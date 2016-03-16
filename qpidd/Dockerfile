@@ -10,4 +10,5 @@ RUN cmake .. -DCMAKE_INSTALL_PREFIX=/usr && make install
 
 COPY ./run_qpidd.sh ./get_data_dir.py /qpid-cpp-$QPID_CPP_VERSION/
 EXPOSE 5672
-CMD ["/qpid-cpp-$QPID_CPP_VERSION/run_qpidd.sh"]
+RUN mkdir /var/run/qpidd
+CMD ["/qpid-cpp-master/run_qpidd.sh"]
