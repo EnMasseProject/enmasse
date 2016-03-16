@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: qpidd
+  labels:
+    name: qpidd
+    messaging: broker
+spec:
+  replicas: 1
+  selector:
+    name: qpidd
+  template:
+    metadata:
+      labels:
+        name: qpidd
+        messaging: broker
+    spec:
+      containers:
+      - name: master
+        image: gordons/qpidd:v4
+        ports:
+        - containerPort: 5672
+      volumeMounts:
+      - name: qpidd-data
+        mountPath: /var/run/qpidd
+      volumes:
+      - name: qpidd-data
+        emptyDir: {}

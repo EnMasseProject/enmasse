@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: qdrouterd
+spec:
+  ports:
+  - port: 5672
+    targetPort: 55672
+    protocol: TCP
+  selector:
+    name: qdrouterd

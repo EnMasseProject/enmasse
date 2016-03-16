@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: qpidd
+spec:
+  containers:
+  - name: qpidd
+    image: gordons/qpidd:v4
+    ports:
+    - containerPort: 5672
+    volumeMounts:
+    - name: qpidd-data
+      mountPath: /var/run/qpidd
+  volumes:
+  - name: qpidd-data
+    emptyDir: {}

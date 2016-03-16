@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: configured
+spec:
+  containers:
+  - name: configured
+    image: gordons/configured:v9
+    ports:
+    - containerPort: 55672
