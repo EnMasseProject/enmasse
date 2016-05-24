@@ -15,6 +15,6 @@ spec:
     spec:
       containers:
       - name: master
-        image: lulf/configures:v1
+        image: lulf/configures:v11
         ports:
         - containerPort: 5672
