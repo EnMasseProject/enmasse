@@ -1,0 +1,10 @@
+{
+  "addr1": {
+    "store-and-forward": true,
+    "multicast": false
+  },
+  "addr2": {
+    "store-and-forward": false,
+    "multicast": true
+  }
+}
