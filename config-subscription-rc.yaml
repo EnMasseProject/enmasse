@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: config-subscription-service
+  labels:
+    name: config-subscription-service
+spec:
+  replicas: 1
+  selector:
+    name: config-subscription-service
+  template:
+    metadata:
+      labels:
+        name: config-subscription-service
+    spec:
+      containers:
+      - name: master
+        image: lulf/config-subscription-service:v1
+        ports:
+        - containerPort: 5672
+        env:
+        - name: "OPENSHIFT_TOKEN"
+          value: QfKPgi5TnzAig4_tW39svRcVOU9Y4hMTzmfhmYGzZM4
