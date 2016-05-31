@@ -3,6 +3,8 @@ package quilt.config.generator.agent;
 import com.openshift.restclient.IClient;
 import com.openshift.restclient.ResourceKind;
 import com.openshift.restclient.model.IReplicationController;
+import quilt.config.model.LabelKeys;
+import quilt.config.model.Roles;
 
 import java.util.Collections;
 import java.util.List;
@@ -48,6 +50,6 @@ public class OpenshiftClient {
     }
 
     public List<IReplicationController> listBrokers() {
-        return client.list(ResourceKind.REPLICATION_CONTROLLER, namespace, Collections.singletonMap("role", "broker"));
+        return client.list(ResourceKind.REPLICATION_CONTROLLER, namespace, Collections.singletonMap(LabelKeys.ROLE, Roles.BROKER));
     }
 }

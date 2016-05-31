@@ -4,6 +4,7 @@ import com.openshift.restclient.ResourceKind;
 import com.openshift.restclient.model.IReplicationController;
 import com.openshift.restclient.model.IResource;
 import quilt.config.model.Config;
+import quilt.config.model.LabelKeys;
 import quilt.config.model.parser.ConfigParser;
 
 import java.io.File;
@@ -42,7 +43,7 @@ public class FileGenerator {
     }
 
     private void generateBroker(IReplicationController resource, File outputDir) throws IOException {
-        String address = resource.getLabels().get("address");
+        String address = resource.getLabels().get(LabelKeys.ADDRESS);
         File brokerFile = new File(outputDir, String.format(BROKER_CLUSTER_PATTERN, address));
         writeBrokerConfig(resource, brokerFile);
     }

@@ -9,6 +9,9 @@ import com.openshift.restclient.images.DockerImageURI;
 import com.openshift.restclient.model.IReplicationController;
 import quilt.config.model.Broker;
 import org.jboss.dmr.ModelNode;
+import quilt.config.model.EnvVars;
+import quilt.config.model.LabelKeys;
+import quilt.config.model.Roles;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -30,10 +33,10 @@ public class BrokerGenerator {
         // TODO: sanitize address
         controller.setName("broker-controller-" + broker.address());
         controller.setReplicas(1);
-        controller.addLabel("role", "broker");
-        controller.addLabel("address", broker.address());
-        controller.addTemplateLabel("role", "broker");
-        controller.setReplicaSelector(Collections.singletonMap("role", "broker"));
+        controller.addLabel(LabelKeys.ROLE, Roles.BROKER);
+        controller.addLabel(LabelKeys.ADDRESS, broker.address());
+        controller.addTemplateLabel(LabelKeys.ROLE, Roles.BROKER);
+        controller.setReplicaSelector(Collections.singletonMap(LabelKeys.ROLE, Roles.BROKER));
 
         generateBroker(controller, broker);
         generateDispatchRouter(controller);
@@ -45,7 +48,7 @@ public class BrokerGenerator {
         Port amqpPort = new Port(new ModelNode());
         amqpPort.setContainerPort(5673);
         Map<String, String> env = new LinkedHashMap<>();
-        env.put("QUEUE_NAME", broker.address());
+        env.put(EnvVars.QUEUE_NAME, broker.address());
 
         controller.addContainer(
                 "broker",
