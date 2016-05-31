@@ -1,4 +1,4 @@
-package quilt.config.generator.service;
+package quilt.config.generator.agent;
 
 import com.openshift.restclient.model.IReplicationController;
 import quilt.config.generator.ConfigGenerator;

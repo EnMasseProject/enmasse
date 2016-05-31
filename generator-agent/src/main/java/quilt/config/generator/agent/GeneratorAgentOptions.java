@@ -1,11 +1,13 @@
-package quilt.config.generator.service;
+package quilt.config.generator.agent;
 
-import java.util.IntSummaryStatistics;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 
 /**
  * @author lulf
  */
-public final class GeneratorServiceOptions {
+public final class GeneratorAgentOptions {
 
     private final String configHost;
     private final int configPort;
@@ -13,18 +15,11 @@ public final class GeneratorServiceOptions {
     private final String openshiftHost;
     private final int openshiftPort;
 
-    private final String namespace;
-    private final String token;
-    private final String user;
-
-    private GeneratorServiceOptions(String configHost, int configPort, String openshiftHost, int openshiftPort, String namespace, String token, String user) {
+    private GeneratorAgentOptions(String configHost, int configPort, String openshiftHost, int openshiftPort) {
         this.configHost = configHost;
         this.configPort = configPort;
         this.openshiftHost = openshiftHost;
         this.openshiftPort = openshiftPort;
-        this.namespace = namespace;
-        this.token = token;
-        this.user = user;
     }
 
     public int configPort() {
@@ -43,14 +38,14 @@ public final class GeneratorServiceOptions {
         return openshiftPort;
     }
 
-    public static GeneratorServiceOptions create(String configUrl, String openshiftUrl, String namespace, String token, String user) {
+    public static GeneratorAgentOptions fromUrls(String configUrl, String openshiftUrl) {
         String openshiftHost = parseHost(openshiftUrl);
         int openshiftPort = parsePort(openshiftUrl);
 
         String configHost = parseHost(configUrl);
         int configPort = parsePort(configUrl);
 
-        return new GeneratorServiceOptions(configHost, configPort, openshiftHost, openshiftPort, namespace, token, user);
+        return new GeneratorAgentOptions(configHost, configPort, openshiftHost, openshiftPort);
     }
 
     private static String parseHost(String url) {
@@ -70,15 +65,17 @@ public final class GeneratorServiceOptions {
         return Integer.parseInt(parts[parts.length - 1]);
     }
 
-    public String openshiftUser() {
-        return user;
+    private static final String SERVICEACCOUNT_PATH = "/var/run/secrets/kubernetes.io/serviceaccount";
+
+    public String openshiftNamespace() throws IOException {
+        return readFile(new File(SERVICEACCOUNT_PATH, "namespace"));
     }
 
-    public String openshiftToken() {
-        return token;
+    public String openshiftToken() throws IOException {
+        return readFile(new File(SERVICEACCOUNT_PATH, "token"));
     }
 
-    public String openshiftNamespace() {
-        return namespace;
+    private static String readFile(File file) throws IOException {
+        return new String(Files.readAllBytes(file.toPath()));
     }
 }

@@ -1,8 +1,9 @@
 package quilt.config.generator.service;
 
-import org.apache.qpid.proton.amqp.transport.Open;
 import org.junit.Test;
 import quilt.config.generator.ConfigGenerator;
+import quilt.config.generator.agent.ConfigSubscriber;
+import quilt.config.generator.agent.OpenshiftClient;
 import quilt.config.model.Broker;
 import quilt.config.model.Config;
 

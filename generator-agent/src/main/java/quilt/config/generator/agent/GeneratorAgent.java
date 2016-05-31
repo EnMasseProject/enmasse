@@ -1,4 +1,4 @@
-package quilt.config.generator.service;
+package quilt.config.generator.agent;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -6,7 +6,6 @@ import com.openshift.restclient.ClientFactory;
 import com.openshift.restclient.IClient;
 import com.openshift.restclient.NoopSSLCertificateCallback;
 import com.openshift.restclient.authorization.TokenAuthorizationStrategy;
-import io.netty.handler.logging.LogLevel;
 import io.vertx.core.Vertx;
 import io.vertx.proton.ProtonClient;
 import io.vertx.proton.ProtonConnection;
@@ -18,18 +17,17 @@ import quilt.config.model.Config;
 import quilt.config.model.parser.ConfigParser;
 
 import java.io.IOException;
-import java.io.StringReader;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
  * @author lulf
  */
-public class GeneratorService implements Runnable, AutoCloseable {
-    private static final Logger log = Logger.getLogger(GeneratorService.class.getName());
+public class GeneratorAgent implements Runnable, AutoCloseable {
+    private static final Logger log = Logger.getLogger(GeneratorAgent.class.getName());
 
     private final ProtonClient client;
-    private final GeneratorServiceOptions options;
+    private final GeneratorAgentOptions options;
     private volatile ProtonConnection connection;
 
     private final ConfigParser parser = new ConfigParser();
@@ -37,11 +35,11 @@ public class GeneratorService implements Runnable, AutoCloseable {
 
     private final ObjectMapper mapper = new ObjectMapper();
 
-    public GeneratorService(GeneratorServiceOptions options) {
+    public GeneratorAgent(GeneratorAgentOptions options) throws IOException {
         client = ProtonClient.create(Vertx.vertx());
 
         IClient osClient = new ClientFactory().create(String.format("%s:%d", options.openshiftHost(), options.openshiftPort()), new NoopSSLCertificateCallback());
-        osClient.setAuthorizationStrategy(new TokenAuthorizationStrategy(options.openshiftToken(), options.openshiftUser()));
+        osClient.setAuthorizationStrategy(new TokenAuthorizationStrategy(options.openshiftToken()));
 
         subscriber = new ConfigSubscriber(new OpenshiftClient(osClient, options.openshiftNamespace()), new ConfigGenerator(osClient));
         this.options = options;

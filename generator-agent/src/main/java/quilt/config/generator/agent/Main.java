@@ -1,4 +1,4 @@
-package quilt.config.generator.service;
+package quilt.config.generator.agent;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -21,24 +21,21 @@ public class Main {
         Options options = new Options();
         options.addOption(createRequiredOption("o", "openshiftUrl", "Openshift Url"));
         options.addOption(createRequiredOption("c", "configUrl", "Config service URL"));
-        options.addOption(createRequiredOption("n", "namespace", "Openshift namespace"));
-        options.addOption(createRequiredOption("t", "token", "Openshift token"));
-        options.addOption(createRequiredOption("u", "user", "Openshift user"));
 
         try {
             CommandLine cmd = parser.parse(options, args);
             String openshiftUrl = cmd.getOptionValue("o");
             String configUrl = cmd.getOptionValue("c");
-            String namespace = cmd.getOptionValue("n");
-            String token = cmd.getOptionValue("t");
-            String user = cmd.getOptionValue("u");
 
-            GeneratorService service = new GeneratorService(GeneratorServiceOptions.create(configUrl, openshiftUrl, namespace, token, user));
+            GeneratorAgent service = new GeneratorAgent(GeneratorAgentOptions.fromUrls(configUrl, openshiftUrl));
             service.run();
         } catch (ParseException e) {
             System.out.println(String.format("Unable to parse arguments: %s", e.getMessage()));
             HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("config-generator-service", options);
+            formatter.printHelp("config-generator-agent", options);
+            System.exit(1);
+        } catch (IOException e) {
+            System.out.println("Error creating generator agent: " + e.getMessage());
             System.exit(1);
         }
     }

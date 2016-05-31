@@ -1,4 +1,4 @@
-package quilt.config.generator.service;
+package quilt.config.generator.agent;
 
 import com.openshift.restclient.IClient;
 import com.openshift.restclient.ResourceKind;

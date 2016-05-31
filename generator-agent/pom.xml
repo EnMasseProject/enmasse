@@ -52,7 +52,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>quilt.config.generator.service.Main</mainClass>
+                            <mainClass>quilt.config.generator.agent.Main</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>
