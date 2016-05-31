@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: config-generator
+  labels:
+    name: config-generator
+spec:
+  replicas: 1
+  selector:
+    name: config-generator
+  template:
+    metadata:
+      labels:
+        name: config-generator
+    spec:
+      serviceAccount: deployer
+      containers:
+      - name: master
+        image: lulf/config-generator-agent:v2

@@ -15,9 +15,6 @@ spec:
     spec:
       containers:
       - name: master
-        image: lulf/config-subscription-service:v1
+        image: lulf/config-subscription-service:v2
         ports:
         - containerPort: 5672
-        env:
-        - name: "OPENSHIFT_TOKEN"
-          value: QfKPgi5TnzAig4_tW39svRcVOU9Y4hMTzmfhmYGzZM4
