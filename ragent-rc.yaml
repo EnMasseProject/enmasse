@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: ragent
+  labels:
+    name: ragent
+spec:
+  replicas: 1
+  selector:
+    name: ragent
+  template:
+    metadata:
+      labels:
+        name: ragent
+    spec:
+      containers:
+      - name: master
+        image: gordons/ragent:latest
+        ports:
+        - containerPort: 55672
