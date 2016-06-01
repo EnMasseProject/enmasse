@@ -1,6 +1,6 @@
 FROM java:8
 
-ADD target/config-subscription-service-1.0-SNAPSHOT-jar-with-dependencies.jar /config-subscription-service.jar
+ADD build/distributions/config-subscription-service-0.1.tar /
 ADD src/main/sh/config-subscription-service.sh /config-subscription-service
 
 EXPOSE 5672

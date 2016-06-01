@@ -17,4 +17,4 @@ fi
 
 echo "Args is $SERVICE_ARGS"
 
-exec /usr/bin/java -Dvertx.cacheDirBase=/tmp/vert.x -jar /config-subscription-service.jar $SERVICE_ARGS
+JAVA_OPTS="-Dvertx.cacheDirBase=/tmp/vert.x" exec /config-subscription-service-0.1/bin/config-subscription-service $SERVICE_ARGS

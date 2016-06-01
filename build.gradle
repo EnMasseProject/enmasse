@@ -1,0 +1,13 @@
+description = 'Config Subscription Service'
+dependencies {
+    compile "com.openshift:openshift-restclient-java:4.0.4-SNAPSHOT"
+    compile "io.vertx:vertx-proton:${vertxProtonVersion}"
+    compile "commons-cli:commons-cli:${commonsCliVersion}"
+    compile "com.fasterxml.jackson.core:jackson-core:${jacksonVersion}"
+    compile "com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}"
+    testCompile "junit:junit:${junitVersion}"
+    testCompile "org.mockito:mockito-core:${mockitoVersion}"
+}
+
+apply plugin: 'application'
+mainClassName = 'quilt.config.subscription.service.ConfigService'
