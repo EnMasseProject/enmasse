@@ -126,7 +126,10 @@ ConnectedRouter.prototype.check_connectors = function (routers) {
 
 function address_equivalence(a, b) {
     if (a === undefined) return b === undefined;
-    return a.name === b.name && a.multicast === b.multicast && a.store_and_forward === b.store_and_forward;
+    var result = a.name === b.name && a.multicast === b.multicast && a.store_and_forward === b.store_and_forward;
+    console.log('testing equivalence of ' + JSON.stringify(a) + ' and ' + JSON.stringify(b) + ' => ' + result);
+    return result;
+    //return a.name === b.name && a.multicast === b.multicast && a.store_and_forward === b.store_and_forward;
 }
 
 ConnectedRouter.prototype.check_addresses = function (desired) {
@@ -175,12 +178,16 @@ function desired_distribution(address) {
     return address.multicast ? "multicast" : "balanced";
 }
 
+function actual_distribution(address) {
+    return address.distribution === "multicast";
+}
+
 function to_router_address(address) {
-    return {prefix:address.name, distribution:desired_distribution(address), waypoint:address.store_and_forward}
+    return {prefix:address.name, distribution:desired_distribution(address), waypoint:address.store_and_forward};
 }
 
 function from_router_address(address) {
-    return {name:address.prefix, multicast:address.distribution==='multicast', store_and_forward:address.waypoint}
+    return {name:address.prefix, multicast:actual_distribution(address), store_and_forward:address.waypoint};
 }
 
 ConnectedRouter.prototype.define_address = function (address) {

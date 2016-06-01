@@ -136,17 +136,30 @@ function on_message(context) {
     if (context.message.subject === 'routers') {
         known_routers[context.connection.container_id] = unwrap_known_routers (context.message.body);
         check_connectivity();
-    } else if (context.message.subject === 'addresses') {
+    } else if (context.message.subject === 'addresses' || context.message.subject === null) {
         var body_type = typeof context.message.body;
         if (body_type  === 'string') {
             try {
-                addresses = JSON.parse(context.message.body);
+                var content = JSON.parse(context.message.body);
+                if (content.json !== undefined) {
+                    content = content.json;
+                }
+                for (var v in content) {
+                    if (content[v].name === undefined) {
+                        content[v].name = v;
+                    }
+                    if (content[v]['store-and-forward'] !== undefined) {
+                        content[v].store_and_forward = content[v]['store-and-forward'];
+                        delete content[v]['store-and-forward'];
+                    }
+                }
+                addresses = content;
                 addresses_updated();
             } catch (e) {
                 console.log('ERROR: failed to parse addresses as JSON: ' + e);
             }
         } else if (body_type  === 'object') {
-            addresses = JSON.parse(context.message.body);
+            addresses = context.message.body;
             addresses_updated();
         } else {
             console.log('ERROR: unrecognised type for addresses: ' + body_type + ' ' + context.message.body);
@@ -216,6 +229,7 @@ if (process.env.KUBERNETES_SERVICE_HOST) {
 }
 
 if (process.env.CONFIGURATION_SERVICE_HOST) {
+    amqp.options.username = 'ragent';
     var conn = amqp.connect({host:process.env.CONFIGURATION_SERVICE_HOST, port:process.env.CONFIGURATION_SERVICE_PORT, properties:connection_properties});
-    conn.open_receiver();
+    conn.open_receiver('maas');
 }

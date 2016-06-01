@@ -84,7 +84,9 @@ function get_options(service, namespace) {
     return options;
 };
 
-function subscribe(service, namespace) {
+function subscribe(service) {
+    var namespace = fs.readFileSync('/var/run/secrets/kubernetes.io/serviceaccount/namespace');
+
     var subscription = new Subscription();
     var request = https.get(get_options(service, namespace || 'default'), function(response) {
 	console.log('STATUS: ' + response.statusCode);
