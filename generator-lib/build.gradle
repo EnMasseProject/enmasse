@@ -1,0 +1,8 @@
+description = 'Config Generator Library'
+dependencies {
+    compile "com.openshift:openshift-restclient-java:4.0.3.Final"
+    compile "com.fasterxml.jackson.core:jackson-core:${jacksonVersion}"
+    compile "com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}"
+    testCompile "junit:junit:${junitVersion}"
+    testCompile "org.mockito:mockito-core:${mockitoVersion}"
+}

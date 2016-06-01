@@ -11,4 +11,4 @@ SERVICE_ARGS="$SERVICE_ARGS -c $CONFIGURATION_SERVICE_HOST:$CONFIGURATION_SERVIC
 
 echo "Args is $SERVICE_ARGS"
 
-exec /usr/bin/java -Dvertx.cacheDirBase=/tmp/vert.x -jar /config-generator-agent.jar $SERVICE_ARGS
+JAVA_OPTS="-Dvertx.cacheDirBase=/tmp/vert.x" exec /config-generator-agent-0.1/bin/config-generator-agent $SERVICE_ARGS

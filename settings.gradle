@@ -1,0 +1,11 @@
+rootProject.name = 'config'
+
+include ':config-generator-lib'
+include ':config-generator-tool'
+include ':config-generator-agent'
+include ':config-subscription-service'
+
+project(':config-generator-lib').projectDir = "$rootDir/generator-lib" as File
+project(':config-generator-tool').projectDir = "$rootDir/generator-tool" as File
+project(':config-generator-agent').projectDir = "$rootDir/generator-agent" as File
+project(':config-subscription-service').projectDir = "$rootDir/subscription-service" as File
