@@ -15,6 +15,6 @@ spec:
     spec:
       containers:
       - name: master
-        image: lulf/config-subscription-service:v3
+        image: lulf/config-subscription-service:v4
         ports:
         - containerPort: 5672
