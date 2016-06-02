@@ -44,38 +44,7 @@ listener {
 }
 
 connector {
-    addr: ${CONFIGURED_SERVICE_HOST}
-    port: ${CONFIGURED_SERVICE_PORT}
-}
-
-fixedAddress {
-    prefix: /closest/
-    fanout: single
-    bias: closest
-}
-
-fixedAddress {
-    prefix: /multicast/
-    fanout: multiple
-}
-
-fixedAddress {
-    prefix: /autoqueue/
-    phase:  0
-    fanout: single
-    bias:   closest
-}
-
-fixedAddress {
-    prefix: /autoqueue/
-    phase:  1
-    fanout: single
-    bias:   closest
-}
-
-fixedAddress {
-    prefix: /unicast
-    fanout: single
-    bias: closest
+    addr: ${RAGENT_SERVICE_HOST}
+    port: ${RAGENT_SERVICE_PORT}
 }
 
