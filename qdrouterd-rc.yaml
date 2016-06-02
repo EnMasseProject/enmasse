@@ -15,6 +15,6 @@ spec:
     spec:
       containers:
       - name: master
-        image: gordons/qdrouterd:v4
+        image: gordons/qdrouterd:v5
         ports:
         - containerPort: 5672
