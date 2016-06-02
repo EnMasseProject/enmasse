@@ -42,7 +42,7 @@ public class BrokerGenerator {
         controller.setReplicaSelector(Collections.singletonMap(LabelKeys.ROLE, Roles.BROKER));
 
         generateBroker(controller, broker);
-        generateDispatchRouter(controller);
+        generateDispatchRouter(controller, broker);
 
         return controller;
     }
@@ -60,21 +60,23 @@ public class BrokerGenerator {
 
         controller.addContainer(
                 "broker",
-                new DockerImageURI("gordons/qpidd:v4"),
+                new DockerImageURI("gordons/artemis:latest"),
                 Collections.singleton(amqpPort),
                 env,
-                Collections.singletonList("/var/run/qpidd"));
+                Collections.singletonList("/var/run/artemis"));
     }
 
-    private void generateDispatchRouter(ReplicationController controller) {
+    private void generateDispatchRouter(ReplicationController controller, Broker broker) {
         Port interRouterPort = new Port(new ModelNode());
         interRouterPort.setContainerPort(5672);
 
+        Map<String, String> env = new LinkedHashMap<>();
+        env.put(broker.multicast() ? EnvVars.TOPIC_NAME : EnvVars.QUEUE_NAME, broker.address());
         controller.addContainer(
                 "router",
-                new DockerImageURI("gordons/qdrouterd:v4"),
+                new DockerImageURI("gordons/qdrouterd:v7"),
                 Collections.singleton(interRouterPort),
-                Collections.emptyMap(),
+                env,
                 Collections.emptyList());
     }
 }
