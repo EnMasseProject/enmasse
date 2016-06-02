@@ -16,4 +16,4 @@ spec:
       serviceAccount: deployer
       containers:
       - name: master
-        image: lulf/config-generator-agent:v3
+        image: lulf/config-generator-agent:latest
