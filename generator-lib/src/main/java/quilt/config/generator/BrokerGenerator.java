@@ -31,7 +31,7 @@ public class BrokerGenerator {
         ReplicationController controller = factory.create("v1", ResourceKind.REPLICATION_CONTROLLER);
 
         // TODO: sanitize address
-        controller.setName("broker-controller-" + broker.address());
+        controller.setName("controller-" + broker.address());
         controller.setReplicas(1);
         controller.addLabel(LabelKeys.ROLE, Roles.BROKER);
         controller.addLabel(LabelKeys.ADDRESS, broker.address());
