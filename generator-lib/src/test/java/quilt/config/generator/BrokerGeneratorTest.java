@@ -41,4 +41,11 @@ public class BrokerGeneratorTest {
         assertThat(router.getPorts().size(), is(1));
         assertThat(router.getPorts().iterator().next().getContainerPort(), is(5672));
     }
+
+    @Test
+    public void testGenerateTopic() {
+        IReplicationController controller = generator.generate(new Broker("testaddr", true, true));
+        IContainer broker = controller.getContainer("broker");
+        assertThat(broker.getEnvVars().get(EnvVars.TOPIC_NAME), is("testaddr"));
+    }
 }
