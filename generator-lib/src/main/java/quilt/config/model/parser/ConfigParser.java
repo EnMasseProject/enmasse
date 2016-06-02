@@ -31,7 +31,7 @@ public class ConfigParser {
             Map.Entry<String, JsonNode> entry = it.next();
             Broker broker = new Broker(
                     entry.getKey(),
-                    entry.getValue().get("store-and-forward").asBoolean(),
+                    entry.getValue().get("store_and_forward").asBoolean(),
                     entry.getValue().get("multicast").asBoolean());
             brokerList.add(broker);
         }
