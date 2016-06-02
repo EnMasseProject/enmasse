@@ -16,11 +16,14 @@ import quilt.config.model.Roles;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * @author lulf
  */
 public class BrokerGenerator {
+    private static final Logger log = Logger.getLogger(BrokerGenerator.class.getName());
     private final ResourceFactory factory;
 
     public BrokerGenerator(IClient osClient) {
@@ -45,6 +48,11 @@ public class BrokerGenerator {
     }
 
     private void generateBroker(ReplicationController controller, Broker broker) {
+        if (!broker.storeAndForward()) {
+            log.log(Level.INFO, "Not generating broker %s as store_and_forward is not set", broker.address());
+            return;
+        }
+
         Port amqpPort = new Port(new ModelNode());
         amqpPort.setContainerPort(5673);
         Map<String, String> env = new LinkedHashMap<>();

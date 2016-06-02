@@ -8,6 +8,7 @@ import quilt.config.model.Config;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author lulf
@@ -21,11 +22,10 @@ public class ConfigGenerator {
     }
 
     public List<IResource> generate(Config config) {
-        List<IResource> resources = new ArrayList<>();
-        for (Broker broker : config.brokers()) {
-            resources.add(brokerGenerator.generate(broker));
-        }
-        return resources;
+        return config.brokers().stream()
+                .filter(Broker::storeAndForward)
+                .map(brokerGenerator::generate)
+                .collect(Collectors.toList());
     }
 
     public IReplicationController generateBroker(Broker broker) {

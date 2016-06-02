@@ -24,6 +24,12 @@ public class BrokerGeneratorTest {
     }
 
     @Test
+    public void testSkipNoStore() {
+        IReplicationController controller = generator.generate(new Broker("testaddr", false, false));
+        assertThat(controller.getContainers().size(), is(1));
+    }
+
+    @Test
     public void testGenerator() {
         IReplicationController controller = generator.generate(new Broker("testaddr", true, false));
 
