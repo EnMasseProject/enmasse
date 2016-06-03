@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 /**
  * The {@link BrokerManager} maintains the number of broker replication controllers to be consistent with the number of destinations in config that require store_and_forward.
@@ -28,8 +29,11 @@ public class BrokerManager {
         this.generator = generator;
     }
 
-    public void destinationsUpdated(Collection<Destination> destinations) {
+    public void destinationsUpdated(Collection<Destination> newDestinations) {
         List<IReplicationController> currentBrokers = openshiftClient.listBrokers();
+        Collection<Destination> destinations = newDestinations.stream()
+                .filter(Destination::storeAndForward)
+                .collect(Collectors.toList());
         log.log(Level.INFO, "Brokers got updated to " + destinations.size() + " destinations, we have " + currentBrokers.size() + " destinations: " + currentBrokers.stream().map(IReplicationController::getName).toString());
         createBrokers(currentBrokers, destinations);
         deleteBrokers(currentBrokers, destinations);

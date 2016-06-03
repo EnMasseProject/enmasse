@@ -7,6 +7,7 @@ import quilt.config.openshift.OpenshiftClient;
 import quilt.config.model.Destination;
 import quilt.config.model.Config;
 
+import java.util.Arrays;
 import java.util.Collections;
 
 import static org.mockito.Matchers.any;
@@ -25,7 +26,7 @@ public class ConfigManagerTest {
                 .brokerPort(1234)
                 .build();
         ConfigManager manager = new ConfigManager(mockClient, new ConfigGenerator(null, props));
-        manager.configUpdated(new Config(Collections.singletonList(new Destination("broker1", true, false))));
+        manager.configUpdated(new Config(Arrays.asList(new Destination("broker1", true, false), new Destination("broker2", false, false))));
         verify(mockClient).createBroker(any());
     }
 }
