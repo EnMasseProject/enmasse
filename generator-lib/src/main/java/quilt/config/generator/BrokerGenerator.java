@@ -10,6 +10,7 @@ import com.openshift.restclient.model.IReplicationController;
 import quilt.config.model.BrokerProperties;
 import quilt.config.model.Destination;
 import org.jboss.dmr.ModelNode;
+import quilt.config.model.Capabilities;
 import quilt.config.model.EnvVars;
 import quilt.config.model.LabelKeys;
 import quilt.config.model.Roles;
@@ -44,7 +45,8 @@ public class BrokerGenerator {
         controller.addLabel(LabelKeys.ROLE, Roles.BROKER);
         controller.addLabel(LabelKeys.ADDRESS, destination.address());
         controller.addTemplateLabel(LabelKeys.ROLE, Roles.BROKER);
-        controller.setReplicaSelector(Collections.singletonMap(LabelKeys.ROLE, Roles.BROKER));
+        controller.addTemplateLabel(LabelKeys.CAPABILITY, Capabilities.ROUTER);
+        controller.setReplicaSelector(Collections.singletonMap(LabelKeys.ADDRESS, destination.address()));
 
         generateBroker(controller, destination);
         generateDispatchRouter(controller, destination);
