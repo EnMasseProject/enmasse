@@ -15,6 +15,6 @@ spec:
     spec:
       containers:
       - name: master
-        image: gordons/ragent:v2
+        image: gordons/ragent:v3
         ports:
         - containerPort: 55672
