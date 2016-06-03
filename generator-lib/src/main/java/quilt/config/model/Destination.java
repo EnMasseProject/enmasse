@@ -3,12 +3,12 @@ package quilt.config.model;
 /**
  * @author lulf
  */
-public final class Broker {
+public final class Destination {
     private final String address;
     private final boolean storeAndForward;
     private final boolean multicast;
 
-    public Broker(String address, boolean storeAndForward, boolean multicast) {
+    public Destination(String address, boolean storeAndForward, boolean multicast) {
         this.address = address;
         this.storeAndForward = storeAndForward;
         this.multicast = multicast;
@@ -31,8 +31,8 @@ public final class Broker {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        Broker broker = (Broker) o;
-        return address.equals(broker.address);
+        Destination destination = (Destination) o;
+        return address.equals(destination.address);
 
     }
 

@@ -12,9 +12,11 @@ import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.ProtonDelivery;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.message.Message;
+import quilt.config.admin.ConfigManager;
 import quilt.config.generator.ConfigGenerator;
 import quilt.config.model.Config;
 import quilt.config.model.parser.ConfigParser;
+import quilt.config.openshift.OpenshiftClient;
 
 import java.io.IOException;
 import java.util.logging.Level;
@@ -31,7 +33,7 @@ public class GeneratorAgent implements Runnable, AutoCloseable {
     private volatile ProtonConnection connection;
 
     private final ConfigParser parser = new ConfigParser();
-    private final ConfigSubscriber subscriber;
+    private final ConfigManager configManager;
 
     private final ObjectMapper mapper = new ObjectMapper();
 
@@ -41,7 +43,7 @@ public class GeneratorAgent implements Runnable, AutoCloseable {
         IClient osClient = new ClientFactory().create(String.format("%s:%d", options.openshiftHost(), options.openshiftPort()), new NoopSSLCertificateCallback());
         osClient.setAuthorizationStrategy(new TokenAuthorizationStrategy(options.openshiftToken()));
 
-        subscriber = new ConfigSubscriber(new OpenshiftClient(osClient, options.openshiftNamespace()), new ConfigGenerator(osClient));
+        configManager = new ConfigManager(new OpenshiftClient(osClient, options.openshiftNamespace()), new ConfigGenerator(osClient));
         this.options = options;
     }
 
@@ -65,7 +67,8 @@ public class GeneratorAgent implements Runnable, AutoCloseable {
                 JsonNode root = mapper.readTree((String) ((AmqpValue) message.getBody()).getValue());
                 Config config = parser.parse(root.get("json"));
                 log.log(Level.INFO, "Configuration was updated");
-                subscriber.configUpdated(config);
+
+                configManager.configUpdated(config);
             }
         } catch (IOException e) {
             log.log(Level.INFO, "Error handling config update", e);

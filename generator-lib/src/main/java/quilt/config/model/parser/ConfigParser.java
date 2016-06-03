@@ -2,7 +2,7 @@ package quilt.config.model.parser;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import quilt.config.model.Broker;
+import quilt.config.model.Destination;
 import quilt.config.model.Config;
 
 import java.io.IOException;
@@ -26,16 +26,16 @@ public class ConfigParser {
     public Config parse(JsonNode root) throws IOException {
         Iterator<Map.Entry<String, JsonNode>> it = root.fields();
 
-        List<Broker> brokerList = new ArrayList<>();
+        List<Destination> destinationList = new ArrayList<>();
         while (it.hasNext()) {
             Map.Entry<String, JsonNode> entry = it.next();
-            Broker broker = new Broker(
+            Destination destination = new Destination(
                     entry.getKey(),
                     entry.getValue().get("store_and_forward").asBoolean(),
                     entry.getValue().get("multicast").asBoolean());
-            brokerList.add(broker);
+            destinationList.add(destination);
         }
 
-        return new Config(brokerList);
+        return new Config(destinationList);
     }
 }

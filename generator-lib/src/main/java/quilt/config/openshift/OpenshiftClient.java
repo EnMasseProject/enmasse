@@ -1,4 +1,4 @@
-package quilt.config.generator.agent;
+package quilt.config.openshift;
 
 import com.openshift.restclient.IClient;
 import com.openshift.restclient.ResourceKind;
@@ -25,31 +25,26 @@ public class OpenshiftClient {
         this.namespace = namespace;
     }
 
-    public void brokerAdded(IReplicationController controller) {
+    public void createBroker(IReplicationController controller) {
         log.log(Level.INFO, "Adding controller " + controller.getName());
         client.create(controller, namespace);
     }
 
-    public void brokerDeleted(IReplicationController controller) {
+    public void deleteBroker(IReplicationController controller) {
         log.log(Level.INFO, "Deleting controller " + controller.getName());
         client.delete(controller);
     }
 
-    public void brokerModified(IReplicationController controller) {
+    public void updateBroker(IReplicationController controller) {
         log.log(Level.INFO, "Updating controller " + controller.getName());
-        IReplicationController oldController = client.get(ResourceKind.REPLICATION_CONTROLLER, controller.getName(), namespace);
-        oldController.setContainers(controller.getContainers());
-        oldController.setReplicas(controller.getReplicas());
-        oldController.setReplicaSelector(controller.getReplicaSelector());
-
-        for (Map.Entry<String, String> label : controller.getLabels().entrySet()) {
-            oldController.addLabel(label.getKey(), label.getValue());
-        }
-
-        client.update(oldController);
+        client.update(controller);
     }
 
     public List<IReplicationController> listBrokers() {
         return client.list(ResourceKind.REPLICATION_CONTROLLER, namespace, Collections.singletonMap(LabelKeys.ROLE, Roles.BROKER));
+    }
+
+    public IReplicationController getBroker(String name) {
+        return client.get(ResourceKind.REPLICATION_CONTROLLER, name, namespace);
     }
 }

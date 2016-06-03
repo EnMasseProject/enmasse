@@ -2,19 +2,18 @@ package quilt.config.model;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
 
 /**
  * @author lulf
  */
 public final class Config {
-    private final Collection<Broker> brokerList;
+    private final Collection<Destination> destinationList;
 
-    public Config(Collection<Broker> brokerList) {
-        this.brokerList = Collections.unmodifiableCollection(brokerList);
+    public Config(Collection<Destination> destinationList) {
+        this.destinationList = Collections.unmodifiableCollection(destinationList);
     }
 
-    public Collection<Broker> brokers() {
-        return brokerList;
+    public Collection<Destination> destinations() {
+        return destinationList;
     }
 }

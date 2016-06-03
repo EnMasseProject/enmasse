@@ -7,7 +7,7 @@ import com.openshift.restclient.IClient;
 import com.openshift.restclient.ResourceKind;
 import com.openshift.restclient.images.DockerImageURI;
 import com.openshift.restclient.model.IReplicationController;
-import quilt.config.model.Broker;
+import quilt.config.model.Destination;
 import org.jboss.dmr.ModelNode;
 import quilt.config.model.EnvVars;
 import quilt.config.model.LabelKeys;
@@ -30,33 +30,32 @@ public class BrokerGenerator {
         factory = new ResourceFactory(osClient);
     }
 
-    public IReplicationController generate(Broker broker) {
-        ReplicationController controller = factory.create("v1", ResourceKind.REPLICATION_CONTROLLER);
+    public IReplicationController generate(Destination destination) {
+        if (!destination.storeAndForward()) {
+            throw new IllegalArgumentException("Not generating broker for destination, storeAndForward = " + destination.storeAndForward());
+        }
 
+        ReplicationController controller = factory.create("v1", ResourceKind.REPLICATION_CONTROLLER);
         // TODO: sanitize address
-        controller.setName("controller-" + broker.address());
+        controller.setName("controller-" + destination.address());
         controller.setReplicas(1);
         controller.addLabel(LabelKeys.ROLE, Roles.BROKER);
-        controller.addLabel(LabelKeys.ADDRESS, broker.address());
+        controller.addLabel(LabelKeys.ADDRESS, destination.address());
         controller.addTemplateLabel(LabelKeys.ROLE, Roles.BROKER);
         controller.setReplicaSelector(Collections.singletonMap(LabelKeys.ROLE, Roles.BROKER));
 
-        generateBroker(controller, broker);
-        generateDispatchRouter(controller, broker);
+        generateBroker(controller, destination);
+        generateDispatchRouter(controller, destination);
 
         return controller;
     }
 
-    private void generateBroker(ReplicationController controller, Broker broker) {
-        if (!broker.storeAndForward()) {
-            log.log(Level.INFO, "Not generating broker %s as store_and_forward is not set", broker.address());
-            return;
-        }
+    private void generateBroker(ReplicationController controller, Destination destination) {
 
         Port amqpPort = new Port(new ModelNode());
         amqpPort.setContainerPort(5673);
         Map<String, String> env = new LinkedHashMap<>();
-        env.put(broker.multicast() ? EnvVars.TOPIC_NAME : EnvVars.QUEUE_NAME, broker.address());
+        env.put(destination.multicast() ? EnvVars.TOPIC_NAME : EnvVars.QUEUE_NAME, destination.address());
 
         controller.addContainer(
                 "broker",
@@ -66,12 +65,12 @@ public class BrokerGenerator {
                 Collections.singletonList("/var/run/artemis"));
     }
 
-    private void generateDispatchRouter(ReplicationController controller, Broker broker) {
+    private void generateDispatchRouter(ReplicationController controller, Destination destination) {
         Port interRouterPort = new Port(new ModelNode());
         interRouterPort.setContainerPort(5672);
 
         Map<String, String> env = new LinkedHashMap<>();
-        env.put(broker.multicast() ? EnvVars.TOPIC_NAME : EnvVars.QUEUE_NAME, broker.address());
+        env.put(destination.multicast() ? EnvVars.TOPIC_NAME : EnvVars.QUEUE_NAME, destination.address());
         controller.addContainer(
                 "router",
                 new DockerImageURI("gordons/qdrouterd:v7"),
