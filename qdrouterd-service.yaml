@@ -5,7 +5,7 @@ metadata:
 spec:
   ports:
   - port: 5672
-    targetPort: 55672
+    targetPort: 5672
     protocol: TCP
   selector:
     name: qdrouterd
