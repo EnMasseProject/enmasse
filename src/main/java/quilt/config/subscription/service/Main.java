@@ -1,45 +1,35 @@
 package quilt.config.subscription.service;
 
-import quilt.config.subscription.service.amqp.AMQPServer;
 import com.openshift.restclient.ClientFactory;
 import com.openshift.restclient.IClient;
 import com.openshift.restclient.NoopSSLCertificateCallback;
 import com.openshift.restclient.authorization.TokenAuthorizationStrategy;
+import io.vertx.core.impl.FileResolver;
+import quilt.config.subscription.service.amqp.AMQPServer;
 import quilt.config.subscription.service.openshift.OpenshiftConfigMapDatabase;
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.Map;
+import java.util.function.Consumer;
 
 /**
  * Main entrypoint for configuration service with arg parsing.
  *
  * @author lulf
  */
-public class ConfigService {
+public class Main {
 
-    public static void main(String [] args) throws ParseException {
-
-        Options options = new Options();
-        options.addOption(new Option("s", "openshiftUri", true, "Openshift URI"));
-        options.addOption(new Option("l", "listenAddress", true, "AMQP listen address"));
-        options.addOption(new Option("p", "port", true, "AMQP listen port"));
-        options.addOption(new Option("h", "help", true, "Usage"));
-
-        CommandLineParser parser = new DefaultParser();
+    public static void main(String [] args) {
         try {
-            CommandLine cmd = parser.parse(options, args);
+            // Kind of a hack
+            System.setProperty(FileResolver.CACHE_DIR_BASE_PROP_NAME, "/tmp/vert.x");
 
-            String openshiftUri = cmd.getOptionValue("s", "https://localhost:8443");
-            String listenAddress = cmd.getOptionValue("l", "0.0.0.0");
-            int listenPort = Integer.parseInt(cmd.getOptionValue("p", "5672"));
+            Map<String, String> env = System.getenv();
+            String openshiftUri = String.format("https://%s:%s", getEnvOrThrow(env, "KUBERNETES_SERVICE_HOST"), getEnvOrThrow(env, "KUBERNETES_SERVICE_PORT"));
+            String listenAddress = env.getOrDefault("CONFIGURATION_SERVICE_LISTEN_ADDRESS", "0.0.0.0");
+            int listenPort = Integer.parseInt(env.getOrDefault("CONFIGURATION_SERVICE_LISTEN_PORT", "5672"));
 
             String openshiftNamespace = getOpenshiftNamespace();
 
@@ -52,13 +42,21 @@ public class ConfigService {
             AMQPServer server = new AMQPServer(listenAddress, listenPort, database);
 
             server.run();
-        } catch (ParseException e) {
-            HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("config-subscription-service", options);
+        } catch (IllegalArgumentException e) {
+            System.out.println("Error parsing environment: " + e.getMessage());
+            System.exit(1);
         } catch (IOException e) {
             System.out.println("Error running config subscription service");
             System.exit(1);
         }
+    }
+
+    private static String getEnvOrThrow(Map<String, String> env, String envVar) {
+        String var = env.get(envVar);
+        if (var == null) {
+            throw new IllegalArgumentException(String.format("Unable to find value for required environment var '%s'", envVar));
+        }
+        return var;
     }
 
     private static final String SERVICEACCOUNT_PATH = "/var/run/secrets/kubernetes.io/serviceaccount";
