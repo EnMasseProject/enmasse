@@ -54,7 +54,11 @@ public class OpenshiftConfigMapDatabase implements IOpenShiftWatchListener, Auto
     @Override
     public void disconnected() {
         log.log(Level.INFO, "Disconnected, restarting watch");
-        this.watcher = restClient.watch(namespace, this, ResourceKind.CONFIG_MAP);
+        try {
+            this.watcher = restClient.watch(namespace, this, ResourceKind.CONFIG_MAP);
+        } catch (Exception e) {
+            log.log(Level.INFO, "Error re-watching on disconnect from " + restClient.getBaseURL(), e);
+        }
     }
 
     @Override
