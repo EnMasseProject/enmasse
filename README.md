@@ -17,38 +17,9 @@ The configuration service will watch all configmaps for the project deployed to.
 
 Create initial config map:
 
-    curl -k "https://localhost:8443/api/v1/namespaces/myproject/configmaps" -H "Authorization: Bearer <token>" -X POST -d @mymap.json  -H "Content-Type: application/json"
+    oc create -f addresses.json
 
-The contents of mymap.json:
-
-```
-{
-  "kind": "ConfigMap",
-  "apiVersion": "v1",
-  "metadata": {
-    "name": "maas"
-  },
-  "data": {
-    "json": "{\"myaddr\":{\"store-and-forward\":true,\"multicast\":false}}"
-  }
-}
-```
-
-To update the map, modify the mymap.json and do a PUT on the myprojects/configmaps/maas resource.
-
-Note: you can also create the config map like this:
-
-    oc create -f mymap.json
-
-and after editing mymap.json:
-
-    oc replace -f mymap.json
-
-If you have a json file with the addresses you can create the config map using:
-
-   oc create configmap maas --from-file=json=addresses.json
-
-The config map can also be specified in yaml, e.g. with mypamp.yaml containing:
+Where address.yaml is of the form:
 
 ```
 kind: ConfigMap
@@ -58,13 +29,16 @@ metadata:
 data:
   json: |
     {
-        "myaddr": { "store_and_forward":true, "multicast":false }
+        "queue1": { "store_and_forward":true, "multicast":false },
+        "queue2": { "store_and_forward":true, "multicast":false },
+        "anycast": { "store_and_forward":false, "multicast":false },
+        "broadcast": { "store_and_forward":false, "multicast":true }
     }
 ```
 
-run:
+After editing that file, update the config map with:
 
-    oc create -f mymap.yaml
+    oc replace -f addresses.json
 
 ## Setting up config generator agent
 
@@ -78,7 +52,6 @@ Then start the replication controller:
 
 Whenever you change the 'maas' config map, the config-generator-agent will pick it up and
 delete/create/update broker clusters.
-
 
 ## Setting up the routers
 
@@ -94,3 +67,10 @@ Start the router service and replication-controller:
 
     oc create -f qdrouterd-service.yaml
     oc create -f qdrouterd-rc.yaml
+
+You can get the service IP either from the web console or by running:
+
+    oc get service qdrouterd -o yaml
+
+You should now be able to connect to that to send and receive
+messages based on the addressing scheme in the config map.
