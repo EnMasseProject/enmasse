@@ -40,10 +40,10 @@ public class GeneratorAgent implements Runnable, AutoCloseable {
     public GeneratorAgent(GeneratorAgentOptions options) throws IOException {
         client = ProtonClient.create(Vertx.vertx());
 
-        IClient osClient = new ClientFactory().create(String.format("%s:%d", options.openshiftHost(), options.openshiftPort()), new NoopSSLCertificateCallback());
+        IClient osClient = new ClientFactory().create(options.openshiftUrl(), new NoopSSLCertificateCallback());
         osClient.setAuthorizationStrategy(new TokenAuthorizationStrategy(options.openshiftToken()));
 
-        configManager = new ConfigManager(new OpenshiftClient(osClient, options.openshiftNamespace()), new ConfigGenerator(osClient));
+        configManager = new ConfigManager(new OpenshiftClient(osClient, options.openshiftNamespace()), new ConfigGenerator(osClient, options.brokerProperties()));
         this.options = options;
     }
 

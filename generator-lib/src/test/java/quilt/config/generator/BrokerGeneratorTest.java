@@ -4,6 +4,7 @@ import com.openshift.restclient.model.IContainer;
 import com.openshift.restclient.model.IReplicationController;
 import org.junit.Before;
 import org.junit.Test;
+import quilt.config.model.BrokerProperties;
 import quilt.config.model.Destination;
 import quilt.config.model.EnvVars;
 import quilt.config.model.LabelKeys;
@@ -20,7 +21,7 @@ public class BrokerGeneratorTest {
 
     @Before
     public void setup() {
-        generator = new BrokerGenerator(null);
+        generator = new BrokerGenerator(null, new BrokerProperties.Builder().brokerPort(1234).build());
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -38,7 +39,7 @@ public class BrokerGeneratorTest {
 
         IContainer broker = controller.getContainer("broker");
         assertThat(broker.getPorts().size(), is(1));
-        assertThat(broker.getPorts().iterator().next().getContainerPort(), is(5673));
+        assertThat(broker.getPorts().iterator().next().getContainerPort(), is(1234));
         assertThat(broker.getEnvVars().get(EnvVars.QUEUE_NAME), is("testaddr"));
         assertThat(broker.getVolumeMounts().size(), is(1));
 

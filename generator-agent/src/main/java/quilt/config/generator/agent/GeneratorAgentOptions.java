@@ -1,8 +1,13 @@
 package quilt.config.generator.agent;
 
+import com.openshift.restclient.images.DockerImageURI;
+import quilt.config.model.BrokerProperties;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.Map;
+import java.util.function.Consumer;
 
 /**
  * @author lulf
@@ -12,14 +17,14 @@ public final class GeneratorAgentOptions {
     private final String configHost;
     private final int configPort;
 
-    private final String openshiftHost;
-    private final int openshiftPort;
+    private final String openshiftUrl;
+    private final BrokerProperties brokerProperties;
 
-    private GeneratorAgentOptions(String configHost, int configPort, String openshiftHost, int openshiftPort) {
+    private GeneratorAgentOptions(String configHost, int configPort, String openshiftUrl, BrokerProperties brokerProperties) {
         this.configHost = configHost;
         this.configPort = configPort;
-        this.openshiftHost = openshiftHost;
-        this.openshiftPort = openshiftPort;
+        this.openshiftUrl = openshiftUrl;
+        this.brokerProperties = brokerProperties;
     }
 
     public int configPort() {
@@ -30,39 +35,47 @@ public final class GeneratorAgentOptions {
         return configHost;
     }
 
-    public String openshiftHost() {
-        return openshiftHost;
+    public String openshiftUrl() {
+        return openshiftUrl;
     }
 
-    public int openshiftPort() {
-        return openshiftPort;
+    public BrokerProperties brokerProperties() {
+        return brokerProperties;
     }
 
-    public static GeneratorAgentOptions fromUrls(String configUrl, String openshiftUrl) {
-        String openshiftHost = parseHost(openshiftUrl);
-        int openshiftPort = parsePort(openshiftUrl);
+    public static GeneratorAgentOptions fromEnv(Map<String, String> env) {
+        String openshiftHost = getEnvOrThrow(env, "KUBERNETES_SERVICE_HOST");
+        String openshiftPort = getEnvOrThrow(env, "KUBERNETES_SERVICE_PORT");
 
-        String configHost = parseHost(configUrl);
-        int configPort = parsePort(configUrl);
+        String configHost = getEnvOrThrow(env, "CONFIGURATION_SERVICE_HOST");
+        int configPort = Integer.parseInt(getEnvOrThrow(env, "CONFIGURATION_SERVICE_PORT"));
 
-        return new GeneratorAgentOptions(configHost, configPort, openshiftHost, openshiftPort);
+        BrokerProperties brokerProperties = getBrokerProperties(env);
+
+        return new GeneratorAgentOptions(configHost, configPort, String.format("https://%s:%s", openshiftHost, openshiftPort), brokerProperties);
     }
 
-    private static String parseHost(String url) {
-        StringBuilder builder = new StringBuilder();
-        String parts[] = url.split(":");
-        for (int i = 0; i < parts.length - 1; i++) {
-            if (i > 0) {
-                builder.append(":");
-            }
-            builder.append(parts[i]);
+    private static BrokerProperties getBrokerProperties(Map<String, String> env) {
+        BrokerProperties.Builder builder = new BrokerProperties.Builder();
+        ifEnvExists(env, "BROKER_IMAGE", uri -> builder.brokerImage(new DockerImageURI(uri)));
+        ifEnvExists(env, "BROKER_PORT", port -> builder.brokerPort(Integer.parseInt(port)));
+        ifEnvExists(env, "ROUTER_IMAGE", uri -> builder.routerImage(new DockerImageURI(uri)));
+        ifEnvExists(env, "ROUTER_PORT", port -> builder.brokerPort(Integer.parseInt(port)));
+        return builder.build();
+    }
+
+    private static String getEnvOrThrow(Map<String, String> env, String envVar) {
+        String var = env.get(envVar);
+        if (var == null) {
+            throw new IllegalArgumentException(String.format("Unable to find value for required environment var '%s'", envVar));
         }
-        return builder.toString();
+        return var;
     }
 
-    private static int parsePort(String url) {
-        String parts[] = url.split(":");
-        return Integer.parseInt(parts[parts.length - 1]);
+    private static void ifEnvExists(Map<String, String> env, String envName, Consumer<String> fn) {
+        if (env.containsKey(envName)) {
+            fn.accept(env.get(envName));
+        }
     }
 
     private static final String SERVICEACCOUNT_PATH = "/var/run/secrets/kubernetes.io/serviceaccount";

@@ -3,6 +3,7 @@ package quilt.config.generator;
 import com.openshift.restclient.ResourceKind;
 import com.openshift.restclient.model.IReplicationController;
 import com.openshift.restclient.model.IResource;
+import quilt.config.model.BrokerProperties;
 import quilt.config.model.Config;
 import quilt.config.model.LabelKeys;
 import quilt.config.model.parser.ConfigParser;
@@ -19,7 +20,7 @@ import java.util.List;
 public class FileGenerator {
 
     private final ConfigParser parser = new ConfigParser();
-    private final ConfigGenerator generator = new ConfigGenerator(null);
+    private final ConfigGenerator generator = new ConfigGenerator(null, new BrokerProperties.Builder().build());
 
     private static final String BROKER_CLUSTER_PATTERN = "broker_cluster_%s.json";
 

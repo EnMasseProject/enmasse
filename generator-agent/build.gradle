@@ -3,7 +3,6 @@ dependencies {
     compile project(':config-generator-lib')
     compile "com.openshift:openshift-restclient-java:4.0.3.Final"
     compile "io.vertx:vertx-proton:${vertxProtonVersion}"
-    compile "commons-cli:commons-cli:${commonsCliVersion}"
     compile "com.fasterxml.jackson.core:jackson-core:${jacksonVersion}"
     compile "com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}"
 

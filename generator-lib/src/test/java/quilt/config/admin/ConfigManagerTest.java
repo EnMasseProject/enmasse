@@ -2,6 +2,7 @@ package quilt.config.admin;
 
 import org.junit.Test;
 import quilt.config.generator.ConfigGenerator;
+import quilt.config.model.BrokerProperties;
 import quilt.config.openshift.OpenshiftClient;
 import quilt.config.model.Destination;
 import quilt.config.model.Config;
@@ -20,7 +21,10 @@ public class ConfigManagerTest {
     public void testBrokerAdded() {
         OpenshiftClient mockClient = mock(OpenshiftClient.class);
 
-        ConfigManager manager = new ConfigManager(mockClient, new ConfigGenerator(null));
+        BrokerProperties props = new BrokerProperties.Builder()
+                .brokerPort(1234)
+                .build();
+        ConfigManager manager = new ConfigManager(mockClient, new ConfigGenerator(null, props));
         manager.configUpdated(new Config(Collections.singletonList(new Destination("broker1", true, false))));
         verify(mockClient).createBroker(any());
     }
