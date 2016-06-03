@@ -96,7 +96,7 @@ function check_router_connectors (router, all_routers) {
         console.log('checking connectivity for ' + router.container_id);
         router.check_connectors(all_routers || get_all_routers());
     } else {
-        console.log(router.container_id + ' not ready for connectivity check');
+        console.log(router.container_id + ' not ready for connectivity check: ' + router.initial_provisioning_completed + ' ' + router.connectors !== undefined);
     }
 }
 
