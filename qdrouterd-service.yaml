@@ -8,4 +8,4 @@ spec:
     targetPort: 5672
     protocol: TCP
   selector:
-    name: qdrouterd
+    capability: router

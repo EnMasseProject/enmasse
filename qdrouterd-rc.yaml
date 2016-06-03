@@ -12,6 +12,7 @@ spec:
     metadata:
       labels:
         name: qdrouterd
+        capability: router
     spec:
       containers:
       - name: master
