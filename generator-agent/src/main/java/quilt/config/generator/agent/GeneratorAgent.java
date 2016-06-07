@@ -36,9 +36,11 @@ public class GeneratorAgent implements Runnable, AutoCloseable {
     private final ConfigManager configManager;
 
     private final ObjectMapper mapper = new ObjectMapper();
+    private final Vertx vertx;
 
     public GeneratorAgent(GeneratorAgentOptions options) throws IOException {
-        client = ProtonClient.create(Vertx.vertx());
+        this.vertx = Vertx.vertx();
+        client = ProtonClient.create(vertx);
 
         IClient osClient = new ClientFactory().create(options.openshiftUrl(), new NoopSSLCertificateCallback());
         osClient.setAuthorizationStrategy(new TokenAuthorizationStrategy(options.openshiftToken()));
@@ -57,6 +59,7 @@ public class GeneratorAgent implements Runnable, AutoCloseable {
                 log.log(Level.INFO, "Created receiver");
             } else {
                 log.log(Level.INFO, "Connect failed: " + connectionHandle.cause().getMessage());
+                vertx.close();
             }
         });
     }
