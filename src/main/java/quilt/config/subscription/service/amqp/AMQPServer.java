@@ -19,6 +19,7 @@ import java.util.logging.Logger;
 public class AMQPServer {
     private static final Logger log = Logger.getLogger(AMQPServer.class.getName());
 
+    private final Vertx vertx = Vertx.vertx();
     private final ConfigMapDatabase database;
     private final ProtonServer server;
     private final String hostname;
@@ -29,7 +30,7 @@ public class AMQPServer {
         this.hostname = hostname;
         this.port = port;
         this.database = database;
-        this.server = ProtonServer.create(Vertx.vertx());
+        this.server = ProtonServer.create(vertx);
 
         server.connectHandler(this::connectHandler);
     }
@@ -68,5 +69,6 @@ public class AMQPServer {
 
     public void close() {
         server.close();
+        vertx.close();
     }
 }
