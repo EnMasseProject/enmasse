@@ -50,6 +50,11 @@ public class BrokerManager {
     private void deleteBrokers(Collection<IReplicationController> currentBrokers, Collection<Destination> newDestinations) {
         currentBrokers.stream()
                 .filter(controller -> !newDestinations.stream().filter(broker -> broker.address().equals(controller.getLabels().get(LabelKeys.ADDRESS))).findAny().isPresent())
+                .map(controller -> {
+                    controller.setReplicas(0);
+                    openshiftClient.updateBroker(controller);
+                    return controller;
+                })
                 .forEach(openshiftClient::deleteBroker);
     }
 
