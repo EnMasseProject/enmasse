@@ -60,6 +60,7 @@ public class BrokerGenerator {
         amqpPort.setContainerPort(properties.brokerPort());
         Map<String, String> env = new LinkedHashMap<>();
         env.put(destination.multicast() ? EnvVars.TOPIC_NAME : EnvVars.QUEUE_NAME, destination.address());
+        env.put(EnvVars.BROKER_PORT, String.valueOf(properties.brokerPort()));
 
         controller.addContainer(
                 "broker",
@@ -75,6 +76,7 @@ public class BrokerGenerator {
 
         Map<String, String> env = new LinkedHashMap<>();
         env.put(destination.multicast() ? EnvVars.TOPIC_NAME : EnvVars.QUEUE_NAME, destination.address());
+        env.put(EnvVars.INTERROUTER_PORT, String.valueOf(properties.routerPort()));
         controller.addContainer(
                 "router",
                 properties.routerImage(),
