@@ -2,9 +2,8 @@ package quilt.config.generator.agent;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.openshift.restclient.ClientFactory;
+import com.openshift.restclient.ClientBuilder;
 import com.openshift.restclient.IClient;
-import com.openshift.restclient.NoopSSLCertificateCallback;
 import com.openshift.restclient.authorization.TokenAuthorizationStrategy;
 import io.vertx.core.Vertx;
 import io.vertx.proton.ProtonClient;
@@ -42,8 +41,9 @@ public class GeneratorAgent implements Runnable, AutoCloseable {
         this.vertx = Vertx.vertx();
         client = ProtonClient.create(vertx);
 
-        IClient osClient = new ClientFactory().create(options.openshiftUrl(), new NoopSSLCertificateCallback());
-        osClient.setAuthorizationStrategy(new TokenAuthorizationStrategy(options.openshiftToken()));
+        IClient osClient = new ClientBuilder(options.openshiftUrl())
+                .resourceFactory(new TokenAuthorizationStrategy(options.openshiftToken())) // TODO: Use new method when new version of openshift-restclient-java is used.
+                .build();
 
         configManager = new ConfigManager(new OpenshiftClient(osClient, options.openshiftNamespace()), new ConfigGenerator(osClient, options.brokerProperties()));
         this.options = options;
