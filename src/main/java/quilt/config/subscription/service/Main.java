@@ -11,7 +11,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Map;
-import java.util.function.Consumer;
 
 /**
  * Main entrypoint for configuration service with arg parsing.
