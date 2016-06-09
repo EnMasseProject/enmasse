@@ -1,8 +1,7 @@
 package quilt.config.subscription.service;
 
-import com.openshift.restclient.ClientFactory;
+import com.openshift.restclient.ClientBuilder;
 import com.openshift.restclient.IClient;
-import com.openshift.restclient.NoopSSLCertificateCallback;
 import com.openshift.restclient.authorization.TokenAuthorizationStrategy;
 import io.vertx.core.impl.FileResolver;
 import quilt.config.subscription.service.amqp.AMQPServer;
@@ -33,8 +32,9 @@ public class Main {
 
             String openshiftNamespace = getOpenshiftNamespace();
 
-            IClient client = new ClientFactory().create(openshiftUri, new NoopSSLCertificateCallback());
-            client.setAuthorizationStrategy(new TokenAuthorizationStrategy(getAuthenticationToken()));
+            IClient client = new ClientBuilder(openshiftUri)
+                    .authorizationStrategy(new TokenAuthorizationStrategy(getAuthenticationToken()))
+                    .build();
 
             OpenshiftConfigMapDatabase database = new OpenshiftConfigMapDatabase(client, openshiftNamespace);
             database.start();
