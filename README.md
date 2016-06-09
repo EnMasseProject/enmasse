@@ -17,7 +17,7 @@ The configuration service will watch all configmaps for the project deployed to.
 
 Create initial config map:
 
-    oc create -f addresses.json
+    oc create -f addresses.yaml
 
 Where address.yaml is of the form:
 
@@ -38,7 +38,7 @@ data:
 
 After editing that file, update the config map with:
 
-    oc replace -f addresses.json
+    oc replace -f addresses.yaml
 
 ## Setting up config generator agent
 
