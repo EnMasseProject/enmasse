@@ -1,3 +1,8 @@
+allprojects  {
+    group = 'enmasse'
+    version = '0.1'
+}
+
 ext {
     jacksonVersion = '2.7.4'
     vertxProtonVersion = '3.2.0'
@@ -15,7 +20,7 @@ repositories {
     maven { url "http://repo.maven.apache.org/maven2" }
 }
 
-description = 'Config Subscription Service'
+description = 'ConfigMap Bridge'
 dependencies {
     compile "com.openshift:openshift-restclient-java:4.0.4-SNAPSHOT"
     compile "io.vertx:vertx-proton:${vertxProtonVersion}"
@@ -26,4 +31,4 @@ dependencies {
 }
 
 apply plugin: 'application'
-mainClassName = 'quilt.config.subscription.service.Main'
+mainClassName = 'enmasse.config.bridge.Main'

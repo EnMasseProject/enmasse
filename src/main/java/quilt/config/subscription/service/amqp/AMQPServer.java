@@ -1,11 +1,11 @@
-package quilt.config.subscription.service.amqp;
+package enmasse.config.bridge.amqp;
 
 import io.vertx.core.Vertx;
 import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.ProtonSender;
 import io.vertx.proton.ProtonServer;
 import io.vertx.proton.ProtonSession;
-import quilt.config.subscription.service.model.ConfigMapDatabase;
+import enmasse.config.bridge.model.ConfigMapDatabase;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;

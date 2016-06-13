@@ -1,4 +1,4 @@
-package quilt.config.subscription.service.model;
+package enmasse.config.bridge.model;
 
 import java.util.ArrayList;
 import java.util.Collections;

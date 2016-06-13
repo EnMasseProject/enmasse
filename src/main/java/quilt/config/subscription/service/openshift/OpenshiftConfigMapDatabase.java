@@ -1,4 +1,4 @@
-package quilt.config.subscription.service.openshift;
+package enmasse.config.bridge.openshift;
 
 import com.openshift.restclient.IClient;
 import com.openshift.restclient.IOpenShiftWatchListener;
@@ -6,9 +6,9 @@ import com.openshift.restclient.IWatcher;
 import com.openshift.restclient.ResourceKind;
 import com.openshift.restclient.model.IConfigMap;
 import com.openshift.restclient.model.IResource;
-import quilt.config.subscription.service.model.ConfigMap;
-import quilt.config.subscription.service.model.ConfigMapDatabase;
-import quilt.config.subscription.service.model.ConfigSubscriber;
+import enmasse.config.bridge.model.ConfigMap;
+import enmasse.config.bridge.model.ConfigMapDatabase;
+import enmasse.config.bridge.model.ConfigSubscriber;
 
 import java.util.List;
 import java.util.Map;

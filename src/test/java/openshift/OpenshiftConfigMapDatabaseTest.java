@@ -4,11 +4,11 @@ import com.openshift.restclient.IClient;
 import com.openshift.restclient.IOpenShiftWatchListener;
 import com.openshift.restclient.ResourceKind;
 import com.openshift.restclient.model.IConfigMap;
-import quilt.config.subscription.service.model.ConfigSubscriber;
+import enmasse.config.bridge.model.ConfigSubscriber;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import quilt.config.subscription.service.openshift.OpenshiftConfigMapDatabase;
+import enmasse.config.bridge.openshift.OpenshiftConfigMapDatabase;
 
 import java.util.Collections;
 import java.util.Map;

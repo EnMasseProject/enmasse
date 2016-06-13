@@ -1,11 +1,11 @@
-package quilt.config.subscription.service.amqp;
+package enmasse.config.bridge.amqp;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.vertx.proton.ProtonSender;
-import quilt.config.subscription.service.model.ConfigSubscriber;
+import enmasse.config.bridge.model.ConfigSubscriber;
 import org.apache.commons.compress.utils.Charsets;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.amqp.messaging.Section;

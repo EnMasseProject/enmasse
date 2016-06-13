@@ -1,9 +1,9 @@
 package amqp;
 
 import io.vertx.proton.ProtonMessageHandler;
-import quilt.config.subscription.service.amqp.AMQPServer;
-import quilt.config.subscription.service.model.ConfigMapDatabase;
-import quilt.config.subscription.service.model.ConfigSubscriber;
+import enmasse.config.bridge.amqp.AMQPServer;
+import enmasse.config.bridge.model.ConfigMapDatabase;
+import enmasse.config.bridge.model.ConfigSubscriber;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.message.Message;
 import org.junit.After;

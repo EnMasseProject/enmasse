@@ -1,8 +1,8 @@
 package model;
 
 import org.junit.Test;
-import quilt.config.subscription.service.model.ConfigMap;
-import quilt.config.subscription.service.model.ConfigSubscriber;
+import enmasse.config.bridge.model.ConfigMap;
+import enmasse.config.bridge.model.ConfigSubscriber;
 
 import java.util.Collections;
 

@@ -1,11 +1,11 @@
-package quilt.config.subscription.service;
+package enmasse.config.bridge;
 
 import com.openshift.restclient.ClientBuilder;
 import com.openshift.restclient.IClient;
 import com.openshift.restclient.authorization.TokenAuthorizationStrategy;
 import io.vertx.core.impl.FileResolver;
-import quilt.config.subscription.service.amqp.AMQPServer;
-import quilt.config.subscription.service.openshift.OpenshiftConfigMapDatabase;
+import enmasse.config.bridge.amqp.AMQPServer;
+import enmasse.config.bridge.openshift.OpenshiftConfigMapDatabase;
 
 import java.io.File;
 import java.io.IOException;
@@ -45,7 +45,7 @@ public class Main {
             System.out.println("Error parsing environment: " + e.getMessage());
             System.exit(1);
         } catch (IOException e) {
-            System.out.println("Error running config subscription service");
+            System.out.println("Error running config bridge");
             System.exit(1);
         }
     }
