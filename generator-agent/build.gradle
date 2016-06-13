@@ -1,6 +1,6 @@
-description = 'Config Generator Agent'
+description = 'RC Generator Agent'
 dependencies {
-    compile project(':config-generator-lib')
+    compile project(':rc-generator-lib')
     compile "com.openshift:openshift-restclient-java:4.0.3.Final"
     compile "io.vertx:vertx-proton:${vertxProtonVersion}"
     compile "com.fasterxml.jackson.core:jackson-core:${jacksonVersion}"
@@ -11,4 +11,4 @@ dependencies {
 }
 
 apply plugin: 'application'
-mainClassName = 'quilt.config.generator.agent.Main'
+mainClassName = 'enmasse.rc.generator.agent.Main'

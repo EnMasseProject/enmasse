@@ -1,9 +1,9 @@
-description = 'Config Generator Standalone Tool'
+description = 'RC Generator Standalone Tool'
 dependencies {
-    compile project(':config-generator-lib')
+    compile project(':rc-generator-lib')
     compile "commons-cli:commons-cli:${commonsCliVersion}"
     testCompile group: 'junit', name: 'junit', version:'4.12'
 }
 
 apply plugin: 'application'
-mainClassName = 'quilt.config.generator.Main'
+mainClassName = 'enmasse.rc.generator.Main'

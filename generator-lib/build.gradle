@@ -1,4 +1,4 @@
-description = 'Config Generator Library'
+description = 'RC Generator Library'
 dependencies {
     compile "com.openshift:openshift-restclient-java:4.0.3.Final"
     compile "com.fasterxml.jackson.core:jackson-core:${jacksonVersion}"

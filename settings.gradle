@@ -1,11 +1,9 @@
-rootProject.name = 'config'
+rootProject.name = 'rc-generator'
 
-include ':config-generator-lib'
-include ':config-generator-tool'
-include ':config-generator-agent'
-include ':config-subscription-service'
+include ':rc-generator-lib'
+include ':rc-generator-tool'
+include ':rc-generator-agent'
 
-project(':config-generator-lib').projectDir = "$rootDir/generator-lib" as File
-project(':config-generator-tool').projectDir = "$rootDir/generator-tool" as File
-project(':config-generator-agent').projectDir = "$rootDir/generator-agent" as File
-project(':config-subscription-service').projectDir = "$rootDir/subscription-service" as File
+project(':rc-generator-lib').projectDir = "$rootDir/generator-lib" as File
+project(':rc-generator-tool').projectDir = "$rootDir/generator-tool" as File
+project(':rc-generator-agent').projectDir = "$rootDir/generator-agent" as File

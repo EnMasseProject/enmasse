@@ -1,5 +1,5 @@
 allprojects  {
-    group = 'quilt'
+    group = 'enmasse'
     version = '0.1'
 }
 
