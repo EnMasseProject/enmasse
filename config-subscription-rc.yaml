@@ -1,20 +1,20 @@
 apiVersion: v1
 kind: ReplicationController
 metadata:
-  name: config-subscription-service
+  name: configmap-bridge
   labels:
-    name: config-subscription-service
+    name: configmap-bridge
 spec:
   replicas: 1
   selector:
-    name: config-subscription-service
+    name: configmap-bridge
   template:
     metadata:
       labels:
-        name: config-subscription-service
+        name: configmap-bridge
     spec:
       containers:
-      - name: master
-        image: lulf/config-subscription-service:latest
+      - name: bridge
+        image: enmasseproject/configmap-bridge:latest
         ports:
         - containerPort: 5672
