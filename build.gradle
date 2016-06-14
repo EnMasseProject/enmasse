@@ -6,6 +6,7 @@ allprojects  {
 ext {
     jacksonVersion = '2.7.4'
     vertxProtonVersion = '3.2.0'
+    openshiftRestclientVersion = '4.0.5.Final'
 
     junitVersion = '4.12'
     mockitoVersion = '2.0.52-beta'
@@ -22,7 +23,7 @@ repositories {
 
 description = 'ConfigMap Bridge'
 dependencies {
-    compile "com.openshift:openshift-restclient-java:4.0.4-SNAPSHOT"
+    compile "com.openshift:openshift-restclient-java:${openshiftRestclientVersion}"
     compile "io.vertx:vertx-proton:${vertxProtonVersion}"
     compile "com.fasterxml.jackson.core:jackson-core:${jacksonVersion}"
     compile "com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}"
