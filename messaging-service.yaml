@@ -1,11 +1,11 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: configured
+  name: messaging
 spec:
   ports:
-  - port: 55672
-    targetPort: 55672
+  - port: 5672
+    targetPort: 5672
     protocol: TCP
   selector:
-    name: ragent
+    capability: router
