@@ -9,7 +9,7 @@ Add view policy to the default serviceaccount:
 Start the configuration service endpoint and the replication controller:
 
     oc create -f configuration-service.yaml
-    oc create -f config-subscription-rc.yaml
+    oc create -f configmap-bridge-rc.yaml
 
 The configuration service will watch all configmaps for the project deployed to.
 
@@ -40,7 +40,7 @@ After editing that file, update the config map with:
 
     oc replace -f addresses.yaml
 
-## Setting up config generator agent
+## Setting up replication controller generator
 
 In order for the agent to generate broker replication controllers, it must be granted edit rights:
 
@@ -48,9 +48,9 @@ In order for the agent to generate broker replication controllers, it must be gr
 
 Then start the replication controller:
 
-    oc create -f config-generator-rc.yaml
+    oc create -f rc-generator-rc.yaml
 
-Whenever you change the 'maas' config map, the config-generator-agent will pick it up and
+Whenever you change the 'maas' config map, the rc-generator will pick it up and
 delete/create/update broker clusters.
 
 ## Setting up the routers
@@ -63,14 +63,14 @@ Start the router agent service replication controller:
 The router agent(s) update the routers to match the desired addresses
 and to maintain full-mesh connectivity.
 
-Start the router service and replication-controller:
+Start the messaging service and replication-controller:
 
-    oc create -f qdrouterd-service.yaml
+    oc create -f messaging-service.yaml
     oc create -f qdrouterd-rc.yaml
 
 You can get the service IP either from the web console or by running:
 
-    oc get service qdrouterd -o yaml
+    oc get service messaging -o yaml
 
 You should now be able to connect to that to send and receive
 messages based on the addressing scheme in the config map.
