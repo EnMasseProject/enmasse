@@ -1,0 +1,21 @@
+language: java
+jdk:
+  - oraclejdk8
+
+before_cache:
+  - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
+  - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
+
+cache:
+  directories:
+    - "$HOME/.gradle/caches/"
+    - "$HOME/.gradle/wrapper/"
+
+after_success:
+    - gradle run -- FOO=bar
+
+env:
+    global:
+        - secure: "UpgPrSuRSDPK6DBk5IR8N/M5hcFQVcHccBPSSITxx4UFNweZm11PrGBSxIlmvx8Z/BKvSC1vjhYPnutZSnjAX7AfbYy0QTtxNOAQ5qNexxXh6YCDoDwGIlOmuzd7dbLrh/YebO5yFlNryz7zrv1z69IouvkZlF+9qeftZt+FX1K/hzquH29K0oeJEXJJ80C3wKksRFB4ewCIdXPHqQt1Hm63UzrMcLyxlJvs+T+kf1VkLAEZqMvT8X5MqYzFgBqaqDrgVlrUnhK3Uwj30TfF1uRR9AsTeJpuv++fg906/kcabgm8SXSpcxQNN/wTGv7J0aXyM5n2leP6E0Pr0ecl8JlXeiAirAvthvKDhDEmuqoRi22tybXyZYk2/QXf7VgBdzNp+Z7iLmBnGswCyuWFFnBxvVehawDf9ZHTLwwpGkGu173igTih0j6ylN7J1/9DTDYQ2uWh31mpm6Q6HGDA/hVVFmU7Wf+WM5BMFyAhSXcWZNtk+C9Ux16mHJMKKr7UK8CBz/XK+UMUICbnTTiTYWkBjwvUHM4VwhBVqpnrwbw3j9H17/AkfInWMM+bPdeAUN/WEuSQPYL0L6cSuhZHnepZdv5RMB4NgzDCiuzsX+t8f1ZpoCvCA6nen7q1Iv/WWrgf8OL15z3utjDV6EgXrAkQPpSZe8IBaavnaxncifE=" # USER
+        - secure: "ri3JTQeny83cdYQtq5ek/ED1tycJw6g3+1HD1anbbCJHTrsSsqPaVPykN0N+noDzVbAmp9aWZq8pCjCN2XCjiEjns1J1ZVI8OKRwO3P5CS1GHsd0SDxg4cQyg+NQIJvvijuJu/sITWaQ5p3wgyDtCfRp8l4d7bcRnbeQGnS+l/UF23UeFYT43VnmaeWlyKTxvePBHhkYDFW/i2oGhFxwSMTkJn7Ilcr823lmN52+5m63CPjvfKVKv/+x5dpx62mBqtV9l5eoBdBL3wOml6bStIba24ZBvEkMYPRz/6MQl4c15HxZ2Qvp5ag69N3nWudH9h5pCiiswzeySZBdIlJXI6L3iF43YBb7TD6m2Qk1jDyvWomdswXycaPNRG3+5/F4tUi6snA2SBN1vMs4IHeSRD124WOnlfnJ1S5KEU8f6Fnz5InxjJ/kAwYJ7U/V+OFXv9gKFFW1AOxRed6KdM58tM4rAj51CfyK+s5XGH7ciytNTHeoiFKtYGPHnzjb6t1i3sI43awr0BxtjT3ViCvI/3Pd4nWSNS3ogzwHkWC2QtwUn3soF+33/7Tl6YyY8TXHU0EziAFd/iicQT2opEHuyk49xERyn0p8aGxsesl90SQAq2MVAubIYl5kMiuuOxEPRwObPUnOylQRmv1IZmGmPVy+I61sox5l4b65dNa/cGM=" # PASS
+        - secure: "HZ9ZW5AjfCqYauZRmqJxLOrwPHgfbGN+hCKrwSqe8u1sadugRPRJZDtxd0JrDP1sLc0LHRYG9iDp9cymlnSD2OWhe1AEScNw1RqrWL7lgNXHYyR0KCeyN9h9Mwl26zIkj9ko3f2i8CaaLBXPZNRkMHzQ7IAq6OMxqD7X9wt7g3g1Ktkk+sMVJqMuMv57sXi4RAhWKbPvD4YDSJ+/TQNF+enpLTVw9Mz4WNkPGqpZfnhwmqXh/Wer0DXUMRTxVDM16WLFAqjlV8ksMhyAy3f6jVmHsnOf9m9+WQlnXYEc/k15N48MzmXualOErtCO4XLKEJqEbtgODoZbwG9VY9J1XlfD+RLhO/CjtPxJ7u2OpN0nooRvSeeccPuDB1UcxHDFnSl1xv3pzuvv5HUi5ArGrPAJWfH9Arz+FRHeR6BNjguYNL5AdNPdyl0av1vZBEpgKjNIRQFmBRLEutXi0+w57N/Ibq2Y8GPp9CkXO6wLHv6fZHWvegvMT15yIdaJfe42mYktr0CNyruF5OULEV3avrZ8kwfqPOpXvyPEviPi6qNHxH+cwpsBCjf3qjxwN1rAzBC4gdHkuQKJt/ZnfvBSLlP+jKGEBGAm4OYGlJhV+YkEh7cJJ/Eo3JauqxXw+4HvAsX+i0M8hiiq4VxF3bYh+ByiIU+kY9mduYCNhhnp/zM=" # URL
