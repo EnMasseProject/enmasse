@@ -1,0 +1,2 @@
+# smoketest
+EnMasse smoke test
