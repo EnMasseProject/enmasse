@@ -1,5 +1,6 @@
 package enmasse.perf
 
 public fun main(args: Array<String>) {
-    println("Heisann")
+    val env = System.getenv("OPENSHIFT_USER");
+    println("Heisann ${env}")
 }

@@ -13,7 +13,7 @@ cache:
 
 script:
     - gradle build
-    - gradle run -- FOO=bar
+    - OPENSHIFT_USER=$OPENSHIFT_USER gradle run
 
 env:
     global:
