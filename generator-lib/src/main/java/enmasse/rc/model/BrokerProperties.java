@@ -46,7 +46,7 @@ public class BrokerProperties {
     }
 
     public static class Builder {
-        private DockerImageURI brokerImage = new DockerImageURI("gordons/artemis:latest");
+        private DockerImageURI brokerImage = new DockerImageURI("enmasseproject/artemis:latest");
         private int brokerPort = 5673;
         private List<String> brokerMounts = Collections.singletonList("/var/run/artemis");
 
