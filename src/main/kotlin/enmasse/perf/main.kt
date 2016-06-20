@@ -6,6 +6,11 @@ import com.openshift.restclient.IClient
 import com.openshift.restclient.ResourceKind
 import com.openshift.restclient.authorization.TokenAuthorizationStrategy
 import com.openshift.restclient.model.IResource
+import com.openshift.restclient.model.IService
+import io.vertx.core.Vertx
+import io.vertx.proton.ProtonClient
+import org.apache.qpid.proton.amqp.messaging.AmqpValue
+import org.apache.qpid.proton.message.Message
 import java.util.*
 
 public fun main(args: Array<String>) {
@@ -68,6 +73,9 @@ class Tester(val client: IClient, val rf: ResourceFactory) {
         println("Created address definition, waiting")
         Thread.sleep(60000)
 
+        println("Running send test")
+        runSendTest()
+
         val empty = createResource("addresses_empty.json")
         client.update(empty)
 
@@ -75,5 +83,34 @@ class Tester(val client: IClient, val rf: ResourceFactory) {
         Thread.sleep(10000)
 
         deleteAllResources()
+    }
+
+    fun getMessagingService(): IService {
+        return client.get(ResourceKind.SERVICE, "messaging", namespace)
+    }
+
+    fun runSendTest() {
+        val vertx = Vertx.vertx()
+        val client = ProtonClient.create(vertx)
+        val service = getMessagingService()
+
+        println("Attempting to connect on ${service.portalIP}:${service.port}")
+        client.connect(service.portalIP, service.port, { handle ->
+            if (handle.succeeded()) {
+                val connection = handle.result().open()
+                val receiver = connection.createReceiver("queue1").handler { protonDelivery, message ->
+                    println("Message received: ${message.body.toString()}")
+                }.open()
+                val sender = connection.createSender("queue1").open()
+                val message = Message.Factory.create()
+                message.setBody(AmqpValue("Hello, receiver!"))
+                vertx.setPeriodic(1000, { timerId ->
+                    sender.send(message)
+                })
+            }
+
+        })
+        Thread.sleep(60000);
+        vertx.close()
     }
 }
