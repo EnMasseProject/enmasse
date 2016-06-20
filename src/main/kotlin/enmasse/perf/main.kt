@@ -66,7 +66,7 @@ class Tester(val client: IClient, val rf: ResourceFactory) {
         client.create(initialMap, namespace)
 
         println("Created address definition, waiting")
-        Thread.sleep(10000)
+        Thread.sleep(60000)
 
         val empty = createResource("addresses_empty.json")
         client.update(empty)
