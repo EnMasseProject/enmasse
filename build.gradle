@@ -2,6 +2,7 @@ buildscript {
    ext.kotlin_version = '1.0.2'
    ext.openshiftRestclientVersion = '4.0.5.Final'
    ext.jacksonVersion = '2.7.4'
+   ext.vertxProtonVersion = '3.2.0'
 
    repositories {
      mavenCentral()
@@ -21,10 +22,8 @@ repositories {
 dependencies {
     compile 'org.slf4j:slf4j-api:1.7.13'
 	compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-    compile "com.fasterxml.jackson.core:jackson-core:${jacksonVersion}"
-    compile "com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}"
-    compile "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:${jacksonVersion}"
     compile "com.openshift:openshift-restclient-java:${openshiftRestclientVersion}"
+    compile "io.vertx:vertx-proton:${vertxProtonVersion}"
     testCompile 'junit:junit:4.12'
 }
 

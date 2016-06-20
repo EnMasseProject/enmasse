@@ -2,8 +2,11 @@ package enmasse.perf
 
 import com.openshift.internal.restclient.ResourceFactory
 import com.openshift.restclient.ClientBuilder
+import com.openshift.restclient.IClient
+import com.openshift.restclient.ResourceKind
 import com.openshift.restclient.authorization.TokenAuthorizationStrategy
 import com.openshift.restclient.model.IResource
+import java.util.*
 
 public fun main(args: Array<String>) {
     val user = System.getenv("OPENSHIFT_USER")
@@ -12,11 +15,65 @@ public fun main(args: Array<String>) {
     val client = ClientBuilder(url).authorizationStrategy(TokenAuthorizationStrategy(token, user)).build();
     val rf = ResourceFactory(client)
 
-    val resources = listOf("configmap-bridge-rc.yaml", "configuration-service.yaml", "messaging-service.yaml", "qdrouterd-rc.yaml", "ragent-rc.yaml", "ragent-service.yaml", "rc-generator-rc.yaml")
-    resources.forEach { r ->
-        val rstream = ClassLoader.getSystemResourceAsStream(r)
-        val resource = rf.create<IResource>(rstream)
-        client.create(resource)
-        System.out.println("Created resource ${resource.name}")
+    Tester(client, rf).runTest()
+
+}
+
+class Tester(val client: IClient, val rf: ResourceFactory) {
+    val resourceNames = listOf("configmap-bridge-rc.json", "configuration-service.json", "messaging-service.json", "qdrouterd-rc.json", "ragent-rc.json", "ragent-service.json", "rc-generator-rc.json")
+    val namespace = "enmasse-ci"
+
+    fun createResources(): List<IResource> {
+        return resourceNames.map { r ->
+            val resource = createResource(r)
+            val handle = client.create(resource, namespace)
+            System.out.println("Created resource ${resource.name}")
+            handle
+        }.toList()
+    }
+
+    fun tryDelete(kind: String) {
+        try {
+            client.list<IResource>(kind, namespace).forEach { r -> client.delete(r) }
+        } catch (e: Exception) {
+            println("Error deleting ${kind}. Ignoring")
+        }
+    }
+
+    fun deleteAllResources() {
+        tryDelete(ResourceKind.REPLICATION_CONTROLLER);
+        tryDelete(ResourceKind.POD);
+        tryDelete(ResourceKind.CONFIG_MAP);
+        tryDelete(ResourceKind.SERVICE);
+    }
+
+    fun createResource(uri: String): IResource {
+        val rstream = ClassLoader.getSystemResourceAsStream(uri)
+        return rf.create<IResource>(rstream)
+    }
+
+    fun runTest() {
+        deleteAllResources()
+
+        Thread.sleep(10000)
+
+        val resources = createResources()
+
+        println("Created resources, waiting for system to come up")
+        Thread.sleep(60000)
+
+        val initialMap = createResource("addresses.json")
+        client.create(initialMap, namespace)
+
+        println("Created address definition, waiting")
+        Thread.sleep(10000)
+
+        val empty = createResource("addresses_empty.json")
+        client.update(empty)
+
+        println("Deleted address definition, waiting")
+        Thread.sleep(10000)
+
+        deleteAllResources()
     }
 }
