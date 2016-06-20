@@ -11,7 +11,8 @@ cache:
     - "$HOME/.gradle/caches/"
     - "$HOME/.gradle/wrapper/"
 
-after_success:
+script:
+    - gradle build
     - gradle run -- FOO=bar
 
 env:
