@@ -28,6 +28,5 @@ script:
     - ./oc policy add-role-to-user edit system:serviceaccount:$(./oc project -q):deployer
     - ./oc process -f src/main/resources/enmasse-template.yaml | ./oc create -f -
     - sleep 60
-    - gradle build
     - OPENSHIFT_USER=test OPENSHIFT_TOKEN=`./oc config view -o jsonpath='{.users[?(@.name == "test/localhost:8443")].user.token}'` OPENSHIFT_URL=https://localhost:8443 gradle run
     - for i in `./oc get pods | cut -f 1 -d ' ' | grep -v NAME`; do ./oc logs $i; done
