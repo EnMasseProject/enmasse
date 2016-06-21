@@ -1,0 +1,17 @@
+{
+  "kind": "Route",
+  "apiVersion": "v1",
+  "metadata": {
+    "name": "messaging",
+    "namespace": "enmasse-ci"
+  },
+  "spec": {
+    "to": {
+      "kind": "Service",
+      "name": "messaging"
+    }
+  },
+  "status": {
+    "ingress": null
+  }
+}

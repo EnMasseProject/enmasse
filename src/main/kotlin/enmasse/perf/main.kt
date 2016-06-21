@@ -7,6 +7,7 @@ import com.openshift.restclient.ResourceKind
 import com.openshift.restclient.authorization.TokenAuthorizationStrategy
 import com.openshift.restclient.model.IResource
 import com.openshift.restclient.model.IService
+import com.openshift.restclient.model.route.IRoute
 import io.vertx.core.Vertx
 import io.vertx.proton.ProtonClient
 import org.apache.qpid.proton.amqp.messaging.AmqpValue
@@ -25,7 +26,7 @@ public fun main(args: Array<String>) {
 }
 
 class Tester(val client: IClient, val rf: ResourceFactory) {
-    val resourceNames = listOf("configmap-bridge-rc.json", "configuration-service.json", "messaging-service.json", "qdrouterd-rc.json", "ragent-rc.json", "ragent-service.json", "rc-generator-rc.json")
+    val resourceNames = listOf("configmap-bridge-rc.json", "configuration-service.json", "messaging-service.json", "qdrouterd-rc.json", "ragent-rc.json", "ragent-service.json", "rc-generator-rc.json", "routes.json")
     val namespace = "enmasse-ci"
 
     fun createResources(): List<IResource> {
@@ -50,6 +51,7 @@ class Tester(val client: IClient, val rf: ResourceFactory) {
         tryDelete(ResourceKind.POD);
         tryDelete(ResourceKind.CONFIG_MAP);
         tryDelete(ResourceKind.SERVICE);
+        tryDelete(ResourceKind.ROUTE);
     }
 
     fun createResource(uri: String): IResource {
@@ -82,8 +84,8 @@ class Tester(val client: IClient, val rf: ResourceFactory) {
         deleteAllResources()
     }
 
-    fun getMessagingService(): IService {
-        return client.get(ResourceKind.SERVICE, "messaging", namespace)
+    fun getMessagingService(): IRoute {
+        return client.get(ResourceKind.ROUTE, "messaging", namespace)
     }
 
     fun runSendTest() {
@@ -91,15 +93,16 @@ class Tester(val client: IClient, val rf: ResourceFactory) {
         val client = ProtonClient.create(vertx)
         val service = getMessagingService()
 
-        println("Attempting to connect on ${service.portalIP}:${service.port}")
+        println("Attempting to connect on ${service.host}:5672")
         connectAndRunTest(client, service, vertx)
         Thread.sleep(60000);
         vertx.close()
     }
 
-    fun connectAndRunTest(client: ProtonClient, service: IService, vertx: Vertx) {
-         client.connect(service.portalIP, service.port, { handle ->
+    fun connectAndRunTest(client: ProtonClient, service: IRoute, vertx: Vertx) {
+         client.connect(service.host, 5672, { handle ->
             if (handle.succeeded()) {
+                println("${System.currentTimeMillis()}: successfully connected")
                 val connection = handle.result().open()
                 val receiver = connection.createReceiver("anycast").handler { protonDelivery, message ->
                     println("Message received: ${message.body.toString()}")
@@ -111,8 +114,8 @@ class Tester(val client: IClient, val rf: ResourceFactory) {
                     sender.send(message)
                 })
             } else {
-                println("Error connecting, retrying in 1 second")
-                vertx.setTimer(1000, { timerId ->
+                println("${System.currentTimeMillis()}: error connecting, retrying in 1 second")
+                vertx.setTimer(2000, { timerId ->
                     connectAndRunTest(client, service, vertx)
                 })
             }
