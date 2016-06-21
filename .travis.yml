@@ -19,7 +19,7 @@ script:
     - wget https://github.com/openshift/origin/releases/download/v1.3.0-alpha.1/openshift-origin-client-tools-v1.3.0-alpha.1-6e83535-linux-64bit.tar.gz -O oclient.tar.gz
     - tar xzvf oclient.tar.gz
     - cp openshift-origin-client-tools-v1.3.0-alpha.1-6e83535-linux-64bit/oc .
-    - ./oc login -u test -p test
+    - ./oc login -u test -p test https://localhost:8443
     - export OPENSHIFT_PASSWORD=`./oc config view -o jsonpath='{.users[?(@.name == "test/localhost:8443")].user.token}'`
 
     - gradle build
