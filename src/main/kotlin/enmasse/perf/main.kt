@@ -24,38 +24,7 @@ public fun main(args: Array<String>) {
 }
 
 class Tester(val client: IClient, val rf: ResourceFactory) {
-    val resourceNames = listOf("configmap-bridge-rc.json", "configuration-service.json", "messaging-service.json", "qdrouterd-rc.json", "ragent-rc.json", "ragent-service.json", "rc-generator-rc.json")
     val namespace = "enmasse-ci"
-
-    fun createResources(): List<IResource> {
-        return resourceNames.map { r ->
-            val resource = createResource(r)
-            val handle = client.create(resource, namespace)
-            System.out.println("Created resource ${resource.name}")
-            handle
-        }.toList()
-    }
-
-    fun tryDelete(kind: String) {
-        try {
-            client.list<IResource>(kind, namespace).forEach { r -> client.delete(r) }
-        } catch (e: Exception) {
-            println("Error deleting ${kind}. Ignoring")
-        }
-    }
-
-    fun deleteAllResources() {
-        tryDelete(ResourceKind.REPLICATION_CONTROLLER);
-        tryDelete(ResourceKind.POD);
-        tryDelete(ResourceKind.CONFIG_MAP);
-        tryDelete(ResourceKind.SERVICE);
-        tryDelete(ResourceKind.ROUTE);
-    }
-
-    fun createResource(uri: String): IResource {
-        val rstream = ClassLoader.getSystemResourceAsStream(uri)
-        return rf.create<IResource>(rstream)
-    }
 
     fun getMessagingService(): IService {
         return client.get(ResourceKind.SERVICE, "messaging", namespace)
@@ -68,7 +37,6 @@ class Tester(val client: IClient, val rf: ResourceFactory) {
 
         println("Attempting to connect on ${service.portalIP}:${service.port}")
         connectAndRunTest(client, service, vertx)
-        Thread.sleep(60000);
         vertx.close()
     }
 
@@ -87,7 +55,7 @@ class Tester(val client: IClient, val rf: ResourceFactory) {
                     sender.send(message)
                 })
             } else {
-                println("${System.currentTimeMillis()}: error connecting, retrying in 1 second")
+                println("${System.currentTimeMillis()}: error connecting, retrying in 2 seconds")
                 vertx.setTimer(2000, { timerId ->
                     connectAndRunTest(client, service, vertx)
                 })
