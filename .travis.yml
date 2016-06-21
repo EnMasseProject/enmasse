@@ -18,7 +18,6 @@ cache:
 script:
     - docker run -d --name "origin" --privileged --pid=host --net=host -v /:/rootfs:ro -v /var/run:/var/run:rw -v /sys:/sys -v /var/lib/docker:/var/lib/docker:rw -v /var/lib/origin/openshift.local.volumes:/var/lib/origin/openshift.local.volumes openshift/origin start
     - sleep 20
-    - docker logs origin
     - wget https://github.com/openshift/origin/releases/download/v1.3.0-alpha.1/openshift-origin-client-tools-v1.3.0-alpha.1-6e83535-linux-64bit.tar.gz -O oclient.tar.gz
     - tar xzvf oclient.tar.gz
     - cp openshift-origin-client-tools-v1.3.0-alpha.1-6e83535-linux-64bit/oc .
@@ -29,4 +28,9 @@ script:
     - ./oc process -f src/main/resources/enmasse-template.yaml | ./oc create -f -
     - sleep 60
     - OPENSHIFT_USER=test OPENSHIFT_TOKEN=`./oc config view -o jsonpath='{.users[?(@.name == "test/localhost:8443")].user.token}'` OPENSHIFT_URL=https://localhost:8443 gradle run
+    - exit 1
+
+after_failure:
+    - docker logs origin        
     - for i in `./oc get pods | cut -f 1 -d ' ' | grep -v NAME`; do ./oc logs $i; done
+
