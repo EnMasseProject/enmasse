@@ -8,7 +8,10 @@
   "spec": {
     "to": {
       "kind": "Service",
-      "name": "messaging"
+      "name": "messaging",
+      "port": {
+          "targetPort": 5672
+      }
     }
   },
   "status": {
