@@ -11,6 +11,7 @@ import io.vertx.core.Vertx
 import io.vertx.proton.ProtonClient
 import org.apache.qpid.proton.amqp.messaging.AmqpValue
 import org.apache.qpid.proton.message.Message
+import java.util.concurrent.atomic.AtomicLong
 
 public fun main(args: Array<String>) {
     val user = System.getenv("OPENSHIFT_USER")
@@ -25,6 +26,7 @@ public fun main(args: Array<String>) {
 
 class Tester(val client: IClient, val rf: ResourceFactory) {
     val namespace = "enmasse-ci"
+    val numReceived = AtomicLong()
 
     fun getMessagingService(): IService {
         return client.get(ResourceKind.SERVICE, "messaging", namespace)
@@ -36,7 +38,11 @@ class Tester(val client: IClient, val rf: ResourceFactory) {
         val service = getMessagingService()
 
         println("Attempting to connect on ${service.portalIP}:${service.port}")
+        numReceived.set(0)
         connectAndRunTest(client, service, vertx)
+        while (numReceived.get() < 10) {
+            Thread.sleep(1000);
+        }
         vertx.close()
     }
 
@@ -47,6 +53,7 @@ class Tester(val client: IClient, val rf: ResourceFactory) {
                 val connection = handle.result().open()
                 val receiver = connection.createReceiver("anycast").handler { protonDelivery, message ->
                     println("Message received: ${message.body.toString()}")
+                    numReceived.incrementAndGet()
                 }.open()
                 val sender = connection.createSender("anycast").open()
                 val message = Message.Factory.create()
