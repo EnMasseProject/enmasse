@@ -62,8 +62,8 @@ class Tester(val client: IClient, val rf: ResourceFactory) {
                     sender.send(message)
                 })
             } else {
-                println("${System.currentTimeMillis()}: error connecting, retrying in 2 seconds")
-                vertx.setTimer(2000, { timerId ->
+                println("${System.currentTimeMillis()}: error connecting, retrying in 10 seconds")
+                vertx.setTimer(10000, { timerId ->
                     connectAndRunTest(client, service, vertx)
                 })
             }
