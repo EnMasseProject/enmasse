@@ -67,16 +67,11 @@ class Tester(val client: IClient, val rf: ResourceFactory) {
         println("Created resources, waiting for system to come up")
         Thread.sleep(60000)
 
-        val initialMap = createResource("addresses.json")
+        val initialMap = createResource("addresses_noqueue.json")
         client.create(initialMap, namespace)
-
-        println("Created address definition, waiting")
-        Thread.sleep(60000)
 
         println("Running send test")
         runSendTest()
-
-        Thread.sleep(10000)
 
         val empty = createResource("addresses_empty.json")
         client.update(empty)
@@ -97,24 +92,30 @@ class Tester(val client: IClient, val rf: ResourceFactory) {
         val service = getMessagingService()
 
         println("Attempting to connect on ${service.portalIP}:${service.port}")
-        client.connect(service.portalIP, service.port, { handle ->
+        connectAndRunTest(client, service, vertx)
+        Thread.sleep(60000);
+        vertx.close()
+    }
+
+    fun connectAndRunTest(client: ProtonClient, service: IService, vertx: Vertx) {
+         client.connect(service.portalIP, service.port, { handle ->
             if (handle.succeeded()) {
                 val connection = handle.result().open()
-                val receiver = connection.createReceiver("queue1").handler { protonDelivery, message ->
+                val receiver = connection.createReceiver("anycast").handler { protonDelivery, message ->
                     println("Message received: ${message.body.toString()}")
                 }.open()
-                val sender = connection.createSender("queue1").open()
+                val sender = connection.createSender("anycast").open()
                 val message = Message.Factory.create()
                 message.setBody(AmqpValue("Hello, receiver!"))
                 vertx.setPeriodic(1000, { timerId ->
                     sender.send(message)
                 })
             } else {
-                println("Error connecting")
+                println("Error connecting, retrying in 1 second")
+                vertx.setTimer(1000, { timerId ->
+                    connectAndRunTest(client, service, vertx)
+                })
             }
-
         })
-        Thread.sleep(60000);
-        vertx.close()
     }
 }
