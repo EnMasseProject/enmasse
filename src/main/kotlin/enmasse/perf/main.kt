@@ -57,37 +57,11 @@ class Tester(val client: IClient, val rf: ResourceFactory) {
         return rf.create<IResource>(rstream)
     }
 
-    fun runTest() {
-        deleteAllResources()
-
-        Thread.sleep(10000)
-
-        val resources = createResources()
-
-        Thread.sleep(10000)
-
-        val initialMap = createResource("addresses_noqueue.json")
-        client.create(initialMap, namespace)
-
-        Thread.sleep(10000)
-
-        println("Created resources, running send test")
-        runSendTest()
-
-        val empty = createResource("addresses_empty.json")
-        client.update(empty)
-
-        println("Deleted address definition, waiting")
-        Thread.sleep(10000)
-
-        deleteAllResources()
-    }
-
     fun getMessagingService(): IService {
         return client.get(ResourceKind.SERVICE, "messaging", namespace)
     }
 
-    fun runSendTest() {
+    fun runTest() {
         val vertx = Vertx.vertx()
         val client = ProtonClient.create(vertx)
         val service = getMessagingService()
