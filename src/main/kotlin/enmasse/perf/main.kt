@@ -1,11 +1,9 @@
 package enmasse.perf
 
-import com.openshift.internal.restclient.ResourceFactory
 import com.openshift.restclient.ClientBuilder
 import com.openshift.restclient.IClient
 import com.openshift.restclient.ResourceKind
 import com.openshift.restclient.authorization.TokenAuthorizationStrategy
-import com.openshift.restclient.model.IResource
 import com.openshift.restclient.model.IService
 import io.vertx.core.Vertx
 import io.vertx.proton.ProtonClient
@@ -18,13 +16,14 @@ public fun main(args: Array<String>) {
     val token = System.getenv("OPENSHIFT_TOKEN")
     val url = System.getenv("OPENSHIFT_URL")
     val client = ClientBuilder(url).authorizationStrategy(TokenAuthorizationStrategy(token, user)).build();
-    val rf = ResourceFactory(client)
 
-    Tester(client, rf).runTest()
+    val tester = Tester(client)
+    tester.runTest("anycast")
+    tester.runTest("myqueue")
 
 }
 
-class Tester(val client: IClient, val rf: ResourceFactory) {
+class Tester(val client: IClient) {
     val namespace = "enmasse-ci"
     val numReceived = AtomicLong()
 
@@ -32,39 +31,40 @@ class Tester(val client: IClient, val rf: ResourceFactory) {
         return client.get(ResourceKind.SERVICE, "messaging", namespace)
     }
 
-    fun runTest() {
+    fun runTest(address: String) {
         val vertx = Vertx.vertx()
         val client = ProtonClient.create(vertx)
         val service = getMessagingService()
 
-        println("Attempting to connect on ${service.portalIP}:${service.port}")
+        println("Running test against ${service.portalIP}:${service.port}/${address}")
         numReceived.set(0)
-        connectAndRunTest(client, service, vertx)
+        connectAndRunTest(address, client, service, vertx)
         while (numReceived.get() < 10) {
             Thread.sleep(1000);
         }
         vertx.close()
     }
 
-    fun connectAndRunTest(client: ProtonClient, service: IService, vertx: Vertx) {
-         client.connect(service.portalIP, service.port, { handle ->
+    fun connectAndRunTest(address: String, client: ProtonClient, service: IService, vertx: Vertx) {
+        val msgnum = AtomicLong(0)
+        client.connect(service.portalIP, service.port, { handle ->
             if (handle.succeeded()) {
                 println("${System.currentTimeMillis()}: successfully connected")
                 val connection = handle.result().open()
-                val receiver = connection.createReceiver("anycast").handler { protonDelivery, message ->
+                val receiver = connection.createReceiver(address).handler { protonDelivery, message ->
                     println("Message received: ${message.body.toString()}")
                     numReceived.incrementAndGet()
                 }.open()
-                val sender = connection.createSender("anycast").open()
-                val message = Message.Factory.create()
-                message.setBody(AmqpValue("Hello, receiver!"))
+                val sender = connection.createSender(address).open()
                 vertx.setPeriodic(1000, { timerId ->
+                    val message = Message.Factory.create()
+                    message.setBody(AmqpValue("Hello, receiver, msg ${msgnum.incrementAndGet()}!"))
                     sender.send(message)
                 })
             } else {
                 println("${System.currentTimeMillis()}: error connecting, retrying in 10 seconds")
                 vertx.setTimer(10000, { timerId ->
-                    connectAndRunTest(client, service, vertx)
+                    connectAndRunTest(address, client, service, vertx)
                 })
             }
         })
