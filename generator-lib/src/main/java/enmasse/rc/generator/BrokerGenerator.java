@@ -24,8 +24,9 @@ import enmasse.rc.model.Roles;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.HashSet;
 import java.util.Map;
-import java.util.Optional;
+import java.util.Set;
 import java.util.logging.Logger;
 
 /**
@@ -96,11 +97,27 @@ public class BrokerGenerator {
         Map<String, String> env = new LinkedHashMap<>();
         env.put(destination.multicast() ? EnvVars.TOPIC_NAME : EnvVars.QUEUE_NAME, destination.address());
         env.put(EnvVars.INTERROUTER_PORT, String.valueOf(properties.routerPort()));
-        controller.addContainer(
+        IContainer router = controller.addContainer(
                 "router",
                 properties.routerImage(),
                 Collections.singleton(interRouterPort),
                 env,
                 Collections.emptyList());
+
+
+        if (properties.routerSecretName() != null) {
+            IVolumeMount volumeMount = new IVolumeMount() {
+                    public String getName() { return "ssl-certs"; }
+                    public String getMountPath() { return properties.routerSecretPath(); }
+                    public boolean isReadOnly() { return true; }
+                    public void setName(String name) {}
+                    public void setMountPath(String path) {}
+                    public void setReadOnly(boolean readonly) {}
+                };
+            Set<IVolumeMount> mounts = new HashSet<>();
+            mounts.add(volumeMount);
+            router.setVolumeMounts(mounts);
+            controller.addSecretVolumeToPodSpec(volumeMount, properties.routerSecretName());
+        }
     }
 }

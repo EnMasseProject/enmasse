@@ -6,8 +6,6 @@ import com.openshift.restclient.model.IReplicationController;
 import com.openshift.restclient.model.IResource;
 import com.openshift.restclient.model.volume.IPersistentVolumeClaim;
 import com.openshift.restclient.model.volume.IPersistentVolumeClaimVolumeSource;
-import enmasse.rc.model.LabelKeys;
-import enmasse.rc.model.Roles;
 
 import java.util.*;
 import java.util.logging.Level;
@@ -73,5 +71,9 @@ public class OpenshiftClient {
 
     public IClient getClient() {
         return client;
+    }
+
+    public IResource getSecret(String name) {
+        return client.get(ResourceKind.SECRET, name, namespace);
     }
 }

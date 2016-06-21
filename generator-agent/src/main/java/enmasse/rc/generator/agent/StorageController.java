@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.openshift.restclient.ClientBuilder;
 import com.openshift.restclient.IClient;
+import com.openshift.restclient.OpenShiftException;
 import com.openshift.restclient.authorization.TokenAuthorizationStrategy;
 import io.vertx.core.Vertx;
 import io.vertx.proton.ProtonClient;
@@ -46,6 +47,13 @@ public class StorageController implements Runnable, AutoCloseable {
                 .build();
 
         OpenshiftClient openshiftClient = new OpenshiftClient(osClient, options.openshiftNamespace());
+
+        try {
+            openshift.getSecret(options.brokerProperties().routerSecretName());
+        } catch (OpenShiftException e) {
+            log.log(Level.INFO, "Router secret " + options.brokerProperties().routerSecretName() + " could not be retrieved; ignoring. [" + e.getStatus().getCode() + "]");
+            options = options.resetRouterSecret();
+        }
         configManager = new ConfigManager(openshiftClient, new StorageGenerator(openshiftClient, options.brokerProperties()));
         this.options = options;
     }
