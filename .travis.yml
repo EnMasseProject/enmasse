@@ -1,6 +1,10 @@
+sudo: required
 language: java
 jdk:
   - oraclejdk8
+
+services:
+  - docker
 
 before_cache:
   - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
@@ -13,7 +17,7 @@ cache:
 
 script:
     - gradle build
-    - OPENSHIFT_USER=$OPENSHIFT_USER OPENSHIFT_TOKEN=$OPENSHIFT_TOKEN OPENSHIFT_URL=$OPENSHIFT_URL gradle run
+    - docker run -d --name "origin" --privileged --pid=host --net=host -v /:/rootfs:ro -v /var/run:/var/run:rw -v /sys:/sys -v /var/lib/docker:/var/lib/docker:rw -v /var/lib/origin/openshift.local.volumes:/var/lib/origin/openshift.local.volumes openshift/origin start
 
 env:
     global:
