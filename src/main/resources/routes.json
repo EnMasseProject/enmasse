@@ -10,7 +10,7 @@
       "kind": "Service",
       "name": "messaging",
       "port": {
-          "targetPort": 5672
+          "targetPort": "5672"
       }
     }
   },
