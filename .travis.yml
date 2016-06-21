@@ -16,13 +16,13 @@ cache:
     - "$HOME/.gradle/wrapper/"
 
 script:
+    - wget https://github.com/openshift/origin/releases/download/v1.3.0-alpha.1/openshift-origin-client-tools-v1.3.0-alpha.1-6e83535-linux-64bit.tar.gz -O oclient.tar.gz
+    - tar xzvf oclient.tar.gz
+    - cp openshift-origin-client-tools-v1.3.0-alpha.1-6e83535-linux-64bit/oc .
+    - ./oc login -u test -p test
+    - export OPENSHIFT_PASSWORD=`./oc config view -o jsonpath='{.users[?(@.name == "test/localhost:8443")].user.token}'`
+
     - gradle build
     - docker run -d --name "origin" --privileged --pid=host --net=host -v /:/rootfs:ro -v /var/run:/var/run:rw -v /sys:/sys -v /var/lib/docker:/var/lib/docker:rw -v /var/lib/origin/openshift.local.volumes:/var/lib/origin/openshift.local.volumes openshift/origin start
     - sleep 10
-    - docker logs origin
-
-env:
-    global:
-        - secure: "UpgPrSuRSDPK6DBk5IR8N/M5hcFQVcHccBPSSITxx4UFNweZm11PrGBSxIlmvx8Z/BKvSC1vjhYPnutZSnjAX7AfbYy0QTtxNOAQ5qNexxXh6YCDoDwGIlOmuzd7dbLrh/YebO5yFlNryz7zrv1z69IouvkZlF+9qeftZt+FX1K/hzquH29K0oeJEXJJ80C3wKksRFB4ewCIdXPHqQt1Hm63UzrMcLyxlJvs+T+kf1VkLAEZqMvT8X5MqYzFgBqaqDrgVlrUnhK3Uwj30TfF1uRR9AsTeJpuv++fg906/kcabgm8SXSpcxQNN/wTGv7J0aXyM5n2leP6E0Pr0ecl8JlXeiAirAvthvKDhDEmuqoRi22tybXyZYk2/QXf7VgBdzNp+Z7iLmBnGswCyuWFFnBxvVehawDf9ZHTLwwpGkGu173igTih0j6ylN7J1/9DTDYQ2uWh31mpm6Q6HGDA/hVVFmU7Wf+WM5BMFyAhSXcWZNtk+C9Ux16mHJMKKr7UK8CBz/XK+UMUICbnTTiTYWkBjwvUHM4VwhBVqpnrwbw3j9H17/AkfInWMM+bPdeAUN/WEuSQPYL0L6cSuhZHnepZdv5RMB4NgzDCiuzsX+t8f1ZpoCvCA6nen7q1Iv/WWrgf8OL15z3utjDV6EgXrAkQPpSZe8IBaavnaxncifE=" # USER
-        - secure: "ri3JTQeny83cdYQtq5ek/ED1tycJw6g3+1HD1anbbCJHTrsSsqPaVPykN0N+noDzVbAmp9aWZq8pCjCN2XCjiEjns1J1ZVI8OKRwO3P5CS1GHsd0SDxg4cQyg+NQIJvvijuJu/sITWaQ5p3wgyDtCfRp8l4d7bcRnbeQGnS+l/UF23UeFYT43VnmaeWlyKTxvePBHhkYDFW/i2oGhFxwSMTkJn7Ilcr823lmN52+5m63CPjvfKVKv/+x5dpx62mBqtV9l5eoBdBL3wOml6bStIba24ZBvEkMYPRz/6MQl4c15HxZ2Qvp5ag69N3nWudH9h5pCiiswzeySZBdIlJXI6L3iF43YBb7TD6m2Qk1jDyvWomdswXycaPNRG3+5/F4tUi6snA2SBN1vMs4IHeSRD124WOnlfnJ1S5KEU8f6Fnz5InxjJ/kAwYJ7U/V+OFXv9gKFFW1AOxRed6KdM58tM4rAj51CfyK+s5XGH7ciytNTHeoiFKtYGPHnzjb6t1i3sI43awr0BxtjT3ViCvI/3Pd4nWSNS3ogzwHkWC2QtwUn3soF+33/7Tl6YyY8TXHU0EziAFd/iicQT2opEHuyk49xERyn0p8aGxsesl90SQAq2MVAubIYl5kMiuuOxEPRwObPUnOylQRmv1IZmGmPVy+I61sox5l4b65dNa/cGM=" # PASS
-        - secure: "N9V+XCbD3m2cZdeiDZ0rzjiBdgR6/SVQNlLGj6cY3Od7ZH8zSB4weCdoCZy0hvxtEZYBJlcgoZWkdRwWosEeM7HZfK9bE6A6x5v4GqDEOqhRuwSAa6UCP9mjFJEMHX4knmOFw3TYKXYY26zQs+sxXVbZNxzGAiwNnZBlc1433IUd51cCGKJo5DaBxqYiaczv12gDPypLXtUmULq+q6gW/1y31/8KnhUwfA/Hb3Q7PZ5sNBk1VEi6nZdySTOwlu6JTY+z+9gvR3nWUx29jJxEoAbShoWozDa7kRtf8mbhWh7MbQswjjCm/hwLcJNGUQg6+2y73Iiyl5W7zNoL+bOt5SVPQ7R5xO4ytP5OFWXYXrw2YulqfHpoSgFVscbTUdSWRQO2MlOB/FFiGpy7geL9N5ObjimsPvRrCTVSwXkmhXjB0miDPrcQeBYytq8OygBMQzCc3ThnYLw0nHwk6vyHZCb/bsCvP38gty2NkAbZRse+B5SUUERIWXbELjddrqcxtPFQMDjHY7ZYacn8iD1GG/5TzpQUzfAIQkDXQBFrGTzRu8oGsM9a0nb9AzL4T2J08oMz+17RYJgrRnThdAm26PgM4ryPtGmyxvFEHiJhmGkXDCtPXFPDT5/FFZ5737261Dw6gUH/GMryAxK2pVKU2BkgEBgJyV2fP4qURiaNvA8=" # URL
+    - OPENSHIFT_USER=test OPENSHIFT_TOKEN=$OPENSHIFT_PASSWORD OPENSHIFT_URL=https://localhost:8443 gradle run
