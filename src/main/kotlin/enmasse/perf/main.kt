@@ -76,6 +76,8 @@ class Tester(val client: IClient, val rf: ResourceFactory) {
         println("Running send test")
         runSendTest()
 
+        Thread.sleep(10000)
+
         val empty = createResource("addresses_empty.json")
         client.update(empty)
 
@@ -107,6 +109,8 @@ class Tester(val client: IClient, val rf: ResourceFactory) {
                 vertx.setPeriodic(1000, { timerId ->
                     sender.send(message)
                 })
+            } else {
+                println("Error connecting")
             }
 
         })

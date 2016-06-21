@@ -23,13 +23,7 @@
         "containers": [
           {
             "name": "master",
-            "image": "enmasseproject/rc-generator:latest",
-            "env": [
-              {
-                "name": "BROKER_IMAGE",
-                "value": "lulf/activemq:latest"
-              }
-            ]
+            "image": "enmasseproject/rc-generator:latest"
           }
         ]
       }
