@@ -81,7 +81,7 @@ class Tester(val client: IClient, val rf: ResourceFactory) {
         println("Deleted address definition, waiting")
         Thread.sleep(10000)
 
-        deleteAllResources()
+       // deleteAllResources()
     }
 
     fun getMessagingService(): IRoute {
