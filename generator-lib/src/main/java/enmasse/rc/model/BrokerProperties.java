@@ -66,8 +66,8 @@ public class BrokerProperties {
 
         private DockerImageURI routerImage = new DockerImageURI("gordons/qdrouterd:v8");
         private int routerPort = 5672;
-        private String routerSecretName = "qdrouterd-certs";
-        private String routerSecretPath = "/etc/qpid-dispatch/ssl/";
+        private String routerSecretName;
+        private String routerSecretPath;
 
         public Builder brokerImage(DockerImageURI brokerImage) {
             this.brokerImage = brokerImage;

@@ -43,16 +43,6 @@ public final class StorageControllerOptions {
         return brokerProperties;
     }
 
-    GeneratorAgentOptions resetRouterSecret() {
-        return new GeneratorAgentOptions(this.configHost, this.configPort, this.openshiftUrl,
-                                         new BrokerProperties(this.brokerProperties.brokerImage(),
-                                                              this.brokerProperties.brokerPort(),
-                                                              this.brokerProperties.brokerMounts(),
-                                                              this.brokerProperties.routerImage(),
-                                                              this.brokerProperties.routerPort(),
-                                                              null, null));
-    }
-
     public static GeneratorAgentOptions fromEnv(Map<String, String> env) {
         String openshiftHost = getEnvOrThrow(env, "KUBERNETES_SERVICE_HOST");
         String openshiftPort = getEnvOrThrow(env, "KUBERNETES_SERVICE_PORT");
