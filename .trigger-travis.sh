@@ -1,9 +1,14 @@
 #!/bin/sh
 
-body='{
-"request": {
-  "branch":"master"
-}}'
+dir=`git rev-parse --show-toplevel`
+orgDir=`dirname $dir`
+
+org=`basename $orgDir`
+repo=`basename $dir`
+
+reponame="$org/$repo"
+
+body="{\"request\": { \"message\": \"Triggered by $reponame\",\"branch\":\"master\" }}"
 
 curl -s -X POST \
   -H "Content-Type: application/json" \
