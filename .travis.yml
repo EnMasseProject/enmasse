@@ -25,7 +25,7 @@ after_success:
       docker tag $REPO:$COMMIT $REPO:travis-$TRAVIS_BUILD_NUMBER;
       docker push $REPO;
       fi
-    - curl -s -X POST -H "Content-Type: application/json" -H "Accept: application/json" -H "Travis-API-Version: 3" -H "Authorization: token $ACCESS_TOKEN" -d "{\"request\":{\"branch\":\"master\"}}" https://api.travis-ci.org/repo/EnMasseProject%2Fsmoketest/requests
+    - TRAVIS_TOKEN=$ACCESS_TOKEN sh .trigger-travis.sh
 
 env:
     global:
