@@ -18,15 +18,19 @@ public fun main(args: Array<String>) {
     val client = ClientBuilder(url).authorizationStrategy(TokenAuthorizationStrategy(token, user)).build();
     val namespace = "enmasse-ci"
     val service: IService = client.get(ResourceKind.SERVICE, "messaging", namespace)
+    val vertx = Vertx.vertx()
 
-    val tester = Tester(service)
-    tester.runTest("anycast", 10, 120L)
-    tester.runTest("myqueue", 10, 120L)
+    val tester = Tester(vertx, service)
+    try {
+        tester.runTest("anycast", 10, 120L)
+        tester.runTest("myqueue", 10, 120L)
+    } finally {
+        vertx.close()
+    }
 
 }
 
-class Tester(val service: IService) {
-    val vertx = Vertx.vertx()
+class Tester(val vertx: Vertx, val service: IService) {
     val client = ProtonClient.create(vertx)
 
     fun runTest(address: String, numMsg: Int, timeout: Long) {
