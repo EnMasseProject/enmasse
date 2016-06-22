@@ -22,8 +22,8 @@ public fun main(args: Array<String>) {
 
     val tester = Tester(vertx, service)
     try {
-        tester.runTest("anycast", 10, 120L)
-        tester.runTest("myqueue", 10, 120L)
+        tester.runTest("anycast", 10, 300L)
+        tester.runTest("myqueue", 10, 300L)
     } finally {
         vertx.close()
     }
