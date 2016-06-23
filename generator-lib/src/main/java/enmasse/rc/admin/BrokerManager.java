@@ -74,7 +74,6 @@ public class BrokerManager {
         if (!equivalent(controller, oldController)) {
             log.log(Level.INFO, "Modifying replication controller " + controller.getName());
             oldController.setContainers(controller.getContainers());
-            oldController.setReplicas(controller.getReplicas());
             oldController.setReplicaSelector(controller.getReplicaSelector());
 
             for (Map.Entry<String, String> label : controller.getLabels().entrySet()) {
