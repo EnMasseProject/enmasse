@@ -19,7 +19,7 @@ after_success:
       docker tag $REPO:$COMMIT $REPO:$TAG;
       docker tag $REPO:$COMMIT $REPO:travis-$TRAVIS_BUILD_NUMBER;
       docker push $REPO;
-      TRAVIS_TOKEN=$ACCESS_TOKEN sh .trigger-travis.sh
+      TRAVIS_TOKEN=$ACCESS_TOKEN sh .trigger-travis.sh;
       fi
 
 env:
