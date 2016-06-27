@@ -119,12 +119,12 @@ objects:
         containers:
         - image: "${RC_GENERATOR_IMAGE}"
           name: master
-        env:
-        - name: BROKER_IMAGE
-          value: "${BROKER_IMAGE}"
-        env:
-        - name: ROUTER_IMAGE
-          value: "${ROUTER_IMAGE}"
+          env:
+          - name: BROKER_IMAGE
+            value: "${BROKER_IMAGE}"
+          env:
+          - name: ROUTER_IMAGE
+            value: "${ROUTER_IMAGE}"
 - apiVersion: v1
   kind: ConfigMap
   metadata:
