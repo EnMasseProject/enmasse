@@ -6,7 +6,13 @@ if [ -z "$RAGENT_SERVICE_HOST" ]; then
     export RAGENT_SERVICE_HOST=localhost;
     export RAGENT_SERVICE_PORT=55672;
 fi
+if [ -z "$LINK_CAPACITY" ]; then
+    export LINK_CAPACITY=50
+fi
 envsubst < /etc/qpid-dispatch/qdrouterd.conf.template > /tmp/qdrouterd.conf
+if [ -d /etc/qpid-dispatch/ssl ]; then
+    envsubst < /etc/qpid-dispatch/ssl.snippet >> /tmp/qdrouterd.conf
+fi
 if [ -n "$QUEUE_NAME" ]; then
     export ADDRESS_NAME=$QUEUE_NAME;
     envsubst < /etc/qpid-dispatch/colocated.snippet >> /tmp/qdrouterd.conf
