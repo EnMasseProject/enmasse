@@ -110,6 +110,7 @@ ConnectedRouter.prototype.check_connectors = function (routers) {
         remove_current.call(router, stale);
     }
     stale = Object.keys(stale);
+    console.log('checking connectors on router ' + this.container_id + ', missing=' + missing + ', stale=' + stale);
 
 
     var do_create = this.create_connector.bind(this);
@@ -126,10 +127,7 @@ ConnectedRouter.prototype.check_connectors = function (routers) {
 
 function address_equivalence(a, b) {
     if (a === undefined) return b === undefined;
-    var result = a.name === b.name && a.multicast === b.multicast && a.store_and_forward === b.store_and_forward;
-    console.log('testing equivalence of ' + JSON.stringify(a) + ' and ' + JSON.stringify(b) + ' => ' + result);
-    return result;
-    //return a.name === b.name && a.multicast === b.multicast && a.store_and_forward === b.store_and_forward;
+    return a.name === b.name && a.multicast === b.multicast && a.store_and_forward === b.store_and_forward;
 }
 
 ConnectedRouter.prototype.check_addresses = function (desired) {

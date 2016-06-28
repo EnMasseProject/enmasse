@@ -96,7 +96,7 @@ function check_router_connectors (router, all_routers) {
         console.log('checking connectivity for ' + router.container_id);
         router.check_connectors(all_routers || get_all_routers());
     } else {
-        console.log(router.container_id + ' not ready for connectivity check: ' + router.initial_provisioning_completed + ' ' + router.connectors !== undefined);
+        console.log(router.container_id + ' not ready for connectivity check: ' + router.initial_provisioning_completed + ' ' + (router.connectors !== undefined));
     }
 }
 
@@ -153,12 +153,14 @@ function on_message(context) {
                         delete content[v]['store-and-forward'];
                     }
                 }
+                console.log('Got address update message');
                 addresses = content;
                 addresses_updated();
             } catch (e) {
                 console.log('ERROR: failed to parse addresses as JSON: ' + e);
             }
         } else if (body_type  === 'object') {
+            console.log('Got address update message');
             addresses = context.message.body;
             addresses_updated();
         } else {
