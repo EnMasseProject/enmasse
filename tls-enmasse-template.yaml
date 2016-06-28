@@ -21,8 +21,13 @@ objects:
   spec:
     ports:
     - port: 5672
-      protocol: TCP
       targetPort: 5672
+      name: amqp
+      protocol: TCP
+    - port: 5671
+      targetPort: 5671
+      name: amqps
+      protocol: TCP
     selector:
       capability: router
 - apiVersion: v1
@@ -73,12 +78,20 @@ objects:
           capability: router
           name: qdrouterd
       spec:
+        volumes:
+        - name: ssl-certs
+          secret:
+            secretName: qdrouterd-certs
         containers:
         - image: "${ROUTER_IMAGE}"
           name: master
           ports:
           - containerPort: 5672
             protocol: TCP
+          volumeMounts:
+          - mountPath: /etc/qpid-dispatch/ssl
+            readOnly: true
+            name: ssl-certs
 - apiVersion: v1
   kind: ReplicationController
   metadata:
@@ -119,12 +132,15 @@ objects:
         containers:
         - image: "${RC_GENERATOR_IMAGE}"
           name: master
-          env:
-          - name: BROKER_IMAGE
-            value: "${BROKER_IMAGE}"
-          env:
-          - name: ROUTER_IMAGE
-            value: "${ROUTER_IMAGE}"
+        env:
+        - name: BROKER_IMAGE
+          value: "${BROKER_IMAGE}"
+        - name: ROUTER_IMAGE
+          value: "${ROUTER_IMAGE}"
+        - name: ROUTER_CERTS_SECRET_NAME
+          value: qdrouterd-certs
+        - name: ROUTER_CERTS_PATH
+          value: /etc/qpid-dispatch/ssl
 - apiVersion: v1
   kind: ConfigMap
   metadata:
@@ -138,7 +154,7 @@ objects:
       }
 parameters:
   - name: BROKER_IMAGE
-    value: enmasseproject/artemis:latest
+    value: gordons/artemis:latest
     description: The image to use for the broker
   - name: ROUTER_IMAGE
     description: "The image to use for the router"

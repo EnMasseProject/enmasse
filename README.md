@@ -11,21 +11,41 @@ router agent.
 Edit rights must also be granted to the deployer role, used by the
 rc-generator pod.
 
-The permissions can be setup with ethe following commands:
+The permissions can be setup with the following commands:
 
     oc policy add-role-to-user view system:serviceaccount:$(oc project -q):default
     oc policy add-role-to-user edit system:serviceaccount:$(oc project -q):deployer
 
-## Using the template
+## Using the simple template
 
 There is a template that can be used to setup the necessary objects in
 openshift. To use it run:
 
     oc process -f enmasse-template.yaml | oc create -f -
 
+## Using the TLS template
+
+For the messaging service to be externally accessible, a route must be
+setup over TLS. This requires qdrouterd containers to have TLS enabled.
+
+To do this we need to create a secret called qdrouterd-certs with the
+key and certificate for the routers contained in server-key.pem and
+server-cert.pem respectively:
+
+    oc secret new qdrouterd-certs server-cert.pem server-key.pem
+
+Then the default serviceaccount (under which the router containers are
+currently run) needs to be allowed to mount this secret:
+
+    oc secret add serviceaccount/default secrets/qdrouterd-certs --for=mount
+
+Then we can use the tls version of the template as follows:
+
+    oc process -f tls-enmasse-template.yaml | oc create -f -
+
 ## Manual setup
 
-Alternatively, instead of using the template, the necessary objects
+Alternatively, instead of using the templates, the necessary objects
 can be created manually as follows:
 
 ### Setting up configuration service
