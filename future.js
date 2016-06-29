@@ -52,7 +52,7 @@ Future.prototype.then = function (callback) {
 };
 
 Future.prototype.and = function (other) {
-    return new FutureSet([this, other]);
+    return new FutureSet().and(this).and(other);
 }
 
 var FutureSet = function (actions) {
@@ -83,7 +83,7 @@ FutureSet.prototype.get_error = function () {
 }
 
 FutureSet.prototype.is_complete = function () {
-    return this.actions.every(function (a) { return a.complete; });
+    return this.actions.every(function (a) { return a.is_complete(); });
 }
 
 FutureSet.prototype.complete = function () {

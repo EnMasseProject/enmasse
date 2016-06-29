@@ -131,6 +131,10 @@ function address_equivalence(a, b) {
 }
 
 ConnectedRouter.prototype.check_addresses = function (desired) {
+    if (this.addresses == undefined) {
+        console.log('router ' + this.container_id + ' is not ready for address check');
+        return;
+    }
     var removed = myutils.values(myutils.difference(this.addresses, desired, address_equivalence));
     var added = myutils.values(myutils.difference(desired, this.addresses, address_equivalence));
 
@@ -144,7 +148,10 @@ ConnectedRouter.prototype.check_addresses = function (desired) {
         //them from router after updates:
         this.addresses = undefined;
     } else {
-        this.initial_provisioning_completed = true;
+        if (this.initial_provisioning_completed !== true) {
+            this.initial_provisioning_completed = true;
+            this.emit('provisioned', this);
+        }
     }
 };
 
@@ -222,6 +229,7 @@ ConnectedRouter.prototype.on_connectors_updated = function (error) {
 
 ConnectedRouter.prototype.on_addresses_updated = function (error) {
     if (error) console.log('error on updating addresses for ' + this.container_id + ': ' + error);
+    else console.log('addresses updated for ' + this.container_id);
     this.retrieve_addresses();
 };
 

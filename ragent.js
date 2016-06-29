@@ -117,8 +117,18 @@ function router_disconnected (context) {
 
 function addresses_updated () {
     for (var r in connected_routers) {
-        check_router_addresses(connected_routers[r]);
+        try {
+            check_router_addresses(connected_routers[r]);
+        } catch (e) {
+            console.log('ERROR: failed to check addresses on router ' + r + ': ' + e + '; ' + addresses);
+        }
     }
+}
+
+function update_addresses (updated) {
+    console.log('updating addresses: ' + JSON.stringify(updated));
+    addresses = updated;
+    addresses_updated();
 }
 
 function check_router_addresses (router) {
@@ -153,16 +163,12 @@ function on_message(context) {
                         delete content[v]['store-and-forward'];
                     }
                 }
-                console.log('Got address update message');
-                addresses = content;
-                addresses_updated();
+                update_addresses(content);
             } catch (e) {
-                console.log('ERROR: failed to parse addresses as JSON: ' + e);
+                console.log('ERROR: failed to parse addresses as JSON: ' + e + '; ' + context.message.body);
             }
         } else if (body_type  === 'object') {
-            console.log('Got address update message');
-            addresses = context.message.body;
-            addresses_updated();
+            update_addresses(context.message.body);
         } else {
             console.log('ERROR: unrecognised type for addresses: ' + body_type + ' ' + context.message.body);
         }
@@ -189,6 +195,7 @@ amqp.on('connection_open', function(context) {
             router.on('listeners_updated', connected_routers_updated);//advertise only once have listeners
             router.on('addresses_updated', check_router_addresses);
             router.on('connectors_updated', check_router_connectors);
+            router.on('provisioned', check_router_connectors);
         });
     } else {
         if (product === 'qdconfigd') {
