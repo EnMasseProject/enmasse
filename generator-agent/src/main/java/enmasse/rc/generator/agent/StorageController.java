@@ -12,7 +12,7 @@ import io.vertx.proton.ProtonDelivery;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.message.Message;
 import enmasse.rc.admin.ConfigManager;
-import enmasse.rc.generator.ConfigGenerator;
+import enmasse.rc.generator.StorageGenerator;
 import enmasse.rc.model.Config;
 import enmasse.rc.model.parser.ConfigParser;
 import enmasse.rc.openshift.OpenshiftClient;
@@ -24,11 +24,11 @@ import java.util.logging.Logger;
 /**
  * @author lulf
  */
-public class GeneratorAgent implements Runnable, AutoCloseable {
-    private static final Logger log = Logger.getLogger(GeneratorAgent.class.getName());
+public class StorageController implements Runnable, AutoCloseable {
+    private static final Logger log = Logger.getLogger(StorageController.class.getName());
 
     private final ProtonClient client;
-    private final GeneratorAgentOptions options;
+    private final StorageControllerOptions options;
     private volatile ProtonConnection connection;
 
     private final ConfigParser parser = new ConfigParser();
@@ -37,15 +37,16 @@ public class GeneratorAgent implements Runnable, AutoCloseable {
     private final ObjectMapper mapper = new ObjectMapper();
     private final Vertx vertx;
 
-    public GeneratorAgent(GeneratorAgentOptions options) throws IOException {
+    public StorageController(StorageControllerOptions options) throws IOException {
         this.vertx = Vertx.vertx();
         client = ProtonClient.create(vertx);
 
         IClient osClient = new ClientBuilder(options.openshiftUrl())
-                .resourceFactory(new TokenAuthorizationStrategy(options.openshiftToken())) // TODO: Use new method when new version of openshift-restclient-java is used.
+                .authorizationStrategy(new TokenAuthorizationStrategy(options.openshiftToken()))
                 .build();
 
-        configManager = new ConfigManager(new OpenshiftClient(osClient, options.openshiftNamespace()), new ConfigGenerator(osClient, options.brokerProperties()));
+        OpenshiftClient openshiftClient = new OpenshiftClient(osClient, options.openshiftNamespace());
+        configManager = new ConfigManager(openshiftClient, new StorageGenerator(openshiftClient, options.brokerProperties()));
         this.options = options;
     }
 

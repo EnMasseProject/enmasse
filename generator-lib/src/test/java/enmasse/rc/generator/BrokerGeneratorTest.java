@@ -1,14 +1,15 @@
 package enmasse.rc.generator;
 
+import com.openshift.internal.restclient.model.volume.PersistentVolumeClaim;
 import com.openshift.restclient.model.IContainer;
 import com.openshift.restclient.model.IReplicationController;
+import com.openshift.restclient.model.volume.IPersistentVolumeClaim;
+import enmasse.rc.model.*;
+import org.jboss.dmr.ModelNode;
 import org.junit.Before;
 import org.junit.Test;
-import enmasse.rc.model.BrokerProperties;
-import enmasse.rc.model.Destination;
-import enmasse.rc.model.EnvVars;
-import enmasse.rc.model.LabelKeys;
-import enmasse.rc.model.Roles;
+
+import java.util.Collections;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
@@ -18,6 +19,7 @@ import static org.junit.Assert.assertThat;
  */
 public class BrokerGeneratorTest {
     private BrokerGenerator generator;
+    private IPersistentVolumeClaim emptyClaim = new PersistentVolumeClaim(new ModelNode(), null, Collections.emptyMap());
 
     @Before
     public void setup() {
@@ -26,12 +28,12 @@ public class BrokerGeneratorTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void testThrowOnNoStore() {
-        generator.generate(new Destination("testaddr", false, false));
+        generator.generate(new Destination("testaddr", false, false), emptyClaim);
     }
 
     @Test
     public void testGenerator() {
-        IReplicationController controller = generator.generate(new Destination("testaddr", true, false));
+        IReplicationController controller = generator.generate(new Destination("testaddr", true, false), emptyClaim);
 
         assertThat(controller.getName(), is("controller-testaddr"));
         assertThat(controller.getLabels().get(LabelKeys.ROLE), is(Roles.BROKER));
@@ -50,7 +52,7 @@ public class BrokerGeneratorTest {
 
     @Test
     public void testGenerateTopic() {
-        IReplicationController controller = generator.generate(new Destination("testaddr", true, true));
+        IReplicationController controller = generator.generate(new Destination("testaddr", true, true), emptyClaim);
         IContainer broker = controller.getContainer("broker");
         assertThat(broker.getEnvVars().get(EnvVars.TOPIC_NAME), is("testaddr"));
     }

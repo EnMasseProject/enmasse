@@ -3,14 +3,16 @@ package enmasse.rc.openshift;
 import com.openshift.restclient.IClient;
 import com.openshift.restclient.ResourceKind;
 import com.openshift.restclient.model.IReplicationController;
+import com.openshift.restclient.model.IResource;
+import com.openshift.restclient.model.volume.IPersistentVolumeClaim;
+import com.openshift.restclient.model.volume.IPersistentVolumeClaimVolumeSource;
 import enmasse.rc.model.LabelKeys;
 import enmasse.rc.model.Roles;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 /**
  * @author lulf
@@ -25,26 +27,51 @@ public class OpenshiftClient {
         this.namespace = namespace;
     }
 
-    public void createBroker(IReplicationController controller) {
-        log.log(Level.INFO, "Adding controller " + controller.getName());
-        client.create(controller, namespace);
+    public void createResource(IResource resource) {
+        log.log(Level.INFO, "Adding " + resource.getName());
+        client.create(resource, namespace);
     }
 
-    public void deleteBroker(IReplicationController controller) {
-        log.log(Level.INFO, "Deleting controller " + controller.getName());
-        client.delete(controller);
+    public void deleteResource(IResource resource) {
+        log.log(Level.INFO, "Deleting " + resource.getName());
+        client.delete(resource);
     }
 
-    public void updateBroker(IReplicationController controller) {
-        log.log(Level.INFO, "Updating controller " + controller.getName());
-        client.update(controller);
+    public void updateResource(IResource resource) {
+        log.log(Level.INFO, "Updating " + resource.getName());
+        client.update(resource);
     }
 
-    public List<IReplicationController> listBrokers() {
+    private List<IReplicationController> listBrokers() {
         return client.list(ResourceKind.REPLICATION_CONTROLLER, namespace, Collections.singletonMap(LabelKeys.ROLE, Roles.BROKER));
     }
 
     public IReplicationController getBroker(String name) {
         return client.get(ResourceKind.REPLICATION_CONTROLLER, name, namespace);
+    }
+
+    public List<StorageCluster> listClusters() {
+        List<IReplicationController> controllerList = listBrokers();
+        List<StorageCluster> clusterList = new ArrayList<>();
+        for (IReplicationController controller : controllerList) {
+            List<IPersistentVolumeClaim> claims = getClaims(controller);
+            clusterList.add(new StorageCluster(this, controller, claims));
+        }
+        return clusterList;
+    }
+
+    private List<IPersistentVolumeClaim> getClaims(IReplicationController controller) {
+        return client.<IPersistentVolumeClaim>list(ResourceKind.PVC, namespace).stream()
+                .filter(claim ->
+                        controller.getVolumes().stream()
+                                .filter(source -> source instanceof IPersistentVolumeClaimVolumeSource)
+                                .map(source -> ((IPersistentVolumeClaimVolumeSource)source).getClaimName())
+                                .collect(Collectors.toSet())
+                                .contains(claim.getName()))
+                .collect(Collectors.toList());
+    }
+
+    public IClient getClient() {
+        return client;
     }
 }

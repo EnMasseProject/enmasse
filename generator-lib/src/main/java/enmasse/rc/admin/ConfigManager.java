@@ -1,6 +1,6 @@
 package enmasse.rc.admin;
 
-import enmasse.rc.generator.ConfigGenerator;
+import enmasse.rc.generator.StorageGenerator;
 import enmasse.rc.model.Config;
 import enmasse.rc.openshift.OpenshiftClient;
 
@@ -10,12 +10,12 @@ import enmasse.rc.openshift.OpenshiftClient;
  * @author lulf
  */
 public class ConfigManager {
-    private final BrokerManager brokerManager;
+    private final ClusterManager clusterManager;
 
-    public ConfigManager(OpenshiftClient osClient, ConfigGenerator generator) {
-        this.brokerManager = new BrokerManager(osClient, generator);
+    public ConfigManager(OpenshiftClient osClient, StorageGenerator generator) {
+        this.clusterManager = new ClusterManager(osClient, generator);
     }
     public void configUpdated(Config config) {
-        brokerManager.destinationsUpdated(config.destinations());
+        clusterManager.destinationsUpdated(config.destinations());
     }
 }

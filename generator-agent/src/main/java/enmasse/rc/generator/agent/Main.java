@@ -14,7 +14,7 @@ public class Main {
             // Kind of a hack
             System.setProperty(FileResolver.CACHE_DIR_BASE_PROP_NAME, "/tmp/vert.x");
 
-            GeneratorAgent service = new GeneratorAgent(GeneratorAgentOptions.fromEnv(System.getenv()));
+            StorageController service = new StorageController(StorageControllerOptions.fromEnv(System.getenv()));
             service.run();
         } catch (IllegalArgumentException e) {
             System.out.println(String.format("Unable to parse arguments: %s", e.getMessage()));
