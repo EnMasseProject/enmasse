@@ -16,9 +16,9 @@ cache:
     - "$HOME/.gradle/wrapper/"
 
 after_success:
-    - export REPO=enmasseproject/rc-generator
+    - export REPO=enmasseproject/storage-controller
     - export TAG=`if [ "$TRAVIS_BRANCH" == "master" ]; then echo "latest"; else echo $TRAVIS_BRANCH ; fi`
-    - docker build -t $REPO:$COMMIT generator-agent
+    - docker build -t $REPO:$COMMIT storage-controller-server
     - if [ "$TRAVIS_BRANCH" == "master" ] && [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
       docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS;
       docker tag $REPO:$COMMIT $REPO:$TAG;

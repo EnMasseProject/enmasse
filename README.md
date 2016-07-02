@@ -1,7 +1,9 @@
-[![Build Status](https://travis-ci.org/EnMasseProject/rc-generator.svg?branch=master)](https://travis-ci.org/EnMasseProject/rc-generator)
+[![Build Status](https://travis-ci.org/EnMasseProject/storage-controller.svg?branch=master)](https://travis-ci.org/EnMasseProject/storage-controller)
 
-# ReplicationController (RC) Generator
+# Storage Controller
 
-The RC generator is responsible for converting a simple address configuration to a set of
-replication controllers for the different addresses. It can be run as a standlone tool, or as an
-agent that subscribes to the config through the configmap-bridge.
+The Storage Controller is responsible for managing brokers and its persistent volumes. The controller converts
+destination addresses to replicated brokers for the different addresses and binds persistent volumes to
+the brokers containers.
+
+Generating the persistent volume claims and broker controllers can also be done manually using the storage-generator-tool.

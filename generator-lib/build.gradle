@@ -1,8 +1,0 @@
-description = 'RC Generator Library'
-dependencies {
-    compile "com.openshift:openshift-restclient-java:${openshiftRestclientVersion}"
-    compile "com.fasterxml.jackson.core:jackson-core:${jacksonVersion}"
-    compile "com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}"
-    testCompile "junit:junit:${junitVersion}"
-    testCompile "org.mockito:mockito-core:${mockitoVersion}"
-}
