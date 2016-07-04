@@ -16,11 +16,7 @@ public class BrokerProperties {
     private final String routerSecretPath;
 
 
-    public BrokerProperties(DockerImageURI brokerImage, int brokerPort, String brokerMountPath, DockerImageURI routerImage, int routerPort) {
-        this(brokerImage, brokerPort, brokerMountPath, routerImage, routerPort, null, null);
-    }
-
-    public BrokerProperties(DockerImageURI brokerImage, int brokerPort, String brokerMountPath, DockerImageURI routerImage, int routerPort,
+    private BrokerProperties(DockerImageURI brokerImage, int brokerPort, String brokerMountPath, DockerImageURI routerImage, int routerPort,
                             String routerSecretName, String routerSecretPath) {
         this.brokerImage = brokerImage;
         this.brokerPort = brokerPort;

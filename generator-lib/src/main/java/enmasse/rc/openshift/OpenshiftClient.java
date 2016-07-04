@@ -6,6 +6,8 @@ import com.openshift.restclient.model.IReplicationController;
 import com.openshift.restclient.model.IResource;
 import com.openshift.restclient.model.volume.IPersistentVolumeClaim;
 import com.openshift.restclient.model.volume.IPersistentVolumeClaimVolumeSource;
+import enmasse.rc.model.LabelKeys;
+import enmasse.rc.model.Roles;
 
 import java.util.*;
 import java.util.logging.Level;

@@ -43,7 +43,7 @@ public final class StorageControllerOptions {
         return brokerProperties;
     }
 
-    public static GeneratorAgentOptions fromEnv(Map<String, String> env) {
+    public static StorageControllerOptions fromEnv(Map<String, String> env) {
         String openshiftHost = getEnvOrThrow(env, "KUBERNETES_SERVICE_HOST");
         String openshiftPort = getEnvOrThrow(env, "KUBERNETES_SERVICE_PORT");
 

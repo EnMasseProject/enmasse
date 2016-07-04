@@ -4,15 +4,14 @@ import com.openshift.internal.restclient.ResourceFactory;
 import com.openshift.internal.restclient.model.Port;
 import com.openshift.internal.restclient.model.ReplicationController;
 import com.openshift.internal.restclient.model.volume.PersistentVolumeClaimVolumeSource;
+import com.openshift.internal.restclient.model.volume.SecretVolumeSource;
 import com.openshift.internal.restclient.model.volume.VolumeMount;
 import com.openshift.restclient.IClient;
 import com.openshift.restclient.ResourceKind;
 import com.openshift.restclient.images.DockerImageURI;
 import com.openshift.restclient.model.IContainer;
 import com.openshift.restclient.model.IReplicationController;
-import com.openshift.restclient.model.volume.IPersistentVolumeClaim;
-import com.openshift.restclient.model.volume.IPersistentVolumeClaimVolumeSource;
-import com.openshift.restclient.model.volume.IVolumeMount;
+import com.openshift.restclient.model.volume.*;
 import enmasse.rc.model.BrokerProperties;
 import enmasse.rc.model.Destination;
 import enmasse.rc.openshift.OpenshiftClient;
@@ -117,7 +116,9 @@ public class BrokerGenerator {
             Set<IVolumeMount> mounts = new HashSet<>();
             mounts.add(volumeMount);
             router.setVolumeMounts(mounts);
-            controller.addSecretVolumeToPodSpec(volumeMount, properties.routerSecretName());
+            ISecretVolumeSource volumeSource = new SecretVolumeSource("ssl-certs");
+            volumeSource.setSecretName(properties.routerSecretName());
+            controller.addVolume(volumeSource);
         }
     }
 }
