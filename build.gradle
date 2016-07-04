@@ -2,7 +2,7 @@ buildscript {
    ext.kotlin_version = '1.0.2'
    ext.openshiftRestclientVersion = '4.0.5.Final'
    ext.jacksonVersion = '2.7.4'
-   ext.vertxProtonVersion = '3.2.0'
+   ext.vertxProtonVersion = '3.3.0'
 
    repositories {
      mavenCentral()
