@@ -6,7 +6,7 @@ allprojects  {
 ext {
     jacksonVersion = '2.7.4'
     commonsCliVersion = '1.3.1'
-    vertxProtonVersion = '3.2.0'
+    vertxProtonVersion = '3.3.0'
     openshiftRestclientVersion = '4.0.5.Final'
 
     junitVersion = '4.12'
