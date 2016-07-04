@@ -16,6 +16,8 @@ spec:
       containers:
       - name: ebench-agent
         image: enmasseproject/ebench-agent:latest
+        ports:
+            - containerPort: 8080
         env:
         - name: BENCH_DURATION
           value: "300"
