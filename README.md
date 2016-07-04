@@ -124,3 +124,20 @@ You can get the service IP either from the web console or by running:
 
 You should now be able to connect to that to send and receive
 messages based on the addressing scheme in the config map.
+
+## Benchmarking
+
+EnMasse provides a benchmarking suite, ebench, that can run alongside the EnMasse cluster or
+on a separate set of machines. The suite is composed of an agent that sends messages to a specific
+address and a collector that aggregates metrics from multiple agents. To start an agent and a
+collector:
+
+    oc create -f ebench-agent-rc.yaml
+    oc create -f ebench-collector.yaml
+
+The agent and collector is parameterized using environment variables defined in the specification
+file. 
+
+You can scale the number of agents by adjusting the number of replicas, and the collector will
+automatically pick up the changes and display aggregated results for all agents running.
+
