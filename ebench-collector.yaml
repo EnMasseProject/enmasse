@@ -1,0 +1,15 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: ebench-collector
+spec:
+  template:
+    metadata:
+      name: ebench-collector
+    spec:
+      containers:
+      - name: ebench-collector
+        image: enmasseproject/ebench-collector:latest
+        env:
+        - name: BENCH_INTERVAL
+          value: "20"

@@ -1,24 +1,24 @@
 apiVersion: v1
-kind: ReplicationController
+kind: DeploymentConfig
 metadata:
-  name: ebench
+  name: ebench-agent
   labels:
-    name: ebench
+    name: ebench-agent
 spec:
   replicas: 1
   selector:
-    name: ebench
+    name: ebench-agent
   template:
     metadata:
       labels:
-        name: ebench
+        name: ebench-agent
     spec:
       containers:
-      - name: ebench
-        image: enmasseproject/ebench:latest
+      - name: ebench-agent
+        image: enmasseproject/ebench-agent:latest
         env:
         - name: BENCH_DURATION
-          value: "60"
+          value: "300"
         - name : BENCH_MSG_SIZE
           value: "128"
         - name : BENCH_ADDRESS
