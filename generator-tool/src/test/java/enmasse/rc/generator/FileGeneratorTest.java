@@ -1,19 +1,15 @@
 package enmasse.rc.generator;
 
-import com.openshift.internal.util.Assert;
 import org.hamcrest.CoreMatchers;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-import enmasse.rc.generator.ConfigGenerator;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.util.Optional;
 
-import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 
@@ -40,11 +36,21 @@ public class FileGeneratorTest {
         File[] outputFiles = outputDir.listFiles();
         assertThat(outputFiles.length, CoreMatchers.is(2));
 
-        File addr1 = findFile(outputFiles, "broker_cluster_addr1.json").get();
-        assertNotNull(addr1);
+        assertClusterExists(outputFiles, "storage_cluster_addr1");
+        assertClusterExists(outputFiles, "storage_cluster_addr2");
+    }
 
-        File addr2 = findFile(outputFiles, "broker_cluster_addr2.json").get();
-        assertNotNull(addr1);
+    private void assertClusterExists(File [] outputFiles, String fileName) {
+        File f = findFile(outputFiles, fileName).get();
+        assertNotNull(f);
+        File[] resources = f.listFiles();
+        assertFileExists(resources, "replicationcontroller.json");
+        assertFileExists(resources, "persistentvolumeclaim.json");
+    }
+
+    private void assertFileExists(File [] outputFiles, String fileName) {
+        File f = findFile(outputFiles, fileName).get();
+        assertNotNull(f);
     }
 
     private Optional<File> findFile(File[] outputFiles, String fileName) {

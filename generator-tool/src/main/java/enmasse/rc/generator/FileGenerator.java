@@ -1,12 +1,11 @@
 package enmasse.rc.generator;
 
-import com.openshift.restclient.ResourceKind;
-import com.openshift.restclient.model.IReplicationController;
 import com.openshift.restclient.model.IResource;
 import enmasse.rc.model.BrokerProperties;
 import enmasse.rc.model.Config;
-import enmasse.rc.model.LabelKeys;
 import enmasse.rc.model.parser.ConfigParser;
+import enmasse.rc.openshift.OpenshiftClient;
+import enmasse.rc.openshift.StorageCluster;
 
 import java.io.File;
 import java.io.FileReader;
@@ -20,9 +19,10 @@ import java.util.List;
 public class FileGenerator {
 
     private final ConfigParser parser = new ConfigParser();
-    private final ConfigGenerator generator = new ConfigGenerator(null, new BrokerProperties.Builder().build());
+    private final StorageGenerator generator = new StorageGenerator(new OpenshiftClient(null, "filegen"), new BrokerProperties.Builder().build());
 
-    private static final String BROKER_CLUSTER_PATTERN = "broker_cluster_%s.json";
+    private static final String STORAGE_CLUSTER_PATTERN = "storage_cluster_%s";
+    private static final String FILE_PATTERN = "%s.json";
 
     public void generate(String inputFilePath, String outputDirPath) throws IOException {
         File inputFile = new File(inputFilePath);
@@ -35,23 +35,27 @@ public class FileGenerator {
     }
 
     private void generateConfig(Config config, File outputDir) throws IOException {
-        List<IResource> resources = generator.generate(config);
-        for (IResource resource : resources) {
-            if (ResourceKind.REPLICATION_CONTROLLER.equals(resource.getKind())) {
-                generateBroker((IReplicationController)resource, outputDir);
-            }
+        List<StorageCluster> clusterList = generator.generate(config.destinations());
+        for (StorageCluster cluster : clusterList) {
+            generateConfig(cluster, outputDir);
         }
     }
 
-    private void generateBroker(IReplicationController resource, File outputDir) throws IOException {
-        String address = resource.getLabels().get(LabelKeys.ADDRESS);
-        File brokerFile = new File(outputDir, String.format(BROKER_CLUSTER_PATTERN, address));
-        writeBrokerConfig(resource, brokerFile);
+    private void generateConfig(StorageCluster cluster, File outputDir) throws IOException {
+        File clusterDir = new File(outputDir, String.format(STORAGE_CLUSTER_PATTERN, cluster.getAddress()));
+        clusterDir.mkdirs();
+        for (IResource resource : cluster.getResources()) {
+            writeBrokerConfig(resource, new File(clusterDir, formatFileName(String.format(FILE_PATTERN, resource.getKind().toLowerCase()))));
+        }
     }
 
-    private void writeBrokerConfig(IReplicationController replicationController, File brokerFile) throws IOException {
-        try (FileWriter writer = new FileWriter(brokerFile)) {
-            writer.write(replicationController.toJson(false));
+    private String formatFileName(String name) {
+        return name.replaceAll("-", "_");
+    }
+
+    private void writeBrokerConfig(IResource resource, File outputFile) throws IOException {
+        try (FileWriter writer = new FileWriter(outputFile)) {
+            writer.write(resource.toJson(false));
         }
     }
 }
