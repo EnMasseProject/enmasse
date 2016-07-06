@@ -1,0 +1,14 @@
+description = 'Storage Controller Server'
+dependencies {
+    compile project(':storage-controller-lib')
+    compile "com.openshift:openshift-restclient-java:${openshiftRestclientVersion}"
+    compile "io.vertx:vertx-proton:${vertxProtonVersion}"
+    compile "com.fasterxml.jackson.core:jackson-core:${jacksonVersion}"
+    compile "com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}"
+
+    testCompile "junit:junit:${junitVersion}"
+    testCompile "org.mockito:mockito-core:${mockitoVersion}"
+}
+
+apply plugin: 'application'
+mainClassName = 'enmasse.storage.controller.Main'

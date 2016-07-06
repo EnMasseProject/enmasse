@@ -1,0 +1,9 @@
+description = 'Storage Generator Tool'
+dependencies {
+    compile project(':storage-controller-lib')
+    compile "commons-cli:commons-cli:${commonsCliVersion}"
+    testCompile group: 'junit', name: 'junit', version:'4.12'
+}
+
+apply plugin: 'application'
+mainClassName = 'enmasse.storage.controller.generator.Main'

@@ -1,9 +1,5 @@
-rootProject.name = 'rc-generator'
+rootProject.name = 'storage-controller'
 
-include ':rc-generator-lib'
-include ':rc-generator-tool'
-include ':rc-generator-agent'
-
-project(':rc-generator-lib').projectDir = "$rootDir/generator-lib" as File
-project(':rc-generator-tool').projectDir = "$rootDir/generator-tool" as File
-project(':rc-generator-agent').projectDir = "$rootDir/generator-agent" as File
+include ':storage-controller-lib'
+include ':storage-controller-server'
+include ':storage-generator-tool'
