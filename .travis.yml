@@ -21,9 +21,9 @@ after_success:
     - docker build -t $REPO:$COMMIT storage-controller-server
     - if [ "$TRAVIS_BRANCH" == "master" ] && [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
       docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS;
-      docker push $REPO;
       docker tag $REPO:$COMMIT $REPO:$TAG;
       docker tag $REPO:$COMMIT $REPO:travis-$TRAVIS_BUILD_NUMBER;
+      docker push $REPO;
       TRAVIS_TOKEN=$ACCESS_TOKEN sh .trigger-travis.sh;
       fi
 
