@@ -101,23 +101,23 @@ objects:
           - containerPort: 55672
             protocol: TCP
 - apiVersion: v1
-  kind: ReplicationController
+  kind: DeploymentConfig
   metadata:
     labels:
-      name: rc-generator
-    name: rc-generator
+      name: storage-controller
+    name: storage-controller
   spec:
     replicas: 1
     selector:
-      name: rc-generator
+      name: storage-controller
     template:
       metadata:
         labels:
-          name: rc-generator
+          name: storage-controller
       spec:
         serviceAccount: deployer
         containers:
-        - image: "${RC_GENERATOR_IMAGE}"
+        - image: "${STORAGE_CONTROLLER_IMAGE}"
           name: master
           env:
           - name: BROKER_IMAGE
@@ -146,9 +146,9 @@ parameters:
   - name: CONFIGMAP_BRIDGE_IMAGE
     description: "The image to use for the configmap notification bridge"
     value: "enmasseproject/configmap-bridge:latest"
-  - name: RC_GENERATOR_IMAGE
-    description: "The image to use for the rc generator"
-    value: "enmasseproject/rc-generator:latest"
+  - name: STORAGE_CONTROLLER_IMAGE
+    description: "The docker image to use for the storage controller"
+    value: "enmasseproject/storage-controller:latest"
   - name: RAGENT_IMAGE
     description: "The image to use for the router agent"
     value: "enmasseproject/ragent:latest"

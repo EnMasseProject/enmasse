@@ -9,7 +9,7 @@ named myproject). This is needed by the configmap-bridge and the
 router agent.
 
 Edit rights must also be granted to the deployer role, used by the
-rc-generator pod.
+storage-controller.
 
 The permissions can be setup with the following commands:
 
@@ -87,16 +87,16 @@ After editing that file, update the config map with:
 
     oc replace -f addresses.yaml
 
-### Setting up replication controller generator
+### Setting up the storage controller
 
-In order for the agent to generate broker replication controllers, it
-must be granted edit rights. See section on access permissions above.
+In order for the storage controller to work, it must be granted edit rights so that it can 
+create replication controllers. See section on access permissions above.
 
 Then start the replication controller:
 
-    oc create -f rc-generator-rc.yaml
+    oc create -f storage-controller-rc.yaml
 
-Whenever you change the 'maas' config map, the rc-generator will pick it up and
+Whenever you change the 'maas' config map, the storage-controller will pick up the changes and
 delete/create/update broker clusters.
 
 ### Setting up the routers
