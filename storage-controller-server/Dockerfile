@@ -1,5 +1,5 @@
 FROM java:8
 
-ADD build/distributions/rc-generator-agent-0.1.tar /
+ADD build/distributions/storage-controller-server-0.1.tar /
 
-CMD ["/rc-generator-agent-0.1/bin/rc-generator-agent"]
+CMD ["/storage-controller-server-0.1/bin/storage-controller-server"]
