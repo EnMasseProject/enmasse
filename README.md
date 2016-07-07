@@ -1,1 +1,1 @@
-Design documents relating to EnMasse project
+Documents relating to EnMasse project
