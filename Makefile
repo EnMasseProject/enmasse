@@ -3,6 +3,6 @@ SUBDIRS=artemis activemq
 all: $(SUBDIRS)
 
 $(SUBDIRS):
-	$(MAKE) -C $@
+	$(MAKE) -C $@ all
 
 .PHONY: all $(SUBDIRS)
