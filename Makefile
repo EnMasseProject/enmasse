@@ -1,4 +1,4 @@
-SUBDIRS=artemis
+SUBDIRS=artemis activemq
 
 all: $(SUBDIRS)
 
