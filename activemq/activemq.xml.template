@@ -29,7 +29,7 @@
         <destinationPolicy>
             <policyMap>
               <policyEntries>
-                <policyEntry queue="${QUEUE_NAME}>" producerFlowControl="true" memoryLimit="512mb">
+                <policyEntry queue=">" producerFlowControl="true" memoryLimit="1mb">
                   <pendingQueuePolicy>
                     <vmQueueCursor/>
                   </pendingQueuePolicy>
