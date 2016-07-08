@@ -1,0 +1,34 @@
+BUILDSCRIPTS=../buildscripts
+FETCH_SOURCE=$(BUILDSCRIPTS)/fetchfile.sh
+REPO=enmasseproject/$(PROJECT_NAME)
+DOCKERFILE_DIR ?= .
+
+ifeq ($(TRAVIS_BRANCH), "master")
+TAG=latest
+else
+TAG=$(TRAVIS_BRANCH)
+endif
+
+DO_PUSH=false
+ifeq ($(TRAVIS_BRANCH), "master")
+ifeq ($(TRAVIS_PULL_REQUEST), "false")
+DO_PUSH=true
+endif
+endif
+
+ifeq ($(DO_PUSH), "true")
+all: build push
+else
+all: build
+endif
+
+build: fetch_source
+	echo "Building TB: $(TRAVIS_BRANCH), PR: $(TRAVIS_PULL_REQUEST)"
+	docker build -t $(PROJECT_NAME):$(COMMIT) $(DOCKERFILE_DIR)
+
+push: build
+	docker login -e $(DOCKER_EMAIL) -u $(DOCKER_USER) -p $(DOCKER_PASS)
+	docker tag $(REPO):$(COMMIT) $(REPO):$(TAG)
+	docker tag $(REPO):$(COMMIT) $(REPO):travis-$(TRAVIS_BUILD_NUMBER)
+	docker push $(REPO)
+	TRAVIS_TOKEN=$(ACCESS_TOKEN) $(BUILDSCRIPTS)/trigger-travis.sh;
