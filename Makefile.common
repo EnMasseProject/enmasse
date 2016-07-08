@@ -17,8 +17,6 @@ DO_PUSH="true"
 endif
 endif
 
-echo "Doing push: $(DO_PUSH)"
-
 ifeq ($(DO_PUSH), "true")
 all: build push
 	echo "Building and pushing"
