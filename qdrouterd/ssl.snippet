@@ -17,35 +17,15 @@
 ## under the License
 ##
 
-# See the qdrouterd.conf (5) manual page for information about this
-# file's format and options.
-
-container {
-    workerThreads: 4
-    containerName: Qpid.Dispatch.Router.${HOSTNAME}
-}
-
-router {
-    mode: interior
-    routerId: Router.${HOSTNAME}
+sslProfile {
+   name: ssl_details
+   certFile: /etc/qpid-dispatch/ssl/server-cert.pem
+   keyFile: /etc/qpid-dispatch/ssl/server-key.pem
 }
 
 listener {
     addr: 0.0.0.0
-    port: 5672
+    port: 5671
     authenticatePeer: no
-    linkCapacity: ${LINK_CAPACITY}
+    sslProfile: ssl_details
 }
-
-listener {
-    addr: ${MY_IP_ADDR}
-    port: 55672
-    role: inter-router
-    authenticatePeer: no
-}
-
-connector {
-    addr: ${RAGENT_SERVICE_HOST}
-    port: ${RAGENT_SERVICE_PORT}
-}
-

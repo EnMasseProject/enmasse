@@ -14,38 +14,12 @@
 ## "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
 ## KIND, either express or implied.  See the License for the
 ## specific language governing permissions and limitations
-## under the License
+## under the License.
 ##
 
-# See the qdrouterd.conf (5) manual page for information about this
-# file's format and options.
-
-container {
-    workerThreads: 4
-    containerName: Qpid.Dispatch.Router.${HOSTNAME}
-}
-
-router {
-    mode: interior
-    routerId: Router.${HOSTNAME}
-}
-
-listener {
-    addr: 0.0.0.0
-    port: 5672
-    authenticatePeer: no
-    linkCapacity: ${LINK_CAPACITY}
-}
-
-listener {
-    addr: ${MY_IP_ADDR}
-    port: 55672
-    role: inter-router
-    authenticatePeer: no
-}
-
-connector {
-    addr: ${RAGENT_SERVICE_HOST}
-    port: ${RAGENT_SERVICE_PORT}
-}
-
+FROM fedora:23
+MAINTAINER Ted Ross <tross@apache.org>
+RUN dnf -y update
+RUN dnf -y install python-websockify
+EXPOSE 8088
+CMD websockify 8088 ${MESSAGING_SERVICE_HOST}:${MESSAGING_SERVICE_PORT}
