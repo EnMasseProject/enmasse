@@ -1,15 +1,12 @@
 package enmasse.storage.controller.generator;
 
-import com.openshift.internal.restclient.model.volume.PersistentVolumeClaim;
+import com.openshift.internal.restclient.model.volume.EmptyDirVolumeSource;
 import com.openshift.restclient.model.IContainer;
 import com.openshift.restclient.model.IReplicationController;
-import com.openshift.restclient.model.volume.IPersistentVolumeClaim;
+import com.openshift.restclient.model.volume.IVolumeSource;
 import enmasse.storage.controller.model.*;
-import org.jboss.dmr.ModelNode;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.util.Collections;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
@@ -19,21 +16,23 @@ import static org.junit.Assert.assertThat;
  */
 public class BrokerGeneratorTest {
     private BrokerGenerator generator;
-    private IPersistentVolumeClaim emptyClaim = new PersistentVolumeClaim(new ModelNode(), null, Collections.emptyMap());
+    private IVolumeSource emptySource = new EmptyDirVolumeSource("myvol");
+    private FlavorConfig flavorConfig;
 
     @Before
     public void setup() {
-        generator = new BrokerGenerator(null, new BrokerProperties.Builder().brokerPort(1234).build());
+        generator = new BrokerGenerator(null);
+        flavorConfig = new FlavorConfig.Builder().brokerPort(1234).build();
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testThrowOnNoStore() {
-        generator.generate(new Destination("testaddr", false, false), emptyClaim);
+        generator.generate(new Destination("testaddr", false, false, flavorConfig), emptySource);
     }
 
     @Test
     public void testGenerator() {
-        IReplicationController controller = generator.generate(new Destination("testaddr", true, false), emptyClaim);
+        IReplicationController controller = generator.generate(new Destination("testaddr", true, false, flavorConfig), emptySource);
 
         assertThat(controller.getName(), is("controller-testaddr"));
         assertThat(controller.getLabels().get(LabelKeys.ROLE), is(Roles.BROKER));
@@ -52,7 +51,7 @@ public class BrokerGeneratorTest {
 
     @Test
     public void testGenerateTopic() {
-        IReplicationController controller = generator.generate(new Destination("testaddr", true, true), emptyClaim);
+        IReplicationController controller = generator.generate(new Destination("testaddr", true, true, flavorConfig), emptySource);
         IContainer broker = controller.getContainer("broker");
         assertThat(broker.getEnvVars().get(EnvVars.TOPIC_NAME), is("testaddr"));
     }

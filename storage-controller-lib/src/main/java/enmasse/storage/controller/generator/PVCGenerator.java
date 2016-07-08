@@ -5,7 +5,9 @@ import com.openshift.internal.restclient.model.volume.PersistentVolumeClaim;
 import com.openshift.restclient.IClient;
 import com.openshift.restclient.ResourceKind;
 import com.openshift.restclient.model.volume.IPersistentVolumeClaim;
+import enmasse.storage.controller.admin.FlavorManager;
 import enmasse.storage.controller.model.Destination;
+import enmasse.storage.controller.model.FlavorConfig;
 
 import java.util.Collections;
 
@@ -20,10 +22,11 @@ public class PVCGenerator {
     }
 
     public IPersistentVolumeClaim generate(Destination dest) {
+        FlavorConfig flavorConfig = dest.flavor();
         PersistentVolumeClaim claim = factory.create("v1", ResourceKind.PVC);
         claim.setName("pvc-" + dest.address());
         claim.setAccessModes(Collections.singleton("ReadWriteOnce"));
-        claim.setRequestedStorage("1Gi"); // TODO: Determine this based on some external property
+        claim.setRequestedStorage(flavorConfig.storageConfig().size());
         return claim;
     }
 }

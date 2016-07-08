@@ -1,21 +1,12 @@
 package enmasse.storage.controller.admin;
 
-import enmasse.storage.controller.generator.StorageGenerator;
-import enmasse.storage.controller.model.Config;
-import enmasse.storage.controller.openshift.OpenshiftClient;
+import com.fasterxml.jackson.databind.JsonNode;
+
+import java.io.IOException;
 
 /**
- * Ensures the state of the cluster matches the config.
- *
- * @author lulf
+ * @author Ulf Lilleengen
  */
-public class ConfigManager {
-    private final ClusterManager clusterManager;
-
-    public ConfigManager(OpenshiftClient osClient, StorageGenerator generator) {
-        this.clusterManager = new ClusterManager(osClient, generator);
-    }
-    public void configUpdated(Config config) {
-        clusterManager.destinationsUpdated(config.destinations());
-    }
+public interface ConfigManager {
+    public void configUpdated(JsonNode jsonConfig) throws IOException;
 }

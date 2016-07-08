@@ -1,0 +1,45 @@
+{
+  "vanilla": {
+    "broker": {
+      "dockerImage": "enmasseproject/artemis:latest",
+      "storage": {
+        "volumeType": "emptyDir",
+        "mountPath": "/var/run/artemis"
+      }
+    },
+    "router": {
+      "dockerImage": "gordons/qdrouter:v9"
+    },
+    "shared": true
+  },
+  "chili": {
+    "broker": {
+      "dockerImage": "enmasseproject/artemis:latest",
+      "storage": {
+        "volumeType": "persistentVolumeClaim",
+        "size": "10Gi",
+        "mountPath": "/var/run/artemis"
+      }
+    },
+    "router": {
+      "dockerImage": "gordons/qdrouter:v9",
+      "certPath": "/etc/qpid-dispatch/ssl",
+      "certSecretName": "qdrouterd-certs"
+    },
+    "shared": false
+  },
+  "caramel": {
+    "broker": {
+      "dockerImage": "enmasseproject/activemq:latest",
+      "storage": {
+        "volumeType": "persistentVolumeClaim",
+        "size": "10Gi",
+        "mountPath": "/var/lib/activemq"
+      }
+    },
+    "router": {
+      "dockerImage": "gordons/qdrouter:v9"
+    },
+    "shared": true
+  }
+}

@@ -45,7 +45,6 @@ public class FileGeneratorTest {
         assertNotNull(f);
         File[] resources = f.listFiles();
         assertFileExists(resources, "replicationcontroller.json");
-        assertFileExists(resources, "persistentvolumeclaim.json");
     }
 
     private void assertFileExists(File [] outputFiles, String fileName) {

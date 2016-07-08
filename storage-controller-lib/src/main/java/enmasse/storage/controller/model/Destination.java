@@ -7,11 +7,13 @@ public final class Destination {
     private final String address;
     private final boolean storeAndForward;
     private final boolean multicast;
+    private final FlavorConfig flavorConfig;
 
-    public Destination(String address, boolean storeAndForward, boolean multicast) {
+    public Destination(String address, boolean storeAndForward, boolean multicast, FlavorConfig flavorConfig) {
         this.address = address;
         this.storeAndForward = storeAndForward;
         this.multicast = multicast;
+        this.flavorConfig = flavorConfig;
     }
 
     public String address() {
@@ -39,5 +41,9 @@ public final class Destination {
     @Override
     public int hashCode() {
         return address.hashCode();
+    }
+
+    public FlavorConfig flavor() {
+        return flavorConfig;
     }
 }

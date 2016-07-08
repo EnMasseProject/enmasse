@@ -21,9 +21,9 @@ public class StorageCluster {
 
     private final OpenshiftClient client;
     private final IReplicationController controller;
-    private final List<IPersistentVolumeClaim> volumeClaims;
+    private final Collection<IPersistentVolumeClaim> volumeClaims;
 
-    public StorageCluster(OpenshiftClient client, IReplicationController controller, List<IPersistentVolumeClaim> claims) {
+    public StorageCluster(OpenshiftClient client, IReplicationController controller, Collection<IPersistentVolumeClaim> claims) {
         this.client = client;
         this.controller = controller;
         this.volumeClaims = claims;
@@ -73,7 +73,7 @@ public class StorageCluster {
         }
     }
 
-    private boolean claimsUpdated(List<IPersistentVolumeClaim> newClaims) {
+    private boolean claimsUpdated(Collection<IPersistentVolumeClaim> newClaims) {
         return volumeClaims.size() != newClaims.size() ||
                 !volumeClaims.stream().map(IPersistentVolumeClaim::getName).collect(Collectors.toSet())
                         .equals(newClaims.stream().map(IPersistentVolumeClaim::getName).collect(Collectors.toSet()));

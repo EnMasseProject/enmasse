@@ -6,10 +6,10 @@ import java.util.Collections;
 /**
  * @author lulf
  */
-public final class Config {
+public final class AddressConfig {
     private final Collection<Destination> destinationList;
 
-    public Config(Collection<Destination> destinationList) {
+    public AddressConfig(Collection<Destination> destinationList) {
         this.destinationList = Collections.unmodifiableCollection(destinationList);
     }
 

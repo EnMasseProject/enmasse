@@ -2,8 +2,10 @@ package enmasse.storage.controller.generator;
 
 import com.openshift.restclient.model.IReplicationController;
 import com.openshift.restclient.model.IResource;
-import enmasse.storage.controller.model.BrokerProperties;
+import com.openshift.restclient.model.volume.VolumeType;
+import enmasse.storage.controller.model.FlavorConfig;
 import enmasse.storage.controller.model.Destination;
+import enmasse.storage.controller.model.StorageConfig;
 import enmasse.storage.controller.openshift.OpenshiftClient;
 import enmasse.storage.controller.openshift.StorageCluster;
 import org.junit.Before;
@@ -21,24 +23,26 @@ import static org.mockito.Mockito.mock;
  */
 public class StorageClusterGeneratorTest {
     private OpenshiftClient mockClient;
+    private FlavorConfig flavorConfig;
 
     @Before
     public void setUp() {
         mockClient = mock(OpenshiftClient.class);
+        flavorConfig = new FlavorConfig.Builder().build();
     }
 
     @Test
     public void testSkipNoStore() {
-        StorageGenerator generator = new StorageGenerator(mockClient, new BrokerProperties.Builder().build());
-        List<StorageCluster> resources = generator.generate(Arrays.asList(new Destination("foo", true, false), new Destination("bar", false, false)));
+        StorageGenerator generator = new StorageGenerator(mockClient);
+        List<StorageCluster> resources = generator.generate(Arrays.asList(new Destination("foo", true, false, flavorConfig), new Destination("bar", false, false, flavorConfig)));
         assertThat(resources.size(), is(1));
     }
 
     @Test
     public void testGenerate() {
-        BrokerProperties properties = new BrokerProperties.Builder().brokerPort(1234).build();
-        StorageGenerator generator = new StorageGenerator(mockClient, properties);
-        List<StorageCluster> clusterList = generator.generate(Arrays.asList(new Destination("foo", true, false), new Destination("bar", false, false)));
+        FlavorConfig properties = new FlavorConfig.Builder().brokerPort(1234).storage(new StorageConfig(VolumeType.PERSISTENT_VOLUME_CLAIM, "10Gi", "/mnt")).build();
+        StorageGenerator generator = new StorageGenerator(mockClient);
+        List<StorageCluster> clusterList = generator.generate(Arrays.asList(new Destination("foo", true, false, properties), new Destination("bar", false, false, properties)));
         assertThat(clusterList.size(), is(1));
         StorageCluster cluster = clusterList.get(0);
         assertThat(cluster.getAddress(), is("foo"));
