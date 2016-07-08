@@ -16,7 +16,7 @@ DO_PUSH=true
 endif
 endif
 
-ifeq ($(DO_PUSH), "true")
+ifeq ($(DO_PUSH), true)
 all: build push
 else
 all: build
@@ -27,6 +27,7 @@ build: fetch_source
 	docker build -t $(PROJECT_NAME):$(COMMIT) $(DOCKERFILE_DIR)
 
 push: build
+	echo "Pushing docker image"
 	docker login -e $(DOCKER_EMAIL) -u $(DOCKER_USER) -p $(DOCKER_PASS)
 	docker tag $(REPO):$(COMMIT) $(REPO):$(TAG)
 	docker tag $(REPO):$(COMMIT) $(REPO):travis-$(TRAVIS_BUILD_NUMBER)
