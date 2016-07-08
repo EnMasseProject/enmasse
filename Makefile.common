@@ -10,11 +10,14 @@ TAG=$(TRAVIS_BRANCH)
 endif
 
 DO_PUSH=false
+
 ifeq ($(TRAVIS_BRANCH), "master")
 ifeq ($(TRAVIS_PULL_REQUEST), "false")
 DO_PUSH=true
 endif
 endif
+
+echo "Doing push: $(DO_PUSH)"
 
 ifeq ($(DO_PUSH), true)
 all: build push
