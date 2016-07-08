@@ -28,11 +28,9 @@ all: build
 endif
 
 build: fetch_source
-	echo "Building TB: $(TRAVIS_BRANCH), PR: $(TRAVIS_PULL_REQUEST)"
-	docker build -t $(PROJECT_NAME):$(COMMIT) $(DOCKERFILE_DIR)
+	docker build -t $(REPO):$(COMMIT) $(DOCKERFILE_DIR)
 
 push: build
-	echo "Pushing docker image"
 	docker login -e $(DOCKER_EMAIL) -u $(DOCKER_USER) -p $(DOCKER_PASS)
 	docker tag $(REPO):$(COMMIT) $(REPO):$(TAG)
 	docker tag $(REPO):$(COMMIT) $(REPO):travis-$(TRAVIS_BUILD_NUMBER)
