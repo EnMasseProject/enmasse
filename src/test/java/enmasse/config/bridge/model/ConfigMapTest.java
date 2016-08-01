@@ -1,4 +1,4 @@
-package model;
+package enmasse.config.bridge.model;
 
 import org.junit.Test;
 import enmasse.config.bridge.model.ConfigMap;

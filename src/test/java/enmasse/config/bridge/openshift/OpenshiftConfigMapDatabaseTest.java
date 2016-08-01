@@ -1,4 +1,4 @@
-package openshift;
+package enmasse.config.bridge.openshift;
 
 import com.openshift.restclient.IClient;
 import com.openshift.restclient.IOpenShiftWatchListener;

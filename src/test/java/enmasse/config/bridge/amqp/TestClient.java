@@ -1,4 +1,4 @@
-package amqp;
+package enmasse.config.bridge.amqp;
 
 import io.vertx.core.Vertx;
 import io.vertx.proton.ProtonClient;
