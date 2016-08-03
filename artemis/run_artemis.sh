@@ -1,23 +1,21 @@
 #!/bin/sh
 
+CONFIG_TEMPLATES=/config_templates
 VOLUME="/var/run/artemis/"
 BASE=$(dirname $0)
 INSTANCE=$($BASE/get_free_instance.py $VOLUME)
+
 if [ ! -d "$INSTANCE" ]; then
     $ARTEMIS_HOME/bin/artemis create $INSTANCE --user admin --password admin --role admin --allow-anonymous
+    cp $CONFIG_TEMPLATES/broker_header.xml /tmp/broker.xml
     if [ -n "$QUEUE_NAME" ]; then
-        cat > /tmp/snippet <<EOF
-      <queues>
-          <queue name="$QUEUE_NAME">
-             <address>$QUEUE_NAME</address>
-          </queue>
-      </queues>
-EOF
-        sed -i -e '/<\/address-settings>/r /tmp/snippet' $INSTANCE/etc/broker.xml
-        sed -i -e 's/0.0.0.0:5672/0.0.0.0:5673/' $INSTANCE/etc/broker.xml
+        cat $CONFIG_TEMPLATES/broker_queue.xml >> /tmp/broker.xml
     elif [ -n "$TOPIC_NAME" ]; then
-        echo "ERROR: topics not yet supported"
+        cat $CONFIG_TEMPLATES/broker_topic.xml >> /tmp/broker.xml
     fi
+    cat $CONFIG_TEMPLATES/broker_footer.xml >> /tmp/broker.xml
+
+    envsubst < /tmp/broker.xml > $INSTANCE/etc/broker.xml
 fi
 
 exec $INSTANCE/bin/artemis run
