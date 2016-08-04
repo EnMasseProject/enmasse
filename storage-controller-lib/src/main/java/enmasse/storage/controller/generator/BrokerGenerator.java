@@ -42,6 +42,7 @@ public class BrokerGenerator {
         controller.addLabel(LabelKeys.ADDRESS, destination.address());
         controller.addTemplateLabel(LabelKeys.ROLE, Roles.BROKER);
         controller.addTemplateLabel(LabelKeys.CAPABILITY, Capabilities.ROUTER);
+        controller.addTemplateLabel(LabelKeys.ADDRESS, destination.address());
         controller.setReplicaSelector(Collections.singletonMap(LabelKeys.ADDRESS, destination.address()));
         controller.addVolume(volumeSource);
 
