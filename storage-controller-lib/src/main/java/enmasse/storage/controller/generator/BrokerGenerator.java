@@ -61,10 +61,10 @@ public class BrokerGenerator {
 
         if (destination.multicast()) {
             // TODO: Make these ports a property of the flavor
-            ports.add(createPort("artemisCore", 61616));
-            ports.add(createPort("jgroupsPing", 7800));
-            ports.add(createPort("broadcastGroup", 7801));
-            ports.add(createPort("discoveryGroup", 7802));
+            ports.add(createPort("artemis", 61616));
+            ports.add(createPort("jgroups", 7800));
+            ports.add(createPort("broadcast", 7801));
+            ports.add(createPort("discovery", 7802));
         }
 
         Map<String, String> env = new LinkedHashMap<>();
