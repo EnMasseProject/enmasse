@@ -70,6 +70,10 @@ under the License.
 
       </acceptors>
 
+      <connectors>
+         <!-- Connector to me -->
+         <connector name="me">tcp://$BROKER_IP:61616</connector>
+      </connectors>
 
       <security-settings>
          <security-setting match="#">

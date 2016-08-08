@@ -2,6 +2,7 @@ BUILDSCRIPTS=../buildscripts
 FETCH_SOURCE=$(BUILDSCRIPTS)/fetchfile.sh
 REPO=enmasseproject/$(PROJECT_NAME)
 DOCKERFILE_DIR ?= .
+COMMIT ?= latest
 
 ifeq ($(TRAVIS_BRANCH), "master")
 TAG=latest
