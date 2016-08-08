@@ -8,6 +8,7 @@ import com.openshift.internal.restclient.model.volume.VolumeMount;
 import com.openshift.restclient.IClient;
 import com.openshift.restclient.ResourceKind;
 import com.openshift.restclient.model.IContainer;
+import com.openshift.restclient.model.IPort;
 import com.openshift.restclient.model.IReplicationController;
 import com.openshift.restclient.model.volume.ISecretVolumeSource;
 import com.openshift.restclient.model.volume.IVolumeMount;
@@ -54,8 +55,18 @@ public class BrokerGenerator {
 
     private void generateBroker(ReplicationController controller, Destination destination, IVolumeSource volumeSource) {
         FlavorConfig flavorConfig = destination.flavor();
-        Port amqpPort = new Port(new ModelNode());
-        amqpPort.setContainerPort(flavorConfig.brokerPort());
+
+        Set<IPort> ports = new LinkedHashSet<>();
+        ports.add(createPort("amqp", flavorConfig.brokerPort()));
+
+        if (destination.multicast()) {
+            // TODO: Make these ports a property of the flavor
+            ports.add(createPort("artemisCore", 61616));
+            ports.add(createPort("jgroupsPing", 7800));
+            ports.add(createPort("broadcastGroup", 7801));
+            ports.add(createPort("discoveryGroup", 7802));
+        }
+
         Map<String, String> env = new LinkedHashMap<>();
         env.put(destination.multicast() ? EnvVars.TOPIC_NAME : EnvVars.QUEUE_NAME, destination.address());
         env.put(EnvVars.BROKER_PORT, String.valueOf(flavorConfig.brokerPort()));
@@ -63,7 +74,7 @@ public class BrokerGenerator {
         IContainer broker = controller.addContainer(
                 "broker",
                 flavorConfig.brokerImage(),
-                Collections.singleton(amqpPort),
+                ports,
                 env,
                 Collections.emptyList());
 
@@ -72,6 +83,13 @@ public class BrokerGenerator {
         volumeMount.setReadOnly(false);
         volumeMount.setMountPath(flavorConfig.storageConfig().mountPath());
         broker.setVolumeMounts(Collections.singleton(volumeMount));
+    }
+
+    private static IPort createPort(String portName, int port) {
+        Port portModel = new Port(new ModelNode());
+        portModel.setName(portName);
+        portModel.setContainerPort(port);
+        return portModel;
     }
 
     private void generateDispatchRouter(ReplicationController controller, Destination destination) {

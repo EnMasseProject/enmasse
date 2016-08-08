@@ -31,7 +31,7 @@ public class BrokerGeneratorTest {
     }
 
     @Test
-    public void testGenerator() {
+    public void testGenerateQueue() {
         IReplicationController controller = generator.generate(new Destination("testaddr", true, false, flavorConfig), emptySource);
 
         assertThat(controller.getName(), is("controller-testaddr"));
@@ -54,5 +54,6 @@ public class BrokerGeneratorTest {
         IReplicationController controller = generator.generate(new Destination("testaddr", true, true, flavorConfig), emptySource);
         IContainer broker = controller.getContainer("broker");
         assertThat(broker.getEnvVars().get(EnvVars.TOPIC_NAME), is("testaddr"));
+        assertThat(broker.getPorts().size(), is(5));
     }
 }
