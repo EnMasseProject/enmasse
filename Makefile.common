@@ -36,4 +36,4 @@ push: build
 	docker tag $(REPO):$(COMMIT) $(REPO):$(TAG)
 	docker tag $(REPO):$(COMMIT) $(REPO):travis-$(TRAVIS_BUILD_NUMBER)
 	docker push $(REPO)
-	@TRAVIS_TOKEN=$(ACCESS_TOKEN) $(BUILDSCRIPTS)/trigger-travis.sh;
+	$(BUILDSCRIPTS)/trigger-travis.sh;
