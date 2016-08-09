@@ -4,7 +4,7 @@ REPO=enmasseproject/$(PROJECT_NAME)
 DOCKERFILE_DIR ?= .
 COMMIT ?= latest
 
-ifeq ($(TRAVIS_BRANCH), "master")
+ifeq ($(TRAVIS_BRANCH),master)
 TAG=latest
 else
 TAG=$(TRAVIS_BRANCH)
