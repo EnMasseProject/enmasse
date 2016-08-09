@@ -158,7 +158,7 @@ parameters:
     description: The image to use for the broker
   - name: ROUTER_IMAGE
     description: "The image to use for the router"
-    value: gordons/qdrouterd:v9
+    value: gordons/qdrouterd:v10
   - name: CONFIGMAP_BRIDGE_IMAGE
     description: "The image to use for the configmap notification bridge"
     value: "enmasseproject/configmap-bridge:latest"

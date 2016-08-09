@@ -20,7 +20,7 @@ spec:
           secretName: qdrouterd-certs
       containers:
       - name: master
-        image: gordons/qdrouterd:v9
+        image: gordons/qdrouterd:v10
         ports:
         - containerPort: 5672
         volumeMounts:

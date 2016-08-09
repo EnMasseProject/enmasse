@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: master
-        image: gordons/qdrouterd:v9
+        image: gordons/qdrouterd:v10
         env:
         - name: LINK_CAPACITY
           value: '50'
