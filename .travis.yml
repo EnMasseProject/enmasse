@@ -14,7 +14,7 @@ cache:
 script:
 - docker run -d --name "origin" --privileged --pid=host --net=host -v /:/rootfs:ro
   -v /var/run:/var/run:rw -v /sys:/sys -v /var/lib/docker:/var/lib/docker:rw -v /var/lib/origin/openshift.local.volumes:/var/lib/origin/openshift.local.volumes
-  openshift/origin start
+  openshift/origin:v1.3.0-alpha.1 start
 - sleep 20
 - wget https://github.com/openshift/origin/releases/download/v1.3.0-alpha.1/openshift-origin-client-tools-v1.3.0-alpha.1-6e83535-linux-64bit.tar.gz
   -O oclient.tar.gz
