@@ -167,7 +167,7 @@ objects:
                 }
             },
             "router": {
-                "dockerImage": "gordons/qdrouterd:v9"
+                "dockerImage": "gordons/qdrouterd:v10"
             },
             "shared": true
         },
@@ -181,7 +181,7 @@ objects:
                 }
             },
             "router": {
-                "dockerImage": "gordons/qdrouterd:v9",
+                "dockerImage": "gordons/qdrouterd:v10",
                 "certPath": "/etc/qpid-dispatch/ssl",
                 "certSecretName": "qdrouterd-certs"
             },
@@ -196,7 +196,7 @@ objects:
                 }
             },
             "router": {
-                "dockerImage": "gordons/qdrouterd:v9"
+                "dockerImage": "gordons/qdrouterd:v10"
             },
             "shared": true
         }
