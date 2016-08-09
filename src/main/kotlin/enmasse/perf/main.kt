@@ -24,6 +24,7 @@ public fun main(args: Array<String>) {
     try {
         tester.runTest("anycast", 10, 300L)
         tester.runTest("myqueue", 10, 300L)
+        tester.runTest("mytopic", 10, 300L)
     } finally {
         vertx.close()
     }
