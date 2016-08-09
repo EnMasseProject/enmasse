@@ -1,36 +1,30 @@
 sudo: required
 language: java
 jdk:
-  - oraclejdk8
-
+- oraclejdk8
 services:
-  - docker
-
+- docker
 before_cache:
-  - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
-  - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
-
+- rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
+- rm -fr $HOME/.gradle/caches/*/plugin-resolution/
 cache:
   directories:
-    - "$HOME/.gradle/caches/"
-    - "$HOME/.gradle/wrapper/"
-
+  - "$HOME/.gradle/caches/"
+  - "$HOME/.gradle/wrapper/"
 after_success:
-    - export REPO=enmasseproject/configmap-bridge
-    - export TAG=`if [ "$TRAVIS_BRANCH" == "master" ]; then echo "latest"; else echo $TRAVIS_BRANCH ; fi`
-    - docker build -t $REPO:$COMMIT .
-    - if [ "$TRAVIS_BRANCH" == "master" ] && [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
-      docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS;
-      docker tag $REPO:$COMMIT $REPO:$TAG;
-      docker tag $REPO:$COMMIT $REPO:travis-$TRAVIS_BUILD_NUMBER;
-      docker push $REPO;
-      TRAVIS_TOKEN=$ACCESS_TOKEN sh .trigger-travis.sh;
-      fi
-
+- export REPO=enmasseproject/configmap-bridge
+- export TAG=`if [ "$TRAVIS_BRANCH" == "master" ]; then echo "latest"; else echo $TRAVIS_BRANCH
+  ; fi`
+- docker build -t $REPO:$COMMIT .
+- if [ "$TRAVIS_BRANCH" == "master" ] && [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
+  docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS; docker tag $REPO:$COMMIT
+  $REPO:$TAG; docker tag $REPO:$COMMIT $REPO:travis-$TRAVIS_BUILD_NUMBER; docker push
+  $REPO; TRAVIS_TOKEN=$ACCESS_TOKEN sh .trigger-travis.sh; fi
 env:
-    global:
-        - secure: "oiMqsXH7q35sn7pFx6WNHP5acxgOhEnDNPiiv/G9PrEWJ67L6jGpm6c2Sgi60xqH2DFqVm3Unt6kycJ7hJDfzo3Ugxik1TzX0/SmwFYbslxpApUdKo6OSfbVVmmO6SDm7wSum1Mv59z9Hc1kLfUZvk/hin4ZcF/75m0NBLn/4PKuN/c2pYYtj4QfwXtwPQNCMLlroBNhaPAsd99a9yQUhv99dkiZeVp7ghldZMzMzwmC0cb7Z98V9DYmjvFRtnrfBYa/V9pecrtyeAd1kD/AjCrEr8W38eTezBu22yD8dqg+2IGTqluSkfKWcJk/SY4aYUPqUFElKUBFmcO/rnGMHbDBdb3SMjDo5ShM9wpi560ZQ/GeiSXgaD+YE1OIz2gbdRtNsLKXVHVZ8XMjOJ38OTYgpjLKhtdWtKkcTStNvjl9km3PAH+14vITcsceAOTbUpmA1ozRxx4zkTcoN5P3ByEySkQ9WhpuAgoCzJ4kLemq9JRpsZsYAs4FoVcTgAAmV42FUqYXat5XC4R454E3fJSGDWJngl04qOFxbNQx74QwBB42EgcfwHy16eXjrzqZsTxhVQhYmNpnuqDhj5mhD13eSDvVdHouuLi0NmnO9/C7oT+4RGC7HpADqebK+pTywLq9COSv+55gh2vaOpD/OhsO6b8EsY9PT3djLhRctZA=" # DOCKER_EMAIL
-        - secure: "W1fCh96pQOe6py9aMAW/IuF4a1/YLXe+x897c3ndwakuLuf+JYGzv/PAmRi6DO8EEns6mtPVn2KXxDJNCiHoPDh941lh+NYhh20TIo5oHJHw4hhXB8aPOEOGT5lQMW848dOxE1Sb3jRZA2CfuWTJa13ZHMW2HbIGAbSZhIWTBpV6JQHXECX1zQ2D9sIHqV1VOr2kCmp5NGOhSTb+GphweF9hBRCUs1oTD9ctbk6CpEffIuLwtiGF+vfwWnvXocS3BSv8OPrcm7es9Nl398anLrf2Dl7+JFqArtF+KEi5qMZhNZLziCQ1cTRPBUS/izpIv4c1KkJpVaADbC/P3uQFukEnLuew5mzutyFRszLV8rhq7JCKcEq862fQF+Rvm1BDFrSUdeLamtp+0M8TFsWQYYCNaggybtIj6QMljEw/l6OZn96Gd07ucctryfwcTq0631iIn9zTBmucp/qo944HKDIug/GnxWkinGkpa8Aq4gRHAL371OoTeCq3lQwrMsgslVYfny4UFonA1JrCKg3JWlHrrVBxL0fOYq2ArDXJSFyeJ9HTGqAKn4udzp1AxJe+uzhEoOoc2OpV+WfYyxTkSGrxShJud34vXyfylhM0Bxqew9BvrLSVTlaiipMEQORNy/zkX36JALqUB/vcXgqv3r8enZO+3OIkPHkYn/FsfI0=" # DOCKER_USER
-        - secure: "pvpNf78W5cT52TIZEiLiYw6iS7xbbvx6wadnFderpuszQU6IFGlavPavZdCb2/B2KboROkUNNmm8y71eon0R2Ppa5VGc8sxeATfPH0Y4Z1LLIp/vIwhnfz1haRK7j7laD+MU2tvroi6DiV/pD0Ro2MsZrqguzkZua0HxmdpRqCgi4uFFmfvApoleegTGv5dotrujco99faFYQMytY3Ir30NyGYSnISxzWbxI5aPnbjSeigXPuAipuHL4qeAVRvNGNOuswHWPyHMSASsFU15LqDXkTLi50JE5flZtvTTQeNb1+oY0NHssaSFuuYIe0+DY+tWQrZ9GHzycC20IE2YzKAfRwaHHvlToe6LkcY4jcSlwE6I0Zxq4D1cfJGIMibccH1IbSw4UHmqlWzxKMGEi37Q08p/7qV3S2mRQG6jSfOcXLgSsOGT16EbGyn+l5R7DbEztIeJoD9wsCspjoJsIs2XUAtV6my2sOFcgrDATKiXM8sqRQxgSFaGd9eXaZSXzIHkJJLBVk5Lt/xuV7ZbcflJB0+J3NoHPNezH7l8JhrON2CfPM/W2XWWtVt26PWKIwWQzDVX0l5kc9dEEL1xQsH1WvkrSHOArg0bv0RN7SD4Hm0ClxbjQ8lGwNRMLbt+arlsZiZKCpEKtDPtVjKY6gPraKA0s5l/JWl8CuXZJxCo=" # DOCKER_PASS
-        - secure: "C4xgmuw9QzxWLzsBRkqZ21K76qOT7ln0QqgKYH0JJbNo0fSkgPApZ72OCdkpPF26HASdnqixuWpJ3oPaJxF2v6IYVaE1LJ03lU8xm99BxtXeKHvsEfTIszXHOQ7u0YDpXwRUV+nrEaJylacsMpVGgeKdUOswjSoSrDl4Eq+eD31MsvnKee4j1ypQWOdKusal/1oJ9SvQd627jbrUZWHSBcqoTEthvy14IrHAoVA9m0+mBs58y3CtcMUCmYH+3LI/kYGcWcSB+GtWuS2/TiCgcXOuAVF29kvog4vgm+zoaneuq7s2Gg5izJ7cyPk9UH2q5v/JkMobOkc91Ocy3Z1fswL7qj9Edg7BqCt1w28x3RAIrACJ3uaP+dgQ3Dtw6Vb/Cyqz93hsXSgEZL+xwC6ZqGrmSlBmmM/M9ISBWK8GxFy4mGleKdlB7h5SFX4kRpbrCa5UtlWJ543BbvboogYeoGOR+stg+7JUxujRLc93R44oHrN4bpNkYx6f4AB6Ju8jvdk8/PmfpQ9npYppLC8XCtX0ysI+bsyKOhz0QuV5j1mxLuDRGd330dCIGwlstCAEPpWtulSzX1xpdFMe3a3xlvqhurmEi0/+2FdI49pUCbS8GWL7X6KbqGhQyoN1+vXIXSFRMX9xFOIBiO6QfRk19KKHIVmI4Bu+hTMHZGrYwWg=" # ACCESS_TOKEN
-        - COMMIT=${TRAVIS_COMMIT::8}
+  global:
+  - COMMIT=${TRAVIS_COMMIT::8}
+  - secure: ybqVCv/t4QW+5cCMhPO9zggq1DT14AuUOPv4u6AyNVpHupOktiQuk7y++y56CrUfI1R5xzLIt2a9g9ZbWL7XuFR4Ip+50FXy+/hkVf/nnTGclI3USCpo4boDH3izytv0GZB1B3JI2kTABMQtIEnzg19/HMxL2/Bcs4PtHjiwipBg07cH9Xx+iDha47y6DD/DtzMRlqTBwan+bummVHZFvy6F8DDHth9/ZEK8ld23e2GI+1J9RClFfO4J0z3yMdRmk2KAsO0X43J+Ve5x3dZDc7lgggiRnlErkYKaFOIvclfau+dlpk1dGXpNrHhsxhRDUswEgBelEniWaWruniWm0uFZZdSDq5kkWUGPsBMsndfTMRyK/lZ3rcx06/Bywa2VYVyoGR5VOKWu2xvpUZzOe7QzZ4M9XBzgy4lkDopEBWblf+KOxU3JCWO0eGnf2vipBeJf5I1T1AVPaVUSiqFifd0Clc5PuDtzLeCmOBHgyVheMniZ898WGh5KvkPr4kDG8IFDKe/SfCNPNo8/a35gxxkKViSU+WBLzD5GQGhMvb5cm6HveweH9vtBx5S+A2CJgmPB0Ods1B0syrZrLx/VgMkFAoDfYkYi4hlb3kHEUXc2W95SkMt1mSR3ef8kA9bSsDzX+R0V9V5CV/yVMSSJSArX+7cLw9uM5JbCqxzSACQ=
+  - secure: OnuYHbMG2yiv5NdIEOyeXBztIFSALhNui6DJWYKkwhgWA/qqWSadMGFGgBoASZWsOMmJp60pBFhncUSHS2Oc2adpzcmtcJXmT9DGZ/X10SsmltdhNI52NVcx7wRoPknfAGRN+eAF8+yac0yQJ32nJN0XHy9fpusohRg+EdeSpmAQkrt9hxvOPZSVk+A8k4zOm6qVFPakglYcPmQegQyPC+F+O60+47qt8r1CydjU5QJHaJX2Y/xqUGd9c1/WhvehyNSpytg6ibPvqE6JGyHmqfe1+FeQxjeDYl1Jw1X7z785tGrMAXe/lRoNaNPJXrMd52xwaWLJMswkjbVme6/egRB6OmRC8LDnrnUJZJMDp6/tA7VEY0WmfB6Mv3KNZZ7+Hm0BZqA5CNVnIGEfdBYF5BOWIPCfJrH2wdprlWAxJ7QKyoERiJn1V3W2eCOrAFLb01HGn+IULFaH0WqzXtKXvJCap60wGSb1c/qlNVplHd6G7ODP5Mns7og5akzAVgWxIfuqNZIUWWGlILl8Ddhroe5x60blx+/liAGSqzPKx9FWORzAyiD1rglsSnJiebtWAFmGFImhB6Ki3fIs63tjZxyA372IFkPWSaK2QSw9tehM7sLWGaKn+0oid8Tmmzgdd632FR2SHKbIvOmti8fOBYARSB4g6yAQXybWdiD46ZU=
+  - secure: XtgqK43CP6fEb0DjKZ9zxZH+EtR0nZpqzXiJ8imF+wElVE4wmWwM93nr0sp8kz+nEajQxZmalS81YUj0p0jhFbBbBtcVIBSs57IuQVcTOnlNOII21i6cH4O8QVSS5YQaCqYcNMgiuTYvrs0U5aymnSROo44WtxZWzeTCJOtta7aDagt2tY3ciSO+RqyHxECBf1SDAOe9iBb2fkyjLwPnSOHMaR4HLJzNY+l702Pl9jBqRd1NycJZzVOMnqHkLFjjdaoJosiPNo6X309+7VmYdPEeusIMbRQ+m6Bc+14o00LFoAvUj9yWKo2jM7PUiDfZRcn0UEOExn2FCvbhvEYTLoBT/6ADDniGCgD2xAZCBaCAm3D6fC0j/zwmyzcG1P+daW5SByTfutPJQXU/wYQ4rBZIG+9EOWsIWFHBXaFHR2HmrultjFeli5XIlIkDkB5jt88M99bR99n7U9k2fB/bLYbVPxIF2mPaE6C08Z4UYHzlYDjrzMROM/r0/jkQYup8bCe/VjSBeqjdEzMH9fqUXl6Z4Z5M3hYA0/l+30Wx61iyibxuq/45VGE+88Q6RACmeV/8vfhnR02eaIV9LsF8RRICqeK++20rD3XYubkNY6WOwj0IBGXDIEhkydUpwXJNq90fzOb8VZMFrg2BQR4UBKQt0Y15Mri34Vt9QBKcZWA=
+  - secure: bL1//ADYi7SdkQ4JO7hMX1pfwXSLUH5CoHcdwh6eSJLQyNPG7ewqfAJx6e0J0FQm7A3uwCIa5MgYFFeZYiDe9OipWTcNAKJ/beHPd8HpyzYu9kB4L20cq/tGKj3G6pXNC16HdmbEVUtKwYASE+S/Hp8YUCWUa+d+9WtsK7xfU4sFIfjuIwgeeaErMDxsS+om5JNPweWvcFzHkcdCbbbZ3gGmjqz++U8nduR3O6Zuq7HCKwwfA5G3Oy2CwdUEGN68ox1uxEVwRtpiv/Wlh5j1qwqewr4pGI9iSHLZQnR69eZEgOVNbP4m6pOgNeOLSBsHYwpyyWY1acffe23QhDp+r71jDmLuISvvylkJQwU7K7WAV9LpryV2tvBbE5RlKNQuVnVGoaStS3Cp80Ed9+1ogz5hL/qZrBnGGA7JlfcxBLSwM8pPsqLqtYJy3Gn9xzjxWfvlDeBSX8HePaWRDhi44Wl8mZIi621gyto79EOo7699rblvzvZhfCM7f02BZDRaCgJ29eMZX/8uTwbavMB24ZD3ClrlF02gRltH51a/vPpkGNdcIZRt4I7jJa7tOH5zcWNgH0NbZE9azAhNiOtwiv2vnSV3zMtysgNAjialZ36BO0N1N5Xh6ctIVYd3VS0Z8zyqS1nEmubJpfSyw4nv3U3ZRPKg+JnpG+/+RxtOh+Q=
+  - secure: dOD/iTWEakOx5z4BkICD0z9cIWh/PCPuk+pN2NuXUAX7UzH+tMCVsy72br39JJWr8RBTnHYP15oEqvXbNWbs8Gp6mXZCvKa9SmlIVBCXIS6LMPpJDCFmlpm5zD0KQnnUocFPeY9hu3AG0x/WYMzi6ikvbTK0u0UXgAWXMTmFSDBQwujRwJlD6KHowArhh4BVHZTs77ii5tjv/C+jXe2MTzhezvpG+n/kl0h+Uzmhq6orowoDtlWh1Srg/jPnq5xPH5auDMS1+y4zx07lDN5WPXDVQS0GQxoV3HJ9WYWlcM6jevkYpk/eTTRleSYxss3llXOx/IRGkfOMl4rCvH4N/iA9XgvtPTy5UZaGDiSBaUoVx90kCtMDW9R8ZDLoOPuoc/Q/nOaGWk20MJMfHJs+K10YApsp6zjRT5PNJvFynZQ4wVPkst9q2j5DstsBohUHgqu3PGi6riX7Lj4YSQ63bALHXnToIxxWSn+712s3pDkcLqFA2FrhoKChw3wxUOW+zEpQ4d5AsHlrGUkCJ+PFfh30tzB4UpyznJPOZ2A1hGKEBVr1zDkJLvMmOKiaM4VDeir/x5glW4iZmbYpPqihCh37nS6khWlZ3zHw9Aos2Vc4iuOt2s1ZzcmuBOZ8ZUnwK6XjQ8i58qmU3CgGjcW1XLBbN/CP/5zva5MVBzuhjfY=
