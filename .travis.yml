@@ -1,34 +1,39 @@
 sudo: required
 language: java
 jdk:
-  - oraclejdk8
-
+- oraclejdk8
 services:
-  - docker
-
+- docker
 before_cache:
-  - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
-  - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
-
+- rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
+- rm -fr $HOME/.gradle/caches/*/plugin-resolution/
 cache:
   directories:
-    - "$HOME/.gradle/caches/"
-    - "$HOME/.gradle/wrapper/"
-
+  - "$HOME/.gradle/caches/"
+  - "$HOME/.gradle/wrapper/"
 script:
-    - docker run -d --name "origin" --privileged --pid=host --net=host -v /:/rootfs:ro -v /var/run:/var/run:rw -v /sys:/sys -v /var/lib/docker:/var/lib/docker:rw -v /var/lib/origin/openshift.local.volumes:/var/lib/origin/openshift.local.volumes openshift/origin start
-    - sleep 20
-    - wget https://github.com/openshift/origin/releases/download/v1.3.0-alpha.1/openshift-origin-client-tools-v1.3.0-alpha.1-6e83535-linux-64bit.tar.gz -O oclient.tar.gz
-    - tar xzvf oclient.tar.gz
-    - cp openshift-origin-client-tools-v1.3.0-alpha.1-6e83535-linux-64bit/oc .
-    - ./oc login -u test -p test --insecure-skip-tls-verify=true https://localhost:8443
-    - ./oc new-project enmasse-ci
-    - ./oc policy add-role-to-user view system:serviceaccount:$(./oc project -q):default
-    - ./oc policy add-role-to-user edit system:serviceaccount:$(./oc project -q):deployer
-    - ./oc process -f src/main/resources/enmasse-template.yaml | ./oc create -f -
-    - OPENSHIFT_USER=test OPENSHIFT_TOKEN=`./oc config view -o jsonpath='{.users[?(@.name == "test/localhost:8443")].user.token}'` OPENSHIFT_URL=https://localhost:8443 gradle run
-
+- docker run -d --name "origin" --privileged --pid=host --net=host -v /:/rootfs:ro
+  -v /var/run:/var/run:rw -v /sys:/sys -v /var/lib/docker:/var/lib/docker:rw -v /var/lib/origin/openshift.local.volumes:/var/lib/origin/openshift.local.volumes
+  openshift/origin start
+- sleep 20
+- wget https://github.com/openshift/origin/releases/download/v1.3.0-alpha.1/openshift-origin-client-tools-v1.3.0-alpha.1-6e83535-linux-64bit.tar.gz
+  -O oclient.tar.gz
+- tar xzvf oclient.tar.gz
+- cp openshift-origin-client-tools-v1.3.0-alpha.1-6e83535-linux-64bit/oc .
+- "./oc login -u test -p test --insecure-skip-tls-verify=true https://localhost:8443"
+- "./oc new-project enmasse-ci"
+- "./oc policy add-role-to-user view system:serviceaccount:$(./oc project -q):default"
+- "./oc policy add-role-to-user edit system:serviceaccount:$(./oc project -q):deployer"
+- "./oc process -f src/main/resources/enmasse-template.yaml | ./oc create -f -"
+- OPENSHIFT_USER=test OPENSHIFT_TOKEN=`./oc config view -o jsonpath='{.users[?(@.name
+  == "test/localhost:8443")].user.token}'` OPENSHIFT_URL=https://localhost:8443 gradle
+  run
 after_failure:
-    - docker logs origin        
-    - for i in `./oc get pods | cut -f 1 -d ' ' | grep -v NAME`; do ./oc logs $i; done
-
+- docker logs origin
+- for i in `./oc get pods | cut -f 1 -d ' ' | grep -v NAME`; do ./oc logs $i; done
+env:
+  global:
+  - secure: iZYkPrDvU/EXON5/7M5q7n7ZkZ9lm1Nh3zscT2h1t91BQ34t4Vdf9GTCyGSlCaBozo5xsx3lsheA4NjjBEEImPAPXS5kvSXlwpzyqQdkStR0yXlynMU/baygWLx+l+ZYa4b0CGZgEiuULdV+PnVGFxE0fIEnU0NVlrhZEuninWTiCX/X4uPrAY8J64SYzymbqL+pQqKlpXAEURMMNYYnTWhd2rrYn2XJthxYtoRuddCfh2O1HlGZf8Wsgno9E9bsEGD0a8MTtBJ5/TP8T1h7RZ7c0DdmJkUauP8ooX410swiox6jXFTa14aFK4KuRziNuf+KkN1NZC5gns2+eRbQ4EO9Tyg7eyH9RADMiEeo6cxVVw8ipcj4HMA7U5aXVNoZfDZN+4CxwZ7oazWkXV1gcmQQaq0gkjpwv0iV+9fT+/hb+KWezm0EktAr4XuoV55LZVhuphjOxBbXRAnTq/JzbRfS+GHypG9bYIGN9MSWVj3dUk7tzYpLlo/lCp7Y9zBdV80P/pCpb0FREkbQRu3kZXi0hGE+V3BoOfP5BOMuXbjapSNhowS1j6T4UKLAimyMKKDEtjlFwz/KQyDdYvXjieJoze3+7XJ5toj2RpcY+LIFRsBxTaWiCLHIZisMOEWT+ZbW3tAlbf+rgBWdUXBoGJawHPXNg5+NFpGGqWbZO48=
+  - secure: sWh+bO5wtXB8vKeCyA7JKS+NHokz7DvnNn4z55VwRGp2JPQl1JahRKIkf4J27nN/UmW3kaJqEGrmAtk4fQWN8l6ZbFaykCuAwVYwl8uljTPWgp6kBTuxGc8MY+sUby77XYQDb7J7/sVcxc0u24ziEMbpNfouU+PDultg5C/S47nmnjVamhUFBqDvqHW5CUjLC2IVeWQd/orQEeY8nSlSNN1TnGb0AUgdKPRxMWhali42sIgnIaC49BsJgYJ/zUdJAwpxNy5E45f+phocPhuRCPTxOyp87MKTmz2CysagRUgiznVQR2FwKiEnG8s9x0X2vHm1zSrzmvzwXKM3sT/5Y7+fMPaDDVq+F8BkWWAGMxFJGRFh8dSdNOcl1LQMvZ3zEGT78GZLX+8mmjhNRps4prSCNPyUxfY2+5+t52cJ2uarx0sYIE6g4PbwP4l9D8pUqhaIpxnQ4jUcUNWzFmc6u6eJ9NZm877SbLszYwFZwa9+upnLXTd9sqtdNXN/fSGoZrUjefn9nnT+2Eyx3NzlHaIevfZRy90shoVoczEAD0f/bL+OjxPkz/njfXQngjrHkXoydgHi/hOQkReQYQ8O72XyJ7irKZq0XYKK/Dxi6+A4gpQaD21XzfbAC/WAsQHAnwHDOO1PI/kSui6LQY864MNrZT1eXiHYLFwu7MdTTG4=
+  - secure: BQXOKLOKbxnVBTbDYG6riI75eROUOwO/XcikVd02HIU0o1ecfFjiJnIYs13GGLGF6FrVThfS1HVzs1OvGNCCJhGDixCpViG3DU6+oBNZvFHzKGnl3LcguDXCLacbK/ahjdL5kt3d+rP5xJprr4lKiNy/sqUB2dDJnGRACIT17vG+P/iETYbZiPBLvgbl8N7kjPcrkdau8BRlqaLbP52gJ5jvx7r27q7vQKKUQmNTNydRXJT4Vpb+bwbOt0upTNLUwKu8JxzDKYIvgo/JWoBrBOp3LiKpYKNKnj+KtbWyAztufnirSFkqGzCS+28X8PlQoKMZ0/nMtg7UIAVQwWWQNeRKxoo2r8q579vkFBv2du6XR8Ap5JYKSq82dt4wzk6PI3Gw3Hdwney8dzxuTJuZCcOsHzIpImPvn+wDgOKMkI++09jkiIeC681tPcu3IG9wteCuKc2sxQNSc7y2NDT4lxwVCtZSHzuk+rPOcQq/LtEh36Wan/CkG6XanIlmrlrkJ36dSA8aNYN8iiUyMbpzdAD4bo4LzOAQrYJSayJiktbK7i1WYh0dwtqbegi6GCt4iWFsf5GhLsmCROMqAKUmmtbveZPa37jfHrGgI1gSbb14R+jtQ9PZAxZsSNjL+csdPK+yy9WFo8VbcyrUm3q3GvEar6iYED5rmDml5tzEmHU=
+  - secure: OspVrbhMUtDTKOMAhYuoU47RgXvPMbOS9kaiCs2SmDbvbqWiRKI5sxdBCz0l+n70r8i1hdCEtD5EIxN5YcF2u6K5/iwlnFBDAPnzyUktlFy1sjjDCTgzob7TyByXhEQ/S7HBeL462owhqnGuWQOixN7ir2GjdZ/RKCGbuS/42y8Bz/PmZJq44MeFzXTbWsxPr8ELb47vbh6TKyD9tjhC1LXjq0OavGxoYkpJnBMQcx71keyQH9tRauPOtsmOFuRXsdhWXXaH/K5amaVUCxY7aGCvUkOo/aR2M5gQb52ht/FiDepXcL4S8DEfUgsUlsG1q5KGSXD9ZnhbQldqkVXD6qtuUbuOtnmwWYWRjDH3Q3rqvP/3Ii7rnTP2/BkKtlUbn0X1spc79eSRT8xJM/wE0yG1gc44wfIvWn50hIhzZxfOtXFM8J+v5dbrM57O/WNAldckToluiJ1g1uHP6FToxRJQCvb8KGeeGwQgoyLb1Z4m5jzQV2Yg3zhbi/XF1SMFxUH5wpbdzX1EzoDQQnxVkSUppaKQ4iAfFTKWFJCgPYF2+xb0PcDdcju6xwEGPv++7+KrF8Y2Z+/xn0vCgZCb/yVnFBIy9XUh0cZ3paeOYmkqSmmLFPTI8zkrWELe/S/Z1IrtfWF/ovvPNIjKJDdvj26S1ZC6EXzT4nPlVdteoLI=
