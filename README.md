@@ -1,4 +1,4 @@
-# Setting up MaaS
+# Setting up EnMasse
 
 ## Access permissions
 
