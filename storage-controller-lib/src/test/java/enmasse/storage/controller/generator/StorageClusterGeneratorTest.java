@@ -5,6 +5,7 @@ import com.openshift.restclient.model.IResource;
 import com.openshift.restclient.model.volume.VolumeType;
 import enmasse.storage.controller.model.FlavorConfig;
 import enmasse.storage.controller.model.Destination;
+import enmasse.storage.controller.model.Port;
 import enmasse.storage.controller.model.StorageConfig;
 import enmasse.storage.controller.openshift.OpenshiftClient;
 import enmasse.storage.controller.openshift.StorageCluster;
@@ -12,6 +13,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import static org.hamcrest.CoreMatchers.is;
@@ -40,7 +42,7 @@ public class StorageClusterGeneratorTest {
 
     @Test
     public void testGenerate() {
-        FlavorConfig properties = new FlavorConfig.Builder().brokerPort(1234).storage(new StorageConfig(VolumeType.PERSISTENT_VOLUME_CLAIM, "10Gi", "/mnt")).build();
+        FlavorConfig properties = new FlavorConfig.Builder().brokerPorts(Collections.singleton(new Port("amqp", 1234))).storage(new StorageConfig(VolumeType.PERSISTENT_VOLUME_CLAIM, "10Gi", "/mnt")).build();
         StorageGenerator generator = new StorageGenerator(mockClient);
         List<StorageCluster> clusterList = generator.generate(Arrays.asList(new Destination("foo", true, false, properties), new Destination("bar", false, false, properties)));
         assertThat(clusterList.size(), is(1));

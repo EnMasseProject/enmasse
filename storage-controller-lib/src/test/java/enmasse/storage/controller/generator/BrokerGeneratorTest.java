@@ -8,6 +8,8 @@ import enmasse.storage.controller.model.*;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.Collections;
+
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
@@ -22,7 +24,7 @@ public class BrokerGeneratorTest {
     @Before
     public void setup() {
         generator = new BrokerGenerator(null);
-        flavorConfig = new FlavorConfig.Builder().brokerPort(1234).build();
+        flavorConfig = new FlavorConfig.Builder().brokerPorts(Collections.singleton(new Port("amqp", 1234))).build();
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -54,6 +56,6 @@ public class BrokerGeneratorTest {
         IReplicationController controller = generator.generate(new Destination("testaddr", true, true, flavorConfig), emptySource);
         IContainer broker = controller.getContainer("broker");
         assertThat(broker.getEnvVars().get(EnvVars.TOPIC_NAME), is("testaddr"));
-        assertThat(broker.getPorts().size(), is(5));
+        assertThat(broker.getPorts().size(), is(1));
     }
 }

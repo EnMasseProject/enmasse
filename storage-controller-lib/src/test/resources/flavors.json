@@ -5,10 +5,20 @@
       "storage": {
         "volumeType": "emptyDir",
         "mountPath": "/var/run/artemis"
+      },
+      "ports": {
+        "amqp": 5673,
+        "artemis": 61616,
+        "jgroups": 7800,
+        "broadcast": 7801,
+        "discovery": 7802
       }
     },
     "router": {
-      "dockerImage": "gordons/qdrouter:v9"
+      "dockerImage": "gordons/qdrouter:v9",
+      "ports": {
+        "amqp": 5672
+      }
     },
     "shared": true
   },

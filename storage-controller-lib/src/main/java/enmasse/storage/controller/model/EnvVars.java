@@ -6,6 +6,4 @@ package enmasse.storage.controller.model;
 public interface EnvVars {
     String QUEUE_NAME = "QUEUE_NAME";
     String TOPIC_NAME = "TOPIC_NAME";
-    String BROKER_PORT = "BROKER_PORT";
-    String INTERROUTER_PORT = "INTERROUTER_PORT";
 }

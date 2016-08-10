@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.openshift.restclient.images.DockerImageURI;
 import enmasse.storage.controller.model.FlavorConfig;
+import enmasse.storage.controller.model.Port;
 import enmasse.storage.controller.model.StorageConfig;
 
 import java.io.IOException;
@@ -58,12 +59,28 @@ public class FlavorConfigParser {
         if (value.has("certSecretName")) {
             builder.routerSecretName(value.get("certSecretName").asText());
         }
+        if (value.has("ports")) {
+            builder.routerPorts(parsePorts(value.get("ports")));
+        }
+    }
+
+    private Set<Port> parsePorts(JsonNode ports) {
+        Set<Port> portSet = new LinkedHashSet<>();
+        Iterator<Map.Entry<String, JsonNode>> it = ports.fields();
+        while (it.hasNext()) {
+            Map.Entry<String, JsonNode> entry = it.next();
+            portSet.add(new Port(entry.getKey(), entry.getValue().asInt()));
+        }
+        return portSet;
     }
 
     private void parseBroker(FlavorConfig.Builder builder, JsonNode value) {
         builder.brokerImage(new DockerImageURI(value.get("dockerImage").asText()));
         if (value.has("storage")) {
             parseStorage(builder, value.get("storage"));
+        }
+        if (value.has("ports")) {
+            builder.brokerPorts(parsePorts(value.get("ports")));
         }
     }
 

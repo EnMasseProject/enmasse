@@ -2,6 +2,7 @@ package enmasse.storage.controller.admin;
 
 import enmasse.storage.controller.model.FlavorConfig;
 import enmasse.storage.controller.model.AddressConfig;
+import enmasse.storage.controller.model.Port;
 import org.junit.Test;
 import enmasse.storage.controller.generator.StorageGenerator;
 import enmasse.storage.controller.openshift.OpenshiftClient;
@@ -24,7 +25,7 @@ public class AddressManagerTest {
         OpenshiftClient mockClient = mock(OpenshiftClient.class);
 
         FlavorConfig props = new FlavorConfig.Builder()
-                .brokerPort(1234)
+                .brokerPorts(Collections.singleton(new Port("amqp", 1234)))
                 .build();
         AddressManager manager = new AddressManager(mockClient, new StorageGenerator(mockClient), null);
         manager.configUpdated(new AddressConfig(Arrays.asList(new Destination("broker1", true, false, props), new Destination("broker2", false, false, props))));

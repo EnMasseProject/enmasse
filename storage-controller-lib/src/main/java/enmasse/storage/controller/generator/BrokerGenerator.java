@@ -18,6 +18,7 @@ import org.jboss.dmr.ModelNode;
 
 import java.util.*;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 /**
  * @author lulf
@@ -56,20 +57,12 @@ public class BrokerGenerator {
     private void generateBroker(ReplicationController controller, Destination destination, IVolumeSource volumeSource) {
         FlavorConfig flavorConfig = destination.flavor();
 
-        Set<IPort> ports = new LinkedHashSet<>();
-        ports.add(createPort("amqp", flavorConfig.brokerPort()));
-
-        if (destination.multicast()) {
-            // TODO: Make these ports a property of the flavor
-            ports.add(createPort("artemis", 61616));
-            ports.add(createPort("jgroups", 7800));
-            ports.add(createPort("broadcast", 7801));
-            ports.add(createPort("discovery", 7802));
-        }
+        Set<IPort> ports = flavorConfig.brokerPorts().stream()
+                .map(port -> createPort(port.name(), port.port()))
+                .collect(Collectors.toSet());
 
         Map<String, String> env = new LinkedHashMap<>();
         env.put(destination.multicast() ? EnvVars.TOPIC_NAME : EnvVars.QUEUE_NAME, destination.address());
-        env.put(EnvVars.BROKER_PORT, String.valueOf(flavorConfig.brokerPort()));
 
         IContainer broker = controller.addContainer(
                 "broker",
@@ -94,16 +87,17 @@ public class BrokerGenerator {
 
     private void generateDispatchRouter(ReplicationController controller, Destination destination) {
         FlavorConfig flavorConfig = destination.flavor();
-        Port interRouterPort = new Port(new ModelNode());
-        interRouterPort.setContainerPort(flavorConfig.routerPort());
+        Set<IPort> ports = flavorConfig.routerPorts().stream()
+                .map(port -> createPort(port.name(), port.port()))
+                .collect(Collectors.toSet());
 
         Map<String, String> env = new LinkedHashMap<>();
         env.put(destination.multicast() ? EnvVars.TOPIC_NAME : EnvVars.QUEUE_NAME, destination.address());
-        env.put(EnvVars.INTERROUTER_PORT, String.valueOf(flavorConfig.routerPort()));
+
         IContainer router = controller.addContainer(
                 "router",
                 flavorConfig.routerImage(),
-                Collections.singleton(interRouterPort),
+                ports,
                 env,
                 Collections.emptyList());
 
