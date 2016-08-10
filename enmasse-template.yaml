@@ -125,19 +125,6 @@ objects:
           env:
           - name: ROUTER_IMAGE
             value: "${ROUTER_IMAGE}"
-- apiVersion: "v1"
-  kind: "ImageStream"
-  metadata:
-    name: "artemis"
-    spec:
-      dockerImageRepository: "docker.io/enmasseproject/artemis"
-
-- apiVersion: "v1"
-  kind: "ImageStream"
-  metadata:
-    name: "activemq"
-    spec:
-      dockerImageRepository: "docker.io/enmasseproject/activemq"
 
 - apiVersion: v1
   kind: ConfigMap
