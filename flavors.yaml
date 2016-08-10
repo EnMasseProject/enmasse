@@ -1,0 +1,77 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: flavors
+data:
+  json: |
+    {
+      "vanilla": {
+        "broker": {
+          "dockerImage": "enmasseproject/artemis:latest",
+          "storage": {
+            "volumeType": "emptyDir",
+            "mountPath": "/var/run/artemis"
+          },
+          "ports": {
+            "amqp": 5673,
+            "artemis": 61616,
+            "jgroups": 7800,
+            "broadcast": 7801,
+            "discovery": 7802
+          }
+        },
+        "router": {
+          "dockerImage": "gordons/qdrouter:v10",
+          "ports": {
+            "amqp": 5672
+          }
+        },
+        "shared": true
+      },
+      "chili": {
+        "broker": {
+          "dockerImage": "enmasseproject/artemis:latest",
+          "storage": {
+            "volumeType": "persistentVolumeClaim",
+            "size": "10Gi",
+            "mountPath": "/var/run/artemis"
+          }
+          "ports": {
+            "amqp": 5673,
+            "artemis": 61616,
+            "jgroups": 7800,
+            "broadcast": 7801,
+            "discovery": 7802
+          }
+        },
+        "router": {
+          "dockerImage": "gordons/qdrouter:v10",
+          "certPath": "/etc/qpid-dispatch/ssl",
+          "certSecretName": "qdrouterd-certs",
+          "ports": {
+            "amqp": 5672
+          }
+        },
+        "shared": false
+      },
+      "caramel": {
+        "broker": {
+          "dockerImage": "enmasseproject/activemq:latest",
+          "storage": {
+            "volumeType": "persistentVolumeClaim",
+            "size": "10Gi",
+            "mountPath": "/var/lib/activemq"
+          }
+          "ports": {
+            "amqp": 5673
+          }
+        },
+        "router": {
+          "dockerImage": "gordons/qdrouter:v10",
+          "ports": {
+            "amqp": 5672
+          }
+        },
+        "shared": true
+      }
+    }
