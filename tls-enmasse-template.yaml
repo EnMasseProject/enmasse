@@ -239,7 +239,7 @@ objects:
       }
 parameters:
   - name: BROKER_IMAGE
-    value: gordons/artemis:latest
+    value: enmasseproject/artemis:latest
     description: The image to use for the broker
   - name: ROUTER_IMAGE
     description: "The image to use for the router"
