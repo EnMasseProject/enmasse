@@ -88,6 +88,8 @@ objects:
           ports:
           - containerPort: 5672
             protocol: TCP
+          - containerPort: 5671
+            protocol: TCP
           volumeMounts:
           - mountPath: /etc/qpid-dispatch/ssl
             readOnly: true
@@ -148,13 +150,96 @@ objects:
   data:
     json: |
       {
-          "myqueue": { "store_and_forward":true, "multicast":false },
+          "myqueue": { "store_and_forward":true, "multicast":false, "flavor": "vanilla" },
+          "mytopic": { "store_and_forward":true, "multicast":false, "flavor": "vanilla" },
           "anycast": { "store_and_forward":false, "multicast":false },
           "broadcast": { "store_and_forward":false, "multicast":true }
       }
+
+- apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    name: flavors
+  data:
+    json: |
+      {
+        "vanilla": {
+          "broker": {
+            "dockerImage": "enmasseproject/artemis:latest",
+            "storage": {
+              "volumeType": "emptyDir",
+              "mountPath": "/var/run/artemis"
+            },
+            "ports": {
+              "amqp": 5673,
+              "artemis": 61616,
+              "jgroups": 7800,
+              "broadcast": 7801,
+              "discovery": 7802
+            }
+          },
+          "router": {
+            "dockerImage": "${ROUTER_IMAGE}",
+            "certPath": "/etc/qpid-dispatch/ssl",
+            "certSecretName": "qdrouterd-certs",
+            "ports": {
+              "amqp": 5672,
+              "amqps": 5671
+            }
+          },
+          "shared": true
+        },
+        "chili": {
+          "broker": {
+            "dockerImage": "enmasseproject/artemis:latest",
+            "storage": {
+              "volumeType": "persistentVolumeClaim",
+              "size": "10Gi",
+              "mountPath": "/var/run/artemis"
+            }
+            "ports": {
+              "amqp": 5673,
+              "artemis": 61616,
+              "jgroups": 7800,
+              "broadcast": 7801,
+              "discovery": 7802
+            }
+          },
+          "router": {
+            "dockerImage": "${ROUTER_IMAGE}",
+            "certPath": "/etc/qpid-dispatch/ssl",
+            "certSecretName": "qdrouterd-certs",
+            "ports": {
+              "amqp": 5672,
+              "amqps": 5671
+            }
+          },
+          "shared": false
+        },
+        "caramel": {
+          "broker": {
+            "dockerImage": "enmasseproject/activemq:latest",
+            "storage": {
+              "volumeType": "persistentVolumeClaim",
+              "size": "10Gi",
+              "mountPath": "/var/lib/activemq"
+            }
+            "ports": {
+              "amqp": 5673
+            }
+          },
+          "router": {
+            "dockerImage": "${ROUTER_IMAGE}",
+            "ports": {
+              "amqp": 5672
+            }
+          },
+          "shared": true
+        }
+      }
 parameters:
   - name: BROKER_IMAGE
-    value: gordons/artemis:latest
+    value: enmasseproject/artemis:latest
     description: The image to use for the broker
   - name: ROUTER_IMAGE
     description: "The image to use for the router"
