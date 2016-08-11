@@ -7,7 +7,7 @@ data:
     {
       "vanilla": {
         "broker": {
-          "dockerImage": "lulf/artemis:latest",
+          "dockerImage": "enmasseproject/artemis:latest",
           "storage": {
             "volumeType": "emptyDir",
             "mountPath": "/var/run/artemis"
@@ -21,7 +21,7 @@ data:
           }
         },
         "router": {
-          "dockerImage": "gordons/qdrouter:v10",
+          "dockerImage": "gordons/qdrouterd:v10",
           "ports": {
             "amqp": 5672
           }
@@ -45,7 +45,7 @@ data:
           }
         },
         "router": {
-          "dockerImage": "gordons/qdrouter:v10",
+          "dockerImage": "gordons/qdrouterd:v10",
           "certPath": "/etc/qpid-dispatch/ssl",
           "certSecretName": "qdrouterd-certs",
           "ports": {
@@ -67,7 +67,7 @@ data:
           }
         },
         "router": {
-          "dockerImage": "gordons/qdrouter:v10",
+          "dockerImage": "gordons/qdrouterd:v10",
           "ports": {
             "amqp": 5672
           }
