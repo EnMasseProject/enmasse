@@ -196,7 +196,7 @@ objects:
               "volumeType": "persistentVolumeClaim",
               "size": "10Gi",
               "mountPath": "/var/run/artemis"
-            }
+            },
             "ports": {
               "amqp": 5673,
               "artemis": 61616,
@@ -223,7 +223,7 @@ objects:
               "volumeType": "persistentVolumeClaim",
               "size": "10Gi",
               "mountPath": "/var/lib/activemq"
-            }
+            },
             "ports": {
               "amqp": 5673
             }
