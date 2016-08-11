@@ -7,7 +7,7 @@ data:
     {
       "vanilla": {
         "broker": {
-          "dockerImage": "enmasseproject/artemis:latest",
+          "dockerImage": "lulf/artemis:latest",
           "storage": {
             "volumeType": "emptyDir",
             "mountPath": "/var/run/artemis"
@@ -35,7 +35,7 @@ data:
             "volumeType": "persistentVolumeClaim",
             "size": "10Gi",
             "mountPath": "/var/run/artemis"
-          }
+          },
           "ports": {
             "amqp": 5673,
             "artemis": 61616,
@@ -61,7 +61,7 @@ data:
             "volumeType": "persistentVolumeClaim",
             "size": "10Gi",
             "mountPath": "/var/lib/activemq"
-          }
+          },
           "ports": {
             "amqp": 5673
           }
