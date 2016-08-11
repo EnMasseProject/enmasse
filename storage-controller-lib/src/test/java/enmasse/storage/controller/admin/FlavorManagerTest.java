@@ -45,4 +45,9 @@ public class FlavorManagerTest {
         assertThat(config.storageConfig().volumeType(), is(VolumeType.PERSISTENT_VOLUME_CLAIM));
         assertThat(config.storageConfig().mountPath(), is("/var/lib/activemq"));
     }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testGetUnknownFlavor() {
+        manager.getFlavor("doesnotexist");
+    }
 }
