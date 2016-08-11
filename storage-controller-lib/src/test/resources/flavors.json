@@ -15,7 +15,7 @@
       }
     },
     "router": {
-      "dockerImage": "gordons/qdrouter:v9",
+      "dockerImage": "gordons/qdrouter:v10",
       "ports": {
         "amqp": 5672
       }
@@ -32,7 +32,7 @@
       }
     },
     "router": {
-      "dockerImage": "gordons/qdrouter:v9",
+      "dockerImage": "gordons/qdrouter:v10",
       "certPath": "/etc/qpid-dispatch/ssl",
       "certSecretName": "qdrouterd-certs"
     },
@@ -48,7 +48,7 @@
       }
     },
     "router": {
-      "dockerImage": "gordons/qdrouter:v9"
+      "dockerImage": "gordons/qdrouter:v10"
     },
     "shared": true
   }
