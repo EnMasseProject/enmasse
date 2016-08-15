@@ -2,7 +2,6 @@ package enmasse.storage.controller;
 
 import com.openshift.restclient.ClientBuilder;
 import com.openshift.restclient.IClient;
-import com.openshift.restclient.authorization.TokenAuthorizationStrategy;
 import enmasse.storage.controller.admin.AddressManager;
 import enmasse.storage.controller.admin.FlavorManager;
 import enmasse.storage.controller.generator.StorageGenerator;
@@ -35,7 +34,7 @@ public class StorageController implements Runnable, AutoCloseable {
         client = ProtonClient.create(vertx);
 
         IClient osClient = new ClientBuilder(options.openshiftUrl())
-                .authorizationStrategy(new TokenAuthorizationStrategy(options.openshiftToken()))
+                .usingToken(options.openshiftToken())
                 .build();
 
         OpenshiftClient openshiftClient = new OpenshiftClient(osClient, options.openshiftNamespace());

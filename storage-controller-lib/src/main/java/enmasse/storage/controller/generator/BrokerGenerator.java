@@ -1,8 +1,8 @@
 package enmasse.storage.controller.generator;
 
 import com.openshift.internal.restclient.ResourceFactory;
+import com.openshift.internal.restclient.model.*;
 import com.openshift.internal.restclient.model.Port;
-import com.openshift.internal.restclient.model.ReplicationController;
 import com.openshift.internal.restclient.model.volume.SecretVolumeSource;
 import com.openshift.internal.restclient.model.volume.VolumeMount;
 import com.openshift.restclient.IClient;
@@ -76,6 +76,14 @@ public class BrokerGenerator {
         volumeMount.setReadOnly(false);
         volumeMount.setMountPath(flavorConfig.storageConfig().mountPath());
         broker.setVolumeMounts(Collections.singleton(volumeMount));
+
+        Lifecycle lifecycle = new Lifecycle();
+        Handler stopHandler = new Handler();
+        ExecAction action = new ExecAction();
+        action.setCommand(new String[]{"/broker-prestop/bin/broker-prestop"});
+        stopHandler.setExec(action);
+        lifecycle.setPreStop(stopHandler);
+        broker.setLifecycle(lifecycle);
     }
 
     private static IPort createPort(String portName, int port) {
