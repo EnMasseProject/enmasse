@@ -1,0 +1,29 @@
+buildscript {
+   ext.kotlin_version = '1.0.3'
+   ext.openshiftRestclientVersion = '4.0.5.Final'
+   ext.vertxProtonVersion = '3.3.2'
+
+   repositories {
+     mavenCentral()
+   }
+
+   dependencies {
+     classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+   }
+}
+
+apply plugin: 'kotlin'
+
+repositories {
+  mavenCentral()
+}
+
+dependencies {
+	compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    compile "com.openshift:openshift-restclient-java:${openshiftRestclientVersion}"
+    compile "io.vertx:vertx-proton:${vertxProtonVersion}"
+    testCompile 'junit:junit:4.12'
+}
+
+apply plugin: 'application'
+mainClassName = 'enmasse.broker.prestop.MainKt'
