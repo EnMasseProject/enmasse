@@ -8,10 +8,10 @@ ENV PATH $ARTEMIS_HOME/bin:$PATH
 ADD apache-artemis-bin.tar.gz /opt
 ADD ./artemis-shutdown-hook/build/distributions/artemis-shutdown-hook.tar /
 
-COPY ./artemis-plugin/lib/artemis-plugin.jar $(ARTEMIS_HOME)/lib
-COPY ./artemis-plugin/lib/kubernetes-0.9.0.jar $(ARTEMIS_HOME)/lib
-COPY ./artemis-plugin/lib/common-0.9.0.jar $(ARTEMIS_HOME)/lib
-COPY ./artemis-plugin/lib/jboss-dmr-1.3.0.Final.jar $(ARTEMIS_HOME)/lib
+COPY ./artemis-plugin/build/libs/artemis-plugin.jar $(ARTEMIS_HOME)/lib
+COPY ./artemis-plugin/build/libs/kubernetes-0.9.0.jar $(ARTEMIS_HOME)/lib
+COPY ./artemis-plugin/build/libs/common-0.9.0.jar $(ARTEMIS_HOME)/lib
+COPY ./artemis-plugin/build/libs/jboss-dmr-1.3.0.Final.jar $(ARTEMIS_HOME)/lib
 
 COPY ./utils/run_artemis.sh ./utils/get_free_instance.py $ARTEMIS_HOME/bin/
 COPY ./config_templates /config_templates
