@@ -11,6 +11,10 @@ cache:
   directories:
   - "$HOME/.gradle/caches/"
   - "$HOME/.gradle/wrapper/"
+script:
+  - gradle build
+  - gradle distTar
+
 after_success:
 - export REPO=enmasseproject/artemis
 - export TAG=`if [ "$TRAVIS_BRANCH" == "master" ]; then echo "latest"; else echo $TRAVIS_BRANCH
