@@ -1,0 +1,29 @@
+sudo: required
+language: java
+jdk:
+- oraclejdk8
+services:
+- docker
+before_cache:
+- rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
+- rm -fr $HOME/.gradle/caches/*/plugin-resolution/
+cache:
+  directories:
+  - "$HOME/.gradle/caches/"
+  - "$HOME/.gradle/wrapper/"
+after_success:
+- export REPO=enmasseproject/artemis
+- export TAG=`if [ "$TRAVIS_BRANCH" == "master" ]; then echo "latest"; else echo $TRAVIS_BRANCH
+  ; fi`
+- docker build -t $REPO:$COMMIT .
+- if [ "$TRAVIS_BRANCH" == "master" ] && [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
+  docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS; docker tag $REPO:$COMMIT
+  $REPO:$TAG; docker tag $REPO:$COMMIT $REPO:travis-$TRAVIS_BUILD_NUMBER; docker push
+  $REPO; TRAVIS_TOKEN=$ACCESS_TOKEN sh .trigger-travis.sh; fi
+env:
+  global:
+  - COMMIT=${TRAVIS_COMMIT::8}
+  - secure: nSgIs+zcmC1ntDi07fH+5eUcOF7I/bj2cyaEDnib52LuOn0043Vuqly+RMAGd2QZyWExirlnkrBc6pHa4fpMhMOla6TUxgHWHjUQUyA4JD4H+2byMdqz/W0Jf9LknwQWo93dyZB8PTOsxOg6V8ENM5uJXFt793LlkhnfO8YvRcJ1eh2jPi79ZktHlLOJVDvyKcYCd5HSoP+34A9bOjshh7/TiKnqLXCpJ3rcqpK9R83GODp/xZMc9kPhdgy8OdR78zdi8M6bYkYUbpGJs3OGvQv0SXyYUX0cmAT7YHgrCBAMVzN0JlOgA7MhWlafMBmI65UX0K8rTlGlYskFYSBM0QqPaTnjSymsDbkgTOm3PHWFBNDOp6mLkpFDD/FUm6nZDXnk2EKkfejUj3cEJCIx0i+JYeQg9L2fIcCdPplzapGqkgZyKLP8tju/kWf13Z+qVPPBDrYK+QuT7KKtDIp1xO3TOfo8Vs0cqPFBVfHR3MHpMaetCwpZUBMTPNpNoRDoRMtKQVf6vXHnMbEqSlTKaXpwA+3p6KJII2Tbc31cwbfTfxuyZkIDocYWRduuZaYQmTBPC4b1znyI2OyO549QRetItAZvLM1whuECJJZJ+8C1vlp/Rzij5G5FvPSVhRYBEwU37Wzn6/V8lvfgxa5nAgEd8IOFAfyeH/ICzV14DfY=
+  - secure: KHeU8dyGEK0sGBQ9fVCKyR/bQPwDeZfQM7qNxpWwIaVMf6u9MmtAA4MdEAm+bdjS8wv0eY9AJvVxhCi88/DZA0kWsx210vc+hLiCVtnZ+uPgPr6lpJPb0t7egMRdHOztD9vx9uBtXsPjeK8+6WQfSklA35ufhvdK/ytnTMWZPdwSyBG3iG82VUR7n0Nw/Hu0L1wjG/S2bx1jZY5BGPSrvA2DkXQ15yKvAGQw74A787GCoLKEGkqt7J5wkIlA7qyOVXK0m7MFPUUd1YkS0kgDXo8ytxnSHf03uLo0JlDWExfFSj+g0PTypiMvshrN9yL50HvHW0s1Siul1YBXPfjU2LOakp496vKlSn0G8FPZ1h8EiOnWVYwltPlym4Es1WqyYPZoOhLWMr5Iqe1lyGEZAjNQEDBMzCno0J25H3jMb1wFr6c/I4+hzrEfQDEVf0BEOvzOdH0Axr+YMifbuLNJVYEr2WLrTlusZ8xDhJlAqVwOL7gPdUkJF6nPXedEFxouFsmc4xsRGgDG8FrE0sc1zfA7bFWEwdeobLny2TIV8XruPWgXilenvD76tWC5ROPewYb7SA3IadpiWnJKBN1JVmrCIYpMhDXGXjoDpuOfcL98rSi1PQI8LWvMfdVaYQ02zxSu3p048cclk4ne1ziFFS5KrFQLaZgPKWNM2IU36DQ=
+  - secure: 72zxllIgyosMuouGGQdsZ1Qn85IoXsmUbYt//fDWELFd0MNI/C43WDMICrDSIPH0qNr4q/MKoHmUScIXvBOW5o111eoaU3hlbVTpId4rqNMbKXQgoX1ph4w5urc1PzUexgN0zGqFBjcOjbhsuHDyjbd5rBO2aVil1cuc9Pm8IY0HrpMyjKlQfCHOd63FLHyL6ckyFRgj00dYXcU/Y0qBQ9Pip67zBfEeePOF2TN1rPLNYrOuZ0GVe4LCh0GKfjZUdni00bhQTVeRwlQSo4iOBvCJzFwKAUUscn577KruEjk5y7OKA7vrsZH64NCGqVZwbB/Gd0zYgKhKs3ocxo8fC7QppOHLuHSB6+W6y8gWN0Oq+DOXKPHkDNP7k0FVxazPvjsSWHmpCkk8c4KbsZO22gDNrLX1DVnvCvIQI4pcJOi4QsOnCYQ+8993D4XaXpyXl45x5x+rEDDPGPn+amx3Xn/BebyT/7AXOQ4eJySN+yppSM8wJ0w2398wnO+2/3TWyyTxVcZSo2TnH9cV1EzURUfe565i+vkW6fUe3r+ZxEOt0MYz+jvl4tvkCl+2dWYq4+sDRZx3B/qDpz3yc//JicUJs0HGGB+IXgE4m0I1fAOO/13c7EZCVIWNlD/kR0lky4aZQRIezaZ8YESmskZkVZGkpY22fbM7NZ8hohNBP4I=
+  - secure: XE7rTxyjCnnnqatgyL0gxhKCPNDE9MaiGBUCjuZwuoU5Y0JoN+S1IcXTs2unOxO2hvRC92hcmoTAwzwRDH1jjNEL7xK65lEahNsdmVC8awZKz4O/TMRC5omkPrfRIRuk+ToEUm+WKaTczVppRAMXT8Pi4sLHV8D6Pr/Cg/rVDbT2pck6YEQCtTj6JR+yk6stKCkYhlk7utNyZf7jPT3a9xTEUTBq7Tb54Rl0ueBH0WXPbTsGkSfcuCNq+lGFQgHgJvfC8kmsQtlRq6paPdzQn5Gb5ov7spEosP6oR0M538+reJH407EfjCPvzLtZzDVcz04ysO1KSsMQfduN3y5VhU7LwjVRgog429Uv/cq2/ecEqjg27hFHvVu98O5khZuj53Srylt6oEFxDPChsr0op0tKoOggFp9LkUbNAyugh4bFi3m1HdIBXvVdjcDd0SMMzPXcz7HWZsqn0KVEqQlDPWwBAfAItfzctA3WnRe7lgKUDvWsUvlxgGk6QPtHkY0jyjxdmZc0oZrH/Lf+nP1hCIPe0l2ziw16voB5/bruQqPc3286j0i+B2NyW1l0/fRfGZVBQg3d4HIXG/loo6QcSIDTEWcX70lyK8wofqDODzk2a6vpvgS8ijLvtoBXpM6eoNOuoQYHHJ9ggxmRJCWNGaQR4jYxIKnAJRHBvhoJMrE=
