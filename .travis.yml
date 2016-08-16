@@ -21,9 +21,7 @@ after_success:
 - export REPO=enmasseproject/artemis
 - export TAG=`if [ "$TRAVIS_BRANCH" == "master" ]; then echo "latest"; else echo $TRAVIS_BRANCH
   ; fi`
-- ls
-- ls artemis-plugin
-- ls artemis-plugin/lib
+- find .
 - docker build -t $REPO:$COMMIT .
 - if [ "$TRAVIS_BRANCH" == "master" ] && [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
   docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS;
