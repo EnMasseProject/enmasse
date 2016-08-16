@@ -15,7 +15,7 @@ COPY ./artemis-plugin/build/libs/jboss-dmr-1.3.0.Final.jar $(ARTEMIS_HOME)/lib
 
 COPY ./utils/run_artemis.sh ./utils/get_free_instance.py $ARTEMIS_HOME/bin/
 COPY ./config_templates /config_templates
-COPY ./artemis-launcher/build/binaries/mainExecutable/main /launcher
+COPY ./artemis-launcher/build/exe/main/main /launcher
 
 RUN mkdir /var/run/artemis/
 VOLUME /var/run/artemis
