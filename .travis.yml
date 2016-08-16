@@ -17,7 +17,7 @@ script:
   - gradle libs
   - gradle distTar
 
-after_sucess:
+after_success:
 - export REPO=enmasseproject/artemis
 - export TAG=`if [ "$TRAVIS_BRANCH" == "master" ]; then echo "latest"; else echo $TRAVIS_BRANCH
   ; fi`
