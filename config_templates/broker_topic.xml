@@ -1,0 +1,28 @@
+      <queues>
+        <queue name="$TOPIC_NAME">
+            <address>$TOPIC_NAME</address>
+        </queue>
+      </queues>
+      <broadcast-groups>
+        <broadcast-group name="bcast_group_$TOPIC_NAME">
+          <jgroups-file>jgroups_openshift.xml</jgroups-file>
+          <jgroups-channel>topic_channel</jgroups-channel>
+          <connector-ref>me</connector-ref>
+        </broadcast-group>
+      </broadcast-groups>
+      <discovery-groups>
+        <discovery-group name="group_$TOPIC_NAME">
+          <jgroups-file>jgroups_openshift.xml</jgroups-file>
+          <jgroups-channel>topic_channel</jgroups-channel>
+          <refresh-timeout>10000</refresh-timeout>
+        </discovery-group>
+      </discovery-groups>
+      <bridges>
+        <bridge name="bridge0">
+          <queue-name>$TOPIC_NAME</queue-name>
+          <filter string="replicated IS NULL" />
+          <transformer-class-name>enmasse.broker.transformer.TopicAnnotationTransformer</transformer-class-name>
+          <use-duplicate-detection>false</use-duplicate-detection>
+          <discovery-group-ref discovery-group-name="group_$TOPIC_NAME"/>
+        </bridge>
+      </bridges>
