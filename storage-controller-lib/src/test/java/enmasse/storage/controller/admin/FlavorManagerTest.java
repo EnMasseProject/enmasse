@@ -33,6 +33,8 @@ public class FlavorManagerTest {
         assertTrue(config.isShared());
         assertThat(config.storageConfig().volumeType(), is(VolumeType.EMPTY_DIR));
         assertThat(config.storageConfig().mountPath(), is("/var/run/artemis"));
+        assertTrue(config.shutdownHook().isPresent());
+        assertThat(config.shutdownHook().get(), is("/artemis-shutdown-hook/bin/artemis-shutdown-hook"));
 
         config = manager.getFlavor("chili");
         assertFalse(config.isShared());

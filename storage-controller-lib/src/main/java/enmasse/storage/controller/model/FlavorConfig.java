@@ -1,16 +1,17 @@
 package enmasse.storage.controller.model;
 
-import com.openshift.internal.restclient.model.volume.VolumeSource;
-import com.openshift.restclient.ResourceKind;
 import com.openshift.restclient.images.DockerImageURI;
 import com.openshift.restclient.model.volume.VolumeType;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.Optional;
+import java.util.Set;
 
 /**
  * @author lulf
  */
-public class FlavorConfig { private final DockerImageURI brokerImage;
+public class FlavorConfig {
+    private final DockerImageURI brokerImage;
     private final Set<Port> brokerPorts;
     private final StorageConfig storageConfig;
 
@@ -19,6 +20,7 @@ public class FlavorConfig { private final DockerImageURI brokerImage;
     private final String routerSecretName;
     private final String routerSecretPath;
     private final boolean isShared;
+    private final Optional<String> shutdownHook;
 
 
     private FlavorConfig(DockerImageURI brokerImage,
@@ -28,7 +30,8 @@ public class FlavorConfig { private final DockerImageURI brokerImage;
                          Set<Port> routerPorts,
                          String routerSecretName,
                          String routerSecretPath,
-                         boolean isShared) {
+                         boolean isShared,
+                         Optional<String> shutdownHook) {
         this.brokerImage = brokerImage;
         this.brokerPorts = brokerPorts;
         this.storageConfig = storageConfig;
@@ -37,6 +40,7 @@ public class FlavorConfig { private final DockerImageURI brokerImage;
         this.routerSecretName = routerSecretName;
         this.routerSecretPath = routerSecretPath;
         this.isShared = isShared;
+        this.shutdownHook = shutdownHook;
     }
 
     public Set<Port> brokerPorts() {
@@ -71,6 +75,10 @@ public class FlavorConfig { private final DockerImageURI brokerImage;
         return this.routerSecretPath;
     }
 
+    public Optional<String> shutdownHook() {
+        return this.shutdownHook;
+    }
+
     public static class Builder {
         private DockerImageURI brokerImage = new DockerImageURI("enmasseproject/artemis:latest");
         private Set<Port> brokerPorts = Collections.singleton(new Port("amqp", 5673));
@@ -81,6 +89,7 @@ public class FlavorConfig { private final DockerImageURI brokerImage;
         private Set<Port> routerPorts = Collections.singleton(new Port("amqp", 5672));
         private String routerSecretName;
         private String routerSecretPath;
+        private Optional<String> shutdownHook = Optional.empty();
 
         public Builder brokerImage(DockerImageURI brokerImage) {
             this.brokerImage = brokerImage;
@@ -112,8 +121,13 @@ public class FlavorConfig { private final DockerImageURI brokerImage;
             return this;
         }
 
+        public Builder shutdownHook(String shutdownHook) {
+            this.shutdownHook = Optional.of(shutdownHook);
+            return this;
+        }
+
         public FlavorConfig build() {
-            return new FlavorConfig(brokerImage, brokerPorts, storage, routerImage, routerPorts, routerSecretName, routerSecretPath, isShared);
+            return new FlavorConfig(brokerImage, brokerPorts, storage, routerImage, routerPorts, routerSecretName, routerSecretPath, isShared, shutdownHook);
         }
 
         public Builder storage(StorageConfig storageConfig) {

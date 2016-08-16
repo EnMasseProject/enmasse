@@ -12,7 +12,8 @@
         "jgroups": 7800,
         "broadcast": 7801,
         "discovery": 7802
-      }
+      },
+      "shutdownHook": "/artemis-shutdown-hook/bin/artemis-shutdown-hook"
     },
     "router": {
       "dockerImage": "gordons/qdrouter:v10",

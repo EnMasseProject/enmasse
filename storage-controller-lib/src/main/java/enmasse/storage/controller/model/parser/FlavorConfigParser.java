@@ -82,6 +82,9 @@ public class FlavorConfigParser {
         if (value.has("ports")) {
             builder.brokerPorts(parsePorts(value.get("ports")));
         }
+        if (value.has("shutdownHook")) {
+            builder.shutdownHook(value.get("shutdownHook").asText());
+        }
     }
 
     private void parseStorage(FlavorConfig.Builder builder, JsonNode value) {
