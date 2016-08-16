@@ -20,3 +20,8 @@ dependencies {
 
 apply plugin: 'application'
 mainClassName = 'enmasse.Main'
+
+task libs(type: Sync) {
+    from configurations.runtime
+    into "$buildDir/libs"
+}
