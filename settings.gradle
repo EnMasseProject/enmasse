@@ -1,0 +1,5 @@
+rootProject.name = 'artemis-image'
+
+include ':artemis-plugin'
+include ':artemis-shutdown-hook'
+include ':artemis-launcher'
