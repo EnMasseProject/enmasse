@@ -2,6 +2,7 @@ package enmasse.storage.controller.generator;
 
 import com.openshift.internal.restclient.model.volume.EmptyDirVolumeSource;
 import com.openshift.restclient.model.IContainer;
+import com.openshift.restclient.model.IExecAction;
 import com.openshift.restclient.model.IReplicationController;
 import com.openshift.restclient.model.volume.IVolumeSource;
 import enmasse.storage.controller.model.*;
@@ -12,6 +13,7 @@ import java.util.Collections;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author lulf
@@ -24,7 +26,7 @@ public class BrokerGeneratorTest {
     @Before
     public void setup() {
         generator = new BrokerGenerator(null);
-        flavorConfig = new FlavorConfig.Builder().brokerPorts(Collections.singleton(new Port("amqp", 1234))).build();
+        flavorConfig = new FlavorConfig.Builder().brokerPorts(Collections.singleton(new Port("amqp", 1234))).shutdownHook("/mycmd").build();
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -45,6 +47,8 @@ public class BrokerGeneratorTest {
         assertThat(broker.getPorts().iterator().next().getContainerPort(), is(1234));
         assertThat(broker.getEnvVars().get(EnvVars.QUEUE_NAME), is("testaddr"));
         assertThat(broker.getVolumeMounts().size(), is(1));
+        assertTrue(broker.getLifecycle().getPreStop().isPresent());
+        assertThat(((IExecAction)broker.getLifecycle().getPreStop().get()).getCommand().get(0), is("/mycmd"));
 
         IContainer router = controller.getContainer("router");
         assertThat(router.getPorts().size(), is(1));
