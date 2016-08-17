@@ -40,6 +40,17 @@ module.exports.values = function (map) {
     return v;
 }
 
+module.exports.separate = function (map, predicate, a, b) {
+    for (var k in map) {
+        var v = map[k];
+        if (predicate(v)) {
+            a[k] = v;
+        } else {
+            b[k] = v;
+        }
+    }
+}
+
 module.exports.difference = function (a, b, equivalence) {
     var equivalent = equivalence || default_equality;
     var diff = {};

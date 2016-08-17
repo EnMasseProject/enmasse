@@ -29,6 +29,17 @@ var KnownRouter = function (container_id, listeners) {
     this.listeners = listeners;
 };
 
+
+function address_equivalence(a, b) {
+    if (a === undefined) return b === undefined;
+    return a.name === b.name && a.multicast === b.multicast && a.store_and_forward === b.store_and_forward;
+}
+
+function link_route_equivalence(a, b) {
+    if (a === undefined) return b === undefined;
+    return a.name === b.name && a.prefix === b.prefix && a.dir === b.dir;
+}
+
 /**
  * A ConnectedRouter represents a router this process is connected to
  * and is therefore resonsbile for configuring.
@@ -51,6 +62,11 @@ var ConnectedRouter = function (connection) {
     connection.on('message', this.incoming.bind(this));
     connection.on('disconnected', this.disconnected.bind(this));
     connection.on('connection_close', this.closed.bind(this));
+
+    this.update_types = {
+        address: {add: this.define_address.bind(this), remove: this.delete_address.bind(this), equivalence: address_equivalence},
+        link_route: {add: this.define_link_route.bind(this), remove: this.delete_link_route.bind(this), equivalence: link_route_equivalence}
+    };
 };
 
 util.inherits(ConnectedRouter, events.EventEmitter);
@@ -125,28 +141,52 @@ ConnectedRouter.prototype.check_connectors = function (routers) {
     }
 };
 
-function address_equivalence(a, b) {
-    if (a === undefined) return b === undefined;
-    return a.name === b.name && a.multicast === b.multicast && a.store_and_forward === b.store_and_forward;
+function is_topic(address) {
+    return address.multicast === true && address.store_and_forward === true;
+}
+
+function to_link_route(direction, address) {
+    return {name:address.name + '_' + direction, prefix:address.name, dir:direction};
+}
+
+function to_in_link_route(address) {
+    return to_link_route('in', address);
+}
+
+function to_out_link_route(address) {
+    return to_link_route('out', address);
+}
+
+function to_link_routes(address_list) {
+    var links = address_list.map(to_in_link_route).concat(address_list.map(to_out_link_route));
+    return myutils.index(links, by_name);
+}
+
+function update(actual, desired, type) {
+    var removed = myutils.values(myutils.difference(actual, desired, type.equivalence));
+    var added = myutils.values(myutils.difference(desired, actual, type.equivalence));
+    return removed.map(type.remove).concat(added.map(type.add));
 }
 
 ConnectedRouter.prototype.check_addresses = function (desired) {
-    if (this.addresses == undefined) {
+    if (this.addresses === undefined || this.link_routes === undefined) {
         console.log('router ' + this.container_id + ' is not ready for address check');
         return;
     }
-    var removed = myutils.values(myutils.difference(this.addresses, desired, address_equivalence));
-    var added = myutils.values(myutils.difference(desired, this.addresses, address_equivalence));
+    var topics = {};
+    var others = {};
+    myutils.separate(desired, is_topic, topics, others);
 
-    var do_define = this.define_address.bind(this);
-    var do_delete = this.delete_address.bind(this);
-    var work = removed.map(do_delete).concat(added.map(do_define));
+    var work = update(this.addresses, others, this.update_types.address);
+    work.concat(update(this.link_routes, to_link_routes(myutils.values(topics)), this.update_types.link_route));
+
     if (work.length) {
         //if made changes, requery when they are complete
         work.reduce(futurejs.and).then(this.on_addresses_updated.bind(this));
         //prevent any updates to addresses until we have re-retrieved
         //them from router after updates:
         this.addresses = undefined;
+        this.link_routes = undefined;
     } else {
         if (this.initial_provisioning_completed !== true) {
             this.initial_provisioning_completed = true;
@@ -199,14 +239,28 @@ ConnectedRouter.prototype.define_address = function (address) {
     var future = futurejs.future(created);
     var dist = address.multicast ? "multicast" : "balanced";
     console.log('defining address ' + address.name + ' on router ' + this.container_id);
-    this.create_entity('router.config.address', address.name, {prefix:address.name, distribution:dist, waypoint:address.store_and_forward}, future.as_callback());
+    this.create_entity('org.apache.qpid.dispatch.router.config.address', address.name, {prefix:address.name, distribution:dist, waypoint:address.store_and_forward}, future.as_callback());
     return future;
 };
 
 ConnectedRouter.prototype.delete_address = function (address) {
     var future = futurejs.future(deleted);
     console.log('deleting address ' + address.name + ' on router ' + this.container_id);
-    this.delete_entity('router.config.address', address.name, future.as_callback());
+    this.delete_entity('org.apache.qpid.dispatch.router.config.address', address.name, future.as_callback());
+    return future;
+};
+
+ConnectedRouter.prototype.define_link_route = function (route) {
+    var future = futurejs.future(created);
+    console.log('defining ' + route.dir + ' link route ' + route.prefix + ' on router ' + this.container_id);
+    this.create_entity('org.apache.qpid.dispatch.router.config.linkRoute', route.name, {'prefix':route.prefix, dir:route.dir}, future.as_callback());
+    return future;
+};
+
+ConnectedRouter.prototype.delete_link_route = function (route) {
+    var future = futurejs.future(deleted);
+    console.log('deleting ' + route.dir + ' link route ' + route.prefix + ' on router ' + this.container_id);
+    this.delete_entity('org.apache.qpid.dispatch.router.config.linkRoute', route.name, future.as_callback());
     return future;
 };
 
@@ -219,7 +273,11 @@ ConnectedRouter.prototype.retrieve_connectors = function () {
 };
 
 ConnectedRouter.prototype.retrieve_addresses = function () {
-    this.query('router.config.address', {attributeNames:[]}, this.on_query_address_response.bind(this));
+    this.query('org.apache.qpid.dispatch.router.config.address', {attributeNames:[]}, this.on_query_address_response.bind(this));
+};
+
+ConnectedRouter.prototype.retrieve_link_routes = function () {
+    this.query('org.apache.qpid.dispatch.router.config.linkRoute', {attributeNames:[]}, this.on_query_link_route_response.bind(this));
 };
 
 ConnectedRouter.prototype.on_connectors_updated = function (error) {
@@ -312,13 +370,36 @@ function by_name (o) {
 
 ConnectedRouter.prototype.on_query_address_response = function (message) {
     if (message.statusCode == 200) {
-        var address_records = extract_records(message.body);
+        var address_records = extract_records(message.body)
         this.addresses = myutils.index(address_records, by_name, from_router_address);
         console.log('retrieved addresses for ' + this.container_id + ': ' + JSON.stringify(this.addresses));
-        this.emit('addresses_updated', this);
+        this.retrieve_link_routes();
     } else {
         console.log('failed to retrieve addresses for ' + this.container_id + ': ' + message.statusDescription);
         this.retrieve_addresses();
+    }
+};
+
+function not_overridden (linkroute) {
+    if (linkroute.name === null) {
+        /*name entered in config file currently doesn't make it through*/
+        console.log('Ignoring unnamed linkroute: ' + JSON.stringify(linkroute));
+    } else {
+        return linkroute.name.indexOf('override') !== 0;
+    }
+}
+
+ConnectedRouter.prototype.on_query_link_route_response = function (message) {
+    if (message.statusCode == 200) {
+        var records = extract_records(message.body);
+        console.log('retrieved link routes for ' + this.container_id + ': raw-> ' + JSON.stringify(records));
+        this.link_routes = myutils.index(records.filter(not_overridden), by_name);
+        //this.link_routes = myutils.index(extract_records(message.body).filter(not_overridden), by_name);
+        console.log('retrieved link routes for ' + this.container_id + ': ' + JSON.stringify(this.link_routes));
+        this.emit('addresses_updated', this);
+    } else {
+        console.log('failed to retrieve link routes for ' + this.container_id + ': ' + message.statusDescription);
+        this.retrieve_link_routes();
     }
 };
 
