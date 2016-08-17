@@ -37,8 +37,9 @@ fun main(args: Array<String>) {
     } else {
         Optional.empty()
     }
-
-    Client(address, debugFn).drainMessages(from, to)
+    val mgmtEndpoint = Endpoint("127.0.0.1", 61616)
+    val client = DrainClient(mgmtEndpoint, from, address, debugFn)
+    client.drainMessages(to)
 }
 
 private fun signalSuccess(osClient: IClient, namespace: String, address: String) {
