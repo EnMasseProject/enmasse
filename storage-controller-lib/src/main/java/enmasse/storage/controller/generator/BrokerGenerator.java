@@ -77,13 +77,15 @@ public class BrokerGenerator {
         volumeMount.setMountPath(flavorConfig.storageConfig().mountPath());
         broker.setVolumeMounts(Collections.singleton(volumeMount));
 
-        flavorConfig.shutdownHook().ifPresent(hook -> {
-            broker.setLifecycle(new Lifecycle.Builder()
-                    .preStop(new ExecAction.Builder()
-                            .command(hook)
-                            .build())
-                    .build());
-        });
+        if (!destination.multicast()) {
+            flavorConfig.shutdownHook().ifPresent(hook -> {
+                broker.setLifecycle(new Lifecycle.Builder()
+                        .preStop(new ExecAction.Builder()
+                                .command(hook)
+                                .build())
+                        .build());
+            });
+        }
     }
 
     private static IPort createPort(String portName, int port) {
