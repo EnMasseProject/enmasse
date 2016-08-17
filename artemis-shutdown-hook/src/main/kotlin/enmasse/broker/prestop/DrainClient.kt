@@ -15,6 +15,7 @@ import java.util.concurrent.atomic.AtomicBoolean
  */
 class DrainClient(val mgmtEndpoint: Endpoint, val from: Endpoint, val address: String, val debugFn: Optional<() -> Unit>) {
 
+    val vertx = Vertx.vertx()
     val locator:ServerLocator
     val sessionFactory:ClientSessionFactory
     val session:ClientSession
@@ -26,14 +27,14 @@ class DrainClient(val mgmtEndpoint: Endpoint, val from: Endpoint, val address: S
     }
 
     fun drainMessages(to: Endpoint) {
-        val vertx = Vertx.vertx()
         val fromClient = ProtonClient.create(vertx)
         val toClient = ProtonClient.create(vertx);
 
-        vertx.setPeriodic(2000, { timerId ->
+        vertx.setPeriodic(1000, { timerId ->
             vertx.executeBlocking<Int>({ future ->
                 try {
                     val count = checkQueue()
+                    println("Queue had ${count} messages")
                     if (count == 0) {
                         shutdownBroker()
                     }
