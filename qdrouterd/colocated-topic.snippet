@@ -24,15 +24,24 @@ connector {
     role: route-container
 }
 
-autoLink {
-    addr: ${ADDRESS_NAME}
+linkRoute {
+    name: override.main_in
+    prefix: ${ADDRESS_NAME}
+    dir: in
+    connection: broker
+}
+
+linkRoute {
+    name: override.main_out
+    prefix: ${ADDRESS_NAME}
     dir: out
     connection: broker
 }
 
-autoLink {
-    addr: ${ADDRESS_NAME}
-    dir: in
+linkRoute {
+    name: override.qualified_out
+    prefix: ${ADDRESS_NAME}/${HOSTNAME}
+    dir: out
     connection: broker
 }
 

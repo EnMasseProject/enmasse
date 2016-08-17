@@ -15,9 +15,9 @@ if [ -d /etc/qpid-dispatch/ssl ]; then
 fi
 if [ -n "$QUEUE_NAME" ]; then
     export ADDRESS_NAME=$QUEUE_NAME;
-    envsubst < /etc/qpid-dispatch/colocated.snippet >> /tmp/qdrouterd.conf
+    envsubst < /etc/qpid-dispatch/colocated-queue.snippet >> /tmp/qdrouterd.conf
 elif [ -n "$TOPIC_NAME" ]; then
     export ADDRESS_NAME=$TOPIC_NAME;
-    envsubst < /etc/qpid-dispatch/colocated.snippet >> /tmp/qdrouterd.conf
+    envsubst < /etc/qpid-dispatch/colocated-topic.snippet >> /tmp/qdrouterd.conf
 fi
 exec /sbin/qdrouterd --conf /tmp/qdrouterd.conf
