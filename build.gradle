@@ -4,5 +4,5 @@ allprojects  {
 
 def f = new File('apache-artemis-bin.tar.gz')
 if (!f.exists()) {
-    new URL('http://www.pvv.org/~lulf/apache-artemis-1.4.0-20160620.113416-8-bin.tar.gz').withInputStream{ i -> f.withOutputStream{ it << i }}
+    new URL('http://www.pvv.org/~lulf/apache-artemis-1.5.0-SNAPSHOT-bin.tar.gz').withInputStream{ i -> f.withOutputStream{ it << i }}
 }

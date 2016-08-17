@@ -2,7 +2,7 @@ FROM fedora:23
 
 RUN dnf -y install which java-1.8.0-openjdk libaio python gettext hostname iputils && dnf clean all -y
 
-ENV ARTEMIS_HOME /opt/apache-artemis-1.4.0-SNAPSHOT
+ENV ARTEMIS_HOME /opt/apache-artemis-1.5.0-SNAPSHOT
 ENV PATH $ARTEMIS_HOME/bin:$PATH
 
 ADD apache-artemis-bin.tar.gz /opt
@@ -26,4 +26,4 @@ EXPOSE 7801
 EXPOSE 7802
 EXPOSE 61616
 
-CMD ["/launcher", "/opt/apache-artemis-1.4.0-SNAPSHOT/bin/run_artemis.sh"]
+CMD ["/launcher", "/opt/apache-artemis-1.5.0-SNAPSHOT/bin/run_artemis.sh"]
