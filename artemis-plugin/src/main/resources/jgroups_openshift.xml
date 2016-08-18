@@ -3,6 +3,7 @@
         xsi:schemaLocation="urn:org:jgroups http://www.jgroups.org/schema/JGroups-3.4.xsd">
     <TCP bind_port="7800"
          bind_addr="GLOBAL"
+         loopback="false"
          defer_client_bind_addr="true"/>
 
     <org.jgroups.protocols.kubernetes.KUBE_PING/>
