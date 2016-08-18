@@ -1,5 +1,5 @@
       <queues>
-        <queue name="$TOPIC_NAME">
+        <queue name="broker_$TOPIC_NAME">
             <address>$TOPIC_NAME</address>
         </queue>
       </queues>
@@ -19,7 +19,7 @@
       </discovery-groups>
       <bridges>
         <bridge name="bridge0">
-          <queue-name>$TOPIC_NAME</queue-name>
+          <queue-name>broker_$TOPIC_NAME</queue-name>
           <filter string="replicated IS NULL" />
           <transformer-class-name>enmasse.broker.transformer.TopicAnnotationTransformer</transformer-class-name>
           <use-duplicate-detection>false</use-duplicate-detection>
