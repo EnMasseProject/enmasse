@@ -22,7 +22,7 @@ data:
           "shutdownHook": "/artemis-shutdown-hook/bin/artemis-shutdown-hook"
         },
         "router": {
-          "dockerImage": "gordons/qdrouterd:v10",
+          "dockerImage": "gordons/qdrouterd:latest",
           "ports": {
             "amqp": 5672
           }
@@ -46,7 +46,7 @@ data:
           }
         },
         "router": {
-          "dockerImage": "gordons/qdrouterd:v10",
+          "dockerImage": "gordons/qdrouterd:latest",
           "certPath": "/etc/qpid-dispatch/ssl",
           "certSecretName": "qdrouterd-certs",
           "ports": {
@@ -68,7 +68,7 @@ data:
           }
         },
         "router": {
-          "dockerImage": "gordons/qdrouterd:v10",
+          "dockerImage": "gordons/qdrouterd:latest",
           "ports": {
             "amqp": 5672
           }
