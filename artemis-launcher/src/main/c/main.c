@@ -7,7 +7,6 @@ int main(int argc, char *argv[])
   struct sigaction sa = { 0 };
 
   sa.sa_handler = SIG_IGN;
-  sigaction(SIGINT, &sa, 0);
   sigaction(SIGTERM, &sa, 0);
 
   if (argc > 1) {
