@@ -4,5 +4,5 @@ allprojects  {
 
 task buildArtemis(type: Exec) {
     workingDir 'activemq-artemis'
-    commandLine 'mvn', 'clean', 'package', '-DskipTests'
+    commandLine 'mvn', '-Prelease', 'clean', 'package', '-DskipTests'
 }
