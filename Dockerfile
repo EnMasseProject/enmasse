@@ -5,7 +5,7 @@ RUN dnf -y install which java-1.8.0-openjdk libaio python gettext hostname iputi
 ENV ARTEMIS_HOME /opt/apache-artemis-1.5.0-SNAPSHOT
 ENV PATH $ARTEMIS_HOME/bin:$PATH
 
-ADD apache-artemis-bin.tar.gz /opt
+ADD activemq-artemis/artemis-distribution/target/apache-artemis-1.5.0-SNAPSHOT-bin.tar.gz /opt
 ADD ./artemis-shutdown-hook/build/distributions/artemis-shutdown-hook.tar /
 
 COPY ./artemis-plugin/build/libs/artemis-plugin.jar $ARTEMIS_HOME/lib

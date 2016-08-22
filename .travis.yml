@@ -16,6 +16,7 @@ script:
   - gradle build
   - gradle libs
   - gradle distTar
+  - gradle buildArtemis
 
 after_success:
 - export REPO=enmasseproject/artemis
