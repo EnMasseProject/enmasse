@@ -13,10 +13,6 @@ class TestReceiver(val context: Context) {
         val destination = context.lookup(address) as Destination
 
         val connection = connectionFactory.createConnection()
-        var exception: JMSException? = null
-        connection.setExceptionListener({ e: JMSException ->
-            exception = e
-        })
         connection.start();
 
         val session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE)
@@ -34,9 +30,6 @@ class TestReceiver(val context: Context) {
         }
 
 
-        if (exception != null) {
-            throw exception!!
-        }
         consumer.close()
         session.close()
         connection.close()
