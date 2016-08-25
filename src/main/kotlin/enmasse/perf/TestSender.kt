@@ -1,5 +1,6 @@
 package enmasse.perf
 
+import java.util.concurrent.TimeUnit
 import javax.jms.*
 import javax.naming.Context
 
@@ -10,10 +11,14 @@ class TestSender(val context: Context) {
 
     fun sendMessages(numMessages: Int, address: String): Int {
         val connectionFactory = context.lookup("enmasse") as ConnectionFactory
+        println("Looked up connection factory")
         val destination = context.lookup(address) as Destination
+        println("Looked up destination")
 
-        val connection = connectionFactory.createConnection()
+        val connection = connectWithTimeout(connectionFactory, 60, TimeUnit.SECONDS)
+        println("Created connection")
         connection.start();
+        println("Started connection")
 
         val session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE)
 

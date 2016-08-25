@@ -1,5 +1,6 @@
 package enmasse.perf
 
+import java.util.concurrent.TimeUnit
 import javax.jms.ConnectionFactory
 import javax.jms.Destination
 import javax.jms.JMSException
@@ -12,7 +13,7 @@ class TestReceiver(val context: Context) {
         val connectionFactory = context.lookup("enmasse") as ConnectionFactory
         val destination = context.lookup(address) as Destination
 
-        val connection = connectionFactory.createConnection()
+        val connection = connectWithTimeout(connectionFactory, 60, TimeUnit.SECONDS)
         connection.start();
 
         val session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE)
