@@ -76,7 +76,7 @@ SubscriptionControl.prototype.subscribe = function (subscription_id, topic) {
             var name = subscription_id + ':' + topic;
             return pod.broker.ensureDivert(name, topic, subscription_id).then(
                 function () {
-                    return pod.router.ensure_auto_link({'name':subscription_id, 'addr':subscription_id, dir:'out', connection:'broker'});
+                    return pod.router.ensure_auto_link({'name':subscription_id, 'addr':subscription_id, dir:'in', phase:0, connection:'broker'});
                 }
             );
         }

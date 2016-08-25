@@ -54,7 +54,7 @@ PodGroup.prototype.added = function (pod) {
 
 PodGroup.prototype.removed = function (pod) {
     //TODO: may be restarted, so should wait for a while before removing
-    this.brokers[pod.name].close();
+    this.pods[pod.name].close();
     delete this.pods[pod.name];
 };
 
@@ -80,8 +80,8 @@ PodGroup.prototype.update = function (pods) {
 };
 
 PodGroup.prototype.close = function () {
-    for (p in this.pods) {
-        pods[p].close();
+    for (var p in this.pods) {
+        this.pods[p].close();
     }
 };
 

@@ -84,7 +84,7 @@ function handle_control_message(context) {
         if (topic !== undefined) {
             if (context.message.subject === 'close') {
                 console.log('closing subscription ' + subscription_id + ' on ' + root);
-                topic.close(subscription_id);
+                topic.controller.close(subscription_id);
             } else {
                 var topics = context.message.body || topic.name;
                 if (!util.isArray(topics)) topics = [topics];
@@ -92,12 +92,12 @@ function handle_control_message(context) {
                 if (context.message.subject === 'subscribe') {
                     topics.forEach(function (t) {
                         console.log('subscribing ' + subscription_id + ' to ' + t);
-                        topic.subscribe(subscription_id, t);
+                        topic.controller.subscribe(subscription_id, t);
                     });
                 } else if (context.message.subject === 'unsubscribe') {
                     topics.forEach(function (t) {
                         console.log('unsubscribing ' + subscription_id + ' from ' + t);
-                        topic.unsubscribe(subscription_id, t);
+                        topic.controller.unsubscribe(subscription_id, t);
                     });
                 } else {
                     console.log('ignoring subscription control message with subject ' + context.message.subject);
@@ -177,8 +177,8 @@ amqp.sasl_server_mechanisms.enable_anonymous();
 amqp.listen({port:5672, properties:connection_properties});
 
 
-if (process.env.ROUTER_SERVICE_HOST) {
-    amqp.connect({host:process.env.ROUTER_SERVICE_HOST, port:process.env.ROUTER_SERVICE_PORT}).open_receiver(SUBCTRL);
+if (process.env.MESSAGING_SERVICE_HOST) {
+    amqp.connect({host:process.env.MESSAGING_SERVICE_HOST, port:process.env.MESSAGING_SERVICE_PORT}).open_receiver(SUBCTRL);
 }
 
 if (process.env.CONFIGURATION_SERVICE_HOST) {
