@@ -20,8 +20,7 @@ class StoreAndForwardTopicTest: StringSpec() {
             val countdownLatch = CountDownLatch(3)
             val executor = Executors.newFixedThreadPool(3)
             val results = 1.rangeTo(3).map { executor.submit<Int> {
-                countdownLatch.countDown()
-                client.recvMessages(dest, msgs.size).size
+                client.recvMessages(dest, msgs.size, connectListener = { countdownLatch.countDown() }).size
             }}
 
             countdownLatch.await(5, TimeUnit.MINUTES)

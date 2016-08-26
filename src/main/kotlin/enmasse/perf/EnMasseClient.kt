@@ -9,7 +9,7 @@ import javax.naming.Context
  */
 class EnMasseClient(val context: Context) {
 
-    fun recvMessages(address: String, numMessages: Int, connectTimeout: Long = 5, timeUnit: TimeUnit = TimeUnit.MINUTES): List<String> {
+    fun recvMessages(address: String, numMessages: Int, connectTimeout: Long = 5, timeUnit: TimeUnit = TimeUnit.MINUTES, connectListener: () -> Unit = {}): List<String> {
         val connectionFactory = context.lookup("enmasse") as ConnectionFactory
         val destination = context.lookup(address) as Destination
 
@@ -20,6 +20,7 @@ class EnMasseClient(val context: Context) {
 
         val consumer = session.createConsumer(destination)
 
+        connectListener.invoke()
         var numReceived = 0
         val receivedMessages = 1.rangeTo(numMessages).map { i ->
             val message = consumer.receive()
