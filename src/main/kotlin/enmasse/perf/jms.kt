@@ -10,13 +10,18 @@ import javax.naming.Context
 /**
  * @author Ulf Lilleengen
  */
-fun createQueueContext(endpoint: Endpoint, address: String): Context {
+
+private fun createCommonEnv(endpoint: Endpoint): Hashtable<Any, Any> {
     val env = Hashtable<Any, Any>();
     env.put(Context.INITIAL_CONTEXT_FACTORY, "org.apache.qpid.jms.jndi.JmsInitialContextFactory")
     env.put("connectionfactory.enmasse", "amqp://${endpoint.host}:${endpoint.port}")
-    println("Connecting to ${env.get("connectionfactory.enmasse")}")
+    env.put("jms.connectTimeout", 300)
+    return env
+}
+
+fun createQueueContext(endpoint: Endpoint, address: String): Context {
+    val env = createCommonEnv(endpoint)
     env.put("queue.${address}", address)
-    env.put("jms.connectTimeout", 60)
     return javax.naming.InitialContext(env);
 }
 
