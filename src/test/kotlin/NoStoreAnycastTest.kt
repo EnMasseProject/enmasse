@@ -1,5 +1,4 @@
 import enmasse.perf.EnMasseClient
-import enmasse.perf.Environment
 import enmasse.perf.createQueueContext
 import io.kotlintest.specs.StringSpec
 import java.util.concurrent.Executors
@@ -11,7 +10,7 @@ import java.util.concurrent.TimeUnit
 class NoStoreAnycastTest: StringSpec() {
     init {
         val dest = "anycast"
-        val client = EnMasseClient(createQueueContext(Environment.endpoint, dest))
+        val client = EnMasseClient(createQueueContext(dest))
 
         "Messages should be delivered to receiver" {
             val msgs = listOf("foo", "bar", "baz")
@@ -21,7 +20,7 @@ class NoStoreAnycastTest: StringSpec() {
             client.sendMessages(dest, msgs) shouldBe msgs.size
             println("Sent ${msgs.size} messages")
 
-            val result = receiver.get(5, TimeUnit.MINUTES)
+            val result = receiver.get(2, TimeUnit.MINUTES)
 
             executor.shutdown()
 

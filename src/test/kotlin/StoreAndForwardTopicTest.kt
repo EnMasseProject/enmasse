@@ -1,5 +1,4 @@
 import enmasse.perf.EnMasseClient
-import enmasse.perf.Environment
 import enmasse.perf.createTopicContext
 import io.kotlintest.specs.StringSpec
 import java.util.concurrent.CountDownLatch
@@ -12,7 +11,7 @@ import java.util.concurrent.TimeUnit
 class StoreAndForwardTopicTest: StringSpec() {
     init {
         val dest = "mytopic"
-        val client = EnMasseClient(createTopicContext(Environment.endpoint, dest))
+        val client = EnMasseClient(createTopicContext(dest))
 
         "Messages should be delivered to multiple subscribers" {
             val msgs = listOf("foo", "bar", "baz")
@@ -23,12 +22,12 @@ class StoreAndForwardTopicTest: StringSpec() {
                 client.recvMessages(dest, msgs.size, connectListener = { countdownLatch.countDown() }).size
             }}
 
-            countdownLatch.await(5, TimeUnit.MINUTES)
+            countdownLatch.await(1, TimeUnit.MINUTES)
             client.sendMessages(dest, msgs) shouldBe msgs.size
             println("Sent ${msgs.size} messages")
 
             results.forEach { future ->
-                val result = future.get(5, TimeUnit.MINUTES)
+                val result = future.get(2, TimeUnit.MINUTES)
                 result shouldBe msgs.size
             }
 

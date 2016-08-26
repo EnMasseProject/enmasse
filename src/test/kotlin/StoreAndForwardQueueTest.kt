@@ -1,5 +1,4 @@
 import enmasse.perf.EnMasseClient
-import enmasse.perf.Environment
 import enmasse.perf.createQueueContext
 import io.kotlintest.specs.StringSpec
 
@@ -9,7 +8,7 @@ import io.kotlintest.specs.StringSpec
 class StoreAndForwardQueueTest : StringSpec() {
     init {
         val dest = "myqueue"
-        val client = EnMasseClient(createQueueContext(Environment.endpoint, dest))
+        val client = EnMasseClient(createQueueContext(dest))
 
         "Messages should be queued" {
             val msgs = listOf("foo", "bar", "baz")

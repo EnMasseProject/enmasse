@@ -10,7 +10,8 @@ import javax.naming.Context
  * @author Ulf Lilleengen
  */
 
-private fun createCommonEnv(endpoint: Endpoint): Hashtable<Any, Any> {
+private fun createCommonEnv(): Hashtable<Any, Any> {
+    val endpoint = Environment.endpoint
     val env = Hashtable<Any, Any>();
     env.put(Context.INITIAL_CONTEXT_FACTORY, "org.apache.qpid.jms.jndi.JmsInitialContextFactory")
     env.put("connectionfactory.enmasse", "amqp://${endpoint.host}:${endpoint.port}")
@@ -18,14 +19,14 @@ private fun createCommonEnv(endpoint: Endpoint): Hashtable<Any, Any> {
     return env
 }
 
-fun createQueueContext(endpoint: Endpoint, address: String): Context {
-    val env = createCommonEnv(endpoint)
+fun createQueueContext(address: String): Context {
+    val env = createCommonEnv()
     env.put("queue.${address}", address)
     return javax.naming.InitialContext(env);
 }
 
-fun createTopicContext(endpoint: Endpoint, address: String): Context {
-    val env = createCommonEnv(endpoint)
+fun createTopicContext(address: String): Context {
+    val env = createCommonEnv()
     env.put("topic.${address}", address)
     return javax.naming.InitialContext(env);
 }
