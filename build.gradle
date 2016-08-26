@@ -28,6 +28,3 @@ dependencies {
     testCompile 'junit:junit:4.12'
     testCompile "io.kotlintest:kotlintest:${kotlintestVersion}"
 }
-
-apply plugin: 'application'
-mainClassName = 'enmasse.perf.MainKt'
