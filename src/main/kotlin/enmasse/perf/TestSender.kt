@@ -7,9 +7,9 @@ import javax.naming.Context
 /**
  * @author Ulf Lilleengen
  */
-class TestSender(val context: Context) {
+class TestSender(val context: Context, val address: String) {
 
-    fun sendMessages(numMessages: Int, address: String): Int {
+    fun sendMessages(messages: List<String>): Int {
         val connectionFactory = context.lookup("enmasse") as ConnectionFactory
         println("Looked up connection factory")
         val destination = context.lookup(address) as Destination
@@ -25,11 +25,10 @@ class TestSender(val context: Context) {
         val messageProducer = session.createProducer(destination)
 
         var messagesSent = 0
-        for (i in 1.rangeTo(numMessages)) {
-            val message = session.createTextMessage("Message ${i}")
-            message.jmsCorrelationID = "${i}"
+        for (msg in messages) {
+            val message = session.createTextMessage(msg)
+            message.jmsCorrelationID = "${++messagesSent}"
             messageProducer.send(message, DeliveryMode.PERSISTENT, Message.DEFAULT_PRIORITY, Message.DEFAULT_TIME_TO_LIVE)
-            messagesSent++
         }
 
         messageProducer.close()

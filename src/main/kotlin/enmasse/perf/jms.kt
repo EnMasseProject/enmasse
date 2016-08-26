@@ -14,6 +14,7 @@ fun createQueueContext(endpoint: Endpoint, address: String): Context {
     val env = Hashtable<Any, Any>();
     env.put(Context.INITIAL_CONTEXT_FACTORY, "org.apache.qpid.jms.jndi.JmsInitialContextFactory")
     env.put("connectionfactory.enmasse", "amqp://${endpoint.host}:${endpoint.port}")
+    println("Connecting to ${env.get("connectionfactory.enmasse")}")
     env.put("queue.${address}", address)
     env.put("jms.connectTimeout", 60)
     return javax.naming.InitialContext(env);
@@ -24,8 +25,8 @@ fun connectWithTimeout(connectionFactory: ConnectionFactory, timeout: Long, unit
     while (System.currentTimeMillis() < endTime) {
         try {
             return connectionFactory.createConnection()
-        } catch (e: JMSException) {
-            println("Error connecting, retrying in 2 seconds")
+        } catch (e: Exception) {
+            println("Error connecting: ${e.message}, retrying in 2 seconds")
             Thread.sleep(2000)
         }
     }

@@ -3,13 +3,12 @@ package enmasse.perf
 import java.util.concurrent.TimeUnit
 import javax.jms.ConnectionFactory
 import javax.jms.Destination
-import javax.jms.JMSException
 import javax.jms.Session
 import javax.naming.Context
 
-class TestReceiver(val context: Context) {
+class TestReceiver(val context: Context, val address: String) {
 
-    fun recvMessages(numMessages: Int, address: String): Int {
+    fun recvMessages(numMessages: Int): List<String> {
         val connectionFactory = context.lookup("enmasse") as ConnectionFactory
         val destination = context.lookup(address) as Destination
 
@@ -21,19 +20,15 @@ class TestReceiver(val context: Context) {
         val consumer = session.createConsumer(destination)
 
         var numReceived = 0
-        for (i in 1.rangeTo(numMessages)) {
+        val receivedMessages = 1.rangeTo(numMessages).map { i ->
             val message = consumer.receive()
-            val cid = "${i}"
-            if (!cid.equals(message.jmsCorrelationID)) {
-                throw IllegalStateException("Got messages in wrong order")
-            }
             numReceived++
+            message.toString()
         }
-
 
         consumer.close()
         session.close()
         connection.close()
-        return numReceived
+        return receivedMessages
     }
 }

@@ -1,7 +1,4 @@
-import enmasse.perf.Environment
-import enmasse.perf.TestReceiver
-import enmasse.perf.TestSender
-import enmasse.perf.createQueueContext
+import enmasse.perf.*
 import io.kotlintest.specs.StringSpec
 
 /**
@@ -11,11 +8,14 @@ class QueueTest : StringSpec() {
     init {
         val ctx = createQueueContext(Environment.endpoint, "myqueue")
         "Messages should be queued" {
-            val sender = TestSender(ctx)
-            sender.sendMessages(10, "myqueue") shouldBe 10
+            val sender = TestSender(ctx, "myqueue")
+            val msgs = listOf("foo", "bar", "baz")
+            sender.sendMessages(msgs) shouldBe msgs.size
+            println("Sent ${msgs.size} messages")
 
-            val receiver = TestReceiver(ctx)
-            receiver.recvMessages(10, "myqueue") shouldBe 10
+            val receiver = TestReceiver(ctx, "myqueue")
+            val received = receiver.recvMessages(msgs.size)
+            println("Received messages: ${received}")
         }
     }
 }
