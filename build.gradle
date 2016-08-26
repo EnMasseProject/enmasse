@@ -1,5 +1,5 @@
 buildscript {
-   ext.kotlin_version = '1.0.2'
+   ext.kotlin_version = '1.0.3'
    ext.openshiftRestclientVersion = '4.0.5.Final'
    ext.qpidJmsVersion = '0.10.0'
    ext.jacksonVersion = '2.7.4'
@@ -22,9 +22,8 @@ repositories {
 
 dependencies {
     compile 'org.slf4j:slf4j-api:1.7.13'
-	compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     compile "com.openshift:openshift-restclient-java:${openshiftRestclientVersion}"
     compile "org.apache.qpid:qpid-jms-client:${qpidJmsVersion}"
-    testCompile 'junit:junit:4.12'
     testCompile "io.kotlintest:kotlintest:${kotlintestVersion}"
 }
