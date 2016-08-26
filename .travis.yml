@@ -16,8 +16,6 @@ script:
   -v /var/run:/var/run:rw -v /sys:/sys -v /var/lib/docker:/var/lib/docker:rw -v /var/lib/origin/openshift.local.volumes:/var/lib/origin/openshift.local.volumes
   openshift/origin:v1.3.0-alpha.1 start
 - cat /etc/hosts
-- sysctl net.ipv6.conf.all.disable_ipv6
-- sleep 20
 - wget https://github.com/openshift/origin/releases/download/v1.3.0-alpha.1/openshift-origin-client-tools-v1.3.0-alpha.1-6e83535-linux-64bit.tar.gz
   -O oclient.tar.gz
 - tar xzvf oclient.tar.gz
@@ -26,8 +24,7 @@ script:
 - "./oc new-project enmasse-ci"
 - "./oc policy add-role-to-user view system:serviceaccount:$(./oc project -q):default"
 - "./oc policy add-role-to-user edit system:serviceaccount:$(./oc project -q):deployer"
-- wget https://raw.githubusercontent.com/enmasseproject/openshift-configuration/master/enmasse-template.yaml
-- "./oc process -f enmasse-template.yaml | ./oc create -f -"
+- "curl -s https://raw.githubusercontent.com/enmasseproject/openshift-configuration/master/enmasse-template.yaml | ./oc process -f - | ./oc create -f -"
 - ./scripts/scale_controller.sh mytopic 3
 - OPENSHIFT_USER=test OPENSHIFT_TOKEN=`./oc config view -o jsonpath='{.users[?(@.name == "test/localhost:8443")].user.token}'` OPENSHIFT_URL=https://localhost:8443 gradle check -i
 after_failure:
