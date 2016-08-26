@@ -8,11 +8,11 @@ import javax.naming.Context
 
 class TestReceiver(val context: Context, val address: String) {
 
-    fun recvMessages(numMessages: Int): List<String> {
+    fun recvMessages(numMessages: Int, connectTimeout: Long, timeUnit: TimeUnit): List<String> {
         val connectionFactory = context.lookup("enmasse") as ConnectionFactory
         val destination = context.lookup(address) as Destination
 
-        val connection = connectWithTimeout(connectionFactory, 60, TimeUnit.SECONDS)
+        val connection = connectWithTimeout(connectionFactory, connectTimeout, timeUnit)
         connection.start();
 
         val session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE)
