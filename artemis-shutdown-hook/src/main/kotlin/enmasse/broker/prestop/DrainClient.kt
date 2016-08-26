@@ -101,7 +101,7 @@ class DrainClient(val mgmtEndpoint: Endpoint, val from: Endpoint, val address: S
         println("Shutting down")
         val requestor = ClientRequestor(session, "jms.queue.activemq.management")
         val message = session.createMessage(false)
-        ManagementHelper.putOperationInvocation(message, "core.server", "forceShutdown")
+        ManagementHelper.putOperationInvocation(message, "core.server", "forceFailover")
         session.start()
         val reply = requestor.request(message)
         session.stop()
