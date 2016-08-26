@@ -1,21 +1,22 @@
-import enmasse.perf.*
+import enmasse.perf.EnMasseClient
+import enmasse.perf.Environment
+import enmasse.perf.createQueueContext
 import io.kotlintest.specs.StringSpec
-import java.util.concurrent.TimeUnit
 
 /**
  * @author Ulf Lilleengen
  */
 class QueueTest : StringSpec() {
     init {
-        val ctx = createQueueContext(Environment.endpoint, "myqueue")
+        val dest = "myqueue"
+        val client = EnMasseClient(createQueueContext(Environment.endpoint, dest))
+
         "Messages should be queued" {
-            val sender = TestSender(ctx, "myqueue")
             val msgs = listOf("foo", "bar", "baz")
-            sender.sendMessages(msgs, 5, TimeUnit.MINUTES) shouldBe msgs.size
+            client.sendMessages(dest, msgs) shouldBe msgs.size
             println("Sent ${msgs.size} messages")
 
-            val receiver = TestReceiver(ctx, "myqueue")
-            val received = receiver.recvMessages(msgs.size, 5, TimeUnit.MINUTES)
+            val received = client.recvMessages(dest, msgs.size)
 
             println("Received ${received.size} messages")
             received.size shouldBe msgs.size
