@@ -1,4 +1,4 @@
-package enmasse.perf
+package enmasse.smoketest
 
 import java.util.*
 import java.util.concurrent.TimeUnit

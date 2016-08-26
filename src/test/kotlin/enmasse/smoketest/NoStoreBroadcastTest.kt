@@ -1,7 +1,5 @@
-import enmasse.perf.EnMasseClient
-import enmasse.perf.Endpoint
-import enmasse.perf.Environment
-import enmasse.perf.createQueueContext
+package enmasse.smoketest
+
 import io.kotlintest.specs.StringSpec
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors

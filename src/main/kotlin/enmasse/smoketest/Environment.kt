@@ -1,4 +1,4 @@
-package enmasse.perf
+package enmasse.smoketest
 
 import com.openshift.restclient.ClientBuilder
 import com.openshift.restclient.ResourceKind

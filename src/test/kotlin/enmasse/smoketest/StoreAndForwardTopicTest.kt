@@ -1,5 +1,5 @@
-import enmasse.perf.EnMasseClient
-import enmasse.perf.createTopicContext
+package enmasse.smoketest
+
 import io.kotlintest.specs.StringSpec
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors

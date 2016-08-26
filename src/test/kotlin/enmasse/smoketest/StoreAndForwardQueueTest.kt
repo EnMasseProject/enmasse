@@ -1,5 +1,5 @@
-import enmasse.perf.EnMasseClient
-import enmasse.perf.createQueueContext
+package enmasse.smoketest
+
 import io.kotlintest.specs.StringSpec
 
 /**
