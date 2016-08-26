@@ -9,7 +9,7 @@ import javax.naming.Context
  */
 class TestSender(val context: Context, val address: String) {
 
-    fun sendMessages(messages: List<String>, connectTimeout: Long, timeUnit: TimeUnit): Int {
+    fun sendMessages(messages: List<String>, connectTimeout: Long = 5, timeUnit: TimeUnit = TimeUnit.MINUTES): Int {
         val connectionFactory = context.lookup("enmasse") as ConnectionFactory
         val destination = context.lookup(address) as Destination
 

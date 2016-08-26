@@ -8,7 +8,7 @@ import javax.naming.Context
 
 class TestReceiver(val context: Context, val address: String) {
 
-    fun recvMessages(numMessages: Int, connectTimeout: Long, timeUnit: TimeUnit): List<String> {
+    fun recvMessages(numMessages: Int, connectTimeout: Long = 5, timeUnit: TimeUnit = TimeUnit.MINUTES): List<String> {
         val connectionFactory = context.lookup("enmasse") as ConnectionFactory
         val destination = context.lookup(address) as Destination
 
