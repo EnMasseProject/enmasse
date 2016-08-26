@@ -24,17 +24,18 @@ class StoreAndForwardTopicTest: StringSpec() {
             }}
 
             println("Waiting for receivers")
-            countdownLatch.await(1, TimeUnit.MINUTES)
+            countdownLatch.await(20, TimeUnit.SECONDS)
             println("Done waiting, running sender")
             client.sendMessages(dest, msgs) shouldBe msgs.size
             println("Sent ${msgs.size} messages")
 
+            executor.shutdown()
+            executor.awaitTermination(20, TimeUnit.SECONDS) shouldBe true
+
             results.forEach { future ->
-                val result = future.get(2, TimeUnit.MINUTES)
+                val result = future.get()
                 result shouldBe msgs.size
             }
-
-            executor.shutdown()
         }
     }
 }

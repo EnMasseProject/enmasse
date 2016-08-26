@@ -20,7 +20,7 @@ class NoStoreAnycastTest: StringSpec() {
             client.sendMessages(dest, msgs) shouldBe msgs.size
             println("Sent ${msgs.size} messages")
 
-            val result = receiver.get(2, TimeUnit.MINUTES)
+            val result = receiver.get(20, TimeUnit.SECONDS)
 
             executor.shutdown()
 
