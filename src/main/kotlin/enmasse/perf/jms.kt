@@ -4,7 +4,6 @@ import java.util.*
 import java.util.concurrent.TimeUnit
 import javax.jms.Connection
 import javax.jms.ConnectionFactory
-import javax.jms.JMSException
 import javax.naming.Context
 
 /**
@@ -22,6 +21,12 @@ private fun createCommonEnv(endpoint: Endpoint): Hashtable<Any, Any> {
 fun createQueueContext(endpoint: Endpoint, address: String): Context {
     val env = createCommonEnv(endpoint)
     env.put("queue.${address}", address)
+    return javax.naming.InitialContext(env);
+}
+
+fun createTopicContext(endpoint: Endpoint, address: String): Context {
+    val env = createCommonEnv(endpoint)
+    env.put("topic.${address}", address)
     return javax.naming.InitialContext(env);
 }
 
