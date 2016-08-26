@@ -13,6 +13,7 @@ class EnMasseClient(val context: Context) {
         val connectionFactory = context.lookup("enmasse") as ConnectionFactory
         val destination = context.lookup(address) as Destination
 
+        println("Creating connection")
         val connection = connectWithTimeout(connectionFactory, connectTimeout, timeUnit)
         connection.start();
 
@@ -20,7 +21,9 @@ class EnMasseClient(val context: Context) {
 
         val consumer = session.createConsumer(destination)
 
+        println("Invoking connect liestener")
         connectListener.invoke()
+        println("Listener invoked")
         var numReceived = 0
         val receivedMessages = 1.rangeTo(numMessages).map { i ->
             val message = consumer.receive()
@@ -28,8 +31,6 @@ class EnMasseClient(val context: Context) {
             message.toString()
         }
 
-        consumer.close()
-        session.close()
         connection.close()
         return receivedMessages
     }
@@ -49,11 +50,10 @@ class EnMasseClient(val context: Context) {
         for (msg in messages) {
             val message = session.createTextMessage(msg)
             message.jmsCorrelationID = "${++messagesSent}"
-            messageProducer.send(message, DeliveryMode.PERSISTENT, Message.DEFAULT_PRIORITY, Message.DEFAULT_TIME_TO_LIVE)
+            println("Sending message with id ${messagesSent}")
+            messageProducer.send(message, DeliveryMode.NON_PERSISTENT, Message.DEFAULT_PRIORITY, Message.DEFAULT_TIME_TO_LIVE)
         }
 
-        messageProducer.close()
-        session.close()
         connection.close()
         return messagesSent
     }

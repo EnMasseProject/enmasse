@@ -18,11 +18,14 @@ class StoreAndForwardTopicTest: StringSpec() {
 
             val countdownLatch = CountDownLatch(3)
             val executor = Executors.newFixedThreadPool(3)
-            val results = 1.rangeTo(3).map { executor.submit<Int> {
+            val results = 1.rangeTo(3).map { i -> executor.submit<Int> {
+                println("Receiving messages for client ${i}")
                 client.recvMessages(dest, msgs.size, connectListener = { countdownLatch.countDown() }).size
             }}
 
+            println("Waiting for receivers")
             countdownLatch.await(1, TimeUnit.MINUTES)
+            println("Done waiting, running sender")
             client.sendMessages(dest, msgs) shouldBe msgs.size
             println("Sent ${msgs.size} messages")
 
