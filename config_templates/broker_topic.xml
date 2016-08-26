@@ -23,6 +23,7 @@
           <filter string="replicated IS NULL" />
           <transformer-class-name>enmasse.broker.transformer.TopicAnnotationTransformer</transformer-class-name>
           <use-duplicate-detection>false</use-duplicate-detection>
+          <retry-interval-multiplier>2.0</retry-interval-multiplier>
           <discovery-group-ref discovery-group-name="group_$TOPIC_NAME"/>
         </bridge>
       </bridges>
