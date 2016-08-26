@@ -1,5 +1,6 @@
 package enmasse.smoketest
 
+import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import javax.jms.*
 import javax.naming.Context
@@ -13,7 +14,6 @@ class EnMasseClient(val context: Context) {
         val connectionFactory = context.lookup("enmasse") as ConnectionFactory
         val destination = context.lookup(address) as Destination
 
-        println("Creating connection")
         val connection = connectWithTimeout(connectionFactory, connectTimeout, timeUnit)
         connection.start();
 
@@ -21,18 +21,19 @@ class EnMasseClient(val context: Context) {
 
         val consumer = session.createConsumer(destination)
 
-        println("Invoking connect liestener")
-        connectListener.invoke()
-        println("Listener invoked")
-        var numReceived = 0
-        val receivedMessages = 1.rangeTo(numMessages).map { i ->
-            val message = consumer.receive()
-            numReceived++
-            message.toString()
+
+        val latch = CountDownLatch(numMessages)
+        var received = java.util.ArrayList<String>()
+        consumer.setMessageListener { message ->
+            received.add(message.toString())
+            latch.countDown()
         }
+        Thread.sleep(1000) // TODO: Figure out why this is needed :(
+        connectListener.invoke()
+        latch.await()
 
         connection.close()
-        return receivedMessages
+        return received
     }
 
     fun sendMessages(address: String, messages: List<String>, connectTimeout: Long = 5, timeUnit: TimeUnit = TimeUnit.MINUTES): Int {

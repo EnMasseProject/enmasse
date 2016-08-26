@@ -18,8 +18,10 @@ class NoStoreBroadcastTest: StringSpec() {
 
             val countdownLatch = CountDownLatch(2)
             val executor = Executors.newFixedThreadPool(2)
-            val results = 1.rangeTo(2).map { executor.submit<Int> {
-                client.recvMessages(dest, msgs.size, connectListener = { countdownLatch.countDown() }).size
+            val results = 1.rangeTo(2).map { i -> executor.submit<Int> {
+                val sz = client.recvMessages(dest, msgs.size, connectListener = { countdownLatch.countDown() }).size
+                println("Client ${i} recieved ${sz} messages")
+                sz
             }}
 
             countdownLatch.await(10, TimeUnit.SECONDS)
