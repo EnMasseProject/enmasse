@@ -2,7 +2,7 @@
 ADDRESS=$1
 REPLICAS=$2
 
-for i in `seq 1 300`
+for i in `seq 1 60`
 do
     echo "Checking for replication controller, attempt $i"
     ./oc get replicationcontroller controller-$ADDRESS
@@ -11,6 +11,6 @@ do
         ./oc scale replicationcontroller controller-$ADDRESS --replicas=$REPLICAS
         exit 0
     fi
-    sleep 1
+    sleep 5
 done
 exit 1
