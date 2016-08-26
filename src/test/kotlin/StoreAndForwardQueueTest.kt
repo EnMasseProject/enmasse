@@ -6,7 +6,7 @@ import io.kotlintest.specs.StringSpec
 /**
  * @author Ulf Lilleengen
  */
-class QueueTest : StringSpec() {
+class StoreAndForwardQueueTest : StringSpec() {
     init {
         val dest = "myqueue"
         val client = EnMasseClient(createQueueContext(Environment.endpoint, dest))
