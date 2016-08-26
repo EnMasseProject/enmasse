@@ -17,7 +17,7 @@ class NoStoreAnycastTest: StringSpec() {
             val msgs = listOf("foo", "bar", "baz")
 
             val executor = Executors.newFixedThreadPool(1)
-            val receiver = executor.submit {  client.recvMessages(dest, msgs.size).size }
+            val receiver = executor.submit<Int> { client.recvMessages(dest, msgs.size).size }
             client.sendMessages(dest, msgs) shouldBe msgs.size
             println("Sent ${msgs.size} messages")
 
