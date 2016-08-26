@@ -29,6 +29,7 @@ class EnMasseClient(val context: Context) {
             latch.countDown()
         }
         Thread.sleep(1000) // TODO: Figure out why this is needed :(
+        println("Receiver set up, allowing sender to start")
         connectListener.invoke()
         latch.await()
 
