@@ -13,11 +13,14 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * @author lulf
  */
 public class AddressConfigParser {
+    private static final Logger log = Logger.getLogger(AddressConfigParser.class.getName());
     private final ObjectMapper mapper = new ObjectMapper();
     private final FlavorRepository flavorRepository;
 
@@ -37,6 +40,7 @@ public class AddressConfigParser {
         while (it.hasNext()) {
             Map.Entry<String, JsonNode> entry = it.next();
             FlavorConfig flavorConfig = entry.getValue().has("flavor") ? flavorRepository.getFlavor(entry.getValue().get("flavor").asText()) : flavorRepository.getDefaultFlavor();
+            log.log(Level.INFO, "Found flavor config with broker image '" + flavorConfig.brokerImage().toString() + "' and router image '" + flavorConfig.routerImage().toString() + "'");
             Destination destination = new Destination(
                     entry.getKey(),
                     entry.getValue().get("store_and_forward").asBoolean(),
