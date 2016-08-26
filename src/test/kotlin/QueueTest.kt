@@ -16,7 +16,9 @@ class QueueTest : StringSpec() {
 
             val receiver = TestReceiver(ctx, "myqueue")
             val received = receiver.recvMessages(msgs.size, 5, TimeUnit.MINUTES)
-            println("Received messages: ${received}")
+
+            println("Received ${received.size} messages")
+            received.size shouldBe msgs.size
         }
     }
 }

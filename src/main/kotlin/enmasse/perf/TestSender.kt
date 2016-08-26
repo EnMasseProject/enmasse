@@ -11,14 +11,10 @@ class TestSender(val context: Context, val address: String) {
 
     fun sendMessages(messages: List<String>, connectTimeout: Long, timeUnit: TimeUnit): Int {
         val connectionFactory = context.lookup("enmasse") as ConnectionFactory
-        println("Looked up connection factory")
         val destination = context.lookup(address) as Destination
-        println("Looked up destination")
 
         val connection = connectWithTimeout(connectionFactory, connectTimeout, timeUnit)
-        println("Created connection")
         connection.start();
-        println("Started connection")
 
         val session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE)
 
