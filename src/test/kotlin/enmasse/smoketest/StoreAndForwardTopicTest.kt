@@ -16,9 +16,9 @@ class StoreAndForwardTopicTest: StringSpec() {
         "Messages should be delivered to multiple subscribers" {
             val msgs = listOf("foo", "bar", "baz")
 
-            val countdownLatch = CountDownLatch(3)
-            val executor = Executors.newFixedThreadPool(3)
-            val results = 1.rangeTo(3).map { i -> executor.submit<Int> {
+            val countdownLatch = CountDownLatch(1)
+            val executor = Executors.newFixedThreadPool(1)
+            val results = 1.rangeTo(1).map { i -> executor.submit<Int> {
                 println("Running client ${i}")
                 val sz = client.recvMessages(dest, msgs.size, connectListener = { countdownLatch.countDown() }).size
                 println("Client ${i} recieved ${sz} messages")
