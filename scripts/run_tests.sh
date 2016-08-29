@@ -1,6 +1,7 @@
 #!/bin/sh
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+DIR=`dirname $0`
 
+echo "BASEDIR $DIR"
 oc login -u test -p test --insecure-skip-tls-verify=true https://localhost:8443
 oc delete project enmasse-ci
 
