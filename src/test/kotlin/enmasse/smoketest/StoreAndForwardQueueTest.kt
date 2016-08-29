@@ -6,7 +6,6 @@ import io.kotlintest.specs.StringSpec
  * @author Ulf Lilleengen
  */
 class StoreAndForwardQueueTest : StringSpec() {
-    /*
     init {
         val dest = "myqueue"
         val client = EnMasseClient(createQueueContext(dest))
@@ -21,6 +20,6 @@ class StoreAndForwardQueueTest : StringSpec() {
             println("Received ${received.size} messages")
             received.size shouldBe msgs.size
         }
-    }*/
+    }
 }
 

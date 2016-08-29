@@ -9,7 +9,6 @@ import java.util.concurrent.TimeUnit
  * @author Ulf Lilleengen
  */
 class NoStoreAnycastTest: StringSpec() {
-    /*
     init {
         val dest = "anycast"
         val client = EnMasseClient(createQueueContext(dest))
@@ -31,5 +30,5 @@ class NoStoreAnycastTest: StringSpec() {
             println("Received ${result} messages")
             result shouldBe msgs.size
         }
-    }*/
+    }
 }
