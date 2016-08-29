@@ -85,7 +85,7 @@ public class FlavorConfig {
         private StorageConfig storage = new StorageConfig(VolumeType.EMPTY_DIR, "1Gi", "/var/run/artemis");
         private boolean isShared = false;
 
-        private DockerImageURI routerImage = new DockerImageURI("gordons/qdrouterd:v9");
+        private DockerImageURI routerImage = new DockerImageURI("gordons/qdrouterd:latest");
         private Set<Port> routerPorts = Collections.singleton(new Port("amqp", 5672));
         private String routerSecretName;
         private String routerSecretPath;
