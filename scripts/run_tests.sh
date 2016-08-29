@@ -1,7 +1,7 @@
 #!/bin/sh
 DIR=`dirname $0`
+set -x
 
-echo "BASEDIR $DIR"
 oc login -u test -p test --insecure-skip-tls-verify=true https://localhost:8443
 oc delete project enmasse-ci
 
