@@ -1,6 +1,7 @@
 package enmasse.smoketest
 
 import io.kotlintest.specs.StringSpec
+import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
@@ -15,8 +16,10 @@ class NoStoreAnycastTest: StringSpec() {
         "Messages should be delivered to receiver" {
             val msgs = listOf("foo", "bar", "baz")
 
+            val countdownLatch = CountDownLatch(1)
             val executor = Executors.newFixedThreadPool(1)
-            val receiver = executor.submit<Int> { client.recvMessages(dest, msgs.size).size }
+            val receiver = executor.submit<Int> { client.recvMessages(dest, msgs.size, connectListener = { countdownLatch.countDown() }).size }
+            countdownLatch.await(10, TimeUnit.SECONDS)
             client.sendMessages(dest, msgs) shouldBe msgs.size
             println("Sent ${msgs.size} messages")
 
