@@ -9,6 +9,7 @@ import java.util.concurrent.TimeUnit
  * @author Ulf Lilleengen
  */
 class NoStoreBroadcastTest: StringSpec() {
+    /*
     init {
         val dest = "broadcast"
         val client = EnMasseClient(createQueueContext(dest))
@@ -36,5 +37,5 @@ class NoStoreBroadcastTest: StringSpec() {
                 result shouldBe msgs.size
             }
         }
-    }
+    }*/
 }
