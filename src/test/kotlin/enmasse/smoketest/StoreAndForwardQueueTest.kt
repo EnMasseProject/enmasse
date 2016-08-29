@@ -1,22 +1,24 @@
 package enmasse.smoketest
 
-import io.kotlintest.specs.StringSpec
+import org.junit.Test
+import org.junit.Assert.*
 
 /**
  * @author Ulf Lilleengen
  */
-class StoreAndForwardQueueTest : StringSpec() {
-    init {
+class StoreAndForwardQueueTest {
+
+    @Test
+    fun testQueue() {
         val dest = "myqueue"
         val client = EnMasseClient(createQueueContext(dest), 1, false)
 
-        "Messages should be queued" {
-            val msgs = listOf("foo", "bar", "baz")
-            client.sendMessages(dest, msgs) shouldBe msgs.size
+        val msgs = listOf("foo", "bar", "baz")
+        val numSent = client.sendMessages(dest, msgs)
+        assertEquals(msgs.size, numSent)
 
-            val received = client.recvMessages(dest, msgs.size)
-            received.size shouldBe msgs.size
-        }
+        val received = client.recvMessages(dest, msgs.size)
+        assertEquals(msgs.size, received.size)
     }
 }
 

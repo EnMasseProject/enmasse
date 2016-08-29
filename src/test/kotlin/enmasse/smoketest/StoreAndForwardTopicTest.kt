@@ -1,30 +1,30 @@
 package enmasse.smoketest
 
-import io.kotlintest.specs.StringSpec
+import org.junit.Assert.*
+import org.junit.Test
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 /**
  * @author Ulf Lilleengen
  */
-class StoreAndForwardTopicTest: StringSpec() {
-    init {
+class StoreAndForwardTopicTest {
+    @Test
+    fun testMultipleSubscribers() {
         val dest = "mytopic"
         val client = EnMasseClient(createTopicContext(dest), 2, true)
 
-        "Messages should be delivered to multiple subscribers" {
-            val msgs = listOf("foo", "bar", "baz")
+        val msgs = listOf("foo", "bar", "baz")
 
-            val executor = Executors.newFixedThreadPool(2)
-            val recvResults = 1.rangeTo(1).map { i -> executor.submit<List<String>> { client.recvMessages(dest, msgs.size) } }
-            val sendResult = executor.submit<Int> { client.sendMessages(dest, msgs) }
+        val executor = Executors.newFixedThreadPool(2)
+        val recvResults = 1.rangeTo(1).map { i -> executor.submit<List<String>> { client.recvMessages(dest, msgs.size) } }
+        val sendResult = executor.submit<Int> { client.sendMessages(dest, msgs) }
 
-            executor.shutdown()
+        executor.shutdown()
 
-            executor.awaitTermination(30, TimeUnit.SECONDS) shouldBe true
+        assertTrue("Clients did not terminate within timeout", executor.awaitTermination(30, TimeUnit.SECONDS))
 
-            sendResult.get() shouldBe msgs.size
-            recvResults.forEach { result -> result.get().size shouldBe msgs.size }
-        }
+        assertEquals(msgs.size, sendResult.get())
+        recvResults.forEach { result -> assertEquals(msgs.size, result.get().size) }
     }
 }

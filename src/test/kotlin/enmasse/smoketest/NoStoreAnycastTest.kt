@@ -1,34 +1,33 @@
 package enmasse.smoketest
 
-import io.kotlintest.specs.StringSpec
-import java.util.concurrent.CountDownLatch
+import org.junit.Assert.*
+import org.junit.Test
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 /**
  * @author Ulf Lilleengen
  */
-class NoStoreAnycastTest: StringSpec() {
-    init {
+class NoStoreAnycastTest {
+
+    @Test
+    fun testMessagesDeliveredToReceiver() {
         val dest = "anycast"
         val client = EnMasseClient(createQueueContext(dest), 2, true)
 
-        "Messages should be delivered to receiver" {
-            val msgs = listOf("foo", "bar", "baz")
+        val msgs = listOf("foo", "bar", "baz")
 
-            val executor = Executors.newFixedThreadPool(2)
-            val recvResult = executor.submit<List<String>> { client.recvMessages(dest, msgs.size) }
-            val sendResult = executor.submit<Int> { client.sendMessages(dest, msgs) }
+        val executor = Executors.newFixedThreadPool(2)
+        val recvResult = executor.submit<List<String>> { client.recvMessages(dest, msgs.size) }
+        val sendResult = executor.submit<Int> { client.sendMessages(dest, msgs) }
 
-            executor.shutdown()
+        executor.shutdown()
+        assertTrue("Clients did not terminate within timeout", executor.awaitTermination(30, TimeUnit.SECONDS))
 
-            executor.awaitTermination(30, TimeUnit.SECONDS) shouldBe true
+        val numReceived = recvResult.get()
+        val numSent = sendResult.get()
 
-            val numReceived = recvResult.get()
-            val numSent = sendResult.get()
-
-            numReceived.size shouldBe msgs.size
-            numSent shouldBe msgs.size
-        }
+        assertEquals(msgs.size, numReceived.size)
+        assertEquals(msgs.size, numSent)
     }
 }

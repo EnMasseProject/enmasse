@@ -4,6 +4,7 @@ buildscript {
    ext.qpidJmsVersion = '0.10.0'
    ext.jacksonVersion = '2.7.4'
    ext.kotlintestVersion = '1.3.3'
+   ext.junitVersion = '4.12'
 
    repositories {
      mavenCentral()
@@ -25,5 +26,5 @@ dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     compile "com.openshift:openshift-restclient-java:${openshiftRestclientVersion}"
     compile "org.apache.qpid:qpid-jms-client:${qpidJmsVersion}"
-    testCompile "io.kotlintest:kotlintest:${kotlintestVersion}"
+    testCompile "junit:junit:${junitVersion}"
 }
