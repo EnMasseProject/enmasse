@@ -1,5 +1,5 @@
 #!/bin/sh
-for i in `oc get pods | cut -f 1 -d ' ' | grep -v NAME`
+for i in `./oc get pods | cut -f 1 -d ' ' | grep -v NAME`
 do
     echo "LOGS FOR $i"
     ./oc logs $i 2> /dev/null
