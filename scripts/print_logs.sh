@@ -9,3 +9,6 @@ do
         oc logs -c router $i
     fi
 done
+
+# Docker logs
+docker logs origin

@@ -20,18 +20,8 @@ script:
 - wget https://github.com/openshift/origin/releases/download/v1.3.0-alpha.1/openshift-origin-client-tools-v1.3.0-alpha.1-6e83535-linux-64bit.tar.gz -O oclient.tar.gz
 - tar xzvf oclient.tar.gz
 - export PATH=openshift-origin-client-tools-v1.3.0-alpha.1-6e83535-linux-64bit:$PATH
-- "oc login -u test -p test --insecure-skip-tls-verify=true https://localhost:8443"
-- "oc new-project enmasse-ci"
-- "oc policy add-role-to-user view system:serviceaccount:$(oc project -q):default"
-- "oc policy add-role-to-user edit system:serviceaccount:$(oc project -q):deployer"
-- "curl -s https://raw.githubusercontent.com/enmasseproject/openshift-configuration/master/enmasse-template.yaml | oc process -f - | oc create -f -"
-- ./scripts/wait_until_up.sh 6
-- ./scripts/scale_controller.sh mytopic 2
-- ./scripts/wait_until_up.sh 7
-- sleep 120
-- OPENSHIFT_USER=test OPENSHIFT_TOKEN=`oc config view -o jsonpath='{.users[?(@.name == "test/localhost:8443")].user.token}'` OPENSHIFT_URL=https://localhost:8443 PN_TRACE_FRM=1 gradle check -i
+- ./scripts/run_tests.sh
 after_failure:
-- docker logs origin
 - ./scripts/print_logs.sh
 env:
   global:
