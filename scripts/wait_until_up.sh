@@ -2,7 +2,7 @@
 EXPECTED_PODS=$1
 while true
 do
-    num_running=`./oc get pods | grep -c Running`
+    num_running=`oc get pods | grep -c Running`
     if [ "$num_running" -eq "$EXPECTED_PODS" ]; then
         echo "ALL UP!"
         exit 0
