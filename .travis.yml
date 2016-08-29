@@ -27,6 +27,7 @@ script:
 - "./oc policy add-role-to-user edit system:serviceaccount:$(./oc project -q):deployer"
 - "curl -s https://raw.githubusercontent.com/enmasseproject/openshift-configuration/master/enmasse-template.yaml | ./oc process -f - | ./oc create -f -"
 - ./scripts/wait_until_up.sh 6
+- sleep 60
 - ./scripts/scale_controller.sh mytopic 3
 - OPENSHIFT_USER=test OPENSHIFT_TOKEN=`./oc config view -o jsonpath='{.users[?(@.name == "test/localhost:8443")].user.token}'` OPENSHIFT_URL=https://localhost:8443 PN_TRACE_FRM=1 gradle check -i
 after_failure:
