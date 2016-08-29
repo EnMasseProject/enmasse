@@ -49,16 +49,16 @@ class EnMasseClient(val context: Context, numThreads: Int, val synchronizeClient
         val connectionFactory = context.lookup("enmasse") as ConnectionFactory
         val destination = context.lookup(address) as Destination
 
+        if (synchronizeClients) {
+            barrier.await(30, TimeUnit.SECONDS)
+        }
+
         val connection = connectWithTimeout(connectionFactory, connectTimeout, timeUnit)
         connection.start();
 
         val session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE)
 
         val messageProducer = session.createProducer(destination)
-
-        if (synchronizeClients) {
-            barrier.await(30, TimeUnit.SECONDS)
-        }
 
         println("Starting sender")
 
