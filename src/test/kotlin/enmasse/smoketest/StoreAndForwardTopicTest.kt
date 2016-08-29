@@ -1,7 +1,6 @@
 package enmasse.smoketest
 
 import io.kotlintest.specs.StringSpec
-import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
@@ -11,32 +10,21 @@ import java.util.concurrent.TimeUnit
 class StoreAndForwardTopicTest: StringSpec() {
     init {
         val dest = "mytopic"
-        val client = EnMasseClient(createTopicContext(dest))
+        val client = EnMasseClient(createTopicContext(dest), 2, true)
 
         "Messages should be delivered to multiple subscribers" {
             val msgs = listOf("foo", "bar", "baz")
 
-            val countdownLatch = CountDownLatch(1)
-            val executor = Executors.newFixedThreadPool(1)
-            val results = 1.rangeTo(1).map { i -> executor.submit<Int> {
-                println("Running client ${i}")
-                val sz = client.recvMessages(dest, msgs.size, connectListener = { countdownLatch.countDown() }).size
-                println("Client ${i} recieved ${sz} messages")
-                sz
-            }}
-
-            countdownLatch.await(30, TimeUnit.SECONDS)
-            Thread.sleep(10000)
-            client.sendMessages(dest, msgs) shouldBe msgs.size
-            println("Sent ${msgs.size} messages")
+            val executor = Executors.newFixedThreadPool(2)
+            val recvResults = 1.rangeTo(1).map { i -> executor.submit<List<String>> { client.recvMessages(dest, msgs.size) } }
+            val sendResult = executor.submit<Int> { client.sendMessages(dest, msgs) }
 
             executor.shutdown()
+
             executor.awaitTermination(30, TimeUnit.SECONDS) shouldBe true
 
-            results.forEach { future ->
-                val result = future.get()
-                result shouldBe msgs.size
-            }
+            sendResult.get() shouldBe msgs.size
+            recvResults.forEach { result -> result.get().size shouldBe msgs.size }
         }
     }
 }

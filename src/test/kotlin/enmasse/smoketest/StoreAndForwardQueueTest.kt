@@ -8,16 +8,13 @@ import io.kotlintest.specs.StringSpec
 class StoreAndForwardQueueTest : StringSpec() {
     init {
         val dest = "myqueue"
-        val client = EnMasseClient(createQueueContext(dest))
+        val client = EnMasseClient(createQueueContext(dest), 1, false)
 
         "Messages should be queued" {
             val msgs = listOf("foo", "bar", "baz")
             client.sendMessages(dest, msgs) shouldBe msgs.size
-            println("Sent ${msgs.size} messages")
 
             val received = client.recvMessages(dest, msgs.size)
-
-            println("Received ${received.size} messages")
             received.size shouldBe msgs.size
         }
     }

@@ -11,24 +11,24 @@ import java.util.concurrent.TimeUnit
 class NoStoreAnycastTest: StringSpec() {
     init {
         val dest = "anycast"
-        val client = EnMasseClient(createQueueContext(dest))
+        val client = EnMasseClient(createQueueContext(dest), 2, true)
 
         "Messages should be delivered to receiver" {
             val msgs = listOf("foo", "bar", "baz")
 
-            val countdownLatch = CountDownLatch(1)
-            val executor = Executors.newFixedThreadPool(1)
-            val receiver = executor.submit<Int> { client.recvMessages(dest, msgs.size, connectListener = { countdownLatch.countDown() }).size }
-            countdownLatch.await(10, TimeUnit.SECONDS)
-            client.sendMessages(dest, msgs) shouldBe msgs.size
-            println("Sent ${msgs.size} messages")
-
-            val result = receiver.get(20, TimeUnit.SECONDS)
+            val executor = Executors.newFixedThreadPool(2)
+            val recvResult = executor.submit<List<String>> { client.recvMessages(dest, msgs.size) }
+            val sendResult = executor.submit<Int> { client.sendMessages(dest, msgs) }
 
             executor.shutdown()
 
-            println("Received ${result} messages")
-            result shouldBe msgs.size
+            executor.awaitTermination(30, TimeUnit.SECONDS) shouldBe true
+
+            val numReceived = recvResult.get()
+            val numSent = sendResult.get()
+
+            numReceived.size shouldBe msgs.size
+            numSent shouldBe msgs.size
         }
     }
 }
