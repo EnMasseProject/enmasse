@@ -12,12 +12,12 @@ class StoreAndForwardTopicTest {
     @Test
     fun testMultipleSubscribers() {
         val dest = "mytopic"
-        val client = EnMasseClient(createTopicContext(dest), 2, true)
+        val client = EnMasseClient(createTopicContext(dest), 4, true)
 
         val msgs = listOf("foo", "bar", "baz")
 
-        val executor = Executors.newFixedThreadPool(2)
-        val recvResults = 1.rangeTo(1).map { i -> executor.submit<List<String>> { client.recvMessages(dest, msgs.size) } }
+        val executor = Executors.newFixedThreadPool(4)
+        val recvResults = 1.rangeTo(3).map { i -> executor.submit<List<String>> { client.recvMessages(dest, msgs.size) } }
         val sendResult = executor.submit<Int> { client.sendMessages(dest, msgs) }
 
         executor.shutdown()
