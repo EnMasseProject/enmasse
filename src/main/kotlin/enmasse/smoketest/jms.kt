@@ -15,7 +15,9 @@ private fun createCommonEnv(): Hashtable<Any, Any> {
     val env = Hashtable<Any, Any>();
     env.put(Context.INITIAL_CONTEXT_FACTORY, "org.apache.qpid.jms.jndi.JmsInitialContextFactory")
     env.put("connectionfactory.enmasse", "amqp://${endpoint.host}:${endpoint.port}")
-    env.put("jms.connectTimeout", 10)
+    env.put("jms.connectTimeout", 60)
+    env.put("jms.closeTimeout", 60)
+    env.put("amqp.idleTimeout", TimeUnit.SECONDS.toMillis(120))
     return env
 }
 
