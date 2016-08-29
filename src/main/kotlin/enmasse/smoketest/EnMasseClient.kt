@@ -31,7 +31,7 @@ class EnMasseClient(val context: Context) {
         Thread.sleep(1000) // TODO: Figure out why this is needed :(
         println("Receiver set up, allowing sender to start")
         connectListener.invoke()
-        latch.await(20, TimeUnit.SECONDS)
+        latch.await(30, TimeUnit.SECONDS)
 
         connection.close()
         return received

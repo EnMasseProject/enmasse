@@ -24,12 +24,12 @@ class NoStoreBroadcastTest: StringSpec() {
                 sz
             }}
 
-            countdownLatch.await(10, TimeUnit.SECONDS)
+            countdownLatch.await(20, TimeUnit.SECONDS)
             client.sendMessages(dest, msgs) shouldBe msgs.size
             println("Sent ${msgs.size} messages")
 
             executor.shutdown()
-            executor.awaitTermination(20, TimeUnit.SECONDS) shouldBe true
+            executor.awaitTermination(30, TimeUnit.SECONDS) shouldBe true
 
             results.forEach { future ->
                 val result = future.get()

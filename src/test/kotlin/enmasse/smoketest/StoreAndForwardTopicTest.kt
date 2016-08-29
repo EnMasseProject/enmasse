@@ -25,13 +25,13 @@ class StoreAndForwardTopicTest: StringSpec() {
                 sz
             }}
 
-            countdownLatch.await(20, TimeUnit.SECONDS)
+            countdownLatch.await(30, TimeUnit.SECONDS)
             Thread.sleep(10000)
             client.sendMessages(dest, msgs) shouldBe msgs.size
             println("Sent ${msgs.size} messages")
 
             executor.shutdown()
-            executor.awaitTermination(20, TimeUnit.SECONDS) shouldBe true
+            executor.awaitTermination(30, TimeUnit.SECONDS) shouldBe true
 
             results.forEach { future ->
                 val result = future.get()
