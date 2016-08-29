@@ -26,6 +26,7 @@ class StoreAndForwardTopicTest: StringSpec() {
             }}
 
             countdownLatch.await(20, TimeUnit.SECONDS)
+            Thread.sleep(10000)
             client.sendMessages(dest, msgs) shouldBe msgs.size
             println("Sent ${msgs.size} messages")
 
