@@ -1,0 +1,6 @@
+description = 'Library for service discovery in openshift'
+dependencies {
+    compile "com.openshift:openshift-restclient-java:${openshiftRestclientVersion}"
+    testCompile "junit:junit:${junitVersion}"
+    testCompile "org.mockito:mockito-core:${mockitoVersion}"
+}

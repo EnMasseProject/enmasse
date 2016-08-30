@@ -1,0 +1,10 @@
+description = 'Broker message forwarder'
+dependencies {
+    compile project(':discovery-lib')
+    compile "io.vertx:vertx-proton:${vertxProtonVersion}"
+    testCompile "junit:junit:${junitVersion}"
+    testCompile "org.mockito:mockito-core:${mockitoVersion}"
+}
+
+apply plugin: 'application'
+mainClassName = 'enmasse.broker.forwarder.Main'
