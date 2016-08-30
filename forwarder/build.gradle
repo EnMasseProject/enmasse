@@ -2,7 +2,7 @@ description = 'Broker message forwarder'
 dependencies {
     compile project(':discovery-lib')
     compile "io.vertx:vertx-proton:${vertxProtonVersion}"
-    compile "org.slf4j:slf4j-log4j12:1.7.21"
+    compile "org.slf4j:slf4j-api:${slf4jVersion}"
     testCompile "junit:junit:${junitVersion}"
     testCompile "org.mockito:mockito-core:${mockitoVersion}"
 }

@@ -35,6 +35,7 @@ public class BrokerReplicatorTest {
 
     @Before
     public void setup() {
+        org.apache.log4j.BasicConfigurator.configure();
         VertxOptions options = new VertxOptions();
         options.setWorkerPoolSize(10);
         vertx = Vertx.vertx(options);
@@ -56,6 +57,7 @@ public class BrokerReplicatorTest {
         Host hostC = new Host(localHost, Collections.singletonMap("amqp", 5674));
 
         BrokerReplicator replicator = new BrokerReplicator(hostA, address);
+
         replicator.start();
 
         Set<Host> hosts = new LinkedHashSet<>();
@@ -95,7 +97,11 @@ public class BrokerReplicatorTest {
 
     private static void waitForConnections(ServerFactory.TestServer server, int num, long timeout) throws InterruptedException {
         long endTime = System.currentTimeMillis() + timeout;
-        while (server.numConnected() != num && System.currentTimeMillis() < endTime) {
+        while (System.currentTimeMillis() < endTime) {
+            System.out.println("Num connected is : " + server.numConnected());
+            if (server.numConnected() == num) {
+                break;
+            }
             Thread.sleep(1000);
         }
         assertThat(server.numConnected(), is(num));

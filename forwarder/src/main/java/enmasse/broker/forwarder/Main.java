@@ -4,6 +4,7 @@ import com.openshift.restclient.ClientBuilder;
 import com.openshift.restclient.IClient;
 import enmasse.discovery.DiscoveryClient;
 import enmasse.discovery.Host;
+import io.vertx.core.impl.FileResolver;
 
 import java.io.File;
 import java.io.IOException;
@@ -20,6 +21,9 @@ import java.util.Map;
 public class Main {
 
     public static void main(String [] args) throws IOException {
+        System.setProperty(FileResolver.CACHE_DIR_BASE_PROP_NAME, "/tmp/vert.x");
+        org.apache.log4j.BasicConfigurator.configure();
+
         Map<String, String> env = System.getenv();
         IClient client = createClient(env);
         String namespace = openshiftNamespace();
