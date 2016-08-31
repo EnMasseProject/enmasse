@@ -4,6 +4,8 @@ CONFIG_TEMPLATES=/config_templates
 VOLUME="/var/run/artemis/"
 BASE=$(dirname $0)
 INSTANCE=$($BASE/get_free_instance.py $VOLUME)
+CONTAINER_ID=$(basename $INSTANCE)
+export CONTAINER_ID
 if [ ! -d "$INSTANCE" ]; then
     $ARTEMIS_HOME/bin/artemis create $INSTANCE --user admin --password admin --role admin --allow-anonymous --java-options "-Djava.net.preferIPv4Stack=true"
     cp $CONFIG_TEMPLATES/broker_header.xml /tmp/broker.xml
