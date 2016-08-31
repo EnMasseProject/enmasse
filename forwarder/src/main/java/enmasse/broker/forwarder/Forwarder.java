@@ -54,7 +54,7 @@ public class Forwarder {
         client.connect(from.getHostname(), from.getAmqpPort(), event -> {
             if (event.succeeded()) {
                 ProtonConnection connection = event.result();
-                connection.setContainer("forwarder-" + this);
+                connection.setContainer("forwarder-" + from.getHostname());
                 connection.open();
                 Source source = new Source();
                 source.setAddress(address);
@@ -97,7 +97,7 @@ public class Forwarder {
         client.connect(to.getHostname(), to.getAmqpPort(), event -> {
             if (event.succeeded()) {
                 ProtonConnection connection = event.result();
-                connection.setContainer("forwarder-" + this);
+                connection.setContainer("forwarder-" + from.getHostname());
                 connection.open();
                 ProtonSender sender = connection.createSender(address)
                         .openHandler(handler -> {
