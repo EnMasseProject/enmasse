@@ -14,14 +14,17 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
+import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.junit.Assert.assertThat;
 
 /**
@@ -31,9 +34,9 @@ public class ForwarderControllerTest {
     private Vertx vertx = Vertx.vertx(new VertxOptions().setWorkerPoolSize(10));
     private String localHost = "127.0.0.1";
     private final String address = "mytopic";
-    private TestBroker serverA = new TestBroker(vertx, localHost, 5672, address);
-    private TestBroker serverB = new TestBroker(vertx, localHost, 5673, address);
-    private TestBroker serverC = new TestBroker(vertx, localHost, 5674, address);
+    private TestBroker serverA = new TestBroker(localHost, 5672, address);
+    private TestBroker serverB = new TestBroker(localHost, 5673, address);
+    private TestBroker serverC = new TestBroker(localHost, 5674, address);
 
     @Before
     public void setup() {
@@ -55,7 +58,7 @@ public class ForwarderControllerTest {
         Host hostB = new Host(localHost, Collections.singletonMap("amqp", 5673));
         Host hostC = new Host(localHost, Collections.singletonMap("amqp", 5674));
 
-        ForwarderController replicator = new ForwarderController(hostA, address);
+        ForwarderController replicator = new ForwarderController(hostA, address, "fwdId");
 
         Set<Host> hosts = new LinkedHashSet<>();
         hosts.add(hostB);
@@ -67,29 +70,33 @@ public class ForwarderControllerTest {
         long timeout = 60_000;
         waitForConnections(serverA, 2, timeout);
         waitForConnections(serverB, 1, timeout);
-        waitForConnections(serverC, 1, timeout);
+        waitForConnections(serverB, 1, timeout);
 
-        CompletableFuture<String> resultB = new CompletableFuture<>();
-        CompletableFuture<String> resultC = new CompletableFuture<>();
+        CompletableFuture<List<String>> result = new CompletableFuture<>();
 
-        ProtonClient.create(vertx).connect(localHost, 5673, new TestHandler(resultB));
-        ProtonClient.create(vertx).connect(localHost, 5674, new TestHandler(resultC));
+        ProtonClient.create(vertx).connect(localHost, 5672, new TestHandler(result, 2));
 
+        sendMessageTo(5673, "Hello from B");
+        sendMessageTo(5674, "Hello from C");
+
+        List<String> messages = result.get(30, TimeUnit.SECONDS);
+        System.out.println("Got these messages: " + messages);
+        assertThat(messages.size(), is(2));
+        assertThat(messages, hasItem("Hello from B"));
+        assertThat(messages, hasItem("Hello from C"));
+        vertx.close();
+    }
+
+    private void sendMessageTo(int port, String body) {
         ProtonClient client = ProtonClient.create(vertx);
-        client.connect(localHost, 5672, event -> {
+        client.connect(localHost, port, event -> {
             ProtonConnection connection = event.result().open();
             ProtonSender sender = connection.createSender(address).open();
-            vertx.setPeriodic(2000, timerId -> {
-                Message message = Message.Factory.create();
-                message.setBody(new AmqpValue("Hello"));
-                message.setAddress(address);
-                sender.send(message);
-            });
+            Message message = Message.Factory.create();
+            message.setBody(new AmqpValue(body));
+            message.setAddress(address);
+            sender.send(message);
         });
-
-        assertThat(resultB.get(30, TimeUnit.SECONDS), is("Hello"));
-        assertThat(resultC.get(30, TimeUnit.SECONDS), is("Hello"));
-        vertx.close();
     }
 
     private static void waitForConnections(TestBroker server, int num, long timeout) throws InterruptedException {
@@ -105,18 +112,23 @@ public class ForwarderControllerTest {
     }
 
     private class TestHandler implements Handler<AsyncResult<ProtonConnection>> {
-        private final CompletableFuture<String> result;
+        private final CompletableFuture<List<String>> result;
+        private final List<String> data = new ArrayList<>();
+        private final int numExpected;
 
-        public TestHandler(CompletableFuture<String> result) {
+        public TestHandler(CompletableFuture<List<String>> result, int numExpected) {
             this.result = result;
+            this.numExpected = numExpected;
         }
 
         @Override
         public void handle(AsyncResult<ProtonConnection> event) {
             ProtonConnection connection = event.result().open();
             connection.createReceiver(address).handler((delivery, message) -> {
-                String data = (String)((AmqpValue)message.getBody()).getValue();
-                result.complete(data);
+                data.add((String)((AmqpValue)message.getBody()).getValue());
+                if (data.size() == numExpected) {
+                    result.complete(data);
+                }
             }).open();
         }
     }

@@ -33,13 +33,18 @@ public class Main {
         Map<String, String> labelFilter = getLabelFilter(env);
         Host localHost = getLocalHost();
         String address = getAddress(env);
+        String containerId = getContainerId(env);
         
         DiscoveryClient discoveryClient = new DiscoveryClient(client, namespace, labelFilter);
-        ForwarderController replicator = new ForwarderController(localHost, address);
+        ForwarderController replicator = new ForwarderController(localHost, address, containerId);
 
         discoveryClient.addListener(replicator);
 
         discoveryClient.start();
+    }
+
+    private static String getContainerId(Map<String, String> env) {
+        return getEnvOrThrow(env, "CONTAINER_ID");
     }
 
     private static IClient createClient(Map<String, String> env) throws IOException {

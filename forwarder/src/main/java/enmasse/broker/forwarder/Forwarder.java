@@ -27,6 +27,7 @@ public class Forwarder {
     private final Vertx vertx;
     private final ProtonClient client;
     private final String address;
+    private final String containerId;
     private final Host from;
     private final Host to;
     private final long connectionRetryInterval;
@@ -38,12 +39,13 @@ public class Forwarder {
     private static Symbol replicated = Symbol.getSymbol("replicated");
     private static Symbol topic = Symbol.getSymbol("topic");
 
-    public Forwarder(Vertx vertx, Host from, Host to, String address, long connectionRetryInterval) {
+    public Forwarder(Vertx vertx, Host from, Host to, String address, String containerId, long connectionRetryInterval) {
         this.vertx = vertx;
         this.client = ProtonClient.create(vertx);
         this.from = from;
         this.to = to;
         this.address = address;
+        this.containerId = containerId;
         this.connectionRetryInterval = connectionRetryInterval;
     }
 
@@ -56,14 +58,14 @@ public class Forwarder {
         client.connect(from.getHostname(), from.getAmqpPort(), event -> {
             if (event.succeeded()) {
                 ProtonConnection connection = event.result();
-                connection.setContainer("forwarder-" + from.getHostname() + "-" + to.getHostname());
+                connection.setContainer(containerId);
                 connection.open();
                 Source source = new Source();
                 source.setAddress(address);
                 source.setCapabilities(topic);
                 source.setDurable(TerminusDurability.UNSETTLED_STATE);
 
-                connection.createReceiver(address, new ProtonLinkOptions().setLinkName("link-" + from.getHostname() + "-" + to.getHostname()))
+                connection.createReceiver(address, new ProtonLinkOptions().setLinkName(containerId))
                         .openHandler(handler -> {
                             log.info(this + ": receiver opened");
                         })

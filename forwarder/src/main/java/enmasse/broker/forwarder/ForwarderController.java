@@ -16,17 +16,20 @@ import java.util.Set;
  * @author Ulf Lilleengen
  */
 public class ForwarderController implements DiscoveryListener {
+    private static final Logger log = LoggerFactory.getLogger(ForwarderController.class.getName());
+
     private final Vertx vertx = Vertx.vertx(new VertxOptions().setWorkerPoolSize(10));
     private final Map<Host, Forwarder> replicatedHosts = new HashMap<>();
 
     private final Host localHost;
     private final String address;
-    private final Logger log = LoggerFactory.getLogger(ForwarderController.class.getName());
+    private final String containerId;
     private final long connectionRetryInterval = 5000;
 
-    public ForwarderController(Host localHost, String address) {
+    public ForwarderController(Host localHost, String address, String containerId) {
         this.localHost = localHost;
         this.address = address;
+        this.containerId = containerId;
     }
 
     @Override
@@ -59,7 +62,7 @@ public class ForwarderController implements DiscoveryListener {
     }
 
     private void createForwarder(Host host) {
-        Forwarder forwarder = new Forwarder(vertx, localHost, host, address, connectionRetryInterval);
+        Forwarder forwarder = new Forwarder(vertx, host, localHost, address, containerId, connectionRetryInterval);
         log.info("Creating forwarder " + forwarder);
         replicatedHosts.put(host, forwarder);
         forwarder.start();
