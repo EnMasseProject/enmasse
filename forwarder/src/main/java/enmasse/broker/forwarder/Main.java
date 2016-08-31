@@ -35,11 +35,10 @@ public class Main {
         String address = getAddress(env);
         
         DiscoveryClient discoveryClient = new DiscoveryClient(client, namespace, labelFilter);
-        BrokerReplicator replicator = new BrokerReplicator(localHost, address);
+        ForwarderController replicator = new ForwarderController(localHost, address);
 
         discoveryClient.addListener(replicator);
 
-        replicator.start();
         discoveryClient.start();
     }
 

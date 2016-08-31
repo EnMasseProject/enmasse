@@ -18,8 +18,8 @@ public class Host {
         return hostname;
     }
 
-    public Map<String, Integer> getPortMap() {
-        return portMap;
+    public int getAmqpPort() {
+        return portMap.get("amqp");
     }
 
     @Override

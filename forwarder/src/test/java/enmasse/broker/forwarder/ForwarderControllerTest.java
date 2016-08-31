@@ -27,25 +27,21 @@ import static org.junit.Assert.assertThat;
 /**
  * @author Ulf Lilleengen
  */
-public class BrokerReplicatorTest {
-    private Vertx vertx;
+public class ForwarderControllerTest {
+    private Vertx vertx = Vertx.vertx(new VertxOptions().setWorkerPoolSize(10));
     private String localHost = "127.0.0.1";
     private final String address = "mytopic";
-    private ServerFactory.TestServer serverA;
-    private ServerFactory.TestServer serverB;
-    private ServerFactory.TestServer serverC;
+    private TestBroker serverA = new TestBroker(vertx, localHost, 5672, address);
+    private TestBroker serverB = new TestBroker(vertx, localHost, 5673, address);
+    private TestBroker serverC = new TestBroker(vertx, localHost, 5674, address);
 
     @Before
     public void setup() {
         Logger.getGlobal().setLevel(Level.INFO);
-        Logger.getLogger("enmasse").setLevel(Level.FINE);
-        VertxOptions options = new VertxOptions();
-        options.setWorkerPoolSize(10);
-        vertx = Vertx.vertx(options);
-        ServerFactory serverFactory = new ServerFactory(vertx, localHost, address);
-        serverA = serverFactory.startServer(5672);
-        serverB = serverFactory.startServer(5673);
-        serverC = serverFactory.startServer(5674);
+        Logger.getLogger("enmasse").setLevel(Level.FINEST);
+        serverA.start();
+        serverB.start();
+        serverC.start();
     }
 
     @After
@@ -59,33 +55,19 @@ public class BrokerReplicatorTest {
         Host hostB = new Host(localHost, Collections.singletonMap("amqp", 5673));
         Host hostC = new Host(localHost, Collections.singletonMap("amqp", 5674));
 
-        BrokerReplicator replicator = new BrokerReplicator(hostA, address);
-
-        replicator.start();
+        ForwarderController replicator = new ForwarderController(hostA, address);
 
         Set<Host> hosts = new LinkedHashSet<>();
         hosts.add(hostB);
+        replicator.hostsChanged(hosts);
+        Thread.sleep(1000);
         hosts.add(hostC);
         replicator.hostsChanged(hosts);
 
         long timeout = 60_000;
-        waitForConnections(serverA, 1, timeout);
+        waitForConnections(serverA, 2, timeout);
         waitForConnections(serverB, 1, timeout);
         waitForConnections(serverC, 1, timeout);
-
-        CountDownLatch latch = new CountDownLatch(1);
-        ProtonClient client = ProtonClient.create(vertx);
-        client.connect(localHost, 5672, event -> {
-            ProtonConnection connection = event.result().open();
-            ProtonSender sender = connection.createSender(address).open();
-            Message message = Message.Factory.create();
-            message.setBody(new AmqpValue("Hello"));
-            message.setAddress(address);
-            sender.send(message);
-            latch.countDown();
-        });
-
-        latch.await(60, TimeUnit.SECONDS);
 
         CompletableFuture<String> resultB = new CompletableFuture<>();
         CompletableFuture<String> resultC = new CompletableFuture<>();
@@ -93,12 +75,24 @@ public class BrokerReplicatorTest {
         ProtonClient.create(vertx).connect(localHost, 5673, new TestHandler(resultB));
         ProtonClient.create(vertx).connect(localHost, 5674, new TestHandler(resultC));
 
+        ProtonClient client = ProtonClient.create(vertx);
+        client.connect(localHost, 5672, event -> {
+            ProtonConnection connection = event.result().open();
+            ProtonSender sender = connection.createSender(address).open();
+            vertx.setPeriodic(2000, timerId -> {
+                Message message = Message.Factory.create();
+                message.setBody(new AmqpValue("Hello"));
+                message.setAddress(address);
+                sender.send(message);
+            });
+        });
+
         assertThat(resultB.get(30, TimeUnit.SECONDS), is("Hello"));
         assertThat(resultC.get(30, TimeUnit.SECONDS), is("Hello"));
         vertx.close();
     }
 
-    private static void waitForConnections(ServerFactory.TestServer server, int num, long timeout) throws InterruptedException {
+    private static void waitForConnections(TestBroker server, int num, long timeout) throws InterruptedException {
         long endTime = System.currentTimeMillis() + timeout;
         while (System.currentTimeMillis() < endTime) {
             System.out.println("Num connected is : " + server.numConnected());
@@ -122,7 +116,6 @@ public class BrokerReplicatorTest {
             ProtonConnection connection = event.result().open();
             connection.createReceiver(address).handler((delivery, message) -> {
                 String data = (String)((AmqpValue)message.getBody()).getValue();
-                System.out.println("Recevide " + data);
                 result.complete(data);
             }).open();
         }

@@ -11,36 +11,41 @@ import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.message.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.event.Level;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import static jdk.nashorn.internal.runtime.regexp.joni.Config.log;
 
 /**
  * @author Ulf Lilleengen
  */
-public class ServerFactory {
-    private final Vertx vertx;
-    private final String localHost;
+public class TestBroker {
+    private static final Logger log = LoggerFactory.getLogger(TestBroker.class.getName());
+    private final Map<String, BlockingQueue<String>> queueMap = new HashMap<>();
+    private final AtomicInteger numConnected = new AtomicInteger(0);
+    private final String host;
     private final String address;
-    private final Logger log = LoggerFactory.getLogger(BrokerReplicatorTest.class.getName());
+    private final int port;
+    private final Vertx vertx;
 
-    public ServerFactory(Vertx vertx, String localHost, String address) {
+    TestBroker(Vertx vertx, String host, int port, String address) {
         this.vertx = vertx;
-        this.localHost = localHost;
+        this.host = host;
+        this.port = port;
         this.address = address;
     }
 
-    public TestServer startServer(int port) {
-        AtomicInteger numConnected = new AtomicInteger(0);
-        BlockingQueue<String> queue = new LinkedBlockingQueue<>();
+    public void start() {
         ProtonServer server = ProtonServer.create(vertx);
         server.connectHandler(connection -> {
-            System.out.println("new incoming connection for " + port);
             connection.setContainer("server-" + port);
             connection.openHandler(conn -> {
-                log.info(port + " connection opened");
+                log.info(port + " connection opened from + " + connection.getRemoteContainer());
             }).closeHandler(conn -> {
                 connection.close();
                 connection.disconnect();
@@ -51,45 +56,45 @@ public class ServerFactory {
             }).open();
 
             numConnected.incrementAndGet();
+
             connection.sessionOpenHandler(ProtonSession::open);
+
             connection.receiverOpenHandler(receiver -> {
-                log.info("Opened receiver on " + port);
                 receiver.handler((delivery, message) -> {
                     vertx.executeBlocking(future -> {
                         try {
-                            queue.put((String)((AmqpValue)message.getBody()).getValue());
+                            synchronized (queueMap) {
+                                for (Map.Entry<String, BlockingQueue<String>> queue : queueMap.entrySet()) {
+                                    queue.getValue().put((String) ((AmqpValue) message.getBody()).getValue());
+                                }
+                            }
                             future.complete();
                         } catch (Exception e) {
                             future.fail(e);
-                        }}, false, result -> {});
+                        }
+                    }, false, result -> {
+                    });
                 }).open();
             });
             connection.senderOpenHandler(sender -> {
                 sender.open();
-                log.info("Opened sender on " + port);
+                BlockingQueue<String> queue = null;
+                synchronized (queueMap) {
+                    if (!queueMap.containsKey(connection.getRemoteContainer())) {
+                        queueMap.put(connection.getRemoteContainer(), new LinkedBlockingQueue<>());
+                    }
+                    queue = queueMap.get(connection.getRemoteContainer());
+                }
                 PollHandler pollHandler = new PollHandler(queue);
                 vertx.executeBlocking(pollHandler, false, new ForwardHandler(pollHandler, sender));
             });
-        }).listen(port, localHost);
-        log.info("Created server " + port);
-        return new TestServer(server, numConnected);
+        }).listen(port, host);
     }
 
-    public static class TestServer {
-        private final ProtonServer server;
-        private final AtomicInteger numConnected;
-
-        private TestServer(ProtonServer server, AtomicInteger numConnected) {
-            this.server = server;
-            this.numConnected = numConnected;
-        }
-
-        public int numConnected() {
-            return numConnected.get();
-        }
+    public int numConnected() {
+        return numConnected.get();
     }
-
-    public class PollHandler implements Handler<Future<String>> {
+        public static class PollHandler implements Handler<Future<String>> {
         private final BlockingQueue<String> queue;
         public PollHandler(BlockingQueue<String> queue) {
             this.queue = queue;
