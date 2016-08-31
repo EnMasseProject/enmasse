@@ -4,9 +4,12 @@ import com.openshift.restclient.IClient;
 import com.openshift.restclient.IOpenShiftWatchListener;
 import com.openshift.restclient.IWatcher;
 import com.openshift.restclient.ResourceKind;
+import com.openshift.restclient.model.IContainer;
 import com.openshift.restclient.model.IPod;
 import com.openshift.restclient.model.IPort;
 import com.openshift.restclient.model.IResource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -18,8 +21,9 @@ public class DiscoveryClient implements IOpenShiftWatchListener {
     private final IClient osClient;
     private final String namespace;
     private final Map<String, String> labelFilter;
-    private volatile IWatcher watch;
     private final List<DiscoveryListener> listeners = new ArrayList<>();
+    private final Logger log = LoggerFactory.getLogger(DiscoveryClient.class.getName());
+    private volatile IWatcher watcher;
 
     public DiscoveryClient(IClient osClient, String namespace, Map<String, String> labelFilter) {
         this.osClient = osClient;
@@ -32,12 +36,12 @@ public class DiscoveryClient implements IOpenShiftWatchListener {
     }
 
     public void start() {
-        this.watch = osClient.watch(namespace, this, ResourceKind.POD);
+        watcher = osClient.watch(namespace, this, ResourceKind.POD);
     }
 
     public void stop() {
-        if (watch != null) {
-            watch.stop();
+        if (watcher != null) {
+            watcher.stop();
         }
     }
 
@@ -46,8 +50,10 @@ public class DiscoveryClient implements IOpenShiftWatchListener {
         Set<Host> hosts = resources.stream()
                 .filter(r -> filterLabels(r.getLabels()))
                 .map(r -> podToHost((IPod)r))
+                .filter(host -> !host.getHostname().isEmpty())
                 .collect(Collectors.toSet());
 
+        log.info("Connected with " + hosts.size() + " hosts");
         notifyListeners(hosts);
     }
 
@@ -67,7 +73,17 @@ public class DiscoveryClient implements IOpenShiftWatchListener {
     }
 
     private static final Host podToHost(IPod pod) {
-        return new Host(pod.getHost(), createPortMap(pod.getContainerPorts()));
+        IContainer broker = findContainer(pod, "broker");
+        return new Host(pod.getIP(), createPortMap(broker.getPorts()));
+    }
+
+    private static IContainer findContainer(IPod pod, String name) {
+        for (IContainer container : pod.getContainers()) {
+            if (name.equals(container.getName())) {
+                return container;
+            }
+        }
+        throw new IllegalArgumentException("Unable to find container with name " + name);
     }
 
     private static Map<String, Integer> createPortMap(Set<IPort> containerPorts) {
@@ -84,24 +100,27 @@ public class DiscoveryClient implements IOpenShiftWatchListener {
 
     @Override
     public void disconnected() {
-        this.watch = osClient.watch(namespace, this, ResourceKind.POD);
+        log.info("Disconnected, reconnecting");
+        watcher = osClient.watch(namespace, this, ResourceKind.POD);
     }
 
     private final Set<Host> fetchHosts() {
         return osClient.<IPod>list(ResourceKind.POD, namespace, labelFilter).stream()
                 .map(DiscoveryClient::podToHost)
+                .filter(host -> !host.getHostname().isEmpty())
                 .collect(Collectors.toSet());
     }
 
     @Override
     public void received(IResource resource, ChangeType change) {
-        if (labelFilter.equals(resource.getLabels())) {
+        log.info("Recieved change for " + resource.getName());
+        if (filterLabels(resource.getLabels())) {
             notifyListeners(fetchHosts());
         }
     }
 
     @Override
     public void error(Throwable err) {
-
+        log.error("Got error: " + err.getMessage());
     }
 }

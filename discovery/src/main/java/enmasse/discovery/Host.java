@@ -30,14 +30,22 @@ public class Host {
         Host host = (Host) o;
 
         if (!hostname.equals(host.hostname)) return false;
-        return portMap.equals(host.portMap);
+        return (portMap.containsKey("amqp") == host.portMap.containsKey("amqp")) && portMap.get("amqp").equals(host.portMap.get("amqp"));
 
     }
 
     @Override
     public int hashCode() {
         int result = hostname.hashCode();
-        result = 31 * result + portMap.hashCode();
+        result = 31 * result + portMap.get("amqp");
         return result;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("host=").append(hostname).append(", ");
+        builder.append("ports=").append(portMap.toString());
+        return builder.toString();
     }
 }
