@@ -53,7 +53,7 @@ public class DiscoveryClient implements IOpenShiftWatchListener {
                 .filter(host -> !host.getHostname().isEmpty())
                 .collect(Collectors.toSet());
 
-        log.info("Connected with " + hosts.size() + " hosts");
+        log.debug("Connected with " + hosts.size() + " hosts");
         notifyListeners(hosts);
     }
 
@@ -100,7 +100,7 @@ public class DiscoveryClient implements IOpenShiftWatchListener {
 
     @Override
     public void disconnected() {
-        log.info("Disconnected, reconnecting");
+        log.debug("Disconnected, reconnecting");
         watcher = osClient.watch(namespace, this, ResourceKind.POD);
     }
 
@@ -113,7 +113,7 @@ public class DiscoveryClient implements IOpenShiftWatchListener {
 
     @Override
     public void received(IResource resource, ChangeType change) {
-        log.info("Recieved change for " + resource.getName());
+        log.debug("Recieved change for " + resource.getName());
         if (filterLabels(resource.getLabels())) {
             notifyListeners(fetchHosts());
         }
