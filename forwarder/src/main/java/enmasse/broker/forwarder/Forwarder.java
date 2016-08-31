@@ -5,6 +5,7 @@ import io.vertx.core.Vertx;
 import io.vertx.proton.ProtonClient;
 import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.ProtonDelivery;
+import io.vertx.proton.ProtonLinkOptions;
 import io.vertx.proton.ProtonSender;
 import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.messaging.MessageAnnotations;
@@ -55,14 +56,14 @@ public class Forwarder {
         client.connect(from.getHostname(), from.getAmqpPort(), event -> {
             if (event.succeeded()) {
                 ProtonConnection connection = event.result();
-                connection.setContainer("forwarder-" + from.getHostname());
+                connection.setContainer("forwarder-" + from.getHostname() + "-" + to.getHostname());
                 connection.open();
                 Source source = new Source();
                 source.setAddress(address);
                 source.setCapabilities(topic);
                 source.setDurable(TerminusDurability.UNSETTLED_STATE);
 
-                connection.createReceiver(address)
+                connection.createReceiver(address, new ProtonLinkOptions().setLinkName("link-" + from.getHostname() + "-" + to.getHostname()))
                         .openHandler(handler -> {
                             log.info(this + ": receiver opened");
                         })
