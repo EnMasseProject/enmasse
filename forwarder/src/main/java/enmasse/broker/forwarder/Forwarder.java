@@ -10,6 +10,7 @@ import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.messaging.MessageAnnotations;
 import org.apache.qpid.proton.amqp.messaging.Source;
 import org.apache.qpid.proton.amqp.messaging.Target;
+import org.apache.qpid.proton.amqp.messaging.TerminusDurability;
 import org.apache.qpid.proton.message.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,6 +60,7 @@ public class Forwarder {
                 Source source = new Source();
                 source.setAddress(address);
                 source.setCapabilities(topic);
+                source.setDurable(TerminusDurability.UNSETTLED_STATE);
 
                 connection.createReceiver(address)
                         .openHandler(handler -> {
