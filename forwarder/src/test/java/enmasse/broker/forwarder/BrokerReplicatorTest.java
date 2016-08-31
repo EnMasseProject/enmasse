@@ -18,6 +18,8 @@ import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.concurrent.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
@@ -35,7 +37,8 @@ public class BrokerReplicatorTest {
 
     @Before
     public void setup() {
-        org.apache.log4j.BasicConfigurator.configure();
+        Logger.getGlobal().setLevel(Level.INFO);
+        Logger.getLogger("enmasse").setLevel(Level.FINE);
         VertxOptions options = new VertxOptions();
         options.setWorkerPoolSize(10);
         vertx = Vertx.vertx(options);
