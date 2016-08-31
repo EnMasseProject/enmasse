@@ -8,10 +8,11 @@ ENV PATH $ARTEMIS_HOME/bin:$PATH
 ADD activemq-artemis/artemis-distribution/target/apache-artemis-1.5.0-SNAPSHOT-bin.tar.gz /opt
 ADD ./artemis-shutdown-hook/build/distributions/artemis-shutdown-hook.tar /
 
-COPY ./artemis-plugin/build/libs/artemis-plugin.jar $ARTEMIS_HOME/lib
-COPY ./artemis-plugin/build/libs/kubernetes-0.9.0.jar $ARTEMIS_HOME/lib
-COPY ./artemis-plugin/build/libs/common-0.9.0.jar $ARTEMIS_HOME/lib
-COPY ./artemis-plugin/build/libs/jboss-dmr-1.3.0.Final.jar $ARTEMIS_HOME/lib
+# Needed for bridge clustering
+# COPY ./artemis-plugin/build/libs/artemis-plugin.jar $ARTEMIS_HOME/lib
+# COPY ./artemis-plugin/build/libs/kubernetes-0.9.0.jar $ARTEMIS_HOME/lib
+# COPY ./artemis-plugin/build/libs/common-0.9.0.jar $ARTEMIS_HOME/lib
+# COPY ./artemis-plugin/build/libs/jboss-dmr-1.3.0.Final.jar $ARTEMIS_HOME/lib
 
 COPY ./utils/run_artemis.sh ./utils/get_free_instance.py $ARTEMIS_HOME/bin/
 COPY ./config_templates /config_templates
@@ -21,9 +22,10 @@ RUN mkdir /var/run/artemis/
 VOLUME /var/run/artemis
 
 EXPOSE 5673
-EXPOSE 7800
-EXPOSE 7801
-EXPOSE 7802
+# Needed for bridge clustering
+# EXPOSE 7800
+# EXPOSE 7801
+# EXPOSE 7802
 EXPOSE 61616
 
 CMD ["/launcher", "/opt/apache-artemis-1.5.0-SNAPSHOT/bin/run_artemis.sh"]
