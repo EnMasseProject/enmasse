@@ -1,0 +1,3 @@
+[submodule "vertx-proton"]
+	path = vertx-proton
+	url = https://github.com/vert-x3/vertx-proton.git

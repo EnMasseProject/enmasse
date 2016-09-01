@@ -12,6 +12,11 @@ ext {
     mockitoVersion = '2.0.52-beta'
 }
 
+task buildVertx(type: Exec) {
+    workingDir 'vertx-proton'
+    commandLine 'mvn', '-q', 'install', '-DskipTests'
+}
+
 subprojects {
     apply plugin: 'java'
     sourceCompatibility = 1.8
