@@ -7,6 +7,7 @@ import com.openshift.internal.restclient.model.volume.SecretVolumeSource;
 import com.openshift.internal.restclient.model.volume.VolumeMount;
 import com.openshift.restclient.IClient;
 import com.openshift.restclient.ResourceKind;
+import com.openshift.restclient.images.DockerImageURI;
 import com.openshift.restclient.model.IContainer;
 import com.openshift.restclient.model.IPort;
 import com.openshift.restclient.model.IReplicationController;
@@ -50,8 +51,22 @@ public class BrokerGenerator {
 
         generateBroker(controller, destination, volumeSource);
         generateDispatchRouter(controller, destination);
+        if (destination.multicast()) {
+            generateForwarder(controller, destination);
+        }
 
         return controller;
+    }
+
+    private void generateForwarder(ReplicationController controller, Destination destination) {
+        Map<String, String> env = new LinkedHashMap<>();
+        env.put(EnvVars.TOPIC_NAME, destination.address());
+        controller.addContainer(
+                "forwarder",
+                new DockerImageURI("enmasseproject/topic-forwarder:latest"),
+                Collections.emptySet(),
+                env,
+                Collections.emptyList());
     }
 
     private void generateBroker(ReplicationController controller, Destination destination, IVolumeSource volumeSource) {
