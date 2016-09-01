@@ -6,7 +6,6 @@ import io.vertx.proton.ProtonClient
 import io.vertx.proton.ProtonQoS
 import org.apache.activemq.artemis.api.core.client.*
 import org.apache.activemq.artemis.api.core.management.ManagementHelper
-import org.apache.qpid.proton.message.Message
 import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -50,18 +49,18 @@ class DrainClient(val mgmtEndpoint: Endpoint, val from: Endpoint, val address: S
         client.connect(to.hostName, to.port, { handle ->
             if (handle.succeeded()) {
                 val sender = handle.result().open().createSender(address)
-                        .setQoS(ProtonQoS.AT_LEAST_ONCE).open()
+                        .setQoS(ProtonQoS.AT_LEAST_ONCE)
+                        .open()
                 client.connect(from.hostName, from.port, { handle ->
                     if (handle.succeeded()) {
-                        val receiver = handle.result().open().createReceiver(address).setQoS(ProtonQoS.AT_LEAST_ONCE).open()
+                        val receiver = handle.result().open().createReceiver(address)
+                                .setAutoAccept(false)
+                                .open()
                         receiver.handler { protonDelivery, message ->
 
-                            val forwardedMessage = Message.Factory.create()
-
-                            forwardedMessage.address = message.address
-                            forwardedMessage.body = message.body
-
-                            sender.send(forwardedMessage)
+                            sender.send(message, { targetDelivery ->
+                                protonDelivery.disposition(targetDelivery.remoteState, targetDelivery.remotelySettled())
+                            })
 
                             // This is for debugging only
                             if (!first.getAndSet(true) && debugFn.isPresent) {
