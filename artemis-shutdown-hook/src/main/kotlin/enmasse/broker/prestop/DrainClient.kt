@@ -16,6 +16,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 class DrainClient(val mgmtEndpoint: Endpoint, val from: Endpoint, val address: String, val debugFn: Optional<() -> Unit>) {
 
     val vertx = Vertx.vertx()
+    val client = ProtonClient.create(vertx)
     val locator:ServerLocator
     val sessionFactory:ClientSessionFactory
     val session:ClientSession
@@ -27,8 +28,6 @@ class DrainClient(val mgmtEndpoint: Endpoint, val from: Endpoint, val address: S
     }
 
     fun drainMessages(to: Endpoint) {
-        val fromClient = ProtonClient.create(vertx)
-        val toClient = ProtonClient.create(vertx);
 
         vertx.setPeriodic(1000, { timerId ->
             vertx.executeBlocking<Int>({ future ->
@@ -48,11 +47,11 @@ class DrainClient(val mgmtEndpoint: Endpoint, val from: Endpoint, val address: S
         })
 
         val first = AtomicBoolean(false)
-        toClient.connect(to.hostName, to.port, { handle ->
+        client.connect(to.hostName, to.port, { handle ->
             if (handle.succeeded()) {
                 val sender = handle.result().open().createSender(address)
                         .setQoS(ProtonQoS.AT_LEAST_ONCE).open()
-                fromClient.connect(from.hostName, from.port, { handle ->
+                client.connect(from.hostName, from.port, { handle ->
                     if (handle.succeeded()) {
                         val receiver = handle.result().open().createReceiver(address).setQoS(ProtonQoS.AT_LEAST_ONCE).open()
                         receiver.handler { protonDelivery, message ->
