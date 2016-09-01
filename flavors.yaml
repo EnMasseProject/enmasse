@@ -14,10 +14,7 @@ data:
           },
           "ports": {
             "amqp": 5673,
-            "artemis": 61616,
-            "jgroups": 7800,
-            "broadcast": 7801,
-            "discovery": 7802
+            "artemis": 61616
           },
           "shutdownHook": "/artemis-shutdown-hook/bin/artemis-shutdown-hook"
         },
@@ -39,10 +36,7 @@ data:
           },
           "ports": {
             "amqp": 5673,
-            "artemis": 61616,
-            "jgroups": 7800,
-            "broadcast": 7801,
-            "discovery": 7802
+            "artemis": 61616
           }
         },
         "router": {
