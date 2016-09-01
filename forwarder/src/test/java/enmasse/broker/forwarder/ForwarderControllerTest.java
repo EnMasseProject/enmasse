@@ -69,7 +69,7 @@ public class ForwarderControllerTest {
         Set<Host> hosts = new LinkedHashSet<>();
         hosts.add(hostB);
         replicator.hostsChanged(hosts);
-        Thread.sleep(1000);
+        Thread.sleep(5000);
         hosts.add(hostC);
         replicator.hostsChanged(hosts);
 
@@ -89,8 +89,8 @@ public class ForwarderControllerTest {
         sendMessageTo(5672, "Hello 1");
         sendMessageTo(5672, "Hello 2");
 
-        assertMessages(resultA.get(30, TimeUnit.SECONDS), "Hello 1", "Hello 2");
-        assertMessages(resultA.get(30, TimeUnit.SECONDS), "Hello 1", "Hello 2");
+        assertMessages(resultA.get(120, TimeUnit.SECONDS), "Hello 1", "Hello 2");
+        assertMessages(resultB.get(120, TimeUnit.SECONDS), "Hello 1", "Hello 2");
         vertx.close();
     }
 
