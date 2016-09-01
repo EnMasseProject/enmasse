@@ -25,7 +25,7 @@ public class PVCGenerator {
         FlavorConfig flavorConfig = dest.flavor();
         PersistentVolumeClaim claim = factory.create("v1", ResourceKind.PVC);
         claim.setName("pvc-" + dest.address());
-        claim.setAccessModes(Collections.singleton("ReadWriteOnce"));
+        claim.setAccessModes(Collections.singleton("ReadWriteMany"));
         claim.setRequestedStorage(flavorConfig.storageConfig().size());
         return claim;
     }
