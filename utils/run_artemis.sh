@@ -3,7 +3,7 @@ export BROKER_IP=`hostname -I | cut -f 1 -d ' '`
 CONFIG_TEMPLATES=/config_templates
 VOLUME="/var/run/artemis/"
 BASE=$(dirname $0)
-INSTANCE=$($BASE/get_free_instance.py $VOLUME)
+INSTANCE=$($BASE/get_free_instance.py $VOLUME artemis $HOSTNAME)
 CONTAINER_ID=$(basename $INSTANCE)
 export CONTAINER_ID
 if [ ! -d "$INSTANCE" ]; then
