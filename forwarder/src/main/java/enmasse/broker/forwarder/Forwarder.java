@@ -160,17 +160,7 @@ public class Forwarder {
             annotations.getValue().put(replicated, true);
         }
         message.setMessageAnnotations(annotations);
-        ProtonDelivery targetDelivery = protonSender.send(message);
-        // TODO: Would be nice if we could register a callback on the delivery instead...
-        vertx.setTimer(10, timerId -> checkAndSettle(sourceDelivery, targetDelivery));
-    }
-
-    private void checkAndSettle(ProtonDelivery sourceDelivery, ProtonDelivery targetDelivery) {
-        if (targetDelivery.remotelySettled()) {
-            sourceDelivery.disposition(new Accepted(), true);
-        } else {
-            vertx.setTimer(10, timerId -> checkAndSettle(sourceDelivery, targetDelivery));
-        }
+        protonSender.send(message, protonDelivery -> sourceDelivery.disposition(protonDelivery.getRemoteState(), protonDelivery.remotelySettled()));
     }
 
     public void stop() {
