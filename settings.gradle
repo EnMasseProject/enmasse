@@ -1,4 +1,4 @@
-rootProject.name = 'broker-forwarder'
+rootProject.name = 'topic-forwarder'
 
 include ':discovery'
 include ':forwarder'
