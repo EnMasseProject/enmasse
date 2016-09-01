@@ -33,6 +33,7 @@ import java.util.concurrent.TimeoutException;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Ulf Lilleengen
@@ -122,12 +123,12 @@ public class ForwarderControllerTest {
         long endTime = System.currentTimeMillis() + timeout;
         while (System.currentTimeMillis() < endTime) {
             log.info("Num connected is : " + server.numConnected());
-            if (server.numConnected() == num) {
+            if (server.numConnected() >= num) {
                 break;
             }
             Thread.sleep(1000);
         }
-        assertThat(server.numConnected(), is(num));
+        assertTrue(server.numConnected() >= num);
     }
 
     private class TestHandler implements Handler<AsyncResult<ProtonConnection>> {
