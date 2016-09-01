@@ -12,8 +12,9 @@ cache:
   - "$HOME/.gradle/caches/"
   - "$HOME/.gradle/wrapper/"
 
-before_script:
+install:
 - gradle buildVertx
+- gradle assemble
 
 after_success:
 - export REPO=enmasseproject/topic-forwarder
