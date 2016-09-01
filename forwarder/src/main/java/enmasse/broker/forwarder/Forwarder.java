@@ -83,8 +83,10 @@ public class Forwarder {
                         vertx.setTimer(connectionRetryInterval, timerId -> startReceiver(sender, containerId));
                     }
                 });
+                receiver.setPrefetch(0);
+                receiver.flow(sender.getCredit());
                 receiver.setSource(source);
-                receiver.handler(((delivery, message) -> handleMessage(sender, delivery, message)));
+                receiver.handler(((delivery, message) -> handleMessage(sender, receiver, delivery, message)));
                 receiver.open();
             } else {
                 log.info(this + ": connection failed, retrying: " + event.cause().getMessage());
@@ -144,16 +146,16 @@ public class Forwarder {
         receiverConnection.ifPresent(ProtonConnection::close);
     }
 
-    private void handleMessage(ProtonSender protonSender, ProtonDelivery protonDelivery, Message message) {
+    private void handleMessage(ProtonSender protonSender, ProtonReceiver protonReceiver, ProtonDelivery protonDelivery, Message message) {
         if (log.isDebugEnabled()) {
             log.debug(this + ": forwarding message");
         }
         if (message.getAddress().equals(address) && !isMessageReplicated(message)) {
-            forwardMessage(protonSender, protonDelivery, message);
+            forwardMessage(protonSender, protonReceiver, protonDelivery, message);
         }
     }
 
-    private void forwardMessage(ProtonSender protonSender, ProtonDelivery sourceDelivery, Message message) {
+    private void forwardMessage(ProtonSender protonSender, ProtonReceiver protonReceiver, ProtonDelivery sourceDelivery, Message message) {
         MessageAnnotations annotations = message.getMessageAnnotations();
         if (annotations == null) {
             annotations = new MessageAnnotations(Collections.singletonMap(replicated, true));
@@ -161,7 +163,10 @@ public class Forwarder {
             annotations.getValue().put(replicated, true);
         }
         message.setMessageAnnotations(annotations);
-        protonSender.send(message, protonDelivery -> sourceDelivery.disposition(protonDelivery.getRemoteState(), protonDelivery.remotelySettled()));
+        protonSender.send(message, protonDelivery -> {
+            sourceDelivery.disposition(protonDelivery.getRemoteState(), protonDelivery.remotelySettled());
+            protonReceiver.flow(protonSender.getCredit() - protonReceiver.getCredit());
+        });
     }
 
     public void stop() {
