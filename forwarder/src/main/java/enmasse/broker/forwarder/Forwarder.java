@@ -76,6 +76,7 @@ public class Forwarder {
                 receiver.closeHandler(result -> {
                     if (result.succeeded()) {
                         log.info(this + ": receiver closed");
+                        closeReceiver();
                     } else {
                         log.warn(this + ": receiver closed with error: " + result.cause().getMessage());
                         closeReceiver();
