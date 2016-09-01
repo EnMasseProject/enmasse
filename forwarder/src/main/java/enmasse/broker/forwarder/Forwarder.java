@@ -9,6 +9,7 @@ import io.vertx.proton.ProtonLinkOptions;
 import io.vertx.proton.ProtonReceiver;
 import io.vertx.proton.ProtonSender;
 import org.apache.qpid.proton.amqp.Symbol;
+import org.apache.qpid.proton.amqp.messaging.Accepted;
 import org.apache.qpid.proton.amqp.messaging.MessageAnnotations;
 import org.apache.qpid.proton.amqp.messaging.Source;
 import org.apache.qpid.proton.amqp.messaging.Target;
@@ -68,6 +69,7 @@ public class Forwarder {
 
                 ProtonReceiver receiver = connection.createReceiver(address, new ProtonLinkOptions().setLinkName(containerId));
 
+                receiver.setAutoAccept(false);
                 receiver.openHandler(handler -> {
                     log.info(this + ": receiver opened to " + connection.getRemoteContainer());
                 });
@@ -146,11 +148,11 @@ public class Forwarder {
             log.debug(this + ": forwarding message");
         }
         if (message.getAddress().equals(address) && !isMessageReplicated(message)) {
-            forwardMessage(protonSender, message);
+            forwardMessage(protonSender, protonDelivery, message);
         }
     }
 
-    private void forwardMessage(ProtonSender protonSender, Message message) {
+    private void forwardMessage(ProtonSender protonSender, ProtonDelivery sourceDelivery, Message message) {
         MessageAnnotations annotations = message.getMessageAnnotations();
         if (annotations == null) {
             annotations = new MessageAnnotations(Collections.singletonMap(replicated, true));
@@ -158,7 +160,17 @@ public class Forwarder {
             annotations.getValue().put(replicated, true);
         }
         message.setMessageAnnotations(annotations);
-        protonSender.send(message);
+        ProtonDelivery targetDelivery = protonSender.send(message);
+        // TODO: Would be nice if we could register a callback on the delivery instead...
+        vertx.setTimer(10, timerId -> checkAndSettle(sourceDelivery, targetDelivery));
+    }
+
+    private void checkAndSettle(ProtonDelivery sourceDelivery, ProtonDelivery targetDelivery) {
+        if (targetDelivery.remotelySettled()) {
+            sourceDelivery.disposition(new Accepted(), true);
+        } else {
+            vertx.setTimer(10, timerId -> checkAndSettle(sourceDelivery, targetDelivery));
+        }
     }
 
     public void stop() {
