@@ -42,10 +42,6 @@ public class Main {
         discoveryClient.start();
     }
 
-    private static String getContainerId(Map<String, String> env) {
-        return getEnvOrThrow(env, "CONTAINER_ID");
-    }
-
     private static IClient createClient(Map<String, String> env) throws IOException {
         String openshiftHost = getEnvOrThrow(env, "KUBERNETES_SERVICE_HOST");
         String openshiftPort = getEnvOrThrow(env, "KUBERNETES_SERVICE_PORT");
