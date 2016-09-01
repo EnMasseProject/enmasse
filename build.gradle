@@ -2,7 +2,9 @@ allprojects  {
     group = 'enmasse'
 }
 
-task buildArtemis(type: Exec) {
-    workingDir 'activemq-artemis'
-    commandLine 'mvn', '-q', '-Prelease', 'install', '-DskipTests'
+task(fetchArtemis) {
+    def f = new File('apache-artemis-bin.tar.gz')
+    if (!f.exists()) {
+        new URL('https://repository.apache.org/content/repositories/snapshots/org/apache/activemq/apache-artemis/1.5.0-SNAPSHOT/apache-artemis-1.5.0-20160831.031259-4-bin.tar.gz').withInputStream{ i -> f.withOutputStream{ it << i }}
+    }
 }
