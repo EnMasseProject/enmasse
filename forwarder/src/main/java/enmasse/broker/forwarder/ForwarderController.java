@@ -23,13 +23,11 @@ public class ForwarderController implements DiscoveryListener {
 
     private final Host localHost;
     private final String address;
-    private final String containerId;
     private final long connectionRetryInterval = 5000;
 
-    public ForwarderController(Host localHost, String address, String containerId) {
+    public ForwarderController(Host localHost, String address) {
         this.localHost = localHost;
         this.address = address;
-        this.containerId = containerId;
     }
 
     @Override
@@ -62,7 +60,7 @@ public class ForwarderController implements DiscoveryListener {
     }
 
     private void createForwarder(Host host) {
-        Forwarder forwarder = new Forwarder(vertx, host, localHost, address, containerId, connectionRetryInterval);
+        Forwarder forwarder = new Forwarder(vertx, localHost, host, address, connectionRetryInterval);
         log.info("Creating forwarder " + forwarder);
         replicatedHosts.put(host, forwarder);
         forwarder.start();

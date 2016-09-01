@@ -36,12 +36,9 @@ public class TestBroker {
         params.put("port", port);
         TransportConfiguration transport = new TransportConfiguration(NettyAcceptorFactory.class.getName(), params, "amqp");
 
-        CoreQueueConfiguration queueConfig = new CoreQueueConfiguration();
-        queueConfig.setAddress(address);
-        queueConfig.setName(address);
         config.setAcceptorConfigurations(Collections.singleton(transport));
         config.setSecurityEnabled(false);
-        config.addQueueConfiguration(queueConfig);
+        config.setName("broker-" + port);
 
         server.setConfiguration(config);
 

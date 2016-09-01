@@ -33,10 +33,9 @@ public class Main {
         Map<String, String> labelFilter = getLabelFilter(env);
         Host localHost = getLocalHost();
         String address = getAddress(env);
-        String containerId = getContainerId(env);
-        
+
         DiscoveryClient discoveryClient = new DiscoveryClient(client, namespace, labelFilter);
-        ForwarderController replicator = new ForwarderController(localHost, address, containerId);
+        ForwarderController replicator = new ForwarderController(localHost, address);
 
         discoveryClient.addListener(replicator);
 
