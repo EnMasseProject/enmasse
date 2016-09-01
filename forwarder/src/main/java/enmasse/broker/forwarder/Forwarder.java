@@ -53,7 +53,7 @@ public class Forwarder {
     }
 
     private void startReceiver(ProtonSender sender, String containerId) {
-        log.info("Starting receiver with id from sender " + containerId);
+        log.info("Starting receiver");
         client.connect(from.getHostname(), from.getAmqpPort(), event -> {
             if (event.succeeded()) {
                 ProtonConnection connection = event.result();
@@ -100,6 +100,7 @@ public class Forwarder {
     }
 
     private void startSender() {
+        log.info(this + ": starting sender");
         client.connect(to.getHostname(), to.getAmqpPort(), event -> {
             if (event.succeeded()) {
                 ProtonConnection connection = event.result();
