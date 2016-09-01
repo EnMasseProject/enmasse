@@ -85,7 +85,7 @@ public class ForwarderControllerTest {
         CountDownLatch latch = new CountDownLatch(2);
         ProtonClient.create(vertx).connect(localHost, 5673, new TestHandler(latch, resultA, 2));
         ProtonClient.create(vertx).connect(localHost, 5674, new TestHandler(latch, resultB, 2));
-        latch.await(20, TimeUnit.SECONDS);
+        latch.await(120, TimeUnit.SECONDS);
 
         sendMessageTo(5672, "Hello 1");
         sendMessageTo(5672, "Hello 2");
