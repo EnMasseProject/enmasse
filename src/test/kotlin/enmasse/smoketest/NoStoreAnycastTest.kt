@@ -10,7 +10,6 @@ import java.util.concurrent.TimeUnit
  */
 class NoStoreAnycastTest {
 
-    @Test
     fun testMessagesDeliveredToReceiver() {
         val dest = "anycast"
         val client = EnMasseClient(createQueueContext(dest), 2, true)
