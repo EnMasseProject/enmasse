@@ -7,8 +7,10 @@ do
     then
         oc logs -c broker $i
         oc logs -c router $i
+        oc logs -c forwarder $i
     fi
 done
 
-# Docker logs
-docker logs origin
+# Openshift logs
+cat logs/os.err
+cat logs/os.log
