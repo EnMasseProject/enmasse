@@ -1,8 +1,8 @@
 package enmasse.storage.controller;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import enmasse.storage.controller.admin.ConfigManager;
-import enmasse.storage.controller.admin.FlavorManager;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import enmasse.storage.controller.admin.ConfigSubscriber;
 import io.vertx.proton.ProtonDelivery;
 import io.vertx.proton.ProtonMessageHandler;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
@@ -12,18 +12,17 @@ import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static io.vertx.core.json.Json.mapper;
-
 /**
  * @author Ulf Lilleengen
  */
 public class ConfigAdapter implements ProtonMessageHandler {
+    private static final ObjectMapper mapper = new ObjectMapper();
     private static final Logger log = Logger.getLogger(ConfigAdapter.class.getName());
 
-    private final ConfigManager configManager;
+    private final ConfigSubscriber configSubscriber;
 
-    public ConfigAdapter(ConfigManager configManager) {
-        this.configManager = configManager;
+    public ConfigAdapter(ConfigSubscriber configSubscriber) {
+        this.configSubscriber = configSubscriber;
     }
 
     @Override
@@ -31,7 +30,7 @@ public class ConfigAdapter implements ProtonMessageHandler {
         try {
             if (message.getBody() instanceof AmqpValue) {
                 JsonNode root = mapper.readTree((String) ((AmqpValue) message.getBody()).getValue());
-                configManager.configUpdated(root.get("json"));
+                configSubscriber.configUpdated(root.get("json"));
             }
         } catch (IOException e) {
             log.log(Level.INFO, "Error handling address config update", e);

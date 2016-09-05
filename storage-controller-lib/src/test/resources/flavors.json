@@ -1,56 +1,153 @@
 {
   "vanilla": {
-    "broker": {
-      "dockerImage": "enmasseproject/artemis:latest",
-      "storage": {
-        "volumeType": "emptyDir",
-        "mountPath": "/var/run/artemis"
+    "shared_cluster": true,
+    "podSpec": {
+      "common": {
+        "volumes": [
+          {
+            "name": "vol-vanilla",
+            "emptyDir": {}
+          }
+        ],
+        "containers": [
+          {
+            "name": "broker",
+            "image": "enmasseproject/artemis:latest",
+            "ports": [
+              {
+                "name": "amqp",
+                "containerPort": 5673
+              },
+              {
+                "name": "core",
+                "containerPort": 61616
+              }
+            ],
+            "volumeMounts": [
+              {
+                "name": "vol-vanilla",
+                "mountPath": "/var/run/artemis"
+              }
+            ]
+          },
+          {
+            "name": "router",
+            "image": "gordons/qdrouterd:latest",
+            "ports": [
+              {
+                "name": "amqp",
+                "containerPort": 5672
+              }
+            ]
+          }
+        ]
       },
-      "ports": {
-        "amqp": 5673,
-        "artemis": 61616,
-        "jgroups": 7800,
-        "broadcast": 7801,
-        "discovery": 7802
+      "anycast": {
+        "containers": [
+          {
+            "name": "broker",
+            "lifecycle": {
+              "preStop": {
+                "exec": {
+                  "command": [
+                    "/artemis-shutdown-hook/bin/artemis-shutdown-hook"
+                  ]
+                }
+              }
+            }
+          }
+        ]
       },
-      "shutdownHook": "/artemis-shutdown-hook/bin/artemis-shutdown-hook"
-    },
-    "router": {
-      "dockerImage": "gordons/qdrouter:v10",
-      "ports": {
-        "amqp": 5672
+      "multicast": {
+        "containers": [
+          {
+            "name": "forwarder",
+            "image": "enmasseproject/topic-forwarder:latest"
+          }
+        ]
       }
-    },
-    "shared": true
+    }
   },
   "chili": {
-    "broker": {
-      "dockerImage": "enmasseproject/artemis:latest",
-      "storage": {
-        "volumeType": "persistentVolumeClaim",
-        "size": "10Gi",
-        "mountPath": "/var/run/artemis"
+    "shared_cluster": false,
+    "claimSpec": {
+      "name": "claim-chili",
+      "accessModes": ["ReadWriteMany"],
+      "resources": {
+        "requests": {
+          "storage": "10Gi"
+        }
       }
     },
-    "router": {
-      "dockerImage": "gordons/qdrouter:v10",
-      "certPath": "/etc/qpid-dispatch/ssl",
-      "certSecretName": "qdrouterd-certs"
-    },
-    "shared": false
-  },
-  "caramel": {
-    "broker": {
-      "dockerImage": "enmasseproject/activemq:latest",
-      "storage": {
-        "volumeType": "persistentVolumeClaim",
-        "size": "10Gi",
-        "mountPath": "/var/lib/activemq"
+    "podSpec": {
+      "common": {
+        "volumes": [
+          {
+            "name": "vol-chili",
+            "persistentVolumeClaim": {
+              "claimName": "claim-chili",
+              "readOnly": false
+            }
+          }
+        ],
+        "containers": [
+          {
+            "name": "broker",
+            "image": "enmasseproject/artemis:latest",
+            "ports": [
+              {
+                "name": "amqp",
+                "containerPort": 5673
+              },
+              {
+                "name": "core",
+                "containerPort": 61616
+              }
+            ],
+            "volumeMounts": [
+              {
+                "name": "vol-vanilla",
+                "mountPath": "/var/run/artemis"
+              }
+            ]
+          },
+          {
+            "name": "router",
+            "image": "gordons/qdrouterd:latest",
+            "ports": [
+              {
+                "name": "amqp",
+                "containerPort": 5672
+              }
+            ]
+          }
+        ]
+      },
+      "anycast": {
+        "containers": [
+          {
+            "name": "broker",
+            "lifecycle": {
+              "preStop": {
+                "exec": {
+                  "command": [
+                    "/artemis-shutdown-hook/bin/artemis-shutdown-hook"
+                  ]
+                }
+              }
+            }
+          }
+        ]
+
+      },
+      "multicast": {
+        "containers": [
+          {
+            "name": "forwarder",
+            "image": "enmasseproject/topic-forwarder:latest"
+          }
+        ]
       }
-    },
-    "router": {
-      "dockerImage": "gordons/qdrouter:v10"
-    },
-    "shared": true
+    }
   }
 }

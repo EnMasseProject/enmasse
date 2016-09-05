@@ -7,6 +7,6 @@ import java.io.IOException;
 /**
  * @author Ulf Lilleengen
  */
-public interface ConfigManager {
-    public void configUpdated(JsonNode jsonConfig) throws IOException;
+public interface ConfigSubscriber {
+    void configUpdated(JsonNode jsonConfig) throws IOException;
 }
