@@ -29,7 +29,7 @@ public class AddressConfigParser {
                     entry.getKey(),
                     node.get("store_and_forward").asBoolean(),
                     node.get("multicast").asBoolean(),
-                    node.get("flavor").asText());
+                    node.has("flavor") ? node.get("flavor").asText() : "");
             destinationList.add(destination);
         }
 

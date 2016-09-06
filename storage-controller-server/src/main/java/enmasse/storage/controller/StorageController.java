@@ -48,9 +48,9 @@ public class StorageController implements Runnable, AutoCloseable {
                 connection = connectionHandle.result();
                 connection.open();
 
-                connection.createReceiver("maas").handler(new ConfigAdapter(clusterManager::configUpdated))
-                        .open();
                 connection.createReceiver("flavor").handler(new ConfigAdapter(flavorManager::configUpdated))
+                        .open();
+                connection.createReceiver("maas").handler(new ConfigAdapter(clusterManager::configUpdated))
                         .open();
                 log.log(Level.INFO, "Created receiver");
             } else {
