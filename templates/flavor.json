@@ -6,7 +6,7 @@
       "name": "flavor"
     },
     "data": {
-      "json": "{\"vanilla\":{\"templateName\":\"queue-inmemory\"}}"
+      "json": "{\n    \"vanilla-queue\": { \"templateName\":\"queue-inmemory\" },\n    \"vanilla-topic\": { \"templateName\":\"topic-inmemory\" }\n}\n"
     }
   }
 ]
