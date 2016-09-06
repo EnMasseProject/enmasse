@@ -42,7 +42,7 @@
         "spec": {
           "containers": [
             {
-              "image": "${ROUTER_IMAGE}",
+              "image": "${QDROUTER_IMAGE}",
               "name": "master",
               "ports": [
                 {

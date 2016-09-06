@@ -25,12 +25,7 @@ local flavorConfig = import "flavor.json";
                flavorConfig,
   "parameters": [
     {
-      "name": "BROKER_IMAGE",
-      "value": "enmasseproject/artemis:latest",
-      "description": "The image to use for the broker"
-    },
-    {
-      "name": "ROUTER_IMAGE",
+      "name": "QDROUTER_IMAGE",
       "description": "The image to use for the router",
       "value": "gordons/qdrouterd:latest"
     },
