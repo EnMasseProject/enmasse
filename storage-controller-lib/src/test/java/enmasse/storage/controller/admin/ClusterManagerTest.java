@@ -20,11 +20,12 @@ import static org.mockito.Mockito.*;
 public class ClusterManagerTest {
     private OpenshiftClient mockClient;
     private ClusterManager manager;
+    private FlavorManager flavorManager = new FlavorManager();
 
     @Before
     public void setUp() {
         mockClient = mock(OpenshiftClient.class);
-        manager = new ClusterManager(mockClient, new StorageGenerator(mockClient));
+        manager = new ClusterManager(mockClient, new StorageGenerator(mockClient, flavorManager));
     }
 
     public void testModifiedBrokerDoesNotResetReplicaCount() {

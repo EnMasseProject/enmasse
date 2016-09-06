@@ -2,6 +2,7 @@ package enmasse.storage.controller.generator;
 
 import com.openshift.restclient.model.IReplicationController;
 import com.openshift.restclient.model.IResource;
+import enmasse.storage.controller.admin.FlavorManager;
 import enmasse.storage.controller.model.Destination;
 import enmasse.storage.controller.openshift.OpenshiftClient;
 import enmasse.storage.controller.openshift.StorageCluster;
@@ -20,6 +21,7 @@ import static org.mockito.Mockito.mock;
  */
 public class StorageClusterGeneratorTest {
     private OpenshiftClient mockClient;
+    private FlavorManager flavorManager = new FlavorManager();
 
     @Before
     public void setUp() {
@@ -27,13 +29,13 @@ public class StorageClusterGeneratorTest {
     }
 
     public void testSkipNoStore() {
-        StorageGenerator generator = new StorageGenerator(mockClient);
+        StorageGenerator generator = new StorageGenerator(mockClient, flavorManager);
         List<StorageCluster> resources = generator.generate(Arrays.asList(new Destination("foo", true, false, "foo"), new Destination("bar", false, false, "bar")));
         assertThat(resources.size(), is(1));
     }
 
     public void testGenerate() {
-        StorageGenerator generator = new StorageGenerator(mockClient);
+        StorageGenerator generator = new StorageGenerator(mockClient, flavorManager);
         List<StorageCluster> clusterList = generator.generate(Arrays.asList(new Destination("foo", true, false, "vanilla"), new Destination("bar", false, false, "chili")));
         assertThat(clusterList.size(), is(1));
         StorageCluster cluster = clusterList.get(0);

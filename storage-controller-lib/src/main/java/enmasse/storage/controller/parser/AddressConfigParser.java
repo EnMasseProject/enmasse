@@ -19,10 +19,6 @@ public class AddressConfigParser {
 
     private static final ObjectMapper mapper = new ObjectMapper();
 
-    public static AddressConfig parse(InputStream config) throws IOException {
-        return parse(mapper.readTree(config));
-    }
-
     public static AddressConfig parse(JsonNode root) throws IOException {
         List<Destination> destinationList = new ArrayList<>();
         Iterator<Map.Entry<String, JsonNode>> it = root.fields();

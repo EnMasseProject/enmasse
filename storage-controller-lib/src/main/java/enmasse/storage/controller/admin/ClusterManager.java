@@ -1,11 +1,13 @@
 package enmasse.storage.controller.admin;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import enmasse.storage.controller.generator.StorageGenerator;
 import enmasse.storage.controller.model.Destination;
 import enmasse.storage.controller.parser.AddressConfigParser;
 import enmasse.storage.controller.openshift.OpenshiftClient;
 import enmasse.storage.controller.openshift.StorageCluster;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 import java.util.logging.Level;
@@ -63,5 +65,9 @@ public class ClusterManager {
                         .isPresent())
                 .forEach(StorageCluster::delete);
 
+    }
+
+    public void configUpdated(JsonNode jsonConfig) throws IOException {
+        destinationsUpdated(AddressConfigParser.parse(jsonConfig).destinations());
     }
 }

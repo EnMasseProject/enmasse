@@ -1,8 +1,10 @@
 package enmasse.storage.controller.generator;
 
 import com.openshift.restclient.model.template.ITemplate;
+import enmasse.storage.controller.admin.FlavorRepository;
 import enmasse.storage.controller.model.AddressType;
 import enmasse.storage.controller.model.Destination;
+import enmasse.storage.controller.model.Flavor;
 import enmasse.storage.controller.model.LabelKeys;
 import enmasse.storage.controller.model.TemplateParameter;
 import enmasse.storage.controller.openshift.OpenshiftClient;
@@ -10,6 +12,7 @@ import enmasse.storage.controller.openshift.StorageCluster;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -18,9 +21,11 @@ import java.util.stream.Collectors;
 public class StorageGenerator {
 
     private final OpenshiftClient osClient;
+    private final FlavorRepository flavorRepository;
 
-    public StorageGenerator(OpenshiftClient osClient) {
+    public StorageGenerator(OpenshiftClient osClient, FlavorRepository flavorRepository) {
         this.osClient = osClient;
+        this.flavorRepository = flavorRepository;
     }
 
     /**
@@ -43,13 +48,18 @@ public class StorageGenerator {
      * @param destination The destination to generate storage definitions for
      */
     public StorageCluster generateStorage(Destination destination) {
-        ITemplate template = osClient.getResource(destination.flavor());
+        Flavor flavor = flavorRepository.getFlavor(destination.flavor());
+
+        ITemplate template = osClient.getResource(flavor.templateName());
         if (!template.getLabels().containsKey(LabelKeys.ADDRESS_TYPE)) {
             throw new IllegalArgumentException("Template is missing label " + LabelKeys.ADDRESS_TYPE);
         }
         AddressType.validate(template.getLabels().get(LabelKeys.ADDRESS_TYPE));
 
         template.updateParameter(TemplateParameter.ADDRESS, destination.address());
+        for (Map.Entry<String, String> entry : flavor.templateParameters().entrySet()) {
+            template.updateParameter(entry.getKey(), entry.getValue());
+        }
         template.addObjectLabel(LabelKeys.ADDRESS, destination.address());
         template.addObjectLabel(LabelKeys.FLAVOR, destination.flavor());
         template.addObjectLabel(LabelKeys.ADDRESS_TYPE, destination.multicast() ? AddressType.TOPIC.name() : AddressType.QUEUE.name());
