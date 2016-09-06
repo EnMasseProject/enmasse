@@ -7,7 +7,10 @@
       "apiVersion": "v1",
       "kind": "Template",
       "metadata": {
-        "name": templateName
+        "name": templateName,
+        "labels": {
+          "addressType": addrtype
+        }
       },
       "objects": [
         {
