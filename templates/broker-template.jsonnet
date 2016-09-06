@@ -1,4 +1,4 @@
 local multicast = std.extVar("multicast");
 local persistence = std.extVar("persistence");
-local gen = import "broker-common.jsonnet";
-gen.generate_template(multicast, persistence)
+local broker = import "broker-common.jsonnet";
+broker.generate_template(multicast, persistence, "false")

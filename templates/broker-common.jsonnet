@@ -1,5 +1,5 @@
 {
-  generate_template(multicast, persistence)::
+  generate_template(multicast, persistence, secure)::
     local addrtype = (if multicast == "true" then "topic" else "queue");
     local templateName = "%s-%s" % [addrtype, (if persistence == "true" then "persisted" else "inmemory")];
     local containerEnv = (if multicast == "true" then [ { name: "TOPIC_NAME", value: "${ADDRESS}" } ] else [ { name: "QUEUE_NAME", value: "${ADDRESS}" }]);
