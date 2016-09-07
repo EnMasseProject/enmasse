@@ -48,16 +48,35 @@ public class StorageController implements Runnable, AutoCloseable {
                 connection = connectionHandle.result();
                 connection.open();
 
-                connection.createReceiver("flavor").handler(new ConfigAdapter(flavorManager::configUpdated))
-                        .open();
-                connection.createReceiver("maas").handler(new ConfigAdapter(clusterManager::configUpdated))
-                        .open();
+                openReceiver(connection, "flavor", new ConfigAdapter(flavorManager::configUpdated));
+                openReceiver(connection, "maas", new ConfigAdapter(clusterManager::configUpdated));
                 log.log(Level.INFO, "Created receiver");
             } else {
                 log.log(Level.INFO, "Connect failed: " + connectionHandle.cause().getMessage());
                 vertx.close();
             }
         });
+    }
+
+    private void openReceiver(ProtonConnection connection, String address, ConfigAdapter configAdapter) {
+        connection.createReceiver(address)
+                .handler(configAdapter)
+                .openHandler(result -> {
+                    if (result.succeeded()) {
+                        log.log(Level.INFO, "Receiver for " + address + " opened");
+                    } else {
+                        log.log(Level.INFO, "Unable to open receiver for " + address + ": " + result.cause().getMessage());
+                        vertx.close();
+                    }})
+                .closeHandler(result -> {
+                    if (result.succeeded()) {
+                        log.log(Level.INFO, "Receiver for " + address + " closed");
+                    } else {
+                        log.log(Level.INFO, "Receiver for " + address + " closed: " + result.cause().getMessage());
+                        vertx.close();
+                    }
+                })
+                .open();
     }
 
     @Override
