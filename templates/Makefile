@@ -1,7 +1,8 @@
 SRCS=$(wildcard *.jsonnet)
 OBJS=$(patsubst %.jsonnet,%.json,$(SRCS))
 
-all: prepare $(OBJS)
+all: prepare $(OBJS) yaml
+	mv generated/*.yaml ../
 
 %.json: %.jsonnet
 	./jsonnet -m generated $<

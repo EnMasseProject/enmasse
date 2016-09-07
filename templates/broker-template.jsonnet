@@ -1,4 +1,4 @@
-local storage = import "include/storage.jsonnet";
+local storage = import "include/storage-template.jsonnet";
 {
   "queue-inmemory.json": storage.template(false, false, false),
   "tls-queue-inmemory.json": storage.template(false, false, true),

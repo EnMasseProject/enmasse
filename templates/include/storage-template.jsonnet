@@ -60,6 +60,11 @@ local forwarder = import "forwarder.jsonnet";
           "value": "gordons/qdrouterd:latest"
         },
         {
+          "name": "ROUTER_LINK_CAPACITY",
+          "description": "The link capacity setting for router",
+          "value": "50"
+        },
+        {
           "name": "ADDRESS",
           "description": "The address to use for the %s" % [addrtype],
           "required": true

@@ -1,4 +1,4 @@
-local storage = import "storage.jsonnet";
+local storage = import "storage-template.jsonnet";
 local configmapBridge = import "configmap-bridge.jsonnet";
 local ragent = import "ragent.jsonnet";
 local qdrouterd = import "qdrouterd.jsonnet";
@@ -33,6 +33,11 @@ local flavorConfig = import "flavor.json";
         "name": "QDROUTER_IMAGE",
         "description": "The image to use for the router",
         "value": "gordons/qdrouterd:latest"
+      },
+      {
+        "name": "ROUTER_LINK_CAPACITY",
+        "description": "The link capacity setting for router",
+        "value": "50"
       },
       {
         "name": "CONFIGMAP_BRIDGE_IMAGE",

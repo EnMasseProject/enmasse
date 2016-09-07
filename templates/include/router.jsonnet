@@ -13,6 +13,11 @@
     {
       "image": image_name,
       "name": "router",
+      "env": [
+        {
+          "name": "LINK_CAPACITY",
+          "value": "${ROUTER_LINK_CAPACITY}"
+      ],
       "ports": if secure
         then [routerPort, secureRouterPort] 
         else [routerPort],
