@@ -22,7 +22,6 @@ import java.util.stream.Collectors;
 public class ClusterManager {
     private static final Logger log = Logger.getLogger(ClusterManager.class.getName());
 
-    private final AddressConfigParser parser = new AddressConfigParser();
     private final OpenshiftClient openshiftClient;
     private final StorageGenerator generator;
 
