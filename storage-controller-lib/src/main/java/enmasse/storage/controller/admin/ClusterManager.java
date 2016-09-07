@@ -35,7 +35,7 @@ public class ClusterManager {
         Collection<Destination> destinations = newDestinations.stream()
                 .filter(Destination::storeAndForward)
                 .collect(Collectors.toList());
-        log.info("Brokers got updated to " + destinations.size() + " destinations, we have " + clusterList.size() + " destinations: " + clusterList.stream().map(StorageCluster::getDestination).toString());
+        log.info("Brokers got updated to " + destinations.size() + " destinations, we have " + clusterList.size() + " destinations: " + clusterList.stream().map(StorageCluster::getDestination).collect(Collectors.toList()));
         createBrokers(clusterList, destinations);
         deleteBrokers(clusterList, destinations);
     }
