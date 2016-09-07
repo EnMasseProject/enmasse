@@ -1,4 +1,4 @@
-local router = import "router-common.jsonnet";
+local router = import "router.jsonnet";
 { 
   local port = {
     "name": "amqp",
@@ -48,7 +48,12 @@ local router = import "router-common.jsonnet";
               "name": "qdrouterd"
             }
           },
-          "spec": router.generate("${QDROUTER_IMAGE}", secure)
+          "spec": {
+            "containers": [ router.container("${QDROUTER_IMAGE}", secure) ],
+            [if secure == "true" then "volumes" ]: [
+              router.secret_volume()
+            ]
+          }
         }
       }
     }

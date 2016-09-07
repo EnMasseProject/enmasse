@@ -1,6 +1,6 @@
 local secure = std.extVar("secure");
 local templateName = (if secure == "true" then "enmasse-secure" else "enmasse");
-local broker = import "broker-common.jsonnet";
+local storage = import "storage.jsonnet";
 local configmapBridge = import "configmap_bridge.json";
 local ragent = import "ragent.json";
 local qdrouterd = import "qdrouterd.jsonnet";
@@ -13,10 +13,10 @@ local flavorConfig = import "flavor.json";
   "metadata": {
     "name": templateName
   },
-  "objects": [ broker.generate_template("false", "false", secure),
-               broker.generate_template("false", "true", secure),
-               broker.generate_template("true", "false", secure),
-               broker.generate_template("true", "true", secure) ] +
+  "objects": [ storage.template("false", "false", secure),
+               storage.template("false", "true", secure),
+               storage.template("true", "false", secure),
+               storage.template("true", "true", secure) ] +
                configmapBridge +
                ragent +
                qdrouterd.generate(secure) +
