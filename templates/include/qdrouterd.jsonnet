@@ -36,7 +36,7 @@ local router = import "router.jsonnet";
           },
           "spec": {
             "containers": [ router.container("${QDROUTER_IMAGE}", secure) ],
-            [if secure == "true" then "volumes" ]: [
+            [if secure then "volumes" ]: [
               router.secret_volume()
             ]
           }

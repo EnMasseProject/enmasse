@@ -3,8 +3,8 @@ local broker = import "broker.jsonnet";
 local forwarder = import "forwarder.jsonnet";
 {
   template(multicast, persistence, secure)::
-    local addrtype = (if multicast == "true" then "topic" else "queue");
-    local templateName = "%s-%s" % [addrtype, (if persistence == "true" then "persisted" else "inmemory")];
+    local addrtype = (if multicast then "topic" else "queue");
+    local templateName = "%s-%s" % [addrtype, (if persistence then "persisted" else "inmemory")];
     { 
       "apiVersion": "v1",
       "kind": "Template",
@@ -36,11 +36,11 @@ local forwarder = import "forwarder.jsonnet";
                 }
               },
               "spec": {
-                "volumes": if secure == "true"
+                "volumes": if secure
                   then [broker.volume(templateName), router.secret_volume()]
                   else [broker.volume(templateName)],
 
-                "containers": if multicast == "true"
+                "containers": if multicast
                   then [ broker.container(multicast, templateName), router.container("${ROUTER_IMAGE}", secure), forwarder.container() ]
                   else [ broker.container(multicast, templateName), router.container("${ROUTER_IMAGE}", secure) ]
               }

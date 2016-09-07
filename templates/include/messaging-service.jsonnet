@@ -19,7 +19,7 @@
         "name": "messaging"
       },
       "spec": {
-        "ports": if secure == "true" then [port, securePort] else [port],
+        "ports": if secure then [port, securePort] else [port],
         "selector": {
           "capability": "router"
         }

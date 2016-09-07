@@ -1,6 +1,6 @@
 {
   container(multicast, volumeName)::
-    local containerEnv = (if multicast == "true" then [ { name: "TOPIC_NAME", value: "${ADDRESS}" } ] else [ { name: "QUEUE_NAME", value: "${ADDRESS}" }]);
+    local containerEnv = (if multicast then [ { name: "TOPIC_NAME", value: "${ADDRESS}" } ] else [ { name: "QUEUE_NAME", value: "${ADDRESS}" }]);
     {
       "name": "broker",
       "image": "${BROKER_IMAGE}",
@@ -21,7 +21,7 @@
           "mountPath": "/var/run/artemis"
         }
       ],
-      [if multicast != "true" then "lifecycle"]: {
+      [if multicast == false then "lifecycle"]: {
         "preStop": {
           "exec": {
             "command": [

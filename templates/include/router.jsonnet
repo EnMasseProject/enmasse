@@ -13,10 +13,10 @@
     {
       "image": image_name,
       "name": "router",
-      "ports": if secure == "true"
+      "ports": if secure
         then [routerPort, secureRouterPort] 
         else [routerPort],
-      [if secure == "true" then "volumeMounts"]: [
+      [if secure then "volumeMounts"]: [
         {
           "name": "ssl-certs",
           "mountPath": "/etc/qpid-dispatch/ssl",

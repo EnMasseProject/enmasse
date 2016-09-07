@@ -1,2 +1,2 @@
 local template = import "include/enmasse-template.jsonnet";
-template.generate(false)
+template.generate(true)
