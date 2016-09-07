@@ -9,16 +9,16 @@ import enmasse.storage.controller.openshift.OpenshiftClient;
 import io.vertx.core.Vertx;
 import io.vertx.proton.ProtonClient;
 import io.vertx.proton.ProtonConnection;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * @author lulf
  */
 public class StorageController implements Runnable, AutoCloseable {
-    private static final Logger log = Logger.getLogger(StorageController.class.getName());
+    private static final Logger log = LoggerFactory.getLogger(StorageController.class.getName());
 
     private final ProtonClient client;
     private final StorageControllerOptions options;
@@ -50,9 +50,8 @@ public class StorageController implements Runnable, AutoCloseable {
 
                 openReceiver(connection, "flavor", new ConfigAdapter(flavorManager::configUpdated));
                 openReceiver(connection, "maas", new ConfigAdapter(clusterManager::configUpdated));
-                log.log(Level.INFO, "Created receiver");
             } else {
-                log.log(Level.INFO, "Connect failed: " + connectionHandle.cause().getMessage());
+                log.error("Connect failed: " + connectionHandle.cause().getMessage());
                 vertx.close();
             }
         });
@@ -63,16 +62,16 @@ public class StorageController implements Runnable, AutoCloseable {
                 .handler(configAdapter)
                 .openHandler(result -> {
                     if (result.succeeded()) {
-                        log.log(Level.INFO, "Receiver for " + address + " opened");
+                        log.info("Receiver for " + address + " opened");
                     } else {
-                        log.log(Level.INFO, "Unable to open receiver for " + address + ": " + result.cause().getMessage());
+                        log.warn("Unable to open receiver for " + address + ": " + result.cause().getMessage());
                         vertx.close();
                     }})
                 .closeHandler(result -> {
                     if (result.succeeded()) {
-                        log.log(Level.INFO, "Receiver for " + address + " closed");
+                        log.info("Receiver for " + address + " closed");
                     } else {
-                        log.log(Level.INFO, "Receiver for " + address + " closed: " + result.cause().getMessage());
+                        log.error("Receiver for " + address + " closed: " + result.cause().getMessage());
                         vertx.close();
                     }
                 })
