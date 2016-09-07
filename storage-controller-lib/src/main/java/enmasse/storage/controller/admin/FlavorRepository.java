@@ -1,11 +1,10 @@
 package enmasse.storage.controller.admin;
 
-import enmasse.storage.controller.model.FlavorConfig;
+import enmasse.storage.controller.model.Flavor;
 
 /**
  * @author Ulf Lilleengen
  */
 public interface FlavorRepository {
-    FlavorConfig getFlavor(String flavorName);
-    FlavorConfig getDefaultFlavor();
+    Flavor getFlavor(String flavorName);
 }

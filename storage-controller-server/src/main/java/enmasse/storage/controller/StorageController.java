@@ -2,7 +2,7 @@ package enmasse.storage.controller;
 
 import com.openshift.restclient.ClientBuilder;
 import com.openshift.restclient.IClient;
-import enmasse.storage.controller.admin.AddressManager;
+import enmasse.storage.controller.admin.ClusterManager;
 import enmasse.storage.controller.admin.FlavorManager;
 import enmasse.storage.controller.generator.StorageGenerator;
 import enmasse.storage.controller.openshift.OpenshiftClient;
@@ -24,9 +24,8 @@ public class StorageController implements Runnable, AutoCloseable {
     private final StorageControllerOptions options;
     private volatile ProtonConnection connection;
 
-    private final AddressManager addressManager;
+    private final ClusterManager clusterManager;
     private final FlavorManager flavorManager;
-
     private final Vertx vertx;
 
     public StorageController(StorageControllerOptions options) throws IOException {
@@ -38,8 +37,8 @@ public class StorageController implements Runnable, AutoCloseable {
                 .build();
 
         OpenshiftClient openshiftClient = new OpenshiftClient(osClient, options.openshiftNamespace());
-        flavorManager = new FlavorManager();
-        addressManager = new AddressManager(openshiftClient, new StorageGenerator(openshiftClient), flavorManager);
+        this.flavorManager = new FlavorManager();
+        this.clusterManager = new ClusterManager(openshiftClient, new StorageGenerator(openshiftClient, flavorManager));
         this.options = options;
     }
 
@@ -49,8 +48,10 @@ public class StorageController implements Runnable, AutoCloseable {
                 connection = connectionHandle.result();
                 connection.open();
 
-                connection.createReceiver("flavors").handler(new ConfigAdapter(flavorManager)).open();
-                connection.createReceiver("maas").handler(new ConfigAdapter(addressManager)).open();
+                connection.createReceiver("flavor").handler(new ConfigAdapter(flavorManager::configUpdated))
+                        .open();
+                connection.createReceiver("maas").handler(new ConfigAdapter(clusterManager::configUpdated))
+                        .open();
                 log.log(Level.INFO, "Created receiver");
             } else {
                 log.log(Level.INFO, "Connect failed: " + connectionHandle.cause().getMessage());

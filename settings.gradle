@@ -2,4 +2,3 @@ rootProject.name = 'storage-controller'
 
 include ':storage-controller-lib'
 include ':storage-controller-server'
-include ':storage-generator-tool'

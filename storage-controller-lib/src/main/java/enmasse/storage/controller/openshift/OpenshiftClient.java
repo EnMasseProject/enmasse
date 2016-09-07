@@ -1,15 +1,22 @@
 package enmasse.storage.controller.openshift;
 
+import com.openshift.internal.restclient.capability.server.ServerTemplateProcessing;
 import com.openshift.restclient.IClient;
+import com.openshift.restclient.OpenShiftException;
 import com.openshift.restclient.ResourceKind;
-import com.openshift.restclient.model.IReplicationController;
+import com.openshift.restclient.UnsupportedOperationException;
+import com.openshift.restclient.capability.server.ITemplateProcessing;
 import com.openshift.restclient.model.IResource;
-import com.openshift.restclient.model.volume.IPersistentVolumeClaim;
-import com.openshift.restclient.model.volume.IPersistentVolumeClaimVolumeSource;
+import com.openshift.restclient.model.template.ITemplate;
+import enmasse.storage.controller.model.AddressType;
+import enmasse.storage.controller.model.Destination;
 import enmasse.storage.controller.model.LabelKeys;
-import enmasse.storage.controller.model.Roles;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -21,10 +28,12 @@ public class OpenshiftClient {
     private static final Logger log = Logger.getLogger(OpenshiftClient.class.getName());
     private final IClient client;
     private final String namespace;
+    private final ITemplateProcessing templateProcessor;
 
     public OpenshiftClient(IClient client, String namespace) {
         this.client = client;
         this.namespace = namespace;
+        this.templateProcessor = new ServerTemplateProcessing(client);
     }
 
     public void createResource(IResource resource) {
@@ -42,40 +51,50 @@ public class OpenshiftClient {
         client.update(resource);
     }
 
-    private List<IReplicationController> listBrokers() {
-        return client.list(ResourceKind.REPLICATION_CONTROLLER, namespace, Collections.singletonMap(LabelKeys.ROLE, Roles.BROKER));
+    public <T extends IResource> T getResource(String name) {
+        return client.get(ResourceKind.TEMPLATE, name, namespace);
     }
 
-    public IReplicationController getBroker(String name) {
-        return client.get(ResourceKind.REPLICATION_CONTROLLER, name, namespace);
+    public ITemplate processTemplate(ITemplate template) {
+        return templateProcessor.process(template, namespace);
     }
 
     public List<StorageCluster> listClusters() {
-        List<IReplicationController> controllerList = listBrokers();
-        List<StorageCluster> clusterList = new ArrayList<>();
-        for (IReplicationController controller : controllerList) {
-            List<IPersistentVolumeClaim> claims = getClaims(controller);
-            clusterList.add(new StorageCluster(this, controller, claims));
+        Map<Destination, List<IResource>> resourceMap = new HashMap<>();
+
+        for (String kind : ResourceKind.values()) {
+            List<IResource> kindResources = listAndIgnore(kind, namespace);
+            for (IResource resource : kindResources) {
+                Map<String, String> labels = resource.getLabels();
+                if (labels.containsKey(LabelKeys.ADDRESS)) {
+                    String address = labels.get(LabelKeys.ADDRESS);
+                    String type = labels.get(LabelKeys.ADDRESS_TYPE);
+                    String flavor = labels.get(LabelKeys.FLAVOR);
+                    Destination destination = new Destination(address, true, AddressType.TOPIC.name().equals(type), flavor);
+                    if (!resourceMap.containsKey(destination)) {
+                        resourceMap.put(destination, new ArrayList<>());
+                    }
+                    resourceMap.get(destination).add(resource);
+                }
+            }
         }
-        return clusterList;
+
+        return resourceMap.entrySet().stream()
+                .map(entry -> new StorageCluster(this, entry.getKey(), entry.getValue()))
+                .collect(Collectors.toList());
     }
 
-    private List<IPersistentVolumeClaim> getClaims(IReplicationController controller) {
-        return client.<IPersistentVolumeClaim>list(ResourceKind.PVC, namespace).stream()
-                .filter(claim ->
-                        controller.getVolumes().stream()
-                                .filter(source -> source instanceof IPersistentVolumeClaimVolumeSource)
-                                .map(source -> ((IPersistentVolumeClaimVolumeSource)source).getClaimName())
-                                .collect(Collectors.toSet())
-                                .contains(claim.getName()))
-                .collect(Collectors.toList());
+    private List<IResource> listAndIgnore(String kind, String namespace) {
+        try {
+            return client.list(kind, namespace);
+        } catch (UnsupportedOperationException | OpenShiftException e) {
+            // Ignore
+            return Collections.emptyList();
+        }
     }
 
     public IClient getClient() {
         return client;
     }
-
-    public IResource getSecret(String name) {
-        return client.get(ResourceKind.SECRET, name, namespace);
-    }
 }
+

@@ -1,17 +1,18 @@
 package enmasse.storage.controller.generator;
 
-import com.openshift.internal.restclient.model.volume.EmptyDirVolumeSource;
-import com.openshift.internal.restclient.model.volume.PersistentVolumeClaimVolumeSource;
-import com.openshift.restclient.model.IReplicationController;
-import com.openshift.restclient.model.volume.*;
+import com.openshift.restclient.model.template.ITemplate;
+import enmasse.storage.controller.admin.FlavorRepository;
+import enmasse.storage.controller.model.AddressType;
 import enmasse.storage.controller.model.Destination;
+import enmasse.storage.controller.model.Flavor;
+import enmasse.storage.controller.model.LabelKeys;
+import enmasse.storage.controller.model.TemplateParameter;
 import enmasse.storage.controller.openshift.OpenshiftClient;
 import enmasse.storage.controller.openshift.StorageCluster;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -19,14 +20,12 @@ import java.util.stream.Collectors;
  */
 public class StorageGenerator {
 
-    private final BrokerGenerator brokerGenerator;
-    private final PVCGenerator pvcGenerator;
     private final OpenshiftClient osClient;
+    private final FlavorRepository flavorRepository;
 
-    public StorageGenerator(OpenshiftClient osClient) {
+    public StorageGenerator(OpenshiftClient osClient, FlavorRepository flavorRepository) {
         this.osClient = osClient;
-        this.brokerGenerator = new BrokerGenerator(osClient.getClient());
-        this.pvcGenerator = new PVCGenerator(osClient.getClient());
+        this.flavorRepository = flavorRepository;
     }
 
     /**
@@ -49,34 +48,23 @@ public class StorageGenerator {
      * @param destination The destination to generate storage definitions for
      */
     public StorageCluster generateStorage(Destination destination) {
-        Optional<IPersistentVolumeClaim> claim = generateClaim(destination);
-        IVolumeSource volume = generateVolume(destination, claim);
-        IReplicationController controller = brokerGenerator.generate(destination, volume);
-        return new StorageCluster(osClient, controller, claim.isPresent() ? Collections.singletonList(claim.get()) : Collections.emptyList());
-    }
+        Flavor flavor = flavorRepository.getFlavor(destination.flavor());
 
-    private IVolumeSource generateVolume(Destination destination, Optional<IPersistentVolumeClaim> claim) {
-        String volumeType = destination.flavor().storageConfig().volumeType();
-        String volumeName = "vol-" + destination.address();
-        if (claim.isPresent() && volumeType.equals(VolumeType.PERSISTENT_VOLUME_CLAIM)) {
-            IPersistentVolumeClaimVolumeSource volumeSource = new PersistentVolumeClaimVolumeSource(volumeName);
-            volumeSource.setClaimName(claim.get().getName());
-            volumeSource.setReadOnly(false);
-            return volumeSource;
-        } else if (volumeType.equals(VolumeType.EMPTY_DIR)) {
-            IEmptyDirVolumeSource volumeSource = new EmptyDirVolumeSource(volumeName);
-            volumeSource.setMedium("");
-            return volumeSource;
-        } else {
-            throw new IllegalArgumentException(String.format("Unsupported storage type %s", volumeType));
+        ITemplate template = osClient.getResource(flavor.templateName());
+        if (!template.getLabels().containsKey(LabelKeys.ADDRESS_TYPE)) {
+            throw new IllegalArgumentException("Template is missing label " + LabelKeys.ADDRESS_TYPE);
         }
-    }
+        AddressType.validate(template.getLabels().get(LabelKeys.ADDRESS_TYPE));
 
-    private Optional<IPersistentVolumeClaim> generateClaim(Destination destination) {
-        if (destination.flavor().storageConfig().volumeType().equals(VolumeType.PERSISTENT_VOLUME_CLAIM)) {
-            return Optional.of(pvcGenerator.generate(destination));
-        } else {
-            return Optional.empty();
+        template.updateParameter(TemplateParameter.ADDRESS, destination.address());
+        for (Map.Entry<String, String> entry : flavor.templateParameters().entrySet()) {
+            template.updateParameter(entry.getKey(), entry.getValue());
         }
+        template.addObjectLabel(LabelKeys.ADDRESS, destination.address());
+        template.addObjectLabel(LabelKeys.FLAVOR, destination.flavor());
+        template.addObjectLabel(LabelKeys.ADDRESS_TYPE, destination.multicast() ? AddressType.TOPIC.name() : AddressType.QUEUE.name());
+
+        ITemplate processedTemplate = osClient.processTemplate(template);
+        return new StorageCluster(osClient, destination, processedTemplate.getObjects());
     }
 }

@@ -1,56 +1,8 @@
 {
-  "vanilla": {
-    "broker": {
-      "dockerImage": "enmasseproject/artemis:latest",
-      "storage": {
-        "volumeType": "emptyDir",
-        "mountPath": "/var/run/artemis"
-      },
-      "ports": {
-        "amqp": 5673,
-        "artemis": 61616,
-        "jgroups": 7800,
-        "broadcast": 7801,
-        "discovery": 7802
-      },
-      "shutdownHook": "/artemis-shutdown-hook/bin/artemis-shutdown-hook"
-    },
-    "router": {
-      "dockerImage": "gordons/qdrouter:v10",
-      "ports": {
-        "amqp": 5672
-      }
-    },
-    "shared": true
-  },
-  "chili": {
-    "broker": {
-      "dockerImage": "enmasseproject/artemis:latest",
-      "storage": {
-        "volumeType": "persistentVolumeClaim",
-        "size": "10Gi",
-        "mountPath": "/var/run/artemis"
-      }
-    },
-    "router": {
-      "dockerImage": "gordons/qdrouter:v10",
-      "certPath": "/etc/qpid-dispatch/ssl",
-      "certSecretName": "qdrouterd-certs"
-    },
-    "shared": false
-  },
-  "caramel": {
-    "broker": {
-      "dockerImage": "enmasseproject/activemq:latest",
-      "storage": {
-        "volumeType": "persistentVolumeClaim",
-        "size": "10Gi",
-        "mountPath": "/var/lib/activemq"
-      }
-    },
-    "router": {
-      "dockerImage": "gordons/qdrouter:v10"
-    },
-    "shared": true
+  "test-queue": {
+    "template": "queue-inmemory",
+    "parameters": {
+      "BROKER_IMAGE": "lulf/artemis:latest"
+    }
   }
 }
