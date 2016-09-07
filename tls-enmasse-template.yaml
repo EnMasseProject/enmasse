@@ -75,6 +75,9 @@ objects:
   - description: The image to use for the router
     name: ROUTER_IMAGE
     value: gordons/qdrouterd:latest
+  - description: The image to use for the topic forwarder
+    name: TOPIC_FORWARDER_IMAGE
+    value: enmasseproject/topic-forwarder:latest
   - description: The link capacity setting for router
     name: ROUTER_LINK_CAPACITY
     value: '50'
@@ -152,6 +155,9 @@ objects:
   - description: The image to use for the router
     name: ROUTER_IMAGE
     value: gordons/qdrouterd:latest
+  - description: The image to use for the topic forwarder
+    name: TOPIC_FORWARDER_IMAGE
+    value: enmasseproject/topic-forwarder:latest
   - description: The link capacity setting for router
     name: ROUTER_LINK_CAPACITY
     value: '50'
@@ -229,6 +235,9 @@ objects:
   - description: The image to use for the router
     name: ROUTER_IMAGE
     value: gordons/qdrouterd:latest
+  - description: The image to use for the topic forwarder
+    name: TOPIC_FORWARDER_IMAGE
+    value: enmasseproject/topic-forwarder:latest
   - description: The link capacity setting for router
     name: ROUTER_LINK_CAPACITY
     value: '50'
@@ -306,6 +315,9 @@ objects:
   - description: The image to use for the router
     name: ROUTER_IMAGE
     value: gordons/qdrouterd:latest
+  - description: The image to use for the topic forwarder
+    name: TOPIC_FORWARDER_IMAGE
+    value: enmasseproject/topic-forwarder:latest
   - description: The link capacity setting for router
     name: ROUTER_LINK_CAPACITY
     value: '50'

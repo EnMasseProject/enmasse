@@ -60,6 +60,11 @@ local forwarder = import "forwarder.jsonnet";
           "value": "gordons/qdrouterd:latest"
         },
         {
+          "name": "TOPIC_FORWARDER_IMAGE",
+          "description": "The image to use for the topic forwarder",
+          "value": "enmasseproject/topic-forwarder:latest"
+        },
+        {
           "name": "ROUTER_LINK_CAPACITY",
           "description": "The link capacity setting for router",
           "value": "50"
