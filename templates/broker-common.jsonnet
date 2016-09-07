@@ -1,3 +1,4 @@
+local router = import "router-common.jsonnet";
 {
   generate_template(multicast, persistence, secure)::
     local addrtype = (if multicast == "true" then "topic" else "queue");
@@ -71,17 +72,7 @@
                       }
                     }
                   },
-                  {
-                    "name": "router",
-                    "image": "${ROUTER_IMAGE}",
-                    "env": containerEnv,
-                    "ports": [
-                      {
-                        "name": "amqp",
-                        "containerPort": 5672
-                      }
-                    ]
-                  }
+                  router.generate("${ROUTER_IMAGE}", secure)
                 ],
                 "containers": (if multicast == "true"
                   then containers_common + [{

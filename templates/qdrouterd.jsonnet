@@ -1,3 +1,4 @@
+local router = import "router-common.jsonnet";
 { 
   local port = {
     "name": "amqp",
@@ -47,42 +48,7 @@
               "name": "qdrouterd"
             }
           },
-          "spec": {
-            local routerPort = {
-                "name": "amqp",
-                "containerPort": 5672,
-                "protocol": "TCP"
-            },
-            local secureRouterPort = {
-                "name": "amqps",
-                "containerPort": 5671,
-                "protocol": "TCP"
-            },
-            "containers": [
-              {
-                "image": "${QDROUTER_IMAGE}",
-                "name": "router",
-                "ports": if secure == "true"
-                  then [routerPort, secureRouterPort] 
-                  else [routerPort],
-                [if secure == "true" then "volumeMounts"]: [
-                  {
-                    "name": "ssl-certs",
-                    "mountPath": "/etc/qpid-dispatch/ssl",
-                    "readOnly": true
-                  }
-                ]
-              }
-            ],
-            [if secure == "true" then "volumes"]: [
-              {
-                "name": "ssl-certs",
-                "secret": {
-                  "secretName": "qdrouterd-certs"
-                }
-              }
-            ]
-          }
+          "spec": router.generate("${QDROUTER_IMAGE}", secure)
         }
       }
     }
