@@ -1,4 +1,16 @@
 { 
+  local port = {
+    "name": "amqp",
+    "port": 5672,
+    "protocol": "TCP",
+    "targetPort": 5672
+  },
+  local securePort = {
+    "name": "amqps",
+    "port": 5671,
+    "protocol": "TCP",
+    "targetPort": 5671
+  },
   generate(secure)::
   [
     {
@@ -8,13 +20,7 @@
         "name": "messaging"
       },
       "spec": {
-        "ports": [
-          {
-            "port": 5672,
-            "protocol": "TCP",
-            "targetPort": 5672
-          }
-        ],
+        "ports": if secure == "true" then [port, securePort] else [port],
         "selector": {
           "capability": "router"
         }
@@ -42,16 +48,38 @@
             }
           },
           "spec": {
+            local routerPort = {
+                "name": "amqp",
+                "containerPort": 5672,
+                "protocol": "TCP"
+            },
+            local secureRouterPort = {
+                "name": "amqps",
+                "containerPort": 5671,
+                "protocol": "TCP"
+            },
             "containers": [
               {
                 "image": "${QDROUTER_IMAGE}",
-                "name": "master",
-                "ports": [
+                "name": "router",
+                "ports": if secure == "true"
+                  then [routerPort, secureRouterPort] 
+                  else [routerPort],
+                [if secure == "true" then "volumeMounts"]: [
                   {
-                    "containerPort": 5672,
-                    "protocol": "TCP"
+                    "name": "ssl-certs",
+                    "mountPath": "/etc/qpid-dispatch/ssl",
+                    "readOnly": true
                   }
                 ]
+              }
+            ],
+            [if secure == "true" then "volumes"]: [
+              {
+                "name": "ssl-certs",
+                "secret": {
+                  "secretName": "qdrouterd-certs"
+                }
               }
             ]
           }
