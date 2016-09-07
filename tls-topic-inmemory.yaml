@@ -4,7 +4,7 @@ kind: Template
 metadata:
   labels:
     addressType: topic
-  name: topic-inmemory
+  name: secure-topic-inmemory
 objects:
 - apiVersion: v1
   kind: ReplicationController
@@ -35,7 +35,7 @@ objects:
             name: core
           volumeMounts:
           - mountPath: "/var/run/artemis"
-            name: vol-topic-inmemory
+            name: vol-secure-topic-inmemory
         - env:
           - name: LINK_CAPACITY
             value: "${ROUTER_LINK_CAPACITY}"
@@ -59,7 +59,7 @@ objects:
           name: forwarder
         volumes:
         - emptyDir: {}
-          name: vol-topic-inmemory
+          name: vol-secure-topic-inmemory
         - name: ssl-certs
           secret:
             secretName: qdrouterd-certs

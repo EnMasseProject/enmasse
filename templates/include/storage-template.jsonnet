@@ -4,7 +4,7 @@ local forwarder = import "forwarder.jsonnet";
 {
   template(multicast, persistence, secure)::
     local addrtype = (if multicast then "topic" else "queue");
-    local templateName = "%s-%s" % [addrtype, (if persistence then "persisted" else "inmemory")];
+    local templateName = "%s%s-%s" % [if secure then "secure-" else "", addrtype, (if persistence then "persisted" else "inmemory")];
     { 
       "apiVersion": "v1",
       "kind": "Template",

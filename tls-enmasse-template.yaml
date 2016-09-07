@@ -9,7 +9,7 @@ objects:
   metadata:
     labels:
       addressType: queue
-    name: queue-inmemory
+    name: secure-queue-inmemory
   objects:
   - apiVersion: v1
     kind: ReplicationController
@@ -45,7 +45,7 @@ objects:
               name: core
             volumeMounts:
             - mountPath: "/var/run/artemis"
-              name: vol-queue-inmemory
+              name: vol-secure-queue-inmemory
           - env:
             - name: LINK_CAPACITY
               value: "${ROUTER_LINK_CAPACITY}"
@@ -64,7 +64,7 @@ objects:
               readOnly: true
           volumes:
           - emptyDir: {}
-            name: vol-queue-inmemory
+            name: vol-secure-queue-inmemory
           - name: ssl-certs
             secret:
               secretName: qdrouterd-certs
@@ -89,7 +89,7 @@ objects:
   metadata:
     labels:
       addressType: queue
-    name: queue-persisted
+    name: secure-queue-persisted
   objects:
   - apiVersion: v1
     kind: ReplicationController
@@ -125,7 +125,7 @@ objects:
               name: core
             volumeMounts:
             - mountPath: "/var/run/artemis"
-              name: vol-queue-persisted
+              name: vol-secure-queue-persisted
           - env:
             - name: LINK_CAPACITY
               value: "${ROUTER_LINK_CAPACITY}"
@@ -144,7 +144,7 @@ objects:
               readOnly: true
           volumes:
           - emptyDir: {}
-            name: vol-queue-persisted
+            name: vol-secure-queue-persisted
           - name: ssl-certs
             secret:
               secretName: qdrouterd-certs
@@ -169,7 +169,7 @@ objects:
   metadata:
     labels:
       addressType: topic
-    name: topic-inmemory
+    name: secure-topic-inmemory
   objects:
   - apiVersion: v1
     kind: ReplicationController
@@ -200,7 +200,7 @@ objects:
               name: core
             volumeMounts:
             - mountPath: "/var/run/artemis"
-              name: vol-topic-inmemory
+              name: vol-secure-topic-inmemory
           - env:
             - name: LINK_CAPACITY
               value: "${ROUTER_LINK_CAPACITY}"
@@ -224,7 +224,7 @@ objects:
             name: forwarder
           volumes:
           - emptyDir: {}
-            name: vol-topic-inmemory
+            name: vol-secure-topic-inmemory
           - name: ssl-certs
             secret:
               secretName: qdrouterd-certs
@@ -249,7 +249,7 @@ objects:
   metadata:
     labels:
       addressType: topic
-    name: topic-persisted
+    name: secure-topic-persisted
   objects:
   - apiVersion: v1
     kind: ReplicationController
@@ -280,7 +280,7 @@ objects:
               name: core
             volumeMounts:
             - mountPath: "/var/run/artemis"
-              name: vol-topic-persisted
+              name: vol-secure-topic-persisted
           - env:
             - name: LINK_CAPACITY
               value: "${ROUTER_LINK_CAPACITY}"
@@ -304,7 +304,7 @@ objects:
             name: forwarder
           volumes:
           - emptyDir: {}
-            name: vol-topic-persisted
+            name: vol-secure-topic-persisted
           - name: ssl-certs
             secret:
               secretName: qdrouterd-certs
