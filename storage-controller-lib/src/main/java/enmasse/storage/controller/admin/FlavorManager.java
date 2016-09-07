@@ -22,12 +22,12 @@ public class FlavorManager implements FlavorRepository {
         long endTime = System.currentTimeMillis() + timeoutInMillis;
         Flavor flavor = null;
         try {
-            while (System.currentTimeMillis() < endTime && flavor == null) {
+            do {
                 flavor = flavorMap.get(flavorName);
                 if (flavor == null) {
                     Thread.sleep(1000);
                 }
-            }
+            } while (System.currentTimeMillis() < endTime && flavor == null);
         } catch (InterruptedException e) {
             log.warn("Interrupted while retrieving flavor");
         }
