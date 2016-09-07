@@ -1,0 +1,78 @@
+---
+apiVersion: v1
+kind: Template
+metadata:
+  labels:
+    addressType: topic
+  name: topic-inmemory
+objects:
+- apiVersion: v1
+  kind: ReplicationController
+  metadata:
+    name: controller-${ADDRESS}
+  spec:
+    replicas: 1
+    selector:
+      address: "${ADDRESS}"
+      role: broker
+    template:
+      metadata:
+        labels:
+          address: "${ADDRESS}"
+          capability: router
+          role: broker
+      spec:
+        containers:
+        - env:
+          - name: TOPIC_NAME
+            value: "${ADDRESS}"
+          image: "${BROKER_IMAGE}"
+          name: broker
+          ports:
+          - containerPort: 5673
+            name: amqp
+          - containerPort: 61616
+            name: core
+          volumeMounts:
+          - mountPath: "/var/run/artemis"
+            name: vol-topic-inmemory
+        - env:
+          - name: LINK_CAPACITY
+            value: "${ROUTER_LINK_CAPACITY}"
+          image: "${ROUTER_IMAGE}"
+          name: router
+          ports:
+          - containerPort: 5672
+            name: amqp
+            protocol: TCP
+          - containerPort: 5671
+            name: amqps
+            protocol: TCP
+          volumeMounts:
+          - mountPath: "/etc/qpid-dispatch/ssl"
+            name: ssl-certs
+            readOnly: true
+        - env:
+          - name: TOPIC_NAME
+            value: "${ADDRESS}"
+          image: "${TOPIC_FORWARDER_IMAGE}"
+          name: forwarder
+        volumes:
+        - emptyDir: {}
+          name: vol-topic-inmemory
+        - name: ssl-certs
+          secret:
+            secretName: qdrouterd-certs
+parameters:
+- description: The image to use for the broker
+  name: BROKER_IMAGE
+  value: enmasseproject/artemis:latest
+- description: The image to use for the router
+  name: ROUTER_IMAGE
+  value: gordons/qdrouterd:latest
+- description: The link capacity setting for router
+  name: ROUTER_LINK_CAPACITY
+  value: '50'
+- description: The address to use for the topic
+  name: ADDRESS
+  required: true
