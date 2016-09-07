@@ -1,4 +1,5 @@
-[
+{
+  generate(image_name)::
   {
     "apiVersion": "v1",
     "kind": "ReplicationController",
@@ -22,7 +23,7 @@
         "spec": {
           "containers": [
             {
-              "image": "${RAGENT_IMAGE}",
+              "image": image_name,
               "name": "master",
               "ports": [
                 {
@@ -35,24 +36,5 @@
         }
       }
     }
-  },
-  {
-    "apiVersion": "v1",
-    "kind": "Service",
-    "metadata": {
-      "name": "ragent"
-    },
-    "spec": {
-      "ports": [
-        {
-          "port": 55672,
-          "protocol": "TCP",
-          "targetPort": 55672
-        }
-      ],
-      "selector": {
-        "name": "ragent"
-      }
-    }
   }
-]
+}

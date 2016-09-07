@@ -1,23 +1,5 @@
-[
-  {
-    "apiVersion": "v1",
-    "kind": "Service",
-    "metadata": {
-      "name": "configuration"
-    },
-    "spec": {
-      "ports": [
-        {
-          "port": 5672,
-          "protocol": "TCP",
-          "targetPort": 5672
-        }
-      ],
-      "selector": {
-        "name": "configmap-bridge"
-      }
-    }
-  },
+{
+  generate(image_name)::
   {
     "apiVersion": "v1",
     "kind": "ReplicationController",
@@ -41,7 +23,7 @@
         "spec": {
           "containers": [
             {
-              "image": "${CONFIGMAP_BRIDGE_IMAGE}",
+              "image": image_name,
               "name": "bridge",
               "ports": [
                 {
@@ -55,4 +37,4 @@
       }
     }
   }
-]
+}

@@ -13,20 +13,6 @@ local router = import "router.jsonnet";
     "targetPort": 5671
   },
   generate(secure)::
-  [
-    {
-      "apiVersion": "v1",
-      "kind": "Service",
-      "metadata": {
-        "name": "messaging"
-      },
-      "spec": {
-        "ports": if secure == "true" then [port, securePort] else [port],
-        "selector": {
-          "capability": "router"
-        }
-      }
-    },
     {
       "apiVersion": "v1",
       "kind": "ReplicationController",
@@ -57,5 +43,4 @@ local router = import "router.jsonnet";
         }
       }
     }
-  ]
 }

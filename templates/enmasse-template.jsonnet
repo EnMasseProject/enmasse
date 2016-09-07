@@ -1,10 +1,11 @@
 local secure = std.extVar("secure");
 local templateName = (if secure == "true" then "enmasse-secure" else "enmasse");
-local storage = import "storage.jsonnet";
-local configmapBridge = import "configmap_bridge.json";
-local ragent = import "ragent.json";
-local qdrouterd = import "qdrouterd.jsonnet";
-local storageController = import "storage_controller.json";
+local storage = import "include/storage.jsonnet";
+local configmapBridge = import "include/configmap-bridge.jsonnet";
+local ragent = import "include/ragent.jsonnet";
+local qdrouterd = import "include/qdrouterd.jsonnet";
+local storageController = import "include/storage-controller.jsonnet";
+local messagingService = import "include/messaging-service.jsonnet";
 local addressConfig = import "addresses.json";
 local flavorConfig = import "flavor.json";
 {
@@ -16,13 +17,16 @@ local flavorConfig = import "flavor.json";
   "objects": [ storage.template("false", "false", secure),
                storage.template("false", "true", secure),
                storage.template("true", "false", secure),
-               storage.template("true", "true", secure) ] +
-               configmapBridge +
-               ragent +
-               qdrouterd.generate(secure) +
-               storageController +
-               addressConfig +
+               storage.template("true", "true", secure),
+               configmapBridge.generate("${CONFIGMAP_BRIDGE_IMAGE}"),
+               ragent.generate("${RAGENT_IMAGE}"),
+               qdrouterd.generate(secure),
+               storageController.generate("${STORAGE_CONTROLLER_IMAGE}"),
+               messagingService.generate(secure),
+               addressConfig,
                flavorConfig,
+               import "ragent-service.json",
+               import "configuration-service.json" ],
   "parameters": [
     {
       "name": "QDROUTER_IMAGE",
