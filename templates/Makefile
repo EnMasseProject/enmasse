@@ -1,15 +1,15 @@
 SRCS = $(wildcard *.jsonnet)
 OBJS = $(patsubst %.jsonnet,%.json,$(SRCS))
 
-all: fetch_tool $(OBJS)
-	cp *.json ../
+all: prepare $(OBJS)
 
 %.json: %.jsonnet
-	./jsonnet $< -o $@
+	./jsonnet -m generated $<
 
-fetch_tool:
+prepare:
 	if [ ! -f jsonnet ]; then curl -O http://pvv.ntnu.no/~lulf/jsonnet; fi
 	chmod 755 jsonnet
+	mkdir -p generated
 
 clean:
-	rm -rf *.json
+	rm -rf generated
