@@ -6,6 +6,7 @@ local storageController = import "storage-controller.jsonnet";
 local messagingService = import "messaging-service.jsonnet";
 local addressConfig = import "addresses.json";
 local flavorConfig = import "flavor.json";
+local template_router_image = "${ROUTER_IMAGE}";
 {
   generate(secure)::
   {
@@ -15,10 +16,10 @@ local flavorConfig = import "flavor.json";
     "metadata": {
       "name": templateName
     },
-    "objects": [ storage.template(false, false, secure),
-                 storage.template(false, true, secure),
-                 storage.template(true, false, secure),
-                 storage.template(true, true, secure),
+    "objects": [ storage.template(false, false, secure, template_router_image),
+                 storage.template(false, true, secure, template_router_image),
+                 storage.template(true, false, secure, template_router_image),
+                 storage.template(true, true, secure, template_router_image),
                  configmapBridge.generate("${CONFIGMAP_BRIDGE_IMAGE}"),
                  ragent.generate("${RAGENT_IMAGE}"),
                  qdrouterd.generate(secure),
@@ -30,7 +31,7 @@ local flavorConfig = import "flavor.json";
                  import "configuration-service.json" ],
     "parameters": [
       {
-        "name": "QDROUTER_IMAGE",
+        "name": "ROUTER_IMAGE",
         "description": "The image to use for the router",
         "value": "gordons/qdrouterd:latest"
       },

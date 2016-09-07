@@ -19,7 +19,7 @@ spec:
       - env:
         - name: LINK_CAPACITY
           value: "${ROUTER_LINK_CAPACITY}"
-        image: "${QDROUTER_IMAGE}"
+        image: "${ROUTER_IMAGE}"
         name: router
         ports:
         - containerPort: 5672

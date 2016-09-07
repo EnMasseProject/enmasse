@@ -49,7 +49,7 @@ objects:
           - env:
             - name: LINK_CAPACITY
               value: "${ROUTER_LINK_CAPACITY}"
-            image: "${ROUTER_IMAGE}"
+            image: "${COLOCATED_ROUTER_IMAGE}"
             name: router
             ports:
             - containerPort: 5672
@@ -63,8 +63,8 @@ objects:
     name: BROKER_IMAGE
     value: enmasseproject/artemis:latest
   - description: The image to use for the router
-    name: ROUTER_IMAGE
-    value: gordons/qdrouterd:latest
+    name: COLOCATED_ROUTER_IMAGE
+    value: "${ROUTER_IMAGE}"
   - description: The image to use for the topic forwarder
     name: TOPIC_FORWARDER_IMAGE
     value: enmasseproject/topic-forwarder:latest
@@ -119,7 +119,7 @@ objects:
           - env:
             - name: LINK_CAPACITY
               value: "${ROUTER_LINK_CAPACITY}"
-            image: "${ROUTER_IMAGE}"
+            image: "${COLOCATED_ROUTER_IMAGE}"
             name: router
             ports:
             - containerPort: 5672
@@ -133,8 +133,8 @@ objects:
     name: BROKER_IMAGE
     value: enmasseproject/artemis:latest
   - description: The image to use for the router
-    name: ROUTER_IMAGE
-    value: gordons/qdrouterd:latest
+    name: COLOCATED_ROUTER_IMAGE
+    value: "${ROUTER_IMAGE}"
   - description: The image to use for the topic forwarder
     name: TOPIC_FORWARDER_IMAGE
     value: enmasseproject/topic-forwarder:latest
@@ -184,7 +184,7 @@ objects:
           - env:
             - name: LINK_CAPACITY
               value: "${ROUTER_LINK_CAPACITY}"
-            image: "${ROUTER_IMAGE}"
+            image: "${COLOCATED_ROUTER_IMAGE}"
             name: router
             ports:
             - containerPort: 5672
@@ -203,8 +203,8 @@ objects:
     name: BROKER_IMAGE
     value: enmasseproject/artemis:latest
   - description: The image to use for the router
-    name: ROUTER_IMAGE
-    value: gordons/qdrouterd:latest
+    name: COLOCATED_ROUTER_IMAGE
+    value: "${ROUTER_IMAGE}"
   - description: The image to use for the topic forwarder
     name: TOPIC_FORWARDER_IMAGE
     value: enmasseproject/topic-forwarder:latest
@@ -254,7 +254,7 @@ objects:
           - env:
             - name: LINK_CAPACITY
               value: "${ROUTER_LINK_CAPACITY}"
-            image: "${ROUTER_IMAGE}"
+            image: "${COLOCATED_ROUTER_IMAGE}"
             name: router
             ports:
             - containerPort: 5672
@@ -273,8 +273,8 @@ objects:
     name: BROKER_IMAGE
     value: enmasseproject/artemis:latest
   - description: The image to use for the router
-    name: ROUTER_IMAGE
-    value: gordons/qdrouterd:latest
+    name: COLOCATED_ROUTER_IMAGE
+    value: "${ROUTER_IMAGE}"
   - description: The image to use for the topic forwarder
     name: TOPIC_FORWARDER_IMAGE
     value: enmasseproject/topic-forwarder:latest
@@ -346,7 +346,7 @@ objects:
         - env:
           - name: LINK_CAPACITY
             value: "${ROUTER_LINK_CAPACITY}"
-          image: "${QDROUTER_IMAGE}"
+          image: "${ROUTER_IMAGE}"
           name: router
           ports:
           - containerPort: 5672
@@ -429,7 +429,7 @@ objects:
       name: configmap-bridge
 parameters:
 - description: The image to use for the router
-  name: QDROUTER_IMAGE
+  name: ROUTER_IMAGE
   value: gordons/qdrouterd:latest
 - description: The link capacity setting for router
   name: ROUTER_LINK_CAPACITY

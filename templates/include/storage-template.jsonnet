@@ -2,7 +2,7 @@ local router = import "router.jsonnet";
 local broker = import "broker.jsonnet";
 local forwarder = import "forwarder.jsonnet";
 {
-  template(multicast, persistence, secure)::
+  template(multicast, persistence, secure, router_image)::
     local addrtype = (if multicast then "topic" else "queue");
     local templateName = "%s%s-%s" % [if secure then "secure-" else "", addrtype, (if persistence then "persisted" else "inmemory")];
     { 
@@ -41,8 +41,8 @@ local forwarder = import "forwarder.jsonnet";
                   else [broker.volume(templateName)],
 
                 "containers": if multicast
-                  then [ broker.container(multicast, templateName), router.container("${ROUTER_IMAGE}", secure), forwarder.container() ]
-                  else [ broker.container(multicast, templateName), router.container("${ROUTER_IMAGE}", secure) ]
+                  then [ broker.container(multicast, templateName), router.container("${COLOCATED_ROUTER_IMAGE}", secure), forwarder.container() ]
+                  else [ broker.container(multicast, templateName), router.container("${COLOCATED_ROUTER_IMAGE}", secure) ]
               }
             }
           }
@@ -55,9 +55,9 @@ local forwarder = import "forwarder.jsonnet";
           "value": "enmasseproject/artemis:latest"
         },
         {
-          "name": "ROUTER_IMAGE",
+          "name": "COLOCATED_ROUTER_IMAGE",
           "description": "The image to use for the router",
-          "value": "gordons/qdrouterd:latest"
+          "value": router_image
         },
         {
           "name": "TOPIC_FORWARDER_IMAGE",
