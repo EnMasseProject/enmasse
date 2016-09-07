@@ -18,8 +18,19 @@ public class FlavorManager implements FlavorRepository {
     private volatile Map<String, Flavor> flavorMap = Collections.emptyMap();
 
     @Override
-    public Flavor getFlavor(String flavorName) {
-        Flavor flavor = flavorMap.get(flavorName);
+    public Flavor getFlavor(String flavorName, long timeoutInMillis) {
+        long endTime = System.currentTimeMillis() + timeoutInMillis;
+        Flavor flavor = null;
+        try {
+            while (System.currentTimeMillis() < endTime && flavor == null) {
+                flavor = flavorMap.get(flavorName);
+                if (flavor == null) {
+                    Thread.sleep(1000);
+                }
+            }
+        } catch (InterruptedException e) {
+            log.warning("Interrupted while retrieving flavor");
+        }
         if (flavor == null) {
             String flavors = flavorMap.keySet().stream().collect(Collectors.joining(","));
             throw new IllegalArgumentException(String.format("No flavor with name '%s' exists, have [%s]", flavorName, flavors));
