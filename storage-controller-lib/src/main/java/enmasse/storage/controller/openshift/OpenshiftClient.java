@@ -11,21 +11,21 @@ import com.openshift.restclient.model.template.ITemplate;
 import enmasse.storage.controller.model.AddressType;
 import enmasse.storage.controller.model.Destination;
 import enmasse.storage.controller.model.LabelKeys;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 /**
  * @author lulf
  */
 public class OpenshiftClient {
-    private static final Logger log = Logger.getLogger(OpenshiftClient.class.getName());
+    private static final Logger log = LoggerFactory.getLogger(OpenshiftClient.class.getName());
     private final IClient client;
     private final String namespace;
     private final ITemplateProcessing templateProcessor;
@@ -37,17 +37,17 @@ public class OpenshiftClient {
     }
 
     public void createResource(IResource resource) {
-        log.log(Level.INFO, "Adding " + resource.getName());
+        log.info("Adding " + resource.getName());
         client.create(resource, namespace);
     }
 
     public void deleteResource(IResource resource) {
-        log.log(Level.INFO, "Deleting " + resource.getName());
+        log.info("Deleting " + resource.getName());
         client.delete(resource);
     }
 
     public void updateResource(IResource resource) {
-        log.log(Level.INFO, "Updating " + resource.getName());
+        log.info("Updating " + resource.getName());
         client.update(resource);
     }
 

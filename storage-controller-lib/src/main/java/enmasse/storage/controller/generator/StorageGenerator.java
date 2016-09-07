@@ -13,6 +13,7 @@ import enmasse.storage.controller.openshift.StorageCluster;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -48,7 +49,8 @@ public class StorageGenerator {
      * @param destination The destination to generate storage definitions for
      */
     public StorageCluster generateStorage(Destination destination) {
-        Flavor flavor = flavorRepository.getFlavor(destination.flavor());
+
+        Flavor flavor = flavorRepository.getFlavor(destination.flavor(), TimeUnit.SECONDS.toMillis(60));
 
         ITemplate template = osClient.getResource(flavor.templateName());
         if (!template.getLabels().containsKey(LabelKeys.ADDRESS_TYPE)) {

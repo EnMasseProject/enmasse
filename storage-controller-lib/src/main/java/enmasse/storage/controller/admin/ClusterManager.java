@@ -6,12 +6,12 @@ import enmasse.storage.controller.model.Destination;
 import enmasse.storage.controller.parser.AddressConfigParser;
 import enmasse.storage.controller.openshift.OpenshiftClient;
 import enmasse.storage.controller.openshift.StorageCluster;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 /**
@@ -20,9 +20,8 @@ import java.util.stream.Collectors;
  * @author lulf
  */
 public class ClusterManager {
-    private static final Logger log = Logger.getLogger(ClusterManager.class.getName());
+    private static final Logger log = LoggerFactory.getLogger(ClusterManager.class.getName());
 
-    private final AddressConfigParser parser = new AddressConfigParser();
     private final OpenshiftClient openshiftClient;
     private final StorageGenerator generator;
 
@@ -36,7 +35,7 @@ public class ClusterManager {
         Collection<Destination> destinations = newDestinations.stream()
                 .filter(Destination::storeAndForward)
                 .collect(Collectors.toList());
-        log.log(Level.INFO, "Brokers got updated to " + destinations.size() + " destinations, we have " + clusterList.size() + " destinations: " + clusterList.stream().map(StorageCluster::getDestination).toString());
+        log.info("Brokers got updated to " + destinations.size() + " destinations, we have " + clusterList.size() + " destinations: " + clusterList.stream().map(StorageCluster::getDestination).toString());
         createBrokers(clusterList, destinations);
         deleteBrokers(clusterList, destinations);
     }

@@ -1,6 +1,7 @@
 description = 'Storage Controller Library'
 dependencies {
     compile "com.openshift:openshift-restclient-java:${openshiftRestclientVersion}"
+    compile "org.slf4j:slf4j-api:${slf4jVersion}"
     compile "com.fasterxml.jackson.core:jackson-core:${jacksonVersion}"
     compile "com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}"
     testCompile "junit:junit:${junitVersion}"

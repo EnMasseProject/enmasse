@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Map;
-import java.util.function.Consumer;
 
 /**
  * @author lulf
@@ -50,12 +49,6 @@ public final class StorageControllerOptions {
             throw new IllegalArgumentException(String.format("Unable to find value for required environment var '%s'", envVar));
         }
         return var;
-    }
-
-    private static void ifEnvExists(Map<String, String> env, String envName, Consumer<String> fn) {
-        if (env.containsKey(envName)) {
-            fn.accept(env.get(envName));
-        }
     }
 
     private static final String SERVICEACCOUNT_PATH = "/var/run/secrets/kubernetes.io/serviceaccount";

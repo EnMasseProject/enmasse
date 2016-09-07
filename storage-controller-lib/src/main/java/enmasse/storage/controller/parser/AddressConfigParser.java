@@ -16,9 +16,6 @@ import java.util.Map;
  * @author lulf
  */
 public class AddressConfigParser {
-
-    private static final ObjectMapper mapper = new ObjectMapper();
-
     public static AddressConfig parse(JsonNode root) throws IOException {
         List<Destination> destinationList = new ArrayList<>();
         Iterator<Map.Entry<String, JsonNode>> it = root.fields();

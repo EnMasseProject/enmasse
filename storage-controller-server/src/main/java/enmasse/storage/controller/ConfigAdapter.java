@@ -7,17 +7,17 @@ import io.vertx.proton.ProtonDelivery;
 import io.vertx.proton.ProtonMessageHandler;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.message.Message;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * @author Ulf Lilleengen
  */
 public class ConfigAdapter implements ProtonMessageHandler {
     private static final ObjectMapper mapper = new ObjectMapper();
-    private static final Logger log = Logger.getLogger(ConfigAdapter.class.getName());
+    private static final Logger log = LoggerFactory.getLogger(ConfigAdapter.class.getName());
 
     private final ConfigSubscriber configSubscriber;
 
@@ -33,7 +33,7 @@ public class ConfigAdapter implements ProtonMessageHandler {
                 configSubscriber.configUpdated(root.get("json"));
             }
         } catch (IOException e) {
-            log.log(Level.INFO, "Error handling address config update", e);
+            log.warn("Error handling address config update", e);
         }
 
     }
