@@ -1,9 +1,10 @@
+---
 apiVersion: v1
 kind: ReplicationController
 metadata:
-  name: ragent
   labels:
     name: ragent
+  name: ragent
 spec:
   replicas: 1
   selector:
@@ -14,7 +15,8 @@ spec:
         name: ragent
     spec:
       containers:
-      - name: master
-        image: enmasseproject/ragent:latest
+      - image: enmasseproject/ragent:latest
+        name: master
         ports:
         - containerPort: 55672
+          protocol: TCP

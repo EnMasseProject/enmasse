@@ -1,9 +1,10 @@
+---
 apiVersion: v1
-kind: DeploymentConfig
+kind: ReplicationController
 metadata:
-  name: storage-controller
   labels:
     name: storage-controller
+  name: storage-controller
 spec:
   replicas: 1
   selector:
@@ -13,7 +14,7 @@ spec:
       labels:
         name: storage-controller
     spec:
-      serviceAccount: deployer
       containers:
-      - name: master
-        image: enmasseproject/storage-controller:latest
+      - image: enmasseproject/storage-controller:latest
+        name: controller
+      serviceAccount: deployer

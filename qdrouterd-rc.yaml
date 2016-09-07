@@ -1,9 +1,10 @@
+---
 apiVersion: v1
 kind: ReplicationController
 metadata:
-  name: qdrouterd
   labels:
     name: qdrouterd
+  name: qdrouterd
 spec:
   replicas: 1
   selector:
@@ -11,14 +12,16 @@ spec:
   template:
     metadata:
       labels:
-        name: qdrouterd
         capability: router
+        name: qdrouterd
     spec:
       containers:
-      - name: master
-        image: gordons/qdrouterd:latest
-        env:
+      - env:
         - name: LINK_CAPACITY
-          value: '50'
+          value: "${ROUTER_LINK_CAPACITY}"
+        image: "${QDROUTER_IMAGE}"
+        name: router
         ports:
         - containerPort: 5672
+          name: amqp
+          protocol: TCP
