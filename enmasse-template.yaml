@@ -49,6 +49,8 @@ objects:
           - env:
             - name: LINK_CAPACITY
               value: "${ROUTER_LINK_CAPACITY}"
+            - name: QUEUE_NAME
+              value: "${ADDRESS}"
             image: "${COLOCATED_ROUTER_IMAGE}"
             name: router
             ports:
@@ -119,6 +121,8 @@ objects:
           - env:
             - name: LINK_CAPACITY
               value: "${ROUTER_LINK_CAPACITY}"
+            - name: QUEUE_NAME
+              value: "${ADDRESS}"
             image: "${COLOCATED_ROUTER_IMAGE}"
             name: router
             ports:
@@ -184,6 +188,8 @@ objects:
           - env:
             - name: LINK_CAPACITY
               value: "${ROUTER_LINK_CAPACITY}"
+            - name: TOPIC_NAME
+              value: "${ADDRESS}"
             image: "${COLOCATED_ROUTER_IMAGE}"
             name: router
             ports:
@@ -254,6 +260,8 @@ objects:
           - env:
             - name: LINK_CAPACITY
               value: "${ROUTER_LINK_CAPACITY}"
+            - name: TOPIC_NAME
+              value: "${ADDRESS}"
             image: "${COLOCATED_ROUTER_IMAGE}"
             name: router
             ports:

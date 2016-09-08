@@ -1,5 +1,5 @@
 {
-  container(image_name, secure)::
+  container(image_name, secure, addressEnv)::
     local routerPort = {
         "name": "amqp",
         "containerPort": 5672,
@@ -13,12 +13,13 @@
     {
       "image": image_name,
       "name": "router",
-      "env": [
-        {
+      local linkEnv = {
           "name": "LINK_CAPACITY",
           "value": "${ROUTER_LINK_CAPACITY}"
-        }
-      ],
+        },
+      "env": if addressEnv == ""
+        then [linkEnv]
+        else [linkEnv, addressEnv],
       "ports": if secure
         then [routerPort, secureRouterPort] 
         else [routerPort],

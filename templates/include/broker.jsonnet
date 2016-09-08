@@ -1,6 +1,5 @@
 {
-  container(multicast, volumeName)::
-    local containerEnv = (if multicast then [ { name: "TOPIC_NAME", value: "${ADDRESS}" } ] else [ { name: "QUEUE_NAME", value: "${ADDRESS}" }]);
+  container(multicast, volumeName, addressEnv)::
     {
       "name": "broker",
       "image": "${BROKER_IMAGE}",
@@ -14,7 +13,7 @@
           "containerPort": 61616
         }
       ],
-      "env": containerEnv,
+      "env": [ addressEnv ],
       "volumeMounts": [
         {
           "name": "vol-%s" % [volumeName],

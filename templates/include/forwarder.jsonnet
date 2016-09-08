@@ -1,8 +1,8 @@
 {
-  container()::
+  container(addressEnv)::
     {
       "name": "forwarder",
-      "env": [ { "name": "TOPIC_NAME", "value": "${ADDRESS}" } ],
+      "env": [ addressEnv ],
       "image": "${TOPIC_FORWARDER_IMAGE}"
     }
 }
