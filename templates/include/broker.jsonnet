@@ -1,5 +1,5 @@
 {
-  container(multicast, volumeName, addressEnv)::
+  container(volumeName, addressEnv)::
     {
       "name": "broker",
       "image": "${BROKER_IMAGE}",
@@ -20,7 +20,7 @@
           "mountPath": "/var/run/artemis"
         }
       ],
-      [if multicast == false then "lifecycle"]: {
+      "lifecycle": {
         "preStop": {
           "exec": {
             "command": [

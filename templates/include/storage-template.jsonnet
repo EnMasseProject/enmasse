@@ -42,8 +42,8 @@ local forwarder = import "forwarder.jsonnet";
                   else [broker.volume(templateName)],
 
                 "containers": if multicast
-                  then [ broker.container(multicast, templateName, addressEnv), router.container("${COLOCATED_ROUTER_IMAGE}", secure, addressEnv), forwarder.container(addressEnv) ]
-                  else [ broker.container(multicast, templateName, addressEnv), router.container("${COLOCATED_ROUTER_IMAGE}", secure, addressEnv) ]
+                  then [ broker.container(templateName, addressEnv), router.container("${COLOCATED_ROUTER_IMAGE}", secure, addressEnv), forwarder.container(addressEnv) ]
+                  else [ broker.container(templateName, addressEnv), router.container("${COLOCATED_ROUTER_IMAGE}", secure, addressEnv) ]
               }
             }
           }
