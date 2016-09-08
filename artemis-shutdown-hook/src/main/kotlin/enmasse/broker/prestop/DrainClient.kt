@@ -12,7 +12,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 /**
  * @author Ulf Lilleengen
  */
-class DrainClient(val mgmtEndpoint: Endpoint, val from: Endpoint, val address: String, val debugFn: Optional<() -> Unit>) {
+class DrainClient(mgmtEndpoint: Endpoint, val from: Endpoint, val debugFn: Optional<() -> Unit>) {
 
     val vertx = Vertx.vertx()
     val client = ProtonClient.create(vertx)
@@ -26,12 +26,12 @@ class DrainClient(val mgmtEndpoint: Endpoint, val from: Endpoint, val address: S
         session = sessionFactory.createSession()
     }
 
-    fun drainMessages(to: Endpoint) {
+    fun drainMessages(to: Endpoint, address: String) {
 
         vertx.setPeriodic(1000, { timerId ->
             vertx.executeBlocking<Int>({ future ->
                 try {
-                    val count = checkQueue()
+                    val count = checkQueue(address)
                     println("Queue had ${count} messages")
                     if (count == 0) {
                         shutdownBroker()
@@ -73,7 +73,7 @@ class DrainClient(val mgmtEndpoint: Endpoint, val from: Endpoint, val address: S
         })
     }
 
-    fun checkQueue(): Int {
+    fun checkQueue(address: String): Int {
         val requestor = ClientRequestor(session, "jms.queue.activemq.management")
         val message = session.createMessage(false)
         ManagementHelper.putAttribute(message, "core.queue.${address}", "messageCount")

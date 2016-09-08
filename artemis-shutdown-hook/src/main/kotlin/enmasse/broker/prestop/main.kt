@@ -19,11 +19,13 @@ fun main(args: Array<String>) {
 
     val debug = System.getenv("PRESTOP_DEBUG") != null
     val address = System.getenv("QUEUE_NAME")
+
     val messagingHost = System.getenv("MESSAGING_SERVICE_HOST")
     val messagingPort = Integer.parseInt(System.getenv("MESSAGING_SERVICE_PORT"))
 
     val from = Endpoint("127.0.0.1", 5673)
     val to = Endpoint(messagingHost, messagingPort)
+    val mgmtEndpoint = Endpoint("127.0.0.1", 61616)
 
     val debugFn: Optional<() -> Unit> = if (debug) {
         val kubeHost = System.getenv("KUBERNETES_SERVICE_HOST")
@@ -37,9 +39,14 @@ fun main(args: Array<String>) {
     } else {
         Optional.empty()
     }
-    val mgmtEndpoint = Endpoint("127.0.0.1", 61616)
-    val client = DrainClient(mgmtEndpoint, from, address, debugFn)
-    client.drainMessages(to)
+    val client = DrainClient(mgmtEndpoint, from, debugFn)
+
+    // Only works for queues at the moment
+    if (address != null) {
+        client.drainMessages(to, address)
+    } else {
+        client.shutdownBroker()
+    }
 }
 
 private fun signalSuccess(osClient: IClient, namespace: String, address: String) {
