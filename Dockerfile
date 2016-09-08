@@ -21,4 +21,4 @@ EXPOSE 5673 61616
 # Needed for bridge clustering
 # EXPOSE 7800 7801 7802
 
-CMD ["/opt/apache-artemis-1.5.0-SNAPSHOT/bin/launcher", "/opt/apache-artemis-1.5.0-SNAPSHOT/bin/run_artemis.sh"]
+CMD ["/opt/apache-artemis-1.5.0-SNAPSHOT/bin/main", "/opt/apache-artemis-1.5.0-SNAPSHOT/bin/run_artemis.sh"]
