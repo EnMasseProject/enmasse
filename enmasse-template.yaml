@@ -36,7 +36,7 @@ objects:
               preStop:
                 exec:
                   command:
-                  - "/artemis-shutdown-hook/bin/artemis-shutdown-hook"
+                  - "/opt/artemis-shutdown-hook/bin/artemis-shutdown-hook"
             name: broker
             ports:
             - containerPort: 5673
@@ -108,7 +108,7 @@ objects:
               preStop:
                 exec:
                   command:
-                  - "/artemis-shutdown-hook/bin/artemis-shutdown-hook"
+                  - "/opt/artemis-shutdown-hook/bin/artemis-shutdown-hook"
             name: broker
             ports:
             - containerPort: 5673
@@ -180,7 +180,7 @@ objects:
               preStop:
                 exec:
                   command:
-                  - "/artemis-shutdown-hook/bin/artemis-shutdown-hook"
+                  - "/opt/artemis-shutdown-hook/bin/artemis-shutdown-hook"
             name: broker
             ports:
             - containerPort: 5673
@@ -257,7 +257,7 @@ objects:
               preStop:
                 exec:
                   command:
-                  - "/artemis-shutdown-hook/bin/artemis-shutdown-hook"
+                  - "/opt/artemis-shutdown-hook/bin/artemis-shutdown-hook"
             name: broker
             ports:
             - containerPort: 5673

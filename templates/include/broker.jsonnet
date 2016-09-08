@@ -24,7 +24,7 @@
         "preStop": {
           "exec": {
             "command": [
-              "/artemis-shutdown-hook/bin/artemis-shutdown-hook"
+              "/opt/artemis-shutdown-hook/bin/artemis-shutdown-hook"
            ]
           }
         }
