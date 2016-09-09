@@ -7,7 +7,7 @@ metadata:
   name: queue-inmemory
 objects:
 - apiVersion: v1
-  kind: ReplicationController
+  kind: DeploymentConfig
   metadata:
     name: queue-${ADDRESS}
   spec:

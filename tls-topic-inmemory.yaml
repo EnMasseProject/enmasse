@@ -7,7 +7,7 @@ metadata:
   name: secure-topic-inmemory
 objects:
 - apiVersion: v1
-  kind: ReplicationController
+  kind: DeploymentConfig
   metadata:
     name: topic-${ADDRESS}
   spec:

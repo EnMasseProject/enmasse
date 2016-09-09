@@ -15,7 +15,7 @@ local router = import "router.jsonnet";
   generate(secure)::
     {
       "apiVersion": "v1",
-      "kind": "ReplicationController",
+      "kind": "DeploymentConfig",
       "metadata": {
         "labels": {
           "name": "qdrouterd"

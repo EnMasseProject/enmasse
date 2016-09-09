@@ -12,7 +12,7 @@ objects:
     name: queue-inmemory
   objects:
   - apiVersion: v1
-    kind: ReplicationController
+    kind: DeploymentConfig
     metadata:
       name: queue-${ADDRESS}
     spec:
@@ -95,7 +95,7 @@ objects:
         requests:
           storage: "${STORAGE_CAPACITY}"
   - apiVersion: v1
-    kind: ReplicationController
+    kind: DeploymentConfig
     metadata:
       name: queue-${ADDRESS}
     spec:
@@ -169,7 +169,7 @@ objects:
     name: topic-inmemory
   objects:
   - apiVersion: v1
-    kind: ReplicationController
+    kind: DeploymentConfig
     metadata:
       name: topic-${ADDRESS}
     spec:
@@ -257,7 +257,7 @@ objects:
         requests:
           storage: "${STORAGE_CAPACITY}"
   - apiVersion: v1
-    kind: ReplicationController
+    kind: DeploymentConfig
     metadata:
       name: topic-${ADDRESS}
     spec:
@@ -329,7 +329,7 @@ objects:
     required: true
     value: 2Gi
 - apiVersion: v1
-  kind: ReplicationController
+  kind: DeploymentConfig
   metadata:
     labels:
       name: configmap-bridge
@@ -350,7 +350,7 @@ objects:
           - containerPort: 5672
             name: amqp
 - apiVersion: v1
-  kind: ReplicationController
+  kind: DeploymentConfig
   metadata:
     labels:
       name: ragent
@@ -371,7 +371,7 @@ objects:
           - containerPort: 55672
             protocol: TCP
 - apiVersion: v1
-  kind: ReplicationController
+  kind: DeploymentConfig
   metadata:
     labels:
       name: qdrouterd
@@ -397,7 +397,7 @@ objects:
             name: amqp
             protocol: TCP
 - apiVersion: v1
-  kind: ReplicationController
+  kind: DeploymentConfig
   metadata:
     labels:
       name: storage-controller

@@ -2,7 +2,7 @@
   generate(image_name)::
   {
     "apiVersion": "v1",
-    "kind": "ReplicationController",
+    "kind": "DeploymentConfig",
     "metadata": {
       "labels": {
         "name": "ragent"
