@@ -2,7 +2,7 @@
   generate(image_name)::
     {
       "apiVersion": "v1",
-      "kind": "DeploymentConfig",
+      "kind": "ReplicationController",
       "metadata": {
         "labels": {
           "name": "storage-controller"

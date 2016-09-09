@@ -17,7 +17,7 @@ objects:
       requests:
         storage: "${STORAGE_CAPACITY}"
 - apiVersion: v1
-  kind: DeploymentConfig
+  kind: ReplicationController
   metadata:
     name: queue-${ADDRESS}
   spec:

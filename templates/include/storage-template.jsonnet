@@ -19,7 +19,7 @@ local forwarder = import "forwarder.jsonnet";
       },
       local controller = {
         "apiVersion": "v1",
-        "kind": "DeploymentConfig",
+        "kind": "ReplicationController",
         "metadata": {
           "name": addrtype + "-${ADDRESS}"
         },
