@@ -22,11 +22,11 @@ public class StorageCluster {
     }
 
     public void create() {
-        client.deleteResource(resources);
+        client.createResource(resources);
     }
 
     public void delete() {
-        client.createResource(resources);
+        client.deleteResource(resources);
     }
 
     public Destination getDestination() {
