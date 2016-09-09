@@ -14,7 +14,7 @@ objects:
   - apiVersion: v1
     kind: ReplicationController
     metadata:
-      name: controller-${ADDRESS}
+      name: queue-${ADDRESS}
     spec:
       replicas: 1
       selector:
@@ -107,7 +107,7 @@ objects:
   - apiVersion: v1
     kind: ReplicationController
     metadata:
-      name: controller-${ADDRESS}
+      name: queue-${ADDRESS}
     spec:
       replicas: 1
       selector:
@@ -191,7 +191,7 @@ objects:
   - apiVersion: v1
     kind: ReplicationController
     metadata:
-      name: controller-${ADDRESS}
+      name: topic-${ADDRESS}
     spec:
       replicas: 1
       selector:
@@ -289,7 +289,7 @@ objects:
   - apiVersion: v1
     kind: ReplicationController
     metadata:
-      name: controller-${ADDRESS}
+      name: topic-${ADDRESS}
     spec:
       replicas: 1
       selector:
