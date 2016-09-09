@@ -1,11 +1,14 @@
 package enmasse.storage.controller.openshift;
 
+import com.openshift.internal.restclient.ResourceFactory;
 import com.openshift.internal.restclient.capability.server.ServerTemplateProcessing;
 import com.openshift.restclient.IClient;
+import com.openshift.restclient.IResourceFactory;
 import com.openshift.restclient.OpenShiftException;
 import com.openshift.restclient.ResourceKind;
 import com.openshift.restclient.UnsupportedOperationException;
 import com.openshift.restclient.capability.server.ITemplateProcessing;
+import com.openshift.restclient.model.IList;
 import com.openshift.restclient.model.IResource;
 import com.openshift.restclient.model.template.ITemplate;
 import enmasse.storage.controller.model.AddressType;
@@ -29,10 +32,12 @@ public class OpenshiftClient {
     private final IClient client;
     private final String namespace;
     private final ITemplateProcessing templateProcessor;
+    private final IResourceFactory resourceFactory;
 
     public OpenshiftClient(IClient client, String namespace) {
         this.client = client;
         this.namespace = namespace;
+        this.resourceFactory = new ResourceFactory(client);
         this.templateProcessor = new ServerTemplateProcessing(client);
     }
 
@@ -55,8 +60,10 @@ public class OpenshiftClient {
         return client.get(ResourceKind.TEMPLATE, name, namespace);
     }
 
-    public ITemplate processTemplate(ITemplate template) {
-        return templateProcessor.process(template, namespace);
+    public IList processTemplate(ITemplate template) {
+        IList resources = createList();
+        resources.addAll(templateProcessor.process(template, namespace).getObjects());
+        return resources;
     }
 
     public List<StorageCluster> listClusters() {
@@ -80,8 +87,15 @@ public class OpenshiftClient {
         }
 
         return resourceMap.entrySet().stream()
-                .map(entry -> new StorageCluster(this, entry.getKey(), entry.getValue()))
-                .collect(Collectors.toList());
+                .map(entry -> {
+                    IList list = createList();
+                    list.addAll(entry.getValue());
+                    return new StorageCluster(this, entry.getKey(), list);
+                }).collect(Collectors.toList());
+    }
+
+    private IList createList() {
+        return resourceFactory.create("v1", ResourceKind.LIST);
     }
 
     private List<IResource> listAndIgnore(String kind, String namespace) {
