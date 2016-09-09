@@ -73,7 +73,9 @@ parameters:
 - description: The link capacity setting for router
   name: ROUTER_LINK_CAPACITY
   value: '50'
+- description: Storage capacity required for volume claims
+  name: STORAGE_CAPACITY
+  value: 2Gi
 - description: The address to use for the topic
   name: ADDRESS
   required: true
-  value: 2Gi

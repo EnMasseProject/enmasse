@@ -97,7 +97,7 @@ local forwarder = import "forwarder.jsonnet";
           "name": "STORAGE_CAPACITY",
           "description": "Storage capacity required for volume claims",
           "value": "2Gi"
-        }
+        },
         {
           "name": "ADDRESS",
           "description": "The address to use for the %s" % [addrtype],
