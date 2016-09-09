@@ -4,14 +4,19 @@ import fcntl, glob, os, sys
 
 def is_free(dirname):
     lockfile = dirname + "/lock/cli.lock"
-    if os.path.isdir(dirname) and os.path.isfile(lockfile):
-        try:
-            f = open(lockfile, 'w+')
-            fcntl.lockf(f, fcntl.LOCK_EX | fcntl.LOCK_NB)
-            fcntl.lockf(f, fcntl.LOCK_UN)
-            return True
-        except Exception as e:
+    deletefile = dirname + "/enmasse-deleted"
+    if os.path.isdir(dirname):
+        if not os.path.isfile(deletefile):
             return False
+
+        if os.path.isfile(lockfile):
+            try:
+                f = open(lockfile, 'w+')
+                fcntl.lockf(f, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                fcntl.lockf(f, fcntl.LOCK_UN)
+                return True
+            except Exception as e:
+                return False
     else:
         return True
 
