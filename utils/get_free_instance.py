@@ -6,7 +6,7 @@ def is_free(dirname):
     lockfile = dirname + "/lock/cli.lock"
     deletefile = dirname + "/enmasse-deleted"
     if os.path.isdir(dirname):
-        if not os.path.isfile(deletefile):
+        if os.path.isfile(deletefile):
             return False
 
         if os.path.isfile(lockfile):
