@@ -28,7 +28,7 @@ public class Main {
         String messagingHost = System.getenv("MESSAGING_SERVICE_HOST");
         int messagingPort = Integer.parseInt(System.getenv("MESSAGING_SERVICE_PORT"));
 
-        String localHost = Inet4Address.getLocalHost().getHostAddress();
+        String localHost = "127.0.0.1"; //Inet4Address.getLocalHost().getHostAddress();
         Endpoint from = new Endpoint(localHost, 5673);
         Endpoint to = new Endpoint(messagingHost, messagingPort);
         Endpoint mgmtEndpoint = new Endpoint(localHost, 61616);

@@ -86,38 +86,52 @@ public class DrainClient {
                         client.connect(from.hostName(), from.port(), recvHandle -> {
                             if (recvHandle.succeeded()) {
                                 ProtonConnection recvConn = recvHandle.result();
-                                recvConn.setContainer("shutdown-hook");
-                                recvConn.open();
-                                System.out.println("Connected to receiver: " + recvConn.getRemoteContainer());
-                                markInstanceDeleted(recvConn.getRemoteContainer());
-                                ProtonReceiver receiver = recvConn.createReceiver(address);
-                                receiver.setAutoAccept(false);
-                                receiver.handler((protonDelivery, message) -> {
-                                    sender.send(message, targetDelivery ->
-                                            protonDelivery.disposition(targetDelivery.getRemoteState(), targetDelivery.remotelySettled()));
-
-                                    // This is for debugging only
-                                    if (!first.getAndSet(true) && debugFn.isPresent()) {
-                                        System.out.println("Forwarded one message");
-                                        vertx.executeBlocking((Future<Integer> future) -> {
-                                            debugFn.get().run();
-                                            future.complete(0);
-                                        }, (AsyncResult<Integer> result) -> {
-                                        });
-                                    }
+                                recvConn.setContainer("shutdown-hook-recv");
+                                recvConn.closeHandler(h -> {
+                                    System.out.println("Receiver closed: " + h.succeeded());
                                 });
-                                receiver.open();
+                                System.out.println("Connected to receiver: " + recvConn.getRemoteContainer());
+                                recvConn.openHandler(h -> {
+                                    System.out.println("Receiver other end opened: " + h.result().getRemoteContainer());
+                                    markInstanceDeleted(recvConn.getRemoteContainer());
+                                    ProtonReceiver receiver = recvConn.createReceiver(address);
+                                    receiver.openHandler(handler -> {
+                                        System.out.println("Receiver open: " + handle.succeeded());
+                                    });
+                                    receiver.handler((protonDelivery, message) -> {
+                                        sender.send(message, targetDelivery ->
+                                                protonDelivery.disposition(targetDelivery.getRemoteState(), targetDelivery.remotelySettled()));
+
+                                        // This is for debugging only
+                                        if (!first.getAndSet(true)) {
+                                            System.out.println("Forwarded one message");
+                                            if (debugFn.isPresent()) {
+                                                vertx.executeBlocking((Future<Integer> future) -> {
+                                                    debugFn.get().run();
+                                                    future.complete(0);
+                                                }, (AsyncResult<Integer> result) -> {
+                                                });
+                                            }
+                                        }
+                                    });
+                                    receiver.open();
+                                });
+                                recvConn.open();
                             } else {
                                 System.out.println("Error connecting to receiver " + from.hostName() + ":" + from.port() + ": " + recvHandle.cause().getMessage());
+                                sendConn.close();
+                                vertx.setTimer(5000, id -> startDrain(to, address));
                             }
                         });
                     } else {
                         System.out.println("Failed to open sender: " + handle.cause().getMessage());
+                        vertx.setTimer(5000, id -> startDrain(to, address));
                     }
                 });
                 sender.open();
             } else {
                 System.out.println("Error connecting to sender " + to.hostName() + ":" + to.port() + ": " + sendHandle.cause().getMessage()) ;
+                vertx.setTimer(5000, id -> startDrain(to, address));
             }
         });
     }
