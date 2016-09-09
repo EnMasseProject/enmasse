@@ -65,7 +65,6 @@ public class DrainClient {
                     }
                 } else {
                     System.out.println("Queue check failed: " + event.cause().getMessage());
-                    System.exit(1);
                 }
             });
         });
