@@ -40,7 +40,7 @@ objects:
             name: core
           volumeMounts:
           - mountPath: "/var/run/artemis"
-            name: vol-secure-topic-inmemory
+            name: vol-${ADDRESS}
         - env:
           - name: LINK_CAPACITY
             value: "${ROUTER_LINK_CAPACITY}"
@@ -66,7 +66,7 @@ objects:
           name: forwarder
         volumes:
         - emptyDir: {}
-          name: vol-secure-topic-inmemory
+          name: vol-${ADDRESS}
         - name: ssl-certs
           secret:
             secretName: qdrouterd-certs
@@ -86,3 +86,4 @@ parameters:
 - description: The address to use for the topic
   name: ADDRESS
   required: true
+  value: 2Gi

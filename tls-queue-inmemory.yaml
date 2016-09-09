@@ -40,7 +40,7 @@ objects:
             name: core
           volumeMounts:
           - mountPath: "/var/run/artemis"
-            name: vol-secure-queue-inmemory
+            name: vol-${ADDRESS}
         - env:
           - name: LINK_CAPACITY
             value: "${ROUTER_LINK_CAPACITY}"
@@ -61,7 +61,7 @@ objects:
             readOnly: true
         volumes:
         - emptyDir: {}
-          name: vol-secure-queue-inmemory
+          name: vol-${ADDRESS}
         - name: ssl-certs
           secret:
             secretName: qdrouterd-certs
@@ -81,3 +81,4 @@ parameters:
 - description: The address to use for the queue
   name: ADDRESS
   required: true
+  value: 2Gi

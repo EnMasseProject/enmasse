@@ -40,7 +40,7 @@ objects:
             name: core
           volumeMounts:
           - mountPath: "/var/run/artemis"
-            name: vol-queue-inmemory
+            name: vol-${ADDRESS}
         - env:
           - name: LINK_CAPACITY
             value: "${ROUTER_LINK_CAPACITY}"
@@ -54,7 +54,7 @@ objects:
             protocol: TCP
         volumes:
         - emptyDir: {}
-          name: vol-queue-inmemory
+          name: vol-${ADDRESS}
 parameters:
 - description: The image to use for the broker
   name: BROKER_IMAGE
@@ -71,3 +71,4 @@ parameters:
 - description: The address to use for the queue
   name: ADDRESS
   required: true
+  value: 2Gi

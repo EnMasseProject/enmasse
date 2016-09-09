@@ -16,7 +16,7 @@
       "env": [ addressEnv ],
       "volumeMounts": [
         {
-          "name": "vol-%s" % [volumeName],
+          "name": volumeName,
           "mountPath": "/var/run/artemis"
         }
       ],
@@ -33,7 +33,15 @@
 
   volume(name)::
     {
-      "name": "vol-%s" % [name],
+      "name": name,
       "emptyDir": {}
+    },
+
+  persistedVolume(name, claimName)::
+    {
+      "name": name,
+      "persistentVolumeClaim": {
+          "claimName": claimName
+      }
     }
 }

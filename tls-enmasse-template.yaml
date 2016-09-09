@@ -45,7 +45,7 @@ objects:
               name: core
             volumeMounts:
             - mountPath: "/var/run/artemis"
-              name: vol-secure-queue-inmemory
+              name: vol-${ADDRESS}
           - env:
             - name: LINK_CAPACITY
               value: "${ROUTER_LINK_CAPACITY}"
@@ -66,7 +66,7 @@ objects:
               readOnly: true
           volumes:
           - emptyDir: {}
-            name: vol-secure-queue-inmemory
+            name: vol-${ADDRESS}
           - name: ssl-certs
             secret:
               secretName: qdrouterd-certs
@@ -86,6 +86,7 @@ objects:
   - description: The address to use for the queue
     name: ADDRESS
     required: true
+    value: 2Gi
 - apiVersion: v1
   kind: Template
   metadata:
@@ -93,6 +94,16 @@ objects:
       addressType: queue
     name: secure-queue-persisted
   objects:
+  - apiVersion: v1
+    kind: PersistentVolumeClaim
+    metadata:
+      name: pvc-${ADDRESS}
+    spec:
+      accessModes:
+      - ReadWriteMany
+      resources:
+        requests:
+          storage: "${STORAGE_CAPACITY}"
   - apiVersion: v1
     kind: ReplicationController
     metadata:
@@ -127,7 +138,7 @@ objects:
               name: core
             volumeMounts:
             - mountPath: "/var/run/artemis"
-              name: vol-secure-queue-persisted
+              name: vol-${ADDRESS}
           - env:
             - name: LINK_CAPACITY
               value: "${ROUTER_LINK_CAPACITY}"
@@ -147,8 +158,9 @@ objects:
               name: ssl-certs
               readOnly: true
           volumes:
-          - emptyDir: {}
-            name: vol-secure-queue-persisted
+          - name: vol-${ADDRESS}
+            persistentVolumeClaim:
+              claimName: pvc-${ADDRESS}
           - name: ssl-certs
             secret:
               secretName: qdrouterd-certs
@@ -168,6 +180,7 @@ objects:
   - description: The address to use for the queue
     name: ADDRESS
     required: true
+    value: 2Gi
 - apiVersion: v1
   kind: Template
   metadata:
@@ -209,7 +222,7 @@ objects:
               name: core
             volumeMounts:
             - mountPath: "/var/run/artemis"
-              name: vol-secure-topic-inmemory
+              name: vol-${ADDRESS}
           - env:
             - name: LINK_CAPACITY
               value: "${ROUTER_LINK_CAPACITY}"
@@ -235,7 +248,7 @@ objects:
             name: forwarder
           volumes:
           - emptyDir: {}
-            name: vol-secure-topic-inmemory
+            name: vol-${ADDRESS}
           - name: ssl-certs
             secret:
               secretName: qdrouterd-certs
@@ -255,6 +268,7 @@ objects:
   - description: The address to use for the topic
     name: ADDRESS
     required: true
+    value: 2Gi
 - apiVersion: v1
   kind: Template
   metadata:
@@ -262,6 +276,16 @@ objects:
       addressType: topic
     name: secure-topic-persisted
   objects:
+  - apiVersion: v1
+    kind: PersistentVolumeClaim
+    metadata:
+      name: pvc-${ADDRESS}
+    spec:
+      accessModes:
+      - ReadWriteMany
+      resources:
+        requests:
+          storage: "${STORAGE_CAPACITY}"
   - apiVersion: v1
     kind: ReplicationController
     metadata:
@@ -296,7 +320,7 @@ objects:
               name: core
             volumeMounts:
             - mountPath: "/var/run/artemis"
-              name: vol-secure-topic-persisted
+              name: vol-${ADDRESS}
           - env:
             - name: LINK_CAPACITY
               value: "${ROUTER_LINK_CAPACITY}"
@@ -321,8 +345,9 @@ objects:
             image: "${TOPIC_FORWARDER_IMAGE}"
             name: forwarder
           volumes:
-          - emptyDir: {}
-            name: vol-secure-topic-persisted
+          - name: vol-${ADDRESS}
+            persistentVolumeClaim:
+              claimName: pvc-${ADDRESS}
           - name: ssl-certs
             secret:
               secretName: qdrouterd-certs
@@ -342,6 +367,7 @@ objects:
   - description: The address to use for the topic
     name: ADDRESS
     required: true
+    value: 2Gi
 - apiVersion: v1
   kind: ReplicationController
   metadata:

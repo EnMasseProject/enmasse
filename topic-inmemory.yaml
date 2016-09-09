@@ -40,7 +40,7 @@ objects:
             name: core
           volumeMounts:
           - mountPath: "/var/run/artemis"
-            name: vol-topic-inmemory
+            name: vol-${ADDRESS}
         - env:
           - name: LINK_CAPACITY
             value: "${ROUTER_LINK_CAPACITY}"
@@ -59,7 +59,7 @@ objects:
           name: forwarder
         volumes:
         - emptyDir: {}
-          name: vol-topic-inmemory
+          name: vol-${ADDRESS}
 parameters:
 - description: The image to use for the broker
   name: BROKER_IMAGE
@@ -76,3 +76,4 @@ parameters:
 - description: The address to use for the topic
   name: ADDRESS
   required: true
+  value: 2Gi
