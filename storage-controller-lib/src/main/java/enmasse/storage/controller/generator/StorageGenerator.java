@@ -1,6 +1,7 @@
 package enmasse.storage.controller.generator;
 
 import com.openshift.restclient.model.IList;
+import com.openshift.restclient.model.IResource;
 import com.openshift.restclient.model.template.ITemplate;
 import enmasse.storage.controller.admin.FlavorRepository;
 import enmasse.storage.controller.model.AddressType;
@@ -67,7 +68,7 @@ public class StorageGenerator {
         template.addObjectLabel(LabelKeys.FLAVOR, destination.flavor());
         template.addObjectLabel(LabelKeys.ADDRESS_TYPE, destination.multicast() ? AddressType.TOPIC.name() : AddressType.QUEUE.name());
 
-        IList resources = osClient.processTemplate(template);
+        Collection<IResource> resources = osClient.processTemplate(template);
         return new StorageCluster(osClient, destination, resources);
     }
 }

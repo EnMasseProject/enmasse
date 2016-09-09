@@ -13,20 +13,20 @@ public class StorageCluster {
 
     private final OpenshiftClient client;
     private final Destination destination;
-    private final IList resources;
+    private final Collection<IResource> resources;
 
-    public StorageCluster(OpenshiftClient osClient, Destination destination, IList resources) {
+    public StorageCluster(OpenshiftClient osClient, Destination destination, Collection<IResource> resources) {
         this.client = osClient;
         this.destination = destination;
         this.resources = resources;
     }
 
     public void create() {
-        client.createResource(resources);
+        client.createResources(resources);
     }
 
     public void delete() {
-        client.deleteResource(resources);
+        client.deleteResources(resources);
     }
 
     public Destination getDestination() {

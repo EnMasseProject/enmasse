@@ -18,6 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -41,24 +42,18 @@ public class OpenshiftClient {
         this.templateProcessor = new ServerTemplateProcessing(client);
     }
 
-    public void createResource(IResource resource) {
-        log.info("Adding " + resource.getName());
-        client.create(resource, namespace);
+    public void createResources(Collection<IResource> resources) {
+        log.info("Adding " + resources.size() + " resources");
+        IList list = createList();
+        list.addAll(resources);
+        client.create(list, namespace);
     }
 
-    public void createResource(IList resource) {
-        log.info("Adding " + resource.getName());
-        client.create(resource, namespace);
-    }
-
-    public void deleteResource(IResource resource) {
-        log.info("Deleting " + resource.getName());
-        client.delete(resource);
-    }
-
-    public void deleteResource(IList resource) {
-        log.info("Deleting " + resource.getName());
-        client.delete(resource);
+    public void deleteResources(Collection<IResource> resources) {
+        log.info("Deleting " + resources.size() + " resources");
+        for (IResource resource : resources) {
+            client.delete(resource);
+        }
     }
 
     public void updateResource(IResource resource) {
@@ -70,10 +65,8 @@ public class OpenshiftClient {
         return client.get(ResourceKind.TEMPLATE, name, namespace);
     }
 
-    public IList processTemplate(ITemplate template) {
-        IList resources = createList();
-        resources.addAll(templateProcessor.process(template, namespace).getObjects());
-        return resources;
+    public Collection<IResource> processTemplate(ITemplate template) {
+        return templateProcessor.process(template, namespace).getObjects();
     }
 
     public List<StorageCluster> listClusters() {
@@ -97,11 +90,7 @@ public class OpenshiftClient {
         }
 
         return resourceMap.entrySet().stream()
-                .map(entry -> {
-                    IList list = createList();
-                    list.addAll(entry.getValue());
-                    return new StorageCluster(this, entry.getKey(), list);
-                }).collect(Collectors.toList());
+                .map(entry -> new StorageCluster(this, entry.getKey(), entry.getValue())).collect(Collectors.toList());
     }
 
     private IList createList() {

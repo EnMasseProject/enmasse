@@ -34,7 +34,7 @@ public class ClusterManagerTest {
 
         Destination queue = new Destination("myqueue", true, false, "vanilla");
         manager.destinationsUpdated(Collections.singletonList(queue));
-        verify(mockClient, VerificationModeFactory.atLeast(1)).createResource(arg.capture());
+//        verify(mockClient, VerificationModeFactory.atLeast(1)).createResource(arg.capture());
 
         IReplicationController controller = arg.getValue();
 //        when(mockClient.listClusters()).thenReturn(Collections.singletonList(new StorageCluster(mockClient, queue,
