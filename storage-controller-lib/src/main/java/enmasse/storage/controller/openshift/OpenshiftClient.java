@@ -46,7 +46,17 @@ public class OpenshiftClient {
         client.create(resource, namespace);
     }
 
+    public void createResource(IList resource) {
+        log.info("Adding " + resource.getName());
+        client.create(resource, namespace);
+    }
+
     public void deleteResource(IResource resource) {
+        log.info("Deleting " + resource.getName());
+        client.delete(resource);
+    }
+
+    public void deleteResource(IList resource) {
         log.info("Deleting " + resource.getName());
         client.delete(resource);
     }
