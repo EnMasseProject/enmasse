@@ -21,7 +21,6 @@ import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.proton.ProtonClient;
 import io.vertx.proton.ProtonConnection;
-import io.vertx.proton.ProtonQoS;
 import io.vertx.proton.ProtonReceiver;
 import io.vertx.proton.ProtonSender;
 import org.apache.activemq.artemis.api.core.client.ActiveMQClient;
@@ -39,7 +38,7 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * @author Ulf Lilleengen
+ * Client for draining messages from an endpoint and forward to a target endpoint, until empty.
  */
 public class DrainClient {
 

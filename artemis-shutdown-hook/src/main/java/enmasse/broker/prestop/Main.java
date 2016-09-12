@@ -20,20 +20,15 @@ import com.openshift.internal.restclient.model.Pod;
 import com.openshift.restclient.ClientBuilder;
 import com.openshift.restclient.IClient;
 import com.openshift.restclient.ResourceKind;
-import com.openshift.restclient.authorization.TokenAuthorizationStrategy;
 import com.openshift.restclient.images.DockerImageURI;
 import com.openshift.restclient.model.IContainer;
 import io.vertx.core.impl.FileResolver;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.Inet4Address;
 import java.nio.file.Files;
 import java.util.Optional;
 
-/**
- * @author Ulf Lilleengen
- */
 public class Main {
     public static void main(String [] args) throws Exception {
         System.setProperty(FileResolver.CACHE_DIR_BASE_PROP_NAME, "/tmp/vert.x");

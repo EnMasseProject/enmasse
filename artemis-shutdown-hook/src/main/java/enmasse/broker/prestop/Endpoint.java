@@ -16,9 +16,6 @@
 
 package enmasse.broker.prestop;
 
-/**
- * @author Ulf Lilleengen
- */
 public class Endpoint {
     private final String hostName;
     private final int port;
