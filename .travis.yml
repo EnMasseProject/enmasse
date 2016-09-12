@@ -12,13 +12,6 @@ cache:
   - "$HOME/.gradle/caches/"
   - "$HOME/.gradle/wrapper/"
 
-install:
-- gradle buildVertx
-- gradle assemble
-
-script:
-- gradle check -i
-
 after_success:
 - export REPO=enmasseproject/topic-forwarder
 - export TAG=`if [ "$TRAVIS_BRANCH" == "master" ]; then echo "latest"; else echo $TRAVIS_BRANCH
