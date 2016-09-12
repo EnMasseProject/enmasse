@@ -1,6 +1,6 @@
 #!/bin/sh
 EXPECTED_PODS=$1
-TIMEOUT=300
+TIMEOUT=600
 NOW=$(date +%s)
 END=$(($NOW + $TIMEOUT))
 echo "Waiting until $END"
