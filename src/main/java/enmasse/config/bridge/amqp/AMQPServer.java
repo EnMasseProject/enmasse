@@ -48,13 +48,14 @@ public class AMQPServer {
         }).open();
 
         connection.sessionOpenHandler(ProtonSession::open);
-        connection.senderOpenHandler(this::senderOpenHandler);
+        connection.senderOpenHandler(sender -> senderOpenHandler(connection, sender));
     }
 
-    private void senderOpenHandler(ProtonSender sender) {
+    private void senderOpenHandler(ProtonConnection connection, ProtonSender sender) {
         sender.setSource(sender.getRemoteSource());
         sender.open();
         database.subscribe(sender.getRemoteSource().getAddress(), new AMQPConfigSubscriber(sender));
+        log.info("Added subscriber {} for config {}", connection.getRemoteContainer(), sender.getRemoteSource().getAddress());
     }
 
     public void run() {
