@@ -51,9 +51,6 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
-/**
- * @author Ulf Lilleengen
- */
 public class ForwarderControllerTest {
     private static final Logger log = LoggerFactory.getLogger(ForwarderControllerTest.class.getName());
     private Vertx vertx = Vertx.vertx(new VertxOptions().setWorkerPoolSize(10));

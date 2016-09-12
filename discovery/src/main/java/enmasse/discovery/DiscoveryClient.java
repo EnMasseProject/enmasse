@@ -31,7 +31,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * @author Ulf Lilleengen
+ * A client for discovering k8s POD hosts with a given set of labels, and notifying listeners of
+ * the changing set of hosts.
  */
 public class DiscoveryClient implements IOpenShiftWatchListener {
     private final IClient osClient;

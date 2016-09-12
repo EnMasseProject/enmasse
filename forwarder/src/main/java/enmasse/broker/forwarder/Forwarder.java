@@ -38,7 +38,7 @@ import java.util.Collections;
 import java.util.Optional;
 
 /**
- * @author Ulf Lilleengen
+ * A forwarder forwards AMQP messages from one host to another, using durable subscriptions, flow control and linked acknowledgement.
  */
 public class Forwarder {
     private static final Logger log = LoggerFactory.getLogger(Forwarder.class.getName());

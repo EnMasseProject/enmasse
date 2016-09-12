@@ -29,7 +29,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * @author Ulf Lilleengen
+ * Maintains a set of {@link Forwarder} instances from a given host based on discovered hosts.
  */
 public class ForwarderController implements DiscoveryListener {
     private static final Logger log = LoggerFactory.getLogger(ForwarderController.class.getName());

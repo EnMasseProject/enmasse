@@ -19,7 +19,7 @@ package enmasse.discovery;
 import java.util.Map;
 
 /**
- * @author Ulf Lilleengen
+ * Represents a host with a name and a set of ports.
  */
 public class Host {
     private final String hostname;

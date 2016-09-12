@@ -32,7 +32,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * @author Ulf Lilleengen
+ * Main entry point for topic forwarder.
  */
 public class Main {
 

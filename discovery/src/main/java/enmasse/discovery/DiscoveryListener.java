@@ -19,7 +19,7 @@ package enmasse.discovery;
 import java.util.Set;
 
 /**
- * @author Ulf Lilleengen
+ * Interface for listeners on host set changes.
  */
 public interface DiscoveryListener {
     void hostsChanged(Set<Host> hosts);
