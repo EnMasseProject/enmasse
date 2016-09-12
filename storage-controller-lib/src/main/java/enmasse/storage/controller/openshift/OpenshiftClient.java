@@ -72,11 +72,6 @@ public class OpenshiftClient {
         }
     }
 
-    public void updateResource(IResource resource) {
-        log.info("Updating " + resource.getName());
-        client.update(resource);
-    }
-
     public ITemplate getTemplate(String name) {
         return client.get(ResourceKind.TEMPLATE, name, namespace);
     }
@@ -122,8 +117,5 @@ public class OpenshiftClient {
         }
     }
 
-    public IClient getClient() {
-        return client;
-    }
 }
 
