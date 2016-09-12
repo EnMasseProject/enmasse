@@ -54,7 +54,7 @@ public class Main {
             String kubeHost = System.getenv("KUBERNETES_SERVICE_HOST");
             String kubePort = System.getenv("KUBERNETES_SERVICE_PORT");
             String kubeUrl = String.format("https://%s:%s", kubeHost, kubePort);
-            IClient client = new ClientBuilder(kubeUrl).authorizationStrategy(new TokenAuthorizationStrategy(openshiftToken())).build();
+            IClient client = new ClientBuilder(kubeUrl).usingToken(openshiftToken()).build();
             String namespace = openshiftNamespace();
             debugFn = Optional.of(() -> signalSuccess(client, namespace, address));
         }
