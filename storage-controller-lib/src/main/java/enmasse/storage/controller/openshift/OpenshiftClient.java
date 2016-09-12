@@ -77,7 +77,7 @@ public class OpenshiftClient {
         client.update(resource);
     }
 
-    public <T extends IResource> T getResource(String name) {
+    public ITemplate getTemplate(String name) {
         return client.get(ResourceKind.TEMPLATE, name, namespace);
     }
 

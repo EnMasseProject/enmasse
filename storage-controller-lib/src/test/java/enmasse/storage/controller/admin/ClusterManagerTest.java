@@ -16,14 +16,17 @@
 
 package enmasse.storage.controller.admin;
 
-import com.openshift.restclient.model.IReplicationController;
 import enmasse.storage.controller.generator.StorageGenerator;
 import enmasse.storage.controller.model.Destination;
+import enmasse.storage.controller.model.Flavor;
 import enmasse.storage.controller.openshift.OpenshiftClient;
+import enmasse.storage.controller.openshift.StorageCluster;
 import org.junit.Before;
+import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.internal.verification.VerificationModeFactory;
 
+import java.util.Arrays;
 import java.util.Collections;
 
 import static org.hamcrest.CoreMatchers.is;
@@ -34,30 +37,69 @@ public class ClusterManagerTest {
     private OpenshiftClient mockClient;
     private ClusterManager manager;
     private FlavorManager flavorManager = new FlavorManager();
+    private StorageGenerator mockGenerator;
 
     @Before
     public void setUp() {
         mockClient = mock(OpenshiftClient.class);
-        manager = new ClusterManager(mockClient, new StorageGenerator(mockClient, flavorManager));
+        mockGenerator = mock(StorageGenerator.class);
+
+        manager = new ClusterManager(mockClient, mockGenerator);
+        flavorManager.flavorsUpdated(Collections.singletonMap("vanilla", new Flavor.Builder().templateName("test").build()));
     }
 
-    public void testModifiedBrokerDoesNotResetReplicaCount() {
-        // Create simple queue and capture generated replication controller
-        ArgumentCaptor<IReplicationController> arg = ArgumentCaptor.forClass(IReplicationController.class);
-
+    @Test
+    public void testClusterIsCreated() {
         Destination queue = new Destination("myqueue", true, false, "vanilla");
+        StorageCluster cluster = mock(StorageCluster.class);
+
+        when(mockClient.listClusters()).thenReturn(Collections.emptyList());
+        when(mockGenerator.generateStorage(queue)).thenReturn(cluster);
+        ArgumentCaptor<Destination> arg = ArgumentCaptor.forClass(Destination.class);
+
         manager.destinationsUpdated(Collections.singletonList(queue));
-//        verify(mockClient, VerificationModeFactory.atLeast(1)).createResource(arg.capture());
+        verify(mockGenerator).generateStorage(arg.capture());
+        assertThat(arg.getValue(), is(queue));
+        verify(cluster).create();
+    }
 
-        IReplicationController controller = arg.getValue();
-//        when(mockClient.listClusters()).thenReturn(Collections.singletonList(new StorageCluster(mockClient, queue,
 
-        // Modify replicas and update controller
-        controller.setReplicas(3);
-        Destination modifiedQueue = new Destination("myqueue", true, true, "vanilla");
-        manager.destinationsUpdated(Collections.singletonList(modifiedQueue));
+    @Test
+    public void testNodesAreRetained() {
+        Destination queue = new Destination("myqueue", true, false, "vanilla");
+        StorageCluster existing = new StorageCluster(mockClient, queue, Collections.emptyList());
+        when(mockClient.listClusters()).thenReturn(Collections.singletonList(existing));
 
-        verify(mockClient).updateResource(arg.capture());
-        assertThat(arg.getValue().getReplicas(), is(3));
+        Destination newQueue = new Destination("newqueue", true, false, "vanilla");
+        StorageCluster newCluster = mock(StorageCluster.class);
+
+        when(mockGenerator.generateStorage(newQueue)).thenReturn(newCluster);
+        ArgumentCaptor<Destination> arg = ArgumentCaptor.forClass(Destination.class);
+
+        manager.destinationsUpdated(Arrays.asList(queue, newQueue));
+
+        verify(mockGenerator).generateStorage(arg.capture());
+        assertThat(arg.getValue(), is(newQueue));
+        verify(newCluster).create();
+    }
+
+    @Test
+    public void testClusterIsRemoved () {
+        Destination queue = new Destination("myqueue", true, false, "vanilla");
+        StorageCluster existing = mock(StorageCluster.class);
+        when(existing.getDestination()).thenReturn(queue);
+
+        Destination newQueue = new Destination("newqueue", true, false, "vanilla");
+        StorageCluster newCluster = mock(StorageCluster.class);
+        when(newCluster.getDestination()).thenReturn(newQueue);
+
+        when(mockClient.listClusters()).thenReturn(Arrays.asList(existing, newCluster));
+
+
+        manager.destinationsUpdated(Arrays.asList(newQueue));
+
+        verify(existing, VerificationModeFactory.atLeastOnce()).getDestination();
+        verify(newCluster, VerificationModeFactory.atLeastOnce()).getDestination();
+        verify(existing).delete();
     }
 }

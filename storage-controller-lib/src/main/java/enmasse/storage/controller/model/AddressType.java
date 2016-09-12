@@ -28,6 +28,10 @@ public enum AddressType {
         this.name = name;
     }
 
+    public String value() {
+        return this.name;
+    }
+
     public static void validate(String type) {
         if (!QUEUE.name.equals(type) && !TOPIC.name.equals(type)) {
             throw new IllegalArgumentException("Unknown address type " + type);

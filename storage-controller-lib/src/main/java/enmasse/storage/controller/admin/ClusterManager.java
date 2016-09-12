@@ -19,9 +19,9 @@ package enmasse.storage.controller.admin;
 import com.fasterxml.jackson.databind.JsonNode;
 import enmasse.storage.controller.generator.StorageGenerator;
 import enmasse.storage.controller.model.Destination;
-import enmasse.storage.controller.parser.AddressConfigParser;
 import enmasse.storage.controller.openshift.OpenshiftClient;
 import enmasse.storage.controller.openshift.StorageCluster;
+import enmasse.storage.controller.parser.AddressConfigParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

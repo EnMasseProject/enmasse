@@ -20,7 +20,7 @@ import com.openshift.restclient.ClientBuilder;
 import com.openshift.restclient.IClient;
 import enmasse.storage.controller.admin.ClusterManager;
 import enmasse.storage.controller.admin.FlavorManager;
-import enmasse.storage.controller.generator.StorageGenerator;
+import enmasse.storage.controller.generator.TemplateStorageGenerator;
 import enmasse.storage.controller.openshift.OpenshiftClient;
 import io.vertx.core.Vertx;
 import io.vertx.proton.ProtonClient;
@@ -54,7 +54,7 @@ public class StorageController implements Runnable, AutoCloseable {
 
         OpenshiftClient openshiftClient = new OpenshiftClient(osClient, options.openshiftNamespace());
         this.flavorManager = new FlavorManager();
-        this.clusterManager = new ClusterManager(openshiftClient, new StorageGenerator(openshiftClient, flavorManager));
+        this.clusterManager = new ClusterManager(openshiftClient, new TemplateStorageGenerator(openshiftClient, flavorManager));
         this.options = options;
     }
 
