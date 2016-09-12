@@ -10,6 +10,7 @@ import java.util.concurrent.TimeUnit
  */
 class StoreAndForwardQueueTest {
 
+    @Test
     fun testQueue() {
         val dest = "myqueue"
         val client = EnMasseClient(createQueueContext(dest), 1, false)

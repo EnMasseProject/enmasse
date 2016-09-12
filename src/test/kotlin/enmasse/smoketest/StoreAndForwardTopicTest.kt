@@ -9,6 +9,7 @@ import java.util.concurrent.TimeUnit
  * @author Ulf Lilleengen
  */
 class StoreAndForwardTopicTest {
+    @Test
     fun testMultipleSubscribers() {
         val dest = "mytopic"
         val client = EnMasseClient(createTopicContext(dest), 4, true)
