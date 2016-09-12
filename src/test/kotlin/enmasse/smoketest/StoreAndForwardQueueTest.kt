@@ -22,7 +22,7 @@ class StoreAndForwardQueueTest {
         val received = executor.submit<List<String>>{ client.recvMessages(dest, msgs.size) }
 
         executor.shutdown()
-        assertTrue("Clients did not terminate within timeout", executor.awaitTermination(30, TimeUnit.SECONDS))
+        assertTrue("Clients did not terminate within timeout", executor.awaitTermination(60, TimeUnit.SECONDS))
 
         assertEquals(msgs.size, numSent.get())
         assertEquals(msgs.size, received.get().size)

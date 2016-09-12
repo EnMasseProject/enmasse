@@ -22,7 +22,7 @@ class NoStoreAnycastTest {
         val sendResult = executor.submit<Int> { client.sendMessages(dest, msgs) }
 
         executor.shutdown()
-        assertTrue("Clients did not terminate within timeout", executor.awaitTermination(30, TimeUnit.SECONDS))
+        assertTrue("Clients did not terminate within timeout", executor.awaitTermination(60, TimeUnit.SECONDS))
 
         val numReceived = recvResult.get()
         val numSent = sendResult.get()

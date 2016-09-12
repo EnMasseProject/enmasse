@@ -22,7 +22,7 @@ class StoreAndForwardTopicTest {
 
         executor.shutdown()
 
-        assertTrue("Clients did not terminate within timeout", executor.awaitTermination(30, TimeUnit.SECONDS))
+        assertTrue("Clients did not terminate within timeout", executor.awaitTermination(60, TimeUnit.SECONDS))
 
         assertEquals(msgs.size, sendResult.get())
         recvResults.forEach { result -> assertEquals(msgs.size, result.get().size) }
