@@ -9,10 +9,10 @@ do
     NOW=$(date +%s)
     if [ $NOW -gt $END ]; then
         echo "Timed out waiting for nodes to come up!"
+        pods=`oc get pods`
+        echo "PODS: $pods"
         exit 1
     fi
-    pods=`oc get pods`
-    echo "PODS: $pods"
     num_running=`oc get pods | grep -c Running`
     if [ "$num_running" -eq "$EXPECTED_PODS" ]; then
         echo "ALL UP!"
