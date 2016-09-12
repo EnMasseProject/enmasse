@@ -53,6 +53,7 @@ class EnMasseClient(val context: Context, numThreads: Int, val synchronizeClient
             barrier.await(30, TimeUnit.SECONDS)
         }
 
+        // TODO: Get this out of here
         Thread.sleep(10000);
 
         val connection = connectWithTimeout(connectionFactory, connectTimeout, timeUnit)
