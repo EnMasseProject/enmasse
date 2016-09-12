@@ -18,7 +18,6 @@ package enmasse.broker.forwarder;
 
 import com.openshift.restclient.ClientBuilder;
 import com.openshift.restclient.IClient;
-import com.openshift.restclient.authorization.TokenAuthorizationStrategy;
 import enmasse.discovery.DiscoveryClient;
 import enmasse.discovery.Host;
 import io.vertx.core.impl.FileResolver;
@@ -59,7 +58,7 @@ public class Main {
         String openshiftHost = getEnvOrThrow(env, "KUBERNETES_SERVICE_HOST");
         String openshiftPort = getEnvOrThrow(env, "KUBERNETES_SERVICE_PORT");
         return new ClientBuilder(String.format("https://%s:%s", openshiftHost, openshiftPort))
-                .authorizationStrategy(new TokenAuthorizationStrategy(openshiftToken()))
+                .usingToken(openshiftToken())
                 .build();
     }
 

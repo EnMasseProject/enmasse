@@ -3,7 +3,7 @@ allprojects  {
 }
 
 ext {
-    openshiftRestclientVersion = '4.0.5.Final'
+    openshiftRestclientVersion = '5.1.0.Final'
     artemisVersion = '1.5.0-SNAPSHOT'
     vertxProtonVersion = '3.3.3'
     slf4jVersion = '1.7.21'
