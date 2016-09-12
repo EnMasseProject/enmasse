@@ -1,16 +1,11 @@
 package enmasse.config.bridge.model;
 
 import org.junit.Test;
-import enmasse.config.bridge.model.ConfigMap;
-import enmasse.config.bridge.model.ConfigSubscriber;
 
 import java.util.Collections;
 
 import static org.mockito.Mockito.mock;
 
-/**
- * @author lulf
- */
 public class ConfigMapTest {
     @Test
     public void testSubscribing() {

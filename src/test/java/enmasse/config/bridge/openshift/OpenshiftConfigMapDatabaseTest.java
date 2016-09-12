@@ -15,9 +15,6 @@ import java.util.Map;
 
 import static org.mockito.Mockito.*;
 
-/**
- * @author lulf
- */
 public class OpenshiftConfigMapDatabaseTest {
     private OpenshiftConfigMapDatabase database;
 

@@ -7,8 +7,6 @@ import java.util.Map;
 
 /**
  * Represents a ConfigMap that can be subscribed to.
- *
- * @author lulf
  */
 public class ConfigMap {
     private final String name;

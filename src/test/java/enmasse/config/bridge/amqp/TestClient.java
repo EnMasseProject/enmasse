@@ -6,9 +6,6 @@ import io.vertx.proton.ProtonClientOptions;
 import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.ProtonMessageHandler;
 
-/**
- * @author lulf
- */
 public class TestClient {
 
     private String serverHost;

@@ -14,8 +14,6 @@ import java.util.Map;
 
 /**
  * Main entrypoint for configuration service with arg parsing.
- *
- * @author lulf
  */
 public class Main {
 

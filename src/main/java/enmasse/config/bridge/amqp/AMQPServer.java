@@ -6,18 +6,17 @@ import io.vertx.proton.ProtonSender;
 import io.vertx.proton.ProtonServer;
 import io.vertx.proton.ProtonSession;
 import enmasse.config.bridge.model.ConfigMapDatabase;
-
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * AMQP server endpoint that handles connections to the service and propagates config for a config map specified
  * as the address to which the client wants to receive.
  *
- * @author lulf
+ * TODO: Handle disconnects and unsubscribe
  */
 public class AMQPServer {
-    private static final Logger log = Logger.getLogger(AMQPServer.class.getName());
+    private static final Logger log = LoggerFactory.getLogger(AMQPServer.class.getName());
 
     private final Vertx vertx = Vertx.vertx();
     private final ConfigMapDatabase database;
@@ -38,14 +37,14 @@ public class AMQPServer {
     private void connectHandler(ProtonConnection connection) {
         connection.setContainer("server");
         connection.openHandler(conn -> {
-            log.log(Level.INFO, "Connection opened");
+            log.info("Connection opened");
         }).closeHandler(conn -> {
             connection.close();
             connection.disconnect();
-            log.log(Level.INFO, "Connection closed");
+            log.info("Connection closed");
         }).disconnectHandler(protonConnection -> {
             connection.disconnect();
-            log.log(Level.INFO, "Disconnected");
+            log.info("Disconnected");
         }).open();
 
         connection.sessionOpenHandler(ProtonSession::open);
@@ -59,7 +58,7 @@ public class AMQPServer {
     }
 
     public void run() {
-        log.log(Level.INFO, String.format("Starting server on %s:%d", hostname, port));
+        log.info("Starting server on {}:{}", hostname, port);
         server.listen(port, hostname);
     }
 

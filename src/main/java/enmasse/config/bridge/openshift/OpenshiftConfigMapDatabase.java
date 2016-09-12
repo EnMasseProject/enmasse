@@ -9,20 +9,18 @@ import com.openshift.restclient.model.IResource;
 import enmasse.config.bridge.model.ConfigMap;
 import enmasse.config.bridge.model.ConfigMapDatabase;
 import enmasse.config.bridge.model.ConfigSubscriber;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * ConfigMapDatabase backed by OpenShift/Kubernetes REST API supporting subscriptions.
- *
- * @author lulf
  */
 public class OpenshiftConfigMapDatabase implements IOpenShiftWatchListener, AutoCloseable, ConfigMapDatabase {
-    private static final Logger log = Logger.getLogger(OpenshiftConfigMapDatabase.class.getName());
+    private static final Logger log = LoggerFactory.getLogger(OpenshiftConfigMapDatabase.class.getName());
     private final IClient restClient;
     private final String namespace;
     private IWatcher watcher = null;
@@ -35,29 +33,29 @@ public class OpenshiftConfigMapDatabase implements IOpenShiftWatchListener, Auto
     }
 
     public void start() {
-        log.log(Level.INFO, "Starting to watch configs");
+        log.info("Starting to watch configs");
         this.watcher = restClient.watch(namespace, this, ResourceKind.CONFIG_MAP);
     }
 
     @Override
     public void connected(List<IResource> resources) {
-        log.log(Level.INFO, "Connected, got " + resources.size() + " resources");
+        log.info("Connected, got " + resources.size() + " resources");
         for (IResource resource : resources) {
             IConfigMap configMap = (IConfigMap) resource;
 
             ConfigMap map = getOrCreateConfigMap(configMap.getName());
             map.configUpdated(configMap.getResourceVersion(), configMap.getData());
-            log.log(Level.FINE, "Added config map '" + configMap.getName() + "'");
+            log.info("Added config map '" + configMap.getName() + "'");
         }
     }
 
     @Override
     public void disconnected() {
-        log.log(Level.INFO, "Disconnected, restarting watch");
+        log.info("Disconnected, restarting watch");
         try {
             this.watcher = restClient.watch(namespace, this, ResourceKind.CONFIG_MAP);
         } catch (Exception e) {
-            log.log(Level.INFO, "Error re-watching on disconnect from " + restClient.getBaseURL(), e);
+            log.error("Error re-watching on disconnect from " + restClient.getBaseURL(), e);
         }
     }
 
@@ -67,21 +65,21 @@ public class OpenshiftConfigMapDatabase implements IOpenShiftWatchListener, Auto
         if (change.equals(ChangeType.DELETED)) {
             // TODO: Notify subscribers?
             configMapMap.remove(configMap.getName());
-            log.log(Level.FINE, "ConfigMap " + configMap.getName() + " deleted!");
+            log.info("ConfigMap " + configMap.getName() + " deleted!");
         } else if (change.equals(ChangeType.ADDED)) {
             ConfigMap map = getOrCreateConfigMap(configMap.getName());
             map.configUpdated(configMap.getResourceVersion(), configMap.getData());
-            log.log(Level.FINE, "ConfigMap " + configMap.getName() + " added!");
+            log.info("ConfigMap " + configMap.getName() + " added!");
         } else if (change.equals(ChangeType.MODIFIED)) {
             // TODO: Can we assume that it exists at this point?
             configMapMap.get(configMap.getName()).configUpdated(configMap.getResourceVersion(), configMap.getData());
-            log.log(Level.FINE, "ConfigMap " + configMap.getName() + " updated!");
+            log.info("ConfigMap " + configMap.getName() + " updated!");
         }
     }
 
     @Override
     public void error(Throwable err) {
-        log.log(Level.WARNING, "Error when watching: " + err.getMessage());
+        log.error("Got error from watcher", err);
     }
 
     @Override

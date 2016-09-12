@@ -10,23 +10,21 @@ import org.apache.commons.compress.utils.Charsets;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.amqp.messaging.Section;
 import org.apache.qpid.proton.message.Message;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * Creates AMQP message on config updates, converting the mapping to a JSON object. Values that are valid JSON strings, will be
  * embedded in the new object.
  *
  *  TODO: This should probably be done once for the config, not for each subscriber.
- *
- * @author lulf
  */
 public class AMQPConfigSubscriber implements ConfigSubscriber {
-    private static final Logger log = Logger.getLogger(AMQPConfigSubscriber.class.getName());
+    private static final Logger log = LoggerFactory.getLogger(AMQPConfigSubscriber.class.getName());
     private final ObjectMapper mapper = new ObjectMapper();
     private final ProtonSender sender;
     public AMQPConfigSubscriber(ProtonSender sender) {
@@ -42,11 +40,11 @@ public class AMQPConfigSubscriber implements ConfigSubscriber {
             message.setBody(createBody(root));
             message.setContentType("application/json");
             sender.send(message, delivery -> {
-                log.log(Level.FINE, "Client has received update");
+                log.debug("Client has received update");
             });
-            log.log(Level.FINE, "Notified client on update");
+            log.debug("Notified client on update");
         } catch (Exception e) {
-            log.log(Level.WARNING, "Error converting map to JSON: " + e.getMessage());
+            log.warn("Error converting map to JSON: " + e.getMessage());
         }
 
     }
@@ -70,7 +68,7 @@ public class AMQPConfigSubscriber implements ConfigSubscriber {
         try {
             node.set(key, mapper.readTree(value));
         } catch (IOException e) {
-            log.log(Level.INFO, "Unable to decode, returning as string");
+            log.info("Unable to decode, returning as string");
             node.put(key, value);
         }
     }
