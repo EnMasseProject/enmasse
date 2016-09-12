@@ -1,13 +1,12 @@
 package enmasse.storage.controller.openshift;
 
-import com.openshift.restclient.model.IList;
 import com.openshift.restclient.model.IResource;
 import enmasse.storage.controller.model.Destination;
 
 import java.util.Collection;
 
 /**
- * @author Ulf Lilleengen
+ * Represents a storage cluster of broker and volume resources for a given destination.
  */
 public class StorageCluster {
 

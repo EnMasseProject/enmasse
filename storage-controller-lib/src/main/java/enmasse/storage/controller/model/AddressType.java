@@ -1,7 +1,7 @@
 package enmasse.storage.controller.model;
 
 /**
- * @author Ulf Lilleengen
+ * The different address types for a broker.
  */
 public enum AddressType {
     QUEUE("queue"),

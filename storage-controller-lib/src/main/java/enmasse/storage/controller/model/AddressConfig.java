@@ -4,7 +4,7 @@ import java.util.Collection;
 import java.util.Collections;
 
 /**
- * @author lulf
+ * Represents the addressing configuration in a cluster.
  */
 public final class AddressConfig {
     private final Collection<Destination> destinationList;

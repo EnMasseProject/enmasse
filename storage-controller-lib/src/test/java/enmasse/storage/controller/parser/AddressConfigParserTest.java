@@ -10,9 +10,6 @@ import java.io.IOException;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.*;
 
-/**
- * @author Ulf Lilleengen
- */
 public class AddressConfigParserTest {
     private static final ObjectMapper mapper = new ObjectMapper();
 

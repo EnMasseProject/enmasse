@@ -16,9 +16,6 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.mock;
 
-/**
- * @author lulf
- */
 public class StorageClusterGeneratorTest {
     private OpenshiftClient mockClient;
     private FlavorManager flavorManager = new FlavorManager();

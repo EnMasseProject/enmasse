@@ -11,7 +11,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
- * @author Ulf Lilleengen
+ * Manages the set of flavors supported by the storage controller. Essentially a glorified map with timeouts for gets.
  */
 public class FlavorManager implements FlavorRepository {
     private static final Logger log = LoggerFactory.getLogger(FlavorManager.class.getName());

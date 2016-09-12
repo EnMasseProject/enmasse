@@ -8,7 +8,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * @author Ulf Lilleengen
+ * Parser for the flavor config.
  */
 public class FlavorParser {
     private static final String KEY_TEMPLATE_NAME = "templateName";

@@ -13,9 +13,13 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * @author lulf
+ * Parser for the addressing config.
  */
 public class AddressConfigParser {
+    private static final String STORE_AND_FORWARD = "store_and_forward";
+    private static final String MULTICAST = "multicast";
+    private static final String FLAVOR = "flavor";
+
     public static AddressConfig parse(JsonNode root) throws IOException {
         List<Destination> destinationList = new ArrayList<>();
         Iterator<Map.Entry<String, JsonNode>> it = root.fields();
@@ -24,9 +28,9 @@ public class AddressConfigParser {
             JsonNode node = entry.getValue();
             Destination destination = new Destination(
                     entry.getKey(),
-                    node.get("store_and_forward").asBoolean(),
-                    node.get("multicast").asBoolean(),
-                    node.has("flavor") ? node.get("flavor").asText() : "");
+                    node.get(STORE_AND_FORWARD).asBoolean(),
+                    node.get(MULTICAST).asBoolean(),
+                    node.has(FLAVOR) ? node.get(FLAVOR).asText() : "");
             destinationList.add(destination);
         }
 

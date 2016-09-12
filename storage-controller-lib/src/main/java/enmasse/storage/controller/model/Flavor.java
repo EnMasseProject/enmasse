@@ -4,7 +4,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * @author Ulf Lilleengen
+ * A @{link Flavor} represents a fixed set of configuration parameters for a template.
  */
 public class Flavor {
     private final String templateName;

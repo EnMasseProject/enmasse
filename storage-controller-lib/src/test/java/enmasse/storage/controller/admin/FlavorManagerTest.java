@@ -10,9 +10,6 @@ import java.util.Map;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
-/**
- * @author Ulf Lilleengen
- */
 public class FlavorManagerTest {
     private FlavorManager flavorManager;
 

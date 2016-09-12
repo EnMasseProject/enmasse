@@ -26,7 +26,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
- * @author lulf
+ * A wrapper for dealing with openshift-restclient.
  */
 public class OpenshiftClient {
     private static final Logger log = LoggerFactory.getLogger(OpenshiftClient.class.getName());

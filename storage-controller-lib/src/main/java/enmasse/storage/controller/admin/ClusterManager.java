@@ -16,8 +16,6 @@ import java.util.stream.Collectors;
 
 /**
  * The {@link ClusterManager} maintains the number of broker replication controllers to be consistent with the number of destinations in config that require store_and_forward.
- *
- * @author lulf
  */
 public class ClusterManager {
     private static final Logger log = LoggerFactory.getLogger(ClusterManager.class.getName());

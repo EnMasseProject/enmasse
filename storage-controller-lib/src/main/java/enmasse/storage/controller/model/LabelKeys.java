@@ -1,7 +1,7 @@
 package enmasse.storage.controller.model;
 
 /**
- * @author lulf
+ * Labels that are applied to a storage cluster.
  */
 public interface LabelKeys {
     String ADDRESS = "address";

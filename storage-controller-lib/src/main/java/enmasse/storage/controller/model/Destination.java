@@ -1,7 +1,8 @@
 package enmasse.storage.controller.model;
 
 /**
- * @author lulf
+ * Represents a single destination in the addressing config. It is identified by the address, but contains
+ * additional properties that determine the semantics.
  */
 public final class Destination {
     private final String address;

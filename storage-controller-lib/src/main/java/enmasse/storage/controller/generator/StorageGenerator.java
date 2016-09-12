@@ -1,6 +1,5 @@
 package enmasse.storage.controller.generator;
 
-import com.openshift.restclient.model.IList;
 import com.openshift.restclient.model.IResource;
 import com.openshift.restclient.model.template.ITemplate;
 import enmasse.storage.controller.admin.FlavorRepository;
@@ -19,7 +18,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
- * @author lulf
+ * Generates storage clusters for a set of destinations that are marked as store and forward.
  */
 public class StorageGenerator {
 
