@@ -11,6 +11,8 @@ do
         echo "Timed out waiting for nodes to come up!"
         exit 1
     fi
+    pods=`oc get pods`
+    echo "PODS: $pods"
     num_running=`oc get pods | grep -c Running`
     if [ "$num_running" -eq "$EXPECTED_PODS" ]; then
         echo "ALL UP!"
