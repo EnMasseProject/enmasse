@@ -1,10 +1,14 @@
+plugins {
+        id "de.undercouch.download" version "3.1.1"
+}
+
 allprojects  {
     group = 'enmasse'
 }
 
-task(fetchArtemis) {
-    def f = new File('apache-artemis-bin.tar.gz')
-    if (!f.exists()) {
-        new URL('http://pvv.ntnu.no/~lulf/apache-artemis-1.5.0-20160908.031353-7-bin.tar.gz').withInputStream{ i -> f.withOutputStream{ it << i }}
-    }
+import de.undercouch.gradle.tasks.download.Download
+
+task downloadArtemis(type: Download) {
+    src 'http://pvv.ntnu.no/~lulf/apache-artemis-1.5.0-20160908.031353-7-bin.tar.gz'
+    dest new File(buildDir, 'apache-artemis-bin.tar.gz')
 }

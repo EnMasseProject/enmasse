@@ -9,7 +9,7 @@ script:
   - gradle build
   - gradle libs
   - gradle distTar
-  - gradle fetchArtemis 
+  - gradle downloadArtemis
 
 after_success:
 - export REPO=enmasseproject/artemis
