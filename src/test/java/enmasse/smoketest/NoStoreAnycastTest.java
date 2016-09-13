@@ -38,7 +38,6 @@ public class NoStoreAnycastTest extends VertxTestBase {
         List<String> msgs = Arrays.asList("foo", "bar", "baz");
 
         Future<List<String>> recvResult = client.recvMessages(dest, msgs.size());
-        Thread.sleep(10000);
         Future<Integer> sendResult = client.sendMessages(dest, msgs);
 
         assertThat(sendResult.get(1, TimeUnit.MINUTES), is(msgs.size()));
