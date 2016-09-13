@@ -42,5 +42,28 @@ public class StoreAndForwardQueueTest extends VertxTestBase {
         Future<List<String>> received = client.recvMessages(dest, msgs.size());
         assertThat(received.get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
     }
+
+    @Test
+    public void testScaledown() throws InterruptedException, TimeoutException, ExecutionException {
+        String dest = "myqueue";
+        TestUtils.setReplicas("queue-myqueue", dest, 3, 5, TimeUnit.MINUTES);
+        EnMasseClient client = createClient(false);
+        List<Future<Integer>> sent = Arrays.asList(
+                client.sendMessages(dest, Arrays.asList("foo")),
+                client.sendMessages(dest, Arrays.asList("bar")),
+                client.sendMessages(dest, Arrays.asList("baz")),
+                client.sendMessages(dest, Arrays.asList("quux")));
+
+        assertThat(sent.get(0).get(1, TimeUnit.MINUTES), is(1));
+        assertThat(sent.get(1).get(1, TimeUnit.MINUTES), is(1));
+        assertThat(sent.get(2).get(1, TimeUnit.MINUTES), is(1));
+        assertThat(sent.get(3).get(1, TimeUnit.MINUTES), is(1));
+
+        TestUtils.setReplicas("queue-myqueue", dest, 1, 5, TimeUnit.MINUTES);
+
+        Future<List<String>> received = client.recvMessages("myqueue", 4);
+
+        assertThat(received.get(1, TimeUnit.MINUTES).size(), is(4));
+    }
 }
 
