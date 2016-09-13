@@ -17,11 +17,46 @@
 package enmasse.broker.prestop;
 
 import org.junit.Before;
+import org.junit.Test;
+
+import java.io.IOException;
+import java.util.Optional;
+import java.util.concurrent.TimeUnit;
+
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThat;
 
 public class DrainClientTest {
     private DrainClient client;
+    private Endpoint from = new Endpoint("127.0.0.1", 12345);
+    private Endpoint to = new Endpoint("127.0.0.1", 12346);
+    private TestBroker fromServer;
+    private TestBroker toServer;
 
     @Before
-    public void setup() {
+    public void setup() throws Exception {
+        fromServer = new TestBroker(from.hostName(), from.port(), "myqueue");
+        toServer = new TestBroker(to.hostName(), to.port(), "myqueue");
+        fromServer.start();
+        toServer.start();
+        client = new DrainClient(from, from, Optional.empty());
+    }
+
+    @Test
+    public void testDrain() throws InterruptedException, IOException {
+        fromServer.sendMessage("Hello drainer");
+        client.drainMessages(to, "myqueue");
+        String msg = toServer.recvMessage();
+        assertThat(msg, is("Hello drainer"));
+        assertShutdown(fromServer, 60, TimeUnit.SECONDS);
+    }
+
+    private void assertShutdown(TestBroker server, long timeout, TimeUnit timeUnit) throws InterruptedException {
+        long endTime = System.currentTimeMillis() + timeUnit.toMillis(timeout);
+        while (server.isActive() && System.currentTimeMillis() < endTime) {
+            Thread.sleep(1000);
+        }
+        assertFalse("Server has not been shut down", server.isActive());
     }
 }
