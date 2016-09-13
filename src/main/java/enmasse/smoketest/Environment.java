@@ -18,15 +18,16 @@ package enmasse.smoketest;
 
 import com.openshift.restclient.ClientBuilder;
 import com.openshift.restclient.IClient;
+import com.openshift.restclient.ResourceKind;
+import com.openshift.restclient.model.IService;
 
 public class Environment {
     public static final String user = System.getenv("OPENSHIFT_USER");
     public static final String token = System.getenv("OPENSHIFT_TOKEN");
     public static final String url = System.getenv("OPENSHIFT_URL");
     public static final String namespace = "myproject";
-//    public static final IClient client = new ClientBuilder(url).usingToken(token).withUserName(user).build();
-    //   val service: IService = client.get(ResourceKind.SERVICE, "messaging", namespace)
-    //  val endpoint = Endpoint(service.portalIP, service.port)
-    //val endpoint = Endpoint("172.30.56.135", 5672)
-    public static final Endpoint endpoint = new Endpoint("172.30.56.135", 5672);
+    public static final IClient client = new ClientBuilder(url).usingToken(token).withUserName(user).build();
+    public static final IService service = client.get(ResourceKind.SERVICE, "messaging", namespace);
+    public static final Endpoint endpoint = new Endpoint(service.getPortalIP(), service.getPort());
+    //public static final Endpoint endpoint = new Endpoint("172.30.56.135", 5672);
 }
