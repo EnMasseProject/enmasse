@@ -37,9 +37,9 @@ public class StoreAndForwardQueueTest extends VertxTestBase {
         List<String> msgs = Arrays.asList("foo", "bar", "baz");
 
         Future<Integer> numSent = client.sendMessages(dest, msgs);
-        Future<List<String>> received = client.recvMessages(dest, msgs.size());
-
         assertThat(numSent.get(1, TimeUnit.MINUTES), is(msgs.size()));
+
+        Future<List<String>> received = client.recvMessages(dest, msgs.size());
         assertThat(received.get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
     }
 }
