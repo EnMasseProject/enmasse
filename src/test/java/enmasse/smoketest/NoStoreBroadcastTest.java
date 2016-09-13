@@ -37,9 +37,10 @@ public class NoStoreBroadcastTest extends VertxTestBase {
 
         List<Future<List<String>>> recvResults = Arrays.asList(
             client.recvMessages(dest, msgs.size()),
-                client.recvMessages(dest, msgs.size()),
+            client.recvMessages(dest, msgs.size()),
             client.recvMessages(dest, msgs.size()));
 
+        Thread.sleep(10000);
         assertThat(client.sendMessages(dest, msgs).get(1, TimeUnit.MINUTES), is(msgs.size()));
 
         assertThat(recvResults.get(0).get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
