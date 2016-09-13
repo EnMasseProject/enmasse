@@ -14,9 +14,22 @@
  * limitations under the License.
  */
 
-package enmasse.smoketest
+package enmasse.smoketest;
 
-/**
- * @author Ulf Lilleengen
- */
-data class Endpoint(val host: String, val port: Int)
+public class Endpoint {
+    private final String host;
+    private final int port;
+
+    public Endpoint(String host, int port) {
+        this.host = host;
+        this.port = port;
+    }
+
+    public String getHost() {
+        return host;
+    }
+
+    public int getPort() {
+        return port;
+    }
+}
