@@ -62,7 +62,7 @@ public class EnMasseClient {
             connection.createReceiver(address)
                 .openHandler(opened -> {
                     latch.countDown();
-                    System.out.println("Receiver opened by remote");
+                    System.out.println("Receiving messages from " + connection.getRemoteContainer());
                 })
                 .setSource(source)
                 .handler((delivery, message) -> {
@@ -84,7 +84,9 @@ public class EnMasseClient {
         AtomicInteger count = new AtomicInteger(0);
         CompletableFuture<Integer> future = new CompletableFuture<>();
         client.connect(endpoint.getHost(), endpoint.getPort(), event -> {
-            ProtonConnection connection = event.result().open();
+            ProtonConnection connection = event.result();
+            connection.openHandler(result -> System.out.println("Sending messages to " + result.result().getRemoteContainer()));
+            connection.open();
             Target target = new Target();
             target.setAddress(address);
             if (isTopic) {
