@@ -22,7 +22,6 @@ import com.openshift.restclient.IClient;
 import com.openshift.restclient.ResourceKind;
 import com.openshift.restclient.images.DockerImageURI;
 import com.openshift.restclient.model.IContainer;
-import io.vertx.core.impl.FileResolver;
 
 import java.io.File;
 import java.io.IOException;
