@@ -27,9 +27,6 @@ public class Main {
 
     public static void main(String args[]) {
         try {
-            // Kind of a hack
-            System.setProperty(FileResolver.CACHE_DIR_BASE_PROP_NAME, "/tmp/vert.x");
-
             StorageController service = new StorageController(StorageControllerOptions.fromEnv(System.getenv()));
             service.run();
         } catch (IllegalArgumentException e) {
