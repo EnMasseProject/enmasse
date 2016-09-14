@@ -31,8 +31,6 @@ import java.util.Optional;
 
 public class Main {
     public static void main(String [] args) throws Exception {
-        System.setProperty(FileResolver.CACHE_DIR_BASE_PROP_NAME, "/tmp/vert.x");
-
         boolean debug = System.getenv("PRESTOP_DEBUG") != null;
         String address = System.getenv("QUEUE_NAME");
 
