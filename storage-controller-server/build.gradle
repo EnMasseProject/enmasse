@@ -14,4 +14,4 @@ dependencies {
 
 apply plugin: 'application'
 mainClassName = 'enmasse.storage.controller.Main'
-applicationDefaultJvmArgs = ["-Dvertx.disableFileCaching"]
+applicationDefaultJvmArgs = ["-Dvertx.disableFileCaching", "-Dvertx.disableFileCPResolving"]
