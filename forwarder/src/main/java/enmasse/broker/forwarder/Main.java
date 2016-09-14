@@ -37,8 +37,6 @@ import java.util.Map;
 public class Main {
 
     public static void main(String [] args) throws IOException, InterruptedException {
-        System.setProperty(FileResolver.CACHE_DIR_BASE_PROP_NAME, "/tmp/vert.x");
-
         Map<String, String> env = System.getenv();
         IClient client = createClient(env);
         String namespace = openshiftNamespace();
