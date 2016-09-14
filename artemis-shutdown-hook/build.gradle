@@ -27,4 +27,4 @@ dependencies {
 
 apply plugin: 'application'
 mainClassName = 'enmasse.broker.prestop.Main'
-applicationDefaultJvmArgs = ["-Dvertx.disableFileCaching"]
+applicationDefaultJvmArgs = ["-Dvertx.disableFileCaching", "-Dvertx.disableFileCPResolving"]
