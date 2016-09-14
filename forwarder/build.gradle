@@ -17,4 +17,4 @@ dependencies {
 
 apply plugin: 'application'
 mainClassName = 'enmasse.broker.forwarder.Main'
-applicationDefaultJvmArgs = ["-Dvertx.disableFileCaching", "-Dvertx.disableFileCPResolving"]
+applicationDefaultJvmArgs = ["-Dvertx.disableFileCaching=true", "-Dvertx.disableFileCPResolving=true"]
