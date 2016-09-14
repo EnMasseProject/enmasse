@@ -16,8 +16,6 @@
 
 package enmasse.storage.controller;
 
-import io.vertx.core.impl.FileResolver;
-
 import java.io.IOException;
 
 public class Main {
