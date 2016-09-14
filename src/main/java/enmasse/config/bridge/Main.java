@@ -19,7 +19,6 @@ package enmasse.config.bridge;
 import com.openshift.restclient.ClientBuilder;
 import com.openshift.restclient.IClient;
 import com.openshift.restclient.authorization.TokenAuthorizationStrategy;
-import io.vertx.core.impl.FileResolver;
 import enmasse.config.bridge.amqp.AMQPServer;
 import enmasse.config.bridge.openshift.OpenshiftConfigMapDatabase;
 
