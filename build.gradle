@@ -35,4 +35,4 @@ dependencies {
 
 apply plugin: 'application'
 mainClassName = 'enmasse.config.bridge.Main'
-applicationDefaultJvmArgs = ["-Dvertx.disableFileCaching"]
+applicationDefaultJvmArgs = ["-Dvertx.disableFileCaching", "-Dvertx.disableFileCPResolving"]
