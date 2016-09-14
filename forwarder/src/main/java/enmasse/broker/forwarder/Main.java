@@ -20,7 +20,6 @@ import com.openshift.restclient.ClientBuilder;
 import com.openshift.restclient.IClient;
 import enmasse.discovery.DiscoveryClient;
 import enmasse.discovery.Host;
-import io.vertx.core.impl.FileResolver;
 
 import java.io.File;
 import java.io.IOException;
