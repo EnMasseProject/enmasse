@@ -20,9 +20,6 @@ import io.vertx.core.impl.FileResolver;
 
 import java.io.IOException;
 
-/**
- * @author lulf
- */
 public class Main {
 
     public static void main(String args[]) {
