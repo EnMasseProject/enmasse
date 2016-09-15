@@ -2,39 +2,88 @@
   generate(image_name)::
   {
     "apiVersion": "v1",
-    "kind": "ReplicationController",
-    "metadata": {
-      "labels": {
-        "name": "configmap-bridge"
-      },
-      "name": "configmap-bridge"
-    },
-    "spec": {
-      "replicas": 1,
-      "selector": {
-        "name": "configmap-bridge"
-      },
-      "template": {
+    "kind": "List",
+    "items": [
+      {
+        "apiVersion": "v1",
+        "kind": "ImageStream",
         "metadata": {
-          "labels": {
-            "name": "configmap-bridge"
-          }
+          "name": "configmap-bridge"
         },
         "spec": {
-          "containers": [
+          "dockerImageRepository": image_name,
+          "tags": [
             {
-              "image": image_name,
-              "name": "bridge",
-              "ports": [
-                {
-                  "name": "amqp",
-                  "containerPort": 5672
-                }
-              ]
+              "name": "latest",
+              "annotations": {
+                "description": "ConfigMap AMQP Bridge",
+                "tags": "enmasse,messaging,configmap,amqp",
+                "version": "1.0"
+              }
             }
           ]
         }
+      },
+      {
+        "apiVersion": "v1",
+        "kind": "DeploymentConfig",
+        "metadata": {
+          "labels": {
+            "name": "configmap-bridge"
+          },
+          "name": "configmap-bridge"
+        },
+        "spec": {
+          "replicas": 1,
+          "selector": {
+            "name": "configmap-bridge"
+          },
+          "triggers": [
+            {
+              "type": "ConfigChange"
+            },
+            {
+              "type": "ImageChange",
+              "imageChangeParams": {
+                "automatic": true,
+                "containerNames": [
+                  "bridge"
+                ],
+                "from": {
+                  "kind": "ImageStreamTag",
+                  "name": "configmap-bridge:latest"
+                }
+              }
+            }
+          ],
+          "template": {
+            "metadata": {
+              "labels": {
+                "name": "configmap-bridge"
+              }
+            },
+            "spec": {
+              "containers": [
+                {
+                  "image": "configmap-bridge",
+                  "name": "bridge",
+                  "ports": [
+                    {
+                      "name": "amqp",
+                      "containerPort": 5672
+                    }
+                  ],
+                  "livenessProbe": {
+                    "tcpSocket": {
+                      "port": 5672
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
       }
-    }
+    ]
   }
 }
