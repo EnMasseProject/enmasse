@@ -81,11 +81,12 @@ public class StorageController implements Runnable, AutoCloseable {
     private void startHealthServer(AtomicInteger openReceivers) {
         vertx.createHttpServer()
                 .requestHandler(request -> {
-                    if (openReceivers.get() == 2) {
+                    int numOpen = openReceivers.get();
+                    if (numOpen == 2) {
                         log.info("Got 2 receivers, sending OK");
                         request.response().setStatusCode(HttpResponseStatus.OK.code()).end();
                     } else {
-                        log.info("Got " + openReceivers.get() + " receivers, sending error");
+                        log.info("Got " + numOpen + " receivers, sending error");
                         request.response().setStatusCode(HttpResponseStatus.INTERNAL_SERVER_ERROR.code()).end();
                     }
                 })
