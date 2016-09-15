@@ -11,6 +11,8 @@ if [ ! -d "$INSTANCE" ]; then
     cp $CONFIG_TEMPLATES/broker_header.xml /tmp/broker.xml
     if [ -n "$QUEUE_NAME" ]; then
         cat $CONFIG_TEMPLATES/broker_queue.xml >> /tmp/broker.xml
+    elif [ -n "$TOPIC_NAME" ]; then
+        cat $CONFIG_TEMPLATES/broker_topic.xml >> /tmp/broker.xml
     fi
     cat $CONFIG_TEMPLATES/broker_footer.xml >> /tmp/broker.xml
 

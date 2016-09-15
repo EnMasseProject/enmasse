@@ -1,0 +1,6 @@
+      <queues>
+        <queue name="____dummy____">
+            <address>$TOPIC_NAME</address>
+            <filter string="false"/>
+        </queue>
+      </queues>
