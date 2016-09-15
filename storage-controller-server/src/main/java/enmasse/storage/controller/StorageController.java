@@ -82,8 +82,10 @@ public class StorageController implements Runnable, AutoCloseable {
         vertx.createHttpServer()
                 .requestHandler(request -> {
                     if (openReceivers.get() == 2) {
+                        log.info("Got 2 receivers, sending OK");
                         request.response().setStatusCode(HttpResponseStatus.OK.code()).end();
                     } else {
+                        log.info("Got " + openReceivers.get() + " receivers, sending error");
                         request.response().setStatusCode(HttpResponseStatus.INTERNAL_SERVER_ERROR.code()).end();
                     }
                 })
