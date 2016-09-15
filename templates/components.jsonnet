@@ -2,6 +2,7 @@ local configmapBridge = import "include/configmap-bridge.jsonnet";
 local ragent = import "include/ragent.jsonnet";
 local qdrouterd = import "include/qdrouterd.jsonnet";
 local storageController = import "include/storage-controller.jsonnet";
+local subserv = import "include/subserv.jsonnet";
 local messagingService = import "include/messaging-service.jsonnet";
 {
   "messaging-service.json": messagingService.generate(false),
@@ -13,5 +14,6 @@ local messagingService = import "include/messaging-service.jsonnet";
   "storage-controller-dc.json": storageController.deployment,
   "storage-controller-imagestream.json": storageController.imagestream("enmasseproject/storage-controller:latest"),
   "ragent-image-stream.json": ragent.imagestream("enmasseproject/ragent:latest"),
-  "ragent-dc.json": ragent.deployment
+  "ragent-dc.json": ragent.deployment,
+  "subserv-rc.json": subserv.generate("enmasseproject/subserv:latest")
 }
