@@ -73,7 +73,7 @@ objects:
   parameters:
   - description: The image to use for the broker
     name: BROKER_IMAGE
-    value: enmasseproject/artemis:latest
+    value: "${DEFAULT_BROKER_IMAGE}"
   - description: The image to use for the router
     name: COLOCATED_ROUTER_IMAGE
     value: "${ROUTER_IMAGE}"
@@ -169,7 +169,7 @@ objects:
   parameters:
   - description: The image to use for the broker
     name: BROKER_IMAGE
-    value: enmasseproject/artemis:latest
+    value: "${DEFAULT_BROKER_IMAGE}"
   - description: The image to use for the router
     name: COLOCATED_ROUTER_IMAGE
     value: "${ROUTER_IMAGE}"
@@ -259,7 +259,7 @@ objects:
   parameters:
   - description: The image to use for the broker
     name: BROKER_IMAGE
-    value: enmasseproject/artemis:latest
+    value: "${DEFAULT_BROKER_IMAGE}"
   - description: The image to use for the router
     name: COLOCATED_ROUTER_IMAGE
     value: "${ROUTER_IMAGE}"
@@ -360,7 +360,7 @@ objects:
   parameters:
   - description: The image to use for the broker
     name: BROKER_IMAGE
-    value: enmasseproject/artemis:latest
+    value: "${DEFAULT_BROKER_IMAGE}"
   - description: The image to use for the router
     name: COLOCATED_ROUTER_IMAGE
     value: "${ROUTER_IMAGE}"
@@ -565,6 +565,9 @@ parameters:
 - description: The image to use for the router
   name: ROUTER_IMAGE
   value: gordons/qdrouterd:latest
+- description: The default image to use as broker
+  name: DEFAULT_BROKER_IMAGE
+  value: enmasseproject/artemis:latest
 - description: The link capacity setting for router
   name: ROUTER_LINK_CAPACITY
   value: '50'
