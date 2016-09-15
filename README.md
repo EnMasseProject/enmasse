@@ -1,5 +1,9 @@
 # Setting up EnMasse
 
+# Requirements
+
+   * Openshift version >= 1.3
+
 ### Note for contributors
 
 To make changes, edit the files in the template/ folder and run 'make' to generate the yaml files.
