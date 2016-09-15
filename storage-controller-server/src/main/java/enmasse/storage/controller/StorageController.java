@@ -22,6 +22,7 @@ import enmasse.storage.controller.admin.ClusterManager;
 import enmasse.storage.controller.admin.FlavorManager;
 import enmasse.storage.controller.generator.TemplateStorageGenerator;
 import enmasse.storage.controller.openshift.OpenshiftClient;
+import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.Vertx;
 import io.vertx.proton.ProtonClient;
 import io.vertx.proton.ProtonConnection;
@@ -29,6 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @author lulf
@@ -59,33 +61,51 @@ public class StorageController implements Runnable, AutoCloseable {
     }
 
     public void run() {
+        AtomicInteger openReceivers = new AtomicInteger(0);
         client.connect(options.configHost(), options.configPort(), connectionHandle -> {
             if (connectionHandle.succeeded()) {
                 connection = connectionHandle.result();
                 connection.open();
 
-                openReceiver(connection, "flavor", new ConfigAdapter(flavorManager::configUpdated));
-                openReceiver(connection, "maas", new ConfigAdapter(clusterManager::configUpdated));
+                openReceiver(connection, "flavor", new ConfigAdapter(flavorManager::configUpdated), openReceivers);
+                openReceiver(connection, "maas", new ConfigAdapter(clusterManager::configUpdated), openReceivers);
             } else {
                 log.error("Connect failed: " + connectionHandle.cause().getMessage());
                 vertx.close();
             }
         });
+
+        startHealthServer(openReceivers);
     }
 
-    private void openReceiver(ProtonConnection connection, String address, ConfigAdapter configAdapter) {
+    private void startHealthServer(AtomicInteger openReceivers) {
+        vertx.createHttpServer()
+                .requestHandler(request -> {
+                    if (openReceivers.get() == 2) {
+                        request.response().setStatusCode(HttpResponseStatus.OK.code()).end();
+                    } else {
+                        request.response().setStatusCode(HttpResponseStatus.INTERNAL_SERVER_ERROR.code()).end();
+                    }
+                })
+                .listen(8080);
+    }
+
+    private void openReceiver(ProtonConnection connection, String address, ConfigAdapter configAdapter, AtomicInteger openReceivers) {
         connection.createReceiver(address)
                 .handler(configAdapter)
                 .openHandler(result -> {
                     if (result.succeeded()) {
                         log.info("Receiver for " + address + " opened");
+                        openReceivers.incrementAndGet();
                     } else {
                         log.warn("Unable to open receiver for " + address + ": " + result.cause().getMessage());
                         vertx.close();
                     }})
                 .closeHandler(result -> {
                     if (result.succeeded()) {
+                        openReceivers.decrementAndGet();
                         log.info("Receiver for " + address + " closed");
+
                     } else {
                         log.error("Receiver for " + address + " closed: " + result.cause().getMessage());
                         vertx.close();
