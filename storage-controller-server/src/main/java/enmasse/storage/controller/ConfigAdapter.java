@@ -28,9 +28,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
-/**
- * @author Ulf Lilleengen
- */
 public class ConfigAdapter implements ProtonMessageHandler {
     private static final ObjectMapper mapper = new ObjectMapper();
     private static final Logger log = LoggerFactory.getLogger(ConfigAdapter.class.getName());

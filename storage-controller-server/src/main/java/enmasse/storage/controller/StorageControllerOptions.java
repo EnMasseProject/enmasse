@@ -21,9 +21,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Map;
 
-/**
- * @author lulf
- */
 public final class StorageControllerOptions {
 
     private final String configHost;
