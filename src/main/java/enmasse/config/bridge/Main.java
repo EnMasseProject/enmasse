@@ -18,7 +18,6 @@ package enmasse.config.bridge;
 
 import com.openshift.restclient.ClientBuilder;
 import com.openshift.restclient.IClient;
-import com.openshift.restclient.authorization.TokenAuthorizationStrategy;
 import enmasse.config.bridge.amqp.AMQPServer;
 import enmasse.config.bridge.openshift.OpenshiftConfigMapDatabase;
 
@@ -42,7 +41,7 @@ public class Main {
             String openshiftNamespace = getOpenshiftNamespace();
 
             IClient client = new ClientBuilder(openshiftUri)
-                    .authorizationStrategy(new TokenAuthorizationStrategy(getAuthenticationToken()))
+                    .usingToken(getAuthenticationToken())
                     .build();
 
             OpenshiftConfigMapDatabase database = new OpenshiftConfigMapDatabase(client, openshiftNamespace);
