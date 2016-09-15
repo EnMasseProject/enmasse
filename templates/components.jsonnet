@@ -8,7 +8,8 @@ local messagingService = import "include/messaging-service.jsonnet";
   "tls-messaging-service.json": messagingService.generate(true),
   "qdrouterd-rc.json": qdrouterd.generate(false),
   "tls-qdrouterd-rc.json": qdrouterd.generate(true),
-  "configmap-bridge-rc.json": configmapBridge.generate("enmasseproject/configmap-bridge:latest"),
+  "configmap-bridge-dc.json": configmapBridge.deployment,
+  "configmap-bridge-imagestream.json": configmapBridge.imagestream("enmasseproject/configmap-bridge:latest"),
   "storage-controller.json": storageController.generate("enmasseproject/storage-controller:latest"),
   "ragent-rc.json": ragent.generate("enmasseproject/ragent:latest")
 }

@@ -1,0 +1,13 @@
+---
+apiVersion: v1
+kind: ImageStream
+metadata:
+  name: configmap-bridge
+spec:
+  dockerImageRepository: enmasseproject/configmap-bridge:latest
+  tags:
+  - annotations:
+      description: ConfigMap AMQP Bridge
+      tags: enmasse,messaging,configmap,amqp
+      version: '1.0'
+    name: latest
