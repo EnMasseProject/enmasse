@@ -483,7 +483,21 @@ objects:
           secret:
             secretName: qdrouterd-certs
 - apiVersion: v1
-  kind: ReplicationController
+  kind: ImageStream
+  metadata:
+    name: storage-controller
+  spec:
+    dockerImageRepository: "${STORAGE_CONTROLLER_IMAGE}"
+    importPolicy:
+      scheduled: true
+    tags:
+    - annotations:
+        description: EnMasse storage controller
+        tags: enmasse,messaging,storage,controller
+        version: '1.0'
+      name: latest
+- apiVersion: v1
+  kind: DeploymentConfig
   metadata:
     labels:
       name: storage-controller
@@ -492,15 +506,36 @@ objects:
     replicas: 1
     selector:
       name: storage-controller
+    strategy:
+      rollingParams:
+        maxSurge: 0
+      type: Rolling
     template:
       metadata:
         labels:
           name: storage-controller
       spec:
         containers:
-        - image: "${STORAGE_CONTROLLER_IMAGE}"
+        - image: storage-controller
+          livenessProbe:
+            httpGet:
+              path: "/health"
+              port: health
           name: controller
+          ports:
+          - containerPort: 8080
+            name: health
         serviceAccount: deployer
+    triggers:
+    - type: ConfigChange
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+        - controller
+        from:
+          kind: ImageStreamTag
+          name: storage-controller:latest
+      type: ImageChange
 - apiVersion: v1
   kind: Service
   metadata:

@@ -1,0 +1,15 @@
+---
+apiVersion: v1
+kind: ImageStream
+metadata:
+  name: storage-controller
+spec:
+  dockerImageRepository: enmasseproject/storage-controller:latest
+  importPolicy:
+    scheduled: true
+  tags:
+  - annotations:
+      description: EnMasse storage controller
+      tags: enmasse,messaging,storage,controller
+      version: '1.0'
+    name: latest
