@@ -342,6 +342,8 @@ objects:
     name: configmap-bridge
   spec:
     dockerImageRepository: "${CONFIGMAP_BRIDGE_IMAGE}"
+    importPolicy:
+      scheduled: true
     tags:
     - annotations:
         description: ConfigMap AMQP Bridge

@@ -5,6 +5,8 @@ metadata:
   name: configmap-bridge
 spec:
   dockerImageRepository: enmasseproject/configmap-bridge:latest
+  importPolicy:
+    scheduled: true
   tags:
   - annotations:
       description: ConfigMap AMQP Bridge

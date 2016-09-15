@@ -17,7 +17,10 @@
               "version": "1.0"
             }
           }
-        ]
+        ],
+        "importPolicy": {
+          "scheduled": true
+        }
       }
     },
   deployment::
