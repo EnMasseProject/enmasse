@@ -75,7 +75,7 @@
                 ],
                 "livenessProbe": {
                   "tcpSocket": {
-                    "port": 5672
+                    "port": "amqp"
                   }
                 }
               }

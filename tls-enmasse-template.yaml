@@ -409,7 +409,7 @@ objects:
         - image: configmap-bridge
           livenessProbe:
             tcpSocket:
-              port: 5672
+              port: amqp
           name: bridge
           ports:
           - containerPort: 5672
