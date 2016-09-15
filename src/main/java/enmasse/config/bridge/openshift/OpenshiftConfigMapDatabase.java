@@ -57,7 +57,7 @@ public class OpenshiftConfigMapDatabase implements IOpenShiftWatchListener, Auto
     public void connected(List<IResource> resources) {
         log.info("Connected, got " + resources.size() + " resources");
         for (IResource resource : resources) {
-            log.info("Resource kind is " + resource.getKind());
+            log.info("Resource kind is " + resource.getKind() + " with class " + resource.getClass().getCanonicalName());
             IConfigMap configMap = (IConfigMap) resource;
 
             ConfigMap map = getOrCreateConfigMap(configMap.getName());
