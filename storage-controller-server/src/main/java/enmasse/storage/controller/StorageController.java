@@ -83,10 +83,10 @@ public class StorageController implements Runnable, AutoCloseable {
                 .requestHandler(request -> {
                     int numOpen = openReceivers.get();
                     if (numOpen == 2) {
-                        log.info("Got 2 receivers, sending OK");
+                        log.debug("Got 2 receivers, sending OK");
                         request.response().setStatusCode(HttpResponseStatus.OK.code()).end();
                     } else {
-                        log.info("Got " + numOpen + " receivers, sending error");
+                        log.debug("Got " + numOpen + " receivers, sending error");
                         request.response().setStatusCode(HttpResponseStatus.INTERNAL_SERVER_ERROR.code()).end();
                     }
                 })
