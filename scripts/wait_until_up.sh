@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 EXPECTED_PODS=$1
 TIMEOUT=600
 NOW=$(date +%s)
