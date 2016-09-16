@@ -17,8 +17,8 @@
 package enmasse.smoketest;
 
 import com.openshift.restclient.ResourceKind;
+import com.openshift.restclient.model.IDeploymentConfig;
 import com.openshift.restclient.model.IPod;
-import com.openshift.restclient.model.IReplicationController;
 
 import java.util.Collections;
 import java.util.List;
@@ -29,7 +29,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class TestUtils {
     public static void setReplicas(String controllerName, String address, int numReplicas, long timeout, TimeUnit timeUnit) throws InterruptedException {
-        IReplicationController controller = Environment.client.get(ResourceKind.REPLICATION_CONTROLLER, controllerName, Environment.namespace);
+        IDeploymentConfig controller = Environment.client.get(ResourceKind.DEPLOYMENT_CONFIG, controllerName, Environment.namespace);
         controller.setReplicas(numReplicas);
         Environment.client.update(controller);
         waitForNReplicas(address, numReplicas, timeout, timeUnit);
