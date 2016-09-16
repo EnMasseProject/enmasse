@@ -10,13 +10,14 @@ script:
   - gradle libs
   - gradle distTar
   - gradle downloadArtemis
+  - export REPO=enmasseproject/artemis
+  - export TAG=`if [ "$TRAVIS_BRANCH" == "master" ]; then echo "latest"; else echo $TRAVIS_BRANCH
+    ; fi`
+  - find . -type f
+  - docker build -t $REPO:$COMMIT .
 
 after_success:
-- export REPO=enmasseproject/artemis
-- export TAG=`if [ "$TRAVIS_BRANCH" == "master" ]; then echo "latest"; else echo $TRAVIS_BRANCH
-  ; fi`
-- find . -type f
-- docker build -t $REPO:$COMMIT .
+- echo "REPO: $REPO"
 - if [ "$TRAVIS_BRANCH" == "master" ] && [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
   docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS;
   docker tag $REPO:$COMMIT $REPO:$TAG;
