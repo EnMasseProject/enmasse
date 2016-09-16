@@ -2,7 +2,7 @@ local router = import "router.jsonnet";
 local broker = import "broker.jsonnet";
 local forwarder = import "forwarder.jsonnet";
 {
-  template(multicast, persistence, secure, router_image, default_broker_image)::
+  template(multicast, persistence, secure)::
     local addrtype = (if multicast then "topic" else "queue");
     local addressEnv = (if multicast then { name: "TOPIC_NAME", value: "${ADDRESS}" } else { name: "QUEUE_NAME", value: "${ADDRESS}" });
     local volumeName = "vol-${ADDRESS}";
@@ -19,7 +19,7 @@ local forwarder = import "forwarder.jsonnet";
       },
       local controller = {
         "apiVersion": "v1",
-        "kind": "ReplicationController",
+        "kind": "DeploymentConfig",
         "metadata": {
           "name": addrtype + "-${ADDRESS}"
         },
@@ -29,6 +29,37 @@ local forwarder = import "forwarder.jsonnet";
             "address": "${ADDRESS}",
             "role": "broker"
           },
+          "triggers": [
+            {
+              "type": "ConfigChange"
+            },
+            {
+              "type": "ImageChange",
+              "imageChangeParams": {
+                "automatic": true,
+                "containerNames": [
+                  "router"
+                ],
+                "from": {
+                  "kind": "ImageStreamTag",
+                  "name": "router:latest"
+                }
+              }
+            },
+            {
+              "type": "ImageChange",
+              "imageChangeParams": {
+                "automatic": true,
+                "containerNames": [
+                  "broker"
+                ],
+                "from": {
+                  "kind": "ImageStreamTag",
+                  "name": "artemis:latest" 
+                }
+              }
+            }
+          ],
           "template": {
             "metadata": {
               "labels": {
@@ -46,8 +77,8 @@ local forwarder = import "forwarder.jsonnet";
                 else [brokerVolume],
 
               "containers": if multicast
-                then [ broker.container(volumeName, addressEnv), router.container("${COLOCATED_ROUTER_IMAGE}", secure, addressEnv), forwarder.container(addressEnv) ]
-                else [ broker.container(volumeName, addressEnv), router.container("${COLOCATED_ROUTER_IMAGE}", secure, addressEnv) ]
+                then [ broker.container(volumeName, addressEnv), router.container(secure, addressEnv), forwarder.container(addressEnv) ]
+                else [ broker.container(volumeName, addressEnv), router.container(secure, addressEnv) ]
             }
           }
         }
@@ -73,16 +104,6 @@ local forwarder = import "forwarder.jsonnet";
         then [pvc, controller]
         else [controller],
       "parameters": [
-        {
-          "name": "BROKER_IMAGE",
-          "description": "The image to use for the broker",
-          "value": default_broker_image
-        },
-        {
-          "name": "COLOCATED_ROUTER_IMAGE",
-          "description": "The image to use for the router",
-          "value": router_image
-        },
         {
           "name": "TOPIC_FORWARDER_IMAGE",
           "description": "The image to use for the topic forwarder",

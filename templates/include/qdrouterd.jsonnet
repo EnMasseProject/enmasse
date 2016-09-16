@@ -12,10 +12,10 @@ local router = import "router.jsonnet";
     "protocol": "TCP",
     "targetPort": 5671
   },
-  generate(secure)::
+  deployment(secure)::
     {
       "apiVersion": "v1",
-      "kind": "ReplicationController",
+      "kind": "DeploymentConfig",
       "metadata": {
         "labels": {
           "name": "qdrouterd"
@@ -27,6 +27,24 @@ local router = import "router.jsonnet";
         "selector": {
           "name": "qdrouterd"
         },
+        "triggers": [
+          {
+            "type": "ConfigChange"
+          },
+          {
+            "type": "ImageChange",
+            "imageChangeParams": {
+              "automatic": true,
+              "containerNames": [
+                "router"
+              ],
+              "from": {
+                "kind": "ImageStreamTag",
+                "name": "router:latest"
+              }
+            }
+          }
+        ],
         "template": {
           "metadata": {
             "labels": {
@@ -35,7 +53,7 @@ local router = import "router.jsonnet";
             }
           },
           "spec": {
-            "containers": [ router.container("${ROUTER_IMAGE}", secure, "") ],
+            "containers": [ router.container(secure, "") ],
             [if secure then "volumes" ]: [
               router.secret_volume()
             ]

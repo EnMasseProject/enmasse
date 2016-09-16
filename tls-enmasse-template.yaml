@@ -12,7 +12,7 @@ objects:
     name: secure-queue-inmemory
   objects:
   - apiVersion: v1
-    kind: ReplicationController
+    kind: DeploymentConfig
     metadata:
       name: queue-${ADDRESS}
     spec:
@@ -31,12 +31,15 @@ objects:
           - env:
             - name: QUEUE_NAME
               value: "${ADDRESS}"
-            image: "${BROKER_IMAGE}"
+            image: artemis
             lifecycle:
               preStop:
                 exec:
                   command:
                   - "/opt/artemis-shutdown-hook/bin/artemis-shutdown-hook"
+            livenessProbe:
+              tcpSocket:
+                port: amqp
             name: broker
             ports:
             - containerPort: 5673
@@ -51,7 +54,10 @@ objects:
               value: "${ROUTER_LINK_CAPACITY}"
             - name: QUEUE_NAME
               value: "${ADDRESS}"
-            image: "${COLOCATED_ROUTER_IMAGE}"
+            image: router
+            livenessProbe:
+              tcpSocket:
+                port: amqp
             name: router
             ports:
             - containerPort: 5672
@@ -70,13 +76,25 @@ objects:
           - name: ssl-certs
             secret:
               secretName: qdrouterd-certs
+      triggers:
+      - type: ConfigChange
+      - imageChangeParams:
+          automatic: true
+          containerNames:
+          - router
+          from:
+            kind: ImageStreamTag
+            name: router:latest
+        type: ImageChange
+      - imageChangeParams:
+          automatic: true
+          containerNames:
+          - broker
+          from:
+            kind: ImageStreamTag
+            name: artemis:latest
+        type: ImageChange
   parameters:
-  - description: The image to use for the broker
-    name: BROKER_IMAGE
-    value: "${DEFAULT_BROKER_IMAGE}"
-  - description: The image to use for the router
-    name: COLOCATED_ROUTER_IMAGE
-    value: "${ROUTER_IMAGE}"
   - description: The image to use for the topic forwarder
     name: TOPIC_FORWARDER_IMAGE
     value: enmasseproject/topic-forwarder:latest
@@ -107,7 +125,7 @@ objects:
         requests:
           storage: "${STORAGE_CAPACITY}"
   - apiVersion: v1
-    kind: ReplicationController
+    kind: DeploymentConfig
     metadata:
       name: queue-${ADDRESS}
     spec:
@@ -126,12 +144,15 @@ objects:
           - env:
             - name: QUEUE_NAME
               value: "${ADDRESS}"
-            image: "${BROKER_IMAGE}"
+            image: artemis
             lifecycle:
               preStop:
                 exec:
                   command:
                   - "/opt/artemis-shutdown-hook/bin/artemis-shutdown-hook"
+            livenessProbe:
+              tcpSocket:
+                port: amqp
             name: broker
             ports:
             - containerPort: 5673
@@ -146,7 +167,10 @@ objects:
               value: "${ROUTER_LINK_CAPACITY}"
             - name: QUEUE_NAME
               value: "${ADDRESS}"
-            image: "${COLOCATED_ROUTER_IMAGE}"
+            image: router
+            livenessProbe:
+              tcpSocket:
+                port: amqp
             name: router
             ports:
             - containerPort: 5672
@@ -166,13 +190,25 @@ objects:
           - name: ssl-certs
             secret:
               secretName: qdrouterd-certs
+      triggers:
+      - type: ConfigChange
+      - imageChangeParams:
+          automatic: true
+          containerNames:
+          - router
+          from:
+            kind: ImageStreamTag
+            name: router:latest
+        type: ImageChange
+      - imageChangeParams:
+          automatic: true
+          containerNames:
+          - broker
+          from:
+            kind: ImageStreamTag
+            name: artemis:latest
+        type: ImageChange
   parameters:
-  - description: The image to use for the broker
-    name: BROKER_IMAGE
-    value: "${DEFAULT_BROKER_IMAGE}"
-  - description: The image to use for the router
-    name: COLOCATED_ROUTER_IMAGE
-    value: "${ROUTER_IMAGE}"
   - description: The image to use for the topic forwarder
     name: TOPIC_FORWARDER_IMAGE
     value: enmasseproject/topic-forwarder:latest
@@ -193,7 +229,7 @@ objects:
     name: secure-topic-inmemory
   objects:
   - apiVersion: v1
-    kind: ReplicationController
+    kind: DeploymentConfig
     metadata:
       name: topic-${ADDRESS}
     spec:
@@ -212,12 +248,15 @@ objects:
           - env:
             - name: TOPIC_NAME
               value: "${ADDRESS}"
-            image: "${BROKER_IMAGE}"
+            image: artemis
             lifecycle:
               preStop:
                 exec:
                   command:
                   - "/opt/artemis-shutdown-hook/bin/artemis-shutdown-hook"
+            livenessProbe:
+              tcpSocket:
+                port: amqp
             name: broker
             ports:
             - containerPort: 5673
@@ -232,7 +271,10 @@ objects:
               value: "${ROUTER_LINK_CAPACITY}"
             - name: TOPIC_NAME
               value: "${ADDRESS}"
-            image: "${COLOCATED_ROUTER_IMAGE}"
+            image: router
+            livenessProbe:
+              tcpSocket:
+                port: amqp
             name: router
             ports:
             - containerPort: 5672
@@ -256,13 +298,25 @@ objects:
           - name: ssl-certs
             secret:
               secretName: qdrouterd-certs
+      triggers:
+      - type: ConfigChange
+      - imageChangeParams:
+          automatic: true
+          containerNames:
+          - router
+          from:
+            kind: ImageStreamTag
+            name: router:latest
+        type: ImageChange
+      - imageChangeParams:
+          automatic: true
+          containerNames:
+          - broker
+          from:
+            kind: ImageStreamTag
+            name: artemis:latest
+        type: ImageChange
   parameters:
-  - description: The image to use for the broker
-    name: BROKER_IMAGE
-    value: "${DEFAULT_BROKER_IMAGE}"
-  - description: The image to use for the router
-    name: COLOCATED_ROUTER_IMAGE
-    value: "${ROUTER_IMAGE}"
   - description: The image to use for the topic forwarder
     name: TOPIC_FORWARDER_IMAGE
     value: enmasseproject/topic-forwarder:latest
@@ -293,7 +347,7 @@ objects:
         requests:
           storage: "${STORAGE_CAPACITY}"
   - apiVersion: v1
-    kind: ReplicationController
+    kind: DeploymentConfig
     metadata:
       name: topic-${ADDRESS}
     spec:
@@ -312,12 +366,15 @@ objects:
           - env:
             - name: TOPIC_NAME
               value: "${ADDRESS}"
-            image: "${BROKER_IMAGE}"
+            image: artemis
             lifecycle:
               preStop:
                 exec:
                   command:
                   - "/opt/artemis-shutdown-hook/bin/artemis-shutdown-hook"
+            livenessProbe:
+              tcpSocket:
+                port: amqp
             name: broker
             ports:
             - containerPort: 5673
@@ -332,7 +389,10 @@ objects:
               value: "${ROUTER_LINK_CAPACITY}"
             - name: TOPIC_NAME
               value: "${ADDRESS}"
-            image: "${COLOCATED_ROUTER_IMAGE}"
+            image: router
+            livenessProbe:
+              tcpSocket:
+                port: amqp
             name: router
             ports:
             - containerPort: 5672
@@ -357,13 +417,25 @@ objects:
           - name: ssl-certs
             secret:
               secretName: qdrouterd-certs
+      triggers:
+      - type: ConfigChange
+      - imageChangeParams:
+          automatic: true
+          containerNames:
+          - router
+          from:
+            kind: ImageStreamTag
+            name: router:latest
+        type: ImageChange
+      - imageChangeParams:
+          automatic: true
+          containerNames:
+          - broker
+          from:
+            kind: ImageStreamTag
+            name: artemis:latest
+        type: ImageChange
   parameters:
-  - description: The image to use for the broker
-    name: BROKER_IMAGE
-    value: "${DEFAULT_BROKER_IMAGE}"
-  - description: The image to use for the router
-    name: COLOCATED_ROUTER_IMAGE
-    value: "${ROUTER_IMAGE}"
   - description: The image to use for the topic forwarder
     name: TOPIC_FORWARDER_IMAGE
     value: enmasseproject/topic-forwarder:latest
@@ -474,7 +546,21 @@ objects:
           name: ragent:latest
       type: ImageChange
 - apiVersion: v1
-  kind: ReplicationController
+  kind: ImageStream
+  metadata:
+    name: router
+  spec:
+    dockerImageRepository: "${ROUTER_IMAGE}"
+    importPolicy:
+      scheduled: true
+    tags:
+    - annotations:
+        description: Qpid Dispatch Router
+        tags: enmasse,messaging,router,qpid,amqp
+        version: '1.0'
+      name: latest
+- apiVersion: v1
+  kind: DeploymentConfig
   metadata:
     labels:
       name: qdrouterd
@@ -493,7 +579,10 @@ objects:
         - env:
           - name: LINK_CAPACITY
             value: "${ROUTER_LINK_CAPACITY}"
-          image: "${ROUTER_IMAGE}"
+          image: router
+          livenessProbe:
+            tcpSocket:
+              port: amqp
           name: router
           ports:
           - containerPort: 5672
@@ -510,6 +599,30 @@ objects:
         - name: ssl-certs
           secret:
             secretName: qdrouterd-certs
+    triggers:
+    - type: ConfigChange
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+        - router
+        from:
+          kind: ImageStreamTag
+          name: router:latest
+      type: ImageChange
+- apiVersion: v1
+  kind: ImageStream
+  metadata:
+    name: artemis
+  spec:
+    dockerImageRepository: "${BROKER_IMAGE}"
+    importPolicy:
+      scheduled: true
+    tags:
+    - annotations:
+        description: Artemis message broker
+        tags: enmasse,messaging,activemq,artemis,broker,amqp
+        version: '1.0'
+      name: latest
 - apiVersion: v1
   kind: ImageStream
   metadata:
@@ -662,7 +775,7 @@ parameters:
   name: ROUTER_IMAGE
   value: gordons/qdrouterd:latest
 - description: The default image to use as broker
-  name: DEFAULT_BROKER_IMAGE
+  name: BROKER_IMAGE
   value: enmasseproject/artemis:latest
 - description: The link capacity setting for router
   name: ROUTER_LINK_CAPACITY

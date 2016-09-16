@@ -1,6 +1,6 @@
 ---
 apiVersion: v1
-kind: ReplicationController
+kind: DeploymentConfig
 metadata:
   labels:
     name: qdrouterd
@@ -19,9 +19,22 @@ spec:
       - env:
         - name: LINK_CAPACITY
           value: "${ROUTER_LINK_CAPACITY}"
-        image: "${ROUTER_IMAGE}"
+        image: router
+        livenessProbe:
+          tcpSocket:
+            port: amqp
         name: router
         ports:
         - containerPort: 5672
           name: amqp
           protocol: TCP
+  triggers:
+  - type: ConfigChange
+  - imageChangeParams:
+      automatic: true
+      containerNames:
+      - router
+      from:
+        kind: ImageStreamTag
+        name: router:latest
+    type: ImageChange

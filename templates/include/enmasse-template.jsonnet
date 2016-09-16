@@ -1,14 +1,14 @@
 local storage = import "storage-template.jsonnet";
 local configmapBridge = import "configmap-bridge.jsonnet";
 local ragent = import "ragent.jsonnet";
+local router = import "router.jsonnet";
+local broker = import "broker.jsonnet";
 local qdrouterd = import "qdrouterd.jsonnet";
 local storageController = import "storage-controller.jsonnet";
 local subserv = import "subserv.jsonnet";
 local messagingService = import "messaging-service.jsonnet";
 local addressConfig = import "addresses.json";
 local flavorConfig = import "flavor.json";
-local template_router_image = "${ROUTER_IMAGE}";
-local template_broker_image = "${DEFAULT_BROKER_IMAGE}";
 {
   generate(secure)::
   {
@@ -18,15 +18,17 @@ local template_broker_image = "${DEFAULT_BROKER_IMAGE}";
     "metadata": {
       "name": templateName
     },
-    "objects": [ storage.template(false, false, secure, template_router_image, template_broker_image),
-                 storage.template(false, true, secure, template_router_image, template_broker_image),
-                 storage.template(true, false, secure, template_router_image, template_broker_image),
-                 storage.template(true, true, secure, template_router_image, template_broker_image),
+    "objects": [ storage.template(false, false, secure),
+                 storage.template(false, true, secure),
+                 storage.template(true, false, secure),
+                 storage.template(true, true, secure),
                  configmapBridge.imagestream("${CONFIGMAP_BRIDGE_IMAGE}"),
                  configmapBridge.deployment,
                  ragent.imagestream("${RAGENT_IMAGE}"),
                  ragent.deployment,
-                 qdrouterd.generate(secure),
+                 router.imagestream("${ROUTER_IMAGE}"),
+                 qdrouterd.deployment(secure),
+                 broker.imagestream("${BROKER_IMAGE}"),
                  storageController.imagestream("${STORAGE_CONTROLLER_IMAGE}"),
                  storageController.deployment,
                  subserv.generate("${SUBSERV_IMAGE}"),
@@ -43,7 +45,7 @@ local template_broker_image = "${DEFAULT_BROKER_IMAGE}";
         "value": "gordons/qdrouterd:latest"
       },
       {
-        "name": "DEFAULT_BROKER_IMAGE",
+        "name": "BROKER_IMAGE",
         "description": "The default image to use as broker",
         "value": "enmasseproject/artemis:latest"
       },
