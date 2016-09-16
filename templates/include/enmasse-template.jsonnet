@@ -8,6 +8,7 @@ local messagingService = import "messaging-service.jsonnet";
 local addressConfig = import "addresses.json";
 local flavorConfig = import "flavor.json";
 local template_router_image = "${ROUTER_IMAGE}";
+local template_broker_image = "${DEFAULT_BROKER_IMAGE}";
 {
   generate(secure)::
   {
@@ -17,10 +18,10 @@ local template_router_image = "${ROUTER_IMAGE}";
     "metadata": {
       "name": templateName
     },
-    "objects": [ storage.template(false, false, secure, template_router_image),
-                 storage.template(false, true, secure, template_router_image),
-                 storage.template(true, false, secure, template_router_image),
-                 storage.template(true, true, secure, template_router_image),
+    "objects": [ storage.template(false, false, secure, template_router_image, template_broker_image),
+                 storage.template(false, true, secure, template_router_image, template_broker_image),
+                 storage.template(true, false, secure, template_router_image, template_broker_image),
+                 storage.template(true, true, secure, template_router_image, template_broker_image),
                  configmapBridge.imagestream("${CONFIGMAP_BRIDGE_IMAGE}"),
                  configmapBridge.deployment,
                  ragent.imagestream("${RAGENT_IMAGE}"),
@@ -40,6 +41,11 @@ local template_router_image = "${ROUTER_IMAGE}";
         "name": "ROUTER_IMAGE",
         "description": "The image to use for the router",
         "value": "gordons/qdrouterd:latest"
+      },
+      {
+        "name": "DEFAULT_BROKER_IMAGE",
+        "description": "The default image to use as broker",
+        "value": "enmasseproject/artemis:latest"
       },
       {
         "name": "ROUTER_LINK_CAPACITY",
@@ -67,6 +73,6 @@ local template_router_image = "${ROUTER_IMAGE}";
         "value": "enmasseproject/subserv:latest"
       }
     ]
-    
+
   }
 }

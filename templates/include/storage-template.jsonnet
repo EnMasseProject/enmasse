@@ -2,13 +2,13 @@ local router = import "router.jsonnet";
 local broker = import "broker.jsonnet";
 local forwarder = import "forwarder.jsonnet";
 {
-  template(multicast, persistence, secure, router_image)::
+  template(multicast, persistence, secure, router_image, default_broker_image)::
     local addrtype = (if multicast then "topic" else "queue");
     local addressEnv = (if multicast then { name: "TOPIC_NAME", value: "${ADDRESS}" } else { name: "QUEUE_NAME", value: "${ADDRESS}" });
     local volumeName = "vol-${ADDRESS}";
     local templateName = "%s%s-%s" % [if secure then "secure-" else "", addrtype, (if persistence then "persisted" else "inmemory")];
     local claimName = "pvc-${ADDRESS}";
-    { 
+    {
       "apiVersion": "v1",
       "kind": "Template",
       "metadata": {
@@ -76,7 +76,7 @@ local forwarder = import "forwarder.jsonnet";
         {
           "name": "BROKER_IMAGE",
           "description": "The image to use for the broker",
-          "value": "enmasseproject/artemis:latest"
+          "value": default_broker_image
         },
         {
           "name": "COLOCATED_ROUTER_IMAGE",
