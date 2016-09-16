@@ -1,8 +1,8 @@
 {
   "test-queue": {
-    "template": "queue-inmemory",
-    "parameters": {
-      "BROKER_IMAGE": "lulf/artemis:latest"
+    "templateName": "queue-persisted",
+    "templateParameters": {
+      "STORAGE_CAPACITY": "2Gi"
     }
   }
 }
