@@ -1,5 +1,0 @@
-      <queues>
-        <queue name="$QUEUE_NAME">
-            <address>$QUEUE_NAME</address>
-        </queue>
-      </queues>
