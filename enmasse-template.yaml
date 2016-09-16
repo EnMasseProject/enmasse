@@ -264,7 +264,14 @@ objects:
             - name: TOPIC_NAME
               value: "${ADDRESS}"
             image: "${TOPIC_FORWARDER_IMAGE}"
+            livenessProbe:
+              httpGet:
+                path: "/health"
+                port: health
             name: forwarder
+            ports:
+            - containerPort: 8080
+              name: health
           volumes:
           - emptyDir: {}
             name: vol-${ADDRESS}
@@ -372,7 +379,14 @@ objects:
             - name: TOPIC_NAME
               value: "${ADDRESS}"
             image: "${TOPIC_FORWARDER_IMAGE}"
+            livenessProbe:
+              httpGet:
+                path: "/health"
+                port: health
             name: forwarder
+            ports:
+            - containerPort: 8080
+              name: health
           volumes:
           - name: vol-${ADDRESS}
             persistentVolumeClaim:
