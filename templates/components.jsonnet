@@ -19,5 +19,6 @@ local messagingService = import "include/messaging-service.jsonnet";
   "storage-controller-imagestream.json": storageController.imagestream("enmasseproject/storage-controller:latest"),
   "ragent-image-stream.json": ragent.imagestream("enmasseproject/ragent:latest"),
   "ragent-dc.json": ragent.deployment,
-  "subserv-rc.json": subserv.generate("enmasseproject/subserv:latest")
+  "subserv-image-stream.json": subserv.imagestream("enmasseproject/subserv:latest"),
+  "subserv-dc.json": subserv.deployment
 }

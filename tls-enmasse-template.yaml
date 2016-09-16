@@ -692,7 +692,21 @@ objects:
           name: storage-controller:latest
       type: ImageChange
 - apiVersion: v1
-  kind: ReplicationController
+  kind: ImageStream
+  metadata:
+    name: subserv
+  spec:
+    dockerImageRepository: "${SUBSERV_IMAGE}"
+    importPolicy:
+      scheduled: true
+    tags:
+    - annotations:
+        description: Subscription service
+        tags: enmasse,messaging,amqp,subscription,topic
+        version: '1.0'
+      name: latest
+- apiVersion: v1
+  kind: DeploymentConfig
   metadata:
     labels:
       name: subserv
@@ -707,12 +721,25 @@ objects:
           name: subserv
       spec:
         containers:
-        - image: "${SUBSERV_IMAGE}"
+        - image: subserv
+          livenessProbe:
+            tcpSocket:
+              port: amqp
           name: subserv
           ports:
           - containerPort: 5672
             name: amqp
             protocol: TCP
+    triggers:
+    - type: ConfigChange
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+        - subserv
+        from:
+          kind: ImageStreamTag
+          name: subserv:latest
+      type: ImageChange
 - apiVersion: v1
   kind: Service
   metadata:
