@@ -3,6 +3,7 @@ local configmapBridge = import "configmap-bridge.jsonnet";
 local ragent = import "ragent.jsonnet";
 local qdrouterd = import "qdrouterd.jsonnet";
 local storageController = import "storage-controller.jsonnet";
+local subserv = import "subserv.jsonnet";
 local messagingService = import "messaging-service.jsonnet";
 local addressConfig = import "addresses.json";
 local flavorConfig = import "flavor.json";
@@ -27,11 +28,13 @@ local template_router_image = "${ROUTER_IMAGE}";
                  qdrouterd.generate(secure),
                  storageController.imagestream("${STORAGE_CONTROLLER_IMAGE}"),
                  storageController.deployment,
+                 subserv.generate("${SUBSERV_IMAGE}"),
                  messagingService.generate(secure),
                  addressConfig,
                  flavorConfig,
                  import "ragent-service.json",
-                 import "configuration-service.json" ],
+                 import "configuration-service.json",
+                 import "subscription-service.json"],
     "parameters": [
       {
         "name": "ROUTER_IMAGE",
@@ -57,6 +60,11 @@ local template_router_image = "${ROUTER_IMAGE}";
         "name": "RAGENT_IMAGE",
         "description": "The image to use for the router agent",
         "value": "enmasseproject/ragent:latest"
+      },
+      {
+        "name": "SUBSERV_IMAGE",
+        "description": "The image to use for the subscription services",
+        "value": "enmasseproject/subserv:latest"
       }
     ]
     
