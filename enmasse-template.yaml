@@ -530,9 +530,10 @@ objects:
       spec:
         containers:
         - image: "${SUBSERV_IMAGE}"
-          name: master
+          name: subserv
           ports:
           - containerPort: 5672
+            name: amqp
             protocol: TCP
 - apiVersion: v1
   kind: Service

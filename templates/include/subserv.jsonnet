@@ -24,10 +24,11 @@
           "containers": [
             {
               "image": image_name,
-              "name": "master",
+              "name": "subserv",
               "ports": [
                 {
                   "containerPort": 5672,
+                  "name": "amqp",
                   "protocol": "TCP"
                 }
               ]
