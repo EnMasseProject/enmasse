@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 function runcmd {
     echo ''
     echo "$1 : "
