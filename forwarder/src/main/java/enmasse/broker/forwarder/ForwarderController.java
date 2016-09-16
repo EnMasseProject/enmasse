@@ -18,6 +18,7 @@ package enmasse.broker.forwarder;
 
 import enmasse.discovery.DiscoveryListener;
 import enmasse.discovery.Host;
+import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
 import org.slf4j.Logger;
@@ -34,7 +35,7 @@ import java.util.Set;
 public class ForwarderController implements DiscoveryListener {
     private static final Logger log = LoggerFactory.getLogger(ForwarderController.class.getName());
 
-    private final Vertx vertx = Vertx.vertx(new VertxOptions().setWorkerPoolSize(10));
+    private final Vertx vertx = Vertx.vertx();
     private final Map<Host, Forwarder> replicatedHosts = new HashMap<>();
 
     private final Host localHost;
@@ -44,6 +45,13 @@ public class ForwarderController implements DiscoveryListener {
     public ForwarderController(Host localHost, String address) {
         this.localHost = localHost;
         this.address = address;
+        startHealthServer();
+    }
+
+    private void startHealthServer() {
+        vertx.createHttpServer()
+                .requestHandler(request -> request.response().setStatusCode(HttpResponseStatus.OK.code()).end())
+                .listen(8080);
     }
 
     @Override
