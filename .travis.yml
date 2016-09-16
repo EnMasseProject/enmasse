@@ -15,16 +15,13 @@ script:
     ; fi`
   - find . -type f
   - docker build -t $REPO:$COMMIT .
-
-after_success:
-- echo "REPO: $REPO"
-- if [ "$TRAVIS_BRANCH" == "master" ] && [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
-  docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS;
-  docker tag $REPO:$COMMIT $REPO:$TAG;
-  docker tag $REPO:$COMMIT $REPO:travis-$TRAVIS_BUILD_NUMBER;
-  docker push $REPO;
-  sh .trigger-travis.sh;
-  fi
+  - if [ "$TRAVIS_BRANCH" == "master" ] && [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
+    docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS;
+    docker tag $REPO:$COMMIT $REPO:$TAG;
+    docker tag $REPO:$COMMIT $REPO:travis-$TRAVIS_BUILD_NUMBER;
+    docker push $REPO;
+    sh .trigger-travis.sh;
+    fi
 env:
   global:
   - COMMIT=${TRAVIS_COMMIT::8}
