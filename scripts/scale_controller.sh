@@ -9,7 +9,7 @@ do
     if [ $? -eq 0 ]
     then
         echo "Found controller, scaling up"
-        while true
+        for i in `seq 1 60`
         do
             oc scale dc $CONTROLLER --replicas=$REPLICAS
             if [ $? -eq 0 ]
