@@ -1,0 +1,20 @@
+---
+apiVersion: v1
+kind: Template
+metadata:
+  name: anycast
+objects:
+  apiVersion: v1
+  data:
+    address: "${ADDRESS}"
+    multicast: 'false'
+    store-and-forward: 'false'
+  kind: ConfigMap
+  metadata:
+    labels:
+      type: address-config
+    name: config-${ADDRESS}
+parameters:
+  description: The address to use for the address
+  name: ADDRESS
+  required: true
