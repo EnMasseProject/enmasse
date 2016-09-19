@@ -112,6 +112,16 @@ objects:
           kind: ImageStreamTag
           name: artemis:latest
       type: ImageChange
+- apiVersion: v1
+  data:
+    address: "${ADDRESS}"
+    multicast: 'true'
+    store-and-forward: 'true'
+  kind: ConfigMap
+  metadata:
+    labels:
+      type: address-config
+    name: config-${ADDRESS}
 parameters:
 - description: The image to use for the topic forwarder
   name: TOPIC_FORWARDER_IMAGE
