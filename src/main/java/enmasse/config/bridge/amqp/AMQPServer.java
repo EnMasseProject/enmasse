@@ -16,6 +16,7 @@
 
 package enmasse.config.bridge.amqp;
 
+import enmasse.config.bridge.amqp.subscription.AddressConfigSubscriber;
 import io.vertx.core.Vertx;
 import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.ProtonSender;
@@ -51,7 +52,7 @@ public class AMQPServer {
     }
 
     private void connectHandler(ProtonConnection connection) {
-        connection.setContainer("server");
+        connection.setContainer("configmap-bridge");
         connection.openHandler(conn -> {
             log.info("Connection opened");
         }).closeHandler(conn -> {
@@ -69,9 +70,15 @@ public class AMQPServer {
 
     private void senderOpenHandler(ProtonConnection connection, ProtonSender sender) {
         sender.setSource(sender.getRemoteSource());
-        sender.open();
-        database.subscribe(sender.getRemoteSource().getAddress(), new AMQPConfigSubscriber(sender));
-        log.info("Added subscriber {} for config {}", connection.getRemoteContainer(), sender.getRemoteSource().getAddress());
+        // TODO: Support different subscribers
+        boolean success = database.subscribe(sender.getRemoteSource().getAddress(), new AddressConfigSubscriber(sender));
+        if (success) {
+            sender.open();
+            log.info("Added subscriber {} for config {}", connection.getRemoteContainer(), sender.getRemoteSource().getAddress());
+        } else {
+            log.info("Failed creating subscriber {} for config {}", connection.getRemoteContainer(), sender.getRemoteSource().getAddress());
+            sender.close();
+        }
     }
 
     public void run() {

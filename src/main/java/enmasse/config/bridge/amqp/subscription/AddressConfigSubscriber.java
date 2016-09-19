@@ -14,14 +14,15 @@
  * limitations under the License.
  */
 
-package enmasse.config.bridge.amqp;
+package enmasse.config.bridge.amqp.subscription;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import io.vertx.proton.ProtonSender;
+import enmasse.config.bridge.model.ConfigMap;
 import enmasse.config.bridge.model.ConfigSubscriber;
+import io.vertx.proton.ProtonSender;
 import org.apache.commons.compress.utils.Charsets;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.amqp.messaging.Section;
@@ -34,31 +35,31 @@ import java.io.IOException;
 import java.util.Map;
 
 /**
- * Creates AMQP message on config updates, converting the mapping to a JSON object. Values that are valid JSON strings, will be
- * embedded in the new object.
- *
- *  TODO: This should probably be done once for the config, not for each subscriber.
+ * Creates AMQP message on address config updates, converting the multiple config maps to a single JSON object
+ * with the addressing config.
  */
-public class AMQPConfigSubscriber implements ConfigSubscriber {
-    private static final Logger log = LoggerFactory.getLogger(AMQPConfigSubscriber.class.getName());
-    private final ObjectMapper mapper = new ObjectMapper();
+public class AddressConfigSubscriber implements ConfigSubscriber {
+    private static final Logger log = LoggerFactory.getLogger(AddressConfigSubscriber.class.getName());
+    private static final ObjectMapper mapper = new ObjectMapper();
     private final ProtonSender sender;
-    public AMQPConfigSubscriber(ProtonSender sender) {
+
+    public AddressConfigSubscriber(ProtonSender sender) {
         this.sender = sender;
     }
 
     @Override
-    public void configUpdated(String name, String version, Map<String, String> values) {
+    public void configUpdated(Map<String, ConfigMap> values) {
         Message message = Message.Factory.create();
 
         try {
-            JsonNode root = encodeConfigAsJson(values);
+            ObjectNode root = mapper.createObjectNode();
+            for (Map.Entry<String, ConfigMap> entry : values.entrySet()) {
+                AddressConfigCodec.encode(root, entry.getValue());
+            }
             message.setBody(createBody(root));
             message.setContentType("application/json");
-            sender.send(message, delivery -> {
-                log.debug("Client has received update");
-            });
-            log.debug("Notified client on update");
+            log.info("Address config was updated to '" + (String)((AmqpValue)message.getBody()).getValue() + "'");
+            sender.send(message);
         } catch (Exception e) {
             log.warn("Error converting map to JSON: " + e.getMessage());
         }
@@ -70,22 +71,5 @@ public class AMQPConfigSubscriber implements ConfigSubscriber {
         JsonGenerator generator = mapper.getFactory().createGenerator(baos);
         mapper.writeTree(generator, root);
         return new AmqpValue(baos.toString(Charsets.UTF_8.name()));
-    }
-
-    private JsonNode encodeConfigAsJson(Map<String, String> values) throws IOException {
-        ObjectNode node = mapper.createObjectNode();
-        for (Map.Entry<String, String> entry : values.entrySet()) {
-            encodeJson(node, entry.getKey(), entry.getValue());
-        }
-        return node;
-    }
-
-    private void encodeJson(ObjectNode node, String key, String value) throws IOException {
-        try {
-            node.set(key, mapper.readTree(value));
-        } catch (IOException e) {
-            log.info("Unable to decode, returning as string");
-            node.put(key, value);
-        }
     }
 }

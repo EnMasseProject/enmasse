@@ -16,47 +16,35 @@
 
 package enmasse.config.bridge.model;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 
 /**
- * Represents a ConfigMap that can be subscribed to.
+ * A config map represents the config payload for a config map.
  */
 public class ConfigMap {
-    private final String name;
-    private final List<ConfigSubscriber> subscriberList = new ArrayList<>();
-
-    private String version = null;
-    private Map<String, String> values = Collections.emptyMap();
-
-    public ConfigMap(String name) {
-        this.name = name;
+    private final Map<String, String> data;
+    public ConfigMap(Map<String, String> data) {
+        this.data = data;
     }
 
-    /**
-     * Subscribe for updates to this configuration.
-     *
-     * @param subscriber The subscriber handle.
-     */
-    public synchronized void subscribe(ConfigSubscriber subscriber) {
-        subscriberList.add(subscriber);
-        // Notify only when we have values
-        if (version != null) {
-            subscriber.configUpdated(name, version, values);
-        }
+    public Map<String, String> getData() {
+        return data;
     }
 
-    /**
-     * Notify this instance that the config has been updated. It is the responsibility of this ConfigMap to notify subscribers.
-     *
-     * @param resourceVersion
-     * @param data
-     */
-    public synchronized void configUpdated(String resourceVersion, Map<String, String> data) {
-        version = resourceVersion;
-        values = data;
-        subscriberList.stream().forEach(subscription -> subscription.configUpdated(name, version, values));
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        ConfigMap configMap = (ConfigMap) o;
+
+        return data.equals(configMap.data);
+
+    }
+
+    @Override
+    public int hashCode() {
+        return data.hashCode();
     }
 }

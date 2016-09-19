@@ -18,28 +18,42 @@ package enmasse.config.bridge.openshift;
 
 import com.openshift.restclient.IClient;
 import com.openshift.restclient.IOpenShiftWatchListener;
+import com.openshift.restclient.IWatcher;
 import com.openshift.restclient.ResourceKind;
 import com.openshift.restclient.model.IConfigMap;
+import enmasse.config.bridge.model.ConfigMap;
 import enmasse.config.bridge.model.ConfigSubscriber;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import enmasse.config.bridge.openshift.OpenshiftConfigMapDatabase;
+import org.mockito.ArgumentCaptor;
 
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.*;
 
 public class OpenshiftConfigMapDatabaseTest {
     private OpenshiftConfigMapDatabase database;
+    private String key = "maas";
+    private IClient client;
+    private String namespace = "testspace";
 
     @Before
     public void setup() {
-        IClient client = mock(IClient.class);
-        database = new OpenshiftConfigMapDatabase(client, "testspace");
-        database.start();
-        verify(client).watch("testspace", database, ResourceKind.CONFIG_MAP);
+        client = mock(IClient.class);
+        IWatcher mockWatcher = mock(IWatcher.class);
+        database = new OpenshiftConfigMapDatabase(client, namespace);
+        when(client.watch(any(), any(), any())).thenReturn(mockWatcher);
+    }
+
+    public IOpenShiftWatchListener getListener() {
+        ArgumentCaptor<IOpenShiftWatchListener> captor = ArgumentCaptor.forClass(IOpenShiftWatchListener.class);
+        verify(client).watch(anyString(), captor.capture(), anyString());
+        return captor.getValue();
     }
 
     @After
@@ -48,55 +62,49 @@ public class OpenshiftConfigMapDatabaseTest {
     }
 
     @Test
-    public void testSubscribeBeforeConnected() {
+    public void testSubscribeWithBadKey() {
         ConfigSubscriber sub = mock(ConfigSubscriber.class);
-        database.subscribe("foo", sub);
-
-        verifyZeroInteractions(sub);
-
-        Map<String, String> testValue = Collections.singletonMap("bar", "baz");
-        connectWithValues(testValue);
-
-        verify(sub).configUpdated("foo", "1234", testValue);
+        assertFalse(database.subscribe("nosuchkey", sub));
     }
 
     @Test
     public void testSubscribeAfterConnected() {
 
         Map<String, String> testValue = Collections.singletonMap("bar", "baz");
-        connectWithValues(testValue);
-
         ConfigSubscriber sub = mock(ConfigSubscriber.class);
-        database.subscribe("foo", sub);
 
-        verify(sub).configUpdated("foo", "1234", testValue);
+        assertTrue(database.subscribe(key, sub));
+        IOpenShiftWatchListener listener = getListener();
+
+        listener.connected(Collections.singletonList(mockMap(testValue)));
+
+        verify(sub).configUpdated(Collections.singletonMap("foo", new ConfigMap(testValue)));
     }
 
     @Test
     public void testUpdates() {
         Map<String, String> testValue = Collections.singletonMap("bar", "baz");
-        connectWithValues(testValue);
 
         ConfigSubscriber sub = mock(ConfigSubscriber.class);
-        database.subscribe("foo", sub);
+        assertTrue(database.subscribe(key, sub));
 
-        verify(sub).configUpdated("foo", "1234", testValue);
+        IOpenShiftWatchListener listener = getListener();
+        listener.connected(Collections.singletonList(mockMap(testValue)));
+
+        verify(sub).configUpdated(Collections.singletonMap("foo", new ConfigMap(testValue)));
 
         testValue = Collections.singletonMap("quux", "bim");
-        IConfigMap newMap = mock(IConfigMap.class);
-        when(newMap.getName()).thenReturn("foo");
-        when(newMap.getResourceVersion()).thenReturn("1235");
-        when(newMap.getData()).thenReturn(testValue);
-        database.received(newMap, IOpenShiftWatchListener.ChangeType.MODIFIED);
+        listener.connected(Collections.singletonList(mockMap(testValue)));
 
-        verify(sub).configUpdated("foo", "1235", testValue);
+        verify(sub).configUpdated(Collections.singletonMap("foo", new ConfigMap(testValue)));
     }
 
-    private void connectWithValues(Map<String, String> testValue) {
+    private IConfigMap mockMap(Map<String, String> testValue) {
         IConfigMap testMap = mock(IConfigMap.class);
         when(testMap.getName()).thenReturn("foo");
-        when(testMap.getResourceVersion()).thenReturn("1234");
+        Map<String, String> labels = Collections.singletonMap("type", "address-config");
+        when(testMap.getLabels()).thenReturn(labels);
         when(testMap.getData()).thenReturn(testValue);
-        database.connected(Collections.singletonList(testMap));
+        return testMap;
     }
 }
