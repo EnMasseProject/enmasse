@@ -80,7 +80,7 @@ public class TemplateStorageGenerator implements StorageGenerator {
     }
 
     private ITemplate prepareDirectTemplate(Destination destination) {
-        Flavor flavor = new Flavor.Builder().templateName(destination.multicast() ? "broacast" : "multicast").build();
+        Flavor flavor = new Flavor.Builder().templateName(destination.multicast() ? "broadcast" : "anycast").build();
         ITemplate template = osClient.getTemplate(flavor.templateName());
         template.updateParameter(TemplateParameter.ADDRESS, destination.address());
         return template;
