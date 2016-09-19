@@ -28,13 +28,14 @@ import java.util.Map;
 public class AddressConfigCodec {
 
     private static final String FIELD_ADDRESS = "address";
-    private static final String FIELD_STORE_AND_FORWARD = "store_and_forward";
+    private static final String FIELD_STORE_AND_FORWARD = "store-and-forward";
+    private static final String FIELD_STORE_AND_FORWARD_JSON = "store_and_forward";
     private static final String FIELD_MULTICAST = "multicast";
 
     public static void encode(ObjectNode parent, ConfigMap config) {
         String key = config.getData().get(FIELD_ADDRESS);
         ObjectNode node = parent.putObject(key);
-        node.put(FIELD_STORE_AND_FORWARD, Boolean.parseBoolean(config.getData().get(FIELD_STORE_AND_FORWARD)));
+        node.put(FIELD_STORE_AND_FORWARD_JSON, Boolean.parseBoolean(config.getData().get(FIELD_STORE_AND_FORWARD)));
         node.put(FIELD_MULTICAST, Boolean.parseBoolean(config.getData().get(FIELD_MULTICAST)));
     }
 

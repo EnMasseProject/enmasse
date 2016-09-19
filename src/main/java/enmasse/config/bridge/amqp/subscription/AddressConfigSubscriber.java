@@ -58,10 +58,8 @@ public class AddressConfigSubscriber implements ConfigSubscriber {
             }
             message.setBody(createBody(root));
             message.setContentType("application/json");
-            sender.send(message, delivery -> {
-                log.debug("Client has received update");
-            });
-            log.debug("Notified client on update");
+            log.info("Address config was updated to '" + (String)((AmqpValue)message.getBody()).getValue() + "'");
+            sender.send(message);
         } catch (Exception e) {
             log.warn("Error converting map to JSON: " + e.getMessage());
         }

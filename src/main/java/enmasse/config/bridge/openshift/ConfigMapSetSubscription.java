@@ -59,7 +59,6 @@ public class ConfigMapSetSubscription implements IOpenShiftWatchListener, AutoCl
                 .collect(Collectors.toList());
 
         for (IResource resource : filtered) {
-            log.info("Resource kind is " + resource.getKind() + " with class " + resource.getClass().getCanonicalName());
             IConfigMap configMap = (IConfigMap) resource;
 
             set.mapAdded(configMap.getName(), configMap.getData());
