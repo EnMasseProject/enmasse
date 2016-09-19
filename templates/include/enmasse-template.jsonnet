@@ -10,7 +10,7 @@ local messagingService = import "messaging-service.jsonnet";
 local addressConfig = import "addresses.json";
 local flavorConfig = import "flavor.json";
 {
-  generate(secure)::
+  generate(secure, with_storage_controller)::
   {
     local templateName = (if secure then "enmasse-secure" else "enmasse"),
     "apiVersion": "v1",
@@ -18,7 +18,7 @@ local flavorConfig = import "flavor.json";
     "metadata": {
       "name": templateName
     },
-    "objects": [ storage.template(false, false, secure),
+    local common = [ storage.template(false, false, secure),
                  storage.template(false, true, secure),
                  storage.template(true, false, secure),
                  storage.template(true, true, secure),
@@ -29,16 +29,18 @@ local flavorConfig = import "flavor.json";
                  router.imagestream("${ROUTER_IMAGE}"),
                  qdrouterd.deployment(secure),
                  broker.imagestream("${BROKER_IMAGE}"),
-                 storageController.imagestream("${STORAGE_CONTROLLER_IMAGE}"),
-                 storageController.deployment,
                  subserv.imagestream("${SUBSERV_IMAGE}"),
                  subserv.deployment,
                  messagingService.generate(secure),
-                 addressConfig,
-                 flavorConfig,
                  import "ragent-service.json",
                  import "configuration-service.json",
                  import "subscription-service.json"],
+    local storage_controller_resources = [
+                 storageController.imagestream("${STORAGE_CONTROLLER_IMAGE}"),
+                 storageController.deployment,
+                 addressConfig,
+                 flavorConfig],
+    "objects": if with_storage_controller then common + storage_controller_resources else common,
     "parameters": [
       {
         "name": "ROUTER_IMAGE",
