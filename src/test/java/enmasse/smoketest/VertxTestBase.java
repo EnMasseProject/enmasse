@@ -16,7 +16,6 @@
 package enmasse.smoketest;
 
 import io.vertx.core.Vertx;
-import io.vertx.core.json.EncodeException;
 import io.vertx.proton.ProtonClient;
 import org.junit.After;
 import org.junit.Before;
