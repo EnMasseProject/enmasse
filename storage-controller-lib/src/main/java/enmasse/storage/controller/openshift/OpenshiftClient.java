@@ -19,10 +19,10 @@ package enmasse.storage.controller.openshift;
 import com.openshift.internal.restclient.ResourceFactory;
 import com.openshift.internal.restclient.capability.server.ServerTemplateProcessing;
 import com.openshift.restclient.IClient;
+import com.openshift.restclient.IOpenShiftWatchListener;
 import com.openshift.restclient.IResourceFactory;
-import com.openshift.restclient.OpenShiftException;
+import com.openshift.restclient.IWatcher;
 import com.openshift.restclient.ResourceKind;
-import com.openshift.restclient.UnsupportedOperationException;
 import com.openshift.restclient.capability.server.ITemplateProcessing;
 import com.openshift.restclient.model.IList;
 import com.openshift.restclient.model.IResource;
@@ -111,11 +111,15 @@ public class OpenshiftClient {
     private List<IResource> listAndIgnore(String kind, String namespace) {
         try {
             return client.list(kind, namespace);
-        } catch (UnsupportedOperationException | OpenShiftException e) {
+        } catch (Exception e) {
             // Ignore
+            log.debug("Ignoring resource", e);
             return Collections.emptyList();
         }
     }
 
+    public IWatcher watch(IOpenShiftWatchListener listener, String ... kinds) {
+        return client.watch(namespace, listener, kinds);
+    }
 }
 

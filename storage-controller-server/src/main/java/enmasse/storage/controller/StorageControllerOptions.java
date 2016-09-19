@@ -23,23 +23,10 @@ import java.util.Map;
 
 public final class StorageControllerOptions {
 
-    private final String configHost;
-    private final int configPort;
-
     private final String openshiftUrl;
 
-    private StorageControllerOptions(String configHost, int configPort, String openshiftUrl) {
-        this.configHost = configHost;
-        this.configPort = configPort;
+    private StorageControllerOptions(String openshiftUrl) {
         this.openshiftUrl = openshiftUrl;
-    }
-
-    public int configPort() {
-        return configPort;
-    }
-
-    public String configHost() {
-        return configHost;
     }
 
     public String openshiftUrl() {
@@ -50,10 +37,7 @@ public final class StorageControllerOptions {
         String openshiftHost = getEnvOrThrow(env, "KUBERNETES_SERVICE_HOST");
         String openshiftPort = getEnvOrThrow(env, "KUBERNETES_SERVICE_PORT");
 
-        String configHost = getEnvOrThrow(env, "CONFIGURATION_SERVICE_HOST");
-        int configPort = Integer.parseInt(getEnvOrThrow(env, "CONFIGURATION_SERVICE_PORT"));
-
-        return new StorageControllerOptions(configHost, configPort, String.format("https://%s:%s", openshiftHost, openshiftPort));
+        return new StorageControllerOptions(String.format("https://%s:%s", openshiftHost, openshiftPort));
     }
 
     private static String getEnvOrThrow(Map<String, String> env, String envVar) {
