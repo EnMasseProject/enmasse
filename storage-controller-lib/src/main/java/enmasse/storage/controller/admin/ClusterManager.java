@@ -44,11 +44,8 @@ public class ClusterManager {
         this.generator = generator;
     }
 
-    public void destinationsUpdated(Collection<Destination> newDestinations) {
+    public void destinationsUpdated(Collection<Destination> destinations) {
         List<StorageCluster> clusterList = openshiftClient.listClusters();
-        Collection<Destination> destinations = newDestinations.stream()
-                .filter(Destination::storeAndForward)
-                .collect(Collectors.toList());
         log.info("Brokers got updated to " + destinations.size() + " destinations, we have " + clusterList.size() + " destinations: " + clusterList.stream().map(StorageCluster::getDestination).collect(Collectors.toList()));
         createBrokers(clusterList, destinations);
         deleteBrokers(clusterList, destinations);

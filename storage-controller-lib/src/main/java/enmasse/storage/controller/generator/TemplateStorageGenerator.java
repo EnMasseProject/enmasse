@@ -50,12 +50,19 @@ public class TemplateStorageGenerator implements StorageGenerator {
      * @param destination The destination to generate storage definitions for
      */
     public StorageCluster generateStorage(Destination destination) {
-        if (!destination.storeAndForward()) {
-            throw new IllegalArgumentException("Destinations without store-and-forward semantics does not require a storage cluster");
+        ITemplate template;
+        if (destination.storeAndForward()) {
+            template = prepareStoreAndForwardTemplate(destination);
+        } else {
+            template = prepareDirectTemplate(destination);
         }
 
-        Flavor flavor = flavorRepository.getFlavor(destination.flavor(), TimeUnit.SECONDS.toMillis(60));
+        Collection<IResource> resources = osClient.processTemplate(template);
+        return new StorageCluster(osClient, destination, resources);
+    }
 
+    private ITemplate prepareStoreAndForwardTemplate(Destination destination) {
+        Flavor flavor = flavorRepository.getFlavor(destination.flavor(), TimeUnit.SECONDS.toMillis(60));
         ITemplate template = osClient.getTemplate(flavor.templateName());
         if (!template.getLabels().containsKey(LabelKeys.ADDRESS_TYPE)) {
             throw new IllegalArgumentException("Template is missing label " + LabelKeys.ADDRESS_TYPE);
@@ -69,8 +76,13 @@ public class TemplateStorageGenerator implements StorageGenerator {
         template.addObjectLabel(LabelKeys.ADDRESS, destination.address());
         template.addObjectLabel(LabelKeys.FLAVOR, destination.flavor());
         template.addObjectLabel(LabelKeys.ADDRESS_TYPE, destination.multicast() ? AddressType.TOPIC.value() : AddressType.QUEUE.value());
+        return template;
+    }
 
-        Collection<IResource> resources = osClient.processTemplate(template);
-        return new StorageCluster(osClient, destination, resources);
+    private ITemplate prepareDirectTemplate(Destination destination) {
+        Flavor flavor = new Flavor.Builder().templateName(destination.multicast() ? "broacast" : "multicast").build();
+        ITemplate template = osClient.getTemplate(flavor.templateName());
+        template.updateParameter(TemplateParameter.ADDRESS, destination.address());
+        return template;
     }
 }

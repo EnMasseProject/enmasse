@@ -51,11 +51,6 @@ public class TemplateStorageGeneratorTest {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testSkipNoStore() {
-        generator.generateStorage(new Destination("bar", false, false, "bar"));
-    }
-
-    @Test(expected = IllegalArgumentException.class)
     public void testAddressTypeRequired() {
         Destination dest = new Destination("foo", true, false, "vanilla");
         ITemplate template = mock(ITemplate.class);
