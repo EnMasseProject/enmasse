@@ -16,11 +16,10 @@
 
 package enmasse.config.bridge.amqp;
 
-import enmasse.config.bridge.model.ConfigMap;
-import enmasse.config.bridge.model.LabelSet;
-import io.vertx.proton.ProtonMessageHandler;
+import enmasse.config.bridge.amqp.subscription.AddressConfigCodec;
 import enmasse.config.bridge.model.ConfigMapDatabase;
 import enmasse.config.bridge.model.ConfigSubscriber;
+import io.vertx.proton.ProtonMessageHandler;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.message.Message;
 import org.junit.After;
@@ -29,8 +28,6 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
 import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.Map;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
@@ -70,23 +67,18 @@ public class AMQPServerTest {
     @Test
     public void testSubscribe() {
         ProtonMessageHandler msgHandler = mock(ProtonMessageHandler.class);
-        LabelSet key = LabelSet.fromString("key1=value1,key2=value2");
-        client.subscribe(key.toString(), msgHandler);
+        client.subscribe("foo", msgHandler);
 
         ArgumentCaptor<ConfigSubscriber> subCapture = ArgumentCaptor.forClass(ConfigSubscriber.class);
-        verify(database, timeout(10000)).subscribe(eq(key), subCapture.capture());
-
-        Map<String, String> testMap = new LinkedHashMap<>();
-        testMap.put("foo", "bar");
-        testMap.put("myjson", "{\"hello\":\"world\"}");
+        verify(database, timeout(10000)).subscribe(anyString(), subCapture.capture());
 
         ConfigSubscriber sub = subCapture.getValue();
-        sub.configUpdated(Collections.singletonMap("testconfig", new ConfigMap(testMap)));
+        sub.configUpdated(Collections.singletonMap("testconfig", AddressConfigCodec.encode("myqueue", true, false)));
 
         ArgumentCaptor<Message> msgCapture = ArgumentCaptor.forClass(Message.class);
         verify(msgHandler, timeout(10000)).handle(any(), msgCapture.capture());
         String value = (String) ((AmqpValue)msgCapture.getValue().getBody()).getValue();
-        assertThat(value, is("[{\"foo\":\"bar\",\"myjson\":{\"hello\":\"world\"}}]"));
+        assertThat(value, is("{\"myqueue\":{\"store_and_forward\":true,\"multicast\":false}}"));
     }
 }
 

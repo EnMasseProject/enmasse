@@ -46,8 +46,6 @@ public class Main {
                     .build();
 
             OpenshiftConfigMapDatabase database = new OpenshiftConfigMapDatabase(client, openshiftNamespace);
-            database.start();
-
             AMQPServer server = new AMQPServer(listenAddress, listenPort, database);
 
             server.run();

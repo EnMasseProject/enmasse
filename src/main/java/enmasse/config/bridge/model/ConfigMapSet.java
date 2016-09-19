@@ -26,7 +26,6 @@ import java.util.Map;
  */
 public class ConfigMapSet {
     private final List<ConfigSubscriber> subscriberList = new ArrayList<>();
-
     private Map<String, ConfigMap> configMaps = new LinkedHashMap<>();
 
     /**
