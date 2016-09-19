@@ -19,7 +19,9 @@ package enmasse.config.bridge.amqp;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import enmasse.config.bridge.model.ConfigMap;
 import io.vertx.proton.ProtonSender;
 import enmasse.config.bridge.model.ConfigSubscriber;
 import org.apache.commons.compress.utils.Charsets;
@@ -48,11 +50,15 @@ public class AMQPConfigSubscriber implements ConfigSubscriber {
     }
 
     @Override
-    public void configUpdated(String name, String version, Map<String, String> values) {
+    public void configUpdated(Map<String, ConfigMap> values) {
         Message message = Message.Factory.create();
 
         try {
-            JsonNode root = encodeConfigAsJson(values);
+            ArrayNode root = mapper.createArrayNode();
+            for (Map.Entry<String, ConfigMap> entry : values.entrySet()) {
+                ObjectNode node = encodeConfigAsJson(entry.getValue().getData());
+                root.add(node);
+            }
             message.setBody(createBody(root));
             message.setContentType("application/json");
             sender.send(message, delivery -> {
@@ -72,7 +78,7 @@ public class AMQPConfigSubscriber implements ConfigSubscriber {
         return new AmqpValue(baos.toString(Charsets.UTF_8.name()));
     }
 
-    private JsonNode encodeConfigAsJson(Map<String, String> values) throws IOException {
+    private ObjectNode encodeConfigAsJson(Map<String, String> values) throws IOException {
         ObjectNode node = mapper.createObjectNode();
         for (Map.Entry<String, String> entry : values.entrySet()) {
             encodeJson(node, entry.getKey(), entry.getValue());

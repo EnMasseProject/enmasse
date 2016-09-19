@@ -22,15 +22,16 @@ import com.openshift.restclient.IWatcher;
 import com.openshift.restclient.ResourceKind;
 import com.openshift.restclient.model.IConfigMap;
 import com.openshift.restclient.model.IResource;
-import enmasse.config.bridge.model.ConfigMap;
 import enmasse.config.bridge.model.ConfigMapDatabase;
+import enmasse.config.bridge.model.ConfigMapSet;
 import enmasse.config.bridge.model.ConfigSubscriber;
+import enmasse.config.bridge.model.LabelSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * ConfigMapDatabase backed by OpenShift/Kubernetes REST API supporting subscriptions.
@@ -41,7 +42,7 @@ public class OpenshiftConfigMapDatabase implements IOpenShiftWatchListener, Auto
     private final String namespace;
     private IWatcher watcher = null;
 
-    private final Map<String, ConfigMap> configMapMap = new ConcurrentHashMap<>();
+    private final Map<LabelSet, ConfigMapSet> configMapMap = new LinkedHashMap<>();
 
     public OpenshiftConfigMapDatabase(IClient restClient, String namespace) {
         this.restClient = restClient;
@@ -60,8 +61,8 @@ public class OpenshiftConfigMapDatabase implements IOpenShiftWatchListener, Auto
             log.info("Resource kind is " + resource.getKind() + " with class " + resource.getClass().getCanonicalName());
             IConfigMap configMap = (IConfigMap) resource;
 
-            ConfigMap map = getOrCreateConfigMap(configMap.getName());
-            map.configUpdated(configMap.getResourceVersion(), configMap.getData());
+            LabelSet labelSet = LabelSet.fromMap(configMap.getLabels());
+            getOrCreateConfigMap(labelSet).mapAdded(configMap.getName(), configMap.getData());
             log.info("Added config map '" + configMap.getName() + "'");
         }
     }
@@ -79,18 +80,18 @@ public class OpenshiftConfigMapDatabase implements IOpenShiftWatchListener, Auto
     @Override
     public void received(IResource resource, ChangeType change) {
         IConfigMap configMap = (IConfigMap) resource;
+        LabelSet labelSet = LabelSet.fromMap(configMap.getLabels());
         if (change.equals(ChangeType.DELETED)) {
             // TODO: Notify subscribers?
-            configMapMap.remove(configMap.getName());
-            log.info("ConfigMap " + configMap.getName() + " deleted!");
+            getOrCreateConfigMap(labelSet).mapDeleted(configMap.getName());
+            log.info("ConfigMapSet " + configMap.getName() + " deleted!");
         } else if (change.equals(ChangeType.ADDED)) {
-            ConfigMap map = getOrCreateConfigMap(configMap.getName());
-            map.configUpdated(configMap.getResourceVersion(), configMap.getData());
-            log.info("ConfigMap " + configMap.getName() + " added!");
+            getOrCreateConfigMap(labelSet).mapAdded(configMap.getName(), configMap.getData());
+            log.info("ConfigMapSet " + configMap.getName() + " added!");
         } else if (change.equals(ChangeType.MODIFIED)) {
             // TODO: Can we assume that it exists at this point?
-            configMapMap.get(configMap.getName()).configUpdated(configMap.getResourceVersion(), configMap.getData());
-            log.info("ConfigMap " + configMap.getName() + " updated!");
+            getOrCreateConfigMap(labelSet).mapUpdated(configMap.getName(), configMap.getData());
+            log.info("ConfigMapSet " + configMap.getName() + " updated!");
         }
     }
 
@@ -109,18 +110,24 @@ public class OpenshiftConfigMapDatabase implements IOpenShiftWatchListener, Auto
     /**
      * This method is synchronized so that we can support atomically getOrCreate on top of the configMapMap.
      */
-    private synchronized ConfigMap getOrCreateConfigMap(String name)
+    private synchronized ConfigMapSet getOrCreateConfigMap(LabelSet labelSet)
     {
-        ConfigMap map = configMapMap.get(name);
+        ConfigMapSet map = configMapMap.get(labelSet);
         if (map == null) {
-            map = new ConfigMap(name);
-            configMapMap.put(name, map);
+            map = new ConfigMapSet();
+            configMapMap.put(labelSet, map);
         }
         return map;
     }
 
-    public void subscribe(String name, ConfigSubscriber configSubscriber) {
-        ConfigMap configMap = getOrCreateConfigMap(name);
-        configMap.subscribe(configSubscriber);
+    public synchronized boolean subscribe(LabelSet labelSet, ConfigSubscriber configSubscriber) {
+        for (Map.Entry<LabelSet, ConfigMapSet> entry : configMapMap.entrySet()) {
+            LabelSet set = entry.getKey();
+            if (set.contains(labelSet)) {
+                entry.getValue().subscribe(configSubscriber);
+                return true;
+            }
+        }
+        return false;
     }
 }

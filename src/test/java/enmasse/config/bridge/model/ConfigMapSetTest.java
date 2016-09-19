@@ -17,17 +17,31 @@
 package enmasse.config.bridge.model;
 
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 
 import java.util.Collections;
+import java.util.Map;
 
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
-public class ConfigMapTest {
+public class ConfigMapSetTest {
     @Test
     public void testSubscribing() {
-        ConfigMap map = new ConfigMap("mymap");
+        ConfigMapSet map = new ConfigMapSet();
         ConfigSubscriber mockSub = mock(ConfigSubscriber.class);
         map.subscribe(mockSub);
-        map.configUpdated("1234", Collections.singletonMap("foo", "bar"));
+        map.mapUpdated("1234", Collections.singletonMap("foo", "bar"));
+        ArgumentCaptor<Map<String, ConfigMap>> capture = ArgumentCaptor.forClass(Map.class);
+        verify(mockSub).configUpdated(capture.capture());
+
+        Map<String, ConfigMap> cfg = capture.getValue();
+        assertThat(cfg.size(), is(1));
+        assertNotNull(cfg.get("1234"));
+        assertThat(cfg.get("1234").getData().size(), is(1));
+        assertThat(cfg.get("1234").getData().get("foo"), is("bar"));
     }
 }
