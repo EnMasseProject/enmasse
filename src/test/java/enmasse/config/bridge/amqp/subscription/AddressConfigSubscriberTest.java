@@ -28,7 +28,6 @@ import java.util.Map;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
-import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
@@ -47,7 +46,7 @@ public class AddressConfigSubscriberTest {
         subscriber.configUpdated(mapMap);
 
         ArgumentCaptor<Message> messageArgumentCaptor = ArgumentCaptor.forClass(Message.class);
-        verify(mockSender).send(messageArgumentCaptor.capture(), any());
+        verify(mockSender).send(messageArgumentCaptor.capture());
 
         String json = (String) ((AmqpValue) messageArgumentCaptor.getValue().getBody()).getValue();
         assertThat(json, is("{\"myqueue\":{\"store_and_forward\":true,\"multicast\":false},\"mytopic\":{\"store_and_forward\":true,\"multicast\":true}}"));
