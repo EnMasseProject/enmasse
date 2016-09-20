@@ -19,7 +19,11 @@ package enmasse.storage.controller.openshift;
 import com.openshift.restclient.model.IResource;
 import enmasse.storage.controller.model.Destination;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 
 /**
  * Represents a storage cluster of broker and volume resources for a given destination.
@@ -28,12 +32,14 @@ public class StorageCluster {
 
     private final OpenshiftClient client;
     private final Destination destination;
-    private final Collection<IResource> resources;
+    private final List<IResource> resources;
+    private static final Comparator<IResource> cmp = new ResourceComparator();
 
     public StorageCluster(OpenshiftClient osClient, Destination destination, Collection<IResource> resources) {
         this.client = osClient;
         this.destination = destination;
-        this.resources = resources;
+        this.resources = new ArrayList<>(resources);
+        Collections.sort(this.resources, cmp);
     }
 
     public void create() {
