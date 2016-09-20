@@ -505,12 +505,12 @@ objects:
 - apiVersion: v1
   kind: Template
   metadata:
-    name: anycast
+    name: direct
   objects:
   - apiVersion: v1
     data:
       address: "${ADDRESS}"
-      multicast: 'false'
+      multicast: "${MULTICAST}"
       store-and-forward: 'false'
     kind: ConfigMap
     metadata:
@@ -521,24 +521,8 @@ objects:
   - description: The address to use for the address
     name: ADDRESS
     required: true
-- apiVersion: v1
-  kind: Template
-  metadata:
-    name: broadcast
-  objects:
-  - apiVersion: v1
-    data:
-      address: "${ADDRESS}"
-      multicast: 'true'
-      store-and-forward: 'false'
-    kind: ConfigMap
-    metadata:
-      labels:
-        type: address-config
-      name: config-${ADDRESS}
-  parameters:
-  - description: The address to use for the address
-    name: ADDRESS
+  - description: If the address should have multicast semantics or not
+    name: MULTICAST
     required: true
 - apiVersion: v1
   kind: ImageStream

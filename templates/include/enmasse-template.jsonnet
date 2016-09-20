@@ -9,7 +9,6 @@ local subserv = import "subserv.jsonnet";
 local messagingService = import "messaging-service.jsonnet";
 local addressConfig = import "addresses.json";
 local flavorConfig = import "flavor.json";
-local direct = import "direct-template.jsonnet";
 {
   generate(secure, with_storage_controller)::
   {
@@ -23,8 +22,7 @@ local direct = import "direct-template.jsonnet";
                  storage.template(false, true, secure),
                  storage.template(true, false, secure),
                  storage.template(true, true, secure),
-                 direct.template(false),
-                 direct.template(true),
+                 import "direct-template.json",
                  configmapBridge.imagestream("${CONFIGMAP_BRIDGE_IMAGE}"),
                  configmapBridge.deployment,
                  ragent.imagestream("${RAGENT_IMAGE}"),
