@@ -40,7 +40,7 @@ public class StoreAndForwardTopicTest extends VertxTestBase{
                 client.recvMessages(dest, msgs.size()),
                 client.recvMessages(dest, msgs.size()));
 
-        Thread.sleep(10000);
+        Thread.sleep(20000);
 
         assertThat(client.sendMessages(dest, msgs).get(1, TimeUnit.MINUTES), is(msgs.size()));
 
