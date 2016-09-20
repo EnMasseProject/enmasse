@@ -21,4 +21,5 @@ package enmasse.storage.controller.model;
  */
 public interface TemplateParameter {
     String ADDRESS = "ADDRESS";
+    String MULTICAST = "MULTICAST";
 }

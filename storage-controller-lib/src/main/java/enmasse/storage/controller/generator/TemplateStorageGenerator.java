@@ -80,9 +80,10 @@ public class TemplateStorageGenerator implements StorageGenerator {
     }
 
     private ITemplate prepareDirectTemplate(Destination destination) {
-        Flavor flavor = new Flavor.Builder().templateName(destination.multicast() ? "broadcast" : "anycast").build();
+        Flavor flavor = new Flavor.Builder().templateName("direct").build();
         ITemplate template = osClient.getTemplate(flavor.templateName());
         template.updateParameter(TemplateParameter.ADDRESS, destination.address());
+        template.updateParameter(TemplateParameter.MULTICAST, String.valueOf(destination.multicast()));
         template.addObjectLabel(LabelKeys.ADDRESS, destination.address());
         template.addObjectLabel(LabelKeys.FLAVOR, destination.flavor());
         template.addObjectLabel(LabelKeys.ADDRESS_TYPE, destination.multicast() ? AddressType.TOPIC.value() : AddressType.QUEUE.value());
