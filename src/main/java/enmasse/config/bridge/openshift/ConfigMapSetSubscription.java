@@ -16,6 +16,8 @@
 
 package enmasse.config.bridge.openshift;
 
+import com.openshift.internal.restclient.model.ConfigMap;
+import com.openshift.internal.restclient.model.KubernetesResource;
 import com.openshift.restclient.IClient;
 import com.openshift.restclient.IOpenShiftWatchListener;
 import com.openshift.restclient.IWatcher;
@@ -59,12 +61,32 @@ public class ConfigMapSetSubscription implements IOpenShiftWatchListener, AutoCl
                 .collect(Collectors.toList());
 
         for (IResource resource : filtered) {
-            IConfigMap configMap = (IConfigMap) resource;
+            IConfigMap configMap = createMap(resource);
 
             set.mapAdded(configMap.getName(), configMap.getData());
             log.info("Added config map '" + configMap.getName() + "'");
         }
     }
+
+    // TODO: This is a workaroaund for https://github.com/openshift/openshift-restclient-java/issues/208
+    private IConfigMap createMap(IResource resource) {
+        if (matchesClass(resource.getClass().getInterfaces(), IConfigMap.class)) {
+            return (IConfigMap)resource;
+        } else {
+            KubernetesResource r = (KubernetesResource) resource;
+            return new ConfigMap(r.getNode(), r.getClient(), r.getPropertyKeys());
+        }
+    }
+
+    private static boolean matchesClass(Class<?> [] classes, Class<?> clazz) {
+        for (Class<?> c : classes) {
+            if (c.equals(clazz)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 
     @Override
     public void disconnected() {
@@ -83,7 +105,7 @@ public class ConfigMapSetSubscription implements IOpenShiftWatchListener, AutoCl
 
     @Override
     public void received(IResource resource, ChangeType change) {
-        IConfigMap configMap = (IConfigMap) resource;
+        IConfigMap configMap = createMap(resource);
         if (LabelSet.fromMap(configMap.getLabels()).contains(labelSet)) {
             if (change.equals(ChangeType.DELETED)) {
                 // TODO: Notify subscribers?
