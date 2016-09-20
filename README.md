@@ -60,96 +60,48 @@ Then we can use the tls version of the template as follows:
 
     oc process -f https://raw.githubusercontent.com/EnMasseProject/openshift-configuration/master/tls-enmasse-template.yaml | oc create -f -
 
-# Manual setup (outdated)
+## Configuring
 
-Alternatively, instead of using the templates, the necessary objects
-can be created manually as follows:
+By default, the template will setup 4 addresses with the following 4 different address types:
 
-### Setting up configuration service
+   * Queue
+   * Topic
+   * 'Direct' anycast
+   * 'Direct' multicast
 
-The configmap-bridge requires view permission so that it can read the
-config map. See section on access permissions above.
+The addresses are defined in a config map called 'maas'. To make a change to the configuration,
+download the config, edit it, and replace it:
 
-Start the configuration service endpoint and the replication controller:
+   oc get configmap maas -o yaml > addresses.yaml
+   # ADD/REMOVE/EDIT addresses
+   oc replace -f addresses.yaml
 
-    oc create -f configuration-service.yaml
-    oc create -f configmap-bridge-rc.yaml
+The changes will be picked up by the storage controller, which will create and delete brokers to
+match the desired state.
 
-The configuration service will watch all configmaps for the project deployed to.
+Each address that set store-and-forward=true must also refer to a flavor.
 
-### Creating config map
+### Flavor config
 
-Create initial config map:
+To support different configurations of brokers, EnMasse comes with different templates that allow
+you to setup persistence and TLS. A flavor is a specific set of parameters for a template. This
+allows a cluster administrator to control which configuration settings that are available to the
+developer.
 
-    oc create -f addresses.yaml
+The flavor map can be changed in a similar fashion to the address config:
 
-Where address.yaml is of the form:
+   oc get configmap flavor -o yaml > flavor.yaml
+   # ADD/REMOVE/CHANGE flavors
+   oc replace -f flavor.yaml
 
-```
-kind: ConfigMap
-apiVersion: v1
-metadata:
-  name: maas
-data:
-  json: |
-    {
-        "queue1": { "store_and_forward":true, "multicast":false },
-        "queue2": { "store_and_forward":true, "multicast":false },
-        "anycast": { "store_and_forward":false, "multicast":false },
-        "broadcast": { "store_and_forward":false, "multicast":true }
-    }
-```
-
-After editing that file, update the config map with:
-
-    oc replace -f addresses.yaml
-
-### Setting up the storage controller
-
-In order for the storage controller to work, it must be granted edit rights so that it can 
-create replication controllers. See section on access permissions above.
-
-Then start the replication controller:
-
-    oc create -f storage-controller-rc.yaml
-
-Whenever you change the 'maas' config map, the storage-controller will pick up the changes and
-delete/create/update broker clusters.
-
-### Setting up the routers
-
-Start the router agent service replication controller:
-
-    oc create -f ragent-service.yaml
-    oc create -f ragent-rc.yaml
-
-The router agent(s) update the routers to match the desired addresses
-and to maintain full-mesh connectivity.
-
-The router agent requires view permission so that it can determine
-other router agent endpoints in the service. See section on access
-permissions above.
-
-Start the messaging service and replication-controller:
-
-    oc create -f messaging-service.yaml
-    oc create -f qdrouterd-rc.yaml
-
-You can get the service IP either from the web console or by running:
-
-    oc get service messaging
-
-You should now be able to connect to that to send and receive
-messages based on the addressing scheme in the config map.
-
-## Benchmarking
+# Benchmarking
 
 EnMasse provides a benchmarking suite, ebench, that can run alongside the EnMasse cluster or
 on a separate set of machines. The suite is composed of an agent that sends messages to a specific
 address and a collector that aggregates metrics from multiple agents. To start an agent and a
 collector:
 
-    oc create -f ebench-agent-rc.yaml
+    oc create -f ebench-agent-dc.yaml
     oc create -f ebench-collector.yaml
 
 The agent and collector is parameterized using environment variables defined in the specification
