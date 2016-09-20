@@ -40,7 +40,7 @@ local router = import "router.jsonnet";
               ],
               "from": {
                 "kind": "ImageStreamTag",
-                "name": "router:latest"
+                "name": "router:${ENMASSE_VERSION}"
               }
             }
           }

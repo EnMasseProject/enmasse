@@ -10,7 +10,7 @@
         "dockerImageRepository": broker_image,
         "tags": [
           {
-            "name": "latest",
+            "name": "${ENMASSE_VERSION}",
             "annotations": {
               "description": "Artemis message broker",
               "tags": "enmasse,messaging,activemq,artemis,broker,amqp",

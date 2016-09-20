@@ -10,7 +10,7 @@
         "dockerImageRepository": image_name,
         "tags": [
           {
-            "name": "latest",
+            "name": "${ENMASSE_VERSION}",
             "annotations": {
               "description": "EnMasse storage controller",
               "tags": "enmasse,messaging,storage,controller",
@@ -57,7 +57,7 @@
               ],
               "from": {
                 "kind": "ImageStreamTag",
-                "name": "storage-controller:latest"
+                "name": "storage-controller:${ENMASSE_VERSION}"
               }
             }
           }

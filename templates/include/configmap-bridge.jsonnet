@@ -10,7 +10,7 @@
         "dockerImageRepository": image_name,
         "tags": [
           {
-            "name": "latest",
+            "name": "${ENMASSE_VERSION}",
             "annotations": {
               "description": "ConfigMap AMQP Bridge",
               "tags": "enmasse,messaging,configmap,amqp",
@@ -51,7 +51,7 @@
               ],
               "from": {
                 "kind": "ImageStreamTag",
-                "name": "configmap-bridge:latest"
+                "name": "configmap-bridge:${ENMASSE_VERSION}"
               }
             }
           }

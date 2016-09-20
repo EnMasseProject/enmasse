@@ -3,6 +3,7 @@ local configmapBridge = import "configmap-bridge.jsonnet";
 local ragent = import "ragent.jsonnet";
 local router = import "router.jsonnet";
 local broker = import "broker.jsonnet";
+local forwarder = import "forwarder.jsonnet";
 local qdrouterd = import "qdrouterd.jsonnet";
 local storageController = import "storage-controller.jsonnet";
 local subserv = import "subserv.jsonnet";
@@ -10,7 +11,7 @@ local messagingService = import "messaging-service.jsonnet";
 local addressConfig = import "addresses.json";
 local flavorConfig = import "flavor.json";
 {
-  generate(secure, with_storage_controller)::
+  generate(secure, with_storage_controller, version)::
   {
     local templateName = (if secure then "tls-enmasse" else "enmasse") + (if with_storage_controller then "" else "-base"),
     "apiVersion": "v1",
@@ -30,6 +31,7 @@ local flavorConfig = import "flavor.json";
                  router.imagestream("${ROUTER_IMAGE}"),
                  qdrouterd.deployment(secure),
                  broker.imagestream("${BROKER_IMAGE}"),
+                 forwarder.imagestream("${TOPIC_FORWARDER_IMAGE}"),
                  subserv.imagestream("${SUBSERV_IMAGE}"),
                  subserv.deployment,
                  messagingService.generate(secure),
@@ -46,12 +48,17 @@ local flavorConfig = import "flavor.json";
       {
         "name": "ROUTER_IMAGE",
         "description": "The image to use for the router",
-        "value": "gordons/qdrouterd:latest"
+        "value": "gordons/qdrouterd:" + version
       },
       {
         "name": "BROKER_IMAGE",
         "description": "The default image to use as broker",
-        "value": "enmasseproject/artemis:latest"
+        "value": "enmasseproject/artemis:" + version
+      },
+      {
+        "name": "TOPIC_FORWARDER_IMAGE",
+        "description": "The default image to use as topic forwarder",
+        "value": "enmasseproject/topic-forwarder:" + version
       },
       {
         "name": "ROUTER_LINK_CAPACITY",
@@ -61,22 +68,27 @@ local flavorConfig = import "flavor.json";
       {
         "name": "CONFIGMAP_BRIDGE_IMAGE",
         "description": "The image to use for the configmap notification bridge",
-        "value": "enmasseproject/configmap-bridge:latest"
+        "value": "enmasseproject/configmap-bridge:" + version
       },
       {
         "name": "STORAGE_CONTROLLER_IMAGE",
         "description": "The docker image to use for the storage controller",
-        "value": "enmasseproject/storage-controller:latest"
+        "value": "enmasseproject/storage-controller:" + version
       },
       {
         "name": "RAGENT_IMAGE",
         "description": "The image to use for the router agent",
-        "value": "enmasseproject/ragent:latest"
+        "value": "enmasseproject/ragent:" + version
       },
       {
         "name": "SUBSERV_IMAGE",
         "description": "The image to use for the subscription services",
-        "value": "enmasseproject/subserv:latest"
+        "value": "enmasseproject/subserv:" + version
+      },
+      {
+        "name": "ENMASSE_VERSION",
+        "description": "EnMasse version",
+        "value": version
       }
     ]
 

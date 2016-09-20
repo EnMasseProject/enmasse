@@ -29,7 +29,7 @@ local forwarder = import "forwarder.jsonnet";
             "address": "${ADDRESS}",
             "role": "broker"
           },
-          "triggers": [
+          local commonTriggers = [
             {
               "type": "ConfigChange"
             },
@@ -42,7 +42,7 @@ local forwarder = import "forwarder.jsonnet";
                 ],
                 "from": {
                   "kind": "ImageStreamTag",
-                  "name": "router:latest"
+                  "name": "router:${ENMASSE_VERSION}"
                 }
               }
             },
@@ -55,11 +55,29 @@ local forwarder = import "forwarder.jsonnet";
                 ],
                 "from": {
                   "kind": "ImageStreamTag",
-                  "name": "artemis:latest" 
+                  "name": "artemis:${ENMASSE_VERSION}" 
                 }
               }
             }
           ],
+          local multicastTriggers = [
+            {
+              "type": "ImageChange",
+              "imageChangeParams": {
+                "automatic": true,
+                "containerNames": [
+                  "forwarder"
+                ],
+                "from": {
+                  "kind": "ImageStreamTag",
+                  "name": "topic-forwarder:${ENMASSE_VERSION}" 
+                }
+              }
+            }
+          ],
+          "triggers": if multicast
+            then commonTriggers + multicastTriggers
+            else commonTriggers,
           "template": {
             "metadata": {
               "labels": {
@@ -120,11 +138,6 @@ local forwarder = import "forwarder.jsonnet";
         else [controller, config],
       "parameters": [
         {
-          "name": "TOPIC_FORWARDER_IMAGE",
-          "description": "The image to use for the topic forwarder",
-          "value": "enmasseproject/topic-forwarder:latest"
-        },
-        {
           "name": "ROUTER_LINK_CAPACITY",
           "description": "The link capacity setting for router",
           "value": "50"
@@ -133,6 +146,11 @@ local forwarder = import "forwarder.jsonnet";
           "name": "STORAGE_CAPACITY",
           "description": "Storage capacity required for volume claims",
           "value": "2Gi"
+        },
+        {
+          "name": "ENMASSE_VERSION",
+          "description": "EnMasse version",
+          "value": "latest"
         },
         {
           "name": "ADDRESS",

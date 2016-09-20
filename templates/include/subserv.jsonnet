@@ -10,7 +10,7 @@
         "dockerImageRepository": image_name,
         "tags": [
           {
-            "name": "latest",
+            "name": "${ENMASSE_VERSION}",
             "annotations": {
               "description": "Subscription service",
               "tags": "enmasse,messaging,amqp,subscription,topic",
@@ -51,7 +51,7 @@
             ],
             "from": {
               "kind": "ImageStreamTag",
-              "name": "subserv:latest"
+              "name": "subserv:${ENMASSE_VERSION}"
             }
           }
         }

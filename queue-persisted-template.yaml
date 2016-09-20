@@ -80,7 +80,7 @@ objects:
         - router
         from:
           kind: ImageStreamTag
-          name: router:latest
+          name: router:${ENMASSE_VERSION}
       type: ImageChange
     - imageChangeParams:
         automatic: true
@@ -88,7 +88,7 @@ objects:
         - broker
         from:
           kind: ImageStreamTag
-          name: artemis:latest
+          name: artemis:${ENMASSE_VERSION}
       type: ImageChange
 - apiVersion: v1
   data:
@@ -101,15 +101,15 @@ objects:
       type: address-config
     name: config-${ADDRESS}
 parameters:
-- description: The image to use for the topic forwarder
-  name: TOPIC_FORWARDER_IMAGE
-  value: enmasseproject/topic-forwarder:latest
 - description: The link capacity setting for router
   name: ROUTER_LINK_CAPACITY
   value: '50'
 - description: Storage capacity required for volume claims
   name: STORAGE_CAPACITY
   value: 2Gi
+- description: EnMasse version
+  name: ENMASSE_VERSION
+  value: latest
 - description: The address to use for the queue
   name: ADDRESS
   required: true

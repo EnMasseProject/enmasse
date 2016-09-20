@@ -10,7 +10,7 @@
         "dockerImageRepository": image_name,
         "tags": [
           {
-            "name": "latest",
+            "name": "${ENMASSE_VERSION}",
             "annotations": {
               "description": "EnMasse router agent",
               "tags": "enmasse,messaging,ragent,config,amqp",
@@ -51,7 +51,7 @@
               ],
               "from": {
                 "kind": "ImageStreamTag",
-                "name": "ragent:latest"
+                "name": "ragent:${ENMASSE_VERSION}"
               }
             }
           }

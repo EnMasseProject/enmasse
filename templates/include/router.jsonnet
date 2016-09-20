@@ -10,7 +10,7 @@
         "dockerImageRepository": image_name,
         "tags": [
           {
-            "name": "latest",
+            "name": "${ENMASSE_VERSION}",
             "annotations": {
               "description": "Qpid Dispatch Router",
               "tags": "enmasse,messaging,router,qpid,amqp",
