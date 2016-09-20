@@ -31,8 +31,9 @@ public class VertxTestBase {
     }
 
     @After
-    public void teardown() {
+    public void teardown() throws InterruptedException {
         vertx.close();
+        Thread.sleep(30000);
     }
 
     protected EnMasseClient createClient(boolean multicast) {
