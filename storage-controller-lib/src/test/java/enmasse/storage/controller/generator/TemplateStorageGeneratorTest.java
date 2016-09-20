@@ -65,7 +65,27 @@ public class TemplateStorageGeneratorTest {
     }
 
     @Test
-    public void testGenerate() {
+    public void testDirect() {
+        Destination dest = new Destination("foo", false, false, "");
+        Map<String, String> labels = new LinkedHashMap<>();
+        ITemplate template = mock(ITemplate.class);
+        when(template.getName()).thenReturn("direct");
+        when(template.getLabels()).thenReturn(labels);
+        when(mockClient.getTemplate("direct")).thenReturn(template);
+
+        ArgumentCaptor<ITemplate> arg = ArgumentCaptor.forClass(ITemplate.class);
+        when(mockClient.processTemplate(arg.capture())).thenReturn(Collections.emptyList());
+
+        StorageCluster clusterList = generator.generateStorage(dest);
+        assertThat(clusterList.getDestination(), is(dest));
+        verify(template).addObjectLabel(LabelKeys.ADDRESS, dest.address());
+        verify(template).addObjectLabel(LabelKeys.FLAVOR, dest.flavor());
+        verify(template).addObjectLabel(LabelKeys.ADDRESS_TYPE, AddressType.QUEUE.value());
+
+    }
+
+    @Test
+    public void testStoreAndForward() {
         Destination dest = new Destination("foo", true, false, "vanilla");
         Map<String, String> labels = new LinkedHashMap<>();
         labels.put(LabelKeys.ADDRESS_TYPE, AddressType.QUEUE.value());
