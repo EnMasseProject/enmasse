@@ -83,6 +83,9 @@ public class TemplateStorageGenerator implements StorageGenerator {
         Flavor flavor = new Flavor.Builder().templateName(destination.multicast() ? "broadcast" : "anycast").build();
         ITemplate template = osClient.getTemplate(flavor.templateName());
         template.updateParameter(TemplateParameter.ADDRESS, destination.address());
+        template.addObjectLabel(LabelKeys.ADDRESS, destination.address());
+        template.addObjectLabel(LabelKeys.FLAVOR, destination.flavor());
+        template.addObjectLabel(LabelKeys.ADDRESS_TYPE, destination.multicast() ? AddressType.TOPIC.value() : AddressType.QUEUE.value());
         return template;
     }
 }
