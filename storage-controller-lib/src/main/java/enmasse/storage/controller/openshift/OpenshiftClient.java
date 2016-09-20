@@ -59,14 +59,14 @@ public class OpenshiftClient {
     }
 
     public void createResources(Collection<IResource> resources) {
-        log.info("Adding " + resources.size() + " resources");
+        log.info("Adding " + resources.size() + " resources: " + resources.stream().map(r -> "name=" + r.getName() + ",kind=" + r.getKind()).collect(Collectors.joining(",")));
         IList list = createList();
         list.addAll(resources);
         client.create(list, namespace);
     }
 
     public void deleteResources(Collection<IResource> resources) {
-        log.info("Deleting " + resources.size() + " resources");
+        log.info("Deleting " + resources.size() + " resources: " + resources.stream().map(r -> "name=" + r.getName() + ",kind=" + r.getKind()).collect(Collectors.joining(",")));
         for (IResource resource : resources) {
             client.delete(resource);
         }
