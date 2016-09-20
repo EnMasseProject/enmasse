@@ -99,6 +99,11 @@ public class ConfigAdapter implements IOpenShiftWatchListener {
     @Override
     public void disconnected() {
         log.info("Disconnected, restarting watch");
+        reconnect();
+    }
+
+    private void reconnect() {
+        watcher.stop();
         try {
             this.watcher = openshiftClient.watch(this, ResourceKind.CONFIG_MAP);
         } catch (Exception e) {
@@ -113,6 +118,7 @@ public class ConfigAdapter implements IOpenShiftWatchListener {
 
     @Override
     public void error(Throwable err) {
-        log.error("Got error from watcher", err);
+        log.error("Got error from watcher: " + err.getMessage() + ", reconnecting");
+        reconnect();
     }
 }
