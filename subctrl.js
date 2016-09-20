@@ -124,7 +124,14 @@ SubscriptionControl.prototype.close = function (subscription_id) {
                             function () {
                                 //delete queue last as that is how we
                                 //find the right broker to cleanup
-                                return result.pod.broker.destroyQueue(subscription_id);
+
+                                //Note: need to delay the delete as it will fail if
+                                //there is still a link attached, and though deleting
+                                //the autoLink will delete the actual link, that is
+                                //an asynchronous side effect.
+                                return Promise.delay(250).then(function () {
+                                    result.pod.broker.destroyQueue(subscription_id);
+                                });
                             }
                         );
                     }

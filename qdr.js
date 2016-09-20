@@ -87,6 +87,7 @@ Router.prototype._send_request = function (request) {
 
 Router.prototype.request = function (operation, properties, body) {
     var id = this.counter.toString();
+    this.counter++;
     var req = {correlation_id:id};
     req.application_properties = properties || {};
     req.application_properties.operation = operation;
@@ -128,10 +129,10 @@ Router.prototype.incoming = function (context) {
 };
 
 Router.prototype.close = function () {
-    this.connection.close();
+    if (this.connection) this.connection.close();
 }
 
-function add_resource_type (name, typename) {
+function add_resource_type (name, typename, plural) {
     var resource_type = typename || name;
     Router.prototype['create_' + name] = function (o) {
         return this.create_entity(resource_type, o.name, o);
@@ -139,7 +140,8 @@ function add_resource_type (name, typename) {
     Router.prototype['delete_' + name] = function (o) {
         return this.delete_entity(resource_type, o.name);
     };
-    Router.prototype['get_' + name + 's'] = function (options) {
+    var plural_name = plural || name + 's';
+    Router.prototype['get_' + plural_name] = function (options) {
         return this.query(resource_type, options);
     };
 
@@ -147,7 +149,7 @@ function add_resource_type (name, typename) {
 
 add_resource_type('connector');
 add_resource_type('listener');
-add_resource_type('address', 'org.apache.qpid.dispatch.router.config.address');
+add_resource_type('address', 'org.apache.qpid.dispatch.router.config.address', 'addresses');
 add_resource_type('link_route', 'org.apache.qpid.dispatch.router.config.linkRoute');
 add_resource_type('auto_link', 'org.apache.qpid.dispatch.router.config.autoLink');
 
