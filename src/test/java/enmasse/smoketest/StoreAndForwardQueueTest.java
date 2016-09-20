@@ -64,6 +64,7 @@ public class StoreAndForwardQueueTest extends VertxTestBase {
         Future<List<String>> received = client.recvMessages("myqueue", 4);
 
         assertThat(received.get(1, TimeUnit.MINUTES).size(), is(4));
+        Thread.sleep(60000);
     }
 }
 
