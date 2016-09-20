@@ -69,6 +69,11 @@ public class ConfigMapSetSubscription implements IOpenShiftWatchListener, AutoCl
     @Override
     public void disconnected() {
         log.info("Disconnected, restarting watch");
+        reconnect();
+    }
+
+    private void reconnect() {
+        watcher.stop();
         try {
             this.watcher = restClient.watch(namespace, this, ResourceKind.CONFIG_MAP);
         } catch (Exception e) {
@@ -104,7 +109,8 @@ public class ConfigMapSetSubscription implements IOpenShiftWatchListener, AutoCl
 
     @Override
     public void error(Throwable err) {
-        log.error("Got error from watcher", err);
+        log.error("Got error from watcher: " +  err.getMessage());
+        reconnect();
     }
 
     public ConfigMapSet getSet() {
