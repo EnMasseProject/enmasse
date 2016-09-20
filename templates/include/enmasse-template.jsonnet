@@ -12,7 +12,7 @@ local flavorConfig = import "flavor.json";
 {
   generate(secure, with_storage_controller)::
   {
-    local templateName = (if secure then "enmasse-secure" else "enmasse"),
+    local templateName = (if secure then "tls-enmasse" else "enmasse") + (if with_storage_controller then "" else "-base"),
     "apiVersion": "v1",
     "kind": "Template",
     "metadata": {

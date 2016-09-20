@@ -2,14 +2,14 @@
 apiVersion: v1
 kind: Template
 metadata:
-  name: enmasse
+  name: tls-enmasse-base
 objects:
 - apiVersion: v1
   kind: Template
   metadata:
     labels:
       addressType: queue
-    name: queue-inmemory
+    name: secure-queue-inmemory
   objects:
   - apiVersion: v1
     kind: DeploymentConfig
@@ -63,9 +63,19 @@ objects:
             - containerPort: 5672
               name: amqp
               protocol: TCP
+            - containerPort: 5671
+              name: amqps
+              protocol: TCP
+            volumeMounts:
+            - mountPath: "/etc/qpid-dispatch/ssl"
+              name: ssl-certs
+              readOnly: true
           volumes:
           - emptyDir: {}
             name: vol-${ADDRESS}
+          - name: ssl-certs
+            secret:
+              secretName: qdrouterd-certs
       triggers:
       - type: ConfigChange
       - imageChangeParams:
@@ -112,7 +122,7 @@ objects:
   metadata:
     labels:
       addressType: queue
-    name: queue-persisted
+    name: secure-queue-persisted
   objects:
   - apiVersion: v1
     kind: PersistentVolumeClaim
@@ -176,10 +186,20 @@ objects:
             - containerPort: 5672
               name: amqp
               protocol: TCP
+            - containerPort: 5671
+              name: amqps
+              protocol: TCP
+            volumeMounts:
+            - mountPath: "/etc/qpid-dispatch/ssl"
+              name: ssl-certs
+              readOnly: true
           volumes:
           - name: vol-${ADDRESS}
             persistentVolumeClaim:
               claimName: pvc-${ADDRESS}
+          - name: ssl-certs
+            secret:
+              secretName: qdrouterd-certs
       triggers:
       - type: ConfigChange
       - imageChangeParams:
@@ -226,7 +246,7 @@ objects:
   metadata:
     labels:
       addressType: topic
-    name: topic-inmemory
+    name: secure-topic-inmemory
   objects:
   - apiVersion: v1
     kind: DeploymentConfig
@@ -280,6 +300,13 @@ objects:
             - containerPort: 5672
               name: amqp
               protocol: TCP
+            - containerPort: 5671
+              name: amqps
+              protocol: TCP
+            volumeMounts:
+            - mountPath: "/etc/qpid-dispatch/ssl"
+              name: ssl-certs
+              readOnly: true
           - env:
             - name: TOPIC_NAME
               value: "${ADDRESS}"
@@ -295,6 +322,9 @@ objects:
           volumes:
           - emptyDir: {}
             name: vol-${ADDRESS}
+          - name: ssl-certs
+            secret:
+              secretName: qdrouterd-certs
       triggers:
       - type: ConfigChange
       - imageChangeParams:
@@ -341,7 +371,7 @@ objects:
   metadata:
     labels:
       addressType: topic
-    name: topic-persisted
+    name: secure-topic-persisted
   objects:
   - apiVersion: v1
     kind: PersistentVolumeClaim
@@ -405,6 +435,13 @@ objects:
             - containerPort: 5672
               name: amqp
               protocol: TCP
+            - containerPort: 5671
+              name: amqps
+              protocol: TCP
+            volumeMounts:
+            - mountPath: "/etc/qpid-dispatch/ssl"
+              name: ssl-certs
+              readOnly: true
           - env:
             - name: TOPIC_NAME
               value: "${ADDRESS}"
@@ -421,6 +458,9 @@ objects:
           - name: vol-${ADDRESS}
             persistentVolumeClaim:
               claimName: pvc-${ADDRESS}
+          - name: ssl-certs
+            secret:
+              secretName: qdrouterd-certs
       triggers:
       - type: ConfigChange
       - imageChangeParams:
@@ -624,6 +664,17 @@ objects:
           - containerPort: 5672
             name: amqp
             protocol: TCP
+          - containerPort: 5671
+            name: amqps
+            protocol: TCP
+          volumeMounts:
+          - mountPath: "/etc/qpid-dispatch/ssl"
+            name: ssl-certs
+            readOnly: true
+        volumes:
+        - name: ssl-certs
+          secret:
+            secretName: qdrouterd-certs
     triggers:
     - type: ConfigChange
     - imageChangeParams:
@@ -707,6 +758,10 @@ objects:
       port: 5672
       protocol: TCP
       targetPort: 5672
+    - name: amqps
+      port: 5671
+      protocol: TCP
+      targetPort: 5671
     selector:
       capability: router
 - apiVersion: v1
