@@ -1,5 +1,6 @@
 language: c
-sudo: true
+sudo: required
+dist: trusty
 before_install:
 - sudo apt-get update
 - sudo apt-cache search ruby
