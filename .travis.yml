@@ -1,9 +1,15 @@
 language: c
+sudo: true
+before_install:
+- sudo apt-get update
+- sudo apt-cache search ruby
+
 script:
 - make
 
 after_success:
 - sh .trigger-travis.sh
+
 env:
   global:
     secure: bCbKAugV/HmX2gW7ayvM1Eb5ZcWXF2Xx9YESpu6yEuUriRArRtU6lGbQZDqoUZnyaS5kE86p7zoH+4wucKDXa8XpcFtarm1TsY8Wrwi6Ce2xr/rgFN2wjNJbpSVWNPIH5U4Vsu37iJtVZ28cRtx8DsKwrF/s62Q8ctwBuNCDjxpce6UPNPSerXXRyn2QnJ0uCDScTrXfvOpTLMS9gNac14JQ+qFVdK94tgy7kA3+biAokGzTO323dlpIXVQQgNPLr86xYgMgMr4ik9+JSUqEryhefGcHlizNSILeN9EXnAkRFgl8SowGPh7qAMQAd2eaQ+fnu0PYQY5crSkP6F15PPFYT+xrF72jHgn/dpHkAI29OCC46IpAHjJuMvgEoiLLmUKT+vl0WNXJZwi6mSyuM8hDEvbqTMc+q6wK3Etia1jtc/E5d60S7l6HBbReiEq33pAU+uMObYMvAYuH9fh6vj6y5jgDMDnZDrp25ZrJr/sMXaFkMhNSjo4M605Pzcrq0Too6EffG8l2b1QbwKozVKpoFoWh12lO98ugnHac6vbC2dHi3F3nvbk4sG9Rdfn+PzGx57lI1ktS6T0fKnDJkxx9B99nL4AIpW5TdXQ5YbyT8WsvlfSlxobt7SU1kcOL+Gi5WyrxJi8YJqptXt1vKyw2nppscuG6KTtSN0IYbq4=

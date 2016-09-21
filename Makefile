@@ -8,7 +8,7 @@ all: prepare $(OBJS) yaml
 	VERSION=$(TRAVIS_TAG) jsonnet/jsonnet --ext-str VERSION -m generated $<
 
 yaml:
-	for i in generated/*.json; do ./convertyaml.rb $$i generated; done
+	for i in generated/*.json; do ./scripts/convertyaml.rb $$i generated; done
 	ls generated/*.yaml
 
 prepare:
