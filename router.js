@@ -370,6 +370,7 @@ function by_name (o) {
 
 ConnectedRouter.prototype.on_query_address_response = function (message) {
     if (message.statusCode == 200) {
+        console.log('EXTRACT, results: ' + message.body.results.toString() + ', attributes: ' + message.body.attributeNames.toString());
         var address_records = extract_records(message.body)
         this.addresses = myutils.index(address_records, by_name, from_router_address);
         console.log('retrieved addresses for ' + this.container_id + ': ' + JSON.stringify(this.addresses));
