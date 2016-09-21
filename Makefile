@@ -2,9 +2,6 @@ SRCS=$(wildcard *.jsonnet)
 OBJS=$(patsubst %.jsonnet,%.json,$(SRCS))
 
 all: prepare $(OBJS) yaml
-	mv generated/*-template.yaml ../
-	mv generated/addresses.yaml ../
-	mv generated/flavor.yaml ../
 
 %.json: %.jsonnet
 	./jsonnet -m generated $<
