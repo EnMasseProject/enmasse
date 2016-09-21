@@ -47,6 +47,7 @@ public class StoreAndForwardQueueTest extends VertxTestBase {
     public void testScaledown() throws InterruptedException, TimeoutException, ExecutionException {
         String dest = "myqueue";
         TestUtils.setReplicas("queue-myqueue", dest, 3, 5, TimeUnit.MINUTES);
+        Thread.sleep(20000);
         EnMasseClient client = createClient(false);
         List<Future<Integer>> sent = Arrays.asList(
                 client.sendMessages(dest, Arrays.asList("foo")),
@@ -60,11 +61,11 @@ public class StoreAndForwardQueueTest extends VertxTestBase {
         assertThat(sent.get(3).get(1, TimeUnit.MINUTES), is(1));
 
         TestUtils.setReplicas("queue-myqueue", dest, 1, 5, TimeUnit.MINUTES);
+        Thread.sleep(20000);
 
         Future<List<String>> received = client.recvMessages("myqueue", 4);
 
         assertThat(received.get(1, TimeUnit.MINUTES).size(), is(4));
-        Thread.sleep(60000);
     }
 }
 
