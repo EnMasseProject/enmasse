@@ -49,7 +49,8 @@ local version = std.extVar("VERSION");
       {
         "name": "ROUTER_IMAGE",
         "description": "The image to use for the router",
-        "value": "gordons/qdrouterd:" + version
+        // TODO: Update to use version when travis is setup for qdrouterd
+        "value": "gordons/qdrouterd:latest"
       },
       {
         "name": "BROKER_IMAGE",
@@ -84,7 +85,8 @@ local version = std.extVar("VERSION");
       {
         "name": "SUBSERV_IMAGE",
         "description": "The image to use for the subscription services",
-        "value": "enmasseproject/subserv:" + version
+        // TODO: Update to use version when travis is setup for subserv
+        "value": "enmasseproject/subserv:latest"
       }
     ]
 
