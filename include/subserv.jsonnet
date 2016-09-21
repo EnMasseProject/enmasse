@@ -1,3 +1,4 @@
+local version = std.extVar("VERSION");
 {
   imagestream(image_name)::
     {
@@ -10,7 +11,7 @@
         "dockerImageRepository": image_name,
         "tags": [
           {
-            "name": "${ENMASSE_VERSION}",
+            "name": version,
             "annotations": {
               "description": "Subscription service",
               "tags": "enmasse,messaging,amqp,subscription,topic",
@@ -51,7 +52,7 @@
             ],
             "from": {
               "kind": "ImageStreamTag",
-              "name": "subserv:${ENMASSE_VERSION}"
+              "name": "subserv:" + version,
             }
           }
         }

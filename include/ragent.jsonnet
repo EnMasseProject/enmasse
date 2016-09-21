@@ -1,3 +1,4 @@
+local version = std.extVar("VERSION");
 {
   imagestream(image_name)::
     {
@@ -10,7 +11,7 @@
         "dockerImageRepository": image_name,
         "tags": [
           {
-            "name": "${ENMASSE_VERSION}",
+            "name": version,
             "annotations": {
               "description": "EnMasse router agent",
               "tags": "enmasse,messaging,ragent,config,amqp",
@@ -51,7 +52,7 @@
               ],
               "from": {
                 "kind": "ImageStreamTag",
-                "name": "ragent:${ENMASSE_VERSION}"
+                "name": "ragent:" + version
               }
             }
           }

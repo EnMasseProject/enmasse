@@ -1,3 +1,4 @@
+local version = std.extVar("VERSION");
 local configmapBridge = import "include/configmap-bridge.jsonnet";
 local ragent = import "include/ragent.jsonnet";
 local router = import "include/router.jsonnet";
@@ -10,17 +11,17 @@ local messagingService = import "include/messaging-service.jsonnet";
 {
   "messaging-service.json": messagingService.generate(false),
   "tls-messaging-service.json": messagingService.generate(true),
-  "qdrouterd-imagestream.json": router.imagestream("gordons/qdrouterd:${ENMASSE_VERSION}"),
+  "qdrouterd-imagestream.json": router.imagestream("gordons/qdrouterd:" + version),
   "qdrouterd-dc.json": qdrouterd.deployment(false),
-  "artemis-imagestream.json": broker.imagestream("enmasseproject/artemis:${ENMASSE_VERSION}"),
-  "forwarder-imagestream.json": forwarder.imagestream("enmasseproject/topic-forwarder:${ENMASSE_VERSION}"),
+  "artemis-imagestream.json": broker.imagestream("enmasseproject/artemis:" + version),
+  "forwarder-imagestream.json": forwarder.imagestream("enmasseproject/topic-forwarder:" + version),
   "tls-qdrouterd-dc.json": qdrouterd.deployment(true),
   "configmap-bridge-dc.json": configmapBridge.deployment,
-  "configmap-bridge-imagestream.json": configmapBridge.imagestream("enmasseproject/configmap-bridge:${ENMASSE_VERSION}"),
+  "configmap-bridge-imagestream.json": configmapBridge.imagestream("enmasseproject/configmap-bridge:" + version),
   "storage-controller-dc.json": storageController.deployment,
-  "storage-controller-imagestream.json": storageController.imagestream("enmasseproject/storage-controller:${ENMASSE_VERSION}"),
-  "ragent-image-stream.json": ragent.imagestream("enmasseproject/ragent:${ENMASSE_VERSION}"),
+  "storage-controller-imagestream.json": storageController.imagestream("enmasseproject/storage-controller:" + version),
+  "ragent-image-stream.json": ragent.imagestream("enmasseproject/ragent:" + version),
   "ragent-dc.json": ragent.deployment,
-  "subserv-image-stream.json": subserv.imagestream("enmasseproject/subserv:${ENMASSE_VERSION}"),
+  "subserv-image-stream.json": subserv.imagestream("enmasseproject/subserv:" + version),
   "subserv-dc.json": subserv.deployment
 }

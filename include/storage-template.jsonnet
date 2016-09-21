@@ -1,3 +1,4 @@
+local version = std.extVar("VERSION");
 local router = import "router.jsonnet";
 local broker = import "broker.jsonnet";
 local forwarder = import "forwarder.jsonnet";
@@ -42,7 +43,7 @@ local forwarder = import "forwarder.jsonnet";
                 ],
                 "from": {
                   "kind": "ImageStreamTag",
-                  "name": "router:${ENMASSE_VERSION}"
+                  "name": "router:" + version
                 }
               }
             },
@@ -55,7 +56,7 @@ local forwarder = import "forwarder.jsonnet";
                 ],
                 "from": {
                   "kind": "ImageStreamTag",
-                  "name": "artemis:${ENMASSE_VERSION}" 
+                  "name": "artemis:" + version
                 }
               }
             }
@@ -70,7 +71,7 @@ local forwarder = import "forwarder.jsonnet";
                 ],
                 "from": {
                   "kind": "ImageStreamTag",
-                  "name": "topic-forwarder:${ENMASSE_VERSION}" 
+                  "name": "topic-forwarder:" + version
                 }
               }
             }
@@ -146,11 +147,6 @@ local forwarder = import "forwarder.jsonnet";
           "name": "STORAGE_CAPACITY",
           "description": "Storage capacity required for volume claims",
           "value": "2Gi"
-        },
-        {
-          "name": "ENMASSE_VERSION",
-          "description": "EnMasse version",
-          "value": "latest"
         },
         {
           "name": "ADDRESS",

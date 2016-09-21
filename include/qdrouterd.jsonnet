@@ -1,3 +1,4 @@
+local version = std.extVar("VERSION");
 local router = import "router.jsonnet";
 { 
   local port = {
@@ -40,7 +41,7 @@ local router = import "router.jsonnet";
               ],
               "from": {
                 "kind": "ImageStreamTag",
-                "name": "router:${ENMASSE_VERSION}"
+                "name": "router:" + version
               }
             }
           }

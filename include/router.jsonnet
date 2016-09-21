@@ -1,3 +1,4 @@
+local version = std.extVar("VERSION");
 {
   imagestream(image_name)::
     {
@@ -10,7 +11,7 @@
         "dockerImageRepository": image_name,
         "tags": [
           {
-            "name": "${ENMASSE_VERSION}",
+            "name": version,
             "annotations": {
               "description": "Qpid Dispatch Router",
               "tags": "enmasse,messaging,router,qpid,amqp",

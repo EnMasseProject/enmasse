@@ -1,3 +1,4 @@
+local version = std.extVar("VERSION");
 {
   imagestream(image_name)::
     {
@@ -10,7 +11,7 @@
         "dockerImageRepository": image_name,
         "tags": [
           {
-            "name": "${ENMASSE_VERSION}",
+            "name": version,
             "annotations": {
               "description": "Topic broker forwarder",
               "tags": "enmasse,messaging,broker,forwarding,amqp",
@@ -27,7 +28,7 @@
     {
       "name": "forwarder",
       "env": [ addressEnv ],
-      "image": "topic-forwarder:${ENMASSE_VERSION}",
+      "image": "topic-forwarder",
       "ports": [
         {
           "name": "health",

@@ -1,3 +1,4 @@
+local version = std.extVar("VERSION");
 {
   imagestream(image_name)::
     {
@@ -10,7 +11,7 @@
         "dockerImageRepository": image_name,
         "tags": [
           {
-            "name": "${ENMASSE_VERSION}",
+            "name": version,
             "annotations": {
               "description": "ConfigMap AMQP Bridge",
               "tags": "enmasse,messaging,configmap,amqp",
@@ -51,7 +52,7 @@
               ],
               "from": {
                 "kind": "ImageStreamTag",
-                "name": "configmap-bridge:${ENMASSE_VERSION}"
+                "name": "configmap-bridge:" + version
               }
             }
           }

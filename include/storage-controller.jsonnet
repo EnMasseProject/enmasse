@@ -1,3 +1,4 @@
+local version = std.extVar("VERSION");
 {
   imagestream(image_name)::
     {
@@ -10,7 +11,7 @@
         "dockerImageRepository": image_name,
         "tags": [
           {
-            "name": "${ENMASSE_VERSION}",
+            "name": version,
             "annotations": {
               "description": "EnMasse storage controller",
               "tags": "enmasse,messaging,storage,controller",
@@ -57,7 +58,7 @@
               ],
               "from": {
                 "kind": "ImageStreamTag",
-                "name": "storage-controller:${ENMASSE_VERSION}"
+                "name": "storage-controller:" + version
               }
             }
           }

@@ -10,8 +10,9 @@ local subserv = import "subserv.jsonnet";
 local messagingService = import "messaging-service.jsonnet";
 local addressConfig = import "addresses.json";
 local flavorConfig = import "flavor.json";
+local version = std.extVar("VERSION");
 {
-  generate(secure, with_storage_controller, version)::
+  generate(secure, with_storage_controller)::
   {
     local templateName = (if secure then "tls-enmasse" else "enmasse") + (if with_storage_controller then "" else "-base"),
     "apiVersion": "v1",
@@ -84,11 +85,6 @@ local flavorConfig = import "flavor.json";
         "name": "SUBSERV_IMAGE",
         "description": "The image to use for the subscription services",
         "value": "enmasseproject/subserv:" + version
-      },
-      {
-        "name": "ENMASSE_VERSION",
-        "description": "EnMasse version",
-        "value": version
       }
     ]
 

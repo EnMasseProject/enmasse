@@ -1,3 +1,4 @@
+local version = std.extVar("VERSION");
 {
   imagestream(broker_image)::
     {
@@ -10,7 +11,7 @@
         "dockerImageRepository": broker_image,
         "tags": [
           {
-            "name": "${ENMASSE_VERSION}",
+            "name": version,
             "annotations": {
               "description": "Artemis message broker",
               "tags": "enmasse,messaging,activemq,artemis,broker,amqp",
