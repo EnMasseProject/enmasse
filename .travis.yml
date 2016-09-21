@@ -30,5 +30,5 @@ deploy:
     - generated/tls-topic-inmemory-template.yaml
     - generated/tls-topic-persisted-template.yaml
   on:
+    tags: true
     repo: EnMasseProject/openshift-configuration
-    branch: store-artifacts-in-releases
