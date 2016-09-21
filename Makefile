@@ -8,6 +8,7 @@ all: prepare $(OBJS) yaml
 
 yaml:
 	for i in generated/*.json; do ./convertyaml.rb $$i generated; done
+	ls generated/*.yaml
 
 prepare:
 	if [ ! -f jsonnet ]; then $(MAKE) -C jsonnet; fi
