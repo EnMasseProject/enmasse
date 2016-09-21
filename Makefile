@@ -1,10 +1,14 @@
 SRCS=$(wildcard *.jsonnet)
 OBJS=$(patsubst %.jsonnet,%.json,$(SRCS))
+VERSION="latest"
+ifdef $(TRAVIS_TAG)
+VERSION=$(TRAVIS_TAG)
+endif
 
 all: prepare $(OBJS) yaml
 
 %.json: %.jsonnet
-	jsonnet/jsonnet -m generated $<
+	VERSION=$(VERSION) jsonnet/jsonnet --ext-str VERSION -m generated $<
 
 yaml:
 	for i in generated/*.json; do ./convertyaml.rb $$i generated; done
@@ -17,3 +21,6 @@ prepare:
 
 clean:
 	rm -rf generated
+
+test:
+	@echo $(VERSION)
