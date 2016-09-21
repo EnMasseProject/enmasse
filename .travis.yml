@@ -5,7 +5,8 @@ script:
 - make
 
 after_success:
-- sh .trigger-travis.sh
+- curl -s https://raw.githubusercontent.com/EnMasseProject/travis-scripts/master/trigger-travis.sh
+  | bash /dev/stdin
 
 env:
   global:
