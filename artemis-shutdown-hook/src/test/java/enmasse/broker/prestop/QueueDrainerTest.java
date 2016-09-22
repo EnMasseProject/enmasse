@@ -27,8 +27,8 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 
-public class DrainClientTest {
-    private DrainClient client;
+public class QueueDrainerTest {
+    private QueueDrainer client;
     private Endpoint from = new Endpoint("127.0.0.1", 12345);
     private Endpoint to = new Endpoint("127.0.0.1", 12346);
     private TestBroker fromServer;
@@ -40,7 +40,7 @@ public class DrainClientTest {
         toServer = new TestBroker(to.hostName(), to.port(), "myqueue");
         fromServer.start();
         toServer.start();
-        client = new DrainClient(from, from, Optional.empty());
+        client = new QueueDrainer(new BrokerManager(from), from, Optional.empty());
     }
 
     @Test
