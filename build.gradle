@@ -9,6 +9,6 @@ allprojects  {
 import de.undercouch.gradle.tasks.download.Download
 
 task downloadArtemis(type: Download) {
-    src 'http://people.redhat.com/~ulilleen/apache-artemis-1.5.0-20160908.031353-7-bin.tar.gz'
+    src 'http://people.redhat.com/~ulilleen/apache-artemis-1.5.0-20160922.035324-11-bin.tar.gz'
     dest new File(buildDir, 'apache-artemis-bin.tar.gz')
 }
