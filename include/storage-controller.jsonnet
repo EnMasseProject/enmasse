@@ -1,29 +1,8 @@
 local version = std.extVar("VERSION");
+local is = import "imagestream.jsonnet";
 {
   imagestream(image_name)::
-    {
-      "apiVersion": "v1",
-      "kind": "ImageStream",
-      "metadata": {
-        "name": "storage-controller"
-      },
-      "spec": {
-        "dockerImageRepository": image_name,
-        "tags": [
-          {
-            "name": version,
-            "annotations": {
-              "description": "EnMasse storage controller",
-              "tags": "enmasse,messaging,storage,controller",
-              "version": "1.0"
-            }
-          }
-        ],
-        "importPolicy": {
-          "scheduled": true
-        }
-      }
-    },
+    is.create("storage-controller", image_name),
   deployment::
     {
       "apiVersion": "v1",

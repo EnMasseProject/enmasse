@@ -1,29 +1,8 @@
 local version = std.extVar("VERSION");
+local is = import "imagestream.jsonnet";
 {
   imagestream(image_name)::
-    {
-      "apiVersion": "v1",
-      "kind": "ImageStream",
-      "metadata": {
-        "name": "subserv"
-      },
-      "spec": {
-        "dockerImageRepository": image_name,
-        "tags": [
-          {
-            "name": version,
-            "annotations": {
-              "description": "Subscription service",
-              "tags": "enmasse,messaging,amqp,subscription,topic",
-              "version": "1.0"
-            }
-          }
-        ],
-        "importPolicy": {
-          "scheduled": true
-        }
-      }
-    },
+    is.create("subserv", image_name),
   deployment::
   {
     "apiVersion": "v1",
@@ -52,7 +31,8 @@ local version = std.extVar("VERSION");
             ],
             "from": {
               "kind": "ImageStreamTag",
-              "name": "subserv:" + version,
+              // TODO: Update to use version when travis is setup for subserv
+              "name": "subserv:latest",
             }
           }
         }

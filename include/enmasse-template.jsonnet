@@ -10,7 +10,6 @@ local subserv = import "subserv.jsonnet";
 local messagingService = import "messaging-service.jsonnet";
 local addressConfig = import "addresses.json";
 local flavorConfig = import "flavor.json";
-local version = std.extVar("VERSION");
 {
   generate(secure, with_storage_controller)::
   {
@@ -25,42 +24,41 @@ local version = std.extVar("VERSION");
                  storage.template(true, false, secure),
                  storage.template(true, true, secure),
                  import "direct-template.json",
-                 configmapBridge.imagestream("${CONFIGMAP_BRIDGE_IMAGE}"),
+                 configmapBridge.imagestream("${CONFIGMAP_BRIDGE_REPO}"),
                  configmapBridge.deployment,
-                 ragent.imagestream("${RAGENT_IMAGE}"),
+                 ragent.imagestream("${RAGENT_REPO}"),
                  ragent.deployment,
-                 router.imagestream("${ROUTER_IMAGE}"),
+                 router.imagestream("${ROUTER_REPO}"),
                  qdrouterd.deployment(secure),
-                 broker.imagestream("${BROKER_IMAGE}"),
-                 forwarder.imagestream("${TOPIC_FORWARDER_IMAGE}"),
-                 subserv.imagestream("${SUBSERV_IMAGE}"),
+                 broker.imagestream("${BROKER_REPO}"),
+                 forwarder.imagestream("${TOPIC_FORWARDER_REPO}"),
+                 subserv.imagestream("${SUBSERV_REPO}"),
                  subserv.deployment,
                  messagingService.generate(secure),
                  import "ragent-service.json",
                  import "configuration-service.json",
                  import "subscription-service.json"],
     local storage_controller_resources = [
-                 storageController.imagestream("${STORAGE_CONTROLLER_IMAGE}"),
+                 storageController.imagestream("${STORAGE_CONTROLLER_REPO}"),
                  storageController.deployment,
                  addressConfig,
                  flavorConfig],
     "objects": if with_storage_controller then common + storage_controller_resources else common,
     "parameters": [
       {
-        "name": "ROUTER_IMAGE",
+        "name": "ROUTER_REPO",
         "description": "The image to use for the router",
-        // TODO: Update to use version when travis is setup for qdrouterd
-        "value": "gordons/qdrouterd:latest"
+        "value": "gordons/qdrouterd"
       },
       {
-        "name": "BROKER_IMAGE",
+        "name": "BROKER_REPO",
         "description": "The default image to use as broker",
-        "value": "enmasseproject/artemis:" + version
+        "value": "enmasseproject/artemis"
       },
       {
-        "name": "TOPIC_FORWARDER_IMAGE",
+        "name": "TOPIC_FORWARDER_REPO",
         "description": "The default image to use as topic forwarder",
-        "value": "enmasseproject/topic-forwarder:" + version
+        "value": "enmasseproject/topic-forwarder"
       },
       {
         "name": "ROUTER_LINK_CAPACITY",
@@ -68,25 +66,24 @@ local version = std.extVar("VERSION");
         "value": "50"
       },
       {
-        "name": "CONFIGMAP_BRIDGE_IMAGE",
+        "name": "CONFIGMAP_BRIDGE_REPO",
         "description": "The image to use for the configmap notification bridge",
-        "value": "enmasseproject/configmap-bridge:" + version
+        "value": "enmasseproject/configmap-bridge"
       },
       {
-        "name": "STORAGE_CONTROLLER_IMAGE",
+        "name": "STORAGE_CONTROLLER_REPO",
         "description": "The docker image to use for the storage controller",
-        "value": "enmasseproject/storage-controller:" + version
+        "value": "enmasseproject/storage-controller"
       },
       {
-        "name": "RAGENT_IMAGE",
+        "name": "RAGENT_REPO",
         "description": "The image to use for the router agent",
-        "value": "enmasseproject/ragent:" + version
+        "value": "enmasseproject/ragent"
       },
       {
-        "name": "SUBSERV_IMAGE",
+        "name": "SUBSERV_REPO",
         "description": "The image to use for the subscription services",
-        // TODO: Update to use version when travis is setup for subserv
-        "value": "enmasseproject/subserv:latest"
+        "value": "enmasseproject/subserv"
       }
     ]
 

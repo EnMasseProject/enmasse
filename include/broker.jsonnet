@@ -1,29 +1,8 @@
-local version = std.extVar("VERSION");
+local is = import "imagestream.jsonnet";
 {
   imagestream(broker_image)::
-    {
-      "apiVersion": "v1",
-      "kind": "ImageStream",
-      "metadata": {
-        "name": "artemis"
-      },
-      "spec": {
-        "dockerImageRepository": broker_image,
-        "tags": [
-          {
-            "name": version,
-            "annotations": {
-              "description": "Artemis message broker",
-              "tags": "enmasse,messaging,activemq,artemis,broker,amqp",
-              "version": "1.0"
-            }
-          }
-        ],
-        "importPolicy": {
-          "scheduled": true
-        }
-      }
-    },
+    is.create("artemis", broker_image),
+
   container(volumeName, addressEnv)::
     {
       "name": "broker",

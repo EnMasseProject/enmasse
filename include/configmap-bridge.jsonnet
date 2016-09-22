@@ -1,29 +1,8 @@
 local version = std.extVar("VERSION");
+local is = import "imagestream.jsonnet";
 {
   imagestream(image_name)::
-    {
-      "apiVersion": "v1",
-      "kind": "ImageStream",
-      "metadata": {
-        "name": "configmap-bridge"
-      },
-      "spec": {
-        "dockerImageRepository": image_name,
-        "tags": [
-          {
-            "name": version,
-            "annotations": {
-              "description": "ConfigMap AMQP Bridge",
-              "tags": "enmasse,messaging,configmap,amqp",
-              "version": "1.0"
-            }
-          }
-        ],
-        "importPolicy": {
-          "scheduled": true
-        }
-      }
-    },
+    is.create("configmap-bridge", image_name),
   deployment::
     {
       "apiVersion": "v1",

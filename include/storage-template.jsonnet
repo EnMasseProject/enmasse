@@ -43,7 +43,8 @@ local forwarder = import "forwarder.jsonnet";
                 ],
                 "from": {
                   "kind": "ImageStreamTag",
-                  "name": "router:" + version
+                   // TODO: Update to use version when travis is setup for qdrouterd
+                  "name": "router:latest"
                 }
               }
             },

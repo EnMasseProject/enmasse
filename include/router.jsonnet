@@ -1,29 +1,7 @@
-local version = std.extVar("VERSION");
+local is = import "imagestream.jsonnet";
 {
   imagestream(image_name)::
-    {
-      "apiVersion": "v1",
-      "kind": "ImageStream",
-      "metadata": {
-        "name": "router"
-      },
-      "spec": {
-        "dockerImageRepository": image_name,
-        "tags": [
-          {
-            "name": version,
-            "annotations": {
-              "description": "Qpid Dispatch Router",
-              "tags": "enmasse,messaging,router,qpid,amqp",
-              "version": "1.0"
-            }
-          }
-        ],
-        "importPolicy": {
-          "scheduled": true
-        }
-      }
-    },
+    is.create("router", image_name),
 
   container(secure, addressEnv)::
     local routerPort = {
