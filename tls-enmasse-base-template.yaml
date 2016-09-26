@@ -14,6 +14,11 @@ objects:
   - apiVersion: v1
     kind: DeploymentConfig
     metadata:
+      labels:
+        address: "${ADDRESS}"
+        multicast: 'false'
+        store_and_forward: 'true'
+        type: address-config
       name: queue-${ADDRESS}
     spec:
       replicas: 1
@@ -94,16 +99,6 @@ objects:
             kind: ImageStreamTag
             name: artemis:${ENMASSE_VERSION}
         type: ImageChange
-  - apiVersion: v1
-    data:
-      address: "${ADDRESS}"
-      multicast: 'false'
-      store-and-forward: 'true'
-    kind: ConfigMap
-    metadata:
-      labels:
-        type: address-config
-      name: config-${ADDRESS}
   parameters:
   - description: The link capacity setting for router
     name: ROUTER_LINK_CAPACITY
@@ -137,6 +132,11 @@ objects:
   - apiVersion: v1
     kind: DeploymentConfig
     metadata:
+      labels:
+        address: "${ADDRESS}"
+        multicast: 'false'
+        store_and_forward: 'true'
+        type: address-config
       name: queue-${ADDRESS}
     spec:
       replicas: 1
@@ -218,16 +218,6 @@ objects:
             kind: ImageStreamTag
             name: artemis:${ENMASSE_VERSION}
         type: ImageChange
-  - apiVersion: v1
-    data:
-      address: "${ADDRESS}"
-      multicast: 'false'
-      store-and-forward: 'true'
-    kind: ConfigMap
-    metadata:
-      labels:
-        type: address-config
-      name: config-${ADDRESS}
   parameters:
   - description: The link capacity setting for router
     name: ROUTER_LINK_CAPACITY
@@ -251,6 +241,11 @@ objects:
   - apiVersion: v1
     kind: DeploymentConfig
     metadata:
+      labels:
+        address: "${ADDRESS}"
+        multicast: 'true'
+        store_and_forward: 'true'
+        type: address-config
       name: topic-${ADDRESS}
     spec:
       replicas: 1
@@ -351,16 +346,6 @@ objects:
             kind: ImageStreamTag
             name: topic-forwarder:${ENMASSE_VERSION}
         type: ImageChange
-  - apiVersion: v1
-    data:
-      address: "${ADDRESS}"
-      multicast: 'true'
-      store-and-forward: 'true'
-    kind: ConfigMap
-    metadata:
-      labels:
-        type: address-config
-      name: config-${ADDRESS}
   parameters:
   - description: The link capacity setting for router
     name: ROUTER_LINK_CAPACITY
@@ -394,6 +379,11 @@ objects:
   - apiVersion: v1
     kind: DeploymentConfig
     metadata:
+      labels:
+        address: "${ADDRESS}"
+        multicast: 'true'
+        store_and_forward: 'true'
+        type: address-config
       name: topic-${ADDRESS}
     spec:
       replicas: 1
@@ -495,16 +485,6 @@ objects:
             kind: ImageStreamTag
             name: topic-forwarder:${ENMASSE_VERSION}
         type: ImageChange
-  - apiVersion: v1
-    data:
-      address: "${ADDRESS}"
-      multicast: 'true'
-      store-and-forward: 'true'
-    kind: ConfigMap
-    metadata:
-      labels:
-        type: address-config
-      name: config-${ADDRESS}
   parameters:
   - description: The link capacity setting for router
     name: ROUTER_LINK_CAPACITY
@@ -524,13 +504,12 @@ objects:
     name: direct
   objects:
   - apiVersion: v1
-    data:
-      address: "${ADDRESS}"
-      multicast: "${MULTICAST}"
-      store-and-forward: 'false'
     kind: ConfigMap
     metadata:
       labels:
+        address: "${ADDRESS}"
+        multicast: "${MULTICAST}"
+        store_and_forward: 'false'
         type: address-config
       name: config-${ADDRESS}
   parameters:
