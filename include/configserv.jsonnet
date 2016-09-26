@@ -2,21 +2,21 @@ local version = std.extVar("VERSION");
 local is = import "imagestream.jsonnet";
 {
   imagestream(image_name)::
-    is.create("configmap-bridge", image_name),
+    is.create("configserv", image_name),
   deployment::
     {
       "apiVersion": "v1",
       "kind": "DeploymentConfig",
       "metadata": {
         "labels": {
-          "name": "configmap-bridge"
+          "name": "configserv"
         },
-        "name": "configmap-bridge"
+        "name": "configserv"
       },
       "spec": {
         "replicas": 1,
         "selector": {
-          "name": "configmap-bridge"
+          "name": "configserv"
         },
         "triggers": [
           {
@@ -31,7 +31,7 @@ local is = import "imagestream.jsonnet";
               ],
               "from": {
                 "kind": "ImageStreamTag",
-                "name": "configmap-bridge:" + version
+                "name": "configserv:" + version
               }
             }
           }
@@ -39,13 +39,13 @@ local is = import "imagestream.jsonnet";
         "template": {
           "metadata": {
             "labels": {
-              "name": "configmap-bridge"
+              "name": "configserv"
             }
           },
           "spec": {
             "containers": [
               {
-                "image": "configmap-bridge",
+                "image": "configserv",
                 "name": "bridge",
                 "ports": [
                   {
