@@ -18,11 +18,18 @@ local forwarder = import "forwarder.jsonnet";
           "addressType": addrtype
         }
       },
+
       local controller = {
         "apiVersion": "v1",
         "kind": "DeploymentConfig",
         "metadata": {
-          "name": addrtype + "-${ADDRESS}"
+          "name": addrtype + "-${ADDRESS}",
+          "labels": {
+            "type": "address-config",
+            "address": "${ADDRESS}",
+            "store_and_forward": "true",
+            "multicast": if multicast then "true" else "false"
+          }
         },
         "spec": {
           "replicas": 1,
@@ -120,24 +127,9 @@ local forwarder = import "forwarder.jsonnet";
           }
         }
       },
-      local config = {
-        "apiVersion": "v1",
-        "kind": "ConfigMap",
-        "metadata": {
-          "name": "config-${ADDRESS}",
-          "labels": {
-            "type": "address-config"
-          }
-        },
-        "data": {
-          "address": "${ADDRESS}",
-          "store-and-forward": "true",
-          "multicast": if multicast then "true" else "false"
-        }
-      },
       "objects": if persistence
-        then [pvc, controller, config]
-        else [controller, config],
+        then [pvc, controller]
+        else [controller],
       "parameters": [
         {
           "name": "ROUTER_LINK_CAPACITY",
