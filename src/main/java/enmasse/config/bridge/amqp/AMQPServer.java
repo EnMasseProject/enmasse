@@ -22,7 +22,7 @@ import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.ProtonSender;
 import io.vertx.proton.ProtonServer;
 import io.vertx.proton.ProtonSession;
-import enmasse.config.bridge.model.ConfigMapDatabase;
+import enmasse.config.bridge.model.ConfigDatabase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,12 +36,12 @@ public class AMQPServer {
     private static final Logger log = LoggerFactory.getLogger(AMQPServer.class.getName());
 
     private final Vertx vertx = Vertx.vertx();
-    private final ConfigMapDatabase database;
+    private final ConfigDatabase database;
     private final ProtonServer server;
     private final String hostname;
     private final int port;
 
-    public AMQPServer(String hostname, int port, ConfigMapDatabase database)
+    public AMQPServer(String hostname, int port, ConfigDatabase database)
     {
         this.hostname = hostname;
         this.port = port;

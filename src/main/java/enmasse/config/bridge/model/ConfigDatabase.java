@@ -19,6 +19,6 @@ package enmasse.config.bridge.model;
 /**
  * Represents a database of config maps that can be subscribed to.
  */
-public interface ConfigMapDatabase {
+public interface ConfigDatabase {
     boolean subscribe(String labelConfig, ConfigSubscriber configSubscriber);
 }

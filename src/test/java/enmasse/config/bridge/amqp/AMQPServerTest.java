@@ -17,7 +17,7 @@
 package enmasse.config.bridge.amqp;
 
 import enmasse.config.bridge.amqp.subscription.AddressConfigCodec;
-import enmasse.config.bridge.model.ConfigMapDatabase;
+import enmasse.config.bridge.model.ConfigDatabase;
 import enmasse.config.bridge.model.ConfigSubscriber;
 import io.vertx.proton.ProtonMessageHandler;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
@@ -35,12 +35,12 @@ import static org.mockito.Mockito.*;
 
 public class AMQPServerTest {
     private AMQPServer server;
-    private ConfigMapDatabase database;
+    private ConfigDatabase database;
     private TestClient client;
 
     @Before
     public void setup() throws InterruptedException {
-        database = mock(ConfigMapDatabase.class);
+        database = mock(ConfigDatabase.class);
         when(database.subscribe(any(), any())).thenReturn(true);
         server = new AMQPServer("localhost", 0, database);
         server.run();
@@ -73,7 +73,7 @@ public class AMQPServerTest {
         verify(database, timeout(10000)).subscribe(anyString(), subCapture.capture());
 
         ConfigSubscriber sub = subCapture.getValue();
-        sub.configUpdated(Collections.singletonMap("testconfig", AddressConfigCodec.encode("myqueue", true, false)));
+        sub.configUpdated(Collections.singletonList(AddressConfigCodec.encodeConfig("myqueue", true, false)));
 
         ArgumentCaptor<Message> msgCapture = ArgumentCaptor.forClass(Message.class);
         verify(msgHandler, timeout(10000)).handle(any(), msgCapture.capture());

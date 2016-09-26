@@ -14,13 +14,19 @@
  * limitations under the License.
  */
 
-package enmasse.config.bridge.model;
+package enmasse.config.bridge.openshift;
 
-import java.util.List;
+import com.openshift.restclient.model.IResource;
+import enmasse.config.bridge.model.ConfigSubscriber;
+
+import java.util.Set;
 
 /**
- * Represents a subscriber that will get notified of config updates.
+ * Listener for openshift resources
  */
-public interface ConfigSubscriber {
-    void configUpdated(List<Config> values);
+public interface OpenshiftResourceListener {
+    void resourcesUpdated(Set<IResource> resources);
+    String [] getKinds();
+
+    void subscribe(ConfigSubscriber configSubscriber);
 }

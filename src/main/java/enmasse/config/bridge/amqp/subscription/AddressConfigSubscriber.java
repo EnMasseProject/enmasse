@@ -20,7 +20,7 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import enmasse.config.bridge.model.ConfigMap;
+import enmasse.config.bridge.model.Config;
 import enmasse.config.bridge.model.ConfigSubscriber;
 import io.vertx.proton.ProtonSender;
 import org.apache.commons.compress.utils.Charsets;
@@ -32,7 +32,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.Map;
+import java.util.List;
 
 /**
  * Creates AMQP message on address config updates, converting the multiple config maps to a single JSON object
@@ -48,17 +48,17 @@ public class AddressConfigSubscriber implements ConfigSubscriber {
     }
 
     @Override
-    public void configUpdated(Map<String, ConfigMap> values) {
+    public void configUpdated(List<Config> values) {
         Message message = Message.Factory.create();
 
         try {
             ObjectNode root = mapper.createObjectNode();
-            for (Map.Entry<String, ConfigMap> entry : values.entrySet()) {
-                AddressConfigCodec.encode(root, entry.getValue());
+            for (Config config : values) {
+                AddressConfigCodec.encodeJson(root, config);
             }
             message.setBody(createBody(root));
             message.setContentType("application/json");
-            log.info("Address config was updated to '" + (String)((AmqpValue)message.getBody()).getValue() + "'");
+            log.info("Address config was updated to '" + ((AmqpValue)message.getBody()).getValue() + "'");
             sender.send(message);
         } catch (Exception e) {
             log.warn("Error converting map to JSON: " + e.getMessage());

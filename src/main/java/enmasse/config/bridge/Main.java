@@ -19,7 +19,8 @@ package enmasse.config.bridge;
 import com.openshift.restclient.ClientBuilder;
 import com.openshift.restclient.IClient;
 import enmasse.config.bridge.amqp.AMQPServer;
-import enmasse.config.bridge.openshift.OpenshiftConfigMapDatabase;
+import enmasse.config.bridge.openshift.OpenshiftClient;
+import enmasse.config.bridge.openshift.OpenshiftConfigDatabase;
 
 import java.io.File;
 import java.io.IOException;
@@ -44,7 +45,7 @@ public class Main {
                     .usingToken(getAuthenticationToken())
                     .build();
 
-            OpenshiftConfigMapDatabase database = new OpenshiftConfigMapDatabase(client, openshiftNamespace);
+            OpenshiftConfigDatabase database = new OpenshiftConfigDatabase(new OpenshiftClient(client, openshiftNamespace));
             AMQPServer server = new AMQPServer(listenAddress, listenPort, database);
 
             server.run();

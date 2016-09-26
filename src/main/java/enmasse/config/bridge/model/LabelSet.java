@@ -21,7 +21,7 @@ import java.util.Map;
 import java.util.StringJoiner;
 
 /**
- * TODO: Description
+ * Represents a set of labels, and supports checking if another labelset is a subset of this set.
  */
 public class LabelSet {
     private final Map<String, String> labelMap;

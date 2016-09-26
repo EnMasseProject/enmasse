@@ -16,35 +16,9 @@
 
 package enmasse.config.bridge.model;
 
-import java.util.Map;
-
 /**
- * A config map represents the config payload for a config map.
+ * Generic interface for configuration data.
  */
-public class ConfigMap {
-    private final Map<String, String> data;
-    public ConfigMap(Map<String, String> data) {
-        this.data = data;
-    }
-
-    public Map<String, String> getData() {
-        return data;
-    }
-
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        ConfigMap configMap = (ConfigMap) o;
-
-        return data.equals(configMap.data);
-
-    }
-
-    @Override
-    public int hashCode() {
-        return data.hashCode();
-    }
+public interface Config {
+    String getValue(String key);
 }

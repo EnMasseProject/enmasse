@@ -16,15 +16,14 @@
 
 package enmasse.config.bridge.amqp.subscription;
 
-import enmasse.config.bridge.model.ConfigMap;
+import enmasse.config.bridge.model.Config;
 import io.vertx.proton.ProtonSender;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.message.Message;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.Arrays;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
@@ -37,13 +36,10 @@ public class AddressConfigSubscriberTest {
         ProtonSender mockSender = mock(ProtonSender.class);
         AddressConfigSubscriber subscriber = new AddressConfigSubscriber(mockSender);
 
-        ConfigMap map1 = AddressConfigCodec.encode("myqueue", true, false);
-        ConfigMap map2 = AddressConfigCodec.encode("mytopic", true, true);
-        Map<String, ConfigMap> mapMap = new LinkedHashMap<>();
-        mapMap.put("map1", map1);
-        mapMap.put("map2", map2);
+        Config cfg1 = AddressConfigCodec.encodeConfig("myqueue", true, false);
+        Config cfg2 = AddressConfigCodec.encodeConfig("mytopic", true, true);
 
-        subscriber.configUpdated(mapMap);
+        subscriber.configUpdated(Arrays.asList(cfg1, cfg2));
 
         ArgumentCaptor<Message> messageArgumentCaptor = ArgumentCaptor.forClass(Message.class);
         verify(mockSender).send(messageArgumentCaptor.capture());

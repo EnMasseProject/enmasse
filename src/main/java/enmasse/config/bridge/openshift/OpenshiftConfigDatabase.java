@@ -16,59 +16,61 @@
 
 package enmasse.config.bridge.openshift;
 
-import com.openshift.restclient.IClient;
-import enmasse.config.bridge.model.ConfigMapDatabase;
+import enmasse.config.bridge.model.ConfigDatabase;
 import enmasse.config.bridge.model.ConfigSubscriber;
 import enmasse.config.bridge.model.LabelSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
- * ConfigMapDatabase backed by OpenShift/Kubernetes REST API supporting subscriptions.
+ * ConfigDatabase backed by OpenShift/Kubernetes REST API supporting subscriptions.
  */
-public class OpenshiftConfigMapDatabase implements AutoCloseable, ConfigMapDatabase {
-    private static final Logger log = LoggerFactory.getLogger(OpenshiftConfigMapDatabase.class.getName());
-    private final IClient restClient;
-    private final String namespace;
+public class OpenshiftConfigDatabase implements AutoCloseable, ConfigDatabase {
+    private static final Logger log = LoggerFactory.getLogger(OpenshiftConfigDatabase.class.getName());
+    private final OpenshiftClient client;
 
-    private final Map<String, ConfigMapSetSubscription> configMapMap = new LinkedHashMap<>();
+    private final Map<LabelSet, ConfigResourceListener> aggregatorMap = new LinkedHashMap<>();
+    private final List<OpenshiftResourceObserver> observerList = new ArrayList<>();
 
-    public OpenshiftConfigMapDatabase(IClient restClient, String namespace) {
-        this.restClient = restClient;
-        this.namespace = namespace;
+    public OpenshiftConfigDatabase(OpenshiftClient client) {
+        this.client = client;
     }
 
     @Override
     public void close() throws Exception {
-        for (ConfigMapSetSubscription sub : configMapMap.values()) {
-            sub.close();
+        for (OpenshiftResourceObserver observer : observerList) {
+            observer.close();
         }
-    }
-
-    private synchronized ConfigMapSetSubscription getOrCreateConfigMap(String labelSetName, LabelSet labelSet) {
-        ConfigMapSetSubscription map = configMapMap.get(labelSetName);
-        if (map == null) {
-            map = new ConfigMapSetSubscription(restClient, labelSet, namespace);
-            configMapMap.put(labelSetName, map);
-        }
-        return map;
     }
 
     public synchronized boolean subscribe(String labelSetName, ConfigSubscriber configSubscriber) {
         try {
             LabelSet labelSet = fetchLabelSet(labelSetName);
-            ConfigMapSetSubscription sub = getOrCreateConfigMap(labelSetName, labelSet);
-            sub.getSet().subscribe(configSubscriber);
-            sub.start();
+            ConfigResourceListener listener = getOrCreateAggregator(labelSet);
+            listener.subscribe(configSubscriber);
             return true;
         } catch (Exception e) {
             log.error("Error subscribing to " + labelSetName + ": ", e);
             return false;
         }
+    }
+
+    private ConfigResourceListener getOrCreateAggregator(LabelSet labelSet) {
+        ConfigResourceListener aggregator = aggregatorMap.get(labelSet);
+        if (aggregator == null) {
+            aggregator = new ConfigResourceListener();
+            OpenshiftResourceObserver observer = new OpenshiftResourceObserver(client, labelSet, aggregator);
+            observer.start();
+            observerList.add(observer);
+            aggregatorMap.put(labelSet, aggregator);
+        }
+        return aggregator;
     }
 
     private LabelSet fetchLabelSet(String labelSetName) {
