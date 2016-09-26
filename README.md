@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/EnMasseProject/configuration-service.svg?branch=master)](https://travis-ci.org/EnMasseProject/configuration-service)
+[![Build Status](https://travis-ci.org/EnMasseProject/configserv.svg?branch=master)](https://travis-ci.org/EnMasseProject/configserv)
 
 # Configuration Service
 

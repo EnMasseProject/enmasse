@@ -1,7 +1,7 @@
 FROM openjdk:8-jre
 
-ADD build/distributions/configuration-service.tar /
+ADD build/distributions/configserv.tar /
 
 EXPOSE 5672
 
-CMD ["/configuration-service/bin/configuration-service"]
+CMD ["/configserv/bin/configserv"]
