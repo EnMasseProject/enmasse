@@ -17,7 +17,6 @@
 package enmasse.config.bridge.openshift;
 
 import com.openshift.restclient.model.IResource;
-import enmasse.config.bridge.model.ConfigSubscriber;
 
 import java.util.Set;
 
@@ -27,6 +26,4 @@ import java.util.Set;
 public interface OpenshiftResourceListener {
     void resourcesUpdated(Set<IResource> resources);
     String [] getKinds();
-
-    void subscribe(ConfigSubscriber configSubscriber);
 }
