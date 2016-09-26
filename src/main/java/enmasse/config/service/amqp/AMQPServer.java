@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-package enmasse.config.bridge.amqp;
+package enmasse.config.service.amqp;
 
-import enmasse.config.bridge.amqp.subscription.AddressConfigSubscriber;
+import enmasse.config.service.amqp.subscription.AddressConfigSubscriber;
 import io.vertx.core.Vertx;
 import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.ProtonSender;
 import io.vertx.proton.ProtonServer;
 import io.vertx.proton.ProtonSession;
-import enmasse.config.bridge.model.ConfigDatabase;
+import enmasse.config.service.model.ConfigDatabase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,7 +52,7 @@ public class AMQPServer {
     }
 
     private void connectHandler(ProtonConnection connection) {
-        connection.setContainer("configmap-bridge");
+        connection.setContainer("configuration-service");
         connection.openHandler(conn -> {
             log.info("Connection opened");
         }).closeHandler(conn -> {

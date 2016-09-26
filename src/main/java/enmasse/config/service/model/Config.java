@@ -14,13 +14,11 @@
  * limitations under the License.
  */
 
-package enmasse.config.bridge.model;
-
-import java.util.List;
+package enmasse.config.service.model;
 
 /**
- * Represents a subscriber that will get notified of config updates.
+ * Generic interface for configuration data.
  */
-public interface ConfigSubscriber {
-    void configUpdated(List<Config> values);
+public interface Config {
+    String getValue(String key);
 }

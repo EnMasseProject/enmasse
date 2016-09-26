@@ -14,13 +14,12 @@
  * limitations under the License.
  */
 
-package enmasse.config.bridge.amqp.subscription;
+package enmasse.config.service.amqp.subscription;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import enmasse.config.bridge.model.Config;
+import enmasse.config.service.model.Config;
 
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 
 /**

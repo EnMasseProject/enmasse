@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-package enmasse.config.bridge.model;
+package enmasse.config.service.model;
 
 /**
- * Generic interface for configuration data.
+ * Represents a database of config maps that can be subscribed to.
  */
-public interface Config {
-    String getValue(String key);
+public interface ConfigDatabase {
+    boolean subscribe(String labelConfig, ConfigSubscriber configSubscriber);
 }

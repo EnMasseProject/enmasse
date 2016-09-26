@@ -1,5 +1,5 @@
-[![Build Status](https://travis-ci.org/EnMasseProject/configmap-bridge.svg?branch=master)](https://travis-ci.org/EnMasseProject/configmap-bridge)
+[![Build Status](https://travis-ci.org/EnMasseProject/configuration-service.svg?branch=master)](https://travis-ci.org/EnMasseProject/configuration-service)
 
-# ConfigMap Bridge
+# Configuration Service
 
-The configmap bridge is a server that subscribes to a configmap in openshift (or kubernetes), and allows clients to subscribe for configmap updates using different protocols. Currently, only AMQP is supported.
+The configuration service is a server that watches deployments and config maps in openshift (or kubernetes), aggregates the configuration data and allows clients to subscribe for updates.

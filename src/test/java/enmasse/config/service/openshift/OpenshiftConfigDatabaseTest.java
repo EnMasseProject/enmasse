@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-package enmasse.config.bridge.openshift;
+package enmasse.config.service.openshift;
 
 import com.openshift.restclient.IOpenShiftWatchListener;
 import com.openshift.restclient.IWatcher;
 import com.openshift.restclient.model.IConfigMap;
-import enmasse.config.bridge.amqp.subscription.AddressConfigCodec;
-import enmasse.config.bridge.model.Config;
-import enmasse.config.bridge.model.ConfigSubscriber;
+import enmasse.config.service.amqp.subscription.AddressConfigCodec;
+import enmasse.config.service.model.Config;
+import enmasse.config.service.model.ConfigSubscriber;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

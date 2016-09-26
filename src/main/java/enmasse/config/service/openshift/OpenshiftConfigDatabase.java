@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-package enmasse.config.bridge.openshift;
+package enmasse.config.service.openshift;
 
-import enmasse.config.bridge.model.ConfigDatabase;
-import enmasse.config.bridge.model.ConfigSubscriber;
-import enmasse.config.bridge.model.LabelSet;
+import enmasse.config.service.model.ConfigDatabase;
+import enmasse.config.service.model.ConfigSubscriber;
+import enmasse.config.service.model.LabelSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

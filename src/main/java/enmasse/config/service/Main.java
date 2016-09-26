@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package enmasse.config.bridge;
+package enmasse.config.service;
 
 import com.openshift.restclient.ClientBuilder;
 import com.openshift.restclient.IClient;
-import enmasse.config.bridge.amqp.AMQPServer;
-import enmasse.config.bridge.openshift.OpenshiftClient;
-import enmasse.config.bridge.openshift.OpenshiftConfigDatabase;
+import enmasse.config.service.amqp.AMQPServer;
+import enmasse.config.service.openshift.OpenshiftClient;
+import enmasse.config.service.openshift.OpenshiftConfigDatabase;
 
 import java.io.File;
 import java.io.IOException;
@@ -53,7 +53,7 @@ public class Main {
             System.out.println("Error parsing environment: " + e.getMessage());
             System.exit(1);
         } catch (IOException e) {
-            System.out.println("Error running config bridge");
+            System.out.println("Error running config service");
             System.exit(1);
         }
     }

@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package enmasse.config.bridge.openshift;
+package enmasse.config.service.openshift;
 
 import com.openshift.restclient.IOpenShiftWatchListener;
 import com.openshift.restclient.IWatcher;
 import com.openshift.restclient.model.IResource;
-import enmasse.config.bridge.model.LabelSet;
+import enmasse.config.service.model.LabelSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

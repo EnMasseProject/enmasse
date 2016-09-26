@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-package enmasse.config.bridge.amqp.subscription;
+package enmasse.config.service.amqp.subscription;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import enmasse.config.bridge.model.Config;
-import enmasse.config.bridge.model.ConfigSubscriber;
+import enmasse.config.service.model.Config;
+import enmasse.config.service.model.ConfigSubscriber;
 import io.vertx.proton.ProtonSender;
 import org.apache.commons.compress.utils.Charsets;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;

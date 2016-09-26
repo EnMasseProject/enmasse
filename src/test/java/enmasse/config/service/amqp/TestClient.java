@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package enmasse.config.bridge.amqp;
+package enmasse.config.service.amqp;
 
 import io.vertx.core.Vertx;
 import io.vertx.proton.ProtonClient;

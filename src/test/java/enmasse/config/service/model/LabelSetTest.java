@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package enmasse.config.bridge.model;
+package enmasse.config.service.model;
 
 import org.junit.Test;
 

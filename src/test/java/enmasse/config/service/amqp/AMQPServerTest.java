@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-package enmasse.config.bridge.amqp;
+package enmasse.config.service.amqp;
 
-import enmasse.config.bridge.amqp.subscription.AddressConfigCodec;
-import enmasse.config.bridge.model.ConfigDatabase;
-import enmasse.config.bridge.model.ConfigSubscriber;
+import enmasse.config.service.amqp.subscription.AddressConfigCodec;
+import enmasse.config.service.model.ConfigDatabase;
+import enmasse.config.service.model.ConfigSubscriber;
 import io.vertx.proton.ProtonMessageHandler;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.message.Message;

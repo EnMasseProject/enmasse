@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package enmasse.config.bridge.amqp.subscription;
+package enmasse.config.service.amqp.subscription;
 
-import enmasse.config.bridge.model.Config;
+import enmasse.config.service.model.Config;
 import io.vertx.proton.ProtonSender;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.message.Message;

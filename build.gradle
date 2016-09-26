@@ -34,5 +34,5 @@ dependencies {
 }
 
 apply plugin: 'application'
-mainClassName = 'enmasse.config.bridge.Main'
+mainClassName = 'enmasse.config.service.Main'
 applicationDefaultJvmArgs = ["-Dvertx.disableFileCaching=true", "-Dvertx.disableFileCPResolving=true"]

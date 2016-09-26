@@ -14,18 +14,17 @@
  * limitations under the License.
  */
 
-package enmasse.config.bridge.model;
+package enmasse.config.service.model;
 
 import com.openshift.restclient.model.IConfigMap;
-import enmasse.config.bridge.amqp.subscription.AddressConfigCodec;
-import enmasse.config.bridge.openshift.ConfigResourceListener;
+import enmasse.config.service.amqp.subscription.AddressConfigCodec;
+import enmasse.config.service.openshift.ConfigResourceListener;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.runners.MockitoJUnitRunner;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;

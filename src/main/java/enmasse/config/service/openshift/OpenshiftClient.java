@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package enmasse.config.bridge.openshift;
+package enmasse.config.service.openshift;
 
 import com.openshift.restclient.IClient;
 import com.openshift.restclient.IOpenShiftWatchListener;

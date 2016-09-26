@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package enmasse.config.bridge.openshift;
+package enmasse.config.service.openshift;
 
 import com.openshift.restclient.ResourceKind;
 import com.openshift.restclient.model.IResource;
-import enmasse.config.bridge.amqp.subscription.AddressConfigCodec;
-import enmasse.config.bridge.model.Config;
-import enmasse.config.bridge.model.ConfigSubscriber;
+import enmasse.config.service.amqp.subscription.AddressConfigCodec;
+import enmasse.config.service.model.Config;
+import enmasse.config.service.model.ConfigSubscriber;
 
 import java.util.ArrayList;
 import java.util.Collections;
