@@ -1,5 +1,5 @@
 local storage = import "storage-template.jsonnet";
-local configmapBridge = import "configmap-bridge.jsonnet";
+local configserv = import "configserv.jsonnet";
 local ragent = import "ragent.jsonnet";
 local router = import "router.jsonnet";
 local broker = import "broker.jsonnet";
@@ -24,8 +24,8 @@ local flavorConfig = import "flavor.json";
                  storage.template(true, false, secure),
                  storage.template(true, true, secure),
                  import "direct-template.json",
-                 configmapBridge.imagestream("${CONFIGMAP_BRIDGE_IMAGE}"),
-                 configmapBridge.deployment,
+                 configserv.imagestream("${CONFIGSERV_IMAGE}"),
+                 configserv.deployment,
                  ragent.imagestream("${RAGENT_IMAGE}"),
                  ragent.deployment,
                  router.imagestream("${ROUTER_IMAGE}"),
@@ -66,9 +66,9 @@ local flavorConfig = import "flavor.json";
         "value": "50"
       },
       {
-        "name": "CONFIGMAP_BRIDGE_IMAGE",
-        "description": "The image to use for the configmap notification bridge",
-        "value": "enmasseproject/configmap-bridge:" + version
+        "name": "CONFIGSERV_IMAGE",
+        "description": "The image to use for the configuration service",
+        "value": "enmasseproject/configserv:" + version
       },
       {
         "name": "STORAGE_CONTROLLER_IMAGE",

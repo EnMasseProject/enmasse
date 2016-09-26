@@ -4,7 +4,7 @@
       "apiVersion": "v1",
       "kind": "ImageStream",
       "metadata": {
-        "name": "configmap-bridge"
+        "name": "configserv"
       },
       "spec": {
         "dockerImageRepository": image_name,
@@ -12,8 +12,8 @@
           {
             "name": "${ENMASSE_VERSION}",
             "annotations": {
-              "description": "ConfigMap AMQP Bridge",
-              "tags": "enmasse,messaging,configmap,amqp",
+              "description": "Configuration Service",
+              "tags": "enmasse,messaging,config,configserv,amqp",
               "version": "1.0"
             }
           }
@@ -29,14 +29,14 @@
       "kind": "DeploymentConfig",
       "metadata": {
         "labels": {
-          "name": "configmap-bridge"
+          "name": "configserv"
         },
-        "name": "configmap-bridge"
+        "name": "configserv"
       },
       "spec": {
         "replicas": 1,
         "selector": {
-          "name": "configmap-bridge"
+          "name": "configserv"
         },
         "triggers": [
           {
@@ -51,7 +51,7 @@
               ],
               "from": {
                 "kind": "ImageStreamTag",
-                "name": "configmap-bridge:${ENMASSE_VERSION}"
+                "name": "configserv:${ENMASSE_VERSION}"
               }
             }
           }
@@ -59,13 +59,13 @@
         "template": {
           "metadata": {
             "labels": {
-              "name": "configmap-bridge"
+              "name": "configserv"
             }
           },
           "spec": {
             "containers": [
               {
-                "image": "configmap-bridge",
+                "image": "configserv",
                 "name": "bridge",
                 "ports": [
                   {

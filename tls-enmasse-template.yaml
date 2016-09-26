@@ -522,34 +522,34 @@ objects:
 - apiVersion: v1
   kind: ImageStream
   metadata:
-    name: configmap-bridge
+    name: configserv
   spec:
-    dockerImageRepository: "${CONFIGMAP_BRIDGE_IMAGE}"
+    dockerImageRepository: "${CONFIGSERV_IMAGE}"
     importPolicy:
       scheduled: true
     tags:
     - annotations:
-        description: ConfigMap AMQP Bridge
-        tags: enmasse,messaging,configmap,amqp
+        description: Configuration Service
+        tags: enmasse,messaging,config,configserv,amqp
         version: '1.0'
       name: "${ENMASSE_VERSION}"
 - apiVersion: v1
   kind: DeploymentConfig
   metadata:
     labels:
-      name: configmap-bridge
-    name: configmap-bridge
+      name: configserv
+    name: configserv
   spec:
     replicas: 1
     selector:
-      name: configmap-bridge
+      name: configserv
     template:
       metadata:
         labels:
-          name: configmap-bridge
+          name: configserv
       spec:
         containers:
-        - image: configmap-bridge
+        - image: configserv
           livenessProbe:
             tcpSocket:
               port: amqp
@@ -565,7 +565,7 @@ objects:
         - bridge
         from:
           kind: ImageStreamTag
-          name: configmap-bridge:${ENMASSE_VERSION}
+          name: configserv:${ENMASSE_VERSION}
       type: ImageChange
 - apiVersion: v1
   kind: ImageStream
@@ -794,7 +794,7 @@ objects:
       protocol: TCP
       targetPort: 5672
     selector:
-      name: configmap-bridge
+      name: configserv
 - apiVersion: v1
   kind: Service
   metadata:
@@ -895,9 +895,9 @@ parameters:
 - description: The link capacity setting for router
   name: ROUTER_LINK_CAPACITY
   value: '50'
-- description: The image to use for the configmap notification bridge
-  name: CONFIGMAP_BRIDGE_IMAGE
-  value: enmasseproject/configmap-bridge:latest
+- description: The image to use for the configuration service
+  name: CONFIGSERV_IMAGE
+  value: enmasseproject/configserv:latest
 - description: The docker image to use for the storage controller
   name: STORAGE_CONTROLLER_IMAGE
   value: enmasseproject/storage-controller:latest

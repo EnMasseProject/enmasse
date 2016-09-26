@@ -13,7 +13,7 @@
       }
     ],
     "selector": {
-      "name": "configmap-bridge"
+      "name": "configserv"
     }
   }
 }

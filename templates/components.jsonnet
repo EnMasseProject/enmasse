@@ -1,4 +1,4 @@
-local configmapBridge = import "include/configmap-bridge.jsonnet";
+local configserv = import "include/configserv.jsonnet";
 local ragent = import "include/ragent.jsonnet";
 local router = import "include/router.jsonnet";
 local broker = import "include/broker.jsonnet";
@@ -15,8 +15,8 @@ local messagingService = import "include/messaging-service.jsonnet";
   "artemis-imagestream.json": broker.imagestream("enmasseproject/artemis:${ENMASSE_VERSION}"),
   "forwarder-imagestream.json": forwarder.imagestream("enmasseproject/topic-forwarder:${ENMASSE_VERSION}"),
   "tls-qdrouterd-dc.json": qdrouterd.deployment(true),
-  "configmap-bridge-dc.json": configmapBridge.deployment,
-  "configmap-bridge-imagestream.json": configmapBridge.imagestream("enmasseproject/configmap-bridge:${ENMASSE_VERSION}"),
+  "configserv-dc.json": configserv.deployment,
+  "configserv-imagestream.json": configserv.imagestream("enmasseproject/configserv:${ENMASSE_VERSION}"),
   "storage-controller-dc.json": storageController.deployment,
   "storage-controller-imagestream.json": storageController.imagestream("enmasseproject/storage-controller:${ENMASSE_VERSION}"),
   "ragent-image-stream.json": ragent.imagestream("enmasseproject/ragent:${ENMASSE_VERSION}"),
