@@ -16,12 +16,19 @@
 
 package enmasse.broker.prestop;
 
+import com.google.common.io.Files;
 import org.apache.activemq.artemis.api.core.TransportConfiguration;
+import org.apache.activemq.artemis.api.jms.management.JMSQueueControl;
 import org.apache.activemq.artemis.core.config.Configuration;
 import org.apache.activemq.artemis.core.config.CoreQueueConfiguration;
 import org.apache.activemq.artemis.core.config.impl.ConfigurationImpl;
 import org.apache.activemq.artemis.core.remoting.impl.netty.NettyAcceptorFactory;
 import org.apache.activemq.artemis.core.server.embedded.EmbeddedActiveMQ;
+import org.apache.activemq.artemis.jms.server.config.JMSConfiguration;
+import org.apache.activemq.artemis.jms.server.config.TopicConfiguration;
+import org.apache.activemq.artemis.jms.server.config.impl.JMSConfigurationImpl;
+import org.apache.activemq.artemis.jms.server.config.impl.TopicConfigurationImpl;
+import org.apache.activemq.artemis.jms.server.embedded.EmbeddedJMS;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.message.Message;
 import org.apache.qpid.proton.messenger.Messenger;
@@ -37,7 +44,7 @@ public class TestBroker {
     private final int port;
     private final String address;
     private final String messageAddress;
-    private final EmbeddedActiveMQ server = new EmbeddedActiveMQ();
+    private final EmbeddedJMS server = new EmbeddedJMS();
     private final Messenger messenger = Messenger.Factory.create();
 
     public TestBroker(String host, int port, String address) {
@@ -56,15 +63,22 @@ public class TestBroker {
         params.put("port", port);
         TransportConfiguration transport = new TransportConfiguration(NettyAcceptorFactory.class.getName(), params, "amqp");
 
-        CoreQueueConfiguration queueConfiguration = new CoreQueueConfiguration();
-        queueConfiguration.setName(address);
-        queueConfiguration.setAddress(address);
-        config.setQueueConfigurations(Collections.singletonList(queueConfiguration));
+        JMSConfiguration jmsConfiguration = new JMSConfigurationImpl();
+        TopicConfiguration topicConfig = new TopicConfigurationImpl();
+        topicConfig.setName(address);
+        jmsConfiguration.setTopicConfigurations(Collections.singletonList(topicConfig));
+
         config.setAcceptorConfigurations(Collections.singleton(transport));
         config.setSecurityEnabled(false);
-        config.setName("broker-" + port);
+        config.setName("broker-" + System.currentTimeMillis() + port);
+        config.setBindingsDirectory(Files.createTempDir().getAbsolutePath());
+        config.setJournalDirectory(Files.createTempDir().getAbsolutePath());
+        config.setPagingDirectory(Files.createTempDir().getAbsolutePath());
+        config.setLargeMessagesDirectory(Files.createTempDir().getAbsolutePath());
+        config.setPersistenceEnabled(false);
 
         server.setConfiguration(config);
+        server.setJmsConfiguration(jmsConfiguration);
 
         server.start();
         messenger.start();

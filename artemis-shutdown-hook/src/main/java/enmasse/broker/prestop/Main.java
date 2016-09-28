@@ -22,6 +22,8 @@ import com.openshift.restclient.IClient;
 import com.openshift.restclient.ResourceKind;
 import com.openshift.restclient.images.DockerImageURI;
 import com.openshift.restclient.model.IContainer;
+import io.vertx.core.Vertx;
+import io.vertx.proton.ProtonClient;
 
 import java.io.File;
 import java.io.IOException;
@@ -45,17 +47,20 @@ public class Main {
         String localHost = "127.0.0.1"; //Inet4Address.getLocalHost().getHostAddress();
         Endpoint mgmtEndpoint = new Endpoint(localHost, 61616);
         BrokerManager brokerManager = new BrokerManager(mgmtEndpoint);
+        Endpoint from = new Endpoint(localHost, 5673);
 
         if (System.getenv("QUEUE_NAME") != null) {
             String address = System.getenv("QUEUE_NAME");
             String messagingHost = System.getenv("MESSAGING_SERVICE_HOST");
             int messagingPort = Integer.parseInt(System.getenv("MESSAGING_SERVICE_PORT"));
-            Endpoint from = new Endpoint(localHost, 5673);
             Endpoint to = new Endpoint(messagingHost, messagingPort);
 
             QueueDrainer client = new QueueDrainer(brokerManager, from, debugFn);
             client.drainMessages(to, address);
         } else if (System.getenv("TOPIC_NAME") != null) {
+            String address = System.getenv("TOPIC_NAME");
+            TopicMigrator migrator = new TopicMigrator(brokerManager, from, Vertx.vertx());
+            // migrator.migrateTo();
             brokerManager.shutdownBroker();
         } else {
             throw new IllegalArgumentException("Unable to find QUEUE_NAME or TOPIC_NAME environment");

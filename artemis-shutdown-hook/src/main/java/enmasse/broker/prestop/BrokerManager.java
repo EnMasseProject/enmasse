@@ -23,11 +23,16 @@ import org.apache.activemq.artemis.api.core.client.ClientSession;
 import org.apache.activemq.artemis.api.core.client.ClientSessionFactory;
 import org.apache.activemq.artemis.api.core.client.ServerLocator;
 import org.apache.activemq.artemis.api.core.management.ManagementHelper;
+import org.apache.activemq.artemis.api.core.management.Parameter;
+
+import java.util.List;
+import java.util.Set;
 
 /**
  * A client for retrieving and invoking actions against Artemis.
  */
 public class BrokerManager {
+    private final Endpoint endpoint;
     private final ServerLocator locator;
     private final ClientSessionFactory sessionFactory;
     private final ClientSession session;
@@ -36,6 +41,7 @@ public class BrokerManager {
         this.locator = ActiveMQClient.createServerLocator(String.format("tcp://%s:%s", mgmtEndpoint.hostName(), mgmtEndpoint.port()));
         this.sessionFactory = locator.createSessionFactory();
         this.session = sessionFactory.createSession();
+        this.endpoint = mgmtEndpoint;
     }
 
     public int getQueueMessageCount(String queueName) throws Exception {
@@ -49,26 +55,71 @@ public class BrokerManager {
         return count;
     }
 
-    public String[] listQueues() throws Exception {
+    public Object[] listQueues() throws Exception {
         ClientRequestor requestor = new ClientRequestor(session, "jms.queue.activemq.management");
         ClientMessage message = session.createMessage(false);
         ManagementHelper.putOperationInvocation(message, "core.server", "getQueueNames");
         session.start();
         ClientMessage reply = requestor.request(message);
-        String[] lists = (String[]) ManagementHelper.getResult(reply);
+        Object[] lists = (Object[]) ManagementHelper.getResult(reply);
         session.stop();
         return lists;
     }
 
-    public String [] listTopics() throws Exception {
+    public Object[] listTopics() throws Exception {
         ClientRequestor requestor = new ClientRequestor(session, "jms.queue.activemq.management");
         ClientMessage message = session.createMessage(false);
         ManagementHelper.putOperationInvocation(message, "jms.server", "getTopicNames");
         session.start();
         ClientMessage reply = requestor.request(message);
-        String [] names = (String [])ManagementHelper.getResult(reply);
+        Object [] names = (Object[])ManagementHelper.getResult(reply);
         session.stop();
         return names;
+    }
+
+    public boolean createTopic(String name) throws Exception {
+        ClientRequestor requestor = new ClientRequestor(session, "jms.queue.activemq.management");
+        ClientMessage message = session.createMessage(false);
+        ManagementHelper.putOperationInvocation(message, "jms.server", "createTopic", name);
+        session.start();
+        ClientMessage reply = requestor.request(message);
+        boolean retVal = (boolean)ManagementHelper.getResult(reply);
+        session.stop();
+        return retVal;
+    }
+
+
+    public String listConsumers(String connectionId) throws Exception {
+        ClientRequestor requestor = new ClientRequestor(session, "jms.queue.activemq.management");
+        ClientMessage message = session.createMessage(false);
+        ManagementHelper.putOperationInvocation(message, "core.server", "listConsumersAsJSON", connectionId);
+        session.start();
+        ClientMessage reply = requestor.request(message);
+        String retVal = (String)ManagementHelper.getResult(reply);
+        session.stop();
+        return retVal;
+    }
+
+    public boolean closeConnections(String address) throws Exception {
+        ClientRequestor requestor = new ClientRequestor(session, "jms.queue.activemq.management");
+        ClientMessage message = session.createMessage(false);
+        ManagementHelper.putOperationInvocation(message, "jms.server", "closeConsumerConnectionsForAddress", address);
+        session.start();
+        ClientMessage reply = requestor.request(message);
+        boolean retVal = (Boolean)ManagementHelper.getResult(reply);
+        session.stop();
+        return retVal;
+    }
+
+    public String listAllSubscriptions(String address) throws Exception {
+        ClientRequestor requestor = new ClientRequestor(session, "jms.queue.activemq.management");
+        ClientMessage message = session.createMessage(false);
+        ManagementHelper.putOperationInvocation(message, address, "listAllSubscriptionsAsJSON");
+        session.start();
+        ClientMessage reply = requestor.request(message);
+        String retVal = (String)ManagementHelper.getResult(reply);
+        session.stop();
+        return retVal;
     }
 
     public void shutdownBroker() throws Exception {
@@ -81,4 +132,33 @@ public class BrokerManager {
         session.stop();
     }
 
+    public Endpoint getEndpoint() {
+        return endpoint;
+    }
+
+    public String listConnections() throws Exception {
+        ClientRequestor requestor = new ClientRequestor(session, "jms.queue.activemq.management");
+        ClientMessage message = session.createMessage(false);
+        ManagementHelper.putOperationInvocation(message, "core.server", "listConnectionsAsJSON");
+        session.start();
+        ClientMessage reply = requestor.request(message);
+        String retVal = (String)ManagementHelper.getResult(reply);
+        session.stop();
+        return retVal;
+    }
+
+    public void closeSubscriptions(String address, Set<Subscription> subscriptionList) throws Exception {
+        for (Subscription sub : subscriptionList) {
+            if (sub.isDurable()) {
+                System.out.println("CLOSING SUB " + sub.getName());
+                ClientRequestor requestor = new ClientRequestor(session, "jms.queue.activemq.management");
+                ClientMessage message = session.createMessage(false);
+                ManagementHelper.putOperationInvocation(message, address, "dropAllSubscriptions");
+                //, null, sub.getName());
+                session.start();
+                requestor.request(message);
+                session.stop();
+            }
+        }
+    }
 }

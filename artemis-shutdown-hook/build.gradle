@@ -23,6 +23,9 @@ dependencies {
     testCompile("org.apache.activemq:artemis-amqp-protocol:${artemisVersion}") {
         exclude group: "io.netty", module: "netty-all"
     }
+    testCompile("org.apache.activemq:artemis-jms-server:${artemisVersion}") {
+        exclude group: "io.netty", module: "netty-all"
+    }
 }
 
 apply plugin: 'application'
