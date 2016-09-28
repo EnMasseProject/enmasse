@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: Template
 metadata:
-  name: tls-enmasse
+  name: tls-enmasse-base
 objects:
 - apiVersion: v1
   kind: Template
@@ -89,7 +89,7 @@ objects:
           - router
           from:
             kind: ImageStreamTag
-            name: router:${ENMASSE_VERSION}
+            name: router:latest
         type: ImageChange
       - imageChangeParams:
           automatic: true
@@ -97,7 +97,7 @@ objects:
           - broker
           from:
             kind: ImageStreamTag
-            name: artemis:${ENMASSE_VERSION}
+            name: artemis:latest
         type: ImageChange
   parameters:
   - description: The link capacity setting for router
@@ -106,9 +106,6 @@ objects:
   - description: Storage capacity required for volume claims
     name: STORAGE_CAPACITY
     value: 2Gi
-  - description: EnMasse version
-    name: ENMASSE_VERSION
-    value: latest
   - description: The address to use for the queue
     name: ADDRESS
     required: true
@@ -208,7 +205,7 @@ objects:
           - router
           from:
             kind: ImageStreamTag
-            name: router:${ENMASSE_VERSION}
+            name: router:latest
         type: ImageChange
       - imageChangeParams:
           automatic: true
@@ -216,7 +213,7 @@ objects:
           - broker
           from:
             kind: ImageStreamTag
-            name: artemis:${ENMASSE_VERSION}
+            name: artemis:latest
         type: ImageChange
   parameters:
   - description: The link capacity setting for router
@@ -225,9 +222,6 @@ objects:
   - description: Storage capacity required for volume claims
     name: STORAGE_CAPACITY
     value: 2Gi
-  - description: EnMasse version
-    name: ENMASSE_VERSION
-    value: latest
   - description: The address to use for the queue
     name: ADDRESS
     required: true
@@ -305,7 +299,7 @@ objects:
           - env:
             - name: TOPIC_NAME
               value: "${ADDRESS}"
-            image: topic-forwarder:${ENMASSE_VERSION}
+            image: topic-forwarder
             livenessProbe:
               httpGet:
                 path: "/health"
@@ -328,7 +322,7 @@ objects:
           - router
           from:
             kind: ImageStreamTag
-            name: router:${ENMASSE_VERSION}
+            name: router:latest
         type: ImageChange
       - imageChangeParams:
           automatic: true
@@ -336,7 +330,7 @@ objects:
           - broker
           from:
             kind: ImageStreamTag
-            name: artemis:${ENMASSE_VERSION}
+            name: artemis:latest
         type: ImageChange
       - imageChangeParams:
           automatic: true
@@ -344,7 +338,7 @@ objects:
           - forwarder
           from:
             kind: ImageStreamTag
-            name: topic-forwarder:${ENMASSE_VERSION}
+            name: topic-forwarder:latest
         type: ImageChange
   parameters:
   - description: The link capacity setting for router
@@ -353,9 +347,6 @@ objects:
   - description: Storage capacity required for volume claims
     name: STORAGE_CAPACITY
     value: 2Gi
-  - description: EnMasse version
-    name: ENMASSE_VERSION
-    value: latest
   - description: The address to use for the topic
     name: ADDRESS
     required: true
@@ -443,7 +434,7 @@ objects:
           - env:
             - name: TOPIC_NAME
               value: "${ADDRESS}"
-            image: topic-forwarder:${ENMASSE_VERSION}
+            image: topic-forwarder
             livenessProbe:
               httpGet:
                 path: "/health"
@@ -467,7 +458,7 @@ objects:
           - router
           from:
             kind: ImageStreamTag
-            name: router:${ENMASSE_VERSION}
+            name: router:latest
         type: ImageChange
       - imageChangeParams:
           automatic: true
@@ -475,7 +466,7 @@ objects:
           - broker
           from:
             kind: ImageStreamTag
-            name: artemis:${ENMASSE_VERSION}
+            name: artemis:latest
         type: ImageChange
       - imageChangeParams:
           automatic: true
@@ -483,7 +474,7 @@ objects:
           - forwarder
           from:
             kind: ImageStreamTag
-            name: topic-forwarder:${ENMASSE_VERSION}
+            name: topic-forwarder:latest
         type: ImageChange
   parameters:
   - description: The link capacity setting for router
@@ -492,9 +483,6 @@ objects:
   - description: Storage capacity required for volume claims
     name: STORAGE_CAPACITY
     value: 2Gi
-  - description: EnMasse version
-    name: ENMASSE_VERSION
-    value: latest
   - description: The address to use for the topic
     name: ADDRESS
     required: true
@@ -528,11 +516,10 @@ objects:
     importPolicy:
       scheduled: true
     tags:
-    - annotations:
-        description: Configuration Service
-        tags: enmasse,messaging,config,configserv,amqp
-        version: '1.0'
-      name: "${ENMASSE_VERSION}"
+    - from:
+        kind: DockerImage
+        name: "${CONFIGSERV_IMAGE}:latest"
+      name: latest
 - apiVersion: v1
   kind: DeploymentConfig
   metadata:
@@ -565,7 +552,7 @@ objects:
         - bridge
         from:
           kind: ImageStreamTag
-          name: configserv:${ENMASSE_VERSION}
+          name: configserv:latest
       type: ImageChange
 - apiVersion: v1
   kind: ImageStream
@@ -576,11 +563,10 @@ objects:
     importPolicy:
       scheduled: true
     tags:
-    - annotations:
-        description: EnMasse router agent
-        tags: enmasse,messaging,ragent,config,amqp
-        version: '1.0'
-      name: "${ENMASSE_VERSION}"
+    - from:
+        kind: DockerImage
+        name: "${RAGENT_IMAGE}:latest"
+      name: latest
 - apiVersion: v1
   kind: DeploymentConfig
   metadata:
@@ -614,22 +600,21 @@ objects:
         - ragent
         from:
           kind: ImageStreamTag
-          name: ragent:${ENMASSE_VERSION}
+          name: ragent:latest
       type: ImageChange
 - apiVersion: v1
   kind: ImageStream
   metadata:
     name: router
   spec:
-    dockerImageRepository: "${ROUTER_IMAGE}"
+    dockerImageRepository: "${ROUTER_REPO}"
     importPolicy:
       scheduled: true
     tags:
-    - annotations:
-        description: Qpid Dispatch Router
-        tags: enmasse,messaging,router,qpid,amqp
-        version: '1.0'
-      name: "${ENMASSE_VERSION}"
+    - from:
+        kind: DockerImage
+        name: "${ROUTER_REPO}:latest"
+      name: latest
 - apiVersion: v1
   kind: DeploymentConfig
   metadata:
@@ -678,50 +663,47 @@ objects:
         - router
         from:
           kind: ImageStreamTag
-          name: router:${ENMASSE_VERSION}
+          name: router:latest
       type: ImageChange
 - apiVersion: v1
   kind: ImageStream
   metadata:
     name: artemis
   spec:
-    dockerImageRepository: "${BROKER_IMAGE}"
+    dockerImageRepository: "${BROKER_REPO}"
     importPolicy:
       scheduled: true
     tags:
-    - annotations:
-        description: Artemis message broker
-        tags: enmasse,messaging,activemq,artemis,broker,amqp
-        version: '1.0'
-      name: "${ENMASSE_VERSION}"
+    - from:
+        kind: DockerImage
+        name: "${BROKER_REPO}:latest"
+      name: latest
 - apiVersion: v1
   kind: ImageStream
   metadata:
     name: topic-forwarder
   spec:
-    dockerImageRepository: "${TOPIC_FORWARDER_IMAGE}"
+    dockerImageRepository: "${TOPIC_FORWARDER_REPO}"
     importPolicy:
       scheduled: true
     tags:
-    - annotations:
-        description: Topic broker forwarder
-        tags: enmasse,messaging,broker,forwarding,amqp
-        version: '1.0'
-      name: "${ENMASSE_VERSION}"
+    - from:
+        kind: DockerImage
+        name: "${TOPIC_FORWARDER_REPO}:latest"
+      name: latest
 - apiVersion: v1
   kind: ImageStream
   metadata:
     name: subserv
   spec:
-    dockerImageRepository: "${SUBSERV_IMAGE}"
+    dockerImageRepository: "${SUBSERV_REPO}"
     importPolicy:
       scheduled: true
     tags:
-    - annotations:
-        description: Subscription service
-        tags: enmasse,messaging,amqp,subscription,topic
-        version: '1.0'
-      name: "${ENMASSE_VERSION}"
+    - from:
+        kind: DockerImage
+        name: "${SUBSERV_REPO}:latest"
+      name: latest
 - apiVersion: v1
   kind: DeploymentConfig
   metadata:
@@ -755,7 +737,7 @@ objects:
         - subserv
         from:
           kind: ImageStreamTag
-          name: subserv:${ENMASSE_VERSION}
+          name: subserv:latest
       type: ImageChange
 - apiVersion: v1
   kind: Service
@@ -806,107 +788,28 @@ objects:
       targetPort: 5672
     selector:
       name: subserv
-- apiVersion: v1
-  kind: ImageStream
-  metadata:
-    name: storage-controller
-  spec:
-    dockerImageRepository: "${STORAGE_CONTROLLER_IMAGE}"
-    importPolicy:
-      scheduled: true
-    tags:
-    - annotations:
-        description: EnMasse storage controller
-        tags: enmasse,messaging,storage,controller
-        version: '1.0'
-      name: "${ENMASSE_VERSION}"
-- apiVersion: v1
-  kind: DeploymentConfig
-  metadata:
-    labels:
-      name: storage-controller
-    name: storage-controller
-  spec:
-    replicas: 1
-    selector:
-      name: storage-controller
-    strategy:
-      rollingParams:
-        maxSurge: 0
-      type: Rolling
-    template:
-      metadata:
-        labels:
-          name: storage-controller
-      spec:
-        containers:
-        - image: storage-controller
-          livenessProbe:
-            httpGet:
-              path: "/health"
-              port: health
-          name: controller
-          ports:
-          - containerPort: 8080
-            name: health
-        serviceAccount: deployer
-    triggers:
-    - type: ConfigChange
-    - imageChangeParams:
-        automatic: true
-        containerNames:
-        - controller
-        from:
-          kind: ImageStreamTag
-          name: storage-controller:${ENMASSE_VERSION}
-      type: ImageChange
-- apiVersion: v1
-  data:
-    json: |
-      {
-          "myqueue": { "store_and_forward":true, "multicast":false, "flavor": "vanilla-queue" },
-          "mytopic": { "store_and_forward":true, "multicast":true, "flavor": "vanilla-topic" },
-          "anycast": { "store_and_forward":false, "multicast":false },
-          "broadcast": { "store_and_forward":false, "multicast":true }
-      }
-  kind: ConfigMap
-  metadata:
-    name: maas
-- apiVersion: v1
-  data:
-    json: |
-      {
-          "vanilla-queue": { "templateName":"queue-inmemory" },
-          "vanilla-topic": { "templateName":"topic-inmemory" }
-      }
-  kind: ConfigMap
-  metadata:
-    name: flavor
 parameters:
 - description: The image to use for the router
-  name: ROUTER_IMAGE
-  value: gordons/qdrouterd:latest
+  name: ROUTER_REPO
+  value: gordons/qdrouterd
 - description: The default image to use as broker
-  name: BROKER_IMAGE
-  value: enmasseproject/artemis:latest
+  name: BROKER_REPO
+  value: enmasseproject/artemis
 - description: The default image to use as topic forwarder
-  name: TOPIC_FORWARDER_IMAGE
-  value: enmasseproject/topic-forwarder:latest
+  name: TOPIC_FORWARDER_REPO
+  value: enmasseproject/topic-forwarder
 - description: The link capacity setting for router
   name: ROUTER_LINK_CAPACITY
   value: '50'
 - description: The image to use for the configuration service
   name: CONFIGSERV_IMAGE
-  value: enmasseproject/configserv:latest
+  value: enmasseproject/configserv
 - description: The docker image to use for the storage controller
-  name: STORAGE_CONTROLLER_IMAGE
-  value: enmasseproject/storage-controller:latest
+  name: STORAGE_CONTROLLER_REPO
+  value: enmasseproject/storage-controller
 - description: The image to use for the router agent
-  name: RAGENT_IMAGE
-  value: enmasseproject/ragent:latest
+  name: RAGENT_REPO
+  value: enmasseproject/ragent
 - description: The image to use for the subscription services
-  name: SUBSERV_IMAGE
-  value: enmasseproject/subserv:latest
-- description: EnMasse version
-  name: ENMASSE_VERSION
-  value: latest
+  name: SUBSERV_REPO
+  value: enmasseproject/subserv
