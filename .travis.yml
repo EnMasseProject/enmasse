@@ -1,6 +1,38 @@
-language: java
+language: ruby
+rvm:
+  - 2.2
 script:
-- sh .trigger-travis.sh
+- make
+
+after_success:
+- curl -s https://raw.githubusercontent.com/EnMasseProject/travis-scripts/master/trigger-travis.sh
+  | bash /dev/stdin
+
 env:
   global:
     secure: bCbKAugV/HmX2gW7ayvM1Eb5ZcWXF2Xx9YESpu6yEuUriRArRtU6lGbQZDqoUZnyaS5kE86p7zoH+4wucKDXa8XpcFtarm1TsY8Wrwi6Ce2xr/rgFN2wjNJbpSVWNPIH5U4Vsu37iJtVZ28cRtx8DsKwrF/s62Q8ctwBuNCDjxpce6UPNPSerXXRyn2QnJ0uCDScTrXfvOpTLMS9gNac14JQ+qFVdK94tgy7kA3+biAokGzTO323dlpIXVQQgNPLr86xYgMgMr4ik9+JSUqEryhefGcHlizNSILeN9EXnAkRFgl8SowGPh7qAMQAd2eaQ+fnu0PYQY5crSkP6F15PPFYT+xrF72jHgn/dpHkAI29OCC46IpAHjJuMvgEoiLLmUKT+vl0WNXJZwi6mSyuM8hDEvbqTMc+q6wK3Etia1jtc/E5d60S7l6HBbReiEq33pAU+uMObYMvAYuH9fh6vj6y5jgDMDnZDrp25ZrJr/sMXaFkMhNSjo4M605Pzcrq0Too6EffG8l2b1QbwKozVKpoFoWh12lO98ugnHac6vbC2dHi3F3nvbk4sG9Rdfn+PzGx57lI1ktS6T0fKnDJkxx9B99nL4AIpW5TdXQ5YbyT8WsvlfSlxobt7SU1kcOL+Gi5WyrxJi8YJqptXt1vKyw2nppscuG6KTtSN0IYbq4=
+deploy:
+  skip_cleanup: true
+  provider: releases
+  api_key:
+    secure: V59lkWFMwiq/5s93GxVr32P1x4ONnR7dDGrEFOkThqsAl6NvprcOmyiPGiDxYRVBE/skeoBEiieRnkOPa4ecuyFzDtKWRc55kQUkVxHf/47DZaFwV0ehzf7Z76XosWn2WtNjpR5Z+V3lqvEOeoQB00wvpnd87tuYs9nc6PUaO+saqmEW2A11KvbDoh2a2lk5XV+D/daNgUmZHVZahRy+1WEEhflpoM2Xrd9yv1C6WmuvSaZy29vv8xz3J8HMtWrPEBuvxFcZrLBsaleauZg6RmHnEml/wmzb0zv+lcVmXqtnBVkEDZzCgHVCWI0XRmgcSLT+e01O4ZD8NOSuMZAlvHTVEBg7oaT2xMoV59C1qM98GIv/4MdGIOceNZ0217jmOgADvHS3Qh+u8XqW6YzZdCyzIeIBW5wuKZVW7TWtGBWkxnotl4e+H2QJKmlZgbaMehBsZNZSiJmG/JkiQ4tNwesFnmMuI7XTFnqhB+rsbjtnHS/7dSkPtjhFBV8kbi8/sTdfAbxldHDlTLxcGrAK8epoZJpVUIFTxmJXXoJYMZxXu3jfCycVdM/hdauoWe+1k5Day8fEmJo7eXaXFLd9ErZwEBOu1nGOgtDonmb0W5a2JLT96lV6h1ow5ydxcw4MwGBYs+W9/6Mzt4IGTf0eKlb0QDGA8tWqauwOIKmrKOU=
+  file:
+    - generated/enmasse-base-template.yaml
+    - generated/enmasse-template.yaml
+    - generated/tls-enmasse-base-template.yaml
+    - generated/tls-enmasse-template.yaml
+    - generated/addresses.yaml
+    - generated/flavor.yaml
+    - generated/console-template.yaml
+    - generated/direct-template.yaml
+    - generated/queue-inmemory-template.yaml
+    - generated/queue-persisted-template.yaml
+    - generated/tls-queue-inmemory-template.yaml
+    - generated/tls-queue-persisted-template.yaml
+    - generated/topic-inmemory-template.yaml
+    - generated/topic-persisted-template.yaml
+    - generated/tls-topic-inmemory-template.yaml
+    - generated/tls-topic-persisted-template.yaml
+  on:
+    tags: true
+    repo: EnMasseProject/openshift-configuration

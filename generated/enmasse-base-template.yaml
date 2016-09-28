@@ -1,0 +1,760 @@
+---
+apiVersion: v1
+kind: Template
+metadata:
+  name: enmasse-base
+objects:
+- apiVersion: v1
+  kind: Template
+  metadata:
+    labels:
+      addressType: queue
+    name: queue-inmemory
+  objects:
+  - apiVersion: v1
+    kind: DeploymentConfig
+    metadata:
+      labels:
+        address: "${ADDRESS}"
+        multicast: 'false'
+        store_and_forward: 'true'
+        type: address-config
+      name: queue-${ADDRESS}
+    spec:
+      replicas: 1
+      selector:
+        address: "${ADDRESS}"
+        role: broker
+      template:
+        metadata:
+          labels:
+            address: "${ADDRESS}"
+            capability: router
+            role: broker
+        spec:
+          containers:
+          - env:
+            - name: QUEUE_NAME
+              value: "${ADDRESS}"
+            image: artemis
+            lifecycle:
+              preStop:
+                exec:
+                  command:
+                  - "/opt/artemis-shutdown-hook/bin/artemis-shutdown-hook"
+            livenessProbe:
+              tcpSocket:
+                port: amqp
+            name: broker
+            ports:
+            - containerPort: 5673
+              name: amqp
+            - containerPort: 61616
+              name: core
+            volumeMounts:
+            - mountPath: "/var/run/artemis"
+              name: vol-${ADDRESS}
+          - env:
+            - name: LINK_CAPACITY
+              value: "${ROUTER_LINK_CAPACITY}"
+            - name: QUEUE_NAME
+              value: "${ADDRESS}"
+            image: router
+            livenessProbe:
+              tcpSocket:
+                port: amqp
+            name: router
+            ports:
+            - containerPort: 5672
+              name: amqp
+              protocol: TCP
+          volumes:
+          - emptyDir: {}
+            name: vol-${ADDRESS}
+      triggers:
+      - type: ConfigChange
+      - imageChangeParams:
+          automatic: true
+          containerNames:
+          - router
+          from:
+            kind: ImageStreamTag
+            name: router:latest
+        type: ImageChange
+      - imageChangeParams:
+          automatic: true
+          containerNames:
+          - broker
+          from:
+            kind: ImageStreamTag
+            name: artemis:latest
+        type: ImageChange
+  parameters:
+  - description: The link capacity setting for router
+    name: ROUTER_LINK_CAPACITY
+    value: '50'
+  - description: Storage capacity required for volume claims
+    name: STORAGE_CAPACITY
+    value: 2Gi
+  - description: The address to use for the queue
+    name: ADDRESS
+    required: true
+- apiVersion: v1
+  kind: Template
+  metadata:
+    labels:
+      addressType: queue
+    name: queue-persisted
+  objects:
+  - apiVersion: v1
+    kind: PersistentVolumeClaim
+    metadata:
+      name: pvc-${ADDRESS}
+    spec:
+      accessModes:
+      - ReadWriteMany
+      resources:
+        requests:
+          storage: "${STORAGE_CAPACITY}"
+  - apiVersion: v1
+    kind: DeploymentConfig
+    metadata:
+      labels:
+        address: "${ADDRESS}"
+        multicast: 'false'
+        store_and_forward: 'true'
+        type: address-config
+      name: queue-${ADDRESS}
+    spec:
+      replicas: 1
+      selector:
+        address: "${ADDRESS}"
+        role: broker
+      template:
+        metadata:
+          labels:
+            address: "${ADDRESS}"
+            capability: router
+            role: broker
+        spec:
+          containers:
+          - env:
+            - name: QUEUE_NAME
+              value: "${ADDRESS}"
+            image: artemis
+            lifecycle:
+              preStop:
+                exec:
+                  command:
+                  - "/opt/artemis-shutdown-hook/bin/artemis-shutdown-hook"
+            livenessProbe:
+              tcpSocket:
+                port: amqp
+            name: broker
+            ports:
+            - containerPort: 5673
+              name: amqp
+            - containerPort: 61616
+              name: core
+            volumeMounts:
+            - mountPath: "/var/run/artemis"
+              name: vol-${ADDRESS}
+          - env:
+            - name: LINK_CAPACITY
+              value: "${ROUTER_LINK_CAPACITY}"
+            - name: QUEUE_NAME
+              value: "${ADDRESS}"
+            image: router
+            livenessProbe:
+              tcpSocket:
+                port: amqp
+            name: router
+            ports:
+            - containerPort: 5672
+              name: amqp
+              protocol: TCP
+          volumes:
+          - name: vol-${ADDRESS}
+            persistentVolumeClaim:
+              claimName: pvc-${ADDRESS}
+      triggers:
+      - type: ConfigChange
+      - imageChangeParams:
+          automatic: true
+          containerNames:
+          - router
+          from:
+            kind: ImageStreamTag
+            name: router:latest
+        type: ImageChange
+      - imageChangeParams:
+          automatic: true
+          containerNames:
+          - broker
+          from:
+            kind: ImageStreamTag
+            name: artemis:latest
+        type: ImageChange
+  parameters:
+  - description: The link capacity setting for router
+    name: ROUTER_LINK_CAPACITY
+    value: '50'
+  - description: Storage capacity required for volume claims
+    name: STORAGE_CAPACITY
+    value: 2Gi
+  - description: The address to use for the queue
+    name: ADDRESS
+    required: true
+- apiVersion: v1
+  kind: Template
+  metadata:
+    labels:
+      addressType: topic
+    name: topic-inmemory
+  objects:
+  - apiVersion: v1
+    kind: DeploymentConfig
+    metadata:
+      labels:
+        address: "${ADDRESS}"
+        multicast: 'true'
+        store_and_forward: 'true'
+        type: address-config
+      name: topic-${ADDRESS}
+    spec:
+      replicas: 1
+      selector:
+        address: "${ADDRESS}"
+        role: broker
+      template:
+        metadata:
+          labels:
+            address: "${ADDRESS}"
+            capability: router
+            role: broker
+        spec:
+          containers:
+          - env:
+            - name: TOPIC_NAME
+              value: "${ADDRESS}"
+            image: artemis
+            lifecycle:
+              preStop:
+                exec:
+                  command:
+                  - "/opt/artemis-shutdown-hook/bin/artemis-shutdown-hook"
+            livenessProbe:
+              tcpSocket:
+                port: amqp
+            name: broker
+            ports:
+            - containerPort: 5673
+              name: amqp
+            - containerPort: 61616
+              name: core
+            volumeMounts:
+            - mountPath: "/var/run/artemis"
+              name: vol-${ADDRESS}
+          - env:
+            - name: LINK_CAPACITY
+              value: "${ROUTER_LINK_CAPACITY}"
+            - name: TOPIC_NAME
+              value: "${ADDRESS}"
+            image: router
+            livenessProbe:
+              tcpSocket:
+                port: amqp
+            name: router
+            ports:
+            - containerPort: 5672
+              name: amqp
+              protocol: TCP
+          - env:
+            - name: TOPIC_NAME
+              value: "${ADDRESS}"
+            image: topic-forwarder
+            livenessProbe:
+              httpGet:
+                path: "/health"
+                port: health
+            name: forwarder
+            ports:
+            - containerPort: 8080
+              name: health
+          volumes:
+          - emptyDir: {}
+            name: vol-${ADDRESS}
+      triggers:
+      - type: ConfigChange
+      - imageChangeParams:
+          automatic: true
+          containerNames:
+          - router
+          from:
+            kind: ImageStreamTag
+            name: router:latest
+        type: ImageChange
+      - imageChangeParams:
+          automatic: true
+          containerNames:
+          - broker
+          from:
+            kind: ImageStreamTag
+            name: artemis:latest
+        type: ImageChange
+      - imageChangeParams:
+          automatic: true
+          containerNames:
+          - forwarder
+          from:
+            kind: ImageStreamTag
+            name: topic-forwarder:latest
+        type: ImageChange
+  parameters:
+  - description: The link capacity setting for router
+    name: ROUTER_LINK_CAPACITY
+    value: '50'
+  - description: Storage capacity required for volume claims
+    name: STORAGE_CAPACITY
+    value: 2Gi
+  - description: The address to use for the topic
+    name: ADDRESS
+    required: true
+- apiVersion: v1
+  kind: Template
+  metadata:
+    labels:
+      addressType: topic
+    name: topic-persisted
+  objects:
+  - apiVersion: v1
+    kind: PersistentVolumeClaim
+    metadata:
+      name: pvc-${ADDRESS}
+    spec:
+      accessModes:
+      - ReadWriteMany
+      resources:
+        requests:
+          storage: "${STORAGE_CAPACITY}"
+  - apiVersion: v1
+    kind: DeploymentConfig
+    metadata:
+      labels:
+        address: "${ADDRESS}"
+        multicast: 'true'
+        store_and_forward: 'true'
+        type: address-config
+      name: topic-${ADDRESS}
+    spec:
+      replicas: 1
+      selector:
+        address: "${ADDRESS}"
+        role: broker
+      template:
+        metadata:
+          labels:
+            address: "${ADDRESS}"
+            capability: router
+            role: broker
+        spec:
+          containers:
+          - env:
+            - name: TOPIC_NAME
+              value: "${ADDRESS}"
+            image: artemis
+            lifecycle:
+              preStop:
+                exec:
+                  command:
+                  - "/opt/artemis-shutdown-hook/bin/artemis-shutdown-hook"
+            livenessProbe:
+              tcpSocket:
+                port: amqp
+            name: broker
+            ports:
+            - containerPort: 5673
+              name: amqp
+            - containerPort: 61616
+              name: core
+            volumeMounts:
+            - mountPath: "/var/run/artemis"
+              name: vol-${ADDRESS}
+          - env:
+            - name: LINK_CAPACITY
+              value: "${ROUTER_LINK_CAPACITY}"
+            - name: TOPIC_NAME
+              value: "${ADDRESS}"
+            image: router
+            livenessProbe:
+              tcpSocket:
+                port: amqp
+            name: router
+            ports:
+            - containerPort: 5672
+              name: amqp
+              protocol: TCP
+          - env:
+            - name: TOPIC_NAME
+              value: "${ADDRESS}"
+            image: topic-forwarder
+            livenessProbe:
+              httpGet:
+                path: "/health"
+                port: health
+            name: forwarder
+            ports:
+            - containerPort: 8080
+              name: health
+          volumes:
+          - name: vol-${ADDRESS}
+            persistentVolumeClaim:
+              claimName: pvc-${ADDRESS}
+      triggers:
+      - type: ConfigChange
+      - imageChangeParams:
+          automatic: true
+          containerNames:
+          - router
+          from:
+            kind: ImageStreamTag
+            name: router:latest
+        type: ImageChange
+      - imageChangeParams:
+          automatic: true
+          containerNames:
+          - broker
+          from:
+            kind: ImageStreamTag
+            name: artemis:latest
+        type: ImageChange
+      - imageChangeParams:
+          automatic: true
+          containerNames:
+          - forwarder
+          from:
+            kind: ImageStreamTag
+            name: topic-forwarder:latest
+        type: ImageChange
+  parameters:
+  - description: The link capacity setting for router
+    name: ROUTER_LINK_CAPACITY
+    value: '50'
+  - description: Storage capacity required for volume claims
+    name: STORAGE_CAPACITY
+    value: 2Gi
+  - description: The address to use for the topic
+    name: ADDRESS
+    required: true
+- apiVersion: v1
+  kind: Template
+  metadata:
+    name: direct
+  objects:
+  - apiVersion: v1
+    kind: ConfigMap
+    metadata:
+      labels:
+        address: "${ADDRESS}"
+        multicast: "${MULTICAST}"
+        store_and_forward: 'false'
+        type: address-config
+      name: config-${ADDRESS}
+  parameters:
+  - description: The address to use for the address
+    name: ADDRESS
+    required: true
+  - description: If the address should have multicast semantics or not
+    name: MULTICAST
+    required: true
+- apiVersion: v1
+  kind: ImageStream
+  metadata:
+    name: configserv
+  spec:
+    dockerImageRepository: "${CONFIGSERV_IMAGE}"
+    importPolicy:
+      scheduled: true
+    tags:
+    - from:
+        kind: DockerImage
+        name: "${CONFIGSERV_IMAGE}:latest"
+      name: latest
+- apiVersion: v1
+  kind: DeploymentConfig
+  metadata:
+    labels:
+      name: configserv
+    name: configserv
+  spec:
+    replicas: 1
+    selector:
+      name: configserv
+    template:
+      metadata:
+        labels:
+          name: configserv
+      spec:
+        containers:
+        - image: configserv
+          livenessProbe:
+            tcpSocket:
+              port: amqp
+          name: bridge
+          ports:
+          - containerPort: 5672
+            name: amqp
+    triggers:
+    - type: ConfigChange
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+        - bridge
+        from:
+          kind: ImageStreamTag
+          name: configserv:latest
+      type: ImageChange
+- apiVersion: v1
+  kind: ImageStream
+  metadata:
+    name: ragent
+  spec:
+    dockerImageRepository: "${RAGENT_IMAGE}"
+    importPolicy:
+      scheduled: true
+    tags:
+    - from:
+        kind: DockerImage
+        name: "${RAGENT_IMAGE}:latest"
+      name: latest
+- apiVersion: v1
+  kind: DeploymentConfig
+  metadata:
+    labels:
+      name: ragent
+    name: ragent
+  spec:
+    replicas: 1
+    selector:
+      name: ragent
+    template:
+      metadata:
+        labels:
+          name: ragent
+      spec:
+        containers:
+        - image: ragent
+          livenessProbe:
+            tcpSocket:
+              port: amqp
+          name: ragent
+          ports:
+          - containerPort: 55672
+            name: amqp
+            protocol: TCP
+    triggers:
+    - type: ConfigChange
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+        - ragent
+        from:
+          kind: ImageStreamTag
+          name: ragent:latest
+      type: ImageChange
+- apiVersion: v1
+  kind: ImageStream
+  metadata:
+    name: router
+  spec:
+    dockerImageRepository: "${ROUTER_REPO}"
+    importPolicy:
+      scheduled: true
+    tags:
+    - from:
+        kind: DockerImage
+        name: "${ROUTER_REPO}:latest"
+      name: latest
+- apiVersion: v1
+  kind: DeploymentConfig
+  metadata:
+    labels:
+      name: qdrouterd
+    name: qdrouterd
+  spec:
+    replicas: 1
+    selector:
+      name: qdrouterd
+    template:
+      metadata:
+        labels:
+          capability: router
+          name: qdrouterd
+      spec:
+        containers:
+        - env:
+          - name: LINK_CAPACITY
+            value: "${ROUTER_LINK_CAPACITY}"
+          image: router
+          livenessProbe:
+            tcpSocket:
+              port: amqp
+          name: router
+          ports:
+          - containerPort: 5672
+            name: amqp
+            protocol: TCP
+    triggers:
+    - type: ConfigChange
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+        - router
+        from:
+          kind: ImageStreamTag
+          name: router:latest
+      type: ImageChange
+- apiVersion: v1
+  kind: ImageStream
+  metadata:
+    name: artemis
+  spec:
+    dockerImageRepository: "${BROKER_REPO}"
+    importPolicy:
+      scheduled: true
+    tags:
+    - from:
+        kind: DockerImage
+        name: "${BROKER_REPO}:latest"
+      name: latest
+- apiVersion: v1
+  kind: ImageStream
+  metadata:
+    name: topic-forwarder
+  spec:
+    dockerImageRepository: "${TOPIC_FORWARDER_REPO}"
+    importPolicy:
+      scheduled: true
+    tags:
+    - from:
+        kind: DockerImage
+        name: "${TOPIC_FORWARDER_REPO}:latest"
+      name: latest
+- apiVersion: v1
+  kind: ImageStream
+  metadata:
+    name: subserv
+  spec:
+    dockerImageRepository: "${SUBSERV_REPO}"
+    importPolicy:
+      scheduled: true
+    tags:
+    - from:
+        kind: DockerImage
+        name: "${SUBSERV_REPO}:latest"
+      name: latest
+- apiVersion: v1
+  kind: DeploymentConfig
+  metadata:
+    labels:
+      name: subserv
+    name: subserv
+  spec:
+    replicas: 1
+    selector:
+      name: subserv
+    template:
+      metadata:
+        labels:
+          name: subserv
+      spec:
+        containers:
+        - image: subserv
+          livenessProbe:
+            tcpSocket:
+              port: amqp
+          name: subserv
+          ports:
+          - containerPort: 5672
+            name: amqp
+            protocol: TCP
+    triggers:
+    - type: ConfigChange
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+        - subserv
+        from:
+          kind: ImageStreamTag
+          name: subserv:latest
+      type: ImageChange
+- apiVersion: v1
+  kind: Service
+  metadata:
+    name: messaging
+  spec:
+    ports:
+    - name: amqp
+      port: 5672
+      protocol: TCP
+      targetPort: 5672
+    selector:
+      capability: router
+- apiVersion: v1
+  kind: Service
+  metadata:
+    name: ragent
+  spec:
+    ports:
+    - port: 55672
+      protocol: TCP
+      targetPort: 55672
+    selector:
+      name: ragent
+- apiVersion: v1
+  kind: Service
+  metadata:
+    name: configuration
+  spec:
+    ports:
+    - port: 5672
+      protocol: TCP
+      targetPort: 5672
+    selector:
+      name: configserv
+- apiVersion: v1
+  kind: Service
+  metadata:
+    name: subscription
+  spec:
+    ports:
+    - port: 5672
+      protocol: TCP
+      targetPort: 5672
+    selector:
+      name: subserv
+parameters:
+- description: The image to use for the router
+  name: ROUTER_REPO
+  value: gordons/qdrouterd
+- description: The default image to use as broker
+  name: BROKER_REPO
+  value: enmasseproject/artemis
+- description: The default image to use as topic forwarder
+  name: TOPIC_FORWARDER_REPO
+  value: enmasseproject/topic-forwarder
+- description: The link capacity setting for router
+  name: ROUTER_LINK_CAPACITY
+  value: '50'
+- description: The image to use for the configuration service
+  name: CONFIGSERV_IMAGE
+  value: enmasseproject/configserv
+- description: The docker image to use for the storage controller
+  name: STORAGE_CONTROLLER_REPO
+  value: enmasseproject/storage-controller
+- description: The image to use for the router agent
+  name: RAGENT_REPO
+  value: enmasseproject/ragent
+- description: The image to use for the subscription services
+  name: SUBSERV_REPO
+  value: enmasseproject/subserv
