@@ -30,7 +30,6 @@ import static org.junit.Assert.assertThat;
 
 public class StoreAndForwardQueueTest extends VertxTestBase {
 
-    @Test
     public void testQueue() throws InterruptedException, ExecutionException, TimeoutException {
         String dest = "myqueue";
         EnMasseClient client = createClient(false);
