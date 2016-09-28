@@ -63,7 +63,7 @@ public class OpenshiftResourceObserver implements IOpenShiftWatchListener, AutoC
 
     @Override
     public void disconnected() {
-        log.info("Disconnected, restarting watch");
+        log.debug("Disconnected, restarting watch");
         reconnect();
     }
 
@@ -103,7 +103,7 @@ public class OpenshiftResourceObserver implements IOpenShiftWatchListener, AutoC
 
     @Override
     public void error(Throwable err) {
-        log.error("Got error from watcher: " +  err.getMessage());
+        log.debug("Got error from watcher: " +  err.getMessage());
         reconnect();
     }
 }
