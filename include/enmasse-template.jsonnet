@@ -24,9 +24,9 @@ local flavorConfig = import "flavor.json";
                  storage.template(true, false, secure),
                  storage.template(true, true, secure),
                  import "direct-template.json",
-                 configserv.imagestream("${CONFIGSERV_IMAGE}"),
+                 configserv.imagestream("${CONFIGSERV_REPO}"),
                  configserv.deployment,
-                 ragent.imagestream("${RAGENT_IMAGE}"),
+                 ragent.imagestream("${RAGENT_REPO}"),
                  ragent.deployment,
                  router.imagestream("${ROUTER_REPO}"),
                  qdrouterd.deployment(secure),
@@ -66,7 +66,7 @@ local flavorConfig = import "flavor.json";
         "value": "50"
       },
       {
-        "name": "CONFIGSERV_IMAGE",
+        "name": "CONFIGSERV_REPO",
         "description": "The image to use for the configuration service",
         "value": "enmasseproject/configserv"
       },

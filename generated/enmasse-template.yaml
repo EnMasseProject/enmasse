@@ -472,13 +472,13 @@ objects:
   metadata:
     name: configserv
   spec:
-    dockerImageRepository: "${CONFIGSERV_IMAGE}"
+    dockerImageRepository: "${CONFIGSERV_REPO}"
     importPolicy:
       scheduled: true
     tags:
     - from:
         kind: DockerImage
-        name: "${CONFIGSERV_IMAGE}:latest"
+        name: "${CONFIGSERV_REPO}:latest"
       name: latest
 - apiVersion: v1
   kind: DeploymentConfig
@@ -519,13 +519,13 @@ objects:
   metadata:
     name: ragent
   spec:
-    dockerImageRepository: "${RAGENT_IMAGE}"
+    dockerImageRepository: "${RAGENT_REPO}"
     importPolicy:
       scheduled: true
     tags:
     - from:
         kind: DockerImage
-        name: "${RAGENT_IMAGE}:latest"
+        name: "${RAGENT_REPO}:latest"
       name: latest
 - apiVersion: v1
   kind: DeploymentConfig
@@ -822,7 +822,7 @@ parameters:
   name: ROUTER_LINK_CAPACITY
   value: '50'
 - description: The image to use for the configuration service
-  name: CONFIGSERV_IMAGE
+  name: CONFIGSERV_REPO
   value: enmasseproject/configserv
 - description: The docker image to use for the storage controller
   name: STORAGE_CONTROLLER_REPO
