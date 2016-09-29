@@ -60,7 +60,7 @@ public class TopicMigrator {
         // Step 2: Create local subscription
         createSubscription(address, handler);
 
-        Thread.sleep(5000);
+        Thread.sleep(10000);
         System.out.println("Closing subscriptions");
 
         // Step 3: Close all subscriptions except our own with a amqp redirect
@@ -107,19 +107,17 @@ public class TopicMigrator {
     private void watchForSubscriptions(Endpoint toEndpoint, String address, Set<Subscription> subs) throws Exception {
         BrokerManager toMgr = new BrokerManager(toEndpoint);
         Set<Subscription> foundSubs = Collections.emptySet();
+        System.out.println("Waiting for " + subs);
         while (!subs.equals(foundSubs)) {
-            System.out.println("Local subs: " + listSubscriptions(brokerManager, address));
-
             foundSubs = listSubscriptions(toMgr, address);
             System.out.println("Remote subs: " + foundSubs);
             Thread.sleep(1000);
         }
+        System.out.println("DONE!");
     }
 
     private void closeSubscriptions(String address, Set<Subscription> subs) throws Exception {
-        boolean ret = brokerManager.closeConnections(address); //address, subs);
-        System.out.println("Closed subs: " + ret);
-
+        brokerManager.closeSubscriptions(address, subs);
     }
 
     private void createSubscription(String address, MigrateMessageHandler handler) throws Exception {
@@ -147,6 +145,7 @@ public class TopicMigrator {
                     localReceiver.openHandler(res -> {
                         if (res.succeeded()) {
                             System.out.println("Opened localReceiver");
+                            handler.setReceiver(localReceiver);
                             Handler<Long> checkReady = new Handler<Long>() {
                                 @Override
                                 public void handle(Long event) {

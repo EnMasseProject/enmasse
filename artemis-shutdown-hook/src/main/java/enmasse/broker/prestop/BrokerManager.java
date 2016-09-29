@@ -103,12 +103,13 @@ public class BrokerManager {
     public boolean closeConnections(String address) throws Exception {
         ClientRequestor requestor = new ClientRequestor(session, "jms.queue.activemq.management");
         ClientMessage message = session.createMessage(false);
-        ManagementHelper.putOperationInvocation(message, "jms.server", "closeConsumerConnectionsForAddress", address);
+        ManagementHelper.putOperationInvocation(message, "jms.server", "destroyTopic", address, true);
         session.start();
         ClientMessage reply = requestor.request(message);
-        boolean retVal = (Boolean)ManagementHelper.getResult(reply);
+        Object o = (Object)ManagementHelper.getResult(reply);
+        System.out.println("O type: " + o.getClass() + "  value: " + o.toString());
         session.stop();
-        return retVal;
+        return true;
     }
 
     public String listAllSubscriptions(String address) throws Exception {
@@ -153,8 +154,7 @@ public class BrokerManager {
                 System.out.println("CLOSING SUB " + sub.getName());
                 ClientRequestor requestor = new ClientRequestor(session, "jms.queue.activemq.management");
                 ClientMessage message = session.createMessage(false);
-                ManagementHelper.putOperationInvocation(message, address, "dropAllSubscriptions");
-                //, null, sub.getName());
+                ManagementHelper.putOperationInvocation(message, address, "dropDurableSubscription", sub.getClientId(), sub.getName());
                 session.start();
                 requestor.request(message);
                 session.stop();

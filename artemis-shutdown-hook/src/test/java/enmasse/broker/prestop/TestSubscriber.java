@@ -16,6 +16,7 @@
 
 package enmasse.broker.prestop;
 
+import io.vertx.core.Vertx;
 import io.vertx.proton.ProtonClient;
 import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.ProtonLinkOptions;
@@ -29,23 +30,24 @@ import org.apache.qpid.proton.amqp.messaging.TerminusDurability;
  * TODO: Description
  */
 public class TestSubscriber {
-    private final ProtonClient client;
+    private final Vertx vertx;
 
-    public TestSubscriber(ProtonClient client) {
-        this.client = client;
+    public TestSubscriber(Vertx vertx) {
+        this.vertx = vertx;
     }
 
     public void subscribe(Endpoint endpoint, String address, Endpoint failover) {
         String containerId = "helloclient";
+        ProtonClient client = ProtonClient.create(vertx);
         client.connect(endpoint.hostName(), endpoint.port(), connection -> {
             if (connection.succeeded()) {
-                System.out.println("Connected: ");
                 ProtonConnection conn = connection.result();
                 conn.setContainer(containerId);
                 conn.closeHandler(res -> {
                     System.out.println("CLIENT cONN cLOSED");
                 });
                 conn.openHandler(result -> {
+                    System.out.println("Connected: " + result.result().getRemoteContainer());
                     Source source = new Source();
                     source.setAddress(address);
                     source.setCapabilities(Symbol.getSymbol("topic"));
@@ -61,6 +63,13 @@ public class TestSubscriber {
                     });
                     receiver.closeHandler(res -> {
                         System.out.println("CLIENT CLOSED");
+                        conn.close();
+                        if (failover != null) {
+                            vertx.setTimer(5000, timerId -> {
+                                System.out.println("Connecting to failover");
+                                subscribe(failover, address, null);
+                            });
+                        }
                     });
                     receiver.handler((delivery, message) -> System.out.println("GOT MESSAGE"));
                     receiver.open();

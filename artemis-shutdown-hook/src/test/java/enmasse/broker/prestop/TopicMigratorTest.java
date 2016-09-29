@@ -20,6 +20,9 @@ import io.vertx.core.Vertx;
 import io.vertx.proton.ProtonClient;
 import org.junit.Test;
 
+import java.io.IOException;
+import java.util.concurrent.atomic.AtomicInteger;
+
 public class TopicMigratorTest {
     private Endpoint from = new Endpoint("127.0.0.1", 12345);
     private Endpoint to = new Endpoint("127.0.0.1", 12346);
@@ -37,11 +40,11 @@ public class TopicMigratorTest {
         Thread.sleep(5000);
         System.out.println("Started brokers");
         BrokerManager fromMgr = new BrokerManager(from);
-        TestSubscriber subscriber = new TestSubscriber(ProtonClient.create(vertx));
+        TestSubscriber subscriber = new TestSubscriber(vertx);
         System.out.println("Attempting to subscribe");
         subscriber.subscribe(from, "jms.topic.mytopic", to);
 
-        Thread.sleep(5000);
+        Thread.sleep(10000);
         System.out.println("Starting migrator");
         TopicMigrator migrator = new TopicMigrator(fromMgr, from, vertx);
         migrator.migrateTo(to, "jms.topic.mytopic");
