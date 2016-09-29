@@ -1,6 +1,6 @@
 description = 'Broker message forwarder'
 dependencies {
-    compile project(':discovery')
+    compile 'com.github.EnMasseProject:common-lib:master-SNAPSHOT'
     compile "io.vertx:vertx-proton:${vertxProtonVersion}"
     compile "org.slf4j:slf4j-api:${slf4jVersion}"
     compile "org.slf4j:slf4j-log4j12:${slf4jVersion}"
