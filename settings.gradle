@@ -1,0 +1,3 @@
+rootProject.name = 'common-lib'
+
+include ':discovery'

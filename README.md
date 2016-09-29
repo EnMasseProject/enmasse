@@ -1,2 +1,1 @@
-# discoverylib
-Library to do resource discovery in Kubernetes
+# Common libraries in use by multiple EnMasse components

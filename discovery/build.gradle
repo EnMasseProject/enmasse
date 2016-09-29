@@ -1,0 +1,12 @@
+ext {
+    openshiftRestclientVersion = '5.1.0.Final'
+    junitVersion = '4.12'
+    mockitoVersion = '2.0.52-beta'
+}
+
+description = 'Library for service discovery in openshift'
+dependencies {
+    compile "com.openshift:openshift-restclient-java:${openshiftRestclientVersion}"
+    testCompile "junit:junit:${junitVersion}"
+    testCompile "org.mockito:mockito-core:${mockitoVersion}"
+}
