@@ -34,12 +34,12 @@ public class Host {
         return hostname;
     }
 
-    public int getAmqpPort() {
-        return portMap.get("amqp");
+    public Endpoint amqpEndpoint() {
+        return new Endpoint(hostname, portMap.get("amqp"));
     }
 
-    public int getCorePort() {
-        return portMap.get("core");
+    public Endpoint coreEndpoint() {
+        return new Endpoint(hostname, portMap.get("core"));
     }
 
     @Override
