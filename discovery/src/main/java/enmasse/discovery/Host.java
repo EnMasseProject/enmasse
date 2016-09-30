@@ -38,6 +38,10 @@ public class Host {
         return portMap.get("amqp");
     }
 
+    public int getCorePort() {
+        return portMap.get("core");
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
