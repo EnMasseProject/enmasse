@@ -33,6 +33,6 @@ public class Endpoint {
     }
 
     public int port() {
-        return port();
+        return port;
     }
 }
