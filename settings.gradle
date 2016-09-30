@@ -1,3 +1,4 @@
 rootProject.name = 'common-lib'
 
 include ':discovery'
+include ':forwarder'

@@ -1,0 +1,12 @@
+description = 'AMQP message forwarder library'
+
+ext {
+    vertxProtonVersion = '3.3.3'
+    slf4jVersion = '1.7.21'
+}
+
+dependencies {
+    compile project(":discovery")
+    compile "io.vertx:vertx-proton:${vertxProtonVersion}"
+    compile "org.slf4j:slf4j-api:${slf4jVersion}"
+}
