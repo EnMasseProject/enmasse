@@ -20,7 +20,6 @@ import enmasse.discovery.DiscoveryListener;
 import enmasse.discovery.Host;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.Vertx;
-import io.vertx.core.VertxOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -84,7 +83,7 @@ public class ForwarderController implements DiscoveryListener {
     }
 
     private void createForwarder(Host host) {
-        Forwarder forwarder = new Forwarder(vertx, localHost, host, address, connectionRetryInterval);
+        Forwarder forwarder = new Forwarder(vertx, localHost.amqpEndpoint(), host.amqpEndpoint(), address, connectionRetryInterval);
         log.info("Creating forwarder " + forwarder);
         replicatedHosts.put(host, forwarder);
         forwarder.start();

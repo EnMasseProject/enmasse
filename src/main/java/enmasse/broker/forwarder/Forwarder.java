@@ -16,7 +16,7 @@
 
 package enmasse.broker.forwarder;
 
-import enmasse.discovery.Host;
+import enmasse.discovery.Endpoint;
 import io.vertx.core.Vertx;
 import io.vertx.proton.ProtonClient;
 import io.vertx.proton.ProtonConnection;
@@ -25,7 +25,6 @@ import io.vertx.proton.ProtonLinkOptions;
 import io.vertx.proton.ProtonReceiver;
 import io.vertx.proton.ProtonSender;
 import org.apache.qpid.proton.amqp.Symbol;
-import org.apache.qpid.proton.amqp.messaging.Accepted;
 import org.apache.qpid.proton.amqp.messaging.MessageAnnotations;
 import org.apache.qpid.proton.amqp.messaging.Source;
 import org.apache.qpid.proton.amqp.messaging.Target;
@@ -46,8 +45,8 @@ public class Forwarder {
     private final Vertx vertx;
     private final ProtonClient client;
     private final String address;
-    private final Host from;
-    private final Host to;
+    private final Endpoint from;
+    private final Endpoint to;
     private final long connectionRetryInterval;
 
     private volatile Optional<ProtonConnection> senderConnection = Optional.empty();
@@ -56,7 +55,7 @@ public class Forwarder {
     private static Symbol replicated = Symbol.getSymbol("replicated");
     private static Symbol topic = Symbol.getSymbol("topic");
 
-    public Forwarder(Vertx vertx, Host from, Host to, String address, long connectionRetryInterval) {
+    public Forwarder(Vertx vertx, Endpoint from, Endpoint to, String address, long connectionRetryInterval) {
         this.vertx = vertx;
         this.client = ProtonClient.create(vertx);
         this.from = from;
@@ -71,7 +70,7 @@ public class Forwarder {
 
     private void startReceiver(ProtonSender sender, String containerId) {
         log.info("Starting receiver");
-        client.connect(from.getHostname(), from.getAmqpPort(), event -> {
+        client.connect(from.hostname(), from.port(), event -> {
             if (event.succeeded()) {
                 ProtonConnection connection = event.result();
                 connection.setContainer(containerId);
@@ -114,15 +113,15 @@ public class Forwarder {
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();
-        builder.append(from.getHostname()).append(":").append(from.getAmqpPort());
+        builder.append(from.hostname()).append(":").append(from.port());
         builder.append(" -> ");
-        builder.append(to.getHostname()).append(":").append(to.getAmqpPort());
+        builder.append(to.hostname()).append(":").append(to.port());
         return builder.toString();
     }
 
     private void startSender() {
         log.info(this + ": starting sender");
-        client.connect(to.getHostname(), to.getAmqpPort(), event -> {
+        client.connect(to.hostname(), to.port(), event -> {
             if (event.succeeded()) {
                 ProtonConnection connection = event.result();
                 connection.open();
