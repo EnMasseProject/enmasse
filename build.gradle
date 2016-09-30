@@ -1,7 +1,3 @@
-allprojects  {
-    group = 'enmasse'
-}
-
 ext {
     openshiftRestclientVersion = '5.1.0.Final'
     artemisVersion = '1.5.0-SNAPSHOT'
@@ -12,15 +8,33 @@ ext {
     mockitoVersion = '2.0.52-beta'
 }
 
-subprojects {
-    apply plugin: 'java'
-    sourceCompatibility = 1.8
-    targetCompatibility = 1.8
+apply plugin: 'java'
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
 
-    repositories {
-        mavenLocal()
-        maven { url "http://repo.maven.apache.org/maven2" }
-        maven { url "https://repository.apache.org/content/repositories/snapshots/" }
-        maven { url "https://jitpack.io" }
+repositories {
+    maven { url "http://repo.maven.apache.org/maven2" }
+    maven { url "https://repository.apache.org/content/repositories/snapshots/" }
+    maven { url "https://jitpack.io" }
+}
+
+description = 'Broker message forwarder'
+dependencies {
+    compile 'com.github.EnMasseProject:common-lib:master-SNAPSHOT'
+    compile "io.vertx:vertx-proton:${vertxProtonVersion}"
+    compile "org.slf4j:slf4j-api:${slf4jVersion}"
+    compile "org.slf4j:slf4j-log4j12:${slf4jVersion}"
+    testCompile "junit:junit:${junitVersion}"
+    testCompile "org.mockito:mockito-core:${mockitoVersion}"
+    testCompile "org.hamcrest:hamcrest-all:${hamcrestVersion}"
+    testCompile("org.apache.activemq:artemis-server:${artemisVersion}") {
+        exclude group: "io.netty", module: "netty-all"
+    }
+    testCompile("org.apache.activemq:artemis-amqp-protocol:${artemisVersion}") {
+        exclude group: "io.netty", module: "netty-all"
     }
 }
+
+apply plugin: 'application'
+mainClassName = 'enmasse.broker.forwarder.Main'
+applicationDefaultJvmArgs = ["-Dvertx.disableFileCaching=true", "-Dvertx.disableFileCPResolving=true"]
