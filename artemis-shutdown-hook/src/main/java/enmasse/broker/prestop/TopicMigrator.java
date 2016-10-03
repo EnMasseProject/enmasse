@@ -50,9 +50,6 @@ public class TopicMigrator implements DiscoveryListener {
     private final Host localHost;
     private final BrokerManager localBroker;
 
-    private final String containerId = "scaledown";
-    private final String linkId = "scaledown";
-
     public TopicMigrator(Host localHost, Vertx vertx) throws Exception {
         this.localHost = localHost;
         this.localBroker = new BrokerManager(localHost.coreEndpoint());
@@ -64,17 +61,13 @@ public class TopicMigrator implements DiscoveryListener {
 
         // Step 1: Retrieve subscription identities
         Set<Subscription> subs = listSubscriptions(localBroker, address);
-        System.out.println("Current subs: " + subs);
 
         List<MigrateMessageHandler> migrateHandlers = subs.stream()
-                .map(s -> new MigrateMessageHandler())
+                .map(s -> new MigrateMessageHandler("scaledown-" + s.getName()))
                 .collect(Collectors.toList());
 
         // Step 2: Create local subscription
         createSubscriptions(address, migrateHandlers);
-
-        Thread.sleep(10000);
-        System.out.println("Closing subscriptions");
 
         // Step 3: Close all subscriptions except our own with a amqp redirect
         closeSubscriptions(address, subs);
@@ -84,6 +77,15 @@ public class TopicMigrator implements DiscoveryListener {
 
         // Step 5: Send messages on broker where subscription identity has appeared
         migrateMessages(address, endpoints, migrateHandlers);
+
+        waitUntilEmpty(address, migrateHandlers.stream().map(MigrateMessageHandler::getSubscription).collect(Collectors.toSet()));
+        localBroker.shutdownBroker();
+    }
+
+    private void waitUntilEmpty(String address, Set<Subscription> subscription) throws InterruptedException {
+        for (Subscription sub : subscription) {
+            localBroker.waitUntilEmpty(address, sub);
+        }
     }
 
     private void migrateMessages(String address, List<Endpoint> endpoints, List<MigrateMessageHandler> handlers) {
@@ -101,7 +103,7 @@ public class TopicMigrator implements DiscoveryListener {
         protonClient.connect(toEndpoint.hostname(), toEndpoint.port(), toConnection -> {
             if (toConnection.succeeded()) {
                 ProtonConnection toConn = toConnection.result();
-                toConn.setContainer(containerId);
+                toConn.setContainer(handler.getSubscription().getClientId());
                 toConn.closeHandler(result -> {
                     System.out.println("Migrator connection closed");
                 });
@@ -109,7 +111,7 @@ public class TopicMigrator implements DiscoveryListener {
                     Target target = new Target();
                     target.setAddress(address);
                     target.setCapabilities(Symbol.getSymbol("topic"));
-                    ProtonSender sender = toConn.createSender(address, new ProtonLinkOptions().setLinkName(linkId));
+                    ProtonSender sender = toConn.createSender(address, new ProtonLinkOptions().setLinkName(handler.getSubscription().getName()));
                     sender.setTarget(target);
                     sender.closeHandler(res -> {
                         System.out.println("Sender connection closed");
@@ -172,7 +174,7 @@ public class TopicMigrator implements DiscoveryListener {
         protonClient.connect(localEndpoint.hostname(), localEndpoint.port(), connection -> {
             if (connection.succeeded()) {
                 ProtonConnection conn = connection.result();
-                conn.setContainer(containerId);
+                conn.setContainer(handler.getSubscription().getClientId());
                 conn.closeHandler(result -> {
                     System.out.println("Migrator sub connection closed");
                 });
@@ -181,7 +183,7 @@ public class TopicMigrator implements DiscoveryListener {
                     source.setAddress(address);
                     source.setCapabilities(Symbol.getSymbol("topic"));
                     source.setDurable(TerminusDurability.UNSETTLED_STATE);
-                    ProtonReceiver localReceiver = conn.createReceiver(address, new ProtonLinkOptions().setLinkName(linkId));
+                    ProtonReceiver localReceiver = conn.createReceiver(address, new ProtonLinkOptions().setLinkName(handler.getSubscription().getName()));
                     localReceiver.setSource(source);
                     localReceiver.setPrefetch(0);
                     localReceiver.setAutoAccept(false);

@@ -17,6 +17,7 @@
 package enmasse.broker.prestop;
 
 import enmasse.discovery.Endpoint;
+import org.apache.activemq.artemis.api.core.ActiveMQNotConnectedException;
 import org.apache.activemq.artemis.api.core.client.ActiveMQClient;
 import org.apache.activemq.artemis.api.core.client.ClientMessage;
 import org.apache.activemq.artemis.api.core.client.ClientRequestor;
@@ -51,6 +52,18 @@ public class BrokerManager {
         ClientRequestor requestor = new ClientRequestor(session, "jms.queue.activemq.management");
         ClientMessage message = session.createMessage(false);
         ManagementHelper.putAttribute(message, "core.queue." + queueName, "messageCount");
+        session.start();
+        ClientMessage reply = requestor.request(message);
+        Object count = (Object) ManagementHelper.getResult(reply);
+        session.stop();
+        System.out.println("Object: " + count.toString());
+        return (Long)count;
+    }
+
+    private long getSubscriptionMessageCount(String address, Subscription sub) throws Exception {
+        ClientRequestor requestor = new ClientRequestor(session, "jms.queue.activemq.management");
+        ClientMessage message = session.createMessage(false);
+        ManagementHelper.putOperationInvocation(message, address, "countMessagesForSubscription", sub.getClientId(), sub.getName(), "");
         session.start();
         ClientMessage reply = requestor.request(message);
         Object count = (Object) ManagementHelper.getResult(reply);
@@ -133,8 +146,12 @@ public class BrokerManager {
         ClientMessage message = session.createMessage(false);
         ManagementHelper.putOperationInvocation(message, "core.server", "forceFailover");
         session.start();
-        requestor.request(message);
-        session.stop();
+        try {
+            requestor.request(message);
+            session.stop();
+        } catch (ActiveMQNotConnectedException e) {
+            System.out.println("Disconnected on shutdown");
+        }
     }
 
     public Endpoint getEndpoint() {
@@ -165,4 +182,38 @@ public class BrokerManager {
             }
         }
     }
+
+
+    public void waitUntilEmpty(String address) throws InterruptedException {
+        while (true) {
+            try {
+                long count = getQueueMessageCount(address);
+                System.out.println("Found " + count + " messages in queue " + address);
+                if (count == 0) {
+                    break;
+                }
+            } catch (Exception e) {
+                // Retry
+                System.out.println("Queue check failed: " + e.getMessage());
+            }
+            Thread.sleep(2000);
+        }
+    }
+
+    public void waitUntilEmpty(String address, Subscription sub) throws InterruptedException {
+            while (true) {
+                try {
+                    long count = getSubscriptionMessageCount(address, sub);
+                    System.out.println("Found " + count + " messages for subscription " + sub);
+                    if (count == 0) {
+                        break;
+                    }
+                } catch (Exception e) {
+                    // Retry
+                    System.out.println("Queue check failed: " + e.getMessage());
+                }
+                Thread.sleep(2000);
+            }
+    }
+
 }

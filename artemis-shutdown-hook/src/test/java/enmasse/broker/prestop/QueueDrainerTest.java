@@ -21,7 +21,6 @@ import enmasse.discovery.Host;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -53,7 +52,7 @@ public class QueueDrainerTest {
     }
 
     @Test
-    public void testDrain() throws InterruptedException, IOException {
+    public void testDrain() throws Exception {
         fromServer.sendMessage("Hello drainer");
         client.drainMessages(to, "myqueue");
         String msg = toServer.recvMessage();

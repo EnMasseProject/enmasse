@@ -29,6 +29,15 @@ public class MigrateMessageHandler {
     private final AtomicReference<ProtonReceiver> protonReceiver = new AtomicReference<>();
     private final AtomicReference<ProtonSender> protonSender = new AtomicReference<>();
     private volatile boolean ready = false;
+    private final Subscription me;
+
+    public MigrateMessageHandler(String id) {
+        this.me = new Subscription(id, id, true);
+    }
+
+    public Subscription getSubscription() {
+        return me;
+    }
 
     public ProtonMessageHandler messageHandler() {
         return (sourceDelivery, message) -> protonSender.get().send(message, protonDelivery -> {

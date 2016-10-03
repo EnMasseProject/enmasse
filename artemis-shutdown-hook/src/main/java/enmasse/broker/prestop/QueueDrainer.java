@@ -47,35 +47,12 @@ public class QueueDrainer {
         this.debugFn = debugFn;
     }
 
-    public void drainMessages(Endpoint to, String address) {
+    public void drainMessages(Endpoint to, String address) throws Exception {
         BrokerManager brokerManager = new BrokerManager(fromHost.coreEndpoint());
 
-        vertx.setPeriodic(2000, timerId -> {
-            vertx.executeBlocking((Future<Long> event) -> {
-                System.out.println("Running queue check");
-                try {
-                    long count = brokerManager.getQueueMessageCount(address);
-                    System.out.println("Queue had " + count + " messages");
-                    if (count == 0) {
-                        brokerManager.shutdownBroker();
-                    }
-                    event.complete(count);
-                } catch (Exception e) {
-                    event.fail(e);
-                }
-            }, event -> {
-                if (event.succeeded()) {
-                    if (event.result() == 0) {
-                        System.out.println("Exiting");
-                        vertx.close();
-                    }
-                } else {
-                    System.out.println("Queue check failed: " + event.cause().getMessage());
-                }
-            });
-        });
-
         startDrain(to, address);
+        brokerManager.waitUntilEmpty(address);
+        brokerManager.shutdownBroker();
     }
 
     public void startDrain(Endpoint to, String address) {
