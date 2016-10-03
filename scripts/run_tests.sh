@@ -12,10 +12,7 @@ oc policy add-role-to-user edit system:serviceaccount:$(oc project -q):deployer
 oc process -f https://raw.githubusercontent.com/enmasseproject/openshift-configuration/master/generated/enmasse-template.yaml | oc create -f -
 
 $DIR/wait_until_up.sh 7 || exit 1
-sleep 20 # TODO: check deployment config instead
-$DIR/scale_controller.sh topic-mytopic 4 || exit 1
-$DIR/wait_until_up.sh 10 || exit 1
 
-sleep 120
+sleep 60
 
 OPENSHIFT_USER=test OPENSHIFT_TOKEN=`oc config view -o jsonpath='{.users[?(@.name == "test/localhost:8443")].user.token}'` OPENSHIFT_URL=https://localhost:8443 PN_TRACE_FRM=1 gradle check -i

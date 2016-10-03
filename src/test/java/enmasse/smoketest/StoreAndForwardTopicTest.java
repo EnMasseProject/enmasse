@@ -16,6 +16,7 @@
 
 package enmasse.smoketest;
 
+import org.junit.Before;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -29,6 +30,11 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
 public class StoreAndForwardTopicTest extends VertxTestBase{
+    @Before
+    public void setupReplicas() throws InterruptedException {
+        TestUtils.setReplicas("topic-mytopic", "mytopic", 4, 10, TimeUnit.MINUTES);
+    }
+
     @Test
     public void testMultipleSubscribers() throws InterruptedException, TimeoutException, ExecutionException {
         String dest = "mytopic";
