@@ -22,6 +22,7 @@ import com.openshift.restclient.IClient;
 import com.openshift.restclient.ResourceKind;
 import com.openshift.restclient.images.DockerImageURI;
 import com.openshift.restclient.model.IContainer;
+import enmasse.discovery.DiscoveryClient;
 import enmasse.discovery.Endpoint;
 import enmasse.discovery.Host;
 import io.vertx.core.Vertx;
@@ -61,7 +62,20 @@ public class Main {
             client.drainMessages(to, address);
         } else if (System.getenv("TOPIC_NAME") != null) {
             String address = System.getenv("TOPIC_NAME");
+
+            String kubeHost = System.getenv("KUBERNETES_SERVICE_HOST");
+            String kubePort = System.getenv("KUBERNETES_SERVICE_PORT");
+            String kubeUrl = String.format("https://%s:%s", kubeHost, kubePort);
+            IClient client = new ClientBuilder(kubeUrl).usingToken(openshiftToken()).build();
+            String namespace = openshiftNamespace();
+
+            Map<String, String> labels = new LinkedHashMap<>();
+            labels.put("role", "broker");
+            labels.put("address", address);
+            DiscoveryClient discoveryClient = new DiscoveryClient(client, namespace, labels);
             TopicMigrator migrator = new TopicMigrator(localHost);
+            discoveryClient.addListener(migrator);
+            discoveryClient.start();
             migrator.migrate(address);
         } else {
             throw new IllegalArgumentException("Unable to find QUEUE_NAME or TOPIC_NAME environment");

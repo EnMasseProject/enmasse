@@ -59,6 +59,7 @@ public class TopicMigrator implements DiscoveryListener {
         // Step 0: Cutoff new subscriptions
 
         // Step 1: Retrieve subscription identities
+        System.out.println("Listing subscriptions");
         Set<Subscription> subs = listSubscriptions(localBroker, address);
 
         List<MigrateMessageHandler> migrateHandlers = subs.stream()
@@ -66,15 +67,19 @@ public class TopicMigrator implements DiscoveryListener {
                 .collect(Collectors.toList());
 
         // Step 2: Create local subscription
+        System.out.println("Creating local subscriptions");
         createSubscriptions(address, migrateHandlers);
 
         // Step 3: Close all subscriptions except our own with a amqp redirect
+        System.out.println("Closing other subscriptions");
         closeSubscriptions(address, subs);
 
         // Step 4: Wait until subscription identities fetched in Step 1 appears on other brokers
+        System.out.println("Waiting for subscriptions");
         List<Endpoint> endpoints = watchForSubscriptions(address, subs);
 
         // Step 5: Send messages on broker where subscription identity has appeared
+        System.out.println("Migrating messages");
         migrateMessages(address, endpoints, migrateHandlers);
 
         waitUntilEmpty(address, migrateHandlers.stream().map(MigrateMessageHandler::getSubscription).collect(Collectors.toSet()));
@@ -131,15 +136,16 @@ public class TopicMigrator implements DiscoveryListener {
 
     private List<Endpoint> watchForSubscriptions(String address, Set<Subscription> subs) throws Exception {
 
-        List<BrokerManager> brokers = destinationBrokers.stream()
-                .filter(host -> !host.equals(localHost))
-                .map(host -> new BrokerManager(host.coreEndpoint()))
-                .collect(Collectors.toList());
 
 
         Map<Subscription, Endpoint> endpointMap = new HashMap<>();
         System.out.println("Waiting for subscriptions");
         while (true) {
+            List<BrokerManager> brokers = destinationBrokers.stream()
+                .filter(host -> !host.equals(localHost))
+                .map(host -> new BrokerManager(host.coreEndpoint()))
+                .collect(Collectors.toList());
+
             for (BrokerManager broker : brokers) {
                 Set<Subscription> brokerSubs = listSubscriptions(broker, address);
                 System.out.println("Remote subs for " + broker.getEndpoint().hostname() + ": " + brokerSubs);
