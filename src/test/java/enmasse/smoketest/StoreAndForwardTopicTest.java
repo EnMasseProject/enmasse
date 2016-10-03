@@ -33,6 +33,7 @@ public class StoreAndForwardTopicTest extends VertxTestBase{
     @Before
     public void setupReplicas() throws InterruptedException {
         TestUtils.setReplicas("topic-mytopic", "mytopic", 4, 10, TimeUnit.MINUTES);
+        Thread.sleep(120_000);
     }
 
     @Test
