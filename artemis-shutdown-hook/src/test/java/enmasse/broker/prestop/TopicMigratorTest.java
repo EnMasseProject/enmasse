@@ -19,11 +19,14 @@ package enmasse.broker.prestop;
 import enmasse.discovery.Endpoint;
 import enmasse.discovery.Host;
 import io.vertx.core.Vertx;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 public class TopicMigratorTest {
     private Endpoint from = new Endpoint("127.0.0.1", 12345);
@@ -31,6 +34,13 @@ public class TopicMigratorTest {
     private TestBroker fromServer;
     private TestBroker toServer;
     private Vertx vertx = Vertx.vertx();
+
+    @After
+    public void teardown() throws Exception {
+        vertx.close();
+        fromServer.stop();
+        toServer.stop();
+    }
 
     @Test
     public void testMigrator() throws Exception {
@@ -51,11 +61,10 @@ public class TopicMigratorTest {
 
         Host from = createHost("127.0.0.1", 12345);
         Host to = createHost("127.0.0.1", 12346);
-        TopicMigrator migrator = new TopicMigrator(from, vertx);
+        TopicMigrator migrator = new TopicMigrator(from);
         migrator.hostsChanged(Collections.singleton(to));
         migrator.migrate("jms.topic.mytopic");
-
-        Thread.sleep(2000);
+        fromServer.assertShutdown(1, TimeUnit.MINUTES);
     }
 
     private Host createHost(String hostname, int port) {

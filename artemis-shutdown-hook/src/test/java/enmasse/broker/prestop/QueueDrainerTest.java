@@ -18,6 +18,7 @@ package enmasse.broker.prestop;
 
 import enmasse.discovery.Endpoint;
 import enmasse.discovery.Host;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -48,23 +49,27 @@ public class QueueDrainerTest {
         fromServer.start();
         toServer.start();
         client = new QueueDrainer(fromHost, Optional.empty());
-        Thread.sleep(5000);
+    }
+
+    @After
+    public void teardown() throws Exception {
+        fromServer.stop();
+        toServer.stop();
     }
 
     @Test
     public void testDrain() throws Exception {
+        System.out.println("Sending message");
         fromServer.sendMessage("Hello drainer");
+        System.out.println("Starting drain");
         client.drainMessages(to, "myqueue");
+        System.out.println("Receiving message");
         String msg = toServer.recvMessage();
+        System.out.println("Checking message");
         assertThat(msg, is("Hello drainer"));
-        assertShutdown(fromServer, 60, TimeUnit.SECONDS);
+        System.out.println("Checking shutdown");
+        fromServer.assertShutdown(1, TimeUnit.MINUTES);
+        System.out.println("DONE");
     }
 
-    private void assertShutdown(TestBroker server, long timeout, TimeUnit timeUnit) throws InterruptedException {
-        long endTime = System.currentTimeMillis() + timeUnit.toMillis(timeout);
-        while (server.isActive() && System.currentTimeMillis() < endTime) {
-            Thread.sleep(1000);
-        }
-        assertFalse("Server has not been shut down", server.isActive());
-    }
 }

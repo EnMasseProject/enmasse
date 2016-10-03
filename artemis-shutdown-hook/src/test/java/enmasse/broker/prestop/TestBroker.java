@@ -35,6 +35,9 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
+
+import static org.junit.Assert.assertFalse;
 
 
 public class TestBroker {
@@ -118,5 +121,13 @@ public class TestBroker {
 
     public boolean isActive() {
         return server.getActiveMQServer().isActive();
+    }
+
+    public void assertShutdown(long timeout, TimeUnit timeUnit) throws InterruptedException {
+        long endTime = System.currentTimeMillis() + timeUnit.toMillis(timeout);
+        while (isActive() && System.currentTimeMillis() < endTime) {
+            Thread.sleep(1000);
+        }
+        assertFalse("Server has not been shut down", isActive());
     }
 }

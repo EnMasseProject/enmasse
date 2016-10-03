@@ -45,15 +45,14 @@ import java.util.stream.Collectors;
 
 public class TopicMigrator implements DiscoveryListener {
     private static final ObjectMapper mapper = new ObjectMapper();
-    private final Vertx vertx;
+    private final Vertx vertx = Vertx.vertx();
     private volatile Set<Host> destinationBrokers = Collections.emptySet();
     private final Host localHost;
     private final BrokerManager localBroker;
 
-    public TopicMigrator(Host localHost, Vertx vertx) throws Exception {
+    public TopicMigrator(Host localHost) throws Exception {
         this.localHost = localHost;
         this.localBroker = new BrokerManager(localHost.coreEndpoint());
-        this.vertx = vertx;
     }
 
     public void migrate(String address) throws Exception {
@@ -79,6 +78,7 @@ public class TopicMigrator implements DiscoveryListener {
         migrateMessages(address, endpoints, migrateHandlers);
 
         waitUntilEmpty(address, migrateHandlers.stream().map(MigrateMessageHandler::getSubscription).collect(Collectors.toSet()));
+        vertx.close();
         localBroker.shutdownBroker();
     }
 
@@ -233,6 +233,7 @@ public class TopicMigrator implements DiscoveryListener {
                 nodes = mapper.readTree(mgr.listAllSubscriptions(address));
             } catch (Exception e) {
                 System.out.println("Error listing: " + e.getMessage());
+                Thread.sleep(1000);
             }
         }
 

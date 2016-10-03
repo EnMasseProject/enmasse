@@ -61,7 +61,7 @@ public class Main {
             client.drainMessages(to, address);
         } else if (System.getenv("TOPIC_NAME") != null) {
             String address = System.getenv("TOPIC_NAME");
-            TopicMigrator migrator = new TopicMigrator(localHost, Vertx.vertx());
+            TopicMigrator migrator = new TopicMigrator(localHost);
             migrator.migrate(address);
         } else {
             throw new IllegalArgumentException("Unable to find QUEUE_NAME or TOPIC_NAME environment");

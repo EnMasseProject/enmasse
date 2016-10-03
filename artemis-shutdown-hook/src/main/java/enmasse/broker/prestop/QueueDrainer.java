@@ -52,6 +52,7 @@ public class QueueDrainer {
 
         startDrain(to, address);
         brokerManager.waitUntilEmpty(address);
+        vertx.close();
         brokerManager.shutdownBroker();
     }
 
