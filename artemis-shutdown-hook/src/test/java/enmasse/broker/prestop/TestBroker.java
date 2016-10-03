@@ -18,12 +18,10 @@ package enmasse.broker.prestop;
 
 import com.google.common.io.Files;
 import org.apache.activemq.artemis.api.core.TransportConfiguration;
-import org.apache.activemq.artemis.api.jms.management.JMSQueueControl;
 import org.apache.activemq.artemis.core.config.Configuration;
 import org.apache.activemq.artemis.core.config.CoreQueueConfiguration;
 import org.apache.activemq.artemis.core.config.impl.ConfigurationImpl;
 import org.apache.activemq.artemis.core.remoting.impl.netty.NettyAcceptorFactory;
-import org.apache.activemq.artemis.core.server.embedded.EmbeddedActiveMQ;
 import org.apache.activemq.artemis.jms.server.config.JMSConfiguration;
 import org.apache.activemq.artemis.jms.server.config.TopicConfiguration;
 import org.apache.activemq.artemis.jms.server.config.impl.JMSConfigurationImpl;
@@ -46,11 +44,13 @@ public class TestBroker {
     private final String messageAddress;
     private final EmbeddedJMS server = new EmbeddedJMS();
     private final Messenger messenger = Messenger.Factory.create();
+    private final boolean topic;
 
-    public TestBroker(String host, int port, String address) {
+    public TestBroker(String host, int port, String address, boolean topic) {
         this.host = host;
         this.port = port;
         this.address = address;
+        this.topic = topic;
         this.messageAddress = String.format("amqp://%s:%s/%s", host, port, address);
     }
 
@@ -62,11 +62,18 @@ public class TestBroker {
         params.put("host", host);
         params.put("port", port);
         TransportConfiguration transport = new TransportConfiguration(NettyAcceptorFactory.class.getName(), params, "amqp");
-
         JMSConfiguration jmsConfiguration = new JMSConfigurationImpl();
-        TopicConfiguration topicConfig = new TopicConfigurationImpl();
-        topicConfig.setName(address);
-        jmsConfiguration.setTopicConfigurations(Collections.singletonList(topicConfig));
+
+        if (topic) {
+            TopicConfiguration topicConfig = new TopicConfigurationImpl();
+            topicConfig.setName(address);
+            jmsConfiguration.setTopicConfigurations(Collections.singletonList(topicConfig));
+        } else {
+            CoreQueueConfiguration queueConfig = new CoreQueueConfiguration();
+            queueConfig.setAddress(address);
+            queueConfig.setName(address);
+            config.setQueueConfigurations(Collections.singletonList(queueConfig));
+        }
 
         config.setAcceptorConfigurations(Collections.singleton(transport));
         config.setSecurityEnabled(false);

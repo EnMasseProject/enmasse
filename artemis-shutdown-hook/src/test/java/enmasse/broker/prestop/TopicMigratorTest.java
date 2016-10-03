@@ -16,12 +16,14 @@
 
 package enmasse.broker.prestop;
 
+import enmasse.discovery.Endpoint;
+import enmasse.discovery.Host;
 import io.vertx.core.Vertx;
-import io.vertx.proton.ProtonClient;
 import org.junit.Test;
 
-import java.io.IOException;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 public class TopicMigratorTest {
     private Endpoint from = new Endpoint("127.0.0.1", 12345);
@@ -32,23 +34,34 @@ public class TopicMigratorTest {
 
     @Test
     public void testMigrator() throws Exception {
-        fromServer = new TestBroker(from.hostName(), from.port(), "mytopic");
-        toServer = new TestBroker(to.hostName(), to.port(), "mytopic");
+        fromServer = new TestBroker(from.hostname(), from.port(), "mytopic", true);
+        toServer = new TestBroker(to.hostname(), to.port(), "mytopic", true);
         fromServer.start();
         toServer.start();
 
-        Thread.sleep(5000);
+        Thread.sleep(2000);
         System.out.println("Started brokers");
         BrokerManager fromMgr = new BrokerManager(from);
         TestSubscriber subscriber = new TestSubscriber(vertx);
         System.out.println("Attempting to subscribe");
         subscriber.subscribe(from, "jms.topic.mytopic", to);
 
-        Thread.sleep(10000);
+        Thread.sleep(2000);
         System.out.println("Starting migrator");
-        TopicMigrator migrator = new TopicMigrator(fromMgr, from, vertx);
-        migrator.migrateTo(to, "jms.topic.mytopic");
 
-        Thread.sleep(10000);
+        Host from = createHost("127.0.0.1", 12345);
+        Host to = createHost("127.0.0.1", 12346);
+        TopicMigrator migrator = new TopicMigrator(from, vertx);
+        migrator.hostsChanged(Collections.singleton(to));
+        migrator.migrate("jms.topic.mytopic");
+
+        Thread.sleep(2000);
+    }
+
+    private Host createHost(String hostname, int port) {
+        Map<String, Integer> portMap = new LinkedHashMap<>();
+        portMap.put("amqp", port);
+        portMap.put("core", port);
+        return new Host(hostname, portMap);
     }
 }

@@ -16,10 +16,14 @@
 
 package enmasse.broker.prestop;
 
+import enmasse.discovery.Endpoint;
+import enmasse.discovery.Host;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
@@ -36,11 +40,16 @@ public class QueueDrainerTest {
 
     @Before
     public void setup() throws Exception {
-        fromServer = new TestBroker(from.hostName(), from.port(), "myqueue");
-        toServer = new TestBroker(to.hostName(), to.port(), "myqueue");
+        fromServer = new TestBroker(from.hostname(), from.port(), "myqueue", false);
+        toServer = new TestBroker(to.hostname(), to.port(), "myqueue", false);
+        Map<String, Integer> portMap = new LinkedHashMap<>();
+        portMap.put("amqp", from.port());
+        portMap.put("core", from.port());
+        Host fromHost = new Host(from.hostname(), portMap);
         fromServer.start();
         toServer.start();
-        client = new QueueDrainer(new BrokerManager(from), from, Optional.empty());
+        client = new QueueDrainer(fromHost, Optional.empty());
+        Thread.sleep(5000);
     }
 
     @Test

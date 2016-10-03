@@ -16,6 +16,8 @@
 
 package enmasse.broker.prestop;
 
+import enmasse.discovery.Endpoint;
+import enmasse.discovery.Host;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
@@ -37,23 +39,22 @@ public class QueueDrainer {
 
     private final Vertx vertx = Vertx.vertx();
     private final ProtonClient client = ProtonClient.create(vertx);
-    private final Endpoint from;
+    private final Host fromHost;
     private final Optional<Runnable> debugFn;
-    private final BrokerManager brokerManager;
 
-    public QueueDrainer(BrokerManager brokerManager, Endpoint from, Optional<Runnable> debugFn) throws Exception {
-        this.brokerManager = brokerManager;
-        this.from = from;
+    public QueueDrainer(Host from, Optional<Runnable> debugFn) throws Exception {
+        this.fromHost = from;
         this.debugFn = debugFn;
     }
 
     public void drainMessages(Endpoint to, String address) {
+        BrokerManager brokerManager = new BrokerManager(fromHost.coreEndpoint());
 
         vertx.setPeriodic(2000, timerId -> {
-            vertx.executeBlocking((Future<Integer> event) -> {
+            vertx.executeBlocking((Future<Long> event) -> {
                 System.out.println("Running queue check");
                 try {
-                    int count = brokerManager.getQueueMessageCount(address);
+                    long count = brokerManager.getQueueMessageCount(address);
                     System.out.println("Queue had " + count + " messages");
                     if (count == 0) {
                         brokerManager.shutdownBroker();
@@ -65,7 +66,8 @@ public class QueueDrainer {
             }, event -> {
                 if (event.succeeded()) {
                     if (event.result() == 0) {
-                        System.exit(0);
+                        System.out.println("Exiting");
+                        vertx.close();
                     }
                 } else {
                     System.out.println("Queue check failed: " + event.cause().getMessage());
@@ -78,7 +80,8 @@ public class QueueDrainer {
 
     public void startDrain(Endpoint to, String address) {
         AtomicBoolean first = new AtomicBoolean(false);
-        client.connect(to.hostName(), to.port(), sendHandle -> {
+        Endpoint from = fromHost.amqpEndpoint();
+        client.connect(to.hostname(), to.port(), sendHandle -> {
             if (sendHandle.succeeded()) {
                 ProtonConnection sendConn = sendHandle.result();
                 sendConn.setContainer("shutdown-hook-sender");
@@ -87,7 +90,7 @@ public class QueueDrainer {
                 ProtonSender sender = sendConn.createSender(address);
                 sender.openHandler(handle -> {
                     if (handle.succeeded()) {
-                        client.connect(from.hostName(), from.port(), recvHandle -> {
+                        client.connect(from.hostname(), from.port(), recvHandle -> {
                             if (recvHandle.succeeded()) {
                                 ProtonConnection recvConn = recvHandle.result();
                                 recvConn.setContainer("shutdown-hook-recv");
@@ -122,7 +125,7 @@ public class QueueDrainer {
                                 });
                                 recvConn.open();
                             } else {
-                                System.out.println("Error connecting to receiver " + from.hostName() + ":" + from.port() + ": " + recvHandle.cause().getMessage());
+                                System.out.println("Error connecting to receiver " + from.hostname() + ":" + from.port() + ": " + recvHandle.cause().getMessage());
                                 sendConn.close();
                                 vertx.setTimer(5000, id -> startDrain(to, address));
                             }
@@ -134,7 +137,7 @@ public class QueueDrainer {
                 });
                 sender.open();
             } else {
-                System.out.println("Error connecting to sender " + to.hostName() + ":" + to.port() + ": " + sendHandle.cause().getMessage()) ;
+                System.out.println("Error connecting to sender " + to.hostname() + ":" + to.port() + ": " + sendHandle.cause().getMessage()) ;
                 vertx.setTimer(5000, id -> startDrain(to, address));
             }
         });

@@ -16,6 +16,7 @@
 
 package enmasse.broker.prestop;
 
+import enmasse.discovery.Endpoint;
 import io.vertx.core.Vertx;
 import io.vertx.proton.ProtonClient;
 import io.vertx.proton.ProtonConnection;
@@ -23,7 +24,6 @@ import io.vertx.proton.ProtonLinkOptions;
 import io.vertx.proton.ProtonReceiver;
 import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.messaging.Source;
-import org.apache.qpid.proton.amqp.messaging.Target;
 import org.apache.qpid.proton.amqp.messaging.TerminusDurability;
 
 /**
@@ -39,7 +39,7 @@ public class TestSubscriber {
     public void subscribe(Endpoint endpoint, String address, Endpoint failover) {
         String containerId = "helloclient";
         ProtonClient client = ProtonClient.create(vertx);
-        client.connect(endpoint.hostName(), endpoint.port(), connection -> {
+        client.connect(endpoint.hostname(), endpoint.port(), connection -> {
             if (connection.succeeded()) {
                 ProtonConnection conn = connection.result();
                 conn.setContainer(containerId);

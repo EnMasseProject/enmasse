@@ -18,12 +18,14 @@ package enmasse.broker.prestop;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import enmasse.discovery.DiscoveryListener;
+import enmasse.discovery.Endpoint;
+import enmasse.discovery.Host;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.proton.ProtonClient;
 import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.ProtonLinkOptions;
-import io.vertx.proton.ProtonMessageHandler;
 import io.vertx.proton.ProtonReceiver;
 import io.vertx.proton.ProtonSender;
 import org.apache.qpid.proton.amqp.Symbol;
@@ -31,34 +33,45 @@ import org.apache.qpid.proton.amqp.messaging.Source;
 import org.apache.qpid.proton.amqp.messaging.Target;
 import org.apache.qpid.proton.amqp.messaging.TerminusDurability;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
-public class TopicMigrator {
-    private final BrokerManager brokerManager;
+public class TopicMigrator implements DiscoveryListener {
     private static final ObjectMapper mapper = new ObjectMapper();
-    private final Endpoint local;
     private final Vertx vertx;
+    private volatile Set<Host> destinationBrokers = Collections.emptySet();
+    private final Host localHost;
+    private final BrokerManager localBroker;
+
     private final String containerId = "scaledown";
     private final String linkId = "scaledown";
 
-    public TopicMigrator(BrokerManager brokerManager, Endpoint local, Vertx vertx) {
-        this.brokerManager = brokerManager;
-        this.local = local;
+    public TopicMigrator(Host localHost, Vertx vertx) throws Exception {
+        this.localHost = localHost;
+        this.localBroker = new BrokerManager(localHost.coreEndpoint());
         this.vertx = vertx;
     }
 
-    public void migrateTo(Endpoint toEndpoint, String address) throws Exception {
+    public void migrate(String address) throws Exception {
+        // Step 0: Cutoff new subscriptions
+
         // Step 1: Retrieve subscription identities
-        Set<Subscription> subs = listSubscriptions(brokerManager, address);
+        Set<Subscription> subs = listSubscriptions(localBroker, address);
         System.out.println("Current subs: " + subs);
 
-        MigrateMessageHandler handler = new MigrateMessageHandler();
+        List<MigrateMessageHandler> migrateHandlers = subs.stream()
+                .map(s -> new MigrateMessageHandler())
+                .collect(Collectors.toList());
+
         // Step 2: Create local subscription
-        createSubscription(address, handler);
+        createSubscriptions(address, migrateHandlers);
 
         Thread.sleep(10000);
         System.out.println("Closing subscriptions");
@@ -66,16 +79,26 @@ public class TopicMigrator {
         // Step 3: Close all subscriptions except our own with a amqp redirect
         closeSubscriptions(address, subs);
 
-        // Step 4: Wait until subscription identities fetch in Step 1 appears on other broker
-        watchForSubscriptions(toEndpoint, address, subs);
+        // Step 4: Wait until subscription identities fetched in Step 1 appears on other brokers
+        List<Endpoint> endpoints = watchForSubscriptions(address, subs);
 
         // Step 5: Send messages on broker where subscription identity has appeared
-        migrateMessages(toEndpoint, address, handler);
+        migrateMessages(address, endpoints, migrateHandlers);
     }
 
-    private void migrateMessages(Endpoint toEndpoint, String address, MigrateMessageHandler handler) {
+    private void migrateMessages(String address, List<Endpoint> endpoints, List<MigrateMessageHandler> handlers) {
+        if (endpoints.size() != handlers.size()) {
+            throw new IllegalStateException("#endpoints and #handler must be the same");
+        }
+        for (int i = 0; i < endpoints.size(); i++) {
+            migrateMessages(address, endpoints.get(i), handlers.get(i));
+        }
+    }
+
+
+    private void migrateMessages(String address, Endpoint toEndpoint, MigrateMessageHandler handler) {
         ProtonClient protonClient = ProtonClient.create(vertx);
-        protonClient.connect(toEndpoint.hostName(), toEndpoint.port(), toConnection -> {
+        protonClient.connect(toEndpoint.hostname(), toEndpoint.port(), toConnection -> {
             if (toConnection.succeeded()) {
                 ProtonConnection toConn = toConnection.result();
                 toConn.setContainer(containerId);
@@ -104,26 +127,49 @@ public class TopicMigrator {
         });
     }
 
-    private void watchForSubscriptions(Endpoint toEndpoint, String address, Set<Subscription> subs) throws Exception {
-        BrokerManager toMgr = new BrokerManager(toEndpoint);
-        Set<Subscription> foundSubs = Collections.emptySet();
-        System.out.println("Waiting for " + subs);
-        while (!subs.equals(foundSubs)) {
-            foundSubs = listSubscriptions(toMgr, address);
-            System.out.println("Remote subs: " + foundSubs);
+    private List<Endpoint> watchForSubscriptions(String address, Set<Subscription> subs) throws Exception {
+
+        List<BrokerManager> brokers = destinationBrokers.stream()
+                .filter(host -> !host.equals(localHost))
+                .map(host -> new BrokerManager(host.coreEndpoint()))
+                .collect(Collectors.toList());
+
+
+        Map<Subscription, Endpoint> endpointMap = new HashMap<>();
+        System.out.println("Waiting for subscriptions");
+        while (true) {
+            for (BrokerManager broker : brokers) {
+                Set<Subscription> brokerSubs = listSubscriptions(broker, address);
+                System.out.println("Remote subs for " + broker.getEndpoint().hostname() + ": " + brokerSubs);
+                for (Subscription sub : brokerSubs) {
+                    if (subs.contains(sub)) {
+                        endpointMap.put(sub, broker.getEndpoint());
+                    }
+                }
+            }
+            System.out.println("Found: " + endpointMap.keySet() + ", waiting for: " + subs);
+            if (endpointMap.keySet().equals(subs)) {
+                break;
+            }
             Thread.sleep(1000);
         }
-        System.out.println("DONE!");
+        return new ArrayList<>(endpointMap.values());
     }
 
     private void closeSubscriptions(String address, Set<Subscription> subs) throws Exception {
-        brokerManager.closeSubscriptions(address, subs);
+        localBroker.closeSubscriptions(address, subs);
     }
 
-    private void createSubscription(String address, MigrateMessageHandler handler) throws Exception {
-        ProtonClient protonClient = ProtonClient.create(vertx);
-        protonClient.connect(local.hostName(), local.port(), connection -> {
+    private void createSubscriptions(String address, List<MigrateMessageHandler> handlers) throws Exception {
+        for (MigrateMessageHandler handler : handlers) {
+            createSubscription(address, handler);
+        }
+    }
 
+    private void createSubscription(String address, MigrateMessageHandler handler) {
+        ProtonClient protonClient = ProtonClient.create(vertx);
+        Endpoint localEndpoint = localHost.amqpEndpoint();
+        protonClient.connect(localEndpoint.hostname(), localEndpoint.port(), connection -> {
             if (connection.succeeded()) {
                 ProtonConnection conn = connection.result();
                 conn.setContainer(containerId);
@@ -177,6 +223,7 @@ public class TopicMigrator {
         });
     }
 
+
     private Set<Subscription> listSubscriptions(BrokerManager mgr, String address) throws Exception {
         JsonNode nodes = null;
         while (nodes == null) {
@@ -199,33 +246,8 @@ public class TopicMigrator {
         return subs;
     }
 
-    public static class MigrateMessageHandler {
-        private final AtomicReference<ProtonReceiver> protonReceiver = new AtomicReference<>();
-        private final AtomicReference<ProtonSender> protonSender = new AtomicReference<>();
-        private volatile boolean ready = false;
-
-        public ProtonMessageHandler messageHandler() {
-            return (sourceDelivery, message) -> protonSender.get().send(message, protonDelivery -> {
-                System.out.println("Forwarding message to subscriber");
-                sourceDelivery.disposition(protonDelivery.getRemoteState(), protonDelivery.remotelySettled());
-                protonReceiver.get().flow(protonSender.get().getCredit() - protonReceiver.get().getCredit());
-            });
-        }
-
-        public boolean isReady() {
-            return ready;
-        }
-
-        public void setReady(boolean ready) {
-            this.ready = ready;
-        }
-
-        public void setReceiver(ProtonReceiver protonReceiver) {
-            this.protonReceiver.set(protonReceiver);
-        }
-
-        public void setSender(ProtonSender protonSender) {
-            this.protonSender.set(protonSender);
-        }
+    @Override
+    public void hostsChanged(Set<Host> set) {
+        destinationBrokers = set;
     }
 }

@@ -16,6 +16,7 @@
 
 package enmasse.broker.prestop;
 
+import enmasse.discovery.Endpoint;
 import org.apache.activemq.artemis.api.core.client.ActiveMQClient;
 import org.apache.activemq.artemis.api.core.client.ClientMessage;
 import org.apache.activemq.artemis.api.core.client.ClientRequestor;
@@ -23,9 +24,7 @@ import org.apache.activemq.artemis.api.core.client.ClientSession;
 import org.apache.activemq.artemis.api.core.client.ClientSessionFactory;
 import org.apache.activemq.artemis.api.core.client.ServerLocator;
 import org.apache.activemq.artemis.api.core.management.ManagementHelper;
-import org.apache.activemq.artemis.api.core.management.Parameter;
 
-import java.util.List;
 import java.util.Set;
 
 /**
@@ -37,22 +36,27 @@ public class BrokerManager {
     private final ClientSessionFactory sessionFactory;
     private final ClientSession session;
 
-    public BrokerManager(Endpoint mgmtEndpoint) throws Exception {
-        this.locator = ActiveMQClient.createServerLocator(String.format("tcp://%s:%s", mgmtEndpoint.hostName(), mgmtEndpoint.port()));
-        this.sessionFactory = locator.createSessionFactory();
-        this.session = sessionFactory.createSession();
+    public BrokerManager(Endpoint mgmtEndpoint) {
+        try {
+            this.locator = ActiveMQClient.createServerLocator(String.format("tcp://%s:%s", mgmtEndpoint.hostname(), mgmtEndpoint.port()));
+            this.sessionFactory = locator.createSessionFactory();
+            this.session = sessionFactory.createSession();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
         this.endpoint = mgmtEndpoint;
     }
 
-    public int getQueueMessageCount(String queueName) throws Exception {
+    public long getQueueMessageCount(String queueName) throws Exception {
         ClientRequestor requestor = new ClientRequestor(session, "jms.queue.activemq.management");
         ClientMessage message = session.createMessage(false);
         ManagementHelper.putAttribute(message, "core.queue." + queueName, "messageCount");
         session.start();
         ClientMessage reply = requestor.request(message);
-        Integer count = (Integer)ManagementHelper.getResult(reply);
+        Object count = (Object) ManagementHelper.getResult(reply);
         session.stop();
-        return count;
+        System.out.println("Object: " + count.toString());
+        return (Long)count;
     }
 
     public Object[] listQueues() throws Exception {

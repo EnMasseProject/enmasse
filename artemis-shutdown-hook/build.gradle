@@ -8,10 +8,12 @@ apply plugin: 'java'
 
 repositories {
     mavenLocal()
-  mavenCentral()
+    mavenCentral()
+    maven { url "https://jitpack.io" }
 }
 
 dependencies {
+    compile 'com.github.EnMasseProject:common-lib:master-SNAPSHOT'
     compile "com.openshift:openshift-restclient-java:${openshiftRestclientVersion}"
     compile "io.vertx:vertx-proton:${vertxProtonVersion}"
     compile("org.apache.activemq:artemis-core-client:${artemisVersion}") {
