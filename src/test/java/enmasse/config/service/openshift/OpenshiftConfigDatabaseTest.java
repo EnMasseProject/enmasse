@@ -32,6 +32,10 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.*;
@@ -41,13 +45,15 @@ public class OpenshiftConfigDatabaseTest {
     private OpenshiftConfigDatabase database;
     private String key = "maas";
     private OpenshiftClient client;
+    private ScheduledExecutorService executor;
 
     @Before
     public void setup() {
         MockitoAnnotations.initMocks(this);
         client = mock(OpenshiftClient.class);
         IWatcher mockWatcher = mock(IWatcher.class);
-        database = new OpenshiftConfigDatabase(client);
+        executor = Executors.newSingleThreadScheduledExecutor();
+        database = new OpenshiftConfigDatabase(executor, client);
         when(client.watch(any(), any())).thenReturn(mockWatcher);
     }
 
@@ -69,12 +75,13 @@ public class OpenshiftConfigDatabaseTest {
     }
 
     @Test
-    public void testSubscribeAfterConnected() {
+    public void testSubscribeAfterConnected() throws InterruptedException {
 
         Map<String, String> testValue = AddressConfigCodec.encodeLabels("foo", true, false);
         TestSubscriber sub = new TestSubscriber();
 
         assertTrue(database.subscribe(key, sub));
+        waitForExecutor();
         IOpenShiftWatchListener listener = getListener();
 
         listener.connected(Collections.singletonList(mockMap(testValue)));
@@ -84,12 +91,19 @@ public class OpenshiftConfigDatabaseTest {
         assertConfig(sub.lastValue.get(0), testValue);
     }
 
+    private void waitForExecutor() throws InterruptedException {
+        CountDownLatch latch = new CountDownLatch(1);
+        executor.execute(() -> latch.countDown());
+        latch.await(10, TimeUnit.SECONDS);
+    }
+
     @Test
-    public void testUpdates() {
+    public void testUpdates() throws InterruptedException {
         Map<String, String> test1 = AddressConfigCodec.encodeLabels("foo", true, false);
         TestSubscriber sub = new TestSubscriber();
 
         assertTrue(database.subscribe(key, sub));
+        waitForExecutor();
 
         IOpenShiftWatchListener listener = getListener();
         listener.connected(Collections.singletonList(mockMap(test1)));
@@ -100,7 +114,6 @@ public class OpenshiftConfigDatabaseTest {
 
         Map<String, String> test2 = AddressConfigCodec.encodeLabels("bar", true, false);
         listener.connected(Collections.singletonList(mockMap(test2)));
-
 
         assertNotNull(sub.lastValue);
         assertFalse(sub.lastValue.isEmpty());

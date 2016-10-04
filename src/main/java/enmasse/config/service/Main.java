@@ -26,6 +26,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Map;
+import java.util.concurrent.Executors;
 
 /**
  * Main entrypoint for configuration service with arg parsing.
@@ -45,7 +46,7 @@ public class Main {
                     .usingToken(getAuthenticationToken())
                     .build();
 
-            OpenshiftConfigDatabase database = new OpenshiftConfigDatabase(new OpenshiftClient(client, openshiftNamespace));
+            OpenshiftConfigDatabase database = new OpenshiftConfigDatabase(Executors.newSingleThreadScheduledExecutor(), new OpenshiftClient(client, openshiftNamespace));
             AMQPServer server = new AMQPServer(listenAddress, listenPort, database);
 
             server.run();

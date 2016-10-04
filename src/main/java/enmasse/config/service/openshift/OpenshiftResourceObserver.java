@@ -26,6 +26,8 @@ import org.slf4j.LoggerFactory;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -38,15 +40,38 @@ public class OpenshiftResourceObserver implements IOpenShiftWatchListener, AutoC
     private final OpenshiftResourceListener listener;
     private final Set<IResource> resourceSet = new LinkedHashSet<>();
     private IWatcher watcher = null;
+    private final ScheduledExecutorService executor;
+    private volatile boolean connected = false;
+    private volatile boolean running = false;
 
-    public OpenshiftResourceObserver(OpenshiftClient client, LabelSet labelSet, OpenshiftResourceListener listener) {
+    public OpenshiftResourceObserver(ScheduledExecutorService executor, OpenshiftClient client, LabelSet labelSet, OpenshiftResourceListener listener) {
+        this.executor = executor;
         this.client = client;
         this.labelSet = labelSet;
         this.listener = listener;
     }
 
     public void start() {
-        this.watcher = client.watch(this, listener.getKinds());
+        running = true;
+        executor.scheduleAtFixedRate(() -> {
+            if (!connected && running) {
+                log.info("Starting watcher");
+                startWatcher();
+            }
+        }, 0, 5, TimeUnit.SECONDS);
+    }
+
+    private void startWatcher() {
+        try {
+            if (this.watcher != null) {
+                this.watcher.stop();
+            }
+            this.watcher = client.watch(this, listener.getKinds());
+            connected = true;
+        } catch (Exception e) {
+            connected = false;
+            log.error("Error starting watcher on " + client.getBaseURL(), e);
+        }
     }
 
     @Override
@@ -54,26 +79,16 @@ public class OpenshiftResourceObserver implements IOpenShiftWatchListener, AutoC
         log.info("Connected, got " + resources.size() + " resources");
         resourceSet.clear();
         resourceSet.addAll(resources.stream()
-                .filter(res -> LabelSet.fromMap(res.getLabels()).contains(labelSet))
-                .map(res -> { log.info("Added resource '" + res.getName() + "'"); return res; })
-                .collect(Collectors.toSet()));
-
+            .filter(res -> LabelSet.fromMap(res.getLabels()).contains(labelSet))
+            .map(res -> { log.info("Added resource '" + res.getName() + "'"); return res; })
+            .collect(Collectors.toSet()));
         listener.resourcesUpdated(resourceSet);
     }
 
     @Override
     public void disconnected() {
-        log.debug("Disconnected, restarting watch");
-        reconnect();
-    }
-
-    private void reconnect() {
-        watcher.stop();
-        try {
-            this.watcher = client.watch(this, listener.getKinds());
-        } catch (Exception e) {
-            log.error("Error re-watching on disconnect from " + client.getBaseURL(), e);
-        }
+        log.debug("Disconnected");
+        connected = false;
     }
 
     @Override
@@ -96,6 +111,7 @@ public class OpenshiftResourceObserver implements IOpenShiftWatchListener, AutoC
 
     @Override
     public void close() throws Exception {
+        running = false;
         if (this.watcher != null) {
             watcher.stop();
         }
@@ -104,6 +120,6 @@ public class OpenshiftResourceObserver implements IOpenShiftWatchListener, AutoC
     @Override
     public void error(Throwable err) {
         log.debug("Got error from watcher: " +  err.getMessage());
-        reconnect();
+        connected = false;
     }
 }
