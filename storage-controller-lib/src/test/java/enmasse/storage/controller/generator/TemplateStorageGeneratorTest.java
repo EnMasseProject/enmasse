@@ -22,6 +22,7 @@ import enmasse.storage.controller.model.AddressType;
 import enmasse.storage.controller.model.Destination;
 import enmasse.storage.controller.model.Flavor;
 import enmasse.storage.controller.model.LabelKeys;
+import enmasse.storage.controller.model.TemplateParameter;
 import enmasse.storage.controller.openshift.OpenshiftClient;
 import enmasse.storage.controller.openshift.StorageCluster;
 import org.junit.Before;
@@ -66,7 +67,7 @@ public class TemplateStorageGeneratorTest {
 
     @Test
     public void testDirect() {
-        Destination dest = new Destination("foo", false, false, "");
+        Destination dest = new Destination("foo.bar", false, false, "");
         Map<String, String> labels = new LinkedHashMap<>();
         ITemplate template = mock(ITemplate.class);
         when(template.getName()).thenReturn("direct");
@@ -81,12 +82,13 @@ public class TemplateStorageGeneratorTest {
         verify(template).addObjectLabel(LabelKeys.ADDRESS, dest.address());
         verify(template).addObjectLabel(LabelKeys.FLAVOR, dest.flavor());
         verify(template).addObjectLabel(LabelKeys.ADDRESS_TYPE, AddressType.QUEUE.value());
-
+        verify(template).updateParameter(TemplateParameter.ADDRESS, dest.address());
+        verify(template).updateParameter(TemplateParameter.NAME, "foo_bar");
     }
 
     @Test
     public void testStoreAndForward() {
-        Destination dest = new Destination("foo", true, false, "vanilla");
+        Destination dest = new Destination("foo.bar", true, false, "vanilla");
         Map<String, String> labels = new LinkedHashMap<>();
         labels.put(LabelKeys.ADDRESS_TYPE, AddressType.QUEUE.value());
         ITemplate template = mock(ITemplate.class);
@@ -102,5 +104,7 @@ public class TemplateStorageGeneratorTest {
         verify(template).addObjectLabel(LabelKeys.ADDRESS, dest.address());
         verify(template).addObjectLabel(LabelKeys.FLAVOR, dest.flavor());
         verify(template).addObjectLabel(LabelKeys.ADDRESS_TYPE, AddressType.QUEUE.value());
+        verify(template).updateParameter(TemplateParameter.ADDRESS, dest.address());
+        verify(template).updateParameter(TemplateParameter.NAME, "foo_bar");
     }
 }

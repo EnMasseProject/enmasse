@@ -20,6 +20,7 @@ package enmasse.storage.controller.model;
  * Template parameters that are dynamically set by the storage controller.
  */
 public interface TemplateParameter {
+    String NAME = "NAME";
     String ADDRESS = "ADDRESS";
     String MULTICAST = "MULTICAST";
 }

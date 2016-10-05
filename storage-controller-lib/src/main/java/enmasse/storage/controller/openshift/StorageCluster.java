@@ -53,4 +53,8 @@ public class StorageCluster {
     public Destination getDestination() {
         return destination;
     }
+
+    public List<IResource> getResources() {
+        return resources;
+    }
 }

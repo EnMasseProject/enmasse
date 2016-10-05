@@ -69,6 +69,7 @@ public class TemplateStorageGenerator implements StorageGenerator {
         }
         AddressType.validate(template.getLabels().get(LabelKeys.ADDRESS_TYPE));
 
+        template.updateParameter(TemplateParameter.NAME, addressToName(destination.address()));
         template.updateParameter(TemplateParameter.ADDRESS, destination.address());
         for (Map.Entry<String, String> entry : flavor.templateParameters().entrySet()) {
             template.updateParameter(entry.getKey(), entry.getValue());
@@ -82,11 +83,16 @@ public class TemplateStorageGenerator implements StorageGenerator {
     private ITemplate prepareDirectTemplate(Destination destination) {
         Flavor flavor = new Flavor.Builder().templateName("direct").build();
         ITemplate template = osClient.getTemplate(flavor.templateName());
+        template.updateParameter(TemplateParameter.NAME, addressToName(destination.address()));
         template.updateParameter(TemplateParameter.ADDRESS, destination.address());
         template.updateParameter(TemplateParameter.MULTICAST, String.valueOf(destination.multicast()));
         template.addObjectLabel(LabelKeys.ADDRESS, destination.address());
         template.addObjectLabel(LabelKeys.FLAVOR, destination.flavor());
         template.addObjectLabel(LabelKeys.ADDRESS_TYPE, destination.multicast() ? AddressType.TOPIC.value() : AddressType.QUEUE.value());
         return template;
+    }
+
+    private String addressToName(String address) {
+        return address.replaceAll("\\.", "_");
     }
 }
