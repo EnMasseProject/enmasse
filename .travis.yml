@@ -4,6 +4,9 @@ jdk:
 - oraclejdk8
 services:
 - docker
+branches:
+  only:
+    - master
 script:
 - gradle buildArtemis 
 - gradle build
