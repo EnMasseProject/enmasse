@@ -1,5 +1,10 @@
 sudo: required
 language: java
+notifications:
+  email: false
+branches:
+  only:
+    - master
 jdk:
 - oraclejdk8
 services:
