@@ -10,6 +10,7 @@ repositories {
     mavenLocal()
     mavenCentral()
     maven { url "https://jitpack.io" }
+    maven { url "https://repository.apache.org/content/repositories/snapshots/" }
 }
 
 dependencies {
