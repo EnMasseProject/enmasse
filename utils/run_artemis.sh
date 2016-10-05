@@ -14,7 +14,6 @@ if [ ! -d "$INSTANCE" ]; then
     elif [ -n "$TOPIC_NAME" ]; then
         cat $CONFIG_TEMPLATES/broker_topic.xml >> /tmp/broker.xml
     fi
-    cat $CONFIG_TEMPLATES/broker_footer.xml >> /tmp/broker.xml
 
     envsubst < /tmp/broker.xml > $INSTANCE/etc/broker.xml
 fi
