@@ -6,9 +6,9 @@ local forwarder = import "forwarder.jsonnet";
   template(multicast, persistence, secure)::
     local addrtype = (if multicast then "topic" else "queue");
     local addressEnv = (if multicast then { name: "TOPIC_NAME", value: "${ADDRESS}" } else { name: "QUEUE_NAME", value: "${ADDRESS}" });
-    local volumeName = "vol-${ADDRESS}";
+    local volumeName = "vol-${NAME}";
     local templateName = "%s%s-%s" % [if secure then "secure-" else "", addrtype, (if persistence then "persisted" else "inmemory")];
-    local claimName = "pvc-${ADDRESS}";
+    local claimName = "pvc-${NAME}";
     {
       "apiVersion": "v1",
       "kind": "Template",
@@ -23,7 +23,7 @@ local forwarder = import "forwarder.jsonnet";
         "apiVersion": "v1",
         "kind": "DeploymentConfig",
         "metadata": {
-          "name": addrtype + "-${ADDRESS}",
+          "name": "${NAME}",
           "labels": {
             "type": "address-config",
             "address": "${ADDRESS}",
@@ -140,6 +140,11 @@ local forwarder = import "forwarder.jsonnet";
           "name": "STORAGE_CAPACITY",
           "description": "Storage capacity required for volume claims",
           "value": "2Gi"
+        },
+        {
+          "name": "NAME",
+          "description": "A valid name for the instance",
+          "required": true
         },
         {
           "name": "ADDRESS",

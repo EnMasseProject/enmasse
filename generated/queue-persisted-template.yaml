@@ -9,7 +9,7 @@ objects:
 - apiVersion: v1
   kind: PersistentVolumeClaim
   metadata:
-    name: pvc-${ADDRESS}
+    name: pvc-${NAME}
   spec:
     accessModes:
     - ReadWriteMany
@@ -24,7 +24,7 @@ objects:
       multicast: 'false'
       store_and_forward: 'true'
       type: address-config
-    name: queue-${ADDRESS}
+    name: "${NAME}"
   spec:
     replicas: 1
     selector:
@@ -58,7 +58,7 @@ objects:
             name: core
           volumeMounts:
           - mountPath: "/var/run/artemis"
-            name: vol-${ADDRESS}
+            name: vol-${NAME}
         - env:
           - name: LINK_CAPACITY
             value: "${ROUTER_LINK_CAPACITY}"
@@ -74,9 +74,9 @@ objects:
             name: amqp
             protocol: TCP
         volumes:
-        - name: vol-${ADDRESS}
+        - name: vol-${NAME}
           persistentVolumeClaim:
-            claimName: pvc-${ADDRESS}
+            claimName: pvc-${NAME}
     triggers:
     - type: ConfigChange
     - imageChangeParams:
@@ -102,6 +102,9 @@ parameters:
 - description: Storage capacity required for volume claims
   name: STORAGE_CAPACITY
   value: 2Gi
+- description: A valid name for the instance
+  name: NAME
+  required: true
 - description: The address to use for the queue
   name: ADDRESS
   required: true

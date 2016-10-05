@@ -9,7 +9,7 @@
       "apiVersion": "v1",
       "kind": "ConfigMap",
       "metadata": {
-        "name": "config-${ADDRESS}",
+        "name": "${NAME}",
         "labels": {
           "type": "address-config",
           "address": "${ADDRESS}",
@@ -20,6 +20,11 @@
     }
   ],
   "parameters": [
+    {
+      "name": "NAME",
+      "description": "A valid name for the instance",
+      "required": true
+    },
     {
       "name": "ADDRESS",
       "description": "The address to use for the address",

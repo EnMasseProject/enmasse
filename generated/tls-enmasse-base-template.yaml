@@ -19,7 +19,7 @@ objects:
         multicast: 'false'
         store_and_forward: 'true'
         type: address-config
-      name: queue-${ADDRESS}
+      name: "${NAME}"
     spec:
       replicas: 1
       selector:
@@ -53,7 +53,7 @@ objects:
               name: core
             volumeMounts:
             - mountPath: "/var/run/artemis"
-              name: vol-${ADDRESS}
+              name: vol-${NAME}
           - env:
             - name: LINK_CAPACITY
               value: "${ROUTER_LINK_CAPACITY}"
@@ -77,7 +77,7 @@ objects:
               readOnly: true
           volumes:
           - emptyDir: {}
-            name: vol-${ADDRESS}
+            name: vol-${NAME}
           - name: ssl-certs
             secret:
               secretName: qdrouterd-certs
@@ -106,6 +106,9 @@ objects:
   - description: Storage capacity required for volume claims
     name: STORAGE_CAPACITY
     value: 2Gi
+  - description: A valid name for the instance
+    name: NAME
+    required: true
   - description: The address to use for the queue
     name: ADDRESS
     required: true
@@ -119,7 +122,7 @@ objects:
   - apiVersion: v1
     kind: PersistentVolumeClaim
     metadata:
-      name: pvc-${ADDRESS}
+      name: pvc-${NAME}
     spec:
       accessModes:
       - ReadWriteMany
@@ -134,7 +137,7 @@ objects:
         multicast: 'false'
         store_and_forward: 'true'
         type: address-config
-      name: queue-${ADDRESS}
+      name: "${NAME}"
     spec:
       replicas: 1
       selector:
@@ -168,7 +171,7 @@ objects:
               name: core
             volumeMounts:
             - mountPath: "/var/run/artemis"
-              name: vol-${ADDRESS}
+              name: vol-${NAME}
           - env:
             - name: LINK_CAPACITY
               value: "${ROUTER_LINK_CAPACITY}"
@@ -191,9 +194,9 @@ objects:
               name: ssl-certs
               readOnly: true
           volumes:
-          - name: vol-${ADDRESS}
+          - name: vol-${NAME}
             persistentVolumeClaim:
-              claimName: pvc-${ADDRESS}
+              claimName: pvc-${NAME}
           - name: ssl-certs
             secret:
               secretName: qdrouterd-certs
@@ -222,6 +225,9 @@ objects:
   - description: Storage capacity required for volume claims
     name: STORAGE_CAPACITY
     value: 2Gi
+  - description: A valid name for the instance
+    name: NAME
+    required: true
   - description: The address to use for the queue
     name: ADDRESS
     required: true
@@ -240,7 +246,7 @@ objects:
         multicast: 'true'
         store_and_forward: 'true'
         type: address-config
-      name: topic-${ADDRESS}
+      name: "${NAME}"
     spec:
       replicas: 1
       selector:
@@ -274,7 +280,7 @@ objects:
               name: core
             volumeMounts:
             - mountPath: "/var/run/artemis"
-              name: vol-${ADDRESS}
+              name: vol-${NAME}
           - env:
             - name: LINK_CAPACITY
               value: "${ROUTER_LINK_CAPACITY}"
@@ -310,7 +316,7 @@ objects:
               name: health
           volumes:
           - emptyDir: {}
-            name: vol-${ADDRESS}
+            name: vol-${NAME}
           - name: ssl-certs
             secret:
               secretName: qdrouterd-certs
@@ -347,6 +353,9 @@ objects:
   - description: Storage capacity required for volume claims
     name: STORAGE_CAPACITY
     value: 2Gi
+  - description: A valid name for the instance
+    name: NAME
+    required: true
   - description: The address to use for the topic
     name: ADDRESS
     required: true
@@ -360,7 +369,7 @@ objects:
   - apiVersion: v1
     kind: PersistentVolumeClaim
     metadata:
-      name: pvc-${ADDRESS}
+      name: pvc-${NAME}
     spec:
       accessModes:
       - ReadWriteMany
@@ -375,7 +384,7 @@ objects:
         multicast: 'true'
         store_and_forward: 'true'
         type: address-config
-      name: topic-${ADDRESS}
+      name: "${NAME}"
     spec:
       replicas: 1
       selector:
@@ -409,7 +418,7 @@ objects:
               name: core
             volumeMounts:
             - mountPath: "/var/run/artemis"
-              name: vol-${ADDRESS}
+              name: vol-${NAME}
           - env:
             - name: LINK_CAPACITY
               value: "${ROUTER_LINK_CAPACITY}"
@@ -444,9 +453,9 @@ objects:
             - containerPort: 8080
               name: health
           volumes:
-          - name: vol-${ADDRESS}
+          - name: vol-${NAME}
             persistentVolumeClaim:
-              claimName: pvc-${ADDRESS}
+              claimName: pvc-${NAME}
           - name: ssl-certs
             secret:
               secretName: qdrouterd-certs
@@ -483,6 +492,9 @@ objects:
   - description: Storage capacity required for volume claims
     name: STORAGE_CAPACITY
     value: 2Gi
+  - description: A valid name for the instance
+    name: NAME
+    required: true
   - description: The address to use for the topic
     name: ADDRESS
     required: true
@@ -499,8 +511,11 @@ objects:
         multicast: "${MULTICAST}"
         store_and_forward: 'false'
         type: address-config
-      name: config-${ADDRESS}
+      name: "${NAME}"
   parameters:
+  - description: A valid name for the instance
+    name: NAME
+    required: true
   - description: The address to use for the address
     name: ADDRESS
     required: true
