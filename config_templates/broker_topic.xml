@@ -1,6 +1,6 @@
       <queues>
         <queue name="____dummy____">
-            <address>$TOPIC_NAME</address>
+            <address>jms.topic.$TOPIC_NAME</address>
             <filter string="__AMQX=-1" />
         </queue>
       </queues>
