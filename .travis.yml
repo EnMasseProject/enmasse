@@ -1,5 +1,10 @@
 sudo: required
 language: node_js
+notifications:
+  email: false
+branches:
+  only:
+    - master
 node_js:
 - '0.12'
 services:
