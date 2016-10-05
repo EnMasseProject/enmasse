@@ -60,27 +60,19 @@ public class BrokerManager {
         return (Long)count;
     }
 
-    private long getSubscriptionMessageCount(String address, Subscription sub) throws Exception {
-        ClientRequestor requestor = new ClientRequestor(session, "jms.queue.activemq.management");
-        ClientMessage message = session.createMessage(false);
-        ManagementHelper.putOperationInvocation(message, address, "countMessagesForSubscription", sub.getClientId(), sub.getName(), "");
-        session.start();
-        ClientMessage reply = requestor.request(message);
-        Object count = (Object) ManagementHelper.getResult(reply);
-        session.stop();
-        System.out.println("Object: " + count.toString());
-        return (Long)count;
-    }
-
-    public Object[] listQueues() throws Exception {
+    public String[] listQueues() throws Exception {
         ClientRequestor requestor = new ClientRequestor(session, "jms.queue.activemq.management");
         ClientMessage message = session.createMessage(false);
         ManagementHelper.putOperationInvocation(message, "core.server", "getQueueNames");
         session.start();
         ClientMessage reply = requestor.request(message);
-        Object[] lists = (Object[]) ManagementHelper.getResult(reply);
+        Object[] response = (Object[]) ManagementHelper.getResult(reply);
+        String[] list = new String[response.length];
+        for (int i = 0; i < list.length; i++) {
+            list[i] = response[i].toString();
+        }
         session.stop();
-        return lists;
+        return list;
     }
 
     public Object[] listTopics() throws Exception {
@@ -129,10 +121,10 @@ public class BrokerManager {
         return true;
     }
 
-    public String listAllSubscriptions(String address) throws Exception {
+    public String getQueueAddress(String queueName) throws Exception {
         ClientRequestor requestor = new ClientRequestor(session, "jms.queue.activemq.management");
         ClientMessage message = session.createMessage(false);
-        ManagementHelper.putOperationInvocation(message, address, "listAllSubscriptionsAsJSON");
+        ManagementHelper.putOperationInvocation(message, "core.queue." + queueName, "getAddress");
         session.start();
         ClientMessage reply = requestor.request(message);
         String retVal = (String)ManagementHelper.getResult(reply);
@@ -169,26 +161,24 @@ public class BrokerManager {
         return retVal;
     }
 
-    public void closeSubscriptions(String address, Set<Subscription> subscriptionList) throws Exception {
-        for (Subscription sub : subscriptionList) {
-            if (sub.isDurable()) {
-                System.out.println("CLOSING SUB " + sub.getName());
-                ClientRequestor requestor = new ClientRequestor(session, "jms.queue.activemq.management");
-                ClientMessage message = session.createMessage(false);
-                ManagementHelper.putOperationInvocation(message, address, "dropDurableSubscription", sub.getClientId(), sub.getName());
-                session.start();
-                requestor.request(message);
-                session.stop();
-            }
+    public void destroyQueues(Set<String> queueList) throws Exception {
+        for (String queue : queueList) {
+            ClientRequestor requestor = new ClientRequestor(session, "jms.queue.activemq.management");
+            ClientMessage message = session.createMessage(false);
+            ManagementHelper.putOperationInvocation(message, "core.server", "destroyQueue", queue, true);
+            session.start();
+            requestor.request(message);
+            session.stop();
         }
     }
 
 
-    public void waitUntilEmpty(String address) throws InterruptedException {
+    public void waitUntilEmpty(String queue) throws InterruptedException {
         while (true) {
             try {
-                long count = getQueueMessageCount(address);
-                System.out.println("Found " + count + " messages in queue " + address);
+                System.out.println("Retrieving count for " + queue);
+                long count = getQueueMessageCount(queue);
+                System.out.println("Found " + count + " messages in queue " + queue);
                 if (count == 0) {
                     break;
                 }
@@ -199,21 +189,4 @@ public class BrokerManager {
             Thread.sleep(2000);
         }
     }
-
-    public void waitUntilEmpty(String address, Subscription sub) throws InterruptedException {
-            while (true) {
-                try {
-                    long count = getSubscriptionMessageCount(address, sub);
-                    System.out.println("Found " + count + " messages for subscription " + sub);
-                    if (count == 0) {
-                        break;
-                    }
-                } catch (Exception e) {
-                    // Retry
-                    System.out.println("Queue check failed: " + e.getMessage());
-                }
-                Thread.sleep(2000);
-            }
-    }
-
 }

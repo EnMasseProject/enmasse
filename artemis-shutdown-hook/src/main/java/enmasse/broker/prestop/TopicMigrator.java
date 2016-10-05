@@ -16,7 +16,6 @@
 
 package enmasse.broker.prestop;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import enmasse.discovery.DiscoveryListener;
 import enmasse.discovery.Endpoint;
@@ -36,7 +35,6 @@ import org.apache.qpid.proton.amqp.messaging.TerminusDurability;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -60,10 +58,10 @@ public class TopicMigrator implements DiscoveryListener {
 
         // Step 1: Retrieve subscription identities
         System.out.println("Listing subscriptions");
-        Set<Subscription> subs = listSubscriptions(localBroker, address);
+        Set<String> queues = listQueuesForAddress(localBroker, address);
 
-        List<MigrateMessageHandler> migrateHandlers = subs.stream()
-                .map(s -> new MigrateMessageHandler("scaledown-" + s.getName()))
+        List<MigrateMessageHandler> migrateHandlers = queues.stream()
+                .map(s -> new MigrateMessageHandler(s))
                 .collect(Collectors.toList());
 
         // Step 2: Create local subscription
@@ -72,24 +70,24 @@ public class TopicMigrator implements DiscoveryListener {
 
         // Step 3: Close all subscriptions except our own with a amqp redirect
         System.out.println("Closing other subscriptions");
-        closeSubscriptions(address, subs);
+        localBroker.destroyQueues(queues);
 
         // Step 4: Wait until subscription identities fetched in Step 1 appears on other brokers
         System.out.println("Waiting for subscriptions");
-        List<Endpoint> endpoints = watchForSubscriptions(address, subs);
+        List<Endpoint> endpoints = watchForQueues(address, queues);
 
         // Step 5: Send messages on broker where subscription identity has appeared
         System.out.println("Migrating messages");
         migrateMessages(address, endpoints, migrateHandlers);
 
-        waitUntilEmpty(address, migrateHandlers.stream().map(MigrateMessageHandler::getSubscription).collect(Collectors.toSet()));
+        waitUntilEmpty(migrateHandlers.stream().map(MigrateMessageHandler::getQueueName).collect(Collectors.toSet()));
         vertx.close();
         localBroker.shutdownBroker();
     }
 
-    private void waitUntilEmpty(String address, Set<Subscription> subscription) throws InterruptedException {
-        for (Subscription sub : subscription) {
-            localBroker.waitUntilEmpty(address, sub);
+    private void waitUntilEmpty(Set<String> queues) throws InterruptedException {
+        for (String queue : queues) {
+            localBroker.waitUntilEmpty(queue);
         }
     }
 
@@ -108,7 +106,7 @@ public class TopicMigrator implements DiscoveryListener {
         protonClient.connect(toEndpoint.hostname(), toEndpoint.port(), toConnection -> {
             if (toConnection.succeeded()) {
                 ProtonConnection toConn = toConnection.result();
-                toConn.setContainer(handler.getSubscription().getClientId());
+                toConn.setContainer(handler.getId());
                 toConn.closeHandler(result -> {
                     System.out.println("Migrator connection closed");
                 });
@@ -116,7 +114,7 @@ public class TopicMigrator implements DiscoveryListener {
                     Target target = new Target();
                     target.setAddress(address);
                     target.setCapabilities(Symbol.getSymbol("topic"));
-                    ProtonSender sender = toConn.createSender(address, new ProtonLinkOptions().setLinkName(handler.getSubscription().getName()));
+                    ProtonSender sender = toConn.createSender(address, new ProtonLinkOptions().setLinkName(handler.getId()));
                     sender.setTarget(target);
                     sender.closeHandler(res -> {
                         System.out.println("Sender connection closed");
@@ -134,11 +132,8 @@ public class TopicMigrator implements DiscoveryListener {
         });
     }
 
-    private List<Endpoint> watchForSubscriptions(String address, Set<Subscription> subs) throws Exception {
-
-
-
-        Map<Subscription, Endpoint> endpointMap = new HashMap<>();
+    private List<Endpoint> watchForQueues(String address, Set<String> queues) throws Exception {
+        Map<String, Endpoint> endpointMap = new HashMap<>();
         System.out.println("Waiting for subscriptions");
         while (true) {
             List<BrokerManager> brokers = destinationBrokers.stream()
@@ -147,25 +142,21 @@ public class TopicMigrator implements DiscoveryListener {
                 .collect(Collectors.toList());
 
             for (BrokerManager broker : brokers) {
-                Set<Subscription> brokerSubs = listSubscriptions(broker, address);
-                System.out.println("Remote subs for " + broker.getEndpoint().hostname() + ": " + brokerSubs);
-                for (Subscription sub : brokerSubs) {
-                    if (subs.contains(sub)) {
-                        endpointMap.put(sub, broker.getEndpoint());
+                Set<String> brokerQueues = listQueuesForAddress(broker, address);
+                System.out.println("Remote queues for " + broker.getEndpoint().hostname() + ": " + brokerQueues);
+                for (String queue : brokerQueues) {
+                    if (queues.contains(queue)) {
+                        endpointMap.put(queue, broker.getEndpoint());
                     }
                 }
             }
-            System.out.println("Found: " + endpointMap.keySet() + ", waiting for: " + subs);
-            if (endpointMap.keySet().equals(subs)) {
+            System.out.println("Found: " + endpointMap.keySet() + ", waiting for: " + queues);
+            if (endpointMap.keySet().equals(queues)) {
                 break;
             }
             Thread.sleep(1000);
         }
         return new ArrayList<>(endpointMap.values());
-    }
-
-    private void closeSubscriptions(String address, Set<Subscription> subs) throws Exception {
-        localBroker.closeSubscriptions(address, subs);
     }
 
     private void createSubscriptions(String address, List<MigrateMessageHandler> handlers) throws Exception {
@@ -180,7 +171,7 @@ public class TopicMigrator implements DiscoveryListener {
         protonClient.connect(localEndpoint.hostname(), localEndpoint.port(), connection -> {
             if (connection.succeeded()) {
                 ProtonConnection conn = connection.result();
-                conn.setContainer(handler.getSubscription().getClientId());
+                conn.setContainer(handler.getId());
                 conn.closeHandler(result -> {
                     System.out.println("Migrator sub connection closed");
                 });
@@ -189,7 +180,7 @@ public class TopicMigrator implements DiscoveryListener {
                     source.setAddress(address);
                     source.setCapabilities(Symbol.getSymbol("topic"));
                     source.setDurable(TerminusDurability.UNSETTLED_STATE);
-                    ProtonReceiver localReceiver = conn.createReceiver(address, new ProtonLinkOptions().setLinkName(handler.getSubscription().getName()));
+                    ProtonReceiver localReceiver = conn.createReceiver(address, new ProtonLinkOptions().setLinkName(handler.getId()));
                     localReceiver.setSource(source);
                     localReceiver.setPrefetch(0);
                     localReceiver.setAutoAccept(false);
@@ -232,27 +223,19 @@ public class TopicMigrator implements DiscoveryListener {
     }
 
 
-    private Set<Subscription> listSubscriptions(BrokerManager mgr, String address) throws Exception {
-        JsonNode nodes = null;
-        while (nodes == null) {
+    private Set<String> listQueuesForAddress(BrokerManager mgr, String address) throws Exception {
+        Set<String> queues = new LinkedHashSet<>();
+        for (String queue : mgr.listQueues()) {
             try {
-                nodes = mapper.readTree(mgr.listAllSubscriptions(address));
+                String queueAddress = mgr.getQueueAddress(queue);
+                if (address.equals(queueAddress)) {
+                    queues.add(queue);
+                }
             } catch (Exception e) {
-                System.out.println("Error listing: " + e.getMessage());
-                Thread.sleep(1000);
+                System.out.println("Error getting queue address, ignoring: " + e.getMessage());
             }
         }
-
-        Set<Subscription> subs = new LinkedHashSet<>();
-        Iterator<JsonNode> it = nodes.iterator();
-        while (it.hasNext()) {
-            JsonNode entry = it.next();
-            String clientId = entry.get("clientID").asText();
-            String name = entry.get("name").asText();
-            boolean durable = entry.get("durable").asBoolean();
-            subs.add(new Subscription(clientId, name, durable));
-        }
-        return subs;
+        return queues;
     }
 
     @Override

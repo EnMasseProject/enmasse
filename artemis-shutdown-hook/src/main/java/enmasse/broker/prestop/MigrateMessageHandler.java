@@ -29,14 +29,20 @@ public class MigrateMessageHandler {
     private final AtomicReference<ProtonReceiver> protonReceiver = new AtomicReference<>();
     private final AtomicReference<ProtonSender> protonSender = new AtomicReference<>();
     private volatile boolean ready = false;
-    private final Subscription me;
+    private final String queueName;
+    private final String id;
 
-    public MigrateMessageHandler(String id) {
-        this.me = new Subscription(id, id, true);
+    public MigrateMessageHandler(String queueName) {
+        this.queueName = queueName;
+        this.id = "migrator-" + queueName;
     }
 
-    public Subscription getSubscription() {
-        return me;
+    public String getId() {
+        return id;
+    }
+
+    public String getQueueName() {
+        return id + "." + id;
     }
 
     public ProtonMessageHandler messageHandler() {

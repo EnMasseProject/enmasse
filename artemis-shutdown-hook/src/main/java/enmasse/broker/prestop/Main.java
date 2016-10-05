@@ -76,7 +76,7 @@ public class Main {
             TopicMigrator migrator = new TopicMigrator(localHost);
             discoveryClient.addListener(migrator);
             discoveryClient.start();
-            migrator.migrate("jms.topic." + address);
+            migrator.migrate(address);
         } else {
             throw new IllegalArgumentException("Unable to find QUEUE_NAME or TOPIC_NAME environment");
         }
