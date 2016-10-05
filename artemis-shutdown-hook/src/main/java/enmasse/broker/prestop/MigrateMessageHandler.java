@@ -16,6 +16,7 @@
 
 package enmasse.broker.prestop;
 
+import enmasse.discovery.Endpoint;
 import io.vertx.proton.ProtonMessageHandler;
 import io.vertx.proton.ProtonReceiver;
 import io.vertx.proton.ProtonSender;
@@ -29,12 +30,12 @@ public class MigrateMessageHandler {
     private final AtomicReference<ProtonReceiver> protonReceiver = new AtomicReference<>();
     private final AtomicReference<ProtonSender> protonSender = new AtomicReference<>();
     private volatile boolean ready = false;
-    private final String queueName;
+    private final Endpoint toEndpoint;
     private final String id;
 
-    public MigrateMessageHandler(String queueName) {
-        this.queueName = queueName;
+    public MigrateMessageHandler(String queueName, Endpoint toEndpoint) {
         this.id = "migrator-" + queueName;
+        this.toEndpoint = toEndpoint;
     }
 
     public String getId() {
@@ -48,6 +49,7 @@ public class MigrateMessageHandler {
     public ProtonMessageHandler messageHandler() {
         return (sourceDelivery, message) -> protonSender.get().send(message, protonDelivery -> {
             System.out.println("Forwarding message to subscriber");
+            message.setPriority(Short.MAX_VALUE);
             sourceDelivery.disposition(protonDelivery.getRemoteState(), protonDelivery.remotelySettled());
             protonReceiver.get().flow(protonSender.get().getCredit() - protonReceiver.get().getCredit());
         });
@@ -67,5 +69,9 @@ public class MigrateMessageHandler {
 
     public void setSender(ProtonSender protonSender) {
         this.protonSender.set(protonSender);
+    }
+
+    public Endpoint toEndpoint() {
+        return toEndpoint;
     }
 }

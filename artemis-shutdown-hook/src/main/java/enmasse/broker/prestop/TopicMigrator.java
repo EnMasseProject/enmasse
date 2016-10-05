@@ -32,9 +32,9 @@ import org.apache.qpid.proton.amqp.messaging.Source;
 import org.apache.qpid.proton.amqp.messaging.Target;
 import org.apache.qpid.proton.amqp.messaging.TerminusDurability;
 
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -60,29 +60,67 @@ public class TopicMigrator implements DiscoveryListener {
         System.out.println("Listing subscriptions");
         Set<String> queues = listQueuesForAddress(localBroker, address);
 
-        List<MigrateMessageHandler> migrateHandlers = queues.stream()
-                .map(s -> new MigrateMessageHandler(s))
-                .collect(Collectors.toList());
+        // Step 2: Create and pause queues on other brokers
+        Map<String, Host> queueMap = createQueues(address, queues);
 
-        // Step 2: Create local subscription
+        // Step 3: Create local subscriptions
         System.out.println("Creating local subscriptions");
+        List<MigrateMessageHandler> migrateHandlers = queueMap.entrySet().stream()
+            .map(e -> new MigrateMessageHandler(e.getKey(), e.getValue().amqpEndpoint()))
+            .collect(Collectors.toList());
+
         createSubscriptions(address, migrateHandlers);
 
-        // Step 3: Close all subscriptions except our own with a amqp redirect
+        // Step 4: Destroy local queues
         System.out.println("Closing other subscriptions");
         localBroker.destroyQueues(queues);
 
-        // Step 4: Wait until subscription identities fetched in Step 1 appears on other brokers
-        System.out.println("Waiting for subscriptions");
-        List<Endpoint> endpoints = watchForQueues(address, queues);
-
         // Step 5: Send messages on broker where subscription identity has appeared
         System.out.println("Migrating messages");
-        migrateMessages(address, endpoints, migrateHandlers);
-
+        migrateMessages(address, migrateHandlers);
         waitUntilEmpty(migrateHandlers.stream().map(MigrateMessageHandler::getQueueName).collect(Collectors.toSet()));
+
+        // Step 6: Activate queues
+        activateQueues(queueMap);
+
+        // Step 7: Shutdown
         vertx.close();
         localBroker.shutdownBroker();
+    }
+
+    private void activateQueues(Map<String, Host> queueMap) throws Exception {
+        for (Map.Entry<String, Host> entry : queueMap.entrySet()) {
+            try (BrokerManager mgr = new BrokerManager(entry.getValue().coreEndpoint())) {
+                mgr.resumeQueue(entry.getKey());
+            }
+        }
+    }
+
+    private Map<String, Host> createQueues(String address, Set<String> queues) throws Exception {
+        Map<String, Host> queueMap = new LinkedHashMap<>();
+        Iterator<Host> destinations = Collections.emptyIterator();
+        for (String queue : queues) {
+            while (!destinations.hasNext()) {
+                destinations = otherHosts().iterator();
+                if (destinations.hasNext()) {
+                    break;
+                }
+                Thread.sleep(1000);
+            }
+            Host dest = destinations.next();
+            try (BrokerManager manager = new BrokerManager(dest.coreEndpoint())) {
+                manager.createQueue(address, queue);
+                manager.pauseQueue(queue);
+            }
+            queueMap.put(queue, dest);
+        }
+        return queueMap;
+    }
+
+    private Set<Host> otherHosts() {
+        return destinationBrokers.stream()
+                .filter(host -> !host.equals(localHost))
+                .collect(Collectors.toSet());
     }
 
     private void waitUntilEmpty(Set<String> queues) throws InterruptedException {
@@ -91,19 +129,16 @@ public class TopicMigrator implements DiscoveryListener {
         }
     }
 
-    private void migrateMessages(String address, List<Endpoint> endpoints, List<MigrateMessageHandler> handlers) {
-        if (endpoints.size() != handlers.size()) {
-            throw new IllegalStateException("#endpoints and #handler must be the same");
-        }
-        for (int i = 0; i < endpoints.size(); i++) {
-            migrateMessages(address, endpoints.get(i), handlers.get(i));
+    private void migrateMessages(String address, List<MigrateMessageHandler> handlers) {
+        for (MigrateMessageHandler handler : handlers) {
+            migrateMessages(address, handler);
         }
     }
 
 
-    private void migrateMessages(String address, Endpoint toEndpoint, MigrateMessageHandler handler) {
+    private void migrateMessages(String address, MigrateMessageHandler handler) {
         ProtonClient protonClient = ProtonClient.create(vertx);
-        protonClient.connect(toEndpoint.hostname(), toEndpoint.port(), toConnection -> {
+        protonClient.connect(handler.toEndpoint().hostname(), handler.toEndpoint().port(), toConnection -> {
             if (toConnection.succeeded()) {
                 ProtonConnection toConn = toConnection.result();
                 toConn.setContainer(handler.getId());
@@ -130,33 +165,6 @@ public class TopicMigrator implements DiscoveryListener {
                 });
             }
         });
-    }
-
-    private List<Endpoint> watchForQueues(String address, Set<String> queues) throws Exception {
-        Map<String, Endpoint> endpointMap = new HashMap<>();
-        System.out.println("Waiting for subscriptions");
-        while (true) {
-            List<BrokerManager> brokers = destinationBrokers.stream()
-                .filter(host -> !host.equals(localHost))
-                .map(host -> new BrokerManager(host.coreEndpoint()))
-                .collect(Collectors.toList());
-
-            for (BrokerManager broker : brokers) {
-                Set<String> brokerQueues = listQueuesForAddress(broker, address);
-                System.out.println("Remote queues for " + broker.getEndpoint().hostname() + ": " + brokerQueues);
-                for (String queue : brokerQueues) {
-                    if (queues.contains(queue)) {
-                        endpointMap.put(queue, broker.getEndpoint());
-                    }
-                }
-            }
-            System.out.println("Found: " + endpointMap.keySet() + ", waiting for: " + queues);
-            if (endpointMap.keySet().equals(queues)) {
-                break;
-            }
-            Thread.sleep(1000);
-        }
-        return new ArrayList<>(endpointMap.values());
     }
 
     private void createSubscriptions(String address, List<MigrateMessageHandler> handlers) throws Exception {

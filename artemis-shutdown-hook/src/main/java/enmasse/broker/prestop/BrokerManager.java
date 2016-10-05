@@ -31,7 +31,7 @@ import java.util.Set;
 /**
  * A client for retrieving and invoking actions against Artemis.
  */
-public class BrokerManager {
+public class BrokerManager implements AutoCloseable {
     private final Endpoint endpoint;
     private final ServerLocator locator;
     private final ClientSessionFactory sessionFactory;
@@ -48,127 +48,86 @@ public class BrokerManager {
         this.endpoint = mgmtEndpoint;
     }
 
-    public long getQueueMessageCount(String queueName) throws Exception {
+    private Object invokeOperationWithResult(String resource, String cmd, Object ... args) throws Exception {
         ClientRequestor requestor = new ClientRequestor(session, "jms.queue.activemq.management");
         ClientMessage message = session.createMessage(false);
-        ManagementHelper.putAttribute(message, "core.queue." + queueName, "messageCount");
+        ManagementHelper.putOperationInvocation(message, resource, cmd, args);
         session.start();
         ClientMessage reply = requestor.request(message);
-        Object count = (Object) ManagementHelper.getResult(reply);
+        Object retVal = ManagementHelper.getResult(reply);
         session.stop();
-        System.out.println("Object: " + count.toString());
-        return (Long)count;
+        return retVal;
+    }
+
+    private void invokeOperation(String resource, String cmd, Object ... args) throws Exception {
+        ClientRequestor requestor = new ClientRequestor(session, "jms.queue.activemq.management");
+        ClientMessage message = session.createMessage(false);
+        ManagementHelper.putOperationInvocation(message, resource, cmd, args);
+        session.start();
+        requestor.request(message);
+        session.stop();
+    }
+
+    private Object invokeAttribute(String resource, String attribute) throws Exception {
+        ClientRequestor requestor = new ClientRequestor(session, "jms.queue.activemq.management");
+        ClientMessage message = session.createMessage(false);
+        ManagementHelper.putAttribute(message, resource, attribute);
+        session.start();
+        ClientMessage reply = requestor.request(message);
+        Object retVal = ManagementHelper.getResult(reply);
+        session.stop();
+        return retVal;
+    }
+
+    public long getQueueMessageCount(String queueName) throws Exception {
+        return (Long)invokeAttribute("core.queue." + queueName, "messageCount");
     }
 
     public String[] listQueues() throws Exception {
-        ClientRequestor requestor = new ClientRequestor(session, "jms.queue.activemq.management");
-        ClientMessage message = session.createMessage(false);
-        ManagementHelper.putOperationInvocation(message, "core.server", "getQueueNames");
-        session.start();
-        ClientMessage reply = requestor.request(message);
-        Object[] response = (Object[]) ManagementHelper.getResult(reply);
+        Object[] response = (Object[]) invokeOperationWithResult("core.server", "getQueueNames");
         String[] list = new String[response.length];
         for (int i = 0; i < list.length; i++) {
             list[i] = response[i].toString();
         }
-        session.stop();
         return list;
     }
 
     public Object[] listTopics() throws Exception {
-        ClientRequestor requestor = new ClientRequestor(session, "jms.queue.activemq.management");
-        ClientMessage message = session.createMessage(false);
-        ManagementHelper.putOperationInvocation(message, "jms.server", "getTopicNames");
-        session.start();
-        ClientMessage reply = requestor.request(message);
-        Object [] names = (Object[])ManagementHelper.getResult(reply);
-        session.stop();
-        return names;
+        return (Object[]) invokeOperationWithResult("jms.server", "getTopicNames");
     }
 
     public boolean createTopic(String name) throws Exception {
-        ClientRequestor requestor = new ClientRequestor(session, "jms.queue.activemq.management");
-        ClientMessage message = session.createMessage(false);
-        ManagementHelper.putOperationInvocation(message, "jms.server", "createTopic", name);
-        session.start();
-        ClientMessage reply = requestor.request(message);
-        boolean retVal = (boolean)ManagementHelper.getResult(reply);
-        session.stop();
-        return retVal;
+        return (boolean) invokeOperationWithResult("jms.server", "createTopic", name);
     }
 
 
     public String listConsumers(String connectionId) throws Exception {
-        ClientRequestor requestor = new ClientRequestor(session, "jms.queue.activemq.management");
-        ClientMessage message = session.createMessage(false);
-        ManagementHelper.putOperationInvocation(message, "core.server", "listConsumersAsJSON", connectionId);
-        session.start();
-        ClientMessage reply = requestor.request(message);
-        String retVal = (String)ManagementHelper.getResult(reply);
-        session.stop();
-        return retVal;
+        return (String) invokeOperationWithResult("core.server", "listConsumersAsJSON", connectionId);
     }
 
     public boolean closeConnections(String address) throws Exception {
-        ClientRequestor requestor = new ClientRequestor(session, "jms.queue.activemq.management");
-        ClientMessage message = session.createMessage(false);
-        ManagementHelper.putOperationInvocation(message, "jms.server", "destroyTopic", address, true);
-        session.start();
-        ClientMessage reply = requestor.request(message);
-        Object o = (Object)ManagementHelper.getResult(reply);
-        System.out.println("O type: " + o.getClass() + "  value: " + o.toString());
-        session.stop();
-        return true;
+        return (boolean) invokeOperationWithResult("jms.server", "destroyTopic", address, true);
     }
 
     public String getQueueAddress(String queueName) throws Exception {
-        ClientRequestor requestor = new ClientRequestor(session, "jms.queue.activemq.management");
-        ClientMessage message = session.createMessage(false);
-        ManagementHelper.putOperationInvocation(message, "core.queue." + queueName, "getAddress");
-        session.start();
-        ClientMessage reply = requestor.request(message);
-        String retVal = (String)ManagementHelper.getResult(reply);
-        session.stop();
-        return retVal;
+        return (String) invokeOperationWithResult("core.queue." + queueName, "getAddress");
     }
 
     public void shutdownBroker() throws Exception {
-        System.out.println("Shutting down");
-        ClientRequestor requestor = new ClientRequestor(session, "jms.queue.activemq.management");
-        ClientMessage message = session.createMessage(false);
-        ManagementHelper.putOperationInvocation(message, "core.server", "forceFailover");
-        session.start();
         try {
-            requestor.request(message);
-            session.stop();
+            invokeOperation("core.server", "forceFailover");
         } catch (ActiveMQNotConnectedException e) {
             System.out.println("Disconnected on shutdown");
         }
     }
 
-    public Endpoint getEndpoint() {
-        return endpoint;
-    }
-
     public String listConnections() throws Exception {
-        ClientRequestor requestor = new ClientRequestor(session, "jms.queue.activemq.management");
-        ClientMessage message = session.createMessage(false);
-        ManagementHelper.putOperationInvocation(message, "core.server", "listConnectionsAsJSON");
-        session.start();
-        ClientMessage reply = requestor.request(message);
-        String retVal = (String)ManagementHelper.getResult(reply);
-        session.stop();
-        return retVal;
+        return (String)invokeOperationWithResult("core.server", "listConnectionsAsJSON");
     }
 
     public void destroyQueues(Set<String> queueList) throws Exception {
         for (String queue : queueList) {
-            ClientRequestor requestor = new ClientRequestor(session, "jms.queue.activemq.management");
-            ClientMessage message = session.createMessage(false);
-            ManagementHelper.putOperationInvocation(message, "core.server", "destroyQueue", queue, true);
-            session.start();
-            requestor.request(message);
-            session.stop();
+            invokeOperation("core.server", "destroyQueue", queue, true);
         }
     }
 
@@ -188,5 +147,24 @@ public class BrokerManager {
             }
             Thread.sleep(2000);
         }
+    }
+
+    public void createQueue(String address, String name) throws Exception {
+        invokeOperation("core.server", "createQueue", address, name);
+    }
+
+    @Override
+    public void close() throws Exception {
+        session.close();
+        sessionFactory.close();
+        locator.close();
+    }
+
+    public void resumeQueue(String queueName) throws Exception {
+        invokeOperation("core.queue." + queueName, "resume");
+    }
+
+    public void pauseQueue(String queueName) throws Exception {
+        invokeOperation("core.queue." + queueName, "pause");
     }
 }
