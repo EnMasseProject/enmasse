@@ -93,6 +93,6 @@ public class TemplateStorageGenerator implements StorageGenerator {
     }
 
     private String addressToName(String address) {
-        return address.replaceAll("\\.", "_");
+        return address.replaceAll("\\.", "-");
     }
 }

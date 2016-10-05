@@ -83,7 +83,7 @@ public class TemplateStorageGeneratorTest {
         verify(template).addObjectLabel(LabelKeys.FLAVOR, dest.flavor());
         verify(template).addObjectLabel(LabelKeys.ADDRESS_TYPE, AddressType.QUEUE.value());
         verify(template).updateParameter(TemplateParameter.ADDRESS, dest.address());
-        verify(template).updateParameter(TemplateParameter.NAME, "foo_bar");
+        verify(template).updateParameter(TemplateParameter.NAME, "foo-bar");
     }
 
     @Test
@@ -105,6 +105,6 @@ public class TemplateStorageGeneratorTest {
         verify(template).addObjectLabel(LabelKeys.FLAVOR, dest.flavor());
         verify(template).addObjectLabel(LabelKeys.ADDRESS_TYPE, AddressType.QUEUE.value());
         verify(template).updateParameter(TemplateParameter.ADDRESS, dest.address());
-        verify(template).updateParameter(TemplateParameter.NAME, "foo_bar");
+        verify(template).updateParameter(TemplateParameter.NAME, "foo-bar");
     }
 }
