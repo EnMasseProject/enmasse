@@ -17,8 +17,15 @@ package enmasse.smoketest;
 
 import io.vertx.core.Vertx;
 import io.vertx.proton.ProtonClient;
+import io.vertx.proton.ProtonConnection;
+import io.vertx.proton.ProtonSender;
 import org.junit.After;
 import org.junit.Before;
+
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+
+import static enmasse.smoketest.Environment.endpoint;
 
 public class VertxTestBase {
     protected Vertx vertx;
@@ -33,10 +40,48 @@ public class VertxTestBase {
     @After
     public void teardown() throws InterruptedException {
         vertx.close();
-        Thread.sleep(30000);
     }
 
     protected EnMasseClient createClient(boolean multicast) {
-        return new EnMasseClient(protonClient, Environment.endpoint, multicast);
+        return new EnMasseClient(protonClient, endpoint, multicast);
+    }
+
+    protected boolean waitUntilReady(String address, long timeout, TimeUnit timeUnit) throws InterruptedException {
+        CountDownLatch latch = new CountDownLatch(1);
+        connectToEndpoint(address, latch);
+        return latch.await(timeout, timeUnit);
+    }
+
+    private void connectToEndpoint(String address, CountDownLatch latch) {
+        protonClient.connect(endpoint.getHost(), endpoint.getPort(), event -> {
+            if (event.succeeded()) {
+                ProtonConnection connection = event.result();
+                connection.openHandler(openResult -> {
+                    if (openResult.succeeded()) {
+                        ProtonSender sender = connection.createSender(address);
+                        sender.openHandler(remoteOpenEvent -> {
+                            sender.close();
+                            connection.close();
+                            if (remoteOpenEvent.succeeded()) {
+                                latch.countDown();
+                            } else {
+                                scheduleReconnect(address, latch);
+                            }
+                        });
+                        sender.open();
+                    } else {
+                        connection.close();
+                        scheduleReconnect(address, latch);
+                    }
+                });
+                connection.open();
+            } else {
+                scheduleReconnect(address, latch);
+            }
+        });
+    }
+
+    private void scheduleReconnect(String address, CountDownLatch latch) {
+        vertx.setTimer(2000, timerId -> connectToEndpoint(address, latch));
     }
 }

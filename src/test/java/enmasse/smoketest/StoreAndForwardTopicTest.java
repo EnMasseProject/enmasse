@@ -39,6 +39,7 @@ public class StoreAndForwardTopicTest extends VertxTestBase{
     @Test
     public void testMultipleSubscribers() throws InterruptedException, TimeoutException, ExecutionException {
         String dest = "mytopic";
+        waitUntilReady(dest, 5, TimeUnit.MINUTES);
         EnMasseClient client = createClient(true);
         List<String> msgs = Arrays.asList("foo", "bar", "baz");
 
@@ -46,8 +47,6 @@ public class StoreAndForwardTopicTest extends VertxTestBase{
                 client.recvMessages(dest, msgs.size()),
                 client.recvMessages(dest, msgs.size()),
                 client.recvMessages(dest, msgs.size()));
-
-        Thread.sleep(20000);
 
         assertThat(client.sendMessages(dest, msgs).get(1, TimeUnit.MINUTES), is(msgs.size()));
 
