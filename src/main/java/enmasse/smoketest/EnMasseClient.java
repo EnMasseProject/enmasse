@@ -94,17 +94,19 @@ public class EnMasseClient {
             }
             ProtonSender sender = connection.createSender(address);
             sender.setTarget(target);
+            sender.openHandler(remoteOpenResult -> {
+                        for (String body : messages) {
+                            Message message = Message.Factory.create();
+                            message.setBody(new AmqpValue(body));
+                            message.setAddress(address);
+                            sender.send(message, delivery -> {
+                                if (count.incrementAndGet() == messages.size()) {
+                                    future.complete(count.get());
+                                }
+                            });
+                        }
+                    });
             sender.open();
-            for (String body : messages) {
-                Message message = Message.Factory.create();
-                message.setBody(new AmqpValue(body));
-                message.setAddress(address);
-                sender.send(message, delivery -> {
-                    if (count.incrementAndGet() == messages.size()) {
-                        future.complete(count.get());
-                    }
-                });
-            }
         });
         return future;
     }
