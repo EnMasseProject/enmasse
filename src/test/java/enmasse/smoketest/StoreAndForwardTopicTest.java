@@ -16,6 +16,7 @@
 
 package enmasse.smoketest;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -33,7 +34,11 @@ public class StoreAndForwardTopicTest extends VertxTestBase{
     @Before
     public void setupReplicas() throws InterruptedException {
         TestUtils.setReplicas("mytopic", "mytopic", 4, 10, TimeUnit.MINUTES);
-        Thread.sleep(120_000);
+    }
+
+    @After
+    public void teardownReplicas() throws InterruptedException {
+        TestUtils.setReplicas("mytopic", "mytopic", 1, 10, TimeUnit.MINUTES);
     }
 
     @Test
