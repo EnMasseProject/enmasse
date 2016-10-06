@@ -27,24 +27,31 @@ import java.util.concurrent.TimeoutException;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 public class NoStoreBroadcastTest extends VertxTestBase {
     @Test
     public void testMultipleRecievers() throws InterruptedException, TimeoutException, ExecutionException {
         String dest = "broadcast";
+        waitUntilReady(dest, 5, TimeUnit.MINUTES);
         EnMasseClient client = createClient(true);
-        List<String> msgs = Arrays.asList("foo", "bar", "baz");
+        List<String> msgs = Arrays.asList("foo");
 
         List<Future<List<String>>> recvResults = Arrays.asList(
             client.recvMessages(dest, msgs.size()),
             client.recvMessages(dest, msgs.size()),
             client.recvMessages(dest, msgs.size()));
 
-        Thread.sleep(10000);
-        assertThat(client.sendMessages(dest, msgs).get(1, TimeUnit.MINUTES), is(msgs.size()));
+        long end = System.currentTimeMillis() + 60_000;
+        boolean isDone = false;
+        while (System.currentTimeMillis() < end && !isDone) {
+            assertThat(client.sendMessages(dest, msgs).get(1, TimeUnit.MINUTES), is(msgs.size()));
+            Thread.sleep(1000);
+            isDone = recvResults.get(0).isDone() && recvResults.get(1).isDone() && recvResults.get(2).isDone();
+        }
 
-        assertThat(recvResults.get(0).get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
-        assertThat(recvResults.get(1).get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
-        assertThat(recvResults.get(2).get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
+        assertTrue(recvResults.get(0).get(1, TimeUnit.MINUTES).size() >= msgs.size());
+        assertTrue(recvResults.get(1).get(1, TimeUnit.MINUTES).size() >= msgs.size());
+        assertTrue(recvResults.get(2).get(1, TimeUnit.MINUTES).size() >= msgs.size());
     }
 }
