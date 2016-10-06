@@ -85,28 +85,29 @@ public class EnMasseClient {
         CompletableFuture<Integer> future = new CompletableFuture<>();
         client.connect(endpoint.getHost(), endpoint.getPort(), event -> {
             ProtonConnection connection = event.result();
-            connection.openHandler(result -> System.out.println("Sending messages to " + result.result().getRemoteContainer()));
+            connection.openHandler(result -> {
+                Target target = new Target();
+                target.setAddress(address);
+                if (isTopic) {
+                    target.setCapabilities(Symbol.getSymbol("topic"));
+                }
+                ProtonSender sender = connection.createSender(address);
+                sender.setTarget(target);
+                sender.openHandler(remoteOpenResult -> {
+                    for (String body : messages) {
+                        Message message = Message.Factory.create();
+                        message.setBody(new AmqpValue(body));
+                        message.setAddress(address);
+                        sender.send(message, delivery -> {
+                            if (count.incrementAndGet() == messages.size()) {
+                                future.complete(count.get());
+                            }
+                        });
+                    }
+                });
+                sender.open();
+            });
             connection.open();
-            Target target = new Target();
-            target.setAddress(address);
-            if (isTopic) {
-                target.setCapabilities(Symbol.getSymbol("topic"));
-            }
-            ProtonSender sender = connection.createSender(address);
-            sender.setTarget(target);
-            sender.openHandler(remoteOpenResult -> {
-                        for (String body : messages) {
-                            Message message = Message.Factory.create();
-                            message.setBody(new AmqpValue(body));
-                            message.setAddress(address);
-                            sender.send(message, delivery -> {
-                                if (count.incrementAndGet() == messages.size()) {
-                                    future.complete(count.get());
-                                }
-                            });
-                        }
-                    });
-            sender.open();
         });
         return future;
     }
