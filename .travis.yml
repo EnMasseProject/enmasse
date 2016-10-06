@@ -2,6 +2,9 @@ sudo: required
 language: java
 notifications:
   email: false
+env:
+  global:
+    - MAVEN_OPTS="-Xmx4g"
 jdk:
 - oraclejdk8
 services:
