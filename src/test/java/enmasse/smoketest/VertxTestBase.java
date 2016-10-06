@@ -26,6 +26,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import static enmasse.smoketest.Environment.endpoint;
+import static org.junit.Assert.assertTrue;
 
 public class VertxTestBase {
     protected Vertx vertx;
@@ -46,10 +47,10 @@ public class VertxTestBase {
         return new EnMasseClient(protonClient, endpoint, multicast);
     }
 
-    protected boolean waitUntilReady(String address, long timeout, TimeUnit timeUnit) throws InterruptedException {
+    protected void waitUntilReady(String address, long timeout, TimeUnit timeUnit) throws InterruptedException {
         CountDownLatch latch = new CountDownLatch(1);
         connectToEndpoint(address, latch);
-        return latch.await(timeout, timeUnit);
+        assertTrue(latch.await(timeout, timeUnit));
     }
 
     private void connectToEndpoint(String address, CountDownLatch latch) {
