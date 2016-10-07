@@ -14,6 +14,7 @@ script:
 - gradle build
 - gradle libs
 - gradle distTar
+- gradle downloadArtemis
 - curl -s https://raw.githubusercontent.com/EnMasseProject/travis-scripts/master/docker-build.sh
   | bash /dev/stdin enmasseproject/artemis .
 - curl -s https://raw.githubusercontent.com/EnMasseProject/travis-scripts/master/trigger-travis.sh

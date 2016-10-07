@@ -4,7 +4,7 @@ RUN dnf -y install which java-1.8.0-openjdk libaio python gettext hostname iputi
 
 ENV ARTEMIS_HOME=/opt/apache-artemis-1.5.0-SNAPSHOT PATH=$ARTEMIS_HOME/bin:$PATH
 
-ADD ./activemq-artemis/artemis-distribution/target/apache-artemis-1.5.0-SNAPSHOT-bin.tar.gz ./artemis-shutdown-hook/build/distributions/artemis-shutdown-hook.tar /opt/
+ADD ./build/apache-artemis-bin.tar.gz ./artemis-shutdown-hook/build/distributions/artemis-shutdown-hook.tar /opt/
 
 # Needed for bridge clustering
 # COPY ./artemis-plugin/build/libs/artemis-plugin.jar $ARTEMIS_HOME/lib
