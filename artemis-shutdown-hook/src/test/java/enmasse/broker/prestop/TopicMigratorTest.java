@@ -18,57 +18,62 @@ package enmasse.broker.prestop;
 
 import enmasse.discovery.Endpoint;
 import enmasse.discovery.Host;
+import io.vertx.core.Vertx;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
-
-public class QueueDrainerTest {
-    private QueueDrainer client;
+public class TopicMigratorTest {
     private Endpoint from = new Endpoint("127.0.0.1", 12345);
     private Endpoint to = new Endpoint("127.0.0.1", 12346);
     private TestBroker fromServer;
     private TestBroker toServer;
+    private Vertx vertx;
 
     @Before
     public void setup() throws Exception {
-        fromServer = new TestBroker(from.hostname(), from.port(), "myqueue");
-        toServer = new TestBroker(to.hostname(), to.port(), "myqueue");
-        Map<String, Integer> portMap = new LinkedHashMap<>();
-        portMap.put("amqp", from.port());
-        portMap.put("core", from.port());
-        Host fromHost = new Host(from.hostname(), portMap);
+        vertx = Vertx.vertx();
+        fromServer = new TestBroker(from.hostname(), from.port(), "jms.topic.mytopic");
+        toServer = new TestBroker(to.hostname(), to.port(), "jms.topic.mytopic");
         fromServer.start();
         toServer.start();
-        client = new QueueDrainer(fromHost, Optional.empty());
+        Thread.sleep(5000);
     }
 
     @After
     public void teardown() throws Exception {
+        vertx.close();
         fromServer.stop();
         toServer.stop();
     }
 
     @Test
-    public void testDrain() throws Exception {
-        System.out.println("Sending message");
-        fromServer.sendMessage("Hello drainer");
-        System.out.println("Starting drain");
-        client.drainMessages(to, "myqueue");
-        System.out.println("Receiving message");
-        String msg = toServer.recvMessage();
-        System.out.println("Checking message");
-        assertThat(msg, is("Hello drainer"));
-        System.out.println("Checking shutdown");
+    public void testMigrator() throws Exception {
+        System.out.println("Started brokers");
+        TestSubscriber subscriber = new TestSubscriber(vertx);
+        System.out.println("Attempting to subscribe");
+        subscriber.subscribe(from, "jms.topic.mytopic", to);
+
+        Thread.sleep(2000);
+        System.out.println("Starting migrator");
+
+        Host from = createHost("127.0.0.1", 12345);
+        Host to = createHost("127.0.0.1", 12346);
+        TopicMigrator migrator = new TopicMigrator(from);
+        migrator.hostsChanged(Collections.singleton(to));
+        migrator.migrate("jms.topic.mytopic");
         fromServer.assertShutdown(1, TimeUnit.MINUTES);
-        System.out.println("DONE");
     }
 
+    private Host createHost(String hostname, int port) {
+        Map<String, Integer> portMap = new LinkedHashMap<>();
+        portMap.put("amqp", port);
+        portMap.put("core", port);
+        return new Host(hostname, portMap);
+    }
 }

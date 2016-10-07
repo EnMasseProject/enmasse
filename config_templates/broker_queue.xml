@@ -3,3 +3,6 @@
             <address>$QUEUE_NAME</address>
         </queue>
       </queues>
+   </core>
+</configuration>
+

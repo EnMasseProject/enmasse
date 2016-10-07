@@ -16,6 +16,7 @@
 
 package enmasse.broker.prestop;
 
+import com.google.common.io.Files;
 import org.apache.activemq.artemis.api.core.TransportConfiguration;
 import org.apache.activemq.artemis.core.config.Configuration;
 import org.apache.activemq.artemis.core.config.CoreQueueConfiguration;
@@ -30,6 +31,9 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
+
+import static org.junit.Assert.assertFalse;
 
 
 public class TestBroker {
@@ -56,13 +60,19 @@ public class TestBroker {
         params.put("port", port);
         TransportConfiguration transport = new TransportConfiguration(NettyAcceptorFactory.class.getName(), params, "amqp");
 
-        CoreQueueConfiguration queueConfiguration = new CoreQueueConfiguration();
-        queueConfiguration.setName(address);
-        queueConfiguration.setAddress(address);
-        config.setQueueConfigurations(Collections.singletonList(queueConfiguration));
+        CoreQueueConfiguration queueConfig = new CoreQueueConfiguration();
+        queueConfig.setAddress(address);
+        queueConfig.setName(address);
+        config.setQueueConfigurations(Collections.singletonList(queueConfig));
+
         config.setAcceptorConfigurations(Collections.singleton(transport));
         config.setSecurityEnabled(false);
-        config.setName("broker-" + port);
+        config.setName("broker-" + System.currentTimeMillis() + port);
+        config.setBindingsDirectory(Files.createTempDir().getAbsolutePath());
+        config.setJournalDirectory(Files.createTempDir().getAbsolutePath());
+        config.setPagingDirectory(Files.createTempDir().getAbsolutePath());
+        config.setLargeMessagesDirectory(Files.createTempDir().getAbsolutePath());
+        config.setPersistenceEnabled(false);
 
         server.setConfiguration(config);
 
@@ -97,5 +107,13 @@ public class TestBroker {
 
     public boolean isActive() {
         return server.getActiveMQServer().isActive();
+    }
+
+    public void assertShutdown(long timeout, TimeUnit timeUnit) throws InterruptedException {
+        long endTime = System.currentTimeMillis() + timeUnit.toMillis(timeout);
+        while (isActive() && System.currentTimeMillis() < endTime) {
+            Thread.sleep(1000);
+        }
+        assertFalse("Server has not been shut down", isActive());
     }
 }

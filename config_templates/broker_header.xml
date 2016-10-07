@@ -23,11 +23,6 @@ under the License.
                xmlns:xi="http://www.w3.org/2001/XInclude"
                xsi:schemaLocation="urn:activemq /schema/artemis-configuration.xsd">
 
-   <jms xmlns="urn:activemq:jms">
-      <queue name="DLQ"/>
-      <queue name="ExpiryQueue"/>
-
-   </jms>
 
    <core xmlns="urn:activemq:core">
 

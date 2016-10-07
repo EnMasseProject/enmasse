@@ -22,10 +22,18 @@ import com.openshift.restclient.IClient;
 import com.openshift.restclient.ResourceKind;
 import com.openshift.restclient.images.DockerImageURI;
 import com.openshift.restclient.model.IContainer;
+import enmasse.discovery.DiscoveryClient;
+import enmasse.discovery.Endpoint;
+import enmasse.discovery.Host;
+import io.vertx.core.Vertx;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.Inet4Address;
+import java.net.UnknownHostException;
 import java.nio.file.Files;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Optional;
 
 public class Main {
@@ -42,24 +50,44 @@ public class Main {
             debugFn = Optional.of(() -> signalSuccess(client, namespace));
         }
 
-        String localHost = "127.0.0.1"; //Inet4Address.getLocalHost().getHostAddress();
-        Endpoint mgmtEndpoint = new Endpoint(localHost, 61616);
-        BrokerManager brokerManager = new BrokerManager(mgmtEndpoint);
+        Host localHost = localHost();
 
         if (System.getenv("QUEUE_NAME") != null) {
             String address = System.getenv("QUEUE_NAME");
             String messagingHost = System.getenv("MESSAGING_SERVICE_HOST");
             int messagingPort = Integer.parseInt(System.getenv("MESSAGING_SERVICE_PORT"));
-            Endpoint from = new Endpoint(localHost, 5673);
             Endpoint to = new Endpoint(messagingHost, messagingPort);
 
-            QueueDrainer client = new QueueDrainer(brokerManager, from, debugFn);
+            QueueDrainer client = new QueueDrainer(localHost, debugFn);
             client.drainMessages(to, address);
         } else if (System.getenv("TOPIC_NAME") != null) {
-            brokerManager.shutdownBroker();
+            String address = System.getenv("TOPIC_NAME");
+
+            String kubeHost = System.getenv("KUBERNETES_SERVICE_HOST");
+            String kubePort = System.getenv("KUBERNETES_SERVICE_PORT");
+            String kubeUrl = String.format("https://%s:%s", kubeHost, kubePort);
+            IClient client = new ClientBuilder(kubeUrl).usingToken(openshiftToken()).build();
+            String namespace = openshiftNamespace();
+
+            Map<String, String> labels = new LinkedHashMap<>();
+            labels.put("role", "broker");
+            labels.put("address", address);
+            DiscoveryClient discoveryClient = new DiscoveryClient(client, namespace, labels);
+            TopicMigrator migrator = new TopicMigrator(localHost);
+            discoveryClient.addListener(migrator);
+            discoveryClient.start();
+            migrator.migrate(address);
         } else {
             throw new IllegalArgumentException("Unable to find QUEUE_NAME or TOPIC_NAME environment");
         }
+    }
+
+    private static Host localHost() throws UnknownHostException {
+        Map<String, Integer> portMap = new LinkedHashMap<>();
+        portMap.put("amqp", 5673);
+        portMap.put("core", 61616);
+
+        return new Host(Inet4Address.getLocalHost().getHostAddress(), portMap);
     }
 
     private static void signalSuccess(IClient osClient, String namespace) {

@@ -1,9 +1,18 @@
 sudo: required
 language: java
+notifications:
+  email: false
+env:
+  global:
+    - MAVEN_OPTS="-Xmx4g"
 jdk:
 - oraclejdk8
 services:
 - docker
+install:
+- gradle buildArtemis 
+- gradle assemble
+
 script:
 - gradle build
 - gradle libs

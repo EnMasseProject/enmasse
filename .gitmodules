@@ -1,0 +1,4 @@
+[submodule "activemq-artemis"]
+	path = activemq-artemis
+	url = https://github.com/EnMasseProject/activemq-artemis.git
+	branch = enmasse
