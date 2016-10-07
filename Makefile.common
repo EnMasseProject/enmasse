@@ -19,19 +19,19 @@ endif
 endif
 
 ifeq ($(DO_PUSH),true)
-all: build push
+all: build_docker push_docker
 	echo "Building and pushing"
 
 else
-all: build
+all: build_docker
 	echo "Building"
 
 endif
 
-build: fetch_source
+build_docker: build
 	docker build -t $(REPO):$(COMMIT) $(DOCKERFILE_DIR)
 
-push: build
+push_docker: build_docker
 	@docker login -e $(DOCKER_EMAIL) -u $(DOCKER_USER) -p $(DOCKER_PASS)
 	docker tag $(REPO):$(COMMIT) $(REPO):$(TAG)
 	docker tag $(REPO):$(COMMIT) $(REPO):travis-$(TRAVIS_BUILD_NUMBER)
