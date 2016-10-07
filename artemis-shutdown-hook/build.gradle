@@ -10,7 +10,6 @@ repositories {
     mavenLocal()
     mavenCentral()
     maven { url "https://jitpack.io" }
-    maven { url "https://repository.apache.org/content/repositories/snapshots/" }
 }
 
 dependencies {
@@ -25,9 +24,6 @@ dependencies {
         exclude group: "io.netty", module: "netty-all"
     }
     testCompile("org.apache.activemq:artemis-amqp-protocol:${artemisVersion}") {
-        exclude group: "io.netty", module: "netty-all"
-    }
-    testCompile("org.apache.activemq:artemis-jms-server:${artemisVersion}") {
         exclude group: "io.netty", module: "netty-all"
     }
 }

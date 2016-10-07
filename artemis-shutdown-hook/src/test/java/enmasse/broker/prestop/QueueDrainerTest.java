@@ -28,7 +28,6 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 
 public class QueueDrainerTest {
@@ -40,8 +39,8 @@ public class QueueDrainerTest {
 
     @Before
     public void setup() throws Exception {
-        fromServer = new TestBroker(from.hostname(), from.port(), "myqueue", false);
-        toServer = new TestBroker(to.hostname(), to.port(), "myqueue", false);
+        fromServer = new TestBroker(from.hostname(), from.port(), "myqueue");
+        toServer = new TestBroker(to.hostname(), to.port(), "myqueue");
         Map<String, Integer> portMap = new LinkedHashMap<>();
         portMap.put("amqp", from.port());
         portMap.put("core", from.port());

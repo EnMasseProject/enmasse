@@ -33,7 +33,17 @@ public class TopicMigratorTest {
     private Endpoint to = new Endpoint("127.0.0.1", 12346);
     private TestBroker fromServer;
     private TestBroker toServer;
-    private Vertx vertx = Vertx.vertx();
+    private Vertx vertx;
+
+    @Before
+    public void setup() throws Exception {
+        vertx = Vertx.vertx();
+        fromServer = new TestBroker(from.hostname(), from.port(), "jms.topic.mytopic");
+        toServer = new TestBroker(to.hostname(), to.port(), "jms.topic.mytopic");
+        fromServer.start();
+        toServer.start();
+        Thread.sleep(5000);
+    }
 
     @After
     public void teardown() throws Exception {
@@ -44,14 +54,7 @@ public class TopicMigratorTest {
 
     @Test
     public void testMigrator() throws Exception {
-        fromServer = new TestBroker(from.hostname(), from.port(), "mytopic", true);
-        toServer = new TestBroker(to.hostname(), to.port(), "mytopic", true);
-        fromServer.start();
-        toServer.start();
-
-        Thread.sleep(2000);
         System.out.println("Started brokers");
-        BrokerManager fromMgr = new BrokerManager(from);
         TestSubscriber subscriber = new TestSubscriber(vertx);
         System.out.println("Attempting to subscribe");
         subscriber.subscribe(from, "jms.topic.mytopic", to);
