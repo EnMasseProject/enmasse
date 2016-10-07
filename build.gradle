@@ -13,8 +13,20 @@ task downloadArtemis(type: Download) {
     dest new File(buildDir, 'apache-artemis-bin.tar.gz')
 }
 
-task buildArtemis(type: Exec) {
-    workingDir 'activemq-artemis'
-    commandLine 'mvn', '-q', '-Prelease', 'install', '-DskipTests'
+task buildArtemis {
+  doLast {
+    exec {
+      workingDir 'activemq-artemis/artemis-core-client'
+      commandLine 'mvn', 'install', '-DskipTests'
+    }
+    exec {
+      workingDir 'activemq-artemis/artemis-protocols'
+      commandLine 'mvn', 'install', '-DskipTests'
+    }
+    exec {
+      workingDir 'activemq-artemis/artemis-server'
+      commandLine 'mvn', 'install', '-DskipTests'
+    }
+  }
 }
 
