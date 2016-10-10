@@ -50,8 +50,9 @@ def verify_router_config(address_config, router_config):
             results = router_config["results"]
             for entry in results:
                 name = entry[0]
-                found = True
-                break
+                if name == address:
+                    found = True
+                    break
             if not found:
                 raise "Unable to find queue %s in config" % name
 
