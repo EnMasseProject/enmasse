@@ -41,8 +41,7 @@ local router = import "router.jsonnet";
               ],
               "from": {
                 "kind": "ImageStreamTag",
-                // TODO: Update to use version when travis is setup for qdrouterd
-                "name": "router:latest"
+                "name": "router:" + version
               }
             }
           }

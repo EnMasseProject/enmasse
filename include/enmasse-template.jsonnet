@@ -48,7 +48,7 @@ local flavorConfig = import "flavor.json";
       {
         "name": "ROUTER_REPO",
         "description": "The image to use for the router",
-        "value": "gordons/qdrouterd"
+        "value": "enmasseproject/qdrouterd"
       },
       {
         "name": "BROKER_REPO",

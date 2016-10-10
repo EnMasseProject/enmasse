@@ -751,7 +751,7 @@ objects:
 parameters:
 - description: The image to use for the router
   name: ROUTER_REPO
-  value: gordons/qdrouterd
+  value: enmasseproject/qdrouterd
 - description: The default image to use as broker
   name: BROKER_REPO
   value: enmasseproject/artemis
