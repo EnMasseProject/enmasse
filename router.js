@@ -110,7 +110,7 @@ ConnectedRouter.prototype.is_ready_for_connectivity_check = function () {
     return this.initial_provisioning_completed && this.connectors !== undefined;
 }
 
-ConnectedRouter.prototype.is_ready_for_address_check = function () {
+ConnectedRouter.prototype.is_ready_for_address_update = function () {
     return this.addresses !== undefined;
 }
 
@@ -168,7 +168,23 @@ function update(actual, desired, type) {
     return removed.map(type.remove).concat(added.map(type.add));
 }
 
-ConnectedRouter.prototype.check_addresses = function (desired) {
+ConnectedRouter.prototype.verify_addresses = function (expected) {
+    if (this.addresses === undefined || this.link_routes == undefined) {
+        return false;
+    }
+
+    for (var i = 0; i < expected.length; i++) {
+        var address = expected[i];
+        if (address["store_and_forward"] && !address["multicast"]) {
+            if (this.addresses[address.name] === undefined) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+ConnectedRouter.prototype.sync_addresses = function (desired) {
     if (this.addresses === undefined || this.link_routes === undefined) {
         console.log('router ' + this.container_id + ' is not ready for address check');
         return;
