@@ -179,7 +179,6 @@ ConnectedRouter.prototype.check_addresses = function (expected) {
         if (address["store_and_forward"] && !address["multicast"]) {
             if (this.addresses[address.name] !== undefined) {
                 found = true;
-                break;
             }
         }
         if (!found) {
