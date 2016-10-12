@@ -168,7 +168,7 @@ function update(actual, desired, type) {
     return removed.map(type.remove).concat(added.map(type.add));
 }
 
-ConnectedRouter.prototype.check_addresses = function (expected) {
+ConnectedRouter.prototype.verify_addresses = function (expected) {
     if (this.addresses === undefined || this.link_routes == undefined) {
         return false;
     }
@@ -184,7 +184,7 @@ ConnectedRouter.prototype.check_addresses = function (expected) {
     return true;
 }
 
-ConnectedRouter.prototype.update_addresses = function (desired) {
+ConnectedRouter.prototype.sync_addresses = function (desired) {
     if (this.addresses === undefined || this.link_routes === undefined) {
         console.log('router ' + this.container_id + ' is not ready for address update');
         return;

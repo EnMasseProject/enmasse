@@ -129,31 +129,31 @@ function router_disconnected (context) {
 function addresses_updated () {
     for (var r in connected_routers) {
         try {
-            update_router_addresses(connected_routers[r]);
+            sync_router_addresses(connected_routers[r]);
         } catch (e) {
             console.log('ERROR: failed to check addresses on router ' + r + ': ' + e + '; ' + addresses);
         }
     }
 }
 
-function update_addresses (updated) {
+function sync_addresses (updated) {
     console.log('updating addresses: ' + JSON.stringify(updated));
     addresses = updated;
     addresses_updated();
 }
 
-function check_addresses (expected) {
+function verify_addresses (expected) {
     for (var r in connected_routers) {
-        if (!connected_routers[r].check_addresses(expected)) {
+        if (!connected_routers[r].verify_addresses(expected)) {
             return false;
         }
     }
     return true;
 }
 
-function update_router_addresses (router) {
+function sync_router_addresses (router) {
     console.log('updating addresses for ' + router.container_id);
-    router.update_addresses(addresses);
+    router.sync_addresses(addresses);
 }
 
 function on_router_agent_disconnect (context) {
@@ -183,25 +183,24 @@ function on_message(context) {
                         delete content[v]['store-and-forward'];
                     }
                 }
-                update_addresses(content);
+                sync_addresses(content);
             } catch (e) {
                 console.log('ERROR: failed to parse addresses as JSON: ' + e + '; ' + context.message.body);
             }
         } else if (body_type  === 'object') {
-            update_addresses(context.message.body);
+            sync_addresses(context.message.body);
         } else {
             console.log('ERROR: unrecognised type for addresses: ' + body_type + ' ' + context.message.body);
         }
     } else if (context.message.subject === 'health-check') {
         var request = context.message;
         var content = JSON.parse(request.body);
-        var check_result = check_addresses(content);
         var reply_to = request.properties.reply_to;
         var response = {properties:{to: reply_to}};
         if (request.properties.correlation_id) {
             response.correlation_id = request.properties.correlation_id;
         }
-        response.body = check_result;
+        response.body = verify_addresses(content);
         var sender = clients[context.connection.container_id];
         if (sender) {
             sender.send(response);
@@ -227,7 +226,7 @@ amqp.on('connection_open', function(context) {
             router.retrieve_addresses();
             router.retrieve_connectors();
             router.on('listeners_updated', connected_routers_updated);//advertise only once have listeners
-            router.on('addresses_updated', update_router_addresses);
+            router.on('addresses_updated', sync_router_addresses);
             router.on('connectors_updated', check_router_connectors);
             router.on('provisioned', check_router_connectors);
         });
