@@ -186,7 +186,7 @@ ConnectedRouter.prototype.verify_addresses = function (expected) {
 
 ConnectedRouter.prototype.sync_addresses = function (desired) {
     if (this.addresses === undefined || this.link_routes === undefined) {
-        console.log('router ' + this.container_id + ' is not ready for address update');
+        console.log('router ' + this.container_id + ' is not ready for address check');
         return;
     }
     var topics = {};
