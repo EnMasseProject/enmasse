@@ -175,14 +175,10 @@ ConnectedRouter.prototype.check_addresses = function (expected) {
 
     for (var i = 0; i < expected.length; i++) {
         var address = expected[i];
-        var found = false;
         if (address["store_and_forward"] && !address["multicast"]) {
-            if (this.addresses[address.name] !== undefined) {
-                found = true;
+            if (this.addresses[address.name] === undefined) {
+                return false;
             }
-        }
-        if (!found) {
-            return false;
         }
     }
     return true;
