@@ -168,15 +168,6 @@ function update(actual, desired, type) {
     return removed.map(type.remove).concat(added.map(type.add));
 }
 
-function find_address(actual, needle) {
-    for (var a in actual) {
-        if (a === needle) {
-            return true;
-        }
-    }
-    return false;
-}
-
 ConnectedRouter.prototype.check_addresses = function (expected) {
     if (this.addresses === undefined || this.link_routes == undefined) {
         return false;
@@ -186,7 +177,7 @@ ConnectedRouter.prototype.check_addresses = function (expected) {
         var address = expected[i];
         var found = false;
         if (address["store_and_forward"] && !address["multicast"]) {
-            if (find_address(this.addresses, address["name"])) {
+            if (this.addresses[address.name] !== undefined) {
                 found = true;
                 break;
             }
