@@ -7,9 +7,8 @@ node_js:
 services:
 - docker
 script:
-- 'echo "Dummy script"
+- make
 
-'
 after_success:
 - curl -s https://raw.githubusercontent.com/EnMasseProject/travis-scripts/master/docker-build.sh
   | bash /dev/stdin enmasseproject/ragent .
