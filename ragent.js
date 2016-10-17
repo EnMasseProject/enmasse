@@ -143,6 +143,7 @@ function sync_addresses (updated) {
 }
 
 function verify_addresses (expected) {
+    console.log('verifying addresses to match: ' + JSON.stringify(expected));
     for (var r in connected_routers) {
         if (!connected_routers[r].verify_addresses(expected)) {
             return false;
