@@ -31,8 +31,7 @@ local is = import "imagestream.jsonnet";
             ],
             "from": {
               "kind": "ImageStreamTag",
-              // TODO: Update to use version when travis is setup for subserv
-              "name": "subserv:latest",
+              "name": "subserv:" + version
             }
           }
         }
