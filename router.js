@@ -64,7 +64,7 @@ var ConnectedRouter = function (connection) {
     connection.on('connection_close', this.closed.bind(this));
 
     this.update_types = {
-        address: {add: this.define_address.bind(this), remove: this.delete_address.bind(this), equivalence: address_equivalence},
+        address: {add: this.add_address.bind(this), remove: this.remove_address.bind(this), equivalence: address_equivalence},
         link_route: {add: this.define_link_route.bind(this), remove: this.delete_link_route.bind(this), equivalence: link_route_equivalence}
     };
 };
@@ -251,6 +251,12 @@ function from_router_address(address) {
     return {name:address.prefix, multicast:actual_distribution(address), store_and_forward:address.waypoint};
 }
 
+ConnectedRouter.prototype.add_address = function (address) {
+    return futurejs.and(this.define_address(address),
+                        futurejs.and(this.define_autolink(address, "in"),
+                                     this.define_autolink(address, "out")));
+}
+
 ConnectedRouter.prototype.define_address = function (address) {
     var future = futurejs.future(created);
     var dist = address.multicast ? "multicast" : "balanced";
@@ -265,6 +271,28 @@ ConnectedRouter.prototype.delete_address = function (address) {
     this.delete_entity('org.apache.qpid.dispatch.router.config.address', address.name, future.as_callback());
     return future;
 };
+
+ConnectedRouter.prototype.define_autolink = function (address, direction) {
+    var future = futurejs.future(created);
+    var name = (direction == "in" ? "autoLinkIn" : "autoLinkOut") + address.name;
+    console.log('defining autolink for ' + address.name + ' in direction ' + direction + ' on router ' + this.container_id);
+    this.create_entity('org.apache.qpid.dispatch.router.config.autoLink', name, {dir:direction, addr:address.name, connection:"broker"}, future.as_callback());
+    return future;
+}
+
+ConnectedRouter.prototype.delete_autolink = function (address, direction) {
+    var future = futurejs.future(created);
+    var name = (direction == "in" ? "autoLinkIn" : "autoLinkOut") + address.name;
+    console.log('deleting autolink for ' + address.name + ' in direction ' + direction + ' on router ' + this.container_id);
+    this.delete_entity('org.apache.qpid.dispatch.router.config.autoLink', name, future.as_callback());
+    return future;
+}
+
+ConnectedRouter.prototype.remove_address = function (address) {
+    return futurejs.and(this.delete_address(address),
+                        futurejs.and(this.delete_autolink(address, "in"),
+                                     this.delete_autolink(address, "out")));
+}
 
 ConnectedRouter.prototype.define_link_route = function (route) {
     var future = futurejs.future(created);
