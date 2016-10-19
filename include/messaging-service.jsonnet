@@ -11,6 +11,12 @@
     "protocol": "TCP",
     "targetPort": 5671
   },
+  local brokerPort = {
+    "name": "broker",
+    "port": 5673,
+    "protocol": "TCP",
+    "targetPort": 5673
+  },
   generate(secure)::
     {
       "apiVersion": "v1",
@@ -19,7 +25,7 @@
         "name": "messaging"
       },
       "spec": {
-        "ports": if secure then [port, securePort] else [port],
+        "ports": if secure then [port, securePort, brokerPort] else [port, brokerPort],
         "selector": {
           "capability": "router"
         }

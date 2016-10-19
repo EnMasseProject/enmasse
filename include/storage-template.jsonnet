@@ -1,6 +1,6 @@
 local version = std.extVar("VERSION");
-local router = import "router.jsonnet";
 local broker = import "broker.jsonnet";
+local router = import "router.jsonnet";
 local forwarder = import "forwarder.jsonnet";
 {
   template(multicast, persistence, secure)::
@@ -46,19 +46,6 @@ local forwarder = import "forwarder.jsonnet";
               "imageChangeParams": {
                 "automatic": true,
                 "containerNames": [
-                  "router"
-                ],
-                "from": {
-                  "kind": "ImageStreamTag",
-                  "name": "router:" + version
-                }
-              }
-            },
-            {
-              "type": "ImageChange",
-              "imageChangeParams": {
-                "automatic": true,
-                "containerNames": [
                   "broker"
                 ],
                 "from": {
@@ -69,6 +56,19 @@ local forwarder = import "forwarder.jsonnet";
             }
           ],
           local multicastTriggers = [
+            {
+              "type": "ImageChange",
+              "imageChangeParams": {
+                "automatic": true,
+                "containerNames": [
+                  "router"
+                ],
+                "from": {
+                  "kind": "ImageStreamTag",
+                  "name": "router:" + version
+                }
+              }
+            },
             {
               "type": "ImageChange",
               "imageChangeParams": {
@@ -90,7 +90,6 @@ local forwarder = import "forwarder.jsonnet";
             "metadata": {
               "labels": {
                 "role": "broker",
-                "capability": "router",
                 "address": "${ADDRESS}"
               }
             },
@@ -104,7 +103,7 @@ local forwarder = import "forwarder.jsonnet";
 
               "containers": if multicast
                 then [ broker.container(volumeName, addressEnv), router.container(secure, addressEnv), forwarder.container(addressEnv) ]
-                else [ broker.container(volumeName, addressEnv), router.container(secure, addressEnv) ]
+                else [ broker.container(volumeName, addressEnv) ]
             }
           }
         }
@@ -131,14 +130,14 @@ local forwarder = import "forwarder.jsonnet";
         else [controller],
       "parameters": [
         {
-          "name": "ROUTER_LINK_CAPACITY",
-          "description": "The link capacity setting for router",
-          "value": "50"
-        },
-        {
           "name": "STORAGE_CAPACITY",
           "description": "Storage capacity required for volume claims",
           "value": "2Gi"
+        },
+        {
+          "name": "ROUTER_LINK_CAPACITY",
+          "description": "The link capacity setting for router",
+          "value": "50"
         },
         {
           "name": "NAME",
