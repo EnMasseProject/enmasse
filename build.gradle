@@ -27,6 +27,10 @@ task buildArtemis {
       workingDir 'activemq-artemis/artemis-server'
       commandLine 'mvn', 'install', '-DskipTests'
     }
+    exec {
+      workingDir 'activemq-artemis/integration/activemq-amqp-connector'
+      commandLine 'mvn', 'install', '-DskipTests'
+    }
   }
 }
 

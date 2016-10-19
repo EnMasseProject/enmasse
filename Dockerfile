@@ -7,6 +7,7 @@ ENV ARTEMIS_HOME=/opt/apache-artemis-1.5.0-SNAPSHOT PATH=$ARTEMIS_HOME/bin:$PATH
 ADD ./build/apache-artemis-bin.tar.gz ./artemis-shutdown-hook/build/distributions/artemis-shutdown-hook.tar /opt/
 
 # Needed for bridge clustering
+COPY ./activemq-artemis/integration/activemq-amqp-connector/target/artemis-amqp-connector-1.5.0-SNAPSHOT.jar $ARTEMIS_HOME/lib
 # COPY ./artemis-plugin/build/libs/artemis-plugin.jar $ARTEMIS_HOME/lib
 # COPY ./artemis-plugin/build/libs/kubernetes-0.9.0.jar $ARTEMIS_HOME/lib
 # COPY ./artemis-plugin/build/libs/common-0.9.0.jar $ARTEMIS_HOME/lib
