@@ -17,23 +17,11 @@
 ## under the License
 ##
 
-connector {
-    addr: 127.0.0.1
+listener {
+    addr: 0.0.0.0
     port: 5673
+    authenticatePeer: no
     name: broker
     role: route-container
+
 }
-
-autoLink {
-    addr: ${ADDRESS_NAME}
-    dir: out
-    connection: broker
-}
-
-autoLink {
-    addr: ${ADDRESS_NAME}
-    dir: in
-    connection: broker
-}
-
-

@@ -13,12 +13,11 @@ envsubst < /etc/qpid-dispatch/qdrouterd.conf.template > /tmp/qdrouterd.conf
 if [ -d /etc/qpid-dispatch/ssl ]; then
     envsubst < /etc/qpid-dispatch/ssl.snippet >> /tmp/qdrouterd.conf
 fi
-if [ -n "$QUEUE_NAME" ]; then
-    export ADDRESS_NAME=$QUEUE_NAME;
-    envsubst < /etc/qpid-dispatch/colocated-queue.snippet >> /tmp/qdrouterd.conf
-elif [ -n "$TOPIC_NAME" ]; then
+if [ -n "$TOPIC_NAME" ]; then
     export ADDRESS_NAME=$TOPIC_NAME;
     envsubst < /etc/qpid-dispatch/colocated-topic.snippet >> /tmp/qdrouterd.conf
+else
+    envsubst < /etc/qpid-dispatch/noncolocated.snippet >> /tmp/qdrouterd.conf
 fi
 if [ -n "$SUBSCRIPTION_SERVICE_HOST" ]; then
     envsubst < /etc/qpid-dispatch/subscriptions.snippet >> /tmp/qdrouterd.conf
