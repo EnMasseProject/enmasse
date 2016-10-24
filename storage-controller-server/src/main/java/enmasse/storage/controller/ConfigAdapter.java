@@ -18,8 +18,6 @@ package enmasse.storage.controller;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.openshift.internal.restclient.model.ConfigMap;
-import com.openshift.internal.restclient.model.KubernetesResource;
 import com.openshift.restclient.IOpenShiftWatchListener;
 import com.openshift.restclient.IWatcher;
 import com.openshift.restclient.ResourceKind;
@@ -81,19 +79,13 @@ public class ConfigAdapter implements IOpenShiftWatchListener {
         IConfigMap map = null;
         for (IResource resource : resources) {
             if (resource.getName().equals(configName)) {
-                map = createMap(resource);
+                map = (IConfigMap)resource;
             }
         }
 
         if (map != null) {
             configUpdated(map);
         }
-    }
-
-    // TODO: This is a workaroaund for https://github.com/openshift/openshift-restclient-java/issues/208
-    private IConfigMap createMap(IResource resource) {
-        KubernetesResource r = (KubernetesResource) resource;
-        return new ConfigMap(r.getNode(), r.getClient(), r.getPropertyKeys());
     }
 
     @Override
@@ -113,7 +105,7 @@ public class ConfigAdapter implements IOpenShiftWatchListener {
 
     @Override
     public void received(IResource resource, ChangeType change) {
-        configUpdated(createMap(resource));
+        configUpdated((IConfigMap)resource);
     }
 
     @Override
