@@ -8,7 +8,7 @@
         <connector-service name="amqp-connector">
           <factory-class>org.apache.activemq.artemis.integration.amqp.AMQPConnectorServiceFactory</factory-class>
           <param key="host" value="$MESSAGING_SERVICE_HOST" />
-          <param key="port" value="$MESSAGING_SERVICE_PORT_BROKER" />
+          <param key="port" value="$MESSAGING_SERVICE_PORT_INTERNAL" />
         </connector-service>
       </connector-services>
    </core>
