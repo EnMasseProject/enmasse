@@ -16,16 +16,8 @@ task downloadArtemis(type: Download) {
 task buildArtemis {
   doLast {
     exec {
-      workingDir 'activemq-artemis/artemis-core-client'
-      commandLine 'mvn', 'install', '-DskipTests'
-    }
-    exec {
-      workingDir 'activemq-artemis/artemis-protocols'
-      commandLine 'mvn', 'install', '-DskipTests'
-    }
-    exec {
-      workingDir 'activemq-artemis/artemis-server'
-      commandLine 'mvn', 'install', '-DskipTests'
+      workingDir 'activemq-artemis/integration/activemq-amqp-connector'
+      commandLine 'mvn', 'install'
     }
   }
 }
