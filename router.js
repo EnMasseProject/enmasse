@@ -64,7 +64,7 @@ var ConnectedRouter = function (connection) {
     connection.on('connection_close', this.closed.bind(this));
 
     this.update_types = {
-        address: {add: this.define_address_and_autolink.bind(this), remove: this.delete_address_and_autolink.bind(this), equivalence: address_equivalence},
+        address: {add: this.define_address_and_autolinks.bind(this), remove: this.delete_address_and_autolinks.bind(this), equivalence: address_equivalence},
         link_route: {add: this.define_link_route.bind(this), remove: this.delete_link_route.bind(this), equivalence: link_route_equivalence}
     };
 };
@@ -251,7 +251,7 @@ function from_router_address(address) {
     return {name:address.prefix, multicast:actual_distribution(address), store_and_forward:address.waypoint};
 }
 
-ConnectedRouter.prototype.define_address_and_autolink = function (address) {
+ConnectedRouter.prototype.define_address_and_autolinks = function (address) {
     return futurejs.and(this.define_address(address),
                         futurejs.and(this.define_autolink(address, "in"),
                                      this.define_autolink(address, "out")));
@@ -288,7 +288,7 @@ ConnectedRouter.prototype.delete_autolink = function (address, direction) {
     return future;
 }
 
-ConnectedRouter.prototype.delete_address_and_autolink = function (address) {
+ConnectedRouter.prototype.delete_address_and_autolinks = function (address) {
     return futurejs.and(this.delete_address(address),
                         futurejs.and(this.delete_autolink(address, "in"),
                                      this.delete_autolink(address, "out")));
