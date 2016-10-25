@@ -31,8 +31,9 @@ import static org.junit.Assert.assertThat;
 public class StoreAndForwardQueueTest extends VertxTestBase {
 
     @Test
-    public void testQueue() throws InterruptedException, ExecutionException, TimeoutException {
+    public void testQueue() throws Exception {
         String dest = "myqueue";
+        waitForAddress(dest, 5, TimeUnit.MINUTES);
         waitUntilReady(dest, 5, TimeUnit.MINUTES);
         EnMasseClient client = createClient(false);
         List<String> msgs = Arrays.asList("foo", "bar", "baz");
@@ -44,10 +45,10 @@ public class StoreAndForwardQueueTest extends VertxTestBase {
         assertThat(received.get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
     }
 
-    @Test
-    public void testScaledown() throws InterruptedException, TimeoutException, ExecutionException {
+    public void testScaledown() throws Exception {
         String dest = "myqueue";
         TestUtils.setReplicas(dest, dest, 3, 5, TimeUnit.MINUTES);
+        waitForAddress(dest, 5, TimeUnit.MINUTES);
         waitUntilReady(dest, 5, TimeUnit.MINUTES);
         EnMasseClient client = createClient(false);
         List<Future<Integer>> sent = Arrays.asList(
