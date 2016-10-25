@@ -1,18 +1,6 @@
 local version = std.extVar("VERSION");
 local router = import "router.jsonnet";
 { 
-  local port = {
-    "name": "amqp",
-    "port": 5672,
-    "protocol": "TCP",
-    "targetPort": 5672
-  },
-  local securePort = {
-    "name": "amqps",
-    "port": 5671,
-    "protocol": "TCP",
-    "targetPort": 5671
-  },
   deployment(secure)::
     {
       "apiVersion": "v1",

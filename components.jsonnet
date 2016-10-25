@@ -10,7 +10,7 @@ local messagingService = import "include/messaging-service.jsonnet";
 {
   "messaging-service.json": messagingService.generate(false),
   "tls-messaging-service.json": messagingService.generate(true),
-  "qdrouterd-imagestream.json": router.imagestream("gordons/qdrouterd"),
+  "qdrouterd-imagestream.json": router.imagestream("enmasseproject/qdrouterd"),
   "qdrouterd-dc.json": qdrouterd.deployment(false),
   "artemis-imagestream.json": broker.imagestream("enmasseproject/artemis"),
   "forwarder-imagestream.json": forwarder.imagestream("enmasseproject/topic-forwarder"),

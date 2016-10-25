@@ -11,6 +11,12 @@
     "protocol": "TCP",
     "targetPort": 5671
   },
+  local internalPort = {
+    "name": "internal",
+    "port": 55673,
+    "protocol": "TCP",
+    "targetPort": 55673
+  },
   generate(secure)::
     {
       "apiVersion": "v1",
@@ -19,7 +25,7 @@
         "name": "messaging"
       },
       "spec": {
-        "ports": if secure then [port, securePort] else [port],
+        "ports": if secure then [port, securePort, internalPort] else [port, internalPort],
         "selector": {
           "capability": "router"
         }

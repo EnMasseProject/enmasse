@@ -9,6 +9,11 @@ local is = import "imagestream.jsonnet";
         "containerPort": 5672,
         "protocol": "TCP"
     };
+    local internalPort = {
+        "name": "internal",
+        "containerPort": 55673,
+        "protocol": "TCP"
+    };
     local secureRouterPort = {
         "name": "amqps",
         "containerPort": 5671,
@@ -25,8 +30,8 @@ local is = import "imagestream.jsonnet";
         then [linkEnv]
         else [linkEnv, addressEnv],
       "ports": if secure
-        then [routerPort, secureRouterPort] 
-        else [routerPort],
+        then [routerPort, internalPort, secureRouterPort] 
+        else [routerPort, internalPort],
       "livenessProbe": {
         "tcpSocket": {
           "port": "amqp"

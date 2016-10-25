@@ -29,7 +29,6 @@ objects:
         metadata:
           labels:
             address: "${ADDRESS}"
-            capability: router
             role: broker
         spec:
           containers:
@@ -54,33 +53,11 @@ objects:
             volumeMounts:
             - mountPath: "/var/run/artemis"
               name: vol-${NAME}
-          - env:
-            - name: LINK_CAPACITY
-              value: "${ROUTER_LINK_CAPACITY}"
-            - name: QUEUE_NAME
-              value: "${ADDRESS}"
-            image: router
-            livenessProbe:
-              tcpSocket:
-                port: amqp
-            name: router
-            ports:
-            - containerPort: 5672
-              name: amqp
-              protocol: TCP
           volumes:
           - emptyDir: {}
             name: vol-${NAME}
       triggers:
       - type: ConfigChange
-      - imageChangeParams:
-          automatic: true
-          containerNames:
-          - router
-          from:
-            kind: ImageStreamTag
-            name: router:latest
-        type: ImageChange
       - imageChangeParams:
           automatic: true
           containerNames:
@@ -90,12 +67,12 @@ objects:
             name: artemis:latest
         type: ImageChange
   parameters:
-  - description: The link capacity setting for router
-    name: ROUTER_LINK_CAPACITY
-    value: '50'
   - description: Storage capacity required for volume claims
     name: STORAGE_CAPACITY
     value: 2Gi
+  - description: The link capacity setting for router
+    name: ROUTER_LINK_CAPACITY
+    value: '50'
   - description: A valid name for the instance
     name: NAME
     required: true
@@ -137,7 +114,6 @@ objects:
         metadata:
           labels:
             address: "${ADDRESS}"
-            capability: router
             role: broker
         spec:
           containers:
@@ -162,20 +138,6 @@ objects:
             volumeMounts:
             - mountPath: "/var/run/artemis"
               name: vol-${NAME}
-          - env:
-            - name: LINK_CAPACITY
-              value: "${ROUTER_LINK_CAPACITY}"
-            - name: QUEUE_NAME
-              value: "${ADDRESS}"
-            image: router
-            livenessProbe:
-              tcpSocket:
-                port: amqp
-            name: router
-            ports:
-            - containerPort: 5672
-              name: amqp
-              protocol: TCP
           volumes:
           - name: vol-${NAME}
             persistentVolumeClaim:
@@ -185,26 +147,18 @@ objects:
       - imageChangeParams:
           automatic: true
           containerNames:
-          - router
-          from:
-            kind: ImageStreamTag
-            name: router:latest
-        type: ImageChange
-      - imageChangeParams:
-          automatic: true
-          containerNames:
           - broker
           from:
             kind: ImageStreamTag
             name: artemis:latest
         type: ImageChange
   parameters:
-  - description: The link capacity setting for router
-    name: ROUTER_LINK_CAPACITY
-    value: '50'
   - description: Storage capacity required for volume claims
     name: STORAGE_CAPACITY
     value: 2Gi
+  - description: The link capacity setting for router
+    name: ROUTER_LINK_CAPACITY
+    value: '50'
   - description: A valid name for the instance
     name: NAME
     required: true
@@ -236,7 +190,6 @@ objects:
         metadata:
           labels:
             address: "${ADDRESS}"
-            capability: router
             role: broker
         spec:
           containers:
@@ -275,6 +228,9 @@ objects:
             - containerPort: 5672
               name: amqp
               protocol: TCP
+            - containerPort: 55673
+              name: internal
+              protocol: TCP
           - env:
             - name: TOPIC_NAME
               value: "${ADDRESS}"
@@ -295,18 +251,18 @@ objects:
       - imageChangeParams:
           automatic: true
           containerNames:
-          - router
-          from:
-            kind: ImageStreamTag
-            name: router:latest
-        type: ImageChange
-      - imageChangeParams:
-          automatic: true
-          containerNames:
           - broker
           from:
             kind: ImageStreamTag
             name: artemis:latest
+        type: ImageChange
+      - imageChangeParams:
+          automatic: true
+          containerNames:
+          - router
+          from:
+            kind: ImageStreamTag
+            name: router:latest
         type: ImageChange
       - imageChangeParams:
           automatic: true
@@ -317,12 +273,12 @@ objects:
             name: topic-forwarder:latest
         type: ImageChange
   parameters:
-  - description: The link capacity setting for router
-    name: ROUTER_LINK_CAPACITY
-    value: '50'
   - description: Storage capacity required for volume claims
     name: STORAGE_CAPACITY
     value: 2Gi
+  - description: The link capacity setting for router
+    name: ROUTER_LINK_CAPACITY
+    value: '50'
   - description: A valid name for the instance
     name: NAME
     required: true
@@ -364,7 +320,6 @@ objects:
         metadata:
           labels:
             address: "${ADDRESS}"
-            capability: router
             role: broker
         spec:
           containers:
@@ -403,6 +358,9 @@ objects:
             - containerPort: 5672
               name: amqp
               protocol: TCP
+            - containerPort: 55673
+              name: internal
+              protocol: TCP
           - env:
             - name: TOPIC_NAME
               value: "${ADDRESS}"
@@ -424,18 +382,18 @@ objects:
       - imageChangeParams:
           automatic: true
           containerNames:
-          - router
-          from:
-            kind: ImageStreamTag
-            name: router:latest
-        type: ImageChange
-      - imageChangeParams:
-          automatic: true
-          containerNames:
           - broker
           from:
             kind: ImageStreamTag
             name: artemis:latest
+        type: ImageChange
+      - imageChangeParams:
+          automatic: true
+          containerNames:
+          - router
+          from:
+            kind: ImageStreamTag
+            name: router:latest
         type: ImageChange
       - imageChangeParams:
           automatic: true
@@ -446,12 +404,12 @@ objects:
             name: topic-forwarder:latest
         type: ImageChange
   parameters:
-  - description: The link capacity setting for router
-    name: ROUTER_LINK_CAPACITY
-    value: '50'
   - description: Storage capacity required for volume claims
     name: STORAGE_CAPACITY
     value: 2Gi
+  - description: The link capacity setting for router
+    name: ROUTER_LINK_CAPACITY
+    value: '50'
   - description: A valid name for the instance
     name: NAME
     required: true
@@ -619,6 +577,9 @@ objects:
           - containerPort: 5672
             name: amqp
             protocol: TCP
+          - containerPort: 55673
+            name: internal
+            protocol: TCP
     triggers:
     - type: ConfigChange
     - imageChangeParams:
@@ -713,6 +674,10 @@ objects:
       port: 5672
       protocol: TCP
       targetPort: 5672
+    - name: internal
+      port: 55673
+      protocol: TCP
+      targetPort: 55673
     selector:
       capability: router
 - apiVersion: v1
