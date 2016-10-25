@@ -276,7 +276,7 @@ ConnectedRouter.prototype.define_autolink = function (address, direction) {
     var future = futurejs.future(created);
     var name = (direction == "in" ? "autoLinkIn" : "autoLinkOut") + address.name;
     console.log('defining autolink for ' + address.name + ' in direction ' + direction + ' on router ' + this.container_id);
-    this.create_entity('org.apache.qpid.dispatch.router.config.autoLink', name, {dir:direction, addr:address.name, containerId:address.name, connection:"broker"}, future.as_callback());
+    this.create_entity('org.apache.qpid.dispatch.router.config.autoLink', name, {dir:direction, addr:address.name, containerId:address.name}, future.as_callback());
     return future;
 }
 
