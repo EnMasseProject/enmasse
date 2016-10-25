@@ -86,13 +86,11 @@ public class VertxTestBase {
                 Message response = client.request(message, budget.timeLeft(), TimeUnit.MILLISECONDS);
                 AmqpValue value = (AmqpValue) response.getBody();
                 if ((Boolean) value.getValue() == true) {
-                    System.out.println("Got response: " + value.getValue());
                     numConfigured++;
                 }
             }
             Thread.sleep(1000);
         }
-        System.out.println("DOne checking");
         assertEquals("Timed out while waiting for EnMasse to be configured", numConfigured, agents.size());
     }
 
