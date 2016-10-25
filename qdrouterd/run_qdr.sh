@@ -16,8 +16,6 @@ fi
 if [ -n "$TOPIC_NAME" ]; then
     export ADDRESS_NAME=$TOPIC_NAME;
     envsubst < /etc/qpid-dispatch/colocated-topic.snippet >> /tmp/qdrouterd.conf
-else
-    envsubst < /etc/qpid-dispatch/noncolocated.snippet >> /tmp/qdrouterd.conf
 fi
 if [ -n "$SUBSCRIPTION_SERVICE_HOST" ]; then
     envsubst < /etc/qpid-dispatch/subscriptions.snippet >> /tmp/qdrouterd.conf
