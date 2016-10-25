@@ -234,8 +234,8 @@ objects:
             - containerPort: 5672
               name: amqp
               protocol: TCP
-            - containerPort: 5673
-              name: broker
+            - containerPort: 55673
+              name: internal
               protocol: TCP
             - containerPort: 5671
               name: amqps
@@ -374,8 +374,8 @@ objects:
             - containerPort: 5672
               name: amqp
               protocol: TCP
-            - containerPort: 5673
-              name: broker
+            - containerPort: 55673
+              name: internal
               protocol: TCP
             - containerPort: 5671
               name: amqps
@@ -603,8 +603,8 @@ objects:
           - containerPort: 5672
             name: amqp
             protocol: TCP
-          - containerPort: 5673
-            name: broker
+          - containerPort: 55673
+            name: internal
             protocol: TCP
           - containerPort: 5671
             name: amqps
@@ -715,10 +715,10 @@ objects:
       port: 5671
       protocol: TCP
       targetPort: 5671
-    - name: broker
-      port: 5673
+    - name: internal
+      port: 55673
       protocol: TCP
-      targetPort: 5673
+      targetPort: 55673
     selector:
       capability: router
 - apiVersion: v1

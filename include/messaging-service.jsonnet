@@ -11,11 +11,11 @@
     "protocol": "TCP",
     "targetPort": 5671
   },
-  local brokerPort = {
-    "name": "broker",
-    "port": 5673,
+  local internalPort = {
+    "name": "internal",
+    "port": 55673,
     "protocol": "TCP",
-    "targetPort": 5673
+    "targetPort": 55673
   },
   generate(secure)::
     {
@@ -25,7 +25,7 @@
         "name": "messaging"
       },
       "spec": {
-        "ports": if secure then [port, securePort, brokerPort] else [port, brokerPort],
+        "ports": if secure then [port, securePort, internalPort] else [port, internalPort],
         "selector": {
           "capability": "router"
         }

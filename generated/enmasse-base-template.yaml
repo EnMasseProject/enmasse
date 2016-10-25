@@ -228,8 +228,8 @@ objects:
             - containerPort: 5672
               name: amqp
               protocol: TCP
-            - containerPort: 5673
-              name: broker
+            - containerPort: 55673
+              name: internal
               protocol: TCP
           - env:
             - name: TOPIC_NAME
@@ -358,8 +358,8 @@ objects:
             - containerPort: 5672
               name: amqp
               protocol: TCP
-            - containerPort: 5673
-              name: broker
+            - containerPort: 55673
+              name: internal
               protocol: TCP
           - env:
             - name: TOPIC_NAME
@@ -577,8 +577,8 @@ objects:
           - containerPort: 5672
             name: amqp
             protocol: TCP
-          - containerPort: 5673
-            name: broker
+          - containerPort: 55673
+            name: internal
             protocol: TCP
     triggers:
     - type: ConfigChange
@@ -674,10 +674,10 @@ objects:
       port: 5672
       protocol: TCP
       targetPort: 5672
-    - name: broker
-      port: 5673
+    - name: internal
+      port: 55673
       protocol: TCP
-      targetPort: 5673
+      targetPort: 55673
     selector:
       capability: router
 - apiVersion: v1

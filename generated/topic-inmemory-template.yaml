@@ -62,8 +62,8 @@ objects:
           - containerPort: 5672
             name: amqp
             protocol: TCP
-          - containerPort: 5673
-            name: broker
+          - containerPort: 55673
+            name: internal
             protocol: TCP
         - env:
           - name: TOPIC_NAME
