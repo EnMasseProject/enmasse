@@ -20,7 +20,7 @@
 connector {
     addr: 127.0.0.1
     port: 5673
-    name: broker
+    name: localbroker
     role: route-container
 }
 
@@ -28,21 +28,21 @@ linkRoute {
     name: override.main_in
     prefix: ${ADDRESS_NAME}
     dir: in
-    connection: broker
+    connection: localbroker
 }
 
 linkRoute {
     name: override.main_out
     prefix: ${ADDRESS_NAME}
     dir: out
-    connection: broker
+    connection: localbroker
 }
 
 linkRoute {
     name: override.qualified_out
     prefix: ${ADDRESS_NAME}/${HOSTNAME}
     dir: out
-    connection: broker
+    connection: localbroker
 }
 
 

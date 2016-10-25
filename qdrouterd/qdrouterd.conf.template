@@ -33,6 +33,13 @@ listener {
 }
 
 listener {
+    addr: 0.0.0.0
+    port: 55673
+    authenticatePeer: no
+    role: route-container
+}
+
+listener {
     addr: ${MY_IP_ADDR}
     port: 55672
     role: inter-router
