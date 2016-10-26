@@ -13,7 +13,7 @@ do
         echo "PODS: $pods"
         exit 1
     fi
-    num_running=`oc get pods | grep -c Running`
+    num_running=`oc get pods | grep -v deploy | grep -c Running`
     if [ "$num_running" -eq "$EXPECTED_PODS" ]; then
         echo "ALL UP!"
         exit 0
