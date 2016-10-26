@@ -50,6 +50,7 @@ public class QueueDrainer {
     public void drainMessages(Endpoint to, String address) throws Exception {
         BrokerManager brokerManager = new BrokerManager(fromHost.coreEndpoint());
 
+        brokerManager.destroyConnectorService("amqp-connector");
         startDrain(to, address);
         brokerManager.waitUntilEmpty(address);
         vertx.close();

@@ -167,4 +167,8 @@ public class BrokerManager implements AutoCloseable {
     public void pauseQueue(String queueName) throws Exception {
         invokeOperation("core.queue." + queueName, "pause");
     }
+
+    public void destroyConnectorService(String connectorName) throws Exception {
+        invokeOperation("core.server", "destroyConnectorService", connectorName);
+    }
 }
