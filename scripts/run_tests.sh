@@ -11,7 +11,7 @@ oc policy add-role-to-user edit system:serviceaccount:$(oc project -q):deployer
 
 oc process -f https://raw.githubusercontent.com/enmasseproject/openshift-configuration/master/generated/enmasse-template.yaml | oc create -f -
 
-$DIR/wait_until_up.sh 8 || exit 1
+$DIR/wait_until_up.sh 7 || exit 1
 
 sleep 300
 
