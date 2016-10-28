@@ -54,9 +54,10 @@ public class TopicMigrator implements DiscoveryListener {
     }
 
     public void migrate(String address) throws Exception {
-        // Step 0: Cutoff new subscriptions
+        // Step 0: Cutoff router link
+        localBroker.destroyConnectorService("amqp-connector");
 
-        // Step 1: Retrieve subscription identities
+        // Step 1: Retrieve subscriptions
         System.out.println("Listing subscriptions");
         Set<String> queues = listQueuesForAddress(localBroker, address);
 
