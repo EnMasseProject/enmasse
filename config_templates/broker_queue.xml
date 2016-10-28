@@ -9,6 +9,7 @@
           <factory-class>org.apache.activemq.artemis.integration.amqp.AMQPConnectorServiceFactory</factory-class>
           <param key="host" value="$MESSAGING_SERVICE_HOST" />
           <param key="port" value="$MESSAGING_SERVICE_PORT_INTERNAL" />
+          <param key="containerId" value="$QUEUE_NAME" />
         </connector-service>
       </connector-services>
    </core>
