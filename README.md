@@ -1,2 +1,2 @@
-# mqtt-frontend
+# MQTT FrontEnd
 MQTT frontend component for EnMasse
