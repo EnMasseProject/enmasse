@@ -151,27 +151,6 @@ add_resource_type('connector');
 add_resource_type('listener');
 add_resource_type('address', 'org.apache.qpid.dispatch.router.config.address', 'addresses');
 add_resource_type('link_route', 'org.apache.qpid.dispatch.router.config.linkRoute');
-add_resource_type('auto_link', 'org.apache.qpid.dispatch.router.config.autoLink');
-
-
-Router.prototype.find_auto_link = function (name) {
-    return this.get_auto_links().then(function (items) {
-        for (var i = 0; i < items.length; i++) {
-            if (items[i].name === name) return items[i];
-        }
-    });
-}
-
-Router.prototype.ensure_auto_link = function (o) {
-    var router = this;
-    return this.find_auto_link(o.name).then(
-        function (item) {
-            if (item === undefined) {
-                return router.create_auto_link(o);
-            }
-        }
-    );
-}
 
 var amqp = require('rhea').create_container();
 module.exports.Router = Router;

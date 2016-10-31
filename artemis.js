@@ -202,6 +202,48 @@ Artemis.prototype.findDivert = function (name) {
     );
 };
 
+Artemis.prototype.createConnectorService = function (name, source, target) {
+    var parameters = {
+        "host": process.env.MESSAGING_SERVICE_HOST,
+        "port": process.env.MESSAGING_SERVICE_PORT_INTERNAL,
+        "containerId": name,
+        "clientAddress": target,
+        "sourceAddress": source
+    };
+    return this._request('core.server', 'createConnectorService', [name, "org.apache.activemq.artemis.integration.amqp.AMQPConnectorServiceFactory", parameters]);
+}
+
+
+Artemis.prototype.destroyConnectorService = function (name) {
+    return this._request('core.server', 'destroyConnectorService', [name]);
+}
+
+Artemis.prototype.getConnectorServices = function () {
+    return this._request('core.server', 'getConnectorServices', []);
+}
+
+/**
+ * Create connector service if one does not already exist.
+ */
+Artemis.prototype.ensureConnectorService = function (name, source, target) {
+    var broker = this;
+    return broker.findConnectorService(name).then(
+        function (found) {
+            if (!found) {
+                return broker.createConnectorService(name, source, target);
+            }
+        }
+    );
+};
+
+Artemis.prototype.findConnectorService = function (name) {
+    return this.getConnectorServices().then(
+        function (results) {
+            return results.indexOf(name) >= 0;
+        }
+    );
+};
+
 Artemis.prototype.close = function () {
     this.connection.close();
 }
