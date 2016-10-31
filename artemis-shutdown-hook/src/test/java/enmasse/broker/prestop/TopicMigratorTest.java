@@ -16,64 +16,64 @@
 
 package enmasse.broker.prestop;
 
-import enmasse.discovery.Endpoint;
 import enmasse.discovery.Host;
-import io.vertx.core.Vertx;
+import org.apache.qpid.proton.amqp.messaging.AmqpValue;
+import org.apache.qpid.proton.message.Message;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
+
 public class TopicMigratorTest {
-    private Endpoint from = new Endpoint("127.0.0.1", 12345);
-    private Endpoint to = new Endpoint("127.0.0.1", 12346);
+    private Host from = TestUtil.createHost("127.0.0.1", 12345);
+    private Host to = TestUtil.createHost("127.0.0.1", 12346);
     private TestBroker fromServer;
     private TestBroker toServer;
-    private Vertx vertx;
+    private TestSubscriber subscriber;
+    private TestPublisher publisher;
 
     @Before
     public void setup() throws Exception {
-        vertx = Vertx.vertx();
-        fromServer = new TestBroker(from.hostname(), from.port(), "jms.topic.mytopic");
-        toServer = new TestBroker(to.hostname(), to.port(), "jms.topic.mytopic");
+        subscriber = new TestSubscriber();
+        publisher = new TestPublisher();
+        fromServer = new TestBroker(from.amqpEndpoint(), "jms.topic.mytopic");
+        toServer = new TestBroker(to.amqpEndpoint(), "jms.topic.mytopic");
         fromServer.start();
         toServer.start();
-        Thread.sleep(5000);
+        Thread.sleep(2000);
     }
 
     @After
     public void teardown() throws Exception {
-        vertx.close();
+        publisher.close();
+        subscriber.close();
         fromServer.stop();
         toServer.stop();
     }
 
     @Test
     public void testMigrator() throws Exception {
-        System.out.println("Started brokers");
-        TestSubscriber subscriber = new TestSubscriber(vertx);
         System.out.println("Attempting to subscribe");
-        subscriber.subscribe(from, "jms.topic.mytopic", to);
+        subscriber.subscribe(from.amqpEndpoint(), "jms.topic.mytopic");
+        subscriber.unsubscribe();
 
-        Thread.sleep(2000);
-        System.out.println("Starting migrator");
+        System.out.println("Publishing message");
+        publisher.publish(from.amqpEndpoint(), "jms.topic.mytopic", "hello, world");
 
-        Host from = createHost("127.0.0.1", 12345);
-        Host to = createHost("127.0.0.1", 12346);
         TopicMigrator migrator = new TopicMigrator(from);
         migrator.hostsChanged(Collections.singleton(to));
+
+        System.out.println("Starting migrator");
         migrator.migrate("jms.topic.mytopic");
         fromServer.assertShutdown(1, TimeUnit.MINUTES);
-    }
 
-    private Host createHost(String hostname, int port) {
-        Map<String, Integer> portMap = new LinkedHashMap<>();
-        portMap.put("amqp", port);
-        portMap.put("core", port);
-        return new Host(hostname, portMap);
+        subscriber.subscribe(to.amqpEndpoint(), "jms.topic.mytopic");
+        Message message = subscriber.receiveMessage(1, TimeUnit.MINUTES);
+        assertThat(((AmqpValue)message.getBody()).getValue(), is("hello, world"));
     }
 }

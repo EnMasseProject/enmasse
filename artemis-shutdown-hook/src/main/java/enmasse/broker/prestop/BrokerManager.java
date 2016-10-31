@@ -135,7 +135,6 @@ public class BrokerManager implements AutoCloseable {
     public void waitUntilEmpty(String queue) throws InterruptedException {
         while (true) {
             try {
-                System.out.println("Retrieving count for " + queue);
                 long count = getQueueMessageCount(queue);
                 System.out.println("Found " + count + " messages in queue " + queue);
                 if (count == 0) {
