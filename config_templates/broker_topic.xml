@@ -4,6 +4,15 @@
             <filter string="__AMQX=-1" />
         </queue>
       </queues>
+
+      <connector-services>
+        <connector-service name="amqp-connector">
+          <factory-class>org.apache.activemq.artemis.integration.amqp.AMQPConnectorServiceFactory</factory-class>
+          <param key="host" value="$MESSAGING_SERVICE_HOST" />
+          <param key="port" value="$MESSAGING_SERVICE_PORT_INTERNAL" />
+          <param key="containerId" value="$CONTAINER_ID" />
+        </connector-service>
+      </connector-services>
    </core>
 </configuration>
 

@@ -52,7 +52,9 @@ public class QueueDrainer {
 
         brokerManager.destroyConnectorService("amqp-connector");
         startDrain(to, address);
+        System.out.println("Waiting.....");
         brokerManager.waitUntilEmpty(address);
+        System.out.println("Done waiting!");
         vertx.close();
         brokerManager.shutdownBroker();
     }
@@ -64,8 +66,10 @@ public class QueueDrainer {
             if (sendHandle.succeeded()) {
                 ProtonConnection sendConn = sendHandle.result();
                 sendConn.setContainer("shutdown-hook-sender");
+                sendConn.openHandler(ev -> {
+                    System.out.println("Connected to sender: " +  sendConn.getRemoteContainer());
+                });
                 sendConn.open();
-                System.out.println("Connected to sender: " +  sendConn.getRemoteContainer());
                 ProtonSender sender = sendConn.createSender(address);
                 sender.openHandler(handle -> {
                     if (handle.succeeded()) {
@@ -81,10 +85,13 @@ public class QueueDrainer {
                                     System.out.println("Receiver other end opened: " + h.result().getRemoteContainer());
                                     markInstanceDeleted(recvConn.getRemoteContainer());
                                     ProtonReceiver receiver = recvConn.createReceiver(address);
+                                    receiver.setPrefetch(0);
                                     receiver.openHandler(handler -> {
                                         System.out.println("Receiver open: " + handle.succeeded());
+                                        receiver.flow(100);
                                     });
                                     receiver.handler((protonDelivery, message) -> {
+                                        System.out.println("Got Message to forwarder");
                                         sender.send(message, targetDelivery ->
                                                 protonDelivery.disposition(targetDelivery.getRemoteState(), targetDelivery.remotelySettled()));
 

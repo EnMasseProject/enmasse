@@ -17,6 +17,7 @@
 package enmasse.broker.prestop;
 
 import com.google.common.io.Files;
+import enmasse.discovery.Endpoint;
 import org.apache.activemq.artemis.api.core.TransportConfiguration;
 import org.apache.activemq.artemis.core.config.Configuration;
 import org.apache.activemq.artemis.core.config.CoreQueueConfiguration;
@@ -44,9 +45,9 @@ public class TestBroker {
     private final EmbeddedActiveMQ server = new EmbeddedActiveMQ();
     private final Messenger messenger = Messenger.Factory.create();
 
-    public TestBroker(String host, int port, String address) {
-        this.host = host;
-        this.port = port;
+    public TestBroker(Endpoint endpoint, String address) {
+        this.host = endpoint.hostname();
+        this.port = endpoint.port();
         this.address = address;
         this.messageAddress = String.format("amqp://%s:%s/%s", host, port, address);
     }

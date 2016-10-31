@@ -16,14 +16,11 @@
 
 package enmasse.broker.prestop;
 
-import enmasse.discovery.Endpoint;
 import enmasse.discovery.Host;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
@@ -32,22 +29,18 @@ import static org.junit.Assert.assertThat;
 
 public class QueueDrainerTest {
     private QueueDrainer client;
-    private Endpoint from = new Endpoint("127.0.0.1", 12345);
-    private Endpoint to = new Endpoint("127.0.0.1", 12346);
+    private Host from = TestUtil.createHost("127.0.0.1", 12345);
+    private Host to = TestUtil.createHost("127.0.0.1", 12346);
     private TestBroker fromServer;
     private TestBroker toServer;
 
     @Before
     public void setup() throws Exception {
-        fromServer = new TestBroker(from.hostname(), from.port(), "myqueue");
-        toServer = new TestBroker(to.hostname(), to.port(), "myqueue");
-        Map<String, Integer> portMap = new LinkedHashMap<>();
-        portMap.put("amqp", from.port());
-        portMap.put("core", from.port());
-        Host fromHost = new Host(from.hostname(), portMap);
+        fromServer = new TestBroker(from.amqpEndpoint(), "myqueue");
+        toServer = new TestBroker(to.amqpEndpoint(), "myqueue");
         fromServer.start();
         toServer.start();
-        client = new QueueDrainer(fromHost, Optional.empty());
+        client = new QueueDrainer(from, Optional.empty());
     }
 
     @After
@@ -61,7 +54,7 @@ public class QueueDrainerTest {
         System.out.println("Sending message");
         fromServer.sendMessage("Hello drainer");
         System.out.println("Starting drain");
-        client.drainMessages(to, "myqueue");
+        client.drainMessages(to.amqpEndpoint(), "myqueue");
         System.out.println("Receiving message");
         String msg = toServer.recvMessage();
         System.out.println("Checking message");

@@ -39,6 +39,11 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 public class TopicMigrator implements DiscoveryListener {
@@ -54,31 +59,34 @@ public class TopicMigrator implements DiscoveryListener {
     }
 
     public void migrate(String address) throws Exception {
-        // Step 0: Cutoff new subscriptions
+        // Step 0: Cutoff router link
+        localBroker.destroyConnectorService("amqp-connector");
 
-        // Step 1: Retrieve subscription identities
-        System.out.println("Listing subscriptions");
-        Set<String> queues = listQueuesForAddress(localBroker, address);
+        // Step 1: Retrieve subscriptions
+        Set<String> queues = listQueuesForAddress(localBroker, address).stream()
+                .filter(q -> MigrateMessageHandler.isValidSubscription(q))
+                .collect(Collectors.toSet());
+        System.out.println("Listed queues: " + queues);
 
         // Step 2: Create and pause queues on other brokers
         Map<String, Host> queueMap = createQueues(address, queues);
 
-        // Step 3: Create local subscriptions
-        System.out.println("Creating local subscriptions");
+        // Step 3: Create subscriptions to local queues and forward to destinations
+        System.out.println("Creating local subscriptions for " + queueMap.keySet());
         List<MigrateMessageHandler> migrateHandlers = queueMap.entrySet().stream()
             .map(e -> new MigrateMessageHandler(e.getKey(), e.getValue().amqpEndpoint()))
             .collect(Collectors.toList());
 
         createSubscriptions(address, migrateHandlers);
 
-        // Step 4: Destroy local queues
-        System.out.println("Closing other subscriptions");
-        localBroker.destroyQueues(queues);
-
-        // Step 5: Send messages on broker where subscription identity has appeared
+        // Step 4: Send messages on broker where subscription identity has appeared
         System.out.println("Migrating messages");
         migrateMessages(address, migrateHandlers);
-        waitUntilEmpty(migrateHandlers.stream().map(MigrateMessageHandler::getQueueName).collect(Collectors.toSet()));
+        System.out.println("Waiting until messages have been migrated");
+
+        // Step 5: Destroy local queues
+        System.out.println("Destroying local queues");
+        localBroker.destroyQueues(queues);
 
         // Step 6: Activate queues
         activateQueues(queueMap);
@@ -123,25 +131,25 @@ public class TopicMigrator implements DiscoveryListener {
                 .collect(Collectors.toSet());
     }
 
-    private void waitUntilEmpty(Set<String> queues) throws InterruptedException {
-        for (String queue : queues) {
-            localBroker.waitUntilEmpty(queue);
-        }
-    }
-
-    private void migrateMessages(String address, List<MigrateMessageHandler> handlers) {
+    private void migrateMessages(String address, List<MigrateMessageHandler> handlers) throws Exception {
         for (MigrateMessageHandler handler : handlers) {
             migrateMessages(address, handler);
         }
     }
 
 
-    private void migrateMessages(String address, MigrateMessageHandler handler) {
+    private void migrateMessages(String address, MigrateMessageHandler handler) throws Exception {
         ProtonClient protonClient = ProtonClient.create(vertx);
+        long numMessages = localBroker.getQueueMessageCount(handler.getQueueName());
+        System.out.println("Migrating " + numMessages + " messages from " + handler.getQueueName());
+        // Assume less than 2 billion messages
+        CountDownLatch latch = new CountDownLatch((int) numMessages);
+        handler.setLatch(latch);
         protonClient.connect(handler.toEndpoint().hostname(), handler.toEndpoint().port(), toConnection -> {
             if (toConnection.succeeded()) {
+                System.out.println("Opened connection to destination");
                 ProtonConnection toConn = toConnection.result();
-                toConn.setContainer(handler.getId());
+                toConn.setContainer("topic-migrator");
                 toConn.closeHandler(result -> {
                     System.out.println("Migrator connection closed");
                 });
@@ -149,7 +157,7 @@ public class TopicMigrator implements DiscoveryListener {
                     Target target = new Target();
                     target.setAddress(address);
                     target.setCapabilities(Symbol.getSymbol("topic"));
-                    ProtonSender sender = toConn.createSender(address, new ProtonLinkOptions().setLinkName(handler.getId()));
+                    ProtonSender sender = toConn.createSender(handler.getSubscriptionName());
                     sender.setTarget(target);
                     sender.closeHandler(res -> {
                         System.out.println("Sender connection closed");
@@ -159,12 +167,18 @@ public class TopicMigrator implements DiscoveryListener {
                             System.out.println("Opened sender, marking ready!");
                             handler.setSender(sender);
                             handler.setReady(true);
+                        } else {
+                            System.out.println("Error opening sender: " + toRes.cause().getMessage());
                         }
                     });
                     sender.open();
                 });
+                toConn.open();
+            } else {
+                System.out.println("Failed opening connection: " + toConnection.cause().getMessage());
             }
         });
+        latch.await(1, TimeUnit.HOURS);
     }
 
     private void createSubscriptions(String address, List<MigrateMessageHandler> handlers) throws Exception {
@@ -179,16 +193,16 @@ public class TopicMigrator implements DiscoveryListener {
         protonClient.connect(localEndpoint.hostname(), localEndpoint.port(), connection -> {
             if (connection.succeeded()) {
                 ProtonConnection conn = connection.result();
-                conn.setContainer(handler.getId());
+                conn.setContainer(handler.getClientId());
                 conn.closeHandler(result -> {
                     System.out.println("Migrator sub connection closed");
                 });
                 conn.openHandler(result -> {
                     Source source = new Source();
                     source.setAddress(address);
-                    source.setCapabilities(Symbol.getSymbol("topic"));
                     source.setDurable(TerminusDurability.UNSETTLED_STATE);
-                    ProtonReceiver localReceiver = conn.createReceiver(address, new ProtonLinkOptions().setLinkName(handler.getId()));
+                    source.setCapabilities(Symbol.getSymbol("topic"));
+                    ProtonReceiver localReceiver = conn.createReceiver(handler.getSubscriptionName(), new ProtonLinkOptions().setLinkName(handler.getSubscriptionName()));
                     localReceiver.setSource(source);
                     localReceiver.setPrefetch(0);
                     localReceiver.setAutoAccept(false);
@@ -197,7 +211,7 @@ public class TopicMigrator implements DiscoveryListener {
                     });
                     localReceiver.openHandler(res -> {
                         if (res.succeeded()) {
-                            System.out.println("Opened localReceiver");
+                            System.out.println("Opened localReceiver for " + handler.getClientId() + "." + handler.getSubscriptionName());
                             handler.setReceiver(localReceiver);
                             Handler<Long> checkReady = new Handler<Long>() {
                                 @Override

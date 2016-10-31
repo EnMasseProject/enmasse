@@ -25,19 +25,26 @@ import io.vertx.proton.ProtonReceiver;
 import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.messaging.Source;
 import org.apache.qpid.proton.amqp.messaging.TerminusDurability;
+import org.apache.qpid.proton.message.Message;
 
-/**
- * TODO: Description
- */
-public class TestSubscriber {
-    private final Vertx vertx;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Queue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
+import java.util.zip.ZipFile;
 
-    public TestSubscriber(Vertx vertx) {
-        this.vertx = vertx;
-    }
+public class TestSubscriber implements AutoCloseable {
+    private final Vertx vertx = Vertx.vertx();
+    private volatile ProtonConnection connection;
 
-    public void subscribe(Endpoint endpoint, String address, Endpoint failover) {
-        String containerId = "helloclient";
+    private final BlockingQueue<Message> received = new LinkedBlockingQueue<>();
+
+    public void subscribe(Endpoint endpoint, String address) throws InterruptedException {
+        CountDownLatch latch = new CountDownLatch(1);
+        String containerId = "test-subscriber";
         ProtonClient client = ProtonClient.create(vertx);
         client.connect(endpoint.hostname(), endpoint.port(), connection -> {
             if (connection.succeeded()) {
@@ -46,6 +53,7 @@ public class TestSubscriber {
                 conn.closeHandler(res -> {
                     System.out.println("CLIENT cONN cLOSED");
                 });
+                this.connection = conn;
                 conn.openHandler(result -> {
                     System.out.println("Connected: " + result.result().getRemoteContainer());
                     Source source = new Source();
@@ -57,6 +65,7 @@ public class TestSubscriber {
                     receiver.openHandler(res -> {
                         if (res.succeeded()) {
                             System.out.println("Opened receiver");
+                            latch.countDown();
                         } else {
                             System.out.println("Failed opening received: " + res.cause().getMessage());
                         }
@@ -64,14 +73,11 @@ public class TestSubscriber {
                     receiver.closeHandler(res -> {
                         System.out.println("CLIENT CLOSED");
                         conn.close();
-                        if (failover != null) {
-                            vertx.setTimer(5000, timerId -> {
-                                System.out.println("Connecting to failover");
-                                subscribe(failover, address, null);
-                            });
-                        }
                     });
-                    receiver.handler((delivery, message) -> System.out.println("GOT MESSAGE"));
+                    receiver.handler((delivery, message) -> {
+                        System.out.println("GOT MESSAGE");
+                        received.add(message);
+                    });
                     receiver.open();
                 });
                 conn.open();
@@ -79,5 +85,21 @@ public class TestSubscriber {
                 System.out.println("Connection failed: " + connection.cause().getMessage());
             }
         });
+        latch.await(1, TimeUnit.MINUTES);
+    }
+
+    public void unsubscribe() {
+        connection.close();
+    }
+
+    @Override
+    public void close() throws Exception {
+        unsubscribe();
+        vertx.close();
+    }
+
+
+    public Message receiveMessage(long timeout, TimeUnit timeUnit) throws InterruptedException {
+        return received.poll(timeout, timeUnit);
     }
 }
