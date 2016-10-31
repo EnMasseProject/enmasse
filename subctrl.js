@@ -74,11 +74,7 @@ SubscriptionControl.prototype.subscribe = function (subscription_id, topic) {
     return ensure_queue(subscription_id, this.pods.pod_list()).then(
         function (pod) {
             var name = subscription_id + ':' + topic;
-            return pod.broker.ensureDivert(name, topic, subscription_id).then(
-                function () {
-                    return pod.router.ensure_auto_link({'name':subscription_id, 'addr':subscription_id, dir:'in', phase:0, connection:'broker'});
-                }
-            );
+            return pod.broker.ensureConnectorService(name, topic, subscription_id);
         }
     );
 };
@@ -88,7 +84,7 @@ SubscriptionControl.prototype.unsubscribe = function (subscription_id, topic) {
         function(result) {
             if (result.found) {
                 var name = subscription_id + ':' + topic;
-                return result.pod.broker.destroyDivert(name);
+                return result.pod.broker.destroyConnectorService(name);
             }
         }
     );
