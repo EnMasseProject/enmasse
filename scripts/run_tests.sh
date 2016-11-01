@@ -13,4 +13,6 @@ oc process -f https://raw.githubusercontent.com/enmasseproject/openshift-configu
 
 $DIR/wait_until_up.sh 7 || exit 1
 
+sleep 300
+
 OPENSHIFT_USER=test OPENSHIFT_TOKEN=`oc config view -o jsonpath='{.users[?(@.name == "test/localhost:8443")].user.token}'` OPENSHIFT_URL=https://localhost:8443 gradle check -i
