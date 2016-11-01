@@ -20,10 +20,8 @@ import org.junit.Test;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
@@ -35,7 +33,7 @@ public class StoreAndForwardQueueTest extends VertxTestBase {
         String dest = "myqueue";
         waitForAddress(dest, 5, TimeUnit.MINUTES);
         waitUntilReady(dest, 5, TimeUnit.MINUTES);
-        EnMasseClient client = createClient(false);
+        EnMasseClient client = createQueueClient();
         List<String> msgs = Arrays.asList("foo", "bar", "baz");
 
         Future<Integer> numSent = client.sendMessages(dest, msgs);
@@ -50,7 +48,7 @@ public class StoreAndForwardQueueTest extends VertxTestBase {
         TestUtils.setReplicas(dest, dest, 3, 5, TimeUnit.MINUTES);
         waitForAddress(dest, 5, TimeUnit.MINUTES);
         waitUntilReady(dest, 5, TimeUnit.MINUTES);
-        EnMasseClient client = createClient(false);
+        EnMasseClient client = createQueueClient();
         List<Future<Integer>> sent = Arrays.asList(
                 client.sendMessages(dest, Arrays.asList("foo")),
                 client.sendMessages(dest, Arrays.asList("bar")),

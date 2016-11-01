@@ -15,11 +15,8 @@
  */
 package enmasse.smoketest;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.BooleanNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.openshift.restclient.ResourceKind;
 import com.openshift.restclient.model.IPod;
@@ -59,8 +56,20 @@ public class VertxTestBase {
         vertx.close();
     }
 
-    protected EnMasseClient createClient(boolean multicast) {
-        return new EnMasseClient(protonClient, endpoint, multicast);
+    protected EnMasseClient createQueueClient() {
+        return createClient(new QueueTerminusFactory());
+    }
+
+    protected EnMasseClient createTopicClient() {
+        return createClient(new TopicTerminusFactory());
+    }
+
+    protected EnMasseClient createDurableTopicClient() {
+        return createClient(new DurableTopicTerminusFactory());
+    }
+
+    protected EnMasseClient createClient(TerminusFactory terminusFactory) {
+        return new EnMasseClient(protonClient, endpoint, terminusFactory);
     }
 
     protected void waitForAddress(String address, long timeout , TimeUnit timeUnit) throws Exception {

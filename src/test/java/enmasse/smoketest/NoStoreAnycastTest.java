@@ -33,7 +33,7 @@ public class NoStoreAnycastTest extends VertxTestBase {
     @Test
     public void testMessagesDeliveredToReceiver() throws InterruptedException, TimeoutException, ExecutionException {
         String dest = "anycast";
-        EnMasseClient client = createClient(false);
+        EnMasseClient client = createQueueClient();
 
         List<String> msgs = Arrays.asList("foo", "bar", "baz");
 

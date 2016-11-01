@@ -40,12 +40,16 @@ public class StoreAndForwardTopicTest extends VertxTestBase{
         TestUtils.setReplicas("mytopic", "mytopic", 1, 10, TimeUnit.MINUTES);
     }
 
+    @Before
+    public void setupReplicas() throws InterruptedException {
+        TestUtils.setReplicas("mytopic", "mytopic", 4, 10, TimeUnit.MINUTES);
+    }
+
     @Test
     public void testMultipleSubscribers() throws InterruptedException, TimeoutException, ExecutionException {
-        TestUtils.setReplicas("mytopic", "mytopic", 4, 10, TimeUnit.MINUTES);
         String dest = "mytopic";
         waitUntilReady(dest, 5, TimeUnit.MINUTES);
-        EnMasseClient client = createClient(true);
+        EnMasseClient client = createTopicClient();
         List<String> msgs = Arrays.asList("foo", "bar", "baz");
 
         List<Future<List<String>>> recvResults = Arrays.asList(
@@ -65,8 +69,8 @@ public class StoreAndForwardTopicTest extends VertxTestBase{
         String topic = "mytopic";
         String address = "myaddress";
 
-        EnMasseClient ctrlClient = createClient(false);
-        EnMasseClient client = createClient(true);
+        EnMasseClient ctrlClient = createQueueClient();
+        EnMasseClient client = createTopicClient();
 
         waitUntilReady(topic, 5, TimeUnit.MINUTES);
         Message sub = Message.Factory.create();

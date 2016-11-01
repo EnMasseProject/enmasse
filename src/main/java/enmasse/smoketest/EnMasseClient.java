@@ -18,11 +18,9 @@ package enmasse.smoketest;
 
 import io.vertx.proton.ProtonClient;
 import io.vertx.proton.ProtonConnection;
+import io.vertx.proton.ProtonLinkOptions;
 import io.vertx.proton.ProtonSender;
-import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
-import org.apache.qpid.proton.amqp.messaging.Source;
-import org.apache.qpid.proton.amqp.messaging.Target;
 import org.apache.qpid.proton.message.Message;
 
 import java.util.ArrayList;
@@ -37,12 +35,12 @@ import java.util.stream.Collectors;
 public class EnMasseClient {
     private final ProtonClient client;
     private final Endpoint endpoint;
-    private final boolean isTopic;
+    private final TerminusFactory terminusFactory;
 
-    public EnMasseClient(ProtonClient protonClient, Endpoint endpoint, boolean isTopic) {
+    public EnMasseClient(ProtonClient protonClient, Endpoint endpoint, TerminusFactory terminusFactory) {
         this.client = protonClient;
         this.endpoint = endpoint;
-        this.isTopic = isTopic;
+        this.terminusFactory = terminusFactory;
     }
 
     public Future<List<String>> recvMessages(String address, int numMessages) throws InterruptedException {
@@ -54,18 +52,15 @@ public class EnMasseClient {
         List<String> messages = new ArrayList<>();
         CompletableFuture<List<String>> future = new CompletableFuture<>();
         client.connect(endpoint.getHost(), endpoint.getPort(), event -> {
-            ProtonConnection connection = event.result().open();
-            Source source = new Source();
-            source.setAddress(address);
-            if (isTopic) {
-                source.setCapabilities(Symbol.getSymbol("topic"));
-            }
-            connection.createReceiver(address)
+            ProtonConnection connection = event.result();
+            connection.setContainer("enmasse-smoketest-client");
+            connection.open();
+            connection.createReceiver(address, new ProtonLinkOptions().setLinkName("enmasse-smoketest-client"))
                 .openHandler(opened -> {
                     latch.countDown();
                     System.out.println("Receiving messages from " + connection.getRemoteContainer());
                 })
-                .setSource(source)
+                .setSource(terminusFactory.getSource(address))
                 .handler((delivery, message) -> {
                     messages.add((String)((AmqpValue)message.getBody()).getValue());
                     if (messages.size() == numMessages) {
@@ -99,13 +94,8 @@ public class EnMasseClient {
         client.connect(endpoint.getHost(), endpoint.getPort(), event -> {
             ProtonConnection connection = event.result();
             connection.openHandler(result -> {
-                Target target = new Target();
-                target.setAddress(address);
-                if (isTopic) {
-                    target.setCapabilities(Symbol.getSymbol("topic"));
-                }
                 ProtonSender sender = connection.createSender(address);
-                sender.setTarget(target);
+                sender.setTarget(terminusFactory.getTarget(address));
                 sender.openHandler(remoteOpenResult -> {
                     for (Message message : messages) {
                         sender.send(message, delivery -> {

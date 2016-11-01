@@ -34,7 +34,7 @@ public class NoStoreBroadcastTest extends VertxTestBase {
     public void testMultipleRecievers() throws InterruptedException, TimeoutException, ExecutionException {
         String dest = "broadcast";
         waitUntilReady(dest, 5, TimeUnit.MINUTES);
-        EnMasseClient client = createClient(true);
+        EnMasseClient client = createTopicClient();
         List<String> msgs = Arrays.asList("foo");
 
         List<Future<List<String>>> recvResults = Arrays.asList(
