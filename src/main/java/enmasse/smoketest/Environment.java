@@ -25,9 +25,8 @@ public class Environment {
     public static final String user = System.getenv("OPENSHIFT_USER");
     public static final String token = System.getenv("OPENSHIFT_TOKEN");
     public static final String url = System.getenv("OPENSHIFT_URL");
-    public static final String namespace = "enmasse-ci";
+    public static final String namespace = System.getenv("OPENSHIFT_NAMESPACE");
     public static final IClient client = new ClientBuilder(url).usingToken(token).withUserName(user).build();
     public static final IService service = client.get(ResourceKind.SERVICE, "messaging", namespace);
     public static final Endpoint endpoint = new Endpoint(service.getPortalIP(), service.getPort());
-    //public static final Endpoint endpoint = new Endpoint("172.30.56.135", 5672);
 }
