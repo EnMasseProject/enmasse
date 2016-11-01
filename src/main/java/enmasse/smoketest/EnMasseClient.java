@@ -32,6 +32,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 public class EnMasseClient {
     private final ProtonClient client;
@@ -81,6 +82,18 @@ public class EnMasseClient {
     }
 
     public Future<Integer> sendMessages(String address, List<String> messages) {
+        Message [] messageList = messages.stream()
+                .map(body -> {
+                    Message message = Message.Factory.create();
+                    message.setBody(new AmqpValue(body));
+                    message.setAddress(address);
+                    return message;
+                })
+                .collect(Collectors.toList()).toArray(new Message[0]);
+        return sendMessages(address, messageList);
+    }
+
+    public Future<Integer> sendMessages(String address, Message ... messages) {
         AtomicInteger count = new AtomicInteger(0);
         CompletableFuture<Integer> future = new CompletableFuture<>();
         client.connect(endpoint.getHost(), endpoint.getPort(), event -> {
@@ -94,12 +107,9 @@ public class EnMasseClient {
                 ProtonSender sender = connection.createSender(address);
                 sender.setTarget(target);
                 sender.openHandler(remoteOpenResult -> {
-                    for (String body : messages) {
-                        Message message = Message.Factory.create();
-                        message.setBody(new AmqpValue(body));
-                        message.setAddress(address);
+                    for (Message message : messages) {
                         sender.send(message, delivery -> {
-                            if (count.incrementAndGet() == messages.size()) {
+                            if (count.incrementAndGet() == messages.length) {
                                 future.complete(count.get());
                             }
                         });
