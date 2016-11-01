@@ -91,4 +91,34 @@ public class StoreAndForwardTopicTest extends VertxTestBase{
         unsub.setSubject("unsubscribe");
         ctrlClient.sendMessages("$subctrl", unsub).get(5, TimeUnit.MINUTES);
     }
+
+    public void testScaledown() throws Exception {
+        String dest = "mytopic";
+        TestUtils.setReplicas(dest, dest, 2, 10, TimeUnit.MINUTES);
+        waitUntilReady(dest, 5, TimeUnit.MINUTES);
+
+        EnMasseClient client = createDurableTopicClient();
+        List<String> msgs = Arrays.asList("foo", "bar", "baz");
+
+        List<Future<List<String>>> recvResults = Arrays.asList(
+                client.recvMessages(dest, msgs.size()),
+                client.recvMessages(dest, msgs.size()),
+                client.recvMessages(dest, msgs.size()));
+
+        assertThat(client.sendMessages(dest, msgs.subList(0, 2)).get(1, TimeUnit.MINUTES), is(2));
+
+        Thread.sleep(5000);
+
+        TestUtils.setReplicas(dest, dest, 1, 10, TimeUnit.MINUTES);
+        waitUntilReady(dest, 5, TimeUnit.MINUTES);
+
+        Thread.sleep(5000);
+
+        assertThat(client.sendMessages(dest, msgs.subList(2, 3)).get(1, TimeUnit.MINUTES), is(1));
+
+        Thread.sleep(5000);
+        assertThat(recvResults.get(0).get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
+        assertThat(recvResults.get(1).get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
+        assertThat(recvResults.get(2).get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
+    }
 }
