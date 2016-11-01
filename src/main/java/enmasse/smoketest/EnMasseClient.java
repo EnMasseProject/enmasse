@@ -54,11 +54,20 @@ public class EnMasseClient {
         client.connect(endpoint.getHost(), endpoint.getPort(), event -> {
             ProtonConnection connection = event.result();
             connection.setContainer("enmasse-smoketest-client");
+            connection.disconnectHandler(disconnected -> {
+                System.out.println("Receiver connection disconnected");
+            });
+            connection.closeHandler(closed -> {
+                System.out.println("Receiver connection closed");
+            });
             connection.open();
             connection.createReceiver(address, new ProtonLinkOptions().setLinkName("enmasse-smoketest-client"))
                 .openHandler(opened -> {
                     latch.countDown();
                     System.out.println("Receiving messages from " + connection.getRemoteContainer());
+                })
+                .closeHandler(closed -> {
+                    System.out.println("Receiver link closed");
                 })
                 .setSource(terminusFactory.getSource(address))
                 .handler((delivery, message) -> {
@@ -97,8 +106,10 @@ public class EnMasseClient {
             connection.openHandler(result -> {
                 ProtonSender sender = connection.createSender(address);
                 sender.setTarget(terminusFactory.getTarget(address));
+                sender.closeHandler(closed -> System.out.println("Sender link closed"));
                 sender.openHandler(remoteOpenResult -> {
                     for (Message message : messages) {
+                        System.out.println("Sending message");
                         sender.send(message, delivery -> {
                             if (count.incrementAndGet() == messages.length) {
                                 connection.close();
@@ -109,6 +120,8 @@ public class EnMasseClient {
                 });
                 sender.open();
             });
+            connection.closeHandler(closed -> System.out.println("Sender connection closed"));
+            connection.disconnectHandler(closed -> System.out.println("Sender connection disconnected"));
             connection.open();
         });
         return future;
