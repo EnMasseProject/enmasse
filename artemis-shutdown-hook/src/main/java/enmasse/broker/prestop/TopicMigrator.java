@@ -18,19 +18,8 @@ package enmasse.broker.prestop;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import enmasse.discovery.DiscoveryListener;
-import enmasse.discovery.Endpoint;
 import enmasse.discovery.Host;
-import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
-import io.vertx.proton.ProtonClient;
-import io.vertx.proton.ProtonConnection;
-import io.vertx.proton.ProtonLinkOptions;
-import io.vertx.proton.ProtonReceiver;
-import io.vertx.proton.ProtonSender;
-import org.apache.qpid.proton.amqp.Symbol;
-import org.apache.qpid.proton.amqp.messaging.Source;
-import org.apache.qpid.proton.amqp.messaging.Target;
-import org.apache.qpid.proton.amqp.messaging.TerminusDurability;
 
 import java.util.Collections;
 import java.util.Iterator;
@@ -39,19 +28,17 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 public class TopicMigrator implements DiscoveryListener {
-    private static final ObjectMapper mapper = new ObjectMapper();
     private final Vertx vertx = Vertx.vertx();
     private volatile Set<Host> destinationBrokers = Collections.emptySet();
     private final Host localHost;
     private final BrokerManager localBroker;
+    private final ExecutorService service = Executors.newSingleThreadExecutor();
 
     public TopicMigrator(Host localHost) throws Exception {
         this.localHost = localHost;
@@ -64,31 +51,22 @@ public class TopicMigrator implements DiscoveryListener {
 
         // Step 1: Retrieve subscriptions
         Set<String> queues = listQueuesForAddress(localBroker, address).stream()
-                .filter(q -> MigrateMessageHandler.isValidSubscription(q))
+                .filter(q -> SubscriptionMigrator.isValidSubscription(q))
                 .collect(Collectors.toSet());
         System.out.println("Listed queues: " + queues);
 
         // Step 2: Create and pause queues on other brokers
         Map<String, Host> queueMap = createQueues(address, queues);
 
-        // Step 3: Create subscriptions to local queues and forward to destinations
-        System.out.println("Creating local subscriptions for " + queueMap.keySet());
-        List<MigrateMessageHandler> migrateHandlers = queueMap.entrySet().stream()
-            .map(e -> new MigrateMessageHandler(e.getKey(), e.getValue().amqpEndpoint()))
-            .collect(Collectors.toList());
+        // Step 3: Migrate messages from local subscriptions to destinations
+        System.out.println("Migrating messages for " + queueMap.keySet());
+        migrateMessages(address, queueMap);
 
-        createSubscriptions(address, migrateHandlers);
-
-        // Step 4: Send messages on broker where subscription identity has appeared
-        System.out.println("Migrating messages");
-        migrateMessages(address, migrateHandlers);
-        System.out.println("Waiting until messages have been migrated");
-
-        // Step 5: Destroy local queues
+        // Step 4: Destroy local queues
         System.out.println("Destroying local queues");
         localBroker.destroyQueues(queues);
 
-        // Step 6: Activate queues
+        // Step 5: Activate queues
         activateQueues(queueMap);
 
         // Step 7: Shutdown
@@ -131,119 +109,20 @@ public class TopicMigrator implements DiscoveryListener {
                 .collect(Collectors.toSet());
     }
 
-    private void migrateMessages(String address, List<MigrateMessageHandler> handlers) throws Exception {
-        for (MigrateMessageHandler handler : handlers) {
-            migrateMessages(address, handler);
+    private void migrateMessages(String address, Map<String, Host> queueMap) throws Exception {
+        List<Future<SubscriptionMigrator>> results = queueMap.entrySet().stream()
+                .map(e -> new SubscriptionMigrator(vertx, address, e.getKey(), localHost, e.getValue(), localBroker))
+                .map(sub -> service.submit(sub))
+                .collect(Collectors.toList());
+
+        for (Future<SubscriptionMigrator> result : results) {
+            try {
+                result.get();
+            } catch (Exception e) {
+                System.out.println("Unable to migrate messages (ignoring): " + e.getMessage());
+            }
         }
     }
-
-
-    private void migrateMessages(String address, MigrateMessageHandler handler) throws Exception {
-        ProtonClient protonClient = ProtonClient.create(vertx);
-        long numMessages = localBroker.getQueueMessageCount(handler.getQueueName());
-        System.out.println("Migrating " + numMessages + " messages from " + handler.getQueueName());
-        // Assume less than 2 billion messages
-        CountDownLatch latch = new CountDownLatch((int) numMessages);
-        handler.setLatch(latch);
-        protonClient.connect(handler.toEndpoint().hostname(), handler.toEndpoint().port(), toConnection -> {
-            if (toConnection.succeeded()) {
-                System.out.println("Opened connection to destination");
-                ProtonConnection toConn = toConnection.result();
-                toConn.setContainer("topic-migrator");
-                toConn.closeHandler(result -> {
-                    System.out.println("Migrator connection closed");
-                });
-                toConn.openHandler(toResult -> {
-                    Target target = new Target();
-                    target.setAddress(address);
-                    target.setCapabilities(Symbol.getSymbol("topic"));
-                    ProtonSender sender = toConn.createSender(handler.getSubscriptionName());
-                    sender.setTarget(target);
-                    sender.closeHandler(res -> {
-                        System.out.println("Sender connection closed");
-                    });
-                    sender.openHandler(toRes -> {
-                        if (toRes.succeeded()) {
-                            System.out.println("Opened sender, marking ready!");
-                            handler.setSender(sender);
-                            handler.setReady(true);
-                        } else {
-                            System.out.println("Error opening sender: " + toRes.cause().getMessage());
-                        }
-                    });
-                    sender.open();
-                });
-                toConn.open();
-            } else {
-                System.out.println("Failed opening connection: " + toConnection.cause().getMessage());
-            }
-        });
-        latch.await(1, TimeUnit.HOURS);
-    }
-
-    private void createSubscriptions(String address, List<MigrateMessageHandler> handlers) throws Exception {
-        for (MigrateMessageHandler handler : handlers) {
-            createSubscription(address, handler);
-        }
-    }
-
-    private void createSubscription(String address, MigrateMessageHandler handler) {
-        ProtonClient protonClient = ProtonClient.create(vertx);
-        Endpoint localEndpoint = localHost.amqpEndpoint();
-        protonClient.connect(localEndpoint.hostname(), localEndpoint.port(), connection -> {
-            if (connection.succeeded()) {
-                ProtonConnection conn = connection.result();
-                conn.setContainer(handler.getClientId());
-                conn.closeHandler(result -> {
-                    System.out.println("Migrator sub connection closed");
-                });
-                conn.openHandler(result -> {
-                    Source source = new Source();
-                    source.setAddress(address);
-                    source.setDurable(TerminusDurability.UNSETTLED_STATE);
-                    source.setCapabilities(Symbol.getSymbol("topic"));
-                    ProtonReceiver localReceiver = conn.createReceiver(handler.getSubscriptionName(), new ProtonLinkOptions().setLinkName(handler.getSubscriptionName()));
-                    localReceiver.setSource(source);
-                    localReceiver.setPrefetch(0);
-                    localReceiver.setAutoAccept(false);
-                    localReceiver.closeHandler(res -> {
-                        System.out.println("Migrator sub receiver closed");
-                    });
-                    localReceiver.openHandler(res -> {
-                        if (res.succeeded()) {
-                            System.out.println("Opened localReceiver for " + handler.getClientId() + "." + handler.getSubscriptionName());
-                            handler.setReceiver(localReceiver);
-                            Handler<Long> checkReady = new Handler<Long>() {
-                                @Override
-                                public void handle(Long event) {
-                                    try {
-                                        if (handler.isReady()) {
-                                            System.out.println("Ready, starting flow!");
-                                            localReceiver.flow(1);
-                                        } else {
-                                            System.out.println("Not ready yet, waiting");
-                                            vertx.setTimer(1000, this);
-                                        }
-                                    } catch (Exception e) {
-                                        vertx.setTimer(1000, this);
-                                    }
-                                }
-                            };
-                            vertx.setTimer(1000, checkReady);
-                        } else {
-                            System.out.println("Failed opening received: " + res.cause().getMessage());
-                        }
-                    });
-                    localReceiver.handler(handler.messageHandler());
-                    localReceiver.open();
-                });
-                conn.open();
-            } else {
-                System.out.println("Connection failed: " + connection.cause().getMessage());
-            }
-        });
-    }
-
 
     private Set<String> listQueuesForAddress(BrokerManager mgr, String address) throws Exception {
         Set<String> queues = new LinkedHashSet<>();
