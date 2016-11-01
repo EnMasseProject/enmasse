@@ -33,14 +33,13 @@ import java.util.concurrent.TimeoutException;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
-public class StoreAndForwardTopicTest extends VertxTestBase{
+public class TopicTest extends VertxTestBase{
 
     @After
     public void teardownReplicas() throws InterruptedException {
         TestUtils.setReplicas("mytopic", "mytopic", 1, 10, TimeUnit.MINUTES);
     }
 
-    @Test
     public void testMultipleSubscribers() throws InterruptedException, TimeoutException, ExecutionException {
         TestUtils.setReplicas("mytopic", "mytopic", 4, 10, TimeUnit.MINUTES);
         String dest = "mytopic";
@@ -60,7 +59,6 @@ public class StoreAndForwardTopicTest extends VertxTestBase{
         assertThat(recvResults.get(2).get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
     }
 
-    @Test
     public void testSubscriptionService() throws Exception {
         String topic = "mytopic";
         String address = "myaddress";

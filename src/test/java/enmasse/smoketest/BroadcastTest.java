@@ -29,7 +29,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
-public class NoStoreBroadcastTest extends VertxTestBase {
+public class BroadcastTest extends VertxTestBase {
     @Test
     public void testMultipleRecievers() throws InterruptedException, TimeoutException, ExecutionException {
         String dest = "broadcast";

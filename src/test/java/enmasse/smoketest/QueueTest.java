@@ -26,7 +26,7 @@ import java.util.concurrent.TimeUnit;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
-public class StoreAndForwardQueueTest extends VertxTestBase {
+public class QueueTest extends VertxTestBase {
 
     @Test
     public void testQueue() throws Exception {

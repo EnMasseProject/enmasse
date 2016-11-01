@@ -28,7 +28,7 @@ import java.util.concurrent.TimeoutException;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
-public class NoStoreAnycastTest extends VertxTestBase {
+public class AnycastTest extends VertxTestBase {
 
     @Test
     public void testMessagesDeliveredToReceiver() throws InterruptedException, TimeoutException, ExecutionException {
