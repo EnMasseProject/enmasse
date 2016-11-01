@@ -64,6 +64,7 @@ public class EnMasseClient {
                 .handler((delivery, message) -> {
                     messages.add((String)((AmqpValue)message.getBody()).getValue());
                     if (messages.size() == numMessages) {
+                        connection.close();
                         future.complete(messages);
                     }
                 })
@@ -100,6 +101,7 @@ public class EnMasseClient {
                     for (Message message : messages) {
                         sender.send(message, delivery -> {
                             if (count.incrementAndGet() == messages.length) {
+                                connection.close();
                                 future.complete(count.get());
                             }
                         });
