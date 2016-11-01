@@ -40,13 +40,9 @@ public class StoreAndForwardTopicTest extends VertxTestBase{
         TestUtils.setReplicas("mytopic", "mytopic", 1, 10, TimeUnit.MINUTES);
     }
 
-    @Before
-    public void setupReplicas() throws InterruptedException {
-        TestUtils.setReplicas("mytopic", "mytopic", 4, 10, TimeUnit.MINUTES);
-    }
-
     @Test
     public void testMultipleSubscribers() throws InterruptedException, TimeoutException, ExecutionException {
+        TestUtils.setReplicas("mytopic", "mytopic", 4, 10, TimeUnit.MINUTES);
         String dest = "mytopic";
         waitUntilReady(dest, 5, TimeUnit.MINUTES);
         EnMasseClient client = createTopicClient();
