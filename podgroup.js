@@ -16,7 +16,6 @@
 'use strict';
 
 var artemis = require('./artemis.js');
-var qdr = require('./qdr.js');
 
 function get(object, fields, default_value) {
     var o = object;
@@ -30,18 +29,12 @@ function get_broker_port(pod) {
     return get(pod.ports, ['broker', 'amqp'], 5673);
 };
 
-function get_router_port(pod) {
-    return get(pod.ports, ['router', 'amqp'], 5672);
-};
-
 function Pod(pod) {
     this.broker = artemis.connect({'id':pod.name, 'host':pod.ip, 'port':get_broker_port(pod)});
-    this.router = qdr.connect({'id':pod.name, 'host':pod.ip, 'port':get_router_port(pod)});
 };
 
 Pod.prototype.close = function () {
     this.broker.close();
-    this.router.close();
 };
 
 function PodGroup() {

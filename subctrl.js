@@ -100,36 +100,22 @@ function delete_diverts(broker, subscription_id) {
     );
 };
 
-function delete_auto_link(router, subscription_id) {
-    return router.get_auto_links().then(
-        function (links) {
-            if (links.some(function (l) { return l.name === subscription_id; })) {
-                return router.delete_auto_link({'name':subscription_id});
-            }
-        }
-    );
-};
-
 SubscriptionControl.prototype.close = function (subscription_id) {
     return find_queue(subscription_id, this.pods.pod_list()).then(
         function(result) {
             if (result.found) {
-                return delete_auto_link(result.pod.router, {'name':subscription_id}).then(
+                return delete_diverts(result.pod.broker, subscription_id).then(
                     function () {
-                        return delete_diverts(result.pod.broker, subscription_id).then(
-                            function () {
-                                //delete queue last as that is how we
-                                //find the right broker to cleanup
+                        //delete queue last as that is how we
+                        //find the right broker to cleanup
 
-                                //Note: need to delay the delete as it will fail if
-                                //there is still a link attached, and though deleting
-                                //the autoLink will delete the actual link, that is
-                                //an asynchronous side effect.
-                                return Promise.delay(250).then(function () {
-                                    result.pod.broker.destroyQueue(subscription_id);
-                                });
-                            }
-                        );
+                        //Note: need to delay the delete as it will fail if
+                        //there is still a link attached, and though deleting
+                        //the autoLink will delete the actual link, that is
+                        //an asynchronous side effect.
+                        return Promise.delay(250).then(function () {
+                            result.pod.broker.destroyQueue(subscription_id);
+                        });
                     }
                 );
             }
