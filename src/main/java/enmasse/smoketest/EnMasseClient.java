@@ -16,10 +16,7 @@
 
 package enmasse.smoketest;
 
-import io.vertx.proton.ProtonClient;
-import io.vertx.proton.ProtonConnection;
-import io.vertx.proton.ProtonLinkOptions;
-import io.vertx.proton.ProtonSender;
+import io.vertx.proton.*;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.message.Message;
 
@@ -36,11 +33,17 @@ public class EnMasseClient {
     private final ProtonClient client;
     private final Endpoint endpoint;
     private final TerminusFactory terminusFactory;
+    private final ProtonClientOptions options;
 
-    public EnMasseClient(ProtonClient protonClient, Endpoint endpoint, TerminusFactory terminusFactory) {
+    public EnMasseClient(ProtonClient protonClient, Endpoint endpoint, TerminusFactory terminusFactory, ProtonClientOptions options) {
         this.client = protonClient;
         this.endpoint = endpoint;
         this.terminusFactory = terminusFactory;
+        this.options = options;
+    }
+
+    public EnMasseClient(ProtonClient protonClient, Endpoint endpoint, TerminusFactory terminusFactory) {
+        this(protonClient, endpoint, terminusFactory, new ProtonClientOptions());
     }
 
     public Future<List<String>> recvMessages(String address, int numMessages) throws InterruptedException {
@@ -51,33 +54,37 @@ public class EnMasseClient {
         CountDownLatch latch = new CountDownLatch(1);
         List<String> messages = new ArrayList<>();
         CompletableFuture<List<String>> future = new CompletableFuture<>();
-        client.connect(endpoint.getHost(), endpoint.getPort(), event -> {
-            ProtonConnection connection = event.result();
-            connection.setContainer("enmasse-smoketest-client");
-            connection.disconnectHandler(disconnected -> {
-                System.out.println("Receiver connection disconnected");
-            });
-            connection.closeHandler(closed -> {
-                System.out.println("Receiver connection closed");
-            });
-            connection.open();
-            connection.createReceiver(address, new ProtonLinkOptions().setLinkName("enmasse-smoketest-client"))
-                .openHandler(opened -> {
-                    latch.countDown();
-                    System.out.println("Receiving messages from " + connection.getRemoteContainer());
-                })
-                .closeHandler(closed -> {
-                    System.out.println("Receiver link closed");
-                })
-                .setSource(terminusFactory.getSource(address))
-                .handler((delivery, message) -> {
-                    messages.add((String)((AmqpValue)message.getBody()).getValue());
-                    if (messages.size() == numMessages) {
-                        connection.close();
-                        future.complete(messages);
-                    }
-                })
-                .open();
+        client.connect(options, endpoint.getHost(), endpoint.getPort(), event -> {
+            if (event.succeeded()) {
+                ProtonConnection connection = event.result();
+                connection.setContainer("enmasse-smoketest-client");
+                connection.disconnectHandler(disconnected -> {
+                    System.out.println("Receiver connection disconnected");
+                });
+                connection.closeHandler(closed -> {
+                    System.out.println("Receiver connection closed");
+                });
+                connection.open();
+                connection.createReceiver(address, new ProtonLinkOptions().setLinkName("enmasse-smoketest-client"))
+                        .openHandler(opened -> {
+                            latch.countDown();
+                            System.out.println("Receiving messages from " + connection.getRemoteContainer());
+                        })
+                        .closeHandler(closed -> {
+                            System.out.println("Receiver link closed");
+                        })
+                        .setSource(terminusFactory.getSource(address))
+                        .handler((delivery, message) -> {
+                            messages.add((String) ((AmqpValue) message.getBody()).getValue());
+                            if (messages.size() == numMessages) {
+                                connection.close();
+                                future.complete(messages);
+                            }
+                        })
+                        .open();
+            } else {
+                System.out.println("Connection open failed: " + event.cause().getMessage());
+            }
         });
         boolean success = latch.await(connectTimeout, timeUnit);
         if (!success) {
@@ -101,28 +108,32 @@ public class EnMasseClient {
     public Future<Integer> sendMessages(String address, Message ... messages) {
         AtomicInteger count = new AtomicInteger(0);
         CompletableFuture<Integer> future = new CompletableFuture<>();
-        client.connect(endpoint.getHost(), endpoint.getPort(), event -> {
-            ProtonConnection connection = event.result();
-            connection.openHandler(result -> {
-                ProtonSender sender = connection.createSender(address);
-                sender.setTarget(terminusFactory.getTarget(address));
-                sender.closeHandler(closed -> System.out.println("Sender link closed"));
-                sender.openHandler(remoteOpenResult -> {
-                    for (Message message : messages) {
-                        System.out.println("Sending message");
-                        sender.send(message, delivery -> {
-                            if (count.incrementAndGet() == messages.length) {
-                                connection.close();
-                                future.complete(count.get());
-                            }
-                        });
-                    }
+        client.connect(options, endpoint.getHost(), endpoint.getPort(), event -> {
+            if (event.succeeded()) {
+                ProtonConnection connection = event.result();
+                connection.openHandler(result -> {
+                    ProtonSender sender = connection.createSender(address);
+                    sender.setTarget(terminusFactory.getTarget(address));
+                    sender.closeHandler(closed -> System.out.println("Sender link closed"));
+                    sender.openHandler(remoteOpenResult -> {
+                        for (Message message : messages) {
+                            System.out.println("Sending message");
+                            sender.send(message, delivery -> {
+                                if (count.incrementAndGet() == messages.length) {
+                                    connection.close();
+                                    future.complete(count.get());
+                                }
+                            });
+                        }
+                    });
+                    sender.open();
                 });
-                sender.open();
-            });
-            connection.closeHandler(closed -> System.out.println("Sender connection closed"));
-            connection.disconnectHandler(closed -> System.out.println("Sender connection disconnected"));
-            connection.open();
+                connection.closeHandler(closed -> System.out.println("Sender connection closed"));
+                connection.disconnectHandler(closed -> System.out.println("Sender connection disconnected"));
+                connection.open();
+            } else {
+                System.out.println("Connection open failed: " + event.cause().getMessage());
+            }
         });
         return future;
     }
