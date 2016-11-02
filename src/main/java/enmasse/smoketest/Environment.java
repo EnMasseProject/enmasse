@@ -21,7 +21,6 @@ import com.openshift.restclient.IClient;
 import com.openshift.restclient.ResourceKind;
 import com.openshift.restclient.model.IService;
 import com.openshift.restclient.model.IServicePort;
-import com.openshift.restclient.model.route.IRoute;
 
 import java.util.List;
 
@@ -34,7 +33,7 @@ public class Environment {
     public static final IService service = client.get(ResourceKind.SERVICE, "messaging", namespace);
     public static final Endpoint endpoint = getInsecureEndpoint();
 
-    private static Endpoint getSecureEndpoint() {
+    public static Endpoint getSecureEndpoint() {
         return new Endpoint(service.getPortalIP(), getPort("amqps"));
     }
 
