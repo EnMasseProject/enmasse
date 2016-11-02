@@ -24,24 +24,24 @@ import org.springframework.stereotype.Component;
 
 
 /**
- * Vert.x based MQTT FrontEnd for EnMasse
+ * Vert.x based MQTT Frontend for EnMasse
  */
 @Component
-public class MqttFrontEnd extends AbstractVerticle {
+public class MqttFrontend extends AbstractVerticle {
 
-    private static final Logger LOG = LoggerFactory.getLogger(MqttFrontEnd.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MqttFrontend.class);
 
     @Override
     public void start(Future<Void> startFuture) throws Exception {
 
-        LOG.info("Starting MQTT front end verticle...");
+        LOG.info("Starting MQTT frontend verticle...");
         startFuture.complete();
     }
 
     @Override
     public void stop(Future<Void> stopFuture) throws Exception {
 
-        LOG.info("Stopping MQTT front end verticle ...");
+        LOG.info("Stopping MQTT frontend verticle ...");
         stopFuture.complete();
     }
 }
