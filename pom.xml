@@ -8,5 +8,32 @@
     <artifactId>mqtt-frontend</artifactId>
     <version>1.0-SNAPSHOT</version>
 
+    <name>EnMasse MQTT FrontEnd</name>
+    <description>MQTT FrontEnd for EnMasse</description>
+
+    <properties>
+        <vertx-mqtt.version>3.4.0-SNAPSHOT</vertx-mqtt.version>
+        <vertx-proton.version>3.3.3</vertx-proton.version>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>io.vertx</groupId>
+            <artifactId>vertx-mqtt-server</artifactId>
+            <version>${vertx-mqtt.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.vertx</groupId>
+            <artifactId>vertx-proton</artifactId>
+            <version>${vertx-proton.version}</version>
+        </dependency>
+    </dependencies>
+
+    <repositories>
+        <repository>
+            <id>oss.sonatype.org-snapshot</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+        </repository>
+    </repositories>
 
 </project>
