@@ -4,7 +4,7 @@ kind: Template
 metadata:
   labels:
     addressType: topic
-  name: secure-topic-inmemory
+  name: tls-topic-inmemory
 objects:
 - apiVersion: v1
   kind: DeploymentConfig

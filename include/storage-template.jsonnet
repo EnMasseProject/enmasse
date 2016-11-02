@@ -7,7 +7,7 @@ local forwarder = import "forwarder.jsonnet";
     local addrtype = (if multicast then "topic" else "queue");
     local addressEnv = (if multicast then { name: "TOPIC_NAME", value: "${ADDRESS}" } else { name: "QUEUE_NAME", value: "${ADDRESS}" });
     local volumeName = "vol-${NAME}";
-    local templateName = "%s%s-%s" % [if secure then "secure-" else "", addrtype, (if persistence then "persisted" else "inmemory")];
+    local templateName = "%s%s-%s" % [if secure then "tls-" else "", addrtype, (if persistence then "persisted" else "inmemory")];
     local claimName = "pvc-${NAME}";
     {
       "apiVersion": "v1",

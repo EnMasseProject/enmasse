@@ -9,7 +9,7 @@ objects:
   metadata:
     labels:
       addressType: queue
-    name: secure-queue-inmemory
+    name: tls-queue-inmemory
   objects:
   - apiVersion: v1
     kind: DeploymentConfig
@@ -87,7 +87,7 @@ objects:
   metadata:
     labels:
       addressType: queue
-    name: secure-queue-persisted
+    name: tls-queue-persisted
   objects:
   - apiVersion: v1
     kind: PersistentVolumeClaim
@@ -176,7 +176,7 @@ objects:
   metadata:
     labels:
       addressType: topic
-    name: secure-topic-inmemory
+    name: tls-topic-inmemory
   objects:
   - apiVersion: v1
     kind: DeploymentConfig
@@ -306,7 +306,7 @@ objects:
   metadata:
     labels:
       addressType: topic
-    name: secure-topic-persisted
+    name: tls-topic-persisted
   objects:
   - apiVersion: v1
     kind: PersistentVolumeClaim
@@ -823,8 +823,8 @@ objects:
   data:
     json: |
       {
-          "vanilla-queue": { "templateName":"queue-inmemory" },
-          "vanilla-topic": { "templateName":"topic-inmemory" }
+          "vanilla-queue": { "templateName":"tls-queue-inmemory" },
+       "vanilla-topic": { "templateName":"tls-topic-inmemory" }
       }
   kind: ConfigMap
   metadata:

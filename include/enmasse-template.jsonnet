@@ -9,7 +9,7 @@ local storageController = import "storage-controller.jsonnet";
 local subserv = import "subserv.jsonnet";
 local messagingService = import "messaging-service.jsonnet";
 local addressConfig = import "addresses.json";
-local flavorConfig = import "flavor.json";
+local flavorConfig = import "flavor.jsonnet";
 {
   generate(secure, with_storage_controller)::
   {
@@ -42,7 +42,7 @@ local flavorConfig = import "flavor.json";
                  storageController.imagestream("${STORAGE_CONTROLLER_REPO}"),
                  storageController.deployment,
                  addressConfig,
-                 flavorConfig],
+                 flavorConfig.generate(secure)],
     "objects": if with_storage_controller then common + storage_controller_resources else common,
     "parameters": [
       {

@@ -4,7 +4,7 @@ kind: Template
 metadata:
   labels:
     addressType: queue
-  name: secure-queue-persisted
+  name: tls-queue-persisted
 objects:
 - apiVersion: v1
   kind: PersistentVolumeClaim
