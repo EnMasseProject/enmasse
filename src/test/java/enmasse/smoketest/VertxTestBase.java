@@ -35,8 +35,7 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import static enmasse.smoketest.Environment.endpoint;
-import static enmasse.smoketest.Environment.namespace;
+import static enmasse.smoketest.Environment.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -69,7 +68,12 @@ public class VertxTestBase {
     }
 
     protected EnMasseClient createClient(TerminusFactory terminusFactory) {
-        return new EnMasseClient(protonClient, endpoint, terminusFactory);
+        String useTls = System.getenv("OPENSHIFT_USE_TLS");
+        if (useTls != null && useTls.toLowerCase().equals("true")) {
+            return new EnMasseClient(protonClient, secureEndpoint, terminusFactory);
+        } else {
+            return new EnMasseClient(protonClient, endpoint, terminusFactory);
+        }
     }
 
     protected void waitForAddress(String address, long timeout , TimeUnit timeUnit) throws Exception {
