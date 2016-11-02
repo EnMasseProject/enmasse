@@ -35,8 +35,9 @@ function run_test() {
 }
 
 setup_test enmasse-ci-default
-run_test enmasse-ci-default false https://raw.githubusercontent.com/enmasseproject/openshift-configuration/master/generated/enmasse-template.yaml
+run_test enmasse-ci-default false
+https://raw.githubusercontent.com/enmasseproject/openshift-configuration/master/generated/enmasse-template.yaml || exit 1
 
 setup_test enmasse-ci-secure
 setup_secure
-run_test enmasse-ci-secure true https://raw.githubusercontent.com/enmasseproject/openshift-configuration/master/generated/tls-enmasse-template.yaml
+run_test enmasse-ci-secure true https://raw.githubusercontent.com/enmasseproject/openshift-configuration/master/generated/tls-enmasse-template.yaml || exit 1
