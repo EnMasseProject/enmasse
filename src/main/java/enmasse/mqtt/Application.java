@@ -18,6 +18,7 @@ package enmasse.mqtt;
 
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
+import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -86,13 +87,13 @@ public class Application {
                     LOG.info("MQTT frontend startup completed successfully");
                 } else {
                     LOG.error("Startup timed out after {} seconds, shutting down ...", this.startupTimeout);
-                    // TODO: shutdown
+                    this.shutdown();
                 }
 
             } catch (InterruptedException e) {
 
                 LOG.error("Startup process has been interrupted, shutting down ...");
-                // TODO: shutdown
+                this.shutdown();
             }
         }
     }
@@ -138,7 +139,47 @@ public class Application {
 
     @PreDestroy
     public void shutdown() {
+        if (this.running.compareAndSet(true, false)) {
+            this.shutdown(this.startupTimeout, result -> {
+                // do nothing ?
+            });
+        }
+    }
 
+    /**
+     * Execute Vert.x shutdown with related verticles
+     *
+     * @param timeout   max timeout to wait for shutdown
+     * @param shutdownHandler   handler called when the shutdown ends
+     */
+    private void shutdown(int timeout, Handler<Boolean> shutdownHandler) {
+
+        try {
+
+            CountDownLatch latch = new CountDownLatch(1);
+
+            if (this.vertx != null) {
+
+                this.vertx.close(done -> {
+                    if (done.failed()) {
+                        LOG.error("Could not shut down MQTT frontend cleanly", done.cause());
+                    }
+                    latch.countDown();
+                });
+
+                if (latch.await(timeout, TimeUnit.SECONDS)) {
+                    LOG.info("MQTT frontend shut down completed");
+                    shutdownHandler.handle(Boolean.TRUE);
+                } else {
+                    LOG.error("Shut down of MQTT frontend timed out, aborting...");
+                    shutdownHandler.handle(Boolean.FALSE);
+                }
+            }
+
+        } catch (InterruptedException e) {
+            LOG.error("Shut down of MQTT frontend has been interrupted, aborting...");
+            shutdownHandler.handle(Boolean.FALSE);
+        }
     }
 
     public static void main(String[] args) {
