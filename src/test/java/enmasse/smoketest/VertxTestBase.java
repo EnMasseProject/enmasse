@@ -70,7 +70,7 @@ public class VertxTestBase {
     protected EnMasseClient createClient(TerminusFactory terminusFactory) {
         String useTls = System.getenv("OPENSHIFT_USE_TLS");
         if (useTls != null && useTls.toLowerCase().equals("true")) {
-            return new EnMasseClient(protonClient, secureEndpoint, terminusFactory);
+            return new EnMasseClient(protonClient, getSecureEndpoint(), terminusFactory);
         } else {
             return new EnMasseClient(protonClient, endpoint, terminusFactory);
         }

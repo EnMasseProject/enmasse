@@ -33,7 +33,6 @@ public class Environment {
     public static final IClient client = new ClientBuilder(url).usingToken(token).withUserName(user).build();
     public static final IService service = client.get(ResourceKind.SERVICE, "messaging", namespace);
     public static final Endpoint endpoint = getInsecureEndpoint();
-    public static final Endpoint secureEndpoint = getSecureEndpoint();
 
     private static Endpoint getSecureEndpoint() {
         return new Endpoint(service.getPortalIP(), getPort("amqps"));
