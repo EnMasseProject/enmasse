@@ -1,0 +1,4 @@
+[submodule "vert.x"]
+	path = vert.x
+	url = https://github.com/lulf/vert.x.git
+	branch = support-tls-sni-client-option

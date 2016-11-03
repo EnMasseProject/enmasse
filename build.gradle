@@ -1,5 +1,6 @@
 ext {
    openshiftRestclientVersion = '5.1.0.Final'
+   vertxVersion = '3.4.0-SNAPSHOT'
    vertxProtonVersion = '3.3.3'
    junitVersion = '4.12'
 }
@@ -7,6 +8,7 @@ ext {
 apply plugin: 'java'
 
 repositories {
+    mavenLocal()
     mavenCentral()
     maven { url "https://jitpack.io" }
 }
@@ -15,6 +17,16 @@ dependencies {
     compile 'org.slf4j:slf4j-api:1.7.13'
     compile 'com.github.EnMasseProject:common-lib:master-SNAPSHOT'
     compile "com.openshift:openshift-restclient-java:${openshiftRestclientVersion}"
+    compile "io.vertx:vertx-core:${vertxVersion}"
     compile "io.vertx:vertx-proton:${vertxProtonVersion}"
     testCompile "junit:junit:${junitVersion}"
+}
+
+task buildVertx {
+    doLast {
+        exec {
+            workingDir 'vert.x'
+            commandLine 'mvn', 'install', '-DskipTests'
+        }
+    }
 }

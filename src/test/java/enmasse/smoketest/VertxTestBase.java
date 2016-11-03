@@ -22,7 +22,12 @@ import com.openshift.restclient.ResourceKind;
 import com.openshift.restclient.model.IPod;
 import enmasse.amqp.SyncRequestClient;
 import io.vertx.core.Vertx;
+import io.vertx.core.buffer.Buffer;
+import io.vertx.core.net.KeyCertOptions;
+import io.vertx.core.net.PemKeyCertOptions;
+import io.vertx.core.net.PemTrustOptions;
 import io.vertx.proton.ProtonClient;
+import io.vertx.proton.ProtonClientOptions;
 import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.ProtonSender;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
@@ -70,7 +75,13 @@ public class VertxTestBase {
     protected EnMasseClient createClient(TerminusFactory terminusFactory) {
         String useTls = System.getenv("OPENSHIFT_USE_TLS");
         if (useTls != null && useTls.toLowerCase().equals("true")) {
-            return new EnMasseClient(protonClient, getSecureEndpoint(), terminusFactory);
+            ProtonClientOptions options = new ProtonClientOptions();
+            options.setSsl(true);
+            options.setHostnameVerificationAlgorithm("");
+            options.setPemTrustOptions(new PemTrustOptions().addCertValue(Buffer.buffer(System.getenv("OPENSHIFT_SERVER_CERT"))));
+            options.setSNIServerName(Environment.getRouteHost());
+            options.setTrustAll(true);
+            return new EnMasseClient(protonClient, getSecureEndpoint(), terminusFactory, options);
         } else {
             return new EnMasseClient(protonClient, endpoint, terminusFactory);
         }

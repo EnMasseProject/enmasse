@@ -19,8 +19,10 @@ package enmasse.smoketest;
 import com.openshift.restclient.ClientBuilder;
 import com.openshift.restclient.IClient;
 import com.openshift.restclient.ResourceKind;
+import com.openshift.restclient.model.IResource;
 import com.openshift.restclient.model.IService;
 import com.openshift.restclient.model.IServicePort;
+import com.openshift.restclient.model.route.IRoute;
 
 import java.util.List;
 
@@ -34,7 +36,7 @@ public class Environment {
     public static final Endpoint endpoint = getInsecureEndpoint();
 
     public static Endpoint getSecureEndpoint() {
-        return new Endpoint(service.getPortalIP(), getPort("amqps"));
+        return new Endpoint("localhost", 443); //getPort("amqps"));
     }
 
     private static Endpoint getInsecureEndpoint() {
@@ -49,5 +51,10 @@ public class Environment {
             }
         }
         throw new IllegalArgumentException("Unable to find port " + portName + " for service " + service.getName());
+    }
+
+    public static String getRouteHost() {
+        IRoute route = client.get(ResourceKind.ROUTE, "messaging", namespace);
+        return route.getHost();
     }
 }

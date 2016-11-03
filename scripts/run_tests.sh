@@ -17,7 +17,8 @@ function setup_secure() {
     openssl req -x509 -newkey rsa:4096 -keyout server-key.pem -out server-cert.pem -days 1 -nodes -batch
     oc secret new qdrouterd-certs server-cert.pem server-key.pem
     oc secret add serviceaccount/default secrets/qdrouterd-certs --for=mount
-export OPENSHIFT_USE_TLS="true"
+    export OPENSHIFT_USE_TLS="true"
+    export OPENSHIFT_SERVER_CERT=`cat server-cert.pem`
 }
 
 function run_test() {

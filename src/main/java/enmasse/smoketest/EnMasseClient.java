@@ -83,6 +83,7 @@ public class EnMasseClient {
                         })
                         .open();
             } else {
+                event.cause().printStackTrace();
                 System.out.println("Connection open failed: " + event.cause().getMessage());
             }
         });
@@ -132,6 +133,7 @@ public class EnMasseClient {
                 connection.disconnectHandler(closed -> System.out.println("Sender connection disconnected"));
                 connection.open();
             } else {
+                event.cause().printStackTrace();
                 System.out.println("Connection open failed: " + event.cause().getMessage());
             }
         });
