@@ -16,6 +16,7 @@
 
 package enmasse.smoketest;
 
+import io.vertx.core.Vertx;
 import io.vertx.proton.*;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.message.Message;
@@ -30,20 +31,21 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 public class EnMasseClient {
-    private final ProtonClient client;
+    private final Vertx vertx;
     private final Endpoint endpoint;
     private final TerminusFactory terminusFactory;
     private final ProtonClientOptions options;
+    private volatile ProtonConnection connection;
 
-    public EnMasseClient(ProtonClient protonClient, Endpoint endpoint, TerminusFactory terminusFactory, ProtonClientOptions options) {
-        this.client = protonClient;
+    public EnMasseClient(Vertx vertx, Endpoint endpoint, TerminusFactory terminusFactory, ProtonClientOptions options) {
+        this.vertx = vertx;
         this.endpoint = endpoint;
         this.terminusFactory = terminusFactory;
         this.options = options;
     }
 
-    public EnMasseClient(ProtonClient protonClient, Endpoint endpoint, TerminusFactory terminusFactory) {
-        this(protonClient, endpoint, terminusFactory, new ProtonClientOptions());
+    public EnMasseClient(Vertx vertx, Endpoint endpoint, TerminusFactory terminusFactory) {
+        this(vertx, endpoint, terminusFactory, new ProtonClientOptions());
     }
 
     public Future<List<String>> recvMessages(String address, int numMessages) throws InterruptedException {
@@ -54,6 +56,7 @@ public class EnMasseClient {
         CountDownLatch latch = new CountDownLatch(1);
         List<String> messages = new ArrayList<>();
         CompletableFuture<List<String>> future = new CompletableFuture<>();
+        ProtonClient client = ProtonClient.create(vertx);
         client.connect(options, endpoint.getHost(), endpoint.getPort(), event -> {
             if (event.succeeded()) {
                 ProtonConnection connection = event.result();
@@ -78,7 +81,7 @@ public class EnMasseClient {
                             messages.add((String) ((AmqpValue) message.getBody()).getValue());
                             if (messages.size() == numMessages) {
                                 connection.close();
-                                future.complete(messages);
+                                vertx.runOnContext((id) -> future.complete(messages));
                             }
                         })
                         .open();
@@ -109,6 +112,7 @@ public class EnMasseClient {
     public Future<Integer> sendMessages(String address, Message ... messages) {
         AtomicInteger count = new AtomicInteger(0);
         CompletableFuture<Integer> future = new CompletableFuture<>();
+        ProtonClient client = ProtonClient.create(vertx);
         client.connect(options, endpoint.getHost(), endpoint.getPort(), event -> {
             if (event.succeeded()) {
                 ProtonConnection connection = event.result();
@@ -122,7 +126,7 @@ public class EnMasseClient {
                             sender.send(message, delivery -> {
                                 if (count.incrementAndGet() == messages.length) {
                                     connection.close();
-                                    future.complete(count.get());
+                                    vertx.runOnContext((id) -> future.complete(count.get()));
                                 }
                             });
                         }

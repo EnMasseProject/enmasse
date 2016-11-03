@@ -23,8 +23,6 @@ import com.openshift.restclient.model.IPod;
 import enmasse.amqp.SyncRequestClient;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
-import io.vertx.core.net.KeyCertOptions;
-import io.vertx.core.net.PemKeyCertOptions;
 import io.vertx.core.net.PemTrustOptions;
 import io.vertx.proton.ProtonClient;
 import io.vertx.proton.ProtonClientOptions;
@@ -43,17 +41,14 @@ import java.util.concurrent.TimeUnit;
 
 import static enmasse.smoketest.Environment.*;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 public class VertxTestBase {
     private static final ObjectMapper mapper = new ObjectMapper();
     protected Vertx vertx;
-    protected ProtonClient protonClient;
 
     @Before
     public void setup() {
         vertx = Vertx.vertx();
-        protonClient = ProtonClient.create(vertx);
     }
 
     @After
@@ -82,9 +77,9 @@ public class VertxTestBase {
             options.setPemTrustOptions(new PemTrustOptions().addCertValue(Buffer.buffer(System.getenv("OPENSHIFT_SERVER_CERT"))));
             options.setSNIServerName(Environment.getRouteHost());
             options.setTrustAll(true);
-            return new EnMasseClient(protonClient, getSecureEndpoint(), terminusFactory, options);
+            return new EnMasseClient(vertx, getSecureEndpoint(), terminusFactory, options);
         } else {
-            return new EnMasseClient(protonClient, endpoint, terminusFactory);
+            return new EnMasseClient(vertx, endpoint, terminusFactory);
         }
     }
 
@@ -126,6 +121,7 @@ public class VertxTestBase {
     }
 
     private void connectToEndpoint(String address, CountDownLatch latch) {
+        ProtonClient protonClient = ProtonClient.create(vertx);
         protonClient.connect(endpoint.getHost(), endpoint.getPort(), event -> {
             if (event.succeeded()) {
                 ProtonConnection connection = event.result();
