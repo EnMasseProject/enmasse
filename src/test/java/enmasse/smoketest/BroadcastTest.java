@@ -18,6 +18,7 @@ package enmasse.smoketest;
 
 import org.junit.Test;
 
+import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -31,7 +32,7 @@ import static org.junit.Assert.assertTrue;
 
 public class BroadcastTest extends VertxTestBase {
     @Test
-    public void testMultipleRecievers() throws InterruptedException, TimeoutException, ExecutionException {
+    public void testMultipleRecievers() throws InterruptedException, TimeoutException, ExecutionException, UnknownHostException {
         String dest = "broadcast";
         waitUntilReady(dest, 5, TimeUnit.MINUTES);
         EnMasseClient client = createTopicClient();

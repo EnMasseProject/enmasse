@@ -35,6 +35,7 @@ import org.apache.qpid.proton.message.Message;
 import org.junit.After;
 import org.junit.Before;
 
+import java.net.UnknownHostException;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
@@ -60,19 +61,19 @@ public class VertxTestBase {
         vertx.close();
     }
 
-    protected EnMasseClient createQueueClient() {
+    protected EnMasseClient createQueueClient() throws UnknownHostException {
         return createClient(new QueueTerminusFactory());
     }
 
-    protected EnMasseClient createTopicClient() {
+    protected EnMasseClient createTopicClient() throws UnknownHostException {
         return createClient(new TopicTerminusFactory());
     }
 
-    protected EnMasseClient createDurableTopicClient() {
+    protected EnMasseClient createDurableTopicClient() throws UnknownHostException {
         return createClient(new DurableTopicTerminusFactory());
     }
 
-    protected EnMasseClient createClient(TerminusFactory terminusFactory) {
+    protected EnMasseClient createClient(TerminusFactory terminusFactory) throws UnknownHostException {
         String useTls = System.getenv("OPENSHIFT_USE_TLS");
         if (useTls != null && useTls.toLowerCase().equals("true")) {
             ProtonClientOptions options = new ProtonClientOptions();

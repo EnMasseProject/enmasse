@@ -22,6 +22,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -40,7 +41,8 @@ public class TopicTest extends VertxTestBase{
         TestUtils.setReplicas("mytopic", "mytopic", 1, 10, TimeUnit.MINUTES);
     }
 
-    public void testMultipleSubscribers() throws InterruptedException, TimeoutException, ExecutionException {
+    @Test
+    public void testMultipleSubscribers() throws InterruptedException, TimeoutException, ExecutionException, UnknownHostException {
         TestUtils.setReplicas("mytopic", "mytopic", 4, 10, TimeUnit.MINUTES);
         String dest = "mytopic";
         waitUntilReady(dest, 5, TimeUnit.MINUTES);
@@ -59,6 +61,7 @@ public class TopicTest extends VertxTestBase{
         assertThat(recvResults.get(2).get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
     }
 
+    @Test
     public void testSubscriptionService() throws Exception {
         String topic = "mytopic";
         String address = "myaddress";

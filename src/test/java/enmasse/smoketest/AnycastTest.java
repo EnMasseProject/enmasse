@@ -18,6 +18,7 @@ package enmasse.smoketest;
 
 import org.junit.Test;
 
+import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -31,7 +32,7 @@ import static org.junit.Assert.assertThat;
 public class AnycastTest extends VertxTestBase {
 
     @Test
-    public void testMessagesDeliveredToReceiver() throws InterruptedException, TimeoutException, ExecutionException {
+    public void testMessagesDeliveredToReceiver() throws InterruptedException, TimeoutException, ExecutionException, UnknownHostException {
         String dest = "anycast";
         EnMasseClient client = createQueueClient();
 

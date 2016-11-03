@@ -24,6 +24,8 @@ import com.openshift.restclient.model.IService;
 import com.openshift.restclient.model.IServicePort;
 import com.openshift.restclient.model.route.IRoute;
 
+import java.net.Inet4Address;
+import java.net.UnknownHostException;
 import java.util.List;
 
 public class Environment {
@@ -35,8 +37,8 @@ public class Environment {
     public static final IService service = client.get(ResourceKind.SERVICE, "messaging", namespace);
     public static final Endpoint endpoint = getInsecureEndpoint();
 
-    public static Endpoint getSecureEndpoint() {
-        return new Endpoint("localhost", 443); //getPort("amqps"));
+    public static Endpoint getSecureEndpoint() throws UnknownHostException {
+        return new Endpoint(Inet4Address.getLocalHost().getHostAddress(), 443); //getPort("amqps"));
     }
 
     private static Endpoint getInsecureEndpoint() {
