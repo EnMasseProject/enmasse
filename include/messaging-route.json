@@ -1,0 +1,20 @@
+{
+    "kind": "Route",
+    "apiVersion": "v1",
+    "metadata": {
+        "name": "messaging"
+    },
+    "spec": {
+        "to": {
+            "kind": "Service",
+            "name": "messaging",
+            "weight": 100
+        },
+        "port": {
+            "targetPort": "amqps"
+        },
+        "tls": {
+            "termination": "passthrough"
+        }
+    }
+}

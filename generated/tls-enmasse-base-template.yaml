@@ -754,6 +754,19 @@ objects:
       targetPort: 5672
     selector:
       name: subserv
+- apiVersion: v1
+  kind: Route
+  metadata:
+    name: messaging
+  spec:
+    port:
+      targetPort: amqps
+    tls:
+      termination: passthrough
+    to:
+      kind: Service
+      name: messaging
+      weight: 100
 parameters:
 - description: The image to use for the router
   name: ROUTER_REPO
