@@ -41,6 +41,7 @@ import java.util.concurrent.TimeUnit;
 
 import static enmasse.smoketest.Environment.*;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class VertxTestBase {
     private static final ObjectMapper mapper = new ObjectMapper();
@@ -115,9 +116,9 @@ public class VertxTestBase {
     }
 
     protected void waitUntilReady(String address, long timeout, TimeUnit timeUnit) throws InterruptedException {
-        //CountDownLatch latch = new CountDownLatch(1);
-        //connectToEndpoint(address, latch);
-        //assertTrue(latch.await(timeout, timeUnit));
+        CountDownLatch latch = new CountDownLatch(1);
+        connectToEndpoint(address, latch);
+        assertTrue(latch.await(timeout, timeUnit));
     }
 
     private void connectToEndpoint(String address, CountDownLatch latch) {
