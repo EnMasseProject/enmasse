@@ -14,32 +14,26 @@
  * limitations under the License.
  */
 
-package enmasse.mqtt;
+package enmasse.mqtt.messages;
+
+import org.apache.qpid.proton.message.Message;
 
 /**
- * Will Service (WS) endpoint class
+ * Represents an AMQP_PUBLISH message
  */
-public class WillServiceEndpoint {
+public class AmqpPublishMessage {
 
-    public WillServiceEndpoint() {
+    public static final String SUBJECT = "publish";
 
-    }
+    /**
+     * Return an AMQP_PUBLISH message from the raw AMQP one
+     *
+     * @param message   raw AMQP message
+     * @return  AMQP_PUBLISH message
+     */
+    public static AmqpPublishMessage from(Message message) {
 
-    public void open() {
         // TODO:
-
-        // attach sender link to $mqtt.willservice
-    }
-
-    public void sendWill(/* Will info */) {
-        // TODO: send AMQP_WILL message with will information
-    }
-
-    public void clearWill() {
-        // TODO: send AMQP_WILL_CLEAR message
-    }
-
-    public void close() {
-
+        return new AmqpPublishMessage();
     }
 }

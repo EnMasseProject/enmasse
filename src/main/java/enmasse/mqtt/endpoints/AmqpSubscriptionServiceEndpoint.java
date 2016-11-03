@@ -14,15 +14,31 @@
  * limitations under the License.
  */
 
-package enmasse.mqtt;
+package enmasse.mqtt.endpoints;
+
+import io.vertx.proton.ProtonDelivery;
+import io.vertx.proton.ProtonReceiver;
+import io.vertx.proton.ProtonSender;
+import org.apache.qpid.proton.message.Message;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Subscription Service (SS) endpoint class
  */
-public class SubscriptionServiceEndpoint {
+public class AmqpSubscriptionServiceEndpoint {
 
-    public SubscriptionServiceEndpoint() {
+    private static final Logger LOG = LoggerFactory.getLogger(AmqpSubscriptionServiceEndpoint.class);
 
+    public static final String SUBSCRIPTION_SERVICE_ENDPOINT = "$mqtt.subscriptionservice";
+    public static final String CLIENT_ENDPOINT_TEMPLATE = "$mqtt.to.%s";
+
+    private ProtonSender sender;
+    private ProtonReceiver receiver;
+
+    public AmqpSubscriptionServiceEndpoint(ProtonSender sender, ProtonReceiver receiver) {
+        this.sender = sender;
+        this.receiver = receiver;
     }
 
     public void sendCleanSession(/* Clean session info */) {
@@ -53,6 +69,10 @@ public class SubscriptionServiceEndpoint {
         // TODO: set handler called when AMQP_UNSUBACK message is received
     }
 
+    private void messageHandler(ProtonDelivery delivery, Message message) {
+        // TODO:
+    }
+
     public void open() {
         // TODO:
 
@@ -63,7 +83,13 @@ public class SubscriptionServiceEndpoint {
         // - AMQP_UNSUBACK after sent AMQP_UNSUBSCRIBE
         // - AMQP_PUBLISH for every AMQP published message
 
+        this.receiver
+                .handler(this::messageHandler)
+                .open();
+
         // attach sender link to $mqtt.subscriptionservice
+
+        this.sender.open();
     }
 
     public void close() {

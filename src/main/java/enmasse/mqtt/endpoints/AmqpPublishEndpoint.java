@@ -14,14 +14,19 @@
  * limitations under the License.
  */
 
-package enmasse.mqtt;
+package enmasse.mqtt.endpoints;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Publisher endpoint
  */
-public class PublishEndpoint {
+public class AmqpPublishEndpoint {
 
-    public PublishEndpoint() {
+    private static final Logger LOG = LoggerFactory.getLogger(AmqpPublishEndpoint.class);
+
+    public AmqpPublishEndpoint() {
 
     }
 

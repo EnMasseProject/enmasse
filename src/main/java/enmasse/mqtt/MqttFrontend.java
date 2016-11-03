@@ -26,6 +26,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
+import java.util.List;
+
 
 /**
  * Vert.x based MQTT Frontend for EnMasse
@@ -46,6 +49,8 @@ public class MqttFrontend extends AbstractVerticle {
 
     private MqttServer server;
 
+    private List<AmqpBridge> bridges;
+
     /**
      * Start the MQTT server component
      *
@@ -63,6 +68,9 @@ public class MqttFrontend extends AbstractVerticle {
                 .listen(done -> {
 
                     if (done.succeeded()) {
+
+                        this.bridges = new ArrayList<>();
+
                         LOG.info("MQTT frontend running on {}:{}", this.bindAddress, this.server.actualPort());
                         startFuture.complete();
                     } else {
@@ -73,8 +81,19 @@ public class MqttFrontend extends AbstractVerticle {
                 });
     }
 
-    private void handleMqttEndpointConnection(MqttEndpoint endpoint) {
-        // TODO
+    /**
+     * Handler for a connection request (CONNECT) received by a remote MQTT client
+     *
+     * @param mqttEndpoint  MQTT local endpoint
+     */
+    private void handleMqttEndpointConnection(MqttEndpoint mqttEndpoint) {
+
+        AmqpBridge bridge = new AmqpBridge(this.vertx, mqttEndpoint);
+
+        bridge.connect(this.connectAddress, this.connectPort);
+
+        // TODO: handle connect result in order to add bridge to the list
+        this.bridges.add(bridge);
     }
 
     @Override

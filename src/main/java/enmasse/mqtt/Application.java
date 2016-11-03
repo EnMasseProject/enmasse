@@ -41,7 +41,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @SpringBootApplication // same as using @Configuration, @EnableAutoConfiguration and @ComponentScan
 public class Application {
 
-    private static Logger LOG = LoggerFactory.getLogger(Application.class);
+    private static final Logger LOG = LoggerFactory.getLogger(Application.class);
 
     private final Vertx vertx = Vertx.vertx();
 

@@ -16,15 +16,21 @@
 
 package enmasse.mqtt;
 
+import enmasse.mqtt.endpoints.AmqpPublishEndpoint;
+import enmasse.mqtt.endpoints.AmqpSubscriptionServiceEndpoint;
+import enmasse.mqtt.endpoints.AmqpWillServiceEndpoint;
 import io.vertx.core.Vertx;
 import io.vertx.mqtt.MqttEndpoint;
-import io.vertx.proton.ProtonClient;
-import io.vertx.proton.ProtonConnection;
+import io.vertx.proton.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * AMQP bridging class from/to the MQTT endpoint to/from the AMQP related endpoints
  */
 public class AmqpBridge {
+
+    private static final Logger LOG = LoggerFactory.getLogger(AmqpBridge.class);
 
     private Vertx vertx;
 
@@ -34,11 +40,11 @@ public class AmqpBridge {
     private MqttEndpoint mqttEndpoint;
 
     // endpoint for handling communication with Will Service (WS)
-    private WillServiceEndpoint wsEndpoint;
+    private AmqpWillServiceEndpoint wsEndpoint;
     // endpoint for handling communication with Subscription Service (SS)
-    private SubscriptionServiceEndpoint ssEndpoint;
+    private AmqpSubscriptionServiceEndpoint ssEndpoint;
     // endpoint for publishing message on topic (via AMQP)
-    private PublishEndpoint pubEndpoint;
+    private AmqpPublishEndpoint pubEndpoint;
 
     /**
      * Constructor
@@ -68,8 +74,17 @@ public class AmqpBridge {
                 ProtonConnection connection = ar.result();
 
                 // TODO: setup AMQP endpoints
+                ProtonSender wsSender = connection.createSender(AmqpWillServiceEndpoint.WILL_SERVICE_ENDPOINT);
+                this.wsEndpoint = new AmqpWillServiceEndpoint(wsSender);
+
+                ProtonSender ssSender = connection.createSender(AmqpSubscriptionServiceEndpoint.SUBSCRIPTION_SERVICE_ENDPOINT);
+                ProtonReceiver ssReceiver = connection.createReceiver(String.format(AmqpSubscriptionServiceEndpoint.CLIENT_ENDPOINT_TEMPLATE, this.mqttEndpoint.clientIdentifier()));
+                this.ssEndpoint = new AmqpSubscriptionServiceEndpoint(ssSender, ssReceiver);
 
                 this.setupMqttEndpointHandlers();
+
+                this.wsEndpoint.open();
+                this.ssEndpoint.open();
 
             } else {
 
