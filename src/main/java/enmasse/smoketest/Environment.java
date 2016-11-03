@@ -38,7 +38,7 @@ public class Environment {
     public static final Endpoint endpoint = getInsecureEndpoint();
 
     public static Endpoint getSecureEndpoint() throws UnknownHostException {
-        return new Endpoint("127.0.0.1", 443); //getPort("amqps"));
+        return new Endpoint(service.getPortalIP(), getPort("amqps")); //"127.0.0.1", 443); //getPort("amqps"));
     }
 
     private static Endpoint getInsecureEndpoint() {
