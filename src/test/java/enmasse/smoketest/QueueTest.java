@@ -43,7 +43,6 @@ public class QueueTest extends VertxTestBase {
         assertThat(received.get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
     }
 
-    @Test
     public void testScaledown() throws Exception {
         String dest = "myqueue";
         TestUtils.setReplicas(dest, dest, 3, 5, TimeUnit.MINUTES);
