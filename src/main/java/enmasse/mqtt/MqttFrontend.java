@@ -39,6 +39,10 @@ public class MqttFrontend extends AbstractVerticle {
     private String bindAddress;
     @Value(value = "${enmasse.mqtt.listenport:1883}")
     private int listenPort;
+    @Value(value = "${enmasse.mqtt.connectaddress:0.0.0.0}")
+    private String connectAddress;
+    @Value(value = "${enmasse.mqtt.connectport:5672}")
+    private int connectPort;
 
     private MqttServer server;
 
