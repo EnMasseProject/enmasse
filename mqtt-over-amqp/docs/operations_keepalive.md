@@ -1,6 +1,6 @@
 # Keep alive
 
-The keep alive mechanism at MQTT side is handled by the FE, exchanging PINGREQ and PINGRESP with the MQTT client.
+The keep alive mechanism at MQTT side is handled by the FE, exchanging _PINGREQ_ and _PINGRESP_ with the MQTT client.
 
 The life of the corresponding AMQP client is handled by AMQP “empty” message at connection level (as usual).
 

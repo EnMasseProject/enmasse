@@ -1,8 +1,8 @@
 # Publish
 
-The MQTT client sends PUBLISH message to FE which maps the message to the following AMQP messages :
+The MQTT client sends _PUBLISH_ message to FE which maps the message to the following AMQP messages :
 
-* AMQP_PUBLISH : sent to the “topic” address
+* **AMQP_PUBLISH** : sent to the “topic” address
   * to (topic from PUBLISH)
   * qos (redundant ? QoS influences exchange)
   * retain
@@ -20,12 +20,14 @@ The requested QoS is represented by the “snd-settle-mode” and “rcv-settle-
   * rcv-settle-mode: second (1)
   * snd-settle-mode : unsettled (1)
 
-For QoS 1, after disposition on the AMQP client, the FE sends the PUBACK to the MQTT client.
-
-For QoS 2, we have intermediate PUBREC, PUBREL and PUBCOMP to send from FE to MQTT client.
-
-> the FE doesn't detach the link on the topic for each publish; it leaves the link attached.
+For QoS 0, no acknowledge is provided.
 
 ![Publish QoS 0](../images/09_publish_qos_0.png)
 
+For QoS 1, after disposition on the AMQP client, the FE sends the _PUBACK_ to the MQTT client.
+
 ![Publish QoS 1](../images/10_publish_qos_1.png)
+
+For QoS 2, we have intermediate _PUBREC_, _PUBREL_ and _PUBCOMP_ to send from FE to MQTT client.
+
+> the FE doesn't detach the link on the topic for each publish; it leaves the link attached.

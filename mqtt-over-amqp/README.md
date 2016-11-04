@@ -1,6 +1,6 @@
 # MQTT over AMQP
 
-Design and specification for bringing MQTT features over AMQP protocol
+Design and specification for bringing MQTT features over AMQP protocol.
 
 ## Preface
 
