@@ -13,7 +13,7 @@ The MQTT client sends a CONNECT message to the FE which maps the message to the 
   * subject : session
   * client-id
   * clean-session
-  * reply-to : $mqtt.to.<client-id>
+  * reply-to : $mqtt.to.[client-id]
 
 After sending the AMQP_SESSION, the FE receives the following message as reply :
 
@@ -21,7 +21,7 @@ After sending the AMQP_SESSION, the FE receives the following message as reply :
   * subject : session-present
   * session-present
 
-If a session is present and there are subscriptions for the client-id, the SS re-establishes the routes from each topic to the $mqtt.to.<client-id> (see “Subscription/Unsubscription”) automatically. No need for the SS to send subscriptions list to the FE in order to re-subscribe.
+If a session is present and there are subscriptions for the client-id, the SS re-establishes the routes from each topic to the $mqtt.to.[client-id] (see “Subscription/Unsubscription”) automatically. No need for the SS to send subscriptions list to the FE in order to re-subscribe.
 
 > the SS should send the AMQP_SESSION_PRESENT message to FE before re-establishing routes for the topics because it should be first message received by FE (in order to build the CONNACK) if there are messages stored when the client was offline that will be puslished now on re-connect.
 
@@ -30,3 +30,7 @@ Regarding the WS, the FE attaches a permanent link to the $mqtt.willservice addr
 > the AMQP_WILL message can be sent by the FE even during client life (not only on connection). It means to overwrite the last “will” information (something that doesn’t exist in the MQTT spec).
 
 The FE builds the MQTT CONNACK message and sends it to the MQTT client.
+
+![Connect Will Service](../images/03_connect_ws.png)
+
+![Connect Subscription Service](../images/04_connect_ss.png)

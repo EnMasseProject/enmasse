@@ -25,3 +25,7 @@ For QoS 1, after disposition on the AMQP client, the FE sends the PUBACK to the 
 For QoS 2, we have intermediate PUBREC, PUBREL and PUBCOMP to send from FE to MQTT client.
 
 > the FE doesn't detach the link on the topic for each publish; it leaves the link attached.
+
+![Publish QoS 0](../images/09_publish_qos_0.png)
+
+![Publish QoS 1](../images/10_publish_qos_1.png)

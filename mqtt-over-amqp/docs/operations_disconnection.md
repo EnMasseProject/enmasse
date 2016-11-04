@@ -17,3 +17,7 @@ If specifying “error” in the detach is not possible, the WS tries to publish
 * n brute disconnection by MQTT client, the FE just detaches the the link so that the WS just starts to publish the “will”; after that it clear the “will” automatically.
 
 > if WE crashes, on restart it should send 	all the “will” messages it has. After that it should delete “will” information for those clients which don’t reconnect in a reasonable time (a timeout should be defined). It could be good to avoid sending “will” messages. if the WS can establish beyond doubt that the client did not lose connectivity (we are speaking about connectivity between MQTT client and FE component)
+
+![Disconnect](../images/05_disconnect.png)
+
+![Brute Disconnect](../images/06_brute_disconnection.png)

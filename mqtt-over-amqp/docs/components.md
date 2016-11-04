@@ -11,3 +11,7 @@ The mentioned AMQP services could be :
 * **Subscription Service (SS)** : handles the clients session about subscriptions and published messages (when client is offline); it provides subscriptions list and “lost” messages when a client re-connect. It’s in charge to deliver a retained message when it’s available for a subscribed topic from a client.
 
 Every single service can be implemented as stand-alone software component or we can leverage on existing features on broker/container (for example).
+
+![Overall](../images/01_overall.png)
+
+![Connections](../images/02_connections.png)

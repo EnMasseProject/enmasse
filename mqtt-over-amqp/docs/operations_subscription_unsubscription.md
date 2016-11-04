@@ -13,10 +13,10 @@ The MQTT client sends a SUBSCRIBE message to FE. The QoS is represented by the �
 
 The FE maps the SUBSCRIBE message to the following AMQP message :
 
-* AMQP_SUBSCRIBE : sent to the SS in order to ask establishing a route between the topics and unique client address $mqtt.to.<client-id>
+* AMQP_SUBSCRIBE : sent to the SS in order to ask establishing a route between the topics and unique client address $mqtt.to.[client-id]
   * subject : subscribe
   * topics (list)
-  * reply-to : $mqtt.to.<client-id>
+  * reply-to : $mqtt.to.[client-id]
   * qos (list) (is it needed in order to define the QoS for the establihed route ?)
 
 After sending the AMQP_SUBSCRIBE, the FE should receive the following messages as reply :
@@ -35,16 +35,18 @@ Finally, the FE builds the SUBACK message as response for the MQTT client and ev
 
 When subscribed/attached, the FE receives published messages on the unique client address :
 
-* $mqtt.to.<client-id>
+* $mqtt.to.[client-id]
 
 The AMQP message is used by FE for building the PUBLISH message to send to the MQTT client (see “Publishing”). The PUBACK (QoS 1) or PUBREC/PUBCOMP (QoS 2) are used by FE and related AMQP client for sending the disposition with right settlement.
 
+![Subscribe](../images/07_subscribe.png)
+
 The MQTT client sends an UNSUBSCRIBE message to FE which maps to the following AMQP message :
 
-* AMQP_UNSUBSCRIBE : sent to the SS in order to ask removing the established route between the topic and unique client address $mqtt.to.<client-id>
+* AMQP_UNSUBSCRIBE : sent to the SS in order to ask removing the established route between the topic and unique client address $mqtt.to.[client-id]
   * subject : unsubscribe
   * topic
-  * reply-to : $mqtt.to.<client-id>
+  * reply-to : $mqtt.to.[client-id]
 
 After sending the AMQP_UNSUBSCRIBE, the FE receives the following messages as reply :
 
@@ -52,3 +54,5 @@ After sending the AMQP_UNSUBSCRIBE, the FE receives the following messages as re
   * subject : unsuback
 
 Finally, the FE builds the UNSUBACK message as response for the MQTT client.
+
+![Unsubscribe](../images/08_unsubscribe.png)
