@@ -1,25 +1,39 @@
 # Connection
 
-The MQTT client sends a _CONNECT_ message to the FE which maps the message to the following AMQP messages :
+The MQTT client sends a _CONNECT_ message to the FE which maps the message to the following AMQP messages.
 
-* **AMQP_WILL** : sent to the WS in order to provide “will” information
-  * subject : will-message
-  * will-retain
-  * will-qos
-  * will-topic
-  * client-id (could be useless because WS can use attached link-name for that)
-  * payload (the “will” content)
-* **AMQP_SESSION** : sent to the SS in order to provide “clean-session” information and querying for a previous session
-  * subject : session
-  * client-id
-  * clean-session
-  * reply-to : $mqtt.to.[client-id]
+**AMQP_WILL** : sent to the WS in order to provide “will” information.
 
-After sending the _AMQP_SESSION_, the FE receives the following message as reply :
+| DATA | TYPE | VALUE | FROM |
+| ---- | ---- | ----- | ---- |
+| subject | system property | "will" | - |
+| x-retain | message annotation | will retain flag | MQTT CONNECT |
+| x-desidered-snd-settle-mode | message annotation | will QoS level | MQTT CONNECT |
+| to | system property | will topic | MQTT CONNECT |
+| payload | Data section | will message | MQTT CONNECT |
 
-* **AMQP_SESSION_PRESENT** : sent by the SS to report to FE if a session is already present for the client-id
-  * subject : session-present
-  * session-present
+The relation between the _AMQP_WILL_ message and the related client, at AMQP level, is inferred by the link name attached to the WS control address.
+
+**AMQP_SESSION** : sent to the SS in order to provide “clean-session” information and querying for a previous session.
+
+| DATA | TYPE | VALUE | FROM |
+| ---- | ---- | ----- | ---- |
+| subject | system property | "session" | - |
+| x-clean-session | message annotation | clean session flag | MQTT CONNECT |
+| reply-to | system property | $mqtt.to.[client-id] | - |
+
+The relation between the _AMQP_SESSION_ message and the related client, at AMQP level, is inferred by the link name attached to the SS control address.
+
+> the [client-id] is the "client identifier" value from the MQTT CONNECT message.
+
+After sending the _AMQP_SESSION_, the FE receives the following message as reply.
+
+**AMQP_SESSION_PRESENT** : sent by the SS to report to FE if a session is already.
+
+| DATA | TYPE | VALUE | FROM |
+| ---- | ---- | ----- | ---- |
+| subject | system property | "session-present" | - |
+| x-session-present | message annotation | if client session did already exist and routes were recovered | - |
 
 ![Connect Will Service](../images/03_connect_ws.png)
 
@@ -34,3 +48,10 @@ Regarding the WS, the FE attaches a permanent link to the $mqtt.willservice addr
 > the _AMQP_WILL_ message can be sent by the FE even during client life (not only on connection). It means to overwrite the last “will” information (something that doesn’t exist in the MQTT spec).
 
 The FE builds the _CONNACK_ message and sends it to the MQTT client.
+
+** CONNACK **
+
+| DATA | VALUE | FROM |
+| ----- | ----- |
+| Session present | if sesson is already present | AMQP_SESSION_PRESENT  |
+| Connect return code | It can depends on some checks on FE side or other on AMQP side | - |

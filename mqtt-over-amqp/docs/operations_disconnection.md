@@ -2,9 +2,13 @@
 
 The FE detects a disconnection from the MQTT client (brute or clean through _DISCONNECT_ message) and builds the following AMQP messages :
 
-* **AMQP_WILL_CLEAR** : sent to the WS in order to delete the “will” information for a client (i.e. “clean” disconnection)
-  * subject : will-clear
-  * client-id
+**AMQP_WILL_CLEAR** : sent to the WS in order to delete the “will” information for a client (i.e. “clean” disconnection).
+
+| DATA | TYPE | VALUE | FROM |
+| ---- | ---- | ----- | ---- |
+| subject | system property | "will-clear" | - |
+
+The relation between the _AMQP_WILL_CLEAR_ message and the related client, at AMQP level, is inferred by the link name attached to the WS control address.
 
 Regarding the “will” publishing on disconnection, the two following scenarios are possible :
 
