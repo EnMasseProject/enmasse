@@ -60,7 +60,9 @@ public class VertxTestBase {
     protected void scale(Destination destination, int numReplicas) throws Exception {
         TimeoutBudget budget = new TimeoutBudget(5, TimeUnit.MINUTES);
         TestUtils.setReplicas(destination, numReplicas, budget);
-        TestUtils.waitForAddress(destination.getAddress(), budget);
+        if (destination.isStoreAndForward() && !destination.isMulticast()) {
+            TestUtils.waitForAddress(destination.getAddress(), budget);
+        }
         waitUntilReady(destination.getAddress(), budget);
     }
 
