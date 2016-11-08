@@ -2,11 +2,11 @@ FROM fedora:23
 
 RUN dnf -y install which java-1.8.0-openjdk libaio python gettext hostname iputils && dnf clean all -y && mkdir -p /var/run/artemis/
 
-ENV ARTEMIS_HOME=/opt/apache-artemis-1.5.0-SNAPSHOT PATH=$ARTEMIS_HOME/bin:$PATH
+ENV ARTEMIS_HOME=/opt/apache-artemis-1.6.0-SNAPSHOT PATH=$ARTEMIS_HOME/bin:$PATH
 
 ADD ./build/apache-artemis-bin.tar.gz ./artemis-shutdown-hook/build/distributions/artemis-shutdown-hook.tar /opt/
 
-COPY ./activemq-artemis/integration/activemq-amqp-connector/target/artemis-amqp-connector-1.5.0-SNAPSHOT.jar $ARTEMIS_HOME/lib
+COPY ./activemq-artemis/integration/activemq-amqp-connector/target/artemis-amqp-connector-1.6.0-SNAPSHOT.jar $ARTEMIS_HOME/lib
 
 # Needed for bridge clustering
 # COPY ./artemis-plugin/build/libs/artemis-plugin.jar $ARTEMIS_HOME/lib
@@ -24,4 +24,4 @@ EXPOSE 5673 61616
 # Needed for bridge clustering
 # EXPOSE 7800 7801 7802
 
-CMD ["/opt/apache-artemis-1.5.0-SNAPSHOT/bin/main", "/opt/apache-artemis-1.5.0-SNAPSHOT/bin/run_artemis.sh"]
+CMD ["/opt/apache-artemis-1.6.0-SNAPSHOT/bin/main", "/opt/apache-artemis-1.6.0-SNAPSHOT/bin/run_artemis.sh"]
