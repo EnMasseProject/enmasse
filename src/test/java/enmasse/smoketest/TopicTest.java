@@ -60,6 +60,8 @@ public class TopicTest extends VertxTestBase{
         EnMasseClient ctrlClient = createQueueClient();
         EnMasseClient client = createTopicClient();
 
+        Thread.sleep(20000);
+
         Message sub = Message.Factory.create();
         sub.setAddress("$subctrl");
         sub.setCorrelationId(address);
@@ -67,7 +69,7 @@ public class TopicTest extends VertxTestBase{
         sub.setApplicationProperties(new ApplicationProperties(Collections.singletonMap("root_address", dest.getAddress())));
         ctrlClient.sendMessages("$subctrl", sub).get(5, TimeUnit.MINUTES);
 
-        Thread.sleep(10000);
+        Thread.sleep(20000);
 
         List<String> msgs = Arrays.asList("foo", "bar", "baz");
         Future<List<String>> recvResult = client.recvMessages(address, msgs.size());
