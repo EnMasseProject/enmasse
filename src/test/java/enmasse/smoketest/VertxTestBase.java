@@ -15,7 +15,6 @@
  */
 package enmasse.smoketest;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.net.PemTrustOptions;
@@ -25,16 +24,12 @@ import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.ProtonSender;
 import org.junit.After;
 import org.junit.Before;
-import sun.security.krb5.internal.crypto.Des;
 
 import java.net.UnknownHostException;
-import java.sql.Time;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import static enmasse.smoketest.Environment.*;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 public class VertxTestBase {
     protected Vertx vertx;

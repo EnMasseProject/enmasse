@@ -33,8 +33,9 @@ import static org.junit.Assert.assertTrue;
 public class BroadcastTest extends VertxTestBase {
 
     @Test
-    public void testMultipleRecievers() throws InterruptedException, TimeoutException, ExecutionException, UnknownHostException {
+    public void testMultipleRecievers() throws Exception {
         Destination dest = Destination.broadcast("broadcast");
+        deploy(dest);
         EnMasseClient client = createTopicClient();
         List<String> msgs = Arrays.asList("foo");
 
