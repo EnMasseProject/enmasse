@@ -25,6 +25,9 @@ public class AmqpPublishMessage {
 
     public static final String SUBJECT = "publish";
 
+    public static final String AMQP_RETAIN_ANNOTATION = "x-retain";
+    public static final String AMQP_DESIDERED_SND_SETTLE_MODE_ANNOTATION = "x-desidered-snd-settle-mode";
+
     /**
      * Return an AMQP_PUBLISH message from the raw AMQP one
      *
@@ -35,5 +38,16 @@ public class AmqpPublishMessage {
 
         // TODO:
         return new AmqpPublishMessage();
+    }
+
+    /**
+     * Return a raw AMQP message
+     *
+     * @return
+     */
+    public Message toAmqp() {
+
+        // TODO:
+        return null;
     }
 }

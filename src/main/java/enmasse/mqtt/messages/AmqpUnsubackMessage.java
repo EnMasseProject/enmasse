@@ -33,7 +33,22 @@ public class AmqpUnsubackMessage {
      */
     public static AmqpUnsubackMessage from(Message message) {
 
+        if (!message.getSubject().equals(SUBJECT)) {
+            throw new IllegalArgumentException("AMQP message subject is no 'unsuback'");
+        }
+
         // TODO:
         return new AmqpUnsubackMessage();
+    }
+
+    /**
+     * Return a raw AMQP message
+     *
+     * @return
+     */
+    public Message toAmqp() {
+
+        // TODO:
+        return null;
     }
 }

@@ -16,6 +16,8 @@
 
 package enmasse.mqtt.messages;
 
+import org.apache.qpid.proton.amqp.messaging.AmqpValue;
+import org.apache.qpid.proton.amqp.messaging.Section;
 import org.apache.qpid.proton.message.Message;
 
 import java.util.List;
@@ -55,7 +57,28 @@ public class AmqpSubackMessage {
      */
     public static AmqpSubackMessage from(Message message) {
 
+        if (!message.getSubject().equals(SUBJECT)) {
+            throw new IllegalArgumentException("AMQP message subject is no 'suback'");
+        }
+
+        Section section = message.getBody();
+        if ((section != null) && (section instanceof AmqpValue)) {
+
+            List<Integer> grantedQoSLevels = (List<Integer>) ((AmqpValue)message.getBody()).getValue();
+            return new AmqpSubackMessage(grantedQoSLevels);
+        } else {
+            throw new IllegalArgumentException("AMQP message wrong body type");
+        }
+    }
+
+    /**
+     * Return a raw AMQP message
+     *
+     * @return
+     */
+    public Message toAmqp() {
+
         // TODO:
-        return new AmqpSubackMessage(null);
+        return null;
     }
 }

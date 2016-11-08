@@ -16,6 +16,7 @@
 
 package enmasse.mqtt.messages;
 
+import io.vertx.proton.ProtonHelper;
 import org.apache.qpid.proton.message.Message;
 
 /**
@@ -35,5 +36,19 @@ public class AmqpWillClearMessage {
 
         // TODO:
         return new AmqpWillClearMessage();
+    }
+
+    /**
+     * Return a raw AMQP message
+     *
+     * @return
+     */
+    public Message toAmqp() {
+
+        Message message = ProtonHelper.message();
+
+        message.setSubject(SUBJECT);
+
+        return message;
     }
 }

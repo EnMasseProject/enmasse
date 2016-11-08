@@ -16,7 +16,13 @@
 
 package enmasse.mqtt.messages;
 
+import io.vertx.proton.ProtonHelper;
+import org.apache.qpid.proton.amqp.Symbol;
+import org.apache.qpid.proton.amqp.messaging.MessageAnnotations;
 import org.apache.qpid.proton.message.Message;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Represents an AMQP_SESSION message
@@ -24,6 +30,23 @@ import org.apache.qpid.proton.message.Message;
 public class AmqpSessionMessage {
 
     public static final String SUBJECT = "session";
+
+    public static final String AMQP_CLEAN_SESSION_ANNOTATION = "x-clean-session";
+
+    private boolean isCleanSession;
+    private String clientId;
+
+    /**
+     * Constructor
+     *
+     * @param isCleanSession    clean session flag
+     * @param clientId  client identifier
+     */
+    public AmqpSessionMessage(boolean isCleanSession, String clientId) {
+
+        this.isCleanSession = isCleanSession;
+        this.clientId = clientId;
+    }
 
     /**
      * Return an AMQP_SESSION message from the raw AMQP one
@@ -34,6 +57,43 @@ public class AmqpSessionMessage {
     public static AmqpSessionMessage from(Message message) {
 
         // TODO:
-        return new AmqpSessionMessage();
+        return new AmqpSessionMessage(false, null);
+    }
+
+    /**
+     * Return a raw AMQP message
+     *
+     * @return
+     */
+    public Message toAmqp() {
+
+        Message message = ProtonHelper.message();
+
+        message.setSubject(SUBJECT);
+
+        Map<Symbol, Object> map = new HashMap<>();
+        map.put(Symbol.valueOf(AMQP_CLEAN_SESSION_ANNOTATION), this.isCleanSession);
+        MessageAnnotations messageAnnotations = new MessageAnnotations(map);
+        message.setMessageAnnotations(messageAnnotations);
+
+        message.setReplyTo(String.format(AmqpCommons.AMQP_CLIENT_ADDRESS_TEMPLATE, this.clientId));
+
+        return message;
+    }
+
+    /**
+     * Clean session flag
+     * @return
+     */
+    public boolean isCleanSession() {
+        return this.isCleanSession;
+    }
+
+    /**
+     * Client identifier
+     * @return
+     */
+    public String clientId() {
+        return this.clientId;
     }
 }

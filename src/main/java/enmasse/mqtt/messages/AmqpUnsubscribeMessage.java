@@ -16,7 +16,11 @@
 
 package enmasse.mqtt.messages;
 
+import io.vertx.proton.ProtonHelper;
+import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.message.Message;
+
+import java.util.List;
 
 /**
  * Represents an AMQP_UNSUBSCRIBE message
@@ -24,6 +28,21 @@ import org.apache.qpid.proton.message.Message;
 public class AmqpUnsubscribeMessage {
 
     public static final String SUBJECT = "unsubscribe";
+
+    private String clientId;
+    private List<String> topics;
+
+    /**
+     * Constructor
+     *
+     * @param clientId  client identifier
+     * @param topics    topics to subscribe
+     */
+    public AmqpUnsubscribeMessage(String clientId, List<String> topics) {
+
+        this.clientId = clientId;
+        this.topics = topics;
+    }
 
     /**
      * Return an AMQP_UNSUBSCRIBE message from the raw AMQP one
@@ -34,6 +53,40 @@ public class AmqpUnsubscribeMessage {
     public static AmqpUnsubscribeMessage from(Message message) {
 
         // TODO:
-        return new AmqpUnsubscribeMessage();
+        return new AmqpUnsubscribeMessage(null, null);
+    }
+
+    /**
+     * Return a raw AMQP message
+     *
+     * @return
+     */
+    public Message toAmqp() {
+
+        Message message = ProtonHelper.message();
+
+        message.setSubject(SUBJECT);
+
+        message.setReplyTo(String.format(AmqpCommons.AMQP_CLIENT_ADDRESS_TEMPLATE, this.clientId));
+
+        message.setBody(new AmqpValue(this.topics));
+
+        return message;
+    }
+
+    /**
+     * Client identifier
+     * @return
+     */
+    public String clientId() {
+        return this.clientId;
+    }
+
+    /**
+     * Topics to subscribe
+     * @return
+     */
+    public List<String> topics() {
+        return this.topics;
     }
 }

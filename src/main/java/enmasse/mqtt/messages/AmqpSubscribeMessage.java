@@ -16,7 +16,15 @@
 
 package enmasse.mqtt.messages;
 
+import io.vertx.proton.ProtonHelper;
+import org.apache.qpid.proton.amqp.messaging.AmqpValue;
+import org.apache.qpid.proton.amqp.transport.ReceiverSettleMode;
 import org.apache.qpid.proton.message.Message;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Represents an AMQP_SUBSCRIBE message
@@ -24,6 +32,27 @@ import org.apache.qpid.proton.message.Message;
 public class AmqpSubscribeMessage {
 
     public static final String SUBJECT = "subscribe";
+
+    private static final String TOPICS_KEY = "topics";
+    private static final String DESIDERED_RCV_SETTLE_MODE_KEY = "desidered-rcv-settle-modes";
+
+    private String clientId;
+    private List<String> topics;
+    private List<Integer> qos;
+
+    /**
+     * Constructor
+     *
+     * @param clientId  client identifier
+     * @param topics    topics to subscribe
+     * @param qos   qos levels for topics to subscribe
+     */
+    public AmqpSubscribeMessage(String clientId, List<String> topics, List<Integer> qos) {
+
+        this.clientId = clientId;
+        this.topics = topics;
+        this.qos = qos;
+    }
 
     /**
      * Return an AMQP_SUBSCRIBE message from the raw AMQP one
@@ -34,6 +63,55 @@ public class AmqpSubscribeMessage {
     public static AmqpSubscribeMessage from(Message message) {
 
         // TODO:
-        return new AmqpSubscribeMessage();
+        return new AmqpSubscribeMessage(null, null, null);
     }
+
+    /**
+     * Return a raw AMQP message
+     *
+     * @return
+     */
+    public Message toAmqp() {
+
+        Message message = ProtonHelper.message();
+
+        message.setSubject(SUBJECT);
+
+        message.setReplyTo(String.format(AmqpCommons.AMQP_CLIENT_ADDRESS_TEMPLATE, this.clientId));
+
+        List<ReceiverSettleMode> desideredRcvSettleModes = this.qos.stream().map(qos -> AmqpHelper.toReceiverSettleMode(qos)).collect(Collectors.toList());
+
+        Map<String, List<?>> map = new HashMap<>();
+        map.put(TOPICS_KEY, this.topics);
+        map.put(DESIDERED_RCV_SETTLE_MODE_KEY, desideredRcvSettleModes);
+
+        message.setBody(new AmqpValue(map));
+
+        return message;
+    }
+
+    /**
+     * Client identifier
+     * @return
+     */
+    public String clientId() {
+        return this.clientId;
+    }
+
+    /**
+     * Topics to subscribe
+     * @return
+     */
+    public List<String> topics() {
+        return this.topics;
+    }
+
+    /**
+     * QoS levels for topics to subscribe
+     * @return
+     */
+    public List<Integer> qos() {
+        return this.qos;
+    }
+
 }

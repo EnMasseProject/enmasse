@@ -16,6 +16,8 @@
 
 package enmasse.mqtt.messages;
 
+import org.apache.qpid.proton.amqp.Symbol;
+import org.apache.qpid.proton.amqp.messaging.MessageAnnotations;
 import org.apache.qpid.proton.message.Message;
 
 /**
@@ -25,23 +27,17 @@ public class AmqpSessionPresentMessage {
 
     public static final String SUBJECT = "session-present";
 
-    private boolean isSessionPresent;
+    public static final String AMQP_CLEAN_SESSION_ANNOTATION = "x-session-present";
 
-    /**
-     * If session is already present
-     *
-     * @return
-     */
-    public boolean isSessionPresent() {
-        return this.isSessionPresent;
-    }
+    private boolean isSessionPresent;
 
     /**
      * Constructor
      *
      * @param isSessionPresent  if session is already present
      */
-    private AmqpSessionPresentMessage(boolean isSessionPresent) {
+    public AmqpSessionPresentMessage(boolean isSessionPresent) {
+
         this.isSessionPresent = isSessionPresent;
     }
 
@@ -53,7 +49,41 @@ public class AmqpSessionPresentMessage {
      */
     public static AmqpSessionPresentMessage from(Message message) {
 
+        if (!message.getSubject().equals(SUBJECT)) {
+            throw new IllegalArgumentException("AMQP message subject is no 'session-present'");
+        }
+
+        MessageAnnotations messageAnnotations = message.getMessageAnnotations();
+        if (messageAnnotations == null) {
+            throw new IllegalArgumentException("AMQP message has no annotations");
+        } else {
+
+            if (!messageAnnotations.getValue().containsKey(Symbol.valueOf(AMQP_CLEAN_SESSION_ANNOTATION))) {
+                throw new IllegalArgumentException("AMQP message has no annotations");
+            } else {
+                AmqpSessionPresentMessage msg = new AmqpSessionPresentMessage((boolean)messageAnnotations.getValue().get(Symbol.valueOf(AMQP_CLEAN_SESSION_ANNOTATION)));
+                return msg;
+            }
+
+        }
+    }
+
+    /**
+     * Return a raw AMQP message
+     *
+     * @return
+     */
+    public Message toAmqp() {
+
         // TODO:
-        return new AmqpSessionPresentMessage(false);
+        return null;
+    }
+
+    /**
+     * If session is already present
+     * @return
+     */
+    public boolean isSessionPresent() {
+        return this.isSessionPresent;
     }
 }
