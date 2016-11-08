@@ -31,22 +31,22 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 public class BroadcastTest extends VertxTestBase {
+
     @Test
     public void testMultipleRecievers() throws InterruptedException, TimeoutException, ExecutionException, UnknownHostException {
-        String dest = "broadcast";
-        waitUntilReady(dest, 5, TimeUnit.MINUTES);
+        Destination dest = Destination.broadcast("broadcast");
         EnMasseClient client = createTopicClient();
         List<String> msgs = Arrays.asList("foo");
 
         List<Future<List<String>>> recvResults = Arrays.asList(
-            client.recvMessages(dest, msgs.size()),
-            client.recvMessages(dest, msgs.size()),
-            client.recvMessages(dest, msgs.size()));
+            client.recvMessages(dest.getAddress(), msgs.size()),
+            client.recvMessages(dest.getAddress(), msgs.size()),
+            client.recvMessages(dest.getAddress(), msgs.size()));
 
         long end = System.currentTimeMillis() + 60_000;
         boolean isDone = false;
         while (System.currentTimeMillis() < end && !isDone) {
-            assertThat(client.sendMessages(dest, msgs).get(1, TimeUnit.MINUTES), is(msgs.size()));
+            assertThat(client.sendMessages(dest.getAddress(), msgs).get(1, TimeUnit.MINUTES), is(msgs.size()));
             Thread.sleep(1000);
             isDone = recvResults.get(0).isDone() && recvResults.get(1).isDone() && recvResults.get(2).isDone();
         }

@@ -18,28 +18,25 @@ package enmasse.smoketest;
 
 import org.junit.Test;
 
-import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
 public class AnycastTest extends VertxTestBase {
-
     @Test
-    public void testMessagesDeliveredToReceiver() throws InterruptedException, TimeoutException, ExecutionException, UnknownHostException {
-        String dest = "anycast";
+    public void testMessagesDeliveredToReceiver() throws Exception {
+        Destination dest = Destination.anycast("anycast");
+        deploy(dest);
         EnMasseClient client = createQueueClient();
 
         List<String> msgs = Arrays.asList("foo", "bar", "baz");
 
-        Future<List<String>> recvResult = client.recvMessages(dest, msgs.size());
-        Future<Integer> sendResult = client.sendMessages(dest, msgs);
+        Future<List<String>> recvResult = client.recvMessages(dest.getAddress(), msgs.size());
+        Future<Integer> sendResult = client.sendMessages(dest.getAddress(), msgs);
 
         assertThat(sendResult.get(1, TimeUnit.MINUTES), is(msgs.size()));
         assertThat(recvResult.get(1, TimeUnit.MINUTES).size(), is(msgs.size()));

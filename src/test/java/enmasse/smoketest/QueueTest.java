@@ -27,43 +27,40 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
 public class QueueTest extends VertxTestBase {
-
     @Test
     public void testQueue() throws Exception {
-        String dest = "myqueue";
-        waitForAddress(dest, 5, TimeUnit.MINUTES);
-        waitUntilReady(dest, 5, TimeUnit.MINUTES);
+        Destination dest = Destination.queue("myqueue");
+        deploy(dest);
         EnMasseClient client = createQueueClient();
         List<String> msgs = Arrays.asList("foo", "bar", "baz");
 
-        Future<Integer> numSent = client.sendMessages(dest, msgs);
+        Future<Integer> numSent = client.sendMessages(dest.getAddress(), msgs);
         assertThat(numSent.get(1, TimeUnit.MINUTES), is(msgs.size()));
 
-        Future<List<String>> received = client.recvMessages(dest, msgs.size());
+        Future<List<String>> received = client.recvMessages(dest.getAddress(), msgs.size());
         assertThat(received.get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
     }
 
+    @Test
     public void testScaledown() throws Exception {
-        String dest = "myqueue";
-        TestUtils.setReplicas(dest, dest, 3, 5, TimeUnit.MINUTES);
-        waitForAddress(dest, 5, TimeUnit.MINUTES);
-        waitUntilReady(dest, 5, TimeUnit.MINUTES);
+        Destination dest = Destination.queue("myqueue");
+        deploy(dest);
+        scale(dest, 1);
         EnMasseClient client = createQueueClient();
         List<Future<Integer>> sent = Arrays.asList(
-                client.sendMessages(dest, Arrays.asList("foo")),
-                client.sendMessages(dest, Arrays.asList("bar")),
-                client.sendMessages(dest, Arrays.asList("baz")),
-                client.sendMessages(dest, Arrays.asList("quux")));
+                client.sendMessages(dest.getAddress(), Arrays.asList("foo")),
+                client.sendMessages(dest.getAddress(), Arrays.asList("bar")),
+                client.sendMessages(dest.getAddress(), Arrays.asList("baz")),
+                client.sendMessages(dest.getAddress(), Arrays.asList("quux")));
 
         assertThat(sent.get(0).get(1, TimeUnit.MINUTES), is(1));
         assertThat(sent.get(1).get(1, TimeUnit.MINUTES), is(1));
         assertThat(sent.get(2).get(1, TimeUnit.MINUTES), is(1));
         assertThat(sent.get(3).get(1, TimeUnit.MINUTES), is(1));
 
-        TestUtils.setReplicas(dest, dest, 1, 5, TimeUnit.MINUTES);
-        waitUntilReady(dest, 5, TimeUnit.MINUTES);
+        scale(dest, 1);
 
-        Future<List<String>> received = client.recvMessages("myqueue", 4);
+        Future<List<String>> received = client.recvMessages(dest.getAddress(), 4);
 
         assertThat(received.get(1, TimeUnit.MINUTES).size(), is(4));
     }
