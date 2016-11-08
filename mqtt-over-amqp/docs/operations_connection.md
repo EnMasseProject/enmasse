@@ -49,9 +49,9 @@ Regarding the WS, the FE attaches a permanent link to the $mqtt.willservice addr
 
 The FE builds the _CONNACK_ message and sends it to the MQTT client.
 
-** CONNACK **
+**CONNACK**
 
 | DATA | VALUE | FROM |
-| ----- | ----- |
+| ---- | ----- | ---- |
 | Session present | if sesson is already present | AMQP_SESSION_PRESENT  |
 | Connect return code | It can depends on some checks on FE side or other on AMQP side | - |

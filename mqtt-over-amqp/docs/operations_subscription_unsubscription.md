@@ -38,10 +38,10 @@ The FE could receive the following message as reply on the unique client address
 
 Finally, the FE builds the _SUBACK_ message as response for the MQTT client and eventually the _PUBLISH_ for a retained message.
 
-** SUBACK **
+**SUBACK**
 
 | DATA | VALUE | FROM |
-| ----- | ----- |
+| ---- | ----- | ---- |
 | Return codes | List of granted QoS (or failure) | AMQP_SUBACK |
 
 When subscribed/attached, the FE receives published messages on the unique client address :
