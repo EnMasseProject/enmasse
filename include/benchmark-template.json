@@ -138,7 +138,8 @@
     },
     {
       "name": "ADDRESS",
-      "description": "The address to use for messages"
+      "description": "The address to use for messages",
+      "required": true
     }
   ]
 }
