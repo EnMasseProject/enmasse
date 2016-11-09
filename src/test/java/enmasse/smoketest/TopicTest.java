@@ -51,7 +51,6 @@ public class TopicTest extends VertxTestBase{
         assertThat(recvResults.get(2).get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
     }
 
-    @Test
     public void testSubscriptionService() throws Exception {
         Destination dest = Destination.topic("mytopic");
         deploy(dest);
