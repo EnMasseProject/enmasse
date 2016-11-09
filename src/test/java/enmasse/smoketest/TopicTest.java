@@ -60,8 +60,10 @@ public class TopicTest extends VertxTestBase{
         EnMasseClient ctrlClient = createQueueClient();
         EnMasseClient client = createTopicClient();
 
-        Thread.sleep(20000);
+        System.out.println("Waiting for the system to stabilize");
+        Thread.sleep(180000);
 
+        System.out.println("Creating subscription");
         Message sub = Message.Factory.create();
         sub.setAddress("$subctrl");
         sub.setCorrelationId(address);
@@ -70,6 +72,7 @@ public class TopicTest extends VertxTestBase{
         ctrlClient.sendMessages("$subctrl", sub).get(5, TimeUnit.MINUTES);
 
         Thread.sleep(20000);
+        System.out.println("Starting to send messages");
 
         List<String> msgs = Arrays.asList("foo", "bar", "baz");
         Future<List<String>> recvResult = client.recvMessages(address, msgs.size());
