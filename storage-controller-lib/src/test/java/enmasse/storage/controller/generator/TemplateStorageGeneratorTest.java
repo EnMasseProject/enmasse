@@ -67,7 +67,7 @@ public class TemplateStorageGeneratorTest {
 
     @Test
     public void testDirect() {
-        Destination dest = new Destination("foo.bar", false, false, "");
+        Destination dest = new Destination("foo.bar_baz.cockooA", false, false, "");
         Map<String, String> labels = new LinkedHashMap<>();
         ITemplate template = mock(ITemplate.class);
         when(template.getName()).thenReturn("direct");
@@ -83,7 +83,7 @@ public class TemplateStorageGeneratorTest {
         verify(template).addObjectLabel(LabelKeys.FLAVOR, dest.flavor());
         verify(template).addObjectLabel(LabelKeys.ADDRESS_TYPE, AddressType.QUEUE.value());
         verify(template).updateParameter(TemplateParameter.ADDRESS, dest.address());
-        verify(template).updateParameter(TemplateParameter.NAME, "foo-bar");
+        verify(template).updateParameter(TemplateParameter.NAME, "foo-bar-baz-cockooa");
     }
 
     @Test
