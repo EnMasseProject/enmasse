@@ -61,7 +61,7 @@ public class TopicTest extends VertxTestBase{
         EnMasseClient client = createTopicClient();
 
         System.out.println("Waiting for the system to stabilize");
-        Thread.sleep(180000);
+        Thread.sleep(300_000);
 
         System.out.println("Creating subscription");
         Message sub = Message.Factory.create();
