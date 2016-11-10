@@ -9,8 +9,11 @@ The MQTT client sends a _CONNECT_ message to the FE which maps the message to th
 | subject | system property | "will" | - |
 | x-retain | message annotation | will retain flag | MQTT CONNECT |
 | x-desidered-snd-settle-mode | message annotation | will QoS level | MQTT CONNECT |
+| x-desidered-rcv-settle-mode | message annotation | will QoS level | MQTT CONNECT |
 | to | system property | will topic | MQTT CONNECT |
 | payload | Data section | will message | MQTT CONNECT |
+
+> the MQTT QoS level is mapped to the AMQP couple snd-settle-mode and rcv-settle-mode (see "“Publishing”").
 
 The relation between the _AMQP_WILL_ message and the related client, at AMQP level, is inferred by the link name attached to the WS control address.
 
