@@ -7,6 +7,7 @@ The MQTT client sends _PUBLISH_ message to FE which maps the message to the foll
 | DATA | TYPE | VALUE | FROM |
 | ---- | ---- | ----- | ---- |
 | subject | system property | "publish" | - |
+| message-id | system property | MessageId | MQTT PUBLISH |
 | x-retain | message annotation | Retain flag | MQTT PUBLISH |
 | x-desired-snd-settle-mode | message annotation | QoS level | MQTT PUBLISH |
 | x-desired-rcv-settle-mode | message annotation | QoS level | MQTT PUBLISH |

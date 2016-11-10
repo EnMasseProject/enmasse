@@ -18,6 +18,7 @@ The FE maps the _SUBSCRIBE_ message to the following AMQP message.
 | DATA | TYPE | VALUE | FROM |
 | ---- | ---- | ----- | ---- |
 | subject | system property | "subscribe" | - |
+| message-id | system property | MessageId | MQTT SUBSCRIBE |
 | reply-to | system property | $mqtt.to.[client-id] | - |
 | payload | AMQP value | Map with two lists (topics and desired-settle-modes) | MQTT SUSBCRIBE |
 
@@ -30,6 +31,7 @@ After sending the _AMQP_SUBSCRIBE_, the FE should receive the following messages
 | DATA | TYPE | VALUE | FROM |
 | ---- | ---- | ----- | ---- |
 | subject | system property | "suback" | - |
+| message-id | system property | MessageId | - |
 | payload | AMQP value | List of granted QoS (or failure) | - |
 
 > the granted QoS is a list of couples with sender and receiver settle mode (both can be "null" for failure)
@@ -46,6 +48,7 @@ Finally, the FE builds the _SUBACK_ message as response for the MQTT client and 
 
 | DATA | VALUE | FROM |
 | ---- | ----- | ---- |
+| MessagId | message-id | AMQP_SUBACK |
 | Return codes | List of granted QoS (or failure) | AMQP_SUBACK |
 
 When subscribed/attached, the FE receives published messages on the unique client address :
@@ -63,8 +66,9 @@ The MQTT client sends an _UNSUBSCRIBE_ message to FE which maps to the following
 | DATA | TYPE | VALUE | FROM |
 | ---- | ---- | ----- | ---- |
 | subject | system property | "unsubscribe" | - |
+| message-id | system property | MessageId | MQTT UNSUBSCRIBE |
 | reply-to | system property | $mqtt.to.[client-id] | - |
-| payload | AMQP value | List of topics | MQTT SUSBCRIBE |
+| payload | AMQP value | List of topics | MQTT UNSUBSCRIBE |
 
 After sending the _AMQP_UNSUBSCRIBE_, the FE receives the following messages as reply.
 
@@ -73,7 +77,14 @@ After sending the _AMQP_UNSUBSCRIBE_, the FE receives the following messages as 
 | DATA | TYPE | VALUE | FROM |
 | ---- | ---- | ----- | ---- |
 | subject | system property | "unsuback" | - |
+| message-id | system property | message identifier | - |
 
 Finally, the FE builds the _UNSUBACK_ message as response for the MQTT client.
+
+**UNSUBACK**
+
+| DATA | VALUE | FROM |
+| ---- | ----- | ---- |
+| MessagId | message-id | AMQP_UNSUBACK |
 
 ![Unsubscribe](../images/08_unsubscribe.png)
