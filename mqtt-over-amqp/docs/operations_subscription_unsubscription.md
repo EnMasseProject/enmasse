@@ -19,7 +19,9 @@ The FE maps the _SUBSCRIBE_ message to the following AMQP message.
 | ---- | ---- | ----- | ---- |
 | subject | system property | "subscribe" | - |
 | reply-to | system property | $mqtt.to.[client-id] | - |
-| payload | AMQP value | Map with two lists (topics and desidered-rcv-settle-modes) | MQTT SUSBCRIBE |
+| payload | AMQP value | Map with two lists (topics and desired-settle-modes) | MQTT SUSBCRIBE |
+
+> "topics" is just a list of topic names; "desired-settle-modes" is a list of couples with sender and receiver settle mode
 
 After sending the _AMQP_SUBSCRIBE_, the FE should receive the following messages as reply.
 
@@ -29,6 +31,8 @@ After sending the _AMQP_SUBSCRIBE_, the FE should receive the following messages
 | ---- | ---- | ----- | ---- |
 | subject | system property | "suback" | - |
 | payload | AMQP value | List of granted QoS (or failure) | - |
+
+> the granted QoS is a list of couples with sender and receiver settle mode (both can be "null" for failure)
 
 The FE could receive the following message as reply on the unique client address.
 

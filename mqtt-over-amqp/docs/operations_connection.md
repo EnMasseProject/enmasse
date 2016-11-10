@@ -8,8 +8,8 @@ The MQTT client sends a _CONNECT_ message to the FE which maps the message to th
 | ---- | ---- | ----- | ---- |
 | subject | system property | "will" | - |
 | x-retain | message annotation | will retain flag | MQTT CONNECT |
-| x-desidered-snd-settle-mode | message annotation | will QoS level | MQTT CONNECT |
-| x-desidered-rcv-settle-mode | message annotation | will QoS level | MQTT CONNECT |
+| x-desired-snd-settle-mode | message annotation | will QoS level | MQTT CONNECT |
+| x-desired-rcv-settle-mode | message annotation | will QoS level | MQTT CONNECT |
 | to | system property | will topic | MQTT CONNECT |
 | payload | Data section | will message | MQTT CONNECT |
 
