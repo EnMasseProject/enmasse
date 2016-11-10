@@ -19,17 +19,18 @@ package enmasse.mqtt.messages;
 import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.messaging.MessageAnnotations;
 import org.apache.qpid.proton.message.Message;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 /**
  * Represents an AMQP_SESSION_PRESENT message
  */
 public class AmqpSessionPresentMessage {
 
-    public static final String AMQP_SUBJECT = "session-present";
+    private static final String AMQP_SUBJECT = "session-present";
 
-    public static final String AMQP_CLEAN_SESSION_ANNOTATION = "x-session-present";
+    private static final String AMQP_CLEAN_SESSION_ANNOTATION = "x-session-present";
 
-    private boolean isSessionPresent;
+    private final boolean isSessionPresent;
 
     /**
      * Constructor
@@ -50,7 +51,7 @@ public class AmqpSessionPresentMessage {
     public static AmqpSessionPresentMessage from(Message message) {
 
         if (!message.getSubject().equals(AMQP_SUBJECT)) {
-            throw new IllegalArgumentException("AMQP message subject is no 'session-present'");
+            throw new IllegalArgumentException(String.format("AMQP message subject is no s%", AMQP_SUBJECT));
         }
 
         MessageAnnotations messageAnnotations = message.getMessageAnnotations();
@@ -75,8 +76,8 @@ public class AmqpSessionPresentMessage {
      */
     public Message toAmqp() {
 
-        // TODO:
-        return null;
+        // do you really need this ?
+        throw new NotImplementedException();
     }
 
     /**

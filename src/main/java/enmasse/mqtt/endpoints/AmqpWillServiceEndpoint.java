@@ -16,6 +16,7 @@
 
 package enmasse.mqtt.endpoints;
 
+import enmasse.mqtt.messages.AmqpWillMessage;
 import io.vertx.proton.ProtonSender;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,8 +43,10 @@ public class AmqpWillServiceEndpoint {
         this.sender.open();
     }
 
-    public void sendWill(/* Will info */) {
+    public void sendWill(AmqpWillMessage amqpWillMessage) {
         // TODO: send AMQP_WILL message with will information
+
+        this.sender.send(amqpWillMessage.toAmqp());
     }
 
     public void clearWill() {

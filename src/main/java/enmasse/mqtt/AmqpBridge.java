@@ -19,9 +19,12 @@ package enmasse.mqtt;
 import enmasse.mqtt.endpoints.AmqpPublishEndpoint;
 import enmasse.mqtt.endpoints.AmqpSubscriptionServiceEndpoint;
 import enmasse.mqtt.endpoints.AmqpWillServiceEndpoint;
+import enmasse.mqtt.messages.AmqpQos;
+import enmasse.mqtt.messages.AmqpWillMessage;
 import io.netty.handler.codec.mqtt.MqttConnectReturnCode;
 import io.vertx.core.Vertx;
 import io.vertx.mqtt.MqttEndpoint;
+import io.vertx.mqtt.MqttWill;
 import io.vertx.proton.ProtonClient;
 import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.ProtonReceiver;
@@ -89,6 +92,18 @@ public class AmqpBridge {
 
                 this.wsEndpoint.open();
                 this.ssEndpoint.open();
+
+                // TODO: sending AMQP_WILL
+                MqttWill will = this.mqttEndpoint.will();
+
+                AmqpWillMessage amqpWillMessage =
+                        new AmqpWillMessage(will.isWillRetain(),
+                                will.willTopic(),
+                                AmqpQos.toAmqpQoS(will.willQos()),
+                                will.willMessage());
+
+                this.wsEndpoint.sendWill(amqpWillMessage);
+
             } else {
 
                 // no connection with the AMQP side

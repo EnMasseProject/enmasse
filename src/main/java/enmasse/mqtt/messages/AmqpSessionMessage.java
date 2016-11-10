@@ -20,6 +20,7 @@ import io.vertx.proton.ProtonHelper;
 import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.messaging.MessageAnnotations;
 import org.apache.qpid.proton.message.Message;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -29,12 +30,12 @@ import java.util.Map;
  */
 public class AmqpSessionMessage {
 
-    public static final String AMQP_SUBJECT = "session";
+    private static final String AMQP_SUBJECT = "session";
 
-    public static final String AMQP_CLEAN_SESSION_ANNOTATION = "x-clean-session";
+    private static final String AMQP_CLEAN_SESSION_ANNOTATION = "x-clean-session";
 
-    private boolean isCleanSession;
-    private String clientId;
+    private final boolean isCleanSession;
+    private final String clientId;
 
     /**
      * Constructor
@@ -56,8 +57,8 @@ public class AmqpSessionMessage {
      */
     public static AmqpSessionMessage from(Message message) {
 
-        // TODO:
-        return new AmqpSessionMessage(false, null);
+        // do you really need this ?
+        throw new NotImplementedException();
     }
 
     /**

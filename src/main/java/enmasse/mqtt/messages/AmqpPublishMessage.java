@@ -35,33 +35,33 @@ import java.util.Map;
  */
 public class AmqpPublishMessage {
 
-    public static final String SUBJECT = "publish";
+    private static final String AMQP_SUBJECT = "publish";
 
-    public static final String AMQP_RETAIN_ANNOTATION = "x-retain";
-    public static final String AMQP_DESIRED_SND_SETTLE_MODE_ANNOTATION = "x-desired-snd-settle-mode";
-    public static final String AMQP_DESIRED_RCV_SETTLE_MODE_ANNOTATION = "x-desired-rcv-settle-mode";
+    private static final String AMQP_RETAIN_ANNOTATION = "x-retain";
+    private static final String AMQP_DESIRED_SND_SETTLE_MODE_ANNOTATION = "x-desired-snd-settle-mode";
+    private static final String AMQP_DESIRED_RCV_SETTLE_MODE_ANNOTATION = "x-desired-rcv-settle-mode";
 
-    private SenderSettleMode sndSettleMode;
-    private ReceiverSettleMode rcvSettleMode;
-    private boolean isDup;
-    private boolean isRetain;
-    private String topic;
-    private Buffer payload;
+    private final Object messageId;
+    private final AmqpQos amqpQos;
+    private final boolean isDup;
+    private final boolean isRetain;
+    private final String topic;
+    private final Buffer payload;
 
     /**
      * Constructor
      *
-     * @param sndSettleMode desired sender settle mode
-     * @param rcvSettleMode desired receiver settle mode
+     * @param messageId message identifier
+     * @param amqpQos AMQP QoS level made of sender and receiver settle modes
      * @param isDup if the message is a duplicate
      * @param isRetain  if the message needs to be retained
      * @param topic topic on which the message is published
      * @param payload   message payload
      */
-    public AmqpPublishMessage(SenderSettleMode sndSettleMode, ReceiverSettleMode rcvSettleMode, boolean isDup, boolean isRetain, String topic, Buffer payload) {
+    public AmqpPublishMessage(Object messageId, AmqpQos amqpQos, boolean isDup, boolean isRetain, String topic, Buffer payload) {
 
-        this.sndSettleMode = sndSettleMode;
-        this.rcvSettleMode = rcvSettleMode;
+        this.messageId = messageId;
+        this.amqpQos = amqpQos;
         this.isDup = isDup;
         this.isRetain = isRetain;
         this.topic = topic;
@@ -76,8 +76,8 @@ public class AmqpPublishMessage {
      */
     public static AmqpPublishMessage from(Message message) {
 
-        if (!message.getSubject().equals(SUBJECT)) {
-            throw new IllegalArgumentException("AMQP message subject is no 'publish'");
+        if (!message.getSubject().equals(AMQP_SUBJECT)) {
+            throw new IllegalArgumentException(String.format("AMQP message subject is no s%", AMQP_SUBJECT));
         }
 
         MessageAnnotations messageAnnotations = message.getMessageAnnotations();
@@ -108,7 +108,7 @@ public class AmqpPublishMessage {
             if ((section != null) && (section instanceof Data)) {
 
                 Buffer payload = Buffer.buffer(((Data) section).getValue().getArray());
-                return new AmqpPublishMessage(sndSettleMode, rcvSettleMode, isDup, isRetain, topic, payload);
+                return new AmqpPublishMessage(message.getMessageId(), new AmqpQos(sndSettleMode, rcvSettleMode), isDup, isRetain, topic, payload);
 
             } else {
                 throw new IllegalArgumentException("AMQP message wrong body type");
@@ -125,12 +125,14 @@ public class AmqpPublishMessage {
 
         Message message = ProtonHelper.message();
 
-        message.setSubject(SUBJECT);
+        message.setSubject(AMQP_SUBJECT);
+
+        message.setMessageId(this.messageId);
 
         Map<Symbol, Object> map = new HashMap<>();
         map.put(Symbol.valueOf(AMQP_RETAIN_ANNOTATION), this.isRetain);
-        map.put(Symbol.valueOf(AMQP_DESIRED_SND_SETTLE_MODE_ANNOTATION), this.sndSettleMode);
-        map.put(Symbol.valueOf(AMQP_DESIRED_RCV_SETTLE_MODE_ANNOTATION), this.rcvSettleMode);
+        map.put(Symbol.valueOf(AMQP_DESIRED_SND_SETTLE_MODE_ANNOTATION), this.amqpQos.sndSettleMode());
+        map.put(Symbol.valueOf(AMQP_DESIRED_RCV_SETTLE_MODE_ANNOTATION), this.amqpQos.rcvSettleMode());
         MessageAnnotations messageAnnotations = new MessageAnnotations(map);
         message.setMessageAnnotations(messageAnnotations);
 
@@ -146,15 +148,19 @@ public class AmqpPublishMessage {
     }
 
     /**
-     *
+     * Message identifier
      * @return
      */
-    public SenderSettleMode sndSettleMode() {
-        return this.sndSettleMode;
+    public Object messageId() {
+        return messageId;
     }
 
-    public ReceiverSettleMode rcvSettleMode() {
-        return this.rcvSettleMode;
+    /**
+     * AMQP QoS level (made of sender and receiver settle modes)
+     * @return
+     */
+    public AmqpQos amqpQos() {
+        return this.amqpQos;
     }
 
     /**

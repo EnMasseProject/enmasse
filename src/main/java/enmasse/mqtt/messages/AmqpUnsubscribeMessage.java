@@ -19,6 +19,7 @@ package enmasse.mqtt.messages;
 import io.vertx.proton.ProtonHelper;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.message.Message;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.util.List;
 
@@ -27,19 +28,22 @@ import java.util.List;
  */
 public class AmqpUnsubscribeMessage {
 
-    public static final String AMQP_SUBJECT = "unsubscribe";
+    private static final String AMQP_SUBJECT = "unsubscribe";
 
-    private String clientId;
-    private List<String> topics;
+    private final String clientId;
+    private final Object messageId;
+    private final List<String> topics;
 
     /**
      * Constructor
      *
      * @param clientId  client identifier
+     * @param messageId message identifier
      * @param topics    topics to subscribe
      */
-    public AmqpUnsubscribeMessage(String clientId, List<String> topics) {
+    public AmqpUnsubscribeMessage(Object messageId, String clientId, List<String> topics) {
 
+        this.messageId = messageId;
         this.clientId = clientId;
         this.topics = topics;
     }
@@ -52,8 +56,8 @@ public class AmqpUnsubscribeMessage {
      */
     public static AmqpUnsubscribeMessage from(Message message) {
 
-        // TODO:
-        return new AmqpUnsubscribeMessage(null, null);
+        // do you really need this ?
+        throw new NotImplementedException();
     }
 
     /**
@@ -66,6 +70,8 @@ public class AmqpUnsubscribeMessage {
         Message message = ProtonHelper.message();
 
         message.setSubject(AMQP_SUBJECT);
+
+        message.setMessageId(this.messageId);
 
         message.setReplyTo(String.format(AmqpCommons.AMQP_CLIENT_ADDRESS_TEMPLATE, this.clientId));
 
@@ -80,6 +86,14 @@ public class AmqpUnsubscribeMessage {
      */
     public String clientId() {
         return this.clientId;
+    }
+
+    /**
+     * Message identifier
+     * @return
+     */
+    public Object messageId() {
+        return messageId;
     }
 
     /**

@@ -18,8 +18,8 @@ package enmasse.mqtt.messages;
 
 import io.vertx.proton.ProtonHelper;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
-import org.apache.qpid.proton.amqp.transport.ReceiverSettleMode;
 import org.apache.qpid.proton.message.Message;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.util.HashMap;
 import java.util.List;
@@ -31,25 +31,28 @@ import java.util.stream.Collectors;
  */
 public class AmqpSubscribeMessage {
 
-    public static final String SUBJECT = "subscribe";
+    private static final String AMQP_SUBJECT = "subscribe";
 
     private static final String TOPICS_KEY = "topics";
     private static final String DESIRED_SETTLE_MODES_KEY = "desired-settle-modes";
 
-    private String clientId;
-    private List<String> topics;
-    private List<AmqpQos> qos;
+    private final String clientId;
+    private final Object messageId;
+    private final List<String> topics;
+    private final List<AmqpQos> qos;
 
     /**
      * Constructor
      *
      * @param clientId  client identifier
+     * @param messageId message identifier
      * @param topics    topics to subscribe
      * @param qos   qos levels for topics to subscribe
      */
-    public AmqpSubscribeMessage(String clientId, List<String> topics, List<AmqpQos> qos) {
+    public AmqpSubscribeMessage(String clientId, Object messageId, List<String> topics, List<AmqpQos> qos) {
 
         this.clientId = clientId;
+        this.messageId = messageId;
         this.topics = topics;
         this.qos = qos;
     }
@@ -62,8 +65,8 @@ public class AmqpSubscribeMessage {
      */
     public static AmqpSubscribeMessage from(Message message) {
 
-        // TODO:
-        return new AmqpSubscribeMessage(null, null, null);
+        // do you really need this ?
+        throw new NotImplementedException();
     }
 
     /**
@@ -75,7 +78,9 @@ public class AmqpSubscribeMessage {
 
         Message message = ProtonHelper.message();
 
-        message.setSubject(SUBJECT);
+        message.setSubject(AMQP_SUBJECT);
+
+        message.setMessageId(this.messageId);
 
         message.setReplyTo(String.format(AmqpCommons.AMQP_CLIENT_ADDRESS_TEMPLATE, this.clientId));
 
@@ -94,6 +99,14 @@ public class AmqpSubscribeMessage {
      */
     public String clientId() {
         return this.clientId;
+    }
+
+    /**
+     * Message identifier
+     * @return
+     */
+    public Object messageId() {
+        return messageId;
     }
 
     /**

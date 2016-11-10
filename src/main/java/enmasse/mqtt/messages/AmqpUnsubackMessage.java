@@ -17,13 +17,26 @@
 package enmasse.mqtt.messages;
 
 import org.apache.qpid.proton.message.Message;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 /**
  * Represents an AMQP_UNSUBACK message
  */
 public class AmqpUnsubackMessage {
 
-    public static final String AMQP_SUBJECT = "unsuback";
+    private static final String AMQP_SUBJECT = "unsuback";
+
+    private final Object messageId;
+
+    /**
+     * Constructor
+     *
+     * @param messageId message identifier
+     */
+    private AmqpUnsubackMessage(Object messageId) {
+
+        this.messageId = messageId;
+    }
 
     /**
      * Return an AMQP_UNSUBACK message from the raw AMQP one
@@ -34,11 +47,10 @@ public class AmqpUnsubackMessage {
     public static AmqpUnsubackMessage from(Message message) {
 
         if (!message.getSubject().equals(AMQP_SUBJECT)) {
-            throw new IllegalArgumentException("AMQP message subject is no 'unsuback'");
+            throw new IllegalArgumentException(String.format("AMQP message subject is no s%", AMQP_SUBJECT));
         }
 
-        // TODO:
-        return new AmqpUnsubackMessage();
+        return new AmqpUnsubackMessage(message.getMessageId());
     }
 
     /**
@@ -48,7 +60,15 @@ public class AmqpUnsubackMessage {
      */
     public Message toAmqp() {
 
-        // TODO:
-        return null;
+        // do you really need this ?
+        throw new NotImplementedException();
+    }
+
+    /**
+     * Message identifier
+     * @return
+     */
+    public Object messageId() {
+        return messageId;
     }
 }

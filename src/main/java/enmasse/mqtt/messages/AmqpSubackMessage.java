@@ -20,6 +20,7 @@ import org.apache.qpid.proton.amqp.UnsignedByte;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.amqp.messaging.Section;
 import org.apache.qpid.proton.message.Message;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -29,25 +30,20 @@ import java.util.stream.Collectors;
  */
 public class AmqpSubackMessage {
 
-    public static final String AMQP_SUBJECT = "suback";
+    private static final String AMQP_SUBJECT = "suback";
 
-    private List<AmqpQos> grantedQoSLevels;
-
-    /**
-     * Granted QoS levels for requested topic subscriptions
-     *
-     * @return
-     */
-    public List<AmqpQos> grantedQoSLevels() {
-        return this.grantedQoSLevels;
-    }
+    private final Object messageId;
+    private final List<AmqpQos> grantedQoSLevels;
 
     /**
      * Constructor
      *
+     * @param messageId message identifier
      * @param grantedQoSLevels  granted QoS levels for requested topic subscriptions
      */
-    private AmqpSubackMessage(List<AmqpQos> grantedQoSLevels) {
+    private AmqpSubackMessage(Object messageId, List<AmqpQos> grantedQoSLevels) {
+
+        this.messageId = messageId;
         this.grantedQoSLevels = grantedQoSLevels;
     }
 
@@ -60,14 +56,14 @@ public class AmqpSubackMessage {
     public static AmqpSubackMessage from(Message message) {
 
         if (!message.getSubject().equals(AMQP_SUBJECT)) {
-            throw new IllegalArgumentException("AMQP message subject is no 'suback'");
+            throw new IllegalArgumentException(String.format("AMQP message subject is no s%", AMQP_SUBJECT));
         }
 
         Section section = message.getBody();
         if ((section != null) && (section instanceof AmqpValue)) {
 
             List<List<UnsignedByte>> grantedQoSLevels = (List<List<UnsignedByte>>) ((AmqpValue)message.getBody()).getValue();
-            return new AmqpSubackMessage(grantedQoSLevels.stream().map(c -> AmqpQos.toAmqpQos(c)).collect(Collectors.toList()));
+            return new AmqpSubackMessage(message.getMessageId(), grantedQoSLevels.stream().map(c -> AmqpQos.toAmqpQos(c)).collect(Collectors.toList()));
         } else {
             throw new IllegalArgumentException("AMQP message wrong body type");
         }
@@ -80,7 +76,23 @@ public class AmqpSubackMessage {
      */
     public Message toAmqp() {
 
-        // TODO:
-        return null;
+        // do you really need this ?
+        throw new NotImplementedException();
+    }
+
+    /**
+     * Message identifier
+     * @return
+     */
+    public Object messageId() {
+        return messageId;
+    }
+
+    /**
+     * Granted QoS levels for requested topic subscriptions
+     * @return
+     */
+    public List<AmqpQos> grantedQoSLevels() {
+        return this.grantedQoSLevels;
     }
 }

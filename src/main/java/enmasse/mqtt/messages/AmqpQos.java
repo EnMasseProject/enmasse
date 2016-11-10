@@ -28,8 +28,8 @@ import java.util.List;
  */
 public class AmqpQos {
 
-    private SenderSettleMode sndSettleMode;
-    private ReceiverSettleMode rcvSettleMode;
+    private final SenderSettleMode sndSettleMode;
+    private final ReceiverSettleMode rcvSettleMode;
 
     /**
      * Constructor
@@ -38,6 +38,7 @@ public class AmqpQos {
      * @param rcvSettleMode receiver settle mode
      */
     public AmqpQos(SenderSettleMode sndSettleMode, ReceiverSettleMode rcvSettleMode) {
+
         this.sndSettleMode = sndSettleMode;
         this.rcvSettleMode = rcvSettleMode;
     }
@@ -48,6 +49,7 @@ public class AmqpQos {
      * @return  list with sender and receiver settle modes couple
      */
     public List<UnsignedByte> toList() {
+
         List<UnsignedByte> list = new ArrayList<>();
         list.add(this.sndSettleMode.getValue());
         list.add(this.rcvSettleMode.getValue());

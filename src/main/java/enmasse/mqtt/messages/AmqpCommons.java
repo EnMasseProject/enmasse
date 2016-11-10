@@ -17,7 +17,7 @@
 package enmasse.mqtt.messages;
 
 /**
- * Some commond definitions for AMQP side
+ * Some common definitions for AMQP side
  */
 public final class AmqpCommons {
 

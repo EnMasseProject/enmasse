@@ -22,6 +22,7 @@ import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.messaging.Data;
 import org.apache.qpid.proton.amqp.messaging.MessageAnnotations;
 import org.apache.qpid.proton.message.Message;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -31,16 +32,16 @@ import java.util.Map;
  */
 public class AmqpWillMessage {
 
-    public static final String AMQP_SUBJECT = "will";
+    private static final String AMQP_SUBJECT = "will";
 
-    public static final String AMQP_RETAIN_ANNOTATION = "x-retain";
-    public static final String AMQP_DESIRED_SND_SETTLE_MODE_ANNOTATION = "x-desired-snd-settle-mode";
-    public static final String AMQP_DESIRED_RCV_SETTLE_MODE_ANNOTATION = "x-desired-rcv-settle-mode";
+    private static final String AMQP_RETAIN_ANNOTATION = "x-retain";
+    private static final String AMQP_DESIRED_SND_SETTLE_MODE_ANNOTATION = "x-desired-snd-settle-mode";
+    private static final String AMQP_DESIRED_RCV_SETTLE_MODE_ANNOTATION = "x-desired-rcv-settle-mode";
 
-    private boolean isRetain;
-    private String topic;
-    private AmqpQos amqpQos;
-    private String payload;
+    private final boolean isRetain;
+    private final String topic;
+    private final AmqpQos amqpQos;
+    private final String payload;
 
     /**
      * Constructor
@@ -66,8 +67,8 @@ public class AmqpWillMessage {
      */
     public static AmqpWillMessage from(Message message) {
 
-        // TODO:
-        return new AmqpWillMessage(false, null, null, null);
+        // do you really need this ?
+        throw new NotImplementedException();
     }
 
     /**

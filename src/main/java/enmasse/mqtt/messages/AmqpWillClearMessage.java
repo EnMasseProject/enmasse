@@ -18,13 +18,14 @@ package enmasse.mqtt.messages;
 
 import io.vertx.proton.ProtonHelper;
 import org.apache.qpid.proton.message.Message;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 /**
  * Represents an AMQP_WILL_CLEAR message
  */
 public class AmqpWillClearMessage {
 
-    public static final String AMQP_SUBJECT = "will-clear";
+    private static final String AMQP_SUBJECT = "will-clear";
 
     /**
      * Return an AMQP_WILL_CLEAR message from the raw AMQP one
@@ -34,8 +35,8 @@ public class AmqpWillClearMessage {
      */
     public static AmqpWillClearMessage from(Message message) {
 
-        // TODO:
-        return new AmqpWillClearMessage();
+        // do you really need this ?
+        throw new NotImplementedException();
     }
 
     /**
