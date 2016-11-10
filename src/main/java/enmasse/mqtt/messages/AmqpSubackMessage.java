@@ -16,27 +16,29 @@
 
 package enmasse.mqtt.messages;
 
+import org.apache.qpid.proton.amqp.UnsignedByte;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.amqp.messaging.Section;
 import org.apache.qpid.proton.message.Message;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Represents an AMQP_SUBACK message
  */
 public class AmqpSubackMessage {
 
-    public static final String SUBJECT = "suback";
+    public static final String AMQP_SUBJECT = "suback";
 
-    private List<Integer> grantedQoSLevels;
+    private List<AmqpQos> grantedQoSLevels;
 
     /**
      * Granted QoS levels for requested topic subscriptions
      *
      * @return
      */
-    public List<Integer> grantedQoSLevels() {
+    public List<AmqpQos> grantedQoSLevels() {
         return this.grantedQoSLevels;
     }
 
@@ -45,7 +47,7 @@ public class AmqpSubackMessage {
      *
      * @param grantedQoSLevels  granted QoS levels for requested topic subscriptions
      */
-    private AmqpSubackMessage(List<Integer> grantedQoSLevels) {
+    private AmqpSubackMessage(List<AmqpQos> grantedQoSLevels) {
         this.grantedQoSLevels = grantedQoSLevels;
     }
 
@@ -57,15 +59,15 @@ public class AmqpSubackMessage {
      */
     public static AmqpSubackMessage from(Message message) {
 
-        if (!message.getSubject().equals(SUBJECT)) {
+        if (!message.getSubject().equals(AMQP_SUBJECT)) {
             throw new IllegalArgumentException("AMQP message subject is no 'suback'");
         }
 
         Section section = message.getBody();
         if ((section != null) && (section instanceof AmqpValue)) {
 
-            List<Integer> grantedQoSLevels = (List<Integer>) ((AmqpValue)message.getBody()).getValue();
-            return new AmqpSubackMessage(grantedQoSLevels);
+            List<List<UnsignedByte>> grantedQoSLevels = (List<List<UnsignedByte>>) ((AmqpValue)message.getBody()).getValue();
+            return new AmqpSubackMessage(grantedQoSLevels.stream().map(c -> AmqpQos.toAmqpQos(c)).collect(Collectors.toList()));
         } else {
             throw new IllegalArgumentException("AMQP message wrong body type");
         }

@@ -25,7 +25,7 @@ import org.apache.qpid.proton.message.Message;
  */
 public class AmqpSessionPresentMessage {
 
-    public static final String SUBJECT = "session-present";
+    public static final String AMQP_SUBJECT = "session-present";
 
     public static final String AMQP_CLEAN_SESSION_ANNOTATION = "x-session-present";
 
@@ -49,7 +49,7 @@ public class AmqpSessionPresentMessage {
      */
     public static AmqpSessionPresentMessage from(Message message) {
 
-        if (!message.getSubject().equals(SUBJECT)) {
+        if (!message.getSubject().equals(AMQP_SUBJECT)) {
             throw new IllegalArgumentException("AMQP message subject is no 'session-present'");
         }
 

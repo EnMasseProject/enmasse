@@ -23,7 +23,7 @@ import org.apache.qpid.proton.message.Message;
  */
 public class AmqpUnsubackMessage {
 
-    public static final String SUBJECT = "unsuback";
+    public static final String AMQP_SUBJECT = "unsuback";
 
     /**
      * Return an AMQP_UNSUBACK message from the raw AMQP one
@@ -33,7 +33,7 @@ public class AmqpUnsubackMessage {
      */
     public static AmqpUnsubackMessage from(Message message) {
 
-        if (!message.getSubject().equals(SUBJECT)) {
+        if (!message.getSubject().equals(AMQP_SUBJECT)) {
             throw new IllegalArgumentException("AMQP message subject is no 'unsuback'");
         }
 

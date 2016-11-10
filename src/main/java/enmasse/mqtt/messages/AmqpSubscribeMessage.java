@@ -34,11 +34,11 @@ public class AmqpSubscribeMessage {
     public static final String SUBJECT = "subscribe";
 
     private static final String TOPICS_KEY = "topics";
-    private static final String DESIDERED_RCV_SETTLE_MODE_KEY = "desidered-rcv-settle-modes";
+    private static final String DESIRED_SETTLE_MODES_KEY = "desired-settle-modes";
 
     private String clientId;
     private List<String> topics;
-    private List<Integer> qos;
+    private List<AmqpQos> qos;
 
     /**
      * Constructor
@@ -47,7 +47,7 @@ public class AmqpSubscribeMessage {
      * @param topics    topics to subscribe
      * @param qos   qos levels for topics to subscribe
      */
-    public AmqpSubscribeMessage(String clientId, List<String> topics, List<Integer> qos) {
+    public AmqpSubscribeMessage(String clientId, List<String> topics, List<AmqpQos> qos) {
 
         this.clientId = clientId;
         this.topics = topics;
@@ -79,11 +79,9 @@ public class AmqpSubscribeMessage {
 
         message.setReplyTo(String.format(AmqpCommons.AMQP_CLIENT_ADDRESS_TEMPLATE, this.clientId));
 
-        List<ReceiverSettleMode> desideredRcvSettleModes = this.qos.stream().map(qos -> AmqpHelper.toReceiverSettleMode(qos)).collect(Collectors.toList());
-
         Map<String, List<?>> map = new HashMap<>();
         map.put(TOPICS_KEY, this.topics);
-        map.put(DESIDERED_RCV_SETTLE_MODE_KEY, desideredRcvSettleModes);
+        map.put(DESIRED_SETTLE_MODES_KEY, this.qos.stream().map(amqpQos -> amqpQos.toList()).collect(Collectors.toList()));
 
         message.setBody(new AmqpValue(map));
 
@@ -110,7 +108,7 @@ public class AmqpSubscribeMessage {
      * QoS levels for topics to subscribe
      * @return
      */
-    public List<Integer> qos() {
+    public List<AmqpQos> qos() {
         return this.qos;
     }
 

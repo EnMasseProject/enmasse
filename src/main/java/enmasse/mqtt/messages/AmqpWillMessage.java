@@ -31,14 +31,15 @@ import java.util.Map;
  */
 public class AmqpWillMessage {
 
-    public static final String SUBJECT = "will";
+    public static final String AMQP_SUBJECT = "will";
 
     public static final String AMQP_RETAIN_ANNOTATION = "x-retain";
-    public static final String AMQP_DESIDERED_SND_SETTLE_MODE_ANNOTATION = "x-desidered-snd-settle-mode";
+    public static final String AMQP_DESIRED_SND_SETTLE_MODE_ANNOTATION = "x-desired-snd-settle-mode";
+    public static final String AMQP_DESIRED_RCV_SETTLE_MODE_ANNOTATION = "x-desired-rcv-settle-mode";
 
     private boolean isRetain;
     private String topic;
-    private int qos;
+    private AmqpQos amqpQos;
     private String payload;
 
     /**
@@ -46,14 +47,14 @@ public class AmqpWillMessage {
      *
      * @param isRetain  will retain flag
      * @param topic will topic
-     * @param qos   will MQTT QoS
+     * @param amqpQos AMQP QoS level made of sender and receiver settle modes
      * @param payload   will message payload
      */
-    public AmqpWillMessage(boolean isRetain, String topic, int qos, String payload) {
+    public AmqpWillMessage(boolean isRetain, String topic, AmqpQos amqpQos, String payload) {
 
         this.isRetain = isRetain;
         this.topic = topic;
-        this.qos = qos;
+        this.amqpQos = amqpQos;
         this.payload = payload;
     }
 
@@ -66,7 +67,7 @@ public class AmqpWillMessage {
     public static AmqpWillMessage from(Message message) {
 
         // TODO:
-        return new AmqpWillMessage(false, null, 0, null);
+        return new AmqpWillMessage(false, null, null, null);
     }
 
     /**
@@ -78,11 +79,12 @@ public class AmqpWillMessage {
 
         Message message = ProtonHelper.message();
 
-        message.setSubject(SUBJECT);
+        message.setSubject(AMQP_SUBJECT);
 
         Map<Symbol, Object> map = new HashMap<>();
         map.put(Symbol.valueOf(AMQP_RETAIN_ANNOTATION), this.isRetain);
-        map.put(Symbol.valueOf(AMQP_DESIDERED_SND_SETTLE_MODE_ANNOTATION), AmqpHelper.toSenderSettleMode(this.qos));
+        map.put(Symbol.valueOf(AMQP_DESIRED_SND_SETTLE_MODE_ANNOTATION), this.amqpQos.sndSettleMode());
+        map.put(Symbol.valueOf(AMQP_DESIRED_RCV_SETTLE_MODE_ANNOTATION), this.amqpQos.rcvSettleMode());
         MessageAnnotations messageAnnotations = new MessageAnnotations(map);
         message.setMessageAnnotations(messageAnnotations);
 
@@ -112,11 +114,11 @@ public class AmqpWillMessage {
     }
 
     /**
-     * Will QoS level
+     * AMQP QoS level (made of sender and receiver settle modes)
      * @return
      */
-    public int qos() {
-        return this.qos;
+    public AmqpQos amqpQos() {
+        return this.amqpQos;
     }
 
     /**

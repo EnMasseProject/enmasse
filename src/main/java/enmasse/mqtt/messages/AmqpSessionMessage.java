@@ -29,7 +29,7 @@ import java.util.Map;
  */
 public class AmqpSessionMessage {
 
-    public static final String SUBJECT = "session";
+    public static final String AMQP_SUBJECT = "session";
 
     public static final String AMQP_CLEAN_SESSION_ANNOTATION = "x-clean-session";
 
@@ -69,7 +69,7 @@ public class AmqpSessionMessage {
 
         Message message = ProtonHelper.message();
 
-        message.setSubject(SUBJECT);
+        message.setSubject(AMQP_SUBJECT);
 
         Map<Symbol, Object> map = new HashMap<>();
         map.put(Symbol.valueOf(AMQP_CLEAN_SESSION_ANNOTATION), this.isCleanSession);

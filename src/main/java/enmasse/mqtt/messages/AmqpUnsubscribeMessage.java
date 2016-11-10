@@ -27,7 +27,7 @@ import java.util.List;
  */
 public class AmqpUnsubscribeMessage {
 
-    public static final String SUBJECT = "unsubscribe";
+    public static final String AMQP_SUBJECT = "unsubscribe";
 
     private String clientId;
     private List<String> topics;
@@ -65,7 +65,7 @@ public class AmqpUnsubscribeMessage {
 
         Message message = ProtonHelper.message();
 
-        message.setSubject(SUBJECT);
+        message.setSubject(AMQP_SUBJECT);
 
         message.setReplyTo(String.format(AmqpCommons.AMQP_CLIENT_ADDRESS_TEMPLATE, this.clientId));
 

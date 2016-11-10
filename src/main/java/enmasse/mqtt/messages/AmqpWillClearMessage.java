@@ -24,7 +24,7 @@ import org.apache.qpid.proton.message.Message;
  */
 public class AmqpWillClearMessage {
 
-    public static final String SUBJECT = "will-clear";
+    public static final String AMQP_SUBJECT = "will-clear";
 
     /**
      * Return an AMQP_WILL_CLEAR message from the raw AMQP one
@@ -47,7 +47,7 @@ public class AmqpWillClearMessage {
 
         Message message = ProtonHelper.message();
 
-        message.setSubject(SUBJECT);
+        message.setSubject(AMQP_SUBJECT);
 
         return message;
     }
