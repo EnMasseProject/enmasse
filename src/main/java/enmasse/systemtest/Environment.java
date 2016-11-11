@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package enmasse.smoketest;
+package enmasse.systemtest;
 
 import com.openshift.restclient.ClientBuilder;
 import com.openshift.restclient.IClient;

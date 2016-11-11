@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package enmasse.smoketest;
+package enmasse.systemtest;
 
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
@@ -29,7 +29,7 @@ import java.net.UnknownHostException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import static enmasse.smoketest.Environment.*;
+import static enmasse.systemtest.Environment.*;
 
 public class VertxTestBase {
     protected Vertx vertx;

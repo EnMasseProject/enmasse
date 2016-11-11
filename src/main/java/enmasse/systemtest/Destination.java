@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package enmasse.smoketest;
+package enmasse.systemtest;
 
 import java.util.Optional;
 

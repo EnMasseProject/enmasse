@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package enmasse.smoketest;
+package enmasse.systemtest;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -36,8 +36,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import static enmasse.smoketest.Environment.getClient;
-import static enmasse.smoketest.Environment.namespace;
+import static enmasse.systemtest.Environment.namespace;
 
 /**
  * TODO: Description

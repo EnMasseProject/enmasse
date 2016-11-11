@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package enmasse.smoketest;
+package enmasse.systemtest;
 
 public class Endpoint {
     private final String host;

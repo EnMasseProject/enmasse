@@ -1,4 +1,4 @@
-package enmasse.smoketest;
+package enmasse.systemtest;
 
 import org.apache.qpid.proton.amqp.messaging.Source;
 import org.apache.qpid.proton.amqp.messaging.Target;

@@ -14,17 +14,14 @@
  * limitations under the License.
  */
 
-package enmasse.smoketest;
+package enmasse.systemtest;
 
 import org.junit.Test;
 
-import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;

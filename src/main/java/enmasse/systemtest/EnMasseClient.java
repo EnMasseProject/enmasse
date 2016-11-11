@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package enmasse.smoketest;
+package enmasse.systemtest;
 
 import io.vertx.core.Vertx;
 import io.vertx.proton.*;
@@ -60,7 +60,7 @@ public class EnMasseClient {
         client.connect(options, endpoint.getHost(), endpoint.getPort(), event -> {
             if (event.succeeded()) {
                 ProtonConnection connection = event.result();
-                connection.setContainer("enmasse-smoketest-client");
+                connection.setContainer("enmasse-systemtest-client");
                 connection.disconnectHandler(disconnected -> {
                     System.out.println("Receiver connection disconnected");
                 });
@@ -68,7 +68,7 @@ public class EnMasseClient {
                     System.out.println("Receiver connection closed");
                 });
                 connection.open();
-                connection.createReceiver(address, new ProtonLinkOptions().setLinkName("enmasse-smoketest-client"))
+                connection.createReceiver(address, new ProtonLinkOptions().setLinkName("enmasse-systemtest-client"))
                         .openHandler(opened -> {
                             latch.countDown();
                             System.out.println("Receiving messages from " + connection.getRemoteContainer());
