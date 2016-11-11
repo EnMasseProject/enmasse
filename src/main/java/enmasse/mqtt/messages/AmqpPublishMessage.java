@@ -131,8 +131,8 @@ public class AmqpPublishMessage {
 
         Map<Symbol, Object> map = new HashMap<>();
         map.put(Symbol.valueOf(AMQP_RETAIN_ANNOTATION), this.isRetain);
-        map.put(Symbol.valueOf(AMQP_DESIRED_SND_SETTLE_MODE_ANNOTATION), this.amqpQos.sndSettleMode());
-        map.put(Symbol.valueOf(AMQP_DESIRED_RCV_SETTLE_MODE_ANNOTATION), this.amqpQos.rcvSettleMode());
+        map.put(Symbol.valueOf(AMQP_DESIRED_SND_SETTLE_MODE_ANNOTATION), this.amqpQos.sndSettleMode().getValue());
+        map.put(Symbol.valueOf(AMQP_DESIRED_RCV_SETTLE_MODE_ANNOTATION), this.amqpQos.rcvSettleMode().getValue());
         MessageAnnotations messageAnnotations = new MessageAnnotations(map);
         message.setMessageAnnotations(messageAnnotations);
 

@@ -46,7 +46,9 @@ public class AmqpWillServiceEndpoint {
     public void sendWill(AmqpWillMessage amqpWillMessage) {
         // TODO: send AMQP_WILL message with will information
 
-        this.sender.send(amqpWillMessage.toAmqp());
+        this.sender.send(amqpWillMessage.toAmqp(), delivery -> {
+            // TODO:
+        });
     }
 
     public void clearWill() {

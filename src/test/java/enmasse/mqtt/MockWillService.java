@@ -21,27 +21,47 @@ import io.vertx.proton.*;
 import org.apache.qpid.proton.amqp.transport.ErrorCondition;
 import org.apache.qpid.proton.amqp.transport.LinkError;
 import org.apache.qpid.proton.message.Message;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Mock for the Will Service
  */
 public class MockWillService {
 
+    private static final Logger LOG = LoggerFactory.getLogger(MockWillService.class);
+
     private static final String WILL_SERVICE_ENDPOINT = "$mqtt.willservice";
 
-    ProtonServer server;
+    private static final String BIND_ADDRESS = "0.0.0.0";
+    private static final int LISTEN_PORT = 5672;
+
+    private ProtonServer server;
 
     public MockWillService(Vertx vertx) {
 
         this.server = ProtonServer.create(vertx);
-        this.server.connectHandler(this::connectHandler);
+    }
 
-        this.server.listen();
+    public void listen() {
+
+        this.server.connectHandler(this::connectHandler);
+        this.server.listen(LISTEN_PORT, BIND_ADDRESS, done -> {
+
+            if (done.succeeded()) {
+
+                LOG.info("Will Service started successfully ...");
+            } else {
+
+                LOG.info("Error starting the Will Service ...", done.cause());
+            }
+        });
     }
 
     private void connectHandler(ProtonConnection connection) {
 
         connection
+                .sessionOpenHandler(session -> session.open())
                 .receiverOpenHandler(this::receiverHandler)
                 .open();
 
@@ -61,13 +81,22 @@ public class MockWillService {
             // TODO: tracking the AMQP sender
 
             receiver
-                    .handler(this::messageHandler)
+                    .setTarget(receiver.getRemoteTarget())
+                    .handler((delivery, message) -> {
+
+                        this.messageHandler(receiver, delivery, message);
+                    })
                     .open();
         }
     }
 
-    private void messageHandler(ProtonDelivery delivery, Message message) {
+    private void messageHandler(ProtonReceiver receiver, ProtonDelivery delivery, Message message) {
 
         // TODO:
+    }
+
+    public void close() {
+
+        this.server.close();
     }
 }

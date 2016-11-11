@@ -78,7 +78,7 @@ public class MqttFrontend extends AbstractVerticle {
      * @return  current MQTT Frontend instance
      */
     @Value(value = "${enmasse.mqtt.connectaddress:0.0.0.0}")
-    public MqttFrontend connectAddress(String connectAddress) {
+    public MqttFrontend setConnectAddress(String connectAddress) {
         this.connectAddress = connectAddress;
         return this;
     }
@@ -90,7 +90,7 @@ public class MqttFrontend extends AbstractVerticle {
      * @return  current MQTT Frontend instance
      */
     @Value(value = "${enmasse.mqtt.connectport:5672}")
-    public MqttFrontend connectPort(int connectPort) {
+    public MqttFrontend setConnectPort(int connectPort) {
         this.connectPort = connectPort;
         return this;
     }
@@ -131,6 +131,8 @@ public class MqttFrontend extends AbstractVerticle {
      * @param mqttEndpoint  MQTT local endpoint
      */
     private void handleMqttEndpointConnection(MqttEndpoint mqttEndpoint) {
+
+        LOG.info("Connection from {}", mqttEndpoint.clientIdentifier());
 
         AmqpBridge bridge = new AmqpBridge(this.vertx, mqttEndpoint);
 

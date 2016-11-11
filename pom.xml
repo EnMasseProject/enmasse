@@ -16,9 +16,12 @@
         <maven.compiler.target>1.8</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <vertx-mqtt.version>3.4.0-SNAPSHOT</vertx-mqtt.version>
-        <vertx-proton.version>3.3.3</vertx-proton.version>
+        <vertx-proton.version>3.4.0-SNAPSHOT</vertx-proton.version>
+        <vertx-unit.version>3.3.3</vertx-unit.version>
         <spring-boot.version>1.4.1.RELEASE</spring-boot.version>
         <slf4j.version>1.7.21</slf4j.version>
+        <junit.version>4.12</junit.version>
+        <paho.version>1.1.0</paho.version>
     </properties>
 
     <dependencies>
@@ -52,6 +55,25 @@
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
             <version>${slf4j.version}</version>
+        </dependency>
+        <!-- Testing -->
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>${junit.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.vertx</groupId>
+            <artifactId>vertx-unit</artifactId>
+            <version>${vertx-unit.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.paho</groupId>
+            <artifactId>org.eclipse.paho.client.mqttv3</artifactId>
+            <version>${paho.version}</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 

@@ -74,11 +74,12 @@ public class AmqpBridge {
 
         this.client = ProtonClient.create(this.vertx);
 
-        this.client.connect(address, port, ar -> {
+        this.client.connect(address, port, done -> {
 
-            if (ar.succeeded()) {
+            if (done.succeeded()) {
 
-                ProtonConnection connection = ar.result();
+                ProtonConnection connection = done.result();
+                connection.open();
 
                 // TODO: setup AMQP endpoints
                 ProtonSender wsSender = connection.createSender(AmqpWillServiceEndpoint.WILL_SERVICE_ENDPOINT);
@@ -104,8 +105,11 @@ public class AmqpBridge {
 
                 this.wsEndpoint.sendWill(amqpWillMessage);
 
+                this.mqttEndpoint.writeConnack(MqttConnectReturnCode.CONNECTION_ACCEPTED, false);
+
             } else {
 
+                LOG.info("Error connecting to AMQP services ...", done.cause());
                 // no connection with the AMQP side
                 this.mqttEndpoint.writeConnack(MqttConnectReturnCode.CONNECTION_REFUSED_SERVER_UNAVAILABLE, false);
             }
