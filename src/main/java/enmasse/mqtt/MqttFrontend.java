@@ -38,18 +38,62 @@ public class MqttFrontend extends AbstractVerticle {
 
     private static final Logger LOG = LoggerFactory.getLogger(MqttFrontend.class);
 
-    @Value(value = "${enmasse.mqtt.bindaddress:0.0.0.0}")
     private String bindAddress;
-    @Value(value = "${enmasse.mqtt.listenport:1883}")
     private int listenPort;
-    @Value(value = "${enmasse.mqtt.connectaddress:0.0.0.0}")
     private String connectAddress;
-    @Value(value = "${enmasse.mqtt.connectport:5672}")
     private int connectPort;
 
     private MqttServer server;
 
     private List<AmqpBridge> bridges;
+
+    /**
+     * Set the IP address the MQTT Frontend will bind to
+     *
+     * @param bindAddress   the IP address
+     * @return  current MQTT Frontend instance
+     */
+    @Value(value = "${enmasse.mqtt.bindaddress:0.0.0.0}")
+    public MqttFrontend setBindAddress(String bindAddress) {
+        this.bindAddress = bindAddress;
+        return this;
+    }
+
+    /**
+     * Set the port the MQTT Frontend will listen on for MQTT connections.
+     *
+     * @param listePort the port to listen on
+     * @return  current MQTT Frontend instance
+     */
+    @Value(value = "${enmasse.mqtt.listenport:1883}")
+    public MqttFrontend setListenPort(int listePort) {
+        this.listenPort = listePort;
+        return this;
+    }
+
+    /**
+     * Set the address for connecting to the AMQP services
+     *
+     * @param connectAddress    address for AMQP connections
+     * @return  current MQTT Frontend instance
+     */
+    @Value(value = "${enmasse.mqtt.connectaddress:0.0.0.0}")
+    public MqttFrontend connectAddress(String connectAddress) {
+        this.connectAddress = connectAddress;
+        return this;
+    }
+
+    /**
+     * Set the port for connecting to the AMQP services
+     *
+     * @param connectPort   port for AMQP connections
+     * @return  current MQTT Frontend instance
+     */
+    @Value(value = "${enmasse.mqtt.connectport:5672}")
+    public MqttFrontend connectPort(int connectPort) {
+        this.connectPort = connectPort;
+        return this;
+    }
 
     /**
      * Start the MQTT server component
