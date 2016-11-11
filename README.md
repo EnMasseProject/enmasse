@@ -59,6 +59,10 @@ Then we can use the tls version of the template as follows:
 
     oc process -f https://raw.githubusercontent.com/EnMasseProject/openshift-configuration/master/generated/tls-enmasse-template.yaml | oc create -f -
 
+This will also create a route called 'messaging' using TLS passthrough. In order for this to work,
+you must ensure that your OpenShift cluster has a
+[router](https://docs.openshift.org/latest/install_config/router/index.html#install-config-router-overview). Then, you can connect to openshift cluster using AMQP over TLS with SNI. Have a look at the [rhea TLS example](https://github.com/grs/rhea/blob/master/examples/tls/tls_client.js). The SNI host would be the host generated for the 'messaging' route.
+
 ## Configuring
 
 By default, the template will setup 4 addresses with the following 4 different address types:
