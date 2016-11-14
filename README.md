@@ -76,7 +76,9 @@ The addresses are defined in a config map called 'maas'. To make a change to the
 download the config, edit it, and replace it:
 
    oc get configmap maas -o yaml > addresses.yaml
+
    # ADD/REMOVE/EDIT addresses
+
    oc replace -f addresses.yaml
 
 The changes will be picked up by the storage controller, which will create and delete brokers to
