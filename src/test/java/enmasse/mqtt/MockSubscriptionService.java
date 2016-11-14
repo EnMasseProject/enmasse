@@ -18,21 +18,19 @@ package enmasse.mqtt;
 
 import io.vertx.core.Vertx;
 import io.vertx.proton.*;
-import org.apache.qpid.proton.amqp.transport.ErrorCondition;
-import org.apache.qpid.proton.amqp.transport.LinkError;
 import org.apache.qpid.proton.message.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Mock for the Will Service
+ * Mock for the Subscription Service
  */
-public class MockWillService {
+public class MockSubscriptionService {
 
-    private static final Logger LOG = LoggerFactory.getLogger(MockWillService.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MockSubscriptionService.class);
 
-    private static final String WILL_SERVICE_ENDPOINT = "$mqtt.willservice";
-    private static final String CONTAINER_ID = "will-service";
+    private static final String SUBSCRIPTION_SERVICE_ENDPOINT = "$mqtt.subscriptionservice";
+    private static final String CONTAINER_ID = "subscription-service";
 
     private String connectAddress;
     private int connectPort;
@@ -44,7 +42,7 @@ public class MockWillService {
      *
      * @param vertx Vert.x instance
      */
-    public MockWillService(Vertx vertx) {
+    public MockSubscriptionService(Vertx vertx) {
 
         this.client = ProtonClient.create(vertx);
     }
@@ -58,14 +56,19 @@ public class MockWillService {
 
             if (done.succeeded()) {
 
-                LOG.info("Will Service started successfully ...");
+                LOG.info("Subscription Service started successfully ...");
 
                 ProtonConnection connection = done.result();
                 connection.setContainer(CONTAINER_ID);
 
                 connection
-                        .sessionOpenHandler(session -> session.open())
-                        .receiverOpenHandler(this::receiverHandler)
+                        .open();
+
+                ProtonReceiver receiver = connection.createReceiver(SUBSCRIPTION_SERVICE_ENDPOINT);
+
+                receiver
+                        .setTarget(receiver.getRemoteTarget())
+                        .handler(this::messageHandler)
                         .open();
 
             } else {
@@ -75,30 +78,7 @@ public class MockWillService {
         });
     }
 
-    private void receiverHandler(ProtonReceiver receiver) {
-
-        // Will Service supports only the control address
-        if (!receiver.getRemoteTarget().getAddress().equals(WILL_SERVICE_ENDPOINT)) {
-
-            ErrorCondition error = new ErrorCondition(LinkError.DETACH_FORCED, "The endpoint provided is not supported");
-            receiver
-                    .setCondition(error)
-                    .close();
-        } else {
-
-            // TODO: tracking the AMQP sender
-
-            receiver
-                    .setTarget(receiver.getRemoteTarget())
-                    .handler((delivery, message) -> {
-
-                        this.messageHandler(receiver, delivery, message);
-                    })
-                    .open();
-        }
-    }
-
-    private void messageHandler(ProtonReceiver receiver, ProtonDelivery delivery, Message message) {
+    private void messageHandler(ProtonDelivery delivery, Message message) {
 
         // TODO:
 
@@ -114,9 +94,9 @@ public class MockWillService {
      * Set the address for connecting to the AMQP services
      *
      * @param connectAddress    address for AMQP connections
-     * @return  current Mock Will Service instance
+     * @return  current Mock Subscription Service instance
      */
-    public MockWillService setConnectAddress(String connectAddress) {
+    public MockSubscriptionService setConnectAddress(String connectAddress) {
         this.connectAddress = connectAddress;
         return this;
     }
@@ -125,9 +105,9 @@ public class MockWillService {
      * Set the port for connecting to the AMQP services
      *
      * @param connectPort   port for AMQP connections
-     * @return  current Mock Will Service instance
+     * @return  current Mock Subscription Service instance
      */
-    public MockWillService setConnectPort(int connectPort) {
+    public MockSubscriptionService setConnectPort(int connectPort) {
         this.connectPort = connectPort;
         return this;
     }

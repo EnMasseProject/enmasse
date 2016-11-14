@@ -29,13 +29,18 @@ import org.junit.runner.RunWith;
 @RunWith(VertxUnitRunner.class)
 public abstract class MockMqttFrontendTestBase {
 
-    public static final String BIND_ADDRESS = "localhost";
-    public static final int LISTEN_PORT = 1883;
-    public static final String CONNECT_ADDRESS = "localhost";
-    public static final int CONNECT_PORT = 5672;
+    public static final String MQTT_BIND_ADDRESS = "localhost";
+    public static final int MQTT_LISTEN_PORT = 1883;
+
+    public static final String AMQP_CLIENTS_LISTENER_ADDRESS = "localhost";
+    public static final int AMQP_CLIENTS_LISTENER_PORT = 5672;
+
+    public static final String AMQP_SERVICES_LISTENER_ADDRESS = "localhost";
+    public static final int AMQP_SERVICES_LISTENER_PORT = 5673;
 
     protected Vertx vertx;
     private MockWillService willService;
+    private MockSubscriptionService subscriptionService;
     private MqttFrontend mqttFrontend;
 
     @Before
@@ -43,16 +48,29 @@ public abstract class MockMqttFrontendTestBase {
 
         this.vertx = Vertx.vertx();
 
+        // create and setup MQTT frontend instance
         this.mqttFrontend = new MqttFrontend();
         this.mqttFrontend
-                .setBindAddress(BIND_ADDRESS)
-                .setListenPort(LISTEN_PORT)
-                .setConnectAddress(CONNECT_ADDRESS)
-                .setConnectPort(CONNECT_PORT);
+                .setBindAddress(MQTT_BIND_ADDRESS)
+                .setListenPort(MQTT_LISTEN_PORT)
+                .setConnectAddress(AMQP_CLIENTS_LISTENER_ADDRESS)
+                .setConnectPort(AMQP_CLIENTS_LISTENER_PORT);
 
+        // create and setup mock Will Service instance
         this.willService = new MockWillService(this.vertx);
+        this.willService
+                .setConnectAddress(AMQP_SERVICES_LISTENER_ADDRESS)
+                .setConnectPort(AMQP_SERVICES_LISTENER_PORT);
 
+        // create and setup mock Subscription Service instance
+        this.subscriptionService = new MockSubscriptionService(this.vertx);
+        this.subscriptionService
+                .setConnectAddress(AMQP_SERVICES_LISTENER_ADDRESS)
+                .setConnectPort(AMQP_SERVICES_LISTENER_PORT);
+
+        // start and deploy components
         this.willService.connect();
+        this.subscriptionService.connect();
         this.vertx.deployVerticle(this.mqttFrontend, context.asyncAssertSuccess());
     }
 
@@ -60,6 +78,7 @@ public abstract class MockMqttFrontendTestBase {
     public void tearDown(TestContext context) {
 
         this.willService.close();
+        this.subscriptionService.close();
         this.vertx.close();
     }
 }

@@ -16,6 +16,7 @@
 
 package enmasse.mqtt;
 
+import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import org.eclipse.paho.client.mqttv3.MqttClient;
@@ -35,6 +36,8 @@ public class WillServiceTest extends MockMqttFrontendTestBase {
     @Test
     public void sendAmqpWillMessage(TestContext context) {
 
+        Async async = context.async();
+
         try {
 
             MemoryPersistence persistence = new MemoryPersistence();
@@ -42,8 +45,10 @@ public class WillServiceTest extends MockMqttFrontendTestBase {
             MqttConnectOptions options = new MqttConnectOptions();
             options.setWill(new MqttTopic("will", null), "will".getBytes(), 1, false);
 
-            MqttClient client = new MqttClient(String.format("tcp://%s:%d", BIND_ADDRESS, LISTEN_PORT), "12345", persistence);
+            MqttClient client = new MqttClient(String.format("tcp://%s:%d", MQTT_BIND_ADDRESS, MQTT_LISTEN_PORT), "12345", persistence);
             client.connect(options);
+
+            async.await();
 
             context.assertTrue(true);
 
