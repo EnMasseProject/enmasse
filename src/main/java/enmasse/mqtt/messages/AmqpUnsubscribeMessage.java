@@ -28,7 +28,7 @@ import java.util.List;
  */
 public class AmqpUnsubscribeMessage {
 
-    private static final String AMQP_SUBJECT = "unsubscribe";
+    public static final String AMQP_SUBJECT = "unsubscribe";
 
     private final String clientId;
     private final Object messageId;
@@ -73,7 +73,7 @@ public class AmqpUnsubscribeMessage {
 
         message.setMessageId(this.messageId);
 
-        message.setReplyTo(String.format(AmqpCommons.AMQP_CLIENT_ADDRESS_TEMPLATE, this.clientId));
+        message.setReplyTo(String.format(AmqpHelper.AMQP_CLIENT_ADDRESS_TEMPLATE, this.clientId));
 
         message.setBody(new AmqpValue(this.topics));
 

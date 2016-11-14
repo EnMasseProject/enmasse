@@ -25,7 +25,7 @@ import sun.reflect.generics.reflectiveObjects.NotImplementedException;
  */
 public class AmqpWillClearMessage {
 
-    private static final String AMQP_SUBJECT = "will-clear";
+    public static final String AMQP_SUBJECT = "will-clear";
 
     /**
      * Return an AMQP_WILL_CLEAR message from the raw AMQP one

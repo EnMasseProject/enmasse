@@ -20,6 +20,7 @@ import enmasse.mqtt.endpoints.AmqpPublishEndpoint;
 import enmasse.mqtt.endpoints.AmqpSubscriptionServiceEndpoint;
 import enmasse.mqtt.endpoints.AmqpWillServiceEndpoint;
 import enmasse.mqtt.messages.AmqpQos;
+import enmasse.mqtt.messages.AmqpSessionMessage;
 import enmasse.mqtt.messages.AmqpWillMessage;
 import io.netty.handler.codec.mqtt.MqttConnectReturnCode;
 import io.vertx.core.Vertx;
@@ -89,6 +90,11 @@ public class AmqpBridge {
                 ProtonReceiver ssReceiver = connection.createReceiver(String.format(AmqpSubscriptionServiceEndpoint.CLIENT_ENDPOINT_TEMPLATE, this.mqttEndpoint.clientIdentifier()));
                 this.ssEndpoint = new AmqpSubscriptionServiceEndpoint(ssSender, ssReceiver);
 
+                this.ssEndpoint.sessionHandler(amqpSessionPresentMessage -> {
+
+                    LOG.info("session present {}", amqpSessionPresentMessage.isSessionPresent());
+                });
+
                 this.setupMqttEndpointHandlers();
 
                 this.wsEndpoint.open();
@@ -104,6 +110,12 @@ public class AmqpBridge {
                                 will.willMessage());
 
                 this.wsEndpoint.sendWill(amqpWillMessage);
+
+                AmqpSessionMessage amqpSessionMessage =
+                        new AmqpSessionMessage(this.mqttEndpoint.isCleanSession(),
+                                this.mqttEndpoint.clientIdentifier());
+
+                this.ssEndpoint.sendCleanSession(amqpSessionMessage);
 
                 this.mqttEndpoint.writeConnack(MqttConnectReturnCode.CONNECTION_ACCEPTED, false);
 

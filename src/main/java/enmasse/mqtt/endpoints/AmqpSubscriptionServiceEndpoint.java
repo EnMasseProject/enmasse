@@ -16,6 +16,9 @@
 
 package enmasse.mqtt.endpoints;
 
+import enmasse.mqtt.messages.AmqpSessionMessage;
+import enmasse.mqtt.messages.AmqpSessionPresentMessage;
+import io.vertx.core.Handler;
 import io.vertx.proton.ProtonDelivery;
 import io.vertx.proton.ProtonReceiver;
 import io.vertx.proton.ProtonSender;
@@ -36,13 +39,20 @@ public class AmqpSubscriptionServiceEndpoint {
     private ProtonSender sender;
     private ProtonReceiver receiver;
 
+    // handler called when AMQP_SESSION_PRESENT is received
+    private Handler<AmqpSessionPresentMessage> sessionHandler;
+
     public AmqpSubscriptionServiceEndpoint(ProtonSender sender, ProtonReceiver receiver) {
         this.sender = sender;
         this.receiver = receiver;
     }
 
-    public void sendCleanSession(/* Clean session info */) {
+    public void sendCleanSession(AmqpSessionMessage amqpSessionMessage) {
         // TODO: send AMQP_SESSION message with clean session info
+
+        this.sender.send(amqpSessionMessage.toAmqp(), delivery -> {
+            // TODO:
+        });
     }
 
     public void sendSubscribe(/* Subscribe info */) {
@@ -53,8 +63,16 @@ public class AmqpSubscriptionServiceEndpoint {
         // TODO: send AMQP_UNSUBSCRIBE message
     }
 
-    public void sessionHandler(/* Handler */) {
-        // TODO: set handler called when AMQP_SESSION_PRESENT is received
+    /**
+     * Set the session handler called when AMQP_SESSION_PRESENT is received
+     *
+     * @param handler   the handler
+     * @return  the current AmqpSubscriptionServiceEndpoint instance
+     */
+    public AmqpSubscriptionServiceEndpoint sessionHandler(Handler<AmqpSessionPresentMessage> handler) {
+
+        this.sessionHandler = handler;
+        return this;
     }
 
     public void publishHandler(/* Handler */) {
@@ -71,6 +89,13 @@ public class AmqpSubscriptionServiceEndpoint {
 
     private void messageHandler(ProtonDelivery delivery, Message message) {
         // TODO:
+
+        switch (message.getSubject()) {
+
+            case AmqpSessionPresentMessage.AMQP_SUBJECT:
+                this.handleSession(AmqpSessionPresentMessage.from(message));
+                break;
+        }
     }
 
     public void open() {
@@ -93,6 +118,18 @@ public class AmqpSubscriptionServiceEndpoint {
     }
 
     public void close() {
+        // TODO:
+    }
 
+    /**
+     * Used for calling the session handler when AMQP_SESSION_PRESENT is received
+     *
+     * @param amqpSessionPresentMessage AMQP_SESSION_PRESENT message
+     */
+    private void handleSession(AmqpSessionPresentMessage amqpSessionPresentMessage) {
+
+        if (this.sessionHandler != null) {
+            this.sessionHandler.handle(amqpSessionPresentMessage);
+        }
     }
 }

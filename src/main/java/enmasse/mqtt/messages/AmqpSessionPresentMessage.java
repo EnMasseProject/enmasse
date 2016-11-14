@@ -16,19 +16,23 @@
 
 package enmasse.mqtt.messages;
 
+import io.vertx.proton.ProtonHelper;
 import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.messaging.MessageAnnotations;
 import org.apache.qpid.proton.message.Message;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Represents an AMQP_SESSION_PRESENT message
  */
 public class AmqpSessionPresentMessage {
 
-    private static final String AMQP_SUBJECT = "session-present";
+    public static final String AMQP_SUBJECT = "session-present";
 
-    private static final String AMQP_CLEAN_SESSION_ANNOTATION = "x-session-present";
+    private static final String AMQP_SESSION_PRESENT_ANNOTATION = "x-session-present";
 
     private final boolean isSessionPresent;
 
@@ -59,10 +63,10 @@ public class AmqpSessionPresentMessage {
             throw new IllegalArgumentException("AMQP message has no annotations");
         } else {
 
-            if (!messageAnnotations.getValue().containsKey(Symbol.valueOf(AMQP_CLEAN_SESSION_ANNOTATION))) {
+            if (!messageAnnotations.getValue().containsKey(Symbol.valueOf(AMQP_SESSION_PRESENT_ANNOTATION))) {
                 throw new IllegalArgumentException("AMQP message has no annotations");
             } else {
-                AmqpSessionPresentMessage msg = new AmqpSessionPresentMessage((boolean)messageAnnotations.getValue().get(Symbol.valueOf(AMQP_CLEAN_SESSION_ANNOTATION)));
+                AmqpSessionPresentMessage msg = new AmqpSessionPresentMessage((boolean)messageAnnotations.getValue().get(Symbol.valueOf(AMQP_SESSION_PRESENT_ANNOTATION)));
                 return msg;
             }
 
@@ -76,8 +80,16 @@ public class AmqpSessionPresentMessage {
      */
     public Message toAmqp() {
 
-        // do you really need this ?
-        throw new NotImplementedException();
+        Message message = ProtonHelper.message();
+
+        message.setSubject(AMQP_SUBJECT);
+
+        Map<Symbol, Object> map = new HashMap<>();
+        map.put(Symbol.valueOf(AMQP_SESSION_PRESENT_ANNOTATION), this.isSessionPresent);
+        MessageAnnotations messageAnnotations = new MessageAnnotations(map);
+        message.setMessageAnnotations(messageAnnotations);
+
+        return message;
     }
 
     /**

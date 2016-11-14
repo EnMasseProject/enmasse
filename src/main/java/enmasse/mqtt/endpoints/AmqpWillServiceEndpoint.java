@@ -56,6 +56,6 @@ public class AmqpWillServiceEndpoint {
     }
 
     public void close() {
-
+        // TODO:
     }
 }

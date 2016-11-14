@@ -24,7 +24,7 @@ import sun.reflect.generics.reflectiveObjects.NotImplementedException;
  */
 public class AmqpUnsubackMessage {
 
-    private static final String AMQP_SUBJECT = "unsuback";
+    public static final String AMQP_SUBJECT = "unsuback";
 
     private final Object messageId;
 

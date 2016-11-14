@@ -32,7 +32,7 @@ import java.util.Map;
  */
 public class AmqpWillMessage {
 
-    private static final String AMQP_SUBJECT = "will";
+    public static final String AMQP_SUBJECT = "will";
 
     private static final String AMQP_RETAIN_ANNOTATION = "x-retain";
     private static final String AMQP_DESIRED_SND_SETTLE_MODE_ANNOTATION = "x-desired-snd-settle-mode";

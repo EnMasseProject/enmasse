@@ -31,7 +31,7 @@ import java.util.stream.Collectors;
  */
 public class AmqpSubscribeMessage {
 
-    private static final String AMQP_SUBJECT = "subscribe";
+    public static final String AMQP_SUBJECT = "subscribe";
 
     private static final String TOPICS_KEY = "topics";
     private static final String DESIRED_SETTLE_MODES_KEY = "desired-settle-modes";
@@ -82,7 +82,7 @@ public class AmqpSubscribeMessage {
 
         message.setMessageId(this.messageId);
 
-        message.setReplyTo(String.format(AmqpCommons.AMQP_CLIENT_ADDRESS_TEMPLATE, this.clientId));
+        message.setReplyTo(String.format(AmqpHelper.AMQP_CLIENT_ADDRESS_TEMPLATE, this.clientId));
 
         Map<String, List<?>> map = new HashMap<>();
         map.put(TOPICS_KEY, this.topics);

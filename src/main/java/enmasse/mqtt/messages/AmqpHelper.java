@@ -17,9 +17,20 @@
 package enmasse.mqtt.messages;
 
 /**
- * Some common definitions for AMQP side
+ * Helper class for AMQP side
  */
-public final class AmqpCommons {
+public final class AmqpHelper {
 
     public static final String AMQP_CLIENT_ADDRESS_TEMPLATE = "$mqtt.to.%s";
+
+    /**
+     * Extract client identifier from the unique client address
+     *
+     * @param address   the address
+     * @return  the client identifier
+     */
+    public static String getClientId(String address) {
+
+        return address.substring(address.indexOf("$mqtt.to.") + "$mqtt.to.".length());
+    }
 }

@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
  */
 public class AmqpSubackMessage {
 
-    private static final String AMQP_SUBJECT = "suback";
+    public static final String AMQP_SUBJECT = "suback";
 
     private final Object messageId;
     private final List<AmqpQos> grantedQoSLevels;

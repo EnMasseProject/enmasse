@@ -31,7 +31,7 @@ public class AmqpPublishEndpoint {
     }
 
     public void open() {
-
+        // TODO:
     }
 
     public void publish() {
@@ -42,6 +42,6 @@ public class AmqpPublishEndpoint {
     }
 
     public void close() {
-
+        // TODO:
     }
 }

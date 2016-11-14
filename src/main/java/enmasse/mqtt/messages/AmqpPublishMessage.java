@@ -35,7 +35,7 @@ import java.util.Map;
  */
 public class AmqpPublishMessage {
 
-    private static final String AMQP_SUBJECT = "publish";
+    public static final String AMQP_SUBJECT = "publish";
 
     private static final String AMQP_RETAIN_ANNOTATION = "x-retain";
     private static final String AMQP_DESIRED_SND_SETTLE_MODE_ANNOTATION = "x-desired-snd-settle-mode";

@@ -20,7 +20,6 @@ import io.vertx.proton.ProtonHelper;
 import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.messaging.MessageAnnotations;
 import org.apache.qpid.proton.message.Message;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -30,7 +29,7 @@ import java.util.Map;
  */
 public class AmqpSessionMessage {
 
-    private static final String AMQP_SUBJECT = "session";
+    public static final String AMQP_SUBJECT = "session";
 
     private static final String AMQP_CLEAN_SESSION_ANNOTATION = "x-clean-session";
 
@@ -57,8 +56,23 @@ public class AmqpSessionMessage {
      */
     public static AmqpSessionMessage from(Message message) {
 
-        // do you really need this ?
-        throw new NotImplementedException();
+        if (!message.getSubject().equals(AMQP_SUBJECT)) {
+            throw new IllegalArgumentException(String.format("AMQP message subject is no s%", AMQP_SUBJECT));
+        }
+
+        MessageAnnotations messageAnnotations = message.getMessageAnnotations();
+        if (messageAnnotations == null) {
+            throw new IllegalArgumentException("AMQP message has no annotations");
+        } else {
+
+            if (!messageAnnotations.getValue().containsKey(Symbol.valueOf(AMQP_CLEAN_SESSION_ANNOTATION))) {
+                throw new IllegalArgumentException("AMQP message has no annotations");
+            } else {
+                AmqpSessionMessage msg = new AmqpSessionMessage((boolean)messageAnnotations.getValue().get(Symbol.valueOf(AMQP_CLEAN_SESSION_ANNOTATION)),
+                        AmqpHelper.getClientId(message.getReplyTo()));
+                return msg;
+            }
+        }
     }
 
     /**
@@ -77,7 +91,7 @@ public class AmqpSessionMessage {
         MessageAnnotations messageAnnotations = new MessageAnnotations(map);
         message.setMessageAnnotations(messageAnnotations);
 
-        message.setReplyTo(String.format(AmqpCommons.AMQP_CLIENT_ADDRESS_TEMPLATE, this.clientId));
+        message.setReplyTo(String.format(AmqpHelper.AMQP_CLIENT_ADDRESS_TEMPLATE, this.clientId));
 
         return message;
     }

@@ -16,6 +16,8 @@
 
 package enmasse.mqtt;
 
+import enmasse.mqtt.messages.AmqpSessionMessage;
+import enmasse.mqtt.messages.AmqpSessionPresentMessage;
 import io.vertx.core.Vertx;
 import io.vertx.proton.*;
 import org.apache.qpid.proton.message.Message;
@@ -36,6 +38,7 @@ public class MockSubscriptionService {
     private int connectPort;
 
     private ProtonClient client;
+    private ProtonConnection connection;
 
     /**
      * Constructor
@@ -58,13 +61,14 @@ public class MockSubscriptionService {
 
                 LOG.info("Subscription Service started successfully ...");
 
-                ProtonConnection connection = done.result();
-                connection.setContainer(CONTAINER_ID);
+                this.connection = done.result();
+                this.connection.setContainer(CONTAINER_ID);
 
-                connection
+                this.connection
+                        .sessionOpenHandler(session -> session.open())
                         .open();
 
-                ProtonReceiver receiver = connection.createReceiver(SUBSCRIPTION_SERVICE_ENDPOINT);
+                ProtonReceiver receiver = this.connection.createReceiver(SUBSCRIPTION_SERVICE_ENDPOINT);
 
                 receiver
                         .setTarget(receiver.getRemoteTarget())
@@ -83,6 +87,20 @@ public class MockSubscriptionService {
         // TODO:
 
         LOG.info("Received {}", message);
+
+        AmqpSessionMessage amqpSessionMessage = AmqpSessionMessage.from(message);
+
+        ProtonSender sender = this.connection.createSender(message.getReplyTo());
+
+        AmqpSessionPresentMessage amqpSessionPresentMessage =
+                new AmqpSessionPresentMessage(amqpSessionMessage.clientId().equals("12345"));
+
+        sender.open();
+
+        sender.send(amqpSessionPresentMessage.toAmqp(), d -> {
+            // TODO:
+            sender.close();
+        });
     }
 
     public void close() {
