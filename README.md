@@ -75,11 +75,11 @@ By default, the template will setup 4 addresses with the following 4 different a
 The addresses are defined in a config map called 'maas'. To make a change to the configuration,
 download the config, edit it, and replace it:
 
-   oc get configmap maas -o yaml > addresses.yaml
+    oc get configmap maas -o yaml > addresses.yaml
 
-   # ADD/REMOVE/EDIT addresses
+    # ADD/REMOVE/EDIT addresses
 
-   oc replace -f addresses.yaml
+    oc replace -f addresses.yaml
 
 The changes will be picked up by the storage controller, which will create and delete brokers to
 match the desired state.
