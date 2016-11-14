@@ -32,39 +32,39 @@ public class MockWillService {
     private static final Logger LOG = LoggerFactory.getLogger(MockWillService.class);
 
     private static final String WILL_SERVICE_ENDPOINT = "$mqtt.willservice";
+    private static final String CONTAINER_ID = "will-service";
 
-    private static final String BIND_ADDRESS = "0.0.0.0";
-    private static final int LISTEN_PORT = 5672;
+    private static final String CONNECT_ADDRESS = "0.0.0.0";
+    private static final int CONNECT_PORT = 5673;
 
-    private ProtonServer server;
+    private ProtonClient client;
 
     public MockWillService(Vertx vertx) {
 
-        this.server = ProtonServer.create(vertx);
+        this.client = ProtonClient.create(vertx);
     }
 
-    public void listen() {
+    public void connect() {
 
-        this.server.connectHandler(this::connectHandler);
-        this.server.listen(LISTEN_PORT, BIND_ADDRESS, done -> {
+        this.client.connect(CONNECT_ADDRESS, CONNECT_PORT, done -> {
 
             if (done.succeeded()) {
 
                 LOG.info("Will Service started successfully ...");
+
+                ProtonConnection connection = done.result();
+                connection.setContainer(CONTAINER_ID);
+
+                connection
+                        .sessionOpenHandler(session -> session.open())
+                        .receiverOpenHandler(this::receiverHandler)
+                        .open();
+
             } else {
 
                 LOG.info("Error starting the Will Service ...", done.cause());
             }
         });
-    }
-
-    private void connectHandler(ProtonConnection connection) {
-
-        connection
-                .sessionOpenHandler(session -> session.open())
-                .receiverOpenHandler(this::receiverHandler)
-                .open();
-
     }
 
     private void receiverHandler(ProtonReceiver receiver) {
@@ -97,6 +97,6 @@ public class MockWillService {
 
     public void close() {
 
-        this.server.close();
+        // TODO:
     }
 }

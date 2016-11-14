@@ -52,8 +52,8 @@ public abstract class MockMqttFrontendTestBase {
 
         this.willService = new MockWillService(this.vertx);
 
-        this.willService.listen();
-        this.vertx.deployVerticle(this.mqttFrontend);
+        this.willService.connect();
+        this.vertx.deployVerticle(this.mqttFrontend, context.asyncAssertSuccess());
     }
 
     @After
