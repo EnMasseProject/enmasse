@@ -24,6 +24,7 @@ The FE maps the _SUBSCRIBE_ message to the following AMQP message.
 
 > "topics" is just a list of topic names; "desired-settle-modes" is a list of couples with sender and receiver settle mode
 
+The _AMQP_SUBSCRIBE_ is sent as "unsettled", in order to know that the Subscription Service has received it (with related disposition).
 After sending the _AMQP_SUBSCRIBE_, the FE should receive the following messages as reply.
 
 **AMQP_SUBACK** : the result of a subscription request.
@@ -70,6 +71,7 @@ The MQTT client sends an _UNSUBSCRIBE_ message to FE which maps to the following
 | reply-to | system property | $mqtt.to.[client-id] | - |
 | payload | AMQP value | List of topics | MQTT UNSUBSCRIBE |
 
+The _AMQP_UNSUBSCRIBE_ is sent as "unsettled", in order to know that the Subscription Service has received it (with related disposition).
 After sending the _AMQP_UNSUBSCRIBE_, the FE receives the following messages as reply.
 
 **AMQP_UNSUBACK** : the result of an unsubscription request.
