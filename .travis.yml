@@ -1,9 +1,6 @@
 language: ruby
 notifications:
   email: false
-branches:
-  only:
-    - master
 rvm:
   - 2.2
 script:
