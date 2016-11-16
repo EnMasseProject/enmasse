@@ -2,6 +2,8 @@
 
 Design and specification for bringing MQTT features over AMQP protocol.
 
+> The main purpose of this specification isn't the simple bridge from MQTT to AMQP but adding native MQTT features on top of AMQP. It means, for example, having "will testament", "retained" messages and client sessions on AMQP so that a pure AMQP client can use them.
+
 ## Preface
 
 The following documentation has no assumptions on the implementation side. It means that every “service” can implement its API in different ways (i.e. using AMQP brokers, database, log file, …). By the way for each service a possible implementation is described using AMQP brokers where "store-and-forward" is needed.
