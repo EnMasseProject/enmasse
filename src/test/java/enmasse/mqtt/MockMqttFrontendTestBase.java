@@ -39,9 +39,9 @@ public abstract class MockMqttFrontendTestBase {
     public static final int AMQP_SERVICES_LISTENER_PORT = 5673;
 
     protected Vertx vertx;
-    private MockWillService willService;
-    private MockSubscriptionService subscriptionService;
-    private MqttFrontend mqttFrontend;
+    protected MockWillService willService;
+    protected MockSubscriptionService subscriptionService;
+    protected MqttFrontend mqttFrontend;
 
     @Before
     public void setup(TestContext context) {

@@ -18,25 +18,28 @@ package enmasse.mqtt;
 
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
-import io.vertx.ext.unit.junit.VertxUnitRunner;
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttTopic;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 /**
- * Tests related to connection
+ * Tests related to disconnection
  */
-@RunWith(VertxUnitRunner.class)
-public class ConnectionTest extends MockMqttFrontendTestBase {
+public class DisconnectionTest extends MockMqttFrontendTestBase {
 
     @Test
-    public void connectionSuccess(TestContext context) {
+    public void bruteDisconnection(TestContext context) {
 
         Async async = context.async();
+
+
+        this.willService.willHandler(v -> {
+
+            async.complete();
+        });
 
         try {
 
@@ -48,15 +51,48 @@ public class ConnectionTest extends MockMqttFrontendTestBase {
             MqttClient client = new MqttClient(String.format("tcp://%s:%d", MQTT_BIND_ADDRESS, MQTT_LISTEN_PORT), "12345", persistence);
             client.connect(options);
 
-            context.assertTrue(true);
+            client.close();
+
+        } catch (MqttException e) {
+
+            e.printStackTrace();
+        }
+
+        async.await();
+
+        context.assertTrue(true);
+    }
+
+    @Test
+    public void disconnection(TestContext context) {
+
+        Async async = context.async();
+
+        this.willService.willHandler(b -> {
 
             async.complete();
+        });
+
+        try {
+
+            MemoryPersistence persistence = new MemoryPersistence();
+
+            MqttConnectOptions options = new MqttConnectOptions();
+            options.setWill(new MqttTopic("will", null), "will".getBytes(), 1, false);
+
+            MqttClient client = new MqttClient(String.format("tcp://%s:%d", MQTT_BIND_ADDRESS, MQTT_LISTEN_PORT), "12345", persistence);
+            client.connect(options);
+
+            client.disconnect();
+
+            async.await();
+
+            context.assertTrue(true);
 
         } catch (MqttException e) {
 
             context.assertTrue(false);
             e.printStackTrace();
         }
-
     }
 }

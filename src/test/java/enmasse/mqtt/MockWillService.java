@@ -21,6 +21,7 @@ import enmasse.mqtt.messages.AmqpQos;
 import enmasse.mqtt.messages.AmqpWillClearMessage;
 import enmasse.mqtt.messages.AmqpWillMessage;
 import io.vertx.core.AsyncResult;
+import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.proton.*;
 import org.apache.qpid.proton.amqp.messaging.Accepted;
@@ -51,6 +52,10 @@ public class MockWillService {
     private ProtonConnection connection;
 
     private Map<String, AmqpWillMessage> wills;
+
+    // handler called when the service publish a will (or not) o detached link
+    // NOTE : it's useful for disconnection tests
+    private Handler<Boolean> willHandler;
 
     /**
      * Constructor
@@ -158,12 +163,31 @@ public class MockWillService {
                 ProtonQoS protonQos = this.toProtonQos(amqpPublishMessage.amqpQos());
                 sender.setQoS(protonQos);
 
+                sender.open();
+
                 if (protonQos == ProtonQoS.AT_MOST_ONCE) {
+
                     sender.send(amqpPublishMessage.toAmqp());
+
+                    if (this.willHandler != null) {
+                        this.willHandler.handle(true);
+                    }
+
                 } else {
+
                     sender.send(amqpPublishMessage.toAmqp(), delivery -> {
                         // TODO:
+
+                        if (this.willHandler != null) {
+                            this.willHandler.handle(true);
+                        }
                     });
+                }
+
+            } else {
+
+                if (this.willHandler != null) {
+                    this.willHandler.handle(false);
                 }
             }
         }
@@ -174,6 +198,12 @@ public class MockWillService {
         // TODO:
     }
 
+    /**
+     * Convert from AMQP QoS level to Proton QoS level
+     *
+     * @param amqpQos
+     * @return
+     */
     private ProtonQoS toProtonQos(AmqpQos amqpQos) {
 
         if (amqpQos.sndSettleMode() == SenderSettleMode.SETTLED) {
@@ -202,6 +232,18 @@ public class MockWillService {
      */
     public MockWillService setConnectPort(int connectPort) {
         this.connectPort = connectPort;
+        return this;
+    }
+
+    /**
+     * Set the handler called when the service publish (or not) a will
+     * on a detached link
+     *
+     * @param handler
+     * @return
+     */
+    public MockWillService willHandler(Handler<Boolean> handler) {
+        this.willHandler = handler;
         return this;
     }
 }

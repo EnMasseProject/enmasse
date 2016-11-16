@@ -21,6 +21,7 @@ import enmasse.mqtt.endpoints.AmqpSubscriptionServiceEndpoint;
 import enmasse.mqtt.endpoints.AmqpWillServiceEndpoint;
 import enmasse.mqtt.messages.AmqpQos;
 import enmasse.mqtt.messages.AmqpSessionMessage;
+import enmasse.mqtt.messages.AmqpWillClearMessage;
 import enmasse.mqtt.messages.AmqpWillMessage;
 import io.netty.handler.codec.mqtt.MqttConnectReturnCode;
 import io.vertx.core.Future;
@@ -174,6 +175,18 @@ public class AmqpBridge {
                 .publishHandler(null)
                 .subscribeHandler(null)
                 .unsubscribeHandler(null)
-                .disconnectHandler(null);
+                .disconnectHandler(v -> {
+
+                    AmqpWillClearMessage amqpWillClearMessage = new AmqpWillClearMessage();
+                    this.wsEndpoint.clearWill(amqpWillClearMessage, ar -> {
+
+                        this.wsEndpoint.close();
+                    });
+
+                })
+                .closeHandler(v -> {
+
+                    this.wsEndpoint.close();
+                });
     }
 }

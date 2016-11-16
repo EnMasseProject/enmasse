@@ -58,16 +58,19 @@ public class AmqpWillServiceEndpoint {
         });
     }
 
-    public void clearWill(AmqpWillClearMessage amqpWillClearMessage) {
+    public void clearWill(AmqpWillClearMessage amqpWillClearMessage, Handler<AsyncResult<ProtonDelivery>> handler) {
         // TODO: send AMQP_WILL_CLEAR message
 
         this.sender.send(amqpWillClearMessage.toAmqp(), delivery -> {
             // TODO:
             LOG.info("AMQP will clear delivered");
+            handler.handle(Future.succeededFuture(delivery));
         });
     }
 
     public void close() {
         // TODO:
+
+        this.sender.close();
     }
 }
