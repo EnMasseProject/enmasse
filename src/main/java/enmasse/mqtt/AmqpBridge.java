@@ -23,13 +23,12 @@ import enmasse.mqtt.messages.AmqpQos;
 import enmasse.mqtt.messages.AmqpSessionMessage;
 import enmasse.mqtt.messages.AmqpWillMessage;
 import io.netty.handler.codec.mqtt.MqttConnectReturnCode;
+import io.vertx.core.Future;
 import io.vertx.core.Vertx;
+import io.vertx.core.buffer.Buffer;
 import io.vertx.mqtt.MqttEndpoint;
 import io.vertx.mqtt.MqttWill;
-import io.vertx.proton.ProtonClient;
-import io.vertx.proton.ProtonConnection;
-import io.vertx.proton.ProtonReceiver;
-import io.vertx.proton.ProtonSender;
+import io.vertx.proton.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -90,11 +89,6 @@ public class AmqpBridge {
                 ProtonReceiver ssReceiver = connection.createReceiver(String.format(AmqpSubscriptionServiceEndpoint.CLIENT_ENDPOINT_TEMPLATE, this.mqttEndpoint.clientIdentifier()));
                 this.ssEndpoint = new AmqpSubscriptionServiceEndpoint(ssSender, ssReceiver);
 
-                this.ssEndpoint.sessionHandler(amqpSessionPresentMessage -> {
-
-                    LOG.info("session present {}", amqpSessionPresentMessage.isSessionPresent());
-                });
-
                 this.setupMqttEndpointHandlers();
 
                 this.wsEndpoint.open();
@@ -107,17 +101,58 @@ public class AmqpBridge {
                         new AmqpWillMessage(will.isWillRetain(),
                                 will.willTopic(),
                                 AmqpQos.toAmqpQoS(will.willQos()),
-                                will.willMessage());
+                                Buffer.buffer(will.willMessage()));
 
-                this.wsEndpoint.sendWill(amqpWillMessage);
-
+                // TODO: sending AMQP_SESSION
                 AmqpSessionMessage amqpSessionMessage =
                         new AmqpSessionMessage(this.mqttEndpoint.isCleanSession(),
                                 this.mqttEndpoint.clientIdentifier());
 
-                this.ssEndpoint.sendCleanSession(amqpSessionMessage);
+                // setup a Future for completed connection steps with all services
+                // with AMQP_WILL and AMQP_SESSION/AMQP_SESSION_PRESENT handled
+                Future<Void> connectionFuture = Future.future();
+                connectionFuture.setHandler(ar -> {
 
-                this.mqttEndpoint.writeConnack(MqttConnectReturnCode.CONNECTION_ACCEPTED, false);
+                    if (ar.succeeded()) {
+
+                        this.mqttEndpoint.writeConnack(MqttConnectReturnCode.CONNECTION_ACCEPTED, false);
+                        LOG.info("Connection accepted");
+                    } else {
+
+                        this.mqttEndpoint.writeConnack(MqttConnectReturnCode.CONNECTION_REFUSED_SERVER_UNAVAILABLE, false);
+                        LOG.info("Connection NOT accepted");
+                    }
+
+                    LOG.info("CONNACK sent");
+                });
+
+                // step 1 : send AMQP_WILL to Will Service
+                Future<ProtonDelivery> willFuture = Future.future();
+                this.wsEndpoint.sendWill(amqpWillMessage, willFuture.completer());
+
+                willFuture.compose(v -> {
+
+                    // handling AMQP_SESSION_PRESENT reply from Subscription Service
+                    this.ssEndpoint.sessionHandler(amqpSessionPresentMessage -> {
+
+                        LOG.info("session present {}", amqpSessionPresentMessage.isSessionPresent());
+                        connectionFuture.complete();
+                    });
+
+                    // step 2 : send AMQP_SESSION to Subscription Service
+                    Future<ProtonDelivery> cleanSessionFuture = Future.future();
+                    this.ssEndpoint.sendCleanSession(amqpSessionMessage, cleanSessionFuture.completer());
+                    return cleanSessionFuture;
+
+                }).compose(v -> {
+                    // nothing here !??
+                }, connectionFuture);
+
+                vertx.setTimer(5000, timer -> {
+                   if (!connectionFuture.isComplete()) {
+                       connectionFuture.fail("timeout");
+                   }
+                });
 
             } else {
 

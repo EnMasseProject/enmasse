@@ -16,13 +16,17 @@
 
 package enmasse.mqtt.messages;
 
+import io.vertx.core.buffer.Buffer;
 import io.vertx.proton.ProtonHelper;
 import org.apache.qpid.proton.amqp.Binary;
 import org.apache.qpid.proton.amqp.Symbol;
+import org.apache.qpid.proton.amqp.UnsignedByte;
 import org.apache.qpid.proton.amqp.messaging.Data;
 import org.apache.qpid.proton.amqp.messaging.MessageAnnotations;
+import org.apache.qpid.proton.amqp.messaging.Section;
+import org.apache.qpid.proton.amqp.transport.ReceiverSettleMode;
+import org.apache.qpid.proton.amqp.transport.SenderSettleMode;
 import org.apache.qpid.proton.message.Message;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -41,7 +45,7 @@ public class AmqpWillMessage {
     private final boolean isRetain;
     private final String topic;
     private final AmqpQos amqpQos;
-    private final String payload;
+    private final Buffer payload;
 
     /**
      * Constructor
@@ -51,7 +55,7 @@ public class AmqpWillMessage {
      * @param amqpQos AMQP QoS level made of sender and receiver settle modes
      * @param payload   will message payload
      */
-    public AmqpWillMessage(boolean isRetain, String topic, AmqpQos amqpQos, String payload) {
+    public AmqpWillMessage(boolean isRetain, String topic, AmqpQos amqpQos, Buffer payload) {
 
         this.isRetain = isRetain;
         this.topic = topic;
@@ -67,8 +71,46 @@ public class AmqpWillMessage {
      */
     public static AmqpWillMessage from(Message message) {
 
-        // do you really need this ?
-        throw new NotImplementedException();
+        if (!message.getSubject().equals(AMQP_SUBJECT)) {
+            throw new IllegalArgumentException(String.format("AMQP message subject is no s%", AMQP_SUBJECT));
+        }
+
+        MessageAnnotations messageAnnotations = message.getMessageAnnotations();
+        if (messageAnnotations == null) {
+            throw new IllegalArgumentException("AMQP message has no annotations");
+        } else {
+
+            boolean isRetain = false;
+            if (messageAnnotations.getValue().containsKey(Symbol.valueOf(AMQP_RETAIN_ANNOTATION))) {
+                isRetain = (boolean) messageAnnotations.getValue().get(Symbol.valueOf(AMQP_RETAIN_ANNOTATION));
+            }
+
+            SenderSettleMode sndSettleMode = null;
+            if (messageAnnotations.getValue().containsKey(Symbol.valueOf(AMQP_DESIRED_SND_SETTLE_MODE_ANNOTATION))) {
+                // TODO: check on this https://issues.apache.org/jira/browse/PROTON-1352
+                UnsignedByte value = (UnsignedByte) messageAnnotations.getValue().get(Symbol.valueOf(AMQP_DESIRED_SND_SETTLE_MODE_ANNOTATION));
+                sndSettleMode = SenderSettleMode.values()[value.intValue()];
+            }
+
+            ReceiverSettleMode rcvSettleMode = null;
+            if (messageAnnotations.getValue().containsKey(Symbol.valueOf(AMQP_DESIRED_RCV_SETTLE_MODE_ANNOTATION))) {
+                // TODO: check on this https://issues.apache.org/jira/browse/PROTON-1352
+                UnsignedByte value = (UnsignedByte) messageAnnotations.getValue().get(Symbol.valueOf(AMQP_DESIRED_RCV_SETTLE_MODE_ANNOTATION));
+                rcvSettleMode = ReceiverSettleMode.values()[value.intValue()];
+            }
+
+            String topic = message.getAddress();
+
+            Section section = message.getBody();
+            if ((section != null) && (section instanceof Data)) {
+
+                Buffer payload = Buffer.buffer(((Data) section).getValue().getArray());
+                return new AmqpWillMessage(isRetain, topic, new AmqpQos(sndSettleMode, rcvSettleMode), payload);
+
+            } else {
+                throw new IllegalArgumentException("AMQP message wrong body type");
+            }
+        }
     }
 
     /**
@@ -126,7 +168,7 @@ public class AmqpWillMessage {
      * Will message payload
      * @return
      */
-    public String payload() {
+    public Buffer payload() {
         return this.payload;
     }
 }

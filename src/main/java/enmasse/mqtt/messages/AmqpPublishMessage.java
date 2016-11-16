@@ -20,6 +20,7 @@ import io.vertx.core.buffer.Buffer;
 import io.vertx.proton.ProtonHelper;
 import org.apache.qpid.proton.amqp.Binary;
 import org.apache.qpid.proton.amqp.Symbol;
+import org.apache.qpid.proton.amqp.UnsignedByte;
 import org.apache.qpid.proton.amqp.messaging.Data;
 import org.apache.qpid.proton.amqp.messaging.MessageAnnotations;
 import org.apache.qpid.proton.amqp.messaging.Section;
@@ -92,12 +93,16 @@ public class AmqpPublishMessage {
 
             SenderSettleMode sndSettleMode = null;
             if (messageAnnotations.getValue().containsKey(Symbol.valueOf(AMQP_DESIRED_SND_SETTLE_MODE_ANNOTATION))) {
-                sndSettleMode = (SenderSettleMode) messageAnnotations.getValue().get(Symbol.valueOf(AMQP_DESIRED_SND_SETTLE_MODE_ANNOTATION));
+                // TODO: check on this https://issues.apache.org/jira/browse/PROTON-1352
+                UnsignedByte value = (UnsignedByte) messageAnnotations.getValue().get(Symbol.valueOf(AMQP_DESIRED_SND_SETTLE_MODE_ANNOTATION));
+                sndSettleMode = SenderSettleMode.values()[value.intValue()];
             }
 
             ReceiverSettleMode rcvSettleMode = null;
             if (messageAnnotations.getValue().containsKey(Symbol.valueOf(AMQP_DESIRED_RCV_SETTLE_MODE_ANNOTATION))) {
-                rcvSettleMode = (ReceiverSettleMode) messageAnnotations.getValue().get(Symbol.valueOf(AMQP_DESIRED_RCV_SETTLE_MODE_ANNOTATION));
+                // TODO: check on this https://issues.apache.org/jira/browse/PROTON-1352
+                UnsignedByte value = (UnsignedByte) messageAnnotations.getValue().get(Symbol.valueOf(AMQP_DESIRED_RCV_SETTLE_MODE_ANNOTATION));
+                rcvSettleMode = ReceiverSettleMode.values()[value.intValue()];
             }
 
             boolean isDup = (message.getDeliveryCount() > 0);

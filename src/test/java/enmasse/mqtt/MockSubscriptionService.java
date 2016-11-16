@@ -20,6 +20,7 @@ import enmasse.mqtt.messages.AmqpSessionMessage;
 import enmasse.mqtt.messages.AmqpSessionPresentMessage;
 import io.vertx.core.Vertx;
 import io.vertx.proton.*;
+import org.apache.qpid.proton.amqp.messaging.Accepted;
 import org.apache.qpid.proton.message.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -88,19 +89,30 @@ public class MockSubscriptionService {
 
         LOG.info("Received {}", message);
 
-        AmqpSessionMessage amqpSessionMessage = AmqpSessionMessage.from(message);
+        switch (message.getSubject()) {
 
-        ProtonSender sender = this.connection.createSender(message.getReplyTo());
+            case AmqpSessionMessage.AMQP_SUBJECT:
 
-        AmqpSessionPresentMessage amqpSessionPresentMessage =
-                new AmqpSessionPresentMessage(amqpSessionMessage.clientId().equals("12345"));
+                // get AMQP_SESSION message and sends disposition for settlement
+                AmqpSessionMessage amqpSessionMessage = AmqpSessionMessage.from(message);
+                delivery.disposition(Accepted.getInstance(), true);
 
-        sender.open();
+                // send AMQP_SESSION_PRESENT to the unique client address
+                ProtonSender sender = this.connection.createSender(message.getReplyTo());
 
-        sender.send(amqpSessionPresentMessage.toAmqp(), d -> {
-            // TODO:
-            sender.close();
-        });
+                AmqpSessionPresentMessage amqpSessionPresentMessage =
+                        new AmqpSessionPresentMessage(amqpSessionMessage.clientId().equals("12345"));
+
+                sender.open();
+
+                sender.send(amqpSessionPresentMessage.toAmqp(), d -> {
+                    // TODO:
+                    sender.close();
+                });
+
+                break;
+        }
+
     }
 
     public void close() {

@@ -31,10 +31,10 @@ import org.junit.runner.RunWith;
  * Tests related to the Will Service
  */
 @RunWith(VertxUnitRunner.class)
-public class WillServiceTest extends MockMqttFrontendTestBase {
+public class ConnectionTest extends MockMqttFrontendTestBase {
 
     @Test
-    public void sendAmqpWillMessage(TestContext context) {
+    public void connectionSuccess(TestContext context) {
 
         Async async = context.async();
 
@@ -48,9 +48,9 @@ public class WillServiceTest extends MockMqttFrontendTestBase {
             MqttClient client = new MqttClient(String.format("tcp://%s:%d", MQTT_BIND_ADDRESS, MQTT_LISTEN_PORT), "12345", persistence);
             client.connect(options);
 
-            async.await();
-
             context.assertTrue(true);
+
+            async.complete();
 
         } catch (MqttException e) {
 

@@ -69,6 +69,7 @@ public class AmqpQos {
 
         // conversion works because value from list used as index in values
         // correspond to enum value in this case
+        // TODO: check on this https://issues.apache.org/jira/browse/PROTON-1352
         return new AmqpQos(
                 SenderSettleMode.values()[list.get(0).intValue()],
                 ReceiverSettleMode.values()[list.get(1).intValue()]);

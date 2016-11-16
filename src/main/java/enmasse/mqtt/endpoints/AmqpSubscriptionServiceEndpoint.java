@@ -18,6 +18,8 @@ package enmasse.mqtt.endpoints;
 
 import enmasse.mqtt.messages.AmqpSessionMessage;
 import enmasse.mqtt.messages.AmqpSessionPresentMessage;
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.proton.ProtonDelivery;
 import io.vertx.proton.ProtonReceiver;
@@ -47,11 +49,13 @@ public class AmqpSubscriptionServiceEndpoint {
         this.receiver = receiver;
     }
 
-    public void sendCleanSession(AmqpSessionMessage amqpSessionMessage) {
+    public void sendCleanSession(AmqpSessionMessage amqpSessionMessage, Handler<AsyncResult<ProtonDelivery>> handler) {
         // TODO: send AMQP_SESSION message with clean session info
 
         this.sender.send(amqpSessionMessage.toAmqp(), delivery -> {
             // TODO:
+            LOG.info("AMQP clean session delivered");
+            handler.handle(Future.succeededFuture(delivery));
         });
     }
 

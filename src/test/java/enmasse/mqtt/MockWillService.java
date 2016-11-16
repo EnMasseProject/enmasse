@@ -16,13 +16,23 @@
 
 package enmasse.mqtt;
 
+import enmasse.mqtt.messages.AmqpPublishMessage;
+import enmasse.mqtt.messages.AmqpQos;
+import enmasse.mqtt.messages.AmqpWillClearMessage;
+import enmasse.mqtt.messages.AmqpWillMessage;
+import io.vertx.core.AsyncResult;
 import io.vertx.core.Vertx;
 import io.vertx.proton.*;
+import org.apache.qpid.proton.amqp.messaging.Accepted;
 import org.apache.qpid.proton.amqp.transport.ErrorCondition;
 import org.apache.qpid.proton.amqp.transport.LinkError;
+import org.apache.qpid.proton.amqp.transport.SenderSettleMode;
 import org.apache.qpid.proton.message.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Mock for the Will Service
@@ -38,6 +48,9 @@ public class MockWillService {
     private int connectPort;
 
     private ProtonClient client;
+    private ProtonConnection connection;
+
+    private Map<String, AmqpWillMessage> wills;
 
     /**
      * Constructor
@@ -46,6 +59,7 @@ public class MockWillService {
      */
     public MockWillService(Vertx vertx) {
 
+        this.wills = new HashMap<>();
         this.client = ProtonClient.create(vertx);
     }
 
@@ -60,10 +74,10 @@ public class MockWillService {
 
                 LOG.info("Will Service started successfully ...");
 
-                ProtonConnection connection = done.result();
-                connection.setContainer(CONTAINER_ID);
+                this.connection = done.result();
+                this.connection.setContainer(CONTAINER_ID);
 
-                connection
+                this.connection
                         .sessionOpenHandler(session -> session.open())
                         .receiverOpenHandler(this::receiverHandler)
                         .open();
@@ -94,6 +108,7 @@ public class MockWillService {
 
                         this.messageHandler(receiver, delivery, message);
                     })
+                    .closeHandler(this::closeHandler)
                     .open();
         }
     }
@@ -103,11 +118,69 @@ public class MockWillService {
         // TODO:
 
         LOG.info("Received {}", message);
+
+        switch (message.getSubject()) {
+
+            case AmqpWillMessage.AMQP_SUBJECT:
+                // get AMQP_WILL message, save it and send disposition for settlement
+                AmqpWillMessage amqpWillMessage = AmqpWillMessage.from(message);
+                this.wills.put(receiver.getName(), amqpWillMessage);
+                delivery.disposition(Accepted.getInstance(), true);
+                break;
+
+            case AmqpWillClearMessage.AMQP_SUBJECT:
+                // get AMQP_WILL_CLEAR message, remove will from the list
+                if (this.wills.containsKey(receiver.getName())) {
+                    this.wills.remove(receiver.getName());
+                }
+                break;
+        }
+
+    }
+
+    private void closeHandler(AsyncResult<ProtonReceiver> ar) {
+
+        // TODO:
+
+        if (ar.succeeded()) {
+
+            ProtonReceiver receiver = ar.result();
+
+            // the detached receiver has a will to publish
+            if (this.wills.containsKey(receiver.getName())) {
+
+                AmqpWillMessage amqpWillMessage = this.wills.get(receiver.getName());
+
+                AmqpPublishMessage amqpPublishMessage =
+                        new AmqpPublishMessage(1, amqpWillMessage.amqpQos(), false, amqpWillMessage.isRetain(), amqpWillMessage.topic(), amqpWillMessage.payload());
+
+                ProtonSender sender = this.connection.createSender(amqpPublishMessage.topic());
+                ProtonQoS protonQos = this.toProtonQos(amqpPublishMessage.amqpQos());
+                sender.setQoS(protonQos);
+
+                if (protonQos == ProtonQoS.AT_MOST_ONCE) {
+                    sender.send(amqpPublishMessage.toAmqp());
+                } else {
+                    sender.send(amqpPublishMessage.toAmqp(), delivery -> {
+                        // TODO:
+                    });
+                }
+            }
+        }
     }
 
     public void close() {
 
         // TODO:
+    }
+
+    private ProtonQoS toProtonQos(AmqpQos amqpQos) {
+
+        if (amqpQos.sndSettleMode() == SenderSettleMode.SETTLED) {
+            return ProtonQoS.AT_MOST_ONCE;
+        } else {
+            return ProtonQoS.AT_LEAST_ONCE;
+        }
     }
 
     /**

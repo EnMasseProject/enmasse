@@ -16,7 +16,12 @@
 
 package enmasse.mqtt.endpoints;
 
+import enmasse.mqtt.messages.AmqpWillClearMessage;
 import enmasse.mqtt.messages.AmqpWillMessage;
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Future;
+import io.vertx.core.Handler;
+import io.vertx.proton.ProtonDelivery;
 import io.vertx.proton.ProtonSender;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,16 +48,23 @@ public class AmqpWillServiceEndpoint {
         this.sender.open();
     }
 
-    public void sendWill(AmqpWillMessage amqpWillMessage) {
+    public void sendWill(AmqpWillMessage amqpWillMessage, Handler<AsyncResult<ProtonDelivery>> handler) {
         // TODO: send AMQP_WILL message with will information
 
         this.sender.send(amqpWillMessage.toAmqp(), delivery -> {
             // TODO:
+            LOG.info("AMQP will delivered");
+            handler.handle(Future.succeededFuture(delivery));
         });
     }
 
-    public void clearWill() {
+    public void clearWill(AmqpWillClearMessage amqpWillClearMessage) {
         // TODO: send AMQP_WILL_CLEAR message
+
+        this.sender.send(amqpWillClearMessage.toAmqp(), delivery -> {
+            // TODO:
+            LOG.info("AMQP will clear delivered");
+        });
     }
 
     public void close() {
