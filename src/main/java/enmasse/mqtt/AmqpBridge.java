@@ -29,6 +29,9 @@ import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.mqtt.MqttEndpoint;
 import io.vertx.mqtt.MqttWill;
+import io.vertx.mqtt.messages.MqttPublishMessage;
+import io.vertx.mqtt.messages.MqttSubscribeMessage;
+import io.vertx.mqtt.messages.MqttUnsubscribeMessage;
 import io.vertx.proton.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -171,26 +174,66 @@ public class AmqpBridge {
     }
 
     /**
+     * Handler for incoming MQTT PUBLISH messages
+     * @param publish   PUBLISH message
+     */
+    private void publishHandler(MqttPublishMessage publish) {
+
+        // TODO:
+    }
+
+    /**
+     * Handler for incoming MQTT SUBSCRIBE messages
+     * @param subscribe SUBSCRIBE message
+     */
+    private void subscribeHandler(MqttSubscribeMessage subscribe) {
+
+        // TODO:
+    }
+
+    /**
+     * Handler for incoming MQTT UNSUBSCRIBE messages
+     * @param unsubscribe   UNSUBSCRIBE message
+     */
+    private void unsubscribeHandler(MqttUnsubscribeMessage unsubscribe) {
+
+        // TODO:
+    }
+
+    /**
+     * Handler for incoming MQTT DISCONNECT message
+     * @param v
+     */
+    private void disconnectHandler(Void v) {
+
+        // TODO:
+        AmqpWillClearMessage amqpWillClearMessage = new AmqpWillClearMessage();
+        this.wsEndpoint.clearWill(amqpWillClearMessage, ar -> {
+
+            this.wsEndpoint.close();
+        });
+    }
+
+    /**
+     * Handler for handling connection closed by remote MQTT client
+     * @param v
+     */
+    private void closeHandler(Void v) {
+
+        // TODO:
+        this.wsEndpoint.close();
+    }
+
+    /**
      * Setup handlers for MQTT endpoint
      */
     private void setupMqttEndpointHandlers() {
 
         this.mqttEndpoint
-                .publishHandler(null)
-                .subscribeHandler(null)
-                .unsubscribeHandler(null)
-                .disconnectHandler(v -> {
-
-                    AmqpWillClearMessage amqpWillClearMessage = new AmqpWillClearMessage();
-                    this.wsEndpoint.clearWill(amqpWillClearMessage, ar -> {
-
-                        this.wsEndpoint.close();
-                    });
-
-                })
-                .closeHandler(v -> {
-
-                    this.wsEndpoint.close();
-                });
+                .publishHandler(this::publishHandler)
+                .subscribeHandler(this::subscribeHandler)
+                .unsubscribeHandler(this::unsubscribeHandler)
+                .disconnectHandler(this::disconnectHandler)
+                .closeHandler(this::closeHandler);
     }
 }
