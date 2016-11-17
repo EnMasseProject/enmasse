@@ -118,6 +118,8 @@ public class MockSubscriptionService {
     public void close() {
 
         // TODO:
+
+        this.connection.close();
     }
 
     /**

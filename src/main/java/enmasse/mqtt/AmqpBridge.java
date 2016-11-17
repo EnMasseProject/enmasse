@@ -82,8 +82,12 @@ public class AmqpBridge {
                 ProtonConnection connection = done.result();
                 connection.open();
 
+                // specified link name for the Will Service as MQTT clientid
+                ProtonLinkOptions options = new ProtonLinkOptions();
+                options.setLinkName(this.mqttEndpoint.clientIdentifier());
+
                 // TODO: setup AMQP endpoints
-                ProtonSender wsSender = connection.createSender(AmqpWillServiceEndpoint.WILL_SERVICE_ENDPOINT);
+                ProtonSender wsSender = connection.createSender(AmqpWillServiceEndpoint.WILL_SERVICE_ENDPOINT, options);
                 this.wsEndpoint = new AmqpWillServiceEndpoint(wsSender);
 
                 ProtonSender ssSender = connection.createSender(AmqpSubscriptionServiceEndpoint.SUBSCRIPTION_SERVICE_ENDPOINT);

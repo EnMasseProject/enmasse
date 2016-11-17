@@ -134,9 +134,16 @@ public class MockWillService {
                 break;
 
             case AmqpWillClearMessage.AMQP_SUBJECT:
-                // get AMQP_WILL_CLEAR message, remove will from the list
-                if (this.wills.containsKey(receiver.getName())) {
-                    this.wills.remove(receiver.getName());
+
+                // workaround for testing "brute disconnection" ignoring the DISCONNECT
+                // so the related AMQP_WILL_CLEAR. Eclipse Paho doesn't provide a way to
+                // close connection without sending DISCONNECT.
+                if (!receiver.getName().contains("ignore-disconnect")) {
+
+                    // get AMQP_WILL_CLEAR message, remove will from the list
+                    if (this.wills.containsKey(receiver.getName())) {
+                        this.wills.remove(receiver.getName());
+                    }
                 }
                 break;
         }
@@ -196,6 +203,8 @@ public class MockWillService {
     public void close() {
 
         // TODO:
+
+        this.connection.close();
     }
 
     /**
