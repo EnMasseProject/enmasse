@@ -37,10 +37,18 @@ public class AmqpWillServiceEndpoint {
 
     private ProtonSender sender;
 
+    /**
+     * Constructor
+     *
+     * @param sender    ProtonSender instance related to control address
+     */
     public AmqpWillServiceEndpoint(ProtonSender sender) {
         this.sender = sender;
     }
 
+    /**
+     * Open the endpoint, attaching the link
+     */
     public void open() {
         // TODO:
 
@@ -48,6 +56,12 @@ public class AmqpWillServiceEndpoint {
         this.sender.open();
     }
 
+    /**
+     * Send the AMQP_WILL message to the Will Service
+     *
+     * @param amqpWillMessage   AMQP_WILL message
+     * @param handler   callback called on message delivered
+     */
     public void sendWill(AmqpWillMessage amqpWillMessage, Handler<AsyncResult<ProtonDelivery>> handler) {
         // TODO: send AMQP_WILL message with will information
 
@@ -58,6 +72,12 @@ public class AmqpWillServiceEndpoint {
         });
     }
 
+    /**
+     * Send the AMQP_WILL_CLEAR message to the Will Service
+     *
+     * @param amqpWillClearMessage  AMQP_WILL_CLEAR message
+     * @param handler   callback called on messahe delivered
+     */
     public void clearWill(AmqpWillClearMessage amqpWillClearMessage, Handler<AsyncResult<ProtonDelivery>> handler) {
         // TODO: send AMQP_WILL_CLEAR message
 
@@ -68,6 +88,9 @@ public class AmqpWillServiceEndpoint {
         });
     }
 
+    /**
+     * Close the endpoint, detaching the link
+     */
     public void close() {
         // TODO:
 

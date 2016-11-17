@@ -44,11 +44,23 @@ public class AmqpSubscriptionServiceEndpoint {
     // handler called when AMQP_SESSION_PRESENT is received
     private Handler<AmqpSessionPresentMessage> sessionHandler;
 
+    /**
+     * Constructor
+     *
+     * @param sender    ProtonSender instance related to control address
+     * @param receiver  ProtonReceiver instance related to unique client address
+     */
     public AmqpSubscriptionServiceEndpoint(ProtonSender sender, ProtonReceiver receiver) {
         this.sender = sender;
         this.receiver = receiver;
     }
 
+    /**
+     * Send the AMQP_SESSION message to the Subscription Service
+     *
+     * @param amqpSessionMessage    AMQP_SESSION message
+     * @param handler   callback called on message delivered
+     */
     public void sendCleanSession(AmqpSessionMessage amqpSessionMessage, Handler<AsyncResult<ProtonDelivery>> handler) {
         // TODO: send AMQP_SESSION message with clean session info
 
@@ -91,6 +103,13 @@ public class AmqpSubscriptionServiceEndpoint {
         // TODO: set handler called when AMQP_UNSUBACK message is received
     }
 
+    /**
+     * Handler for the receiver for handling incoming raw AMQP message
+     * from the Subscription Service
+     *
+     * @param delivery  AMQP delivery information
+     * @param message   raw AMQP message
+     */
     private void messageHandler(ProtonDelivery delivery, Message message) {
         // TODO:
 
@@ -102,6 +121,9 @@ public class AmqpSubscriptionServiceEndpoint {
         }
     }
 
+    /**
+     * Open the endpoint, attaching the links
+     */
     public void open() {
         // TODO:
 
@@ -121,8 +143,14 @@ public class AmqpSubscriptionServiceEndpoint {
         this.sender.open();
     }
 
+    /**
+     * Close the endpoint, detaching the links
+     */
     public void close() {
         // TODO:
+
+        this.sender.close();
+        this.receiver.close();
     }
 
     /**
