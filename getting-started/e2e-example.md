@@ -20,7 +20,7 @@ Online.
 
 EnMasse comes with a few templates that makes setting it up easy. First, create a new project:
 
-    oc new-project messaging-service
+    oc new-project enmasse
 
 Then import the EnMasse template:
 
@@ -73,11 +73,11 @@ For sending and receiving messages, have a look at an example python [sender](tl
 
 For SNI, use the host listed by running ```oc get route messaging```. To start the receiver:
 
-    $ ./tls_simple_recv.py -c amqps://localhost:443 -a anycast -s messaging-messaging-service.192.168.1.6.xip.io -m 10
+    $ ./tls_simple_recv.py -c amqps://localhost:443 -a anycast -s enmasse-messaging-service.192.168.1.6.xip.io -m 10
 
 This will block until it has received 10 messages. To start the sender:
 
-    $ ./tls_simple_send.py -c amqps://localhost:443 -a anycast -s messaging-messaging-service.192.168.1.6.xip.io -m 10
+    $ ./tls_simple_send.py -c amqps://localhost:443 -a anycast -s enmasse-messaging-service.192.168.1.6.xip.io -m 10
 
 You can use the client with the 'myqueue' and 'multicast' addresses as well. Making the clients work
 with topics is left as an exercies to the reader.
