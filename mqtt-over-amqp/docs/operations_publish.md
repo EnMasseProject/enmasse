@@ -38,4 +38,5 @@ For QoS 1, after disposition on the AMQP client, the FE sends the _PUBACK_ to th
 
 For QoS 2, we have intermediate _PUBREC_, _PUBREL_ and _PUBCOMP_ to send from FE to MQTT client.
 
-> the FE doesn't detach the link on the topic for each publish; it leaves the link attached.
+From the above images it's clear that the FE doesn't detach the link on the topic for each publish; it leaves the link attached.
+It's also true that on every _PUBLISH_ message, the MQTT remote client can specify a different QoS level. It means that if the link on the requested topic is already attached with a specific QoS (settle mode) that is different from the new one, the FE should detaches the link and reattaches it with the new requested QoS level (settle mode).
