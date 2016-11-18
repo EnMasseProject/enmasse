@@ -31,19 +31,19 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 /**
- * Tests related to disconnection
+ * Tests related to connection
  */
 @RunWith(VertxUnitRunner.class)
-public class DisconnectionTest extends MockMqttFrontendTestBase {
+public class PublishTest extends MockMqttFrontendTestBase {
 
     @Test
-    public void bruteDisconnection(TestContext context) {
+    public void publish(TestContext context) {
 
         Async async = context.async();
 
         try {
 
-            // AMQP client connects for receiving the will message
+            // AMQP client connects for receiving the published message
             ProtonClient amqpClient = ProtonClient.create(this.vertx);
 
             amqpClient.connect(AMQP_CLIENTS_LISTENER_ADDRESS, AMQP_CLIENTS_LISTENER_PORT, done -> {
@@ -53,10 +53,10 @@ public class DisconnectionTest extends MockMqttFrontendTestBase {
                     ProtonConnection connection = done.result();
                     connection.open();
 
-                    ProtonReceiver receiver = connection.createReceiver("will");
+                    ProtonReceiver receiver = connection.createReceiver("my_topic");
                     receiver.handler((delivery, message) -> {
 
-                        System.out.println("Will message received " + message);
+                        System.out.println("Message received " + message);
                         async.complete();
 
                     }).open();
@@ -68,46 +68,10 @@ public class DisconnectionTest extends MockMqttFrontendTestBase {
             MqttConnectOptions options = new MqttConnectOptions();
             options.setWill(new MqttTopic("will", null), "will".getBytes(), 1, false);
 
-            // workaround for testing "brute disconnection" ignoring the DISCONNECT
-            // so the related AMQP_WILL_CLEAR. Eclipse Paho doesn't provide a way to
-            // close connection without sending DISCONNECT. The mock Will Service will
-            // not clear the will message for this "ignore-disconnect" client
-            MqttClient client = new MqttClient(String.format("tcp://%s:%d", MQTT_BIND_ADDRESS, MQTT_LISTEN_PORT), "ignore-disconnect", persistence);
-            client.connect(options);
-
-            client.disconnect();
-
-            async.await();
-
-            context.assertTrue(true);
-
-        } catch (MqttException e) {
-
-            e.printStackTrace();
-        }
-    }
-
-    @Test
-    public void disconnection(TestContext context) {
-
-        Async async = context.async();
-
-        this.willService.willHandler(b -> {
-
-            async.complete();
-        });
-
-        try {
-
-            MemoryPersistence persistence = new MemoryPersistence();
-
-            MqttConnectOptions options = new MqttConnectOptions();
-            options.setWill(new MqttTopic("will", null), "will".getBytes(), 1, false);
-
             MqttClient client = new MqttClient(String.format("tcp://%s:%d", MQTT_BIND_ADDRESS, MQTT_LISTEN_PORT), "12345", persistence);
             client.connect(options);
 
-            client.disconnect();
+            client.publish("my_topic", "my_payload".getBytes(), 0, false);
 
             async.await();
 

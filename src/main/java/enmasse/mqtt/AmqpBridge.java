@@ -19,10 +19,7 @@ package enmasse.mqtt;
 import enmasse.mqtt.endpoints.AmqpPublishEndpoint;
 import enmasse.mqtt.endpoints.AmqpSubscriptionServiceEndpoint;
 import enmasse.mqtt.endpoints.AmqpWillServiceEndpoint;
-import enmasse.mqtt.messages.AmqpQos;
-import enmasse.mqtt.messages.AmqpSessionMessage;
-import enmasse.mqtt.messages.AmqpWillClearMessage;
-import enmasse.mqtt.messages.AmqpWillMessage;
+import enmasse.mqtt.messages.*;
 import io.netty.handler.codec.mqtt.MqttConnectReturnCode;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
@@ -36,16 +33,22 @@ import io.vertx.proton.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * AMQP bridging class from/to the MQTT endpoint to/from the AMQP related endpoints
  */
 public class AmqpBridge {
+
+    private static final int AMQP_SERVICES_CONNECTION_TIMEOUT = 5000; // in ms
 
     private static final Logger LOG = LoggerFactory.getLogger(AmqpBridge.class);
 
     private Vertx vertx;
 
     private ProtonClient client;
+    private ProtonConnection connection;
 
     // local endpoint for handling remote connected MQTT client
     private MqttEndpoint mqttEndpoint;
@@ -54,8 +57,8 @@ public class AmqpBridge {
     private AmqpWillServiceEndpoint wsEndpoint;
     // endpoint for handling communication with Subscription Service (SS)
     private AmqpSubscriptionServiceEndpoint ssEndpoint;
-    // endpoint for publishing message on topic (via AMQP)
-    private AmqpPublishEndpoint pubEndpoint;
+    // endpoints for publishing message on topic (via AMQP)
+    private Map<String, AmqpPublishEndpoint> pubEndpoints;
 
     /**
      * Constructor
@@ -66,6 +69,7 @@ public class AmqpBridge {
     public AmqpBridge(Vertx vertx, MqttEndpoint mqttEndpoint) {
         this.vertx = vertx;
         this.mqttEndpoint = mqttEndpoint;
+        this.pubEndpoints = new HashMap<>();
     }
 
     /**
@@ -82,19 +86,19 @@ public class AmqpBridge {
 
             if (done.succeeded()) {
 
-                ProtonConnection connection = done.result();
-                connection.open();
+                this.connection = done.result();
+                this.connection.open();
 
                 // specified link name for the Will Service as MQTT clientid
                 ProtonLinkOptions options = new ProtonLinkOptions();
                 options.setLinkName(this.mqttEndpoint.clientIdentifier());
 
                 // TODO: setup AMQP endpoints
-                ProtonSender wsSender = connection.createSender(AmqpWillServiceEndpoint.WILL_SERVICE_ENDPOINT, options);
+                ProtonSender wsSender = this.connection.createSender(AmqpWillServiceEndpoint.WILL_SERVICE_ENDPOINT, options);
                 this.wsEndpoint = new AmqpWillServiceEndpoint(wsSender);
 
-                ProtonSender ssSender = connection.createSender(AmqpSubscriptionServiceEndpoint.SUBSCRIPTION_SERVICE_ENDPOINT);
-                ProtonReceiver ssReceiver = connection.createReceiver(String.format(AmqpSubscriptionServiceEndpoint.CLIENT_ENDPOINT_TEMPLATE, this.mqttEndpoint.clientIdentifier()));
+                ProtonSender ssSender = this.connection.createSender(AmqpSubscriptionServiceEndpoint.SUBSCRIPTION_SERVICE_ENDPOINT);
+                ProtonReceiver ssReceiver = this.connection.createReceiver(String.format(AmqpSubscriptionServiceEndpoint.CLIENT_ENDPOINT_TEMPLATE, this.mqttEndpoint.clientIdentifier()));
                 this.ssEndpoint = new AmqpSubscriptionServiceEndpoint(ssSender, ssReceiver);
 
                 this.setupMqttEndpointHandlers();
@@ -156,7 +160,8 @@ public class AmqpBridge {
                     // nothing here !??
                 }, connectionFuture);
 
-                vertx.setTimer(5000, timer -> {
+                // timeout for the overall connection process
+                vertx.setTimer(AMQP_SERVICES_CONNECTION_TIMEOUT, timer -> {
                    if (!connectionFuture.isComplete()) {
                        connectionFuture.fail("timeout");
                    }
@@ -180,6 +185,29 @@ public class AmqpBridge {
     private void publishHandler(MqttPublishMessage publish) {
 
         // TODO:
+
+        // TODO: simple way, without considering wildcards
+
+        AmqpPublishEndpoint pubEndpoint = null;
+
+        // check if publish endpoint already exists for the requested topic
+        if (!this.pubEndpoints.containsKey(publish.topicName())) {
+
+            ProtonSender sender = this.connection.createSender(publish.topicName());
+            pubEndpoint = new AmqpPublishEndpoint(sender);
+            this.pubEndpoints.put(publish.topicName(), pubEndpoint);
+        }
+
+        // TODO: sending AMQP_PUBLISH
+        AmqpPublishMessage amqpPublishMessage =
+                new AmqpPublishMessage(publish.messageId(),
+                        AmqpQos.toAmqpQoS(publish.qosLevel().value()),
+                        publish.isDup(),
+                        publish.isRetain(),
+                        publish.topicName(),
+                        publish.payload());
+
+        pubEndpoint.publish(amqpPublishMessage);
     }
 
     /**

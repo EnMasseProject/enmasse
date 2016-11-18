@@ -16,6 +16,9 @@
 
 package enmasse.mqtt.endpoints;
 
+import enmasse.mqtt.messages.AmqpPublishMessage;
+import io.vertx.proton.ProtonQoS;
+import io.vertx.proton.ProtonSender;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,19 +29,49 @@ public class AmqpPublishEndpoint {
 
     private static final Logger LOG = LoggerFactory.getLogger(AmqpPublishEndpoint.class);
 
-    public AmqpPublishEndpoint() {
+    private ProtonSender sender;
 
+    /**
+     * Constructor
+     *
+     * @param sender    ProtonSender instance related to the publishing address
+     */
+    public AmqpPublishEndpoint(ProtonSender sender) {
+        this.sender = sender;
     }
 
     public void open() {
         // TODO:
     }
 
-    public void publish() {
+    public void publish(AmqpPublishMessage amqpPublishMessage) {
         // TODO:
 
         // attach sender link on "topic" (if doesn't exist yet)
         // send AMQP_PUBLISH message
+
+        if (!this.sender.isOpen()) {
+
+            this.sender.setQoS(amqpPublishMessage.amqpQos().toProtonQos());
+            this.sender.open();
+        }
+
+        // TODO:
+        // check if requested QoS is equal to the current (link already opened)
+        // could be need to detach and reattach with new QoS ?
+
+        if (this.sender.getQoS() == ProtonQoS.AT_MOST_ONCE) {
+
+            this.sender.send(amqpPublishMessage.toAmqp());
+
+        } else {
+
+            this.sender.send(amqpPublishMessage.toAmqp(), delivery -> {
+                // TODO:
+            });
+
+        }
+
     }
 
     public void close() {

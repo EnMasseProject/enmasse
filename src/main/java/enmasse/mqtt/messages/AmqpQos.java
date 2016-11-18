@@ -16,6 +16,7 @@
 
 package enmasse.mqtt.messages;
 
+import io.vertx.proton.ProtonQoS;
 import org.apache.qpid.proton.amqp.UnsignedByte;
 import org.apache.qpid.proton.amqp.transport.ReceiverSettleMode;
 import org.apache.qpid.proton.amqp.transport.SenderSettleMode;
@@ -110,6 +111,20 @@ public class AmqpQos {
             return 2;
         } else {
             throw new IllegalArgumentException("Illegal AMQP QoS");
+        }
+    }
+
+    /**
+     * Convert AMQP QoS level to Proton QoS level
+     *
+     * @return
+     */
+    public ProtonQoS toProtonQos() {
+
+        if (this.sndSettleMode == SenderSettleMode.SETTLED) {
+            return ProtonQoS.AT_MOST_ONCE;
+        } else {
+            return ProtonQoS.AT_LEAST_ONCE;
         }
     }
 

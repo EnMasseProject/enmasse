@@ -17,7 +17,6 @@
 package enmasse.mqtt;
 
 import enmasse.mqtt.messages.AmqpPublishMessage;
-import enmasse.mqtt.messages.AmqpQos;
 import enmasse.mqtt.messages.AmqpWillClearMessage;
 import enmasse.mqtt.messages.AmqpWillMessage;
 import io.vertx.core.AsyncResult;
@@ -27,7 +26,6 @@ import io.vertx.proton.*;
 import org.apache.qpid.proton.amqp.messaging.Accepted;
 import org.apache.qpid.proton.amqp.transport.ErrorCondition;
 import org.apache.qpid.proton.amqp.transport.LinkError;
-import org.apache.qpid.proton.amqp.transport.SenderSettleMode;
 import org.apache.qpid.proton.message.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -167,7 +165,7 @@ public class MockWillService {
                         new AmqpPublishMessage(1, amqpWillMessage.amqpQos(), false, amqpWillMessage.isRetain(), amqpWillMessage.topic(), amqpWillMessage.payload());
 
                 ProtonSender sender = this.connection.createSender(amqpPublishMessage.topic());
-                ProtonQoS protonQos = this.toProtonQos(amqpPublishMessage.amqpQos());
+                ProtonQoS protonQos = amqpPublishMessage.amqpQos().toProtonQos();
                 sender.setQoS(protonQos);
 
                 sender.open();
@@ -205,21 +203,6 @@ public class MockWillService {
         // TODO:
 
         this.connection.close();
-    }
-
-    /**
-     * Convert from AMQP QoS level to Proton QoS level
-     *
-     * @param amqpQos
-     * @return
-     */
-    private ProtonQoS toProtonQos(AmqpQos amqpQos) {
-
-        if (amqpQos.sndSettleMode() == SenderSettleMode.SETTLED) {
-            return ProtonQoS.AT_MOST_ONCE;
-        } else {
-            return ProtonQoS.AT_LEAST_ONCE;
-        }
     }
 
     /**
