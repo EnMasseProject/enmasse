@@ -73,12 +73,12 @@ public class AmqpBridge {
     }
 
     /**
-     * Connect to the AMQP service provider
+     * Open the bridge and connect to the AMQP service provider
      *
      * @param address   AMQP service provider address
      * @param port      AMQP service provider port
      */
-    public void connect(String address, int port) {
+    public void open(String address, int port) {
 
         this.client = ProtonClient.create(this.vertx);
 
@@ -185,6 +185,21 @@ public class AmqpBridge {
 
         });
 
+    }
+
+    /**
+     * Close the bridge with all related attached links and connection to AMQP services
+     */
+    public void close() {
+
+        this.wsEndpoint.close();
+        this.ssEndpoint.close();
+
+        for (Map.Entry<String, AmqpPublishEndpoint> entry: this.pubEndpoints.entrySet()) {
+            entry.getValue().close();
+        }
+
+        this.connection.close();
     }
 
     /**

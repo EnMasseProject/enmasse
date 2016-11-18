@@ -136,7 +136,7 @@ public class MqttFrontend extends AbstractVerticle {
 
         AmqpBridge bridge = new AmqpBridge(this.vertx, mqttEndpoint);
 
-        bridge.connect(this.connectAddress, this.connectPort);
+        bridge.open(this.connectAddress, this.connectPort);
 
         // TODO: handle connect result in order to add bridge to the list
         this.bridges.add(bridge);
@@ -166,6 +166,11 @@ public class MqttFrontend extends AbstractVerticle {
         });
 
         if (this.server != null) {
+
+            this.bridges.stream().forEach(bridge -> {
+                bridge.close();
+            });
+
             this.server.close(shutdownTracker.completer());
         } else {
             shutdownTracker.complete();

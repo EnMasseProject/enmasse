@@ -81,5 +81,7 @@ public class AmqpPublishEndpoint {
 
     public void close() {
         // TODO:
+
+        this.sender.close();
     }
 }
