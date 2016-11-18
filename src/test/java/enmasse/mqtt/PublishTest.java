@@ -65,11 +65,8 @@ public class PublishTest extends MockMqttFrontendTestBase {
 
             MemoryPersistence persistence = new MemoryPersistence();
 
-            MqttConnectOptions options = new MqttConnectOptions();
-            options.setWill(new MqttTopic("will", null), "will".getBytes(), 1, false);
-
             MqttClient client = new MqttClient(String.format("tcp://%s:%d", MQTT_BIND_ADDRESS, MQTT_LISTEN_PORT), "12345", persistence);
-            client.connect(options);
+            client.connect();
 
             client.publish("my_topic", "my_payload".getBytes(), 0, false);
 

@@ -44,6 +44,11 @@ public class AmqpPublishEndpoint {
         // TODO:
     }
 
+    /**
+     * Send the AMQP_PUBLISH to the attached topic/address
+     *
+     * @param amqpPublishMessage    AMQP_PUBLISH message
+     */
     public void publish(AmqpPublishMessage amqpPublishMessage) {
         // TODO:
 

@@ -106,20 +106,6 @@ public class AmqpBridge {
                 this.wsEndpoint.open();
                 this.ssEndpoint.open();
 
-                // TODO: sending AMQP_WILL
-                MqttWill will = this.mqttEndpoint.will();
-
-                AmqpWillMessage amqpWillMessage =
-                        new AmqpWillMessage(will.isWillRetain(),
-                                will.willTopic(),
-                                AmqpQos.toAmqpQoS(will.willQos()),
-                                Buffer.buffer(will.willMessage()));
-
-                // TODO: sending AMQP_SESSION
-                AmqpSessionMessage amqpSessionMessage =
-                        new AmqpSessionMessage(this.mqttEndpoint.isCleanSession(),
-                                this.mqttEndpoint.clientIdentifier());
-
                 // setup a Future for completed connection steps with all services
                 // with AMQP_WILL and AMQP_SESSION/AMQP_SESSION_PRESENT handled
                 Future<Void> connectionFuture = Future.future();
@@ -140,7 +126,24 @@ public class AmqpBridge {
 
                 // step 1 : send AMQP_WILL to Will Service
                 Future<ProtonDelivery> willFuture = Future.future();
-                this.wsEndpoint.sendWill(amqpWillMessage, willFuture.completer());
+                // if remote MQTT has specified the will
+                if (this.mqttEndpoint.will().isWillFlag()) {
+
+                    // TODO: sending AMQP_WILL
+                    MqttWill will = this.mqttEndpoint.will();
+
+                    AmqpWillMessage amqpWillMessage =
+                            new AmqpWillMessage(will.isWillRetain(),
+                                    will.willTopic(),
+                                    AmqpQos.toAmqpQoS(will.willQos()),
+                                    Buffer.buffer(will.willMessage()));
+
+                    this.wsEndpoint.sendWill(amqpWillMessage, willFuture.completer());
+                } else {
+
+                    // otherwise just complete the Future
+                    willFuture.complete();
+                }
 
                 willFuture.compose(v -> {
 
@@ -153,6 +156,12 @@ public class AmqpBridge {
 
                     // step 2 : send AMQP_SESSION to Subscription Service
                     Future<ProtonDelivery> cleanSessionFuture = Future.future();
+
+                    // TODO: sending AMQP_SESSION
+                    AmqpSessionMessage amqpSessionMessage =
+                            new AmqpSessionMessage(this.mqttEndpoint.isCleanSession(),
+                                    this.mqttEndpoint.clientIdentifier());
+
                     this.ssEndpoint.sendCleanSession(amqpSessionMessage, cleanSessionFuture.completer());
                     return cleanSessionFuture;
 
