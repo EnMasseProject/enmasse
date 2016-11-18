@@ -8,10 +8,14 @@ The MQTT client sends a _CONNECT_ message to the FE which maps the message to th
 | ---- | ---- | ----- | ---- |
 | subject | system property | "will" | - |
 | x-retain | message annotation | will retain flag | MQTT CONNECT |
-| x-desidered-snd-settle-mode | message annotation | will QoS level | MQTT CONNECT |
+| x-desired-snd-settle-mode | message annotation | will QoS level | MQTT CONNECT |
+| x-desired-rcv-settle-mode | message annotation | will QoS level | MQTT CONNECT |
 | to | system property | will topic | MQTT CONNECT |
 | payload | Data section | will message | MQTT CONNECT |
 
+> the MQTT QoS level is mapped to the AMQP couple snd-settle-mode and rcv-settle-mode (see "“Publishing”").
+
+The _AMQP_WILL_ is sent as "unsettled", in order to know that the Will Service has received it (with related disposition).
 The relation between the _AMQP_WILL_ message and the related client, at AMQP level, is inferred by the link name attached to the WS control address.
 
 **AMQP_SESSION** : sent to the SS in order to provide “clean-session” information and querying for a previous session.
@@ -22,6 +26,7 @@ The relation between the _AMQP_WILL_ message and the related client, at AMQP lev
 | x-clean-session | message annotation | clean session flag | MQTT CONNECT |
 | reply-to | system property | $mqtt.to.[client-id] | - |
 
+The _AMQP_SESSION_ is sent as "unsettled", in order to know that the Subscription Service has received it (with related disposition).
 The relation between the _AMQP_SESSION_ message and the related client, at AMQP level, is inferred by the link name attached to the SS control address.
 
 > the [client-id] is the "client identifier" value from the MQTT CONNECT message.
@@ -39,6 +44,8 @@ After sending the _AMQP_SESSION_, the FE receives the following message as reply
 
 ![Connect Subscription Service](../images/04_connect_ss.png)
 
+The _AMQP_SESSION_PRESENT_ is sent as "unsettled", in order to know that the FE has received it (with related disposition).
+
 If a session is present and there are subscriptions for the client-id, the SS re-establishes the routes from each topic to the $mqtt.to.[client-id] automatically (see “Subscription/Unsubscription”). No need for the SS to send subscriptions list to the FE in order to re-subscribe.
 
 > the SS should send the _AMQP_SESSION_PRESENT_ message to FE before re-establishing routes for the topics because it should be first message received by FE (in order to build the CONNACK) if there are messages stored when the client was offline that will be puslished now on re-connect.
@@ -49,9 +56,9 @@ Regarding the WS, the FE attaches a permanent link to the $mqtt.willservice addr
 
 The FE builds the _CONNACK_ message and sends it to the MQTT client.
 
-** CONNACK **
+**CONNACK**
 
 | DATA | VALUE | FROM |
-| ----- | ----- |
+| ---- | ----- | ---- |
 | Session present | if sesson is already present | AMQP_SESSION_PRESENT  |
 | Connect return code | It can depends on some checks on FE side or other on AMQP side | - |

@@ -18,9 +18,13 @@ The FE maps the _SUBSCRIBE_ message to the following AMQP message.
 | DATA | TYPE | VALUE | FROM |
 | ---- | ---- | ----- | ---- |
 | subject | system property | "subscribe" | - |
+| message-id | system property | MessageId | MQTT SUBSCRIBE |
 | reply-to | system property | $mqtt.to.[client-id] | - |
-| payload | AMQP value | Map with two lists (topics and desidered-rcv-settle-modes) | MQTT SUSBCRIBE |
+| payload | AMQP value | Map with two lists (topics and desired-settle-modes) | MQTT SUSBCRIBE |
 
+> "topics" is just a list of topic names; "desired-settle-modes" is a list of couples with sender and receiver settle mode
+
+The _AMQP_SUBSCRIBE_ is sent as "unsettled", in order to know that the Subscription Service has received it (with related disposition).
 After sending the _AMQP_SUBSCRIBE_, the FE should receive the following messages as reply.
 
 **AMQP_SUBACK** : the result of a subscription request.
@@ -28,7 +32,10 @@ After sending the _AMQP_SUBSCRIBE_, the FE should receive the following messages
 | DATA | TYPE | VALUE | FROM |
 | ---- | ---- | ----- | ---- |
 | subject | system property | "suback" | - |
+| message-id | system property | MessageId | - |
 | payload | AMQP value | List of granted QoS (or failure) | - |
+
+> the granted QoS is a list of couples with sender and receiver settle mode (both can be "null" for failure)
 
 The FE could receive the following message as reply on the unique client address.
 
@@ -38,10 +45,11 @@ The FE could receive the following message as reply on the unique client address
 
 Finally, the FE builds the _SUBACK_ message as response for the MQTT client and eventually the _PUBLISH_ for a retained message.
 
-** SUBACK **
+**SUBACK**
 
 | DATA | VALUE | FROM |
-| ----- | ----- |
+| ---- | ----- | ---- |
+| MessagId | message-id | AMQP_SUBACK |
 | Return codes | List of granted QoS (or failure) | AMQP_SUBACK |
 
 When subscribed/attached, the FE receives published messages on the unique client address :
@@ -59,9 +67,11 @@ The MQTT client sends an _UNSUBSCRIBE_ message to FE which maps to the following
 | DATA | TYPE | VALUE | FROM |
 | ---- | ---- | ----- | ---- |
 | subject | system property | "unsubscribe" | - |
+| message-id | system property | MessageId | MQTT UNSUBSCRIBE |
 | reply-to | system property | $mqtt.to.[client-id] | - |
-| payload | AMQP value | List of topics | MQTT SUSBCRIBE |
+| payload | AMQP value | List of topics | MQTT UNSUBSCRIBE |
 
+The _AMQP_UNSUBSCRIBE_ is sent as "unsettled", in order to know that the Subscription Service has received it (with related disposition).
 After sending the _AMQP_UNSUBSCRIBE_, the FE receives the following messages as reply.
 
 **AMQP_UNSUBACK** : the result of an unsubscription request.
@@ -69,7 +79,14 @@ After sending the _AMQP_UNSUBSCRIBE_, the FE receives the following messages as 
 | DATA | TYPE | VALUE | FROM |
 | ---- | ---- | ----- | ---- |
 | subject | system property | "unsuback" | - |
+| message-id | system property | message identifier | - |
 
 Finally, the FE builds the _UNSUBACK_ message as response for the MQTT client.
+
+**UNSUBACK**
+
+| DATA | VALUE | FROM |
+| ---- | ----- | ---- |
+| MessagId | message-id | AMQP_UNSUBACK |
 
 ![Unsubscribe](../images/08_unsubscribe.png)

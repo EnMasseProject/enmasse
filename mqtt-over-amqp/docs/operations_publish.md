@@ -7,13 +7,15 @@ The MQTT client sends _PUBLISH_ message to FE which maps the message to the foll
 | DATA | TYPE | VALUE | FROM |
 | ---- | ---- | ----- | ---- |
 | subject | system property | "publish" | - |
+| message-id | system property | MessageId | MQTT PUBLISH |
 | x-retain | message annotation | Retain flag | MQTT PUBLISH |
-| x-desidered-snd-settle-mode | message annotation | QoS level | MQTT PUBLISH |
+| x-desired-snd-settle-mode | message annotation | QoS level | MQTT PUBLISH |
+| x-desired-rcv-settle-mode | message annotation | QoS level | MQTT PUBLISH |
 | to | system property | topic | MQTT PUBLISH |
-| delivery-count | header | If the message is a duplicate (previous failure). DUP flag. | MQTT PUBLISH |
+| delivery-count | header | DUP flag | MQTT PUBLISH |
 | payload | Data section | Message payload | MQTT PUBLISH |
 
-> the QoS level defines what AMQP settle mode will be used for delivering message
+> the MQTT QoS level is mapped to the AMQP couple snd-settle-mode and rcv-settle-mode. It defines what AMQP settle mode will be used for delivering message
 
 The requested QoS is represented by the “snd-settle-mode” and “rcv-settle-mode” in the attach performative.
 

@@ -8,6 +8,7 @@ The FE detects a disconnection from the MQTT client (brute or clean through _DIS
 | ---- | ---- | ----- | ---- |
 | subject | system property | "will-clear" | - |
 
+The _AMQP_WILL_CLEAR_ is sent as "unsettled", in order to know that the Will Service has received it (with related disposition).
 The relation between the _AMQP_WILL_CLEAR_ message and the related client, at AMQP level, is inferred by the link name attached to the WS control address.
 
 Regarding the “will” publishing on disconnection, the two following scenarios are possible :
