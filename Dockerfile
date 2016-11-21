@@ -14,7 +14,7 @@ COPY ./activemq-artemis/integration/activemq-amqp-connector/target/artemis-amqp-
 # COPY ./artemis-plugin/build/libs/common-0.9.0.jar $ARTEMIS_HOME/lib
 # COPY ./artemis-plugin/build/libs/jboss-dmr-1.3.0.Final.jar $ARTEMIS_HOME/lib
 
-COPY ./utils/run_artemis.sh ./utils/get_free_instance.py ./artemis-launcher/build/exe/main/main $ARTEMIS_HOME/bin/
+COPY ./utils/* ./artemis-launcher/build/exe/main/main $ARTEMIS_HOME/bin/
 COPY ./config_templates /config_templates
 
 VOLUME /var/run/artemis
@@ -24,4 +24,4 @@ EXPOSE 5673 61616
 # Needed for bridge clustering
 # EXPOSE 7800 7801 7802
 
-CMD ["/opt/apache-artemis-1.6.0-SNAPSHOT/bin/main", "/opt/apache-artemis-1.6.0-SNAPSHOT/bin/run_artemis.sh"]
+CMD ["/opt/apache-artemis-1.6.0-SNAPSHOT/bin/main", "/opt/apache-artemis-1.6.0-SNAPSHOT/bin/launch.sh"]

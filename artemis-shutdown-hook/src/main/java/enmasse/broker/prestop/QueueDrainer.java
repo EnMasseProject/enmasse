@@ -29,6 +29,8 @@ import io.vertx.proton.ProtonSender;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.OpenOption;
+import java.nio.file.StandardOpenOption;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -133,8 +135,8 @@ public class QueueDrainer {
         try {
             File instancePath = new File("/var/run/artemis", instanceName);
             if (instancePath.exists()) {
-                Files.createFile(new File(instancePath, "enmasse-deleted").toPath());
-                System.out.println("Instance " + instanceName + " marked as deleted");
+                Files.write(new File(instanceName, "terminating").toPath(), "yes".getBytes(), StandardOpenOption.WRITE);
+                System.out.println("Instance " + instanceName + " marked as terminating");
             }
         } catch (IOException e) {
             System.out.println("Error deleting instance: " + e.getMessage());
