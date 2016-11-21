@@ -23,6 +23,7 @@ import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.proton.ProtonDelivery;
 import io.vertx.proton.ProtonSender;
+import org.apache.qpid.proton.amqp.messaging.Accepted;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,7 +51,6 @@ public class AmqpWillServiceEndpoint {
      * Open the endpoint, attaching the link
      */
     public void open() {
-        // TODO:
 
         // attach sender link to $mqtt.willservice
         this.sender.open();
@@ -63,12 +63,16 @@ public class AmqpWillServiceEndpoint {
      * @param handler   callback called on message delivered
      */
     public void sendWill(AmqpWillMessage amqpWillMessage, Handler<AsyncResult<ProtonDelivery>> handler) {
-        // TODO: send AMQP_WILL message with will information
 
+        // send AMQP_WILL message with will information
         this.sender.send(amqpWillMessage.toAmqp(), delivery -> {
-            // TODO:
-            LOG.info("AMQP will delivered");
-            handler.handle(Future.succeededFuture(delivery));
+
+            if (delivery.getRemoteState() == Accepted.getInstance()) {
+                LOG.info("AMQP will delivery {}", delivery.getRemoteState());
+                handler.handle(Future.succeededFuture(delivery));
+            } else {
+                handler.handle(Future.failedFuture(String.format("AMQP will delivery %s", delivery.getRemoteState())));
+            }
         });
     }
 
@@ -79,12 +83,16 @@ public class AmqpWillServiceEndpoint {
      * @param handler   callback called on messahe delivered
      */
     public void clearWill(AmqpWillClearMessage amqpWillClearMessage, Handler<AsyncResult<ProtonDelivery>> handler) {
-        // TODO: send AMQP_WILL_CLEAR message
 
+        // send AMQP_WILL_CLEAR message
         this.sender.send(amqpWillClearMessage.toAmqp(), delivery -> {
-            // TODO:
-            LOG.info("AMQP will clear delivered");
-            handler.handle(Future.succeededFuture(delivery));
+
+            if (delivery.getRemoteState() == Accepted.getInstance()) {
+                LOG.info("AMQP will clear delivery {}", delivery.getRemoteState());
+                handler.handle(Future.succeededFuture(delivery));
+            } else {
+                handler.handle(Future.failedFuture(String.format("AMQP will clear delivery %s", delivery.getRemoteState())));
+            }
         });
     }
 
@@ -92,8 +100,8 @@ public class AmqpWillServiceEndpoint {
      * Close the endpoint, detaching the link
      */
     public void close() {
-        // TODO:
 
+        // detach link
         this.sender.close();
     }
 }

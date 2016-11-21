@@ -79,6 +79,6 @@ public abstract class MockMqttFrontendTestBase {
 
         this.willService.close();
         this.subscriptionService.close();
-        this.vertx.close();
+        this.vertx.close(context.asyncAssertSuccess());
     }
 }

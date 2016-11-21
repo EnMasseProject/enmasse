@@ -21,7 +21,9 @@ import enmasse.mqtt.endpoints.AmqpSubscriptionServiceEndpoint;
 import enmasse.mqtt.endpoints.AmqpWillServiceEndpoint;
 import enmasse.mqtt.messages.*;
 import io.netty.handler.codec.mqtt.MqttConnectReturnCode;
+import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
+import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.mqtt.MqttEndpoint;
@@ -77,8 +79,9 @@ public class AmqpBridge {
      *
      * @param address   AMQP service provider address
      * @param port      AMQP service provider port
+     * @param openHandler   handler called when the open is completed (with success or not)
      */
-    public void open(String address, int port) {
+    public void open(String address, int port, Handler<AsyncResult<AmqpBridge>> openHandler) {
 
         this.client = ProtonClient.create(this.vertx);
 
@@ -93,7 +96,7 @@ public class AmqpBridge {
                 ProtonLinkOptions options = new ProtonLinkOptions();
                 options.setLinkName(this.mqttEndpoint.clientIdentifier());
 
-                // TODO: setup AMQP endpoints
+                // setup and open AMQP endpoints to Will and Subscription services
                 ProtonSender wsSender = this.connection.createSender(AmqpWillServiceEndpoint.WILL_SERVICE_ENDPOINT, options);
                 this.wsEndpoint = new AmqpWillServiceEndpoint(wsSender);
 
@@ -115,10 +118,15 @@ public class AmqpBridge {
 
                         this.mqttEndpoint.writeConnack(MqttConnectReturnCode.CONNECTION_ACCEPTED, false);
                         LOG.info("Connection accepted");
+
+                        openHandler.handle(Future.succeededFuture(AmqpBridge.this));
+
                     } else {
 
                         this.mqttEndpoint.writeConnack(MqttConnectReturnCode.CONNECTION_REFUSED_SERVER_UNAVAILABLE, false);
                         LOG.info("Connection NOT accepted");
+
+                        openHandler.handle(Future.failedFuture(ar.cause()));
                     }
 
                     LOG.info("CONNACK sent");
@@ -129,7 +137,7 @@ public class AmqpBridge {
                 // if remote MQTT has specified the will
                 if (this.mqttEndpoint.will().isWillFlag()) {
 
-                    // TODO: sending AMQP_WILL
+                    // sending AMQP_WILL
                     MqttWill will = this.mqttEndpoint.will();
 
                     AmqpWillMessage amqpWillMessage =
@@ -157,7 +165,7 @@ public class AmqpBridge {
                     // step 2 : send AMQP_SESSION to Subscription Service
                     Future<ProtonDelivery> cleanSessionFuture = Future.future();
 
-                    // TODO: sending AMQP_SESSION
+                    // sending AMQP_SESSION
                     AmqpSessionMessage amqpSessionMessage =
                             new AmqpSessionMessage(this.mqttEndpoint.isCleanSession(),
                                     this.mqttEndpoint.clientIdentifier());
@@ -172,7 +180,7 @@ public class AmqpBridge {
                 // timeout for the overall connection process
                 vertx.setTimer(AMQP_SERVICES_CONNECTION_TIMEOUT, timer -> {
                    if (!connectionFuture.isComplete()) {
-                       connectionFuture.fail("timeout");
+                       connectionFuture.fail("Timeout on connecting to AMQP services");
                    }
                 });
 
@@ -181,6 +189,10 @@ public class AmqpBridge {
                 LOG.info("Error connecting to AMQP services ...", done.cause());
                 // no connection with the AMQP side
                 this.mqttEndpoint.writeConnack(MqttConnectReturnCode.CONNECTION_REFUSED_SERVER_UNAVAILABLE, false);
+
+                openHandler.handle(Future.failedFuture(done.cause()));
+
+                LOG.info("CONNACK sent");
             }
 
         });
@@ -258,7 +270,7 @@ public class AmqpBridge {
      */
     private void disconnectHandler(Void v) {
 
-        // TODO:
+        // sending AMQP_WILL_CLEAR
         AmqpWillClearMessage amqpWillClearMessage = new AmqpWillClearMessage();
         this.wsEndpoint.clearWill(amqpWillClearMessage, ar -> {
 

@@ -24,6 +24,7 @@ import io.vertx.core.Handler;
 import io.vertx.proton.ProtonDelivery;
 import io.vertx.proton.ProtonReceiver;
 import io.vertx.proton.ProtonSender;
+import org.apache.qpid.proton.amqp.messaging.Accepted;
 import org.apache.qpid.proton.message.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,12 +63,16 @@ public class AmqpSubscriptionServiceEndpoint {
      * @param handler   callback called on message delivered
      */
     public void sendCleanSession(AmqpSessionMessage amqpSessionMessage, Handler<AsyncResult<ProtonDelivery>> handler) {
-        // TODO: send AMQP_SESSION message with clean session info
 
+        // send AMQP_SESSION message with clean session info
         this.sender.send(amqpSessionMessage.toAmqp(), delivery -> {
-            // TODO:
-            LOG.info("AMQP clean session delivered");
-            handler.handle(Future.succeededFuture(delivery));
+
+            if (delivery.getRemoteState() == Accepted.getInstance()) {
+                LOG.info("AMQP clean session delivery {}", delivery.getRemoteState());
+                handler.handle(Future.succeededFuture(delivery));
+            } else {
+                handler.handle(Future.failedFuture(String.format("AMQP clean session delivery %s", delivery.getRemoteState())));
+            }
         });
     }
 
@@ -125,7 +130,6 @@ public class AmqpSubscriptionServiceEndpoint {
      * Open the endpoint, attaching the links
      */
     public void open() {
-        // TODO:
 
         // attach receiver link on the $mqtt.to.<client-id> address for receiving messages (from SS)
         // define handler for received messages
@@ -133,13 +137,11 @@ public class AmqpSubscriptionServiceEndpoint {
         // - AMQP_SUBACK after sent AMQP_SUBSCRIBE
         // - AMQP_UNSUBACK after sent AMQP_UNSUBSCRIBE
         // - AMQP_PUBLISH for every AMQP published message
-
         this.receiver
                 .handler(this::messageHandler)
                 .open();
 
         // attach sender link to $mqtt.subscriptionservice
-
         this.sender.open();
     }
 
@@ -147,8 +149,8 @@ public class AmqpSubscriptionServiceEndpoint {
      * Close the endpoint, detaching the links
      */
     public void close() {
-        // TODO:
 
+        // detach links
         this.sender.close();
         this.receiver.close();
     }

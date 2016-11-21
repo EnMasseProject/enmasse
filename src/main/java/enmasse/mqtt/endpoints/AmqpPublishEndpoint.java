@@ -59,6 +59,8 @@ public class AmqpPublishEndpoint {
 
             this.sender.setQoS(amqpPublishMessage.amqpQos().toProtonQos());
             this.sender.open();
+
+            // TODO: think about starting a timer for inactivity on this link for detaching ?
         }
 
         // TODO:

@@ -136,10 +136,14 @@ public class MqttFrontend extends AbstractVerticle {
 
         AmqpBridge bridge = new AmqpBridge(this.vertx, mqttEndpoint);
 
-        bridge.open(this.connectAddress, this.connectPort);
+        bridge.open(this.connectAddress, this.connectPort, done -> {
 
-        // TODO: handle connect result in order to add bridge to the list
-        this.bridges.add(bridge);
+            if (done.succeeded()) {
+                this.bridges.add(done.result());
+            } else {
+                LOG.info("Error opening the AMQP bridge ...", done.cause());
+            }
+        });
     }
 
     @Override
