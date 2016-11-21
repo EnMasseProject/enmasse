@@ -41,10 +41,10 @@ public class AmqpUnsubscribeMessage {
      * @param messageId message identifier
      * @param topics    topics to subscribe
      */
-    public AmqpUnsubscribeMessage(Object messageId, String clientId, List<String> topics) {
+    public AmqpUnsubscribeMessage(String clientId, Object messageId, List<String> topics) {
 
-        this.messageId = messageId;
         this.clientId = clientId;
+        this.messageId = messageId;
         this.topics = topics;
     }
 

@@ -18,6 +18,10 @@ package enmasse.mqtt.endpoints;
 
 import enmasse.mqtt.messages.AmqpSessionMessage;
 import enmasse.mqtt.messages.AmqpSessionPresentMessage;
+import enmasse.mqtt.messages.AmqpSubackMessage;
+import enmasse.mqtt.messages.AmqpSubscribeMessage;
+import enmasse.mqtt.messages.AmqpUnsubackMessage;
+import enmasse.mqtt.messages.AmqpUnsubscribeMessage;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -44,6 +48,10 @@ public class AmqpSubscriptionServiceEndpoint {
 
     // handler called when AMQP_SESSION_PRESENT is received
     private Handler<AmqpSessionPresentMessage> sessionHandler;
+    // handler called when AMQP_SUBACK is received
+    private Handler<AmqpSubackMessage> subackHandler;
+    // handler called when AMQP_UNSUBACK is received
+    private Handler<AmqpUnsubackMessage> unsubackHandler;
 
     /**
      * Constructor
@@ -76,12 +84,20 @@ public class AmqpSubscriptionServiceEndpoint {
         });
     }
 
-    public void sendSubscribe(/* Subscribe info */) {
+    public void sendSubscribe(AmqpSubscribeMessage amqpSubscribeMessage) {
         // TODO: send AMQP_SUBSCRIBE message
+
+        this.sender.send(amqpSubscribeMessage.toAmqp(), delivery -> {
+            // TODO:
+        });
     }
 
-    public void sendUnsubscribe(/* Unsubscribe info */) {
+    public void sendUnsubscribe(AmqpUnsubscribeMessage amqpUnsubscribeMessage) {
         // TODO: send AMQP_UNSUBSCRIBE message
+
+        this.sender.send(amqpUnsubscribeMessage.toAmqp(), delivery -> {
+           // TODO:
+        });
     }
 
     /**
@@ -100,12 +116,28 @@ public class AmqpSubscriptionServiceEndpoint {
         // TODO: set handler called when AMQP_PUBLISH message is received
     }
 
-    public void subackHandler(/* Handler */) {
-        // TODO: set handler called when AMQP_SUBACK message is received
+    /**
+     * Set the session handler called when AMQP_SUBACK is received
+     *
+     * @param handler   the handler
+     * @return  the current AmqpSubscriptionServiceEndpoint instance
+     */
+    public AmqpSubscriptionServiceEndpoint subackHandler(Handler<AmqpSubackMessage> handler) {
+
+        this.subackHandler = handler;
+        return this;
     }
 
-    public void unsubackHandler(/* Handler */) {
-        // TODO: set handler called when AMQP_UNSUBACK message is received
+    /**
+     * Set the session handler called when AMQP_UNSUBACK is received
+     *
+     * @param handler   the handler
+     * @return  the current AmqpSubscriptionServiceEndpoint instance
+     */
+    public AmqpSubscriptionServiceEndpoint unsubackHandler(Handler<AmqpUnsubackMessage> handler) {
+
+        this.unsubackHandler = handler;
+        return this;
     }
 
     /**
@@ -122,6 +154,14 @@ public class AmqpSubscriptionServiceEndpoint {
 
             case AmqpSessionPresentMessage.AMQP_SUBJECT:
                 this.handleSession(AmqpSessionPresentMessage.from(message));
+                break;
+
+            case AmqpSubackMessage.AMQP_SUBJECT:
+                this.handleSuback(AmqpSubackMessage.from(message));
+                break;
+
+            case AmqpUnsubackMessage.AMQP_SUBJECT:
+                this.handleUnsuback(AmqpUnsubackMessage.from(message));
                 break;
         }
     }
@@ -164,6 +204,30 @@ public class AmqpSubscriptionServiceEndpoint {
 
         if (this.sessionHandler != null) {
             this.sessionHandler.handle(amqpSessionPresentMessage);
+        }
+    }
+
+    /**
+     * Used for calling the session handler when AMQP_SUBACK is received
+     *
+     * @param amqpSubackMessage AMQP_SUBACK message
+     */
+    private void handleSuback(AmqpSubackMessage amqpSubackMessage) {
+
+        if (this.subackHandler != null) {
+            this.subackHandler.handle(amqpSubackMessage);
+        }
+    }
+
+    /**
+     * Used for calling the session handler when AMQP_UNSUBACK is received
+     *
+     * @param amqpUnsubackMessage AMQP_UNSUBACK message
+     */
+    private void handleUnsuback(AmqpUnsubackMessage amqpUnsubackMessage) {
+
+        if (this.unsubackHandler != null) {
+            this.unsubackHandler.handle(amqpUnsubackMessage);
         }
     }
 }

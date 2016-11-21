@@ -27,6 +27,7 @@ import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.mqtt.MqttEndpoint;
+import io.vertx.mqtt.MqttTopicSubscription;
 import io.vertx.mqtt.MqttWill;
 import io.vertx.mqtt.messages.MqttPublishMessage;
 import io.vertx.mqtt.messages.MqttSubscribeMessage;
@@ -35,8 +36,11 @@ import io.vertx.proton.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * AMQP bridging class from/to the MQTT endpoint to/from the AMQP related endpoints
@@ -159,6 +163,10 @@ public class AmqpBridge {
                     this.ssEndpoint.sessionHandler(amqpSessionPresentMessage -> {
 
                         LOG.info("session present {}", amqpSessionPresentMessage.isSessionPresent());
+
+                        this.ssEndpoint.subackHandler(this::subackHandler);
+                        this.ssEndpoint.unsubackHandler(this::unsubackHandler);
+
                         connectionFuture.complete();
                     });
 
@@ -252,7 +260,22 @@ public class AmqpBridge {
      */
     private void subscribeHandler(MqttSubscribeMessage subscribe) {
 
-        // TODO:
+        // TODO: sending AMQP_SUBSCRIBE
+
+        List<String> topics = new ArrayList<>();
+        List<AmqpQos> qos = new ArrayList<>();
+
+        for (MqttTopicSubscription topicSubscription: subscribe.topicSubscriptions()) {
+            topics.add(topicSubscription.topicName());
+            qos.add(AmqpQos.toAmqpQoS(topicSubscription.qualityOfService().value()));
+        }
+
+        AmqpSubscribeMessage amqpSubscribeMessage =
+                new AmqpSubscribeMessage(this.mqttEndpoint.clientIdentifier(),
+                        subscribe.messageId(),
+                        topics, qos);
+
+        this.ssEndpoint.sendSubscribe(amqpSubscribeMessage);
     }
 
     /**
@@ -261,7 +284,14 @@ public class AmqpBridge {
      */
     private void unsubscribeHandler(MqttUnsubscribeMessage unsubscribe) {
 
-        // TODO:
+        // TODO: sending AMQP_UNSUBSCRIBE
+
+        AmqpUnsubscribeMessage amqpUnsubscribeMessage =
+                new AmqpUnsubscribeMessage(this.mqttEndpoint.clientIdentifier(),
+                        unsubscribe.messageId(),
+                        unsubscribe.topics());
+
+        this.ssEndpoint.sendUnsubscribe(amqpUnsubscribeMessage);
     }
 
     /**
@@ -286,6 +316,27 @@ public class AmqpBridge {
 
         // TODO:
         this.wsEndpoint.close();
+    }
+
+    /**
+     * Handler for handling AMQP_SUBACK message received by Subscription Service
+     * @param suback    AMQP_SUBACK message
+     */
+    private void subackHandler(AmqpSubackMessage suback) {
+        // TODO:
+
+        List<Integer> grantedQoSLevels = suback.grantedQoSLevels().stream().map(qos -> { return qos.toMqttQos(); }).collect(Collectors.toList());
+        this.mqttEndpoint.writeSuback((int)suback.messageId(), grantedQoSLevels);
+    }
+
+    /**
+     * Handler for handling AMQP_UNSUBACK message received by Subscription Service
+     * @param unsuback  AMQP_UNSUBACK message
+     */
+    private void unsubackHandler(AmqpUnsubackMessage unsuback) {
+        // TODO:
+
+        this.mqttEndpoint.writeUnsuback((int)unsuback.messageId());
     }
 
     /**
