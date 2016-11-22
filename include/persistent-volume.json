@@ -4,6 +4,7 @@
   "metadata": {
     "name": "pv0001",
     "labels": {
+      "app": "enmasse",
       "type": "local"
     }
   },

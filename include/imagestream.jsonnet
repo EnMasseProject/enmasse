@@ -5,6 +5,9 @@ local version = std.extVar("VERSION");
     "apiVersion": "v1",
     "kind": "ImageStream",
     "metadata": {
+      "labels": {
+        "app": "enmasse"
+      },
       "name": name
     },
     "spec": {

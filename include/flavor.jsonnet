@@ -5,6 +5,9 @@
     "kind": "ConfigMap",
     "apiVersion": "v1",
     "metadata": {
+      "labels": {
+        "app": "enmasse"
+      },
       "name": "flavor"
     },
     "data": {

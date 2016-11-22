@@ -2,6 +2,8 @@
 apiVersion: v1
 kind: Template
 metadata:
+  labels:
+    app: enmasse
   name: tls-enmasse-base
 objects:
 - apiVersion: v1
@@ -9,6 +11,7 @@ objects:
   metadata:
     labels:
       addressType: queue
+      app: enmasse
     name: tls-queue-inmemory
   objects:
   - apiVersion: v1
@@ -16,6 +19,7 @@ objects:
     metadata:
       labels:
         address: "${ADDRESS}"
+        app: enmasse
         multicast: 'false'
         store_and_forward: 'true'
         type: address-config
@@ -29,6 +33,7 @@ objects:
         metadata:
           labels:
             address: "${ADDRESS}"
+            app: enmasse
             role: broker
         spec:
           containers:
@@ -87,11 +92,14 @@ objects:
   metadata:
     labels:
       addressType: queue
+      app: enmasse
     name: tls-queue-persisted
   objects:
   - apiVersion: v1
     kind: PersistentVolumeClaim
     metadata:
+      labels:
+        app: enmasse
       name: pvc-${NAME}
     spec:
       accessModes:
@@ -104,6 +112,7 @@ objects:
     metadata:
       labels:
         address: "${ADDRESS}"
+        app: enmasse
         multicast: 'false'
         store_and_forward: 'true'
         type: address-config
@@ -117,6 +126,7 @@ objects:
         metadata:
           labels:
             address: "${ADDRESS}"
+            app: enmasse
             role: broker
         spec:
           containers:
@@ -176,6 +186,7 @@ objects:
   metadata:
     labels:
       addressType: topic
+      app: enmasse
     name: tls-topic-inmemory
   objects:
   - apiVersion: v1
@@ -183,6 +194,7 @@ objects:
     metadata:
       labels:
         address: "${ADDRESS}"
+        app: enmasse
         multicast: 'true'
         store_and_forward: 'true'
         type: address-config
@@ -196,6 +208,7 @@ objects:
         metadata:
           labels:
             address: "${ADDRESS}"
+            app: enmasse
             role: broker
         spec:
           containers:
@@ -306,11 +319,14 @@ objects:
   metadata:
     labels:
       addressType: topic
+      app: enmasse
     name: tls-topic-persisted
   objects:
   - apiVersion: v1
     kind: PersistentVolumeClaim
     metadata:
+      labels:
+        app: enmasse
       name: pvc-${NAME}
     spec:
       accessModes:
@@ -323,6 +339,7 @@ objects:
     metadata:
       labels:
         address: "${ADDRESS}"
+        app: enmasse
         multicast: 'true'
         store_and_forward: 'true'
         type: address-config
@@ -336,6 +353,7 @@ objects:
         metadata:
           labels:
             address: "${ADDRESS}"
+            app: enmasse
             role: broker
         spec:
           containers:
@@ -445,6 +463,8 @@ objects:
 - apiVersion: v1
   kind: Template
   metadata:
+    labels:
+      app: enmasse
     name: direct
   objects:
   - apiVersion: v1
@@ -452,6 +472,7 @@ objects:
     metadata:
       labels:
         address: "${ADDRESS}"
+        app: enmasse
         multicast: "${MULTICAST}"
         store_and_forward: 'false'
         type: address-config
@@ -469,6 +490,8 @@ objects:
 - apiVersion: v1
   kind: ImageStream
   metadata:
+    labels:
+      app: enmasse
     name: configserv
   spec:
     dockerImageRepository: "${CONFIGSERV_REPO}"
@@ -483,6 +506,7 @@ objects:
   kind: DeploymentConfig
   metadata:
     labels:
+      app: enmasse
       name: configserv
     name: configserv
   spec:
@@ -492,6 +516,7 @@ objects:
     template:
       metadata:
         labels:
+          app: enmasse
           name: configserv
       spec:
         containers:
@@ -516,6 +541,8 @@ objects:
 - apiVersion: v1
   kind: ImageStream
   metadata:
+    labels:
+      app: enmasse
     name: ragent
   spec:
     dockerImageRepository: "${RAGENT_REPO}"
@@ -530,6 +557,7 @@ objects:
   kind: DeploymentConfig
   metadata:
     labels:
+      app: enmasse
       name: ragent
     name: ragent
   spec:
@@ -539,6 +567,7 @@ objects:
     template:
       metadata:
         labels:
+          app: enmasse
           name: ragent
       spec:
         containers:
@@ -564,6 +593,8 @@ objects:
 - apiVersion: v1
   kind: ImageStream
   metadata:
+    labels:
+      app: enmasse
     name: router
   spec:
     dockerImageRepository: "${ROUTER_REPO}"
@@ -578,6 +609,7 @@ objects:
   kind: DeploymentConfig
   metadata:
     labels:
+      app: enmasse
       name: qdrouterd
     name: qdrouterd
   spec:
@@ -587,6 +619,7 @@ objects:
     template:
       metadata:
         labels:
+          app: enmasse
           capability: router
           name: qdrouterd
       spec:
@@ -630,6 +663,8 @@ objects:
 - apiVersion: v1
   kind: ImageStream
   metadata:
+    labels:
+      app: enmasse
     name: artemis
   spec:
     dockerImageRepository: "${BROKER_REPO}"
@@ -643,6 +678,8 @@ objects:
 - apiVersion: v1
   kind: ImageStream
   metadata:
+    labels:
+      app: enmasse
     name: topic-forwarder
   spec:
     dockerImageRepository: "${TOPIC_FORWARDER_REPO}"
@@ -656,6 +693,8 @@ objects:
 - apiVersion: v1
   kind: ImageStream
   metadata:
+    labels:
+      app: enmasse
     name: subserv
   spec:
     dockerImageRepository: "${SUBSERV_REPO}"
@@ -670,6 +709,7 @@ objects:
   kind: DeploymentConfig
   metadata:
     labels:
+      app: enmasse
       name: subserv
     name: subserv
   spec:
@@ -679,6 +719,7 @@ objects:
     template:
       metadata:
         labels:
+          app: enmasse
           name: subserv
       spec:
         containers:
@@ -704,6 +745,8 @@ objects:
 - apiVersion: v1
   kind: Service
   metadata:
+    labels:
+      app: enmasse
     name: messaging
   spec:
     ports:
@@ -724,6 +767,8 @@ objects:
 - apiVersion: v1
   kind: Service
   metadata:
+    labels:
+      app: enmasse
     name: ragent
   spec:
     ports:
@@ -735,6 +780,8 @@ objects:
 - apiVersion: v1
   kind: Service
   metadata:
+    labels:
+      app: enmasse
     name: configuration
   spec:
     ports:
@@ -746,6 +793,8 @@ objects:
 - apiVersion: v1
   kind: Service
   metadata:
+    labels:
+      app: enmasse
     name: subscription
   spec:
     ports:
@@ -757,8 +806,11 @@ objects:
 - apiVersion: v1
   kind: Route
   metadata:
+    labels:
+      app: enmasse
     name: messaging
   spec:
+    host: "${MESSAGING_HOSTNAME}"
     port:
       targetPort: amqps
     tls:
@@ -792,3 +844,5 @@ parameters:
 - description: The image to use for the subscription services
   name: SUBSERV_REPO
   value: enmasseproject/subserv
+- description: The hostname to use for the exposed route for (TLS only)
+  name: MESSAGING_HOSTNAME

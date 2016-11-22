@@ -9,7 +9,8 @@ local is = import "imagestream.jsonnet";
       "kind": "DeploymentConfig",
       "metadata": {
         "labels": {
-          "name": "ragent"
+          "name": "ragent",
+          "app": "enmasse"
         },
         "name": "ragent"
       },
@@ -39,7 +40,8 @@ local is = import "imagestream.jsonnet";
         "template": {
           "metadata": {
             "labels": {
-              "name": "ragent"
+              "name": "ragent",
+              "app": "enmasse"
             }
           },
           "spec": {

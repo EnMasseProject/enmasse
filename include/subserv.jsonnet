@@ -9,7 +9,8 @@ local is = import "imagestream.jsonnet";
     "kind": "DeploymentConfig",
     "metadata": {
       "labels": {
-        "name": "subserv"
+        "name": "subserv",
+        "app": "enmasse"
       },
       "name": "subserv"
     },
@@ -39,7 +40,8 @@ local is = import "imagestream.jsonnet";
       "template": {
         "metadata": {
           "labels": {
-            "name": "subserv"
+            "name": "subserv",
+            "app": "enmasse"
           }
         },
         "spec": {

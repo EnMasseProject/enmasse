@@ -2,6 +2,9 @@
     "kind": "Route",
     "apiVersion": "v1",
     "metadata": {
+        "labels": {
+          "app": "enmasse"
+        },
         "name": "messaging"
     },
     "spec": {

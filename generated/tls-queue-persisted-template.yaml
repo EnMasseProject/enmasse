@@ -4,11 +4,14 @@ kind: Template
 metadata:
   labels:
     addressType: queue
+    app: enmasse
   name: tls-queue-persisted
 objects:
 - apiVersion: v1
   kind: PersistentVolumeClaim
   metadata:
+    labels:
+      app: enmasse
     name: pvc-${NAME}
   spec:
     accessModes:
@@ -21,6 +24,7 @@ objects:
   metadata:
     labels:
       address: "${ADDRESS}"
+      app: enmasse
       multicast: 'false'
       store_and_forward: 'true'
       type: address-config
@@ -34,6 +38,7 @@ objects:
       metadata:
         labels:
           address: "${ADDRESS}"
+          app: enmasse
           role: broker
       spec:
         containers:

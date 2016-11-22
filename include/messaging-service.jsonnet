@@ -22,6 +22,9 @@
       "apiVersion": "v1",
       "kind": "Service",
       "metadata": {
+        "labels": {
+          "app": "enmasse"
+        },
         "name": "messaging"
       },
       "spec": {

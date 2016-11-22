@@ -7,7 +7,8 @@ local router = import "router.jsonnet";
       "kind": "DeploymentConfig",
       "metadata": {
         "labels": {
-          "name": "qdrouterd"
+          "name": "qdrouterd",
+          "app": "enmasse"
         },
         "name": "qdrouterd"
       },
@@ -38,7 +39,8 @@ local router = import "router.jsonnet";
           "metadata": {
             "labels": {
               "capability": "router",
-              "name": "qdrouterd"
+              "name": "qdrouterd",
+              "app": "enmasse"
             }
           },
           "spec": {

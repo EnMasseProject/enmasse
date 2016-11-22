@@ -18,6 +18,9 @@ local flavorConfig = import "flavor.jsonnet";
     "apiVersion": "v1",
     "kind": "Template",
     "metadata": {
+      "labels": {
+        "app": "enmasse"
+      },
       "name": templateName
     },
     local common = [ storage.template(false, false, secure),

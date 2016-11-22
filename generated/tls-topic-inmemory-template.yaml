@@ -4,6 +4,7 @@ kind: Template
 metadata:
   labels:
     addressType: topic
+    app: enmasse
   name: tls-topic-inmemory
 objects:
 - apiVersion: v1
@@ -11,6 +12,7 @@ objects:
   metadata:
     labels:
       address: "${ADDRESS}"
+      app: enmasse
       multicast: 'true'
       store_and_forward: 'true'
       type: address-config
@@ -24,6 +26,7 @@ objects:
       metadata:
         labels:
           address: "${ADDRESS}"
+          app: enmasse
           role: broker
       spec:
         containers:

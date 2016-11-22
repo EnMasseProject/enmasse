@@ -15,7 +15,8 @@ local forwarder = import "forwarder.jsonnet";
       "metadata": {
         "name": templateName,
         "labels": {
-          "addressType": addrtype
+          "addressType": addrtype,
+          "app": "enmasse"
         }
       },
 
@@ -25,6 +26,7 @@ local forwarder = import "forwarder.jsonnet";
         "metadata": {
           "name": "${NAME}",
           "labels": {
+            "app": "enmasse",
             "type": "address-config",
             "address": "${ADDRESS}",
             "store_and_forward": "true",
@@ -89,6 +91,7 @@ local forwarder = import "forwarder.jsonnet";
           "template": {
             "metadata": {
               "labels": {
+                "app": "enmasse",
                 "role": "broker",
                 "address": "${ADDRESS}"
               }
@@ -112,7 +115,10 @@ local forwarder = import "forwarder.jsonnet";
         "apiVersion": "v1",
         "kind": "PersistentVolumeClaim",
         "metadata": {
-          "name": claimName
+          "name": claimName,
+          "labels": {
+            "app": "enmasse"
+          }
         },
         "spec": {
           "accessModes": [

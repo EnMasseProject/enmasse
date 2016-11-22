@@ -9,7 +9,8 @@ local is = import "imagestream.jsonnet";
       "kind": "DeploymentConfig",
       "metadata": {
         "labels": {
-          "name": "storage-controller"
+          "name": "storage-controller",
+          "app": "enmasse"
         },
         "name": "storage-controller"
       },
@@ -45,7 +46,8 @@ local is = import "imagestream.jsonnet";
         "template": {
           "metadata": {
             "labels": {
-              "name": "storage-controller"
+              "name": "storage-controller",
+              "app": "enmasse"
             }
           },
           "spec": {
