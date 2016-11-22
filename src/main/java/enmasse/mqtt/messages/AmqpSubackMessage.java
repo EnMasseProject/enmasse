@@ -16,11 +16,11 @@
 
 package enmasse.mqtt.messages;
 
+import io.vertx.proton.ProtonHelper;
 import org.apache.qpid.proton.amqp.UnsignedByte;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.amqp.messaging.Section;
 import org.apache.qpid.proton.message.Message;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -41,7 +41,7 @@ public class AmqpSubackMessage {
      * @param messageId message identifier
      * @param grantedQoSLevels  granted QoS levels for requested topic subscriptions
      */
-    private AmqpSubackMessage(Object messageId, List<AmqpQos> grantedQoSLevels) {
+    public AmqpSubackMessage(Object messageId, List<AmqpQos> grantedQoSLevels) {
 
         this.messageId = messageId;
         this.grantedQoSLevels = grantedQoSLevels;
@@ -76,8 +76,18 @@ public class AmqpSubackMessage {
      */
     public Message toAmqp() {
 
-        // do you really need this ?
-        throw new NotImplementedException();
+        Message message = ProtonHelper.message();
+
+        message.setSubject(AMQP_SUBJECT);
+
+        message.setMessageId(this.messageId);
+
+        List<List<UnsignedByte>> list =
+                this.grantedQoSLevels.stream().map(qos -> { return qos.toList(); }).collect(Collectors.toList());
+
+        message.setBody(new AmqpValue(list));
+
+        return message;
     }
 
     /**

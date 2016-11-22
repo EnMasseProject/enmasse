@@ -18,6 +18,8 @@ package enmasse.mqtt;
 
 import enmasse.mqtt.messages.AmqpSessionMessage;
 import enmasse.mqtt.messages.AmqpSessionPresentMessage;
+import enmasse.mqtt.messages.AmqpSubackMessage;
+import enmasse.mqtt.messages.AmqpSubscribeMessage;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.proton.ProtonClient;
@@ -45,6 +47,8 @@ public class MockSubscriptionService extends AbstractVerticle {
 
     private ProtonClient client;
     private ProtonConnection connection;
+
+    private MockBroker broker = new MockBroker();
 
     @Override
     public void start(Future<Void> startFuture) throws Exception {
@@ -102,22 +106,48 @@ public class MockSubscriptionService extends AbstractVerticle {
 
             case AmqpSessionMessage.AMQP_SUBJECT:
 
-                // get AMQP_SESSION message and sends disposition for settlement
-                AmqpSessionMessage amqpSessionMessage = AmqpSessionMessage.from(message);
-                delivery.disposition(Accepted.getInstance(), true);
+                {
+                    // get AMQP_SESSION message and sends disposition for settlement
+                    AmqpSessionMessage amqpSessionMessage = AmqpSessionMessage.from(message);
+                    delivery.disposition(Accepted.getInstance(), true);
 
-                // send AMQP_SESSION_PRESENT to the unique client address
-                ProtonSender sender = this.connection.createSender(message.getReplyTo());
+                    // send AMQP_SESSION_PRESENT to the unique client address
+                    ProtonSender sender = this.connection.createSender(message.getReplyTo());
 
-                AmqpSessionPresentMessage amqpSessionPresentMessage =
-                        new AmqpSessionPresentMessage(amqpSessionMessage.clientId().equals("12345"));
+                    AmqpSessionPresentMessage amqpSessionPresentMessage =
+                            new AmqpSessionPresentMessage(amqpSessionMessage.clientId().equals("12345"));
 
-                sender.open();
+                    sender.open();
 
-                sender.send(amqpSessionPresentMessage.toAmqp(), d -> {
-                    // TODO:
-                    sender.close();
-                });
+                    sender.send(amqpSessionPresentMessage.toAmqp(), d -> {
+                        // TODO:
+                        sender.close();
+                    });
+                }
+
+                break;
+
+            case AmqpSubscribeMessage.AMQP_SUBJECT:
+
+                {
+                    // get AMQP_SUBSCRIBE message and sends disposition for settlement
+                    AmqpSubscribeMessage amqpSubscribeMessage = AmqpSubscribeMessage.from(message);
+                    delivery.disposition(Accepted.getInstance(), true);
+
+                    // send AMQP_SUBACK to the unique client address
+                    ProtonSender sender = this.connection.createSender(message.getReplyTo());
+
+                    // TODO: providing a real granted QoS levels list
+                    AmqpSubackMessage amqpSubackMessage =
+                            new AmqpSubackMessage(amqpSubscribeMessage.messageId(), amqpSubscribeMessage.qos());
+
+                    sender.open();
+
+                    sender.send(amqpSubackMessage.toAmqp(), d -> {
+                        // TODO:
+                        sender.close();
+                    });
+                }
 
                 break;
         }

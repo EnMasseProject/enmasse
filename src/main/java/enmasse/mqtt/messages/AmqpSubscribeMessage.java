@@ -17,7 +17,9 @@
 package enmasse.mqtt.messages;
 
 import io.vertx.proton.ProtonHelper;
+import org.apache.qpid.proton.amqp.UnsignedByte;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
+import org.apache.qpid.proton.amqp.messaging.Section;
 import org.apache.qpid.proton.message.Message;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
@@ -65,8 +67,29 @@ public class AmqpSubscribeMessage {
      */
     public static AmqpSubscribeMessage from(Message message) {
 
-        // do you really need this ?
-        throw new NotImplementedException();
+        if (!message.getSubject().equals(AMQP_SUBJECT)) {
+            throw new IllegalArgumentException(String.format("AMQP message subject is no s%", AMQP_SUBJECT));
+        }
+
+        Section section = message.getBody();
+        if ((section != null) && (section instanceof AmqpValue)) {
+
+            Map<String, List<?>> map = (Map<String, List<?>>) ((AmqpValue) section).getValue();
+
+            List<String> topics = (List<String>) map.get(TOPICS_KEY);
+            List<List<UnsignedByte>> settleModes = (List<List<UnsignedByte>>) map.get(DESIRED_SETTLE_MODES_KEY);
+
+            AmqpSubscribeMessage amqpSubscribeMessage =
+                    new AmqpSubscribeMessage(AmqpHelper.getClientId(message.getReplyTo()),
+                            message.getMessageId(),
+                            topics,
+                            settleModes.stream().map(settleMode -> { return AmqpQos.toAmqpQos(settleMode); }).collect(Collectors.toList()));
+
+            return amqpSubscribeMessage;
+
+        } else {
+            throw new IllegalArgumentException("AMQP message wrong body type");
+        }
     }
 
     /**
