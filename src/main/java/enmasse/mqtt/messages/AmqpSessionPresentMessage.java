@@ -20,7 +20,6 @@ import io.vertx.proton.ProtonHelper;
 import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.messaging.MessageAnnotations;
 import org.apache.qpid.proton.message.Message;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -66,8 +65,8 @@ public class AmqpSessionPresentMessage {
             if (!messageAnnotations.getValue().containsKey(Symbol.valueOf(AMQP_SESSION_PRESENT_ANNOTATION))) {
                 throw new IllegalArgumentException("AMQP message has no annotations");
             } else {
-                AmqpSessionPresentMessage msg = new AmqpSessionPresentMessage((boolean)messageAnnotations.getValue().get(Symbol.valueOf(AMQP_SESSION_PRESENT_ANNOTATION)));
-                return msg;
+
+                return new AmqpSessionPresentMessage((boolean)messageAnnotations.getValue().get(Symbol.valueOf(AMQP_SESSION_PRESENT_ANNOTATION)));
             }
 
         }

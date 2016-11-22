@@ -32,6 +32,8 @@ import org.apache.qpid.proton.message.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.stream.Collectors;
+
 /**
  * Mock for the Subscription Service
  */
@@ -48,7 +50,7 @@ public class MockSubscriptionService extends AbstractVerticle {
     private ProtonClient client;
     private ProtonConnection connection;
 
-    private MockBroker broker = new MockBroker();
+    private MockBroker broker;
 
     @Override
     public void start(Future<Void> startFuture) throws Exception {
@@ -74,6 +76,8 @@ public class MockSubscriptionService extends AbstractVerticle {
                         .setTarget(receiver.getRemoteTarget())
                         .handler(this::messageHandler)
                         .open();
+
+                this.broker = new MockBroker(this.connection);
 
                 startFuture.complete();
 
@@ -139,7 +143,10 @@ public class MockSubscriptionService extends AbstractVerticle {
 
                     // TODO: providing a real granted QoS levels list
                     AmqpSubackMessage amqpSubackMessage =
-                            new AmqpSubackMessage(amqpSubscribeMessage.messageId(), amqpSubscribeMessage.qos());
+                            new AmqpSubackMessage(amqpSubscribeMessage.messageId(),
+                                    amqpSubscribeMessage.topicSubscriptions().stream().map(amqpTopicSubscription -> {
+                                        return amqpTopicSubscription.qos();
+                                    }).collect(Collectors.toList()));
 
                     sender.open();
 

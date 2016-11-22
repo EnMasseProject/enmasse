@@ -19,7 +19,16 @@ package enmasse.mqtt;
 import enmasse.mqtt.endpoints.AmqpPublishEndpoint;
 import enmasse.mqtt.endpoints.AmqpSubscriptionServiceEndpoint;
 import enmasse.mqtt.endpoints.AmqpWillServiceEndpoint;
-import enmasse.mqtt.messages.*;
+import enmasse.mqtt.messages.AmqpPublishMessage;
+import enmasse.mqtt.messages.AmqpQos;
+import enmasse.mqtt.messages.AmqpSessionMessage;
+import enmasse.mqtt.messages.AmqpSubackMessage;
+import enmasse.mqtt.messages.AmqpSubscribeMessage;
+import enmasse.mqtt.messages.AmqpTopicSubscription;
+import enmasse.mqtt.messages.AmqpUnsubackMessage;
+import enmasse.mqtt.messages.AmqpUnsubscribeMessage;
+import enmasse.mqtt.messages.AmqpWillClearMessage;
+import enmasse.mqtt.messages.AmqpWillMessage;
 import io.netty.handler.codec.mqtt.MqttConnectReturnCode;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
@@ -27,16 +36,19 @@ import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.mqtt.MqttEndpoint;
-import io.vertx.mqtt.MqttTopicSubscription;
 import io.vertx.mqtt.MqttWill;
 import io.vertx.mqtt.messages.MqttPublishMessage;
 import io.vertx.mqtt.messages.MqttSubscribeMessage;
 import io.vertx.mqtt.messages.MqttUnsubscribeMessage;
-import io.vertx.proton.*;
+import io.vertx.proton.ProtonClient;
+import io.vertx.proton.ProtonConnection;
+import io.vertx.proton.ProtonDelivery;
+import io.vertx.proton.ProtonLinkOptions;
+import io.vertx.proton.ProtonReceiver;
+import io.vertx.proton.ProtonSender;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -262,18 +274,15 @@ public class AmqpBridge {
 
         // TODO: sending AMQP_SUBSCRIBE
 
-        List<String> topics = new ArrayList<>();
-        List<AmqpQos> qos = new ArrayList<>();
-
-        for (MqttTopicSubscription topicSubscription: subscribe.topicSubscriptions()) {
-            topics.add(topicSubscription.topicName());
-            qos.add(AmqpQos.toAmqpQoS(topicSubscription.qualityOfService().value()));
-        }
+        List<AmqpTopicSubscription> topicSubscriptions =
+                subscribe.topicSubscriptions().stream().map(topicSubscription -> {
+                    return new AmqpTopicSubscription(topicSubscription.topicName(), AmqpQos.toAmqpQoS(topicSubscription.qualityOfService().value()));
+                }).collect(Collectors.toList());
 
         AmqpSubscribeMessage amqpSubscribeMessage =
                 new AmqpSubscribeMessage(this.mqttEndpoint.clientIdentifier(),
                         subscribe.messageId(),
-                        topics, qos);
+                        topicSubscriptions);
 
         this.ssEndpoint.sendSubscribe(amqpSubscribeMessage);
     }

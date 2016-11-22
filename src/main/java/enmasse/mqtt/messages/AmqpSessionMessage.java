@@ -68,9 +68,9 @@ public class AmqpSessionMessage {
             if (!messageAnnotations.getValue().containsKey(Symbol.valueOf(AMQP_CLEAN_SESSION_ANNOTATION))) {
                 throw new IllegalArgumentException("AMQP message has no annotations");
             } else {
-                AmqpSessionMessage msg = new AmqpSessionMessage((boolean)messageAnnotations.getValue().get(Symbol.valueOf(AMQP_CLEAN_SESSION_ANNOTATION)),
+
+                return new AmqpSessionMessage((boolean)messageAnnotations.getValue().get(Symbol.valueOf(AMQP_CLEAN_SESSION_ANNOTATION)),
                         AmqpHelper.getClientId(message.getReplyTo()));
-                return msg;
             }
         }
     }

@@ -21,12 +21,11 @@ import org.apache.qpid.proton.amqp.UnsignedByte;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.amqp.messaging.Section;
 import org.apache.qpid.proton.message.Message;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * Represents an AMQP_SUBSCRIBE message
@@ -40,23 +39,20 @@ public class AmqpSubscribeMessage {
 
     private final String clientId;
     private final Object messageId;
-    private final List<String> topics;
-    private final List<AmqpQos> qos;
+    private final List<AmqpTopicSubscription> topicSubscriptions;
 
     /**
      * Constructor
      *
      * @param clientId  client identifier
      * @param messageId message identifier
-     * @param topics    topics to subscribe
-     * @param qos   qos levels for topics to subscribe
+     * @param topicSubscriptions    list with topics and related quolity of service levels
      */
-    public AmqpSubscribeMessage(String clientId, Object messageId, List<String> topics, List<AmqpQos> qos) {
+    public AmqpSubscribeMessage(String clientId, Object messageId, List<AmqpTopicSubscription> topicSubscriptions) {
 
         this.clientId = clientId;
         this.messageId = messageId;
-        this.topics = topics;
-        this.qos = qos;
+        this.topicSubscriptions = topicSubscriptions;
     }
 
     /**
@@ -79,13 +75,19 @@ public class AmqpSubscribeMessage {
             List<String> topics = (List<String>) map.get(TOPICS_KEY);
             List<List<UnsignedByte>> settleModes = (List<List<UnsignedByte>>) map.get(DESIRED_SETTLE_MODES_KEY);
 
-            AmqpSubscribeMessage amqpSubscribeMessage =
-                    new AmqpSubscribeMessage(AmqpHelper.getClientId(message.getReplyTo()),
-                            message.getMessageId(),
-                            topics,
-                            settleModes.stream().map(settleMode -> { return AmqpQos.toAmqpQos(settleMode); }).collect(Collectors.toList()));
+            if (topics.size() != settleModes.size()) {
+                throw new IllegalArgumentException("Topics and QoS lists differ in size");
+            }
 
-            return amqpSubscribeMessage;
+            // build the unique topic subscriptions list
+            List<AmqpTopicSubscription> topicSubscriptions = new ArrayList<>();
+            for (int i = 0; i < topics.size(); i++) {
+                topicSubscriptions.add(new AmqpTopicSubscription(topics.get(i), AmqpQos.toAmqpQos(settleModes.get(0))));
+            }
+
+            return new AmqpSubscribeMessage(AmqpHelper.getClientId(message.getReplyTo()),
+                    message.getMessageId(),
+                    topicSubscriptions);
 
         } else {
             throw new IllegalArgumentException("AMQP message wrong body type");
@@ -107,9 +109,18 @@ public class AmqpSubscribeMessage {
 
         message.setReplyTo(String.format(AmqpHelper.AMQP_CLIENT_ADDRESS_TEMPLATE, this.clientId));
 
+        // extract two separate lists for topics and qos for encoding inside a Map into the raw AMQP message
+        List<String> topics = new ArrayList<>();
+        List<List<UnsignedByte>> qos = new ArrayList<>();
+
+        this.topicSubscriptions.stream().forEach(amqpTopicSubscription -> {
+            topics.add(amqpTopicSubscription.topic());
+            qos.add(amqpTopicSubscription.qos().toList());
+        });
+
         Map<String, List<?>> map = new HashMap<>();
-        map.put(TOPICS_KEY, this.topics);
-        map.put(DESIRED_SETTLE_MODES_KEY, this.qos.stream().map(amqpQos -> amqpQos.toList()).collect(Collectors.toList()));
+        map.put(TOPICS_KEY, topics);
+        map.put(DESIRED_SETTLE_MODES_KEY, qos);
 
         message.setBody(new AmqpValue(map));
 
@@ -133,19 +144,11 @@ public class AmqpSubscribeMessage {
     }
 
     /**
-     * Topics to subscribe
+     * List with topics and related quolity of service levels
      * @return
      */
-    public List<String> topics() {
-        return this.topics;
-    }
-
-    /**
-     * QoS levels for topics to subscribe
-     * @return
-     */
-    public List<AmqpQos> qos() {
-        return this.qos;
+    public List<AmqpTopicSubscription> topicSubscriptions() {
+        return this.topicSubscriptions;
     }
 
 }
