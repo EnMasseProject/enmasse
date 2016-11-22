@@ -16,11 +16,18 @@
 
 package enmasse.mqtt;
 
+import enmasse.mqtt.messages.AmqpHelper;
+import enmasse.mqtt.messages.AmqpPublishMessage;
 import enmasse.mqtt.messages.AmqpSubscribeMessage;
+import enmasse.mqtt.messages.AmqpTopicSubscription;
 import io.vertx.proton.ProtonConnection;
+import io.vertx.proton.ProtonDelivery;
 import io.vertx.proton.ProtonReceiver;
 import io.vertx.proton.ProtonSender;
+import org.apache.qpid.proton.message.Message;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -29,19 +36,89 @@ import java.util.Map;
  */
 public class MockBroker {
 
+    // topic -> receiver
     private Map<String, ProtonReceiver> receivers;
-    private Map<String, List<ProtonSender>> senders;
+    // client-id -> sender (to $mqtt.to.<client-id>
+    private Map<String, ProtonSender> senders;
+    // topic -> client-id lists (subscribers)
+    private Map<String, List<String>> subscriptions;
+    // topic -> retained message
+    private Map<String, AmqpPublishMessage> retained;
 
     private ProtonConnection connection;
 
     public MockBroker(ProtonConnection connection) {
+
         this.connection = connection;
+
+        this.receivers = new HashMap<>();
+        this.senders = new HashMap<>();
+        this.subscriptions = new HashMap<>();
+        this.retained = new HashMap<>();
     }
 
     public void subscribe(AmqpSubscribeMessage amqpSubscribeMessage) {
 
         // TODO:
 
+        for (AmqpTopicSubscription amqpTopicSubscription: amqpSubscribeMessage.topicSubscriptions()) {
+
+            // create a receiver for getting messages from the requested topic
+            if (!this.receivers.containsKey(amqpTopicSubscription.topic())) {
+
+                ProtonReceiver receiver = this.connection.createReceiver(amqpTopicSubscription.topic());
+
+                receiver
+                        .setQoS(amqpTopicSubscription.qos().toProtonQos())
+                        .setTarget(receiver.getRemoteTarget())
+                        .handler((delivery, message) -> {
+
+                            this.messageHandler(receiver, delivery, message);
+                        })
+                        .open();
+
+                this.receivers.put(amqpTopicSubscription.topic(), receiver);
+            }
+
+            // create a sender to the unique client address for forwarding
+            // messages when received on requested topic
+            if (!this.senders.containsKey(amqpSubscribeMessage.clientId())) {
+
+                ProtonSender sender = this.connection.createSender(String.format(AmqpHelper.AMQP_CLIENT_ADDRESS_TEMPLATE, amqpSubscribeMessage.clientId()));
+
+                sender
+                        .setQoS(amqpTopicSubscription.qos().toProtonQos())
+                        .open();
+
+                this.senders.put(amqpSubscribeMessage.clientId(), sender);
+            }
+
+            // add the subscription to the requested topic by the client identifier
+            if (!this.subscriptions.containsKey(amqpTopicSubscription.topic())) {
+
+                this.subscriptions.put(amqpTopicSubscription.topic(), new ArrayList<>());
+            }
+
+            this.subscriptions.get(amqpTopicSubscription.topic()).add(amqpSubscribeMessage.clientId());
+
+        }
+
+    }
+
+    private void messageHandler(ProtonReceiver receiver, ProtonDelivery delivery, Message message) {
+
+        String topic = receiver.getSource().getAddress();
+
+        List<String> subscribers = this.subscriptions.get(topic);
+
+        if (subscribers != null) {
+
+            for (String clientId: subscribers) {
+
+                this.senders.get(clientId).send(message);
+
+            }
+        }
 
     }
 

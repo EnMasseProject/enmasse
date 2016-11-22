@@ -16,6 +16,7 @@
 
 package enmasse.mqtt.endpoints;
 
+import enmasse.mqtt.messages.AmqpPublishMessage;
 import enmasse.mqtt.messages.AmqpSessionPresentMessage;
 import enmasse.mqtt.messages.AmqpSubackMessage;
 import enmasse.mqtt.messages.AmqpUnsubackMessage;
@@ -43,6 +44,8 @@ public class AmqpReceiverEndpoint {
     private Handler<AmqpSubackMessage> subackHandler;
     // handler called when AMQP_UNSUBACK is received
     private Handler<AmqpUnsubackMessage> unsubackHandler;
+    // handler called when AMQP_PUBLISH is received
+    private Handler<AmqpPublishMessage> publishHandler;
 
     /**
      * Constructor
@@ -65,8 +68,16 @@ public class AmqpReceiverEndpoint {
         return this;
     }
 
-    public void publishHandler(/* Handler */) {
-        // TODO: set handler called when AMQP_PUBLISH message is received
+    /**
+     * Set the session handler called when AMQP_PUBLISH is received
+     *
+     * @param handler   the handler
+     * @return  the current AmqpReceiverEndpoint instance
+     */
+    public AmqpReceiverEndpoint publishHandler(Handler<AmqpPublishMessage> handler) {
+
+        this.publishHandler = handler;
+        return this;
     }
 
     /**
@@ -103,23 +114,33 @@ public class AmqpReceiverEndpoint {
     private void messageHandler(ProtonDelivery delivery, Message message) {
         // TODO:
 
-        switch (message.getSubject()) {
+        if (message.getSubject() != null) {
 
-            case AmqpSessionPresentMessage.AMQP_SUBJECT:
-                this.handleSession(AmqpSessionPresentMessage.from(message));
-                break;
+            switch (message.getSubject()) {
 
-            case AmqpSubackMessage.AMQP_SUBJECT:
-                this.handleSuback(AmqpSubackMessage.from(message));
-                break;
+                case AmqpSessionPresentMessage.AMQP_SUBJECT:
+                    this.handleSession(AmqpSessionPresentMessage.from(message));
+                    break;
 
-            case AmqpUnsubackMessage.AMQP_SUBJECT:
-                this.handleUnsuback(AmqpUnsubackMessage.from(message));
-                break;
+                case AmqpSubackMessage.AMQP_SUBJECT:
+                    this.handleSuback(AmqpSubackMessage.from(message));
+                    break;
 
-            default:
-                this.publishHandler();
-                break;
+                case AmqpUnsubackMessage.AMQP_SUBJECT:
+                    this.handleUnsuback(AmqpUnsubackMessage.from(message));
+                    break;
+
+                case AmqpPublishMessage.AMQP_SUBJECT:
+                    this.handlePublish(AmqpPublishMessage.from(message));
+                    break;
+            }
+
+        } else {
+
+
+            // TODO: published message (i.e. from native AMQP clients) could not have subject "publish" and all needed annotations !!!
+            message.setSubject(AmqpPublishMessage.AMQP_SUBJECT);
+            this.handlePublish(AmqpPublishMessage.from(message));
         }
     }
 
@@ -181,6 +202,18 @@ public class AmqpReceiverEndpoint {
 
         if (this.unsubackHandler != null) {
             this.unsubackHandler.handle(amqpUnsubackMessage);
+        }
+    }
+
+    /**
+     * Used for calling the session handler when AMQP_PUBLISH is received
+     *
+     * @param amqpPublishMessage AMQP_PUBLISH message
+     */
+    private void handlePublish(AmqpPublishMessage amqpPublishMessage) {
+
+        if (this.publishHandler != null) {
+            this.publishHandler.handle(amqpPublishMessage);
         }
     }
 }

@@ -89,14 +89,14 @@ public class AmqpWillMessage {
             if (messageAnnotations.getValue().containsKey(Symbol.valueOf(AMQP_DESIRED_SND_SETTLE_MODE_ANNOTATION))) {
                 // TODO: check on this https://issues.apache.org/jira/browse/PROTON-1352
                 UnsignedByte value = (UnsignedByte) messageAnnotations.getValue().get(Symbol.valueOf(AMQP_DESIRED_SND_SETTLE_MODE_ANNOTATION));
-                sndSettleMode = SenderSettleMode.values()[value.intValue()];
+                sndSettleMode = (value != null) ? SenderSettleMode.values()[value.intValue()] : null;
             }
 
             ReceiverSettleMode rcvSettleMode = null;
             if (messageAnnotations.getValue().containsKey(Symbol.valueOf(AMQP_DESIRED_RCV_SETTLE_MODE_ANNOTATION))) {
                 // TODO: check on this https://issues.apache.org/jira/browse/PROTON-1352
                 UnsignedByte value = (UnsignedByte) messageAnnotations.getValue().get(Symbol.valueOf(AMQP_DESIRED_RCV_SETTLE_MODE_ANNOTATION));
-                rcvSettleMode = ReceiverSettleMode.values()[value.intValue()];
+                rcvSettleMode = (value != null) ? ReceiverSettleMode.values()[value.intValue()] : null;
             }
 
             String topic = message.getAddress();

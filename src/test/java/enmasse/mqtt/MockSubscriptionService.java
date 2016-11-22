@@ -138,6 +138,8 @@ public class MockSubscriptionService extends AbstractVerticle {
                     AmqpSubscribeMessage amqpSubscribeMessage = AmqpSubscribeMessage.from(message);
                     delivery.disposition(Accepted.getInstance(), true);
 
+                    this.broker.subscribe(amqpSubscribeMessage);
+
                     // send AMQP_SUBACK to the unique client address
                     ProtonSender sender = this.connection.createSender(message.getReplyTo());
 

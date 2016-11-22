@@ -31,6 +31,7 @@ import enmasse.mqtt.messages.AmqpUnsubscribeMessage;
 import enmasse.mqtt.messages.AmqpWillClearMessage;
 import enmasse.mqtt.messages.AmqpWillMessage;
 import io.netty.handler.codec.mqtt.MqttConnectReturnCode;
+import io.netty.handler.codec.mqtt.MqttQoS;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -185,6 +186,7 @@ public class AmqpBridge {
 
                         this.rcvEndpoint.subackHandler(this::subackHandler);
                         this.rcvEndpoint.unsubackHandler(this::unsubackHandler);
+                        this.rcvEndpoint.publishHandler(this::publishHandler);
 
                         connectionFuture.complete();
                     });
@@ -247,7 +249,7 @@ public class AmqpBridge {
      */
     private void publishHandler(MqttPublishMessage publish) {
 
-        // TODO:
+        LOG.info("PUBLISH received");
 
         // TODO: simple way, without considering wildcards
 
@@ -274,10 +276,23 @@ public class AmqpBridge {
     }
 
     /**
+     * Handler for incoming AMQP_PUBLISH messages
+     * @param publish   AMQP_PUBLISH message
+     */
+    private void publishHandler(AmqpPublishMessage publish) {
+
+        this.mqttEndpoint.writePublish(publish.topic(), publish.payload(), MqttQoS.AT_LEAST_ONCE, publish.isDup(), publish.isRetain());
+
+        LOG.info("PUBLISH sent");
+    }
+
+    /**
      * Handler for incoming MQTT SUBSCRIBE messages
      * @param subscribe SUBSCRIBE message
      */
     private void subscribeHandler(MqttSubscribeMessage subscribe) {
+
+        LOG.info("SUBSCRIBE received");
 
         // TODO: sending AMQP_SUBSCRIBE
 
@@ -300,6 +315,8 @@ public class AmqpBridge {
      */
     private void unsubscribeHandler(MqttUnsubscribeMessage unsubscribe) {
 
+        LOG.info("UNSUBSCRIBE received");
+
         // TODO: sending AMQP_UNSUBSCRIBE
 
         AmqpUnsubscribeMessage amqpUnsubscribeMessage =
@@ -315,6 +332,8 @@ public class AmqpBridge {
      * @param v
      */
     private void disconnectHandler(Void v) {
+
+        LOG.info("DISCONNECT received");
 
         // sending AMQP_WILL_CLEAR
         AmqpWillClearMessage amqpWillClearMessage = new AmqpWillClearMessage();
@@ -343,6 +362,8 @@ public class AmqpBridge {
 
         List<Integer> grantedQoSLevels = suback.grantedQoSLevels().stream().map(qos -> { return qos.toMqttQos(); }).collect(Collectors.toList());
         this.mqttEndpoint.writeSuback((int)suback.messageId(), grantedQoSLevels);
+
+        LOG.info("SUBACK sent");
     }
 
     /**
