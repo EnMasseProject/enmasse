@@ -17,6 +17,7 @@
 package enmasse.mqtt;
 
 import enmasse.mqtt.endpoints.AmqpPublishEndpoint;
+import enmasse.mqtt.endpoints.AmqpReceiverEndpoint;
 import enmasse.mqtt.endpoints.AmqpSubscriptionServiceEndpoint;
 import enmasse.mqtt.endpoints.AmqpWillServiceEndpoint;
 import enmasse.mqtt.messages.AmqpPublishMessage;
@@ -75,6 +76,8 @@ public class AmqpBridge {
     private AmqpWillServiceEndpoint wsEndpoint;
     // endpoint for handling communication with Subscription Service (SS)
     private AmqpSubscriptionServiceEndpoint ssEndpoint;
+    // endpoint for handling incoming messages on the unique client address
+    private AmqpReceiverEndpoint rcvEndpoint;
     // endpoints for publishing message on topic (via AMQP)
     private Map<String, AmqpPublishEndpoint> pubEndpoints;
 
@@ -112,16 +115,20 @@ public class AmqpBridge {
                 ProtonLinkOptions options = new ProtonLinkOptions();
                 options.setLinkName(this.mqttEndpoint.clientIdentifier());
 
+                // setup and open AMQP endpoint for receiving on unique client address
+                ProtonReceiver rcvReceiver = this.connection.createReceiver(String.format(AmqpReceiverEndpoint.CLIENT_ENDPOINT_TEMPLATE, this.mqttEndpoint.clientIdentifier()));
+                this.rcvEndpoint = new AmqpReceiverEndpoint(rcvReceiver);
+
                 // setup and open AMQP endpoints to Will and Subscription services
                 ProtonSender wsSender = this.connection.createSender(AmqpWillServiceEndpoint.WILL_SERVICE_ENDPOINT, options);
                 this.wsEndpoint = new AmqpWillServiceEndpoint(wsSender);
 
                 ProtonSender ssSender = this.connection.createSender(AmqpSubscriptionServiceEndpoint.SUBSCRIPTION_SERVICE_ENDPOINT);
-                ProtonReceiver ssReceiver = this.connection.createReceiver(String.format(AmqpSubscriptionServiceEndpoint.CLIENT_ENDPOINT_TEMPLATE, this.mqttEndpoint.clientIdentifier()));
-                this.ssEndpoint = new AmqpSubscriptionServiceEndpoint(ssSender, ssReceiver);
+                this.ssEndpoint = new AmqpSubscriptionServiceEndpoint(ssSender);
 
                 this.setupMqttEndpointHandlers();
 
+                this.rcvEndpoint.open();
                 this.wsEndpoint.open();
                 this.ssEndpoint.open();
 
@@ -172,12 +179,12 @@ public class AmqpBridge {
                 willFuture.compose(v -> {
 
                     // handling AMQP_SESSION_PRESENT reply from Subscription Service
-                    this.ssEndpoint.sessionHandler(amqpSessionPresentMessage -> {
+                    this.rcvEndpoint.sessionHandler(amqpSessionPresentMessage -> {
 
                         LOG.info("session present {}", amqpSessionPresentMessage.isSessionPresent());
 
-                        this.ssEndpoint.subackHandler(this::subackHandler);
-                        this.ssEndpoint.unsubackHandler(this::unsubackHandler);
+                        this.rcvEndpoint.subackHandler(this::subackHandler);
+                        this.rcvEndpoint.unsubackHandler(this::unsubackHandler);
 
                         connectionFuture.complete();
                     });
