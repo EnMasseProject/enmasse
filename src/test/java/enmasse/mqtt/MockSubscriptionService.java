@@ -18,6 +18,9 @@ package enmasse.mqtt;
 
 import enmasse.mqtt.messages.AmqpSessionMessage;
 import enmasse.mqtt.messages.AmqpSessionPresentMessage;
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Future;
+import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.proton.*;
 import org.apache.qpid.proton.amqp.messaging.Accepted;
@@ -52,9 +55,11 @@ public class MockSubscriptionService {
     }
 
     /**
-     * Connect to the router
+     * Start the Subscription Services for connecting to the router
+     *
+     * @param startHandler  handler called when starting process ends (success or fail)
      */
-    public void connect() {
+    public void start(Handler<AsyncResult<Void>> startHandler) {
 
         this.client.connect(this.connectAddress, this.connectPort, done -> {
 
@@ -76,9 +81,13 @@ public class MockSubscriptionService {
                         .handler(this::messageHandler)
                         .open();
 
+                startHandler.handle(Future.succeededFuture(null));
+
             } else {
 
-                LOG.info("Error starting the Will Service ...", done.cause());
+                LOG.info("Error starting the Subscription Service ...", done.cause());
+
+                startHandler.handle(Future.failedFuture(done.cause()));
             }
         });
     }
@@ -115,7 +124,10 @@ public class MockSubscriptionService {
 
     }
 
-    public void close() {
+    /**
+     * Stop the Subscription Service closing the connection to the router
+     */
+    public void stop() {
 
         // TODO:
 

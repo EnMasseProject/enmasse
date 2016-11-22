@@ -69,16 +69,16 @@ public abstract class MockMqttFrontendTestBase {
                 .setConnectPort(AMQP_SERVICES_LISTENER_PORT);
 
         // start and deploy components
-        this.willService.connect();
-        this.subscriptionService.connect();
+        this.willService.start(context.asyncAssertSuccess());
+        this.subscriptionService.start(context.asyncAssertSuccess());
         this.vertx.deployVerticle(this.mqttFrontend, context.asyncAssertSuccess());
     }
 
     @After
     public void tearDown(TestContext context) {
 
-        this.willService.close();
-        this.subscriptionService.close();
+        this.willService.stop();
+        this.subscriptionService.stop();
         this.vertx.close(context.asyncAssertSuccess());
     }
 }

@@ -20,6 +20,7 @@ import enmasse.mqtt.messages.AmqpPublishMessage;
 import enmasse.mqtt.messages.AmqpWillClearMessage;
 import enmasse.mqtt.messages.AmqpWillMessage;
 import io.vertx.core.AsyncResult;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.proton.*;
@@ -67,9 +68,11 @@ public class MockWillService {
     }
 
     /**
-     * Connect to the router
+     * Start the Will Services for connecting to the router
+     *
+     * @param startHandler  handler called when starting process ends (success or fail)
      */
-    public void connect() {
+    public void start(Handler<AsyncResult<Void>> startHandler) {
 
         this.client.connect(this.connectAddress, this.connectPort, done -> {
 
@@ -85,9 +88,13 @@ public class MockWillService {
                         .receiverOpenHandler(this::receiverHandler)
                         .open();
 
+                startHandler.handle(Future.succeededFuture(null));
+
             } else {
 
                 LOG.info("Error starting the Will Service ...", done.cause());
+
+                startHandler.handle(Future.failedFuture(done.cause()));
             }
         });
     }
@@ -198,7 +205,10 @@ public class MockWillService {
         }
     }
 
-    public void close() {
+    /**
+     * Stop the Will Service closing the connection to the router
+     */
+    public void stop() {
 
         // TODO:
 
