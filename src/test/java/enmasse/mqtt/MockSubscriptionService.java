@@ -18,11 +18,13 @@ package enmasse.mqtt;
 
 import enmasse.mqtt.messages.AmqpSessionMessage;
 import enmasse.mqtt.messages.AmqpSessionPresentMessage;
-import io.vertx.core.AsyncResult;
+import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
-import io.vertx.core.Handler;
-import io.vertx.core.Vertx;
-import io.vertx.proton.*;
+import io.vertx.proton.ProtonClient;
+import io.vertx.proton.ProtonConnection;
+import io.vertx.proton.ProtonDelivery;
+import io.vertx.proton.ProtonReceiver;
+import io.vertx.proton.ProtonSender;
 import org.apache.qpid.proton.amqp.messaging.Accepted;
 import org.apache.qpid.proton.message.Message;
 import org.slf4j.Logger;
@@ -31,7 +33,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Mock for the Subscription Service
  */
-public class MockSubscriptionService {
+public class MockSubscriptionService extends AbstractVerticle {
 
     private static final Logger LOG = LoggerFactory.getLogger(MockSubscriptionService.class);
 
@@ -44,22 +46,10 @@ public class MockSubscriptionService {
     private ProtonClient client;
     private ProtonConnection connection;
 
-    /**
-     * Constructor
-     *
-     * @param vertx Vert.x instance
-     */
-    public MockSubscriptionService(Vertx vertx) {
+    @Override
+    public void start(Future<Void> startFuture) throws Exception {
 
-        this.client = ProtonClient.create(vertx);
-    }
-
-    /**
-     * Start the Subscription Services for connecting to the router
-     *
-     * @param startHandler  handler called when starting process ends (success or fail)
-     */
-    public void start(Handler<AsyncResult<Void>> startHandler) {
+        this.client = ProtonClient.create(this.vertx);
 
         this.client.connect(this.connectAddress, this.connectPort, done -> {
 
@@ -81,15 +71,25 @@ public class MockSubscriptionService {
                         .handler(this::messageHandler)
                         .open();
 
-                startHandler.handle(Future.succeededFuture(null));
+                startFuture.complete();
 
             } else {
 
                 LOG.info("Error starting the Subscription Service ...", done.cause());
 
-                startHandler.handle(Future.failedFuture(done.cause()));
+                startFuture.fail(done.cause());
             }
         });
+    }
+
+    @Override
+    public void stop(Future<Void> stopFuture) throws Exception {
+
+        // TODO:
+
+        this.connection.close();
+        LOG.info("Subscription Service has been shut down successfully");
+        stopFuture.complete();
     }
 
     private void messageHandler(ProtonDelivery delivery, Message message) {
@@ -122,16 +122,6 @@ public class MockSubscriptionService {
                 break;
         }
 
-    }
-
-    /**
-     * Stop the Subscription Service closing the connection to the router
-     */
-    public void stop() {
-
-        // TODO:
-
-        this.connection.close();
     }
 
     /**

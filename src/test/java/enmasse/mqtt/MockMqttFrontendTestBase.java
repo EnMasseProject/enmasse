@@ -57,28 +57,26 @@ public abstract class MockMqttFrontendTestBase {
                 .setConnectPort(AMQP_CLIENTS_LISTENER_PORT);
 
         // create and setup mock Will Service instance
-        this.willService = new MockWillService(this.vertx);
+        this.willService = new MockWillService();
         this.willService
                 .setConnectAddress(AMQP_SERVICES_LISTENER_ADDRESS)
                 .setConnectPort(AMQP_SERVICES_LISTENER_PORT);
 
         // create and setup mock Subscription Service instance
-        this.subscriptionService = new MockSubscriptionService(this.vertx);
+        this.subscriptionService = new MockSubscriptionService();
         this.subscriptionService
                 .setConnectAddress(AMQP_SERVICES_LISTENER_ADDRESS)
                 .setConnectPort(AMQP_SERVICES_LISTENER_PORT);
 
         // start and deploy components
-        this.willService.start(context.asyncAssertSuccess());
-        this.subscriptionService.start(context.asyncAssertSuccess());
+        this.vertx.deployVerticle(this.willService, context.asyncAssertSuccess());
+        this.vertx.deployVerticle(this.subscriptionService, context.asyncAssertSuccess());
         this.vertx.deployVerticle(this.mqttFrontend, context.asyncAssertSuccess());
     }
 
     @After
     public void tearDown(TestContext context) {
 
-        this.willService.stop();
-        this.subscriptionService.stop();
         this.vertx.close(context.asyncAssertSuccess());
     }
 }

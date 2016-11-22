@@ -19,11 +19,16 @@ package enmasse.mqtt;
 import enmasse.mqtt.messages.AmqpPublishMessage;
 import enmasse.mqtt.messages.AmqpWillClearMessage;
 import enmasse.mqtt.messages.AmqpWillMessage;
+import io.vertx.core.AbstractVerticle;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import io.vertx.core.Vertx;
-import io.vertx.proton.*;
+import io.vertx.proton.ProtonClient;
+import io.vertx.proton.ProtonConnection;
+import io.vertx.proton.ProtonDelivery;
+import io.vertx.proton.ProtonQoS;
+import io.vertx.proton.ProtonReceiver;
+import io.vertx.proton.ProtonSender;
 import org.apache.qpid.proton.amqp.messaging.Accepted;
 import org.apache.qpid.proton.amqp.transport.ErrorCondition;
 import org.apache.qpid.proton.amqp.transport.LinkError;
@@ -37,7 +42,7 @@ import java.util.Map;
 /**
  * Mock for the Will Service
  */
-public class MockWillService {
+public class MockWillService extends AbstractVerticle {
 
     private static final Logger LOG = LoggerFactory.getLogger(MockWillService.class);
 
@@ -56,23 +61,11 @@ public class MockWillService {
     // NOTE : it's useful for disconnection tests
     private Handler<Boolean> willHandler;
 
-    /**
-     * Constructor
-     *
-     * @param vertx Vert.x instance
-     */
-    public MockWillService(Vertx vertx) {
+    @Override
+    public void start(Future<Void> startFuture) throws Exception {
 
         this.wills = new HashMap<>();
-        this.client = ProtonClient.create(vertx);
-    }
-
-    /**
-     * Start the Will Services for connecting to the router
-     *
-     * @param startHandler  handler called when starting process ends (success or fail)
-     */
-    public void start(Handler<AsyncResult<Void>> startHandler) {
+        this.client = ProtonClient.create(this.vertx);
 
         this.client.connect(this.connectAddress, this.connectPort, done -> {
 
@@ -88,15 +81,25 @@ public class MockWillService {
                         .receiverOpenHandler(this::receiverHandler)
                         .open();
 
-                startHandler.handle(Future.succeededFuture(null));
+                startFuture.complete();
 
             } else {
 
                 LOG.info("Error starting the Will Service ...", done.cause());
 
-                startHandler.handle(Future.failedFuture(done.cause()));
+                startFuture.fail(done.cause());
             }
         });
+    }
+
+    @Override
+    public void stop(Future<Void> stopFuture) throws Exception {
+
+        // TODO:
+
+        this.connection.close();
+        LOG.info("Will Service has been shut down successfully");
+        stopFuture.complete();
     }
 
     private void receiverHandler(ProtonReceiver receiver) {
@@ -203,16 +206,6 @@ public class MockWillService {
                 }
             }
         }
-    }
-
-    /**
-     * Stop the Will Service closing the connection to the router
-     */
-    public void stop() {
-
-        // TODO:
-
-        this.connection.close();
     }
 
     /**
