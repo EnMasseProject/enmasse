@@ -88,6 +88,10 @@ local flavorConfig = import "flavor.jsonnet";
         "name": "SUBSERV_REPO",
         "description": "The image to use for the subscription services",
         "value": "enmasseproject/subserv"
+      },
+      {
+        "name": "MESSAGING_HOSTNAME",
+        "description": "The hostname to use for the exposed route for (TLS only)",
       }
     ]
 

@@ -5,6 +5,7 @@
         "name": "messaging"
     },
     "spec": {
+        "host": "${MESSAGING_HOSTNAME}",
         "to": {
             "kind": "Service",
             "name": "messaging",
