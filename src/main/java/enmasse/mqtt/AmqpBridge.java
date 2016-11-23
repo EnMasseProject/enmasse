@@ -244,7 +244,7 @@ public class AmqpBridge {
     }
 
     /**
-     * Handler for incoming MQTT PUBLISH messages
+     * Handler for incoming MQTT PUBLISH message
      * @param publish   PUBLISH message
      */
     private void publishHandler(MqttPublishMessage publish) {
@@ -288,7 +288,7 @@ public class AmqpBridge {
     }
 
     /**
-     * Handler for incoming AMQP_PUBLISH messages
+     * Handler for incoming AMQP_PUBLISH message
      * @param publish   AMQP_PUBLISH message
      */
     private void publishHandler(AmqpPublishMessage publish) {
@@ -299,7 +299,7 @@ public class AmqpBridge {
     }
 
     /**
-     * Handler for incoming MQTT SUBSCRIBE messages
+     * Handler for incoming MQTT SUBSCRIBE message
      * @param subscribe SUBSCRIBE message
      */
     private void subscribeHandler(MqttSubscribeMessage subscribe) {
@@ -322,7 +322,7 @@ public class AmqpBridge {
     }
 
     /**
-     * Handler for incoming MQTT UNSUBSCRIBE messages
+     * Handler for incoming MQTT UNSUBSCRIBE message
      * @param unsubscribe   UNSUBSCRIBE message
      */
     private void unsubscribeHandler(MqttUnsubscribeMessage unsubscribe) {
@@ -356,7 +356,7 @@ public class AmqpBridge {
     }
 
     /**
-     * Handler for handling connection closed by remote MQTT client
+     * Handler for connection closed by remote MQTT client
      * @param v
      */
     private void closeHandler(Void v) {
@@ -366,7 +366,7 @@ public class AmqpBridge {
     }
 
     /**
-     * Handler for handling AMQP_SUBACK message received by Subscription Service
+     * Handler for AMQP_SUBACK message received by Subscription Service
      * @param suback    AMQP_SUBACK message
      */
     private void subackHandler(AmqpSubackMessage suback) {
@@ -379,7 +379,7 @@ public class AmqpBridge {
     }
 
     /**
-     * Handler for handling AMQP_UNSUBACK message received by Subscription Service
+     * Handler for AMQP_UNSUBACK message received by Subscription Service
      * @param unsuback  AMQP_UNSUBACK message
      */
     private void unsubackHandler(AmqpUnsubackMessage unsuback) {
@@ -391,12 +391,22 @@ public class AmqpBridge {
     }
 
     /**
+     * Handler for incoming MQTT PUBACK message
+     * @param messageId
+     */
+    private void pubackHandler(int messageId) {
+
+        LOG.info("PUBACK received");
+    }
+
+    /**
      * Setup handlers for MQTT endpoint
      */
     private void setupMqttEndpointHandlers() {
 
         this.mqttEndpoint
                 .publishHandler(this::publishHandler)
+                .pubackHandler(this::pubackHandler)
                 .subscribeHandler(this::subscribeHandler)
                 .unsubscribeHandler(this::unsubscribeHandler)
                 .disconnectHandler(this::disconnectHandler)

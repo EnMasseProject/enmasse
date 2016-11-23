@@ -23,9 +23,7 @@ import io.vertx.proton.ProtonClient;
 import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.ProtonReceiver;
 import org.eclipse.paho.client.mqttv3.MqttClient;
-import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
-import org.eclipse.paho.client.mqttv3.MqttTopic;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -69,6 +67,8 @@ public class PublishTest extends MockMqttFrontendTestBase {
             client.connect();
 
             client.publish("my_topic", "my_payload".getBytes(), 1, false);
+
+            client.disconnect();
 
             async.await();
 
