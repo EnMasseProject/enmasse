@@ -33,7 +33,7 @@ public class AmqpUnsubackMessage {
      *
      * @param messageId message identifier
      */
-    private AmqpUnsubackMessage(Object messageId) {
+    public AmqpUnsubackMessage(Object messageId) {
 
         this.messageId = messageId;
     }

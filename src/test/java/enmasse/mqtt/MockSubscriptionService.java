@@ -20,6 +20,8 @@ import enmasse.mqtt.messages.AmqpSessionMessage;
 import enmasse.mqtt.messages.AmqpSessionPresentMessage;
 import enmasse.mqtt.messages.AmqpSubackMessage;
 import enmasse.mqtt.messages.AmqpSubscribeMessage;
+import enmasse.mqtt.messages.AmqpUnsubackMessage;
+import enmasse.mqtt.messages.AmqpUnsubscribeMessage;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.proton.ProtonClient;
@@ -154,6 +156,31 @@ public class MockSubscriptionService extends AbstractVerticle {
 
                     sender.send(amqpSubackMessage.toAmqp(), d -> {
                         // TODO:
+                        sender.close();
+                    });
+                }
+
+                break;
+
+            case AmqpUnsubscribeMessage.AMQP_SUBJECT:
+
+                {
+                    // get AMQP_UNSUBSCRIBE mesage and sends disposition for settlment
+                    AmqpUnsubscribeMessage amqpUnsubscribeMessage = AmqpUnsubscribeMessage.from(message);
+                    delivery.disposition(Accepted.getInstance(), true);
+
+                    this.broker.unsubscribe(amqpUnsubscribeMessage);
+
+                    // send AMQP_UNSUBACK to the unique client address
+                    ProtonSender sender = this.connection.createSender(message.getReplyTo());
+
+                    AmqpUnsubackMessage amqpUnsubackMessage =
+                            new AmqpUnsubackMessage(amqpUnsubscribeMessage.messageId());
+
+                    sender.open();
+
+                    sender.send(amqpUnsubackMessage.toAmqp(), d -> {
+                       // TODO:
                         sender.close();
                     });
                 }

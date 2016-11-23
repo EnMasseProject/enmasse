@@ -18,6 +18,7 @@ package enmasse.mqtt.messages;
 
 import io.vertx.proton.ProtonHelper;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
+import org.apache.qpid.proton.amqp.messaging.Section;
 import org.apache.qpid.proton.message.Message;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
@@ -56,8 +57,22 @@ public class AmqpUnsubscribeMessage {
      */
     public static AmqpUnsubscribeMessage from(Message message) {
 
-        // do you really need this ?
-        throw new NotImplementedException();
+        if (!message.getSubject().equals(AMQP_SUBJECT)) {
+            throw new IllegalArgumentException(String.format("AMQP message subject is no s%", AMQP_SUBJECT));
+        }
+
+        Section section = message.getBody();
+        if ((section != null) && (section instanceof AmqpValue)) {
+
+            List<String> topics = (List<String>) ((AmqpValue) section).getValue();
+
+            return new AmqpUnsubscribeMessage(AmqpHelper.getClientId(message.getReplyTo()),
+                    message.getMessageId(),
+                    topics);
+
+        } else {
+            throw new IllegalArgumentException("AMQP message wrong body type");
+        }
     }
 
     /**

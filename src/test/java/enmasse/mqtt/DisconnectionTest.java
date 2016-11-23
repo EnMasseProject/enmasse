@@ -57,6 +57,9 @@ public class DisconnectionTest extends MockMqttFrontendTestBase {
                     receiver.handler((delivery, message) -> {
 
                         System.out.println("Will message received " + message);
+
+                        receiver.close();
+                        connection.close();
                         async.complete();
 
                     }).open();

@@ -374,6 +374,8 @@ public class AmqpBridge {
         // TODO:
 
         this.mqttEndpoint.writeUnsuback((int)unsuback.messageId());
+
+        LOG.info("UNSUBACK sent");
     }
 
     /**

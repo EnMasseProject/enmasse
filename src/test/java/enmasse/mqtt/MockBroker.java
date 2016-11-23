@@ -20,6 +20,7 @@ import enmasse.mqtt.messages.AmqpHelper;
 import enmasse.mqtt.messages.AmqpPublishMessage;
 import enmasse.mqtt.messages.AmqpSubscribeMessage;
 import enmasse.mqtt.messages.AmqpTopicSubscription;
+import enmasse.mqtt.messages.AmqpUnsubscribeMessage;
 import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.ProtonDelivery;
 import io.vertx.proton.ProtonReceiver;
@@ -120,6 +121,14 @@ public class MockBroker {
             }
         }
 
+    }
+
+    public void unsubscribe(AmqpUnsubscribeMessage amqpUnsubscribeMessage) {
+
+        for (String topic: amqpUnsubscribeMessage.topics()) {
+
+            this.subscriptions.get(topic).remove(amqpUnsubscribeMessage.clientId());
+        }
     }
 
 }
