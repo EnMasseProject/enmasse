@@ -240,6 +240,7 @@ public class AmqpBridge {
 
         this.wsEndpoint.close();
         this.ssEndpoint.close();
+        this.rcvEndpoint.close();
 
         for (Map.Entry<String, AmqpPublishEndpoint> entry: this.pubEndpoints.entrySet()) {
             entry.getValue().close();

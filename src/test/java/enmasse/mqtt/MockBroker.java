@@ -24,7 +24,6 @@ import enmasse.mqtt.messages.AmqpTopicSubscription;
 import enmasse.mqtt.messages.AmqpUnsubscribeMessage;
 import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.ProtonDelivery;
-import io.vertx.proton.ProtonQoS;
 import io.vertx.proton.ProtonReceiver;
 import io.vertx.proton.ProtonSender;
 import org.apache.qpid.proton.message.Message;
