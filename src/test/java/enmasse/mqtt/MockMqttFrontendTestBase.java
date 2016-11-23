@@ -22,12 +22,16 @@ import io.vertx.ext.unit.junit.VertxUnitRunner;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.runner.RunWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Base class for all unit tests
  */
 @RunWith(VertxUnitRunner.class)
 public abstract class MockMqttFrontendTestBase {
+
+    protected final Logger LOG = LoggerFactory.getLogger(this.getClass());
 
     public static final String MQTT_BIND_ADDRESS = "localhost";
     public static final int MQTT_LISTEN_PORT = 1883;

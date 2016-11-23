@@ -22,7 +22,6 @@ import io.vertx.ext.unit.junit.VertxUnitRunner;
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -69,7 +68,7 @@ public class SubscribeTest extends MockMqttFrontendTestBase {
 
             subscriber.subscribe("my_topic", 1, (topic, message) -> {
 
-                System.out.println("topic: " + topic + " message: " + message);
+                LOG.info("topic: {} message: {}", topic, message);
                 async.complete();
             });
 
@@ -122,7 +121,7 @@ public class SubscribeTest extends MockMqttFrontendTestBase {
 
             subscriber.subscribe("my_topic", 1, (topic, message) -> {
 
-                System.out.println("topic: " + topic + " message: " + message);
+                LOG.info("topic: {} message: {}", topic, message);
                 async.complete();
             });
 

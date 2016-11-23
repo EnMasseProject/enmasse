@@ -56,7 +56,7 @@ public class PublishTest extends MockMqttFrontendTestBase {
                     ProtonReceiver receiver = connection.createReceiver("my_topic");
                     receiver.handler((delivery, message) -> {
 
-                        System.out.println("Message received " + message);
+                        LOG.info("Message received {}", message);
                         async.complete();
 
                     }).open();
