@@ -16,8 +16,8 @@
 
 package enmasse.mqtt.messages;
 
+import io.vertx.proton.ProtonHelper;
 import org.apache.qpid.proton.message.Message;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 /**
  * Represents an AMQP_UNSUBACK message
@@ -60,8 +60,13 @@ public class AmqpUnsubackMessage {
      */
     public Message toAmqp() {
 
-        // do you really need this ?
-        throw new NotImplementedException();
+        Message message = ProtonHelper.message();
+
+        message.setSubject(AMQP_SUBJECT);
+
+        message.setMessageId(this.messageId);
+
+        return message;
     }
 
     /**

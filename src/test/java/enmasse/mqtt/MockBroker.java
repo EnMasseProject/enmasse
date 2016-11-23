@@ -128,6 +128,10 @@ public class MockBroker {
         for (String topic: amqpUnsubscribeMessage.topics()) {
 
             this.subscriptions.get(topic).remove(amqpUnsubscribeMessage.clientId());
+
+            if (this.subscriptions.get(topic).size() == 0) {
+                this.subscriptions.remove(topic);
+            }
         }
     }
 
