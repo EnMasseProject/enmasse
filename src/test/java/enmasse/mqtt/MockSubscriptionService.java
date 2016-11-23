@@ -162,7 +162,6 @@ public class MockSubscriptionService extends AbstractVerticle {
                     // send AMQP_SUBACK to the unique client address
                     ProtonSender sender = this.connection.createSender(message.getReplyTo());
 
-                    // TODO: providing a real granted QoS levels list
                     AmqpSubackMessage amqpSubackMessage =
                             new AmqpSubackMessage(amqpSubscribeMessage.messageId(), grantedQoSLevels);
 

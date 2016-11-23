@@ -43,6 +43,7 @@ import io.vertx.mqtt.messages.MqttPublishMessage;
 import io.vertx.mqtt.messages.MqttSubscribeMessage;
 import io.vertx.mqtt.messages.MqttUnsubscribeMessage;
 import io.vertx.proton.ProtonClient;
+import io.vertx.proton.ProtonClientOptions;
 import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.ProtonDelivery;
 import io.vertx.proton.ProtonLinkOptions;
@@ -105,7 +106,11 @@ public class AmqpBridge {
 
         this.client = ProtonClient.create(this.vertx);
 
-        this.client.connect(address, port, done -> {
+        // TODO: check correlation between MQTT and AMQP keep alive
+        ProtonClientOptions clientOptions = new ProtonClientOptions();
+        clientOptions.setHeartbeat(this.mqttEndpoint.keepAliveTimeSeconds() * 1000);
+
+        this.client.connect(clientOptions, address, port, done -> {
 
             if (done.succeeded()) {
 
@@ -113,15 +118,15 @@ public class AmqpBridge {
                 this.connection.open();
 
                 // specified link name for the Will Service as MQTT clientid
-                ProtonLinkOptions options = new ProtonLinkOptions();
-                options.setLinkName(this.mqttEndpoint.clientIdentifier());
+                ProtonLinkOptions linkOptions = new ProtonLinkOptions();
+                linkOptions.setLinkName(this.mqttEndpoint.clientIdentifier());
 
                 // setup and open AMQP endpoint for receiving on unique client address
                 ProtonReceiver rcvReceiver = this.connection.createReceiver(String.format(AmqpReceiverEndpoint.CLIENT_ENDPOINT_TEMPLATE, this.mqttEndpoint.clientIdentifier()));
                 this.rcvEndpoint = new AmqpReceiverEndpoint(rcvReceiver);
 
                 // setup and open AMQP endpoints to Will and Subscription services
-                ProtonSender wsSender = this.connection.createSender(AmqpWillServiceEndpoint.WILL_SERVICE_ENDPOINT, options);
+                ProtonSender wsSender = this.connection.createSender(AmqpWillServiceEndpoint.WILL_SERVICE_ENDPOINT, linkOptions);
                 this.wsEndpoint = new AmqpWillServiceEndpoint(wsSender);
 
                 ProtonSender ssSender = this.connection.createSender(AmqpSubscriptionServiceEndpoint.SUBSCRIPTION_SERVICE_ENDPOINT);
