@@ -165,6 +165,7 @@ public class MockSubscriptionService extends AbstractVerticle {
             case AmqpUnsubscribeMessage.AMQP_SUBJECT:
 
                 {
+
                     // get AMQP_UNSUBSCRIBE mesage and sends disposition for settlment
                     AmqpUnsubscribeMessage amqpUnsubscribeMessage = AmqpUnsubscribeMessage.from(message);
                     delivery.disposition(Accepted.getInstance(), true);
@@ -183,6 +184,7 @@ public class MockSubscriptionService extends AbstractVerticle {
                        // TODO:
                         sender.close();
                     });
+
                 }
 
                 break;

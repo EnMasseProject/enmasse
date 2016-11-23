@@ -23,6 +23,7 @@ import enmasse.mqtt.messages.AmqpTopicSubscription;
 import enmasse.mqtt.messages.AmqpUnsubscribeMessage;
 import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.ProtonDelivery;
+import io.vertx.proton.ProtonQoS;
 import io.vertx.proton.ProtonReceiver;
 import io.vertx.proton.ProtonSender;
 import org.apache.qpid.proton.message.Message;
@@ -94,6 +95,13 @@ public class MockBroker {
                 this.senders.put(amqpSubscribeMessage.clientId(), sender);
             }
 
+            // check if a retained message exists for sending
+            if (this.retained.containsKey(amqpTopicSubscription.topic())) {
+
+                this.senders.get(amqpSubscribeMessage.clientId())
+                        .send(this.retained.get(amqpTopicSubscription.topic()).toAmqp());
+            }
+
             // add the subscription to the requested topic by the client identifier
             if (!this.subscriptions.containsKey(amqpTopicSubscription.topic())) {
 
@@ -109,6 +117,14 @@ public class MockBroker {
     private void messageHandler(ProtonReceiver receiver, ProtonDelivery delivery, Message message) {
 
         String topic = receiver.getSource().getAddress();
+
+        // TODO: what when raw AMQP message hasn't "publish" as subject ??
+
+        // check if it's retained
+        AmqpPublishMessage amqpPublishMessage = AmqpPublishMessage.from(message);
+        if (amqpPublishMessage.isRetain()) {
+            this.retained.put(amqpPublishMessage.topic(), amqpPublishMessage);
+        }
 
         List<String> subscribers = this.subscriptions.get(topic);
 

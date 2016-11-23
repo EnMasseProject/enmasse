@@ -22,6 +22,7 @@ import io.vertx.ext.unit.junit.VertxUnitRunner;
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -97,6 +98,42 @@ public class SubscribeTest extends MockMqttFrontendTestBase {
             context.assertTrue(false);
             e.printStackTrace();
         }
+    }
 
+    @Test
+    public void subscribeAndReceiveRetained(TestContext context) {
+
+        Async async = context.async();
+
+        try {
+
+            MemoryPersistence publisherPersistence = new MemoryPersistence();
+
+            MqttClient publisher = new MqttClient(String.format("tcp://%s:%d", MQTT_BIND_ADDRESS, MQTT_LISTEN_PORT), "12345", publisherPersistence);
+            publisher.connect();
+
+            publisher.publish("my_topic", "my_payload".getBytes(), 0, true);
+
+            publisher.disconnect();
+
+            MemoryPersistence subscriberPersistence = new MemoryPersistence();
+            MqttClient subscriber = new MqttClient(String.format("tcp://%s:%d", MQTT_BIND_ADDRESS, MQTT_LISTEN_PORT), "67890", subscriberPersistence);
+            subscriber.connect();
+
+            subscriber.subscribe("my_topic", 1, (topic, message) -> {
+
+                System.out.println("topic: " + topic + " message: " + message);
+                async.complete();
+            });
+
+            async.await();
+
+            context.assertTrue(true);
+
+        } catch (MqttException e) {
+
+            context.assertTrue(false);
+            e.printStackTrace();
+        }
     }
 }
