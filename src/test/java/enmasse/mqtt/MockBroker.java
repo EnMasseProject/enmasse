@@ -18,6 +18,7 @@ package enmasse.mqtt;
 
 import enmasse.mqtt.messages.AmqpHelper;
 import enmasse.mqtt.messages.AmqpPublishMessage;
+import enmasse.mqtt.messages.AmqpQos;
 import enmasse.mqtt.messages.AmqpSubscribeMessage;
 import enmasse.mqtt.messages.AmqpTopicSubscription;
 import enmasse.mqtt.messages.AmqpUnsubscribeMessage;
@@ -49,6 +50,11 @@ public class MockBroker {
 
     private ProtonConnection connection;
 
+    /**
+     * Constructor
+     *
+     * @param connection    connection to the router
+     */
     public MockBroker(ProtonConnection connection) {
 
         this.connection = connection;
@@ -59,9 +65,28 @@ public class MockBroker {
         this.retained = new HashMap<>();
     }
 
-    public void subscribe(AmqpSubscribeMessage amqpSubscribeMessage) {
+    /**
+     * Get the retained message for a topic
+     *
+     * @param topic topic name
+     * @return  AMQP_PUBLISH with retained message
+     */
+    public AmqpPublishMessage getRetainedMessage(String topic) {
+
+        return this.retained.get(topic);
+    }
+
+    /**
+     * Handle a subscription request
+     *
+     * @param amqpSubscribeMessage  AMQP_SUBSCRIBE message with subscribe request
+     * @return  granted QoS levels
+     */
+    public List<AmqpQos> subscribe(AmqpSubscribeMessage amqpSubscribeMessage) {
 
         // TODO:
+
+        List<AmqpQos> grantedQoSLevels = new ArrayList<>();
 
         for (AmqpTopicSubscription amqpTopicSubscription: amqpSubscribeMessage.topicSubscriptions()) {
 
@@ -95,13 +120,6 @@ public class MockBroker {
                 this.senders.put(amqpSubscribeMessage.clientId(), sender);
             }
 
-            // check if a retained message exists for sending
-            if (this.retained.containsKey(amqpTopicSubscription.topic())) {
-
-                this.senders.get(amqpSubscribeMessage.clientId())
-                        .send(this.retained.get(amqpTopicSubscription.topic()).toAmqp());
-            }
-
             // add the subscription to the requested topic by the client identifier
             if (!this.subscriptions.containsKey(amqpTopicSubscription.topic())) {
 
@@ -110,8 +128,28 @@ public class MockBroker {
 
             this.subscriptions.get(amqpTopicSubscription.topic()).add(amqpSubscribeMessage.clientId());
 
+            // just as mock all requested QoS levels are granted
+            grantedQoSLevels.add(amqpTopicSubscription.qos());
         }
 
+        return grantedQoSLevels;
+    }
+
+    /**
+     * Handle an unsubscription request
+     *
+     * @param amqpUnsubscribeMessage  AMQP_UNSUBSCRIBE message with unsubscribe request
+     */
+    public void unsubscribe(AmqpUnsubscribeMessage amqpUnsubscribeMessage) {
+
+        for (String topic: amqpUnsubscribeMessage.topics()) {
+
+            this.subscriptions.get(topic).remove(amqpUnsubscribeMessage.clientId());
+
+            if (this.subscriptions.get(topic).size() == 0) {
+                this.subscriptions.remove(topic);
+            }
+        }
     }
 
     private void messageHandler(ProtonReceiver receiver, ProtonDelivery delivery, Message message) {
@@ -137,18 +175,6 @@ public class MockBroker {
             }
         }
 
-    }
-
-    public void unsubscribe(AmqpUnsubscribeMessage amqpUnsubscribeMessage) {
-
-        for (String topic: amqpUnsubscribeMessage.topics()) {
-
-            this.subscriptions.get(topic).remove(amqpUnsubscribeMessage.clientId());
-
-            if (this.subscriptions.get(topic).size() == 0) {
-                this.subscriptions.remove(topic);
-            }
-        }
     }
 
 }

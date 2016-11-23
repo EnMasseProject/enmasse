@@ -16,10 +16,13 @@
 
 package enmasse.mqtt;
 
+import enmasse.mqtt.messages.AmqpPublishMessage;
+import enmasse.mqtt.messages.AmqpQos;
 import enmasse.mqtt.messages.AmqpSessionMessage;
 import enmasse.mqtt.messages.AmqpSessionPresentMessage;
 import enmasse.mqtt.messages.AmqpSubackMessage;
 import enmasse.mqtt.messages.AmqpSubscribeMessage;
+import enmasse.mqtt.messages.AmqpTopicSubscription;
 import enmasse.mqtt.messages.AmqpUnsubackMessage;
 import enmasse.mqtt.messages.AmqpUnsubscribeMessage;
 import io.vertx.core.AbstractVerticle;
@@ -34,6 +37,10 @@ import org.apache.qpid.proton.message.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -140,22 +147,37 @@ public class MockSubscriptionService extends AbstractVerticle {
                     AmqpSubscribeMessage amqpSubscribeMessage = AmqpSubscribeMessage.from(message);
                     delivery.disposition(Accepted.getInstance(), true);
 
-                    this.broker.subscribe(amqpSubscribeMessage);
+                    // get AMQP_PUBLISH as retained messages for each topic
+                    List<AmqpPublishMessage> retained = new ArrayList<>();
+                    for (AmqpTopicSubscription topicSubscription: amqpSubscribeMessage.topicSubscriptions()) {
+
+                        AmqpPublishMessage amqpPublishMessage = this.broker.getRetainedMessage(topicSubscription.topic());
+                        if (amqpPublishMessage != null) {
+                            retained.add(amqpPublishMessage);
+                        }
+                    }
+
+                    List<AmqpQos> grantedQoSLevels = this.broker.subscribe(amqpSubscribeMessage);
 
                     // send AMQP_SUBACK to the unique client address
                     ProtonSender sender = this.connection.createSender(message.getReplyTo());
 
                     // TODO: providing a real granted QoS levels list
                     AmqpSubackMessage amqpSubackMessage =
-                            new AmqpSubackMessage(amqpSubscribeMessage.messageId(),
-                                    amqpSubscribeMessage.topicSubscriptions().stream().map(amqpTopicSubscription -> {
-                                        return amqpTopicSubscription.qos();
-                                    }).collect(Collectors.toList()));
+                            new AmqpSubackMessage(amqpSubscribeMessage.messageId(), grantedQoSLevels);
 
                     sender.open();
 
                     sender.send(amqpSubackMessage.toAmqp(), d -> {
                         // TODO:
+
+                        // after sending AMQP_SUBACK, start to send retained AMQP_PUBLISH messages
+                        for (AmqpPublishMessage amqpPublishMessage: retained) {
+
+                            // TODO: with which QoS ?
+                            sender.send(amqpPublishMessage.toAmqp());
+                        }
+
                         sender.close();
                     });
                 }
@@ -165,7 +187,6 @@ public class MockSubscriptionService extends AbstractVerticle {
             case AmqpUnsubscribeMessage.AMQP_SUBJECT:
 
                 {
-
                     // get AMQP_UNSUBSCRIBE mesage and sends disposition for settlment
                     AmqpUnsubscribeMessage amqpUnsubscribeMessage = AmqpUnsubscribeMessage.from(message);
                     delivery.disposition(Accepted.getInstance(), true);
@@ -184,7 +205,6 @@ public class MockSubscriptionService extends AbstractVerticle {
                        // TODO:
                         sender.close();
                     });
-
                 }
 
                 break;
