@@ -1,7 +1,7 @@
-local is = import "imagestream.jsonnet";
+local common = import "common.jsonnet";
 {
   imagestream(broker_image)::
-    is.create("artemis", broker_image),
+    common.imagestream("artemis", broker_image),
 
   container(volumeName, addressEnv)::
     {

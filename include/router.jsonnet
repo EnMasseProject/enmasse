@@ -1,7 +1,7 @@
-local is = import "imagestream.jsonnet";
+local common = import "common.jsonnet";
 {
   imagestream(image_name)::
-    is.create("router", image_name),
+    common.imagestream("router", image_name),
 
   container(secure, addressEnv)::
     local routerPort = {

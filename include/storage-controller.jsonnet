@@ -1,8 +1,8 @@
 local version = std.extVar("VERSION");
-local is = import "imagestream.jsonnet";
+local common = import "common.jsonnet";
 {
   imagestream(image_name)::
-    is.create("storage-controller", image_name),
+    common.imagestream("storage-controller", image_name),
   deployment::
     {
       "apiVersion": "v1",
