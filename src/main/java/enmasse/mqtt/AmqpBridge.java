@@ -272,7 +272,19 @@ public class AmqpBridge {
                         publish.topicName(),
                         publish.payload());
 
-        pubEndpoint.publish(amqpPublishMessage);
+        pubEndpoint.publish(amqpPublishMessage, done -> {
+
+            if (done.succeeded()) {
+
+                ProtonDelivery delivery = done.result();
+                if (delivery != null) {
+
+                    this.mqttEndpoint.writePuback(publish.messageId());
+                    LOG.info("PUBACK sent");
+                }
+            }
+
+        });
     }
 
     /**

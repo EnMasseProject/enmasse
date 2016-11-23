@@ -68,7 +68,7 @@ public class PublishTest extends MockMqttFrontendTestBase {
             MqttClient client = new MqttClient(String.format("tcp://%s:%d", MQTT_BIND_ADDRESS, MQTT_LISTEN_PORT), "12345", persistence);
             client.connect();
 
-            client.publish("my_topic", "my_payload".getBytes(), 0, false);
+            client.publish("my_topic", "my_payload".getBytes(), 1, false);
 
             async.await();
 

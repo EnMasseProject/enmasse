@@ -76,17 +76,7 @@ public class SubscribeTest extends MockMqttFrontendTestBase {
             MqttClient publisher = new MqttClient(String.format("tcp://%s:%d", MQTT_BIND_ADDRESS, MQTT_LISTEN_PORT), "67890", publisherPersistence);
             publisher.connect();
 
-            this.vertx.runOnContext(v -> {
-
-                try {
-
-                    publisher.publish("my_topic", "Hello".getBytes(), 1, false);
-
-                } catch (MqttException e) {
-
-                }
-
-            });
+            publisher.publish("my_topic", "Hello".getBytes(), 1, false);
 
             async.await();
 

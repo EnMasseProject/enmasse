@@ -17,8 +17,13 @@
 package enmasse.mqtt.endpoints;
 
 import enmasse.mqtt.messages.AmqpPublishMessage;
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Future;
+import io.vertx.core.Handler;
+import io.vertx.proton.ProtonDelivery;
 import io.vertx.proton.ProtonQoS;
 import io.vertx.proton.ProtonSender;
+import org.apache.qpid.proton.amqp.messaging.Accepted;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,7 +54,7 @@ public class AmqpPublishEndpoint {
      *
      * @param amqpPublishMessage    AMQP_PUBLISH message
      */
-    public void publish(AmqpPublishMessage amqpPublishMessage) {
+    public void publish(AmqpPublishMessage amqpPublishMessage, Handler<AsyncResult<ProtonDelivery>> handler) {
         // TODO:
 
         // attach sender link on "topic" (if doesn't exist yet)
@@ -70,11 +75,18 @@ public class AmqpPublishEndpoint {
         if (this.sender.getQoS() == ProtonQoS.AT_MOST_ONCE) {
 
             this.sender.send(amqpPublishMessage.toAmqp());
+            handler.handle(Future.succeededFuture(null));
 
         } else {
 
             this.sender.send(amqpPublishMessage.toAmqp(), delivery -> {
-                // TODO:
+
+                if (delivery.getRemoteState() == Accepted.getInstance()) {
+                    LOG.info("AMQP publish delivery {}", delivery.getRemoteState());
+                    handler.handle(Future.succeededFuture(delivery));
+                } else {
+                    handler.handle(Future.failedFuture(String.format("AMQP publish delivery %s", delivery.getRemoteState())));
+                }
             });
 
         }
