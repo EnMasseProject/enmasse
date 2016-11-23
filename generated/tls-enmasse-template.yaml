@@ -492,109 +492,6 @@ objects:
   metadata:
     labels:
       app: enmasse
-    name: configserv
-  spec:
-    dockerImageRepository: "${CONFIGSERV_REPO}"
-    importPolicy:
-      scheduled: true
-    tags:
-    - from:
-        kind: DockerImage
-        name: "${CONFIGSERV_REPO}:latest"
-      name: latest
-- apiVersion: v1
-  kind: DeploymentConfig
-  metadata:
-    labels:
-      app: enmasse
-      name: configserv
-    name: configserv
-  spec:
-    replicas: 1
-    selector:
-      name: configserv
-    template:
-      metadata:
-        labels:
-          app: enmasse
-          name: configserv
-      spec:
-        containers:
-        - image: configserv
-          livenessProbe:
-            tcpSocket:
-              port: amqp
-          name: bridge
-          ports:
-          - containerPort: 5672
-            name: amqp
-    triggers:
-    - type: ConfigChange
-    - imageChangeParams:
-        automatic: true
-        containerNames:
-        - bridge
-        from:
-          kind: ImageStreamTag
-          name: configserv:latest
-      type: ImageChange
-- apiVersion: v1
-  kind: ImageStream
-  metadata:
-    labels:
-      app: enmasse
-    name: ragent
-  spec:
-    dockerImageRepository: "${RAGENT_REPO}"
-    importPolicy:
-      scheduled: true
-    tags:
-    - from:
-        kind: DockerImage
-        name: "${RAGENT_REPO}:latest"
-      name: latest
-- apiVersion: v1
-  kind: DeploymentConfig
-  metadata:
-    labels:
-      app: enmasse
-      name: ragent
-    name: ragent
-  spec:
-    replicas: 1
-    selector:
-      name: ragent
-    template:
-      metadata:
-        labels:
-          app: enmasse
-          name: ragent
-      spec:
-        containers:
-        - image: ragent
-          livenessProbe:
-            tcpSocket:
-              port: amqp
-          name: ragent
-          ports:
-          - containerPort: 55672
-            name: amqp
-            protocol: TCP
-    triggers:
-    - type: ConfigChange
-    - imageChangeParams:
-        automatic: true
-        containerNames:
-        - ragent
-        from:
-          kind: ImageStreamTag
-          name: ragent:latest
-      type: ImageChange
-- apiVersion: v1
-  kind: ImageStream
-  metadata:
-    labels:
-      app: enmasse
     name: router
   spec:
     dockerImageRepository: "${ROUTER_REPO}"
@@ -691,6 +588,160 @@ objects:
         name: "${TOPIC_FORWARDER_REPO}:latest"
       name: latest
 - apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      service.alpha.openshift.io/dependencies: '[{"name":"configuration","namespace":"","kind":"Service"},{"name":"ragent","namespace":"","kind":"Service"},{"name":"subscription","namespace":"","kind":"Service"},{"name":"restapi","namespace":"","kind":"Service"}]'
+      service.alpha.openshift.io/infrastructure: 'true'
+    labels:
+      app: enmasse
+    name: messaging
+  spec:
+    ports:
+    - name: amqp
+      port: 5672
+      protocol: TCP
+      targetPort: 5672
+    - name: amqps
+      port: 5671
+      protocol: TCP
+      targetPort: 5671
+    - name: internal
+      port: 55673
+      protocol: TCP
+      targetPort: 55673
+    selector:
+      capability: router
+- apiVersion: v1
+  kind: ImageStream
+  metadata:
+    labels:
+      app: enmasse
+    name: configserv
+  spec:
+    dockerImageRepository: "${CONFIGSERV_REPO}"
+    importPolicy:
+      scheduled: true
+    tags:
+    - from:
+        kind: DockerImage
+        name: "${CONFIGSERV_REPO}:latest"
+      name: latest
+- apiVersion: v1
+  kind: DeploymentConfig
+  metadata:
+    labels:
+      app: enmasse
+      name: configserv
+    name: configserv
+  spec:
+    replicas: 1
+    selector:
+      name: configserv
+    template:
+      metadata:
+        labels:
+          app: enmasse
+          name: configserv
+      spec:
+        containers:
+        - image: configserv
+          livenessProbe:
+            tcpSocket:
+              port: amqp
+          name: bridge
+          ports:
+          - containerPort: 5672
+            name: amqp
+    triggers:
+    - type: ConfigChange
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+        - bridge
+        from:
+          kind: ImageStreamTag
+          name: configserv:latest
+      type: ImageChange
+- apiVersion: v1
+  kind: Service
+  metadata:
+    labels:
+      app: enmasse
+    name: configuration
+  spec:
+    ports:
+    - port: 5672
+      protocol: TCP
+      targetPort: 5672
+    selector:
+      name: configserv
+- apiVersion: v1
+  kind: ImageStream
+  metadata:
+    labels:
+      app: enmasse
+    name: ragent
+  spec:
+    dockerImageRepository: "${RAGENT_REPO}"
+    importPolicy:
+      scheduled: true
+    tags:
+    - from:
+        kind: DockerImage
+        name: "${RAGENT_REPO}:latest"
+      name: latest
+- apiVersion: v1
+  kind: DeploymentConfig
+  metadata:
+    labels:
+      app: enmasse
+      name: ragent
+    name: ragent
+  spec:
+    replicas: 1
+    selector:
+      name: ragent
+    template:
+      metadata:
+        labels:
+          app: enmasse
+          name: ragent
+      spec:
+        containers:
+        - image: ragent
+          livenessProbe:
+            tcpSocket:
+              port: amqp
+          name: ragent
+          ports:
+          - containerPort: 55672
+            name: amqp
+            protocol: TCP
+    triggers:
+    - type: ConfigChange
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+        - ragent
+        from:
+          kind: ImageStreamTag
+          name: ragent:latest
+      type: ImageChange
+- apiVersion: v1
+  kind: Service
+  metadata:
+    labels:
+      app: enmasse
+    name: ragent
+  spec:
+    ports:
+    - port: 55672
+      protocol: TCP
+      targetPort: 55672
+    selector:
+      name: ragent
+- apiVersion: v1
   kind: ImageStream
   metadata:
     labels:
@@ -743,6 +794,19 @@ objects:
           name: subserv:latest
       type: ImageChange
 - apiVersion: v1
+  kind: Service
+  metadata:
+    labels:
+      app: enmasse
+    name: subscription
+  spec:
+    ports:
+    - port: 5672
+      protocol: TCP
+      targetPort: 5672
+    selector:
+      name: subserv
+- apiVersion: v1
   kind: ImageStream
   metadata:
     labels:
@@ -762,17 +826,17 @@ objects:
   metadata:
     labels:
       app: enmasse
-      component: restapi
+      name: restapi
     name: restapi
   spec:
     replicas: 1
     selector:
-      component: restapi
+      name: restapi
     template:
       metadata:
         labels:
           app: enmasse
-          component: restapi
+          name: restapi
       spec:
         containers:
         - image: enmasse-rest
@@ -798,79 +862,16 @@ objects:
 - apiVersion: v1
   kind: Service
   metadata:
-    annotations:
-      service.alpha.openshift.io/dependencies: '[{"name":"configuration","namespace":"","kind":"Service"},{"name":"ragent","namespace":"","kind":"Service"},{"name":"subscription","namespace":"","kind":"Service"},{"name":"enmasse-rest","namespace":"","kind":"Service"}]'
-      service.alpha.openshift.io/infrastructure: 'true'
     labels:
       app: enmasse
-    name: messaging
-  spec:
-    ports:
-    - name: amqp
-      port: 5672
-      protocol: TCP
-      targetPort: 5672
-    - name: amqps
-      port: 5671
-      protocol: TCP
-      targetPort: 5671
-    - name: internal
-      port: 55673
-      protocol: TCP
-      targetPort: 55673
-    selector:
-      capability: router
-- apiVersion: v1
-  kind: Service
-  metadata:
-    labels:
-      app: enmasse
-    name: ragent
-  spec:
-    ports:
-    - port: 55672
-      protocol: TCP
-      targetPort: 55672
-    selector:
-      name: ragent
-- apiVersion: v1
-  kind: Service
-  metadata:
-    labels:
-      app: enmasse
-    name: enmasse-rest
+    name: restapi
   spec:
     ports:
     - port: 8080
       protocol: TCP
+      targetPort: 8080
     selector:
-      component: restapi
-- apiVersion: v1
-  kind: Service
-  metadata:
-    labels:
-      app: enmasse
-    name: configuration
-  spec:
-    ports:
-    - port: 5672
-      protocol: TCP
-      targetPort: 5672
-    selector:
-      name: configserv
-- apiVersion: v1
-  kind: Service
-  metadata:
-    labels:
-      app: enmasse
-    name: subscription
-  spec:
-    ports:
-    - port: 5672
-      protocol: TCP
-      targetPort: 5672
-    selector:
-      name: subserv
+      name: restapi
 - apiVersion: v1
   kind: ImageStream
   metadata:

@@ -3,6 +3,8 @@ local common = import "common.jsonnet";
 {
   imagestream(image_name)::
     common.imagestream("ragent", image_name),
+  service::
+    common.service("ragent", "ragent", 55672, 55672),
   deployment::
     {
       "apiVersion": "v1",
@@ -23,19 +25,7 @@ local common = import "common.jsonnet";
           {
             "type": "ConfigChange"
           },
-          {
-            "type": "ImageChange",
-            "imageChangeParams": {
-              "automatic": true,
-              "containerNames": [
-                "ragent"
-              ],
-              "from": {
-                "kind": "ImageStreamTag",
-                "name": "ragent:" + version
-              }
-            }
-          }
+          common.trigger("ragent", "ragent")
         ],
         "template": {
           "metadata": {
@@ -46,22 +36,7 @@ local common = import "common.jsonnet";
           },
           "spec": {
             "containers": [
-              {
-                "image": "ragent",
-                "name": "ragent",
-                "ports": [
-                  {
-                    "name": "amqp",
-                    "containerPort": 55672,
-                    "protocol": "TCP"
-                  }
-                ],
-                "livenessProbe": {
-                  "tcpSocket": {
-                    "port": "amqp"
-                  }
-                }
-              }
+              common.container("ragent", "ragent", "amqp", 55672)
             ]
           }
         }

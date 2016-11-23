@@ -1,8 +1,10 @@
 local version = std.extVar("VERSION");
-local is = import "imagestream.jsonnet";
+local common = import "common.jsonnet";
 {
   imagestream(image_name)::
-    is.create("enmasse-rest", image_name),
+    common.imagestream("enmasse-rest", image_name),
+  service::
+    common.service("restapi", "restapi", 8080, 8080),
   deployment::
     {
       "apiVersion": "v1",
@@ -10,37 +12,25 @@ local is = import "imagestream.jsonnet";
       "metadata": {
         "labels": {
           "app": "enmasse",
-          "component": "restapi"
+          "name": "restapi"
         },
         "name": "restapi"
       },
       "spec": {
         "replicas": 1,
         "selector": {
-          "component": "restapi"
+          "name": "restapi"
         },
         "triggers": [
           {
             "type": "ConfigChange"
           },
-          {
-            "type": "ImageChange",
-            "imageChangeParams": {
-              "automatic": true,
-              "containerNames": [
-                "restapi"
-              ],
-              "from": {
-                "kind": "ImageStreamTag",
-                "name": "enmasse-rest:" + version
-              }
-            }
-          }
+          common.trigger("restapi", "enmasse-rest")
         ],
         "template": {
           "metadata": {
             "labels": {
-              "component": "restapi",
+              "name": "restapi",
               "app": "enmasse"
             }
           },

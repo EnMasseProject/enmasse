@@ -1,5 +1,6 @@
 local version = std.extVar("VERSION");
 local router = import "router.jsonnet";
+local common = import "common.jsonnet";
 { 
   deployment(secure)::
     {
@@ -21,19 +22,7 @@ local router = import "router.jsonnet";
           {
             "type": "ConfigChange"
           },
-          {
-            "type": "ImageChange",
-            "imageChangeParams": {
-              "automatic": true,
-              "containerNames": [
-                "router"
-              ],
-              "from": {
-                "kind": "ImageStreamTag",
-                "name": "router:" + version
-              }
-            }
-          }
+          common.trigger("router", "router")
         ],
         "template": {
           "metadata": {

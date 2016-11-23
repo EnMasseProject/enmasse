@@ -11,6 +11,7 @@ local messagingService = import "messaging-service.jsonnet";
 local messagingRoute = import "messaging-route.json";
 local addressConfig = import "addresses.json";
 local flavorConfig = import "flavor.jsonnet";
+local common = import "common.jsonnet";
 local restapi = import "restapi.jsonnet";
 {
   generate(secure, with_storage_controller)::
@@ -29,23 +30,24 @@ local restapi = import "restapi.jsonnet";
                  storage.template(true, false, secure),
                  storage.template(true, true, secure),
                  import "direct-template.json",
-                 configserv.imagestream("${CONFIGSERV_REPO}"),
-                 configserv.deployment,
-                 ragent.imagestream("${RAGENT_REPO}"),
-                 ragent.deployment,
+
                  router.imagestream("${ROUTER_REPO}"),
                  qdrouterd.deployment(secure),
                  broker.imagestream("${BROKER_REPO}"),
                  forwarder.imagestream("${TOPIC_FORWARDER_REPO}"),
+                 messagingService.generate(secure),
+                 configserv.imagestream("${CONFIGSERV_REPO}"),
+                 configserv.deployment,
+                 configserv.service,
+                 ragent.imagestream("${RAGENT_REPO}"),
+                 ragent.deployment,
+                 ragent.service,
                  subserv.imagestream("${SUBSERV_REPO}"),
                  subserv.deployment,
+                 subserv.service,
                  restapi.imagestream("${RESTAPI_REPO}"),
                  restapi.deployment,
-                 messagingService.generate(secure),
-                 import "ragent-service.json",
-                 import "restapi-service.json",
-                 import "configuration-service.json",
-                 import "subscription-service.json"],
+                 restapi.service ],
     local storage_controller_resources = [
                  storageController.imagestream("${STORAGE_CONTROLLER_REPO}"),
                  storageController.deployment,

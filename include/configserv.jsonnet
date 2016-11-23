@@ -3,6 +3,8 @@ local common = import "common.jsonnet";
 {
   imagestream(image_name)::
     common.imagestream("configserv", image_name),
+  service::
+    common.service("configuration", "configserv", 5672, 5672),
   deployment::
     {
       "apiVersion": "v1",

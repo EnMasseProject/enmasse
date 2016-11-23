@@ -7,6 +7,7 @@ local qdrouterd = import "include/qdrouterd.jsonnet";
 local storageController = import "include/storage-controller.jsonnet";
 local subserv = import "include/subserv.jsonnet";
 local restapi = import "include/restapi.jsonnet";
+local common = import "include/common.jsonnet";
 local messagingService = import "include/messaging-service.jsonnet";
 {
   "messaging-service.json": messagingService.generate(false),
@@ -18,12 +19,16 @@ local messagingService = import "include/messaging-service.jsonnet";
   "tls-qdrouterd-dc.json": qdrouterd.deployment(true),
   "configserv-dc.json": configserv.deployment,
   "configserv-imagestream.json": configserv.imagestream("enmasseproject/configserv"),
+  "configuration-service.json": configserv.service,
   "storage-controller-dc.json": storageController.deployment,
   "storage-controller-imagestream.json": storageController.imagestream("enmasseproject/storage-controller"),
   "ragent-image-stream.json": ragent.imagestream("enmasseproject/ragent"),
   "ragent-dc.json": ragent.deployment,
+  "ragent-service.json": ragent.service,
   "subserv-image-stream.json": subserv.imagestream("enmasseproject/subserv"),
   "subserv-dc.json": subserv.deployment,
+  "subscription-service.json": subserv.service,
   "restapi-image-stream.json": restapi.imagestream("enmasseproject/enmasse-rest"),
-  "restapi-dc.json": restapi.deployment
+  "restapi-dc.json": restapi.deployment,
+  "restapi-service.json": restapi.service,
 }

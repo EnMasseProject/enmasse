@@ -3,6 +3,8 @@ local common = import "common.jsonnet";
 {
   imagestream(image_name)::
     common.imagestream("subserv", image_name),
+  service::
+    common.service("subscription", "subserv", 5672, 5672),
   deployment::
   {
     "apiVersion": "v1",
@@ -23,19 +25,7 @@ local common = import "common.jsonnet";
         {
           "type": "ConfigChange"
         },
-        {
-          "type": "ImageChange",
-          "imageChangeParams": {
-            "automatic": true,
-            "containerNames": [
-              "subserv"
-            ],
-            "from": {
-              "kind": "ImageStreamTag",
-              "name": "subserv:" + version
-            }
-          }
-        }
+        common.trigger("subserv", "subserv")
       ],
       "template": {
         "metadata": {
@@ -46,22 +36,7 @@ local common = import "common.jsonnet";
         },
         "spec": {
           "containers": [
-            {
-              "image": "subserv",
-              "name": "subserv",
-              "ports": [
-                {
-                  "containerPort": 5672,
-                  "name": "amqp",
-                  "protocol": "TCP"
-                }
-              ],
-              "livenessProbe": {
-                "tcpSocket": {
-                  "port": "amqp"
-                }
-              }
-            }
+            common.container("subserv", "subserv", "amqp", 5672)
           ]
         }
       }

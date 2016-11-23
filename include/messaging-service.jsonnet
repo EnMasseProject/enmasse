@@ -28,7 +28,7 @@
         "name": "messaging",
         "annotations": {
           "service.alpha.openshift.io/infrastructure": "true",
-          "service.alpha.openshift.io/dependencies": '[{"name":"configuration","namespace":"","kind":"Service"},{"name":"ragent","namespace":"","kind":"Service"},{"name":"subscription","namespace":"","kind":"Service"},{"name":"enmasse-rest","namespace":"","kind":"Service"}]'
+          "service.alpha.openshift.io/dependencies": '[{"name":"configuration","namespace":"","kind":"Service"},{"name":"ragent","namespace":"","kind":"Service"},{"name":"subscription","namespace":"","kind":"Service"},{"name":"restapi","namespace":"","kind":"Service"}]'
         }
       },
       "spec": {
