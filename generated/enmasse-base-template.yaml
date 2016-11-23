@@ -706,10 +706,63 @@ objects:
           name: subserv:latest
       type: ImageChange
 - apiVersion: v1
+  kind: ImageStream
+  metadata:
+    labels:
+      app: enmasse
+    name: enmasse-rest
+  spec:
+    dockerImageRepository: "${RESTAPI_REPO}"
+    importPolicy:
+      scheduled: true
+    tags:
+    - from:
+        kind: DockerImage
+        name: "${RESTAPI_REPO}:latest"
+      name: latest
+- apiVersion: v1
+  kind: DeploymentConfig
+  metadata:
+    labels:
+      app: enmasse
+      component: restapi
+    name: restapi
+  spec:
+    replicas: 1
+    selector:
+      component: restapi
+    template:
+      metadata:
+        labels:
+          app: enmasse
+          component: restapi
+      spec:
+        containers:
+        - image: enmasse-rest
+          livenessProbe:
+            httpGet:
+              path: "/v1/enmasse/addresses"
+              port: http
+          name: restapi
+          ports:
+          - containerPort: 8080
+            name: http
+        serviceAccount: deployer
+    triggers:
+    - type: ConfigChange
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+        - restapi
+        from:
+          kind: ImageStreamTag
+          name: enmasse-rest:latest
+      type: ImageChange
+- apiVersion: v1
   kind: Service
   metadata:
     annotations:
-      service.alpha.openshift.io/dependencies: '[{"name":"configuration","namespace":"","kind":"Service"},{"name":"ragent","namespace":"","kind":"Service"},{"name":"subscription","namespace":"","kind":"Service"},{"name":"storage-controller","namespace":"","kind":"DeploymentConfig"}]'
+      service.alpha.openshift.io/dependencies: '[{"name":"configuration","namespace":"","kind":"Service"},{"name":"ragent","namespace":"","kind":"Service"},{"name":"subscription","namespace":"","kind":"Service"},{"name":"enmasse-rest","namespace":"","kind":"Service"}]'
       service.alpha.openshift.io/infrastructure: 'true'
     labels:
       app: enmasse
@@ -739,6 +792,18 @@ objects:
       targetPort: 55672
     selector:
       name: ragent
+- apiVersion: v1
+  kind: Service
+  metadata:
+    labels:
+      app: enmasse
+    name: enmasse-rest
+  spec:
+    ports:
+    - port: 8080
+      protocol: TCP
+    selector:
+      component: restapi
 - apiVersion: v1
   kind: Service
   metadata:
@@ -790,5 +855,8 @@ parameters:
 - description: The image to use for the subscription services
   name: SUBSERV_REPO
   value: enmasseproject/subserv
+- description: The image to use for the rest api
+  name: RESTAPI_REPO
+  value: enmasseproject/enmasse-rest
 - description: The hostname to use for the exposed route for (TLS only)
   name: MESSAGING_HOSTNAME

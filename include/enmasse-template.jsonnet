@@ -11,6 +11,7 @@ local messagingService = import "messaging-service.jsonnet";
 local messagingRoute = import "messaging-route.json";
 local addressConfig = import "addresses.json";
 local flavorConfig = import "flavor.jsonnet";
+local restapi = import "restapi.jsonnet";
 {
   generate(secure, with_storage_controller)::
   {
@@ -38,8 +39,11 @@ local flavorConfig = import "flavor.jsonnet";
                  forwarder.imagestream("${TOPIC_FORWARDER_REPO}"),
                  subserv.imagestream("${SUBSERV_REPO}"),
                  subserv.deployment,
+                 restapi.imagestream("${RESTAPI_REPO}"),
+                 restapi.deployment,
                  messagingService.generate(secure),
                  import "ragent-service.json",
+                 import "restapi-service.json",
                  import "configuration-service.json",
                  import "subscription-service.json"],
     local storage_controller_resources = [
@@ -91,6 +95,11 @@ local flavorConfig = import "flavor.jsonnet";
         "name": "SUBSERV_REPO",
         "description": "The image to use for the subscription services",
         "value": "enmasseproject/subserv"
+      },
+      {
+        "name": "RESTAPI_REPO",
+        "description": "The image to use for the rest api",
+        "value": "enmasseproject/enmasse-rest"
       },
       {
         "name": "MESSAGING_HOSTNAME",
