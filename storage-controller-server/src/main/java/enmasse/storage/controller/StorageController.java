@@ -30,14 +30,12 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 
 public class StorageController implements Runnable, AutoCloseable {
-    private static final Logger log = LoggerFactory.getLogger(StorageController.class.getName());
-
     private final ClusterManager clusterManager;
     private final FlavorManager flavorManager;
+    private final AMQPServer server;
     private final Vertx vertx;
 
     private final ConfigAdapter flavorWatcher;
-    private final ConfigAdapter clusterWatcher;
 
 
     public StorageController(StorageControllerOptions options) throws IOException {
@@ -50,25 +48,18 @@ public class StorageController implements Runnable, AutoCloseable {
         OpenshiftClient openshiftClient = new OpenshiftClient(osClient, options.openshiftNamespace());
         this.flavorManager = new FlavorManager();
         this.clusterManager = new ClusterManager(openshiftClient, new TemplateStorageGenerator(openshiftClient, flavorManager));
+        this.server = new AMQPServer(clusterManager, options.port());
         this.flavorWatcher = new ConfigAdapter(openshiftClient, "flavor", flavorManager::configUpdated);
-        this.clusterWatcher = new ConfigAdapter(openshiftClient, "maas", clusterManager::configUpdated);
     }
 
     public void run() {
         flavorWatcher.start();
-        clusterWatcher.start();
-        startHealthServer();
-    }
-
-    private void startHealthServer() {
-        vertx.createHttpServer()
-                .requestHandler(request -> request.response().setStatusCode(HttpResponseStatus.OK.code()).end())
-                .listen(8080);
+        vertx.deployVerticle(server);
     }
 
     @Override
     public void close() throws Exception {
         flavorWatcher.stop();
-        clusterWatcher.stop();
+        vertx.close();
     }
 }

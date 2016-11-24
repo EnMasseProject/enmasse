@@ -61,4 +61,8 @@ public final class StorageControllerOptions {
     private static String readFile(File file) throws IOException {
         return new String(Files.readAllBytes(file.toPath()));
     }
+
+    public int port() {
+        return 55674;
+    }
 }
