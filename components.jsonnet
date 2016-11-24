@@ -8,6 +8,7 @@ local storageController = import "include/storage-controller.jsonnet";
 local subserv = import "include/subserv.jsonnet";
 local restapi = import "include/restapi.jsonnet";
 local common = import "include/common.jsonnet";
+local flavor = import "include/flavor.jsonnet";
 local messagingService = import "include/messaging-service.jsonnet";
 {
   "messaging-service.json": messagingService.generate(false),
@@ -22,6 +23,7 @@ local messagingService = import "include/messaging-service.jsonnet";
   "configuration-service.json": configserv.service,
   "storage-controller-dc.json": storageController.deployment,
   "storage-controller-imagestream.json": storageController.imagestream("enmasseproject/storage-controller"),
+  "storage-controller-service.json": storageController.service,
   "ragent-image-stream.json": ragent.imagestream("enmasseproject/ragent"),
   "ragent-dc.json": ragent.deployment,
   "ragent-service.json": ragent.service,
@@ -31,4 +33,6 @@ local messagingService = import "include/messaging-service.jsonnet";
   "restapi-image-stream.json": restapi.imagestream("enmasseproject/enmasse-rest"),
   "restapi-dc.json": restapi.deployment,
   "restapi-service.json": restapi.service,
+  "flavor.json": flavor.generate(false),
+  "tls-flavor.json": flavor.generate(true),
 }

@@ -1,11 +1,13 @@
 ---
-kind: ConfigMap
 apiVersion: v1
-metadata:
-  name: flavor
 data:
   json: |
     {
         "vanilla-queue": { "templateName":"queue-inmemory" },
-        "vanilla-topic": { "templateName":"topic-inmemory" }
+     "vanilla-topic": { "templateName":"topic-inmemory" }
     }
+kind: ConfigMap
+metadata:
+  labels:
+    app: enmasse
+  name: flavor

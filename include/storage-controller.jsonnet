@@ -3,6 +3,8 @@ local common = import "common.jsonnet";
 {
   imagestream(image_name)::
     common.imagestream("storage-controller", image_name),
+  service::
+    common.service("storage-controller", "storage-controller", 5672, 55674),
   deployment::
     {
       "apiVersion": "v1",
@@ -19,29 +21,11 @@ local common = import "common.jsonnet";
         "selector": {
           "name": "storage-controller"
         },
-        "strategy": {
-          "type": "Rolling",
-          "rollingParams": {
-            "maxSurge": 0
-          }
-        },
         "triggers": [
           {
             "type": "ConfigChange"
           },
-          {
-            "type": "ImageChange",
-            "imageChangeParams": {
-              "automatic": true,
-              "containerNames": [
-                "controller"
-              ],
-              "from": {
-                "kind": "ImageStreamTag",
-                "name": "storage-controller:" + version
-              }
-            }
-          }
+          common.trigger("storage-controller", "storage-controller")
         ],
         "template": {
           "metadata": {
@@ -53,22 +37,7 @@ local common = import "common.jsonnet";
           "spec": {
             "serviceAccount": "deployer",
             "containers": [
-              {
-                "image": "storage-controller",
-                "name": "controller",
-                "ports": [
-                  {
-                    "name": "health",
-                    "containerPort": 8080
-                  }
-                ],
-                "livenessProbe": {
-                  "httpGet": {
-                    "path": "/health",
-                    "port": "health"
-                  }
-                }
-              }
+              common.container("storage-controller", "storage-controller", "amqp", 55674)
             ]
           }
         }
