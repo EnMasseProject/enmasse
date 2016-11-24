@@ -85,7 +85,7 @@ public class MockWillService extends AbstractVerticle {
 
             } else {
 
-                LOG.info("Error starting the Will Service ...", done.cause());
+                LOG.error("Error starting the Will Service ...", done.cause());
 
                 startFuture.fail(done.cause());
             }
@@ -113,10 +113,11 @@ public class MockWillService extends AbstractVerticle {
                     .close();
         } else {
 
-            // TODO: tracking the AMQP sender
+            // TODO: tracking the AMQP sender ??
 
             receiver
                     .setTarget(receiver.getRemoteTarget())
+                    .setQoS(ProtonQoS.AT_LEAST_ONCE)
                     .handler((delivery, message) -> {
 
                         this.messageHandler(receiver, delivery, message);

@@ -23,6 +23,7 @@ import enmasse.mqtt.endpoints.AmqpWillServiceEndpoint;
 import enmasse.mqtt.messages.AmqpPublishMessage;
 import enmasse.mqtt.messages.AmqpQos;
 import enmasse.mqtt.messages.AmqpSessionMessage;
+import enmasse.mqtt.messages.AmqpSessionPresentMessage;
 import enmasse.mqtt.messages.AmqpSubackMessage;
 import enmasse.mqtt.messages.AmqpSubscribeMessage;
 import enmasse.mqtt.messages.AmqpTopicSubscription;
@@ -140,12 +141,12 @@ public class AmqpBridge {
 
                 // setup a Future for completed connection steps with all services
                 // with AMQP_WILL and AMQP_SESSION/AMQP_SESSION_PRESENT handled
-                Future<Void> connectionFuture = Future.future();
+                Future<AmqpSessionPresentMessage> connectionFuture = Future.future();
                 connectionFuture.setHandler(ar -> {
 
                     if (ar.succeeded()) {
 
-                        this.mqttEndpoint.writeConnack(MqttConnectReturnCode.CONNECTION_ACCEPTED, false);
+                        this.mqttEndpoint.writeConnack(MqttConnectReturnCode.CONNECTION_ACCEPTED, ar.result().isSessionPresent());
                         LOG.info("Connection accepted");
 
                         openHandler.handle(Future.succeededFuture(AmqpBridge.this));
@@ -153,7 +154,7 @@ public class AmqpBridge {
                     } else {
 
                         this.mqttEndpoint.writeConnack(MqttConnectReturnCode.CONNECTION_REFUSED_SERVER_UNAVAILABLE, false);
-                        LOG.info("Connection NOT accepted");
+                        LOG.error("Connection NOT accepted");
 
                         openHandler.handle(Future.failedFuture(ar.cause()));
                     }
@@ -187,13 +188,13 @@ public class AmqpBridge {
                     // handling AMQP_SESSION_PRESENT reply from Subscription Service
                     this.rcvEndpoint.sessionHandler(amqpSessionPresentMessage -> {
 
-                        LOG.info("session present {}", amqpSessionPresentMessage.isSessionPresent());
+                        LOG.info("Session present: {}", amqpSessionPresentMessage.isSessionPresent());
 
                         this.rcvEndpoint.subackHandler(this::subackHandler);
                         this.rcvEndpoint.unsubackHandler(this::unsubackHandler);
                         this.rcvEndpoint.publishHandler(this::publishHandler);
 
-                        connectionFuture.complete();
+                        connectionFuture.complete(amqpSessionPresentMessage);
                     });
 
                     // step 2 : send AMQP_SESSION to Subscription Service
@@ -220,7 +221,7 @@ public class AmqpBridge {
 
             } else {
 
-                LOG.info("Error connecting to AMQP services ...", done.cause());
+                LOG.error("Error connecting to AMQP services ...", done.cause());
                 // no connection with the AMQP side
                 this.mqttEndpoint.writeConnack(MqttConnectReturnCode.CONNECTION_REFUSED_SERVER_UNAVAILABLE, false);
 
@@ -251,6 +252,7 @@ public class AmqpBridge {
 
     /**
      * Handler for incoming MQTT PUBLISH message
+     *
      * @param publish   PUBLISH message
      */
     private void publishHandler(MqttPublishMessage publish) {
@@ -302,6 +304,7 @@ public class AmqpBridge {
 
     /**
      * Handler for incoming AMQP_PUBLISH message
+     *
      * @param publish   AMQP_PUBLISH message
      */
     private void publishHandler(AmqpPublishMessage publish) {
@@ -313,6 +316,7 @@ public class AmqpBridge {
 
     /**
      * Handler for incoming MQTT SUBSCRIBE message
+     *
      * @param subscribe SUBSCRIBE message
      */
     private void subscribeHandler(MqttSubscribeMessage subscribe) {
@@ -336,6 +340,7 @@ public class AmqpBridge {
 
     /**
      * Handler for incoming MQTT UNSUBSCRIBE message
+     *
      * @param unsubscribe   UNSUBSCRIBE message
      */
     private void unsubscribeHandler(MqttUnsubscribeMessage unsubscribe) {
@@ -354,6 +359,7 @@ public class AmqpBridge {
 
     /**
      * Handler for incoming MQTT DISCONNECT message
+     *
      * @param v
      */
     private void disconnectHandler(Void v) {
@@ -370,6 +376,7 @@ public class AmqpBridge {
 
     /**
      * Handler for connection closed by remote MQTT client
+     *
      * @param v
      */
     private void closeHandler(Void v) {
@@ -380,6 +387,7 @@ public class AmqpBridge {
 
     /**
      * Handler for AMQP_SUBACK message received by Subscription Service
+     *
      * @param suback    AMQP_SUBACK message
      */
     private void subackHandler(AmqpSubackMessage suback) {
@@ -393,6 +401,7 @@ public class AmqpBridge {
 
     /**
      * Handler for AMQP_UNSUBACK message received by Subscription Service
+     *
      * @param unsuback  AMQP_UNSUBACK message
      */
     private void unsubackHandler(AmqpUnsubackMessage unsuback) {
@@ -405,6 +414,7 @@ public class AmqpBridge {
 
     /**
      * Handler for incoming MQTT PUBACK message
+     *
      * @param messageId
      */
     private void pubackHandler(int messageId) {

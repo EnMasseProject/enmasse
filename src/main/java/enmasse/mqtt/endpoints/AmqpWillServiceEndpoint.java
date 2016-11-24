@@ -22,6 +22,7 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.proton.ProtonDelivery;
+import io.vertx.proton.ProtonQoS;
 import io.vertx.proton.ProtonSender;
 import org.apache.qpid.proton.amqp.messaging.Accepted;
 import org.slf4j.Logger;
@@ -53,7 +54,9 @@ public class AmqpWillServiceEndpoint {
     public void open() {
 
         // attach sender link to $mqtt.willservice
-        this.sender.open();
+        this.sender
+                .setQoS(ProtonQoS.AT_LEAST_ONCE)
+                .open();
     }
 
     /**
