@@ -1,6 +1,6 @@
 # Subscription/Unsubscription
 
-The FE needs an attached link with sender role to the Subscription Service control address. The MQTT _SUBSCRIBE_ and _UNSUBSCRIBE_ messages, that will be handled, have QoS level 1 by nature so the attached link should have :
+The FE needs an attached link with sender role to the Subscription Service control address. The MQTT _SUBSCRIBE_ and _UNSUBSCRIBE_ messages, that will be handled, have QoS level 1 (AT_LEAST_ONCE) by nature so the attached link should have :
 
 * rcv-settle-mode : first (0)
 * snd-settle-mode : unsettled (0)

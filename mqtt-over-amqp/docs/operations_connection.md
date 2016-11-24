@@ -1,5 +1,10 @@
 # Connection
 
+The FE needs an attached link with sender role to the Will Service control address. It should have QoS level 1 (AT_LEAST_ONCE) so the attached link should have :
+
+* rcv-settle-mode : first (0)
+* snd-settle-mode : unsettled (0)
+
 The MQTT client sends a _CONNECT_ message to the FE which maps the message to the following AMQP messages.
 
 **AMQP_WILL** : sent to the WS in order to provide “will” information.
