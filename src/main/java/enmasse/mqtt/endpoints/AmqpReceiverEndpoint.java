@@ -23,9 +23,13 @@ import enmasse.mqtt.messages.AmqpUnsubackMessage;
 import io.vertx.core.Handler;
 import io.vertx.proton.ProtonDelivery;
 import io.vertx.proton.ProtonReceiver;
+import org.apache.qpid.proton.amqp.messaging.Accepted;
 import org.apache.qpid.proton.message.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Receiver endpoint
@@ -46,6 +50,8 @@ public class AmqpReceiverEndpoint {
     private Handler<AmqpUnsubackMessage> unsubackHandler;
     // handler called when AMQP_PUBLISH is received
     private Handler<AmqpPublishMessage> publishHandler;
+    // all delivery for received messages if they need settlement (messageId -> delivery)
+    private Map<Object, ProtonDelivery> deliveries;
 
     /**
      * Constructor
@@ -120,27 +126,35 @@ public class AmqpReceiverEndpoint {
 
                 case AmqpSessionPresentMessage.AMQP_SUBJECT:
                     this.handleSession(AmqpSessionPresentMessage.from(message));
+                    delivery.disposition(Accepted.getInstance(), true);
                     break;
 
                 case AmqpSubackMessage.AMQP_SUBJECT:
                     this.handleSuback(AmqpSubackMessage.from(message));
+                    delivery.disposition(Accepted.getInstance(), true);
                     break;
 
                 case AmqpUnsubackMessage.AMQP_SUBJECT:
                     this.handleUnsuback(AmqpUnsubackMessage.from(message));
+                    delivery.disposition(Accepted.getInstance(), true);
                     break;
 
                 case AmqpPublishMessage.AMQP_SUBJECT:
                     this.handlePublish(AmqpPublishMessage.from(message));
+                    if (!delivery.remotelySettled()) {
+                        this.deliveries.put(message.getMessageId(), delivery);
+                    }
                     break;
             }
 
         } else {
 
-
             // TODO: published message (i.e. from native AMQP clients) could not have subject "publish" and all needed annotations !!!
             message.setSubject(AmqpPublishMessage.AMQP_SUBJECT);
             this.handlePublish(AmqpPublishMessage.from(message));
+            if (!delivery.remotelySettled()) {
+                this.deliveries.put(message.getMessageId(), delivery);
+            }
         }
     }
 
@@ -148,6 +162,8 @@ public class AmqpReceiverEndpoint {
      * Open the endpoint, attaching the links
      */
     public void open() {
+
+        this.deliveries = new HashMap<>();
 
         // attach receiver link on the $mqtt.to.<client-id> address for receiving messages (from SS)
         // define handler for received messages
@@ -167,6 +183,20 @@ public class AmqpReceiverEndpoint {
 
         // detach link
         this.receiver.close();
+        this.deliveries.clear();
+    }
+
+    /**
+     * Settle the delivery for a received message
+     *
+     * @param messageId message identifier to settle
+     */
+    public void settle(Object messageId) {
+
+        if (this.deliveries.containsKey(messageId)) {
+            ProtonDelivery delivery = this.deliveries.remove(messageId);
+            delivery.disposition(Accepted.getInstance(), true);
+        }
     }
 
     /**

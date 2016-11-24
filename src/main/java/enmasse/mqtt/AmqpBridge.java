@@ -285,8 +285,15 @@ public class AmqpBridge {
                 ProtonDelivery delivery = done.result();
                 if (delivery != null) {
 
-                    this.mqttEndpoint.writePuback(publish.messageId());
-                    LOG.info("PUBACK sent");
+                    if (publish.qosLevel() == MqttQoS.AT_LEAST_ONCE) {
+
+                        this.mqttEndpoint.writePuback(publish.messageId());
+                        LOG.info("PUBACK sent");
+                    } else {
+
+                        // TODO: handling QoS 2
+                    }
+
                 }
             }
 
@@ -403,6 +410,8 @@ public class AmqpBridge {
     private void pubackHandler(int messageId) {
 
         LOG.info("PUBACK received");
+
+        this.rcvEndpoint.settle(messageId);
     }
 
     /**

@@ -153,6 +153,7 @@ public class MockWillService extends AbstractVerticle {
                         this.wills.remove(receiver.getName());
                     }
                 }
+                delivery.disposition(Accepted.getInstance(), true);
                 break;
         }
 
