@@ -44,6 +44,7 @@ public class OpenShift {
     private static int getPort(Service service, String portName) {
         List<ServicePort> ports = service.getSpec().getPorts();
         for (ServicePort port : ports) {
+            System.out.println("Found port: " + port);
             if (port.getName().equals(portName)) {
                 return port.getPort();
             }
@@ -70,6 +71,15 @@ public class OpenShift {
                 .withReplicas(numReplicas)
                 .endSpec()
                 .done();
+    }
+
+    public List<Pod> listPods() {
+        return client.pods()
+                .inNamespace(environment.namespace())
+                .list()
+                .getItems().stream()
+                .filter(pod -> !pod.getMetadata().getName().endsWith("-deploy"))
+                .collect(Collectors.toList());
     }
 
     public List<Pod> listPods(Map<String, String> labelSelector) {

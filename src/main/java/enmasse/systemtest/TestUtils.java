@@ -21,9 +21,10 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import enmasse.amqp.SyncRequestClient;
 import io.fabric8.kubernetes.api.model.Pod;
-import io.vertx.core.Handler;
+import io.fabric8.kubernetes.api.model.PodStatus;
+import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpClient;
-import io.vertx.core.http.HttpClientResponse;
+import io.vertx.core.http.HttpClientRequest;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.message.Message;
 
@@ -68,7 +69,7 @@ public class TestUtils {
     private static int numReady(List<Pod> pods) {
         int numReady = 0;
         for (Pod pod : pods) {
-            if ("Running".equals(pod.getStatus())) {
+            if ("Running".equals(pod.getStatus().getPhase())) {
                 numReady++;
             } else {
                 System.out.println("POD " + pod.getMetadata().getName() + " in status : " + pod.getStatus());
@@ -95,8 +96,8 @@ public class TestUtils {
     }
 
     public static List<Pod> listRunningPods(OpenShift openShift) {
-        return openShift.listPods(Collections.emptyMap()).stream()
-                .filter(pod -> pod.getStatus().equals("Running"))
+        return openShift.listPods().stream()
+                .filter(pod -> pod.getStatus().getPhase().equals("Running"))
                 .collect(Collectors.toList());
     }
 
@@ -126,16 +127,17 @@ public class TestUtils {
         }
         Endpoint restApi = openShift.getRestEndpoint();
         CountDownLatch latch = new CountDownLatch(1);
-        httpClient.getNow(restApi.getPort(), restApi.getHost(), "/v1/enmasse/addresses", new Handler<HttpClientResponse>() {
-            @Override
-            public void handle(HttpClientResponse event) {
-                if (event.statusCode() >= 200 && event.statusCode() < 300) {
-                    latch.countDown();
-                }
+        HttpClientRequest request = httpClient.put(restApi.getPort(), restApi.getHost(), "/v1/enmasse/addresses");
+        request.putHeader("content-type", "application/json");
+        request.handler(event -> {
+            System.out.println("Got response: " + event.statusCode() + ": " + event.statusMessage());
+            if (event.statusCode() >= 200 && event.statusCode() < 300) {
+                latch.countDown();
             }
         });
+        request.end(Buffer.buffer(mapper.writeValueAsBytes(config)));
         latch.await(30, TimeUnit.SECONDS);
-        int expectedPods = 5;
+        int expectedPods = 6;
         for (Destination destination : destinations) {
             if (destination.isStoreAndForward()) {
                 waitForBrokerPod(openShift, destination.getAddress(), budget);
@@ -145,6 +147,7 @@ public class TestUtils {
                 expectedPods++;
             }
         }
+        System.out.println("Waiting for " + expectedPods + " pods");
         waitForExpectedPods(openShift, expectedPods, budget);
     }
 
