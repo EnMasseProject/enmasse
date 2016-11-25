@@ -1,9 +1,21 @@
 # Connection
 
-The FE needs an attached link with sender role to the Will Service control address. It should have QoS level 1 (AT_LEAST_ONCE) so the attached link should have :
+The FE needs to attach a link with sender role to the Will Service control address. It should have QoS level 1 (AT_LEAST_ONCE) so the attached link should have :
 
 * rcv-settle-mode : first (0)
 * snd-settle-mode : unsettled (0)
+
+The FE needs to attach a link with sender role to the Subscription Service control address. It should have QoS level 1 (AT_LEAST_ONCE) so the attached link should have :
+
+* rcv-settle-mode : first (0)
+* snd-settle-mode : unsettled (0)
+
+The FE needs to attach a link with receiver role to the unique client address $mqtt.to.[client-id]. It should have QoS level 1 (AT_LEAST_ONCE) :
+
+* rcv-settle-mode : first (0)
+* snd-settle-mode : unsettled (0)
+
+or using "mixed" (2) for the "snd-settle-mode".
 
 The MQTT client sends a _CONNECT_ message to the FE which maps the message to the following AMQP messages.
 
@@ -13,12 +25,12 @@ The MQTT client sends a _CONNECT_ message to the FE which maps the message to th
 | ---- | ---- | ----- | ---- |
 | subject | system property | "will" | - |
 | x-retain | message annotation | will retain flag | MQTT CONNECT |
-| x-desired-snd-settle-mode | message annotation | will QoS level | MQTT CONNECT |
-| x-desired-rcv-settle-mode | message annotation | will QoS level | MQTT CONNECT |
+| x-qos | message annotation | will QoS level | MQTT CONNECT |
+| durable | header | will QoS level | MQTT CONNECT |
 | to | system property | will topic | MQTT CONNECT |
 | payload | Data section | will message | MQTT CONNECT |
 
-> the MQTT QoS level is mapped to the AMQP couple snd-settle-mode and rcv-settle-mode (see "“Publishing”").
+> the MQTT QoS level is copied to the x-qos annotation. At same time the "durable" header field is set as FALSE if QoS level is 0, TRUE if QoS level is 1 or 2. When the x-qos annotations isn't present (i.e. AMQP_WILL published from a native AMQP client which doesn't add it), fallback to use only "durable" and if it's TRUE consider QoS level 1.
 
 The _AMQP_WILL_ is sent as "unsettled", in order to know that the Will Service has received it (with related disposition).
 The relation between the _AMQP_WILL_ message and the related client, at AMQP level, is inferred by the link name attached to the WS control address.
