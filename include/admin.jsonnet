@@ -3,10 +3,10 @@ local common = import "common.jsonnet";
 {
   services::
   [
-    common.service("ragent", "admin", 55672, 55672),
-    common.service("restapi", "admin", 8080, 8080),
-    common.service("configuration", "admin", 5672, 5672),
-    common.service("storage-controller", "admin", 5672, 55674)
+    common.service("ragent", "admin", "amqp", 55672, 55672),
+    common.service("restapi", "admin", "http", 8080, 8080),
+    common.service("configuration", "admin", "amqp", 5672, 5672),
+    common.service("storage-controller", "admin", "amqp", 5672, 55674)
   ],
   deployment::
   {

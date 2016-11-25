@@ -4,7 +4,7 @@ local common = import "common.jsonnet";
   imagestream(image_name)::
     common.imagestream("enmasse-rest", image_name),
   service::
-    common.service("restapi", "restapi", 8080, 8080),
+    common.service("restapi", "restapi", "http", 8080, 8080),
   deployment::
     {
       "apiVersion": "v1",

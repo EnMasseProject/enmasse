@@ -60,7 +60,7 @@ local version = std.extVar("VERSION");
     }
   },
 
-  service(name, selector_name, port, target_port)::
+  service(name, selector_name, port_name, port, target_port)::
   {
     "apiVersion": "v1",
     "kind": "Service",
@@ -73,6 +73,7 @@ local version = std.extVar("VERSION");
     "spec": {
       "ports": [
         {
+          "name": port_name,
           "port": port,
           "protocol": "TCP",
           "targetPort": target_port 

@@ -4,7 +4,7 @@ local common = import "common.jsonnet";
   imagestream(image_name)::
     common.imagestream("ragent", image_name),
   service::
-    common.service("ragent", "ragent", 55672, 55672),
+    common.service("ragent", "ragent", "amqp", 55672, 55672),
   deployment::
     {
       "apiVersion": "v1",

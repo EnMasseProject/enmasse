@@ -4,7 +4,7 @@ kind: Template
 metadata:
   labels:
     app: enmasse
-  name: tls-enmasse-base
+  name: enmasse
 objects:
 - apiVersion: v1
   kind: Template
@@ -12,7 +12,7 @@ objects:
     labels:
       addressType: queue
       app: enmasse
-    name: tls-queue-inmemory
+    name: queue-inmemory
   objects:
   - apiVersion: v1
     kind: DeploymentConfig
@@ -61,9 +61,6 @@ objects:
           volumes:
           - emptyDir: {}
             name: vol-${NAME}
-          - name: ssl-certs
-            secret:
-              secretName: qdrouterd-certs
       triggers:
       - type: ConfigChange
       - imageChangeParams:
@@ -93,7 +90,7 @@ objects:
     labels:
       addressType: queue
       app: enmasse
-    name: tls-queue-persisted
+    name: queue-persisted
   objects:
   - apiVersion: v1
     kind: PersistentVolumeClaim
@@ -155,9 +152,6 @@ objects:
           - name: vol-${NAME}
             persistentVolumeClaim:
               claimName: pvc-${NAME}
-          - name: ssl-certs
-            secret:
-              secretName: qdrouterd-certs
       triggers:
       - type: ConfigChange
       - imageChangeParams:
@@ -187,7 +181,7 @@ objects:
     labels:
       addressType: topic
       app: enmasse
-    name: tls-topic-inmemory
+    name: topic-inmemory
   objects:
   - apiVersion: v1
     kind: DeploymentConfig
@@ -250,13 +244,6 @@ objects:
             - containerPort: 55673
               name: internal
               protocol: TCP
-            - containerPort: 5671
-              name: amqps
-              protocol: TCP
-            volumeMounts:
-            - mountPath: "/etc/qpid-dispatch/ssl"
-              name: ssl-certs
-              readOnly: true
           - env:
             - name: TOPIC_NAME
               value: "${ADDRESS}"
@@ -272,9 +259,6 @@ objects:
           volumes:
           - emptyDir: {}
             name: vol-${NAME}
-          - name: ssl-certs
-            secret:
-              secretName: qdrouterd-certs
       triggers:
       - type: ConfigChange
       - imageChangeParams:
@@ -320,7 +304,7 @@ objects:
     labels:
       addressType: topic
       app: enmasse
-    name: tls-topic-persisted
+    name: topic-persisted
   objects:
   - apiVersion: v1
     kind: PersistentVolumeClaim
@@ -395,13 +379,6 @@ objects:
             - containerPort: 55673
               name: internal
               protocol: TCP
-            - containerPort: 5671
-              name: amqps
-              protocol: TCP
-            volumeMounts:
-            - mountPath: "/etc/qpid-dispatch/ssl"
-              name: ssl-certs
-              readOnly: true
           - env:
             - name: TOPIC_NAME
               value: "${ADDRESS}"
@@ -418,9 +395,6 @@ objects:
           - name: vol-${NAME}
             persistentVolumeClaim:
               claimName: pvc-${NAME}
-          - name: ssl-certs
-            secret:
-              secretName: qdrouterd-certs
       triggers:
       - type: ConfigChange
       - imageChangeParams:
@@ -536,17 +510,6 @@ objects:
           - containerPort: 55673
             name: internal
             protocol: TCP
-          - containerPort: 5671
-            name: amqps
-            protocol: TCP
-          volumeMounts:
-          - mountPath: "/etc/qpid-dispatch/ssl"
-            name: ssl-certs
-            readOnly: true
-        volumes:
-        - name: ssl-certs
-          secret:
-            secretName: qdrouterd-certs
     triggers:
     - type: ConfigChange
     - imageChangeParams:
@@ -602,10 +565,6 @@ objects:
       port: 5672
       protocol: TCP
       targetPort: 5672
-    - name: amqps
-      port: 5671
-      protocol: TCP
-      targetPort: 5671
     - name: internal
       port: 55673
       protocol: TCP
@@ -628,56 +587,6 @@ objects:
         name: "${CONFIGSERV_REPO}:latest"
       name: latest
 - apiVersion: v1
-  kind: DeploymentConfig
-  metadata:
-    labels:
-      app: enmasse
-      name: configserv
-    name: configserv
-  spec:
-    replicas: 1
-    selector:
-      name: configserv
-    template:
-      metadata:
-        labels:
-          app: enmasse
-          name: configserv
-      spec:
-        containers:
-        - image: configserv
-          livenessProbe:
-            tcpSocket:
-              port: amqp
-          name: bridge
-          ports:
-          - containerPort: 5672
-            name: amqp
-    triggers:
-    - type: ConfigChange
-    - imageChangeParams:
-        automatic: true
-        containerNames:
-        - bridge
-        from:
-          kind: ImageStreamTag
-          name: configserv:latest
-      type: ImageChange
-- apiVersion: v1
-  kind: Service
-  metadata:
-    labels:
-      app: enmasse
-    name: configuration
-  spec:
-    ports:
-    - name: amqp
-      port: 5672
-      protocol: TCP
-      targetPort: 5672
-    selector:
-      name: configserv
-- apiVersion: v1
   kind: ImageStream
   metadata:
     labels:
@@ -692,57 +601,6 @@ objects:
         kind: DockerImage
         name: "${RAGENT_REPO}:latest"
       name: latest
-- apiVersion: v1
-  kind: DeploymentConfig
-  metadata:
-    labels:
-      app: enmasse
-      name: ragent
-    name: ragent
-  spec:
-    replicas: 1
-    selector:
-      name: ragent
-    template:
-      metadata:
-        labels:
-          app: enmasse
-          name: ragent
-      spec:
-        containers:
-        - image: ragent
-          livenessProbe:
-            tcpSocket:
-              port: amqp
-          name: ragent
-          ports:
-          - containerPort: 55672
-            name: amqp
-            protocol: TCP
-    triggers:
-    - type: ConfigChange
-    - imageChangeParams:
-        automatic: true
-        containerNames:
-        - ragent
-        from:
-          kind: ImageStreamTag
-          name: ragent:latest
-      type: ImageChange
-- apiVersion: v1
-  kind: Service
-  metadata:
-    labels:
-      app: enmasse
-    name: ragent
-  spec:
-    ports:
-    - name: amqp
-      port: 55672
-      protocol: TCP
-      targetPort: 55672
-    selector:
-      name: ragent
 - apiVersion: v1
   kind: ImageStream
   metadata:
@@ -810,21 +668,192 @@ objects:
     selector:
       name: subserv
 - apiVersion: v1
-  kind: Route
+  kind: ImageStream
   metadata:
     labels:
       app: enmasse
-    name: messaging
+    name: enmasse-rest
   spec:
-    host: "${MESSAGING_HOSTNAME}"
-    port:
-      targetPort: amqps
-    tls:
-      termination: passthrough
-    to:
-      kind: Service
-      name: messaging
-      weight: 100
+    dockerImageRepository: "${RESTAPI_REPO}"
+    importPolicy:
+      scheduled: true
+    tags:
+    - from:
+        kind: DockerImage
+        name: "${RESTAPI_REPO}:latest"
+      name: latest
+- apiVersion: v1
+  kind: ImageStream
+  metadata:
+    labels:
+      app: enmasse
+    name: storage-controller
+  spec:
+    dockerImageRepository: "${STORAGE_CONTROLLER_REPO}"
+    importPolicy:
+      scheduled: true
+    tags:
+    - from:
+        kind: DockerImage
+        name: "${STORAGE_CONTROLLER_REPO}:latest"
+      name: latest
+- apiVersion: v1
+  data:
+    json: |
+      {
+          "vanilla-queue": { "templateName":"queue-inmemory" },
+       "vanilla-topic": { "templateName":"topic-inmemory" }
+      }
+  kind: ConfigMap
+  metadata:
+    labels:
+      app: enmasse
+    name: flavor
+- apiVersion: v1
+  kind: DeploymentConfig
+  metadata:
+    labels:
+      app: enmasse
+      name: admin
+    name: admin
+  spec:
+    replicas: 1
+    selector:
+      name: admin
+    template:
+      metadata:
+        labels:
+          app: enmasse
+          name: admin
+      spec:
+        containers:
+        - image: storage-controller
+          livenessProbe:
+            tcpSocket:
+              port: amqp
+          name: storage-controller
+          ports:
+          - containerPort: 55674
+            name: amqp
+            protocol: TCP
+        - image: ragent
+          livenessProbe:
+            tcpSocket:
+              port: amqp
+          name: ragent
+          ports:
+          - containerPort: 55672
+            name: amqp
+            protocol: TCP
+        - image: configserv
+          livenessProbe:
+            tcpSocket:
+              port: amqp
+          name: configserv
+          ports:
+          - containerPort: 5672
+            name: amqp
+            protocol: TCP
+        - image: enmasse-rest
+          livenessProbe:
+            httpGet:
+              path: "/v1/enmasse/addresses"
+              port: http
+          name: restapi
+          ports:
+          - containerPort: 8080
+            name: http
+        serviceAccount: deployer
+    triggers:
+    - type: ConfigChange
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+        - restapi
+        from:
+          kind: ImageStreamTag
+          name: enmasse-rest:latest
+      type: ImageChange
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+        - ragent
+        from:
+          kind: ImageStreamTag
+          name: ragent:latest
+      type: ImageChange
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+        - configserv
+        from:
+          kind: ImageStreamTag
+          name: configserv:latest
+      type: ImageChange
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+        - storage-controller
+        from:
+          kind: ImageStreamTag
+          name: storage-controller:latest
+      type: ImageChange
+- apiVersion: v1
+  kind: Service
+  metadata:
+    labels:
+      app: enmasse
+    name: ragent
+  spec:
+    ports:
+    - name: amqp
+      port: 55672
+      protocol: TCP
+      targetPort: 55672
+    selector:
+      name: admin
+- apiVersion: v1
+  kind: Service
+  metadata:
+    labels:
+      app: enmasse
+    name: restapi
+  spec:
+    ports:
+    - name: http
+      port: 8080
+      protocol: TCP
+      targetPort: 8080
+    selector:
+      name: admin
+- apiVersion: v1
+  kind: Service
+  metadata:
+    labels:
+      app: enmasse
+    name: configuration
+  spec:
+    ports:
+    - name: amqp
+      port: 5672
+      protocol: TCP
+      targetPort: 5672
+    selector:
+      name: admin
+- apiVersion: v1
+  kind: Service
+  metadata:
+    labels:
+      app: enmasse
+    name: storage-controller
+  spec:
+    ports:
+    - name: amqp
+      port: 5672
+      protocol: TCP
+      targetPort: 55674
+    selector:
+      name: admin
 parameters:
 - description: The image to use for the router
   name: ROUTER_REPO

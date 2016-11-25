@@ -4,7 +4,7 @@ local common = import "common.jsonnet";
   imagestream(image_name)::
     common.imagestream("storage-controller", image_name),
   service::
-    common.service("storage-controller", "storage-controller", 5672, 55674),
+    common.service("storage-controller", "storage-controller", "amqp", 5672, 55674),
   deployment::
     {
       "apiVersion": "v1",
