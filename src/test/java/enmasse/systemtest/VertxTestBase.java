@@ -17,6 +17,7 @@ package enmasse.systemtest;
 
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
+import io.vertx.core.http.HttpClient;
 import io.vertx.core.net.PemTrustOptions;
 import io.vertx.proton.ProtonClient;
 import io.vertx.proton.ProtonClientOptions;
@@ -29,19 +30,22 @@ import java.net.UnknownHostException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import static enmasse.systemtest.Environment.*;
-
 public class VertxTestBase {
     protected Vertx vertx;
+    protected HttpClient httpClient;
+    protected Environment environment = new Environment();
+    protected OpenShift openShift = new OpenShift(environment);
 
     @Before
     public void setup() {
         vertx = Vertx.vertx();
+        httpClient = vertx.createHttpClient();
     }
 
     @After
     public void teardown() throws Exception {
         cleanup();
+        httpClient.close();
         vertx.close();
     }
 
@@ -51,7 +55,7 @@ public class VertxTestBase {
 
     protected void deploy(Destination ... destinations) throws Exception {
         TimeoutBudget budget = new TimeoutBudget(5, TimeUnit.MINUTES);
-        TestUtils.deploy(getClient(), budget, destinations);
+        TestUtils.deploy(httpClient, openShift, budget, destinations);
         for (Destination destination : destinations) {
             waitUntilReady(destination.getAddress(), budget);
         }
@@ -59,9 +63,9 @@ public class VertxTestBase {
 
     protected void scale(Destination destination, int numReplicas) throws Exception {
         TimeoutBudget budget = new TimeoutBudget(5, TimeUnit.MINUTES);
-        TestUtils.setReplicas(destination, numReplicas, budget);
+        TestUtils.setReplicas(openShift, destination, numReplicas, budget);
         if (destination.isStoreAndForward() && !destination.isMulticast()) {
-            TestUtils.waitForAddress(destination.getAddress(), budget);
+            TestUtils.waitForAddress(openShift, destination.getAddress(), budget);
         }
         waitUntilReady(destination.getAddress(), budget);
     }
@@ -79,17 +83,16 @@ public class VertxTestBase {
     }
 
     protected EnMasseClient createClient(TerminusFactory terminusFactory) throws UnknownHostException {
-        String useTls = System.getenv("OPENSHIFT_USE_TLS");
-        if (useTls != null && useTls.toLowerCase().equals("true")) {
+        if (environment.useTLS()) {
             ProtonClientOptions options = new ProtonClientOptions();
             options.setSsl(true);
             options.setHostnameVerificationAlgorithm("");
-            options.setPemTrustOptions(new PemTrustOptions().addCertValue(Buffer.buffer(System.getenv("OPENSHIFT_SERVER_CERT"))));
-            options.setSNIServerName(Environment.getRouteHost());
+            options.setPemTrustOptions(new PemTrustOptions().addCertValue(Buffer.buffer(environment.messagingCert())));
+            options.setSNIServerName(openShift.getRouteHost());
             options.setTrustAll(true);
-            return new EnMasseClient(vertx, getSecureEndpoint(), terminusFactory, options);
+            return new EnMasseClient(vertx, openShift.getSecureEndpoint(), terminusFactory, options);
         } else {
-            return new EnMasseClient(vertx, getInsecureEndpoint(), terminusFactory);
+            return new EnMasseClient(vertx, openShift.getInsecureEndpoint(), terminusFactory);
         }
     }
 
@@ -103,7 +106,7 @@ public class VertxTestBase {
 
     private void connectToEndpoint(String address, CountDownLatch latch) {
         ProtonClient protonClient = ProtonClient.create(vertx);
-        Endpoint endpoint = getInsecureEndpoint();
+        Endpoint endpoint = openShift.getInsecureEndpoint();
         protonClient.connect(endpoint.getHost(), endpoint.getPort(), event -> {
             if (event.succeeded()) {
                 ProtonConnection connection = event.result();

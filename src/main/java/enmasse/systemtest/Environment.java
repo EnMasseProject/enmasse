@@ -16,60 +16,35 @@
 
 package enmasse.systemtest;
 
-import com.openshift.restclient.ClientBuilder;
-import com.openshift.restclient.IClient;
-import com.openshift.restclient.ResourceKind;
-import com.openshift.restclient.model.IService;
-import com.openshift.restclient.model.IServicePort;
-import com.openshift.restclient.model.route.IRoute;
-
-import java.net.UnknownHostException;
-import java.util.List;
-
 public class Environment {
-    public static final String user = System.getenv("OPENSHIFT_USER");
-    public static final String token = System.getenv("OPENSHIFT_TOKEN");
-    public static final String url = System.getenv("OPENSHIFT_URL");
-    public static final String namespace = System.getenv("OPENSHIFT_NAMESPACE");
+    private final String user = System.getenv("OPENSHIFT_USER");
+    private final String token = System.getenv("OPENSHIFT_TOKEN");
+    private final String url = System.getenv("OPENSHIFT_URL");
+    private final String namespace = System.getenv("OPENSHIFT_NAMESPACE");
+    private final String useTls = System.getenv("OPENSHIFT_USE_TLS");
+    private final String messagingCert = System.getenv("OPENSHIFT_SERVER_CERT");
 
-
-    private static IClient client;
-    private static IService service;
-
-    public static synchronized IClient getClient() {
-        if (client == null) {
-            client = new ClientBuilder(url).usingToken(token).withUserName(user).build();
-        }
-        return client;
+    public String openShiftUrl() {
+        return url;
     }
 
-    public static synchronized  IService getService() {
-        if (service == null) {
-            service = getClient().get(ResourceKind.SERVICE, "messaging", namespace);
-        }
-        return service;
+    public String openShiftToken() {
+        return token;
     }
 
-    public static Endpoint getSecureEndpoint() throws UnknownHostException {
-        return new Endpoint(getService().getPortalIP(), getPort("amqps")); //"127.0.0.1", 443); //getPort("amqps"));
+    public String openShiftUser() {
+        return user;
     }
 
-    public static Endpoint getInsecureEndpoint() {
-        return new Endpoint(getService().getPortalIP(), getPort("amqp"));
+    public boolean useTLS() {
+        return (useTls != null && useTls.toLowerCase().equals("true"));
     }
 
-    private static int getPort(String portName) {
-        List<IServicePort> ports = getService().getPorts();
-        for (IServicePort port : ports) {
-            if (port.getName().equals(portName)) {
-                return port.getPort();
-            }
-        }
-        throw new IllegalArgumentException("Unable to find port " + portName + " for service " + getService().getName());
+    public String messagingCert() {
+        return this.messagingCert;
     }
 
-    public static String getRouteHost() {
-        IRoute route = getClient().get(ResourceKind.ROUTE, "messaging", namespace);
-        return route.getHost();
+    public String namespace() {
+        return namespace;
     }
 }
