@@ -101,7 +101,7 @@ public class TestUtils {
                 .collect(Collectors.toList());
     }
 
-    public static void waitForBrokerPod(OpenShift openShift, String address, TimeoutBudget budget) {
+    public static void waitForBrokerPod(OpenShift openShift, String address, TimeoutBudget budget) throws InterruptedException {
         Map<String, String> labels = new LinkedHashMap<>();
         labels.put("address", address);
         labels.put("role", "broker");
@@ -111,6 +111,9 @@ public class TestUtils {
         while (budget.timeLeft() >= 0 && numReady != 1) {
             List<Pod> pods = openShift.listPods(labels);
             numReady = numReady(pods);
+            if (numReady != 1) {
+                Thread.sleep(5000);
+            }
         }
         if (numReady != 1) {
             throw new IllegalStateException("Unable to find broker pod for " + address + " within timeout");
