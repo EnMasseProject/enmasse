@@ -127,19 +127,55 @@ describe('subscription services', function() {
         });
     });
 
-    it('simple message routed subscription', function(done) {
+    it('simple message routed subscription with single string', function(done) {
         var sender = new_connection().open_sender({target:{address:'mytopic', capabilities: ['topic']}});
         var client = new_connection();
         var address = container.generate_uuid();
         var ctrl = client.open_sender('$subctrl');
         var recv = client.open_receiver(address);
-        ctrl.send({to:'$subctrl', correlation_id:address, subject:'subscribe', application_properties:{'root_address':'mytopic'}});
+        ctrl.send({to:'$subctrl', correlation_id:address, subject:'subscribe', body:'mytopic'});
         ctrl.once('accepted', function (context) {
             sender.send({body:'test1'});
         });
         recv.on('message', function (context) {
             assert.equal(context.message.body, 'test1');
-            ctrl.send({to:'$subctrl', correlation_id:address, subject:'close', application_properties:{'root_address':'mytopic'}});
+            ctrl.send({to:'$subctrl', correlation_id:address, subject:'close'});
+            ctrl.once('accepted', function (context) {
+                done();
+            });
+        });
+    });
+    it('simple message routed subscription with array', function(done) {
+        var sender = new_connection().open_sender({target:{address:'mytopic', capabilities: ['topic']}});
+        var client = new_connection();
+        var address = container.generate_uuid();
+        var ctrl = client.open_sender('$subctrl');
+        var recv = client.open_receiver(address);
+        ctrl.send({to:'$subctrl', correlation_id:address, subject:'subscribe', body:['mytopic']});
+        ctrl.once('accepted', function (context) {
+            sender.send({body:'test1'});
+        });
+        recv.on('message', function (context) {
+            assert.equal(context.message.body, 'test1');
+            ctrl.send({to:'$subctrl', correlation_id:address, subject:'close'});
+            ctrl.once('accepted', function (context) {
+                done();
+            });
+        });
+    });
+    it('simple message routed subscription with map', function(done) {
+        var sender = new_connection().open_sender({target:{address:'mytopic', capabilities: ['topic']}});
+        var client = new_connection();
+        var address = container.generate_uuid();
+        var ctrl = client.open_sender('$subctrl');
+        var recv = client.open_receiver(address);
+        ctrl.send({to:'$subctrl', correlation_id:address, subject:'subscribe', body:{'mytopic':undefined}});
+        ctrl.once('accepted', function (context) {
+            sender.send({body:'test1'});
+        });
+        recv.on('message', function (context) {
+            assert.equal(context.message.body, 'test1');
+            ctrl.send({to:'$subctrl', correlation_id:address, subject:'close'});
             ctrl.once('accepted', function (context) {
                 done();
             });

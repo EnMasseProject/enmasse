@@ -63,63 +63,139 @@ function addresses_updated(addresses) {
 var SUBCTRL = '$subctrl';
 
 function get_topic(message) {
-    //TODO: handle errors by rejecting message
     if (message.application_properties && message.application_properties.root_address) {
         var root = message.application_properties.root_address;
         var topic = topics[root];
         if (topic !== undefined) {
             return topic;
         } else {
-            console.log('subscription control message specified unrecognised root_address: ' + root);
+            throw Error('subscription control message specified unrecognised root_address: ' + root + ' [' + Object.getOwnPropertyNames(topics) + ']');
         }
     } else {
-        console.log('subscription control message must specify root_address in application properties');
+        throw Error('subscription control message must specify root_address in application properties');
     }
 }
 
+function combine(objects) {
+    var r = {};
+    objects.forEach(function (o) {
+        Object.keys(o).forEach( function(key) { r[key] = o[key]; } );
+    });
+    return r;
+}
+
+function list(subscription_id, key) {
+    return topics[key].controller.list(subscription_id);
+}
+
+function close(subscription_id, key) {
+    return topics[key].controller.close(subscription_id);
+}
+
+function subscribe(subscription_id, request) {
+    return request.topic.controller.subscribe(subscription_id, request.addresses);
+}
+
+function unsubscribe(subscription_id, request) {
+    return request.topic.controller.unsubscribe(subscription_id, request.addresses);
+}
+
+function request_string(message) {
+    var params = message.body ? [message.correlation_id, message.body] : [message.correlation_id];
+    return message.subject + '(' + params.join() + ')';
+}
+
+function get_separator(address) {
+    return address.indexOf('/') >= 0 ? '/' : '.';
+}
+
+function get_root(address) {
+    if (topics[address]) {
+        return address;
+    } else {
+        var separator = get_separator(address);
+        var root = address;
+        for (var end = root.lastIndexOf(separator); end > 0; end = root.lastIndexOf(separator)) {
+            root = root.substr(0, end);
+            if (topics[root]) return root;
+        }
+    }
+    throw Error('Unrecognised topic: ' + address);
+}
+
+function subreqs(input) {
+    var grouped = {};
+    if (util.isArray(input)) {
+        input.forEach(function (address) {
+            var root = get_root(address);
+            if (grouped[root] === undefined) {
+                grouped[root] = {};
+            }
+            grouped[root][address] = undefined;
+        });
+    } else if ((typeof input) === 'string') {
+        var addresses = {};
+        addresses[input] = undefined;
+        grouped[get_root(input)] = addresses;
+    } else {
+        //assume map
+        for (var address in input) {
+            var root = get_root(address);
+            if (grouped[root] === undefined) {
+                grouped[root] = {};
+            }
+            grouped[root][address] = input[address];
+        }
+    }
+    console.log('in subreqs(' + input + '): type=' + (typeof input) + ', grouped=' + JSON.stringify(grouped));
+    return Object.keys(grouped).map(
+        function(key) {
+            return {
+                topic: topics[key],
+                addresses: grouped[key]
+            };
+        }
+    );
+}
+
 function handle_control_message(context) {
+    console.log('received message: ' + context.message);
     if (context.message.to === SUBCTRL) {
         var subscription_id = context.message.correlation_id;
-        var topic = get_topic(context.message);
-        if (topic !== undefined) {
-            if (context.message.subject === 'close') {
-                console.log('closing subscription ' + subscription_id);
-                topic.controller.close(subscription_id).then(function () {
-                    context.delivery.accept();
-                }).catch(function (e) {
-                    context.delivery.reject({condition:'amqp:internal-error',description:''+e});
-                });
-            } else {
-                var topics = context.message.body || topic.name;
-                if (!util.isArray(topics)) topics = [topics];
-
-                if (context.message.subject === 'subscribe') {
-                    Promise.all(topics.map(function (t) {
-                        console.log('subscribing ' + subscription_id + ' to ' + t + '...');
-                        return topic.controller.subscribe(subscription_id, t);
-                    })).then(function () {
-                        console.log('successfully subscribed ' + subscription_id + ' to ' + topics);
-                        context.delivery.accept();
-                    }).catch(function (e) {
-                        context.delivery.reject({condition:'amqp:internal-error',description:''+e});
-                    });
-                } else if (context.message.subject === 'unsubscribe') {
-                    Promise.all(topics.map(function (t) {
-                        console.log('unsubscribing ' + subscription_id + ' from ' + t + '...');
-                        return topic.controller.unsubscribe(subscription_id, t);
-                    })).then(function () {
-                        console.log('successfully unsubscribed ' + subscription_id + ' from ' + topics);
-                        context.delivery.accept();
-                    }).catch(function (e) {
-                        context.delivery.reject({condition:'amqp:internal-error',description:''+e});
-                    });
-                } else {
-                    console.log('ignoring subscription control message with subject ' + context.message.subject);
-                    context.delivery.reject({condition:'amqp:not-implemented',description:'control message has unrecognised subject ' + context.message.subject});
-                }
+        var accept = function () {
+            console.log(request_string(context.message) + ' succeeded');
+            context.delivery.accept();
+        };
+        var reject = function (e, code) {
+            console.error(request_string(context.message) + ' failed: ' + e);
+            context.delivery.reject({condition: code || 'amqp:internal-error', description: '' + e});
+        };
+        var reply = function (type, value) {
+            if (sender) {
+                sender.send({to:context.message.reply_to, subject:type, correlation_id:subscription_id, body:value});
             }
-        } else {
-            context.delivery.reject({condition:'amqp:precondition-failed',description:'no topic specified'});
+            accept();
+        };
+
+        console.log(request_string(context.message));
+        try {
+            if (context.message.subject === 'list') {
+                Promise.all(Object.keys(topics).map(list.bind(null, subscription_id))).then(
+                    function (results) {
+                        reply('subscriptions', combine(results));
+                    }
+                ).catch(reject);
+            } else if (context.message.subject === 'close') {
+                Promise.all(Object.keys(topics).map(close.bind(null, subscription_id))).then(accept).catch(reject);
+            } else if (context.message.subject === 'subscribe') {
+                Promise.all(subreqs(context.message.body).map(subscribe.bind(null, subscription_id))).then(accept).catch(reject);
+            } else if (context.message.subject === 'unsubscribe') {
+                Promise.all(subreqs(context.message.body).map(unsubscribe.bind(null, subscription_id))).then(accept).catch(reject);
+            } else {
+                reject('unrecognised subject ' + context.message.subject, 'amqp:not-implemented');
+            }
+        } catch (e) {
+            reject(e, 'amqp:precondition-failed');
         }
     } else if (context.message.subject === 'pods') {
         if (context.receiver.target.address) {
@@ -200,9 +276,14 @@ var connection_properties = {product:'subserv', container_id:process.env.HOSTNAM
 amqp.sasl_server_mechanisms.enable_anonymous();
 amqp.listen({port:5672, properties:connection_properties});
 
-
+var sender;
 if (process.env.MESSAGING_SERVICE_HOST) {
-    amqp.connect({host:process.env.MESSAGING_SERVICE_HOST, port:process.env.MESSAGING_SERVICE_PORT, id:'messaging-service'}).open_receiver({autoaccept: false, source:SUBCTRL});
+    var conn = amqp.connect({host:process.env.MESSAGING_SERVICE_HOST, port:process.env.MESSAGING_SERVICE_PORT, properties:connection_properties, id:'messaging-service'});
+    conn.open_receiver({autoaccept: false, source:SUBCTRL});
+    sender = conn.open_sender({target:{}});
+    conn.on('sender_open', function (context) {
+        console.log('opened anonymous sender');
+    });
 }
 
 var config_host = process.env.ADMIN_SERVICE_HOST
