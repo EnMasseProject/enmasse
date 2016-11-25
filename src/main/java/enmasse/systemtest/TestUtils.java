@@ -72,7 +72,7 @@ public class TestUtils {
             if ("Running".equals(pod.getStatus().getPhase())) {
                 numReady++;
             } else {
-                System.out.println("POD " + pod.getMetadata().getName() + " in status : " + pod.getStatus());
+                System.out.println("POD " + pod.getMetadata().getName() + " in status : " + pod.getStatus().getPhase());
             }
         }
         return numReady;
@@ -130,7 +130,6 @@ public class TestUtils {
         HttpClientRequest request = httpClient.put(restApi.getPort(), restApi.getHost(), "/v1/enmasse/addresses");
         request.putHeader("content-type", "application/json");
         request.handler(event -> {
-            System.out.println("Got response: " + event.statusCode() + ": " + event.statusMessage());
             if (event.statusCode() >= 200 && event.statusCode() < 300) {
                 latch.countDown();
             }
