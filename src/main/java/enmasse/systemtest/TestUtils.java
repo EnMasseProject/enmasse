@@ -168,7 +168,7 @@ public class TestUtils {
         while (budget.timeLeft() >= 0 && numConfigured < agents.size()) {
             numConfigured = 0;
             for (Pod pod : agents) {
-                SyncRequestClient client = new SyncRequestClient(pod.getSpec().getHost(), pod.getSpec().getContainers().get(0).getPorts().get(0).getContainerPort());
+                SyncRequestClient client = new SyncRequestClient(pod.getStatus().getHostIP(), pod.getSpec().getContainers().get(0).getPorts().get(0).getContainerPort());
                 Message response = client.request(message, budget.timeLeft(), TimeUnit.MILLISECONDS);
                 AmqpValue value = (AmqpValue) response.getBody();
                 if ((Boolean) value.getValue() == true) {
