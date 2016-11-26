@@ -1,5 +1,7 @@
 # Subscription/Unsubscription
 
+## Subscribe
+
 The FE needs an attached link with sender role to the Subscription Service control address. The MQTT _SUBSCRIBE_ and _UNSUBSCRIBE_ messages, that will be handled, have QoS level 1 (AT_LEAST_ONCE) by nature so the attached link should have :
 
 * rcv-settle-mode : first (0)
@@ -42,9 +44,11 @@ When subscribed/attached, the FE receives published messages on the unique clien
 
 * $mqtt.to.[client-id]
 
-The AMQP message is used by FE for building the _PUBLISH_ message to send to the MQTT client (see “Publishing”). The _PUBACK_ (QoS 1) or _PUBREC_/_PUBCOMP_ (QoS 2) are used by FE and related AMQP client for sending the disposition with right settlement.
+The AMQP message is used by FE for building the _PUBLISH_ message to send to the MQTT client (see “Publishing”).
 
 ![Subscribe](../images/07_subscribe.png)
+
+## Unsubscribe
 
 The MQTT client sends an _UNSUBSCRIBE_ message to FE which maps to the following AMQP message.
 
@@ -57,9 +61,7 @@ The MQTT client sends an _UNSUBSCRIBE_ message to FE which maps to the following
 | reply-to | system property | $mqtt.to.[client-id] | - |
 | payload | AMQP value | List of topics | MQTT UNSUBSCRIBE |
 
-The _AMQP_UNSUBSCRIBE_ is sent as "unsettled", in order to know that the Subscription Service has received it (with related disposition). When FE receives tha related disposition (ACCEPTED) it builds the _UNSUBACK_ message for MQTT client.
-
-Finally, the FE builds the _UNSUBACK_ message as response for the MQTT client.
+The _AMQP_UNSUBSCRIBE_ is sent as "unsettled", in order to know that the Subscription Service has received it (with related disposition). When FE receives tha related disposition (with "settled") it builds the _UNSUBACK_ message for MQTT client.
 
 **UNSUBACK**
 
