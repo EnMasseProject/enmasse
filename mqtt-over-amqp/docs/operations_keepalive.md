@@ -4,4 +4,4 @@ The keep alive mechanism at MQTT side is handled by the FE, exchanging _PINGREQ_
 
 The life of the corresponding AMQP client is handled by AMQP “empty” message at connection level (as usual).
 
-> multiple AMQP clients can “live” with same AMQP connection so with only one AMQP “empty” keep alive message (i.e. using a router to establish the connection to the broker/container).
+The FE uses the "keep alive timeout" parameter from the MQTT _CONNECT_ message for specifying the "idle-time-out" parameter om the AMQP open connection operation.
