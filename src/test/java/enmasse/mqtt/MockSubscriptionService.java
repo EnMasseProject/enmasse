@@ -170,13 +170,8 @@ public class MockSubscriptionService extends AbstractVerticle {
 
                                 // after sending AMQP_SUBACK, start to send retained AMQP_PUBLISH messages
 
-                                // the request object is exchanged through the map using messageId in the event bus message
-                                // NOTE : it's a subscribe request
-                                this.vertx.sharedData().getLocalMap(MockBroker.EB_RETAINED)
-                                        .put(amqpSubscribeMessage.messageId(), new AmqpSubscribeData(amqpSubscribeMessage.messageId(), amqpSubscribeMessage));
-
-                                // send retain request to the broker
-                                this.vertx.eventBus().send(MockBroker.EB_RETAINED, amqpSubscribeMessage.messageId());
+                                // reply to the mock broker, for allowing it to start sending retained messages
+                                done.result().reply(null);
 
                                 sender.close();
                             });

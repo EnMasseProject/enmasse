@@ -53,7 +53,6 @@ public class MockBroker extends AbstractVerticle {
     // event bus names for communication between Subscription Service and broker
     public static final String EB_SUBSCRIBE = "subscribe";
     public static final String EB_UNSUBSCRIBE = "unsubscribe";
-    public static final String EB_RETAINED = "retained";
 
     // topic -> receiver
     private Map<String, ProtonReceiver> receivers;
@@ -136,7 +135,32 @@ public class MockBroker extends AbstractVerticle {
                             jsonArray.add(amqpQos.toJson());
                         }
 
-                        ebMessage.reply(jsonArray);
+                        // reply to the SUBSCRIBE request; the Subscription Service can send SUBACK
+                        ebMessage.reply(jsonArray, replyDone -> {
+
+                            // after sending SUBACK, Subscription Service reply in order to have mock broker
+                            // sending retained message for topic subscriptions
+                            if (replyDone.succeeded()) {
+
+                                if (!this.retained.isEmpty()) {
+
+                                    ProtonSender sender = this.connection.createSender(AmqpHelper.getClientAddress(amqpSubscribeMessage.clientId()));
+
+                                    sender.open();
+
+                                    for (AmqpTopicSubscription amqpTopicSubscription: amqpSubscribeMessage.topicSubscriptions()) {
+                                        if (this.retained.containsKey(amqpTopicSubscription.topic())) {
+
+                                            AmqpPublishMessage amqpPublishMessage = this.retained.get(amqpTopicSubscription.topic());
+                                            // TODO: with which QoS ?
+                                            sender.send(amqpPublishMessage.toAmqp());
+                                        }
+                                    }
+
+                                    sender.close();
+                                }
+                            }
+                        });
                     }
                 });
 
@@ -152,39 +176,6 @@ public class MockBroker extends AbstractVerticle {
                         this.unsubscribe(amqpUnsubscribeMessage);
                         ebMessage.reply(null);
                     }
-                });
-
-                // consumer for RETAINED requests from Subscription Service (start sending retained messages)
-                this.vertx.eventBus().consumer(EB_RETAINED, ebMessage -> {
-
-                    // the request object is exchanged through the map using messageId in the event bus message
-                    // NOTE : it's a subscribe request
-                    Object obj = this.vertx.sharedData().getLocalMap(EB_RETAINED).remove(ebMessage.body());
-
-                    if (obj instanceof  AmqpSubscribeData) {
-
-                        AmqpSubscribeMessage amqpSubscribeMessage = ((AmqpSubscribeData) obj).subscribe();
-
-                        if (!this.retained.isEmpty()) {
-
-                            ProtonSender sender = this.connection.createSender(AmqpHelper.getClientAddress(amqpSubscribeMessage.clientId()));
-
-                            sender.open();
-
-                            for (AmqpTopicSubscription amqpTopicSubscription: amqpSubscribeMessage.topicSubscriptions()) {
-                                if (this.retained.containsKey(amqpTopicSubscription.topic())) {
-
-                                    AmqpPublishMessage amqpPublishMessage = this.retained.get(amqpTopicSubscription.topic());
-                                    // TODO: with which QoS ?
-                                    sender.send(amqpPublishMessage.toAmqp());
-                                }
-                            }
-
-                            sender.close();
-                        }
-
-                    }
-
                 });
 
                 startFuture.complete();
@@ -204,17 +195,6 @@ public class MockBroker extends AbstractVerticle {
         this.connection.close();
         LOG.info("Broker has been shut down successfully");
         stopFuture.complete();
-    }
-
-    /**
-     * Get the retained message for a topic
-     *
-     * @param topic topic name
-     * @return  AMQP_PUBLISH with retained message
-     */
-    public AmqpPublishMessage getRetainedMessage(String topic) {
-
-        return this.retained.get(topic);
     }
 
     /**
