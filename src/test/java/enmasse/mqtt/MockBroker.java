@@ -80,7 +80,7 @@ public class MockBroker extends AbstractVerticle {
         this.senders = new HashMap<>();
         this.subscriptions = new HashMap<>();
         this.retained = new HashMap<>();
-        this.topics = Arrays.asList("my_topic");
+        this.topics = Arrays.asList("my_topic", "will");
     }
 
     @Override
