@@ -33,4 +33,15 @@ public final class AmqpHelper {
 
         return address.substring(address.indexOf("$mqtt.to.") + "$mqtt.to.".length());
     }
+
+    /**
+     * Return the unique client address from the client identifier
+     *
+     * @param clientId  the client identifier
+     * @return  the address
+     */
+    public static String getClientAddress(String clientId) {
+
+        return String.format("$mqtt.to.%s", clientId);
+    }
 }

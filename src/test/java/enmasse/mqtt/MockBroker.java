@@ -22,13 +22,20 @@ import enmasse.mqtt.messages.AmqpQos;
 import enmasse.mqtt.messages.AmqpSubscribeMessage;
 import enmasse.mqtt.messages.AmqpTopicSubscription;
 import enmasse.mqtt.messages.AmqpUnsubscribeMessage;
+import io.vertx.core.AbstractVerticle;
+import io.vertx.core.Future;
+import io.vertx.proton.ProtonClient;
 import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.ProtonDelivery;
+import io.vertx.proton.ProtonQoS;
 import io.vertx.proton.ProtonReceiver;
 import io.vertx.proton.ProtonSender;
 import org.apache.qpid.proton.message.Message;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,7 +43,16 @@ import java.util.Map;
 /**
  * Mock for a "broker like" component
  */
-public class MockBroker {
+public class MockBroker extends AbstractVerticle {
+
+    private static final Logger LOG = LoggerFactory.getLogger(MockBroker.class);
+
+    private static final String CONTAINER_ID = "broker";
+
+    // event bus names for communication between Subscription Service and broker
+    public static final String EB_SUBSCRIBE = "subscribe";
+    public static final String EB_UNSUBSCRIBE = "unsubscribe";
+    public static final String EB_RETAINED = "retained";
 
     // topic -> receiver
     private Map<String, ProtonReceiver> receivers;
@@ -47,21 +63,139 @@ public class MockBroker {
     // topic -> retained message
     private Map<String, AmqpPublishMessage> retained;
 
+    private String connectAddress;
+    private int connectPort;
+
+    private ProtonClient client;
     private ProtonConnection connection;
+
+    private List<String> topics;
 
     /**
      * Constructor
-     *
-     * @param connection    connection to the router
      */
-    public MockBroker(ProtonConnection connection) {
-
-        this.connection = connection;
+    public MockBroker() {
 
         this.receivers = new HashMap<>();
         this.senders = new HashMap<>();
         this.subscriptions = new HashMap<>();
         this.retained = new HashMap<>();
+        this.topics = Arrays.asList("my_topic");
+    }
+
+    @Override
+    public void start(Future<Void> startFuture) throws Exception {
+
+        this.client = ProtonClient.create(this.vertx);
+
+        this.client.connect(this.connectAddress, this.connectPort, done -> {
+
+            if (done.succeeded()) {
+
+                LOG.info("Broker started successfully ...");
+
+                this.connection = done.result();
+                this.connection.setContainer(CONTAINER_ID);
+
+                this.connection
+                        .sessionOpenHandler(session -> session.open())
+                        .open();
+
+                // attach receivers of pre-configured topics
+                for (String topic: this.topics) {
+
+                    ProtonReceiver receiver = this.connection.createReceiver(topic);
+
+                    receiver
+                            .setQoS(ProtonQoS.AT_LEAST_ONCE)
+                            .setTarget(receiver.getRemoteTarget())
+                            .handler((delivery, message) -> {
+
+                                this.messageHandler(receiver, delivery, message);
+                            })
+                            .open();
+
+                    this.receivers.put(topic, receiver);
+                }
+
+                // consumer for SUBSCRIBE requests from the Subscription Service
+                this.vertx.eventBus().consumer(EB_SUBSCRIBE, ebMessage -> {
+
+                    // the request object is exchanged through the map using messageId in the event bus message
+                    Object obj = this.vertx.sharedData().getLocalMap(EB_SUBSCRIBE).remove(ebMessage.body());
+
+                    if (obj instanceof AmqpSubscribeData) {
+
+                        AmqpSubscribeMessage amqpSubscribeMessage = ((AmqpSubscribeData) obj).subscribe();
+                        List<AmqpQos> grantedQoSLevels = this.subscribe(amqpSubscribeMessage);
+                        ebMessage.reply(null);
+                    }
+                });
+
+                // consumer for UNSUBSCRIBE requests from the Subscription Service
+                this.vertx.eventBus().consumer(EB_UNSUBSCRIBE, ebMessage -> {
+
+                    // the request object is exchanged through the map using messageId in the event bus message
+                    Object obj = this.vertx.sharedData().getLocalMap(EB_UNSUBSCRIBE).remove(ebMessage.body());
+
+                    if (obj instanceof  AmqpUnsubscribeData) {
+
+                        AmqpUnsubscribeMessage amqpUnsubscribeMessage = ((AmqpUnsubscribeData) obj).unsubscribe();
+                        this.unsubscribe(amqpUnsubscribeMessage);
+                        ebMessage.reply(null);
+                    }
+                });
+
+                // consumer for RETAINED requests from Subscription Service (start sending retained messages)
+                this.vertx.eventBus().consumer(EB_RETAINED, ebMessage -> {
+
+                    // the request object is exchanged through the map using messageId in the event bus message
+                    // NOTE : it's a subscribe request
+                    Object obj = this.vertx.sharedData().getLocalMap(EB_RETAINED).remove(ebMessage.body());
+
+                    if (obj instanceof  AmqpSubscribeData) {
+
+                        AmqpSubscribeMessage amqpSubscribeMessage = ((AmqpSubscribeData) obj).subscribe();
+
+                        if (!this.retained.isEmpty()) {
+
+                            ProtonSender sender = this.connection.createSender(AmqpHelper.getClientAddress(amqpSubscribeMessage.clientId()));
+
+                            sender.open();
+
+                            for (AmqpTopicSubscription amqpTopicSubscription: amqpSubscribeMessage.topicSubscriptions()) {
+                                if (this.retained.containsKey(amqpTopicSubscription.topic())) {
+
+                                    AmqpPublishMessage amqpPublishMessage = this.retained.get(amqpTopicSubscription.topic());
+                                    // TODO: with which QoS ?
+                                    sender.send(amqpPublishMessage.toAmqp());
+                                }
+                            }
+
+                            sender.close();
+                        }
+
+                    }
+
+                });
+
+                startFuture.complete();
+
+            } else {
+
+                LOG.info("Error starting the broker ...", done.cause());
+
+                startFuture.fail(done.cause());
+            }
+        });
+    }
+
+    @Override
+    public void stop(Future<Void> stopFuture) throws Exception {
+
+        this.connection.close();
+        LOG.info("Broker has been shut down successfully");
+        stopFuture.complete();
     }
 
     /**
@@ -174,6 +308,28 @@ public class MockBroker {
             }
         }
 
+    }
+
+    /**
+     * Set the address for connecting to the AMQP services
+     *
+     * @param connectAddress    address for AMQP connections
+     * @return  current Mock broker instance
+     */
+    public MockBroker setConnectAddress(String connectAddress) {
+        this.connectAddress = connectAddress;
+        return this;
+    }
+
+    /**
+     * Set the port for connecting to the AMQP services
+     *
+     * @param connectPort   port for AMQP connections
+     * @return  current Mock broker instance
+     */
+    public MockBroker setConnectPort(int connectPort) {
+        this.connectPort = connectPort;
+        return this;
     }
 
 }

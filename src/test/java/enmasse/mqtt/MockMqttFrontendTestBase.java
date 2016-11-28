@@ -45,6 +45,7 @@ public abstract class MockMqttFrontendTestBase {
     protected Vertx vertx;
     protected MockWillService willService;
     protected MockSubscriptionService subscriptionService;
+    protected MockBroker broker;
     protected MqttFrontend mqttFrontend;
 
     @Before
@@ -60,6 +61,12 @@ public abstract class MockMqttFrontendTestBase {
                 .setConnectAddress(AMQP_CLIENTS_LISTENER_ADDRESS)
                 .setConnectPort(AMQP_CLIENTS_LISTENER_PORT);
 
+        // create and setup mock Broker instance
+        this.broker = new MockBroker();
+        this.broker
+                .setConnectAddress(AMQP_SERVICES_LISTENER_ADDRESS)
+                .setConnectPort(AMQP_SERVICES_LISTENER_PORT);
+
         // create and setup mock Will Service instance
         this.willService = new MockWillService();
         this.willService
@@ -73,6 +80,7 @@ public abstract class MockMqttFrontendTestBase {
                 .setConnectPort(AMQP_SERVICES_LISTENER_PORT);
 
         // start and deploy components
+        this.vertx.deployVerticle(this.broker, context.asyncAssertSuccess());
         this.vertx.deployVerticle(this.willService, context.asyncAssertSuccess());
         this.vertx.deployVerticle(this.subscriptionService, context.asyncAssertSuccess());
         this.vertx.deployVerticle(this.mqttFrontend, context.asyncAssertSuccess());

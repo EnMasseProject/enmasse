@@ -16,13 +16,11 @@
 
 package enmasse.mqtt;
 
-import enmasse.mqtt.messages.AmqpPublishMessage;
 import enmasse.mqtt.messages.AmqpQos;
 import enmasse.mqtt.messages.AmqpSessionMessage;
 import enmasse.mqtt.messages.AmqpSessionPresentMessage;
 import enmasse.mqtt.messages.AmqpSubackMessage;
 import enmasse.mqtt.messages.AmqpSubscribeMessage;
-import enmasse.mqtt.messages.AmqpTopicSubscription;
 import enmasse.mqtt.messages.AmqpUnsubackMessage;
 import enmasse.mqtt.messages.AmqpUnsubscribeMessage;
 import io.vertx.core.AbstractVerticle;
@@ -37,8 +35,8 @@ import org.apache.qpid.proton.message.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Mock for the Subscription Service
@@ -55,8 +53,6 @@ public class MockSubscriptionService extends AbstractVerticle {
 
     private ProtonClient client;
     private ProtonConnection connection;
-
-    private MockBroker broker;
 
     @Override
     public void start(Future<Void> startFuture) throws Exception {
@@ -82,8 +78,6 @@ public class MockSubscriptionService extends AbstractVerticle {
                         .setTarget(receiver.getRemoteTarget())
                         .handler(this::messageHandler)
                         .open();
-
-                this.broker = new MockBroker(this.connection);
 
                 startFuture.complete();
 
@@ -144,38 +138,48 @@ public class MockSubscriptionService extends AbstractVerticle {
                     AmqpSubscribeMessage amqpSubscribeMessage = AmqpSubscribeMessage.from(message);
                     delivery.disposition(Accepted.getInstance(), true);
 
-                    // get AMQP_PUBLISH as retained messages for each topic
-                    List<AmqpPublishMessage> retained = new ArrayList<>();
-                    for (AmqpTopicSubscription topicSubscription: amqpSubscribeMessage.topicSubscriptions()) {
+                    // the request object is exchanged through the map using messageId in the event bus message
+                    this.vertx.sharedData().getLocalMap(MockBroker.EB_SUBSCRIBE)
+                            .put(amqpSubscribeMessage.messageId(), new AmqpSubscribeData(amqpSubscribeMessage.messageId(), amqpSubscribeMessage));
 
-                        AmqpPublishMessage amqpPublishMessage = this.broker.getRetainedMessage(topicSubscription.topic());
-                        if (amqpPublishMessage != null) {
-                            retained.add(amqpPublishMessage);
+                    // send SUBSCRIBE request to the broker
+                    this.vertx.eventBus().send(MockBroker.EB_SUBSCRIBE, amqpSubscribeMessage.messageId(), done -> {
+
+                        if (done.succeeded()) {
+
+                            // send AMQP_SUBACK to the unique client address
+                            ProtonSender sender = this.connection.createSender(message.getReplyTo());
+
+                            List<AmqpQos> grantedQoSLevels =
+                                    amqpSubscribeMessage.topicSubscriptions().stream()
+                                            .map(amqpTopicSubscription -> { return amqpTopicSubscription.qos(); })
+                                            .collect(Collectors.toList());
+
+                            AmqpSubackMessage amqpSubackMessage =
+                                    new AmqpSubackMessage(amqpSubscribeMessage.messageId(), grantedQoSLevels);
+
+                            sender.open();
+
+                            sender.send(amqpSubackMessage.toAmqp(), d -> {
+                                // TODO:
+
+                                // after sending AMQP_SUBACK, start to send retained AMQP_PUBLISH messages
+
+                                // the request object is exchanged through the map using messageId in the event bus message
+                                // NOTE : it's a subscribe request
+                                this.vertx.sharedData().getLocalMap(MockBroker.EB_RETAINED)
+                                        .put(amqpSubscribeMessage.messageId(), new AmqpSubscribeData(amqpSubscribeMessage.messageId(), amqpSubscribeMessage));
+
+                                // send retain request to the broker
+                                this.vertx.eventBus().send(MockBroker.EB_RETAINED, amqpSubscribeMessage.messageId());
+
+                                sender.close();
+                            });
+
                         }
-                    }
 
-                    List<AmqpQos> grantedQoSLevels = this.broker.subscribe(amqpSubscribeMessage);
-
-                    // send AMQP_SUBACK to the unique client address
-                    ProtonSender sender = this.connection.createSender(message.getReplyTo());
-
-                    AmqpSubackMessage amqpSubackMessage =
-                            new AmqpSubackMessage(amqpSubscribeMessage.messageId(), grantedQoSLevels);
-
-                    sender.open();
-
-                    sender.send(amqpSubackMessage.toAmqp(), d -> {
-                        // TODO:
-
-                        // after sending AMQP_SUBACK, start to send retained AMQP_PUBLISH messages
-                        for (AmqpPublishMessage amqpPublishMessage: retained) {
-
-                            // TODO: with which QoS ?
-                            sender.send(amqpPublishMessage.toAmqp());
-                        }
-
-                        sender.close();
                     });
+
                 }
 
                 break;
@@ -187,20 +191,31 @@ public class MockSubscriptionService extends AbstractVerticle {
                     AmqpUnsubscribeMessage amqpUnsubscribeMessage = AmqpUnsubscribeMessage.from(message);
                     delivery.disposition(Accepted.getInstance(), true);
 
-                    this.broker.unsubscribe(amqpUnsubscribeMessage);
+                    // the request object is exchanged through the map using messageId in the event bus message
+                    this.vertx.sharedData().getLocalMap(MockBroker.EB_UNSUBSCRIBE)
+                            .put(amqpUnsubscribeMessage.messageId(), new AmqpUnsubscribeData(amqpUnsubscribeMessage.messageId(), amqpUnsubscribeMessage));
 
-                    // send AMQP_UNSUBACK to the unique client address
-                    ProtonSender sender = this.connection.createSender(message.getReplyTo());
+                    // send UNSUBSCRIBE request to the broker
+                    this.vertx.eventBus().send(MockBroker.EB_UNSUBSCRIBE, amqpUnsubscribeMessage.messageId(), done -> {
 
-                    AmqpUnsubackMessage amqpUnsubackMessage =
-                            new AmqpUnsubackMessage(amqpUnsubscribeMessage.messageId());
+                        if (done.succeeded()) {
 
-                    sender.open();
+                            // send AMQP_UNSUBACK to the unique client address
+                            ProtonSender sender = this.connection.createSender(message.getReplyTo());
 
-                    sender.send(amqpUnsubackMessage.toAmqp(), d -> {
-                       // TODO:
-                        sender.close();
+                            AmqpUnsubackMessage amqpUnsubackMessage =
+                                    new AmqpUnsubackMessage(amqpUnsubscribeMessage.messageId());
+
+                            sender.open();
+
+                            sender.send(amqpUnsubackMessage.toAmqp(), d -> {
+                                // TODO:
+                                sender.close();
+                            });
+                        }
+
                     });
+
                 }
 
                 break;
