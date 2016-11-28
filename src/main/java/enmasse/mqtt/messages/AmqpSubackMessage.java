@@ -63,7 +63,7 @@ public class AmqpSubackMessage {
         if ((section != null) && (section instanceof AmqpValue)) {
 
             List<List<UnsignedByte>> grantedQoSLevels = (List<List<UnsignedByte>>) ((AmqpValue)message.getBody()).getValue();
-            return new AmqpSubackMessage(message.getMessageId(), grantedQoSLevels.stream().map(c -> AmqpQos.toAmqpQos(c)).collect(Collectors.toList()));
+            return new AmqpSubackMessage(message.getMessageId(), grantedQoSLevels.stream().map(c -> AmqpQos.from(c)).collect(Collectors.toList()));
         } else {
             throw new IllegalArgumentException("AMQP message wrong body type");
         }

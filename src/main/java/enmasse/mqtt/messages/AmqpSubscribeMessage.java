@@ -82,7 +82,7 @@ public class AmqpSubscribeMessage {
             // build the unique topic subscriptions list
             List<AmqpTopicSubscription> topicSubscriptions = new ArrayList<>();
             for (int i = 0; i < topics.size(); i++) {
-                topicSubscriptions.add(new AmqpTopicSubscription(topics.get(i), AmqpQos.toAmqpQos(settleModes.get(0))));
+                topicSubscriptions.add(new AmqpTopicSubscription(topics.get(i), AmqpQos.from(settleModes.get(0))));
             }
 
             return new AmqpSubscribeMessage(AmqpHelper.getClientId(message.getReplyTo()),

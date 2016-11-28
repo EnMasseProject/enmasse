@@ -24,6 +24,7 @@ import enmasse.mqtt.messages.AmqpTopicSubscription;
 import enmasse.mqtt.messages.AmqpUnsubscribeMessage;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
+import io.vertx.core.json.JsonArray;
 import io.vertx.proton.ProtonClient;
 import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.ProtonDelivery;
@@ -128,7 +129,14 @@ public class MockBroker extends AbstractVerticle {
 
                         AmqpSubscribeMessage amqpSubscribeMessage = ((AmqpSubscribeData) obj).subscribe();
                         List<AmqpQos> grantedQoSLevels = this.subscribe(amqpSubscribeMessage);
-                        ebMessage.reply(null);
+
+                        // build the reply message body with granted QoS levels (JSON encoded)
+                        JsonArray jsonArray = new JsonArray();
+                        for (AmqpQos amqpQos: grantedQoSLevels) {
+                            jsonArray.add(amqpQos.toJson());
+                        }
+
+                        ebMessage.reply(jsonArray);
                     }
                 });
 

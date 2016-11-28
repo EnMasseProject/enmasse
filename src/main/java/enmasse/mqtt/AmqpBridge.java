@@ -173,7 +173,7 @@ public class AmqpBridge {
                     AmqpWillMessage amqpWillMessage =
                             new AmqpWillMessage(will.isWillRetain(),
                                     will.willTopic(),
-                                    AmqpQos.toAmqpQoS(will.willQos()),
+                                    AmqpQos.from(will.willQos()),
                                     Buffer.buffer(will.willMessage()));
 
                     this.wsEndpoint.sendWill(amqpWillMessage, willFuture.completer());
@@ -274,7 +274,7 @@ public class AmqpBridge {
         // TODO: sending AMQP_PUBLISH
         AmqpPublishMessage amqpPublishMessage =
                 new AmqpPublishMessage(publish.messageId(),
-                        AmqpQos.toAmqpQoS(publish.qosLevel().value()),
+                        AmqpQos.from(publish.qosLevel().value()),
                         publish.isDup(),
                         publish.isRetain(),
                         publish.topicName(),
@@ -327,7 +327,7 @@ public class AmqpBridge {
 
         List<AmqpTopicSubscription> topicSubscriptions =
                 subscribe.topicSubscriptions().stream().map(topicSubscription -> {
-                    return new AmqpTopicSubscription(topicSubscription.topicName(), AmqpQos.toAmqpQoS(topicSubscription.qualityOfService().value()));
+                    return new AmqpTopicSubscription(topicSubscription.topicName(), AmqpQos.from(topicSubscription.qualityOfService().value()));
                 }).collect(Collectors.toList());
 
         AmqpSubscribeMessage amqpSubscribeMessage =

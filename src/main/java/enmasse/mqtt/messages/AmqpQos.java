@@ -16,6 +16,7 @@
 
 package enmasse.mqtt.messages;
 
+import io.vertx.core.json.JsonObject;
 import io.vertx.proton.ProtonQoS;
 import org.apache.qpid.proton.amqp.UnsignedByte;
 import org.apache.qpid.proton.amqp.transport.ReceiverSettleMode;
@@ -28,6 +29,9 @@ import java.util.List;
  * Represents an AMQP QoS in terms of sender and receiver settle modes
  */
 public class AmqpQos {
+
+    private static final String JSON_SND_SETTLE_MODE = "snd-settle-mode";
+    private static final String JSON_RCV_SETTLE_MODE = "rcv-settle-mode";
 
     private final SenderSettleMode sndSettleMode;
     private final ReceiverSettleMode rcvSettleMode;
@@ -63,7 +67,7 @@ public class AmqpQos {
      * @param list  list with sender and receiver settle modes couple
      * @return  AMQP QoS level
      */
-    public static AmqpQos toAmqpQos(List<UnsignedByte> list) {
+    public static AmqpQos from(List<UnsignedByte> list) {
 
         if ((list.get(0).intValue() > 2 ) || (list.get(1).intValue() > 2))
             throw new IllegalArgumentException("Illegal settle mode");
@@ -82,7 +86,7 @@ public class AmqpQos {
      * @param mqttQos   MQTT QoS level to map
      * @return  AMQP QoS level
      */
-    public static AmqpQos toAmqpQoS(int mqttQos) {
+    public static AmqpQos from(int mqttQos) {
 
         switch (mqttQos) {
             case 0:
@@ -126,6 +130,32 @@ public class AmqpQos {
         } else {
             return ProtonQoS.AT_LEAST_ONCE;
         }
+    }
+
+    /**
+     * Convert AMQP QoS level to a JSON object
+     *
+     * @return
+     */
+    public JsonObject toJson() {
+
+        JsonObject jsonObject = new JsonObject();
+        jsonObject.put(JSON_SND_SETTLE_MODE, this.sndSettleMode);
+        jsonObject.put(JSON_RCV_SETTLE_MODE, this.rcvSettleMode);
+        return jsonObject;
+    }
+
+    /**
+     * Convert a JSON object to AMQP QoS level made of sender and receiver settle mode
+     *
+     * @param jsonObject    JSON object
+     * @return  AMQP QoS level
+     */
+    public static AmqpQos from(JsonObject jsonObject) {
+
+        return new AmqpQos(
+                SenderSettleMode.valueOf(jsonObject.getString(JSON_SND_SETTLE_MODE)),
+                ReceiverSettleMode.valueOf(jsonObject.getString(JSON_RCV_SETTLE_MODE)));
     }
 
     /**

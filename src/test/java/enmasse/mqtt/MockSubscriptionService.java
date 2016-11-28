@@ -25,6 +25,8 @@ import enmasse.mqtt.messages.AmqpUnsubackMessage;
 import enmasse.mqtt.messages.AmqpUnsubscribeMessage;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 import io.vertx.proton.ProtonClient;
 import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.ProtonDelivery;
@@ -35,8 +37,8 @@ import org.apache.qpid.proton.message.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Mock for the Subscription Service
@@ -147,13 +149,16 @@ public class MockSubscriptionService extends AbstractVerticle {
 
                         if (done.succeeded()) {
 
+                            // event bus message body contains granted QoS levels (JSON encoded)
+                            List<AmqpQos> grantedQoSLevels = new ArrayList<>();
+                            JsonArray jsonArray = (JsonArray) done.result().body();
+                            for (int i = 0; i < jsonArray.size(); i++) {
+                                JsonObject object = jsonArray.getJsonObject(i);
+                                grantedQoSLevels.add(AmqpQos.from(object));
+                            }
+
                             // send AMQP_SUBACK to the unique client address
                             ProtonSender sender = this.connection.createSender(message.getReplyTo());
-
-                            List<AmqpQos> grantedQoSLevels =
-                                    amqpSubscribeMessage.topicSubscriptions().stream()
-                                            .map(amqpTopicSubscription -> { return amqpTopicSubscription.qos(); })
-                                            .collect(Collectors.toList());
 
                             AmqpSubackMessage amqpSubackMessage =
                                     new AmqpSubackMessage(amqpSubscribeMessage.messageId(), grantedQoSLevels);
