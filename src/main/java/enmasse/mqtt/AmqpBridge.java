@@ -146,14 +146,14 @@ public class AmqpBridge {
 
                     if (ar.succeeded()) {
 
-                        this.mqttEndpoint.writeConnack(MqttConnectReturnCode.CONNECTION_ACCEPTED, ar.result().isSessionPresent());
+                        this.mqttEndpoint.accept(ar.result().isSessionPresent());
                         LOG.info("Connection accepted");
 
                         openHandler.handle(Future.succeededFuture(AmqpBridge.this));
 
                     } else {
 
-                        this.mqttEndpoint.writeConnack(MqttConnectReturnCode.CONNECTION_REFUSED_SERVER_UNAVAILABLE, false);
+                        this.mqttEndpoint.reject(MqttConnectReturnCode.CONNECTION_REFUSED_SERVER_UNAVAILABLE);
                         LOG.error("Connection NOT accepted");
 
                         openHandler.handle(Future.failedFuture(ar.cause()));
@@ -223,7 +223,7 @@ public class AmqpBridge {
 
                 LOG.error("Error connecting to AMQP services ...", done.cause());
                 // no connection with the AMQP side
-                this.mqttEndpoint.writeConnack(MqttConnectReturnCode.CONNECTION_REFUSED_SERVER_UNAVAILABLE, false);
+                this.mqttEndpoint.reject(MqttConnectReturnCode.CONNECTION_REFUSED_SERVER_UNAVAILABLE);
 
                 openHandler.handle(Future.failedFuture(done.cause()));
 
@@ -289,7 +289,7 @@ public class AmqpBridge {
 
                     if (publish.qosLevel() == MqttQoS.AT_LEAST_ONCE) {
 
-                        this.mqttEndpoint.writePuback(publish.messageId());
+                        this.mqttEndpoint.publishAcknowledge(publish.messageId());
                         LOG.info("PUBACK sent");
                     } else {
 
@@ -309,7 +309,7 @@ public class AmqpBridge {
      */
     private void publishHandler(AmqpPublishMessage publish) {
 
-        this.mqttEndpoint.writePublish(publish.topic(), publish.payload(), MqttQoS.AT_LEAST_ONCE, publish.isDup(), publish.isRetain());
+        this.mqttEndpoint.publish(publish.topic(), publish.payload(), MqttQoS.AT_LEAST_ONCE, publish.isDup(), publish.isRetain());
 
         LOG.info("PUBLISH sent");
     }
@@ -392,7 +392,7 @@ public class AmqpBridge {
     private void subackHandler(AmqpSubackMessage suback) {
 
         List<Integer> grantedQoSLevels = suback.grantedQoSLevels().stream().map(qos -> { return qos.toMqttQos(); }).collect(Collectors.toList());
-        this.mqttEndpoint.writeSuback((int)suback.messageId(), grantedQoSLevels);
+        this.mqttEndpoint.subscribeAcknowledge((int)suback.messageId(), grantedQoSLevels);
 
         LOG.info("SUBACK sent");
     }
@@ -404,7 +404,7 @@ public class AmqpBridge {
      */
     private void unsubackHandler(AmqpUnsubackMessage unsuback) {
 
-        this.mqttEndpoint.writeUnsuback((int)unsuback.messageId());
+        this.mqttEndpoint.unsubscribeAcknowledge((int)unsuback.messageId());
 
         LOG.info("UNSUBACK sent");
     }
@@ -428,7 +428,7 @@ public class AmqpBridge {
 
         this.mqttEndpoint
                 .publishHandler(this::publishHandler)
-                .pubackHandler(this::pubackHandler)
+                .publishAcknowledgeHandler(this::pubackHandler)
                 .subscribeHandler(this::subscribeHandler)
                 .unsubscribeHandler(this::unsubscribeHandler)
                 .disconnectHandler(this::disconnectHandler)
