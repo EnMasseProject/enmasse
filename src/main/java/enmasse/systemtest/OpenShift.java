@@ -29,16 +29,20 @@ public class OpenShift {
                 .withUsername(environment.openShiftUser())
                 .build();
         client = new DefaultOpenShiftClient(config);
+
+    }
+
+    private Endpoint getEndpoint(String serviceName, String port) {
+        Service service = client.services().inNamespace(environment.namespace()).withName(serviceName).get();
+        return new Endpoint(service.getSpec().getPortalIP(), getPort(service, port));
     }
 
     public Endpoint getSecureEndpoint() {
-        Service service = client.services().inNamespace(environment.namespace()).withName("messaging").get();
-        return new Endpoint(service.getSpec().getPortalIP(), getPort(service, "amqps"));
+        return getEndpoint("messaging", "amqps");
     }
 
     public Endpoint getInsecureEndpoint() {
-        Service service = client.services().inNamespace(environment.namespace()).withName("messaging").get();
-        return new Endpoint(service.getSpec().getPortalIP(), getPort(service, "amqp"));
+        return getEndpoint("messaging", "amqp");
     }
 
     private static int getPort(Service service, String portName) {
@@ -57,8 +61,7 @@ public class OpenShift {
     }
 
     public Endpoint getRestEndpoint() {
-        Service service = client.services().inNamespace(environment.namespace()).withName("restapi").get();
-        return new Endpoint(service.getSpec().getPortalIP(), getPort(service, "http"));
+        return getEndpoint("restapi", "http");
     }
 
     public void setDeploymentReplicas(String name, int numReplicas) {
