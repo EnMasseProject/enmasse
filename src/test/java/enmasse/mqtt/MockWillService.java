@@ -95,8 +95,6 @@ public class MockWillService extends AbstractVerticle {
     @Override
     public void stop(Future<Void> stopFuture) throws Exception {
 
-        // TODO:
-
         this.connection.close();
         LOG.info("Will Service has been shut down successfully");
         stopFuture.complete();
@@ -129,8 +127,6 @@ public class MockWillService extends AbstractVerticle {
 
     private void messageHandler(ProtonReceiver receiver, ProtonDelivery delivery, Message message) {
 
-        // TODO:
-
         LOG.info("Received {}", message);
 
         switch (message.getSubject()) {
@@ -162,8 +158,6 @@ public class MockWillService extends AbstractVerticle {
 
     private void closeHandler(AsyncResult<ProtonReceiver> ar) {
 
-        // TODO:
-
         if (ar.succeeded()) {
 
             ProtonReceiver receiver = ar.result();
@@ -193,7 +187,6 @@ public class MockWillService extends AbstractVerticle {
                 } else {
 
                     sender.send(amqpPublishMessage.toAmqp(), delivery -> {
-                        // TODO:
 
                         if (this.willHandler != null) {
                             this.willHandler.handle(true);

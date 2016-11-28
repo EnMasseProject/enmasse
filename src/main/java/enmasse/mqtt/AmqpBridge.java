@@ -271,7 +271,7 @@ public class AmqpBridge {
             this.pubEndpoints.put(publish.topicName(), pubEndpoint);
         }
 
-        // TODO: sending AMQP_PUBLISH
+        // sending AMQP_PUBLISH
         AmqpPublishMessage amqpPublishMessage =
                 new AmqpPublishMessage(publish.messageId(),
                         AmqpQos.from(publish.qosLevel().value()),
@@ -323,7 +323,7 @@ public class AmqpBridge {
 
         LOG.info("SUBSCRIBE received");
 
-        // TODO: sending AMQP_SUBSCRIBE
+        // sending AMQP_SUBSCRIBE
 
         List<AmqpTopicSubscription> topicSubscriptions =
                 subscribe.topicSubscriptions().stream().map(topicSubscription -> {
@@ -347,7 +347,7 @@ public class AmqpBridge {
 
         LOG.info("UNSUBSCRIBE received");
 
-        // TODO: sending AMQP_UNSUBSCRIBE
+        // sending AMQP_UNSUBSCRIBE
 
         AmqpUnsubscribeMessage amqpUnsubscribeMessage =
                 new AmqpUnsubscribeMessage(this.mqttEndpoint.clientIdentifier(),
@@ -381,7 +381,6 @@ public class AmqpBridge {
      */
     private void closeHandler(Void v) {
 
-        // TODO:
         this.wsEndpoint.close();
     }
 
@@ -391,7 +390,6 @@ public class AmqpBridge {
      * @param suback    AMQP_SUBACK message
      */
     private void subackHandler(AmqpSubackMessage suback) {
-        // TODO:
 
         List<Integer> grantedQoSLevels = suback.grantedQoSLevels().stream().map(qos -> { return qos.toMqttQos(); }).collect(Collectors.toList());
         this.mqttEndpoint.writeSuback((int)suback.messageId(), grantedQoSLevels);
@@ -405,7 +403,6 @@ public class AmqpBridge {
      * @param unsuback  AMQP_UNSUBACK message
      */
     private void unsubackHandler(AmqpUnsubackMessage unsuback) {
-        // TODO:
 
         this.mqttEndpoint.writeUnsuback((int)unsuback.messageId());
 

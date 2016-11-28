@@ -205,8 +205,6 @@ public class MockBroker extends AbstractVerticle {
      */
     public List<AmqpQos> subscribe(AmqpSubscribeMessage amqpSubscribeMessage) {
 
-        // TODO:
-
         List<AmqpQos> grantedQoSLevels = new ArrayList<>();
 
         for (AmqpTopicSubscription amqpTopicSubscription: amqpSubscribeMessage.topicSubscriptions()) {

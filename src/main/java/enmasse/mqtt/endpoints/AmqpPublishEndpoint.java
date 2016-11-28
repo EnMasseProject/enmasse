@@ -55,7 +55,6 @@ public class AmqpPublishEndpoint {
      * @param amqpPublishMessage    AMQP_PUBLISH message
      */
     public void publish(AmqpPublishMessage amqpPublishMessage, Handler<AsyncResult<ProtonDelivery>> handler) {
-        // TODO:
 
         // attach sender link on "topic" (if doesn't exist yet)
         // send AMQP_PUBLISH message
@@ -94,7 +93,6 @@ public class AmqpPublishEndpoint {
     }
 
     public void close() {
-        // TODO:
 
         this.sender.close();
     }

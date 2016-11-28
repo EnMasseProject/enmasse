@@ -95,16 +95,12 @@ public class MockSubscriptionService extends AbstractVerticle {
     @Override
     public void stop(Future<Void> stopFuture) throws Exception {
 
-        // TODO:
-
         this.connection.close();
         LOG.info("Subscription Service has been shut down successfully");
         stopFuture.complete();
     }
 
     private void messageHandler(ProtonDelivery delivery, Message message) {
-
-        // TODO:
 
         LOG.info("Received {}", message);
 
@@ -126,7 +122,7 @@ public class MockSubscriptionService extends AbstractVerticle {
                     sender.open();
 
                     sender.send(amqpSessionPresentMessage.toAmqp(), d -> {
-                        // TODO:
+
                         sender.close();
                     });
                 }
@@ -166,7 +162,6 @@ public class MockSubscriptionService extends AbstractVerticle {
                             sender.open();
 
                             sender.send(amqpSubackMessage.toAmqp(), d -> {
-                                // TODO:
 
                                 // after sending AMQP_SUBACK, start to send retained AMQP_PUBLISH messages
 
@@ -209,7 +204,7 @@ public class MockSubscriptionService extends AbstractVerticle {
                             sender.open();
 
                             sender.send(amqpUnsubackMessage.toAmqp(), d -> {
-                                // TODO:
+
                                 sender.close();
                             });
                         }
