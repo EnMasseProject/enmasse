@@ -18,6 +18,7 @@ package enmasse.systemtest;
 
 import org.apache.qpid.proton.amqp.messaging.ApplicationProperties;
 import org.apache.qpid.proton.message.Message;
+import org.junit.Test;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -30,6 +31,7 @@ import static org.junit.Assert.assertThat;
 
 public class TopicTest extends VertxTestBase{
 
+    @Test
     public void testMultipleSubscribers() throws Exception {
         Destination dest = Destination.topic("mytopic");
         deploy(dest);
