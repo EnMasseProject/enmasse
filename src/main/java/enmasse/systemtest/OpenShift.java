@@ -1,6 +1,5 @@
 package enmasse.systemtest;
 
-import com.openshift.internal.restclient.model.DeploymentConfig;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServicePort;
@@ -26,6 +25,7 @@ public class OpenShift {
         Config config = new ConfigBuilder()
                 .withMasterUrl(environment.openShiftUrl())
                 .withOauthToken(environment.openShiftToken())
+                .withNamespace(environment.namespace())
                 .withUsername(environment.openShiftUser())
                 .build();
         client = new DefaultOpenShiftClient(config);
@@ -44,7 +44,6 @@ public class OpenShift {
     private static int getPort(Service service, String portName) {
         List<ServicePort> ports = service.getSpec().getPorts();
         for (ServicePort port : ports) {
-            System.out.println("Found port: " + port);
             if (port.getName().equals(portName)) {
                 return port.getPort();
             }
@@ -66,11 +65,7 @@ public class OpenShift {
         client.deploymentConfigs()
                 .inNamespace(environment.namespace())
                 .withName(name)
-                .edit()
-                .editSpec()
-                .withReplicas(numReplicas)
-                .endSpec()
-                .done();
+                .scale(numReplicas, true);
     }
 
     public List<Pod> listPods() {
