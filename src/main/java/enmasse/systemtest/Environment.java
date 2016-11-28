@@ -19,7 +19,7 @@ package enmasse.systemtest;
 public class Environment {
     private final String user = System.getenv("OPENSHIFT_USER");
     private final String token = System.getenv("OPENSHIFT_TOKEN");
-    private final String url = System.getenv("OPENSHIFT_URL");
+    private final String url = System.getenv("OPENSHIFT_MASTER_URL");
     private final String namespace = System.getenv("OPENSHIFT_NAMESPACE");
     private final String useTls = System.getenv("OPENSHIFT_USE_TLS");
     private final String messagingCert = System.getenv("OPENSHIFT_SERVER_CERT");
