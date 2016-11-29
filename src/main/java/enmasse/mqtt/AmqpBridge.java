@@ -23,7 +23,6 @@ import enmasse.mqtt.endpoints.AmqpWillServiceEndpoint;
 import enmasse.mqtt.messages.AmqpPublishMessage;
 import enmasse.mqtt.messages.AmqpSessionMessage;
 import enmasse.mqtt.messages.AmqpSessionPresentMessage;
-import enmasse.mqtt.messages.AmqpSubackMessage;
 import enmasse.mqtt.messages.AmqpSubscribeMessage;
 import enmasse.mqtt.messages.AmqpTopicSubscription;
 import enmasse.mqtt.messages.AmqpUnsubackMessage;
@@ -49,9 +48,12 @@ import io.vertx.proton.ProtonDelivery;
 import io.vertx.proton.ProtonLinkOptions;
 import io.vertx.proton.ProtonReceiver;
 import io.vertx.proton.ProtonSender;
+import org.apache.qpid.proton.amqp.messaging.Accepted;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -189,7 +191,6 @@ public class AmqpBridge {
 
                         LOG.info("Session present: {}", amqpSessionPresentMessage.isSessionPresent());
 
-                        this.rcvEndpoint.subackHandler(this::subackHandler);
                         this.rcvEndpoint.unsubackHandler(this::unsubackHandler);
                         this.rcvEndpoint.publishHandler(this::publishHandler);
 
@@ -334,7 +335,31 @@ public class AmqpBridge {
                         subscribe.messageId(),
                         topicSubscriptions);
 
-        this.ssEndpoint.sendSubscribe(amqpSubscribeMessage);
+        this.ssEndpoint.sendSubscribe(amqpSubscribeMessage, done -> {
+
+            if (done.succeeded()) {
+
+                ProtonDelivery delivery = done.result();
+
+                List<Integer> grantedQoSLevels = null;
+                if (delivery.getRemoteState() == Accepted.getInstance()) {
+
+                    // QoS levels requested are granted
+                    grantedQoSLevels = amqpSubscribeMessage.topicSubscriptions().stream().map(topicSubscription -> {
+                        return topicSubscription.qos().value();
+                    }).collect(Collectors.toList());
+
+                } else {
+
+                    // failure for all QoS levels requested
+                    grantedQoSLevels = new ArrayList<>(Collections.nCopies(amqpSubscribeMessage.topicSubscriptions().size(), MqttQoS.FAILURE.value()));
+                }
+
+                this.mqttEndpoint.subscribeAcknowledge((int) amqpSubscribeMessage.messageId(), grantedQoSLevels);
+
+                LOG.info("SUBACK sent");
+            }
+        });
     }
 
     /**
@@ -381,19 +406,6 @@ public class AmqpBridge {
     private void closeHandler(Void v) {
 
         this.wsEndpoint.close();
-    }
-
-    /**
-     * Handler for AMQP_SUBACK message received by Subscription Service
-     *
-     * @param suback    AMQP_SUBACK message
-     */
-    private void subackHandler(AmqpSubackMessage suback) {
-
-        List<Integer> grantedQoSLevels = suback.grantedQoSLevels().stream().map(qos -> { return qos.value(); }).collect(Collectors.toList());
-        this.mqttEndpoint.subscribeAcknowledge((int)suback.messageId(), grantedQoSLevels);
-
-        LOG.info("SUBACK sent");
     }
 
     /**

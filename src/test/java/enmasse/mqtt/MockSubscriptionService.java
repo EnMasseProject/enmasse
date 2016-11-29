@@ -18,7 +18,6 @@ package enmasse.mqtt;
 
 import enmasse.mqtt.messages.AmqpSessionMessage;
 import enmasse.mqtt.messages.AmqpSessionPresentMessage;
-import enmasse.mqtt.messages.AmqpSubackMessage;
 import enmasse.mqtt.messages.AmqpSubscribeMessage;
 import enmasse.mqtt.messages.AmqpUnsubackMessage;
 import enmasse.mqtt.messages.AmqpUnsubscribeMessage;
@@ -31,7 +30,10 @@ import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.ProtonDelivery;
 import io.vertx.proton.ProtonReceiver;
 import io.vertx.proton.ProtonSender;
+import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.messaging.Accepted;
+import org.apache.qpid.proton.amqp.messaging.Rejected;
+import org.apache.qpid.proton.amqp.transport.ErrorCondition;
 import org.apache.qpid.proton.message.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -133,7 +135,6 @@ public class MockSubscriptionService extends AbstractVerticle {
                 {
                     // get AMQP_SUBSCRIBE message and sends disposition for settlement
                     AmqpSubscribeMessage amqpSubscribeMessage = AmqpSubscribeMessage.from(message);
-                    delivery.disposition(Accepted.getInstance(), true);
 
                     // the request object is exchanged through the map using messageId in the event bus message
                     this.vertx.sharedData().getLocalMap(MockBroker.EB_SUBSCRIBE)
@@ -152,24 +153,22 @@ public class MockSubscriptionService extends AbstractVerticle {
                                 grantedQoSLevels.add(MqttQoS.valueOf(qos));
                             }
 
-                            // send AMQP_SUBACK to the unique client address
-                            ProtonSender sender = this.connection.createSender(message.getReplyTo());
+                            // TODO: removed AMQP_SUBACK, need for grantedQoSLevels here ?
 
-                            AmqpSubackMessage amqpSubackMessage =
-                                    new AmqpSubackMessage(amqpSubscribeMessage.messageId(), grantedQoSLevels);
+                            delivery.disposition(Accepted.getInstance(), true);
 
-                            sender.open();
+                            // after disposition for AMQP_SUBSCRIBE, start to send retained AMQP_PUBLISH messages
 
-                            sender.send(amqpSubackMessage.toAmqp(), d -> {
+                            // reply to the mock broker, for allowing it to start sending retained messages
+                            done.result().reply(null);
 
-                                // after sending AMQP_SUBACK, start to send retained AMQP_PUBLISH messages
+                        } else {
 
-                                // reply to the mock broker, for allowing it to start sending retained messages
-                                done.result().reply(null);
+                            ErrorCondition errorCondition = new ErrorCondition(Symbol.getSymbol("enmasse:subscribe-refused"), "SUBSCRIBE refused");
+                            Rejected rejected = new Rejected();
+                            rejected.setError(errorCondition);
 
-                                sender.close();
-                            });
-
+                            delivery.disposition(rejected, true);
                         }
 
                     });

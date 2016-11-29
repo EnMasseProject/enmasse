@@ -18,7 +18,6 @@ package enmasse.mqtt.endpoints;
 
 import enmasse.mqtt.messages.AmqpPublishMessage;
 import enmasse.mqtt.messages.AmqpSessionPresentMessage;
-import enmasse.mqtt.messages.AmqpSubackMessage;
 import enmasse.mqtt.messages.AmqpUnsubackMessage;
 import io.vertx.core.Handler;
 import io.vertx.proton.ProtonDelivery;
@@ -45,8 +44,6 @@ public class AmqpReceiverEndpoint {
 
     // handler called when AMQP_SESSION_PRESENT is received
     private Handler<AmqpSessionPresentMessage> sessionHandler;
-    // handler called when AMQP_SUBACK is received
-    private Handler<AmqpSubackMessage> subackHandler;
     // handler called when AMQP_UNSUBACK is received
     private Handler<AmqpUnsubackMessage> unsubackHandler;
     // handler called when AMQP_PUBLISH is received
@@ -88,18 +85,6 @@ public class AmqpReceiverEndpoint {
     }
 
     /**
-     * Set the session handler called when AMQP_SUBACK is received
-     *
-     * @param handler   the handler
-     * @return  the current AmqpReceiverEndpoint instance
-     */
-    public AmqpReceiverEndpoint subackHandler(Handler<AmqpSubackMessage> handler) {
-
-        this.subackHandler = handler;
-        return this;
-    }
-
-    /**
      * Set the session handler called when AMQP_UNSUBACK is received
      *
      * @param handler   the handler
@@ -127,11 +112,6 @@ public class AmqpReceiverEndpoint {
 
                 case AmqpSessionPresentMessage.AMQP_SUBJECT:
                     this.handleSession(AmqpSessionPresentMessage.from(message));
-                    delivery.disposition(Accepted.getInstance(), true);
-                    break;
-
-                case AmqpSubackMessage.AMQP_SUBJECT:
-                    this.handleSuback(AmqpSubackMessage.from(message));
                     delivery.disposition(Accepted.getInstance(), true);
                     break;
 
@@ -169,7 +149,6 @@ public class AmqpReceiverEndpoint {
         // attach receiver link on the $mqtt.to.<client-id> address for receiving messages (from SS)
         // define handler for received messages
         // - AMQP_SESSION_PRESENT after sent AMQP_SESSION -> for writing CONNACK (session-present)
-        // - AMQP_SUBACK after sent AMQP_SUBSCRIBE
         // - AMQP_UNSUBACK after sent AMQP_UNSUBSCRIBE
         // - AMQP_PUBLISH for every AMQP published message
         this.receiver
@@ -210,18 +189,6 @@ public class AmqpReceiverEndpoint {
 
         if (this.sessionHandler != null) {
             this.sessionHandler.handle(amqpSessionPresentMessage);
-        }
-    }
-
-    /**
-     * Used for calling the session handler when AMQP_SUBACK is received
-     *
-     * @param amqpSubackMessage AMQP_SUBACK message
-     */
-    private void handleSuback(AmqpSubackMessage amqpSubackMessage) {
-
-        if (this.subackHandler != null) {
-            this.subackHandler.handle(amqpSubackMessage);
         }
     }
 

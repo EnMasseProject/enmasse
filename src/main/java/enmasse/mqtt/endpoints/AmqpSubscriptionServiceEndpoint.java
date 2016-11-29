@@ -26,6 +26,7 @@ import io.vertx.proton.ProtonDelivery;
 import io.vertx.proton.ProtonQoS;
 import io.vertx.proton.ProtonSender;
 import org.apache.qpid.proton.amqp.messaging.Accepted;
+import org.apache.qpid.proton.amqp.messaging.Rejected;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -69,11 +70,24 @@ public class AmqpSubscriptionServiceEndpoint {
         });
     }
 
-    public void sendSubscribe(AmqpSubscribeMessage amqpSubscribeMessage) {
-        // TODO: send AMQP_SUBSCRIBE message
+    /**
+     * Send the AMQP_SUBSCRIBE message to the Subscription Service
+     *
+     * @param amqpSubscribeMessage  AMQP_SUBSCRIBE message
+     * @param handler   callback called on message dlivered
+     */
+    public void sendSubscribe(AmqpSubscribeMessage amqpSubscribeMessage, Handler<AsyncResult<ProtonDelivery>> handler) {
 
+        // send AMQP_SUBSCRIBE message
         this.sender.send(amqpSubscribeMessage.toAmqp(), delivery -> {
-            // TODO:
+
+            if ((delivery.getRemoteState() == Accepted.getInstance()) ||
+                (delivery.getRemoteState() instanceof Rejected)) {
+                LOG.info("AMQP subscribe delivery {}", delivery.getRemoteState());
+                handler.handle(Future.succeededFuture(delivery));
+            } else {
+                handler.handle(Future.failedFuture(String.format("AMQP subscribe delivery %s", delivery.getRemoteState())));
+            }
         });
     }
 
