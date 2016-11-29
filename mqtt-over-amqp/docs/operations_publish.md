@@ -64,6 +64,11 @@ The FE has an attached link with receiver role to the unique client address $mqt
 
 The FE receives published messages as _AMQP_PUBLISH_ messages (see previous paragraph).
 
+For handling QoS level 2, the FE attaches a link with sender role to the address $mqtt.[client-id].pubrel (for sending _AMQP_PUBREL_ messages). It should have QoS as AT_LEAST_ONCE so with :
+
+* rcv-settle-mode : first (0)
+* snd-settle-mode : unsettled (0)
+
 ### QoS level 0 (AT_MOST_ONCE)
 
 For QoS level 0, message is published as "unsettled" but the FE can sends immediately the disposition (with "settled") before sending the _PUBLISH_ to the remote MQTT client and without waiting for any acknowledge (of course, due to QoS level 0).
@@ -78,9 +83,11 @@ For QoS level 1, message is published as "unsettled". The FE sends the _PUBLISH_
 
 ### QoS level 2 (EXACTLY_ONCE)
 
-For QoS level 2, message is published as "unsettled". The FE sends the _PUBLISH_ to the MQTT client waiting for _PUBREC_; after receving it, FE sends the disposition (with "settled"). The first step in the acknowledge process ends and the AMQP side starts the next step sending an _AMQP_PUBREL_ message as "unsettled". The FE sends the corresponding _PUBREL_ to the MQTT client waiting for _PUBCOMP_; after receiving it, FE sends the disposition (with "settled").
+For QoS level 2, message is published as "unsettled". The FE sends the _PUBLISH_ to the MQTT client waiting for _PUBREC_; after receving it, FE doesn't settle the original _AMQP_PUBLISH_ message yet. Instead, FE sends an _AMQP_PUBREL_ message to the AMQP side. The first phase of QoS 2 exchange isn't finished yet because we need to be sure that before settling the original _AMQP_PUBLISH_ message, the _AMQP_PUBREL_ is available to the AMQP network. If something goes wrong, the _AMQP_PUBLISH_ (not yet settled) is resent or the exchange restarts from sending the _AMQP_PUBREL_.
+So, the FE waits for disposition (with "settled") from the _AMQP_PUBREL_ and then sends the disposition (with "settle") for the original _AMQP_PUBLISH_ message. The first phase of QoS 2 exchange is ended. Whatever it will happen, the exchange will restart from the _AMQP_PUBREL_.
+In the second phase, the AMQP side publishes the _AMQP_PUBREL_ to the FE, which sends _PUBREL_ to the MQTT client and receives the _PUBCOMP_ for then sending disposition (with "settled") to the AMQP side (for the _AMQP_PUBREL_).
 
-**AMQP_PUBREL** : sent to the unique client address $mqtt.to.[client-id]
+**AMQP_PUBREL** : sent to the unique client address $mqtt.[client-id].pubrel
 
 | DATA | TYPE | VALUE | FROM |
 | ---- | ---- | ----- | ---- |
