@@ -25,13 +25,7 @@ The _AMQP_SUBSCRIBE_ is sent as "unsettled", in order to know that the Subscript
 * ACCEPTED : then the FE builds a _SUBACK_ message for MQTT client using the same requested QoS as granted QoS
 * REJECTED : then the FE builds a _SUBACK_ message for MQTT client using 0x80 (failure) as granted QoS
 
-The FE could also receive the following message as reply on the unique client address.
-
-**AMQP_PUBLISH** : the retained message to deliver to the client (see “Publishing”)
-
-> the retained message is sent to the unique client address and it's not published on the topic because only that client should receive the message (not all the other subscribers for the topic itself).
-
-Finally, the FE builds the _SUBACK_ message as response for the MQTT client and eventually the _PUBLISH_ for a retained message.
+The FE builds the _SUBACK_ message as response for the MQTT client.
 
 **SUBACK**
 
@@ -40,7 +34,13 @@ Finally, the FE builds the _SUBACK_ message as response for the MQTT client and 
 | MessagId | message-id | AMQP_SUBSCRIBE |
 | Return codes | List of granted QoS (or failure) | AMQP_SUBSCRIBE |
 
-When subscribed/attached, the FE receives published messages on the unique client address :
+The FE could also receive the following _AMQP_PUBLISH_ message (as a retained message) on the unique client address and builds the _PUBLISH_ for the MQTT client.
+
+**AMQP_PUBLISH** : the retained message to deliver to the client (see “Publishing”)
+
+> the retained message is sent to the unique client address and it's not published on the topic because only that client should receive the message (not all the other subscribers for the topic itself).
+
+Starting from now, when subscribed/attached, the FE receives published messages on the unique client address :
 
 * $mqtt.to.[client-id]
 
