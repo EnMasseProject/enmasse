@@ -67,6 +67,6 @@ The _AMQP_UNSUBSCRIBE_ is sent as "unsettled", in order to know that the Subscri
 
 | DATA | VALUE | FROM |
 | ---- | ----- | ---- |
-| MessagId | message-id | AMQP_SUBACK |
+| MessagId | message-id | AMQP_UNSUBSCRIBE |
 
 ![Unsubscribe](../images/08_unsubscribe.png)
