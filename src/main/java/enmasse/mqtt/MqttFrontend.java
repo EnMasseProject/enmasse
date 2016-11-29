@@ -132,7 +132,7 @@ public class MqttFrontend extends AbstractVerticle {
      */
     private void handleMqttEndpointConnection(MqttEndpoint mqttEndpoint) {
 
-        LOG.info("Connection from {}", mqttEndpoint.clientIdentifier());
+        LOG.info("CONNECT from MQTT client {}", mqttEndpoint.clientIdentifier());
 
         AmqpBridge bridge = new AmqpBridge(this.vertx, mqttEndpoint);
 

@@ -159,7 +159,7 @@ public class AmqpBridge {
                         openHandler.handle(Future.failedFuture(ar.cause()));
                     }
 
-                    LOG.info("CONNACK sent");
+                    LOG.info("CONNACK to MQTT client {}", this.mqttEndpoint.clientIdentifier());
                 });
 
                 // step 1 : send AMQP_WILL to Will Service
@@ -225,7 +225,7 @@ public class AmqpBridge {
 
                 openHandler.handle(Future.failedFuture(done.cause()));
 
-                LOG.info("CONNACK sent");
+                LOG.info("CONNACK to MQTT client {}", this.mqttEndpoint.clientIdentifier());
             }
 
         });
@@ -255,7 +255,7 @@ public class AmqpBridge {
      */
     private void publishHandler(MqttPublishMessage publish) {
 
-        LOG.info("PUBLISH received");
+        LOG.info("PUBLISH [{}] from MQTT client {}", publish.messageId(), this.mqttEndpoint.clientIdentifier());
 
         // TODO: simple way, without considering wildcards
 
@@ -264,8 +264,10 @@ public class AmqpBridge {
         // check if publish endpoint already exists for the requested topic
         if (!this.pubEndpoints.containsKey(publish.topicName())) {
 
-            ProtonSender sender = this.connection.createSender(publish.topicName());
-            pubEndpoint = new AmqpPublishEndpoint(sender);
+            // create two sender for publishing QoS 0/1 and QoS 2 messages
+            ProtonSender senderQoS01 = this.connection.createSender(publish.topicName());
+            ProtonSender senderQoS2 = this.connection.createSender(publish.topicName());
+            pubEndpoint = new AmqpPublishEndpoint(senderQoS01, senderQoS2);
             this.pubEndpoints.put(publish.topicName(), pubEndpoint);
         }
 
@@ -287,8 +289,8 @@ public class AmqpBridge {
 
                     if (publish.qosLevel() == MqttQoS.AT_LEAST_ONCE) {
 
-                        this.mqttEndpoint.publishAcknowledge(publish.messageId());
-                        LOG.info("PUBACK sent");
+                        this.mqttEndpoint.publishAcknowledge((int) amqpPublishMessage.messageId());
+                        LOG.info("PUBACK [{}] to MQTT client {}", amqpPublishMessage.messageId(), this.mqttEndpoint.clientIdentifier());
                     } else {
 
                         // TODO: handling QoS 2
@@ -309,7 +311,7 @@ public class AmqpBridge {
 
         this.mqttEndpoint.publish(publish.topic(), publish.payload(), MqttQoS.AT_LEAST_ONCE, publish.isDup(), publish.isRetain());
 
-        LOG.info("PUBLISH sent");
+        LOG.info("PUBLISH [{}] to MQTT client {}", publish.messageId(), this.mqttEndpoint.clientIdentifier());
     }
 
     /**
@@ -319,7 +321,7 @@ public class AmqpBridge {
      */
     private void subscribeHandler(MqttSubscribeMessage subscribe) {
 
-        LOG.info("SUBSCRIBE received");
+        LOG.info("SUBSCRIBE [{}] from MQTT client {}", subscribe.messageId(), this.mqttEndpoint.clientIdentifier());
 
         // sending AMQP_SUBSCRIBE
 
@@ -355,7 +357,7 @@ public class AmqpBridge {
 
                 this.mqttEndpoint.subscribeAcknowledge((int) amqpSubscribeMessage.messageId(), grantedQoSLevels);
 
-                LOG.info("SUBACK sent");
+                LOG.info("SUBACK [{}] to MQTT client {}", amqpSubscribeMessage.messageId(), this.mqttEndpoint.clientIdentifier());
             }
         });
     }
@@ -367,7 +369,7 @@ public class AmqpBridge {
      */
     private void unsubscribeHandler(MqttUnsubscribeMessage unsubscribe) {
 
-        LOG.info("UNSUBSCRIBE received");
+        LOG.info("UNSUBSCRIBE [{}] from MQTT client {}", unsubscribe.messageId(), this.mqttEndpoint.clientIdentifier());
 
         // sending AMQP_UNSUBSCRIBE
 
@@ -380,9 +382,9 @@ public class AmqpBridge {
 
             if (done.succeeded()) {
 
-                this.mqttEndpoint.unsubscribeAcknowledge((int)amqpUnsubscribeMessage.messageId());
+                this.mqttEndpoint.unsubscribeAcknowledge((int) amqpUnsubscribeMessage.messageId());
 
-                LOG.info("UNSUBACK sent");
+                LOG.info("UNSUBACK [{}] to MQTT client {}", amqpUnsubscribeMessage.messageId(), this.mqttEndpoint.clientIdentifier());
             }
         });
     }
@@ -394,7 +396,7 @@ public class AmqpBridge {
      */
     private void disconnectHandler(Void v) {
 
-        LOG.info("DISCONNECT received");
+        LOG.info("DISCONNECT from MQTT client {}", this.mqttEndpoint.clientIdentifier());
 
         // sending AMQP_WILL_CLEAR
         AmqpWillClearMessage amqpWillClearMessage = new AmqpWillClearMessage();
@@ -421,8 +423,10 @@ public class AmqpBridge {
      */
     private void pubackHandler(int messageId) {
 
-        LOG.info("PUBACK received");
+        LOG.info("PUBACK [{}] from MQTT client {}", messageId, this.mqttEndpoint.clientIdentifier());
 
+        // a PUBLISH message with QoS 1 was sent to remote MQTT client (not settled yet at source)
+        // now PUBACK is received so it's time to settle
         this.rcvEndpoint.settle(messageId);
     }
 

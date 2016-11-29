@@ -17,6 +17,7 @@
 package enmasse.mqtt.endpoints;
 
 import enmasse.mqtt.messages.AmqpPublishMessage;
+import io.netty.handler.codec.mqtt.MqttQoS;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -34,15 +35,18 @@ public class AmqpPublishEndpoint {
 
     private static final Logger LOG = LoggerFactory.getLogger(AmqpPublishEndpoint.class);
 
-    private ProtonSender sender;
+    private ProtonSender senderQoS01;
+    private ProtonSender senderQoS2;
 
     /**
      * Constructor
      *
-     * @param sender    ProtonSender instance related to the publishing address
+     * @param senderQoS01    ProtonSender instance related to the publishing address for QoS 0 and 1
+     * @param senderQoS2    ProtonSender instance related to the publishing address for QoS 2
      */
-    public AmqpPublishEndpoint(ProtonSender sender) {
-        this.sender = sender;
+    public AmqpPublishEndpoint(ProtonSender senderQoS01, ProtonSender senderQoS2) {
+        this.senderQoS01 = senderQoS01;
+        this.senderQoS2 = senderQoS2;
     }
 
     public void open() {
@@ -56,45 +60,55 @@ public class AmqpPublishEndpoint {
      */
     public void publish(AmqpPublishMessage amqpPublishMessage, Handler<AsyncResult<ProtonDelivery>> handler) {
 
-        // attach sender link on "topic" (if doesn't exist yet)
         // send AMQP_PUBLISH message
 
-        if (!this.sender.isOpen()) {
+        // use sender for QoS 0/1 messages
+        if (amqpPublishMessage.qos() != MqttQoS.EXACTLY_ONCE) {
 
-            // TODO: it should be always AT_LEAST_ONCE
-            //this.sender.setQoS(amqpPublishMessage.amqpQos().toProtonQos());
-            this.sender.open();
+            // attach sender link on "topic" (if doesn't exist yet)
+            if (!this.senderQoS01.isOpen()) {
 
-            // TODO: think about starting a timer for inactivity on this link for detaching ?
-        }
+                this.senderQoS01
+                        .setQoS(ProtonQoS.AT_LEAST_ONCE)
+                        .open();
 
-        // TODO:
-        // check if requested QoS is equal to the current (link already opened)
-        // could be need to detach and reattach with new QoS ?
+                // TODO: think about starting a timer for inactivity on this link for detaching ?
+            }
 
-        if (this.sender.getQoS() == ProtonQoS.AT_MOST_ONCE) {
 
-            this.sender.send(amqpPublishMessage.toAmqp());
-            handler.handle(Future.succeededFuture(null));
+            if (amqpPublishMessage.qos() == MqttQoS.AT_MOST_ONCE) {
 
+                this.senderQoS01.send(amqpPublishMessage.toAmqp());
+                handler.handle(Future.succeededFuture(null));
+
+            } else {
+
+                this.senderQoS01.send(amqpPublishMessage.toAmqp(), delivery -> {
+
+                    if (delivery.getRemoteState() == Accepted.getInstance()) {
+                        LOG.info("AMQP publish delivery {}", delivery.getRemoteState());
+                        handler.handle(Future.succeededFuture(delivery));
+                    } else {
+                        handler.handle(Future.failedFuture(String.format("AMQP publish delivery %s", delivery.getRemoteState())));
+                    }
+                });
+
+            }
+
+        // use sender for QoS 2 messages
         } else {
 
-            this.sender.send(amqpPublishMessage.toAmqp(), delivery -> {
-
-                if (delivery.getRemoteState() == Accepted.getInstance()) {
-                    LOG.info("AMQP publish delivery {}", delivery.getRemoteState());
-                    handler.handle(Future.succeededFuture(delivery));
-                } else {
-                    handler.handle(Future.failedFuture(String.format("AMQP publish delivery %s", delivery.getRemoteState())));
-                }
-            });
-
+            // TODO: handling publish QoS 2 messages
         }
 
     }
 
+    /**
+     * Close the endpoint, detaching the links
+     */
     public void close() {
 
-        this.sender.close();
+        this.senderQoS01.close();
+        this.senderQoS2.close();
     }
 }

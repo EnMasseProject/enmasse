@@ -18,6 +18,7 @@ package enmasse.mqtt.endpoints;
 
 import enmasse.mqtt.messages.AmqpPublishMessage;
 import enmasse.mqtt.messages.AmqpSessionPresentMessage;
+import io.netty.handler.codec.mqtt.MqttQoS;
 import io.vertx.core.Handler;
 import io.vertx.proton.ProtonDelivery;
 import io.vertx.proton.ProtonQoS;
@@ -102,10 +103,31 @@ public class AmqpReceiverEndpoint {
                     break;
 
                 case AmqpPublishMessage.AMQP_SUBJECT:
-                    this.handlePublish(AmqpPublishMessage.from(message));
-                    if (!delivery.remotelySettled()) {
-                        this.deliveries.put(message.getMessageId(), delivery);
+
+                    AmqpPublishMessage amqpPublishMessage = AmqpPublishMessage.from(message);
+
+                    // QoS 0 : immediate disposition (settle), then passing to the bridge handler
+                    if (amqpPublishMessage.qos() == MqttQoS.AT_MOST_ONCE) {
+
+                        if (!delivery.remotelySettled()) {
+                            delivery.disposition(Accepted.getInstance(), true);
+                        }
+                        this.handlePublish(amqpPublishMessage);
+
+                    // QoS 1 : passing to the bridge handle first, added to deliveries (be settled after bridge handling)
+                    } else if (amqpPublishMessage.qos() == MqttQoS.AT_LEAST_ONCE) {
+
+                        this.handlePublish(amqpPublishMessage);
+                        if (!delivery.remotelySettled()) {
+                            this.deliveries.put(message.getMessageId(), delivery);
+                        }
+
+                    // QoS 2 :
+                    } else {
+
+                        // TODO: handling QoS 2
                     }
+
                     break;
             }
 
