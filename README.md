@@ -65,23 +65,44 @@ you must ensure that your OpenShift cluster has a
 
 ## Configuring
 
-By default, the template will setup 4 addresses with the following 4 different address types:
+EnMasse is configured by defining a set of addresses. An address can be of 4 different types:
 
    * Queue
    * Topic
    * 'Direct' anycast
    * 'Direct' multicast
 
-The addresses are defined in a config map called 'maas'. To make a change to the configuration,
-download the config, edit it, and replace it:
+EnMasse is configured by pushing an addressing config to the REST API. An example config may look
+like this:
 
-    oc get configmap maas -o yaml > addresses.yaml
+```
+{
+    "anycast": {
+        "store_and_forward": false,
+        "multicast": false
+    },
+    "broadcast": {
+        "store_and_forward": false,
+        "multicast": true
+    },
+    "mytopic": {
+        "store_and_forward": true,
+        "multicast": true,
+        "flavor": "vanilla-topic"
+    },
+    "myqueue": {
+        "store_and_forward": true,
+        "multicast": false,
+        "flavor": "vanilla-queue"
+    }
+}
+```
 
-    # ADD/REMOVE/EDIT addresses
+Save your config to a file, i.e. ```addresses.json``` and deploy it using curl:
+    
+    curl -X PUT -H "content-type: application/json" --data-binary @addresses.json http://$(oc get service -o jsonpath='{.spec.clusterIP}' restapi):8080/v1/enmasse/addresses
 
-    oc replace -f addresses.yaml
-
-The changes will be picked up by the storage controller, which will create and delete brokers to
+The REST API will deploy the configuration to the storage controller, which will create and delete brokers to
 match the desired state.
 
 Each address that set store-and-forward=true must also refer to a flavor.
