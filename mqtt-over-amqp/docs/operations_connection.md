@@ -30,7 +30,7 @@ The MQTT client sends a _CONNECT_ message to the FE which extracts "will" inform
 | subject | system property | "will" | - |
 | x-retain | message annotation | will retain flag | MQTT CONNECT |
 | x-qos | message annotation | will QoS level | MQTT CONNECT |
-| durable | header | will QoS level | MQTT CONNECT |
+| durable | header | will QoS level > 0 | MQTT CONNECT |
 | to | system property | will topic | MQTT CONNECT |
 | payload | Data section | will message | MQTT CONNECT |
 

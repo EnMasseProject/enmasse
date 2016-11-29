@@ -9,9 +9,14 @@ Actually two links are attached :
 * one link shared between messages published with QoS levels 0 and 1.
 * one link only for messages published with QoS 2, because recovering link could be needed.
 
-Both links are attached with :
+The link for QoS levels 0 and 1 is attached with :
 
 * rcv-settle-mode : first (0)
+* snd-settle-mode : unsettled (0)
+
+The link for QoS level 2 is attached with :
+
+* rcv-settle-mode : second (1)
 * snd-settle-mode : unsettled (0)
 
 The MQTT client sends _PUBLISH_ message to FE which maps the message to the following AMQP messages.
@@ -24,7 +29,7 @@ The MQTT client sends _PUBLISH_ message to FE which maps the message to the foll
 | message-id | system property | MessageId | MQTT PUBLISH |
 | x-retain | message annotation | Retain flag | MQTT PUBLISH |
 | x-qos | message annotation | QoS level | MQTT PUBLISH |
-| durable | header | QoS level | MQTT PUBLISH |
+| durable | header | QoS level > 0 | MQTT PUBLISH |
 | to | system property | topic | MQTT PUBLISH |
 | delivery-count | header | DUP flag | MQTT PUBLISH |
 | payload | Data section | Message payload | MQTT PUBLISH |
@@ -55,13 +60,13 @@ A timeout could be used to detect links inactivity for detaching them.
 
 ## From AMQP network to MQTT client
 
-The FE has an attached link with receiver role to the unique client address $mqtt.to.[client-id] where all published messages are conveyed (see "Connection").
+The FE has an attached link with receiver role to the unique client address $mqtt.to.[client-id] where all published messages are conveyed (see "Connection"). This link has QoS as AT_LEAST_ONCE so in all cases, the messages received from the AMQP network is "unsettled" (even for QoS level 0).
 
 The FE receives published messages as _AMQP_PUBLISH_ messages (see previous paragraph).
 
 ### QoS level 0 (AT_MOST_ONCE)
 
-For QoS level 0, message is published as "settled" and no acknowledge is needed.
+For QoS level 0, message is published as "unsettled" but the FE can sends immediately the disposition (with "settled") before sending the _PUBLISH_ to the remote MQTT client and without waiting for any acknowledge (of course, due to QoS level 0).
 
 ![Publish QoS 0](../images/12_publish_qos_0_amqp.png)
 
