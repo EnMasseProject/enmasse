@@ -23,6 +23,7 @@ import io.vertx.core.AbstractVerticle;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.proton.ProtonClient;
 import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.ProtonDelivery;
@@ -55,16 +56,13 @@ public class MockWillService extends AbstractVerticle {
     private ProtonClient client;
     private ProtonConnection connection;
 
-    private Map<String, AmqpWillMessage> wills;
-
-    // handler called when the service publish a will (or not) o detached link
+    // handler called when the service publish a will (or not) on detached link
     // NOTE : it's useful for disconnection tests
     private Handler<Boolean> willHandler;
 
     @Override
     public void start(Future<Void> startFuture) throws Exception {
 
-        this.wills = new HashMap<>();
         this.client = ProtonClient.create(this.vertx);
 
         this.client.connect(this.connectAddress, this.connectPort, done -> {
@@ -132,25 +130,47 @@ public class MockWillService extends AbstractVerticle {
         switch (message.getSubject()) {
 
             case AmqpWillMessage.AMQP_SUBJECT:
-                // get AMQP_WILL message, save it and send disposition for settlement
-                AmqpWillMessage amqpWillMessage = AmqpWillMessage.from(message);
-                this.wills.put(receiver.getName(), amqpWillMessage);
-                delivery.disposition(Accepted.getInstance(), true);
+
+                {
+                    // get AMQP_WILL message, save it and send disposition for settlement
+                    AmqpWillMessage amqpWillMessage = AmqpWillMessage.from(message);
+
+                    this.vertx.sharedData().getLocalMap(MockBroker.EB_WILL)
+                            .put(receiver.getName(), new AmqpWillData(receiver.getName(), amqpWillMessage));
+
+                    DeliveryOptions options = new DeliveryOptions();
+                    options.addHeader(MockBroker.EB_WILL_ACTION_HEADER, MockBroker.EB_WILL_ACTION_ADD);
+
+                    this.vertx.eventBus().send(MockBroker.EB_WILL, receiver.getName(), options, done -> {
+
+                        if (done.succeeded()) {
+                            delivery.disposition(Accepted.getInstance(), true);
+                        }
+                    });
+
+                }
                 break;
 
             case AmqpWillClearMessage.AMQP_SUBJECT:
 
-                // workaround for testing "brute disconnection" ignoring the DISCONNECT
-                // so the related AMQP_WILL_CLEAR. Eclipse Paho doesn't provide a way to
-                // close connection without sending DISCONNECT.
-                if (!receiver.getName().contains("ignore-disconnect")) {
+                {
+                    // workaround for testing "brute disconnection" ignoring the DISCONNECT
+                    // so the related AMQP_WILL_CLEAR. Eclipse Paho doesn't provide a way to
+                    // close connection without sending DISCONNECT.
+                    if (!receiver.getName().contains("ignore-disconnect")) {
 
-                    // get AMQP_WILL_CLEAR message, remove will from the list
-                    if (this.wills.containsKey(receiver.getName())) {
-                        this.wills.remove(receiver.getName());
+                        DeliveryOptions options = new DeliveryOptions();
+                        options.addHeader(MockBroker.EB_WILL_ACTION_HEADER, MockBroker.EB_WILL_ACTION_CLEAR);
+
+                        this.vertx.eventBus().send(MockBroker.EB_WILL, receiver.getName(), options, done -> {
+
+                            if (done.succeeded()) {
+                                delivery.disposition(Accepted.getInstance(), true);
+                            }
+                        });
                     }
+
                 }
-                delivery.disposition(Accepted.getInstance(), true);
                 break;
         }
 
@@ -162,44 +182,21 @@ public class MockWillService extends AbstractVerticle {
 
             ProtonReceiver receiver = ar.result();
 
-            // the detached receiver has a will to publish
-            if (this.wills.containsKey(receiver.getName())) {
+            // send a delivery request to mock broker; client link name as body
+            DeliveryOptions options = new DeliveryOptions();
+            options.addHeader(MockBroker.EB_WILL_ACTION_HEADER, MockBroker.EB_WILL_ACTION_DELIVERY);
 
-                AmqpWillMessage amqpWillMessage = this.wills.get(receiver.getName());
+            this.vertx.eventBus().send(MockBroker.EB_WILL, receiver.getName(), options, done -> {
 
-                AmqpPublishMessage amqpPublishMessage =
-                        new AmqpPublishMessage(1, amqpWillMessage.amqpQos(), false, amqpWillMessage.isRetain(), amqpWillMessage.topic(), amqpWillMessage.payload());
-
-                ProtonSender sender = this.connection.createSender(amqpPublishMessage.topic());
-                ProtonQoS protonQos = amqpPublishMessage.amqpQos().toProtonQos();
-                sender.setQoS(protonQos);
-
-                sender.open();
-
-                if (protonQos == ProtonQoS.AT_MOST_ONCE) {
-
-                    sender.send(amqpPublishMessage.toAmqp());
+                if (done.succeeded()) {
 
                     if (this.willHandler != null) {
-                        this.willHandler.handle(true);
+                        this.willHandler.handle((boolean) done.result().body());
                     }
-
-                } else {
-
-                    sender.send(amqpPublishMessage.toAmqp(), delivery -> {
-
-                        if (this.willHandler != null) {
-                            this.willHandler.handle(true);
-                        }
-                    });
                 }
 
-            } else {
+            });
 
-                if (this.willHandler != null) {
-                    this.willHandler.handle(false);
-                }
-            }
         }
     }
 

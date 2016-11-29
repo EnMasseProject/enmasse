@@ -22,6 +22,7 @@ import enmasse.mqtt.messages.AmqpSubackMessage;
 import enmasse.mqtt.messages.AmqpUnsubackMessage;
 import io.vertx.core.Handler;
 import io.vertx.proton.ProtonDelivery;
+import io.vertx.proton.ProtonQoS;
 import io.vertx.proton.ProtonReceiver;
 import org.apache.qpid.proton.amqp.messaging.Accepted;
 import org.apache.qpid.proton.message.Message;
@@ -172,6 +173,7 @@ public class AmqpReceiverEndpoint {
         // - AMQP_UNSUBACK after sent AMQP_UNSUBSCRIBE
         // - AMQP_PUBLISH for every AMQP published message
         this.receiver
+                .setQoS(ProtonQoS.AT_LEAST_ONCE)
                 .handler(this::messageHandler)
                 .open();
     }

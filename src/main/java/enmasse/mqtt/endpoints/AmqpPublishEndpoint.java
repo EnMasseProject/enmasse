@@ -61,7 +61,8 @@ public class AmqpPublishEndpoint {
 
         if (!this.sender.isOpen()) {
 
-            this.sender.setQoS(amqpPublishMessage.amqpQos().toProtonQos());
+            // TODO: it should be always AT_LEAST_ONCE
+            //this.sender.setQoS(amqpPublishMessage.amqpQos().toProtonQos());
             this.sender.open();
 
             // TODO: think about starting a timer for inactivity on this link for detaching ?

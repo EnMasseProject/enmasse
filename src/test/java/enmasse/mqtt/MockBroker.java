@@ -22,6 +22,7 @@ import enmasse.mqtt.messages.AmqpQos;
 import enmasse.mqtt.messages.AmqpSubscribeMessage;
 import enmasse.mqtt.messages.AmqpTopicSubscription;
 import enmasse.mqtt.messages.AmqpUnsubscribeMessage;
+import enmasse.mqtt.messages.AmqpWillMessage;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonArray;
@@ -53,15 +54,24 @@ public class MockBroker extends AbstractVerticle {
     // event bus names for communication between Subscription Service and broker
     public static final String EB_SUBSCRIBE = "subscribe";
     public static final String EB_UNSUBSCRIBE = "unsubscribe";
+    public static final String EB_WILL = "will";
+
+    // header field and related action available for interacting with the event bus "will"
+    public static final String EB_WILL_ACTION_HEADER = "will-action";
+    public static final String EB_WILL_ACTION_ADD = "will-add";
+    public static final String EB_WILL_ACTION_CLEAR = "will-clear";
+    public static final String EB_WILL_ACTION_DELIVERY = "will-delivery";
 
     // topic -> receiver
     private Map<String, ProtonReceiver> receivers;
-    // client-id -> sender (to $mqtt.to.<client-id>
+    // client-id -> sender (to $mqtt.to.<client-id>)
     private Map<String, ProtonSender> senders;
     // topic -> client-id lists (subscribers)
     private Map<String, List<String>> subscriptions;
     // topic -> retained message
     private Map<String, AmqpPublishMessage> retained;
+    // receiver link name -> will message
+    private Map<String, AmqpWillMessage> wills;
 
     private String connectAddress;
     private int connectPort;
@@ -81,6 +91,7 @@ public class MockBroker extends AbstractVerticle {
         this.subscriptions = new HashMap<>();
         this.retained = new HashMap<>();
         this.topics = Arrays.asList("my_topic", "will");
+        this.wills = new HashMap<>();
     }
 
     @Override
@@ -176,6 +187,71 @@ public class MockBroker extends AbstractVerticle {
                         this.unsubscribe(amqpUnsubscribeMessage);
                         ebMessage.reply(null);
                     }
+                });
+
+                // consumer for will requests from Will Service
+                this.vertx.eventBus().consumer(EB_WILL, ebMessage -> {
+
+                    String willAction = ebMessage.headers().get(EB_WILL_ACTION_HEADER);
+
+                    switch (willAction) {
+
+                        case EB_WILL_ACTION_ADD:
+
+                            // get the AMQP_WILL using the client link name from the message body as key
+                            Object obj = this.vertx.sharedData().getLocalMap(EB_WILL).remove(ebMessage.body());
+
+                            if (obj instanceof AmqpWillData) {
+
+                                AmqpWillMessage amqpWillMessage = ((AmqpWillData) obj).will();
+                                this.wills.put((String) ebMessage.body(), amqpWillMessage);
+
+                                ebMessage.reply(null);
+                            }
+                            break;
+
+                        case EB_WILL_ACTION_CLEAR:
+
+                            // clear the will using the client link name as key
+                            if (this.wills.containsKey(ebMessage.body())) {
+                                this.wills.remove(ebMessage.body());
+
+                                ebMessage.reply(null);
+                            }
+                            break;
+
+                        case EB_WILL_ACTION_DELIVERY:
+
+                            // the requested client link name has a will to publish
+                            if (this.wills.containsKey(ebMessage.body())) {
+
+                                AmqpWillMessage amqpWillMessage = this.wills.get(ebMessage.body());
+
+                                AmqpPublishMessage amqpPublishMessage =
+                                        new AmqpPublishMessage(1, amqpWillMessage.qos(), false, amqpWillMessage.isRetain(), amqpWillMessage.topic(), amqpWillMessage.payload());
+
+                                ProtonSender sender = this.connection.createSender(amqpPublishMessage.topic());
+
+                                // TODO: it should be always AT_LEAST_ONCE
+                                ProtonQoS protonQos = ProtonQoS.AT_LEAST_ONCE;
+                                sender.setQoS(protonQos);
+
+                                sender.open();
+
+                                sender.send(amqpPublishMessage.toAmqp(), delivery -> {
+
+                                    // true ... will published
+                                    ebMessage.reply(true);
+                                });
+
+                            } else {
+
+                                // false ... will not published (but request handled)
+                                ebMessage.reply(false);
+                            }
+                            break;
+                    }
+
                 });
 
                 startFuture.complete();

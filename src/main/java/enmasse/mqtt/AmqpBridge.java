@@ -173,7 +173,7 @@ public class AmqpBridge {
                     AmqpWillMessage amqpWillMessage =
                             new AmqpWillMessage(will.isWillRetain(),
                                     will.willTopic(),
-                                    AmqpQos.from(will.willQos()),
+                                    MqttQoS.valueOf(will.willQos()),
                                     Buffer.buffer(will.willMessage()));
 
                     this.wsEndpoint.sendWill(amqpWillMessage, willFuture.completer());
@@ -274,7 +274,7 @@ public class AmqpBridge {
         // sending AMQP_PUBLISH
         AmqpPublishMessage amqpPublishMessage =
                 new AmqpPublishMessage(publish.messageId(),
-                        AmqpQos.from(publish.qosLevel().value()),
+                        publish.qosLevel(),
                         publish.isDup(),
                         publish.isRetain(),
                         publish.topicName(),

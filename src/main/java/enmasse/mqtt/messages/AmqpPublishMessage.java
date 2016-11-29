@@ -16,16 +16,15 @@
 
 package enmasse.mqtt.messages;
 
+import io.netty.handler.codec.mqtt.MqttQoS;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.proton.ProtonHelper;
 import org.apache.qpid.proton.amqp.Binary;
 import org.apache.qpid.proton.amqp.Symbol;
-import org.apache.qpid.proton.amqp.UnsignedByte;
 import org.apache.qpid.proton.amqp.messaging.Data;
+import org.apache.qpid.proton.amqp.messaging.Header;
 import org.apache.qpid.proton.amqp.messaging.MessageAnnotations;
 import org.apache.qpid.proton.amqp.messaging.Section;
-import org.apache.qpid.proton.amqp.transport.ReceiverSettleMode;
-import org.apache.qpid.proton.amqp.transport.SenderSettleMode;
 import org.apache.qpid.proton.message.Message;
 
 import java.util.HashMap;
@@ -39,11 +38,10 @@ public class AmqpPublishMessage {
     public static final String AMQP_SUBJECT = "publish";
 
     private static final String AMQP_RETAIN_ANNOTATION = "x-retain";
-    private static final String AMQP_DESIRED_SND_SETTLE_MODE_ANNOTATION = "x-desired-snd-settle-mode";
-    private static final String AMQP_DESIRED_RCV_SETTLE_MODE_ANNOTATION = "x-desired-rcv-settle-mode";
+    private static final String AMQP_QOS_ANNOTATION = "x-qos";
 
     private final Object messageId;
-    private final AmqpQos amqpQos;
+    private final MqttQoS qos;
     private final boolean isDup;
     private final boolean isRetain;
     private final String topic;
@@ -53,16 +51,16 @@ public class AmqpPublishMessage {
      * Constructor
      *
      * @param messageId message identifier
-     * @param amqpQos AMQP QoS level made of sender and receiver settle modes
+     * @param qos MQTT QoS level
      * @param isDup if the message is a duplicate
      * @param isRetain  if the message needs to be retained
      * @param topic topic on which the message is published
      * @param payload   message payload
      */
-    public AmqpPublishMessage(Object messageId, AmqpQos amqpQos, boolean isDup, boolean isRetain, String topic, Buffer payload) {
+    public AmqpPublishMessage(Object messageId, MqttQoS qos, boolean isDup, boolean isRetain, String topic, Buffer payload) {
 
         this.messageId = messageId;
-        this.amqpQos = amqpQos;
+        this.qos = qos;
         this.isDup = isDup;
         this.isRetain = isRetain;
         this.topic = topic;
@@ -91,18 +89,18 @@ public class AmqpPublishMessage {
                 isRetain = (boolean) messageAnnotations.getValue().get(Symbol.valueOf(AMQP_RETAIN_ANNOTATION));
             }
 
-            SenderSettleMode sndSettleMode = null;
-            if (messageAnnotations.getValue().containsKey(Symbol.valueOf(AMQP_DESIRED_SND_SETTLE_MODE_ANNOTATION))) {
-                // TODO: check on this https://issues.apache.org/jira/browse/PROTON-1352
-                UnsignedByte value = (UnsignedByte) messageAnnotations.getValue().get(Symbol.valueOf(AMQP_DESIRED_SND_SETTLE_MODE_ANNOTATION));
-                sndSettleMode = (value != null) ? SenderSettleMode.values()[value.intValue()] : null;
-            }
+            MqttQoS qos;
+            if (messageAnnotations.getValue().containsKey(Symbol.valueOf(AMQP_QOS_ANNOTATION))) {
+                int value = (int) messageAnnotations.getValue().get(Symbol.valueOf(AMQP_QOS_ANNOTATION));
+                qos = MqttQoS.valueOf(value);
+            } else {
 
-            ReceiverSettleMode rcvSettleMode = null;
-            if (messageAnnotations.getValue().containsKey(Symbol.valueOf(AMQP_DESIRED_RCV_SETTLE_MODE_ANNOTATION))) {
-                // TODO: check on this https://issues.apache.org/jira/browse/PROTON-1352
-                UnsignedByte value = (UnsignedByte) messageAnnotations.getValue().get(Symbol.valueOf(AMQP_DESIRED_RCV_SETTLE_MODE_ANNOTATION));
-                rcvSettleMode = (value != null) ? ReceiverSettleMode.values()[value.intValue()] : null;
+                if (message.getHeader() != null) {
+                    // if qos annotation isn't present, fallback to "durable" header field
+                    qos = !message.getHeader().getDurable() ? MqttQoS.AT_MOST_ONCE : MqttQoS.AT_LEAST_ONCE;
+                } else {
+                    qos = MqttQoS.AT_MOST_ONCE;
+                }
             }
 
             boolean isDup = (message.getDeliveryCount() > 0);
@@ -113,7 +111,7 @@ public class AmqpPublishMessage {
             if ((section != null) && (section instanceof Data)) {
 
                 Buffer payload = Buffer.buffer(((Data) section).getValue().getArray());
-                return new AmqpPublishMessage(message.getMessageId(), new AmqpQos(sndSettleMode, rcvSettleMode), isDup, isRetain, topic, payload);
+                return new AmqpPublishMessage(message.getMessageId(), qos, isDup, isRetain, topic, payload);
 
             } else {
                 throw new IllegalArgumentException("AMQP message wrong body type");
@@ -136,14 +134,15 @@ public class AmqpPublishMessage {
 
         Map<Symbol, Object> map = new HashMap<>();
         map.put(Symbol.valueOf(AMQP_RETAIN_ANNOTATION), this.isRetain);
-        map.put(Symbol.valueOf(AMQP_DESIRED_SND_SETTLE_MODE_ANNOTATION),
-                this.amqpQos.sndSettleMode() != null ? this.amqpQos.sndSettleMode().getValue() : null);
-        map.put(Symbol.valueOf(AMQP_DESIRED_RCV_SETTLE_MODE_ANNOTATION),
-                this.amqpQos.rcvSettleMode() != null ? this.amqpQos.rcvSettleMode().getValue() : null);
+        map.put(Symbol.valueOf(AMQP_QOS_ANNOTATION), this.qos.value());
         MessageAnnotations messageAnnotations = new MessageAnnotations(map);
         message.setMessageAnnotations(messageAnnotations);
 
         message.setAddress(this.topic);
+
+        Header header = new Header();
+        header.setDurable(this.qos != MqttQoS.AT_MOST_ONCE);
+        message.setHeader(header);
 
         message.setDeliveryCount(this.isDup ? 1 : 0);
 
@@ -163,11 +162,11 @@ public class AmqpPublishMessage {
     }
 
     /**
-     * AMQP QoS level (made of sender and receiver settle modes)
+     * MQTT QoS level
      * @return
      */
-    public AmqpQos amqpQos() {
-        return this.amqpQos;
+    public MqttQoS qos() {
+        return this.qos;
     }
 
     /**
