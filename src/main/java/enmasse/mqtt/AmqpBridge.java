@@ -25,7 +25,6 @@ import enmasse.mqtt.messages.AmqpSessionMessage;
 import enmasse.mqtt.messages.AmqpSessionPresentMessage;
 import enmasse.mqtt.messages.AmqpSubscribeMessage;
 import enmasse.mqtt.messages.AmqpTopicSubscription;
-import enmasse.mqtt.messages.AmqpUnsubackMessage;
 import enmasse.mqtt.messages.AmqpUnsubscribeMessage;
 import enmasse.mqtt.messages.AmqpWillClearMessage;
 import enmasse.mqtt.messages.AmqpWillMessage;
@@ -191,7 +190,6 @@ public class AmqpBridge {
 
                         LOG.info("Session present: {}", amqpSessionPresentMessage.isSessionPresent());
 
-                        this.rcvEndpoint.unsubackHandler(this::unsubackHandler);
                         this.rcvEndpoint.publishHandler(this::publishHandler);
 
                         connectionFuture.complete(amqpSessionPresentMessage);
@@ -378,7 +376,15 @@ public class AmqpBridge {
                         unsubscribe.messageId(),
                         unsubscribe.topics());
 
-        this.ssEndpoint.sendUnsubscribe(amqpUnsubscribeMessage);
+        this.ssEndpoint.sendUnsubscribe(amqpUnsubscribeMessage, done -> {
+
+            if (done.succeeded()) {
+
+                this.mqttEndpoint.unsubscribeAcknowledge((int)amqpUnsubscribeMessage.messageId());
+
+                LOG.info("UNSUBACK sent");
+            }
+        });
     }
 
     /**
@@ -406,18 +412,6 @@ public class AmqpBridge {
     private void closeHandler(Void v) {
 
         this.wsEndpoint.close();
-    }
-
-    /**
-     * Handler for AMQP_UNSUBACK message received by Subscription Service
-     *
-     * @param unsuback  AMQP_UNSUBACK message
-     */
-    private void unsubackHandler(AmqpUnsubackMessage unsuback) {
-
-        this.mqttEndpoint.unsubscribeAcknowledge((int)unsuback.messageId());
-
-        LOG.info("UNSUBACK sent");
     }
 
     /**

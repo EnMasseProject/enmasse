@@ -74,7 +74,7 @@ public class AmqpSubscriptionServiceEndpoint {
      * Send the AMQP_SUBSCRIBE message to the Subscription Service
      *
      * @param amqpSubscribeMessage  AMQP_SUBSCRIBE message
-     * @param handler   callback called on message dlivered
+     * @param handler   callback called on message delivered
      */
     public void sendSubscribe(AmqpSubscribeMessage amqpSubscribeMessage, Handler<AsyncResult<ProtonDelivery>> handler) {
 
@@ -91,11 +91,23 @@ public class AmqpSubscriptionServiceEndpoint {
         });
     }
 
-    public void sendUnsubscribe(AmqpUnsubscribeMessage amqpUnsubscribeMessage) {
-        // TODO: send AMQP_UNSUBSCRIBE message
+    /**
+     * Send the AMQP_UNSUBSCRIBE message to the Subscription Service
+     *
+     * @param amqpUnsubscribeMessage    AMQP_UNSUBSCRIBE message
+     * @param handler   callback called on message delivered
+     */
+    public void sendUnsubscribe(AmqpUnsubscribeMessage amqpUnsubscribeMessage, Handler<AsyncResult<ProtonDelivery>> handler) {
 
+        // send AMQP_UNSUBSCRIBE message
         this.sender.send(amqpUnsubscribeMessage.toAmqp(), delivery -> {
-           // TODO:
+
+            if (delivery.getRemoteState() == Accepted.getInstance()) {
+                LOG.info("AMQP unsubscribe delivery {}", delivery.getRemoteState());
+                handler.handle(Future.succeededFuture(delivery));
+            } else {
+                handler.handle(Future.failedFuture(String.format("AMQP unsubscribe delivery %s", delivery.getRemoteState())));
+            }
         });
     }
 

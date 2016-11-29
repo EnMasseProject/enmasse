@@ -18,7 +18,6 @@ package enmasse.mqtt.endpoints;
 
 import enmasse.mqtt.messages.AmqpPublishMessage;
 import enmasse.mqtt.messages.AmqpSessionPresentMessage;
-import enmasse.mqtt.messages.AmqpUnsubackMessage;
 import io.vertx.core.Handler;
 import io.vertx.proton.ProtonDelivery;
 import io.vertx.proton.ProtonQoS;
@@ -44,8 +43,6 @@ public class AmqpReceiverEndpoint {
 
     // handler called when AMQP_SESSION_PRESENT is received
     private Handler<AmqpSessionPresentMessage> sessionHandler;
-    // handler called when AMQP_UNSUBACK is received
-    private Handler<AmqpUnsubackMessage> unsubackHandler;
     // handler called when AMQP_PUBLISH is received
     private Handler<AmqpPublishMessage> publishHandler;
     // all delivery for received messages if they need settlement (messageId -> delivery)
@@ -85,18 +82,6 @@ public class AmqpReceiverEndpoint {
     }
 
     /**
-     * Set the session handler called when AMQP_UNSUBACK is received
-     *
-     * @param handler   the handler
-     * @return  the current AmqpReceiverEndpoint instance
-     */
-    public AmqpReceiverEndpoint unsubackHandler(Handler<AmqpUnsubackMessage> handler) {
-
-        this.unsubackHandler = handler;
-        return this;
-    }
-
-    /**
      * Handler for the receiver for handling incoming raw AMQP message
      * from the Subscription Service
      *
@@ -104,7 +89,8 @@ public class AmqpReceiverEndpoint {
      * @param message   raw AMQP message
      */
     private void messageHandler(ProtonDelivery delivery, Message message) {
-        // TODO:
+
+        LOG.info("Received {}", message);
 
         if (message.getSubject() != null) {
 
@@ -112,11 +98,6 @@ public class AmqpReceiverEndpoint {
 
                 case AmqpSessionPresentMessage.AMQP_SUBJECT:
                     this.handleSession(AmqpSessionPresentMessage.from(message));
-                    delivery.disposition(Accepted.getInstance(), true);
-                    break;
-
-                case AmqpUnsubackMessage.AMQP_SUBJECT:
-                    this.handleUnsuback(AmqpUnsubackMessage.from(message));
                     delivery.disposition(Accepted.getInstance(), true);
                     break;
 
@@ -149,7 +130,6 @@ public class AmqpReceiverEndpoint {
         // attach receiver link on the $mqtt.to.<client-id> address for receiving messages (from SS)
         // define handler for received messages
         // - AMQP_SESSION_PRESENT after sent AMQP_SESSION -> for writing CONNACK (session-present)
-        // - AMQP_UNSUBACK after sent AMQP_UNSUBSCRIBE
         // - AMQP_PUBLISH for every AMQP published message
         this.receiver
                 .setQoS(ProtonQoS.AT_LEAST_ONCE)
@@ -189,18 +169,6 @@ public class AmqpReceiverEndpoint {
 
         if (this.sessionHandler != null) {
             this.sessionHandler.handle(amqpSessionPresentMessage);
-        }
-    }
-
-    /**
-     * Used for calling the session handler when AMQP_UNSUBACK is received
-     *
-     * @param amqpUnsubackMessage AMQP_UNSUBACK message
-     */
-    private void handleUnsuback(AmqpUnsubackMessage amqpUnsubackMessage) {
-
-        if (this.unsubackHandler != null) {
-            this.unsubackHandler.handle(amqpUnsubackMessage);
         }
     }
 

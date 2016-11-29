@@ -19,7 +19,6 @@ package enmasse.mqtt;
 import enmasse.mqtt.messages.AmqpSessionMessage;
 import enmasse.mqtt.messages.AmqpSessionPresentMessage;
 import enmasse.mqtt.messages.AmqpSubscribeMessage;
-import enmasse.mqtt.messages.AmqpUnsubackMessage;
 import enmasse.mqtt.messages.AmqpUnsubscribeMessage;
 import io.netty.handler.codec.mqtt.MqttQoS;
 import io.vertx.core.AbstractVerticle;
@@ -182,7 +181,6 @@ public class MockSubscriptionService extends AbstractVerticle {
                 {
                     // get AMQP_UNSUBSCRIBE mesage and sends disposition for settlment
                     AmqpUnsubscribeMessage amqpUnsubscribeMessage = AmqpUnsubscribeMessage.from(message);
-                    delivery.disposition(Accepted.getInstance(), true);
 
                     // the request object is exchanged through the map using messageId in the event bus message
                     this.vertx.sharedData().getLocalMap(MockBroker.EB_UNSUBSCRIBE)
@@ -193,18 +191,7 @@ public class MockSubscriptionService extends AbstractVerticle {
 
                         if (done.succeeded()) {
 
-                            // send AMQP_UNSUBACK to the unique client address
-                            ProtonSender sender = this.connection.createSender(message.getReplyTo());
-
-                            AmqpUnsubackMessage amqpUnsubackMessage =
-                                    new AmqpUnsubackMessage(amqpUnsubscribeMessage.messageId());
-
-                            sender.open();
-
-                            sender.send(amqpUnsubackMessage.toAmqp(), d -> {
-
-                                sender.close();
-                            });
+                            delivery.disposition(Accepted.getInstance(), true);
                         }
 
                     });
