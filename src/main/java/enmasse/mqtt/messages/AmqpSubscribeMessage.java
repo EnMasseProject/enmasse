@@ -16,8 +16,8 @@
 
 package enmasse.mqtt.messages;
 
+import io.netty.handler.codec.mqtt.MqttQoS;
 import io.vertx.proton.ProtonHelper;
-import org.apache.qpid.proton.amqp.UnsignedByte;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.amqp.messaging.Section;
 import org.apache.qpid.proton.message.Message;
@@ -35,7 +35,7 @@ public class AmqpSubscribeMessage {
     public static final String AMQP_SUBJECT = "subscribe";
 
     private static final String TOPICS_KEY = "topics";
-    private static final String DESIRED_SETTLE_MODES_KEY = "desired-settle-modes";
+    private static final String QOS_KEY = "qos";
 
     private final String clientId;
     private final Object messageId;
@@ -46,7 +46,7 @@ public class AmqpSubscribeMessage {
      *
      * @param clientId  client identifier
      * @param messageId message identifier
-     * @param topicSubscriptions    list with topics and related quolity of service levels
+     * @param topicSubscriptions    list with topics and related quality of service levels
      */
     public AmqpSubscribeMessage(String clientId, Object messageId, List<AmqpTopicSubscription> topicSubscriptions) {
 
@@ -73,16 +73,16 @@ public class AmqpSubscribeMessage {
             Map<String, List<?>> map = (Map<String, List<?>>) ((AmqpValue) section).getValue();
 
             List<String> topics = (List<String>) map.get(TOPICS_KEY);
-            List<List<UnsignedByte>> settleModes = (List<List<UnsignedByte>>) map.get(DESIRED_SETTLE_MODES_KEY);
+            List<Integer> qos = (List<Integer>) map.get(QOS_KEY);
 
-            if (topics.size() != settleModes.size()) {
+            if (topics.size() != qos.size()) {
                 throw new IllegalArgumentException("Topics and QoS lists differ in size");
             }
 
             // build the unique topic subscriptions list
             List<AmqpTopicSubscription> topicSubscriptions = new ArrayList<>();
             for (int i = 0; i < topics.size(); i++) {
-                topicSubscriptions.add(new AmqpTopicSubscription(topics.get(i), AmqpQos.from(settleModes.get(0))));
+                topicSubscriptions.add(new AmqpTopicSubscription(topics.get(i), MqttQoS.valueOf(qos.get(i))));
             }
 
             return new AmqpSubscribeMessage(AmqpHelper.getClientId(message.getReplyTo()),
@@ -111,16 +111,16 @@ public class AmqpSubscribeMessage {
 
         // extract two separate lists for topics and qos for encoding inside a Map into the raw AMQP message
         List<String> topics = new ArrayList<>();
-        List<List<UnsignedByte>> qos = new ArrayList<>();
+        List<Integer> qos = new ArrayList<>();
 
         this.topicSubscriptions.stream().forEach(amqpTopicSubscription -> {
             topics.add(amqpTopicSubscription.topic());
-            qos.add(amqpTopicSubscription.qos().toList());
+            qos.add(amqpTopicSubscription.qos().value());
         });
 
         Map<String, List<?>> map = new HashMap<>();
         map.put(TOPICS_KEY, topics);
-        map.put(DESIRED_SETTLE_MODES_KEY, qos);
+        map.put(QOS_KEY, qos);
 
         message.setBody(new AmqpValue(map));
 

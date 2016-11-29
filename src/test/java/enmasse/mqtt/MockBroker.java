@@ -18,11 +18,11 @@ package enmasse.mqtt;
 
 import enmasse.mqtt.messages.AmqpHelper;
 import enmasse.mqtt.messages.AmqpPublishMessage;
-import enmasse.mqtt.messages.AmqpQos;
 import enmasse.mqtt.messages.AmqpSubscribeMessage;
 import enmasse.mqtt.messages.AmqpTopicSubscription;
 import enmasse.mqtt.messages.AmqpUnsubscribeMessage;
 import enmasse.mqtt.messages.AmqpWillMessage;
+import io.netty.handler.codec.mqtt.MqttQoS;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonArray;
@@ -138,12 +138,12 @@ public class MockBroker extends AbstractVerticle {
                     if (obj instanceof AmqpSubscribeData) {
 
                         AmqpSubscribeMessage amqpSubscribeMessage = ((AmqpSubscribeData) obj).subscribe();
-                        List<AmqpQos> grantedQoSLevels = this.subscribe(amqpSubscribeMessage);
+                        List<MqttQoS> grantedQoSLevels = this.subscribe(amqpSubscribeMessage);
 
                         // build the reply message body with granted QoS levels (JSON encoded)
                         JsonArray jsonArray = new JsonArray();
-                        for (AmqpQos amqpQos: grantedQoSLevels) {
-                            jsonArray.add(amqpQos.toJson());
+                        for (MqttQoS qos: grantedQoSLevels) {
+                            jsonArray.add(qos);
                         }
 
                         // reply to the SUBSCRIBE request; the Subscription Service can send SUBACK
@@ -279,9 +279,9 @@ public class MockBroker extends AbstractVerticle {
      * @param amqpSubscribeMessage  AMQP_SUBSCRIBE message with subscribe request
      * @return  granted QoS levels
      */
-    public List<AmqpQos> subscribe(AmqpSubscribeMessage amqpSubscribeMessage) {
+    public List<MqttQoS> subscribe(AmqpSubscribeMessage amqpSubscribeMessage) {
 
-        List<AmqpQos> grantedQoSLevels = new ArrayList<>();
+        List<MqttQoS> grantedQoSLevels = new ArrayList<>();
 
         for (AmqpTopicSubscription amqpTopicSubscription: amqpSubscribeMessage.topicSubscriptions()) {
 
@@ -290,8 +290,8 @@ public class MockBroker extends AbstractVerticle {
 
                 ProtonReceiver receiver = this.connection.createReceiver(amqpTopicSubscription.topic());
 
+                // TODO: check QoS, always AT_LEAST_ONCE ?
                 receiver
-                        .setQoS(amqpTopicSubscription.qos().toProtonQos())
                         .setTarget(receiver.getRemoteTarget())
                         .handler((delivery, message) -> {
 
@@ -308,9 +308,8 @@ public class MockBroker extends AbstractVerticle {
 
                 ProtonSender sender = this.connection.createSender(String.format(AmqpHelper.AMQP_CLIENT_ADDRESS_TEMPLATE, amqpSubscribeMessage.clientId()));
 
-                sender
-                        .setQoS(amqpTopicSubscription.qos().toProtonQos())
-                        .open();
+                // TODO: check QoS, always AT_LEAST_ONCE ?
+                sender.open();
 
                 this.senders.put(amqpSubscribeMessage.clientId(), sender);
             }

@@ -16,17 +16,16 @@
 
 package enmasse.mqtt;
 
-import enmasse.mqtt.messages.AmqpQos;
 import enmasse.mqtt.messages.AmqpSessionMessage;
 import enmasse.mqtt.messages.AmqpSessionPresentMessage;
 import enmasse.mqtt.messages.AmqpSubackMessage;
 import enmasse.mqtt.messages.AmqpSubscribeMessage;
 import enmasse.mqtt.messages.AmqpUnsubackMessage;
 import enmasse.mqtt.messages.AmqpUnsubscribeMessage;
+import io.netty.handler.codec.mqtt.MqttQoS;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
 import io.vertx.proton.ProtonClient;
 import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.ProtonDelivery;
@@ -146,11 +145,11 @@ public class MockSubscriptionService extends AbstractVerticle {
                         if (done.succeeded()) {
 
                             // event bus message body contains granted QoS levels (JSON encoded)
-                            List<AmqpQos> grantedQoSLevels = new ArrayList<>();
+                            List<MqttQoS> grantedQoSLevels = new ArrayList<>();
                             JsonArray jsonArray = (JsonArray) done.result().body();
                             for (int i = 0; i < jsonArray.size(); i++) {
-                                JsonObject object = jsonArray.getJsonObject(i);
-                                grantedQoSLevels.add(AmqpQos.from(object));
+                                String qos = jsonArray.getString(i);
+                                grantedQoSLevels.add(MqttQoS.valueOf(qos));
                             }
 
                             // send AMQP_SUBACK to the unique client address

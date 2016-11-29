@@ -16,13 +16,15 @@
 
 package enmasse.mqtt.messages;
 
+import io.netty.handler.codec.mqtt.MqttQoS;
+
 /**
  * Represent a subscription to a topic in the AMQP way
  */
 public class AmqpTopicSubscription {
 
     private final String topic;
-    private final AmqpQos qos;
+    private final MqttQoS qos;
 
     /**
      * Constructor
@@ -30,7 +32,7 @@ public class AmqpTopicSubscription {
      * @param topic topic name for the subscription
      * @param qos   quality of service level
      */
-    public AmqpTopicSubscription(String topic, AmqpQos qos) {
+    public AmqpTopicSubscription(String topic, MqttQoS qos) {
         this.topic = topic;
         this.qos = qos;
     }
@@ -49,7 +51,7 @@ public class AmqpTopicSubscription {
      *
      * @return
      */
-    public AmqpQos qos() {
+    public MqttQoS qos() {
         return qos;
     }
 }

@@ -21,7 +21,6 @@ import enmasse.mqtt.endpoints.AmqpReceiverEndpoint;
 import enmasse.mqtt.endpoints.AmqpSubscriptionServiceEndpoint;
 import enmasse.mqtt.endpoints.AmqpWillServiceEndpoint;
 import enmasse.mqtt.messages.AmqpPublishMessage;
-import enmasse.mqtt.messages.AmqpQos;
 import enmasse.mqtt.messages.AmqpSessionMessage;
 import enmasse.mqtt.messages.AmqpSessionPresentMessage;
 import enmasse.mqtt.messages.AmqpSubackMessage;
@@ -327,7 +326,7 @@ public class AmqpBridge {
 
         List<AmqpTopicSubscription> topicSubscriptions =
                 subscribe.topicSubscriptions().stream().map(topicSubscription -> {
-                    return new AmqpTopicSubscription(topicSubscription.topicName(), AmqpQos.from(topicSubscription.qualityOfService().value()));
+                    return new AmqpTopicSubscription(topicSubscription.topicName(), topicSubscription.qualityOfService());
                 }).collect(Collectors.toList());
 
         AmqpSubscribeMessage amqpSubscribeMessage =
@@ -391,7 +390,7 @@ public class AmqpBridge {
      */
     private void subackHandler(AmqpSubackMessage suback) {
 
-        List<Integer> grantedQoSLevels = suback.grantedQoSLevels().stream().map(qos -> { return qos.toMqttQos(); }).collect(Collectors.toList());
+        List<Integer> grantedQoSLevels = suback.grantedQoSLevels().stream().map(qos -> { return qos.value(); }).collect(Collectors.toList());
         this.mqttEndpoint.subscribeAcknowledge((int)suback.messageId(), grantedQoSLevels);
 
         LOG.info("SUBACK sent");

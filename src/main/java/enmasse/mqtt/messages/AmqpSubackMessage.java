@@ -16,8 +16,8 @@
 
 package enmasse.mqtt.messages;
 
+import io.netty.handler.codec.mqtt.MqttQoS;
 import io.vertx.proton.ProtonHelper;
-import org.apache.qpid.proton.amqp.UnsignedByte;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.amqp.messaging.Section;
 import org.apache.qpid.proton.message.Message;
@@ -33,7 +33,7 @@ public class AmqpSubackMessage {
     public static final String AMQP_SUBJECT = "suback";
 
     private final Object messageId;
-    private final List<AmqpQos> grantedQoSLevels;
+    private final List<MqttQoS> grantedQoSLevels;
 
     /**
      * Constructor
@@ -41,7 +41,7 @@ public class AmqpSubackMessage {
      * @param messageId message identifier
      * @param grantedQoSLevels  granted QoS levels for requested topic subscriptions
      */
-    public AmqpSubackMessage(Object messageId, List<AmqpQos> grantedQoSLevels) {
+    public AmqpSubackMessage(Object messageId, List<MqttQoS> grantedQoSLevels) {
 
         this.messageId = messageId;
         this.grantedQoSLevels = grantedQoSLevels;
@@ -62,8 +62,8 @@ public class AmqpSubackMessage {
         Section section = message.getBody();
         if ((section != null) && (section instanceof AmqpValue)) {
 
-            List<List<UnsignedByte>> grantedQoSLevels = (List<List<UnsignedByte>>) ((AmqpValue)message.getBody()).getValue();
-            return new AmqpSubackMessage(message.getMessageId(), grantedQoSLevels.stream().map(c -> AmqpQos.from(c)).collect(Collectors.toList()));
+            List<Integer> grantedQoSLevels = (List<Integer>) ((AmqpValue)message.getBody()).getValue();
+            return new AmqpSubackMessage(message.getMessageId(), grantedQoSLevels.stream().map(qos -> MqttQoS.valueOf(qos)).collect(Collectors.toList()));
         } else {
             throw new IllegalArgumentException("AMQP message wrong body type");
         }
@@ -82,8 +82,8 @@ public class AmqpSubackMessage {
 
         message.setMessageId(this.messageId);
 
-        List<List<UnsignedByte>> list =
-                this.grantedQoSLevels.stream().map(qos -> { return qos.toList(); }).collect(Collectors.toList());
+        List<Integer> list =
+                this.grantedQoSLevels.stream().map(qos -> { return qos.value(); }).collect(Collectors.toList());
 
         message.setBody(new AmqpValue(list));
 
@@ -102,7 +102,7 @@ public class AmqpSubackMessage {
      * Granted QoS levels for requested topic subscriptions
      * @return
      */
-    public List<AmqpQos> grantedQoSLevels() {
+    public List<MqttQoS> grantedQoSLevels() {
         return this.grantedQoSLevels;
     }
 }
