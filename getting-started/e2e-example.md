@@ -96,7 +96,8 @@ Here is an example config with all 4 variants that you can save to `addresses.js
 }
 ```
 
-To deploy this configuration, you must currently use a barebone client like curl:
+Each address that set store-and-forward=true must also refer to a flavor. See below on how to create
+your own flavors. To deploy this configuration, you must currently use a barebone client like curl:
 
     curl -X PUT -H "content-type: application/json" --data-binary @addresses.json http://$(oc get service -o jsonpath='{.spec.clusterIP}' restapi):8080/v1/enmasse/addresses
 
@@ -120,29 +121,21 @@ This will block until it has received 10 messages. To start the sender:
 You can use the client with the 'myqueue' and 'multicast' addresses as well. Making the clients work
 with topics is left as an exercies to the reader.
 
-### Address configuration
-
-The addresses are defined in a config map called 'maas'. To make a change to the configuration,
-download the config, edit it, and replace it:
-
-    oc get configmap maas -o yaml > addresses.yaml
-
-    # ADD/REMOVE/EDIT addresses 
 
     oc replace -f addresses.yaml
 
 The changes will be picked up by the storage controller, which will create and delete brokers to
 match the desired state.
 
-Each address that set store-and-forward=true must also refer to a flavor.
 
 ### Flavor config
 
 To support different configurations of brokers, EnMasse comes with different templates that allows
 for different broker configurations and broker types.  A flavor is a specific set of parameters for a template. This
-allows a cluster administrator to control which configuration settings that are available to the developer.
+allows a cluster administrator to control which configuration settings that are available to the
+developer. The flavor configuration is stored in a ConfigMap in OpenShift.
 
-The flavor map can be changed in a similar fashion to the address config:
+The flavor map can be changed using the `oc` tool:
 
    oc get configmap flavor -o yaml > flavor.yaml
    # ADD/REMOVE/CHANGE flavors
