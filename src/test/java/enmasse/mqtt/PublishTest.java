@@ -22,6 +22,7 @@ import io.vertx.ext.unit.junit.VertxUnitRunner;
 import io.vertx.proton.ProtonClient;
 import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.ProtonReceiver;
+import org.apache.qpid.proton.amqp.messaging.Accepted;
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
@@ -55,6 +56,7 @@ public class PublishTest extends MockMqttFrontendTestBase {
                     receiver.handler((delivery, message) -> {
 
                         LOG.info("Message received {}", message);
+                        delivery.disposition(Accepted.getInstance(), true);
                         async.complete();
 
                     }).open();

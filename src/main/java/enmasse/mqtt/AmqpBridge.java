@@ -17,6 +17,7 @@
 package enmasse.mqtt;
 
 import enmasse.mqtt.endpoints.AmqpPublishEndpoint;
+import enmasse.mqtt.endpoints.AmqpPublisher;
 import enmasse.mqtt.endpoints.AmqpReceiverEndpoint;
 import enmasse.mqtt.endpoints.AmqpSubscriptionServiceEndpoint;
 import enmasse.mqtt.endpoints.AmqpWillServiceEndpoint;
@@ -53,9 +54,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -81,8 +80,8 @@ public class AmqpBridge {
     private AmqpSubscriptionServiceEndpoint ssEndpoint;
     // endpoint for handling incoming messages on the unique client address
     private AmqpReceiverEndpoint rcvEndpoint;
-    // endpoints for publishing message on topic (via AMQP)
-    private Map<String, AmqpPublishEndpoint> pubEndpoints;
+    // endpoint for publishing message on topic (via AMQP)
+    private AmqpPublishEndpoint pubEndpoint;
 
     /**
      * Constructor
@@ -93,7 +92,6 @@ public class AmqpBridge {
     public AmqpBridge(Vertx vertx, MqttEndpoint mqttEndpoint) {
         this.vertx = vertx;
         this.mqttEndpoint = mqttEndpoint;
-        this.pubEndpoints = new HashMap<>();
     }
 
     /**
@@ -118,26 +116,9 @@ public class AmqpBridge {
                 this.connection = done.result();
                 this.connection.open();
 
-                // specified link name for the Will Service as MQTT clientid
-                ProtonLinkOptions linkOptions = new ProtonLinkOptions();
-                linkOptions.setLinkName(this.mqttEndpoint.clientIdentifier());
-
-                // setup and open AMQP endpoint for receiving on unique client address
-                ProtonReceiver rcvReceiver = this.connection.createReceiver(String.format(AmqpReceiverEndpoint.CLIENT_ENDPOINT_TEMPLATE, this.mqttEndpoint.clientIdentifier()));
-                this.rcvEndpoint = new AmqpReceiverEndpoint(rcvReceiver);
-
-                // setup and open AMQP endpoints to Will and Subscription services
-                ProtonSender wsSender = this.connection.createSender(AmqpWillServiceEndpoint.WILL_SERVICE_ENDPOINT, linkOptions);
-                this.wsEndpoint = new AmqpWillServiceEndpoint(wsSender);
-
-                ProtonSender ssSender = this.connection.createSender(AmqpSubscriptionServiceEndpoint.SUBSCRIPTION_SERVICE_ENDPOINT);
-                this.ssEndpoint = new AmqpSubscriptionServiceEndpoint(ssSender);
-
-                this.setupMqttEndpointHandlers();
-
-                this.rcvEndpoint.open();
-                this.wsEndpoint.open();
-                this.ssEndpoint.open();
+                // setup MQTT endpoint handlers and AMQP endpoints
+                this.setupMqttEndpoint();
+                this.setupAmqpEndpoits();
 
                 // setup a Future for completed connection steps with all services
                 // with AMQP_WILL and AMQP_SESSION/AMQP_SESSION_PRESENT handled
@@ -240,10 +221,7 @@ public class AmqpBridge {
         this.wsEndpoint.close();
         this.ssEndpoint.close();
         this.rcvEndpoint.close();
-
-        for (Map.Entry<String, AmqpPublishEndpoint> entry: this.pubEndpoints.entrySet()) {
-            entry.getValue().close();
-        }
+        this.pubEndpoint.close();
 
         this.connection.close();
     }
@@ -259,16 +237,14 @@ public class AmqpBridge {
 
         // TODO: simple way, without considering wildcards
 
-        AmqpPublishEndpoint pubEndpoint = null;
-
-        // check if publish endpoint already exists for the requested topic
-        if (!this.pubEndpoints.containsKey(publish.topicName())) {
+        // check if a publisher already exists for the requested topic
+        if (!this.pubEndpoint.isPublisher(publish.topicName())) {
 
             // create two sender for publishing QoS 0/1 and QoS 2 messages
             ProtonSender senderQoS01 = this.connection.createSender(publish.topicName());
             ProtonSender senderQoS2 = this.connection.createSender(publish.topicName());
-            pubEndpoint = new AmqpPublishEndpoint(senderQoS01, senderQoS2);
-            this.pubEndpoints.put(publish.topicName(), pubEndpoint);
+
+            this.pubEndpoint.addPublisher(publish.topicName(), new AmqpPublisher(senderQoS01, senderQoS2));
         }
 
         // sending AMQP_PUBLISH
@@ -293,7 +269,8 @@ public class AmqpBridge {
                         LOG.info("PUBACK [{}] to MQTT client {}", amqpPublishMessage.messageId(), this.mqttEndpoint.clientIdentifier());
                     } else {
 
-                        // TODO: handling QoS 2
+                        this.mqttEndpoint.publishReceived((int) amqpPublishMessage.messageId());
+                        LOG.info("PUBREC [{}] to MQTT client {}", amqpPublishMessage.messageId(), this.mqttEndpoint.clientIdentifier());
                     }
 
                 }
@@ -419,7 +396,7 @@ public class AmqpBridge {
     /**
      * Handler for incoming MQTT PUBACK message
      *
-     * @param messageId
+     * @param messageId message identifier
      */
     private void pubackHandler(int messageId) {
 
@@ -431,16 +408,64 @@ public class AmqpBridge {
     }
 
     /**
+     * Handler for incoming MQTT PUBREL message
+     *
+     * @param messageId message identifier
+     */
+    private void pubrelHandler(int messageId) {
+
+        LOG.info("PUBREL [{}] from MQTT client {}", messageId, this.mqttEndpoint.clientIdentifier());
+
+        // a PUBLISH message with QoS 2 was received from remote MQTT client, PUBREC was already sent
+        // as reply, now that PUBREL is coming it's time to settle and reply with PUBCOMP
+        this.pubEndpoint.settle(messageId);
+
+        this.mqttEndpoint.publishComplete(messageId);
+
+        LOG.info("PUBCOMP [{}] to MQTT client {}", messageId, this.mqttEndpoint.clientIdentifier());
+    }
+
+    /**
      * Setup handlers for MQTT endpoint
      */
-    private void setupMqttEndpointHandlers() {
+    private void setupMqttEndpoint() {
 
         this.mqttEndpoint
                 .publishHandler(this::publishHandler)
                 .publishAcknowledgeHandler(this::pubackHandler)
+                .publishReleaseHandler(this::pubrelHandler)
                 .subscribeHandler(this::subscribeHandler)
                 .unsubscribeHandler(this::unsubscribeHandler)
                 .disconnectHandler(this::disconnectHandler)
                 .closeHandler(this::closeHandler);
+    }
+
+    /**
+     * Setup all AMQP endpoints
+     */
+    private void setupAmqpEndpoits() {
+
+        // specified link name for the Will Service as MQTT clientid
+        ProtonLinkOptions linkOptions = new ProtonLinkOptions();
+        linkOptions.setLinkName(this.mqttEndpoint.clientIdentifier());
+
+        // setup and open AMQP endpoint for receiving on unique client address
+        ProtonReceiver rcvReceiver = this.connection.createReceiver(String.format(AmqpReceiverEndpoint.CLIENT_ENDPOINT_TEMPLATE, this.mqttEndpoint.clientIdentifier()));
+        this.rcvEndpoint = new AmqpReceiverEndpoint(rcvReceiver);
+
+        // setup and open AMQP endpoints to Will and Subscription services
+        ProtonSender wsSender = this.connection.createSender(AmqpWillServiceEndpoint.WILL_SERVICE_ENDPOINT, linkOptions);
+        this.wsEndpoint = new AmqpWillServiceEndpoint(wsSender);
+
+        ProtonSender ssSender = this.connection.createSender(AmqpSubscriptionServiceEndpoint.SUBSCRIPTION_SERVICE_ENDPOINT);
+        this.ssEndpoint = new AmqpSubscriptionServiceEndpoint(ssSender);
+
+        // setup and open AMQP endpoint for publishing
+        this.pubEndpoint = new AmqpPublishEndpoint();
+
+        this.rcvEndpoint.open();
+        this.wsEndpoint.open();
+        this.ssEndpoint.open();
+        this.pubEndpoint.open();
     }
 }
