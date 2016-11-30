@@ -1,5 +1,7 @@
 # Setting up EnMasse
 
+<b>NOTE: For an End-2-End example for setting up EnMasse, see [Getting Started](https://github.com/EnMasseProject/enmasse/blob/master/getting-started/e2e-example.md). This document is exposing more low level details that may quickly get outdated.</b>
+
 # Preqrequisites
 
    * Openshift version >= 1.3
@@ -8,10 +10,6 @@
 
 To make changes, edit the jsonnet files in root and include/ folders. To generate the templates, run
 'make'. 
-
-# Quick start
-
-NOTE: For an End-2-End example for setting up EnMasse, see [Getting Started](https://github.com/EnMasseProject/enmasse/blob/master/getting-started/e2e-example.md). This document is exposing more low level details that may quickly get outdated.
 
 ## Optional: Setup openshift test cluster
 
