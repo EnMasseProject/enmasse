@@ -22,6 +22,7 @@ package enmasse.mqtt.messages;
 public final class AmqpHelper {
 
     public static final String AMQP_CLIENT_ADDRESS_TEMPLATE = "$mqtt.to.%s";
+    public static final String AMQP_CLIENT_PUBREL_ADDRESS_TEMPLATE = "$mqtt.%s.pubrel";
 
     /**
      * Extract client identifier from the unique client address
@@ -29,7 +30,7 @@ public final class AmqpHelper {
      * @param address   the address
      * @return  the client identifier
      */
-    public static String getClientId(String address) {
+    public static String getClientIdFromUniqueAddress(String address) {
 
         return address.substring(address.indexOf("$mqtt.to.") + "$mqtt.to.".length());
     }
@@ -40,8 +41,19 @@ public final class AmqpHelper {
      * @param clientId  the client identifier
      * @return  the address
      */
-    public static String getClientAddress(String clientId) {
+    public static String getUniqueClientAddress(String clientId) {
 
         return String.format("$mqtt.to.%s", clientId);
+    }
+
+    /**
+     * Return client identifier from the pubrel client address
+     *
+     * @param address   the address
+     * @return  the client identifier
+     */
+    public static String getClientIdFromPubrelAddress(String address) {
+
+        return address.substring(address.indexOf("$mqtt.to."), address.indexOf(".pubrel"));
     }
 }

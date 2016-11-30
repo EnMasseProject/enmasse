@@ -17,6 +17,7 @@
 package enmasse.mqtt.endpoints;
 
 import enmasse.mqtt.messages.AmqpPublishMessage;
+import enmasse.mqtt.messages.AmqpPubrelMessage;
 import enmasse.mqtt.messages.AmqpSessionPresentMessage;
 import io.netty.handler.codec.mqtt.MqttQoS;
 import io.vertx.core.Handler;
@@ -46,6 +47,8 @@ public class AmqpReceiverEndpoint {
     private Handler<AmqpSessionPresentMessage> sessionHandler;
     // handler called when AMQP_PUBLISH is received
     private Handler<AmqpPublishMessage> publishHandler;
+    // handler called when AMQP_PUBREL is received
+    private Handler<AmqpPubrelMessage> pubrelHandler;
     // all delivery for received messages if they need settlement (messageId -> delivery)
     private Map<Object, ProtonDelivery> deliveries;
 
@@ -83,6 +86,18 @@ public class AmqpReceiverEndpoint {
     }
 
     /**
+     * Set the session handler called when AMQP_PUBREL is received
+     *
+     * @param handler   the handler
+     * @return  the current AmqpReceiverEndpoint instance
+     */
+    public AmqpReceiverEndpoint pubrelHandler(Handler<AmqpPubrelMessage> handler) {
+
+        this.pubrelHandler = handler;
+        return this;
+    }
+
+    /**
      * Handler for the receiver for handling incoming raw AMQP message
      * from the Subscription Service
      *
@@ -98,8 +113,10 @@ public class AmqpReceiverEndpoint {
             switch (message.getSubject()) {
 
                 case AmqpSessionPresentMessage.AMQP_SUBJECT:
+
                     this.handleSession(AmqpSessionPresentMessage.from(message));
                     delivery.disposition(Accepted.getInstance(), true);
+
                     break;
 
                 case AmqpPublishMessage.AMQP_SUBJECT:
@@ -126,6 +143,20 @@ public class AmqpReceiverEndpoint {
                     } else {
 
                         // TODO: handling QoS 2
+
+                        this.handlePublish(amqpPublishMessage);
+                        if (!delivery.remotelySettled()) {
+                            this.deliveries.put(message.getMessageId(), delivery);
+                        }
+                    }
+
+                    break;
+
+                case AmqpPubrelMessage.AMQP_SUBJECT:
+
+                    this.handlePubrel(AmqpPubrelMessage.from(message));
+                    if (!delivery.remotelySettled()) {
+                        this.deliveries.put(message.getMessageId(), delivery);
                     }
 
                     break;
@@ -203,6 +234,18 @@ public class AmqpReceiverEndpoint {
 
         if (this.publishHandler != null) {
             this.publishHandler.handle(amqpPublishMessage);
+        }
+    }
+
+    /**
+     * Used for calling the pubrel handler when AMQP_PUBREL is received
+     *
+     * @param amqpPubrelMessage AMQP_PUBREL message
+     */
+    private void handlePubrel(AmqpPubrelMessage amqpPubrelMessage) {
+
+        if (this.pubrelHandler != null) {
+            this.pubrelHandler.handle(amqpPubrelMessage);
         }
     }
 }

@@ -17,12 +17,14 @@
 package enmasse.mqtt.endpoints;
 
 import enmasse.mqtt.messages.AmqpPublishMessage;
+import enmasse.mqtt.messages.AmqpPubrelMessage;
 import io.netty.handler.codec.mqtt.MqttQoS;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.proton.ProtonDelivery;
 import io.vertx.proton.ProtonQoS;
+import io.vertx.proton.ProtonSender;
 import org.apache.qpid.proton.amqp.messaging.Accepted;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,16 +39,22 @@ public class AmqpPublishEndpoint {
 
     private static final Logger LOG = LoggerFactory.getLogger(AmqpPublishEndpoint.class);
 
+    public static final String AMQP_CLIENT_PUBREL_ENDPOINT_TEMPLATE = "$mqtt.%s.pubrel";
+
     // all delivery for published messages if they need settlement (messageId -> delivery)
     private Map<Object, ProtonDelivery> deliveries;
     // links for publishing message on topic (topic -> link/senders couple)
     private Map<String, AmqpPublisher> publishers;
+    // sender for PUBREL messages
+    private ProtonSender senderPubrel;
 
     /**
      * Constructor
+     *
+     * @param senderPubrel  ProtonSender instance related to client PUBREL address
      */
-    public AmqpPublishEndpoint() {
-
+    public AmqpPublishEndpoint(ProtonSender senderPubrel) {
+        this.senderPubrel = senderPubrel;
     }
 
     /**
@@ -159,6 +167,27 @@ public class AmqpPublishEndpoint {
     }
 
     /**
+     * Send the AMQP_PUBREL to the related client pubrel address
+     *
+     * @param amqpPubrelMessage    AMQP_PUBREL message
+     */
+    public void publish(AmqpPubrelMessage amqpPubrelMessage, Handler<AsyncResult<ProtonDelivery>> handler) {
+
+        // send AMQP_PUBREL message
+
+        this.senderPubrel.send(amqpPubrelMessage.toAmqp(), delivery -> {
+
+            if (delivery.getRemoteState() == Accepted.getInstance()) {
+                LOG.info("AMQP pubrel delivery {}", delivery.getRemoteState());
+                handler.handle(Future.succeededFuture(delivery));
+            } else {
+                handler.handle(Future.failedFuture(String.format("AMQP pubrel delivery %s", delivery.getRemoteState())));
+            }
+
+        });
+    }
+
+    /**
      * Close the endpoint, detaching the links
      */
     public void close() {
@@ -167,6 +196,8 @@ public class AmqpPublishEndpoint {
         for (Map.Entry<String, AmqpPublisher> entry: this.publishers.entrySet()) {
             entry.getValue().close();
         }
+
+        this.senderPubrel.close();
 
         this.publishers.clear();
         this.deliveries.clear();

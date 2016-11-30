@@ -20,7 +20,6 @@ import io.vertx.proton.ProtonHelper;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.amqp.messaging.Section;
 import org.apache.qpid.proton.message.Message;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.util.List;
 
@@ -66,7 +65,7 @@ public class AmqpUnsubscribeMessage {
 
             List<String> topics = (List<String>) ((AmqpValue) section).getValue();
 
-            return new AmqpUnsubscribeMessage(AmqpHelper.getClientId(message.getReplyTo()),
+            return new AmqpUnsubscribeMessage(AmqpHelper.getClientIdFromUniqueAddress(message.getReplyTo()),
                     message.getMessageId(),
                     topics);
 

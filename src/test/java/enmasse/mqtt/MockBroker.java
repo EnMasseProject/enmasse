@@ -18,6 +18,7 @@ package enmasse.mqtt;
 
 import enmasse.mqtt.messages.AmqpHelper;
 import enmasse.mqtt.messages.AmqpPublishMessage;
+import enmasse.mqtt.messages.AmqpPubrelMessage;
 import enmasse.mqtt.messages.AmqpSubscribeMessage;
 import enmasse.mqtt.messages.AmqpTopicSubscription;
 import enmasse.mqtt.messages.AmqpUnsubscribeMessage;
@@ -32,6 +33,7 @@ import io.vertx.proton.ProtonDelivery;
 import io.vertx.proton.ProtonQoS;
 import io.vertx.proton.ProtonReceiver;
 import io.vertx.proton.ProtonSender;
+import org.apache.qpid.proton.amqp.messaging.Accepted;
 import org.apache.qpid.proton.message.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -72,6 +74,8 @@ public class MockBroker extends AbstractVerticle {
     private Map<String, AmqpPublishMessage> retained;
     // receiver link name -> will message
     private Map<String, AmqpWillMessage> wills;
+    // client-id -> receiver (to $mqtt.<client-id>.pubrel)
+    private Map<String, ProtonReceiver> receiversPubrel;
 
     private String connectAddress;
     private int connectPort;
@@ -92,6 +96,7 @@ public class MockBroker extends AbstractVerticle {
         this.retained = new HashMap<>();
         this.topics = Arrays.asList("my_topic", "will");
         this.wills = new HashMap<>();
+        this.receiversPubrel = new HashMap<>();
     }
 
     @Override
@@ -155,7 +160,7 @@ public class MockBroker extends AbstractVerticle {
 
                                 if (!this.retained.isEmpty()) {
 
-                                    ProtonSender sender = this.connection.createSender(AmqpHelper.getClientAddress(amqpSubscribeMessage.clientId()));
+                                    ProtonSender sender = this.connection.createSender(AmqpHelper.getUniqueClientAddress(amqpSubscribeMessage.clientId()));
 
                                     sender.open();
 
@@ -314,6 +319,18 @@ public class MockBroker extends AbstractVerticle {
                 this.senders.put(amqpSubscribeMessage.clientId(), sender);
             }
 
+            // create a receiver for the PUBREL client address for receiving
+            // such messages (handling QoS 2)
+            if (!this.receiversPubrel.containsKey(amqpSubscribeMessage.clientId())) {
+
+                ProtonReceiver receiver = this.connection.createReceiver(String.format(AmqpHelper.AMQP_CLIENT_PUBREL_ADDRESS_TEMPLATE, amqpSubscribeMessage.clientId()));
+
+                // TODO: check QoS, always AT_LEAST_ONCE ?
+                receiver.open();
+
+                this.receiversPubrel.put(amqpSubscribeMessage.clientId(), receiver);
+            }
+
             // add the subscription to the requested topic by the client identifier
             if (!this.subscriptions.containsKey(amqpTopicSubscription.topic())) {
 
@@ -348,25 +365,56 @@ public class MockBroker extends AbstractVerticle {
 
     private void messageHandler(ProtonReceiver receiver, ProtonDelivery delivery, Message message) {
 
-        String topic = receiver.getSource().getAddress();
+        if (message.getSubject() != null) {
 
-        // TODO: what when raw AMQP message hasn't "publish" as subject ??
+            switch (message.getSubject()) {
 
-        // check if it's retained
-        AmqpPublishMessage amqpPublishMessage = AmqpPublishMessage.from(message);
-        if (amqpPublishMessage.isRetain()) {
-            this.retained.put(amqpPublishMessage.topic(), amqpPublishMessage);
-        }
+                case AmqpPubrelMessage.AMQP_SUBJECT:
 
-        List<String> subscribers = this.subscriptions.get(topic);
+                    {
+                        AmqpPubrelMessage amqpPubrelMessage = AmqpPubrelMessage.from(message);
+                        delivery.disposition(Accepted.getInstance(), true);
 
-        if (subscribers != null) {
+                        String address = receiver.getSource().getAddress();
 
-            for (String clientId: subscribers) {
+                        String clientId = AmqpHelper.getClientIdFromPubrelAddress(address);
 
-                this.senders.get(clientId).send(message);
+                        // TODO: check the publish QoS level ??
+                        this.senders.get(clientId).send(message);
+                    }
+                    break;
 
+                case AmqpPublishMessage.AMQP_SUBJECT:
+
+                    {
+
+                        String topic = receiver.getSource().getAddress();
+
+                        // TODO: what when raw AMQP message hasn't "publish" as subject ??
+
+                        // check if it's retained
+                        AmqpPublishMessage amqpPublishMessage = AmqpPublishMessage.from(message);
+                        if (amqpPublishMessage.isRetain()) {
+                            this.retained.put(amqpPublishMessage.topic(), amqpPublishMessage);
+                        }
+
+                        delivery.disposition(Accepted.getInstance(), true);
+
+                        List<String> subscribers = this.subscriptions.get(topic);
+
+                        if (subscribers != null) {
+
+                            for (String clientId : subscribers) {
+
+                                // TODO: check the publish QoS level ??
+                                this.senders.get(clientId).send(message);
+
+                            }
+                        }
+                    }
+                    break;
             }
+
         }
 
     }

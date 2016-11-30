@@ -22,6 +22,7 @@ import enmasse.mqtt.endpoints.AmqpReceiverEndpoint;
 import enmasse.mqtt.endpoints.AmqpSubscriptionServiceEndpoint;
 import enmasse.mqtt.endpoints.AmqpWillServiceEndpoint;
 import enmasse.mqtt.messages.AmqpPublishMessage;
+import enmasse.mqtt.messages.AmqpPubrelMessage;
 import enmasse.mqtt.messages.AmqpSessionMessage;
 import enmasse.mqtt.messages.AmqpSessionPresentMessage;
 import enmasse.mqtt.messages.AmqpSubscribeMessage;
@@ -172,6 +173,7 @@ public class AmqpBridge {
                         LOG.info("Session present: {}", amqpSessionPresentMessage.isSessionPresent());
 
                         this.rcvEndpoint.publishHandler(this::publishHandler);
+                        this.rcvEndpoint.pubrelHandler(this::pubrelHandler);
 
                         connectionFuture.complete(amqpSessionPresentMessage);
                     });
@@ -286,9 +288,21 @@ public class AmqpBridge {
      */
     private void publishHandler(AmqpPublishMessage publish) {
 
-        this.mqttEndpoint.publish(publish.topic(), publish.payload(), MqttQoS.AT_LEAST_ONCE, publish.isDup(), publish.isRetain());
+        this.mqttEndpoint.publish(publish.topic(), publish.payload(), publish.qos(), publish.isDup(), publish.isRetain());
 
         LOG.info("PUBLISH [{}] to MQTT client {}", publish.messageId(), this.mqttEndpoint.clientIdentifier());
+    }
+
+    /**
+     * Handler for incoming AMQP_PUBREL message
+     *
+     * @param pubrel    AMQP_PUBREL message
+     */
+    private void pubrelHandler(AmqpPubrelMessage pubrel) {
+
+        this.mqttEndpoint.publishRelease((int) pubrel.messageId());
+
+        LOG.info("PUBREL [{}] to MQTT client {}", pubrel.messageId(), this.mqttEndpoint.clientIdentifier());
     }
 
     /**
@@ -426,6 +440,41 @@ public class AmqpBridge {
     }
 
     /**
+     * Handler for incoming MQTT PUBREC message
+     *
+     * @param messageId message identifier
+     */
+    private void pubrecHandler(int messageId) {
+
+        LOG.info("PUBREC [{}] from MQTT client {}", messageId, this.mqttEndpoint.clientIdentifier());
+
+        AmqpPubrelMessage amqpPubrelMessage = new AmqpPubrelMessage(messageId);
+
+        this.pubEndpoint.publish(amqpPubrelMessage, done -> {
+
+            if (done.succeeded()) {
+
+                this.rcvEndpoint.settle(messageId);
+            }
+        });
+    }
+
+    /**
+     * Handler for incoming MQTT PUBCOMP message
+     *
+     * @param messageId message identifier
+     */
+    private void pubcompHandler(int messageId) {
+
+        LOG.info("PUBCOMP [{}] from MQTT client {}", messageId, this.mqttEndpoint.clientIdentifier());
+
+        // a PUBLISH message with QoS 2 was sent to remote MQTT client (not settled yet at source)
+        // then PUBREC was received. The corresponding PUBREL was sent (after PUBLISH settlement at source)
+        // and now the PUBCOMP was received so it's time to settle
+        this.rcvEndpoint.settle(messageId);
+    }
+
+    /**
      * Setup handlers for MQTT endpoint
      */
     private void setupMqttEndpoint() {
@@ -434,6 +483,8 @@ public class AmqpBridge {
                 .publishHandler(this::publishHandler)
                 .publishAcknowledgeHandler(this::pubackHandler)
                 .publishReleaseHandler(this::pubrelHandler)
+                .publishReceivedHandler(this::pubrecHandler)
+                .publishCompleteHandler(this::pubcompHandler)
                 .subscribeHandler(this::subscribeHandler)
                 .unsubscribeHandler(this::unsubscribeHandler)
                 .disconnectHandler(this::disconnectHandler)
@@ -461,7 +512,8 @@ public class AmqpBridge {
         this.ssEndpoint = new AmqpSubscriptionServiceEndpoint(ssSender);
 
         // setup and open AMQP endpoint for publishing
-        this.pubEndpoint = new AmqpPublishEndpoint();
+        ProtonSender senderPubrel = this.connection.createSender(String.format(AmqpPublishEndpoint.AMQP_CLIENT_PUBREL_ENDPOINT_TEMPLATE, this.mqttEndpoint.clientIdentifier()));
+        this.pubEndpoint = new AmqpPublishEndpoint(senderPubrel);
 
         this.rcvEndpoint.open();
         this.wsEndpoint.open();

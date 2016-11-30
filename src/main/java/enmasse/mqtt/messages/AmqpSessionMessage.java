@@ -70,7 +70,7 @@ public class AmqpSessionMessage {
             } else {
 
                 return new AmqpSessionMessage((boolean)messageAnnotations.getValue().get(Symbol.valueOf(AMQP_CLEAN_SESSION_ANNOTATION)),
-                        AmqpHelper.getClientId(message.getReplyTo()));
+                        AmqpHelper.getClientIdFromUniqueAddress(message.getReplyTo()));
             }
         }
     }

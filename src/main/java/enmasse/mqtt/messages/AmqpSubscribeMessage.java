@@ -85,7 +85,7 @@ public class AmqpSubscribeMessage {
                 topicSubscriptions.add(new AmqpTopicSubscription(topics.get(i), MqttQoS.valueOf(qos.get(i))));
             }
 
-            return new AmqpSubscribeMessage(AmqpHelper.getClientId(message.getReplyTo()),
+            return new AmqpSubscribeMessage(AmqpHelper.getClientIdFromUniqueAddress(message.getReplyTo()),
                     message.getMessageId(),
                     topicSubscriptions);
 
