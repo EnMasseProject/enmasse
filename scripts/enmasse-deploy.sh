@@ -24,7 +24,7 @@ else
 fi
 
 ENMASSE_TEMPLATE_MASTER_URL=https://raw.githubusercontent.com/EnMasseProject/openshift-configuration/master/generated
-TEMPLATE_NAME=enmasse-base
+TEMPLATE_NAME=enmasse
 TEMPLATE_PARAMS=""
 
 DEFAULT_OPENSHIFT_USER=developer
@@ -123,7 +123,7 @@ oc policy add-role-to-user edit system:serviceaccount:${PROJECT}:deployer
 
 if [ -n "$SERVER_KEY" ] && [ -n "$SERVER_CERT" ]
 then
-    TEMPLATE_NAME=tls-enmasse-base
+    TEMPLATE_NAME=tls-enmasse
     oc secret new qdrouterd-certs ${SERVER_CERT} ${SERVER_KEY}
     oc secret add serviceaccount/default secrets/qdrouterd-certs --for=mount
 fi
