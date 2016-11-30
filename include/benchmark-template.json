@@ -51,6 +51,10 @@
                   {
                     "name": "BENCH_CLIENTS",
                     "value": "1"
+                  },
+                  {
+                    "name": "BENCH_WAIT_TIME",
+                    "value": "${WAIT_INTERVAL}"
                   }
                 ]
               }
@@ -135,6 +139,11 @@
       "name": "REPORT_INTERVAL",
       "description": "Interval between fetching reports from agents",
       "value": "30"
+    },
+    {
+      "name": "WAIT_INTERVAL",
+      "description": "Wait interval between each message sent",
+      "value": "0"
     },
     {
       "name": "ADDRESS",
