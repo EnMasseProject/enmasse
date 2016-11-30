@@ -11,6 +11,8 @@ To make changes, edit the jsonnet files in root and include/ folders. To generat
 
 # Quick start
 
+NOTE: For an End-2-End example for setting up EnMasse, see [Getting Started](https://github.com/EnMasseProject/enmasse/blob/master/getting-started/e2e-example.md). This document is exposing more low level details that may quickly get outdated.
+
 ## Optional: Setup openshift test cluster
 
 If you don't have an openshift cluster available, you can easily set one up locally by downloading
