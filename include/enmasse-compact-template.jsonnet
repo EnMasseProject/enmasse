@@ -30,6 +30,7 @@ local admin = import "admin.jsonnet";
                  storage.template(true, false, secure),
                  storage.template(true, true, secure),
                  import "direct-template.json",
+                 import "restapi-route.json",
 
                  router.imagestream("${ROUTER_REPO}"),
                  qdrouterd.deployment(secure),
@@ -96,7 +97,11 @@ local admin = import "admin.jsonnet";
       },
       {
         "name": "MESSAGING_HOSTNAME",
-        "description": "The hostname to use for the exposed route for (TLS only)",
+        "description": "The hostname to use for the exposed route for messaging (TLS only)"
+      },
+      {
+        "name": "RESTAPI_HOSTNAME",
+        "description": "The hostname to use for the exposed route for the REST API"
       }
     ]
 

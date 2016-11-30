@@ -488,6 +488,19 @@ objects:
     name: MULTICAST
     required: true
 - apiVersion: v1
+  kind: Route
+  metadata:
+    labels:
+      app: enmasse
+    name: restapi
+  spec:
+    host: "${RESTAPI_HOSTNAME}"
+    port:
+      targetPort: http
+    to:
+      kind: Service
+      name: restapi
+- apiVersion: v1
   kind: ImageStream
   metadata:
     labels:
@@ -853,5 +866,7 @@ parameters:
 - description: The image to use for the rest api
   name: RESTAPI_REPO
   value: enmasseproject/enmasse-rest
-- description: The hostname to use for the exposed route for (TLS only)
+- description: The hostname to use for the exposed route for messaging (TLS only)
   name: MESSAGING_HOSTNAME
+- description: The hostname to use for the exposed route for the REST API
+  name: RESTAPI_HOSTNAME
