@@ -112,21 +112,14 @@ For sending and receiving messages, have a look at an example python [sender](tl
 
 For SNI, use the host listed by running ```oc get route messaging```. To start the receiver:
 
-    $ ./tls_simple_recv.py -c amqps://localhost:443 -a anycast -s enmasse-messaging-service.192.168.1.6.xip.io -m 10
+    ./tls_simple_recv.py -c amqps://localhost:443 -a anycast -s "$(oc get route -o jsonpath='{.spec.host}' messaging)" -m 10
 
 This will block until it has received 10 messages. To start the sender:
 
-    $ ./tls_simple_send.py -c amqps://localhost:443 -a anycast -s enmasse-messaging-service.192.168.1.6.xip.io -m 10
+    ./tls_simple_send.py -c amqps://localhost:443 -a anycast -s "$(oc get route -o jsonpath='{.spec.host}' messaging)" -m 10
 
 You can use the client with the 'myqueue' and 'multicast' addresses as well. Making the clients work
 with topics is left as an exercies to the reader.
-
-
-    oc replace -f addresses.yaml
-
-The changes will be picked up by the storage controller, which will create and delete brokers to
-match the desired state.
-
 
 ### Flavor config
 
