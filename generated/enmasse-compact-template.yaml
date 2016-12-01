@@ -816,55 +816,17 @@ objects:
   metadata:
     labels:
       app: enmasse
-    name: ragent
+    name: admin
   spec:
     ports:
-    - name: amqp
+    - name: ragent
       port: 55672
-      protocol: TCP
-      targetPort: 55672
-    selector:
-      name: admin
-- apiVersion: v1
-  kind: Service
-  metadata:
-    labels:
-      app: enmasse
-    name: restapi
-  spec:
-    ports:
-    - name: http
+    - name: restapi
       port: 8080
-      protocol: TCP
-      targetPort: 8080
-    selector:
-      name: admin
-- apiVersion: v1
-  kind: Service
-  metadata:
-    labels:
-      app: enmasse
-    name: configuration
-  spec:
-    ports:
-    - name: amqp
+    - name: configuration
       port: 5672
-      protocol: TCP
-      targetPort: 5672
-    selector:
-      name: admin
-- apiVersion: v1
-  kind: Service
-  metadata:
-    labels:
-      app: enmasse
-    name: storage-controller
-  spec:
-    ports:
-    - name: amqp
-      port: 5672
-      protocol: TCP
-      targetPort: 55674
+    - name: storage-controller
+      port: 55674
     selector:
       name: admin
 parameters:

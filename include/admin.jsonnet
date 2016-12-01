@@ -3,10 +3,39 @@ local common = import "common.jsonnet";
 {
   services::
   [
-    common.service("ragent", "admin", "amqp", 55672, 55672),
-    common.service("restapi", "admin", "http", 8080, 8080),
-    common.service("configuration", "admin", "amqp", 5672, 5672),
-    common.service("storage-controller", "admin", "amqp", 5672, 55674)
+    {
+      "apiVersion": "v1",
+      "kind": "Service",
+      "metadata": {
+        "name": "admin",
+        "labels": {
+          "app": "enmasse"
+        }
+      },
+      "spec": {
+        "ports": [
+          {
+            "name": "ragent",
+            "port": 55672
+          },
+          {
+            "name": "restapi",
+            "port": 8080
+          },
+          {
+            "name": "configuration",
+            "port": 5672
+          },
+          {
+            "name": "storage-controller",
+            "port": 55674
+          }
+        ],
+        "selector": {
+          "name": "admin"
+        }
+      }
+    }
   ],
   deployment::
   {
