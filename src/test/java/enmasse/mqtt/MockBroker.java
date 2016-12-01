@@ -326,7 +326,13 @@ public class MockBroker extends AbstractVerticle {
                 ProtonReceiver receiver = this.connection.createReceiver(String.format(AmqpHelper.AMQP_CLIENT_PUBREL_ADDRESS_TEMPLATE, amqpSubscribeMessage.clientId()));
 
                 // TODO: check QoS, always AT_LEAST_ONCE ?
-                receiver.open();
+                receiver
+                        .setTarget(receiver.getRemoteTarget())
+                        .handler((delivery, message) -> {
+
+                            this.messageHandler(receiver, delivery, message);
+                        })
+                        .open();
 
                 this.receiversPubrel.put(amqpSubscribeMessage.clientId(), receiver);
             }

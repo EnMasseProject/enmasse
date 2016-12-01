@@ -54,6 +54,6 @@ public final class AmqpHelper {
      */
     public static String getClientIdFromPubrelAddress(String address) {
 
-        return address.substring(address.indexOf("$mqtt.to."), address.indexOf(".pubrel"));
+        return address.substring(address.indexOf("$mqtt.") + "$mqtt.".length(), address.indexOf(".pubrel"));
     }
 }
