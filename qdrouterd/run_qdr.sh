@@ -2,9 +2,14 @@
 
 export MY_IP_ADDR=$(hostname -I)
 if [ -z "$RAGENT_SERVICE_HOST" ]; then
-    echo "ERROR: router agent service not configured";
-    export RAGENT_SERVICE_HOST=localhost;
-    export RAGENT_SERVICE_PORT=55672;
+    if [ -n "$ADMIN_SERVICE_HOST" ]; then
+        export RAGENT_SERVICE_HOST=$ADMIN_SERVICE_HOST
+        export RAGENT_SERVICE_PORT=$ADMIN_SERVICE_PORT_RAGENT
+    else
+        echo "ERROR: router agent service not configured";
+        export RAGENT_SERVICE_HOST=localhost;
+        export RAGENT_SERVICE_PORT=55672;
+    fi
 fi
 if [ -z "$LINK_CAPACITY" ]; then
     export LINK_CAPACITY=50
