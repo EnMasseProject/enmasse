@@ -70,32 +70,78 @@ function ensure_queue (name, pods) {
     );
 };
 
-SubscriptionControl.prototype.subscribe = function (subscription_id, topic) {
+/**
+ * Returns a map of topic name to optional tag (as passed to subscribe
+ * request). If no tag was specified, the value of the map is always
+ * true.
+ */
+SubscriptionControl.prototype.list = function (subscription_id) {
+    return find_queue(subscription_id, this.pods.pod_list()).then(function (result) {
+        if (result.found) {
+            return result.pod.broker.getDivertNames().then(
+                function (names) {
+                    return names.filter(
+                        function (n) { return n.indexOf(subscription_id) === 0; }
+                    ).reduce(
+                        function (a, b) {
+                            var parts = b.split('|');
+                            a[parts[1]] = parts[2] || true;
+                            return a;
+                        },
+                        {}
+                    );
+                }
+            );
+        } else {
+            return {};
+        }
+    });
+};
+
+function get_divert_name(subscription_id, topic, tag) {
+    return subscription_id + '|' + topic + '|' + (tag || '');
+}
+
+SubscriptionControl.prototype.subscribe = function (subscription_id, topics) {
+    console.log('subscribing to ' + JSON.stringify(topics));
     return ensure_queue(subscription_id, this.pods.pod_list()).then(
         function (pod) {
-            var name = subscription_id + ':' + topic;
-            return pod.broker.ensureConnectorService(name, topic, subscription_id);
+            return pod.broker.ensureConnectorService(subscription_id, subscription_id, subscription_id).then(
+                function () {
+                    return Promise.all(Object.keys(topics).map(
+                        function (topic) {
+                            var name = get_divert_name(subscription_id, topic, topics[topic]);
+                            return pod.broker.ensureDivert(name, topic, subscription_id);
+                        }
+                    ));
+                }
+            );
         }
     );
 };
 
-SubscriptionControl.prototype.unsubscribe = function (subscription_id, topic) {
-    return find_queue(subscription_id, this.pods.pod_list()).then(
-        function(result) {
-            if (result.found) {
-                var name = subscription_id + ':' + topic;
-                return result.pod.broker.destroyConnectorService(name);
-            }
-        }
-    );
-};
-
-function delete_diverts(broker, subscription_id) {
-    function matches(n) { return n.indexOf(subscription_id) === 0; };
+function delete_diverts(broker, prefix) {
+    function matches(n) { return n.indexOf(prefix) === 0; };
     function destroy(n) { return broker.destroyDivert(n); }
     return broker.getDivertNames().then(
         function (names) {
             return Promise.all(names.filter(matches).map(destroy));
+        }
+    );
+};
+
+SubscriptionControl.prototype.unsubscribe = function (subscription_id, topics) {
+    return find_queue(subscription_id, this.pods.pod_list()).then(
+        function(result) {
+            if (result.found) {
+                return Promises.all(Object.keys(topics).map(
+                    function (topic) {
+                        var name = get_divert_name(subscription_id, topic);
+                        return delete_diverts(result.pod.broker, name);
+                        //TODO: could delete queue and connector *if* there are no longer any diverts
+                    }
+                ));
+            }
         }
     );
 };
@@ -106,16 +152,13 @@ SubscriptionControl.prototype.close = function (subscription_id) {
             if (result.found) {
                 return delete_diverts(result.pod.broker, subscription_id).then(
                     function () {
-                        //delete queue last as that is how we
-                        //find the right broker to cleanup
-
-                        //Note: need to delay the delete as it will fail if
-                        //there is still a link attached, and though deleting
-                        //the autoLink will delete the actual link, that is
-                        //an asynchronous side effect.
-                        return Promise.delay(250).then(function () {
-                            result.pod.broker.destroyQueue(subscription_id);
-                        });
+                        return result.pod.broker.destroyConnectorService(subscription_id).then(
+                            function () {
+                                //delete queue last as that is how we
+                                //find the right broker to cleanup
+                                return result.pod.broker.destroyQueue(subscription_id);
+                            }
+                        );
                     }
                 );
             }
