@@ -36,20 +36,15 @@ EnMasse comes with a few templates that makes setting it up easy. First, create 
 
     oc new-project enmasse
 
-Then import the EnMasse template:
+Then download a script for deploying the EnMasse template:
 
-    oc create -f https://raw.githubusercontent.com/EnMasseProject/openshift-configuration/master/generated/tls-enmasse-template.yaml
+    curl https://raw.githubusercontent.com/EnMasseProject/openshift-configuration/master/scripts/enmasse-deploy.sh -o enmasse-deploy.sh
 
-### Setting up permissions 
-
-At the moment of writing, some permissions need to be granted before creating the service. View permission should
-be granted to the default serviceaccount. Edit rights must also be granted to the deployer role:
-
-    oc policy add-role-to-user view system:serviceaccount:$(oc project -q):default
-    oc policy add-role-to-user edit system:serviceaccount:$(oc project -q):deployer
+This script simplifies the process of deploying the enmasse cluster to your openshift instance. You
+can invoke it with `-h` to get a list of options.
 
 
-### Setting up certificates 
+### Creating certificates 
 
 Since the service requires TLS, we need to install certificates to be used by the routers in the
 messaging service. If you do not have any signed certificates to use, you can generate one with
@@ -57,26 +52,56 @@ messaging service. If you do not have any signed certificates to use, you can ge
 
     openssl req -new -x509 -batch -nodes -out server-cert.pem -keyout server-key.pem
 
-To install the certificates for EnMasse, a secret must be added to OpenShift:
-
-    oc secret new qdrouterd-certs server-cert.pem server-key.pem
-
-Then, the default serviceaccount must be allowed to read this secret:
-
-    oc secret add serviceaccount/default secrets/qdrouterd-certs --for=mount
-
 ### Creating the EnMasse instance
 
 Now you are ready for creating the messaging service itself:
 
-    oc new-app --template=tls-enmasse -l app=enmasse
+    bash enmasse-deploy.sh -c "https://localhost:8443" -p enmasse -k server-key.pem -s server-cert.pem
 
-By default, the template will setup 4 addresses with 4 different address types:
+This will create the deployments required for running EnMasse. Starting up EnMasse will take a while,
+usually depending on how fast it is able to download the docker images for the various components.
+In the meantime, you can start to create your address configuration.
 
-   * A queue named 'myqueue'
-   * A topic named 'mytopic'
-   * A 'direct' address 'anycast'
-   * A 'direct' address 'multicast'
+### Configuring addresses 
+
+EnMasse is configured with a set of addresses that you can use for messages. Currently, EnMasse supports 4 different address types:
+
+   * Brokered queues
+   * Brokered topics (pub/sub)
+   * Direct anycast addresses 
+   * Direct broadcast addresses
+
+Here is an example config with all 4 variants that you can save to `addresses.json`:
+
+```
+{
+    "anycast": {
+        "store_and_forward": false,
+        "multicast": false
+    },
+    "broadcast": {
+        "store_and_forward": false,
+        "multicast": true
+    },
+    "mytopic": {
+        "store_and_forward": true,
+        "multicast": true,
+        "flavor": "vanilla-topic"
+    },
+    "myqueue": {
+        "store_and_forward": true,
+        "multicast": false,
+        "flavor": "vanilla-queue"
+    }
+}
+```
+
+Each address that set store-and-forward=true must also refer to a flavor. See below on how to create
+your own flavors. To deploy this configuration, you must currently use a barebone client like curl:
+
+    curl -X PUT -H "content-type: application/json" --data-binary @addresses.json http://$(oc get service -o jsonpath='{.spec.clusterIP}' restapi):8080/v1/enmasse/addresses
+
+This will connect to the EnMasse REST API to deploy the address config.
 
 ### Sending and receiving messages
 
@@ -87,38 +112,23 @@ For sending and receiving messages, have a look at an example python [sender](tl
 
 For SNI, use the host listed by running ```oc get route messaging```. To start the receiver:
 
-    $ ./tls_simple_recv.py -c amqps://localhost:443 -a anycast -s enmasse-messaging-service.192.168.1.6.xip.io -m 10
+    ./tls_simple_recv.py -c amqps://localhost:443 -a anycast -s "$(oc get route -o jsonpath='{.spec.host}' messaging)" -m 10
 
 This will block until it has received 10 messages. To start the sender:
 
-    $ ./tls_simple_send.py -c amqps://localhost:443 -a anycast -s enmasse-messaging-service.192.168.1.6.xip.io -m 10
+    ./tls_simple_send.py -c amqps://localhost:443 -a anycast -s "$(oc get route -o jsonpath='{.spec.host}' messaging)" -m 10
 
 You can use the client with the 'myqueue' and 'multicast' addresses as well. Making the clients work
 with topics is left as an exercies to the reader.
-
-### Address configuration
-
-The addresses are defined in a config map called 'maas'. To make a change to the configuration,
-download the config, edit it, and replace it:
-
-    oc get configmap maas -o yaml > addresses.yaml
-
-    # ADD/REMOVE/EDIT addresses 
-
-    oc replace -f addresses.yaml
-
-The changes will be picked up by the storage controller, which will create and delete brokers to
-match the desired state.
-
-Each address that set store-and-forward=true must also refer to a flavor.
 
 ### Flavor config
 
 To support different configurations of brokers, EnMasse comes with different templates that allows
 for different broker configurations and broker types.  A flavor is a specific set of parameters for a template. This
-allows a cluster administrator to control which configuration settings that are available to the developer.
+allows a cluster administrator to control which configuration settings that are available to the
+developer. The flavor configuration is stored in a ConfigMap in OpenShift.
 
-The flavor map can be changed in a similar fashion to the address config:
+The flavor map can be changed using the `oc` tool:
 
    oc get configmap flavor -o yaml > flavor.yaml
    # ADD/REMOVE/CHANGE flavors
