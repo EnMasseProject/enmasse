@@ -21,6 +21,8 @@ import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import io.vertx.proton.ProtonClient;
 import io.vertx.proton.ProtonConnection;
+import io.vertx.proton.ProtonLinkOptions;
+import io.vertx.proton.ProtonQoS;
 import io.vertx.proton.ProtonReceiver;
 import org.apache.qpid.proton.amqp.messaging.Accepted;
 import org.eclipse.paho.client.mqttv3.MqttClient;
@@ -35,44 +37,124 @@ import org.junit.runner.RunWith;
 @RunWith(VertxUnitRunner.class)
 public class PublishTest extends MockMqttFrontendTestBase {
 
-    @Test
-    public void publish(TestContext context) {
+    private static final String MQTT_TOPIC = "/my_topic";
+    private static final String MQTT_MESSAGE = "Hello MQTT on EnMasse";
+    private static final String SUBSCRIBER_ID = "12345";
+    private static final String PUBLISHER_ID = "67890";
 
-        Async async = context.async();
+    private Async async;
+
+    @Test
+    public void publishQoS0toMqtt(TestContext context) {
+
+        this.mqttReceiver(context, MQTT_TOPIC, 0);
+        this.publish(context, MQTT_TOPIC, MQTT_MESSAGE, 0);
+    }
+
+    @Test
+    public void publishQoS1toMqtt(TestContext context) {
+
+        this.mqttReceiver(context, MQTT_TOPIC, 1);
+        this.publish(context, MQTT_TOPIC, MQTT_MESSAGE, 1);
+    }
+
+    @Test
+    public void publishQoS2toMqtt(TestContext context) {
+
+        this.mqttReceiver(context, MQTT_TOPIC, 2);
+        this.publish(context, MQTT_TOPIC, MQTT_MESSAGE, 2);
+    }
+
+    @Test
+    public void publishQoS0toAmqp(TestContext context) {
+
+        this.amqpReceiver(context, MQTT_TOPIC, 0);
+        this.publish(context, MQTT_TOPIC, MQTT_MESSAGE, 0);
+    }
+
+    @Test
+    public void publishQoS1toAmqp(TestContext context) {
+
+        this.amqpReceiver(context, MQTT_TOPIC, 1);
+        this.publish(context, MQTT_TOPIC, MQTT_MESSAGE, 1);
+    }
+
+    @Test
+    public void publishQoS2toAmqp(TestContext context) {
+
+        this.amqpReceiver(context, MQTT_TOPIC, 2);
+        this.publish(context, MQTT_TOPIC, MQTT_MESSAGE, 2);
+    }
+
+    private void mqttReceiver(TestContext context, String topic, int qos) {
 
         try {
 
-            // AMQP client connects for receiving the published message
-            ProtonClient amqpClient = ProtonClient.create(this.vertx);
-
-            amqpClient.connect(AMQP_CLIENTS_LISTENER_ADDRESS, AMQP_CLIENTS_LISTENER_PORT, done -> {
-
-                if (done.succeeded()) {
-
-                    ProtonConnection connection = done.result();
-                    connection.open();
-
-                    ProtonReceiver receiver = connection.createReceiver("my_topic");
-                    receiver.handler((delivery, message) -> {
-
-                        LOG.info("Message received {}", message);
-                        delivery.disposition(Accepted.getInstance(), true);
-                        async.complete();
-
-                    }).open();
-                }
-            });
-
             MemoryPersistence persistence = new MemoryPersistence();
-
-            MqttClient client = new MqttClient(String.format("tcp://%s:%d", MQTT_BIND_ADDRESS, MQTT_LISTEN_PORT), "12345", persistence);
+            MqttClient client = new MqttClient(String.format("tcp://%s:%d", MQTT_BIND_ADDRESS, MQTT_LISTEN_PORT), SUBSCRIBER_ID, persistence);
             client.connect();
 
-            client.publish("my_topic", "my_payload".getBytes(), 1, false);
+            client.subscribe(topic, qos, (t, m) -> {
 
-            client.disconnect();
+                LOG.info("topic: {}, message: {}", t, m);
+                this.async.complete();
+            });
 
-            async.await();
+        } catch (MqttException e) {
+
+            context.assertTrue(false);
+            e.printStackTrace();
+        }
+    }
+
+    private void amqpReceiver(TestContext context, String topic, int qos) {
+
+        // AMQP client connects for receiving the published message
+        ProtonClient client = ProtonClient.create(this.vertx);
+
+        client.connect(AMQP_CLIENTS_LISTENER_ADDRESS, AMQP_CLIENTS_LISTENER_PORT, done -> {
+
+            if (done.succeeded()) {
+
+                ProtonConnection connection = done.result();
+                connection.open();
+
+                ProtonLinkOptions options = new ProtonLinkOptions();
+                options.setLinkName(SUBSCRIBER_ID);
+
+                ProtonReceiver receiver = connection.createReceiver(topic, options);
+
+                receiver
+                        .setQoS((qos == 0) ? ProtonQoS.AT_MOST_ONCE : ProtonQoS.AT_LEAST_ONCE)
+                        .handler((d, m) -> {
+
+                            LOG.info("topic: {}, message: {}", topic, m);
+                            d.disposition(Accepted.getInstance(), true);
+                            this.async.complete();
+
+                        }).open();
+
+            } else {
+
+                context.assertTrue(false);
+                done.cause().printStackTrace();
+            }
+        });
+    }
+
+    private void publish(TestContext context, String topic, String message, int qos) {
+
+        this.async = context.async();
+
+        try {
+
+            MemoryPersistence persistence = new MemoryPersistence();
+            MqttClient client = new MqttClient(String.format("tcp://%s:%d", MQTT_BIND_ADDRESS, MQTT_LISTEN_PORT), PUBLISHER_ID, persistence);
+            client.connect();
+
+            client.publish(topic, message.getBytes(), qos, false);
+
+            this.async.await();
 
             context.assertTrue(true);
 
@@ -82,4 +164,5 @@ public class PublishTest extends MockMqttFrontendTestBase {
             e.printStackTrace();
         }
     }
+
 }
