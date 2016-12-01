@@ -165,7 +165,7 @@ public class MockBroker extends AbstractVerticle {
                                         if (this.retained.containsKey(amqpTopicSubscription.topic())) {
 
                                             AmqpPublishMessage amqpPublishMessage = this.retained.get(amqpTopicSubscription.topic());
-                                            // TODO: with which QoS ?
+                                            // QoS already set at AT_LEAST_ONCE as requested by the receiver side
                                             this.senders.get(amqpSubscribeMessage.clientId()).send(amqpPublishMessage.toAmqp());
                                         }
                                     }
@@ -309,8 +309,9 @@ public class MockBroker extends AbstractVerticle {
 
                 ProtonSender sender = this.connection.createSender(String.format(AmqpHelper.AMQP_CLIENT_ADDRESS_TEMPLATE, amqpSubscribeMessage.clientId()));
 
-                // TODO: check QoS, always AT_LEAST_ONCE ?
-                sender.open();
+                // QoS AT_LEAST_ONCE as requested by the receiver side
+                sender.setQoS(ProtonQoS.AT_LEAST_ONCE)
+                        .open();
 
                 this.senders.put(amqpSubscribeMessage.clientId(), sender);
             }
@@ -381,7 +382,7 @@ public class MockBroker extends AbstractVerticle {
 
                         String clientId = AmqpHelper.getClientIdFromPubrelAddress(address);
 
-                        // TODO: check the publish QoS level ??
+                        // QoS already set at AT_LEAST_ONCE as requested by the receiver side
                         this.senders.get(clientId).send(message);
                     }
                     break;
@@ -408,7 +409,7 @@ public class MockBroker extends AbstractVerticle {
 
                             for (String clientId : subscribers) {
 
-                                // TODO: check the publish QoS level ??
+                                // QoS already set at AT_LEAST_ONCE as requested by the receiver side
                                 this.senders.get(clientId).send(message);
 
                             }
