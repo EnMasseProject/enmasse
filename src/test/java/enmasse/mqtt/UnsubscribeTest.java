@@ -30,21 +30,24 @@ import org.junit.runner.RunWith;
 @RunWith(VertxUnitRunner.class)
 public class UnsubscribeTest extends MockMqttFrontendTestBase {
 
+    private static final String MQTT_TOPIC = "/my_topic";
+    private static final String CLIENT_ID = "12345";
+
     @Test
     public void unsubscribe(TestContext context) {
 
         try {
 
             MemoryPersistence persistence = new MemoryPersistence();
-            MqttClient client = new MqttClient(String.format("tcp://%s:%d", MQTT_BIND_ADDRESS, MQTT_LISTEN_PORT), "12345", persistence);
+            MqttClient client = new MqttClient(String.format("tcp://%s:%d", MQTT_BIND_ADDRESS, MQTT_LISTEN_PORT), CLIENT_ID, persistence);
             client.connect();
 
-            String[] topics = new String[]{ "my_topic" };
+            String[] topics = new String[]{ MQTT_TOPIC };
             int[] qos = new int[]{ 1 };
             // after calling subscribe, the qos is replaced with granted QoS that should be the same
             client.subscribe(topics, qos);
 
-            client.unsubscribe("my_topic");
+            client.unsubscribe(MQTT_TOPIC);
 
             context.assertTrue(true);
 

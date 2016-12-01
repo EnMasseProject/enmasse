@@ -33,6 +33,10 @@ import org.junit.runner.RunWith;
 @RunWith(VertxUnitRunner.class)
 public class ConnectionTest extends MockMqttFrontendTestBase {
 
+    private static final String MQTT_WILL_TOPIC = "/will";
+    private static final String MQTT_WILL_MESSAGE = "Will on EnMasse";
+    private static final String CLIENT_ID = "12345";
+
     @Test
     public void connectionSuccess(TestContext context) {
 
@@ -43,9 +47,9 @@ public class ConnectionTest extends MockMqttFrontendTestBase {
             MemoryPersistence persistence = new MemoryPersistence();
 
             MqttConnectOptions options = new MqttConnectOptions();
-            options.setWill(new MqttTopic("will", null), "will".getBytes(), 1, false);
+            options.setWill(new MqttTopic(MQTT_WILL_TOPIC, null), MQTT_WILL_MESSAGE.getBytes(), 1, false);
 
-            MqttClient client = new MqttClient(String.format("tcp://%s:%d", MQTT_BIND_ADDRESS, MQTT_LISTEN_PORT), "12345", persistence);
+            MqttClient client = new MqttClient(String.format("tcp://%s:%d", MQTT_BIND_ADDRESS, MQTT_LISTEN_PORT), CLIENT_ID, persistence);
             client.connect(options);
 
             context.assertTrue(true);

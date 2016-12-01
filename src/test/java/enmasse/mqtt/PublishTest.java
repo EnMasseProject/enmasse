@@ -25,6 +25,7 @@ import io.vertx.proton.ProtonLinkOptions;
 import io.vertx.proton.ProtonQoS;
 import io.vertx.proton.ProtonReceiver;
 import org.apache.qpid.proton.amqp.messaging.Accepted;
+import org.apache.qpid.proton.amqp.messaging.Data;
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
@@ -128,7 +129,7 @@ public class PublishTest extends MockMqttFrontendTestBase {
                         .setQoS((qos == 0) ? ProtonQoS.AT_MOST_ONCE : ProtonQoS.AT_LEAST_ONCE)
                         .handler((d, m) -> {
 
-                            LOG.info("topic: {}, message: {}", topic, m);
+                            LOG.info("topic: {}, message: {}", topic, ((Data)m.getBody()).getValue());
                             d.disposition(Accepted.getInstance(), true);
                             this.async.complete();
 
