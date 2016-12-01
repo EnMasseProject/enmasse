@@ -160,20 +160,16 @@ public class MockBroker extends AbstractVerticle {
 
                                 if (!this.retained.isEmpty()) {
 
-                                    ProtonSender sender = this.connection.createSender(AmqpHelper.getUniqueClientAddress(amqpSubscribeMessage.clientId()));
-
-                                    sender.open();
-
                                     for (AmqpTopicSubscription amqpTopicSubscription: amqpSubscribeMessage.topicSubscriptions()) {
+
                                         if (this.retained.containsKey(amqpTopicSubscription.topic())) {
 
                                             AmqpPublishMessage amqpPublishMessage = this.retained.get(amqpTopicSubscription.topic());
                                             // TODO: with which QoS ?
-                                            sender.send(amqpPublishMessage.toAmqp());
+                                            this.senders.get(amqpSubscribeMessage.clientId()).send(amqpPublishMessage.toAmqp());
                                         }
                                     }
 
-                                    sender.close();
                                 }
                             }
                         });
