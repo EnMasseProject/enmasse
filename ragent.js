@@ -285,8 +285,16 @@ if (process.env.KUBERNETES_SERVICE_HOST) {
     });
 }
 
+var config_host = process.env.ADMIN_SERVICE_HOST
+var config_port = process.env.ADMIN_SERVICE_PORT_CONFIGURATION
+
 if (process.env.CONFIGURATION_SERVICE_HOST) {
+    config_host = process.env.CONFIGURATION_SERVICE_HOST
+    config_port = process.env.CONFIGURATION_SERVICE_PORT
+}
+
+if (config_host) {
     amqp.options.username = 'ragent';
-    var conn = amqp.connect({host:process.env.CONFIGURATION_SERVICE_HOST, port:process.env.CONFIGURATION_SERVICE_PORT, properties:connection_properties});
+    var conn = amqp.connect({host:config_host, port:config_port, properties:connection_properties});
     conn.open_receiver('maas');
 }
