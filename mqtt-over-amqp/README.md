@@ -23,3 +23,9 @@ The following documentation has no assumptions on the implementation side. It me
 * Implementation
   * [Will Service](docs/implementation_will_service.md)
   * [Subscription Service](docs/implementation_subscription_service.md)
+
+## EnMasse implementation
+
+The implementation for EnMasse can be found [here](https://github.com/EnMasseProject/mqtt-frontend) and following its overall big picture :
+
+![MQTT Fronted](./images/mqtt_frontend.png)
