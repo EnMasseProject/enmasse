@@ -175,6 +175,15 @@ public class AmqpPublishEndpoint {
 
         // send AMQP_PUBREL message
 
+        if (!this.senderPubrel.isOpen()) {
+
+            this.senderPubrel
+                    .setQoS(ProtonQoS.AT_LEAST_ONCE)
+                    .open();
+
+            // TODO: think about starting a timer for inactivity on this link for detaching ?
+        }
+
         this.senderPubrel.send(amqpPubrelMessage.toAmqp(), delivery -> {
 
             if (delivery.getRemoteState() == Accepted.getInstance()) {
