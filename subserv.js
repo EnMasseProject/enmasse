@@ -205,10 +205,17 @@ if (process.env.MESSAGING_SERVICE_HOST) {
     amqp.connect({host:process.env.MESSAGING_SERVICE_HOST, port:process.env.MESSAGING_SERVICE_PORT, id:'messaging-service'}).open_receiver({autoaccept: false, source:SUBCTRL});
 }
 
+var config_host = process.env.ADMIN_SERVICE_HOST
+var config_port = process.env.ADMIN_SERVICE_PORT_CONFIGURATION
+
 if (process.env.CONFIGURATION_SERVICE_HOST) {
-    console.log('connecting to configuration service...');
-    amqp.options.username = 'subserv';
-    var conn = amqp.connect({host:process.env.CONFIGURATION_SERVICE_HOST, port:process.env.CONFIGURATION_SERVICE_PORT, properties:connection_properties, id:'configuration-service'});
-    conn.open_receiver('maas');
+    config_host = process.env.CONFIGURATION_SERVICE_HOST
+    config_port = process.env.CONFIGURATION_SERVICE_PORT
 }
 
+if (config_host) {
+    console.log('connecting to configuration service...');
+    amqp.options.username = 'subserv';
+    var conn = amqp.connect({host:config_host, port:config_port, properties:connection_properties, id:'configuration-service'});
+    conn.open_receiver('maas');
+}
