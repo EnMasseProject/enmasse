@@ -142,8 +142,6 @@ public class AmqpReceiverEndpoint {
                     // QoS 2 :
                     } else {
 
-                        // TODO: handling QoS 2
-
                         this.handlePublish(amqpPublishMessage);
                         if (!delivery.remotelySettled()) {
                             this.deliveries.put(message.getMessageId(), delivery);

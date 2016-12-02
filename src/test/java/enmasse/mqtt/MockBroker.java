@@ -228,21 +228,20 @@ public class MockBroker extends AbstractVerticle {
 
                                 AmqpWillMessage amqpWillMessage = this.wills.get(ebMessage.body());
 
+                                // TODO: how will messageid generation should happen ?
                                 AmqpPublishMessage amqpPublishMessage =
                                         new AmqpPublishMessage(1, amqpWillMessage.qos(), false, amqpWillMessage.isRetain(), amqpWillMessage.topic(), amqpWillMessage.payload());
 
                                 ProtonSender sender = this.connection.createSender(amqpPublishMessage.topic());
 
-                                // TODO: it should be always AT_LEAST_ONCE
-                                ProtonQoS protonQos = ProtonQoS.AT_LEAST_ONCE;
-                                sender.setQoS(protonQos);
-
-                                sender.open();
+                                sender.setQoS(ProtonQoS.AT_LEAST_ONCE)
+                                        .open();
 
                                 sender.send(amqpPublishMessage.toAmqp(), delivery -> {
 
                                     // true ... will published
                                     ebMessage.reply(true);
+                                    sender.close();
                                 });
 
                             } else {
@@ -291,8 +290,8 @@ public class MockBroker extends AbstractVerticle {
 
                 ProtonReceiver receiver = this.connection.createReceiver(amqpTopicSubscription.topic());
 
-                // TODO: check QoS, always AT_LEAST_ONCE ?
                 receiver
+                        .setQoS(ProtonQoS.AT_LEAST_ONCE)
                         .setTarget(receiver.getRemoteTarget())
                         .handler((delivery, message) -> {
 
@@ -322,8 +321,8 @@ public class MockBroker extends AbstractVerticle {
 
                 ProtonReceiver receiver = this.connection.createReceiver(String.format(AmqpHelper.AMQP_CLIENT_PUBREL_ADDRESS_TEMPLATE, amqpSubscribeMessage.clientId()));
 
-                // TODO: check QoS, always AT_LEAST_ONCE ?
                 receiver
+                        .setQoS(ProtonQoS.AT_LEAST_ONCE)
                         .setTarget(receiver.getRemoteTarget())
                         .handler((delivery, message) -> {
 
