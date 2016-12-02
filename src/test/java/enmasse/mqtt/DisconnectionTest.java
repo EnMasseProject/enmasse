@@ -81,17 +81,45 @@ public class DisconnectionTest extends MockMqttFrontendTestBase {
     }
 
     @Test
-    public void bruteDisconnectionWillToAmqp(TestContext context) {
+    public void bruteDisconnectionWillQoS0ToMqtt(TestContext context) {
+
+        this.mqttReceiver(context, MQTT_WILL_TOPIC, 0);
+        this.willClient(context, MQTT_WILL_TOPIC, MQTT_WILL_MESSAGE, 0);
+    }
+
+    @Test
+    public void bruteDisconnectionWillQoS1ToMqtt(TestContext context) {
+
+        this.mqttReceiver(context, MQTT_WILL_TOPIC, 1);
+        this.willClient(context, MQTT_WILL_TOPIC, MQTT_WILL_MESSAGE, 1);
+    }
+
+    @Test
+    public void bruteDisconnectionWillQoS2ToMqtt(TestContext context) {
+
+        this.mqttReceiver(context, MQTT_WILL_TOPIC, 2);
+        this.willClient(context, MQTT_WILL_TOPIC, MQTT_WILL_MESSAGE, 2);
+    }
+
+    @Test
+    public void bruteDisconnectionWillQoS0ToAmqp(TestContext context) {
+
+        this.amqpReceiver(context, MQTT_WILL_TOPIC, 0);
+        this.willClient(context, MQTT_WILL_TOPIC, MQTT_WILL_MESSAGE, 0);
+    }
+
+    @Test
+    public void bruteDisconnectionWillQoS1ToAmqp(TestContext context) {
 
         this.amqpReceiver(context, MQTT_WILL_TOPIC, 1);
         this.willClient(context, MQTT_WILL_TOPIC, MQTT_WILL_MESSAGE, 1);
     }
 
     @Test
-    public void bruteDisconnectionWillToMqtt(TestContext context) {
+    public void bruteDisconnectionWillQoS2ToAmqp(TestContext context) {
 
-        this.mqttReceiver(context, MQTT_WILL_TOPIC, 1);
-        this.willClient(context, MQTT_WILL_TOPIC, MQTT_WILL_MESSAGE, 1);
+        this.amqpReceiver(context, MQTT_WILL_TOPIC, 2);
+        this.willClient(context, MQTT_WILL_TOPIC, MQTT_WILL_MESSAGE, 2);
     }
 
     private void amqpReceiver(TestContext context, String topic, int qos) {
