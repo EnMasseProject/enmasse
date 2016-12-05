@@ -9,7 +9,7 @@
       "apiVersion": "v1",
       "kind": "ReplicationController",
       "metadata": {
-        "name": "benchmark-controller"
+        "name": "benchmark-agent"
       },
       "spec": {
         "replicas": 1,
@@ -55,6 +55,10 @@
                   {
                     "name": "BENCH_WAIT_TIME",
                     "value": "${WAIT_INTERVAL}"
+                  },
+                  {
+                    "name": "BENCH_SPLIT_CLIENTS",
+                    "value": "${SPLIT_CLIENTS}"
                   }
                 ]
               }
@@ -144,6 +148,11 @@
       "name": "WAIT_INTERVAL",
       "description": "Wait interval between each message sent",
       "value": "0"
+    },
+    {
+      "name": "SPLIT_CLIENTS",
+      "description": "Enforce sender and receiver to connect to different routers",
+      "value": ""
     },
     {
       "name": "ADDRESS",
