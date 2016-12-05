@@ -1,4 +1,4 @@
-# Getting started with EnMasse
+# Getting started with EnMasse and TLS
 
 This guide will walk through the process of setting up a TLS-enabled EnMasse on OpenShift together
 with clients for sending and receiving messages.
@@ -38,7 +38,7 @@ EnMasse comes with a few templates that makes setting it up easy. First, create 
 
 Then download a script for deploying the EnMasse template:
 
-    curl https://raw.githubusercontent.com/EnMasseProject/openshift-configuration/master/scripts/enmasse-deploy.sh -o enmasse-deploy.sh
+    curl -o enmasse-deploy.sh https://raw.githubusercontent.com/EnMasseProject/openshift-configuration/master/scripts/enmasse-deploy.sh
 
 This script simplifies the process of deploying the enmasse cluster to your openshift instance. You
 can invoke it with `-h` to get a list of options.

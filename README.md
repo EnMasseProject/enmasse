@@ -1,6 +1,6 @@
 # EnMasse
 
-Documents relating to EnMasse project. For setting up EnMasse, see [Getting Started](getting-started/e2e-example.md).
+Documents relating to EnMasse project. For setting up EnMasse, see [Getting Started](getting-started/README.md)
 
 ## Design documents
 
