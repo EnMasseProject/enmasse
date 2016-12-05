@@ -130,11 +130,11 @@ developer. The flavor configuration is stored in a ConfigMap in OpenShift.
 
 The flavor map can be changed using the `oc` tool:
 
-   oc get configmap flavor -o yaml > flavor.yaml
-   # ADD/REMOVE/CHANGE flavors
-   oc replace -f flavor.yaml
+    oc get configmap flavor -o yaml > flavor.yaml
+    # ADD/REMOVE/CHANGE flavors
+    oc replace -f flavor.yaml
 
 ## Conclusion
 
 We have seen how to setup a secured messaging service, and how to communicate with it using python
-example AMQP clients. For further documentation on EnMasse, see the [configuration repository](https://travis-ci.org/EnMasseProject/openshift-configuration).
+example AMQP clients. For further documentation on EnMasse, see the [configuration repository](https://github.com/EnMasseProject/openshift-configuration).
