@@ -33,6 +33,7 @@ public class BroadcastTest extends VertxTestBase {
     public void testMultipleRecievers() throws Exception {
         Destination dest = Destination.broadcast("broadcast");
         deploy(dest);
+        Thread.sleep(20_000);
         EnMasseClient client = createTopicClient();
         List<String> msgs = Arrays.asList("foo");
 
@@ -41,16 +42,12 @@ public class BroadcastTest extends VertxTestBase {
             client.recvMessages(dest.getAddress(), msgs.size()),
             client.recvMessages(dest.getAddress(), msgs.size()));
 
-        long end = System.currentTimeMillis() + 60_000;
-        boolean isDone = false;
-        while (System.currentTimeMillis() < end && !isDone) {
-            assertThat(client.sendMessages(dest.getAddress(), msgs).get(1, TimeUnit.MINUTES), is(msgs.size()));
-            Thread.sleep(1000);
-            isDone = recvResults.get(0).isDone() && recvResults.get(1).isDone() && recvResults.get(2).isDone();
-        }
+        Thread.sleep(60_000);
 
-        assertTrue(recvResults.get(0).get(1, TimeUnit.MINUTES).size() >= msgs.size());
-        assertTrue(recvResults.get(1).get(1, TimeUnit.MINUTES).size() >= msgs.size());
-        assertTrue(recvResults.get(2).get(1, TimeUnit.MINUTES).size() >= msgs.size());
+        assertThat(client.sendMessages(dest.getAddress(), msgs).get(1, TimeUnit.MINUTES), is(msgs.size()));
+
+        assertTrue(recvResults.get(0).get(10, TimeUnit.SECONDS).size() >= msgs.size());
+        assertTrue(recvResults.get(1).get(10, TimeUnit.SECONDS).size() >= msgs.size());
+        assertTrue(recvResults.get(2).get(10, TimeUnit.SECONDS).size() >= msgs.size());
     }
 }
