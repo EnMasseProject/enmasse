@@ -23,7 +23,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import enmasse.config.service.model.Config;
 import enmasse.config.service.model.ConfigSubscriber;
 import io.vertx.proton.ProtonSender;
-import org.apache.commons.compress.utils.Charsets;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.amqp.messaging.Section;
 import org.apache.qpid.proton.message.Message;
@@ -70,6 +69,6 @@ public class AddressConfigSubscriber implements ConfigSubscriber {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         JsonGenerator generator = mapper.getFactory().createGenerator(baos);
         mapper.writeTree(generator, root);
-        return new AmqpValue(baos.toString(Charsets.UTF_8.name()));
+        return new AmqpValue(baos.toString("UTF-8"));
     }
 }

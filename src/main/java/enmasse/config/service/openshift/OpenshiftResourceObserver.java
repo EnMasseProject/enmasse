@@ -16,110 +16,91 @@
 
 package enmasse.config.service.openshift;
 
-import com.openshift.restclient.IOpenShiftWatchListener;
-import com.openshift.restclient.IWatcher;
-import com.openshift.restclient.model.IResource;
 import enmasse.config.service.model.LabelSet;
+import io.fabric8.kubernetes.api.model.*;
+import io.fabric8.kubernetes.client.KubernetesClientException;
+import io.fabric8.kubernetes.client.Watch;
+import io.fabric8.kubernetes.client.Watcher;
+import io.fabric8.kubernetes.client.dsl.ClientOperation;
+import io.fabric8.openshift.client.OpenShiftClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
+import java.util.*;
 
 /**
  * A subscription to a set of resources;
  */
-public class OpenshiftResourceObserver implements IOpenShiftWatchListener, AutoCloseable {
+public class OpenshiftResourceObserver implements AutoCloseable, Watcher {
     private static final Logger log = LoggerFactory.getLogger(OpenshiftResourceObserver.class.getName());
     private final LabelSet labelSet;
-    private final OpenshiftClient client;
+    private final OpenShiftClient client;
     private final OpenshiftResourceListener listener;
-    private final Set<IResource> resourceSet = new LinkedHashSet<>();
-    private IWatcher watcher = null;
-    private final ScheduledExecutorService executor;
-    private volatile boolean connected = false;
-    private volatile boolean running = false;
+    private final Set<HasMetadata> resourceSet = new LinkedHashSet<>();
+    private final List<Watch> watches = new ArrayList<>();
 
-    public OpenshiftResourceObserver(ScheduledExecutorService executor, OpenshiftClient client, LabelSet labelSet, OpenshiftResourceListener listener) {
-        this.executor = executor;
+    public OpenshiftResourceObserver(OpenShiftClient client, LabelSet labelSet, OpenshiftResourceListener listener) {
         this.client = client;
         this.labelSet = labelSet;
         this.listener = listener;
     }
 
     public void start() {
-        running = true;
-        executor.scheduleAtFixedRate(() -> {
-            if (!connected && running) {
-                log.info("Starting watcher");
-                startWatcher();
-            }
-        }, 0, 5, TimeUnit.SECONDS);
-    }
-
-    private void startWatcher() {
-        try {
-            if (this.watcher != null) {
-                this.watcher.stop();
-            }
-            this.watcher = client.watch(this, listener.getKinds());
-            connected = true;
-        } catch (Exception e) {
-            connected = false;
-            log.error("Error starting watcher on " + client.getBaseURL(), e);
+        Map<ClientOperation<? extends HasMetadata, ?, ?, ?>, KubernetesResourceList>  initialResources = new LinkedHashMap<>();
+        for (ClientOperation<? extends HasMetadata, ?, ?, ?> operation : listener.getOperations(client)) {
+            KubernetesResourceList list = (KubernetesResourceList) operation.withLabels(labelSet.getLabelMap()).list();
+            initialResources.put(operation, list);
+        }
+        initializeResources(initialResources.values());
+        for (Map.Entry<ClientOperation<? extends HasMetadata, ?, ?, ?>, KubernetesResourceList> entry : initialResources.entrySet()) {
+            watches.add(entry.getKey().withLabels(labelSet.getLabelMap()).withResourceVersion(entry.getValue().getMetadata().getResourceVersion()).watch(this));
         }
     }
 
-    @Override
-    public void connected(List<IResource> resources) {
-        log.info("Connected, got " + resources.size() + " resources");
-        resourceSet.clear();
-        resourceSet.addAll(resources.stream()
-            .filter(res -> LabelSet.fromMap(res.getLabels()).contains(labelSet))
-            .map(res -> { log.info("Added resource '" + res.getName() + "'"); return res; })
-            .collect(Collectors.toSet()));
+    private synchronized void initializeResources(Collection<KubernetesResourceList> initialResources) {
+        for (KubernetesResourceList list : initialResources) {
+            for (Object item : list.getItems()) {
+                if (item instanceof HasMetadata) {
+                    resourceSet.add((HasMetadata) item);
+                }
+            }
+        }
         listener.resourcesUpdated(resourceSet);
     }
 
     @Override
-    public void disconnected() {
-        log.debug("Disconnected");
-        connected = false;
-    }
-
-    @Override
-    public void received(IResource resource, ChangeType change) {
-        if (LabelSet.fromMap(resource.getLabels()).contains(labelSet)) {
-            if (change.equals(ChangeType.DELETED)) {
-                resourceSet.remove(resource);
-                log.info("Resource " + resource.getName() + " deleted!");
-            } else if (change.equals(ChangeType.ADDED)) {
-                resourceSet.add(resource);
-                log.info("Resource " + resource.getName() + " added!");
-            } else if (change.equals(ChangeType.MODIFIED)) {
-                // TODO: Can we assume that it exists at this point?
-                resourceSet.add(resource);
-                log.info("Resource " + resource.getName() + " updated!");
-            }
-            listener.resourcesUpdated(resourceSet);
-        }
-    }
-
-    @Override
     public void close() throws Exception {
-        running = false;
-        if (this.watcher != null) {
-            watcher.stop();
+        for (Watch watch : watches) {
+            watch.close();
         }
+        watches.clear();
     }
 
     @Override
-    public void error(Throwable err) {
-        log.debug("Got error from watcher: " +  err.getMessage());
-        connected = false;
+    public synchronized void eventReceived(Action action, Object obj) {
+        if (!(obj instanceof HasMetadata)) {
+            throw new IllegalArgumentException("Invalid resource instance: " + obj.getClass().getName());
+        }
+        HasMetadata resource = (HasMetadata) obj;
+        if (action.equals(Action.ADDED)) {
+            resourceSet.add(resource);
+            log.info("Resource " + resource.getMetadata().getName() + " added!");
+        } else if (action.equals(Action.DELETED)) {
+            resourceSet.remove(resource);
+            log.info("Resource " + resource.getMetadata().getName() + " deleted!");
+        } else if (action.equals(Action.MODIFIED)) {
+            resourceSet.add(resource);
+            log.info("Resource " + resource.getMetadata().getName() + " updated!");
+        } else if (action.equals(Action.ERROR)) {
+            log.error("Received an error event for resource " + resource.getMetadata().getName());
+        }
+        listener.resourcesUpdated(resourceSet);
+    }
+
+    @Override
+    public void onClose(KubernetesClientException cause) {
+        if (cause != null) {
+            log.error("Exception from watcher: ", cause);
+        }
     }
 }

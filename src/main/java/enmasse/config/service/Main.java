@@ -16,17 +16,17 @@
 
 package enmasse.config.service;
 
-import com.openshift.restclient.ClientBuilder;
-import com.openshift.restclient.IClient;
 import enmasse.config.service.amqp.AMQPServer;
-import enmasse.config.service.openshift.OpenshiftClient;
 import enmasse.config.service.openshift.OpenshiftConfigDatabase;
+import io.fabric8.openshift.client.DefaultOpenShiftClient;
+import io.fabric8.openshift.client.OpenShiftClient;
+import io.fabric8.openshift.client.OpenShiftConfig;
+import io.fabric8.openshift.client.OpenShiftConfigBuilder;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Map;
-import java.util.concurrent.Executors;
 
 /**
  * Main entrypoint for configuration service with arg parsing.
@@ -42,11 +42,10 @@ public class Main {
 
             String openshiftNamespace = getOpenshiftNamespace();
 
-            IClient client = new ClientBuilder(openshiftUri)
-                    .usingToken(getAuthenticationToken())
-                    .build();
+            OpenShiftConfig config = new OpenShiftConfigBuilder().withMasterUrl(openshiftUri).withOauthToken(getAuthenticationToken()).withNamespace(openshiftNamespace).build();
+            OpenShiftClient client = new DefaultOpenShiftClient(config);
 
-            OpenshiftConfigDatabase database = new OpenshiftConfigDatabase(Executors.newSingleThreadScheduledExecutor(), new OpenshiftClient(client, openshiftNamespace));
+            OpenshiftConfigDatabase database = new OpenshiftConfigDatabase(client);
             AMQPServer server = new AMQPServer(listenAddress, listenPort, database);
 
             server.run();

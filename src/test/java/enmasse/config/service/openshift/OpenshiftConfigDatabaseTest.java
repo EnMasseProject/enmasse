@@ -16,12 +16,22 @@
 
 package enmasse.config.service.openshift;
 
-import com.openshift.restclient.IOpenShiftWatchListener;
-import com.openshift.restclient.IWatcher;
-import com.openshift.restclient.model.IConfigMap;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import enmasse.config.service.amqp.subscription.AddressConfigCodec;
 import enmasse.config.service.model.Config;
 import enmasse.config.service.model.ConfigSubscriber;
+import io.fabric8.kubernetes.api.model.*;
+import io.fabric8.kubernetes.client.Watch;
+import io.fabric8.kubernetes.client.Watcher;
+import io.fabric8.kubernetes.client.dsl.ClientMixedOperation;
+import io.fabric8.kubernetes.client.dsl.ClientResource;
+import io.fabric8.kubernetes.client.dsl.ClientScaleableResource;
+import io.fabric8.kubernetes.client.dsl.FilterWatchListDeletable;
+import io.fabric8.kubernetes.client.dsl.internal.ConfigMapOperationsImpl;
+import io.fabric8.openshift.api.model.DeploymentConfig;
+import io.fabric8.openshift.api.model.DeploymentConfigList;
+import io.fabric8.openshift.api.model.DoneableDeploymentConfig;
+import io.fabric8.openshift.client.OpenShiftClient;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -44,22 +54,38 @@ import static org.mockito.Mockito.*;
 public class OpenshiftConfigDatabaseTest {
     private OpenshiftConfigDatabase database;
     private String key = "maas";
-    private OpenshiftClient client;
+    private OpenShiftClient client;
     private ScheduledExecutorService executor;
+    private ClientMixedOperation<ConfigMap, ConfigMapList, DoneableConfigMap, ClientResource<ConfigMap, DoneableConfigMap>> mapOp = mock(ClientMixedOperation.class);
+    private ClientMixedOperation<DeploymentConfig, DeploymentConfigList, DoneableDeploymentConfig, ClientScaleableResource<DeploymentConfig, DoneableDeploymentConfig>> dcOp = mock(ClientMixedOperation.class);
 
     @Before
     public void setup() {
         MockitoAnnotations.initMocks(this);
-        client = mock(OpenshiftClient.class);
-        IWatcher mockWatcher = mock(IWatcher.class);
+        client = mock(OpenShiftClient.class);
+        Watch mockWatcher = mock(Watch.class);
         executor = Executors.newSingleThreadScheduledExecutor();
-        database = new OpenshiftConfigDatabase(executor, client);
-        when(client.watch(any(), any())).thenReturn(mockWatcher);
+        database = new OpenshiftConfigDatabase(client);
+        when(client.configMaps()).thenReturn(mapOp);
+        when(client.deploymentConfigs()).thenReturn(dcOp);
+
+        when(mapOp.withLabels(any())).thenReturn(mapOp);
+        when(dcOp.withLabels(any())).thenReturn(dcOp);
+        when(mapOp.withResourceVersion(anyString())).thenReturn(mapOp);
+        when(dcOp.withResourceVersion(anyString())).thenReturn(dcOp);
+
+        when(mapOp.watch(any())).thenReturn(() -> {});
+        when(dcOp.watch(any())).thenReturn(() -> {});
+
+        ListMeta listMeta = new ListMeta();
+        listMeta.setResourceVersion("1234");
+        when(mapOp.list()).thenReturn(new ConfigMapList("v1", Collections.emptyList(), "List", listMeta));
+        when(dcOp.list()).thenReturn(new DeploymentConfigList("v1", Collections.emptyList(), "List", listMeta));
     }
 
-    public IOpenShiftWatchListener getListener() {
-        ArgumentCaptor<IOpenShiftWatchListener> captor = ArgumentCaptor.forClass(IOpenShiftWatchListener.class);
-        verify(client).watch(captor.capture(), anyString(), anyString());
+    public Watcher getListener() {
+        ArgumentCaptor<Watcher> captor = ArgumentCaptor.forClass(Watcher.class);
+        verify(mapOp).watch(captor.capture());
         return captor.getValue();
     }
 
@@ -82,9 +108,9 @@ public class OpenshiftConfigDatabaseTest {
 
         assertTrue(database.subscribe(key, sub));
         waitForExecutor();
-        IOpenShiftWatchListener listener = getListener();
+        Watcher listener = getListener();
 
-        listener.connected(Collections.singletonList(mockMap(testValue)));
+        listener.eventReceived(Watcher.Action.ADDED, mockMap(testValue));
 
         assertNotNull(sub.lastValue);
         assertFalse(sub.lastValue.isEmpty());
@@ -105,19 +131,19 @@ public class OpenshiftConfigDatabaseTest {
         assertTrue(database.subscribe(key, sub));
         waitForExecutor();
 
-        IOpenShiftWatchListener listener = getListener();
-        listener.connected(Collections.singletonList(mockMap(test1)));
+        Watcher listener = getListener();
+        listener.eventReceived(Watcher.Action.ADDED, mockMap(test1));
 
         assertNotNull(sub.lastValue);
         assertFalse(sub.lastValue.isEmpty());
         assertConfig(sub.lastValue.get(0), test1);
 
         Map<String, String> test2 = AddressConfigCodec.encodeLabels("bar", true, false);
-        listener.connected(Collections.singletonList(mockMap(test2)));
+        listener.eventReceived(Watcher.Action.ADDED, mockMap(test2));
 
         assertNotNull(sub.lastValue);
         assertFalse(sub.lastValue.isEmpty());
-        assertConfig(sub.lastValue.get(0), test2);
+        assertConfig(sub.lastValue.get(1), test2);
     }
 
     private static void assertConfig(Config config, Map<String, String> testValue) {
@@ -126,13 +152,15 @@ public class OpenshiftConfigDatabaseTest {
         }
     }
 
-    private IConfigMap mockMap(Map<String, String> testValue) {
-        IConfigMap testMap = mock(IConfigMap.class);
-        when(testMap.getName()).thenReturn("map1");
+    private ConfigMap mockMap(Map<String, String> testValue) {
+        ConfigMap testMap = new ConfigMap();
+        ObjectMeta meta = new ObjectMeta();
+        meta.setName("map1");
         Map<String, String> labels = new LinkedHashMap<>();
         labels.put("type", "address-config");
         labels.putAll(testValue);
-        when(testMap.getLabels()).thenReturn(labels);
+        meta.setLabels(labels);
+        testMap.setMetadata(meta);
         return testMap;
     }
 

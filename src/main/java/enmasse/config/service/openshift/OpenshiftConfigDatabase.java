@@ -19,6 +19,7 @@ package enmasse.config.service.openshift;
 import enmasse.config.service.model.ConfigDatabase;
 import enmasse.config.service.model.ConfigSubscriber;
 import enmasse.config.service.model.LabelSet;
+import io.fabric8.openshift.client.OpenShiftClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,32 +28,26 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 /**
  * ConfigDatabase backed by OpenShift/Kubernetes REST API supporting subscriptions.
  */
 public class OpenshiftConfigDatabase implements AutoCloseable, ConfigDatabase {
     private static final Logger log = LoggerFactory.getLogger(OpenshiftConfigDatabase.class.getName());
-    private final OpenshiftClient client;
+    private final OpenShiftClient client;
 
     private final Map<LabelSet, ConfigResourceListener> aggregatorMap = new LinkedHashMap<>();
     private final List<OpenshiftResourceObserver> observerList = new ArrayList<>();
-    private final ScheduledExecutorService executor;
 
-    public OpenshiftConfigDatabase(ScheduledExecutorService executor, OpenshiftClient client) {
+    public OpenshiftConfigDatabase(OpenShiftClient client) {
         this.client = client;
-        this.executor = executor;
     }
 
     @Override
     public void close() throws Exception {
-        executor.shutdown();
         for (OpenshiftResourceObserver observer : observerList) {
             observer.close();
         }
-        executor.awaitTermination(30, TimeUnit.SECONDS);
     }
 
     public synchronized boolean subscribe(String labelSetName, ConfigSubscriber configSubscriber) {
@@ -71,7 +66,7 @@ public class OpenshiftConfigDatabase implements AutoCloseable, ConfigDatabase {
         ConfigResourceListener aggregator = aggregatorMap.get(labelSet);
         if (aggregator == null) {
             aggregator = new ConfigResourceListener();
-            OpenshiftResourceObserver observer = new OpenshiftResourceObserver(executor, client, labelSet, aggregator);
+            OpenshiftResourceObserver observer = new OpenshiftResourceObserver(client, labelSet, aggregator);
             observer.start();
             observerList.add(observer);
             aggregatorMap.put(labelSet, aggregator);

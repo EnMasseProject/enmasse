@@ -16,9 +16,10 @@
 
 package enmasse.config.service.model;
 
-import com.openshift.restclient.model.IConfigMap;
 import enmasse.config.service.amqp.subscription.AddressConfigCodec;
 import enmasse.config.service.openshift.ConfigResourceListener;
+import io.fabric8.kubernetes.api.model.ConfigMap;
+import io.fabric8.kubernetes.api.model.ObjectMeta;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
@@ -60,13 +61,15 @@ public class ConfigResourceListenerTest {
 
     }
 
-    private IConfigMap mockMap(Map<String, String> testValue) {
-        IConfigMap testMap = mock(IConfigMap.class);
-        when(testMap.getName()).thenReturn("foo");
+    private ConfigMap mockMap(Map<String, String> testValue) {
+        ConfigMap testMap = new ConfigMap();
+        ObjectMeta meta = new ObjectMeta();
+        meta.setName("foo");
         Map<String, String> labels = new LinkedHashMap<>();
         labels.put("type", "address-config");
         labels.putAll(testValue);
-        when(testMap.getLabels()).thenReturn(labels);
+        meta.setLabels(labels);
+        testMap.setMetadata(meta);
         return testMap;
     }
 }

@@ -16,11 +16,12 @@
 
 package enmasse.config.service.openshift;
 
-import com.openshift.restclient.ResourceKind;
-import com.openshift.restclient.model.IResource;
 import enmasse.config.service.amqp.subscription.AddressConfigCodec;
 import enmasse.config.service.model.Config;
 import enmasse.config.service.model.ConfigSubscriber;
+import io.fabric8.kubernetes.api.model.HasMetadata;
+import io.fabric8.kubernetes.client.dsl.ClientOperation;
+import io.fabric8.openshift.client.OpenShiftClient;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -32,7 +33,6 @@ import java.util.stream.Collectors;
  * Listeners for ConfigMaps and DeploymentConfigs and creates an aggregate configuration.
  */
 public class ConfigResourceListener implements OpenshiftResourceListener {
-    private static final String[] kinds = {ResourceKind.CONFIG_MAP, ResourceKind.DEPLOYMENT_CONFIG };
     private final List<ConfigSubscriber> subscriberList = new ArrayList<>();
 
     private final List<Config> configList = new ArrayList<>();
@@ -59,7 +59,7 @@ public class ConfigResourceListener implements OpenshiftResourceListener {
     }
 
     @Override
-    public synchronized void resourcesUpdated(Set<IResource> resources) {
+    public synchronized void resourcesUpdated(Set<HasMetadata> resources) {
         configList.clear();
         configList.addAll(resources.stream()
                 .map(resource -> createFromResourceLabels(resource))
@@ -67,12 +67,15 @@ public class ConfigResourceListener implements OpenshiftResourceListener {
         notifySubscribers();
     }
 
-    private Config createFromResourceLabels(IResource resource) {
-        return AddressConfigCodec.decodeLabels(resource.getLabels());
+    @Override
+    public ClientOperation<? extends HasMetadata, ?, ?, ?>[] getOperations(OpenShiftClient client) {
+        ClientOperation<? extends HasMetadata, ?, ?, ?> [] ops = new ClientOperation[2];
+        ops[0] = client.configMaps();
+        ops[1] = client.deploymentConfigs();
+        return ops;
     }
 
-    @Override
-    public String[] getKinds() {
-        return kinds;
+    private Config createFromResourceLabels(HasMetadata resource) {
+        return AddressConfigCodec.decodeLabels(resource.getMetadata().getLabels());
     }
 }

@@ -6,7 +6,7 @@ ext {
     jacksonVersion = '2.7.4'
     vertxProtonVersion = '3.3.3'
     slf4jVersion = '1.7.21'
-    openshiftRestclientVersion = '5.1.0.Final'
+    openshiftClientVersion = '1.4.20'
 
     junitVersion = '4.12'
     mockitoVersion = '2.0.52-beta'
@@ -22,7 +22,7 @@ repositories {
 
 description = 'ConfigMap Bridge'
 dependencies {
-    compile "com.openshift:openshift-restclient-java:${openshiftRestclientVersion}"
+    compile "io.fabric8:openshift-client:${openshiftClientVersion}"
     compile "io.vertx:vertx-proton:${vertxProtonVersion}"
     compile "org.slf4j:slf4j-api:${slf4jVersion}"
     compile "org.slf4j:slf4j-log4j12:${slf4jVersion}"

@@ -16,14 +16,17 @@
 
 package enmasse.config.service.openshift;
 
-import com.openshift.restclient.model.IResource;
+import io.fabric8.kubernetes.api.model.HasMetadata;
+import io.fabric8.kubernetes.client.dsl.ClientOperation;
+import io.fabric8.openshift.client.OpenShiftClient;
 
+import java.util.List;
 import java.util.Set;
 
 /**
  * Listener for openshift resources
  */
 public interface OpenshiftResourceListener {
-    void resourcesUpdated(Set<IResource> resources);
-    String [] getKinds();
+    void resourcesUpdated(Set<HasMetadata> resources);
+    ClientOperation<? extends HasMetadata, ?, ?, ?>[] getOperations(OpenShiftClient client);
 }
