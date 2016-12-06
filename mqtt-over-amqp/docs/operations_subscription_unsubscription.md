@@ -15,10 +15,10 @@ The MQTT client sends a _SUBSCRIBE_ message to FE which maps the _SUBSCRIBE_ mes
 | ---- | ---- | ----- | ---- |
 | subject | system property | "subscribe" | - |
 | message-id | system property | MessageId | MQTT SUBSCRIBE |
-| reply-to | system property | $mqtt.to.[client-id] | - |
-| payload | AMQP value | Map with two lists (topics and qos) | MQTT SUSBCRIBE |
+| correlation-id | system property | $mqtt.to.[client-id] | - |
+| payload | AMQP value | Map with topics (as key) and qos (as value) | MQTT SUSBCRIBE |
 
-> "topics" is just a list of topic names; "qos" is a list of QoS levels
+> the payload is a map with topics used as key and the related qos as corresponding value
 
 The _AMQP_SUBSCRIBE_ is sent as "unsettled", in order to know that the Subscription Service has received it (with related disposition). The related disposition could be :
 
@@ -58,7 +58,7 @@ The MQTT client sends an _UNSUBSCRIBE_ message to FE which maps to the following
 | ---- | ---- | ----- | ---- |
 | subject | system property | "unsubscribe" | - |
 | message-id | system property | MessageId | MQTT UNSUBSCRIBE |
-| reply-to | system property | $mqtt.to.[client-id] | - |
+| correlation-id | system property | $mqtt.to.[client-id] | - |
 | payload | AMQP value | List of topics | MQTT UNSUBSCRIBE |
 
 The _AMQP_UNSUBSCRIBE_ is sent as "unsettled", in order to know that the Subscription Service has received it (with related disposition). When FE receives tha related disposition (with "settled") it builds the _UNSUBACK_ message for MQTT client.
