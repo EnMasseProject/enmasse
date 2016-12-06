@@ -18,7 +18,7 @@ Regarding the “will” publishing on disconnection, the two following scenario
 
 ![Disconnect](../images/05_disconnect.png)
 
-![Brute Disconnect](../images/06_brute_disconnection.png)
+![Brute Disconnect](../images/07_brute_disconnection.png)
 
 If specifying “error” in the detach is not possible, the WS tries to publish “will” on detach but the following approach can be followed :
 

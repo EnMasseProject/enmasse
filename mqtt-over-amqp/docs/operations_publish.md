@@ -40,19 +40,19 @@ The MQTT client sends _PUBLISH_ message to FE which maps the message to the foll
 
 For QoS level 0, no acknowledge is provided.
 
-![Publish QoS 0](../images/09_publish_qos_0_mqtt.png)
+![Publish QoS 0](../images/10_publish_qos_0_mqtt.png)
 
 ### QoS level 1 (AT_LEAST_ONCE)
 
 For QoS level 1, after disposition on the AMQP client, the FE sends the _PUBACK_ to the MQTT client.
 
-![Publish QoS 1](../images/10_publish_qos_1_mqtt.png)
+![Publish QoS 1](../images/11_publish_qos_1_mqtt.png)
 
 ### QoS level 2 (EXACTLY_ONCE)
 
 For QoS level 2, the FE sends the _AMQP_PUBLISH_ message as "unsettled" waiting for disposition (with "unsettled"); after receiving it, FE sends the _PUBREC_ to the MQTT client and the first step in the acknowledge process ends. The MQTT client replies with _PUBREL_ message; the FE sends the disposition (with "settled") waiting for the receiver disposition (with "settled") so that it can send the _PUBCOMP_ to the MQTT client.
 
-![Publish QoS 2](../images/11_publish_qos_2_mqtt.png)
+![Publish QoS 2](../images/12_publish_qos_2_mqtt.png)
 
 From the above images it's clear that the FE doesn't detach the link on the topic for each publish; it leaves the link attached.
 
@@ -73,13 +73,13 @@ For handling QoS level 2, the FE attaches a link with sender role to the address
 
 For QoS level 0, message is published as "unsettled" but the FE can sends immediately the disposition (with "settled") before sending the _PUBLISH_ to the remote MQTT client and without waiting for any acknowledge (of course, due to QoS level 0).
 
-![Publish QoS 0](../images/12_publish_qos_0_amqp.png)
+![Publish QoS 0](../images/13_publish_qos_0_amqp.png)
 
 ### QoS level 1 (AT_LEAST_ONCE)
 
 For QoS level 1, message is published as "unsettled". The FE sends the _PUBLISH_ to the MQTT client waiting for _PUBACK_; after receving it, FE sends the disposition (with "settled") to acknowledge the message.
 
-![Publish QoS 1](../images/13_publish_qos_1_amqp.png)
+![Publish QoS 1](../images/14_publish_qos_1_amqp.png)
 
 ### QoS level 2 (EXACTLY_ONCE)
 
@@ -94,4 +94,4 @@ In the second phase, the AMQP side publishes the _AMQP_PUBREL_ to the FE, which 
 | subject | system property | "pubrel" | - |
 | message-id | system property | MessageId | AMQP_PUBLISH |
 
-![Publish QoS 2](../images/14_publish_qos_2_amqp.png)
+![Publish QoS 2](../images/15_publish_qos_2_amqp.png)

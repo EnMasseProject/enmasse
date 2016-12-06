@@ -46,7 +46,7 @@ Starting from now, when subscribed/attached, the FE receives published messages 
 
 The AMQP message is used by FE for building the _PUBLISH_ message to send to the MQTT client (see “Publishing”).
 
-![Subscribe](../images/07_subscribe.png)
+![Subscribe](../images/08_subscribe.png)
 
 ## Unsubscribe
 
@@ -69,4 +69,4 @@ The _AMQP_UNSUBSCRIBE_ is sent as "unsettled", in order to know that the Subscri
 | ---- | ----- | ---- |
 | MessagId | message-id | AMQP_UNSUBSCRIBE |
 
-![Unsubscribe](../images/08_unsubscribe.png)
+![Unsubscribe](../images/09_unsubscribe.png)

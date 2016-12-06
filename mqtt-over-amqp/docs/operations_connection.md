@@ -47,37 +47,50 @@ The FE attaches a permanent link to the $mqtt.willservice address; the WS maps t
 
 ## "Session" request to Subscription Service
 
-From the same received MQTT _CONNECT_ message, the FE extracts information related to session handling for building the following AMQP message to send to the Subscription Service.
+From the same received MQTT _CONNECT_ message, the FE extracts information related to session handling for building the following AMQP messages to send to the Subscription Service.
+The AMQP message sent depends on the "clean session" flag in the received _CONNECT_ message :
 
-**AMQP_SESSION** : sent to the SS in order to provide “clean-session” information and querying for a previous session.
+* clean session is TRUE : the _AMQP_CLOSE_ message is used in order to clean any previous session.
+* clean session is FALSE : the _AMQP_LIST_ message is used in order to recover the last session with related subscriptions.
+
+**AMQP_LIST** : sent to the SS in order to to recover the last session with related subscriptions.
 
 | DATA | TYPE | VALUE | FROM |
 | ---- | ---- | ----- | ---- |
-| subject | system property | "session" | - |
-| x-clean-session | message annotation | clean session flag | MQTT CONNECT |
+| subject | system property | "list" | - |
+| correlation-id | system property | $mqtt.to.[client-id] | - |
 | reply-to | system property | $mqtt.to.[client-id] | - |
 
-The _AMQP_SESSION_ is sent as "unsettled", in order to know that the Subscription Service has received it (with related disposition).
-The relation between the _AMQP_SESSION_ message and the related client, at AMQP level, is inferred by the link name attached to the SS control address.
+The _AMQP_LIST_ is sent as "unsettled", in order to know that the Subscription Service has received it (with related disposition).
+The relation between the _AMQP_LIST_ message and the related client, at AMQP level, is inferred by the link name attached to the SS control address.
 
 > the [client-id] is the "client identifier" value from the MQTT CONNECT message.
 
-After sending the _AMQP_SESSION_, the FE receives the following message as reply.
+After sending the _AMQP_LIST_, the FE receives the following message as reply.
 
-**AMQP_SESSION_PRESENT** : sent by the SS to report to FE if a session was already present and recovered.
+**AMQP_SUBSCRIPTIONS** : sent by the SS to report to FE the last session with related subscriptions.
 
 | DATA | TYPE | VALUE | FROM |
 | ---- | ---- | ----- | ---- |
-| subject | system property | "session-present" | - |
-| x-session-present | message annotation | if client session did already exist and routes were recovered | - |
+| subject | system property | "subscriptions" | - |
+| payload | AMQP value | List with topics (subscriptions from recovered session) | - |
 
-The _AMQP_SESSION_PRESENT_ is sent as "unsettled", in order to know that the FE has received it (with related disposition).
+The _AMQP_SUBSCRIPTIONS_ is sent as "unsettled", in order to know that the FE has received it (with related disposition).
 
 If a session is present and there are subscriptions for the client-id, the SS re-establishes the routes from each topic to the $mqtt.to.[client-id] automatically (see “Subscription/Unsubscription”). No need for the SS to send subscriptions list to the FE in order to re-subscribe.
 
-> the SS should send the _AMQP_SESSION_PRESENT_ message to FE before re-establishing routes for the topics because it should be first message received by FE (in order to build the _CONNACK_) if there are messages stored when the client was offline that will be puslished now on re-connect.
+> the SS should send the _AMQP_SUBSCRIPTIONS_ message to FE before re-establishing routes for the topics because it should be first message received by FE (in order to build the _CONNACK_) if there are messages stored when the client was offline that will be puslished now on re-connect.
 
-![Connect Subscription Service](../images/04_connect_ss.png)
+![Connect Subscription Service](../images/04_connect_ss_list.png)
+
+**AMQP_CLOSE** : sent to the SS in order to clean any previous session.
+
+| DATA | TYPE | VALUE | FROM |
+| ---- | ---- | ----- | ---- |
+| subject | system property | "close" | - |
+| correlation-id | system property | $mqtt.to.[client-id] | - |
+
+![Connect Subscription Service](../images/05_connect_ss_close.png)
 
 ## Reply to MQTT client
 
