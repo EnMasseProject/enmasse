@@ -53,6 +53,10 @@ The AMQP message sent depends on the "clean session" flag in the received _CONNE
 * clean session is TRUE : the _AMQP_CLOSE_ message is used in order to clean any previous session.
 * clean session is FALSE : the _AMQP_LIST_ message is used in order to recover the last session with related subscriptions.
 
+### Not clean-session
+
+If the "clean session" from _CONNECT_ packet is FALSE.
+
 **AMQP_LIST** : sent to the SS in order to to recover the last session with related subscriptions.
 
 | DATA | TYPE | VALUE | FROM |
@@ -83,6 +87,10 @@ If a session is present and there are subscriptions for the client-id, the SS re
 
 ![Connect Subscription Service](../images/04_connect_ss_list.png)
 
+### Clean-session
+
+If the "clean session" from _CONNECT_ packet is TRUE.
+
 **AMQP_CLOSE** : sent to the SS in order to clean any previous session.
 
 | DATA | TYPE | VALUE | FROM |
@@ -100,5 +108,7 @@ Based on the replies from Will Service and mostly Subscription Service, the FE b
 
 | DATA | VALUE | FROM |
 | ---- | ----- | ---- |
-| Session present | if sesson is already present | AMQP_SESSION_PRESENT  |
+| Session present | if sesson is already present | Session present  |
 | Connect return code | It can depends on some checks on FE side or other on AMQP side | - |
+
+> the session present could be (_AMQP_SUBSCRIPTIONS_ body != empty) if _AMQP_LIST_ is used otherwise (_AMQP_CLOSE_ used), it's FALSE.
