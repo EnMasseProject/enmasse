@@ -65,7 +65,7 @@ public class AmqpUnsubscribeMessage {
 
             List<String> topics = (List<String>) ((AmqpValue) section).getValue();
 
-            return new AmqpUnsubscribeMessage(AmqpHelper.getClientIdFromUniqueAddress(message.getReplyTo()),
+            return new AmqpUnsubscribeMessage(AmqpHelper.getClientIdFromUniqueAddress((String) message.getCorrelationId()),
                     message.getMessageId(),
                     topics);
 
@@ -87,7 +87,7 @@ public class AmqpUnsubscribeMessage {
 
         message.setMessageId(this.messageId);
 
-        message.setReplyTo(String.format(AmqpHelper.AMQP_CLIENT_ADDRESS_TEMPLATE, this.clientId));
+        message.setCorrelationId(String.format(AmqpHelper.AMQP_CLIENT_ADDRESS_TEMPLATE, this.clientId));
 
         message.setBody(new AmqpValue(this.topics));
 

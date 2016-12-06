@@ -34,9 +34,6 @@ public class AmqpSubscribeMessage {
 
     public static final String AMQP_SUBJECT = "subscribe";
 
-    private static final String TOPICS_KEY = "topics";
-    private static final String QOS_KEY = "qos";
-
     private final String clientId;
     private final Object messageId;
     private final List<AmqpTopicSubscription> topicSubscriptions;
@@ -70,22 +67,15 @@ public class AmqpSubscribeMessage {
         Section section = message.getBody();
         if ((section != null) && (section instanceof AmqpValue)) {
 
-            Map<String, List<?>> map = (Map<String, List<?>>) ((AmqpValue) section).getValue();
-
-            List<String> topics = (List<String>) map.get(TOPICS_KEY);
-            List<Integer> qos = (List<Integer>) map.get(QOS_KEY);
-
-            if (topics.size() != qos.size()) {
-                throw new IllegalArgumentException("Topics and QoS lists differ in size");
-            }
+            Map<String, String> map = (Map<String, String>) ((AmqpValue) section).getValue();
 
             // build the unique topic subscriptions list
             List<AmqpTopicSubscription> topicSubscriptions = new ArrayList<>();
-            for (int i = 0; i < topics.size(); i++) {
-                topicSubscriptions.add(new AmqpTopicSubscription(topics.get(i), MqttQoS.valueOf(qos.get(i))));
+            for (Map.Entry<String, String> entry: map.entrySet()) {
+                topicSubscriptions.add(new AmqpTopicSubscription(entry.getKey(), MqttQoS.valueOf(Integer.valueOf(entry.getValue()))));
             }
 
-            return new AmqpSubscribeMessage(AmqpHelper.getClientIdFromUniqueAddress(message.getReplyTo()),
+            return new AmqpSubscribeMessage(AmqpHelper.getClientIdFromUniqueAddress((String) message.getCorrelationId()),
                     message.getMessageId(),
                     topicSubscriptions);
 
@@ -107,20 +97,15 @@ public class AmqpSubscribeMessage {
 
         message.setMessageId(this.messageId);
 
-        message.setReplyTo(String.format(AmqpHelper.AMQP_CLIENT_ADDRESS_TEMPLATE, this.clientId));
+        message.setCorrelationId(String.format(AmqpHelper.AMQP_CLIENT_ADDRESS_TEMPLATE, this.clientId));
 
-        // extract two separate lists for topics and qos for encoding inside a Map into the raw AMQP message
-        List<String> topics = new ArrayList<>();
-        List<Integer> qos = new ArrayList<>();
+        // map with topic -> qos (in String format)
+        Map<String, String> map = new HashMap<>();
 
         this.topicSubscriptions.stream().forEach(amqpTopicSubscription -> {
-            topics.add(amqpTopicSubscription.topic());
-            qos.add(amqpTopicSubscription.qos().value());
-        });
 
-        Map<String, List<?>> map = new HashMap<>();
-        map.put(TOPICS_KEY, topics);
-        map.put(QOS_KEY, qos);
+            map.put(amqpTopicSubscription.topic(), String.valueOf(amqpTopicSubscription.qos().value()));
+        });
 
         message.setBody(new AmqpValue(map));
 
