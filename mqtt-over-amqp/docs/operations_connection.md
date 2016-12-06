@@ -77,7 +77,9 @@ After sending the _AMQP_LIST_, the FE receives the following message as reply.
 | DATA | TYPE | VALUE | FROM |
 | ---- | ---- | ----- | ---- |
 | subject | system property | "subscriptions" | - |
-| payload | AMQP value | List with topics (subscriptions from recovered session) | - |
+| payload | AMQP value | Map with topics (as key) and qos (as value) | - |
+
+> the map with topics and corresponding qos is related to the subscriptions that were in place in the previous session, now recovered.
 
 The _AMQP_SUBSCRIPTIONS_ is sent as "unsettled", in order to know that the FE has received it (with related disposition).
 
