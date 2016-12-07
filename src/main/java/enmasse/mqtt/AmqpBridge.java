@@ -170,7 +170,17 @@ public class AmqpBridge {
                                     MqttQoS.valueOf(will.willQos()),
                                     Buffer.buffer(will.willMessage()));
 
+                    // specified link name for the Will Service as MQTT clientid
+                    ProtonLinkOptions linkOptions = new ProtonLinkOptions();
+                    linkOptions.setLinkName(this.mqttEndpoint.clientIdentifier());
+
+                    // setup and open AMQP endpoints to Will Service
+                    ProtonSender wsSender = this.connection.createSender(AmqpWillServiceEndpoint.WILL_SERVICE_ENDPOINT, linkOptions);
+                    this.wsEndpoint = new AmqpWillServiceEndpoint(wsSender);
+
+                    this.wsEndpoint.open();
                     this.wsEndpoint.sendWill(amqpWillMessage, willFuture.completer());
+
                 } else {
 
                     // otherwise just complete the Future
@@ -248,7 +258,9 @@ public class AmqpBridge {
      */
     public void close() {
 
-        this.wsEndpoint.close();
+        if (this.wsEndpoint != null)
+            this.wsEndpoint.close();
+
         this.ssEndpoint.close();
         this.rcvEndpoint.close();
         this.pubEndpoint.close();
@@ -417,12 +429,15 @@ public class AmqpBridge {
 
         LOG.info("DISCONNECT from MQTT client {}", this.mqttEndpoint.clientIdentifier());
 
-        // sending AMQP_WILL_CLEAR
-        AmqpWillClearMessage amqpWillClearMessage = new AmqpWillClearMessage();
-        this.wsEndpoint.clearWill(amqpWillClearMessage, ar -> {
+        if (this.wsEndpoint != null) {
 
-            this.wsEndpoint.close();
-        });
+            // sending AMQP_WILL_CLEAR
+            AmqpWillClearMessage amqpWillClearMessage = new AmqpWillClearMessage();
+            this.wsEndpoint.clearWill(amqpWillClearMessage, ar -> {
+
+                this.wsEndpoint.close();
+            });
+        }
     }
 
     /**
@@ -432,7 +447,9 @@ public class AmqpBridge {
      */
     private void closeHandler(Void v) {
 
-        this.wsEndpoint.close();
+        if (this.wsEndpoint != null)
+            this.wsEndpoint.close();
+
         this.handleMqttEndpointClose(this);
     }
 
@@ -525,18 +542,13 @@ public class AmqpBridge {
      */
     private void setupAmqpEndpoits() {
 
-        // specified link name for the Will Service as MQTT clientid
-        ProtonLinkOptions linkOptions = new ProtonLinkOptions();
-        linkOptions.setLinkName(this.mqttEndpoint.clientIdentifier());
+        // NOTE : Will Service endpoint is opened only if MQTT client provides will information
 
         // setup and open AMQP endpoint for receiving on unique client address
         ProtonReceiver rcvReceiver = this.connection.createReceiver(String.format(AmqpReceiverEndpoint.CLIENT_ENDPOINT_TEMPLATE, this.mqttEndpoint.clientIdentifier()));
         this.rcvEndpoint = new AmqpReceiverEndpoint(rcvReceiver);
 
-        // setup and open AMQP endpoints to Will and Subscription services
-        ProtonSender wsSender = this.connection.createSender(AmqpWillServiceEndpoint.WILL_SERVICE_ENDPOINT, linkOptions);
-        this.wsEndpoint = new AmqpWillServiceEndpoint(wsSender);
-
+        // setup and open AMQP endpoint to Subscription Service
         ProtonSender ssSender = this.connection.createSender(AmqpSubscriptionServiceEndpoint.SUBSCRIPTION_SERVICE_ENDPOINT);
         this.ssEndpoint = new AmqpSubscriptionServiceEndpoint(ssSender);
 
@@ -545,7 +557,6 @@ public class AmqpBridge {
         this.pubEndpoint = new AmqpPublishEndpoint(senderPubrel);
 
         this.rcvEndpoint.open();
-        this.wsEndpoint.open();
         this.ssEndpoint.open();
         this.pubEndpoint.open();
     }

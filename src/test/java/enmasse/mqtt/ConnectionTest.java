@@ -41,16 +41,22 @@ public class ConnectionTest extends MockMqttFrontendTestBase {
     @Test
     public void connectionCleanSession(TestContext context) {
 
-        this.connect(context, true, CLIENT_ID);
+        this.connect(context, true, CLIENT_ID, true);
     }
 
     @Test
     public void connectionNotCleanSession(TestContext context) {
 
-        this.connect(context, false, CLIENT_ID_WITH_SESSION);
+        this.connect(context, false, CLIENT_ID_WITH_SESSION, true);
     }
 
-    private void connect(TestContext context, boolean isCleanSession, String clientId) {
+    @Test
+    public void connectionNoWill(TestContext context) {
+
+        this.connect(context, true, CLIENT_ID, false);
+    }
+
+    private void connect(TestContext context, boolean isCleanSession, String clientId, boolean isWill) {
 
         Async async = context.async();
 
@@ -59,7 +65,9 @@ public class ConnectionTest extends MockMqttFrontendTestBase {
             MemoryPersistence persistence = new MemoryPersistence();
 
             MqttConnectOptions options = new MqttConnectOptions();
-            options.setWill(new MqttTopic(MQTT_WILL_TOPIC, null), MQTT_WILL_MESSAGE.getBytes(), 1, false);
+            if (isWill) {
+                options.setWill(new MqttTopic(MQTT_WILL_TOPIC, null), MQTT_WILL_MESSAGE.getBytes(), 1, false);
+            }
             options.setCleanSession(isCleanSession);
 
             MqttClient client = new MqttClient(String.format("tcp://%s:%d", MQTT_BIND_ADDRESS, MQTT_LISTEN_PORT), clientId, persistence);
