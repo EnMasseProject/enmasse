@@ -27,6 +27,7 @@ import io.netty.handler.codec.mqtt.MqttQoS;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 import io.vertx.proton.ProtonClient;
 import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.ProtonDelivery;
@@ -57,6 +58,7 @@ public class MockBroker extends AbstractVerticle {
     public static final String EB_SUBSCRIBE = "subscribe";
     public static final String EB_UNSUBSCRIBE = "unsubscribe";
     public static final String EB_WILL = "will";
+    public static final String EB_LIST = "list";
 
     // header field and related action available for interacting with the event bus "will"
     public static final String EB_WILL_ACTION_HEADER = "will-action";
@@ -70,6 +72,8 @@ public class MockBroker extends AbstractVerticle {
     private Map<String, ProtonSender> senders;
     // topic -> client-id lists (subscribers)
     private Map<String, List<String>> subscriptions;
+    // client-id -> subscription
+    private Map<String, List<AmqpTopicSubscription>> sessions;
     // topic -> retained message
     private Map<String, AmqpPublishMessage> retained;
     // receiver link name -> will message
@@ -93,6 +97,7 @@ public class MockBroker extends AbstractVerticle {
         this.receivers = new HashMap<>();
         this.senders = new HashMap<>();
         this.subscriptions = new HashMap<>();
+        this.sessions = new HashMap<>();
         this.retained = new HashMap<>();
         this.topics = Arrays.asList("my_topic", "will");
         this.wills = new HashMap<>();
@@ -188,6 +193,27 @@ public class MockBroker extends AbstractVerticle {
                         this.unsubscribe(amqpUnsubscribeMessage);
                         ebMessage.reply(null);
                     }
+                });
+
+                // consumer for LIST requests from the Subscription Service
+                this.vertx.eventBus().consumer(EB_LIST, ebMessage -> {
+
+                    String clientId = (String) ebMessage.body();
+
+                    // a session not exist yet, create an empty one
+                    if (!this.sessions.containsKey(clientId)) {
+                        this.sessions.put(clientId, new ArrayList<>());
+                    }
+
+                    JsonArray jsonArray = new JsonArray();
+                    for (AmqpTopicSubscription amqpTopicSubscription: this.sessions.get(clientId)) {
+                        JsonObject jsonObject = new JsonObject();
+                        jsonObject.put("topic", amqpTopicSubscription.topic());
+                        jsonObject.put("qos", amqpTopicSubscription.qos().value());
+                        jsonArray.add(jsonObject);
+                    }
+
+                    ebMessage.reply(jsonArray);
                 });
 
                 // consumer for will requests from Will Service
@@ -340,6 +366,11 @@ public class MockBroker extends AbstractVerticle {
             }
 
             this.subscriptions.get(amqpTopicSubscription.topic()).add(amqpSubscribeMessage.clientId());
+
+            // if there is a session for the client, add the new subscription
+            if (this.sessions.containsKey(amqpSubscribeMessage.clientId())) {
+                this.sessions.get(amqpSubscribeMessage.clientId()).add(amqpTopicSubscription);
+            }
 
             // just as mock all requested QoS levels are granted
             grantedQoSLevels.add(amqpTopicSubscription.qos());

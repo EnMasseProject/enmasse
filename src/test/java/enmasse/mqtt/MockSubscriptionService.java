@@ -26,6 +26,7 @@ import io.netty.handler.codec.mqtt.MqttQoS;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 import io.vertx.proton.ProtonClient;
 import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.ProtonDelivery;
@@ -115,23 +116,33 @@ public class MockSubscriptionService extends AbstractVerticle {
                     AmqpListMessage amqpListMessage = AmqpListMessage.from(message);
                     delivery.disposition(Accepted.getInstance(), true);
 
-                    // send AMQP_SUBSCRIPTIONS to the unique client address
-                    ProtonSender sender = this.connection.createSender(message.getReplyTo());
+                    // send LIST request to the broker
+                    this.vertx.eventBus().send(MockBroker.EB_LIST, amqpListMessage.clientId(), done -> {
 
-                    // TODO: simulate a previous session with related subscriptions (communicate with MockBroker)
-                    List<AmqpTopicSubscription> subscriptions = new ArrayList<>();
-                    if (amqpListMessage.clientId().equals("67890")) {
-                        subscriptions.add(new AmqpTopicSubscription("my_topic", MqttQoS.AT_MOST_ONCE));
-                    }
-                    AmqpSubscriptionsMessage amqpSubscriptionsMessage =
-                            new AmqpSubscriptionsMessage(subscriptions);
+                        // event bus message body contains subscriptions (JSON encoded)
+                        List<AmqpTopicSubscription> subscriptions = new ArrayList<>();
+                        JsonArray jsonArray = (JsonArray) done.result().body();
+                        for (int i = 0; i < jsonArray.size(); i++) {
+                            JsonObject jsonObject = jsonArray.getJsonObject(i);
+                            subscriptions.add(
+                                    new AmqpTopicSubscription(jsonObject.getString("topic"),
+                                            MqttQoS.valueOf(jsonObject.getInteger("qos"))));
+                        }
 
-                    sender.open();
+                        // send AMQP_SUBSCRIPTIONS to the unique client address
+                        ProtonSender sender = this.connection.createSender(message.getReplyTo());
 
-                    sender.send(amqpSubscriptionsMessage.toAmqp(), d -> {
+                        AmqpSubscriptionsMessage amqpSubscriptionsMessage =
+                                new AmqpSubscriptionsMessage(subscriptions);
 
-                        sender.close();
+                        sender.open();
+
+                        sender.send(amqpSubscriptionsMessage.toAmqp(), d -> {
+
+                            sender.close();
+                        });
                     });
+
                 }
 
                 break;
