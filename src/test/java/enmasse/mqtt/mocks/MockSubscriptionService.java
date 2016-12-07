@@ -14,8 +14,10 @@
  * limitations under the License.
  */
 
-package enmasse.mqtt;
+package enmasse.mqtt.mocks;
 
+import enmasse.mqtt.AmqpSubscribeData;
+import enmasse.mqtt.AmqpUnsubscribeData;
 import enmasse.mqtt.messages.AmqpCloseMessage;
 import enmasse.mqtt.messages.AmqpListMessage;
 import enmasse.mqtt.messages.AmqpSubscribeMessage;

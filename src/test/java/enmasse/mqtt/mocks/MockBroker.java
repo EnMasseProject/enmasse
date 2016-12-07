@@ -14,8 +14,11 @@
  * limitations under the License.
  */
 
-package enmasse.mqtt;
+package enmasse.mqtt.mocks;
 
+import enmasse.mqtt.AmqpSubscribeData;
+import enmasse.mqtt.AmqpUnsubscribeData;
+import enmasse.mqtt.AmqpWillData;
 import enmasse.mqtt.messages.AmqpHelper;
 import enmasse.mqtt.messages.AmqpPublishMessage;
 import enmasse.mqtt.messages.AmqpPubrelMessage;
@@ -187,7 +190,7 @@ public class MockBroker extends AbstractVerticle {
                     // the request object is exchanged through the map using messageId in the event bus message
                     Object obj = this.vertx.sharedData().getLocalMap(EB_UNSUBSCRIBE).remove(ebMessage.body());
 
-                    if (obj instanceof  AmqpUnsubscribeData) {
+                    if (obj instanceof AmqpUnsubscribeData) {
 
                         AmqpUnsubscribeMessage amqpUnsubscribeMessage = ((AmqpUnsubscribeData) obj).unsubscribe();
                         this.unsubscribe(amqpUnsubscribeMessage);

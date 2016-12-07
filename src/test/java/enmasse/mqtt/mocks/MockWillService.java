@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-package enmasse.mqtt;
+package enmasse.mqtt.mocks;
 
+import enmasse.mqtt.AmqpWillData;
 import enmasse.mqtt.messages.AmqpWillClearMessage;
 import enmasse.mqtt.messages.AmqpWillMessage;
 import io.vertx.core.AbstractVerticle;

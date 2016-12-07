@@ -16,6 +16,9 @@
 
 package enmasse.mqtt;
 
+import enmasse.mqtt.mocks.MockWillService;
+import enmasse.mqtt.mocks.MockBroker;
+import enmasse.mqtt.mocks.MockSubscriptionService;
 import io.vertx.core.Vertx;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
