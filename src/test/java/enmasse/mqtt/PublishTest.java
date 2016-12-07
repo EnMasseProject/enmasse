@@ -38,7 +38,7 @@ import org.junit.runner.RunWith;
 @RunWith(VertxUnitRunner.class)
 public class PublishTest extends MockMqttFrontendTestBase {
 
-    private static final String MQTT_TOPIC = "/my_topic";
+    private static final String MQTT_TOPIC = "my_topic";
     private static final String MQTT_MESSAGE = "Hello MQTT on EnMasse";
     private static final String SUBSCRIBER_ID = "12345";
     private static final String PUBLISHER_ID = "67890";
