@@ -21,11 +21,12 @@ import enmasse.mqtt.endpoints.AmqpPublisher;
 import enmasse.mqtt.endpoints.AmqpReceiverEndpoint;
 import enmasse.mqtt.endpoints.AmqpSubscriptionServiceEndpoint;
 import enmasse.mqtt.endpoints.AmqpWillServiceEndpoint;
+import enmasse.mqtt.messages.AmqpCloseMessage;
+import enmasse.mqtt.messages.AmqpListMessage;
 import enmasse.mqtt.messages.AmqpPublishMessage;
 import enmasse.mqtt.messages.AmqpPubrelMessage;
-import enmasse.mqtt.messages.AmqpSessionMessage;
-import enmasse.mqtt.messages.AmqpSessionPresentMessage;
 import enmasse.mqtt.messages.AmqpSubscribeMessage;
+import enmasse.mqtt.messages.AmqpSubscriptionsMessage;
 import enmasse.mqtt.messages.AmqpTopicSubscription;
 import enmasse.mqtt.messages.AmqpUnsubscribeMessage;
 import enmasse.mqtt.messages.AmqpWillClearMessage;
@@ -122,13 +123,22 @@ public class AmqpBridge {
                 this.setupAmqpEndpoits();
 
                 // setup a Future for completed connection steps with all services
-                // with AMQP_WILL and AMQP_SESSION/AMQP_SESSION_PRESENT handled
-                Future<AmqpSessionPresentMessage> connectionFuture = Future.future();
+                // with AMQP_WILL and AMQP_LIST/AMQP_SUBSCRIPTIONS or AMQP_CLOSE handled
+                Future<AmqpSubscriptionsMessage> connectionFuture = Future.future();
                 connectionFuture.setHandler(ar -> {
 
                     if (ar.succeeded()) {
 
-                        this.mqttEndpoint.accept(ar.result().isSessionPresent());
+                        this.rcvEndpoint.publishHandler(this::publishHandler);
+                        this.rcvEndpoint.pubrelHandler(this::pubrelHandler);
+
+                        AmqpSubscriptionsMessage amqpSubscriptionsMessage = ar.result();
+
+                        if (amqpSubscriptionsMessage != null) {
+                            this.mqttEndpoint.accept(!amqpSubscriptionsMessage.topicSubscriptions().isEmpty());
+                        } else {
+                            this.mqttEndpoint.accept(false);
+                        }
                         LOG.info("Connection accepted");
 
                         openHandler.handle(Future.succeededFuture(AmqpBridge.this));
@@ -167,27 +177,46 @@ public class AmqpBridge {
 
                 willFuture.compose(v -> {
 
-                    // handling AMQP_SESSION_PRESENT reply from Subscription Service
-                    this.rcvEndpoint.sessionHandler(amqpSessionPresentMessage -> {
+                    // handling AMQP_SUBSCRIPTIONS reply from Subscription Service
+                    this.rcvEndpoint.subscriptionsHandler(amqpSubscriptionsMessage -> {
 
-                        LOG.info("Session present: {}", amqpSessionPresentMessage.isSessionPresent());
+                        LOG.info("Session present: {}", !amqpSubscriptionsMessage.topicSubscriptions().isEmpty());
 
-                        this.rcvEndpoint.publishHandler(this::publishHandler);
-                        this.rcvEndpoint.pubrelHandler(this::pubrelHandler);
+                        //this.rcvEndpoint.publishHandler(this::publishHandler);
+                        //this.rcvEndpoint.pubrelHandler(this::pubrelHandler);
 
-                        connectionFuture.complete(amqpSessionPresentMessage);
+                        connectionFuture.complete(amqpSubscriptionsMessage);
                     });
 
-                    // step 2 : send AMQP_SESSION to Subscription Service
-                    Future<ProtonDelivery> cleanSessionFuture = Future.future();
+                    // step 2 : send AMQP_CLOSE or AMQP_LIST (based on "clean session" flag) to Subscription Service
+                    Future<ProtonDelivery> sessionFuture = Future.future();
 
-                    // sending AMQP_SESSION
-                    AmqpSessionMessage amqpSessionMessage =
-                            new AmqpSessionMessage(this.mqttEndpoint.isCleanSession(),
-                                    this.mqttEndpoint.clientIdentifier());
+                    if (this.mqttEndpoint.isCleanSession()) {
 
-                    this.ssEndpoint.sendCleanSession(amqpSessionMessage, cleanSessionFuture.completer());
-                    return cleanSessionFuture;
+                        // sending AMQP_CLOSE
+                        AmqpCloseMessage amqpCloseMessage =
+                                new AmqpCloseMessage(this.mqttEndpoint.clientIdentifier());
+
+                        //this.ssEndpoint.sendClose(amqpCloseMessage, sessionFuture.completer());
+                        this.ssEndpoint.sendClose(amqpCloseMessage, closeAsyncResult -> {
+
+                            // in case of AMQP_CLOSE, the connection completes on its disposition
+                            // no other AMQP message will be delivered by Subscription Service (i.e. AMQP_SUBSCRIPTIONS)
+                            if (closeAsyncResult.succeeded()) {
+                                connectionFuture.complete();
+                            }
+                        });
+
+                    } else {
+
+                        // sending AMQP_LIST
+                        AmqpListMessage amqpListMessage =
+                                new AmqpListMessage(this.mqttEndpoint.clientIdentifier());
+
+                        this.ssEndpoint.sendList(amqpListMessage, sessionFuture.completer());
+                    }
+
+                    return sessionFuture;
 
                 }).compose(v -> {
                     // nothing here !??

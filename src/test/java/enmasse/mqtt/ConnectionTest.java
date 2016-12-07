@@ -36,9 +36,21 @@ public class ConnectionTest extends MockMqttFrontendTestBase {
     private static final String MQTT_WILL_TOPIC = "/will";
     private static final String MQTT_WILL_MESSAGE = "Will on EnMasse";
     private static final String CLIENT_ID = "12345";
+    private static final String CLIENT_ID_WITH_SESSION = "67890";
 
     @Test
-    public void connectionSuccess(TestContext context) {
+    public void connectionCleanSession(TestContext context) {
+
+        this.connect(context, true, CLIENT_ID);
+    }
+
+    @Test
+    public void connectionNotCleanSession(TestContext context) {
+
+        this.connect(context, false, CLIENT_ID_WITH_SESSION);
+    }
+
+    private void connect(TestContext context, boolean isCleanSession, String clientId) {
 
         Async async = context.async();
 
@@ -48,8 +60,9 @@ public class ConnectionTest extends MockMqttFrontendTestBase {
 
             MqttConnectOptions options = new MqttConnectOptions();
             options.setWill(new MqttTopic(MQTT_WILL_TOPIC, null), MQTT_WILL_MESSAGE.getBytes(), 1, false);
+            options.setCleanSession(isCleanSession);
 
-            MqttClient client = new MqttClient(String.format("tcp://%s:%d", MQTT_BIND_ADDRESS, MQTT_LISTEN_PORT), CLIENT_ID, persistence);
+            MqttClient client = new MqttClient(String.format("tcp://%s:%d", MQTT_BIND_ADDRESS, MQTT_LISTEN_PORT), clientId, persistence);
             client.connect(options);
 
             context.assertTrue(true);
@@ -61,6 +74,5 @@ public class ConnectionTest extends MockMqttFrontendTestBase {
             context.assertTrue(false);
             e.printStackTrace();
         }
-
     }
 }

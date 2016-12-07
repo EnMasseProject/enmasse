@@ -16,7 +16,8 @@
 
 package enmasse.mqtt.endpoints;
 
-import enmasse.mqtt.messages.AmqpSessionMessage;
+import enmasse.mqtt.messages.AmqpCloseMessage;
+import enmasse.mqtt.messages.AmqpListMessage;
 import enmasse.mqtt.messages.AmqpSubscribeMessage;
 import enmasse.mqtt.messages.AmqpUnsubscribeMessage;
 import io.vertx.core.AsyncResult;
@@ -51,21 +52,41 @@ public class AmqpSubscriptionServiceEndpoint {
     }
 
     /**
-     * Send the AMQP_SESSION message to the Subscription Service
+     * Send the AMQP_LIST message to the Subscription Service
      *
-     * @param amqpSessionMessage    AMQP_SESSION message
+     * @param amqpSessionMessage    AMQP_LIST message
      * @param handler   callback called on message delivered
      */
-    public void sendCleanSession(AmqpSessionMessage amqpSessionMessage, Handler<AsyncResult<ProtonDelivery>> handler) {
+    public void sendList(AmqpListMessage amqpSessionMessage, Handler<AsyncResult<ProtonDelivery>> handler) {
 
-        // send AMQP_SESSION message with clean session info
+        // send AMQP_LIST message
         this.sender.send(amqpSessionMessage.toAmqp(), delivery -> {
 
             if (delivery.getRemoteState() == Accepted.getInstance()) {
-                LOG.info("AMQP clean session delivery {}", delivery.getRemoteState());
+                LOG.info("AMQP list delivery {}", delivery.getRemoteState());
                 handler.handle(Future.succeededFuture(delivery));
             } else {
-                handler.handle(Future.failedFuture(String.format("AMQP clean session delivery %s", delivery.getRemoteState())));
+                handler.handle(Future.failedFuture(String.format("AMQP list delivery %s", delivery.getRemoteState())));
+            }
+        });
+    }
+
+    /**
+     * Send the AMQP_CLOSE message to the Subscription Service
+     *
+     * @param amqpCloseMessage  AMQP_CLOSE message
+     * @param handler   callback called on message delivered
+     */
+    public void sendClose(AmqpCloseMessage amqpCloseMessage, Handler<AsyncResult<ProtonDelivery>> handler) {
+
+        // send AMQP_CLOSE message
+        this.sender.send(amqpCloseMessage.toAmqp(), delivery -> {
+
+            if (delivery.getRemoteState() == Accepted.getInstance()) {
+                LOG.info("AMQP close delivery {}", delivery.getRemoteState());
+                handler.handle(Future.succeededFuture(delivery));
+            } else {
+                handler.handle(Future.failedFuture(String.format("AMQP close delivery %s", delivery.getRemoteState())));
             }
         });
     }

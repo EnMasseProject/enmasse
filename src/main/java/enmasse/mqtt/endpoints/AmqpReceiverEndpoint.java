@@ -18,7 +18,7 @@ package enmasse.mqtt.endpoints;
 
 import enmasse.mqtt.messages.AmqpPublishMessage;
 import enmasse.mqtt.messages.AmqpPubrelMessage;
-import enmasse.mqtt.messages.AmqpSessionPresentMessage;
+import enmasse.mqtt.messages.AmqpSubscriptionsMessage;
 import io.netty.handler.codec.mqtt.MqttQoS;
 import io.vertx.core.Handler;
 import io.vertx.proton.ProtonDelivery;
@@ -43,8 +43,8 @@ public class AmqpReceiverEndpoint {
 
     private ProtonReceiver receiver;
 
-    // handler called when AMQP_SESSION_PRESENT is received
-    private Handler<AmqpSessionPresentMessage> sessionHandler;
+    // handler called when AMQP_SUBSCRIPTIONS is received
+    private Handler<AmqpSubscriptionsMessage> subscriptionsHandler;
     // handler called when AMQP_PUBLISH is received
     private Handler<AmqpPublishMessage> publishHandler;
     // handler called when AMQP_PUBREL is received
@@ -62,14 +62,14 @@ public class AmqpReceiverEndpoint {
     }
 
     /**
-     * Set the session handler called when AMQP_SESSION_PRESENT is received
+     * Set the session handler called when AMQP_SUBSCRIPTIONS is received
      *
      * @param handler   the handler
      * @return  the current AmqpReceiverEndpoint instance
      */
-    public AmqpReceiverEndpoint sessionHandler(Handler<AmqpSessionPresentMessage> handler) {
+    public AmqpReceiverEndpoint subscriptionsHandler(Handler<AmqpSubscriptionsMessage> handler) {
 
-        this.sessionHandler = handler;
+        this.subscriptionsHandler = handler;
         return this;
     }
 
@@ -112,9 +112,9 @@ public class AmqpReceiverEndpoint {
 
             switch (message.getSubject()) {
 
-                case AmqpSessionPresentMessage.AMQP_SUBJECT:
+                case AmqpSubscriptionsMessage.AMQP_SUBJECT:
 
-                    this.handleSession(AmqpSessionPresentMessage.from(message));
+                    this.handleSession(AmqpSubscriptionsMessage.from(message));
                     delivery.disposition(Accepted.getInstance(), true);
 
                     break;
@@ -180,8 +180,9 @@ public class AmqpReceiverEndpoint {
 
         // attach receiver link on the $mqtt.to.<client-id> address for receiving messages (from SS)
         // define handler for received messages
-        // - AMQP_SESSION_PRESENT after sent AMQP_SESSION -> for writing CONNACK (session-present)
+        // - AMQP_SUBSCRIPTIONS after sent AMQP_LIST -> for writing CONNACK (session-present)
         // - AMQP_PUBLISH for every AMQP published message
+        // - AMQP_PUBREL for handling QoS 2
         this.receiver
                 .setQoS(ProtonQoS.AT_LEAST_ONCE)
                 .handler(this::messageHandler)
@@ -212,14 +213,14 @@ public class AmqpReceiverEndpoint {
     }
 
     /**
-     * Used for calling the session handler when AMQP_SESSION_PRESENT is received
+     * Used for calling the session handler when AMQP_SUBSCRIPTIONS is received
      *
-     * @param amqpSessionPresentMessage AMQP_SESSION_PRESENT message
+     * @param amqpSubscriptionsMessage AMQP_SUBSCRIPTIONS message
      */
-    private void handleSession(AmqpSessionPresentMessage amqpSessionPresentMessage) {
+    private void handleSession(AmqpSubscriptionsMessage amqpSubscriptionsMessage) {
 
-        if (this.sessionHandler != null) {
-            this.sessionHandler.handle(amqpSessionPresentMessage);
+        if (this.subscriptionsHandler != null) {
+            this.subscriptionsHandler.handle(amqpSubscriptionsMessage);
         }
     }
 

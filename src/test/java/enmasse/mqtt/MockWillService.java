@@ -16,7 +16,6 @@
 
 package enmasse.mqtt;
 
-import enmasse.mqtt.messages.AmqpPublishMessage;
 import enmasse.mqtt.messages.AmqpWillClearMessage;
 import enmasse.mqtt.messages.AmqpWillMessage;
 import io.vertx.core.AbstractVerticle;
@@ -29,16 +28,12 @@ import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.ProtonDelivery;
 import io.vertx.proton.ProtonQoS;
 import io.vertx.proton.ProtonReceiver;
-import io.vertx.proton.ProtonSender;
 import org.apache.qpid.proton.amqp.messaging.Accepted;
 import org.apache.qpid.proton.amqp.transport.ErrorCondition;
 import org.apache.qpid.proton.amqp.transport.LinkError;
 import org.apache.qpid.proton.message.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Mock for the Will Service

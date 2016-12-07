@@ -16,9 +16,11 @@
 
 package enmasse.mqtt;
 
-import enmasse.mqtt.messages.AmqpSessionMessage;
-import enmasse.mqtt.messages.AmqpSessionPresentMessage;
+import enmasse.mqtt.messages.AmqpCloseMessage;
+import enmasse.mqtt.messages.AmqpListMessage;
 import enmasse.mqtt.messages.AmqpSubscribeMessage;
+import enmasse.mqtt.messages.AmqpSubscriptionsMessage;
+import enmasse.mqtt.messages.AmqpTopicSubscription;
 import enmasse.mqtt.messages.AmqpUnsubscribeMessage;
 import io.netty.handler.codec.mqtt.MqttQoS;
 import io.vertx.core.AbstractVerticle;
@@ -106,25 +108,42 @@ public class MockSubscriptionService extends AbstractVerticle {
 
         switch (message.getSubject()) {
 
-            case AmqpSessionMessage.AMQP_SUBJECT:
+            case AmqpListMessage.AMQP_SUBJECT:
 
                 {
-                    // get AMQP_SESSION message and sends disposition for settlement
-                    AmqpSessionMessage amqpSessionMessage = AmqpSessionMessage.from(message);
+                    // get AMQP_LIST message and sends disposition for settlement
+                    AmqpListMessage amqpListMessage = AmqpListMessage.from(message);
                     delivery.disposition(Accepted.getInstance(), true);
 
-                    // send AMQP_SESSION_PRESENT to the unique client address
+                    // send AMQP_SUBSCRIPTIONS to the unique client address
                     ProtonSender sender = this.connection.createSender(message.getReplyTo());
 
-                    AmqpSessionPresentMessage amqpSessionPresentMessage =
-                            new AmqpSessionPresentMessage(amqpSessionMessage.clientId().equals("12345"));
+                    // TODO: simulate a previous session with related subscriptions (communicate with MockBroker)
+                    List<AmqpTopicSubscription> subscriptions = new ArrayList<>();
+                    if (amqpListMessage.clientId().equals("67890")) {
+                        subscriptions.add(new AmqpTopicSubscription("my_topic", MqttQoS.AT_MOST_ONCE));
+                    }
+                    AmqpSubscriptionsMessage amqpSubscriptionsMessage =
+                            new AmqpSubscriptionsMessage(subscriptions);
 
                     sender.open();
 
-                    sender.send(amqpSessionPresentMessage.toAmqp(), d -> {
+                    sender.send(amqpSubscriptionsMessage.toAmqp(), d -> {
 
                         sender.close();
                     });
+                }
+
+                break;
+
+            case AmqpCloseMessage.AMQP_SUBJECT:
+
+                {
+                    // get AMQP_CLOSE message and sends disposition for settlement
+                    AmqpCloseMessage amqpCloseMessage = AmqpCloseMessage.from(message);
+                    delivery.disposition(Accepted.getInstance(), true);
+
+                    // TODO: simulate closing a previous session with related subscriptions ? (communicate with MockBroker)
                 }
 
                 break;
