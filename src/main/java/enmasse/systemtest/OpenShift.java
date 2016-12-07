@@ -61,7 +61,7 @@ public class OpenShift {
     }
 
     public Endpoint getRestEndpoint() {
-        return getEndpoint("restapi", "http");
+        return getEndpoint("admin", "restapi");
     }
 
     public void setDeploymentReplicas(String name, int numReplicas) {
