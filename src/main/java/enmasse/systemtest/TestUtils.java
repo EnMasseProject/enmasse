@@ -139,7 +139,7 @@ public class TestUtils {
         });
         request.end(Buffer.buffer(mapper.writeValueAsBytes(config)));
         latch.await(30, TimeUnit.SECONDS);
-        int expectedPods = 6;
+        int expectedPods = 3;
         for (Destination destination : destinations) {
             if (destination.isStoreAndForward()) {
                 waitForBrokerPod(openShift, destination.getAddress(), budget);
