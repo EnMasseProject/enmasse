@@ -6,7 +6,7 @@ WORKING=`pwd`
 OUTDIR=${3:-$ABS_BASE}
 MESH_PATCH=$BASE/meshfix.patch
 
-wget ${1:-https://dist.apache.org/repos/dist/dev/qpid/dispatch/0.7.0-rc2/qpid-dispatch-0.7.0.tar.gz} -O qpid-dispatch.tar.gz
+wget ${1:-http://archive.apache.org/dist/qpid/dispatch/0.7.0/qpid-dispatch-0.7.0.tar.gz} -O qpid-dispatch.tar.gz
 wget ${2:-http://archive.apache.org/dist/qpid/proton/0.15.0/qpid-proton-0.15.0.tar.gz} -O qpid-proton.tar.gz
 
 mkdir qpid-dispatch-src qpid-proton-src build staging proton_build proton_install
