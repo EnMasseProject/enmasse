@@ -119,8 +119,9 @@ public class MockSubscriptionService extends AbstractVerticle {
                     // send LIST request to the broker
                     this.vertx.eventBus().send(MockBroker.EB_LIST, amqpListMessage.clientId(), done -> {
 
-                        // event bus message body contains subscriptions (JSON encoded)
                         List<AmqpTopicSubscription> subscriptions = new ArrayList<>();
+
+                        // event bus message body contains subscriptions (JSON encoded)
                         JsonArray jsonArray = (JsonArray) done.result().body();
                         for (int i = 0; i < jsonArray.size(); i++) {
                             JsonObject jsonObject = jsonArray.getJsonObject(i);

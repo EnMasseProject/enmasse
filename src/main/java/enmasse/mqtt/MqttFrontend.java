@@ -26,8 +26,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 
 /**
@@ -45,7 +45,7 @@ public class MqttFrontend extends AbstractVerticle {
 
     private MqttServer server;
 
-    private List<AmqpBridge> bridges;
+    private Map<String, AmqpBridge> bridges;
 
     /**
      * Set the IP address the MQTT Frontend will bind to
@@ -113,7 +113,7 @@ public class MqttFrontend extends AbstractVerticle {
 
                     if (done.succeeded()) {
 
-                        this.bridges = new ArrayList<>();
+                        this.bridges = new HashMap<>();
 
                         LOG.info("MQTT frontend running on {}:{}", this.bindAddress, this.server.actualPort());
                         startFuture.complete();
@@ -136,10 +136,18 @@ public class MqttFrontend extends AbstractVerticle {
 
         AmqpBridge bridge = new AmqpBridge(this.vertx, mqttEndpoint);
 
-        bridge.open(this.connectAddress, this.connectPort, done -> {
+        bridge.mqttEndpointCloseHandler(amqpBridge -> {
+
+            this.bridges.remove(amqpBridge.id());
+            amqpBridge.close();
+            LOG.info("Closed AMQP bridge for client {}", amqpBridge.id());
+
+        }).open(this.connectAddress, this.connectPort, done -> {
 
             if (done.succeeded()) {
-                this.bridges.add(done.result());
+
+                LOG.info("Opened AMQP bridge for client {}", done.result().id());
+                this.bridges.put(done.result().id(), done.result());
             } else {
                 LOG.info("Error opening the AMQP bridge ...", done.cause());
             }
@@ -171,8 +179,8 @@ public class MqttFrontend extends AbstractVerticle {
 
         if (this.server != null) {
 
-            this.bridges.stream().forEach(bridge -> {
-                bridge.close();
+            this.bridges.entrySet().stream().forEach(entry -> {
+                entry.getValue().close();
             });
 
             this.server.close(shutdownTracker.completer());

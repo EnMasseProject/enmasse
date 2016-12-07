@@ -19,8 +19,12 @@ package enmasse.mqtt;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
+import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
+import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttClient;
+import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
+import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -31,16 +35,21 @@ import org.junit.runner.RunWith;
 @RunWith(VertxUnitRunner.class)
 public class SubscribeTest extends MockMqttFrontendTestBase {
 
+    private static final String MQTT_TOPIC = "my_topic";
+    private static final String MQTT_MESSAGE = "Hello MQTT on EnMasse";
+    private static final String SUBSCRIBER_ID = "12345";
+    private static final String PUBLISHER_ID = "67890";
+
     @Test
     public void subscribe(TestContext context) {
 
         try {
 
             MemoryPersistence persistence = new MemoryPersistence();
-            MqttClient client = new MqttClient(String.format("tcp://%s:%d", MQTT_BIND_ADDRESS, MQTT_LISTEN_PORT), "12345", persistence);
+            MqttClient client = new MqttClient(String.format("tcp://%s:%d", MQTT_BIND_ADDRESS, MQTT_LISTEN_PORT), SUBSCRIBER_ID, persistence);
             client.connect();
 
-            String[] topics = new String[]{ "my_topic" };
+            String[] topics = new String[]{ MQTT_TOPIC };
             int[] qos = new int[]{ 1 };
             // after calling subscribe, the qos is replaced with granted QoS that should be the same
             client.subscribe(topics, qos);
@@ -63,20 +72,20 @@ public class SubscribeTest extends MockMqttFrontendTestBase {
         try {
 
             MemoryPersistence subscriberPersistence = new MemoryPersistence();
-            MqttClient subscriber = new MqttClient(String.format("tcp://%s:%d", MQTT_BIND_ADDRESS, MQTT_LISTEN_PORT), "12345", subscriberPersistence);
+            MqttClient subscriber = new MqttClient(String.format("tcp://%s:%d", MQTT_BIND_ADDRESS, MQTT_LISTEN_PORT), SUBSCRIBER_ID, subscriberPersistence);
             subscriber.connect();
 
-            subscriber.subscribe("my_topic", 1, (topic, message) -> {
+            subscriber.subscribe(MQTT_TOPIC, 1, (topic, message) -> {
 
                 LOG.info("topic: {} message: {}", topic, message);
                 async.complete();
             });
 
             MemoryPersistence publisherPersistence = new MemoryPersistence();
-            MqttClient publisher = new MqttClient(String.format("tcp://%s:%d", MQTT_BIND_ADDRESS, MQTT_LISTEN_PORT), "67890", publisherPersistence);
+            MqttClient publisher = new MqttClient(String.format("tcp://%s:%d", MQTT_BIND_ADDRESS, MQTT_LISTEN_PORT), PUBLISHER_ID, publisherPersistence);
             publisher.connect();
 
-            publisher.publish("my_topic", "Hello".getBytes(), 1, false);
+            publisher.publish(MQTT_TOPIC, MQTT_MESSAGE.getBytes(), 1, false);
 
             async.await();
 
@@ -98,22 +107,81 @@ public class SubscribeTest extends MockMqttFrontendTestBase {
 
             MemoryPersistence publisherPersistence = new MemoryPersistence();
 
-            MqttClient publisher = new MqttClient(String.format("tcp://%s:%d", MQTT_BIND_ADDRESS, MQTT_LISTEN_PORT), "12345", publisherPersistence);
+            MqttClient publisher = new MqttClient(String.format("tcp://%s:%d", MQTT_BIND_ADDRESS, MQTT_LISTEN_PORT), PUBLISHER_ID, publisherPersistence);
             publisher.connect();
 
-            publisher.publish("my_topic", "my_payload".getBytes(), 0, true);
+            publisher.publish(MQTT_TOPIC, MQTT_MESSAGE.getBytes(), 0, true);
 
             publisher.disconnect();
 
             MemoryPersistence subscriberPersistence = new MemoryPersistence();
-            MqttClient subscriber = new MqttClient(String.format("tcp://%s:%d", MQTT_BIND_ADDRESS, MQTT_LISTEN_PORT), "67890", subscriberPersistence);
+            MqttClient subscriber = new MqttClient(String.format("tcp://%s:%d", MQTT_BIND_ADDRESS, MQTT_LISTEN_PORT), SUBSCRIBER_ID, subscriberPersistence);
             subscriber.connect();
 
-            subscriber.subscribe("my_topic", 1, (topic, message) -> {
+            subscriber.subscribe(MQTT_TOPIC, 1, (topic, message) -> {
 
                 LOG.info("topic: {} message: {}", topic, message);
                 async.complete();
             });
+
+            async.await();
+
+            context.assertTrue(true);
+
+        } catch (MqttException e) {
+
+            context.assertTrue(false);
+            e.printStackTrace();
+        }
+    }
+
+    @Test
+    public void subscribeRecoveringSession(TestContext context) {
+
+        Async async = context.async();
+
+        try {
+
+            MqttConnectOptions options = new MqttConnectOptions();
+            options.setCleanSession(false);
+
+            MemoryPersistence subscriberPersistence = new MemoryPersistence();
+            MqttClient subscriber = new MqttClient(String.format("tcp://%s:%d", MQTT_BIND_ADDRESS, MQTT_LISTEN_PORT), SUBSCRIBER_ID, subscriberPersistence);
+            subscriber.connect(options);
+
+            subscriber.subscribe(MQTT_TOPIC, 0);
+            subscriber.disconnect();
+
+            // re-connect without subscribing, should receive published message
+            subscriber.connect(options);
+            subscriber.setCallback(new MqttCallback() {
+
+                @Override
+                public void connectionLost(Throwable throwable) {
+
+                }
+
+                @Override
+                public void messageArrived(String topic, MqttMessage mqttMessage) throws Exception {
+
+                    LOG.info("topic: {} message: {}", topic, new String(mqttMessage.getPayload()));
+                    async.complete();
+                }
+
+                @Override
+                public void deliveryComplete(IMqttDeliveryToken iMqttDeliveryToken) {
+
+                }
+            });
+
+            MemoryPersistence publisherPersistence = new MemoryPersistence();
+
+            MqttClient publisher = new MqttClient(String.format("tcp://%s:%d", MQTT_BIND_ADDRESS, MQTT_LISTEN_PORT), PUBLISHER_ID, publisherPersistence);
+            publisher.connect();
+
+            publisher.publish(MQTT_TOPIC, MQTT_MESSAGE.getBytes(), 0, true);
+
+            publisher.disconnect();
 
             async.await();
 

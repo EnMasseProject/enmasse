@@ -85,6 +85,9 @@ public class AmqpBridge {
     // endpoint for publishing message on topic (via AMQP)
     private AmqpPublishEndpoint pubEndpoint;
 
+    // callback called when the MQTT client closes connection
+    private Handler<AmqpBridge> mqttEndpointCloseHandler;
+
     /**
      * Constructor
      *
@@ -139,19 +142,18 @@ public class AmqpBridge {
                         } else {
                             this.mqttEndpoint.accept(false);
                         }
-                        LOG.info("Connection accepted");
+                        LOG.info("CONNACK to MQTT client {} [accepted]", this.mqttEndpoint.clientIdentifier());
 
                         openHandler.handle(Future.succeededFuture(AmqpBridge.this));
 
                     } else {
 
                         this.mqttEndpoint.reject(MqttConnectReturnCode.CONNECTION_REFUSED_SERVER_UNAVAILABLE);
-                        LOG.error("Connection NOT accepted");
+                        LOG.error("CONNACK to MQTT client {} [rejected]", this.mqttEndpoint.clientIdentifier());
 
                         openHandler.handle(Future.failedFuture(ar.cause()));
                     }
 
-                    LOG.info("CONNACK to MQTT client {}", this.mqttEndpoint.clientIdentifier());
                 });
 
                 // step 1 : send AMQP_WILL to Will Service
@@ -181,9 +183,6 @@ public class AmqpBridge {
                     this.rcvEndpoint.subscriptionsHandler(amqpSubscriptionsMessage -> {
 
                         LOG.info("Session present: {}", !amqpSubscriptionsMessage.topicSubscriptions().isEmpty());
-
-                        //this.rcvEndpoint.publishHandler(this::publishHandler);
-                        //this.rcvEndpoint.pubrelHandler(this::pubrelHandler);
 
                         connectionFuture.complete(amqpSubscriptionsMessage);
                     });
@@ -434,6 +433,7 @@ public class AmqpBridge {
     private void closeHandler(Void v) {
 
         this.wsEndpoint.close();
+        this.handleMqttEndpointClose(this);
     }
 
     /**
@@ -548,5 +548,39 @@ public class AmqpBridge {
         this.wsEndpoint.open();
         this.ssEndpoint.open();
         this.pubEndpoint.open();
+    }
+
+    /**
+     * Set the session handler called when MQTT client closes connection
+     *
+     * @param handler   the handler
+     * @return  the current AmqpBridge instance
+     */
+    public AmqpBridge mqttEndpointCloseHandler(Handler<AmqpBridge> handler) {
+
+        this.mqttEndpointCloseHandler = handler;
+        return this;
+    }
+
+    /**
+     * Used for calling the close handler when MQTT client closes connection
+     *
+     * @param amqpBridge    AMQP bridge instance
+     */
+    private void handleMqttEndpointClose(AmqpBridge amqpBridge) {
+
+        if (this.mqttEndpointCloseHandler != null) {
+            this.mqttEndpointCloseHandler.handle(amqpBridge);
+        }
+    }
+
+    /**
+     * AMQP bridge identifier
+     *
+     * @return
+     */
+    public String id() {
+        // just the MQTT client identifier
+        return this.mqttEndpoint.clientIdentifier();
     }
 }
