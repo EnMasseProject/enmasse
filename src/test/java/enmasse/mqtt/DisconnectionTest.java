@@ -40,7 +40,7 @@ import org.junit.runner.RunWith;
 @RunWith(VertxUnitRunner.class)
 public class DisconnectionTest extends MockMqttFrontendTestBase {
 
-    private static final String MQTT_WILL_TOPIC = "/will";
+    private static final String MQTT_WILL_TOPIC = "will";
     private static final String MQTT_WILL_MESSAGE = "Will on EnMasse";
     private static final String CLIENT_ID = "12345";
     private static final String WILL_CLIENT_ID = "ignore-disconnect";
