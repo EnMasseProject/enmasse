@@ -11,8 +11,8 @@ local common = import "include/common.jsonnet";
 local flavor = import "include/flavor.jsonnet";
 local messagingService = import "include/messaging-service.jsonnet";
 {
-  "messaging-service.json": messagingService.generate(false),
-  "tls-messaging-service.json": messagingService.generate(true),
+  "messaging-service.json": messagingService.generate(false, false),
+  "tls-messaging-service.json": messagingService.generate(true, false),
   "qdrouterd-imagestream.json": router.imagestream("enmasseproject/qdrouterd"),
   "qdrouterd-dc.json": qdrouterd.deployment(false),
   "artemis-imagestream.json": broker.imagestream("enmasseproject/artemis"),

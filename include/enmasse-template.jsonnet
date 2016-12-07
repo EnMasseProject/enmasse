@@ -11,12 +11,13 @@ local messagingService = import "messaging-service.jsonnet";
 local messagingRoute = import "messaging-route.json";
 local addressConfig = import "addresses.json";
 local flavorConfig = import "flavor.jsonnet";
-local common = import "common.jsonnet";
 local restapi = import "restapi.jsonnet";
+local common = import "common.jsonnet";
+local admin = import "admin.jsonnet";
 {
-  generate(secure, with_storage_controller)::
+  generate(secure)::
   {
-    local templateName = (if secure then "tls-enmasse" else "enmasse") + (if with_storage_controller then "" else "-base"),
+    local templateName = (if secure then "tls-enmasse" else "enmasse"),
     "apiVersion": "v1",
     "kind": "Template",
     "metadata": {
@@ -36,28 +37,19 @@ local restapi = import "restapi.jsonnet";
                  qdrouterd.deployment(secure),
                  broker.imagestream("${BROKER_REPO}"),
                  forwarder.imagestream("${TOPIC_FORWARDER_REPO}"),
-                 messagingService.generate(secure),
+                 messagingService.generate(secure, true),
                  configserv.imagestream("${CONFIGSERV_REPO}"),
-                 configserv.deployment,
-                 configserv.service,
                  ragent.imagestream("${RAGENT_REPO}"),
-                 ragent.deployment,
-                 ragent.service,
                  subserv.imagestream("${SUBSERV_REPO}"),
                  subserv.deployment,
-                 subserv.service ],
-    local storage_controller_resources = [
-                 storageController.imagestream("${STORAGE_CONTROLLER_REPO}"),
-                 storageController.deployment,
-                 storageController.service,
+                 subserv.service,
                  restapi.imagestream("${RESTAPI_REPO}"),
-                 restapi.deployment,
-                 restapi.service,
-                 flavorConfig.generate(secure)],
+                 storageController.imagestream("${STORAGE_CONTROLLER_REPO}"),
+                 flavorConfig.generate(secure),
+                 admin.deployment ] + admin.services,
 
-    local all_objects = if with_storage_controller then common + storage_controller_resources else common,
-    local secured_objects = all_objects + [ messagingRoute ],
-    "objects": if secure then secured_objects else all_objects,
+    local secured_objects = common + [ messagingRoute ],
+    "objects": if secure then secured_objects else common,
     "parameters": [
       {
         "name": "ROUTER_REPO",

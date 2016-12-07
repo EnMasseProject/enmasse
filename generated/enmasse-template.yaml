@@ -567,7 +567,7 @@ objects:
   kind: Service
   metadata:
     annotations:
-      service.alpha.openshift.io/dependencies: '[{"name":"configuration","namespace":"","kind":"Service"},{"name":"ragent","namespace":"","kind":"Service"},{"name":"subscription","namespace":"","kind":"Service"},{"name":"restapi","namespace":"","kind":"Service"},{"name":"storage-controller","namespace":"","kind":"Service"}]'
+      service.alpha.openshift.io/dependencies: '[{"name":"admin","namespace":"","kind":"Service"},{"name":"subscription","namespace":"","kind":"Service"}]'
       service.alpha.openshift.io/infrastructure: 'true'
     labels:
       app: enmasse
@@ -600,56 +600,6 @@ objects:
         name: "${CONFIGSERV_REPO}:latest"
       name: latest
 - apiVersion: v1
-  kind: DeploymentConfig
-  metadata:
-    labels:
-      app: enmasse
-      name: configserv
-    name: configserv
-  spec:
-    replicas: 1
-    selector:
-      name: configserv
-    template:
-      metadata:
-        labels:
-          app: enmasse
-          name: configserv
-      spec:
-        containers:
-        - image: configserv
-          livenessProbe:
-            tcpSocket:
-              port: amqp
-          name: bridge
-          ports:
-          - containerPort: 5672
-            name: amqp
-    triggers:
-    - type: ConfigChange
-    - imageChangeParams:
-        automatic: true
-        containerNames:
-        - bridge
-        from:
-          kind: ImageStreamTag
-          name: configserv:latest
-      type: ImageChange
-- apiVersion: v1
-  kind: Service
-  metadata:
-    labels:
-      app: enmasse
-    name: configuration
-  spec:
-    ports:
-    - name: amqp
-      port: 5672
-      protocol: TCP
-      targetPort: 5672
-    selector:
-      name: configserv
-- apiVersion: v1
   kind: ImageStream
   metadata:
     labels:
@@ -664,57 +614,6 @@ objects:
         kind: DockerImage
         name: "${RAGENT_REPO}:latest"
       name: latest
-- apiVersion: v1
-  kind: DeploymentConfig
-  metadata:
-    labels:
-      app: enmasse
-      name: ragent
-    name: ragent
-  spec:
-    replicas: 1
-    selector:
-      name: ragent
-    template:
-      metadata:
-        labels:
-          app: enmasse
-          name: ragent
-      spec:
-        containers:
-        - image: ragent
-          livenessProbe:
-            tcpSocket:
-              port: amqp
-          name: ragent
-          ports:
-          - containerPort: 55672
-            name: amqp
-            protocol: TCP
-    triggers:
-    - type: ConfigChange
-    - imageChangeParams:
-        automatic: true
-        containerNames:
-        - ragent
-        from:
-          kind: ImageStreamTag
-          name: ragent:latest
-      type: ImageChange
-- apiVersion: v1
-  kind: Service
-  metadata:
-    labels:
-      app: enmasse
-    name: ragent
-  spec:
-    ports:
-    - name: amqp
-      port: 55672
-      protocol: TCP
-      targetPort: 55672
-    selector:
-      name: ragent
 - apiVersion: v1
   kind: ImageStream
   metadata:
@@ -786,73 +685,6 @@ objects:
   metadata:
     labels:
       app: enmasse
-    name: storage-controller
-  spec:
-    dockerImageRepository: "${STORAGE_CONTROLLER_REPO}"
-    importPolicy:
-      scheduled: true
-    tags:
-    - from:
-        kind: DockerImage
-        name: "${STORAGE_CONTROLLER_REPO}:latest"
-      name: latest
-- apiVersion: v1
-  kind: DeploymentConfig
-  metadata:
-    labels:
-      app: enmasse
-      name: storage-controller
-    name: storage-controller
-  spec:
-    replicas: 1
-    selector:
-      name: storage-controller
-    template:
-      metadata:
-        labels:
-          app: enmasse
-          name: storage-controller
-      spec:
-        containers:
-        - image: storage-controller
-          livenessProbe:
-            tcpSocket:
-              port: amqp
-          name: storage-controller
-          ports:
-          - containerPort: 55674
-            name: amqp
-            protocol: TCP
-        serviceAccount: deployer
-    triggers:
-    - type: ConfigChange
-    - imageChangeParams:
-        automatic: true
-        containerNames:
-        - storage-controller
-        from:
-          kind: ImageStreamTag
-          name: storage-controller:latest
-      type: ImageChange
-- apiVersion: v1
-  kind: Service
-  metadata:
-    labels:
-      app: enmasse
-    name: storage-controller
-  spec:
-    ports:
-    - name: amqp
-      port: 5672
-      protocol: TCP
-      targetPort: 55674
-    selector:
-      name: storage-controller
-- apiVersion: v1
-  kind: ImageStream
-  metadata:
-    labels:
-      app: enmasse
     name: enmasse-rest
   spec:
     dockerImageRepository: "${RESTAPI_REPO}"
@@ -864,23 +696,77 @@ objects:
         name: "${RESTAPI_REPO}:latest"
       name: latest
 - apiVersion: v1
+  kind: ImageStream
+  metadata:
+    labels:
+      app: enmasse
+    name: storage-controller
+  spec:
+    dockerImageRepository: "${STORAGE_CONTROLLER_REPO}"
+    importPolicy:
+      scheduled: true
+    tags:
+    - from:
+        kind: DockerImage
+        name: "${STORAGE_CONTROLLER_REPO}:latest"
+      name: latest
+- apiVersion: v1
+  data:
+    json: |
+      {
+          "vanilla-queue": { "templateName":"queue-inmemory" },
+       "vanilla-topic": { "templateName":"topic-inmemory" }
+      }
+  kind: ConfigMap
+  metadata:
+    labels:
+      app: enmasse
+    name: flavor
+- apiVersion: v1
   kind: DeploymentConfig
   metadata:
     labels:
       app: enmasse
-      name: restapi
-    name: restapi
+      name: admin
+    name: admin
   spec:
     replicas: 1
     selector:
-      name: restapi
+      name: admin
     template:
       metadata:
         labels:
           app: enmasse
-          name: restapi
+          name: admin
       spec:
         containers:
+        - image: storage-controller
+          livenessProbe:
+            tcpSocket:
+              port: amqp
+          name: storage-controller
+          ports:
+          - containerPort: 55674
+            name: amqp
+            protocol: TCP
+        - image: ragent
+          livenessProbe:
+            tcpSocket:
+              port: amqp
+          name: ragent
+          ports:
+          - containerPort: 55672
+            name: amqp
+            protocol: TCP
+        - image: configserv
+          livenessProbe:
+            tcpSocket:
+              port: amqp
+          name: configserv
+          ports:
+          - containerPort: 5672
+            name: amqp
+            protocol: TCP
         - image: enmasse-rest
           livenessProbe:
             httpGet:
@@ -901,32 +787,48 @@ objects:
           kind: ImageStreamTag
           name: enmasse-rest:latest
       type: ImageChange
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+        - ragent
+        from:
+          kind: ImageStreamTag
+          name: ragent:latest
+      type: ImageChange
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+        - configserv
+        from:
+          kind: ImageStreamTag
+          name: configserv:latest
+      type: ImageChange
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+        - storage-controller
+        from:
+          kind: ImageStreamTag
+          name: storage-controller:latest
+      type: ImageChange
 - apiVersion: v1
   kind: Service
   metadata:
     labels:
       app: enmasse
-    name: restapi
+    name: admin
   spec:
     ports:
-    - name: http
+    - name: ragent
+      port: 55672
+    - name: restapi
       port: 8080
-      protocol: TCP
-      targetPort: 8080
+    - name: configuration
+      port: 5672
+    - name: storage-controller
+      port: 55674
     selector:
-      name: restapi
-- apiVersion: v1
-  data:
-    json: |
-      {
-          "vanilla-queue": { "templateName":"queue-inmemory" },
-       "vanilla-topic": { "templateName":"topic-inmemory" }
-      }
-  kind: ConfigMap
-  metadata:
-    labels:
-      app: enmasse
-    name: flavor
+      name: admin
 parameters:
 - description: The image to use for the router
   name: ROUTER_REPO
