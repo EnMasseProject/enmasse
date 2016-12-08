@@ -14,7 +14,7 @@ install:
 - gradle assemble
 
 script:
-- gradle build
+- gradle build -i
 - gradle distTar
 - gradle downloadArtemis
 - curl -s https://raw.githubusercontent.com/EnMasseProject/travis-scripts/master/docker-build.sh
