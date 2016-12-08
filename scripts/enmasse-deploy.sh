@@ -114,7 +114,20 @@ fi
 
 oc login $OS_CLUSTER -u $OS_USER
 
-oc new-project $PROJECT
+AVAILABLE_PROJECTS=`oc projects -q`
+
+for proj in $AVAILABLE_PROJECTS
+do
+    if [ "$proj" == "$PROJECT" ]; then
+        oc project $proj
+        break
+    fi
+done
+
+CURRENT_PROJECT=`oc project -q`
+if [ "$CURRENT_PROJECT" != "$PROJECT" ]; then
+    oc new-project $PROJECT
+fi
 
 # oc create sa enmasse -n $PROJECT
 oc policy add-role-to-user view system:serviceaccount:${PROJECT}:default
