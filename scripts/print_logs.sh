@@ -12,6 +12,11 @@ do
     runcmd "oc logs $i"
     if [ "$?" -gt "0" ]
     then
+        runcmd "oc logs -c restapi $i"
+        runcmd "oc logs -c configserv $i"
+        runcmd "oc logs -c ragent $i"
+        runcmd "oc logs -c storage-controller $i"
+        runcmd "oc logs -c broker $i"
         runcmd "oc logs -c broker $i"
         runcmd "oc logs -c router $i"
         runcmd "oc rsh -c router $i qdmanage query --type=address"
