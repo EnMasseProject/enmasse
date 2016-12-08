@@ -33,10 +33,16 @@ Topic.prototype.watch_pods = function () {
         var current = {};
         this.watcher = require('./podwatch.js').watch_pods('address=' + topic.name);
         var add = function (pod) {
-            if (pod.ready && current[pod.name] === undefined) {
-                console.log('pod added for ' + topic.name + ': ' + JSON.stringify(pod));
-                current[pod.name] = pod;
-	        topic.pods.added(pod);
+            if (current[pod.name] === undefined) {
+                if (pod.ready) {
+                    console.log('pod added for ' + topic.name + ': ' + JSON.stringify(pod));
+                    current[pod.name] = pod;
+	            topic.pods.added(pod);
+                } else {
+                    console.log('pod not yet ready for ' + topic.name + ': ' + JSON.stringify(pod));
+                }
+            } else {
+                console.log('pod updated: now ' + JSON.stringify(pod) + ' was ' + JSON.stringify(current[pod.name]));
             }
         };
         this.watcher.on('added', add);

@@ -22,31 +22,40 @@ function SubscriptionLocator(pods) {
 }
 
 SubscriptionLocator.prototype.locate = function (subscription_id, topic) {
-    var broker_list = this.pods.broker_list();
-    return new Promise(function (resolve, reject) {
-        Promise.all(broker_list.map(function (b) { return b.getBoundQueues(topic); } )).then(
-            function (results) {
-                var address = topic;
-                for (var i = 0; i < results.length; i++) {
-                    for (var j = 0; j < results[i].length; j++) {
-                        if (results[i][j].indexOf(subscription_id) >= 0) {
-                            address = topic + '/' + broker_list[i].connection.container_id;
-                            console.log('matched result ' + i + ','  + j + ' of ' + results[i].length + ': ' + results[i][j]);
-                            break;
-                        } else {
-                            console.log('did not match result ' + i + ','  + j + ' of ' + results.length + ': ' + results[i][j]);
+    var pod_list = this.pods.pod_list();
+    if (pod_list === undefined || pod_list.length === 0) {
+        reject("no connected brokers for " + topic);
+    } else {
+        return new Promise(function (resolve, reject) {
+            Promise.all(pod_list.map(function (p) { return p.broker.getBoundQueues(topic + '/' + p.name); } )).then(
+                function (results) {
+                    var found = false;
+                    var address, min;
+                    for (var i = 0; !found && i < results.length; i++) {
+                        for (var j = 0; !found && j < results[i].length; j++) {
+                            if (results[i][j].indexOf(subscription_id) >= 0) {
+                                address = topic + '/' + pod_list[i].name;
+                                found = true;
+                                console.log('matched result ' + i + ','  + j + ' of ' + results[i].length + ': ' + results[i][j]);
+                            } else {
+                                console.log('did not match result ' + i + ','  + j + ' of ' + results.length + ': ' + results[i][j]);
+                            }
+                        }
+                        if (!found && (min === undefined || results[i].length < min)) {
+                            min = results[i].length;
+                            address = topic + '/' + pod_list[i].name;
                         }
                     }
+                    console.log('resolved ' + subscription_id + ' on ' + topic + ' to ' + address);
+                    resolve(address);
                 }
-                console.log('resolved ' + subscription_id + ' on ' + topic + ' to ' + address);
-                resolve(address);
-            }
-        ).catch (
-            function(e) {
-                reject(e);
-            }
-        );
-    });
+            ).catch (
+                function(e) {
+                    reject(e);
+                }
+            );
+        });
+    }
 }
 
 module.exports = function (pods) {
