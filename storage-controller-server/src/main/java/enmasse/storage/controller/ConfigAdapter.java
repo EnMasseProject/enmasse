@@ -18,37 +18,31 @@ package enmasse.storage.controller;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.openshift.restclient.IOpenShiftWatchListener;
-import com.openshift.restclient.IWatcher;
-import com.openshift.restclient.ResourceKind;
-import com.openshift.restclient.model.IConfigMap;
-import com.openshift.restclient.model.IResource;
 import enmasse.storage.controller.admin.ConfigSubscriber;
-import enmasse.storage.controller.openshift.OpenshiftClient;
+import io.fabric8.kubernetes.api.model.ConfigMap;
+import io.fabric8.kubernetes.client.KubernetesClientException;
+import io.fabric8.kubernetes.client.Watch;
+import io.fabric8.kubernetes.client.Watcher;
+import io.fabric8.openshift.client.OpenShiftClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
-
-public class ConfigAdapter implements IOpenShiftWatchListener {
+class ConfigAdapter implements Watcher<ConfigMap> {
     private static final ObjectMapper mapper = new ObjectMapper();
     private static final Logger log = LoggerFactory.getLogger(ConfigAdapter.class.getName());
 
-    private IWatcher watcher;
-    private final OpenshiftClient openshiftClient;
+    private Watch watch;
+    private final OpenShiftClient openshiftClient;
     private final String configName;
     private final ConfigSubscriber configSubscriber;
 
-    public ConfigAdapter(OpenshiftClient openshiftClient, String configName, ConfigSubscriber configSubscriber) {
+    ConfigAdapter(OpenShiftClient openshiftClient, String configName, ConfigSubscriber configSubscriber) {
         this.openshiftClient = openshiftClient;
         this.configName = configName;
         this.configSubscriber = configSubscriber;
     }
 
-    private void configUpdated(IConfigMap configMap) {
-        if (!configName.equals(configMap.getName())) {
-            return;
-        }
+    private void configUpdated(ConfigMap configMap) {
         try {
             if (configMap.getData().containsKey("json")) {
                 log.info("Got new config for " + configName + " with data: " + configMap.getData().get("json"));
@@ -64,53 +58,27 @@ public class ConfigAdapter implements IOpenShiftWatchListener {
 
     }
 
-    public void start() {
-        watcher = openshiftClient.watch(this, ResourceKind.CONFIG_MAP);
+    void start() {
+        ConfigMap initial = openshiftClient.configMaps().withName(configName).get();
+        configUpdated(initial);
+        watch = openshiftClient.configMaps().withName(configName).withResourceVersion(initial.getMetadata().getResourceVersion()).watch(this);
     }
 
-    public void stop() {
-        if (watcher != null) {
-            watcher.stop();
+    void stop() {
+        if (watch != null) {
+            watch.close();
         }
     }
 
     @Override
-    public void connected(List<IResource> resources) {
-        IConfigMap map = null;
-        for (IResource resource : resources) {
-            if (resource.getName().equals(configName)) {
-                map = (IConfigMap)resource;
-            }
-        }
-
-        if (map != null) {
-            configUpdated(map);
+    public void eventReceived(Action action, ConfigMap resource) {
+        if (!action.equals(Action.ERROR)) {
+            configUpdated(resource);
         }
     }
 
     @Override
-    public void disconnected() {
-        log.info("Disconnected, restarting watch");
-        reconnect();
-    }
-
-    private void reconnect() {
-        watcher.stop();
-        try {
-            this.watcher = openshiftClient.watch(this, ResourceKind.CONFIG_MAP);
-        } catch (Exception e) {
-            log.error("Error re-watching on disconnect", e);
-        }
-    }
-
-    @Override
-    public void received(IResource resource, ChangeType change) {
-        configUpdated((IConfigMap)resource);
-    }
-
-    @Override
-    public void error(Throwable err) {
-        log.error("Got error from watcher: " + err.getMessage() + ", reconnecting");
-        reconnect();
+    public void onClose(KubernetesClientException cause) {
+        log.info("Received onClose for watcher", cause);
     }
 }

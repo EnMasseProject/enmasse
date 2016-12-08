@@ -16,45 +16,48 @@
 
 package enmasse.storage.controller.openshift;
 
-import com.openshift.restclient.model.IResource;
 import enmasse.storage.controller.model.Destination;
+import io.fabric8.kubernetes.api.model.HasMetadata;
+import io.fabric8.kubernetes.api.model.KubernetesList;
+import io.fabric8.openshift.client.OpenShiftClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Represents a storage cluster of broker and volume resources for a given destination.
  */
 public class StorageCluster {
+    private static final Logger log = LoggerFactory.getLogger(StorageCluster.class.getName());
 
-    private final OpenshiftClient client;
+    private final OpenShiftClient client;
     private final Destination destination;
-    private final List<IResource> resources;
-    private static final Comparator<IResource> cmp = new ResourceComparator();
+    private final KubernetesList resources;
 
-    public StorageCluster(OpenshiftClient osClient, Destination destination, Collection<IResource> resources) {
+    public StorageCluster(OpenShiftClient osClient, Destination destination, KubernetesList resources) {
         this.client = osClient;
         this.destination = destination;
-        this.resources = new ArrayList<>(resources);
-        Collections.sort(this.resources, cmp);
+        this.resources = resources;
     }
 
     public void create() {
-        client.createResources(resources);
+        log.info("Adding " + resources.getItems().size() + " resources: " + resources.getItems().stream().map(r -> "name=" + r.getMetadata().getName() + ",kind=" + r.getKind()).collect(Collectors.joining(",")));
+        client.lists().create(resources);
     }
 
     public void delete() {
-        client.deleteResources(resources);
+        log.info("Deleting " + resources.getItems().size() + " resources: " + resources.getItems().stream().map(r -> "name=" + r.getMetadata().getName() + ",kind=" + r.getKind()).collect(Collectors.joining(",")));
+        client.lists().delete(resources);
     }
 
     public Destination getDestination() {
         return destination;
     }
 
-    public List<IResource> getResources() {
-        return resources;
+    public List<HasMetadata> getResources() {
+        return resources.getItems();
     }
+
 }

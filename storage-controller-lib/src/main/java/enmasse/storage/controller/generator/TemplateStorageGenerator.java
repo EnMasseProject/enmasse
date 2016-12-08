@@ -16,30 +16,32 @@
 
 package enmasse.storage.controller.generator;
 
-import com.openshift.restclient.model.IResource;
-import com.openshift.restclient.model.template.ITemplate;
 import enmasse.storage.controller.admin.FlavorRepository;
-import enmasse.storage.controller.model.AddressType;
-import enmasse.storage.controller.model.Destination;
-import enmasse.storage.controller.model.Flavor;
-import enmasse.storage.controller.model.LabelKeys;
-import enmasse.storage.controller.model.TemplateParameter;
-import enmasse.storage.controller.openshift.OpenshiftClient;
+import enmasse.storage.controller.model.*;
 import enmasse.storage.controller.openshift.StorageCluster;
+import io.fabric8.kubernetes.api.model.HasMetadata;
+import io.fabric8.kubernetes.api.model.KubernetesList;
+import io.fabric8.openshift.api.model.DoneableTemplate;
+import io.fabric8.openshift.api.model.Template;
+import io.fabric8.openshift.client.OpenShiftClient;
+import io.fabric8.openshift.client.ParameterValue;
+import io.fabric8.openshift.client.dsl.ClientTemplateResource;
 
-import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
  * Generates storage clusters using Openshift templates.
  */
 public class TemplateStorageGenerator implements StorageGenerator {
 
-    private final OpenshiftClient osClient;
+    private final OpenShiftClient osClient;
     private final FlavorRepository flavorRepository;
 
-    public TemplateStorageGenerator(OpenshiftClient osClient, FlavorRepository flavorRepository) {
+    public TemplateStorageGenerator(OpenShiftClient osClient, FlavorRepository flavorRepository) {
         this.osClient = osClient;
         this.flavorRepository = flavorRepository;
     }
@@ -50,46 +52,66 @@ public class TemplateStorageGenerator implements StorageGenerator {
      * @param destination The destination to generate storage definitions for
      */
     public StorageCluster generateStorage(Destination destination) {
-        ITemplate template;
+        KubernetesList items;
         if (destination.storeAndForward()) {
-            template = prepareStoreAndForwardTemplate(destination);
+            items = prepareStoreAndForwardTemplate(destination);
         } else {
-            template = prepareDirectTemplate(destination);
+            items = prepareDirectTemplate(destination);
         }
 
-        Collection<IResource> resources = osClient.processTemplate(template);
-        return new StorageCluster(osClient, destination, resources);
+        return new StorageCluster(osClient, destination, items);
     }
 
-    private ITemplate prepareStoreAndForwardTemplate(Destination destination) {
+    private KubernetesList prepareStoreAndForwardTemplate(Destination destination) {
         Flavor flavor = flavorRepository.getFlavor(destination.flavor(), TimeUnit.SECONDS.toMillis(60));
-        ITemplate template = osClient.getTemplate(flavor.templateName());
-        if (!template.getLabels().containsKey(LabelKeys.ADDRESS_TYPE)) {
+        ClientTemplateResource<Template, KubernetesList, DoneableTemplate> templateProcessor = osClient.templates().withName(flavor.templateName());
+
+        Template template = templateProcessor.get();
+        if (!template.getMetadata().getLabels().containsKey(LabelKeys.ADDRESS_TYPE)) {
             throw new IllegalArgumentException("Template is missing label " + LabelKeys.ADDRESS_TYPE);
         }
-        AddressType.validate(template.getLabels().get(LabelKeys.ADDRESS_TYPE));
+        AddressType.validate(template.getMetadata().getLabels().get(LabelKeys.ADDRESS_TYPE));
 
-        template.updateParameter(TemplateParameter.NAME, nameSanitizer(destination.address()));
-        template.updateParameter(TemplateParameter.ADDRESS, destination.address());
-        for (Map.Entry<String, String> entry : flavor.templateParameters().entrySet()) {
-            template.updateParameter(entry.getKey(), entry.getValue());
-        }
-        template.addObjectLabel(LabelKeys.ADDRESS, destination.address());
-        template.addObjectLabel(LabelKeys.FLAVOR, destination.flavor());
-        template.addObjectLabel(LabelKeys.ADDRESS_TYPE, destination.multicast() ? AddressType.TOPIC.value() : AddressType.QUEUE.value());
-        return template;
+        Map<String, String> paramMap = new LinkedHashMap<>(flavor.templateParameters());
+        paramMap.put(TemplateParameter.NAME, nameSanitizer(destination.address()));
+        paramMap.put(TemplateParameter.ADDRESS, destination.address());
+        paramMap.put(TemplateParameter.MULTICAST, String.valueOf(destination.multicast()));
+
+        ParameterValue parameters[] = paramMap.entrySet().stream()
+                .map(entry -> new ParameterValue(entry.getKey(), entry.getValue()))
+                .collect(Collectors.toList())
+                .toArray(new ParameterValue[0]);
+
+
+        KubernetesList items = templateProcessor.process(parameters);
+        addObjectLabel(items, LabelKeys.ADDRESS, destination.address());
+        addObjectLabel(items, LabelKeys.FLAVOR, destination.flavor());
+        addObjectLabel(items, LabelKeys.ADDRESS_TYPE, destination.multicast() ? AddressType.TOPIC.value() : AddressType.QUEUE.value());
+        return items;
     }
 
-    private ITemplate prepareDirectTemplate(Destination destination) {
+    private void addObjectLabel(KubernetesList items, String labelKey, String labelValue) {
+        for (HasMetadata item : items.getItems()) {
+            Map<String, String> labels = item.getMetadata().getLabels();
+            labels.put(labelKey, labelValue);
+            item.getMetadata().setLabels(labels);
+        }
+    }
+
+    private KubernetesList prepareDirectTemplate(Destination destination) {
         Flavor flavor = new Flavor.Builder().templateName("direct").build();
-        ITemplate template = osClient.getTemplate(flavor.templateName());
-        template.updateParameter(TemplateParameter.NAME, nameSanitizer(destination.address()));
-        template.updateParameter(TemplateParameter.ADDRESS, destination.address());
-        template.updateParameter(TemplateParameter.MULTICAST, String.valueOf(destination.multicast()));
-        template.addObjectLabel(LabelKeys.ADDRESS, destination.address());
-        template.addObjectLabel(LabelKeys.FLAVOR, destination.flavor());
-        template.addObjectLabel(LabelKeys.ADDRESS_TYPE, destination.multicast() ? AddressType.TOPIC.value() : AddressType.QUEUE.value());
-        return template;
+        ClientTemplateResource<Template, KubernetesList, DoneableTemplate> template = osClient.templates().withName(flavor.templateName());
+
+        ParameterValue parameters[] = new ParameterValue[3];
+        parameters[0] = new ParameterValue(TemplateParameter.NAME, nameSanitizer(destination.address()));
+        parameters[1] = new ParameterValue(TemplateParameter.ADDRESS, destination.address());
+        parameters[2] = new ParameterValue(TemplateParameter.MULTICAST, String.valueOf(destination.multicast()));
+
+        KubernetesList items = template.process(parameters);
+        addObjectLabel(items, LabelKeys.ADDRESS, destination.address());
+        addObjectLabel(items, LabelKeys.FLAVOR, destination.flavor());
+        addObjectLabel(items, LabelKeys.ADDRESS_TYPE, destination.multicast() ? AddressType.TOPIC.value() : AddressType.QUEUE.value());
+        return items;
     }
 
     private static String nameSanitizer(String name) {

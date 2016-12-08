@@ -16,37 +16,41 @@
 
 package enmasse.storage.controller.generator;
 
-import com.openshift.restclient.model.template.ITemplate;
 import enmasse.storage.controller.admin.FlavorManager;
 import enmasse.storage.controller.model.AddressType;
 import enmasse.storage.controller.model.Destination;
 import enmasse.storage.controller.model.Flavor;
 import enmasse.storage.controller.model.LabelKeys;
 import enmasse.storage.controller.model.TemplateParameter;
-import enmasse.storage.controller.openshift.OpenshiftClient;
 import enmasse.storage.controller.openshift.StorageCluster;
+import io.fabric8.kubernetes.api.model.*;
+import io.fabric8.kubernetes.client.dsl.ClientMixedOperation;
+import io.fabric8.openshift.api.model.*;
+import io.fabric8.openshift.client.OpenShiftClient;
+import io.fabric8.openshift.client.ParameterValue;
+import io.fabric8.openshift.client.dsl.ClientTemplateResource;
+import io.fabric8.openshift.client.dsl.TemplateOperation;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 public class TemplateStorageGeneratorTest {
-    private OpenshiftClient mockClient;
+    private OpenShiftClient mockClient;
     private FlavorManager flavorManager = new FlavorManager();
     private StorageGenerator generator;
 
     @Before
     public void setUp() {
-        mockClient = mock(OpenshiftClient.class);
+        mockClient = mock(OpenShiftClient.class);
         generator = new TemplateStorageGenerator(mockClient, flavorManager);
         flavorManager.flavorsUpdated(Collections.singletonMap("vanilla", new Flavor.Builder().templateName("test").build()));
     }
@@ -54,57 +58,77 @@ public class TemplateStorageGeneratorTest {
     @Test(expected = IllegalArgumentException.class)
     public void testAddressTypeRequired() {
         Destination dest = new Destination("foo", true, false, "vanilla");
-        ITemplate template = mock(ITemplate.class);
-        when(template.getName()).thenReturn("test");
-        when(template.getLabels()).thenReturn(Collections.emptyMap());
-        when(mockClient.getTemplate("test")).thenReturn(template);
+        Template template = new TemplateBuilder()
+                .withMetadata(new ObjectMetaBuilder()
+                    .withName("test")
+                    .addToLabels("key1", "value1")
+                    .build())
+                .build();
 
-        ArgumentCaptor<ITemplate> arg = ArgumentCaptor.forClass(ITemplate.class);
-        when(mockClient.processTemplate(arg.capture())).thenReturn(Collections.emptyList());
-
+        TemplateOperation templateOp = mock(TemplateOperation.class);
+        ClientTemplateResource templateResource = mock(ClientTemplateResource.class);
+        when(templateOp.list()).thenReturn(new TemplateListBuilder().addToItems(template).build());
+        when(templateOp.withName(anyString())).thenReturn(templateResource);
+        when(templateResource.get()).thenReturn(template);
+        when(mockClient.templates()).thenReturn(templateOp);
         generator.generateStorage(dest);
     }
 
     @Test
     public void testDirect() {
         Destination dest = new Destination("foo.bar_baz.cockooA", false, false, "");
-        Map<String, String> labels = new LinkedHashMap<>();
-        ITemplate template = mock(ITemplate.class);
-        when(template.getName()).thenReturn("direct");
-        when(template.getLabels()).thenReturn(labels);
-        when(mockClient.getTemplate("direct")).thenReturn(template);
-
-        ArgumentCaptor<ITemplate> arg = ArgumentCaptor.forClass(ITemplate.class);
-        when(mockClient.processTemplate(arg.capture())).thenReturn(Collections.emptyList());
-
-        StorageCluster clusterList = generator.generateStorage(dest);
+        ArgumentCaptor<ParameterValue> captor = ArgumentCaptor.forClass(ParameterValue.class);
+        StorageCluster clusterList = generateCluster(dest, captor);
         assertThat(clusterList.getDestination(), is(dest));
-        verify(template).addObjectLabel(LabelKeys.ADDRESS, dest.address());
-        verify(template).addObjectLabel(LabelKeys.FLAVOR, dest.flavor());
-        verify(template).addObjectLabel(LabelKeys.ADDRESS_TYPE, AddressType.QUEUE.value());
-        verify(template).updateParameter(TemplateParameter.ADDRESS, dest.address());
-        verify(template).updateParameter(TemplateParameter.NAME, "foo-bar-baz-cockooa");
+        List<HasMetadata> resources = clusterList.getResources();
+        assertThat(resources.size(), is(1));
+        for (HasMetadata resource : resources) {
+            Map<String, String> rlabel = resource.getMetadata().getLabels();
+            assertThat(rlabel.get(LabelKeys.ADDRESS), is(dest.address()));
+            assertThat(rlabel.get(LabelKeys.FLAVOR), is(dest.flavor()));
+            assertThat(rlabel.get(LabelKeys.ADDRESS_TYPE), is(AddressType.QUEUE.value()));
+        }
+        List<ParameterValue> parameters = captor.getAllValues();
+        assertThat(parameters.size(), is(3));
     }
 
     @Test
     public void testStoreAndForward() {
         Destination dest = new Destination("foo.bar", true, false, "vanilla");
+        ArgumentCaptor<ParameterValue> captor = ArgumentCaptor.forClass(ParameterValue.class);
+        StorageCluster clusterList = generateCluster(dest, captor);
+        assertThat(clusterList.getDestination(), is(dest));
+        List<HasMetadata> resources = clusterList.getResources();
+        assertThat(resources.size(), is(1));
+        for (HasMetadata resource : resources) {
+            Map<String, String> rlabel = resource.getMetadata().getLabels();
+            assertThat(rlabel.get(LabelKeys.ADDRESS), is(dest.address()));
+            assertThat(rlabel.get(LabelKeys.FLAVOR), is(dest.flavor()));
+            assertThat(rlabel.get(LabelKeys.ADDRESS_TYPE), is(AddressType.QUEUE.value()));
+        }
+        List<ParameterValue> parameters = captor.getAllValues();
+        assertThat(parameters.size(), is(3));
+    }
+
+    private StorageCluster generateCluster(Destination destination, ArgumentCaptor<ParameterValue> captor) {
         Map<String, String> labels = new LinkedHashMap<>();
         labels.put(LabelKeys.ADDRESS_TYPE, AddressType.QUEUE.value());
-        ITemplate template = mock(ITemplate.class);
-        when(template.getName()).thenReturn("test");
-        when(template.getLabels()).thenReturn(labels);
-        when(mockClient.getTemplate("test")).thenReturn(template);
+        Template template = new TemplateBuilder()
+                .withMetadata(new ObjectMetaBuilder()
+                    .withName("vanilla")
+                    .withLabels(labels)
+                    .build())
+                .build();
 
-        ArgumentCaptor<ITemplate> arg = ArgumentCaptor.forClass(ITemplate.class);
-        when(mockClient.processTemplate(arg.capture())).thenReturn(Collections.emptyList());
+        TemplateOperation templateOp = mock(TemplateOperation.class);
+        ClientTemplateResource templateResource = mock(ClientTemplateResource.class);
+        when(templateOp.list()).thenReturn(new TemplateListBuilder().addToItems(template).build());
+        when(templateOp.withName(anyString())).thenReturn(templateResource);
+        when(templateResource.get()).thenReturn(template);
+        when(templateResource.process(captor.capture())).thenReturn(new KubernetesListBuilder().addNewConfigMapItem().withNewMetadata().withName("testmap").endMetadata().endConfigMapItem().build());
+        when(mockClient.templates()).thenReturn(templateOp);
 
-        StorageCluster clusterList = generator.generateStorage(dest);
-        assertThat(clusterList.getDestination(), is(dest));
-        verify(template).addObjectLabel(LabelKeys.ADDRESS, dest.address());
-        verify(template).addObjectLabel(LabelKeys.FLAVOR, dest.flavor());
-        verify(template).addObjectLabel(LabelKeys.ADDRESS_TYPE, AddressType.QUEUE.value());
-        verify(template).updateParameter(TemplateParameter.ADDRESS, dest.address());
-        verify(template).updateParameter(TemplateParameter.NAME, "foo-bar");
+        return generator.generateStorage(destination);
     }
+
 }

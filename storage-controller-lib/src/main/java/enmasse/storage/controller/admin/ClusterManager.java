@@ -19,7 +19,6 @@ package enmasse.storage.controller.admin;
 import com.fasterxml.jackson.databind.JsonNode;
 import enmasse.storage.controller.generator.StorageGenerator;
 import enmasse.storage.controller.model.Destination;
-import enmasse.storage.controller.openshift.OpenshiftClient;
 import enmasse.storage.controller.openshift.StorageCluster;
 import enmasse.storage.controller.parser.AddressConfigParser;
 import org.slf4j.Logger;
@@ -36,16 +35,16 @@ import java.util.stream.Collectors;
 public class ClusterManager {
     private static final Logger log = LoggerFactory.getLogger(ClusterManager.class.getName());
 
-    private final OpenshiftClient openshiftClient;
+    private final OpenShiftHelper helper;
     private final StorageGenerator generator;
 
-    public ClusterManager(OpenshiftClient openshiftClient, StorageGenerator generator) {
-        this.openshiftClient = openshiftClient;
+    public ClusterManager(OpenShiftHelper openshiftHelper, StorageGenerator generator) {
+        this.helper = openshiftHelper;
         this.generator = generator;
     }
 
     public void destinationsUpdated(Collection<Destination> destinations) {
-        List<StorageCluster> clusterList = openshiftClient.listClusters();
+        List<StorageCluster> clusterList = helper.listClusters();
         log.info("Brokers got updated to " + destinations.size() + " destinations, we have " + clusterList.size() + " destinations: " + clusterList.stream().map(StorageCluster::getDestination).collect(Collectors.toList()));
         createBrokers(clusterList, destinations);
         deleteBrokers(clusterList, destinations);

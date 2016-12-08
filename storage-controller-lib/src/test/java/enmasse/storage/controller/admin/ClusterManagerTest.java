@@ -19,8 +19,8 @@ package enmasse.storage.controller.admin;
 import enmasse.storage.controller.generator.StorageGenerator;
 import enmasse.storage.controller.model.Destination;
 import enmasse.storage.controller.model.Flavor;
-import enmasse.storage.controller.openshift.OpenshiftClient;
 import enmasse.storage.controller.openshift.StorageCluster;
+import io.fabric8.kubernetes.api.model.KubernetesList;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -34,17 +34,17 @@ import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.*;
 
 public class ClusterManagerTest {
-    private OpenshiftClient mockClient;
+    private OpenShiftHelper mockHelper;
     private ClusterManager manager;
     private FlavorManager flavorManager = new FlavorManager();
     private StorageGenerator mockGenerator;
 
     @Before
     public void setUp() {
-        mockClient = mock(OpenshiftClient.class);
+        mockHelper = mock(OpenShiftHelper.class);
         mockGenerator = mock(StorageGenerator.class);
 
-        manager = new ClusterManager(mockClient, mockGenerator);
+        manager = new ClusterManager(mockHelper, mockGenerator);
         flavorManager.flavorsUpdated(Collections.singletonMap("vanilla", new Flavor.Builder().templateName("test").build()));
     }
 
@@ -53,7 +53,7 @@ public class ClusterManagerTest {
         Destination queue = new Destination("myqueue", true, false, "vanilla");
         StorageCluster cluster = mock(StorageCluster.class);
 
-        when(mockClient.listClusters()).thenReturn(Collections.emptyList());
+        when(mockHelper.listClusters()).thenReturn(Collections.emptyList());
         when(mockGenerator.generateStorage(queue)).thenReturn(cluster);
         ArgumentCaptor<Destination> arg = ArgumentCaptor.forClass(Destination.class);
 
@@ -67,8 +67,8 @@ public class ClusterManagerTest {
     @Test
     public void testNodesAreRetained() {
         Destination queue = new Destination("myqueue", true, false, "vanilla");
-        StorageCluster existing = new StorageCluster(mockClient, queue, Collections.emptyList());
-        when(mockClient.listClusters()).thenReturn(Collections.singletonList(existing));
+        StorageCluster existing = new StorageCluster(mockHelper.getClient(), queue, new KubernetesList());
+        when(mockHelper.listClusters()).thenReturn(Collections.singletonList(existing));
 
         Destination newQueue = new Destination("newqueue", true, false, "vanilla");
         StorageCluster newCluster = mock(StorageCluster.class);
@@ -93,7 +93,7 @@ public class ClusterManagerTest {
         StorageCluster newCluster = mock(StorageCluster.class);
         when(newCluster.getDestination()).thenReturn(newQueue);
 
-        when(mockClient.listClusters()).thenReturn(Arrays.asList(existing, newCluster));
+        when(mockHelper.listClusters()).thenReturn(Arrays.asList(existing, newCluster));
 
 
         manager.destinationsUpdated(Arrays.asList(newQueue));

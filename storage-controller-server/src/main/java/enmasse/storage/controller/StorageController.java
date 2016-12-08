@@ -16,16 +16,14 @@
 
 package enmasse.storage.controller;
 
-import com.openshift.restclient.ClientBuilder;
-import com.openshift.restclient.IClient;
 import enmasse.storage.controller.admin.ClusterManager;
 import enmasse.storage.controller.admin.FlavorManager;
+import enmasse.storage.controller.admin.OpenShiftHelper;
 import enmasse.storage.controller.generator.TemplateStorageGenerator;
-import enmasse.storage.controller.openshift.OpenshiftClient;
-import io.netty.handler.codec.http.HttpResponseStatus;
+import io.fabric8.openshift.client.DefaultOpenShiftClient;
+import io.fabric8.openshift.client.OpenShiftClient;
+import io.fabric8.openshift.client.OpenShiftConfigBuilder;
 import io.vertx.core.Vertx;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
@@ -41,15 +39,16 @@ public class StorageController implements Runnable, AutoCloseable {
     public StorageController(StorageControllerOptions options) throws IOException {
         this.vertx = Vertx.vertx();
 
-        IClient osClient = new ClientBuilder(options.openshiftUrl())
-                .usingToken(options.openshiftToken())
-                .build();
+        OpenShiftClient osClient = new DefaultOpenShiftClient(new OpenShiftConfigBuilder()
+                .withMasterUrl(options.openshiftUrl())
+                .withOauthToken(options.openshiftToken())
+                .withNamespace(options.openshiftNamespace())
+                .build());
 
-        OpenshiftClient openshiftClient = new OpenshiftClient(osClient, options.openshiftNamespace());
         this.flavorManager = new FlavorManager();
-        this.clusterManager = new ClusterManager(openshiftClient, new TemplateStorageGenerator(openshiftClient, flavorManager));
+        this.clusterManager = new ClusterManager(new OpenShiftHelper(osClient), new TemplateStorageGenerator(osClient, flavorManager));
         this.server = new AMQPServer(clusterManager, options.port());
-        this.flavorWatcher = new ConfigAdapter(openshiftClient, "flavor", flavorManager::configUpdated);
+        this.flavorWatcher = new ConfigAdapter(osClient, "flavor", flavorManager::configUpdated);
     }
 
     public void run() {

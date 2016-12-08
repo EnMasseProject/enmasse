@@ -1,7 +1,7 @@
 description = 'Storage Controller Server'
 dependencies {
     compile project(':storage-controller-lib')
-    compile "com.openshift:openshift-restclient-java:${openshiftRestclientVersion}"
+    compile "io.fabric8:openshift-client:${openshiftClientVersion}"
     compile "io.vertx:vertx-core:${vertxVersion}"
     compile "io.vertx:vertx-proton:${vertxVersion}"
     compile "org.slf4j:slf4j-api:${slf4jVersion}"
