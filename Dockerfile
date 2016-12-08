@@ -1,4 +1,4 @@
-FROM fedora:23
+FROM fedora:25
 
 RUN dnf -y install which java-1.8.0-openjdk libaio python gettext hostname iputils && dnf clean all -y && mkdir -p /var/run/artemis/
 
