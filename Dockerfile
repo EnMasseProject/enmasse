@@ -1,6 +1,6 @@
 FROM openjdk:8-jre
 
-ADD build/distributions/configserv.tar.gz /
+ADD build/distributions/configserv.tar /
 
 EXPOSE 5672
 
