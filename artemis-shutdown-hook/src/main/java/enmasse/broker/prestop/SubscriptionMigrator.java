@@ -19,13 +19,7 @@ package enmasse.broker.prestop;
 import enmasse.discovery.Endpoint;
 import enmasse.discovery.Host;
 import io.vertx.core.Vertx;
-import io.vertx.proton.ProtonClient;
-import io.vertx.proton.ProtonConnection;
-import io.vertx.proton.ProtonLinkOptions;
-import io.vertx.proton.ProtonMessageHandler;
-import io.vertx.proton.ProtonReceiver;
-import io.vertx.proton.ProtonSender;
-import javafx.util.Pair;
+import io.vertx.proton.*;
 import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.messaging.Source;
 import org.apache.qpid.proton.amqp.messaging.Target;
@@ -50,18 +44,27 @@ public class SubscriptionMigrator implements Callable<SubscriptionMigrator> {
     public SubscriptionMigrator(Vertx vertx, String address, String queueName, Host from, Host to, BrokerManager localBroker) {
         this.vertx = vertx;
         this.address = address;
-        Pair<String, String> pair = decomposeQueueNameForDurableSubscription(queueName);
+        QueueName decomposedName = decomposeQueueNameForDurableSubscription(queueName);
         this.queueName = queueName;
         this.from = from;
         this.to = to;
         this.localBroker = localBroker;
-        this.clientId = pair.getKey();
-        this.subscriptionName = pair.getValue();
+        this.clientId = decomposedName.clientId;
+        this.subscriptionName = decomposedName.subscriptionName;
+    }
+
+    private static class QueueName {
+        String clientId;
+        String subscriptionName;
+        QueueName(String clientId, String subscriptionName) {
+            this.clientId = clientId;
+            this.subscriptionName = subscriptionName;
+        }
     }
 
     // This code is stolen from Artemis internals so that we can decompose the queue name in the same way. This will not be necessary once we can use global link names.
     private static final char SEPARATOR = '.';
-    private static Pair<String, String> decomposeQueueNameForDurableSubscription(final String queueName) {
+    private static QueueName decomposeQueueNameForDurableSubscription(final String queueName) {
         StringBuffer[] parts = new StringBuffer[2];
         int currentPart = 0;
 
@@ -102,9 +105,7 @@ public class SubscriptionMigrator implements Callable<SubscriptionMigrator> {
             parts[0] = new StringBuffer();
         }
 
-        Pair<String, String> pair = new Pair<>(parts[0].toString(), parts[1].toString());
-
-        return pair;
+        return new QueueName(parts[0].toString(), parts[1].toString());
     }
 
 
