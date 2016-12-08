@@ -4,7 +4,7 @@
 
 This repository contains
    * Dockerfile for building container image
-   * Startup scripts for Artemis running in containers
+   * Startup scripts and configuration for Artemis running in containers
    * Shutdown hooks for use when running in OpenShift
    * Launcher for blocking SIGTERM in OpenShift
 
