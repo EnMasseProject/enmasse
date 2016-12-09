@@ -145,6 +145,26 @@ describe('subscription services', function() {
             });
         });
     });
+
+    it('simple message routed subscription without to field', function(done) {
+        var sender = new_connection().open_sender({target:{address:'mytopic', capabilities: ['topic']}});
+        var client = new_connection();
+        var address = container.generate_uuid();
+        var ctrl = client.open_sender('$subctrl');
+        var recv = client.open_receiver(address);
+        ctrl.send({correlation_id:address, subject:'subscribe', body:'mytopic'});
+        ctrl.once('accepted', function (context) {
+            sender.send({body:'test1'});
+        });
+        recv.on('message', function (context) {
+            assert.equal(context.message.body, 'test1');
+            ctrl.send({correlation_id:address, subject:'close'});
+            ctrl.once('accepted', function (context) {
+                done();
+            });
+        });
+    });
+
     it('simple message routed subscription with array', function(done) {
         var sender = new_connection().open_sender({target:{address:'mytopic', capabilities: ['topic']}});
         var client = new_connection();
