@@ -769,8 +769,7 @@ objects:
             protocol: TCP
         - image: enmasse-rest
           livenessProbe:
-            httpGet:
-              path: "/v1/enmasse/addresses"
+            tcpSocket:
               port: http
           name: restapi
           ports:

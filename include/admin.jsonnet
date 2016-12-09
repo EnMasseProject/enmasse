@@ -85,8 +85,7 @@ local common = import "common.jsonnet";
                 }
               ],
               "livenessProbe": {
-                "httpGet": {
-                  "path": "/v1/enmasse/addresses",
+                "tcpSocket": {
                   "port": "http"
                 }
               }

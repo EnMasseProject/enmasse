@@ -10,6 +10,7 @@ local restapi = import "include/restapi.jsonnet";
 local common = import "include/common.jsonnet";
 local flavor = import "include/flavor.jsonnet";
 local messagingService = import "include/messaging-service.jsonnet";
+local admin = import "include/admin.jsonnet";
 {
   "messaging-service.json": messagingService.generate(false, false),
   "tls-messaging-service.json": messagingService.generate(true, false),
@@ -35,4 +36,5 @@ local messagingService = import "include/messaging-service.jsonnet";
   "restapi-service.json": restapi.service,
   "flavor.json": flavor.generate(false),
   "tls-flavor.json": flavor.generate(true),
+  "admin-dc.json": admin.deployment
 }
