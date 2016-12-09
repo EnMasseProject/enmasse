@@ -68,7 +68,7 @@ Here is an example config with all 4 variants that you can save to `addresses.js
 Each address that set store-and-forward=true must also refer to a flavor. See below on how to create
 your own flavors. To deploy this configuration, you must currently use a barebone client like curl:
 
-    curl -X PUT -H "content-type: application/json" --data-binary @addresses.json http://$(oc get service -o jsonpath='{.spec.clusterIP}' restapi):8080/v1/enmasse/addresses
+    curl -X PUT -H "content-type: application/json" --data-binary @addresses.json http://$(oc get service -o jsonpath='{.spec.clusterIP}' admin):8080/v1/enmasse/addresses
 
 This will connect to the EnMasse REST API to deploy the address config.
 
