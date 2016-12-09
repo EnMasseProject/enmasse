@@ -91,7 +91,8 @@ public class AmqpWillMessage {
 
                 if (message.getHeader() != null) {
                     // if qos annotation isn't present, fallback to "durable" header field
-                    qos = !message.getHeader().getDurable() ? MqttQoS.AT_MOST_ONCE : MqttQoS.AT_LEAST_ONCE;
+                    qos = ((message.getHeader().getDurable() == null) || !message.getHeader().getDurable())
+                            ? MqttQoS.AT_MOST_ONCE : MqttQoS.AT_LEAST_ONCE;
                 } else {
                     qos = MqttQoS.AT_MOST_ONCE;
                 }
