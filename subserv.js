@@ -160,7 +160,7 @@ function subreqs(input) {
 
 function handle_control_message(context) {
     console.log('received message: ' + context.message);
-    if (context.message.to === SUBCTRL) {
+    if (context.message.to === SUBCTRL || (context.receiver.target && context.receiver.target.address === SUBCTRL)) {
         var subscription_id = context.message.correlation_id;
         var accept = function () {
             console.log(request_string(context.message) + ' succeeded');
@@ -279,7 +279,7 @@ amqp.listen({port:5672, properties:connection_properties});
 var sender;
 if (process.env.MESSAGING_SERVICE_HOST) {
     var conn = amqp.connect({host:process.env.MESSAGING_SERVICE_HOST, port:process.env.MESSAGING_SERVICE_PORT, properties:connection_properties, id:'messaging-service'});
-    conn.open_receiver({autoaccept: false, source:SUBCTRL});
+    conn.open_receiver({autoaccept: false, source:SUBCTRL, target:SUBCTRL});
     sender = conn.open_sender({target:{}});
     conn.on('sender_open', function (context) {
         console.log('opened anonymous sender');
