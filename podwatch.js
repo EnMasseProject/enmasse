@@ -74,7 +74,13 @@ function get_pod_handler() {
                 status: o.object.status.phase
             };
             if (o.object.status.conditions) {
-                pod.ready = o.object.status.conditions[0].status === 'True';
+                console.log(JSON.stringify(o.object.status.conditions));
+                for (var i = 0; i < o.object.status.conditions.length; i++) {
+                    var condition = o.object.status.conditions[i];
+                    if (condition.type === 'Ready') {
+                        pod.ready = o.object.status.conditions[i].status === 'True';
+                    }
+                }
             }
             if (o.object.spec.containers) {
                 pod.ports = {};

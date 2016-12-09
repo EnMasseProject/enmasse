@@ -30,6 +30,7 @@ function get_broker_port(pod) {
 };
 
 function Pod(pod) {
+    this.name = pod.name;
     this.broker = artemis.connect({'id':pod.name, 'host':pod.ip, 'port':get_broker_port(pod)});
 };
 
