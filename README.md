@@ -1,6 +1,6 @@
 # Setting up EnMasse
 
-<b>NOTE: For an End-2-End example for setting up EnMasse, see [Getting Started](https://github.com/EnMasseProject/enmasse/blob/master/getting-started/e2e-example.md). This document is exposing more low level details that may quickly get outdated.</b>
+<b>NOTE: For an End-2-End example for setting up EnMasse, see [Getting Started](https://github.com/EnMasseProject/enmasse/blob/master/getting-started/README.md). This document is exposing more low level details that may quickly get outdated.</b>
 
 # Preqrequisites
 
@@ -100,7 +100,7 @@ like this:
 
 Save your config to a file, i.e. ```addresses.json``` and deploy it using curl:
     
-    curl -X PUT -H "content-type: application/json" --data-binary @addresses.json http://$(oc get service -o jsonpath='{.spec.clusterIP}' restapi):8080/v1/enmasse/addresses
+    curl -X PUT -H "content-type: application/json" --data-binary @addresses.json http://$(oc get service -o jsonpath='{.spec.clusterIP}' admin):8080/v1/enmasse/addresses
 
 The REST API will deploy the configuration to the storage controller, which will create and delete brokers to
 match the desired state.
@@ -125,14 +125,12 @@ The flavor map can be changed in a similar fashion to the address config:
 EnMasse provides a benchmarking suite, ebench, that can run alongside the EnMasse cluster or
 on a separate set of machines. The suite is composed of an agent that sends messages to a specific
 address and a collector that aggregates metrics from multiple agents. To start an agent and a
-collector:
+collector, invoke the benchmark template:
 
-    oc create -f ebench-agent-dc.yaml
-    oc create -f ebench-collector.yaml
+    oc process -f include/benchmark-template.json | oc create -f -
 
 The agent and collector is parameterized using environment variables defined in the specification
 file. 
 
 You can scale the number of agents by adjusting the number of replicas, and the collector will
 automatically pick up the changes and display aggregated results for all agents running.
-
