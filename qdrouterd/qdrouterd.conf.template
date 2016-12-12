@@ -23,6 +23,7 @@
 router {
     mode: interior
     id: Router.${HOSTNAME}
+    workerThreads: ${WORKER_THREADS}
 }
 
 listener {
