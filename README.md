@@ -11,6 +11,7 @@ This repository contains
 
 ## Build instructions
 
+    git submodule update --init
     gradle buildArtemis assemble build distTar downloadArtemis
 
 
