@@ -38,7 +38,7 @@ public class AmqpSubscriptionServiceEndpoint {
 
     private static final Logger LOG = LoggerFactory.getLogger(AmqpSubscriptionServiceEndpoint.class);
 
-    public static final String SUBSCRIPTION_SERVICE_ENDPOINT = "$mqtt.subscriptionservice";
+    public static final String SUBSCRIPTION_SERVICE_ENDPOINT = "$subctrl";
     
     private ProtonSender sender;
 
@@ -137,7 +137,7 @@ public class AmqpSubscriptionServiceEndpoint {
      */
     public void open() {
 
-        // attach sender link to $mqtt.subscriptionservice
+        // attach sender link to $subctrl
         this.sender
                 .setQoS(ProtonQoS.AT_LEAST_ONCE)
                 .open();

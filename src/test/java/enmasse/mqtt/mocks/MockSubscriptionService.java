@@ -52,7 +52,7 @@ public class MockSubscriptionService extends AbstractVerticle {
 
     private static final Logger LOG = LoggerFactory.getLogger(MockSubscriptionService.class);
 
-    private static final String SUBSCRIPTION_SERVICE_ENDPOINT = "$mqtt.subscriptionservice";
+    private static final String SUBSCRIPTION_SERVICE_ENDPOINT = "$subctrl";
     private static final String CONTAINER_ID = "subscription-service";
 
     private String connectAddress;
