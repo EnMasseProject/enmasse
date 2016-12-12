@@ -40,8 +40,8 @@ public class MqttFrontend extends AbstractVerticle {
 
     private String bindAddress;
     private int listenPort;
-    private String connectAddress;
-    private int connectPort;
+    private String messagingServiceHost;
+    private int messagingServicePort;
 
     private MqttServer server;
 
@@ -74,24 +74,24 @@ public class MqttFrontend extends AbstractVerticle {
     /**
      * Set the address for connecting to the AMQP services
      *
-     * @param connectAddress    address for AMQP connections
+     * @param messagingServiceHost    address for AMQP connections
      * @return  current MQTT Frontend instance
      */
-    @Value(value = "${enmasse.mqtt.connectaddress:0.0.0.0}")
-    public MqttFrontend setConnectAddress(String connectAddress) {
-        this.connectAddress = connectAddress;
+    @Value(value = "${messaging.service.host:0.0.0.0}")
+    public MqttFrontend setMessagingServiceHost(String messagingServiceHost) {
+        this.messagingServiceHost = messagingServiceHost;
         return this;
     }
 
     /**
      * Set the port for connecting to the AMQP services
      *
-     * @param connectPort   port for AMQP connections
+     * @param messagingServicePort   port for AMQP connections
      * @return  current MQTT Frontend instance
      */
-    @Value(value = "${enmasse.mqtt.connectport:5672}")
-    public MqttFrontend setConnectPort(int connectPort) {
-        this.connectPort = connectPort;
+    @Value(value = "${messaging.service.port:5672}")
+    public MqttFrontend setMessagingServicePort(int messagingServicePort) {
+        this.messagingServicePort = messagingServicePort;
         return this;
     }
 
@@ -142,7 +142,7 @@ public class MqttFrontend extends AbstractVerticle {
             amqpBridge.close();
             LOG.info("Closed AMQP bridge for client {}", amqpBridge.id());
 
-        }).open(this.connectAddress, this.connectPort, done -> {
+        }).open(this.messagingServiceHost, this.messagingServicePort, done -> {
 
             if (done.succeeded()) {
 

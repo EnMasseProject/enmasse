@@ -46,8 +46,8 @@ public class MockWillService extends AbstractVerticle {
     private static final String WILL_SERVICE_ENDPOINT = "$mqtt.willservice";
     private static final String CONTAINER_ID = "will-service";
 
-    private String connectAddress;
-    private int connectPort;
+    private String internalServiceHost;
+    private int internalServicePort;
 
     private ProtonClient client;
     private ProtonConnection connection;
@@ -61,7 +61,7 @@ public class MockWillService extends AbstractVerticle {
 
         this.client = ProtonClient.create(this.vertx);
 
-        this.client.connect(this.connectAddress, this.connectPort, done -> {
+        this.client.connect(this.internalServiceHost, this.internalServicePort, done -> {
 
             if (done.succeeded()) {
 
@@ -199,22 +199,22 @@ public class MockWillService extends AbstractVerticle {
     /**
      * Set the address for connecting to the AMQP services
      *
-     * @param connectAddress    address for AMQP connections
+     * @param internalServiceHost    address for AMQP connections
      * @return  current Mock Will Service instance
      */
-    public MockWillService setConnectAddress(String connectAddress) {
-        this.connectAddress = connectAddress;
+    public MockWillService setInternalServiceHost(String internalServiceHost) {
+        this.internalServiceHost = internalServiceHost;
         return this;
     }
 
     /**
      * Set the port for connecting to the AMQP services
      *
-     * @param connectPort   port for AMQP connections
+     * @param internalServicePort   port for AMQP connections
      * @return  current Mock Will Service instance
      */
-    public MockWillService setConnectPort(int connectPort) {
-        this.connectPort = connectPort;
+    public MockWillService setInternalServicePort(int internalServicePort) {
+        this.internalServicePort = internalServicePort;
         return this;
     }
 

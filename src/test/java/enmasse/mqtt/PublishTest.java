@@ -113,7 +113,7 @@ public class PublishTest extends MockMqttFrontendTestBase {
         // AMQP client connects for receiving the published message
         ProtonClient client = ProtonClient.create(this.vertx);
 
-        client.connect(AMQP_CLIENTS_LISTENER_ADDRESS, AMQP_CLIENTS_LISTENER_PORT, done -> {
+        client.connect(MESSAGING_SERVICE_HOST, MESSAGING_SERVICE_PORT, done -> {
 
             if (done.succeeded()) {
 

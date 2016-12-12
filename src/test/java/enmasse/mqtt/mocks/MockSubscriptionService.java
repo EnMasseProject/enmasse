@@ -55,8 +55,8 @@ public class MockSubscriptionService extends AbstractVerticle {
     private static final String SUBSCRIPTION_SERVICE_ENDPOINT = "$subctrl";
     private static final String CONTAINER_ID = "subscription-service";
 
-    private String connectAddress;
-    private int connectPort;
+    private String internalServiceHost;
+    private int internalServicePort;
 
     private ProtonClient client;
     private ProtonConnection connection;
@@ -66,7 +66,7 @@ public class MockSubscriptionService extends AbstractVerticle {
 
         this.client = ProtonClient.create(this.vertx);
 
-        this.client.connect(this.connectAddress, this.connectPort, done -> {
+        this.client.connect(this.internalServiceHost, this.internalServicePort, done -> {
 
             if (done.succeeded()) {
 
@@ -239,22 +239,22 @@ public class MockSubscriptionService extends AbstractVerticle {
     /**
      * Set the address for connecting to the AMQP services
      *
-     * @param connectAddress    address for AMQP connections
+     * @param internalServiceHost    address for AMQP connections
      * @return  current Mock Subscription Service instance
      */
-    public MockSubscriptionService setConnectAddress(String connectAddress) {
-        this.connectAddress = connectAddress;
+    public MockSubscriptionService setInternalServiceHost(String internalServiceHost) {
+        this.internalServiceHost = internalServiceHost;
         return this;
     }
 
     /**
      * Set the port for connecting to the AMQP services
      *
-     * @param connectPort   port for AMQP connections
+     * @param internalServicePort   port for AMQP connections
      * @return  current Mock Subscription Service instance
      */
-    public MockSubscriptionService setConnectPort(int connectPort) {
-        this.connectPort = connectPort;
+    public MockSubscriptionService setInternalServicePort(int internalServicePort) {
+        this.internalServicePort = internalServicePort;
         return this;
     }
 }

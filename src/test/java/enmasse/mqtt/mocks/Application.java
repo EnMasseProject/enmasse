@@ -57,20 +57,20 @@ public class Application {
         // create and setup mock Broker instance
         this.broker = new MockBroker();
         this.broker
-                .setConnectAddress(AMQP_SERVICES_LISTENER_ADDRESS)
-                .setConnectPort(AMQP_SERVICES_LISTENER_PORT);
+                .setInternalServiceHost(AMQP_SERVICES_LISTENER_ADDRESS)
+                .setInternalServicePort(AMQP_SERVICES_LISTENER_PORT);
 
         // create and setup mock Will Service instance
         this.willService = new MockWillService();
         this.willService
-                .setConnectAddress(AMQP_SERVICES_LISTENER_ADDRESS)
-                .setConnectPort(AMQP_SERVICES_LISTENER_PORT);
+                .setInternalServiceHost(AMQP_SERVICES_LISTENER_ADDRESS)
+                .setInternalServicePort(AMQP_SERVICES_LISTENER_PORT);
 
         // create and setup mock Subscription Service instance
         this.subscriptionService = new MockSubscriptionService();
         this.subscriptionService
-                .setConnectAddress(AMQP_SERVICES_LISTENER_ADDRESS)
-                .setConnectPort(AMQP_SERVICES_LISTENER_PORT);
+                .setInternalServiceHost(AMQP_SERVICES_LISTENER_ADDRESS)
+                .setInternalServicePort(AMQP_SERVICES_LISTENER_PORT);
 
         // start and deploy components
         this.vertx.deployVerticle(this.broker);

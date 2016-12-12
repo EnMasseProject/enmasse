@@ -39,11 +39,11 @@ public abstract class MockMqttFrontendTestBase {
     public static final String MQTT_BIND_ADDRESS = "localhost";
     public static final int MQTT_LISTEN_PORT = 1883;
 
-    public static final String AMQP_CLIENTS_LISTENER_ADDRESS = "localhost";
-    public static final int AMQP_CLIENTS_LISTENER_PORT = 5672;
+    public static final String MESSAGING_SERVICE_HOST = "localhost";
+    public static final int MESSAGING_SERVICE_PORT = 5672;
 
-    public static final String AMQP_SERVICES_LISTENER_ADDRESS = "localhost";
-    public static final int AMQP_SERVICES_LISTENER_PORT = 5673;
+    public static final String INTERNAL_SERVICE_HOST = "localhost";
+    public static final int INTERNAL_SERVICE_PORT = 5673;
 
     protected Vertx vertx;
     protected MockWillService willService;
@@ -61,26 +61,26 @@ public abstract class MockMqttFrontendTestBase {
         this.mqttFrontend
                 .setBindAddress(MQTT_BIND_ADDRESS)
                 .setListenPort(MQTT_LISTEN_PORT)
-                .setConnectAddress(AMQP_CLIENTS_LISTENER_ADDRESS)
-                .setConnectPort(AMQP_CLIENTS_LISTENER_PORT);
+                .setMessagingServiceHost(MESSAGING_SERVICE_HOST)
+                .setMessagingServicePort(MESSAGING_SERVICE_PORT);
 
         // create and setup mock Broker instance
         this.broker = new MockBroker();
         this.broker
-                .setConnectAddress(AMQP_SERVICES_LISTENER_ADDRESS)
-                .setConnectPort(AMQP_SERVICES_LISTENER_PORT);
+                .setInternalServiceHost(INTERNAL_SERVICE_HOST)
+                .setInternalServicePort(INTERNAL_SERVICE_PORT);
 
         // create and setup mock Will Service instance
         this.willService = new MockWillService();
         this.willService
-                .setConnectAddress(AMQP_SERVICES_LISTENER_ADDRESS)
-                .setConnectPort(AMQP_SERVICES_LISTENER_PORT);
+                .setInternalServiceHost(INTERNAL_SERVICE_HOST)
+                .setInternalServicePort(INTERNAL_SERVICE_PORT);
 
         // create and setup mock Subscription Service instance
         this.subscriptionService = new MockSubscriptionService();
         this.subscriptionService
-                .setConnectAddress(AMQP_SERVICES_LISTENER_ADDRESS)
-                .setConnectPort(AMQP_SERVICES_LISTENER_PORT);
+                .setInternalServiceHost(INTERNAL_SERVICE_HOST)
+                .setInternalServicePort(INTERNAL_SERVICE_PORT);
 
         // start and deploy components
         this.vertx.deployVerticle(this.broker, context.asyncAssertSuccess());
