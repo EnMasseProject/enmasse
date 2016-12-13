@@ -61,7 +61,11 @@ public class OpenShift {
     }
 
     public Endpoint getRestEndpoint() {
-        return getEndpoint("admin", "restapi");
+        if (isFullTemplate()) {
+            return getEndpoint("restapi", "http");
+        } else {
+            return getEndpoint("admin", "restapi");
+        }
     }
 
     public void setDeploymentReplicas(String name, int numReplicas) {
@@ -88,5 +92,19 @@ public class OpenShift {
                 .getItems().stream()
                     .filter(pod -> !pod.getMetadata().getName().endsWith("-deploy"))
                     .collect(Collectors.toList());
+    }
+
+    // Heuristic: if restapi service exists, we are running with a full template
+    private boolean isFullTemplate() {
+        Service service = client.services().withName("admin").get();
+        return service == null;
+    }
+
+    public int getExpectedPods() {
+        if (isFullTemplate()) {
+            return 6; // config, storagecontroller, restapi, ragent, qdrouterd, subscription
+        } else {
+            return 3; // admin, qdrouterd, subscription
+        }
     }
 }

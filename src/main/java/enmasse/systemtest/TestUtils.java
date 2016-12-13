@@ -129,6 +129,7 @@ public class TestUtils {
             destination.getFlavor().ifPresent(e -> entry.put("flavor", e));
         }
         Endpoint restApi = openShift.getRestEndpoint();
+
         CountDownLatch latch = new CountDownLatch(1);
         HttpClientRequest request = httpClient.put(restApi.getPort(), restApi.getHost(), "/v1/enmasse/addresses");
         request.putHeader("content-type", "application/json");
@@ -139,7 +140,7 @@ public class TestUtils {
         });
         request.end(Buffer.buffer(mapper.writeValueAsBytes(config)));
         latch.await(30, TimeUnit.SECONDS);
-        int expectedPods = 3;
+        int expectedPods = openShift.getExpectedPods();
         for (Destination destination : destinations) {
             if (destination.isStoreAndForward()) {
                 waitForBrokerPod(openShift, destination.getAddress(), budget);
