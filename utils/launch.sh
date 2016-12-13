@@ -21,7 +21,7 @@ JAVA_OPTS="${JAVA_OPTS} -Djava.security.egd=file:/dev/./urandom"
 function configure() {
     local instanceDir=$1
     local instanceId=$2
-    export CONTAINER_ID=$instanceId
+    export CONTAINER_ID=$HOSTNAME
     if [ ! -d "$INSTANCE" ]; then
         $ARTEMIS_HOME/bin/artemis create $instanceDir --user admin --password admin --role admin --allow-anonymous --java-options "$JAVA_OPTS"
         cp $CONFIG_TEMPLATES/broker_header.xml /tmp/broker.xml
