@@ -767,7 +767,12 @@ objects:
           - containerPort: 5672
             name: amqp
             protocol: TCP
-        - image: enmasse-rest
+        - env:
+          - name: STORAGE_CONTROLLER_SERVICE_HOST
+            value: localhost
+          - name: STORAGE_CONTROLLER_SERVICE_PORT
+            value: '55674'
+          image: enmasse-rest
           livenessProbe:
             tcpSocket:
               port: http

@@ -78,6 +78,14 @@ local common = import "common.jsonnet";
             {
               "image": "enmasse-rest",
               "name": "restapi",
+              "env": [{
+                        "name": "STORAGE_CONTROLLER_SERVICE_HOST",
+                        "value": "localhost"
+                      },
+                      {
+                        "name": "STORAGE_CONTROLLER_SERVICE_PORT",
+                        "value": "55674"
+                      }],
               "ports": [
                 {
                   "name": "http",
