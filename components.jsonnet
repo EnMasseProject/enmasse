@@ -11,6 +11,7 @@ local common = import "include/common.jsonnet";
 local flavor = import "include/flavor.jsonnet";
 local messagingService = import "include/messaging-service.jsonnet";
 local admin = import "include/admin.jsonnet";
+local mqttFrontend = import "include/mqtt-frontend.jsonnet";
 {
   "messaging-service.json": messagingService.generate(false, false),
   "tls-messaging-service.json": messagingService.generate(true, false),
@@ -36,5 +37,8 @@ local admin = import "include/admin.jsonnet";
   "restapi-service.json": restapi.service,
   "flavor.json": flavor.generate(false),
   "tls-flavor.json": flavor.generate(true),
-  "admin-dc.json": admin.deployment
+  "admin-dc.json": admin.deployment,
+  "mqtt-frontend-image-stream.json": mqttFrontend.imagestream("enmasseproject/mqtt-frontend"),
+  "mqtt-frontend-dc.json": mqttFrontend.deployment,
+  "mqtt-frontend-service.json": mqttFrontend.service
 }

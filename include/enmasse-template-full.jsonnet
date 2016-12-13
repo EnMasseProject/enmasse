@@ -13,6 +13,7 @@ local addressConfig = import "addresses.json";
 local flavorConfig = import "flavor.jsonnet";
 local common = import "common.jsonnet";
 local restapi = import "restapi.jsonnet";
+local mqttFrontend = import "mqtt-frontend.jsonnet";
 {
   generate(secure, with_storage_controller)::
   {
@@ -45,7 +46,10 @@ local restapi = import "restapi.jsonnet";
                  ragent.service,
                  subserv.imagestream("${SUBSERV_REPO}"),
                  subserv.deployment,
-                 subserv.service ],
+                 subserv.service,
+                 mqttFrontend.imagestream("${MQTT_FRONTEND_REPO}"),
+                 mqttFrontend.deployment,
+                 mqttFrontend.service ],
     local storage_controller_resources = [
                  storageController.imagestream("${STORAGE_CONTROLLER_REPO}"),
                  storageController.deployment,
@@ -111,6 +115,11 @@ local restapi = import "restapi.jsonnet";
       {
         "name": "RESTAPI_HOSTNAME",
         "description": "The hostname to use for the exposed route for the REST API"
+      },
+      {
+        "name" : "MQTT_FRONTEND_REPO",
+        "description": "The image to use for the MQTT frontend",
+        "value": "enmasseproject/mqtt-frontend"
       }
     ]
 

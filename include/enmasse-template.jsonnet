@@ -14,6 +14,7 @@ local flavorConfig = import "flavor.jsonnet";
 local restapi = import "restapi.jsonnet";
 local common = import "common.jsonnet";
 local admin = import "admin.jsonnet";
+local mqttFrontend = import "mqtt-frontend.jsonnet";
 {
   generate(secure)::
   {
@@ -43,6 +44,9 @@ local admin = import "admin.jsonnet";
                  subserv.imagestream("${SUBSERV_REPO}"),
                  subserv.deployment,
                  subserv.service,
+                 mqttFrontend.imagestream("${MQTT_FRONTEND_REPO}"),
+                 mqttFrontend.deployment,
+                 mqttFrontend.service,
                  restapi.imagestream("${RESTAPI_REPO}"),
                  storageController.imagestream("${STORAGE_CONTROLLER_REPO}"),
                  flavorConfig.generate(secure),
@@ -103,6 +107,11 @@ local admin = import "admin.jsonnet";
       {
         "name": "RESTAPI_HOSTNAME",
         "description": "The hostname to use for the exposed route for the REST API"
+      },
+      {
+        "name" : "MQTT_FRONTEND_REPO",
+        "description": "The image to use for the MQTT frontend",
+        "value": "enmasseproject/mqtt-frontend"
       }
     ]
 
