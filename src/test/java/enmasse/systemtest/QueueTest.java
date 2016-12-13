@@ -22,6 +22,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
@@ -32,13 +34,19 @@ public class QueueTest extends VertxTestBase {
         Destination dest = Destination.queue("myqueue");
         deploy(dest);
         EnMasseClient client = createQueueClient();
-        List<String> msgs = Arrays.asList("foo", "bar", "baz");
+        List<String> msgs = generateMessages(1024);
 
         Future<Integer> numSent = client.sendMessages(dest.getAddress(), msgs);
         assertThat(numSent.get(1, TimeUnit.MINUTES), is(msgs.size()));
 
         Future<List<String>> received = client.recvMessages(dest.getAddress(), msgs.size());
         assertThat(received.get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
+    }
+
+    private List<String> generateMessages(int numMessages) {
+        return IntStream.range(0, numMessages)
+                .mapToObj(num -> "msg" + num)
+                .collect(Collectors.toList());
     }
 
     @Test
