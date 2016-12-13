@@ -8,8 +8,11 @@
 
 ### Note for contributors
 
-To make changes, edit the jsonnet files in root and include/ folders. To generate the templates, run
-'make'. 
+To make changes, edit the jsonnet files in root and include/ folders. To generate the templates,
+run:
+
+    git submodule update --init
+    make
 
 ## Optional: Setup openshift test cluster
 
