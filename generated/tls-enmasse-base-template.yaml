@@ -604,7 +604,7 @@ objects:
   kind: Service
   metadata:
     annotations:
-      service.alpha.openshift.io/dependencies: '[{"name":"configuration","namespace":"","kind":"Service"},{"name":"ragent","namespace":"","kind":"Service"},{"name":"subscription","namespace":"","kind":"Service"},{"name":"restapi","namespace":"","kind":"Service"},{"name":"storage-controller","namespace":"","kind":"Service"}]'
+      service.alpha.openshift.io/dependencies: '[{"name":"configuration","namespace":"","kind":"Service"},{"name":"ragent","namespace":"","kind":"Service"},{"name":"subscription","namespace":"","kind":"Service"},{"name":"restapi","namespace":"","kind":"Service"},{"name":"storage-controller","namespace":"","kind":"Service"},{"name":"mqtt-frontend","namespace":"","kind":"Service"}]'
       service.alpha.openshift.io/infrastructure: 'true'
     labels:
       app: enmasse
@@ -823,6 +823,72 @@ objects:
     selector:
       name: subserv
 - apiVersion: v1
+  kind: ImageStream
+  metadata:
+    labels:
+      app: enmasse
+    name: mqtt-frontend
+  spec:
+    dockerImageRepository: "${MQTT_FRONTEND_REPO}"
+    importPolicy:
+      scheduled: true
+    tags:
+    - from:
+        kind: DockerImage
+        name: "${MQTT_FRONTEND_REPO}:latest"
+      name: latest
+- apiVersion: v1
+  kind: DeploymentConfig
+  metadata:
+    labels:
+      app: enmasse
+      name: mqtt-frontend
+    name: mqtt-frontend
+  spec:
+    replicas: 1
+    selector:
+      name: mqtt-frontend
+    template:
+      metadata:
+        labels:
+          app: enmasse
+          name: mqtt-frontend
+      spec:
+        containers:
+        - image: mqtt-frontend
+          livenessProbe:
+            tcpSocket:
+              port: mqtt
+          name: mqtt-frontend
+          ports:
+          - containerPort: 1883
+            name: mqtt
+            protocol: TCP
+    triggers:
+    - type: ConfigChange
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+        - mqtt-frontend
+        from:
+          kind: ImageStreamTag
+          name: mqtt-frontend:latest
+      type: ImageChange
+- apiVersion: v1
+  kind: Service
+  metadata:
+    labels:
+      app: enmasse
+    name: mqtt-frontend
+  spec:
+    ports:
+    - name: mqtt
+      port: 1883
+      protocol: TCP
+      targetPort: 1883
+    selector:
+      name: mqtt-frontend
+- apiVersion: v1
   kind: Route
   metadata:
     labels:
@@ -870,3 +936,6 @@ parameters:
   name: MESSAGING_HOSTNAME
 - description: The hostname to use for the exposed route for the REST API
   name: RESTAPI_HOSTNAME
+- description: The image to use for the MQTT frontend
+  name: MQTT_FRONTEND_REPO
+  value: enmasseproject/mqtt-frontend
