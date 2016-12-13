@@ -129,8 +129,12 @@ ConnectedRouter.prototype.check_connectors = function (routers) {
     console.log('checking connectors on router ' + this.container_id + ', missing=' + missing + ', stale=' + stale);
 
 
-    var do_create = this.create_connector.bind(this);
-    var do_delete = this.delete_connector.bind(this);
+    var num_connectors = 1;
+    if (process.env.ROUTER_NUM_CONNECTORS) {
+        num_connectors = process.env.ROUTER_NUM_CONNECTORS;
+    }
+    var do_create = this.forall_connectors.bind(this, num_connectors, this.create_connector.bind(this));
+    var do_delete = this.forall_connectors.bind(this, num_connectors, this.delete_connector.bind(this));
     var work = missing.map(do_create).concat(stale.map(do_delete));
     if (work.length) {
         //if made changes, requery when they are complete
@@ -220,18 +224,27 @@ function created(message) { if (message.statusCode !== 201) return message.statu
 
 function deleted(message) { if (message.statusCode !== 204) return message.statusDescription; };
 
-ConnectedRouter.prototype.create_connector = function (host_port) {
+ConnectedRouter.prototype.forall_connectors = function (num_connectors, connector_operation, host_port) {
+    var futures = [];
+    for (var i = 0; i < num_connectors; i++) {
+        var connector_name = host_port + "-" + i;
+        futures.push(connector_operation(host_port, connector_name));
+    }
+    return futures.reduce(futurejs.and)
+}
+
+ConnectedRouter.prototype.create_connector = function (host_port, connector_name) {
     var future = futurejs.future(created);
     var parts = host_port.split(':');
-    console.log('creating connector to ' + host_port + ' on router ' + this.container_id);
-    this.create_entity('connector', host_port, {role:'inter-router', addr:parts[0], port:parts[1]}, future.as_callback());
+    console.log('creating connector ' + connector_name + ' to ' + host_port + ' on router ' + this.container_id);
+    this.create_entity('connector', connector_name, {role:'inter-router', addr:parts[0], port:parts[1]}, future.as_callback());
     return future;
 };
 
-ConnectedRouter.prototype.delete_connector = function (host_port) {
+ConnectedRouter.prototype.delete_connector = function (connector_name) {
     var future = futurejs.future(deleted);
-    console.log('deleting connector to ' + host_port + ' on router ' + this.container_id);
-    this.delete_entity('connector', host_port, future.as_callback());
+    console.log('deleting connector to ' + connector_name + ' on router ' + this.container_id);
+    this.delete_entity('connector', connector_name, future.as_callback());
     return future;
 };
 
