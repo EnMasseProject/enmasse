@@ -60,7 +60,7 @@ A timeout could be used to detect links inactivity for detaching them.
 
 ## From AMQP network to MQTT client
 
-The FE has an attached link with receiver role to the unique client address $mqtt.to.[client-id] where all published messages are conveyed (see "Connection"). This link has QoS as AT_LEAST_ONCE so in all cases, the messages received from the AMQP network is "unsettled" (even for QoS level 0).
+The FE has an attached link with receiver role to the unique client publish address $mqtt.to.[client-id].publish where all published messages are conveyed (see "Connection"). This link has QoS as AT_LEAST_ONCE so in all cases, the messages received from the AMQP network is "unsettled" (even for QoS level 0).
 
 The FE receives published messages as _AMQP_PUBLISH_ messages (see previous paragraph).
 

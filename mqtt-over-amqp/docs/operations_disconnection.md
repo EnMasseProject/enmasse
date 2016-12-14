@@ -16,7 +16,7 @@ Regarding the “will” publishing on disconnection, the two following scenario
 * on clean disconnection by MQTT client, the FE detaches the permanent link to the WS (on $mqtt.willservice address) with no “error” condition. In this way the WS knows that “will” information for that link-name (so related client-id) needs to be cleaned but no “will” publishing happens.
 * on brute disconnection by MQTT, client, the FE detaches the permanent link to the WS (on $mqtt.willservice address) with an “error” condition. In this way the WS knows that before cleaning the “will” information for that link-name (so related client-id), it needs to start publishing the “will” message.
 
-![Disconnect](../images/05_disconnect.png)
+![Disconnect](../images/06_disconnect.png)
 
 ![Brute Disconnect](../images/07_brute_disconnection.png)
 

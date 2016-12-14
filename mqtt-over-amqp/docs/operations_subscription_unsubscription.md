@@ -9,13 +9,13 @@ The FE needs an attached link with sender role to the Subscription Service contr
 
 The MQTT client sends a _SUBSCRIBE_ message to FE which maps the _SUBSCRIBE_ message to the following AMQP message.
 
-**AMQP_SUBSCRIBE** : sent to the SS in order to ask establishing a route between the topics and unique client address $mqtt.to.[client-id].
+**AMQP_SUBSCRIBE** : sent to the SS in order to ask establishing a route between the topics and unique client publish address $mqtt.to.[client-id].publish.
 
 | DATA | TYPE | VALUE | FROM |
 | ---- | ---- | ----- | ---- |
 | subject | system property | "subscribe" | - |
 | message-id | system property | MessageId | MQTT SUBSCRIBE |
-| correlation-id | system property | $mqtt.to.[client-id] | - |
+| correlation-id | system property | $mqtt.to.[client-id].publish | - |
 | payload | AMQP value | Map with topics (as key) and qos (as value) | MQTT SUSBCRIBE |
 
 > the payload is a map with topics used as key and the related qos as corresponding value
@@ -42,7 +42,7 @@ The FE could also receive the following _AMQP_PUBLISH_ message (as a retained me
 
 Starting from now, when subscribed/attached, the FE receives published messages on the unique client address :
 
-* $mqtt.to.[client-id]
+* $mqtt.to.[client-id].publish
 
 The AMQP message is used by FE for building the _PUBLISH_ message to send to the MQTT client (see “Publishing”).
 
@@ -52,13 +52,13 @@ The AMQP message is used by FE for building the _PUBLISH_ message to send to the
 
 The MQTT client sends an _UNSUBSCRIBE_ message to FE which maps to the following AMQP message.
 
-**AMQP_UNSUBSCRIBE** : sent to the SS in order to ask removing the established route between the topic and unique client address $mqtt.to.[client-id].
+**AMQP_UNSUBSCRIBE** : sent to the SS in order to ask removing the established route between the topic and unique client publish address $mqtt.to.[client-id].publish.
 
 | DATA | TYPE | VALUE | FROM |
 | ---- | ---- | ----- | ---- |
 | subject | system property | "unsubscribe" | - |
 | message-id | system property | MessageId | MQTT UNSUBSCRIBE |
-| correlation-id | system property | $mqtt.to.[client-id] | - |
+| correlation-id | system property | $mqtt.to.[client-id].publish | - |
 | payload | AMQP value | List of topics | MQTT UNSUBSCRIBE |
 
 The _AMQP_UNSUBSCRIBE_ is sent as "unsettled", in order to know that the Subscription Service has received it (with related disposition). When FE receives tha related disposition (with "settled") it builds the _UNSUBACK_ message for MQTT client.

@@ -14,6 +14,6 @@ Every single service can be implemented as stand-alone software component or we 
 
 ![Overall](../images/01_overall.png)
 
-Following the main connections established by the services for providing their "control" addresses.
+Following the main connections established by the services for providing their "control" addresses and connections established for every MQTT client.
 
 ![Connections](../images/02_connections.png)

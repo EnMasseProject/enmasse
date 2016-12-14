@@ -12,12 +12,20 @@ The FE needs to attach a link with sender role to the Subscription Service contr
 * rcv-settle-mode : first (0)
 * snd-settle-mode : unsettled (0)
 
-The FE needs to attach a link with receiver role to the unique client address $mqtt.to.[client-id]. It should have QoS as AT_LEAST_ONCE so with :
+The FE needs to attach a link with receiver role to the unique client control address $mqtt.to.[client-id].control. It should have QoS as AT_LEAST_ONCE so with :
+
+* rcv-settle-mode : first (0)
+* snd-settle-mode : unsettled (0)
+
+This address is useful for receiving control messages (i.e. from the Subscription Service).
+
+The FE needs to attach a link with receiver role to the unique client publish address $mqtt.to.[client-id].publish. It should have QoS as AT_LEAST_ONCE so with :
 
 * rcv-settle-mode : first (0)
 * snd-settle-mode : unsettled (0)
 
 or using "mixed" (2) for the "snd-settle-mode", in order to allow the sender on the other side to send messages both "settle" and "unsettled" on the same link.
+This address is used for receiving published messages.
 
 ## "Will" information to Will Service
 
@@ -62,8 +70,8 @@ If the "clean session" from _CONNECT_ packet is FALSE.
 | DATA | TYPE | VALUE | FROM |
 | ---- | ---- | ----- | ---- |
 | subject | system property | "list" | - |
-| correlation-id | system property | $mqtt.to.[client-id] | - |
-| reply-to | system property | $mqtt.to.[client-id] | - |
+| correlation-id | system property | $mqtt.to.[client-id].publish | - |
+| reply-to | system property | $mqtt.to.[client-id].control | - |
 
 The _AMQP_LIST_ is sent as "unsettled", in order to know that the Subscription Service has received it (with related disposition).
 The relation between the _AMQP_LIST_ message and the related client, at AMQP level, is inferred by the link name attached to the SS control address.
@@ -83,7 +91,7 @@ After sending the _AMQP_LIST_, the FE receives the following message as reply.
 
 The _AMQP_SUBSCRIPTIONS_ is sent as "unsettled", in order to know that the FE has received it (with related disposition).
 
-If a session is present and there are subscriptions for the client-id, the SS re-establishes the routes from each topic to the $mqtt.to.[client-id] automatically (see “Subscription/Unsubscription”). No need for the SS to send subscriptions list to the FE in order to re-subscribe.
+If a session is present and there are subscriptions for the client-id, the SS re-establishes the routes from each topic to the $mqtt.to.[client-id].publish automatically (see “Subscription/Unsubscription”). No need for the SS to send subscriptions list to the FE in order to re-subscribe.
 
 > the SS should send the _AMQP_SUBSCRIPTIONS_ message to FE before re-establishing routes for the topics because it should be first message received by FE (in order to build the _CONNACK_) if there are messages stored when the client was offline that will be puslished now on re-connect.
 
@@ -98,7 +106,7 @@ If the "clean session" from _CONNECT_ packet is TRUE.
 | DATA | TYPE | VALUE | FROM |
 | ---- | ---- | ----- | ---- |
 | subject | system property | "close" | - |
-| correlation-id | system property | $mqtt.to.[client-id] | - |
+| correlation-id | system property | $mqtt.to.[client-id].publish | - |
 
 ![Connect Subscription Service](../images/05_connect_ss_close.png)
 
