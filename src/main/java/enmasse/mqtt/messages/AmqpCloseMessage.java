@@ -50,7 +50,7 @@ public class AmqpCloseMessage {
             throw new IllegalArgumentException(String.format("AMQP message subject is no s%", AMQP_SUBJECT));
         }
 
-        return new AmqpCloseMessage(AmqpHelper.getClientIdFromUniqueAddress((String) message.getCorrelationId()));
+        return new AmqpCloseMessage(AmqpHelper.getClientIdFromPublishAddress((String) message.getCorrelationId()));
     }
 
     /**
@@ -64,7 +64,7 @@ public class AmqpCloseMessage {
 
         message.setSubject(AMQP_SUBJECT);
 
-        message.setCorrelationId(String.format(AmqpHelper.AMQP_CLIENT_ADDRESS_TEMPLATE, this.clientId));
+        message.setCorrelationId(String.format(AmqpHelper.AMQP_CLIENT_PUBLISH_ADDRESS_TEMPLATE, this.clientId));
 
         return message;
     }
