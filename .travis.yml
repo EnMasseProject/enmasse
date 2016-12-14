@@ -1,14 +1,23 @@
 sudo: required
-
 language: java
 jdk:
-  - oraclejdk8
+- oraclejdk8
 notifications:
   email: false
-
 services:
-  - docker
-
+- docker
 before_install:
-  - docker pull ppatierno/qdrouterd:0.7.0-repo
-  - docker run -d --name qdrouterd -p 5672:5672 -p 5673:5673 -v $TRAVIS_BUILD_DIR/src/test/resources:/conf ppatierno/qdrouterd:0.7.0-repo qdrouterd --conf /conf/qdrouterd.conf
+- docker pull ppatierno/qdrouterd:0.7.0-repo
+- docker run -d --name qdrouterd -p 5672:5672 -p 5673:5673 -v $TRAVIS_BUILD_DIR/src/test/resources:/conf
+  ppatierno/qdrouterd:0.7.0-repo qdrouterd --conf /conf/qdrouterd.conf
+after_success:
+- curl -s https://raw.githubusercontent.com/EnMasseProject/travis-scripts/master/docker-build.sh
+  | bash /dev/stdin enmasseproject/mqtt-frontend .
+- curl -s https://raw.githubusercontent.com/EnMasseProject/travis-scripts/master/trigger-travis.sh
+  | bash /dev/stdin
+env:
+  global:
+  - COMMIT=${TRAVIS_COMMIT::8}
+  - secure: u4c9iRUFD6Sz5mcsFp0jFY6zAf/vpxVeJs5LPi2Q/sU3ByFHi9ZllU9GMEB/ECnJqK9Mth8s82K5QtKkNpYAqZadResUlheKTXFyAhkKR2c5dQ2Vjc/wWGyRr2QV042IvvMBfnrzyr6+zaG334aKJ2C3tVJWQHmfvzktIln838CTfgnBN9NShnQ0oRr7EkQBngdyuSPybCJPch+87//HKT7TnOm6Wt9Y/w1F5CzOYjcf1IkG32p/fzGxn+wPOEA4Q5LO8syW7F4uKnBzJv0U7aF8Pp9FwDMIF5llXYLxRvj2/4Ly7JctUiQ6jGiTrbhODMBiQTFOsRfDYPlnyefW1Wv7WSRX+Vj9kFxRjYrw4ls6BBpOzDKkOeHEk6ZLJyXk61eJZGruVqwKyknu+keo5gO9/vsfFau9XJyK6zCPSy3kBjpjvEtbeej4o+OdgbZHBg0wPSfArNN3Qqwkb8sfJIm83MBksxAXq/e6z38ukalAmPai3CN5flf6fXBpjGb7d4pH3HGb+J56SkrcwM00/3S+0IX2e39yCKZ7qSle/cNEARrsKtWV/068s5whRcvKzfj2/MfC+L21gYJjFEHtWM369sg7T9KSckFLIurJU1/xrL8JfUh7GyshYx0/DK3zh0hpfKTT3cYCcTCGD/IkraKm+2R94Am671AD0KCXRPY=
+  - secure: mz4KFuPiTqMpfI6om3jmkyIRCJtW6LMeMh48p3hXnqSJKRIf7KvU22MeGnP09j3QJz7iy5GAaYvAWJm0UsIvVQIXGMCrFWQsgWZbtG+Ed6ElQp9b4BZz9aFpHOPnahG5FVJ0MZ8TBxNKuBrXG5f6dfxS5PS2AEBuck/JF2qL4imBrApkf6F+BWk/UZVnMsyQeLD1HqJjRSFy3QQUUWvzTED8VvRpsM+EOYAE8iSBMW/H1DwN1gf4SxvBB7MNMaw9eyy7V29HemCSWSdfMj290VzmKIOXqOSrplGYf9EXUWWwK6x/tL/sjBAE2TUJWjcUp+6ijeu2EGOFp3SWPOWOPSafdWod3iGMJiGrOY5GPzflYKdOqdkqpZg9bUH+1B+ug4GSDjqk8q2EGbjdyTM6iyjIJLrmqfQ1PWA/P5yZr/PImhd3mkUFo/jyej2g/lkPsTUMooB/A1HaF3mFZ55vc78fetaKSBl6x81P+GaKJ2rP7TIpJ108o36+KgmR7a7AIz33CdGgSq4vw2eyvwNW+RIqr+Z/pXOclmO1hihCg++YSUlCF77njJlLAgwB58SNea2RUJ2TjZP+zvEBhgBwsN+oVpR1LsAmWn8HN6ZZoJp+GDU/+lxOhZ2epePAaBmgjlKLfUnaAH/GyWkQSU0zDDHqVds95nt7Y0620UahXNc=
+  - secure: DL+lQbO0Ym/3wZVjfcVJcdI/ZcOG5jXJnfKSBZM2HSIaq0TCOet+cimKOCoxmHs6hAqLFywnhQzbV+MpkmPAGUh1ApgEPiiVDkSsDQOkxrL82Y0tUvL9mhvgrl1F8Y/FU42P3k9k2V/wXz3fW+2d20MfYyyO9BVWRqupYfNn/ElI0AEbvuaFFCRmo1eCPmldwYWY89blX3o9loJ/7ErDfv2AaQpgS4seH/wktO3uvQ3dmfe0x5FwWG/jpLtgtfjetVhG6LIPdoCay/dBLXiAZYiRMsOT9rnBgC8HlkkjBX0aoeAPX7FptqZgDI8w+L4oW5cpIh9VCwlLZpSLWuKJyxr8du+6yB5pc6ev7KC9sWXssm9FZho+VhIK5nyTr4LAo5vfqreSQUTc5WtkvR20vJwpSuVXU57HSq7pUXRtqr6I3sRkAQ8N89K3so60DCjEX/xRtDNGoA77WWcMANOoUIk2R5+ozR1wKe14iFG7fuhxwSLdIzU4gCldGkoQ7D/fV21M5TtNOmF8SUyOql1qX8PaO297+VmaCbTXVgLPFf3CqqNbqgJcL5L/tefgPq/sUdBZrHohlzRVJI29X0+di2yy7lF8YJsin9hgReNoH/kYJgraape01JZEMYa1/tzszJW8qVFFTUt68nF54JzvmxN78OGZOgL2IMx1cymb9BU=
