@@ -18,6 +18,7 @@ package enmasse.mqtt;
 
 import enmasse.mqtt.endpoints.AmqpPublishEndpoint;
 import enmasse.mqtt.endpoints.AmqpPublisher;
+import enmasse.mqtt.endpoints.AmqpReceiver;
 import enmasse.mqtt.endpoints.AmqpReceiverEndpoint;
 import enmasse.mqtt.endpoints.AmqpSubscriptionServiceEndpoint;
 import enmasse.mqtt.endpoints.AmqpWillServiceEndpoint;
@@ -134,6 +135,8 @@ public class AmqpBridge {
 
                         this.rcvEndpoint.publishHandler(this::publishHandler);
                         this.rcvEndpoint.pubrelHandler(this::pubrelHandler);
+                        // open unique client publish address receiver
+                        this.rcvEndpoint.openPublish();
 
                         AmqpSubscriptionsMessage amqpSubscriptionsMessage = ar.result();
 
@@ -207,7 +210,6 @@ public class AmqpBridge {
                         AmqpCloseMessage amqpCloseMessage =
                                 new AmqpCloseMessage(this.mqttEndpoint.clientIdentifier());
 
-                        //this.ssEndpoint.sendClose(amqpCloseMessage, sessionFuture.completer());
                         this.ssEndpoint.sendClose(amqpCloseMessage, closeAsyncResult -> {
 
                             // in case of AMQP_CLOSE, the connection completes on its disposition
@@ -544,10 +546,13 @@ public class AmqpBridge {
     private void setupAmqpEndpoits() {
 
         // NOTE : Will Service endpoint is opened only if MQTT client provides will information
+        //        The receiver on the unique client publish address will be opened only after
+        //        connection is established (and CONNACK sent to the MQTT client)
 
-        // setup and open AMQP endpoint for receiving on unique client address
-        ProtonReceiver rcvReceiver = this.connection.createReceiver(String.format(AmqpReceiverEndpoint.CLIENT_ENDPOINT_TEMPLATE, this.mqttEndpoint.clientIdentifier()));
-        this.rcvEndpoint = new AmqpReceiverEndpoint(rcvReceiver);
+        // setup and open AMQP endpoint for receiving on unique client control/publish addresses
+        ProtonReceiver receiverControl = this.connection.createReceiver(String.format(AmqpReceiverEndpoint.CLIENT_CONTROL_ENDPOINT_TEMPLATE, this.mqttEndpoint.clientIdentifier()));
+        ProtonReceiver receiverPublish = this.connection.createReceiver(String.format(AmqpReceiverEndpoint.CLIENT_PUBLISH_ENDPOINT_TEMPLATE, this.mqttEndpoint.clientIdentifier()));
+        this.rcvEndpoint = new AmqpReceiverEndpoint(new AmqpReceiver(receiverControl, receiverPublish));
 
         // setup and open AMQP endpoint to Subscription Service
         ProtonSender ssSender = this.connection.createSender(AmqpSubscriptionServiceEndpoint.SUBSCRIPTION_SERVICE_ENDPOINT);
@@ -557,7 +562,7 @@ public class AmqpBridge {
         ProtonSender senderPubrel = this.connection.createSender(String.format(AmqpPublishEndpoint.AMQP_CLIENT_PUBREL_ENDPOINT_TEMPLATE, this.mqttEndpoint.clientIdentifier()));
         this.pubEndpoint = new AmqpPublishEndpoint(senderPubrel);
 
-        this.rcvEndpoint.open();
+        this.rcvEndpoint.openControl();
         this.ssEndpoint.open();
         this.pubEndpoint.open();
     }

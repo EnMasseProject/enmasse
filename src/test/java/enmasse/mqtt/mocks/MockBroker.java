@@ -71,7 +71,7 @@ public class MockBroker extends AbstractVerticle {
 
     // topic -> receiver
     private Map<String, ProtonReceiver> receivers;
-    // client-id -> sender (to $mqtt.to.<client-id>)
+    // client-id -> sender (to $mqtt.to.<client-id>.publish)
     private Map<String, ProtonSender> senders;
     // topic -> client-id lists (subscribers)
     private Map<String, List<String>> subscriptions;
@@ -331,11 +331,11 @@ public class MockBroker extends AbstractVerticle {
                 this.receivers.put(amqpTopicSubscription.topic(), receiver);
             }
 
-            // create a sender to the unique client address for forwarding
+            // create a sender to the unique client publish address for forwarding
             // messages when received on requested topic
             if (!this.senders.containsKey(amqpSubscribeMessage.clientId())) {
 
-                ProtonSender sender = this.connection.createSender(String.format(AmqpHelper.AMQP_CLIENT_ADDRESS_TEMPLATE, amqpSubscribeMessage.clientId()));
+                ProtonSender sender = this.connection.createSender(String.format(AmqpHelper.AMQP_CLIENT_PUBLISH_ADDRESS_TEMPLATE, amqpSubscribeMessage.clientId()));
 
                 // QoS AT_LEAST_ONCE as requested by the receiver side
                 sender.setQoS(ProtonQoS.AT_LEAST_ONCE)

@@ -23,7 +23,6 @@ import io.netty.handler.codec.mqtt.MqttQoS;
 import io.vertx.core.Handler;
 import io.vertx.proton.ProtonDelivery;
 import io.vertx.proton.ProtonQoS;
-import io.vertx.proton.ProtonReceiver;
 import org.apache.qpid.proton.amqp.messaging.Accepted;
 import org.apache.qpid.proton.message.Message;
 import org.slf4j.Logger;
@@ -39,9 +38,10 @@ public class AmqpReceiverEndpoint {
 
     private static final Logger LOG = LoggerFactory.getLogger(AmqpReceiverEndpoint.class);
 
-    public static final String CLIENT_ENDPOINT_TEMPLATE = "$mqtt.to.%s";
+    public static final String CLIENT_CONTROL_ENDPOINT_TEMPLATE = "$mqtt.to.%s.control";
+    public static final String CLIENT_PUBLISH_ENDPOINT_TEMPLATE = "$mqtt.to.%s.publish";
 
-    private ProtonReceiver receiver;
+    private AmqpReceiver receiver;
 
     // handler called when AMQP_SUBSCRIPTIONS is received
     private Handler<AmqpSubscriptionsMessage> subscriptionsHandler;
@@ -55,9 +55,9 @@ public class AmqpReceiverEndpoint {
     /**
      * Constructor
      *
-     * @param receiver  ProtonReceiver instance related to unique client address
+     * @param receiver  receiver instance related to unique client addresses
      */
-    public AmqpReceiverEndpoint(ProtonReceiver receiver) {
+    public AmqpReceiverEndpoint(AmqpReceiver receiver) {
         this.receiver = receiver;
     }
 
@@ -172,18 +172,31 @@ public class AmqpReceiverEndpoint {
     }
 
     /**
-     * Open the endpoint, attaching the links
+     * Open the control endpoint, attaching the link
      */
-    public void open() {
+    public void openControl() {
 
         this.deliveries = new HashMap<>();
 
-        // attach receiver link on the $mqtt.to.<client-id> address for receiving messages (from SS)
+        // attach receiver link on the $mqtt.to.<client-id>.control address for receiving messages (from SS)
         // define handler for received messages
         // - AMQP_SUBSCRIPTIONS after sent AMQP_LIST -> for writing CONNACK (session-present)
+        this.receiver.receiverControl()
+                .setQoS(ProtonQoS.AT_LEAST_ONCE)
+                .handler(this::messageHandler)
+                .open();
+    }
+
+    /**
+     * Open the publish endpoint, attaching the link
+     */
+    public void openPublish() {
+
+        // attach receiver link on the $mqtt.to.<client-id>.publish address for receiving published messages
+        // define handler for received messages
         // - AMQP_PUBLISH for every AMQP published message
         // - AMQP_PUBREL for handling QoS 2
-        this.receiver
+        this.receiver.receiverPublish()
                 .setQoS(ProtonQoS.AT_LEAST_ONCE)
                 .handler(this::messageHandler)
                 .open();
@@ -194,7 +207,7 @@ public class AmqpReceiverEndpoint {
      */
     public void close() {
 
-        // detach link
+        // detach links
         this.receiver.close();
         this.deliveries.clear();
     }

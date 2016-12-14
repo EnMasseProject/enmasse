@@ -75,7 +75,7 @@ public class AmqpSubscribeMessage {
                 topicSubscriptions.add(new AmqpTopicSubscription(entry.getKey(), MqttQoS.valueOf(Integer.valueOf(entry.getValue()))));
             }
 
-            return new AmqpSubscribeMessage(AmqpHelper.getClientIdFromUniqueAddress((String) message.getCorrelationId()),
+            return new AmqpSubscribeMessage(AmqpHelper.getClientIdFromPublishAddress((String) message.getCorrelationId()),
                     message.getMessageId(),
                     topicSubscriptions);
 
@@ -97,7 +97,7 @@ public class AmqpSubscribeMessage {
 
         message.setMessageId(this.messageId);
 
-        message.setCorrelationId(String.format(AmqpHelper.AMQP_CLIENT_ADDRESS_TEMPLATE, this.clientId));
+        message.setCorrelationId(String.format(AmqpHelper.AMQP_CLIENT_PUBLISH_ADDRESS_TEMPLATE, this.clientId));
 
         // map with topic -> qos (in String format)
         Map<String, String> map = new HashMap<>();

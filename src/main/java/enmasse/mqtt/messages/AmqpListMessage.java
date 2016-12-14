@@ -50,7 +50,7 @@ public class AmqpListMessage {
             throw new IllegalArgumentException(String.format("AMQP message subject is no s%", AMQP_SUBJECT));
         }
 
-        return new AmqpListMessage(AmqpHelper.getClientIdFromUniqueAddress((String) message.getCorrelationId()));
+        return new AmqpListMessage(AmqpHelper.getClientIdFromPublishAddress((String) message.getCorrelationId()));
     }
 
     /**
@@ -64,8 +64,8 @@ public class AmqpListMessage {
 
         message.setSubject(AMQP_SUBJECT);
 
-        message.setCorrelationId(String.format(AmqpHelper.AMQP_CLIENT_ADDRESS_TEMPLATE, this.clientId));
-        message.setReplyTo(String.format(AmqpHelper.AMQP_CLIENT_ADDRESS_TEMPLATE, this.clientId));
+        message.setCorrelationId(String.format(AmqpHelper.AMQP_CLIENT_PUBLISH_ADDRESS_TEMPLATE, this.clientId));
+        message.setReplyTo(String.format(AmqpHelper.AMQP_CLIENT_CONTROL_ADDRESS_TEMPLATE, this.clientId));
 
         return message;
     }

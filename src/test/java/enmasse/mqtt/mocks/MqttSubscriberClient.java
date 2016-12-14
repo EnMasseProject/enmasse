@@ -45,12 +45,13 @@ public class MqttSubscriberClient {
 
             MqttConnectOptions options = new MqttConnectOptions();
             options.setConnectionTimeout(60);
-            options.setCleanSession(false);
+            options.setCleanSession(true);
 
             client = new MqttClient(String.format("tcp://%s:%d", "localhost", 1883), "12345", persistence);
+
             client.connect(options);
 
-            /*client.subscribe("mytopic", 0, (topic, mqttMessage) -> {
+            client.subscribe("mytopic", 0, (topic, mqttMessage) -> {
 
                 LOG.info("topic: {} message: {}", topic, new String(mqttMessage.getPayload()));
 
@@ -58,7 +59,6 @@ public class MqttSubscriberClient {
 
             client.disconnect();
 
-            client.connect(options);*/
             client.setCallback(new MqttCallback() {
                 @Override
                 public void connectionLost(Throwable throwable) {
@@ -75,6 +75,8 @@ public class MqttSubscriberClient {
 
                 }
             });
+            client.connect(options);
+
 
         } catch (MqttException e) {
 
