@@ -107,4 +107,12 @@ public class AmqpSubscriptionsMessage {
     public List<AmqpTopicSubscription> topicSubscriptions() {
         return this.topicSubscriptions;
     }
+
+    @Override
+    public String toString() {
+
+        return "AmqpSubscriptionsMessage{" +
+                "topicSubscriptions=" + this.topicSubscriptions +
+                "}";
+    }
 }

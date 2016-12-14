@@ -54,4 +54,13 @@ public class AmqpTopicSubscription {
     public MqttQoS qos() {
         return qos;
     }
+
+    @Override
+    public String toString() {
+
+        return "AmqpTopicSubscription{" +
+                "topic=" + this.topic +
+                ", qos=" + this.qos +
+                "}";
+    }
 }

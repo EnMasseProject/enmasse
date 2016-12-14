@@ -136,4 +136,13 @@ public class AmqpSubscribeMessage {
         return this.topicSubscriptions;
     }
 
+    @Override
+    public String toString() {
+
+        return "AmqpSubscribeMessage{" +
+                "clientId=" + this.clientId +
+                ", messageId=" + this.messageId +
+                ", topicSubscriptions=" + this.topicSubscriptions +
+                "}";
+    }
 }

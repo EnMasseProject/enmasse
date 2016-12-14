@@ -52,4 +52,10 @@ public class AmqpWillClearMessage {
 
         return message;
     }
+
+    @Override
+    public String toString() {
+
+        return "AmqpWillClearMessage{}";
+    }
 }

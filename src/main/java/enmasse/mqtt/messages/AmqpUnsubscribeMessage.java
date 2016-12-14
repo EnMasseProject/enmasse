@@ -117,4 +117,14 @@ public class AmqpUnsubscribeMessage {
     public List<String> topics() {
         return this.topics;
     }
+
+    @Override
+    public String toString() {
+
+        return "AmqpUnsubscribeMessage{" +
+                "clientId=" + this.clientId +
+                ", messageId=" + this.messageId +
+                ", topics=" + this.topics +
+                "}";
+    }
 }

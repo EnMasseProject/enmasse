@@ -201,4 +201,17 @@ public class AmqpPublishMessage {
     public Buffer payload() {
         return this.payload;
     }
+
+    @Override
+    public String toString() {
+
+        return "AmqpPublishMessage{" +
+                "messageId=" + this.messageId +
+                ", qos=" + this.qos +
+                ", isDup=" + this.isDup +
+                ", isRetain=" + this.isRetain +
+                ", topic=" + this.topic +
+                ", payload=" + this.payload +
+                "}";
+    }
 }

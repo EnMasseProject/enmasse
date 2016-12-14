@@ -16,9 +16,12 @@
 
 package enmasse.mqtt.mocks;
 
+import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
+import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
+import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,14 +45,35 @@ public class MqttSubscriberClient {
 
             MqttConnectOptions options = new MqttConnectOptions();
             options.setConnectionTimeout(60);
+            options.setCleanSession(false);
 
             client = new MqttClient(String.format("tcp://%s:%d", "localhost", 1883), "12345", persistence);
             client.connect(options);
 
-            client.subscribe("mytopic", 0, (topic, mqttMessage) -> {
+            /*client.subscribe("mytopic", 0, (topic, mqttMessage) -> {
 
                 LOG.info("topic: {} message: {}", topic, new String(mqttMessage.getPayload()));
 
+            });
+
+            client.disconnect();
+
+            client.connect(options);*/
+            client.setCallback(new MqttCallback() {
+                @Override
+                public void connectionLost(Throwable throwable) {
+
+                }
+
+                @Override
+                public void messageArrived(String s, MqttMessage mqttMessage) throws Exception {
+                    LOG.info("topic {} message {}", s, new String(mqttMessage.getPayload()));
+                }
+
+                @Override
+                public void deliveryComplete(IMqttDeliveryToken iMqttDeliveryToken) {
+
+                }
             });
 
         } catch (MqttException e) {

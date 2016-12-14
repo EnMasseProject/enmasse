@@ -173,4 +173,15 @@ public class AmqpWillMessage {
     public Buffer payload() {
         return this.payload;
     }
+
+    @Override
+    public String toString() {
+
+        return "AmqpSubscribeMessage{" +
+                "isRetain=" + this.isRetain +
+                ", topic=" + this.topic +
+                ", qos=" + this.qos +
+                ", payload=" + this.payload +
+                "}";
+    }
 }

@@ -76,4 +76,12 @@ public class AmqpPubrelMessage {
     public Object messageId() {
         return messageId;
     }
+
+    @Override
+    public String toString() {
+
+        return "AmqpPubrelMessage{" +
+                "messageId=" + this.messageId +
+                "}";
+    }
 }

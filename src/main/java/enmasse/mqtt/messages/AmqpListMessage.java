@@ -77,4 +77,12 @@ public class AmqpListMessage {
     public String clientId() {
         return this.clientId;
     }
+
+    @Override
+    public String toString() {
+
+        return "AmqpListMessage{" +
+                "clientId=" + this.clientId +
+                "}";
+    }
 }

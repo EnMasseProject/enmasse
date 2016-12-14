@@ -193,6 +193,7 @@ public class AmqpBridge {
                     this.rcvEndpoint.subscriptionsHandler(amqpSubscriptionsMessage -> {
 
                         LOG.info("Session present: {}", !amqpSubscriptionsMessage.topicSubscriptions().isEmpty());
+                        LOG.info(amqpSubscriptionsMessage.toString());
 
                         connectionFuture.complete(amqpSubscriptionsMessage);
                     });

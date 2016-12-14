@@ -76,4 +76,12 @@ public class AmqpCloseMessage {
     public String clientId() {
         return this.clientId;
     }
+
+    @Override
+    public String toString() {
+
+        return "AmqpCloseMessage{" +
+                "clientId=" + this.clientId +
+                "}";
+    }
 }
