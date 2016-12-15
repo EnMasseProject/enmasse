@@ -2,7 +2,9 @@
 
 [![Build Status](https://travis-ci.org/EnMasseProject/configserv.svg?branch=master)](https://travis-ci.org/EnMasseProject/configserv)
 
-The configuration server watches deployments and config maps in openshift (or kubernetes), aggregates the configuration data and allows clients to subscribe for updates. 
+This repository contains the config server.  The config server is able to watch OpenShift resources and notify AMQP clients when they change. The subscription addresses available are:
+
+* maas: Creating a receiver with this as the source will provide updates whenever the addressing config of EnMasse changes
 
 ## Build instructions
 

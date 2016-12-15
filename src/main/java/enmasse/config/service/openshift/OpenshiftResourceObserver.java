@@ -16,8 +16,8 @@
 
 package enmasse.config.service.openshift;
 
-import enmasse.config.service.model.LabelSet;
-import io.fabric8.kubernetes.api.model.*;
+import io.fabric8.kubernetes.api.model.HasMetadata;
+import io.fabric8.kubernetes.api.model.KubernetesResourceList;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.Watch;
 import io.fabric8.kubernetes.client.Watcher;
@@ -33,27 +33,25 @@ import java.util.*;
  */
 public class OpenshiftResourceObserver implements AutoCloseable, Watcher {
     private static final Logger log = LoggerFactory.getLogger(OpenshiftResourceObserver.class.getName());
-    private final LabelSet labelSet;
-    private final OpenShiftClient client;
+    private final ObserverOptions observerOptions;
     private final OpenshiftResourceListener listener;
     private final Set<HasMetadata> resourceSet = new LinkedHashSet<>();
     private final List<Watch> watches = new ArrayList<>();
 
-    public OpenshiftResourceObserver(OpenShiftClient client, LabelSet labelSet, OpenshiftResourceListener listener) {
-        this.client = client;
-        this.labelSet = labelSet;
+    public OpenshiftResourceObserver(ObserverOptions observerOptions, OpenshiftResourceListener listener) {
+        this.observerOptions = observerOptions;
         this.listener = listener;
     }
 
     public void start() {
         Map<ClientOperation<? extends HasMetadata, ?, ?, ?>, KubernetesResourceList>  initialResources = new LinkedHashMap<>();
-        for (ClientOperation<? extends HasMetadata, ?, ?, ?> operation : listener.getOperations(client)) {
-            KubernetesResourceList list = (KubernetesResourceList) operation.withLabels(labelSet.getLabelMap()).list();
+        for (ClientOperation<? extends HasMetadata, ?, ?, ?> operation : observerOptions.getOperations()) {
+            KubernetesResourceList list = (KubernetesResourceList) operation.withLabels(observerOptions.getLabelMap()).list();
             initialResources.put(operation, list);
         }
         initializeResources(initialResources.values());
         for (Map.Entry<ClientOperation<? extends HasMetadata, ?, ?, ?>, KubernetesResourceList> entry : initialResources.entrySet()) {
-            watches.add(entry.getKey().withLabels(labelSet.getLabelMap()).withResourceVersion(entry.getValue().getMetadata().getResourceVersion()).watch(this));
+            watches.add(entry.getKey().withLabels(observerOptions.getLabelMap()).withResourceVersion(entry.getValue().getMetadata().getResourceVersion()).watch(this));
         }
     }
 

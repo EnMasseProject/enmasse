@@ -16,17 +16,64 @@
 
 package enmasse.config.service.openshift;
 
+import enmasse.config.service.model.Subscriber;
 import io.fabric8.kubernetes.api.model.HasMetadata;
-import io.fabric8.kubernetes.client.dsl.ClientOperation;
-import io.fabric8.openshift.client.OpenShiftClient;
+import org.apache.qpid.proton.message.Message;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.util.List;
-import java.util.Set;
+import java.io.IOException;
+import java.util.*;
 
 /**
- * Listener for openshift resources
+ * Manages subscribers for a given set of OpenShift resources.
  */
-public interface OpenshiftResourceListener {
-    void resourcesUpdated(Set<HasMetadata> resources);
-    ClientOperation<? extends HasMetadata, ?, ?, ?>[] getOperations(OpenShiftClient client);
+public class OpenshiftResourceListener {
+    private static final Logger log = LoggerFactory.getLogger(OpenshiftResourceListener.class.getName());
+
+    private final List<Subscriber> subscriberList = new ArrayList<>();
+    private final Set<HasMetadata> resources = new LinkedHashSet<>();
+    private final MessageEncoder messageEncoder;
+
+    public OpenshiftResourceListener(MessageEncoder messageEncoder) {
+        this.messageEncoder = messageEncoder;
+    }
+
+    /**
+     * Subscribe for updates.
+     *
+     * @param subscriber The subscriber handle.
+     */
+    public synchronized void subscribe(Subscriber subscriber) {
+        subscriberList.add(subscriber);
+        // Notify only when we have values
+        if (!resources.isEmpty()) {
+            Optional<Message> message = encodeAndLog();
+            message.ifPresent(subscriber::resourcesUpdated);
+        }
+    }
+
+    /**
+     * Notify subscribers that the set of configs has been updated.
+     */
+    private void notifySubscribers() {
+        Optional<Message> message = encodeAndLog();
+        message.ifPresent(m -> subscriberList.forEach(s -> s.resourcesUpdated(m)));
+    }
+
+    private Optional<Message> encodeAndLog() {
+        Set<HasMetadata> set = Collections.unmodifiableSet(resources);
+        try {
+            return Optional.of(messageEncoder.encode(set));
+        } catch (IOException e) {
+            log.warn("Error encoding message", e);
+            return Optional.empty();
+        }
+    }
+
+    public synchronized void resourcesUpdated(Set<HasMetadata> updated) {
+        resources.clear();
+        resources.addAll(updated);
+        notifySubscribers();
+    }
 }

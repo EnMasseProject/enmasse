@@ -21,6 +21,10 @@ import io.vertx.proton.ProtonClient;
 import io.vertx.proton.ProtonClientOptions;
 import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.ProtonMessageHandler;
+import org.apache.qpid.proton.amqp.Symbol;
+import org.apache.qpid.proton.amqp.messaging.Source;
+
+import java.util.Collections;
 
 public class TestClient {
 
@@ -42,7 +46,10 @@ public class TestClient {
                 connection = connectResult.result();
                 connection.open();
                 System.out.println("Creating receiver");
-                connection.createReceiver(address).handler(handler).open();
+                Source source = new Source();
+                source.setAddress(address);
+                source.setFilter(Collections.singletonMap(Symbol.getSymbol("my"), "label"));
+                connection.createReceiver(address).setSource(source).handler(handler).open();
             } else {
                 System.out.println("Connection failed: " + connectResult.cause().getMessage());
             }

@@ -16,10 +16,10 @@
 
 package enmasse.config.service.amqp;
 
-import enmasse.config.service.amqp.subscription.AddressConfigCodec;
-import enmasse.config.service.model.ConfigDatabase;
-import enmasse.config.service.model.ConfigSubscriber;
+import enmasse.config.service.model.ResourceDatabase;
+import enmasse.config.service.model.Subscriber;
 import io.vertx.proton.ProtonMessageHandler;
+import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.message.Message;
 import org.junit.After;
@@ -27,21 +27,22 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
-import java.util.Collections;
+import java.util.Map;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.*;
 
 public class AMQPServerTest {
     private AMQPServer server;
-    private ConfigDatabase database;
+    private ResourceDatabase database;
     private TestClient client;
 
     @Before
     public void setup() throws InterruptedException {
-        database = mock(ConfigDatabase.class);
-        when(database.subscribe(any(), any())).thenReturn(true);
+        database = mock(ResourceDatabase.class);
+        when(database.subscribe(any(), any(), any())).thenReturn(true);
         server = new AMQPServer("localhost", 0, database);
         server.run();
         int port = waitForPort(server);
@@ -69,16 +70,24 @@ public class AMQPServerTest {
         ProtonMessageHandler msgHandler = mock(ProtonMessageHandler.class);
         client.subscribe("foo", msgHandler);
 
-        ArgumentCaptor<ConfigSubscriber> subCapture = ArgumentCaptor.forClass(ConfigSubscriber.class);
-        verify(database, timeout(10000)).subscribe(anyString(), subCapture.capture());
+        ArgumentCaptor<Subscriber> subCapture = ArgumentCaptor.forClass(Subscriber.class);
+        ArgumentCaptor<Map<String, String>> mapCapture = ArgumentCaptor.forClass(Map.class);
+        verify(database, timeout(10000)).subscribe(anyString(), mapCapture.capture(), subCapture.capture());
 
-        ConfigSubscriber sub = subCapture.getValue();
-        sub.configUpdated(Collections.singletonList(AddressConfigCodec.encodeConfig("myqueue", true, false)));
+        Map<String, String> filter = mapCapture.getValue();
+        assertThat(filter.size(), is(1));
+        assertTrue(filter.containsKey("my"));
+        assertThat(filter.get("my"), is("label"));
+
+        Subscriber sub = subCapture.getValue();
+        Message testMessage = Message.Factory.create();
+        testMessage.setBody(new AmqpValue("test1"));
+        sub.resourcesUpdated(testMessage);
 
         ArgumentCaptor<Message> msgCapture = ArgumentCaptor.forClass(Message.class);
         verify(msgHandler, timeout(10000)).handle(any(), msgCapture.capture());
         String value = (String) ((AmqpValue)msgCapture.getValue().getBody()).getValue();
-        assertThat(value, is("{\"myqueue\":{\"store_and_forward\":true,\"multicast\":false}}"));
+        assertThat(value, is("test1"));
     }
 }
 

@@ -16,9 +16,11 @@
 
 package enmasse.config.service.model;
 
+import java.util.Map;
+
 /**
- * Generic interface for configuration data.
+ * Represents a database of resources that can be subscribed to.
  */
-public interface Config {
-    String getValue(String key);
+public interface ResourceDatabase {
+    boolean subscribe(String address, Map<String, String> filter, Subscriber subscriber);
 }
