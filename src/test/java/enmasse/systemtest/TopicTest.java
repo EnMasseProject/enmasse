@@ -17,6 +17,9 @@
 package enmasse.systemtest;
 
 import org.apache.qpid.proton.amqp.messaging.ApplicationProperties;
+import org.apache.qpid.proton.amqp.messaging.AmqpValue;
+import org.apache.qpid.proton.amqp.messaging.Source;
+import org.apache.qpid.proton.amqp.messaging.TerminusDurability;
 import org.apache.qpid.proton.message.Message;
 import org.junit.Test;
 
@@ -28,6 +31,7 @@ import java.util.concurrent.TimeUnit;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 public class TopicTest extends VertxTestBase{
 
@@ -49,6 +53,36 @@ public class TopicTest extends VertxTestBase{
         assertThat(recvResults.get(0).get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
         assertThat(recvResults.get(1).get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
         assertThat(recvResults.get(2).get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
+    }
+
+    @Test
+    public void testDurableSubscription() throws Exception {
+        Destination dest = Destination.topic("mytopic");
+        deploy(dest);
+        scale(dest, 4);
+
+        Source source = new TopicTerminusFactory().getSource("locate/" + dest.getAddress());
+        source.setDurable(TerminusDurability.UNSETTLED_STATE);
+
+        EnMasseClient client = createTopicClient();
+        List<String> batch1 = Arrays.asList("one", "two", "three");
+
+        Future<List<String>> recvResults = client.recvMessages(source, batch1.size());
+        assertThat(client.sendMessages(dest.getAddress(), batch1).get(1, TimeUnit.MINUTES), is(batch1.size()));
+        assertThat(recvResults.get(1, TimeUnit.MINUTES), is(batch1));
+
+        List<String> batch2 = Arrays.asList("four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve");
+        assertThat(client.sendMessages(dest.getAddress(), batch2).get(1, TimeUnit.MINUTES), is(batch2.size()));
+
+        source.setAddress("locate/" + dest.getAddress());
+        //at present may get one or more of the first three messages
+        //redelivered due to DISPATCH-595, so use more lenient checks
+        recvResults = client.recvMessages(source, message -> {
+                String body = (String) ((AmqpValue) message.getBody()).getValue();
+                System.out.println("received " + body);
+                return "twelve".equals(body);
+            });
+        assertTrue(recvResults.get(1, TimeUnit.MINUTES).containsAll(batch2));
     }
 
     public void testSubscriptionService() throws Exception {
