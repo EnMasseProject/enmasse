@@ -35,7 +35,7 @@ public class OpenshiftResourceObserver implements AutoCloseable, Watcher {
     private static final Logger log = LoggerFactory.getLogger(OpenshiftResourceObserver.class.getName());
     private final ObserverOptions observerOptions;
     private final OpenshiftResourceListener listener;
-    private final Set<HasMetadata> resourceSet = new LinkedHashSet<>();
+    private final Set<Resource<? extends HasMetadata>> resourceSet = new LinkedHashSet<>();
     private final List<Watch> watches = new ArrayList<>();
 
     public OpenshiftResourceObserver(ObserverOptions observerOptions, OpenshiftResourceListener listener) {
@@ -59,7 +59,7 @@ public class OpenshiftResourceObserver implements AutoCloseable, Watcher {
         for (KubernetesResourceList list : initialResources) {
             for (Object item : list.getItems()) {
                 if (item instanceof HasMetadata) {
-                    resourceSet.add((HasMetadata) item);
+                    resourceSet.add(new Resource<>((HasMetadata) item));
                 }
             }
         }
@@ -79,18 +79,18 @@ public class OpenshiftResourceObserver implements AutoCloseable, Watcher {
         if (!(obj instanceof HasMetadata)) {
             throw new IllegalArgumentException("Invalid resource instance: " + obj.getClass().getName());
         }
-        HasMetadata resource = (HasMetadata) obj;
+        Resource<? extends HasMetadata> resource = new Resource<>((HasMetadata) obj);
         if (action.equals(Action.ADDED)) {
             resourceSet.add(resource);
-            log.info("Resource " + resource.getMetadata().getName() + " added!");
+            log.info("Resource " + resource + " added!");
         } else if (action.equals(Action.DELETED)) {
             resourceSet.remove(resource);
-            log.info("Resource " + resource.getMetadata().getName() + " deleted!");
+            log.info("Resource " + resource + " deleted!");
         } else if (action.equals(Action.MODIFIED)) {
             resourceSet.add(resource);
-            log.info("Resource " + resource.getMetadata().getName() + " updated!");
+            log.info("Resource " + resource + " updated!");
         } else if (action.equals(Action.ERROR)) {
-            log.error("Received an error event for resource " + resource.getMetadata().getName());
+            log.error("Received an error event for resource " + resource);
         }
         listener.resourcesUpdated(resourceSet);
     }

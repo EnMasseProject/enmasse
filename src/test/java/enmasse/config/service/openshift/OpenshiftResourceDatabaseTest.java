@@ -110,7 +110,6 @@ public class OpenshiftResourceDatabaseTest {
 
     @Test
     public void testUpdates() throws InterruptedException {
-        Map<String, String> test1 = AddressConfigCodec.encodeLabels("foo", true, false);
         TestSubscriber sub = new TestSubscriber();
 
         assertTrue(database.subscribe(key, Collections.emptyMap(), sub));
@@ -126,6 +125,10 @@ public class OpenshiftResourceDatabaseTest {
 
         assertNotNull(sub.lastValue);
         assertValue(sub.lastValue, "r1", "r2");
+
+        listener.eventReceived(Watcher.Action.DELETED, createResource("r1"));
+        assertNotNull(sub.lastValue);
+        assertValue(sub.lastValue, "r2");
     }
 
     private static void assertValue(Message message, String ... resourceIds) {

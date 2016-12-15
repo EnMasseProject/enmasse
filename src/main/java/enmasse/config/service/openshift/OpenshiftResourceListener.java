@@ -32,7 +32,7 @@ public class OpenshiftResourceListener {
     private static final Logger log = LoggerFactory.getLogger(OpenshiftResourceListener.class.getName());
 
     private final List<Subscriber> subscriberList = new ArrayList<>();
-    private final Set<HasMetadata> resources = new LinkedHashSet<>();
+    private final Set<Resource<? extends HasMetadata>> resources = new LinkedHashSet<>();
     private final MessageEncoder messageEncoder;
 
     public OpenshiftResourceListener(MessageEncoder messageEncoder) {
@@ -62,7 +62,7 @@ public class OpenshiftResourceListener {
     }
 
     private Optional<Message> encodeAndLog() {
-        Set<HasMetadata> set = Collections.unmodifiableSet(resources);
+        Set<Resource<? extends HasMetadata>> set = Collections.unmodifiableSet(resources);
         try {
             return Optional.of(messageEncoder.encode(set));
         } catch (IOException e) {
@@ -71,7 +71,7 @@ public class OpenshiftResourceListener {
         }
     }
 
-    public synchronized void resourcesUpdated(Set<HasMetadata> updated) {
+    public synchronized void resourcesUpdated(Set<Resource<? extends HasMetadata>> updated) {
         resources.clear();
         resources.addAll(updated);
         notifySubscribers();

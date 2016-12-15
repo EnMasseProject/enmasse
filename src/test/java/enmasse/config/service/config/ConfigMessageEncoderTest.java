@@ -17,8 +17,7 @@
 package enmasse.config.service.config;
 
 import enmasse.config.service.TestResource;
-import enmasse.config.service.config.AddressConfigCodec;
-import enmasse.config.service.config.ConfigMessageEncoder;
+import enmasse.config.service.openshift.Resource;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.message.Message;
@@ -37,9 +36,9 @@ public class ConfigMessageEncoderTest {
     public void testEncoder() throws IOException {
         ConfigMessageEncoder encoder = new ConfigMessageEncoder();
 
-        Set<HasMetadata> configSet = new LinkedHashSet<>(Arrays.asList(
-                new TestResource("r1", AddressConfigCodec.encodeLabels("myqueue", true, false)),
-                new TestResource("r2", AddressConfigCodec.encodeLabels("mytopic", true, true))));
+        Set<Resource<HasMetadata>> configSet = new LinkedHashSet<>(Arrays.asList(
+                new Resource<>(new TestResource("r1", AddressConfigCodec.encodeLabels("myqueue", true, false))),
+                new Resource<>(new TestResource("r2", AddressConfigCodec.encodeLabels("mytopic", true, true)))));
 
         Message message = encoder.encode(configSet);
         String json = (String) ((AmqpValue) message.getBody()).getValue();

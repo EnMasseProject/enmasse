@@ -1,5 +1,6 @@
 package enmasse.config.service.openshift;
 
+import enmasse.config.service.TestResource;
 import enmasse.config.service.model.LabelSet;
 import io.fabric8.kubernetes.client.dsl.ClientMixedOperation;
 import io.fabric8.openshift.client.OpenShiftClient;
@@ -12,10 +13,11 @@ import java.util.stream.Collectors;
 
 public class TestSubscriptionConfig implements SubscriptionConfig {
     @Override
-    public MessageEncoder getMessageEncoder() {
+    public MessageEncoder<TestResource> getMessageEncoder() {
         return set -> {
             Message message = Message.Factory.create();
-            message.setBody(new AmqpSequence(set.stream().map(r -> r.getMetadata().getName()).collect(Collectors.toList())));
+
+            message.setBody(new AmqpSequence(set.stream().map(r -> r.getResource().getMetadata().getName()).collect(Collectors.toList())));
             return message;
         };
     }

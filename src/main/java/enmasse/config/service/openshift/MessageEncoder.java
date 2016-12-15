@@ -9,6 +9,6 @@ import java.util.Set;
 /**
  * Interface for encoding AMQP messages
  */
-public interface MessageEncoder {
-    Message encode(Set<HasMetadata> set) throws IOException;
+public interface MessageEncoder<T extends HasMetadata> {
+    Message encode(Set<Resource<T>> set) throws IOException;
 }

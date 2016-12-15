@@ -50,7 +50,7 @@ public class OpenshiftResourceListenerTest {
         OpenshiftResourceListener listener = new OpenshiftResourceListener(encoder);
         Subscriber mockSub = mock(Subscriber.class);
         listener.subscribe(mockSub);
-        listener.resourcesUpdated(Collections.singleton(new TestResource("t1", Collections.singletonMap("key1", "value1"))));
+        listener.resourcesUpdated(Collections.singleton(new Resource<>(new TestResource("t1", Collections.singletonMap("key1", "value1")))));
 
         verify(mockSub).resourcesUpdated(messageCaptor.capture());
 
