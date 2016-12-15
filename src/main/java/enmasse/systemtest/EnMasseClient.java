@@ -18,7 +18,9 @@ package enmasse.systemtest;
 
 import io.vertx.core.Vertx;
 import io.vertx.proton.*;
+import org.apache.qpid.proton.amqp.messaging.Accepted;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
+import org.apache.qpid.proton.amqp.messaging.Source;
 import org.apache.qpid.proton.message.Message;
 
 import java.util.ArrayList;
@@ -28,6 +30,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public class EnMasseClient {
@@ -53,6 +56,18 @@ public class EnMasseClient {
     }
 
     public Future<List<String>> recvMessages(String address, int numMessages, long connectTimeout, TimeUnit timeUnit) throws InterruptedException {
+        return recvMessages(terminusFactory.getSource(address), numMessages, connectTimeout, timeUnit);
+    }
+
+    public Future<List<String>> recvMessages(Source source, int numMessages) throws InterruptedException {
+        return recvMessages(source, numMessages, 1, TimeUnit.MINUTES);
+    }
+
+    public Future<List<String>> recvMessages(Source source, Predicate<Message> done) throws InterruptedException {
+        return recvMessages(source, done, 1, TimeUnit.MINUTES);
+    }
+
+    public Future<List<String>> recvMessages(Source source, Predicate<Message> done, long connectTimeout, TimeUnit timeUnit) throws InterruptedException {
         CountDownLatch latch = new CountDownLatch(1);
         List<String> messages = new ArrayList<>();
         CompletableFuture<List<String>> future = new CompletableFuture<>();
@@ -68,23 +83,29 @@ public class EnMasseClient {
                     System.out.println("Receiver connection closed");
                 });
                 connection.open();
-                connection.createReceiver(address, new ProtonLinkOptions().setLinkName("enmasse-systemtest-client"))
-                        .openHandler(opened -> {
-                            latch.countDown();
-                            System.out.println("Receiving messages from " + connection.getRemoteContainer());
-                        })
-                        .closeHandler(closed -> {
-                            System.out.println("Receiver link closed");
-                        })
-                        .setSource(terminusFactory.getSource(address))
-                        .handler((delivery, message) -> {
-                            messages.add((String) ((AmqpValue) message.getBody()).getValue());
-                            if (messages.size() == numMessages) {
-                                connection.close();
-                                vertx.runOnContext((id) -> future.complete(messages));
-                            }
-                        })
-                        .open();
+                String linkName = "enmasse-systemtest-client";
+                new RedirectableReceiver(vertx, connection, source, "enmasse-systemtest-client",
+                                         opened -> {
+                                             if (opened.succeeded()) {
+                                                 Source remote = (Source) opened.result().getRemoteSource();
+                                                 if (remote != null && remote.getAddress() != null) {
+                                                     latch.countDown();
+                                                     System.out.println("Receiving messages from " + connection.getRemoteContainer());
+                                                 }
+                                             } else {
+                                                 System.out.println("receiver failed to open: " + opened.cause());
+                                             }
+                                         },
+                                         (delivery, message) -> {
+                                             messages.add((String) ((AmqpValue) message.getBody()).getValue());
+                                             if (done.test(message)) {
+                                                 delivery.disposition(Accepted.getInstance(), true);
+                                                 connection.close();
+                                                 vertx.runOnContext((id) -> {
+                                                         future.complete(messages);
+                                                     });
+                                             }
+                                         }).open();
             } else {
                 event.cause().printStackTrace();
                 System.out.println("Connection open failed: " + event.cause().getMessage());
@@ -95,6 +116,23 @@ public class EnMasseClient {
             future.completeExceptionally(new RuntimeException("Unable to connect within timeout"));
         }
         return future;
+    }
+
+    private static class Count implements Predicate<Message> {
+        private final int expected;
+        private int actual;
+
+        Count(int expected) {
+            this.expected = expected;
+        }
+
+        public boolean test(Message message) {
+            return ++actual == expected;
+        }
+    }
+
+    public Future<List<String>> recvMessages(Source source, int numMessages, long connectTimeout, TimeUnit timeUnit) throws InterruptedException {
+        return recvMessages(source, new Count(numMessages), connectTimeout, timeUnit);
     }
 
     public Future<Integer> sendMessages(String address, List<String> messages) {
@@ -124,6 +162,7 @@ public class EnMasseClient {
                         for (Message message : messages) {
                             System.out.println("Sending message");
                             sender.send(message, delivery -> {
+                                System.out.println("message confirmed");
                                 if (count.incrementAndGet() == messages.length) {
                                     connection.close();
                                     vertx.runOnContext((id) -> future.complete(count.get()));
