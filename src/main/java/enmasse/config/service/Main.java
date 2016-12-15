@@ -19,6 +19,8 @@ package enmasse.config.service;
 import enmasse.config.service.amqp.AMQPServer;
 import enmasse.config.service.config.ConfigSubscriptionConfig;
 import enmasse.config.service.openshift.OpenshiftResourceDatabase;
+import enmasse.config.service.openshift.SubscriptionConfig;
+import enmasse.config.service.podsense.PodSenseSubscriptionConfig;
 import io.fabric8.openshift.client.DefaultOpenShiftClient;
 import io.fabric8.openshift.client.OpenShiftClient;
 import io.fabric8.openshift.client.OpenShiftConfig;
@@ -28,7 +30,7 @@ import io.vertx.core.Vertx;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
@@ -48,7 +50,11 @@ public class Main {
             OpenShiftConfig config = new OpenShiftConfigBuilder().withMasterUrl(openshiftUri).withOauthToken(getAuthenticationToken()).withNamespace(openshiftNamespace).build();
             OpenShiftClient client = new DefaultOpenShiftClient(config);
 
-            OpenshiftResourceDatabase database = new OpenshiftResourceDatabase(client, Collections.singletonMap("maas", new ConfigSubscriptionConfig()));
+            Map<String, SubscriptionConfig> mapping = new LinkedHashMap<>();
+            mapping.put("maas", new ConfigSubscriptionConfig());
+            mapping.put("podsense", new PodSenseSubscriptionConfig());
+
+            OpenshiftResourceDatabase database = new OpenshiftResourceDatabase(client, mapping);
             AMQPServer server = new AMQPServer(listenAddress, listenPort, database);
 
             Vertx vertx = Vertx.vertx();
