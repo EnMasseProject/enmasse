@@ -16,15 +16,11 @@
 
 package enmasse.systemtest;
 
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.proton.*;
-import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.messaging.Accepted;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.amqp.messaging.Source;
-import org.apache.qpid.proton.amqp.transport.ErrorCondition;
 import org.apache.qpid.proton.message.Message;
 
 import java.util.ArrayList;
@@ -53,88 +49,6 @@ public class EnMasseClient {
 
     public EnMasseClient(Vertx vertx, Endpoint endpoint, TerminusFactory terminusFactory) {
         this(vertx, endpoint, terminusFactory, new ProtonClientOptions());
-    }
-
-    private static final Symbol AMQP_LINK_REDIRECT = Symbol.valueOf("amqp:link:redirect");
-    private class RedirectableReceiver implements Handler<AsyncResult<ProtonReceiver>> {
-        private ProtonConnection connection;
-        private final Source source;
-        private final String name;
-        private final Handler<AsyncResult<ProtonReceiver>> openHandler;
-        private final ProtonMessageHandler messageHandler;
-        private ProtonReceiver receiver;
-
-        RedirectableReceiver(ProtonConnection connection, Source source, String name,
-                             Handler<AsyncResult<ProtonReceiver>> openHandler,
-                             ProtonMessageHandler messageHandler) {
-            this.connection = connection;
-            this.source = source;
-            this.name = name;
-            this.openHandler = openHandler;
-            this.messageHandler = messageHandler;
-        }
-
-        ProtonReceiver open() {
-            if (receiver != null) {
-                receiver = connection.open().createReceiver(source.getAddress(), new ProtonLinkOptions().setLinkName(name));
-            } else {
-                receiver = connection.createReceiver(source.getAddress(), new ProtonLinkOptions().setLinkName(name));
-            }
-            receiver.openHandler(openHandler);
-            receiver.closeHandler(this);
-            receiver.setSource(source);
-            receiver.handler(messageHandler);
-            receiver.open();
-            return receiver;
-        }
-
-        ProtonReceiver get() {
-            return receiver;
-        }
-
-        void recreateConnectionAndReattach() {
-            ProtonClient client = ProtonClient.create(vertx);
-            client.connect(options, endpoint.getHost(), endpoint.getPort(), event -> {
-                    if (event.succeeded()) {
-                        System.out.println("opened new connection for link redirect");
-                        connection = event.result();
-                        connection.setContainer("enmasse-systemtest-client");
-                        connection.disconnectHandler(disconnected -> {
-                                System.out.println("Receiver connection disconnected");
-                            });
-                        connection.closeHandler(closed -> {
-                                System.out.println("Receiver connection closed");
-                            });
-                        connection.open();
-                        open();
-                    } else {
-                        System.out.println("failed to open new connection for link redirect: " + event.cause());
-                    }
-                });
-        }
-
-        public void handle(AsyncResult<ProtonReceiver> closed) {
-            receiver.close();
-            ErrorCondition error = receiver.getRemoteCondition();
-            if (error != null && AMQP_LINK_REDIRECT.equals(error.getCondition())) {
-                String relocated = (String) error.getInfo().get("address");
-                System.out.println("Receiver link redirected to " + relocated);
-                source.setAddress(relocated);
-                open();
-                //recreateConnectionAndReattach();
-            } else {
-                handleReceiverClose(receiver);
-            }
-        }
-
-        protected void handleReceiverClose(ProtonReceiver receiver) {
-            ErrorCondition error = receiver.getRemoteCondition();
-            if (error == null || error.getCondition() == null) {
-                System.out.println("Receiver link closed without error");
-            } else {
-                System.out.println("Receiver link closed with " + error);
-            }
-        }
     }
 
     public Future<List<String>> recvMessages(String address, int numMessages) throws InterruptedException {
@@ -170,7 +84,7 @@ public class EnMasseClient {
                 });
                 connection.open();
                 String linkName = "enmasse-systemtest-client";
-                new RedirectableReceiver(connection, source, "enmasse-systemtest-client",
+                new RedirectableReceiver(vertx, connection, source, "enmasse-systemtest-client",
                                          opened -> {
                                              if (opened.succeeded()) {
                                                  Source remote = (Source) opened.result().getRemoteSource();
