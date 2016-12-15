@@ -16,15 +16,18 @@
 
 package enmasse.config.service.amqp;
 
-import enmasse.config.service.amqp.subscription.AddressConfigSubscriber;
+import enmasse.config.service.model.ResourceDatabase;
 import io.vertx.core.Vertx;
 import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.ProtonSender;
 import io.vertx.proton.ProtonServer;
 import io.vertx.proton.ProtonSession;
-import enmasse.config.service.model.ConfigDatabase;
+import org.apache.qpid.proton.amqp.messaging.Source;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * AMQP server endpoint that handles connections to the service and propagates config for a config map specified
@@ -36,12 +39,12 @@ public class AMQPServer {
     private static final Logger log = LoggerFactory.getLogger(AMQPServer.class.getName());
 
     private final Vertx vertx = Vertx.vertx();
-    private final ConfigDatabase database;
+    private final ResourceDatabase database;
     private final ProtonServer server;
     private final String hostname;
     private final int port;
 
-    public AMQPServer(String hostname, int port, ConfigDatabase database)
+    public AMQPServer(String hostname, int port, ResourceDatabase database)
     {
         this.hostname = hostname;
         this.port = port;
@@ -70,8 +73,9 @@ public class AMQPServer {
 
     private void senderOpenHandler(ProtonConnection connection, ProtonSender sender) {
         sender.setSource(sender.getRemoteSource());
-        // TODO: Support different subscribers
-        boolean success = database.subscribe(sender.getRemoteSource().getAddress(), new AddressConfigSubscriber(sender));
+        Source source = (Source) sender.getRemoteSource();
+
+        boolean success = database.subscribe(source.getAddress(), createStringFilter(source.getFilter()), sender::send);
         if (success) {
             sender.open();
             log.info("Added subscriber {} for config {}", connection.getRemoteContainer(), sender.getRemoteSource().getAddress());
@@ -79,6 +83,16 @@ public class AMQPServer {
             log.info("Failed creating subscriber {} for config {}", connection.getRemoteContainer(), sender.getRemoteSource().getAddress());
             sender.close();
         }
+    }
+
+    private Map<String, String> createStringFilter(Map filter) {
+        Map<String, String> filterMap = new LinkedHashMap<>();
+        if (filter != null) {
+            for (Object key : filter.keySet()) {
+                filterMap.put(key.toString(), filter.get(key).toString());
+            }
+        }
+        return filterMap;
     }
 
     public void run() {

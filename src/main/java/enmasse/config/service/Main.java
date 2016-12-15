@@ -17,7 +17,8 @@
 package enmasse.config.service;
 
 import enmasse.config.service.amqp.AMQPServer;
-import enmasse.config.service.openshift.OpenshiftConfigDatabase;
+import enmasse.config.service.config.ConfigSubscriptionConfig;
+import enmasse.config.service.openshift.OpenshiftResourceDatabase;
 import io.fabric8.openshift.client.DefaultOpenShiftClient;
 import io.fabric8.openshift.client.OpenShiftClient;
 import io.fabric8.openshift.client.OpenShiftConfig;
@@ -26,6 +27,7 @@ import io.fabric8.openshift.client.OpenShiftConfigBuilder;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.Collections;
 import java.util.Map;
 
 /**
@@ -45,7 +47,7 @@ public class Main {
             OpenShiftConfig config = new OpenShiftConfigBuilder().withMasterUrl(openshiftUri).withOauthToken(getAuthenticationToken()).withNamespace(openshiftNamespace).build();
             OpenShiftClient client = new DefaultOpenShiftClient(config);
 
-            OpenshiftConfigDatabase database = new OpenshiftConfigDatabase(client);
+            OpenshiftResourceDatabase database = new OpenshiftResourceDatabase(client, Collections.singletonMap("maas", new ConfigSubscriptionConfig()));
             AMQPServer server = new AMQPServer(listenAddress, listenPort, database);
 
             server.run();

@@ -14,37 +14,35 @@
  * limitations under the License.
  */
 
-package enmasse.config.service.amqp.subscription;
+package enmasse.config.service.config;
 
-import enmasse.config.service.model.Config;
-import io.vertx.proton.ProtonSender;
+import enmasse.config.service.TestResource;
+import enmasse.config.service.config.AddressConfigCodec;
+import enmasse.config.service.config.ConfigMessageEncoder;
+import io.fabric8.kubernetes.api.model.HasMetadata;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.message.Message;
 import org.junit.Test;
-import org.mockito.ArgumentCaptor;
 
+import java.io.IOException;
 import java.util.Arrays;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
 
-public class AddressConfigSubscriberTest {
+public class ConfigMessageEncoderTest {
     @Test
-    public void testSubscriber() {
-        ProtonSender mockSender = mock(ProtonSender.class);
-        AddressConfigSubscriber subscriber = new AddressConfigSubscriber(mockSender);
+    public void testEncoder() throws IOException {
+        ConfigMessageEncoder encoder = new ConfigMessageEncoder();
 
-        Config cfg1 = AddressConfigCodec.encodeConfig("myqueue", true, false);
-        Config cfg2 = AddressConfigCodec.encodeConfig("mytopic", true, true);
+        Set<HasMetadata> configSet = new LinkedHashSet<>(Arrays.asList(
+                new TestResource("r1", AddressConfigCodec.encodeLabels("myqueue", true, false)),
+                new TestResource("r2", AddressConfigCodec.encodeLabels("mytopic", true, true))));
 
-        subscriber.configUpdated(Arrays.asList(cfg1, cfg2));
-
-        ArgumentCaptor<Message> messageArgumentCaptor = ArgumentCaptor.forClass(Message.class);
-        verify(mockSender).send(messageArgumentCaptor.capture());
-
-        String json = (String) ((AmqpValue) messageArgumentCaptor.getValue().getBody()).getValue();
+        Message message = encoder.encode(configSet);
+        String json = (String) ((AmqpValue) message.getBody()).getValue();
         assertThat(json, is("{\"myqueue\":{\"store_and_forward\":true,\"multicast\":false},\"mytopic\":{\"store_and_forward\":true,\"multicast\":true}}"));
     }
 }

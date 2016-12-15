@@ -16,48 +16,41 @@
 
 package enmasse.config.service.openshift;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import enmasse.config.service.amqp.subscription.AddressConfigCodec;
-import enmasse.config.service.model.Config;
-import enmasse.config.service.model.ConfigSubscriber;
-import io.fabric8.kubernetes.api.model.*;
+import enmasse.config.service.TestResource;
+import enmasse.config.service.config.AddressConfigCodec;
+import enmasse.config.service.model.Subscriber;
+import io.fabric8.kubernetes.api.model.ConfigMap;
+import io.fabric8.kubernetes.api.model.ConfigMapList;
+import io.fabric8.kubernetes.api.model.DoneableConfigMap;
+import io.fabric8.kubernetes.api.model.ListMeta;
 import io.fabric8.kubernetes.client.Watch;
 import io.fabric8.kubernetes.client.Watcher;
 import io.fabric8.kubernetes.client.dsl.ClientMixedOperation;
 import io.fabric8.kubernetes.client.dsl.ClientResource;
-import io.fabric8.kubernetes.client.dsl.ClientScaleableResource;
-import io.fabric8.kubernetes.client.dsl.FilterWatchListDeletable;
-import io.fabric8.kubernetes.client.dsl.internal.ConfigMapOperationsImpl;
-import io.fabric8.openshift.api.model.DeploymentConfig;
-import io.fabric8.openshift.api.model.DeploymentConfigList;
-import io.fabric8.openshift.api.model.DoneableDeploymentConfig;
 import io.fabric8.openshift.client.OpenShiftClient;
+import org.apache.qpid.proton.amqp.messaging.AmqpSequence;
+import org.apache.qpid.proton.message.Message;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.MockitoAnnotations;
 
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
-public class OpenshiftConfigDatabaseTest {
-    private OpenshiftConfigDatabase database;
+public class OpenshiftResourceDatabaseTest {
+    private OpenshiftResourceDatabase database;
     private String key = "maas";
     private OpenShiftClient client;
     private ScheduledExecutorService executor;
     private ClientMixedOperation<ConfigMap, ConfigMapList, DoneableConfigMap, ClientResource<ConfigMap, DoneableConfigMap>> mapOp = mock(ClientMixedOperation.class);
-    private ClientMixedOperation<DeploymentConfig, DeploymentConfigList, DoneableDeploymentConfig, ClientScaleableResource<DeploymentConfig, DoneableDeploymentConfig>> dcOp = mock(ClientMixedOperation.class);
 
     @Before
     public void setup() {
@@ -65,22 +58,16 @@ public class OpenshiftConfigDatabaseTest {
         client = mock(OpenShiftClient.class);
         Watch mockWatcher = mock(Watch.class);
         executor = Executors.newSingleThreadScheduledExecutor();
-        database = new OpenshiftConfigDatabase(client);
+        database = new OpenshiftResourceDatabase(client, Collections.singletonMap(key, new TestSubscriptionConfig()));
         when(client.configMaps()).thenReturn(mapOp);
-        when(client.deploymentConfigs()).thenReturn(dcOp);
 
         when(mapOp.withLabels(any())).thenReturn(mapOp);
-        when(dcOp.withLabels(any())).thenReturn(dcOp);
         when(mapOp.withResourceVersion(anyString())).thenReturn(mapOp);
-        when(dcOp.withResourceVersion(anyString())).thenReturn(dcOp);
-
         when(mapOp.watch(any())).thenReturn(() -> {});
-        when(dcOp.watch(any())).thenReturn(() -> {});
 
         ListMeta listMeta = new ListMeta();
         listMeta.setResourceVersion("1234");
         when(mapOp.list()).thenReturn(new ConfigMapList("v1", Collections.emptyList(), "List", listMeta));
-        when(dcOp.list()).thenReturn(new DeploymentConfigList("v1", Collections.emptyList(), "List", listMeta));
     }
 
     public Watcher getListener() {
@@ -96,25 +83,23 @@ public class OpenshiftConfigDatabaseTest {
 
     @Test
     public void testSubscribeWithBadKey() {
-        ConfigSubscriber sub = mock(ConfigSubscriber.class);
-        assertFalse(database.subscribe("nosuchkey", sub));
+        Subscriber sub = mock(Subscriber.class);
+        assertFalse(database.subscribe("nosuchkey", Collections.emptyMap(), sub));
     }
 
     @Test
     public void testSubscribeAfterConnected() throws InterruptedException {
 
-        Map<String, String> testValue = AddressConfigCodec.encodeLabels("foo", true, false);
         TestSubscriber sub = new TestSubscriber();
 
-        assertTrue(database.subscribe(key, sub));
+        assertTrue(database.subscribe(key, Collections.emptyMap(), sub));
         waitForExecutor();
         Watcher listener = getListener();
 
-        listener.eventReceived(Watcher.Action.ADDED, mockMap(testValue));
+        listener.eventReceived(Watcher.Action.ADDED, createResource("r1"));
 
         assertNotNull(sub.lastValue);
-        assertFalse(sub.lastValue.isEmpty());
-        assertConfig(sub.lastValue.get(0), testValue);
+        assertValue(sub.lastValue, "r1");
     }
 
     private void waitForExecutor() throws InterruptedException {
@@ -128,48 +113,40 @@ public class OpenshiftConfigDatabaseTest {
         Map<String, String> test1 = AddressConfigCodec.encodeLabels("foo", true, false);
         TestSubscriber sub = new TestSubscriber();
 
-        assertTrue(database.subscribe(key, sub));
+        assertTrue(database.subscribe(key, Collections.emptyMap(), sub));
         waitForExecutor();
 
         Watcher listener = getListener();
-        listener.eventReceived(Watcher.Action.ADDED, mockMap(test1));
+        listener.eventReceived(Watcher.Action.ADDED, createResource("r1"));
 
         assertNotNull(sub.lastValue);
-        assertFalse(sub.lastValue.isEmpty());
-        assertConfig(sub.lastValue.get(0), test1);
+        assertValue(sub.lastValue, "r1");
 
-        Map<String, String> test2 = AddressConfigCodec.encodeLabels("bar", true, false);
-        listener.eventReceived(Watcher.Action.ADDED, mockMap(test2));
+        listener.eventReceived(Watcher.Action.ADDED, createResource("r2"));
 
         assertNotNull(sub.lastValue);
-        assertFalse(sub.lastValue.isEmpty());
-        assertConfig(sub.lastValue.get(1), test2);
+        assertValue(sub.lastValue, "r1", "r2");
     }
 
-    private static void assertConfig(Config config, Map<String, String> testValue) {
-        for (Map.Entry<String, String> entry : testValue.entrySet()) {
-            assertThat(config.getValue(entry.getKey()), is(entry.getValue()));
+    private static void assertValue(Message message, String ... resourceIds) {
+        AmqpSequence seq = (AmqpSequence) message.getBody();
+        Set<String> expected = new LinkedHashSet<>(Arrays.asList(resourceIds));
+        Set<String> actual = new LinkedHashSet<>();
+        for (Object o : seq.getValue()) {
+            actual.add((String)o);
         }
+        assertEquals(expected, actual);
+    }
+    private static TestResource createResource(String name) {
+        return new TestResource(name, Collections.singletonMap("key", "value"));
     }
 
-    private ConfigMap mockMap(Map<String, String> testValue) {
-        ConfigMap testMap = new ConfigMap();
-        ObjectMeta meta = new ObjectMeta();
-        meta.setName("map1");
-        Map<String, String> labels = new LinkedHashMap<>();
-        labels.put("type", "address-config");
-        labels.putAll(testValue);
-        meta.setLabels(labels);
-        testMap.setMetadata(meta);
-        return testMap;
-    }
-
-    public static class TestSubscriber implements ConfigSubscriber {
-        public List<Config> lastValue;
+    public static class TestSubscriber implements Subscriber {
+        public Message lastValue = null;
 
         @Override
-        public void configUpdated(List<Config> values) {
-            lastValue = values;
+        public void resourcesUpdated(Message message) {
+            lastValue = message;
         }
     }
 }
