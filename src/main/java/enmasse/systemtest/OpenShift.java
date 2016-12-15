@@ -32,7 +32,7 @@ public class OpenShift {
 
     }
 
-    private Endpoint getEndpoint(String serviceName, String port) {
+    public Endpoint getEndpoint(String serviceName, String port) {
         Service service = client.services().inNamespace(environment.namespace()).withName(serviceName).get();
         return new Endpoint(service.getSpec().getPortalIP(), getPort(service, port));
     }
@@ -95,7 +95,7 @@ public class OpenShift {
     }
 
     // Heuristic: if restapi service exists, we are running with a full template
-    private boolean isFullTemplate() {
+    public boolean isFullTemplate() {
         Service service = client.services().withName("admin").get();
         return service == null;
     }
