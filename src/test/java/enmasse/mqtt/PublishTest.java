@@ -45,11 +45,35 @@ public class PublishTest extends MockMqttFrontendTestBase {
 
     private Async async;
 
+    private int receivedQos;
+
+    @Test
+    public void publishQoStoMqtt(TestContext context) {
+
+        for (int receiverQos = 0; receiverQos <= 2; receiverQos++) {
+
+            for (int publisherQos = 0; publisherQos <= 2; publisherQos++) {
+
+                // MQTT 3.1.1 spec :  The QoS of Payload Messages sent in response to a Subscription MUST be
+                // the minimum of the QoS of the originally published message and the maximum QoS granted by the Server
+                int qos = (receiverQos < publisherQos) ? receiverQos : publisherQos;
+
+                this.mqttReceiver(context, MQTT_TOPIC, receiverQos);
+                this.publish(context, MQTT_TOPIC, MQTT_MESSAGE, publisherQos);
+
+                context.assertTrue(qos == this.receivedQos);
+                LOG.info("receiverQos = {}, publisherQos = {}, qos = {}", receiverQos, publisherQos, qos);
+            }
+        }
+    }
+
     @Test
     public void publishQoS0toMqtt(TestContext context) {
 
         this.mqttReceiver(context, MQTT_TOPIC, 0);
         this.publish(context, MQTT_TOPIC, MQTT_MESSAGE, 0);
+
+        context.assertTrue(true);
     }
 
     @Test
@@ -57,6 +81,8 @@ public class PublishTest extends MockMqttFrontendTestBase {
 
         this.mqttReceiver(context, MQTT_TOPIC, 1);
         this.publish(context, MQTT_TOPIC, MQTT_MESSAGE, 1);
+
+        context.assertTrue(true);
     }
 
     @Test
@@ -64,6 +90,8 @@ public class PublishTest extends MockMqttFrontendTestBase {
 
         this.mqttReceiver(context, MQTT_TOPIC, 2);
         this.publish(context, MQTT_TOPIC, MQTT_MESSAGE, 2);
+
+        context.assertTrue(true);
     }
 
     @Test
@@ -71,6 +99,8 @@ public class PublishTest extends MockMqttFrontendTestBase {
 
         this.amqpReceiver(context, MQTT_TOPIC, 0);
         this.publish(context, MQTT_TOPIC, MQTT_MESSAGE, 0);
+
+        context.assertTrue(true);
     }
 
     @Test
@@ -78,6 +108,8 @@ public class PublishTest extends MockMqttFrontendTestBase {
 
         this.amqpReceiver(context, MQTT_TOPIC, 1);
         this.publish(context, MQTT_TOPIC, MQTT_MESSAGE, 1);
+
+        context.assertTrue(true);
     }
 
     @Test
@@ -85,6 +117,8 @@ public class PublishTest extends MockMqttFrontendTestBase {
 
         this.amqpReceiver(context, MQTT_TOPIC, 2);
         this.publish(context, MQTT_TOPIC, MQTT_MESSAGE, 2);
+
+        context.assertTrue(true);
     }
 
     private void mqttReceiver(TestContext context, String topic, int qos) {
@@ -98,6 +132,7 @@ public class PublishTest extends MockMqttFrontendTestBase {
             client.subscribe(topic, qos, (t, m) -> {
 
                 LOG.info("topic: {}, message: {}", t, m);
+                this.receivedQos = m.getQos();
                 this.async.complete();
             });
 
@@ -156,8 +191,6 @@ public class PublishTest extends MockMqttFrontendTestBase {
             client.publish(topic, message.getBytes(), qos, false);
 
             this.async.await();
-
-            context.assertTrue(true);
 
         } catch (MqttException e) {
 
