@@ -57,7 +57,9 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -88,6 +90,9 @@ public class AmqpBridge {
 
     // callback called when the MQTT client closes connection
     private Handler<AmqpBridge> mqttEndpointCloseHandler;
+
+    // topic subscriptions with granted QoS levels
+    private Map<String, MqttQoS> grantedQoSLevels;
 
     /**
      * Constructor
@@ -135,17 +140,25 @@ public class AmqpBridge {
 
                         this.rcvEndpoint.publishHandler(this::publishHandler);
                         this.rcvEndpoint.pubrelHandler(this::pubrelHandler);
-                        // open unique client publish address receiver
-                        this.rcvEndpoint.openPublish();
 
                         AmqpSubscriptionsMessage amqpSubscriptionsMessage = ar.result();
 
                         if (amqpSubscriptionsMessage != null) {
                             this.mqttEndpoint.accept(!amqpSubscriptionsMessage.topicSubscriptions().isEmpty());
+                            // added topic subscriptions of a previous session in the local collection
+                            this.grantedQoSLevels = amqpSubscriptionsMessage.topicSubscriptions()
+                                    .stream()
+                                    .collect(Collectors.toMap(amqpTopicSubscription -> amqpTopicSubscription.topic(),
+                                            amqpTopicSubscription -> amqpTopicSubscription.qos()));
+
                         } else {
                             this.mqttEndpoint.accept(false);
+                            this.grantedQoSLevels = new HashMap<>();
                         }
                         LOG.info("CONNACK to MQTT client {} [accepted]", this.mqttEndpoint.clientIdentifier());
+
+                        // open unique client publish address receiver
+                        this.rcvEndpoint.openPublish();
 
                         openHandler.handle(Future.succeededFuture(AmqpBridge.this));
 
@@ -269,6 +282,8 @@ public class AmqpBridge {
         this.pubEndpoint.close();
 
         this.connection.close();
+
+        this.grantedQoSLevels.clear();
     }
 
     /**
@@ -331,9 +346,20 @@ public class AmqpBridge {
      */
     private void publishHandler(AmqpPublishMessage publish) {
 
-        this.mqttEndpoint.publish(publish.topic(), publish.payload(), publish.qos(), publish.isDup(), publish.isRetain());
+        // MQTT 3.1.1 spec :  The QoS of Payload Messages sent in response to a Subscription MUST be
+        // the minimum of the QoS of the originally published message and the maximum QoS granted by the Server
+        MqttQoS qos = (publish.qos().value() < this.grantedQoSLevels.get(publish.topic()).value()) ?
+                publish.qos() :
+                this.grantedQoSLevels.get(publish.topic());
+
+        this.mqttEndpoint.publish(publish.topic(), publish.payload(), qos, publish.isDup(), publish.isRetain());
 
         LOG.info("PUBLISH [{}] to MQTT client {}", publish.messageId(), this.mqttEndpoint.clientIdentifier());
+
+        // for QoS 0, message settled immediately
+        if (qos == MqttQoS.AT_MOST_ONCE) {
+            this.rcvEndpoint.settle(publish.messageId());
+        }
     }
 
     /**
@@ -391,6 +417,11 @@ public class AmqpBridge {
 
                 this.mqttEndpoint.subscribeAcknowledge((int) amqpSubscribeMessage.messageId(), grantedQoSLevels);
 
+                // add topic subscriptions to the local collection
+                amqpSubscribeMessage.topicSubscriptions().stream().forEach(amqpTopicSubscription -> {
+                    this.grantedQoSLevels.put(amqpTopicSubscription.topic(), amqpTopicSubscription.qos());
+                });
+
                 LOG.info("SUBACK [{}] to MQTT client {}", amqpSubscribeMessage.messageId(), this.mqttEndpoint.clientIdentifier());
             }
         });
@@ -417,6 +448,12 @@ public class AmqpBridge {
             if (done.succeeded()) {
 
                 this.mqttEndpoint.unsubscribeAcknowledge((int) amqpUnsubscribeMessage.messageId());
+
+                // removing topics from local collection
+                unsubscribe.topics().stream().forEach(topic -> {
+
+                    this.grantedQoSLevels.remove(topic);
+                });
 
                 LOG.info("UNSUBACK [{}] to MQTT client {}", amqpUnsubscribeMessage.messageId(), this.mqttEndpoint.clientIdentifier());
             }

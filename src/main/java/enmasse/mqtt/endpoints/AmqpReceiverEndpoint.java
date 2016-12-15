@@ -19,7 +19,6 @@ package enmasse.mqtt.endpoints;
 import enmasse.mqtt.messages.AmqpPublishMessage;
 import enmasse.mqtt.messages.AmqpPubrelMessage;
 import enmasse.mqtt.messages.AmqpSubscriptionsMessage;
-import io.netty.handler.codec.mqtt.MqttQoS;
 import io.vertx.core.Handler;
 import io.vertx.proton.ProtonDelivery;
 import io.vertx.proton.ProtonQoS;
@@ -123,39 +122,21 @@ public class AmqpReceiverEndpoint {
 
                     AmqpPublishMessage amqpPublishMessage = AmqpPublishMessage.from(message);
 
-                    // QoS 0 : immediate disposition (settle), then passing to the bridge handler
-                    if (amqpPublishMessage.qos() == MqttQoS.AT_MOST_ONCE) {
-
-                        if (!delivery.remotelySettled()) {
-                            delivery.disposition(Accepted.getInstance(), true);
-                        }
-                        this.handlePublish(amqpPublishMessage);
-
-                    // QoS 1 : passing to the bridge handle first, added to deliveries (be settled after bridge handling)
-                    } else if (amqpPublishMessage.qos() == MqttQoS.AT_LEAST_ONCE) {
-
-                        this.handlePublish(amqpPublishMessage);
-                        if (!delivery.remotelySettled()) {
-                            this.deliveries.put(message.getMessageId(), delivery);
-                        }
-
-                    // QoS 2 :
-                    } else {
-
-                        this.handlePublish(amqpPublishMessage);
-                        if (!delivery.remotelySettled()) {
-                            this.deliveries.put(message.getMessageId(), delivery);
-                        }
+                    // settlement depends on the QoS levels that could be different from the current one in the
+                    // publish message. The AMQP bridge checks the granted QoS as well (MQTT 3.1.1)
+                    if (!delivery.remotelySettled()) {
+                        this.deliveries.put(message.getMessageId(), delivery);
                     }
+                    this.handlePublish(amqpPublishMessage);
 
                     break;
 
                 case AmqpPubrelMessage.AMQP_SUBJECT:
 
-                    this.handlePubrel(AmqpPubrelMessage.from(message));
                     if (!delivery.remotelySettled()) {
                         this.deliveries.put(message.getMessageId(), delivery);
                     }
+                    this.handlePubrel(AmqpPubrelMessage.from(message));
 
                     break;
             }
@@ -222,6 +203,7 @@ public class AmqpReceiverEndpoint {
         if (this.deliveries.containsKey(messageId)) {
             ProtonDelivery delivery = this.deliveries.remove(messageId);
             delivery.disposition(Accepted.getInstance(), true);
+            LOG.info("AMQP message [{}] settled", messageId);
         }
     }
 
