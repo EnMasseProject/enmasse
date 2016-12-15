@@ -99,7 +99,7 @@ public class OpenshiftResourceDatabaseTest {
         listener.eventReceived(Watcher.Action.ADDED, createResource("r1"));
 
         assertNotNull(sub.lastValue);
-        assertValue(sub.lastValue, "r1");
+        assertValue(sub.lastValue, "val");
     }
 
     private void waitForExecutor() throws InterruptedException {
@@ -116,32 +116,41 @@ public class OpenshiftResourceDatabaseTest {
         waitForExecutor();
 
         Watcher listener = getListener();
-        listener.eventReceived(Watcher.Action.ADDED, createResource("r1"));
+        listener.eventReceived(Watcher.Action.ADDED, createResource("r1", "v1"));
 
         assertNotNull(sub.lastValue);
-        assertValue(sub.lastValue, "r1");
+        assertValue(sub.lastValue, "v1");
 
-        listener.eventReceived(Watcher.Action.ADDED, createResource("r2"));
+        listener.eventReceived(Watcher.Action.ADDED, createResource("r2", "v2"));
 
         assertNotNull(sub.lastValue);
-        assertValue(sub.lastValue, "r1", "r2");
+        assertValue(sub.lastValue, "v1", "v2");
 
         listener.eventReceived(Watcher.Action.DELETED, createResource("r1"));
         assertNotNull(sub.lastValue);
-        assertValue(sub.lastValue, "r2");
+        assertValue(sub.lastValue, "v2");
+
+        listener.eventReceived(Watcher.Action.MODIFIED, createResource("r2", "v22"));
+        assertNotNull(sub.lastValue);
+        assertValue(sub.lastValue, "v22");
     }
 
-    private static void assertValue(Message message, String ... resourceIds) {
+    private static void assertValue(Message message, String ... values) {
         AmqpSequence seq = (AmqpSequence) message.getBody();
-        Set<String> expected = new LinkedHashSet<>(Arrays.asList(resourceIds));
+        Set<String> expected = new LinkedHashSet<>(Arrays.asList(values));
         Set<String> actual = new LinkedHashSet<>();
         for (Object o : seq.getValue()) {
-            actual.add((String)o);
+            actual.add((String) o);
         }
         assertEquals(expected, actual);
     }
+
     private static TestResource createResource(String name) {
-        return new TestResource(name, Collections.singletonMap("key", "value"));
+        return createResource(name, "val");
+    }
+
+    private static TestResource createResource(String name, String value) {
+        return new TestResource(name, Collections.singletonMap("key", "value"), value);
     }
 
     public static class TestSubscriber implements Subscriber {

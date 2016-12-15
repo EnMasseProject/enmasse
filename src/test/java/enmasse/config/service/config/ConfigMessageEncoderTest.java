@@ -37,8 +37,8 @@ public class ConfigMessageEncoderTest {
         ConfigMessageEncoder encoder = new ConfigMessageEncoder();
 
         Set<Resource<HasMetadata>> configSet = new LinkedHashSet<>(Arrays.asList(
-                new Resource<>(new TestResource("r1", AddressConfigCodec.encodeLabels("myqueue", true, false))),
-                new Resource<>(new TestResource("r2", AddressConfigCodec.encodeLabels("mytopic", true, true)))));
+                new Resource<>(new TestResource("r1", AddressConfigCodec.encodeLabels("myqueue", true, false), "v1")),
+                new Resource<>(new TestResource("r2", AddressConfigCodec.encodeLabels("mytopic", true, true), "v2"))));
 
         Message message = encoder.encode(configSet);
         String json = (String) ((AmqpValue) message.getBody()).getValue();

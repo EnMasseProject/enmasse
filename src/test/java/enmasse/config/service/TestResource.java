@@ -7,10 +7,12 @@ import java.util.Map;
 
 public class TestResource implements HasMetadata {
     private final ObjectMeta meta = new ObjectMeta();
+    private final String value;
 
-    public TestResource(String name, Map<String, String> labelMap) {
+    public TestResource(String name, Map<String, String> labelMap, String value) {
         meta.setName(name);
         meta.setLabels(labelMap);
+        this.value = value;
     }
 
     @Override
@@ -21,6 +23,10 @@ public class TestResource implements HasMetadata {
     @Override
     public void setMetadata(ObjectMeta metadata) {
 
+    }
+
+    public String getValue() {
+        return value;
     }
 
     @Override

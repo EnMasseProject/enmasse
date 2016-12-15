@@ -17,7 +17,7 @@ public class TestSubscriptionConfig implements SubscriptionConfig {
         return set -> {
             Message message = Message.Factory.create();
 
-            message.setBody(new AmqpSequence(set.stream().map(r -> r.getResource().getMetadata().getName()).collect(Collectors.toList())));
+            message.setBody(new AmqpSequence(set.stream().map(r -> r.getResource().getValue()).collect(Collectors.toList())));
             return message;
         };
     }

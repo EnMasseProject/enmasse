@@ -87,6 +87,7 @@ public class OpenshiftResourceObserver implements AutoCloseable, Watcher {
             resourceSet.remove(resource);
             log.info("Resource " + resource + " deleted!");
         } else if (action.equals(Action.MODIFIED)) {
+            resourceSet.remove(resource);
             resourceSet.add(resource);
             log.info("Resource " + resource + " updated!");
         } else if (action.equals(Action.ERROR)) {
