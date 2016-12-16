@@ -45,7 +45,7 @@ public class AmqpReceiverEndpoint {
     // handler called when AMQP_SUBSCRIPTIONS is received
     private Handler<AmqpSubscriptionsMessage> subscriptionsHandler;
     // handler called when AMQP_PUBLISH is received
-    private Handler<AmqpPublishMessage> publishHandler;
+    private Handler<AmqpPublishData> publishHandler;
     // handler called when AMQP_PUBREL is received
     private Handler<AmqpPubrelMessage> pubrelHandler;
     // all delivery for received messages if they need settlement (messageId -> delivery)
@@ -78,7 +78,7 @@ public class AmqpReceiverEndpoint {
      * @param handler   the handler
      * @return  the current AmqpReceiverEndpoint instance
      */
-    public AmqpReceiverEndpoint publishHandler(Handler<AmqpPublishMessage> handler) {
+    public AmqpReceiverEndpoint publishHandler(Handler<AmqpPublishData> handler) {
 
         this.publishHandler = handler;
         return this;
@@ -120,14 +120,15 @@ public class AmqpReceiverEndpoint {
 
                 case AmqpPublishMessage.AMQP_SUBJECT:
 
-                    AmqpPublishMessage amqpPublishMessage = AmqpPublishMessage.from(message);
+                    AmqpPublishData amqpPublishData = new AmqpPublishData();
+                    amqpPublishData.setAmqpPublishMessage(AmqpPublishMessage.from(message));
 
+                    this.handlePublish(amqpPublishData);
                     // settlement depends on the QoS levels that could be different from the current one in the
                     // publish message. The AMQP bridge checks the granted QoS as well (MQTT 3.1.1)
                     if (!delivery.remotelySettled()) {
-                        this.deliveries.put(message.getMessageId(), delivery);
+                        this.deliveries.put(amqpPublishData.messageId(), delivery);
                     }
-                    this.handlePublish(amqpPublishMessage);
 
                     break;
 
@@ -145,9 +146,12 @@ public class AmqpReceiverEndpoint {
 
             // TODO: published message (i.e. from native AMQP clients) could not have subject "publish" and all needed annotations !!!
             message.setSubject(AmqpPublishMessage.AMQP_SUBJECT);
-            this.handlePublish(AmqpPublishMessage.from(message));
+            AmqpPublishData amqpPublishData = new AmqpPublishData();
+            amqpPublishData.setAmqpPublishMessage(AmqpPublishMessage.from(message));
+
+            this.handlePublish(amqpPublishData);
             if (!delivery.remotelySettled()) {
-                this.deliveries.put(message.getMessageId(), delivery);
+                this.deliveries.put(amqpPublishData.messageId(), delivery);
             }
         }
     }
@@ -222,12 +226,12 @@ public class AmqpReceiverEndpoint {
     /**
      * Used for calling the session handler when AMQP_PUBLISH is received
      *
-     * @param amqpPublishMessage AMQP_PUBLISH message
+     * @param amqpPublishData object with the AMQP_PUBLISH message
      */
-    private void handlePublish(AmqpPublishMessage amqpPublishMessage) {
+    private void handlePublish(AmqpPublishData amqpPublishData) {
 
         if (this.publishHandler != null) {
-            this.publishHandler.handle(amqpPublishMessage);
+            this.publishHandler.handle(amqpPublishData);
         }
     }
 

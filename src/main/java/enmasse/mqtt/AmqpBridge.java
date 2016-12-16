@@ -16,6 +16,7 @@
 
 package enmasse.mqtt;
 
+import enmasse.mqtt.endpoints.AmqpPublishData;
 import enmasse.mqtt.endpoints.AmqpPublishEndpoint;
 import enmasse.mqtt.endpoints.AmqpPublisher;
 import enmasse.mqtt.endpoints.AmqpReceiver;
@@ -342,9 +343,11 @@ public class AmqpBridge {
     /**
      * Handler for incoming AMQP_PUBLISH message
      *
-     * @param publish   AMQP_PUBLISH message
+     * @param amqpPublishData   object with the AMQP_PUBLISH message
      */
-    private void publishHandler(AmqpPublishMessage publish) {
+    private void publishHandler(AmqpPublishData amqpPublishData) {
+
+        AmqpPublishMessage publish = amqpPublishData.amqpPublishMessage();
 
         // MQTT 3.1.1 spec :  The QoS of Payload Messages sent in response to a Subscription MUST be
         // the minimum of the QoS of the originally published message and the maximum QoS granted by the Server
@@ -353,12 +356,14 @@ public class AmqpBridge {
                 this.grantedQoSLevels.get(publish.topic());
 
         this.mqttEndpoint.publish(publish.topic(), publish.payload(), qos, publish.isDup(), publish.isRetain());
+        // the the message identifier assigned to the published message
+        amqpPublishData.setMessageId(this.mqttEndpoint.lastMessageId());
 
-        LOG.info("PUBLISH [{}] to MQTT client {}", publish.messageId(), this.mqttEndpoint.clientIdentifier());
+        LOG.info("PUBLISH [{}] to MQTT client {}", this.mqttEndpoint.lastMessageId(), this.mqttEndpoint.clientIdentifier());
 
         // for QoS 0, message settled immediately
         if (qos == MqttQoS.AT_MOST_ONCE) {
-            this.rcvEndpoint.settle(publish.messageId());
+            this.rcvEndpoint.settle(amqpPublishData.messageId());
         }
     }
 
