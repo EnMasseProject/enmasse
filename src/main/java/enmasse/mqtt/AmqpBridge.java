@@ -349,21 +349,30 @@ public class AmqpBridge {
 
         AmqpPublishMessage publish = amqpPublishData.amqpPublishMessage();
 
-        // MQTT 3.1.1 spec :  The QoS of Payload Messages sent in response to a Subscription MUST be
-        // the minimum of the QoS of the originally published message and the maximum QoS granted by the Server
-        MqttQoS qos = (publish.qos().value() < this.grantedQoSLevels.get(publish.topic()).value()) ?
-                publish.qos() :
-                this.grantedQoSLevels.get(publish.topic());
+        // defensive ... check that current bridge has information about subscriptions and related granted QoS
+        // see https://github.com/EnMasseProject/subserv/issues/8
+        if ((this.grantedQoSLevels.size() != 0) && (this.grantedQoSLevels.containsKey(publish.topic()))) {
 
-        this.mqttEndpoint.publish(publish.topic(), publish.payload(), qos, publish.isDup(), publish.isRetain());
-        // the the message identifier assigned to the published message
-        amqpPublishData.setMessageId(this.mqttEndpoint.lastMessageId());
+            // MQTT 3.1.1 spec :  The QoS of Payload Messages sent in response to a Subscription MUST be
+            // the minimum of the QoS of the originally published message and the maximum QoS granted by the Server
+            MqttQoS qos = (publish.qos().value() < this.grantedQoSLevels.get(publish.topic()).value()) ?
+                    publish.qos() :
+                    this.grantedQoSLevels.get(publish.topic());
 
-        LOG.info("PUBLISH [{}] to MQTT client {}", this.mqttEndpoint.lastMessageId(), this.mqttEndpoint.clientIdentifier());
+            this.mqttEndpoint.publish(publish.topic(), publish.payload(), qos, publish.isDup(), publish.isRetain());
+            // the the message identifier assigned to the published message
+            amqpPublishData.setMessageId(this.mqttEndpoint.lastMessageId());
 
-        // for QoS 0, message settled immediately
-        if (qos == MqttQoS.AT_MOST_ONCE) {
-            this.rcvEndpoint.settle(amqpPublishData.messageId());
+            LOG.info("PUBLISH [{}] to MQTT client {}", this.mqttEndpoint.lastMessageId(), this.mqttEndpoint.clientIdentifier());
+
+            // for QoS 0, message settled immediately
+            if (qos == MqttQoS.AT_MOST_ONCE) {
+                this.rcvEndpoint.settle(amqpPublishData.messageId());
+            }
+
+        } else {
+
+            LOG.error("Published message : MQTT client {} is not subscribed to {} !!", this.mqttEndpoint.clientIdentifier(), publish.topic());
         }
     }
 
