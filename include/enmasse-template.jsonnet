@@ -12,6 +12,7 @@ local messagingRoute = import "messaging-route.json";
 local addressConfig = import "addresses.json";
 local flavorConfig = import "flavor.jsonnet";
 local restapi = import "restapi.jsonnet";
+local restapiRoute = import "restapi-route.jsonnet";
 local common = import "common.jsonnet";
 local admin = import "admin.jsonnet";
 local mqttFrontend = import "mqtt-frontend.jsonnet";
@@ -32,7 +33,7 @@ local mqttFrontend = import "mqtt-frontend.jsonnet";
                  storage.template(true, false, secure),
                  storage.template(true, true, secure),
                  import "direct-template.json",
-                 import "restapi-route.json",
+                 restapiRoute.generate(true),
 
                  router.imagestream("${ROUTER_REPO}"),
                  qdrouterd.deployment(secure),

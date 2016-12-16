@@ -470,10 +470,10 @@ objects:
   spec:
     host: "${RESTAPI_HOSTNAME}"
     port:
-      targetPort: http
+      targetPort: restapi
     to:
       kind: Service
-      name: restapi
+      name: admin
 - apiVersion: v1
   kind: ImageStream
   metadata:
