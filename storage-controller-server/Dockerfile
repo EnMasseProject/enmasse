@@ -1,5 +1,6 @@
-FROM openjdk:8-jre
+FROM openjdk:8-jre-alpine
 
+RUN apk add --no-cache bash
 ADD build/distributions/storage-controller-server.tar /
 
 EXPOSE 55674
