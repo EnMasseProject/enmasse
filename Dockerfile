@@ -1,4 +1,5 @@
-FROM node:0.12
+FROM node:6-alpine
+RUN apk add --no-cache git
 # RUN npm install debug && npm install bluebird && npm install rhea
 RUN npm install debug && npm install bluebird && npm install https://github.com/grs/rhea
 ADD subserv.tgz /usr/local/subserv
