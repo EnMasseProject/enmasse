@@ -17,7 +17,7 @@
 package enmasse.config.service.amqp;
 
 import enmasse.config.service.model.ResourceDatabase;
-import io.vertx.core.Vertx;
+import io.vertx.core.AbstractVerticle;
 import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.ProtonSender;
 import io.vertx.proton.ProtonServer;
@@ -35,23 +35,19 @@ import java.util.Map;
  *
  * TODO: Handle disconnects and unsubscribe
  */
-public class AMQPServer {
+public class AMQPServer extends AbstractVerticle {
     private static final Logger log = LoggerFactory.getLogger(AMQPServer.class.getName());
 
-    private final Vertx vertx = Vertx.vertx();
     private final ResourceDatabase database;
-    private final ProtonServer server;
     private final String hostname;
     private final int port;
+    private volatile ProtonServer server;
 
     public AMQPServer(String hostname, int port, ResourceDatabase database)
     {
         this.hostname = hostname;
         this.port = port;
         this.database = database;
-        this.server = ProtonServer.create(vertx);
-
-        server.connectHandler(this::connectHandler);
     }
 
     private void connectHandler(ProtonConnection connection) {
@@ -95,17 +91,25 @@ public class AMQPServer {
         return filterMap;
     }
 
-    public void run() {
+    @Override
+    public void start() {
+        server = ProtonServer.create(vertx);
+        server.connectHandler(this::connectHandler);
         log.info("Starting server on {}:{}", hostname, port);
         server.listen(port, hostname);
     }
 
     public int port() {
+        if (server == null) {
+            return 0;
+        }
         return server.actualPort();
     }
 
-    public void close() {
-        server.close();
-        vertx.close();
+    @Override
+    public void stop() {
+        if (server != null) {
+            server.close();
+        }
     }
 }

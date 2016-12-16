@@ -23,6 +23,7 @@ import io.fabric8.openshift.client.DefaultOpenShiftClient;
 import io.fabric8.openshift.client.OpenShiftClient;
 import io.fabric8.openshift.client.OpenShiftConfig;
 import io.fabric8.openshift.client.OpenShiftConfigBuilder;
+import io.vertx.core.Vertx;
 
 import java.io.File;
 import java.io.IOException;
@@ -50,7 +51,8 @@ public class Main {
             OpenshiftResourceDatabase database = new OpenshiftResourceDatabase(client, Collections.singletonMap("maas", new ConfigSubscriptionConfig()));
             AMQPServer server = new AMQPServer(listenAddress, listenPort, database);
 
-            server.run();
+            Vertx vertx = Vertx.vertx();
+            vertx.deployVerticle(server);
         } catch (IllegalArgumentException e) {
             System.out.println("Error parsing environment: " + e.getMessage());
             System.exit(1);

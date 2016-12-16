@@ -18,8 +18,8 @@ package enmasse.config.service.amqp;
 
 import enmasse.config.service.model.ResourceDatabase;
 import enmasse.config.service.model.Subscriber;
+import io.vertx.core.Vertx;
 import io.vertx.proton.ProtonMessageHandler;
-import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.message.Message;
 import org.junit.After;
@@ -35,16 +35,18 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.*;
 
 public class AMQPServerTest {
+    private Vertx vertx;
     private AMQPServer server;
     private ResourceDatabase database;
     private TestClient client;
 
     @Before
     public void setup() throws InterruptedException {
+        vertx = Vertx.vertx();
         database = mock(ResourceDatabase.class);
         when(database.subscribe(any(), any(), any())).thenReturn(true);
         server = new AMQPServer("localhost", 0, database);
-        server.run();
+        vertx.deployVerticle(server);
         int port = waitForPort(server);
         System.out.println("Server running on port " + server.port());
         client = new TestClient("localhost", port);
@@ -62,7 +64,7 @@ public class AMQPServerTest {
     @After
     public void teardown() {
         client.close();
-        server.close();
+        vertx.close();
     }
 
     @Test
