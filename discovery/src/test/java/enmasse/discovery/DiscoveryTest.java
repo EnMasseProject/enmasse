@@ -1,8 +1,6 @@
 package enmasse.discovery;
 
 import enmasse.config.service.amqp.AMQPServer;
-import enmasse.config.service.model.ResourceDatabase;
-import enmasse.config.service.model.Subscriber;
 import io.vertx.core.Vertx;
 import org.apache.qpid.proton.amqp.messaging.AmqpSequence;
 import org.apache.qpid.proton.message.Message;
@@ -45,8 +43,8 @@ public class DiscoveryTest {
 
             Message message = Message.Factory.create();
             Map<String, Object> responseMap = new LinkedHashMap<>();
-            Map<Integer, String> portMap = Collections.singletonMap(1234, "http");
-            responseMap.put("ip", "10.0.0.1");
+            Map<String, Map<String, Integer>> portMap = Collections.singletonMap("c", Collections.singletonMap("http", 1234));
+            responseMap.put("host", "10.0.0.1");
             responseMap.put("ports", portMap);
             AmqpSequence seq = new AmqpSequence(Collections.singletonList(responseMap));
             message.setBody(seq);
@@ -56,7 +54,7 @@ public class DiscoveryTest {
         });
 
         vertx.deployVerticle(testServer);
-        DiscoveryClient client = new DiscoveryClient(new Endpoint("127.0.0.1", waitForPort(testServer)), expectedFilter);
+        DiscoveryClient client = new DiscoveryClient(new Endpoint("127.0.0.1", waitForPort(testServer)), expectedFilter, Optional.empty());
         client.addListener(changedHosts::complete);
         vertx.deployVerticle(client);
 

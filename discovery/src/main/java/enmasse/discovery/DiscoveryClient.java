@@ -38,14 +38,16 @@ public class DiscoveryClient extends AbstractVerticle {
     private final List<DiscoveryListener> listeners = new ArrayList<>();
     private final Logger log = LoggerFactory.getLogger(DiscoveryClient.class.getName());
     private final Endpoint endpoint;
+    private final Optional<String> containerName;
 
-    public DiscoveryClient(Endpoint endpoint, Map<String, String> labelFilter) {
+    public DiscoveryClient(Endpoint endpoint, Map<String, String> labelFilter, Optional<String> containerName) {
         this.endpoint = endpoint;
         this.labelFilter = toSymbolMap(labelFilter);
+        this.containerName = containerName;
     }
 
-    public DiscoveryClient(Map<String, String> labelFilter) {
-        this(getPodSenseEndpoint(), labelFilter);
+    public DiscoveryClient(Map<String, String> labelFilter, Optional<String> containerName) {
+        this(getPodSenseEndpoint(), labelFilter, containerName);
     }
 
     private static Endpoint getPodSenseEndpoint() {
@@ -103,13 +105,13 @@ public class DiscoveryClient extends AbstractVerticle {
         AmqpSequence sequence = (AmqpSequence) message.getBody();
         for (Object obj : sequence.getValue()) {
             Map<String, Object> podInfo = (Map<String, Object>) obj;
-            String ip = (String) podInfo.get("ip");
-            Map<String, Integer> reversedMap = new HashMap<>();
-            Map<Integer, String> portMap = (Map<Integer, String>) podInfo.get("ports");
-            for (Map.Entry<Integer, String> port : portMap.entrySet()) {
-                reversedMap.put(port.getValue(), port.getKey());
+            String host = (String) podInfo.get("host");
+            Map<String, Map<String, Integer>> portMap = (Map<String, Map<String, Integer>>) podInfo.get("ports");
+            if (containerName.isPresent()) {
+                hosts.add(new Host(host, portMap.get(containerName.get())));
+            } else {
+                hosts.add(new Host(host, portMap.values().iterator().next()));
             }
-            hosts.add(new Host(ip, reversedMap));
         }
         return hosts;
     }
