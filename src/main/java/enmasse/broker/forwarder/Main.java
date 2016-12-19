@@ -41,6 +41,7 @@ public class Main {
 
         DiscoveryClient discoveryClient = new DiscoveryClient(labelFilter, Optional.of("broker"));
         ForwarderController replicator = new ForwarderController(localHost, address);
+        discoveryClient.addListener(replicator);
 
         Vertx vertx = Vertx.vertx();
         vertx.deployVerticle(replicator, result -> {
@@ -48,9 +49,6 @@ public class Main {
                 vertx.deployVerticle(discoveryClient);
             }
         });
-        discoveryClient.addListener(replicator);
-
-        discoveryClient.start();
     }
 
     private static String getAddress(Map<String, String> env) {
