@@ -8,8 +8,8 @@ set of pods changes the service will send a message with the following format (u
 ```
     list
         map <string, *>
-            "ip": string
-            "ports": map <int string>
+            "host": string
+            "ports": map <string, map<string, int>>
 ```
 
-The `ports` field has a map from `port number` to `port name` for all containers in the pod.
+The `ports` field has a map from `container name` to another map of `port name` to `port number` for each container.
