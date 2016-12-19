@@ -17,6 +17,7 @@
 package enmasse.broker.prestop;
 
 import enmasse.discovery.Host;
+import io.vertx.core.Vertx;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.message.Message;
 import org.junit.After;
@@ -65,7 +66,7 @@ public class TopicMigratorTest {
         System.out.println("Publishing message");
         publisher.publish(from.amqpEndpoint(), "mytopic", "hello, world");
 
-        TopicMigrator migrator = new TopicMigrator(from);
+        TopicMigrator migrator = new TopicMigrator(Vertx.vertx(), from);
         migrator.hostsChanged(Collections.singleton(to));
 
         System.out.println("Starting migrator");

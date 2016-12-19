@@ -34,13 +34,14 @@ import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
 public class TopicMigrator implements DiscoveryListener {
-    private final Vertx vertx = Vertx.vertx();
+    private final Vertx vertx;
     private volatile Set<Host> destinationBrokers = Collections.emptySet();
     private final Host localHost;
     private final BrokerManager localBroker;
     private final ExecutorService service = Executors.newSingleThreadExecutor();
 
-    public TopicMigrator(Host localHost) throws Exception {
+    public TopicMigrator(Vertx vertx, Host localHost) throws Exception {
+        this.vertx = vertx;
         this.localHost = localHost;
         this.localBroker = new BrokerManager(localHost.coreEndpoint());
     }
