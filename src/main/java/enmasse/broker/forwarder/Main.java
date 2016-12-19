@@ -26,6 +26,7 @@ import java.net.UnknownHostException;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Main entry point for topic forwarder.
@@ -38,7 +39,7 @@ public class Main {
         Host localHost = getLocalHost();
         String address = getAddress(env);
 
-        DiscoveryClient discoveryClient = new DiscoveryClient(labelFilter);
+        DiscoveryClient discoveryClient = new DiscoveryClient(labelFilter, Optional.of("broker"));
         ForwarderController replicator = new ForwarderController(localHost, address);
 
         Vertx vertx = Vertx.vertx();
