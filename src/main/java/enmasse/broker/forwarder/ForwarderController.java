@@ -19,6 +19,7 @@ package enmasse.broker.forwarder;
 import enmasse.discovery.DiscoveryListener;
 import enmasse.discovery.Host;
 import io.netty.handler.codec.http.HttpResponseStatus;
+import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Vertx;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,11 +32,10 @@ import java.util.Set;
 /**
  * Maintains a set of {@link Forwarder} instances from a given host based on discovered hosts.
  */
-public class ForwarderController implements DiscoveryListener {
+public class ForwarderController extends AbstractVerticle implements DiscoveryListener {
     private static final Logger log = LoggerFactory.getLogger(ForwarderController.class.getName());
 
-    private final Vertx vertx = Vertx.vertx();
-    private final Map<Host, Forwarder> replicatedHosts = new HashMap<>();
+    private final Map<Host, String> replicatedHosts = new HashMap<>();
 
     private final Host localHost;
     private final String address;
@@ -44,10 +44,10 @@ public class ForwarderController implements DiscoveryListener {
     public ForwarderController(Host localHost, String address) {
         this.localHost = localHost;
         this.address = address;
-        startHealthServer();
     }
 
-    private void startHealthServer() {
+    @Override
+    public void start() {
         vertx.createHttpServer()
                 .requestHandler(request -> request.response().setStatusCode(HttpResponseStatus.OK.code()).end())
                 .listen(8080);
@@ -76,16 +76,19 @@ public class ForwarderController implements DiscoveryListener {
     }
 
     private void deleteForwarder(Host host) {
-        Forwarder forwarder = replicatedHosts.remove(host);
+        String forwarder = replicatedHosts.remove(host);
         log.info("Deleting forwarder " + forwarder);
         assert (forwarder != null);
-        vertx.runOnContext(event -> forwarder.stop());
+        vertx.undeploy(forwarder);
     }
 
     private void createForwarder(Host host) {
-        Forwarder forwarder = new Forwarder(vertx, localHost.amqpEndpoint(), host.amqpEndpoint(), address, connectionRetryInterval);
+        Forwarder forwarder = new Forwarder(localHost.amqpEndpoint(), host.amqpEndpoint(), address, connectionRetryInterval);
         log.info("Creating forwarder " + forwarder);
-        replicatedHosts.put(host, forwarder);
-        forwarder.start();
+        vertx.deployVerticle(forwarder, result -> {
+            if (result.succeeded()) {
+                replicatedHosts.put(host, result.result());
+            }
+        });
     }
 }

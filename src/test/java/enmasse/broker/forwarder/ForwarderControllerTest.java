@@ -58,8 +58,11 @@ public class ForwarderControllerTest {
     }
 
     @After
-    public void teardown() {
+    public void teardown() throws Exception {
         vertx.close();
+        serverA.stop();
+        serverB.stop();
+        serverC.stop();
     }
 
     @Test
@@ -69,6 +72,7 @@ public class ForwarderControllerTest {
         Host hostC = new Host(localHost, Collections.singletonMap("amqp", 5674));
 
         ForwarderController replicator = new ForwarderController(hostA, address);
+        vertx.deployVerticle(replicator);
 
         Set<Host> hosts = new LinkedHashSet<>();
         hosts.add(hostB);
@@ -80,7 +84,7 @@ public class ForwarderControllerTest {
         long timeout = 60_000;
         waitForConnections(serverA, 2, timeout);
         waitForConnections(serverB, 1, timeout);
-        waitForConnections(serverB, 1, timeout);
+        waitForConnections(serverC, 1, timeout);
 
         CompletableFuture<List<String>> resultB = serverB.recvMessages(2, 60, TimeUnit.SECONDS);
         CompletableFuture<List<String>> resultC = serverC.recvMessages(2, 60, TimeUnit.SECONDS);
@@ -90,7 +94,18 @@ public class ForwarderControllerTest {
 
         assertMessages(resultB.get(120, TimeUnit.SECONDS), "Hello 1", "Hello 2");
         assertMessages(resultC.get(120, TimeUnit.SECONDS), "Hello 1", "Hello 2");
-        vertx.close();
+
+        hosts.remove(hostB);
+        replicator.hostsChanged(hosts);
+
+        waitForConnections(serverA, 2, timeout);
+        waitForConnections(serverB, 0, timeout);
+        waitForConnections(serverC, 1, timeout);
+
+        resultC = serverC.recvMessages(2, 60, TimeUnit.SECONDS);
+        serverA.sendMessage("Hello 3", 60, TimeUnit.SECONDS);
+        serverA.sendMessage("Hello 4", 60, TimeUnit.SECONDS);
+        assertMessages(resultC.get(120, TimeUnit.SECONDS), "Hello 3", "Hello 4");
     }
 
     private void assertMessages(List<String> result, String...messages) {

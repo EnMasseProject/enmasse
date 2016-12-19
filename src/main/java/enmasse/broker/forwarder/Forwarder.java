@@ -17,7 +17,7 @@
 package enmasse.broker.forwarder;
 
 import enmasse.discovery.Endpoint;
-import io.vertx.core.Vertx;
+import io.vertx.core.AbstractVerticle;
 import io.vertx.proton.ProtonClient;
 import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.ProtonDelivery;
@@ -39,11 +39,9 @@ import java.util.Optional;
 /**
  * A forwarder forwards AMQP messages from one host to another, using durable subscriptions, flow control and linked acknowledgement.
  */
-public class Forwarder {
+public class Forwarder extends AbstractVerticle {
     private static final Logger log = LoggerFactory.getLogger(Forwarder.class.getName());
 
-    private final Vertx vertx;
-    private final ProtonClient client;
     private final String address;
     private final Endpoint from;
     private final Endpoint to;
@@ -55,21 +53,21 @@ public class Forwarder {
     private static Symbol replicated = Symbol.getSymbol("replicated");
     private static Symbol topic = Symbol.getSymbol("topic");
 
-    public Forwarder(Vertx vertx, Endpoint from, Endpoint to, String address, long connectionRetryInterval) {
-        this.vertx = vertx;
-        this.client = ProtonClient.create(vertx);
+    public Forwarder(Endpoint from, Endpoint to, String address, long connectionRetryInterval) {
         this.from = from;
         this.to = to;
         this.address = address;
         this.connectionRetryInterval = connectionRetryInterval;
     }
 
+    @Override
     public void start() {
         startSender();
     }
 
     private void startReceiver(ProtonSender sender, String containerId) {
         log.info("Starting receiver");
+        ProtonClient client = ProtonClient.create(vertx);
         client.connect(from.hostname(), from.port(), event -> {
             if (event.succeeded()) {
                 ProtonConnection connection = event.result();
@@ -120,6 +118,7 @@ public class Forwarder {
     }
 
     private void startSender() {
+        ProtonClient client = ProtonClient.create(vertx);
         log.info(this + ": starting sender");
         client.connect(to.hostname(), to.port(), event -> {
             if (event.succeeded()) {
@@ -184,6 +183,7 @@ public class Forwarder {
         });
     }
 
+    @Override
     public void stop() {
         receiverConnection.ifPresent(ProtonConnection::close);
         senderConnection.ifPresent(ProtonConnection::close);

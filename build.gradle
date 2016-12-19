@@ -1,6 +1,5 @@
 ext {
-    openshiftRestclientVersion = '5.1.0.Final'
-    artemisVersion = '1.5.0'
+    artemisVersion = '1.5.1'
     vertxProtonVersion = '3.3.3'
     slf4jVersion = '1.7.21'
     hamcrestVersion = '1.3'
