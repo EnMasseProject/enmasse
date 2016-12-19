@@ -1,14 +1,21 @@
 ext {
-    openshiftRestclientVersion = '5.1.0.Final'
+    vertxVersion = '3.3.3'
+    slf4jVersion = '1.7.21'
     junitVersion = '4.12'
     mockitoVersion = '2.0.52-beta'
 }
 
-description = 'Library for service discovery in openshift'
+repositories {
+    maven { url 'https://jitpack.io' }
+}
+
+description = 'Podsense client library for service discovery in openshift'
 dependencies {
-    compile "com.openshift:openshift-restclient-java:${openshiftRestclientVersion}"
+    compile "io.vertx:vertx-proton:${vertxVersion}"
+    compile "org.slf4j:slf4j-api:${slf4jVersion}"
     testCompile "junit:junit:${junitVersion}"
     testCompile "org.mockito:mockito-core:${mockitoVersion}"
+    testCompile 'com.github.EnMasseProject:configserv:master-SNAPSHOT'
 }
 
 apply plugin: 'maven-publish'

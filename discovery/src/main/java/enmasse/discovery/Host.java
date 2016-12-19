@@ -57,7 +57,9 @@ public class Host {
     @Override
     public int hashCode() {
         int result = hostname.hashCode();
-        result = 31 * result + portMap.get("amqp");
+        if (portMap.containsKey("amqp")) {
+            result = 31 * result + portMap.get("amqp");
+        }
         return result;
     }
 

@@ -16,128 +16,87 @@
 
 package enmasse.discovery;
 
-import com.openshift.restclient.IClient;
-import com.openshift.restclient.IOpenShiftWatchListener;
-import com.openshift.restclient.IWatcher;
-import com.openshift.restclient.ResourceKind;
-import com.openshift.restclient.model.IContainer;
-import com.openshift.restclient.model.IPod;
-import com.openshift.restclient.model.IPort;
-import com.openshift.restclient.model.IResource;
+import io.vertx.core.AbstractVerticle;
+import io.vertx.proton.ProtonClient;
+import io.vertx.proton.ProtonConnection;
+import io.vertx.proton.ProtonReceiver;
+import org.apache.qpid.proton.amqp.Symbol;
+import org.apache.qpid.proton.amqp.messaging.AmqpSequence;
+import org.apache.qpid.proton.amqp.messaging.Source;
+import org.apache.qpid.proton.message.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
- * A client for discovering k8s POD hosts with a given set of labels, and notifying listeners of
+ * A client for talking to the 'podsense' discovery service a given set of labels, and notifying listeners of
  * the changing set of hosts.
  */
-public class DiscoveryClient implements IOpenShiftWatchListener {
-    private final IClient osClient;
-    private final String namespace;
-    private final Map<String, String> labelFilter;
+public class DiscoveryClient extends AbstractVerticle {
+    private final Map<Symbol, String> labelFilter;
     private final List<DiscoveryListener> listeners = new ArrayList<>();
     private final Logger log = LoggerFactory.getLogger(DiscoveryClient.class.getName());
-    private volatile IWatcher watcher;
+    private final Endpoint endpoint;
 
-    public DiscoveryClient(IClient osClient, String namespace, Map<String, String> labelFilter) {
-        this.osClient = osClient;
-        this.namespace = namespace;
-        this.labelFilter = labelFilter;
+    public DiscoveryClient(Endpoint endpoint, Map<String, String> labelFilter) {
+        this.endpoint = endpoint;
+        this.labelFilter = toSymbolMap(labelFilter);
+    }
+
+    private static Map<Symbol, String> toSymbolMap(Map<String, String> labelFilter) {
+        Map<Symbol, String> symbolMap = new HashMap<>();
+        for (Map.Entry<String, String> entry : labelFilter.entrySet()) {
+            symbolMap.put(Symbol.getSymbol(entry.getKey()), entry.getValue());
+        }
+        return symbolMap;
     }
 
     public void addListener(DiscoveryListener listener) {
         this.listeners.add(listener);
     }
 
-    public void start() {
-        watcher = osClient.watch(namespace, this, ResourceKind.POD);
-    }
-
-    public void stop() {
-        if (watcher != null) {
-            watcher.stop();
-        }
-    }
-
-    @Override
-    public void connected(List<IResource> resources) {
-        Set<Host> hosts = resources.stream()
-                .filter(r -> filterLabels(r.getLabels()))
-                .map(r -> podToHost((IPod)r))
-                .filter(host -> !host.getHostname().isEmpty())
-                .collect(Collectors.toSet());
-
-        log.debug("Connected with " + hosts.size() + " hosts");
-        notifyListeners(hosts);
-    }
-
-    private boolean filterLabels(Map<String, String> labels) {
-        for (Map.Entry<String, String> entrySet : labelFilter.entrySet()) {
-            if (!labels.containsKey(entrySet.getKey()) || !labels.get(entrySet.getKey()).equals(entrySet.getValue())) {
-                return false;
-            }
-        }
-        return true;
-    }
-
     private void notifyListeners(Set<Host> hosts) {
+        log.debug("Received new set of hosts: " + hosts);
         for (DiscoveryListener listener : listeners) {
             listener.hostsChanged(hosts);
         }
     }
 
-    private static final Host podToHost(IPod pod) {
-        IContainer broker = findContainer(pod, "broker");
-        return new Host(pod.getIP(), createPortMap(broker.getPorts()));
-    }
+    @Override
+    public void start() {
+        ProtonClient client = ProtonClient.create(vertx);
+        client.connect(endpoint.hostname(), endpoint.port(), event -> {
+            if (event.succeeded()) {
+                ProtonConnection connection = event.result();
+                connection.open();
 
-    private static IContainer findContainer(IPod pod, String name) {
-        for (IContainer container : pod.getContainers()) {
-            if (name.equals(container.getName())) {
-                return container;
+                Source source = new Source();
+                source.setAddress("podsense");
+                source.setFilter(labelFilter);
+                ProtonReceiver receiver = connection.createReceiver("podsense");
+                receiver.setSource(source);
+                receiver.handler((protonDelivery, message) -> notifyListeners(decodeHosts(message)));
+                receiver.open();
             }
-        }
-        throw new IllegalArgumentException("Unable to find container with name " + name);
+
+        });
     }
 
-    private static Map<String, Integer> createPortMap(Set<IPort> containerPorts) {
-        Map<String, Integer> portMap = new LinkedHashMap<>();
-        for (IPort port : containerPorts) {
-            if (port.getName() == null) {
-                portMap.put(String.valueOf(port.getContainerPort()), port.getContainerPort());
-            } else {
-                portMap.put(port.getName(), port.getContainerPort());
+    @SuppressWarnings("unchecked")
+    private Set<Host> decodeHosts(Message message) {
+        Set<Host> hosts = new HashSet<>();
+        AmqpSequence sequence = (AmqpSequence) message.getBody();
+        for (Object obj : sequence.getValue()) {
+            Map<String, Object> podInfo = (Map<String, Object>) obj;
+            String ip = (String) podInfo.get("ip");
+            Map<String, Integer> reversedMap = new HashMap<>();
+            Map<Integer, String> portMap = (Map<Integer, String>) podInfo.get("ports");
+            for (Map.Entry<Integer, String> port : portMap.entrySet()) {
+                reversedMap.put(port.getValue(), port.getKey());
             }
+            hosts.add(new Host(ip, reversedMap));
         }
-        return portMap;
-    }
-
-    @Override
-    public void disconnected() {
-        log.debug("Disconnected, reconnecting");
-        watcher = osClient.watch(namespace, this, ResourceKind.POD);
-    }
-
-    private final Set<Host> fetchHosts() {
-        return osClient.<IPod>list(ResourceKind.POD, namespace, labelFilter).stream()
-                .map(DiscoveryClient::podToHost)
-                .filter(host -> !host.getHostname().isEmpty())
-                .collect(Collectors.toSet());
-    }
-
-    @Override
-    public void received(IResource resource, ChangeType change) {
-        log.debug("Recieved change for " + resource.getName());
-        if (filterLabels(resource.getLabels())) {
-            notifyListeners(fetchHosts());
-        }
-    }
-
-    @Override
-    public void error(Throwable err) {
-        log.error("Got error: " + err.getMessage());
+        return hosts;
     }
 }
