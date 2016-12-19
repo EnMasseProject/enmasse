@@ -32,13 +32,13 @@ public class PodSenseMessageEncoderTest {
     }
 
     private static void assertPod(Map<String, Object> encodedPod, String expectedIp, int expectedPort, String expectedPortName) {
-        assertThat(encodedPod.get("ip"), is(expectedIp));
-        Map<Integer, String> ports = (Map<Integer, String>) encodedPod.get("ports");
-        assertPodPort(ports, expectedPort, expectedPortName);
+        assertThat(encodedPod.get("host"), is(expectedIp));
+        Map<String, Map<String, Integer>> ports = (Map<String, Map<String, Integer>>) encodedPod.get("ports");
+        assertPodPort(ports.get("c"), expectedPort, expectedPortName);
     }
 
-    private static void assertPodPort(Map<Integer, String> ports, int expectedPort, String expectedPortName) {
-        assertThat(ports.get(expectedPort), is(expectedPortName));
+    private static void assertPodPort(Map<String, Integer> ports, int expectedPort, String expectedPortName) {
+        assertThat(ports.get(expectedPortName), is(expectedPort));
     }
 
     private static Set<Resource<Pod>> createPods() {

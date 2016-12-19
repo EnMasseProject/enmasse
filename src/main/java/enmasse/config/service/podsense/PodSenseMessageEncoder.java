@@ -32,18 +32,20 @@ public class PodSenseMessageEncoder implements MessageEncoder<Pod> {
 
     private Map<String, Object> encodePod(Pod pod) {
         Map<String, Object> map = new LinkedHashMap<>();
-        map.put("ip", pod.getStatus().getPodIP());
+        map.put("host", pod.getStatus().getPodIP());
         map.put("ports", encodePorts(pod.getSpec().getContainers()));
         return map;
     }
 
-    private Map<Integer, String> encodePorts(List<Container> containers) {
-        Map<Integer, String> ports = new LinkedHashMap<>();
+    private Map<String, Map<String, Integer>> encodePorts(List<Container> containers) {
+        Map<String, Map<String, Integer>> portMap = new LinkedHashMap<>();
         for (Container container : containers) {
+            Map<String, Integer> ports = new LinkedHashMap<>();
             for (ContainerPort port : container.getPorts()) {
-                ports.put(port.getContainerPort(), port.getName());
+                ports.put(port.getName(), port.getContainerPort());
             }
+            portMap.put(container.getName(), ports);
         }
-        return ports;
+        return portMap;
     }
 }
