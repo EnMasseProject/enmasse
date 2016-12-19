@@ -20,15 +20,18 @@ import com.google.common.io.Files;
 import enmasse.discovery.Endpoint;
 import org.apache.activemq.artemis.api.core.TransportConfiguration;
 import org.apache.activemq.artemis.core.config.Configuration;
+import org.apache.activemq.artemis.core.config.CoreAddressConfiguration;
 import org.apache.activemq.artemis.core.config.CoreQueueConfiguration;
 import org.apache.activemq.artemis.core.config.impl.ConfigurationImpl;
 import org.apache.activemq.artemis.core.remoting.impl.netty.NettyAcceptorFactory;
+import org.apache.activemq.artemis.core.server.RoutingType;
 import org.apache.activemq.artemis.core.server.embedded.EmbeddedActiveMQ;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.message.Message;
 import org.apache.qpid.proton.messenger.Messenger;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -44,12 +47,14 @@ public class TestBroker {
     private final String messageAddress;
     private final EmbeddedActiveMQ server = new EmbeddedActiveMQ();
     private final Messenger messenger = Messenger.Factory.create();
+    private final boolean multicast;
 
-    public TestBroker(Endpoint endpoint, String address) {
+    public TestBroker(Endpoint endpoint, String address, boolean multicast) {
         this.host = endpoint.hostname();
         this.port = endpoint.port();
         this.address = address;
         this.messageAddress = String.format("amqp://%s:%s/%s", host, port, address);
+        this.multicast = multicast;
     }
 
     public void start() throws Exception {
@@ -61,13 +66,17 @@ public class TestBroker {
         params.put("port", port);
         TransportConfiguration transport = new TransportConfiguration(NettyAcceptorFactory.class.getName(), params, "amqp");
 
+        CoreAddressConfiguration addressConfig = new CoreAddressConfiguration();
+        addressConfig.setName(address);
         CoreQueueConfiguration queueConfig = new CoreQueueConfiguration();
         queueConfig.setAddress(address);
+        queueConfig.setRoutingType(multicast ? RoutingType.MULTICAST : RoutingType.ANYCAST);
         queueConfig.setName(address);
-        config.setQueueConfigurations(Collections.singletonList(queueConfig));
+        addressConfig.addQueueConfiguration(queueConfig);
 
         config.setAcceptorConfigurations(Collections.singleton(transport));
         config.setSecurityEnabled(false);
+        config.setAddressConfigurations(Arrays.asList(addressConfig));
         config.setName("broker-" + System.currentTimeMillis() + port);
         config.setBindingsDirectory(Files.createTempDir().getAbsolutePath());
         config.setJournalDirectory(Files.createTempDir().getAbsolutePath());
@@ -78,6 +87,7 @@ public class TestBroker {
         server.setConfiguration(config);
 
         server.start();
+        Thread.sleep(2000);
         messenger.start();
     }
 

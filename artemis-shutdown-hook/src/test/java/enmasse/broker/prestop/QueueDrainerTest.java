@@ -36,8 +36,8 @@ public class QueueDrainerTest {
 
     @Before
     public void setup() throws Exception {
-        fromServer = new TestBroker(from.amqpEndpoint(), "myqueue");
-        toServer = new TestBroker(to.amqpEndpoint(), "myqueue");
+        fromServer = new TestBroker(from.amqpEndpoint(), "myqueue", false);
+        toServer = new TestBroker(to.amqpEndpoint(), "myqueue", false);
         fromServer.start();
         toServer.start();
         client = new QueueDrainer(from, Optional.empty());

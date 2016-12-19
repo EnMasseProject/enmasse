@@ -41,8 +41,8 @@ public class TopicMigratorTest {
     public void setup() throws Exception {
         subscriber = new TestSubscriber();
         publisher = new TestPublisher();
-        fromServer = new TestBroker(from.amqpEndpoint(), "jms.topic.mytopic");
-        toServer = new TestBroker(to.amqpEndpoint(), "jms.topic.mytopic");
+        fromServer = new TestBroker(from.amqpEndpoint(), "mytopic", true);
+        toServer = new TestBroker(to.amqpEndpoint(), "mytopic", true);
         fromServer.start();
         toServer.start();
         Thread.sleep(2000);
@@ -59,20 +59,20 @@ public class TopicMigratorTest {
     @Test
     public void testMigrator() throws Exception {
         System.out.println("Attempting to subscribe");
-        subscriber.subscribe(from.amqpEndpoint(), "jms.topic.mytopic");
+        subscriber.subscribe(from.amqpEndpoint(), "mytopic");
         subscriber.unsubscribe();
 
         System.out.println("Publishing message");
-        publisher.publish(from.amqpEndpoint(), "jms.topic.mytopic", "hello, world");
+        publisher.publish(from.amqpEndpoint(), "mytopic", "hello, world");
 
         TopicMigrator migrator = new TopicMigrator(from);
         migrator.hostsChanged(Collections.singleton(to));
 
         System.out.println("Starting migrator");
-        migrator.migrate("jms.topic.mytopic");
+        migrator.migrate("mytopic");
         fromServer.assertShutdown(1, TimeUnit.MINUTES);
 
-        subscriber.subscribe(to.amqpEndpoint(), "jms.topic.mytopic");
+        subscriber.subscribe(to.amqpEndpoint(), "mytopic");
         Message message = subscriber.receiveMessage(1, TimeUnit.MINUTES);
         assertThat(((AmqpValue)message.getBody()).getValue(), is("hello, world"));
     }

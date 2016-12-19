@@ -1,8 +1,10 @@
-      <queues>
-        <queue name="$QUEUE_NAME">
-            <address>$QUEUE_NAME</address>
-        </queue>
-      </queues>
+      <addresses>
+         <address name="$QUEUE_NAME">
+            <anycast>
+               <queue name="$QUEUE_NAME" />
+            </anycast>
+         </address>
+      </addresses>
 
       <connector-services>
         <connector-service name="amqp-connector">
