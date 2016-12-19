@@ -19,6 +19,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
 public class ConfigServTest extends VertxTestBase {
+    @SuppressWarnings("unchecked")
     @Test
     public void testPodSense() throws Exception {
         Endpoint configserv = getConfigServEndpoint();
@@ -35,7 +36,7 @@ public class ConfigServTest extends VertxTestBase {
                     AmqpSequence seq = (AmqpSequence) message.getBody();
                     for (Object obj : seq.getValue()) {
                         Map<String, Object> pod = (Map<String, Object>) obj;
-                        pods.add((String) pod.get("ip"));
+                        pods.add((String) pod.get("host"));
                     }
                     try {
                         latestPods.put(pods);
