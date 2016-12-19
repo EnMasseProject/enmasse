@@ -44,6 +44,20 @@ public class DiscoveryClient extends AbstractVerticle {
         this.labelFilter = toSymbolMap(labelFilter);
     }
 
+    public DiscoveryClient(Map<String, String> labelFilter) {
+        this(getPodSenseEndpoint(), labelFilter);
+    }
+
+    private static Endpoint getPodSenseEndpoint() {
+        String host = System.getenv("ADMIN_SERVICE_HOST");
+        String port = System.getenv("ADMIN_SERVICE_PORT_CONFIGURATION");
+        if (host == null) {
+            host = System.getenv("CONFIGURATION_SERVICE_HOST");
+            port = System.getenv("CONFIGURATION_SERVICE_PORT");
+        }
+        return new Endpoint(host, Integer.parseInt(port));
+    }
+
     private static Map<Symbol, String> toSymbolMap(Map<String, String> labelFilter) {
         Map<Symbol, String> symbolMap = new HashMap<>();
         for (Map.Entry<String, String> entry : labelFilter.entrySet()) {
