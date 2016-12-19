@@ -17,7 +17,6 @@
 package enmasse.broker.forwarder;
 
 import enmasse.discovery.DiscoveryClient;
-import enmasse.discovery.Endpoint;
 import enmasse.discovery.Host;
 import io.vertx.core.Vertx;
 
@@ -38,9 +37,8 @@ public class Main {
         Map<String, String> labelFilter = getLabelFilter(env);
         Host localHost = getLocalHost();
         String address = getAddress(env);
-        Endpoint podsenseService = getPodsenseService(env);
 
-        DiscoveryClient discoveryClient = new DiscoveryClient(podsenseService, labelFilter);
+        DiscoveryClient discoveryClient = new DiscoveryClient(labelFilter);
         ForwarderController replicator = new ForwarderController(localHost, address);
 
         Vertx vertx = Vertx.vertx();
@@ -52,14 +50,6 @@ public class Main {
         discoveryClient.addListener(replicator);
 
         discoveryClient.start();
-    }
-
-    private static Endpoint getPodsenseService(Map<String, String> env) {
-        if (env.containsKey("ADMIN_SERVICE_HOST")) {
-            return new Endpoint(getEnvOrThrow(env, "ADMIN_SERVICE_HOST"), Integer.parseInt(getEnvOrThrow(env, "ADMIN_SERVICE_PORT_CONFIGSERV")));
-        } else {
-            return new Endpoint(getEnvOrThrow(env, "CONFIGURATION_SERVICE_HOST"), Integer.parseInt(getEnvOrThrow(env, "CONFIGURATION_SERVICE_PORT")));
-        }
     }
 
     private static String getAddress(Map<String, String> env) {
