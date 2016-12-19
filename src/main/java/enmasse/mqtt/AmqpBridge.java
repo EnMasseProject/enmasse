@@ -126,7 +126,10 @@ public class AmqpBridge {
             if (done.succeeded()) {
 
                 this.connection = done.result();
-                this.connection.open();
+                this.connection
+                        .closeHandler(remoteClose -> handleRemoteConnectionClose(this.connection, remoteClose))
+                        .disconnectHandler(this::handleRemoteDisconnect)
+                        .open();
 
                 // setup MQTT endpoint handlers and AMQP endpoints
                 this.setupMqttEndpoint();
@@ -640,6 +643,38 @@ public class AmqpBridge {
         if (this.mqttEndpointCloseHandler != null) {
             this.mqttEndpointCloseHandler.handle(amqpBridge);
         }
+    }
+
+    /**
+     * Handle connection closed by remote AMQP container
+     *
+     * @param connection    current ProtonConnection instance
+     * @param result    result of remote connection closing
+     */
+    private void handleRemoteConnectionClose(ProtonConnection connection, AsyncResult<ProtonConnection> result) {
+
+        // NOTE : the connection parameter is needed because Vert.x doesn't provide the ProtonConnection
+        //        instance when the operation ends with errors (so exception). We need the instance for closing.
+        if (result.succeeded()) {
+            LOG.info("AMQP connection closed by {}", connection.getRemoteContainer());
+        } else {
+            LOG.info("AMQP connection closed by {} with error", connection.getRemoteContainer(), result.cause());
+        }
+        connection.close();
+
+        this.mqttEndpoint.close();
+    }
+
+    /**
+     * Handler disconnection by remote AMQP container
+     *
+     * @param connection    current ProtonConnection instance
+     */
+    private void handleRemoteDisconnect(ProtonConnection connection) {
+        LOG.info("AMQP disconnection by {}", connection.getRemoteContainer());
+        connection.disconnect();
+
+        this.mqttEndpoint.close();
     }
 
     /**
