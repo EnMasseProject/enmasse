@@ -52,7 +52,6 @@ public class Main {
 
         Host localHost = localHost();
         Vertx vertx = Vertx.vertx();
-        ShutdownHandler shutdownHandler = () -> vertx.close();
 
         if (System.getenv("QUEUE_NAME") != null) {
             String address = System.getenv("QUEUE_NAME");
