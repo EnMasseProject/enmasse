@@ -7,23 +7,17 @@ function runcmd {
     echo '#######################################################################'
 }
 
-for i in `oc get pods | cut -f 1 -d ' ' | grep -v NAME`
+for pod in `oc get pods -o jsonpath='{.items[*].metadata.name}'`
 do
-    runcmd "oc logs $i"
-    if [ "$?" -gt "0" ]
-    then
-        runcmd "oc logs -c restapi $i"
-        runcmd "oc logs -c configserv $i"
-        runcmd "oc logs -c ragent $i"
-        runcmd "oc logs -c storage-controller $i"
-        runcmd "oc logs -c broker $i"
-        runcmd "oc logs -c broker $i"
-        runcmd "oc logs -c router $i"
-        runcmd "oc rsh -c router $i qdmanage query --type=address"
-        runcmd "oc rsh -c router $i qdmanage query --type=connection"
-        runcmd "oc rsh -c router $i qdmanage query --type=connector"
-        runcmd "oc logs -c forwarder $i"
-    fi
+    for container in `oc get pod $pod -o jsonpath='{.spec.containers[*].name}'`
+    do
+        runcmd "oc logs -c $container $pod"
+        if [ "$container" == "router" ]; then
+            runcmd "oc rsh -c $container $pod qdmanage query --type=address"
+            runcmd "oc rsh -c $container $pod qdmanage query --type=connection"
+            runcmd "oc rsh -c $container $pod qdmanage query --type=connector"
+        fi
+    done
 done
 
 echo "OPENSHIFT LOGS"
