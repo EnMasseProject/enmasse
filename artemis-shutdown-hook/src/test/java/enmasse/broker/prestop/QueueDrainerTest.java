@@ -17,6 +17,7 @@
 package enmasse.broker.prestop;
 
 import enmasse.discovery.Host;
+import io.vertx.core.Vertx;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -36,11 +37,11 @@ public class QueueDrainerTest {
 
     @Before
     public void setup() throws Exception {
-        fromServer = new TestBroker(from.amqpEndpoint(), "myqueue");
-        toServer = new TestBroker(to.amqpEndpoint(), "myqueue");
+        fromServer = new TestBroker(from.amqpEndpoint(), "myqueue", false);
+        toServer = new TestBroker(to.amqpEndpoint(), "myqueue", false);
         fromServer.start();
         toServer.start();
-        client = new QueueDrainer(from, Optional.empty());
+        client = new QueueDrainer(Vertx.vertx(), from, Optional.empty());
     }
 
     @After

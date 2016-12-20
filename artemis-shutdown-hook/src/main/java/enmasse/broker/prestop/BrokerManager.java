@@ -50,7 +50,7 @@ public class BrokerManager implements AutoCloseable {
     }
 
     private Object invokeOperationWithResult(String resource, String cmd, Object ... args) throws Exception {
-        ClientRequestor requestor = new ClientRequestor(session, "jms.queue.activemq.management");
+        ClientRequestor requestor = new ClientRequestor(session, "activemq.management");
         ClientMessage message = session.createMessage(false);
         ManagementHelper.putOperationInvocation(message, resource, cmd, args);
         session.start();
@@ -61,7 +61,7 @@ public class BrokerManager implements AutoCloseable {
     }
 
     private void invokeOperation(String resource, String cmd, Object ... args) throws Exception {
-        ClientRequestor requestor = new ClientRequestor(session, "jms.queue.activemq.management");
+        ClientRequestor requestor = new ClientRequestor(session, "activemq.management");
         ClientMessage message = session.createMessage(false);
         ManagementHelper.putOperationInvocation(message, resource, cmd, args);
         session.start();
@@ -70,7 +70,7 @@ public class BrokerManager implements AutoCloseable {
     }
 
     private Object invokeAttribute(String resource, String attribute) throws Exception {
-        ClientRequestor requestor = new ClientRequestor(session, "jms.queue.activemq.management");
+        ClientRequestor requestor = new ClientRequestor(session, "activemq.management");
         ClientMessage message = session.createMessage(false);
         ManagementHelper.putAttribute(message, resource, attribute);
         session.start();
@@ -81,11 +81,11 @@ public class BrokerManager implements AutoCloseable {
     }
 
     public long getQueueMessageCount(String queueName) throws Exception {
-        return (Long)invokeAttribute("core.queue." + queueName, "messageCount");
+        return (Long)invokeAttribute("queue." + queueName, "messageCount");
     }
 
     public String[] listQueues() throws Exception {
-        Object[] response = (Object[]) invokeOperationWithResult("core.server", "getQueueNames");
+        Object[] response = (Object[]) invokeOperationWithResult("broker", "getQueueNames");
         String[] list = new String[response.length];
         for (int i = 0; i < list.length; i++) {
             list[i] = response[i].toString();
@@ -111,24 +111,24 @@ public class BrokerManager implements AutoCloseable {
     }
 
     public String getQueueAddress(String queueName) throws Exception {
-        return (String) invokeOperationWithResult("core.queue." + queueName, "getAddress");
+        return (String) invokeOperationWithResult("queue." + queueName, "getAddress");
     }
 
     public void shutdownBroker() throws Exception {
         try {
-            invokeOperation("core.server", "forceFailover");
+            invokeOperation("broker", "forceFailover");
         } catch (ActiveMQObjectClosedException | ActiveMQNotConnectedException e) {
             System.out.println("Disconnected on shutdown");
         }
     }
 
     public String listConnections() throws Exception {
-        return (String)invokeOperationWithResult("core.server", "listConnectionsAsJSON");
+        return (String)invokeOperationWithResult("broker", "listConnectionsAsJSON");
     }
 
     public void destroyQueues(Set<String> queueList) throws Exception {
         for (String queue : queueList) {
-            invokeOperation("core.server", "destroyQueue", queue, true);
+            invokeOperation("broker", "destroyQueue", queue, true);
         }
     }
 
@@ -150,7 +150,7 @@ public class BrokerManager implements AutoCloseable {
     }
 
     public void createQueue(String address, String name) throws Exception {
-        invokeOperation("core.server", "createQueue", address, name);
+        invokeOperation("broker", "createQueue", address, name);
     }
 
     @Override
@@ -161,14 +161,14 @@ public class BrokerManager implements AutoCloseable {
     }
 
     public void resumeQueue(String queueName) throws Exception {
-        invokeOperation("core.queue." + queueName, "resume");
+        invokeOperation("queue." + queueName, "resume");
     }
 
     public void pauseQueue(String queueName) throws Exception {
-        invokeOperation("core.queue." + queueName, "pause");
+        invokeOperation("queue." + queueName, "pause");
     }
 
     public void destroyConnectorService(String connectorName) throws Exception {
-        invokeOperation("core.server", "destroyConnectorService", connectorName);
+        invokeOperation("broker", "destroyConnectorService", connectorName);
     }
 }

@@ -51,6 +51,7 @@ public class Main {
         }
 
         Host localHost = localHost();
+        Vertx vertx = Vertx.vertx();
 
         if (System.getenv("QUEUE_NAME") != null) {
             String address = System.getenv("QUEUE_NAME");
@@ -58,24 +59,18 @@ public class Main {
             int messagingPort = Integer.parseInt(System.getenv("MESSAGING_SERVICE_PORT"));
             Endpoint to = new Endpoint(messagingHost, messagingPort);
 
-            QueueDrainer client = new QueueDrainer(localHost, debugFn);
+            QueueDrainer client = new QueueDrainer(vertx, localHost, debugFn);
             client.drainMessages(to, address);
         } else if (System.getenv("TOPIC_NAME") != null) {
             String address = System.getenv("TOPIC_NAME");
 
-            String kubeHost = System.getenv("KUBERNETES_SERVICE_HOST");
-            String kubePort = System.getenv("KUBERNETES_SERVICE_PORT");
-            String kubeUrl = String.format("https://%s:%s", kubeHost, kubePort);
-            IClient client = new ClientBuilder(kubeUrl).usingToken(openshiftToken()).build();
-            String namespace = openshiftNamespace();
-
             Map<String, String> labels = new LinkedHashMap<>();
             labels.put("role", "broker");
             labels.put("address", address);
-            DiscoveryClient discoveryClient = new DiscoveryClient(client, namespace, labels);
-            TopicMigrator migrator = new TopicMigrator(localHost);
+            DiscoveryClient discoveryClient = new DiscoveryClient(labels, Optional.of("broker"));
+            TopicMigrator migrator = new TopicMigrator(vertx, localHost);
             discoveryClient.addListener(migrator);
-            discoveryClient.start();
+            vertx.deployVerticle(discoveryClient);
             migrator.migrate(address);
         } else {
             throw new IllegalArgumentException("Unable to find QUEUE_NAME or TOPIC_NAME environment");

@@ -29,7 +29,6 @@ import io.vertx.proton.ProtonSender;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.OpenOption;
 import java.nio.file.StandardOpenOption;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -38,13 +37,12 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * Client for draining messages from an endpoint and forward to a target endpoint, until empty.
  */
 public class QueueDrainer {
-
-    private final Vertx vertx = Vertx.vertx();
-    private final ProtonClient client = ProtonClient.create(vertx);
+    private final Vertx vertx;
     private final Host fromHost;
     private final Optional<Runnable> debugFn;
 
-    public QueueDrainer(Host from, Optional<Runnable> debugFn) throws Exception {
+    public QueueDrainer(Vertx vertx, Host from, Optional<Runnable> debugFn) throws Exception {
+        this.vertx = vertx;
         this.fromHost = from;
         this.debugFn = debugFn;
     }
@@ -61,9 +59,10 @@ public class QueueDrainer {
         brokerManager.shutdownBroker();
     }
 
-    public void startDrain(Endpoint to, String address) {
+    private void startDrain(Endpoint to, String address) {
         AtomicBoolean first = new AtomicBoolean(false);
         Endpoint from = fromHost.amqpEndpoint();
+        ProtonClient client = ProtonClient.create(vertx);
         client.connect(to.hostname(), to.port(), sendHandle -> {
             if (sendHandle.succeeded()) {
                 ProtonConnection sendConn = sendHandle.result();
