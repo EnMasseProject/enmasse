@@ -16,6 +16,7 @@
 
 package enmasse.config.service.openshift;
 
+import enmasse.config.service.model.Resource;
 import enmasse.config.service.model.Subscriber;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import org.apache.qpid.proton.message.Message;
@@ -72,8 +73,10 @@ public class OpenshiftResourceListener {
     }
 
     public synchronized void resourcesUpdated(Set<Resource<? extends HasMetadata>> updated) {
-        resources.clear();
-        resources.addAll(updated);
-        notifySubscribers();
+        if (!updated.equals(resources)) {
+            resources.clear();
+            resources.addAll(updated);
+            notifySubscribers();
+        }
     }
 }

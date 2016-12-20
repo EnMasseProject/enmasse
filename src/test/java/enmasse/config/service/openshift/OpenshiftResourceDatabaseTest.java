@@ -145,12 +145,12 @@ public class OpenshiftResourceDatabaseTest {
         assertEquals(expected, actual);
     }
 
-    private static TestResource createResource(String name) {
+    private static TestResource.TestValue createResource(String name) {
         return createResource(name, "val");
     }
 
-    private static TestResource createResource(String name, String value) {
-        return new TestResource(name, Collections.singletonMap("key", "value"), value);
+    private static TestResource.TestValue createResource(String name, String value) {
+        return new TestResource.TestValue(name, Collections.singletonMap("key", "value"), value);
     }
 
     public static class TestSubscriber implements Subscriber {

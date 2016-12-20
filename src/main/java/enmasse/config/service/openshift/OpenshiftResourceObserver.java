@@ -16,13 +16,14 @@
 
 package enmasse.config.service.openshift;
 
+import enmasse.config.service.model.Resource;
+import enmasse.config.service.model.ResourceFactory;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesResourceList;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.Watch;
 import io.fabric8.kubernetes.client.Watcher;
 import io.fabric8.kubernetes.client.dsl.ClientOperation;
-import io.fabric8.openshift.client.OpenShiftClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,9 +37,11 @@ public class OpenshiftResourceObserver implements AutoCloseable, Watcher {
     private final ObserverOptions observerOptions;
     private final OpenshiftResourceListener listener;
     private final Set<Resource<? extends HasMetadata>> resourceSet = new LinkedHashSet<>();
+    private final ResourceFactory<? extends Resource<? extends HasMetadata>> resourceFactory;
     private final List<Watch> watches = new ArrayList<>();
 
-    public OpenshiftResourceObserver(ObserverOptions observerOptions, OpenshiftResourceListener listener) {
+    public OpenshiftResourceObserver(ResourceFactory<? extends Resource<? extends HasMetadata>> resourceFactory, ObserverOptions observerOptions, OpenshiftResourceListener listener) {
+        this.resourceFactory = resourceFactory;
         this.observerOptions = observerOptions;
         this.listener = listener;
     }
@@ -59,7 +62,7 @@ public class OpenshiftResourceObserver implements AutoCloseable, Watcher {
         for (KubernetesResourceList list : initialResources) {
             for (Object item : list.getItems()) {
                 if (item instanceof HasMetadata) {
-                    resourceSet.add(new Resource<>((HasMetadata) item));
+                    resourceSet.add(resourceFactory.createResource((HasMetadata) item));
                 }
             }
         }
@@ -79,21 +82,26 @@ public class OpenshiftResourceObserver implements AutoCloseable, Watcher {
         if (!(obj instanceof HasMetadata)) {
             throw new IllegalArgumentException("Invalid resource instance: " + obj.getClass().getName());
         }
-        Resource<? extends HasMetadata> resource = new Resource<>((HasMetadata) obj);
+        Resource<? extends HasMetadata> resource = resourceFactory.createResource((HasMetadata) obj);
         if (action.equals(Action.ADDED)) {
             resourceSet.add(resource);
             log.info("Resource " + resource + " added!");
         } else if (action.equals(Action.DELETED)) {
+            deleteFromSet(resource);
             resourceSet.remove(resource);
             log.info("Resource " + resource + " deleted!");
         } else if (action.equals(Action.MODIFIED)) {
-            resourceSet.remove(resource);
+            deleteFromSet(resource);
             resourceSet.add(resource);
             log.info("Resource " + resource + " updated!");
         } else if (action.equals(Action.ERROR)) {
             log.error("Received an error event for resource " + resource);
         }
         listener.resourcesUpdated(resourceSet);
+    }
+
+    private void deleteFromSet(Resource<? extends HasMetadata> resource) {
+        resourceSet.removeIf(next -> next.getName().equals(resource.getName()) && next.getKind().equals(resource.getKind()));
     }
 
     @Override

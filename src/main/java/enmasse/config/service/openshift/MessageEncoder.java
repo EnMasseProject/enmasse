@@ -1,5 +1,6 @@
 package enmasse.config.service.openshift;
 
+import enmasse.config.service.model.Resource;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import org.apache.qpid.proton.message.Message;
 
@@ -9,6 +10,6 @@ import java.util.Set;
 /**
  * Interface for encoding AMQP messages
  */
-public interface MessageEncoder<T extends HasMetadata> {
-    Message encode(Set<Resource<T>> set) throws IOException;
+public interface MessageEncoder<T extends Resource<? extends HasMetadata>> {
+    Message encode(Set<T> set) throws IOException;
 }

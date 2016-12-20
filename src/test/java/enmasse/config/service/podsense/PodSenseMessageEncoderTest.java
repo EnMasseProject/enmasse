@@ -1,7 +1,7 @@
 package enmasse.config.service.podsense;
 
 import enmasse.config.service.openshift.MessageEncoder;
-import enmasse.config.service.openshift.Resource;
+import enmasse.config.service.model.Resource;
 import io.fabric8.kubernetes.api.model.*;
 import org.apache.qpid.proton.amqp.messaging.AmqpSequence;
 import org.apache.qpid.proton.message.Message;
@@ -49,8 +49,8 @@ public class PodSenseMessageEncoderTest {
         return pods;
     }
 
-    private static Resource<Pod> createPod(String name, String ip, String phase, Map<String, Integer> portMap) {
-        return new Resource<>(new PodBuilder()
+    private static PodResource createPod(String name, String ip, String phase, Map<String, Integer> portMap) {
+        return new PodResource(new PodBuilder()
                 .withMetadata(new ObjectMetaBuilder()
                         .withName(name)
                         .addToLabels("my", "label")

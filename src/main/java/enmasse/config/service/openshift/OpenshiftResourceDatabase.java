@@ -36,11 +36,11 @@ public class OpenshiftResourceDatabase implements AutoCloseable, ResourceDatabas
 
     private final Map<String, OpenshiftResourceListener> listenerMap = new LinkedHashMap<>();
     private final List<OpenshiftResourceObserver> observerList = new ArrayList<>();
-    private final Map<String, SubscriptionConfig> listenerFactoryMap;
+    private final Map<String, SubscriptionConfig> subscriptionConfigMap;
 
-    public OpenshiftResourceDatabase(OpenShiftClient client, Map<String, SubscriptionConfig> listenerFactoryMap) {
+    public OpenshiftResourceDatabase(OpenShiftClient client, Map<String, SubscriptionConfig> subscriptionConfigMap) {
         this.client = client;
-        this.listenerFactoryMap = listenerFactoryMap;
+        this.subscriptionConfigMap = subscriptionConfigMap;
     }
 
     @Override
@@ -64,9 +64,9 @@ public class OpenshiftResourceDatabase implements AutoCloseable, ResourceDatabas
     private OpenshiftResourceListener getOrCreateListener(String address, Map<String, String> filter) {
         OpenshiftResourceListener listener = listenerMap.get(address);
         if (listener == null) {
-            SubscriptionConfig listenerFactory = getListenerFactory(address);
-            listener = new OpenshiftResourceListener(listenerFactory.getMessageEncoder());
-            OpenshiftResourceObserver observer = new OpenshiftResourceObserver(listenerFactory.getObserverOptions(client, filter), listener);
+            SubscriptionConfig subscriptionConfig = getSubscriptionConfig(address);
+            listener = new OpenshiftResourceListener(subscriptionConfig.getMessageEncoder());
+            OpenshiftResourceObserver observer = new OpenshiftResourceObserver(subscriptionConfig.getResourceFactory(), subscriptionConfig.getObserverOptions(client, filter), listener);
             observer.start();
             observerList.add(observer);
             listenerMap.put(address, listener);
@@ -74,9 +74,9 @@ public class OpenshiftResourceDatabase implements AutoCloseable, ResourceDatabas
         return listener;
     }
 
-    private SubscriptionConfig getListenerFactory(String address) {
-        if (listenerFactoryMap.containsKey(address)) {
-            return listenerFactoryMap.get(address);
+    private SubscriptionConfig getSubscriptionConfig(String address) {
+        if (subscriptionConfigMap.containsKey(address)) {
+            return subscriptionConfigMap.get(address);
         } else {
             throw new IllegalArgumentException("Unknown listener factory for address " + address);
         }

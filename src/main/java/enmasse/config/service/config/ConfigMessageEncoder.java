@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import enmasse.config.service.openshift.MessageEncoder;
-import enmasse.config.service.openshift.Resource;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.amqp.messaging.Section;
@@ -22,14 +21,14 @@ import java.util.stream.Collectors;
 /**
  * Encodes a set of address configs to an AMQP message
  */
-public class ConfigMessageEncoder implements MessageEncoder<HasMetadata> {
+public class ConfigMessageEncoder implements MessageEncoder<ConfigResource> {
     private static final Logger log = LoggerFactory.getLogger(ConfigMessageEncoder.class.getName());
     private static final ObjectMapper mapper = new ObjectMapper();
 
     @Override
-    public Message encode(Set<Resource<HasMetadata>> resources) throws IOException {
+    public Message encode(Set<ConfigResource> resources) throws IOException {
         List<Config> configs = resources.stream()
-                .map(h -> AddressConfigCodec.decodeLabels(h.getResource().getMetadata().getLabels()))
+                .map(h -> AddressConfigCodec.decodeLabels(h.getLabels()))
                 .collect(Collectors.toList());
         Message message = Message.Factory.create();
         ObjectNode root = mapper.createObjectNode();

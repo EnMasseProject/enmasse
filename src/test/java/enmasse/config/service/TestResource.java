@@ -1,28 +1,23 @@
 package enmasse.config.service;
 
-import io.fabric8.kubernetes.api.model.HasMetadata;
-import io.fabric8.kubernetes.api.model.ObjectMeta;
+import enmasse.config.service.model.Resource;
+import io.fabric8.kubernetes.api.model.HasMetadata; import io.fabric8.kubernetes.api.model.ObjectMeta;
 
 import java.util.Map;
 
-public class TestResource implements HasMetadata {
-    private final ObjectMeta meta = new ObjectMeta();
+public class TestResource extends Resource<TestResource.TestValue> {
+    private final String name;
+    private final Map<String, String> labels;
     private final String value;
 
     public TestResource(String name, Map<String, String> labelMap, String value) {
-        meta.setName(name);
-        meta.setLabels(labelMap);
+        this.name = name;
+        this.labels = labelMap;
         this.value = value;
     }
 
-    @Override
-    public ObjectMeta getMetadata() {
-        return meta;
-    }
-
-    @Override
-    public void setMetadata(ObjectMeta metadata) {
-
+    public TestResource(TestValue value) {
+        this(value.getMetadata().getName(), value.getMetadata().getLabels(), value.value);
     }
 
     public String getValue() {
@@ -30,12 +25,72 @@ public class TestResource implements HasMetadata {
     }
 
     @Override
-    public String getKind() {
-        return "test";
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        TestResource that = (TestResource) o;
+
+        if (!name.equals(that.name)) return false;
+        if (!labels.equals(that.labels)) return false;
+        return value.equals(that.value);
     }
 
     @Override
-    public String getApiVersion() {
-        return "v1enmasse";
+    public String getName() {
+        return name;
+    }
+
+    @Override
+    public String getKind() {
+        return "testresource";
+    }
+
+    @Override
+    public int hashCode() {
+        int result = name.hashCode();
+        result = 31 * result + labels.hashCode();
+        result = 31 * result + value.hashCode();
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return name;
+    }
+
+    public static class TestValue implements HasMetadata {
+        private ObjectMeta meta = new ObjectMeta();
+        private final String value;
+
+        public TestValue(String name, Map<String, String> labels, String value) {
+            meta.setName(name);
+            meta.setLabels(labels);
+            this.value = value;
+        }
+
+        public String getValue() {
+            return value;
+        }
+
+        @Override
+        public ObjectMeta getMetadata() {
+            return meta;
+        }
+
+        @Override
+        public void setMetadata(ObjectMeta objectMeta) {
+            this.meta = objectMeta;
+        }
+
+        @Override
+        public String getKind() {
+            return "mock";
+        }
+
+        @Override
+        public String getApiVersion() {
+            return "v1test";
+        }
     }
 }

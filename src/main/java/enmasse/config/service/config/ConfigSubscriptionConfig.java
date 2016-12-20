@@ -1,6 +1,7 @@
 package enmasse.config.service.config;
 
 import enmasse.config.service.model.LabelSet;
+import enmasse.config.service.model.ResourceFactory;
 import enmasse.config.service.openshift.MessageEncoder;
 import enmasse.config.service.openshift.ObserverOptions;
 import enmasse.config.service.openshift.SubscriptionConfig;
@@ -12,16 +13,17 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * TODO: Description
+ * Subscription config for config subscriptions
  */
-public class ConfigSubscriptionConfig implements SubscriptionConfig {
+public class ConfigSubscriptionConfig implements SubscriptionConfig<ConfigResource> {
     private final ConfigMessageEncoder encoder = new ConfigMessageEncoder();
 
     @Override
-    public MessageEncoder getMessageEncoder() {
+    public MessageEncoder<ConfigResource> getMessageEncoder() {
         return encoder;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public ObserverOptions getObserverOptions(OpenShiftClient client, Map<String, String> filter) {
         ClientOperation<? extends HasMetadata, ?, ?, ?>[] ops = new ClientOperation[2];
@@ -32,5 +34,10 @@ public class ConfigSubscriptionConfig implements SubscriptionConfig {
             labelMap.put("type", "address-config");
         }
         return new ObserverOptions(LabelSet.fromMap(labelMap), ops);
+    }
+
+    @Override
+    public ResourceFactory<ConfigResource> getResourceFactory() {
+        return ConfigResource::new;
     }
 }
