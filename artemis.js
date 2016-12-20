@@ -19,7 +19,7 @@ var Promise = require('bluebird');
 
 var Artemis = function (connection) {
     this.connection = connection;
-    this.sender = connection.open_sender('jms.queue.activemq.management');
+    this.sender = connection.open_sender('activemq.management');
     connection.open_receiver({source:{dynamic:true}});
     connection.on('receiver_open', this.ready.bind(this));
     connection.on('message', this.incoming.bind(this));
@@ -135,15 +135,15 @@ Artemis.prototype._request = function (resource, operation, parameters) {
 
 Artemis.prototype.deployQueue = function (name, durable) {
     var is_durable = durable === undefined ? true : durable;
-    return this._request('core.server', 'deployQueue', [name, name, null, is_durable]);
+    return this._request('broker', 'deployQueue', [name, name, null, is_durable]);
 }
 
 Artemis.prototype.destroyQueue = function (name) {
-    return this._request('core.server', 'destroyQueue', [name]);
+    return this._request('broker', 'destroyQueue', [name]);
 }
 
 Artemis.prototype.getQueueNames = function () {
-    return this._request('core.server', 'getQueueNames', []);
+    return this._request('broker', 'getQueueNames', []);
 }
 
 var queue_attributes = {temporary: 'isTemporary',
@@ -158,7 +158,7 @@ var queue_attributes = {temporary: 'isTemporary',
 
 function add_queue_method(name) {
     Artemis.prototype[name] = function (queue) {
-        return this._request('core.queue.'+queue, name, []);
+        return this._request('queue.'+queue, name, []);
     };
 }
 
@@ -204,23 +204,23 @@ Artemis.prototype.listQueues = function (attributes) {
 }
 
 Artemis.prototype.getAddressNames = function () {
-    return this._request('core.server', 'getAddressNames', []);
+    return this._request('broker', 'getAddressNames', []);
 }
 
 Artemis.prototype.getBoundQueues = function (address) {
-    return this._request('core.address.'+address, 'getQueueNames', []);
+    return this._request('address.'+address, 'getQueueNames', []);
 };
 
 Artemis.prototype.createDivert = function (name, source, target) {
-    return this._request('core.server', 'createDivert', [name, name, source, target, false, null, null]);
+    return this._request('broker', 'createDivert', [name, name, source, target, false, null, null]);
 }
 
 Artemis.prototype.destroyDivert = function (name) {
-    return this._request('core.server', 'destroyDivert', [name]);
+    return this._request('broker', 'destroyDivert', [name]);
 }
 
 Artemis.prototype.getDivertNames = function () {
-    return this._request('core.server', 'getDivertNames', []);
+    return this._request('broker', 'getDivertNames', []);
 }
 
 /**
@@ -254,16 +254,16 @@ Artemis.prototype.createConnectorService = function (name, source, target) {
         "clientAddress": target,
         "sourceAddress": source
     };
-    return this._request('core.server', 'createConnectorService', [name, "org.apache.activemq.artemis.integration.amqp.AMQPConnectorServiceFactory", parameters]);
+    return this._request('broker', 'createConnectorService', [name, "org.apache.activemq.artemis.integration.amqp.AMQPConnectorServiceFactory", parameters]);
 }
 
 
 Artemis.prototype.destroyConnectorService = function (name) {
-    return this._request('core.server', 'destroyConnectorService', [name]);
+    return this._request('broker', 'destroyConnectorService', [name]);
 }
 
 Artemis.prototype.getConnectorServices = function () {
-    return this._request('core.server', 'getConnectorServices', []);
+    return this._request('broker', 'getConnectorServices', []);
 }
 
 /**
