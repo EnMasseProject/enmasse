@@ -241,7 +241,7 @@ ConnectedRouter.prototype.create_connector = function (host_port, connector_name
     return future;
 };
 
-ConnectedRouter.prototype.delete_connector = function (connector_name) {
+ConnectedRouter.prototype.delete_connector = function (host_port, connector_name) {
     var future = futurejs.future(deleted);
     console.log('deleting connector to ' + connector_name + ' on router ' + this.container_id);
     this.delete_entity('connector', connector_name, future.as_callback());
