@@ -9,16 +9,12 @@ allprojects  {
 import de.undercouch.gradle.tasks.download.Download
 
 task downloadArtemis(type: Download) {
-    src 'http://people.redhat.com/~ulilleen/apache-artemis-2.0.0-SNAPSHOT-bin.tar.gz'
+    src 'http://people.redhat.com/~ulilleen/apache-artemis-2.0.0-20161217.031221-7-bin.tar.gz'
     dest new File(buildDir, 'apache-artemis-bin.tar.gz')
 }
 
 task buildArtemis {
   doLast {
-    exec {
-      workingDir 'activemq-artemis/artemis-protocols/artemis-amqp-protocol'
-      commandLine 'mvn', 'install', '-DskipTests'
-    }
     exec {
       workingDir 'activemq-artemis/integration/activemq-amqp-connector'
       commandLine 'mvn', 'install'
