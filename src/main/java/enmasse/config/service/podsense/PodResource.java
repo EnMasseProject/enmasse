@@ -12,7 +12,7 @@ import java.util.Map;
 /**
  * Represents a podsense resource.
  */
-public class PodResource extends Resource<Pod> {
+public class PodResource extends Resource {
     private final String name;
     private final String kind;
     private final String host;

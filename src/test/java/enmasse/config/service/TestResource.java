@@ -5,7 +5,7 @@ import io.fabric8.kubernetes.api.model.HasMetadata; import io.fabric8.kubernetes
 
 import java.util.Map;
 
-public class TestResource extends Resource<TestResource.TestValue> {
+public class TestResource extends Resource {
     private final String name;
     private final Map<String, String> labels;
     private final String value;

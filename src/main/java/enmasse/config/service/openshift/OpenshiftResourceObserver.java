@@ -36,11 +36,11 @@ public class OpenshiftResourceObserver implements AutoCloseable, Watcher {
     private static final Logger log = LoggerFactory.getLogger(OpenshiftResourceObserver.class.getName());
     private final ObserverOptions observerOptions;
     private final OpenshiftResourceListener listener;
-    private final Set<Resource<? extends HasMetadata>> resourceSet = new LinkedHashSet<>();
-    private final ResourceFactory<? extends Resource<? extends HasMetadata>> resourceFactory;
+    private final Set<Resource> resourceSet = new LinkedHashSet<>();
+    private final ResourceFactory<? extends Resource> resourceFactory;
     private final List<Watch> watches = new ArrayList<>();
 
-    public OpenshiftResourceObserver(ResourceFactory<? extends Resource<? extends HasMetadata>> resourceFactory, ObserverOptions observerOptions, OpenshiftResourceListener listener) {
+    public OpenshiftResourceObserver(ResourceFactory<? extends Resource> resourceFactory, ObserverOptions observerOptions, OpenshiftResourceListener listener) {
         this.resourceFactory = resourceFactory;
         this.observerOptions = observerOptions;
         this.listener = listener;
@@ -82,7 +82,7 @@ public class OpenshiftResourceObserver implements AutoCloseable, Watcher {
         if (!(obj instanceof HasMetadata)) {
             throw new IllegalArgumentException("Invalid resource instance: " + obj.getClass().getName());
         }
-        Resource<? extends HasMetadata> resource = resourceFactory.createResource((HasMetadata) obj);
+        Resource resource = resourceFactory.createResource((HasMetadata) obj);
         if (action.equals(Action.ADDED)) {
             resourceSet.add(resource);
             log.info("Resource " + resource + " added!");
@@ -100,7 +100,7 @@ public class OpenshiftResourceObserver implements AutoCloseable, Watcher {
         listener.resourcesUpdated(resourceSet);
     }
 
-    private void deleteFromSet(Resource<? extends HasMetadata> resource) {
+    private void deleteFromSet(Resource resource) {
         resourceSet.removeIf(next -> next.getName().equals(resource.getName()) && next.getKind().equals(resource.getKind()));
     }
 

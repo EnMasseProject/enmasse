@@ -18,7 +18,6 @@ package enmasse.config.service.openshift;
 
 import enmasse.config.service.model.Resource;
 import enmasse.config.service.model.Subscriber;
-import io.fabric8.kubernetes.api.model.HasMetadata;
 import org.apache.qpid.proton.message.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,7 +32,7 @@ public class OpenshiftResourceListener {
     private static final Logger log = LoggerFactory.getLogger(OpenshiftResourceListener.class.getName());
 
     private final List<Subscriber> subscriberList = new ArrayList<>();
-    private final Set<Resource<? extends HasMetadata>> resources = new LinkedHashSet<>();
+    private final Set<Resource> resources = new LinkedHashSet<>();
     private final MessageEncoder messageEncoder;
 
     public OpenshiftResourceListener(MessageEncoder messageEncoder) {
@@ -63,7 +62,7 @@ public class OpenshiftResourceListener {
     }
 
     private Optional<Message> encodeAndLog() {
-        Set<Resource<? extends HasMetadata>> set = Collections.unmodifiableSet(resources);
+        Set<Resource> set = Collections.unmodifiableSet(resources);
         try {
             return Optional.of(messageEncoder.encode(set));
         } catch (IOException e) {
@@ -72,7 +71,7 @@ public class OpenshiftResourceListener {
         }
     }
 
-    public synchronized void resourcesUpdated(Set<Resource<? extends HasMetadata>> updated) {
+    public synchronized void resourcesUpdated(Set<Resource> updated) {
         if (!updated.equals(resources)) {
             resources.clear();
             resources.addAll(updated);

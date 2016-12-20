@@ -10,7 +10,7 @@ import java.util.Map;
 /**
  * Configuration for a specific type of resource observation and encoding of those resources
  */
-public interface SubscriptionConfig<T extends Resource<? extends HasMetadata>> {
+public interface SubscriptionConfig<T extends Resource> {
     MessageEncoder<T> getMessageEncoder();
     ObserverOptions getObserverOptions(OpenShiftClient client, Map<String, String> filter);
     ResourceFactory<T> getResourceFactory();

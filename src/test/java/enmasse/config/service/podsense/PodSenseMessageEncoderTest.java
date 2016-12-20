@@ -41,8 +41,8 @@ public class PodSenseMessageEncoderTest {
         assertThat(ports.get(expectedPortName), is(expectedPort));
     }
 
-    private static Set<Resource<Pod>> createPods() {
-        Set<Resource<Pod>> pods = new LinkedHashSet<>();
+    private static Set<Resource> createPods() {
+        Set<Resource> pods = new LinkedHashSet<>();
         pods.add(createPod("p1", "192.168.0.1", "Running", Collections.singletonMap("amqp", 5672)));
         pods.add(createPod("p2", "192.168.0.2", "Running", Collections.singletonMap("amqps", 5671)));
         pods.add(createPod("p3", "192.168.0.3", "Terminating", Collections.singletonMap("http", 8080)));

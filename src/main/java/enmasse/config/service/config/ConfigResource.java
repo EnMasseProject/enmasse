@@ -8,7 +8,7 @@ import java.util.Map;
 /**
  * Extends a Kubernetes resource with metadata and applies hashCode and equals
  */
-public class ConfigResource extends Resource<HasMetadata> {
+public class ConfigResource extends Resource {
     private final String kind;
     private final String name;
     private final Map<String, String> labels;
