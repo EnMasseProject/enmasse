@@ -402,56 +402,55 @@ public class MockBroker extends AbstractVerticle {
 
     private void messageHandler(ProtonReceiver receiver, ProtonDelivery delivery, Message message) {
 
-        if (message.getSubject() != null) {
+        // just for handling AMQP messages from native AMQP clients (which don't set "subject")
+        if (message.getSubject() == null) {
+            message.setSubject(AmqpPublishMessage.AMQP_SUBJECT);
+        }
 
-            switch (message.getSubject()) {
+        switch (message.getSubject()) {
 
-                case AmqpPubrelMessage.AMQP_SUBJECT:
+            case AmqpPubrelMessage.AMQP_SUBJECT:
 
-                    {
-                        AmqpPubrelMessage amqpPubrelMessage = AmqpPubrelMessage.from(message);
-                        delivery.disposition(Accepted.getInstance(), true);
+            {
+                AmqpPubrelMessage amqpPubrelMessage = AmqpPubrelMessage.from(message);
+                delivery.disposition(Accepted.getInstance(), true);
 
-                        String address = receiver.getSource().getAddress();
+                String address = receiver.getSource().getAddress();
 
-                        String clientId = AmqpHelper.getClientIdFromPubrelAddress(address);
+                String clientId = AmqpHelper.getClientIdFromPubrelAddress(address);
+
+                // QoS already set at AT_LEAST_ONCE as requested by the receiver side
+                this.senders.get(clientId).send(message);
+            }
+            break;
+
+            case AmqpPublishMessage.AMQP_SUBJECT:
+
+            {
+
+                String topic = receiver.getSource().getAddress();
+
+                // check if it's retained
+                AmqpPublishMessage amqpPublishMessage = AmqpPublishMessage.from(message);
+                if (amqpPublishMessage.isRetain()) {
+                    this.retained.put(amqpPublishMessage.topic(), amqpPublishMessage);
+                }
+
+                delivery.disposition(Accepted.getInstance(), true);
+
+                List<String> subscribers = this.subscriptions.get(topic);
+
+                if (subscribers != null) {
+
+                    for (String clientId : subscribers) {
 
                         // QoS already set at AT_LEAST_ONCE as requested by the receiver side
                         this.senders.get(clientId).send(message);
+
                     }
-                    break;
-
-                case AmqpPublishMessage.AMQP_SUBJECT:
-
-                    {
-
-                        String topic = receiver.getSource().getAddress();
-
-                        // TODO: what when raw AMQP message hasn't "publish" as subject ??
-
-                        // check if it's retained
-                        AmqpPublishMessage amqpPublishMessage = AmqpPublishMessage.from(message);
-                        if (amqpPublishMessage.isRetain()) {
-                            this.retained.put(amqpPublishMessage.topic(), amqpPublishMessage);
-                        }
-
-                        delivery.disposition(Accepted.getInstance(), true);
-
-                        List<String> subscribers = this.subscriptions.get(topic);
-
-                        if (subscribers != null) {
-
-                            for (String clientId : subscribers) {
-
-                                // QoS already set at AT_LEAST_ONCE as requested by the receiver side
-                                this.senders.get(clientId).send(message);
-
-                            }
-                        }
-                    }
-                    break;
+                }
             }
-
+            break;
         }
 
     }

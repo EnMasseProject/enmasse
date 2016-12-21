@@ -107,53 +107,44 @@ public class AmqpReceiverEndpoint {
 
         LOG.info("Received {}", message);
 
-        if (message.getSubject() != null) {
-
-            switch (message.getSubject()) {
-
-                case AmqpSubscriptionsMessage.AMQP_SUBJECT:
-
-                    this.handleSession(AmqpSubscriptionsMessage.from(message));
-                    delivery.disposition(Accepted.getInstance(), true);
-
-                    break;
-
-                case AmqpPublishMessage.AMQP_SUBJECT:
-
-                    AmqpPublishData amqpPublishData = new AmqpPublishData();
-                    amqpPublishData.setAmqpPublishMessage(AmqpPublishMessage.from(message));
-
-                    this.handlePublish(amqpPublishData);
-                    // settlement depends on the QoS levels that could be different from the current one in the
-                    // publish message. The AMQP bridge checks the granted QoS as well (MQTT 3.1.1)
-                    if (!delivery.remotelySettled()) {
-                        this.deliveries.put(amqpPublishData.messageId(), delivery);
-                    }
-
-                    break;
-
-                case AmqpPubrelMessage.AMQP_SUBJECT:
-
-                    if (!delivery.remotelySettled()) {
-                        this.deliveries.put(message.getMessageId(), delivery);
-                    }
-                    this.handlePubrel(AmqpPubrelMessage.from(message));
-
-                    break;
-            }
-
-        } else {
-
-            // TODO: published message (i.e. from native AMQP clients) could not have subject "publish" and all needed annotations !!!
+        // just for handling AMQP messages from native AMQP clients (which don't set "subject")
+        if (message.getSubject() == null) {
             message.setSubject(AmqpPublishMessage.AMQP_SUBJECT);
-            AmqpPublishData amqpPublishData = new AmqpPublishData();
-            amqpPublishData.setAmqpPublishMessage(AmqpPublishMessage.from(message));
-
-            this.handlePublish(amqpPublishData);
-            if (!delivery.remotelySettled()) {
-                this.deliveries.put(amqpPublishData.messageId(), delivery);
-            }
         }
+
+        switch (message.getSubject()) {
+
+            case AmqpSubscriptionsMessage.AMQP_SUBJECT:
+
+                this.handleSession(AmqpSubscriptionsMessage.from(message));
+                delivery.disposition(Accepted.getInstance(), true);
+
+                break;
+
+            case AmqpPublishMessage.AMQP_SUBJECT:
+
+                AmqpPublishData amqpPublishData = new AmqpPublishData();
+                amqpPublishData.setAmqpPublishMessage(AmqpPublishMessage.from(message));
+
+                this.handlePublish(amqpPublishData);
+                // settlement depends on the QoS levels that could be different from the current one in the
+                // publish message. The AMQP bridge checks the granted QoS as well (MQTT 3.1.1)
+                if (!delivery.remotelySettled()) {
+                    this.deliveries.put(amqpPublishData.messageId(), delivery);
+                }
+
+                break;
+
+            case AmqpPubrelMessage.AMQP_SUBJECT:
+
+                if (!delivery.remotelySettled()) {
+                    this.deliveries.put(message.getMessageId(), delivery);
+                }
+                this.handlePubrel(AmqpPubrelMessage.from(message));
+
+                break;
+        }
+
     }
 
     /**
