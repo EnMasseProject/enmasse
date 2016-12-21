@@ -16,11 +16,10 @@
 
 package enmasse.config.service.amqp;
 
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
-import io.vertx.proton.ProtonClient;
-import io.vertx.proton.ProtonClientOptions;
-import io.vertx.proton.ProtonConnection;
-import io.vertx.proton.ProtonMessageHandler;
+import io.vertx.proton.*;
 import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.messaging.Source;
 
@@ -39,7 +38,7 @@ public class TestClient {
         this.client = ProtonClient.create(Vertx.vertx());
     }
 
-    public void subscribe(String address, ProtonMessageHandler handler) {
+    public void subscribe(String address, Handler<AsyncResult<ProtonReceiver>> closeHandler, ProtonMessageHandler handler) {
         client.connect(new ProtonClientOptions().setConnectTimeout(10000), serverHost, serverPort, connectResult -> {
             if (connectResult.succeeded()) {
                 System.out.println("Connected'");
@@ -49,7 +48,7 @@ public class TestClient {
                 Source source = new Source();
                 source.setAddress(address);
                 source.setFilter(Collections.singletonMap(Symbol.getSymbol("my"), "label"));
-                connection.createReceiver(address).setSource(source).handler(handler).open();
+                connection.createReceiver(address).setSource(source).closeHandler(closeHandler).handler(handler).open();
             } else {
                 System.out.println("Connection failed: " + connectResult.cause().getMessage());
             }

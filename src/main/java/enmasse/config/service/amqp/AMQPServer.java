@@ -16,7 +16,10 @@
 
 package enmasse.config.service.amqp;
 
+import enmasse.config.service.model.Resource;
 import enmasse.config.service.model.ResourceDatabase;
+import enmasse.config.service.openshift.OpenshiftResourceDatabase;
+import enmasse.config.service.openshift.SubscriptionConfig;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.ProtonSender;
@@ -38,16 +41,16 @@ import java.util.Map;
 public class AMQPServer extends AbstractVerticle {
     private static final Logger log = LoggerFactory.getLogger(AMQPServer.class.getName());
 
-    private final ResourceDatabase database;
+    private final Map<String, ResourceDatabase> databaseMap;
     private final String hostname;
     private final int port;
     private volatile ProtonServer server;
 
-    public AMQPServer(String hostname, int port, ResourceDatabase database)
+    public AMQPServer(String hostname, int port, Map<String, ResourceDatabase> databaseMap)
     {
         this.hostname = hostname;
         this.port = port;
-        this.database = database;
+        this.databaseMap = databaseMap;
     }
 
     private void connectHandler(ProtonConnection connection) {
@@ -71,13 +74,22 @@ public class AMQPServer extends AbstractVerticle {
         sender.setSource(sender.getRemoteSource());
         Source source = (Source) sender.getRemoteSource();
 
-        boolean success = database.subscribe(source.getAddress(), createStringFilter(source.getFilter()), sender::send);
-        if (success) {
+        try {
+            ResourceDatabase database = lookupDatabase(source.getAddress());
+            database.subscribe(createStringFilter(source.getFilter()), sender::send);
             sender.open();
             log.info("Added subscriber {} for config {}", connection.getRemoteContainer(), sender.getRemoteSource().getAddress());
-        } else {
-            log.info("Failed creating subscriber {} for config {}", connection.getRemoteContainer(), sender.getRemoteSource().getAddress());
+        } catch (Exception e) {
+            log.info("Failed creating subscriber {} for config {}", connection.getRemoteContainer(), sender.getRemoteSource().getAddress(), e);
             sender.close();
+        }
+    }
+
+    private ResourceDatabase lookupDatabase(String address) {
+        if (databaseMap.containsKey(address)) {
+            return databaseMap.get(address);
+        } else {
+            throw new IllegalArgumentException("Unknown database for address " + address);
         }
     }
 

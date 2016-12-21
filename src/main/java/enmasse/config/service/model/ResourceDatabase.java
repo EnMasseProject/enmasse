@@ -22,5 +22,5 @@ import java.util.Map;
  * Represents a database of resources that can be subscribed to.
  */
 public interface ResourceDatabase {
-    boolean subscribe(String address, Map<String, String> filter, Subscriber subscriber);
+    void subscribe(Map<String, String> filter, Subscriber subscriber) throws Exception;
 }

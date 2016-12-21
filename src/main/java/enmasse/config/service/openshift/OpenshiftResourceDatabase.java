@@ -16,69 +16,53 @@
 
 package enmasse.config.service.openshift;
 
+import enmasse.config.service.model.LabelSet;
+import enmasse.config.service.model.Resource;
 import enmasse.config.service.model.Subscriber;
 import enmasse.config.service.model.ResourceDatabase;
 import io.fabric8.openshift.client.OpenShiftClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
- * ResourceDatabase backed by OpenShift/Kubernetes REST API supporting subscriptions.
+ * ResourceDatabase backed by OpenShift/Kubernetes REST API supporting subscription for a resource of a particular type
  */
-public class OpenshiftResourceDatabase implements AutoCloseable, ResourceDatabase {
+public class OpenshiftResourceDatabase<T extends Resource> implements AutoCloseable, ResourceDatabase {
     private static final Logger log = LoggerFactory.getLogger(OpenshiftResourceDatabase.class.getName());
     private final OpenShiftClient client;
 
-    private final Map<String, OpenshiftResourceListener> listenerMap = new LinkedHashMap<>();
-    private final List<OpenshiftResourceObserver> observerList = new ArrayList<>();
-    private final Map<String, SubscriptionConfig> subscriptionConfigMap;
+    private final Map<LabelSet, OpenshiftResourceObserver<T>> observerMap = new LinkedHashMap<>();
+    private final SubscriptionConfig<T> subscriptionConfig;
 
-    public OpenshiftResourceDatabase(OpenShiftClient client, Map<String, SubscriptionConfig> subscriptionConfigMap) {
+    public OpenshiftResourceDatabase(OpenShiftClient client, SubscriptionConfig<T> subscriptionConfig) {
         this.client = client;
-        this.subscriptionConfigMap = subscriptionConfigMap;
+        this.subscriptionConfig = subscriptionConfig;
     }
 
     @Override
-    public void close() throws Exception {
-        for (OpenshiftResourceObserver observer : observerList) {
+    public synchronized void close() throws Exception {
+        for (OpenshiftResourceObserver<T> observer : observerMap.values()) {
             observer.close();
         }
     }
 
-    public synchronized boolean subscribe(String address, Map<String, String> filter, Subscriber subscriber) {
-        try {
-            OpenshiftResourceListener listener = getOrCreateListener(address, filter);
-            listener.subscribe(subscriber);
-            return true;
-        } catch (Exception e) {
-            log.error("Error subscribing to " + address + ": ", e);
-            return false;
-        }
-    }
+    public synchronized void subscribe(Map<String, String> filter, Subscriber subscriber) throws Exception {
+        LabelSet key = LabelSet.fromMap(filter);
+        OpenshiftResourceObserver<T> observer = observerMap.get(key);
+        if (observer == null) {
+            log.debug("Creating new observer with filter " + filter);
+            SubscriptionManager<T> subscriptionManager = new SubscriptionManager<>(subscriptionConfig.getMessageEncoder());
+            observer = new OpenshiftResourceObserver<>(subscriptionConfig.getResourceFactory(), subscriptionConfig.getObserverOptions(client, filter), subscriptionManager);
+            observerMap.put(key, observer);
 
-    private OpenshiftResourceListener getOrCreateListener(String address, Map<String, String> filter) {
-        OpenshiftResourceListener listener = listenerMap.get(address);
-        if (listener == null) {
-            SubscriptionConfig subscriptionConfig = getSubscriptionConfig(address);
-            listener = new OpenshiftResourceListener(subscriptionConfig.getMessageEncoder());
-            OpenshiftResourceObserver observer = new OpenshiftResourceObserver(subscriptionConfig.getResourceFactory(), subscriptionConfig.getObserverOptions(client, filter), listener);
+            observer.subscribe(subscriber);
             observer.start();
-            observerList.add(observer);
-            listenerMap.put(address, listener);
-        }
-        return listener;
-    }
-
-    private SubscriptionConfig getSubscriptionConfig(String address) {
-        if (subscriptionConfigMap.containsKey(address)) {
-            return subscriptionConfigMap.get(address);
         } else {
-            throw new IllegalArgumentException("Unknown listener factory for address " + address);
+            log.debug("Subscribing to existing observer");
+            observer.subscribe(subscriber);
         }
     }
 }

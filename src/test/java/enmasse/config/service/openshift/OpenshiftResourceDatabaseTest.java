@@ -46,8 +46,7 @@ import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
 public class OpenshiftResourceDatabaseTest {
-    private OpenshiftResourceDatabase database;
-    private String key = "maas";
+    private OpenshiftResourceDatabase<TestResource> database;
     private OpenShiftClient client;
     private ScheduledExecutorService executor;
     private ClientMixedOperation<ConfigMap, ConfigMapList, DoneableConfigMap, ClientResource<ConfigMap, DoneableConfigMap>> mapOp = mock(ClientMixedOperation.class);
@@ -58,7 +57,7 @@ public class OpenshiftResourceDatabaseTest {
         client = mock(OpenShiftClient.class);
         Watch mockWatcher = mock(Watch.class);
         executor = Executors.newSingleThreadScheduledExecutor();
-        database = new OpenshiftResourceDatabase(client, Collections.singletonMap(key, new TestSubscriptionConfig()));
+        database = new OpenshiftResourceDatabase<>(client, new TestSubscriptionConfig());
         when(client.configMaps()).thenReturn(mapOp);
 
         when(mapOp.withLabels(any())).thenReturn(mapOp);
@@ -82,17 +81,11 @@ public class OpenshiftResourceDatabaseTest {
     }
 
     @Test
-    public void testSubscribeWithBadKey() {
-        Subscriber sub = mock(Subscriber.class);
-        assertFalse(database.subscribe("nosuchkey", Collections.emptyMap(), sub));
-    }
-
-    @Test
-    public void testSubscribeAfterConnected() throws InterruptedException {
+    public void testSubscribeAfterConnected() throws Exception {
 
         TestSubscriber sub = new TestSubscriber();
 
-        assertTrue(database.subscribe(key, Collections.emptyMap(), sub));
+        database.subscribe(Collections.emptyMap(), sub);
         waitForExecutor();
         Watcher listener = getListener();
 
@@ -109,10 +102,10 @@ public class OpenshiftResourceDatabaseTest {
     }
 
     @Test
-    public void testUpdates() throws InterruptedException {
+    public void testUpdates() throws Exception {
         TestSubscriber sub = new TestSubscriber();
 
-        assertTrue(database.subscribe(key, Collections.emptyMap(), sub));
+        database.subscribe(Collections.emptyMap(), sub);
         waitForExecutor();
 
         Watcher listener = getListener();

@@ -18,6 +18,7 @@ package enmasse.config.service.openshift;
 
 import enmasse.config.service.model.Resource;
 import enmasse.config.service.model.ResourceFactory;
+import enmasse.config.service.model.Subscriber;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesResourceList;
 import io.fabric8.kubernetes.client.KubernetesClientException;
@@ -32,18 +33,21 @@ import java.util.*;
 /**
  * A subscription to a set of resources;
  */
-public class OpenshiftResourceObserver implements AutoCloseable, Watcher {
+public class OpenshiftResourceObserver<T extends Resource> implements AutoCloseable, Watcher {
     private static final Logger log = LoggerFactory.getLogger(OpenshiftResourceObserver.class.getName());
-    private final ObserverOptions observerOptions;
-    private final OpenshiftResourceListener listener;
-    private final Set<Resource> resourceSet = new LinkedHashSet<>();
-    private final ResourceFactory<? extends Resource> resourceFactory;
+
     private final List<Watch> watches = new ArrayList<>();
 
-    public OpenshiftResourceObserver(ResourceFactory<? extends Resource> resourceFactory, ObserverOptions observerOptions, OpenshiftResourceListener listener) {
+    private final ObserverOptions observerOptions;
+
+    private final Set<T> resourceSet = new LinkedHashSet<>();
+    private final ResourceFactory<T> resourceFactory;
+    private final SubscriptionManager<T> subscriptionManager;
+
+    public OpenshiftResourceObserver(ResourceFactory<T> resourceFactory, ObserverOptions observerOptions, SubscriptionManager<T> subscriptionManager) {
         this.resourceFactory = resourceFactory;
         this.observerOptions = observerOptions;
-        this.listener = listener;
+        this.subscriptionManager = subscriptionManager;
     }
 
     public void start() {
@@ -66,7 +70,7 @@ public class OpenshiftResourceObserver implements AutoCloseable, Watcher {
                 }
             }
         }
-        listener.resourcesUpdated(resourceSet);
+        subscriptionManager.resourcesUpdated(resourceSet);
     }
 
     @Override
@@ -77,12 +81,16 @@ public class OpenshiftResourceObserver implements AutoCloseable, Watcher {
         watches.clear();
     }
 
+    public void subscribe(Subscriber subscriber) {
+        subscriptionManager.subscribe(subscriber);
+    }
+
     @Override
     public synchronized void eventReceived(Action action, Object obj) {
         if (!(obj instanceof HasMetadata)) {
             throw new IllegalArgumentException("Invalid resource instance: " + obj.getClass().getName());
         }
-        Resource resource = resourceFactory.createResource((HasMetadata) obj);
+        T resource = resourceFactory.createResource((HasMetadata) obj);
         if (action.equals(Action.ADDED)) {
             resourceSet.add(resource);
             log.info("Resource " + resource + " added!");
@@ -97,7 +105,7 @@ public class OpenshiftResourceObserver implements AutoCloseable, Watcher {
         } else if (action.equals(Action.ERROR)) {
             log.error("Received an error event for resource " + resource);
         }
-        listener.resourcesUpdated(resourceSet);
+        subscriptionManager.resourcesUpdated(resourceSet);
     }
 
     private void deleteFromSet(Resource resource) {

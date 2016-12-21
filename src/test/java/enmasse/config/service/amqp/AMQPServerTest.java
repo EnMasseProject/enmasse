@@ -27,7 +27,10 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
+import java.util.Collections;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
@@ -44,8 +47,7 @@ public class AMQPServerTest {
     public void setup() throws InterruptedException {
         vertx = Vertx.vertx();
         database = mock(ResourceDatabase.class);
-        when(database.subscribe(any(), any(), any())).thenReturn(true);
-        server = new AMQPServer("localhost", 0, database);
+        server = new AMQPServer("localhost", 0, Collections.singletonMap("foo", database));
         vertx.deployVerticle(server);
         int port = waitForPort(server);
         System.out.println("Server running on port " + server.port());
@@ -68,13 +70,13 @@ public class AMQPServerTest {
     }
 
     @Test
-    public void testSubscribe() {
+    public void testSubscribe() throws Exception {
         ProtonMessageHandler msgHandler = mock(ProtonMessageHandler.class);
-        client.subscribe("foo", msgHandler);
+        client.subscribe("foo", result -> {}, msgHandler);
 
         ArgumentCaptor<Subscriber> subCapture = ArgumentCaptor.forClass(Subscriber.class);
         ArgumentCaptor<Map<String, String>> mapCapture = ArgumentCaptor.forClass(Map.class);
-        verify(database, timeout(10000)).subscribe(anyString(), mapCapture.capture(), subCapture.capture());
+        verify(database, timeout(10000)).subscribe(mapCapture.capture(), subCapture.capture());
 
         Map<String, String> filter = mapCapture.getValue();
         assertThat(filter.size(), is(1));
@@ -90,6 +92,14 @@ public class AMQPServerTest {
         verify(msgHandler, timeout(10000)).handle(any(), msgCapture.capture());
         String value = (String) ((AmqpValue)msgCapture.getValue().getBody()).getValue();
         assertThat(value, is("test1"));
+    }
+
+    @Test
+    public void testSubscribeWithBadKey() throws InterruptedException {
+        ProtonMessageHandler msgHandler = mock(ProtonMessageHandler.class);
+        CountDownLatch latch = new CountDownLatch(1);
+        client.subscribe("nosuchaddress", result -> latch.countDown(), msgHandler);
+        assertTrue(latch.await(1, TimeUnit.MINUTES));
     }
 }
 

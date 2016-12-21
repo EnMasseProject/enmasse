@@ -34,7 +34,7 @@ import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.*;
 
 @RunWith(MockitoJUnitRunner.class)
-public class OpenshiftResourceListenerTest {
+public class SubscriptionManagerTest {
 
     @Captor
     private ArgumentCaptor<Message> messageCaptor;
@@ -46,7 +46,7 @@ public class OpenshiftResourceListenerTest {
             message.setBody(new AmqpValue("test"));
             return message;
         };
-        OpenshiftResourceListener listener = new OpenshiftResourceListener(encoder);
+        SubscriptionManager listener = new SubscriptionManager(encoder);
         Subscriber mockSub = mock(Subscriber.class);
         listener.subscribe(mockSub);
         listener.resourcesUpdated(Collections.singleton(new TestResource("t1", Collections.singletonMap("key1", "value1"), "v1")));

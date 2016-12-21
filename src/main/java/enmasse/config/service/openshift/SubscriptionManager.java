@@ -28,14 +28,14 @@ import java.util.*;
 /**
  * Manages subscribers for a given set of OpenShift resources.
  */
-public class OpenshiftResourceListener {
-    private static final Logger log = LoggerFactory.getLogger(OpenshiftResourceListener.class.getName());
+public class SubscriptionManager<T extends Resource> {
+    private static final Logger log = LoggerFactory.getLogger(SubscriptionManager.class.getName());
 
     private final List<Subscriber> subscriberList = new ArrayList<>();
-    private final Set<Resource> resources = new LinkedHashSet<>();
-    private final MessageEncoder messageEncoder;
+    private final Set<T> resources = new LinkedHashSet<>();
+    private final MessageEncoder<T> messageEncoder;
 
-    public OpenshiftResourceListener(MessageEncoder messageEncoder) {
+    public SubscriptionManager(MessageEncoder<T> messageEncoder) {
         this.messageEncoder = messageEncoder;
     }
 
@@ -62,7 +62,7 @@ public class OpenshiftResourceListener {
     }
 
     private Optional<Message> encodeAndLog() {
-        Set<Resource> set = Collections.unmodifiableSet(resources);
+        Set<T> set = Collections.unmodifiableSet(resources);
         try {
             return Optional.of(messageEncoder.encode(set));
         } catch (IOException e) {
@@ -71,7 +71,7 @@ public class OpenshiftResourceListener {
         }
     }
 
-    public synchronized void resourcesUpdated(Set<Resource> updated) {
+    public synchronized void resourcesUpdated(Set<T> updated) {
         if (!updated.equals(resources)) {
             resources.clear();
             resources.addAll(updated);
