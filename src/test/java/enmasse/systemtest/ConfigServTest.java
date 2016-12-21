@@ -1,11 +1,15 @@
 package enmasse.systemtest;
 
+import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.openshift.client.OpenShiftClient;
 import io.vertx.proton.ProtonClient;
 import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.ProtonReceiver;
 import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.messaging.AmqpSequence;
 import org.apache.qpid.proton.amqp.messaging.Source;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.Ignore;
 
@@ -15,14 +19,52 @@ import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 public class ConfigServTest extends VertxTestBase {
+
+    private Set<String> pods;
+
+    @Before
+    public void setupPodList() {
+        pods = new LinkedHashSet<>();
+    }
+
+    @After
+    public void teardownPods() {
+        OpenShiftClient client = openShift.getClient();
+        for (String pod : pods) {
+            assertTrue(client.pods().withName(pod).delete());
+        }
+        pods.clear();
+    }
+
+    public void createPod(String name) throws Exception {
+        OpenShiftClient client = openShift.getClient();
+        client.pods().createNew()
+                .withNewMetadata()
+                    .withName(name)
+                    .addToLabels("testpodsense", "working")
+                    .endMetadata()
+                .withNewSpec()
+                    .addNewContainer()
+                        .withName("dummy")
+                        .withImage("fedora:25")
+                        .withCommand("read")
+                        .endContainer()
+                    .endSpec()
+                .done();
+        pods.add(name);
+    }
+
+    private void deletePod(String name) throws Exception {
+        OpenShiftClient client = openShift.getClient();
+        assertTrue(client.pods().withName(name).delete());
+        pods.remove(name);
+    }
+
     @SuppressWarnings("unchecked")
     @Test
-    @Ignore
     public void testPodSense() throws Exception {
         Endpoint configserv = getConfigServEndpoint();
         BlockingQueue<List<String>> latestPods = new LinkedBlockingDeque<>();
@@ -31,7 +73,7 @@ public class ConfigServTest extends VertxTestBase {
                 ProtonConnection connection = event.result().open();
                 Source source = new Source();
                 source.setAddress("podsense");
-                source.setFilter(Collections.singletonMap(Symbol.getSymbol("role"), "broker"));
+                source.setFilter(Collections.singletonMap(Symbol.getSymbol("testpodsense"), "working"));
                 ProtonReceiver receiver = connection.createReceiver("podsense").setSource(source);
                 receiver.handler((protonDelivery, message) -> {
                     List<String> pods = new ArrayList<>();
@@ -40,6 +82,7 @@ public class ConfigServTest extends VertxTestBase {
                         Map<String, Object> pod = (Map<String, Object>) obj;
                         pods.add((String) pod.get("host"));
                     }
+                    System.out.println("Got pods: " + pods);
                     try {
                         latestPods.put(pods);
                     } catch (InterruptedException e) {
@@ -49,12 +92,14 @@ public class ConfigServTest extends VertxTestBase {
                 receiver.open();
             }
         });
-        deploy(Destination.queue("testqueue"));
+
+        createPod("pod1");
         assertPods(latestPods, 1, new TimeoutBudget(2, TimeUnit.MINUTES));
-        deploy(Destination.queue("testqueue"), Destination.queue("anotherqueue"));
+        createPod("pod2");
+        createPod("pod3");
+        assertPods(latestPods, 3, new TimeoutBudget(2, TimeUnit.MINUTES));
+        deletePod("pod2");
         assertPods(latestPods, 2, new TimeoutBudget(2, TimeUnit.MINUTES));
-        deploy(Destination.queue("anotherqueue"));
-        assertPods(latestPods, 1, new TimeoutBudget(2, TimeUnit.MINUTES));
     }
 
     private void assertPods(BlockingQueue<List<String>> latestPods, int numPods, TimeoutBudget timeoutBudget) throws InterruptedException {

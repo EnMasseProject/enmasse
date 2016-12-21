@@ -37,7 +37,7 @@ public class VertxTestBase {
     protected OpenShift openShift = new OpenShift(environment);
 
     @Before
-    public void setup() {
+    public void setup() throws Exception {
         vertx = Vertx.vertx();
         httpClient = vertx.createHttpClient();
     }
