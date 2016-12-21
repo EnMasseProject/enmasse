@@ -21,11 +21,15 @@ import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import io.vertx.proton.ProtonClient;
 import io.vertx.proton.ProtonConnection;
+import io.vertx.proton.ProtonHelper;
 import io.vertx.proton.ProtonLinkOptions;
 import io.vertx.proton.ProtonQoS;
 import io.vertx.proton.ProtonReceiver;
+import io.vertx.proton.ProtonSender;
+import org.apache.qpid.proton.amqp.Binary;
 import org.apache.qpid.proton.amqp.messaging.Accepted;
 import org.apache.qpid.proton.amqp.messaging.Data;
+import org.apache.qpid.proton.message.Message;
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
@@ -48,7 +52,7 @@ public class PublishTest extends MockMqttFrontendTestBase {
     private int receivedQos;
 
     @Test
-    public void publishQoStoMqtt(TestContext context) {
+    public void mqttPublishQoStoMqtt(TestContext context) {
 
         for (int receiverQos = 0; receiverQos <= 2; receiverQos++) {
 
@@ -59,7 +63,7 @@ public class PublishTest extends MockMqttFrontendTestBase {
                 int qos = (receiverQos < publisherQos) ? receiverQos : publisherQos;
 
                 this.mqttReceiver(context, MQTT_TOPIC, receiverQos);
-                this.publish(context, MQTT_TOPIC, MQTT_MESSAGE, publisherQos);
+                this.mqttPublish(context, MQTT_TOPIC, MQTT_MESSAGE, publisherQos);
 
                 context.assertTrue(qos == this.receivedQos);
                 LOG.info("receiverQos = {}, publisherQos = {}, qos = {}", receiverQos, publisherQos, qos);
@@ -68,57 +72,87 @@ public class PublishTest extends MockMqttFrontendTestBase {
     }
 
     @Test
-    public void publishQoS0toMqtt(TestContext context) {
+    public void mqttPublishQoS0toMqtt(TestContext context) {
 
         this.mqttReceiver(context, MQTT_TOPIC, 0);
-        this.publish(context, MQTT_TOPIC, MQTT_MESSAGE, 0);
+        this.mqttPublish(context, MQTT_TOPIC, MQTT_MESSAGE, 0);
 
         context.assertTrue(true);
     }
 
     @Test
-    public void publishQoS1toMqtt(TestContext context) {
+    public void mqttPublishQoS1toMqtt(TestContext context) {
 
         this.mqttReceiver(context, MQTT_TOPIC, 1);
-        this.publish(context, MQTT_TOPIC, MQTT_MESSAGE, 1);
+        this.mqttPublish(context, MQTT_TOPIC, MQTT_MESSAGE, 1);
 
         context.assertTrue(true);
     }
 
     @Test
-    public void publishQoS2toMqtt(TestContext context) {
+    public void mqttPublishQoS2toMqtt(TestContext context) {
 
         this.mqttReceiver(context, MQTT_TOPIC, 2);
-        this.publish(context, MQTT_TOPIC, MQTT_MESSAGE, 2);
+        this.mqttPublish(context, MQTT_TOPIC, MQTT_MESSAGE, 2);
 
         context.assertTrue(true);
     }
 
     @Test
-    public void publishQoS0toAmqp(TestContext context) {
+    public void mqttPublishQoS0toAmqp(TestContext context) {
 
         this.amqpReceiver(context, MQTT_TOPIC, 0);
-        this.publish(context, MQTT_TOPIC, MQTT_MESSAGE, 0);
+        this.mqttPublish(context, MQTT_TOPIC, MQTT_MESSAGE, 0);
 
         context.assertTrue(true);
     }
 
     @Test
-    public void publishQoS1toAmqp(TestContext context) {
+    public void mqttPublishQoS1toAmqp(TestContext context) {
 
         this.amqpReceiver(context, MQTT_TOPIC, 1);
-        this.publish(context, MQTT_TOPIC, MQTT_MESSAGE, 1);
+        this.mqttPublish(context, MQTT_TOPIC, MQTT_MESSAGE, 1);
 
         context.assertTrue(true);
     }
 
     @Test
-    public void publishQoS2toAmqp(TestContext context) {
+    public void mqttPublishQoS2toAmqp(TestContext context) {
 
         this.amqpReceiver(context, MQTT_TOPIC, 2);
-        this.publish(context, MQTT_TOPIC, MQTT_MESSAGE, 2);
+        this.mqttPublish(context, MQTT_TOPIC, MQTT_MESSAGE, 2);
 
         context.assertTrue(true);
+    }
+
+    @Test
+    public void amqpPublishQoS0toMqtt(TestContext context) {
+
+        this.mqttReceiver(context, MQTT_TOPIC, 0);
+        this.amqpPublish(context, MQTT_TOPIC, MQTT_MESSAGE, 0);
+
+        // without "durable" header and/or x-qos annotation, message always republished with qos = 0
+        context.assertTrue(this.receivedQos == 0);
+    }
+
+    @Test
+    public void amqpPublishQoS1toMqtt(TestContext context) {
+
+        this.mqttReceiver(context, MQTT_TOPIC, 1);
+        this.amqpPublish(context, MQTT_TOPIC, MQTT_MESSAGE, 1);
+
+        // using "durable" header, the qos is 1 as default
+        context.assertTrue(this.receivedQos == 1);
+    }
+
+    @Test
+    public void amqpPublishQoS2toMqtt(TestContext context) {
+
+        this.mqttReceiver(context, MQTT_TOPIC, 2);
+        this.amqpPublish(context, MQTT_TOPIC, MQTT_MESSAGE, 2);
+
+        // using "durable" header, the qos is 1 as default
+        context.assertTrue(this.receivedQos == 1);
     }
 
     private void mqttReceiver(TestContext context, String topic, int qos) {
@@ -178,7 +212,48 @@ public class PublishTest extends MockMqttFrontendTestBase {
         });
     }
 
-    private void publish(TestContext context, String topic, String message, int qos) {
+    private void amqpPublish(TestContext context, String topic, String payload, int qos) {
+
+        this.async = context.async();
+
+        // AMQP client connects for publishing message
+        ProtonClient client = ProtonClient.create(this.vertx);
+
+        client.connect(MESSAGING_SERVICE_HOST, MESSAGING_SERVICE_PORT, done -> {
+
+            if (done.succeeded()) {
+
+                ProtonConnection connection = done.result();
+                connection.open();
+
+                ProtonSender sender = connection.createSender(topic);
+
+                sender
+                        .setQoS((qos == 0) ? ProtonQoS.AT_MOST_ONCE : ProtonQoS.AT_LEAST_ONCE)
+                        .open();
+
+                Message message = ProtonHelper.message();
+                message.setBody(new Data(new Binary(payload.getBytes())));
+                message.setAddress(topic);
+
+                if (qos > 0) {
+                    message.setDurable(true); // it will be AT_LEAST_ONCE as default
+                }
+
+                sender.send(message);
+
+            } else {
+
+                context.assertTrue(false);
+                done.cause().printStackTrace();
+            }
+
+        });
+
+        this.async.await();
+    }
+
+    private void mqttPublish(TestContext context, String topic, String message, int qos) {
 
         this.async = context.async();
 

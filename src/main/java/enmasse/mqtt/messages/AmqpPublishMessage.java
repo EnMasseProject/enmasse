@@ -79,17 +79,25 @@ public class AmqpPublishMessage {
             throw new IllegalArgumentException(String.format("AMQP message subject is no s%", AMQP_SUBJECT));
         }
 
+        boolean isRetain = false;
+        MqttQoS qos = MqttQoS.AT_MOST_ONCE;
+
+        // raw AMQP messages published from native AMQP clients could not have annotations
         MessageAnnotations messageAnnotations = message.getMessageAnnotations();
         if (messageAnnotations == null) {
-            throw new IllegalArgumentException("AMQP message has no annotations");
+
+            if (message.getHeader() != null) {
+                // if qos annotation isn't present, fallback to "durable" header field
+                qos = ((message.getHeader().getDurable() == null) || !message.getHeader().getDurable())
+                        ? MqttQoS.AT_MOST_ONCE : MqttQoS.AT_LEAST_ONCE;
+            }
+
         } else {
 
-            boolean isRetain = false;
             if (messageAnnotations.getValue().containsKey(Symbol.valueOf(AMQP_RETAIN_ANNOTATION))) {
                 isRetain = (boolean) messageAnnotations.getValue().get(Symbol.valueOf(AMQP_RETAIN_ANNOTATION));
             }
 
-            MqttQoS qos;
             if (messageAnnotations.getValue().containsKey(Symbol.valueOf(AMQP_QOS_ANNOTATION))) {
                 int value = (int) messageAnnotations.getValue().get(Symbol.valueOf(AMQP_QOS_ANNOTATION));
                 qos = MqttQoS.valueOf(value);
@@ -99,24 +107,22 @@ public class AmqpPublishMessage {
                     // if qos annotation isn't present, fallback to "durable" header field
                     qos = ((message.getHeader().getDurable() == null) || !message.getHeader().getDurable())
                             ? MqttQoS.AT_MOST_ONCE : MqttQoS.AT_LEAST_ONCE;
-                } else {
-                    qos = MqttQoS.AT_MOST_ONCE;
                 }
             }
+        }
 
-            boolean isDup = (message.getDeliveryCount() > 0);
+        boolean isDup = (message.getDeliveryCount() > 0);
 
-            String topic = message.getAddress();
+        String topic = message.getAddress();
 
-            Section section = message.getBody();
-            if ((section != null) && (section instanceof Data)) {
+        Section section = message.getBody();
+        if ((section != null) && (section instanceof Data)) {
 
-                Buffer payload = Buffer.buffer(((Data) section).getValue().getArray());
-                return new AmqpPublishMessage(message.getMessageId(), qos, isDup, isRetain, topic, payload);
+            Buffer payload = Buffer.buffer(((Data) section).getValue().getArray());
+            return new AmqpPublishMessage(message.getMessageId(), qos, isDup, isRetain, topic, payload);
 
-            } else {
-                throw new IllegalArgumentException("AMQP message wrong body type");
-            }
+        } else {
+            throw new IllegalArgumentException("AMQP message wrong body type");
         }
     }
 
