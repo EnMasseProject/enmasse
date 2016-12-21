@@ -18,9 +18,7 @@ public class PodSenseMessageEncoder implements MessageEncoder<PodResource> {
         Message message = Message.Factory.create();
         List<Map<String, Object>> root = new ArrayList<>();
 
-        set.stream()
-                .filter(pod -> "Running".equals(pod.getPhase()))
-                .forEach(pod -> root.add(encodePod(pod)));
+        set.forEach(pod -> root.add(encodePod(pod)));
 
         message.setBody(new AmqpSequence(root));
         return message;

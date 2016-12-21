@@ -10,6 +10,7 @@ import io.fabric8.kubernetes.client.dsl.ClientOperation;
 import io.fabric8.openshift.client.OpenShiftClient;
 
 import java.util.Map;
+import java.util.function.Predicate;
 
 /**
  * PodSense supports subscribing to a set of pods matching a label set. The response contains a list of running Pods with their IPs and ports.
@@ -32,5 +33,10 @@ public class PodSenseSubscriptionConfig implements SubscriptionConfig<PodResourc
     @Override
     public ResourceFactory<PodResource> getResourceFactory() {
         return in -> new PodResource((Pod) in);
+    }
+
+    @Override
+    public Predicate<PodResource> getResourceFilter() {
+        return podResource -> "Running".equals(podResource.getPhase());
     }
 }

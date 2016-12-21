@@ -11,6 +11,7 @@ import io.fabric8.openshift.client.OpenShiftClient;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.function.Predicate;
 
 /**
  * Subscription config for config subscriptions
@@ -39,5 +40,10 @@ public class ConfigSubscriptionConfig implements SubscriptionConfig<ConfigResour
     @Override
     public ResourceFactory<ConfigResource> getResourceFactory() {
         return ConfigResource::new;
+    }
+
+    @Override
+    public Predicate<ConfigResource> getResourceFilter() {
+        return configResource -> true;
     }
 }

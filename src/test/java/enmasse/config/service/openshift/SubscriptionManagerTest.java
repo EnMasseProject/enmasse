@@ -17,6 +17,7 @@
 package enmasse.config.service.openshift;
 
 import enmasse.config.service.TestResource;
+import enmasse.config.service.model.Resource;
 import enmasse.config.service.model.Subscriber;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.message.Message;
@@ -27,7 +28,10 @@ import org.mockito.Captor;
 import org.mockito.runners.MockitoJUnitRunner;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.function.Predicate;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
@@ -41,12 +45,12 @@ public class SubscriptionManagerTest {
 
     @Test
     public void testSubscribing() throws IOException {
-        MessageEncoder encoder = set -> {
+        MessageEncoder<TestResource> encoder = set -> {
             Message message = Message.Factory.create();
             message.setBody(new AmqpValue("test"));
             return message;
         };
-        SubscriptionManager listener = new SubscriptionManager(encoder);
+        SubscriptionManager<TestResource> listener = new SubscriptionManager<>(encoder, resource -> !"filtered".equals(resource.getValue()));
         Subscriber mockSub = mock(Subscriber.class);
         listener.subscribe(mockSub);
         listener.resourcesUpdated(Collections.singleton(new TestResource("t1", Collections.singletonMap("key1", "value1"), "v1")));
@@ -64,6 +68,10 @@ public class SubscriptionManagerTest {
 
         clearInvocations(mockSub);
         listener.resourcesUpdated(Collections.singleton(new TestResource("t2", Collections.singletonMap("key1", "value1"), "v2")));
+        verifyZeroInteractions(mockSub);
+
+        clearInvocations(mockSub);
+        listener.resourcesUpdated(new HashSet<>(Arrays.asList(new TestResource("t2", Collections.singletonMap("key1", "value1"), "v2"), new TestResource("t3", Collections.singletonMap("key1", "value1"), "filtered"))));
         verifyZeroInteractions(mockSub);
     }
 }

@@ -10,6 +10,7 @@ import org.apache.qpid.proton.message.Message;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public class TestSubscriptionConfig implements SubscriptionConfig<TestResource> {
@@ -34,5 +35,10 @@ public class TestSubscriptionConfig implements SubscriptionConfig<TestResource> 
     @Override
     public ResourceFactory<TestResource> getResourceFactory() {
         return in -> new TestResource((TestResource.TestValue) in);
+    }
+
+    @Override
+    public Predicate<TestResource> getResourceFilter() {
+        return TestResource -> true;
     }
 }

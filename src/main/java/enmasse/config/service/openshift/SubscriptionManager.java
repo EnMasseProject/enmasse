@@ -24,6 +24,8 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 /**
  * Manages subscribers for a given set of OpenShift resources.
@@ -34,9 +36,11 @@ public class SubscriptionManager<T extends Resource> {
     private final List<Subscriber> subscriberList = new ArrayList<>();
     private final Set<T> resources = new LinkedHashSet<>();
     private final MessageEncoder<T> messageEncoder;
+    private final Predicate<T> resourceFilter;
 
-    public SubscriptionManager(MessageEncoder<T> messageEncoder) {
+    public SubscriptionManager(MessageEncoder<T> messageEncoder, Predicate<T> resourceFilter) {
         this.messageEncoder = messageEncoder;
+        this.resourceFilter = resourceFilter;
     }
 
     /**
@@ -72,9 +76,13 @@ public class SubscriptionManager<T extends Resource> {
     }
 
     public synchronized void resourcesUpdated(Set<T> updated) {
-        if (!updated.equals(resources)) {
+        Set<T> filtered = updated.stream()
+                .filter(resourceFilter)
+                .collect(Collectors.toSet());
+
+        if (!filtered.equals(resources)) {
             resources.clear();
-            resources.addAll(updated);
+            resources.addAll(filtered);
             notifySubscribers();
         }
     }
