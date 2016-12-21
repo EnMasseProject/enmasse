@@ -203,10 +203,16 @@ public class AmqpPublishEndpoint {
 
         // detach links
         for (Map.Entry<String, AmqpPublisher> entry: this.publishers.entrySet()) {
-            entry.getValue().close();
+
+            AmqpPublisher publisher = entry.getValue();
+            if (publisher.isOpen()) {
+                publisher.close();
+            }
         }
 
-        this.senderPubrel.close();
+        if (this.senderPubrel.isOpen()) {
+            this.senderPubrel.close();
+        }
 
         this.publishers.clear();
         this.deliveries.clear();

@@ -17,7 +17,6 @@
 package enmasse.mqtt.mocks;
 
 import enmasse.mqtt.AmqpWillData;
-import enmasse.mqtt.messages.AmqpWillClearMessage;
 import enmasse.mqtt.messages.AmqpWillMessage;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.AsyncResult;
@@ -29,6 +28,7 @@ import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.ProtonDelivery;
 import io.vertx.proton.ProtonQoS;
 import io.vertx.proton.ProtonReceiver;
+import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.messaging.Accepted;
 import org.apache.qpid.proton.amqp.transport.ErrorCondition;
 import org.apache.qpid.proton.amqp.transport.LinkError;
@@ -43,6 +43,7 @@ public class MockWillService extends AbstractVerticle {
 
     private static final Logger LOG = LoggerFactory.getLogger(MockWillService.class);
 
+    private static final Symbol AMQP_DETACH_FORCED = Symbol.valueOf("amqp:link:detach-forced");
     private static final String WILL_SERVICE_ENDPOINT = "$mqtt.willservice";
     private static final String CONTAINER_ID = "will-service";
 
@@ -114,7 +115,10 @@ public class MockWillService extends AbstractVerticle {
 
                         this.messageHandler(receiver, delivery, message);
                     })
-                    .closeHandler(this::closeHandler)
+                    .closeHandler(ar -> {
+
+                        this.closeHandler(receiver, ar);
+                    })
                     .open();
         }
     }
@@ -123,76 +127,78 @@ public class MockWillService extends AbstractVerticle {
 
         LOG.info("Received {}", message);
 
-        switch (message.getSubject()) {
+        if (message.getSubject().equals(AmqpWillMessage.AMQP_SUBJECT)) {
 
-            case AmqpWillMessage.AMQP_SUBJECT:
+            // get AMQP_WILL message, save it and send disposition for settlement
+            AmqpWillMessage amqpWillMessage = AmqpWillMessage.from(message);
 
-                {
-                    // get AMQP_WILL message, save it and send disposition for settlement
-                    AmqpWillMessage amqpWillMessage = AmqpWillMessage.from(message);
+            this.vertx.sharedData().getLocalMap(MockBroker.EB_WILL)
+                    .put(receiver.getName(), new AmqpWillData(receiver.getName(), amqpWillMessage));
 
-                    this.vertx.sharedData().getLocalMap(MockBroker.EB_WILL)
-                            .put(receiver.getName(), new AmqpWillData(receiver.getName(), amqpWillMessage));
-
-                    DeliveryOptions options = new DeliveryOptions();
-                    options.addHeader(MockBroker.EB_WILL_ACTION_HEADER, MockBroker.EB_WILL_ACTION_ADD);
-
-                    this.vertx.eventBus().send(MockBroker.EB_WILL, receiver.getName(), options, done -> {
-
-                        if (done.succeeded()) {
-                            delivery.disposition(Accepted.getInstance(), true);
-                        }
-                    });
-
-                }
-                break;
-
-            case AmqpWillClearMessage.AMQP_SUBJECT:
-
-                {
-                    // workaround for testing "brute disconnection" ignoring the DISCONNECT
-                    // so the related AMQP_WILL_CLEAR. Eclipse Paho doesn't provide a way to
-                    // close connection without sending DISCONNECT.
-                    if (!receiver.getName().contains("ignore-disconnect")) {
-
-                        DeliveryOptions options = new DeliveryOptions();
-                        options.addHeader(MockBroker.EB_WILL_ACTION_HEADER, MockBroker.EB_WILL_ACTION_CLEAR);
-
-                        this.vertx.eventBus().send(MockBroker.EB_WILL, receiver.getName(), options, done -> {
-
-                            if (done.succeeded()) {
-                                delivery.disposition(Accepted.getInstance(), true);
-                            }
-                        });
-                    }
-
-                }
-                break;
-        }
-
-    }
-
-    private void closeHandler(AsyncResult<ProtonReceiver> ar) {
-
-        if (ar.succeeded()) {
-
-            ProtonReceiver receiver = ar.result();
-
-            // send a delivery request to mock broker; client link name as body
             DeliveryOptions options = new DeliveryOptions();
-            options.addHeader(MockBroker.EB_WILL_ACTION_HEADER, MockBroker.EB_WILL_ACTION_DELIVERY);
+            options.addHeader(MockBroker.EB_WILL_ACTION_HEADER, MockBroker.EB_WILL_ACTION_ADD);
 
             this.vertx.eventBus().send(MockBroker.EB_WILL, receiver.getName(), options, done -> {
 
                 if (done.succeeded()) {
-
-                    if (this.willHandler != null) {
-                        this.willHandler.handle((boolean) done.result().body());
-                    }
+                    delivery.disposition(Accepted.getInstance(), true);
                 }
-
             });
 
+        }
+    }
+
+    /**
+     * Send a request for a "will" action to the mock broker
+     *
+     * @param receiverName  receiver name for which send the "will" action
+     * @param willAction    "will" action to execute
+     */
+    private void willAction(String receiverName, String willAction) {
+
+        DeliveryOptions options = new DeliveryOptions();
+        options.addHeader(MockBroker.EB_WILL_ACTION_HEADER, willAction);
+
+        this.vertx.eventBus().send(MockBroker.EB_WILL, receiverName, options, done -> {
+
+            if (done.succeeded()) {
+
+                if (this.willHandler != null) {
+                    this.willHandler.handle((boolean) done.result().body());
+                }
+            }
+        });
+    }
+
+    private void closeHandler(ProtonReceiver receiver, AsyncResult<ProtonReceiver> ar) {
+
+        // link detached without error, so the "will" should be cleared and not sent
+        if (ar.succeeded()) {
+
+            // workaround for testing "brute disconnection" ignoring the DISCONNECT
+            // so the related will clear. Eclipse Paho doesn't provide a way to
+            // close connection without sending DISCONNECT.
+            if (!receiver.getName().contains("ignore-disconnect")) {
+
+                // send a clear request to mock broker; client link name as body
+                this.willAction(receiver.getName(), MockBroker.EB_WILL_ACTION_CLEAR);
+
+            } else {
+
+                // send a delivery request to mock broker; client link name as body
+                this.willAction(receiver.getName(), MockBroker.EB_WILL_ACTION_DELIVERY);
+            }
+
+        // link detached with error, so the "will" should be sent
+        } else {
+
+            ErrorCondition errorCondition = receiver.getRemoteCondition();
+
+            if ((errorCondition != null) && (AMQP_DETACH_FORCED.equals(errorCondition.getCondition()))) {
+
+                // send a delivery request to mock broker; client link name as body
+                this.willAction(receiver.getName(), MockBroker.EB_WILL_ACTION_DELIVERY);
+            }
         }
     }
 

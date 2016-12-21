@@ -42,8 +42,22 @@ public class AmqpPublisher {
      */
     public void close() {
 
-        this.senderQoS01.close();
-        this.senderQoS2.close();
+        if (this.senderQoS01.isOpen()) {
+            this.senderQoS01.close();
+        }
+
+        if (this.senderQoS2.isOpen()) {
+            this.senderQoS2.close();
+        }
+    }
+
+    /**
+     * If the publisher is opened
+     * @return
+     */
+    public boolean isOpen() {
+
+        return (this.senderQoS01.isOpen() || this.senderQoS2.isOpen());
     }
 
     /**

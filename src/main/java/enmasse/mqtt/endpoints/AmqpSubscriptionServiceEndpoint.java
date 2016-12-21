@@ -148,7 +148,9 @@ public class AmqpSubscriptionServiceEndpoint {
      */
     public void close() {
 
-        // detach link
-        this.sender.close();
+        if (this.sender.isOpen()) {
+            // detach link
+            this.sender.close();
+        }
     }
 }

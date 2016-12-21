@@ -31,7 +31,6 @@ import enmasse.mqtt.messages.AmqpSubscribeMessage;
 import enmasse.mqtt.messages.AmqpSubscriptionsMessage;
 import enmasse.mqtt.messages.AmqpTopicSubscription;
 import enmasse.mqtt.messages.AmqpUnsubscribeMessage;
-import enmasse.mqtt.messages.AmqpWillClearMessage;
 import enmasse.mqtt.messages.AmqpWillMessage;
 import io.netty.handler.codec.mqtt.MqttConnectReturnCode;
 import io.netty.handler.codec.mqtt.MqttQoS;
@@ -279,7 +278,7 @@ public class AmqpBridge {
     public void close() {
 
         if (this.wsEndpoint != null)
-            this.wsEndpoint.close();
+            this.wsEndpoint.close(false);
 
         this.ssEndpoint.close();
         this.rcvEndpoint.close();
@@ -487,13 +486,7 @@ public class AmqpBridge {
         LOG.info("DISCONNECT from MQTT client {}", this.mqttEndpoint.clientIdentifier());
 
         if (this.wsEndpoint != null) {
-
-            // sending AMQP_WILL_CLEAR
-            AmqpWillClearMessage amqpWillClearMessage = new AmqpWillClearMessage();
-            this.wsEndpoint.clearWill(amqpWillClearMessage, ar -> {
-
-                this.wsEndpoint.close();
-            });
+            this.wsEndpoint.close(false);
         }
     }
 
@@ -504,8 +497,10 @@ public class AmqpBridge {
      */
     private void closeHandler(Void v) {
 
+        LOG.info("Close from MQTT client {}", this.mqttEndpoint.clientIdentifier());
+
         if (this.wsEndpoint != null)
-            this.wsEndpoint.close();
+            this.wsEndpoint.close(true);
 
         this.handleMqttEndpointClose(this);
     }
@@ -646,7 +641,7 @@ public class AmqpBridge {
     }
 
     /**
-     * Handle connection closed by remote AMQP container
+     * Handle connection closed with remote AMQP container
      *
      * @param connection    current ProtonConnection instance
      * @param result    result of remote connection closing
@@ -656,25 +651,34 @@ public class AmqpBridge {
         // NOTE : the connection parameter is needed because Vert.x doesn't provide the ProtonConnection
         //        instance when the operation ends with errors (so exception). We need the instance for closing.
         if (result.succeeded()) {
-            LOG.info("AMQP connection closed by {}", connection.getRemoteContainer());
+            LOG.info("AMQP connection closed with {}", connection.getRemoteContainer());
         } else {
-            LOG.info("AMQP connection closed by {} with error", connection.getRemoteContainer(), result.cause());
+            LOG.info("AMQP connection closed with {} with error", connection.getRemoteContainer(), result.cause());
         }
         connection.close();
 
-        this.mqttEndpoint.close();
+        try {
+            this.mqttEndpoint.close();
+        } catch (IllegalStateException e) {
+            LOG.warn("MQTT endpoint for client {} already closed", this.mqttEndpoint.clientIdentifier());
+        }
     }
 
     /**
-     * Handler disconnection by remote AMQP container
+     * Handler disconnection with remote AMQP container
      *
      * @param connection    current ProtonConnection instance
      */
     private void handleRemoteDisconnect(ProtonConnection connection) {
-        LOG.info("AMQP disconnection by {}", connection.getRemoteContainer());
+
+        LOG.info("AMQP disconnection with {}", connection.getRemoteContainer());
         connection.disconnect();
 
-        this.mqttEndpoint.close();
+        try {
+            this.mqttEndpoint.close();
+        } catch (IllegalStateException e) {
+            LOG.warn("MQTT endpoint for client {} already closed", this.mqttEndpoint.clientIdentifier());
+        }
     }
 
     /**
