@@ -16,7 +16,6 @@
 
 package enmasse.mqtt.endpoints;
 
-import enmasse.mqtt.messages.AmqpWillClearMessage;
 import enmasse.mqtt.messages.AmqpWillMessage;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
@@ -24,7 +23,9 @@ import io.vertx.core.Handler;
 import io.vertx.proton.ProtonDelivery;
 import io.vertx.proton.ProtonQoS;
 import io.vertx.proton.ProtonSender;
+import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.messaging.Accepted;
+import org.apache.qpid.proton.amqp.transport.ErrorCondition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,6 +35,8 @@ import org.slf4j.LoggerFactory;
 public class AmqpWillServiceEndpoint {
 
     private static final Logger LOG = LoggerFactory.getLogger(AmqpWillServiceEndpoint.class);
+
+    private static final Symbol AMQP_DETACH_FORCED = Symbol.valueOf("amqp:link:detach-forced");
 
     public static final String WILL_SERVICE_ENDPOINT = "$mqtt.willservice";
 
@@ -80,31 +83,22 @@ public class AmqpWillServiceEndpoint {
     }
 
     /**
-     * Send the AMQP_WILL_CLEAR message to the Will Service
-     *
-     * @param amqpWillClearMessage  AMQP_WILL_CLEAR message
-     * @param handler   callback called on messahe delivered
-     */
-    public void clearWill(AmqpWillClearMessage amqpWillClearMessage, Handler<AsyncResult<ProtonDelivery>> handler) {
-
-        // send AMQP_WILL_CLEAR message
-        this.sender.send(amqpWillClearMessage.toAmqp(), delivery -> {
-
-            if (delivery.getRemoteState() == Accepted.getInstance()) {
-                LOG.info("AMQP will clear delivery {}", delivery.getRemoteState());
-                handler.handle(Future.succeededFuture(delivery));
-            } else {
-                handler.handle(Future.failedFuture(String.format("AMQP will clear delivery %s", delivery.getRemoteState())));
-            }
-        });
-    }
-
-    /**
      * Close the endpoint, detaching the link
+     *
+     * @param isDetachForced    if link should be detached with error
      */
-    public void close() {
+    public void close(boolean isDetachForced) {
 
-        // detach link
-        this.sender.close();
+        if (this.sender.isOpen()) {
+
+            if (isDetachForced) {
+                ErrorCondition errorCondition =
+                        new ErrorCondition(AMQP_DETACH_FORCED, "Link detached due to a brute MQTT client disconnection");
+                this.sender.setCondition(errorCondition);
+            }
+
+            // detach link
+            this.sender.close();
+        }
     }
 }

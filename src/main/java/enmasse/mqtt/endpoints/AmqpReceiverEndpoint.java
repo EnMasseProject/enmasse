@@ -192,8 +192,11 @@ public class AmqpReceiverEndpoint {
      */
     public void close() {
 
-        // detach links
-        this.receiver.close();
+        if (this.receiver.isOpen()) {
+            // detach links
+            this.receiver.close();
+        }
+
         this.deliveries.clear();
     }
 

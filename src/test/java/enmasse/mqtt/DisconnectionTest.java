@@ -190,9 +190,8 @@ public class DisconnectionTest extends MockMqttFrontendTestBase {
         options.setWill(new MqttTopic(topic, null), message.getBytes(), qos, false);
 
         // workaround for testing "brute disconnection" ignoring the DISCONNECT
-        // so the related AMQP_WILL_CLEAR. Eclipse Paho doesn't provide a way to
-        // close connection without sending DISCONNECT. The mock Will Service will
-        // not clear the will message for this "ignore-disconnect" client
+        // Eclipse Paho doesn't provide a way to close connection without sending DISCONNECT
+        // The mock Will Service will not clear the will message for this "ignore-disconnect" client
         MqttClient client = new MqttClient(String.format("tcp://%s:%d", MQTT_BIND_ADDRESS, MQTT_LISTEN_PORT), WILL_CLIENT_ID, persistence);
         client.connect(options);
 

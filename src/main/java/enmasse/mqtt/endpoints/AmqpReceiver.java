@@ -42,8 +42,22 @@ public class AmqpReceiver {
      */
     public void close() {
 
-        this.receiverControl.close();
-        this.receiverPublish.close();
+        if (this.receiverControl.isOpen()) {
+            this.receiverControl.close();
+        }
+
+        if (this.receiverPublish.isOpen()) {
+            this.receiverPublish.close();
+        }
+    }
+
+    /**
+     * If the receiver is opened
+     * @return
+     */
+    public boolean isOpen() {
+
+        return (this.receiverControl.isOpen() || this.receiverPublish.isOpen());
     }
 
     /**

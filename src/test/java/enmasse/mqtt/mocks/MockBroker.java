@@ -246,7 +246,7 @@ public class MockBroker extends AbstractVerticle {
                             if (this.wills.containsKey(ebMessage.body())) {
                                 this.wills.remove(ebMessage.body());
 
-                                ebMessage.reply(null);
+                                ebMessage.reply(false);
                             }
                             break;
 
@@ -255,7 +255,7 @@ public class MockBroker extends AbstractVerticle {
                             // the requested client link name has a will to publish
                             if (this.wills.containsKey(ebMessage.body())) {
 
-                                AmqpWillMessage amqpWillMessage = this.wills.get(ebMessage.body());
+                                AmqpWillMessage amqpWillMessage = this.wills.remove(ebMessage.body());
 
                                 // TODO: how will messageid generation should happen ?
                                 AmqpPublishMessage amqpPublishMessage =
