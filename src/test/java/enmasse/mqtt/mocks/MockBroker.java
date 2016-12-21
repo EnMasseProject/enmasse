@@ -257,9 +257,10 @@ public class MockBroker extends AbstractVerticle {
 
                                 AmqpWillMessage amqpWillMessage = this.wills.remove(ebMessage.body());
 
-                                // TODO: how will messageid generation should happen ?
+                                // no matter about the messageId, this will message will be published to the
+                                // MQTT clients using the auto-generated message identifier from MQTT server
                                 AmqpPublishMessage amqpPublishMessage =
-                                        new AmqpPublishMessage(1, amqpWillMessage.qos(), false, amqpWillMessage.isRetain(), amqpWillMessage.topic(), amqpWillMessage.payload());
+                                        new AmqpPublishMessage(null, amqpWillMessage.qos(), false, amqpWillMessage.isRetain(), amqpWillMessage.topic(), amqpWillMessage.payload());
 
                                 ProtonSender sender = this.connection.createSender(amqpPublishMessage.topic());
 
