@@ -107,42 +107,40 @@ public class AmqpReceiverEndpoint {
 
         LOG.info("Received {}", message);
 
-        // just for handling AMQP messages from native AMQP clients (which don't set "subject")
+        // messages without subject are just AMQP_PUBLISH messages
         if (message.getSubject() == null) {
-            message.setSubject(AmqpPublishMessage.AMQP_SUBJECT);
-        }
 
-        switch (message.getSubject()) {
+            AmqpPublishData amqpPublishData = new AmqpPublishData();
+            amqpPublishData.setAmqpPublishMessage(AmqpPublishMessage.from(message));
 
-            case AmqpSubscriptionsMessage.AMQP_SUBJECT:
+            this.handlePublish(amqpPublishData);
+            // settlement depends on the QoS levels that could be different from the current one in the
+            // publish message. The AMQP bridge checks the granted QoS as well (MQTT 3.1.1)
+            if (!delivery.remotelySettled()) {
+                this.deliveries.put(amqpPublishData.messageId(), delivery);
+            }
 
-                this.handleSession(AmqpSubscriptionsMessage.from(message));
-                delivery.disposition(Accepted.getInstance(), true);
+        } else {
 
-                break;
+            switch (message.getSubject()) {
 
-            case AmqpPublishMessage.AMQP_SUBJECT:
+                case AmqpSubscriptionsMessage.AMQP_SUBJECT:
 
-                AmqpPublishData amqpPublishData = new AmqpPublishData();
-                amqpPublishData.setAmqpPublishMessage(AmqpPublishMessage.from(message));
+                    this.handleSession(AmqpSubscriptionsMessage.from(message));
+                    delivery.disposition(Accepted.getInstance(), true);
 
-                this.handlePublish(amqpPublishData);
-                // settlement depends on the QoS levels that could be different from the current one in the
-                // publish message. The AMQP bridge checks the granted QoS as well (MQTT 3.1.1)
-                if (!delivery.remotelySettled()) {
-                    this.deliveries.put(amqpPublishData.messageId(), delivery);
-                }
+                    break;
 
-                break;
+                case AmqpPubrelMessage.AMQP_SUBJECT:
 
-            case AmqpPubrelMessage.AMQP_SUBJECT:
+                    if (!delivery.remotelySettled()) {
+                        this.deliveries.put(message.getMessageId(), delivery);
+                    }
+                    this.handlePubrel(AmqpPubrelMessage.from(message));
 
-                if (!delivery.remotelySettled()) {
-                    this.deliveries.put(message.getMessageId(), delivery);
-                }
-                this.handlePubrel(AmqpPubrelMessage.from(message));
+                    break;
+            }
 
-                break;
         }
 
     }

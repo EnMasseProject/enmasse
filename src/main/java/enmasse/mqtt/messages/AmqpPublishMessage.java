@@ -35,8 +35,6 @@ import java.util.Map;
  */
 public class AmqpPublishMessage {
 
-    public static final String AMQP_SUBJECT = "publish";
-
     private static final String AMQP_RETAIN_ANNOTATION = "x-retain";
     private static final String AMQP_QOS_ANNOTATION = "x-qos";
 
@@ -74,10 +72,6 @@ public class AmqpPublishMessage {
      * @return  AMQP_PUBLISH message
      */
     public static AmqpPublishMessage from(Message message) {
-
-        if (!message.getSubject().equals(AMQP_SUBJECT)) {
-            throw new IllegalArgumentException(String.format("AMQP message subject is no s%", AMQP_SUBJECT));
-        }
 
         boolean isRetain = false;
         MqttQoS qos = MqttQoS.AT_MOST_ONCE;
@@ -134,8 +128,6 @@ public class AmqpPublishMessage {
     public Message toAmqp() {
 
         Message message = ProtonHelper.message();
-
-        message.setSubject(AMQP_SUBJECT);
 
         message.setMessageId(this.messageId);
 

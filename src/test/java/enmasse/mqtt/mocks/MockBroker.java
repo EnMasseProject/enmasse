@@ -402,57 +402,44 @@ public class MockBroker extends AbstractVerticle {
 
     private void messageHandler(ProtonReceiver receiver, ProtonDelivery delivery, Message message) {
 
-        // just for handling AMQP messages from native AMQP clients (which don't set "subject")
+        // messages without subject are just AMQP_PUBLISH messages
         if (message.getSubject() == null) {
-            message.setSubject(AmqpPublishMessage.AMQP_SUBJECT);
-        }
 
-        switch (message.getSubject()) {
+            String topic = receiver.getSource().getAddress();
 
-            case AmqpPubrelMessage.AMQP_SUBJECT:
-
-            {
-                AmqpPubrelMessage amqpPubrelMessage = AmqpPubrelMessage.from(message);
-                delivery.disposition(Accepted.getInstance(), true);
-
-                String address = receiver.getSource().getAddress();
-
-                String clientId = AmqpHelper.getClientIdFromPubrelAddress(address);
-
-                // QoS already set at AT_LEAST_ONCE as requested by the receiver side
-                this.senders.get(clientId).send(message);
+            // check if it's retained
+            AmqpPublishMessage amqpPublishMessage = AmqpPublishMessage.from(message);
+            if (amqpPublishMessage.isRetain()) {
+                this.retained.put(amqpPublishMessage.topic(), amqpPublishMessage);
             }
-            break;
 
-            case AmqpPublishMessage.AMQP_SUBJECT:
+            delivery.disposition(Accepted.getInstance(), true);
 
-            {
+            List<String> subscribers = this.subscriptions.get(topic);
 
-                String topic = receiver.getSource().getAddress();
+            if (subscribers != null) {
 
-                // check if it's retained
-                AmqpPublishMessage amqpPublishMessage = AmqpPublishMessage.from(message);
-                if (amqpPublishMessage.isRetain()) {
-                    this.retained.put(amqpPublishMessage.topic(), amqpPublishMessage);
-                }
+                for (String clientId : subscribers) {
 
-                delivery.disposition(Accepted.getInstance(), true);
+                    // QoS already set at AT_LEAST_ONCE as requested by the receiver side
+                    this.senders.get(clientId).send(message);
 
-                List<String> subscribers = this.subscriptions.get(topic);
-
-                if (subscribers != null) {
-
-                    for (String clientId : subscribers) {
-
-                        // QoS already set at AT_LEAST_ONCE as requested by the receiver side
-                        this.senders.get(clientId).send(message);
-
-                    }
                 }
             }
-            break;
-        }
 
+        // AMQP_PUBREL messages
+        } else if (message.getSubject().equals(AmqpPubrelMessage.AMQP_SUBJECT)) {
+
+            AmqpPubrelMessage amqpPubrelMessage = AmqpPubrelMessage.from(message);
+            delivery.disposition(Accepted.getInstance(), true);
+
+            String address = receiver.getSource().getAddress();
+
+            String clientId = AmqpHelper.getClientIdFromPubrelAddress(address);
+
+            // QoS already set at AT_LEAST_ONCE as requested by the receiver side
+            this.senders.get(clientId).send(message);
+        }
     }
 
     /**
