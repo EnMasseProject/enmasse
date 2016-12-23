@@ -31,13 +31,13 @@ Now you are ready for creating the messaging service itself:
 
 This will create the deployments required for running EnMasse. Starting up EnMasse will take a while, usually depending on how fast it is able to download the docker images for the various components.  In the meantime, you can start to create your address configuration.
 
-### Configuring addresses 
+### Configuring addresses
 
 EnMasse is configured with a set of addresses that you can use for messages. Currently, EnMasse supports 4 different address types:
 
    * Brokered queues
    * Brokered topics (pub/sub)
-   * Direct anycast addresses 
+   * Direct anycast addresses
    * Direct broadcast addresses
 
 Here is an example config with all 4 variants that you can save to `addresses.json`:
@@ -74,6 +74,8 @@ This will connect to the EnMasse REST API to deploy the address config.
 
 ### Sending and receiving messages
 
+#### AMQP
+
 For sending and receiving messages, have a look at an example python [sender](http://qpid.apache.org/releases/qpid-proton-0.15.0/proton/python/examples/simple_send.py.html) and [receiver](http://qpid.apache.org/releases/qpid-proton-0.15.0/proton/python/examples/simple_recv.py.html).
 
 To send and receive messages, you can use the local service IP with the clients:
@@ -86,6 +88,20 @@ This will block until it has received 10 messages. To start the sender:
 
 You can use the client with the 'myqueue' and 'multicast' addresses as well. Making the clients work
 with topics is left as an exercies to the reader.
+
+#### MQTT
+
+For sending and receiving messages, the `mosquitto` clients are the simpler way to go.
+
+In order to subscribe to a topic (i.e. `mytopic` from the previous addresses configuration), the `mosquitto_sub` can be used in the following way :
+
+    mosquitto_sub -h $(oc get service -o jsonpath='{.spec.clusterIP}' mqtt-frontend) -t mytopic -q 1
+
+Then the subscriber is waiting for messages published on that topic. To start the publisher, the `mosquitto_pub` can be used in the following way :
+
+    mosquitto_pub -h $(oc get service -o jsonpath='{.spec.clusterIP}' mqtt-frontend) -t mytopic -q 1 -m "Hello EnMasse"
+
+The the publisher publishes the message and disconnects from EnMasse. The message is received by the previous connected subscriber.
 
 ### Flavor config
 
