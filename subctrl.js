@@ -134,7 +134,7 @@ SubscriptionControl.prototype.unsubscribe = function (subscription_id, topics) {
     return find_queue(subscription_id, this.pods.pod_list()).then(
         function(result) {
             if (result.found) {
-                return Promises.all(Object.keys(topics).map(
+                return Promise.all(Object.keys(topics).map(
                     function (topic) {
                         var name = get_divert_name(subscription_id, topic);
                         return delete_diverts(result.pod.broker, name);

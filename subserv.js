@@ -167,7 +167,7 @@ function handle_control_message(context) {
             context.delivery.accept();
         };
         var reject = function (e, code) {
-            console.error(request_string(context.message) + ' failed: ' + e);
+            console.log(request_string(context.message) + ' failed: ' + e);
             context.delivery.reject({condition: code || 'amqp:internal-error', description: '' + e});
         };
         var reply = function (type, value) {
