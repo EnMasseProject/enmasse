@@ -49,7 +49,11 @@
                     "value": "${ADDRESS}"
                   },
                   {
-                    "name": "BENCH_CLIENTS",
+                    "name": "BENCH_SENDERS",
+                    "value": "1"
+                  },
+                  {
+                    "name": "BENCH_RECEIVERS",
                     "value": "1"
                   },
                   {
