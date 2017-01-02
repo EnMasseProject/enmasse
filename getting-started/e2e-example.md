@@ -5,7 +5,7 @@ with clients for sending and receiving messages.
 
 ## Preqrequisites
 
-In this guide, you need the OpenShift client tools, an OpenShift server, and a recent build of Qpid
+In this guide, you need the OpenShift client tools, an OpenShift server, and a recent version of Qpid
 Proton for the clients.
 
 ### Setting up OpenShift
@@ -19,14 +19,9 @@ setting up a local developer instance.
 You can also sign up for a [developer preview](https://www.openshift.com/devpreview/) of OpenShift
 Online.
 
-### Building/install qpid-proton
+### Install qpid-proton
 
-Client examples in this guide assume that [Qpid Proton](https://qpid.apache.org/proton/index.html)
-python bindings are installed. The clients require being able to specify SNI to work, so until a
-version of proton is released with this support, you have to build it from source using the latest
-code from the [github repo](https://github.com/apache/qpid-proton). Follow the the [install
-instructions](https://git-wip-us.apache.org/repos/asf?p=qpid-proton.git;a=blob_plain;f=INSTALL.md;hb=0.15.0)
-for building and installing from source.
+Client examples in this guide assume that [Qpid Proton](https://qpid.apache.org/proton/index.html) with python bindings are installed ( > 0.16.0). The python bindings are also available in [PyPI](https://pypi.python.org/pypi/python-qpid-proton/0.16.0)
 
 ## Setting up EnMasse
 
