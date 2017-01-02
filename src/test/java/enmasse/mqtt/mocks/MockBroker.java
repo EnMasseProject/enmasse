@@ -102,7 +102,7 @@ public class MockBroker extends AbstractVerticle {
         this.subscriptions = new HashMap<>();
         this.sessions = new HashMap<>();
         this.retained = new HashMap<>();
-        this.topics = Arrays.asList("my_topic", "will");
+        this.topics = Arrays.asList("mytopic", "will");
         this.wills = new HashMap<>();
         this.receiversPubrel = new HashMap<>();
     }
