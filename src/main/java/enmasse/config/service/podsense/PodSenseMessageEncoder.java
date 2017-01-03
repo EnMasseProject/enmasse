@@ -27,6 +27,8 @@ public class PodSenseMessageEncoder implements MessageEncoder<PodResource> {
     private Map<String, Object> encodePod(PodResource pod) {
         Map<String, Object> map = new LinkedHashMap<>();
         map.put("host", pod.getHost());
+        map.put("phase", pod.getPhase());
+        map.put("ready", pod.getReady());
         map.put("ports", pod.getPortMap());
         return map;
     }

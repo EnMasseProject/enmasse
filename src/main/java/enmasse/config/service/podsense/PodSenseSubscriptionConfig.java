@@ -37,6 +37,6 @@ public class PodSenseSubscriptionConfig implements SubscriptionConfig<PodResourc
 
     @Override
     public Predicate<PodResource> getResourceFilter() {
-        return podResource -> "Running".equals(podResource.getPhase());
+        return podResource -> true;
     }
 }

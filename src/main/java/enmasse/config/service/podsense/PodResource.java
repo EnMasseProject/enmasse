@@ -4,6 +4,7 @@ import enmasse.config.service.model.Resource;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerPort;
 import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.api.model.PodCondition;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -16,6 +17,7 @@ public class PodResource extends Resource {
     private final String name;
     private final String kind;
     private final String host;
+    private final String ready;
     private final String phase;
     private final Map<String, Map<String, Integer>> portMap;
 
@@ -24,7 +26,17 @@ public class PodResource extends Resource {
         this.kind = pod.getKind();
         this.host = pod.getStatus().getPodIP();
         this.phase = pod.getStatus().getPhase();
+        this.ready = getReadyCondition(pod.getStatus().getConditions());
         this.portMap = getPortMap(pod.getSpec().getContainers());
+    }
+
+    private String getReadyCondition(List<PodCondition> conditions) {
+        for (PodCondition condition : conditions) {
+            if ("Ready".equals(condition.getType())) {
+                return condition.getStatus();
+            }
+        }
+        return "Unknown";
     }
 
     private static Map<String, Map<String, Integer>> getPortMap(List<Container> containers) {
@@ -50,6 +62,7 @@ public class PodResource extends Resource {
         if (!kind.equals(that.kind)) return false;
         if (host != null ? !host.equals(that.host) : that.host != null) return false;
         if (phase != null ? !phase.equals(that.phase) : that.phase != null) return false;
+        if (ready != null ? !ready.equals(that.ready) : that.ready != null) return false;
         return portMap != null ? portMap.equals(that.portMap) : that.portMap == null;
     }
 
@@ -74,12 +87,17 @@ public class PodResource extends Resource {
         result = 31 * result + kind.hashCode();
         result = 31 * result + (host != null ? host.hashCode() : 0);
         result = 31 * result + (phase != null ? phase.hashCode() : 0);
+        result = 31 * result + (ready != null ? ready.hashCode() : 0);
         result = 31 * result + (portMap != null ? portMap.hashCode() : 0);
         return result;
     }
 
     public String getPhase() {
         return phase;
+    }
+
+    public String getReady() {
+        return ready;
     }
 
     public String getHost() {

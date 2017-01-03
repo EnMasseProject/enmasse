@@ -32,6 +32,8 @@ public class PodSenseMessageEncoderTest {
 
     private static void assertPod(Map<String, Object> encodedPod, String expectedIp, int expectedPort, String expectedPortName) {
         assertThat(encodedPod.get("host"), is(expectedIp));
+        assertThat(encodedPod.get("phase"), is("Running"));
+        assertThat(encodedPod.get("ready"), is("False"));
         Map<String, Map<String, Integer>> ports = (Map<String, Map<String, Integer>>) encodedPod.get("ports");
         assertPodPort(ports.get("c"), expectedPort, expectedPortName);
     }
@@ -60,6 +62,10 @@ public class PodSenseMessageEncoderTest {
                                 .build())
                         .build())
                 .withStatus(new PodStatusBuilder()
+                        .withConditions(new PodConditionBuilder()
+                                .withType("Ready")
+                                .withStatus("False")
+                                .build())
                         .withPodIP(ip)
                         .withPhase(phase)
                         .build())
