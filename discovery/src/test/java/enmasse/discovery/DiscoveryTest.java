@@ -1,6 +1,9 @@
 package enmasse.discovery;
 
 import enmasse.config.service.amqp.AMQPServer;
+import enmasse.config.service.model.ResourceDatabase;
+import enmasse.config.service.model.Subscriber;
+import enmasse.config.service.openshift.SubscriptionConfig;
 import io.vertx.core.Vertx;
 import org.apache.qpid.proton.amqp.messaging.AmqpSequence;
 import org.apache.qpid.proton.message.Message;
@@ -10,13 +13,11 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.util.concurrent.*;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
 
 public class DiscoveryTest {
 
@@ -37,31 +38,50 @@ public class DiscoveryTest {
         Map<String, String> expectedFilter = Collections.singletonMap("my", "key");
         CompletableFuture<Set<Host>> changedHosts = new CompletableFuture<>();
 
-        AMQPServer testServer = new AMQPServer("0.0.0.0", 0, (address, map, subscriber) -> {
-            assertThat(address, is("podsense"));
+        BlockingQueue<Subscriber> subscriptionQueue = new LinkedBlockingDeque<>();
+        AMQPServer testServer = new AMQPServer("0.0.0.0", 0, Collections.singletonMap("podsense", (map, subscriber) -> {
             assertThat(map, is(expectedFilter));
-
-            Message message = Message.Factory.create();
-            Map<String, Object> responseMap = new LinkedHashMap<>();
-            Map<String, Map<String, Integer>> portMap = Collections.singletonMap("c", Collections.singletonMap("http", 1234));
-            responseMap.put("host", "10.0.0.1");
-            responseMap.put("ports", portMap);
-            AmqpSequence seq = new AmqpSequence(Collections.singletonList(responseMap));
-            message.setBody(seq);
-
-            subscriber.resourcesUpdated(message);
-            return true;
-        });
+            subscriptionQueue.put(subscriber);
+        }));
 
         vertx.deployVerticle(testServer);
         DiscoveryClient client = new DiscoveryClient(new Endpoint("127.0.0.1", waitForPort(testServer)), expectedFilter, Optional.empty());
         client.addListener(changedHosts::complete);
         vertx.deployVerticle(client);
 
+        Subscriber subscriber = subscriptionQueue.poll(1, TimeUnit.MINUTES);
+        subscriber.resourcesUpdated(createResponse("False", "Pending"));
+        try {
+            changedHosts.get(10, TimeUnit.SECONDS);
+            fail("Pending hosts should not update host set");
+        } catch (TimeoutException e) {
+        }
+
+        subscriber.resourcesUpdated(createResponse("False", "Running"));
+        try {
+            changedHosts.get(10, TimeUnit.SECONDS);
+            fail("Ready must be true before returning host");
+        } catch (TimeoutException e) {
+        }
+
+        subscriber.resourcesUpdated(createResponse("True", "Running"));
         Set<Host> actual = changedHosts.get(1, TimeUnit.MINUTES);
         assertThat(actual.size(), is(1));
         Host actualHost = actual.iterator().next();
         assertThat(actualHost.getHostname(), is("10.0.0.1"));
+    }
+
+    public Message createResponse(String ready, String phase) {
+        Message message = Message.Factory.create();
+        Map<String, Object> responseMap = new LinkedHashMap<>();
+        Map<String, Map<String, Integer>> portMap = Collections.singletonMap("c", Collections.singletonMap("http", 1234));
+        responseMap.put("host", "10.0.0.1");
+        responseMap.put("ports", portMap);
+        responseMap.put("ready", ready);
+        responseMap.put("phase", phase);
+        AmqpSequence seq = new AmqpSequence(Collections.singletonList(responseMap));
+        message.setBody(seq);
+        return message;
     }
 
 

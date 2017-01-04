@@ -39,6 +39,7 @@ public class DiscoveryClient extends AbstractVerticle {
     private final Logger log = LoggerFactory.getLogger(DiscoveryClient.class.getName());
     private final Endpoint endpoint;
     private final Optional<String> containerName;
+    private Set<Host> currentHosts = new LinkedHashSet<>();
 
     public DiscoveryClient(Endpoint endpoint, Map<String, String> labelFilter, Optional<String> containerName) {
         this.endpoint = endpoint;
@@ -73,6 +74,10 @@ public class DiscoveryClient extends AbstractVerticle {
     }
 
     private void notifyListeners(Set<Host> hosts) {
+        if (currentHosts.equals(hosts)) {
+            return;
+        }
+        currentHosts = new LinkedHashSet<>(hosts);
         log.debug("Received new set of hosts: " + hosts);
         for (DiscoveryListener listener : listeners) {
             listener.hostsChanged(hosts);
@@ -106,11 +111,15 @@ public class DiscoveryClient extends AbstractVerticle {
         for (Object obj : sequence.getValue()) {
             Map<String, Object> podInfo = (Map<String, Object>) obj;
             String host = (String) podInfo.get("host");
-            Map<String, Map<String, Integer>> portMap = (Map<String, Map<String, Integer>>) podInfo.get("ports");
-            if (containerName.isPresent()) {
-                hosts.add(new Host(host, portMap.get(containerName.get())));
-            } else {
-                hosts.add(new Host(host, portMap.values().iterator().next()));
+            String ready = (String) podInfo.get("ready");
+            String phase = (String) podInfo.get("phase");
+            if ("True".equals(ready) && "Running".equals(phase)) {
+                Map<String, Map<String, Integer>> portMap = (Map<String, Map<String, Integer>>) podInfo.get("ports");
+                if (containerName.isPresent()) {
+                    hosts.add(new Host(host, portMap.get(containerName.get())));
+                } else {
+                    hosts.add(new Host(host, portMap.values().iterator().next()));
+                }
             }
         }
         return hosts;
