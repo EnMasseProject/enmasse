@@ -1,17 +1,15 @@
 package enmasse.systemtest;
 
-import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.openshift.client.OpenShiftClient;
 import io.vertx.proton.ProtonClient;
 import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.ProtonReceiver;
 import org.apache.qpid.proton.amqp.Symbol;
-import org.apache.qpid.proton.amqp.messaging.AmqpSequence;
+import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.amqp.messaging.Source;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.Ignore;
 
 import java.util.*;
 import java.util.concurrent.BlockingQueue;
@@ -77,8 +75,8 @@ public class ConfigServTest extends VertxTestBase {
                 ProtonReceiver receiver = connection.createReceiver("podsense").setSource(source);
                 receiver.handler((protonDelivery, message) -> {
                     List<String> pods = new ArrayList<>();
-                    AmqpSequence seq = (AmqpSequence) message.getBody();
-                    for (Object obj : seq.getValue()) {
+                    AmqpValue val = (AmqpValue) message.getBody();
+                    for (Object obj : (List)val.getValue()) {
                         Map<String, Object> pod = (Map<String, Object>) obj;
                         pods.add((String) pod.get("host"));
                     }
