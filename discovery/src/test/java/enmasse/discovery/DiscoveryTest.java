@@ -1,11 +1,9 @@
 package enmasse.discovery;
 
 import enmasse.config.service.amqp.AMQPServer;
-import enmasse.config.service.model.ResourceDatabase;
 import enmasse.config.service.model.Subscriber;
-import enmasse.config.service.openshift.SubscriptionConfig;
 import io.vertx.core.Vertx;
-import org.apache.qpid.proton.amqp.messaging.AmqpSequence;
+import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.message.Message;
 import org.junit.After;
 import org.junit.Before;
@@ -79,8 +77,8 @@ public class DiscoveryTest {
         responseMap.put("ports", portMap);
         responseMap.put("ready", ready);
         responseMap.put("phase", phase);
-        AmqpSequence seq = new AmqpSequence(Collections.singletonList(responseMap));
-        message.setBody(seq);
+        AmqpValue val = new AmqpValue(Collections.singletonList(responseMap));
+        message.setBody(val);
         return message;
     }
 

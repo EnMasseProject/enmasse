@@ -21,7 +21,7 @@ import io.vertx.proton.ProtonClient;
 import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.ProtonReceiver;
 import org.apache.qpid.proton.amqp.Symbol;
-import org.apache.qpid.proton.amqp.messaging.AmqpSequence;
+import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.amqp.messaging.Source;
 import org.apache.qpid.proton.message.Message;
 import org.slf4j.Logger;
@@ -107,8 +107,8 @@ public class DiscoveryClient extends AbstractVerticle {
     @SuppressWarnings("unchecked")
     private Set<Host> decodeHosts(Message message) {
         Set<Host> hosts = new HashSet<>();
-        AmqpSequence sequence = (AmqpSequence) message.getBody();
-        for (Object obj : sequence.getValue()) {
+        AmqpValue value = (AmqpValue) message.getBody();
+        for (Object obj : (List)value.getValue()) {
             Map<String, Object> podInfo = (Map<String, Object>) obj;
             String host = (String) podInfo.get("host");
             String ready = (String) podInfo.get("ready");
