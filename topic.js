@@ -27,35 +27,35 @@ function Topic (name) {
 };
 
 Topic.prototype.watch_pods = function () {
-    if (process.env.KUBERNETES_SERVICE_HOST) {
-        var topic = this;
-        console.log('watching pods serving ' + topic.name);
-        var current = {};
-        this.watcher = require('./podwatch.js').watch_pods('address=' + topic.name);
-        var add = function (pod) {
-            if (current[pod.name] === undefined) {
-                if (pod.ready) {
-                    console.log('pod added for ' + topic.name + ': ' + JSON.stringify(pod));
-                    current[pod.name] = pod;
-	            topic.pods.added(pod);
-                } else {
-                    console.log('pod not yet ready for ' + topic.name + ': ' + JSON.stringify(pod));
-                }
+    var topic = this;
+    console.log('watching pods serving ' + topic.name);
+    var current = {};
+    this.watcher = require('./podwatch.js').watch_pods({"address": topic.name});
+    var changed = function (pods) {
+        var newpods = {};
+        console.log("Got new pods");
+        for (var i in pods) {
+            newpods[pods[i].name] = pods[i];
+        }
+        for (var pod in newpods) {
+            if (current[pod] === undefined) {
+                current[pod] = newpods[pod];
+                topic.pods.added(newpods[pod]);
+                console.log('pod added for ' + topic.name + ': ' + JSON.stringify(pod));
             } else {
-                console.log('pod updated: now ' + JSON.stringify(pod) + ' was ' + JSON.stringify(current[pod.name]));
+                console.log('pod updated: now ' + JSON.stringify(pod) + ' was ' + JSON.stringify(current[pod]));
             }
-        };
-        this.watcher.on('added', add);
-        this.watcher.on('modified', add);
-        this.watcher.on('removed', function (pod) {
-            var pod = current[pod.name];
-            if (pod !== undefined) {
-                console.log('pod removed for ' + topic.name + ': ' + JSON.stringify(pod));
-	        topic.pods.removed(pod);
-                delete current[pod.name];
+        }
+
+        for (var pod in current) {
+            if (newpods[pod] === undefined) {
+                topic.pods.removed(current[pod]);
+                console.log('pod removed for ' + topic.name + ': ' + JSON.stringify(current[pod]));
+                delete current[pod];
             }
-        });
-    }
+        }
+    };
+    this.watcher.on('changed', changed);
 }
 
 Topic.prototype.close = function () {
