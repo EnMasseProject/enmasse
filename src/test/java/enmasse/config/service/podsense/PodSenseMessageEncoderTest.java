@@ -2,7 +2,7 @@ package enmasse.config.service.podsense;
 
 import enmasse.config.service.openshift.MessageEncoder;
 import io.fabric8.kubernetes.api.model.*;
-import org.apache.qpid.proton.amqp.messaging.AmqpSequence;
+import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.message.Message;
 import org.junit.Test;
 
@@ -21,8 +21,8 @@ public class PodSenseMessageEncoderTest {
         Message message = encoder.encode(createPods());
 
         assertNotNull(message);
-        AmqpSequence seq = (AmqpSequence) message.getBody();
-        List pods = seq.getValue();
+        AmqpValue seq = (AmqpValue) message.getBody();
+        List pods = (List) seq.getValue();
         assertNotNull(pods);
         assertThat(pods.size(), is(2));
 

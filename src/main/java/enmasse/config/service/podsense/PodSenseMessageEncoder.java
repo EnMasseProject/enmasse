@@ -3,6 +3,7 @@ package enmasse.config.service.podsense;
 import enmasse.config.service.openshift.MessageEncoder;
 import io.fabric8.kubernetes.api.model.Pod;
 import org.apache.qpid.proton.amqp.messaging.AmqpSequence;
+import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.message.Message;
 
 import java.io.IOException;
@@ -20,7 +21,7 @@ public class PodSenseMessageEncoder implements MessageEncoder<PodResource> {
 
         set.forEach(pod -> root.add(encodePod(pod)));
 
-        message.setBody(new AmqpSequence(root));
+        message.setBody(new AmqpValue(root));
         return message;
     }
 
