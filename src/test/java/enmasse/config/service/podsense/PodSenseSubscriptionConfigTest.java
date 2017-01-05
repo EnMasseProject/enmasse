@@ -7,10 +7,10 @@ import io.fabric8.openshift.client.OpenShiftClient;
 import org.junit.Test;
 
 import java.util.Collections;
+import java.util.function.Predicate;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
 
 public class PodSenseSubscriptionConfigTest {
@@ -28,5 +28,13 @@ public class PodSenseSubscriptionConfigTest {
         assertNotNull(options);
         assertThat(options.getLabelMap().get("my"), is("filter"));
         assertThat(options.getOperations().length, is(1));
+    }
+
+    @Test
+    public void testFilter() {
+        Predicate<PodResource> filter = new PodSenseSubscriptionConfig().getResourceFilter();
+        assertFalse(filter.test(PodSenseMessageEncoderTest.createPod("p1", null, "", Collections.emptyMap())));
+        assertFalse(filter.test(PodSenseMessageEncoderTest.createPod("p1", "", "", Collections.emptyMap())));
+        assertTrue(filter.test(PodSenseMessageEncoderTest.createPod("p1", "myhost", "", Collections.emptyMap())));
     }
 }

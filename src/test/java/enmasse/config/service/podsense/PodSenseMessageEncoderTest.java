@@ -49,7 +49,7 @@ public class PodSenseMessageEncoderTest {
         return pods;
     }
 
-    private static PodResource createPod(String name, String ip, String phase, Map<String, Integer> portMap) {
+    static PodResource createPod(String name, String ip, String phase, Map<String, Integer> portMap) {
         return new PodResource(new PodBuilder()
                 .withMetadata(new ObjectMetaBuilder()
                         .withName(name)
@@ -72,7 +72,7 @@ public class PodSenseMessageEncoderTest {
                 .build());
     }
 
-    private static List<ContainerPort> createPorts(Map<String, Integer> portMap) {
+    static List<ContainerPort> createPorts(Map<String, Integer> portMap) {
         return portMap.entrySet().stream()
                 .map(e -> new ContainerPortBuilder()
                         .withName(e.getKey())
