@@ -1,6 +1,6 @@
+local flavor = import "flavorgen.jsonnet";
 {
   generate(secure)::
-  local prefix = if secure then "tls-" else "";
   {
     "kind": "ConfigMap",
     "apiVersion": "v1",
@@ -11,7 +11,15 @@
       "name": "flavor"
     },
     "data": {
-      "json": "{\n    \"vanilla-queue\": { \"templateName\":\"" + prefix + "queue-inmemory\" },\n \"vanilla-topic\": { \"templateName\":\"" + prefix + "topic-inmemory\" }\n}\n"
+      local flavors = {
+        "vanilla-queue": flavor.generate(secure, "queue-inmemory", null),
+        "vanilla-topic": flavor.generate(secure, "topic-inmemory", null),
+        "small-persisted-queue": flavor.generate(secure, "queue-persisted", "1Gi"),
+        "large-persisted-queue": flavor.generate(secure, "queue-persisted", "10Gi"),
+        "small-persisted-topic": flavor.generate(secure, "topic-persisted", "1Gi"),
+        "large-persisted-topic": flavor.generate(secure, "topic-persisted", "10Gi"),
+      },
+      "json": std.toString(flavors),
     }
   }
 }

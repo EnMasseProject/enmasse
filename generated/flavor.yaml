@@ -1,11 +1,13 @@
 ---
 apiVersion: v1
 data:
-  json: |
-    {
-        "vanilla-queue": { "templateName":"queue-inmemory" },
-     "vanilla-topic": { "templateName":"topic-inmemory" }
-    }
+  json: '{"large-persisted-queue": {"templateName": "queue-persisted", "templateParameters":
+    {"STORAGE_CAPACITY": "10Gi"}}, "large-persisted-topic": {"templateName": "topic-persisted",
+    "templateParameters": {"STORAGE_CAPACITY": "10Gi"}}, "small-persisted-queue":
+    {"templateName": "queue-persisted", "templateParameters": {"STORAGE_CAPACITY":
+    "1Gi"}}, "small-persisted-topic": {"templateName": "topic-persisted", "templateParameters":
+    {"STORAGE_CAPACITY": "1Gi"}}, "vanilla-queue": {"templateName": "queue-inmemory"},
+    "vanilla-topic": {"templateName": "topic-inmemory"}}'
 kind: ConfigMap
 metadata:
   labels:
