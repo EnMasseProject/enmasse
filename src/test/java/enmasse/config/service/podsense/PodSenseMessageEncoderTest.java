@@ -26,11 +26,12 @@ public class PodSenseMessageEncoderTest {
         assertNotNull(pods);
         assertThat(pods.size(), is(2));
 
-        assertPod((Map<String, Object>) pods.get(0), "192.168.0.1", 5672, "amqp");
-        assertPod((Map<String, Object>) pods.get(1), "192.168.0.2", 5671, "amqps");
+        assertPod((Map<String, Object>) pods.get(0), "p1", "192.168.0.1", 5672, "amqp");
+        assertPod((Map<String, Object>) pods.get(1), "p2", "192.168.0.2", 5671, "amqps");
     }
 
-    private static void assertPod(Map<String, Object> encodedPod, String expectedIp, int expectedPort, String expectedPortName) {
+    private static void assertPod(Map<String, Object> encodedPod, String expectedName, String expectedIp, int expectedPort, String expectedPortName) {
+        assertThat(encodedPod.get("name"), is(expectedName));
         assertThat(encodedPod.get("host"), is(expectedIp));
         assertThat(encodedPod.get("phase"), is("Running"));
         assertThat(encodedPod.get("ready"), is("False"));
