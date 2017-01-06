@@ -16,6 +16,7 @@
 'use strict';
 
 var util = require('util');
+var config_service = require('./config_service.js');
 var Promise = require('bluebird');
 var amqp = require('rhea').create_container();
 var create_topic = require('./topic.js');
@@ -286,17 +287,8 @@ if (process.env.MESSAGING_SERVICE_HOST) {
     });
 }
 
-var config_host = process.env.ADMIN_SERVICE_HOST
-var config_port = process.env.ADMIN_SERVICE_PORT_CONFIGURATION
-
-if (process.env.CONFIGURATION_SERVICE_HOST) {
-    config_host = process.env.CONFIGURATION_SERVICE_HOST
-    config_port = process.env.CONFIGURATION_SERVICE_PORT
-}
-
-if (config_host) {
-    console.log('connecting to configuration service...');
-    amqp.options.username = 'subserv';
-    var conn = amqp.connect({host:config_host, port:config_port, properties:connection_properties, id:'configuration-service'});
+var conn = config_service.connect(amqp, 'configuration-service');
+if (conn) {
+    console.log('opening link to configuration service...');
     conn.open_receiver('maas');
 }

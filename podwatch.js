@@ -13,11 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var https = require('https');
-var fs = require('fs');
 var util = require("util");
 var events = require("events");
-var querystring = require("querystring");
+var rhea = require('rhea');
+var config_service = require('./config_service.js');
 
 var Subscription = function () {
     events.EventEmitter.call(this);
@@ -29,97 +28,35 @@ util.inherits(Subscription, events.EventEmitter);
 Subscription.prototype.close = function () {
     this.closed = true;
 }
-Subscription.prototype.subscribe = function (options, handler) {
+
+Subscription.prototype.subscribe = function (selector, handler) {
     var self = this;
-    var request = https.get(options, function(response) {
-	console.log('STATUS: ' + response.statusCode);
-	response.setEncoding('utf8');
-	response.on('data', handler);
-	response.on('end', function () {
-            if (!this.closed) {
-	        console.log('response ended; reconnecting...');
-	        self.subscribe(options, handler);
-            }
-	});
-    });
-    request.on('error', function(e) {
-	console.log('problem with request: ' + e.message);
-    });
-}
-
-function subscribe(options, handler) {
-    var subscription = new Subscription();
-    subscription.subscribe(options, handler.bind(subscription));
-    return subscription;
-}
-
-function get_pod_handler() {
-    var current = {};
-    var partial = undefined;
-    return function (msg) {
-        var content = partial ? partial + msg : msg;
-        var start = 0;
-        for (var end = content.indexOf('\n', start); end > 0; start = end + 1, end = start < content.length ? content.indexOf('\n', start) : -1) {
-            var line = content.substring(start, end);
-            var o;
-            try {
-	        o = JSON.parse(line);
-            } catch (e) {
-	        console.log('Could not parse message as JSON, assuming incomplete: ' + line);
-                break;
-            }
-            var pod = {
-                name: o.object.metadata.name,
-                ip: o.object.status.podIP,
-                status: o.object.status.phase
-            };
-            if (o.object.status.conditions) {
-                console.log(JSON.stringify(o.object.status.conditions));
-                for (var i = 0; i < o.object.status.conditions.length; i++) {
-                    var condition = o.object.status.conditions[i];
-                    if (condition.type === 'Ready') {
-                        pod.ready = o.object.status.conditions[i].status === 'True';
-                    }
-                }
-            }
-            if (o.object.spec.containers) {
-                pod.ports = {};
-                for (var i in o.object.spec.containers) {
-                    var c = o.object.spec.containers[i];
-                    if (c.ports) {
-                        pod.ports[c.name] = {};
-                        for (var j in c.ports) {
-                            var p = c.ports[j];
-                            pod.ports[c.name][p.name] = p.containerPort;
-                        }
-                    }
-                }
-            }
-            if (o.type === 'ADDED') {
-	        this.emit('added', pod);
-            } else if (o.type === 'MODIFIED') {
-	        this.emit('modified', pod);
-            } else if (o.type === 'DELETED') {
-	        this.emit('removed', pod);
-            } else {
-                console.log('ERROR: unknown type for pod watcher ' + o.type);
-            }
-        }
-	partial = content.substring(start);
+    var amqp = rhea.create_container();
+    amqp.on('message', handler);
+    var conn = config_service.connect(amqp, "podsense-" + selector.address);
+    if (conn) {
+        conn.open_receiver({source:{address:"podsense", filter:selector}});
     }
 }
 
-module.exports.watch_pods = function (selector, namespace) {
-    var ns = namespace || fs.readFileSync('/var/run/secrets/kubernetes.io/serviceaccount/namespace') || 'default';
-    var options = {
-	hostname: process.env.KUBERNETES_SERVICE_HOST,
-	port: process.env.KUBERNETES_SERVICE_PORT,
-	rejectUnauthorized: false,
-	path: '/api/v1/watch/namespaces/' + ns + '/pods?' + querystring.stringify({'labelSelector':selector}),
-	headers: {
-	    'Authorization': 'Bearer ' + fs.readFileSync('/var/run/secrets/kubernetes.io/serviceaccount/token')
-	}
-    };
-    console.log('subscribing with path: ' + options.path);
-    return subscribe(options, get_pod_handler());
-};
+
+
+function get_pod_handler() {
+    return function (context) {
+        var content = context.message.body;
+        if (content === undefined) {
+            return;
+        }
+        filtered = content.filter(function (pod) {
+            return pod.ready === 'True' && pod.phase === 'Running';
+        });
+        this.emit('changed', filtered);
+    }
+}
+
+module.exports.watch_pods = function subscribe(selector) {
+    var subscription = new Subscription();
+    var handler = get_pod_handler();
+    subscription.subscribe(selector, handler.bind(subscription));
+    return subscription;
+}
