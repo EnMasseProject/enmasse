@@ -11,8 +11,6 @@ import org.apache.qpid.proton.message.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-
 /**
  * AMQPServer for triggering deployments through AMQP
  */
@@ -56,12 +54,19 @@ public class AMQPServer extends AbstractVerticle {
 
     private void onAddressConfig(ProtonDelivery delivery, Message message) {
         String data = (String) ((AmqpValue) message.getBody()).getValue();
-        try {
-            clusterManager.configUpdated(mapper.readTree(data));
-            delivery.disposition(new Accepted(), true);
-        } catch (IOException e) {
-            delivery.disposition(new Rejected(), true);
-        }
+        vertx.executeBlocking(future -> {
+            try {
+                clusterManager.configUpdated(mapper.readTree(data));
+            } catch (Exception e) {
+                future.fail(e);
+            }
+        }, result -> {
+            if (result.succeeded()) {
+                delivery.disposition(new Accepted(), true);
+            } else {
+                delivery.disposition(new Rejected(), true);
+            }
+        });
     }
 
 
