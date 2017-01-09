@@ -7,12 +7,9 @@ node_js:
 services:
 - docker
 script:
-- 'echo "Dummy script"
-
-'
-after_success:
 - curl -s https://raw.githubusercontent.com/EnMasseProject/travis-scripts/master/docker-build.sh
   | bash /dev/stdin enmasseproject/ragent .
+after_success:
 - curl -s https://raw.githubusercontent.com/EnMasseProject/travis-scripts/master/trigger-travis.sh
   | bash /dev/stdin
 env:
