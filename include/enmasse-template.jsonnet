@@ -16,6 +16,9 @@ local restapiRoute = import "restapi-route.jsonnet";
 local common = import "common.jsonnet";
 local admin = import "admin.jsonnet";
 local mqttFrontend = import "mqtt-frontend.jsonnet";
+local mqtt = import "mqtt.jsonnet";
+local mqttService = import "mqtt-service.jsonnet";
+local mqttRoute = import "mqtt-route.json";
 {
   generate(secure)::
   {
@@ -45,15 +48,15 @@ local mqttFrontend = import "mqtt-frontend.jsonnet";
                  subserv.imagestream("${SUBSERV_REPO}"),
                  subserv.deployment,
                  subserv.service,
-                 mqttFrontend.imagestream("${MQTT_FRONTEND_REPO}"),
-                 mqttFrontend.deployment,
-                 mqttFrontend.service,
+                 mqtt.imagestream("${MQTT_FRONTEND_REPO}"),
+                 mqttFrontend.deployment(secure),
+                 mqttService.generate(secure),
                  restapi.imagestream("${RESTAPI_REPO}"),
                  storageController.imagestream("${STORAGE_CONTROLLER_REPO}"),
                  flavorConfig.generate(secure),
                  admin.deployment ] + admin.services,
 
-    local secured_objects = common + [ messagingRoute ],
+    local secured_objects = common + [ messagingRoute, mqttRoute ],
     "objects": if secure then secured_objects else common,
     "parameters": [
       {
@@ -113,6 +116,10 @@ local mqttFrontend = import "mqtt-frontend.jsonnet";
         "name" : "MQTT_FRONTEND_REPO",
         "description": "The image to use for the MQTT frontend",
         "value": "enmasseproject/mqtt-frontend"
+      },
+      {
+        "name": "MQTT_FRONTEND_HOSTNAME",
+        "description": "The hostname to use for the exposed route for MQTT (TLS only)"
       }
     ]
 

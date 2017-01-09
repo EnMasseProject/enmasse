@@ -604,7 +604,7 @@ objects:
   kind: Service
   metadata:
     annotations:
-      service.alpha.openshift.io/dependencies: '[{"name":"admin","namespace":"","kind":"Service"},{"name":"subscription","namespace":"","kind":"Service"},{"name":"mqtt-frontend","namespace":"","kind":"Service"}]'
+      service.alpha.openshift.io/dependencies: '[{"name":"admin","namespace":"","kind":"Service"},{"name":"subscription","namespace":"","kind":"Service"},{"name":"mqtt","namespace":"","kind":"Service"}]'
       service.alpha.openshift.io/infrastructure: 'true'
     labels:
       app: enmasse
@@ -757,12 +757,20 @@ objects:
         - image: mqtt-frontend
           livenessProbe:
             tcpSocket:
-              port: mqtt
+              port: secure-mqtt
           name: mqtt-frontend
           ports:
-          - containerPort: 1883
-            name: mqtt
+          - containerPort: 8883
+            name: secure-mqtt
             protocol: TCP
+          volumeMounts:
+          - mountPath: "/etc/mqtt-frontend/ssl"
+            name: ssl-certs
+            readOnly: true
+        volumes:
+        - name: ssl-certs
+          secret:
+            secretName: mqtt-certs
     triggers:
     - type: ConfigChange
     - imageChangeParams:
@@ -778,13 +786,13 @@ objects:
   metadata:
     labels:
       app: enmasse
-    name: mqtt-frontend
+    name: mqtt
   spec:
     ports:
-    - name: mqtt
-      port: 1883
+    - name: secure-mqtt
+      port: 8883
       protocol: TCP
-      targetPort: 1883
+      targetPort: 8883
     selector:
       name: mqtt-frontend
 - apiVersion: v1
@@ -958,6 +966,22 @@ objects:
       kind: Service
       name: messaging
       weight: 100
+- apiVersion: v1
+  kind: Route
+  metadata:
+    labels:
+      app: enmasse
+    name: mqtt
+  spec:
+    host: "${MQTT_FRONTEND_HOSTNAME}"
+    port:
+      targetPort: secure-mqtt
+    tls:
+      termination: passthrough
+    to:
+      kind: Service
+      name: mqtt
+      weight: 100
 parameters:
 - description: The image to use for the router
   name: ROUTER_REPO
@@ -993,3 +1017,5 @@ parameters:
 - description: The image to use for the MQTT frontend
   name: MQTT_FRONTEND_REPO
   value: enmasseproject/mqtt-frontend
+- description: The hostname to use for the exposed route for MQTT (TLS only)
+  name: MQTT_FRONTEND_HOSTNAME
