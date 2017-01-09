@@ -165,6 +165,7 @@ public class EnMasseClient {
                                 //System.out.println("message confirmed");
                                 if (count.incrementAndGet() == messages.length) {
                                     connection.close();
+                                    System.out.println(messages.length + " messages confirmed");
                                     vertx.runOnContext((id) -> future.complete(count.get()));
                                 }
                             });
