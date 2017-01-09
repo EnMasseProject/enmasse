@@ -24,6 +24,8 @@ import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttTopic;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -35,8 +37,18 @@ public class ConnectionTest extends MockMqttFrontendTestBase {
 
     private static final String MQTT_WILL_TOPIC = "will";
     private static final String MQTT_WILL_MESSAGE = "Will on EnMasse";
-    private static final String CLIENT_ID = "12345";
-    private static final String CLIENT_ID_WITH_SESSION = "67890";
+    private static final String CLIENT_ID = "my_client_id";
+    private static final String CLIENT_ID_WITH_SESSION = "my_client_id_with_session";
+
+    @Before
+    public void before(TestContext context) {
+        super.setup(context, false);
+    }
+
+    @After
+    public void after(TestContext context) {
+        super.tearDown(context);
+    }
 
     @Test
     public void connectionCleanSession(TestContext context) {

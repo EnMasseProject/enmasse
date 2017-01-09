@@ -16,14 +16,12 @@
 
 package enmasse.mqtt;
 
-import enmasse.mqtt.mocks.MockWillService;
 import enmasse.mqtt.mocks.MockBroker;
 import enmasse.mqtt.mocks.MockSubscriptionService;
+import enmasse.mqtt.mocks.MockWillService;
 import io.vertx.core.Vertx;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
-import org.junit.After;
-import org.junit.Before;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,6 +36,7 @@ public abstract class MockMqttFrontendTestBase {
 
     public static final String MQTT_BIND_ADDRESS = "localhost";
     public static final int MQTT_LISTEN_PORT = 1883;
+    public static final int MQTT_TLS_LISTEN_PORT = 8883;
 
     public static final String MESSAGING_SERVICE_HOST = "localhost";
     public static final int MESSAGING_SERVICE_PORT = 5672;
@@ -45,24 +44,40 @@ public abstract class MockMqttFrontendTestBase {
     public static final String INTERNAL_SERVICE_HOST = "localhost";
     public static final int INTERNAL_SERVICE_PORT = 5673;
 
+    private static final String SERVER_KEY = "./src/test/resources/tls/server-key.pem";
+    private static final String SERVER_CERT = "./src/test/resources/tls/server-cert.pem";
+
     protected Vertx vertx;
     protected MockWillService willService;
     protected MockSubscriptionService subscriptionService;
     protected MockBroker broker;
     protected MqttFrontend mqttFrontend;
 
-    @Before
-    public void setup(TestContext context) {
+    /**
+     * Setup the MQTT frontend test base
+     *
+     * @param context   test context
+     * @param ssl   if SSL/TLS support is needed
+     */
+    protected void setup(TestContext context, boolean ssl) {
 
         this.vertx = Vertx.vertx();
 
+        int port = !ssl ? MQTT_LISTEN_PORT : MQTT_TLS_LISTEN_PORT;
         // create and setup MQTT frontend instance
         this.mqttFrontend = new MqttFrontend();
         this.mqttFrontend
                 .setBindAddress(MQTT_BIND_ADDRESS)
-                .setListenPort(MQTT_LISTEN_PORT)
+                .setListenPort(port)
                 .setMessagingServiceHost(MESSAGING_SERVICE_HOST)
                 .setMessagingServicePort(MESSAGING_SERVICE_PORT);
+
+        if (ssl) {
+            this.mqttFrontend
+                    .setSsl(ssl)
+                    .setKeyFile(SERVER_KEY)
+                    .setCertFile(SERVER_CERT);
+        }
 
         // create and setup mock Broker instance
         this.broker = new MockBroker();
@@ -89,8 +104,12 @@ public abstract class MockMqttFrontendTestBase {
         this.vertx.deployVerticle(this.mqttFrontend, context.asyncAssertSuccess());
     }
 
-    @After
-    public void tearDown(TestContext context) {
+    /**
+     * Teardown the MQTT frontend test base
+     *
+     * @param context   test context
+     */
+    protected void tearDown(TestContext context) {
 
         this.vertx.close(context.asyncAssertSuccess());
     }

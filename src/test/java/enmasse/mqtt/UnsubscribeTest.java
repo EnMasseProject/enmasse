@@ -21,6 +21,8 @@ import io.vertx.ext.unit.junit.VertxUnitRunner;
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -31,7 +33,17 @@ import org.junit.runner.RunWith;
 public class UnsubscribeTest extends MockMqttFrontendTestBase {
 
     private static final String MQTT_TOPIC = "mytopic";
-    private static final String CLIENT_ID = "12345";
+    private static final String CLIENT_ID = "my_client_id";
+
+    @Before
+    public void before(TestContext context) {
+        super.setup(context, false);
+    }
+
+    @After
+    public void after(TestContext context) {
+        super.tearDown(context);
+    }
 
     @Test
     public void unsubscribe(TestContext context) {

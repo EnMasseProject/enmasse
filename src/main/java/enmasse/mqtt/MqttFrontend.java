@@ -18,6 +18,7 @@ package enmasse.mqtt;
 
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
+import io.vertx.core.net.PemKeyCertOptions;
 import io.vertx.mqtt.MqttEndpoint;
 import io.vertx.mqtt.MqttServer;
 import io.vertx.mqtt.MqttServerOptions;
@@ -38,10 +39,17 @@ public class MqttFrontend extends AbstractVerticle {
 
     private static final Logger LOG = LoggerFactory.getLogger(MqttFrontend.class);
 
+    // binding info for listening
     private String bindAddress;
     private int listenPort;
+    // connection info to the messaging service
     private String messagingServiceHost;
     private int messagingServicePort;
+
+    // SSL/TLS support stuff
+    private boolean ssl;
+    private String certFile;
+    private String keyFile;
 
     private MqttServer server;
 
@@ -96,6 +104,42 @@ public class MqttFrontend extends AbstractVerticle {
     }
 
     /**
+     * Set the SSL/TLS support needed for the MQTT connections
+     *
+     * @param ssl   SSL/TLS is needed
+     * @return  current MQTT Frontend instance
+     */
+    @Value(value = "${enmasse.mqtt.ssl:false")
+    public MqttFrontend setSsl(boolean ssl) {
+        this.ssl = ssl;
+        return this;
+    }
+
+    /**
+     * Set the server certificate file path for SSL/TLS support
+     *
+     * @param certFile  server certificate file path
+     * @return  current MQTT Frontend instance
+     */
+    @Value(value = "${enmasse.mqtt.certfile:./src/test/resources/tls/server-key.pem}")
+    public MqttFrontend setCertFile(String certFile) {
+        this.certFile = certFile;
+        return this;
+    }
+
+    /**
+     * Set the server private key file path for SSL/TLS support
+     *
+     * @param keyFile   server private key file path
+     * @return  current MQTT Frontend instance
+     */
+    @Value(value = "${enmasse.mqtt.keyfile:./src/test/resources/tls/server-cert.pem}")
+    public MqttFrontend setKeyFile(String keyFile) {
+        this.keyFile = keyFile;
+        return this;
+    }
+
+    /**
      * Start the MQTT server component
      *
      * @param startFuture
@@ -104,6 +148,16 @@ public class MqttFrontend extends AbstractVerticle {
 
         MqttServerOptions options = new MqttServerOptions();
         options.setHost(this.bindAddress).setPort(this.listenPort);
+
+        if (this.ssl) {
+
+            PemKeyCertOptions pemKeyCertOptions = new PemKeyCertOptions()
+                    .setKeyPath(this.keyFile)
+                    .setCertPath(this.certFile);
+
+            options.setKeyCertOptions(pemKeyCertOptions)
+                    .setSsl(this.ssl);
+        }
 
         this.server = MqttServer.create(this.vertx, options);
 

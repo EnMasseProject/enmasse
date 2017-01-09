@@ -26,6 +26,8 @@ import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -37,8 +39,18 @@ public class SubscribeTest extends MockMqttFrontendTestBase {
 
     private static final String MQTT_TOPIC = "mytopic";
     private static final String MQTT_MESSAGE = "Hello MQTT on EnMasse";
-    private static final String SUBSCRIBER_ID = "12345";
-    private static final String PUBLISHER_ID = "67890";
+    private static final String SUBSCRIBER_ID = "my_subscriber_id";
+    private static final String PUBLISHER_ID = "my_publisher_id";
+
+    @Before
+    public void before(TestContext context) {
+        super.setup(context, false);
+    }
+
+    @After
+    public void after(TestContext context) {
+        super.tearDown(context);
+    }
 
     @Test
     public void subscribe(TestContext context) {
