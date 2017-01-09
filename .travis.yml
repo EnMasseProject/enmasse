@@ -10,9 +10,11 @@ before_install:
 - docker pull ppatierno/qdrouterd:0.7.0-repo
 - docker run -d --name qdrouterd -p 5672:5672 -p 5673:5673 -v $TRAVIS_BUILD_DIR/src/test/resources:/conf
   ppatierno/qdrouterd:0.7.0-repo qdrouterd --conf /conf/qdrouterd.conf
-after_success:
+script:
+- mvn test -B
 - curl -s https://raw.githubusercontent.com/EnMasseProject/travis-scripts/master/docker-build.sh
   | bash /dev/stdin enmasseproject/mqtt-frontend .
+after_success:
 - curl -s https://raw.githubusercontent.com/EnMasseProject/travis-scripts/master/trigger-travis.sh
   | bash /dev/stdin
 env:
