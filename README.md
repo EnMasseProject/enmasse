@@ -5,6 +5,7 @@ Documents relating to EnMasse project. For setting up EnMasse, see [Getting Star
 ## Design documents
 
    * [Architecture](overview/architecture.md)
+   * [Continuous Integration](ci/README.md)
    * [Topics](topics/design.md)
    * [Scaledown](scaledown/design.md)
    * [Flavors](flavors/design.md)
