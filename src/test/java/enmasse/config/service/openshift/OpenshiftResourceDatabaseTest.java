@@ -17,7 +17,6 @@
 package enmasse.config.service.openshift;
 
 import enmasse.config.service.TestResource;
-import enmasse.config.service.config.AddressConfigCodec;
 import enmasse.config.service.model.Subscriber;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.ConfigMapList;
@@ -45,6 +44,7 @@ import java.util.concurrent.TimeUnit;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
+@SuppressWarnings("unchecked")
 public class OpenshiftResourceDatabaseTest {
     private OpenshiftResourceDatabase<TestResource> database;
     private OpenShiftClient client;

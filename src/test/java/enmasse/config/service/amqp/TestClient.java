@@ -24,6 +24,8 @@ import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.messaging.Source;
 
 import java.util.Collections;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 public class TestClient {
 
@@ -31,11 +33,12 @@ public class TestClient {
     private int serverPort;
     private ProtonClient client;
     private ProtonConnection connection;
+    private CountDownLatch closeLatch = new CountDownLatch(1);
 
-    public TestClient(String serverHost, int serverPort) {
+    public TestClient(Vertx vertx, String serverHost, int serverPort) {
         this.serverHost = serverHost;
         this.serverPort = serverPort;
-        this.client = ProtonClient.create(Vertx.vertx());
+        this.client = ProtonClient.create(vertx);
     }
 
     public void subscribe(String address, Handler<AsyncResult<ProtonReceiver>> closeHandler, ProtonMessageHandler handler) {
@@ -43,6 +46,7 @@ public class TestClient {
             if (connectResult.succeeded()) {
                 System.out.println("Connected'");
                 connection = connectResult.result();
+                connection.closeHandler(c -> closeLatch.countDown());
                 connection.open();
                 System.out.println("Creating receiver");
                 Source source = new Source();
@@ -55,9 +59,10 @@ public class TestClient {
         });
     }
 
-    public void close() {
+    public void close() throws InterruptedException {
         if (connection != null) {
             connection.close();
+            closeLatch.await(1, TimeUnit.MINUTES);
         }
     }
 }

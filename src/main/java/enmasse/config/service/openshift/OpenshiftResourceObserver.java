@@ -50,6 +50,7 @@ public class OpenshiftResourceObserver<T extends Resource> implements AutoClosea
         this.subscriptionManager = subscriptionManager;
     }
 
+    @SuppressWarnings("unchecked")
     public void start() {
         Map<ClientOperation<? extends HasMetadata, ?, ?, ?>, KubernetesResourceList>  initialResources = new LinkedHashMap<>();
         for (ClientOperation<? extends HasMetadata, ?, ?, ?> operation : observerOptions.getOperations()) {

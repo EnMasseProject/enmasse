@@ -25,7 +25,10 @@ import org.apache.qpid.proton.message.Message;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
+import org.mockito.runners.MockitoJUnitRunner;
 
 import java.util.Collections;
 import java.util.Map;
@@ -37,11 +40,15 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.*;
 
+@RunWith(MockitoJUnitRunner.class)
 public class AMQPServerTest {
     private Vertx vertx;
     private AMQPServer server;
     private ResourceDatabase database;
     private TestClient client;
+
+    @Captor
+    private ArgumentCaptor<Map<String, String>> mapCapture;
 
     @Before
     public void setup() throws InterruptedException {
@@ -51,7 +58,7 @@ public class AMQPServerTest {
         vertx.deployVerticle(server);
         int port = waitForPort(server);
         System.out.println("Server running on port " + server.port());
-        client = new TestClient("localhost", port);
+        client = new TestClient(vertx, "localhost", port);
     }
 
     private int waitForPort(AMQPServer server) throws InterruptedException {
@@ -64,8 +71,9 @@ public class AMQPServerTest {
     }
 
     @After
-    public void teardown() {
+    public void teardown() throws InterruptedException {
         client.close();
+        server.stop();
         vertx.close();
     }
 
@@ -75,7 +83,6 @@ public class AMQPServerTest {
         client.subscribe("foo", result -> {}, msgHandler);
 
         ArgumentCaptor<Subscriber> subCapture = ArgumentCaptor.forClass(Subscriber.class);
-        ArgumentCaptor<Map<String, String>> mapCapture = ArgumentCaptor.forClass(Map.class);
         verify(database, timeout(10000)).subscribe(mapCapture.capture(), subCapture.capture());
 
         Map<String, String> filter = mapCapture.getValue();

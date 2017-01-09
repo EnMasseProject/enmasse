@@ -14,6 +14,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 
+@SuppressWarnings("unchecked")
 public class PodSenseMessageEncoderTest {
     @Test
     public void testEncode() throws IOException {

@@ -17,7 +17,7 @@ public class PodSenseSubscriptionConfigTest {
 
     @Test
     public void testDefaultSetup() {
-        SubscriptionConfig config = new PodSenseSubscriptionConfig();
+        SubscriptionConfig<PodResource> config = new PodSenseSubscriptionConfig();
 
         MessageEncoder encoder = config.getMessageEncoder();
         assertNotNull(encoder);
