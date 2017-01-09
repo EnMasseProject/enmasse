@@ -41,7 +41,7 @@ public class TopicTest extends VertxTestBase{
         deploy(dest);
         scale(dest, 4);
         EnMasseClient client = createTopicClient();
-        List<String> msgs = Arrays.asList("foo", "bar", "baz");
+        List<String> msgs = TestUtils.generateMessages(1000);
 
         List<Future<List<String>>> recvResults = Arrays.asList(
                 client.recvMessages(dest.getAddress(), msgs.size()),

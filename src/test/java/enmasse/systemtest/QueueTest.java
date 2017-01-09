@@ -22,19 +22,16 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
 public class QueueTest extends VertxTestBase {
-    @Test
     public void testQueue() throws Exception {
         Destination dest = Destination.queue("myqueue");
         deploy(dest);
         EnMasseClient client = createQueueClient();
-        List<String> msgs = generateMessages(1024);
+        List<String> msgs = TestUtils.generateMessages(1024);
 
         Future<Integer> numSent = client.sendMessages(dest.getAddress(), msgs);
         assertThat(numSent.get(1, TimeUnit.MINUTES), is(msgs.size()));
@@ -43,34 +40,28 @@ public class QueueTest extends VertxTestBase {
         assertThat(received.get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
     }
 
-    private List<String> generateMessages(int numMessages) {
-        return IntStream.range(0, numMessages)
-                .mapToObj(num -> "msg" + num)
-                .collect(Collectors.toList());
-    }
-
     @Test
     public void testScaledown() throws Exception {
         Destination dest = Destination.queue("myqueue");
         deploy(dest);
-        scale(dest, 1);
+        scale(dest, 4);
         EnMasseClient client = createQueueClient();
         List<Future<Integer>> sent = Arrays.asList(
-                client.sendMessages(dest.getAddress(), Arrays.asList("foo")),
-                client.sendMessages(dest.getAddress(), Arrays.asList("bar")),
-                client.sendMessages(dest.getAddress(), Arrays.asList("baz")),
-                client.sendMessages(dest.getAddress(), Arrays.asList("quux")));
+                client.sendMessages(dest.getAddress(), TestUtils.generateMessages("foo", 1000)),
+                client.sendMessages(dest.getAddress(), TestUtils.generateMessages("bar", 1000)),
+                client.sendMessages(dest.getAddress(), TestUtils.generateMessages("baz", 1000)),
+                client.sendMessages(dest.getAddress(), TestUtils.generateMessages("quux", 1000)));
 
-        assertThat(sent.get(0).get(1, TimeUnit.MINUTES), is(1));
-        assertThat(sent.get(1).get(1, TimeUnit.MINUTES), is(1));
-        assertThat(sent.get(2).get(1, TimeUnit.MINUTES), is(1));
-        assertThat(sent.get(3).get(1, TimeUnit.MINUTES), is(1));
+        assertThat(sent.get(0).get(1, TimeUnit.MINUTES), is(1000));
+        assertThat(sent.get(1).get(1, TimeUnit.MINUTES), is(1000));
+        assertThat(sent.get(2).get(1, TimeUnit.MINUTES), is(1000));
+        assertThat(sent.get(3).get(1, TimeUnit.MINUTES), is(1000));
 
         scale(dest, 1);
 
-        Future<List<String>> received = client.recvMessages(dest.getAddress(), 4);
+        Future<List<String>> received = client.recvMessages(dest.getAddress(), 4000);
 
-        assertThat(received.get(1, TimeUnit.MINUTES).size(), is(4));
+        assertThat(received.get(1, TimeUnit.MINUTES).size(), is(4000));
     }
 }
 

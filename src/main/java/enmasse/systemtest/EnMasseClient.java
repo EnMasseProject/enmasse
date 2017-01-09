@@ -160,9 +160,9 @@ public class EnMasseClient {
                     sender.closeHandler(closed -> System.out.println("Sender link closed"));
                     sender.openHandler(remoteOpenResult -> {
                         for (Message message : messages) {
-                            System.out.println("Sending message");
+                            //System.out.println("Sending message");
                             sender.send(message, delivery -> {
-                                System.out.println("message confirmed");
+                                //System.out.println("message confirmed");
                                 if (count.incrementAndGet() == messages.length) {
                                     connection.close();
                                     vertx.runOnContext((id) -> future.complete(count.get()));

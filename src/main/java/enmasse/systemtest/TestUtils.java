@@ -35,6 +35,7 @@ import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
  * TODO: Description
@@ -184,5 +185,13 @@ public class TestUtils {
         if (numConfigured != agents.size()) {
             throw new IllegalStateException("Timed out while waiting for EnMasse to be configured");
         }
+    }
+
+    public static List<String> generateMessages(String prefix, int numMessages) {
+        return IntStream.range(0, numMessages).mapToObj(i -> prefix + i).collect(Collectors.toList());
+    }
+
+    public static List<String> generateMessages(int numMessages) {
+        return generateMessages("testmessage", numMessages);
     }
 }
