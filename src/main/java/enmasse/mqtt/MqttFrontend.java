@@ -109,7 +109,7 @@ public class MqttFrontend extends AbstractVerticle {
      * @param ssl   SSL/TLS is needed
      * @return  current MQTT Frontend instance
      */
-    @Value(value = "${enmasse.mqtt.ssl:false")
+    @Value(value = "${enmasse.mqtt.ssl:false}")
     public MqttFrontend setSsl(boolean ssl) {
         this.ssl = ssl;
         return this;
