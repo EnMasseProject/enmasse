@@ -43,7 +43,7 @@ public class QueueTest extends VertxTestBase {
 
     @Test
     public void testScaledown() throws Exception {
-        Destination dest = Destination.queue("myqueue");
+        Destination dest = Destination.queue("scalequeue");
         deploy(dest);
         scale(dest, 4);
         EnMasseClient client = createQueueClient();
