@@ -157,6 +157,8 @@ public class MqttFrontend extends AbstractVerticle {
 
             options.setKeyCertOptions(pemKeyCertOptions)
                     .setSsl(this.ssl);
+
+            LOG.info("SSL/TLS support enabled key {} cert {}", this.keyFile, this.certFile);
         }
 
         this.server = MqttServer.create(this.vertx, options);
