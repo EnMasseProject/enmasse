@@ -25,6 +25,7 @@ import io.vertx.proton.ProtonClient;
 import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.ProtonReceiver;
 import io.vertx.proton.ProtonSender;
+import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 
 import java.io.File;
 import java.io.IOException;
@@ -89,16 +90,18 @@ public class QueueDrainer {
                                     receiver.setPrefetch(0);
                                     receiver.openHandler(handler -> {
                                         System.out.println("Receiver open: " + handle.succeeded());
-                                        receiver.flow(100);
+                                        receiver.flow(1);
                                     });
                                     receiver.handler((protonDelivery, message) -> {
-                                        System.out.println("Got Message to forwarder");
-                                        sender.send(message, targetDelivery ->
-                                                protonDelivery.disposition(targetDelivery.getRemoteState(), targetDelivery.remotelySettled()));
+                                        //System.out.println("Got Message to forwarder: " + ((AmqpValue)message.getBody()).getValue());
+                                        sender.send(message, targetDelivery -> {
+                                                System.out.println("Got delivery confirmation, id = " + message.getMessageId() + ", remoteState = " + targetDelivery.getRemoteState() + ", remoteSettle = " + targetDelivery.remotelySettled());
+                                                receiver.flow(1);
+                                                protonDelivery.disposition(targetDelivery.getRemoteState(), targetDelivery.remotelySettled()); });
 
                                         // This is for debugging only
                                         if (!first.getAndSet(true)) {
-                                            System.out.println("Forwarded one message");
+                                            System.out.println("Forwarded first message");
                                             if (debugFn.isPresent()) {
                                                 vertx.executeBlocking((Future<Integer> future) -> {
                                                     debugFn.get().run();

@@ -17,7 +17,9 @@
 package enmasse.broker.prestop;
 
 import com.google.common.io.Files;
+import enmasse.amqp.BlockingClient;
 import enmasse.discovery.Endpoint;
+import org.apache.activemq.artemis.api.core.SimpleString;
 import org.apache.activemq.artemis.api.core.TransportConfiguration;
 import org.apache.activemq.artemis.core.config.Configuration;
 import org.apache.activemq.artemis.core.config.CoreAddressConfiguration;
@@ -28,14 +30,11 @@ import org.apache.activemq.artemis.core.server.RoutingType;
 import org.apache.activemq.artemis.core.server.embedded.EmbeddedActiveMQ;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.message.Message;
-import org.apache.qpid.proton.messenger.Messenger;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertFalse;
 
@@ -44,17 +43,16 @@ public class TestBroker {
     private final String host;
     private final int port;
     private final String address;
-    private final String messageAddress;
     private final EmbeddedActiveMQ server = new EmbeddedActiveMQ();
-    private final Messenger messenger = Messenger.Factory.create();
+    private final BlockingClient client;
     private final boolean multicast;
 
     public TestBroker(Endpoint endpoint, String address, boolean multicast) {
         this.host = endpoint.hostname();
         this.port = endpoint.port();
         this.address = address;
-        this.messageAddress = String.format("amqp://%s:%s/%s", host, port, address);
         this.multicast = multicast;
+        this.client = new BlockingClient(endpoint.hostname(), endpoint.port());
     }
 
     public void start() throws Exception {
@@ -88,23 +86,6 @@ public class TestBroker {
 
         server.start();
         Thread.sleep(2000);
-        messenger.start();
-    }
-
-    public void sendMessage(String messageBody) throws IOException {
-        Message message = Message.Factory.create();
-        message.setAddress(messageAddress);
-        message.setBody(new AmqpValue(messageBody));
-
-        messenger.put(message);
-        messenger.send();
-    }
-
-    public String recvMessage() throws IOException {
-        messenger.subscribe(messageAddress);
-        messenger.recv(1);
-        Message message = messenger.get();
-        return (String) ((AmqpValue)message.getBody()).getValue();
     }
 
     public int numConnected() {
@@ -112,7 +93,7 @@ public class TestBroker {
     }
 
     public void stop() throws Exception {
-        messenger.stop();
+        client.close();
         server.stop();
     }
 
@@ -126,5 +107,28 @@ public class TestBroker {
             Thread.sleep(1000);
         }
         assertFalse("Server has not been shut down", isActive());
+    }
+
+    public void sendMessages(List<String> messages) throws InterruptedException {
+        client.send(address, messages.stream()
+                .map(body -> {
+                    Message message = Message.Factory.create();
+                    message.setAddress(address);
+                    message.setBody(new AmqpValue(body));
+                    return message;
+                })
+                .collect(Collectors.toList()),
+                1, TimeUnit.MINUTES);
+    }
+
+    public List<String> recvMessages(int numMessages) throws IOException, InterruptedException {
+        List<Message> messages = client.recv(address, numMessages, 1, TimeUnit.MINUTES);
+        return messages.stream()
+                .map(m -> (String)((AmqpValue)m.getBody()).getValue())
+                .collect(Collectors.toList());
+    }
+
+    public long numMessages(String queueName) throws Exception {
+        return server.getActiveMQServer().getPostOffice().listQueuesForAddress(new SimpleString(queueName)).get(0).getMessageCount();
     }
 }
