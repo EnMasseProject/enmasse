@@ -827,13 +827,13 @@ objects:
       name: latest
 - apiVersion: v1
   data:
-    json: '{"large-persisted-queue": {"templateName": "queue-persisted", "templateParameters":
-      {"STORAGE_CAPACITY": "10Gi"}}, "large-persisted-topic": {"templateName": "topic-persisted",
+    json: '{"large-persisted-queue": {"templateName": "tls-queue-persisted", "templateParameters":
+      {"STORAGE_CAPACITY": "10Gi"}}, "large-persisted-topic": {"templateName": "tls-topic-persisted",
       "templateParameters": {"STORAGE_CAPACITY": "10Gi"}}, "small-persisted-queue":
-      {"templateName": "queue-persisted", "templateParameters": {"STORAGE_CAPACITY":
-      "1Gi"}}, "small-persisted-topic": {"templateName": "topic-persisted", "templateParameters":
-      {"STORAGE_CAPACITY": "1Gi"}}, "vanilla-queue": {"templateName": "queue-inmemory"},
-      "vanilla-topic": {"templateName": "topic-inmemory"}}'
+      {"templateName": "tls-queue-persisted", "templateParameters": {"STORAGE_CAPACITY":
+      "1Gi"}}, "small-persisted-topic": {"templateName": "tls-topic-persisted", "templateParameters":
+      {"STORAGE_CAPACITY": "1Gi"}}, "vanilla-queue": {"templateName": "tls-queue-inmemory"},
+      "vanilla-topic": {"templateName": "tls-topic-inmemory"}}'
   kind: ConfigMap
   metadata:
     labels:
