@@ -1,0 +1,24 @@
+{
+    "kind": "Route",
+    "apiVersion": "v1",
+    "metadata": {
+        "labels": {
+          "app": "enmasse"
+        },
+        "name": "mqtt"
+    },
+    "spec": {
+        "host": "${MQTT_FRONTEND_HOSTNAME}",
+        "to": {
+            "kind": "Service",
+            "name": "mqtt",
+            "weight": 100
+        },
+        "port": {
+            "targetPort": "secure-mqtt"
+        },
+        "tls": {
+            "termination": "passthrough"
+        }
+    }
+}

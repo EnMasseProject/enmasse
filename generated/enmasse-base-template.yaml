@@ -567,7 +567,7 @@ objects:
   kind: Service
   metadata:
     annotations:
-      service.alpha.openshift.io/dependencies: '[{"name":"configuration","namespace":"","kind":"Service"},{"name":"ragent","namespace":"","kind":"Service"},{"name":"subscription","namespace":"","kind":"Service"},{"name":"restapi","namespace":"","kind":"Service"},{"name":"storage-controller","namespace":"","kind":"Service"},{"name":"mqtt-frontend","namespace":"","kind":"Service"}]'
+      service.alpha.openshift.io/dependencies: '[{"name":"configuration","namespace":"","kind":"Service"},{"name":"ragent","namespace":"","kind":"Service"},{"name":"subscription","namespace":"","kind":"Service"},{"name":"restapi","namespace":"","kind":"Service"},{"name":"storage-controller","namespace":"","kind":"Service"},{"name":"mqtt","namespace":"","kind":"Service"}]'
       service.alpha.openshift.io/infrastructure: 'true'
     labels:
       app: enmasse
@@ -838,7 +838,7 @@ objects:
   metadata:
     labels:
       app: enmasse
-    name: mqtt-frontend
+    name: mqtt
   spec:
     ports:
     - name: mqtt
@@ -882,3 +882,5 @@ parameters:
 - description: The image to use for the MQTT frontend
   name: MQTT_FRONTEND_REPO
   value: enmasseproject/mqtt-frontend
+- description: The hostname to use for the exposed route for MQTT (TLS only)
+  name: MQTT_FRONTEND_HOSTNAME

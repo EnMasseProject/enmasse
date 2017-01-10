@@ -139,6 +139,9 @@ then
     TEMPLATE_NAME=tls-enmasse
     oc secret new qdrouterd-certs ${SERVER_CERT} ${SERVER_KEY}
     oc secret add serviceaccount/default secrets/qdrouterd-certs --for=mount
+    # secret for MQTT certificates
+    oc secret new mqtt-certs ${SERVER_CERT} ${SERVER_KEY}
+    oc secret add serviceaccount/default secrets/mqtt-certs --for=mount
 fi
 
 if [ -n "$ALT_TEMPLATE" ]
@@ -155,4 +158,3 @@ else
         oc new-app -n $PROJECT --template=$TEMPLATE_NAME
     fi
 fi
-
