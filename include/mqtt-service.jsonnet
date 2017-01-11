@@ -22,7 +22,7 @@
         "name": "mqtt"
       },
       "spec": {
-        "ports": if secure then [securePort] else [port],
+        "ports": if secure then [port, securePort] else [port],
         "selector": {
           "name": "mqtt-frontend"
         }

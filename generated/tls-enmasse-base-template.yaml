@@ -859,7 +859,7 @@ objects:
           livenessProbe:
             tcpSocket:
               port: secure-mqtt
-          name: mqtt-frontend
+          name: mqtt-frontend-tls
           ports:
           - containerPort: 8883
             name: secure-mqtt
@@ -868,6 +868,15 @@ objects:
           - mountPath: "/etc/mqtt-frontend/ssl"
             name: ssl-certs
             readOnly: true
+        - image: mqtt-frontend
+          livenessProbe:
+            tcpSocket:
+              port: mqtt
+          name: mqtt-frontend
+          ports:
+          - containerPort: 1883
+            name: mqtt
+            protocol: TCP
         volumes:
         - name: ssl-certs
           secret:
@@ -882,6 +891,14 @@ objects:
           kind: ImageStreamTag
           name: mqtt-frontend:latest
       type: ImageChange
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+        - mqtt-frontend-tls
+        from:
+          kind: ImageStreamTag
+          name: mqtt-frontend:latest
+      type: ImageChange
 - apiVersion: v1
   kind: Service
   metadata:
@@ -890,6 +907,10 @@ objects:
     name: mqtt
   spec:
     ports:
+    - name: mqtt
+      port: 1883
+      protocol: TCP
+      targetPort: 1883
     - name: secure-mqtt
       port: 8883
       protocol: TCP

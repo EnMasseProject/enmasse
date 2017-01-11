@@ -3,6 +3,11 @@ local mqtt = import "mqtt.jsonnet";
 local common = import "common.jsonnet";
 {
   deployment(secure)::
+    local container = common.trigger("mqtt-frontend", "mqtt-frontend");
+    local secureContainer = common.trigger("mqtt-frontend-tls", "mqtt-frontend");
+    local triggerConfigChange = {
+      "type": "ConfigChange"
+    };
     {
       "apiVersion": "v1",
       "kind": "DeploymentConfig",
@@ -18,12 +23,9 @@ local common = import "common.jsonnet";
         "selector": {
           "name": "mqtt-frontend"
         },
-        "triggers": [
-          {
-            "type": "ConfigChange"
-          },
-          common.trigger("mqtt-frontend", "mqtt-frontend")
-        ],
+        "triggers": if secure
+          then [triggerConfigChange, container, secureContainer]
+          else [triggerConfigChange, container],
         "template": {
           "metadata": {
             "labels": {
@@ -32,7 +34,10 @@ local common = import "common.jsonnet";
             }
           },
           "spec": {
-            "containers": [ mqtt.container(secure) ],
+            "containers":
+            if secure
+            then [ mqtt.container(true), mqtt.container(false) ]
+            else [ mqtt.container(false) ],
             [if secure then "volumes" ]: [
               mqtt.secret_volume()
             ]
