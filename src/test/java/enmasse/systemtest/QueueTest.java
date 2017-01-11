@@ -35,7 +35,11 @@ public class QueueTest extends VertxTestBase {
         List<String> msgs = TestUtils.generateMessages(1024);
 
         Future<Integer> numSent = client.sendMessages(dest.getAddress(), msgs);
-        assertThat(numSent.get(1, TimeUnit.MINUTES), is(msgs.size()));
+        TimeoutBudget timeoutBudget = new TimeoutBudget(1, TimeUnit.MINUTES);
+        while (numSent.get(timeoutBudget.timeLeft(), TimeUnit.MILLISECONDS) != msgs.size() && timeoutBudget.timeLeft() >= 0) {
+            numSent = client.sendMessages(dest.getAddress(), msgs);
+        }
+        assertThat(numSent.get(1, TimeUnit.SECONDS), is(msgs.size()));
 
         Future<List<String>> received = client.recvMessages(dest.getAddress(), msgs.size());
         assertThat(received.get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
