@@ -24,12 +24,12 @@ import org.apache.qpid.proton.amqp.messaging.Source;
 import org.apache.qpid.proton.message.Message;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
+import java.util.Queue;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -38,7 +38,6 @@ public class EnMasseClient {
     private final Endpoint endpoint;
     private final TerminusFactory terminusFactory;
     private final ProtonClientOptions options;
-    private volatile ProtonConnection connection;
 
     public EnMasseClient(Vertx vertx, Endpoint endpoint, TerminusFactory terminusFactory, ProtonClientOptions options) {
         this.vertx = vertx;
@@ -83,8 +82,7 @@ public class EnMasseClient {
                     System.out.println("Receiver connection closed");
                 });
                 connection.open();
-                String linkName = "enmasse-systemtest-client";
-                new RedirectableReceiver(vertx, connection, source, "enmasse-systemtest-client",
+                new RedirectableReceiver(connection, source, "enmasse-systemtest-client",
                                          opened -> {
                                              if (opened.succeeded()) {
                                                  Source remote = (Source) opened.result().getRemoteSource();
@@ -92,18 +90,20 @@ public class EnMasseClient {
                                                      latch.countDown();
                                                      System.out.println("Receiving messages from " + connection.getRemoteContainer());
                                                  }
+                                                 opened.result().flow(1);
                                              } else {
                                                  System.out.println("receiver failed to open: " + opened.cause());
                                              }
                                          },
-                                         (delivery, message) -> {
+                                         (receiver, delivery, message) -> {
                                              messages.add((String) ((AmqpValue) message.getBody()).getValue());
                                              if (done.test(message)) {
-                                                 delivery.disposition(Accepted.getInstance(), true);
-                                                 connection.close();
                                                  vertx.runOnContext((id) -> {
-                                                         future.complete(messages);
-                                                     });
+                                                     connection.close();
+                                                     future.complete(messages);
+                                                 });
+                                             } else {
+                                                 receiver.flow(1);
                                              }
                                          }).open();
             } else {
@@ -148,9 +148,10 @@ public class EnMasseClient {
     }
 
     public Future<Integer> sendMessages(String address, Message ... messages) {
-        AtomicInteger count = new AtomicInteger(0);
-        CompletableFuture<Integer> future = new CompletableFuture<>();
+        CompletableFuture<Integer> promise = new CompletableFuture<>();
         ProtonClient client = ProtonClient.create(vertx);
+        AtomicInteger numSent = new AtomicInteger(0);
+        Queue<Message> messageQueue = new LinkedBlockingDeque<>(Arrays.asList(messages));
         client.connect(options, endpoint.getHost(), endpoint.getPort(), event -> {
             if (event.succeeded()) {
                 ProtonConnection connection = event.result();
@@ -159,28 +160,48 @@ public class EnMasseClient {
                     sender.setTarget(terminusFactory.getTarget(address));
                     sender.closeHandler(closed -> System.out.println("Sender link closed"));
                     sender.openHandler(remoteOpenResult -> {
-                        for (Message message : messages) {
-                            //System.out.println("Sending message");
-                            sender.send(message, delivery -> {
-                                //System.out.println("message confirmed");
-                                if (count.incrementAndGet() == messages.length) {
-                                    connection.close();
-                                    System.out.println(messages.length + " messages confirmed");
-                                    vertx.runOnContext((id) -> future.complete(count.get()));
-                                }
-                            });
-                        }
+                        sendNext(connection, sender, numSent, messageQueue, promise);
                     });
                     sender.open();
                 });
-                connection.closeHandler(closed -> System.out.println("Sender connection closed"));
-                connection.disconnectHandler(closed -> System.out.println("Sender connection disconnected"));
+                connection.closeHandler(closed -> {
+                    if (!promise.isDone()) {
+                        promise.complete(numSent.get());
+                    }
+                });
+
+                connection.disconnectHandler(closed -> {
+                    if (!promise.isDone()) {
+                        promise.complete(numSent.get());
+                    }
+                    connection.close();
+                });
                 connection.open();
             } else {
                 event.cause().printStackTrace();
                 System.out.println("Connection open failed: " + event.cause().getMessage());
+                promise.completeExceptionally(event.cause());
             }
         });
-        return future;
+        return promise;
+    }
+
+    private static void sendNext(ProtonConnection connection, ProtonSender sender, AtomicInteger numSent, Queue<Message> messageQueue, CompletableFuture<Integer> promise) {
+        Message message = messageQueue.poll();
+
+        if (message == null) {
+            connection.close();
+            promise.complete(numSent.get());
+        } else {
+            sender.send(message, protonDelivery -> {
+                if (protonDelivery.getRemoteState().equals(Accepted.getInstance())) {
+                    numSent.incrementAndGet();
+                    sendNext(connection, sender, numSent, messageQueue, promise);
+                } else {
+                    connection.close();
+                    promise.complete(numSent.get());
+                }
+            });
+        }
     }
 }

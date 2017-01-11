@@ -18,7 +18,6 @@ package enmasse.systemtest;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
-import io.vertx.core.Vertx;
 import io.vertx.proton.*;
 import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.messaging.Source;
@@ -26,19 +25,20 @@ import org.apache.qpid.proton.amqp.transport.ErrorCondition;
 import org.apache.qpid.proton.message.Message;
 
 class RedirectableReceiver implements Handler<AsyncResult<ProtonReceiver>> {
+    interface MessageHandler {
+        void handle(ProtonReceiver receiver, ProtonDelivery delivery, Message message);
+    }
     private static final Symbol AMQP_LINK_REDIRECT = Symbol.valueOf("amqp:link:redirect");
-    private final Vertx vertx;
     private final ProtonConnection connection;
     private final Source source;
     private final String name;
     private final Handler<AsyncResult<ProtonReceiver>> openHandler;
-    private final ProtonMessageHandler messageHandler;
+    private final MessageHandler messageHandler;
     private ProtonReceiver receiver;
 
-    RedirectableReceiver(Vertx vertx, ProtonConnection connection, Source source, String name,
+    RedirectableReceiver(ProtonConnection connection, Source source, String name,
                          Handler<AsyncResult<ProtonReceiver>> openHandler,
-                         ProtonMessageHandler messageHandler) {
-        this.vertx = vertx;
+                         MessageHandler messageHandler) {
         this.connection = connection;
         this.source = source;
         this.name = name;
@@ -55,7 +55,8 @@ class RedirectableReceiver implements Handler<AsyncResult<ProtonReceiver>> {
         receiver.openHandler(openHandler);
         receiver.closeHandler(this);
         receiver.setSource(source);
-        receiver.handler(messageHandler);
+        receiver.handler((delivery, message) -> messageHandler.handle(receiver, delivery, message));
+        receiver.setPrefetch(0);
         receiver.open();
         return receiver;
     }
