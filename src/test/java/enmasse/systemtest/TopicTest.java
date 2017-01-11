@@ -55,8 +55,7 @@ public class TopicTest extends VertxTestBase{
         assertThat(recvResults.get(2).get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
     }
 
-    @Test
-    public void testDurableSubscription() throws Exception {
+    public void testDurableLinkRoutedSubscription() throws Exception {
         Destination dest = Destination.topic("mytopic");
         deploy(dest);
         scale(dest, 4);
@@ -85,38 +84,35 @@ public class TopicTest extends VertxTestBase{
         assertTrue(recvResults.get(1, TimeUnit.MINUTES).containsAll(batch2));
     }
 
-    public void testSubscriptionService() throws Exception {
+    @Test
+    public void testDurableMessageRoutedSubscription() throws Exception {
         Destination dest = Destination.topic("mytopic");
         deploy(dest);
+        scale(dest, 1);
         String address = "myaddress";
 
         EnMasseClient ctrlClient = createQueueClient();
         EnMasseClient client = createTopicClient();
 
-        System.out.println("Waiting for the system to stabilize");
-        Thread.sleep(300_000);
-
-        System.out.println("Creating subscription");
         Message sub = Message.Factory.create();
         sub.setAddress("$subctrl");
         sub.setCorrelationId(address);
         sub.setSubject("subscribe");
-        sub.setApplicationProperties(new ApplicationProperties(Collections.singletonMap("root_address", dest.getAddress())));
+        sub.setBody(new AmqpValue(dest.getAddress()));
+
         ctrlClient.sendMessages("$subctrl", sub).get(5, TimeUnit.MINUTES);
 
-        Thread.sleep(20000);
-        System.out.println("Starting to send messages");
+        List<String> msgs = TestUtils.generateMessages(123);
+        assertThat(client.sendMessages(dest.getAddress(), msgs).get(1, TimeUnit.MINUTES), is(msgs.size()));
 
-        List<String> msgs = Arrays.asList("foo", "bar", "baz");
         Future<List<String>> recvResult = client.recvMessages(address, msgs.size());
 
-        assertThat(client.sendMessages(dest.getAddress(), msgs).get(1, TimeUnit.MINUTES), is(msgs.size()));
         assertThat(recvResult.get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
 
         Message unsub = Message.Factory.create();
         unsub.setAddress("$subctrl");
         unsub.setCorrelationId(address);
-        unsub.setApplicationProperties(new ApplicationProperties(Collections.singletonMap("root_address", dest.getAddress())));
+        sub.setBody(new AmqpValue(dest.getAddress()));
         unsub.setSubject("unsubscribe");
         ctrlClient.sendMessages("$subctrl", unsub).get(5, TimeUnit.MINUTES);
     }
