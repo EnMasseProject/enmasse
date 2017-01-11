@@ -16,7 +16,9 @@ local common = import "common.jsonnet";
     };
     {
       "image": "mqtt-frontend",
-      "name": "mqtt-frontend",
+      "name": if secure
+        then "mqtt-frontend-tls"
+        else "mqtt-frontend",
       "ports": if secure
         then [secureMqttPort]
         else [mqttPort],
