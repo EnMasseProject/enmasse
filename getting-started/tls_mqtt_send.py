@@ -8,11 +8,11 @@ def on_connect(client, userdata, flags, rc):
 
     # Subscribing in on_connect() means that if we lose the connection and
     # reconnect then subscriptions will be renewed.
-    client.publish(opts.topic, "Hello EnMasse", int(opts.qos))
-    #client.disconnect()
+    client.publish(opts.topic, opts.message, int(opts.qos))
 
 def on_publish(client, userdata, mid):
     print("mid: " + str(mid))
+    client.disconnect()
 
 def on_log(client, userdata, level, string):
     print(string)
@@ -34,6 +34,9 @@ parser.add_option("-q", "--qos", default="0",
 
 parser.add_option("-s", "--serverCert", default="server-cert.pem",
                   help="server certificate file path (default %default)")
+
+parser.add_option("-m", "--message", default="Hello",
+                  help="message to publish (default %default)")
 
 opts, args = parser.parse_args()
 

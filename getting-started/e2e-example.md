@@ -11,7 +11,7 @@ Proton for the clients.
 ### Setting up OpenShift
 
 First, you must download the OpenShift client. You can download [OpenShift
-Origin](https://github.com/openshift/origin/releases). EnMasse will work with the latest stable release. 
+Origin](https://github.com/openshift/origin/releases). EnMasse will work with the latest stable release.
 
 If you do not have an OpenShift instance running, follow [this guide](https://github.com/openshift/origin/blob/master/docs/cluster_up_down.md) for
 setting up a local developer instance.
@@ -19,9 +19,11 @@ setting up a local developer instance.
 You can also sign up for a [developer preview](https://www.openshift.com/devpreview/) of OpenShift
 Online.
 
-### Install qpid-proton
+### Installing clients
 
-Client examples in this guide assume that [Qpid Proton](https://qpid.apache.org/proton/index.html) with python bindings are installed ( > 0.16.0). The python bindings are also available in [PyPI](https://pypi.python.org/pypi/python-qpid-proton/0.16.0)
+AMQP client examples in this guide assume that [Qpid Proton](https://qpid.apache.org/proton/index.html) with python bindings are installed ( > 0.16.0). The python bindings are also available in [PyPI](https://pypi.python.org/pypi/python-qpid-proton/0.16.0).
+
+MQTT client examples use [Eclipse Paho Python library ](https://github.com/eclipse/paho.mqtt.python).
 
 ## Setting up EnMasse
 
@@ -39,7 +41,7 @@ This script simplifies the process of deploying the enmasse cluster to your open
 can invoke it with `-h` to get a list of options.
 
 
-### Creating certificates 
+### Creating certificates
 
 Since the service requires TLS, we need to install certificates to be used by the routers in the
 messaging service. If you do not have any signed certificates to use, you can generate one with
@@ -57,13 +59,13 @@ This will create the deployments required for running EnMasse. Starting up EnMas
 usually depending on how fast it is able to download the docker images for the various components.
 In the meantime, you can start to create your address configuration.
 
-### Configuring addresses 
+### Configuring addresses
 
 EnMasse is configured with a set of addresses that you can use for messages. Currently, EnMasse supports 4 different address types:
 
    * Brokered queues
    * Brokered topics (pub/sub)
-   * Direct anycast addresses 
+   * Direct anycast addresses
    * Direct broadcast addresses
 
 Here is an example config with all 4 variants that you can save to `addresses.json`:
@@ -100,6 +102,8 @@ This will connect to the EnMasse REST API to deploy the address config.
 
 ### Sending and receiving messages
 
+#### AMQP
+
 OpenShift by default only allows HTTP for non-encrypted connections. With TLS, however, we can use
 SNI (Server Name Indication) to communicate with the messaging service.
 
@@ -115,6 +119,24 @@ This will block until it has received 10 messages. To start the sender:
 
 You can use the client with the 'myqueue' and 'multicast' addresses as well. Making the clients work
 with topics is left as an exercies to the reader.
+
+#### MQTT
+
+OpenShift allows connections with TLS using the SNI (Server Name Indication) to communicate with the MQTT service. If you want to run
+EnMasse locally, it could be needed to apply a workaround for having connection hostname equals to the SNI name; you could modify the
+`/etc/hosts` file in order to map the localhost address to the route hostname.
+
+For sending and receiving messages, have a look at an example python [sender](tls_mqtt_send.py) and [receiver](tls_mqtt_recv.py).
+
+In order to subscribe to a topic (i.e. `mytopic` from the previous addresses configuration), the receiver client can be used in the following way :
+
+    ./tls_mqtt_recv.py -c "$(oc get route -o jsonpath='{.spec.host}' mqtt)" -p 443 -t mytopic -q 1 -s ./server-cert.pem
+
+Then the subscriber is waiting for messages published on that topic. To start the publisher, the sender client can be used in the following way :
+
+    ./tls_mqtt_send.py -c "$(oc get route -o jsonpath='{.spec.host}' mqtt)" -p 443 -t mytopic -q 1 -s ./server-cert.pem -m "Hello EnMasse"
+
+The the publisher publishes the message and disconnects from EnMasse. The message is received by the previous connected subscriber.
 
 ### Flavor config
 
