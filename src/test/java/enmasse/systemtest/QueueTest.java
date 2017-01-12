@@ -24,6 +24,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 
 public class QueueTest extends VertxTestBase {
@@ -34,11 +35,18 @@ public class QueueTest extends VertxTestBase {
         EnMasseClient client = createQueueClient();
         List<String> msgs = TestUtils.generateMessages(1024);
 
-        Future<Integer> numSent = client.sendMessages(dest.getAddress(), msgs);
+        Future<Integer> numSent = null;
         TimeoutBudget timeoutBudget = new TimeoutBudget(1, TimeUnit.MINUTES);
-        while (numSent.get(timeoutBudget.timeLeft(), TimeUnit.MILLISECONDS) != msgs.size() && timeoutBudget.timeLeft() >= 0) {
+        while (timeoutBudget.timeLeft() >= 0) {
             numSent = client.sendMessages(dest.getAddress(), msgs);
+            try {
+                if (numSent.get(timeoutBudget.timeLeft(), TimeUnit.MILLISECONDS) == msgs.size()) {
+                    break;
+                }
+            } catch (Exception e) {
+            }
         }
+        assertNotNull(numSent);
         assertThat(numSent.get(1, TimeUnit.SECONDS), is(msgs.size()));
 
         Future<List<String>> received = client.recvMessages(dest.getAddress(), msgs.size());
