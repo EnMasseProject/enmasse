@@ -3,8 +3,8 @@ local mqtt = import "mqtt.jsonnet";
 local common = import "common.jsonnet";
 {
   deployment(secure)::
-    local container = common.trigger("mqtt-frontend", "mqtt-frontend");
-    local secureContainer = common.trigger("mqtt-frontend-tls", "mqtt-frontend");
+    local container = common.trigger("mqtt-gateway", "mqtt-gateway");
+    local secureContainer = common.trigger("mqtt-gateway-tls", "mqtt-gateway");
     local triggerConfigChange = {
       "type": "ConfigChange"
     };
@@ -13,15 +13,15 @@ local common = import "common.jsonnet";
       "kind": "DeploymentConfig",
       "metadata": {
         "labels": {
-          "name": "mqtt-frontend",
+          "name": "mqtt-gateway",
           "app": "enmasse"
         },
-        "name": "mqtt-frontend"
+        "name": "mqtt-gateway"
       },
       "spec": {
         "replicas": 1,
         "selector": {
-          "name": "mqtt-frontend"
+          "name": "mqtt-gateway"
         },
         "triggers": if secure
           then [triggerConfigChange, container, secureContainer]
@@ -29,7 +29,7 @@ local common = import "common.jsonnet";
         "template": {
           "metadata": {
             "labels": {
-              "name": "mqtt-frontend",
+              "name": "mqtt-gateway",
               "app": "enmasse"
             }
           },

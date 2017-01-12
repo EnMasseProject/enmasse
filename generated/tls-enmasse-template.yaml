@@ -726,52 +726,52 @@ objects:
   metadata:
     labels:
       app: enmasse
-    name: mqtt-frontend
+    name: mqtt-gateway
   spec:
-    dockerImageRepository: "${MQTT_FRONTEND_REPO}"
+    dockerImageRepository: "${MQTT_GATEWAY_REPO}"
     importPolicy:
       scheduled: true
     tags:
     - from:
         kind: DockerImage
-        name: "${MQTT_FRONTEND_REPO}:latest"
+        name: "${MQTT_GATEWAY_REPO}:latest"
       name: latest
 - apiVersion: v1
   kind: DeploymentConfig
   metadata:
     labels:
       app: enmasse
-      name: mqtt-frontend
-    name: mqtt-frontend
+      name: mqtt-gateway
+    name: mqtt-gateway
   spec:
     replicas: 1
     selector:
-      name: mqtt-frontend
+      name: mqtt-gateway
     template:
       metadata:
         labels:
           app: enmasse
-          name: mqtt-frontend
+          name: mqtt-gateway
       spec:
         containers:
-        - image: mqtt-frontend
+        - image: mqtt-gateway
           livenessProbe:
             tcpSocket:
               port: secure-mqtt
-          name: mqtt-frontend-tls
+          name: mqtt-gateway-tls
           ports:
           - containerPort: 8883
             name: secure-mqtt
             protocol: TCP
           volumeMounts:
-          - mountPath: "/etc/mqtt-frontend/ssl"
+          - mountPath: "/etc/mqtt-gateway/ssl"
             name: ssl-certs
             readOnly: true
-        - image: mqtt-frontend
+        - image: mqtt-gateway
           livenessProbe:
             tcpSocket:
               port: mqtt
-          name: mqtt-frontend
+          name: mqtt-gateway
           ports:
           - containerPort: 1883
             name: mqtt
@@ -785,18 +785,18 @@ objects:
     - imageChangeParams:
         automatic: true
         containerNames:
-        - mqtt-frontend
+        - mqtt-gateway
         from:
           kind: ImageStreamTag
-          name: mqtt-frontend:latest
+          name: mqtt-gateway:latest
       type: ImageChange
     - imageChangeParams:
         automatic: true
         containerNames:
-        - mqtt-frontend-tls
+        - mqtt-gateway-tls
         from:
           kind: ImageStreamTag
-          name: mqtt-frontend:latest
+          name: mqtt-gateway:latest
       type: ImageChange
 - apiVersion: v1
   kind: Service
@@ -815,7 +815,7 @@ objects:
       protocol: TCP
       targetPort: 8883
     selector:
-      name: mqtt-frontend
+      name: mqtt-gateway
 - apiVersion: v1
   kind: ImageStream
   metadata:
@@ -994,7 +994,7 @@ objects:
       app: enmasse
     name: mqtt
   spec:
-    host: "${MQTT_FRONTEND_HOSTNAME}"
+    host: "${MQTT_GATEWAY_HOSTNAME}"
     port:
       targetPort: secure-mqtt
     tls:
@@ -1035,8 +1035,8 @@ parameters:
   name: MESSAGING_HOSTNAME
 - description: The hostname to use for the exposed route for the REST API
   name: RESTAPI_HOSTNAME
-- description: The image to use for the MQTT frontend
-  name: MQTT_FRONTEND_REPO
-  value: enmasseproject/mqtt-frontend
+- description: The image to use for the MQTT gateway
+  name: MQTT_GATEWAY_REPO
+  value: enmasseproject/mqtt-gateway
 - description: The hostname to use for the exposed route for MQTT (TLS only)
-  name: MQTT_FRONTEND_HOSTNAME
+  name: MQTT_GATEWAY_HOSTNAME

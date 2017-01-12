@@ -15,7 +15,7 @@ local restapi = import "restapi.jsonnet";
 local restapiRoute = import "restapi-route.jsonnet";
 local common = import "common.jsonnet";
 local admin = import "admin.jsonnet";
-local mqttFrontend = import "mqtt-frontend.jsonnet";
+local mqttGateway = import "mqtt-gateway.jsonnet";
 local mqtt = import "mqtt.jsonnet";
 local mqttService = import "mqtt-service.jsonnet";
 local mqttRoute = import "mqtt-route.json";
@@ -48,8 +48,8 @@ local mqttRoute = import "mqtt-route.json";
                  subserv.imagestream("${SUBSERV_REPO}"),
                  subserv.deployment,
                  subserv.service,
-                 mqtt.imagestream("${MQTT_FRONTEND_REPO}"),
-                 mqttFrontend.deployment(secure),
+                 mqtt.imagestream("${MQTT_GATEWAY_REPO}"),
+                 mqttGateway.deployment(secure),
                  mqttService.generate(secure),
                  restapi.imagestream("${RESTAPI_REPO}"),
                  storageController.imagestream("${STORAGE_CONTROLLER_REPO}"),
@@ -113,12 +113,12 @@ local mqttRoute = import "mqtt-route.json";
         "description": "The hostname to use for the exposed route for the REST API"
       },
       {
-        "name" : "MQTT_FRONTEND_REPO",
-        "description": "The image to use for the MQTT frontend",
-        "value": "enmasseproject/mqtt-frontend"
+        "name" : "MQTT_GATEWAY_REPO",
+        "description": "The image to use for the MQTT gateway",
+        "value": "enmasseproject/mqtt-gateway"
       },
       {
-        "name": "MQTT_FRONTEND_HOSTNAME",
+        "name": "MQTT_GATEWAY_HOSTNAME",
         "description": "The hostname to use for the exposed route for MQTT (TLS only)"
       }
     ]

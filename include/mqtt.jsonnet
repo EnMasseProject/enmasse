@@ -1,7 +1,7 @@
 local common = import "common.jsonnet";
 {
   imagestream(image_name)::
-    common.imagestream("mqtt-frontend", image_name),
+    common.imagestream("mqtt-gateway", image_name),
 
   container(secure)::
     local mqttPort = {
@@ -15,10 +15,10 @@ local common = import "common.jsonnet";
       "protocol": "TCP"
     };
     {
-      "image": "mqtt-frontend",
+      "image": "mqtt-gateway",
       "name": if secure
-        then "mqtt-frontend-tls"
-        else "mqtt-frontend",
+        then "mqtt-gateway-tls"
+        else "mqtt-gateway",
       "ports": if secure
         then [secureMqttPort]
         else [mqttPort],
@@ -32,7 +32,7 @@ local common = import "common.jsonnet";
       [if secure then "volumeMounts"]: [
         {
           "name": "ssl-certs",
-          "mountPath": "/etc/mqtt-frontend/ssl",
+          "mountPath": "/etc/mqtt-gateway/ssl",
           "readOnly": true
         }
       ]

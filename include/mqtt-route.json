@@ -8,7 +8,7 @@
         "name": "mqtt"
     },
     "spec": {
-        "host": "${MQTT_FRONTEND_HOSTNAME}",
+        "host": "${MQTT_GATEWAY_HOSTNAME}",
         "to": {
             "kind": "Service",
             "name": "mqtt",

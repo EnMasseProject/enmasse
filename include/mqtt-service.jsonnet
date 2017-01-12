@@ -24,7 +24,7 @@
       "spec": {
         "ports": if secure then [port, securePort] else [port],
         "selector": {
-          "name": "mqtt-frontend"
+          "name": "mqtt-gateway"
         }
       }
     }

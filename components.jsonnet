@@ -11,7 +11,7 @@ local common = import "include/common.jsonnet";
 local flavor = import "include/flavor.jsonnet";
 local messagingService = import "include/messaging-service.jsonnet";
 local admin = import "include/admin.jsonnet";
-local mqttFrontend = import "include/mqtt-frontend.jsonnet";
+local mqttGateway = import "include/mqtt-gateway.jsonnet";
 local mqtt = import "include/mqtt.jsonnet";
 local mqttService = import "include/mqtt-service.jsonnet";
 {
@@ -40,9 +40,9 @@ local mqttService = import "include/mqtt-service.jsonnet";
   "flavor.json": flavor.generate(false),
   "tls-flavor.json": flavor.generate(true),
   "admin-dc.json": admin.deployment,
-  "mqtt-frontend-image-stream.json": mqtt.imagestream("enmasseproject/mqtt-frontend"),
-  "mqtt-frontend-dc.json": mqttFrontend.deployment(false),
+  "mqtt-gateway-image-stream.json": mqtt.imagestream("enmasseproject/mqtt-gateway"),
+  "mqtt-gateway-dc.json": mqttGateway.deployment(false),
   "mqtt-service.json": mqttService.generate(false),
-  "tls-mqtt-frontend-dc.json" : mqttFrontend.deployment(true),
+  "tls-mqtt-gateway-dc.json" : mqttGateway.deployment(true),
   "tls-mqtt-service.json" : mqttService.generate(true)
 }
