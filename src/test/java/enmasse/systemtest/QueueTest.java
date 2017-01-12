@@ -44,6 +44,7 @@ public class QueueTest extends VertxTestBase {
                     break;
                 }
             } catch (Exception e) {
+                Thread.sleep(5000);
             }
         }
         assertNotNull(numSent);
