@@ -32,12 +32,12 @@ import java.util.Map;
 
 
 /**
- * Vert.x based MQTT Frontend for EnMasse
+ * Vert.x based MQTT gateway for EnMasse
  */
 @Component
-public class MqttFrontend extends AbstractVerticle {
+public class MqttGateway extends AbstractVerticle {
 
-    private static final Logger LOG = LoggerFactory.getLogger(MqttFrontend.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MqttGateway.class);
 
     // binding info for listening
     private String bindAddress;
@@ -56,25 +56,25 @@ public class MqttFrontend extends AbstractVerticle {
     private Map<String, AmqpBridge> bridges;
 
     /**
-     * Set the IP address the MQTT Frontend will bind to
+     * Set the IP address the MQTT gateway will bind to
      *
      * @param bindAddress   the IP address
-     * @return  current MQTT Frontend instance
+     * @return  current MQTT gateway instance
      */
     @Value(value = "${enmasse.mqtt.bindaddress:0.0.0.0}")
-    public MqttFrontend setBindAddress(String bindAddress) {
+    public MqttGateway setBindAddress(String bindAddress) {
         this.bindAddress = bindAddress;
         return this;
     }
 
     /**
-     * Set the port the MQTT Frontend will listen on for MQTT connections.
+     * Set the port the MQTT gateway will listen on for MQTT connections.
      *
      * @param listePort the port to listen on
-     * @return  current MQTT Frontend instance
+     * @return  current MQTT gateway instance
      */
     @Value(value = "${enmasse.mqtt.listenport:1883}")
-    public MqttFrontend setListenPort(int listePort) {
+    public MqttGateway setListenPort(int listePort) {
         this.listenPort = listePort;
         return this;
     }
@@ -83,10 +83,10 @@ public class MqttFrontend extends AbstractVerticle {
      * Set the address for connecting to the AMQP services
      *
      * @param messagingServiceHost    address for AMQP connections
-     * @return  current MQTT Frontend instance
+     * @return  current MQTT gateway instance
      */
     @Value(value = "${messaging.service.host:0.0.0.0}")
-    public MqttFrontend setMessagingServiceHost(String messagingServiceHost) {
+    public MqttGateway setMessagingServiceHost(String messagingServiceHost) {
         this.messagingServiceHost = messagingServiceHost;
         return this;
     }
@@ -95,10 +95,10 @@ public class MqttFrontend extends AbstractVerticle {
      * Set the port for connecting to the AMQP services
      *
      * @param messagingServicePort   port for AMQP connections
-     * @return  current MQTT Frontend instance
+     * @return  current MQTT gateway instance
      */
     @Value(value = "${messaging.service.port:5672}")
-    public MqttFrontend setMessagingServicePort(int messagingServicePort) {
+    public MqttGateway setMessagingServicePort(int messagingServicePort) {
         this.messagingServicePort = messagingServicePort;
         return this;
     }
@@ -107,10 +107,10 @@ public class MqttFrontend extends AbstractVerticle {
      * Set the SSL/TLS support needed for the MQTT connections
      *
      * @param ssl   SSL/TLS is needed
-     * @return  current MQTT Frontend instance
+     * @return  current MQTT gateway instance
      */
     @Value(value = "${enmasse.mqtt.ssl:false}")
-    public MqttFrontend setSsl(boolean ssl) {
+    public MqttGateway setSsl(boolean ssl) {
         this.ssl = ssl;
         return this;
     }
@@ -119,10 +119,10 @@ public class MqttFrontend extends AbstractVerticle {
      * Set the server certificate file path for SSL/TLS support
      *
      * @param certFile  server certificate file path
-     * @return  current MQTT Frontend instance
+     * @return  current MQTT gateway instance
      */
     @Value(value = "${enmasse.mqtt.certfile:./src/test/resources/tls/server-key.pem}")
-    public MqttFrontend setCertFile(String certFile) {
+    public MqttGateway setCertFile(String certFile) {
         this.certFile = certFile;
         return this;
     }
@@ -131,10 +131,10 @@ public class MqttFrontend extends AbstractVerticle {
      * Set the server private key file path for SSL/TLS support
      *
      * @param keyFile   server private key file path
-     * @return  current MQTT Frontend instance
+     * @return  current MQTT gateway instance
      */
     @Value(value = "${enmasse.mqtt.keyfile:./src/test/resources/tls/server-cert.pem}")
-    public MqttFrontend setKeyFile(String keyFile) {
+    public MqttGateway setKeyFile(String keyFile) {
         this.keyFile = keyFile;
         return this;
     }
@@ -171,10 +171,10 @@ public class MqttFrontend extends AbstractVerticle {
 
                         this.bridges = new HashMap<>();
 
-                        LOG.info("MQTT frontend running on {}:{}", this.bindAddress, this.server.actualPort());
+                        LOG.info("MQTT gateway running on {}:{}", this.bindAddress, this.server.actualPort());
                         startFuture.complete();
                     } else {
-                        LOG.error("Error while starting up MQTT frontend", done.cause());
+                        LOG.error("Error while starting up MQTT gateway", done.cause());
                         startFuture.fail(done.cause());
                     }
 
@@ -213,22 +213,22 @@ public class MqttFrontend extends AbstractVerticle {
     @Override
     public void start(Future<Void> startFuture) throws Exception {
 
-        LOG.info("Starting MQTT frontend verticle...");
+        LOG.info("Starting MQTT gateway verticle...");
         this.bindMqttServer(startFuture);
     }
 
     @Override
     public void stop(Future<Void> stopFuture) throws Exception {
 
-        LOG.info("Stopping MQTT frontend verticle ...");
+        LOG.info("Stopping MQTT gateway verticle ...");
 
         Future<Void> shutdownTracker = Future.future();
         shutdownTracker.setHandler(done -> {
            if (done.succeeded()) {
-               LOG.info("MQTT frontend has been shut down successfully");
+               LOG.info("MQTT gateway has been shut down successfully");
                stopFuture.complete();
            } else {
-               LOG.info("Error while shutting down MQTT frontend", done.cause());
+               LOG.info("Error while shutting down MQTT gateway", done.cause());
                stopFuture.fail(done.cause());
            }
         });

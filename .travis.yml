@@ -13,7 +13,7 @@ before_install:
 script:
 - mvn test -B
 - curl -s https://raw.githubusercontent.com/EnMasseProject/travis-scripts/master/docker-build.sh
-  | bash /dev/stdin enmasseproject/mqtt-frontend .
+  | bash /dev/stdin enmasseproject/mqtt-gateway .
 after_success:
 - curl -s https://raw.githubusercontent.com/EnMasseProject/travis-scripts/master/trigger-travis.sh
   | bash /dev/stdin

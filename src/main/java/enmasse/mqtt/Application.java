@@ -36,7 +36,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * EnMasse MQTT frontend main application class
+ * EnMasse MQTT gateway main application class
  */
 @SpringBootApplication // same as using @Configuration, @EnableAutoConfiguration and @ComponentScan
 public class Application {
@@ -50,7 +50,7 @@ public class Application {
     @Value(value = "${enmasse.mqtt.startuptimeout:20}")
     private int startupTimeout;
     @Autowired
-    private MqttFrontend mqttFrontend;
+    private MqttGateway mqttGateway;
 
     private AtomicBoolean running = new AtomicBoolean();
 
@@ -75,7 +75,7 @@ public class Application {
                     if (done.succeeded()) {
                         latch.countDown();
                     } else {
-                        LOG.error("Could not start MQTT frontend", done.cause());
+                        LOG.error("Could not start MQTT gateway", done.cause());
                     }
                 });
 
@@ -84,7 +84,7 @@ public class Application {
 
                 // wait for deploying end
                 if (latch.await(this.startupTimeout, TimeUnit.SECONDS)) {
-                    LOG.info("MQTT frontend startup completed successfully");
+                    LOG.info("MQTT gateway startup completed successfully");
                 } else {
                     LOG.error("Startup timed out after {} seconds, shutting down ...", this.startupTimeout);
                     this.shutdown();
@@ -106,7 +106,7 @@ public class Application {
      */
     private void deployVerticles(int instanceCount, Future<Void> resultHandler) {
 
-        LOG.debug("Starting up {} instances of MQTT frontend verticle", instanceCount);
+        LOG.debug("Starting up {} instances of MQTT gateway verticle", instanceCount);
 
         List<Future> results = new ArrayList<>();
 
@@ -116,7 +116,7 @@ public class Application {
             Future<Void> result = Future.future();
             results.add(result);
 
-            this.vertx.deployVerticle(this.mqttFrontend, done -> {
+            this.vertx.deployVerticle(this.mqttGateway, done -> {
                 if (done.succeeded()) {
                     LOG.debug("Verticle instance {} deployed [{}]", instanceId, done.result());
                     result.complete();
@@ -162,22 +162,22 @@ public class Application {
 
                 this.vertx.close(done -> {
                     if (done.failed()) {
-                        LOG.error("Could not shut down MQTT frontend cleanly", done.cause());
+                        LOG.error("Could not shut down MQTT gateway cleanly", done.cause());
                     }
                     latch.countDown();
                 });
 
                 if (latch.await(timeout, TimeUnit.SECONDS)) {
-                    LOG.info("MQTT frontend shut down completed");
+                    LOG.info("MQTT gateway shut down completed");
                     shutdownHandler.handle(Boolean.TRUE);
                 } else {
-                    LOG.error("Shut down of MQTT frontend timed out, aborting...");
+                    LOG.error("Shut down of MQTT gateway timed out, aborting...");
                     shutdownHandler.handle(Boolean.FALSE);
                 }
             }
 
         } catch (InterruptedException e) {
-            LOG.error("Shut down of MQTT frontend has been interrupted, aborting...");
+            LOG.error("Shut down of MQTT gateway has been interrupted, aborting...");
             shutdownHandler.handle(Boolean.FALSE);
         }
     }

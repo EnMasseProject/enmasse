@@ -30,7 +30,7 @@ import org.junit.runner.RunWith;
  * Tests related to unsubscribe
  */
 @RunWith(VertxUnitRunner.class)
-public class UnsubscribeTest extends MockMqttFrontendTestBase {
+public class UnsubscribeTest extends MockMqttGatewayTestBase {
 
     private static final String MQTT_TOPIC = "mytopic";
     private static final String CLIENT_ID = "my_client_id";

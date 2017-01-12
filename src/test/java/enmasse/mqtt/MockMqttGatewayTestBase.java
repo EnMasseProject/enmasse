@@ -30,7 +30,7 @@ import org.slf4j.LoggerFactory;
  * Base class for all unit tests
  */
 @RunWith(VertxUnitRunner.class)
-public abstract class MockMqttFrontendTestBase {
+public abstract class MockMqttGatewayTestBase {
 
     protected final Logger LOG = LoggerFactory.getLogger(this.getClass());
 
@@ -51,10 +51,10 @@ public abstract class MockMqttFrontendTestBase {
     protected MockWillService willService;
     protected MockSubscriptionService subscriptionService;
     protected MockBroker broker;
-    protected MqttFrontend mqttFrontend;
+    protected MqttGateway mqttGateway;
 
     /**
-     * Setup the MQTT frontend test base
+     * Setup the MQTT gateway test base
      *
      * @param context   test context
      * @param ssl   if SSL/TLS support is needed
@@ -64,16 +64,16 @@ public abstract class MockMqttFrontendTestBase {
         this.vertx = Vertx.vertx();
 
         int port = !ssl ? MQTT_LISTEN_PORT : MQTT_TLS_LISTEN_PORT;
-        // create and setup MQTT frontend instance
-        this.mqttFrontend = new MqttFrontend();
-        this.mqttFrontend
+        // create and setup MQTT gateway instance
+        this.mqttGateway = new MqttGateway();
+        this.mqttGateway
                 .setBindAddress(MQTT_BIND_ADDRESS)
                 .setListenPort(port)
                 .setMessagingServiceHost(MESSAGING_SERVICE_HOST)
                 .setMessagingServicePort(MESSAGING_SERVICE_PORT);
 
         if (ssl) {
-            this.mqttFrontend
+            this.mqttGateway
                     .setSsl(ssl)
                     .setKeyFile(SERVER_KEY)
                     .setCertFile(SERVER_CERT);
@@ -101,11 +101,11 @@ public abstract class MockMqttFrontendTestBase {
         this.vertx.deployVerticle(this.broker, context.asyncAssertSuccess());
         this.vertx.deployVerticle(this.willService, context.asyncAssertSuccess());
         this.vertx.deployVerticle(this.subscriptionService, context.asyncAssertSuccess());
-        this.vertx.deployVerticle(this.mqttFrontend, context.asyncAssertSuccess());
+        this.vertx.deployVerticle(this.mqttGateway, context.asyncAssertSuccess());
     }
 
     /**
-     * Teardown the MQTT frontend test base
+     * Teardown the MQTT gateway test base
      *
      * @param context   test context
      */

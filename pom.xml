@@ -5,11 +5,11 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>enmasse</groupId>
-    <artifactId>mqtt-frontend</artifactId>
+    <artifactId>mqtt-gateway</artifactId>
     <version>1.0-SNAPSHOT</version>
 
-    <name>EnMasse MQTT FrontEnd</name>
-    <description>MQTT FrontEnd for EnMasse</description>
+    <name>EnMasse MQTT gateway</name>
+    <description>MQTT gateway for EnMasse</description>
 
     <properties>
         <maven.compiler.source>1.8</maven.compiler.source>

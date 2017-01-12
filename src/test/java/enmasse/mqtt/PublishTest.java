@@ -42,7 +42,7 @@ import org.junit.runner.RunWith;
  * Tests related to publish
  */
 @RunWith(VertxUnitRunner.class)
-public class PublishTest extends MockMqttFrontendTestBase {
+public class PublishTest extends MockMqttGatewayTestBase {
 
     private static final String MQTT_TOPIC = "mytopic";
     private static final String MQTT_MESSAGE = "Hello MQTT on EnMasse";

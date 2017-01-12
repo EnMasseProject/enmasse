@@ -30,7 +30,7 @@ import java.net.URL;
 /**
  * Test related to SSL/TLS support
  */
-public class SslTest extends MockMqttFrontendTestBase {
+public class SslTest extends MockMqttGatewayTestBase {
 
     private static final String MQTT_TOPIC = "mytopic";
     private static final String MQTT_MESSAGE = "Hello MQTT on EnMasse";

@@ -35,7 +35,7 @@ import org.junit.runner.RunWith;
  * Tests related to subscribe
  */
 @RunWith(VertxUnitRunner.class)
-public class SubscribeTest extends MockMqttFrontendTestBase {
+public class SubscribeTest extends MockMqttGatewayTestBase {
 
     private static final String MQTT_TOPIC = "mytopic";
     private static final String MQTT_MESSAGE = "Hello MQTT on EnMasse";

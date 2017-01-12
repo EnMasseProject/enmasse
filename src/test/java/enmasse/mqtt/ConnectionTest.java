@@ -33,7 +33,7 @@ import org.junit.runner.RunWith;
  * Tests related to connection
  */
 @RunWith(VertxUnitRunner.class)
-public class ConnectionTest extends MockMqttFrontendTestBase {
+public class ConnectionTest extends MockMqttGatewayTestBase {
 
     private static final String MQTT_WILL_TOPIC = "will";
     private static final String MQTT_WILL_MESSAGE = "Will on EnMasse";
