@@ -121,26 +121,14 @@ public class MockBroker extends AbstractVerticle {
                 this.connection = done.result();
                 this.connection.setContainer(CONTAINER_ID);
 
+                // the mock broker works with link routing (like for EnMasse) so
+                // no more receiver attached from broker to router but handling
+                // incoming attaching requests for receivers and senders
                 this.connection
                         .sessionOpenHandler(session -> session.open())
+                        .receiverOpenHandler(this::receiverHandler)
+                        .senderOpenHandler(this::senderHandler)
                         .open();
-
-                // attach receivers of pre-configured topics
-                for (String topic: this.topics) {
-
-                    ProtonReceiver receiver = this.connection.createReceiver(topic);
-
-                    receiver
-                            .setQoS(ProtonQoS.AT_LEAST_ONCE)
-                            .setTarget(receiver.getRemoteTarget())
-                            .handler((delivery, message) -> {
-
-                                this.messageHandler(receiver, delivery, message);
-                            })
-                            .open();
-
-                    this.receivers.put(topic, receiver);
-                }
 
                 // consumer for SUBSCRIBE requests from the Subscription Service
                 this.vertx.eventBus().consumer(EB_SUBSCRIBE, ebMessage -> {
@@ -315,23 +303,6 @@ public class MockBroker extends AbstractVerticle {
 
         for (AmqpTopicSubscription amqpTopicSubscription: amqpSubscribeMessage.topicSubscriptions()) {
 
-            // create a receiver for getting messages from the requested topic
-            if (!this.receivers.containsKey(amqpTopicSubscription.topic())) {
-
-                ProtonReceiver receiver = this.connection.createReceiver(amqpTopicSubscription.topic());
-
-                receiver
-                        .setQoS(ProtonQoS.AT_LEAST_ONCE)
-                        .setTarget(receiver.getRemoteTarget())
-                        .handler((delivery, message) -> {
-
-                            this.messageHandler(receiver, delivery, message);
-                        })
-                        .open();
-
-                this.receivers.put(amqpTopicSubscription.topic(), receiver);
-            }
-
             // create a sender to the unique client publish address for forwarding
             // messages when received on requested topic
             if (!this.senders.containsKey(amqpSubscribeMessage.clientId())) {
@@ -400,12 +371,78 @@ public class MockBroker extends AbstractVerticle {
         }
     }
 
+    /**
+     * Handler for publishers which want to send messages to the broker
+     *
+     * @param receiver  corresponding receiver for remote publisher
+     */
+    private void receiverHandler(ProtonReceiver receiver) {
+
+        receiver.setTarget(receiver.getRemoteTarget())
+                .setQoS(ProtonQoS.AT_LEAST_ONCE)
+                .handler((delivery, message) -> {
+
+                    this.messageHandler(receiver, delivery, message);
+                })
+                .closeHandler(ar -> {
+
+                    if (ar.succeeded()) {
+                        receiver.close();
+                    }
+                })
+                .open();
+
+    }
+
+    /**
+     * Handler for receivers which want to receive messages from the broker
+     * // NOTE : this is needed when a native AMQP receiver attaches for a topic
+     *
+     * @param sender    corresponding sender for remote receiver
+     */
+    private void senderHandler(ProtonSender sender) {
+
+        // put the native AMQP sender (for the native AMQP receiver) for forwarding
+        // messages when received on requested topic
+        if (!this.senders.containsKey(sender.getName())) {
+
+            // QoS AT_LEAST_ONCE as requested by the receiver side
+            sender.setSource(sender.getRemoteSource())
+                    .setQoS(ProtonQoS.AT_LEAST_ONCE)
+                    .closeHandler(ar -> {
+
+                        if (ar.succeeded()) {
+
+                            String topic = sender.getSource().getAddress();
+
+                            this.subscriptions.get(topic).remove(sender.getName());
+
+                            if (this.subscriptions.get(topic).size() == 0) {
+                                this.subscriptions.remove(topic);
+                            }
+                        }
+                    })
+                    .open();
+
+            this.senders.put(sender.getName(), sender);
+        }
+
+        // add the subscription to the requested topic by the link name
+        if (!this.subscriptions.containsKey(sender.getSource().getAddress())) {
+
+            this.subscriptions.put(sender.getSource().getAddress(), new ArrayList<>());
+        }
+
+        this.subscriptions.get(sender.getSource().getAddress()).add(sender.getName());
+    }
+
     private void messageHandler(ProtonReceiver receiver, ProtonDelivery delivery, Message message) {
 
         // messages without subject are just AMQP_PUBLISH messages
         if (message.getSubject() == null) {
 
-            String topic = receiver.getSource().getAddress();
+            //String topic = receiver.getSource().getAddress();
+            String topic = receiver.getTarget().getAddress();
 
             // check if it's retained
             AmqpPublishMessage amqpPublishMessage = AmqpPublishMessage.from(message);
