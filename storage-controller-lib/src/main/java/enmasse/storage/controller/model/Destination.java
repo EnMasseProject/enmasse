@@ -60,6 +60,16 @@ public final class Destination {
         return address.hashCode();
     }
 
+    @Override
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("{address=").append(address).append(",")
+                .append("storeAndForward=").append(storeAndForward).append(",")
+                .append("multicast=").append(multicast).append(",")
+                .append("flavor=").append(flavor).append("}");
+        return builder.toString();
+    }
+
     public String flavor() {
         return flavor;
     }
