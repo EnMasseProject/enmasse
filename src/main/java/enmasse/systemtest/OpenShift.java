@@ -38,7 +38,7 @@ public class OpenShift {
 
     public Endpoint getEndpoint(String serviceName, String port) {
         Service service = client.services().inNamespace(environment.namespace()).withName(serviceName).get();
-        return new Endpoint(service.getSpec().getPortalIP(), getPort(service, port));
+        return new Endpoint(service.getSpec().getClusterIP(), getPort(service, port));
     }
 
     public Endpoint getSecureEndpoint() {
