@@ -16,7 +16,7 @@
 
 package enmasse.storage.controller;
 
-import enmasse.storage.controller.admin.ClusterManager;
+import enmasse.storage.controller.admin.AddressManager;
 import enmasse.storage.controller.admin.FlavorManager;
 import enmasse.storage.controller.admin.OpenShiftHelper;
 import enmasse.storage.controller.generator.TemplateStorageGenerator;
@@ -28,9 +28,10 @@ import io.vertx.core.Vertx;
 import java.io.IOException;
 
 public class StorageController implements Runnable, AutoCloseable {
-    private final ClusterManager clusterManager;
+    private final AddressManager addressManager;
     private final FlavorManager flavorManager;
     private final AMQPServer server;
+    private final HTTPServer restServer;
     private final Vertx vertx;
 
     private final ConfigAdapter flavorWatcher;
@@ -46,14 +47,16 @@ public class StorageController implements Runnable, AutoCloseable {
                 .build());
 
         this.flavorManager = new FlavorManager();
-        this.clusterManager = new ClusterManager(new OpenShiftHelper(osClient), new TemplateStorageGenerator(osClient, flavorManager));
-        this.server = new AMQPServer(clusterManager, options.port());
+        this.addressManager = new AddressManager(new OpenShiftHelper(osClient), new TemplateStorageGenerator(osClient, flavorManager));
+        this.server = new AMQPServer(addressManager, options.port());
+        this.restServer = new HTTPServer(addressManager);
         this.flavorWatcher = new ConfigAdapter(osClient, "flavor", flavorManager::configUpdated);
     }
 
     public void run() {
         flavorWatcher.start();
         vertx.deployVerticle(server);
+        vertx.deployVerticle(restServer);
     }
 
     @Override

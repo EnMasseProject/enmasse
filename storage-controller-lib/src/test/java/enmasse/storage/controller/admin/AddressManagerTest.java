@@ -33,9 +33,9 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.*;
 
-public class ClusterManagerTest {
+public class AddressManagerTest {
     private OpenShiftHelper mockHelper;
-    private ClusterManager manager;
+    private AddressManager manager;
     private FlavorManager flavorManager = new FlavorManager();
     private StorageGenerator mockGenerator;
 
@@ -44,7 +44,7 @@ public class ClusterManagerTest {
         mockHelper = mock(OpenShiftHelper.class);
         mockGenerator = mock(StorageGenerator.class);
 
-        manager = new ClusterManager(mockHelper, mockGenerator);
+        manager = new AddressManager(mockHelper, mockGenerator);
         flavorManager.flavorsUpdated(Collections.singletonMap("vanilla", new Flavor.Builder().templateName("test").build()));
     }
 

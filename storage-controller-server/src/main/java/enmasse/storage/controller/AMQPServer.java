@@ -1,7 +1,7 @@
 package enmasse.storage.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import enmasse.storage.controller.admin.ClusterManager;
+import enmasse.storage.controller.admin.AddressManager;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.proton.ProtonDelivery;
 import io.vertx.proton.ProtonServer;
@@ -17,13 +17,13 @@ import org.slf4j.LoggerFactory;
 public class AMQPServer extends AbstractVerticle {
     private static final Logger log = LoggerFactory.getLogger(AMQPServer.class.getName());
     private final int port;
-    private final ClusterManager clusterManager;
+    private final AddressManager addressManager;
     private ProtonServer server;
     private static final ObjectMapper mapper = new ObjectMapper();
 
-    public AMQPServer(ClusterManager clusterManager, int port) {
+    public AMQPServer(AddressManager addressManager, int port) {
         this.port = port;
-        this.clusterManager = clusterManager;
+        this.addressManager = addressManager;
     }
 
     public void start() {
@@ -56,7 +56,7 @@ public class AMQPServer extends AbstractVerticle {
         String data = (String) ((AmqpValue) message.getBody()).getValue();
         vertx.executeBlocking(future -> {
             try {
-                clusterManager.configUpdated(mapper.readTree(data));
+                addressManager.configUpdated(mapper.readTree(data));
             } catch (Exception e) {
                 future.fail(e);
             }

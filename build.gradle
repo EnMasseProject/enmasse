@@ -8,6 +8,7 @@ ext {
     vertxVersion = '3.3.3'
     openshiftClientVersion = '1.4.20'
     slf4jVersion = '1.7.21'
+    resteasyVersion = '3.1.0.Final'
 
     junitVersion = '4.12'
     mockitoVersion = '2.0.52-beta'

@@ -30,15 +30,15 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * The {@link ClusterManager} maintains the number of broker replication controllers to be consistent with the number of destinations in config that require store_and_forward.
+ * The {@link AddressManager} maintains the number of destinations to be consistent with the number of destinations in config.
  */
-public class ClusterManager {
-    private static final Logger log = LoggerFactory.getLogger(ClusterManager.class.getName());
+public class AddressManager {
+    private static final Logger log = LoggerFactory.getLogger(AddressManager.class.getName());
 
     private final OpenShiftHelper helper;
     private final StorageGenerator generator;
 
-    public ClusterManager(OpenShiftHelper openshiftHelper, StorageGenerator generator) {
+    public AddressManager(OpenShiftHelper openshiftHelper, StorageGenerator generator) {
         this.helper = openshiftHelper;
         this.generator = generator;
     }
@@ -78,5 +78,9 @@ public class ClusterManager {
 
     public void configUpdated(JsonNode jsonConfig) throws IOException {
         destinationsUpdated(AddressConfigParser.parse(jsonConfig).destinations());
+    }
+
+    public List<Destination> listDestinations() {
+        return helper.listClusters().stream().map(c -> c.getDestination()).collect(Collectors.toList());
     }
 }

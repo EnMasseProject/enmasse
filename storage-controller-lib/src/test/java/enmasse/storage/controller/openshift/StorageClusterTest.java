@@ -16,20 +16,7 @@
 
 package enmasse.storage.controller.openshift;
 
-import enmasse.storage.controller.admin.ClusterManager;
-import enmasse.storage.controller.model.AddressType;
-import enmasse.storage.controller.model.LabelKeys;
-import io.fabric8.kubernetes.api.model.*;
-import io.fabric8.kubernetes.client.dsl.ClientMixedOperation;
-import io.fabric8.openshift.api.model.*;
-import io.fabric8.openshift.client.OpenShiftClient;
-import org.junit.Test;
-
-import java.util.List;
-
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
 
 public class StorageClusterTest {
 
