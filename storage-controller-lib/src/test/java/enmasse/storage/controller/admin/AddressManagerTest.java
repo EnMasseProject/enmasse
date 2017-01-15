@@ -28,6 +28,7 @@ import org.mockito.internal.verification.VerificationModeFactory;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
@@ -44,7 +45,7 @@ public class AddressManagerTest {
         mockHelper = mock(OpenShiftHelper.class);
         mockGenerator = mock(StorageGenerator.class);
 
-        manager = new AddressManager(mockHelper, mockGenerator);
+        manager = new AddressManagerImpl(mockHelper, mockGenerator);
         flavorManager.flavorsUpdated(Collections.singletonMap("vanilla", new Flavor.Builder().templateName("test").build()));
     }
 
@@ -57,7 +58,7 @@ public class AddressManagerTest {
         when(mockGenerator.generateStorage(queue)).thenReturn(cluster);
         ArgumentCaptor<Destination> arg = ArgumentCaptor.forClass(Destination.class);
 
-        manager.destinationsUpdated(Collections.singletonList(queue));
+        manager.destinationsUpdated(Collections.singleton(queue));
         verify(mockGenerator).generateStorage(arg.capture());
         assertThat(arg.getValue(), is(queue));
         verify(cluster).create();
@@ -76,7 +77,7 @@ public class AddressManagerTest {
         when(mockGenerator.generateStorage(newQueue)).thenReturn(newCluster);
         ArgumentCaptor<Destination> arg = ArgumentCaptor.forClass(Destination.class);
 
-        manager.destinationsUpdated(Arrays.asList(queue, newQueue));
+        manager.destinationsUpdated(new LinkedHashSet<>(Arrays.asList(queue, newQueue)));
 
         verify(mockGenerator).generateStorage(arg.capture());
         assertThat(arg.getValue(), is(newQueue));
@@ -96,7 +97,7 @@ public class AddressManagerTest {
         when(mockHelper.listClusters()).thenReturn(Arrays.asList(existing, newCluster));
 
 
-        manager.destinationsUpdated(Arrays.asList(newQueue));
+        manager.destinationsUpdated(Collections.singleton(newQueue));
 
         verify(existing, VerificationModeFactory.atLeastOnce()).getDestination();
         verify(newCluster, VerificationModeFactory.atLeastOnce()).getDestination();

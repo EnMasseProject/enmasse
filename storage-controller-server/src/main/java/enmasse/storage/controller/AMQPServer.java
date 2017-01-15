@@ -2,6 +2,7 @@ package enmasse.storage.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import enmasse.storage.controller.admin.AddressManager;
+import enmasse.storage.controller.parser.DestinationParser;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.proton.ProtonDelivery;
 import io.vertx.proton.ProtonServer;
@@ -56,7 +57,7 @@ public class AMQPServer extends AbstractVerticle {
         String data = (String) ((AmqpValue) message.getBody()).getValue();
         vertx.executeBlocking(future -> {
             try {
-                addressManager.configUpdated(mapper.readTree(data));
+                addressManager.destinationsUpdated(DestinationParser.parse(mapper.readTree(data)));
             } catch (Exception e) {
                 future.fail(e);
             }

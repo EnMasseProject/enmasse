@@ -17,27 +17,24 @@
 package enmasse.storage.controller.parser;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import enmasse.storage.controller.model.AddressConfig;
 import enmasse.storage.controller.model.Destination;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Parser for the addressing config.
  */
-public class AddressConfigParser {
+public class DestinationParser {
     private static final String STORE_AND_FORWARD = "store_and_forward";
     private static final String MULTICAST = "multicast";
     private static final String FLAVOR = "flavor";
 
-    public static AddressConfig parse(JsonNode root) throws IOException {
-        List<Destination> destinationList = new ArrayList<>();
+    public static Set<Destination> parse(JsonNode root) throws IOException {
+        Set<Destination> destinations = new HashSet<>();
         Iterator<Map.Entry<String, JsonNode>> it = root.fields();
         while (it.hasNext()) {
             Map.Entry<String, JsonNode> entry = it.next();
@@ -47,9 +44,9 @@ public class AddressConfigParser {
                     node.get(STORE_AND_FORWARD).asBoolean(),
                     node.get(MULTICAST).asBoolean(),
                     node.has(FLAVOR) ? node.get(FLAVOR).asText() : "");
-            destinationList.add(destination);
+            destinations.add(destination);
         }
 
-        return new AddressConfig(destinationList);
+        return destinations;
     }
 }

@@ -1,86 +1,13 @@
-/*
- * Copyright 2016 Red Hat Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package enmasse.storage.controller.admin;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import enmasse.storage.controller.generator.StorageGenerator;
 import enmasse.storage.controller.model.Destination;
-import enmasse.storage.controller.openshift.StorageCluster;
-import enmasse.storage.controller.parser.AddressConfigParser;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.util.Collection;
-import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Set;
 
 /**
- * The {@link AddressManager} maintains the number of destinations to be consistent with the number of destinations in config.
+ * Manages the address space state
  */
-public class AddressManager {
-    private static final Logger log = LoggerFactory.getLogger(AddressManager.class.getName());
-
-    private final OpenShiftHelper helper;
-    private final StorageGenerator generator;
-
-    public AddressManager(OpenShiftHelper openshiftHelper, StorageGenerator generator) {
-        this.helper = openshiftHelper;
-        this.generator = generator;
-    }
-
-    public void destinationsUpdated(Collection<Destination> destinations) {
-        List<StorageCluster> clusterList = helper.listClusters();
-        log.info("Brokers got updated to " + destinations.size() + " destinations, we have " + clusterList.size() + " destinations: " + clusterList.stream().map(StorageCluster::getDestination).collect(Collectors.toList()));
-        createBrokers(clusterList, destinations);
-        deleteBrokers(clusterList, destinations);
-    }
-
-    private static boolean brokerExists(Collection<StorageCluster> clusterList, Destination destination) {
-        return clusterList.stream()
-                .filter(cluster -> destination.equals(cluster.getDestination()))
-                .findAny()
-                .isPresent();
-    }
-
-    private void createBrokers(Collection<StorageCluster> clusterList, Collection<Destination> newDestinations) {
-        newDestinations.stream()
-                .filter(destination -> !brokerExists(clusterList, destination))
-                .map(destination -> generator.generateStorage(destination))
-                .forEach(StorageCluster::create);
-    }
-
-
-
-    private void deleteBrokers(Collection<StorageCluster> clusterList, Collection<Destination> newDestinations) {
-        clusterList.stream()
-                .filter(cluster -> !newDestinations.stream()
-                        .filter(destination -> destination.equals(cluster.getDestination()))
-                        .findAny()
-                        .isPresent())
-                .forEach(StorageCluster::delete);
-
-    }
-
-    public void configUpdated(JsonNode jsonConfig) throws IOException {
-        destinationsUpdated(AddressConfigParser.parse(jsonConfig).destinations());
-    }
-
-    public List<Destination> listDestinations() {
-        return helper.listClusters().stream().map(c -> c.getDestination()).collect(Collectors.toList());
-    }
+public interface AddressManager {
+    void destinationsUpdated(Set<Destination> destinations);
+    Set<Destination> listDestinations();
 }
