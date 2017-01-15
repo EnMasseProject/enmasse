@@ -45,7 +45,7 @@ public class AddressManagerTest {
         mockHelper = mock(OpenShiftHelper.class);
         mockGenerator = mock(DestinationClusterGenerator.class);
 
-        manager = new AddressManager(mockHelper, mockGenerator);
+        manager = new AddressManagerImpl(mockHelper, mockGenerator);
         flavorManager.flavorsUpdated(Collections.singletonMap("vanilla", new Flavor.Builder().templateName("test").build()));
     }
 
