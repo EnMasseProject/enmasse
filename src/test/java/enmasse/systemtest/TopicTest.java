@@ -122,33 +122,4 @@ public class TopicTest extends VertxTestBase{
         unsub.setSubject("unsubscribe");
         ctrlClient.sendMessages("$subctrl", unsub).get(5, TimeUnit.MINUTES);
     }
-
-    public void testScaledown() throws Exception {
-        Destination dest = Destination.topic("mytopic");
-        deploy(dest);
-        scale(dest, 2);
-
-        EnMasseClient client = createDurableTopicClient();
-        List<String> msgs = Arrays.asList("foo", "bar", "baz");
-
-        List<Future<List<String>>> recvResults = Arrays.asList(
-                client.recvMessages(dest.getAddress(), msgs.size()),
-                client.recvMessages(dest.getAddress(), msgs.size()),
-                client.recvMessages(dest.getAddress(), msgs.size()));
-
-        assertThat(client.sendMessages(dest.getAddress(), msgs.subList(0, 2)).get(1, TimeUnit.MINUTES), is(2));
-
-        Thread.sleep(5000);
-
-        scale(dest, 1);
-
-        Thread.sleep(5000);
-
-        assertThat(client.sendMessages(dest.getAddress(), msgs.subList(2, 3)).get(1, TimeUnit.MINUTES), is(1));
-
-        Thread.sleep(5000);
-        assertThat(recvResults.get(0).get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
-        assertThat(recvResults.get(1).get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
-        assertThat(recvResults.get(2).get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
-    }
 }
