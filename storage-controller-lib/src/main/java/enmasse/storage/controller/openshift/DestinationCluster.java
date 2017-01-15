@@ -27,16 +27,16 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * Represents a storage cluster of broker and volume resources for a given destination.
+ * Represents a cluster of resources for a given destination.
  */
-public class StorageCluster {
-    private static final Logger log = LoggerFactory.getLogger(StorageCluster.class.getName());
+public class DestinationCluster {
+    private static final Logger log = LoggerFactory.getLogger(DestinationCluster.class.getName());
 
     private final OpenShiftClient client;
     private final Destination destination;
     private final KubernetesList resources;
 
-    public StorageCluster(OpenShiftClient osClient, Destination destination, KubernetesList resources) {
+    public DestinationCluster(OpenShiftClient osClient, Destination destination, KubernetesList resources) {
         this.client = osClient;
         this.destination = destination;
         this.resources = resources;

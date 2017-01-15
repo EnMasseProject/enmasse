@@ -2,7 +2,7 @@ package enmasse.storage.controller.admin;
 
 import enmasse.storage.controller.model.AddressType;
 import enmasse.storage.controller.model.LabelKeys;
-import enmasse.storage.controller.openshift.StorageCluster;
+import enmasse.storage.controller.openshift.DestinationCluster;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.client.dsl.ClientMixedOperation;
 import io.fabric8.openshift.api.model.DeploymentConfig;
@@ -63,10 +63,10 @@ public class OpenShiftHelperTest {
         when(mapOp.list()).thenReturn(new ConfigMapListBuilder().addToItems(map).build());
         when(rcOp.list()).thenReturn(new ReplicationControllerListBuilder().build());
 
-        List<StorageCluster> clusters = helper.listClusters();
+        List<DestinationCluster> clusters = helper.listClusters();
         assertThat(clusters.size(), is(2));
 
-        StorageCluster cluster = clusters.get(0);
+        DestinationCluster cluster = clusters.get(0);
         assertThat(cluster.getDestination().address(), is("anycast"));
         assertThat(cluster.getDestination().flavor(), is(""));
         assertFalse(cluster.getDestination().storeAndForward());

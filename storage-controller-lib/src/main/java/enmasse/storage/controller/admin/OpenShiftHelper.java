@@ -3,12 +3,9 @@ package enmasse.storage.controller.admin;
 import enmasse.storage.controller.model.AddressType;
 import enmasse.storage.controller.model.Destination;
 import enmasse.storage.controller.model.LabelKeys;
-import enmasse.storage.controller.openshift.StorageCluster;
-import io.fabric8.kubernetes.api.model.ConfigMap;
+import enmasse.storage.controller.openshift.DestinationCluster;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesList;
-import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
-import io.fabric8.openshift.api.model.DeploymentConfig;
 import io.fabric8.openshift.client.OpenShiftClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,7 +31,7 @@ public class OpenShiftHelper {
         return client;
     }
 
-    public List<StorageCluster> listClusters() {
+    public List<DestinationCluster> listClusters() {
         Map<Destination, List<HasMetadata>> resourceMap = new HashMap<>();
 
         // Add other resources part of a storage cluster
@@ -62,7 +59,7 @@ public class OpenShiftHelper {
                 .map(entry -> {
                     KubernetesList list = new KubernetesList();
                     list.setItems(entry.getValue());
-                    return new StorageCluster(client, entry.getKey(), list);
+                    return new DestinationCluster(client, entry.getKey(), list);
                 }).collect(Collectors.toList());
     }
 }

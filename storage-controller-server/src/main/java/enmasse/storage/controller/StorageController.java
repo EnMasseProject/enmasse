@@ -20,7 +20,7 @@ import enmasse.storage.controller.admin.AddressManager;
 import enmasse.storage.controller.admin.AddressManagerImpl;
 import enmasse.storage.controller.admin.FlavorManager;
 import enmasse.storage.controller.admin.OpenShiftHelper;
-import enmasse.storage.controller.generator.TemplateStorageGenerator;
+import enmasse.storage.controller.generator.TemplateDestinationClusterGenerator;
 import io.fabric8.openshift.client.DefaultOpenShiftClient;
 import io.fabric8.openshift.client.OpenShiftClient;
 import io.fabric8.openshift.client.OpenShiftConfigBuilder;
@@ -48,7 +48,7 @@ public class StorageController implements Runnable, AutoCloseable {
                 .build());
 
         this.flavorManager = new FlavorManager();
-        this.addressManager = new AddressManagerImpl(new OpenShiftHelper(osClient), new TemplateStorageGenerator(osClient, flavorManager));
+        this.addressManager = new AddressManagerImpl(new OpenShiftHelper(osClient), new TemplateDestinationClusterGenerator(osClient, flavorManager));
         this.server = new AMQPServer(addressManager, options.port());
         this.restServer = new HTTPServer(addressManager);
         this.flavorWatcher = new ConfigAdapter(osClient, "flavor", flavorManager::configUpdated);

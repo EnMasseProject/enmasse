@@ -16,17 +16,17 @@
 package enmasse.storage.controller.generator;
 
 import enmasse.storage.controller.model.Destination;
-import enmasse.storage.controller.openshift.StorageCluster;
+import enmasse.storage.controller.openshift.DestinationCluster;
 
 /**
  * Generates storage clusters for a set of destinations that are marked as store and forward.
  */
-public interface StorageGenerator {
+public interface DestinationClusterGenerator {
 
     /**
      * Generate storage cluster for a given destination.
      *
      * @param destination The destination to generate a storage cluster for.
      */
-    StorageCluster generateStorage(Destination destination);
+    DestinationCluster generateCluster(Destination destination);
 }

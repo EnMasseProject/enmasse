@@ -18,7 +18,7 @@ package enmasse.storage.controller.generator;
 
 import enmasse.storage.controller.admin.FlavorRepository;
 import enmasse.storage.controller.model.*;
-import enmasse.storage.controller.openshift.StorageCluster;
+import enmasse.storage.controller.openshift.DestinationCluster;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.openshift.api.model.DoneableTemplate;
@@ -28,7 +28,6 @@ import io.fabric8.openshift.client.ParameterValue;
 import io.fabric8.openshift.client.dsl.ClientTemplateResource;
 
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -36,12 +35,12 @@ import java.util.stream.Collectors;
 /**
  * Generates storage clusters using Openshift templates.
  */
-public class TemplateStorageGenerator implements StorageGenerator {
+public class TemplateDestinationClusterGenerator implements DestinationClusterGenerator {
 
     private final OpenShiftClient osClient;
     private final FlavorRepository flavorRepository;
 
-    public TemplateStorageGenerator(OpenShiftClient osClient, FlavorRepository flavorRepository) {
+    public TemplateDestinationClusterGenerator(OpenShiftClient osClient, FlavorRepository flavorRepository) {
         this.osClient = osClient;
         this.flavorRepository = flavorRepository;
     }
@@ -51,7 +50,7 @@ public class TemplateStorageGenerator implements StorageGenerator {
      *
      * @param destination The destination to generate storage definitions for
      */
-    public StorageCluster generateStorage(Destination destination) {
+    public DestinationCluster generateCluster(Destination destination) {
         KubernetesList items;
         if (destination.storeAndForward()) {
             items = prepareStoreAndForwardTemplate(destination);
@@ -59,7 +58,7 @@ public class TemplateStorageGenerator implements StorageGenerator {
             items = prepareDirectTemplate(destination);
         }
 
-        return new StorageCluster(osClient, destination, items);
+        return new DestinationCluster(osClient, destination, items);
     }
 
     private KubernetesList prepareStoreAndForwardTemplate(Destination destination) {

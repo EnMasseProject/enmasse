@@ -21,10 +21,8 @@ import enmasse.storage.controller.model.AddressType;
 import enmasse.storage.controller.model.Destination;
 import enmasse.storage.controller.model.Flavor;
 import enmasse.storage.controller.model.LabelKeys;
-import enmasse.storage.controller.model.TemplateParameter;
-import enmasse.storage.controller.openshift.StorageCluster;
+import enmasse.storage.controller.openshift.DestinationCluster;
 import io.fabric8.kubernetes.api.model.*;
-import io.fabric8.kubernetes.client.dsl.ClientMixedOperation;
 import io.fabric8.openshift.api.model.*;
 import io.fabric8.openshift.client.OpenShiftClient;
 import io.fabric8.openshift.client.ParameterValue;
@@ -43,15 +41,15 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.*;
 
-public class TemplateStorageGeneratorTest {
+public class TemplateDestinationClusterGeneratorTest {
     private OpenShiftClient mockClient;
     private FlavorManager flavorManager = new FlavorManager();
-    private StorageGenerator generator;
+    private DestinationClusterGenerator generator;
 
     @Before
     public void setUp() {
         mockClient = mock(OpenShiftClient.class);
-        generator = new TemplateStorageGenerator(mockClient, flavorManager);
+        generator = new TemplateDestinationClusterGenerator(mockClient, flavorManager);
         flavorManager.flavorsUpdated(Collections.singletonMap("vanilla", new Flavor.Builder().templateName("test").build()));
     }
 
@@ -71,14 +69,14 @@ public class TemplateStorageGeneratorTest {
         when(templateOp.withName(anyString())).thenReturn(templateResource);
         when(templateResource.get()).thenReturn(template);
         when(mockClient.templates()).thenReturn(templateOp);
-        generator.generateStorage(dest);
+        generator.generateCluster(dest);
     }
 
     @Test
     public void testDirect() {
         Destination dest = new Destination("foo.bar_baz.cockooA", false, false, "");
         ArgumentCaptor<ParameterValue> captor = ArgumentCaptor.forClass(ParameterValue.class);
-        StorageCluster clusterList = generateCluster(dest, captor);
+        DestinationCluster clusterList = generateCluster(dest, captor);
         assertThat(clusterList.getDestination(), is(dest));
         List<HasMetadata> resources = clusterList.getResources();
         assertThat(resources.size(), is(1));
@@ -96,7 +94,7 @@ public class TemplateStorageGeneratorTest {
     public void testStoreAndForward() {
         Destination dest = new Destination("foo.bar", true, false, "vanilla");
         ArgumentCaptor<ParameterValue> captor = ArgumentCaptor.forClass(ParameterValue.class);
-        StorageCluster clusterList = generateCluster(dest, captor);
+        DestinationCluster clusterList = generateCluster(dest, captor);
         assertThat(clusterList.getDestination(), is(dest));
         List<HasMetadata> resources = clusterList.getResources();
         assertThat(resources.size(), is(1));
@@ -110,7 +108,7 @@ public class TemplateStorageGeneratorTest {
         assertThat(parameters.size(), is(3));
     }
 
-    private StorageCluster generateCluster(Destination destination, ArgumentCaptor<ParameterValue> captor) {
+    private DestinationCluster generateCluster(Destination destination, ArgumentCaptor<ParameterValue> captor) {
         Map<String, String> labels = new LinkedHashMap<>();
         labels.put(LabelKeys.ADDRESS_TYPE, AddressType.QUEUE.value());
         Template template = new TemplateBuilder()
@@ -128,7 +126,7 @@ public class TemplateStorageGeneratorTest {
         when(templateResource.process(captor.capture())).thenReturn(new KubernetesListBuilder().addNewConfigMapItem().withNewMetadata().withName("testmap").endMetadata().endConfigMapItem().build());
         when(mockClient.templates()).thenReturn(templateOp);
 
-        return generator.generateStorage(destination);
+        return generator.generateCluster(destination);
     }
 
 }
