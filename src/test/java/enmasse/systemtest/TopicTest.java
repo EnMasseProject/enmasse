@@ -88,7 +88,7 @@ public class TopicTest extends VertxTestBase{
     public void testDurableMessageRoutedSubscription() throws Exception {
         Destination dest = Destination.topic("mytopic");
         deploy(dest);
-        scale(dest, 1);
+        scale(dest, 4);
         String address = "myaddress";
 
         EnMasseClient ctrlClient = createQueueClient();
@@ -102,12 +102,18 @@ public class TopicTest extends VertxTestBase{
 
         ctrlClient.sendMessages("$subctrl", sub).get(5, TimeUnit.MINUTES);
 
-        List<String> msgs = TestUtils.generateMessages(123);
+        List<String> msgs = TestUtils.generateMessages(122);
         assertThat(client.sendMessages(dest.getAddress(), msgs).get(1, TimeUnit.MINUTES), is(msgs.size()));
 
-        Future<List<String>> recvResult = client.recvMessages(address, msgs.size());
+        Future<List<String>> recvResult = client.recvMessages(address, 61);
+        assertThat(recvResult.get(1, TimeUnit.MINUTES).size(), is(61));
 
-        assertThat(recvResult.get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
+        // Do scaledown and 'reconnect' receiver and verify that we got everything
+
+        scale(dest, 1);
+
+        recvResult = client.recvMessages(address, 61);
+        assertThat(recvResult.get(1, TimeUnit.MINUTES).size(), is(61));
 
         Message unsub = Message.Factory.create();
         unsub.setAddress("$subctrl");
