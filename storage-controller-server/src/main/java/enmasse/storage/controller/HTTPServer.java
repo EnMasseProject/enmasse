@@ -3,8 +3,6 @@ package enmasse.storage.controller;
 import enmasse.storage.controller.admin.AddressManager;
 import enmasse.storage.controller.restapi.RestService;
 import io.vertx.core.AbstractVerticle;
-import io.vertx.core.spi.cluster.ClusterManager;
-import org.jboss.resteasy.plugins.server.servlet.ResteasyContextParameters;
 import org.jboss.resteasy.plugins.server.vertx.VertxRequestHandler;
 import org.jboss.resteasy.plugins.server.vertx.VertxResteasyDeployment;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;

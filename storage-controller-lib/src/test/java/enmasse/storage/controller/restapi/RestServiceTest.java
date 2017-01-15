@@ -132,9 +132,14 @@ public class RestServiceTest {
         assertThat(addressManager.destinationList, hasItem(destination));
     }
 
-    private static class TestManager implements AddressManager {
+    // TODO: Make address manager interface
+    private static class TestManager extends AddressManager {
         Set<Destination> destinationList = new LinkedHashSet<>();
         boolean throwException = false;
+
+        public TestManager() {
+            super(null, null);
+        }
 
         @Override
         public void destinationsUpdated(Set<Destination> destinationList) {
