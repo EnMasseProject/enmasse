@@ -2,8 +2,9 @@
 
 # Storage Controller
 
-The Storage Controller is responsible for managing brokers and its persistent volumes. The controller converts
-destination addresses to replicated brokers for the different addresses and binds persistent volumes to
-the brokers containers.
+The Storage Controller is responsible for handling the address configuration and to instantiate OpenShift templates based on a flavor config for each address. The address config can be deployed either using AMQP or HTTP.
 
-Generating the persistent volume claims and broker controllers can also be done manually using the storage-generator-tool.
+# Build instructions
+
+    gradle build
+
