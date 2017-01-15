@@ -109,15 +109,16 @@ public class TestUtils {
 
 
         int numReady = 0;
+        List<Pod> pods = null;
         while (budget.timeLeft() >= 0 && numReady != 1) {
-            List<Pod> pods = openShift.listPods(labels);
+            pods = openShift.listPods(labels);
             numReady = numReady(pods);
             if (numReady != 1) {
                 Thread.sleep(5000);
             }
         }
         if (numReady != 1) {
-            throw new IllegalStateException("Unable to find broker pod for " + address + " within timeout");
+            throw new IllegalStateException("Unable to find broker pod for " + address + " within timeout. Found " + pods);
         }
     }
 
