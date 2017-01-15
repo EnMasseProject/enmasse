@@ -1,4 +1,4 @@
-rootProject.name = 'storage-controller'
+rootProject.name = 'address-controller'
 
-include ':storage-controller-lib'
-include ':storage-controller-server'
+include ':address-controller-lib'
+include ':address-controller-server'

@@ -1,0 +1,11 @@
+description = 'Address Controller Library'
+dependencies {
+    compile "org.slf4j:slf4j-api:${slf4jVersion}"
+    compile "io.fabric8:openshift-client:${openshiftClientVersion}"
+    compile "com.fasterxml.jackson.core:jackson-core:${jacksonVersion}"
+    compile "com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}"
+    compile "org.jboss.resteasy:resteasy-jackson-provider:${resteasyVersion}"
+    compile "org.jboss.resteasy:resteasy-vertx:${resteasyVersion}"
+    testCompile "junit:junit:${junitVersion}"
+    testCompile "org.mockito:mockito-core:${mockitoVersion}"
+}
