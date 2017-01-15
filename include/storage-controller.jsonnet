@@ -5,6 +5,8 @@ local common = import "common.jsonnet";
     common.imagestream("storage-controller", image_name),
   service::
     common.service("storage-controller", "storage-controller", "amqp", 5672, 55674),
+  restapi::
+    common.service("restapi", "storage-controller", "http", 8080, 8080),
   deployment::
     {
       "apiVersion": "v1",

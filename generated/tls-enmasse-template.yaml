@@ -821,21 +821,6 @@ objects:
   metadata:
     labels:
       app: enmasse
-    name: enmasse-rest
-  spec:
-    dockerImageRepository: "${RESTAPI_REPO}"
-    importPolicy:
-      scheduled: true
-    tags:
-    - from:
-        kind: DockerImage
-        name: "${RESTAPI_REPO}:latest"
-      name: latest
-- apiVersion: v1
-  kind: ImageStream
-  metadata:
-    labels:
-      app: enmasse
     name: storage-controller
   spec:
     dockerImageRepository: "${STORAGE_CONTROLLER_REPO}"
@@ -887,6 +872,9 @@ objects:
           - containerPort: 55674
             name: amqp
             protocol: TCP
+          - containerPort: 8080
+            name: http
+            protocol: TCP
         - image: ragent
           livenessProbe:
             tcpSocket:
@@ -905,30 +893,9 @@ objects:
           - containerPort: 5672
             name: amqp
             protocol: TCP
-        - env:
-          - name: STORAGE_CONTROLLER_SERVICE_HOST
-            value: localhost
-          - name: STORAGE_CONTROLLER_SERVICE_PORT
-            value: '55674'
-          image: enmasse-rest
-          livenessProbe:
-            tcpSocket:
-              port: http
-          name: restapi
-          ports:
-          - containerPort: 8080
-            name: http
         serviceAccount: deployer
     triggers:
     - type: ConfigChange
-    - imageChangeParams:
-        automatic: true
-        containerNames:
-        - restapi
-        from:
-          kind: ImageStreamTag
-          name: enmasse-rest:latest
-      type: ImageChange
     - imageChangeParams:
         automatic: true
         containerNames:
@@ -1028,9 +995,6 @@ parameters:
 - description: The image to use for the subscription services
   name: SUBSERV_REPO
   value: enmasseproject/subserv
-- description: The image to use for the rest api
-  name: RESTAPI_REPO
-  value: enmasseproject/enmasse-rest
 - description: The hostname to use for the exposed route for messaging (TLS only)
   name: MESSAGING_HOSTNAME
 - description: The hostname to use for the exposed route for the REST API

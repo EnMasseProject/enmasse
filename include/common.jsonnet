@@ -60,6 +60,29 @@ local version = std.extVar("VERSION");
     }
   },
 
+  container2(name, image, port_name, port, port2_name, port2_port)::
+  {
+    "image": name,
+    "name": name,
+    "ports": [
+      {
+        "name": port_name,
+        "containerPort": port,
+        "protocol": "TCP"
+      },
+      {
+        "name": port2_name,
+        "containerPort": port2_port,
+        "protocol": "TCP"
+      }
+    ],
+    "livenessProbe": {
+      "tcpSocket": {
+        "port": port_name
+      }
+    }
+  },
+
   service(name, selector_name, port_name, port, target_port)::
   {
     "apiVersion": "v1",

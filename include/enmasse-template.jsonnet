@@ -11,7 +11,6 @@ local messagingService = import "messaging-service.jsonnet";
 local messagingRoute = import "messaging-route.json";
 local addressConfig = import "addresses.json";
 local flavorConfig = import "flavor.jsonnet";
-local restapi = import "restapi.jsonnet";
 local restapiRoute = import "restapi-route.jsonnet";
 local common = import "common.jsonnet";
 local admin = import "admin.jsonnet";
@@ -51,7 +50,6 @@ local mqttRoute = import "mqtt-route.json";
                  mqtt.imagestream("${MQTT_GATEWAY_REPO}"),
                  mqttGateway.deployment(secure),
                  mqttService.generate(secure),
-                 restapi.imagestream("${RESTAPI_REPO}"),
                  storageController.imagestream("${STORAGE_CONTROLLER_REPO}"),
                  flavorConfig.generate(secure),
                  admin.deployment ] + admin.services,
@@ -98,11 +96,6 @@ local mqttRoute = import "mqtt-route.json";
         "name": "SUBSERV_REPO",
         "description": "The image to use for the subscription services",
         "value": "enmasseproject/subserv"
-      },
-      {
-        "name": "RESTAPI_REPO",
-        "description": "The image to use for the rest api",
-        "value": "enmasseproject/enmasse-rest"
       },
       {
         "name": "MESSAGING_HOSTNAME",

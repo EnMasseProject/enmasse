@@ -872,9 +872,6 @@ parameters:
 - description: The image to use for the subscription services
   name: SUBSERV_REPO
   value: enmasseproject/subserv
-- description: The image to use for the rest api
-  name: RESTAPI_REPO
-  value: enmasseproject/enmasse-rest
 - description: The hostname to use for the exposed route for messaging (TLS only)
   name: MESSAGING_HOSTNAME
 - description: The hostname to use for the exposed route for the REST API

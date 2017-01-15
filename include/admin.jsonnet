@@ -57,7 +57,6 @@ local common = import "common.jsonnet";
         {
           "type": "ConfigChange"
         },
-        common.trigger("restapi", "enmasse-rest"),
         common.trigger("ragent", "ragent"),
         common.trigger("configserv", "configserv"),
         common.trigger("storage-controller", "storage-controller")
@@ -72,32 +71,9 @@ local common = import "common.jsonnet";
         "spec": {
           "serviceAccount": "deployer",
           "containers": [
-            common.container("storage-controller", "storage-controller", "amqp", 55674),
+            common.container2("storage-controller", "storage-controller", "amqp", 55674, "http", 8080),
             common.container("ragent", "ragent", "amqp", 55672),
             common.container("configserv", "configserv", "amqp", 5672),
-            {
-              "image": "enmasse-rest",
-              "name": "restapi",
-              "env": [{
-                        "name": "STORAGE_CONTROLLER_SERVICE_HOST",
-                        "value": "localhost"
-                      },
-                      {
-                        "name": "STORAGE_CONTROLLER_SERVICE_PORT",
-                        "value": "55674"
-                      }],
-              "ports": [
-                {
-                  "name": "http",
-                  "containerPort": 8080
-                }
-              ],
-              "livenessProbe": {
-                "tcpSocket": {
-                  "port": "http"
-                }
-              }
-            }
           ]
         }
       }

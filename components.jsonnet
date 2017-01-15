@@ -6,7 +6,6 @@ local forwarder = import "include/forwarder.jsonnet";
 local qdrouterd = import "include/qdrouterd.jsonnet";
 local storageController = import "include/storage-controller.jsonnet";
 local subserv = import "include/subserv.jsonnet";
-local restapi = import "include/restapi.jsonnet";
 local common = import "include/common.jsonnet";
 local flavor = import "include/flavor.jsonnet";
 local messagingService = import "include/messaging-service.jsonnet";
@@ -34,9 +33,7 @@ local mqttService = import "include/mqtt-service.jsonnet";
   "subserv-image-stream.json": subserv.imagestream("enmasseproject/subserv"),
   "subserv-dc.json": subserv.deployment,
   "subscription-service.json": subserv.service,
-  "restapi-image-stream.json": restapi.imagestream("enmasseproject/enmasse-rest"),
-  "restapi-dc.json": restapi.deployment,
-  "restapi-service.json": restapi.service,
+  "restapi-service.json": storageController.restapi,
   "flavor.json": flavor.generate(false),
   "tls-flavor.json": flavor.generate(true),
   "admin-dc.json": admin.deployment,
