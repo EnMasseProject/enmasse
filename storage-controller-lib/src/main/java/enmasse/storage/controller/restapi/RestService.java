@@ -2,6 +2,8 @@ package enmasse.storage.controller.restapi;
 
 import enmasse.storage.controller.admin.AddressManager;
 import enmasse.storage.controller.model.Destination;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
@@ -10,15 +12,19 @@ import javax.ws.rs.core.Response;
 import java.util.*;
 import java.util.stream.Collectors;
 
-@Path("/v1/enmasse/addresses")
+@Path("/")
 public class RestService {
+    private static final Logger log = LoggerFactory.getLogger(RestService.class.getName());
 
     @GET
     @Produces({MediaType.APPLICATION_JSON})
+    @Path("/v1/enmasse/addresses")
     public Response getAddresses(@Context AddressManager addressManager) {
         try {
+            log.info("Retrieving addresses");
             return Response.ok(destinationsToMap(addressManager.listDestinations()), MediaType.APPLICATION_JSON_TYPE).build();
         } catch (Exception e) {
+            log.error("Error retrieving addresses", e);
             return Response.serverError().build();
         }
     }
@@ -26,11 +32,14 @@ public class RestService {
     @PUT
     @Consumes({MediaType.APPLICATION_JSON})
     @Produces({MediaType.APPLICATION_JSON})
+    @Path("/v1/enmasse/addresses")
     public Response putAddresses(@Context AddressManager addressManager, Map<String, AddressProperties> addressMap) {
         try {
+            log.info("Replacing addresses");
             addressManager.destinationsUpdated(mapToDestinations(addressMap));
             return Response.ok(addressMap).build();
         } catch (Exception e) {
+            log.error("Error replacing addresses", e);
             return Response.serverError().build();
         }
     }
@@ -38,8 +47,10 @@ public class RestService {
     @DELETE
     @Consumes({MediaType.APPLICATION_JSON})
     @Produces({MediaType.APPLICATION_JSON})
+    @Path("/v1/enmasse/addresses")
     public Response deleteAddresses(@Context AddressManager addressManager, List<String> data) {
         try {
+            log.info("Deleting addresses");
             Set<Destination> destinations = addressManager.listDestinations();
             for (String address : data) {
                 destinations.removeIf(dest -> dest.address().equals(address));
@@ -47,6 +58,7 @@ public class RestService {
             addressManager.destinationsUpdated(destinations);
             return Response.ok(destinationsToMap(destinations)).build();
         } catch (Exception e) {
+            log.error("Error deleting addresses");
             return Response.serverError().build();
         }
     }
@@ -54,14 +66,17 @@ public class RestService {
     @POST
     @Consumes({MediaType.APPLICATION_JSON})
     @Produces({MediaType.APPLICATION_JSON})
+    @Path("/v1/enmasse/addresses")
     public Response appendAddresses(@Context AddressManager addressManager, Map<String, AddressProperties> addressMap) {
         try {
+            log.info("Appending addresses");
             Set<Destination> destinations = new HashSet<>(addressManager.listDestinations());
             destinations.addAll(mapToDestinations(addressMap));
             addressManager.destinationsUpdated(destinations);
 
             return Response.ok(destinationsToMap(destinations)).build();
         } catch (Exception e) {
+            log.error("Error appending addresses");
             return Response.serverError().build();
         }
     }
