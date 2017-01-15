@@ -3,11 +3,8 @@ package enmasse.storage.controller;
 import enmasse.storage.controller.admin.AddressManager;
 import enmasse.storage.controller.restapi.RestService;
 import io.vertx.core.AbstractVerticle;
-import io.vertx.core.spi.cluster.ClusterManager;
-import org.jboss.resteasy.plugins.server.servlet.ResteasyContextParameters;
 import org.jboss.resteasy.plugins.server.vertx.VertxRequestHandler;
 import org.jboss.resteasy.plugins.server.vertx.VertxResteasyDeployment;
-import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,8 +23,7 @@ public class HTTPServer extends AbstractVerticle {
     public void start() {
         VertxResteasyDeployment deployment = new VertxResteasyDeployment();
         deployment.start();
-        deployment.getRegistry().addPerInstanceResource(RestService.class);
-        ResteasyProviderFactory.pushContext(AddressManager.class, addressManager);
+        deployment.getRegistry().addSingletonResource(new RestService(addressManager));
 
         vertx.createHttpServer()
                 .requestHandler(new VertxRequestHandler(vertx, deployment))

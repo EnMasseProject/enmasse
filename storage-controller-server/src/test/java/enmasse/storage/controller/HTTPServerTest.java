@@ -45,7 +45,14 @@ public class HTTPServerTest {
         testManager.destinationList.add(new Destination("addr1", false, false, null));
         HttpClient client = vertx.createHttpClient();
         try {
-            CountDownLatch latch = new CountDownLatch(1);
+            CountDownLatch latch = new CountDownLatch(2);
+            client.getNow(8080, "localhost", "/v1/enmasse/addresses", response -> {
+                response.bodyHandler(buffer -> {
+                    JsonObject data = buffer.toJsonObject();
+                    assertTrue(data.containsKey("addr1"));
+                    latch.countDown();
+                });
+            });
             client.getNow(8080, "localhost", "/v1/enmasse/addresses", response -> {
                 response.bodyHandler(buffer -> {
                     JsonObject data = buffer.toJsonObject();

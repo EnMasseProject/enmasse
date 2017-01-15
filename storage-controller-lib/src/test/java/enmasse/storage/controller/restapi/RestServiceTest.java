@@ -20,8 +20,8 @@ public class RestServiceTest {
 
     @Before
     public void setup() {
-        restService = new RestService();
         addressManager = new TestManager();
+        restService = new RestService(addressManager);
     }
 
     @Test
@@ -29,7 +29,7 @@ public class RestServiceTest {
         addressManager.destinationsUpdated(Sets.newSet(
                 new Destination("addr1", false, false, null),
                 new Destination("queue1", true, false, "vanilla")));
-        Response response = restService.getAddresses(addressManager);
+        Response response = restService.getAddresses();
         assertThat(response.getMediaType().toString(), is(MediaType.APPLICATION_JSON));
         assertThat(response.getStatus(), is(200));
         Map<String, AddressProperties> data = (Map<String, AddressProperties>) response.getEntity();
@@ -41,7 +41,7 @@ public class RestServiceTest {
     @Test
     public void testGetException() {
         addressManager.throwException = true;
-        Response response = restService.getAddresses(addressManager);
+        Response response = restService.getAddresses();
         assertThat(response.getStatus(), is(500));
     }
 
@@ -53,7 +53,7 @@ public class RestServiceTest {
         input.put("addr2", new AddressProperties(false, false, null));
         input.put("topic", new AddressProperties(true,true, "vanilla"));
 
-        Response response = restService.putAddresses(addressManager, input);
+        Response response = restService.putAddresses(input);
 
         Map<String, AddressProperties> result = (Map<String, AddressProperties>) response.getEntity();
         assertThat(result, is(input));
@@ -67,7 +67,7 @@ public class RestServiceTest {
     @Test
     public void testPutException() {
         addressManager.throwException = true;
-        Response response = restService.putAddresses(addressManager, Collections.singletonMap("addr1", new AddressProperties(true, false, "vanilla")));
+        Response response = restService.putAddresses(Collections.singletonMap("addr1", new AddressProperties(true, false, "vanilla")));
         assertThat(response.getStatus(), is(500));
     }
 
@@ -76,7 +76,7 @@ public class RestServiceTest {
         addressManager.destinationsUpdated(Sets.newSet(new Destination("addr1", false, false, null)));
         addressManager.destinationsUpdated(Sets.newSet(new Destination("addr2", false, false, null)));
 
-        Response response = restService.deleteAddresses(addressManager, Arrays.asList("addr1"));
+        Response response = restService.deleteAddresses(Arrays.asList("addr1"));
 
         Map<String, AddressProperties> result = (Map<String, AddressProperties>) response.getEntity();
         assertThat(result.size(), is(1));
@@ -91,7 +91,7 @@ public class RestServiceTest {
     @Test
     public void testDeleteException() {
         addressManager.throwException = true;
-        Response response = restService.deleteAddresses(addressManager, Collections.singletonList("addr1"));
+        Response response = restService.deleteAddresses(Collections.singletonList("addr1"));
         assertThat(response.getStatus(), is(500));
     }
 
@@ -103,7 +103,7 @@ public class RestServiceTest {
         input.put("addr2", new AddressProperties(false, false, null));
         input.put("topic", new AddressProperties(true,true, "vanilla"));
 
-        Response response = restService.appendAddresses(addressManager, input);
+        Response response = restService.appendAddresses(input);
 
         Map<String, AddressProperties> result = (Map<String, AddressProperties>) response.getEntity();
         assertThat(result.size(), is(3));
@@ -120,7 +120,7 @@ public class RestServiceTest {
     @Test
     public void testAppendException() {
         addressManager.throwException = true;
-        Response response = restService.appendAddresses(addressManager, Collections.singletonMap("addr1", new AddressProperties(true, false, "vanilla")));
+        Response response = restService.appendAddresses(Collections.singletonMap("addr1", new AddressProperties(true, false, "vanilla")));
         assertThat(response.getStatus(), is(500));
     }
 

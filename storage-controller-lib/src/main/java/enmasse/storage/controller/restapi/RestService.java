@@ -16,10 +16,16 @@ import java.util.stream.Collectors;
 public class RestService {
     private static final Logger log = LoggerFactory.getLogger(RestService.class.getName());
 
+    private final AddressManager addressManager;
+
+    public RestService(@Context AddressManager addressManager) {
+        this.addressManager = addressManager;
+    }
+
     @GET
     @Produces({MediaType.APPLICATION_JSON})
     @Path("/v1/enmasse/addresses")
-    public Response getAddresses(@Context AddressManager addressManager) {
+    public Response getAddresses() {
         try {
             log.info("Retrieving addresses");
             return Response.ok(destinationsToMap(addressManager.listDestinations()), MediaType.APPLICATION_JSON_TYPE).build();
@@ -33,7 +39,7 @@ public class RestService {
     @Consumes({MediaType.APPLICATION_JSON})
     @Produces({MediaType.APPLICATION_JSON})
     @Path("/v1/enmasse/addresses")
-    public Response putAddresses(@Context AddressManager addressManager, Map<String, AddressProperties> addressMap) {
+    public Response putAddresses(Map<String, AddressProperties> addressMap) {
         try {
             log.info("Replacing addresses");
             addressManager.destinationsUpdated(mapToDestinations(addressMap));
@@ -48,7 +54,7 @@ public class RestService {
     @Consumes({MediaType.APPLICATION_JSON})
     @Produces({MediaType.APPLICATION_JSON})
     @Path("/v1/enmasse/addresses")
-    public Response deleteAddresses(@Context AddressManager addressManager, List<String> data) {
+    public Response deleteAddresses(List<String> data) {
         try {
             log.info("Deleting addresses");
             Set<Destination> destinations = addressManager.listDestinations();
@@ -67,7 +73,7 @@ public class RestService {
     @Consumes({MediaType.APPLICATION_JSON})
     @Produces({MediaType.APPLICATION_JSON})
     @Path("/v1/enmasse/addresses")
-    public Response appendAddresses(@Context AddressManager addressManager, Map<String, AddressProperties> addressMap) {
+    public Response appendAddresses(Map<String, AddressProperties> addressMap) {
         try {
             log.info("Appending addresses");
             Set<Destination> destinations = new HashSet<>(addressManager.listDestinations());
