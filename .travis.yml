@@ -2,7 +2,12 @@ sudo: required
 language: java
 notifications:
   email: false
-  irc: "chat.freenode.net#enmasse"
+  irc:
+    channels:
+      - "chat.freenode.net#enmasse"
+    use_notice: true
+    skip_join: true
+
 jdk:
 - oraclejdk8
 services:
