@@ -16,6 +16,8 @@
 
 package enmasse.address.controller.generator;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import enmasse.address.controller.admin.FlavorRepository;
 import enmasse.address.controller.model.*;
 import enmasse.address.controller.openshift.DestinationCluster;
@@ -29,6 +31,7 @@ import io.fabric8.openshift.client.dsl.ClientTemplateResource;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -38,6 +41,7 @@ import java.util.stream.Collectors;
 public class TemplateDestinationClusterGenerator implements DestinationClusterGenerator {
 
     private final OpenShiftClient osClient;
+    private static final ObjectMapper mapper = new ObjectMapper();
     private final FlavorRepository flavorRepository;
 
     public TemplateDestinationClusterGenerator(OpenShiftClient osClient, FlavorRepository flavorRepository) {
@@ -48,32 +52,27 @@ public class TemplateDestinationClusterGenerator implements DestinationClusterGe
     /**
      * Generate cluseter for a given destination.
      *
-     * @param destination The destination to generate cluster for
+     * @param destination The destinations to generate cluster for
      */
     public DestinationCluster generateCluster(Destination destination) {
-        KubernetesList items;
-        if (destination.storeAndForward()) {
-            items = prepareStoreAndForwardTemplate(destination);
-        } else {
-            items = prepareDirectTemplate(destination);
-        }
+        Flavor flavor = destination.flavor()
+                .map(f -> flavorRepository.getFlavor(f, TimeUnit.SECONDS.toMillis(60)))
+                .orElse(new Flavor.Builder("direct", "direct").build());
 
-        return new DestinationCluster(osClient, destination, items);
-    }
-
-    private KubernetesList prepareStoreAndForwardTemplate(Destination destination) {
-        Flavor flavor = flavorRepository.getFlavor(destination.flavor(), TimeUnit.SECONDS.toMillis(60));
         ClientTemplateResource<Template, KubernetesList, DoneableTemplate> templateProcessor = osClient.templates().withName(flavor.templateName());
 
-        Template template = templateProcessor.get();
-        if (!template.getMetadata().getLabels().containsKey(LabelKeys.ADDRESS_TYPE)) {
-            throw new IllegalArgumentException("Template is missing label " + LabelKeys.ADDRESS_TYPE);
-        }
-        AddressType.validate(template.getMetadata().getLabels().get(LabelKeys.ADDRESS_TYPE));
-
         Map<String, String> paramMap = new LinkedHashMap<>(flavor.templateParameters());
-        paramMap.put(TemplateParameter.NAME, nameSanitizer(destination.address()));
-        paramMap.put(TemplateParameter.ADDRESS, destination.address());
+        String addressList = createAddressList(destination.addresses());
+
+        // If the flavor is shared, there is only one instance of it, so give it the name of the flavor
+        String firstAddress = destination.addresses().iterator().next();
+        if (flavor.isShared()) {
+            paramMap.put(TemplateParameter.NAME, nameSanitizer(flavor.name()));
+        } else {
+            paramMap.put(TemplateParameter.NAME, nameSanitizer(firstAddress));
+        }
+        paramMap.put(TemplateParameter.ADDRESS, firstAddress);
+        paramMap.put(TemplateParameter.ADDRESS_LIST, addressList);
         paramMap.put(TemplateParameter.MULTICAST, String.valueOf(destination.multicast()));
 
         ParameterValue parameters[] = paramMap.entrySet().stream()
@@ -83,11 +82,16 @@ public class TemplateDestinationClusterGenerator implements DestinationClusterGe
 
 
         KubernetesList items = templateProcessor.process(parameters);
-        addObjectLabel(items, LabelKeys.ADDRESS, destination.address());
-        addObjectLabel(items, LabelKeys.FLAVOR, destination.flavor());
-        addObjectLabel(items, LabelKeys.ADDRESS_TYPE, destination.multicast() ? AddressType.TOPIC.value() : AddressType.QUEUE.value());
-        return items;
+
+        // These are attributes that we need to identify components belonging to this address
+        addObjectAnnotation(items, LabelKeys.ADDRESS_LIST, addressList);
+        destination.flavor().ifPresent(f -> addObjectLabel(items, LabelKeys.FLAVOR, f));
+        addObjectLabel(items, LabelKeys.STORE_AND_FORWARD, String.valueOf(destination.storeAndForward()));
+        addObjectLabel(items, LabelKeys.MULTICAST, String.valueOf(destination.multicast()));
+
+        return new DestinationCluster(osClient, destination, items, flavor.isShared());
     }
+
 
     private void addObjectLabel(KubernetesList items, String labelKey, String labelValue) {
         for (HasMetadata item : items.getItems()) {
@@ -97,20 +101,27 @@ public class TemplateDestinationClusterGenerator implements DestinationClusterGe
         }
     }
 
-    private KubernetesList prepareDirectTemplate(Destination destination) {
-        Flavor flavor = new Flavor.Builder().templateName("direct").build();
-        ClientTemplateResource<Template, KubernetesList, DoneableTemplate> template = osClient.templates().withName(flavor.templateName());
+    private void addObjectAnnotation(KubernetesList items, String annotationKey, String annotationValue) {
+        for (HasMetadata item : items.getItems()) {
+            Map<String, String> annotations = item.getMetadata().getAnnotations();
+            if (annotations == null) {
+                annotations = new LinkedHashMap<>();
+            }
+            annotations.put(annotationKey, annotationValue);
+            item.getMetadata().setAnnotations(annotations);
+        }
+    }
 
-        ParameterValue parameters[] = new ParameterValue[3];
-        parameters[0] = new ParameterValue(TemplateParameter.NAME, nameSanitizer(destination.address()));
-        parameters[1] = new ParameterValue(TemplateParameter.ADDRESS, destination.address());
-        parameters[2] = new ParameterValue(TemplateParameter.MULTICAST, String.valueOf(destination.multicast()));
-
-        KubernetesList items = template.process(parameters);
-        addObjectLabel(items, LabelKeys.ADDRESS, destination.address());
-        addObjectLabel(items, LabelKeys.FLAVOR, destination.flavor());
-        addObjectLabel(items, LabelKeys.ADDRESS_TYPE, destination.multicast() ? AddressType.TOPIC.value() : AddressType.QUEUE.value());
-        return items;
+    private static String createAddressList(Set<String> addresses) {
+        try {
+            ArrayNode array = mapper.createArrayNode();
+            for (String address : addresses) {
+                array.add(address);
+            }
+            return mapper.writeValueAsString(addresses);
+        } catch (Exception e) {
+            throw new RuntimeException("Unable to create address list", e);
+        }
     }
 
     private static String nameSanitizer(String name) {

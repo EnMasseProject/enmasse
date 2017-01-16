@@ -17,6 +17,7 @@
 package enmasse.address.controller.generator;
 
 import enmasse.address.controller.admin.FlavorManager;
+import enmasse.address.controller.admin.OpenShiftHelper;
 import enmasse.address.controller.model.AddressType;
 import enmasse.address.controller.model.Destination;
 import enmasse.address.controller.model.Flavor;
@@ -32,12 +33,10 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.*;
 
@@ -50,31 +49,12 @@ public class TemplateDestinationClusterGeneratorTest {
     public void setUp() {
         mockClient = mock(OpenShiftClient.class);
         generator = new TemplateDestinationClusterGenerator(mockClient, flavorManager);
-        flavorManager.flavorsUpdated(Collections.singletonMap("vanilla", new Flavor.Builder().templateName("test").build()));
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testAddressTypeRequired() {
-        Destination dest = new Destination("foo", true, false, "vanilla");
-        Template template = new TemplateBuilder()
-                .withMetadata(new ObjectMetaBuilder()
-                    .withName("test")
-                    .addToLabels("key1", "value1")
-                    .build())
-                .build();
-
-        TemplateOperation templateOp = mock(TemplateOperation.class);
-        ClientTemplateResource templateResource = mock(ClientTemplateResource.class);
-        when(templateOp.list()).thenReturn(new TemplateListBuilder().addToItems(template).build());
-        when(templateOp.withName(anyString())).thenReturn(templateResource);
-        when(templateResource.get()).thenReturn(template);
-        when(mockClient.templates()).thenReturn(templateOp);
-        generator.generateCluster(dest);
+        flavorManager.flavorsUpdated(Collections.singletonMap("vanilla", new Flavor.Builder("vanilla", "test").build()));
     }
 
     @Test
     public void testDirect() {
-        Destination dest = new Destination("foo.bar_baz.cockooA", false, false, "");
+        Destination dest = new Destination("foo.bar_baz.cockooA", false, false, Optional.empty());
         ArgumentCaptor<ParameterValue> captor = ArgumentCaptor.forClass(ParameterValue.class);
         DestinationCluster clusterList = generateCluster(dest, captor);
         assertThat(clusterList.getDestination(), is(dest));
@@ -82,17 +62,19 @@ public class TemplateDestinationClusterGeneratorTest {
         assertThat(resources.size(), is(1));
         for (HasMetadata resource : resources) {
             Map<String, String> rlabel = resource.getMetadata().getLabels();
-            assertThat(rlabel.get(LabelKeys.ADDRESS), is(dest.address()));
-            assertThat(rlabel.get(LabelKeys.FLAVOR), is(dest.flavor()));
-            assertThat(rlabel.get(LabelKeys.ADDRESS_TYPE), is(AddressType.QUEUE.value()));
+            Map<String, String> rannotation = resource.getMetadata().getAnnotations();
+            assertThat(OpenShiftHelper.parseAddressAnnotation(rannotation.get(LabelKeys.ADDRESS_LIST)), is(dest.addresses()));
+            assertNull(rlabel.get(LabelKeys.FLAVOR));
+            assertThat(rlabel.get(LabelKeys.MULTICAST), is("false"));
+            assertThat(rlabel.get(LabelKeys.STORE_AND_FORWARD), is("false"));
         }
         List<ParameterValue> parameters = captor.getAllValues();
-        assertThat(parameters.size(), is(3));
+        assertThat(parameters.size(), is(4));
     }
 
     @Test
     public void testStoreAndForward() {
-        Destination dest = new Destination("foo.bar", true, false, "vanilla");
+        Destination dest = new Destination("foo.bar", true, false, Optional.of("vanilla"));
         ArgumentCaptor<ParameterValue> captor = ArgumentCaptor.forClass(ParameterValue.class);
         DestinationCluster clusterList = generateCluster(dest, captor);
         assertThat(clusterList.getDestination(), is(dest));
@@ -100,12 +82,14 @@ public class TemplateDestinationClusterGeneratorTest {
         assertThat(resources.size(), is(1));
         for (HasMetadata resource : resources) {
             Map<String, String> rlabel = resource.getMetadata().getLabels();
-            assertThat(rlabel.get(LabelKeys.ADDRESS), is(dest.address()));
-            assertThat(rlabel.get(LabelKeys.FLAVOR), is(dest.flavor()));
-            assertThat(rlabel.get(LabelKeys.ADDRESS_TYPE), is(AddressType.QUEUE.value()));
+            Map<String, String> rannotation = resource.getMetadata().getAnnotations();
+            assertThat(OpenShiftHelper.parseAddressAnnotation(rannotation.get(LabelKeys.ADDRESS_LIST)), is(dest.addresses()));
+            assertThat(rlabel.get(LabelKeys.FLAVOR), is(dest.flavor().get()));
+            assertThat(rlabel.get(LabelKeys.MULTICAST), is("false"));
+            assertThat(rlabel.get(LabelKeys.STORE_AND_FORWARD), is("true"));
         }
         List<ParameterValue> parameters = captor.getAllValues();
-        assertThat(parameters.size(), is(3));
+        assertThat(parameters.size(), is(4));
     }
 
     private DestinationCluster generateCluster(Destination destination, ArgumentCaptor<ParameterValue> captor) {

@@ -20,7 +20,10 @@ package enmasse.address.controller.model;
  * Labels that are applied to a destination cluster.
  */
 public interface LabelKeys {
-    String ADDRESS = "address";
-    String ADDRESS_TYPE = "addressType";
+    String ADDRESS_TYPE = "type";
+
+    String ADDRESS_LIST = "addressList";
     String FLAVOR = "flavor";
+    String STORE_AND_FORWARD = "store_and_forward";
+    String MULTICAST = "multicast";
 }

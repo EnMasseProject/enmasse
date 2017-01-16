@@ -35,11 +35,16 @@ public class FlavorParserTest {
         File testFile = new File("src/test/resources/flavors.json");
         Map<String, Flavor> parsed = FlavorParser.parse(mapper.readTree(testFile));
 
-        assertThat(parsed.size(), is(1));
+        assertThat(parsed.size(), is(2));
         assertNotNull(parsed.get("test-queue"));
         Flavor flavor = parsed.get("test-queue");
         assertThat(flavor.templateName(), is("queue-persisted"));
         assertThat(flavor.templateParameters().size(), is(1));
         assertThat(flavor.templateParameters().get("STORAGE_CAPACITY"), is("2Gi"));
+
+        assertNotNull(parsed.get("shared-queue"));
+        flavor = parsed.get("shared-queue");
+        assertThat(flavor.templateName(), is("queue-inmemory"));
+        assertThat(flavor.templateParameters().size(), is(0));
     }
 }

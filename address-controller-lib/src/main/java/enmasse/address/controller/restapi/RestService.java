@@ -10,6 +10,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.*;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 @Path("/")
@@ -58,8 +59,9 @@ public class RestService {
         try {
             log.info("Deleting addresses");
             Set<Destination> destinations = addressManager.listDestinations();
+
             for (String address : data) {
-                destinations.removeIf(dest -> dest.address().equals(address));
+                destinations = deleteAddressFromSet(address, destinations);
             }
             addressManager.destinationsUpdated(destinations);
             return Response.ok(destinationsToMap(destinations)).build();
@@ -67,6 +69,19 @@ public class RestService {
             log.error("Error deleting addresses");
             return Response.serverError().build();
         }
+    }
+
+    private static Set<Destination> deleteAddressFromSet(String address, Set<Destination> destinations) {
+        Set<Destination> newDestinations = new HashSet<>(destinations);
+        for (Destination destination : destinations) {
+            if (destination.addresses().contains(address)) {
+                Set<String> newAddresses = new HashSet<>(destination.addresses());
+                newAddresses.remove(address);
+                newDestinations.remove(destination);
+                newDestinations.add(new Destination(newAddresses, destination.storeAndForward(), destination.multicast(), destination.flavor()));
+            }
+        }
+        return newDestinations;
     }
 
     @POST
@@ -89,14 +104,17 @@ public class RestService {
 
     private static Set<Destination> mapToDestinations(Map<String, AddressProperties> addressMap) {
         return addressMap.entrySet().stream()
-                .map(e -> new Destination(e.getKey(), e.getValue().store_and_forward, e.getValue().multicast, e.getValue().flavor == null ? "" : e.getValue().flavor))
+                .map(e -> new Destination(e.getKey(), e.getValue().store_and_forward, e.getValue().multicast, Optional.ofNullable(e.getValue().flavor)))
                 .collect(Collectors.toSet());
     }
 
     private static Map<String, AddressProperties> destinationsToMap(Collection<Destination> destinations) {
         Map<String, AddressProperties> map = new LinkedHashMap<>();
         for (Destination destination : destinations) {
-            map.put(destination.address(), new AddressProperties(destination.storeAndForward(), destination.multicast(), destination.flavor()));
+            String flavor = destination.flavor().orElse(null);
+            for (String address : destination.addresses()) {
+                map.put(address, new AddressProperties(destination.storeAndForward(), destination.multicast(), flavor));
+            }
         }
         return map;
     }

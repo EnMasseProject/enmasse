@@ -25,11 +25,21 @@ import java.util.Map;
 public class Flavor {
     private final String templateName;
     private final Map<String, String> templateParameters;
+    private final boolean shared;
+    private final String name;
 
-    private Flavor(String templateName,
-                   Map<String, String> templateParameters) {
+    private Flavor(String name,
+                   String templateName,
+                   Map<String, String> templateParameters,
+                   boolean shared) {
+        this.name = name;
         this.templateName = templateName;
         this.templateParameters = templateParameters;
+        this.shared = shared;
+    }
+
+    public String name() {
+        return name;
     }
 
     public String templateName() {
@@ -40,25 +50,65 @@ public class Flavor {
         return templateParameters;
     }
 
+    public boolean isShared() {
+        return shared;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("{name=").append(name).append(",")
+                .append("templateName=").append(templateName).append(",")
+                .append("templateParameters={").append(templateParameters).append("}").append(",")
+                .append("shared=").append(shared).append("}");
+        return builder.toString();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Flavor flavor = (Flavor) o;
+
+        if (shared != flavor.shared) return false;
+        if (!name.equals(flavor.name)) return false;
+        if (!templateName.equals(flavor.templateName)) return false;
+        return templateParameters.equals(flavor.templateParameters);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = templateName.hashCode();
+        result = 31 * result + name.hashCode();
+        result = 31 * result + templateParameters.hashCode();
+        result = 31 * result + (shared ? 1 : 0);
+        return result;
+    }
+
     public static class Builder {
+        private String name;
         private String templateName;
         private Map<String, String> templateParameters = new LinkedHashMap<>();
+        private boolean shared = false;
+
+        public Builder(String name, String templateName) {
+            this.name = name;
+            this.templateName = templateName;
+        }
 
         public Builder templateParameter(String key, String value) {
             templateParameters.put(key, value);
             return this;
         }
 
-        public Builder templateName(String templateName) {
-            this.templateName = templateName;
+        public Builder shared(boolean shared) {
+            this.shared = shared;
             return this;
         }
 
         public Flavor build() {
-            if (templateName == null) {
-                throw new IllegalArgumentException("Cannot instantiate flavor without template name");
-            }
-            return new Flavor(templateName, templateParameters);
+            return new Flavor(name, templateName, templateParameters, shared);
         }
     }
 }

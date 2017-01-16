@@ -27,8 +27,8 @@ public class RestServiceTest {
     @Test
     public void testGet() {
         addressManager.destinationsUpdated(Sets.newSet(
-                new Destination("addr1", false, false, null),
-                new Destination("queue1", true, false, "vanilla")));
+                new Destination("addr1", false, false, Optional.empty()),
+                new Destination("queue1", true, false, Optional.of("vanilla"))));
         Response response = restService.getAddresses();
         assertThat(response.getMediaType().toString(), is(MediaType.APPLICATION_JSON));
         assertThat(response.getStatus(), is(200));
@@ -47,7 +47,7 @@ public class RestServiceTest {
 
     @Test
     public void testPut() {
-        addressManager.destinationsUpdated(Sets.newSet(new Destination("addr1", false, false, null)));
+        addressManager.destinationsUpdated(Sets.newSet(new Destination("addr1", false, false, Optional.empty())));
 
         Map<String, AddressProperties> input = new LinkedHashMap<>();
         input.put("addr2", new AddressProperties(false, false, null));
@@ -59,9 +59,9 @@ public class RestServiceTest {
         assertThat(result, is(input));
 
         assertThat(addressManager.destinationList.size(), is(2));
-        assertDestination(new Destination("addr2", false, false, null));
-        assertDestination(new Destination("topic", true, true, "vanilla"));
-        assertNotDestination(new Destination("addr1", false, false, null));
+        assertDestination(new Destination("addr2", false, false, Optional.empty()));
+        assertDestination(new Destination("topic", true, true, Optional.of("vanilla")));
+        assertNotDestination(new Destination("addr1", false, false, Optional.empty()));
     }
 
     @Test
@@ -73,8 +73,8 @@ public class RestServiceTest {
 
     @Test
     public void testDelete() {
-        addressManager.destinationsUpdated(Sets.newSet(new Destination("addr1", false, false, null)));
-        addressManager.destinationsUpdated(Sets.newSet(new Destination("addr2", false, false, null)));
+        addressManager.destinationsUpdated(Sets.newSet(new Destination("addr1", false, false, Optional.empty())));
+        addressManager.destinationsUpdated(Sets.newSet(new Destination("addr2", false, false, Optional.empty())));
 
         Response response = restService.deleteAddresses(Arrays.asList("addr1"));
 
@@ -84,8 +84,8 @@ public class RestServiceTest {
         assertFalse(result.containsKey("addr1"));
 
         assertThat(addressManager.destinationList.size(), is(1));
-        assertDestination(new Destination("addr2", false, false, null));
-        assertNotDestination(new Destination("addr1", false, false, null));
+        assertDestination(new Destination("addr2", false, false, Optional.empty()));
+        assertNotDestination(new Destination("addr1", false, false, Optional.empty()));
     }
 
     @Test
@@ -97,7 +97,7 @@ public class RestServiceTest {
 
     @Test
     public void testAppend() {
-        addressManager.destinationsUpdated(Sets.newSet(new Destination("addr1", false, false, null)));
+        addressManager.destinationsUpdated(Sets.newSet(new Destination("addr1", false, false, Optional.empty())));
 
         Map<String, AddressProperties> input = new LinkedHashMap<>();
         input.put("addr2", new AddressProperties(false, false, null));
@@ -112,9 +112,9 @@ public class RestServiceTest {
         assertTrue(result.containsKey("topic"));
 
         assertThat(addressManager.destinationList.size(), is(3));
-        assertDestination(new Destination("addr2", false, false, null));
-        assertDestination(new Destination("topic", true, true, "vanilla"));
-        assertDestination(new Destination("addr1", false, false, null));
+        assertDestination(new Destination("addr2", false, false, Optional.empty()));
+        assertDestination(new Destination("topic", true, true, Optional.of("vanilla")));
+        assertDestination(new Destination("addr1", false, false, Optional.empty()));
     }
 
     @Test

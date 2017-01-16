@@ -22,5 +22,6 @@ package enmasse.address.controller.model;
 public interface TemplateParameter {
     String NAME = "NAME";
     String ADDRESS = "ADDRESS";
+    String ADDRESS_LIST = "ADDRESS_LIST";
     String MULTICAST = "MULTICAST";
 }

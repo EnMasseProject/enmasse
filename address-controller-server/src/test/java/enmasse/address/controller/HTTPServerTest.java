@@ -10,6 +10,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.util.LinkedHashSet;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -39,7 +40,7 @@ public class HTTPServerTest {
 
     @Test
     public void testApi() throws InterruptedException {
-        testManager.destinationList.add(new Destination("addr1", false, false, null));
+        testManager.destinationList.add(new Destination("addr1", false, false, Optional.empty()));
         HttpClient client = vertx.createHttpClient();
         try {
             CountDownLatch latch = new CountDownLatch(2);

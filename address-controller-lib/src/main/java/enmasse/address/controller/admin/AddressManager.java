@@ -2,6 +2,7 @@ package enmasse.address.controller.admin;
 
 import enmasse.address.controller.model.Destination;
 
+import java.io.IOException;
 import java.util.Set;
 
 /**

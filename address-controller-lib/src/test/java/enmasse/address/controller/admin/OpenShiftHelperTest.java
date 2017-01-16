@@ -1,6 +1,7 @@
 package enmasse.address.controller.admin;
 
 import enmasse.address.controller.model.AddressType;
+import enmasse.address.controller.model.Flavor;
 import enmasse.address.controller.model.LabelKeys;
 import enmasse.address.controller.openshift.DestinationCluster;
 import io.fabric8.kubernetes.api.model.*;
@@ -11,8 +12,10 @@ import io.fabric8.openshift.api.model.DeploymentConfigListBuilder;
 import io.fabric8.openshift.client.OpenShiftClient;
 import org.junit.Test;
 
+import java.util.Collections;
 import java.util.List;
 
+import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
@@ -30,8 +33,9 @@ public class OpenShiftHelperTest {
                         .withMetadata(new ObjectMetaBuilder()
                             .withName("testdc")
                             .addToLabels(LabelKeys.FLAVOR, "vanilla")
-                            .addToLabels(LabelKeys.ADDRESS, "myqueue")
-                            .addToLabels(LabelKeys.ADDRESS_TYPE, AddressType.QUEUE.value())
+                            .addToAnnotations(LabelKeys.ADDRESS_LIST, "[\"myqueue\"]")
+                            .addToLabels(LabelKeys.STORE_AND_FORWARD, "true")
+                            .addToLabels(LabelKeys.MULTICAST, "false")
                             .build())
                         .build();
 
@@ -39,9 +43,9 @@ public class OpenShiftHelperTest {
                 new ConfigMapBuilder()
                         .withMetadata(new ObjectMetaBuilder()
                                 .withName("testmap")
-                                .addToLabels(LabelKeys.FLAVOR, "")
-                                .addToLabels(LabelKeys.ADDRESS, "anycast")
-                                .addToLabels(LabelKeys.ADDRESS_TYPE, AddressType.QUEUE.value())
+                                .addToAnnotations(LabelKeys.ADDRESS_LIST, "[\"anycast\"]")
+                                .addToLabels(LabelKeys.STORE_AND_FORWARD, "false")
+                                .addToLabels(LabelKeys.MULTICAST, "false")
                                 .build())
                         .build();
 
@@ -58,23 +62,28 @@ public class OpenShiftHelperTest {
         when(mockClient.replicationControllers()).thenReturn(rcOp);
 
         when(pvcOp.withLabel(anyString(), anyString())).thenReturn(pvcOp);
+        when(dcOp.withLabel(anyString(), anyString())).thenReturn(dcOp);
+        when(mapOp.withLabel(anyString(), anyString())).thenReturn(mapOp);
+        when(rcOp.withLabel(anyString(), anyString())).thenReturn(rcOp);
         when(pvcOp.list()).thenReturn(new PersistentVolumeClaimListBuilder().build());
         when(dcOp.list()).thenReturn(new DeploymentConfigListBuilder().addToItems(config).build());
         when(mapOp.list()).thenReturn(new ConfigMapListBuilder().addToItems(map).build());
         when(rcOp.list()).thenReturn(new ReplicationControllerListBuilder().build());
 
-        List<DestinationCluster> clusters = helper.listClusters();
+        FlavorManager flavorManager = new FlavorManager();
+        flavorManager.flavorsUpdated(Collections.singletonMap("vanilla", new Flavor.Builder("vanilla", "test").build()));
+        List<DestinationCluster> clusters = helper.listClusters(flavorManager);
         assertThat(clusters.size(), is(2));
 
         DestinationCluster cluster = clusters.get(0);
-        assertThat(cluster.getDestination().address(), is("anycast"));
-        assertThat(cluster.getDestination().flavor(), is(""));
+        assertThat(cluster.getDestination().addresses(), hasItem("anycast"));
+        assertFalse(cluster.getDestination().flavor().isPresent());
         assertFalse(cluster.getDestination().storeAndForward());
         assertFalse(cluster.getDestination().multicast());
 
         cluster = clusters.get(1);
-        assertThat(cluster.getDestination().address(), is("myqueue"));
-        assertThat(cluster.getDestination().flavor(), is("vanilla"));
+        assertThat(cluster.getDestination().addresses(), hasItem("myqueue"));
+        assertThat(cluster.getDestination().flavor().get(), is("vanilla"));
         assertTrue(cluster.getDestination().storeAndForward());
         assertFalse(cluster.getDestination().multicast());
     }

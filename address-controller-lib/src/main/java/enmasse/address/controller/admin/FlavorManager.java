@@ -57,7 +57,7 @@ public class FlavorManager implements FlavorRepository {
     public void flavorsUpdated(Map<String, Flavor> flavorMap) {
         this.flavorMap = flavorMap;
         if (log.isInfoEnabled()) {
-            String flavors = flavorMap.keySet().stream().collect(Collectors.joining(","));
+            String flavors = flavorMap.values().stream().map(Flavor::toString).collect(Collectors.joining(","));
             log.info(String.format("Got new set of flavors: [%s]", flavors));
         }
 

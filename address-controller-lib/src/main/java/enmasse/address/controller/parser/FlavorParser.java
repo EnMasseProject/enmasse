@@ -27,6 +27,7 @@ import java.util.Map;
  * Parser for the flavor config.
  */
 public class FlavorParser {
+    private static final String KEY_SHARED = "shared";
     private static final String KEY_TEMPLATE_NAME = "templateName";
     private static final String KEY_TEMPLATE_PARAMETERS = "templateParameters";
 
@@ -36,15 +37,14 @@ public class FlavorParser {
         while (it.hasNext()) {
             Map.Entry<String, JsonNode> entry = it.next();
             String name = entry.getKey();
-            Flavor flavor = parseFlavor(entry.getValue());
+            Flavor flavor = parseFlavor(name, entry.getValue());
             flavorMap.put(name, flavor);
         }
         return flavorMap;
     }
 
-    private static Flavor parseFlavor(JsonNode node) {
-        Flavor.Builder builder = new Flavor.Builder();
-        builder.templateName(node.get(KEY_TEMPLATE_NAME).asText());
+    private static Flavor parseFlavor(String name, JsonNode node) {
+        Flavor.Builder builder = new Flavor.Builder(name, node.get(KEY_TEMPLATE_NAME).asText());
 
         if (node.has(KEY_TEMPLATE_PARAMETERS)) {
             Iterator<Map.Entry<String, JsonNode>> it = node.get(KEY_TEMPLATE_PARAMETERS).fields();
@@ -52,6 +52,10 @@ public class FlavorParser {
                 Map.Entry<String, JsonNode> entry = it.next();
                 builder.templateParameter(entry.getKey(), entry.getValue().asText());
             }
+        }
+
+        if (node.has(KEY_SHARED)) {
+            builder.shared(node.get(KEY_SHARED).asBoolean());
         }
         return builder.build();
     }

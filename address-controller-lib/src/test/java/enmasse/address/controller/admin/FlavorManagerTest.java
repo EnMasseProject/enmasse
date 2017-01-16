@@ -37,9 +37,9 @@ public class FlavorManagerTest {
     @Test
     public void testManager() {
         Map<String, Flavor> flavorMap = new LinkedHashMap<>();
-        flavorMap.put("flavor1", new Flavor.Builder().templateName("template1").build());
-        flavorMap.put("flavor2", new Flavor.Builder().templateName("template2").build());
-        flavorMap.put("flavor3", new Flavor.Builder().templateName("template1").templateParameter("BROKER_IMAGE", "myimage").build());
+        flavorMap.put("flavor1", new Flavor.Builder("flavor1", "template1").build());
+        flavorMap.put("flavor2", new Flavor.Builder("flavor2", "template2").build());
+        flavorMap.put("flavor3", new Flavor.Builder("flavor3", "template1").templateParameter("BROKER_IMAGE", "myimage").build());
 
         flavorManager.flavorsUpdated(flavorMap);
 

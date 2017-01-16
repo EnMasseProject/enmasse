@@ -23,6 +23,7 @@ import org.junit.Test;
 import java.io.IOException;
 import java.util.Set;
 
+import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.*;
 
@@ -42,10 +43,10 @@ public class DestinationParserTest {
         Set<Destination> config = parsePayload(json);
         assertThat(config.size(), is(1));
         Destination dest = config.iterator().next();
-        assertThat(dest.address(), is("queue1"));
+        assertThat(dest.addresses(), hasItem("queue1"));
         assertTrue(dest.storeAndForward());
         assertFalse(dest.multicast());
-        assertThat(dest.flavor(), is("vanilla"));
+        assertThat(dest.flavor().get(), is("vanilla"));
     }
 
     private Set<Destination> parsePayload(String json) throws IOException {

@@ -48,7 +48,7 @@ public class AddressController implements Runnable, AutoCloseable {
                 .build());
 
         this.flavorManager = new FlavorManager();
-        this.addressManager = new AddressManagerImpl(new OpenShiftHelper(osClient), new TemplateDestinationClusterGenerator(osClient, flavorManager));
+        this.addressManager = new AddressManagerImpl(new OpenShiftHelper(osClient), new TemplateDestinationClusterGenerator(osClient, flavorManager), flavorManager);
         this.server = new AMQPServer(addressManager, options.port());
         this.restServer = new HTTPServer(addressManager);
         this.flavorWatcher = new ConfigAdapter(osClient, "flavor", flavorManager::configUpdated);

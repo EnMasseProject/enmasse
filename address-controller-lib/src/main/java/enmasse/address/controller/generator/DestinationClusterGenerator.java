@@ -16,7 +16,10 @@
 package enmasse.address.controller.generator;
 
 import enmasse.address.controller.model.Destination;
+import enmasse.address.controller.model.Flavor;
 import enmasse.address.controller.openshift.DestinationCluster;
+
+import java.util.Set;
 
 /**
  * Generates clusters for a set of destinations
@@ -26,7 +29,7 @@ public interface DestinationClusterGenerator {
     /**
      * Generate cluster for a given destination.
      *
-     * @param destination The destination to generate a cluster for.
+     * @param destination The destinations to generate a cluster for.
      */
     DestinationCluster generateCluster(Destination destination);
 }

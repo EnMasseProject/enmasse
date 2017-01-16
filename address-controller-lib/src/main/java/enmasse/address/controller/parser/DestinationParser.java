@@ -20,10 +20,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import enmasse.address.controller.model.Destination;
 
 import java.io.IOException;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Parser for the addressing config.
@@ -43,7 +40,7 @@ public class DestinationParser {
                     entry.getKey(),
                     node.get(STORE_AND_FORWARD).asBoolean(),
                     node.get(MULTICAST).asBoolean(),
-                    node.has(FLAVOR) ? node.get(FLAVOR).asText() : "");
+                    node.has(FLAVOR) ? Optional.of(node.get(FLAVOR).asText()) : Optional.empty());
             destinations.add(destination);
         }
 

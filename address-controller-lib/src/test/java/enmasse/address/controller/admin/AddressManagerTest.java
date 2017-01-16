@@ -26,11 +26,11 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.internal.verification.VerificationModeFactory;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.LinkedHashSet;
+import java.util.*;
 
+import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.*;
 
@@ -45,16 +45,19 @@ public class AddressManagerTest {
         mockHelper = mock(OpenShiftHelper.class);
         mockGenerator = mock(DestinationClusterGenerator.class);
 
-        manager = new AddressManagerImpl(mockHelper, mockGenerator);
-        flavorManager.flavorsUpdated(Collections.singletonMap("vanilla", new Flavor.Builder().templateName("test").build()));
+        manager = new AddressManagerImpl(mockHelper, mockGenerator, flavorManager);
+        Map<String, Flavor> flavorMap = new LinkedHashMap<>();
+        flavorMap.put("vanilla", new Flavor.Builder("vanilla", "test").build());
+        flavorMap.put("shared", new Flavor.Builder("shared", "test").shared(true).build());
+        flavorManager.flavorsUpdated(flavorMap);
     }
 
     @Test
     public void testClusterIsCreated() {
-        Destination queue = new Destination("myqueue", true, false, "vanilla");
+        Destination queue = new Destination("myqueue", true, false, Optional.of("vanilla"));
         DestinationCluster cluster = mock(DestinationCluster.class);
 
-        when(mockHelper.listClusters()).thenReturn(Collections.emptyList());
+        when(mockHelper.listClusters(flavorManager)).thenReturn(Collections.emptyList());
         when(mockGenerator.generateCluster(queue)).thenReturn(cluster);
         ArgumentCaptor<Destination> arg = ArgumentCaptor.forClass(Destination.class);
 
@@ -67,11 +70,11 @@ public class AddressManagerTest {
 
     @Test
     public void testNodesAreRetained() {
-        Destination queue = new Destination("myqueue", true, false, "vanilla");
-        DestinationCluster existing = new DestinationCluster(mockHelper.getClient(), queue, new KubernetesList());
-        when(mockHelper.listClusters()).thenReturn(Collections.singletonList(existing));
+        Destination queue = new Destination("myqueue", true, false, Optional.of("vanilla"));
+        DestinationCluster existing = new DestinationCluster(mockHelper.getClient(), queue, new KubernetesList(), false);
+        when(mockHelper.listClusters(flavorManager)).thenReturn(Collections.singletonList(existing));
 
-        Destination newQueue = new Destination("newqueue", true, false, "vanilla");
+        Destination newQueue = new Destination("newqueue", true, false, Optional.of("vanilla"));
         DestinationCluster newCluster = mock(DestinationCluster.class);
 
         when(mockGenerator.generateCluster(newQueue)).thenReturn(newCluster);
@@ -86,15 +89,15 @@ public class AddressManagerTest {
 
     @Test
     public void testClusterIsRemoved () {
-        Destination queue = new Destination("myqueue", true, false, "vanilla");
+        Destination queue = new Destination("myqueue", true, false, Optional.of("vanilla"));
         DestinationCluster existing = mock(DestinationCluster.class);
         when(existing.getDestination()).thenReturn(queue);
 
-        Destination newQueue = new Destination("newqueue", true, false, "vanilla");
+        Destination newQueue = new Destination("newqueue", true, false, Optional.of("vanilla"));
         DestinationCluster newCluster = mock(DestinationCluster.class);
         when(newCluster.getDestination()).thenReturn(newQueue);
 
-        when(mockHelper.listClusters()).thenReturn(Arrays.asList(existing, newCluster));
+        when(mockHelper.listClusters(flavorManager)).thenReturn(Arrays.asList(existing, newCluster));
 
 
         manager.destinationsUpdated(Collections.singleton(newQueue));
@@ -102,5 +105,41 @@ public class AddressManagerTest {
         verify(existing, VerificationModeFactory.atLeastOnce()).getDestination();
         verify(newCluster, VerificationModeFactory.atLeastOnce()).getDestination();
         verify(existing).delete();
+    }
+
+    @Test
+    public void testDestinationsAreGrouped() {
+        Destination addr1 = new Destination("myqueue1", true, false, Optional.of("shared"));
+        Destination addr2 = new Destination("myqueue2", true, false, Optional.of("shared"));
+        Destination addr3 = new Destination("myqueue3", true, false, Optional.of("vanilla"));
+
+        DestinationCluster cluster = mock(DestinationCluster.class);
+
+        when(mockHelper.listClusters(flavorManager)).thenReturn(Collections.emptyList());
+        ArgumentCaptor<Destination> arg = ArgumentCaptor.forClass(Destination.class);
+        when(mockGenerator.generateCluster(arg.capture())).thenReturn(cluster);
+
+        Set<Destination> destinations = new LinkedHashSet<>();
+        destinations.add(addr1);
+        destinations.add(addr2);
+        destinations.add(addr3);
+
+        manager.destinationsUpdated(destinations);
+
+        List<Destination> generated = arg.getAllValues();
+        assertThat(generated.size(), is(2));
+        Destination shared = getDestination(generated, "myqueue1");
+        assertNotNull(shared);
+        assertThat(shared.addresses(), hasItem("myqueue1"));
+        assertThat(shared.addresses(), hasItem("myqueue2"));
+    }
+
+    private Destination getDestination(List<Destination> destinations, String address) {
+        for (Destination destination : destinations) {
+            if (destination.addresses().contains(address)) {
+                return destination;
+            }
+        }
+        return null;
     }
 }
