@@ -7,7 +7,7 @@ services:
 script:
 - gradle check
 - curl -s https://raw.githubusercontent.com/EnMasseProject/travis-scripts/master/docker-build.sh
-  | bash /dev/stdin enmasseproject/storage-controller storage-controller-server
+  | bash /dev/stdin enmasseproject/address-controller address-controller-server
 
 after_success:
 - curl -s https://raw.githubusercontent.com/EnMasseProject/travis-scripts/master/trigger-travis.sh

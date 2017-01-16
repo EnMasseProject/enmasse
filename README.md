@@ -1,8 +1,10 @@
-[![Build Status](https://travis-ci.org/EnMasseProject/storage-controller.svg?branch=master)](https://travis-ci.org/EnMasseProject/storage-controller)
+[![Build Status](https://travis-ci.org/EnMasseProject/address-controller.svg?branch=master)](https://travis-ci.org/EnMasseProject/address-controller)
 
-# Storage Controller
+# Address Controller
 
-The Storage Controller is responsible for handling the address configuration and to instantiate OpenShift templates based on a flavor config for each address. The address config can be deployed either using AMQP or HTTP.
+The Address Controller implements an API for deploying and modifying the address configuration in EnMasse. It combines the address configuration with the flavor configuration to find the appropriate OpenShift template to use for a given address, and instantiates the template with parameters as specified by the flavor.
+
+The Address Controller exposes an API for modifying the addressing config using either AMQP or HTTP.
 
 # Build instructions
 
