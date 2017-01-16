@@ -604,7 +604,7 @@ objects:
   kind: Service
   metadata:
     annotations:
-      service.alpha.openshift.io/dependencies: '[{"name":"configuration","namespace":"","kind":"Service"},{"name":"ragent","namespace":"","kind":"Service"},{"name":"subscription","namespace":"","kind":"Service"},{"name":"restapi","namespace":"","kind":"Service"},{"name":"storage-controller","namespace":"","kind":"Service"},{"name":"mqtt","namespace":"","kind":"Service"}]'
+      service.alpha.openshift.io/dependencies: '[{"name":"configuration","namespace":"","kind":"Service"},{"name":"ragent","namespace":"","kind":"Service"},{"name":"subscription","namespace":"","kind":"Service"},{"name":"restapi","namespace":"","kind":"Service"},{"name":"address-controller","namespace":"","kind":"Service"},{"name":"mqtt","namespace":"","kind":"Service"}]'
       service.alpha.openshift.io/infrastructure: 'true'
     labels:
       app: enmasse
@@ -965,9 +965,9 @@ parameters:
 - description: The image to use for the configuration service
   name: CONFIGSERV_REPO
   value: enmasseproject/configserv
-- description: The docker image to use for the storage controller
-  name: STORAGE_CONTROLLER_REPO
-  value: enmasseproject/storage-controller
+- description: The docker image to use for the address controller
+  name: ADDRESS_CONTROLLER_REPO
+  value: enmasseproject/address-controller
 - description: The image to use for the router agent
   name: RAGENT_REPO
   value: enmasseproject/ragent

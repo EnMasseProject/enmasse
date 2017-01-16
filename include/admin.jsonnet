@@ -27,7 +27,7 @@ local common = import "common.jsonnet";
             "port": 5672
           },
           {
-            "name": "storage-controller",
+            "name": "address-controller",
             "port": 55674
           }
         ],
@@ -59,7 +59,7 @@ local common = import "common.jsonnet";
         },
         common.trigger("ragent", "ragent"),
         common.trigger("configserv", "configserv"),
-        common.trigger("storage-controller", "storage-controller")
+        common.trigger("address-controller", "address-controller")
       ],
       "template": {
         "metadata": {
@@ -71,7 +71,7 @@ local common = import "common.jsonnet";
         "spec": {
           "serviceAccount": "deployer",
           "containers": [
-            common.container2("storage-controller", "storage-controller", "amqp", 55674, "http", 8080),
+            common.container2("address-controller", "address-controller", "amqp", 55674, "http", 8080),
             common.container("ragent", "ragent", "amqp", 55672),
             common.container("configserv", "configserv", "amqp", 5672),
           ]

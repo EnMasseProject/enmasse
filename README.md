@@ -28,7 +28,7 @@ named myproject). This is needed by the configmap-bridge and the
 router agent.
 
 Edit rights must also be granted to the deployer role, used by the
-storage-controller.
+address-controller.
 
 The permissions can be setup with the following commands:
 
@@ -105,7 +105,7 @@ Save your config to a file, i.e. ```addresses.json``` and deploy it using curl:
     
     curl -X PUT -H "content-type: application/json" --data-binary @addresses.json http://$(oc get service -o jsonpath='{.spec.clusterIP}' admin):8080/v1/enmasse/addresses
 
-The REST API will deploy the configuration to the storage controller, which will create and delete brokers to
+The REST API will deploy the configuration to the address controller, which will create and delete brokers to
 match the desired state.
 
 Each address that set store-and-forward=true must also refer to a flavor.

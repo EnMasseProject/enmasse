@@ -2,44 +2,44 @@ local version = std.extVar("VERSION");
 local common = import "common.jsonnet";
 {
   imagestream(image_name)::
-    common.imagestream("storage-controller", image_name),
+    common.imagestream("address-controller", image_name),
   service::
-    common.service("storage-controller", "storage-controller", "amqp", 5672, 55674),
+    common.service("address-controller", "address-controller", "amqp", 5672, 55674),
   restapi::
-    common.service("restapi", "storage-controller", "http", 8080, 8080),
+    common.service("restapi", "address-controller", "http", 8080, 8080),
   deployment::
     {
       "apiVersion": "v1",
       "kind": "DeploymentConfig",
       "metadata": {
         "labels": {
-          "name": "storage-controller",
+          "name": "address-controller",
           "app": "enmasse"
         },
-        "name": "storage-controller"
+        "name": "address-controller"
       },
       "spec": {
         "replicas": 1,
         "selector": {
-          "name": "storage-controller"
+          "name": "address-controller"
         },
         "triggers": [
           {
             "type": "ConfigChange"
           },
-          common.trigger("storage-controller", "storage-controller")
+          common.trigger("address-controller", "address-controller")
         ],
         "template": {
           "metadata": {
             "labels": {
-              "name": "storage-controller",
+              "name": "address-controller",
               "app": "enmasse"
             }
           },
           "spec": {
             "serviceAccount": "deployer",
             "containers": [
-              common.container("storage-controller", "storage-controller", "amqp", 55674)
+              common.container("address-controller", "address-controller", "amqp", 55674)
             ]
           }
         }

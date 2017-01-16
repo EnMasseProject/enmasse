@@ -5,7 +5,7 @@ local router = import "router.jsonnet";
 local broker = import "broker.jsonnet";
 local forwarder = import "forwarder.jsonnet";
 local qdrouterd = import "qdrouterd.jsonnet";
-local storageController = import "storage-controller.jsonnet";
+local addressController = import "address-controller.jsonnet";
 local subserv = import "subserv.jsonnet";
 local messagingService = import "messaging-service.jsonnet";
 local messagingRoute = import "messaging-route.json";
@@ -18,9 +18,9 @@ local mqtt = import "mqtt.jsonnet";
 local mqttService = import "mqtt-service.jsonnet";
 local mqttRoute = import "mqtt-route.json";
 {
-  generate(secure, with_storage_controller)::
+  generate(secure, with_address_controller)::
   {
-    local templateName = (if secure then "tls-enmasse" else "enmasse") + (if with_storage_controller then "" else "-base"),
+    local templateName = (if secure then "tls-enmasse" else "enmasse") + (if with_address_controller then "" else "-base"),
     "apiVersion": "v1",
     "kind": "Template",
     "metadata": {
@@ -53,14 +53,14 @@ local mqttRoute = import "mqtt-route.json";
                  mqtt.imagestream("${MQTT_GATEWAY_REPO}"),
                  mqttGateway.deployment(secure),
                  mqttService.generate(secure) ],
-    local storage_controller_resources = [
-                 storageController.imagestream("${STORAGE_CONTROLLER_REPO}"),
-                 storageController.deployment,
-                 storageController.service,
-                 storageController.restapi,
+    local address_controller_resources = [
+                 addressController.imagestream("${ADDRESS_CONTROLLER_REPO}"),
+                 addressController.deployment,
+                 addressController.service,
+                 addressController.restapi,
                  flavorConfig.generate(secure)],
 
-    local all_objects = if with_storage_controller then common + storage_controller_resources else common,
+    local all_objects = if with_address_controller then common + address_controller_resources else common,
     local secured_objects = all_objects + [ messagingRoute, mqttRoute ],
     "objects": if secure then secured_objects else all_objects,
     "parameters": [
@@ -90,9 +90,9 @@ local mqttRoute = import "mqtt-route.json";
         "value": "enmasseproject/configserv"
       },
       {
-        "name": "STORAGE_CONTROLLER_REPO",
-        "description": "The docker image to use for the storage controller",
-        "value": "enmasseproject/storage-controller"
+        "name": "ADDRESS_CONTROLLER_REPO",
+        "description": "The docker image to use for the address controller",
+        "value": "enmasseproject/address-controller"
       },
       {
         "name": "RAGENT_REPO",

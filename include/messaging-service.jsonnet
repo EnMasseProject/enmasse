@@ -18,7 +18,7 @@
     "targetPort": 55673
   },
   local admin_deps = '[{"name":"admin","namespace":"","kind":"Service"},{"name":"subscription","namespace":"","kind":"Service"},{"name":"mqtt","namespace":"","kind":"Service"}]',
-  local full_deps = '[{"name":"configuration","namespace":"","kind":"Service"},{"name":"ragent","namespace":"","kind":"Service"},{"name":"subscription","namespace":"","kind":"Service"},{"name":"restapi","namespace":"","kind":"Service"},{"name":"storage-controller","namespace":"","kind":"Service"},{"name":"mqtt","namespace":"","kind":"Service"}]',
+  local full_deps = '[{"name":"configuration","namespace":"","kind":"Service"},{"name":"ragent","namespace":"","kind":"Service"},{"name":"subscription","namespace":"","kind":"Service"},{"name":"restapi","namespace":"","kind":"Service"},{"name":"address-controller","namespace":"","kind":"Service"},{"name":"mqtt","namespace":"","kind":"Service"}]',
   generate(secure, admin)::
     {
       "apiVersion": "v1",

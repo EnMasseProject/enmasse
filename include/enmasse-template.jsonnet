@@ -5,7 +5,7 @@ local router = import "router.jsonnet";
 local broker = import "broker.jsonnet";
 local forwarder = import "forwarder.jsonnet";
 local qdrouterd = import "qdrouterd.jsonnet";
-local storageController = import "storage-controller.jsonnet";
+local addressController = import "address-controller.jsonnet";
 local subserv = import "subserv.jsonnet";
 local messagingService = import "messaging-service.jsonnet";
 local messagingRoute = import "messaging-route.json";
@@ -50,7 +50,7 @@ local mqttRoute = import "mqtt-route.json";
                  mqtt.imagestream("${MQTT_GATEWAY_REPO}"),
                  mqttGateway.deployment(secure),
                  mqttService.generate(secure),
-                 storageController.imagestream("${STORAGE_CONTROLLER_REPO}"),
+                 addressController.imagestream("${ADDRESS_CONTROLLER_REPO}"),
                  flavorConfig.generate(secure),
                  admin.deployment ] + admin.services,
 
@@ -83,9 +83,9 @@ local mqttRoute = import "mqtt-route.json";
         "value": "enmasseproject/configserv"
       },
       {
-        "name": "STORAGE_CONTROLLER_REPO",
-        "description": "The docker image to use for the storage controller",
-        "value": "enmasseproject/storage-controller"
+        "name": "ADDRESS_CONTROLLER_REPO",
+        "description": "The docker image to use for the address controller",
+        "value": "enmasseproject/address-controller"
       },
       {
         "name": "RAGENT_REPO",

@@ -751,15 +751,15 @@ objects:
   metadata:
     labels:
       app: enmasse
-    name: storage-controller
+    name: address-controller
   spec:
-    dockerImageRepository: "${STORAGE_CONTROLLER_REPO}"
+    dockerImageRepository: "${ADDRESS_CONTROLLER_REPO}"
     importPolicy:
       scheduled: true
     tags:
     - from:
         kind: DockerImage
-        name: "${STORAGE_CONTROLLER_REPO}:latest"
+        name: "${ADDRESS_CONTROLLER_REPO}:latest"
       name: latest
 - apiVersion: v1
   data:
@@ -793,11 +793,11 @@ objects:
           name: admin
       spec:
         containers:
-        - image: storage-controller
+        - image: address-controller
           livenessProbe:
             tcpSocket:
               port: amqp
-          name: storage-controller
+          name: address-controller
           ports:
           - containerPort: 55674
             name: amqp
@@ -845,10 +845,10 @@ objects:
     - imageChangeParams:
         automatic: true
         containerNames:
-        - storage-controller
+        - address-controller
         from:
           kind: ImageStreamTag
-          name: storage-controller:latest
+          name: address-controller:latest
       type: ImageChange
 - apiVersion: v1
   kind: Service
@@ -864,7 +864,7 @@ objects:
       port: 8080
     - name: configuration
       port: 5672
-    - name: storage-controller
+    - name: address-controller
       port: 55674
     selector:
       name: admin
@@ -884,9 +884,9 @@ parameters:
 - description: The image to use for the configuration service
   name: CONFIGSERV_REPO
   value: enmasseproject/configserv
-- description: The docker image to use for the storage controller
-  name: STORAGE_CONTROLLER_REPO
-  value: enmasseproject/storage-controller
+- description: The docker image to use for the address controller
+  name: ADDRESS_CONTROLLER_REPO
+  value: enmasseproject/address-controller
 - description: The image to use for the router agent
   name: RAGENT_REPO
   value: enmasseproject/ragent
