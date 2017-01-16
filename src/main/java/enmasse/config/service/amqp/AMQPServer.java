@@ -107,8 +107,13 @@ public class AMQPServer extends AbstractVerticle {
     public void start() {
         server = ProtonServer.create(vertx);
         server.connectHandler(this::connectHandler);
-        log.info("Starting server on {}:{}", hostname, port);
-        server.listen(port, hostname);
+        server.listen(port, hostname, result -> {
+            if (result.succeeded()) {
+                log.info("Starting server on {}:{}", hostname, port);
+            } else {
+                log.error("Error starting server", result.cause());
+            }
+        });
     }
 
     public int port() {
