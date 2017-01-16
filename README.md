@@ -2,9 +2,9 @@
 
 # Address Controller
 
-The Address Controller is the API for deploying and modifying the address configuration in EnMasse. It combines the address configuration with the flavor configuration to find the appropriate OpenShift template to use for a given address, and instantiates the template with parameters as specified by the flavor.
+The Address Controller implements an API for deploying and modifying the address configuration in EnMasse. It combines the address configuration with the flavor configuration to find the appropriate OpenShift template to use for a given address, and instantiates the template with parameters as specified by the flavor.
 
-The Address Controller expose an API for modifying the addressing config using either AMQP or HTTP.
+The Address Controller exposes an API for modifying the addressing config using either AMQP or HTTP.
 
 # Build instructions
 
