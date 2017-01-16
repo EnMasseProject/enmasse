@@ -4,6 +4,8 @@ jdk:
 - oraclejdk8
 services:
 - docker
+notifications:
+  email: false
 script:
 - gradle check
 - curl -s https://raw.githubusercontent.com/EnMasseProject/travis-scripts/master/docker-build.sh
