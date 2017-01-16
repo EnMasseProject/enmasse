@@ -1,0 +1,5 @@
+         <address name="$QUEUE_NAME">
+            <anycast>
+               <queue name="$QUEUE_NAME" />
+            </anycast>
+         </address>

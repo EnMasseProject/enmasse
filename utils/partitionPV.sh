@@ -3,7 +3,6 @@
 # - lock timeout
 function partitionPV() {
   LOCK_DIR="$1"
-  ADDRESS="$2"
   LOCK_TIMEOUT="${3:-30}"
 
   mkdir -p "${LOCK_DIR}"
@@ -14,7 +13,7 @@ function partitionPV() {
   COUNT=1
 
   while : ; do
-    INSTANCE_ID="artemis-${ADDRESS}-${COUNT}"
+    INSTANCE_ID="artemis-${COUNT}"
     INSTANCE_DIR="${LOCK_DIR}/${INSTANCE_ID}"
     mkdir -p "${INSTANCE_DIR}"
 
