@@ -72,7 +72,15 @@ local common = import "common.jsonnet";
           "serviceAccount": "deployer",
           "containers": [
             common.container2("address-controller", "address-controller", "amqp", 55674, "http", 8080),
-            common.container("ragent", "ragent", "amqp", 55672),
+            common.containerWithEnv("ragent", "ragent", "amqp", 55672, [
+                      {
+                        "name": "CONFIGURATION_SERVICE_HOST",
+                        "value": "localhost"
+                      },
+                      {
+                        "name": "CONFIGURATION_SERVICE_PORT",
+                        "value": "5672"
+                      }]),
             common.container("configserv", "configserv", "amqp", 5672),
           ]
         }

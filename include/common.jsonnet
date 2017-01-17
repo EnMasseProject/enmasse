@@ -60,6 +60,25 @@ local version = std.extVar("VERSION");
     }
   },
 
+  containerWithEnv(name, image, port_name, port, env)::
+  {
+    "image": name,
+    "name": name,
+    "ports": [
+      {
+        "name": port_name,
+        "containerPort": port,
+        "protocol": "TCP"
+      }
+    ],
+    "env": env,
+    "livenessProbe": {
+      "tcpSocket": {
+        "port": port_name
+      }
+    }
+  },
+
   container2(name, image, port_name, port, port2_name, port2_port)::
   {
     "image": name,

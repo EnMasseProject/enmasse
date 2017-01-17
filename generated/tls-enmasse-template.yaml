@@ -875,7 +875,12 @@ objects:
           - containerPort: 8080
             name: http
             protocol: TCP
-        - image: ragent
+        - env:
+          - name: CONFIGURATION_SERVICE_HOST
+            value: localhost
+          - name: CONFIGURATION_SERVICE_PORT
+            value: '5672'
+          image: ragent
           livenessProbe:
             tcpSocket:
               port: amqp
