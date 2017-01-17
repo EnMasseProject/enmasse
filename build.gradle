@@ -7,7 +7,7 @@ ext {
     jacksonVersion = '2.7.4'
     vertxProtonVersion = '3.3.3'
     slf4jVersion = '1.7.21'
-    openshiftClientVersion = '1.4.20'
+    openshiftClientVersion = '1.4.33'
 
     junitVersion = '4.12'
     mockitoVersion = '2.0.52-beta'
