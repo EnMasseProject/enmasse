@@ -89,7 +89,7 @@ public class RestService {
 
     private static Set<Destination> mapToDestinations(Map<String, AddressProperties> addressMap) {
         return addressMap.entrySet().stream()
-                .map(e -> new Destination(e.getKey(), e.getValue().store_and_forward, e.getValue().multicast, e.getValue().flavor))
+                .map(e -> new Destination(e.getKey(), e.getValue().store_and_forward, e.getValue().multicast, e.getValue().flavor == null ? "" : e.getValue().flavor))
                 .collect(Collectors.toSet());
     }
 
