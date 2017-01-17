@@ -3,6 +3,7 @@ package enmasse.config.service;
 import enmasse.config.service.model.Resource;
 import io.fabric8.kubernetes.api.model.HasMetadata; import io.fabric8.kubernetes.api.model.ObjectMeta;
 
+import java.util.Collections;
 import java.util.Map;
 
 public class TestResource extends Resource {
@@ -64,8 +65,13 @@ public class TestResource extends Resource {
         private final String value;
 
         public TestValue(String name, Map<String, String> labels, String value) {
+            this(name, labels, Collections.emptyMap(), value);
+        }
+
+        public TestValue(String name, Map<String, String> labels, Map<String, String> annotations, String value) {
             meta.setName(name);
             meta.setLabels(labels);
+            meta.setAnnotations(annotations);
             this.value = value;
         }
 

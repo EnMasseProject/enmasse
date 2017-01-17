@@ -28,7 +28,7 @@ public class ConfigMessageEncoder implements MessageEncoder<ConfigResource> {
     @Override
     public Message encode(Set<ConfigResource> resources) throws IOException {
         List<Config> configs = resources.stream()
-                .map(h -> AddressConfigCodec.decodeLabels(h.getLabels()))
+                .map(h -> AddressConfigCodec.decodeConfig(h))
                 .collect(Collectors.toList());
         Message message = Message.Factory.create();
         ObjectNode root = mapper.createObjectNode();

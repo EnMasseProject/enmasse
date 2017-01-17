@@ -12,11 +12,13 @@ public class ConfigResource extends Resource {
     private final String kind;
     private final String name;
     private final Map<String, String> labels;
+    private final Map<String, String> annotations;
 
     public ConfigResource(HasMetadata resource) {
         this.kind = resource.getKind();
         this.name = resource.getMetadata().getName();
         this.labels = resource.getMetadata().getLabels();
+        this.annotations = resource.getMetadata().getAnnotations();
     }
 
     @Override
@@ -51,6 +53,10 @@ public class ConfigResource extends Resource {
 
     public Map<String, String> getLabels() {
         return labels;
+    }
+
+    public Map<String, String> getAnnotations() {
+        return annotations;
     }
 
     @Override

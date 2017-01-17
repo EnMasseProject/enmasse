@@ -35,11 +35,11 @@ public class ConfigMessageEncoderTest {
         ConfigMessageEncoder encoder = new ConfigMessageEncoder();
 
         Set<ConfigResource> configSet = new LinkedHashSet<>(Arrays.asList(
-                new ConfigResource(new TestResource.TestValue("r1", AddressConfigCodec.encodeLabels("myqueue", true, false), "v1")),
-                new ConfigResource(new TestResource.TestValue("r2", AddressConfigCodec.encodeLabels("mytopic", true, true), "v2"))));
+                new ConfigResource(new TestResource.TestValue("r1", AddressConfigCodec.encodeLabels(true, false), AddressConfigCodec.encodeAnnotations("[\"myqueue\", \"myqueue2\"]"), "v1")),
+                new ConfigResource(new TestResource.TestValue("r2", AddressConfigCodec.encodeLabels(true, true), AddressConfigCodec.encodeAnnotations("[\"mytopic\"]"), "v2"))));
 
         Message message = encoder.encode(configSet);
         String json = (String) ((AmqpValue) message.getBody()).getValue();
-        assertThat(json, is("{\"myqueue\":{\"store_and_forward\":true,\"multicast\":false},\"mytopic\":{\"store_and_forward\":true,\"multicast\":true}}"));
+        assertThat(json, is("{\"myqueue\":{\"store_and_forward\":true,\"multicast\":false},\"myqueue2\":{\"store_and_forward\":true,\"multicast\":false},\"mytopic\":{\"store_and_forward\":true,\"multicast\":true}}"));
     }
 }
