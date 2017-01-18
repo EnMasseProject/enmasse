@@ -27,13 +27,14 @@ function configure() {
         cp $CONFIG_TEMPLATES/broker_header.xml /tmp/broker.xml
         if [ -n "$QUEUE_NAMES" ]; then
             cat $CONFIG_TEMPLATES/broker_queue_address_header.xml >> /tmp/broker.xml
-            for queue in $QUEUE_NAMES
+            QUEUE_LIST=`$ARTEMIS_HOME/bin/parse_addresses.py "$QUEUE_NAMES"`
+            for queue in $QUEUE_LIST
             do
                 cat $CONFIG_TEMPLATES/broker_queue_address.xml | QUEUE_NAME=$queue envsubst >> /tmp/broker.xml
             done
             cat $CONFIG_TEMPLATES/broker_queue_address_footer.xml >> /tmp/broker.xml
             cat $CONFIG_TEMPLATES/broker_queue_connector_header.xml >> /tmp/broker.xml
-            for queue in $QUEUE_NAMES
+            for queue in $QUEUE_LIST
             do
                 cat $CONFIG_TEMPLATES/broker_queue_connector.xml | QUEUE_NAME=$queue envsubst >> /tmp/broker.xml
             done
