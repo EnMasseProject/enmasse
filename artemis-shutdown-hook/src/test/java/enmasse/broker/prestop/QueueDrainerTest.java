@@ -24,6 +24,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -60,7 +61,7 @@ public class QueueDrainerTest {
         sendMessages(fromServer, "testfrom", 100);
         sendMessages(toServer, "testto", 100);
         System.out.println("Starting drain");
-        client.drainMessages(to.amqpEndpoint(), "myqueue");
+        client.drainMessages(to.amqpEndpoint(), Collections.singleton("myqueue"));
         assertThat(toServer.numMessages("myqueue"), is(200L));
         assertReceive(toServer, "testto", 100);
         assertReceive(toServer, "testfrom", 100);

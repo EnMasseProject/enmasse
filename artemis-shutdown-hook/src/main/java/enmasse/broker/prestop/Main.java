@@ -16,6 +16,8 @@
 
 package enmasse.broker.prestop;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.openshift.internal.restclient.model.Pod;
 import com.openshift.restclient.ClientBuilder;
 import com.openshift.restclient.IClient;
@@ -32,11 +34,10 @@ import java.io.IOException;
 import java.net.Inet4Address;
 import java.net.UnknownHostException;
 import java.nio.file.Files;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 public class Main {
+    private static final ObjectMapper mapper = new ObjectMapper();
     public static void main(String [] args) throws Exception {
         boolean debug = System.getenv("PRESTOP_DEBUG") != null;
 
@@ -53,14 +54,15 @@ public class Main {
         Host localHost = localHost();
         Vertx vertx = Vertx.vertx();
 
-        if (System.getenv("QUEUE_NAME") != null) {
-            String address = System.getenv("QUEUE_NAME");
+        if (System.getenv("QUEUE_NAMES") != null) {
+            String json = System.getenv("QUEUE_NAMES");
+            Set<String> addresses = parseAddresses(json);
             String messagingHost = System.getenv("MESSAGING_SERVICE_HOST");
             int messagingPort = Integer.parseInt(System.getenv("MESSAGING_SERVICE_PORT"));
             Endpoint to = new Endpoint(messagingHost, messagingPort);
 
             QueueDrainer client = new QueueDrainer(vertx, localHost, debugFn);
-            client.drainMessages(to, address);
+            client.drainMessages(to, addresses);
         } else if (System.getenv("TOPIC_NAME") != null) {
             String address = System.getenv("TOPIC_NAME");
 
@@ -75,6 +77,15 @@ public class Main {
         } else {
             throw new IllegalArgumentException("Unable to find QUEUE_NAME or TOPIC_NAME environment");
         }
+    }
+
+    private static Set<String> parseAddresses(String json) throws IOException {
+        Set<String> addresses = new LinkedHashSet<>();
+        ArrayNode node = (ArrayNode) mapper.readTree(json);
+        for (int i = 0; i < node.size(); i++) {
+            addresses.add(node.get(i).asText());
+        }
+        return addresses;
     }
 
     private static Host localHost() throws UnknownHostException {

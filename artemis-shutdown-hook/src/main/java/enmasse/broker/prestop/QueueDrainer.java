@@ -25,13 +25,13 @@ import io.vertx.proton.ProtonClient;
 import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.ProtonReceiver;
 import io.vertx.proton.ProtonSender;
-import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -48,13 +48,15 @@ public class QueueDrainer {
         this.debugFn = debugFn;
     }
 
-    public void drainMessages(Endpoint to, String address) throws Exception {
+    public void drainMessages(Endpoint to, Set<String> addresses) throws Exception {
         BrokerManager brokerManager = new BrokerManager(fromHost.coreEndpoint());
 
         brokerManager.destroyConnectorService("amqp-connector");
-        startDrain(to, address);
+        for (String address : addresses) {
+            startDrain(to, address);
+        }
         System.out.println("Waiting.....");
-        brokerManager.waitUntilEmpty(address);
+        brokerManager.waitUntilEmpty(addresses);
         System.out.println("Done waiting!");
         vertx.close();
         brokerManager.shutdownBroker();
