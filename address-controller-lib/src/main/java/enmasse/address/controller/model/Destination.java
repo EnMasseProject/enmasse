@@ -80,4 +80,52 @@ public final class Destination {
                 .append("flavor=").append(flavor).append("}");
         return builder.toString();
     }
+
+    public static class Builder {
+        private Set<String> addresses = new HashSet<>();
+        private boolean storeAndForward = false;
+        private boolean multicast = false;
+        private Optional<String> flavor = Optional.empty();
+
+        public Builder() {}
+
+        public Builder(Destination destination) {
+            this.addresses.addAll(destination.addresses());
+            this.storeAndForward = destination.storeAndForward();
+            this.multicast = destination.multicast();
+            this.flavor = destination.flavor();
+        }
+
+        public Builder addresses(Set<String> addresses) {
+            this.addresses.addAll(addresses);
+            return this;
+        }
+
+        public Set<String> addresses() {
+            return addresses;
+        }
+
+        public Builder storeAndForward(boolean storeAndForward) {
+            this.storeAndForward = storeAndForward;
+            return this;
+        }
+
+        public Builder multicast(boolean multicast) {
+            this.multicast = multicast;
+            return this;
+        }
+
+        public Builder flavor(Optional<String> flavor) {
+            this.flavor = flavor;
+            return this;
+        }
+
+        public Optional<String> flavor() {
+            return flavor;
+        }
+
+        public Destination build() {
+            return new Destination(addresses, storeAndForward, multicast, flavor);
+        }
+    }
 }

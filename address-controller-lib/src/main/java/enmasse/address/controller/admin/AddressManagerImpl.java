@@ -25,6 +25,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BinaryOperator;
 import java.util.stream.Collectors;
 
 /**
@@ -52,40 +53,34 @@ public class AddressManagerImpl implements AddressManager {
         deleteBrokers(clusterList, newDestinations);
     }
 
-    private Set<Destination> groupSharedDestinations(Set<Destination> newDestinations) {
-        Set<Destination> destByFlavor = new HashSet<>();
-        //log.info("Grouping destinations : " + newDestinations);
-        for (Destination newDest : newDestinations) {
-            Flavor flavor = newDest.flavor()
-                    .map(f ->flavorRepository.getFlavor(f, TimeUnit.SECONDS.toMillis(60)))
-                    .orElse(new Flavor.Builder("direct", "direct").build());
-            if (flavor.isShared()) {
-                if (destByFlavor.isEmpty()) {
-                    destByFlavor.add(newDest);
-                } else {
-                    Iterator<Destination> destIt = destByFlavor.iterator();
-                    // TODO: Rework this loop by introducing a Destination builder class
-                    while (destIt.hasNext()) {
-                        Destination dest = destIt.next();
-                        //log.info("Comparing " + dest + " against " + newDest);
-                        if (dest.flavor().get().equals(newDest.flavor().get())) {
-                            Set<String> mergedAddresses = new HashSet<>(dest.addresses());
-                            mergedAddresses.addAll(newDest.addresses());
-                            Destination merged = new Destination(mergedAddresses, dest.storeAndForward(), dest.multicast(), dest.flavor());
-                            destIt.remove();
-                            destByFlavor.add(merged);
-                            break;
-                            //log.info("Merged into new dest: " + merged);
-                        }
-                    }
-                }
-                //log.info("Found shared flavor, collected multiple addresses into destinations: " + destByFlavor);
-            } else {
-                //log.info("Flavor is not shared, deploying as normal");
-                destByFlavor.add(newDest);
-            }
+    private static Destination mergeDestinations(Destination destA, Destination destB) {
+        return new Destination.Builder(destA).addresses(destB.addresses()).build();
+    }
+
+    private String getDestinationIdentifier(Destination dest) {
+        Flavor flavor = dest.flavor()
+                .map(f ->flavorRepository.getFlavor(f, TimeUnit.SECONDS.toMillis(60)))
+                .orElse(new Flavor.Builder("direct", "direct").build());
+        if (flavor.isShared()) {
+            return flavor.name();
+        } else {
+            return dest.addresses().iterator().next();
         }
-        return destByFlavor;
+    }
+
+    private Set<Destination> groupSharedDestinations(Set<Destination> newDestinations) {
+        /*
+         * 1. Group by flavor name
+         * 2. Merge addresses on destinations having the same flavor
+         * 3. Collect a new set
+         */
+        return newDestinations.stream()
+                .collect(Collectors.groupingBy(
+                        this::getDestinationIdentifier,
+                        Collectors.reducing(AddressManagerImpl::mergeDestinations))).values().stream()
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .collect(Collectors.toSet());
     }
 
     private static boolean brokerExists(Collection<DestinationCluster> clusterList, Destination destination) {

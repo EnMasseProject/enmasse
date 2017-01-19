@@ -109,17 +109,21 @@ public class AddressManagerTest {
 
     @Test
     public void testDestinationsAreGrouped() {
+        Destination addr0 = new Destination("myqueue0", true, false, Optional.of("vanilla"));
         Destination addr1 = new Destination("myqueue1", true, false, Optional.of("shared"));
         Destination addr2 = new Destination("myqueue2", true, false, Optional.of("shared"));
         Destination addr3 = new Destination("myqueue3", true, false, Optional.of("vanilla"));
 
+        DestinationCluster existing = mock(DestinationCluster.class);
+        when(existing.getDestination()).thenReturn(addr0);
         DestinationCluster cluster = mock(DestinationCluster.class);
 
-        when(mockHelper.listClusters(flavorManager)).thenReturn(Collections.emptyList());
+        when(mockHelper.listClusters(flavorManager)).thenReturn(Collections.singletonList(existing));
         ArgumentCaptor<Destination> arg = ArgumentCaptor.forClass(Destination.class);
         when(mockGenerator.generateCluster(arg.capture())).thenReturn(cluster);
 
         Set<Destination> destinations = new LinkedHashSet<>();
+        destinations.add(addr0);
         destinations.add(addr1);
         destinations.add(addr2);
         destinations.add(addr3);
