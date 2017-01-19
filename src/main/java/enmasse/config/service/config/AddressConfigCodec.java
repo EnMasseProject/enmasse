@@ -31,7 +31,7 @@ import java.util.Set;
  */
 public class AddressConfigCodec {
 
-    private static final String FIELD_ADDRESS = "address";
+    private static final String FIELD_ADDRESS = "addressList";
     private static final String FIELD_STORE_AND_FORWARD = "store_and_forward";
     private static final String FIELD_MULTICAST = "multicast";
     private static final ObjectMapper mapper = new ObjectMapper();
