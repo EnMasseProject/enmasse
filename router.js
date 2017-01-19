@@ -265,9 +265,13 @@ function from_router_address(address) {
 }
 
 ConnectedRouter.prototype.define_address_and_autolinks = function (address) {
-    return futurejs.and(this.define_address(address),
-                        futurejs.and(this.define_autolink(address, "in"),
-                                     this.define_autolink(address, "out")));
+    if (address.store_and_forward) {
+        return futurejs.and(this.define_address(address),
+                            futurejs.and(this.define_autolink(address, "in"),
+                                         this.define_autolink(address, "out")));
+    } else {
+        return this.define_address(address);
+    }
 }
 
 ConnectedRouter.prototype.define_address = function (address) {
