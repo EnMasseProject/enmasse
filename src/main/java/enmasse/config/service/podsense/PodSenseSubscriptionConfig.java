@@ -36,7 +36,7 @@ public class PodSenseSubscriptionConfig implements SubscriptionConfig<PodResourc
     }
 
     @Override
-    public Predicate<PodResource> getResourceFilter() {
+    public Predicate<PodResource> getResourceFilter(Map<String, String> filter) {
         return podResource -> podResource.getHost() != null && !podResource.getHost().isEmpty();
     }
 }

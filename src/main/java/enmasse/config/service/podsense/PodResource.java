@@ -20,9 +20,13 @@ public class PodResource extends Resource {
     private final String ready;
     private final String phase;
     private final Map<String, Map<String, Integer>> portMap;
+    private final Map<String, String> annotations = new LinkedHashMap<>();
 
     public PodResource(Pod pod) {
         this.name = pod.getMetadata().getName();
+        if (pod.getMetadata().getAnnotations() != null) {
+            this.annotations.putAll(pod.getMetadata().getAnnotations());
+        }
         this.kind = pod.getKind();
         this.host = pod.getStatus().getPodIP();
         this.phase = pod.getStatus().getPhase();
@@ -106,5 +110,9 @@ public class PodResource extends Resource {
 
     public Map<String, Map<String, Integer>> getPortMap() {
         return portMap;
+    }
+
+    public Map<String, String> getAnnotations() {
+        return annotations;
     }
 }

@@ -54,7 +54,7 @@ public class OpenshiftResourceDatabase<T extends Resource> implements AutoClosea
         OpenshiftResourceObserver<T> observer = observerMap.get(key);
         if (observer == null) {
             log.debug("Creating new observer with filter " + filter);
-            SubscriptionManager<T> subscriptionManager = new SubscriptionManager<>(subscriptionConfig.getMessageEncoder(), subscriptionConfig.getResourceFilter());
+            SubscriptionManager<T> subscriptionManager = new SubscriptionManager<>(subscriptionConfig.getMessageEncoder(), subscriptionConfig.getResourceFilter(filter));
             observer = new OpenshiftResourceObserver<>(subscriptionConfig.getResourceFactory(), subscriptionConfig.getObserverOptions(client, filter), subscriptionManager);
             observerMap.put(key, observer);
 

@@ -32,7 +32,7 @@ public class PodSenseSubscriptionConfigTest {
 
     @Test
     public void testFilter() {
-        Predicate<PodResource> filter = new PodSenseSubscriptionConfig().getResourceFilter();
+        Predicate<PodResource> filter = new PodSenseSubscriptionConfig().getResourceFilter(Collections.emptyMap());
         assertFalse(filter.test(PodSenseMessageEncoderTest.createPod("p1", null, "", Collections.emptyMap())));
         assertFalse(filter.test(PodSenseMessageEncoderTest.createPod("p1", "", "", Collections.emptyMap())));
         assertTrue(filter.test(PodSenseMessageEncoderTest.createPod("p1", "myhost", "", Collections.emptyMap())));

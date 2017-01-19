@@ -38,7 +38,7 @@ public class TestSubscriptionConfig implements SubscriptionConfig<TestResource> 
     }
 
     @Override
-    public Predicate<TestResource> getResourceFilter() {
+    public Predicate<TestResource> getResourceFilter(Map<String, String> filter) {
         return TestResource -> true;
     }
 }

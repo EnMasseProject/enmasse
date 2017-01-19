@@ -17,10 +17,10 @@
 package enmasse.config.service;
 
 import enmasse.config.service.amqp.AMQPServer;
+import enmasse.config.service.brokersense.BrokerSenseSubscriptionConfig;
 import enmasse.config.service.config.ConfigSubscriptionConfig;
 import enmasse.config.service.model.ResourceDatabase;
 import enmasse.config.service.openshift.OpenshiftResourceDatabase;
-import enmasse.config.service.openshift.SubscriptionConfig;
 import enmasse.config.service.podsense.PodSenseSubscriptionConfig;
 import io.fabric8.openshift.client.DefaultOpenShiftClient;
 import io.fabric8.openshift.client.OpenShiftClient;
@@ -54,6 +54,7 @@ public class Main {
             Map<String, ResourceDatabase> databaseMap = new LinkedHashMap<>();
             databaseMap.put("maas", new OpenshiftResourceDatabase<>(client, new ConfigSubscriptionConfig()));
             databaseMap.put("podsense", new OpenshiftResourceDatabase<>(client, new PodSenseSubscriptionConfig()));
+            databaseMap.put("brokersense", new OpenshiftResourceDatabase<>(client, new BrokerSenseSubscriptionConfig()));
 
             AMQPServer server = new AMQPServer(listenAddress, listenPort, databaseMap);
 
