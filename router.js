@@ -306,9 +306,13 @@ ConnectedRouter.prototype.delete_autolink = function (address, direction) {
 }
 
 ConnectedRouter.prototype.delete_address_and_autolinks = function (address) {
-    return futurejs.and(this.delete_address(address),
-                        futurejs.and(this.delete_autolink(address, "in"),
-                                     this.delete_autolink(address, "out")));
+    if (address.store_and_forward) {
+        return futurejs.and(this.delete_address(address),
+                            futurejs.and(this.delete_autolink(address, "in"),
+                                         this.delete_autolink(address, "out")));
+    } else {
+        return this.delete_address(address);
+    }
 }
 
 ConnectedRouter.prototype.define_link_route = function (route) {
