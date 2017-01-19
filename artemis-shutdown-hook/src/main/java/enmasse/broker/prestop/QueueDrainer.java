@@ -30,6 +30,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
+import java.util.Collection;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -48,7 +49,7 @@ public class QueueDrainer {
         this.debugFn = debugFn;
     }
 
-    public void drainMessages(Endpoint to, Set<String> addresses) throws Exception {
+    public void drainMessages(Endpoint to, Collection<String> addresses) throws Exception {
         BrokerManager brokerManager = new BrokerManager(fromHost.coreEndpoint());
 
         brokerManager.destroyConnectorService("amqp-connector");

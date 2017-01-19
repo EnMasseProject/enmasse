@@ -18,13 +18,12 @@ package enmasse.broker.prestop;
 
 import enmasse.discovery.Host;
 import io.vertx.core.Vertx;
-import org.apache.commons.lang.math.IntRange;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -43,8 +42,8 @@ public class QueueDrainerTest {
 
     @Before
     public void setup() throws Exception {
-        fromServer = new TestBroker(from.amqpEndpoint(), "myqueue", false);
-        toServer = new TestBroker(to.amqpEndpoint(), "myqueue", false);
+        fromServer = new TestBroker(from.amqpEndpoint(), Arrays.asList("myqueue", "queue2"), false);
+        toServer = new TestBroker(to.amqpEndpoint(), Arrays.asList("myqueue", "queue2"), false);
         fromServer.start();
         toServer.start();
         client = new QueueDrainer(Vertx.vertx(), from, Optional.empty());
@@ -58,26 +57,34 @@ public class QueueDrainerTest {
 
     @Test
     public void testDrain() throws Exception {
-        sendMessages(fromServer, "testfrom", 100);
-        sendMessages(toServer, "testto", 100);
+        sendMessages(fromServer, "myqueue", "testfrom", 100);
+        sendMessages(fromServer, "queue2", "q2from", 10);
+        sendMessages(toServer, "myqueue","testto", 100);
+        sendMessages(toServer, "queue2", "q2to", 1);
+
         System.out.println("Starting drain");
-        client.drainMessages(to.amqpEndpoint(), Collections.singleton("myqueue"));
+        client.drainMessages(to.amqpEndpoint(), Arrays.asList("myqueue", "queue2"));
         assertThat(toServer.numMessages("myqueue"), is(200L));
-        assertReceive(toServer, "testto", 100);
-        assertReceive(toServer, "testfrom", 100);
+        assertThat(toServer.numMessages("queue2"), is(11L));
+
+        assertReceive(toServer, "myqueue", "testto", 100);
+        assertReceive(toServer, "myqueue", "testfrom", 100);
+        assertReceive(toServer, "queue2", "q2to", 1);
+        assertReceive(toServer, "queue2", "q2from", 10);
+
         System.out.println("Checking shutdown");
         fromServer.assertShutdown(1, TimeUnit.MINUTES);
     }
 
-    private static void sendMessages(TestBroker broker, String prefix, int numMessages) throws IOException, InterruptedException {
+    private static void sendMessages(TestBroker broker, String address, String prefix, int numMessages) throws IOException, InterruptedException {
         List<String> messages = IntStream.range(0, numMessages)
                 .mapToObj(i -> prefix + i)
                 .collect(Collectors.toList());
-        broker.sendMessages(messages);
+        broker.sendMessages(address, messages);
     }
 
-    private static void assertReceive(TestBroker broker, String prefix, int numMessages) throws IOException, InterruptedException {
-        List<String> messages = broker.recvMessages(numMessages);
+    private static void assertReceive(TestBroker broker, String address, String prefix, int numMessages) throws IOException, InterruptedException {
+        List<String> messages = broker.recvMessages(address, numMessages);
         for (int i = 0; i < numMessages; i++) {
             String actualBody = messages.get(i);
             String expectedBody = prefix + i;
