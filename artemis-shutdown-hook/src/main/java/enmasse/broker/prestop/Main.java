@@ -66,7 +66,11 @@ public class Main {
         } else if (System.getenv("TOPIC_NAME") != null) {
             String address = System.getenv("TOPIC_NAME");
 
-            BrokerDiscoveryClient discoveryClient = new BrokerDiscoveryClient(address, Optional.of("broker"));
+            Map<String, String> filter = new LinkedHashMap<>();
+            filter.put("role", "broker");
+            filter.put("address", address);
+
+            DiscoveryClient discoveryClient = new DiscoveryClient(filter, Optional.of("broker"));
             TopicMigrator migrator = new TopicMigrator(vertx, localHost);
             discoveryClient.addListener(migrator);
             vertx.deployVerticle(discoveryClient);
