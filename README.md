@@ -10,6 +10,7 @@ Documents relating to EnMasse project. For setting up EnMasse, see [Getting Star
    * [Scaledown](scaledown/design.md)
    * [Flavors](flavors/design.md)
    * [Configserv](configserv/README.md)
+   * [REST API](restapi/design.md)
 
 ## MQTT over AMQP
 
