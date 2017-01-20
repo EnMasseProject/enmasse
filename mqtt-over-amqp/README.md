@@ -26,6 +26,6 @@ The following documentation has no assumptions on the implementation side. It me
 
 ## EnMasse implementation
 
-The implementation for EnMasse can be found [here](https://github.com/EnMasseProject/mqtt-frontend) and following its overall big picture :
+The implementation for EnMasse can be found [here](https://github.com/EnMasseProject/mqtt-gateway) and following its overall big picture :
 
-![MQTT Fronted](./images/mqtt_frontend.png)
+![MQTT gateway](./images/mqtt_gateway.png)

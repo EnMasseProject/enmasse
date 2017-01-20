@@ -95,11 +95,11 @@ For sending and receiving messages, the `mosquitto` clients are the simpler way 
 
 In order to subscribe to a topic (i.e. `mytopic` from the previous addresses configuration), the `mosquitto_sub` can be used in the following way :
 
-    mosquitto_sub -h $(oc get service -o jsonpath='{.spec.clusterIP}' mqtt-frontend) -t mytopic -q 1
+    mosquitto_sub -h $(oc get service -o jsonpath='{.spec.clusterIP}' mqtt) -t mytopic -q 1
 
 Then the subscriber is waiting for messages published on that topic. To start the publisher, the `mosquitto_pub` can be used in the following way :
 
-    mosquitto_pub -h $(oc get service -o jsonpath='{.spec.clusterIP}' mqtt-frontend) -t mytopic -q 1 -m "Hello EnMasse"
+    mosquitto_pub -h $(oc get service -o jsonpath='{.spec.clusterIP}' mqtt) -t mytopic -q 1 -m "Hello EnMasse"
 
 The the publisher publishes the message and disconnects from EnMasse. The message is received by the previous connected subscriber.
 

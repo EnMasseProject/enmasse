@@ -2,8 +2,8 @@
 
 The macro components for handling MQTT over AMQP are :
 
-* **Front End (FE)** : it's in charge to handle MQTT connections with remote clients on one side and communicate via AMQP on the other side in order to bring MQTT features on top of AMQP.
-* **Back End (BE)** : it's made of “services” which are accessible through some “control” AMQP addresses providing MQTT features over AMQP.
+* **Gateway (GW)** : it's in charge to handle MQTT connections with remote clients on one side and communicate via AMQP on the other side in order to bring MQTT features on top of AMQP.
+* **Backend (BE)** : it's made of “services” which are accessible through some “control” AMQP addresses providing MQTT features over AMQP.
 
 The mentioned AMQP services are :
 
