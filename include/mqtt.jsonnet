@@ -23,6 +23,7 @@ local common = import "common.jsonnet";
         then [secureMqttPort]
         else [mqttPort],
       "livenessProbe": {
+        "initialDelaySeconds": 60,
         "tcpSocket": {
           "port": if secure
             then "secure-mqtt"
