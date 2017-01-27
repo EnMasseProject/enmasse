@@ -33,7 +33,7 @@ local common = import "common.jsonnet";
             }
           },
           "spec": {
-            "containers": [ router.container(secure, "") ],
+            "containers": [ router.container(secure, "", "") ],
             [if secure then "volumes" ]: [
               router.secret_volume()
             ]

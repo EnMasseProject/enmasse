@@ -36,7 +36,7 @@ local common = import "common.jsonnet";
           },
           "spec": {
             "containers": [
-              common.container("ragent", "ragent", "amqp", 55672)
+              common.container("ragent", "ragent", "amqp", 55672, "64Mi")
             ]
           }
         }

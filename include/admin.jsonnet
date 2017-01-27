@@ -71,7 +71,7 @@ local common = import "common.jsonnet";
         "spec": {
           "serviceAccount": "deployer",
           "containers": [
-            common.container2("address-controller", "address-controller", "amqp", 55674, "http", 8080),
+            common.container2("address-controller", "address-controller", "amqp", 55674, "http", 8080, "256Mi"),
             common.containerWithEnv("ragent", "ragent", "amqp", 55672, [
                       {
                         "name": "CONFIGURATION_SERVICE_HOST",
@@ -80,8 +80,8 @@ local common = import "common.jsonnet";
                       {
                         "name": "CONFIGURATION_SERVICE_PORT",
                         "value": "5672"
-                      }]),
-            common.container("configserv", "configserv", "amqp", 5672),
+                      }], "64Mi"),
+            common.container("configserv", "configserv", "amqp", 5672, "256Mi"),
           ]
         }
       }

@@ -253,6 +253,11 @@ objects:
             - containerPort: 5671
               name: amqps
               protocol: TCP
+            resources:
+              limits:
+                memory: 256Mi
+              requests:
+                memory: 256Mi
             volumeMounts:
             - mountPath: "/etc/qpid-dispatch/ssl"
               name: ssl-certs
@@ -269,6 +274,11 @@ objects:
             ports:
             - containerPort: 8080
               name: health
+            resources:
+              limits:
+                memory: 128Mi
+              requests:
+                memory: 128Mi
           volumes:
           - emptyDir: {}
             name: vol-${NAME}
@@ -398,6 +408,11 @@ objects:
             - containerPort: 5671
               name: amqps
               protocol: TCP
+            resources:
+              limits:
+                memory: 256Mi
+              requests:
+                memory: 256Mi
             volumeMounts:
             - mountPath: "/etc/qpid-dispatch/ssl"
               name: ssl-certs
@@ -414,6 +429,11 @@ objects:
             ports:
             - containerPort: 8080
               name: health
+            resources:
+              limits:
+                memory: 128Mi
+              requests:
+                memory: 128Mi
           volumes:
           - name: vol-${NAME}
             persistentVolumeClaim:
@@ -495,6 +515,7 @@ objects:
     name: restapi
   spec:
     host: "${RESTAPI_HOSTNAME}"
+    path: "/v1/enmasse/addresses"
     port:
       targetPort: http
     to:
@@ -732,6 +753,11 @@ objects:
           - containerPort: 55672
             name: amqp
             protocol: TCP
+          resources:
+            limits:
+              memory: 64Mi
+            requests:
+              memory: 64Mi
     triggers:
     - type: ConfigChange
     - imageChangeParams:
@@ -798,6 +824,11 @@ objects:
           - containerPort: 5672
             name: amqp
             protocol: TCP
+          resources:
+            limits:
+              memory: 64Mi
+            requests:
+              memory: 64Mi
     triggers:
     - type: ConfigChange
     - imageChangeParams:
@@ -857,6 +888,7 @@ objects:
         containers:
         - image: mqtt-gateway
           livenessProbe:
+            initialDelaySeconds: 60
             tcpSocket:
               port: secure-mqtt
           name: mqtt-gateway-tls
@@ -870,6 +902,7 @@ objects:
             readOnly: true
         - image: mqtt-gateway
           livenessProbe:
+            initialDelaySeconds: 60
             tcpSocket:
               port: mqtt
           name: mqtt-gateway

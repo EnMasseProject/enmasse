@@ -7,6 +7,14 @@ local common = import "common.jsonnet";
       "name": "forwarder",
       "env": [ addressEnv ],
       "image": "topic-forwarder",
+      "resources": {
+          "requests": {
+              "memory": "128Mi"
+          },
+          "limits": {
+              "memory": "128Mi"
+          }
+      },
       "ports": [
         {
           "name": "health",

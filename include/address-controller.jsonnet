@@ -39,7 +39,7 @@ local common = import "common.jsonnet";
           "spec": {
             "serviceAccount": "deployer",
             "containers": [
-              common.container("address-controller", "address-controller", "amqp", 55674)
+              common.container("address-controller", "address-controller", "amqp", 55674, "256Mi")
             ]
           }
         }

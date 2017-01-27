@@ -105,7 +105,7 @@ local forwarder = import "forwarder.jsonnet";
                 else [brokerVolume],
 
               "containers": if multicast
-                then [ broker.container(volumeName, addressEnv), router.container(secure, addressEnv), forwarder.container(addressEnv) ]
+                then [ broker.container(volumeName, addressEnv), router.container(secure, addressEnv, "256Mi"), forwarder.container(addressEnv) ]
                 else [ broker.container(volumeName, addressEnv) ]
             }
           }

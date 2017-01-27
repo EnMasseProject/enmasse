@@ -71,6 +71,11 @@ objects:
           - containerPort: 5671
             name: amqps
             protocol: TCP
+          resources:
+            limits:
+              memory: 256Mi
+            requests:
+              memory: 256Mi
           volumeMounts:
           - mountPath: "/etc/qpid-dispatch/ssl"
             name: ssl-certs
@@ -87,6 +92,11 @@ objects:
           ports:
           - containerPort: 8080
             name: health
+          resources:
+            limits:
+              memory: 128Mi
+            requests:
+              memory: 128Mi
         volumes:
         - emptyDir: {}
           name: vol-${NAME}

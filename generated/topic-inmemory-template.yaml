@@ -68,6 +68,11 @@ objects:
           - containerPort: 55673
             name: internal
             protocol: TCP
+          resources:
+            limits:
+              memory: 256Mi
+            requests:
+              memory: 256Mi
         - env:
           - name: TOPIC_NAME
             value: "${ADDRESS}"
@@ -80,6 +85,11 @@ objects:
           ports:
           - containerPort: 8080
             name: health
+          resources:
+            limits:
+              memory: 128Mi
+            requests:
+              memory: 128Mi
         volumes:
         - emptyDir: {}
           name: vol-${NAME}

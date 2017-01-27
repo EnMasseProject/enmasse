@@ -244,6 +244,11 @@ objects:
             - containerPort: 55673
               name: internal
               protocol: TCP
+            resources:
+              limits:
+                memory: 256Mi
+              requests:
+                memory: 256Mi
           - env:
             - name: TOPIC_NAME
               value: "${ADDRESS}"
@@ -256,6 +261,11 @@ objects:
             ports:
             - containerPort: 8080
               name: health
+            resources:
+              limits:
+                memory: 128Mi
+              requests:
+                memory: 128Mi
           volumes:
           - emptyDir: {}
             name: vol-${NAME}
@@ -379,6 +389,11 @@ objects:
             - containerPort: 55673
               name: internal
               protocol: TCP
+            resources:
+              limits:
+                memory: 256Mi
+              requests:
+                memory: 256Mi
           - env:
             - name: TOPIC_NAME
               value: "${ADDRESS}"
@@ -391,6 +406,11 @@ objects:
             ports:
             - containerPort: 8080
               name: health
+            resources:
+              limits:
+                memory: 128Mi
+              requests:
+                memory: 128Mi
           volumes:
           - name: vol-${NAME}
             persistentVolumeClaim:
@@ -469,6 +489,7 @@ objects:
     name: restapi
   spec:
     host: "${RESTAPI_HOSTNAME}"
+    path: "/v1/enmasse/addresses"
     port:
       targetPort: restapi
     to:
@@ -656,6 +677,11 @@ objects:
           - containerPort: 5672
             name: amqp
             protocol: TCP
+          resources:
+            limits:
+              memory: 64Mi
+            requests:
+              memory: 64Mi
     triggers:
     - type: ConfigChange
     - imageChangeParams:
@@ -715,6 +741,7 @@ objects:
         containers:
         - image: mqtt-gateway
           livenessProbe:
+            initialDelaySeconds: 60
             tcpSocket:
               port: mqtt
           name: mqtt-gateway
@@ -805,6 +832,11 @@ objects:
           - containerPort: 8080
             name: http
             protocol: TCP
+          resources:
+            limits:
+              memory: 256Mi
+            requests:
+              memory: 256Mi
         - env:
           - name: CONFIGURATION_SERVICE_HOST
             value: localhost
@@ -819,6 +851,11 @@ objects:
           - containerPort: 55672
             name: amqp
             protocol: TCP
+          resources:
+            limits:
+              memory: 64Mi
+            requests:
+              memory: 64Mi
         - image: configserv
           livenessProbe:
             tcpSocket:
@@ -828,6 +865,11 @@ objects:
           - containerPort: 5672
             name: amqp
             protocol: TCP
+          resources:
+            limits:
+              memory: 256Mi
+            requests:
+              memory: 256Mi
         serviceAccount: deployer
     triggers:
     - type: ConfigChange

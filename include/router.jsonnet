@@ -3,7 +3,7 @@ local common = import "common.jsonnet";
   imagestream(image_name)::
     common.imagestream("router", image_name),
 
-  container(secure, addressEnv)::
+  container(secure, addressEnv, mem_request)::
     local routerPort = {
         "name": "amqp",
         "containerPort": 5672,
@@ -18,6 +18,14 @@ local common = import "common.jsonnet";
         "name": "amqps",
         "containerPort": 5671,
         "protocol": "TCP"
+    };
+    local resources = {
+        "requests": {
+            "memory": mem_request,
+        },
+        "limits": {
+            "memory": mem_request,
+        }
     };
     {
       "image": "router",
@@ -37,6 +45,7 @@ local common = import "common.jsonnet";
           "port": "amqp"
         }
       },
+      [if mem_request != "" then "resources"]: resources,
       [if secure then "volumeMounts"]: [
         {
           "name": "ssl-certs",

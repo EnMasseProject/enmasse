@@ -42,10 +42,18 @@ local version = std.extVar("VERSION");
     }
   },
 
-  container(name, image, port_name, port)::
+  container(name, image, port_name, port, mem_request)::
   {
     "image": name,
     "name": name,
+    "resources": {
+        "requests": {
+            "memory": mem_request,
+        },
+        "limits": {
+            "memory": mem_request,
+        }
+    },
     "ports": [
       {
         "name": port_name,
@@ -60,10 +68,18 @@ local version = std.extVar("VERSION");
     }
   },
 
-  containerWithEnv(name, image, port_name, port, env)::
+  containerWithEnv(name, image, port_name, port, env, mem_request)::
   {
     "image": name,
     "name": name,
+    "resources": {
+        "requests": {
+            "memory": mem_request,
+        },
+        "limits": {
+            "memory": mem_request,
+        }
+    },
     "ports": [
       {
         "name": port_name,
@@ -79,10 +95,18 @@ local version = std.extVar("VERSION");
     }
   },
 
-  container2(name, image, port_name, port, port2_name, port2_port)::
+  container2(name, image, port_name, port, port2_name, port2_port, mem_request)::
   {
     "image": name,
     "name": name,
+    "resources": {
+        "requests": {
+            "memory": mem_request,
+        },
+        "limits": {
+            "memory": mem_request,
+        }
+    },
     "ports": [
       {
         "name": port_name,
