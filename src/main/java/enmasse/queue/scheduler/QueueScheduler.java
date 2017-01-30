@@ -23,12 +23,13 @@ public class QueueScheduler extends AbstractVerticle implements Watcher<ConfigMa
 
     private final KubernetesClient kubernetesClient;
     private final QueueState queueState = new QueueState();
-    private final ExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
+    private final ExecutorService executorService;
 
     private final int port;
 
-    public QueueScheduler(KubernetesClient kubernetesClient, int port) {
+    public QueueScheduler(KubernetesClient kubernetesClient, ExecutorService executorService, int port) {
         this.kubernetesClient = kubernetesClient;
+        this.executorService = executorService;
         this.port = port;
     }
 
