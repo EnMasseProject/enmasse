@@ -44,7 +44,7 @@ public class AddressManagerTest {
         mockHelper = mock(OpenShiftHelper.class);
         mockGenerator = mock(DestinationClusterGenerator.class);
 
-        manager = new AddressManagerImpl(mockHelper, mockGenerator, flavorManager);
+        manager = new AddressManagerImpl(mockHelper, mockGenerator);
         Map<String, Flavor> flavorMap = new LinkedHashMap<>();
         flavorMap.put("vanilla", new Flavor.Builder("vanilla", "test").build());
         flavorMap.put("shared", new Flavor.Builder("shared", "test").build());

@@ -38,7 +38,7 @@ public class AddressManagerImpl implements AddressManager {
     private final OpenShiftHelper helper;
     private final DestinationClusterGenerator generator;
 
-    public AddressManagerImpl(OpenShiftHelper openshiftHelper, DestinationClusterGenerator generator, FlavorRepository flavorRepository) {
+    public AddressManagerImpl(OpenShiftHelper openshiftHelper, DestinationClusterGenerator generator) {
         this.helper = openshiftHelper;
         this.generator = generator;
     }
