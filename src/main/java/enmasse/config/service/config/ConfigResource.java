@@ -1,7 +1,7 @@
 package enmasse.config.service.config;
 
 import enmasse.config.service.model.Resource;
-import io.fabric8.kubernetes.api.model.HasMetadata;
+import io.fabric8.kubernetes.api.model.ConfigMap;
 
 import java.util.Map;
 
@@ -12,13 +12,13 @@ public class ConfigResource extends Resource {
     private final String kind;
     private final String name;
     private final Map<String, String> labels;
-    private final Map<String, String> annotations;
+    private final Map<String, String> data;
 
-    public ConfigResource(HasMetadata resource) {
-        this.kind = resource.getKind();
-        this.name = resource.getMetadata().getName();
-        this.labels = resource.getMetadata().getLabels();
-        this.annotations = resource.getMetadata().getAnnotations();
+    public ConfigResource(ConfigMap configMap) {
+        this.kind = configMap.getKind();
+        this.name = configMap.getMetadata().getName();
+        this.labels = configMap.getMetadata().getLabels();
+        this.data = configMap.getData();
     }
 
     @Override
@@ -51,12 +51,8 @@ public class ConfigResource extends Resource {
         return result;
     }
 
-    public Map<String, String> getLabels() {
-        return labels;
-    }
-
-    public Map<String, String> getAnnotations() {
-        return annotations;
+    public Map<String, String> getData() {
+        return data;
     }
 
     @Override

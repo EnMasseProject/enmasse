@@ -19,10 +19,12 @@ targetCompatibility = 1.8
 
 repositories {
     maven { url "http://repo.maven.apache.org/maven2" }
+    maven { url "https://jitpack.io" }
 }
 
 description = 'Configuration Server'
 dependencies {
+    compile 'com.github.EnMasseProject:common-lib:master-SNAPSHOT'
     compile "io.fabric8:openshift-client:${openshiftClientVersion}"
     compile "io.vertx:vertx-proton:${vertxProtonVersion}"
     compile "org.slf4j:slf4j-api:${slf4jVersion}"

@@ -5,7 +5,7 @@ import enmasse.config.service.model.ResourceFactory;
 import enmasse.config.service.openshift.MessageEncoder;
 import enmasse.config.service.openshift.ObserverOptions;
 import enmasse.config.service.openshift.SubscriptionConfig;
-import io.fabric8.kubernetes.api.model.HasMetadata;
+import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.client.dsl.ClientOperation;
 import io.fabric8.openshift.client.OpenShiftClient;
 
@@ -27,9 +27,8 @@ public class ConfigSubscriptionConfig implements SubscriptionConfig<ConfigResour
     @SuppressWarnings("unchecked")
     @Override
     public ObserverOptions getObserverOptions(OpenShiftClient client, Map<String, String> filter) {
-        ClientOperation<? extends HasMetadata, ?, ?, ?>[] ops = new ClientOperation[2];
+        ClientOperation<ConfigMap, ?, ?, ?>[] ops = new ClientOperation[2];
         ops[0] = client.configMaps();
-        ops[1] = client.deploymentConfigs();
         Map<String, String> labelMap = new LinkedHashMap<>(filter);
         if (labelMap.isEmpty()) {
             labelMap.put("type", "address-config");
@@ -39,7 +38,7 @@ public class ConfigSubscriptionConfig implements SubscriptionConfig<ConfigResour
 
     @Override
     public ResourceFactory<ConfigResource> getResourceFactory() {
-        return ConfigResource::new;
+        return in -> new ConfigResource((ConfigMap) in);
     }
 
     @Override
