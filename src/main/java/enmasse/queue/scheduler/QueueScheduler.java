@@ -1,35 +1,33 @@
 package enmasse.queue.scheduler;
 
-import enmasse.address.controller.admin.OpenShiftHelper;
-import enmasse.address.controller.model.LabelKeys;
+import enmasse.config.LabelKeys;
+import io.fabric8.kubernetes.api.model.ConfigMap;
+import io.fabric8.kubernetes.api.model.ConfigMapList;
+import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.Watcher;
-import io.fabric8.openshift.api.model.DeploymentConfig;
-import io.fabric8.openshift.api.model.DeploymentConfigList;
-import io.fabric8.openshift.client.OpenShiftClient;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.proton.ProtonServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
  * Acts as an arbiter deciding in which broker a queue should run.
  */
-public class QueueScheduler extends AbstractVerticle implements Watcher<DeploymentConfig> {
+public class QueueScheduler extends AbstractVerticle implements Watcher<ConfigMap> {
     private static final Logger log = LoggerFactory.getLogger(QueueScheduler.class.getName());
 
-    private final OpenShiftClient openShiftClient;
+    private final KubernetesClient kubernetesClient;
     private final QueueState queueState = new QueueState();
     private final ExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
 
     private final int port;
 
-    public QueueScheduler(OpenShiftClient openShiftClient, int port) {
-        this.openShiftClient = openShiftClient;
+    public QueueScheduler(KubernetesClient kubernetesClient, int port) {
+        this.kubernetesClient = kubernetesClient;
         this.port = port;
     }
 
@@ -61,11 +59,11 @@ public class QueueScheduler extends AbstractVerticle implements Watcher<Deployme
 
         vertx.executeBlocking(promise -> {
             try {
-                DeploymentConfigList configs = openShiftClient.deploymentConfigs().withLabel("type", "address-config").list();
-                for (DeploymentConfig config : configs.getItems()) {
+                ConfigMapList configs = kubernetesClient.configMaps().withLabel("type", "address-config").list();
+                for (ConfigMap config : configs.getItems()) {
                     eventReceived(Action.ADDED, config);
                 }
-                openShiftClient.deploymentConfigs().withResourceVersion(configs.getMetadata().getResourceVersion()).watch(this);
+                kubernetesClient.configMaps().withResourceVersion(configs.getMetadata().getResourceVersion()).watch(this);
                 promise.complete(configs);
             } catch (Exception e) {
                 promise.fail(e);
@@ -80,7 +78,7 @@ public class QueueScheduler extends AbstractVerticle implements Watcher<Deployme
 
 
     @Override
-    public void eventReceived(Action action, DeploymentConfig resource) {
+    public void eventReceived(Action action, ConfigMap resource) {
         switch (action) {
             case ADDED:
                 log.info("Deployment config was added");
@@ -98,15 +96,15 @@ public class QueueScheduler extends AbstractVerticle implements Watcher<Deployme
         }
     }
 
-    private void addressesChanged(DeploymentConfig deploymentConfig) {
-        String deploymentId = deploymentConfig.getMetadata().getName();
-        Set<String> addresses = OpenShiftHelper.parseAddressAnnotation(deploymentConfig.getMetadata().getAnnotations().get(LabelKeys.ADDRESS_LIST));
+    private void addressesChanged(ConfigMap configMap) {
+        String groupId = configMap.getMetadata().getLabels().get(LabelKeys.GROUP_ID);
 
-        executorService.execute(() -> queueState.deploymentUpdated(deploymentId, addresses));
+        executorService.execute(() -> queueState.deploymentUpdated(groupId, configMap.getData().keySet()));
     }
 
-    private void addressesDeleted(DeploymentConfig deploymentConfig) {
-        executorService.execute(() -> queueState.deploymentDeleted(deploymentConfig.getMetadata().getName()));
+    private void addressesDeleted(ConfigMap configMap) {
+        String groupId = configMap.getMetadata().getLabels().get(LabelKeys.GROUP_ID);
+        executorService.execute(() -> queueState.deploymentDeleted(groupId));
     }
 
     @Override
