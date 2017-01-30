@@ -9,33 +9,31 @@ public class QueueState {
     private final Map<String, List<Broker>> brokerMap = new LinkedHashMap<>();
     private final Map<String, Set<String>> addressMap = new LinkedHashMap<>();
 
-    public synchronized void deploymentUpdated(String deploymentId, Set<String> addresses) {
-        Set<String> existing = addressMap.get(deploymentId);
+    public synchronized void groupUpdated(String groupId, Set<String> addresses) {
+        Set<String> existing = addressMap.get(groupId);
 
         Set<String> removed = new HashSet<>(existing);
         removed.removeAll(addresses);
         if (!removed.isEmpty()) {
-            deleteAddresses(deploymentId, removed);
+            deleteAddresses(groupId, removed);
         }
 
         Set<String> added = new HashSet<>(addresses);
         added.removeAll(existing);
         if (!added.isEmpty()) {
-            addAddresses(deploymentId, addresses, added);
+            addAddresses(groupId, addresses, added);
         }
 
-        addressMap.put(deploymentId, addresses);
+        addressMap.put(groupId, addresses);
     }
 
 
-    public synchronized void deploymentDeleted(String deploymentId) {
+    public synchronized void groupDeleted(String groupId) {
         // TODO: Close/free resources?
-        addressMap.remove(deploymentId);
-        brokerMap.remove(deploymentId);
+        addressMap.remove(groupId);
     }
 
-    public synchronized void brokerAdded(Broker broker) {
-        String brokerId = broker.getId();
+    public synchronized void brokerAdded(String brokerId, Broker broker) {
         if (!brokerMap.containsKey(brokerId)) {
             brokerMap.put(brokerId, new ArrayList<>());
         }
@@ -56,18 +54,18 @@ public class QueueState {
         brokerMap.remove(brokerId);
     }
 
-    private void addAddresses(String deploymentId, Set<String> addresses, Set<String> added) {
+    private void addAddresses(String groupId, Set<String> addresses, Set<String> added) {
 
         // TODO: Fetch this information from somewhere, but assume > 1 address means shared flavor
         if (addresses.size() > 1) {
-            distributeAddressesByNumQueues(deploymentId, added);
+            distributeAddressesByNumQueues(groupId, added);
         } else {
-            distributeAddressesAll(deploymentId, added);
+            distributeAddressesAll(groupId, added);
         }
     }
 
-    private void distributeAddressesByNumQueues(String deploymentId, Set<String> addresses) {
-        List<Broker> brokerList = brokerMap.get(deploymentId);
+    private void distributeAddressesByNumQueues(String groupId, Set<String> addresses) {
+        List<Broker> brokerList = brokerMap.get(groupId);
         PriorityQueue<Broker> brokerByNumQueues = new PriorityQueue<>(brokerList.size(), (a, b) -> {
             if (a.numQueues() < b.numQueues()) {
                 return -1;
@@ -87,16 +85,16 @@ public class QueueState {
         }
     }
 
-    private void distributeAddressesAll(String deploymentId, Set<String> addresses) {
+    private void distributeAddressesAll(String groupId, Set<String> addresses) {
         for (String address : addresses) {
-            for (Broker  broker : brokerMap.get(deploymentId)) {
+            for (Broker  broker : brokerMap.get(groupId)) {
                 broker.deployQueue(address);
             }
         }
     }
 
-    private void deleteAddresses(String deploymentId, Set<String> removed) {
-        for (Broker broker : brokerMap.get(deploymentId)) {
+    private void deleteAddresses(String groupId, Set<String> removed) {
+        for (Broker broker : brokerMap.get(groupId)) {
             for (String address : removed) {
                 broker.deleteQueue(address);
             }

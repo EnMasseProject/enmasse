@@ -7,5 +7,4 @@ public interface Broker {
     void deployQueue(String address);
     void deleteQueue(String address);
     long numQueues();
-    String getId();
 }

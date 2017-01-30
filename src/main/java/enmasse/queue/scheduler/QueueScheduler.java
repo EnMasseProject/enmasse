@@ -11,6 +11,7 @@ import io.vertx.proton.ProtonServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -38,7 +39,13 @@ public class QueueScheduler extends AbstractVerticle implements Watcher<ConfigMa
             connection.setContainer("queue-scheduler");
             connection.openHandler(conn -> {
                 log.info("Connection opened from " + conn.result().getRemoteContainer());
-                executorService.execute(() -> queueState.brokerAdded(new Artemis(connection)));
+                executorService.execute(() -> {
+                    try {
+                        queueState.brokerAdded(conn.result().getRemoteContainer(), Artemis.create(vertx, connection).get());
+                    } catch (Exception e) {
+                        log.error("Error adding broker", e);
+                    }
+                });
             }).closeHandler(conn -> {
                 executorService.execute(() -> queueState.brokerRemoved(conn.result().getRemoteContainer()));
                 connection.close();
@@ -99,12 +106,12 @@ public class QueueScheduler extends AbstractVerticle implements Watcher<ConfigMa
     private void addressesChanged(ConfigMap configMap) {
         String groupId = configMap.getMetadata().getLabels().get(LabelKeys.GROUP_ID);
 
-        executorService.execute(() -> queueState.deploymentUpdated(groupId, configMap.getData().keySet()));
+        executorService.execute(() -> queueState.groupUpdated(groupId, configMap.getData().keySet()));
     }
 
     private void addressesDeleted(ConfigMap configMap) {
         String groupId = configMap.getMetadata().getLabels().get(LabelKeys.GROUP_ID);
-        executorService.execute(() -> queueState.deploymentDeleted(groupId));
+        executorService.execute(() -> queueState.groupDeleted(groupId));
     }
 
     @Override
