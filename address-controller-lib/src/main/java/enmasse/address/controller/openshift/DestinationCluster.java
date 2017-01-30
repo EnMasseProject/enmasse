@@ -16,18 +16,14 @@
 
 package enmasse.address.controller.openshift;
 
-import enmasse.address.controller.model.Destination;
-import enmasse.address.controller.model.Flavor;
+import enmasse.address.controller.admin.OpenShiftHelper;
+import enmasse.address.controller.model.DestinationGroup;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesList;
-import io.fabric8.openshift.api.model.DeploymentConfig;
-import io.fabric8.openshift.client.OpenShiftClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
-import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -36,43 +32,37 @@ import java.util.stream.Collectors;
 public class DestinationCluster {
     private static final Logger log = LoggerFactory.getLogger(DestinationCluster.class.getName());
 
-    private final OpenShiftClient client;
-    private final Destination destination;
+    private final OpenShiftHelper helper;
     private final KubernetesList resources;
-    private final boolean shared;
+    private DestinationGroup destinationGroup;
 
-    public DestinationCluster(OpenShiftClient osClient, Destination destination, KubernetesList resources, boolean shared) {
-        this.client = osClient;
-        this.destination = destination;
+    public DestinationCluster(OpenShiftHelper helper, DestinationGroup destinationGroup, KubernetesList resources) {
+        this.helper = helper;
+        this.destinationGroup = destinationGroup;
         this.resources = resources;
-        this.shared = shared;
     }
 
     public void create() {
         log.info("Adding " + resources.getItems().size() + " resources: " + resources.getItems().stream().map(r -> "name=" + r.getMetadata().getName() + ",kind=" + r.getKind()).collect(Collectors.joining(",")));
-        client.lists().create(resources);
-    }
-
-    public void createReplace() {
-        for (Object item : resources.getItems()) {
-            client.resource((HasMetadata) item).createOrReplace();
-        }
+        helper.create(resources);
+        updateDestinations(destinationGroup);
     }
 
     public void delete() {
         log.info("Deleting " + resources.getItems().size() + " resources: " + resources.getItems().stream().map(r -> "name=" + r.getMetadata().getName() + ",kind=" + r.getKind()).collect(Collectors.joining(",")));
-        client.lists().delete(resources);
+        helper.delete(resources);
     }
 
-    public Destination getDestination() {
-        return destination;
+    public DestinationGroup getDestinationGroup() {
+        return destinationGroup;
     }
 
     public List<HasMetadata> getResources() {
         return resources.getItems();
     }
 
-    public boolean isShared() {
-        return shared;
+    public void updateDestinations(DestinationGroup destinationGroup) {
+        this.destinationGroup = destinationGroup;
+        helper.updateDestinations(destinationGroup);
     }
 }

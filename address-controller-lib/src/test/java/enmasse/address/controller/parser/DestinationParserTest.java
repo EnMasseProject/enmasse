@@ -18,6 +18,7 @@ package enmasse.address.controller.parser;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import enmasse.address.controller.model.Destination;
+import enmasse.address.controller.model.DestinationGroup;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -33,23 +34,25 @@ public class DestinationParserTest {
     @Test
     public void testEmpty() throws IOException {
         String json = "{}";
-        Set<Destination> config = parsePayload(json);
+        Set<DestinationGroup> config = parsePayload(json);
         assertThat(config.size(), is(0));
     }
 
     @Test
     public void testParse() throws IOException {
         String json = "{\"queue1\":{\"store_and_forward\":true,\"multicast\":false,\"flavor\":\"vanilla\"}}";
-        Set<Destination> config = parsePayload(json);
+        Set<DestinationGroup> config = parsePayload(json);
         assertThat(config.size(), is(1));
-        Destination dest = config.iterator().next();
-        assertThat(dest.addresses(), hasItem("queue1"));
+        DestinationGroup destGroup = config.iterator().next();
+        assertThat(destGroup.getGroupId(), is("queue1"));
+        Destination dest = destGroup.getDestinations().iterator().next();
+        assertThat(dest.address(), is("queue1"));
         assertTrue(dest.storeAndForward());
         assertFalse(dest.multicast());
         assertThat(dest.flavor().get(), is("vanilla"));
     }
 
-    private Set<Destination> parsePayload(String json) throws IOException {
+    private Set<DestinationGroup> parsePayload(String json) throws IOException {
         return DestinationParser.parse(mapper.readTree(json));
     }
 }

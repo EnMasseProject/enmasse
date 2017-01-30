@@ -1,9 +1,13 @@
 package enmasse.address.controller.admin;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import enmasse.address.controller.model.*;
+import enmasse.address.controller.model.Destination;
+import enmasse.address.controller.model.DestinationGroup;
 import enmasse.address.controller.openshift.DestinationCluster;
+import enmasse.config.AddressDecoder;
+import enmasse.config.AddressEncoder;
+import enmasse.config.LabelKeys;
+import io.fabric8.kubernetes.api.model.DoneableConfigMap;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.openshift.client.OpenShiftClient;
@@ -11,7 +15,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -26,12 +29,13 @@ public class OpenShiftHelper {
         this.client = client;
     }
 
-    public OpenShiftClient getClient() {
-        return client;
+    public static String nameSanitizer(String name) {
+        return name.toLowerCase().replaceAll("[^a-z0-9]", "-");
     }
 
-    public List<DestinationCluster> listClusters(FlavorRepository flavorRepository) {
-        Map<Destination, List<HasMetadata>> resourceMap = new HashMap<>();
+    public List<DestinationCluster> listClusters() {
+        Map<String, List<HasMetadata>> resourceMap = new HashMap<>();
+        Map<String, DestinationGroup> groupMap = new HashMap<>();
 
         // Add other resources part of a destination cluster
         List<HasMetadata> objects = new ArrayList<>();
@@ -42,23 +46,30 @@ public class OpenShiftHelper {
 
         for (HasMetadata config : objects) {
             Map<String, String> labels = config.getMetadata().getLabels();
-            Map<String, String> annotations = config.getMetadata().getAnnotations();
 
-            if (labels != null && labels.containsKey(LabelKeys.STORE_AND_FORWARD) &&  labels.containsKey(LabelKeys.MULTICAST) &&
-                    annotations != null && annotations.containsKey(LabelKeys.ADDRESS_LIST)) {
-                log.info("Parsing resource " + config);
+            if (labels != null && labels.containsKey(LabelKeys.GROUP_ID)) {
+                String groupId = labels.get(LabelKeys.GROUP_ID);
 
-                Optional<String> flavorName = Optional.ofNullable(labels.get(LabelKeys.FLAVOR));
-                Set<String> addresses = parseAddressAnnotation(annotations.get(LabelKeys.ADDRESS_LIST));
-                boolean storeAndForward = Boolean.parseBoolean(labels.get(LabelKeys.STORE_AND_FORWARD));
-                boolean multicast = Boolean.parseBoolean(labels.get(LabelKeys.MULTICAST));
+                // First time we encounter this group, fetch the address config for it
+                if (!resourceMap.containsKey(groupId)) {
+                    String addressConfig = labels.get(LabelKeys.ADDRESS_CONFIG);
+                    Map<String, String> addressConfigMap = client.configMaps().withName(addressConfig).get().getData();
 
-                Destination destination = new Destination(addresses, storeAndForward, multicast, flavorName);
+                    Set<Destination> destinations = new HashSet<>();
+                    for (Map.Entry<String, String> entry : addressConfigMap.entrySet()) {
+                        Destination.Builder destBuilder = new Destination.Builder(entry.getKey());
+                        AddressDecoder addressDecoder = new AddressDecoder(entry.getValue());
+                        destBuilder.storeAndForward(addressDecoder.storeAndForward());
+                        destBuilder.multicast(addressDecoder.multicast());
+                        destBuilder.flavor(addressDecoder.flavor());
+                        destinations.add(destBuilder.build());
+                    }
 
-                if (!resourceMap.containsKey(destination)) {
-                    resourceMap.put(destination, new ArrayList<>());
+                    DestinationGroup destinationGroup = new DestinationGroup(groupId, destinations);
+                    resourceMap.put(groupId, new ArrayList<>());
+                    groupMap.put(groupId, destinationGroup);
                 }
-                resourceMap.get(destination).add(config);
+                resourceMap.get(groupId).add(config);
             }
         }
 
@@ -66,28 +77,30 @@ public class OpenShiftHelper {
                 .map(entry -> {
                     KubernetesList list = new KubernetesList();
                     list.setItems(entry.getValue());
-                    Flavor flavor = getFlavor(flavorRepository, entry.getKey());
-                    return new DestinationCluster(client, entry.getKey(), list, flavor.isShared());
+                    return new DestinationCluster(this, groupMap.get(entry.getKey()), list);
                 }).collect(Collectors.toList());
     }
 
-    private Flavor getFlavor(FlavorRepository flavorRepository, Destination dest) {
-        return dest.flavor()
-                .map(f -> flavorRepository.getFlavor(f, TimeUnit.SECONDS.toMillis(60)))
-                .orElse(new Flavor.Builder("direct", "direct").build());
+    public void create(KubernetesList resources) {
+        client.lists().create(resources);
     }
 
-    public static Set<String> parseAddressAnnotation(String jsonAddresses) {
-        try {
-            ArrayNode array = (ArrayNode) mapper.readTree(jsonAddresses);
-            Set<String> lst = new HashSet<>();
-            for (int i = 0; i < array.size(); i++) {
-                lst.add(array.get(i).asText());
-            }
-            return lst;
-        } catch (Exception e) {
-            log.error("Unable to parse address annotation '" + jsonAddresses + "'", e);
-            return Collections.emptySet();
+    public void delete(KubernetesList resources) {
+        client.lists().delete(resources);
+    }
+
+    public void updateDestinations(DestinationGroup destinationGroup) {
+        DoneableConfigMap map = client.configMaps().withName(nameSanitizer("address-config-" + destinationGroup.getGroupId())).createOrReplaceWithNew()
+                .editMetadata()
+                    .addToLabels(LabelKeys.GROUP_ID, destinationGroup.getGroupId())
+                    .addToLabels("type", "address-config")
+                .endMetadata();
+
+        for (Destination destination : destinationGroup.getDestinations()) {
+            AddressEncoder encoder = new AddressEncoder();
+            encoder.encode(destination.storeAndForward(), destination.multicast(), destination.flavor());
+            map.addToData(destination.address(), encoder.toJson());
         }
+        map.done();
     }
 }

@@ -19,29 +19,25 @@ package enmasse.address.controller.model;
 import java.util.*;
 
 /**
- * Represents a single destination in the addressing config. It is identified by one or more addresses, but contains
+ * Represents a single destination in the addressing config. It is identified by an address and
  * additional properties that determine the semantics.
  */
 public final class Destination {
-    private final Set<String> addresses = new HashSet<>();
+    private final String address;
     private final boolean storeAndForward;
     private final boolean multicast;
     private final Optional<String> flavor;
 
     public Destination(String address, boolean storeAndForward, boolean multicast, Optional<String> flavor) {
-        this(Collections.singleton(address), storeAndForward, multicast, flavor);
-    }
-
-    public Destination(Set<String> addresses, boolean storeAndForward, boolean multicast, Optional<String> flavor) {
         Objects.requireNonNull(flavor);
-        this.addresses.addAll(addresses);
+        this.address = address;
         this.storeAndForward = storeAndForward;
         this.multicast = multicast;
         this.flavor = flavor;
     }
 
-    public Set<String> addresses() {
-        return Collections.unmodifiableSet(addresses);
+    public String address() {
+        return address;
     }
 
     public boolean storeAndForward() {
@@ -62,19 +58,19 @@ public final class Destination {
         if (o == null || getClass() != o.getClass()) return false;
 
         Destination destination = (Destination) o;
-        return addresses.equals(destination.addresses);
+        return address.equals(destination.address);
 
     }
 
     @Override
     public int hashCode() {
-        return addresses.hashCode();
+        return address.hashCode();
     }
 
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();
-        builder.append("{addresses=[").append(addresses).append("],")
+        builder.append("{address=").append(address).append(",")
                 .append("storeAndForward=").append(storeAndForward).append(",")
                 .append("multicast=").append(multicast).append(",")
                 .append("flavor=").append(flavor).append("}");
@@ -82,27 +78,25 @@ public final class Destination {
     }
 
     public static class Builder {
-        private Set<String> addresses = new HashSet<>();
+        private String address;
         private boolean storeAndForward = false;
         private boolean multicast = false;
         private Optional<String> flavor = Optional.empty();
 
-        public Builder() {}
+        public Builder(String address) {
+            this.address = address;
+        }
 
         public Builder(Destination destination) {
-            this.addresses.addAll(destination.addresses());
+            this.address = destination.address();
             this.storeAndForward = destination.storeAndForward();
             this.multicast = destination.multicast();
             this.flavor = destination.flavor();
         }
 
-        public Builder addresses(Set<String> addresses) {
-            this.addresses.addAll(addresses);
+        public Builder address(String address) {
+            this.address = address;
             return this;
-        }
-
-        public Set<String> addresses() {
-            return addresses;
         }
 
         public Builder storeAndForward(boolean storeAndForward) {
@@ -125,7 +119,7 @@ public final class Destination {
         }
 
         public Destination build() {
-            return new Destination(addresses, storeAndForward, multicast, flavor);
+            return new Destination(address, storeAndForward, multicast, flavor);
         }
     }
 }

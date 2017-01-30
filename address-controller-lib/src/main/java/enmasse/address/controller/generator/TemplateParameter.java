@@ -14,27 +14,12 @@
  * limitations under the License.
  */
 
-package enmasse.address.controller.model;
+package enmasse.address.controller.generator;
 
 /**
- * The different address types for a broker.
+ * Template parameters that are dynamically set by the address controller.
  */
-public enum AddressType {
-    QUEUE("queue"),
-    TOPIC("topic");
-
-    private final String name;
-    AddressType(String name) {
-        this.name = name;
-    }
-
-    public String value() {
-        return this.name;
-    }
-
-    public static void validate(String type) {
-        if (!QUEUE.name.equals(type) && !TOPIC.name.equals(type)) {
-            throw new IllegalArgumentException("Unknown address type " + type);
-        }
-    }
+public interface TemplateParameter {
+    String NAME = "NAME";
+    String ADDRESS = "ADDRESS";
 }

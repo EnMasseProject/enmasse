@@ -18,6 +18,7 @@ package enmasse.address.controller.parser;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import enmasse.address.controller.model.Destination;
+import enmasse.address.controller.model.DestinationGroup;
 
 import java.io.IOException;
 import java.util.*;
@@ -30,20 +31,35 @@ public class DestinationParser {
     private static final String MULTICAST = "multicast";
     private static final String FLAVOR = "flavor";
 
-    public static Set<Destination> parse(JsonNode root) throws IOException {
-        Set<Destination> destinations = new HashSet<>();
+    public static Set<DestinationGroup> parse(JsonNode root) throws IOException {
+        Set<DestinationGroup> destinationGroups = new HashSet<>();
         Iterator<Map.Entry<String, JsonNode>> it = root.fields();
         while (it.hasNext()) {
             Map.Entry<String, JsonNode> entry = it.next();
             JsonNode node = entry.getValue();
-            Destination destination = new Destination(
-                    entry.getKey(),
-                    node.get(STORE_AND_FORWARD).asBoolean(),
-                    node.get(MULTICAST).asBoolean(),
-                    node.has(FLAVOR) ? Optional.of(node.get(FLAVOR).asText()) : Optional.empty());
-            destinations.add(destination);
-        }
 
-        return destinations;
+            DestinationGroup.Builder builder = new DestinationGroup.Builder(entry.getKey());
+
+            // Supports parsing the old syntax
+            if (node.has(STORE_AND_FORWARD) && !node.get(STORE_AND_FORWARD).isObject()) {
+                builder.destination(parseDestination(entry.getKey(), node));
+            } else {
+                Iterator<Map.Entry<String, JsonNode>> destIt = node.fields();
+                while (destIt.hasNext()) {
+                    Map.Entry<String, JsonNode> destEntry = it.next();
+                    builder.destination(parseDestination(destEntry.getKey(), destEntry.getValue()));
+                }
+
+            }
+            destinationGroups.add(builder.build());
+        }
+        return destinationGroups;
+    }
+
+    private static Destination parseDestination(String key, JsonNode node) {
+        return new Destination(key,
+                node.get(STORE_AND_FORWARD).asBoolean(),
+                node.get(MULTICAST).asBoolean(),
+                node.has(FLAVOR) ? Optional.of(node.get(FLAVOR).asText()) : Optional.empty());
     }
 }

@@ -23,5 +23,6 @@ subprojects {
         mavenLocal()
         maven { url "http://repo.maven.apache.org/maven2" }
         maven { url "https://repository.jboss.org/nexus/content/repositories/snapshots/" }
+        maven { url "https://jitpack.io" }
     }
 }

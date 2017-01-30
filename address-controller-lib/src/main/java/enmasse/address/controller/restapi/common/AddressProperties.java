@@ -1,4 +1,4 @@
-package enmasse.address.controller.restapi;
+package enmasse.address.controller.restapi.common;
 
 /**
  * API type representing an address and its properties

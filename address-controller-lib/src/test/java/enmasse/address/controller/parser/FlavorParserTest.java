@@ -41,10 +41,5 @@ public class FlavorParserTest {
         assertThat(flavor.templateName(), is("queue-persisted"));
         assertThat(flavor.templateParameters().size(), is(1));
         assertThat(flavor.templateParameters().get("STORAGE_CAPACITY"), is("2Gi"));
-
-        assertNotNull(parsed.get("shared-queue"));
-        flavor = parsed.get("shared-queue");
-        assertThat(flavor.templateName(), is("queue-inmemory"));
-        assertThat(flavor.templateParameters().size(), is(0));
     }
 }

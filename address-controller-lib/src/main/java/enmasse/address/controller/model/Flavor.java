@@ -25,17 +25,14 @@ import java.util.Map;
 public class Flavor {
     private final String templateName;
     private final Map<String, String> templateParameters;
-    private final boolean shared;
     private final String name;
 
     private Flavor(String name,
                    String templateName,
-                   Map<String, String> templateParameters,
-                   boolean shared) {
+                   Map<String, String> templateParameters) {
         this.name = name;
         this.templateName = templateName;
         this.templateParameters = templateParameters;
-        this.shared = shared;
     }
 
     public String name() {
@@ -50,17 +47,12 @@ public class Flavor {
         return templateParameters;
     }
 
-    public boolean isShared() {
-        return shared;
-    }
-
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();
         builder.append("{name=").append(name).append(",")
                 .append("templateName=").append(templateName).append(",")
-                .append("templateParameters={").append(templateParameters).append("}").append(",")
-                .append("shared=").append(shared).append("}");
+                .append("templateParameters=").append(templateParameters).append("}");
         return builder.toString();
     }
 
@@ -71,7 +63,6 @@ public class Flavor {
 
         Flavor flavor = (Flavor) o;
 
-        if (shared != flavor.shared) return false;
         if (!name.equals(flavor.name)) return false;
         if (!templateName.equals(flavor.templateName)) return false;
         return templateParameters.equals(flavor.templateParameters);
@@ -82,7 +73,6 @@ public class Flavor {
         int result = templateName.hashCode();
         result = 31 * result + name.hashCode();
         result = 31 * result + templateParameters.hashCode();
-        result = 31 * result + (shared ? 1 : 0);
         return result;
     }
 
@@ -90,7 +80,6 @@ public class Flavor {
         private String name;
         private String templateName;
         private Map<String, String> templateParameters = new LinkedHashMap<>();
-        private boolean shared = false;
 
         public Builder(String name, String templateName) {
             this.name = name;
@@ -102,13 +91,8 @@ public class Flavor {
             return this;
         }
 
-        public Builder shared(boolean shared) {
-            this.shared = shared;
-            return this;
-        }
-
         public Flavor build() {
-            return new Flavor(name, templateName, templateParameters, shared);
+            return new Flavor(name, templateName, templateParameters);
         }
     }
 }
