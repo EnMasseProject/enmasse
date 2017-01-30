@@ -4,13 +4,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import enmasse.config.service.model.LabelSet;
 import enmasse.config.service.model.ResourceFactory;
-import enmasse.config.service.openshift.MessageEncoder;
-import enmasse.config.service.openshift.ObserverOptions;
+import enmasse.config.service.kubernetes.MessageEncoder;
+import enmasse.config.service.kubernetes.ObserverOptions;
 import enmasse.config.service.podsense.PodResource;
 import enmasse.config.service.podsense.PodSenseMessageEncoder;
 import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.ClientOperation;
-import io.fabric8.openshift.client.OpenShiftClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,7 +24,7 @@ import java.util.function.Predicate;
 /**
  * A variant of PodSense where the annotation field is inspected for matching addresses.
  */
-public class BrokerSenseSubscriptionConfig implements enmasse.config.service.openshift.SubscriptionConfig<PodResource> {
+public class BrokerSenseSubscriptionConfig implements enmasse.config.service.kubernetes.SubscriptionConfig<PodResource> {
     private static final Logger log = LoggerFactory.getLogger(BrokerSenseSubscriptionConfig.class.getName());
     private static final ObjectMapper mapper = new ObjectMapper();
 
@@ -35,7 +35,7 @@ public class BrokerSenseSubscriptionConfig implements enmasse.config.service.ope
 
     @SuppressWarnings("unchecked")
     @Override
-    public ObserverOptions getObserverOptions(OpenShiftClient client, Map<String, String> filter) {
+    public ObserverOptions getObserverOptions(KubernetesClient client, Map<String, String> filter) {
         ClientOperation<Pod, ?, ?, ?>[] ops = new ClientOperation[1];
         ops[0] = client.pods();
         return new ObserverOptions(LabelSet.fromMap(Collections.singletonMap("role", "broker")), ops);

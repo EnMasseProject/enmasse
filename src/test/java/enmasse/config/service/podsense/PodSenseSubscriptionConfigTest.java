@@ -1,9 +1,9 @@
 package enmasse.config.service.podsense;
 
-import enmasse.config.service.openshift.MessageEncoder;
-import enmasse.config.service.openshift.ObserverOptions;
-import enmasse.config.service.openshift.SubscriptionConfig;
-import io.fabric8.openshift.client.OpenShiftClient;
+import enmasse.config.service.kubernetes.MessageEncoder;
+import enmasse.config.service.kubernetes.ObserverOptions;
+import enmasse.config.service.kubernetes.SubscriptionConfig;
+import io.fabric8.kubernetes.client.KubernetesClient;
 import org.junit.Test;
 
 import java.util.Collections;
@@ -23,7 +23,7 @@ public class PodSenseSubscriptionConfigTest {
         assertNotNull(encoder);
 
 
-        OpenShiftClient client = mock(OpenShiftClient.class);
+        KubernetesClient client = mock(KubernetesClient.class);
         ObserverOptions options = config.getObserverOptions(client, Collections.singletonMap("my", "filter"));
         assertNotNull(options);
         assertThat(options.getLabelMap().get("my"), is("filter"));

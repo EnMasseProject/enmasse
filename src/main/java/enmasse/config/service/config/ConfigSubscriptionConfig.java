@@ -2,12 +2,12 @@ package enmasse.config.service.config;
 
 import enmasse.config.service.model.LabelSet;
 import enmasse.config.service.model.ResourceFactory;
-import enmasse.config.service.openshift.MessageEncoder;
-import enmasse.config.service.openshift.ObserverOptions;
-import enmasse.config.service.openshift.SubscriptionConfig;
+import enmasse.config.service.kubernetes.MessageEncoder;
+import enmasse.config.service.kubernetes.ObserverOptions;
+import enmasse.config.service.kubernetes.SubscriptionConfig;
 import io.fabric8.kubernetes.api.model.ConfigMap;
+import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.ClientOperation;
-import io.fabric8.openshift.client.OpenShiftClient;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -26,7 +26,7 @@ public class ConfigSubscriptionConfig implements SubscriptionConfig<ConfigResour
 
     @SuppressWarnings("unchecked")
     @Override
-    public ObserverOptions getObserverOptions(OpenShiftClient client, Map<String, String> filter) {
+    public ObserverOptions getObserverOptions(KubernetesClient client, Map<String, String> filter) {
         ClientOperation<ConfigMap, ?, ?, ?>[] ops = new ClientOperation[2];
         ops[0] = client.configMaps();
         Map<String, String> labelMap = new LinkedHashMap<>(filter);

@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import enmasse.config.service.openshift.MessageEncoder;
+import enmasse.config.service.kubernetes.MessageEncoder;
 import enmasse.config.AddressEncoder;
 import enmasse.config.AddressDecoder;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
@@ -15,11 +15,9 @@ import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * Encodes a set of address configs to an AMQP message

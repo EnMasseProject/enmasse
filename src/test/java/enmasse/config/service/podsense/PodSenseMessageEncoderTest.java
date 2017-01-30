@@ -1,6 +1,6 @@
 package enmasse.config.service.podsense;
 
-import enmasse.config.service.openshift.MessageEncoder;
+import enmasse.config.service.kubernetes.MessageEncoder;
 import io.fabric8.kubernetes.api.model.*;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.message.Message;
