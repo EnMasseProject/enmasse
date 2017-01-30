@@ -14,7 +14,7 @@ import javax.ws.rs.core.Response;
 import java.util.*;
 import java.util.stream.Collectors;
 
-@Path("/")
+@Path("/v1/enmasse/addresses")
 public class RestService {
     private static final Logger log = LoggerFactory.getLogger(RestService.class.getName());
 
@@ -26,7 +26,6 @@ public class RestService {
 
     @GET
     @Produces({MediaType.APPLICATION_JSON})
-    @Path("/v1/enmasse/addresses")
     public Response getAddresses() {
         try {
             log.info("Retrieving addresses");
@@ -40,7 +39,6 @@ public class RestService {
     @PUT
     @Consumes({MediaType.APPLICATION_JSON})
     @Produces({MediaType.APPLICATION_JSON})
-    @Path("/v1/enmasse/addresses")
     public Response putAddresses(Map<String, AddressProperties> addressMap) {
         try {
             log.info("Replacing addresses");
@@ -55,7 +53,6 @@ public class RestService {
     @DELETE
     @Consumes({MediaType.APPLICATION_JSON})
     @Produces({MediaType.APPLICATION_JSON})
-    @Path("/v1/enmasse/addresses")
     public Response deleteAddresses(List<String> data) {
         try {
             log.info("Deleting addresses");
@@ -92,7 +89,6 @@ public class RestService {
     @POST
     @Consumes({MediaType.APPLICATION_JSON})
     @Produces({MediaType.APPLICATION_JSON})
-    @Path("/v1/enmasse/addresses")
     public Response appendAddresses(Map<String, AddressProperties> addressMap) {
         try {
             log.info("Appending addresses");
