@@ -1,0 +1,28 @@
+repositories {
+    maven { url 'https://jitpack.io' }
+}
+
+description = 'Library for handling EnMasse configuration'
+dependencies {
+    compile "com.fasterxml.jackson.core:jackson-core:${jacksonVersion}"
+    compile "com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}"
+    compile "org.slf4j:slf4j-api:${slf4jVersion}"
+    testCompile "junit:junit:${junitVersion}"
+    testCompile "org.mockito:mockito-core:${mockitoVersion}"
+}
+
+apply plugin: 'maven-publish'
+group = "${groupId}"
+version = "${libVersion}"
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+        }
+    }
+    repositories {
+        maven {
+            url "$buildDir/repo"
+        }
+    }
+}

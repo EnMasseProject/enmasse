@@ -1,4 +1,5 @@
 rootProject.name = 'common-lib'
 
-include ':discovery'
 include ':amqp'
+include ':config'
+include ':discovery'

@@ -3,7 +3,8 @@ allprojects  {
 }
 
 ext {
-    openshiftRestclientVersion = '5.1.0.Final'
+    slf4jVersion = '1.7.21'
+    jacksonVersion = '2.7.4'
     junitVersion = '4.12'
     mockitoVersion = '2.0.52-beta'
     libVersion = '0.1.0'
