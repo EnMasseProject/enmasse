@@ -15,7 +15,6 @@ local forwarder = import "forwarder.jsonnet";
       "metadata": {
         "name": templateName,
         "labels": {
-          "addressType": addrtype,
           "app": "enmasse"
         }
       },
@@ -27,10 +26,7 @@ local forwarder = import "forwarder.jsonnet";
           "name": "${NAME}",
           "labels": {
             "app": "enmasse",
-            "type": "address-config",
-            "address": "${ADDRESS}",
-            "store_and_forward": "true",
-            "multicast": if multicast then "true" else "false"
+            "address_config": "address-config-${NAME}"
           }
         },
         "spec": {
@@ -131,9 +127,25 @@ local forwarder = import "forwarder.jsonnet";
           }
         }
       },
+      local mcast = if multicast then "true" else "false",
+      local config = {
+        "apiVersion": "v1",
+        "kind": "ConfigMap",
+        "metadata": {
+          "name": "address-config-${NAME}",
+          "labels": {
+            "type": "address-config",
+            "group_id": "${NAME}",
+            "app": "enmasse"
+          }
+        },
+        "data": {
+          "${ADDRESS}": "{\"store_and_forward\": true, \"multicast\": " + mcast + "}"
+        }
+      },
       "objects": if persistence
-        then [pvc, controller]
-        else [controller],
+        then [pvc, controller, config]
+        else [controller, config],
       "parameters": [
         {
           "name": "STORAGE_CAPACITY",
