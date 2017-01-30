@@ -27,7 +27,7 @@ public class ConfigSubscriptionConfig implements SubscriptionConfig<ConfigResour
     @SuppressWarnings("unchecked")
     @Override
     public ObserverOptions getObserverOptions(KubernetesClient client, Map<String, String> filter) {
-        ClientOperation<ConfigMap, ?, ?, ?>[] ops = new ClientOperation[2];
+        ClientOperation<ConfigMap, ?, ?, ?>[] ops = new ClientOperation[1];
         ops[0] = client.configMaps();
         Map<String, String> labelMap = new LinkedHashMap<>(filter);
         if (labelMap.isEmpty()) {
