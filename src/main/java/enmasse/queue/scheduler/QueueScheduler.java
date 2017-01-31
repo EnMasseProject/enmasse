@@ -36,7 +36,7 @@ public class QueueScheduler extends AbstractVerticle implements Watcher<ConfigMa
     private static final Logger log = LoggerFactory.getLogger(QueueScheduler.class.getName());
 
     private final KubernetesClient kubernetesClient;
-    private final QueueState queueState = new QueueState();
+    private final SchedulerState schedulerState = new SchedulerState();
     private final BrokerFactory brokerFactory;
     private final ExecutorService executorService;
 
@@ -58,13 +58,13 @@ public class QueueScheduler extends AbstractVerticle implements Watcher<ConfigMa
                 log.info("Connection opened from " + conn.result().getRemoteContainer());
                 executorService.execute(() -> {
                     try {
-                        queueState.brokerAdded(conn.result().getRemoteContainer(), brokerFactory.createBroker(connection).get());
+                        schedulerState.brokerAdded(conn.result().getRemoteContainer(), brokerFactory.createBroker(connection).get());
                     } catch (Exception e) {
                         log.error("Error adding broker", e);
                     }
                 });
             }).closeHandler(conn -> {
-                executorService.execute(() -> queueState.brokerRemoved(conn.result().getRemoteContainer()));
+                executorService.execute(() -> schedulerState.brokerRemoved(conn.result().getRemoteContainer()));
                 connection.close();
                 connection.disconnect();
                 log.info("Connection closed");
@@ -125,7 +125,7 @@ public class QueueScheduler extends AbstractVerticle implements Watcher<ConfigMa
 
         executorService.execute(() -> {
             try {
-                queueState.groupUpdated(groupId, configMap.getData().keySet());
+                schedulerState.groupUpdated(groupId, configMap.getData().keySet());
             } catch (Exception e) {
                 log.error("ERROR: ", e);
             }
@@ -134,7 +134,7 @@ public class QueueScheduler extends AbstractVerticle implements Watcher<ConfigMa
 
     private void addressesDeleted(ConfigMap configMap) {
         String groupId = configMap.getMetadata().getLabels().get(LabelKeys.GROUP_ID);
-        executorService.execute(() -> queueState.groupDeleted(groupId));
+        executorService.execute(() -> schedulerState.groupDeleted(groupId));
     }
 
     @Override

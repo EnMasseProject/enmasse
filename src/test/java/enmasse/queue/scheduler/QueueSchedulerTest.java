@@ -74,8 +74,8 @@ public class QueueSchedulerTest {
         TestBroker br1 = brokerFactory.deployBroker("br1");
 
         waitForAddresses(br1, 2);
-        assertThat(br1.getAddressSet(), hasItem("queue1"));
-        assertThat(br1.getAddressSet(), hasItem("queue2"));
+        assertThat(br1.getQueueNames(), hasItem("queue1"));
+        assertThat(br1.getQueueNames(), hasItem("queue2"));
     }
 
     @Test
@@ -85,15 +85,15 @@ public class QueueSchedulerTest {
         scheduler.eventReceived(Watcher.Action.ADDED, createMap("br1", "queue1", "queue2"));
 
         waitForAddresses(br1, 2);
-        assertThat(br1.getAddressSet(), hasItem("queue1"));
-        assertThat(br1.getAddressSet(), hasItem("queue2"));
+        assertThat(br1.getQueueNames(), hasItem("queue1"));
+        assertThat(br1.getQueueNames(), hasItem("queue2"));
 
         scheduler.eventReceived(Watcher.Action.MODIFIED, createMap("br1", "queue1", "queue2", "queue3"));
 
         waitForAddresses(br1, 3);
-        assertThat(br1.getAddressSet(), hasItem("queue1"));
-        assertThat(br1.getAddressSet(), hasItem("queue2"));
-        assertThat(br1.getAddressSet(), hasItem("queue3"));
+        assertThat(br1.getQueueNames(), hasItem("queue1"));
+        assertThat(br1.getQueueNames(), hasItem("queue2"));
+        assertThat(br1.getQueueNames(), hasItem("queue3"));
     }
 
     @Test
@@ -102,12 +102,12 @@ public class QueueSchedulerTest {
         TestBroker br1 = brokerFactory.deployBroker("br1");
         scheduler.eventReceived(Watcher.Action.ADDED, createMap("br1", "queue1", "queue2"));
         waitForAddresses(br1, 2);
-        assertThat(br1.getAddressSet(), hasItem("queue1"));
-        assertThat(br1.getAddressSet(), hasItem("queue2"));
+        assertThat(br1.getQueueNames(), hasItem("queue1"));
+        assertThat(br1.getQueueNames(), hasItem("queue2"));
 
         scheduler.eventReceived(Watcher.Action.MODIFIED, createMap("br1", "queue1"));
         waitForAddresses(br1, 1);
-        assertThat(br1.getAddressSet(), hasItem("queue1"));
+        assertThat(br1.getQueueNames(), hasItem("queue1"));
     }
 
     @Test
@@ -122,14 +122,14 @@ public class QueueSchedulerTest {
         waitForAddresses(br1, 1);
         waitForAddresses(br2, 1);
 
-        assertThat(br1.getAddressSet(), hasItem("queue1"));
-        assertThat(br2.getAddressSet(), hasItem("queue2"));
+        assertThat(br1.getQueueNames(), hasItem("queue1"));
+        assertThat(br2.getQueueNames(), hasItem("queue2"));
 
         scheduler.eventReceived(Watcher.Action.DELETED, createMap("br1"));
         waitForAddresses(br1, 1);
         waitForAddresses(br2, 1);
-        assertThat(br1.getAddressSet(), hasItem("queue1"));
-        assertThat(br2.getAddressSet(), hasItem("queue2"));
+        assertThat(br1.getQueueNames(), hasItem("queue1"));
+        assertThat(br2.getQueueNames(), hasItem("queue2"));
     }
 
     @Test
@@ -140,11 +140,11 @@ public class QueueSchedulerTest {
 
         TestBroker br1 = brokerFactory.deployBroker("br1");
         waitForAddresses(br1, 1);
-        assertThat(br1.getAddressSet(), hasItem("queue1"));
+        assertThat(br1.getQueueNames(), hasItem("queue1"));
 
         TestBroker br2 = brokerFactory.deployBroker("br2");
         waitForAddresses(br2, 1);
-        assertThat(br2.getAddressSet(), hasItem("queue2"));
+        assertThat(br2.getQueueNames(), hasItem("queue2"));
     }
 
     @Test
@@ -164,7 +164,7 @@ public class QueueSchedulerTest {
 
         br2 = brokerFactory.deployBroker("br2");
         waitForAddresses(br2, 1);
-        assertThat(br2.getAddressSet(), hasItem("queue2"));
+        assertThat(br2.getQueueNames(), hasItem("queue2"));
     }
 
     @Test
@@ -194,9 +194,9 @@ public class QueueSchedulerTest {
 
     private static void waitForAddresses(TestBroker broker, long numAddresses, long timeout, TimeUnit timeUnit) throws InterruptedException {
         long endTime = System.currentTimeMillis() + timeUnit.toMillis(timeout);
-        long actualSize = broker.numQueues();
+        long actualSize = broker.getNumQueues();
         while (System.currentTimeMillis() < endTime && actualSize != numAddresses) {
-            actualSize = broker.numQueues();
+            actualSize = broker.getNumQueues();
             Thread.sleep(1000);
         }
         assertThat(actualSize, is(numAddresses));

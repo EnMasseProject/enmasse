@@ -63,11 +63,12 @@ public class TestBroker extends AbstractVerticle implements Broker {
     }
 
     @Override
-    public synchronized long numQueues() {
+    public synchronized long getNumQueues() {
         return addressSet.size();
     }
 
-    public synchronized Set<String> getAddressSet() {
+    @Override
+    public synchronized Set<String> getQueueNames() {
         return Collections.unmodifiableSet(addressSet);
     }
 

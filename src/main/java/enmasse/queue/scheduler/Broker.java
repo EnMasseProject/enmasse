@@ -16,11 +16,14 @@
 
 package enmasse.queue.scheduler;
 
+import java.util.Set;
+
 /**
  * Represents a broker that may be assigned multiple addresses
  */
 public interface Broker {
     void deployQueue(String address);
     void deleteQueue(String address);
-    long numQueues();
+    Set<String> getQueueNames();
+    long getNumQueues();
 }

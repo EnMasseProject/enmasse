@@ -59,6 +59,6 @@ public class ArtemisTest {
         artemis.deployQueue("queue1");
         artemis.deployQueue("queue2");
 
-        assertThat(artemis.numQueues(), is(2L));
+        assertThat(artemis.getNumQueues(), is(2L));
     }
 }

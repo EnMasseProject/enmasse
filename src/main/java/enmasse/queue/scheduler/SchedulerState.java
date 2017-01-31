@@ -21,7 +21,7 @@ import java.util.*;
 /**
  * Contains the mapping from queue to broker and ensures there is only one modifying the state at a time.
  */
-public class QueueState {
+public class SchedulerState {
     private final Map<String, List<Broker>> brokerMap = new LinkedHashMap<>();
     private final Map<String, Set<String>> addressMap = new LinkedHashMap<>();
 
@@ -83,10 +83,18 @@ public class QueueState {
         if (brokerList.isEmpty()) {
             return;
         }
+
+        Set<String> addressesToDeploy = new HashSet<>(addresses);
+
+        // Remove addresses that are already distributed. This is to avoid changes in broker list to affect where queues are scheduler
+        for (Broker broker : brokerList) {
+            addressesToDeploy.removeAll(broker.getQueueNames());
+        }
+
         PriorityQueue<Broker> brokerByNumQueues = new PriorityQueue<>(brokerList.size(), (a, b) -> {
-            if (a.numQueues() < b.numQueues()) {
+            if (a.getNumQueues() < b.getNumQueues()) {
                 return -1;
-            } else if (a.numQueues() > b.numQueues()) {
+            } else if (a.getNumQueues() > b.getNumQueues()) {
                 return 1;
             } else {
                 return 0;
@@ -95,7 +103,7 @@ public class QueueState {
 
         brokerByNumQueues.addAll(brokerList);
 
-        for (String address : addresses) {
+        for (String address : addressesToDeploy) {
             Broker broker = brokerByNumQueues.poll();
             broker.deployQueue(address);
             brokerByNumQueues.offer(broker);

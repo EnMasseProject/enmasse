@@ -30,7 +30,9 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.*;
 
 /**
@@ -132,7 +134,13 @@ public class Artemis implements Broker {
     }
 
     @Override
-    public long numQueues() {
+    public long getNumQueues() {
+        return getQueueNames().size();
+    }
+
+    @Override
+    public Set<String> getQueueNames() {
+        Set<String> queues = new LinkedHashSet<>();
         Message message = createMessage("getQueueNames");
         message.setBody(new AmqpValue("[]"));
 
@@ -140,23 +148,21 @@ public class Artemis implements Broker {
         Message response = doRequest(message);
         if (response == null) {
             log.warn("Timed out getting response from broker");
-            return -1;
+            return queues;
         }
         AmqpValue value = (AmqpValue) response.getBody();
-        long numQueues = 0;
         try {
             ArrayNode root = (ArrayNode) mapper.readTree((String) value.getValue());
             ArrayNode elements = (ArrayNode) root.get(0);
             for (int i = 0; i < elements.size(); i++) {
                 String queueName = elements.get(i).asText();
                 if (!queueName.equals(replyTo)) {
-                    numQueues++;
+                    queues.add(queueName);
                 }
             }
         } catch (IOException e) {
             log.error("Error decoding queue names", e);
-            return -1;
         }
-        return numQueues;
+        return queues;
     }
 }
