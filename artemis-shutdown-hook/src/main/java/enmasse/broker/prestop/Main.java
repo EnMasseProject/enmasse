@@ -54,16 +54,7 @@ public class Main {
         Host localHost = localHost();
         Vertx vertx = Vertx.vertx();
 
-        if (System.getenv("QUEUE_NAMES") != null) {
-            String json = System.getenv("QUEUE_NAMES");
-            Set<String> addresses = parseAddresses(json);
-            String messagingHost = System.getenv("MESSAGING_SERVICE_HOST");
-            int messagingPort = Integer.parseInt(System.getenv("MESSAGING_SERVICE_PORT"));
-            Endpoint to = new Endpoint(messagingHost, messagingPort);
-
-            QueueDrainer client = new QueueDrainer(vertx, localHost, debugFn);
-            client.drainMessages(to, addresses);
-        } else if (System.getenv("TOPIC_NAME") != null) {
+        if (System.getenv("TOPIC_NAME") != null) {
             String address = System.getenv("TOPIC_NAME");
 
             Map<String, String> filter = new LinkedHashMap<>();
@@ -76,17 +67,13 @@ public class Main {
             vertx.deployVerticle(discoveryClient);
             migrator.migrate(address);
         } else {
-            throw new IllegalArgumentException("Unable to find QUEUE_NAME or TOPIC_NAME environment");
-        }
-    }
+            String messagingHost = System.getenv("MESSAGING_SERVICE_HOST");
+            int messagingPort = Integer.parseInt(System.getenv("MESSAGING_SERVICE_PORT"));
+            Endpoint to = new Endpoint(messagingHost, messagingPort);
 
-    private static Set<String> parseAddresses(String json) throws IOException {
-        Set<String> addresses = new LinkedHashSet<>();
-        ArrayNode node = (ArrayNode) mapper.readTree(json);
-        for (int i = 0; i < node.size(); i++) {
-            addresses.add(node.get(i).asText());
+            QueueDrainer client = new QueueDrainer(vertx, localHost, debugFn);
+            client.drainMessages(to);
         }
-        return addresses;
     }
 
     private static Host localHost() throws UnknownHostException {

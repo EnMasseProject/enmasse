@@ -63,7 +63,7 @@ public class QueueDrainerTest {
         sendMessages(toServer, "queue2", "q2to", 1);
 
         System.out.println("Starting drain");
-        client.drainMessages(to.amqpEndpoint(), Arrays.asList("myqueue", "queue2"));
+        client.drainMessages(to.amqpEndpoint());
         assertThat(toServer.numMessages("myqueue"), is(200L));
         assertThat(toServer.numMessages("queue2"), is(11L));
 
