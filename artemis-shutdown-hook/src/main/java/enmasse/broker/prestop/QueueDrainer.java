@@ -62,8 +62,8 @@ public class QueueDrainer {
 
         Set<String> addresses = getQueues(brokerManager);
 
-        brokerManager.destroyConnectorService("amqp-connector");
         for (String address : addresses) {
+            brokerManager.destroyConnectorService(address);
             startDrain(to, address);
         }
         System.out.println("Waiting.....");
