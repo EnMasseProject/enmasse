@@ -12,14 +12,15 @@
       "apiVersion": "v1",
       "kind": "ConfigMap",
       "metadata": {
-        "name": "${NAME}",
+        "name": "address-config-${NAME}",
         "labels": {
           "app": "enmasse",
           "type": "address-config",
-          "address": "${ADDRESS}",
-          "store_and_forward": "false",
-          "multicast": "${MULTICAST}"
+          "group_id": "${NAME}"
         }
+      },
+      "data": {
+        "${ADDRESS}": "{\"store_and_forward\":false, \"multicast\": ${MULTICAST}}"
       }
     }
   ],

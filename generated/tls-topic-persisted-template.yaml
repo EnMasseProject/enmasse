@@ -3,7 +3,6 @@ apiVersion: v1
 kind: Template
 metadata:
   labels:
-    addressType: topic
     app: enmasse
   name: tls-topic-persisted
 objects:
@@ -23,11 +22,8 @@ objects:
   kind: DeploymentConfig
   metadata:
     labels:
-      address: "${ADDRESS}"
+      address_config: address-config-${NAME}
       app: enmasse
-      multicast: 'true'
-      store_and_forward: 'true'
-      type: address-config
     name: "${NAME}"
   spec:
     replicas: 1
@@ -142,6 +138,16 @@ objects:
           kind: ImageStreamTag
           name: topic-forwarder:latest
       type: ImageChange
+- apiVersion: v1
+  data:
+    "${ADDRESS}": '{"store_and_forward": true, "multicast": true}'
+  kind: ConfigMap
+  metadata:
+    labels:
+      app: enmasse
+      group_id: "${NAME}"
+      type: address-config
+    name: address-config-${NAME}
 parameters:
 - description: Storage capacity required for volume claims
   name: STORAGE_CAPACITY
