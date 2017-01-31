@@ -38,40 +38,30 @@ public class QueueSchedulerTest {
     private TestConfigServ testConfigServ;
 
     @Before
-    public void setup() throws InterruptedException {
+    public void setup() throws Exception {
         vertx = Vertx.vertx();
         testConfigServ = new TestConfigServ(0);
         deployVerticle(testConfigServ);
-        int configPort = waitForPort(testConfigServ, 1, TimeUnit.MINUTES);
+        int configPort = waitForPort(() -> testConfigServ.getPort(), 1, TimeUnit.MINUTES);
         System.out.println("Config port is " + configPort);
 
         executorService = Executors.newSingleThreadScheduledExecutor();
         brokerFactory = new TestBrokerFactory(vertx, "localhost");
         scheduler = new QueueScheduler("localhost", configPort, executorService, brokerFactory, 0);
         deployVerticle(scheduler);
-        int schedulerPort = waitForPort(scheduler, 1, TimeUnit.MINUTES);
+        int schedulerPort = waitForPort(() -> scheduler.getPort(), 1, TimeUnit.MINUTES);
         System.out.println("Scheduler port is " + schedulerPort);
         brokerFactory.setSchedulerPort(schedulerPort);
     }
 
-    private int waitForPort(TestConfigServ testConfigServ, long timeout, TimeUnit timeUnit) throws InterruptedException {
+    private int waitForPort(Callable<Integer> portFetcher, long timeout, TimeUnit timeUnit) throws Exception {
         long endTime = System.currentTimeMillis() + timeUnit.toMillis(timeout);
-        while (System.currentTimeMillis() < endTime && testConfigServ.getPort() == 0) {
+        while (System.currentTimeMillis() < endTime && portFetcher.call() == 0) {
             Thread.sleep(1000);
         }
-        assertTrue(testConfigServ.getPort() > 0);
-        return testConfigServ.getPort();
+        assertTrue(portFetcher.call() > 0);
+        return portFetcher.call();
     }
-
-    private int waitForPort(QueueScheduler scheduler, long timeout, TimeUnit timeUnit) throws InterruptedException {
-        long endTime = System.currentTimeMillis() + timeUnit.toMillis(timeout);
-        while (System.currentTimeMillis() < endTime && scheduler.getPort() == 0) {
-            Thread.sleep(1000);
-        }
-        assertTrue(scheduler.getPort() > 0);
-        return scheduler.getPort();
-    }
-
 
     private void deployVerticle(Verticle verticle) throws InterruptedException {
         CountDownLatch latch = new CountDownLatch(1);
