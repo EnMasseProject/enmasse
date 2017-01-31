@@ -59,7 +59,6 @@ public class Artemis implements Broker {
         BlockingQueue<Message> replies = new LinkedBlockingDeque<>();
         ProtonSender sender = connection.createSender("activemq.management");
         sender.openHandler(result -> {
-            System.out.println("Opened sender");
             ProtonReceiver receiver = connection.createReceiver("activemq.management");
             Source source = new Source();
             source.setDynamic(true);
@@ -68,7 +67,6 @@ public class Artemis implements Broker {
                 promise.complete(new Artemis(vertx, sender, h.result().getRemoteSource().getAddress(), replies));
             });
             receiver.handler(((protonDelivery, message) -> {
-                System.out.println("Got new message!");
                 try {
                     replies.put(message);
                     ProtonHelper.accepted(protonDelivery, true);
