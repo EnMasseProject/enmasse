@@ -42,7 +42,7 @@ public class ConfigMessageEncoderTest {
 
         Message message = encoder.encode(configSet);
         String json = (String) ((AmqpValue) message.getBody()).getValue();
-        assertThat(json, is("{\"c1\":{\"myqueue\":{\"store_and_forward\":true,\"multicast\":false},\"myqueue2\":{\"store_and_forward\":true,\"multicast\":false}},\"c2\":{\"mytopic\":{\"store_and_forward\":true,\"multicast\":true}}}"));
+        assertThat(json, is("{\"myqueue\":{\"store_and_forward\":true,\"multicast\":false,\"group_id\":\"c1\"},\"myqueue2\":{\"store_and_forward\":true,\"multicast\":false,\"group_id\":\"c1\"},\"mytopic\":{\"store_and_forward\":true,\"multicast\":true,\"group_id\":\"c2\"}}"));
     }
 
     private ConfigMap createConfigMap(String name, List<String> addresses, boolean storeAndForward, boolean multicast) {
