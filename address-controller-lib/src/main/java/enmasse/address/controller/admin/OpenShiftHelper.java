@@ -91,7 +91,8 @@ public class OpenShiftHelper {
 
     public void updateDestinations(DestinationGroup destinationGroup) {
         DoneableConfigMap map = client.configMaps().withName(nameSanitizer("address-config-" + destinationGroup.getGroupId())).createOrReplaceWithNew()
-                .editMetadata()
+                .editOrNewMetadata()
+                    .withName(nameSanitizer("address-config-" + destinationGroup.getGroupId()))
                     .addToLabels(LabelKeys.GROUP_ID, destinationGroup.getGroupId())
                     .addToLabels("type", "address-config")
                 .endMetadata();
