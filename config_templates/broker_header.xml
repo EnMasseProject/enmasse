@@ -93,7 +93,7 @@ under the License.
 
       <!-- the system will enter into page mode once you hit this limit.
            This is an estimate in bytes of how much the messages are using in memory -->
-      <global-max-size>10485760</global-max-size>
+      <global-max-size>104857600</global-max-size>
 
       <acceptors>
          <acceptor name="artemis">tcp://0.0.0.0:61616?tcpSendBufferSize=1048576;tcpReceiveBufferSize=1048576</acceptor>
