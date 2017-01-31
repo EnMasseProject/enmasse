@@ -10,7 +10,7 @@ public class QueueState {
     private final Map<String, Set<String>> addressMap = new LinkedHashMap<>();
 
     public synchronized void groupUpdated(String groupId, Set<String> addresses) {
-        Set<String> existing = addressMap.get(groupId);
+        Set<String> existing = addressMap.getOrDefault(groupId, Collections.emptySet());
 
         Set<String> removed = new HashSet<>(existing);
         removed.removeAll(addresses);
@@ -39,13 +39,11 @@ public class QueueState {
         }
         brokerMap.get(brokerId).add(broker);
 
-        Set<String> addresses = addressMap.get(brokerId);
-        if (addresses != null) {
-            if (addresses.size() > 1) {
-                distributeAddressesByNumQueues(brokerId, addresses);
-            } else {
-                broker.deployQueue(addresses.iterator().next());
-            }
+        Set<String> addresses = addressMap.getOrDefault(brokerId, Collections.emptySet());
+        if (addresses.size() == 1) {
+            broker.deployQueue(addresses.iterator().next());
+        } else {
+            distributeAddressesByNumQueues(brokerId, addresses);
         }
     }
 
@@ -65,7 +63,10 @@ public class QueueState {
     }
 
     private void distributeAddressesByNumQueues(String groupId, Set<String> addresses) {
-        List<Broker> brokerList = brokerMap.get(groupId);
+        List<Broker> brokerList = brokerMap.getOrDefault(groupId, Collections.emptyList());
+        if (brokerList.isEmpty()) {
+            return;
+        }
         PriorityQueue<Broker> brokerByNumQueues = new PriorityQueue<>(brokerList.size(), (a, b) -> {
             if (a.numQueues() < b.numQueues()) {
                 return -1;
@@ -87,14 +88,14 @@ public class QueueState {
 
     private void distributeAddressesAll(String groupId, Set<String> addresses) {
         for (String address : addresses) {
-            for (Broker  broker : brokerMap.get(groupId)) {
+            for (Broker  broker : brokerMap.getOrDefault(groupId, Collections.emptyList())) {
                 broker.deployQueue(address);
             }
         }
     }
 
     private void deleteAddresses(String groupId, Set<String> removed) {
-        for (Broker broker : brokerMap.get(groupId)) {
+        for (Broker broker : brokerMap.getOrDefault(groupId, Collections.emptyList())) {
             for (String address : removed) {
                 broker.deleteQueue(address);
             }

@@ -11,9 +11,7 @@ import io.vertx.proton.ProtonServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 /**
  * Acts as an arbiter deciding in which broker a queue should run.
@@ -23,13 +21,15 @@ public class QueueScheduler extends AbstractVerticle implements Watcher<ConfigMa
 
     private final KubernetesClient kubernetesClient;
     private final QueueState queueState = new QueueState();
+    private final BrokerFactory brokerFactory;
     private final ExecutorService executorService;
 
     private final int port;
 
-    public QueueScheduler(KubernetesClient kubernetesClient, ExecutorService executorService, int port) {
+    public QueueScheduler(KubernetesClient kubernetesClient, ExecutorService executorService, BrokerFactory brokerFactory, int port) {
         this.kubernetesClient = kubernetesClient;
         this.executorService = executorService;
+        this.brokerFactory = brokerFactory;
         this.port = port;
     }
 
@@ -42,7 +42,7 @@ public class QueueScheduler extends AbstractVerticle implements Watcher<ConfigMa
                 log.info("Connection opened from " + conn.result().getRemoteContainer());
                 executorService.execute(() -> {
                     try {
-                        queueState.brokerAdded(conn.result().getRemoteContainer(), Artemis.create(vertx, connection).get());
+                        queueState.brokerAdded(conn.result().getRemoteContainer(), brokerFactory.createBroker(connection).get());
                     } catch (Exception e) {
                         log.error("Error adding broker", e);
                     }
@@ -107,7 +107,13 @@ public class QueueScheduler extends AbstractVerticle implements Watcher<ConfigMa
     private void addressesChanged(ConfigMap configMap) {
         String groupId = configMap.getMetadata().getLabels().get(LabelKeys.GROUP_ID);
 
-        executorService.execute(() -> queueState.groupUpdated(groupId, configMap.getData().keySet()));
+        executorService.execute(() -> {
+            try {
+                queueState.groupUpdated(groupId, configMap.getData().keySet());
+            } catch (Exception e) {
+                log.error("ERROR: ", e);
+            }
+        });
     }
 
     private void addressesDeleted(ConfigMap configMap) {

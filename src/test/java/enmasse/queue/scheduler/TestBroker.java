@@ -17,21 +17,22 @@
 package enmasse.queue.scheduler;
 
 import io.vertx.core.AbstractVerticle;
-import io.vertx.proton.*;
-import org.apache.qpid.proton.amqp.messaging.Source;
-import org.apache.qpid.proton.message.Message;
+import io.vertx.proton.ProtonClient;
+import io.vertx.proton.ProtonConnection;
 
-import java.util.ArrayDeque;
-import java.util.Queue;
+import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 import static org.junit.Assert.assertTrue;
 
 
-public class TestBroker extends AbstractVerticle {
+public class TestBroker extends AbstractVerticle implements Broker {
     private final String id;
     private final String schedulerHost;
     private final int schedulerPort;
-    private final Queue<Message> incoming = new ArrayDeque<>();
+    private final Set<String> addressSet = new LinkedHashSet<>();
+    private volatile ProtonConnection connection;
 
     public TestBroker(String id, String schedulerHost, int schedulerPort) {
         this.id = id;
@@ -39,33 +40,40 @@ public class TestBroker extends AbstractVerticle {
         this.schedulerPort = schedulerPort;
     }
 
+    @Override
     public void start() throws Exception {
         ProtonClient client = ProtonClient.create(vertx);
         client.connect(schedulerHost, schedulerPort, openResult -> {
             assertTrue(openResult.succeeded());
-            ProtonConnection connection = openResult.result();
+            connection = openResult.result();
             connection.setContainer(id);
-            connection.sessionOpenHandler(ProtonSession::open);
-            connection.receiverOpenHandler(r -> {
-                Source source = new Source();
-                source.setAddress("replyaddr");
-                r.setSource(source);
-                r.handler((protonDelivery, message) -> {
-                    incoming.add(message);
-                    ProtonHelper.accepted(protonDelivery, true);
-                });
-                r.open();
-            });
-            connection.senderOpenHandler(sender -> {
-                Source source = new Source();
-                source.setAddress("replyaddr");
-                sender.setSource(source);
-            });
             connection.open();
         });
     }
 
-    public Message receive() {
-        return incoming.poll();
+    @Override
+    public synchronized void deployQueue(String address) {
+        addressSet.add(address);
+    }
+
+    @Override
+    public synchronized void deleteQueue(String address) {
+        addressSet.remove(address);
+
+    }
+
+    @Override
+    public synchronized long numQueues() {
+        return addressSet.size();
+    }
+
+    public synchronized Set<String> getAddressSet() {
+        return Collections.unmodifiableSet(addressSet);
+    }
+
+    public void close() {
+        if (connection != null) {
+            connection.close();
+        }
     }
 }
