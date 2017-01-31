@@ -56,8 +56,8 @@ public class Artemis implements Broker {
         this.replies = replies;
     }
 
-    public static Future<Artemis> create(Vertx vertx, ProtonConnection connection) {
-        CompletableFuture<Artemis> promise = new CompletableFuture<>();
+    public static Future<Broker> create(Vertx vertx, ProtonConnection connection) {
+        CompletableFuture<Broker> promise = new CompletableFuture<>();
         connection.sessionOpenHandler(ProtonSession::open);
         BlockingQueue<Message> replies = new LinkedBlockingDeque<>();
         ProtonSender sender = connection.createSender("activemq.management");

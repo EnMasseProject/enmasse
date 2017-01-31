@@ -48,13 +48,13 @@ public class ArtemisTest {
     @Test
     public void testManagement() throws InterruptedException, ExecutionException, TimeoutException {
         ProtonClient client = ProtonClient.create(vertx);
-        CompletableFuture<Future<Artemis>> promise = new CompletableFuture<>();
+        CompletableFuture<Future<Broker>> promise = new CompletableFuture<>();
         client.connect("localhost", 12345, h -> {
             assertTrue(h.succeeded());
             promise.complete(Artemis.create(vertx, h.result().open()));
         });
 
-        Artemis artemis = promise.get().get(10, TimeUnit.SECONDS);
+        Artemis artemis = (Artemis)promise.get().get(10, TimeUnit.SECONDS);
 
         artemis.deployQueue("queue1");
         artemis.deployQueue("queue2");
