@@ -19,6 +19,7 @@ package enmasse.queue.scheduler;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.vertx.core.Vertx;
 import io.vertx.proton.*;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
@@ -45,6 +46,8 @@ public class Artemis implements Broker {
     private final ProtonSender sender;
     private final String replyTo;
     private final BlockingQueue<Message> replies;
+    private final String messagingHost = System.getenv("MESSAGING_SERVICE_HOST");
+    private final String messagingPort = System.getenv("MESSAGING_SERVICE_PORT");
 
     public Artemis(Vertx vertx, ProtonSender sender, String replyTo, BlockingQueue<Message> replies) {
         this.vertx = vertx;
@@ -91,6 +94,19 @@ public class Artemis implements Broker {
 
         message.setBody(new AmqpValue(encodeJson(parameters)));
         doRequest(message);
+
+        message = createMessage("createConnectorService");
+        parameters = mapper.createArrayNode();
+        parameters.add(address);
+        parameters.add("org.apache.activemq.artemis.integration.amqp.AMQPConnectorServiceFactory");
+        ObjectNode connectorParams = parameters.addObject();
+        connectorParams.put("host", messagingHost);
+        connectorParams.put("port", messagingPort);
+        connectorParams.put("containerId", address);
+        connectorParams.put("groupId", address);
+
+        message.setBody(new AmqpValue(encodeJson(parameters)));
+        doRequest(message);
     }
 
     private Message doRequest(Message message) {
@@ -118,6 +134,12 @@ public class Artemis implements Broker {
         parameters.add(true);
         message.setBody(new AmqpValue(encodeJson(parameters)));
 
+        doRequest(message);
+
+        message = createMessage("destroyConnectorService");
+        parameters = mapper.createArrayNode();
+        parameters.add(address);
+        message.setBody(new AmqpValue(encodeJson(parameters)));
         doRequest(message);
     }
 
