@@ -20,22 +20,19 @@ import io.vertx.core.Vertx;
 import io.vertx.proton.ProtonConnection;
 
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Future;
+import java.util.concurrent.*;
 
 
 public class TestBrokerFactory implements BrokerFactory {
 
     private final Vertx vertx;
     private final String host;
-    private final int port;
     private final Map<String, Broker> brokerMap = new ConcurrentHashMap<>();
+    private int schedulerPort;
 
-    public TestBrokerFactory(Vertx vertx, String host, int port) {
+    public TestBrokerFactory(Vertx vertx, String host) {
         this.vertx = vertx;
         this.host = host;
-        this.port = port;
     }
 
     @Override
@@ -45,10 +42,18 @@ public class TestBrokerFactory implements BrokerFactory {
         return broker;
     }
 
-    public TestBroker deployBroker(String id) {
-        TestBroker broker = new TestBroker(id, host, port);
+    public TestBroker deployBroker(String id) throws InterruptedException {
+        TestBroker broker = new TestBroker(id, host, schedulerPort);
         brokerMap.put(id, broker);
-        vertx.deployVerticle(broker);
+        CountDownLatch latch = new CountDownLatch(1);
+        vertx.deployVerticle(broker, result -> {
+            latch.countDown();
+        });
+        latch.await(1, TimeUnit.MINUTES);
         return broker;
+    }
+
+    public void setSchedulerPort(int schedulerPort) {
+        this.schedulerPort = schedulerPort;
     }
 }

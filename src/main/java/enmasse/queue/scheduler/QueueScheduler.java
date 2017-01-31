@@ -16,42 +16,49 @@
 
 package enmasse.queue.scheduler;
 
-import enmasse.config.LabelKeys;
-import io.fabric8.kubernetes.api.model.ConfigMap;
-import io.fabric8.kubernetes.api.model.ConfigMapList;
-import io.fabric8.kubernetes.client.KubernetesClient;
-import io.fabric8.kubernetes.client.KubernetesClientException;
-import io.fabric8.kubernetes.client.Watcher;
 import io.vertx.core.AbstractVerticle;
+import io.vertx.core.json.JsonObject;
+import io.vertx.proton.ProtonClient;
+import io.vertx.proton.ProtonConnection;
+import io.vertx.proton.ProtonReceiver;
 import io.vertx.proton.ProtonServer;
+import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 
 /**
  * Acts as an arbiter deciding in which broker a queue should run.
  */
-public class QueueScheduler extends AbstractVerticle implements Watcher<ConfigMap> {
+public class QueueScheduler extends AbstractVerticle {
     private static final Logger log = LoggerFactory.getLogger(QueueScheduler.class.getName());
 
-    private final KubernetesClient kubernetesClient;
+    private final String configHost;
+    private final int configPort;
     private final SchedulerState schedulerState = new SchedulerState();
     private final BrokerFactory brokerFactory;
     private final ExecutorService executorService;
+    private volatile ProtonServer server;
+    private volatile ProtonConnection configConnection;
 
     private final int port;
 
-    public QueueScheduler(KubernetesClient kubernetesClient, ExecutorService executorService, BrokerFactory brokerFactory, int port) {
-        this.kubernetesClient = kubernetesClient;
+    public QueueScheduler(String configHost, int configPort, ExecutorService executorService, BrokerFactory brokerFactory, int listenPort) {
+        this.configHost = configHost;
+        this.configPort = configPort;
         this.executorService = executorService;
         this.brokerFactory = brokerFactory;
-        this.port = port;
+        this.port = listenPort;
     }
 
     @Override
     public void start() {
-        ProtonServer server = ProtonServer.create(vertx);
+        server = ProtonServer.create(vertx);
         server.connectHandler(connection -> {
             connection.setContainer("queue-scheduler");
             connection.openHandler(conn -> {
@@ -67,78 +74,79 @@ public class QueueScheduler extends AbstractVerticle implements Watcher<ConfigMa
                 executorService.execute(() -> schedulerState.brokerRemoved(conn.result().getRemoteContainer()));
                 connection.close();
                 connection.disconnect();
-                log.info("Connection closed");
+                log.info("Broker connection closed");
             }).disconnectHandler(protonConnection -> {
                 connection.disconnect();
-                log.info("Disconnected");
+                log.info("Broker connection disconnected");
             }).open();
         });
         server.listen(port, event -> {
             if (event.succeeded()) {
-                log.info("QueueScheduler is up and running on port " + port);
+                log.info("QueueScheduler is up and running");
             } else {
                 log.error("Error starting queue scheduler", event.cause());
             }
         });
 
-        vertx.executeBlocking(promise -> {
-            try {
-                ConfigMapList configs = kubernetesClient.configMaps().withLabel("type", "address-config").list();
-                for (ConfigMap config : configs.getItems()) {
-                    eventReceived(Action.ADDED, config);
-                }
-                kubernetesClient.configMaps().withResourceVersion(configs.getMetadata().getResourceVersion()).watch(this);
-                promise.complete(configs);
-            } catch (Exception e) {
-                promise.fail(e);
-            }
-
-        }, result -> {
-            if (!result.succeeded()) {
-                log.warn("Error getting deployment configs", result.cause());
-            }
-        });
+        connectToConfigService(ProtonClient.create(vertx));
     }
 
-
     @Override
-    public void eventReceived(Action action, ConfigMap resource) {
-        switch (action) {
-            case ADDED:
-                log.info("Deployment config was added");
-                addressesChanged(resource);
-                break;
-            case DELETED:
-                addressesDeleted(resource);
-                break;
-            case ERROR:
-                log.error("Error with action", action);
-                break;
-            case MODIFIED:
-                addressesChanged(resource);
-                break;
+    public void stop() {
+        if (configConnection != null) {
+            configConnection.close();
+        }
+
+        if (server != null) {
+            server.close();
         }
     }
 
-    private void addressesChanged(ConfigMap configMap) {
-        String groupId = configMap.getMetadata().getLabels().get(LabelKeys.GROUP_ID);
+    private void connectToConfigService(ProtonClient client) {
+        client.connect(configHost, configPort, connResult -> {
+            if (connResult.succeeded()) {
+                log.info("Connected to the configuration service");
+                configConnection = connResult.result();
+                configConnection.open();
 
-        executorService.execute(() -> {
-            try {
-                schedulerState.groupUpdated(groupId, configMap.getData().keySet());
-            } catch (Exception e) {
-                log.error("ERROR: ", e);
+                ProtonReceiver receiver = configConnection.createReceiver("maas");
+                receiver.handler((protonDelivery, message) -> {
+                    String payload = (String)((AmqpValue)message.getBody()).getValue();
+                    Map<String, Set<String>> addressConfig = decodeAddressConfig(new JsonObject(payload));
+                    addressesChanged(addressConfig);
+                });
+                receiver.open();
+            } else {
+                log.error("Error connecting to configuration service", connResult.cause());
+                vertx.setTimer(5000, id -> connectToConfigService(client));
             }
         });
     }
 
-    private void addressesDeleted(ConfigMap configMap) {
-        String groupId = configMap.getMetadata().getLabels().get(LabelKeys.GROUP_ID);
-        executorService.execute(() -> schedulerState.groupDeleted(groupId));
+    private Map<String, Set<String>> decodeAddressConfig(JsonObject payload) {
+        Map<String, Set<String>> addressMap = new LinkedHashMap<>();
+        for (String group : payload.fieldNames()) {
+            JsonObject groupObject = payload.getJsonObject(group);
+            addressMap.put(group, new HashSet<>(groupObject.fieldNames()));
+        }
+        return addressMap;
     }
 
-    @Override
-    public void onClose(KubernetesClientException cause) {
-        log.warn("Watcher closed", cause);
+    private void addressesChanged(Map<String, Set<String>> addressMap) {
+        executorService.execute(() -> {
+            try {
+                schedulerState.addressesChanged(addressMap);
+            } catch (Exception e) {
+                log.error("Error handling address change: ", e);
+            }
+        });
+    }
+
+    public int getPort() {
+        if (server == null) {
+            return 0;
+        } else {
+            return server.actualPort();
+        }
     }
 }

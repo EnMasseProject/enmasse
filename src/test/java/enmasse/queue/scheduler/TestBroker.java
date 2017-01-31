@@ -43,11 +43,18 @@ public class TestBroker extends AbstractVerticle implements Broker {
     @Override
     public void start() throws Exception {
         ProtonClient client = ProtonClient.create(vertx);
+        connectToScheduler(client);
+    }
+
+    private void connectToScheduler(ProtonClient client) {
         client.connect(schedulerHost, schedulerPort, openResult -> {
-            assertTrue(openResult.succeeded());
-            connection = openResult.result();
-            connection.setContainer(id);
-            connection.open();
+            if (openResult.succeeded()) {
+                connection = openResult.result();
+                connection.setContainer(id);
+                connection.open();
+            } else {
+                vertx.setTimer(2000, id -> connectToScheduler(client));
+            }
         });
     }
 

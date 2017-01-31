@@ -25,6 +25,15 @@ public class SchedulerState {
     private final Map<String, List<Broker>> brokerMap = new LinkedHashMap<>();
     private final Map<String, Set<String>> addressMap = new LinkedHashMap<>();
 
+
+    public synchronized void addressesChanged(Map<String, Set<String>> updatedMap) {
+        Set<String> removedGroups = new HashSet<>(addressMap.keySet());
+        removedGroups.removeAll(updatedMap.keySet());
+        removedGroups.forEach(addressMap::remove);
+
+        updatedMap.forEach(this::groupUpdated);
+    }
+
     public synchronized void groupUpdated(String groupId, Set<String> addresses) {
         Set<String> existing = addressMap.getOrDefault(groupId, Collections.emptySet());
 
@@ -43,11 +52,6 @@ public class SchedulerState {
         addressMap.put(groupId, addresses);
     }
 
-
-    public synchronized void groupDeleted(String groupId) {
-        // TODO: Close/free resources?
-        addressMap.remove(groupId);
-    }
 
     public synchronized void brokerAdded(String brokerId, Broker broker) {
         if (!brokerMap.containsKey(brokerId)) {

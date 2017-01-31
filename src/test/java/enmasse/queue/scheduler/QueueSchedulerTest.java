@@ -16,23 +16,18 @@
 
 package enmasse.queue.scheduler;
 
-import enmasse.config.AddressEncoder;
-import io.fabric8.kubernetes.api.model.*;
-import io.fabric8.kubernetes.client.KubernetesClient;
-import io.fabric8.kubernetes.client.Watcher;
-import io.fabric8.kubernetes.client.dsl.ClientMixedOperation;
+import io.vertx.core.Verticle;
 import io.vertx.core.Vertx;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.*;
 import java.util.concurrent.*;
 
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertTrue;
 
 public class QueueSchedulerTest {
 
@@ -40,20 +35,47 @@ public class QueueSchedulerTest {
     private ExecutorService executorService;
     private TestBrokerFactory brokerFactory;
     private QueueScheduler scheduler;
-    private KubernetesClient mockClient;
+    private TestConfigServ testConfigServ;
 
     @Before
     public void setup() throws InterruptedException {
         vertx = Vertx.vertx();
+        testConfigServ = new TestConfigServ(0);
+        deployVerticle(testConfigServ);
+        int configPort = waitForPort(testConfigServ, 1, TimeUnit.MINUTES);
+        System.out.println("Config port is " + configPort);
+
         executorService = Executors.newSingleThreadScheduledExecutor();
-        mockClient = mock(KubernetesClient.class);
-        brokerFactory = new TestBrokerFactory(vertx, "localhost", 12223);
-        scheduler = new QueueScheduler(mockClient, executorService, brokerFactory, 12223);
+        brokerFactory = new TestBrokerFactory(vertx, "localhost");
+        scheduler = new QueueScheduler("localhost", configPort, executorService, brokerFactory, 0);
+        deployVerticle(scheduler);
+        int schedulerPort = waitForPort(scheduler, 1, TimeUnit.MINUTES);
+        System.out.println("Scheduler port is " + schedulerPort);
+        brokerFactory.setSchedulerPort(schedulerPort);
     }
 
-    private void deployScheduler() throws InterruptedException {
+    private int waitForPort(TestConfigServ testConfigServ, long timeout, TimeUnit timeUnit) throws InterruptedException {
+        long endTime = System.currentTimeMillis() + timeUnit.toMillis(timeout);
+        while (System.currentTimeMillis() < endTime && testConfigServ.getPort() == 0) {
+            Thread.sleep(1000);
+        }
+        assertTrue(testConfigServ.getPort() > 0);
+        return testConfigServ.getPort();
+    }
+
+    private int waitForPort(QueueScheduler scheduler, long timeout, TimeUnit timeUnit) throws InterruptedException {
+        long endTime = System.currentTimeMillis() + timeUnit.toMillis(timeout);
+        while (System.currentTimeMillis() < endTime && scheduler.getPort() == 0) {
+            Thread.sleep(1000);
+        }
+        assertTrue(scheduler.getPort() > 0);
+        return scheduler.getPort();
+    }
+
+
+    private void deployVerticle(Verticle verticle) throws InterruptedException {
         CountDownLatch latch = new CountDownLatch(1);
-        vertx.deployVerticle(scheduler, r -> {
+        vertx.deployVerticle(verticle, r -> {
             latch.countDown();
         });
         latch.await(1, TimeUnit.MINUTES);
@@ -68,10 +90,9 @@ public class QueueSchedulerTest {
 
     @Test
     public void testAddressAddedBeforeBroker() throws InterruptedException, ExecutionException, TimeoutException {
-        deployScheduler();
-        scheduler.eventReceived(Watcher.Action.ADDED, createMap("br1", "queue1", "queue2"));
+        testConfigServ.deployConfig("{\"br1\":{\"queue1\":null,\"queue2\":null}}");
 
-        TestBroker br1 = brokerFactory.deployBroker("br1");
+        TestBroker br1 = deployBroker("br1");
 
         waitForAddresses(br1, 2);
         assertThat(br1.getQueueNames(), hasItem("queue1"));
@@ -80,15 +101,14 @@ public class QueueSchedulerTest {
 
     @Test
     public void testAddressAdded() throws InterruptedException {
-        deployScheduler();
-        TestBroker br1 = brokerFactory.deployBroker("br1");
-        scheduler.eventReceived(Watcher.Action.ADDED, createMap("br1", "queue1", "queue2"));
+        TestBroker br1 = deployBroker("br1");
+        testConfigServ.deployConfig("{\"br1\":{\"queue1\":null,\"queue2\":null}}");
 
         waitForAddresses(br1, 2);
         assertThat(br1.getQueueNames(), hasItem("queue1"));
         assertThat(br1.getQueueNames(), hasItem("queue2"));
 
-        scheduler.eventReceived(Watcher.Action.MODIFIED, createMap("br1", "queue1", "queue2", "queue3"));
+        testConfigServ.deployConfig("{\"br1\":{\"queue1\":null,\"queue2\":null,\"queue3\":null}}");
 
         waitForAddresses(br1, 3);
         assertThat(br1.getQueueNames(), hasItem("queue1"));
@@ -98,26 +118,23 @@ public class QueueSchedulerTest {
 
     @Test
     public void testAddressRemoved() throws InterruptedException {
-        deployScheduler();
-        TestBroker br1 = brokerFactory.deployBroker("br1");
-        scheduler.eventReceived(Watcher.Action.ADDED, createMap("br1", "queue1", "queue2"));
+        TestBroker br1 = deployBroker("br1");
+        testConfigServ.deployConfig("{\"br1\":{\"queue1\":null,\"queue2\":null}}");
         waitForAddresses(br1, 2);
         assertThat(br1.getQueueNames(), hasItem("queue1"));
         assertThat(br1.getQueueNames(), hasItem("queue2"));
 
-        scheduler.eventReceived(Watcher.Action.MODIFIED, createMap("br1", "queue1"));
+        testConfigServ.deployConfig("{\"br1\":{\"queue1\":null}}");
         waitForAddresses(br1, 1);
         assertThat(br1.getQueueNames(), hasItem("queue1"));
     }
 
     @Test
     public void testGroupDeleted() throws InterruptedException {
-        deployScheduler();
-        TestBroker br1 = brokerFactory.deployBroker("br1");
-        TestBroker br2 = brokerFactory.deployBroker("br2");
+        TestBroker br1 = deployBroker("br1");
+        TestBroker br2 = deployBroker("br2");
 
-        scheduler.eventReceived(Watcher.Action.ADDED, createMap("br1", "queue1"));
-        scheduler.eventReceived(Watcher.Action.ADDED, createMap("br2", "queue2"));
+        testConfigServ.deployConfig("{\"br1\":{\"queue1\":null}, \"br2\": {\"queue2\":null}}");
 
         waitForAddresses(br1, 1);
         waitForAddresses(br2, 1);
@@ -125,7 +142,7 @@ public class QueueSchedulerTest {
         assertThat(br1.getQueueNames(), hasItem("queue1"));
         assertThat(br2.getQueueNames(), hasItem("queue2"));
 
-        scheduler.eventReceived(Watcher.Action.DELETED, createMap("br1"));
+        testConfigServ.deployConfig("{\"br2\": {\"queue2\":null}}");
         waitForAddresses(br1, 1);
         waitForAddresses(br2, 1);
         assertThat(br1.getQueueNames(), hasItem("queue1"));
@@ -134,27 +151,23 @@ public class QueueSchedulerTest {
 
     @Test
     public void testBrokerAdded() throws InterruptedException {
-        deployScheduler();
-        scheduler.eventReceived(Watcher.Action.ADDED, createMap("br1", "queue1"));
-        scheduler.eventReceived(Watcher.Action.ADDED, createMap("br2", "queue2"));
+        testConfigServ.deployConfig("{\"br1\":{\"queue1\":null}, \"br2\": {\"queue2\":null}}");
 
-        TestBroker br1 = brokerFactory.deployBroker("br1");
+        TestBroker br1 = deployBroker("br1");
         waitForAddresses(br1, 1);
         assertThat(br1.getQueueNames(), hasItem("queue1"));
 
-        TestBroker br2 = brokerFactory.deployBroker("br2");
+        TestBroker br2 = deployBroker("br2");
         waitForAddresses(br2, 1);
         assertThat(br2.getQueueNames(), hasItem("queue2"));
     }
 
     @Test
     public void testBrokerRemoved() throws InterruptedException, TimeoutException, ExecutionException {
-        deployScheduler();
-        scheduler.eventReceived(Watcher.Action.ADDED, createMap("br1", "queue1"));
-        scheduler.eventReceived(Watcher.Action.ADDED, createMap("br2", "queue2"));
+        testConfigServ.deployConfig("{\"br1\":{\"queue1\":null}, \"br2\": {\"queue2\":null}}");
 
-        TestBroker br1 = brokerFactory.deployBroker("br1");
-        TestBroker br2 = brokerFactory.deployBroker("br2");
+        TestBroker br1 = deployBroker("br1");
+        TestBroker br2 = deployBroker("br2");
 
         waitForAddresses(br1, 1);
         waitForAddresses(br2, 1);
@@ -162,30 +175,9 @@ public class QueueSchedulerTest {
         br2.close();
         waitTask(1, TimeUnit.MINUTES);
 
-        br2 = brokerFactory.deployBroker("br2");
+        br2 = deployBroker("br2");
         waitForAddresses(br2, 1);
         assertThat(br2.getQueueNames(), hasItem("queue2"));
-    }
-
-    @Test
-    @SuppressWarnings("unchecked")
-    public void testKubernetesWatch() throws InterruptedException, TimeoutException, ExecutionException {
-        ClientMixedOperation mapOp = mock(ClientMixedOperation.class);
-        when(mockClient.configMaps()).thenReturn(mapOp);
-        when(mapOp.withLabel(anyString(), anyString())).thenReturn(mapOp);
-        when(mapOp.withResourceVersion(anyString())).thenReturn(mapOp);
-        ConfigMapList list = new ConfigMapListBuilder()
-                .addToItems(createMap("br1", "queue1", "queue3"),
-                        createMap("br2", "queue2"))
-                .withMetadata(new ListMetaBuilder()
-                        .withResourceVersion("r3")
-                        .build())
-                .build();
-        when(mapOp.list()).thenReturn(list);
-
-        deployScheduler();
-        TestBroker br1 = brokerFactory.deployBroker("br1");
-        waitForAddresses(br1, 2);
     }
 
     private static void waitForAddresses(TestBroker broker, long numAddresses) throws InterruptedException {
@@ -207,20 +199,7 @@ public class QueueSchedulerTest {
         f.get(timeout, timeUnit);
     }
 
-    private ConfigMap createMap(String groupId, String ... addresses) {
-        Map<String, String> data = new LinkedHashMap<>();
-        for (String address : addresses) {
-            AddressEncoder encoder = new AddressEncoder();
-            encoder.encode(true, false, Optional.of("vanilla"));
-            data.put(address, encoder.toJson());
-        }
-        return new ConfigMapBuilder()
-                .withMetadata(new ObjectMetaBuilder()
-                        .withName("address-config-" + groupId)
-                        .addToLabels("group_id", groupId)
-                        .build())
-                .withData(data)
-                .build();
-
+    private TestBroker deployBroker(String id) throws InterruptedException {
+        return brokerFactory.deployBroker(id);
     }
 }
