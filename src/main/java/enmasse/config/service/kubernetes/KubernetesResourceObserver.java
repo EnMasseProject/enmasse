@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package enmasse.config.service.openshift;
+package enmasse.config.service.kubernetes;
 
 import enmasse.config.service.model.Resource;
 import enmasse.config.service.model.ResourceFactory;
@@ -33,8 +33,8 @@ import java.util.*;
 /**
  * A subscription to a set of resources;
  */
-public class OpenshiftResourceObserver<T extends Resource> implements AutoCloseable, Watcher {
-    private static final Logger log = LoggerFactory.getLogger(OpenshiftResourceObserver.class.getName());
+public class KubernetesResourceObserver<T extends Resource> implements AutoCloseable, Watcher {
+    private static final Logger log = LoggerFactory.getLogger(KubernetesResourceObserver.class.getName());
 
     private final List<Watch> watches = new ArrayList<>();
 
@@ -44,7 +44,7 @@ public class OpenshiftResourceObserver<T extends Resource> implements AutoClosea
     private final ResourceFactory<T> resourceFactory;
     private final SubscriptionManager<T> subscriptionManager;
 
-    public OpenshiftResourceObserver(ResourceFactory<T> resourceFactory, ObserverOptions observerOptions, SubscriptionManager<T> subscriptionManager) {
+    public KubernetesResourceObserver(ResourceFactory<T> resourceFactory, ObserverOptions observerOptions, SubscriptionManager<T> subscriptionManager) {
         this.resourceFactory = resourceFactory;
         this.observerOptions = observerOptions;
         this.subscriptionManager = subscriptionManager;

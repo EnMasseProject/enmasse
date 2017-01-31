@@ -1,10 +1,10 @@
-package enmasse.config.service.openshift;
+package enmasse.config.service.kubernetes;
 
 import enmasse.config.service.TestResource;
 import enmasse.config.service.model.LabelSet;
 import enmasse.config.service.model.ResourceFactory;
+import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.ClientMixedOperation;
-import io.fabric8.openshift.client.OpenShiftClient;
 import org.apache.qpid.proton.amqp.messaging.AmqpSequence;
 import org.apache.qpid.proton.message.Message;
 
@@ -26,7 +26,7 @@ public class TestSubscriptionConfig implements SubscriptionConfig<TestResource> 
 
     @SuppressWarnings("unchecked")
     @Override
-    public ObserverOptions getObserverOptions(OpenShiftClient client, Map<String, String> filter) {
+    public ObserverOptions getObserverOptions(KubernetesClient client, Map<String, String> filter) {
         Map<String, String> filterMap = new LinkedHashMap<>(filter);
         filterMap.put("key", "value");
         return new ObserverOptions(LabelSet.fromMap(filterMap), new ClientMixedOperation[] {client.configMaps() });
@@ -38,7 +38,7 @@ public class TestSubscriptionConfig implements SubscriptionConfig<TestResource> 
     }
 
     @Override
-    public Predicate<TestResource> getResourceFilter() {
+    public Predicate<TestResource> getResourceFilter(Map<String, String> filter) {
         return TestResource -> true;
     }
 }

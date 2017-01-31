@@ -1,7 +1,8 @@
 package enmasse.config.service;
 
 import enmasse.config.service.model.Resource;
-import io.fabric8.kubernetes.api.model.HasMetadata; import io.fabric8.kubernetes.api.model.ObjectMeta;
+import io.fabric8.kubernetes.api.model.HasMetadata;
+import io.fabric8.kubernetes.api.model.ObjectMeta;
 
 import java.util.Map;
 

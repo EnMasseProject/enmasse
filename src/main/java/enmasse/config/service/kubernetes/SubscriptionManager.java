@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package enmasse.config.service.openshift;
+package enmasse.config.service.kubernetes;
 
 import enmasse.config.service.model.Resource;
 import enmasse.config.service.model.Subscriber;

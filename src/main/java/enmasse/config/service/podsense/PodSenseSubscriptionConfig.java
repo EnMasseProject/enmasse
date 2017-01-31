@@ -2,12 +2,12 @@ package enmasse.config.service.podsense;
 
 import enmasse.config.service.model.LabelSet;
 import enmasse.config.service.model.ResourceFactory;
-import enmasse.config.service.openshift.MessageEncoder;
-import enmasse.config.service.openshift.ObserverOptions;
-import enmasse.config.service.openshift.SubscriptionConfig;
+import enmasse.config.service.kubernetes.MessageEncoder;
+import enmasse.config.service.kubernetes.ObserverOptions;
+import enmasse.config.service.kubernetes.SubscriptionConfig;
 import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.ClientOperation;
-import io.fabric8.openshift.client.OpenShiftClient;
 
 import java.util.Map;
 import java.util.function.Predicate;
@@ -24,7 +24,7 @@ public class PodSenseSubscriptionConfig implements SubscriptionConfig<PodResourc
 
     @SuppressWarnings("unchecked")
     @Override
-    public ObserverOptions getObserverOptions(OpenShiftClient client, Map<String, String> filter) {
+    public ObserverOptions getObserverOptions(KubernetesClient client, Map<String, String> filter) {
         ClientOperation<Pod , ?, ?, ?>[] ops = new ClientOperation[1];
         ops[0] = client.pods();
         return new ObserverOptions(LabelSet.fromMap(filter), ops);
@@ -36,7 +36,7 @@ public class PodSenseSubscriptionConfig implements SubscriptionConfig<PodResourc
     }
 
     @Override
-    public Predicate<PodResource> getResourceFilter() {
+    public Predicate<PodResource> getResourceFilter(Map<String, String> filter) {
         return podResource -> podResource.getHost() != null && !podResource.getHost().isEmpty();
     }
 }

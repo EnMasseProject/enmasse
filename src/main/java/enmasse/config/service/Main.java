@@ -17,15 +17,15 @@
 package enmasse.config.service;
 
 import enmasse.config.service.amqp.AMQPServer;
+import enmasse.config.service.brokersense.BrokerSenseSubscriptionConfig;
 import enmasse.config.service.config.ConfigSubscriptionConfig;
 import enmasse.config.service.model.ResourceDatabase;
-import enmasse.config.service.openshift.OpenshiftResourceDatabase;
-import enmasse.config.service.openshift.SubscriptionConfig;
+import enmasse.config.service.kubernetes.KubernetesResourceDatabase;
 import enmasse.config.service.podsense.PodSenseSubscriptionConfig;
-import io.fabric8.openshift.client.DefaultOpenShiftClient;
-import io.fabric8.openshift.client.OpenShiftClient;
-import io.fabric8.openshift.client.OpenShiftConfig;
-import io.fabric8.openshift.client.OpenShiftConfigBuilder;
+import io.fabric8.kubernetes.client.Config;
+import io.fabric8.kubernetes.client.ConfigBuilder;
+import io.fabric8.kubernetes.client.DefaultKubernetesClient;
+import io.fabric8.kubernetes.client.KubernetesClient;
 import io.vertx.core.Vertx;
 
 import java.io.File;
@@ -46,14 +46,15 @@ public class Main {
             String listenAddress = env.getOrDefault("CONFIGURATION_SERVICE_LISTEN_ADDRESS", "0.0.0.0");
             int listenPort = Integer.parseInt(env.getOrDefault("CONFIGURATION_SERVICE_LISTEN_PORT", "5672"));
 
-            String openshiftNamespace = getOpenshiftNamespace();
+            String namespace = getNamespace();
 
-            OpenShiftConfig config = new OpenShiftConfigBuilder().withMasterUrl(openshiftUri).withOauthToken(getAuthenticationToken()).withNamespace(openshiftNamespace).build();
-            OpenShiftClient client = new DefaultOpenShiftClient(config);
+            Config config = new ConfigBuilder().withMasterUrl(openshiftUri).withOauthToken(getAuthenticationToken()).withNamespace(namespace).build();
+            KubernetesClient client = new DefaultKubernetesClient(config);
 
             Map<String, ResourceDatabase> databaseMap = new LinkedHashMap<>();
-            databaseMap.put("maas", new OpenshiftResourceDatabase<>(client, new ConfigSubscriptionConfig()));
-            databaseMap.put("podsense", new OpenshiftResourceDatabase<>(client, new PodSenseSubscriptionConfig()));
+            databaseMap.put("maas", new KubernetesResourceDatabase<>(client, new ConfigSubscriptionConfig()));
+            databaseMap.put("podsense", new KubernetesResourceDatabase<>(client, new PodSenseSubscriptionConfig()));
+            databaseMap.put("brokersense", new KubernetesResourceDatabase<>(client, new BrokerSenseSubscriptionConfig()));
 
             AMQPServer server = new AMQPServer(listenAddress, listenPort, databaseMap);
 
@@ -78,7 +79,7 @@ public class Main {
 
     private static final String SERVICEACCOUNT_PATH = "/var/run/secrets/kubernetes.io/serviceaccount";
 
-    private static String getOpenshiftNamespace() throws IOException {
+    private static String getNamespace() throws IOException {
         return readFile(new File(SERVICEACCOUNT_PATH, "namespace"));
     }
 

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package enmasse.config.service.openshift;
+package enmasse.config.service.kubernetes;
 
 import enmasse.config.service.TestResource;
 import enmasse.config.service.model.Subscriber;
@@ -22,11 +22,11 @@ import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.ConfigMapList;
 import io.fabric8.kubernetes.api.model.DoneableConfigMap;
 import io.fabric8.kubernetes.api.model.ListMeta;
+import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.Watch;
 import io.fabric8.kubernetes.client.Watcher;
 import io.fabric8.kubernetes.client.dsl.ClientMixedOperation;
 import io.fabric8.kubernetes.client.dsl.ClientResource;
-import io.fabric8.openshift.client.OpenShiftClient;
 import org.apache.qpid.proton.amqp.messaging.AmqpSequence;
 import org.apache.qpid.proton.message.Message;
 import org.junit.After;
@@ -45,19 +45,19 @@ import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
 @SuppressWarnings("unchecked")
-public class OpenshiftResourceDatabaseTest {
-    private OpenshiftResourceDatabase<TestResource> database;
-    private OpenShiftClient client;
+public class KubernetesResourceDatabaseTest {
+    private KubernetesResourceDatabase<TestResource> database;
+    private KubernetesClient client;
     private ScheduledExecutorService executor;
     private ClientMixedOperation<ConfigMap, ConfigMapList, DoneableConfigMap, ClientResource<ConfigMap, DoneableConfigMap>> mapOp = mock(ClientMixedOperation.class);
 
     @Before
     public void setup() {
         MockitoAnnotations.initMocks(this);
-        client = mock(OpenShiftClient.class);
+        client = mock(KubernetesClient.class);
         Watch mockWatcher = mock(Watch.class);
         executor = Executors.newSingleThreadScheduledExecutor();
-        database = new OpenshiftResourceDatabase<>(client, new TestSubscriptionConfig());
+        database = new KubernetesResourceDatabase<>(client, new TestSubscriptionConfig());
         when(client.configMaps()).thenReturn(mapOp);
 
         when(mapOp.withLabels(any())).thenReturn(mapOp);

@@ -1,7 +1,6 @@
-package enmasse.config.service.openshift;
+package enmasse.config.service.kubernetes;
 
 import enmasse.config.service.model.Resource;
-import io.fabric8.kubernetes.api.model.HasMetadata;
 import org.apache.qpid.proton.message.Message;
 
 import java.io.IOException;

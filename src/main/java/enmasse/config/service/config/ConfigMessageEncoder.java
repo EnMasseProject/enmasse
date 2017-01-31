@@ -4,8 +4,9 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import enmasse.config.service.openshift.MessageEncoder;
-import io.fabric8.kubernetes.api.model.HasMetadata;
+import enmasse.config.service.kubernetes.MessageEncoder;
+import enmasse.config.AddressEncoder;
+import enmasse.config.AddressDecoder;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.amqp.messaging.Section;
 import org.apache.qpid.proton.message.Message;
@@ -14,9 +15,9 @@ import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * Encodes a set of address configs to an AMQP message
@@ -27,13 +28,15 @@ public class ConfigMessageEncoder implements MessageEncoder<ConfigResource> {
 
     @Override
     public Message encode(Set<ConfigResource> resources) throws IOException {
-        List<Config> configs = resources.stream()
-                .map(h -> AddressConfigCodec.decodeLabels(h.getLabels()))
-                .collect(Collectors.toList());
         Message message = Message.Factory.create();
         ObjectNode root = mapper.createObjectNode();
-        for (Config config : configs) {
-            AddressConfigCodec.encodeJson(root, config);
+        for (ConfigResource config : resources) {
+            for (Map.Entry<String, String> entry : config.getData().entrySet()) {
+                AddressDecoder decoder = new AddressDecoder(entry.getValue());
+                AddressEncoder encoder = new AddressEncoder(root.putObject(entry.getKey()));
+                // Don't encode flavor in address config
+                encoder.encode(decoder.storeAndForward(), decoder.multicast(), Optional.empty());
+            }
         }
         message.setBody(createBody(root));
         message.setContentType("application/json");

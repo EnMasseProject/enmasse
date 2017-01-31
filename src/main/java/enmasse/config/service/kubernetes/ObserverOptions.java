@@ -1,4 +1,4 @@
-package enmasse.config.service.openshift;
+package enmasse.config.service.kubernetes;
 
 import enmasse.config.service.model.LabelSet;
 import io.fabric8.kubernetes.api.model.HasMetadata;

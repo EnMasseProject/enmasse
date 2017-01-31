@@ -2,12 +2,12 @@ package enmasse.config.service.config;
 
 import enmasse.config.service.model.LabelSet;
 import enmasse.config.service.model.ResourceFactory;
-import enmasse.config.service.openshift.MessageEncoder;
-import enmasse.config.service.openshift.ObserverOptions;
-import enmasse.config.service.openshift.SubscriptionConfig;
-import io.fabric8.kubernetes.api.model.HasMetadata;
+import enmasse.config.service.kubernetes.MessageEncoder;
+import enmasse.config.service.kubernetes.ObserverOptions;
+import enmasse.config.service.kubernetes.SubscriptionConfig;
+import io.fabric8.kubernetes.api.model.ConfigMap;
+import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.ClientOperation;
-import io.fabric8.openshift.client.OpenShiftClient;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -26,10 +26,9 @@ public class ConfigSubscriptionConfig implements SubscriptionConfig<ConfigResour
 
     @SuppressWarnings("unchecked")
     @Override
-    public ObserverOptions getObserverOptions(OpenShiftClient client, Map<String, String> filter) {
-        ClientOperation<? extends HasMetadata, ?, ?, ?>[] ops = new ClientOperation[2];
+    public ObserverOptions getObserverOptions(KubernetesClient client, Map<String, String> filter) {
+        ClientOperation<ConfigMap, ?, ?, ?>[] ops = new ClientOperation[1];
         ops[0] = client.configMaps();
-        ops[1] = client.deploymentConfigs();
         Map<String, String> labelMap = new LinkedHashMap<>(filter);
         if (labelMap.isEmpty()) {
             labelMap.put("type", "address-config");
@@ -39,11 +38,11 @@ public class ConfigSubscriptionConfig implements SubscriptionConfig<ConfigResour
 
     @Override
     public ResourceFactory<ConfigResource> getResourceFactory() {
-        return ConfigResource::new;
+        return in -> new ConfigResource((ConfigMap) in);
     }
 
     @Override
-    public Predicate<ConfigResource> getResourceFilter() {
+    public Predicate<ConfigResource> getResourceFilter(Map<String, String> filter) {
         return configResource -> true;
     }
 }

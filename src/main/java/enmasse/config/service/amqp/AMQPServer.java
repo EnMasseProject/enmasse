@@ -16,10 +16,7 @@
 
 package enmasse.config.service.amqp;
 
-import enmasse.config.service.model.Resource;
 import enmasse.config.service.model.ResourceDatabase;
-import enmasse.config.service.openshift.OpenshiftResourceDatabase;
-import enmasse.config.service.openshift.SubscriptionConfig;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.ProtonSender;
