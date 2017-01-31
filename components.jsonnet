@@ -5,6 +5,7 @@ local broker = import "include/broker.jsonnet";
 local forwarder = import "include/forwarder.jsonnet";
 local qdrouterd = import "include/qdrouterd.jsonnet";
 local addressController = import "include/address-controller.jsonnet";
+local queueScheduler = import "include/queue-scheduler.jsonnet";
 local subserv = import "include/subserv.jsonnet";
 local common = import "include/common.jsonnet";
 local flavor = import "include/flavor.jsonnet";
@@ -27,6 +28,9 @@ local mqttService = import "include/mqtt-service.jsonnet";
   "address-controller-dc.json": addressController.deployment,
   "address-controller-imagestream.json": addressController.imagestream("enmasseproject/address-controller"),
   "address-controller-service.json": addressController.service,
+  "queue-scheduler-dc.json": queueScheduler.deployment,
+  "queue-scheduler-imagestream.json": queueScheduler.imagestream("enmasseproject/queue-scheduler"),
+  "queue-scheduler-service.json": queueScheduler.service,
   "ragent-image-stream.json": ragent.imagestream("enmasseproject/ragent"),
   "ragent-dc.json": ragent.deployment,
   "ragent-service.json": ragent.service,

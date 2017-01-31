@@ -837,6 +837,77 @@ objects:
     selector:
       name: subserv
 - apiVersion: v1
+  kind: Service
+  metadata:
+    labels:
+      app: enmasse
+    name: queue-scheduler
+  spec:
+    ports:
+    - name: amqp
+      port: 55667
+      protocol: TCP
+      targetPort: 55667
+    selector:
+      name: queue-scheduler
+- apiVersion: v1
+  kind: DeploymentConfig
+  metadata:
+    labels:
+      app: enmasse
+      name: queue-scheduler
+    name: queue-scheduler
+  spec:
+    replicas: 1
+    selector:
+      name: queue-scheduler
+    template:
+      metadata:
+        labels:
+          app: enmasse
+          name: queue-scheduler
+      spec:
+        containers:
+        - image: queue-scheduler
+          livenessProbe:
+            tcpSocket:
+              port: amqp
+          name: queue-scheduler
+          ports:
+          - containerPort: 55667
+            name: amqp
+            protocol: TCP
+          resources:
+            limits:
+              memory: 128Mi
+            requests:
+              memory: 128Mi
+    triggers:
+    - type: ConfigChange
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+        - queue-scheduler
+        from:
+          kind: ImageStreamTag
+          name: queue-scheduler:latest
+      type: ImageChange
+- apiVersion: v1
+  kind: ImageStream
+  metadata:
+    labels:
+      app: enmasse
+    name: queue-scheduler
+  spec:
+    dockerImageRepository: "${QUEUE_SCHEDULER_REPO}"
+    importPolicy:
+      scheduled: true
+    tags:
+    - from:
+        kind: DockerImage
+        name: "${QUEUE_SCHEDULER_REPO}:latest"
+      name: latest
+- apiVersion: v1
   kind: ImageStream
   metadata:
     labels:
@@ -922,6 +993,9 @@ parameters:
 - description: The docker image to use for the address controller
   name: ADDRESS_CONTROLLER_REPO
   value: enmasseproject/address-controller
+- description: The docker image to use for the queue scheduler
+  name: QUEUE_SCHEDULER_REPO
+  value: enmasseproject/queue-scheduler
 - description: The image to use for the router agent
   name: RAGENT_REPO
   value: enmasseproject/ragent
