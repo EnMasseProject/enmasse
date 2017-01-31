@@ -76,10 +76,6 @@ public class TestArtemis {
         return server.getActiveMQServer().isActive();
     }
 
-    public long numMessages(String queueName) throws Exception {
-        return server.getActiveMQServer().getPostOffice().listQueuesForAddress(new SimpleString(queueName)).get(0).getMessageCount();
-    }
-
     public ActiveMQServer getServer() {
         return server.getActiveMQServer();
     }
