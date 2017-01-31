@@ -70,6 +70,11 @@ public class TemplateDestinationClusterGenerator implements DestinationClusterGe
         paramMap.put(TemplateParameter.NAME, OpenShiftHelper.nameSanitizer(destinationGroup.getGroupId()));
         paramMap.put(TemplateParameter.ADDRESS, first.address());
 
+        // Workaround for direct templates that need multicast set
+        if (!first.flavor().isPresent()) {
+            paramMap.put(TemplateParameter.MULTICAST, String.valueOf(first.multicast()));
+        }
+
         ParameterValue parameters[] = paramMap.entrySet().stream()
                 .map(entry -> new ParameterValue(entry.getKey(), entry.getValue()))
                 .collect(Collectors.toList())

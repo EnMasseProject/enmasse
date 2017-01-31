@@ -72,7 +72,7 @@ public class TemplateDestinationClusterGeneratorTest {
             assertThat(rlabel.get(LabelKeys.ADDRESS_CONFIG), is("address-config-foo-bar-baz-cockooa"));
         }
         List<ParameterValue> parameters = captor.getAllValues();
-        assertThat(parameters.size(), is(2));
+        assertThat(parameters.size(), is(3));
     }
 
     @Test
