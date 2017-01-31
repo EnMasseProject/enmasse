@@ -4,5 +4,9 @@
     "templateParameters": {
       "STORAGE_CAPACITY": "2Gi"
     }
+  },
+  "shared-queue": {
+    "shared": true,
+    "templateName": "queue-inmemory"
   }
 }

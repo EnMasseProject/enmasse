@@ -1,7 +1,7 @@
 package enmasse.address.controller;
 
 import enmasse.address.controller.admin.AddressManager;
-import enmasse.address.controller.restapi.RestService;
+import enmasse.address.controller.restapi.v1.RestService;
 import io.vertx.core.AbstractVerticle;
 import org.jboss.resteasy.plugins.server.vertx.VertxRequestHandler;
 import org.jboss.resteasy.plugins.server.vertx.VertxResteasyDeployment;

@@ -35,7 +35,7 @@ public class FlavorParserTest {
         File testFile = new File("src/test/resources/flavors.json");
         Map<String, Flavor> parsed = FlavorParser.parse(mapper.readTree(testFile));
 
-        assertThat(parsed.size(), is(1));
+        assertThat(parsed.size(), is(2));
         assertNotNull(parsed.get("test-queue"));
         Flavor flavor = parsed.get("test-queue");
         assertThat(flavor.templateName(), is("queue-persisted"));

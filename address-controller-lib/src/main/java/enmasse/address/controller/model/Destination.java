@@ -16,17 +16,20 @@
 
 package enmasse.address.controller.model;
 
+import java.util.*;
+
 /**
- * Represents a single destination in the addressing config. It is identified by the address, but contains
+ * Represents a single destination in the addressing config. It is identified by an address and
  * additional properties that determine the semantics.
  */
 public final class Destination {
     private final String address;
     private final boolean storeAndForward;
     private final boolean multicast;
-    private final String flavor;
+    private final Optional<String> flavor;
 
-    public Destination(String address, boolean storeAndForward, boolean multicast, String flavor) {
+    public Destination(String address, boolean storeAndForward, boolean multicast, Optional<String> flavor) {
+        Objects.requireNonNull(flavor);
         this.address = address;
         this.storeAndForward = storeAndForward;
         this.multicast = multicast;
@@ -43,6 +46,10 @@ public final class Destination {
 
     public boolean multicast() {
         return multicast;
+    }
+
+    public Optional<String> flavor() {
+        return flavor;
     }
 
     @Override
@@ -70,7 +77,49 @@ public final class Destination {
         return builder.toString();
     }
 
-    public String flavor() {
-        return flavor;
+    public static class Builder {
+        private String address;
+        private boolean storeAndForward = false;
+        private boolean multicast = false;
+        private Optional<String> flavor = Optional.empty();
+
+        public Builder(String address) {
+            this.address = address;
+        }
+
+        public Builder(Destination destination) {
+            this.address = destination.address();
+            this.storeAndForward = destination.storeAndForward();
+            this.multicast = destination.multicast();
+            this.flavor = destination.flavor();
+        }
+
+        public Builder address(String address) {
+            this.address = address;
+            return this;
+        }
+
+        public Builder storeAndForward(boolean storeAndForward) {
+            this.storeAndForward = storeAndForward;
+            return this;
+        }
+
+        public Builder multicast(boolean multicast) {
+            this.multicast = multicast;
+            return this;
+        }
+
+        public Builder flavor(Optional<String> flavor) {
+            this.flavor = flavor;
+            return this;
+        }
+
+        public Optional<String> flavor() {
+            return flavor;
+        }
+
+        public Destination build() {
+            return new Destination(address, storeAndForward, multicast, flavor);
+        }
     }
 }

@@ -18,11 +18,13 @@ package enmasse.address.controller.admin;
 
 import enmasse.address.controller.generator.DestinationClusterGenerator;
 import enmasse.address.controller.model.Destination;
+import enmasse.address.controller.model.DestinationGroup;
 import enmasse.address.controller.openshift.DestinationCluster;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -42,40 +44,62 @@ public class AddressManagerImpl implements AddressManager {
     }
 
     @Override
-    public synchronized void destinationsUpdated(Set<Destination> destinations) {
+    public synchronized void destinationsUpdated(Set<DestinationGroup> newGroups) {
+        newGroups.stream().forEach(AddressManagerImpl::validateDestinationGroup);
+
         List<DestinationCluster> clusterList = helper.listClusters();
-        log.info("Brokers got updated to " + destinations.size() + " destinations, we have " + clusterList.size() + " destinations: " + clusterList.stream().map(DestinationCluster::getDestination).collect(Collectors.toList()));
-        createBrokers(clusterList, destinations);
-        deleteBrokers(clusterList, destinations);
+        log.info("Brokers got updated to " + newGroups.size() + " groups. We have " + clusterList.size() + " groups: " + clusterList.stream().map(DestinationCluster::getDestinationGroup).collect(Collectors.toList()));
+        createBrokers(clusterList, newGroups);
+        updateBrokers(clusterList, newGroups);
+        deleteBrokers(clusterList, newGroups);
     }
 
-    private static boolean brokerExists(Collection<DestinationCluster> clusterList, Destination destination) {
+    /*
+     * Ensure that a destination groups meet the criteria of all destinations sharing the same properties, until we can
+     * support a mix.
+     */
+    private static void validateDestinationGroup(DestinationGroup destinationGroup) {
+        Iterator<Destination> it = destinationGroup.getDestinations().iterator();
+        Destination first = it.next();
+        while (it.hasNext()) {
+            Destination current = it.next();
+            if (current.storeAndForward() != first.storeAndForward() &&
+                    current.multicast() != first.multicast() &&
+                    current.flavor() != first.flavor()) {
+                throw new IllegalArgumentException("All destinations in a destination group must share the same properties. Found: " + destinationGroup);
+            }
+        }
+    }
+
+    private static boolean brokerExists(Collection<DestinationCluster> clusterList, DestinationGroup destinationGroup) {
         return clusterList.stream()
-                .filter(cluster -> destination.equals(cluster.getDestination()))
-                .findAny()
-                .isPresent();
+                .anyMatch(cluster -> cluster.getDestinationGroup().equals(destinationGroup));
     }
 
-    private void createBrokers(Collection<DestinationCluster> clusterList, Collection<Destination> newDestinations) {
-        newDestinations.stream()
-                .filter(destination -> !brokerExists(clusterList, destination))
-                .map(destination -> generator.generateCluster(destination))
+    private void createBrokers(Collection<DestinationCluster> clusterList, Collection<DestinationGroup> newDestinationGroups) {
+        newDestinationGroups.stream()
+                .filter(group -> !brokerExists(clusterList, group))
+                .map(generator::generateCluster)
                 .forEach(DestinationCluster::create);
     }
 
 
-
-    private void deleteBrokers(Collection<DestinationCluster> clusterList, Collection<Destination> newDestinations) {
-        clusterList.stream()
-                .filter(cluster -> !newDestinations.stream()
-                        .filter(destination -> destination.equals(cluster.getDestination()))
-                        .findAny()
-                        .isPresent())
-                .forEach(DestinationCluster::delete);
-
+    private void updateBrokers(Collection<DestinationCluster> clusterList, Collection<DestinationGroup> newDestinationGroups) {
+        clusterList.forEach(cluster -> newDestinationGroups.forEach(destinationGroup -> {
+            if (cluster.getDestinationGroup().equals(destinationGroup)) {
+                cluster.updateDestinations(destinationGroup);
+            }
+        }));
     }
 
-    public synchronized Set<Destination> listDestinations() {
-        return helper.listClusters().stream().map(c -> c.getDestination()).collect(Collectors.toSet());
+    private void deleteBrokers(Collection<DestinationCluster> clusterList, Collection<DestinationGroup> newDestinationGroups) {
+        clusterList.stream()
+                .filter(cluster -> newDestinationGroups.stream()
+                        .noneMatch(destinationGroup -> cluster.getDestinationGroup().equals(destinationGroup)))
+                .forEach(DestinationCluster::delete);
+    }
+
+    public synchronized Set<DestinationGroup> listDestinationGroups() {
+        return helper.listClusters().stream().map(DestinationCluster::getDestinationGroup).collect(Collectors.toSet());
     }
 }

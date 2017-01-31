@@ -36,15 +36,14 @@ public class FlavorParser {
         while (it.hasNext()) {
             Map.Entry<String, JsonNode> entry = it.next();
             String name = entry.getKey();
-            Flavor flavor = parseFlavor(entry.getValue());
+            Flavor flavor = parseFlavor(name, entry.getValue());
             flavorMap.put(name, flavor);
         }
         return flavorMap;
     }
 
-    private static Flavor parseFlavor(JsonNode node) {
-        Flavor.Builder builder = new Flavor.Builder();
-        builder.templateName(node.get(KEY_TEMPLATE_NAME).asText());
+    private static Flavor parseFlavor(String name, JsonNode node) {
+        Flavor.Builder builder = new Flavor.Builder(name, node.get(KEY_TEMPLATE_NAME).asText());
 
         if (node.has(KEY_TEMPLATE_PARAMETERS)) {
             Iterator<Map.Entry<String, JsonNode>> it = node.get(KEY_TEMPLATE_PARAMETERS).fields();

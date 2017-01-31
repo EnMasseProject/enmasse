@@ -2,14 +2,17 @@ package enmasse.address.controller;
 
 import enmasse.address.controller.admin.AddressManager;
 import enmasse.address.controller.model.Destination;
+import enmasse.address.controller.model.DestinationGroup;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.json.JsonObject;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.internal.util.collections.Sets;
 
 import java.util.LinkedHashSet;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -39,7 +42,7 @@ public class HTTPServerTest {
 
     @Test
     public void testApi() throws InterruptedException {
-        testManager.destinationList.add(new Destination("addr1", false, false, null));
+        testManager.destinationList.add(new DestinationGroup("group0", Sets.newSet(new Destination("addr1", false, false, Optional.empty()))));
         HttpClient client = vertx.createHttpClient();
         try {
             CountDownLatch latch = new CountDownLatch(2);
@@ -64,11 +67,11 @@ public class HTTPServerTest {
     }
 
     private static class TestManager implements AddressManager {
-        Set<Destination> destinationList = new LinkedHashSet<>();
+        Set<DestinationGroup> destinationList = new LinkedHashSet<>();
         boolean throwException = false;
 
         @Override
-        public void destinationsUpdated(Set<Destination> destinationList) {
+        public void destinationsUpdated(Set<DestinationGroup> destinationList) {
             if (throwException) {
                 throw new RuntimeException();
             }
@@ -76,7 +79,7 @@ public class HTTPServerTest {
         }
 
         @Override
-        public Set<Destination> listDestinations() {
+        public Set<DestinationGroup> listDestinationGroups() {
             if (throwException) {
                 throw new RuntimeException();
             }

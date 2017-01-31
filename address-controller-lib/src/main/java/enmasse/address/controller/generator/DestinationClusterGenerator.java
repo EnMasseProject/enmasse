@@ -15,7 +15,7 @@
  */
 package enmasse.address.controller.generator;
 
-import enmasse.address.controller.model.Destination;
+import enmasse.address.controller.model.DestinationGroup;
 import enmasse.address.controller.openshift.DestinationCluster;
 
 /**
@@ -26,7 +26,7 @@ public interface DestinationClusterGenerator {
     /**
      * Generate cluster for a given destination.
      *
-     * @param destination The destination to generate a cluster for.
+     * @param destinationGroup The group of destinations to generate a cluster for.
      */
-    DestinationCluster generateCluster(Destination destination);
+    DestinationCluster generateCluster(DestinationGroup destinationGroup);
 }

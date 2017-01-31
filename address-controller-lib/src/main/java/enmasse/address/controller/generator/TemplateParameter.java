@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package enmasse.address.controller.model;
+package enmasse.address.controller.generator;
 
 /**
  * Template parameters that are dynamically set by the address controller.
