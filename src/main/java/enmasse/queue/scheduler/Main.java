@@ -24,7 +24,7 @@ public class Main {
     public static void main(String [] args) {
         Vertx vertx = Vertx.vertx();
         String configHost = getEnvOrThrow("CONFIGURATION_SERVICE_HOST");
-        int configPort = Integer.parseInt(getEnvOrThrow("CONFIGURATION_SERVICE_HOST"));
+        int configPort = Integer.parseInt(getEnvOrThrow("CONFIGURATION_SERVICE_PORT"));
         int listenPort = 55667;
 
         vertx.deployVerticle(new QueueScheduler(
