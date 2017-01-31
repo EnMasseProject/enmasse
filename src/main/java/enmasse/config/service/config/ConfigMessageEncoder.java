@@ -31,9 +31,10 @@ public class ConfigMessageEncoder implements MessageEncoder<ConfigResource> {
         Message message = Message.Factory.create();
         ObjectNode root = mapper.createObjectNode();
         for (ConfigResource config : resources) {
+            ObjectNode group = root.putObject(config.getGroup());
             for (Map.Entry<String, String> entry : config.getData().entrySet()) {
                 AddressDecoder decoder = new AddressDecoder(entry.getValue());
-                AddressEncoder encoder = new AddressEncoder(root.putObject(entry.getKey()));
+                AddressEncoder encoder = new AddressEncoder(group.putObject(entry.getKey()));
                 // Don't encode flavor in address config
                 encoder.encode(decoder.storeAndForward(), decoder.multicast(), Optional.empty());
             }

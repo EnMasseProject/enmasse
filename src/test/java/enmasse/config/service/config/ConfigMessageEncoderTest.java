@@ -17,6 +17,7 @@
 package enmasse.config.service.config;
 
 import enmasse.config.AddressEncoder;
+import enmasse.config.LabelKeys;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
@@ -41,7 +42,7 @@ public class ConfigMessageEncoderTest {
 
         Message message = encoder.encode(configSet);
         String json = (String) ((AmqpValue) message.getBody()).getValue();
-        assertThat(json, is("{\"myqueue\":{\"store_and_forward\":true,\"multicast\":false},\"myqueue2\":{\"store_and_forward\":true,\"multicast\":false},\"mytopic\":{\"store_and_forward\":true,\"multicast\":true}}"));
+        assertThat(json, is("{\"c1\":{\"myqueue\":{\"store_and_forward\":true,\"multicast\":false},\"myqueue2\":{\"store_and_forward\":true,\"multicast\":false}},\"c2\":{\"mytopic\":{\"store_and_forward\":true,\"multicast\":true}}}"));
     }
 
     private ConfigMap createConfigMap(String name, List<String> addresses, boolean storeAndForward, boolean multicast) {
@@ -54,6 +55,7 @@ public class ConfigMessageEncoderTest {
         return new ConfigMapBuilder()
                 .withMetadata(new ObjectMetaBuilder()
                         .withName(name)
+                        .addToLabels(LabelKeys.GROUP_ID, name)
                         .build())
                 .withData(data)
                 .build();

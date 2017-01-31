@@ -1,5 +1,6 @@
 package enmasse.config.service.config;
 
+import enmasse.config.LabelKeys;
 import enmasse.config.service.model.Resource;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 
@@ -58,5 +59,9 @@ public class ConfigResource extends Resource {
     @Override
     public String toString() {
         return kind + ":" + name;
+    }
+
+    public String getGroup() {
+        return this.labels.get(LabelKeys.GROUP_ID);
     }
 }
