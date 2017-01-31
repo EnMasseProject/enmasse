@@ -25,22 +25,10 @@ function configure() {
     if [ ! -d "$INSTANCE" ]; then
         $ARTEMIS_HOME/bin/artemis create $instanceDir --user admin --password admin --role admin --allow-anonymous --java-options "$JAVA_OPTS"
         cp $CONFIG_TEMPLATES/broker_header.xml /tmp/broker.xml
-        if [ -n "$QUEUE_NAMES" ]; then
-            cat $CONFIG_TEMPLATES/broker_queue_address_header.xml >> /tmp/broker.xml
-            QUEUE_LIST=`$ARTEMIS_HOME/bin/parse_addresses.py "$QUEUE_NAMES"`
-            for queue in $QUEUE_LIST
-            do
-                cat $CONFIG_TEMPLATES/broker_queue_address.xml | QUEUE_NAME=$queue envsubst >> /tmp/broker.xml
-            done
-            cat $CONFIG_TEMPLATES/broker_queue_address_footer.xml >> /tmp/broker.xml
-            cat $CONFIG_TEMPLATES/broker_queue_connector_header.xml >> /tmp/broker.xml
-            for queue in $QUEUE_LIST
-            do
-                cat $CONFIG_TEMPLATES/broker_queue_connector.xml | QUEUE_NAME=$queue envsubst >> /tmp/broker.xml
-            done
-            cat $CONFIG_TEMPLATES/broker_queue_connector_footer.xml >> /tmp/broker.xml
-        elif [ -n "$TOPIC_NAME" ]; then
+        if [ -n "$TOPIC_NAME" ]; then
             cat $CONFIG_TEMPLATES/broker_topic.xml >> /tmp/broker.xml
+        else
+            cat $CONFIG_TEMPLATES/broker_queue.xml >> /tmp/broker.xml
         fi
         cat $CONFIG_TEMPLATES/broker_footer.xml >> /tmp/broker.xml
     
@@ -61,9 +49,4 @@ function runServer() {
 }
 
 DATA_DIR="/var/run/artemis/"
-if [ -n "$QUEUE_NAMES" ]; then
-    ADDRESS=`echo $QUEUE_NAMES | sed -e 's/ /-/g'`
-elif [ -n "$TOPIC_NAME" ]; then
-    ADDRESS=$TOPIC_NAME
-fi
 partitionPV "${DATA_DIR}" "${ARTEMIS_LOCK_TIMEOUT:-30}"
