@@ -107,6 +107,7 @@ public class Artemis implements Broker {
 
         message.setBody(new AmqpValue(encodeJson(parameters)));
         doRequest(message);
+        log.info("Deployed queue " + address);
     }
 
     private Message doRequest(Message message) {
@@ -141,6 +142,7 @@ public class Artemis implements Broker {
         parameters.add(address);
         message.setBody(new AmqpValue(encodeJson(parameters)));
         doRequest(message);
+        log.info("Destroyed queue " + address);
     }
 
     private Message createMessage(String operation) {
