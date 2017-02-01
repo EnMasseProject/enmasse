@@ -27,12 +27,15 @@ public class Main {
         int configPort = Integer.parseInt(getEnvOrThrow("CONFIGURATION_SERVICE_PORT"));
         int listenPort = 55667;
 
-        vertx.deployVerticle(new QueueScheduler(
-                configHost,
-                configPort,
+        QueueScheduler scheduler = new QueueScheduler(
                 Executors.newSingleThreadExecutor(),
                 connection -> Artemis.create(vertx, connection),
-                listenPort));
+                listenPort);
+
+        ConfigServiceClient configServiceClient = new ConfigServiceClient(configHost, configPort, scheduler);
+
+        vertx.deployVerticle(configServiceClient);
+        vertx.deployVerticle(scheduler);
     }
 
     private static String getEnvOrThrow(String env) {

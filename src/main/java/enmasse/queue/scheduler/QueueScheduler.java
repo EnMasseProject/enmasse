@@ -35,22 +35,17 @@ import java.util.concurrent.ExecutorService;
 /**
  * Acts as an arbiter deciding in which broker a queue should run.
  */
-public class QueueScheduler extends AbstractVerticle {
+public class QueueScheduler extends AbstractVerticle implements ConfigListener {
     private static final Logger log = LoggerFactory.getLogger(QueueScheduler.class.getName());
 
-    private final String configHost;
-    private final int configPort;
     private final SchedulerState schedulerState = new SchedulerState();
     private final BrokerFactory brokerFactory;
     private final ExecutorService executorService;
     private volatile ProtonServer server;
-    private volatile ProtonConnection configConnection;
 
     private final int port;
 
-    public QueueScheduler(String configHost, int configPort, ExecutorService executorService, BrokerFactory brokerFactory, int listenPort) {
-        this.configHost = configHost;
-        this.configPort = configPort;
+    public QueueScheduler(ExecutorService executorService, BrokerFactory brokerFactory, int listenPort) {
         this.executorService = executorService;
         this.brokerFactory = brokerFactory;
         this.port = listenPort;
@@ -60,6 +55,7 @@ public class QueueScheduler extends AbstractVerticle {
     public void start() {
         server = ProtonServer.create(vertx);
         server.connectHandler(connection -> {
+            log.info("Got connection open!");
             connection.setContainer("queue-scheduler");
             connection.openHandler(conn -> {
                 log.info("Connection opened from " + conn.result().getRemoteContainer());
@@ -78,7 +74,7 @@ public class QueueScheduler extends AbstractVerticle {
             }).disconnectHandler(protonConnection -> {
                 connection.disconnect();
                 log.info("Broker connection disconnected");
-            }).open();
+            });
         });
         server.listen(port, event -> {
             if (event.succeeded()) {
@@ -87,59 +83,18 @@ public class QueueScheduler extends AbstractVerticle {
                 log.error("Error starting queue scheduler", event.cause());
             }
         });
-
-        connectToConfigService(ProtonClient.create(vertx));
     }
 
     @Override
     public void stop() {
-        if (configConnection != null) {
-            configConnection.close();
-        }
-
+        log.info("Stopping server!");
         if (server != null) {
             server.close();
         }
     }
 
-    private void connectToConfigService(ProtonClient client) {
-        client.connect(configHost, configPort, connResult -> {
-            if (connResult.succeeded()) {
-                log.info("Connected to the configuration service");
-                configConnection = connResult.result();
-                configConnection.closeHandler(result -> {
-                    vertx.setTimer(5000, id -> connectToConfigService(client));
-                });
-                configConnection.open();
-
-                ProtonReceiver receiver = configConnection.createReceiver("maas");
-                receiver.closeHandler(result -> {
-                    configConnection.close();
-                    vertx.setTimer(5000, id -> connectToConfigService(client));
-                });
-                receiver.handler((protonDelivery, message) -> {
-                    String payload = (String)((AmqpValue)message.getBody()).getValue();
-                    Map<String, Set<String>> addressConfig = decodeAddressConfig(new JsonObject(payload));
-                    addressesChanged(addressConfig);
-                });
-                receiver.open();
-            } else {
-                log.error("Error connecting to configuration service", connResult.cause());
-                vertx.setTimer(5000, id -> connectToConfigService(client));
-            }
-        });
-    }
-
-    private Map<String, Set<String>> decodeAddressConfig(JsonObject payload) {
-        Map<String, Set<String>> addressMap = new LinkedHashMap<>();
-        for (String group : payload.fieldNames()) {
-            JsonObject groupObject = payload.getJsonObject(group);
-            addressMap.put(group, new HashSet<>(groupObject.fieldNames()));
-        }
-        return addressMap;
-    }
-
-    private void addressesChanged(Map<String, Set<String>> addressMap) {
+    @Override
+    public void addressesChanged(Map<String, Set<String>> addressMap) {
         executorService.execute(() -> {
             try {
                 schedulerState.addressesChanged(addressMap);

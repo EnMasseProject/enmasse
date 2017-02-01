@@ -16,18 +16,22 @@
 
 package enmasse.queue.scheduler;
 
-import io.vertx.core.Verticle;
 import io.vertx.core.Vertx;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.internal.util.collections.Sets;
 
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.*;
 
+import static enmasse.queue.scheduler.TestUtils.waitForPort;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
 
 public class QueueSchedulerTest {
 
@@ -35,40 +39,17 @@ public class QueueSchedulerTest {
     private ExecutorService executorService;
     private TestBrokerFactory brokerFactory;
     private QueueScheduler scheduler;
-    private TestConfigServ testConfigServ;
 
     @Before
     public void setup() throws Exception {
         vertx = Vertx.vertx();
-        testConfigServ = new TestConfigServ(0);
-        deployVerticle(testConfigServ);
-        int configPort = waitForPort(() -> testConfigServ.getPort(), 1, TimeUnit.MINUTES);
-        System.out.println("Config port is " + configPort);
-
         executorService = Executors.newSingleThreadScheduledExecutor();
         brokerFactory = new TestBrokerFactory(vertx, "localhost");
-        scheduler = new QueueScheduler("localhost", configPort, executorService, brokerFactory, 0);
-        deployVerticle(scheduler);
+        scheduler = new QueueScheduler(executorService, brokerFactory, 0);
+        TestUtils.deployVerticle(vertx, scheduler);
         int schedulerPort = waitForPort(() -> scheduler.getPort(), 1, TimeUnit.MINUTES);
         System.out.println("Scheduler port is " + schedulerPort);
         brokerFactory.setSchedulerPort(schedulerPort);
-    }
-
-    private int waitForPort(Callable<Integer> portFetcher, long timeout, TimeUnit timeUnit) throws Exception {
-        long endTime = System.currentTimeMillis() + timeUnit.toMillis(timeout);
-        while (System.currentTimeMillis() < endTime && portFetcher.call() == 0) {
-            Thread.sleep(1000);
-        }
-        assertTrue(portFetcher.call() > 0);
-        return portFetcher.call();
-    }
-
-    private void deployVerticle(Verticle verticle) throws InterruptedException {
-        CountDownLatch latch = new CountDownLatch(1);
-        vertx.deployVerticle(verticle, r -> {
-            latch.countDown();
-        });
-        latch.await(1, TimeUnit.MINUTES);
     }
 
     @After
@@ -80,7 +61,7 @@ public class QueueSchedulerTest {
 
     @Test
     public void testAddressAddedBeforeBroker() throws InterruptedException, ExecutionException, TimeoutException {
-        testConfigServ.deployConfig("{\"br1\":{\"queue1\":null,\"queue2\":null}}");
+        scheduler.addressesChanged(Collections.singletonMap("br1", Sets.newSet("queue1", "queue2")));
 
         TestBroker br1 = deployBroker("br1");
 
@@ -92,13 +73,13 @@ public class QueueSchedulerTest {
     @Test
     public void testAddressAdded() throws InterruptedException {
         TestBroker br1 = deployBroker("br1");
-        testConfigServ.deployConfig("{\"br1\":{\"queue1\":null,\"queue2\":null}}");
+        scheduler.addressesChanged(Collections.singletonMap("br1", Sets.newSet("queue1", "queue2")));
 
         waitForAddresses(br1, 2);
         assertThat(br1.getQueueNames(), hasItem("queue1"));
         assertThat(br1.getQueueNames(), hasItem("queue2"));
 
-        testConfigServ.deployConfig("{\"br1\":{\"queue1\":null,\"queue2\":null,\"queue3\":null}}");
+        scheduler.addressesChanged(Collections.singletonMap("br1", Sets.newSet("queue1", "queue2", "queue3")));
 
         waitForAddresses(br1, 3);
         assertThat(br1.getQueueNames(), hasItem("queue1"));
@@ -109,12 +90,12 @@ public class QueueSchedulerTest {
     @Test
     public void testAddressRemoved() throws InterruptedException {
         TestBroker br1 = deployBroker("br1");
-        testConfigServ.deployConfig("{\"br1\":{\"queue1\":null,\"queue2\":null}}");
+        scheduler.addressesChanged(Collections.singletonMap("br1", Sets.newSet("queue1", "queue2")));
         waitForAddresses(br1, 2);
         assertThat(br1.getQueueNames(), hasItem("queue1"));
         assertThat(br1.getQueueNames(), hasItem("queue2"));
 
-        testConfigServ.deployConfig("{\"br1\":{\"queue1\":null}}");
+        scheduler.addressesChanged(Collections.singletonMap("br1", Sets.newSet("queue1")));
         waitForAddresses(br1, 1);
         assertThat(br1.getQueueNames(), hasItem("queue1"));
     }
@@ -124,7 +105,7 @@ public class QueueSchedulerTest {
         TestBroker br1 = deployBroker("br1");
         TestBroker br2 = deployBroker("br2");
 
-        testConfigServ.deployConfig("{\"br1\":{\"queue1\":null}, \"br2\": {\"queue2\":null}}");
+        scheduler.addressesChanged(createMap("br1", "br2", "queue1", "queue2"));
 
         waitForAddresses(br1, 1);
         waitForAddresses(br2, 1);
@@ -132,16 +113,23 @@ public class QueueSchedulerTest {
         assertThat(br1.getQueueNames(), hasItem("queue1"));
         assertThat(br2.getQueueNames(), hasItem("queue2"));
 
-        testConfigServ.deployConfig("{\"br2\": {\"queue2\":null}}");
+        scheduler.addressesChanged(Collections.singletonMap("br2", Sets.newSet("queue2")));
         waitForAddresses(br1, 1);
         waitForAddresses(br2, 1);
         assertThat(br1.getQueueNames(), hasItem("queue1"));
         assertThat(br2.getQueueNames(), hasItem("queue2"));
     }
 
-    @Test
+    private Map<String, Set<String>> createMap(String key1, String key2, String value1, String value2) {
+        Map<String, Set<String>> map = new HashMap<>();
+        map.put(key1, Sets.newSet(value1));
+        map.put(key2, Sets.newSet(value2));
+        return map;
+    }
+
+                                               @Test
     public void testBrokerAdded() throws InterruptedException {
-        testConfigServ.deployConfig("{\"br1\":{\"queue1\":null}, \"br2\": {\"queue2\":null}}");
+        scheduler.addressesChanged(createMap("br1", "br2", "queue1", "queue2"));
 
         TestBroker br1 = deployBroker("br1");
         waitForAddresses(br1, 1);
@@ -154,7 +142,7 @@ public class QueueSchedulerTest {
 
     @Test
     public void testBrokerRemoved() throws InterruptedException, TimeoutException, ExecutionException {
-        testConfigServ.deployConfig("{\"br1\":{\"queue1\":null}, \"br2\": {\"queue2\":null}}");
+        scheduler.addressesChanged(createMap("br1", "br2", "queue1", "queue2"));
 
         TestBroker br1 = deployBroker("br1");
         TestBroker br2 = deployBroker("br2");
