@@ -107,9 +107,16 @@ public class QueueScheduler extends AbstractVerticle {
             if (connResult.succeeded()) {
                 log.info("Connected to the configuration service");
                 configConnection = connResult.result();
+                configConnection.closeHandler(result -> {
+                    vertx.setTimer(5000, id -> connectToConfigService(client));
+                });
                 configConnection.open();
 
                 ProtonReceiver receiver = configConnection.createReceiver("maas");
+                receiver.closeHandler(result -> {
+                    configConnection.close();
+                    vertx.setTimer(5000, id -> connectToConfigService(client));
+                });
                 receiver.handler((protonDelivery, message) -> {
                     String payload = (String)((AmqpValue)message.getBody()).getValue();
                     Map<String, Set<String>> addressConfig = decodeAddressConfig(new JsonObject(payload));
