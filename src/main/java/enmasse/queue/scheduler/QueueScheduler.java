@@ -74,7 +74,7 @@ public class QueueScheduler extends AbstractVerticle implements ConfigListener {
             }).disconnectHandler(protonConnection -> {
                 connection.disconnect();
                 log.info("Broker connection disconnected");
-            });
+            }).open();
         });
         server.listen(port, event -> {
             if (event.succeeded()) {
