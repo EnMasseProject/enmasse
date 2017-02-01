@@ -69,6 +69,10 @@ public class OpenShiftHelper {
                 // First time we encounter this group, fetch the address config for it
                 if (!resourceMap.containsKey(groupId)) {
                     String addressConfig = labels.get(LabelKeys.ADDRESS_CONFIG);
+                    if (addressConfig.isEmpty() || addressConfig == null) {
+                        log.info("Encounted grouped resource without address config: " + config);
+                        continue;
+                    }
                     Map<String, String> addressConfigMap = client.configMaps().withName(addressConfig).get().getData();
 
                     Set<Destination> destinations = new HashSet<>();
