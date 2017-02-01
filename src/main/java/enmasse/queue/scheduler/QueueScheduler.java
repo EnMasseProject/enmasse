@@ -17,17 +17,15 @@
 package enmasse.queue.scheduler;
 
 import io.vertx.core.AbstractVerticle;
-import io.vertx.core.json.JsonObject;
-import io.vertx.proton.ProtonClient;
+import io.vertx.core.Handler;
+import io.vertx.core.net.NetSocket;
 import io.vertx.proton.ProtonConnection;
-import io.vertx.proton.ProtonReceiver;
 import io.vertx.proton.ProtonServer;
-import org.apache.qpid.proton.amqp.messaging.AmqpValue;
+import io.vertx.proton.sasl.ProtonSaslAuthenticator;
+import org.apache.qpid.proton.engine.Transport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
@@ -54,19 +52,24 @@ public class QueueScheduler extends AbstractVerticle implements ConfigListener {
     @Override
     public void start() {
         server = ProtonServer.create(vertx);
+        server.saslAuthenticatorFactory(() -> new ProtonSaslAuthenticator() {
+            @Override
+            public void init(NetSocket socket, ProtonConnection protonConnection, Transport transport) {
+            }
+
+            @Override
+            public void process(Handler<Boolean> completionHandler) {
+                completionHandler.handle(true);
+            }
+
+            @Override
+            public boolean succeeded() {
+                return true;
+            }
+        });
         server.connectHandler(connection -> {
-            log.info("Got connection open!");
             connection.setContainer("queue-scheduler");
-            connection.openHandler(conn -> {
-                log.info("Connection opened from " + conn.result().getRemoteContainer());
-                executorService.execute(() -> {
-                    try {
-                        schedulerState.brokerAdded(conn.result().getRemoteContainer(), brokerFactory.createBroker(connection).get());
-                    } catch (Exception e) {
-                        log.error("Error adding broker", e);
-                    }
-                });
-            }).closeHandler(conn -> {
+            connection.closeHandler(conn -> {
                 executorService.execute(() -> schedulerState.brokerRemoved(conn.result().getRemoteContainer()));
                 connection.close();
                 connection.disconnect();
@@ -75,6 +78,15 @@ public class QueueScheduler extends AbstractVerticle implements ConfigListener {
                 connection.disconnect();
                 log.info("Broker connection disconnected");
             }).open();
+
+            log.info("Connection opened from " + connection.getRemoteContainer());
+                executorService.execute(() -> {
+                    try {
+                        schedulerState.brokerAdded(connection.getRemoteContainer(), brokerFactory.createBroker(connection).get());
+                    } catch (Exception e) {
+                        log.error("Error adding broker", e);
+                    }
+                });
         });
         server.listen(port, event -> {
             if (event.succeeded()) {
