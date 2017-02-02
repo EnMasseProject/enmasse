@@ -24,8 +24,6 @@ import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-import static org.junit.Assert.assertTrue;
-
 
 public class TestBroker extends AbstractVerticle implements Broker {
     private final String id;

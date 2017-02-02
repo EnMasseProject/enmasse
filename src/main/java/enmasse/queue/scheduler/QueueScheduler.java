@@ -17,12 +17,9 @@
 package enmasse.queue.scheduler;
 
 import io.vertx.core.AbstractVerticle;
-import io.vertx.core.Handler;
-import io.vertx.core.net.NetSocket;
 import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.ProtonServer;
-import io.vertx.proton.sasl.ProtonSaslAuthenticator;
-import org.apache.qpid.proton.engine.Transport;
+import io.vertx.proton.sasl.ProtonSaslAuthenticatorFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,6 +36,7 @@ public class QueueScheduler extends AbstractVerticle implements ConfigListener {
     private final SchedulerState schedulerState = new SchedulerState();
     private final BrokerFactory brokerFactory;
     private final ExecutorService executorService;
+    private ProtonSaslAuthenticatorFactory saslAuthenticatorFactory;
     private volatile ProtonServer server;
 
     private final int port;
@@ -49,27 +47,20 @@ public class QueueScheduler extends AbstractVerticle implements ConfigListener {
         this.port = listenPort;
     }
 
+    // This is a temporary hack until Artemis can support sasl anonymous
+    public void setProtonSaslAuthenticatorFactory(ProtonSaslAuthenticatorFactory saslAuthenticatorFactory) {
+        this.saslAuthenticatorFactory = saslAuthenticatorFactory;
+    }
+
     @Override
     public void start() {
         server = ProtonServer.create(vertx);
-        server.saslAuthenticatorFactory(() -> new ProtonSaslAuthenticator() {
-            @Override
-            public void init(NetSocket socket, ProtonConnection protonConnection, Transport transport) {
-            }
-
-            @Override
-            public void process(Handler<Boolean> completionHandler) {
-                completionHandler.handle(true);
-            }
-
-            @Override
-            public boolean succeeded() {
-                return true;
-            }
-        });
+        server.saslAuthenticatorFactory(saslAuthenticatorFactory);
         server.connectHandler(connection -> {
             connection.setContainer("queue-scheduler");
-            connection.closeHandler(conn -> {
+            connection.openHandler(result -> {
+                connectionOpened(connection);
+            }).closeHandler(conn -> {
                 executorService.execute(() -> schedulerState.brokerRemoved(conn.result().getRemoteContainer()));
                 connection.close();
                 connection.disconnect();
@@ -77,22 +68,30 @@ public class QueueScheduler extends AbstractVerticle implements ConfigListener {
             }).disconnectHandler(protonConnection -> {
                 connection.disconnect();
                 log.info("Broker connection disconnected");
-            }).open();
+            });
 
-            log.info("Connection opened from " + connection.getRemoteContainer());
-                executorService.execute(() -> {
-                    try {
-                        schedulerState.brokerAdded(connection.getRemoteContainer(), brokerFactory.createBroker(connection).get());
-                    } catch (Exception e) {
-                        log.error("Error adding broker", e);
-                    }
-                });
+            if (connection.getRemoteContainer() != null) {
+                connectionOpened(connection);
+            }
+
+            connection.open();
         });
         server.listen(port, event -> {
             if (event.succeeded()) {
                 log.info("QueueScheduler is up and running");
             } else {
                 log.error("Error starting queue scheduler", event.cause());
+            }
+        });
+    }
+
+    private void connectionOpened(ProtonConnection connection) {
+        log.info("Connection opened from " + connection.getRemoteContainer());
+        executorService.execute(() -> {
+            try {
+                schedulerState.brokerAdded(connection.getRemoteContainer(), brokerFactory.createBroker(connection).get());
+            } catch (Exception e) {
+                log.error("Error adding broker", e);
             }
         });
     }

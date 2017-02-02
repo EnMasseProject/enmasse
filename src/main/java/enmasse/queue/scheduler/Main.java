@@ -32,6 +32,7 @@ public class Main {
                 connection -> Artemis.create(vertx, connection),
                 listenPort);
 
+        scheduler.setProtonSaslAuthenticatorFactory(new DummySaslAuthenticatorFactory());
         ConfigServiceClient configServiceClient = new ConfigServiceClient(configHost, configPort, scheduler);
 
         vertx.deployVerticle(configServiceClient);
