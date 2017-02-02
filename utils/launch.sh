@@ -7,6 +7,12 @@ export BROKER_IP=`hostname -I | cut -f 1 -d ' '`
 CONFIG_TEMPLATES=/config_templates
 JAVA_OPTS="-Djava.net.preferIPv4Stack=true"
 
+if [ -n "$ADMIN_SERVICE_HOST" ]
+then
+    export QUEUE_SCHEDULER_SERVICE_HOST=$ADMIN_SERVICE_HOST
+    export QUEUE_SCHEDULER_SERVICE_PORT=$ADMIN_SERVICE_PORT_QUEUE_SCHEDULER
+fi
+
 MAX_HEAP=`get_heap_size`
 if [ -n "$MAX_HEAP" ]; then
   JAVA_OPTS="-Xms${MAX_HEAP}m -Xmx${MAX_HEAP}m $JAVA_OPTS"
