@@ -17,6 +17,7 @@
 package enmasse.address.controller.openshift;
 
 import enmasse.address.controller.admin.OpenShiftHelper;
+import enmasse.address.controller.model.Destination;
 import enmasse.address.controller.model.DestinationGroup;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesList;
@@ -63,6 +64,10 @@ public class DestinationCluster {
 
     public void updateDestinations(DestinationGroup destinationGroup) {
         this.destinationGroup = destinationGroup;
-        helper.updateDestinations(destinationGroup);
+        Destination first = destinationGroup.getDestinations().iterator().next();
+        // This is a workaround for direct addresses, which store everything in a single configmap that
+        if (first.storeAndForward()) {
+            helper.updateDestinations(destinationGroup);
+        }
     }
 }
