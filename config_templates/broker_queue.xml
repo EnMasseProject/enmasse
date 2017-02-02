@@ -1,9 +1,17 @@
+      <addresses>
+         <address name="$QUEUE_NAME">
+            <anycast>
+               <queue name="$QUEUE_NAME" />
+            </anycast>
+         </address>
+      </addresses>
+
       <connector-services>
         <connector-service name="amqp-connector">
           <factory-class>org.apache.activemq.artemis.integration.amqp.AMQPConnectorServiceFactory</factory-class>
-          <param key="host" value="$QUEUE_SCHEDULER_SERVICE_HOST" />
-          <param key="port" value="$QUEUE_SCHEDULER_SERVICE_PORT" />
-          <param key="containerId" value="$CONTAINER_ID" />
-          <param key="groupId" value="$GROUP_ID" />
+          <param key="host" value="$MESSAGING_SERVICE_HOST" />
+          <param key="port" value="$MESSAGING_SERVICE_PORT_INTERNAL" />
+          <param key="containerId" value="$QUEUE_NAME" />
+          <param key="groupId" value="$QUEUE_NAME" />
         </connector-service>
       </connector-services>
