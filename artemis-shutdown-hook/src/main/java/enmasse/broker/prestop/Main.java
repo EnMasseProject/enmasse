@@ -17,7 +17,6 @@
 package enmasse.broker.prestop;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.openshift.internal.restclient.model.Pod;
 import com.openshift.restclient.ClientBuilder;
 import com.openshift.restclient.IClient;
@@ -71,8 +70,10 @@ public class Main {
             int messagingPort = Integer.parseInt(System.getenv("MESSAGING_SERVICE_PORT"));
             Endpoint to = new Endpoint(messagingHost, messagingPort);
 
+            Optional<String> queueName = Optional.ofNullable(System.getenv("QUEUE_NAME"));
             QueueDrainer client = new QueueDrainer(vertx, localHost, debugFn);
-            client.drainMessages(to);
+
+            client.drainMessages(to, queueName);
         }
     }
 

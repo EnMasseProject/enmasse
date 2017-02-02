@@ -31,10 +31,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -57,17 +54,24 @@ public class QueueDrainer {
         return addresses;
     }
 
-    public void drainMessages(Endpoint to) throws Exception {
+    public void drainMessages(Endpoint to, Optional<String> queueName) throws Exception {
         BrokerManager brokerManager = new BrokerManager(fromHost.coreEndpoint());
 
-        Set<String> addresses = getQueues(brokerManager);
+        if (queueName.isPresent()) {
+            brokerManager.destroyConnectorService("amqp-connector");
+            startDrain(to, queueName.get());
+            System.out.println("Waiting.....");
+            brokerManager.waitUntilEmpty(Collections.singleton(queueName.get()));
+        } else {
+            Set<String> addresses = getQueues(brokerManager);
 
-        for (String address : addresses) {
-            brokerManager.destroyConnectorService(address);
-            startDrain(to, address);
+            for (String address : addresses) {
+                brokerManager.destroyConnectorService(address);
+                startDrain(to, address);
+            }
+            System.out.println("Waiting.....");
+            brokerManager.waitUntilEmpty(addresses);
         }
-        System.out.println("Waiting.....");
-        brokerManager.waitUntilEmpty(addresses);
         System.out.println("Done waiting!");
         vertx.close();
         brokerManager.shutdownBroker();
