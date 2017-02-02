@@ -42,15 +42,15 @@ import static org.junit.Assert.assertFalse;
 public class TestBroker {
     private final String host;
     private final int port;
-    private final String address;
+    private final Set<String> addressList = new HashSet<>();
     private final EmbeddedActiveMQ server = new EmbeddedActiveMQ();
     private final BlockingClient client;
     private final boolean multicast;
 
-    public TestBroker(Endpoint endpoint, String address, boolean multicast) {
+    public TestBroker(Endpoint endpoint, Collection<String> addressList, boolean multicast) {
         this.host = endpoint.hostname();
         this.port = endpoint.port();
-        this.address = address;
+        this.addressList.addAll(addressList);
         this.multicast = multicast;
         this.client = new BlockingClient(endpoint.hostname(), endpoint.port());
     }
@@ -64,17 +64,19 @@ public class TestBroker {
         params.put("port", port);
         TransportConfiguration transport = new TransportConfiguration(NettyAcceptorFactory.class.getName(), params, "amqp");
 
-        CoreAddressConfiguration addressConfig = new CoreAddressConfiguration();
-        addressConfig.setName(address);
-        CoreQueueConfiguration queueConfig = new CoreQueueConfiguration();
-        queueConfig.setAddress(address);
-        queueConfig.setRoutingType(multicast ? RoutingType.MULTICAST : RoutingType.ANYCAST);
-        queueConfig.setName(address);
-        addressConfig.addQueueConfiguration(queueConfig);
+        for (String address : addressList) {
+            CoreAddressConfiguration addressConfig = new CoreAddressConfiguration();
+            addressConfig.setName(address);
+            CoreQueueConfiguration queueConfig = new CoreQueueConfiguration();
+            queueConfig.setAddress(address);
+            queueConfig.setRoutingType(multicast ? RoutingType.MULTICAST : RoutingType.ANYCAST);
+            queueConfig.setName(address);
+            addressConfig.addQueueConfiguration(queueConfig);
+            config.addAddressConfiguration(addressConfig);
+        }
 
         config.setAcceptorConfigurations(Collections.singleton(transport));
         config.setSecurityEnabled(false);
-        config.setAddressConfigurations(Arrays.asList(addressConfig));
         config.setName("broker-" + System.currentTimeMillis() + port);
         config.setBindingsDirectory(Files.createTempDir().getAbsolutePath());
         config.setJournalDirectory(Files.createTempDir().getAbsolutePath());
@@ -109,7 +111,7 @@ public class TestBroker {
         assertFalse("Server has not been shut down", isActive());
     }
 
-    public void sendMessages(List<String> messages) throws InterruptedException {
+    public void sendMessages(String address, List<String> messages) throws InterruptedException {
         client.send(address, messages.stream()
                 .map(body -> {
                     Message message = Message.Factory.create();
@@ -121,7 +123,7 @@ public class TestBroker {
                 1, TimeUnit.MINUTES);
     }
 
-    public List<String> recvMessages(int numMessages) throws IOException, InterruptedException {
+    public List<String> recvMessages(String address, int numMessages) throws IOException, InterruptedException {
         List<Message> messages = client.recv(address, numMessages, 1, TimeUnit.MINUTES);
         return messages.stream()
                 .map(m -> (String)((AmqpValue)m.getBody()).getValue())

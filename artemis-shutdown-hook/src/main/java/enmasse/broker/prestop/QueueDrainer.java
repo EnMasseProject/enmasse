@@ -16,6 +16,7 @@
 
 package enmasse.broker.prestop;
 
+import com.google.common.collect.Sets;
 import enmasse.discovery.Endpoint;
 import enmasse.discovery.Host;
 import io.vertx.core.AsyncResult;
@@ -25,13 +26,15 @@ import io.vertx.proton.ProtonClient;
 import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.ProtonReceiver;
 import io.vertx.proton.ProtonSender;
-import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -48,13 +51,23 @@ public class QueueDrainer {
         this.debugFn = debugFn;
     }
 
-    public void drainMessages(Endpoint to, String address) throws Exception {
+    private Set<String> getQueues(BrokerManager brokerManager) throws Exception {
+        Set<String> addresses = Sets.newHashSet(brokerManager.listQueues());
+        addresses.removeIf(a -> a.startsWith("activemq.management"));
+        return addresses;
+    }
+
+    public void drainMessages(Endpoint to) throws Exception {
         BrokerManager brokerManager = new BrokerManager(fromHost.coreEndpoint());
 
-        brokerManager.destroyConnectorService("amqp-connector");
-        startDrain(to, address);
+        Set<String> addresses = getQueues(brokerManager);
+
+        for (String address : addresses) {
+            brokerManager.destroyConnectorService(address);
+            startDrain(to, address);
+        }
         System.out.println("Waiting.....");
-        brokerManager.waitUntilEmpty(address);
+        brokerManager.waitUntilEmpty(addresses);
         System.out.println("Done waiting!");
         vertx.close();
         brokerManager.shutdownBroker();

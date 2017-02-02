@@ -16,6 +16,8 @@
 
 package enmasse.broker.prestop;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.openshift.internal.restclient.model.Pod;
 import com.openshift.restclient.ClientBuilder;
 import com.openshift.restclient.IClient;
@@ -32,11 +34,10 @@ import java.io.IOException;
 import java.net.Inet4Address;
 import java.net.UnknownHostException;
 import java.nio.file.Files;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 public class Main {
+    private static final ObjectMapper mapper = new ObjectMapper();
     public static void main(String [] args) throws Exception {
         boolean debug = System.getenv("PRESTOP_DEBUG") != null;
 
@@ -53,27 +54,25 @@ public class Main {
         Host localHost = localHost();
         Vertx vertx = Vertx.vertx();
 
-        if (System.getenv("QUEUE_NAME") != null) {
-            String address = System.getenv("QUEUE_NAME");
-            String messagingHost = System.getenv("MESSAGING_SERVICE_HOST");
-            int messagingPort = Integer.parseInt(System.getenv("MESSAGING_SERVICE_PORT"));
-            Endpoint to = new Endpoint(messagingHost, messagingPort);
-
-            QueueDrainer client = new QueueDrainer(vertx, localHost, debugFn);
-            client.drainMessages(to, address);
-        } else if (System.getenv("TOPIC_NAME") != null) {
+        if (System.getenv("TOPIC_NAME") != null) {
             String address = System.getenv("TOPIC_NAME");
 
-            Map<String, String> labels = new LinkedHashMap<>();
-            labels.put("role", "broker");
-            labels.put("address", address);
-            DiscoveryClient discoveryClient = new DiscoveryClient(labels, Optional.of("broker"));
+            Map<String, String> filter = new LinkedHashMap<>();
+            filter.put("role", "broker");
+            filter.put("address", address);
+
+            DiscoveryClient discoveryClient = new DiscoveryClient(filter, Optional.of("broker"));
             TopicMigrator migrator = new TopicMigrator(vertx, localHost);
             discoveryClient.addListener(migrator);
             vertx.deployVerticle(discoveryClient);
             migrator.migrate(address);
         } else {
-            throw new IllegalArgumentException("Unable to find QUEUE_NAME or TOPIC_NAME environment");
+            String messagingHost = System.getenv("MESSAGING_SERVICE_HOST");
+            int messagingPort = Integer.parseInt(System.getenv("MESSAGING_SERVICE_PORT"));
+            Endpoint to = new Endpoint(messagingHost, messagingPort);
+
+            QueueDrainer client = new QueueDrainer(vertx, localHost, debugFn);
+            client.drainMessages(to);
         }
     }
 

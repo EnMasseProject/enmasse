@@ -15,6 +15,3 @@
           <param key="groupId" value="$QUEUE_NAME" />
         </connector-service>
       </connector-services>
-   </core>
-</configuration>
-

@@ -22,6 +22,3 @@
           <param key="groupId" value="$CONTAINER_ID" />
         </connector-service>
       </connector-services>
-   </core>
-</configuration>
-

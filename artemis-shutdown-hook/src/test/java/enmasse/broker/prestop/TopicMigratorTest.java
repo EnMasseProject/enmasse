@@ -24,6 +24,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
@@ -42,8 +43,8 @@ public class TopicMigratorTest {
     public void setup() throws Exception {
         subscriber = new TestSubscriber();
         publisher = new TestPublisher();
-        fromServer = new TestBroker(from.amqpEndpoint(), "mytopic", true);
-        toServer = new TestBroker(to.amqpEndpoint(), "mytopic", true);
+        fromServer = new TestBroker(from.amqpEndpoint(), Arrays.asList("mytopic"), true);
+        toServer = new TestBroker(to.amqpEndpoint(), Arrays.asList("mytopic"), true);
         fromServer.start();
         toServer.start();
         Thread.sleep(2000);

@@ -27,6 +27,7 @@ import org.apache.activemq.artemis.api.core.client.ClientSessionFactory;
 import org.apache.activemq.artemis.api.core.client.ServerLocator;
 import org.apache.activemq.artemis.api.core.management.ManagementHelper;
 
+import java.util.Collection;
 import java.util.Set;
 
 /**
@@ -133,11 +134,14 @@ public class BrokerManager implements AutoCloseable {
     }
 
 
-    public void waitUntilEmpty(String queue) throws InterruptedException {
+    public void waitUntilEmpty(Collection<String> queues) throws InterruptedException {
         while (true) {
             try {
-                long count = getQueueMessageCount(queue);
-                System.out.println("Found " + count + " messages in queue " + queue);
+                long count = 0;
+                for (String queue : queues) {
+                    count += getQueueMessageCount(queue);
+                    System.out.println("Found " + count + " messages in queue " + queue);
+                }
                 if (count == 0) {
                     break;
                 }
