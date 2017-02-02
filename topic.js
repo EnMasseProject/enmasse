@@ -30,7 +30,7 @@ Topic.prototype.watch_pods = function () {
     var topic = this;
     console.log('watching pods serving ' + topic.name);
     var current = {};
-    this.watcher = require('./podwatch.js').watch_pods({"address": topic.name});
+    this.watcher = require('./podwatch.js').watch_pods({"group_id": topic.name});
     var changed = function (pods) {
         var newpods = {};
         console.log("Got new pods");
