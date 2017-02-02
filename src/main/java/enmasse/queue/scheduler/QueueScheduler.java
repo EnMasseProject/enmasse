@@ -26,7 +26,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ExecutorService;
 
 /**
  * Acts as an arbiter deciding in which broker a queue should run.
@@ -37,14 +36,12 @@ public class QueueScheduler extends AbstractVerticle implements ConfigListener {
 
     private final SchedulerState schedulerState = new SchedulerState();
     private final BrokerFactory brokerFactory;
-    private final ExecutorService executorService;
     private ProtonSaslAuthenticatorFactory saslAuthenticatorFactory;
     private volatile ProtonServer server;
 
     private final int port;
 
-    public QueueScheduler(ExecutorService executorService, BrokerFactory brokerFactory, int listenPort) {
-        this.executorService = executorService;
+    public QueueScheduler(BrokerFactory brokerFactory, int listenPort) {
         this.brokerFactory = brokerFactory;
         this.port = listenPort;
     }
@@ -73,7 +70,8 @@ public class QueueScheduler extends AbstractVerticle implements ConfigListener {
                 connectionOpened(connection);
             }).closeHandler(conn -> {
                 log.info("Broker connection " + connection.getRemoteContainer() + " closed");
-                executorService.execute(() -> schedulerState.brokerRemoved(getGroupId(connection), connection.getRemoteContainer()));
+                executeBlocking(() -> schedulerState.brokerRemoved(getGroupId(connection), connection.getRemoteContainer()),
+                        "Error removing broker");
                 connection.close();
                 connection.disconnect();
             }).disconnectHandler(protonConnection -> {
@@ -98,13 +96,8 @@ public class QueueScheduler extends AbstractVerticle implements ConfigListener {
 
     private void connectionOpened(ProtonConnection connection) {
         log.info("Connection opened from " + connection.getRemoteContainer());
-        executorService.execute(() -> {
-            try {
-                schedulerState.brokerAdded(getGroupId(connection), connection.getRemoteContainer(), brokerFactory.createBroker(connection).get());
-            } catch (Exception e) {
-                log.error("Error adding broker", e);
-            }
-        });
+        executeBlocking(() -> schedulerState.brokerAdded(getGroupId(connection), connection.getRemoteContainer(), brokerFactory.createBroker(connection).get()),
+                "Error adding broker");
     }
 
     @Override
@@ -117,13 +110,26 @@ public class QueueScheduler extends AbstractVerticle implements ConfigListener {
 
     @Override
     public void addressesChanged(Map<String, Set<String>> addressMap) {
-        executorService.execute(() -> {
+        executeBlocking(() -> schedulerState.addressesChanged(addressMap), "Error handling address change");
+    }
+
+    private void executeBlocking(Task task, String errorMessage) {
+        vertx.executeBlocking(promise -> {
             try {
-                schedulerState.addressesChanged(addressMap);
+                task.run();
+                promise.complete();
             } catch (Exception e) {
-                log.error("Error handling address change: ", e);
+                promise.fail(e);
+            }
+        }, true, result -> {
+            if (result.failed()) {
+                log.error(errorMessage, result.cause());
             }
         });
+    }
+
+    private interface Task {
+        void run() throws Exception;
     }
 
     public int getPort() {

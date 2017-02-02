@@ -36,16 +36,14 @@ import static org.junit.Assert.assertThat;
 public class QueueSchedulerTest {
 
     private Vertx vertx;
-    private ExecutorService executorService;
     private TestBrokerFactory brokerFactory;
     private QueueScheduler scheduler;
 
     @Before
     public void setup() throws Exception {
         vertx = Vertx.vertx();
-        executorService = Executors.newSingleThreadScheduledExecutor();
         brokerFactory = new TestBrokerFactory(vertx, "localhost");
-        scheduler = new QueueScheduler(executorService, brokerFactory, 0);
+        scheduler = new QueueScheduler(brokerFactory, 0);
         TestUtils.deployVerticle(vertx, scheduler);
         int schedulerPort = waitForPort(() -> scheduler.getPort(), 1, TimeUnit.MINUTES);
         System.out.println("Scheduler port is " + schedulerPort);
@@ -55,8 +53,6 @@ public class QueueSchedulerTest {
     @After
     public void teardown() throws InterruptedException {
         vertx.close();
-        executorService.shutdown();
-        executorService.awaitTermination(1, TimeUnit.MINUTES);
     }
 
     @Test
@@ -151,7 +147,6 @@ public class QueueSchedulerTest {
         waitForAddresses(br2, 1);
 
         br2.close();
-        waitTask(1, TimeUnit.MINUTES);
 
         br2 = deployBroker("br2");
         waitForAddresses(br2, 1);
@@ -185,11 +180,6 @@ public class QueueSchedulerTest {
             Thread.sleep(1000);
         }
         assertThat(actualSize, is(numAddresses));
-    }
-
-    private void waitTask(long timeout, TimeUnit timeUnit) throws InterruptedException, ExecutionException, TimeoutException {
-        Future f = executorService.submit(() -> { });
-        f.get(timeout, timeUnit);
     }
 
     private TestBroker deployBroker(String id) throws InterruptedException {

@@ -18,8 +18,6 @@ package enmasse.queue.scheduler;
 
 import io.vertx.core.Vertx;
 
-import java.util.concurrent.Executors;
-
 public class Main {
     public static void main(String [] args) {
         Vertx vertx = Vertx.vertx();
@@ -28,7 +26,6 @@ public class Main {
         int listenPort = 55667;
 
         QueueScheduler scheduler = new QueueScheduler(
-                Executors.newSingleThreadExecutor(),
                 connection -> Artemis.create(vertx, connection),
                 listenPort);
 

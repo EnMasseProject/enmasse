@@ -53,11 +53,11 @@ public class SchedulerState {
         }
 
         addressMap.put(groupId, addresses);
+        log.info("Updated addresses for " + groupId + ": " + addresses);
     }
 
 
     public synchronized void brokerAdded(String groupId, String brokerId, Broker broker) {
-        log.info("Broker " + brokerId + " in group " + groupId + " was added");
         if (!brokerGroupMap.containsKey(groupId)) {
             brokerGroupMap.put(groupId, new LinkedHashMap<>());
         }
@@ -68,6 +68,7 @@ public class SchedulerState {
         brokerGroupMap.get(groupId).put(brokerId, broker);
 
         Set<String> addresses = addressMap.getOrDefault(groupId, Collections.emptySet());
+        log.info("Broker " + brokerId + " in group " + groupId + " was added, distributing addresses: " + addresses);
         if (addresses.size() == 1) {
             broker.deployQueue(addresses.iterator().next());
         } else {
