@@ -3,7 +3,7 @@
           <factory-class>org.apache.activemq.artemis.integration.amqp.AMQPConnectorServiceFactory</factory-class>
           <param key="host" value="$QUEUE_SCHEDULER_SERVICE_HOST" />
           <param key="port" value="$QUEUE_SCHEDULER_SERVICE_PORT" />
-          <param key="containerId" value="$GROUP_ID" />
+          <param key="containerId" value="$CONTAINER_ID" />
           <param key="groupId" value="$GROUP_ID" />
         </connector-service>
       </connector-services>
