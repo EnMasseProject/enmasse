@@ -76,6 +76,8 @@ public class QueueScheduler extends AbstractVerticle implements ConfigListener {
                 connection.disconnect();
             }).disconnectHandler(protonConnection -> {
                 log.info("Broker connection " + connection.getRemoteContainer() + " disconnected");
+                executeBlocking(() -> schedulerState.brokerRemoved(getGroupId(connection), connection.getRemoteContainer()),
+                        "Error removing broker");
                 connection.disconnect();
             });
 
