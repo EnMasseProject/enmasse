@@ -39,7 +39,7 @@ public class HTTPServer extends AbstractVerticle {
     public void start() {
         VertxResteasyDeployment deployment = new VertxResteasyDeployment();
         deployment.start();
-        deployment.getRegistry().addSingletonResource(new RestService(addressManager));
+        deployment.getRegistry().addSingletonResource(new RestService(addressManager, vertx));
 
         vertx.createHttpServer()
                 .requestHandler(new VertxRequestHandler(vertx, deployment))
