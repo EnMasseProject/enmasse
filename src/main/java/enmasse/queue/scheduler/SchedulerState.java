@@ -81,7 +81,11 @@ public class SchedulerState {
         if (brokerMap.isEmpty()) {
             brokerGroupMap.remove(groupId);
         }
-
+        Set<String> addresses = addressMap.getOrDefault(groupId, Collections.emptySet());
+        // If colocated queues, ensure missing queues are recreated on other brokers.
+        if (addresses.size() > 1) {
+            distributeAddressesByNumQueues(groupId, addresses);
+        }
         log.info("Broker " +  brokerId + " in group " + groupId + " was removed");
     }
 
