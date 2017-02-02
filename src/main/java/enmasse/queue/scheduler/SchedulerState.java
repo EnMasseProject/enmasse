@@ -15,6 +15,8 @@
  */
 
 package enmasse.queue.scheduler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
@@ -22,7 +24,8 @@ import java.util.*;
  * Contains the mapping from queue to broker and ensures there is only one modifying the state at a time.
  */
 public class SchedulerState {
-    private final Map<String, List<Broker>> brokerMap = new LinkedHashMap<>();
+    private static final Logger log = LoggerFactory.getLogger(SchedulerState.class.getName());
+    private final Map<String, Map<String, Broker>> brokerGroupMap = new LinkedHashMap<>();
     private final Map<String, Set<String>> addressMap = new LinkedHashMap<>();
 
 
@@ -53,23 +56,33 @@ public class SchedulerState {
     }
 
 
-    public synchronized void brokerAdded(String brokerId, Broker broker) {
-        if (!brokerMap.containsKey(brokerId)) {
-            brokerMap.put(brokerId, new ArrayList<>());
+    public synchronized void brokerAdded(String groupId, String brokerId, Broker broker) {
+        log.info("Broker " + brokerId + " in group " + groupId + " was added");
+        if (!brokerGroupMap.containsKey(groupId)) {
+            brokerGroupMap.put(groupId, new LinkedHashMap<>());
         }
-        brokerMap.get(brokerId).add(broker);
 
-        Set<String> addresses = addressMap.getOrDefault(brokerId, Collections.emptySet());
+        if (brokerGroupMap.get(groupId).containsKey(brokerId)) {
+            throw new IllegalArgumentException("Broker with id " + brokerId + " already exists in group " + groupId);
+        }
+        brokerGroupMap.get(groupId).put(brokerId, broker);
+
+        Set<String> addresses = addressMap.getOrDefault(groupId, Collections.emptySet());
         if (addresses.size() == 1) {
             broker.deployQueue(addresses.iterator().next());
         } else {
-            distributeAddressesByNumQueues(brokerId, addresses);
+            distributeAddressesByNumQueues(groupId, addresses);
         }
     }
 
-    public synchronized void brokerRemoved(String brokerId) {
-        // TODO: Close resources etc?
+    public synchronized void brokerRemoved(String groupId, String brokerId) {
+        Map<String, Broker> brokerMap = brokerGroupMap.get(groupId);
         brokerMap.remove(brokerId);
+        if (brokerMap.isEmpty()) {
+            brokerGroupMap.remove(groupId);
+        }
+
+        log.info("Broker " +  brokerId + " in group " + groupId + " was removed");
     }
 
     private void addAddresses(String groupId, Set<String> addresses, Set<String> added) {
@@ -83,19 +96,19 @@ public class SchedulerState {
     }
 
     private void distributeAddressesByNumQueues(String groupId, Set<String> addresses) {
-        List<Broker> brokerList = brokerMap.getOrDefault(groupId, Collections.emptyList());
-        if (brokerList.isEmpty()) {
+        Map<String, Broker> brokerMap = brokerGroupMap.get(groupId);
+        if (brokerMap == null) {
             return;
         }
 
         Set<String> addressesToDeploy = new HashSet<>(addresses);
 
         // Remove addresses that are already distributed. This is to avoid changes in broker list to affect where queues are scheduler
-        for (Broker broker : brokerList) {
+        for (Broker broker : brokerMap.values()) {
             addressesToDeploy.removeAll(broker.getQueueNames());
         }
 
-        PriorityQueue<Broker> brokerByNumQueues = new PriorityQueue<>(brokerList.size(), (a, b) -> {
+        PriorityQueue<Broker> brokerByNumQueues = new PriorityQueue<>(brokerMap.size(), (a, b) -> {
             if (a.getNumQueues() < b.getNumQueues()) {
                 return -1;
             } else if (a.getNumQueues() > b.getNumQueues()) {
@@ -105,7 +118,7 @@ public class SchedulerState {
             }
         });
 
-        brokerByNumQueues.addAll(brokerList);
+        brokerByNumQueues.addAll(brokerMap.values());
 
         for (String address : addressesToDeploy) {
             Broker broker = brokerByNumQueues.poll();
@@ -116,14 +129,14 @@ public class SchedulerState {
 
     private void distributeAddressesAll(String groupId, Set<String> addresses) {
         for (String address : addresses) {
-            for (Broker  broker : brokerMap.getOrDefault(groupId, Collections.emptyList())) {
+            for (Broker  broker : brokerGroupMap.getOrDefault(groupId, Collections.emptyMap()).values()) {
                 broker.deployQueue(address);
             }
         }
     }
 
     private void deleteAddresses(String groupId, Set<String> removed) {
-        for (Broker broker : brokerMap.getOrDefault(groupId, Collections.emptyList())) {
+        for (Broker broker : brokerGroupMap.getOrDefault(groupId, Collections.emptyMap()).values()) {
             for (String address : removed) {
                 broker.deleteQueue(address);
             }

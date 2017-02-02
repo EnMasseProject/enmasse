@@ -20,6 +20,7 @@ import io.vertx.core.AbstractVerticle;
 import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.ProtonServer;
 import io.vertx.proton.sasl.ProtonSaslAuthenticatorFactory;
+import org.apache.qpid.proton.amqp.Symbol;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,6 +33,7 @@ import java.util.concurrent.ExecutorService;
  */
 public class QueueScheduler extends AbstractVerticle implements ConfigListener {
     private static final Logger log = LoggerFactory.getLogger(QueueScheduler.class.getName());
+    private static final Symbol groupSymbol = Symbol.getSymbol("qd.route-container-group");
 
     private final SchedulerState schedulerState = new SchedulerState();
     private final BrokerFactory brokerFactory;
@@ -52,6 +54,15 @@ public class QueueScheduler extends AbstractVerticle implements ConfigListener {
         this.saslAuthenticatorFactory = saslAuthenticatorFactory;
     }
 
+    private static String getGroupId(ProtonConnection connection) {
+        Map<Symbol, Object> connectionProperties = connection.getRemoteProperties();
+        if (connectionProperties.containsKey(groupSymbol)) {
+            return (String) connectionProperties.get(groupSymbol);
+        } else {
+            return connection.getRemoteContainer();
+        }
+    }
+
     @Override
     public void start() {
         server = ProtonServer.create(vertx);
@@ -61,13 +72,13 @@ public class QueueScheduler extends AbstractVerticle implements ConfigListener {
             connection.openHandler(result -> {
                 connectionOpened(connection);
             }).closeHandler(conn -> {
-                executorService.execute(() -> schedulerState.brokerRemoved(conn.result().getRemoteContainer()));
+                log.info("Broker connection " + connection.getRemoteContainer() + " closed");
+                executorService.execute(() -> schedulerState.brokerRemoved(getGroupId(connection), connection.getRemoteContainer()));
                 connection.close();
                 connection.disconnect();
-                log.info("Broker connection closed");
             }).disconnectHandler(protonConnection -> {
+                log.info("Broker connection " + connection.getRemoteContainer() + " disconnected");
                 connection.disconnect();
-                log.info("Broker connection disconnected");
             });
 
             if (connection.getRemoteContainer() != null) {
@@ -89,7 +100,7 @@ public class QueueScheduler extends AbstractVerticle implements ConfigListener {
         log.info("Connection opened from " + connection.getRemoteContainer());
         executorService.execute(() -> {
             try {
-                schedulerState.brokerAdded(connection.getRemoteContainer(), brokerFactory.createBroker(connection).get());
+                schedulerState.brokerAdded(getGroupId(connection), connection.getRemoteContainer(), brokerFactory.createBroker(connection).get());
             } catch (Exception e) {
                 log.error("Error adding broker", e);
             }

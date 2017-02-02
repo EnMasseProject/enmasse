@@ -127,7 +127,7 @@ public class QueueSchedulerTest {
         return map;
     }
 
-                                               @Test
+    @Test
     public void testBrokerAdded() throws InterruptedException {
         scheduler.addressesChanged(createMap("br1", "br2", "queue1", "queue2"));
 
@@ -156,6 +156,21 @@ public class QueueSchedulerTest {
         br2 = deployBroker("br2");
         waitForAddresses(br2, 1);
         assertThat(br2.getQueueNames(), hasItem("queue2"));
+    }
+
+    @Test
+    public void testBrokerReconnected() throws InterruptedException, TimeoutException, ExecutionException {
+        TestBroker br1 = deployBroker("br1");
+        scheduler.addressesChanged(Collections.singletonMap("br1", Sets.newSet("queue1")));
+
+        waitForAddresses(br1, 1);
+        assertThat(br1.getQueueNames(), hasItem("queue1"));
+
+        br1.close();
+
+        br1 = deployBroker("br1");
+        waitForAddresses(br1, 1);
+        assertThat(br1.getQueueNames(), hasItem("queue1"));
     }
 
     private static void waitForAddresses(TestBroker broker, long numAddresses) throws InterruptedException {
