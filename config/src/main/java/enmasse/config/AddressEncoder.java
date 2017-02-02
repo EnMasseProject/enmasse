@@ -24,10 +24,11 @@ public class AddressEncoder {
         this.properties = properties;
     }
 
-    public void encode(boolean storeAndForward, boolean multicast, Optional<String> flavor) {
+    public AddressEncoder encode(boolean storeAndForward, boolean multicast, Optional<String> flavor) {
         properties.put("store_and_forward", storeAndForward);
         properties.put("multicast", multicast);
         flavor.ifPresent(f -> properties.put("flavor", f));
+        return this;
     }
 
     public String toJson() {
