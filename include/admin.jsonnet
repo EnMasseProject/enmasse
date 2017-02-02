@@ -29,6 +29,10 @@ local common = import "common.jsonnet";
           {
             "name": "address-controller",
             "port": 55674
+          },
+          {
+            "name": "queue-scheduler",
+            "port": 55667
           }
         ],
         "selector": {
@@ -59,7 +63,8 @@ local common = import "common.jsonnet";
         },
         common.trigger("ragent", "ragent"),
         common.trigger("configserv", "configserv"),
-        common.trigger("address-controller", "address-controller")
+        common.trigger("address-controller", "address-controller"),
+        common.trigger("queue-scheduler", "queue-scheduler")
       ],
       "template": {
         "metadata": {
@@ -81,6 +86,15 @@ local common = import "common.jsonnet";
                         "name": "CONFIGURATION_SERVICE_PORT",
                         "value": "5672"
                       }], "64Mi"),
+            common.containerWithEnv("queue-scheduler", "queue-scheduler", "amqp", 55667, [
+                      {
+                        "name": "CONFIGURATION_SERVICE_HOST",
+                        "value": "localhost"
+                      },
+                      {
+                        "name": "CONFIGURATION_SERVICE_PORT",
+                        "value": "5672"
+                      }], "128Mi"),
             common.container("configserv", "configserv", "amqp", 5672, "256Mi"),
           ]
         }

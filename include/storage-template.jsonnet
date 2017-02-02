@@ -26,13 +26,14 @@ local forwarder = import "forwarder.jsonnet";
           "name": "${NAME}",
           "labels": {
             "app": "enmasse",
+            "group_id": "${NAME}",
             "address_config": "address-config-${NAME}"
           }
         },
         "spec": {
           "replicas": 1,
           "selector": {
-            "address": "${ADDRESS}",
+            "group_id": "${NAME}",
             "role": "broker"
           },
           local commonTriggers = [
@@ -89,7 +90,7 @@ local forwarder = import "forwarder.jsonnet";
               "labels": {
                 "app": "enmasse",
                 "role": "broker",
-                "address": "${ADDRESS}"
+                "group_id": "${NAME}"
               }
             },
             "spec": {
@@ -113,6 +114,7 @@ local forwarder = import "forwarder.jsonnet";
         "metadata": {
           "name": claimName,
           "labels": {
+            "group_id": "${NAME}",
             "app": "enmasse"
           }
         },

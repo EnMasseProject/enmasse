@@ -19,23 +19,26 @@ objects:
       labels:
         address_config: address-config-${NAME}
         app: enmasse
+        group_id: "${NAME}"
       name: "${NAME}"
     spec:
       replicas: 1
       selector:
-        address: "${ADDRESS}"
+        group_id: "${NAME}"
         role: broker
       template:
         metadata:
           labels:
-            address: "${ADDRESS}"
             app: enmasse
+            group_id: "${NAME}"
             role: broker
         spec:
           containers:
           - env:
             - name: QUEUE_NAME
               value: "${ADDRESS}"
+            - name: GROUP_ID
+              value: "${NAME}"
             image: artemis
             lifecycle:
               preStop:
@@ -105,6 +108,7 @@ objects:
     metadata:
       labels:
         app: enmasse
+        group_id: "${NAME}"
       name: pvc-${NAME}
     spec:
       accessModes:
@@ -118,23 +122,26 @@ objects:
       labels:
         address_config: address-config-${NAME}
         app: enmasse
+        group_id: "${NAME}"
       name: "${NAME}"
     spec:
       replicas: 1
       selector:
-        address: "${ADDRESS}"
+        group_id: "${NAME}"
         role: broker
       template:
         metadata:
           labels:
-            address: "${ADDRESS}"
             app: enmasse
+            group_id: "${NAME}"
             role: broker
         spec:
           containers:
           - env:
             - name: QUEUE_NAME
               value: "${ADDRESS}"
+            - name: GROUP_ID
+              value: "${NAME}"
             image: artemis
             lifecycle:
               preStop:
@@ -206,23 +213,26 @@ objects:
       labels:
         address_config: address-config-${NAME}
         app: enmasse
+        group_id: "${NAME}"
       name: "${NAME}"
     spec:
       replicas: 1
       selector:
-        address: "${ADDRESS}"
+        group_id: "${NAME}"
         role: broker
       template:
         metadata:
           labels:
-            address: "${ADDRESS}"
             app: enmasse
+            group_id: "${NAME}"
             role: broker
         spec:
           containers:
           - env:
             - name: TOPIC_NAME
               value: "${ADDRESS}"
+            - name: GROUP_ID
+              value: "${NAME}"
             image: artemis
             lifecycle:
               preStop:
@@ -354,6 +364,7 @@ objects:
     metadata:
       labels:
         app: enmasse
+        group_id: "${NAME}"
       name: pvc-${NAME}
     spec:
       accessModes:
@@ -367,23 +378,26 @@ objects:
       labels:
         address_config: address-config-${NAME}
         app: enmasse
+        group_id: "${NAME}"
       name: "${NAME}"
     spec:
       replicas: 1
       selector:
-        address: "${ADDRESS}"
+        group_id: "${NAME}"
         role: broker
       template:
         metadata:
           labels:
-            address: "${ADDRESS}"
             app: enmasse
+            group_id: "${NAME}"
             role: broker
         spec:
           containers:
           - env:
             - name: TOPIC_NAME
               value: "${ADDRESS}"
+            - name: GROUP_ID
+              value: "${NAME}"
             image: artemis
             lifecycle:
               preStop:
@@ -884,6 +898,21 @@ objects:
         name: "${ADDRESS_CONTROLLER_REPO}:latest"
       name: latest
 - apiVersion: v1
+  kind: ImageStream
+  metadata:
+    labels:
+      app: enmasse
+    name: queue-scheduler
+  spec:
+    dockerImageRepository: "${QUEUE_SCHEDULER_REPO}"
+    importPolicy:
+      scheduled: true
+    tags:
+    - from:
+        kind: DockerImage
+        name: "${QUEUE_SCHEDULER_REPO}:latest"
+      name: latest
+- apiVersion: v1
   data:
     json: '{"large-persisted-queue": {"templateName": "tls-queue-persisted", "templateParameters":
       {"STORAGE_CAPACITY": "10Gi"}}, "large-persisted-topic": {"templateName": "tls-topic-persisted",
@@ -951,6 +980,25 @@ objects:
               memory: 64Mi
             requests:
               memory: 64Mi
+        - env:
+          - name: CONFIGURATION_SERVICE_HOST
+            value: localhost
+          - name: CONFIGURATION_SERVICE_PORT
+            value: '5672'
+          image: queue-scheduler
+          livenessProbe:
+            tcpSocket:
+              port: amqp
+          name: queue-scheduler
+          ports:
+          - containerPort: 55667
+            name: amqp
+            protocol: TCP
+          resources:
+            limits:
+              memory: 128Mi
+            requests:
+              memory: 128Mi
         - image: configserv
           livenessProbe:
             tcpSocket:
@@ -992,6 +1040,14 @@ objects:
           kind: ImageStreamTag
           name: address-controller:latest
       type: ImageChange
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+        - queue-scheduler
+        from:
+          kind: ImageStreamTag
+          name: queue-scheduler:latest
+      type: ImageChange
 - apiVersion: v1
   kind: Service
   metadata:
@@ -1008,6 +1064,8 @@ objects:
       port: 5672
     - name: address-controller
       port: 55674
+    - name: queue-scheduler
+      port: 55667
     selector:
       name: admin
 - apiVersion: v1
@@ -1061,6 +1119,9 @@ parameters:
 - description: The docker image to use for the address controller
   name: ADDRESS_CONTROLLER_REPO
   value: enmasseproject/address-controller
+- description: The docker image to use for the queue scheduler
+  name: QUEUE_SCHEDULER_REPO
+  value: enmasseproject/queue-scheduler
 - description: The image to use for the router agent
   name: RAGENT_REPO
   value: enmasseproject/ragent

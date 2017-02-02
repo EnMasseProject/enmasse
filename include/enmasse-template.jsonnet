@@ -6,6 +6,7 @@ local broker = import "broker.jsonnet";
 local forwarder = import "forwarder.jsonnet";
 local qdrouterd = import "qdrouterd.jsonnet";
 local addressController = import "address-controller.jsonnet";
+local queueScheduler = import "queue-scheduler.jsonnet";
 local subserv = import "subserv.jsonnet";
 local messagingService = import "messaging-service.jsonnet";
 local messagingRoute = import "messaging-route.json";
@@ -51,6 +52,7 @@ local mqttRoute = import "mqtt-route.json";
                  mqttGateway.deployment(secure),
                  mqttService.generate(secure),
                  addressController.imagestream("${ADDRESS_CONTROLLER_REPO}"),
+                 queueScheduler.imagestream("${QUEUE_SCHEDULER_REPO}"),
                  flavorConfig.generate(secure),
                  admin.deployment ] + admin.services,
 
@@ -86,6 +88,11 @@ local mqttRoute = import "mqtt-route.json";
         "name": "ADDRESS_CONTROLLER_REPO",
         "description": "The docker image to use for the address controller",
         "value": "enmasseproject/address-controller"
+      },
+      {
+        "name": "QUEUE_SCHEDULER_REPO",
+        "description": "The docker image to use for the queue scheduler",
+        "value": "enmasseproject/queue-scheduler"
       },
       {
         "name": "RAGENT_REPO",
