@@ -73,7 +73,7 @@ public class TemplateDestinationClusterGenerator implements DestinationClusterGe
         if (destinationGroup.getGroupId().equals(first.address()) && destinationGroup.getDestinations().size() == 1) {
             paramMap.put(TemplateParameter.ADDRESS, first.address());
         } else {
-            paramMap.put(TemplateParameter.ADDRESS, "");
+            paramMap.put(TemplateParameter.ADDRESS, "ENMASSE_INTERNAL_RESERVED");
         }
 
         // Workaround for direct templates that need multicast set
