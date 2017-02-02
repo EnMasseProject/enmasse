@@ -19,12 +19,14 @@ package enmasse.systemtest;
 import java.util.Optional;
 
 public class Destination {
+    private final String group;
     private final String address;
     private final boolean storeAndForward;
     private final boolean multicast;
     private final Optional<String> flavor;
 
-    public Destination(String address, boolean storeAndForward, boolean multicast, Optional<String> flavor) {
+    public Destination(String group, String address, boolean storeAndForward, boolean multicast, Optional<String> flavor) {
+        this.group = group;
         this.address = address;
         this.storeAndForward = storeAndForward;
         this.multicast = multicast;
@@ -32,20 +34,22 @@ public class Destination {
     }
 
     public static Destination queue(String address) {
-        return new Destination(address, true, false, Optional.of("vanilla-queue"));
+        return new Destination(address, address, true, false, Optional.of("vanilla-queue"));
     }
 
     public static Destination topic(String address) {
-        return new Destination(address, true, true, Optional.of("vanilla-topic"));
+        return new Destination(address, address, true, true, Optional.of("vanilla-topic"));
     }
 
     public static Destination anycast(String address) {
-        return new Destination(address, false, false, Optional.empty());
+        return new Destination(address, address, false, false, Optional.empty());
     }
 
     public static Destination broadcast(String address) {
-        return new Destination(address, false, true, Optional.empty());
+        return new Destination(address, address, false, true, Optional.empty());
     }
+
+    public String getGroup() { return group; }
 
     public String getAddress() {
         return address;
@@ -73,6 +77,7 @@ public class Destination {
         if (storeAndForward != that.storeAndForward) return false;
         if (multicast != that.multicast) return false;
         if (!address.equals(that.address)) return false;
+        if (!group.equals(that.group)) return false;
         return flavor.equals(that.flavor);
 
     }
@@ -80,6 +85,7 @@ public class Destination {
     @Override
     public int hashCode() {
         int result = address.hashCode();
+        result = 31 * result + group.hashCode();
         result = 31 * result + (storeAndForward ? 1 : 0);
         result = 31 * result + (multicast ? 1 : 0);
         result = 31 * result + flavor.hashCode();
