@@ -68,7 +68,13 @@ public class TemplateDestinationClusterGenerator implements DestinationClusterGe
 
         // If the flavor is shared, there is only one instance of it, so give it the name of the flavor
         paramMap.put(TemplateParameter.NAME, OpenShiftHelper.nameSanitizer(destinationGroup.getGroupId()));
-        paramMap.put(TemplateParameter.ADDRESS, first.address());
+
+        // If the name of the group matches that of the address, assume a scalable queue
+        if (destinationGroup.getGroupId().equals(first.address()) && destinationGroup.getDestinations().size() == 1) {
+            paramMap.put(TemplateParameter.ADDRESS, first.address());
+        } else {
+            paramMap.put(TemplateParameter.ADDRESS, "");
+        }
 
         // Workaround for direct templates that need multicast set
         if (!first.flavor().isPresent()) {
