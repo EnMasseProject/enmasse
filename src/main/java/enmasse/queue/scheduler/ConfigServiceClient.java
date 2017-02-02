@@ -67,15 +67,21 @@ public class ConfigServiceClient extends AbstractVerticle {
         Map<String, Set<String>> addressMap = new LinkedHashMap<>();
         for (String address : payload.fieldNames()) {
             JsonObject addressObject = payload.getJsonObject(address);
-            String groupId = addressObject.getString("group_id");
-            Set<String> addresses = addressMap.get(groupId);
-            if (addresses == null) {
-                addresses = new HashSet<>();
-                addressMap.put(groupId, addresses);
+            if (isQueue(addressObject)) {
+                String groupId = addressObject.getString("group_id");
+                Set<String> addresses = addressMap.get(groupId);
+                if (addresses == null) {
+                    addresses = new HashSet<>();
+                    addressMap.put(groupId, addresses);
+                }
+                addresses.add(address);
             }
-            addresses.add(address);
         }
         return addressMap;
+    }
+
+    private boolean isQueue(JsonObject addressObject) {
+        return addressObject.getBoolean("store_and_forward") && !addressObject.getBoolean("multicast");
     }
 
     @Override

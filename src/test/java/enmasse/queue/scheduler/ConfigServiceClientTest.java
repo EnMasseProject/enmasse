@@ -41,7 +41,7 @@ public class ConfigServiceClientTest {
     @Test
     public void testClientUpdatesListener() throws Exception {
         assertNull(listener.addressMap);
-        testConfigServ.deployConfig("{\"queue1\":{\"store_and_forward\":true,\"multicast\":false,\"group_id\":\"group1\"},\"queue2\":{\"group_id\":\"group1\"},\"queue3\":{\"group_id\":\"group2\"}}");
+        testConfigServ.deployConfig("{\"queue1\":{\"store_and_forward\":true,\"multicast\":false,\"group_id\":\"group1\"},\"queue2\":{\"store_and_forward\":true,\"multicast\":false,\"group_id\":\"group1\"},\"queue3\":{\"store_and_forward\":true,\"multicast\":false,\"group_id\":\"group2\"},\"direct1\":{\"store_and_forward\":false,\"multicast\":false}}");
 
         waitForPort(() -> listener.addressMap == null ? 0 : 1, 1, TimeUnit.MINUTES);
 
