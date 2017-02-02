@@ -47,7 +47,7 @@ public class Artemis implements Broker {
     private final String replyTo;
     private final BlockingQueue<Message> replies;
     private final String messagingHost = System.getenv("MESSAGING_SERVICE_HOST");
-    private final String messagingPort = System.getenv("MESSAGING_SERVICE_PORT");
+    private final String messagingPort = System.getenv("MESSAGING_SERVICE_PORT_INTERNAL");
 
     public Artemis(Vertx vertx, ProtonSender sender, String replyTo, BlockingQueue<Message> replies) {
         this.vertx = vertx;
