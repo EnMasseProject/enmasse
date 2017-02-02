@@ -26,6 +26,8 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Acts as an arbiter deciding in which broker a queue should run.
@@ -98,8 +100,8 @@ public class QueueScheduler extends AbstractVerticle implements ConfigListener {
 
     private void connectionOpened(ProtonConnection connection) {
         log.info("Connection opened from " + connection.getRemoteContainer());
-        executeBlocking(() -> schedulerState.brokerAdded(getGroupId(connection), connection.getRemoteContainer(), brokerFactory.createBroker(connection).get()),
-                "Error adding broker");
+        Future<Broker> broker = brokerFactory.createBroker(connection);
+        executeBlocking(() -> schedulerState.brokerAdded(getGroupId(connection), connection.getRemoteContainer(), broker.get(30, TimeUnit.SECONDS)),"Error adding broker");
     }
 
     @Override
