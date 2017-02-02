@@ -14,43 +14,40 @@
  * limitations under the License.
  */
 
-package enmasse.address.controller.restapi.v1;
+package enmasse.address.controller.restapi.common;
 
 import enmasse.address.controller.admin.AddressManager;
 import enmasse.address.controller.model.Destination;
 import enmasse.address.controller.model.DestinationGroup;
-import enmasse.address.controller.restapi.common.AddressProperties;
 import io.vertx.core.Vertx;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.ws.rs.*;
 import javax.ws.rs.container.AsyncResponse;
 import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
-@Path("/v1/enmasse/addresses")
-public class RestService {
-    private static final Logger log = LoggerFactory.getLogger(RestService.class.getName());
+public abstract class RestServiceBase {
+    private static final Logger log = LoggerFactory.getLogger(RestServiceBase.class.getName());
 
     private final AddressManager addressManager;
     private final Vertx vertx;
 
-    public RestService(@Context AddressManager addressManager, @Context Vertx vertx) {
+    public RestServiceBase(@Context AddressManager addressManager, @Context Vertx vertx) {
         this.addressManager = addressManager;
         this.vertx = vertx;
     }
 
-    @GET
-    @Produces({MediaType.APPLICATION_JSON})
-    public void getAddresses(@Suspended final AsyncResponse response) {
+    protected void getAddresses(@Suspended final AsyncResponse response) {
         vertx.executeBlocking(promise -> {
             try {
-                promise.complete(destinationsToMap(addressManager.listDestinationGroups()));
+                promise.complete(getResponseEntity(addressManager.listDestinationGroups()));
             } catch (Exception e) {
                 promise.fail(e);
             }
@@ -64,14 +61,11 @@ public class RestService {
         });
     }
 
-    @PUT
-    @Consumes({MediaType.APPLICATION_JSON})
-    @Produces({MediaType.APPLICATION_JSON})
-    public void putAddresses(Map<String, AddressProperties> addressMap, @Suspended final AsyncResponse response) {
+    protected void putAddresses(Set<DestinationGroup> destinationGroups, @Suspended final AsyncResponse response) {
         vertx.executeBlocking(promise -> {
             try {
-                addressManager.destinationsUpdated(mapToDestinations(addressMap));
-                promise.complete(addressMap);
+                addressManager.destinationsUpdated(destinationGroups);
+                promise.complete(getResponseEntity(destinationGroups));
             } catch (Exception e) {
                 promise.fail(e);
             }
@@ -85,10 +79,7 @@ public class RestService {
         });
     }
 
-    @DELETE
-    @Consumes({MediaType.APPLICATION_JSON})
-    @Produces({MediaType.APPLICATION_JSON})
-    public void deleteAddresses(List<String> data, @Suspended final AsyncResponse response) {
+    protected void deleteAddresses(List<String> data, @Suspended final AsyncResponse response) {
         vertx.executeBlocking(promise -> {
             try {
                 Set<DestinationGroup> destinationGroups = addressManager.listDestinationGroups();
@@ -97,7 +88,7 @@ public class RestService {
                     destinationGroups = deleteAddressFromSet(address, destinationGroups);
                 }
                 addressManager.destinationsUpdated(destinationGroups);
-                promise.complete(destinationsToMap(destinationGroups));
+                promise.complete(getResponseEntity(destinationGroups));
             } catch (Exception e) {
                 promise.fail(e);
             }
@@ -128,17 +119,14 @@ public class RestService {
         return newDestinations;
     }
 
-    @POST
-    @Consumes({MediaType.APPLICATION_JSON})
-    @Produces({MediaType.APPLICATION_JSON})
-    public void appendAddresses(Map<String, AddressProperties> addressMap, @Suspended final AsyncResponse response) {
+    protected void appendAddresses(Set<DestinationGroup> newDestinationGroups, @Suspended final AsyncResponse response) {
         vertx.executeBlocking(promise -> {
             try {
                 Set<DestinationGroup> destinationGroups = new HashSet<>(addressManager.listDestinationGroups());
-                destinationGroups.addAll(mapToDestinations(addressMap));
+                destinationGroups.addAll(newDestinationGroups);
                 addressManager.destinationsUpdated(destinationGroups);
 
-                promise.complete(destinationsToMap(destinationGroups));
+                promise.complete(getResponseEntity(destinationGroups));
             } catch (Exception e) {
                 promise.fail(e);
             }
@@ -152,24 +140,5 @@ public class RestService {
         });
     }
 
-    private static Set<DestinationGroup> mapToDestinations(Map<String, AddressProperties> addressMap) {
-        return addressMap.entrySet().stream()
-                .map(e -> {
-                    DestinationGroup.Builder groupBuilder = new DestinationGroup.Builder(e.getKey());
-                    groupBuilder.destination(new Destination(e.getKey(), e.getValue().store_and_forward, e.getValue().multicast, Optional.ofNullable(e.getValue().flavor)));
-                    return groupBuilder.build();
-                })
-                .collect(Collectors.toSet());
-    }
-
-    private static Map<String, AddressProperties> destinationsToMap(Collection<DestinationGroup> destinationGroups) {
-        Map<String, AddressProperties> map = new LinkedHashMap<>();
-        for (DestinationGroup destinationGroup : destinationGroups) {
-            for (Destination destination : destinationGroup.getDestinations()) {
-                String flavor = destination.flavor().orElse(null);
-                map.put(destination.address(), new AddressProperties(destination.storeAndForward(), destination.multicast(), flavor));
-            }
-        }
-        return map;
-    }
+    protected abstract Object getResponseEntity(Collection<DestinationGroup> destinationGroups);
 }

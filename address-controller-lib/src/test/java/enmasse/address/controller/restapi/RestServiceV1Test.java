@@ -20,7 +20,7 @@ import enmasse.address.controller.admin.AddressManager;
 import enmasse.address.controller.model.Destination;
 import enmasse.address.controller.model.DestinationGroup;
 import enmasse.address.controller.restapi.common.AddressProperties;
-import enmasse.address.controller.restapi.v1.RestService;
+import enmasse.address.controller.restapi.v1.RestServiceV1;
 import io.vertx.core.Vertx;
 import org.junit.After;
 import org.junit.Before;
@@ -38,8 +38,8 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
-public class RestServiceTest {
-    private RestService restService;
+public class RestServiceV1Test {
+    private RestServiceV1 restServiceV1;
     private TestManager addressManager;
     private Vertx vertx;
 
@@ -47,7 +47,7 @@ public class RestServiceTest {
     public void setup() {
         vertx = Vertx.vertx();
         addressManager = new TestManager();
-        restService = new RestService(addressManager, vertx);
+        restServiceV1 = new RestServiceV1(addressManager, vertx);
     }
 
     @After
@@ -60,7 +60,7 @@ public class RestServiceTest {
         addressManager.destinationsUpdated(Sets.newSet(
                 createGroup(new Destination("addr1", false, false, Optional.empty())),
                 createGroup(new Destination("queue1", true, false, Optional.of("vanilla")))));
-        Response response = invokeRequest(restService::getAddresses);
+        Response response = invokeRequest(restServiceV1::getAddresses);
         assertThat(response.getMediaType().toString(), is(MediaType.APPLICATION_JSON));
         assertThat(response.getStatus(), is(200));
         Map<String, AddressProperties> data = (Map<String, AddressProperties>) response.getEntity();
@@ -82,7 +82,7 @@ public class RestServiceTest {
     @Test
     public void testGetException() {
         addressManager.throwException = true;
-        Response response = invokeRequest(restService::getAddresses);
+        Response response = invokeRequest(restServiceV1::getAddresses);
         assertThat(response.getStatus(), is(500));
     }
 
@@ -94,7 +94,7 @@ public class RestServiceTest {
         input.put("addr2", new AddressProperties(false, false, null));
         input.put("topic", new AddressProperties(true,true, "vanilla"));
 
-        Response response = invokeRequest(r -> restService.putAddresses(input, r));
+        Response response = invokeRequest(r -> restServiceV1.putAddresses(input, r));
 
         Map <String, AddressProperties > result = (Map<String, AddressProperties>) response.getEntity();
         assertThat(result, is(input));
@@ -108,7 +108,7 @@ public class RestServiceTest {
     @Test
     public void testPutException() {
         addressManager.throwException = true;
-        Response response = invokeRequest(r -> restService.putAddresses(Collections.singletonMap("addr1", new AddressProperties(true, false, "vanilla")), r));
+        Response response = invokeRequest(r -> restServiceV1.putAddresses(Collections.singletonMap("addr1", new AddressProperties(true, false, "vanilla")), r));
         assertThat(response.getStatus(), is(500));
     }
 
@@ -117,7 +117,7 @@ public class RestServiceTest {
         addressManager.destinationsUpdated(Sets.newSet(createGroup(new Destination("addr1", false, false, Optional.empty()))));
         addressManager.destinationsUpdated(Sets.newSet(createGroup(new Destination("addr2", false, false, Optional.empty()))));
 
-        Response response = invokeRequest(r -> restService.deleteAddresses(Collections.singletonList("addr1"), r));
+        Response response = invokeRequest(r -> restServiceV1.deleteAddresses(Collections.singletonList("addr1"), r));
 
         Map<String, AddressProperties> result = (Map<String, AddressProperties>) response.getEntity();
         assertThat(result.size(), is(1));
@@ -132,7 +132,7 @@ public class RestServiceTest {
     @Test
     public void testDeleteException() {
         addressManager.throwException = true;
-        Response response = invokeRequest(r -> restService.deleteAddresses(Collections.singletonList("addr1"), r));
+        Response response = invokeRequest(r -> restServiceV1.deleteAddresses(Collections.singletonList("addr1"), r));
         assertThat(response.getStatus(), is(500));
     }
 
@@ -148,7 +148,7 @@ public class RestServiceTest {
         input.put("addr2", new AddressProperties(false, false, null));
         input.put("topic", new AddressProperties(true,true, "vanilla"));
 
-        Response response = invokeRequest(r -> restService.appendAddresses(input, r));
+        Response response = invokeRequest(r -> restServiceV1.appendAddresses(input, r));
 
         Map<String, AddressProperties> result = (Map<String, AddressProperties>) response.getEntity();
         assertThat(result.size(), is(3));
@@ -165,7 +165,7 @@ public class RestServiceTest {
     @Test
     public void testAppendException() {
         addressManager.throwException = true;
-        Response response = invokeRequest(r -> restService.appendAddresses(Collections.singletonMap("addr1", new AddressProperties(true, false, "vanilla")), r));
+        Response response = invokeRequest(r -> restServiceV1.appendAddresses(Collections.singletonMap("addr1", new AddressProperties(true, false, "vanilla")), r));
         assertThat(response.getStatus(), is(500));
     }
 
