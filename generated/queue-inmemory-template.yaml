@@ -12,23 +12,26 @@ objects:
     labels:
       address_config: address-config-${NAME}
       app: enmasse
+      group_id: "${NAME}"
     name: "${NAME}"
   spec:
     replicas: 1
     selector:
-      address: "${ADDRESS}"
+      group_id: "${NAME}"
       role: broker
     template:
       metadata:
         labels:
-          address: "${ADDRESS}"
           app: enmasse
+          group_id: "${NAME}"
           role: broker
       spec:
         containers:
         - env:
           - name: QUEUE_NAME
             value: "${ADDRESS}"
+          - name: GROUP_ID
+            value: "${NAME}"
           image: artemis
           lifecycle:
             preStop:

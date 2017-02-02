@@ -63,7 +63,8 @@ local common = import "common.jsonnet";
         },
         common.trigger("ragent", "ragent"),
         common.trigger("configserv", "configserv"),
-        common.trigger("address-controller", "address-controller")
+        common.trigger("address-controller", "address-controller"),
+        common.trigger("queue-scheduler", "queue-scheduler")
       ],
       "template": {
         "metadata": {
