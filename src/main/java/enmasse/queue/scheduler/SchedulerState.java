@@ -78,6 +78,10 @@ public class SchedulerState {
 
     public synchronized void brokerRemoved(String groupId, String brokerId) {
         Map<String, Broker> brokerMap = brokerGroupMap.get(groupId);
+        if (!brokerMap.containsKey(brokerId)) {
+            log.info("Broker was already removed, ignoring");
+            return;
+        }
         brokerMap.remove(brokerId);
         if (brokerMap.isEmpty()) {
             brokerGroupMap.remove(groupId);
