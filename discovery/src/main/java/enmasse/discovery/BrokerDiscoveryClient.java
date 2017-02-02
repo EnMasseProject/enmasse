@@ -8,7 +8,7 @@ import java.util.Optional;
  * the changing set of hosts.
  */
 public class BrokerDiscoveryClient extends BaseDiscoveryClient {
-    public BrokerDiscoveryClient(Endpoint endpoint, String address, Optional<String> containerName) {
-        super(endpoint, "brokersense", Collections.singletonMap("address", address), containerName);
+    public BrokerDiscoveryClient(Endpoint endpoint, String group, Optional<String> containerName) {
+        super(endpoint, "brokersense", Collections.singletonMap("group_id", group), containerName);
     }
 }
