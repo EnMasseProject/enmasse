@@ -1,4 +1,4 @@
-SUBDIRS=activemq qdrouterd
+SUBDIRS=qdrouterd
 
 all: $(SUBDIRS)
 
