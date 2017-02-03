@@ -57,7 +57,9 @@ public class QueueTest extends VertxTestBase {
     public void testScaledown() throws Exception {
         Destination dest = Destination.queue("scalequeue");
         deploy(dest);
+        Thread.sleep(30_000);
         scale(dest, 4);
+        Thread.sleep(30_000);
         EnMasseClient client = createQueueClient();
         List<Future<Integer>> sent = Arrays.asList(
                 client.sendMessages(dest.getAddress(), TestUtils.generateMessages("foo", 1000)),
@@ -71,6 +73,8 @@ public class QueueTest extends VertxTestBase {
         assertThat(sent.get(3).get(1, TimeUnit.MINUTES), is(1000));
 
         scale(dest, 1);
+
+        Thread.sleep(30_000);
 
         Future<List<String>> received = client.recvMessages(dest.getAddress(), 4000);
 
