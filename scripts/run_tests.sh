@@ -26,7 +26,7 @@ function run_test() {
     USE_TLS=$2
     TEMPLATE=$3
 
-    oc process -f $TEMPLATE BROKER_REPO=lulf/artemis ADDRESS_CONTROLLER_REPO=lulf/address-controller CONFIGSERV_REPO=lulf/configserv | oc create -f -
+    oc process -f $TEMPLATE | oc create -f -
 
     $DIR/wait_until_up.sh 4 || exit 1
 
@@ -36,7 +36,7 @@ function run_test() {
 }
 
 setup_test enmasse-ci-default
-run_test enmasse-ci-default false https://raw.githubusercontent.com/EnMasseProject/openshift-configuration/multiple-queues-per-broker/generated/enmasse-template.yaml || exit 1
+run_test enmasse-ci-default false https://raw.githubusercontent.com/enmasseproject/openshift-configuration/master/generated/enmasse-template.yaml || exit 1
 
 #setup_test enmasse-ci-secure
 #setup_secure
