@@ -44,15 +44,15 @@ public class TestUtils {
     private static final ObjectMapper mapper = new ObjectMapper();
 
     public static void setReplicas(OpenShift openShift, Destination destination, int numReplicas, TimeoutBudget budget) throws InterruptedException {
-        openShift.setDeploymentReplicas(destination.getAddress(), numReplicas);
-        waitForNReplicas(openShift, destination.getAddress(), numReplicas, budget);
+        openShift.setDeploymentReplicas(destination.getGroup(), numReplicas);
+        waitForNReplicas(openShift, destination.getGroup(), numReplicas, budget);
     }
 
-    public static void waitForNReplicas(OpenShift openShift, String address, int expectedReplicas, TimeoutBudget budget) throws InterruptedException {
+    public static void waitForNReplicas(OpenShift openShift, String group, int expectedReplicas, TimeoutBudget budget) throws InterruptedException {
         boolean done = false;
         int actualReplicas = 0;
         do {
-            List<Pod> pods = openShift.listPods(Collections.singletonMap("address", address));
+            List<Pod> pods = openShift.listPods(Collections.singletonMap("group_id", group));
             actualReplicas = numReady(pods);
             System.out.println("Have " + actualReplicas + " out of " + pods.size() + " replicas. Expecting " + expectedReplicas);
             if (actualReplicas != pods.size() || actualReplicas != expectedReplicas) {
@@ -102,9 +102,9 @@ public class TestUtils {
                 .collect(Collectors.toList());
     }
 
-    public static void waitForBrokerPod(OpenShift openShift, String address, TimeoutBudget budget) throws InterruptedException {
+    public static void waitForBrokerPod(OpenShift openShift, String group, TimeoutBudget budget) throws InterruptedException {
         Map<String, String> labels = new LinkedHashMap<>();
-        labels.put("address", address);
+        labels.put("group_id", group);
         labels.put("role", "broker");
 
 
@@ -118,7 +118,7 @@ public class TestUtils {
             }
         }
         if (numReady != 1) {
-            throw new IllegalStateException("Unable to find broker pod for " + address + " within timeout. Found " + pods);
+            throw new IllegalStateException("Unable to find broker pod for " + group + " within timeout. Found " + pods);
         }
     }
 
@@ -145,7 +145,7 @@ public class TestUtils {
         int expectedPods = openShift.getExpectedPods();
         for (Destination destination : destinations) {
             if (destination.isStoreAndForward()) {
-                waitForBrokerPod(openShift, destination.getAddress(), budget);
+                waitForBrokerPod(openShift, destination.getGroup(), budget);
                 if (!destination.isMulticast()) {
                     waitForAddress(openShift, destination.getAddress(), budget);
                 }
