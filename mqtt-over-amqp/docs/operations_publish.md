@@ -27,8 +27,8 @@ The MQTT client sends _PUBLISH_ message to FE which maps the message to the foll
 | ---- | ---- | ----- | ---- |
 | subject | system property | - | - |
 | message-id | system property | MessageId | MQTT PUBLISH |
-| x-retain | message annotation | Retain flag | MQTT PUBLISH |
-| x-qos | message annotation | QoS level | MQTT PUBLISH |
+| x-opt-retain-message | message annotation | Retain flag | MQTT PUBLISH |
+| x-opt-mqtt-qos | message annotation | QoS level | MQTT PUBLISH |
 | durable | header | QoS level > 0 | MQTT PUBLISH |
 | to | system property | topic | MQTT PUBLISH |
 | delivery-count | header | DUP flag | MQTT PUBLISH |
@@ -36,7 +36,7 @@ The MQTT client sends _PUBLISH_ message to FE which maps the message to the foll
 
 > the "subject" system property is just empty for publishing messages (it's different from all the other messages which have a well defined "subject"). It's just because all the other messages are special AMQP messages, not just like a publishing one.
 
-> the MQTT QoS level is copied to the x-qos annotation. At same time the "durable" header field is set as FALSE if QoS level is 0, TRUE if QoS level is 1 or 2. When the x-qos annotations isn't present (i.e. AMQP_WILL published from a native AMQP client which doesn't add it), fallback to use only "durable" and if it's TRUE consider QoS level 1.
+> the MQTT QoS level is copied to the x-opt-mqtt-qos annotation. At same time the "durable" header field is set as FALSE if QoS level is 0, TRUE if QoS level is 1 or 2. When the x-opt-mqtt-qos annotations isn't present (i.e. AMQP_WILL published from a native AMQP client which doesn't add it), fallback to use only "durable" and if it's TRUE consider QoS level 1.
 
 ### QoS level 0 (AT_MOST_ONCE)
 

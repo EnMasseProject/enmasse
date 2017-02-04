@@ -36,13 +36,13 @@ The MQTT client sends a _CONNECT_ message to the FE which extracts "will" inform
 | DATA | TYPE | VALUE | FROM |
 | ---- | ---- | ----- | ---- |
 | subject | system property | "will" | - |
-| x-retain | message annotation | will retain flag | MQTT CONNECT |
-| x-qos | message annotation | will QoS level | MQTT CONNECT |
+| x-opt-retain-message | message annotation | will retain flag | MQTT CONNECT |
+| x-opt-mqtt-qos | message annotation | will QoS level | MQTT CONNECT |
 | durable | header | will QoS level > 0 | MQTT CONNECT |
 | to | system property | will topic | MQTT CONNECT |
 | payload | Data section | will message | MQTT CONNECT |
 
-> the MQTT QoS level is copied to the x-qos annotation. At same time the "durable" header field is set as FALSE if QoS level is 0, TRUE if QoS level is 1 or 2. When the x-qos annotations isn't present (i.e. AMQP_WILL published from a native AMQP client which doesn't add it), fallback to use only "durable" and if it's TRUE consider QoS level 1 as default.
+> the MQTT QoS level is copied to the x-opt-mqtt-qos annotation. At same time the "durable" header field is set as FALSE if QoS level is 0, TRUE if QoS level is 1 or 2. When the x-opt-mqtt-qos annotations isn't present (i.e. AMQP_WILL published from a native AMQP client which doesn't add it), fallback to use only "durable" and if it's TRUE consider QoS level 1 as default.
 
 The _AMQP_WILL_ is sent as "unsettled", in order to know that the Will Service has received it (with related disposition).
 The relation between the _AMQP_WILL_ message and the related client, at AMQP level, is inferred by the link name attached to the WS control address.
