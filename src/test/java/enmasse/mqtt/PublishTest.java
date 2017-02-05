@@ -143,7 +143,7 @@ public class PublishTest extends MockMqttGatewayTestBase {
         this.mqttReceiver(context, MQTT_TOPIC, 0);
         this.amqpPublish(context, MQTT_TOPIC, MQTT_MESSAGE, 0);
 
-        // without "durable" header and/or x-qos annotation, message always republished with qos = 0
+        // without "durable" header and/or x-opt-mqtt-qos annotation, message always republished with qos = 0
         context.assertTrue(this.receivedQos == 0);
     }
 

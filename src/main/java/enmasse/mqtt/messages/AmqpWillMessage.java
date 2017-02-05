@@ -37,8 +37,8 @@ public class AmqpWillMessage {
 
     public static final String AMQP_SUBJECT = "will";
 
-    private static final String AMQP_RETAIN_ANNOTATION = "x-retain";
-    private static final String AMQP_QOS_ANNOTATION = "x-qos";
+    private static final String AMQP_RETAIN_ANNOTATION = "x-opt-retain-message";
+    private static final String AMQP_QOS_ANNOTATION = "x-opt-mqtt-qos";
 
     private final boolean isRetain;
     private final String topic;

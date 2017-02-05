@@ -417,18 +417,18 @@ public class AmqpBridge {
 
                 ProtonDelivery delivery = done.result();
 
-                List<Integer> grantedQoSLevels = null;
+                List<MqttQoS> grantedQoSLevels = null;
                 if (delivery.getRemoteState() == Accepted.getInstance()) {
 
                     // QoS levels requested are granted
                     grantedQoSLevels = amqpSubscribeMessage.topicSubscriptions().stream().map(topicSubscription -> {
-                        return topicSubscription.qos().value();
+                        return topicSubscription.qos();
                     }).collect(Collectors.toList());
 
                 } else {
 
                     // failure for all QoS levels requested
-                    grantedQoSLevels = new ArrayList<>(Collections.nCopies(amqpSubscribeMessage.topicSubscriptions().size(), MqttQoS.FAILURE.value()));
+                    grantedQoSLevels = new ArrayList<>(Collections.nCopies(amqpSubscribeMessage.topicSubscriptions().size(), MqttQoS.FAILURE));
                 }
 
                 this.mqttEndpoint.subscribeAcknowledge((int) amqpSubscribeMessage.messageId(), grantedQoSLevels);
