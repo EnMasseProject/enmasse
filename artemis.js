@@ -76,7 +76,10 @@ Artemis.prototype.disconnected = function (context) {
 
 Artemis.prototype.abort_requests = function (error) {
     while (this.handlers) {
-        this.handlers.shift()(error);
+        var handler = this.handlers.shift();
+        if (handler) {
+            handler(error);
+        }
     }
 }
 
