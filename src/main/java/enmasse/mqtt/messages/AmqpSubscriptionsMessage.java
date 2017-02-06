@@ -52,6 +52,7 @@ public class AmqpSubscriptionsMessage {
      * @param message   raw AMQP message
      * @return  AMQP_SUBSCRIPTIONS message
      */
+    @SuppressWarnings("unchecked")
     public static AmqpSubscriptionsMessage from(Message message) {
 
         if (!message.getSubject().equals(AMQP_SUBJECT)) {

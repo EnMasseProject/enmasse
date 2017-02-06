@@ -54,6 +54,7 @@ public class AmqpUnsubscribeMessage {
      * @param message   raw AMQP message
      * @return  AMQP_UNSUBSCRIBE message
      */
+    @SuppressWarnings("unchecked")
     public static AmqpUnsubscribeMessage from(Message message) {
 
         if (!message.getSubject().equals(AMQP_SUBJECT)) {
