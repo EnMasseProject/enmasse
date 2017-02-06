@@ -17,38 +17,59 @@
 package enmasse.mqtt;
 
 import io.vertx.core.AbstractVerticle;
+import io.vertx.core.Future;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 /**
  * Vert.x based MQTT Last Will and Testament service for EnMasse
  */
+@Component
 public class MqttLwt extends AbstractVerticle {
 
     private static final Logger LOG = LoggerFactory.getLogger(MqttLwt.class);
 
-    private String internalServiceHost;
-    private int internalServicePort;
+    // connection info to the messaging service
+    private String messagingServiceHost;
+    private int messagingServiceInternalPort;
 
     /**
      * Set the address for connecting to the AMQP internal network
      *
-     * @param internalServiceHost   address for AMQP connection
+     * @param messagingServiceHost   address for AMQP connection
      * @return  current MQTT LWT instance
      */
-    public MqttLwt setInternalServiceHost(String internalServiceHost) {
-        this.internalServiceHost = internalServiceHost;
+    @Value(value = "${messaging.service.host:0.0.0.0}")
+    public MqttLwt setMessagingServiceHost(String messagingServiceHost) {
+        this.messagingServiceHost = messagingServiceHost;
         return this;
     }
 
     /**
      * Set the port for connecting to the AMQP internal network
      *
-     * @param internalServicePort   port for AMQP connection
+     * @param messagingServiceInternalPort   port for AMQP connection
      * @return  current MQTT LWT instance
      */
-    public MqttLwt setInternalServicePort(int internalServicePort) {
-        this.internalServicePort = internalServicePort;
+    @Value(value = "${messaging.service..internal.port:55673}")
+    public MqttLwt setMessagingServiceInternalPort(int messagingServiceInternalPort) {
+        this.messagingServiceInternalPort = messagingServiceInternalPort;
         return this;
+    }
+
+    @Override
+    public void start(Future<Void> startFuture) throws Exception {
+
+        LOG.info("Starting MQTT LWT service verticle...");
+        // TODO
+    }
+
+    @Override
+    public void stop(Future<Void> stopFuture) throws Exception {
+
+        LOG.info("Stopping MQTT LWT service verticle...");
+        // TODO
     }
 }
