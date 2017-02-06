@@ -13,8 +13,8 @@ objects:
       app: enmasse
     name: queue-inmemory
   objects:
-  - apiVersion: v1
-    kind: DeploymentConfig
+  - apiVersion: extensions/v1beta1
+    kind: Deployment
     metadata:
       labels:
         address_config: address-config-${NAME}
@@ -23,9 +23,6 @@ objects:
       name: "${NAME}"
     spec:
       replicas: 1
-      selector:
-        group_id: "${NAME}"
-        role: broker
       template:
         metadata:
           labels:
@@ -39,7 +36,7 @@ objects:
               value: "${ADDRESS}"
             - name: GROUP_ID
               value: "${NAME}"
-            image: artemis
+            image: "${BROKER_REPO}:latest"
             lifecycle:
               preStop:
                 exec:
@@ -60,16 +57,6 @@ objects:
           volumes:
           - emptyDir: {}
             name: vol-${NAME}
-      triggers:
-      - type: ConfigChange
-      - imageChangeParams:
-          automatic: true
-          containerNames:
-          - broker
-          from:
-            kind: ImageStreamTag
-            name: artemis:latest
-        type: ImageChange
   - apiVersion: v1
     data:
       "${ADDRESS}": '{"store_and_forward": true, "multicast": false}'
@@ -113,8 +100,8 @@ objects:
       resources:
         requests:
           storage: "${STORAGE_CAPACITY}"
-  - apiVersion: v1
-    kind: DeploymentConfig
+  - apiVersion: extensions/v1beta1
+    kind: Deployment
     metadata:
       labels:
         address_config: address-config-${NAME}
@@ -123,9 +110,6 @@ objects:
       name: "${NAME}"
     spec:
       replicas: 1
-      selector:
-        group_id: "${NAME}"
-        role: broker
       template:
         metadata:
           labels:
@@ -139,7 +123,7 @@ objects:
               value: "${ADDRESS}"
             - name: GROUP_ID
               value: "${NAME}"
-            image: artemis
+            image: "${BROKER_REPO}:latest"
             lifecycle:
               preStop:
                 exec:
@@ -161,16 +145,6 @@ objects:
           - name: vol-${NAME}
             persistentVolumeClaim:
               claimName: pvc-${NAME}
-      triggers:
-      - type: ConfigChange
-      - imageChangeParams:
-          automatic: true
-          containerNames:
-          - broker
-          from:
-            kind: ImageStreamTag
-            name: artemis:latest
-        type: ImageChange
   - apiVersion: v1
     data:
       "${ADDRESS}": '{"store_and_forward": true, "multicast": false}'
@@ -201,8 +175,8 @@ objects:
       app: enmasse
     name: topic-inmemory
   objects:
-  - apiVersion: v1
-    kind: DeploymentConfig
+  - apiVersion: extensions/v1beta1
+    kind: Deployment
     metadata:
       labels:
         address_config: address-config-${NAME}
@@ -211,9 +185,6 @@ objects:
       name: "${NAME}"
     spec:
       replicas: 1
-      selector:
-        group_id: "${NAME}"
-        role: broker
       template:
         metadata:
           labels:
@@ -227,7 +198,7 @@ objects:
               value: "${ADDRESS}"
             - name: GROUP_ID
               value: "${NAME}"
-            image: artemis
+            image: "${BROKER_REPO}:latest"
             lifecycle:
               preStop:
                 exec:
@@ -250,7 +221,7 @@ objects:
               value: "${ROUTER_LINK_CAPACITY}"
             - name: TOPIC_NAME
               value: "${ADDRESS}"
-            image: router
+            image: "${ROUTER_REPO}:latest"
             livenessProbe:
               tcpSocket:
                 port: amqp
@@ -270,7 +241,7 @@ objects:
           - env:
             - name: TOPIC_NAME
               value: "${ADDRESS}"
-            image: topic-forwarder
+            image: "${TOPIC_FORWARDER_REPO}:latest"
             livenessProbe:
               httpGet:
                 path: "/health"
@@ -287,32 +258,6 @@ objects:
           volumes:
           - emptyDir: {}
             name: vol-${NAME}
-      triggers:
-      - type: ConfigChange
-      - imageChangeParams:
-          automatic: true
-          containerNames:
-          - broker
-          from:
-            kind: ImageStreamTag
-            name: artemis:latest
-        type: ImageChange
-      - imageChangeParams:
-          automatic: true
-          containerNames:
-          - router
-          from:
-            kind: ImageStreamTag
-            name: router:latest
-        type: ImageChange
-      - imageChangeParams:
-          automatic: true
-          containerNames:
-          - forwarder
-          from:
-            kind: ImageStreamTag
-            name: topic-forwarder:latest
-        type: ImageChange
   - apiVersion: v1
     data:
       "${ADDRESS}": '{"store_and_forward": true, "multicast": true}'
@@ -356,8 +301,8 @@ objects:
       resources:
         requests:
           storage: "${STORAGE_CAPACITY}"
-  - apiVersion: v1
-    kind: DeploymentConfig
+  - apiVersion: extensions/v1beta1
+    kind: Deployment
     metadata:
       labels:
         address_config: address-config-${NAME}
@@ -366,9 +311,6 @@ objects:
       name: "${NAME}"
     spec:
       replicas: 1
-      selector:
-        group_id: "${NAME}"
-        role: broker
       template:
         metadata:
           labels:
@@ -382,7 +324,7 @@ objects:
               value: "${ADDRESS}"
             - name: GROUP_ID
               value: "${NAME}"
-            image: artemis
+            image: "${BROKER_REPO}:latest"
             lifecycle:
               preStop:
                 exec:
@@ -405,7 +347,7 @@ objects:
               value: "${ROUTER_LINK_CAPACITY}"
             - name: TOPIC_NAME
               value: "${ADDRESS}"
-            image: router
+            image: "${ROUTER_REPO}:latest"
             livenessProbe:
               tcpSocket:
                 port: amqp
@@ -425,7 +367,7 @@ objects:
           - env:
             - name: TOPIC_NAME
               value: "${ADDRESS}"
-            image: topic-forwarder
+            image: "${TOPIC_FORWARDER_REPO}:latest"
             livenessProbe:
               httpGet:
                 path: "/health"
@@ -443,32 +385,6 @@ objects:
           - name: vol-${NAME}
             persistentVolumeClaim:
               claimName: pvc-${NAME}
-      triggers:
-      - type: ConfigChange
-      - imageChangeParams:
-          automatic: true
-          containerNames:
-          - broker
-          from:
-            kind: ImageStreamTag
-            name: artemis:latest
-        type: ImageChange
-      - imageChangeParams:
-          automatic: true
-          containerNames:
-          - router
-          from:
-            kind: ImageStreamTag
-            name: router:latest
-        type: ImageChange
-      - imageChangeParams:
-          automatic: true
-          containerNames:
-          - forwarder
-          from:
-            kind: ImageStreamTag
-            name: topic-forwarder:latest
-        type: ImageChange
   - apiVersion: v1
     data:
       "${ADDRESS}": '{"store_and_forward": true, "multicast": true}'
@@ -533,23 +449,8 @@ objects:
     to:
       kind: Service
       name: admin
-- apiVersion: v1
-  kind: ImageStream
-  metadata:
-    labels:
-      app: enmasse
-    name: router
-  spec:
-    dockerImageRepository: "${ROUTER_REPO}"
-    importPolicy:
-      scheduled: true
-    tags:
-    - from:
-        kind: DockerImage
-        name: "${ROUTER_REPO}:latest"
-      name: latest
-- apiVersion: v1
-  kind: DeploymentConfig
+- apiVersion: extensions/v1beta1
+  kind: Deployment
   metadata:
     labels:
       app: enmasse
@@ -557,8 +458,6 @@ objects:
     name: qdrouterd
   spec:
     replicas: 1
-    selector:
-      name: qdrouterd
     template:
       metadata:
         labels:
@@ -570,7 +469,7 @@ objects:
         - env:
           - name: LINK_CAPACITY
             value: "${ROUTER_LINK_CAPACITY}"
-          image: router
+          image: "${ROUTER_REPO}:latest"
           livenessProbe:
             tcpSocket:
               port: amqp
@@ -582,46 +481,6 @@ objects:
           - containerPort: 55673
             name: internal
             protocol: TCP
-    triggers:
-    - type: ConfigChange
-    - imageChangeParams:
-        automatic: true
-        containerNames:
-        - router
-        from:
-          kind: ImageStreamTag
-          name: router:latest
-      type: ImageChange
-- apiVersion: v1
-  kind: ImageStream
-  metadata:
-    labels:
-      app: enmasse
-    name: artemis
-  spec:
-    dockerImageRepository: "${BROKER_REPO}"
-    importPolicy:
-      scheduled: true
-    tags:
-    - from:
-        kind: DockerImage
-        name: "${BROKER_REPO}:latest"
-      name: latest
-- apiVersion: v1
-  kind: ImageStream
-  metadata:
-    labels:
-      app: enmasse
-    name: topic-forwarder
-  spec:
-    dockerImageRepository: "${TOPIC_FORWARDER_REPO}"
-    importPolicy:
-      scheduled: true
-    tags:
-    - from:
-        kind: DockerImage
-        name: "${TOPIC_FORWARDER_REPO}:latest"
-      name: latest
 - apiVersion: v1
   kind: Service
   metadata:
@@ -643,53 +502,8 @@ objects:
       targetPort: 55673
     selector:
       capability: router
-- apiVersion: v1
-  kind: ImageStream
-  metadata:
-    labels:
-      app: enmasse
-    name: configserv
-  spec:
-    dockerImageRepository: "${CONFIGSERV_REPO}"
-    importPolicy:
-      scheduled: true
-    tags:
-    - from:
-        kind: DockerImage
-        name: "${CONFIGSERV_REPO}:latest"
-      name: latest
-- apiVersion: v1
-  kind: ImageStream
-  metadata:
-    labels:
-      app: enmasse
-    name: ragent
-  spec:
-    dockerImageRepository: "${RAGENT_REPO}"
-    importPolicy:
-      scheduled: true
-    tags:
-    - from:
-        kind: DockerImage
-        name: "${RAGENT_REPO}:latest"
-      name: latest
-- apiVersion: v1
-  kind: ImageStream
-  metadata:
-    labels:
-      app: enmasse
-    name: subserv
-  spec:
-    dockerImageRepository: "${SUBSERV_REPO}"
-    importPolicy:
-      scheduled: true
-    tags:
-    - from:
-        kind: DockerImage
-        name: "${SUBSERV_REPO}:latest"
-      name: latest
-- apiVersion: v1
-  kind: DeploymentConfig
+- apiVersion: extensions/v1beta1
+  kind: Deployment
   metadata:
     labels:
       app: enmasse
@@ -697,8 +511,6 @@ objects:
     name: subserv
   spec:
     replicas: 1
-    selector:
-      name: subserv
     template:
       metadata:
         labels:
@@ -706,7 +518,7 @@ objects:
           name: subserv
       spec:
         containers:
-        - image: subserv
+        - image: "${SUBSERV_REPO}:latest"
           livenessProbe:
             tcpSocket:
               port: amqp
@@ -720,16 +532,6 @@ objects:
               memory: 64Mi
             requests:
               memory: 64Mi
-    triggers:
-    - type: ConfigChange
-    - imageChangeParams:
-        automatic: true
-        containerNames:
-        - subserv
-        from:
-          kind: ImageStreamTag
-          name: subserv:latest
-      type: ImageChange
 - apiVersion: v1
   kind: Service
   metadata:
@@ -744,23 +546,8 @@ objects:
       targetPort: 5672
     selector:
       name: subserv
-- apiVersion: v1
-  kind: ImageStream
-  metadata:
-    labels:
-      app: enmasse
-    name: mqtt-gateway
-  spec:
-    dockerImageRepository: "${MQTT_GATEWAY_REPO}"
-    importPolicy:
-      scheduled: true
-    tags:
-    - from:
-        kind: DockerImage
-        name: "${MQTT_GATEWAY_REPO}:latest"
-      name: latest
-- apiVersion: v1
-  kind: DeploymentConfig
+- apiVersion: extensions/v1beta1
+  kind: Deployment
   metadata:
     labels:
       app: enmasse
@@ -768,8 +555,6 @@ objects:
     name: mqtt-gateway
   spec:
     replicas: 1
-    selector:
-      name: mqtt-gateway
     template:
       metadata:
         labels:
@@ -777,7 +562,7 @@ objects:
           name: mqtt-gateway
       spec:
         containers:
-        - image: mqtt-gateway
+        - image: "${MQTT_GATEWAY_REPO}:latest"
           livenessProbe:
             initialDelaySeconds: 60
             tcpSocket:
@@ -787,16 +572,6 @@ objects:
           - containerPort: 1883
             name: mqtt
             protocol: TCP
-    triggers:
-    - type: ConfigChange
-    - imageChangeParams:
-        automatic: true
-        containerNames:
-        - mqtt-gateway
-        from:
-          kind: ImageStreamTag
-          name: mqtt-gateway:latest
-      type: ImageChange
 - apiVersion: v1
   kind: Service
   metadata:
@@ -812,36 +587,6 @@ objects:
     selector:
       name: mqtt-gateway
 - apiVersion: v1
-  kind: ImageStream
-  metadata:
-    labels:
-      app: enmasse
-    name: address-controller
-  spec:
-    dockerImageRepository: "${ADDRESS_CONTROLLER_REPO}"
-    importPolicy:
-      scheduled: true
-    tags:
-    - from:
-        kind: DockerImage
-        name: "${ADDRESS_CONTROLLER_REPO}:latest"
-      name: latest
-- apiVersion: v1
-  kind: ImageStream
-  metadata:
-    labels:
-      app: enmasse
-    name: queue-scheduler
-  spec:
-    dockerImageRepository: "${QUEUE_SCHEDULER_REPO}"
-    importPolicy:
-      scheduled: true
-    tags:
-    - from:
-        kind: DockerImage
-        name: "${QUEUE_SCHEDULER_REPO}:latest"
-      name: latest
-- apiVersion: v1
   data:
     json: '{"large-persisted-queue": {"templateName": "queue-persisted", "templateParameters":
       {"STORAGE_CAPACITY": "10Gi"}}, "large-persisted-topic": {"templateName": "topic-persisted",
@@ -855,8 +600,8 @@ objects:
     labels:
       app: enmasse
     name: flavor
-- apiVersion: v1
-  kind: DeploymentConfig
+- apiVersion: extensions/v1beta1
+  kind: Deployment
   metadata:
     labels:
       app: enmasse
@@ -864,8 +609,6 @@ objects:
     name: admin
   spec:
     replicas: 1
-    selector:
-      name: admin
     template:
       metadata:
         labels:
@@ -873,7 +616,7 @@ objects:
           name: admin
       spec:
         containers:
-        - image: address-controller
+        - image: "${ADDRESS_CONTROLLER_REPO}:latest"
           livenessProbe:
             tcpSocket:
               port: amqp
@@ -895,7 +638,7 @@ objects:
             value: localhost
           - name: CONFIGURATION_SERVICE_PORT
             value: '5672'
-          image: ragent
+          image: "${RAGENT_REPO}:latest"
           livenessProbe:
             tcpSocket:
               port: amqp
@@ -914,7 +657,7 @@ objects:
             value: localhost
           - name: CONFIGURATION_SERVICE_PORT
             value: '5672'
-          image: queue-scheduler
+          image: "${QUEUE_SCHEDULER_REPO}:latest"
           livenessProbe:
             tcpSocket:
               port: amqp
@@ -928,7 +671,7 @@ objects:
               memory: 128Mi
             requests:
               memory: 128Mi
-        - image: configserv
+        - image: "${CONFIGSERV_REPO}:latest"
           livenessProbe:
             tcpSocket:
               port: amqp
@@ -943,40 +686,6 @@ objects:
             requests:
               memory: 256Mi
         serviceAccount: deployer
-    triggers:
-    - type: ConfigChange
-    - imageChangeParams:
-        automatic: true
-        containerNames:
-        - ragent
-        from:
-          kind: ImageStreamTag
-          name: ragent:latest
-      type: ImageChange
-    - imageChangeParams:
-        automatic: true
-        containerNames:
-        - configserv
-        from:
-          kind: ImageStreamTag
-          name: configserv:latest
-      type: ImageChange
-    - imageChangeParams:
-        automatic: true
-        containerNames:
-        - address-controller
-        from:
-          kind: ImageStreamTag
-          name: address-controller:latest
-      type: ImageChange
-    - imageChangeParams:
-        automatic: true
-        containerNames:
-        - queue-scheduler
-        from:
-          kind: ImageStreamTag
-          name: queue-scheduler:latest
-      type: ImageChange
 - apiVersion: v1
   kind: Service
   metadata:

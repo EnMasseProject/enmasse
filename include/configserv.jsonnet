@@ -1,14 +1,12 @@
 local version = std.extVar("VERSION");
 local common = import "common.jsonnet";
 {
-  imagestream(image_name)::
-    common.imagestream("configserv", image_name),
   service::
     common.service("configuration", "configserv", "amqp", 5672, 5672),
-  deployment::
+  deployment(image_repo)::
     {
-      "apiVersion": "v1",
-      "kind": "DeploymentConfig",
+      "apiVersion": "extensions/v1beta1",
+      "kind": "Deployment",
       "metadata": {
         "labels": {
           "app": "enmasse",
@@ -18,27 +16,6 @@ local common = import "common.jsonnet";
       },
       "spec": {
         "replicas": 1,
-        "selector": {
-          "name": "configserv"
-        },
-        "triggers": [
-          {
-            "type": "ConfigChange"
-          },
-          {
-            "type": "ImageChange",
-            "imageChangeParams": {
-              "automatic": true,
-              "containerNames": [
-                "bridge"
-              ],
-              "from": {
-                "kind": "ImageStreamTag",
-                "name": "configserv:" + version
-              }
-            }
-          }
-        ],
         "template": {
           "metadata": {
             "labels": {
@@ -47,23 +24,7 @@ local common = import "common.jsonnet";
             }
           },
           "spec": {
-            "containers": [
-              {
-                "image": "configserv",
-                "name": "bridge",
-                "ports": [
-                  {
-                    "name": "amqp",
-                    "containerPort": 5672
-                  }
-                ],
-                "livenessProbe": {
-                  "tcpSocket": {
-                    "port": "amqp"
-                  }
-                }
-              }
-            ]
+            "containers": [ common.container("configserv", image_repo, "amqp", 5672, "128Mi") ]
           }
         }
       }

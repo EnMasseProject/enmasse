@@ -41,10 +41,10 @@ local common = import "common.jsonnet";
       }
     }
   ],
-  deployment::
+  deployment(controller_image, configserv_image, ragent_image, scheduler_image)::
   {
-    "apiVersion": "v1",
-    "kind": "DeploymentConfig",
+    "apiVersion": "extensions/v1beta1",
+    "kind": "Deployment",
     "metadata": {
       "labels": {
         "app": "enmasse",
@@ -54,18 +54,6 @@ local common = import "common.jsonnet";
     },
     "spec": {
       "replicas": 1,
-      "selector": {
-        "name": "admin"
-      },
-      "triggers": [
-        {
-          "type": "ConfigChange"
-        },
-        common.trigger("ragent", "ragent"),
-        common.trigger("configserv", "configserv"),
-        common.trigger("address-controller", "address-controller"),
-        common.trigger("queue-scheduler", "queue-scheduler")
-      ],
       "template": {
         "metadata": {
           "labels": {
@@ -76,8 +64,8 @@ local common = import "common.jsonnet";
         "spec": {
           "serviceAccount": "deployer",
           "containers": [
-            common.container2("address-controller", "address-controller", "amqp", 55674, "http", 8080, "256Mi"),
-            common.containerWithEnv("ragent", "ragent", "amqp", 55672, [
+            common.container2("address-controller", controller_image, "amqp", 55674, "http", 8080, "256Mi"),
+            common.containerWithEnv("ragent", ragent_image, "amqp", 55672, [
                       {
                         "name": "CONFIGURATION_SERVICE_HOST",
                         "value": "localhost"
@@ -86,7 +74,7 @@ local common = import "common.jsonnet";
                         "name": "CONFIGURATION_SERVICE_PORT",
                         "value": "5672"
                       }], "64Mi"),
-            common.containerWithEnv("queue-scheduler", "queue-scheduler", "amqp", 55667, [
+            common.containerWithEnv("queue-scheduler", scheduler_image, "amqp", 55667, [
                       {
                         "name": "CONFIGURATION_SERVICE_HOST",
                         "value": "localhost"
@@ -95,7 +83,7 @@ local common = import "common.jsonnet";
                         "name": "CONFIGURATION_SERVICE_PORT",
                         "value": "5672"
                       }], "128Mi"),
-            common.container("configserv", "configserv", "amqp", 5672, "256Mi"),
+            common.container("configserv", configserv_image, "amqp", 5672, "256Mi"),
           ]
         }
       }

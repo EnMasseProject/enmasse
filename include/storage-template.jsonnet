@@ -1,6 +1,9 @@
 local version = std.extVar("VERSION");
 local broker = import "broker.jsonnet";
 local router = import "router.jsonnet";
+local broker_repo = "${BROKER_REPO}";
+local router_repo = "${ROUTER_REPO}";
+local forwarder_repo = "${TOPIC_FORWARDER_REPO}";
 local forwarder = import "forwarder.jsonnet";
 {
   template(multicast, persistence, secure)::
@@ -20,8 +23,8 @@ local forwarder = import "forwarder.jsonnet";
       },
 
       local controller = {
-        "apiVersion": "v1",
-        "kind": "DeploymentConfig",
+        "apiVersion": "extensions/v1beta1",
+        "kind": "Deployment",
         "metadata": {
           "name": "${NAME}",
           "labels": {
@@ -32,59 +35,6 @@ local forwarder = import "forwarder.jsonnet";
         },
         "spec": {
           "replicas": 1,
-          "selector": {
-            "group_id": "${NAME}",
-            "role": "broker"
-          },
-          local commonTriggers = [
-            {
-              "type": "ConfigChange"
-            },
-            {
-              "type": "ImageChange",
-              "imageChangeParams": {
-                "automatic": true,
-                "containerNames": [
-                  "broker"
-                ],
-                "from": {
-                  "kind": "ImageStreamTag",
-                  "name": "artemis:" + version
-                }
-              }
-            }
-          ],
-          local multicastTriggers = [
-            {
-              "type": "ImageChange",
-              "imageChangeParams": {
-                "automatic": true,
-                "containerNames": [
-                  "router"
-                ],
-                "from": {
-                  "kind": "ImageStreamTag",
-                  "name": "router:" + version
-                }
-              }
-            },
-            {
-              "type": "ImageChange",
-              "imageChangeParams": {
-                "automatic": true,
-                "containerNames": [
-                  "forwarder"
-                ],
-                "from": {
-                  "kind": "ImageStreamTag",
-                  "name": "topic-forwarder:" + version
-                }
-              }
-            }
-          ],
-          "triggers": if multicast
-            then commonTriggers + multicastTriggers
-            else commonTriggers,
           "template": {
             "metadata": {
               "labels": {
@@ -102,8 +52,8 @@ local forwarder = import "forwarder.jsonnet";
                 else [brokerVolume],
 
               "containers": if multicast
-                then [ broker.container(volumeName, addressEnv), router.container(secure, addressEnv, "256Mi"), forwarder.container(addressEnv) ]
-                else [ broker.container(volumeName, addressEnv) ]
+                then [ broker.container(volumeName, broker_repo, addressEnv), router.container(secure, router_repo, addressEnv, "256Mi"), forwarder.container(forwarder_repo, addressEnv) ]
+                else [ broker.container(volumeName, broker_repo, addressEnv) ]
             }
           }
         }

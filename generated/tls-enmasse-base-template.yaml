@@ -13,8 +13,8 @@ objects:
       app: enmasse
     name: tls-queue-inmemory
   objects:
-  - apiVersion: v1
-    kind: DeploymentConfig
+  - apiVersion: extensions/v1beta1
+    kind: Deployment
     metadata:
       labels:
         address_config: address-config-${NAME}
@@ -23,9 +23,6 @@ objects:
       name: "${NAME}"
     spec:
       replicas: 1
-      selector:
-        group_id: "${NAME}"
-        role: broker
       template:
         metadata:
           labels:
@@ -39,7 +36,7 @@ objects:
               value: "${ADDRESS}"
             - name: GROUP_ID
               value: "${NAME}"
-            image: artemis
+            image: "${BROKER_REPO}:latest"
             lifecycle:
               preStop:
                 exec:
@@ -63,16 +60,6 @@ objects:
           - name: ssl-certs
             secret:
               secretName: qdrouterd-certs
-      triggers:
-      - type: ConfigChange
-      - imageChangeParams:
-          automatic: true
-          containerNames:
-          - broker
-          from:
-            kind: ImageStreamTag
-            name: artemis:latest
-        type: ImageChange
   - apiVersion: v1
     data:
       "${ADDRESS}": '{"store_and_forward": true, "multicast": false}'
@@ -116,8 +103,8 @@ objects:
       resources:
         requests:
           storage: "${STORAGE_CAPACITY}"
-  - apiVersion: v1
-    kind: DeploymentConfig
+  - apiVersion: extensions/v1beta1
+    kind: Deployment
     metadata:
       labels:
         address_config: address-config-${NAME}
@@ -126,9 +113,6 @@ objects:
       name: "${NAME}"
     spec:
       replicas: 1
-      selector:
-        group_id: "${NAME}"
-        role: broker
       template:
         metadata:
           labels:
@@ -142,7 +126,7 @@ objects:
               value: "${ADDRESS}"
             - name: GROUP_ID
               value: "${NAME}"
-            image: artemis
+            image: "${BROKER_REPO}:latest"
             lifecycle:
               preStop:
                 exec:
@@ -167,16 +151,6 @@ objects:
           - name: ssl-certs
             secret:
               secretName: qdrouterd-certs
-      triggers:
-      - type: ConfigChange
-      - imageChangeParams:
-          automatic: true
-          containerNames:
-          - broker
-          from:
-            kind: ImageStreamTag
-            name: artemis:latest
-        type: ImageChange
   - apiVersion: v1
     data:
       "${ADDRESS}": '{"store_and_forward": true, "multicast": false}'
@@ -207,8 +181,8 @@ objects:
       app: enmasse
     name: tls-topic-inmemory
   objects:
-  - apiVersion: v1
-    kind: DeploymentConfig
+  - apiVersion: extensions/v1beta1
+    kind: Deployment
     metadata:
       labels:
         address_config: address-config-${NAME}
@@ -217,9 +191,6 @@ objects:
       name: "${NAME}"
     spec:
       replicas: 1
-      selector:
-        group_id: "${NAME}"
-        role: broker
       template:
         metadata:
           labels:
@@ -233,7 +204,7 @@ objects:
               value: "${ADDRESS}"
             - name: GROUP_ID
               value: "${NAME}"
-            image: artemis
+            image: "${BROKER_REPO}:latest"
             lifecycle:
               preStop:
                 exec:
@@ -256,7 +227,7 @@ objects:
               value: "${ROUTER_LINK_CAPACITY}"
             - name: TOPIC_NAME
               value: "${ADDRESS}"
-            image: router
+            image: "${ROUTER_REPO}:latest"
             livenessProbe:
               tcpSocket:
                 port: amqp
@@ -283,7 +254,7 @@ objects:
           - env:
             - name: TOPIC_NAME
               value: "${ADDRESS}"
-            image: topic-forwarder
+            image: "${TOPIC_FORWARDER_REPO}:latest"
             livenessProbe:
               httpGet:
                 path: "/health"
@@ -303,32 +274,6 @@ objects:
           - name: ssl-certs
             secret:
               secretName: qdrouterd-certs
-      triggers:
-      - type: ConfigChange
-      - imageChangeParams:
-          automatic: true
-          containerNames:
-          - broker
-          from:
-            kind: ImageStreamTag
-            name: artemis:latest
-        type: ImageChange
-      - imageChangeParams:
-          automatic: true
-          containerNames:
-          - router
-          from:
-            kind: ImageStreamTag
-            name: router:latest
-        type: ImageChange
-      - imageChangeParams:
-          automatic: true
-          containerNames:
-          - forwarder
-          from:
-            kind: ImageStreamTag
-            name: topic-forwarder:latest
-        type: ImageChange
   - apiVersion: v1
     data:
       "${ADDRESS}": '{"store_and_forward": true, "multicast": true}'
@@ -372,8 +317,8 @@ objects:
       resources:
         requests:
           storage: "${STORAGE_CAPACITY}"
-  - apiVersion: v1
-    kind: DeploymentConfig
+  - apiVersion: extensions/v1beta1
+    kind: Deployment
     metadata:
       labels:
         address_config: address-config-${NAME}
@@ -382,9 +327,6 @@ objects:
       name: "${NAME}"
     spec:
       replicas: 1
-      selector:
-        group_id: "${NAME}"
-        role: broker
       template:
         metadata:
           labels:
@@ -398,7 +340,7 @@ objects:
               value: "${ADDRESS}"
             - name: GROUP_ID
               value: "${NAME}"
-            image: artemis
+            image: "${BROKER_REPO}:latest"
             lifecycle:
               preStop:
                 exec:
@@ -421,7 +363,7 @@ objects:
               value: "${ROUTER_LINK_CAPACITY}"
             - name: TOPIC_NAME
               value: "${ADDRESS}"
-            image: router
+            image: "${ROUTER_REPO}:latest"
             livenessProbe:
               tcpSocket:
                 port: amqp
@@ -448,7 +390,7 @@ objects:
           - env:
             - name: TOPIC_NAME
               value: "${ADDRESS}"
-            image: topic-forwarder
+            image: "${TOPIC_FORWARDER_REPO}:latest"
             livenessProbe:
               httpGet:
                 path: "/health"
@@ -469,32 +411,6 @@ objects:
           - name: ssl-certs
             secret:
               secretName: qdrouterd-certs
-      triggers:
-      - type: ConfigChange
-      - imageChangeParams:
-          automatic: true
-          containerNames:
-          - broker
-          from:
-            kind: ImageStreamTag
-            name: artemis:latest
-        type: ImageChange
-      - imageChangeParams:
-          automatic: true
-          containerNames:
-          - router
-          from:
-            kind: ImageStreamTag
-            name: router:latest
-        type: ImageChange
-      - imageChangeParams:
-          automatic: true
-          containerNames:
-          - forwarder
-          from:
-            kind: ImageStreamTag
-            name: topic-forwarder:latest
-        type: ImageChange
   - apiVersion: v1
     data:
       "${ADDRESS}": '{"store_and_forward": true, "multicast": true}'
@@ -559,23 +475,8 @@ objects:
     to:
       kind: Service
       name: restapi
-- apiVersion: v1
-  kind: ImageStream
-  metadata:
-    labels:
-      app: enmasse
-    name: router
-  spec:
-    dockerImageRepository: "${ROUTER_REPO}"
-    importPolicy:
-      scheduled: true
-    tags:
-    - from:
-        kind: DockerImage
-        name: "${ROUTER_REPO}:latest"
-      name: latest
-- apiVersion: v1
-  kind: DeploymentConfig
+- apiVersion: extensions/v1beta1
+  kind: Deployment
   metadata:
     labels:
       app: enmasse
@@ -583,8 +484,6 @@ objects:
     name: qdrouterd
   spec:
     replicas: 1
-    selector:
-      name: qdrouterd
     template:
       metadata:
         labels:
@@ -596,7 +495,7 @@ objects:
         - env:
           - name: LINK_CAPACITY
             value: "${ROUTER_LINK_CAPACITY}"
-          image: router
+          image: "${ROUTER_REPO}:latest"
           livenessProbe:
             tcpSocket:
               port: amqp
@@ -619,46 +518,6 @@ objects:
         - name: ssl-certs
           secret:
             secretName: qdrouterd-certs
-    triggers:
-    - type: ConfigChange
-    - imageChangeParams:
-        automatic: true
-        containerNames:
-        - router
-        from:
-          kind: ImageStreamTag
-          name: router:latest
-      type: ImageChange
-- apiVersion: v1
-  kind: ImageStream
-  metadata:
-    labels:
-      app: enmasse
-    name: artemis
-  spec:
-    dockerImageRepository: "${BROKER_REPO}"
-    importPolicy:
-      scheduled: true
-    tags:
-    - from:
-        kind: DockerImage
-        name: "${BROKER_REPO}:latest"
-      name: latest
-- apiVersion: v1
-  kind: ImageStream
-  metadata:
-    labels:
-      app: enmasse
-    name: topic-forwarder
-  spec:
-    dockerImageRepository: "${TOPIC_FORWARDER_REPO}"
-    importPolicy:
-      scheduled: true
-    tags:
-    - from:
-        kind: DockerImage
-        name: "${TOPIC_FORWARDER_REPO}:latest"
-      name: latest
 - apiVersion: v1
   kind: Service
   metadata:
@@ -684,23 +543,8 @@ objects:
       targetPort: 55673
     selector:
       capability: router
-- apiVersion: v1
-  kind: ImageStream
-  metadata:
-    labels:
-      app: enmasse
-    name: configserv
-  spec:
-    dockerImageRepository: "${CONFIGSERV_REPO}"
-    importPolicy:
-      scheduled: true
-    tags:
-    - from:
-        kind: DockerImage
-        name: "${CONFIGSERV_REPO}:latest"
-      name: latest
-- apiVersion: v1
-  kind: DeploymentConfig
+- apiVersion: extensions/v1beta1
+  kind: Deployment
   metadata:
     labels:
       app: enmasse
@@ -708,8 +552,6 @@ objects:
     name: configserv
   spec:
     replicas: 1
-    selector:
-      name: configserv
     template:
       metadata:
         labels:
@@ -717,24 +559,20 @@ objects:
           name: configserv
       spec:
         containers:
-        - image: configserv
+        - image: "${CONFIGSERV_REPO}:latest"
           livenessProbe:
             tcpSocket:
               port: amqp
-          name: bridge
+          name: configserv
           ports:
           - containerPort: 5672
             name: amqp
-    triggers:
-    - type: ConfigChange
-    - imageChangeParams:
-        automatic: true
-        containerNames:
-        - bridge
-        from:
-          kind: ImageStreamTag
-          name: configserv:latest
-      type: ImageChange
+            protocol: TCP
+          resources:
+            limits:
+              memory: 128Mi
+            requests:
+              memory: 128Mi
 - apiVersion: v1
   kind: Service
   metadata:
@@ -749,23 +587,8 @@ objects:
       targetPort: 5672
     selector:
       name: configserv
-- apiVersion: v1
-  kind: ImageStream
-  metadata:
-    labels:
-      app: enmasse
-    name: ragent
-  spec:
-    dockerImageRepository: "${RAGENT_REPO}"
-    importPolicy:
-      scheduled: true
-    tags:
-    - from:
-        kind: DockerImage
-        name: "${RAGENT_REPO}:latest"
-      name: latest
-- apiVersion: v1
-  kind: DeploymentConfig
+- apiVersion: extensions/v1beta1
+  kind: Deployment
   metadata:
     labels:
       app: enmasse
@@ -773,8 +596,6 @@ objects:
     name: ragent
   spec:
     replicas: 1
-    selector:
-      name: ragent
     template:
       metadata:
         labels:
@@ -782,7 +603,7 @@ objects:
           name: ragent
       spec:
         containers:
-        - image: ragent
+        - image: "${RAGENT_REPO}:latest"
           livenessProbe:
             tcpSocket:
               port: amqp
@@ -796,16 +617,6 @@ objects:
               memory: 64Mi
             requests:
               memory: 64Mi
-    triggers:
-    - type: ConfigChange
-    - imageChangeParams:
-        automatic: true
-        containerNames:
-        - ragent
-        from:
-          kind: ImageStreamTag
-          name: ragent:latest
-      type: ImageChange
 - apiVersion: v1
   kind: Service
   metadata:
@@ -820,23 +631,8 @@ objects:
       targetPort: 55672
     selector:
       name: ragent
-- apiVersion: v1
-  kind: ImageStream
-  metadata:
-    labels:
-      app: enmasse
-    name: subserv
-  spec:
-    dockerImageRepository: "${SUBSERV_REPO}"
-    importPolicy:
-      scheduled: true
-    tags:
-    - from:
-        kind: DockerImage
-        name: "${SUBSERV_REPO}:latest"
-      name: latest
-- apiVersion: v1
-  kind: DeploymentConfig
+- apiVersion: extensions/v1beta1
+  kind: Deployment
   metadata:
     labels:
       app: enmasse
@@ -844,8 +640,6 @@ objects:
     name: subserv
   spec:
     replicas: 1
-    selector:
-      name: subserv
     template:
       metadata:
         labels:
@@ -853,7 +647,7 @@ objects:
           name: subserv
       spec:
         containers:
-        - image: subserv
+        - image: "${SUBSERV_REPO}:latest"
           livenessProbe:
             tcpSocket:
               port: amqp
@@ -867,16 +661,6 @@ objects:
               memory: 64Mi
             requests:
               memory: 64Mi
-    triggers:
-    - type: ConfigChange
-    - imageChangeParams:
-        automatic: true
-        containerNames:
-        - subserv
-        from:
-          kind: ImageStreamTag
-          name: subserv:latest
-      type: ImageChange
 - apiVersion: v1
   kind: Service
   metadata:
@@ -905,8 +689,8 @@ objects:
       targetPort: 55667
     selector:
       name: queue-scheduler
-- apiVersion: v1
-  kind: DeploymentConfig
+- apiVersion: extensions/v1beta1
+  kind: Deployment
   metadata:
     labels:
       app: enmasse
@@ -914,8 +698,6 @@ objects:
     name: queue-scheduler
   spec:
     replicas: 1
-    selector:
-      name: queue-scheduler
     template:
       metadata:
         labels:
@@ -923,7 +705,7 @@ objects:
           name: queue-scheduler
       spec:
         containers:
-        - image: queue-scheduler
+        - image: "${QUEUE_SCHEDULER_REPO}:latest"
           livenessProbe:
             tcpSocket:
               port: amqp
@@ -937,48 +719,8 @@ objects:
               memory: 128Mi
             requests:
               memory: 128Mi
-    triggers:
-    - type: ConfigChange
-    - imageChangeParams:
-        automatic: true
-        containerNames:
-        - queue-scheduler
-        from:
-          kind: ImageStreamTag
-          name: queue-scheduler:latest
-      type: ImageChange
-- apiVersion: v1
-  kind: ImageStream
-  metadata:
-    labels:
-      app: enmasse
-    name: queue-scheduler
-  spec:
-    dockerImageRepository: "${QUEUE_SCHEDULER_REPO}"
-    importPolicy:
-      scheduled: true
-    tags:
-    - from:
-        kind: DockerImage
-        name: "${QUEUE_SCHEDULER_REPO}:latest"
-      name: latest
-- apiVersion: v1
-  kind: ImageStream
-  metadata:
-    labels:
-      app: enmasse
-    name: mqtt-gateway
-  spec:
-    dockerImageRepository: "${MQTT_GATEWAY_REPO}"
-    importPolicy:
-      scheduled: true
-    tags:
-    - from:
-        kind: DockerImage
-        name: "${MQTT_GATEWAY_REPO}:latest"
-      name: latest
-- apiVersion: v1
-  kind: DeploymentConfig
+- apiVersion: extensions/v1beta1
+  kind: Deployment
   metadata:
     labels:
       app: enmasse
@@ -986,8 +728,6 @@ objects:
     name: mqtt-gateway
   spec:
     replicas: 1
-    selector:
-      name: mqtt-gateway
     template:
       metadata:
         labels:
@@ -995,7 +735,7 @@ objects:
           name: mqtt-gateway
       spec:
         containers:
-        - image: mqtt-gateway
+        - image: "${MQTT_GATEWAY_REPO}:latest"
           livenessProbe:
             initialDelaySeconds: 60
             tcpSocket:
@@ -1009,7 +749,7 @@ objects:
           - mountPath: "/etc/mqtt-gateway/ssl"
             name: ssl-certs
             readOnly: true
-        - image: mqtt-gateway
+        - image: "${MQTT_GATEWAY_REPO}:latest"
           livenessProbe:
             initialDelaySeconds: 60
             tcpSocket:
@@ -1023,24 +763,6 @@ objects:
         - name: ssl-certs
           secret:
             secretName: mqtt-certs
-    triggers:
-    - type: ConfigChange
-    - imageChangeParams:
-        automatic: true
-        containerNames:
-        - mqtt-gateway
-        from:
-          kind: ImageStreamTag
-          name: mqtt-gateway:latest
-      type: ImageChange
-    - imageChangeParams:
-        automatic: true
-        containerNames:
-        - mqtt-gateway-tls
-        from:
-          kind: ImageStreamTag
-          name: mqtt-gateway:latest
-      type: ImageChange
 - apiVersion: v1
   kind: Service
   metadata:

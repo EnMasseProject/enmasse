@@ -1,14 +1,12 @@
 local version = std.extVar("VERSION");
 local common = import "common.jsonnet";
 {
-  imagestream(image_name)::
-    common.imagestream("queue-scheduler", image_name),
   service::
     common.service("queue-scheduler", "queue-scheduler", "amqp", 55667, 55667),
-  deployment::
+  deployment(image_repo)::
     {
-      "apiVersion": "v1",
-      "kind": "DeploymentConfig",
+      "apiVersion": "extensions/v1beta1",
+      "kind": "Deployment",
       "metadata": {
         "labels": {
           "name": "queue-scheduler",
@@ -18,15 +16,6 @@ local common = import "common.jsonnet";
       },
       "spec": {
         "replicas": 1,
-        "selector": {
-          "name": "queue-scheduler"
-        },
-        "triggers": [
-          {
-            "type": "ConfigChange"
-          },
-          common.trigger("queue-scheduler", "queue-scheduler")
-        ],
         "template": {
           "metadata": {
             "labels": {
@@ -36,7 +25,7 @@ local common = import "common.jsonnet";
           },
           "spec": {
             "containers": [
-              common.container("queue-scheduler", "queue-scheduler", "amqp", 55667, "128Mi")
+              common.container("queue-scheduler", image_repo, "amqp", 55667, "128Mi")
             ]
           }
         }

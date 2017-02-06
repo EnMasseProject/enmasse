@@ -2,10 +2,10 @@ local version = std.extVar("VERSION");
 local router = import "router.jsonnet";
 local common = import "common.jsonnet";
 { 
-  deployment(secure)::
+  deployment(secure, image_repo)::
     {
-      "apiVersion": "v1",
-      "kind": "DeploymentConfig",
+      "apiVersion": "extensions/v1beta1",
+      "kind": "Deployment",
       "metadata": {
         "labels": {
           "name": "qdrouterd",
@@ -15,15 +15,6 @@ local common = import "common.jsonnet";
       },
       "spec": {
         "replicas": 1,
-        "selector": {
-          "name": "qdrouterd"
-        },
-        "triggers": [
-          {
-            "type": "ConfigChange"
-          },
-          common.trigger("router", "router")
-        ],
         "template": {
           "metadata": {
             "labels": {
@@ -33,7 +24,7 @@ local common = import "common.jsonnet";
             }
           },
           "spec": {
-            "containers": [ router.container(secure, "", "") ],
+            "containers": [ router.container(secure, image_repo, "", "") ],
             [if secure then "volumes" ]: [
               router.secret_volume()
             ]

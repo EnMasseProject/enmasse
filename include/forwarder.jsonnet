@@ -1,12 +1,11 @@
+local version = std.extVar("VERSION");
 local common = import "common.jsonnet";
 {
-  imagestream(image_name)::
-    common.imagestream("topic-forwarder", image_name),
-  container(addressEnv)::
+  container(image_repo, addressEnv)::
     {
       "name": "forwarder",
       "env": [ addressEnv ],
-      "image": "topic-forwarder",
+      "image": image_repo + ":" + version,
       "resources": {
           "requests": {
               "memory": "128Mi"

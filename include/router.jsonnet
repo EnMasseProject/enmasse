@@ -1,9 +1,7 @@
+local version = std.extVar("VERSION");
 local common = import "common.jsonnet";
 {
-  imagestream(image_name)::
-    common.imagestream("router", image_name),
-
-  container(secure, addressEnv, mem_request)::
+  container(secure, image_repo, addressEnv, mem_request)::
     local routerPort = {
         "name": "amqp",
         "containerPort": 5672,
@@ -28,7 +26,7 @@ local common = import "common.jsonnet";
         }
     };
     {
-      "image": "router",
+      "image": image_repo + ":" + version,
       "name": "router",
       local linkEnv = {
           "name": "LINK_CAPACITY",

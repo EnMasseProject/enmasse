@@ -1,50 +1,8 @@
 local version = std.extVar("VERSION");
 {
-  imagestream(name, repo)::
-  {
-    "apiVersion": "v1",
-    "kind": "ImageStream",
-    "metadata": {
-      "labels": {
-        "app": "enmasse"
-      },
-      "name": name
-    },
-    "spec": {
-      "dockerImageRepository": repo, 
-      "tags": [
-        {
-          "name": version,
-          "from": {
-            "kind": "DockerImage",
-            "name": repo + ":" + version
-          }
-        }
-      ],
-      "importPolicy": {
-        "scheduled": true
-      }
-    }
-  },
-
-  trigger(name, image)::
-  {
-    "type": "ImageChange",
-    "imageChangeParams": {
-      "automatic": true,
-      "containerNames": [
-        name
-      ],
-      "from": {
-        "kind": "ImageStreamTag",
-        "name": image + ":" + version
-      }
-    }
-  },
-
   container(name, image, port_name, port, mem_request)::
   {
-    "image": name,
+    "image": image + ":" + version,
     "name": name,
     "resources": {
         "requests": {
@@ -70,7 +28,7 @@ local version = std.extVar("VERSION");
 
   containerWithEnv(name, image, port_name, port, env, mem_request)::
   {
-    "image": name,
+    "image": image + ":" + version,
     "name": name,
     "resources": {
         "requests": {
@@ -97,7 +55,7 @@ local version = std.extVar("VERSION");
 
   container2(name, image, port_name, port, port2_name, port2_port, mem_request)::
   {
-    "image": name,
+    "image": image + ":" + version,
     "name": name,
     "resources": {
         "requests": {
