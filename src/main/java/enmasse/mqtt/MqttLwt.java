@@ -16,8 +16,11 @@
 
 package enmasse.mqtt;
 
+import enmasse.mqtt.endpoints.AmqpLwtEndpoint;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
+import io.vertx.proton.ProtonClient;
+import io.vertx.proton.ProtonConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -31,9 +34,62 @@ public class MqttLwt extends AbstractVerticle {
 
     private static final Logger LOG = LoggerFactory.getLogger(MqttLwt.class);
 
+    private static final String CONTAINER_ID = "lwt-service";
+
     // connection info to the messaging service
     private String messagingServiceHost;
     private int messagingServiceInternalPort;
+
+    private ProtonClient client;
+
+    private AmqpLwtEndpoint lwtEndpoint;
+
+    @Override
+    public void start(Future<Void> startFuture) throws Exception {
+
+        LOG.info("Starting MQTT LWT service verticle...");
+        this.connect(startFuture);
+    }
+
+    @Override
+    public void stop(Future<Void> stopFuture) throws Exception {
+
+        this.lwtEndpoint.close();
+        LOG.info("Stopping MQTT LWT service verticle...");
+        stopFuture.complete();
+    }
+
+    /**
+     * Connect to the AMQP messaging network
+     *
+     * @param startFuture
+     */
+    private void connect(Future<Void> startFuture) {
+
+        this.client = ProtonClient.create(this.vertx);
+
+        this.client.connect(this.messagingServiceHost, this.messagingServiceInternalPort, done -> {
+
+            if (done.succeeded()) {
+
+                LOG.info("MQTT LWT service started successfully ...");
+
+                ProtonConnection connection = done.result();
+                connection.setContainer(CONTAINER_ID);
+
+                // TODO
+                this.lwtEndpoint = new AmqpLwtEndpoint(connection);
+                this.lwtEndpoint.open();
+
+                startFuture.complete();
+
+            } else {
+
+                LOG.error("Error starting the MQTT LWT service ...", done.cause());
+                startFuture.fail(done.cause());
+            }
+        });
+    }
 
     /**
      * Set the address for connecting to the AMQP internal network
@@ -57,19 +113,5 @@ public class MqttLwt extends AbstractVerticle {
     public MqttLwt setMessagingServiceInternalPort(int messagingServiceInternalPort) {
         this.messagingServiceInternalPort = messagingServiceInternalPort;
         return this;
-    }
-
-    @Override
-    public void start(Future<Void> startFuture) throws Exception {
-
-        LOG.info("Starting MQTT LWT service verticle...");
-        // TODO
-    }
-
-    @Override
-    public void stop(Future<Void> stopFuture) throws Exception {
-
-        LOG.info("Stopping MQTT LWT service verticle...");
-        // TODO
     }
 }
