@@ -64,7 +64,7 @@ public class DisconnectionTest extends MockMqttGatewayTestBase {
 
         Async async = context.async();
 
-        this.willService.willHandler(b -> {
+        this.lwtService.willHandler(b -> {
 
             async.complete();
         });
@@ -203,7 +203,7 @@ public class DisconnectionTest extends MockMqttGatewayTestBase {
 
         // workaround for testing "brute disconnection" ignoring the DISCONNECT
         // Eclipse Paho doesn't provide a way to close connection without sending DISCONNECT
-        // The mock Will Service will not clear the will message for this "ignore-disconnect" client
+        // The mock Last Will and Testament Service will not clear the will message for this "ignore-disconnect" client
         MqttClient client = new MqttClient(String.format("tcp://%s:%d", MQTT_BIND_ADDRESS, MQTT_LISTEN_PORT), WILL_CLIENT_ID, persistence);
         client.connect(options);
 

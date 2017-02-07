@@ -207,7 +207,7 @@ public class MockBroker extends AbstractVerticle {
                     ebMessage.reply(jsonArray);
                 });
 
-                // consumer for will requests from Will Service
+                // consumer for will requests from Last Will and Testament Service
                 this.vertx.eventBus().consumer(EB_WILL, ebMessage -> {
 
                     String willAction = ebMessage.headers().get(EB_WILL_ACTION_HEADER);

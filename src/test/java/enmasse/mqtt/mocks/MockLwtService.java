@@ -37,15 +37,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Mock for the Will Service
+ * Mock for the Last Will and Testament Service
  */
-public class MockWillService extends AbstractVerticle {
+public class MockLwtService extends AbstractVerticle {
 
-    private static final Logger LOG = LoggerFactory.getLogger(MockWillService.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MockLwtService.class);
 
     private static final Symbol AMQP_DETACH_FORCED = Symbol.valueOf("amqp:link:detach-forced");
-    private static final String WILL_SERVICE_ENDPOINT = "$mqtt.willservice";
-    private static final String CONTAINER_ID = "will-service";
+    private static final String LWT_SERVICE_ENDPOINT = "$lwt";
+    private static final String CONTAINER_ID = "lwt-service";
 
     private String internalServiceHost;
     private int internalServicePort;
@@ -66,7 +66,7 @@ public class MockWillService extends AbstractVerticle {
 
             if (done.succeeded()) {
 
-                LOG.info("Will Service started successfully ...");
+                LOG.info("Last Will and Testament Service started successfully ...");
 
                 this.connection = done.result();
                 this.connection.setContainer(CONTAINER_ID);
@@ -80,7 +80,7 @@ public class MockWillService extends AbstractVerticle {
 
             } else {
 
-                LOG.error("Error starting the Will Service ...", done.cause());
+                LOG.error("Error starting the Last Will and Testament Service ...", done.cause());
 
                 startFuture.fail(done.cause());
             }
@@ -91,14 +91,14 @@ public class MockWillService extends AbstractVerticle {
     public void stop(Future<Void> stopFuture) throws Exception {
 
         this.connection.close();
-        LOG.info("Will Service has been shut down successfully");
+        LOG.info("Last Will and Testament Service has been shut down successfully");
         stopFuture.complete();
     }
 
     private void receiverHandler(ProtonReceiver receiver) {
 
-        // Will Service supports only the control address
-        if (!receiver.getRemoteTarget().getAddress().equals(WILL_SERVICE_ENDPOINT)) {
+        // Last Will and Testament Service supports only the control address
+        if (!receiver.getRemoteTarget().getAddress().equals(LWT_SERVICE_ENDPOINT)) {
 
             ErrorCondition error = new ErrorCondition(LinkError.DETACH_FORCED, "The endpoint provided is not supported");
             receiver
@@ -206,9 +206,9 @@ public class MockWillService extends AbstractVerticle {
      * Set the address for connecting to the AMQP services
      *
      * @param internalServiceHost    address for AMQP connections
-     * @return  current Mock Will Service instance
+     * @return  current Mock Last Will and Testament Service instance
      */
-    public MockWillService setInternalServiceHost(String internalServiceHost) {
+    public MockLwtService setInternalServiceHost(String internalServiceHost) {
         this.internalServiceHost = internalServiceHost;
         return this;
     }
@@ -217,9 +217,9 @@ public class MockWillService extends AbstractVerticle {
      * Set the port for connecting to the AMQP services
      *
      * @param internalServicePort   port for AMQP connections
-     * @return  current Mock Will Service instance
+     * @return  current Mock Last Will and Testament Service instance
      */
-    public MockWillService setInternalServicePort(int internalServicePort) {
+    public MockLwtService setInternalServicePort(int internalServicePort) {
         this.internalServicePort = internalServicePort;
         return this;
     }
@@ -231,7 +231,7 @@ public class MockWillService extends AbstractVerticle {
      * @param handler
      * @return
      */
-    public MockWillService willHandler(Handler<Boolean> handler) {
+    public MockLwtService willHandler(Handler<Boolean> handler) {
         this.willHandler = handler;
         return this;
     }

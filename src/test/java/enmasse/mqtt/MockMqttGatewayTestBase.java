@@ -18,7 +18,7 @@ package enmasse.mqtt;
 
 import enmasse.mqtt.mocks.MockBroker;
 import enmasse.mqtt.mocks.MockSubscriptionService;
-import enmasse.mqtt.mocks.MockWillService;
+import enmasse.mqtt.mocks.MockLwtService;
 import io.vertx.core.Vertx;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
@@ -48,7 +48,7 @@ public abstract class MockMqttGatewayTestBase {
     private static final String SERVER_CERT = "./src/test/resources/tls/server-cert.pem";
 
     protected Vertx vertx;
-    protected MockWillService willService;
+    protected MockLwtService lwtService;
     protected MockSubscriptionService subscriptionService;
     protected MockBroker broker;
     protected MqttGateway mqttGateway;
@@ -85,9 +85,9 @@ public abstract class MockMqttGatewayTestBase {
                 .setInternalServiceHost(INTERNAL_SERVICE_HOST)
                 .setInternalServicePort(INTERNAL_SERVICE_PORT);
 
-        // create and setup mock Will Service instance
-        this.willService = new MockWillService();
-        this.willService
+        // create and setup mock Last Will and Testament Service instance
+        this.lwtService = new MockLwtService();
+        this.lwtService
                 .setInternalServiceHost(INTERNAL_SERVICE_HOST)
                 .setInternalServicePort(INTERNAL_SERVICE_PORT);
 
@@ -99,7 +99,7 @@ public abstract class MockMqttGatewayTestBase {
 
         // start and deploy components
         this.vertx.deployVerticle(this.broker, context.asyncAssertSuccess());
-        this.vertx.deployVerticle(this.willService, context.asyncAssertSuccess());
+        this.vertx.deployVerticle(this.lwtService, context.asyncAssertSuccess());
         this.vertx.deployVerticle(this.subscriptionService, context.asyncAssertSuccess());
         this.vertx.deployVerticle(this.mqttGateway, context.asyncAssertSuccess());
     }

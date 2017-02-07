@@ -22,7 +22,7 @@ import enmasse.mqtt.endpoints.AmqpPublisher;
 import enmasse.mqtt.endpoints.AmqpReceiver;
 import enmasse.mqtt.endpoints.AmqpReceiverEndpoint;
 import enmasse.mqtt.endpoints.AmqpSubscriptionServiceEndpoint;
-import enmasse.mqtt.endpoints.AmqpWillServiceEndpoint;
+import enmasse.mqtt.endpoints.AmqpLwtServiceEndpoint;
 import enmasse.mqtt.messages.AmqpCloseMessage;
 import enmasse.mqtt.messages.AmqpListMessage;
 import enmasse.mqtt.messages.AmqpPublishMessage;
@@ -79,8 +79,8 @@ public class AmqpBridge {
     // local endpoint for handling remote connected MQTT client
     private MqttEndpoint mqttEndpoint;
 
-    // endpoint for handling communication with Will Service (WS)
-    private AmqpWillServiceEndpoint wsEndpoint;
+    // endpoint for handling communication with Last Will and Testament Service (LWTS)
+    private AmqpLwtServiceEndpoint lwtEndpoint;
     // endpoint for handling communication with Subscription Service (SS)
     private AmqpSubscriptionServiceEndpoint ssEndpoint;
     // endpoint for handling incoming messages on the unique client address
@@ -175,7 +175,7 @@ public class AmqpBridge {
 
                 });
 
-                // step 1 : send AMQP_WILL to Will Service
+                // step 1 : send AMQP_WILL to Last Will and Testament Service
                 Future<ProtonDelivery> willFuture = Future.future();
                 // if remote MQTT has specified the will
                 if (this.mqttEndpoint.will().isWillFlag()) {
@@ -189,16 +189,16 @@ public class AmqpBridge {
                                     MqttQoS.valueOf(will.willQos()),
                                     Buffer.buffer(will.willMessage()));
 
-                    // specified link name for the Will Service as MQTT clientid
+                    // specified link name for the Last Will and Testament Service as MQTT clientid
                     ProtonLinkOptions linkOptions = new ProtonLinkOptions();
                     linkOptions.setLinkName(this.mqttEndpoint.clientIdentifier());
 
-                    // setup and open AMQP endpoints to Will Service
-                    ProtonSender wsSender = this.connection.createSender(AmqpWillServiceEndpoint.WILL_SERVICE_ENDPOINT, linkOptions);
-                    this.wsEndpoint = new AmqpWillServiceEndpoint(wsSender);
+                    // setup and open AMQP endpoints to Last Will and Testament Service
+                    ProtonSender wsSender = this.connection.createSender(AmqpLwtServiceEndpoint.LWT_SERVICE_ENDPOINT, linkOptions);
+                    this.lwtEndpoint = new AmqpLwtServiceEndpoint(wsSender);
 
-                    this.wsEndpoint.open();
-                    this.wsEndpoint.sendWill(amqpWillMessage, willFuture.completer());
+                    this.lwtEndpoint.open();
+                    this.lwtEndpoint.sendWill(amqpWillMessage, willFuture.completer());
 
                 } else {
 
@@ -277,8 +277,8 @@ public class AmqpBridge {
      */
     public void close() {
 
-        if (this.wsEndpoint != null)
-            this.wsEndpoint.close(false);
+        if (this.lwtEndpoint != null)
+            this.lwtEndpoint.close(false);
 
         this.ssEndpoint.close();
         this.rcvEndpoint.close();
@@ -485,8 +485,8 @@ public class AmqpBridge {
 
         LOG.info("DISCONNECT from MQTT client {}", this.mqttEndpoint.clientIdentifier());
 
-        if (this.wsEndpoint != null) {
-            this.wsEndpoint.close(false);
+        if (this.lwtEndpoint != null) {
+            this.lwtEndpoint.close(false);
         }
     }
 
@@ -499,8 +499,8 @@ public class AmqpBridge {
 
         LOG.info("Close from MQTT client {}", this.mqttEndpoint.clientIdentifier());
 
-        if (this.wsEndpoint != null)
-            this.wsEndpoint.close(true);
+        if (this.lwtEndpoint != null)
+            this.lwtEndpoint.close(true);
 
         this.handleMqttEndpointClose(this);
     }
@@ -594,7 +594,7 @@ public class AmqpBridge {
      */
     private void setupAmqpEndpoits() {
 
-        // NOTE : Will Service endpoint is opened only if MQTT client provides will information
+        // NOTE : Last Will and Testament Service endpoint is opened only if MQTT client provides will information
         //        The receiver on the unique client publish address will be opened only after
         //        connection is established (and CONNACK sent to the MQTT client)
 

@@ -30,7 +30,7 @@ public class Application {
 
     private Vertx vertx;
 
-    private MockWillService willService;
+    private MockLwtService lwtService;
     private MockSubscriptionService subscriptionService;
     private MockBroker broker;
 
@@ -60,9 +60,9 @@ public class Application {
                 .setInternalServiceHost(AMQP_SERVICES_LISTENER_ADDRESS)
                 .setInternalServicePort(AMQP_SERVICES_LISTENER_PORT);
 
-        // create and setup mock Will Service instance
-        this.willService = new MockWillService();
-        this.willService
+        // create and setup mock Last Will and Testament Service instance
+        this.lwtService = new MockLwtService();
+        this.lwtService
                 .setInternalServiceHost(AMQP_SERVICES_LISTENER_ADDRESS)
                 .setInternalServicePort(AMQP_SERVICES_LISTENER_PORT);
 
@@ -74,7 +74,7 @@ public class Application {
 
         // start and deploy components
         this.vertx.deployVerticle(this.broker);
-        this.vertx.deployVerticle(this.willService);
+        this.vertx.deployVerticle(this.lwtService);
         this.vertx.deployVerticle(this.subscriptionService);
     }
 

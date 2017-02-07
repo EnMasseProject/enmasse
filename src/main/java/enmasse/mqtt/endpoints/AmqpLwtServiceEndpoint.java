@@ -26,19 +26,18 @@ import io.vertx.proton.ProtonSender;
 import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.messaging.Accepted;
 import org.apache.qpid.proton.amqp.transport.ErrorCondition;
+import org.apache.qpid.proton.amqp.transport.LinkError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Will Service (WS) endpoint class
+ * Last Will and Testament Service (WS) endpoint class
  */
-public class AmqpWillServiceEndpoint {
+public class AmqpLwtServiceEndpoint {
 
-    private static final Logger LOG = LoggerFactory.getLogger(AmqpWillServiceEndpoint.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AmqpLwtServiceEndpoint.class);
 
-    private static final Symbol AMQP_DETACH_FORCED = Symbol.valueOf("amqp:link:detach-forced");
-
-    public static final String WILL_SERVICE_ENDPOINT = "$mqtt.willservice";
+    public static final String LWT_SERVICE_ENDPOINT = "$lwt";
 
     private ProtonSender sender;
 
@@ -47,7 +46,7 @@ public class AmqpWillServiceEndpoint {
      *
      * @param sender    ProtonSender instance related to control address
      */
-    public AmqpWillServiceEndpoint(ProtonSender sender) {
+    public AmqpLwtServiceEndpoint(ProtonSender sender) {
         this.sender = sender;
     }
 
@@ -56,14 +55,14 @@ public class AmqpWillServiceEndpoint {
      */
     public void open() {
 
-        // attach sender link to $mqtt.willservice
+        // attach sender link to $lwt
         this.sender
                 .setQoS(ProtonQoS.AT_LEAST_ONCE)
                 .open();
     }
 
     /**
-     * Send the AMQP_WILL message to the Will Service
+     * Send the AMQP_WILL message to the Last Will and Testament Service
      *
      * @param amqpWillMessage   AMQP_WILL message
      * @param handler   callback called on message delivered
@@ -93,7 +92,7 @@ public class AmqpWillServiceEndpoint {
 
             if (isDetachForced) {
                 ErrorCondition errorCondition =
-                        new ErrorCondition(AMQP_DETACH_FORCED, "Link detached due to a brute MQTT client disconnection");
+                        new ErrorCondition(LinkError.DETACH_FORCED, "Link detached due to a brute MQTT client disconnection");
                 this.sender.setCondition(errorCondition);
             }
 
