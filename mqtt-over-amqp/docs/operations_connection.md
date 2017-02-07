@@ -2,7 +2,7 @@
 
 ## FE attached links
 
-The FE needs to attach a link with sender role to the Will Service control address. It should have QoS as AT_LEAST_ONCE so with :
+The FE needs to attach a link with sender role to the Last Will and Testament Service control address. It should have QoS as AT_LEAST_ONCE so with :
 
 * rcv-settle-mode : first (0)
 * snd-settle-mode : unsettled (0)
@@ -27,9 +27,9 @@ The FE needs to attach a link with receiver role to the unique client publish ad
 or using "mixed" (2) for the "snd-settle-mode", in order to allow the sender on the other side to send messages both "settle" and "unsettled" on the same link.
 This address is used for receiving published messages.
 
-## "Will" information to Will Service
+## "Will" information to the Last Will and Testament Service
 
-The MQTT client sends a _CONNECT_ message to the FE which extracts "will" information for building the following AMQP message to send to the Will Service.
+The MQTT client sends a _CONNECT_ message to the FE which extracts "will" information for building the following AMQP message to send to the Last Will and Testament Service.
 
 **AMQP_WILL** : sent to the WS in order to provide “will” information.
 
@@ -44,10 +44,10 @@ The MQTT client sends a _CONNECT_ message to the FE which extracts "will" inform
 
 > the MQTT QoS level is copied to the x-opt-mqtt-qos annotation. At same time the "durable" header field is set as FALSE if QoS level is 0, TRUE if QoS level is 1 or 2. When the x-opt-mqtt-qos annotations isn't present (i.e. AMQP_WILL published from a native AMQP client which doesn't add it), fallback to use only "durable" and if it's TRUE consider QoS level 1 as default.
 
-The _AMQP_WILL_ is sent as "unsettled", in order to know that the Will Service has received it (with related disposition).
+The _AMQP_WILL_ is sent as "unsettled", in order to know that the Last Will and Testament Service has received it (with related disposition).
 The relation between the _AMQP_WILL_ message and the related client, at AMQP level, is inferred by the link name attached to the WS control address.
 
-![Connect Will Service](../images/03_connect_ws.png)
+![Connect Last Will and Testament Service](../images/03_connect_ws.png)
 
 The FE attaches a permanent link to the $mqtt.willservice address; the WS maps the link-name with the “will” information provided in order to have a 1-1 relationship between them. See “Disconnection”, in order to know how publishing “will” information could happen on client disconnection.
 
@@ -112,7 +112,7 @@ If the "clean session" from _CONNECT_ packet is TRUE.
 
 ## Reply to MQTT client
 
-Based on the replies from Will Service and mostly Subscription Service, the FE builds the _CONNACK_ message and sends it to the MQTT client.
+Based on the replies from Last Will and Testament Service and mostly Subscription Service, the FE builds the _CONNACK_ message and sends it to the MQTT client.
 
 **CONNACK**
 

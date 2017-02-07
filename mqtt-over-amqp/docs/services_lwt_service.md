@@ -1,6 +1,6 @@
-# Will Service
+# Last Will and Testament Service
 
-The Will Service (WS) has an AMQP receiver on the following control address :
+The Last Will and Testament Service (LWTS) has an AMQP receiver on the following control address :
 
 * $mqtt.willservice
 

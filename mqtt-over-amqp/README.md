@@ -2,7 +2,7 @@
 
 Design and specification for bringing MQTT features over AMQP protocol.
 
-> The main purpose of this specification isn't the simple bridge from MQTT to AMQP but adding native MQTT features on top of AMQP. It means, for example, having "will testament", "retained" messages and client sessions on AMQP so that a pure AMQP client can use them.
+> The main purpose of this specification isn't the simple bridge from MQTT to AMQP but adding native MQTT features on top of AMQP. It means, for example, having "will", "retained" messages and client sessions on AMQP so that a pure AMQP client can use them.
 
 ## Preface
 
@@ -12,7 +12,7 @@ The following documentation has no assumptions on the implementation side. It me
 
 * [Components](docs/components.md)
 * Services
-  * [Will Service](docs/services_will_service.md)
+  * [Last Will and Testament Service](docs/services_lwt_service.md)
   * [Subscription Services](docs/services_subscription_service.md)
 * Operations
   * [Connection](docs/operations_connection.md)
@@ -21,7 +21,7 @@ The following documentation has no assumptions on the implementation side. It me
   * [Publish](docs/operations_publish.md)
   * [Keep alive](docs/operations_keepalive.md)
 * Implementation
-  * [Will Service](docs/implementation_will_service.md)
+  * [Last Will and Testament Service](docs/implementation_lwt_service.md)
   * [Subscription Service](docs/implementation_subscription_service.md)
 
 ## EnMasse implementation

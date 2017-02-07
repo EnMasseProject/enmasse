@@ -1,4 +1,4 @@
-# Will Service
+# Last Will and Testament Service
 
 A possible Implementation could be using a backed queue on a broker at following address :
 
