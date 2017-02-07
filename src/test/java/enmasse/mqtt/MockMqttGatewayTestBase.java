@@ -42,7 +42,7 @@ public abstract class MockMqttGatewayTestBase {
     public static final int MESSAGING_SERVICE_PORT = 5672;
 
     public static final String INTERNAL_SERVICE_HOST = "localhost";
-    public static final int INTERNAL_SERVICE_PORT = 5673;
+    public static final int INTERNAL_SERVICE_PORT = 55673;
 
     private static final String SERVER_KEY = "./src/test/resources/tls/server-key.pem";
     private static final String SERVER_CERT = "./src/test/resources/tls/server-cert.pem";

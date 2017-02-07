@@ -26,7 +26,7 @@ import java.io.IOException;
 public class Application {
 
     public static final String AMQP_SERVICES_LISTENER_ADDRESS = "localhost";
-    public static final int AMQP_SERVICES_LISTENER_PORT = 5673;
+    public static final int AMQP_SERVICES_LISTENER_PORT = 55673;
 
     private Vertx vertx;
 
