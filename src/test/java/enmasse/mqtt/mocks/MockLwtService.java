@@ -43,7 +43,6 @@ public class MockLwtService extends AbstractVerticle {
 
     private static final Logger LOG = LoggerFactory.getLogger(MockLwtService.class);
 
-    private static final Symbol AMQP_DETACH_FORCED = Symbol.valueOf("amqp:link:detach-forced");
     private static final String LWT_SERVICE_ENDPOINT = "$lwt";
     private static final String CONTAINER_ID = "lwt-service";
 
@@ -194,7 +193,7 @@ public class MockLwtService extends AbstractVerticle {
 
             ErrorCondition errorCondition = receiver.getRemoteCondition();
 
-            if ((errorCondition != null) && (AMQP_DETACH_FORCED.equals(errorCondition.getCondition()))) {
+            if ((errorCondition != null) && (errorCondition.getCondition().compareTo(LinkError.DETACH_FORCED) == 0)) {
 
                 // send a delivery request to mock broker; client link name as body
                 this.willAction(receiver.getName(), MockBroker.EB_WILL_ACTION_DELIVERY);
