@@ -17,6 +17,7 @@
 package enmasse.mqtt;
 
 import io.vertx.core.Vertx;
+import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import org.junit.runner.RunWith;
@@ -59,8 +60,7 @@ public class MqttLwtTestBase {
                 .setMessagingServiceInternalPort(INTERNAL_SERVICE_PORT);
 
         if (deploy) {
-            // start and deploy components
-            this.vertx.deployVerticle(this.lwtService, context.asyncAssertSuccess());
+            this.deploy(context);
         }
     }
 
@@ -71,8 +71,13 @@ public class MqttLwtTestBase {
      */
     protected void deploy(TestContext context) {
 
+        Async async = context.async();
+
         // start and deploy components
-        this.vertx.deployVerticle(this.lwtService, context.asyncAssertSuccess());
+        this.vertx.deployVerticle(this.lwtService,
+                context.asyncAssertSuccess(v -> async.complete()));
+
+        async.awaitSuccess();
     }
 
     /**
