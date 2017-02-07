@@ -22,6 +22,8 @@ import io.vertx.ext.unit.junit.VertxUnitRunner;
 import io.vertx.proton.ProtonClient;
 import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.ProtonSender;
+import org.apache.qpid.proton.amqp.Symbol;
+import org.apache.qpid.proton.amqp.transport.LinkError;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -32,6 +34,8 @@ import org.junit.runner.RunWith;
  */
 @RunWith(VertxUnitRunner.class)
 public class ConnectionTest extends MqttLwtTestBase {
+
+    private static final Symbol QD_NO_ROUTE_TO_DESTINATION = Symbol.getSymbol("qd:no-route-to-dest");
 
     @Before
     public void before(TestContext context) {
@@ -49,7 +53,7 @@ public class ConnectionTest extends MqttLwtTestBase {
 
         // deploy the MQTT LWT service
         super.deploy(context);
-        this.attaching(context, LWT_SERVICE_ENDPOINT, true);
+        this.attaching(context, LWT_SERVICE_ENDPOINT, null);
     }
 
     @Test
@@ -60,14 +64,14 @@ public class ConnectionTest extends MqttLwtTestBase {
         // trying to attach a not supported address by MQTT LWT service
         // NOTE : $lwt.wrong passes through the router (link route "prefix" is $lwt)
         //        but it should be refused by the MQTT LWT service
-        this.attaching(context, LWT_SERVICE_ENDPOINT + ".wrong", false);
+        this.attaching(context, LWT_SERVICE_ENDPOINT + ".wrong", LinkError.DETACH_FORCED);
     }
 
     @Test
     public void attachingRouteNotAvailable(TestContext context) {
 
         // MQTT LWT service not deployed, so link route not available
-        this.attaching(context, LWT_SERVICE_ENDPOINT, false);
+        this.attaching(context, LWT_SERVICE_ENDPOINT, QD_NO_ROUTE_TO_DESTINATION);
     }
 
     /**
@@ -75,10 +79,11 @@ public class ConnectionTest extends MqttLwtTestBase {
      *
      * @param context   test context
      * @param address   address to attach
-     * @param expectedSuccess   if success on attaching is expected
+     * @param condition error condition (if testing failure)
      */
-    private void attaching(TestContext context, String address, boolean expectedSuccess) {
+    private void attaching(TestContext context, String address, Symbol condition) {
 
+        boolean expectedSuccess = (condition == null);
         Async async = context.async();
 
         ProtonClient client = ProtonClient.create(this.vertx);
@@ -96,7 +101,8 @@ public class ConnectionTest extends MqttLwtTestBase {
 
                     if (ar.failed()) {
                         LOG.error("Error on attaching link {}", address, ar.cause());
-                        context.assertTrue(!expectedSuccess);
+                        context.assertTrue(!expectedSuccess &&
+                                (sender.getRemoteCondition().getCondition().compareTo(condition)) == 0);
                         async.complete();
                     }
 

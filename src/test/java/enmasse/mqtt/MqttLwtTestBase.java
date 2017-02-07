@@ -87,6 +87,10 @@ public class MqttLwtTestBase {
      */
     protected void tearDown(TestContext context) {
 
-        this.vertx.close(context.asyncAssertSuccess());
+        Async async = context.async();
+
+        this.vertx.close(context.asyncAssertSuccess(v -> async.complete()));
+
+        async.awaitSuccess();
     }
 }
