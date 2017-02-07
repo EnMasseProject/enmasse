@@ -20,6 +20,8 @@ import io.vertx.core.Vertx;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import org.junit.runner.RunWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Base class for unit tests
@@ -27,18 +29,26 @@ import org.junit.runner.RunWith;
 @RunWith(VertxUnitRunner.class)
 public class MqttLwtTestBase {
 
+    protected final Logger LOG = LoggerFactory.getLogger(this.getClass());
+
     protected Vertx vertx;
     protected MqttLwt lwtService;
 
+    public static final String MESSAGING_SERVICE_HOST = "localhost";
+    public static final int MESSAGING_SERVICE_PORT = 5672;
+
     public static final String INTERNAL_SERVICE_HOST = "localhost";
     public static final int INTERNAL_SERVICE_PORT = 55673;
+
+    public static final String LWT_SERVICE_ENDPOINT = "$lwt";
 
     /**
      * Setup the MQTT LWT test base
      *
      * @param context   test context
+     * @param deploy    deploy the MQTT LWT verticle
      */
-    protected void setup(TestContext context) {
+    protected void setup(TestContext context, boolean deploy) {
 
         this.vertx = Vertx.vertx();
 
@@ -47,6 +57,19 @@ public class MqttLwtTestBase {
         this.lwtService
                 .setMessagingServiceHost(INTERNAL_SERVICE_HOST)
                 .setMessagingServiceInternalPort(INTERNAL_SERVICE_PORT);
+
+        if (deploy) {
+            // start and deploy components
+            this.vertx.deployVerticle(this.lwtService, context.asyncAssertSuccess());
+        }
+    }
+
+    /**
+     * Deploy the MQTT LWT instance
+     *
+     * @param context   test context
+     */
+    protected void deploy(TestContext context) {
 
         // start and deploy components
         this.vertx.deployVerticle(this.lwtService, context.asyncAssertSuccess());

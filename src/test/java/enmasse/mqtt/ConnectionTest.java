@@ -16,8 +16,12 @@
 
 package enmasse.mqtt;
 
+import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
+import io.vertx.proton.ProtonClient;
+import io.vertx.proton.ProtonConnection;
+import io.vertx.proton.ProtonSender;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -31,7 +35,8 @@ public class ConnectionTest extends MqttLwtTestBase {
 
     @Before
     public void before(TestContext context) {
-        super.setup(context);
+        // these tests are based on deploying MQTT LWT service when needed
+        super.setup(context, false);
     }
 
     @After
@@ -40,7 +45,78 @@ public class ConnectionTest extends MqttLwtTestBase {
     }
 
     @Test
-    public void connectionNoWill(TestContext context) {
-        //TODO
+    public void attachingSuccess(TestContext context) {
+
+        // deploy the MQTT LWT service
+        super.deploy(context);
+        this.attaching(context, LWT_SERVICE_ENDPOINT, true);
+    }
+
+    @Test
+    public void attachingAddressNotSupported(TestContext context) {
+
+        // deploy the MQTT LWT service
+        super.deploy(context);
+        // trying to attach a not supported address by MQTT LWT service
+        // NOTE : $lwt.wrong passes through the router (link route "prefix" is $lwt)
+        //        but it should be refused by the MQTT LWT service
+        this.attaching(context, LWT_SERVICE_ENDPOINT + ".wrong", false);
+    }
+
+    @Test
+    public void attachingRouteNotAvailable(TestContext context) {
+
+        // MQTT LWT service not deployed, so link route not available
+        this.attaching(context, LWT_SERVICE_ENDPOINT, false);
+    }
+
+    /**
+     * Attaches a link to the router network for the MQTT LWT service
+     *
+     * @param context   test context
+     * @param address   address to attach
+     * @param expectedSuccess   if success on attaching is expected
+     */
+    private void attaching(TestContext context, String address, boolean expectedSuccess) {
+
+        Async async = context.async();
+
+        ProtonClient client = ProtonClient.create(this.vertx);
+
+        client.connect(MESSAGING_SERVICE_HOST, MESSAGING_SERVICE_PORT, done -> {
+
+            if (done.succeeded()) {
+
+                ProtonConnection connection = done.result();
+                connection.open();
+
+                ProtonSender sender = connection.createSender(address);
+
+                sender.closeHandler(ar -> {
+
+                    if (ar.failed()) {
+                        LOG.error("Error on attaching link {}", address, ar.cause());
+                        context.assertTrue(!expectedSuccess);
+                        async.complete();
+                    }
+
+                }).openHandler(ar -> {
+
+                    if (ar.succeeded()) {
+                        LOG.info("Link attached on {}", address);
+                        context.assertTrue(expectedSuccess);
+                        async.complete();
+                    }
+
+                });
+                sender.open();
+
+            } else {
+
+                LOG.error("Error on connection", done.cause());
+                context.assertTrue(false);
+                async.complete();
+            }
+        });
     }
 }
