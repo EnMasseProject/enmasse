@@ -2,7 +2,7 @@
 
 The Last Will and Testament Service (LWTS) has an AMQP receiver on the following control address :
 
-* $mqtt.willservice
+* $mqtt.lwtservice
 
 This receiver is attached with :
 

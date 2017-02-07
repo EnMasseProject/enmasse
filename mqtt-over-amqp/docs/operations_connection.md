@@ -47,7 +47,7 @@ The MQTT client sends a _CONNECT_ message to the FE which extracts "will" inform
 The _AMQP_WILL_ is sent as "unsettled", in order to know that the Last Will and Testament Service has received it (with related disposition).
 The relation between the _AMQP_WILL_ message and the related client, at AMQP level, is inferred by the link name attached to the WS control address.
 
-![Connect Last Will and Testament Service](../images/03_connect_ws.png)
+![Connect Last Will and Testament Service](../images/03_connect_lwts.png)
 
 The FE attaches a permanent link to the $mqtt.willservice address; the WS maps the link-name with the “will” information provided in order to have a 1-1 relationship between them. See “Disconnection”, in order to know how publishing “will” information could happen on client disconnection.
 
