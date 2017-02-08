@@ -34,6 +34,7 @@ public class AmqpLwtEndpoint {
 
     private static final Logger LOG = LoggerFactory.getLogger(AmqpLwtEndpoint.class);
 
+    public static final int AMQP_WILL_CREDITS = 1;
     public static final String LWT_SERVICE_ENDPOINT = "$lwt";
 
     private ProtonConnection connection;
@@ -91,16 +92,45 @@ public class AmqpLwtEndpoint {
                     .closeHandler(ar -> {
                         this.closeHandler(receiver, ar);
                     })
+                    .setPrefetch(0)
                     .open();
 
+            receiver.flow(AMQP_WILL_CREDITS);
         }
     }
 
     private void messageHandler(ProtonReceiver receiver, ProtonDelivery delivery, Message message) {
         // TODO
+
+        // NOTE : after receiving the AMQP_WILL, a new credit should be issued
+        //        with AMQP we want to change the "will" message during the client life
     }
 
     private void closeHandler(ProtonReceiver receiver, AsyncResult<ProtonReceiver> ar) {
-        // TODO
+
+        ErrorCondition errorCondition = null;
+
+        // link detached without error, so the "will" should be cleared and not sent
+        if (ar.succeeded()) {
+
+            LOG.info("Clean disconnection from {}", receiver.getName());
+            // TODO
+
+
+        // link detached with error, so the "will" should be sent
+        } else {
+
+            LOG.info("Brute disconnection from {}", receiver.getName());
+
+            errorCondition = new ErrorCondition(receiver.getRemoteCondition().getCondition(),
+                    String.format("client detached with: %s", receiver.getRemoteCondition().getDescription()));
+
+            // TODO
+        }
+
+        if (errorCondition != null) {
+            receiver.setCondition(errorCondition);
+        }
+        receiver.close();
     }
 }
