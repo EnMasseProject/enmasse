@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/EnMasseProject/mqtt-lwt.svg?branch=master)](https://travis-ci.org/EnMasseProject/mqtt-lwt)
+
 # MQTT Last Will and Testament service
 MQTT Last Will and Testament service component for EnMasse which provides "will" messages handling for remote MQTT clients.
 
