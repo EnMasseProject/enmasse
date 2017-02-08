@@ -28,8 +28,8 @@ import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.ProtonDelivery;
 import io.vertx.proton.ProtonQoS;
 import io.vertx.proton.ProtonReceiver;
-import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.messaging.Accepted;
+import org.apache.qpid.proton.amqp.transport.AmqpError;
 import org.apache.qpid.proton.amqp.transport.ErrorCondition;
 import org.apache.qpid.proton.amqp.transport.LinkError;
 import org.apache.qpid.proton.message.Message;
@@ -99,7 +99,7 @@ public class MockLwtService extends AbstractVerticle {
         // Last Will and Testament Service supports only the control address
         if (!receiver.getRemoteTarget().getAddress().equals(LWT_SERVICE_ENDPOINT)) {
 
-            ErrorCondition error = new ErrorCondition(LinkError.DETACH_FORCED, "The endpoint provided is not supported");
+            ErrorCondition error = new ErrorCondition(AmqpError.NOT_FOUND, "The endpoint provided is not supported");
             receiver
                     .setCondition(error)
                     .close();
