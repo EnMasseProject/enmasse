@@ -21,8 +21,8 @@ import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.ProtonDelivery;
 import io.vertx.proton.ProtonQoS;
 import io.vertx.proton.ProtonReceiver;
+import org.apache.qpid.proton.amqp.transport.AmqpError;
 import org.apache.qpid.proton.amqp.transport.ErrorCondition;
-import org.apache.qpid.proton.amqp.transport.LinkError;
 import org.apache.qpid.proton.message.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -77,7 +77,7 @@ public class AmqpLwtEndpoint {
         if (!receiver.getRemoteTarget().getAddress().equals(LWT_SERVICE_ENDPOINT)) {
 
             ErrorCondition errorCondition =
-                    new ErrorCondition(LinkError.DETACH_FORCED, "The provided address isn't supported");
+                    new ErrorCondition(AmqpError.NOT_FOUND, "The provided address isn't supported");
 
             receiver.setCondition(errorCondition)
                     .close();

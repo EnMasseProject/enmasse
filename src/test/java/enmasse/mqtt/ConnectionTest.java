@@ -23,7 +23,7 @@ import io.vertx.proton.ProtonClient;
 import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.ProtonSender;
 import org.apache.qpid.proton.amqp.Symbol;
-import org.apache.qpid.proton.amqp.transport.LinkError;
+import org.apache.qpid.proton.amqp.transport.AmqpError;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -64,7 +64,7 @@ public class ConnectionTest extends MqttLwtTestBase {
         // trying to attach a not supported address by MQTT LWT service
         // NOTE : $lwt.wrong passes through the router (link route "prefix" is $lwt)
         //        but it should be refused by the MQTT LWT service
-        this.attaching(context, LWT_SERVICE_ENDPOINT + ".wrong", LinkError.DETACH_FORCED);
+        this.attaching(context, LWT_SERVICE_ENDPOINT + ".wrong", AmqpError.NOT_FOUND);
     }
 
     @Test
