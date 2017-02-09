@@ -56,6 +56,7 @@ public class OpenShiftHelper {
         // Add other resources part of a destination cluster
         List<HasMetadata> objects = new ArrayList<>();
         objects.addAll(client.deploymentConfigs().list().getItems());
+        objects.addAll(client.extensions().deployments().list().getItems());
         objects.addAll(client.persistentVolumeClaims().list().getItems());
         objects.addAll(client.configMaps().list().getItems());
         objects.addAll(client.replicationControllers().list().getItems());
