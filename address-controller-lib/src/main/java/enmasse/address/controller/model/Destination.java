@@ -24,11 +24,13 @@ import java.util.*;
  */
 public final class Destination {
     private final String address;
+    private final String group;
     private final boolean storeAndForward;
     private final boolean multicast;
     private final Optional<String> flavor;
 
-    public Destination(String address, boolean storeAndForward, boolean multicast, Optional<String> flavor) {
+    public Destination(String address, String group, boolean storeAndForward, boolean multicast, Optional<String> flavor) {
+        this.group = group;
         Objects.requireNonNull(flavor);
         this.address = address;
         this.storeAndForward = storeAndForward;
@@ -39,6 +41,8 @@ public final class Destination {
     public String address() {
         return address;
     }
+
+    public String group() { return group; }
 
     public boolean storeAndForward() {
         return storeAndForward;
@@ -53,49 +57,55 @@ public final class Destination {
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        Destination destination = (Destination) o;
-        return address.equals(destination.address);
-
-    }
-
-    @Override
-    public int hashCode() {
-        return address.hashCode();
-    }
-
-    @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();
         builder.append("{address=").append(address).append(",")
+                .append("group=").append(group).append(",")
                 .append("storeAndForward=").append(storeAndForward).append(",")
                 .append("multicast=").append(multicast).append(",")
                 .append("flavor=").append(flavor).append("}");
         return builder.toString();
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Destination that = (Destination) o;
+
+        if (!address.equals(that.address)) return false;
+        return group.equals(that.group);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = address.hashCode();
+        result = 31 * result + group.hashCode();
+        return result;
+    }
+
     public static class Builder {
         private String address;
+        private String group;
         private boolean storeAndForward = false;
         private boolean multicast = false;
         private Optional<String> flavor = Optional.empty();
 
-        public Builder(String address) {
+        public Builder(String address, String group) {
             this.address = address;
+            this.group = group;
         }
 
-        public Builder(Destination destination) {
-            this.address = destination.address();
-            this.storeAndForward = destination.storeAndForward();
-            this.multicast = destination.multicast();
-            this.flavor = destination.flavor();
-        }
+        public Builder() {}
 
         public Builder address(String address) {
             this.address = address;
+            return this;
+        }
+
+        public Builder group(String group) {
+            this.group = group;
             return this;
         }
 
@@ -119,7 +129,7 @@ public final class Destination {
         }
 
         public Destination build() {
-            return new Destination(address, storeAndForward, multicast, flavor);
+            return new Destination(address, group, storeAndForward, multicast, flavor);
         }
     }
 }

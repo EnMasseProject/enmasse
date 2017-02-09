@@ -108,7 +108,7 @@ public abstract class RestServiceBase {
             DestinationGroup.Builder groupBuilder = new DestinationGroup.Builder(destinationGroup.getGroupId());
             for (Destination destination : destinationGroup.getDestinations()) {
                 if (!destination.address().equals(address)) {
-                    groupBuilder.destination(new Destination(address, destination.storeAndForward(), destination.multicast(), destination.flavor()));
+                    groupBuilder.destination(new Destination(address, destinationGroup.getGroupId(), destination.storeAndForward(), destination.multicast(), destination.flavor()));
                 }
             }
             DestinationGroup newGroup = groupBuilder.build();

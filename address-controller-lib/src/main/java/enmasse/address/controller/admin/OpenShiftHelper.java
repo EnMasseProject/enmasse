@@ -77,7 +77,7 @@ public class OpenShiftHelper {
 
                     Set<Destination> destinations = new HashSet<>();
                     for (Map.Entry<String, String> entry : addressConfigMap.entrySet()) {
-                        Destination.Builder destBuilder = new Destination.Builder(entry.getKey());
+                        Destination.Builder destBuilder = new Destination.Builder(entry.getKey(), groupId);
                         AddressDecoder addressDecoder = new AddressDecoder(entry.getValue());
                         destBuilder.storeAndForward(addressDecoder.storeAndForward());
                         destBuilder.multicast(addressDecoder.multicast());

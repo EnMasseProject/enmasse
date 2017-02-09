@@ -24,7 +24,9 @@ import enmasse.address.controller.admin.OpenShiftHelper;
 import io.fabric8.openshift.client.DefaultOpenShiftClient;
 import io.fabric8.openshift.client.OpenShiftClient;
 import io.fabric8.openshift.client.OpenShiftConfigBuilder;
+import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
+import io.vertx.core.VertxOptions;
 
 import java.io.IOException;
 
@@ -57,7 +59,7 @@ public class AddressController implements Runnable, AutoCloseable {
     public void run() {
         flavorWatcher.start();
         vertx.deployVerticle(server);
-        vertx.deployVerticle(restServer);
+        vertx.deployVerticle(restServer, new DeploymentOptions().setWorker(true));
     }
 
     @Override

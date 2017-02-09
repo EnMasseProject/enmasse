@@ -19,6 +19,7 @@ package enmasse.address.controller;
 import enmasse.address.controller.admin.AddressManager;
 import enmasse.address.controller.restapi.v1.RestServiceV1;
 import enmasse.address.controller.restapi.v2.RestServiceV2;
+import enmasse.address.controller.restapi.v3.AddressingService;
 import io.vertx.core.AbstractVerticle;
 import org.jboss.resteasy.plugins.server.vertx.VertxRequestHandler;
 import org.jboss.resteasy.plugins.server.vertx.VertxResteasyDeployment;
@@ -42,6 +43,7 @@ public class HTTPServer extends AbstractVerticle {
         deployment.start();
         deployment.getRegistry().addSingletonResource(new RestServiceV1(addressManager, vertx));
         deployment.getRegistry().addSingletonResource(new RestServiceV2(addressManager, vertx));
+        deployment.getRegistry().addSingletonResource(new AddressingService(addressManager));
 
         vertx.createHttpServer()
                 .requestHandler(new VertxRequestHandler(vertx, deployment))

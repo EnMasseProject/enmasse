@@ -69,7 +69,7 @@ public class RestServiceV1 extends RestServiceBase {
         return addressMap.entrySet().stream()
                 .map(e -> {
                     DestinationGroup.Builder groupBuilder = new DestinationGroup.Builder(e.getKey());
-                    groupBuilder.destination(new Destination(e.getKey(), e.getValue().store_and_forward, e.getValue().multicast, Optional.ofNullable(e.getValue().flavor)));
+                    groupBuilder.destination(new Destination(e.getKey(), e.getKey(), e.getValue().store_and_forward, e.getValue().multicast, Optional.ofNullable(e.getValue().flavor)));
                     return groupBuilder.build();
                 })
                 .collect(Collectors.toSet());

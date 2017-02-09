@@ -149,8 +149,8 @@ public class OpenShiftHelperTest {
         when(mapOp.withName("address-config-group1")).thenReturn(mapOp);
         when(mapOp.createOrReplaceWithNew()).thenReturn(map);
 
-        DestinationGroup group = new DestinationGroup("group1", Sets.newSet(new Destination("queue1", true, false, Optional.of("vanilla")),
-                new Destination("queue2", true, false, Optional.of("vanilla"))));
+        DestinationGroup group = new DestinationGroup("group1", Sets.newSet(new Destination("queue1", "group1", true, false, Optional.of("vanilla")),
+                new Destination("queue2", "group1", true, false, Optional.of("vanilla"))));
         helper.updateDestinations(group);
 
         ConfigMap edited = map.done();

@@ -58,7 +58,7 @@ public class DestinationParser {
 
     private static Destination parseDestination(String key, JsonNode node) {
         return new Destination(key,
-                node.get(STORE_AND_FORWARD).asBoolean(),
+                key, node.get(STORE_AND_FORWARD).asBoolean(),
                 node.get(MULTICAST).asBoolean(),
                 node.has(FLAVOR) ? Optional.of(node.get(FLAVOR).asText()) : Optional.empty());
     }
