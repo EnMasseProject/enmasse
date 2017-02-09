@@ -23,9 +23,12 @@ import enmasse.address.controller.openshift.DestinationCluster;
 import enmasse.config.AddressEncoder;
 import enmasse.config.LabelKeys;
 import io.fabric8.kubernetes.api.model.*;
+import io.fabric8.kubernetes.api.model.extensions.Deployment;
+import io.fabric8.kubernetes.api.model.extensions.DeploymentBuilder;
+import io.fabric8.kubernetes.api.model.extensions.DeploymentListBuilder;
 import io.fabric8.kubernetes.client.dsl.ClientMixedOperation;
-import io.fabric8.openshift.api.model.DeploymentConfig;
-import io.fabric8.openshift.api.model.DeploymentConfigBuilder;
+import io.fabric8.kubernetes.client.dsl.ClientResource;
+import io.fabric8.kubernetes.client.dsl.ExtensionsAPIGroupDSL;
 import io.fabric8.openshift.api.model.DeploymentConfigListBuilder;
 import io.fabric8.openshift.client.OpenShiftClient;
 import org.junit.Test;
@@ -37,20 +40,17 @@ import java.util.Optional;
 import java.util.Set;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 public class OpenShiftHelperTest {
 
     @Test
     public void testListClusters() {
-        DeploymentConfig config =
-                new DeploymentConfigBuilder()
+        Deployment config =
+                new DeploymentBuilder()
                         .withMetadata(new ObjectMetaBuilder()
                             .withName("testdc")
                             .addToLabels(LabelKeys.GROUP_ID, "mygroup")
@@ -89,36 +89,45 @@ public class OpenShiftHelperTest {
                         .build();
 
         ClientMixedOperation dcOp = mock(ClientMixedOperation.class);
+        ClientMixedOperation dOp = mock(ClientMixedOperation.class);
         ClientMixedOperation pvcOp = mock(ClientMixedOperation.class);
         ClientMixedOperation mapOp = mock(ClientMixedOperation.class);
 
         ClientMixedOperation mapOpQueue = mock(ClientMixedOperation.class);
         ClientMixedOperation mapOpDirect = mock(ClientMixedOperation.class);
 
+        ClientResource mapQueueResource = mock(ClientResource.class);
+        ClientResource mapDirectResource = mock(ClientResource.class);
+
         ClientMixedOperation rcOp = mock(ClientMixedOperation.class);
+        ExtensionsAPIGroupDSL extensions = mock(ExtensionsAPIGroupDSL.class);
 
         OpenShiftClient mockClient = mock(OpenShiftClient.class);
         OpenShiftHelper helper = new OpenShiftHelper(mockClient);
         when(mockClient.deploymentConfigs()).thenReturn(dcOp);
+        when(mockClient.extensions()).thenReturn(extensions);
+        when(extensions.deployments()).thenReturn(dOp);
         when(mockClient.persistentVolumeClaims()).thenReturn(pvcOp);
         when(mockClient.configMaps()).thenReturn(mapOp);
         when(mockClient.replicationControllers()).thenReturn(rcOp);
 
         when(pvcOp.withLabel(anyString(), anyString())).thenReturn(pvcOp);
         when(dcOp.withLabel(anyString(), anyString())).thenReturn(dcOp);
+        when(dOp.withLabel(anyString(), anyString())).thenReturn(dOp);
         when(mapOp.withLabel(anyString(), anyString())).thenReturn(mapOp);
 
-        when(mapOp.withName("mygroup-config")).thenReturn(mapOpQueue);
-        when(mapOp.withName("group2-config")).thenReturn(mapOpDirect);
+        when(mapOp.withName("mygroup-config")).thenReturn(mapQueueResource);
+        when(mapOp.withName("group2-config")).thenReturn(mapDirectResource);
 
-        when(mapOpQueue.get()).thenReturn(map);
-        when(mapOpDirect.get()).thenReturn(directMap);
+
+        when(mapQueueResource.get()).thenReturn(map);
+        when(mapDirectResource.get()).thenReturn(directMap);
 
         when(rcOp.withLabel(anyString(), anyString())).thenReturn(rcOp);
         when(pvcOp.list()).thenReturn(new PersistentVolumeClaimListBuilder().build());
-        when(dcOp.list()).thenReturn(new DeploymentConfigListBuilder().addToItems(config).build());
+        when(dcOp.list()).thenReturn(new DeploymentConfigListBuilder().build());
+        when(dOp.list()).thenReturn(new DeploymentListBuilder().addToItems(config).build());
         when(mapOp.list()).thenReturn(new ConfigMapListBuilder().addToItems(direct).build());
-        when(mapOpDirect.list()).thenReturn(new ConfigMapListBuilder().addToItems(direct).build());
         when(rcOp.list()).thenReturn(new ReplicationControllerListBuilder().build());
 
         FlavorManager flavorManager = new FlavorManager();
@@ -146,8 +155,10 @@ public class OpenShiftHelperTest {
         DoneableConfigMap map = new DoneableConfigMap(new ConfigMap("v1", Collections.<String, String>emptyMap(), "ConfigMap", new ObjectMetaBuilder().withName("address-config-group1").build()));
         ClientMixedOperation mapOp = mock(ClientMixedOperation.class);
         when(mockClient.configMaps()).thenReturn(mapOp);
-        when(mapOp.withName("address-config-group1")).thenReturn(mapOp);
-        when(mapOp.createOrReplaceWithNew()).thenReturn(map);
+        ClientResource mapResource = mock(ClientResource.class);
+        when(mapOp.withName("address-config-group1")).thenReturn(mapResource);
+        when(mapResource.get()).thenReturn(map);
+        when(mapResource.createOrReplaceWithNew()).thenReturn(map);
 
         DestinationGroup group = new DestinationGroup("group1", Sets.newSet(new Destination("queue1", "group1", true, false, Optional.of("vanilla")),
                 new Destination("queue2", "group1", true, false, Optional.of("vanilla"))));

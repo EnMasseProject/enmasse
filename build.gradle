@@ -6,7 +6,7 @@ ext {
     jacksonVersion = '2.7.4'
     commonsCliVersion = '1.3.1'
     vertxVersion = '3.3.3'
-    openshiftClientVersion = '1.4.33'
+    openshiftClientVersion = '2.0.1'
     slf4jVersion = '1.7.21'
     resteasyVersion = '3.1.0.Final'
 
