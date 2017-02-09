@@ -43,6 +43,6 @@ public class ConfigSubscriptionConfig implements SubscriptionConfig<ConfigResour
 
     @Override
     public Predicate<ConfigResource> getResourceFilter(Map<String, String> filter) {
-        return configResource -> true;
+        return configResource -> !configResource.getData().containsKey("ENMASSE_INTERNAL_RESERVED");
     }
 }
