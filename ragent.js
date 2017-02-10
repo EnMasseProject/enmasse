@@ -167,7 +167,7 @@ function on_message(context) {
     if (context.message.subject === 'routers') {
         known_routers[context.connection.container_id] = unwrap_known_routers (context.message.body);
         check_connectivity();
-    } else if (context.message.subject === 'addresses' || context.message.subject === null) {
+    } else if (context.message.subject === 'addresses' || !context.message.subject) {
         var body_type = typeof context.message.body;
         if (body_type  === 'string') {
             try {

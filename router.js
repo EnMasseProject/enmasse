@@ -360,7 +360,7 @@ ConnectedRouter.prototype.request = function (operation, properties, body, callb
     if (this.sender) {
 	this.counter++;
 	var id = this.counter.toString();
-	var req = {properties:{reply_to:this.address, correlation_id:id}};
+	var req = {reply_to:this.address, correlation_id:id};
         req.application_properties = properties || {};
         req.application_properties.operation = operation;
         req.body = body;
@@ -408,7 +408,7 @@ function to_host_port (record) {
 }
 
 ConnectedRouter.prototype.on_query_connector_response = function (message) {
-    if (message.statusCode == 200) {
+    if (message.application_properties.statusCode == 200) {
         this.connectors = extract_records(message.body).filter(has_inter_router_role).map(to_host_port);
         console.log('retrieved connectors for ' + this.container_id + ': ' + this.connectors);
         this.emit('connectors_updated', this);
@@ -419,7 +419,7 @@ ConnectedRouter.prototype.on_query_connector_response = function (message) {
 };
 
 ConnectedRouter.prototype.on_query_listener_response = function (message) {
-    if (message.statusCode == 200) {
+    if (message.application_properties.statusCode == 200) {
         this.listeners = extract_records(message.body).filter(has_inter_router_role).map(to_host_port);
         console.log('retrieved listeners for ' + this.container_id + ': ' + this.listeners);
         this.emit('listeners_updated', this);
@@ -434,7 +434,7 @@ function by_name (o) {
 }
 
 ConnectedRouter.prototype.on_query_address_response = function (message) {
-    if (message.statusCode == 200) {
+    if (message.application_properties.statusCode == 200) {
         console.log('EXTRACT, results: ' + message.body.results.toString() + ', attributes: ' + message.body.attributeNames.toString());
         var address_records = extract_records(message.body)
         this.addresses = myutils.index(address_records, by_name, from_router_address);
@@ -456,7 +456,7 @@ function not_overridden (linkroute) {
 }
 
 ConnectedRouter.prototype.on_query_link_route_response = function (message) {
-    if (message.statusCode == 200) {
+    if (message.application_properties.statusCode == 200) {
         var records = extract_records(message.body);
         console.log('retrieved link routes for ' + this.container_id + ': raw-> ' + JSON.stringify(records));
         this.link_routes = myutils.index(records.filter(not_overridden), by_name);
@@ -472,16 +472,16 @@ ConnectedRouter.prototype.on_query_link_route_response = function (message) {
 ConnectedRouter.prototype.incoming = function (context) {
     //console.log('Got message: ' + JSON.stringify(context.message));
     var message = context.message;
-    var handler = this.requests[message.properties.correlation_id];
+    var handler = this.requests[message.correlation_id];
     if (handler) {
         if (typeof handler === 'function') {
-	    delete this.requests[message.properties.correlation_id];
+	    delete this.requests[message.correlation_id];
 	    handler(message);
         } else {
 	    console.log('ERROR: handler not a function: ' + handler + ' [' + JSON.stringify(message) + ']');
         }
     } else {
-	console.log('WARNING: unexpected response: ' + message.properties.correlation_id + ' [' + JSON.stringify(message) + ']');
+	console.log('WARNING: unexpected response: ' + message.correlation_id + ' [' + JSON.stringify(message) + ']');
     }
 };
 
