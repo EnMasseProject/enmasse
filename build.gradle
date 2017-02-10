@@ -1,6 +1,6 @@
 ext {
    openshiftClientVersion = '2.0.1'
-   vertxVersion = '3.4.0-SNAPSHOT'
+   vertxVersion = '3.3.3'
    vertxProtonVersion = '3.3.3'
    junitVersion = '4.12'
 }

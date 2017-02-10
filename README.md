@@ -5,13 +5,6 @@
 This repository contains the EnMasse system tests. The tests can be run against an EnMasse instance
 running on OpenShift.
 
-## Prerequisites
-
-The test framework requires some changes to vertx that has not yet been released. To build them,
-run:
-
-    gradle buildVertx
-
 ## Setting up test environment
 
 It is assumed that you have EnMasse running on an OpenShift instance already. If not, have a look at

@@ -88,7 +88,7 @@ public class VertxTestBase {
             options.setSsl(true);
             options.setHostnameVerificationAlgorithm("");
             options.setPemTrustOptions(new PemTrustOptions().addCertValue(Buffer.buffer(environment.messagingCert())));
-            options.setSniServerName(openShift.getRouteHost());
+          //  options.setSniServerName(openShift.getRouteHost());
             options.setTrustAll(true);
             return new EnMasseClient(vertx, openShift.getSecureEndpoint(), terminusFactory, options);
         } else {
