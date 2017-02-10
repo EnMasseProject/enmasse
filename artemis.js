@@ -36,7 +36,7 @@ var Artemis = function (connection) {
 };
 
 Artemis.prototype.ready = function (context) {
-    console.log(this.connection.container_id + ' ready to send requests');
+    console.log('[' + this.connection.container_id + '] ready to send requests');
     this.address = context.receiver.remote.attach.source.address;
     this._send_pending_requests();
 };
@@ -44,22 +44,22 @@ Artemis.prototype.ready = function (context) {
 function as_handler(resolve, reject) {
     return function (context) {
         var message = context.message || context;
-        if (message._AMQ_OperationSucceeded) {
+        if (message.application_properties._AMQ_OperationSucceeded) {
             try {
                 if (message.body) resolve(JSON.parse(message.body)[0]);
                 else resolve(true);
             } catch (e) {
-                console.log('Error parsing message body: ' + message + ': ' + e);
+                console.log('[' + this.connection.container_id + '] Error parsing message body: ' + message + ': ' + e);
             }
         } else {
-            reject(message.toString());
+            reject('Request did not succeed, response: ' + message.toString());
         }
     };
 }
 
 Artemis.prototype.incoming = function (context) {
     var message = context.message;
-    console.log('recv: ' + message);
+    console.log('[' + this.connection.container_id + '] recv: ' + message);
     this.outstanding_requests.shift();
     var handler = this.handlers.shift();
     if (handler) {
@@ -68,7 +68,7 @@ Artemis.prototype.incoming = function (context) {
 };
 
 Artemis.prototype.disconnected = function (context) {
-    console.log(this.connection.container_id + ' disconnected');
+    console.log('[' + this.connection.container_id + '] disconnected');
     this.address = undefined;
     //fail all outstanding requests? or keep them and retry on reconnection? currently do the latter...
     this.requests = this.outstanding_requests;
@@ -85,25 +85,25 @@ Artemis.prototype.abort_requests = function (error) {
 
 Artemis.prototype.on_sender_error = function (context) {
     var error = this.connection.container_id + ' sender error ' + context.sender.error;
-    console.log(error);
+    console.log('[' + this.connection.container_id + '] ' + error);
     this.abort_requests(error);
 };
 
 Artemis.prototype.on_receiver_error = function (context) {
     var error = this.connection.container_id + ' receiver error ' + context.receiver.error;
-    console.log(error);
+    console.log('[' + this.connection.container_id + '] ' + error);
     this.abort_requests(error);
 };
 
 Artemis.prototype.on_connection_error = function (context) {
     var error = this.connection.container_id + ' connection error ' + context.connection.error;
-    console.log(error);
+    console.log('[' + this.connection.container_id + '] ' + error);
     this.abort_requests(error);
 };
 
 Artemis.prototype.on_connection_close = function (context) {
     var error = this.connection.container_id + ' connection closed';
-    console.log(error);
+    console.log('[' + this.connection.container_id + '] ' + error);
     this.abort_requests(error);
 };
 
@@ -116,13 +116,13 @@ Artemis.prototype._send_pending_requests = function () {
 }
 
 Artemis.prototype._send_request = function (request) {
-    request.JMSReplyTo = this.address;
+    request.application_properties.JMSReplyTo = this.address;
     this.sender.send(request);
-    console.log('sent: ' + JSON.stringify(request));
+    console.log('[' + this.connection.container_id + '] sent: ' + JSON.stringify(request));
 }
 
 Artemis.prototype._request = function (resource, operation, parameters) {
-    var request = {'_AMQ_ResourceName':resource, '_AMQ_OperationName':operation};
+    var request = {application_properties:{'_AMQ_ResourceName':resource, '_AMQ_OperationName':operation}};
     request.body = JSON.stringify(parameters);
     if (this.address) {
         this._send_pending_requests();

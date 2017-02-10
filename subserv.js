@@ -205,7 +205,7 @@ function handle_control_message(context) {
         } else {
             console.log('Must specify topic as target address for messages with pods as subject');
         }
-    } else if (context.message.subject === 'addresses' || context.message.subject === null) {
+    } else if (context.message.subject === 'addresses' || !context.message.subject) {
         var body_type = typeof context.message.body;
         if (body_type  === 'string') {
             var content;
