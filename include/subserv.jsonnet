@@ -1,14 +1,12 @@
 local version = std.extVar("VERSION");
 local common = import "common.jsonnet";
 {
-  imagestream(image_name)::
-    common.imagestream("subserv", image_name),
   service::
     common.service("subscription", "subserv", "amqp", 5672, 5672),
-  deployment::
+  deployment(container_image)::
   {
-    "apiVersion": "v1",
-    "kind": "DeploymentConfig",
+    "apiVersion": "extensions/v1beta1",
+    "kind": "Deployment",
     "metadata": {
       "labels": {
         "name": "subserv",
@@ -18,15 +16,6 @@ local common = import "common.jsonnet";
     },
     "spec": {
       "replicas": 1,
-      "selector": {
-        "name": "subserv"
-      },
-      "triggers": [
-        {
-          "type": "ConfigChange"
-        },
-        common.trigger("subserv", "subserv")
-      ],
       "template": {
         "metadata": {
           "labels": {
@@ -36,7 +25,7 @@ local common = import "common.jsonnet";
         },
         "spec": {
           "containers": [
-            common.container("subserv", "subserv", "amqp", 5672, "64Mi")
+            common.container("subserv", container_image, "amqp", 5672, "64Mi")
           ]
         }
       }

@@ -6,8 +6,8 @@ metadata:
     app: enmasse
   name: tls-queue-inmemory
 objects:
-- apiVersion: v1
-  kind: DeploymentConfig
+- apiVersion: extensions/v1beta1
+  kind: Deployment
   metadata:
     labels:
       address_config: address-config-${NAME}
@@ -16,9 +16,6 @@ objects:
     name: "${NAME}"
   spec:
     replicas: 1
-    selector:
-      group_id: "${NAME}"
-      role: broker
     template:
       metadata:
         labels:
@@ -32,7 +29,7 @@ objects:
             value: "${ADDRESS}"
           - name: GROUP_ID
             value: "${NAME}"
-          image: artemis
+          image: "${BROKER_REPO}:latest"
           lifecycle:
             preStop:
               exec:
@@ -56,16 +53,6 @@ objects:
         - name: ssl-certs
           secret:
             secretName: qdrouterd-certs
-    triggers:
-    - type: ConfigChange
-    - imageChangeParams:
-        automatic: true
-        containerNames:
-        - broker
-        from:
-          kind: ImageStreamTag
-          name: artemis:latest
-      type: ImageChange
 - apiVersion: v1
   data:
     "${ADDRESS}": '{"store_and_forward": true, "multicast": false}'

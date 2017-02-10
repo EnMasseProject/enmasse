@@ -1,14 +1,12 @@
 local version = std.extVar("VERSION");
 local common = import "common.jsonnet";
 {
-  imagestream(image_name)::
-    common.imagestream("ragent", image_name),
   service::
     common.service("ragent", "ragent", "amqp", 55672, 55672),
-  deployment::
+  deployment(image_repo)::
     {
-      "apiVersion": "v1",
-      "kind": "DeploymentConfig",
+      "apiVersion": "extensions/v1beta1",
+      "kind": "Deployment",
       "metadata": {
         "labels": {
           "name": "ragent",
@@ -18,15 +16,6 @@ local common = import "common.jsonnet";
       },
       "spec": {
         "replicas": 1,
-        "selector": {
-          "name": "ragent"
-        },
-        "triggers": [
-          {
-            "type": "ConfigChange"
-          },
-          common.trigger("ragent", "ragent")
-        ],
         "template": {
           "metadata": {
             "labels": {
@@ -36,7 +25,7 @@ local common = import "common.jsonnet";
           },
           "spec": {
             "containers": [
-              common.container("ragent", "ragent", "amqp", 55672, "64Mi")
+              common.container("ragent", image_repo, "amqp", 55672, "64Mi")
             ]
           }
         }

@@ -1,9 +1,10 @@
+local version = std.extVar("VERSION");
 local common = import "common.jsonnet";
 {
   imagestream(image_name)::
     common.imagestream("mqtt-gateway", image_name),
 
-  container(secure)::
+  container(secure, image_repo)::
     local mqttPort = {
       "name": "mqtt",
       "containerPort": 1883,
@@ -15,7 +16,7 @@ local common = import "common.jsonnet";
       "protocol": "TCP"
     };
     {
-      "image": "mqtt-gateway",
+      "image": image_repo + ":" + version,
       "name": if secure
         then "mqtt-gateway-tls"
         else "mqtt-gateway",

@@ -1,16 +1,14 @@
 local version = std.extVar("VERSION");
 local common = import "common.jsonnet";
 {
-  imagestream(image_name)::
-    common.imagestream("address-controller", image_name),
   service::
     common.service("address-controller", "address-controller", "amqp", 5672, 55674),
   restapi::
     common.service("restapi", "address-controller", "http", 8080, 8080),
-  deployment::
+  deployment(image_repo)::
     {
-      "apiVersion": "v1",
-      "kind": "DeploymentConfig",
+      "apiVersion": "extensions/v1beta1",
+      "kind": "Deployment",
       "metadata": {
         "labels": {
           "name": "address-controller",
@@ -20,15 +18,6 @@ local common = import "common.jsonnet";
       },
       "spec": {
         "replicas": 1,
-        "selector": {
-          "name": "address-controller"
-        },
-        "triggers": [
-          {
-            "type": "ConfigChange"
-          },
-          common.trigger("address-controller", "address-controller")
-        ],
         "template": {
           "metadata": {
             "labels": {
@@ -39,7 +28,7 @@ local common = import "common.jsonnet";
           "spec": {
             "serviceAccount": "deployer",
             "containers": [
-              common.container("address-controller", "address-controller", "amqp", 55674, "256Mi")
+              common.container("address-controller", image_repo, "amqp", 55674, "256Mi")
             ]
           }
         }
