@@ -20,13 +20,12 @@ var config_service = require('./config_service.js');
 
 var Subscription = function () {
     events.EventEmitter.call(this);
-    this.closed = false;
 };
 
 util.inherits(Subscription, events.EventEmitter);
 
 Subscription.prototype.close = function () {
-    this.closed = true;
+    if (this.conn) this.conn.close();
 }
 
 Subscription.prototype.subscribe = function (selector, handler) {
@@ -36,6 +35,7 @@ Subscription.prototype.subscribe = function (selector, handler) {
     var conn = config_service.connect(amqp, "podsense-" + selector.group_id);
     if (conn) {
         conn.open_receiver({source:{address:"podsense", filter:selector}});
+        this.conn = conn;
     }
 }
 
