@@ -42,7 +42,7 @@ public class ConfigMessageEncoder implements MessageEncoder<ConfigResource> {
         }
         message.setBody(createBody(root));
         message.setContentType("application/json");
-        log.info("Address config was updated to '" + ((AmqpValue)message.getBody()).getValue() + "'");
+        log.info("Address config encoded: '" + ((AmqpValue)message.getBody()).getValue() + "'");
         return message;
     }
 
