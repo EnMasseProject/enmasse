@@ -1,4 +1,7 @@
       <addresses>
+         <address name="$nodes">
+             <multicast />
+         </address>
          <address name="$TOPIC_NAME">
              <multicast />
          </address>

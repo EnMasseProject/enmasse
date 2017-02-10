@@ -1,4 +1,4 @@
 [submodule "activemq-artemis"]
 	path = activemq-artemis
 	url = https://github.com/EnMasseProject/activemq-artemis.git
-	branch = enmasse-2.0
+	branch = enmasse-observer
