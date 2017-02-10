@@ -196,10 +196,10 @@ function on_message(context) {
     } else if (context.message.subject === 'health-check') {
         var request = context.message;
         var content = JSON.parse(request.body);
-        var reply_to = request.properties.reply_to;
-        var response = {properties:{to: reply_to}};
-        if (request.properties.correlation_id) {
-            response.correlation_id = request.properties.correlation_id;
+        var reply_to = request.reply_to;
+        var response = {to: reply_to};
+        if (request.correlation_id) {
+            response.correlation_id = request.correlation_id;
         }
         response.body = verify_addresses(content);
         var sender = clients[context.connection.container_id];
