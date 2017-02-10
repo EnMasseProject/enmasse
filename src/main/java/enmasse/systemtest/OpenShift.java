@@ -73,7 +73,7 @@ public class OpenShift {
     }
 
     public void setDeploymentReplicas(String name, int numReplicas) {
-        client.deploymentConfigs()
+        client.extensions().deployments()
                 .inNamespace(environment.namespace())
                 .withName(name)
                 .scale(numReplicas, true);
@@ -84,7 +84,6 @@ public class OpenShift {
                 .inNamespace(environment.namespace())
                 .list()
                 .getItems().stream()
-                .filter(pod -> !pod.getMetadata().getName().endsWith("-deploy"))
                 .collect(Collectors.toList());
     }
 
@@ -94,7 +93,6 @@ public class OpenShift {
                 .withLabels(labelSelector)
                 .list()
                 .getItems().stream()
-                    .filter(pod -> !pod.getMetadata().getName().endsWith("-deploy"))
                     .collect(Collectors.toList());
     }
 
