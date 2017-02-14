@@ -40,7 +40,7 @@ public class Address {
             return new Address(new Destination.Builder(address, group)
                 .storeAndForward(spec.get(ResourceKeys.STORE_AND_FORWARD).asBoolean())
                 .multicast(spec.get(ResourceKeys.MULTICAST).asBoolean())
-                .flavor(Optional.ofNullable(spec.get(ResourceKeys.FLAVOR).asText()))
+                .flavor(Optional.ofNullable(spec.get(ResourceKeys.FLAVOR)).map(JsonNode::asText))
                 .build());
         }
     }

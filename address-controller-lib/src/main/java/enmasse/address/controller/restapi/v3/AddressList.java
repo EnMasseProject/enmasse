@@ -69,7 +69,7 @@ public class AddressList {
                 destinations.add(new Destination.Builder(address, group)
                         .storeAndForward(value.get(ResourceKeys.STORE_AND_FORWARD).asBoolean())
                         .multicast(value.get(ResourceKeys.MULTICAST).asBoolean())
-                        .flavor(Optional.ofNullable(value.get(ResourceKeys.FLAVOR).asText()))
+                        .flavor(Optional.ofNullable(value.get(ResourceKeys.FLAVOR)).map(JsonNode::asText))
                         .build());
             }
             return new AddressList(destinations);
