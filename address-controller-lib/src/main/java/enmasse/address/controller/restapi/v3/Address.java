@@ -34,9 +34,11 @@ public class Address {
             ObjectNode node = mapper.readValue(p, ObjectNode.class);
             ObjectNode spec = (ObjectNode) node.get(ResourceKeys.SPEC);
             ObjectNode metadata = (ObjectNode) node.get(ResourceKeys.METADATA);
+            String address = metadata.get(ResourceKeys.NAME).asText();
+            String group = spec.has(ResourceKeys.GROUP) ? spec.get(ResourceKeys.GROUP).asText() : address;
 
-            return new Address(new Destination.Builder(metadata.get(ResourceKeys.NAME).asText(), spec.get(ResourceKeys.GROUP).asText())
-                    .storeAndForward(spec.get(ResourceKeys.STORE_AND_FORWARD).asBoolean())
+            return new Address(new Destination.Builder(address, group)
+                .storeAndForward(spec.get(ResourceKeys.STORE_AND_FORWARD).asBoolean())
                 .multicast(spec.get(ResourceKeys.MULTICAST).asBoolean())
                 .flavor(Optional.ofNullable(spec.get(ResourceKeys.FLAVOR).asText()))
                 .build());

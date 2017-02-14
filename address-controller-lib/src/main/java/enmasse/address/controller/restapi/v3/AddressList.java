@@ -57,15 +57,16 @@ public class AddressList {
         @Override
         public AddressList deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JsonProcessingException {
             ObjectNode node = mapper.readValue(p, ObjectNode.class);
-            ObjectNode spec = (ObjectNode) node.get(ResourceKeys.SPEC);
-            ObjectNode addresses = (ObjectNode) node.get(ResourceKeys.METADATA);
 
+            ObjectNode addresses = node.has(ResourceKeys.ADDRESSES) ? (ObjectNode) node.get(ResourceKeys.ADDRESSES) : mapper.createObjectNode();
             Iterator<Map.Entry<String, JsonNode>> it = addresses.fields();
             Set<Destination> destinations = new LinkedHashSet<>();
             while (it.hasNext()) {
                 Map.Entry<String, JsonNode> entry = it.next();
                 ObjectNode value = (ObjectNode) entry.getValue();
-                destinations.add(new Destination.Builder(entry.getKey(), value.get(ResourceKeys.GROUP).asText())
+                String address = entry.getKey();
+                String group = value.has(ResourceKeys.GROUP) ? value.get(ResourceKeys.GROUP).asText() : address;
+                destinations.add(new Destination.Builder(address, group)
                         .storeAndForward(value.get(ResourceKeys.STORE_AND_FORWARD).asBoolean())
                         .multicast(value.get(ResourceKeys.MULTICAST).asBoolean())
                         .flavor(Optional.ofNullable(value.get(ResourceKeys.FLAVOR).asText()))
