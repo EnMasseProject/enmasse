@@ -16,6 +16,7 @@
 
 package enmasse.mqtt;
 
+import enmasse.mqtt.endpoints.AmqpBrokerEndpoint;
 import enmasse.mqtt.endpoints.AmqpLwtEndpoint;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
@@ -40,9 +41,14 @@ public class MqttLwt extends AbstractVerticle {
     private String messagingServiceHost;
     private int messagingServiceInternalPort;
 
+    // connection info to the backing co-located broker
+    private String brokerHost;
+    private int brokerPort;
+
     private ProtonClient client;
 
     private AmqpLwtEndpoint lwtEndpoint;
+    private AmqpBrokerEndpoint brokerEndpoint;
 
     @Override
     public void start(Future<Void> startFuture) throws Exception {
@@ -55,6 +61,7 @@ public class MqttLwt extends AbstractVerticle {
     public void stop(Future<Void> stopFuture) throws Exception {
 
         this.lwtEndpoint.close();
+        this.brokerEndpoint.close();
         LOG.info("Stopping MQTT LWT service verticle...");
         stopFuture.complete();
     }
@@ -68,11 +75,14 @@ public class MqttLwt extends AbstractVerticle {
 
         this.client = ProtonClient.create(this.vertx);
 
+        Future<ProtonConnection> lwtConnFuture = Future.future();
+
+        // connecting to the messaging service (router network)
         this.client.connect(this.messagingServiceHost, this.messagingServiceInternalPort, done -> {
 
             if (done.succeeded()) {
 
-                LOG.info("MQTT LWT service started successfully ...");
+                LOG.info("MQTT LWT service connected to the messaging service ...");
 
                 ProtonConnection connection = done.result();
                 connection.setContainer(CONTAINER_ID);
@@ -81,14 +91,45 @@ public class MqttLwt extends AbstractVerticle {
                 this.lwtEndpoint = new AmqpLwtEndpoint(connection);
                 this.lwtEndpoint.open();
 
-                startFuture.complete();
+                lwtConnFuture.complete();
 
             } else {
 
-                LOG.error("Error starting the MQTT LWT service ...", done.cause());
-                startFuture.fail(done.cause());
+                LOG.error("Error connecting MQTT LWT service to the messaging service ...", done.cause());
+
+                lwtConnFuture.fail(done.cause());
             }
+
         });
+
+        // compose the connection to the messaging service with connection to the co-located broker
+        lwtConnFuture.compose(v -> {
+
+            // connecting to the co-located broker
+            this.client.connect(this.brokerHost, this.brokerPort, done -> {
+
+                if (done.succeeded()) {
+
+                    LOG.info("MQTT LWT service connected to the co-located broker ...");
+
+                    ProtonConnection connection = done.result();
+                    connection.setContainer(CONTAINER_ID);
+
+                    // TODO
+                    this.brokerEndpoint = new AmqpBrokerEndpoint(connection);
+                    this.brokerEndpoint.open();
+
+                    startFuture.complete();
+
+                } else {
+
+                    LOG.error("Error connecting MQTT LWT service to the co-located broker ...", done.cause());
+
+                    startFuture.fail(done.cause());
+                }
+            });
+
+        }, startFuture);
     }
 
     /**
@@ -97,7 +138,7 @@ public class MqttLwt extends AbstractVerticle {
      * @param messagingServiceHost   address for AMQP connection
      * @return  current MQTT LWT instance
      */
-    @Value(value = "${messaging.service.host:0.0.0.0}")
+    @Value(value = "${messaging.service.host:localhost}")
     public MqttLwt setMessagingServiceHost(String messagingServiceHost) {
         this.messagingServiceHost = messagingServiceHost;
         return this;
@@ -109,9 +150,33 @@ public class MqttLwt extends AbstractVerticle {
      * @param messagingServiceInternalPort   port for AMQP connection
      * @return  current MQTT LWT instance
      */
-    @Value(value = "${messaging.service..internal.port:55673}")
+    @Value(value = "${messaging.service.internal.port:55673}")
     public MqttLwt setMessagingServiceInternalPort(int messagingServiceInternalPort) {
         this.messagingServiceInternalPort = messagingServiceInternalPort;
+        return this;
+    }
+
+    /**
+     * Set the address for connecting to the backing co-located broker
+     *
+     * @param brokerHost    address for AMQP connection
+     * @return  current MQTT LWT instance
+     */
+    @Value(value = "${broker.host:localhost}")
+    public MqttLwt setBrokerHost(String brokerHost) {
+        this.brokerHost = brokerHost;
+        return this;
+    }
+
+    /**
+     * Set the port for connecting to the backing co-located broker
+     *
+     * @param brokerPort    port for AMQP connection
+     * @return  current MQTT LWT instance
+     */
+    @Value(value = "${broker.port:5672}")
+    public MqttLwt setBrokerPort(int brokerPort) {
+        this.brokerPort = brokerPort;
         return this;
     }
 }
