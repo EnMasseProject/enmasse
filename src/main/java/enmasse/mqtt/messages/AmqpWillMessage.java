@@ -177,7 +177,7 @@ public class AmqpWillMessage {
     @Override
     public String toString() {
 
-        return "AmqpSubscribeMessage{" +
+        return "AmqpWillMessage{" +
                 "isRetain=" + this.isRetain +
                 ", topic=" + this.topic +
                 ", qos=" + this.qos +
