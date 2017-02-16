@@ -16,6 +16,7 @@
 
 package enmasse.mqtt;
 
+import enmasse.mqtt.storage.impl.InMemoryLwtStorage;
 import io.vertx.core.Vertx;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
@@ -61,8 +62,7 @@ public class MqttLwtTestBase {
         this.lwtService
                 .setMessagingServiceHost(INTERNAL_SERVICE_HOST)
                 .setMessagingServiceInternalPort(INTERNAL_SERVICE_PORT)
-                .setBrokerHost(BROKER_HOST)
-                .setBrokerPort(BROKER_PORT);
+                .setLwtStorage(new InMemoryLwtStorage());
 
         if (deploy) {
             this.deploy(context);

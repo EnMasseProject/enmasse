@@ -16,14 +16,15 @@
 
 package enmasse.mqtt;
 
-import enmasse.mqtt.endpoints.AmqpBrokerEndpoint;
 import enmasse.mqtt.endpoints.AmqpLwtEndpoint;
+import enmasse.mqtt.storage.LwtStorage;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.proton.ProtonClient;
 import io.vertx.proton.ProtonConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -41,14 +42,10 @@ public class MqttLwt extends AbstractVerticle {
     private String messagingServiceHost;
     private int messagingServiceInternalPort;
 
-    // connection info to the backing co-located broker
-    private String brokerHost;
-    private int brokerPort;
-
     private ProtonClient client;
 
     private AmqpLwtEndpoint lwtEndpoint;
-    private AmqpBrokerEndpoint brokerEndpoint;
+    private LwtStorage lwtStorage;
 
     @Override
     public void start(Future<Void> startFuture) throws Exception {
@@ -61,7 +58,7 @@ public class MqttLwt extends AbstractVerticle {
     public void stop(Future<Void> stopFuture) throws Exception {
 
         this.lwtEndpoint.close();
-        this.brokerEndpoint.close();
+        this.lwtStorage.close();
         LOG.info("Stopping MQTT LWT service verticle...");
         stopFuture.complete();
     }
@@ -102,31 +99,27 @@ public class MqttLwt extends AbstractVerticle {
 
         });
 
-        // compose the connection to the messaging service with connection to the co-located broker
+        // compose the connection to the messaging service with connection to storage service
         lwtConnFuture.compose(v -> {
 
-            // connecting to the co-located broker
-            this.client.connect(this.brokerHost, this.brokerPort, done -> {
+            // connecting to the storage service
+            this.lwtStorage.open(done -> {
 
                 if (done.succeeded()) {
 
-                    LOG.info("MQTT LWT service connected to the co-located broker ...");
-
-                    ProtonConnection connection = done.result();
-                    connection.setContainer(CONTAINER_ID);
+                    LOG.info("MQTT LWT service connected to the storage service ...");
 
                     // TODO
-                    this.brokerEndpoint = new AmqpBrokerEndpoint(connection);
-                    this.brokerEndpoint.open();
 
                     startFuture.complete();
 
                 } else {
 
-                    LOG.error("Error connecting MQTT LWT service to the co-located broker ...", done.cause());
+                    LOG.error("Error connecting MQTT LWT service to the storage service ...", done.cause());
 
                     startFuture.fail(done.cause());
                 }
+
             });
 
         }, startFuture);
@@ -157,26 +150,14 @@ public class MqttLwt extends AbstractVerticle {
     }
 
     /**
-     * Set the address for connecting to the backing co-located broker
+     * Set the LWT Storage service implementation to use
      *
-     * @param brokerHost    address for AMQP connection
+     * @param lwtStorage    LWT Storage service instance
      * @return  current MQTT LWT instance
      */
-    @Value(value = "${broker.host:localhost}")
-    public MqttLwt setBrokerHost(String brokerHost) {
-        this.brokerHost = brokerHost;
-        return this;
-    }
-
-    /**
-     * Set the port for connecting to the backing co-located broker
-     *
-     * @param brokerPort    port for AMQP connection
-     * @return  current MQTT LWT instance
-     */
-    @Value(value = "${broker.port:5672}")
-    public MqttLwt setBrokerPort(int brokerPort) {
-        this.brokerPort = brokerPort;
+    @Autowired
+    public MqttLwt setLwtStorage(LwtStorage lwtStorage) {
+        this.lwtStorage = lwtStorage;
         return this;
     }
 }
