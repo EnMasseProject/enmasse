@@ -17,6 +17,7 @@
 package enmasse.mqtt;
 
 import enmasse.mqtt.endpoints.AmqpLwtEndpoint;
+import enmasse.mqtt.endpoints.AmqpPublishEndpoint;
 import enmasse.mqtt.storage.LwtStorage;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
@@ -40,12 +41,14 @@ public class MqttLwt extends AbstractVerticle {
 
     // connection info to the messaging service
     private String messagingServiceHost;
+    private int messagingServicePort;
     private int messagingServiceInternalPort;
 
     private ProtonClient client;
 
     private AmqpLwtEndpoint lwtEndpoint;
     private LwtStorage lwtStorage;
+    private AmqpPublishEndpoint publishEndpoint;
 
     @Override
     public void start(Future<Void> startFuture) throws Exception {
@@ -74,12 +77,12 @@ public class MqttLwt extends AbstractVerticle {
 
         Future<ProtonConnection> lwtConnFuture = Future.future();
 
-        // connecting to the messaging service (router network)
+        // connecting to the messaging service internal (router network)
         this.client.connect(this.messagingServiceHost, this.messagingServiceInternalPort, done -> {
 
             if (done.succeeded()) {
 
-                LOG.info("MQTT LWT service connected to the messaging service ...");
+                LOG.info("MQTT LWT service connected to the messaging service internal ...");
 
                 ProtonConnection connection = done.result();
                 connection.setContainer(CONTAINER_ID);
@@ -92,15 +95,45 @@ public class MqttLwt extends AbstractVerticle {
 
             } else {
 
-                LOG.error("Error connecting MQTT LWT service to the messaging service ...", done.cause());
+                LOG.error("Error connecting MQTT LWT service to the messaging service internal ...", done.cause());
 
                 lwtConnFuture.fail(done.cause());
             }
 
         });
 
-        // compose the connection to the messaging service with connection to storage service
+        // compose the connection with messaging service
         lwtConnFuture.compose(v -> {
+
+            Future<ProtonConnection> publishConnFuture = Future.future();
+
+            this.client.connect(this.messagingServiceHost, this.messagingServicePort, done -> {
+
+                if (done.succeeded()) {
+
+                    LOG.info("MQTT LWT service connected to the messaging service ...");
+
+                    ProtonConnection connection = done.result();
+                    connection.setContainer(CONTAINER_ID);
+
+                    // TODO
+                    this.publishEndpoint = new AmqpPublishEndpoint();
+
+                    publishConnFuture.complete();
+
+                } else {
+
+                    LOG.error("Error connecting MQTT LWT service to the messaging service ...", done.cause());
+
+                    publishConnFuture.fail(done.cause());
+                }
+
+            });
+
+            return publishConnFuture;
+
+        // compose the connection to the messaging service with connection to storage service
+        }).compose(v -> {
 
             // connecting to the storage service
             this.lwtStorage.open(done -> {
@@ -138,9 +171,21 @@ public class MqttLwt extends AbstractVerticle {
     }
 
     /**
-     * Set the port for connecting to the AMQP internal network
+     * Set the port for connecting to the AMQP services
      *
-     * @param messagingServiceInternalPort   port for AMQP connection
+     * @param messagingServicePort   port for AMQP connections
+     * @return  current MQTT LWT instance
+     */
+    @Value(value = "${messaging.service.port:5672}")
+    public MqttLwt setMessagingServicePort(int messagingServicePort) {
+        this.messagingServicePort = messagingServicePort;
+        return this;
+    }
+
+    /**
+     * Set the internal port for connecting to the AMQP internal network
+     *
+     * @param messagingServiceInternalPort   internal port for AMQP connection
      * @return  current MQTT LWT instance
      */
     @Value(value = "${messaging.service.internal.port:55673}")

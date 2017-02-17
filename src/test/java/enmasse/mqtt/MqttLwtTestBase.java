@@ -40,9 +40,7 @@ public class MqttLwtTestBase {
 
     public static final String MESSAGING_SERVICE_HOST = "localhost";
     public static final int MESSAGING_SERVICE_PORT = 5672;
-
-    public static final String INTERNAL_SERVICE_HOST = "localhost";
-    public static final int INTERNAL_SERVICE_PORT = 55673;
+    public static final int MESSAGING_SERVICE_INTERNAL_PORT = 55673;
 
     public static final String LWT_SERVICE_ENDPOINT = "$lwt";
 
@@ -64,8 +62,9 @@ public class MqttLwtTestBase {
         // create and setup MQTT LWT instance
         this.lwtService = new MqttLwt();
         this.lwtService
-                .setMessagingServiceHost(INTERNAL_SERVICE_HOST)
-                .setMessagingServiceInternalPort(INTERNAL_SERVICE_PORT)
+                .setMessagingServiceHost(MESSAGING_SERVICE_HOST)
+                .setMessagingServicePort(MESSAGING_SERVICE_PORT)
+                .setMessagingServiceInternalPort(MESSAGING_SERVICE_INTERNAL_PORT)
                 .setLwtStorage(this.lwtStorage);
 
         if (deploy) {
