@@ -16,6 +16,7 @@
 
 package enmasse.mqtt;
 
+import enmasse.mqtt.storage.LwtStorage;
 import enmasse.mqtt.storage.impl.InMemoryLwtStorage;
 import io.vertx.core.Vertx;
 import io.vertx.ext.unit.Async;
@@ -35,15 +36,13 @@ public class MqttLwtTestBase {
 
     protected Vertx vertx;
     protected MqttLwt lwtService;
+    protected LwtStorage lwtStorage;
 
     public static final String MESSAGING_SERVICE_HOST = "localhost";
     public static final int MESSAGING_SERVICE_PORT = 5672;
 
     public static final String INTERNAL_SERVICE_HOST = "localhost";
     public static final int INTERNAL_SERVICE_PORT = 55673;
-
-    public static final String BROKER_HOST = "localhost";
-    public static final int BROKER_PORT = 5672;
 
     public static final String LWT_SERVICE_ENDPOINT = "$lwt";
 
@@ -55,6 +54,11 @@ public class MqttLwtTestBase {
      */
     protected void setup(TestContext context, boolean deploy) {
 
+        // if not set before, using in memory LWT storage as default
+        if (this.lwtStorage == null) {
+            this.lwtStorage = new InMemoryLwtStorage();
+        }
+
         this.vertx = Vertx.vertx();
 
         // create and setup MQTT LWT instance
@@ -62,7 +66,7 @@ public class MqttLwtTestBase {
         this.lwtService
                 .setMessagingServiceHost(INTERNAL_SERVICE_HOST)
                 .setMessagingServiceInternalPort(INTERNAL_SERVICE_PORT)
-                .setLwtStorage(new InMemoryLwtStorage());
+                .setLwtStorage(this.lwtStorage);
 
         if (deploy) {
             this.deploy(context);

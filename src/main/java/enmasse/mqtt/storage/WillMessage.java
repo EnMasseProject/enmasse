@@ -78,6 +78,47 @@ public class WillMessage {
     }
 
     @Override
+    public boolean equals(Object obj) {
+
+        if (this == obj) {
+            return true;
+        }
+
+        if (obj == null || this.getClass() != obj.getClass()) {
+            return false;
+        }
+
+        WillMessage other = (WillMessage)obj;
+
+        if (this.isRetain != other.isRetain()) {
+            return false;
+        }
+
+        if (!this.topic.equals(other.topic())) {
+            return false;
+        }
+
+        if (this.qos != other.qos()) {
+            return false;
+        }
+
+        if (this.payload.length() != other.payload().length()) {
+            return false;
+        } else {
+            return this.byteArraysEqual(this.payload.getBytes(), other.payload().getBytes());
+        }
+    }
+
+    private boolean byteArraysEqual(byte[] b1, byte[] b2) {
+
+        if (b1.length != b2.length) return false;
+        for (int i = 0; i < b1.length; i++) {
+            if (b1[i] != b2[i]) return false;
+        }
+        return true;
+    }
+
+    @Override
     public String toString() {
 
         return "WillMessage{" +
