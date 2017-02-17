@@ -61,6 +61,7 @@ public class MqttLwt extends AbstractVerticle {
     public void stop(Future<Void> stopFuture) throws Exception {
 
         this.lwtEndpoint.close();
+        this.publishEndpoint.close();
         this.lwtStorage.close();
         LOG.info("Stopping MQTT LWT service verticle...");
         stopFuture.complete();
@@ -117,7 +118,8 @@ public class MqttLwt extends AbstractVerticle {
                     connection.setContainer(CONTAINER_ID);
 
                     // TODO
-                    this.publishEndpoint = new AmqpPublishEndpoint();
+                    this.publishEndpoint = new AmqpPublishEndpoint(connection);
+                    this.publishEndpoint.open();
 
                     publishConnFuture.complete();
 
