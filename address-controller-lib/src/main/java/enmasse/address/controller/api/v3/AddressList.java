@@ -52,6 +52,10 @@ public class AddressList {
                 .collect(Collectors.toSet());
     }
 
+    public static String kind() {
+        return AddressList.class.getName();
+    }
+
     protected static class Deserializer extends JsonDeserializer<AddressList> {
 
         @Override

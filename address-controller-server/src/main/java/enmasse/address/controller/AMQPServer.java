@@ -51,16 +51,16 @@ public class AMQPServer extends AbstractVerticle {
         server.connectHandler(connection -> {
             connection.setContainer("address-controller");
             connection.openHandler(conn -> {
-                log.info("Connection opened");
+                log.debug("Connection opened");
             }).closeHandler(conn -> {
                 closeHandlers(connection);
                 connection.close();
                 connection.disconnect();
-                log.info("Connection closed");
+                log.debug("Connection closed");
             }).disconnectHandler(protonConnection -> {
                 closeHandlers(connection);
                 connection.disconnect();
-                log.info("Disconnected");
+                log.debug("Disconnected");
             }).open();
             connection.sessionOpenHandler(ProtonSession::open);
             connection.receiverOpenHandler(this::createReceiver);
@@ -117,29 +117,10 @@ public class AMQPServer extends AbstractVerticle {
     }
 
     private void onAddressConfig(Message message) throws IOException {
-        ApplicationProperties properties = message.getApplicationProperties();
-        if (properties == null) {
-            throw new IllegalArgumentException("Missing message properties");
-        }
-        Map propertyMap = properties.getValue();
-
-        if (!propertyMap.containsKey("method")) {
-            throw new IllegalArgumentException("Property 'method' is missing");
-        }
-        String method = (String) propertyMap.get("method");
-
         Optional<ResponseHandler> responseHandler = Optional.ofNullable(replyHandlers.get(message.getReplyTo()))
                 .map(context -> (ResponseHandler) response -> vertx.runOnContext(v -> context.sender.send(response)));
 
-        if ("GET".equals(method)) {
-            addressingService.handleGet(message, responseHandler);
-        } else if ("PUT".equals(method)) {
-            addressingService.handlePut(message, responseHandler);
-        } else if ("POST".equals(method)) {
-            addressingService.handleAppend(message, responseHandler);
-        } else if ("DELETE".equals(method)) {
-            addressingService.handleDelete(message, responseHandler);
-        }
+        addressingService.handleMessage(message, responseHandler);
     }
 
     public void stop() {
