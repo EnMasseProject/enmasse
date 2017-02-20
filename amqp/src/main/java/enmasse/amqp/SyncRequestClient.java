@@ -54,7 +54,6 @@ public class SyncRequestClient implements AutoCloseable {
         ProtonClient client = ProtonClient.create(vertx);
         client.connect(host, port, connectEvent -> {
             if (connectEvent.succeeded()) {
-                System.out.println("COnnected");
                 ProtonConnection connection = connectEvent.result();
                 connection.open();
 
@@ -76,6 +75,7 @@ public class SyncRequestClient implements AutoCloseable {
 
                         receiver.openHandler(receiverOpenEvent -> {
                             if (receiverOpenEvent.succeeded()) {
+                                message.setReplyTo(receiver.getRemoteSource().getAddress());
                                 sender.send(message);
                             } else {
                                 response.completeExceptionally(receiverOpenEvent.cause());
