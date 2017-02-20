@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package enmasse.address.controller.restapi.common;
+package enmasse.address.controller.api.v1v2common.common;
 
 /**
  * API type representing an address and its properties

@@ -1,9 +1,9 @@
-package enmasse.address.controller.restapi;
+package enmasse.address.controller.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import enmasse.address.controller.model.Destination;
-import enmasse.address.controller.restapi.v3.Address;
-import enmasse.address.controller.restapi.v3.AddressList;
+import enmasse.address.controller.api.v3.Address;
+import enmasse.address.controller.api.v3.AddressList;
 import org.junit.Test;
 import org.mockito.internal.util.collections.Sets;
 

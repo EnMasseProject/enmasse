@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package enmasse.address.controller.restapi.v1;
+package enmasse.address.controller.api.v2.http;
 
 import enmasse.address.controller.admin.AddressManager;
+import enmasse.address.controller.api.v1v2common.RestServiceBase;
+import enmasse.address.controller.api.v1v2common.common.AddressProperties;
 import enmasse.address.controller.model.Destination;
 import enmasse.address.controller.model.DestinationGroup;
-import enmasse.address.controller.restapi.common.AddressProperties;
-import enmasse.address.controller.restapi.common.RestServiceBase;
 import io.vertx.core.Vertx;
 
 import javax.ws.rs.*;
@@ -31,10 +31,13 @@ import javax.ws.rs.core.MediaType;
 import java.util.*;
 import java.util.stream.Collectors;
 
-@Path("/v1/enmasse/addresses")
-public class RestServiceV1 extends RestServiceBase {
+/**
+ * The V2 interface is not yet public, so it is temporary in order to have a way to deploy colocated addresses
+ */
+@Path("/v2/enmasse/addresses")
+public class RestServiceV2 extends RestServiceBase {
 
-    public RestServiceV1(@Context AddressManager addressManager, @Context Vertx vertx) {
+    public RestServiceV2(@Context AddressManager addressManager, @Context Vertx vertx) {
         super(addressManager, vertx);
     }
 
@@ -47,7 +50,7 @@ public class RestServiceV1 extends RestServiceBase {
     @PUT
     @Consumes({MediaType.APPLICATION_JSON})
     @Produces({MediaType.APPLICATION_JSON})
-    public void putAddresses(Map<String, AddressProperties> addressMap, @Suspended final AsyncResponse response) {
+    public void putAddresses(Map<String, Map<String, AddressProperties>> addressMap, @Suspended final AsyncResponse response) {
         super.putAddresses(mapToDestinations(addressMap), response);
     }
 
@@ -61,26 +64,31 @@ public class RestServiceV1 extends RestServiceBase {
     @POST
     @Consumes({MediaType.APPLICATION_JSON})
     @Produces({MediaType.APPLICATION_JSON})
-    public void appendAddresses(Map<String, AddressProperties> addressMap, @Suspended final AsyncResponse response) {
+    public void appendAddresses(Map<String, Map<String, AddressProperties>> addressMap, @Suspended final AsyncResponse response) {
         super.appendAddresses(mapToDestinations(addressMap), response);
     }
 
-    private static Set<DestinationGroup> mapToDestinations(Map<String, AddressProperties> addressMap) {
+    private static Set<DestinationGroup> mapToDestinations(Map<String, Map<String, AddressProperties>> addressMap) {
         return addressMap.entrySet().stream()
                 .map(e -> {
                     DestinationGroup.Builder groupBuilder = new DestinationGroup.Builder(e.getKey());
-                    groupBuilder.destination(new Destination(e.getKey(), e.getKey(), e.getValue().store_and_forward, e.getValue().multicast, Optional.ofNullable(e.getValue().flavor)));
+                    e.getValue().entrySet()
+                            .forEach(d -> {
+                                groupBuilder.destination(new Destination(d.getKey(), e.getKey(), d.getValue().store_and_forward, d.getValue().multicast, Optional.ofNullable(d.getValue().flavor)));
+                            });
                     return groupBuilder.build();
                 })
                 .collect(Collectors.toSet());
     }
 
-    protected Map<String, AddressProperties> getResponseEntity(Collection<DestinationGroup> destinationGroups) {
-        Map<String, AddressProperties> map = new LinkedHashMap<>();
+    protected Map<String, Map<String, AddressProperties>> getResponseEntity(Collection<DestinationGroup> destinationGroups) {
+        Map<String, Map<String, AddressProperties>> map = new LinkedHashMap<>();
         for (DestinationGroup destinationGroup : destinationGroups) {
+            Map<String, AddressProperties> addrMap = new LinkedHashMap<>();
+            map.put(destinationGroup.getGroupId(), addrMap);
             for (Destination destination : destinationGroup.getDestinations()) {
                 String flavor = destination.flavor().orElse(null);
-                map.put(destination.address(), new AddressProperties(destination.storeAndForward(), destination.multicast(), flavor));
+                addrMap.put(destination.address(), new AddressProperties(destination.storeAndForward(), destination.multicast(), flavor));
             }
         }
         return map;

@@ -14,14 +14,15 @@
  * limitations under the License.
  */
 
-package enmasse.address.controller.restapi;
+package enmasse.address.controller.api;
 
 import enmasse.address.controller.admin.AddressManager;
+import enmasse.address.controller.api.v3.ApiHandler;
 import enmasse.address.controller.model.Destination;
 import enmasse.address.controller.model.DestinationGroup;
-import enmasse.address.controller.restapi.v3.Address;
-import enmasse.address.controller.restapi.v3.AddressList;
-import enmasse.address.controller.restapi.v3.AddressingService;
+import enmasse.address.controller.api.v3.Address;
+import enmasse.address.controller.api.v3.AddressList;
+import enmasse.address.controller.api.v3.http.AddressingService;
 import io.vertx.core.Vertx;
 import org.junit.Before;
 import org.junit.Test;
@@ -44,7 +45,7 @@ public class AddressingApiTest {
     @Before
     public void setup() {
         addressManager = new TestManager();
-        addressingService = new AddressingService(addressManager);
+        addressingService = new AddressingService(new ApiHandler(addressManager));
         addressManager.destinationsUpdated(Sets.newSet(
             createGroup(new Destination("addr1", "addr1", false, false, Optional.empty())),
             createGroup(new Destination("queue1", "queue1", true, false, Optional.of("vanilla")))));

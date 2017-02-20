@@ -87,7 +87,7 @@ public class HTTPServerTest {
         }
     }
 
-    private static class TestManager implements AddressManager {
+    public static class TestManager implements AddressManager {
         Set<DestinationGroup> destinationList = new LinkedHashSet<>();
         boolean throwException = false;
 

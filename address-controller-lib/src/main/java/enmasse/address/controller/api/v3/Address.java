@@ -1,4 +1,4 @@
-package enmasse.address.controller.restapi.v3;
+package enmasse.address.controller.api.v3;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
