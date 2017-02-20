@@ -286,7 +286,8 @@ public class AmqpBridge {
 
         this.connection.close();
 
-        this.grantedQoSLevels.clear();
+        if (this.grantedQoSLevels != null)
+            this.grantedQoSLevels.clear();
     }
 
     /**
