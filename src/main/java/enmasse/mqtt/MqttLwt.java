@@ -18,6 +18,8 @@ package enmasse.mqtt;
 
 import enmasse.mqtt.endpoints.AmqpLwtEndpoint;
 import enmasse.mqtt.endpoints.AmqpPublishEndpoint;
+import enmasse.mqtt.messages.AmqpPublishMessage;
+import enmasse.mqtt.messages.AmqpWillMessage;
 import enmasse.mqtt.storage.LwtStorage;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
@@ -90,6 +92,9 @@ public class MqttLwt extends AbstractVerticle {
 
                 // TODO
                 this.lwtEndpoint = new AmqpLwtEndpoint(connection);
+                this.lwtEndpoint
+                        .willHandler(this::handleWill)
+                        .disconnectionHandler(this::handleDisconnection);
                 this.lwtEndpoint.open();
 
                 lwtConnFuture.complete();
@@ -158,6 +163,59 @@ public class MqttLwt extends AbstractVerticle {
             });
 
         }, startFuture);
+    }
+
+    private void handleWill(WillData willData) {
+
+        // TODO
+        this.lwtStorage.get(willData.clientId(), done -> {
+
+            if (done.succeeded()) {
+                this.lwtStorage.update(willData.clientId(), willData.amqpWillMessage(), ar -> {
+                    // TODO
+                });
+            } else {
+                this.lwtStorage.add(willData.clientId(), willData.amqpWillMessage(), ar -> {
+                    // TODO
+                });
+            }
+        });
+    }
+
+    private void handleDisconnection(DisconnectionData disconnectionData) {
+
+        // TODO
+
+        if (!disconnectionData.isError()) {
+
+            this.lwtStorage.delete(disconnectionData.clientId(), done -> {
+                // TODO
+            });
+        } else {
+
+            this.lwtStorage.get(disconnectionData.clientId(), ar -> {
+
+                if (ar.succeeded()) {
+
+                    AmqpWillMessage amqpWillMessage = ar.result();
+
+                    AmqpPublishMessage amqpPublishMessage =
+                            new AmqpPublishMessage(null, amqpWillMessage.qos(), false, amqpWillMessage.isRetain(), amqpWillMessage.topic(), amqpWillMessage.payload());
+
+                    this.publishEndpoint.publish(amqpPublishMessage, ar1 -> {
+
+                        // TODO
+                        if (ar1.succeeded()) {
+
+                            this.lwtStorage.delete(disconnectionData.clientId(), ar2 -> {
+
+                                // TODO
+                            });
+                        }
+                    });
+                }
+            });
+        }
     }
 
     /**

@@ -16,11 +16,18 @@
 
 package enmasse.mqtt.endpoints;
 
+import enmasse.mqtt.DisconnectionData;
+import enmasse.mqtt.WillData;
+import enmasse.mqtt.messages.AmqpWillMessage;
 import io.vertx.core.AsyncResult;
+import io.vertx.core.Handler;
 import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.ProtonDelivery;
 import io.vertx.proton.ProtonQoS;
 import io.vertx.proton.ProtonReceiver;
+import org.apache.qpid.proton.amqp.Symbol;
+import org.apache.qpid.proton.amqp.messaging.Accepted;
+import org.apache.qpid.proton.amqp.messaging.Rejected;
 import org.apache.qpid.proton.amqp.transport.AmqpError;
 import org.apache.qpid.proton.amqp.transport.ErrorCondition;
 import org.apache.qpid.proton.message.Message;
@@ -39,6 +46,9 @@ public class AmqpLwtEndpoint {
 
     private ProtonConnection connection;
 
+    private Handler<WillData> willHandler;
+    private Handler<DisconnectionData> disconnectionHandler;
+
     /**
      * Constructor
      *
@@ -52,6 +62,12 @@ public class AmqpLwtEndpoint {
      * Open the endpoint, opening the connection
      */
     public void open() {
+
+        if ((this.willHandler == null) ||
+            (this.disconnectionHandler == null)) {
+
+            throw new IllegalStateException("Handlers for received will and disconnection must be set");
+        }
 
         this.connection
                 .sessionOpenHandler(session -> session.open())
@@ -100,15 +116,35 @@ public class AmqpLwtEndpoint {
     }
 
     private void messageHandler(ProtonReceiver receiver, ProtonDelivery delivery, Message message) {
+
         // TODO
+
+        AmqpWillMessage amqpWillMessage = AmqpWillMessage.from(message);
+
+        if (this.willHandler != null) {
+
+            // TODO : hanving a callback to check if handling went well and send right disposition ?
+            this.willHandler.handle(new WillData(receiver.getName(), amqpWillMessage));
+
+            delivery.disposition(Accepted.getInstance(), true);
+
+        } else {
+
+            ErrorCondition errorCondition = new ErrorCondition(Symbol.getSymbol("enmasse:will-refused"), "WILL refused");
+            Rejected rejected = new Rejected();
+            rejected.setError(errorCondition);
+
+            delivery.disposition(rejected, true);
+        }
 
         // NOTE : after receiving the AMQP_WILL, a new credit should be issued
         //        with AMQP we want to change the "will" message during the client life
+        receiver.flow(AMQP_WILL_CREDITS);
     }
 
     private void closeHandler(ProtonReceiver receiver, AsyncResult<ProtonReceiver> ar) {
 
-        ErrorCondition errorCondition = null;
+        ErrorCondition remoteErrorCondition = receiver.getRemoteCondition();
 
         // link detached without error, so the "will" should be cleared and not sent
         if (ar.succeeded()) {
@@ -122,15 +158,42 @@ public class AmqpLwtEndpoint {
 
             LOG.info("Brute disconnection from {}", receiver.getName());
 
-            errorCondition = new ErrorCondition(receiver.getRemoteCondition().getCondition(),
-                    String.format("client detached with: %s", receiver.getRemoteCondition().getDescription()));
+            ErrorCondition errorCondition = new ErrorCondition(remoteErrorCondition.getCondition(),
+                    String.format("client detached with: %s", remoteErrorCondition.getDescription()));
+
+            receiver.setCondition(errorCondition);
 
             // TODO
         }
 
-        if (errorCondition != null) {
-            receiver.setCondition(errorCondition);
+        if (this.disconnectionHandler != null) {
+            this.disconnectionHandler.handle(new DisconnectionData(receiver.getName(), remoteErrorCondition != null));
         }
+
         receiver.close();
+    }
+
+    /**
+     * Set the handler called when an AMQP_WILL message is received on the endpoint
+     *
+     * @param handler   the handler
+     * @return  a reference to the current AmqpLwtEndpoint instance
+     */
+    public AmqpLwtEndpoint willHandler(Handler<WillData> handler) {
+
+        this.willHandler = handler;
+        return this;
+    }
+
+    /**
+     * Set the handler called when a client disconnect on this endpoint
+     *
+     * @param handler   the handler
+     * @return  a reference to the current AmqpLwtEndpoint instance
+     */
+    public AmqpLwtEndpoint disconnectionHandler(Handler<DisconnectionData> handler) {
+
+        this.disconnectionHandler = handler;
+        return this;
     }
 }
