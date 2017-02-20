@@ -69,12 +69,10 @@ public class AmqpPublishEndpoint {
         // use sender for QoS 0/1 messages
         if (amqpPublishMessage.qos() != MqttQoS.EXACTLY_ONCE) {
 
-            // TODO
             ProtonSender sender = this.connection.createSender(amqpPublishMessage.topic());
 
-            sender
-                    .setQoS(ProtonQoS.AT_LEAST_ONCE)
-                    .open();
+            sender.setQoS(ProtonQoS.AT_LEAST_ONCE)
+                  .open();
 
             if (amqpPublishMessage.qos() == MqttQoS.AT_MOST_ONCE) {
 

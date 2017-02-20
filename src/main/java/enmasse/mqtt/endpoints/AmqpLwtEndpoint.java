@@ -25,9 +25,7 @@ import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.ProtonDelivery;
 import io.vertx.proton.ProtonQoS;
 import io.vertx.proton.ProtonReceiver;
-import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.messaging.Accepted;
-import org.apache.qpid.proton.amqp.messaging.Rejected;
 import org.apache.qpid.proton.amqp.transport.AmqpError;
 import org.apache.qpid.proton.amqp.transport.ErrorCondition;
 import org.apache.qpid.proton.message.Message;
@@ -65,7 +63,6 @@ public class AmqpLwtEndpoint {
 
         if ((this.willHandler == null) ||
             (this.disconnectionHandler == null)) {
-
             throw new IllegalStateException("Handlers for received will and disconnection must be set");
         }
 
@@ -117,60 +114,56 @@ public class AmqpLwtEndpoint {
 
     private void messageHandler(ProtonReceiver receiver, ProtonDelivery delivery, Message message) {
 
-        // TODO
+        try {
 
-        AmqpWillMessage amqpWillMessage = AmqpWillMessage.from(message);
+            AmqpWillMessage amqpWillMessage = AmqpWillMessage.from(message);
 
-        if (this.willHandler != null) {
-
-            // TODO : hanving a callback to check if handling went well and send right disposition ?
+            // TODO : having a callback to check if handling went well and send right disposition ?
             this.willHandler.handle(new WillData(receiver.getName(), amqpWillMessage));
 
             delivery.disposition(Accepted.getInstance(), true);
 
-        } else {
+            // NOTE : after receiving the AMQP_WILL, a new credit is issued because
+            //        with AMQP we want to change the "will" message during the client life
+            receiver.flow(AMQP_WILL_CREDITS);
 
-            ErrorCondition errorCondition = new ErrorCondition(Symbol.getSymbol("enmasse:will-refused"), "WILL refused");
-            Rejected rejected = new Rejected();
-            rejected.setError(errorCondition);
+        } catch (IllegalArgumentException ex) {
 
-            delivery.disposition(rejected, true);
+            LOG.error("Error decoding will message", ex);
+
+            ErrorCondition errorCondition =
+                    new ErrorCondition(AmqpError.DECODE_ERROR, "Received message is not a will message");
+
+            receiver.setCondition(errorCondition)
+                    .close();
         }
-
-        // NOTE : after receiving the AMQP_WILL, a new credit should be issued
-        //        with AMQP we want to change the "will" message during the client life
-        receiver.flow(AMQP_WILL_CREDITS);
     }
 
     private void closeHandler(ProtonReceiver receiver, AsyncResult<ProtonReceiver> ar) {
-
-        ErrorCondition remoteErrorCondition = receiver.getRemoteCondition();
 
         // link detached without error, so the "will" should be cleared and not sent
         if (ar.succeeded()) {
 
             LOG.info("Clean disconnection from {}", receiver.getName());
-            // TODO
 
+            // TODO: for now nothing to do ?
 
         // link detached with error, so the "will" should be sent
         } else {
 
             LOG.info("Brute disconnection from {}", receiver.getName());
 
-            ErrorCondition errorCondition = new ErrorCondition(remoteErrorCondition.getCondition(),
-                    String.format("client detached with: %s", remoteErrorCondition.getDescription()));
+            ErrorCondition errorCondition = new ErrorCondition(receiver.getRemoteCondition().getCondition(),
+                    String.format("client detached with: %s", receiver.getRemoteCondition().getDescription()));
 
             receiver.setCondition(errorCondition);
-
-            // TODO
-        }
-
-        if (this.disconnectionHandler != null) {
-            this.disconnectionHandler.handle(new DisconnectionData(receiver.getName(), remoteErrorCondition.getCondition() != null));
         }
 
         receiver.close();
+
+        if (this.disconnectionHandler != null) {
+            this.disconnectionHandler.handle(new DisconnectionData(receiver.getName(), ar.failed()));
+        }
     }
 
     /**

@@ -167,16 +167,18 @@ public class MqttLwt extends AbstractVerticle {
 
     private void handleWill(WillData willData) {
 
-        // TODO
+        // will message received, check for updating or adding
         this.lwtStorage.get(willData.clientId(), done -> {
 
             if (done.succeeded()) {
                 this.lwtStorage.update(willData.clientId(), willData.amqpWillMessage(), ar -> {
-                    // TODO
+
+                    LOG.info("Updated will for client {}", willData.clientId());
                 });
             } else {
                 this.lwtStorage.add(willData.clientId(), willData.amqpWillMessage(), ar -> {
-                    // TODO
+
+                    LOG.info("Added will for client {}", willData.clientId());
                 });
             }
         });
@@ -184,15 +186,16 @@ public class MqttLwt extends AbstractVerticle {
 
     private void handleDisconnection(DisconnectionData disconnectionData) {
 
-        // TODO
-
+        // clean disconnection, just delete will message
         if (!disconnectionData.isError()) {
 
             this.lwtStorage.delete(disconnectionData.clientId(), done -> {
-                // TODO
+
+                LOG.info("Deleted will for client {}", disconnectionData.clientId());
             });
         } else {
 
+            // brute disconnection, get will message and deliver it
             this.lwtStorage.get(disconnectionData.clientId(), ar -> {
 
                 if (ar.succeeded()) {
@@ -204,12 +207,13 @@ public class MqttLwt extends AbstractVerticle {
 
                     this.publishEndpoint.publish(amqpPublishMessage, ar1 -> {
 
-                        // TODO
                         if (ar1.succeeded()) {
+
+                            LOG.info("Published will message for client {}", disconnectionData.clientId());
 
                             this.lwtStorage.delete(disconnectionData.clientId(), ar2 -> {
 
-                                // TODO
+                                LOG.info("Deleted will for client {}", disconnectionData.clientId());
                             });
                         }
                     });
