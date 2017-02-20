@@ -75,7 +75,9 @@ public class SyncRequestClient implements AutoCloseable {
 
                         receiver.openHandler(receiverOpenEvent -> {
                             if (receiverOpenEvent.succeeded()) {
-                                message.setReplyTo(receiver.getRemoteSource().getAddress());
+                                if (receiver.getRemoteSource() != null) {
+                                    message.setReplyTo(receiver.getRemoteSource().getAddress());
+                                }
                                 sender.send(message);
                             } else {
                                 response.completeExceptionally(receiverOpenEvent.cause());
