@@ -49,11 +49,12 @@ public class InMemoryLwtStorage implements LwtStorage {
     @Override
     public void add(String clientId, AmqpWillMessage willMessage, Handler<AsyncResult<Integer>> handler) {
 
-        // TODO
         if (this.wills.containsKey(clientId)) {
-            handler.handle(Future.failedFuture(new IllegalArgumentException("Will already available for the client")));
+            LOG.warn("Will already existing for the client {}", clientId);
+            handler.handle(Future.failedFuture(new IllegalArgumentException("Will already existing for the client")));
         } else {
             this.wills.put(clientId, willMessage);
+            LOG.info("Will added for the client {}", clientId);
             handler.handle(Future.succeededFuture());
         }
     }
@@ -61,10 +62,11 @@ public class InMemoryLwtStorage implements LwtStorage {
     @Override
     public void get(String clientId, Handler<AsyncResult<AmqpWillMessage>> handler) {
 
-        // TODO
         if (!this.wills.containsKey(clientId)) {
-            handler.handle(Future.failedFuture(new IllegalArgumentException("No will for specified client")));
+            LOG.warn("No will for the client {}", clientId);
+            handler.handle(Future.failedFuture(new IllegalArgumentException("No will for the client")));
         } else {
+            LOG.info("Will retrieved for the client {}", clientId);
             handler.handle(Future.succeededFuture(this.wills.get(clientId)));
         }
     }
@@ -72,11 +74,12 @@ public class InMemoryLwtStorage implements LwtStorage {
     @Override
     public void update(String clientId, AmqpWillMessage willMessage, Handler<AsyncResult<Integer>> handler) {
 
-        // TODO
         if (!this.wills.containsKey(clientId)) {
-            handler.handle(Future.failedFuture(new IllegalArgumentException("No will for specified client")));
+            LOG.warn("No will for the client {}", clientId);
+            handler.handle(Future.failedFuture(new IllegalArgumentException("No will for the client")));
         } else {
             this.wills.put(clientId, willMessage);
+            LOG.info("Will updated for the client {}", clientId);
             handler.handle(Future.succeededFuture());
         }
     }
@@ -84,11 +87,12 @@ public class InMemoryLwtStorage implements LwtStorage {
     @Override
     public void delete(String clientId, Handler<AsyncResult<Integer>> handler) {
 
-        // TODO
         if (!this.wills.containsKey(clientId)) {
-            handler.handle(Future.failedFuture(new IllegalArgumentException("No will for specified client")));
+            LOG.warn("No will for the client {}", clientId);
+            handler.handle(Future.failedFuture(new IllegalArgumentException("No will for the client")));
         } else {
             this.wills.remove(clientId);
+            LOG.error("Will deleted for the client {}", clientId);
             handler.handle(Future.succeededFuture());
         }
     }

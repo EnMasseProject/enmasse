@@ -167,7 +167,7 @@ public class AmqpLwtEndpoint {
         }
 
         if (this.disconnectionHandler != null) {
-            this.disconnectionHandler.handle(new DisconnectionData(receiver.getName(), remoteErrorCondition != null));
+            this.disconnectionHandler.handle(new DisconnectionData(receiver.getName(), remoteErrorCondition.getCondition() != null));
         }
 
         receiver.close();
