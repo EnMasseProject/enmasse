@@ -16,15 +16,18 @@
 
 package enmasse.mqtt.endpoints;
 
-import enmasse.mqtt.storage.WillMessage;
+import enmasse.mqtt.messages.AmqpPublishMessage;
 import io.netty.handler.codec.mqtt.MqttQoS;
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Future;
+import io.vertx.core.Handler;
 import io.vertx.proton.ProtonConnection;
+import io.vertx.proton.ProtonDelivery;
+import io.vertx.proton.ProtonQoS;
 import io.vertx.proton.ProtonSender;
+import org.apache.qpid.proton.amqp.messaging.Accepted;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Publisher endpoint
@@ -34,9 +37,6 @@ public class AmqpPublishEndpoint {
     private static final Logger LOG = LoggerFactory.getLogger(AmqpPublishEndpoint.class);
 
     private ProtonConnection connection;
-
-    // links for publishing message on topic (topic -> link/senders couple)
-    private Map<String, AmqpPublisher> publishers;
 
     /**
      * Constructor
@@ -55,41 +55,49 @@ public class AmqpPublishEndpoint {
         this.connection
                 .sessionOpenHandler(session -> session.open())
                 .open();
-
-        this.publishers = new HashMap<>();
     }
 
     /**
-     * Add a publisher to the endpoint
+     * Send the AMQP_PUBLISH to the attached topic/address
      *
-     * @param address address for which adding the publisher
+     * @param amqpPublishMessage   AMQP_PUBLISH message
      */
-    public void addPublisher(String address) {
+    public void publish(AmqpPublishMessage amqpPublishMessage, Handler<AsyncResult<ProtonDelivery>> handler) {
 
-        if (!this.publishers.containsKey(address)) {
-
-            ProtonSender senderQoS1 = this.connection.createSender(address);
-            ProtonSender senderQoS2 = this.connection.createSender(address);
-
-            AmqpPublisher publisher = new AmqpPublisher(senderQoS1, senderQoS2);
-
-            this.publishers.put(address, publisher);
-        }
-    }
-
-    /**
-     * Send will message to the attached topic/address
-     *
-     * @param willMessage   will message to publish
-     */
-    public void publish(WillMessage willMessage) {
-
-        AmqpPublisher publisher = this.publishers.get(willMessage.topic());
+        // send AMQP_PUBLISH message
 
         // use sender for QoS 0/1 messages
-        if (willMessage.qos() != MqttQoS.EXACTLY_ONCE) {
+        if (amqpPublishMessage.qos() != MqttQoS.EXACTLY_ONCE) {
 
             // TODO
+            ProtonSender sender = this.connection.createSender(amqpPublishMessage.topic());
+
+            sender
+                    .setQoS(ProtonQoS.AT_LEAST_ONCE)
+                    .open();
+
+            if (amqpPublishMessage.qos() == MqttQoS.AT_MOST_ONCE) {
+
+                sender.send(amqpPublishMessage.toAmqp());
+                sender.close();
+                LOG.info("AMQP published on {}", amqpPublishMessage.topic());
+
+                handler.handle(Future.succeededFuture(null));
+
+            } else {
+
+                sender.send(amqpPublishMessage.toAmqp(), delivery -> {
+
+                    if (delivery.getRemoteState() == Accepted.getInstance()) {
+                        LOG.info("AMQP publish delivery {}", delivery.getRemoteState());
+                        handler.handle(Future.succeededFuture(delivery));
+                    } else {
+                        handler.handle(Future.failedFuture(String.format("AMQP publish delivery %s", delivery.getRemoteState())));
+                    }
+
+                    sender.close();
+                });
+            }
 
         // use sender for QoS 2 messages
         } else {
@@ -107,11 +115,5 @@ public class AmqpPublishEndpoint {
         if (this.connection != null) {
             this.connection.close();
         }
-
-        if (this.publishers != null) {
-            this.publishers.clear();
-        }
     }
-
-
 }

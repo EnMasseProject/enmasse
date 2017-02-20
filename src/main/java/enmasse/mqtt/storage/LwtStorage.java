@@ -16,6 +16,7 @@
 
 package enmasse.mqtt.storage;
 
+import enmasse.mqtt.messages.AmqpWillMessage;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 
@@ -38,7 +39,7 @@ public interface LwtStorage {
      * @param willMessage   "will" information to store
      * @param handler   handler called with the result code
      */
-    void add(String clientId, WillMessage willMessage, Handler<AsyncResult<Integer>> handler);
+    void add(String clientId, AmqpWillMessage willMessage, Handler<AsyncResult<Integer>> handler);
 
     /**
      * Get "will" information for the specified client
@@ -46,7 +47,7 @@ public interface LwtStorage {
      * @param clientId  client identifier for which getting "will" information
      * @param handler   handler called with the "will" information retrieved
      */
-    void get(String clientId, Handler<AsyncResult<WillMessage>> handler);
+    void get(String clientId, Handler<AsyncResult<AmqpWillMessage>> handler);
 
     /**
      * Update "will" information for the specified client
@@ -55,7 +56,7 @@ public interface LwtStorage {
      * @param willMessage   "will" information to update
      * @param handler   handler called with the result code
      */
-    void update(String clientId, WillMessage willMessage, Handler<AsyncResult<Integer>> handler);
+    void update(String clientId, AmqpWillMessage willMessage, Handler<AsyncResult<Integer>> handler);
 
     /**
      * Delete "will" information for the specified client

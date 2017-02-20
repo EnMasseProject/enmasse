@@ -16,8 +16,8 @@
 
 package enmasse.mqtt.storage.impl;
 
+import enmasse.mqtt.messages.AmqpWillMessage;
 import enmasse.mqtt.storage.LwtStorage;
-import enmasse.mqtt.storage.WillMessage;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -34,7 +34,7 @@ public class InMemoryLwtStorage implements LwtStorage {
 
     public static final Logger LOG = LoggerFactory.getLogger(InMemoryLwtStorage.class);
 
-    Map<String, WillMessage> wills;
+    Map<String, AmqpWillMessage> wills;
 
     @Override
     public void open(Handler<AsyncResult<Void>> handler) {
@@ -47,7 +47,7 @@ public class InMemoryLwtStorage implements LwtStorage {
     }
 
     @Override
-    public void add(String clientId, WillMessage willMessage, Handler<AsyncResult<Integer>> handler) {
+    public void add(String clientId, AmqpWillMessage willMessage, Handler<AsyncResult<Integer>> handler) {
 
         // TODO
         if (this.wills.containsKey(clientId)) {
@@ -59,7 +59,7 @@ public class InMemoryLwtStorage implements LwtStorage {
     }
 
     @Override
-    public void get(String clientId, Handler<AsyncResult<WillMessage>> handler) {
+    public void get(String clientId, Handler<AsyncResult<AmqpWillMessage>> handler) {
 
         // TODO
         if (!this.wills.containsKey(clientId)) {
@@ -70,7 +70,7 @@ public class InMemoryLwtStorage implements LwtStorage {
     }
 
     @Override
-    public void update(String clientId, WillMessage willMessage, Handler<AsyncResult<Integer>> handler) {
+    public void update(String clientId, AmqpWillMessage willMessage, Handler<AsyncResult<Integer>> handler) {
 
         // TODO
         if (!this.wills.containsKey(clientId)) {

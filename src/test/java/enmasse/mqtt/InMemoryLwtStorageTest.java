@@ -16,8 +16,8 @@
 
 package enmasse.mqtt;
 
+import enmasse.mqtt.messages.AmqpWillMessage;
 import enmasse.mqtt.storage.LwtStorage;
-import enmasse.mqtt.storage.WillMessage;
 import enmasse.mqtt.storage.impl.InMemoryLwtStorage;
 import io.netty.handler.codec.mqtt.MqttQoS;
 import io.vertx.core.buffer.Buffer;
@@ -39,8 +39,8 @@ public class InMemoryLwtStorageTest {
 
     protected final Logger LOG = LoggerFactory.getLogger(InMemoryLwtStorageTest.class);
 
-    private static final WillMessage WILL_MESSAGE =
-            new WillMessage(true, "will_topic", MqttQoS.AT_MOST_ONCE, Buffer.buffer("Hello"));
+    private static final AmqpWillMessage WILL_MESSAGE =
+            new AmqpWillMessage(true, "will_topic", MqttQoS.AT_MOST_ONCE, Buffer.buffer("Hello"));
 
     private static final String CLIENT_ID = "client_id";
 
@@ -71,7 +71,7 @@ public class InMemoryLwtStorageTest {
 
                     if (done1.succeeded()) {
 
-                        WillMessage willMessage1 = done1.result();
+                        AmqpWillMessage willMessage1 = done1.result();
                         context.assertTrue(willMessage1.equals(WILL_MESSAGE));
                         LOG.info("Added a not existing will");
 
@@ -120,7 +120,7 @@ public class InMemoryLwtStorageTest {
 
             if (done.succeeded()) {
 
-                WillMessage willMessage1 = new WillMessage(false, "will_topic_1", MqttQoS.AT_LEAST_ONCE, Buffer.buffer("Hello_1"));
+                AmqpWillMessage willMessage1 = new AmqpWillMessage(false, "will_topic_1", MqttQoS.AT_LEAST_ONCE, Buffer.buffer("Hello_1"));
                 this.lwtStorage.update(CLIENT_ID, willMessage1, done1 -> {
 
                     if (done1.succeeded()) {
@@ -129,7 +129,7 @@ public class InMemoryLwtStorageTest {
 
                             if (done2.succeeded()) {
 
-                                WillMessage willMessage2 = done2.result();
+                                AmqpWillMessage willMessage2 = done2.result();
                                 // updated message not equals to the original one but to the one got from the storage
                                 context.assertTrue(!willMessage1.equals(WILL_MESSAGE) && willMessage1.equals(willMessage2));
                                 LOG.info("Existing will updated");
