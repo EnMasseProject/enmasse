@@ -1,4 +1,4 @@
-package enmasse.address.controller.api;
+package enmasse.address.controller.api.v3;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import enmasse.address.controller.model.Destination;

@@ -19,10 +19,11 @@ package enmasse.address.controller;
 import enmasse.address.controller.admin.AddressManager;
 import enmasse.address.controller.api.v3.ApiHandler;
 import enmasse.address.controller.api.v3.amqp.AddressingService;
-import enmasse.address.controller.api.v3.amqp.ResponseHandler;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.proton.*;
-import org.apache.qpid.proton.amqp.messaging.*;
+import org.apache.qpid.proton.amqp.messaging.Accepted;
+import org.apache.qpid.proton.amqp.messaging.Rejected;
+import org.apache.qpid.proton.amqp.messaging.Source;
 import org.apache.qpid.proton.message.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -117,10 +118,11 @@ public class AMQPServer extends AbstractVerticle {
     }
 
     private void onAddressConfig(Message message) throws IOException {
-        Optional<ResponseHandler> responseHandler = Optional.ofNullable(replyHandlers.get(message.getReplyTo()))
-                .map(context -> (ResponseHandler) response -> vertx.runOnContext(v -> context.sender.send(response)));
 
-        addressingService.handleMessage(message, responseHandler);
+        Optional<HandlerContext> context = Optional.ofNullable(replyHandlers.get(message.getReplyTo()));
+
+        Message response = addressingService.handleMessage(message);
+        context.ifPresent(ctx -> vertx.runOnContext(v -> ctx.sender.send(response)));
     }
 
     public void stop() {

@@ -53,7 +53,7 @@ public class AddressList {
     }
 
     public static String kind() {
-        return AddressList.class.getName();
+        return AddressList.class.getSimpleName();
     }
 
     protected static class Deserializer extends JsonDeserializer<AddressList> {

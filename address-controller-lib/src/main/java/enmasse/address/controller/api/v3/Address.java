@@ -29,7 +29,7 @@ public class Address {
     }
 
     public static String kind() {
-        return Address.class.getName();
+        return Address.class.getSimpleName();
     }
 
     protected static class Deserializer extends JsonDeserializer<Address> {

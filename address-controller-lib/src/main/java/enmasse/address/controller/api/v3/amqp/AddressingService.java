@@ -15,7 +15,7 @@ import java.util.Map;
 import java.util.Optional;
 
 /**
- * Handles address updates based on an AMQP message. Responses are sent to an optional {@link ResponseHandler}
+ * Handles address updates based on an AMQP message.
  */
 public class AddressingService {
     private static final ObjectMapper mapper = new ObjectMapper();
@@ -33,7 +33,7 @@ public class AddressingService {
         this.apiHandler = apiHandler;
     }
 
-    public void handleMessage(Message message, Optional<ResponseHandler> responseHandler) throws IOException {
+    public Message handleMessage(Message message) throws IOException {
         ApplicationProperties properties = message.getApplicationProperties();
         if (properties == null) {
             throw new IllegalArgumentException("Missing message properties");
@@ -46,57 +46,68 @@ public class AddressingService {
         String method = (String) propertyMap.get(PROPERTY_METHOD);
 
         if (METHOD_GET.equals(method)) {
-            handleGet(message, responseHandler);
+            return handleGet(message);
         } else if (METHOD_PUT.equals(method)) {
-            handlePut(message, responseHandler);
+            return handlePut(message);
         } else if (METHOD_POST.equals(method)) {
-            handleAppend(message, responseHandler);
+            return handleAppend(message);
         } else if (METHOD_DELETE.equals(method)) {
-            handleDelete(message, responseHandler);
+            return handleDelete(message);
+        } else {
+            throw new IllegalArgumentException("Unknown method " + method);
         }
     }
 
-    private void handleGet(Message message, Optional<ResponseHandler> responseHandler) throws IOException {
+    private Message handleGet(Message message) throws IOException {
         Optional<String> address = getAddressProperty(message);
 
         if (address.isPresent()) {
-            sendResponse(responseHandler, apiHandler.getAddress(address.get()));
+            Optional<Address> addr = apiHandler.getAddress(address.get());
+            if (addr.isPresent()) {
+                return createResponse(addr.get());
+            } else {
+                throw new IllegalArgumentException("Address " + address.get() + " not found");
+            }
         } else {
-            sendResponse(responseHandler, apiHandler.getAddresses());
+            return createResponse(apiHandler.getAddresses());
         }
     }
 
-    private void handlePut(Message message, Optional<ResponseHandler> responseHandler) throws IOException {
+    private Message handlePut(Message message) throws IOException {
         String json = (String)((AmqpValue) message.getBody()).getValue();
         String kind = getKind(json);
         if (Address.kind().equals(kind)) {
             Address address = mapper.readValue(json, Address.class);
-            sendResponse(responseHandler, apiHandler.putAddress(address));
+            return createResponse(apiHandler.putAddress(address));
         } else if (AddressList.kind().equals(kind)) {
             AddressList list = mapper.readValue(json, AddressList.class);
-            sendResponse(responseHandler, apiHandler.putAddresses(list));
+            return createResponse(apiHandler.putAddresses(list));
+        } else {
+            throw new IllegalArgumentException("Unknown kind " + kind);
         }
     }
 
-    private void handleAppend(Message message, Optional<ResponseHandler> responseHandler) throws IOException {
+    private Message handleAppend(Message message) throws IOException {
         String json = (String)((AmqpValue) message.getBody()).getValue();
         String kind = getKind(json);
         if (Address.kind().equals(kind)) {
             Address address = mapper.readValue(json, Address.class);
-            sendResponse(responseHandler, apiHandler.appendAddress(address));
+            return createResponse(apiHandler.appendAddress(address));
         } else if (AddressList.kind().equals(kind)) {
             AddressList list = mapper.readValue(json, AddressList.class);
-            sendResponse(responseHandler, apiHandler.appendAddresses(list));
+            return createResponse(apiHandler.appendAddresses(list));
+        } else {
+            throw new IllegalArgumentException("Unknown kind " + kind);
         }
     }
 
 
-    private void handleDelete(Message message, Optional<ResponseHandler> responseHandler) throws IOException {
+    private Message handleDelete(Message message) throws IOException {
         Optional<String> address = getAddressProperty(message);
 
         if (address.isPresent()) {
             AddressList list = apiHandler.deleteAddress(address.get());
-            sendResponse(responseHandler, list);
+            return createResponse(list);
         } else {
             throw new IllegalArgumentException("Address to delete was not specified in application properties");
         }
@@ -113,12 +124,6 @@ public class AddressingService {
         response.setContentType(APPLICATION_JSON);
         response.setBody(new AmqpValue(mapper.writeValueAsString(object)));
         return response;
-    }
-
-    private static void sendResponse(Optional<ResponseHandler> responseHandler, Object object) throws JsonProcessingException {
-        if (responseHandler.isPresent()) {
-            responseHandler.get().sendResponse(createResponse(object));
-        }
     }
 
     private static String getKind(String json) throws IOException {
