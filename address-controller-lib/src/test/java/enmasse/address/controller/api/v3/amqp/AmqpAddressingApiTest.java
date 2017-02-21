@@ -14,58 +14,74 @@
  * limitations under the License.
  */
 
-package enmasse.address.controller.restapi;
+package enmasse.address.controller.api.v3.amqp;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import enmasse.address.controller.admin.AddressManager;
+import enmasse.address.controller.api.v3.Address;
+import enmasse.address.controller.api.v3.AddressList;
+import enmasse.address.controller.api.v3.ApiHandler;
 import enmasse.address.controller.model.Destination;
 import enmasse.address.controller.model.DestinationGroup;
-import enmasse.address.controller.restapi.v3.Address;
-import enmasse.address.controller.restapi.v3.AddressList;
-import enmasse.address.controller.restapi.v3.AddressingService;
-import io.vertx.core.Vertx;
+import org.apache.qpid.proton.amqp.messaging.AmqpValue;
+import org.apache.qpid.proton.amqp.messaging.ApplicationProperties;
+import org.apache.qpid.proton.message.Message;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.internal.util.collections.Sets;
 
-import javax.ws.rs.core.Response;
-import java.util.Collections;
-import java.util.LinkedHashSet;
-import java.util.Optional;
-import java.util.Set;
+import java.io.IOException;
+import java.util.*;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.*;
 
-public class AddressingApiTest {
+public class AmqpAddressingApiTest {
+    private static ObjectMapper mapper = new ObjectMapper();
     private AddressingService addressingService;
     private TestManager addressManager;
-    private Vertx vertx;
 
     @Before
     public void setup() {
         addressManager = new TestManager();
-        addressingService = new AddressingService(addressManager);
+        addressingService = new AddressingService(new ApiHandler(addressManager));
         addressManager.destinationsUpdated(Sets.newSet(
             createGroup(new Destination("addr1", "addr1", false, false, Optional.empty())),
             createGroup(new Destination("queue1", "queue1", true, false, Optional.of("vanilla")))));
     }
 
     @Test
-    public void testList() {
-        Response response = addressingService.listAddresses();
-        assertThat(response.getStatus(), is(200));
-        Set<Destination> data = ((AddressList)response.getEntity()).getDestinations();
+    public void testList() throws IOException {
+        Message response = doRequest("GET", "", Optional.empty());
+        Set<Destination> data = decodeAs(AddressList.class, response).getDestinations();
 
         assertThat(data.size(), is(2));
         assertDestinationName(data, "addr1");
         assertDestinationName(data, "queue1");
     }
 
+    private static <T> T decodeAs(Class<T> clazz, Message message) throws IOException {
+        System.out.println("Decode body: " + ((AmqpValue)message.getBody()).getValue());
+        return mapper.readValue((String)((AmqpValue)message.getBody()).getValue(), clazz);
+    }
+
+    private Message doRequest(String method, Object body, Optional<String> addressProperty) throws IOException {
+        Message message = Message.Factory.create();
+        message.setAddress("$address");
+        message.setContentType("application/json");
+        message.setBody(new AmqpValue(mapper.writeValueAsString(body)));
+        Map<String, String> properties = new LinkedHashMap<>();
+        properties.put("method", method);
+        addressProperty.ifPresent(address -> properties.put("address", address));
+        message.setApplicationProperties(new ApplicationProperties(properties));
+
+        return addressingService.handleMessage(message);
+    }
+
     @Test
-    public void testGet() {
-        Response response = addressingService.getAddress("queue1");
-        assertThat(response.getStatus(), is(200));
-        Destination data = ((Address)response.getEntity()).getDestination();
+    public void testGet() throws IOException {
+        Message response = doRequest("GET", "", Optional.of("queue1"));
+        Destination data = decodeAs(Address.class, response).getDestination();
 
         assertThat(data.address(), is("queue1"));
         assertTrue(data.storeAndForward());
@@ -73,28 +89,26 @@ public class AddressingApiTest {
         assertThat(data.flavor().get(), is("vanilla"));
     }
 
-    @Test
-    public void testGetException() {
+    @Test(expected = RuntimeException.class)
+    public void testGetException() throws IOException {
         addressManager.throwException = true;
-        Response response = addressingService.listAddresses();
-        assertThat(response.getStatus(), is(500));
+        doRequest("GET", "", Optional.empty());
     }
 
-    @Test
-    public void testGetUnknown() {
-        Response response = addressingService.getAddress("unknown");
-        assertThat(response.getStatus(), is(404));
+    @Test(expected = IllegalArgumentException.class)
+    public void testGetUnknown() throws IOException {
+        doRequest("GET", "", Optional.of("unknown"));
     }
 
 
     @Test
-    public void testPut() {
+    public void testPut() throws IOException {
         Set<Destination> input = Sets.newSet(
                 new Destination("addr2", "addr2", false, false, Optional.empty()),
                 new Destination("topic", "topic", true, true, Optional.of("vanilla")));
 
-        Response response = addressingService.putAddresses(AddressList.fromSet(input));
-        Set<Destination> result = ((AddressList)response.getEntity()).getDestinations();
+        Message response = doRequest("PUT", AddressList.fromSet(input), Optional.empty());
+        Set<Destination> result = decodeAs(AddressList.class, response).getDestinations();
 
         assertThat(result, is(input));
 
@@ -104,19 +118,17 @@ public class AddressingApiTest {
         assertNotDestination(new Destination("addr1", "addr1", false, false, Optional.empty()));
     }
 
-    @Test
-    public void testPutException() {
+    @Test(expected = RuntimeException.class)
+    public void testPutException() throws IOException {
         addressManager.throwException = true;
-        Response response = addressingService.putAddresses(AddressList.fromSet(Collections.singleton(
-                    new Destination("newaddr", "newaddr", true, false, Optional.of("vanilla")))));
-        assertThat(response.getStatus(), is(500));
+        doRequest("PUT", AddressList.fromSet(Collections.singleton( new Destination("newaddr", "newaddr", true, false, Optional.of("vanilla")))), Optional.empty());
     }
 
     @Test
-    public void testDelete() {
+    public void testDelete() throws IOException {
 
-        Response response = addressingService.deleteAddress("addr1");
-        Set<Destination> result = ((AddressList)response.getEntity()).getDestinations();
+        Message response = doRequest("DELETE", "", Optional.of("addr1"));
+        Set<Destination> result = decodeAs(AddressList.class, response).getDestinations();
 
         assertThat(result.size(), is(1));
         assertThat(result.iterator().next().address(), is("queue1"));
@@ -126,11 +138,10 @@ public class AddressingApiTest {
         assertNotDestination(new Destination("addr1", "addr1", false, false, Optional.empty()));
     }
 
-    @Test
-    public void testDeleteException() {
+    @Test(expected = RuntimeException.class)
+    public void testDeleteException() throws IOException {
         addressManager.throwException = true;
-        Response response = addressingService.deleteAddress("throw");
-        assertThat(response.getStatus(), is(500));
+        doRequest("DELETE", "", Optional.of("throw"));
     }
 
     private static DestinationGroup createGroup(Destination destination) {
@@ -138,9 +149,9 @@ public class AddressingApiTest {
     }
 
     @Test
-    public void testAppend() {
-        Response response = addressingService.appendAddress(new Address(new Destination("addr2", "addr2", false, false, Optional.empty())));
-        Set<Destination> result = ((AddressList)response.getEntity()).getDestinations();
+    public void testAppend() throws IOException {
+        Message response = doRequest("POST", new Address(new Destination("addr2", "addr2", false, false, Optional.empty())), Optional.empty());
+        Set<Destination> result = decodeAs(AddressList.class, response).getDestinations();
 
         assertThat(result.size(), is(3));
         assertDestinationName(result, "addr1");
@@ -165,12 +176,10 @@ public class AddressingApiTest {
         assertThat(found.address(), is(expectedAddress));
     }
 
-    @Test
-    public void testAppendException() {
+    @Test(expected = RuntimeException.class)
+    public void testAppendException() throws IOException {
         addressManager.throwException = true;
-        Response response = addressingService.appendAddress(new Address(
-                new Destination("newaddr", "newaddr", true, false, Optional.of("vanilla"))));
-        assertThat(response.getStatus(), is(500));
+        doRequest("POST", new Address(new Destination("newaddr", "newaddr", true, false, Optional.of("vanilla"))), Optional.empty());
     }
 
     private void assertNotDestination(Destination destination) {

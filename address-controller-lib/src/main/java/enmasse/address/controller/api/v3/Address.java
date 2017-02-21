@@ -1,4 +1,4 @@
-package enmasse.address.controller.restapi.v3;
+package enmasse.address.controller.api.v3;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import enmasse.address.controller.model.Destination;
 
+import java.awt.geom.Area;
 import java.io.IOException;
 import java.util.Optional;
 
@@ -25,6 +26,10 @@ public class Address {
 
     public Destination getDestination() {
         return destination;
+    }
+
+    public static String kind() {
+        return Address.class.getSimpleName();
     }
 
     protected static class Deserializer extends JsonDeserializer<Address> {

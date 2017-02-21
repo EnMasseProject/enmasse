@@ -1,4 +1,4 @@
-package enmasse.address.controller.restapi.v3;
+package enmasse.address.controller.api.v3;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
@@ -50,6 +50,10 @@ public class AddressList {
         return groupMap.values().stream()
                 .map(DestinationGroup.Builder::build)
                 .collect(Collectors.toSet());
+    }
+
+    public static String kind() {
+        return AddressList.class.getSimpleName();
     }
 
     protected static class Deserializer extends JsonDeserializer<AddressList> {

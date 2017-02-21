@@ -1,4 +1,4 @@
-package enmasse.address.controller.restapi.v3;
+package enmasse.address.controller.api.v3;
 
 public interface ResourceKeys {
     String APIVERSION = "apiVersion";

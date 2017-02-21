@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package enmasse.address.controller.restapi.common;
+package enmasse.address.controller.api.v1v2common;
 
 import enmasse.address.controller.admin.AddressManager;
 import enmasse.address.controller.model.Destination;
