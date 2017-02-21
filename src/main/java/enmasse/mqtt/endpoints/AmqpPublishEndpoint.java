@@ -66,6 +66,8 @@ public class AmqpPublishEndpoint {
 
         // send AMQP_PUBLISH message
 
+        LOG.info("Will ready for publishing on topic [{}]", amqpPublishMessage.topic());
+
         // use sender for QoS 0/1 messages
         if (amqpPublishMessage.qos() != MqttQoS.EXACTLY_ONCE) {
 

@@ -118,6 +118,8 @@ public class AmqpLwtEndpoint {
 
             AmqpWillMessage amqpWillMessage = AmqpWillMessage.from(message);
 
+            LOG.info("Received will on topic [{}] by client [{}]", amqpWillMessage.topic(), receiver.getName());
+
             // TODO : having a callback to check if handling went well and send right disposition ?
             this.willHandler.handle(new WillData(receiver.getName(), amqpWillMessage));
 
