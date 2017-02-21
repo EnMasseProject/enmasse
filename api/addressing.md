@@ -65,7 +65,6 @@ specification yet, but following is an example of each.
 | GET    | /v3/address/[address] | N/A            | v3.Address     | Retrieves the definition of a single address                                  |
 | PUT    | /v3/address           | v3.AddressList | v3.AddressList | Replaces the entire addressing config with provided config                    |
 | POST   | /v3/address           | v3.Address     | v3.AddressList | Appends an address to the list of addresses                                   |
-| POST   | /v3/address           | v3.AddressList | v3.AddressList | Appends a list of addresses to the list of addresses                          |
 | DELETE | /v3/address/[address] | N/A            | v3.AddressList | Deletes an address and returns the remaining addresses                        |
 
 # AMQP
