@@ -41,6 +41,8 @@ public class MqttLwt extends AbstractVerticle {
 
     private static final String CONTAINER_ID = "lwt-service";
 
+    private static final int MAX_MESSAGE_ID = 65535;
+
     // connection info to the messaging service
     private String messagingServiceHost;
     private int messagingServicePort;
@@ -51,6 +53,9 @@ public class MqttLwt extends AbstractVerticle {
     private AmqpLwtEndpoint lwtEndpoint;
     private LwtStorage lwtStorage;
     private AmqpPublishEndpoint publishEndpoint;
+
+    // counter for the message identifier
+    private int messageIdCounter;
 
     @Override
     public void start(Future<Void> startFuture) throws Exception {
@@ -202,8 +207,12 @@ public class MqttLwt extends AbstractVerticle {
 
                     AmqpWillMessage amqpWillMessage = ar.result();
 
+                    // TODO : workaround ...
+                    // check why with a message-id null or String the Artemis broker change "To" property
+                    // so that the message isn't delivered by MQTT gateway
+                    Object messageId = this.nextMessageId();
                     AmqpPublishMessage amqpPublishMessage =
-                            new AmqpPublishMessage(null, amqpWillMessage.qos(), false, amqpWillMessage.isRetain(), amqpWillMessage.topic(), amqpWillMessage.payload());
+                            new AmqpPublishMessage(messageId, amqpWillMessage.qos(), false, amqpWillMessage.isRetain(), amqpWillMessage.topic(), amqpWillMessage.payload());
 
                     this.publishEndpoint.publish(amqpPublishMessage, ar1 -> {
 
@@ -220,6 +229,18 @@ public class MqttLwt extends AbstractVerticle {
                 }
             });
         }
+    }
+
+    /**
+     * Update and return the next message identifier
+     *
+     * @return message identifier
+     */
+    private int nextMessageId() {
+
+        // if 0 or MAX_MESSAGE_ID, it becomes 1 (first valid messageId)
+        this.messageIdCounter = ((this.messageIdCounter % MAX_MESSAGE_ID) != 0) ? this.messageIdCounter + 1 : 1;
+        return this.messageIdCounter;
     }
 
     /**
