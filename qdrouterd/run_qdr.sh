@@ -17,7 +17,7 @@ fi
 if [ -z "$WORKER_THREADS" ]; then
     export WORKER_THREADS=4
 fi
-envsubst < /etc/qpid-dispatch/qdrouterd.conf.template > /tmp/qdrouterd.conf
+DOLLAR='$' envsubst < /etc/qpid-dispatch/qdrouterd.conf.template > /tmp/qdrouterd.conf
 if [ -d /etc/qpid-dispatch/ssl ]; then
     envsubst < /etc/qpid-dispatch/ssl.snippet >> /tmp/qdrouterd.conf
 fi

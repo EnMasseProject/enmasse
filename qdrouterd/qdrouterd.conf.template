@@ -53,13 +53,13 @@ connector {
 }
 
 linkRoute {
-  prefix: $lwt
+  prefix: ${DOLLAR}lwt
   dir: in
   containerId: lwt-service
 }
 
 linkRoute {
-  prefix: $lwt
+  prefix: ${DOLLAR}lwt
   dir: out
   containerId: lwt-service
 }
