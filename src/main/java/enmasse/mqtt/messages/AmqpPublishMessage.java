@@ -21,6 +21,7 @@ import io.vertx.core.buffer.Buffer;
 import io.vertx.proton.ProtonHelper;
 import org.apache.qpid.proton.amqp.Binary;
 import org.apache.qpid.proton.amqp.Symbol;
+import org.apache.qpid.proton.amqp.messaging.ApplicationProperties;
 import org.apache.qpid.proton.amqp.messaging.Data;
 import org.apache.qpid.proton.amqp.messaging.Header;
 import org.apache.qpid.proton.amqp.messaging.MessageAnnotations;
@@ -108,6 +109,16 @@ public class AmqpPublishMessage {
         boolean isDup = (message.getDeliveryCount() > 0);
 
         String topic = message.getAddress();
+
+        // TODO: to remove
+        // workaround for the Artemis broker which change the original "To" property
+        // in the AMQP message when message-id is null
+        ApplicationProperties applicationProperties = message.getApplicationProperties();
+        if (applicationProperties != null) {
+
+            Object amqOrigAddress = applicationProperties.getValue().get("_AMQ_ORIG_ADDRESS");
+            topic = (amqOrigAddress != null) ? amqOrigAddress.toString() : topic;
+        }
 
         Section section = message.getBody();
         if ((section != null) && (section instanceof Data)) {
