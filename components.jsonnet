@@ -14,6 +14,7 @@ local admin = import "include/admin.jsonnet";
 local mqttGateway = import "include/mqtt-gateway.jsonnet";
 local mqtt = import "include/mqtt.jsonnet";
 local mqttService = import "include/mqtt-service.jsonnet";
+local mqttLwt = import "include/mqtt-lwt.jsonnet";
 {
   "messaging-service.json": messagingService.generate(false, false),
   "tls-messaging-service.json": messagingService.generate(true, false),
@@ -36,5 +37,6 @@ local mqttService = import "include/mqtt-service.jsonnet";
   "mqtt-gateway-dc.json": mqttGateway.deployment(false, "enmasseproject/mqtt-gateway"),
   "mqtt-service.json": mqttService.generate(false),
   "tls-mqtt-gateway-dc.json" : mqttGateway.deployment(true, "enmasseproject/mqtt-gateway"),
-  "tls-mqtt-service.json" : mqttService.generate(true)
+  "tls-mqtt-service.json" : mqttService.generate(true),
+  "mqtt-lwt-dc.json" : mqttLwt.deployment("enmasseproject/mqtt-lwt")
 }

@@ -19,6 +19,7 @@ local mqttGateway = import "mqtt-gateway.jsonnet";
 local mqtt = import "mqtt.jsonnet";
 local mqttService = import "mqtt-service.jsonnet";
 local mqttRoute = import "mqtt-route.json";
+local mqttLwt = import "mqtt-lwt.jsonnet";
 {
   generate(secure)::
   {
@@ -44,6 +45,7 @@ local mqttRoute = import "mqtt-route.json";
                  subserv.service,
                  mqttGateway.deployment(secure, "${MQTT_GATEWAY_REPO}"),
                  mqttService.generate(secure),
+                 mqttLwt.deployment("${MQTT_LWT_REPO}"),
                  flavorConfig.generate(secure),
                  admin.deployment("${ADDRESS_CONTROLLER_REPO}", "${CONFIGSERV_REPO}", "${RAGENT_REPO}", "${QUEUE_SCHEDULER_REPO}") ] + admin.services,
 
@@ -111,6 +113,11 @@ local mqttRoute = import "mqtt-route.json";
       {
         "name": "MQTT_GATEWAY_HOSTNAME",
         "description": "The hostname to use for the exposed route for MQTT (TLS only)"
+      },
+      {
+        "name" : "MQTT_LWT_REPO",
+        "description": "The image to use for the MQTT LWT",
+        "value": "enmasseproject/mqtt-lwt"
       }
     ]
 
