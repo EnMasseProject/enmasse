@@ -18,6 +18,7 @@ local mqttGateway = import "mqtt-gateway.jsonnet";
 local mqtt = import "mqtt.jsonnet";
 local mqttService = import "mqtt-service.jsonnet";
 local mqttRoute = import "mqtt-route.json";
+local mqttLwt = import "mqtt-lwt.jsonnet";
 {
   generate(secure, with_address_controller)::
   {
@@ -48,7 +49,8 @@ local mqttRoute = import "mqtt-route.json";
                  queueScheduler.service,
                  queueScheduler.deployment("${QUEUE_SCHEDULER_REPO}"),
                  mqttGateway.deployment(secure, "${MQTT_GATEWAY_REPO}"),
-                 mqttService.generate(secure) ],
+                 mqttService.generate(secure),
+                 mqttLwt.deployment("${MQTT_LWT_REPO}") ],
     local address_controller_resources = [
                  addressController.deployment("${ADDRESS_CONTROLLER_REPO}"),
                  addressController.service,
@@ -120,6 +122,11 @@ local mqttRoute = import "mqtt-route.json";
       {
         "name": "MQTT_GATEWAY_HOSTNAME",
         "description": "The hostname to use for the exposed route for MQTT (TLS only)"
+      },
+      {
+        "name" : "MQTT_LWT_REPO",
+        "description": "The image to use for the MQTT LWT",
+        "value": "enmasseproject/mqtt-lwt"
       }
     ]
 
