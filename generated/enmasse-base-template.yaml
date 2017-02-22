@@ -443,7 +443,7 @@ objects:
     name: restapi
   spec:
     host: "${RESTAPI_HOSTNAME}"
-    path: "/v1/enmasse/addresses"
+    path: "/v3/address"
     port:
       targetPort: http
     to:

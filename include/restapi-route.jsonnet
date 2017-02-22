@@ -10,7 +10,7 @@
             "name": "restapi"
         },
         "spec": {
-            "path": "/v1/enmasse/addresses",
+            "path": "/v3/address",
             "host": "${RESTAPI_HOSTNAME}",
             "to": {
                 "kind": "Service",
