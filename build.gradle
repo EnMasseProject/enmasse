@@ -1,3 +1,8 @@
+allprojects  {
+    group = 'enmasse'
+    version = 'latest'
+}
+
 ext {
     artemisVersion = '1.5.1'
     vertxProtonVersion = '3.3.3'
