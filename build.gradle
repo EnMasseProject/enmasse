@@ -46,4 +46,4 @@ dependencies {
 
 apply plugin: 'application'
 mainClassName = 'enmasse.queue.scheduler.Main'
-applicationDefaultJvmArgs = ["-Dvertx.disableFileCaching=true", "-Dvertx.disableFileCPResolving=true", "-Xmx128m", "-Xms128m"]
+applicationDefaultJvmArgs = ["-Dvertx.cacheDirBase=/tmp", "-Xmx128m", "-Xms128m"]
