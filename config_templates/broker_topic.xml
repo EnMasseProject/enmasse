@@ -9,6 +9,12 @@
              <multicast />
          </address>
       </addresses>
+      <wildcard-addresses>
+        <enabled>true</enabled>
+        <delimiter>/</delimiter>
+        <any-words>#</any-words>
+        <single-word>+</single-word>
+      </wildcard-addresses>
       <diverts>
         <divert name="qualified-topic-divert">
           <address>$TOPIC_NAME</address>
