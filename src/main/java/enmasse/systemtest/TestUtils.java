@@ -124,16 +124,20 @@ public class TestUtils {
 
     public static void deploy(HttpClient httpClient, OpenShift openShift, TimeoutBudget budget, Destination ... destinations) throws Exception {
         ObjectNode config = mapper.createObjectNode();
+        config.put("apiVersion", "v3");
+        config.put("kind", "AddressList");
+        ObjectNode addresses = config.putObject("addresses");
         for (Destination destination : destinations) {
-            ObjectNode entry = config.putObject(destination.getAddress());
+            ObjectNode entry = addresses.putObject(destination.getAddress());
             entry.put("store_and_forward", destination.isStoreAndForward());
             entry.put("multicast", destination.isMulticast());
+            entry.put("group", destination.getGroup());
             destination.getFlavor().ifPresent(e -> entry.put("flavor", e));
         }
         Endpoint restApi = openShift.getRestEndpoint();
 
         CountDownLatch latch = new CountDownLatch(1);
-        HttpClientRequest request = httpClient.put(restApi.getPort(), restApi.getHost(), "/v1/enmasse/addresses");
+        HttpClientRequest request = httpClient.put(restApi.getPort(), restApi.getHost(), "/v3/address");
         request.putHeader("content-type", "application/json");
         request.handler(event -> {
             if (event.statusCode() >= 200 && event.statusCode() < 300) {
@@ -160,7 +164,7 @@ public class TestUtils {
         ArrayNode root = mapper.createArrayNode();
         ObjectNode data = root.addObject();
         data.put("name", address);
-        data.put("store-and-forward", true);
+        data.put("store_and_forward", true);
         data.put("multicast", false);
         String json = mapper.writeValueAsString(root);
         Message message = Message.Factory.create();
