@@ -20,11 +20,12 @@ import org.junit.Test;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 
 public class QueueTest extends VertxTestBase {
@@ -33,25 +34,21 @@ public class QueueTest extends VertxTestBase {
         Destination dest = Destination.queue("myqueue");
         deploy(dest);
         EnMasseClient client = createQueueClient();
-        List<String> msgs = TestUtils.generateMessages(1024);
 
-        Future<Integer> numSent = null;
-        TimeoutBudget timeoutBudget = new TimeoutBudget(1, TimeUnit.MINUTES);
-        while (timeoutBudget.timeLeft() >= 0) {
-            numSent = client.sendMessages(dest.getAddress(), msgs);
-            try {
-                if (numSent.get(timeoutBudget.timeLeft(), TimeUnit.MILLISECONDS) == msgs.size()) {
-                    break;
-                }
-            } catch (Exception e) {
-                Thread.sleep(5000);
-            }
-        }
-        assertNotNull(numSent);
-        assertThat(numSent.get(1, TimeUnit.SECONDS), is(msgs.size()));
+        runQueueTest(client, dest);
+    }
 
-        Future<List<String>> received = client.recvMessages(dest.getAddress(), msgs.size());
-        assertThat(received.get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
+    @Test
+    public void testColocatedQueues() throws Exception {
+        Destination q1 = Destination.queue("group1", "queue1");
+        Destination q2 = Destination.queue("group1", "queue2");
+        Destination q3 = Destination.queue("group2", "queue3");
+        deploy(q1, q2, q3);
+
+        EnMasseClient client = createQueueClient();
+        runQueueTest(client, q1);
+        runQueueTest(client, q2);
+        runQueueTest(client, q3);
     }
 
     @Test
@@ -80,6 +77,19 @@ public class QueueTest extends VertxTestBase {
         Future<List<String>> received = client.recvMessages(dest.getAddress(), 4000);
 
         assertThat(received.get(1, TimeUnit.MINUTES).size(), is(4000));
+    }
+
+    private static void runQueueTest(EnMasseClient client, Destination dest) throws InterruptedException, TimeoutException, ExecutionException {
+        Thread.sleep(20_000);
+        List<String> msgs = TestUtils.generateMessages(1024);
+
+
+        Future<Integer> numSent = client.sendMessages(dest.getAddress(), msgs);
+
+        assertThat(numSent.get(1, TimeUnit.SECONDS), is(msgs.size()));
+
+        Future<List<String>> received = client.recvMessages(dest.getAddress(), msgs.size());
+        assertThat(received.get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
     }
 }
 

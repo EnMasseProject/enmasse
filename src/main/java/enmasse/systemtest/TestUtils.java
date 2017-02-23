@@ -28,10 +28,7 @@ import io.vertx.core.http.HttpClientRequest;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.message.Message;
 
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -146,16 +143,17 @@ public class TestUtils {
         });
         request.end(Buffer.buffer(mapper.writeValueAsBytes(config)));
         latch.await(30, TimeUnit.SECONDS);
-        int expectedPods = openShift.getExpectedPods();
+        Set<String> groups = new HashSet<>();
         for (Destination destination : destinations) {
             if (destination.isStoreAndForward()) {
                 waitForBrokerPod(openShift, destination.getGroup(), budget);
                 if (!destination.isMulticast()) {
                     waitForAddress(openShift, destination.getAddress(), budget);
                 }
-                expectedPods++;
+                groups.add(destination.getGroup());
             }
         }
+        int expectedPods = openShift.getExpectedPods() + groups.size();
         System.out.println("Waiting for " + expectedPods + " pods");
         waitForExpectedPods(openShift, expectedPods, budget);
     }

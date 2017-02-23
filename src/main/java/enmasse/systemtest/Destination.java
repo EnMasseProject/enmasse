@@ -34,7 +34,11 @@ public class Destination {
     }
 
     public static Destination queue(String address) {
-        return new Destination(address, address, true, false, Optional.of("vanilla-queue"));
+        return queue(address, address);
+    }
+
+    public static Destination queue(String group, String address) {
+        return new Destination(group, address, true, false, Optional.of("vanilla-queue"));
     }
 
     public static Destination topic(String address) {
