@@ -166,12 +166,14 @@ public class EnMasseClient {
                 });
                 connection.closeHandler(closed -> {
                     if (!promise.isDone()) {
+                        System.out.println("Connection closed : " + closed.cause());
                         promise.complete(numSent.get());
                     }
                 });
 
                 connection.disconnectHandler(closed -> {
                     if (!promise.isDone()) {
+                        System.out.println("Connection disconnected: " + closed.getRemoteCondition());
                         promise.complete(numSent.get());
                     }
                     connection.close();
