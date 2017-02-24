@@ -26,6 +26,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 
 public class QueueTest extends VertxTestBase {
@@ -80,16 +81,27 @@ public class QueueTest extends VertxTestBase {
     }
 
     private static void runQueueTest(EnMasseClient client, Destination dest) throws InterruptedException, TimeoutException, ExecutionException {
-        Thread.sleep(60_000);
+        Thread.sleep(30_000);
         List<String> msgs = TestUtils.generateMessages(1024);
 
-
-        Future<Integer> numSent = client.sendMessages(dest.getAddress(), msgs);
-
+        Future<Integer> numSent = null;
+        TimeoutBudget timeoutBudget = new TimeoutBudget(1, TimeUnit.MINUTES);
+        while (timeoutBudget.timeLeft() >= 0) {
+            numSent = client.sendMessages(dest.getAddress(), msgs);
+            try {
+                if (numSent.get(timeoutBudget.timeLeft(), TimeUnit.MILLISECONDS) == msgs.size()) {
+                    break;
+                }
+            } catch (Exception e) {
+                Thread.sleep(5000);
+            }
+        }
+        assertNotNull(numSent);
         assertThat(numSent.get(1, TimeUnit.SECONDS), is(msgs.size()));
 
         Future<List<String>> received = client.recvMessages(dest.getAddress(), msgs.size());
         assertThat(received.get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
+
     }
 }
 
