@@ -80,7 +80,7 @@ public class QueueTest extends VertxTestBase {
     }
 
     private static void runQueueTest(EnMasseClient client, Destination dest) throws InterruptedException, TimeoutException, ExecutionException {
-        Thread.sleep(20_000);
+        Thread.sleep(60_000);
         List<String> msgs = TestUtils.generateMessages(1024);
 
 
