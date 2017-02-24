@@ -43,7 +43,7 @@ public class DiscoveryTest {
         }));
 
         vertx.deployVerticle(testServer);
-        DiscoveryClient client = new DiscoveryClient(new Endpoint("127.0.0.1", waitForPort(testServer)), expectedFilter, Optional.empty());
+        DiscoveryClient client = new DiscoveryClient(new Endpoint("127.0.0.1", waitForPort(testServer)), "podsense", expectedFilter, Optional.empty());
         client.addListener(changedHosts::complete);
         vertx.deployVerticle(client);
 
