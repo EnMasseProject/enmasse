@@ -80,30 +80,34 @@ like this:
 
 ```
 {
-    "anycast": {
-        "store_and_forward": false,
-        "multicast": false
-    },
-    "broadcast": {
-        "store_and_forward": false,
-        "multicast": true
-    },
-    "mytopic": {
-        "store_and_forward": true,
-        "multicast": true,
-        "flavor": "vanilla-topic"
-    },
-    "myqueue": {
-        "store_and_forward": true,
-        "multicast": false,
-        "flavor": "vanilla-queue"
+    "apiVersion": "v3",
+    "kind": "AddressList",
+    "addresses": {
+        "anycast": {
+            "store_and_forward": false,
+            "multicast": false
+        },
+        "broadcast": {
+            "store_and_forward": false,
+            "multicast": true
+        },
+        "mytopic": {
+            "store_and_forward": true,
+            "multicast": true,
+            "flavor": "vanilla-topic"
+        },
+        "myqueue": {
+            "store_and_forward": true,
+            "multicast": false,
+            "flavor": "vanilla-queue"
+        }
     }
 }
 ```
 
 Save your config to a file, i.e. ```addresses.json``` and deploy it using curl:
     
-    curl -X PUT -H "content-type: application/json" --data-binary @addresses.json http://$(oc get service -o jsonpath='{.spec.clusterIP}' admin):8080/v1/enmasse/addresses
+    curl -X PUT -H "content-type: application/json" --data-binary @addresses.json http://$(oc get service -o jsonpath='{.spec.clusterIP}' admin):8080/v3/address
 
 The REST API will deploy the configuration to the address controller, which will create and delete brokers to
 match the desired state.
