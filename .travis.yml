@@ -7,7 +7,7 @@ jdk:
 services:
 - docker
 script:
-- gradle check
+- gradle check -i
 - curl -s https://raw.githubusercontent.com/EnMasseProject/travis-scripts/master/docker-build.sh
   | bash /dev/stdin enmasseproject/topic-forwarder .
 after_success:
