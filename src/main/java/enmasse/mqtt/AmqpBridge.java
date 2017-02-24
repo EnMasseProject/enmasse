@@ -426,6 +426,11 @@ public class AmqpBridge {
                         return topicSubscription.qos();
                     }).collect(Collectors.toList());
 
+                    // add accepted topic subscriptions to the local collection
+                    amqpSubscribeMessage.topicSubscriptions().stream().forEach(amqpTopicSubscription -> {
+                        this.grantedQoSLevels.put(amqpTopicSubscription.topic(), amqpTopicSubscription.qos());
+                    });
+
                 } else {
 
                     // failure for all QoS levels requested
@@ -433,11 +438,6 @@ public class AmqpBridge {
                 }
 
                 this.mqttEndpoint.subscribeAcknowledge((int) amqpSubscribeMessage.messageId(), grantedQoSLevels);
-
-                // add topic subscriptions to the local collection
-                amqpSubscribeMessage.topicSubscriptions().stream().forEach(amqpTopicSubscription -> {
-                    this.grantedQoSLevels.put(amqpTopicSubscription.topic(), amqpTopicSubscription.qos());
-                });
 
                 LOG.info("SUBACK [{}] to MQTT client {}", amqpSubscribeMessage.messageId(), this.mqttEndpoint.clientIdentifier());
             }
