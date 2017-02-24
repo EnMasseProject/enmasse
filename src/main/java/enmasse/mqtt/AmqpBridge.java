@@ -354,13 +354,18 @@ public class AmqpBridge {
 
         // defensive ... check that current bridge has information about subscriptions and related granted QoS
         // see https://github.com/EnMasseProject/subserv/issues/8
-        if ((this.grantedQoSLevels.size() != 0) && (this.grantedQoSLevels.containsKey(publish.topic()))) {
+
+        // try to get subscribed topic (that could have wildcards) that matches the publish topic
+        String topic = (this.grantedQoSLevels.size() == 0) ? null :
+                TopicMatcher.match(this.grantedQoSLevels.keySet().stream().collect(Collectors.toList()), publish.topic());
+
+        if (topic != null) {
 
             // MQTT 3.1.1 spec :  The QoS of Payload Messages sent in response to a Subscription MUST be
             // the minimum of the QoS of the originally published message and the maximum QoS granted by the Server
-            MqttQoS qos = (publish.qos().value() < this.grantedQoSLevels.get(publish.topic()).value()) ?
+            MqttQoS qos = (publish.qos().value() < this.grantedQoSLevels.get(topic).value()) ?
                     publish.qos() :
-                    this.grantedQoSLevels.get(publish.topic());
+                    this.grantedQoSLevels.get(topic);
 
             this.mqttEndpoint.publish(publish.topic(), publish.payload(), qos, publish.isDup(), publish.isRetain());
             // the the message identifier assigned to the published message
