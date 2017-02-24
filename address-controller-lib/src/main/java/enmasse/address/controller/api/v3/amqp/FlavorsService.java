@@ -55,7 +55,7 @@ public class FlavorsService {
             if (flav.isPresent()) {
                 return createResponse(flav.get());
             } else {
-                throw new IllegalArgumentException("Flavor " + flav.get() + " not found");
+                throw new IllegalArgumentException("Flavor " + flavor.get() + " not found");
             }
         } else {
             return createResponse(FlavorList.fromSet(repository.getFlavors()));

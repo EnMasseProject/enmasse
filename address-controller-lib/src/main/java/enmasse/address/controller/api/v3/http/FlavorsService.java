@@ -24,7 +24,7 @@ public class FlavorsService {
 
     @GET
     @Produces({MediaType.APPLICATION_JSON})
-    public Response listAddresses() {
+    public Response listFlavors() {
         try {
             return Response.ok(FlavorList.fromSet(flavorRepository.getFlavors())).build();
         } catch (Exception e) {
@@ -35,7 +35,7 @@ public class FlavorsService {
     @GET
     @Path("{flavor}")
     @Produces({MediaType.APPLICATION_JSON})
-    public Response getAddress(@PathParam("flavor") String flavor) {
+    public Response getFlavor(@PathParam("flavor") String flavor) {
         try {
             Optional<Flavor> flav = flavorRepository.getFlavor(flavor).map(Flavor::new);
 
