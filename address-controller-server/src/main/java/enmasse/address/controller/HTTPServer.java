@@ -17,10 +17,13 @@
 package enmasse.address.controller;
 
 import enmasse.address.controller.admin.AddressManager;
+import enmasse.address.controller.admin.FlavorRepository;
 import enmasse.address.controller.api.v1.http.RestServiceV1;
 import enmasse.address.controller.api.v2.http.RestServiceV2;
 import enmasse.address.controller.api.v3.ApiHandler;
+import enmasse.address.controller.api.v3.FlavorList;
 import enmasse.address.controller.api.v3.http.AddressingService;
+import enmasse.address.controller.api.v3.http.FlavorsService;
 import io.vertx.core.AbstractVerticle;
 import org.jboss.resteasy.plugins.server.vertx.VertxRequestHandler;
 import org.jboss.resteasy.plugins.server.vertx.VertxResteasyDeployment;
@@ -33,9 +36,11 @@ import org.slf4j.LoggerFactory;
 public class HTTPServer extends AbstractVerticle {
     private static final Logger log = LoggerFactory.getLogger(HTTPServer.class.getName());
     private final AddressManager addressManager;
+    private final FlavorRepository flavorRepository;
 
-    public HTTPServer(AddressManager addressManager) {
+    public HTTPServer(AddressManager addressManager, FlavorRepository flavorRepository) {
         this.addressManager = addressManager;
+        this.flavorRepository = flavorRepository;
     }
 
     @Override
@@ -45,6 +50,7 @@ public class HTTPServer extends AbstractVerticle {
         deployment.getRegistry().addSingletonResource(new RestServiceV1(addressManager, vertx));
         deployment.getRegistry().addSingletonResource(new RestServiceV2(addressManager, vertx));
         deployment.getRegistry().addSingletonResource(new AddressingService(new ApiHandler(addressManager)));
+        deployment.getRegistry().addSingletonResource(new FlavorsService(flavorRepository));
 
         vertx.createHttpServer()
                 .requestHandler(new VertxRequestHandler(vertx, deployment))

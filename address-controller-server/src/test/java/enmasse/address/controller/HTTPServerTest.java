@@ -17,8 +17,10 @@
 package enmasse.address.controller;
 
 import enmasse.address.controller.admin.AddressManager;
+import enmasse.address.controller.admin.FlavorManager;
 import enmasse.address.controller.model.Destination;
 import enmasse.address.controller.model.DestinationGroup;
+import enmasse.address.controller.model.Flavor;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.json.JsonObject;
@@ -27,6 +29,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.internal.util.collections.Sets;
 
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -41,13 +44,15 @@ public class HTTPServerTest {
 
     private Vertx vertx;
     private TestManager testManager;
+    private FlavorManager testRepository;
 
     @Before
     public void setup() throws InterruptedException {
         vertx = Vertx.vertx();
         testManager = new TestManager();
+        testRepository = new FlavorManager();
         CountDownLatch latch = new CountDownLatch(1);
-        vertx.deployVerticle(new HTTPServer(testManager), c -> {
+        vertx.deployVerticle(new HTTPServer(testManager, testRepository), c -> {
             latch.countDown();
         });
         latch.await(1, TimeUnit.MINUTES);
@@ -78,6 +83,39 @@ public class HTTPServerTest {
                     JsonObject data = buffer.toJsonObject();
                     assertTrue(data.containsKey("metadata"));
                     assertThat(data.getJsonObject("metadata").getString("name"), is("addr1"));
+                    latch.countDown();
+                });
+            });
+            assertTrue(latch.await(1, TimeUnit.MINUTES));
+        } finally {
+            client.close();
+        }
+    }
+
+    @Test
+    public void testFlavorsApi() throws InterruptedException {
+        Flavor flavor = new Flavor.Builder("vanilla", "inmemory-queue")
+                .type("queue")
+                .description("Simple queue")
+                .build();
+        testRepository.flavorsUpdated(Collections.singletonMap("vanilla", flavor));
+        HttpClient client = vertx.createHttpClient();
+        try {
+            CountDownLatch latch = new CountDownLatch(2);
+            client.getNow(8080, "localhost", "/v3/flavor", response -> {
+                response.bodyHandler(buffer -> {
+                    JsonObject data = buffer.toJsonObject();
+                    assertTrue(data.containsKey("flavors"));
+                    assertTrue(data.getJsonObject("flavors").containsKey("vanilla"));
+                    latch.countDown();
+                });
+            });
+
+            client.getNow(8080, "localhost", "/v3/flavor/vanilla", response -> {
+                response.bodyHandler(buffer -> {
+                    JsonObject data = buffer.toJsonObject();
+                    assertTrue(data.containsKey("metadata"));
+                    assertThat(data.getJsonObject("metadata").getString("name"), is("vanilla"));
                     latch.countDown();
                 });
             });

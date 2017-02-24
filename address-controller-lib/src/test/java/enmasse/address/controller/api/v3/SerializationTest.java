@@ -1,9 +1,9 @@
 package enmasse.address.controller.api.v3;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import enmasse.address.controller.model.Destination;
-import enmasse.address.controller.api.v3.Address;
-import enmasse.address.controller.api.v3.AddressList;
+import enmasse.address.controller.model.Flavor;
 import org.junit.Test;
 import org.mockito.internal.util.collections.Sets;
 
@@ -48,5 +48,39 @@ public class SerializationTest {
 
         Set<Destination> deserialized = mapper.readValue(serialized, AddressList.class).getDestinations();
         assertThat(deserialized, is(destinations));
+    }
+
+    @Test
+    public void testSerializeFlavorList() throws IOException {
+        Set<enmasse.address.controller.model.Flavor> flavors = Sets.newSet(
+                new Flavor.Builder("flavor1", "template1").type("queue").description("Simple queue").build(),
+                new Flavor.Builder("flavor2", "template2").type("topic").description("Simple topic").build());
+
+        FlavorList list = FlavorList.fromSet(flavors);
+
+        ObjectMapper mapper = new ObjectMapper();
+        String serialized = mapper.writeValueAsString(list);
+
+        ObjectNode deserialized = mapper.readValue(serialized, ObjectNode.class);
+        assertThat(deserialized.get("kind").asText(), is("FlavorList"));
+        assertThat(deserialized.get("flavors").size(), is(2));
+        assertThat(deserialized.get("flavors").get("flavor1").get("type").asText(), is("queue"));
+        assertThat(deserialized.get("flavors").get("flavor1").get("description").asText(), is("Simple queue"));
+        assertThat(deserialized.get("flavors").get("flavor2").get("type").asText(), is("topic"));
+        assertThat(deserialized.get("flavors").get("flavor2").get("description").asText(), is("Simple topic"));
+    }
+
+    @Test
+    public void testSerializeFlavor() throws IOException {
+        Flavor flavor = new Flavor.Builder("flavor1", "template1").type("queue").description("Simple queue").build();
+
+        ObjectMapper mapper = new ObjectMapper();
+        String serialized = mapper.writeValueAsString(new enmasse.address.controller.api.v3.Flavor(flavor));
+
+        ObjectNode deserialized = mapper.readValue(serialized, ObjectNode.class);
+        assertThat(deserialized.get("kind").asText(), is("Flavor"));
+        assertThat(deserialized.get("metadata").get("name").asText(), is("flavor1"));
+        assertThat(deserialized.get("spec").get("type").asText(), is("queue"));
+        assertThat(deserialized.get("spec").get("description").asText(), is("Simple queue"));
     }
 }

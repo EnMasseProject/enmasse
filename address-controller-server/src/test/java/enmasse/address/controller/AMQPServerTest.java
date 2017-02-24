@@ -1,9 +1,13 @@
 package enmasse.address.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import enmasse.address.controller.admin.FlavorManager;
+import enmasse.address.controller.admin.FlavorRepository;
 import enmasse.address.controller.api.v3.AddressList;
 import enmasse.address.controller.model.Destination;
 import enmasse.address.controller.model.DestinationGroup;
+import enmasse.address.controller.model.Flavor;
 import enmasse.amqp.SyncRequestClient;
 import io.vertx.core.Vertx;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
@@ -15,6 +19,7 @@ import org.junit.Test;
 import org.mockito.internal.util.collections.Sets;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -24,20 +29,23 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import static org.hamcrest.CoreMatchers.hasItem;
+import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 public class AMQPServerTest {
     private Vertx vertx;
     private HTTPServerTest.TestManager testManager;
+    private FlavorManager testRepository;
     private int port;
 
     @Before
     public void setup() throws InterruptedException {
         vertx = Vertx.vertx();
         testManager = new HTTPServerTest.TestManager();
+        testRepository = new FlavorManager();
         CountDownLatch latch = new CountDownLatch(1);
-        AMQPServer server = new AMQPServer(testManager, 0);
+        AMQPServer server = new AMQPServer(testManager, testRepository, 0);
         vertx.deployVerticle(server, c -> {
             latch.countDown();
         });
@@ -78,4 +86,31 @@ public class AMQPServerTest {
         AddressList list = mapper.readValue((String)((AmqpValue)response.getBody()).getValue(), AddressList.class);
         assertThat(list.getDestinationGroups(), hasItem(gr));
     }
+
+    @Test
+    public void testFlavorsService() throws InterruptedException, ExecutionException, TimeoutException, IOException {
+        Flavor flavor = new Flavor.Builder("vanilla", "inmemory-queue")
+                .type("queue")
+                .description("Simple queue")
+                .build();
+        testRepository.flavorsUpdated(Collections.singletonMap("vanilla", flavor));
+
+        SyncRequestClient client = new SyncRequestClient("localhost", port, vertx);
+        Message request = Message.Factory.create();
+        Map<String, String> properties = new LinkedHashMap<>();
+        properties.put("method", "GET");
+        request.setAddress("$flavor");
+        request.setApplicationProperties(new ApplicationProperties(properties));
+        Message response = client.request(request, 1, TimeUnit.MINUTES);
+
+        ObjectMapper mapper = new ObjectMapper();
+        ObjectNode list = mapper.readValue((String)((AmqpValue)response.getBody()).getValue(), ObjectNode.class);
+        assertTrue(list.has("flavors"));
+        ObjectNode flavors = (ObjectNode) list.get("flavors");
+        assertTrue(flavors.has("vanilla"));
+        ObjectNode f = (ObjectNode) flavors.get("vanilla");
+        assertThat(f.get("type").asText(), is("queue"));
+        assertThat(f.get("description").asText(), is("Simple queue"));
+    }
+
 }

@@ -17,8 +17,10 @@
 package enmasse.address.controller;
 
 import enmasse.address.controller.admin.AddressManager;
+import enmasse.address.controller.admin.FlavorRepository;
 import enmasse.address.controller.api.v3.ApiHandler;
 import enmasse.address.controller.api.v3.amqp.AddressingService;
+import enmasse.address.controller.api.v3.amqp.FlavorsService;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.proton.*;
 import org.apache.qpid.proton.amqp.messaging.Accepted;
@@ -39,12 +41,14 @@ public class AMQPServer extends AbstractVerticle {
     private static final Logger log = LoggerFactory.getLogger(AMQPServer.class.getName());
     private final int port;
     private final AddressingService addressingService;
+    private final FlavorsService flavorsService;
     private final Map<String, HandlerContext> replyHandlers = new ConcurrentHashMap<>();
     private ProtonServer server;
 
-    public AMQPServer(AddressManager addressManager, int port) {
+    public AMQPServer(AddressManager addressManager, FlavorRepository repository, int port) {
         this.port = port;
         this.addressingService = new AddressingService(new ApiHandler(addressManager));
+        this.flavorsService = new FlavorsService(repository);
     }
 
     public void start() {
@@ -95,34 +99,34 @@ public class AMQPServer extends AbstractVerticle {
     private void createReceiver(ProtonReceiver receiver) {
         String targetAddress = receiver.getRemoteTarget().getAddress();
         if (targetAddress.equals("$address")) {
-            receiver.handler((delivery, message) -> {
-                vertx.executeBlocking(future -> {
-                    try {
-                        onAddressConfig(message);
-                    } catch (Exception e) {
-                        log.warn("Error handling addressing message", e);
-                        future.fail(e);
-                    }
-                }, result -> {
-                    if (result.succeeded()) {
-                        delivery.disposition(new Accepted(), true);
-                    } else {
-                        delivery.disposition(new Rejected(), true);
-                    }
-                });
-            });
-            receiver.open();
+            openReceiverWithHandler(receiver, addressingService::handleMessage);
+        } else if (targetAddress.equals("$flavor")) {
+            openReceiverWithHandler(receiver, flavorsService::handleMessage);
         } else {
             receiver.close();
         }
     }
 
-    private void onAddressConfig(Message message) throws IOException {
-
-        Optional<HandlerContext> context = Optional.ofNullable(replyHandlers.get(message.getReplyTo()));
-
-        Message response = addressingService.handleMessage(message);
-        context.ifPresent(ctx -> vertx.runOnContext(v -> ctx.sender.send(response)));
+    private void openReceiverWithHandler(ProtonReceiver receiver, RequestHandler requestHandler) {
+        receiver.handler((delivery, message) -> {
+            vertx.executeBlocking(future -> {
+                try {
+                    Optional<HandlerContext> context = Optional.ofNullable(replyHandlers.get(message.getReplyTo()));
+                    Message response = requestHandler.handleMessage(message);
+                    context.ifPresent(ctx -> vertx.runOnContext(v -> ctx.sender.send(response)));
+                } catch (Exception e) {
+                    log.warn("Error handling addressing message", e);
+                    future.fail(e);
+                }
+            }, result -> {
+                if (result.succeeded()) {
+                    delivery.disposition(new Accepted(), true);
+                } else {
+                    delivery.disposition(new Rejected(), true);
+                }
+            });
+        });
+        receiver.open();
     }
 
     public void stop() {
@@ -149,6 +153,10 @@ public class AMQPServer extends AbstractVerticle {
             this.sender = sender;
             this.address = address;
         }
+    }
+
+    private interface RequestHandler {
+        Message handleMessage(Message message) throws IOException;
     }
 }
 

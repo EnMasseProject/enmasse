@@ -22,8 +22,7 @@ import enmasse.address.controller.parser.FlavorParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Collections;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -32,6 +31,11 @@ import java.util.stream.Collectors;
 public class FlavorManager implements FlavorRepository {
     private static final Logger log = LoggerFactory.getLogger(FlavorManager.class.getName());
     private volatile Map<String, Flavor> flavorMap = Collections.emptyMap();
+
+    @Override
+    public Set<Flavor> getFlavors() {
+        return new HashSet<>(flavorMap.values());
+    }
 
     @Override
     public Flavor getFlavor(String flavorName, long timeoutInMillis) {
@@ -52,6 +56,11 @@ public class FlavorManager implements FlavorRepository {
             throw new IllegalArgumentException(String.format("No flavor with name '%s' exists, have [%s]", flavorName, flavors));
         }
         return flavor;
+    }
+
+    @Override
+    public Optional<Flavor> getFlavor(String flavorName) {
+        return Optional.ofNullable(flavorMap.get(flavorName));
     }
 
     public void flavorsUpdated(Map<String, Flavor> flavorMap) {

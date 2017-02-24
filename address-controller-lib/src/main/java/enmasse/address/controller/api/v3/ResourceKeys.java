@@ -12,4 +12,7 @@ public interface ResourceKeys {
     String SPEC = "spec";
     String STATUS = "status";
     String ADDRESSES = "addresses";
+    String FLAVORS = "flavors";
+    String TYPE = "type";
+    String DESCRIPTION = "description";
 }

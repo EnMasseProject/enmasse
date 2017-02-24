@@ -26,17 +26,31 @@ public class Flavor {
     private final String templateName;
     private final Map<String, String> templateParameters;
     private final String name;
+    private final String type;
+    private final String description;
 
     private Flavor(String name,
+                   String type,
+                   String description,
                    String templateName,
                    Map<String, String> templateParameters) {
         this.name = name;
+        this.type = type;
+        this.description = description;
         this.templateName = templateName;
         this.templateParameters = templateParameters;
     }
 
     public String name() {
         return name;
+    }
+
+    public String type() {
+        return type;
+    }
+
+    public String description() {
+        return description;
     }
 
     public String templateName() {
@@ -78,6 +92,8 @@ public class Flavor {
 
     public static class Builder {
         private String name;
+        private String type;
+        private String description;
         private String templateName;
         private Map<String, String> templateParameters = new LinkedHashMap<>();
 
@@ -86,13 +102,23 @@ public class Flavor {
             this.templateName = templateName;
         }
 
+        public Builder type(String type) {
+            this.type = type;
+            return this;
+        }
+
+        public Builder description(String description) {
+            this.description = description;
+            return this;
+        }
+
         public Builder templateParameter(String key, String value) {
             templateParameters.put(key, value);
             return this;
         }
 
         public Flavor build() {
-            return new Flavor(name, templateName, templateParameters);
+            return new Flavor(name, type, description, templateName, templateParameters);
         }
     }
 }

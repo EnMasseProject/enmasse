@@ -18,9 +18,14 @@ package enmasse.address.controller.admin;
 
 import enmasse.address.controller.model.Flavor;
 
+import java.util.Optional;
+import java.util.Set;
+
 /**
  * Interface for a repository of flavors.
  */
 public interface FlavorRepository {
+    Set<Flavor> getFlavors();
     Flavor getFlavor(String flavorName, long timeoutInMillis);
+    Optional<Flavor> getFlavor(String flavorName);
 }

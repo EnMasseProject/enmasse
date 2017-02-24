@@ -16,17 +16,16 @@
 
 package enmasse.address.controller;
 
-import enmasse.address.controller.admin.AddressManagerImpl;
-import enmasse.address.controller.generator.TemplateDestinationClusterGenerator;
 import enmasse.address.controller.admin.AddressManager;
+import enmasse.address.controller.admin.AddressManagerImpl;
 import enmasse.address.controller.admin.FlavorManager;
 import enmasse.address.controller.admin.OpenShiftHelper;
+import enmasse.address.controller.generator.TemplateDestinationClusterGenerator;
 import io.fabric8.openshift.client.DefaultOpenShiftClient;
 import io.fabric8.openshift.client.OpenShiftClient;
 import io.fabric8.openshift.client.OpenShiftConfigBuilder;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
-import io.vertx.core.VertxOptions;
 
 import java.io.IOException;
 
@@ -51,8 +50,8 @@ public class AddressController implements Runnable, AutoCloseable {
 
         this.flavorManager = new FlavorManager();
         this.addressManager = new AddressManagerImpl(new OpenShiftHelper(osClient), new TemplateDestinationClusterGenerator(osClient, flavorManager));
-        this.server = new AMQPServer(addressManager, options.port());
-        this.restServer = new HTTPServer(addressManager);
+        this.server = new AMQPServer(addressManager, flavorManager, options.port());
+        this.restServer = new HTTPServer(addressManager, flavorManager);
         this.flavorWatcher = new ConfigAdapter(osClient, "flavor", flavorManager::configUpdated);
     }
 
