@@ -37,32 +37,8 @@
                 ],
                 "env": [
                   {
-                    "name": "BENCH_DURATION",
-                    "value": "${DURATION}"
-                  },
-                  {
-                    "name": "BENCH_MSG_SIZE",
-                    "value": "${MESSAGE_SIZE}"
-                  },
-                  {
-                    "name": "BENCH_ADDRESS",
-                    "value": "${ADDRESS}"
-                  },
-                  {
-                    "name": "BENCH_SENDERS",
-                    "value": "1"
-                  },
-                  {
-                    "name": "BENCH_RECEIVERS",
-                    "value": "1"
-                  },
-                  {
-                    "name": "BENCH_WAIT_TIME",
-                    "value": "${WAIT_INTERVAL}"
-                  },
-                  {
-                    "name": "BENCH_SPLIT_CLIENTS",
-                    "value": "${SPLIT_CLIENTS}"
+                    "name": "BENCH_ARGS",
+                    "value": "-s 1 -r 1 -h $MESSAGING_SERVICE_HOST:$MESSAGING_SERVICE_PORT -a ${ADDRESS} -d ${DURATION} -m ${MESSAGE_SIZE} -f none -w ${WAIT_INTERVAL}"
                   }
                 ]
               }
