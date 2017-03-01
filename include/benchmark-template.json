@@ -38,7 +38,7 @@
                 "env": [
                   {
                     "name": "BENCH_ARGS",
-                    "value": "-s 1 -r 1 -h $MESSAGING_SERVICE_HOST:$MESSAGING_SERVICE_PORT -a ${ADDRESS} -d ${DURATION} -m ${MESSAGE_SIZE} -f none -w ${WAIT_INTERVAL}"
+                    "value": "-s 1 -r 1 -h $MESSAGING_SERVICE_HOST:$MESSAGING_SERVICE_PORT -a ${ADDRESS} -d ${DURATION} -m ${MESSAGE_SIZE} -f none -n ${SEND_RATE}"
                   }
                 ]
               }
@@ -76,8 +76,8 @@
                 ],
                 "env": [
                   {
-                    "name": "BENCH_INTERVAL",
-                    "value": "${REPORT_INTERVAL}"
+                    "name": "BENCH_ARGS",
+                    "value": "-i ${REPORT_INTERVAL}"
                   }
                 ]
               }
@@ -125,8 +125,8 @@
       "value": "30"
     },
     {
-      "name": "WAIT_INTERVAL",
-      "description": "Wait interval between each message sent",
+      "name": "SEND_RATE",
+      "description": "Send rate of senders (messages/second)",
       "value": "0"
     },
     {
