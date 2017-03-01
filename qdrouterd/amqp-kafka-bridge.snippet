@@ -25,14 +25,14 @@ connector {
 }
 
 linkRoute {
-    name: override.kafka
+    name: override.kafka_out
     prefix: kafka
     dir: out
     connection: amqp-kafka-bridge-service
 }
 
 linkRoute {
-    name: override.kafka
+    name: override.kafka_in
     prefix: kafka
     dir: in
     connection: amqp-kafka-bridge-service
