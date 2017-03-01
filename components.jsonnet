@@ -15,6 +15,8 @@ local mqttGateway = import "include/mqtt-gateway.jsonnet";
 local mqtt = import "include/mqtt.jsonnet";
 local mqttService = import "include/mqtt-service.jsonnet";
 local mqttLwt = import "include/mqtt-lwt.jsonnet";
+local amqpKafkaBridge = import "include/amqp-kafka-bridge.jsonnet";
+local amqpKafkaBridgeService = import "include/amqp-kafka-bridge-service.jsonnet";
 {
   "messaging-service.json": messagingService.generate(false, false),
   "tls-messaging-service.json": messagingService.generate(true, false),
@@ -38,5 +40,7 @@ local mqttLwt = import "include/mqtt-lwt.jsonnet";
   "mqtt-service.json": mqttService.generate(false),
   "tls-mqtt-gateway-dc.json" : mqttGateway.deployment(true, "enmasseproject/mqtt-gateway"),
   "tls-mqtt-service.json" : mqttService.generate(true),
-  "mqtt-lwt-dc.json" : mqttLwt.deployment("enmasseproject/mqtt-lwt")
+  "mqtt-lwt-dc.json" : mqttLwt.deployment("enmasseproject/mqtt-lwt"),
+  "amqp-kafka-bridge-dc.json" : amqpKafkaBridge.deployment("enmasseproject/amqp-kafka-bridge"),
+  "amqp-kafka-bridge-service.json" : amqpKafkaBridgeService.generate(false)
 }
