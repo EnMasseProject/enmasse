@@ -35,11 +35,19 @@ public class Host {
     }
 
     public Endpoint amqpEndpoint() {
-        return new Endpoint(hostname, portMap.get("amqp"));
+        return getEndpoint("amqp");
     }
 
     public Endpoint coreEndpoint() {
-        return new Endpoint(hostname, portMap.get("core"));
+        return getEndpoint("core");
+    }
+
+    public Endpoint httpEndpoint() {
+        return getEndpoint("http");
+    }
+
+    public Endpoint getEndpoint(String portName) {
+        return new Endpoint(hostname, portMap.get(portName));
     }
 
     @Override
