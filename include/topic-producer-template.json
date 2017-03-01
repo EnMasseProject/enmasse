@@ -48,7 +48,7 @@
       "apiVersion": "batch/v1",
       "kind": "Job",
       "metadata": {
-        "name": "producer-collector"
+        "name": "benchmark-producer-collector"
       },
       "spec": {
         "template": {

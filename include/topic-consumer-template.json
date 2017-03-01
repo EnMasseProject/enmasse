@@ -48,7 +48,7 @@
       "apiVersion": "batch/v1",
       "kind": "Job",
       "metadata": {
-        "name": "consumer-collector"
+        "name": "benchmark-consumer-collector"
       },
       "spec": {
         "template": {
