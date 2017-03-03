@@ -123,7 +123,7 @@ under the License.
             <dead-letter-address>DLQ</dead-letter-address>
             <redelivery-delay>0</redelivery-delay>
             <!-- with -1 only the global-max-size is in use for limiting -->
-            <max-size-bytes>-1</max-size-bytes>
+            <max-size-bytes>52428800</max-size-bytes>
             <message-counter-history-day-limit>10</message-counter-history-day-limit>
             <address-full-policy>BLOCK</address-full-policy>
          </address-setting>
