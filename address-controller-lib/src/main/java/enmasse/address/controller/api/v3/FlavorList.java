@@ -48,6 +48,7 @@ public class FlavorList {
                 ObjectNode flavorNode = flavorsNode.putObject(flavor.name());
                 flavorNode.put(ResourceKeys.TYPE, flavor.type());
                 flavorNode.put(ResourceKeys.DESCRIPTION, flavor.description());
+                flavor.uuid().ifPresent(u -> flavorNode.put(ResourceKeys.UUID, u));
             }
             mapper.writeValue(gen, node);
         }

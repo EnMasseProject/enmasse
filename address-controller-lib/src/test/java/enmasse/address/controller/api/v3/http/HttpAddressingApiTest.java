@@ -44,8 +44,8 @@ public class HttpAddressingApiTest {
         addressManager = new TestManager();
         addressingService = new AddressingService(new ApiHandler(addressManager));
         addressManager.destinationsUpdated(Sets.newSet(
-            createGroup(new Destination("addr1", "addr1", false, false, Optional.empty())),
-            createGroup(new Destination("queue1", "queue1", true, false, Optional.of("vanilla")))));
+            createGroup(new Destination("addr1", "addr1", false, false, Optional.empty(), Optional.empty())),
+            createGroup(new Destination("queue1", "queue1", true, false, Optional.of("vanilla"), Optional.empty()))));
     }
 
     @Test
@@ -88,8 +88,8 @@ public class HttpAddressingApiTest {
     @Test
     public void testPut() {
         Set<Destination> input = Sets.newSet(
-                new Destination("addr2", "addr2", false, false, Optional.empty()),
-                new Destination("topic", "topic", true, true, Optional.of("vanilla")));
+                new Destination("addr2", "addr2", false, false, Optional.empty(), Optional.empty()),
+                new Destination("topic", "topic", true, true, Optional.of("vanilla"), Optional.empty()));
 
         Response response = addressingService.putAddresses(AddressList.fromSet(input));
         Set<Destination> result = ((AddressList)response.getEntity()).getDestinations();
@@ -97,16 +97,16 @@ public class HttpAddressingApiTest {
         assertThat(result, is(input));
 
         assertThat(addressManager.destinationList.size(), is(2));
-        assertDestination(new Destination("addr2", "addr2", false, false, Optional.empty()));
-        assertDestination(new Destination("topic", "topic", true, true, Optional.of("vanilla")));
-        assertNotDestination(new Destination("addr1", "addr1", false, false, Optional.empty()));
+        assertDestination(new Destination("addr2", "addr2", false, false, Optional.empty(), Optional.empty()));
+        assertDestination(new Destination("topic", "topic", true, true, Optional.of("vanilla"), Optional.empty()));
+        assertNotDestination(new Destination("addr1", "addr1", false, false, Optional.empty(), Optional.empty()));
     }
 
     @Test
     public void testPutException() {
         addressManager.throwException = true;
         Response response = addressingService.putAddresses(AddressList.fromSet(Collections.singleton(
-                    new Destination("newaddr", "newaddr", true, false, Optional.of("vanilla")))));
+                    new Destination("newaddr", "newaddr", true, false, Optional.of("vanilla"), Optional.empty()))));
         assertThat(response.getStatus(), is(500));
     }
 
@@ -120,8 +120,8 @@ public class HttpAddressingApiTest {
         assertThat(result.iterator().next().address(), is("queue1"));
 
         assertThat(addressManager.destinationList.size(), is(1));
-        assertDestination(new Destination("queue1", "queue1", true, false, Optional.of("vanilla")));
-        assertNotDestination(new Destination("addr1", "addr1", false, false, Optional.empty()));
+        assertDestination(new Destination("queue1", "queue1", true, false, Optional.of("vanilla"), Optional.empty()));
+        assertNotDestination(new Destination("addr1", "addr1", false, false, Optional.empty(), Optional.empty()));
     }
 
     @Test
@@ -137,7 +137,8 @@ public class HttpAddressingApiTest {
 
     @Test
     public void testAppend() {
-        Response response = addressingService.appendAddress(new Address(new Destination("addr2", "addr2", false, false, Optional.empty())));
+        Response response = addressingService.appendAddress(new Address(new Destination("addr2", "addr2",
+                false, false, Optional.empty(), Optional.empty())));
         Set<Destination> result = ((AddressList)response.getEntity()).getDestinations();
 
         assertThat(result.size(), is(3));
@@ -146,9 +147,9 @@ public class HttpAddressingApiTest {
         assertDestinationName(result, "addr2");
 
         assertThat(addressManager.destinationList.size(), is(3));
-        assertDestination(new Destination("addr2", "addr2", false, false, Optional.empty()));
-        assertDestination(new Destination("queue1", "queue1", true, false, Optional.of("vanilla")));
-        assertDestination(new Destination("addr1", "addr1", false, false, Optional.empty()));
+        assertDestination(new Destination("addr2", "addr2", false, false, Optional.empty(), Optional.empty()));
+        assertDestination(new Destination("queue1", "queue1", true, false, Optional.of("vanilla"), Optional.empty()));
+        assertDestination(new Destination("addr1", "addr1", false, false, Optional.empty(), Optional.empty()));
     }
 
     private void assertDestinationName(Set<Destination> actual, String expectedAddress) {
@@ -167,7 +168,7 @@ public class HttpAddressingApiTest {
     public void testAppendException() {
         addressManager.throwException = true;
         Response response = addressingService.appendAddress(new Address(
-                new Destination("newaddr", "newaddr", true, false, Optional.of("vanilla"))));
+                new Destination("newaddr", "newaddr", true, false, Optional.of("vanilla"), Optional.empty())));
         assertThat(response.getStatus(), is(500));
     }
 

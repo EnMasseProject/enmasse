@@ -9,7 +9,6 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import enmasse.address.controller.model.Destination;
 
-import java.awt.geom.Area;
 import java.io.IOException;
 import java.util.Optional;
 
@@ -46,6 +45,7 @@ public class Address {
                 .storeAndForward(spec.get(ResourceKeys.STORE_AND_FORWARD).asBoolean())
                 .multicast(spec.get(ResourceKeys.MULTICAST).asBoolean())
                 .flavor(Optional.ofNullable(spec.get(ResourceKeys.FLAVOR)).map(JsonNode::asText))
+                .uuid(Optional.ofNullable(metadata.get(ResourceKeys.UUID)).map(JsonNode::asText))
                 .build());
         }
     }
@@ -62,6 +62,7 @@ public class Address {
 
             ObjectNode metadata = node.putObject(ResourceKeys.METADATA);
             metadata.put(ResourceKeys.NAME, destination.address());
+            destination.uuid().ifPresent(u -> metadata.put(ResourceKeys.UUID, u));
 
             ObjectNode spec = node.putObject("spec");
             spec.put(ResourceKeys.STORE_AND_FORWARD, destination.storeAndForward());

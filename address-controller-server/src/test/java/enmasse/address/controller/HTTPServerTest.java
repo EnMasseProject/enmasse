@@ -65,7 +65,7 @@ public class HTTPServerTest {
 
     @Test
     public void testAddressingApi() throws InterruptedException {
-        testManager.destinationList.add(new DestinationGroup("group0", Sets.newSet(new Destination("addr1", "group0", false, false, Optional.empty()))));
+        testManager.destinationList.add(new DestinationGroup("group0", Sets.newSet(new Destination("addr1", "group0", false, false, Optional.empty(), Optional.empty()))));
         HttpClient client = vertx.createHttpClient();
         try {
             CountDownLatch latch = new CountDownLatch(2);

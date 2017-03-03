@@ -21,6 +21,7 @@ public class SerializationTest {
                 .multicast(false)
                 .storeAndForward(true)
                 .flavor(Optional.of("myflavor"))
+                .uuid(Optional.of("uuid1"))
                 .build();
 
         Address address = new Address(destination);
@@ -33,6 +34,7 @@ public class SerializationTest {
         assertThat(next.storeAndForward(), is(destination.storeAndForward()));
         assertThat(next.multicast(), is(destination.multicast()));
         assertThat(next.flavor(), is(destination.flavor()));
+        assertThat(next.uuid(), is(destination.uuid()));
     }
 
     @Test

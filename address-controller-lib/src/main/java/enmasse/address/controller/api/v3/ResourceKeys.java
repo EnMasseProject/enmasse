@@ -15,4 +15,5 @@ public interface ResourceKeys {
     String FLAVORS = "flavors";
     String TYPE = "type";
     String DESCRIPTION = "description";
+    String UUID = "uuid";
 }

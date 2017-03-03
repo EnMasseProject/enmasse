@@ -18,6 +18,7 @@ package enmasse.address.controller.model;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * A @{link Flavor} represents a fixed set of configuration parameters for a template.
@@ -28,17 +29,20 @@ public class Flavor {
     private final String name;
     private final String type;
     private final String description;
+    private final Optional<String> uuid;
 
     private Flavor(String name,
                    String type,
                    String description,
                    String templateName,
-                   Map<String, String> templateParameters) {
+                   Map<String, String> templateParameters,
+                   Optional<String> uuid) {
         this.name = name;
         this.type = type;
         this.description = description;
         this.templateName = templateName;
         this.templateParameters = templateParameters;
+        this.uuid = uuid;
     }
 
     public String name() {
@@ -59,6 +63,10 @@ public class Flavor {
 
     public Map<String, String> templateParameters() {
         return templateParameters;
+    }
+
+    public Optional<String> uuid() {
+        return uuid;
     }
 
     @Override
@@ -96,6 +104,7 @@ public class Flavor {
         private String description;
         private String templateName;
         private Map<String, String> templateParameters = new LinkedHashMap<>();
+        private Optional<String> uuid = Optional.empty();
 
         public Builder(String name, String templateName) {
             this.name = name;
@@ -117,8 +126,13 @@ public class Flavor {
             return this;
         }
 
+        public Builder uuid(Optional<String> uuid) {
+            this.uuid = uuid;
+            return this;
+        }
+
         public Flavor build() {
-            return new Flavor(name, type, description, templateName, templateParameters);
+            return new Flavor(name, type, description, templateName, templateParameters, uuid);
         }
     }
 }
