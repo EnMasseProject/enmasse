@@ -46,8 +46,8 @@ public class AmqpAddressingApiTest {
         addressManager = new TestManager();
         addressingService = new AddressingService(new ApiHandler(addressManager));
         addressManager.destinationsUpdated(Sets.newSet(
-            createGroup(new Destination("addr1", "addr1", false, false, Optional.empty())),
-            createGroup(new Destination("queue1", "queue1", true, false, Optional.of("vanilla")))));
+            createGroup(new Destination("addr1", "addr1", false, false, Optional.empty(), Optional.empty())),
+            createGroup(new Destination("queue1", "queue1", true, false, Optional.of("vanilla"), Optional.empty()))));
     }
 
     @Test
@@ -104,8 +104,8 @@ public class AmqpAddressingApiTest {
     @Test
     public void testPut() throws IOException {
         Set<Destination> input = Sets.newSet(
-                new Destination("addr2", "addr2", false, false, Optional.empty()),
-                new Destination("topic", "topic", true, true, Optional.of("vanilla")));
+                new Destination("addr2", "addr2", false, false, Optional.empty(), Optional.empty()),
+                new Destination("topic", "topic", true, true, Optional.of("vanilla"), Optional.empty()));
 
         Message response = doRequest("PUT", AddressList.fromSet(input), Optional.empty());
         Set<Destination> result = decodeAs(AddressList.class, response).getDestinations();
@@ -113,15 +113,15 @@ public class AmqpAddressingApiTest {
         assertThat(result, is(input));
 
         assertThat(addressManager.destinationList.size(), is(2));
-        assertDestination(new Destination("addr2", "addr2", false, false, Optional.empty()));
-        assertDestination(new Destination("topic", "topic", true, true, Optional.of("vanilla")));
-        assertNotDestination(new Destination("addr1", "addr1", false, false, Optional.empty()));
+        assertDestination(new Destination("addr2", "addr2", false, false, Optional.empty(), Optional.empty()));
+        assertDestination(new Destination("topic", "topic", true, true, Optional.of("vanilla"), Optional.empty()));
+        assertNotDestination(new Destination("addr1", "addr1", false, false, Optional.empty(), Optional.empty()));
     }
 
     @Test(expected = RuntimeException.class)
     public void testPutException() throws IOException {
         addressManager.throwException = true;
-        doRequest("PUT", AddressList.fromSet(Collections.singleton( new Destination("newaddr", "newaddr", true, false, Optional.of("vanilla")))), Optional.empty());
+        doRequest("PUT", AddressList.fromSet(Collections.singleton( new Destination("newaddr", "newaddr", true, false, Optional.of("vanilla"), Optional.empty()))), Optional.empty());
     }
 
     @Test
@@ -134,8 +134,8 @@ public class AmqpAddressingApiTest {
         assertThat(result.iterator().next().address(), is("queue1"));
 
         assertThat(addressManager.destinationList.size(), is(1));
-        assertDestination(new Destination("queue1", "queue1", true, false, Optional.of("vanilla")));
-        assertNotDestination(new Destination("addr1", "addr1", false, false, Optional.empty()));
+        assertDestination(new Destination("queue1", "queue1", true, false, Optional.of("vanilla"), Optional.empty()));
+        assertNotDestination(new Destination("addr1", "addr1", false, false, Optional.empty(), Optional.empty()));
     }
 
     @Test(expected = RuntimeException.class)
@@ -150,7 +150,7 @@ public class AmqpAddressingApiTest {
 
     @Test
     public void testAppend() throws IOException {
-        Message response = doRequest("POST", new Address(new Destination("addr2", "addr2", false, false, Optional.empty())), Optional.empty());
+        Message response = doRequest("POST", new Address(new Destination("addr2", "addr2", false, false, Optional.empty(), Optional.empty())), Optional.empty());
         Set<Destination> result = decodeAs(AddressList.class, response).getDestinations();
 
         assertThat(result.size(), is(3));
@@ -159,9 +159,9 @@ public class AmqpAddressingApiTest {
         assertDestinationName(result, "addr2");
 
         assertThat(addressManager.destinationList.size(), is(3));
-        assertDestination(new Destination("addr2", "addr2", false, false, Optional.empty()));
-        assertDestination(new Destination("queue1", "queue1", true, false, Optional.of("vanilla")));
-        assertDestination(new Destination("addr1", "addr1", false, false, Optional.empty()));
+        assertDestination(new Destination("addr2", "addr2", false, false, Optional.empty(), Optional.empty()));
+        assertDestination(new Destination("queue1", "queue1", true, false, Optional.of("vanilla"), Optional.empty()));
+        assertDestination(new Destination("addr1", "addr1", false, false, Optional.empty(), Optional.empty()));
     }
 
     private void assertDestinationName(Set<Destination> actual, String expectedAddress) {
@@ -179,7 +179,7 @@ public class AmqpAddressingApiTest {
     @Test(expected = RuntimeException.class)
     public void testAppendException() throws IOException {
         addressManager.throwException = true;
-        doRequest("POST", new Address(new Destination("newaddr", "newaddr", true, false, Optional.of("vanilla"))), Optional.empty());
+        doRequest("POST", new Address(new Destination("newaddr", "newaddr", true, false, Optional.of("vanilla"), Optional.empty())), Optional.empty());
     }
 
     private void assertNotDestination(Destination destination) {

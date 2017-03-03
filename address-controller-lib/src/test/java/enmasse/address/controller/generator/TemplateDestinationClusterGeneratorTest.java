@@ -58,7 +58,7 @@ public class TemplateDestinationClusterGeneratorTest {
 
     @Test
     public void testDirect() {
-        Destination dest = new Destination("foo.bar_baz.cockooA", "gr0", false, false, Optional.empty());
+        Destination dest = new Destination("foo.bar_baz.cockooA", "gr0", false, false, Optional.empty(), Optional.empty());
         ArgumentCaptor<ParameterValue> captor = ArgumentCaptor.forClass(ParameterValue.class);
         DestinationCluster clusterList = generateCluster(dest, captor);
         Destination first = clusterList.getDestinationGroup().getDestinations().iterator().next();
@@ -77,7 +77,7 @@ public class TemplateDestinationClusterGeneratorTest {
 
     @Test
     public void testStoreAndForward() {
-        Destination dest = new Destination("foo.bar", "gr1", true, false, Optional.of("vanilla"));
+        Destination dest = new Destination("foo.bar", "gr1", true, false, Optional.of("vanilla"), Optional.empty());
         ArgumentCaptor<ParameterValue> captor = ArgumentCaptor.forClass(ParameterValue.class);
         DestinationCluster clusterList = generateCluster(dest, captor);
         assertThat(clusterList.getDestinationGroup().getDestinations(), hasItem(dest));

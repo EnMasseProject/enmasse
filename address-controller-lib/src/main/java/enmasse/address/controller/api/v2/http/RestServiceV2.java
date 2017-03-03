@@ -74,7 +74,7 @@ public class RestServiceV2 extends RestServiceBase {
                     DestinationGroup.Builder groupBuilder = new DestinationGroup.Builder(e.getKey());
                     e.getValue().entrySet()
                             .forEach(d -> {
-                                groupBuilder.destination(new Destination(d.getKey(), e.getKey(), d.getValue().store_and_forward, d.getValue().multicast, Optional.ofNullable(d.getValue().flavor)));
+                                groupBuilder.destination(new Destination(d.getKey(), e.getKey(), d.getValue().store_and_forward, d.getValue().multicast, Optional.ofNullable(d.getValue().flavor), Optional.empty()));
                             });
                     return groupBuilder.build();
                 })

@@ -3,7 +3,6 @@ package enmasse.address.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import enmasse.address.controller.admin.FlavorManager;
-import enmasse.address.controller.admin.FlavorRepository;
 import enmasse.address.controller.api.v3.AddressList;
 import enmasse.address.controller.model.Destination;
 import enmasse.address.controller.model.DestinationGroup;
@@ -71,7 +70,7 @@ public class AMQPServerTest {
 
     @Test
     public void testAddressingService() throws InterruptedException, ExecutionException, TimeoutException, IOException {
-        DestinationGroup gr = new DestinationGroup("group0", Sets.newSet(new Destination("addr1", "group0", false, false, Optional.empty())));
+        DestinationGroup gr = new DestinationGroup("group0", Sets.newSet(new Destination("addr1", "group0", false, false, Optional.empty(), Optional.empty())));
         testManager.destinationList.add(gr);
 
         SyncRequestClient client = new SyncRequestClient("localhost", port, vertx);

@@ -53,7 +53,7 @@ public class AddressManagerTest {
 
     @Test
     public void testClusterIsCreated() {
-        Destination queue = new Destination("myqueue", "gr0", true, false, Optional.of("vanilla"));
+        Destination queue = new Destination("myqueue", "gr0", true, false, Optional.of("vanilla"), Optional.empty());
         DestinationGroup group = new DestinationGroup("myqueue", Collections.singleton(queue));
         DestinationCluster cluster = mock(DestinationCluster.class);
 
@@ -70,12 +70,12 @@ public class AddressManagerTest {
 
     @Test
     public void testNodesAreRetained() {
-        Destination queue = new Destination("myqueue", "gr0", true, false, Optional.of("vanilla"));
+        Destination queue = new Destination("myqueue", "gr0", true, false, Optional.of("vanilla"), Optional.empty());
         DestinationGroup group = new DestinationGroup("myqueue", Collections.singleton(queue));
         DestinationCluster existing = new DestinationCluster(mockHelper, group, new KubernetesList());
         when(mockHelper.listClusters()).thenReturn(Collections.singletonList(existing));
 
-        Destination newQueue = new Destination("newqueue", "gr0", true, false, Optional.of("vanilla"));
+        Destination newQueue = new Destination("newqueue", "gr0", true, false, Optional.of("vanilla"), Optional.empty());
         DestinationGroup newGroup = new DestinationGroup("newqueue", Collections.singleton(newQueue));
         DestinationCluster newCluster = mock(DestinationCluster.class);
 
@@ -91,12 +91,12 @@ public class AddressManagerTest {
 
     @Test
     public void testClusterIsRemoved () {
-        Destination queue = new Destination("myqueue", "gr0", true, false, Optional.of("vanilla"));
+        Destination queue = new Destination("myqueue", "gr0", true, false, Optional.of("vanilla"), Optional.empty());
         DestinationGroup group = new DestinationGroup("myqueue", Collections.singleton(queue));
         DestinationCluster existing = mock(DestinationCluster.class);
         when(existing.getDestinationGroup()).thenReturn(group);
 
-        Destination newQueue = new Destination("newqueue", "gr0", true, false, Optional.of("vanilla"));
+        Destination newQueue = new Destination("newqueue", "gr0", true, false, Optional.of("vanilla"), Optional.empty());
         DestinationGroup newGroup = new DestinationGroup("newqueue", Collections.singleton(newQueue));
         DestinationCluster newCluster = mock(DestinationCluster.class);
         when(newCluster.getDestinationGroup()).thenReturn(newGroup);
@@ -113,10 +113,10 @@ public class AddressManagerTest {
 
     @Test
     public void testDestinationsAreGrouped() {
-        Destination addr0 = new Destination("myqueue0", "group0", true, false, Optional.of("vanilla"));
-        Destination addr1 = new Destination("myqueue1", "group1", true, false, Optional.of("vanilla"));
-        Destination addr2 = new Destination("myqueue2", "group1", true, false, Optional.of("vanilla"));
-        Destination addr3 = new Destination("myqueue3", "group2", true, false, Optional.of("vanilla"));
+        Destination addr0 = new Destination("myqueue0", "group0", true, false, Optional.of("vanilla"), Optional.empty());
+        Destination addr1 = new Destination("myqueue1", "group1", true, false, Optional.of("vanilla"), Optional.empty());
+        Destination addr2 = new Destination("myqueue2", "group1", true, false, Optional.of("vanilla"), Optional.empty());
+        Destination addr3 = new Destination("myqueue3", "group2", true, false, Optional.of("vanilla"), Optional.empty());
 
 
         DestinationGroup group0 = new DestinationGroup("group0", Collections.singleton(addr0));

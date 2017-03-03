@@ -30,6 +30,7 @@ public class DestinationParser {
     private static final String STORE_AND_FORWARD = "store_and_forward";
     private static final String MULTICAST = "multicast";
     private static final String FLAVOR = "flavor";
+    private static final String UUID = "uuid";
 
     public static Set<DestinationGroup> parse(JsonNode root) throws IOException {
         Set<DestinationGroup> destinationGroups = new HashSet<>();
@@ -60,6 +61,7 @@ public class DestinationParser {
         return new Destination(key,
                 key, node.get(STORE_AND_FORWARD).asBoolean(),
                 node.get(MULTICAST).asBoolean(),
-                node.has(FLAVOR) ? Optional.of(node.get(FLAVOR).asText()) : Optional.empty());
+                node.has(FLAVOR) ? Optional.of(node.get(FLAVOR).asText()) : Optional.empty(),
+                node.has(UUID) ? Optional.of(node.get(UUID).asText()) : Optional.empty());
     }
 }

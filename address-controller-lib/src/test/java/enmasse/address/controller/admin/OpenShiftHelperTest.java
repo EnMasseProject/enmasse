@@ -160,8 +160,8 @@ public class OpenShiftHelperTest {
         when(mapResource.get()).thenReturn(map);
         when(mapResource.createOrReplaceWithNew()).thenReturn(map);
 
-        DestinationGroup group = new DestinationGroup("group1", Sets.newSet(new Destination("queue1", "group1", true, false, Optional.of("vanilla")),
-                new Destination("queue2", "group1", true, false, Optional.of("vanilla"))));
+        DestinationGroup group = new DestinationGroup("group1", Sets.newSet(new Destination("queue1", "group1", true, false, Optional.of("vanilla"), Optional.empty()),
+                new Destination("queue2", "group1", true, false, Optional.of("vanilla"), Optional.empty())));
         helper.updateDestinations(group);
 
         ConfigMap edited = map.done();

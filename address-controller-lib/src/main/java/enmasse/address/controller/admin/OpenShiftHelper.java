@@ -83,6 +83,7 @@ public class OpenShiftHelper {
                         destBuilder.storeAndForward(addressDecoder.storeAndForward());
                         destBuilder.multicast(addressDecoder.multicast());
                         destBuilder.flavor(addressDecoder.flavor());
+                        destBuilder.uuid(addressDecoder.uuid());
                         destinations.add(destBuilder.build());
                     }
 
@@ -120,7 +121,7 @@ public class OpenShiftHelper {
 
         for (Destination destination : destinationGroup.getDestinations()) {
             AddressEncoder encoder = new AddressEncoder();
-            encoder.encode(destination.storeAndForward(), destination.multicast(), destination.flavor());
+            encoder.encode(destination.storeAndForward(), destination.multicast(), destination.flavor(), destination.uuid());
             map.addToData(destination.address(), encoder.toJson());
         }
         map.done();

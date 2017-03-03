@@ -28,14 +28,17 @@ public final class Destination {
     private final boolean storeAndForward;
     private final boolean multicast;
     private final Optional<String> flavor;
+    private final Optional<String> uuid;
 
-    public Destination(String address, String group, boolean storeAndForward, boolean multicast, Optional<String> flavor) {
-        this.group = group;
+    public Destination(String address, String group, boolean storeAndForward, boolean multicast, Optional<String> flavor, Optional<String> uuid) {
         Objects.requireNonNull(flavor);
+        Objects.requireNonNull(uuid);
+        this.group = group;
         this.address = address;
         this.storeAndForward = storeAndForward;
         this.multicast = multicast;
         this.flavor = flavor;
+        this.uuid = uuid;
     }
 
     public String address() {
@@ -56,6 +59,10 @@ public final class Destination {
         return flavor;
     }
 
+    public Optional<String> uuid() {
+        return uuid;
+    }
+
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();
@@ -63,7 +70,8 @@ public final class Destination {
                 .append("group=").append(group).append(",")
                 .append("storeAndForward=").append(storeAndForward).append(",")
                 .append("multicast=").append(multicast).append(",")
-                .append("flavor=").append(flavor).append("}");
+                .append("flavor=").append(flavor).append(",")
+                .append("uuid=").append(uuid).append("}");
         return builder.toString();
     }
 
@@ -75,6 +83,7 @@ public final class Destination {
         Destination that = (Destination) o;
 
         if (!address.equals(that.address)) return false;
+        if (!uuid.equals(that.uuid)) return false;
         return group.equals(that.group);
     }
 
@@ -82,6 +91,7 @@ public final class Destination {
     public int hashCode() {
         int result = address.hashCode();
         result = 31 * result + group.hashCode();
+        result = 31 * result + uuid.hashCode();
         return result;
     }
 
@@ -91,6 +101,7 @@ public final class Destination {
         private boolean storeAndForward = false;
         private boolean multicast = false;
         private Optional<String> flavor = Optional.empty();
+        private Optional<String> uuid = Optional.empty();
 
         public Builder(String address, String group) {
             this.address = address;
@@ -124,12 +135,17 @@ public final class Destination {
             return this;
         }
 
+        public Builder uuid(Optional<String> uuid) {
+            this.uuid = uuid;
+            return this;
+        }
+
         public Optional<String> flavor() {
             return flavor;
         }
 
         public Destination build() {
-            return new Destination(address, group, storeAndForward, multicast, flavor);
+            return new Destination(address, group, storeAndForward, multicast, flavor, uuid);
         }
     }
 }
