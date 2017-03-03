@@ -39,7 +39,7 @@ public class Main {
         Host localHost = getLocalHost();
         String address = getAddress(env);
 
-        DiscoveryClient discoveryClient = new DiscoveryClient(labelFilter, Optional.of("broker"));
+        DiscoveryClient discoveryClient = new DiscoveryClient("podsense", labelFilter, Optional.of("broker"));
         ForwarderController replicator = new ForwarderController(localHost, address);
         discoveryClient.addListener(replicator);
 
