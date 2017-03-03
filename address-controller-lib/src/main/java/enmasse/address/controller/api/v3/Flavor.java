@@ -38,6 +38,7 @@ public class Flavor {
 
             ObjectNode metadata = node.putObject(ResourceKeys.METADATA);
             metadata.put(ResourceKeys.NAME, flavor.name());
+            flavor.uuid().ifPresent(u -> metadata.put(ResourceKeys.UUID, u));
 
             ObjectNode spec = node.putObject(ResourceKeys.SPEC);
             spec.put(ResourceKeys.TYPE, flavor.type());

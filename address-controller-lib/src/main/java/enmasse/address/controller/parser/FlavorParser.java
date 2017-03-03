@@ -22,6 +22,7 @@ import enmasse.address.controller.model.Flavor;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Parser for the flavor config.
@@ -31,6 +32,7 @@ public class FlavorParser {
     private static final String KEY_TEMPLATE_PARAMETERS = "templateParameters";
     private static final String KEY_TYPE = "type";
     private static final String KEY_DESCRIPTION = "description";
+    private static final String KEY_UUID = "uuid";
 
     public static Map<String, Flavor> parse(JsonNode root) {
         Map<String, Flavor> flavorMap = new LinkedHashMap<>();
@@ -54,6 +56,8 @@ public class FlavorParser {
         if (node.has(KEY_DESCRIPTION)) {
             builder.description(node.get(KEY_DESCRIPTION).asText());
         }
+
+        builder.uuid(Optional.ofNullable(node.get(KEY_UUID)).map(JsonNode::asText));
 
         if (node.has(KEY_TEMPLATE_PARAMETERS)) {
             Iterator<Map.Entry<String, JsonNode>> it = node.get(KEY_TEMPLATE_PARAMETERS).fields();
