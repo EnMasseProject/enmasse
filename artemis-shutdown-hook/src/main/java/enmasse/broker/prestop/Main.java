@@ -60,7 +60,7 @@ public class Main {
             filter.put("role", "broker");
             filter.put("address", address);
 
-            DiscoveryClient discoveryClient = new DiscoveryClient(filter, Optional.of("broker"));
+            DiscoveryClient discoveryClient = new DiscoveryClient("podsense", filter, Optional.of("broker"));
             TopicMigrator migrator = new TopicMigrator(vertx, localHost);
             discoveryClient.addListener(migrator);
             vertx.deployVerticle(discoveryClient);
