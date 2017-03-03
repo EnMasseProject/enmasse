@@ -31,6 +31,12 @@ public class AddressEncoder {
         return this;
     }
 
+    public AddressEncoder encode(boolean storeAndForward, boolean multicast, Optional<String> flavor, Optional<String> uuid) {
+        encode(storeAndForward, multicast, flavor);
+        uuid.ifPresent(u -> properties.put("uuid", u));
+        return this;
+    }
+
     public String toJson() {
         try {
             return mapper.writeValueAsString(properties);

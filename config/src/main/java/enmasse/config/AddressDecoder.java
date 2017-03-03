@@ -1,5 +1,6 @@
 package enmasse.config;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.slf4j.Logger;
@@ -34,6 +35,10 @@ public class AddressDecoder {
     }
 
     public Optional<String> flavor() {
-        return properties.has("flavor") ? Optional.of(properties.get("flavor").asText()) : Optional.empty();
+        return Optional.ofNullable(properties.get("flavor")).map(JsonNode::asText);
+    }
+
+    public Optional<String> uuid() {
+        return Optional.ofNullable(properties.get("uuid")).map(JsonNode::asText);
     }
 }
