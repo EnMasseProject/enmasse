@@ -41,5 +41,11 @@ public class FlavorParserTest {
         assertThat(flavor.templateName(), is("queue-persisted"));
         assertThat(flavor.templateParameters().size(), is(1));
         assertThat(flavor.templateParameters().get("STORAGE_CAPACITY"), is("2Gi"));
+
+        flavor = parsed.get("descriptive-queue");
+
+        assertThat(flavor.templateName(), is("queue-inmemory"));
+        assertThat(flavor.type(), is("queue"));
+        assertThat(flavor.description(), is("This is a simple queue"));
     }
 }

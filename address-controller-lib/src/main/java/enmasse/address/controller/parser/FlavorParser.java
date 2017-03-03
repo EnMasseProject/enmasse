@@ -29,6 +29,8 @@ import java.util.Map;
 public class FlavorParser {
     private static final String KEY_TEMPLATE_NAME = "templateName";
     private static final String KEY_TEMPLATE_PARAMETERS = "templateParameters";
+    private static final String KEY_TYPE = "type";
+    private static final String KEY_DESCRIPTION = "description";
 
     public static Map<String, Flavor> parse(JsonNode root) {
         Map<String, Flavor> flavorMap = new LinkedHashMap<>();
@@ -44,6 +46,14 @@ public class FlavorParser {
 
     private static Flavor parseFlavor(String name, JsonNode node) {
         Flavor.Builder builder = new Flavor.Builder(name, node.get(KEY_TEMPLATE_NAME).asText());
+
+        if (node.has(KEY_TYPE)) {
+            builder.type(node.get(KEY_TYPE).asText());
+        }
+
+        if (node.has(KEY_DESCRIPTION)) {
+            builder.description(node.get(KEY_DESCRIPTION).asText());
+        }
 
         if (node.has(KEY_TEMPLATE_PARAMETERS)) {
             Iterator<Map.Entry<String, JsonNode>> it = node.get(KEY_TEMPLATE_PARAMETERS).fields();
