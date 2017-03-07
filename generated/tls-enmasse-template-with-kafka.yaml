@@ -698,7 +698,10 @@ objects:
           name: amqp-kafka-bridge
       spec:
         containers:
-        - image: "${AMQP_KAFKA_BRIDGE_REPO}:latest"
+        - env:
+          - name: KAFKA_BOOTSTRAP_SERVERS
+            value: "${KAFKA_BOOTSTRAP_SERVERS}"
+          image: "${AMQP_KAFKA_BRIDGE_REPO}:latest"
           livenessProbe:
             tcpSocket:
               port: amqp
@@ -912,3 +915,6 @@ parameters:
 - description: The image to use for the AMQP - Kafka bridge
   name: AMQP_KAFKA_BRIDGE_REPO
   value: enmasseproject/amqp-kafka-bridge
+- description: A list of host/port pairs to use for establishing the initial connection
+    to the Kafka cluster
+  name: KAFKA_BOOTSTRAP_SERVERS

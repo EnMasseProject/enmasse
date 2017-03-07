@@ -23,7 +23,13 @@ local common = import "common.jsonnet";
             }
           },
           "spec": {
-            "containers": [ common.container("amqp-kafka-bridge", image_repo, "amqp", 5672, "512Mi") ]
+            "containers": [
+              common.containerWithEnv("amqp-kafka-bridge", image_repo, "amqp", 5672, [
+                        {
+                          "name": "KAFKA_BOOTSTRAP_SERVERS",
+                          "value": "${KAFKA_BOOTSTRAP_SERVERS}"
+                        }], "512Mi"),
+            ]
           }
         }
       }
