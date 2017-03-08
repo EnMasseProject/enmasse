@@ -129,9 +129,9 @@ if [ "$CURRENT_PROJECT" != "$PROJECT" ]; then
     oc new-project $PROJECT
 fi
 
-# oc create sa enmasse -n $PROJECT
+oc create sa enmasse-service-account -n $PROJECT
 oc policy add-role-to-user view system:serviceaccount:${PROJECT}:default
-oc policy add-role-to-user edit system:serviceaccount:${PROJECT}:deployer
+oc policy add-role-to-user edit system:serviceaccount:${PROJECT}:enmasse-service-account
 
 
 if [ -n "$SERVER_KEY" ] && [ -n "$SERVER_CERT" ]
