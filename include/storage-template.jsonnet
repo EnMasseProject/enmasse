@@ -9,9 +9,9 @@ local forwarder = import "forwarder.jsonnet";
   template(multicast, persistence, secure)::
     local addrtype = (if multicast then "topic" else "queue");
     local addressEnv = (if multicast then { name: "TOPIC_NAME", value: "${ADDRESS}" } else { name: "QUEUE_NAME", value: "${ADDRESS}" });
-    local volumeName = "vol-${NAME}";
+    local volumeName = "vol-${TENANT}-${NAME}";
     local templateName = "%s%s-%s" % [if secure then "tls-" else "", addrtype, (if persistence then "persisted" else "inmemory")];
-    local claimName = "pvc-${NAME}";
+    local claimName = "pvc-${TENANT}-${NAME}";
     {
       "apiVersion": "v1",
       "kind": "Template",
@@ -26,11 +26,12 @@ local forwarder = import "forwarder.jsonnet";
         "apiVersion": "extensions/v1beta1",
         "kind": "Deployment",
         "metadata": {
-          "name": "${NAME}",
+          "name": "${TENANT}-${NAME}",
           "labels": {
             "app": "enmasse",
             "group_id": "${NAME}",
-            "address_config": "address-config-${NAME}"
+            "tenant": "${TENANT}",
+            "address_config": "address-config-${TENANT}-${NAME}"
           }
         },
         "spec": {
@@ -40,7 +41,8 @@ local forwarder = import "forwarder.jsonnet";
               "labels": {
                 "app": "enmasse",
                 "role": "broker",
-                "group_id": "${NAME}"
+                "group_id": "${NAME}",
+                "tenant": "${TENANT}"
               }
             },
             "spec": {
@@ -65,6 +67,7 @@ local forwarder = import "forwarder.jsonnet";
           "name": claimName,
           "labels": {
             "group_id": "${NAME}",
+            "tenant": "${TENANT}",
             "app": "enmasse"
           }
         },
@@ -84,10 +87,11 @@ local forwarder = import "forwarder.jsonnet";
         "apiVersion": "v1",
         "kind": "ConfigMap",
         "metadata": {
-          "name": "address-config-${NAME}",
+          "name": "address-config-${TENANT}-${NAME}",
           "labels": {
             "type": "address-config",
             "group_id": "${NAME}",
+            "tenant": "${TENANT}",
             "app": "enmasse"
           }
         },
@@ -105,9 +109,29 @@ local forwarder = import "forwarder.jsonnet";
           "value": "2Gi"
         },
         {
+          "name": "BROKER_REPO",
+          "description": "The docker image to use for the message broker",
+          "value": "enmasseproject/artemis"
+        },
+        {
+          "name": "TOPIC_FORWARDER_REPO",
+          "description": "The default image to use as topic forwarder",
+          "value": "enmasseproject/topic-forwarder"
+        },
+        {
+          "name": "ROUTER_REPO",
+          "description": "The image to use for the router",
+          "value": "enmasseproject/qdrouterd"
+        },
+        {
           "name": "ROUTER_LINK_CAPACITY",
           "description": "The link capacity setting for router",
           "value": "50"
+        },
+        {
+          "name": "TENANT",
+          "description": "A valid tenant name for the instance",
+          "required": true
         },
         {
           "name": "NAME",

@@ -2,16 +2,17 @@ local version = std.extVar("VERSION");
 local router = import "router.jsonnet";
 local common = import "common.jsonnet";
 { 
-  deployment(secure, image_repo)::
+  deployment(secure, tenant, image_repo)::
     {
       "apiVersion": "extensions/v1beta1",
       "kind": "Deployment",
       "metadata": {
         "labels": {
           "name": "qdrouterd",
-          "app": "enmasse"
+          "app": "enmasse",
+          "tenant": tenant
         },
-        "name": "qdrouterd"
+        "name": tenant + "-qdrouterd"
       },
       "spec": {
         "replicas": 1,
@@ -20,7 +21,8 @@ local common = import "common.jsonnet";
             "labels": {
               "capability": "router",
               "name": "qdrouterd",
-              "app": "enmasse"
+              "app": "enmasse",
+              "tenant": tenant
             }
           },
           "spec": {

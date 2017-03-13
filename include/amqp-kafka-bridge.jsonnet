@@ -1,16 +1,17 @@
 local version = std.extVar("VERSION");
 local common = import "common.jsonnet";
 {
-  deployment(image_repo)::
+  deployment(tenant, image_repo)::
     {
       "apiVersion": "extensions/v1beta1",
       "kind": "Deployment",
       "metadata": {
         "labels": {
           "name": "amqp-kafka-bridge",
+          "tenant": tenant,
           "app": "enmasse"
         },
-        "name": "amqp-kafka-bridge"
+        "name": tenant + "-amqp-kafka-bridge"
       },
       "spec": {
         "replicas": 1,
@@ -19,16 +20,17 @@ local common = import "common.jsonnet";
             "labels": {
               "capability": "bridge",
               "name": "amqp-kafka-bridge",
+              "tenant": tenant,
               "app": "enmasse"
             }
           },
           "spec": {
             "containers": [
-              common.containerWithEnv("amqp-kafka-bridge", image_repo, "amqp", 5672, [
+              common.container("amqp-kafka-bridge", image_repo, "amqp", 5672, "512Mi", [
                         {
                           "name": "KAFKA_BOOTSTRAP_SERVERS",
                           "value": "${KAFKA_BOOTSTRAP_SERVERS}"
-                        }], "512Mi"),
+                        }]),
             ]
           }
         }

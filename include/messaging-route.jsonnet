@@ -1,24 +1,28 @@
 {
+  generate(tenant, hostname)::
+  {
     "kind": "Route",
     "apiVersion": "v1",
     "metadata": {
         "labels": {
-          "app": "enmasse"
+          "app": "enmasse",
+          "tenant": tenant
         },
-        "name": "mqtt"
+        "name": tenant + "-messaging"
     },
     "spec": {
-        "host": "${MQTT_GATEWAY_HOSTNAME}",
+        "host": hostname,
         "to": {
             "kind": "Service",
-            "name": "mqtt",
+            "name": "messaging",
             "weight": 100
         },
         "port": {
-            "targetPort": "secure-mqtt"
+            "targetPort": "amqps"
         },
         "tls": {
             "termination": "passthrough"
         }
     }
+  }
 }

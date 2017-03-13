@@ -10,10 +10,11 @@ objects:
   kind: Deployment
   metadata:
     labels:
-      address_config: address-config-${NAME}
+      address_config: address-config-${TENANT}-${NAME}
       app: enmasse
       group_id: "${NAME}"
-    name: "${NAME}"
+      tenant: "${TENANT}"
+    name: "${TENANT}-${NAME}"
   spec:
     replicas: 1
     template:
@@ -22,6 +23,7 @@ objects:
           app: enmasse
           group_id: "${NAME}"
           role: broker
+          tenant: "${TENANT}"
       spec:
         containers:
         - env:
@@ -46,7 +48,7 @@ objects:
             name: core
           volumeMounts:
           - mountPath: "/var/run/artemis"
-            name: vol-${NAME}
+            name: vol-${TENANT}-${NAME}
         - env:
           - name: LINK_CAPACITY
             value: "${ROUTER_LINK_CAPACITY}"
@@ -95,7 +97,7 @@ objects:
               memory: 128Mi
         volumes:
         - emptyDir: {}
-          name: vol-${NAME}
+          name: vol-${TENANT}-${NAME}
         - name: ssl-certs
           secret:
             secretName: qdrouterd-certs
@@ -107,15 +109,28 @@ objects:
     labels:
       app: enmasse
       group_id: "${NAME}"
+      tenant: "${TENANT}"
       type: address-config
-    name: address-config-${NAME}
+    name: address-config-${TENANT}-${NAME}
 parameters:
 - description: Storage capacity required for volume claims
   name: STORAGE_CAPACITY
   value: 2Gi
+- description: The docker image to use for the message broker
+  name: BROKER_REPO
+  value: enmasseproject/artemis
+- description: The default image to use as topic forwarder
+  name: TOPIC_FORWARDER_REPO
+  value: enmasseproject/topic-forwarder
+- description: The image to use for the router
+  name: ROUTER_REPO
+  value: enmasseproject/qdrouterd
 - description: The link capacity setting for router
   name: ROUTER_LINK_CAPACITY
   value: '50'
+- description: A valid tenant name for the instance
+  name: TENANT
+  required: true
 - description: A valid name for the instance
   name: NAME
   required: true

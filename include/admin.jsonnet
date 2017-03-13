@@ -1,7 +1,7 @@
 local version = std.extVar("VERSION");
 local common = import "common.jsonnet";
 {
-  services::
+  services(tenant)::
   [
     {
       "apiVersion": "v1",
@@ -9,7 +9,8 @@ local common = import "common.jsonnet";
       "metadata": {
         "name": "admin",
         "labels": {
-          "app": "enmasse"
+          "app": "enmasse",
+          "tenant": tenant
         }
       },
       "spec": {
@@ -19,16 +20,8 @@ local common = import "common.jsonnet";
             "port": 55672
           },
           {
-            "name": "restapi",
-            "port": 8080
-          },
-          {
             "name": "configuration",
             "port": 5672
-          },
-          {
-            "name": "address-controller",
-            "port": 55674
           },
           {
             "name": "queue-scheduler",
@@ -36,21 +29,23 @@ local common = import "common.jsonnet";
           }
         ],
         "selector": {
-          "name": "admin"
+          "name": "admin",
+          "tenant": tenant
         }
       }
     }
   ],
-  deployment(controller_image, configserv_image, ragent_image, scheduler_image)::
+  deployment(tenant, configserv_image, ragent_image, scheduler_image)::
   {
     "apiVersion": "extensions/v1beta1",
     "kind": "Deployment",
     "metadata": {
       "labels": {
         "app": "enmasse",
-        "name": "admin"
+        "name": "admin",
+        "tenant": tenant
       },
-      "name": "admin"
+      "name": tenant + "-admin"
     },
     "spec": {
       "replicas": 1,
@@ -58,14 +53,13 @@ local common = import "common.jsonnet";
         "metadata": {
           "labels": {
             "name": "admin",
-            "app": "enmasse"
+            "app": "enmasse",
+            "tenant": tenant
           }
         },
         "spec": {
-          "serviceAccount": "deployer",
           "containers": [
-            common.container2("address-controller", controller_image, "amqp", 55674, "http", 8080, "256Mi"),
-            common.containerWithEnv("ragent", ragent_image, "amqp", 55672, [
+            common.container("ragent", ragent_image, "amqp", 55672, "64Mi", [
                       {
                         "name": "CONFIGURATION_SERVICE_HOST",
                         "value": "localhost"
@@ -73,8 +67,8 @@ local common = import "common.jsonnet";
                       {
                         "name": "CONFIGURATION_SERVICE_PORT",
                         "value": "5672"
-                      }], "64Mi"),
-            common.containerWithEnv("queue-scheduler", scheduler_image, "amqp", 55667, [
+                      }]),
+            common.container("queue-scheduler", scheduler_image, "amqp", 55667, "128Mi", [
                       {
                         "name": "CONFIGURATION_SERVICE_HOST",
                         "value": "localhost"
@@ -82,8 +76,8 @@ local common = import "common.jsonnet";
                       {
                         "name": "CONFIGURATION_SERVICE_PORT",
                         "value": "5672"
-                      }], "128Mi"),
-            common.container("configserv", configserv_image, "amqp", 5672, "256Mi"),
+                      }]),
+            common.container("configserv", configserv_image, "amqp", 5672, "256Mi", []),
           ]
         }
       }

@@ -17,26 +17,65 @@
     "protocol": "TCP",
     "targetPort": 55673
   },
-  local admin_deps = '[{"name":"admin","namespace":"","kind":"Service"},{"name":"subscription","namespace":"","kind":"Service"},{"name":"mqtt","namespace":"","kind":"Service"}]',
-  local full_deps = '[{"name":"configuration","namespace":"","kind":"Service"},{"name":"ragent","namespace":"","kind":"Service"},{"name":"subscription","namespace":"","kind":"Service"},{"name":"restapi","namespace":"","kind":"Service"},{"name":"address-controller","namespace":"","kind":"Service"},{"name":"mqtt","namespace":"","kind":"Service"}]',
-  generate(secure, admin)::
+  generate(secure, tenant, admin)::
     {
+      local admin_deps = [
+        {
+          "name":"admin",
+          "namespace":"",
+          "kind":"Service"
+        },
+        {
+          "name":"subscription",
+          "namespace":"",
+          "kind":"Service"
+        },
+        {
+          "name":"mqtt",
+          "namespace":"",
+          "kind":"Service"
+        }
+      ],
+      local full_deps = [
+        {
+          "name":"configuration",
+          "namespace":"",
+          "kind":"Service"
+        },
+        {
+          "name":"ragent",
+          "namespace":"",
+          "kind":"Service"
+        },
+        {
+          "name":"subscription",
+          "namespace":"",
+          "kind":"Service"
+        },
+        {
+          "name":"mqtt",
+          "namespace":"",
+          "kind":"Service"
+        }
+      ],
       "apiVersion": "v1",
       "kind": "Service",
       "metadata": {
         "labels": {
-          "app": "enmasse"
+          "app": "enmasse",
+          "tenant": tenant
         },
         "name": "messaging",
         "annotations": {
           "service.alpha.openshift.io/infrastructure": "true",
-          "service.alpha.openshift.io/dependencies": if admin then admin_deps else full_deps
+          "service.alpha.openshift.io/dependencies": if admin then std.toString(admin_deps) else std.toString(full_deps)
         }
       },
       "spec": {
         "ports": if secure then [port, securePort, internalPort] else [port, internalPort],
         "selector": {
-          "capability": "router"
+          "capability": "router",
+          "tenant": tenant
         }
       }
     }
