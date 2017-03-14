@@ -52,7 +52,7 @@ local common = import "common.jsonnet";
             }
           },
           "spec": {
-            "serviceAccount": "deployer",
+            "serviceAccount": "enmasse-service-account",
             "containers": [
               common.container2("address-controller", image_repo, "amqp", 5672, "http", 8080, "256Mi", [{
                 "name": "MULTITENANT",

@@ -827,7 +827,7 @@ objects:
               memory: 256Mi
             requests:
               memory: 256Mi
-        serviceAccount: deployer
+        serviceAccount: enmasse-service-account
 - apiVersion: v1
   kind: Service
   metadata:

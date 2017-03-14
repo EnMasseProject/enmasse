@@ -27,13 +27,15 @@ serviceaccount (system:serviceaccount:myproject:default for a project
 named myproject). This is needed by the configmap-bridge and the
 router agent.
 
-Edit rights must also be granted to the deployer role, used by the
-address-controller.
+A service-account for enmasse-service-account must be created.  Edit 
+rights must also be granted to the enmasse-service-account role, used
+by the address-controller.
 
 The permissions can be setup with the following commands:
 
+    oc create sa enmasse-service-account -n $(oc project -q)
     oc policy add-role-to-user view system:serviceaccount:$(oc project -q):default
-    oc policy add-role-to-user edit system:serviceaccount:$(oc project -q):deployer
+    oc policy add-role-to-user edit system:serviceaccount:$(oc project -q):enmasse-service-account
 
 ## Using the simple template
 
