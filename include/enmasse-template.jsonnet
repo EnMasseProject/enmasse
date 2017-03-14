@@ -19,7 +19,6 @@ local enmasseInfra = import "enmasse-tenant-infra.jsonnet";
                  storage.template(false, true, secure),
                  storage.template(true, false, secure),
                  storage.template(true, true, secure),
-                 import "direct-template.json",
                  enmasseInfra.generate(secure, compact, with_kafka),
                  addressController.deployment(std.toString(secure), "${ADDRESS_CONTROLLER_REPO}", "${MULTITENANT}"),
                  addressController.service,

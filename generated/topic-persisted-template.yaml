@@ -106,17 +106,6 @@ objects:
         - name: vol-${TENANT}-${NAME}
           persistentVolumeClaim:
             claimName: pvc-${TENANT}-${NAME}
-- apiVersion: v1
-  data:
-    "${ADDRESS}": '{"store_and_forward": true, "multicast": true}'
-  kind: ConfigMap
-  metadata:
-    labels:
-      app: enmasse
-      group_id: "${NAME}"
-      tenant: "${TENANT}"
-      type: address-config
-    name: address-config-${TENANT}-${NAME}
 parameters:
 - description: Storage capacity required for volume claims
   name: STORAGE_CAPACITY

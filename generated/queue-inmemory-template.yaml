@@ -52,17 +52,6 @@ objects:
         volumes:
         - emptyDir: {}
           name: vol-${TENANT}-${NAME}
-- apiVersion: v1
-  data:
-    "${ADDRESS}": '{"store_and_forward": true, "multicast": false}'
-  kind: ConfigMap
-  metadata:
-    labels:
-      app: enmasse
-      group_id: "${NAME}"
-      tenant: "${TENANT}"
-      type: address-config
-    name: address-config-${TENANT}-${NAME}
 parameters:
 - description: Storage capacity required for volume claims
   name: STORAGE_CAPACITY

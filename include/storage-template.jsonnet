@@ -82,26 +82,9 @@ local forwarder = import "forwarder.jsonnet";
           }
         }
       },
-      local mcast = if multicast then "true" else "false",
-      local config = {
-        "apiVersion": "v1",
-        "kind": "ConfigMap",
-        "metadata": {
-          "name": "address-config-${TENANT}-${NAME}",
-          "labels": {
-            "type": "address-config",
-            "group_id": "${NAME}",
-            "tenant": "${TENANT}",
-            "app": "enmasse"
-          }
-        },
-        "data": {
-          "${ADDRESS}": "{\"store_and_forward\": true, \"multicast\": " + mcast + "}"
-        }
-      },
       "objects": if persistence
-        then [pvc, controller, config]
-        else [controller, config],
+        then [pvc, controller]
+        else [controller],
       "parameters": [
         {
           "name": "STORAGE_CAPACITY",

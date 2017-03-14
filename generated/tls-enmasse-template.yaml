@@ -62,17 +62,6 @@ objects:
           - name: ssl-certs
             secret:
               secretName: qdrouterd-certs
-  - apiVersion: v1
-    data:
-      "${ADDRESS}": '{"store_and_forward": true, "multicast": false}'
-    kind: ConfigMap
-    metadata:
-      labels:
-        app: enmasse
-        group_id: "${NAME}"
-        tenant: "${TENANT}"
-        type: address-config
-      name: address-config-${TENANT}-${NAME}
   parameters:
   - description: Storage capacity required for volume claims
     name: STORAGE_CAPACITY
@@ -169,17 +158,6 @@ objects:
           - name: ssl-certs
             secret:
               secretName: qdrouterd-certs
-  - apiVersion: v1
-    data:
-      "${ADDRESS}": '{"store_and_forward": true, "multicast": false}'
-    kind: ConfigMap
-    metadata:
-      labels:
-        app: enmasse
-        group_id: "${NAME}"
-        tenant: "${TENANT}"
-        type: address-config
-      name: address-config-${TENANT}-${NAME}
   parameters:
   - description: Storage capacity required for volume claims
     name: STORAGE_CAPACITY
@@ -307,17 +285,6 @@ objects:
           - name: ssl-certs
             secret:
               secretName: qdrouterd-certs
-  - apiVersion: v1
-    data:
-      "${ADDRESS}": '{"store_and_forward": true, "multicast": true}'
-    kind: ConfigMap
-    metadata:
-      labels:
-        app: enmasse
-        group_id: "${NAME}"
-        tenant: "${TENANT}"
-        type: address-config
-      name: address-config-${TENANT}-${NAME}
   parameters:
   - description: Storage capacity required for volume claims
     name: STORAGE_CAPACITY
@@ -460,17 +427,6 @@ objects:
           - name: ssl-certs
             secret:
               secretName: qdrouterd-certs
-  - apiVersion: v1
-    data:
-      "${ADDRESS}": '{"store_and_forward": true, "multicast": true}'
-    kind: ConfigMap
-    metadata:
-      labels:
-        app: enmasse
-        group_id: "${NAME}"
-        tenant: "${TENANT}"
-        type: address-config
-      name: address-config-${TENANT}-${NAME}
   parameters:
   - description: Storage capacity required for volume claims
     name: STORAGE_CAPACITY
@@ -495,33 +451,6 @@ objects:
     required: true
   - description: The address to use for the topic
     name: ADDRESS
-    required: true
-- apiVersion: v1
-  kind: Template
-  metadata:
-    labels:
-      app: enmasse
-    name: direct
-  objects:
-  - apiVersion: v1
-    data:
-      "${ADDRESS}": '{"store_and_forward":false, "multicast": ${MULTICAST}}'
-    kind: ConfigMap
-    metadata:
-      labels:
-        app: enmasse
-        group_id: "${NAME}"
-        type: address-config
-      name: address-config-${NAME}
-  parameters:
-  - description: A valid name for the instance
-    name: NAME
-    required: true
-  - description: The address to use for the address
-    name: ADDRESS
-    required: true
-  - description: If the address should have multicast semantics or not
-    name: MULTICAST
     required: true
 - apiVersion: v1
   kind: Template
