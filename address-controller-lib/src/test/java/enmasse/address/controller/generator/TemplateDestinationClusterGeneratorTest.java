@@ -20,6 +20,7 @@ import enmasse.address.controller.admin.FlavorManager;
 import enmasse.address.controller.model.Destination;
 import enmasse.address.controller.model.DestinationGroup;
 import enmasse.address.controller.model.Flavor;
+import enmasse.address.controller.model.TenantId;
 import enmasse.address.controller.openshift.DestinationCluster;
 import enmasse.config.LabelKeys;
 import io.fabric8.kubernetes.api.model.HasMetadata;
@@ -52,7 +53,7 @@ public class TemplateDestinationClusterGeneratorTest {
     @Before
     public void setUp() {
         mockClient = mock(OpenShiftClient.class);
-        generator = new TemplateDestinationClusterGenerator(mockClient, flavorManager);
+        generator = new TemplateDestinationClusterGenerator(TenantId.fromString("mytenant"), mockClient, flavorManager);
         flavorManager.flavorsUpdated(Collections.singletonMap("vanilla", new Flavor.Builder("vanilla", "test").build()));
     }
 
@@ -72,7 +73,7 @@ public class TemplateDestinationClusterGeneratorTest {
             assertThat(rlabel.get(LabelKeys.ADDRESS_CONFIG), is("address-config-foo-bar-baz-cockooa"));
         }
         List<ParameterValue> parameters = captor.getAllValues();
-        assertThat(parameters.size(), is(3));
+        assertThat(parameters.size(), is(4));
     }
 
     @Test
@@ -90,7 +91,7 @@ public class TemplateDestinationClusterGeneratorTest {
             assertThat(rlabel.get(LabelKeys.ADDRESS_CONFIG), is("address-config-foo-bar"));
         }
         List<ParameterValue> parameters = captor.getAllValues();
-        assertThat(parameters.size(), is(2));
+        assertThat(parameters.size(), is(3));
     }
 
     private DestinationCluster generateCluster(Destination destination, ArgumentCaptor<ParameterValue> captor) {

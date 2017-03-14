@@ -16,24 +16,22 @@
 
 package enmasse.address.controller;
 
-import enmasse.address.controller.admin.AddressManager;
-import enmasse.address.controller.admin.AddressManagerImpl;
 import enmasse.address.controller.admin.FlavorManager;
-import enmasse.address.controller.admin.OpenShiftHelper;
-import enmasse.address.controller.generator.TemplateDestinationClusterGenerator;
+import enmasse.address.controller.admin.AddressManagerFactory;
+import enmasse.address.controller.admin.AddressManagerFactoryImpl;
+import io.fabric8.kubernetes.client.ConfigBuilder;
 import io.fabric8.openshift.client.DefaultOpenShiftClient;
 import io.fabric8.openshift.client.OpenShiftClient;
-import io.fabric8.openshift.client.OpenShiftConfigBuilder;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
 
 import java.io.IOException;
 
 public class AddressController implements Runnable, AutoCloseable {
-    private final AddressManager addressManager;
     private final FlavorManager flavorManager;
     private final AMQPServer server;
     private final HTTPServer restServer;
+    private final AddressManagerFactory addressManagerFactory;
     private final Vertx vertx;
 
     private final ConfigAdapter flavorWatcher;
@@ -42,17 +40,19 @@ public class AddressController implements Runnable, AutoCloseable {
     public AddressController(AddressControllerOptions options) throws IOException {
         this.vertx = Vertx.vertx();
 
-        OpenShiftClient osClient = new DefaultOpenShiftClient(new OpenShiftConfigBuilder()
+        OpenShiftClient controllerClient = new DefaultOpenShiftClient(new ConfigBuilder()
                 .withMasterUrl(options.openshiftUrl())
                 .withOauthToken(options.openshiftToken())
                 .withNamespace(options.openshiftNamespace())
                 .build());
 
         this.flavorManager = new FlavorManager();
-        this.addressManager = new AddressManagerImpl(new OpenShiftHelper(osClient), new TemplateDestinationClusterGenerator(osClient, flavorManager));
-        this.server = new AMQPServer(addressManager, flavorManager, options.port());
-        this.restServer = new HTTPServer(addressManager, flavorManager);
-        this.flavorWatcher = new ConfigAdapter(osClient, "flavor", flavorManager::configUpdated);
+        this.addressManagerFactory = new AddressManagerFactoryImpl(controllerClient, tenant -> new DefaultOpenShiftClient(new ConfigBuilder(controllerClient.getConfiguration())
+                .withNamespace("enmasse-" + tenant)
+                .build()), flavorManager, options.isMultitenant(), options.useTLS());
+        this.server = new AMQPServer(addressManagerFactory, flavorManager, options.port());
+        this.restServer = new HTTPServer(addressManagerFactory, flavorManager);
+        this.flavorWatcher = new ConfigAdapter(controllerClient, "flavor", flavorManager::configUpdated);
     }
 
     public void run() {

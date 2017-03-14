@@ -24,9 +24,13 @@ import java.util.Map;
 public final class AddressControllerOptions {
 
     private final String openshiftUrl;
+    private final boolean isMultitenant;
+    private final boolean useTLS;
 
-    private AddressControllerOptions(String openshiftUrl) {
+    private AddressControllerOptions(String openshiftUrl, boolean isMultitenant, boolean useTLS) {
         this.openshiftUrl = openshiftUrl;
+        this.isMultitenant = isMultitenant;
+        this.useTLS = useTLS;
     }
 
     public String openshiftUrl() {
@@ -36,8 +40,10 @@ public final class AddressControllerOptions {
     public static AddressControllerOptions fromEnv(Map<String, String> env) {
         String openshiftHost = getEnvOrThrow(env, "KUBERNETES_SERVICE_HOST");
         String openshiftPort = getEnvOrThrow(env, "KUBERNETES_SERVICE_PORT");
+        boolean isMultitenant = Boolean.parseBoolean(env.get("MULTITENANT"));
+        boolean useTLS = Boolean.parseBoolean(env.get("TLS"));
 
-        return new AddressControllerOptions(String.format("https://%s:%s", openshiftHost, openshiftPort));
+        return new AddressControllerOptions(String.format("https://%s:%s", openshiftHost, openshiftPort), isMultitenant, useTLS);
     }
 
     private static String getEnvOrThrow(Map<String, String> env, String envVar) {
@@ -58,11 +64,19 @@ public final class AddressControllerOptions {
         return readFile(new File(SERVICEACCOUNT_PATH, "token"));
     }
 
+    public boolean isMultitenant() {
+        return isMultitenant;
+    }
+
     private static String readFile(File file) throws IOException {
         return new String(Files.readAllBytes(file.toPath()));
     }
 
     public int port() {
-        return 55674;
+        return 5672;
+    }
+
+    public boolean useTLS() {
+        return useTLS;
     }
 }

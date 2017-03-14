@@ -16,11 +16,11 @@
 
 package enmasse.address.controller;
 
-import enmasse.address.controller.admin.AddressManager;
 import enmasse.address.controller.admin.FlavorManager;
 import enmasse.address.controller.model.Destination;
 import enmasse.address.controller.model.DestinationGroup;
 import enmasse.address.controller.model.Flavor;
+import enmasse.address.controller.model.TenantId;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.json.JsonObject;
@@ -30,9 +30,7 @@ import org.junit.Test;
 import org.mockito.internal.util.collections.Sets;
 
 import java.util.Collections;
-import java.util.LinkedHashSet;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -43,16 +41,18 @@ import static org.junit.Assert.assertTrue;
 public class HTTPServerTest {
 
     private Vertx vertx;
-    private TestManager testManager;
+    private TestAddressManagerFactory testTenantManager;
+    private TestAddressManager testAddressManager;
     private FlavorManager testRepository;
 
     @Before
     public void setup() throws InterruptedException {
         vertx = Vertx.vertx();
-        testManager = new TestManager();
+        testAddressManager = new TestAddressManager();
+        testTenantManager = new TestAddressManagerFactory().addManager(TenantId.fromString("mytenant"), testAddressManager);
         testRepository = new FlavorManager();
         CountDownLatch latch = new CountDownLatch(1);
-        vertx.deployVerticle(new HTTPServer(testManager, testRepository), c -> {
+        vertx.deployVerticle(new HTTPServer(testTenantManager, testRepository), c -> {
             latch.countDown();
         });
         latch.await(1, TimeUnit.MINUTES);
@@ -65,7 +65,7 @@ public class HTTPServerTest {
 
     @Test
     public void testAddressingApi() throws InterruptedException {
-        testManager.destinationList.add(new DestinationGroup("group0", Sets.newSet(new Destination("addr1", "group0", false, false, Optional.empty(), Optional.empty()))));
+        testAddressManager.destinationList.add(new DestinationGroup("group0", Sets.newSet(new Destination("addr1", "group0", false, false, Optional.empty(), Optional.empty()))));
         HttpClient client = vertx.createHttpClient();
         try {
             CountDownLatch latch = new CountDownLatch(2);
@@ -122,27 +122,6 @@ public class HTTPServerTest {
             assertTrue(latch.await(1, TimeUnit.MINUTES));
         } finally {
             client.close();
-        }
-    }
-
-    public static class TestManager implements AddressManager {
-        Set<DestinationGroup> destinationList = new LinkedHashSet<>();
-        boolean throwException = false;
-
-        @Override
-        public void destinationsUpdated(Set<DestinationGroup> destinationList) {
-            if (throwException) {
-                throw new RuntimeException();
-            }
-            this.destinationList = new LinkedHashSet<>(destinationList);
-        }
-
-        @Override
-        public Set<DestinationGroup> listDestinationGroups() {
-            if (throwException) {
-                throw new RuntimeException();
-            }
-            return this.destinationList;
         }
     }
 }

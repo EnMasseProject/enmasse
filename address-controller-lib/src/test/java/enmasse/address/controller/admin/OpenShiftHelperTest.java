@@ -19,6 +19,7 @@ package enmasse.address.controller.admin;
 import enmasse.address.controller.model.Destination;
 import enmasse.address.controller.model.DestinationGroup;
 import enmasse.address.controller.model.Flavor;
+import enmasse.address.controller.model.TenantId;
 import enmasse.address.controller.openshift.DestinationCluster;
 import enmasse.config.AddressEncoder;
 import enmasse.config.LabelKeys;
@@ -93,9 +94,6 @@ public class OpenShiftHelperTest {
         ClientMixedOperation pvcOp = mock(ClientMixedOperation.class);
         ClientMixedOperation mapOp = mock(ClientMixedOperation.class);
 
-        ClientMixedOperation mapOpQueue = mock(ClientMixedOperation.class);
-        ClientMixedOperation mapOpDirect = mock(ClientMixedOperation.class);
-
         ClientResource mapQueueResource = mock(ClientResource.class);
         ClientResource mapDirectResource = mock(ClientResource.class);
 
@@ -103,7 +101,7 @@ public class OpenShiftHelperTest {
         ExtensionsAPIGroupDSL extensions = mock(ExtensionsAPIGroupDSL.class);
 
         OpenShiftClient mockClient = mock(OpenShiftClient.class);
-        OpenShiftHelper helper = new OpenShiftHelper(mockClient);
+        OpenShiftHelper helper = new OpenShiftHelper(TenantId.fromString("mytenant"), mockClient);
         when(mockClient.deploymentConfigs()).thenReturn(dcOp);
         when(mockClient.extensions()).thenReturn(extensions);
         when(extensions.deployments()).thenReturn(dOp);
@@ -150,7 +148,7 @@ public class OpenShiftHelperTest {
     @Test
     public void testUpdateDestinationGroup() {
         OpenShiftClient mockClient = mock(OpenShiftClient.class);
-        OpenShiftHelper helper = new OpenShiftHelper(mockClient);
+        OpenShiftHelper helper = new OpenShiftHelper(TenantId.fromString("mytenant"), mockClient);
 
         DoneableConfigMap map = new DoneableConfigMap(new ConfigMap("v1", Collections.<String, String>emptyMap(), "ConfigMap", new ObjectMetaBuilder().withName("address-config-group1").build()));
         ClientMixedOperation mapOp = mock(ClientMixedOperation.class);

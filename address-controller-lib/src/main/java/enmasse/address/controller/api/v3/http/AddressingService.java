@@ -3,6 +3,7 @@ package enmasse.address.controller.api.v3.http;
 import enmasse.address.controller.api.v3.Address;
 import enmasse.address.controller.api.v3.AddressList;
 import enmasse.address.controller.api.v3.ApiHandler;
+import enmasse.address.controller.model.TenantId;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
@@ -13,6 +14,7 @@ import java.util.Optional;
 @Path("/v3/address")
 public class AddressingService {
     private final ApiHandler apiHandler;
+    private final TenantId tenantId = TenantId.fromString("mytenant");
 
     public AddressingService(@Context ApiHandler apiHandler) {
         this.apiHandler = apiHandler;
@@ -22,7 +24,7 @@ public class AddressingService {
     @Produces({MediaType.APPLICATION_JSON})
     public Response listAddresses() {
         try {
-            return Response.ok(apiHandler.getAddresses()).build();
+            return Response.ok(apiHandler.getAddresses(tenantId)).build();
         } catch (Exception e) {
             return Response.serverError().build();
         }
@@ -33,7 +35,7 @@ public class AddressingService {
     @Consumes({MediaType.APPLICATION_JSON})
     public Response putAddresses(AddressList addressList) {
         try {
-            return Response.ok(apiHandler.putAddresses(addressList)).build();
+            return Response.ok(apiHandler.putAddresses(tenantId, addressList)).build();
         } catch (Exception e) {
             return Response.serverError().build();
         }
@@ -44,7 +46,7 @@ public class AddressingService {
     @Consumes({MediaType.APPLICATION_JSON})
     public Response appendAddress(Address address) {
         try {
-            return Response.ok(apiHandler.appendAddress(address)).build();
+            return Response.ok(apiHandler.appendAddress(tenantId, address)).build();
         } catch (Exception e) {
             return Response.serverError().build();
         }
@@ -55,7 +57,7 @@ public class AddressingService {
     @Produces({MediaType.APPLICATION_JSON})
     public Response getAddress(@PathParam("address") String address) {
         try {
-            Optional<Address> addr = apiHandler.getAddress(address);
+            Optional<Address> addr = apiHandler.getAddress(tenantId, address);
 
             if (addr.isPresent()) {
                 return Response.ok(addr.get()).build();
@@ -80,7 +82,7 @@ public class AddressingService {
     @Produces({MediaType.APPLICATION_JSON})
     public Response deleteAddress(@PathParam("address") String address) {
         try {
-            return Response.ok(apiHandler.deleteAddress(address)).build();
+            return Response.ok(apiHandler.deleteAddress(tenantId, address)).build();
         } catch (Exception e) {
             return Response.serverError().build();
         }

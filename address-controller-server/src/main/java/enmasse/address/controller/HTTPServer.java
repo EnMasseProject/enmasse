@@ -16,12 +16,11 @@
 
 package enmasse.address.controller;
 
-import enmasse.address.controller.admin.AddressManager;
 import enmasse.address.controller.admin.FlavorRepository;
+import enmasse.address.controller.admin.AddressManagerFactory;
 import enmasse.address.controller.api.v1.http.RestServiceV1;
 import enmasse.address.controller.api.v2.http.RestServiceV2;
 import enmasse.address.controller.api.v3.ApiHandler;
-import enmasse.address.controller.api.v3.FlavorList;
 import enmasse.address.controller.api.v3.http.AddressingService;
 import enmasse.address.controller.api.v3.http.FlavorsService;
 import io.vertx.core.AbstractVerticle;
@@ -35,11 +34,11 @@ import org.slf4j.LoggerFactory;
  */
 public class HTTPServer extends AbstractVerticle {
     private static final Logger log = LoggerFactory.getLogger(HTTPServer.class.getName());
-    private final AddressManager addressManager;
+    private final AddressManagerFactory addressManagerFactory;
     private final FlavorRepository flavorRepository;
 
-    public HTTPServer(AddressManager addressManager, FlavorRepository flavorRepository) {
-        this.addressManager = addressManager;
+    public HTTPServer(AddressManagerFactory addressManagerFactory, FlavorRepository flavorRepository) {
+        this.addressManagerFactory = addressManagerFactory;
         this.flavorRepository = flavorRepository;
     }
 
@@ -47,9 +46,9 @@ public class HTTPServer extends AbstractVerticle {
     public void start() {
         VertxResteasyDeployment deployment = new VertxResteasyDeployment();
         deployment.start();
-        deployment.getRegistry().addSingletonResource(new RestServiceV1(addressManager, vertx));
-        deployment.getRegistry().addSingletonResource(new RestServiceV2(addressManager, vertx));
-        deployment.getRegistry().addSingletonResource(new AddressingService(new ApiHandler(addressManager)));
+        deployment.getRegistry().addSingletonResource(new RestServiceV1(addressManagerFactory, vertx));
+        deployment.getRegistry().addSingletonResource(new RestServiceV2(addressManagerFactory, vertx));
+        deployment.getRegistry().addSingletonResource(new AddressingService(new ApiHandler(addressManagerFactory)));
         deployment.getRegistry().addSingletonResource(new FlavorsService(flavorRepository));
 
         vertx.createHttpServer()

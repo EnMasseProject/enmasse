@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Red Hat Inc.
+ * Copyright 2017 Red Hat Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,15 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package enmasse.address.controller.admin;
 
-package enmasse.address.controller.generator;
+import enmasse.address.controller.model.TenantId;
+import io.fabric8.openshift.client.OpenShiftClient;
 
 /**
- * Template parameters that are dynamically set by the address controller.
+ * Interface for creating openshift clients for a tenant
  */
-public interface TemplateParameter {
-    String NAME = "NAME";
-    String ADDRESS = "ADDRESS";
-    String MULTICAST = "MULTICAST";
-    String TENANT = "TENANT";
+public interface TenantClientFactory {
+    OpenShiftClient createClient(TenantId tenant);
 }

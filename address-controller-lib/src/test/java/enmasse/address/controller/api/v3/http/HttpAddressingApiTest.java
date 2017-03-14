@@ -16,19 +16,20 @@
 
 package enmasse.address.controller.api.v3.http;
 
-import enmasse.address.controller.admin.AddressManager;
+import enmasse.address.controller.api.TestAddressManager;
+import enmasse.address.controller.api.TestAddressManagerFactory;
 import enmasse.address.controller.api.v3.ApiHandler;
 import enmasse.address.controller.model.Destination;
 import enmasse.address.controller.model.DestinationGroup;
 import enmasse.address.controller.api.v3.Address;
 import enmasse.address.controller.api.v3.AddressList;
+import enmasse.address.controller.model.TenantId;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.internal.util.collections.Sets;
 
 import javax.ws.rs.core.Response;
 import java.util.Collections;
-import java.util.LinkedHashSet;
 import java.util.Optional;
 import java.util.Set;
 
@@ -37,12 +38,16 @@ import static org.junit.Assert.*;
 
 public class HttpAddressingApiTest {
     private AddressingService addressingService;
-    private TestManager addressManager;
+    private TestAddressManagerFactory tenantManager;
+    private TestAddressManager addressManager;
 
     @Before
     public void setup() {
-        addressManager = new TestManager();
-        addressingService = new AddressingService(new ApiHandler(addressManager));
+        addressManager = new TestAddressManager();
+        tenantManager = new TestAddressManagerFactory();
+        tenantManager.addManager(TenantId.fromString("mytenant"), addressManager);
+
+        addressingService = new AddressingService(new ApiHandler(tenantManager));
         addressManager.destinationsUpdated(Sets.newSet(
             createGroup(new Destination("addr1", "addr1", false, false, Optional.empty(), Optional.empty())),
             createGroup(new Destination("queue1", "queue1", true, false, Optional.of("vanilla"), Optional.empty()))));
@@ -188,26 +193,5 @@ public class HttpAddressingApiTest {
         }
         assertNotNull(actual);
         assertTrue(actual.equals(dest));
-    }
-
-    public static class TestManager implements AddressManager {
-        Set<DestinationGroup> destinationList = new LinkedHashSet<>();
-        boolean throwException = false;
-
-        @Override
-        public void destinationsUpdated(Set<DestinationGroup> destinationList) {
-            if (throwException) {
-                throw new RuntimeException();
-            }
-            this.destinationList = new LinkedHashSet<>(destinationList);
-        }
-
-        @Override
-        public Set<DestinationGroup> listDestinationGroups() {
-            if (throwException) {
-                throw new RuntimeException();
-            }
-            return this.destinationList;
-        }
     }
 }

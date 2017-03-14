@@ -21,6 +21,7 @@ import enmasse.address.controller.admin.OpenShiftHelper;
 import enmasse.address.controller.model.Destination;
 import enmasse.address.controller.model.DestinationGroup;
 import enmasse.address.controller.model.Flavor;
+import enmasse.address.controller.model.TenantId;
 import enmasse.address.controller.openshift.DestinationCluster;
 import enmasse.config.LabelKeys;
 import io.fabric8.kubernetes.api.model.HasMetadata;
@@ -43,8 +44,10 @@ public class TemplateDestinationClusterGenerator implements DestinationClusterGe
 
     private final OpenShiftClient osClient;
     private final FlavorRepository flavorRepository;
+    private final TenantId tenant;
 
-    public TemplateDestinationClusterGenerator(OpenShiftClient osClient, FlavorRepository flavorRepository) {
+    public TemplateDestinationClusterGenerator(TenantId tenant, OpenShiftClient osClient, FlavorRepository flavorRepository) {
+        this.tenant = tenant;
         this.osClient = osClient;
         this.flavorRepository = flavorRepository;
     }
@@ -68,6 +71,7 @@ public class TemplateDestinationClusterGenerator implements DestinationClusterGe
 
         // If the flavor is shared, there is only one instance of it, so give it the name of the flavor
         paramMap.put(TemplateParameter.NAME, OpenShiftHelper.nameSanitizer(destinationGroup.getGroupId()));
+        paramMap.put(TemplateParameter.TENANT, OpenShiftHelper.nameSanitizer(tenant.toString()));
 
         // If the name of the group matches that of the address, assume a scalable queue
         if (destinationGroup.getGroupId().equals(first.address()) && destinationGroup.getDestinations().size() == 1) {
@@ -93,7 +97,7 @@ public class TemplateDestinationClusterGenerator implements DestinationClusterGe
         addObjectLabel(items, LabelKeys.GROUP_ID, OpenShiftHelper.nameSanitizer(destinationGroup.getGroupId()));
         addObjectLabel(items, LabelKeys.ADDRESS_CONFIG, OpenShiftHelper.nameSanitizer("address-config-" + destinationGroup.getGroupId()));
 
-        return new DestinationCluster(new OpenShiftHelper(osClient), destinationGroup, items);
+        return new DestinationCluster(new OpenShiftHelper(tenant, osClient), destinationGroup, items);
     }
 
 

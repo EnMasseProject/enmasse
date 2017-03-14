@@ -16,9 +16,9 @@
 
 package enmasse.address.controller.admin;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import enmasse.address.controller.model.Destination;
 import enmasse.address.controller.model.DestinationGroup;
+import enmasse.address.controller.model.TenantId;
 import enmasse.address.controller.openshift.DestinationCluster;
 import enmasse.config.AddressDecoder;
 import enmasse.config.AddressEncoder;
@@ -37,11 +37,12 @@ import java.util.stream.Collectors;
  * Wraps the OpenShift client and adds some helper methods.
  */
 public class OpenShiftHelper {
-    private static final ObjectMapper mapper = new ObjectMapper();
     private static final Logger log = LoggerFactory.getLogger(OpenShiftHelper.class.getName());
     private final OpenShiftClient client;
+    private final TenantId tenant;
 
-    public OpenShiftHelper(OpenShiftClient client) {
+    public OpenShiftHelper(TenantId tenant, OpenShiftClient client) {
+        this.tenant = tenant;
         this.client = client;
     }
 
@@ -114,9 +115,10 @@ public class OpenShiftHelper {
     public void updateDestinations(DestinationGroup destinationGroup) {
         DoneableConfigMap map = client.configMaps().withName(nameSanitizer("address-config-" + destinationGroup.getGroupId())).createOrReplaceWithNew()
                 .editOrNewMetadata()
-                    .withName(nameSanitizer("address-config-" + destinationGroup.getGroupId()))
+                    .withName(nameSanitizer("address-config-" + tenant.toString() + "-" + destinationGroup.getGroupId()))
                     .addToLabels(LabelKeys.GROUP_ID, destinationGroup.getGroupId())
                     .addToLabels("type", "address-config")
+                    .addToLabels("tenant", tenant.toString())
                 .endMetadata();
 
         for (Destination destination : destinationGroup.getDestinations()) {
