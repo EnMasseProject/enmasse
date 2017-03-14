@@ -146,28 +146,19 @@ public class OpenShiftHelperTest {
     }
 
     @Test
-    public void testUpdateDestinationGroup() {
+    public void testCreateAddressConfig() {
         OpenShiftClient mockClient = mock(OpenShiftClient.class);
         OpenShiftHelper helper = new OpenShiftHelper(TenantId.fromString("mytenant"), mockClient);
-
-        DoneableConfigMap map = new DoneableConfigMap(new ConfigMap("v1", Collections.<String, String>emptyMap(), "ConfigMap", new ObjectMetaBuilder().withName("address-config-group1").build()));
-        ClientMixedOperation mapOp = mock(ClientMixedOperation.class);
-        when(mockClient.configMaps()).thenReturn(mapOp);
-        ClientResource mapResource = mock(ClientResource.class);
-        when(mapOp.withName("address-config-group1")).thenReturn(mapResource);
-        when(mapResource.get()).thenReturn(map);
-        when(mapResource.createOrReplaceWithNew()).thenReturn(map);
-
         DestinationGroup group = new DestinationGroup("group1", Sets.newSet(new Destination("queue1", "group1", true, false, Optional.of("vanilla"), Optional.empty()),
                 new Destination("queue2", "group1", true, false, Optional.of("vanilla"), Optional.empty())));
-        helper.updateDestinations(group);
 
-        ConfigMap edited = map.done();
-        assertTrue(edited.getMetadata().getLabels().containsKey(LabelKeys.GROUP_ID));
-        assertThat(edited.getMetadata().getLabels().get(LabelKeys.GROUP_ID), is("group1"));
-        assertThat(edited.getData().size(), is(2));
-        assertTrue(edited.getData().containsKey("queue1"));
-        assertTrue(edited.getData().containsKey("queue2"));
+        ConfigMap addressConfig = helper.createAddressConfig(group);
+
+        assertTrue(addressConfig.getMetadata().getLabels().containsKey(LabelKeys.GROUP_ID));
+        assertThat(addressConfig.getMetadata().getLabels().get(LabelKeys.GROUP_ID), is("group1"));
+        assertThat(addressConfig.getData().size(), is(2));
+        assertTrue(addressConfig.getData().containsKey("queue1"));
+        assertTrue(addressConfig.getData().containsKey("queue2"));
     }
 
     private void assertDestination(Set<Destination> destinations, String address, boolean storeAndForward, boolean multicast, Optional<String> flavor) {

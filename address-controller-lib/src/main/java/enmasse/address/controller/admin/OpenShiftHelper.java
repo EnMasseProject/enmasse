@@ -23,9 +23,7 @@ import enmasse.address.controller.openshift.DestinationCluster;
 import enmasse.config.AddressDecoder;
 import enmasse.config.AddressEncoder;
 import enmasse.config.LabelKeys;
-import io.fabric8.kubernetes.api.model.DoneableConfigMap;
-import io.fabric8.kubernetes.api.model.HasMetadata;
-import io.fabric8.kubernetes.api.model.KubernetesList;
+import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.openshift.client.OpenShiftClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -113,19 +111,25 @@ public class OpenShiftHelper {
     }
 
     public void updateDestinations(DestinationGroup destinationGroup) {
-        DoneableConfigMap map = client.configMaps().withName(nameSanitizer("address-config-" + destinationGroup.getGroupId())).createOrReplaceWithNew()
-                .editOrNewMetadata()
-                    .withName(nameSanitizer("address-config-" + tenant.toString() + "-" + destinationGroup.getGroupId()))
-                    .addToLabels(LabelKeys.GROUP_ID, destinationGroup.getGroupId())
-                    .addToLabels("type", "address-config")
-                    .addToLabels("tenant", tenant.toString())
+        client.configMaps().createOrReplace(createAddressConfig(destinationGroup));
+    }
+
+    public ConfigMap createAddressConfig(DestinationGroup destinationGroup) {
+        String name = nameSanitizer("address-config-" + tenant.toString() + "-" + destinationGroup.getGroupId());
+        ConfigMapBuilder builder = new ConfigMapBuilder()
+                .withNewMetadata()
+                .withName(name)
+                .addToLabels(LabelKeys.GROUP_ID, nameSanitizer(destinationGroup.getGroupId()))
+                .addToLabels(LabelKeys.ADDRESS_CONFIG, name)
+                .addToLabels("type", "address-config")
+                .addToLabels("tenant", nameSanitizer(tenant.toString()))
                 .endMetadata();
 
         for (Destination destination : destinationGroup.getDestinations()) {
             AddressEncoder encoder = new AddressEncoder();
             encoder.encode(destination.storeAndForward(), destination.multicast(), destination.flavor(), destination.uuid());
-            map.addToData(destination.address(), encoder.toJson());
+            builder.addToData(destination.address(), encoder.toJson());
         }
-        map.done();
+        return builder.build();
     }
 }

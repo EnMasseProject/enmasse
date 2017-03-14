@@ -26,6 +26,7 @@ import enmasse.address.controller.openshift.DestinationCluster;
 import enmasse.config.LabelKeys;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesList;
+import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.openshift.api.model.DoneableTemplate;
 import io.fabric8.openshift.api.model.Template;
 import io.fabric8.openshift.client.OpenShiftClient;
@@ -34,6 +35,7 @@ import io.fabric8.openshift.client.dsl.ClientTemplateResource;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -61,11 +63,20 @@ public class TemplateDestinationClusterGenerator implements DestinationClusterGe
      */
     public DestinationCluster generateCluster(DestinationGroup destinationGroup) {
         Destination first = destinationGroup.getDestinations().iterator().next();
-        Flavor flavor = first.flavor()
-                .map(f -> flavorRepository.getFlavor(f, TimeUnit.SECONDS.toMillis(60)))
-                .orElse(new Flavor.Builder("direct", "direct").build());
+        Optional<Flavor> flavor = first.flavor()
+                .map(f -> flavorRepository.getFlavor(f, TimeUnit.SECONDS.toMillis(60)));
 
-        ClientTemplateResource<Template, KubernetesList, DoneableTemplate> templateProcessor = osClient.templates().withName(flavor.templateName());
+        KubernetesList resources = flavor.map(f -> processTemplate(first, destinationGroup, f)).orElse(new KubernetesList());
+
+        OpenShiftHelper helper = new OpenShiftHelper(tenant, osClient);
+        KubernetesListBuilder combined = new KubernetesListBuilder(resources);
+        combined.addToItems(helper.createAddressConfig(destinationGroup));
+
+        return new DestinationCluster(helper, destinationGroup, combined.build());
+    }
+
+    private KubernetesList processTemplate(Destination first, DestinationGroup destinationGroup, Flavor flavor) {
+                ClientTemplateResource<Template, KubernetesList, DoneableTemplate> templateProcessor = osClient.templates().withName(flavor.templateName());
 
         Map<String, String> paramMap = new LinkedHashMap<>(flavor.templateParameters());
 
@@ -80,11 +91,6 @@ public class TemplateDestinationClusterGenerator implements DestinationClusterGe
             paramMap.put(TemplateParameter.ADDRESS, "ENMASSE_INTERNAL_RESERVED");
         }
 
-        // Workaround for direct templates that need multicast set
-        if (!first.flavor().isPresent()) {
-            paramMap.put(TemplateParameter.MULTICAST, String.valueOf(first.multicast()));
-        }
-
         ParameterValue parameters[] = paramMap.entrySet().stream()
                 .map(entry -> new ParameterValue(entry.getKey(), entry.getValue()))
                 .collect(Collectors.toList())
@@ -95,9 +101,8 @@ public class TemplateDestinationClusterGenerator implements DestinationClusterGe
 
         // These are attributes that we need to identify components belonging to this address
         addObjectLabel(items, LabelKeys.GROUP_ID, OpenShiftHelper.nameSanitizer(destinationGroup.getGroupId()));
-        addObjectLabel(items, LabelKeys.ADDRESS_CONFIG, OpenShiftHelper.nameSanitizer("address-config-" + destinationGroup.getGroupId()));
-
-        return new DestinationCluster(new OpenShiftHelper(tenant, osClient), destinationGroup, items);
+        addObjectLabel(items, LabelKeys.ADDRESS_CONFIG, OpenShiftHelper.nameSanitizer("address-config-" + tenant.toString() + "-" + destinationGroup.getGroupId()));
+        return items;
     }
 
 
