@@ -9,8 +9,9 @@ function setup_test() {
     oc delete project $PROJECT_NAME
 
     oc new-project $PROJECT_NAME
+    oc create sa enmasse-service-account -n $(oc project -q)
     oc policy add-role-to-user view system:serviceaccount:$(oc project -q):default
-    oc policy add-role-to-user edit system:serviceaccount:$(oc project -q):deployer
+    oc policy add-role-to-user edit system:serviceaccount:$(oc project -q):enmasse-service-account
 }
 
 function setup_secure() {
