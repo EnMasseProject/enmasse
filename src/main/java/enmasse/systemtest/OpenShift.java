@@ -65,11 +65,7 @@ public class OpenShift {
     }
 
     public Endpoint getRestEndpoint() {
-        if (isFullTemplate()) {
-            return getEndpoint("restapi", "http");
-        } else {
-            return getEndpoint("admin", "restapi");
-        }
+        return getEndpoint("address-controller", "http");
     }
 
     public void setDeploymentReplicas(String name, int numReplicas) {
