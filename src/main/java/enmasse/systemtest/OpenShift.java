@@ -100,9 +100,9 @@ public class OpenShift {
 
     public int getExpectedPods() {
         if (isFullTemplate()) {
-            return 8; // config, storagecontroller, restapi, ragent, qdrouterd, subscription, mqtt gateway, mqtt lwt
+            return 8; // configserv, address-controller, queue-scheduler, ragent, qdrouterd, subscription, mqtt gateway, mqtt lwt
         } else {
-            return 5; // admin, qdrouterd, subscription, mqtt gateway, mqtt lwt
+            return 6; // address-controller, admin, qdrouterd, subscription, mqtt gateway, mqtt lwt
         }
     }
 }
