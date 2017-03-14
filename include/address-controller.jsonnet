@@ -26,7 +26,7 @@ local common = import "common.jsonnet";
             }
           },
           "spec": {
-            "serviceAccount": "deployer",
+            "serviceAccount": "enmasse-service-account",
             "containers": [
               common.container("address-controller", image_repo, "amqp", 55674, "256Mi")
             ]
