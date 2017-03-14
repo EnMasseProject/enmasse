@@ -29,7 +29,7 @@ function run_test() {
 
     oc process -f $TEMPLATE | oc create -f -
 
-    $DIR/wait_until_up.sh 5 || exit 1
+    $DIR/wait_until_up.sh 6 || exit 1
 
     sleep 120
 
