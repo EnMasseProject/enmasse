@@ -7,7 +7,7 @@ import enmasse.address.controller.api.v3.AddressList;
 import enmasse.address.controller.model.Destination;
 import enmasse.address.controller.model.DestinationGroup;
 import enmasse.address.controller.model.Flavor;
-import enmasse.address.controller.model.TenantId;
+import enmasse.address.controller.model.InstanceId;
 import enmasse.amqp.SyncRequestClient;
 import io.vertx.core.Vertx;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
@@ -35,7 +35,7 @@ import static org.junit.Assert.assertTrue;
 
 public class AMQPServerTest {
     private Vertx vertx;
-    private TestAddressManagerFactory testTenantManager;
+    private TestAddressManagerFactory testInstanceManager;
     private TestAddressManager testAddressManager;
     private FlavorManager testRepository;
     private int port;
@@ -44,10 +44,10 @@ public class AMQPServerTest {
     public void setup() throws InterruptedException {
         vertx = Vertx.vertx();
         testAddressManager = new TestAddressManager();
-        testTenantManager = new TestAddressManagerFactory().addManager(TenantId.fromString("mytenant"), testAddressManager);
+        testInstanceManager = new TestAddressManagerFactory().addManager(InstanceId.fromString("myinstance"), testAddressManager);
         testRepository = new FlavorManager();
         CountDownLatch latch = new CountDownLatch(1);
-        AMQPServer server = new AMQPServer(testTenantManager, testRepository, 0);
+        AMQPServer server = new AMQPServer(testInstanceManager, testRepository, 0);
         vertx.deployVerticle(server, c -> {
             latch.countDown();
         });

@@ -22,7 +22,7 @@ import enmasse.address.controller.admin.TemplateRepository;
 import enmasse.address.controller.model.Destination;
 import enmasse.address.controller.model.DestinationGroup;
 import enmasse.address.controller.model.Flavor;
-import enmasse.address.controller.model.TenantId;
+import enmasse.address.controller.model.InstanceId;
 import enmasse.address.controller.openshift.DestinationCluster;
 import enmasse.config.LabelKeys;
 import io.fabric8.kubernetes.api.model.HasMetadata;
@@ -48,10 +48,10 @@ public class TemplateDestinationClusterGenerator implements DestinationClusterGe
     private final OpenShiftClient osClient;
     private final TemplateRepository templateRepository;
     private final FlavorRepository flavorRepository;
-    private final TenantId tenant;
+    private final InstanceId instance;
 
-    public TemplateDestinationClusterGenerator(TenantId tenant, OpenShiftClient osClient, TemplateRepository templateRepository, FlavorRepository flavorRepository) {
-        this.tenant = tenant;
+    public TemplateDestinationClusterGenerator(InstanceId instance, OpenShiftClient osClient, TemplateRepository templateRepository, FlavorRepository flavorRepository) {
+        this.instance = instance;
         this.osClient = osClient;
         this.templateRepository = templateRepository;
         this.flavorRepository = flavorRepository;
@@ -71,7 +71,7 @@ public class TemplateDestinationClusterGenerator implements DestinationClusterGe
 
         KubernetesList resources = flavor.map(f -> processTemplate(first, destinationGroup, f)).orElse(new KubernetesList());
 
-        OpenShiftHelper helper = new OpenShiftHelper(tenant, osClient);
+        OpenShiftHelper helper = new OpenShiftHelper(instance, osClient);
         KubernetesListBuilder combined = new KubernetesListBuilder(resources);
         combined.addToItems(helper.createAddressConfig(destinationGroup));
 
@@ -85,7 +85,7 @@ public class TemplateDestinationClusterGenerator implements DestinationClusterGe
 
         // If the flavor is shared, there is only one instance of it, so give it the name of the flavor
         paramMap.put(TemplateParameter.NAME, OpenShiftHelper.nameSanitizer(destinationGroup.getGroupId()));
-        paramMap.put(TemplateParameter.TENANT, OpenShiftHelper.nameSanitizer(tenant.toString()));
+        paramMap.put(TemplateParameter.INSTANCE, OpenShiftHelper.nameSanitizer(instance.toString()));
 
         // If the name of the group matches that of the address, assume a scalable queue
         if (destinationGroup.getGroupId().equals(first.address()) && destinationGroup.getDestinations().size() == 1) {
@@ -104,7 +104,7 @@ public class TemplateDestinationClusterGenerator implements DestinationClusterGe
 
         // These are attributes that we need to identify components belonging to this address
         addObjectLabel(items, LabelKeys.GROUP_ID, OpenShiftHelper.nameSanitizer(destinationGroup.getGroupId()));
-        addObjectLabel(items, LabelKeys.ADDRESS_CONFIG, OpenShiftHelper.nameSanitizer("address-config-" + tenant.toString() + "-" + destinationGroup.getGroupId()));
+        addObjectLabel(items, LabelKeys.ADDRESS_CONFIG, OpenShiftHelper.nameSanitizer("address-config-" + instance.toString() + "-" + destinationGroup.getGroupId()));
         return items;
     }
 

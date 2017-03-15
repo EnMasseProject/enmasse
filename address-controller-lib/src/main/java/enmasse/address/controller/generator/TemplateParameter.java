@@ -23,5 +23,5 @@ public interface TemplateParameter {
     String NAME = "NAME";
     String ADDRESS = "ADDRESS";
     String MULTICAST = "MULTICAST";
-    String TENANT = "TENANT";
+    String INSTANCE = "INSTANCE";
 }

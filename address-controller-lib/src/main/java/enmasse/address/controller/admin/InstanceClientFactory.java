@@ -15,12 +15,12 @@
  */
 package enmasse.address.controller.admin;
 
-import enmasse.address.controller.model.TenantId;
+import enmasse.address.controller.model.InstanceId;
 import io.fabric8.openshift.client.OpenShiftClient;
 
 /**
- * Interface for creating openshift clients for a tenant
+ * Interface for creating openshift clients for a instance
  */
-public interface TenantClientFactory {
-    OpenShiftClient createClient(TenantId tenant);
+public interface InstanceClientFactory {
+    OpenShiftClient createClient(InstanceId instance);
 }

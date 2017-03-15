@@ -23,7 +23,7 @@ import enmasse.address.controller.api.v2.http.RestServiceV2;
 import enmasse.address.controller.api.v3.ApiHandler;
 import enmasse.address.controller.api.v3.http.AddressingService;
 import enmasse.address.controller.api.v3.http.FlavorsService;
-import enmasse.address.controller.api.v3.http.MultitenantAddressingService;
+import enmasse.address.controller.api.v3.http.MultiInstanceAddressingService;
 import io.vertx.core.AbstractVerticle;
 import org.jboss.resteasy.plugins.server.vertx.VertxRequestHandler;
 import org.jboss.resteasy.plugins.server.vertx.VertxResteasyDeployment;
@@ -50,7 +50,7 @@ public class HTTPServer extends AbstractVerticle {
         deployment.getRegistry().addSingletonResource(new RestServiceV1(addressManagerFactory, vertx));
         deployment.getRegistry().addSingletonResource(new RestServiceV2(addressManagerFactory, vertx));
         deployment.getRegistry().addSingletonResource(new AddressingService(new ApiHandler(addressManagerFactory)));
-        deployment.getRegistry().addSingletonResource(new MultitenantAddressingService(new ApiHandler(addressManagerFactory)));
+        deployment.getRegistry().addSingletonResource(new MultiInstanceAddressingService(new ApiHandler(addressManagerFactory)));
         deployment.getRegistry().addSingletonResource(new FlavorsService(flavorRepository));
 
         vertx.createHttpServer()

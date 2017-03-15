@@ -23,7 +23,7 @@ import enmasse.address.controller.model.Destination;
 import enmasse.address.controller.model.DestinationGroup;
 import enmasse.address.controller.api.v3.Address;
 import enmasse.address.controller.api.v3.AddressList;
-import enmasse.address.controller.model.TenantId;
+import enmasse.address.controller.model.InstanceId;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.internal.util.collections.Sets;
@@ -38,16 +38,16 @@ import static org.junit.Assert.*;
 
 public class HttpAddressingApiTest {
     private AddressingService addressingService;
-    private TestAddressManagerFactory tenantManager;
+    private TestAddressManagerFactory instanceManager;
     private TestAddressManager addressManager;
 
     @Before
     public void setup() {
         addressManager = new TestAddressManager();
-        tenantManager = new TestAddressManagerFactory();
-        tenantManager.addManager(TenantId.fromString("mytenant"), addressManager);
+        instanceManager = new TestAddressManagerFactory();
+        instanceManager.addManager(InstanceId.fromString("myinstance"), addressManager);
 
-        addressingService = new AddressingService(new ApiHandler(tenantManager));
+        addressingService = new AddressingService(new ApiHandler(instanceManager));
         addressManager.destinationsUpdated(Sets.newSet(
             createGroup(new Destination("addr1", "addr1", false, false, Optional.empty(), Optional.empty())),
             createGroup(new Destination("queue1", "queue1", true, false, Optional.of("vanilla"), Optional.empty()))));

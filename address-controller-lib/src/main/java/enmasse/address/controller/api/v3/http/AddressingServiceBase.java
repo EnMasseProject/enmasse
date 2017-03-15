@@ -3,7 +3,7 @@ package enmasse.address.controller.api.v3.http;
 import enmasse.address.controller.api.v3.Address;
 import enmasse.address.controller.api.v3.AddressList;
 import enmasse.address.controller.api.v3.ApiHandler;
-import enmasse.address.controller.model.TenantId;
+import enmasse.address.controller.model.InstanceId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,36 +21,36 @@ public class AddressingServiceBase {
         this.apiHandler = apiHandler;
     }
 
-    public Response listAddresses(TenantId tenantId) {
+    public Response listAddresses(InstanceId instanceId) {
         try {
-            return Response.ok(apiHandler.getAddresses(tenantId)).build();
+            return Response.ok(apiHandler.getAddresses(instanceId)).build();
         } catch (Exception e) {
             log.warn("Error listing addresses", e);
             return Response.serverError().build();
         }
     }
 
-    public Response putAddresses(TenantId tenantId, AddressList addressList) {
+    public Response putAddresses(InstanceId instanceId, AddressList addressList) {
         try {
-            return Response.ok(apiHandler.putAddresses(tenantId, addressList)).build();
+            return Response.ok(apiHandler.putAddresses(instanceId, addressList)).build();
         } catch (Exception e) {
             log.warn("Error putting addresses", e);
             return Response.serverError().build();
         }
     }
 
-    public Response appendAddress(TenantId tenantId, Address address) {
+    public Response appendAddress(InstanceId instanceId, Address address) {
         try {
-            return Response.ok(apiHandler.appendAddress(tenantId, address)).build();
+            return Response.ok(apiHandler.appendAddress(instanceId, address)).build();
         } catch (Exception e) {
             log.warn("Error appending addresses", e);
             return Response.serverError().build();
         }
     }
 
-    public Response getAddress(TenantId tenantId, String address) {
+    public Response getAddress(InstanceId instanceId, String address) {
         try {
-            Optional<Address> addr = apiHandler.getAddress(tenantId, address);
+            Optional<Address> addr = apiHandler.getAddress(instanceId, address);
 
             if (addr.isPresent()) {
                 return Response.ok(addr.get()).build();
@@ -63,13 +63,13 @@ public class AddressingServiceBase {
         }
     }
 
-    public Response putAddress(TenantId tenantId, String address) {
+    public Response putAddress(InstanceId instanceId, String address) {
         return Response.status(405).build();
     }
 
-    public Response deleteAddress(TenantId tenantId, String address) {
+    public Response deleteAddress(InstanceId instanceId, String address) {
         try {
-            return Response.ok(apiHandler.deleteAddress(tenantId, address)).build();
+            return Response.ok(apiHandler.deleteAddress(instanceId, address)).build();
         } catch (Exception e) {
             log.warn("Error deleting address", e);
             return Response.serverError().build();

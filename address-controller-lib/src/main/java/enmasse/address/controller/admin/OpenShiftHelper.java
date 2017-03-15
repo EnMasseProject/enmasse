@@ -18,7 +18,7 @@ package enmasse.address.controller.admin;
 
 import enmasse.address.controller.model.Destination;
 import enmasse.address.controller.model.DestinationGroup;
-import enmasse.address.controller.model.TenantId;
+import enmasse.address.controller.model.InstanceId;
 import enmasse.address.controller.openshift.DestinationCluster;
 import enmasse.config.AddressDecoder;
 import enmasse.config.AddressEncoder;
@@ -37,10 +37,10 @@ import java.util.stream.Collectors;
 public class OpenShiftHelper {
     private static final Logger log = LoggerFactory.getLogger(OpenShiftHelper.class.getName());
     private final OpenShiftClient client;
-    private final TenantId tenant;
+    private final InstanceId instance;
 
-    public OpenShiftHelper(TenantId tenant, OpenShiftClient client) {
-        this.tenant = tenant;
+    public OpenShiftHelper(InstanceId instance, OpenShiftClient client) {
+        this.instance = instance;
         this.client = client;
     }
 
@@ -115,14 +115,14 @@ public class OpenShiftHelper {
     }
 
     public ConfigMap createAddressConfig(DestinationGroup destinationGroup) {
-        String name = nameSanitizer("address-config-" + tenant.toString() + "-" + destinationGroup.getGroupId());
+        String name = nameSanitizer("address-config-" + instance.toString() + "-" + destinationGroup.getGroupId());
         ConfigMapBuilder builder = new ConfigMapBuilder()
                 .withNewMetadata()
                 .withName(name)
                 .addToLabels(LabelKeys.GROUP_ID, nameSanitizer(destinationGroup.getGroupId()))
                 .addToLabels(LabelKeys.ADDRESS_CONFIG, name)
                 .addToLabels("type", "address-config")
-                .addToLabels("tenant", nameSanitizer(tenant.toString()))
+                .addToLabels("instance", nameSanitizer(instance.toString()))
                 .endMetadata();
 
         for (Destination destination : destinationGroup.getDestinations()) {

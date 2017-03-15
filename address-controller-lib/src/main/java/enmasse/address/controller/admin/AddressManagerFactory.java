@@ -15,14 +15,14 @@
  */
 package enmasse.address.controller.admin;
 
-import enmasse.address.controller.model.TenantId;
+import enmasse.address.controller.model.InstanceId;
 
 import java.util.Optional;
 
 /**
- * Interface for creating per-tenant address spaces.
+ * Interface for creating per-instance address spaces.
  */
 public interface AddressManagerFactory {
-    Optional<AddressManager> getAddressManager(TenantId tenant);
-    AddressManager getOrCreateAddressManager(TenantId tenant);
+    Optional<AddressManager> getAddressManager(InstanceId instance);
+    AddressManager getOrCreateAddressManager(InstanceId instance);
 }

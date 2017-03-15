@@ -19,7 +19,7 @@ package enmasse.address.controller.admin;
 import enmasse.address.controller.model.Destination;
 import enmasse.address.controller.model.DestinationGroup;
 import enmasse.address.controller.model.Flavor;
-import enmasse.address.controller.model.TenantId;
+import enmasse.address.controller.model.InstanceId;
 import enmasse.address.controller.openshift.DestinationCluster;
 import enmasse.config.AddressEncoder;
 import enmasse.config.LabelKeys;
@@ -101,7 +101,7 @@ public class OpenShiftHelperTest {
         ExtensionsAPIGroupDSL extensions = mock(ExtensionsAPIGroupDSL.class);
 
         OpenShiftClient mockClient = mock(OpenShiftClient.class);
-        OpenShiftHelper helper = new OpenShiftHelper(TenantId.fromString("mytenant"), mockClient);
+        OpenShiftHelper helper = new OpenShiftHelper(InstanceId.fromString("myinstance"), mockClient);
         when(mockClient.deploymentConfigs()).thenReturn(dcOp);
         when(mockClient.extensions()).thenReturn(extensions);
         when(extensions.deployments()).thenReturn(dOp);
@@ -148,7 +148,7 @@ public class OpenShiftHelperTest {
     @Test
     public void testCreateAddressConfig() {
         OpenShiftClient mockClient = mock(OpenShiftClient.class);
-        OpenShiftHelper helper = new OpenShiftHelper(TenantId.fromString("mytenant"), mockClient);
+        OpenShiftHelper helper = new OpenShiftHelper(InstanceId.fromString("myinstance"), mockClient);
         DestinationGroup group = new DestinationGroup("group1", Sets.newSet(new Destination("queue1", "group1", true, false, Optional.of("vanilla"), Optional.empty()),
                 new Destination("queue2", "group1", true, false, Optional.of("vanilla"), Optional.empty())));
 

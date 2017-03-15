@@ -4,7 +4,7 @@ import enmasse.address.controller.admin.AddressManager;
 import enmasse.address.controller.admin.AddressManagerFactory;
 import enmasse.address.controller.model.Destination;
 import enmasse.address.controller.model.DestinationGroup;
-import enmasse.address.controller.model.TenantId;
+import enmasse.address.controller.model.InstanceId;
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -21,19 +21,19 @@ public class ApiHandler {
         this.addressManagerFactory = addressManagerFactory;
     }
 
-    public AddressList getAddresses(TenantId tenant) {
-        Optional<AddressManager> addressManager = addressManagerFactory.getAddressManager(tenant);
+    public AddressList getAddresses(InstanceId instance) {
+        Optional<AddressManager> addressManager = addressManagerFactory.getAddressManager(instance);
         return AddressList.fromGroups(addressManager.map(AddressManager::listDestinationGroups).orElse(Collections.emptySet()));
     }
 
-    public AddressList putAddresses(TenantId tenant, AddressList addressList) {
-        AddressManager addressManager = addressManagerFactory.getOrCreateAddressManager(tenant);
+    public AddressList putAddresses(InstanceId instance, AddressList addressList) {
+        AddressManager addressManager = addressManagerFactory.getOrCreateAddressManager(instance);
         addressManager.destinationsUpdated(addressList.getDestinationGroups());
         return addressList;
     }
 
-    public AddressList appendAddress(TenantId tenant, Address address) {
-        AddressManager addressManager = addressManagerFactory.getOrCreateAddressManager(tenant);
+    public AddressList appendAddress(InstanceId instance, Address address) {
+        AddressManager addressManager = addressManagerFactory.getOrCreateAddressManager(instance);
         Set<DestinationGroup> destinationGroups = new HashSet<>(addressManager.listDestinationGroups());
         Destination newDest = address.getDestination();
         DestinationGroup group = null;
@@ -57,8 +57,8 @@ public class ApiHandler {
     }
 
 
-    public Optional<Address> getAddress(TenantId tenant, String address) {
-        Optional<AddressManager> addressManager = addressManagerFactory.getAddressManager(tenant);
+    public Optional<Address> getAddress(InstanceId instance, String address) {
+        Optional<AddressManager> addressManager = addressManagerFactory.getAddressManager(instance);
         return addressManager.map(AddressManager::listDestinationGroups).orElse(Collections.emptySet()).stream()
                 .flatMap(g -> g.getDestinations().stream())
                 .filter(d -> d.address().equals(address))
@@ -66,14 +66,14 @@ public class ApiHandler {
                 .map(Address::new);
     }
 
-    public Address putAddress(TenantId tenant, Address address) {
-        appendAddress(tenant, address);
+    public Address putAddress(InstanceId instance, Address address) {
+        appendAddress(instance, address);
         return address;
     }
 
 
-    public AddressList deleteAddress(TenantId tenant, String address) {
-        Optional<AddressManager> addressManager = addressManagerFactory.getAddressManager(tenant);
+    public AddressList deleteAddress(InstanceId instance, String address) {
+        Optional<AddressManager> addressManager = addressManagerFactory.getAddressManager(instance);
         Set<DestinationGroup> destinationGroups = addressManager.map(AddressManager::listDestinationGroups).orElse(Collections.emptySet());
         Set<DestinationGroup> newGroups = new HashSet<>();
         for (DestinationGroup group : destinationGroups) {
@@ -93,8 +93,8 @@ public class ApiHandler {
         return AddressList.fromGroups(newGroups);
     }
 
-    public AddressList appendAddresses(TenantId tenant, AddressList list) {
-        AddressManager addressManager = addressManagerFactory.getOrCreateAddressManager(tenant);
+    public AddressList appendAddresses(InstanceId instance, AddressList list) {
+        AddressManager addressManager = addressManagerFactory.getOrCreateAddressManager(instance);
         Set<DestinationGroup> destinationGroups = new HashSet<>(addressManager.listDestinationGroups());
         destinationGroups.addAll(list.getDestinationGroups());
         addressManager.destinationsUpdated(destinationGroups);

@@ -16,12 +16,12 @@
 package enmasse.address.controller.model;
 
 /**
- * Represents a tenant
+ * Represents a instance
  */
-public final class TenantId {
+public final class InstanceId {
     private final String idString;
 
-    private TenantId(String idString) {
+    private InstanceId(String idString) {
         this.idString = idString;
     }
 
@@ -30,8 +30,8 @@ public final class TenantId {
         return idString;
     }
 
-    public static TenantId fromString(String idString) {
-        return new TenantId(idString);
+    public static InstanceId fromString(String idString) {
+        return new InstanceId(idString);
     }
 
     @Override
@@ -39,9 +39,9 @@ public final class TenantId {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        TenantId tenantId = (TenantId) o;
+        InstanceId instanceId = (InstanceId) o;
 
-        return idString.equals(tenantId.idString);
+        return idString.equals(instanceId.idString);
     }
 
     @Override

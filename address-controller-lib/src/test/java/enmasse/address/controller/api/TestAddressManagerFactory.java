@@ -2,30 +2,30 @@ package enmasse.address.controller.api;
 
 import enmasse.address.controller.admin.AddressManager;
 import enmasse.address.controller.admin.AddressManagerFactory;
-import enmasse.address.controller.model.TenantId;
+import enmasse.address.controller.model.InstanceId;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
 public class TestAddressManagerFactory implements AddressManagerFactory {
-    private final Map<TenantId, AddressManager> managerMap = new HashMap<>();
+    private final Map<InstanceId, AddressManager> managerMap = new HashMap<>();
 
-    public TestAddressManagerFactory addManager(TenantId tenant, AddressManager addressManager) {
-        managerMap.put(tenant, addressManager);
+    public TestAddressManagerFactory addManager(InstanceId instance, AddressManager addressManager) {
+        managerMap.put(instance, addressManager);
         return this;
     }
 
     @Override
-    public Optional<AddressManager> getAddressManager(TenantId tenant) {
-        return Optional.ofNullable(managerMap.get(tenant));
+    public Optional<AddressManager> getAddressManager(InstanceId instance) {
+        return Optional.ofNullable(managerMap.get(instance));
     }
 
     @Override
-    public AddressManager getOrCreateAddressManager(TenantId tenant) {
-        if (!managerMap.containsKey(tenant)) {
-            managerMap.put(tenant, new TestAddressManager());
+    public AddressManager getOrCreateAddressManager(InstanceId instance) {
+        if (!managerMap.containsKey(instance)) {
+            managerMap.put(instance, new TestAddressManager());
         }
-        return managerMap.get(tenant);
+        return managerMap.get(instance);
     }
 }

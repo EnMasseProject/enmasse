@@ -21,7 +21,7 @@ import enmasse.address.controller.admin.TemplateRepository;
 import enmasse.address.controller.model.Destination;
 import enmasse.address.controller.model.DestinationGroup;
 import enmasse.address.controller.model.Flavor;
-import enmasse.address.controller.model.TenantId;
+import enmasse.address.controller.model.InstanceId;
 import enmasse.address.controller.openshift.DestinationCluster;
 import enmasse.config.LabelKeys;
 import io.fabric8.kubernetes.api.model.*;
@@ -53,7 +53,7 @@ public class TemplateDestinationClusterGeneratorTest {
     @Before
     public void setUp() {
         mockClient = mock(OpenShiftClient.class);
-        generator = new TemplateDestinationClusterGenerator(TenantId.fromString("mytenant"), mockClient, new TemplateRepository(mockClient), flavorManager);
+        generator = new TemplateDestinationClusterGenerator(InstanceId.fromString("myinstance"), mockClient, new TemplateRepository(mockClient), flavorManager);
         flavorManager.flavorsUpdated(Collections.singletonMap("vanilla", new Flavor.Builder("vanilla", "test").build()));
     }
 
@@ -72,7 +72,7 @@ public class TemplateDestinationClusterGeneratorTest {
             Map<String, String> rlabel = resource.getMetadata().getLabels();
             assertNotNull(rlabel.get(LabelKeys.GROUP_ID));
             assertThat(rlabel.get(LabelKeys.GROUP_ID), is("foo-bar-baz-cockooa"));
-            assertThat(rlabel.get(LabelKeys.ADDRESS_CONFIG), is("address-config-mytenant-foo-bar-baz-cockooa"));
+            assertThat(rlabel.get(LabelKeys.ADDRESS_CONFIG), is("address-config-myinstance-foo-bar-baz-cockooa"));
             assertThat(map.getData().size(), is(1));
         }
         List<ParameterValue> parameters = captor.getAllValues();
@@ -91,7 +91,7 @@ public class TemplateDestinationClusterGeneratorTest {
             Map<String, String> rlabel = resource.getMetadata().getLabels();
             assertNotNull(rlabel.get(LabelKeys.GROUP_ID));
             assertThat(rlabel.get(LabelKeys.GROUP_ID), is("foo-bar"));
-            assertThat(rlabel.get(LabelKeys.ADDRESS_CONFIG), is("address-config-mytenant-foo-bar"));
+            assertThat(rlabel.get(LabelKeys.ADDRESS_CONFIG), is("address-config-myinstance-foo-bar"));
         }
         List<ParameterValue> parameters = captor.getAllValues();
         assertThat(parameters.size(), is(3));

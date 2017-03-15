@@ -20,7 +20,7 @@ import enmasse.address.controller.admin.AddressManager;
 import enmasse.address.controller.admin.AddressManagerFactory;
 import enmasse.address.controller.model.Destination;
 import enmasse.address.controller.model.DestinationGroup;
-import enmasse.address.controller.model.TenantId;
+import enmasse.address.controller.model.InstanceId;
 import io.vertx.core.Vertx;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,7 +47,7 @@ public abstract class RestServiceBase {
     }
 
     private AddressManager getAddressManager() {
-        return addressManagerFactory.getOrCreateAddressManager(TenantId.fromString("mytenant"));
+        return addressManagerFactory.getOrCreateAddressManager(InstanceId.fromString("myinstance"));
     }
 
     protected void getAddresses(@Suspended final AsyncResponse response) {

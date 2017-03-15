@@ -16,7 +16,7 @@
 package enmasse.address.controller.admin;
 
 import enmasse.address.controller.generator.TemplateParameter;
-import enmasse.address.controller.model.TenantId;
+import enmasse.address.controller.model.InstanceId;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.client.ConfigBuilder;
 import io.fabric8.kubernetes.client.dsl.ClientKubernetesListMixedOperation;
@@ -47,11 +47,11 @@ public class AddressManagerFactoryTest {
 
         Map<String, String> presentLabels = new HashMap<>();
         presentLabels.put("app", "enmasse");
-        presentLabels.put("tenant", "mytenant");
+        presentLabels.put("instance", "myinstance");
 
         Map<String, String> notPresentLabels = new HashMap<>();
         notPresentLabels.put("app", "enmasse");
-        notPresentLabels.put("tenant", "notpresent");
+        notPresentLabels.put("instance", "notpresent");
 
         ClientNonNamespaceOperation presentOp = mock(ClientNonNamespaceOperation.class);
         ClientNonNamespaceOperation notPresentOp = mock(ClientNonNamespaceOperation.class);
@@ -61,11 +61,11 @@ public class AddressManagerFactoryTest {
         when(presentOp.withLabels(presentLabels)).thenReturn(presentOp);
 
         when(notPresentOp.list()).thenReturn(new NamespaceListBuilder().build());
-        when(presentOp.list()).thenReturn(new NamespaceListBuilder().addToItems(new NamespaceBuilder().withMetadata(new ObjectMetaBuilder().withName("enmasse-mytenant").build()).build()).build());
+        when(presentOp.list()).thenReturn(new NamespaceListBuilder().addToItems(new NamespaceBuilder().withMetadata(new ObjectMetaBuilder().withName("enmasse-myinstance").build()).build()).build());
 
-        AddressManagerFactoryImpl tenantManager = new AddressManagerFactoryImpl(mockClient, tenant -> mockClient, new FlavorManager(), true, false);
-        assertFalse(tenantManager.getAddressManager(TenantId.fromString("notpresent")).isPresent());
-        assertTrue(tenantManager.getAddressManager(TenantId.fromString("mytenant")).isPresent());
+        AddressManagerFactoryImpl instanceManager = new AddressManagerFactoryImpl(mockClient, instance -> mockClient, new FlavorManager(), true, false);
+        assertFalse(instanceManager.getAddressManager(InstanceId.fromString("notpresent")).isPresent());
+        assertTrue(instanceManager.getAddressManager(InstanceId.fromString("myinstance")).isPresent());
     }
 
     @Test
@@ -85,7 +85,7 @@ public class AddressManagerFactoryTest {
         ClientMixedOperation templateOp = mock(ClientMixedOperation.class);
         when(mockClient.templates()).thenReturn(templateOp);
         ClientTemplateResource templateResource = mock(ClientTemplateResource.class);
-        when(templateOp.withName("enmasse-tenant-infra")).thenReturn(templateResource);
+        when(templateOp.withName("enmasse-instance-infra")).thenReturn(templateResource);
 
         ArgumentCaptor<ParameterValue> captor = ArgumentCaptor.forClass(ParameterValue.class);
         when(templateResource.process(captor.capture())).thenReturn(new KubernetesListBuilder().addNewConfigMapItem().withNewMetadata().withName("testmap").endMetadata().endConfigMapItem().build());
@@ -93,14 +93,14 @@ public class AddressManagerFactoryTest {
         ArgumentCaptor<KubernetesList> listCaptor = ArgumentCaptor.forClass(KubernetesList.class);
         when(listOp.create(listCaptor.capture())).thenReturn(null);
 
-        AddressManagerFactoryImpl tenantManager = new AddressManagerFactoryImpl(mockClient, tenant -> mockClient, new FlavorManager(), true, false);
+        AddressManagerFactoryImpl instanceManager = new AddressManagerFactoryImpl(mockClient, instance -> mockClient, new FlavorManager(), true, false);
 
-        AddressManager manager = tenantManager.getOrCreateAddressManager(TenantId.fromString("mytenant"));
+        AddressManager manager = instanceManager.getOrCreateAddressManager(InstanceId.fromString("myinstance"));
         assertNotNull(manager);
         List<ParameterValue> values = captor.getAllValues();
         assertThat(values.size(), is(1));
-        assertThat(values.get(0).getName(), is(TemplateParameter.TENANT));
-        assertThat(values.get(0).getValue(), is("mytenant"));
+        assertThat(values.get(0).getName(), is(TemplateParameter.INSTANCE));
+        assertThat(values.get(0).getValue(), is("myinstance"));
         assertThat(listCaptor.getValue().getItems().size(), is(1));
     }
 }

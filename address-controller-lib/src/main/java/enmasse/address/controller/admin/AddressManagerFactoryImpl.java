@@ -18,7 +18,7 @@ package enmasse.address.controller.admin;
 import enmasse.address.controller.generator.DestinationClusterGenerator;
 import enmasse.address.controller.generator.TemplateDestinationClusterGenerator;
 import enmasse.address.controller.generator.TemplateParameter;
-import enmasse.address.controller.model.TenantId;
+import enmasse.address.controller.model.InstanceId;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.openshift.api.model.DoneableTemplate;
 import io.fabric8.openshift.api.model.Template;
@@ -32,95 +32,95 @@ import java.util.Map;
 import java.util.Optional;
 
 /**
- * Manages namespaces and infrastructure for a single tenant.
+ * Manages namespaces and infrastructure for a single instance.
  */
 public class AddressManagerFactoryImpl implements AddressManagerFactory {
     private final OpenShiftClient openShiftClient;
-    private final TenantClientFactory clientFactory;
+    private final InstanceClientFactory clientFactory;
     private final FlavorRepository flavorRepository;
     private final TemplateRepository templateRepository;
-    private final boolean isMultitenant;
-    private final String tenantTemplateName;
+    private final boolean isMultiinstance;
+    private final String instanceTemplateName;
 
-    public AddressManagerFactoryImpl(OpenShiftClient openShiftClient, TenantClientFactory clientFactory, FlavorRepository flavorRepository, boolean isMultitenant, boolean useTLS) {
+    public AddressManagerFactoryImpl(OpenShiftClient openShiftClient, InstanceClientFactory clientFactory, FlavorRepository flavorRepository, boolean isMultiinstance, boolean useTLS) {
         this.openShiftClient = openShiftClient;
         this.templateRepository = new TemplateRepository(openShiftClient);
         this.clientFactory = clientFactory;
         this.flavorRepository = flavorRepository;
-        this.isMultitenant = isMultitenant;
-        this.tenantTemplateName = useTLS ? "tls-enmasse-tenant-infra" : "enmasse-tenant-infra";
+        this.isMultiinstance = isMultiinstance;
+        this.instanceTemplateName = useTLS ? "tls-enmasse-instance-infra" : "enmasse-instance-infra";
     }
 
     @Override
-    public Optional<AddressManager> getAddressManager(TenantId tenant) {
-        return hasTenant(tenant) ? Optional.of(createManager(tenant)) : Optional.empty();
+    public Optional<AddressManager> getAddressManager(InstanceId instance) {
+        return hasInstance(instance) ? Optional.of(createManager(instance)) : Optional.empty();
     }
 
-    private AddressManager createManager(TenantId tenant) {
-        OpenShiftClient tenantClient = createTenantClient(tenant);
+    private AddressManager createManager(InstanceId instance) {
+        OpenShiftClient instanceClient = createInstanceClient(instance);
 
-        DestinationClusterGenerator generator = new TemplateDestinationClusterGenerator(tenant, tenantClient, templateRepository, flavorRepository);
-        return new AddressManagerImpl(new OpenShiftHelper(tenant, tenantClient), generator);
+        DestinationClusterGenerator generator = new TemplateDestinationClusterGenerator(instance, instanceClient, templateRepository, flavorRepository);
+        return new AddressManagerImpl(new OpenShiftHelper(instance, instanceClient), generator);
     }
 
-    private OpenShiftClient createTenantClient(TenantId tenant) {
-        if (isMultitenant) {
-            return clientFactory.createClient(tenant);
+    private OpenShiftClient createInstanceClient(InstanceId instance) {
+        if (isMultiinstance) {
+            return clientFactory.createClient(instance);
         } else {
             return openShiftClient;
         }
     }
 
     @Override
-    public AddressManager getOrCreateAddressManager(TenantId tenant) {
-        if (hasTenant(tenant)) {
-            return createManager(tenant);
+    public AddressManager getOrCreateAddressManager(InstanceId instance) {
+        if (hasInstance(instance)) {
+            return createManager(instance);
         } else {
-            return deployTenant(tenant);
+            return deployInstance(instance);
         }
     }
 
-    private void createNamespace(TenantId tenant) {
-        if (isMultitenant) {
+    private void createNamespace(InstanceId instance) {
+        if (isMultiinstance) {
             openShiftClient.namespaces().createNew()
                     .editOrNewMetadata()
-                    .withName("enmasse-" + tenant.toString())
+                    .withName("enmasse-" + instance.toString())
                     .addToLabels("app", "enmasse")
-                    .addToLabels("tenant", tenant.toString())
+                    .addToLabels("instance", instance.toString())
                     .endMetadata()
                     .done();
         }
     }
 
-    private boolean hasTenant(TenantId tenant) {
+    private boolean hasInstance(InstanceId instance) {
         Map<String, String> labelMap = new HashMap<>();
         labelMap.put("app", "enmasse");
-        labelMap.put("tenant", tenant.toString());
-        if (isMultitenant) {
+        labelMap.put("instance", instance.toString());
+        if (isMultiinstance) {
             return !openShiftClient.namespaces().withLabels(labelMap).list().getItems().isEmpty();
         } else {
             return !openShiftClient.services().withLabels(labelMap).list().getItems().isEmpty();
         }
     }
 
-    private AddressManager deployTenant(TenantId tenant) {
-        createNamespace(tenant);
+    private AddressManager deployInstance(InstanceId instance) {
+        createNamespace(instance);
 
-        ClientTemplateResource<Template, KubernetesList, DoneableTemplate> templateProcessor = templateRepository.getTemplate(tenantTemplateName);
+        ClientTemplateResource<Template, KubernetesList, DoneableTemplate> templateProcessor = templateRepository.getTemplate(instanceTemplateName);
 
         Map<String, String> paramMap = new LinkedHashMap<>();
 
         // If the flavor is shared, there is only one instance of it, so give it the name of the flavor
-        paramMap.put(TemplateParameter.TENANT, OpenShiftHelper.nameSanitizer(tenant.toString()));
+        paramMap.put(TemplateParameter.INSTANCE, OpenShiftHelper.nameSanitizer(instance.toString()));
 
         ParameterValue parameters[] = new ParameterValue[1];
-        parameters[0] = new ParameterValue(TemplateParameter.TENANT, OpenShiftHelper.nameSanitizer(tenant.toString()));
+        parameters[0] = new ParameterValue(TemplateParameter.INSTANCE, OpenShiftHelper.nameSanitizer(instance.toString()));
         KubernetesList items = templateProcessor.process(parameters);
 
-        OpenShiftClient tenantClient = createTenantClient(tenant);
-        tenantClient.lists().create(items);
+        OpenShiftClient instanceClient = createInstanceClient(instance);
+        instanceClient.lists().create(items);
 
-        DestinationClusterGenerator generator = new TemplateDestinationClusterGenerator(tenant, tenantClient, templateRepository, flavorRepository);
-        return new AddressManagerImpl(new OpenShiftHelper(tenant, tenantClient), generator);
+        DestinationClusterGenerator generator = new TemplateDestinationClusterGenerator(instance, instanceClient, templateRepository, flavorRepository);
+        return new AddressManagerImpl(new OpenShiftHelper(instance, instanceClient), generator);
     }
 }

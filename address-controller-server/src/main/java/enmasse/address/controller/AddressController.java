@@ -47,9 +47,9 @@ public class AddressController implements Runnable, AutoCloseable {
                 .build());
 
         this.flavorManager = new FlavorManager();
-        this.addressManagerFactory = new AddressManagerFactoryImpl(controllerClient, tenant -> new DefaultOpenShiftClient(new ConfigBuilder(controllerClient.getConfiguration())
-                .withNamespace("enmasse-" + tenant)
-                .build()), flavorManager, options.isMultitenant(), options.useTLS());
+        this.addressManagerFactory = new AddressManagerFactoryImpl(controllerClient, instance -> new DefaultOpenShiftClient(new ConfigBuilder(controllerClient.getConfiguration())
+                .withNamespace("enmasse-" + instance)
+                .build()), flavorManager, options.isMultiinstance(), options.useTLS());
         this.server = new AMQPServer(addressManagerFactory, flavorManager, options.port());
         this.restServer = new HTTPServer(addressManagerFactory, flavorManager);
         this.flavorWatcher = new ConfigAdapter(controllerClient, "flavor", flavorManager::configUpdated);
