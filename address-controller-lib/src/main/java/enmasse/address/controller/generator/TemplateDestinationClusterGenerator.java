@@ -18,6 +18,7 @@ package enmasse.address.controller.generator;
 
 import enmasse.address.controller.admin.FlavorRepository;
 import enmasse.address.controller.admin.OpenShiftHelper;
+import enmasse.address.controller.admin.TemplateRepository;
 import enmasse.address.controller.model.Destination;
 import enmasse.address.controller.model.DestinationGroup;
 import enmasse.address.controller.model.Flavor;
@@ -45,12 +46,14 @@ import java.util.stream.Collectors;
 public class TemplateDestinationClusterGenerator implements DestinationClusterGenerator {
 
     private final OpenShiftClient osClient;
+    private final TemplateRepository templateRepository;
     private final FlavorRepository flavorRepository;
     private final TenantId tenant;
 
-    public TemplateDestinationClusterGenerator(TenantId tenant, OpenShiftClient osClient, FlavorRepository flavorRepository) {
+    public TemplateDestinationClusterGenerator(TenantId tenant, OpenShiftClient osClient, TemplateRepository templateRepository, FlavorRepository flavorRepository) {
         this.tenant = tenant;
         this.osClient = osClient;
+        this.templateRepository = templateRepository;
         this.flavorRepository = flavorRepository;
     }
 
@@ -76,7 +79,7 @@ public class TemplateDestinationClusterGenerator implements DestinationClusterGe
     }
 
     private KubernetesList processTemplate(Destination first, DestinationGroup destinationGroup, Flavor flavor) {
-                ClientTemplateResource<Template, KubernetesList, DoneableTemplate> templateProcessor = osClient.templates().withName(flavor.templateName());
+        ClientTemplateResource<Template, KubernetesList, DoneableTemplate> templateProcessor = templateRepository.getTemplate(flavor.templateName());
 
         Map<String, String> paramMap = new LinkedHashMap<>(flavor.templateParameters());
 

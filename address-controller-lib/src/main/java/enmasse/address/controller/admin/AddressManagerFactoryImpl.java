@@ -38,11 +38,13 @@ public class AddressManagerFactoryImpl implements AddressManagerFactory {
     private final OpenShiftClient openShiftClient;
     private final TenantClientFactory clientFactory;
     private final FlavorRepository flavorRepository;
+    private final TemplateRepository templateRepository;
     private final boolean isMultitenant;
     private final String tenantTemplateName;
 
     public AddressManagerFactoryImpl(OpenShiftClient openShiftClient, TenantClientFactory clientFactory, FlavorRepository flavorRepository, boolean isMultitenant, boolean useTLS) {
         this.openShiftClient = openShiftClient;
+        this.templateRepository = new TemplateRepository(openShiftClient);
         this.clientFactory = clientFactory;
         this.flavorRepository = flavorRepository;
         this.isMultitenant = isMultitenant;
@@ -57,7 +59,7 @@ public class AddressManagerFactoryImpl implements AddressManagerFactory {
     private AddressManager createManager(TenantId tenant) {
         OpenShiftClient tenantClient = createTenantClient(tenant);
 
-        DestinationClusterGenerator generator = new TemplateDestinationClusterGenerator(tenant, tenantClient, flavorRepository);
+        DestinationClusterGenerator generator = new TemplateDestinationClusterGenerator(tenant, tenantClient, templateRepository, flavorRepository);
         return new AddressManagerImpl(new OpenShiftHelper(tenant, tenantClient), generator);
     }
 
@@ -81,7 +83,7 @@ public class AddressManagerFactoryImpl implements AddressManagerFactory {
     private void createNamespace(TenantId tenant) {
         if (isMultitenant) {
             openShiftClient.namespaces().createNew()
-                    .editMetadata()
+                    .editOrNewMetadata()
                     .withName("enmasse-" + tenant.toString())
                     .addToLabels("app", "enmasse")
                     .addToLabels("tenant", tenant.toString())
@@ -104,7 +106,7 @@ public class AddressManagerFactoryImpl implements AddressManagerFactory {
     private AddressManager deployTenant(TenantId tenant) {
         createNamespace(tenant);
 
-        ClientTemplateResource<Template, KubernetesList, DoneableTemplate> templateProcessor = openShiftClient.templates().withName(tenantTemplateName);
+        ClientTemplateResource<Template, KubernetesList, DoneableTemplate> templateProcessor = templateRepository.getTemplate(tenantTemplateName);
 
         Map<String, String> paramMap = new LinkedHashMap<>();
 
@@ -118,7 +120,7 @@ public class AddressManagerFactoryImpl implements AddressManagerFactory {
         OpenShiftClient tenantClient = createTenantClient(tenant);
         tenantClient.lists().create(items);
 
-        DestinationClusterGenerator generator = new TemplateDestinationClusterGenerator(tenant, tenantClient, flavorRepository);
+        DestinationClusterGenerator generator = new TemplateDestinationClusterGenerator(tenant, tenantClient, templateRepository, flavorRepository);
         return new AddressManagerImpl(new OpenShiftHelper(tenant, tenantClient), generator);
     }
 }

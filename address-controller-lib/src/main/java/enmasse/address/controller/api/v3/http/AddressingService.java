@@ -14,66 +14,38 @@ import javax.ws.rs.core.Response;
 import java.util.Optional;
 
 @Path("/v3/address")
-public class AddressingService {
-    private static final Logger log = LoggerFactory.getLogger(AddressingService.class.getName());
-    private final ApiHandler apiHandler;
+public class AddressingService extends AddressingServiceBase {
     private final TenantId tenantId = TenantId.fromString("mytenant");
 
     public AddressingService(@Context ApiHandler apiHandler) {
-        this.apiHandler = apiHandler;
+        super(apiHandler);
     }
 
     @GET
     @Produces({MediaType.APPLICATION_JSON})
     public Response listAddresses() {
-        try {
-            return Response.ok(apiHandler.getAddresses(tenantId)).build();
-        } catch (Exception e) {
-            log.warn("Error listing addresses", e);
-            return Response.serverError().build();
-        }
+        return listAddresses(tenantId);
     }
 
     @PUT
     @Produces({MediaType.APPLICATION_JSON})
     @Consumes({MediaType.APPLICATION_JSON})
     public Response putAddresses(AddressList addressList) {
-        try {
-            return Response.ok(apiHandler.putAddresses(tenantId, addressList)).build();
-        } catch (Exception e) {
-            log.warn("Error putting addresses", e);
-            return Response.serverError().build();
-        }
+        return putAddresses(tenantId, addressList);
     }
 
     @POST
     @Produces({MediaType.APPLICATION_JSON})
     @Consumes({MediaType.APPLICATION_JSON})
     public Response appendAddress(Address address) {
-        try {
-            return Response.ok(apiHandler.appendAddress(tenantId, address)).build();
-        } catch (Exception e) {
-            log.warn("Error appending addresses", e);
-            return Response.serverError().build();
-        }
+        return appendAddress(tenantId, address);
     }
 
     @GET
     @Path("{address}")
     @Produces({MediaType.APPLICATION_JSON})
     public Response getAddress(@PathParam("address") String address) {
-        try {
-            Optional<Address> addr = apiHandler.getAddress(tenantId, address);
-
-            if (addr.isPresent()) {
-                return Response.ok(addr.get()).build();
-            } else {
-                return Response.status(404).build();
-            }
-        } catch (Exception e) {
-            log.warn("Error getting address", e);
-            return Response.serverError().build();
-        }
+        return getAddress(tenantId, address);
     }
 
     @PUT
@@ -81,18 +53,13 @@ public class AddressingService {
     @Produces({MediaType.APPLICATION_JSON})
     @Consumes({MediaType.APPLICATION_JSON})
     public Response putAddress(@PathParam("address") String address) {
-        return Response.status(405).build();
+        return putAddress(tenantId, address);
     }
 
     @DELETE
     @Path("{address}")
     @Produces({MediaType.APPLICATION_JSON})
     public Response deleteAddress(@PathParam("address") String address) {
-        try {
-            return Response.ok(apiHandler.deleteAddress(tenantId, address)).build();
-        } catch (Exception e) {
-            log.warn("Error deleting address", e);
-            return Response.serverError().build();
-        }
+        return deleteAddress(tenantId, address);
     }
 }
