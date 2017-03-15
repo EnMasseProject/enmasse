@@ -1,7 +1,7 @@
 local version = std.extVar("VERSION");
 local common = import "common.jsonnet";
 {
-  services(tenant)::
+  services(instance)::
   [
     {
       "apiVersion": "v1",
@@ -10,7 +10,7 @@ local common = import "common.jsonnet";
         "name": "admin",
         "labels": {
           "app": "enmasse",
-          "tenant": tenant
+          "instance": instance
         }
       },
       "spec": {
@@ -30,12 +30,12 @@ local common = import "common.jsonnet";
         ],
         "selector": {
           "name": "admin",
-          "tenant": tenant
+          "instance": instance
         }
       }
     }
   ],
-  deployment(tenant, configserv_image, ragent_image, scheduler_image)::
+  deployment(instance, configserv_image, ragent_image, scheduler_image)::
   {
     "apiVersion": "extensions/v1beta1",
     "kind": "Deployment",
@@ -43,9 +43,9 @@ local common = import "common.jsonnet";
       "labels": {
         "app": "enmasse",
         "name": "admin",
-        "tenant": tenant
+        "instance": instance
       },
-      "name": tenant + "-admin"
+      "name": instance + "-admin"
     },
     "spec": {
       "replicas": 1,
@@ -54,7 +54,7 @@ local common = import "common.jsonnet";
           "labels": {
             "name": "admin",
             "app": "enmasse",
-            "tenant": tenant
+            "instance": instance
           }
         },
         "spec": {

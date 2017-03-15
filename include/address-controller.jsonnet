@@ -31,7 +31,7 @@ local common = import "common.jsonnet";
       }
     }
   },
-  deployment(secure, image_repo, multitenant)::
+  deployment(secure, image_repo, multiinstance)::
     {
       "apiVersion": "extensions/v1beta1",
       "kind": "Deployment",
@@ -55,8 +55,8 @@ local common = import "common.jsonnet";
             "serviceAccount": "enmasse-service-account",
             "containers": [
               common.container2("address-controller", image_repo, "amqp", 5672, "http", 8080, "256Mi", [{
-                "name": "MULTITENANT",
-                "value": multitenant
+                "name": "MULTIINSTANCE",
+                "value": multiinstance
               }, {
                 "name": "TLS",
                 "value": secure

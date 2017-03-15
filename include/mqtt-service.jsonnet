@@ -11,14 +11,14 @@
     "protocol": "TCP",
     "targetPort": 8883
   },
-  generate(secure, tenant)::
+  generate(secure, instance)::
     {
       "apiVersion": "v1",
       "kind": "Service",
       "metadata": {
         "labels": {
           "app": "enmasse",
-          "tenant": tenant
+          "instance": instance
         },
         "name": "mqtt"
       },
@@ -26,7 +26,7 @@
         "ports": if secure then [port, securePort] else [port],
         "selector": {
           "name": "mqtt-gateway",
-          "tenant": tenant
+          "instance": instance
         }
       }
     }

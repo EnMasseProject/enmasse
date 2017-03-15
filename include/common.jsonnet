@@ -59,7 +59,7 @@ local version = std.extVar("VERSION");
     }
   },
 
-  service(tenant, name, selector_name, port_name, port, target_port)::
+  service(instance, name, selector_name, port_name, port, target_port)::
   {
     "apiVersion": "v1",
     "kind": "Service",
@@ -67,7 +67,7 @@ local version = std.extVar("VERSION");
       "name": name,
       "labels": {
         "app": "enmasse",
-        "tenant": tenant
+        "instance": instance
       }
     },
     "spec": {
@@ -81,7 +81,7 @@ local version = std.extVar("VERSION");
       ],
       "selector": {
         "name": selector_name,
-        "tenant": tenant
+        "instance": instance
       }
     }
   }

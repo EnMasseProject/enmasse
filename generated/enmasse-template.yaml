@@ -17,11 +17,11 @@ objects:
     kind: Deployment
     metadata:
       labels:
-        address_config: address-config-${TENANT}-${NAME}
+        address_config: address-config-${INSTANCE}-${NAME}
         app: enmasse
         group_id: "${NAME}"
-        tenant: "${TENANT}"
-      name: "${TENANT}-${NAME}"
+        instance: "${INSTANCE}"
+      name: "${INSTANCE}-${NAME}"
     spec:
       replicas: 1
       template:
@@ -29,8 +29,8 @@ objects:
           labels:
             app: enmasse
             group_id: "${NAME}"
+            instance: "${INSTANCE}"
             role: broker
-            tenant: "${TENANT}"
         spec:
           containers:
           - env:
@@ -55,10 +55,10 @@ objects:
               name: core
             volumeMounts:
             - mountPath: "/var/run/artemis"
-              name: vol-${TENANT}-${NAME}
+              name: vol-${INSTANCE}-${NAME}
           volumes:
           - emptyDir: {}
-            name: vol-${TENANT}-${NAME}
+            name: vol-${INSTANCE}-${NAME}
   parameters:
   - description: Storage capacity required for volume claims
     name: STORAGE_CAPACITY
@@ -75,8 +75,8 @@ objects:
   - description: The link capacity setting for router
     name: ROUTER_LINK_CAPACITY
     value: '50'
-  - description: A valid tenant name for the instance
-    name: TENANT
+  - description: A valid instance name for the instance
+    name: INSTANCE
     required: true
   - description: A valid name for the instance
     name: NAME
@@ -97,8 +97,8 @@ objects:
       labels:
         app: enmasse
         group_id: "${NAME}"
-        tenant: "${TENANT}"
-      name: pvc-${TENANT}-${NAME}
+        instance: "${INSTANCE}"
+      name: pvc-${INSTANCE}-${NAME}
     spec:
       accessModes:
       - ReadWriteMany
@@ -109,11 +109,11 @@ objects:
     kind: Deployment
     metadata:
       labels:
-        address_config: address-config-${TENANT}-${NAME}
+        address_config: address-config-${INSTANCE}-${NAME}
         app: enmasse
         group_id: "${NAME}"
-        tenant: "${TENANT}"
-      name: "${TENANT}-${NAME}"
+        instance: "${INSTANCE}"
+      name: "${INSTANCE}-${NAME}"
     spec:
       replicas: 1
       template:
@@ -121,8 +121,8 @@ objects:
           labels:
             app: enmasse
             group_id: "${NAME}"
+            instance: "${INSTANCE}"
             role: broker
-            tenant: "${TENANT}"
         spec:
           containers:
           - env:
@@ -147,11 +147,11 @@ objects:
               name: core
             volumeMounts:
             - mountPath: "/var/run/artemis"
-              name: vol-${TENANT}-${NAME}
+              name: vol-${INSTANCE}-${NAME}
           volumes:
-          - name: vol-${TENANT}-${NAME}
+          - name: vol-${INSTANCE}-${NAME}
             persistentVolumeClaim:
-              claimName: pvc-${TENANT}-${NAME}
+              claimName: pvc-${INSTANCE}-${NAME}
   parameters:
   - description: Storage capacity required for volume claims
     name: STORAGE_CAPACITY
@@ -168,8 +168,8 @@ objects:
   - description: The link capacity setting for router
     name: ROUTER_LINK_CAPACITY
     value: '50'
-  - description: A valid tenant name for the instance
-    name: TENANT
+  - description: A valid instance name for the instance
+    name: INSTANCE
     required: true
   - description: A valid name for the instance
     name: NAME
@@ -188,11 +188,11 @@ objects:
     kind: Deployment
     metadata:
       labels:
-        address_config: address-config-${TENANT}-${NAME}
+        address_config: address-config-${INSTANCE}-${NAME}
         app: enmasse
         group_id: "${NAME}"
-        tenant: "${TENANT}"
-      name: "${TENANT}-${NAME}"
+        instance: "${INSTANCE}"
+      name: "${INSTANCE}-${NAME}"
     spec:
       replicas: 1
       template:
@@ -200,8 +200,8 @@ objects:
           labels:
             app: enmasse
             group_id: "${NAME}"
+            instance: "${INSTANCE}"
             role: broker
-            tenant: "${TENANT}"
         spec:
           containers:
           - env:
@@ -226,7 +226,7 @@ objects:
               name: core
             volumeMounts:
             - mountPath: "/var/run/artemis"
-              name: vol-${TENANT}-${NAME}
+              name: vol-${INSTANCE}-${NAME}
           - env:
             - name: LINK_CAPACITY
               value: "${ROUTER_LINK_CAPACITY}"
@@ -268,7 +268,7 @@ objects:
                 memory: 128Mi
           volumes:
           - emptyDir: {}
-            name: vol-${TENANT}-${NAME}
+            name: vol-${INSTANCE}-${NAME}
   parameters:
   - description: Storage capacity required for volume claims
     name: STORAGE_CAPACITY
@@ -285,8 +285,8 @@ objects:
   - description: The link capacity setting for router
     name: ROUTER_LINK_CAPACITY
     value: '50'
-  - description: A valid tenant name for the instance
-    name: TENANT
+  - description: A valid instance name for the instance
+    name: INSTANCE
     required: true
   - description: A valid name for the instance
     name: NAME
@@ -307,8 +307,8 @@ objects:
       labels:
         app: enmasse
         group_id: "${NAME}"
-        tenant: "${TENANT}"
-      name: pvc-${TENANT}-${NAME}
+        instance: "${INSTANCE}"
+      name: pvc-${INSTANCE}-${NAME}
     spec:
       accessModes:
       - ReadWriteMany
@@ -319,11 +319,11 @@ objects:
     kind: Deployment
     metadata:
       labels:
-        address_config: address-config-${TENANT}-${NAME}
+        address_config: address-config-${INSTANCE}-${NAME}
         app: enmasse
         group_id: "${NAME}"
-        tenant: "${TENANT}"
-      name: "${TENANT}-${NAME}"
+        instance: "${INSTANCE}"
+      name: "${INSTANCE}-${NAME}"
     spec:
       replicas: 1
       template:
@@ -331,8 +331,8 @@ objects:
           labels:
             app: enmasse
             group_id: "${NAME}"
+            instance: "${INSTANCE}"
             role: broker
-            tenant: "${TENANT}"
         spec:
           containers:
           - env:
@@ -357,7 +357,7 @@ objects:
               name: core
             volumeMounts:
             - mountPath: "/var/run/artemis"
-              name: vol-${TENANT}-${NAME}
+              name: vol-${INSTANCE}-${NAME}
           - env:
             - name: LINK_CAPACITY
               value: "${ROUTER_LINK_CAPACITY}"
@@ -398,9 +398,9 @@ objects:
               requests:
                 memory: 128Mi
           volumes:
-          - name: vol-${TENANT}-${NAME}
+          - name: vol-${INSTANCE}-${NAME}
             persistentVolumeClaim:
-              claimName: pvc-${TENANT}-${NAME}
+              claimName: pvc-${INSTANCE}-${NAME}
   parameters:
   - description: Storage capacity required for volume claims
     name: STORAGE_CAPACITY
@@ -417,8 +417,8 @@ objects:
   - description: The link capacity setting for router
     name: ROUTER_LINK_CAPACITY
     value: '50'
-  - description: A valid tenant name for the instance
-    name: TENANT
+  - description: A valid instance name for the instance
+    name: INSTANCE
     required: true
   - description: A valid name for the instance
     name: NAME
@@ -431,16 +431,16 @@ objects:
   metadata:
     labels:
       app: enmasse
-    name: enmasse-tenant-infra
+    name: enmasse-instance-infra
   objects:
   - apiVersion: extensions/v1beta1
     kind: Deployment
     metadata:
       labels:
         app: enmasse
+        instance: "${INSTANCE}"
         name: qdrouterd
-        tenant: "${TENANT}"
-      name: "${TENANT}-qdrouterd"
+      name: "${INSTANCE}-qdrouterd"
     spec:
       replicas: 1
       template:
@@ -448,8 +448,8 @@ objects:
           labels:
             app: enmasse
             capability: router
+            instance: "${INSTANCE}"
             name: qdrouterd
-            tenant: "${TENANT}"
         spec:
           containers:
           - env:
@@ -477,7 +477,7 @@ objects:
         service.alpha.openshift.io/infrastructure: 'true'
       labels:
         app: enmasse
-        tenant: "${TENANT}"
+        instance: "${INSTANCE}"
       name: messaging
     spec:
       ports:
@@ -491,23 +491,23 @@ objects:
         targetPort: 55673
       selector:
         capability: router
-        tenant: "${TENANT}"
+        instance: "${INSTANCE}"
   - apiVersion: extensions/v1beta1
     kind: Deployment
     metadata:
       labels:
         app: enmasse
+        instance: "${INSTANCE}"
         name: subserv
-        tenant: "${TENANT}"
-      name: "${TENANT}-subserv"
+      name: "${INSTANCE}-subserv"
     spec:
       replicas: 1
       template:
         metadata:
           labels:
             app: enmasse
+            instance: "${INSTANCE}"
             name: subserv
-            tenant: "${TENANT}"
         spec:
           containers:
           - env: []
@@ -530,7 +530,7 @@ objects:
     metadata:
       labels:
         app: enmasse
-        tenant: "${TENANT}"
+        instance: "${INSTANCE}"
       name: subscription
     spec:
       ports:
@@ -539,24 +539,24 @@ objects:
         protocol: TCP
         targetPort: 5672
       selector:
+        instance: "${INSTANCE}"
         name: subserv
-        tenant: "${TENANT}"
   - apiVersion: extensions/v1beta1
     kind: Deployment
     metadata:
       labels:
         app: enmasse
+        instance: "${INSTANCE}"
         name: mqtt-gateway
-        tenant: "${TENANT}"
-      name: "${TENANT}-mqtt-gateway"
+      name: "${INSTANCE}-mqtt-gateway"
     spec:
       replicas: 1
       template:
         metadata:
           labels:
             app: enmasse
+            instance: "${INSTANCE}"
             name: mqtt-gateway
-            tenant: "${TENANT}"
         spec:
           containers:
           - image: "${MQTT_GATEWAY_REPO}:latest"
@@ -574,7 +574,7 @@ objects:
     metadata:
       labels:
         app: enmasse
-        tenant: "${TENANT}"
+        instance: "${INSTANCE}"
       name: mqtt
     spec:
       ports:
@@ -583,24 +583,24 @@ objects:
         protocol: TCP
         targetPort: 1883
       selector:
+        instance: "${INSTANCE}"
         name: mqtt-gateway
-        tenant: "${TENANT}"
   - apiVersion: extensions/v1beta1
     kind: Deployment
     metadata:
       labels:
         app: enmasse
+        instance: "${INSTANCE}"
         name: mqtt-lwt
-        tenant: "${TENANT}"
-      name: "${TENANT}-mqtt-lwt"
+      name: "${INSTANCE}-mqtt-lwt"
     spec:
       replicas: 1
       template:
         metadata:
           labels:
             app: enmasse
+            instance: "${INSTANCE}"
             name: mqtt-lwt
-            tenant: "${TENANT}"
         spec:
           containers:
           - image: "${MQTT_LWT_REPO}:latest"
@@ -610,17 +610,17 @@ objects:
     metadata:
       labels:
         app: enmasse
+        instance: "${INSTANCE}"
         name: admin
-        tenant: "${TENANT}"
-      name: "${TENANT}-admin"
+      name: "${INSTANCE}-admin"
     spec:
       replicas: 1
       template:
         metadata:
           labels:
             app: enmasse
+            instance: "${INSTANCE}"
             name: admin
-            tenant: "${TENANT}"
         spec:
           containers:
           - env:
@@ -681,7 +681,7 @@ objects:
     metadata:
       labels:
         app: enmasse
-        tenant: "${TENANT}"
+        instance: "${INSTANCE}"
       name: admin
     spec:
       ports:
@@ -692,8 +692,8 @@ objects:
       - name: queue-scheduler
         port: 55667
       selector:
+        instance: "${INSTANCE}"
         name: admin
-        tenant: "${TENANT}"
   parameters:
   - description: The image to use for the router
     name: ROUTER_REPO
@@ -723,8 +723,8 @@ objects:
   - description: The image to use for the MQTT LWT
     name: MQTT_LWT_REPO
     value: enmasseproject/mqtt-lwt
-  - description: The tenant this infrastructure is deployed for
-    name: TENANT
+  - description: The instance this infrastructure is deployed for
+    name: INSTANCE
     required: true
 - apiVersion: extensions/v1beta1
   kind: Deployment
@@ -743,8 +743,8 @@ objects:
       spec:
         containers:
         - env:
-          - name: MULTITENANT
-            value: "${MULTITENANT}"
+          - name: MULTIINSTANCE
+            value: "${MULTIINSTANCE}"
           - name: TLS
             value: 'false'
           image: "${ADDRESS_CONTROLLER_REPO}:latest"
@@ -821,7 +821,7 @@ parameters:
   name: RESTAPI_HOSTNAME
 - description: If set to true, the address controller will deploy infrastructure to
     separate namespaces
-  name: MULTITENANT
+  name: MULTIINSTANCE
   value: 'false'
 - description: The docker image to use for the address controller
   name: ADDRESS_CONTROLLER_REPO

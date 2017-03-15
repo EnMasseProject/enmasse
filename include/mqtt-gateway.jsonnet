@@ -2,17 +2,17 @@ local version = std.extVar("VERSION");
 local mqtt = import "mqtt.jsonnet";
 local common = import "common.jsonnet";
 {
-  deployment(secure, tenant, image_repo)::
+  deployment(secure, instance, image_repo)::
     {
       "apiVersion": "extensions/v1beta1",
       "kind": "Deployment",
       "metadata": {
         "labels": {
           "name": "mqtt-gateway",
-          "tenant": tenant,
+          "instance": instance,
           "app": "enmasse"
         },
-        "name": tenant + "-mqtt-gateway"
+        "name": instance + "-mqtt-gateway"
       },
       "spec": {
         "replicas": 1,
@@ -20,7 +20,7 @@ local common = import "common.jsonnet";
           "metadata": {
             "labels": {
               "name": "mqtt-gateway",
-              "tenant": tenant,
+              "instance": instance,
               "app": "enmasse"
             }
           },

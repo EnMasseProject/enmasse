@@ -17,7 +17,7 @@
     "protocol": "TCP",
     "targetPort": 55673
   },
-  generate(secure, tenant, admin)::
+  generate(secure, instance, admin)::
     {
       local admin_deps = [
         {
@@ -63,7 +63,7 @@
       "metadata": {
         "labels": {
           "app": "enmasse",
-          "tenant": tenant
+          "instance": instance
         },
         "name": "messaging",
         "annotations": {
@@ -75,7 +75,7 @@
         "ports": if secure then [port, securePort, internalPort] else [port, internalPort],
         "selector": {
           "capability": "router",
-          "tenant": tenant
+          "instance": instance
         }
       }
     }

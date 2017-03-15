@@ -2,7 +2,7 @@ local storage = import "storage-template.jsonnet";
 local addressController = import "address-controller.jsonnet";
 local restapiRoute = import "restapi-route.jsonnet";
 local flavorConfig = import "flavor.jsonnet";
-local enmasseInfra = import "enmasse-tenant-infra.jsonnet";
+local enmasseInfra = import "enmasse-instance-infra.jsonnet";
 {
   generate(secure, compact, with_kafka)::
   {
@@ -20,7 +20,7 @@ local enmasseInfra = import "enmasse-tenant-infra.jsonnet";
                  storage.template(true, false, secure),
                  storage.template(true, true, secure),
                  enmasseInfra.generate(secure, compact, with_kafka),
-                 addressController.deployment(std.toString(secure), "${ADDRESS_CONTROLLER_REPO}", "${MULTITENANT}"),
+                 addressController.deployment(std.toString(secure), "${ADDRESS_CONTROLLER_REPO}", "${MULTIINSTANCE}"),
                  addressController.service,
                  restapiRoute.generate("${RESTAPI_HOSTNAME}"),
                  flavorConfig.generate(secure) ],
@@ -30,7 +30,7 @@ local enmasseInfra = import "enmasse-tenant-infra.jsonnet";
         "description": "The hostname to use for the exposed route for the REST API"
       },
       {
-        "name": "MULTITENANT",
+        "name": "MULTIINSTANCE",
         "description": "If set to true, the address controller will deploy infrastructure to separate namespaces",
         "value": "false"
       },

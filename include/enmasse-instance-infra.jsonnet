@@ -20,7 +20,7 @@ local amqpKafkaBridgeService = import "amqp-kafka-bridge-service.jsonnet";
 {
   generate(secure, compact, with_kafka)::
   {
-    local templateName = (if secure then "tls-enmasse-tenant-infra" else "enmasse-tenant-infra"),
+    local templateName = (if secure then "tls-enmasse-instance-infra" else "enmasse-instance-infra"),
     "apiVersion": "v1",
     "kind": "Template",
     "metadata": {
@@ -30,34 +30,34 @@ local amqpKafkaBridgeService = import "amqp-kafka-bridge-service.jsonnet";
       "name": templateName
     },
     local common = [
-      qdrouterd.deployment(secure, "${TENANT}", "${ROUTER_REPO}"),
-      messagingService.generate(secure, "${TENANT}", true),
-      subserv.deployment("${TENANT}", "${SUBSERV_REPO}"),
-      subserv.service("${TENANT}"),
-      mqttGateway.deployment(secure, "${TENANT}", "${MQTT_GATEWAY_REPO}"),
-      mqttService.generate(secure, "${TENANT}"),
-      mqttLwt.deployment("${TENANT}", "${MQTT_LWT_REPO}")
+      qdrouterd.deployment(secure, "${INSTANCE}", "${ROUTER_REPO}"),
+      messagingService.generate(secure, "${INSTANCE}", true),
+      subserv.deployment("${INSTANCE}", "${SUBSERV_REPO}"),
+      subserv.service("${INSTANCE}"),
+      mqttGateway.deployment(secure, "${INSTANCE}", "${MQTT_GATEWAY_REPO}"),
+      mqttService.generate(secure, "${INSTANCE}"),
+      mqttLwt.deployment("${INSTANCE}", "${MQTT_LWT_REPO}")
     ],
 
     local compactAdmin = [
-      admin.deployment("${TENANT}", "${CONFIGSERV_REPO}", "${RAGENT_REPO}", "${QUEUE_SCHEDULER_REPO}")
-    ] + admin.services("${TENANT}"),
+      admin.deployment("${INSTANCE}", "${CONFIGSERV_REPO}", "${RAGENT_REPO}", "${QUEUE_SCHEDULER_REPO}")
+    ] + admin.services("${INSTANCE}"),
 
     local fullAdmin = [
-      configserv.deployment("${TENANT}", "${CONFIGSERV_REPO}"),
-      configserv.service("${TENANT}"),
-      ragent.deployment("${TENANT}", "${RAGENT_REPO}"),
-      ragent.service("${TENANT}"),
-      queueScheduler.service("${TENANT}"),
-      queueScheduler.deployment("${TENANT}", "${QUEUE_SCHEDULER_REPO}")
+      configserv.deployment("${INSTANCE}", "${CONFIGSERV_REPO}"),
+      configserv.service("${INSTANCE}"),
+      ragent.deployment("${INSTANCE}", "${RAGENT_REPO}"),
+      ragent.service("${INSTANCE}"),
+      queueScheduler.service("${INSTANCE}"),
+      queueScheduler.deployment("${INSTANCE}", "${QUEUE_SCHEDULER_REPO}")
     ],
 
     local kafka = [ 
-      amqpKafkaBridgeService.generate(secure, "${TENANT}"),
-      amqpKafkaBridge.deployment("${TENANT}", "${AMQP_KAFKA_BRIDGE_REPO}")
+      amqpKafkaBridgeService.generate(secure, "${INSTANCE}"),
+      amqpKafkaBridge.deployment("${INSTANCE}", "${AMQP_KAFKA_BRIDGE_REPO}")
     ],
 
-    local securedRoutes = [ messagingRoute.generate("${TENANT}", "${MESSAGING_HOSTNAME}"), mqttRoute.generate("${TENANT}", "${MQTT_GATEWAY_HOSTNAME}") ],
+    local securedRoutes = [ messagingRoute.generate("${INSTANCE}", "${MESSAGING_HOSTNAME}"), mqttRoute.generate("${INSTANCE}", "${MQTT_GATEWAY_HOSTNAME}") ],
 
     "objects": common + 
       if compact then compactAdmin else fullAdmin +
@@ -114,8 +114,8 @@ local amqpKafkaBridgeService = import "amqp-kafka-bridge-service.jsonnet";
         "value": "enmasseproject/mqtt-lwt"
       },
       {
-        "name": "TENANT",
-        "description": "The tenant this infrastructure is deployed for",
+        "name": "INSTANCE",
+        "description": "The instance this infrastructure is deployed for",
         "required": true
       }
     ]

@@ -1,9 +1,9 @@
 local version = std.extVar("VERSION");
 local common = import "common.jsonnet";
 {
-  service(tenant)::
-    common.service(tenant, "configuration", "configserv", "amqp", 5672, 5672),
-  deployment(tenant, image_repo)::
+  service(instance)::
+    common.service(instance, "configuration", "configserv", "amqp", 5672, 5672),
+  deployment(instance, image_repo)::
     {
       "apiVersion": "extensions/v1beta1",
       "kind": "Deployment",
@@ -11,9 +11,9 @@ local common = import "common.jsonnet";
         "labels": {
           "app": "enmasse",
           "name": "configserv",
-          "tenant": tenant
+          "instance": instance
         },
-        "name": tenant + "-configserv"
+        "name": instance + "-configserv"
       },
       "spec": {
         "replicas": 1,
@@ -22,7 +22,7 @@ local common = import "common.jsonnet";
             "labels": {
               "app": "enmasse",
               "name": "configserv",
-              "tenant": tenant
+              "instance": instance
             }
           },
           "spec": {

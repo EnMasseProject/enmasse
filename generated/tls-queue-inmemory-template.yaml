@@ -10,11 +10,11 @@ objects:
   kind: Deployment
   metadata:
     labels:
-      address_config: address-config-${TENANT}-${NAME}
+      address_config: address-config-${INSTANCE}-${NAME}
       app: enmasse
       group_id: "${NAME}"
-      tenant: "${TENANT}"
-    name: "${TENANT}-${NAME}"
+      instance: "${INSTANCE}"
+    name: "${INSTANCE}-${NAME}"
   spec:
     replicas: 1
     template:
@@ -22,8 +22,8 @@ objects:
         labels:
           app: enmasse
           group_id: "${NAME}"
+          instance: "${INSTANCE}"
           role: broker
-          tenant: "${TENANT}"
       spec:
         containers:
         - env:
@@ -48,10 +48,10 @@ objects:
             name: core
           volumeMounts:
           - mountPath: "/var/run/artemis"
-            name: vol-${TENANT}-${NAME}
+            name: vol-${INSTANCE}-${NAME}
         volumes:
         - emptyDir: {}
-          name: vol-${TENANT}-${NAME}
+          name: vol-${INSTANCE}-${NAME}
         - name: ssl-certs
           secret:
             secretName: qdrouterd-certs
@@ -71,8 +71,8 @@ parameters:
 - description: The link capacity setting for router
   name: ROUTER_LINK_CAPACITY
   value: '50'
-- description: A valid tenant name for the instance
-  name: TENANT
+- description: A valid instance name for the instance
+  name: INSTANCE
   required: true
 - description: A valid name for the instance
   name: NAME

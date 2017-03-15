@@ -1,12 +1,12 @@
 {
-  generate(tenant, hostname)::
+  generate(instance, hostname)::
   {
     "kind": "Route",
     "apiVersion": "v1",
     "metadata": {
         "labels": {
           "app": "enmasse",
-          "tenant": tenant
+          "instance": instance
         },
         "name": "mqtt"
     },

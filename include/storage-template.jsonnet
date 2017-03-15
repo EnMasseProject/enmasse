@@ -9,9 +9,9 @@ local forwarder = import "forwarder.jsonnet";
   template(multicast, persistence, secure)::
     local addrtype = (if multicast then "topic" else "queue");
     local addressEnv = (if multicast then { name: "TOPIC_NAME", value: "${ADDRESS}" } else { name: "QUEUE_NAME", value: "${ADDRESS}" });
-    local volumeName = "vol-${TENANT}-${NAME}";
+    local volumeName = "vol-${INSTANCE}-${NAME}";
     local templateName = "%s%s-%s" % [if secure then "tls-" else "", addrtype, (if persistence then "persisted" else "inmemory")];
-    local claimName = "pvc-${TENANT}-${NAME}";
+    local claimName = "pvc-${INSTANCE}-${NAME}";
     {
       "apiVersion": "v1",
       "kind": "Template",
@@ -26,12 +26,12 @@ local forwarder = import "forwarder.jsonnet";
         "apiVersion": "extensions/v1beta1",
         "kind": "Deployment",
         "metadata": {
-          "name": "${TENANT}-${NAME}",
+          "name": "${INSTANCE}-${NAME}",
           "labels": {
             "app": "enmasse",
             "group_id": "${NAME}",
-            "tenant": "${TENANT}",
-            "address_config": "address-config-${TENANT}-${NAME}"
+            "instance": "${INSTANCE}",
+            "address_config": "address-config-${INSTANCE}-${NAME}"
           }
         },
         "spec": {
@@ -42,7 +42,7 @@ local forwarder = import "forwarder.jsonnet";
                 "app": "enmasse",
                 "role": "broker",
                 "group_id": "${NAME}",
-                "tenant": "${TENANT}"
+                "instance": "${INSTANCE}"
               }
             },
             "spec": {
@@ -67,7 +67,7 @@ local forwarder = import "forwarder.jsonnet";
           "name": claimName,
           "labels": {
             "group_id": "${NAME}",
-            "tenant": "${TENANT}",
+            "instance": "${INSTANCE}",
             "app": "enmasse"
           }
         },
@@ -112,8 +112,8 @@ local forwarder = import "forwarder.jsonnet";
           "value": "50"
         },
         {
-          "name": "TENANT",
-          "description": "A valid tenant name for the instance",
+          "name": "INSTANCE",
+          "description": "A valid instance name for the instance",
           "required": true
         },
         {
