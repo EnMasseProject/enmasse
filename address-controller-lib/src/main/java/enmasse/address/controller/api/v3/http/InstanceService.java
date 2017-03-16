@@ -37,7 +37,8 @@ public class InstanceService {
     @Consumes({MediaType.APPLICATION_JSON})
     public Response createInstance(Instance instance) {
         try {
-            return Response.ok(new Instance(instanceManager.create(instance.getInstance()))).build();
+            instanceManager.create(instance.getInstance());
+            return Response.ok().build();
         } catch (Exception e) {
             log.warn("Error creating instance", e);
             return Response.serverError().build();

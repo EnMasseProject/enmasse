@@ -20,9 +20,8 @@ public class TestInstanceManager implements InstanceManager {
     }
 
     @Override
-    public Instance create(Instance instance) {
+    public void create(Instance instance) {
         instances.put(instance.id(), instance);
-        return instance;
     }
 
     @Override

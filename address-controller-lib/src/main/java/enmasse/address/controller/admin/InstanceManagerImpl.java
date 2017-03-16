@@ -56,11 +56,11 @@ public class InstanceManagerImpl implements InstanceManager {
     }
 
     @Override
-    public Instance create(Instance instance) {
-        return create(instance, true);
+    public void create(Instance instance) {
+        create(instance, true);
     }
 
-    public Instance create(Instance instance, boolean createNamespace) {
+    public void create(Instance instance, boolean createNamespace) {
         if (createNamespace) {
             openShift.createNamespace(instance.id());
             openShift.addDefaultViewPolicy(instance.id());
@@ -76,8 +76,6 @@ public class InstanceManagerImpl implements InstanceManager {
 
         OpenShift instanceClient = openShift.mutateClient(instance.id());
         instanceClient.create(items);
-
-        return get(instance.id().getId()).get();
     }
 
     @Override

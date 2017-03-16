@@ -12,7 +12,7 @@ import java.util.Set;
 public interface InstanceManager {
     Optional<Instance> get(InstanceId instanceId);
     Optional<Instance> get(String instanceId);
-    Instance create(Instance instance);
+    void create(Instance instance);
     void delete(Instance instance);
     Set<Instance> list();
 }
