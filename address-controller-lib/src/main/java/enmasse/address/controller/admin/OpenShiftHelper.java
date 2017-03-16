@@ -151,6 +151,7 @@ public class OpenShiftHelper implements OpenShift {
                     .withName(instance.getNamespace())
                     .addToLabels("app", "enmasse")
                     .addToLabels("instance", instance.getId())
+                    .addToLabels("type", "instance")
                 .endMetadata()
                 .done();
     }
