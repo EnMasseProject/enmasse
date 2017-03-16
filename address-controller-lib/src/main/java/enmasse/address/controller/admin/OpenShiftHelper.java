@@ -27,6 +27,7 @@ import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.client.dsl.ClientResource;
 import io.fabric8.openshift.api.model.DoneablePolicyBinding;
 import io.fabric8.openshift.api.model.PolicyBinding;
+import io.fabric8.openshift.api.model.Route;
 import io.fabric8.openshift.client.OpenShiftClient;
 import io.fabric8.openshift.client.ParameterValue;
 import org.slf4j.Logger;
@@ -106,6 +107,11 @@ public class OpenShiftHelper implements OpenShift {
     @Override
     public void create(KubernetesList resources) {
         client.lists().inNamespace(instance.getNamespace()).create(resources);
+    }
+
+    @Override
+    public InstanceId getInstanceId() {
+        return instance;
     }
 
     @Override
@@ -199,12 +205,22 @@ public class OpenShiftHelper implements OpenShift {
     }
 
     @Override
-    public boolean hasNamespace(Map<String, String> labelMap) {
-        return !client.namespaces().withLabels(labelMap).list().getItems().isEmpty();
+    public List<Namespace> listNamespaces(Map<String, String> labelMap) {
+        return client.namespaces().withLabels(labelMap).list().getItems();
     }
 
     @Override
-    public boolean hasService(Map<String, String> labelMap) {
-        return !client.services().withLabels(labelMap).list().getItems().isEmpty();
+    public List<Route> getRoutes(InstanceId instanceId) {
+        return client.routes().inNamespace(instanceId.getNamespace()).list().getItems();
+    }
+
+    @Override
+    public void deleteNamespace(String namespace) {
+        client.namespaces().withName(namespace).delete();
+    }
+
+    @Override
+    public boolean hasService(String service) {
+        return client.services().withName(service).get() != null;
     }
 }

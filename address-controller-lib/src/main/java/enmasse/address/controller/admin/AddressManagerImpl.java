@@ -45,7 +45,7 @@ public class AddressManagerImpl implements AddressManager {
 
     @Override
     public synchronized void destinationsUpdated(Set<DestinationGroup> newGroups) {
-        newGroups.stream().forEach(AddressManagerImpl::validateDestinationGroup);
+        newGroups.forEach(AddressManagerImpl::validateDestinationGroup);
 
         List<DestinationCluster> clusterList = openShift.listClusters();
         log.info("Brokers got updated to " + newGroups.size() + " groups. We have " + clusterList.size() + " groups: " + clusterList.stream().map(DestinationCluster::getDestinationGroup).collect(Collectors.toList()));

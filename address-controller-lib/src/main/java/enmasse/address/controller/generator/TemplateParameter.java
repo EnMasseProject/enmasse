@@ -22,6 +22,8 @@ package enmasse.address.controller.generator;
 public interface TemplateParameter {
     String NAME = "NAME";
     String ADDRESS = "ADDRESS";
-    String MULTICAST = "MULTICAST";
     String INSTANCE = "INSTANCE";
+    String MESSAGING_HOSTNAME = "MESSAGING_HOSTNAME";
+    String MQTT_HOSTNAME = "MQTT_HOSTNAME";
+    String CONSOLE_HOSTNAME = "CONSOLE_HOSTNAME";
 }

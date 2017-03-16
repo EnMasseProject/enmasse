@@ -34,6 +34,21 @@ public class Instance {
         return instanceId;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Instance instance = (Instance) o;
+
+        return instanceId.equals(instance.instanceId);
+    }
+
+    @Override
+    public int hashCode() {
+        return instanceId.hashCode();
+    }
+
     public static class Builder {
         private InstanceId instanceId;
         private Optional<String> messagingHost = Optional.empty();

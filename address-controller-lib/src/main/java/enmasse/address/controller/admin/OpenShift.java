@@ -6,6 +6,7 @@ import enmasse.address.controller.openshift.DestinationCluster;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.Namespace;
+import io.fabric8.openshift.api.model.Route;
 import io.fabric8.openshift.client.ParameterValue;
 
 import java.util.List;
@@ -20,6 +21,7 @@ public interface OpenShift {
         return name.toLowerCase().replaceAll("[^a-z0-9]", "-");
     }
 
+    InstanceId getInstanceId();
     List<DestinationCluster> listClusters();
     void updateDestinations(DestinationGroup destinationGroup);
     void create(KubernetesList resources);
@@ -29,6 +31,8 @@ public interface OpenShift {
     OpenShift mutateClient(InstanceId instance);
     KubernetesList processTemplate(String templateName, ParameterValue ... parameterValues);
     void addDefaultViewPolicy(InstanceId instance);
-    boolean hasNamespace(Map<String, String> labelMap);
-    boolean hasService(Map<String, String> labelMap);
+    List<Namespace> listNamespaces(Map<String, String> labelMap);
+    List<Route> getRoutes(InstanceId instanceId);
+    void deleteNamespace(String namespace);
+    boolean hasService(String service);
 }

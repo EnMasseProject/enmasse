@@ -18,16 +18,11 @@ package enmasse.address.controller.admin;
 import enmasse.address.controller.generator.TemplateParameter;
 import enmasse.address.controller.model.InstanceId;
 import io.fabric8.kubernetes.api.model.*;
-import io.fabric8.kubernetes.client.ConfigBuilder;
-import io.fabric8.kubernetes.client.dsl.ClientKubernetesListMixedOperation;
-import io.fabric8.kubernetes.client.dsl.ClientMixedOperation;
-import io.fabric8.kubernetes.client.dsl.ClientNonNamespaceOperation;
-import io.fabric8.openshift.client.OpenShiftClient;
 import io.fabric8.openshift.client.ParameterValue;
-import io.fabric8.openshift.client.dsl.ClientTemplateResource;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -48,15 +43,22 @@ public class AddressManagerFactoryTest {
         Map<String, String> presentLabels = new HashMap<>();
         presentLabels.put("app", "enmasse");
         presentLabels.put("instance", "myinstance");
+        presentLabels.put("type", "instance");
 
         Map<String, String> notPresentLabels = new HashMap<>();
         notPresentLabels.put("app", "enmasse");
         notPresentLabels.put("instance", "notpresent");
+        notPresentLabels.put("type", "instance");
 
-        when(mockClient.hasNamespace(notPresentLabels)).thenReturn(false);
-        when(mockClient.hasNamespace(presentLabels)).thenReturn(true);
+        when(mockClient.listNamespaces(notPresentLabels)).thenReturn(Collections.emptyList());
+        when(mockClient.listNamespaces(presentLabels)).thenReturn(Collections.singletonList(new NamespaceBuilder()
+                .withNewMetadata()
+                .withName("enmasse-myinstance")
+                .addToLabels("instance", "myinstance")
+                .endMetadata()
+                .build()));
 
-        AddressManagerFactoryImpl instanceManager = new AddressManagerFactoryImpl(mockClient, new FlavorManager(), true, false);
+        AddressManagerFactoryImpl instanceManager = new AddressManagerFactoryImpl(mockClient, new InstanceManagerImpl(mockClient, "test"), new FlavorManager());
         assertFalse(instanceManager.getAddressManager(InstanceId.withId("notpresent")).isPresent());
         assertTrue(instanceManager.getAddressManager(InstanceId.withId("myinstance")).isPresent());
     }
@@ -68,12 +70,19 @@ public class AddressManagerFactoryTest {
         when(mockClient.mutateClient(any())).thenReturn(mockClient);
         KubernetesList list = new KubernetesListBuilder().addToItems(new ConfigMapBuilder().withMetadata(new ObjectMetaBuilder().withName("foo").build()).build()).build();
         when(mockClient.processTemplate(anyString(), any())).thenReturn(list);
+        when(mockClient.listNamespaces(any())).thenReturn(Collections.emptyList())
+                .thenReturn(Collections.singletonList(new NamespaceBuilder()
+                .withNewMetadata()
+                .withName("enmasse-myinstance")
+                .addToLabels("instance", "myinstance")
+                .endMetadata()
+                .build()));
         ArgumentCaptor<KubernetesList> listCaptor = ArgumentCaptor.forClass(KubernetesList.class);
 
         ArgumentCaptor<ParameterValue> captor = ArgumentCaptor.forClass(ParameterValue.class);
 
 
-        AddressManagerFactoryImpl instanceManager = new AddressManagerFactoryImpl(mockClient, new FlavorManager(), true, false);
+        AddressManagerFactoryImpl instanceManager = new AddressManagerFactoryImpl(mockClient, new InstanceManagerImpl(mockClient, "test"), new FlavorManager());
 
         AddressManager manager = instanceManager.getOrCreateAddressManager(InstanceId.withId("myinstance"));
         assertNotNull(manager);

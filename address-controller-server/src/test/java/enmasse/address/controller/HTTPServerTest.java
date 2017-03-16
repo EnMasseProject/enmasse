@@ -41,7 +41,8 @@ import static org.junit.Assert.assertTrue;
 public class HTTPServerTest {
 
     private Vertx vertx;
-    private TestAddressManagerFactory testInstanceManager;
+    private TestAddressManagerFactory testAddressManagerFactory;
+    private TestInstanceManager testInstanceManager;
     private TestAddressManager testAddressManager;
     private FlavorManager testRepository;
 
@@ -49,10 +50,11 @@ public class HTTPServerTest {
     public void setup() throws InterruptedException {
         vertx = Vertx.vertx();
         testAddressManager = new TestAddressManager();
-        testInstanceManager = new TestAddressManagerFactory().addManager(InstanceId.withId("myinstance"), testAddressManager);
+        testInstanceManager = new TestInstanceManager();
+        testAddressManagerFactory = new TestAddressManagerFactory().addManager(InstanceId.withId("myinstance"), testAddressManager);
         testRepository = new FlavorManager();
         CountDownLatch latch = new CountDownLatch(1);
-        vertx.deployVerticle(new HTTPServer(testInstanceManager, testRepository), c -> {
+        vertx.deployVerticle(new HTTPServer(testAddressManagerFactory, testInstanceManager, testRepository), c -> {
             latch.countDown();
         });
         latch.await(1, TimeUnit.MINUTES);
