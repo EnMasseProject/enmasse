@@ -24,6 +24,6 @@ public interface TemplateParameter {
     String ADDRESS = "ADDRESS";
     String INSTANCE = "INSTANCE";
     String MESSAGING_HOSTNAME = "MESSAGING_HOSTNAME";
-    String MQTT_HOSTNAME = "MQTT_HOSTNAME";
+    String MQTT_HOSTNAME = "MQTT_GATEWAY_HOSTNAME";
     String CONSOLE_HOSTNAME = "CONSOLE_HOSTNAME";
 }
