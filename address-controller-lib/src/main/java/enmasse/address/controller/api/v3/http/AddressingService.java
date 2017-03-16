@@ -4,18 +4,15 @@ import enmasse.address.controller.api.v3.Address;
 import enmasse.address.controller.api.v3.AddressList;
 import enmasse.address.controller.api.v3.ApiHandler;
 import enmasse.address.controller.model.InstanceId;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.util.Optional;
 
 @Path("/v3/address")
 public class AddressingService extends AddressingServiceBase {
-    private final InstanceId instanceId = InstanceId.fromString("myinstance");
+    private final InstanceId instanceId = InstanceId.withId("myinstance");
 
     public AddressingService(@Context ApiHandler apiHandler) {
         super(apiHandler);

@@ -48,7 +48,7 @@ public class AmqpAddressingApiTest {
     public void setup() {
         addressManager = new TestAddressManager();
         instanceManager = new TestAddressManagerFactory();
-        instanceManager.addManager(InstanceId.fromString("myinstance"), addressManager);
+        instanceManager.addManager(InstanceId.withId("myinstance"), addressManager);
         addressingService = new AddressingService(new ApiHandler(instanceManager));
         addressManager.destinationsUpdated(Sets.newSet(
             createGroup(new Destination("addr1", "addr1", false, false, Optional.empty(), Optional.empty())),

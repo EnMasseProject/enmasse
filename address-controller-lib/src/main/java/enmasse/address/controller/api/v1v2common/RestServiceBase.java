@@ -47,7 +47,7 @@ public abstract class RestServiceBase {
     }
 
     private AddressManager getAddressManager() {
-        return addressManagerFactory.getOrCreateAddressManager(InstanceId.fromString("myinstance"));
+        return addressManagerFactory.getOrCreateAddressManager(InstanceId.withId("myinstance"));
     }
 
     protected void getAddresses(@Suspended final AsyncResponse response) {

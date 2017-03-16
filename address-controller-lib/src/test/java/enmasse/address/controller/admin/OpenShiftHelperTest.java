@@ -101,13 +101,19 @@ public class OpenShiftHelperTest {
         ExtensionsAPIGroupDSL extensions = mock(ExtensionsAPIGroupDSL.class);
 
         OpenShiftClient mockClient = mock(OpenShiftClient.class);
-        OpenShiftHelper helper = new OpenShiftHelper(InstanceId.fromString("myinstance"), mockClient);
+        OpenShiftHelper helper = new OpenShiftHelper(InstanceId.withId("myinstance"), mockClient);
         when(mockClient.deploymentConfigs()).thenReturn(dcOp);
         when(mockClient.extensions()).thenReturn(extensions);
         when(extensions.deployments()).thenReturn(dOp);
         when(mockClient.persistentVolumeClaims()).thenReturn(pvcOp);
         when(mockClient.configMaps()).thenReturn(mapOp);
         when(mockClient.replicationControllers()).thenReturn(rcOp);
+
+        when(dcOp.inNamespace(anyString())).thenReturn(dcOp);
+        when(dOp.inNamespace(anyString())).thenReturn(dOp);
+        when(pvcOp.inNamespace(anyString())).thenReturn(pvcOp);
+        when(mapOp.inNamespace(anyString())).thenReturn(mapOp);
+        when(rcOp.inNamespace(anyString())).thenReturn(rcOp);
 
         when(pvcOp.withLabel(anyString(), anyString())).thenReturn(pvcOp);
         when(dcOp.withLabel(anyString(), anyString())).thenReturn(dcOp);
@@ -148,7 +154,7 @@ public class OpenShiftHelperTest {
     @Test
     public void testCreateAddressConfig() {
         OpenShiftClient mockClient = mock(OpenShiftClient.class);
-        OpenShiftHelper helper = new OpenShiftHelper(InstanceId.fromString("myinstance"), mockClient);
+        OpenShiftHelper helper = new OpenShiftHelper(InstanceId.withId("myinstance"), mockClient);
         DestinationGroup group = new DestinationGroup("group1", Sets.newSet(new Destination("queue1", "group1", true, false, Optional.of("vanilla"), Optional.empty()),
                 new Destination("queue2", "group1", true, false, Optional.of("vanilla"), Optional.empty())));
 

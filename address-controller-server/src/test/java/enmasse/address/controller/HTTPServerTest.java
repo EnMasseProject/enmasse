@@ -49,7 +49,7 @@ public class HTTPServerTest {
     public void setup() throws InterruptedException {
         vertx = Vertx.vertx();
         testAddressManager = new TestAddressManager();
-        testInstanceManager = new TestAddressManagerFactory().addManager(InstanceId.fromString("myinstance"), testAddressManager);
+        testInstanceManager = new TestAddressManagerFactory().addManager(InstanceId.withId("myinstance"), testAddressManager);
         testRepository = new FlavorManager();
         CountDownLatch latch = new CountDownLatch(1);
         vertx.deployVerticle(new HTTPServer(testInstanceManager, testRepository), c -> {

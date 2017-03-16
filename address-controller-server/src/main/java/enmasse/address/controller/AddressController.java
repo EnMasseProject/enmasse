@@ -19,6 +19,8 @@ package enmasse.address.controller;
 import enmasse.address.controller.admin.FlavorManager;
 import enmasse.address.controller.admin.AddressManagerFactory;
 import enmasse.address.controller.admin.AddressManagerFactoryImpl;
+import enmasse.address.controller.admin.OpenShiftHelper;
+import enmasse.address.controller.model.InstanceId;
 import io.fabric8.kubernetes.client.ConfigBuilder;
 import io.fabric8.openshift.client.DefaultOpenShiftClient;
 import io.fabric8.openshift.client.OpenShiftClient;
@@ -47,9 +49,8 @@ public class AddressController implements Runnable, AutoCloseable {
                 .build());
 
         this.flavorManager = new FlavorManager();
-        this.addressManagerFactory = new AddressManagerFactoryImpl(controllerClient, instance -> new DefaultOpenShiftClient(new ConfigBuilder(controllerClient.getConfiguration())
-                .withNamespace("enmasse-" + instance)
-                .build()), flavorManager, options.isMultiinstance(), options.useTLS());
+        this.addressManagerFactory = new AddressManagerFactoryImpl(new OpenShiftHelper(InstanceId.withIdAndNamespace(options.openshiftNamespace(), options.openshiftNamespace()), controllerClient)
+                ,flavorManager, options.isMultiinstance(), options.useTLS());
         this.server = new AMQPServer(addressManagerFactory, flavorManager, options.port());
         this.restServer = new HTTPServer(addressManagerFactory, flavorManager);
         this.flavorWatcher = new ConfigAdapter(controllerClient, "flavor", flavorManager::configUpdated);

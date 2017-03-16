@@ -20,14 +20,9 @@ import enmasse.address.controller.generator.TemplateDestinationClusterGenerator;
 import enmasse.address.controller.generator.TemplateParameter;
 import enmasse.address.controller.model.InstanceId;
 import io.fabric8.kubernetes.api.model.KubernetesList;
-import io.fabric8.openshift.api.model.DoneableTemplate;
-import io.fabric8.openshift.api.model.Template;
-import io.fabric8.openshift.client.OpenShiftClient;
 import io.fabric8.openshift.client.ParameterValue;
-import io.fabric8.openshift.client.dsl.ClientTemplateResource;
 
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 
@@ -35,17 +30,13 @@ import java.util.Optional;
  * Manages namespaces and infrastructure for a single instance.
  */
 public class AddressManagerFactoryImpl implements AddressManagerFactory {
-    private final OpenShiftClient openShiftClient;
-    private final InstanceClientFactory clientFactory;
+    private final OpenShift openShift;
     private final FlavorRepository flavorRepository;
-    private final TemplateRepository templateRepository;
     private final boolean isMultiinstance;
     private final String instanceTemplateName;
 
-    public AddressManagerFactoryImpl(OpenShiftClient openShiftClient, InstanceClientFactory clientFactory, FlavorRepository flavorRepository, boolean isMultiinstance, boolean useTLS) {
-        this.openShiftClient = openShiftClient;
-        this.templateRepository = new TemplateRepository(openShiftClient);
-        this.clientFactory = clientFactory;
+    public AddressManagerFactoryImpl(OpenShift openShift, FlavorRepository flavorRepository, boolean isMultiinstance, boolean useTLS) {
+        this.openShift = openShift;
         this.flavorRepository = flavorRepository;
         this.isMultiinstance = isMultiinstance;
         this.instanceTemplateName = useTLS ? "tls-enmasse-instance-infra" : "enmasse-instance-infra";
@@ -57,17 +48,17 @@ public class AddressManagerFactoryImpl implements AddressManagerFactory {
     }
 
     private AddressManager createManager(InstanceId instance) {
-        OpenShiftClient instanceClient = createInstanceClient(instance);
+        OpenShift instanceClient = createInstanceClient(instance);
 
-        DestinationClusterGenerator generator = new TemplateDestinationClusterGenerator(instance, instanceClient, templateRepository, flavorRepository);
-        return new AddressManagerImpl(new OpenShiftHelper(instance, instanceClient), generator);
+        DestinationClusterGenerator generator = new TemplateDestinationClusterGenerator(instance, instanceClient, flavorRepository);
+        return new AddressManagerImpl(instanceClient, generator);
     }
 
-    private OpenShiftClient createInstanceClient(InstanceId instance) {
+    private OpenShift createInstanceClient(InstanceId instance) {
         if (isMultiinstance) {
-            return clientFactory.createClient(instance);
+            return openShift.mutateClient(instance);
         } else {
-            return openShiftClient;
+            return openShift;
         }
     }
 
@@ -82,45 +73,33 @@ public class AddressManagerFactoryImpl implements AddressManagerFactory {
 
     private void createNamespace(InstanceId instance) {
         if (isMultiinstance) {
-            openShiftClient.namespaces().createNew()
-                    .editOrNewMetadata()
-                    .withName("enmasse-" + instance.toString())
-                    .addToLabels("app", "enmasse")
-                    .addToLabels("instance", instance.toString())
-                    .endMetadata()
-                    .done();
+            openShift.createNamespace(instance);
+            openShift.addDefaultViewPolicy(instance);
         }
     }
 
     private boolean hasInstance(InstanceId instance) {
         Map<String, String> labelMap = new HashMap<>();
         labelMap.put("app", "enmasse");
-        labelMap.put("instance", instance.toString());
+        labelMap.put("instance", instance.getId());
         if (isMultiinstance) {
-            return !openShiftClient.namespaces().withLabels(labelMap).list().getItems().isEmpty();
+            return openShift.hasNamespace(labelMap);
         } else {
-            return !openShiftClient.services().withLabels(labelMap).list().getItems().isEmpty();
+            return openShift.hasService(labelMap);
         }
     }
 
     private AddressManager deployInstance(InstanceId instance) {
         createNamespace(instance);
 
-        ClientTemplateResource<Template, KubernetesList, DoneableTemplate> templateProcessor = templateRepository.getTemplate(instanceTemplateName);
-
-        Map<String, String> paramMap = new LinkedHashMap<>();
-
-        // If the flavor is shared, there is only one instance of it, so give it the name of the flavor
-        paramMap.put(TemplateParameter.INSTANCE, OpenShiftHelper.nameSanitizer(instance.toString()));
-
         ParameterValue parameters[] = new ParameterValue[1];
-        parameters[0] = new ParameterValue(TemplateParameter.INSTANCE, OpenShiftHelper.nameSanitizer(instance.toString()));
-        KubernetesList items = templateProcessor.process(parameters);
+        parameters[0] = new ParameterValue(TemplateParameter.INSTANCE, OpenShift.sanitizeName(instance.getId()));
+        KubernetesList items = openShift.processTemplate(instanceTemplateName, parameters);
 
-        OpenShiftClient instanceClient = createInstanceClient(instance);
-        instanceClient.lists().create(items);
+        OpenShift instanceClient = createInstanceClient(instance);
+        instanceClient.create(items);
 
-        DestinationClusterGenerator generator = new TemplateDestinationClusterGenerator(instance, instanceClient, templateRepository, flavorRepository);
-        return new AddressManagerImpl(new OpenShiftHelper(instance, instanceClient), generator);
+        DestinationClusterGenerator generator = new TemplateDestinationClusterGenerator(instance, instanceClient, flavorRepository);
+        return new AddressManagerImpl(instanceClient, generator);
     }
 }

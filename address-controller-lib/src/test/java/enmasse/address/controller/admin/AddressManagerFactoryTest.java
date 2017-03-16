@@ -35,15 +35,15 @@ import java.util.Map;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 public class AddressManagerFactoryTest {
     @Test
     public void testGetAddressManager() {
-        OpenShiftClient mockClient = mock(OpenShiftClient.class);
-
-        when(mockClient.getConfiguration()).thenReturn(new ConfigBuilder().build());
+        OpenShift mockClient = mock(OpenShift.class);
 
         Map<String, String> presentLabels = new HashMap<>();
         presentLabels.put("app", "enmasse");
@@ -53,50 +53,33 @@ public class AddressManagerFactoryTest {
         notPresentLabels.put("app", "enmasse");
         notPresentLabels.put("instance", "notpresent");
 
-        ClientNonNamespaceOperation presentOp = mock(ClientNonNamespaceOperation.class);
-        ClientNonNamespaceOperation notPresentOp = mock(ClientNonNamespaceOperation.class);
-        when(mockClient.namespaces()).thenReturn(presentOp);
+        when(mockClient.hasNamespace(notPresentLabels)).thenReturn(false);
+        when(mockClient.hasNamespace(presentLabels)).thenReturn(true);
 
-        when(presentOp.withLabels(notPresentLabels)).thenReturn(notPresentOp);
-        when(presentOp.withLabels(presentLabels)).thenReturn(presentOp);
-
-        when(notPresentOp.list()).thenReturn(new NamespaceListBuilder().build());
-        when(presentOp.list()).thenReturn(new NamespaceListBuilder().addToItems(new NamespaceBuilder().withMetadata(new ObjectMetaBuilder().withName("enmasse-myinstance").build()).build()).build());
-
-        AddressManagerFactoryImpl instanceManager = new AddressManagerFactoryImpl(mockClient, instance -> mockClient, new FlavorManager(), true, false);
-        assertFalse(instanceManager.getAddressManager(InstanceId.fromString("notpresent")).isPresent());
-        assertTrue(instanceManager.getAddressManager(InstanceId.fromString("myinstance")).isPresent());
+        AddressManagerFactoryImpl instanceManager = new AddressManagerFactoryImpl(mockClient, new FlavorManager(), true, false);
+        assertFalse(instanceManager.getAddressManager(InstanceId.withId("notpresent")).isPresent());
+        assertTrue(instanceManager.getAddressManager(InstanceId.withId("myinstance")).isPresent());
     }
 
     @Test
     public void testGetOrCreateAddressManager() {
-        OpenShiftClient mockClient = mock(OpenShiftClient.class);
+        OpenShift mockClient = mock(OpenShift.class);
 
-        when(mockClient.getConfiguration()).thenReturn(new ConfigBuilder().build());
-        ClientKubernetesListMixedOperation listOp = mock(ClientKubernetesListMixedOperation.class);
-        when(mockClient.lists()).thenReturn(listOp);
-
-        ClientNonNamespaceOperation nsOp = mock(ClientNonNamespaceOperation.class);
-        when(mockClient.namespaces()).thenReturn(nsOp);
-        when(nsOp.withLabels(any())).thenReturn(nsOp);
-        when(nsOp.list()).thenReturn(new NamespaceListBuilder().build());
-        when(nsOp.createNew()).thenReturn(new DoneableNamespace(new NamespaceBuilder().withMetadata(new ObjectMetaBuilder().build()).build()));
-
-        ClientMixedOperation templateOp = mock(ClientMixedOperation.class);
-        when(mockClient.templates()).thenReturn(templateOp);
-        ClientTemplateResource templateResource = mock(ClientTemplateResource.class);
-        when(templateOp.withName("enmasse-instance-infra")).thenReturn(templateResource);
+        when(mockClient.mutateClient(any())).thenReturn(mockClient);
+        KubernetesList list = new KubernetesListBuilder().addToItems(new ConfigMapBuilder().withMetadata(new ObjectMetaBuilder().withName("foo").build()).build()).build();
+        when(mockClient.processTemplate(anyString(), any())).thenReturn(list);
+        ArgumentCaptor<KubernetesList> listCaptor = ArgumentCaptor.forClass(KubernetesList.class);
 
         ArgumentCaptor<ParameterValue> captor = ArgumentCaptor.forClass(ParameterValue.class);
-        when(templateResource.process(captor.capture())).thenReturn(new KubernetesListBuilder().addNewConfigMapItem().withNewMetadata().withName("testmap").endMetadata().endConfigMapItem().build());
 
-        ArgumentCaptor<KubernetesList> listCaptor = ArgumentCaptor.forClass(KubernetesList.class);
-        when(listOp.create(listCaptor.capture())).thenReturn(null);
 
-        AddressManagerFactoryImpl instanceManager = new AddressManagerFactoryImpl(mockClient, instance -> mockClient, new FlavorManager(), true, false);
+        AddressManagerFactoryImpl instanceManager = new AddressManagerFactoryImpl(mockClient, new FlavorManager(), true, false);
 
-        AddressManager manager = instanceManager.getOrCreateAddressManager(InstanceId.fromString("myinstance"));
+        AddressManager manager = instanceManager.getOrCreateAddressManager(InstanceId.withId("myinstance"));
         assertNotNull(manager);
+        verify(mockClient).create(listCaptor.capture());
+        verify(mockClient).processTemplate(anyString(), captor.capture());
+
         List<ParameterValue> values = captor.getAllValues();
         assertThat(values.size(), is(1));
         assertThat(values.get(0).getName(), is(TemplateParameter.INSTANCE));

@@ -17,7 +17,7 @@
 package enmasse.address.controller.generator;
 
 import enmasse.address.controller.admin.FlavorManager;
-import enmasse.address.controller.admin.TemplateRepository;
+import enmasse.address.controller.admin.OpenShiftHelper;
 import enmasse.address.controller.model.Destination;
 import enmasse.address.controller.model.DestinationGroup;
 import enmasse.address.controller.model.Flavor;
@@ -53,7 +53,7 @@ public class TemplateDestinationClusterGeneratorTest {
     @Before
     public void setUp() {
         mockClient = mock(OpenShiftClient.class);
-        generator = new TemplateDestinationClusterGenerator(InstanceId.fromString("myinstance"), mockClient, new TemplateRepository(mockClient), flavorManager);
+        generator = new TemplateDestinationClusterGenerator(InstanceId.withId("myinstance"), new OpenShiftHelper(InstanceId.withId("myinstance"), mockClient), flavorManager);
         flavorManager.flavorsUpdated(Collections.singletonMap("vanilla", new Flavor.Builder("vanilla", "test").build()));
     }
 

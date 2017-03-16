@@ -19,28 +19,28 @@ public class MultiInstanceAddressingService extends AddressingServiceBase {
     @GET
     @Produces({MediaType.APPLICATION_JSON})
     public Response listAddresses(@PathParam("instance") String instance) {
-        return listAddresses(InstanceId.fromString(instance));
+        return listAddresses(InstanceId.withId(instance));
     }
 
     @PUT
     @Produces({MediaType.APPLICATION_JSON})
     @Consumes({MediaType.APPLICATION_JSON})
     public Response putAddresses(@PathParam("instance") String instance, AddressList addressList) {
-        return putAddresses(InstanceId.fromString(instance), addressList);
+        return putAddresses(InstanceId.withId(instance), addressList);
     }
 
     @POST
     @Produces({MediaType.APPLICATION_JSON})
     @Consumes({MediaType.APPLICATION_JSON})
     public Response appendAddress(@PathParam("instance") String instance, Address address) {
-        return appendAddress(InstanceId.fromString(instance), address);
+        return appendAddress(InstanceId.withId(instance), address);
     }
 
     @GET
     @Path("{address}")
     @Produces({MediaType.APPLICATION_JSON})
     public Response getAddress(@PathParam("instance") String instance, @PathParam("address") String address) {
-        return getAddress(InstanceId.fromString(instance), address);
+        return getAddress(InstanceId.withId(instance), address);
     }
 
     @PUT
@@ -48,13 +48,13 @@ public class MultiInstanceAddressingService extends AddressingServiceBase {
     @Produces({MediaType.APPLICATION_JSON})
     @Consumes({MediaType.APPLICATION_JSON})
     public Response putAddress(@PathParam("instance") String instance, @PathParam("address") String address) {
-        return putAddress(InstanceId.fromString(instance), address);
+        return putAddress(InstanceId.withId(instance), address);
     }
 
     @DELETE
     @Path("{address}")
     @Produces({MediaType.APPLICATION_JSON})
     public Response deleteAddress(@PathParam("instance") String instance, @PathParam("address") String address) {
-        return deleteAddress(InstanceId.fromString(instance), address);
+        return deleteAddress(InstanceId.withId(instance), address);
     }
 }

@@ -19,19 +19,28 @@ package enmasse.address.controller.model;
  * Represents a instance
  */
 public final class InstanceId {
-    private final String idString;
+    private final String id;
+    private final String namespace;
 
-    private InstanceId(String idString) {
-        this.idString = idString;
+    private InstanceId(String id, String namespace) {
+        this.id = id;
+        this.namespace = namespace;
     }
 
-    @Override
-    public String toString() {
-        return idString;
+    public String getId() {
+        return id;
     }
 
-    public static InstanceId fromString(String idString) {
-        return new InstanceId(idString);
+    public String getNamespace() {
+        return namespace;
+    }
+
+    public static InstanceId withId(String idString) {
+        return withIdAndNamespace(idString, "enmasse-" + idString);
+    }
+
+    public static InstanceId withIdAndNamespace(String idString, String namespace) {
+        return new InstanceId(idString, namespace);
     }
 
     @Override
@@ -41,11 +50,11 @@ public final class InstanceId {
 
         InstanceId instanceId = (InstanceId) o;
 
-        return idString.equals(instanceId.idString);
+        return id.equals(instanceId.id);
     }
 
     @Override
     public int hashCode() {
-        return idString.hashCode();
+        return id.hashCode();
     }
 }

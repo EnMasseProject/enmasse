@@ -29,7 +29,7 @@ public class AddressingService {
     private static final String METHOD_DELETE = "DELETE";
 
     private final ApiHandler apiHandler;
-    private final InstanceId instance = InstanceId.fromString("myinstance");
+    private final InstanceId instance = InstanceId.withId("myinstance");
 
     public AddressingService(ApiHandler apiHandler) {
         this.apiHandler = apiHandler;
