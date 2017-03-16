@@ -854,7 +854,7 @@ objects:
     name: restapi
   spec:
     host: "${RESTAPI_HOSTNAME}"
-    path: "/v3/address"
+    path: "/v3"
     port:
       targetPort: http
     to:

@@ -10,7 +10,7 @@
             "name": "restapi"
         },
         "spec": {
-            "path": "/v3/address",
+            "path": "/v3",
             "host": hostname,
             "to": {
                 "kind": "Service",
