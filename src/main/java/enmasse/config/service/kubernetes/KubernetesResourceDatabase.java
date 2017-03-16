@@ -53,7 +53,7 @@ public class KubernetesResourceDatabase<T extends Resource> implements AutoClose
         LabelSet key = LabelSet.fromMap(filter);
         KubernetesResourceObserver<T> observer = observerMap.get(key);
         if (observer == null) {
-            log.debug("Creating new observer with filter " + filter);
+            log.info("Creating new observer with filter " + filter);
             SubscriptionManager<T> subscriptionManager = new SubscriptionManager<>(subscriptionConfig.getMessageEncoder(), subscriptionConfig.getResourceFilter(filter));
             observer = new KubernetesResourceObserver<>(subscriptionConfig.getResourceFactory(), subscriptionConfig.getObserverOptions(client, filter), subscriptionManager);
             observerMap.put(key, observer);
