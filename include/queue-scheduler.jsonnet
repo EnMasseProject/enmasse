@@ -13,7 +13,7 @@ local common = import "common.jsonnet";
           "app": "enmasse",
           "instance": instance
         },
-        "name": instance + "-queue-scheduler"
+        "name": "queue-scheduler"
       },
       "spec": {
         "replicas": 1,

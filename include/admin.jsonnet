@@ -45,7 +45,7 @@ local common = import "common.jsonnet";
         "name": "admin",
         "instance": instance
       },
-      "name": instance + "-admin"
+      "name": "admin"
     },
     "spec": {
       "replicas": 1,

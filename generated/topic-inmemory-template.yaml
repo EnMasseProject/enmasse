@@ -14,7 +14,7 @@ objects:
       app: enmasse
       group_id: "${NAME}"
       instance: "${INSTANCE}"
-    name: "${INSTANCE}-${NAME}"
+    name: "${NAME}"
   spec:
     replicas: 1
     template:
@@ -48,7 +48,7 @@ objects:
             name: core
           volumeMounts:
           - mountPath: "/var/run/artemis"
-            name: vol-${INSTANCE}-${NAME}
+            name: vol-${NAME}
         - env:
           - name: LINK_CAPACITY
             value: "${ROUTER_LINK_CAPACITY}"
@@ -90,7 +90,7 @@ objects:
               memory: 128Mi
         volumes:
         - emptyDir: {}
-          name: vol-${INSTANCE}-${NAME}
+          name: vol-${NAME}
 parameters:
 - description: Storage capacity required for volume claims
   name: STORAGE_CAPACITY

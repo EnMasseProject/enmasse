@@ -8,7 +8,7 @@
           "app": "enmasse",
           "instance": instance
         },
-        "name": instance + "-messaging"
+        "name": "messaging"
     },
     "spec": {
         "host": hostname,

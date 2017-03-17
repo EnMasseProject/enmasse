@@ -9,9 +9,9 @@ local forwarder = import "forwarder.jsonnet";
   template(multicast, persistence, secure)::
     local addrtype = (if multicast then "topic" else "queue");
     local addressEnv = (if multicast then { name: "TOPIC_NAME", value: "${ADDRESS}" } else { name: "QUEUE_NAME", value: "${ADDRESS}" });
-    local volumeName = "vol-${INSTANCE}-${NAME}";
+    local volumeName = "vol-${NAME}";
     local templateName = "%s%s-%s" % [if secure then "tls-" else "", addrtype, (if persistence then "persisted" else "inmemory")];
-    local claimName = "pvc-${INSTANCE}-${NAME}";
+    local claimName = "pvc-${NAME}";
     {
       "apiVersion": "v1",
       "kind": "Template",
@@ -26,7 +26,7 @@ local forwarder = import "forwarder.jsonnet";
         "apiVersion": "extensions/v1beta1",
         "kind": "Deployment",
         "metadata": {
-          "name": "${INSTANCE}-${NAME}",
+          "name": "${NAME}",
           "labels": {
             "app": "enmasse",
             "group_id": "${NAME}",

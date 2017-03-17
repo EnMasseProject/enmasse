@@ -13,7 +13,7 @@ local common = import "common.jsonnet";
         "instance": instance,
         "app": "enmasse"
       },
-      "name": instance + "-subserv"
+      "name": "subserv"
     },
     "spec": {
       "replicas": 1,

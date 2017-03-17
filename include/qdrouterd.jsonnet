@@ -12,7 +12,7 @@ local common = import "common.jsonnet";
           "app": "enmasse",
           "instance": instance
         },
-        "name": instance + "-qdrouterd"
+        "name": "qdrouterd"
       },
       "spec": {
         "replicas": 1,

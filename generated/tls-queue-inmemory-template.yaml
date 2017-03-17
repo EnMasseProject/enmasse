@@ -14,7 +14,7 @@ objects:
       app: enmasse
       group_id: "${NAME}"
       instance: "${INSTANCE}"
-    name: "${INSTANCE}-${NAME}"
+    name: "${NAME}"
   spec:
     replicas: 1
     template:
@@ -48,10 +48,10 @@ objects:
             name: core
           volumeMounts:
           - mountPath: "/var/run/artemis"
-            name: vol-${INSTANCE}-${NAME}
+            name: vol-${NAME}
         volumes:
         - emptyDir: {}
-          name: vol-${INSTANCE}-${NAME}
+          name: vol-${NAME}
         - name: ssl-certs
           secret:
             secretName: qdrouterd-certs

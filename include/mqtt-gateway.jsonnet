@@ -12,7 +12,7 @@ local common = import "common.jsonnet";
           "instance": instance,
           "app": "enmasse"
         },
-        "name": instance + "-mqtt-gateway"
+        "name": "mqtt-gateway"
       },
       "spec": {
         "replicas": 1,

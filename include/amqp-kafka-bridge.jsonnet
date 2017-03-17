@@ -11,7 +11,7 @@ local common = import "common.jsonnet";
           "instance": instance,
           "app": "enmasse"
         },
-        "name": instance + "-amqp-kafka-bridge"
+        "name": "amqp-kafka-bridge"
       },
       "spec": {
         "replicas": 1,

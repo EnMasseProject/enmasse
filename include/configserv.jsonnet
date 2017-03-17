@@ -13,7 +13,7 @@ local common = import "common.jsonnet";
           "name": "configserv",
           "instance": instance
         },
-        "name": instance + "-configserv"
+        "name": "configserv"
       },
       "spec": {
         "replicas": 1,

@@ -11,7 +11,7 @@ local common = import "common.jsonnet";
           "instance": instance,
           "app": "enmasse"
         },
-        "name": instance + "-mqtt-lwt"
+        "name": "mqtt-lwt"
       },
       "spec": {
         "replicas": 1,
