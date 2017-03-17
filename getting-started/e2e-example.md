@@ -74,26 +74,46 @@ Here is an example config with all 4 variants that you can save to `addresses.js
 {
     "apiVersion": "v3",
     "kind": "AddressList",
-    "addresses": {
-        "anycast": {
-            "store_and_forward": false,
-            "multicast": false
+    "items": [
+        {
+            "metadata": {
+                "name": "anycast"
+            },
+            "spec": {
+                "store_and_forward": false,
+                "multicast": false
+            },
         },
-        "broadcast": {
-            "store_and_forward": false,
-            "multicast": true
+        {
+            "metadata": {
+                "name": "broadcast"
+            },
+            "spec": {
+                "store_and_forward": false,
+                "multicast": true 
+            },
         },
-        "mytopic": {
-            "store_and_forward": true,
-            "multicast": true,
-            "flavor": "vanilla-topic"
+        {
+            "metadata": {
+                "name": "myqueue"
+            },
+            "spec": {
+                "store_and_forward": true,
+                "multicast": false,
+                "flavor": "vanilla-queue"
+            },
         },
-        "myqueue": {
-            "store_and_forward": true,
-            "multicast": false,
-            "flavor": "vanilla-queue"
+        {
+            "metadata": {
+                "name": "mytopic"
+            },
+            "spec": {
+                "store_and_forward": true,
+                "multicast": true,
+                "flavor": "vanilla-topic"
+            }
         }
-    }
+    ]
 }
 ```
 
