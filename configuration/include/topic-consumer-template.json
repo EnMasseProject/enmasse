@@ -1,0 +1,132 @@
+{
+  "apiVersion": "v1",
+  "kind": "Template",
+  "metadata": {
+    "name": "topic-benchmark"
+  },
+  "objects": [
+    {
+      "apiVersion": "extensions/v1beta1",
+      "kind": "Deployment",
+      "metadata": {
+        "name": "benchmark-consumer"
+      },
+      "spec": {
+        "replicas": 0,
+        "template": {
+          "metadata": {
+            "labels": {
+              "app": "benchmark",
+              "role": "consumer",
+              "type": "agent"
+            }
+          },
+          "spec": {
+            "containers": [
+              {
+                "name": "benchmark-agent",
+                "image": "enmasseproject/ebench-agent:latest",
+                "ports": [
+                  {
+                    "name": "metrics",
+                    "containerPort": 8080
+                  }
+                ],
+                "env": [
+                  {
+                    "name": "BENCH_ARGS",
+                    "value": "-s 0 -r 1 -h $MESSAGING_SERVICE_HOST:$MESSAGING_SERVICE_PORT -a ${ADDRESS} -d ${DURATION} -m ${MESSAGE_SIZE} -f none -t"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "apiVersion": "batch/v1",
+      "kind": "Job",
+      "metadata": {
+        "name": "benchmark-consumer-collector"
+      },
+      "spec": {
+        "template": {
+          "metadata": {
+            "name": "benchmark-collector",
+            "labels": {
+              "app": "benchmark",
+              "role": "consumer",
+              "type": "collector"
+            }
+          },
+          "spec": {
+            "restartPolicy": "OnFailure",
+            "containers": [
+              {
+                "name": "benchmark-collector",
+                "image": "enmasseproject/ebench-collector:latest",
+                "ports": [
+                  {
+                    "name": "metrics",
+                    "containerPort": 8080
+                  }
+                ],
+                "env": [
+                  {
+                    "name": "BENCH_ARGS",
+                    "value": "-i ${REPORT_INTERVAL} -l app=benchmark,role=consumer,type=agent"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Service",
+      "metadata": {
+        "name": "benchmark-consumer"
+      },
+      "spec": {
+        "ports": [
+          {
+            "name": "metrics",
+            "port": 8080,
+            "targetPort": 8080,
+            "protocol": "TCP"
+          }
+        ],
+        "selector": {
+          "app": "benchmark",
+          "role": "consumer",
+          "type": "collector"
+        }
+      }
+    }
+  ],
+  "parameters": [
+    {
+      "name": "DURATION",
+      "description": "The duration of the benchmark",
+      "value": "300"
+    },
+    {
+      "name": "MESSAGE_SIZE",
+      "description": "Size of messages",
+      "value": "128"
+    },
+    {
+      "name": "REPORT_INTERVAL",
+      "description": "Interval between fetching reports from agents",
+      "value": "30"
+    },
+    {
+      "name": "ADDRESS",
+      "description": "The address to use for messages",
+      "required": true
+    }
+  ]
+}

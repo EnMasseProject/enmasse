@@ -1,0 +1,143 @@
+{
+  "apiVersion": "v1",
+  "kind": "Template",
+  "metadata": {
+    "name": "benchmark"
+  },
+  "objects": [
+    {
+      "apiVersion": "v1",
+      "kind": "ReplicationController",
+      "metadata": {
+        "name": "benchmark-agent"
+      },
+      "spec": {
+        "replicas": 1,
+        "selector": {
+          "role": "benchmark",
+          "type": "agent"
+        },
+        "template": {
+          "metadata": {
+            "labels": {
+              "role": "benchmark",
+              "type": "agent"
+            }
+          },
+          "spec": {
+            "containers": [
+              {
+                "name": "benchmark-agent",
+                "image": "enmasseproject/ebench-agent:latest",
+                "ports": [
+                  {
+                    "name": "metrics",
+                    "containerPort": 8080
+                  }
+                ],
+                "env": [
+                  {
+                    "name": "BENCH_ARGS",
+                    "value": "-s 1 -r 1 -h $MESSAGING_SERVICE_HOST:$MESSAGING_SERVICE_PORT -a ${ADDRESS} -d ${DURATION} -m ${MESSAGE_SIZE} -f none -n ${SEND_RATE}"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "apiVersion": "batch/v1",
+      "kind": "Job",
+      "metadata": {
+        "name": "benchmark-collector"
+      },
+      "spec": {
+        "template": {
+          "metadata": {
+            "name": "benchmark-collector",
+            "labels": {
+              "role": "benchmark",
+              "type": "collector"
+            }
+          },
+          "spec": {
+            "restartPolicy": "OnFailure",
+            "containers": [
+              {
+                "name": "benchmark-collector",
+                "image": "enmasseproject/ebench-collector:latest",
+                "ports": [
+                  {
+                    "name": "metrics",
+                    "containerPort": 8080
+                  }
+                ],
+                "env": [
+                  {
+                    "name": "BENCH_ARGS",
+                    "value": "-i ${REPORT_INTERVAL}"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Service",
+      "metadata": {
+        "name": "benchmark"
+      },
+      "spec": {
+        "ports": [
+          {
+            "name": "metrics",
+            "port": 8080,
+            "targetPort": 8080,
+            "protocol": "TCP"
+          }
+        ],
+        "selector": {
+          "role": "benchmark",
+          "type": "collector"
+        }
+      }
+    }
+  ],
+  "parameters": [
+    {
+      "name": "DURATION",
+      "description": "The duration of the benchmark",
+      "value": "300"
+    },
+    {
+      "name": "MESSAGE_SIZE",
+      "description": "Size of messages",
+      "value": "128"
+    },
+    {
+      "name": "REPORT_INTERVAL",
+      "description": "Interval between fetching reports from agents",
+      "value": "30"
+    },
+    {
+      "name": "SEND_RATE",
+      "description": "Send rate of senders (messages/second)",
+      "value": "0"
+    },
+    {
+      "name": "SPLIT_CLIENTS",
+      "description": "Enforce sender and receiver to connect to different routers",
+      "value": ""
+    },
+    {
+      "name": "ADDRESS",
+      "description": "The address to use for messages",
+      "required": true
+    }
+  ]
+}
