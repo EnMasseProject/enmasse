@@ -40,7 +40,7 @@ public abstract class VertxTestBase {
     @Before
     public void setup() throws Exception {
         vertx = Vertx.vertx();
-        openShift = new OpenShift(environment, getInstanceName().toLowerCase());
+        openShift = new OpenShift(environment, environment.isMultitenant() ? getInstanceName().toLowerCase() : environment.namespace());
         addressApiClient = new AddressApiClient(vertx, openShift.getRestEndpoint(), environment.isMultitenant());
         addressApiClient.deployInstance(getInstanceName().toLowerCase());
     }
