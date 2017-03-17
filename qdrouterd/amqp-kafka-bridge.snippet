@@ -17,23 +17,16 @@
 ## under the License
 ##
 
-connector {
-    addr: ${AMQP_KAFKA_BRIDGE_SERVICE_HOST}
-    port: ${AMQP_KAFKA_BRIDGE_SERVICE_PORT}
-    name: amqp-kafka-bridge-service
-    role: route-container
-}
-
 linkRoute {
     name: override.kafka_out
     prefix: kafka
     dir: out
-    connection: amqp-kafka-bridge-service
+    containerId: amqp-kafka-bridge-service
 }
 
 linkRoute {
     name: override.kafka_in
     prefix: kafka
     dir: in
-    connection: amqp-kafka-bridge-service
+    containerId: amqp-kafka-bridge-service
 }
