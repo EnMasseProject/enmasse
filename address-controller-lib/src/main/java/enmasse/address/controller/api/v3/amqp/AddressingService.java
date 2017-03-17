@@ -28,10 +28,11 @@ public class AddressingService {
     private static final String METHOD_POST = "POST";
     private static final String METHOD_DELETE = "DELETE";
 
+    private final InstanceId instance;
     private final ApiHandler apiHandler;
-    private final InstanceId instance = InstanceId.withId("myinstance");
 
-    public AddressingService(ApiHandler apiHandler) {
+    public AddressingService(InstanceId instance, ApiHandler apiHandler) {
+        this.instance = instance;
         this.apiHandler = apiHandler;
     }
 

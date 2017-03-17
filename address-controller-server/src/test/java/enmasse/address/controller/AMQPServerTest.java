@@ -44,10 +44,11 @@ public class AMQPServerTest {
     public void setup() throws InterruptedException {
         vertx = Vertx.vertx();
         testAddressManager = new TestAddressManager();
-        testInstanceManager = new TestAddressManagerFactory().addManager(InstanceId.withId("myinstance"), testAddressManager);
+        InstanceId instanceId = InstanceId.withId("myinstance");
+        testInstanceManager = new TestAddressManagerFactory().addManager(instanceId, testAddressManager);
         testRepository = new FlavorManager();
         CountDownLatch latch = new CountDownLatch(1);
-        AMQPServer server = new AMQPServer(testInstanceManager, testRepository, 0);
+        AMQPServer server = new AMQPServer(instanceId, testInstanceManager, testRepository, 0);
         vertx.deployVerticle(server, c -> {
             latch.countDown();
         });

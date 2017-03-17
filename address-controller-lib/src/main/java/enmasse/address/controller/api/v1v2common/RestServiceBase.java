@@ -38,16 +38,18 @@ import java.util.Set;
 public abstract class RestServiceBase {
     private static final Logger log = LoggerFactory.getLogger(RestServiceBase.class.getName());
 
+    private final InstanceId instanceId;
     private final AddressManagerFactory addressManagerFactory;
     private final Vertx vertx;
 
-    public RestServiceBase(@Context AddressManagerFactory addressManagerFactory, @Context Vertx vertx) {
+    public RestServiceBase(@Context InstanceId instanceId, @Context AddressManagerFactory addressManagerFactory, @Context Vertx vertx) {
+        this.instanceId = instanceId;
         this.addressManagerFactory = addressManagerFactory;
         this.vertx = vertx;
     }
 
     private AddressManager getAddressManager() {
-        return addressManagerFactory.getOrCreateAddressManager(InstanceId.withId("myinstance"));
+        return addressManagerFactory.getOrCreateAddressManager(instanceId);
     }
 
     protected void getAddresses(@Suspended final AsyncResponse response) {

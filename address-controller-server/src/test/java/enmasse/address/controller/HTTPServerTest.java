@@ -17,10 +17,7 @@
 package enmasse.address.controller;
 
 import enmasse.address.controller.admin.FlavorManager;
-import enmasse.address.controller.api.v3.*;
 import enmasse.address.controller.model.*;
-import enmasse.address.controller.model.Flavor;
-import enmasse.address.controller.model.Instance;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.json.JsonArray;
@@ -52,10 +49,11 @@ public class HTTPServerTest {
         vertx = Vertx.vertx();
         testAddressManager = new TestAddressManager();
         testInstanceManager = new TestInstanceManager();
-        testAddressManagerFactory = new TestAddressManagerFactory().addManager(InstanceId.withId("myinstance"), testAddressManager);
+        InstanceId instanceId = InstanceId.withId("myinstance");
+        testAddressManagerFactory = new TestAddressManagerFactory().addManager(instanceId, testAddressManager);
         testRepository = new FlavorManager();
         CountDownLatch latch = new CountDownLatch(1);
-        vertx.deployVerticle(new HTTPServer(testAddressManagerFactory, testInstanceManager, testRepository), c -> {
+        vertx.deployVerticle(new HTTPServer(instanceId, testAddressManagerFactory, testInstanceManager, testRepository), c -> {
             latch.countDown();
         });
         latch.await(1, TimeUnit.MINUTES);

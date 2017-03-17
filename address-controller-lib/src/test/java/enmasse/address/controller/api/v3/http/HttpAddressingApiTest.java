@@ -47,7 +47,7 @@ public class HttpAddressingApiTest {
         instanceManager = new TestAddressManagerFactory();
         instanceManager.addManager(InstanceId.withId("myinstance"), addressManager);
 
-        addressingService = new AddressingService(new ApiHandler(instanceManager));
+        addressingService = new AddressingService(InstanceId.withId("myinstance"), new ApiHandler(instanceManager));
         addressManager.destinationsUpdated(Sets.newSet(
             createGroup(new Destination("addr1", "addr1", false, false, Optional.empty(), Optional.empty())),
             createGroup(new Destination("queue1", "queue1", true, false, Optional.of("vanilla"), Optional.empty()))));

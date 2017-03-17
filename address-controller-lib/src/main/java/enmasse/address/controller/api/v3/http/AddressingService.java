@@ -12,10 +12,11 @@ import javax.ws.rs.core.Response;
 
 @Path("/v3/address")
 public class AddressingService extends AddressingServiceBase {
-    private final InstanceId instanceId = InstanceId.withId("myinstance");
+    private final InstanceId instanceId;
 
-    public AddressingService(@Context ApiHandler apiHandler) {
+    public AddressingService(@Context InstanceId instanceId, @Context ApiHandler apiHandler) {
         super(apiHandler);
+        this.instanceId = instanceId;
     }
 
     @GET

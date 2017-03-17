@@ -26,6 +26,7 @@ import enmasse.address.controller.api.v3.http.AddressingService;
 import enmasse.address.controller.api.v3.http.FlavorsService;
 import enmasse.address.controller.api.v3.http.InstanceService;
 import enmasse.address.controller.api.v3.http.MultiInstanceAddressingService;
+import enmasse.address.controller.model.InstanceId;
 import io.vertx.core.AbstractVerticle;
 import org.jboss.resteasy.plugins.server.vertx.VertxRequestHandler;
 import org.jboss.resteasy.plugins.server.vertx.VertxResteasyDeployment;
@@ -40,8 +41,10 @@ public class HTTPServer extends AbstractVerticle {
     private final AddressManagerFactory addressManagerFactory;
     private final InstanceManager instanceManager;
     private final FlavorRepository flavorRepository;
+    private final InstanceId globalInstance;
 
-    public HTTPServer(AddressManagerFactory addressManagerFactory, InstanceManager instanceManager, FlavorRepository flavorRepository) {
+    public HTTPServer(InstanceId globalInstance, AddressManagerFactory addressManagerFactory, InstanceManager instanceManager, FlavorRepository flavorRepository) {
+        this.globalInstance = globalInstance;
         this.addressManagerFactory = addressManagerFactory;
         this.instanceManager = instanceManager;
         this.flavorRepository = flavorRepository;
@@ -51,9 +54,9 @@ public class HTTPServer extends AbstractVerticle {
     public void start() {
         VertxResteasyDeployment deployment = new VertxResteasyDeployment();
         deployment.start();
-        deployment.getRegistry().addSingletonResource(new RestServiceV1(addressManagerFactory, vertx));
-        deployment.getRegistry().addSingletonResource(new RestServiceV2(addressManagerFactory, vertx));
-        deployment.getRegistry().addSingletonResource(new AddressingService(new ApiHandler(addressManagerFactory)));
+        deployment.getRegistry().addSingletonResource(new RestServiceV1(globalInstance, addressManagerFactory, vertx));
+        deployment.getRegistry().addSingletonResource(new RestServiceV2(globalInstance, addressManagerFactory, vertx));
+        deployment.getRegistry().addSingletonResource(new AddressingService(globalInstance, new ApiHandler(addressManagerFactory)));
         deployment.getRegistry().addSingletonResource(new InstanceService(instanceManager));
         deployment.getRegistry().addSingletonResource(new MultiInstanceAddressingService(new ApiHandler(addressManagerFactory)));
         deployment.getRegistry().addSingletonResource(new FlavorsService(flavorRepository));
