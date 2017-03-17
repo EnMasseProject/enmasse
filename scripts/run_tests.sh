@@ -63,7 +63,7 @@ setup_test enmasse-ci-single
 run_test enmasse-ci-single false false https://raw.githubusercontent.com/enmasseproject/openshift-configuration/master/generated/enmasse-template.yaml || failure=$(($failure + 1))
 teardown_test enmasse-ci-single
 
-setup_test enmasse-ci-multi
+setup_test_multitenant enmasse-ci-multi
 run_test enmasse-ci-multi false true https://raw.githubusercontent.com/enmasseproject/openshift-configuration/master/generated/enmasse-template.yaml || failure=$(($failure + 1))
 teardown_test enmasse-ci-multi
 
