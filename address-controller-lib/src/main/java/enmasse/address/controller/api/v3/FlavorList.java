@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import enmasse.address.controller.model.Flavor;
 
@@ -37,18 +38,14 @@ public class FlavorList {
         @Override
         public void serialize(FlavorList value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
             ObjectNode node = mapper.createObjectNode();
-            Set<Flavor> flavors = value.flavors;
 
             node.put(ResourceKeys.KIND, kind());
             node.put(ResourceKeys.APIVERSION, "v3");
 
-            ObjectNode flavorsNode = node.putObject(ResourceKeys.FLAVORS);
+            ArrayNode items = node.putArray(ResourceKeys.ITEMS);
 
-            for (Flavor flavor : flavors) {
-                ObjectNode flavorNode = flavorsNode.putObject(flavor.name());
-                flavorNode.put(ResourceKeys.TYPE, flavor.type());
-                flavorNode.put(ResourceKeys.DESCRIPTION, flavor.description());
-                flavor.uuid().ifPresent(u -> flavorNode.put(ResourceKeys.UUID, u));
+            for (Flavor flavor : value.flavors) {
+                items.add(mapper.valueToTree(new enmasse.address.controller.api.v3.Flavor(flavor)));
             }
             mapper.writeValue(gen, node);
         }

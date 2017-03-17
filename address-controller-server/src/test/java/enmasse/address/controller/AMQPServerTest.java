@@ -108,12 +108,9 @@ public class AMQPServerTest {
 
         ObjectMapper mapper = new ObjectMapper();
         ObjectNode list = mapper.readValue((String)((AmqpValue)response.getBody()).getValue(), ObjectNode.class);
-        assertTrue(list.has("flavors"));
-        ObjectNode flavors = (ObjectNode) list.get("flavors");
-        assertTrue(flavors.has("vanilla"));
-        ObjectNode f = (ObjectNode) flavors.get("vanilla");
-        assertThat(f.get("type").asText(), is("queue"));
-        assertThat(f.get("description").asText(), is("Simple queue"));
+        assertThat(list.get("items").get(0).get("metadata").get("name").asText(), is("vanilla"));
+        assertThat(list.get("items").get(0).get("spec").get("type").asText(), is("queue"));
+        assertThat(list.get("items").get(0).get("spec").get("description").asText(), is("Simple queue"));
     }
 
 }

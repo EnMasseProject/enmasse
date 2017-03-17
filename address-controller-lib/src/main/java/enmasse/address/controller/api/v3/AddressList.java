@@ -6,6 +6,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import enmasse.address.controller.model.Destination;
 import enmasse.address.controller.model.DestinationGroup;
@@ -62,20 +63,11 @@ public class AddressList {
         public AddressList deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JsonProcessingException {
             ObjectNode node = mapper.readValue(p, ObjectNode.class);
 
-            ObjectNode addresses = node.has(ResourceKeys.ADDRESSES) ? (ObjectNode) node.get(ResourceKeys.ADDRESSES) : mapper.createObjectNode();
-            Iterator<Map.Entry<String, JsonNode>> it = addresses.fields();
+            ArrayNode items = node.has(ResourceKeys.ITEMS) ? (ArrayNode) node.get(ResourceKeys.ITEMS) : mapper.createArrayNode();
             Set<Destination> destinations = new LinkedHashSet<>();
-            while (it.hasNext()) {
-                Map.Entry<String, JsonNode> entry = it.next();
-                ObjectNode value = (ObjectNode) entry.getValue();
-                String address = entry.getKey();
-                String group = value.has(ResourceKeys.GROUP) ? value.get(ResourceKeys.GROUP).asText() : address;
-                destinations.add(new Destination.Builder(address, group)
-                        .storeAndForward(value.get(ResourceKeys.STORE_AND_FORWARD).asBoolean())
-                        .multicast(value.get(ResourceKeys.MULTICAST).asBoolean())
-                        .flavor(Optional.ofNullable(value.get(ResourceKeys.FLAVOR)).map(JsonNode::asText))
-                        .uuid(Optional.ofNullable(value.get(ResourceKeys.UUID)).map(JsonNode::asText))
-                        .build());
+
+            for (int i = 0; i < items.size(); i++) {
+                destinations.add(mapper.convertValue(items.get(i), enmasse.address.controller.api.v3.Address.class).getDestination());
             }
             return new AddressList(destinations);
         }
@@ -85,20 +77,14 @@ public class AddressList {
         @Override
         public void serialize(AddressList value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
             ObjectNode node = mapper.createObjectNode();
-            Set<Destination> destinations = value.destinations;
 
-            node.put(ResourceKeys.KIND, "AddressList");
+            node.put(ResourceKeys.KIND, kind());
             node.put(ResourceKeys.APIVERSION, "v3");
 
-            ObjectNode addresses = node.putObject(ResourceKeys.ADDRESSES);
+            ArrayNode items = node.putArray(ResourceKeys.ITEMS);
 
-            for (Destination destination : destinations) {
-                ObjectNode address = addresses.putObject(destination.address());
-                address.put(ResourceKeys.STORE_AND_FORWARD, destination.storeAndForward());
-                address.put(ResourceKeys.MULTICAST, destination.multicast());
-                address.put(ResourceKeys.GROUP, destination.group());
-                destination.flavor().ifPresent(f -> address.put(ResourceKeys.FLAVOR, f));
-                destination.uuid().ifPresent(u -> address.put(ResourceKeys.UUID, u));
+            for (Destination destination : value.destinations) {
+                items.add(mapper.valueToTree(new enmasse.address.controller.api.v3.Address(destination)));
             }
             mapper.writeValue(gen, node);
         }

@@ -56,7 +56,7 @@ public class Address {
             ObjectNode node = mapper.createObjectNode();
             Destination destination = value.destination;
 
-            node.put(ResourceKeys.KIND, "Address");
+            node.put(ResourceKeys.KIND, kind());
             node.put(ResourceKeys.APIVERSION, "v3");
             node.put(ResourceKeys.STATUS, "/api/v3/status/" + destination.address());
 
@@ -64,7 +64,7 @@ public class Address {
             metadata.put(ResourceKeys.NAME, destination.address());
             destination.uuid().ifPresent(u -> metadata.put(ResourceKeys.UUID, u));
 
-            ObjectNode spec = node.putObject("spec");
+            ObjectNode spec = node.putObject(ResourceKeys.SPEC);
             spec.put(ResourceKeys.STORE_AND_FORWARD, destination.storeAndForward());
             spec.put(ResourceKeys.MULTICAST, destination.multicast());
             spec.put(ResourceKeys.GROUP, destination.group());

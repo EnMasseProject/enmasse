@@ -68,11 +68,11 @@ public class SerializationTest {
 
         ObjectNode deserialized = mapper.readValue(serialized, ObjectNode.class);
         assertThat(deserialized.get("kind").asText(), is("FlavorList"));
-        assertThat(deserialized.get("flavors").size(), is(2));
-        assertThat(deserialized.get("flavors").get("flavor1").get("type").asText(), is("queue"));
-        assertThat(deserialized.get("flavors").get("flavor1").get("description").asText(), is("Simple queue"));
-        assertThat(deserialized.get("flavors").get("flavor2").get("type").asText(), is("topic"));
-        assertThat(deserialized.get("flavors").get("flavor2").get("description").asText(), is("Simple topic"));
+        assertThat(deserialized.get("items").size(), is(2));
+        assertThat(deserialized.get("items").get(0).get("spec").get("type").asText(), is("queue"));
+        assertThat(deserialized.get("items").get(0).get("spec").get("description").asText(), is("Simple queue"));
+        assertThat(deserialized.get("items").get(1).get("spec").get("type").asText(), is("topic"));
+        assertThat(deserialized.get("items").get(1).get("spec").get("description").asText(), is("Simple topic"));
     }
 
     @Test

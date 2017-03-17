@@ -73,8 +73,8 @@ public class HTTPServerTest {
             client.getNow(8080, "localhost", "/v3/address", response -> {
                 response.bodyHandler(buffer -> {
                     JsonObject data = buffer.toJsonObject();
-                    assertTrue(data.containsKey("addresses"));
-                    assertTrue(data.getJsonObject("addresses").containsKey("addr1"));
+                    assertTrue(data.containsKey("items"));
+                    assertThat(data.getJsonArray("items").getJsonObject(0).getJsonObject("metadata").getString("name"), is("addr1"));
                     latch.countDown();
                 });
             });
@@ -106,8 +106,8 @@ public class HTTPServerTest {
             client.getNow(8080, "localhost", "/v3/flavor", response -> {
                 response.bodyHandler(buffer -> {
                     JsonObject data = buffer.toJsonObject();
-                    assertTrue(data.containsKey("flavors"));
-                    assertTrue(data.getJsonObject("flavors").containsKey("vanilla"));
+                    assertTrue(data.containsKey("items"));
+                    assertThat(data.getJsonArray("items").getJsonObject(0).getJsonObject("metadata").getString("name"), is("vanilla"));
                     latch.countDown();
                 });
             });

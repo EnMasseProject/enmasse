@@ -34,7 +34,7 @@ public class FlavorManager implements FlavorRepository {
 
     @Override
     public Set<Flavor> getFlavors() {
-        return new HashSet<>(flavorMap.values());
+        return new LinkedHashSet<>(flavorMap.values());
     }
 
     @Override

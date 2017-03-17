@@ -28,6 +28,7 @@ import java.util.Optional;
  * Parser for the flavor config.
  */
 public class FlavorParser {
+    private static final String KEY_NAME = "name";
     private static final String KEY_TEMPLATE_NAME = "templateName";
     private static final String KEY_TEMPLATE_PARAMETERS = "templateParameters";
     private static final String KEY_TYPE = "type";
@@ -36,17 +37,15 @@ public class FlavorParser {
 
     public static Map<String, Flavor> parse(JsonNode root) {
         Map<String, Flavor> flavorMap = new LinkedHashMap<>();
-        Iterator<Map.Entry<String, JsonNode>> it = root.fields();
-        while (it.hasNext()) {
-            Map.Entry<String, JsonNode> entry = it.next();
-            String name = entry.getKey();
-            Flavor flavor = parseFlavor(name, entry.getValue());
-            flavorMap.put(name, flavor);
+        for (int i = 0; i < root.size(); i++) {
+            Flavor flavor = parseFlavor(root.get(i));
+            flavorMap.put(flavor.name(), flavor);
         }
         return flavorMap;
     }
 
-    private static Flavor parseFlavor(String name, JsonNode node) {
+    private static Flavor parseFlavor(JsonNode node) {
+        String name = node.get(KEY_NAME).asText();
         Flavor.Builder builder = new Flavor.Builder(name, node.get(KEY_TEMPLATE_NAME).asText());
 
         if (node.has(KEY_TYPE)) {

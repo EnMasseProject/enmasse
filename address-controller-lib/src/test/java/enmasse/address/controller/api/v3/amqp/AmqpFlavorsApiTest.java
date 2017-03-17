@@ -55,11 +55,11 @@ public class AmqpFlavorsApiTest {
         ObjectNode json = decodeJson(response);
 
         assertThat(json.get("kind").asText(), is("FlavorList"));
-        assertThat(json.get("flavors").size(), is(2));
-        assertThat(json.get("flavors").get("flavor1").get("type").asText(), is("queue"));
-        assertThat(json.get("flavors").get("flavor1").get("description").asText(), is("Simple queue"));
-        assertThat(json.get("flavors").get("flavor2").get("type").asText(), is("topic"));
-        assertThat(json.get("flavors").get("flavor2").get("description").asText(), is("Simple topic"));
+        assertThat(json.get("items").size(), is(2));
+        assertThat(json.get("items").get(0).get("spec").get("type").asText(), is("queue"));
+        assertThat(json.get("items").get(0).get("spec").get("description").asText(), is("Simple queue"));
+        assertThat(json.get("items").get(1).get("spec").get("type").asText(), is("topic"));
+        assertThat(json.get("items").get(1).get("spec").get("description").asText(), is("Simple topic"));
     }
 
     @Test
