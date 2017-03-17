@@ -799,18 +799,18 @@ objects:
       name: address-controller
 - apiVersion: v1
   data:
-    json: '{"large-persisted-queue": {"description": "Large queue with persistence",
-      "templateName": "queue-persisted", "templateParameters": {"STORAGE_CAPACITY":
-      "10Gi"}, "type": "queue"}, "large-persisted-topic": {"description": "Large topic
-      with persistence", "templateName": "topic-persisted", "templateParameters":
-      {"STORAGE_CAPACITY": "10Gi"}, "type": "topic"}, "small-persisted-queue": {"description":
-      "Small queue with persistence", "templateName": "queue-persisted", "templateParameters":
-      {"STORAGE_CAPACITY": "1Gi"}, "type": "queue"}, "small-persisted-topic": {"description":
-      "Small topic with persistence", "templateName": "topic-persisted", "templateParameters":
-      {"STORAGE_CAPACITY": "1Gi"}, "type": "topic"}, "vanilla-queue": {"description":
-      "Simple in memory queue", "templateName": "queue-inmemory", "type": "queue"},
-      "vanilla-topic": {"description": "Simple in memory topic", "templateName": "topic-inmemory",
-      "type": "topic"}}'
+    json: '[{"description": "Simple in memory queue", "name": "vanilla-queue", "templateName":
+      "queue-inmemory", "type": "queue"}, {"description": "Small queue with persistence",
+      "name": "small-persisted-queue", "templateName": "queue-persisted", "templateParameters":
+      {"STORAGE_CAPACITY": "1Gi"}, "type": "queue"}, {"description": "Large queue
+      with persistence", "name": "large-persisted-queue", "templateName": "queue-persisted",
+      "templateParameters": {"STORAGE_CAPACITY": "10Gi"}, "type": "queue"}, {"description":
+      "Simple in memory topic", "name": "vanilla-topic", "templateName": "topic-inmemory",
+      "type": "topic"}, {"description": "Small topic with persistence", "name": "small-persisted-topic",
+      "templateName": "topic-persisted", "templateParameters": {"STORAGE_CAPACITY":
+      "1Gi"}, "type": "topic"}, {"description": "Large topic with persistence", "name":
+      "large-persisted-topic", "templateName": "topic-persisted", "templateParameters":
+      {"STORAGE_CAPACITY": "10Gi"}, "type": "topic"}]'
   kind: ConfigMap
   metadata:
     labels:
