@@ -723,6 +723,9 @@ objects:
   - description: The image to use for the MQTT LWT
     name: MQTT_LWT_REPO
     value: enmasseproject/mqtt-lwt
+  - description: The image to use for the AMQP Kafka Bridge
+    name: AMQP_KAFKA_BRIDGE_REPO
+    value: enmasseproject/amqp-kafka-bridge
   - description: The instance this infrastructure is deployed for
     name: INSTANCE
     required: true

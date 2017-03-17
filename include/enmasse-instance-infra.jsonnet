@@ -111,6 +111,11 @@ local amqpKafkaBridgeService = import "amqp-kafka-bridge-service.jsonnet";
         "value": "enmasseproject/mqtt-lwt"
       },
       {
+        "name" : "AMQP_KAFKA_BRIDGE_REPO",
+        "description": "The image to use for the AMQP Kafka Bridge",
+        "value": "enmasseproject/amqp-kafka-bridge"
+      },
+      {
         "name": "INSTANCE",
         "description": "The instance this infrastructure is deployed for",
         "required": true
