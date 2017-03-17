@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<dt-example table-type="html" order="1">
+
+<css lib="datatables colreorder">
+	div.DTCR_pointer {
+		margin-left: -10px;
+		width: 0;
+		height: 0 !important;
+		border-style: solid;
+		border-width: 10px 10px 0 10px;
+		border-color: #0259c4 transparent transparent transparent;
+		background: transparent;
+	}
+</css>
+<js lib="jquery datatables colreorder">
+<![CDATA[
+$(document).ready(function() {
+	$('#example').DataTable( {
+		colReorder: true
+	} );
+} );
+]]>
+</js>
+
+<title lib="ColReorder">Alternative insert styling</title>
+
+<info><![CDATA[
+
+Using CSS it is easy to modify the insert bar to suit your web-site. This example shows how CSS can be used to display an insert arrow pointer while dragging a column. Equally an image could be used for more complex visual insert pointers if required.
+
+]]></info>
+
+</dt-example>

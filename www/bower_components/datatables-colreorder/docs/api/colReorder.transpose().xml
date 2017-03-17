@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<dt-api library="ColReorder">
+	<name>colReorder.transpose()</name>
+	<summary>Convert one or more column indexes to and from current and original indexes</summary>
+	<since>1.3.0</since>
+
+	<type type="function">
+		<signature>colReorder.transpose( idx [, direction ] )</signature>
+		<parameter name="idx" type="integer|array">
+			The index, or array of indexes to transpose.
+		</parameter>
+		<parameter name="direction" type="string" default="toCurrent">
+			Set what transposition is required. This can be one of:
+
+			* `-string toCurrent` - the input value is an original index and you wish to know its current index
+			* `-string toOriginal` - the input value is the current index and you wish to know its original index
+			* `-string fromOriginal` - As `-string toCurrent`
+			* `-string toOriginal` - As `-string fromCurrent`.
+		</parameter>
+		<description>
+			Get one or more current column indexes form their original index.
+		</description>
+		<returns type="integer|array">The transpose values</returns>
+	</type>
+
+	<description>
+		ColReorder will change the indexes of columns when columns are reordered and it can often be useful to convert between the original column index and the current column index. This method provides that ability.
+
+		This ability to transpose between current and original values can be really useful if you have a reference to a column (`dt-api column().index()`) and you want to ensure that your index refers to the correct column, regardless of ordering.
+
+		For example consider column index 0 is moved by the end user to index 5. You need to find out what its index is - this method provides that ability.
+
+		Note that if ColReorder is not enabled on the target table this method can still be safely called - the input data will simply be returned (since no transposition is required).
+	</description>
+
+	<example title="Get the current column position of the column that was in index 0 when the table was created"><![CDATA[
+
+var table = $('#example').DataTable( {
+	colReorder: true
+} );
+
+$('#info').click( function (e) {
+	alert( table.colReorder.transpose( 0 ) );
+} );
+
+]]></example>
+
+</dt-api>

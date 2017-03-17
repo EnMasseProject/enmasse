@@ -1,0 +1,36 @@
+language: node_js
+node_js:
+  - '4'
+
+env:
+  global:
+    - ENCRYPTION_LABEL: "aa286ccd339e"
+    - COMMIT_AUTHOR_EMAIL: "patternfly-build@redhat.com"
+    - TRIGGER_REPO_SLUG: "patternfly/angular-patternfly"
+    - TRIGGER_REPO_BRANCH: "master"
+
+before_install:
+  - if [[ `npm -v` != 3* ]]; then npm i -g npm@3; fi
+  - npm install -g bower grunt-cli
+  - npm install git+https://github.com/patternfly/patternfly-eng-release.git
+
+install: true
+
+script:
+  - sh -x ./node_modules/patternfly-eng-release/scripts/_build.sh -a
+
+after_success:
+  - ./scripts/publish-ghpages.sh -t docs
+
+# OpenShift expects its deployment branch to be "master-dist". This can be changed using:
+# rhc app-configure patternfly/angular --deployment-branch master-dist
+deploy:
+  provider: openshift
+  user: "$OPENSHIFT_USER"
+  password: "$OPENSHIFT_PWD"
+  domain: "patternfly"
+  app: angular
+  skip_cleanup: true
+  on: # The branch and repo that triggered the build
+    branch: master
+    condition: $TRAVIS_REPO_SLUG = "patternfly/angular-patternfly"

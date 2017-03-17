@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<dt-api library="ColReorder">
+	<name>colReorder.reset()</name>
+	<summary>Restore the loaded column order</summary>
+	<since>1.2.0</since>
+
+	<type type="function">
+		<signature>colReorder.reset()</signature>
+		<description>
+			Restore the column order that the columns were in when initially loaded.
+		</description>
+		<returns type="DataTables.Api">DataTables API instance</returns>
+	</type>
+
+	<description>
+		This method provides the ability to restore the original order of the columns, as was defined in the HTML during the table's initialisation. This will undo any reordering changes that the end user or API has made prior to calling this method.
+
+		The reorder triggered by this method is immediate and there is no requirement to redraw the table.
+	</description>
+
+	<example title="Restore column ordering on click of a button"><![CDATA[
+
+var table = $('#example').DataTable( {
+	colReorder: true
+} );
+
+$('#reset').click( function (e) {
+	table.colReorder.reset();
+} );
+
+]]></example>
+
+</dt-api>

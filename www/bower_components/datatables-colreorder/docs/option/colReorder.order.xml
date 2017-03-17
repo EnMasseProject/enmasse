@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<dt-option library="ColReorder">
+	<name>colReorder.order</name>
+	<summary>Set a default order for the columns in the table</summary>
+
+	<type type="array">
+		<description>
+			An array of integer values that define the order the columns should appear in. The position in the array is the position the column will take, and the value is the current column index that should be shown in that new position.
+
+			The array _must_ contain all columns in the table, and cannot contain duplicates.
+		</description>
+	</type>
+
+	<default value="null">
+		The table's default column ordering will be used
+	</default>
+
+	<description>
+		This option provides the option to define a default order for the columns in a table. Typically you will wish to have the columns in the order defined in the HTML, or from state saving (`dt-init stateSave`), but if required, this option can be used to define an initial default order.
+	</description>
+
+	<example title="Enable ColReorder and reserve the table's default column order (for a six column table)"><![CDATA[
+
+$('#example').DataTable( {
+	colReorder: {
+		order: [ 5, 4, 3, 2, 1, 0 ]
+	}
+} );
+
+]]></example>
+
+	<related>cr-api colReorder.order()</related>
+</dt-option>

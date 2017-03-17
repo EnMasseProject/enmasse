@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<dt-example table-type="html" order="4">
+
+<css lib="datatables colreorder" />
+<js lib="jquery datatables colreorder">
+<![CDATA[
+
+$(document).ready(function() {
+	$('#example').dataTable( {
+		colReorder: {
+			realtime: false
+		}
+	} );
+} );
+
+]]>
+</js>
+
+<title lib="ColReorder">Realtime updating</title>
+
+<info><![CDATA[
+
+ColReorder will automatically move columns in realtime as the user moves their mouse. On slower computers with complex tables this can potentially impact performance, so ColReorder has the option to disable this dynamic update and reorder columns only once the reordering is complete - this is done using the `cr-init colReorder.realtime` option.
+
+]]></info>
+
+</dt-example>

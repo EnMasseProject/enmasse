@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<dt-option library="ColReorder">
+	<name>colReorder.fixedColumnsLeft</name>
+	<summary>Disallow _x_ columns from reordering (counting from the left)</summary>
+
+	<type type="integer">
+		<description>
+			Number of columns (counting from the left) to disallow reordering of.
+		</description>
+	</type>
+
+	<default value="0">
+		No columns will be discounted from the reordering operation.
+	</default>
+
+	<description>
+		When allowing reordering of columns in a table, you may often wish to disallow reordering of certain columns (for example locking an index, select or action column to the start of a table). This option provides that ability, locking columns counting from the left (`cr-init colReorder.fixedColumnsRight` provides the option to count from the right).
+
+		This can be particularly useful if using ColReorder with the [FixedColumns extension](https://datatables.net/extensions/fixedcolumns).
+	</description>
+
+	<example title="Disallow the first column in a table from being reorderable"><![CDATA[
+
+$('#example').DataTable( {
+	colReorder: {
+		fixedColumnsLeft: 1
+	}
+} );
+
+]]></example>
+
+	<related>cr-init colReorder.fixedColumnsRight</related>
+</dt-option>
