@@ -123,13 +123,16 @@ public class TestUtils {
         ObjectNode config = mapper.createObjectNode();
         config.put("apiVersion", "v3");
         config.put("kind", "AddressList");
-        ObjectNode addresses = config.putObject("addresses");
+        ArrayNode items = config.putArray("items");
         for (Destination destination : destinations) {
-            ObjectNode entry = addresses.putObject(destination.getAddress());
-            entry.put("store_and_forward", destination.isStoreAndForward());
-            entry.put("multicast", destination.isMulticast());
-            entry.put("group", destination.getGroup());
-            destination.getFlavor().ifPresent(e -> entry.put("flavor", e));
+            ObjectNode entry = items.addObject();
+            ObjectNode metadata = entry.putObject("metadata");
+            metadata.put("name", destination.getAddress());
+            ObjectNode spec = entry.putObject("spec");
+            spec.put("store_and_forward", destination.isStoreAndForward());
+            spec.put("multicast", destination.isMulticast());
+            spec.put("group", destination.getGroup());
+            destination.getFlavor().ifPresent(e -> spec.put("flavor", e));
         }
         Endpoint restApi = openShift.getRestEndpoint();
 
