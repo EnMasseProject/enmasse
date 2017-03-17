@@ -22,17 +22,22 @@ public interface OpenShift {
     }
 
     InstanceId getInstanceId();
+    OpenShift mutateClient(InstanceId instance);
+
     List<DestinationCluster> listClusters();
     void updateDestinations(DestinationGroup destinationGroup);
     void create(KubernetesList resources);
     void delete(KubernetesList resources);
     ConfigMap createAddressConfig(DestinationGroup destinationGroup);
-    Namespace createNamespace(InstanceId instance);
-    OpenShift mutateClient(InstanceId instance);
     KubernetesList processTemplate(String templateName, ParameterValue ... parameterValues);
-    void addDefaultViewPolicy(InstanceId instance);
+
+    Namespace createNamespace(InstanceId instance);
     List<Namespace> listNamespaces(Map<String, String> labelMap);
-    List<Route> getRoutes(InstanceId instanceId);
     void deleteNamespace(String namespace);
+
+    void addDefaultViewPolicy(InstanceId instance);
+
+    List<Route> getRoutes(InstanceId instanceId);
+
     boolean hasService(String service);
 }
