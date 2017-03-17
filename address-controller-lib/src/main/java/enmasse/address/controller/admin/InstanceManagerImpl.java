@@ -13,37 +13,45 @@ import java.util.stream.Collectors;
 public class InstanceManagerImpl implements InstanceManager {
     private final OpenShift openShift;
     private final String instanceTemplateName;
+    private final boolean isMultitenant;
 
-    public InstanceManagerImpl(OpenShift openShift, String instanceTemplateName) {
+    public InstanceManagerImpl(OpenShift openShift, String instanceTemplateName, boolean isMultitenant) {
         this.openShift = openShift;
         this.instanceTemplateName = instanceTemplateName;
-    }
-
-    @Override
-    public Optional<Instance> get(String instanceId) {
-        Map<String, String> labelMap = new LinkedHashMap<>();
-        labelMap.put("instance", instanceId);
-        labelMap.put("app", "enmasse");
-        labelMap.put("type", "instance");
-        return list(labelMap).stream().findAny();
+        this.isMultitenant = isMultitenant;
     }
 
     @Override
     public Optional<Instance> get(InstanceId instanceId) {
-        return get(instanceId.getId());
+        if (isMultitenant) {
+            Map<String, String> labelMap = new LinkedHashMap<>();
+            labelMap.put("instance", instanceId.getId());
+            labelMap.put("app", "enmasse");
+            labelMap.put("type", "instance");
+            return list(labelMap).stream().findAny();
+        } else {
+            return Optional.of(buildInstance(instanceId));
+        }
+    }
+
+    private Instance buildInstance(InstanceId instanceId) {
+        List<Route> routes = openShift.getRoutes(instanceId);
+        return new Instance.Builder(instanceId)
+                .messagingHost(getRouteHost(routes, "messaging"))
+                .mqttHost(getRouteHost(routes, "mqtt"))
+                .consoleHost(getRouteHost(routes, "console"))
+                .build();
     }
 
     private Set<Instance> list(Map<String, String> labelMap) {
-        return openShift.listNamespaces(labelMap).stream()
-                .map(namespace -> InstanceId.withIdAndNamespace(namespace.getMetadata().getLabels().get("instance"), namespace.getMetadata().getName()))
-                .map(id -> {
-                    List<Route> routes = openShift.getRoutes(id);
-                    Instance.Builder builder = new Instance.Builder(id);
-                    builder.messagingHost(getRouteHost(routes, "messaging"));
-                    builder.mqttHost(getRouteHost(routes, "mqtt"));
-                    builder.consoleHost(getRouteHost(routes, "console"));
-                    return builder.build();
-                }).collect(Collectors.toSet());
+        if (isMultitenant) {
+            return openShift.listNamespaces(labelMap).stream()
+                    .map(namespace -> InstanceId.withIdAndNamespace(namespace.getMetadata().getLabels().get("instance"), namespace.getMetadata().getName()))
+                    .map(this::buildInstance)
+                    .collect(Collectors.toSet());
+        } else {
+            return Collections.emptySet();
+        }
     }
 
     private Optional<String> getRouteHost(List<Route> routes, String routeName) {
@@ -57,11 +65,7 @@ public class InstanceManagerImpl implements InstanceManager {
 
     @Override
     public void create(Instance instance) {
-        create(instance, true);
-    }
-
-    public void create(Instance instance, boolean createNamespace) {
-        if (createNamespace) {
+        if (isMultitenant) {
             openShift.createNamespace(instance.id());
             openShift.addDefaultViewPolicy(instance.id());
         }

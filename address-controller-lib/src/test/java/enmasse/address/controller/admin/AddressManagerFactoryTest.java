@@ -58,7 +58,7 @@ public class AddressManagerFactoryTest {
                 .endMetadata()
                 .build()));
 
-        AddressManagerFactoryImpl instanceManager = new AddressManagerFactoryImpl(mockClient, new InstanceManagerImpl(mockClient, "test"), new FlavorManager());
+        AddressManagerFactoryImpl instanceManager = new AddressManagerFactoryImpl(mockClient, new InstanceManagerImpl(mockClient, "test", true), new FlavorManager());
         assertFalse(instanceManager.getAddressManager(InstanceId.withId("notpresent")).isPresent());
         assertTrue(instanceManager.getAddressManager(InstanceId.withId("myinstance")).isPresent());
     }
@@ -82,7 +82,7 @@ public class AddressManagerFactoryTest {
         ArgumentCaptor<ParameterValue> captor = ArgumentCaptor.forClass(ParameterValue.class);
 
 
-        AddressManagerFactoryImpl instanceManager = new AddressManagerFactoryImpl(mockClient, new InstanceManagerImpl(mockClient, "test"), new FlavorManager());
+        AddressManagerFactoryImpl instanceManager = new AddressManagerFactoryImpl(mockClient, new InstanceManagerImpl(mockClient, "test", true), new FlavorManager());
 
         AddressManager manager = instanceManager.getOrCreateAddressManager(InstanceId.withId("myinstance"));
         assertNotNull(manager);

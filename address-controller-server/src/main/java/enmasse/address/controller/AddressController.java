@@ -51,9 +51,9 @@ public class AddressController implements Runnable, AutoCloseable {
         String templateName = options.useTLS() ? "tls-enmasse-instance-infra" : "enmasse-instance-infra";
 
         this.flavorManager = new FlavorManager();
-        this.instanceManager = new InstanceManagerImpl(openShift, templateName);
+        this.instanceManager = new InstanceManagerImpl(openShift, templateName, options.isMultiinstance());
         if (!options.isMultiinstance() && !openShift.hasService("messaging")) {
-            instanceManager.create(new Instance.Builder(openShift.getInstanceId()).build(), false);
+            instanceManager.create(new Instance.Builder(openShift.getInstanceId()).build());
         }
 
         this.addressManagerFactory = new AddressManagerFactoryImpl(openShift, instanceManager, flavorManager);

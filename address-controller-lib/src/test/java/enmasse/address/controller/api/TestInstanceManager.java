@@ -19,14 +19,6 @@ public class TestInstanceManager implements InstanceManager {
     }
 
     @Override
-    public Optional<Instance> get(String instanceId) {
-        if (throwException) {
-            throw new RuntimeException("foo");
-        }
-        return get(InstanceId.withId(instanceId));
-    }
-
-    @Override
     public void create(Instance instance) {
         if (throwException) {
             throw new RuntimeException("foo");

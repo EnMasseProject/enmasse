@@ -15,11 +15,6 @@ public class TestInstanceManager implements InstanceManager {
     }
 
     @Override
-    public Optional<Instance> get(String instanceId) {
-        return get(InstanceId.withId(instanceId));
-    }
-
-    @Override
     public void create(Instance instance) {
         instances.put(instance.id(), instance);
     }
