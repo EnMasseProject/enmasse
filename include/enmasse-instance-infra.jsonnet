@@ -59,10 +59,7 @@ local amqpKafkaBridgeService = import "amqp-kafka-bridge-service.jsonnet";
 
     local securedRoutes = [ messagingRoute.generate("${INSTANCE}", "${MESSAGING_HOSTNAME}"), mqttRoute.generate("${INSTANCE}", "${MQTT_GATEWAY_HOSTNAME}") ],
 
-    "objects": common + 
-      if compact then compactAdmin else fullAdmin +
-      if with_kafka then kafka else [] + 
-      if secure then securedRoutes else [],
+    "objects": common + (if compact then compactAdmin else fullAdmin) + (if with_kafka then kafka else []) + (if secure then securedRoutes else []),
 
     "parameters": [
       {
