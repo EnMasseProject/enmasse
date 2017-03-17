@@ -43,7 +43,7 @@ public class InstanceList {
         public InstanceList deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JsonProcessingException {
             ObjectNode node = mapper.readValue(p, ObjectNode.class);
 
-            ArrayNode items = (ArrayNode) node.get(ResourceKeys.ITEMS);
+            ArrayNode items = node.has(ResourceKeys.ITEMS) ? (ArrayNode) node.get(ResourceKeys.ITEMS) : mapper.createArrayNode();
             Set<Instance> instances = new HashSet<>();
             for (int i = 0; i < items.size(); i++) {
                 instances.add(mapper.convertValue(items.get(i), enmasse.address.controller.api.v3.Instance.class).getInstance());

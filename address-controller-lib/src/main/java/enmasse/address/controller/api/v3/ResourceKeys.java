@@ -11,7 +11,6 @@ public interface ResourceKeys {
     String FLAVOR = "flavor";
     String SPEC = "spec";
     String STATUS = "status";
-    String ADDRESSES = "addresses";
     String FLAVORS = "flavors";
     String TYPE = "type";
     String DESCRIPTION = "description";
