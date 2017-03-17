@@ -58,14 +58,22 @@ function run_test() {
     OPENSHIFT_USE_TLS=$USE_TLS OPENSHIFT_NAMESPACE=$PROJECT_NAME OPENSHIFT_USER=test OPENSHIFT_MULTITENANT=$MULTIINSTANCE OPENSHIFT_TOKEN=`oc config view -o jsonpath='{.users[?(@.name == "test/localhost:8443")].user.token}'` OPENSHIFT_MASTER_URL=https://localhost:8443 gradle check -i --rerun-tasks -Djava.net.preferIPv4Stack=true
 }
 
+failure=0
 setup_test enmasse-ci-single
-run_test enmasse-ci-single false false https://raw.githubusercontent.com/enmasseproject/openshift-configuration/master/generated/enmasse-template.yaml || exit 1
+run_test enmasse-ci-single false false https://raw.githubusercontent.com/enmasseproject/openshift-configuration/master/generated/enmasse-template.yaml || failure=$(($failure + 1))
 teardown_test enmasse-ci-single
 
 setup_test enmasse-ci-multi
-run_test enmasse-ci-multi false true https://raw.githubusercontent.com/enmasseproject/openshift-configuration/master/generated/enmasse-template.yaml || exit 1
+run_test enmasse-ci-multi false true https://raw.githubusercontent.com/enmasseproject/openshift-configuration/master/generated/enmasse-template.yaml || failure=$(($failure + 1))
 teardown_test enmasse-ci-multi
 
 #setup_test enmasse-ci-secure
 #setup_secure
-#run_test enmasse-ci-secure true https://raw.githubusercontent.com/enmasseproject/openshift-configuration/master/generated/tls-enmasse-template.yaml || exit 1
+#run_test enmasse-ci-secure true false https://raw.githubusercontent.com/enmasseproject/openshift-configuration/master/generated/tls-enmasse-template.yaml || exit 1
+
+
+if [ $failure -gt 0 ]
+then
+    echo "Systemtests failed"
+    exit 1
+fi
