@@ -1,16 +1,17 @@
 local version = std.extVar("VERSION");
 local common = import "common.jsonnet";
 {
-  service::
-    common.service("queue-scheduler", "queue-scheduler", "amqp", 55667, 55667),
-  deployment(image_repo)::
+  service(instance)::
+    common.service(instance, "queue-scheduler", "queue-scheduler", "amqp", 55667, 55667),
+  deployment(instance, image_repo)::
     {
       "apiVersion": "extensions/v1beta1",
       "kind": "Deployment",
       "metadata": {
         "labels": {
           "name": "queue-scheduler",
-          "app": "enmasse"
+          "app": "enmasse",
+          "instance": instance
         },
         "name": "queue-scheduler"
       },
@@ -20,12 +21,13 @@ local common = import "common.jsonnet";
           "metadata": {
             "labels": {
               "name": "queue-scheduler",
-              "app": "enmasse"
+              "app": "enmasse",
+              "instance": instance
             }
           },
           "spec": {
             "containers": [
-              common.container("queue-scheduler", image_repo, "amqp", 55667, "128Mi")
+              common.container("queue-scheduler", image_repo, "amqp", 55667, "128Mi", [])
             ]
           }
         }

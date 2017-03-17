@@ -1,14 +1,17 @@
 {
+  generate(instance, hostname)::
+  {
     "kind": "Route",
     "apiVersion": "v1",
     "metadata": {
         "labels": {
-          "app": "enmasse"
+          "app": "enmasse",
+          "instance": instance
         },
         "name": "messaging"
     },
     "spec": {
-        "host": "${MESSAGING_HOSTNAME}",
+        "host": hostname,
         "to": {
             "kind": "Service",
             "name": "messaging",
@@ -21,4 +24,5 @@
             "termination": "passthrough"
         }
     }
+  }
 }

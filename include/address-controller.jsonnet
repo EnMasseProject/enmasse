@@ -2,10 +2,36 @@ local version = std.extVar("VERSION");
 local common = import "common.jsonnet";
 {
   service::
-    common.service("address-controller", "address-controller", "amqp", 5672, 55674),
-  restapi::
-    common.service("restapi", "address-controller", "http", 8080, 8080),
-  deployment(image_repo)::
+  {
+    "apiVersion": "v1",
+    "kind": "Service",
+    "metadata": {
+      "name": "address-controller",
+      "labels": {
+        "app": "enmasse"
+      }
+    },
+    "spec": {
+      "ports": [
+        {
+          "name": "http",
+          "port": 8080,
+          "protocol": "TCP",
+          "targetPort": "http"
+        },
+        {
+          "name": "amqp",
+          "port": 5672,
+          "protocol": "TCP",
+          "targetPort": "amqp"
+        }
+      ],
+      "selector": {
+        "name": "address-controller"
+      }
+    }
+  },
+  deployment(secure, image_repo, multiinstance)::
     {
       "apiVersion": "extensions/v1beta1",
       "kind": "Deployment",
@@ -28,7 +54,13 @@ local common = import "common.jsonnet";
           "spec": {
             "serviceAccount": "enmasse-service-account",
             "containers": [
-              common.container("address-controller", image_repo, "amqp", 55674, "256Mi")
+              common.container2("address-controller", image_repo, "amqp", 5672, "http", 8080, "256Mi", [{
+                "name": "MULTIINSTANCE",
+                "value": multiinstance
+              }, {
+                "name": "TLS",
+                "value": secure
+              }])
             ]
           }
         }

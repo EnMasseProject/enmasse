@@ -1,16 +1,17 @@
 local version = std.extVar("VERSION");
 local common = import "common.jsonnet";
 {
-  service::
-    common.service("configuration", "configserv", "amqp", 5672, 5672),
-  deployment(image_repo)::
+  service(instance)::
+    common.service(instance, "configuration", "configserv", "amqp", 5672, 5672),
+  deployment(instance, image_repo)::
     {
       "apiVersion": "extensions/v1beta1",
       "kind": "Deployment",
       "metadata": {
         "labels": {
           "app": "enmasse",
-          "name": "configserv"
+          "name": "configserv",
+          "instance": instance
         },
         "name": "configserv"
       },
@@ -20,11 +21,12 @@ local common = import "common.jsonnet";
           "metadata": {
             "labels": {
               "app": "enmasse",
-              "name": "configserv"
+              "name": "configserv",
+              "instance": instance
             }
           },
           "spec": {
-            "containers": [ common.container("configserv", image_repo, "amqp", 5672, "128Mi") ]
+            "containers": [ common.container("configserv", image_repo, "amqp", 5672, "128Mi", []) ]
           }
         }
       }

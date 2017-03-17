@@ -5,20 +5,22 @@
     "protocol": "TCP",
     "targetPort": 5672
   },
-  generate(secure)::
+  generate(secure, instance)::
     {
       "apiVersion": "v1",
       "kind": "Service",
       "metadata": {
         "labels": {
-          "app": "enmasse"
+          "app": "enmasse",
+          "instance": instance
         },
         "name": "amqp-kafka-bridge"
       },
       "spec": {
         "ports": [port],
         "selector": {
-          "capability": "bridge"
+          "capability": "bridge",
+          "instance": instance
         }
       }
     }

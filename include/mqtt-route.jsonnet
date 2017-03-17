@@ -1,14 +1,17 @@
 {
+  generate(instance, hostname)::
+  {
     "kind": "Route",
     "apiVersion": "v1",
     "metadata": {
         "labels": {
-          "app": "enmasse"
+          "app": "enmasse",
+          "instance": instance
         },
         "name": "mqtt"
     },
     "spec": {
-        "host": "${MQTT_GATEWAY_HOSTNAME}",
+        "host": hostname,
         "to": {
             "kind": "Service",
             "name": "mqtt",
@@ -21,4 +24,5 @@
             "termination": "passthrough"
         }
     }
+  }
 }

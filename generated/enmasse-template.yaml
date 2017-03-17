@@ -4,7 +4,7 @@ kind: Template
 metadata:
   labels:
     app: enmasse
-  name: enmasse
+  name: enmasse-infra
 objects:
 - apiVersion: v1
   kind: Template
@@ -17,9 +17,10 @@ objects:
     kind: Deployment
     metadata:
       labels:
-        address_config: address-config-${NAME}
+        address_config: address-config-${INSTANCE}-${NAME}
         app: enmasse
         group_id: "${NAME}"
+        instance: "${INSTANCE}"
       name: "${NAME}"
     spec:
       replicas: 1
@@ -28,6 +29,7 @@ objects:
           labels:
             app: enmasse
             group_id: "${NAME}"
+            instance: "${INSTANCE}"
             role: broker
         spec:
           containers:
@@ -57,23 +59,25 @@ objects:
           volumes:
           - emptyDir: {}
             name: vol-${NAME}
-  - apiVersion: v1
-    data:
-      "${ADDRESS}": '{"store_and_forward": true, "multicast": false}'
-    kind: ConfigMap
-    metadata:
-      labels:
-        app: enmasse
-        group_id: "${NAME}"
-        type: address-config
-      name: address-config-${NAME}
   parameters:
   - description: Storage capacity required for volume claims
     name: STORAGE_CAPACITY
     value: 2Gi
+  - description: The docker image to use for the message broker
+    name: BROKER_REPO
+    value: enmasseproject/artemis
+  - description: The default image to use as topic forwarder
+    name: TOPIC_FORWARDER_REPO
+    value: enmasseproject/topic-forwarder
+  - description: The image to use for the router
+    name: ROUTER_REPO
+    value: enmasseproject/qdrouterd
   - description: The link capacity setting for router
     name: ROUTER_LINK_CAPACITY
     value: '50'
+  - description: A valid instance name for the instance
+    name: INSTANCE
+    required: true
   - description: A valid name for the instance
     name: NAME
     required: true
@@ -93,6 +97,7 @@ objects:
       labels:
         app: enmasse
         group_id: "${NAME}"
+        instance: "${INSTANCE}"
       name: pvc-${NAME}
     spec:
       accessModes:
@@ -104,9 +109,10 @@ objects:
     kind: Deployment
     metadata:
       labels:
-        address_config: address-config-${NAME}
+        address_config: address-config-${INSTANCE}-${NAME}
         app: enmasse
         group_id: "${NAME}"
+        instance: "${INSTANCE}"
       name: "${NAME}"
     spec:
       replicas: 1
@@ -115,6 +121,7 @@ objects:
           labels:
             app: enmasse
             group_id: "${NAME}"
+            instance: "${INSTANCE}"
             role: broker
         spec:
           containers:
@@ -145,23 +152,25 @@ objects:
           - name: vol-${NAME}
             persistentVolumeClaim:
               claimName: pvc-${NAME}
-  - apiVersion: v1
-    data:
-      "${ADDRESS}": '{"store_and_forward": true, "multicast": false}'
-    kind: ConfigMap
-    metadata:
-      labels:
-        app: enmasse
-        group_id: "${NAME}"
-        type: address-config
-      name: address-config-${NAME}
   parameters:
   - description: Storage capacity required for volume claims
     name: STORAGE_CAPACITY
     value: 2Gi
+  - description: The docker image to use for the message broker
+    name: BROKER_REPO
+    value: enmasseproject/artemis
+  - description: The default image to use as topic forwarder
+    name: TOPIC_FORWARDER_REPO
+    value: enmasseproject/topic-forwarder
+  - description: The image to use for the router
+    name: ROUTER_REPO
+    value: enmasseproject/qdrouterd
   - description: The link capacity setting for router
     name: ROUTER_LINK_CAPACITY
     value: '50'
+  - description: A valid instance name for the instance
+    name: INSTANCE
+    required: true
   - description: A valid name for the instance
     name: NAME
     required: true
@@ -179,9 +188,10 @@ objects:
     kind: Deployment
     metadata:
       labels:
-        address_config: address-config-${NAME}
+        address_config: address-config-${INSTANCE}-${NAME}
         app: enmasse
         group_id: "${NAME}"
+        instance: "${INSTANCE}"
       name: "${NAME}"
     spec:
       replicas: 1
@@ -190,6 +200,7 @@ objects:
           labels:
             app: enmasse
             group_id: "${NAME}"
+            instance: "${INSTANCE}"
             role: broker
         spec:
           containers:
@@ -258,23 +269,25 @@ objects:
           volumes:
           - emptyDir: {}
             name: vol-${NAME}
-  - apiVersion: v1
-    data:
-      "${ADDRESS}": '{"store_and_forward": true, "multicast": true}'
-    kind: ConfigMap
-    metadata:
-      labels:
-        app: enmasse
-        group_id: "${NAME}"
-        type: address-config
-      name: address-config-${NAME}
   parameters:
   - description: Storage capacity required for volume claims
     name: STORAGE_CAPACITY
     value: 2Gi
+  - description: The docker image to use for the message broker
+    name: BROKER_REPO
+    value: enmasseproject/artemis
+  - description: The default image to use as topic forwarder
+    name: TOPIC_FORWARDER_REPO
+    value: enmasseproject/topic-forwarder
+  - description: The image to use for the router
+    name: ROUTER_REPO
+    value: enmasseproject/qdrouterd
   - description: The link capacity setting for router
     name: ROUTER_LINK_CAPACITY
     value: '50'
+  - description: A valid instance name for the instance
+    name: INSTANCE
+    required: true
   - description: A valid name for the instance
     name: NAME
     required: true
@@ -294,6 +307,7 @@ objects:
       labels:
         app: enmasse
         group_id: "${NAME}"
+        instance: "${INSTANCE}"
       name: pvc-${NAME}
     spec:
       accessModes:
@@ -305,9 +319,10 @@ objects:
     kind: Deployment
     metadata:
       labels:
-        address_config: address-config-${NAME}
+        address_config: address-config-${INSTANCE}-${NAME}
         app: enmasse
         group_id: "${NAME}"
+        instance: "${INSTANCE}"
       name: "${NAME}"
     spec:
       replicas: 1
@@ -316,6 +331,7 @@ objects:
           labels:
             app: enmasse
             group_id: "${NAME}"
+            instance: "${INSTANCE}"
             role: broker
         spec:
           containers:
@@ -385,23 +401,25 @@ objects:
           - name: vol-${NAME}
             persistentVolumeClaim:
               claimName: pvc-${NAME}
-  - apiVersion: v1
-    data:
-      "${ADDRESS}": '{"store_and_forward": true, "multicast": true}'
-    kind: ConfigMap
-    metadata:
-      labels:
-        app: enmasse
-        group_id: "${NAME}"
-        type: address-config
-      name: address-config-${NAME}
   parameters:
   - description: Storage capacity required for volume claims
     name: STORAGE_CAPACITY
     value: 2Gi
+  - description: The docker image to use for the message broker
+    name: BROKER_REPO
+    value: enmasseproject/artemis
+  - description: The default image to use as topic forwarder
+    name: TOPIC_FORWARDER_REPO
+    value: enmasseproject/topic-forwarder
+  - description: The image to use for the router
+    name: ROUTER_REPO
+    value: enmasseproject/qdrouterd
   - description: The link capacity setting for router
     name: ROUTER_LINK_CAPACITY
     value: '50'
+  - description: A valid instance name for the instance
+    name: INSTANCE
+    required: true
   - description: A valid name for the instance
     name: NAME
     required: true
@@ -413,28 +431,358 @@ objects:
   metadata:
     labels:
       app: enmasse
-    name: direct
+    name: enmasse-instance-infra
   objects:
-  - apiVersion: v1
-    data:
-      "${ADDRESS}": '{"store_and_forward":false, "multicast": ${MULTICAST}}'
-    kind: ConfigMap
+  - apiVersion: extensions/v1beta1
+    kind: Deployment
     metadata:
       labels:
         app: enmasse
-        group_id: "${NAME}"
-        type: address-config
-      name: address-config-${NAME}
+        instance: "${INSTANCE}"
+        name: qdrouterd
+      name: qdrouterd
+    spec:
+      replicas: 1
+      template:
+        metadata:
+          labels:
+            app: enmasse
+            capability: router
+            instance: "${INSTANCE}"
+            name: qdrouterd
+        spec:
+          containers:
+          - env:
+            - name: LINK_CAPACITY
+              value: "${ROUTER_LINK_CAPACITY}"
+            image: "${ROUTER_REPO}:latest"
+            livenessProbe:
+              tcpSocket:
+                port: amqp
+            name: router
+            ports:
+            - containerPort: 5672
+              name: amqp
+              protocol: TCP
+            - containerPort: 55673
+              name: internal
+              protocol: TCP
+  - apiVersion: v1
+    kind: Service
+    metadata:
+      annotations:
+        service.alpha.openshift.io/dependencies: '[{"kind": "Service", "name": "admin",
+          "namespace": ""}, {"kind": "Service", "name": "subscription", "namespace":
+          ""}, {"kind": "Service", "name": "mqtt", "namespace": ""}]'
+        service.alpha.openshift.io/infrastructure: 'true'
+      labels:
+        app: enmasse
+        instance: "${INSTANCE}"
+      name: messaging
+    spec:
+      ports:
+      - name: amqp
+        port: 5672
+        protocol: TCP
+        targetPort: 5672
+      - name: internal
+        port: 55673
+        protocol: TCP
+        targetPort: 55673
+      selector:
+        capability: router
+        instance: "${INSTANCE}"
+  - apiVersion: extensions/v1beta1
+    kind: Deployment
+    metadata:
+      labels:
+        app: enmasse
+        instance: "${INSTANCE}"
+        name: subserv
+      name: subserv
+    spec:
+      replicas: 1
+      template:
+        metadata:
+          labels:
+            app: enmasse
+            instance: "${INSTANCE}"
+            name: subserv
+        spec:
+          containers:
+          - env: []
+            image: "${SUBSERV_REPO}:latest"
+            livenessProbe:
+              tcpSocket:
+                port: amqp
+            name: subserv
+            ports:
+            - containerPort: 5672
+              name: amqp
+              protocol: TCP
+            resources:
+              limits:
+                memory: 64Mi
+              requests:
+                memory: 64Mi
+  - apiVersion: v1
+    kind: Service
+    metadata:
+      labels:
+        app: enmasse
+        instance: "${INSTANCE}"
+      name: subscription
+    spec:
+      ports:
+      - name: amqp
+        port: 5672
+        protocol: TCP
+        targetPort: 5672
+      selector:
+        instance: "${INSTANCE}"
+        name: subserv
+  - apiVersion: extensions/v1beta1
+    kind: Deployment
+    metadata:
+      labels:
+        app: enmasse
+        instance: "${INSTANCE}"
+        name: mqtt-gateway
+      name: mqtt-gateway
+    spec:
+      replicas: 1
+      template:
+        metadata:
+          labels:
+            app: enmasse
+            instance: "${INSTANCE}"
+            name: mqtt-gateway
+        spec:
+          containers:
+          - image: "${MQTT_GATEWAY_REPO}:latest"
+            livenessProbe:
+              initialDelaySeconds: 60
+              tcpSocket:
+                port: mqtt
+            name: mqtt-gateway
+            ports:
+            - containerPort: 1883
+              name: mqtt
+              protocol: TCP
+  - apiVersion: v1
+    kind: Service
+    metadata:
+      labels:
+        app: enmasse
+        instance: "${INSTANCE}"
+      name: mqtt
+    spec:
+      ports:
+      - name: mqtt
+        port: 1883
+        protocol: TCP
+        targetPort: 1883
+      selector:
+        instance: "${INSTANCE}"
+        name: mqtt-gateway
+  - apiVersion: extensions/v1beta1
+    kind: Deployment
+    metadata:
+      labels:
+        app: enmasse
+        instance: "${INSTANCE}"
+        name: mqtt-lwt
+      name: mqtt-lwt
+    spec:
+      replicas: 1
+      template:
+        metadata:
+          labels:
+            app: enmasse
+            instance: "${INSTANCE}"
+            name: mqtt-lwt
+        spec:
+          containers:
+          - image: "${MQTT_LWT_REPO}:latest"
+            name: mqtt-lwt
+  - apiVersion: extensions/v1beta1
+    kind: Deployment
+    metadata:
+      labels:
+        app: enmasse
+        instance: "${INSTANCE}"
+        name: admin
+      name: admin
+    spec:
+      replicas: 1
+      template:
+        metadata:
+          labels:
+            app: enmasse
+            instance: "${INSTANCE}"
+            name: admin
+        spec:
+          containers:
+          - env:
+            - name: CONFIGURATION_SERVICE_HOST
+              value: localhost
+            - name: CONFIGURATION_SERVICE_PORT
+              value: '5672'
+            image: "${RAGENT_REPO}:latest"
+            livenessProbe:
+              tcpSocket:
+                port: amqp
+            name: ragent
+            ports:
+            - containerPort: 55672
+              name: amqp
+              protocol: TCP
+            resources:
+              limits:
+                memory: 64Mi
+              requests:
+                memory: 64Mi
+          - env:
+            - name: CONFIGURATION_SERVICE_HOST
+              value: localhost
+            - name: CONFIGURATION_SERVICE_PORT
+              value: '5672'
+            image: "${QUEUE_SCHEDULER_REPO}:latest"
+            livenessProbe:
+              tcpSocket:
+                port: amqp
+            name: queue-scheduler
+            ports:
+            - containerPort: 55667
+              name: amqp
+              protocol: TCP
+            resources:
+              limits:
+                memory: 128Mi
+              requests:
+                memory: 128Mi
+          - env: []
+            image: "${CONFIGSERV_REPO}:latest"
+            livenessProbe:
+              tcpSocket:
+                port: amqp
+            name: configserv
+            ports:
+            - containerPort: 5672
+              name: amqp
+              protocol: TCP
+            resources:
+              limits:
+                memory: 256Mi
+              requests:
+                memory: 256Mi
+  - apiVersion: v1
+    kind: Service
+    metadata:
+      labels:
+        app: enmasse
+        instance: "${INSTANCE}"
+      name: admin
+    spec:
+      ports:
+      - name: ragent
+        port: 55672
+      - name: configuration
+        port: 5672
+      - name: queue-scheduler
+        port: 55667
+      selector:
+        instance: "${INSTANCE}"
+        name: admin
   parameters:
-  - description: A valid name for the instance
-    name: NAME
+  - description: The image to use for the router
+    name: ROUTER_REPO
+    value: enmasseproject/qdrouterd
+  - description: The link capacity setting for router
+    name: ROUTER_LINK_CAPACITY
+    value: '50'
+  - description: The image to use for the configuration service
+    name: CONFIGSERV_REPO
+    value: enmasseproject/configserv
+  - description: The docker image to use for the queue scheduler
+    name: QUEUE_SCHEDULER_REPO
+    value: enmasseproject/queue-scheduler
+  - description: The image to use for the router agent
+    name: RAGENT_REPO
+    value: enmasseproject/ragent
+  - description: The image to use for the subscription services
+    name: SUBSERV_REPO
+    value: enmasseproject/subserv
+  - description: The hostname to use for the exposed route for messaging (TLS only)
+    name: MESSAGING_HOSTNAME
+  - description: The image to use for the MQTT gateway
+    name: MQTT_GATEWAY_REPO
+    value: enmasseproject/mqtt-gateway
+  - description: The hostname to use for the exposed route for MQTT (TLS only)
+    name: MQTT_GATEWAY_HOSTNAME
+  - description: The image to use for the MQTT LWT
+    name: MQTT_LWT_REPO
+    value: enmasseproject/mqtt-lwt
+  - description: The instance this infrastructure is deployed for
+    name: INSTANCE
     required: true
-  - description: The address to use for the address
-    name: ADDRESS
-    required: true
-  - description: If the address should have multicast semantics or not
-    name: MULTICAST
-    required: true
+- apiVersion: extensions/v1beta1
+  kind: Deployment
+  metadata:
+    labels:
+      app: enmasse
+      name: address-controller
+    name: address-controller
+  spec:
+    replicas: 1
+    template:
+      metadata:
+        labels:
+          app: enmasse
+          name: address-controller
+      spec:
+        containers:
+        - env:
+          - name: MULTIINSTANCE
+            value: "${MULTIINSTANCE}"
+          - name: TLS
+            value: 'false'
+          image: "${ADDRESS_CONTROLLER_REPO}:latest"
+          livenessProbe:
+            tcpSocket:
+              port: amqp
+          name: address-controller
+          ports:
+          - containerPort: 5672
+            name: amqp
+            protocol: TCP
+          - containerPort: 8080
+            name: http
+            protocol: TCP
+          resources:
+            limits:
+              memory: 256Mi
+            requests:
+              memory: 256Mi
+        serviceAccount: enmasse-service-account
+- apiVersion: v1
+  kind: Service
+  metadata:
+    labels:
+      app: enmasse
+    name: address-controller
+  spec:
+    ports:
+    - name: http
+      port: 8080
+      protocol: TCP
+      targetPort: http
+    - name: amqp
+      port: 5672
+      protocol: TCP
+      targetPort: amqp
+    selector:
+      name: address-controller
 - apiVersion: v1
   kind: Route
   metadata:
@@ -443,167 +791,12 @@ objects:
     name: restapi
   spec:
     host: "${RESTAPI_HOSTNAME}"
-    path: "/v3/address"
+    path: "/v3"
     port:
-      targetPort: restapi
+      targetPort: http
     to:
       kind: Service
-      name: admin
-- apiVersion: extensions/v1beta1
-  kind: Deployment
-  metadata:
-    labels:
-      app: enmasse
-      name: qdrouterd
-    name: qdrouterd
-  spec:
-    replicas: 1
-    template:
-      metadata:
-        labels:
-          app: enmasse
-          capability: router
-          name: qdrouterd
-      spec:
-        containers:
-        - env:
-          - name: LINK_CAPACITY
-            value: "${ROUTER_LINK_CAPACITY}"
-          image: "${ROUTER_REPO}:latest"
-          livenessProbe:
-            tcpSocket:
-              port: amqp
-          name: router
-          ports:
-          - containerPort: 5672
-            name: amqp
-            protocol: TCP
-          - containerPort: 55673
-            name: internal
-            protocol: TCP
-- apiVersion: v1
-  kind: Service
-  metadata:
-    annotations:
-      service.alpha.openshift.io/dependencies: '[{"name":"admin","namespace":"","kind":"Service"},{"name":"subscription","namespace":"","kind":"Service"},{"name":"mqtt","namespace":"","kind":"Service"}]'
-      service.alpha.openshift.io/infrastructure: 'true'
-    labels:
-      app: enmasse
-    name: messaging
-  spec:
-    ports:
-    - name: amqp
-      port: 5672
-      protocol: TCP
-      targetPort: 5672
-    - name: internal
-      port: 55673
-      protocol: TCP
-      targetPort: 55673
-    selector:
-      capability: router
-- apiVersion: extensions/v1beta1
-  kind: Deployment
-  metadata:
-    labels:
-      app: enmasse
-      name: subserv
-    name: subserv
-  spec:
-    replicas: 1
-    template:
-      metadata:
-        labels:
-          app: enmasse
-          name: subserv
-      spec:
-        containers:
-        - image: "${SUBSERV_REPO}:latest"
-          livenessProbe:
-            tcpSocket:
-              port: amqp
-          name: subserv
-          ports:
-          - containerPort: 5672
-            name: amqp
-            protocol: TCP
-          resources:
-            limits:
-              memory: 64Mi
-            requests:
-              memory: 64Mi
-- apiVersion: v1
-  kind: Service
-  metadata:
-    labels:
-      app: enmasse
-    name: subscription
-  spec:
-    ports:
-    - name: amqp
-      port: 5672
-      protocol: TCP
-      targetPort: 5672
-    selector:
-      name: subserv
-- apiVersion: extensions/v1beta1
-  kind: Deployment
-  metadata:
-    labels:
-      app: enmasse
-      name: mqtt-gateway
-    name: mqtt-gateway
-  spec:
-    replicas: 1
-    template:
-      metadata:
-        labels:
-          app: enmasse
-          name: mqtt-gateway
-      spec:
-        containers:
-        - image: "${MQTT_GATEWAY_REPO}:latest"
-          livenessProbe:
-            initialDelaySeconds: 60
-            tcpSocket:
-              port: mqtt
-          name: mqtt-gateway
-          ports:
-          - containerPort: 1883
-            name: mqtt
-            protocol: TCP
-- apiVersion: v1
-  kind: Service
-  metadata:
-    labels:
-      app: enmasse
-    name: mqtt
-  spec:
-    ports:
-    - name: mqtt
-      port: 1883
-      protocol: TCP
-      targetPort: 1883
-    selector:
-      name: mqtt-gateway
-- apiVersion: extensions/v1beta1
-  kind: Deployment
-  metadata:
-    labels:
-      app: enmasse
-      name: mqtt-lwt
-    name: mqtt-lwt
-  spec:
-    replicas: 1
-    template:
-      metadata:
-        labels:
-          app: enmasse
-          name: mqtt-lwt
-      spec:
-        containers:
-        - image: "${MQTT_LWT_REPO}:latest"
-          name: mqtt-lwt
+      name: address-controller
 - apiVersion: v1
   data:
     json: '{"large-persisted-queue": {"description": "Large queue with persistence",
@@ -623,149 +816,13 @@ objects:
     labels:
       app: enmasse
     name: flavor
-- apiVersion: extensions/v1beta1
-  kind: Deployment
-  metadata:
-    labels:
-      app: enmasse
-      name: admin
-    name: admin
-  spec:
-    replicas: 1
-    template:
-      metadata:
-        labels:
-          app: enmasse
-          name: admin
-      spec:
-        containers:
-        - image: "${ADDRESS_CONTROLLER_REPO}:latest"
-          livenessProbe:
-            tcpSocket:
-              port: amqp
-          name: address-controller
-          ports:
-          - containerPort: 55674
-            name: amqp
-            protocol: TCP
-          - containerPort: 8080
-            name: http
-            protocol: TCP
-          resources:
-            limits:
-              memory: 256Mi
-            requests:
-              memory: 256Mi
-        - env:
-          - name: CONFIGURATION_SERVICE_HOST
-            value: localhost
-          - name: CONFIGURATION_SERVICE_PORT
-            value: '5672'
-          image: "${RAGENT_REPO}:latest"
-          livenessProbe:
-            tcpSocket:
-              port: amqp
-          name: ragent
-          ports:
-          - containerPort: 55672
-            name: amqp
-            protocol: TCP
-          resources:
-            limits:
-              memory: 64Mi
-            requests:
-              memory: 64Mi
-        - env:
-          - name: CONFIGURATION_SERVICE_HOST
-            value: localhost
-          - name: CONFIGURATION_SERVICE_PORT
-            value: '5672'
-          image: "${QUEUE_SCHEDULER_REPO}:latest"
-          livenessProbe:
-            tcpSocket:
-              port: amqp
-          name: queue-scheduler
-          ports:
-          - containerPort: 55667
-            name: amqp
-            protocol: TCP
-          resources:
-            limits:
-              memory: 128Mi
-            requests:
-              memory: 128Mi
-        - image: "${CONFIGSERV_REPO}:latest"
-          livenessProbe:
-            tcpSocket:
-              port: amqp
-          name: configserv
-          ports:
-          - containerPort: 5672
-            name: amqp
-            protocol: TCP
-          resources:
-            limits:
-              memory: 256Mi
-            requests:
-              memory: 256Mi
-        serviceAccount: enmasse-service-account
-- apiVersion: v1
-  kind: Service
-  metadata:
-    labels:
-      app: enmasse
-    name: admin
-  spec:
-    ports:
-    - name: ragent
-      port: 55672
-    - name: restapi
-      port: 8080
-    - name: configuration
-      port: 5672
-    - name: address-controller
-      port: 55674
-    - name: queue-scheduler
-      port: 55667
-    selector:
-      name: admin
 parameters:
-- description: The image to use for the router
-  name: ROUTER_REPO
-  value: enmasseproject/qdrouterd
-- description: The default image to use as broker
-  name: BROKER_REPO
-  value: enmasseproject/artemis
-- description: The default image to use as topic forwarder
-  name: TOPIC_FORWARDER_REPO
-  value: enmasseproject/topic-forwarder
-- description: The link capacity setting for router
-  name: ROUTER_LINK_CAPACITY
-  value: '50'
-- description: The image to use for the configuration service
-  name: CONFIGSERV_REPO
-  value: enmasseproject/configserv
+- description: The hostname to use for the exposed route for the REST API
+  name: RESTAPI_HOSTNAME
+- description: If set to true, the address controller will deploy infrastructure to
+    separate namespaces
+  name: MULTIINSTANCE
+  value: 'false'
 - description: The docker image to use for the address controller
   name: ADDRESS_CONTROLLER_REPO
   value: enmasseproject/address-controller
-- description: The docker image to use for the queue scheduler
-  name: QUEUE_SCHEDULER_REPO
-  value: enmasseproject/queue-scheduler
-- description: The image to use for the router agent
-  name: RAGENT_REPO
-  value: enmasseproject/ragent
-- description: The image to use for the subscription services
-  name: SUBSERV_REPO
-  value: enmasseproject/subserv
-- description: The hostname to use for the exposed route for messaging (TLS only)
-  name: MESSAGING_HOSTNAME
-- description: The hostname to use for the exposed route for the REST API
-  name: RESTAPI_HOSTNAME
-- description: The image to use for the MQTT gateway
-  name: MQTT_GATEWAY_REPO
-  value: enmasseproject/mqtt-gateway
-- description: The hostname to use for the exposed route for MQTT (TLS only)
-  name: MQTT_GATEWAY_HOSTNAME
-- description: The image to use for the MQTT LWT
-  name: MQTT_LWT_REPO
-  value: enmasseproject/mqtt-lwt

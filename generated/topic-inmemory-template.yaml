@@ -10,9 +10,10 @@ objects:
   kind: Deployment
   metadata:
     labels:
-      address_config: address-config-${NAME}
+      address_config: address-config-${INSTANCE}-${NAME}
       app: enmasse
       group_id: "${NAME}"
+      instance: "${INSTANCE}"
     name: "${NAME}"
   spec:
     replicas: 1
@@ -21,6 +22,7 @@ objects:
         labels:
           app: enmasse
           group_id: "${NAME}"
+          instance: "${INSTANCE}"
           role: broker
       spec:
         containers:
@@ -89,23 +91,25 @@ objects:
         volumes:
         - emptyDir: {}
           name: vol-${NAME}
-- apiVersion: v1
-  data:
-    "${ADDRESS}": '{"store_and_forward": true, "multicast": true}'
-  kind: ConfigMap
-  metadata:
-    labels:
-      app: enmasse
-      group_id: "${NAME}"
-      type: address-config
-    name: address-config-${NAME}
 parameters:
 - description: Storage capacity required for volume claims
   name: STORAGE_CAPACITY
   value: 2Gi
+- description: The docker image to use for the message broker
+  name: BROKER_REPO
+  value: enmasseproject/artemis
+- description: The default image to use as topic forwarder
+  name: TOPIC_FORWARDER_REPO
+  value: enmasseproject/topic-forwarder
+- description: The image to use for the router
+  name: ROUTER_REPO
+  value: enmasseproject/qdrouterd
 - description: The link capacity setting for router
   name: ROUTER_LINK_CAPACITY
   value: '50'
+- description: A valid instance name for the instance
+  name: INSTANCE
+  required: true
 - description: A valid name for the instance
   name: NAME
   required: true

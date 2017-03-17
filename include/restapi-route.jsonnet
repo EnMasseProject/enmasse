@@ -1,5 +1,5 @@
 {
-    generate(admin)::
+    generate(hostname)::
     {
         "kind": "Route",
         "apiVersion": "v1",
@@ -10,14 +10,14 @@
             "name": "restapi"
         },
         "spec": {
-            "path": "/v3/address",
-            "host": "${RESTAPI_HOSTNAME}",
+            "path": "/v3",
+            "host": hostname,
             "to": {
                 "kind": "Service",
-                "name": if (admin) then "admin" else "restapi"
+                "name": "address-controller"
             },
             "port": {
-                "targetPort": if (admin) then "restapi" else "http"
+                "targetPort": "http"
             }
         }
     }

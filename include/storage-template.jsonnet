@@ -30,7 +30,8 @@ local forwarder = import "forwarder.jsonnet";
           "labels": {
             "app": "enmasse",
             "group_id": "${NAME}",
-            "address_config": "address-config-${NAME}"
+            "instance": "${INSTANCE}",
+            "address_config": "address-config-${INSTANCE}-${NAME}"
           }
         },
         "spec": {
@@ -40,7 +41,8 @@ local forwarder = import "forwarder.jsonnet";
               "labels": {
                 "app": "enmasse",
                 "role": "broker",
-                "group_id": "${NAME}"
+                "group_id": "${NAME}",
+                "instance": "${INSTANCE}"
               }
             },
             "spec": {
@@ -65,6 +67,7 @@ local forwarder = import "forwarder.jsonnet";
           "name": claimName,
           "labels": {
             "group_id": "${NAME}",
+            "instance": "${INSTANCE}",
             "app": "enmasse"
           }
         },
@@ -79,25 +82,9 @@ local forwarder = import "forwarder.jsonnet";
           }
         }
       },
-      local mcast = if multicast then "true" else "false",
-      local config = {
-        "apiVersion": "v1",
-        "kind": "ConfigMap",
-        "metadata": {
-          "name": "address-config-${NAME}",
-          "labels": {
-            "type": "address-config",
-            "group_id": "${NAME}",
-            "app": "enmasse"
-          }
-        },
-        "data": {
-          "${ADDRESS}": "{\"store_and_forward\": true, \"multicast\": " + mcast + "}"
-        }
-      },
       "objects": if persistence
-        then [pvc, controller, config]
-        else [controller, config],
+        then [pvc, controller]
+        else [controller],
       "parameters": [
         {
           "name": "STORAGE_CAPACITY",
@@ -105,9 +92,29 @@ local forwarder = import "forwarder.jsonnet";
           "value": "2Gi"
         },
         {
+          "name": "BROKER_REPO",
+          "description": "The docker image to use for the message broker",
+          "value": "enmasseproject/artemis"
+        },
+        {
+          "name": "TOPIC_FORWARDER_REPO",
+          "description": "The default image to use as topic forwarder",
+          "value": "enmasseproject/topic-forwarder"
+        },
+        {
+          "name": "ROUTER_REPO",
+          "description": "The image to use for the router",
+          "value": "enmasseproject/qdrouterd"
+        },
+        {
           "name": "ROUTER_LINK_CAPACITY",
           "description": "The link capacity setting for router",
           "value": "50"
+        },
+        {
+          "name": "INSTANCE",
+          "description": "A valid instance name for the instance",
+          "required": true
         },
         {
           "name": "NAME",

@@ -17,10 +17,11 @@ objects:
     kind: Deployment
     metadata:
       labels:
-        address_config: address-config-${NAME}
+        address_config: address-config-${TENANT}-${NAME}
         app: enmasse
         group_id: "${NAME}"
-      name: "${NAME}"
+        tenant: "${TENANT}"
+      name: "${TENANT}-${NAME}"
     spec:
       replicas: 1
       template:
@@ -29,6 +30,7 @@ objects:
             app: enmasse
             group_id: "${NAME}"
             role: broker
+            tenant: "${TENANT}"
         spec:
           containers:
           - env:
@@ -53,10 +55,10 @@ objects:
               name: core
             volumeMounts:
             - mountPath: "/var/run/artemis"
-              name: vol-${NAME}
+              name: vol-${TENANT}-${NAME}
           volumes:
           - emptyDir: {}
-            name: vol-${NAME}
+            name: vol-${TENANT}-${NAME}
           - name: ssl-certs
             secret:
               secretName: qdrouterd-certs
@@ -68,8 +70,9 @@ objects:
       labels:
         app: enmasse
         group_id: "${NAME}"
+        tenant: "${TENANT}"
         type: address-config
-      name: address-config-${NAME}
+      name: address-config-${TENANT}-${NAME}
   parameters:
   - description: Storage capacity required for volume claims
     name: STORAGE_CAPACITY
@@ -77,6 +80,9 @@ objects:
   - description: The link capacity setting for router
     name: ROUTER_LINK_CAPACITY
     value: '50'
+  - description: A valid tenant name for the instance
+    name: TENANT
+    required: true
   - description: A valid name for the instance
     name: NAME
     required: true
@@ -96,7 +102,8 @@ objects:
       labels:
         app: enmasse
         group_id: "${NAME}"
-      name: pvc-${NAME}
+        tenant: "${TENANT}"
+      name: pvc-${TENANT}-${NAME}
     spec:
       accessModes:
       - ReadWriteMany
@@ -107,10 +114,11 @@ objects:
     kind: Deployment
     metadata:
       labels:
-        address_config: address-config-${NAME}
+        address_config: address-config-${TENANT}-${NAME}
         app: enmasse
         group_id: "${NAME}"
-      name: "${NAME}"
+        tenant: "${TENANT}"
+      name: "${TENANT}-${NAME}"
     spec:
       replicas: 1
       template:
@@ -119,6 +127,7 @@ objects:
             app: enmasse
             group_id: "${NAME}"
             role: broker
+            tenant: "${TENANT}"
         spec:
           containers:
           - env:
@@ -143,11 +152,11 @@ objects:
               name: core
             volumeMounts:
             - mountPath: "/var/run/artemis"
-              name: vol-${NAME}
+              name: vol-${TENANT}-${NAME}
           volumes:
-          - name: vol-${NAME}
+          - name: vol-${TENANT}-${NAME}
             persistentVolumeClaim:
-              claimName: pvc-${NAME}
+              claimName: pvc-${TENANT}-${NAME}
           - name: ssl-certs
             secret:
               secretName: qdrouterd-certs
@@ -159,8 +168,9 @@ objects:
       labels:
         app: enmasse
         group_id: "${NAME}"
+        tenant: "${TENANT}"
         type: address-config
-      name: address-config-${NAME}
+      name: address-config-${TENANT}-${NAME}
   parameters:
   - description: Storage capacity required for volume claims
     name: STORAGE_CAPACITY
@@ -168,6 +178,9 @@ objects:
   - description: The link capacity setting for router
     name: ROUTER_LINK_CAPACITY
     value: '50'
+  - description: A valid tenant name for the instance
+    name: TENANT
+    required: true
   - description: A valid name for the instance
     name: NAME
     required: true
@@ -185,10 +198,11 @@ objects:
     kind: Deployment
     metadata:
       labels:
-        address_config: address-config-${NAME}
+        address_config: address-config-${TENANT}-${NAME}
         app: enmasse
         group_id: "${NAME}"
-      name: "${NAME}"
+        tenant: "${TENANT}"
+      name: "${TENANT}-${NAME}"
     spec:
       replicas: 1
       template:
@@ -197,6 +211,7 @@ objects:
             app: enmasse
             group_id: "${NAME}"
             role: broker
+            tenant: "${TENANT}"
         spec:
           containers:
           - env:
@@ -221,7 +236,7 @@ objects:
               name: core
             volumeMounts:
             - mountPath: "/var/run/artemis"
-              name: vol-${NAME}
+              name: vol-${TENANT}-${NAME}
           - env:
             - name: LINK_CAPACITY
               value: "${ROUTER_LINK_CAPACITY}"
@@ -270,7 +285,7 @@ objects:
                 memory: 128Mi
           volumes:
           - emptyDir: {}
-            name: vol-${NAME}
+            name: vol-${TENANT}-${NAME}
           - name: ssl-certs
             secret:
               secretName: qdrouterd-certs
@@ -282,8 +297,9 @@ objects:
       labels:
         app: enmasse
         group_id: "${NAME}"
+        tenant: "${TENANT}"
         type: address-config
-      name: address-config-${NAME}
+      name: address-config-${TENANT}-${NAME}
   parameters:
   - description: Storage capacity required for volume claims
     name: STORAGE_CAPACITY
@@ -291,6 +307,9 @@ objects:
   - description: The link capacity setting for router
     name: ROUTER_LINK_CAPACITY
     value: '50'
+  - description: A valid tenant name for the instance
+    name: TENANT
+    required: true
   - description: A valid name for the instance
     name: NAME
     required: true
@@ -310,7 +329,8 @@ objects:
       labels:
         app: enmasse
         group_id: "${NAME}"
-      name: pvc-${NAME}
+        tenant: "${TENANT}"
+      name: pvc-${TENANT}-${NAME}
     spec:
       accessModes:
       - ReadWriteMany
@@ -321,10 +341,11 @@ objects:
     kind: Deployment
     metadata:
       labels:
-        address_config: address-config-${NAME}
+        address_config: address-config-${TENANT}-${NAME}
         app: enmasse
         group_id: "${NAME}"
-      name: "${NAME}"
+        tenant: "${TENANT}"
+      name: "${TENANT}-${NAME}"
     spec:
       replicas: 1
       template:
@@ -333,6 +354,7 @@ objects:
             app: enmasse
             group_id: "${NAME}"
             role: broker
+            tenant: "${TENANT}"
         spec:
           containers:
           - env:
@@ -357,7 +379,7 @@ objects:
               name: core
             volumeMounts:
             - mountPath: "/var/run/artemis"
-              name: vol-${NAME}
+              name: vol-${TENANT}-${NAME}
           - env:
             - name: LINK_CAPACITY
               value: "${ROUTER_LINK_CAPACITY}"
@@ -405,9 +427,9 @@ objects:
               requests:
                 memory: 128Mi
           volumes:
-          - name: vol-${NAME}
+          - name: vol-${TENANT}-${NAME}
             persistentVolumeClaim:
-              claimName: pvc-${NAME}
+              claimName: pvc-${TENANT}-${NAME}
           - name: ssl-certs
             secret:
               secretName: qdrouterd-certs
@@ -419,8 +441,9 @@ objects:
       labels:
         app: enmasse
         group_id: "${NAME}"
+        tenant: "${TENANT}"
         type: address-config
-      name: address-config-${NAME}
+      name: address-config-${TENANT}-${NAME}
   parameters:
   - description: Storage capacity required for volume claims
     name: STORAGE_CAPACITY
@@ -428,6 +451,9 @@ objects:
   - description: The link capacity setting for router
     name: ROUTER_LINK_CAPACITY
     value: '50'
+  - description: A valid tenant name for the instance
+    name: TENANT
+    required: true
   - description: A valid name for the instance
     name: NAME
     required: true
