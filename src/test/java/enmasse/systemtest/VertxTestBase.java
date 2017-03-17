@@ -17,7 +17,6 @@ package enmasse.systemtest;
 
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
-import io.vertx.core.http.HttpClient;
 import io.vertx.core.net.PemTrustOptions;
 import io.vertx.proton.ProtonClient;
 import io.vertx.proton.ProtonClientOptions;
@@ -30,22 +29,26 @@ import java.net.UnknownHostException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-public class VertxTestBase {
+public abstract class VertxTestBase {
     protected Vertx vertx;
-    protected HttpClient httpClient;
+    protected AddressApiClient addressApiClient;
     protected Environment environment = new Environment();
-    protected OpenShift openShift = new OpenShift(environment);
+    protected OpenShift openShift;
+
+    protected abstract String getInstanceName();
 
     @Before
     public void setup() throws Exception {
         vertx = Vertx.vertx();
-        httpClient = vertx.createHttpClient();
+        openShift = new OpenShift(environment, getInstanceName().toLowerCase());
+        addressApiClient = new AddressApiClient(vertx, openShift.getRestEndpoint(), environment.isMultitenant());
+        addressApiClient.deployInstance(getInstanceName().toLowerCase());
     }
 
     @After
     public void teardown() throws Exception {
         cleanup();
-        httpClient.close();
+        addressApiClient.close();
         vertx.close();
     }
 
@@ -55,7 +58,7 @@ public class VertxTestBase {
 
     protected void deploy(Destination ... destinations) throws Exception {
         TimeoutBudget budget = new TimeoutBudget(5, TimeUnit.MINUTES);
-        TestUtils.deploy(httpClient, openShift, budget, destinations);
+        TestUtils.deploy(addressApiClient, openShift, budget, getInstanceName().toLowerCase(), destinations);
         for (Destination destination : destinations) {
             waitUntilReady(destination.getAddress(), budget);
         }

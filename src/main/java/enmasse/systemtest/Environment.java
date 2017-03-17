@@ -23,6 +23,7 @@ public class Environment {
     private final String namespace = System.getenv("OPENSHIFT_NAMESPACE");
     private final String useTls = System.getenv("OPENSHIFT_USE_TLS");
     private final String messagingCert = System.getenv("OPENSHIFT_SERVER_CERT");
+    private final boolean multitenant = Boolean.parseBoolean(System.getenv("OPENSHIFT_MULTITENANT"));
 
     public String openShiftUrl() {
         return url;
@@ -46,5 +47,9 @@ public class Environment {
 
     public String namespace() {
         return namespace;
+    }
+
+    public boolean isMultitenant() {
+        return multitenant;
     }
 }

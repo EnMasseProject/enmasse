@@ -33,7 +33,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
-public class TopicTest extends VertxTestBase{
+public class TopicTest extends VertxTestBase {
 
     @Test
     public void testMultipleSubscribers() throws Exception {
@@ -122,5 +122,10 @@ public class TopicTest extends VertxTestBase{
         sub.setBody(new AmqpValue(dest.getAddress()));
         unsub.setSubject("unsubscribe");
         ctrlClient.sendMessages("$subctrl", unsub).get(5, TimeUnit.MINUTES);
+    }
+
+    @Override
+    protected String getInstanceName() {
+        return this.getClass().getSimpleName();
     }
 }

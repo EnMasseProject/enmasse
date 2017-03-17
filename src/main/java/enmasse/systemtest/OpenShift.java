@@ -19,17 +19,17 @@ import java.util.stream.Collectors;
 public class OpenShift {
     private final Environment environment;
     private final OpenShiftClient client;
+    private final String namespace;
 
-    public OpenShift(Environment environment) {
+    public OpenShift(Environment environment, String namespace) {
         this.environment = environment;
         Config config = new ConfigBuilder()
                 .withMasterUrl(environment.openShiftUrl())
                 .withOauthToken(environment.openShiftToken())
-                .withNamespace(environment.namespace())
                 .withUsername(environment.openShiftUser())
                 .build();
         client = new DefaultOpenShiftClient(config);
-
+        this.namespace = namespace;
     }
 
     public OpenShiftClient getClient() {
@@ -37,7 +37,7 @@ public class OpenShift {
     }
 
     public Endpoint getEndpoint(String serviceName, String port) {
-        Service service = client.services().inNamespace(environment.namespace()).withName(serviceName).get();
+        Service service = client.services().inNamespace(namespace).withName(serviceName).get();
         return new Endpoint(service.getSpec().getClusterIP(), getPort(service, port));
     }
 
@@ -60,24 +60,25 @@ public class OpenShift {
     }
 
     public String getRouteHost() {
-        Route route = client.routes().inNamespace(environment.namespace()).withName("messaging").get();
+        Route route = client.routes().inNamespace(namespace).withName("messaging").get();
         return route.getSpec().getHost();
     }
 
     public Endpoint getRestEndpoint() {
-        return getEndpoint("address-controller", "http");
+        Service service = client.services().inNamespace(environment.namespace()).withName("address-controller").get();
+        return new Endpoint(service.getSpec().getClusterIP(), getPort(service, "http"));
     }
 
     public void setDeploymentReplicas(String name, int numReplicas) {
         client.extensions().deployments()
-                .inNamespace(environment.namespace())
+                .inNamespace(namespace)
                 .withName(name)
                 .scale(numReplicas, true);
     }
 
     public List<Pod> listPods() {
         return client.pods()
-                .inNamespace(environment.namespace())
+                .inNamespace(namespace)
                 .list()
                 .getItems().stream()
                 .collect(Collectors.toList());
@@ -85,7 +86,7 @@ public class OpenShift {
 
     public List<Pod> listPods(Map<String, String> labelSelector) {
         return client.pods()
-                .inNamespace(environment.namespace())
+                .inNamespace(namespace)
                 .withLabels(labelSelector)
                 .list()
                 .getItems().stream()
@@ -94,7 +95,7 @@ public class OpenShift {
 
     // Heuristic: if restapi service exists, we are running with a full template
     public boolean isFullTemplate() {
-        Service service = client.services().withName("admin").get();
+        Service service = client.services().inNamespace(namespace).withName("admin").get();
         return service == null;
     }
 
@@ -102,7 +103,11 @@ public class OpenShift {
         if (isFullTemplate()) {
             return 8; // configserv, address-controller, queue-scheduler, ragent, qdrouterd, subscription, mqtt gateway, mqtt lwt
         } else {
-            return 6; // address-controller, admin, qdrouterd, subscription, mqtt gateway, mqtt lwt
+            if (environment.isMultitenant()) {
+                return 5; // admin, qdrouterd, subscription, mqtt gateway, mqtt lwt
+            } else {
+                return 6; // address-controller, admin, qdrouterd, subscription, mqtt gateway, mqtt lwt
+            }
         }
     }
 }

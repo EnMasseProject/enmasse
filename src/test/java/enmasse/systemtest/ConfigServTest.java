@@ -116,5 +116,10 @@ public class ConfigServTest extends VertxTestBase {
             return openShift.getEndpoint("admin", "configuration");
         }
     }
+
+    @Override
+    protected String getInstanceName() {
+        return ConfigServTest.class.getSimpleName();
+    }
 }
 

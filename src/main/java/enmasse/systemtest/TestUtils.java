@@ -119,33 +119,8 @@ public class TestUtils {
         }
     }
 
-    public static void deploy(HttpClient httpClient, OpenShift openShift, TimeoutBudget budget, Destination ... destinations) throws Exception {
-        ObjectNode config = mapper.createObjectNode();
-        config.put("apiVersion", "v3");
-        config.put("kind", "AddressList");
-        ArrayNode items = config.putArray("items");
-        for (Destination destination : destinations) {
-            ObjectNode entry = items.addObject();
-            ObjectNode metadata = entry.putObject("metadata");
-            metadata.put("name", destination.getAddress());
-            ObjectNode spec = entry.putObject("spec");
-            spec.put("store_and_forward", destination.isStoreAndForward());
-            spec.put("multicast", destination.isMulticast());
-            spec.put("group", destination.getGroup());
-            destination.getFlavor().ifPresent(e -> spec.put("flavor", e));
-        }
-        Endpoint restApi = openShift.getRestEndpoint();
-
-        CountDownLatch latch = new CountDownLatch(1);
-        HttpClientRequest request = httpClient.put(restApi.getPort(), restApi.getHost(), "/v3/address");
-        request.putHeader("content-type", "application/json");
-        request.handler(event -> {
-            if (event.statusCode() >= 200 && event.statusCode() < 300) {
-                latch.countDown();
-            }
-        });
-        request.end(Buffer.buffer(mapper.writeValueAsBytes(config)));
-        latch.await(30, TimeUnit.SECONDS);
+    public static void deploy(AddressApiClient apiClient, OpenShift openShift, TimeoutBudget budget, String instanceName, Destination ... destinations) throws Exception {
+        apiClient.deploy(instanceName, destinations);
         Set<String> groups = new HashSet<>();
         for (Destination destination : destinations) {
             if (destination.isStoreAndForward()) {

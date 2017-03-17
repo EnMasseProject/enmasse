@@ -41,4 +41,9 @@ public class AnycastTest extends VertxTestBase {
         assertThat(sendResult.get(1, TimeUnit.MINUTES), is(msgs.size()));
         assertThat(recvResult.get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
     }
+
+    @Override
+    protected String getInstanceName() {
+        return this.getClass().getSimpleName();
+    }
 }
