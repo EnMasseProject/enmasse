@@ -151,6 +151,7 @@ public class Artemis implements Broker {
         properties.put("_AMQ_ResourceName", "broker");
         properties.put("_AMQ_OperationName", operation);
         properties.put("JMSReplyTo", replyTo);
+        message.setReplyTo(replyTo);
         message.setApplicationProperties(new ApplicationProperties(properties));
         return message;
     }
