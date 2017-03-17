@@ -7,6 +7,7 @@ import enmasse.address.controller.api.v3.AddressList;
 import enmasse.address.controller.model.Destination;
 import enmasse.address.controller.model.DestinationGroup;
 import enmasse.address.controller.model.Flavor;
+import enmasse.address.controller.model.InstanceId;
 import enmasse.amqp.SyncRequestClient;
 import io.vertx.core.Vertx;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
@@ -34,17 +35,20 @@ import static org.junit.Assert.assertTrue;
 
 public class AMQPServerTest {
     private Vertx vertx;
-    private HTTPServerTest.TestManager testManager;
+    private TestAddressManagerFactory testInstanceManager;
+    private TestAddressManager testAddressManager;
     private FlavorManager testRepository;
     private int port;
 
     @Before
     public void setup() throws InterruptedException {
         vertx = Vertx.vertx();
-        testManager = new HTTPServerTest.TestManager();
+        testAddressManager = new TestAddressManager();
+        InstanceId instanceId = InstanceId.withId("myinstance");
+        testInstanceManager = new TestAddressManagerFactory().addManager(instanceId, testAddressManager);
         testRepository = new FlavorManager();
         CountDownLatch latch = new CountDownLatch(1);
-        AMQPServer server = new AMQPServer(testManager, testRepository, 0);
+        AMQPServer server = new AMQPServer(instanceId, testInstanceManager, testRepository, 0);
         vertx.deployVerticle(server, c -> {
             latch.countDown();
         });
@@ -71,7 +75,7 @@ public class AMQPServerTest {
     @Test
     public void testAddressingService() throws InterruptedException, ExecutionException, TimeoutException, IOException {
         DestinationGroup gr = new DestinationGroup("group0", Sets.newSet(new Destination("addr1", "group0", false, false, Optional.empty(), Optional.empty())));
-        testManager.destinationList.add(gr);
+        testAddressManager.destinationList.add(gr);
 
         SyncRequestClient client = new SyncRequestClient("localhost", port, vertx);
         Message request = Message.Factory.create();

@@ -19,6 +19,7 @@ package enmasse.address.controller.admin;
 import enmasse.address.controller.model.Destination;
 import enmasse.address.controller.model.DestinationGroup;
 import enmasse.address.controller.model.Flavor;
+import enmasse.address.controller.model.InstanceId;
 import enmasse.address.controller.openshift.DestinationCluster;
 import enmasse.config.AddressEncoder;
 import enmasse.config.LabelKeys;
@@ -93,9 +94,6 @@ public class OpenShiftHelperTest {
         ClientMixedOperation pvcOp = mock(ClientMixedOperation.class);
         ClientMixedOperation mapOp = mock(ClientMixedOperation.class);
 
-        ClientMixedOperation mapOpQueue = mock(ClientMixedOperation.class);
-        ClientMixedOperation mapOpDirect = mock(ClientMixedOperation.class);
-
         ClientResource mapQueueResource = mock(ClientResource.class);
         ClientResource mapDirectResource = mock(ClientResource.class);
 
@@ -103,13 +101,19 @@ public class OpenShiftHelperTest {
         ExtensionsAPIGroupDSL extensions = mock(ExtensionsAPIGroupDSL.class);
 
         OpenShiftClient mockClient = mock(OpenShiftClient.class);
-        OpenShiftHelper helper = new OpenShiftHelper(mockClient);
+        OpenShiftHelper helper = new OpenShiftHelper(InstanceId.withId("myinstance"), mockClient);
         when(mockClient.deploymentConfigs()).thenReturn(dcOp);
         when(mockClient.extensions()).thenReturn(extensions);
         when(extensions.deployments()).thenReturn(dOp);
         when(mockClient.persistentVolumeClaims()).thenReturn(pvcOp);
         when(mockClient.configMaps()).thenReturn(mapOp);
         when(mockClient.replicationControllers()).thenReturn(rcOp);
+
+        when(dcOp.inNamespace(anyString())).thenReturn(dcOp);
+        when(dOp.inNamespace(anyString())).thenReturn(dOp);
+        when(pvcOp.inNamespace(anyString())).thenReturn(pvcOp);
+        when(mapOp.inNamespace(anyString())).thenReturn(mapOp);
+        when(rcOp.inNamespace(anyString())).thenReturn(rcOp);
 
         when(pvcOp.withLabel(anyString(), anyString())).thenReturn(pvcOp);
         when(dcOp.withLabel(anyString(), anyString())).thenReturn(dcOp);
@@ -148,28 +152,19 @@ public class OpenShiftHelperTest {
     }
 
     @Test
-    public void testUpdateDestinationGroup() {
+    public void testCreateAddressConfig() {
         OpenShiftClient mockClient = mock(OpenShiftClient.class);
-        OpenShiftHelper helper = new OpenShiftHelper(mockClient);
-
-        DoneableConfigMap map = new DoneableConfigMap(new ConfigMap("v1", Collections.<String, String>emptyMap(), "ConfigMap", new ObjectMetaBuilder().withName("address-config-group1").build()));
-        ClientMixedOperation mapOp = mock(ClientMixedOperation.class);
-        when(mockClient.configMaps()).thenReturn(mapOp);
-        ClientResource mapResource = mock(ClientResource.class);
-        when(mapOp.withName("address-config-group1")).thenReturn(mapResource);
-        when(mapResource.get()).thenReturn(map);
-        when(mapResource.createOrReplaceWithNew()).thenReturn(map);
-
+        OpenShiftHelper helper = new OpenShiftHelper(InstanceId.withId("myinstance"), mockClient);
         DestinationGroup group = new DestinationGroup("group1", Sets.newSet(new Destination("queue1", "group1", true, false, Optional.of("vanilla"), Optional.empty()),
                 new Destination("queue2", "group1", true, false, Optional.of("vanilla"), Optional.empty())));
-        helper.updateDestinations(group);
 
-        ConfigMap edited = map.done();
-        assertTrue(edited.getMetadata().getLabels().containsKey(LabelKeys.GROUP_ID));
-        assertThat(edited.getMetadata().getLabels().get(LabelKeys.GROUP_ID), is("group1"));
-        assertThat(edited.getData().size(), is(2));
-        assertTrue(edited.getData().containsKey("queue1"));
-        assertTrue(edited.getData().containsKey("queue2"));
+        ConfigMap addressConfig = helper.createAddressConfig(group);
+
+        assertTrue(addressConfig.getMetadata().getLabels().containsKey(LabelKeys.GROUP_ID));
+        assertThat(addressConfig.getMetadata().getLabels().get(LabelKeys.GROUP_ID), is("group1"));
+        assertThat(addressConfig.getData().size(), is(2));
+        assertTrue(addressConfig.getData().containsKey("queue1"));
+        assertTrue(addressConfig.getData().containsKey("queue2"));
     }
 
     private void assertDestination(Set<Destination> destinations, String address, boolean storeAndForward, boolean multicast, Optional<String> flavor) {

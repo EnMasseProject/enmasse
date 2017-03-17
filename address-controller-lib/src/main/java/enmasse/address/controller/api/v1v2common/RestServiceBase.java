@@ -17,8 +17,10 @@
 package enmasse.address.controller.api.v1v2common;
 
 import enmasse.address.controller.admin.AddressManager;
+import enmasse.address.controller.admin.AddressManagerFactory;
 import enmasse.address.controller.model.Destination;
 import enmasse.address.controller.model.DestinationGroup;
+import enmasse.address.controller.model.InstanceId;
 import io.vertx.core.Vertx;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,18 +38,24 @@ import java.util.Set;
 public abstract class RestServiceBase {
     private static final Logger log = LoggerFactory.getLogger(RestServiceBase.class.getName());
 
-    private final AddressManager addressManager;
+    private final InstanceId instanceId;
+    private final AddressManagerFactory addressManagerFactory;
     private final Vertx vertx;
 
-    public RestServiceBase(@Context AddressManager addressManager, @Context Vertx vertx) {
-        this.addressManager = addressManager;
+    public RestServiceBase(@Context InstanceId instanceId, @Context AddressManagerFactory addressManagerFactory, @Context Vertx vertx) {
+        this.instanceId = instanceId;
+        this.addressManagerFactory = addressManagerFactory;
         this.vertx = vertx;
+    }
+
+    private AddressManager getAddressManager() {
+        return addressManagerFactory.getOrCreateAddressManager(instanceId);
     }
 
     protected void getAddresses(@Suspended final AsyncResponse response) {
         vertx.executeBlocking(promise -> {
             try {
-                promise.complete(getResponseEntity(addressManager.listDestinationGroups()));
+                promise.complete(getResponseEntity(getAddressManager().listDestinationGroups()));
             } catch (Exception e) {
                 promise.fail(e);
             }
@@ -64,7 +72,7 @@ public abstract class RestServiceBase {
     protected void putAddresses(Set<DestinationGroup> destinationGroups, @Suspended final AsyncResponse response) {
         vertx.executeBlocking(promise -> {
             try {
-                addressManager.destinationsUpdated(destinationGroups);
+                getAddressManager().destinationsUpdated(destinationGroups);
                 promise.complete(getResponseEntity(destinationGroups));
             } catch (Exception e) {
                 promise.fail(e);
@@ -82,6 +90,7 @@ public abstract class RestServiceBase {
     protected void deleteAddresses(List<String> data, @Suspended final AsyncResponse response) {
         vertx.executeBlocking(promise -> {
             try {
+                AddressManager addressManager = getAddressManager();
                 Set<DestinationGroup> destinationGroups = addressManager.listDestinationGroups();
 
                 for (String address : data) {
@@ -122,6 +131,7 @@ public abstract class RestServiceBase {
     protected void appendAddresses(Set<DestinationGroup> newDestinationGroups, @Suspended final AsyncResponse response) {
         vertx.executeBlocking(promise -> {
             try {
+                AddressManager addressManager = getAddressManager();
                 Set<DestinationGroup> destinationGroups = new HashSet<>(addressManager.listDestinationGroups());
                 destinationGroups.addAll(newDestinationGroups);
                 addressManager.destinationsUpdated(destinationGroups);

@@ -17,12 +17,14 @@
 package enmasse.address.controller.api.v3.amqp;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import enmasse.address.controller.admin.AddressManager;
+import enmasse.address.controller.api.TestAddressManager;
+import enmasse.address.controller.api.TestAddressManagerFactory;
 import enmasse.address.controller.api.v3.Address;
 import enmasse.address.controller.api.v3.AddressList;
 import enmasse.address.controller.api.v3.ApiHandler;
 import enmasse.address.controller.model.Destination;
 import enmasse.address.controller.model.DestinationGroup;
+import enmasse.address.controller.model.InstanceId;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.amqp.messaging.ApplicationProperties;
 import org.apache.qpid.proton.message.Message;
@@ -39,12 +41,15 @@ import static org.junit.Assert.*;
 public class AmqpAddressingApiTest {
     private static ObjectMapper mapper = new ObjectMapper();
     private AddressingService addressingService;
-    private TestManager addressManager;
+    private TestAddressManagerFactory instanceManager;
+    private TestAddressManager addressManager;
 
     @Before
     public void setup() {
-        addressManager = new TestManager();
-        addressingService = new AddressingService(new ApiHandler(addressManager));
+        addressManager = new TestAddressManager();
+        instanceManager = new TestAddressManagerFactory();
+        instanceManager.addManager(InstanceId.withId("myinstance"), addressManager);
+        addressingService = new AddressingService(InstanceId.withId("myinstance"), new ApiHandler(instanceManager));
         addressManager.destinationsUpdated(Sets.newSet(
             createGroup(new Destination("addr1", "addr1", false, false, Optional.empty(), Optional.empty())),
             createGroup(new Destination("queue1", "queue1", true, false, Optional.of("vanilla"), Optional.empty()))));
@@ -198,26 +203,5 @@ public class AmqpAddressingApiTest {
         }
         assertNotNull(actual);
         assertTrue(actual.equals(dest));
-    }
-
-    public static class TestManager implements AddressManager {
-        Set<DestinationGroup> destinationList = new LinkedHashSet<>();
-        boolean throwException = false;
-
-        @Override
-        public void destinationsUpdated(Set<DestinationGroup> destinationList) {
-            if (throwException) {
-                throw new RuntimeException();
-            }
-            this.destinationList = new LinkedHashSet<>(destinationList);
-        }
-
-        @Override
-        public Set<DestinationGroup> listDestinationGroups() {
-            if (throwException) {
-                throw new RuntimeException();
-            }
-            return this.destinationList;
-        }
     }
 }

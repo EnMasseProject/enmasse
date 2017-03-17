@@ -3,68 +3,47 @@ package enmasse.address.controller.api.v3.http;
 import enmasse.address.controller.api.v3.Address;
 import enmasse.address.controller.api.v3.AddressList;
 import enmasse.address.controller.api.v3.ApiHandler;
+import enmasse.address.controller.model.InstanceId;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.util.Optional;
 
 @Path("/v3/address")
-public class AddressingService {
-    private final ApiHandler apiHandler;
+public class AddressingService extends AddressingServiceBase {
+    private final InstanceId instanceId;
 
-    public AddressingService(@Context ApiHandler apiHandler) {
-        this.apiHandler = apiHandler;
+    public AddressingService(@Context InstanceId instanceId, @Context ApiHandler apiHandler) {
+        super(apiHandler);
+        this.instanceId = instanceId;
     }
 
     @GET
     @Produces({MediaType.APPLICATION_JSON})
     public Response listAddresses() {
-        try {
-            return Response.ok(apiHandler.getAddresses()).build();
-        } catch (Exception e) {
-            return Response.serverError().build();
-        }
+        return listAddresses(instanceId);
     }
 
     @PUT
     @Produces({MediaType.APPLICATION_JSON})
     @Consumes({MediaType.APPLICATION_JSON})
     public Response putAddresses(AddressList addressList) {
-        try {
-            return Response.ok(apiHandler.putAddresses(addressList)).build();
-        } catch (Exception e) {
-            return Response.serverError().build();
-        }
+        return putAddresses(instanceId, addressList);
     }
 
     @POST
     @Produces({MediaType.APPLICATION_JSON})
     @Consumes({MediaType.APPLICATION_JSON})
     public Response appendAddress(Address address) {
-        try {
-            return Response.ok(apiHandler.appendAddress(address)).build();
-        } catch (Exception e) {
-            return Response.serverError().build();
-        }
+        return appendAddress(instanceId, address);
     }
 
     @GET
     @Path("{address}")
     @Produces({MediaType.APPLICATION_JSON})
     public Response getAddress(@PathParam("address") String address) {
-        try {
-            Optional<Address> addr = apiHandler.getAddress(address);
-
-            if (addr.isPresent()) {
-                return Response.ok(addr.get()).build();
-            } else {
-                return Response.status(404).build();
-            }
-        } catch (Exception e) {
-            return Response.serverError().build();
-        }
+        return getAddress(instanceId, address);
     }
 
     @PUT
@@ -72,17 +51,13 @@ public class AddressingService {
     @Produces({MediaType.APPLICATION_JSON})
     @Consumes({MediaType.APPLICATION_JSON})
     public Response putAddress(@PathParam("address") String address) {
-        return Response.status(405).build();
+        return putAddress(instanceId, address);
     }
 
     @DELETE
     @Path("{address}")
     @Produces({MediaType.APPLICATION_JSON})
     public Response deleteAddress(@PathParam("address") String address) {
-        try {
-            return Response.ok(apiHandler.deleteAddress(address)).build();
-        } catch (Exception e) {
-            return Response.serverError().build();
-        }
+        return deleteAddress(instanceId, address);
     }
 }

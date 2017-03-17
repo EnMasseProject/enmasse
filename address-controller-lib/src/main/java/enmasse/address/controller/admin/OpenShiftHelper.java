@@ -16,17 +16,20 @@
 
 package enmasse.address.controller.admin;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import enmasse.address.controller.model.Destination;
 import enmasse.address.controller.model.DestinationGroup;
+import enmasse.address.controller.model.InstanceId;
 import enmasse.address.controller.openshift.DestinationCluster;
 import enmasse.config.AddressDecoder;
 import enmasse.config.AddressEncoder;
 import enmasse.config.LabelKeys;
-import io.fabric8.kubernetes.api.model.DoneableConfigMap;
-import io.fabric8.kubernetes.api.model.HasMetadata;
-import io.fabric8.kubernetes.api.model.KubernetesList;
+import io.fabric8.kubernetes.api.model.*;
+import io.fabric8.kubernetes.client.dsl.ClientResource;
+import io.fabric8.openshift.api.model.DoneablePolicyBinding;
+import io.fabric8.openshift.api.model.PolicyBinding;
+import io.fabric8.openshift.api.model.Route;
 import io.fabric8.openshift.client.OpenShiftClient;
+import io.fabric8.openshift.client.ParameterValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,30 +39,28 @@ import java.util.stream.Collectors;
 /**
  * Wraps the OpenShift client and adds some helper methods.
  */
-public class OpenShiftHelper {
-    private static final ObjectMapper mapper = new ObjectMapper();
+public class OpenShiftHelper implements OpenShift {
     private static final Logger log = LoggerFactory.getLogger(OpenShiftHelper.class.getName());
     private final OpenShiftClient client;
+    private final InstanceId instance;
 
-    public OpenShiftHelper(OpenShiftClient client) {
+    public OpenShiftHelper(InstanceId instance, OpenShiftClient client) {
         this.client = client;
+        this.instance = instance;
     }
 
-    public static String nameSanitizer(String name) {
-        return name.toLowerCase().replaceAll("[^a-z0-9]", "-");
-    }
-
+    @Override
     public List<DestinationCluster> listClusters() {
         Map<String, List<HasMetadata>> resourceMap = new HashMap<>();
         Map<String, DestinationGroup> groupMap = new HashMap<>();
 
         // Add other resources part of a destination cluster
         List<HasMetadata> objects = new ArrayList<>();
-        objects.addAll(client.deploymentConfigs().list().getItems());
-        objects.addAll(client.extensions().deployments().list().getItems());
-        objects.addAll(client.persistentVolumeClaims().list().getItems());
-        objects.addAll(client.configMaps().list().getItems());
-        objects.addAll(client.replicationControllers().list().getItems());
+        objects.addAll(client.deploymentConfigs().inNamespace(instance.getNamespace()).list().getItems());
+        objects.addAll(client.extensions().deployments().inNamespace(instance.getNamespace()).list().getItems());
+        objects.addAll(client.persistentVolumeClaims().inNamespace(instance.getNamespace()).list().getItems());
+        objects.addAll(client.configMaps().inNamespace(instance.getNamespace()).list().getItems());
+        objects.addAll(client.replicationControllers().inNamespace(instance.getNamespace()).list().getItems());
 
         for (HasMetadata config : objects) {
             Map<String, String> labels = config.getMetadata().getLabels();
@@ -74,7 +75,7 @@ public class OpenShiftHelper {
                         log.info("Encounted grouped resource without address config: " + config);
                         continue;
                     }
-                    Map<String, String> addressConfigMap = client.configMaps().withName(addressConfig).get().getData();
+                    Map<String, String> addressConfigMap = client.configMaps().inNamespace(instance.getNamespace()).withName(addressConfig).get().getData();
 
                     Set<Destination> destinations = new HashSet<>();
                     for (Map.Entry<String, String> entry : addressConfigMap.entrySet()) {
@@ -103,27 +104,124 @@ public class OpenShiftHelper {
                 }).collect(Collectors.toList());
     }
 
+    @Override
     public void create(KubernetesList resources) {
-        client.lists().create(resources);
+        client.lists().inNamespace(instance.getNamespace()).create(resources);
     }
 
+    @Override
+    public InstanceId getInstanceId() {
+        return instance;
+    }
+
+    @Override
     public void delete(KubernetesList resources) {
-        client.lists().delete(resources);
+        client.lists().inNamespace(instance.getNamespace()).delete(resources);
     }
 
+    @Override
     public void updateDestinations(DestinationGroup destinationGroup) {
-        DoneableConfigMap map = client.configMaps().withName(nameSanitizer("address-config-" + destinationGroup.getGroupId())).createOrReplaceWithNew()
-                .editOrNewMetadata()
-                    .withName(nameSanitizer("address-config-" + destinationGroup.getGroupId()))
-                    .addToLabels(LabelKeys.GROUP_ID, destinationGroup.getGroupId())
-                    .addToLabels("type", "address-config")
+        client.configMaps().inNamespace(instance.getNamespace()).createOrReplace(createAddressConfig(destinationGroup));
+    }
+
+    @Override
+    public ConfigMap createAddressConfig(DestinationGroup destinationGroup) {
+        String name = OpenShift.sanitizeName("address-config-" + instance.getId() + "-" + destinationGroup.getGroupId());
+        ConfigMapBuilder builder = new ConfigMapBuilder()
+                .withNewMetadata()
+                .withName(name)
+                .addToLabels(LabelKeys.GROUP_ID, OpenShift.sanitizeName(destinationGroup.getGroupId()))
+                .addToLabels(LabelKeys.ADDRESS_CONFIG, name)
+                .addToLabels("type", "address-config")
+                .addToLabels("instance", OpenShift.sanitizeName(instance.getId()))
                 .endMetadata();
 
         for (Destination destination : destinationGroup.getDestinations()) {
             AddressEncoder encoder = new AddressEncoder();
             encoder.encode(destination.storeAndForward(), destination.multicast(), destination.flavor(), destination.uuid());
-            map.addToData(destination.address(), encoder.toJson());
+            builder.addToData(destination.address(), encoder.toJson());
         }
-        map.done();
+        return builder.build();
+    }
+
+    @Override
+    public Namespace createNamespace(InstanceId instance) {
+        return client.namespaces().createNew()
+                .editOrNewMetadata()
+                    .withName(instance.getNamespace())
+                    .addToLabels("app", "enmasse")
+                    .addToLabels("instance", instance.getId())
+                    .addToLabels("type", "instance")
+                .endMetadata()
+                .done();
+    }
+
+    @Override
+    public OpenShift mutateClient(InstanceId newInstance) {
+        return new OpenShiftHelper(newInstance, client);
+    }
+
+    @Override
+    public KubernetesList processTemplate(String templateName, ParameterValue... parameterValues) {
+        return client.templates().withName(templateName).process(parameterValues);
+    }
+
+    @Override
+    public void addDefaultViewPolicy(InstanceId instance) {
+        ClientResource<PolicyBinding, DoneablePolicyBinding> bindingResource = client.policyBindings()
+                .inNamespace(instance.getNamespace())
+                .withName(":default");
+
+        DoneablePolicyBinding binding;
+        if (bindingResource.get() == null) {
+            binding = bindingResource.createNew();
+        } else {
+            binding = bindingResource.edit();
+        }
+        binding.editOrNewMetadata()
+                    .withName(":default")
+                .endMetadata()
+                .editOrNewPolicyRef()
+                    .withName("default")
+                .endPolicyRef()
+                .addNewRoleBinding()
+                    .withName("view")
+                    .editOrNewRoleBinding()
+                        .editOrNewMetadata()
+                            .withName("view")
+                            .withNamespace(instance.getNamespace())
+                        .endMetadata()
+                        .addToUserNames("system:serviceaccount:" + instance.getNamespace() + ":default")
+                        .addNewSubject()
+                            .withName("default")
+                            .withNamespace(instance.getNamespace())
+                            .withKind("ServiceAccount")
+                        .endSubject()
+                        .withNewRoleRef()
+                            .withName("view")
+                        .endRoleRef()
+                    .endRoleBinding()
+                .endRoleBinding()
+                .done();
+    }
+
+    @Override
+    public List<Namespace> listNamespaces(Map<String, String> labelMap) {
+        return client.namespaces().withLabels(labelMap).list().getItems();
+    }
+
+    @Override
+    public List<Route> getRoutes(InstanceId instanceId) {
+        return client.routes().inNamespace(instanceId.getNamespace()).list().getItems();
+    }
+
+    @Override
+    public void deleteNamespace(String namespace) {
+        client.namespaces().withName(namespace).delete();
+    }
+
+    @Override
+    public boolean hasService(String service) {
+        return client.services().withName(service).get() != null;
     }
 }

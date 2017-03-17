@@ -16,7 +16,7 @@
 
 package enmasse.address.controller.openshift;
 
-import enmasse.address.controller.admin.OpenShiftHelper;
+import enmasse.address.controller.admin.OpenShift;
 import enmasse.address.controller.model.Destination;
 import enmasse.address.controller.model.DestinationGroup;
 import io.fabric8.kubernetes.api.model.HasMetadata;
@@ -33,25 +33,25 @@ import java.util.stream.Collectors;
 public class DestinationCluster {
     private static final Logger log = LoggerFactory.getLogger(DestinationCluster.class.getName());
 
-    private final OpenShiftHelper helper;
+    private final OpenShift openShift;
     private final KubernetesList resources;
     private DestinationGroup destinationGroup;
 
-    public DestinationCluster(OpenShiftHelper helper, DestinationGroup destinationGroup, KubernetesList resources) {
-        this.helper = helper;
+    public DestinationCluster(OpenShift openShift, DestinationGroup destinationGroup, KubernetesList resources) {
+        this.openShift = openShift;
         this.destinationGroup = destinationGroup;
         this.resources = resources;
     }
 
     public void create() {
         log.info("Adding " + resources.getItems().size() + " resources: " + resources.getItems().stream().map(r -> "name=" + r.getMetadata().getName() + ",kind=" + r.getKind()).collect(Collectors.joining(",")));
-        helper.create(resources);
+        openShift.create(resources);
         updateDestinations(destinationGroup);
     }
 
     public void delete() {
         log.info("Deleting " + resources.getItems().size() + " resources: " + resources.getItems().stream().map(r -> "name=" + r.getMetadata().getName() + ",kind=" + r.getKind()).collect(Collectors.joining(",")));
-        helper.delete(resources);
+        openShift.delete(resources);
     }
 
     public DestinationGroup getDestinationGroup() {
@@ -67,7 +67,7 @@ public class DestinationCluster {
         Destination first = destinationGroup.getDestinations().iterator().next();
         // This is a workaround for direct addresses, which store everything in a single configmap that
         if (first.storeAndForward()) {
-            helper.updateDestinations(destinationGroup);
+            openShift.updateDestinations(destinationGroup);
         }
     }
 }

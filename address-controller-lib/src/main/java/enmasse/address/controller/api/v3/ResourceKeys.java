@@ -16,4 +16,9 @@ public interface ResourceKeys {
     String TYPE = "type";
     String DESCRIPTION = "description";
     String UUID = "uuid";
+    String NAMESPACE = "namespace";
+    String MESSAGING_HOST = "messagingHost";
+    String MQTT_HOST = "mqttHost";
+    String CONSOLE_HOST = "consoleHost";
+    String ITEMS = "items";
 }

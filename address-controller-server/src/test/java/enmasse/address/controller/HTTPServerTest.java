@@ -16,13 +16,11 @@
 
 package enmasse.address.controller;
 
-import enmasse.address.controller.admin.AddressManager;
 import enmasse.address.controller.admin.FlavorManager;
-import enmasse.address.controller.model.Destination;
-import enmasse.address.controller.model.DestinationGroup;
-import enmasse.address.controller.model.Flavor;
+import enmasse.address.controller.model.*;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpClient;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.junit.After;
 import org.junit.Before;
@@ -30,9 +28,7 @@ import org.junit.Test;
 import org.mockito.internal.util.collections.Sets;
 
 import java.util.Collections;
-import java.util.LinkedHashSet;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -43,16 +39,21 @@ import static org.junit.Assert.assertTrue;
 public class HTTPServerTest {
 
     private Vertx vertx;
-    private TestManager testManager;
+    private TestAddressManagerFactory testAddressManagerFactory;
+    private TestInstanceManager testInstanceManager;
+    private TestAddressManager testAddressManager;
     private FlavorManager testRepository;
 
     @Before
     public void setup() throws InterruptedException {
         vertx = Vertx.vertx();
-        testManager = new TestManager();
+        testAddressManager = new TestAddressManager();
+        testInstanceManager = new TestInstanceManager();
+        InstanceId instanceId = InstanceId.withId("myinstance");
+        testAddressManagerFactory = new TestAddressManagerFactory().addManager(instanceId, testAddressManager);
         testRepository = new FlavorManager();
         CountDownLatch latch = new CountDownLatch(1);
-        vertx.deployVerticle(new HTTPServer(testManager, testRepository), c -> {
+        vertx.deployVerticle(new HTTPServer(instanceId, testAddressManagerFactory, testInstanceManager, testRepository), c -> {
             latch.countDown();
         });
         latch.await(1, TimeUnit.MINUTES);
@@ -65,7 +66,7 @@ public class HTTPServerTest {
 
     @Test
     public void testAddressingApi() throws InterruptedException {
-        testManager.destinationList.add(new DestinationGroup("group0", Sets.newSet(new Destination("addr1", "group0", false, false, Optional.empty(), Optional.empty()))));
+        testAddressManager.destinationList.add(new DestinationGroup("group0", Sets.newSet(new Destination("addr1", "group0", false, false, Optional.empty(), Optional.empty()))));
         HttpClient client = vertx.createHttpClient();
         try {
             CountDownLatch latch = new CountDownLatch(2);
@@ -125,24 +126,42 @@ public class HTTPServerTest {
         }
     }
 
-    public static class TestManager implements AddressManager {
-        Set<DestinationGroup> destinationList = new LinkedHashSet<>();
-        boolean throwException = false;
+    @Test
+    public void testInstanceApi() throws InterruptedException {
+        Instance instance = new Instance.Builder(InstanceId.withId("myinstance"))
+                .messagingHost(Optional.of("messaging.example.com"))
+                .build();
+        testInstanceManager.create(instance);
 
-        @Override
-        public void destinationsUpdated(Set<DestinationGroup> destinationList) {
-            if (throwException) {
-                throw new RuntimeException();
-            }
-            this.destinationList = new LinkedHashSet<>(destinationList);
-        }
+        HttpClient client = vertx.createHttpClient();
+        try {
+            CountDownLatch latch = new CountDownLatch(2);
+            client.getNow(8080, "localhost", "/v3/instance", response -> {
+                response.bodyHandler(buffer -> {
+                    JsonObject data = buffer.toJsonObject();
+                    assertTrue(data.containsKey("kind"));
+                    assertThat(data.getString("kind"), is("InstanceList"));
+                    assertTrue(data.containsKey("items"));
+                    JsonArray items = data.getJsonArray("items");
+                    assertThat(items.size(), is(1));
+                    assertThat(items.getJsonObject(0).getJsonObject("spec").getString("messagingHost"), is("messaging.example.com"));
+                    latch.countDown();
+                });
+            });
 
-        @Override
-        public Set<DestinationGroup> listDestinationGroups() {
-            if (throwException) {
-                throw new RuntimeException();
-            }
-            return this.destinationList;
+            client.getNow(8080, "localhost", "/v3/instance/myinstance", response -> {
+                response.bodyHandler(buffer -> {
+                    JsonObject data = buffer.toJsonObject();
+                    assertTrue(data.containsKey("metadata"));
+                    assertThat(data.getJsonObject("metadata").getString("name"), is("myinstance"));
+                    assertThat(data.getString("kind"), is("Instance"));
+                    assertThat(data.getJsonObject("spec").getString("messagingHost"), is("messaging.example.com"));
+                    latch.countDown();
+                });
+            });
+            assertTrue(latch.await(1, TimeUnit.MINUTES));
+        } finally {
+            client.close();
         }
     }
 }

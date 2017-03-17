@@ -35,19 +35,19 @@ import java.util.stream.Collectors;
 public class AddressManagerImpl implements AddressManager {
     private static final Logger log = LoggerFactory.getLogger(AddressManagerImpl.class.getName());
 
-    private final OpenShiftHelper helper;
+    private final OpenShift openShift;
     private final DestinationClusterGenerator generator;
 
-    public AddressManagerImpl(OpenShiftHelper openshiftHelper, DestinationClusterGenerator generator) {
-        this.helper = openshiftHelper;
+    public AddressManagerImpl(OpenShift openShift, DestinationClusterGenerator generator) {
+        this.   openShift = openShift;
         this.generator = generator;
     }
 
     @Override
     public synchronized void destinationsUpdated(Set<DestinationGroup> newGroups) {
-        newGroups.stream().forEach(AddressManagerImpl::validateDestinationGroup);
+        newGroups.forEach(AddressManagerImpl::validateDestinationGroup);
 
-        List<DestinationCluster> clusterList = helper.listClusters();
+        List<DestinationCluster> clusterList = openShift.listClusters();
         log.info("Brokers got updated to " + newGroups.size() + " groups. We have " + clusterList.size() + " groups: " + clusterList.stream().map(DestinationCluster::getDestinationGroup).collect(Collectors.toList()));
         createBrokers(clusterList, newGroups);
         updateBrokers(clusterList, newGroups);
@@ -100,6 +100,6 @@ public class AddressManagerImpl implements AddressManager {
     }
 
     public synchronized Set<DestinationGroup> listDestinationGroups() {
-        return helper.listClusters().stream().map(DestinationCluster::getDestinationGroup).collect(Collectors.toSet());
+        return openShift.listClusters().stream().map(DestinationCluster::getDestinationGroup).collect(Collectors.toSet());
     }
 }

@@ -17,14 +17,14 @@
 package enmasse.address.controller.generator;
 
 import enmasse.address.controller.admin.FlavorManager;
+import enmasse.address.controller.admin.OpenShiftHelper;
 import enmasse.address.controller.model.Destination;
 import enmasse.address.controller.model.DestinationGroup;
 import enmasse.address.controller.model.Flavor;
+import enmasse.address.controller.model.InstanceId;
 import enmasse.address.controller.openshift.DestinationCluster;
 import enmasse.config.LabelKeys;
-import io.fabric8.kubernetes.api.model.HasMetadata;
-import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
-import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
+import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.openshift.api.model.Template;
 import io.fabric8.openshift.api.model.TemplateBuilder;
 import io.fabric8.openshift.api.model.TemplateListBuilder;
@@ -42,6 +42,7 @@ import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.*;
 
 public class TemplateDestinationClusterGeneratorTest {
@@ -52,7 +53,7 @@ public class TemplateDestinationClusterGeneratorTest {
     @Before
     public void setUp() {
         mockClient = mock(OpenShiftClient.class);
-        generator = new TemplateDestinationClusterGenerator(mockClient, flavorManager);
+        generator = new TemplateDestinationClusterGenerator(InstanceId.withId("myinstance"), new OpenShiftHelper(InstanceId.withId("myinstance"), mockClient), flavorManager);
         flavorManager.flavorsUpdated(Collections.singletonMap("vanilla", new Flavor.Builder("vanilla", "test").build()));
     }
 
@@ -65,14 +66,17 @@ public class TemplateDestinationClusterGeneratorTest {
         assertThat(first, is(dest));
         List<HasMetadata> resources = clusterList.getResources();
         assertThat(resources.size(), is(1));
+        assertTrue(resources.get(0) instanceof ConfigMap);
         for (HasMetadata resource : resources) {
+            ConfigMap map = (ConfigMap) resource;
             Map<String, String> rlabel = resource.getMetadata().getLabels();
             assertNotNull(rlabel.get(LabelKeys.GROUP_ID));
             assertThat(rlabel.get(LabelKeys.GROUP_ID), is("foo-bar-baz-cockooa"));
-            assertThat(rlabel.get(LabelKeys.ADDRESS_CONFIG), is("address-config-foo-bar-baz-cockooa"));
+            assertThat(rlabel.get(LabelKeys.ADDRESS_CONFIG), is("address-config-myinstance-foo-bar-baz-cockooa"));
+            assertThat(map.getData().size(), is(1));
         }
         List<ParameterValue> parameters = captor.getAllValues();
-        assertThat(parameters.size(), is(3));
+        assertThat(parameters.size(), is(0));
     }
 
     @Test
@@ -82,15 +86,15 @@ public class TemplateDestinationClusterGeneratorTest {
         DestinationCluster clusterList = generateCluster(dest, captor);
         assertThat(clusterList.getDestinationGroup().getDestinations(), hasItem(dest));
         List<HasMetadata> resources = clusterList.getResources();
-        assertThat(resources.size(), is(1));
+        assertThat(resources.size(), is(2));
         for (HasMetadata resource : resources) {
             Map<String, String> rlabel = resource.getMetadata().getLabels();
             assertNotNull(rlabel.get(LabelKeys.GROUP_ID));
             assertThat(rlabel.get(LabelKeys.GROUP_ID), is("foo-bar"));
-            assertThat(rlabel.get(LabelKeys.ADDRESS_CONFIG), is("address-config-foo-bar"));
+            assertThat(rlabel.get(LabelKeys.ADDRESS_CONFIG), is("address-config-myinstance-foo-bar"));
         }
         List<ParameterValue> parameters = captor.getAllValues();
-        assertThat(parameters.size(), is(2));
+        assertThat(parameters.size(), is(3));
     }
 
     private DestinationCluster generateCluster(Destination destination, ArgumentCaptor<ParameterValue> captor) {

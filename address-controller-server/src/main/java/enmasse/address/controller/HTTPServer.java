@@ -16,14 +16,17 @@
 
 package enmasse.address.controller;
 
-import enmasse.address.controller.admin.AddressManager;
 import enmasse.address.controller.admin.FlavorRepository;
+import enmasse.address.controller.admin.AddressManagerFactory;
+import enmasse.address.controller.admin.InstanceManager;
 import enmasse.address.controller.api.v1.http.RestServiceV1;
 import enmasse.address.controller.api.v2.http.RestServiceV2;
 import enmasse.address.controller.api.v3.ApiHandler;
-import enmasse.address.controller.api.v3.FlavorList;
 import enmasse.address.controller.api.v3.http.AddressingService;
 import enmasse.address.controller.api.v3.http.FlavorsService;
+import enmasse.address.controller.api.v3.http.InstanceService;
+import enmasse.address.controller.api.v3.http.MultiInstanceAddressingService;
+import enmasse.address.controller.model.InstanceId;
 import io.vertx.core.AbstractVerticle;
 import org.jboss.resteasy.plugins.server.vertx.VertxRequestHandler;
 import org.jboss.resteasy.plugins.server.vertx.VertxResteasyDeployment;
@@ -35,11 +38,15 @@ import org.slf4j.LoggerFactory;
  */
 public class HTTPServer extends AbstractVerticle {
     private static final Logger log = LoggerFactory.getLogger(HTTPServer.class.getName());
-    private final AddressManager addressManager;
+    private final AddressManagerFactory addressManagerFactory;
+    private final InstanceManager instanceManager;
     private final FlavorRepository flavorRepository;
+    private final InstanceId globalInstance;
 
-    public HTTPServer(AddressManager addressManager, FlavorRepository flavorRepository) {
-        this.addressManager = addressManager;
+    public HTTPServer(InstanceId globalInstance, AddressManagerFactory addressManagerFactory, InstanceManager instanceManager, FlavorRepository flavorRepository) {
+        this.globalInstance = globalInstance;
+        this.addressManagerFactory = addressManagerFactory;
+        this.instanceManager = instanceManager;
         this.flavorRepository = flavorRepository;
     }
 
@@ -47,9 +54,11 @@ public class HTTPServer extends AbstractVerticle {
     public void start() {
         VertxResteasyDeployment deployment = new VertxResteasyDeployment();
         deployment.start();
-        deployment.getRegistry().addSingletonResource(new RestServiceV1(addressManager, vertx));
-        deployment.getRegistry().addSingletonResource(new RestServiceV2(addressManager, vertx));
-        deployment.getRegistry().addSingletonResource(new AddressingService(new ApiHandler(addressManager)));
+        deployment.getRegistry().addSingletonResource(new RestServiceV1(globalInstance, addressManagerFactory, vertx));
+        deployment.getRegistry().addSingletonResource(new RestServiceV2(globalInstance, addressManagerFactory, vertx));
+        deployment.getRegistry().addSingletonResource(new AddressingService(globalInstance, new ApiHandler(addressManagerFactory)));
+        deployment.getRegistry().addSingletonResource(new InstanceService(instanceManager));
+        deployment.getRegistry().addSingletonResource(new MultiInstanceAddressingService(new ApiHandler(addressManagerFactory)));
         deployment.getRegistry().addSingletonResource(new FlavorsService(flavorRepository));
 
         vertx.createHttpServer()

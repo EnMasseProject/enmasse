@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Red Hat Inc.
+ * Copyright 2017 Red Hat Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,17 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package enmasse.address.controller.admin;
 
-package enmasse.address.controller.generator;
+import enmasse.address.controller.model.InstanceId;
+
+import java.util.Optional;
 
 /**
- * Template parameters that are dynamically set by the address controller.
+ * Interface for creating per-instance address spaces.
  */
-public interface TemplateParameter {
-    String NAME = "NAME";
-    String ADDRESS = "ADDRESS";
-    String INSTANCE = "INSTANCE";
-    String MESSAGING_HOSTNAME = "MESSAGING_HOSTNAME";
-    String MQTT_HOSTNAME = "MQTT_GATEWAY_HOSTNAME";
-    String CONSOLE_HOSTNAME = "CONSOLE_HOSTNAME";
+public interface AddressManagerFactory {
+    Optional<AddressManager> getAddressManager(InstanceId instance);
+    AddressManager getOrCreateAddressManager(InstanceId instance);
 }

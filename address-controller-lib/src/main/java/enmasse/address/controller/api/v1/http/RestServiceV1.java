@@ -16,11 +16,12 @@
 
 package enmasse.address.controller.api.v1.http;
 
-import enmasse.address.controller.admin.AddressManager;
+import enmasse.address.controller.admin.AddressManagerFactory;
 import enmasse.address.controller.api.v1v2common.RestServiceBase;
 import enmasse.address.controller.api.v1v2common.common.AddressProperties;
 import enmasse.address.controller.model.Destination;
 import enmasse.address.controller.model.DestinationGroup;
+import enmasse.address.controller.model.InstanceId;
 import io.vertx.core.Vertx;
 
 import javax.ws.rs.*;
@@ -34,8 +35,8 @@ import java.util.stream.Collectors;
 @Path("/v1/enmasse/addresses")
 public class RestServiceV1 extends RestServiceBase {
 
-    public RestServiceV1(@Context AddressManager addressManager, @Context Vertx vertx) {
-        super(addressManager, vertx);
+    public RestServiceV1(@Context InstanceId instanceId, @Context AddressManagerFactory addressManagerFactory, @Context Vertx vertx) {
+        super(instanceId, addressManagerFactory, vertx);
     }
 
     @GET
