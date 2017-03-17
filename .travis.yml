@@ -12,8 +12,6 @@ jdk:
 - oraclejdk8
 services:
 - docker
-install:
-- gradle buildVertx
 script:
 - ./scripts/install_openshift.sh openshift
 - ./scripts/start_openshift.sh openshift
