@@ -1,6 +1,7 @@
 FROM openjdk:8-jre-alpine
 
-ADD target/mqtt-gateway-1.0-SNAPSHOT.jar /
+ARG version=1.0-SNAPSHOT
+ADD target/mqtt-gateway-${version}.jar /
 COPY ./run_mqtt.sh /etc/mqtt-gateway/
 
 EXPOSE 1883 8883

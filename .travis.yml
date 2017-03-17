@@ -11,6 +11,7 @@ before_install:
 - docker run -d --name qdrouterd -p 5672:5672 -p 55673:55673 -v $TRAVIS_BUILD_DIR/src/test/resources:/conf
   ppatierno/qdrouterd:0.8.0-repo qdrouterd --conf /conf/qdrouterd.conf
 script:
+- if [ -n "${TRAVIS_TAG}" ]; then mvn versions:set -DgenerateBackupPoms=false -DnewVersion=${TRAVIS_TAG}; fi
 - mvn test -B
 - curl -s https://raw.githubusercontent.com/EnMasseProject/travis-scripts/master/docker-build.sh
   | bash /dev/stdin enmasseproject/mqtt-gateway .
