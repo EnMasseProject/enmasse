@@ -1,6 +1,14 @@
-# Setting up EnMasse
+# EnMasse - Messaging as a Service
 
-<b>NOTE: For an End-2-End example for setting up EnMasse, see [Getting Started](https://github.com/EnMasseProject/enmasse/blob/master/getting-started/README.md). This document is exposing more low level details that may quickly get outdated.</b>
+The EnMasse project is a scalable messaging platform on OpenShift.
+
+## Features
+
+* Supports multiple communication patterns: request-response, pub-sub and events
+* Elastic scaling of message brokers
+* AMQP and MQTT support
+* Simple setup and management
+* Multitenancy
 
 # Preqrequisites
 
