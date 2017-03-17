@@ -59,6 +59,21 @@ local version = std.extVar("VERSION");
     }
   },
 
+  clientContainer(name, image, mem_request, env)::
+  {
+    "image": image + ":" + version,
+    "name": name,
+    "env": env,
+    "resources": {
+        "requests": {
+            "memory": mem_request,
+        },
+        "limits": {
+            "memory": mem_request,
+        }
+    }
+  },
+
   service(instance, name, selector_name, port_name, port, target_port)::
   {
     "apiVersion": "v1",
@@ -76,7 +91,7 @@ local version = std.extVar("VERSION");
           "name": port_name,
           "port": port,
           "protocol": "TCP",
-          "targetPort": target_port 
+          "targetPort": target_port
         }
       ],
       "selector": {
