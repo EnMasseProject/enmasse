@@ -52,7 +52,7 @@ local amqpKafkaBridgeService = import "amqp-kafka-bridge-service.jsonnet";
       queueScheduler.deployment("${INSTANCE}", "${QUEUE_SCHEDULER_REPO}")
     ],
 
-    local kafka = [ 
+    local kafka = [
       amqpKafkaBridgeService.generate(secure, "${INSTANCE}"),
       amqpKafkaBridge.deployment("${INSTANCE}", "${AMQP_KAFKA_BRIDGE_REPO}")
     ],
@@ -114,6 +114,10 @@ local amqpKafkaBridgeService = import "amqp-kafka-bridge-service.jsonnet";
         "name" : "AMQP_KAFKA_BRIDGE_REPO",
         "description": "The image to use for the AMQP Kafka Bridge",
         "value": "enmasseproject/amqp-kafka-bridge"
+      },
+      {
+        "name" : "KAFKA_BOOTSTRAP_SERVERS",
+        "description": "A list of host/port pairs to use for establishing the initial connection to the Kafka cluster"
       },
       {
         "name": "INSTANCE",

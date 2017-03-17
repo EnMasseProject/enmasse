@@ -823,6 +823,9 @@ objects:
   - description: The image to use for the AMQP Kafka Bridge
     name: AMQP_KAFKA_BRIDGE_REPO
     value: enmasseproject/amqp-kafka-bridge
+  - description: A list of host/port pairs to use for establishing the initial connection
+      to the Kafka cluster
+    name: KAFKA_BOOTSTRAP_SERVERS
   - description: The instance this infrastructure is deployed for
     name: INSTANCE
     required: true

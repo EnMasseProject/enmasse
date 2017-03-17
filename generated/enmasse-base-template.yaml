@@ -17,11 +17,10 @@ objects:
     kind: Deployment
     metadata:
       labels:
-        address_config: address-config-${TENANT}-${NAME}
+        address_config: address-config-${NAME}
         app: enmasse
         group_id: "${NAME}"
-        tenant: "${TENANT}"
-      name: "${TENANT}-${NAME}"
+      name: "${NAME}"
     spec:
       replicas: 1
       template:
@@ -30,7 +29,6 @@ objects:
             app: enmasse
             group_id: "${NAME}"
             role: broker
-            tenant: "${TENANT}"
         spec:
           containers:
           - env:
@@ -55,10 +53,10 @@ objects:
               name: core
             volumeMounts:
             - mountPath: "/var/run/artemis"
-              name: vol-${TENANT}-${NAME}
+              name: vol-${NAME}
           volumes:
           - emptyDir: {}
-            name: vol-${TENANT}-${NAME}
+            name: vol-${NAME}
   - apiVersion: v1
     data:
       "${ADDRESS}": '{"store_and_forward": true, "multicast": false}'
@@ -67,9 +65,8 @@ objects:
       labels:
         app: enmasse
         group_id: "${NAME}"
-        tenant: "${TENANT}"
         type: address-config
-      name: address-config-${TENANT}-${NAME}
+      name: address-config-${NAME}
   parameters:
   - description: Storage capacity required for volume claims
     name: STORAGE_CAPACITY
@@ -77,9 +74,6 @@ objects:
   - description: The link capacity setting for router
     name: ROUTER_LINK_CAPACITY
     value: '50'
-  - description: A valid tenant name for the instance
-    name: TENANT
-    required: true
   - description: A valid name for the instance
     name: NAME
     required: true
@@ -99,8 +93,7 @@ objects:
       labels:
         app: enmasse
         group_id: "${NAME}"
-        tenant: "${TENANT}"
-      name: pvc-${TENANT}-${NAME}
+      name: pvc-${NAME}
     spec:
       accessModes:
       - ReadWriteMany
@@ -111,11 +104,10 @@ objects:
     kind: Deployment
     metadata:
       labels:
-        address_config: address-config-${TENANT}-${NAME}
+        address_config: address-config-${NAME}
         app: enmasse
         group_id: "${NAME}"
-        tenant: "${TENANT}"
-      name: "${TENANT}-${NAME}"
+      name: "${NAME}"
     spec:
       replicas: 1
       template:
@@ -124,7 +116,6 @@ objects:
             app: enmasse
             group_id: "${NAME}"
             role: broker
-            tenant: "${TENANT}"
         spec:
           containers:
           - env:
@@ -149,11 +140,11 @@ objects:
               name: core
             volumeMounts:
             - mountPath: "/var/run/artemis"
-              name: vol-${TENANT}-${NAME}
+              name: vol-${NAME}
           volumes:
-          - name: vol-${TENANT}-${NAME}
+          - name: vol-${NAME}
             persistentVolumeClaim:
-              claimName: pvc-${TENANT}-${NAME}
+              claimName: pvc-${NAME}
   - apiVersion: v1
     data:
       "${ADDRESS}": '{"store_and_forward": true, "multicast": false}'
@@ -162,9 +153,8 @@ objects:
       labels:
         app: enmasse
         group_id: "${NAME}"
-        tenant: "${TENANT}"
         type: address-config
-      name: address-config-${TENANT}-${NAME}
+      name: address-config-${NAME}
   parameters:
   - description: Storage capacity required for volume claims
     name: STORAGE_CAPACITY
@@ -172,9 +162,6 @@ objects:
   - description: The link capacity setting for router
     name: ROUTER_LINK_CAPACITY
     value: '50'
-  - description: A valid tenant name for the instance
-    name: TENANT
-    required: true
   - description: A valid name for the instance
     name: NAME
     required: true
@@ -192,11 +179,10 @@ objects:
     kind: Deployment
     metadata:
       labels:
-        address_config: address-config-${TENANT}-${NAME}
+        address_config: address-config-${NAME}
         app: enmasse
         group_id: "${NAME}"
-        tenant: "${TENANT}"
-      name: "${TENANT}-${NAME}"
+      name: "${NAME}"
     spec:
       replicas: 1
       template:
@@ -205,7 +191,6 @@ objects:
             app: enmasse
             group_id: "${NAME}"
             role: broker
-            tenant: "${TENANT}"
         spec:
           containers:
           - env:
@@ -230,7 +215,7 @@ objects:
               name: core
             volumeMounts:
             - mountPath: "/var/run/artemis"
-              name: vol-${TENANT}-${NAME}
+              name: vol-${NAME}
           - env:
             - name: LINK_CAPACITY
               value: "${ROUTER_LINK_CAPACITY}"
@@ -272,7 +257,7 @@ objects:
                 memory: 128Mi
           volumes:
           - emptyDir: {}
-            name: vol-${TENANT}-${NAME}
+            name: vol-${NAME}
   - apiVersion: v1
     data:
       "${ADDRESS}": '{"store_and_forward": true, "multicast": true}'
@@ -281,9 +266,8 @@ objects:
       labels:
         app: enmasse
         group_id: "${NAME}"
-        tenant: "${TENANT}"
         type: address-config
-      name: address-config-${TENANT}-${NAME}
+      name: address-config-${NAME}
   parameters:
   - description: Storage capacity required for volume claims
     name: STORAGE_CAPACITY
@@ -291,9 +275,6 @@ objects:
   - description: The link capacity setting for router
     name: ROUTER_LINK_CAPACITY
     value: '50'
-  - description: A valid tenant name for the instance
-    name: TENANT
-    required: true
   - description: A valid name for the instance
     name: NAME
     required: true
@@ -313,8 +294,7 @@ objects:
       labels:
         app: enmasse
         group_id: "${NAME}"
-        tenant: "${TENANT}"
-      name: pvc-${TENANT}-${NAME}
+      name: pvc-${NAME}
     spec:
       accessModes:
       - ReadWriteMany
@@ -325,11 +305,10 @@ objects:
     kind: Deployment
     metadata:
       labels:
-        address_config: address-config-${TENANT}-${NAME}
+        address_config: address-config-${NAME}
         app: enmasse
         group_id: "${NAME}"
-        tenant: "${TENANT}"
-      name: "${TENANT}-${NAME}"
+      name: "${NAME}"
     spec:
       replicas: 1
       template:
@@ -338,7 +317,6 @@ objects:
             app: enmasse
             group_id: "${NAME}"
             role: broker
-            tenant: "${TENANT}"
         spec:
           containers:
           - env:
@@ -363,7 +341,7 @@ objects:
               name: core
             volumeMounts:
             - mountPath: "/var/run/artemis"
-              name: vol-${TENANT}-${NAME}
+              name: vol-${NAME}
           - env:
             - name: LINK_CAPACITY
               value: "${ROUTER_LINK_CAPACITY}"
@@ -404,9 +382,9 @@ objects:
               requests:
                 memory: 128Mi
           volumes:
-          - name: vol-${TENANT}-${NAME}
+          - name: vol-${NAME}
             persistentVolumeClaim:
-              claimName: pvc-${TENANT}-${NAME}
+              claimName: pvc-${NAME}
   - apiVersion: v1
     data:
       "${ADDRESS}": '{"store_and_forward": true, "multicast": true}'
@@ -415,9 +393,8 @@ objects:
       labels:
         app: enmasse
         group_id: "${NAME}"
-        tenant: "${TENANT}"
         type: address-config
-      name: address-config-${TENANT}-${NAME}
+      name: address-config-${NAME}
   parameters:
   - description: Storage capacity required for volume claims
     name: STORAGE_CAPACITY
@@ -425,9 +402,6 @@ objects:
   - description: The link capacity setting for router
     name: ROUTER_LINK_CAPACITY
     value: '50'
-  - description: A valid tenant name for the instance
-    name: TENANT
-    required: true
   - description: A valid name for the instance
     name: NAME
     required: true
