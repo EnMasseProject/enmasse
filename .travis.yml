@@ -19,22 +19,8 @@ deploy:
   api_key:
     secure: V59lkWFMwiq/5s93GxVr32P1x4ONnR7dDGrEFOkThqsAl6NvprcOmyiPGiDxYRVBE/skeoBEiieRnkOPa4ecuyFzDtKWRc55kQUkVxHf/47DZaFwV0ehzf7Z76XosWn2WtNjpR5Z+V3lqvEOeoQB00wvpnd87tuYs9nc6PUaO+saqmEW2A11KvbDoh2a2lk5XV+D/daNgUmZHVZahRy+1WEEhflpoM2Xrd9yv1C6WmuvSaZy29vv8xz3J8HMtWrPEBuvxFcZrLBsaleauZg6RmHnEml/wmzb0zv+lcVmXqtnBVkEDZzCgHVCWI0XRmgcSLT+e01O4ZD8NOSuMZAlvHTVEBg7oaT2xMoV59C1qM98GIv/4MdGIOceNZ0217jmOgADvHS3Qh+u8XqW6YzZdCyzIeIBW5wuKZVW7TWtGBWkxnotl4e+H2QJKmlZgbaMehBsZNZSiJmG/JkiQ4tNwesFnmMuI7XTFnqhB+rsbjtnHS/7dSkPtjhFBV8kbi8/sTdfAbxldHDlTLxcGrAK8epoZJpVUIFTxmJXXoJYMZxXu3jfCycVdM/hdauoWe+1k5Day8fEmJo7eXaXFLd9ErZwEBOu1nGOgtDonmb0W5a2JLT96lV6h1ow5ydxcw4MwGBYs+W9/6Mzt4IGTf0eKlb0QDGA8tWqauwOIKmrKOU=
   file:
-    - generated/enmasse-base-template.yaml
     - generated/enmasse-template.yaml
-    - generated/tls-enmasse-base-template.yaml
     - generated/tls-enmasse-template.yaml
-    - generated/addresses.yaml
-    - generated/flavor.yaml
-    - generated/console-template.yaml
-    - generated/direct-template.yaml
-    - generated/queue-inmemory-template.yaml
-    - generated/queue-persisted-template.yaml
-    - generated/tls-queue-inmemory-template.yaml
-    - generated/tls-queue-persisted-template.yaml
-    - generated/topic-inmemory-template.yaml
-    - generated/topic-persisted-template.yaml
-    - generated/tls-topic-inmemory-template.yaml
-    - generated/tls-topic-persisted-template.yaml
   on:
     tags: true
-    repo: EnMasseProject/openshift-configuration
+    repo: EnMasseProject/enmasse
