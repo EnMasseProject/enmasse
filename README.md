@@ -1,6 +1,6 @@
 # EnMasse - Messaging as a Service
 
-The EnMasse project is a scalable messaging platform on OpenShift.
+The EnMasse project aims to provide a scalable messaging platform on OpenShift.
 
 ## Features
 
@@ -9,165 +9,23 @@ The EnMasse project is a scalable messaging platform on OpenShift.
 * AMQP and MQTT support
 * Simple setup and management
 * Multitenancy
+* Runs wherever OpenShift runs: on-premise or in the cloud
 
-# Preqrequisites
+# Getting started
 
-   * Openshift version >= 1.3
+See the [Getting Started](documentation/getting-started/README.md) for how to setup EnMasse. For
+more details on architecture and implementation, see [documentation](documentation/README.md).
 
-### Note for contributors
+# Getting help
 
-To make changes, edit the jsonnet files in root and include/ folders. To generate the templates,
-run:
+Submit bugs and feature requests using the [issue tracker](https://github.com/EnMasseProject/enmasse/issues).
 
-    git submodule update --init
-    make
+For questions or feedback, reach us on IRC on #enmasse on Freenode or post to our [mailing list](https://www.redhat.com/mailman/listinfo/enmasse).
 
-## Optional: Setup openshift test cluster
+# Contributing
 
-If you don't have an openshift cluster available, you can easily set one up locally by downloading
-the openshift client from https://github.com/openshift/origin/releases and run 'oc cluster up'.
+See [HACKING](HACKING.md) for details on how to build the different components of EnMasse. Submit patches using pull requests, or post patches to the mailing lists.
 
-## Access permissions
+# License
 
-Some permissions need to be granted before setting up the messaging
-service.  View permission should be granted to the default
-serviceaccount (system:serviceaccount:myproject:default for a project
-named myproject). This is needed by the configmap-bridge and the
-router agent.
-
-A service-account for enmasse-service-account must be created.  Edit 
-rights must also be granted to the enmasse-service-account role, used
-by the address-controller.
-
-The permissions can be setup with the following commands:
-
-    oc create sa enmasse-service-account -n $(oc project -q)
-    oc policy add-role-to-user view system:serviceaccount:$(oc project -q):default
-    oc policy add-role-to-user edit system:serviceaccount:$(oc project -q):enmasse-service-account
-
-## Using the simple template
-
-There is a template that can be used to setup the necessary objects in
-openshift. To use it, run:
-
-    oc process -f https://raw.githubusercontent.com/EnMasseProject/openshift-configuration/master/generated/enmasse-template.yaml | oc create -f -
-
-## Using the TLS template
-
-For the messaging service to be externally accessible, a route must be
-setup over TLS. This requires qdrouterd containers to have TLS enabled.
-
-To do this we need to create a secret called qdrouterd-certs with the
-key and certificate for the routers contained in server-key.pem and
-server-cert.pem respectively:
-
-    oc secret new qdrouterd-certs server-cert.pem server-key.pem
-
-Then the default serviceaccount (under which the router containers are
-currently run) needs to be allowed to mount this secret:
-
-    oc secret add serviceaccount/default secrets/qdrouterd-certs --for=mount
-
-Then we can use the tls version of the template as follows:
-
-    oc process -f https://raw.githubusercontent.com/EnMasseProject/openshift-configuration/master/generated/tls-enmasse-template.yaml | oc create -f -
-
-This will also create a route called 'messaging' using TLS passthrough. In order for this to work,
-you must ensure that your OpenShift cluster has a
-[router](https://docs.openshift.org/latest/install_config/router/index.html#install-config-router-overview). Then, you can connect to openshift cluster using AMQP over TLS with SNI. Have a look at the [rhea TLS example](https://github.com/grs/rhea/blob/master/examples/tls/tls_client.js). The SNI host would be the host generated for the 'messaging' route.
-
-## Configuring
-
-EnMasse is configured by defining a set of addresses. An address can be of 4 different types:
-
-   * Queue
-   * Topic
-   * 'Direct' anycast
-   * 'Direct' multicast
-
-EnMasse is configured by pushing an addressing config to the REST API. An example config may look
-like this:
-
-```
-{
-    "apiVersion": "v3",
-    "kind": "AddressList",
-    "items": [
-        {
-            "metadata": {
-                "name": "anycast"
-            },
-            "spec": {
-                "store_and_forward": false,
-                "multicast": false
-            },
-        },
-        {
-            "metadata": {
-                "name": "broadcast"
-            },
-            "spec": {
-                "store_and_forward": false,
-                "multicast": true 
-            },
-        },
-        {
-            "metadata": {
-                "name": "myqueue"
-            },
-            "spec": {
-                "store_and_forward": true,
-                "multicast": false,
-                "flavor": "vanilla-queue"
-            },
-        },
-        {
-            "metadata": {
-                "name": "mytopic"
-            },
-            "spec": {
-                "store_and_forward": true,
-                "multicast": true,
-                "flavor": "vanilla-topic"
-            }
-        }
-    ]
-}
-```
-
-Save your config to a file, i.e. ```addresses.json``` and deploy it using curl:
-    
-    curl -X PUT -H "content-type: application/json" --data-binary @addresses.json http://$(oc get service -o jsonpath='{.spec.clusterIP}' admin):8080/v3/address
-
-The REST API will deploy the configuration to the address controller, which will create and delete brokers to
-match the desired state.
-
-Each address that set store-and-forward=true must also refer to a flavor.
-
-### Flavor config
-
-To support different configurations of brokers, EnMasse comes with different templates that allow
-you to setup persistence and TLS. A flavor is a specific set of parameters for a template. This
-allows a cluster administrator to control which configuration settings that are available to the
-developer.
-
-The flavor map can be changed in a similar fashion to the address config:
-
-   oc get configmap flavor -o yaml > flavor.yaml
-   # ADD/REMOVE/CHANGE flavors
-   oc replace -f flavor.yaml
-
-# Benchmarking
-
-EnMasse provides a benchmarking suite, ebench, that can run alongside the EnMasse cluster or
-on a separate set of machines. The suite is composed of an agent that sends messages to a specific
-address and a collector that aggregates metrics from multiple agents. To start an agent and a
-collector, invoke the benchmark template:
-
-    oc process -f include/benchmark-template.json | oc create -f -
-
-The agent and collector is parameterized using environment variables defined in the specification
-file. 
-
-You can scale the number of agents by adjusting the number of replicas, and the collector will
-automatically pick up the changes and display aggregated results for all agents running.
+EnMasse is licensed under the [Apache License, Version 2.0](LICENSE)

@@ -19,7 +19,7 @@ EnMasse comes with a few templates that makes setting it up easy. First, create 
 
 Then download a script for deploying the EnMasse template:
 
-    curl -o enmasse-deploy.sh https://raw.githubusercontent.com/EnMasseProject/openshift-configuration/master/scripts/enmasse-deploy.sh
+    curl -o enmasse-deploy.sh https://raw.githubusercontent.com/EnMasseProject/enmasse/master/scripts/enmasse-deploy.sh
 
 This script simplifies the process of deploying the enmasse cluster to your openshift instance. You can invoke it with `-h` to get a list of options.
 
@@ -143,4 +143,4 @@ The flavor map can be changed using the `oc` tool:
 ## Conclusion
 
 We have seen how to setup a messaging service locally, and how to communicate with it using python
-example AMQP clients. For further documentation on EnMasse, see the [configuration repository](https://github.com/EnMasseProject/openshift-configuration).
+example AMQP clients.

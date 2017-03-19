@@ -23,7 +23,7 @@ else
     exit 1
 fi
 
-ENMASSE_TEMPLATE_MASTER_URL=https://raw.githubusercontent.com/EnMasseProject/openshift-configuration/master/generated
+ENMASSE_TEMPLATE_MASTER_URL=https://raw.githubusercontent.com/EnMasseProject/enmasse/master/generated
 TEMPLATE_NAME=enmasse
 TEMPLATE_PARAMS=""
 
