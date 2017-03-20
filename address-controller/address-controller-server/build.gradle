@@ -1,0 +1,18 @@
+description = 'Address Controller Server'
+dependencies {
+    compile project(':address-controller-lib')
+    compile "io.fabric8:openshift-client:${openshiftClientVersion}"
+    compile "io.vertx:vertx-core:${vertxVersion}"
+    compile "io.vertx:vertx-proton:${vertxVersion}"
+    compile "org.slf4j:slf4j-api:${slf4jVersion}"
+    compile "org.slf4j:slf4j-log4j12:${slf4jVersion}"
+    compile "com.fasterxml.jackson.core:jackson-core:${jacksonVersion}"
+    compile "com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}"
+
+    testCompile "junit:junit:${junitVersion}"
+    testCompile "org.mockito:mockito-core:${mockitoVersion}"
+}
+
+apply plugin: 'application'
+mainClassName = 'enmasse.controller.Controller'
+applicationDefaultJvmArgs = ["-Dvertx.cacheDirBase=/tmp", "-Xmx128m", "-Xms128m"]

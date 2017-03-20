@@ -1,0 +1,4 @@
+rootProject.name = 'address-controller'
+
+include ':address-controller-lib'
+include ':address-controller-server'
