@@ -15,7 +15,7 @@ repositories {
 
 dependencies {
     compile 'org.slf4j:slf4j-api:1.7.13'
-    compile 'com.github.EnMasseProject:common-lib:master-SNAPSHOT'
+    compile 'com.github.EnMasseProject:admin:master-SNAPSHOT'
     compile "io.fabric8:openshift-client:${openshiftClientVersion}"
     compile "io.vertx:vertx-core:${vertxVersion}"
     compile "io.vertx:vertx-proton:${vertxProtonVersion}"
