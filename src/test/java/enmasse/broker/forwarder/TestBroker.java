@@ -19,8 +19,10 @@ package enmasse.broker.forwarder;
 import io.vertx.proton.ProtonClient;
 import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.ProtonSender;
+import org.apache.activemq.artemis.api.core.RoutingType;
 import org.apache.activemq.artemis.api.core.TransportConfiguration;
 import org.apache.activemq.artemis.core.config.Configuration;
+import org.apache.activemq.artemis.core.config.CoreAddressConfiguration;
 import org.apache.activemq.artemis.core.config.impl.ConfigurationImpl;
 import org.apache.activemq.artemis.core.remoting.impl.netty.NettyAcceptorFactory;
 import org.apache.activemq.artemis.core.server.embedded.EmbeddedActiveMQ;
@@ -56,6 +58,7 @@ public class TestBroker {
 
     public void start() throws Exception {
         Configuration config = new ConfigurationImpl();
+        config.setPersistenceEnabled(false);
 
         Map<String, Object> params = new LinkedHashMap<>();
         params.put("protocols", "AMQP");
@@ -67,6 +70,11 @@ public class TestBroker {
         config.setSecurityEnabled(false);
         config.setName("broker-" + port);
 
+
+        CoreAddressConfiguration addressConfig = new CoreAddressConfiguration();
+        addressConfig.setName(address);
+        addressConfig.addRoutingType(RoutingType.MULTICAST);
+        config.addAddressConfiguration(addressConfig);
         server.setConfiguration(config);
 
         server.start();
