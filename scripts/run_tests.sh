@@ -25,8 +25,8 @@ function setup_test_multitenant() {
     oc new-project $PROJECT_NAME
     oc create sa enmasse-service-account -n $(oc project -q)
 
-    oadm --config openshift.local.config/master/admin.kubeconfig policy add-cluster-role-to-user cluster-admin system:serviceaccount:$(oc project -q):enmasse-service-account
-    oadm --config openshift.local.config/master/admin.kubeconfig policy add-cluster-role-to-user cluster-admin test
+    sudo ./openshift/oadm --config openshift.local.config/master/admin.kubeconfig policy add-cluster-role-to-user cluster-admin system:serviceaccount:$(oc project -q):enmasse-service-account
+    sudo ./openshift/oadm --config openshift.local.config/master/admin.kubeconfig policy add-cluster-role-to-user cluster-admin test
 }
 
 function setup_secure() {
