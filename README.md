@@ -1,5 +1,7 @@
 # EnMasse - Messaging as a Service
+[![Systemtest Status](https://travis-ci.org/EnMasseProject/systemtests.svg?branch=master)](https://travis-ci.org/EnMasseProject/systemtests)
 
+--- 
 The EnMasse project aims to provide a scalable messaging platform on OpenShift.
 
 ## Features
