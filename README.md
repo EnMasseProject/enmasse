@@ -7,8 +7,7 @@ performance. EnMasse can run on your own infrastructure or in the cloud, and sim
 deployment of messaging infrastructure.
 
 EnMasse is based on open standards like [AMQP](http://amqp.org/) and [MQTT](http://mqtt.org/), and 
-open source projects like [Apache ActiveMQ Artemis](https://activemq.apache.org/artemis/) and
-[Apache Qpid Dispatch Router](https://qpid.apache.org/components/dispatch-router/index.html).
+open source projects like [Apache ActiveMQ Artemis](https://activemq.apache.org/artemis/), [Apache Qpid Dispatch Router](https://qpid.apache.org/components/dispatch-router/index.html) and finally the [Vert.x](http://vertx.io/) toolkit for some of its components.
 
 EnMasse is a great fit for IoT cloud infrastructure, and aims to extend protocol support to both
 HTTP and CoAP.
@@ -16,11 +15,24 @@ HTTP and CoAP.
 ## Features
 
 * Multiple <b>communication patterns</b>: request-response, pub-sub and events
+* Support for <b>store and forward</b> and <b>direct messaging</b> mechanisms
 * <b>Elastic scaling</b> of message brokers
 * <b>AMQP</b> and <b>MQTT</b> support
 * <b>Simple</b> setup and management
 * <b>Multitenancy</b>: Manage multiple independent instances
 * Built on <b>OpenShift</b>: deploy <b>on-premise</b> or in the <b>cloud</b>
+
+## Components
+
+EnMasse is made of different components needed for the OpenShift deployment and for handling the messaging infrastructure based on a Qpid Dispatch Router network and Apache ActiveMS broker(s).
+
+* [address-controller](https://github.com/EnMasseProject/address-controller): Controls the addresses in EnMasse
+* [ragent](https://github.com/EnMasseProject/ragent): Router Configuration Agent
+* [configserv](https://github.com/EnMasseProject/configserv): A bridge for subscribing to configmap updates through AMQP
+* [queue-scheduler](https://github.com/EnMasseProject/queue-scheduler): Queue Scheduler Service
+* [subserv](https://github.com/EnMasseProject/subserv) : Subscription Service
+* [mqtt-gateway](https://github.com/EnMasseProject/mqtt-gateway): MQTT gateway for "MQTT over AMQP"
+* [mqtt-lwt](https://github.com/EnMasseProject/mqtt-lwt): MQTT Last Will and Testament Service for "MQTT over AMQP"
 
 # Getting started
 
