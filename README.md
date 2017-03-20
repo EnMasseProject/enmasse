@@ -26,10 +26,10 @@ HTTP and CoAP.
 
 EnMasse is made of different components needed for the OpenShift deployment and for handling the messaging infrastructure based on a Qpid Dispatch Router network and Apache ActiveMQ broker(s).
 
-* [address-controller](https://github.com/EnMasseProject/address-controller): Controls multiple instances (tenants) and per-instance address space
+* [address-controller](https://github.com/EnMasseProject/admin#address-controller): Controls multiple instances (tenants) and per-instance address space
 * [ragent](https://github.com/EnMasseProject/ragent): Controls the router network configuration
-* [configserv](https://github.com/EnMasseProject/configserv): A bridge for subscribing to OpenShift resource updates through AMQP
-* [queue-scheduler](https://github.com/EnMasseProject/queue-scheduler): Controls the mapping of queues to brokers
+* [configserv](https://github.com/EnMasseProject/admin#configuration-server): A bridge for subscribing to OpenShift resource updates through AMQP
+* [queue-scheduler](https://github.com/EnMasseProject/admin#queue-scheduler): Controls the mapping of queues to brokers
 * [subserv](https://github.com/EnMasseProject/subserv): Subscription service for durable subscriptions
 * [mqtt-gateway](https://github.com/EnMasseProject/mqtt-gateway): MQTT gateway for "MQTT over AMQP"
 * [mqtt-lwt](https://github.com/EnMasseProject/mqtt-lwt): MQTT Last Will and Testament Service for "MQTT over AMQP"
