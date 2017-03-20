@@ -30,7 +30,7 @@ TEMPLATE_PARAMS=""
 DEFAULT_OPENSHIFT_USER=developer
 DEFAULT_OPENSHIFT_PROJECT=myproject
 
-while getopts c:dk:o:p:s:t:u:h opt; do
+while getopts c:dk:mo:p:s:t:u:h opt; do
     case $opt in
         c)
             OS_CLUSTER=$OPTARG
@@ -40,6 +40,10 @@ while getopts c:dk:o:p:s:t:u:h opt; do
             ;;
         k)
             SERVER_KEY=$OPTARG
+            ;;
+        m)
+            TEMPLATE_PARAMS="MULTIINSTANCE=true $TEMPLATE_PARAMS"
+            echo "Please grant cluster-admin rights to system:serviceaccount:${PROJECT}:enmasse-service-account: 'oadm policy add-cluster-role-to-user cluster-admin system:serviceaccount:${PROJECT}:enmasse-service-account'"
             ;;
         o)
             TEMPLATE_PARAMS="MESSAGING_HOSTNAME=$OPTARG $TEMPLATE_PARAMS"
@@ -132,6 +136,7 @@ fi
 oc create sa enmasse-service-account -n $PROJECT
 oc policy add-role-to-user view system:serviceaccount:${PROJECT}:default
 oc policy add-role-to-user edit system:serviceaccount:${PROJECT}:enmasse-service-account
+
 
 
 if [ -n "$SERVER_KEY" ] && [ -n "$SERVER_CERT" ]
