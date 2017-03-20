@@ -14,11 +14,8 @@
  * limitations under the License.
  */
 
-package enmasse.controller;
+package enmasse.controller.common;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import enmasse.controller.common.ConfigSubscriber;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.Watch;
@@ -27,8 +24,10 @@ import io.fabric8.openshift.client.OpenShiftClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-class ConfigAdapter implements Watcher<ConfigMap> {
-    private static final ObjectMapper mapper = new ObjectMapper();
+/**
+ * An adapter for subscribing to updates to a config map that manages the watch.
+ */
+public class ConfigAdapter implements Watcher<ConfigMap> {
     private static final Logger log = LoggerFactory.getLogger(ConfigAdapter.class.getName());
 
     private Watch watch;
@@ -36,7 +35,7 @@ class ConfigAdapter implements Watcher<ConfigMap> {
     private final String configName;
     private final ConfigSubscriber configSubscriber;
 
-    ConfigAdapter(OpenShiftClient openshiftClient, String configName, ConfigSubscriber configSubscriber) {
+    public ConfigAdapter(OpenShiftClient openshiftClient, String configName, ConfigSubscriber configSubscriber) {
         this.openshiftClient = openshiftClient;
         this.configName = configName;
         this.configSubscriber = configSubscriber;
@@ -44,27 +43,20 @@ class ConfigAdapter implements Watcher<ConfigMap> {
 
     private void configUpdated(ConfigMap configMap) {
         try {
-            if (configMap.getData().containsKey("json")) {
-                log.info("Got new config for " + configName + " with data: " + configMap.getData().get("json"));
-                JsonNode root = mapper.readTree(configMap.getData().get("json"));
-                configSubscriber.configUpdated(root);
-            } else {
-                log.info("Got empty config for " + configName);
-                configSubscriber.configUpdated(mapper.createObjectNode());
-            }
+            configSubscriber.configUpdated(configMap);
         } catch (Exception e) {
             log.warn("Error handling address config update", e);
         }
 
     }
 
-    void start() {
+    public void start() {
         ConfigMap initial = openshiftClient.configMaps().withName(configName).get();
         configUpdated(initial);
         watch = openshiftClient.configMaps().withName(configName).withResourceVersion(initial.getMetadata().getResourceVersion()).watch(this);
     }
 
-    void stop() {
+    public void stop() {
         if (watch != null) {
             watch.close();
         }

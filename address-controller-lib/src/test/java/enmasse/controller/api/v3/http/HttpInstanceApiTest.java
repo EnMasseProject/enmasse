@@ -1,6 +1,6 @@
 package enmasse.controller.api.v3.http;
 
-import enmasse.controller.api.TestInstanceController;
+import enmasse.controller.api.TestInstanceManager;
 import enmasse.controller.api.v3.InstanceList;
 import enmasse.controller.model.Instance;
 import enmasse.controller.model.InstanceId;
@@ -17,13 +17,13 @@ import static org.junit.Assert.assertThat;
 
 public class HttpInstanceApiTest {
     private InstanceService instanceService;
-    private TestInstanceController instanceManager;
+    private TestInstanceManager instanceManager;
     private Instance instance1;
     private Instance instance2;
 
     @Before
     public void setup() {
-        instanceManager = new TestInstanceController();
+        instanceManager = new TestInstanceManager();
         instanceService = new InstanceService(instanceManager);
         instance1 = new Instance.Builder(InstanceId.withId("instance1"))
                 .messagingHost(Optional.of("messaging.example.com"))

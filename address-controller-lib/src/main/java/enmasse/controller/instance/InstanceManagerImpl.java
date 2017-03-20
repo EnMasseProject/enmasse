@@ -11,12 +11,12 @@ import io.fabric8.openshift.client.ParameterValue;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class InstanceControllerImpl implements InstanceController {
+public class InstanceManagerImpl implements InstanceManager {
     private final OpenShift openShift;
     private final String instanceTemplateName;
     private final boolean isMultitenant;
 
-    public InstanceControllerImpl(OpenShift openShift, String instanceTemplateName, boolean isMultitenant) {
+    public InstanceManagerImpl(OpenShift openShift, String instanceTemplateName, boolean isMultitenant) {
         this.openShift = openShift;
         this.instanceTemplateName = instanceTemplateName;
         this.isMultitenant = isMultitenant;

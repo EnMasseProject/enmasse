@@ -19,7 +19,7 @@ import enmasse.controller.common.TemplateParameter;
 import enmasse.controller.model.InstanceId;
 import enmasse.controller.common.OpenShift;
 import enmasse.controller.flavor.FlavorManager;
-import enmasse.controller.instance.InstanceControllerImpl;
+import enmasse.controller.instance.InstanceManagerImpl;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.openshift.client.ParameterValue;
 import org.junit.Test;
@@ -61,7 +61,7 @@ public class AddressManagerFactoryTest {
                 .endMetadata()
                 .build()));
 
-        AddressManagerFactoryImpl instanceManager = new AddressManagerFactoryImpl(mockClient, new InstanceControllerImpl(mockClient, "test", true), new FlavorManager());
+        AddressManagerFactoryImpl instanceManager = new AddressManagerFactoryImpl(mockClient, new InstanceManagerImpl(mockClient, "test", true), new FlavorManager());
         assertFalse(instanceManager.getAddressManager(InstanceId.withId("notpresent")).isPresent());
         assertTrue(instanceManager.getAddressManager(InstanceId.withId("myinstance")).isPresent());
     }
@@ -85,7 +85,7 @@ public class AddressManagerFactoryTest {
         ArgumentCaptor<ParameterValue> captor = ArgumentCaptor.forClass(ParameterValue.class);
 
 
-        AddressManagerFactoryImpl instanceManager = new AddressManagerFactoryImpl(mockClient, new InstanceControllerImpl(mockClient, "test", true), new FlavorManager());
+        AddressManagerFactoryImpl instanceManager = new AddressManagerFactoryImpl(mockClient, new InstanceManagerImpl(mockClient, "test", true), new FlavorManager());
 
         AddressManager manager = instanceManager.getOrCreateAddressManager(InstanceId.withId("myinstance"));
         assertNotNull(manager);

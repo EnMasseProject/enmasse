@@ -16,36 +16,33 @@
 
 package enmasse.controller;
 
-import enmasse.controller.model.Instance;
-import enmasse.controller.model.InstanceId;
 import enmasse.controller.address.AddressManagerFactory;
 import enmasse.controller.address.AddressManagerFactoryImpl;
 import enmasse.controller.common.OpenShift;
 import enmasse.controller.common.OpenShiftHelper;
+import enmasse.controller.flavor.FlavorController;
 import enmasse.controller.flavor.FlavorManager;
-import enmasse.controller.instance.InstanceControllerImpl;
+import enmasse.controller.instance.InstanceManagerImpl;
+import enmasse.controller.model.Instance;
+import enmasse.controller.model.InstanceId;
 import io.fabric8.kubernetes.client.ConfigBuilder;
 import io.fabric8.openshift.client.DefaultOpenShiftClient;
 import io.fabric8.openshift.client.OpenShiftClient;
+import io.vertx.core.AbstractVerticle;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
 
 import java.io.IOException;
 
-public class AddressController implements Runnable, AutoCloseable {
-    private final FlavorManager flavorManager;
+public class Controller extends AbstractVerticle {
     private final AMQPServer server;
     private final HTTPServer restServer;
     private final AddressManagerFactory addressManagerFactory;
-    private final InstanceControllerImpl instanceManager;
-    private final Vertx vertx;
-
-    private final ConfigAdapter flavorWatcher;
+    private final InstanceManagerImpl instanceManager;
+    private final FlavorController flavorController;
 
 
-    public AddressController(AddressControllerOptions options) throws IOException {
-        this.vertx = Vertx.vertx();
-
+    public Controller(ControllerOptions options) throws IOException {
         OpenShiftClient controllerClient = new DefaultOpenShiftClient(new ConfigBuilder()
                 .withMasterUrl(options.openshiftUrl())
                 .withOauthToken(options.openshiftToken())
@@ -55,8 +52,8 @@ public class AddressController implements Runnable, AutoCloseable {
         OpenShift openShift = new OpenShiftHelper(InstanceId.withIdAndNamespace(options.openshiftNamespace(), options.openshiftNamespace()), controllerClient);
         String templateName = options.useTLS() ? "tls-enmasse-instance-infra" : "enmasse-instance-infra";
 
-        this.flavorManager = new FlavorManager();
-        this.instanceManager = new InstanceControllerImpl(openShift, templateName, options.isMultiinstance());
+        FlavorManager flavorManager = new FlavorManager();
+        this.instanceManager = new InstanceManagerImpl(openShift, templateName, options.isMultiinstance());
         if (!options.isMultiinstance() && !openShift.hasService("messaging")) {
             instanceManager.create(new Instance.Builder(openShift.getInstanceId()).build());
         }
@@ -64,18 +61,26 @@ public class AddressController implements Runnable, AutoCloseable {
         this.addressManagerFactory = new AddressManagerFactoryImpl(openShift, instanceManager, flavorManager);
         this.server = new AMQPServer(openShift.getInstanceId(), addressManagerFactory, flavorManager, options.port());
         this.restServer = new HTTPServer(openShift.getInstanceId(), addressManagerFactory, instanceManager, flavorManager);
-        this.flavorWatcher = new ConfigAdapter(controllerClient, "flavor", flavorManager::configUpdated);
+        this.flavorController = new FlavorController(controllerClient, flavorManager);
     }
 
-    public void run() {
-        flavorWatcher.start();
+    @Override
+    public void start() {
+        vertx.deployVerticle(flavorController);
         vertx.deployVerticle(server);
         vertx.deployVerticle(restServer, new DeploymentOptions().setWorker(true));
     }
 
-    @Override
-    public void close() throws Exception {
-        flavorWatcher.stop();
-        vertx.close();
+    public static void main(String args[]) {
+        try {
+            Vertx vertx = Vertx.vertx();
+            vertx.deployVerticle(new Controller(ControllerOptions.fromEnv(System.getenv())));
+        } catch (IllegalArgumentException e) {
+            System.out.println(String.format("Unable to parse arguments: %s", e.getMessage()));
+            System.exit(1);
+        } catch (IOException e) {
+            System.out.println("Error starting address controller: " + e.getMessage());
+            System.exit(1);
+        }
     }
 }

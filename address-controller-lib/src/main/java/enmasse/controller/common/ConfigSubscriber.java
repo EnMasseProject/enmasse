@@ -17,12 +17,13 @@
 package enmasse.controller.common;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import io.fabric8.kubernetes.api.model.ConfigMap;
 
 import java.io.IOException;
 
 /**
- * Represents a component subscribes to JSON config updates.
+ * Represents a component subscribes to config map updates.
  */
 public interface ConfigSubscriber {
-    void configUpdated(JsonNode jsonConfig) throws IOException;
+    void configUpdated(ConfigMap configMap) throws IOException;
 }

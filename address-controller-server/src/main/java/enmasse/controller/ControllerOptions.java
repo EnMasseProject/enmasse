@@ -21,13 +21,13 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Map;
 
-public final class AddressControllerOptions {
+public final class ControllerOptions {
 
     private final String openshiftUrl;
     private final boolean isMultiinstance;
     private final boolean useTLS;
 
-    private AddressControllerOptions(String openshiftUrl, boolean isMultiinstance, boolean useTLS) {
+    private ControllerOptions(String openshiftUrl, boolean isMultiinstance, boolean useTLS) {
         this.openshiftUrl = openshiftUrl;
         this.isMultiinstance = isMultiinstance;
         this.useTLS = useTLS;
@@ -37,13 +37,13 @@ public final class AddressControllerOptions {
         return openshiftUrl;
     }
 
-    public static AddressControllerOptions fromEnv(Map<String, String> env) {
+    public static ControllerOptions fromEnv(Map<String, String> env) {
         String openshiftHost = getEnvOrThrow(env, "KUBERNETES_SERVICE_HOST");
         String openshiftPort = getEnvOrThrow(env, "KUBERNETES_SERVICE_PORT");
         boolean isMultiinstance = Boolean.parseBoolean(env.get("MULTIINSTANCE"));
         boolean useTLS = Boolean.parseBoolean(env.get("TLS"));
 
-        return new AddressControllerOptions(String.format("https://%s:%s", openshiftHost, openshiftPort), isMultiinstance, useTLS);
+        return new ControllerOptions(String.format("https://%s:%s", openshiftHost, openshiftPort), isMultiinstance, useTLS);
     }
 
     private static String getEnvOrThrow(Map<String, String> env, String envVar) {

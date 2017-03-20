@@ -70,8 +70,4 @@ public class FlavorManager implements FlavorRepository {
         }
 
     }
-
-    public void configUpdated(JsonNode jsonConfig) {
-        flavorsUpdated(FlavorParser.parse(jsonConfig));
-    }
 }

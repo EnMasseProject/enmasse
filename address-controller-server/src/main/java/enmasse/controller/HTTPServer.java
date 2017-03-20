@@ -18,7 +18,7 @@ package enmasse.controller;
 
 import enmasse.controller.flavor.FlavorRepository;
 import enmasse.controller.address.AddressManagerFactory;
-import enmasse.controller.instance.InstanceController;
+import enmasse.controller.instance.InstanceManager;
 import enmasse.controller.api.http.RestServiceV1;
 import enmasse.controller.api.http.RestServiceV2;
 import enmasse.controller.api.v3.ApiHandler;
@@ -39,14 +39,14 @@ import org.slf4j.LoggerFactory;
 public class HTTPServer extends AbstractVerticle {
     private static final Logger log = LoggerFactory.getLogger(HTTPServer.class.getName());
     private final AddressManagerFactory addressManagerFactory;
-    private final InstanceController instanceController;
+    private final InstanceManager instanceManager;
     private final FlavorRepository flavorRepository;
     private final InstanceId globalInstance;
 
-    public HTTPServer(InstanceId globalInstance, AddressManagerFactory addressManagerFactory, InstanceController instanceController, FlavorRepository flavorRepository) {
+    public HTTPServer(InstanceId globalInstance, AddressManagerFactory addressManagerFactory, InstanceManager instanceManager, FlavorRepository flavorRepository) {
         this.globalInstance = globalInstance;
         this.addressManagerFactory = addressManagerFactory;
-        this.instanceController = instanceController;
+        this.instanceManager = instanceManager;
         this.flavorRepository = flavorRepository;
     }
 
@@ -57,7 +57,7 @@ public class HTTPServer extends AbstractVerticle {
         deployment.getRegistry().addSingletonResource(new RestServiceV1(globalInstance, addressManagerFactory, vertx));
         deployment.getRegistry().addSingletonResource(new RestServiceV2(globalInstance, addressManagerFactory, vertx));
         deployment.getRegistry().addSingletonResource(new AddressingService(globalInstance, new ApiHandler(addressManagerFactory)));
-        deployment.getRegistry().addSingletonResource(new InstanceService(instanceController));
+        deployment.getRegistry().addSingletonResource(new InstanceService(instanceManager));
         deployment.getRegistry().addSingletonResource(new MultiInstanceAddressingService(new ApiHandler(addressManagerFactory)));
         deployment.getRegistry().addSingletonResource(new FlavorsService(flavorRepository));
 

@@ -15,7 +15,7 @@
  */
 package enmasse.controller.address;
 
-import enmasse.controller.instance.InstanceController;
+import enmasse.controller.instance.InstanceManager;
 import enmasse.controller.common.OpenShift;
 import enmasse.controller.common.DestinationClusterGenerator;
 import enmasse.controller.common.TemplateDestinationClusterGenerator;
@@ -31,17 +31,17 @@ import java.util.Optional;
 public class AddressManagerFactoryImpl implements AddressManagerFactory {
     private final OpenShift openShift;
     private final FlavorRepository flavorRepository;
-    private final InstanceController instanceController;
+    private final InstanceManager instanceManager;
 
-    public AddressManagerFactoryImpl(OpenShift openShift, InstanceController instanceController, FlavorRepository flavorRepository) {
+    public AddressManagerFactoryImpl(OpenShift openShift, InstanceManager instanceManager, FlavorRepository flavorRepository) {
         this.openShift = openShift;
         this.flavorRepository = flavorRepository;
-        this.instanceController = instanceController;
+        this.instanceManager = instanceManager;
     }
 
     @Override
     public Optional<AddressManager> getAddressManager(InstanceId instanceId) {
-        return instanceController.get(instanceId).map(i -> createManager(i.id()));
+        return instanceManager.get(instanceId).map(i -> createManager(i.id()));
     }
 
     private AddressManager createManager(InstanceId instanceId) {
@@ -61,7 +61,7 @@ public class AddressManagerFactoryImpl implements AddressManagerFactory {
     }
 
     private AddressManager deployInstance(InstanceId instance) {
-        instanceController.create(new Instance.Builder(instance).build());
+        instanceManager.create(new Instance.Builder(instance).build());
         OpenShift instanceClient = createInstanceClient(instance);
         DestinationClusterGenerator generator = new TemplateDestinationClusterGenerator(instance, instanceClient, flavorRepository);
         return new AddressManagerImpl(instanceClient, generator);
