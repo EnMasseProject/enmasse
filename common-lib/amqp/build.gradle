@@ -1,0 +1,28 @@
+ext {
+    vertxVersion = '3.3.3'
+    junitVersion = '4.12'
+    mockitoVersion = '2.0.52-beta'
+}
+
+description = 'AMQP utilities'
+dependencies {
+    compile "io.vertx:vertx-proton:${vertxVersion}"
+    testCompile "junit:junit:${junitVersion}"
+    testCompile "org.mockito:mockito-core:${mockitoVersion}"
+}
+
+apply plugin: 'maven-publish'
+group = "${groupId}"
+version = "${libVersion}"
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+        }
+    }
+    repositories {
+        maven {
+            url "$buildDir/repo"
+        }
+    }
+}
