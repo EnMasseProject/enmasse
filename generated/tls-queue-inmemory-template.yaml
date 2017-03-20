@@ -1,0 +1,82 @@
+---
+apiVersion: v1
+kind: Template
+metadata:
+  labels:
+    app: enmasse
+  name: tls-queue-inmemory
+objects:
+- apiVersion: extensions/v1beta1
+  kind: Deployment
+  metadata:
+    labels:
+      address_config: address-config-${INSTANCE}-${NAME}
+      app: enmasse
+      group_id: "${NAME}"
+      instance: "${INSTANCE}"
+    name: "${NAME}"
+  spec:
+    replicas: 1
+    template:
+      metadata:
+        labels:
+          app: enmasse
+          group_id: "${NAME}"
+          instance: "${INSTANCE}"
+          role: broker
+      spec:
+        containers:
+        - env:
+          - name: QUEUE_NAME
+            value: "${ADDRESS}"
+          - name: GROUP_ID
+            value: "${NAME}"
+          image: "${BROKER_REPO}:latest"
+          lifecycle:
+            preStop:
+              exec:
+                command:
+                - "/opt/artemis-shutdown-hook/bin/artemis-shutdown-hook"
+          livenessProbe:
+            tcpSocket:
+              port: amqp
+          name: broker
+          ports:
+          - containerPort: 5673
+            name: amqp
+          - containerPort: 61616
+            name: core
+          volumeMounts:
+          - mountPath: "/var/run/artemis"
+            name: vol-${NAME}
+        volumes:
+        - emptyDir: {}
+          name: vol-${NAME}
+        - name: ssl-certs
+          secret:
+            secretName: qdrouterd-certs
+parameters:
+- description: Storage capacity required for volume claims
+  name: STORAGE_CAPACITY
+  value: 2Gi
+- description: The docker image to use for the message broker
+  name: BROKER_REPO
+  value: enmasseproject/artemis
+- description: The default image to use as topic forwarder
+  name: TOPIC_FORWARDER_REPO
+  value: enmasseproject/topic-forwarder
+- description: The image to use for the router
+  name: ROUTER_REPO
+  value: enmasseproject/qdrouterd
+- description: The link capacity setting for router
+  name: ROUTER_LINK_CAPACITY
+  value: '50'
+- description: A valid instance name for the instance
+  name: INSTANCE
+  required: true
+- description: A valid name for the instance
+  name: NAME
+  required: true
+- description: The address to use for the queue
+  name: ADDRESS
+  required: true
