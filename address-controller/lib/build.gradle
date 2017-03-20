@@ -1,7 +1,8 @@
 description = 'Address Controller Library'
 dependencies {
-    compile 'com.github.EnMasseProject:common-lib:master-SNAPSHOT'
+    compile project(':common-lib:config')
     compile "org.slf4j:slf4j-api:${slf4jVersion}"
+    compile "io.vertx:vertx-proton:${vertxVersion}"
     compile "io.fabric8:openshift-client:${openshiftClientVersion}"
     compile "com.fasterxml.jackson.core:jackson-core:${jacksonVersion}"
     compile "com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}"

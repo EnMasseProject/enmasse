@@ -1,33 +1,8 @@
-allprojects  {
-    group = 'enmasse'
-    version = 'latest'
-}
-
-
-ext {
-    jacksonVersion = '2.7.4'
-    vertxProtonVersion = '3.3.3'
-    slf4jVersion = '1.7.21'
-    kubernetesClientVersion = '2.0.1'
-
-    junitVersion = '4.12'
-    mockitoVersion = '2.0.52-beta'
-}
-
-apply plugin: 'java'
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
-
-repositories {
-    maven { url "http://repo.maven.apache.org/maven2" }
-    maven { url "https://jitpack.io" }
-}
-
 description = 'Configuration Server'
 dependencies {
-    compile 'com.github.EnMasseProject:common-lib:master-SNAPSHOT'
-    compile "io.fabric8:kubernetes-client:${kubernetesClientVersion}"
-    compile "io.vertx:vertx-proton:${vertxProtonVersion}"
+    compile project (':common-lib:config')
+    compile "io.fabric8:kubernetes-client:${openshiftClientVersion}"
+    compile "io.vertx:vertx-proton:${vertxVersion}"
     compile "org.slf4j:slf4j-api:${slf4jVersion}"
     compile "org.slf4j:slf4j-log4j12:${slf4jVersion}"
     compile "com.fasterxml.jackson.core:jackson-core:${jacksonVersion}"

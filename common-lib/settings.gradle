@@ -1,5 +1,0 @@
-rootProject.name = 'common-lib'
-
-include ':amqp'
-include ':config'
-include ':discovery'
