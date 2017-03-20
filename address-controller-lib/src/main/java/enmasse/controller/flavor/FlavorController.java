@@ -56,11 +56,11 @@ public class FlavorController extends AbstractVerticle implements ConfigSubscrib
     public void configUpdated(ConfigMap configMap) throws IOException {
 
         if (configMap.getData().containsKey("json")) {
-            log.info("Got new config for " + configMap.getMetadata().getName() + " with data: " + configMap.getData().get("json"));
+            log.debug("Got new config for " + configMap.getMetadata().getName() + " with data: " + configMap.getData().get("json"));
             JsonNode root = mapper.readTree(configMap.getData().get("json"));
             flavorManager.flavorsUpdated(FlavorParser.parse(root));
         } else {
-            log.info("Got empty config for " + configMap.getMetadata().getName());
+            log.debug("Got empty config for " + configMap.getMetadata().getName());
             flavorManager.flavorsUpdated(Collections.emptyMap());
         }
     }
