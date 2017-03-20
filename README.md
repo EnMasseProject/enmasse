@@ -2,16 +2,25 @@
 [![Systemtest Status](https://travis-ci.org/EnMasseProject/systemtests.svg?branch=master)](https://travis-ci.org/EnMasseProject/systemtests)
 
 --- 
-The EnMasse project aims to provide a scalable messaging platform on OpenShift.
+EnMasse is an elastic messaging platform running on OpenShift with focus on scalability and 
+performance. EnMasse can run on your own infrastructure or in the cloud, and simplifies the 
+deployment of messaging infrastructure.
+
+EnMasse is based on open standards like [AMQP](http://amqp.org/) and [MQTT](http://mqtt.org/), and 
+open source projects like [Apache ActiveMQ Artemis](https://activemq.apache.org/artemis/) and
+[Apache Qpid Dispatch Router](https://qpid.apache.org/components/dispatch-router/index.html).
+
+EnMasse is a great fit for IoT cloud infrastructure, and aims to extend protocol support to both
+HTTP and CoAP.
 
 ## Features
 
-* Supports multiple communication patterns: request-response, pub-sub and events
-* Elastic scaling of message brokers
-* AMQP and MQTT support
-* Simple setup and management
-* Multitenancy
-* Runs wherever OpenShift runs: on-premise or in the cloud
+* Multiple <b>communication patterns</b>: request-response, pub-sub and events
+* <b>Elastic scaling</b> of message brokers
+* <b>AMQP</b> and <b>MQTT</b> support
+* <b>Simple</b> setup and management
+* <b>Multitenancy</b>: Manage multiple independent instances
+* Built on <b>OpenShift</b>: deploy <b>on-premise</b> or in the <b>cloud</b>
 
 # Getting started
 
