@@ -28,7 +28,7 @@ EnMasse is made of different components needed for the OpenShift deployment and 
 
 * [address-controller](https://github.com/EnMasseProject/address-controller): Controls multiple instances (tenants) and per-instance address space
 * [ragent](https://github.com/EnMasseProject/ragent): Controls the router network configuration
-* [configserv](https://github.com/EnMasseProject/configserv): A bridge for subscribing to kubernetes resource updates through AMQP
+* [configserv](https://github.com/EnMasseProject/configserv): A bridge for subscribing to OpenShift resource updates through AMQP
 * [queue-scheduler](https://github.com/EnMasseProject/queue-scheduler): Controls the mapping of queues to brokers
 * [subserv](https://github.com/EnMasseProject/subserv): Subscription service for durable subscriptions
 * [mqtt-gateway](https://github.com/EnMasseProject/mqtt-gateway): MQTT gateway for "MQTT over AMQP"
