@@ -56,9 +56,7 @@ public class QueueTest extends VertxTestBase {
     public void testScaledown() throws Exception {
         Destination dest = Destination.queue("scalequeue");
         deploy(dest);
-        Thread.sleep(30_000);
         scale(dest, 4);
-        Thread.sleep(30_000);
         EnMasseClient client = createQueueClient();
         List<Future<Integer>> sent = Arrays.asList(
                 client.sendMessages(dest.getAddress(), TestUtils.generateMessages("foo", 1000)),
@@ -73,15 +71,12 @@ public class QueueTest extends VertxTestBase {
 
         scale(dest, 1);
 
-        Thread.sleep(30_000);
-
         Future<List<String>> received = client.recvMessages(dest.getAddress(), 4000);
 
         assertThat(received.get(1, TimeUnit.MINUTES).size(), is(4000));
     }
 
     private static void runQueueTest(EnMasseClient client, Destination dest) throws InterruptedException, TimeoutException, ExecutionException {
-        Thread.sleep(30_000);
         List<String> msgs = TestUtils.generateMessages(1024);
 
         Future<Integer> numSent = null;
@@ -93,7 +88,7 @@ public class QueueTest extends VertxTestBase {
                     break;
                 }
             } catch (Exception e) {
-                Thread.sleep(5000);
+                Thread.sleep(2000);
             }
         }
         assertNotNull(numSent);
