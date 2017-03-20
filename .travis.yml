@@ -19,6 +19,7 @@ deploy:
   file:
   - generated/enmasse-template.yaml
   - generated/tls-enmasse-template.yaml
+  - scripts/enmasse-deploy.sh
   on:
     tags: true
     repo: EnMasseProject/enmasse
