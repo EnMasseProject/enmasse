@@ -34,9 +34,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-/**
- * TODO: Description
- */
 public class TestUtils {
     private static final ObjectMapper mapper = new ObjectMapper();
 
@@ -164,7 +161,7 @@ public class TestUtils {
             Thread.sleep(1000);
         }
         if (numConfigured != agents.size()) {
-            throw new IllegalStateException("Timed out while waiting for EnMasse to be configured");
+            throw new IllegalStateException("Timed out while waiting for routers to be configured");
         }
     }
 
