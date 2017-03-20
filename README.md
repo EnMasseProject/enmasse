@@ -24,7 +24,7 @@ HTTP and CoAP.
 
 ## Components
 
-EnMasse is made of different components needed for the OpenShift deployment and for handling the messaging infrastructure based on a Qpid Dispatch Router network and Apache ActiveMS broker(s).
+EnMasse is made of different components needed for the OpenShift deployment and for handling the messaging infrastructure based on a Qpid Dispatch Router network and Apache ActiveMQ broker(s).
 
 * [address-controller](https://github.com/EnMasseProject/address-controller): Controls the addresses in EnMasse
 * [ragent](https://github.com/EnMasseProject/ragent): Router Configuration Agent
