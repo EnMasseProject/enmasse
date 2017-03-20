@@ -1,0 +1,19 @@
+sudo: required
+language: java
+jdk:
+- oraclejdk8
+services:
+- docker
+notifications:
+  email: false
+script:
+- gradle check
+- curl -s https://raw.githubusercontent.com/EnMasseProject/travis-scripts/master/docker-build.sh | bash /dev/stdin enmasseproject/address-controller address-controller/server
+- curl -s https://raw.githubusercontent.com/EnMasseProject/travis-scripts/master/docker-build.sh | bash /dev/stdin enmasseproject/configserv configserv
+- curl -s https://raw.githubusercontent.com/EnMasseProject/travis-scripts/master/docker-build.sh | bash /dev/stdin enmasseproject/queue-scheduler queue-scheduler
+
+after_success:
+- curl -s https://raw.githubusercontent.com/EnMasseProject/travis-scripts/master/trigger-travis.sh | bash /dev/stdin
+env:
+  global:
+  - COMMIT=${TRAVIS_COMMIT::8}

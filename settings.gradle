@@ -1,0 +1,7 @@
+include ':configserv'
+include ':queue-scheduler'
+include ':address-controller:lib'
+include ':address-controller:server'
+include ':common-lib:amqp'
+include ':common-lib:config'
+include ':common-lib:discovery'
