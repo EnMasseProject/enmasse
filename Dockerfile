@@ -2,7 +2,8 @@ FROM fedora:25
 
 RUN dnf -y install which java-1.8.0-openjdk libaio python gettext hostname iputils && dnf clean all -y && mkdir -p /var/run/artemis/
 
-ENV ARTEMIS_HOME=/opt/apache-artemis-2.0.0-SNAPSHOT PATH=$ARTEMIS_HOME/bin:$PATH
+ARG version=latest
+ENV ARTEMIS_HOME=/opt/apache-artemis-2.0.0-SNAPSHOT PATH=$ARTEMIS_HOME/bin:$PATH VERSION=${version}
 
 ADD ./build/apache-artemis-bin.tar.gz ./artemis-shutdown-hook/build/distributions/artemis-shutdown-hook.tar /opt/
 
