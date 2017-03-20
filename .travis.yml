@@ -6,7 +6,7 @@ notifications:
     channels:
       - "chat.freenode.net#enmasse"
     use_notice: true
-    skip_join: false
+    skip_join: true
 
 jdk:
 - oraclejdk8
