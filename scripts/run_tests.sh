@@ -58,16 +58,16 @@ function run_test() {
 
 failure=0
 setup_test enmasse-ci-single
-run_test enmasse-ci-single false false https://raw.githubusercontent.com/enmasseproject/openshift-configuration/master/generated/enmasse-template.yaml || failure=$(($failure + 1))
+run_test enmasse-ci-single false false https://raw.githubusercontent.com/enmasseproject/enmasse/master/generated/enmasse-template.yaml || failure=$(($failure + 1))
 teardown_test enmasse-ci-single
 
 setup_test_multitenant enmasse-ci-multi
-run_test enmasse-ci-multi false true https://raw.githubusercontent.com/enmasseproject/openshift-configuration/master/generated/enmasse-template.yaml || failure=$(($failure + 1))
+run_test enmasse-ci-multi false true https://raw.githubusercontent.com/enmasseproject/enmasse/master/generated/enmasse-template.yaml || failure=$(($failure + 1))
 teardown_test enmasse-ci-multi
 
 #setup_test enmasse-ci-secure
 #setup_secure
-#run_test enmasse-ci-secure true false https://raw.githubusercontent.com/enmasseproject/openshift-configuration/master/generated/tls-enmasse-template.yaml || exit 1
+#run_test enmasse-ci-secure true false https://raw.githubusercontent.com/enmasseproject/enmasse/master/generated/tls-enmasse-template.yaml || exit 1
 
 
 if [ $failure -gt 0 ]
