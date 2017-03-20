@@ -17,7 +17,7 @@ task buildArtemis {
   doLast {
     exec {
       workingDir 'activemq-artemis/integration/activemq-amqp-connector'
-      commandLine 'mvn', 'install'
+      commandLine 'mvn', '-q', 'install'
     }
   }
 }
