@@ -17,12 +17,6 @@
 package enmasse.broker.prestop;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.openshift.internal.restclient.model.Pod;
-import com.openshift.restclient.ClientBuilder;
-import com.openshift.restclient.IClient;
-import com.openshift.restclient.ResourceKind;
-import com.openshift.restclient.images.DockerImageURI;
-import com.openshift.restclient.model.IContainer;
 import enmasse.discovery.DiscoveryClient;
 import enmasse.discovery.Endpoint;
 import enmasse.discovery.Host;
@@ -33,7 +27,9 @@ import java.io.IOException;
 import java.net.Inet4Address;
 import java.net.UnknownHostException;
 import java.nio.file.Files;
-import java.util.*;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Optional;
 
 public class Main {
     private static final ObjectMapper mapper = new ObjectMapper();
@@ -41,15 +37,6 @@ public class Main {
         boolean debug = System.getenv("PRESTOP_DEBUG") != null;
 
         Optional<Runnable> debugFn = Optional.empty();
-        if (debug) {
-            String kubeHost = System.getenv("KUBERNETES_SERVICE_HOST");
-            String kubePort = System.getenv("KUBERNETES_SERVICE_PORT");
-            String kubeUrl = String.format("https://%s:%s", kubeHost, kubePort);
-            IClient client = new ClientBuilder(kubeUrl).usingToken(openshiftToken()).build();
-            String namespace = openshiftNamespace();
-            debugFn = Optional.of(() -> signalSuccess(client, namespace));
-        }
-
         Host localHost = localHost();
         Vertx vertx = Vertx.vertx();
 
@@ -83,20 +70,6 @@ public class Main {
         portMap.put("core", 61616);
 
         return new Host(Inet4Address.getLocalHost().getHostAddress(), portMap);
-    }
-
-    private static void signalSuccess(IClient osClient, String namespace) {
-        try {
-            Pod pod = osClient.getResourceFactory().create("v1", ResourceKind.POD);
-            pod.setName("mypod-test");
-            pod.addContainer("containerfoo");
-            IContainer cont = pod.getContainers().iterator().next();
-            cont.setImage(new DockerImageURI("enmasseproject/artemis:latest"));
-            cont.addEnvVar("QUEUE_NAME", "myqueue");
-
-            osClient.create(pod, namespace);
-            Thread.sleep(10000);
-        } catch (InterruptedException e) {}
     }
 
     private static final String serviceAccountPath = "/var/run/secrets/kubernetes.io/serviceaccount";

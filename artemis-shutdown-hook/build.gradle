@@ -1,7 +1,6 @@
 buildscript {
-   ext.openshiftRestclientVersion = '5.1.0.Final'
-   ext.vertxProtonVersion = '3.3.3'
-   ext.artemisVersion = '2.0.0-SNAPSHOT'
+   ext.vertxProtonVersion = '3.4.1'
+   ext.artemisVersion = '2.0.0'
 }
 
 apply plugin: 'java'
@@ -13,8 +12,7 @@ repositories {
 }
 
 dependencies {
-    compile 'com.github.EnMasseProject:common-lib:master-SNAPSHOT'
-    compile "com.openshift:openshift-restclient-java:${openshiftRestclientVersion}"
+    compile 'com.github.EnMasseProject:admin:master-SNAPSHOT'
     compile "io.vertx:vertx-proton:${vertxProtonVersion}"
     compile("org.apache.activemq:artemis-core-client:${artemisVersion}") {
         exclude group: "io.netty", module: "netty-all"
