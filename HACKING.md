@@ -1,3 +1,7 @@
+# Changing EnMasse components
+
+See the README file in the corresponding repo of the component you want to build.
+
 # Changing the OpenShift templates
 
 The OpenShift templates for EnMasse are generated from [jsonnet](jsonnet.org) files.
