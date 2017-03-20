@@ -58,7 +58,7 @@ function run_test() {
 }
 
 failure=0
-setup_test enmasse-ci-single run_test enmasse-ci-single false false https://raw.githubusercontent.com/enmasseproject/enmasse/master/generated/enmasse-template.yaml -Dtest.single=QueueTest || failure=$(($failure + 1))
+setup_test enmasse-ci-single run_test enmasse-ci-single false false https://raw.githubusercontent.com/enmasseproject/enmasse/master/generated/enmasse-template.yaml || failure=$(($failure + 1))
 teardown_test enmasse-ci-single
 
 setup_test_multitenant enmasse-ci-multi
