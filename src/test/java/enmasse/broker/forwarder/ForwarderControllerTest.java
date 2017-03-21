@@ -30,10 +30,7 @@ import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.util.concurrent.*;
 
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
@@ -72,7 +69,9 @@ public class ForwarderControllerTest {
         Host hostC = new Host(localHost, Collections.singletonMap("amqp", 5674));
 
         ForwarderController replicator = new ForwarderController(hostA, address);
-        vertx.deployVerticle(replicator);
+        CountDownLatch latch = new CountDownLatch(1);
+        vertx.deployVerticle(replicator, id -> latch.countDown());
+        latch.await(1, TimeUnit.MINUTES);
 
         Set<Host> hosts = new LinkedHashSet<>();
         hosts.add(hostB);
