@@ -261,6 +261,8 @@ objects:
           - env:
             - name: TOPIC_NAME
               value: "${ADDRESS}"
+            - name: GROUP_ID
+              value: "${NAME}"
             image: "${TOPIC_FORWARDER_REPO}:latest"
             livenessProbe:
               httpGet:
@@ -395,6 +397,8 @@ objects:
           - env:
             - name: TOPIC_NAME
               value: "${ADDRESS}"
+            - name: GROUP_ID
+              value: "${NAME}"
             image: "${TOPIC_FORWARDER_REPO}:latest"
             livenessProbe:
               httpGet:
