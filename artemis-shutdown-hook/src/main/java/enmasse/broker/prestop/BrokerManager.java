@@ -28,13 +28,14 @@ import org.apache.activemq.artemis.api.core.client.ServerLocator;
 import org.apache.activemq.artemis.api.core.management.ManagementHelper;
 
 import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Set;
 
 /**
  * A client for retrieving and invoking actions against Artemis.
  */
 public class BrokerManager implements AutoCloseable {
-    private final Endpoint endpoint;
     private final ServerLocator locator;
     private final ClientSessionFactory sessionFactory;
     private final ClientSession session;
@@ -47,7 +48,6 @@ public class BrokerManager implements AutoCloseable {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-        this.endpoint = mgmtEndpoint;
     }
 
     private Object invokeOperationWithResult(String resource, String cmd, Object ... args) throws Exception {
@@ -94,23 +94,6 @@ public class BrokerManager implements AutoCloseable {
         return list;
     }
 
-    public Object[] listTopics() throws Exception {
-        return (Object[]) invokeOperationWithResult("jms.server", "getTopicNames");
-    }
-
-    public boolean createTopic(String name) throws Exception {
-        return (boolean) invokeOperationWithResult("jms.server", "createTopic", name);
-    }
-
-
-    public String listConsumers(String connectionId) throws Exception {
-        return (String) invokeOperationWithResult("core.server", "listConsumersAsJSON", connectionId);
-    }
-
-    public boolean closeConnections(String address) throws Exception {
-        return (boolean) invokeOperationWithResult("jms.server", "destroyTopic", address, true);
-    }
-
     public String getQueueAddress(String queueName) throws Exception {
         return (String) invokeOperationWithResult("queue." + queueName, "getAddress");
     }
@@ -127,10 +110,8 @@ public class BrokerManager implements AutoCloseable {
         return (String)invokeOperationWithResult("broker", "listConnectionsAsJSON");
     }
 
-    public void destroyQueues(Set<String> queueList) throws Exception {
-        for (String queue : queueList) {
-            invokeOperation("broker", "destroyQueue", queue, true);
-        }
+    public void destroyQueue(QueueInfo queue) throws Exception {
+        invokeOperation("broker", "destroyQueue", queue.getQueueName(), true);
     }
 
 
@@ -174,5 +155,58 @@ public class BrokerManager implements AutoCloseable {
 
     public void destroyConnectorService(String connectorName) throws Exception {
         invokeOperation("broker", "destroyConnectorService", connectorName);
+    }
+
+    public void createConnectorService(Endpoint messagingEndpoint, String address) throws Exception {
+        Map<String, String> parameters = new LinkedHashMap<>();
+        parameters.put("host", messagingEndpoint.hostname());
+        parameters.put("port", String.valueOf(messagingEndpoint.port()));
+        parameters.put("containerId", address);
+        parameters.put("groupId", address);
+        parameters.put("clientAddress", address);
+        parameters.put("sourceAddress", address);
+        invokeOperation("broker", "createConnectorService", address, "org.apache.activemq.artemis.integration.amqp.AMQPConnectorServiceFactory", parameters);
+    }
+
+    public String[] listDiverts() throws Exception {
+        Object[] response = (Object[]) invokeOperationWithResult("broker", "getDivertNames");
+        String[] list = new String[response.length];
+        for (int i = 0; i < list.length; i++) {
+            list[i] = response[i].toString();
+        }
+        return list;
+    }
+
+    public String getDivertRoutingName(String divertName) throws Exception {
+        return (String) invokeOperationWithResult("divert." + divertName, "getRoutingName");
+    }
+
+    public String getDivertAddress(String divertName) throws Exception {
+        return (String) invokeOperationWithResult("divert." + divertName, "getAddress");
+    }
+
+    public String getDivertForwardingAddress(String divertName) throws Exception {
+        return (String) invokeOperationWithResult("divert." + divertName, "getForwardingAddress");
+    }
+
+    public void createDivert(String name, String routingName, String address, String forwardingAddress) throws Exception {
+        invokeOperation("broker", "createDivert", name, routingName, address, forwardingAddress, false, null, null);
+    }
+
+    public void destroySubscriptions(Set<SubscriptionInfo> subscriptions) throws Exception {
+        for (SubscriptionInfo subscription : subscriptions) {
+            QueueInfo queueInfo = subscription.getQueueInfo();
+            destroyQueue(queueInfo);
+            if (subscription.getDivertInfo().isPresent()) {
+                destroyDivert(subscription.getDivertInfo().get());
+            }
+            if (subscription.getConnectorInfo().isPresent()) {
+                destroyConnectorService(subscription.getConnectorInfo().get().getName());
+            }
+        }
+    }
+
+    private void destroyDivert(DivertInfo divertInfo) throws Exception {
+        invokeOperation("broker", "destroyDivert", divertInfo.getName());
     }
 }
