@@ -71,7 +71,7 @@ public class Forwarder extends AbstractVerticle {
         client.connect(from.hostname(), from.port(), event -> {
             if (event.succeeded()) {
                 ProtonConnection connection = event.result();
-                connection.setContainer(containerId);
+                connection.setContainer("topic-forwarder-" + containerId);
                 connection.open();
                 receiverConnection = Optional.of(connection);
 
