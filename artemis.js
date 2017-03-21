@@ -116,7 +116,7 @@ Artemis.prototype._send_pending_requests = function () {
 }
 
 Artemis.prototype._send_request = function (request) {
-    request.application_properties.JMSReplyTo = this.address;
+    request.reply_to = this.address;
     this.sender.send(request);
     console.log('[' + this.connection.container_id + '] sent: ' + JSON.stringify(request));
 }
