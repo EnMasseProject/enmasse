@@ -53,6 +53,9 @@ objects:
               name: amqp
             - containerPort: 61616
               name: core
+            readinessProbe:
+              tcpSocket:
+                port: amqp
             volumeMounts:
             - mountPath: "/var/run/artemis"
               name: vol-${NAME}
@@ -145,6 +148,9 @@ objects:
               name: amqp
             - containerPort: 61616
               name: core
+            readinessProbe:
+              tcpSocket:
+                port: amqp
             volumeMounts:
             - mountPath: "/var/run/artemis"
               name: vol-${NAME}
@@ -224,6 +230,9 @@ objects:
               name: amqp
             - containerPort: 61616
               name: core
+            readinessProbe:
+              tcpSocket:
+                port: amqp
             volumeMounts:
             - mountPath: "/var/run/artemis"
               name: vol-${NAME}
@@ -355,6 +364,9 @@ objects:
               name: amqp
             - containerPort: 61616
               name: core
+            readinessProbe:
+              tcpSocket:
+                port: amqp
             volumeMounts:
             - mountPath: "/var/run/artemis"
               name: vol-${NAME}

@@ -27,6 +27,11 @@ local common = import "common.jsonnet";
           "port": "amqp"
         }
       },
+      "readinessProbe": {
+        "tcpSocket": {
+          "port": "amqp"
+        }
+      },
       "lifecycle": {
         "preStop": {
           "exec": {
