@@ -164,7 +164,7 @@ public class Forwarder extends AbstractVerticle {
         if (log.isDebugEnabled()) {
             log.debug(this + ": forwarding message");
         }
-        if (message.getAddress().equals(address) && !isMessageReplicated(message)) {
+        if (!isMessageReplicated(message)) {
             forwardMessage(protonSender, protonReceiver, protonDelivery, message);
         }
     }
