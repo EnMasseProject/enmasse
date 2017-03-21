@@ -42,10 +42,11 @@ public class Main {
 
         if (System.getenv("TOPIC_NAME") != null) {
             String address = System.getenv("TOPIC_NAME");
+            String groupId = System.getenv("GROUP_ID");
 
             Map<String, String> filter = new LinkedHashMap<>();
             filter.put("role", "broker");
-            filter.put("address", address);
+            filter.put("group_id", groupId);
 
             DiscoveryClient discoveryClient = new DiscoveryClient("podsense", filter, Optional.of("broker"));
             TopicMigrator migrator = new TopicMigrator(vertx, localHost);
