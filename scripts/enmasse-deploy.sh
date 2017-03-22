@@ -152,14 +152,8 @@ fi
 if [ -n "$ALT_TEMPLATE" ]
 then
     ENMASSE_TEMPLATE=$ALT_TEMPLATE
-    oc process -f $ENMASSE_TEMPLATE $TEMPLATE_PARAMS | oc create -n $PROJECT -f -
 else
     ENMASSE_TEMPLATE=${ENMASSE_TEMPLATE_MASTER_URL}/${TEMPLATE_NAME}-template.yaml
-    oc create -f $ENMASSE_TEMPLATE
-    if [ -n "$TEMPLATE_PARAMS" ]
-    then
-        oc new-app -n $PROJECT --template=$TEMPLATE_NAME -p $TEMPLATE_PARAMS
-    else
-        oc new-app -n $PROJECT --template=$TEMPLATE_NAME
-    fi
 fi
+
+oc process -f $ENMASSE_TEMPLATE $TEMPLATE_PARAMS | oc create -n $PROJECT -f -
