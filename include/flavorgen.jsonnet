@@ -1,8 +1,9 @@
 {
-  generate(name, secure, type, description, templateName, capacity)::
+  generate(name, uuid, secure, type, description, templateName, capacity)::
   local prefix = if secure then "tls-" else "";
   {
     "name": name,
+    "uuid": uuid,
     "type": type,
     "description": description,
     "templateName": prefix + templateName,
