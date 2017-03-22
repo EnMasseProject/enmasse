@@ -41,18 +41,18 @@ public class Main {
         Vertx vertx = Vertx.vertx();
 
         if (System.getenv("TOPIC_NAME") != null) {
-            String address = System.getenv("TOPIC_NAME");
             String groupId = System.getenv("GROUP_ID");
+            Endpoint messagingEndpoint = new Endpoint(System.getenv("MESSAGING_SERVICE_HOST"), Integer.parseInt(System.getenv("MESSAGING_SERVICE_PORT_INTERNAL")));
 
             Map<String, String> filter = new LinkedHashMap<>();
             filter.put("role", "broker");
             filter.put("group_id", groupId);
 
             DiscoveryClient discoveryClient = new DiscoveryClient("podsense", filter, Optional.of("broker"));
-            TopicMigrator migrator = new TopicMigrator(vertx, localHost);
+            TopicMigrator migrator = new TopicMigrator(vertx, localHost, messagingEndpoint);
             discoveryClient.addListener(migrator);
             vertx.deployVerticle(discoveryClient);
-            migrator.migrate(address);
+            migrator.migrate();
         } else {
             String messagingHost = System.getenv("MESSAGING_SERVICE_HOST");
             int messagingPort = Integer.parseInt(System.getenv("MESSAGING_SERVICE_PORT"));

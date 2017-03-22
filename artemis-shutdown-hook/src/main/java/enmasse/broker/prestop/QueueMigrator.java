@@ -20,10 +20,8 @@ import enmasse.discovery.Endpoint;
 import enmasse.discovery.Host;
 import io.vertx.core.Vertx;
 import io.vertx.proton.*;
-import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.messaging.Source;
 import org.apache.qpid.proton.amqp.messaging.Target;
-import org.apache.qpid.proton.amqp.messaging.TerminusDurability;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
@@ -31,92 +29,19 @@ import java.util.concurrent.CountDownLatch;
 /**
  * Migrates messages from a single subscription to a destination host
  */
-public class SubscriptionMigrator implements Callable<SubscriptionMigrator> {
+public class QueueMigrator implements Callable<QueueMigrator> {
     private final Vertx vertx;
     private final Host from;
     private final Host to;
     private final BrokerManager localBroker;
-    private final String address;
-    private final String queueName;
-    private final String clientId;
-    private final String subscriptionName;
+    private final QueueInfo queueInfo;
 
-    public SubscriptionMigrator(Vertx vertx, String address, String queueName, Host from, Host to, BrokerManager localBroker) {
+    public QueueMigrator(Vertx vertx, QueueInfo queueInfo, Host from, Host to, BrokerManager localBroker) {
         this.vertx = vertx;
-        this.address = address;
-        QueueName decomposedName = decomposeQueueNameForDurableSubscription(queueName);
-        this.queueName = queueName;
+        this.queueInfo = queueInfo;
         this.from = from;
         this.to = to;
         this.localBroker = localBroker;
-        this.clientId = decomposedName.clientId;
-        this.subscriptionName = decomposedName.subscriptionName;
-    }
-
-    private static class QueueName {
-        String clientId;
-        String subscriptionName;
-        QueueName(String clientId, String subscriptionName) {
-            this.clientId = clientId;
-            this.subscriptionName = subscriptionName;
-        }
-    }
-
-    // This code is stolen from Artemis internals so that we can decompose the queue name in the same way. This will not be necessary once we can use global link names.
-    private static final char SEPARATOR = '.';
-    private static QueueName decomposeQueueNameForDurableSubscription(final String queueName) {
-        StringBuffer[] parts = new StringBuffer[2];
-        int currentPart = 0;
-
-        parts[0] = new StringBuffer();
-        parts[1] = new StringBuffer();
-
-        int pos = 0;
-        while (pos < queueName.length()) {
-            char ch = queueName.charAt(pos);
-            pos++;
-
-            if (ch == SEPARATOR) {
-                currentPart++;
-                if (currentPart >= parts.length) {
-                    throw new RuntimeException("Invalid message queue name: " + queueName);
-                }
-
-                continue;
-            }
-
-            if (ch == '\\') {
-                if (pos >= queueName.length()) {
-                    throw new RuntimeException("Invalid message queue name: " + queueName);
-                }
-                ch = queueName.charAt(pos);
-                pos++;
-            }
-
-            parts[currentPart].append(ch);
-        }
-
-        if (currentPart != 1) {
-         /* JMS 2.0 introduced the ability to create "shared" subscriptions which do not require a clientID.
-          * In this case the subscription name will be the same as the queue name, but the above algorithm will put that
-          * in the wrong position in the array so we need to move it.
-          */
-            parts[1] = parts[0];
-            parts[0] = new StringBuffer();
-        }
-
-        return new QueueName(parts[0].toString(), parts[1].toString());
-    }
-
-
-    public static boolean isValidSubscription(String queue) {
-        try {
-            decomposeQueueNameForDurableSubscription(queue);
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
-
     }
 
     private ProtonMessageHandler messageHandler(CountDownLatch latch, ProtonReceiver protonReceiver, ProtonSender protonSender) {
@@ -134,23 +59,20 @@ public class SubscriptionMigrator implements Callable<SubscriptionMigrator> {
         protonClient.connect(endpoint.hostname(), endpoint.port(), connection -> {
             if (connection.succeeded()) {
                 ProtonConnection conn = connection.result();
-                conn.setContainer(clientId);
                 conn.closeHandler(result -> {
                     System.out.println("Migrator sub connection closed");
                 });
                 conn.openHandler(result -> {
                     Source source = new Source();
-                    source.setAddress(address);
-                    source.setDurable(TerminusDurability.UNSETTLED_STATE);
-                    source.setCapabilities(Symbol.getSymbol("topic"));
-                    ProtonReceiver localReceiver = conn.createReceiver(subscriptionName, new ProtonLinkOptions().setLinkName(subscriptionName));
+                    source.setAddress(queueInfo.getQualifiedAddress());
+                    ProtonReceiver localReceiver = conn.createReceiver(queueInfo.getQualifiedAddress());
                     localReceiver.setSource(source);
                     localReceiver.setPrefetch(0);
                     localReceiver.setAutoAccept(false);
                     localReceiver.closeHandler(res -> System.out.println("Migrator sub receiver closed"));
                     localReceiver.openHandler(res -> {
                         if (res.succeeded()) {
-                            System.out.println("Opened localReceiver for " + clientId + "." + subscriptionName);
+                            System.out.println("Opened localReceiver for " + queueInfo);
                             localReceiver.flow(1);
                         } else {
                             System.out.println("Failed opening received: " + res.cause().getMessage());
@@ -179,9 +101,8 @@ public class SubscriptionMigrator implements Callable<SubscriptionMigrator> {
                 });
                 toConn.openHandler(toResult -> {
                     Target target = new Target();
-                    target.setAddress(address);
-                    target.setCapabilities(Symbol.getSymbol("topic"));
-                    ProtonSender sender = toConn.createSender(subscriptionName);
+                    target.setAddress(queueInfo.getAddress());
+                    ProtonSender sender = toConn.createSender(queueInfo.getAddress());
                     sender.setTarget(target);
                     sender.closeHandler(res -> System.out.println("Sender connection closed"));
                     sender.openHandler(toRes -> {
@@ -202,11 +123,11 @@ public class SubscriptionMigrator implements Callable<SubscriptionMigrator> {
     }
 
     @Override
-    public SubscriptionMigrator call() throws Exception {
+    public QueueMigrator call() throws Exception {
         System.out.println("Calling migrator...");
-        long numMessages = localBroker.getQueueMessageCount(queueName);
+        long numMessages = localBroker.getQueueMessageCount(queueInfo.getQueueName());
         CountDownLatch latch = new CountDownLatch(Math.toIntExact(numMessages));
-        System.out.println("Migrating " + numMessages + " messages from " + queueName);
+        System.out.println("Migrating " + numMessages + " messages from " + queueInfo);
         createSender(latch);
         System.out.println("Waiting ....");
         latch.await();
