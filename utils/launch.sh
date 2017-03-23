@@ -41,6 +41,7 @@ function configure() {
         cat $CONFIG_TEMPLATES/broker_footer.xml >> /tmp/broker.xml
     
         envsubst < /tmp/broker.xml > $instanceDir/etc/broker.xml
+        sed -i 's/localhost/0.0.0.0/' $instanceDir/etc/bootstrap.xml
     fi
 }
 

@@ -20,7 +20,7 @@ COPY ./config_templates /config_templates
 
 VOLUME /var/run/artemis
 
-EXPOSE 5673 61616
+EXPOSE 5673 61616 8161
 
 # Needed for bridge clustering
 # EXPOSE 7800 7801 7802
