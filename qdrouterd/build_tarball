@@ -14,7 +14,7 @@ mkdir qpid-dispatch-src qpid-proton-src build staging proton_build proton_instal
 tar -zxf qpid-dispatch.tar.gz -C qpid-dispatch-src --strip-components 1
 tar -zxf qpid-proton.tar.gz -C qpid-proton-src --strip-components 1
 patch -d qpid-dispatch-src -p1 < $MESH_PATCH
-patch -d qpid-dispatch-src -p1 < $CONNDEBUG_PATCH
+#patch -d qpid-dispatch-src -p1 < $CONNDEBUG_PATCH
 
 cd proton_build
 cmake -DCMAKE_INSTALL_PREFIX=$WORKING/proton_install -DCMAKE_BUILD_TYPE=RelWithDebInfo -DBUILD_CPP=OFF -DBUILD_PERL=OFF -DBUILD_RUBY=OFF -DBUILD_JAVA=OFF -DBUILD_GO=OFF -DBUILD_JAVASCRIPT=OFF -DBUILD_PHP=OFF $WORKING/qpid-proton-src/ && make && make install
