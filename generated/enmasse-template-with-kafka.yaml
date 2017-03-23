@@ -489,7 +489,8 @@ objects:
       annotations:
         service.alpha.openshift.io/dependencies: '[{"kind": "Service", "name": "admin",
           "namespace": ""}, {"kind": "Service", "name": "subscription", "namespace":
-          ""}, {"kind": "Service", "name": "mqtt", "namespace": ""}]'
+          ""}, {"kind": "Service", "name": "mqtt", "namespace": ""}, {"kind": "Deployment",
+          "name": "mqtt-lwt", "namespace": ""}]'
         service.alpha.openshift.io/infrastructure: 'true'
       labels:
         app: enmasse
