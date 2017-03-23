@@ -47,9 +47,9 @@ public abstract class VertxTestBase {
 
     @After
     public void teardown() throws Exception {
-        cleanup();
-        addressApiClient.close();
-        vertx.close();
+    //    cleanup();
+    //    addressApiClient.close();
+    //    vertx.close();
     }
 
     private void cleanup() throws Exception {

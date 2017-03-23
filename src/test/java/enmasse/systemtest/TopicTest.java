@@ -16,7 +16,7 @@
 
 package enmasse.systemtest;
 
-import org.apache.qpid.proton.amqp.messaging.ApplicationProperties;
+import io.vertx.proton.ProtonClientOptions;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.amqp.messaging.Source;
 import org.apache.qpid.proton.amqp.messaging.TerminusDurability;
@@ -24,7 +24,6 @@ import org.apache.qpid.proton.message.Message;
 import org.junit.Test;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -61,6 +60,8 @@ public class TopicTest extends VertxTestBase {
         deploy(dest);
         scale(dest, 4);
 
+        Thread.sleep(60_000);
+
         Source source = new TopicTerminusFactory().getSource("locate/" + dest.getAddress());
         source.setDurable(TerminusDurability.UNSETTLED_STATE);
 
@@ -88,12 +89,17 @@ public class TopicTest extends VertxTestBase {
     @Test
     public void testDurableMessageRoutedSubscription() throws Exception {
         Destination dest = Destination.topic("mytopic");
-        deploy(dest);
-        scale(dest, 4);
         String address = "myaddress";
+        System.out.println("Deploying");
+        deploy(dest);
+        System.out.println("Scaling");
+        scale(dest, 4);
 
-        EnMasseClient ctrlClient = createQueueClient();
-        EnMasseClient client = createTopicClient();
+        Thread.sleep(60_000);
+
+        EnMasseClient subClient = createClient(new QueueTerminusFactory(), new ProtonClientOptions(), openShift.getEndpoint("subscription", "amqp"));
+        EnMasseClient queueClient = createQueueClient();
+        EnMasseClient topicClient = createTopicClient();
 
         Message sub = Message.Factory.create();
         sub.setAddress("$subctrl");
@@ -101,27 +107,40 @@ public class TopicTest extends VertxTestBase {
         sub.setSubject("subscribe");
         sub.setBody(new AmqpValue(dest.getAddress()));
 
-        ctrlClient.sendMessages("$subctrl", sub).get(5, TimeUnit.MINUTES);
+        System.out.println("Sending subscribe");
+        subClient.sendMessages("$subctrl", sub).get(1, TimeUnit.MINUTES);
+
+        System.out.println("Sending 122 messages");
 
         List<String> msgs = TestUtils.generateMessages(122);
-        assertThat(client.sendMessages(dest.getAddress(), msgs).get(1, TimeUnit.MINUTES), is(msgs.size()));
+        assertThat(topicClient.sendMessages(dest.getAddress(),msgs).get(1, TimeUnit.MINUTES), is(msgs.size()));
 
-        Future<List<String>> recvResult = client.recvMessages(address, 61);
-        assertThat(recvResult.get(1, TimeUnit.MINUTES).size(), is(61));
+        System.out.println("Receiving 61 messages");
+        Future<List<String>> recvResult = queueClient.recvMessages(address, 1);
+        assertThat(recvResult.get(1, TimeUnit.MINUTES).size(), is(1));
 
         // Do scaledown and 'reconnect' receiver and verify that we got everything
 
+        System.out.println("Scale down brokers");
+        scale(dest, 3);
+        Thread.sleep(5_000);
+        scale(dest, 2);
+        Thread.sleep(5_000);
         scale(dest, 1);
 
-        recvResult = client.recvMessages(address, 61);
-        assertThat(recvResult.get(1, TimeUnit.MINUTES).size(), is(61));
+        Thread.sleep(30_000);
+
+        System.out.println("Receiving another 61 messages");
+        recvResult = queueClient.recvMessages(address, 2);
+        assertThat(recvResult.get(1, TimeUnit.MINUTES).size(), is(2));
 
         Message unsub = Message.Factory.create();
         unsub.setAddress("$subctrl");
         unsub.setCorrelationId(address);
         sub.setBody(new AmqpValue(dest.getAddress()));
         unsub.setSubject("unsubscribe");
-        ctrlClient.sendMessages("$subctrl", unsub).get(5, TimeUnit.MINUTES);
+        System.out.println("Sending unsubscribe");
+        subClient.sendMessages("$subctrl", unsub).get(1, TimeUnit.MINUTES);
     }
 
     @Override
