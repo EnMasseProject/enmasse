@@ -13,6 +13,10 @@ local common = import "common.jsonnet";
         {
           "name": "core",
           "containerPort": 61616
+        },
+        {
+          "name": "jolokia",
+          "containerPort": 8161 
         }
       ],
       "env": [ addressEnv, {"name": "GROUP_ID", "value": "${NAME}"} ],
@@ -54,6 +58,14 @@ local common = import "common.jsonnet";
       "name": name,
       "persistentVolumeClaim": {
           "claimName": claimName
+      }
+    },
+
+  hawkularVolume()::
+    {
+      "name": "hawkular-openshift-agent",
+      "configMap": {
+          "name": "hawkular-broker-config"
       }
     }
 }

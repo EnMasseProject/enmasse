@@ -46,6 +46,8 @@ objects:
             name: amqp
           - containerPort: 61616
             name: core
+          - containerPort: 8161
+            name: jolokia
           readinessProbe:
             tcpSocket:
               port: amqp
@@ -106,6 +108,9 @@ objects:
         - name: ssl-certs
           secret:
             secretName: qdrouterd-certs
+        - configMap:
+            name: hawkular-broker-config
+          name: hawkular-openshift-agent
 parameters:
 - description: Storage capacity required for volume claims
   name: STORAGE_CAPACITY

@@ -53,6 +53,8 @@ objects:
               name: amqp
             - containerPort: 61616
               name: core
+            - containerPort: 8161
+              name: jolokia
             readinessProbe:
               tcpSocket:
                 port: amqp
@@ -62,6 +64,9 @@ objects:
           volumes:
           - emptyDir: {}
             name: vol-${NAME}
+          - configMap:
+              name: hawkular-broker-config
+            name: hawkular-openshift-agent
   parameters:
   - description: Storage capacity required for volume claims
     name: STORAGE_CAPACITY
@@ -148,6 +153,8 @@ objects:
               name: amqp
             - containerPort: 61616
               name: core
+            - containerPort: 8161
+              name: jolokia
             readinessProbe:
               tcpSocket:
                 port: amqp
@@ -158,6 +165,9 @@ objects:
           - name: vol-${NAME}
             persistentVolumeClaim:
               claimName: pvc-${NAME}
+          - configMap:
+              name: hawkular-broker-config
+            name: hawkular-openshift-agent
   parameters:
   - description: Storage capacity required for volume claims
     name: STORAGE_CAPACITY
@@ -230,6 +240,8 @@ objects:
               name: amqp
             - containerPort: 61616
               name: core
+            - containerPort: 8161
+              name: jolokia
             readinessProbe:
               tcpSocket:
                 port: amqp
@@ -280,6 +292,9 @@ objects:
           volumes:
           - emptyDir: {}
             name: vol-${NAME}
+          - configMap:
+              name: hawkular-broker-config
+            name: hawkular-openshift-agent
   parameters:
   - description: Storage capacity required for volume claims
     name: STORAGE_CAPACITY
@@ -366,6 +381,8 @@ objects:
               name: amqp
             - containerPort: 61616
               name: core
+            - containerPort: 8161
+              name: jolokia
             readinessProbe:
               tcpSocket:
                 port: amqp
@@ -417,6 +434,9 @@ objects:
           - name: vol-${NAME}
             persistentVolumeClaim:
               claimName: pvc-${NAME}
+          - configMap:
+              name: hawkular-broker-config
+            name: hawkular-openshift-agent
   parameters:
   - description: Storage capacity required for volume claims
     name: STORAGE_CAPACITY
@@ -621,6 +641,15 @@ objects:
           containers:
           - image: "${MQTT_LWT_REPO}:latest"
             name: mqtt-lwt
+  - apiVersion: v1
+    data:
+      hawkular-openshift-agent: '{"endpoints": [{"collection_interval": "60s", "metrics":
+        [{"id": "VM Thread Count", "name": "java.lang:type=Threading#ThreadCount",
+        "type": "counter"}], "path": "/web", "port": 8161, "protocol": "http", "type":
+        "jolokia"}]}'
+    kind: ConfigMap
+    metadata:
+      name: hawkular-broker-config
   - apiVersion: extensions/v1beta1
     kind: Deployment
     metadata:
