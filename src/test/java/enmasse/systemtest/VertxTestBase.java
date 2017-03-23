@@ -86,17 +86,21 @@ public abstract class VertxTestBase {
     }
 
     protected EnMasseClient createClient(TerminusFactory terminusFactory) throws UnknownHostException {
+        ProtonClientOptions options = new ProtonClientOptions();
         if (environment.useTLS()) {
-            ProtonClientOptions options = new ProtonClientOptions();
             options.setSsl(true);
             options.setHostnameVerificationAlgorithm("");
             options.setPemTrustOptions(new PemTrustOptions().addCertValue(Buffer.buffer(environment.messagingCert())));
           //  options.setSniServerName(openShift.getRouteHost());
             options.setTrustAll(true);
-            return new EnMasseClient(vertx, openShift.getSecureEndpoint(), terminusFactory, options);
+            return createClient(terminusFactory, options, openShift.getSecureEndpoint());
         } else {
-            return new EnMasseClient(vertx, openShift.getInsecureEndpoint(), terminusFactory);
+            return createClient(terminusFactory, options, openShift.getInsecureEndpoint());
         }
+    }
+
+    protected EnMasseClient createClient(TerminusFactory terminusFactory, ProtonClientOptions options, Endpoint endpoint) {
+        return new EnMasseClient(vertx, endpoint, terminusFactory, options);
     }
 
     public void waitUntilReady(String address, TimeoutBudget budget) throws InterruptedException {
