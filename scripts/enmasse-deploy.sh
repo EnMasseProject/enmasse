@@ -23,6 +23,27 @@ else
     exit 1
 fi
 
+function runcmd() {
+    local cmd=$1
+    local description=$2
+
+    if [ -z $GUIDE ]; then
+        eval $cmd
+    else
+        echo "$description:"
+        echo ""
+        echo "    $cmd"
+        echo ""
+    fi
+}
+
+function docmd() {
+    local cmd=$1
+    if [ -z $GUIDE ]; then
+        $cmd
+    fi
+}
+
 ENMASSE_TEMPLATE_MASTER_URL=https://raw.githubusercontent.com/EnMasseProject/enmasse/master/generated
 TEMPLATE_NAME=enmasse
 TEMPLATE_PARAMS=""
@@ -30,13 +51,16 @@ TEMPLATE_PARAMS=""
 DEFAULT_OPENSHIFT_USER=developer
 DEFAULT_OPENSHIFT_PROJECT=myproject
 
-while getopts c:dk:mo:p:s:t:u:h opt; do
+while getopts c:dgk:mo:p:s:t:u:h opt; do
     case $opt in
         c)
             OS_CLUSTER=$OPTARG
             ;;
         d)
             OS_ALLINONE=true
+            ;;
+        g)
+            GUIDE=true
             ;;
         k)
             SERVER_KEY=$OPTARG
@@ -88,13 +112,11 @@ done
 
 if [ -z "$OS_USER" ]
 then
-    echo "user not set, using default value"
     OS_USER=$DEFAULT_OPENSHIFT_USER
 fi
 
 if [ -z "$PROJECT" ]
 then
-    echo "project name not set, using default value"
     PROJECT=$DEFAULT_OPENSHIFT_PROJECT
 fi
 
@@ -112,41 +134,38 @@ then
         echo "Please choose either all-in-one or a cluster deployment if you need to use a specific user."
         exit 1
     fi
-    sudo oc cluster up
+    runcmd "sudo oc cluster up" "Start local OpenShift cluster"
 fi
 
 
-oc login $OS_CLUSTER -u $OS_USER
+runcmd "oc login $OS_CLUSTER -u $OS_USER" "Login as $OS_USER"
 
-AVAILABLE_PROJECTS=`oc projects -q`
+AVAILABLE_PROJECTS=`docmd "oc projects -q"`
 
 for proj in $AVAILABLE_PROJECTS
 do
     if [ "$proj" == "$PROJECT" ]; then
-        oc project $proj
+        runcmd "oc project $proj" "Select project"
         break
     fi
 done
 
-CURRENT_PROJECT=`oc project -q`
+CURRENT_PROJECT=`docmd "oc project -q"`
 if [ "$CURRENT_PROJECT" != "$PROJECT" ]; then
-    oc new-project $PROJECT
+    runcmd "oc new-project $PROJECT" "Create new project $PROJECT"
 fi
 
-oc create sa enmasse-service-account -n $PROJECT
-oc policy add-role-to-user view system:serviceaccount:${PROJECT}:default
-oc policy add-role-to-user edit system:serviceaccount:${PROJECT}:enmasse-service-account
-
-
+runcmd "oc create sa enmasse-service-account -n $PROJECT" "Create service account for address controller"
+runcmd "oc policy add-role-to-user view system:serviceaccount:${PROJECT}:default" "Add permissions for viewing OpenShift resources to default user"
+runcmd "oc policy add-role-to-user edit system:serviceaccount:${PROJECT}:enmasse-service-account" "Add permissions for editing OpenShift resources to EnMasse service account"
 
 if [ -n "$SERVER_KEY" ] && [ -n "$SERVER_CERT" ]
 then
     TEMPLATE_NAME=tls-enmasse
-    oc secret new qdrouterd-certs ${SERVER_CERT} ${SERVER_KEY}
-    oc secret add serviceaccount/default secrets/qdrouterd-certs --for=mount
-    # secret for MQTT certificates
-    oc secret new mqtt-certs ${SERVER_CERT} ${SERVER_KEY}
-    oc secret add serviceaccount/default secrets/mqtt-certs --for=mount
+    runcmd "oc secret new qdrouterd-certs ${SERVER_CERT} ${SERVER_KEY}" "Create certificate secret for router"
+    runcmd "oc secret add serviceaccount/default secrets/qdrouterd-certs --for=mount" "Add router secret to default service account"
+    runcmd "oc secret new mqtt-certs ${SERVER_CERT} ${SERVER_KEY}" "Create certificate secret for MQTT gateway"
+    runcmd "oc secret add serviceaccount/default secrets/mqtt-certs --for=mount" "Add MQTT secret to default service account"
 fi
 
 if [ -n "$ALT_TEMPLATE" ]
@@ -156,4 +175,4 @@ else
     ENMASSE_TEMPLATE=${ENMASSE_TEMPLATE_MASTER_URL}/${TEMPLATE_NAME}-template.yaml
 fi
 
-oc process -f $ENMASSE_TEMPLATE $TEMPLATE_PARAMS | oc create -n $PROJECT -f -
+runcmd "oc process -f $ENMASSE_TEMPLATE $TEMPLATE_PARAMS | oc create -n $PROJECT -f -" "Instantiate EnMasse template"
