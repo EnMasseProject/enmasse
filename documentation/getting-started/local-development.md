@@ -17,19 +17,49 @@ EnMasse comes with a few templates that makes setting it up easy. First, create 
 
     oc new-project enmasse
 
-Then download a script for deploying the EnMasse template:
+You can setup EnMasse automatically or manually. 
+
+#### Deploying EnMasse automatically
+
+To create it automatically, download the deployment script:
 
     curl -o enmasse-deploy.sh https://raw.githubusercontent.com/EnMasseProject/enmasse/master/scripts/enmasse-deploy.sh
 
-This script simplifies the process of deploying the enmasse cluster to your openshift instance. You can invoke it with `-h` to get a list of options.
-
-### Creating the EnMasse instance
-
-Now you are ready for creating the messaging service itself:
+This script simplifies the process of deploying the enmasse cluster to your openshift instance. You
+can invoke it with `-h` to get a list of options. To deploy:
 
     bash enmasse-deploy.sh -c "https://localhost:8443" -p enmasse
 
-This will create the deployments required for running EnMasse. Starting up EnMasse will take a while, usually depending on how fast it is able to download the docker images for the various components.  In the meantime, you can start to create your address configuration.
+This will create the deployments required for running EnMasse. Starting up EnMasse will take a while,
+usually depending on how fast it is able to download the docker images for the various components.
+In the meantime, you can start to create your address configuration.
+
+
+#### Deploying EnMasse manually
+
+Login as developer:
+
+    oc login https://localhost:8443 -u developer
+
+Create new project enmasse:
+
+    oc new-project enmasse
+
+Create service account for address controller:
+
+    oc create sa enmasse-service-account -n enmasse
+
+Add permissions for viewing OpenShift resources to default user:
+
+    oc policy add-role-to-user view system:serviceaccount:enmasse:default
+
+Add permissions for editing OpenShift resources to EnMasse service account:
+
+    oc policy add-role-to-user edit system:serviceaccount:enmasse:enmasse-service-account
+
+Instantiate EnMasse template:
+
+    oc process -f https://raw.githubusercontent.com/EnMasseProject/enmasse/master/generated/enmasse-template.yaml  | oc create -n enmasse -f -
 
 ### Configuring addresses
 
