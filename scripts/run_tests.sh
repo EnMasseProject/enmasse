@@ -52,7 +52,7 @@ function run_test() {
         $DIR/wait_until_up.sh 1 || exit 1
     fi
 
-    sleep 60
+    sleep 120
 
     OPENSHIFT_USE_TLS=$USE_TLS OPENSHIFT_NAMESPACE=$PROJECT_NAME OPENSHIFT_USER=test OPENSHIFT_MULTITENANT=$MULTIINSTANCE OPENSHIFT_TOKEN=`oc config view -o jsonpath='{.users[?(@.name == "test/localhost:8443")].user.token}'` OPENSHIFT_MASTER_URL=https://localhost:8443 gradle check -i --rerun-tasks -Djava.net.preferIPv4Stack=true $ARGS
 }
