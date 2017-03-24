@@ -21,6 +21,8 @@
               "description": "Message count for ${address}",
               "tags": {
                 "messagingAddress": "${address}",
+                "messagingBroker": "{broker}",
+                "messagingQueue": "${queue}",
                 "messagingMetricType": "messageCount"
               }
             },
@@ -31,6 +33,8 @@
               "description": "Consumer count for ${address}",
               "tags": {
                 "messagingAddress": "${address}",
+                "messagingBroker": "{broker}",
+                "messagingQueue": "${queue}",
                 "messagingMetricType": "consumerCount"
               }
             }
