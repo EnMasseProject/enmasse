@@ -17,6 +17,7 @@ local mqttRoute = import "mqtt-route.jsonnet";
 local mqttLwt = import "mqtt-lwt.jsonnet";
 local amqpKafkaBridge = import "amqp-kafka-bridge.jsonnet";
 local amqpKafkaBridgeService = import "amqp-kafka-bridge-service.jsonnet";
+local hawkularConfig = import "hawkular-broker-config.jsonnet";
 {
   generate(secure, compact, with_kafka)::
   {
@@ -36,7 +37,8 @@ local amqpKafkaBridgeService = import "amqp-kafka-bridge-service.jsonnet";
       subserv.service("${INSTANCE}"),
       mqttGateway.deployment(secure, "${INSTANCE}", "${MQTT_GATEWAY_REPO}"),
       mqttService.generate(secure, "${INSTANCE}"),
-      mqttLwt.deployment("${INSTANCE}", "${MQTT_LWT_REPO}")
+      mqttLwt.deployment("${INSTANCE}", "${MQTT_LWT_REPO}"),
+      hawkularConfig
     ],
 
     local compactAdmin = [

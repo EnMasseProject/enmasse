@@ -124,7 +124,7 @@ Here is an example config with all 4 variants that you can save to `addresses.js
             "spec": {
                 "store_and_forward": false,
                 "multicast": false
-            },
+            }
         },
         {
             "metadata": {
@@ -133,7 +133,7 @@ Here is an example config with all 4 variants that you can save to `addresses.js
             "spec": {
                 "store_and_forward": false,
                 "multicast": true 
-            },
+            }
         },
         {
             "metadata": {
@@ -143,7 +143,7 @@ Here is an example config with all 4 variants that you can save to `addresses.js
                 "store_and_forward": true,
                 "multicast": false,
                 "flavor": "vanilla-queue"
-            },
+            }
         },
         {
             "metadata": {
