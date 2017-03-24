@@ -9,9 +9,9 @@
       "endpoints": [
         {
           "type": "jolokia",
-          "protocol": "https",
+          "protocol": "http",
           "port": 8161,
-          "path": "/jolokia",
+          "path": "/jolokia/",
           "collection_interval": "60s",
           "metrics": [
             {
