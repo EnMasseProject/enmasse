@@ -644,7 +644,12 @@ objects:
   - apiVersion: v1
     data:
       hawkular-openshift-agent: '{"endpoints": [{"collection_interval": "60s", "metrics":
-        [{"id": "VM Thread Count", "name": "java.lang:type=Threading#ThreadCount",
+        [{"description": "Message count for ${address}", "id": "${address}.${queue}.${broker}.messageCount",
+        "name": "org.apache.activemq.artemis:address=*,broker=*,component=addresses,queue=*,routing-type=*,subcomponent=queues#MessageCount",
+        "tags": {"messagingAddress": "${address}", "messagingMetricType": "messageCount"},
+        "type": "counter"}, {"description": "Consumer count for ${address}", "id":
+        "${address}.${queue}.${broker}.consumerCount", "name": "org.apache.activemq.artemis:address=*,broker=*,component=addresses,queue=*,routing-type=*,subcomponent=queues#ConsumerCount",
+        "tags": {"messagingAddress": "${address}", "messagingMetricType": "consumerCount"},
         "type": "counter"}], "path": "/jolokia/", "port": 8161, "protocol": "http",
         "type": "jolokia"}]}'
     kind: ConfigMap

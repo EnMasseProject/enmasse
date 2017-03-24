@@ -15,9 +15,24 @@
           "collection_interval": "60s",
           "metrics": [
             {
-              "name": "java.lang:type=Threading#ThreadCount",
+              "name": "org.apache.activemq.artemis:address=*,broker=*,component=addresses,queue=*,routing-type=*,subcomponent=queues#MessageCount",
               "type": "counter",
-              "id": "VM Thread Count"
+              "id": "${address}.${queue}.${broker}.messageCount",
+              "description": "Message count for ${address}",
+              "tags": {
+                "messagingAddress": "${address}",
+                "messagingMetricType": "messageCount"
+              }
+            },
+            {
+              "name": "org.apache.activemq.artemis:address=*,broker=*,component=addresses,queue=*,routing-type=*,subcomponent=queues#ConsumerCount",
+              "type": "counter",
+              "id": "${address}.${queue}.${broker}.consumerCount",
+              "description": "Consumer count for ${address}",
+              "tags": {
+                "messagingAddress": "${address}",
+                "messagingMetricType": "consumerCount"
+              }
             }
           ]
         }
