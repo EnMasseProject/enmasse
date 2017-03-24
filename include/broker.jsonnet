@@ -1,7 +1,7 @@
 local version = std.extVar("VERSION");
 local common = import "common.jsonnet";
 {
-  container(volumeName, image_repo, addressEnv)::
+  container(secure, volumeName, image_repo, addressEnv)::
     {
       "name": "broker",
       "image": image_repo + ":" + version,
@@ -13,6 +13,10 @@ local common = import "common.jsonnet";
         {
           "name": "core",
           "containerPort": 61616
+        },
+        {
+          "name": "jolokia",
+          "containerPort": 8161 
         }
       ],
       "env": [ addressEnv, {"name": "GROUP_ID", "value": "${NAME}"} ],
@@ -22,8 +26,14 @@ local common = import "common.jsonnet";
           "mountPath": "/var/run/artemis"
         }
       ],
-      "livenessProbe": {
-        "tcpSocket": {
+      //+ if secure then [
+      //  {
+      //    "name": "ssl-certs",
+      //    "mountPath": "/etc/artemis/certs",
+      //    "readOnly": true
+      //  }
+      //] else [],
+      "livenessProbe": { "tcpSocket": {
           "port": "amqp"
         }
       },
@@ -54,6 +64,22 @@ local common = import "common.jsonnet";
       "name": name,
       "persistentVolumeClaim": {
           "claimName": claimName
+      }
+    },
+
+  hawkularVolume()::
+    {
+      "name": "hawkular-openshift-agent",
+      "configMap": {
+          "name": "hawkular-broker-config"
+      }
+    },
+
+  secretVolume()::
+    {
+      "name": "ssl-certs",
+      "secret": {
+        "secretName": "broker-certs"
       }
     }
 }

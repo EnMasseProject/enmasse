@@ -50,16 +50,17 @@ local forwarder = import "forwarder.jsonnet";
                 then broker.persistedVolume(volumeName, claimName)
                 else broker.volume(volumeName),
               "volumes": if secure
-                then [brokerVolume, router.secret_volume()]
-                else [brokerVolume],
+                then [brokerVolume, router.secret_volume(), broker.hawkularVolume()]
+                else [brokerVolume, broker.hawkularVolume()],
 
               "containers": if multicast
-                then [ broker.container(volumeName, broker_repo, addressEnv), router.container(secure, router_repo, addressEnv, "256Mi"), forwarder.container(forwarder_repo, addressEnv) ]
-                else [ broker.container(volumeName, broker_repo, addressEnv) ]
+                then [ broker.container(secure, volumeName, broker_repo, addressEnv), router.container(secure, router_repo, addressEnv, "256Mi"), forwarder.container(forwarder_repo, addressEnv) ]
+                else [ broker.container(secure, volumeName, broker_repo, addressEnv) ]
             }
           }
         }
       },
+
       local pvc = {
         "apiVersion": "v1",
         "kind": "PersistentVolumeClaim",
