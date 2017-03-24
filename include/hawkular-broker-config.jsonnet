@@ -9,7 +9,7 @@
       "endpoints": [
         {
           "type": "jolokia",
-          "protocol": "http",
+          "protocol": "https",
           "port": 8161,
           "path": "/jolokia",
           "collection_interval": "60s",
