@@ -1,189 +1,75 @@
-    <!doctype html>
-    <html ng-app="myapp">
-      <head>
-        <meta charset="utf-8"></meta>
-        <!-- PatternFly Styles -->
-        <!-- Note: No other CSS files are needed regardless of what other JS packages located in patternfly/components that you decide to pull in -->
-        <link rel="stylesheet" href="bower_components/patternfly/dist/css/patternfly.min.css">
-        <link rel="stylesheet" href="bower_components/patternfly/dist/css/patternfly-additions.min.css">
+<!doctype html>
+<html ng-app="myapp">
+  <head>
+    <meta charset="utf-8"></meta>
+    <!-- PatternFly Styles -->
+    <!-- Note: No other CSS files are needed regardless of what other JS packages located in patternfly/components that you decide to pull in -->
+    <link rel="stylesheet" href="bower_components/patternfly/dist/css/patternfly.min.css">
+    <link rel="stylesheet" href="bower_components/patternfly/dist/css/patternfly-additions.min.css">
 
-        <!-- Angular-PatternFly Styles -->
-        <link rel="stylesheet" href="bower_components/angular-patternfly/dist/styles/angular-patternfly.min.css" />
+    <!-- Angular-PatternFly Styles -->
+    <link rel="stylesheet" href="bower_components/angular-patternfly/dist/styles/angular-patternfly.min.css" />
 
-        <script src="bower_components/angular-patternfly/dist/docs/grunt-scripts/jquery.js"></script>
-        <script src="bower_components/angular-patternfly/dist/docs/grunt-scripts/bootstrap.js"></script>
-        <script src="bower_components/angular-patternfly/dist/docs/grunt-scripts/bootstrap-combobox.js"></script>
-        <script src="bower_components/angular-patternfly/dist/docs/grunt-scripts/bootstrap-datepicker.js"></script>
-        <script src="bower_components/angular-patternfly/dist/docs/grunt-scripts/moment.js"></script>
-        <script src="bower_components/angular-patternfly/dist/docs/grunt-scripts/bootstrap-datetimepicker.js"></script>
-        <script src="bower_components/angular-patternfly/dist/docs/grunt-scripts/bootstrap-select.js"></script>
-        <script src="bower_components/angular-patternfly/dist/docs/grunt-scripts/bootstrap-treeview.js"></script>
-        <script src="bower_components/angular-patternfly/dist/docs/grunt-scripts/c3.js"></script>
-        <script src="bower_components/angular-patternfly/dist/docs/grunt-scripts/d3.js"></script>
-        <script src="bower_components/angular-patternfly/dist/docs/grunt-scripts/patternfly.js"></script>
-        <script src="bower_components/angular-patternfly/dist/docs/grunt-scripts/angular.js"></script>
-        <script src="bower_components/angular-patternfly/dist/docs/grunt-scripts/angular-sanitize.js"></script>
-        <script src="bower_components/angular-patternfly/dist/docs/grunt-scripts/angular-animate.js"></script>
-        <script src="bower_components/angular-patternfly/dist/docs/grunt-scripts/ui-bootstrap-tpls.js"></script>
-        <script src="bower_components/angular-patternfly/dist/docs/grunt-scripts/angular-bootstrap-prettify.js"></script>
-        <script src="bower_components/angular-patternfly/dist/docs/grunt-scripts/lodash.min.js"></script>
-        <script src="bower_components/angular-patternfly/dist/docs/grunt-scripts/angular-patternfly.js"></script>
-        <script src="bower_components/angular-patternfly/dist/docs/grunt-scripts/angular-ui-router.min.js"></script>
-        <script src="bower_components/angular-patternfly/dist/docs/grunt-scripts/angular-drag-and-drop-lists.js"></script>
+    <script src="bower_components/angular-patternfly/dist/docs/grunt-scripts/jquery.js"></script>
+    <script src="bower_components/angular-patternfly/dist/docs/grunt-scripts/bootstrap.js"></script>
+    <script src="bower_components/angular-patternfly/dist/docs/grunt-scripts/bootstrap-combobox.js"></script>
+    <script src="bower_components/angular-patternfly/dist/docs/grunt-scripts/bootstrap-datepicker.js"></script>
+    <script src="bower_components/angular-patternfly/dist/docs/grunt-scripts/moment.js"></script>
+    <script src="bower_components/angular-patternfly/dist/docs/grunt-scripts/bootstrap-datetimepicker.js"></script>
+    <script src="bower_components/angular-patternfly/dist/docs/grunt-scripts/bootstrap-select.js"></script>
+    <script src="bower_components/angular-patternfly/dist/docs/grunt-scripts/bootstrap-treeview.js"></script>
+    <script src="bower_components/angular-patternfly/dist/docs/grunt-scripts/c3.js"></script>
+    <script src="bower_components/angular-patternfly/dist/docs/grunt-scripts/d3.js"></script>
+    <script src="bower_components/angular-patternfly/dist/docs/grunt-scripts/patternfly.js"></script>
+    <script src="bower_components/angular-patternfly/dist/docs/grunt-scripts/angular.js"></script>
+    <script src="bower_components/angular-patternfly/dist/docs/grunt-scripts/angular-sanitize.js"></script>
+    <script src="bower_components/angular-patternfly/dist/docs/grunt-scripts/angular-animate.js"></script>
+    <script src="bower_components/angular-patternfly/dist/docs/grunt-scripts/ui-bootstrap-tpls.js"></script>
+    <script src="bower_components/angular-patternfly/dist/docs/grunt-scripts/angular-bootstrap-prettify.js"></script>
+    <script src="bower_components/angular-patternfly/dist/docs/grunt-scripts/lodash.min.js"></script>
+    <script src="bower_components/angular-patternfly/dist/docs/grunt-scripts/angular-patternfly.js"></script>
+    <script src="bower_components/angular-patternfly/dist/docs/grunt-scripts/angular-ui-router.min.js"></script>
+    <script src="bower_components/angular-patternfly/dist/docs/grunt-scripts/angular-drag-and-drop-lists.js"></script>
 
-        <script src="script.js"></script>
-        <script src="rhea.js"></script>
-        <script src="address_service.js"></script>
-      </head>
-      <body>
-        <div id="verticalNavLayout" class="layout-pf layout-pf-fixed faux-layout" ng-controller="NavCtrl">
-          <div pf-vertical-navigation items="navigationItems" brand-alt="EnMasse"
-               pinnable-menus="true" update-active-items-on-click="true" navigate-callback="handleNavigateClick">
-            <div>
-              <ul class="nav navbar-nav navbar-right navbar-iconic">
-                <li class="dropdown">
-                </li>
-                <li class="dropdown">
-                  <a class="dropdown-toggle nav-item-iconic" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
-                    <span title="Help" class="fa pficon-help"></span>
-                    <span class="caret"></span>
-                  </a>
-                  <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
-                    <li><a href="#">Help</a></li>
-                    <li><a href="#">About</a></li>
-                  </ul>
-                </li>
-                <li class="dropdown">
-                  <a class="dropdown-toggle nav-item-iconic" id="dropdownMenu2" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
-                    <span title="Username" class="fa pficon-user"></span>
-                    <span class="caret"></span>
-                  </a>
-                  <ul class="dropdown-menu" aria-labelledby="dropdownMenu2">
-                    <li><a href="#">Preferences</a></li>
-                    <li><a href="#">Logout</a></li>
-                  </ul>
-                </li>
+    <script src="script.js"></script>
+    <script src="rhea.js"></script>
+    <script src="address_service.js"></script>
+  </head>
+  <body>
+    <div id="verticalNavLayout" class="layout-pf layout-pf-fixed faux-layout" ng-controller="NavCtrl">
+      <div pf-vertical-navigation items="navigationItems" brand-alt="EnMasse"
+           pinnable-menus="true" update-active-items-on-click="true" navigate-callback="handleNavigateClick">
+        <div>
+          <ul class="nav navbar-nav navbar-right navbar-iconic">
+            <li class="dropdown"></li>
+            <li class="dropdown">
+              <a class="dropdown-toggle nav-item-iconic" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+                <span title="Help" class="fa pficon-help"></span>
+                <span class="caret"></span>
+              </a>
+              <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
+                <li><a href="#">Help</a></li>
+                <li><a href="#">About</a></li>
               </ul>
-            </div>
-          </div>
-          <div id="contentContainer" class="container-fluid container-cards-pf container-pf-nav-pf-vertical example-page-container">
-              <div id="addresses" ng-controller="ViewCtrl" class="row example-container">
-                <div class="row card-pf col-md-12" style="height: 15px;"></div>
-                <div class="row col-md-12">
-                  <div pf-toolbar id="exampleToolbar" config="toolbarConfig">
-                    <actions>
-                      <button class="btn btn-default primary-action" type="button" ng-controller="WizardModalController" ng-click="openWizardModel()">
-                        <span class="fa fa-plus"></span> Create
-                      </button>
-                      <button class="btn btn-default primary-action" type="button" ng-click="delete_address()">
-                        Delete
-                      </button>
-                    </actions>
-                  </div>
-                </div>
-
-                <div class="col-md-12 list-view-container">
-                  <div pf-list-view id="exampleListView"
-                       items="items" config="listConfig">
-
-                    <div class="list-view-pf-description">
-                      <div class="list-view-pf-left">
-                        <span class="fa fa-spinner" ng-if="item.propagated !== 100"></span>
-                        <span class="fa pficon-ok" ng-if="item.propagated === 100"></span>
-                      </div>
-                      <div class="list-group-item-heading">
-                        {{item.address}}
-                      </div>
-                      <div class="list-group-item-text">
-                        {{item.pattern}} &nbsp &nbsp
-                        {{item.flavor}}
-                      </div>
-                    </div>
-                    <div class="list-view-pf-additional-info">
-                      <div class="list-view-pf-additional-info-item">
-                        <span class="fa fa-sign-in"></span>
-                        <strong>{{item.messages_in_delta}}</strong> Messages In
-                      </div>
-                      <div class="list-view-pf-additional-info-item">
-                        <span class="fa fa-sign-out"></span>
-                        <strong>{{item.messages_out_delta}}</strong> Messages Out
-                      </div>
-                      <div class="list-view-pf-additional-info-item">
-                        <span class="fa pficon-import"></span> <strong>{{item.senders}}</strong> Senders
-                      </div>
-                      <div class="list-view-pf-additional-info-item">
-                        <span class="fa pficon-export"></span><strong>{{item.receivers}}</strong> Receivers
-                      </div>
-                      <div class="list-view-pf-additional-info-item"  ng-if="item.store_and_forward">
-                        <span class="fa fa-envelope-o"></span><strong>{{item.depth}}</strong> Stored
-                      </div>
-                      <div class="list-view-pf-additional-info-item"  ng-if="item.store_and_forward">
-                        <span class="fa fa-database"></span><strong>{{item.shards.length}}</strong> Shards
-                      </div>
-                    </div>
-                    <list-expanded-content>
-                      <div class="row">
-                        <div class="col-md-2" ng-if="$parent.item.store_and_forward && $parent.item.multicast">
-                          <div pf-c3-chart id="{{'subscribers-' + $parent.$parent.item.address}}" config="get_subscribers_chart_config($parent.$parent.item)"></div>
-                        </div>
-                        <div class="col-md-2" ng-if="$parent.item.store_and_forward">
-                          <div pf-c3-chart id="{{$parent.$parent.item.address}}" config="get_stored_chart_config($parent.$parent.item)"></div>
-                          <!-- div style="text-align: center; width: 220px;"><strong>{{$parent.$parent.item.depth}}</strong> Messages Stored</div -->
-                        </div>
-                        <div class="col-md-6" ng-if="$parent.item.store_and_forward">
-                          <div pf-sparkline-chart config="$parent.$parent.item.depth_series_config" chart-data="$parent.$parent.item.depth_series" chart-height="115" show-x-axis="false" show-y-axis="false"></div>
-                        </div>
-                        <!--
-                        <div class="col-md-6" ng-if="$parent.item.store_and_forward">
-                          <div pf-trends-chart config="$parent.$parent.item.depth_series_config" chart-data="$parent.$parent.item.depth_series" chart-height="115" show-x-axis="false" show-y-axis="false"></div>
-                        </div>
-                        -->
-                        <div class="col-md-2" ng-if="!$parent.item.store_and_forward">
-                          <div pf-c3-chart id="{{'ingress-outcomes-' + $parent.$parent.item.address}}" config="get_outcomes_chart_config($parent.$parent.item, 'ingress')"></div>
-                        </div>
-                        <div class="col-md-2" ng-if="!$parent.item.store_and_forward">
-                          <div pf-c3-chart id="{{'egress-outcomes-' + $parent.$parent.item.address}}" config="get_outcomes_chart_config($parent.$parent.item, 'egress')"></div>
-                        </div>
-
-                        <!--
-                        <div ng-repeat="shard in $parent.item.shards">
-                          <div class="col-md-9" ng-if="$parent.$parent.item.multicast">
-                            <dl class="dl-horizontal">
-                              <dt>Host</dt>
-                              <dd>{{shard.name}}</dd>
-                              <dt>Stored</dt>
-                              <dd>{{shard.messages}}</dd>
-                              <dt>Subscribers</dt>
-                              <dd>{{shard.subscription_count}}</dd>
-                              <dt>Durable Subscribers</dt>
-                              <dd>{{shard.durable_subscription_count}}</dd>
-                            </dl>
-                          </div>
-                          <div class="col-md-9" ng-if="!$parent.$parent.item.multicast">
-                            <dl class="dl-horizontal">
-                              <dt>Host</dt>
-                              <dd>{{shard.name}}</dd>
-                              <dt>Stored</dt>
-                              <dd>{{shard.messages}}</dd>
-                              <dt>Enqueued</dt>
-                              <dd>{{shard.enqueued}}</dd>
-                              <dt>Acknowledged</dt>
-                              <dd>{{shard.acknowledged}}</dd>
-                              <dt>Expired</dt>
-                              <dd>{{shard.expired}}</dd>
-                              <dt>Killed</dt>
-                              <dd>{{shard.killed}}</dd>
-                            </dl>
-                          </div>
-                          -->
-                        </div>
-                      </div>
-                    </list-expanded-content>
-                  </div>
-                </div>
-              </div>
-          </div>
+            </li>
+            <li class="dropdown">
+              <a class="dropdown-toggle nav-item-iconic" id="dropdownMenu2" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+                <span title="Username" class="fa pficon-user"></span>
+                <span class="caret"></span>
+              </a>
+              <ul class="dropdown-menu" aria-labelledby="dropdownMenu2">
+                <li><a href="#">Preferences</a></li>
+                <li><a href="#">Logout</a></li>
+              </ul>
+            </li>
+          </ul>
         </div>
-</div>
-</body>
+      </div>
+      <div id="contentContainer" class="container-fluid container-cards-pf container-pf-nav-pf-vertical example-page-container">
+        <ui-view>
+          <!-- Content will be added here -->
+        </ui-view>
+      </div>
+    </div>
+  </body>
 </html>

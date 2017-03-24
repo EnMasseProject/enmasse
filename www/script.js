@@ -1,24 +1,3 @@
-angular.module('patternfly.navigation').controller('NavCtrl', ['$scope',
-    function ($scope) {
-        $scope.navigationItems = [
-            {
-                title: "Addresses",
-                iconClass: "fa pficon-topology",
-                href: "#/addresses"
-            },
-            {
-                title: "Connections",
-                iconClass : "fa pficon-route",
-                href: "#/connections",
-            },
-            {
-                title: "Users",
-                iconClass: "fa pficon-users",
-                href: "#/users"
-            }
-        ];
-    }
-]);
 
 function extended_tooltip (colour, rows) {
     var html = '<table class="c3-tooltip">';
@@ -282,19 +261,6 @@ angular.module('patternfly.toolbars').controller('ViewCtrl', ['$scope', 'pfViewU
           };
 
           $scope.actionsConfig = {
-              /*
-          primaryActions: [
-            {
-              name: 'Delete',
-              title: 'Delete address',
-              actionFn: delete_address
-            },
-            {
-              name: 'Create',
-              title: 'Create new address',
-              actionFn: create_address
-            }
-            ],*/
           moreActions: [
               {
                   name: 'Suspend',
@@ -479,4 +445,175 @@ angular.module('patternfly.wizard').controller('SemanticsController', ['$rootSco
       }
     ]);
 
-angular.module('myapp', ['patternfly.navigation', 'patternfly.views', 'patternfly.toolbars', 'patternfly.charts', 'patternfly.wizard', 'patternfly.validation', 'address_service']);
+angular.module('patternfly.toolbars').controller('ConnectionViewCtrl', ['$scope', 'pfViewUtils', 'address_service',
+    function ($scope, pfViewUtils, address_service) {
+        address_service.on_update(function () { $scope.$apply(); });
+
+        function get_filter_function(filter) {
+            if (filter.id === 'host' || filter.id === 'container' || filter.id === 'user') {
+                return function (item) {
+                    return item[filter.id] && item[filter.id].match(filter.value) !== null;
+                };
+            } else if (filter.id === 'encrypted') {
+                if (filter.value === 'encrypted') {
+                    return function (item) { return item.encrypted; };
+                } else if (filter.value === 'unencrypted') {
+                    return function (item) { return !item.encrypted; };
+                };
+            } else {
+                return function () {
+                    console.log('unhandled filter: ' + JSON.stringify(filter));
+                    return true;
+                };
+            }
+        }
+
+        function all(predicates) {
+            return function (o) {
+                return predicates.every(function (p) { return p(o); });
+            }
+        }
+
+        var filterChange = function (filters) {
+            $scope.filtersText = filters.map(function (filter) { return  filter.title + " : " + filter.value + "\n"; }).join();
+            $scope.items = address_service.connections.filter(all(filters.map(get_filter_function)));
+            $scope.toolbarConfig.filterConfig.resultsCount = $scope.items.length;
+        };
+
+        $scope.filtersText = '';
+        $scope.items = address_service.connections;
+        $scope.filterConfig = {
+            fields: [
+                {
+                    id: 'container',
+                    title:  'Container',
+                    placeholder: 'Filter by Container ID...',
+                    filterType: 'text'
+                },
+                {
+                    id: 'host',
+                    title:  'Hostname',
+                    placeholder: 'Filter by Hostname...',
+                    filterType: 'text'
+                },
+                {
+                    id: 'user',
+                    title:  'User',
+                    placeholder: 'Filter by username...',
+                    filterType: 'text'
+                },
+                {
+                    id: 'encrypted',
+                    title:  'Encrypted',
+                    placeholder: 'Filter by encrypted/unencrypted...',
+                    filterType: 'select',
+                    filterValues: ['encrypted', 'unencrypted']
+                }
+            ],
+          resultsCount: $scope.items.length,
+          appliedFilters: [],
+          onFilterChange: filterChange
+        };
+        var compareFn = function(item1, item2) {
+          var compValue = 0;
+          if ($scope.sortConfig.currentField.id === 'container') {
+            compValue = item1.container.localeCompare(item2.container);
+          } else if ($scope.sortConfig.currentField.id === 'host') {
+            compValue = item1.host.localeCompare(item2.host);
+          } else if ($scope.sortConfig.currentField.id === 'senders') {
+              compValue = item1.senders.length - item2.senders.length;
+          } else if ($scope.sortConfig.currentField.id === 'receivers') {
+              compValue = item1.receivers.length - item2.receivers.length;
+          }
+
+          if (!$scope.sortConfig.isAscending) {
+            compValue = compValue * -1;
+          }
+
+          return compValue;
+        };
+
+        var sortChange = function (sortId, isAscending) {
+          $scope.items.sort(compareFn);
+        };
+
+        $scope.sortConfig = {
+          fields: [
+            {
+              id: 'container',
+              title:  'Container ID',
+              sortType: 'alpha'
+            },
+            {
+              id: 'host',
+              title:  'Hostname',
+              sortType: 'alpha'
+            },
+            {
+              id: 'senders',
+              title:  'Senders',
+              sortType: 'numeric'
+            },
+            {
+              id: 'receivers',
+              title:  'Receivers',
+              sortType: 'numeric'
+            }
+          ],
+          onSortChange: sortChange
+        };
+
+        $scope.toolbarConfig = {
+          viewsConfig: $scope.viewsConfig,
+          filterConfig: $scope.filterConfig,
+          sortConfig: $scope.sortConfig,
+          actionsConfig: $scope.actionsConfig
+        };
+
+        $scope.connectionListConfig = {
+            showSelectBox: false,
+            useExpandingRows: true,
+            checkDisabled: false
+        };
+      }
+    ]);
+
+angular.module('myapp', ['patternfly.navigation', 'ui.router', 'patternfly.views', 'patternfly.toolbars', 'patternfly.charts', 'patternfly.wizard', 'patternfly.validation', 'address_service']).config(
+    function ($stateProvider, $urlRouterProvider) {
+        $urlRouterProvider.otherwise('/addresses');
+        $stateProvider.state('addresses',
+                             { url: '/addresses',
+                               templateUrl: 'addresses.html'
+                             }
+                            );
+        $stateProvider.state('connections',
+                             { url: '/connections',
+                               templateUrl: 'connections.html'
+                             }
+                            );
+        $stateProvider.state('users',
+                             { url: '/users',
+                               templateUrl: 'users.html'
+                             }
+                            );
+    }).controller('NavCtrl', ['$scope',
+    function ($scope) {
+        $scope.navigationItems = [
+            {
+                title: "Addresses",
+                iconClass: "fa pficon-topology",
+                uiSref: "addresses"
+            },
+            {
+                title: "Connections",
+                iconClass : "fa pficon-route",
+                uiSref: "connections",
+            },
+            {
+                title: "Users",
+                iconClass: "fa pficon-users",
+                uiSref: "users"
+            }
+        ];
+    }
+]);

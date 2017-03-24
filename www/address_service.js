@@ -102,6 +102,7 @@ AddressDefinition.prototype.reset_periodic_deltas = function () {
 function AddressService() {
     this.addresses = [];
     this.flavors = [];
+    this.connections = [];
     var ws = rhea.websocket_connect(WebSocket);
     this.connection = rhea.connect({"connection_details":ws("ws://" + location.hostname + ":56720", ["binary", "AMQPWSB10"]), "reconnect":true});
     this.connection.on('message', this.on_message.bind(this));
@@ -179,6 +180,14 @@ AddressService.prototype.is_unique_name = function (name) {
     return !this.addresses.some(function (a) { return a.address === name; });
 }
 
+AddressService.prototype.update_connection = function (c) {
+    var i = 0;
+    while (i < this.connections.length && c.id !== this.connections[i].id) {
+        i++;
+    }
+    this.connections[i] = c;
+}
+
 AddressService.prototype.on_message = function (context) {
     if (context.message.subject === 'address') {
         this.update(context.message.body);
@@ -197,6 +206,20 @@ AddressService.prototype.on_message = function (context) {
     } else if (context.message.subject === 'flavors') {
         this.flavors = context.message.body;
         if (this.callback) this.callback();
+    } else if (context.message.subject === 'connection') {
+        this.update_connection(context.message.body);
+        if (this.callback) this.callback();
+    } else if (context.message.subject === 'connection_deleted') {
+        var changed = false;
+        for (var i = 0; i < this.connections.length;) {
+            if (this.connections[i].id === context.message.body) {
+                this.connections.splice(i, 1);
+                changed = true;
+            } else {
+                i++;
+            }
+        }
+        if (changed && this.callback) this.callback();
     }
 }
 

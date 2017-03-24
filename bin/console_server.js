@@ -21,8 +21,9 @@ var rhea = require('rhea');
 var WebSocketServer = require('ws').Server;
 var address_ctrl = require('../lib/address_ctrl.js');
 var address_list = require('../lib/address_list.js');
-var address_router_stats = require('../lib/address_router_stats.js');
+var router_stats = require('../lib/router_stats.js');
 var broker_stats = require('../lib/broker_stats.js');
+var Registry = require('../lib/registry.js');
 
 var app = express();
 app.set('port', 8080);
@@ -36,13 +37,19 @@ ws_server.on('connection', function (ws) {
     amqp_container.websocket_accept(ws);
 });
 
+var connections = new Registry();
+connections.debug = true;
+
 var listeners = {};
 
 function subscribe(name, sender) {
     listeners[name] = sender;
-    for (var a in address_list.addresses) {
-        sender.send({subject:'address', body:address_list.addresses[a]});
-    }
+    address_list.for_each(function (address) {
+        sender.send({subject:'address', body:address});
+    });
+    connections.for_each(function (conn) {
+        sender.send({subject:'connection', body:conn});
+    });
     //TODO: poll for changes in flavors
     address_ctrl.get_flavors().then(function (flavors) {
         var flavor_list = [];
@@ -60,7 +67,7 @@ function unsubscribe(name) {
 }
 
 setInterval(function () {
-    address_router_stats.retrieve(address_list);
+    router_stats.retrieve(address_list, connections);
 }, 5000);//poll router stats every 5 secs
 
 setInterval(function () {
@@ -76,6 +83,17 @@ address_list.on('deleted', function (address) {
     console.log('address ' + address.address + ' has been deleted, notifying clients...');
     for (var name in listeners) {
         listeners[name].send({subject:'address_deleted',body:address.address});
+    }
+});
+connections.on('updated', function (conn) {
+    for (var name in listeners) {
+        listeners[name].send({subject:'connection',body:conn});
+    }
+});
+connections.on('deleted', function (conn) {
+    console.log('connection ' + conn.host + ' has been deleted, notifying clients...');
+    for (var name in listeners) {
+        listeners[name].send({subject:'connection_deleted',body:conn.id});
     }
 });
 
