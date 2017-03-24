@@ -11,7 +11,7 @@
           "type": "jolokia",
           "protocol": "http",
           "port": 8161,
-          "path": "/web",
+          "path": "/jolokia",
           "collection_interval": "60s",
           "metrics": [
             {

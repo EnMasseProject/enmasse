@@ -708,8 +708,8 @@ objects:
     data:
       hawkular-openshift-agent: '{"endpoints": [{"collection_interval": "60s", "metrics":
         [{"id": "VM Thread Count", "name": "java.lang:type=Threading#ThreadCount",
-        "type": "counter"}], "path": "/web", "port": 8161, "protocol": "http", "type":
-        "jolokia"}]}'
+        "type": "counter"}], "path": "/jolokia", "port": 8161, "protocol": "http",
+        "type": "jolokia"}]}'
     kind: ConfigMap
     metadata:
       name: hawkular-broker-config
