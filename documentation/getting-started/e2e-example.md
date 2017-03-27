@@ -183,8 +183,7 @@ This will block until it has received 10 messages. To start the sender:
 
     ./tls_simple_send.py -c amqps://localhost:443 -a anycast -s "$(oc get route -o jsonpath='{.spec.host}' messaging)" -m 10
 
-You can use the client with the 'myqueue' and 'multicast' addresses as well. Making the clients work
-with topics is left as an exercies to the reader.
+You can use the client with the 'myqueue' and 'broadcast' and 'mytopic' addresses as well.
 
 #### MQTT
 
