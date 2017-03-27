@@ -644,7 +644,11 @@ objects:
   - apiVersion: v1
     data:
       hawkular-openshift-agent: '{"endpoints": [{"collection_interval": "60s", "metrics":
-        [{"description": "Message count for ${address}", "id": "${address}.${queue}.${broker}.messageCount",
+        [{"id": "broker.threadCount", "name": "java.lang:type=Threading#ThreadCount",
+        "tags": {"messagingComponent": "broker", "messagingMetricType": "threadCount"},
+        "type": "counter"}, {"id": "broker.memoryHeapUsage", "name": "java.lang:type=Memory#HeapMemoryUsage#used",
+        "tags": {"messagingComponent": "broker", "messagingMetricType": "heapUsage"},
+        "type": "gauge"}, {"description": "Message count for ${address}", "id": "${address}.${queue}.${broker}.messageCount",
         "name": "org.apache.activemq.artemis:address=*,broker=*,component=addresses,queue=*,routing-type=*,subcomponent=queues#MessageCount",
         "tags": {"messagingAddress": "${address}", "messagingBroker": "{broker}",
         "messagingMetricType": "messageCount", "messagingQueue": "${queue}"}, "type":

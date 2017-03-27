@@ -15,6 +15,24 @@
           "collection_interval": "60s",
           "metrics": [
             {
+              "name": "java.lang:type=Threading#ThreadCount",
+              "type": "counter",
+              "id": "broker.threadCount",
+              "tags": {
+                "messagingComponent": "broker",
+                "messagingMetricType": "threadCount"
+              }
+            },
+            {
+              "name": "java.lang:type=Memory#HeapMemoryUsage#used",
+              "type": "gauge",
+              "id": "broker.memoryHeapUsage",
+              "tags": {
+                "messagingComponent": "broker",
+                "messagingMetricType": "heapUsage"
+              }
+            },
+            {
               "name": "org.apache.activemq.artemis:address=*,broker=*,component=addresses,queue=*,routing-type=*,subcomponent=queues#MessageCount",
               "type": "counter",
               "id": "${address}.${queue}.${broker}.messageCount",
