@@ -324,7 +324,7 @@
     }
   ],
   "time": {
-    "from": "now-6h",
+    "from": "now-30m",
     "to": "now"
   },
   "timepicker": {
@@ -358,8 +358,9 @@
   "annotations": {
     "list": []
   },
+  "refresh": "10s",
   "schemaVersion": 12,
-  "version": 0,
+  "version": 2,
   "links": [],
   "gnetId": null
 }
