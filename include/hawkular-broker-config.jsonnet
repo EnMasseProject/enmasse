@@ -34,7 +34,7 @@
             },
             {
               "name": "org.apache.activemq.artemis:address=*,broker=*,component=addresses,queue=*,routing-type=*,subcomponent=queues#MessageCount",
-              "type": "counter",
+              "type": "gauge",
               "id": "${address}.${queue}.${broker}.messageCount",
               "description": "Message count for ${address}",
               "tags": {
@@ -46,7 +46,7 @@
             },
             {
               "name": "org.apache.activemq.artemis:address=*,broker=*,component=addresses,queue=*,routing-type=*,subcomponent=queues#ConsumerCount",
-              "type": "counter",
+              "type": "gauge",
               "id": "${address}.${queue}.${broker}.consumerCount",
               "description": "Consumer count for ${address}",
               "tags": {

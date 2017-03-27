@@ -652,11 +652,11 @@ objects:
         "name": "org.apache.activemq.artemis:address=*,broker=*,component=addresses,queue=*,routing-type=*,subcomponent=queues#MessageCount",
         "tags": {"messagingAddress": "${address}", "messagingBroker": "{broker}",
         "messagingMetricType": "messageCount", "messagingQueue": "${queue}"}, "type":
-        "counter"}, {"description": "Consumer count for ${address}", "id": "${address}.${queue}.${broker}.consumerCount",
+        "gauge"}, {"description": "Consumer count for ${address}", "id": "${address}.${queue}.${broker}.consumerCount",
         "name": "org.apache.activemq.artemis:address=*,broker=*,component=addresses,queue=*,routing-type=*,subcomponent=queues#ConsumerCount",
         "tags": {"messagingAddress": "${address}", "messagingBroker": "{broker}",
         "messagingMetricType": "consumerCount", "messagingQueue": "${queue}"}, "type":
-        "counter"}], "path": "/jolokia/", "port": 8161, "protocol": "http", "type":
+        "gauge"}], "path": "/jolokia/", "port": 8161, "protocol": "http", "type":
         "jolokia"}]}'
     kind: ConfigMap
     metadata:
