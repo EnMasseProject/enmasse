@@ -35,25 +35,25 @@
             {
               "name": "org.apache.activemq.artemis:address=*,broker=*,component=addresses,queue=*,routing-type=*,subcomponent=queues#MessageCount",
               "type": "gauge",
-              "id": "${address}.${queue}.${broker}.messageCount",
-              "description": "Message count for ${address}",
+              "id": "${address}.${queue}.${broker}.queueDepth",
+              "description": "Queue depth for ${address}",
               "tags": {
                 "messagingAddress": "${address}",
                 "messagingBroker": "{broker}",
                 "messagingQueue": "${queue}",
-                "messagingMetricType": "messageCount"
+                "messagingMetricType": "queueDepth"
               }
             },
             {
               "name": "org.apache.activemq.artemis:address=*,broker=*,component=addresses,queue=*,routing-type=*,subcomponent=queues#ConsumerCount",
               "type": "gauge",
-              "id": "${address}.${queue}.${broker}.consumerCount",
-              "description": "Consumer count for ${address}",
+              "id": "${address}.${queue}.${broker}.numConsumers",
+              "description": "Number of consumers for ${address}",
               "tags": {
                 "messagingAddress": "${address}",
                 "messagingBroker": "{broker}",
                 "messagingQueue": "${queue}",
-                "messagingMetricType": "consumerCount"
+                "messagingMetricType": "numConsumers"
               }
             }
           ]

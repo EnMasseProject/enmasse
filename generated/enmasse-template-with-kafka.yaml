@@ -648,14 +648,14 @@ objects:
         "tags": {"messagingComponent": "broker", "messagingMetricType": "threadCount"},
         "type": "counter"}, {"id": "broker.memoryHeapUsage", "name": "java.lang:type=Memory#HeapMemoryUsage#used",
         "tags": {"messagingComponent": "broker", "messagingMetricType": "heapUsage"},
-        "type": "gauge"}, {"description": "Message count for ${address}", "id": "${address}.${queue}.${broker}.messageCount",
+        "type": "gauge"}, {"description": "Queue depth for ${address}", "id": "${address}.${queue}.${broker}.queueDepth",
         "name": "org.apache.activemq.artemis:address=*,broker=*,component=addresses,queue=*,routing-type=*,subcomponent=queues#MessageCount",
         "tags": {"messagingAddress": "${address}", "messagingBroker": "{broker}",
-        "messagingMetricType": "messageCount", "messagingQueue": "${queue}"}, "type":
-        "gauge"}, {"description": "Consumer count for ${address}", "id": "${address}.${queue}.${broker}.consumerCount",
+        "messagingMetricType": "queueDepth", "messagingQueue": "${queue}"}, "type":
+        "gauge"}, {"description": "Number of consumers for ${address}", "id": "${address}.${queue}.${broker}.numConsumers",
         "name": "org.apache.activemq.artemis:address=*,broker=*,component=addresses,queue=*,routing-type=*,subcomponent=queues#ConsumerCount",
         "tags": {"messagingAddress": "${address}", "messagingBroker": "{broker}",
-        "messagingMetricType": "consumerCount", "messagingQueue": "${queue}"}, "type":
+        "messagingMetricType": "numConsumers", "messagingQueue": "${queue}"}, "type":
         "gauge"}], "path": "/jolokia/", "port": 8161, "protocol": "http", "type":
         "jolokia"}]}'
     kind: ConfigMap
