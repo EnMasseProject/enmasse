@@ -58,10 +58,9 @@ setup_test_multitenant enmasse-ci-multi
 run_test enmasse-ci-multi false true || failure=$(($failure + 1))
 teardown_test enmasse-ci-multi
 
-#setup_test_secure enmasse-ci-secure
-#run_test enmasse-ci-secure true false || failure=$(($failure + 1))
-#teardown_test enmasse-ci-secure
-
+setup_test_secure enmasse-ci-secure
+run_test enmasse-ci-secure true false || failure=$(($failure + 1))
+teardown_test enmasse-ci-secure
 
 if [ $failure -gt 0 ]
 then
