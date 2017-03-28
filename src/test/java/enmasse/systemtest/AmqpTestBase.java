@@ -25,6 +25,8 @@ import org.junit.After;
 import org.junit.Before;
 
 import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public abstract class AmqpTestBase {
@@ -32,11 +34,13 @@ public abstract class AmqpTestBase {
     protected AddressApiClient addressApiClient;
     protected Environment environment = new Environment();
     protected OpenShift openShift;
+    private final List<AmqpClient> clients = new ArrayList<>();
 
     protected abstract String getInstanceName();
 
     @Before
     public void setup() throws Exception {
+        clients.clear();
         vertx = Vertx.vertx();
         openShift = new OpenShift(environment, environment.isMultitenant() ? getInstanceName().toLowerCase() : environment.namespace());
         addressApiClient = new AddressApiClient(vertx, openShift.getRestEndpoint(), environment.isMultitenant());
@@ -48,6 +52,10 @@ public abstract class AmqpTestBase {
         cleanup();
         addressApiClient.close();
         vertx.close();
+        for (AmqpClient client : clients) {
+            client.close();
+        }
+        clients.clear();
     }
 
     private void cleanup() throws Exception {
