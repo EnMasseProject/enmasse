@@ -4,12 +4,8 @@ set -x
 
 function setup_test() {
     PROJECT_NAME=$1
-    oc login -u test -p test --insecure-skip-tls-verify=true https://localhost:8443
 
-    oc new-project $PROJECT_NAME
-    oc create sa enmasse-service-account -n $(oc project -q)
-    oc policy add-role-to-user view system:serviceaccount:$(oc project -q):default
-    oc policy add-role-to-user edit system:serviceaccount:$(oc project -q):enmasse-service-account
+    curl https://raw.githubusercontent.com/EnMasseProject/enmasse/master/scripts/enmasse-deploy.sh | bash -s -p $PROJECT_NAME -u test -c https://localhost:8443
 }
 
 function teardown_test() {
@@ -21,18 +17,15 @@ function teardown_test() {
 function setup_test_multitenant() {
     PROJECT_NAME=$1
 
-    oc login -u test -p test --insecure-skip-tls-verify=true https://localhost:8443
-    oc new-project $PROJECT_NAME
-    oc create sa enmasse-service-account -n $(oc project -q)
+    curl https://raw.githubusercontent.com/EnMasseProject/enmasse/master/scripts/enmasse-deploy.sh | bash -s -p $PROJECT_NAME -u test -c https://localhost:8443 -m
 
     sudo ./openshift/oadm --config openshift.local.config/master/admin.kubeconfig policy add-cluster-role-to-user cluster-admin system:serviceaccount:$(oc project -q):enmasse-service-account
     sudo ./openshift/oadm --config openshift.local.config/master/admin.kubeconfig policy add-cluster-role-to-user cluster-admin test
 }
 
-function setup_secure() {
+function setup_test_secure() {
     openssl req -x509 -newkey rsa:4096 -keyout server-key.pem -out server-cert.pem -days 1 -nodes -batch
-    oc secret new qdrouterd-certs server-cert.pem server-key.pem
-    oc secret add serviceaccount/default secrets/qdrouterd-certs --for=mount
+    curl https://raw.githubusercontent.com/EnMasseProject/enmasse/master/scripts/enmasse-deploy.sh | bash -s -p $PROJECT_NAME -u test -c https://localhost:8443 -k server-key.pem -s server-cert.pem
     export OPENSHIFT_USE_TLS="true"
     export OPENSHIFT_SERVER_CERT=`cat server-cert.pem`
 }
@@ -41,10 +34,6 @@ function run_test() {
     PROJECT_NAME=$1
     USE_TLS=$2
     MULTIINSTANCE=$3
-    TEMPLATE=$4
-    ARGS=$5
-
-    oc process -f $TEMPLATE MULTIINSTANCE=$MULTIINSTANCE | oc create -f -
 
     if [ "$MULTIINSTANCE" == false ]; then
         $DIR/wait_until_up.sh 6 || exit 1
@@ -58,16 +47,17 @@ function run_test() {
 }
 
 failure=0
-setup_test enmasse-ci-single run_test enmasse-ci-single false false https://raw.githubusercontent.com/enmasseproject/enmasse/master/generated/enmasse-template.yaml || failure=$(($failure + 1))
+setup_test enmasse-ci-single
+run_test enmasse-ci-single false false || failure=$(($failure + 1))
 teardown_test enmasse-ci-single
 
 setup_test_multitenant enmasse-ci-multi
-run_test enmasse-ci-multi false true https://raw.githubusercontent.com/enmasseproject/enmasse/master/generated/enmasse-template.yaml || failure=$(($failure + 1))
+run_test enmasse-ci-multi false true || failure=$(($failure + 1))
 teardown_test enmasse-ci-multi
 
-#setup_test enmasse-ci-secure
-#setup_secure
-#run_test enmasse-ci-secure true false https://raw.githubusercontent.com/enmasseproject/enmasse/master/generated/tls-enmasse-template.yaml || exit 1
+#setup_test_secure enmasse-ci-secure
+#run_test enmasse-ci-secure true false || failure=$(($failure + 1))
+#teardown_test enmasse-ci-secure
 
 
 if [ $failure -gt 0 ]
