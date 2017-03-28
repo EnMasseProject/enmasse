@@ -16,17 +16,16 @@
 package enmasse.systemtest;
 
 import enmasse.systemtest.amqp.AmqpClient;
+import enmasse.systemtest.amqp.SslOptions;
 import enmasse.systemtest.amqp.TerminusFactory;
 import io.vertx.core.Vertx;
-import io.vertx.core.buffer.Buffer;
-import io.vertx.core.net.PemTrustOptions;
-import io.vertx.proton.ProtonClientOptions;
 import org.junit.After;
 import org.junit.Before;
 
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 public abstract class AmqpTestBase {
@@ -88,7 +87,7 @@ public abstract class AmqpTestBase {
     }
 
     protected AmqpClient createClient(TerminusFactory terminusFactory) throws UnknownHostException {
-        ProtonClientOptions options = new ProtonClientOptions();
+        /*
         if (environment.useTLS()) {
             options.setSsl(true);
             options.setHostnameVerificationAlgorithm("");
@@ -96,12 +95,18 @@ public abstract class AmqpTestBase {
           //  options.setSniServerName(openShift.getRouteHost());
             options.setTrustAll(true);
             return createClient(terminusFactory, options, openShift.getSecureEndpoint());
-        } else {
-            return createClient(terminusFactory, options, openShift.getInsecureEndpoint());
-        }
+        } else { */
+            return createClient(terminusFactory, openShift.getInsecureEndpoint(), Optional.empty());
+       // }
     }
 
-    protected AmqpClient createClient(TerminusFactory terminusFactory, ProtonClientOptions options, Endpoint endpoint) {
-        return new AmqpClient(endpoint, terminusFactory);
+    protected AmqpClient createClient(TerminusFactory terminusFactory, Endpoint endpoint) {
+        return createClient(terminusFactory, endpoint, Optional.empty());
+    }
+
+    protected AmqpClient createClient(TerminusFactory terminusFactory, Endpoint endpoint, Optional<SslOptions> sslOptions) {
+        AmqpClient client = new AmqpClient(endpoint, terminusFactory, sslOptions);
+        clients.add(client);
+        return client;
     }
 }

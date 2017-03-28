@@ -7,9 +7,6 @@ import org.apache.qpid.proton.reactor.Handshaker;
 
 import java.util.concurrent.CountDownLatch;
 
-/**
- * TODO: Description
- */
 public abstract class ClientHandlerBase extends BaseHandler {
 
     private final enmasse.systemtest.Endpoint endpoint;
@@ -34,8 +31,8 @@ public abstract class ClientHandlerBase extends BaseHandler {
     public void onConnectionInit(Event event) {
         Connection connection = event.getConnection();
         connection.setHostname("enmasse-systemtest-client");
-        if (clientOptions.useSSL()) {
-            connection.getTransport().ssl(clientOptions.sslDomain(), clientOptions.sslPeerDetails());
+        if (clientOptions.getSslOptions().isPresent()) {
+            connection.getTransport().ssl(clientOptions.getSslOptions().get().getSslDomain(), clientOptions.getSslOptions().get().getSslPeerDetails());
         }
         connection.open();
     }

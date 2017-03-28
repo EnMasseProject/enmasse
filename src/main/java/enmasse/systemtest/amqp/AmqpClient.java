@@ -32,10 +32,13 @@ public class AmqpClient implements AutoCloseable {
     private final enmasse.systemtest.Endpoint endpoint;
     private final TerminusFactory terminusFactory;
     private final ExecutorService  executorService = Executors.newCachedThreadPool();
+    private final Optional<SslOptions> sslOptions;
+    private final List<Reactor> reactors = new ArrayList<>();
 
-    public AmqpClient(enmasse.systemtest.Endpoint endpoint, TerminusFactory terminusFactory) {
+    public AmqpClient(enmasse.systemtest.Endpoint endpoint, TerminusFactory terminusFactory, Optional<SslOptions> sslOptions) {
         this.endpoint = endpoint;
         this.terminusFactory = terminusFactory;
+        this.sslOptions = sslOptions;
     }
 
     public Future<List<String>> recvMessages(String address, int numMessages) throws InterruptedException, IOException {
@@ -58,8 +61,9 @@ public class AmqpClient implements AutoCloseable {
         CompletableFuture<List<String>> promise = new CompletableFuture<>();
         CountDownLatch connectLatch = new CountDownLatch(1);
         Reactor reactor = Reactor.Factory.create();
-        reactor.setHandler(new ReceiveHandler(endpoint, done, promise, new ClientOptions(source, new Target()), connectLatch));
-        executorService.execute(() -> reactor.run());
+        reactor.setHandler(new ReceiveHandler(endpoint, done, promise, new ClientOptions(source, new Target(), sslOptions), connectLatch));
+        reactors.add(reactor);
+        executorService.execute(reactor::run);
         if (!connectLatch.await(connectTimeout, timeUnit)) {
             throw new RuntimeException("Timeout waiting for client to connect");
         }
@@ -69,6 +73,9 @@ public class AmqpClient implements AutoCloseable {
     @Override
     public void close() throws Exception {
         executorService.shutdown();
+        for (Reactor reactor : reactors) {
+            reactor.stop();
+        }
         executorService.awaitTermination(1, TimeUnit.MINUTES);
     }
 
@@ -112,8 +119,9 @@ public class AmqpClient implements AutoCloseable {
         CountDownLatch connectLatch = new CountDownLatch(1);
         Queue<Message> messageQueue = new LinkedList<>(Arrays.asList(messages));
         Reactor reactor = Reactor.Factory.create();
-        reactor.setHandler(new SendHandler(endpoint, new ClientOptions(terminusFactory.getSource(address), terminusFactory.getTarget(address)), connectLatch, promise, messageQueue));
-        executorService.execute(() -> reactor.run());
+        reactor.setHandler(new SendHandler(endpoint, new ClientOptions(terminusFactory.getSource(address), terminusFactory.getTarget(address), sslOptions), connectLatch, promise, messageQueue));
+        reactors.add(reactor);
+        executorService.execute(reactor::run);
         if (!connectLatch.await(connectTimeout, timeUnit)) {
             throw new RuntimeException("Timeout waiting for client to connect");
         }

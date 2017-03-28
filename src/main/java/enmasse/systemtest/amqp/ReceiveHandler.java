@@ -17,9 +17,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.function.Predicate;
 
-/**
- * TODO: Description
- */
 public class ReceiveHandler extends ClientHandlerBase {
     private static final Symbol AMQP_LINK_REDIRECT = Symbol.valueOf("amqp:link:redirect");
 

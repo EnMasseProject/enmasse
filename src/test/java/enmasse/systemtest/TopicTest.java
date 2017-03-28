@@ -17,7 +17,6 @@
 package enmasse.systemtest;
 
 import enmasse.systemtest.amqp.AmqpClient;
-import io.vertx.proton.ProtonClientOptions;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.amqp.messaging.Source;
 import org.apache.qpid.proton.amqp.messaging.TerminusDurability;
@@ -98,7 +97,7 @@ public class TopicTest extends AmqpTestBase {
 
         Thread.sleep(60_000);
 
-        AmqpClient subClient = createClient(new QueueTerminusFactory(), new ProtonClientOptions(), openShift.getEndpoint("subscription", "amqp"));
+        AmqpClient subClient = createClient(new QueueTerminusFactory(), openShift.getEndpoint("subscription", "amqp"));
         AmqpClient queueClient = createQueueClient();
         AmqpClient topicClient = createTopicClient();
 
