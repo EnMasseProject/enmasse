@@ -5,7 +5,7 @@ set -x
 function setup_test() {
     PROJECT_NAME=$1
 
-    curl https://raw.githubusercontent.com/EnMasseProject/enmasse/master/scripts/enmasse-deploy.sh | bash -s -p $PROJECT_NAME -u test -c https://localhost:8443
+    ./enmasse-deploy.sh -p $PROJECT_NAME -u test -c https://localhost:8443
 }
 
 function teardown_test() {
@@ -16,8 +16,7 @@ function teardown_test() {
 
 function setup_test_multitenant() {
     PROJECT_NAME=$1
-
-    curl https://raw.githubusercontent.com/EnMasseProject/enmasse/master/scripts/enmasse-deploy.sh | bash -s -p $PROJECT_NAME -u test -c https://localhost:8443 -m
+    ./enmasse-deploy.sh -p $PROJECT_NAME -u test -c https://localhost:8443 -m
 
     sudo ./openshift/oadm --config openshift.local.config/master/admin.kubeconfig policy add-cluster-role-to-user cluster-admin system:serviceaccount:$(oc project -q):enmasse-service-account
     sudo ./openshift/oadm --config openshift.local.config/master/admin.kubeconfig policy add-cluster-role-to-user cluster-admin test
@@ -25,7 +24,7 @@ function setup_test_multitenant() {
 
 function setup_test_secure() {
     openssl req -x509 -newkey rsa:4096 -keyout server-key.pem -out server-cert.pem -days 1 -nodes -batch
-    curl https://raw.githubusercontent.com/EnMasseProject/enmasse/master/scripts/enmasse-deploy.sh | bash -s -p $PROJECT_NAME -u test -c https://localhost:8443 -k server-key.pem -s server-cert.pem
+    ./enmasse-deploy.sh -p $PROJECT_NAME -u test -c https://localhost:8443 -k server-key.pem -s server-cert.pem
     export OPENSHIFT_USE_TLS="true"
     export OPENSHIFT_SERVER_CERT=`cat server-cert.pem`
 }
@@ -45,6 +44,9 @@ function run_test() {
 
     OPENSHIFT_USE_TLS=$USE_TLS OPENSHIFT_NAMESPACE=$PROJECT_NAME OPENSHIFT_USER=test OPENSHIFT_MULTITENANT=$MULTIINSTANCE OPENSHIFT_TOKEN=`oc config view -o jsonpath='{.users[?(@.name == "test/localhost:8443")].user.token}'` OPENSHIFT_MASTER_URL=https://localhost:8443 gradle check -i --rerun-tasks -Djava.net.preferIPv4Stack=true $ARGS
 }
+
+curl https://raw.githubusercontent.com/EnMasseProject/enmasse/master/scripts/enmasse-deploy.sh -o enmasse-deploy.sh
+chmod 755 enmasse-deploy.sh
 
 failure=0
 setup_test enmasse-ci-single
