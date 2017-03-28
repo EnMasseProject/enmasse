@@ -47,6 +47,8 @@ public class TopicTest extends AmqpTestBase {
                 client.recvMessages(dest.getAddress(), msgs.size()),
                 client.recvMessages(dest.getAddress(), msgs.size()));
 
+        Thread.sleep(30_000);
+
         assertThat(client.sendMessages(dest.getAddress(), msgs).get(1, TimeUnit.MINUTES), is(msgs.size()));
 
         assertThat(recvResults.get(0).get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
