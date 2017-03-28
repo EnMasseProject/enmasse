@@ -31,10 +31,15 @@ public abstract class ClientHandlerBase extends BaseHandler {
     public void onConnectionInit(Event event) {
         Connection connection = event.getConnection();
         connection.setHostname("enmasse-systemtest-client");
+        connection.open();
+    }
+
+    @Override
+    public void onConnectionBound(Event event) {
+        Connection connection = event.getConnection();
         if (clientOptions.getSslOptions().isPresent()) {
             connection.getTransport().ssl(clientOptions.getSslOptions().get().getSslDomain(), clientOptions.getSslOptions().get().getSslPeerDetails());
         }
-        connection.open();
     }
 
     @Override

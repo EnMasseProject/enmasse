@@ -40,7 +40,6 @@ public class ReceiveHandler extends ClientHandlerBase {
         this.promise = promise;
     }
 
-
     protected void reportException(Exception e) {
         promise.completeExceptionally(e);
     }

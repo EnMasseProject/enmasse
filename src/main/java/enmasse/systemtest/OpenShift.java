@@ -59,11 +59,6 @@ public class OpenShift {
         throw new IllegalArgumentException("Unable to find port " + portName + " for service " + service.getMetadata().getName());
     }
 
-    public String getRouteHost() {
-        Route route = client.routes().inNamespace(namespace).withName("messaging").get();
-        return route.getSpec().getHost();
-    }
-
     public Endpoint getRestEndpoint() {
         Service service = client.services().inNamespace(environment.namespace()).withName("address-controller").get();
         return new Endpoint(service.getSpec().getClusterIP(), getPort(service, "http"));
@@ -109,5 +104,10 @@ public class OpenShift {
                 return 6; // address-controller, admin, qdrouterd, subscription, mqtt gateway, mqtt lwt
             }
         }
+    }
+
+    public Endpoint getRouteEndpoint(String routeName) {
+        Route route = client.routes().inNamespace(namespace).withName(routeName).get();
+        return new Endpoint(route.getSpec().getHost(), 443);
     }
 }

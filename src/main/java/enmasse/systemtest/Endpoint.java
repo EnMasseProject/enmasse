@@ -32,4 +32,9 @@ public class Endpoint {
     public int getPort() {
         return port;
     }
+
+    @Override
+    public String toString() {
+        return host + ":" + port;
+    }
 }

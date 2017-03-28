@@ -19,6 +19,9 @@ import enmasse.systemtest.amqp.AmqpClient;
 import enmasse.systemtest.amqp.SslOptions;
 import enmasse.systemtest.amqp.TerminusFactory;
 import io.vertx.core.Vertx;
+import org.apache.qpid.proton.amqp.transport.End;
+import org.apache.qpid.proton.engine.SslDomain;
+import org.apache.qpid.proton.engine.SslPeerDetails;
 import org.junit.After;
 import org.junit.Before;
 
@@ -87,17 +90,18 @@ public abstract class AmqpTestBase {
     }
 
     protected AmqpClient createClient(TerminusFactory terminusFactory) throws UnknownHostException {
-        /*
         if (environment.useTLS()) {
-            options.setSsl(true);
-            options.setHostnameVerificationAlgorithm("");
-            options.setPemTrustOptions(new PemTrustOptions().addCertValue(Buffer.buffer(environment.messagingCert())));
-          //  options.setSniServerName(openShift.getRouteHost());
-            options.setTrustAll(true);
-            return createClient(terminusFactory, options, openShift.getSecureEndpoint());
-        } else { */
+            Endpoint endpoint = openShift.getRouteEndpoint("messaging");
+            SslDomain sslDomain = SslDomain.Factory.create();
+            sslDomain.init(SslDomain.Mode.CLIENT);
+            sslDomain.setPeerAuthentication(SslDomain.VerifyMode.ANONYMOUS_PEER);
+            SslPeerDetails sslPeerDetails = SslPeerDetails.Factory.create(endpoint.getHost(), endpoint.getPort());
+            SslOptions sslOptions = new SslOptions(sslDomain, sslPeerDetails);
+            System.out.println("Endpoint: " + endpoint);
+            return createClient(terminusFactory, endpoint, Optional.of(sslOptions));
+        } else {
             return createClient(terminusFactory, openShift.getInsecureEndpoint(), Optional.empty());
-       // }
+        }
     }
 
     protected AmqpClient createClient(TerminusFactory terminusFactory, Endpoint endpoint) {
