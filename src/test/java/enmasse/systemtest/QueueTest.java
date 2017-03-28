@@ -16,8 +16,10 @@
 
 package enmasse.systemtest;
 
+import enmasse.systemtest.amqp.AmqpClient;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -29,12 +31,12 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 
-public class QueueTest extends VertxTestBase {
+public class QueueTest extends AmqpTestBase {
     @Test
     public void testQueue() throws Exception {
         Destination dest = Destination.queue("myqueue");
         deploy(dest);
-        EnMasseClient client = createQueueClient();
+        AmqpClient client = createQueueClient();
 
         runQueueTest(client, dest);
     }
@@ -46,7 +48,7 @@ public class QueueTest extends VertxTestBase {
         Destination q3 = Destination.queue("group2", "queue3");
         deploy(q1, q2, q3);
 
-        EnMasseClient client = createQueueClient();
+        AmqpClient client = createQueueClient();
         runQueueTest(client, q1);
         runQueueTest(client, q2);
         runQueueTest(client, q3);
@@ -57,7 +59,7 @@ public class QueueTest extends VertxTestBase {
         Destination dest = Destination.queue("scalequeue");
         deploy(dest);
         scale(dest, 4);
-        EnMasseClient client = createQueueClient();
+        AmqpClient client = createQueueClient();
         List<Future<Integer>> sent = Arrays.asList(
                 client.sendMessages(dest.getAddress(), TestUtils.generateMessages("foo", 1000)),
                 client.sendMessages(dest.getAddress(), TestUtils.generateMessages("bar", 1000)),
@@ -76,7 +78,7 @@ public class QueueTest extends VertxTestBase {
         assertThat(received.get(1, TimeUnit.MINUTES).size(), is(4000));
     }
 
-    private static void runQueueTest(EnMasseClient client, Destination dest) throws InterruptedException, TimeoutException, ExecutionException {
+    private static void runQueueTest(AmqpClient client, Destination dest) throws InterruptedException, TimeoutException, ExecutionException, IOException {
         List<String> msgs = TestUtils.generateMessages(1024);
 
         Future<Integer> numSent = null;

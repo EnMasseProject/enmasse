@@ -1,7 +1,6 @@
 ext {
    openshiftClientVersion = '2.0.1'
    vertxVersion = '3.4.1'
-   vertxProtonVersion = '3.3.3'
    junitVersion = '4.12'
 }
 
@@ -18,6 +17,5 @@ dependencies {
     compile 'com.github.EnMasseProject:admin:master-SNAPSHOT'
     compile "io.fabric8:openshift-client:${openshiftClientVersion}"
     compile "io.vertx:vertx-core:${vertxVersion}"
-    compile "io.vertx:vertx-proton:${vertxProtonVersion}"
     testCompile "junit:junit:${junitVersion}"
 }

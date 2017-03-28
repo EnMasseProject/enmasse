@@ -16,6 +16,7 @@
 
 package enmasse.systemtest;
 
+import enmasse.systemtest.amqp.AmqpClient;
 import io.vertx.proton.ProtonClientOptions;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.amqp.messaging.Source;
@@ -32,14 +33,14 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
-public class TopicTest extends VertxTestBase {
+public class TopicTest extends AmqpTestBase {
 
     @Test
     public void testMultipleSubscribers() throws Exception {
         Destination dest = Destination.topic("mytopic");
         deploy(dest);
         scale(dest, 4);
-        EnMasseClient client = createTopicClient();
+        AmqpClient client = createTopicClient();
         List<String> msgs = TestUtils.generateMessages(1000);
 
         List<Future<List<String>>> recvResults = Arrays.asList(
@@ -65,7 +66,7 @@ public class TopicTest extends VertxTestBase {
         Source source = new TopicTerminusFactory().getSource("locate/" + dest.getAddress());
         source.setDurable(TerminusDurability.UNSETTLED_STATE);
 
-        EnMasseClient client = createTopicClient();
+        AmqpClient client = createTopicClient();
         List<String> batch1 = Arrays.asList("one", "two", "three");
 
         Future<List<String>> recvResults = client.recvMessages(source, batch1.size());
@@ -97,9 +98,9 @@ public class TopicTest extends VertxTestBase {
 
         Thread.sleep(60_000);
 
-        EnMasseClient subClient = createClient(new QueueTerminusFactory(), new ProtonClientOptions(), openShift.getEndpoint("subscription", "amqp"));
-        EnMasseClient queueClient = createQueueClient();
-        EnMasseClient topicClient = createTopicClient();
+        AmqpClient subClient = createClient(new QueueTerminusFactory(), new ProtonClientOptions(), openShift.getEndpoint("subscription", "amqp"));
+        AmqpClient queueClient = createQueueClient();
+        AmqpClient topicClient = createTopicClient();
 
         Message sub = Message.Factory.create();
         sub.setAddress("$subctrl");

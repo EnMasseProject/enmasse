@@ -16,6 +16,7 @@
 
 package enmasse.systemtest;
 
+import enmasse.systemtest.amqp.AmqpClient;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -27,14 +28,14 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
-public class BroadcastTest extends VertxTestBase {
+public class BroadcastTest extends AmqpTestBase {
 
     @Test
     public void testMultipleRecievers() throws Exception {
         Destination dest = Destination.broadcast("broadcast");
         deploy(dest);
         Thread.sleep(20_000);
-        EnMasseClient client = createTopicClient();
+        AmqpClient client = createTopicClient();
         List<String> msgs = Arrays.asList("foo");
 
         List<Future<List<String>>> recvResults = Arrays.asList(

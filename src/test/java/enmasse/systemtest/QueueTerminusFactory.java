@@ -16,6 +16,7 @@
 
 package enmasse.systemtest;
 
+import enmasse.systemtest.amqp.TerminusFactory;
 import org.apache.qpid.proton.amqp.messaging.Source;
 import org.apache.qpid.proton.amqp.messaging.Target;
 

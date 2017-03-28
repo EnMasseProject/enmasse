@@ -16,6 +16,7 @@
 
 package enmasse.systemtest;
 
+import enmasse.systemtest.amqp.AmqpClient;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -26,12 +27,12 @@ import java.util.concurrent.TimeUnit;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
-public class AnycastTest extends VertxTestBase {
+public class AnycastTest extends AmqpTestBase {
     @Test
     public void testMessagesDeliveredToReceiver() throws Exception {
         Destination dest = Destination.anycast("anycast");
         deploy(dest);
-        EnMasseClient client = createQueueClient();
+        AmqpClient client = createQueueClient();
 
         List<String> msgs = Arrays.asList("foo", "bar", "baz");
 

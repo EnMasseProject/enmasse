@@ -19,7 +19,7 @@ import java.util.concurrent.TimeUnit;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.*;
 
-public class ConfigServTest extends VertxTestBase {
+public class ConfigServTest extends AmqpTestBase {
 
     private Set<String> pods;
 
