@@ -70,16 +70,20 @@ public class TopicTest extends AmqpTestBase {
         AmqpClient client = createTopicClient();
         List<String> batch1 = Arrays.asList("one", "two", "three");
 
+        System.out.println("Receiving first batch");
         Future<List<String>> recvResults = client.recvMessages(source, batch1.size());
+        System.out.println("Sending first batch");
         assertThat(client.sendMessages(dest.getAddress(), batch1).get(1, TimeUnit.MINUTES), is(batch1.size()));
         assertThat(recvResults.get(1, TimeUnit.MINUTES), is(batch1));
 
+        System.out.println("Sending second batch");
         List<String> batch2 = Arrays.asList("four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve");
         assertThat(client.sendMessages(dest.getAddress(), batch2).get(1, TimeUnit.MINUTES), is(batch2.size()));
 
         source.setAddress("locate/" + dest.getAddress());
         //at present may get one or more of the first three messages
         //redelivered due to DISPATCH-595, so use more lenient checks
+        System.out.println("Receiving second batch again");
         recvResults = client.recvMessages(source, message -> {
                 String body = (String) ((AmqpValue) message.getBody()).getValue();
                 System.out.println("received " + body);
