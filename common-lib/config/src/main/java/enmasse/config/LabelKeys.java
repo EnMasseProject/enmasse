@@ -24,5 +24,6 @@ public interface LabelKeys {
 
     String GROUP_ID = "group_id";
     String ADDRESS_CONFIG = "address_config";
-    String TENANT = "tenant";
+    String INSTANCE = "instance";
+    String UUID = "uuid";
 }

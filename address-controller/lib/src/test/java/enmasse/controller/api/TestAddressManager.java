@@ -1,28 +1,27 @@
 package enmasse.controller.api;
 
 import enmasse.controller.address.AddressManager;
-import enmasse.controller.model.DestinationGroup;
+import enmasse.controller.address.AddressSpace;
+import enmasse.controller.model.Instance;
+import enmasse.controller.model.InstanceId;
 
-import java.util.LinkedHashSet;
-import java.util.Set;
+import java.util.HashMap;
+import java.util.Map;
 
 public class TestAddressManager implements AddressManager {
-    public Set<DestinationGroup> destinationList = new LinkedHashSet<>();
     public boolean throwException = false;
+    private final Map<InstanceId, AddressSpace> managerMap = new HashMap<>();
 
-    @Override
-    public void destinationsUpdated(Set<DestinationGroup> destinationList) {
-        if (throwException) {
-            throw new RuntimeException();
-        }
-        this.destinationList = new LinkedHashSet<>(destinationList);
+    public TestAddressManager addManager(InstanceId instance, AddressSpace addressSpace) {
+        managerMap.put(instance, addressSpace);
+        return this;
     }
 
     @Override
-    public Set<DestinationGroup> listDestinationGroups() {
+    public AddressSpace getAddressSpace(Instance instance) {
         if (throwException) {
-            throw new RuntimeException();
+            throw new RuntimeException("buhu");
         }
-        return this.destinationList;
+        return managerMap.get(instance.id());
     }
 }

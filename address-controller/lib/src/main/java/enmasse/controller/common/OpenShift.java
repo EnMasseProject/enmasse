@@ -4,6 +4,7 @@ import enmasse.controller.model.DestinationGroup;
 import enmasse.controller.model.InstanceId;
 import enmasse.controller.address.DestinationCluster;
 import io.fabric8.kubernetes.api.model.ConfigMap;
+import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.Namespace;
 import io.fabric8.openshift.api.model.Route;
@@ -19,6 +20,14 @@ public interface OpenShift {
 
     static String sanitizeName(String name) {
         return name.toLowerCase().replaceAll("[^a-z0-9]", "-");
+    }
+
+    static void addObjectLabel(KubernetesList items, String labelKey, String labelValue) {
+        for (HasMetadata item : items.getItems()) {
+            Map<String, String> labels = item.getMetadata().getLabels();
+            labels.put(labelKey, labelValue);
+            item.getMetadata().setLabels(labels);
+        }
     }
 
     InstanceId getInstanceId();

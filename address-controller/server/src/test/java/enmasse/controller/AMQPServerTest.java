@@ -4,10 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import enmasse.controller.flavor.FlavorManager;
 import enmasse.controller.api.v3.AddressList;
-import enmasse.controller.model.Destination;
-import enmasse.controller.model.DestinationGroup;
-import enmasse.controller.model.Flavor;
-import enmasse.controller.model.InstanceId;
+import enmasse.controller.model.*;
 import enmasse.amqp.SyncRequestClient;
 import io.vertx.core.Vertx;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
@@ -35,20 +32,22 @@ import static org.junit.Assert.assertTrue;
 
 public class AMQPServerTest {
     private Vertx vertx;
-    private TestAddressManagerFactory testInstanceManager;
     private TestAddressManager testAddressManager;
+    private TestAddressSpace testAddressSpace;
     private FlavorManager testRepository;
     private int port;
 
     @Before
     public void setup() throws InterruptedException {
         vertx = Vertx.vertx();
-        testAddressManager = new TestAddressManager();
+        testAddressSpace = new TestAddressSpace();
         InstanceId instanceId = InstanceId.withId("myinstance");
-        testInstanceManager = new TestAddressManagerFactory().addManager(instanceId, testAddressManager);
+        testAddressManager = new TestAddressManager().addManager(instanceId, testAddressSpace);
         testRepository = new FlavorManager();
+        TestInstanceManager testInstanceManager = new TestInstanceManager();
+        testInstanceManager.create(new Instance.Builder(instanceId).build());
         CountDownLatch latch = new CountDownLatch(1);
-        AMQPServer server = new AMQPServer(instanceId, testInstanceManager, testRepository, 0);
+        AMQPServer server = new AMQPServer(instanceId, testAddressManager, testInstanceManager, testRepository, 0);
         vertx.deployVerticle(server, c -> {
             latch.countDown();
         });
@@ -75,7 +74,7 @@ public class AMQPServerTest {
     @Test
     public void testAddressingService() throws InterruptedException, ExecutionException, TimeoutException, IOException {
         DestinationGroup gr = new DestinationGroup("group0", Sets.newSet(new Destination("addr1", "group0", false, false, Optional.empty(), Optional.empty())));
-        testAddressManager.destinationList.add(gr);
+        testAddressSpace.setDestinations(Sets.newSet(gr));
 
         SyncRequestClient client = new SyncRequestClient("localhost", port, vertx);
         Message request = Message.Factory.create();

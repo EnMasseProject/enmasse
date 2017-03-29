@@ -39,21 +39,22 @@ import static org.junit.Assert.assertTrue;
 public class HTTPServerTest {
 
     private Vertx vertx;
-    private TestAddressManagerFactory testAddressManagerFactory;
-    private TestInstanceManager testInstanceManager;
     private TestAddressManager testAddressManager;
+    private TestInstanceManager testInstanceManager;
+    private TestAddressSpace testAddressSpace;
     private FlavorManager testRepository;
 
     @Before
     public void setup() throws InterruptedException {
         vertx = Vertx.vertx();
-        testAddressManager = new TestAddressManager();
+        testAddressSpace = new TestAddressSpace();
         testInstanceManager = new TestInstanceManager();
         InstanceId instanceId = InstanceId.withId("myinstance");
-        testAddressManagerFactory = new TestAddressManagerFactory().addManager(instanceId, testAddressManager);
+        testAddressManager = new TestAddressManager().addManager(instanceId, testAddressSpace);
         testRepository = new FlavorManager();
+        testInstanceManager.create(new Instance.Builder(instanceId).build());
         CountDownLatch latch = new CountDownLatch(1);
-        vertx.deployVerticle(new HTTPServer(instanceId, testAddressManagerFactory, testInstanceManager, testRepository), c -> {
+        vertx.deployVerticle(new HTTPServer(instanceId, testAddressManager, testInstanceManager, testRepository), c -> {
             latch.countDown();
         });
         latch.await(1, TimeUnit.MINUTES);
@@ -66,7 +67,7 @@ public class HTTPServerTest {
 
     @Test
     public void testAddressingApi() throws InterruptedException {
-        testAddressManager.destinationList.add(new DestinationGroup("group0", Sets.newSet(new Destination("addr1", "group0", false, false, Optional.empty(), Optional.empty()))));
+        testAddressSpace.setDestinations(Sets.newSet(new DestinationGroup("group0", Sets.newSet(new Destination("addr1", "group0", false, false, Optional.empty(), Optional.empty())))));
         HttpClient client = vertx.createHttpClient();
         try {
             CountDownLatch latch = new CountDownLatch(2);

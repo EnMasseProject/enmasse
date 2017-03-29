@@ -17,12 +17,14 @@
 package enmasse.controller.api.v3.http;
 
 import enmasse.controller.api.TestAddressManager;
-import enmasse.controller.api.TestAddressManagerFactory;
+import enmasse.controller.api.TestAddressSpace;
+import enmasse.controller.api.TestInstanceManager;
+import enmasse.controller.api.v3.Address;
+import enmasse.controller.api.v3.AddressList;
 import enmasse.controller.api.v3.ApiHandler;
 import enmasse.controller.model.Destination;
 import enmasse.controller.model.DestinationGroup;
-import enmasse.controller.api.v3.Address;
-import enmasse.controller.api.v3.AddressList;
+import enmasse.controller.model.Instance;
 import enmasse.controller.model.InstanceId;
 import org.junit.Before;
 import org.junit.Test;
@@ -38,19 +40,21 @@ import static org.junit.Assert.*;
 
 public class HttpAddressingApiTest {
     private AddressingService addressingService;
-    private TestAddressManagerFactory instanceManager;
-    private TestAddressManager addressManager;
+    private TestInstanceManager instanceManager;
+    private TestAddressSpace addressSpace;
 
     @Before
     public void setup() {
-        addressManager = new TestAddressManager();
-        instanceManager = new TestAddressManagerFactory();
-        instanceManager.addManager(InstanceId.withId("myinstance"), addressManager);
+        instanceManager = new TestInstanceManager();
+        instanceManager.create(new Instance.Builder(InstanceId.withId("myinstance")).build());
+        addressSpace = new TestAddressSpace();
+        addressSpace.setDestinations(Sets.newSet(
+                createGroup(new Destination("addr1", "addr1", false, false, Optional.empty(), Optional.empty())),
+                createGroup(new Destination("queue1", "queue1", true, false, Optional.of("vanilla"), Optional.empty()))));
+        TestAddressManager addressManager = new TestAddressManager();
+        addressManager.addManager(InstanceId.withId("myinstance"), addressSpace);
 
-        addressingService = new AddressingService(InstanceId.withId("myinstance"), new ApiHandler(instanceManager));
-        addressManager.destinationsUpdated(Sets.newSet(
-            createGroup(new Destination("addr1", "addr1", false, false, Optional.empty(), Optional.empty())),
-            createGroup(new Destination("queue1", "queue1", true, false, Optional.of("vanilla"), Optional.empty()))));
+        addressingService = new AddressingService(InstanceId.withId("myinstance"), new ApiHandler(instanceManager, addressManager));
     }
 
     @Test
@@ -78,7 +82,7 @@ public class HttpAddressingApiTest {
 
     @Test
     public void testGetException() {
-        addressManager.throwException = true;
+        addressSpace.throwException = true;
         Response response = addressingService.listAddresses();
         assertThat(response.getStatus(), is(500));
     }
@@ -101,7 +105,7 @@ public class HttpAddressingApiTest {
 
         assertThat(result, is(input));
 
-        assertThat(addressManager.destinationList.size(), is(2));
+        assertThat(addressSpace.getDestinations().size(), is(2));
         assertDestination(new Destination("addr2", "addr2", false, false, Optional.empty(), Optional.empty()));
         assertDestination(new Destination("topic", "topic", true, true, Optional.of("vanilla"), Optional.empty()));
         assertNotDestination(new Destination("addr1", "addr1", false, false, Optional.empty(), Optional.empty()));
@@ -109,7 +113,7 @@ public class HttpAddressingApiTest {
 
     @Test
     public void testPutException() {
-        addressManager.throwException = true;
+        addressSpace.throwException = true;
         Response response = addressingService.putAddresses(AddressList.fromSet(Collections.singleton(
                     new Destination("newaddr", "newaddr", true, false, Optional.of("vanilla"), Optional.empty()))));
         assertThat(response.getStatus(), is(500));
@@ -124,14 +128,14 @@ public class HttpAddressingApiTest {
         assertThat(result.size(), is(1));
         assertThat(result.iterator().next().address(), is("queue1"));
 
-        assertThat(addressManager.destinationList.size(), is(1));
+        assertThat(addressSpace.getDestinations().size(), is(1));
         assertDestination(new Destination("queue1", "queue1", true, false, Optional.of("vanilla"), Optional.empty()));
         assertNotDestination(new Destination("addr1", "addr1", false, false, Optional.empty(), Optional.empty()));
     }
 
     @Test
     public void testDeleteException() {
-        addressManager.throwException = true;
+        addressSpace.throwException = true;
         Response response = addressingService.deleteAddress("throw");
         assertThat(response.getStatus(), is(500));
     }
@@ -151,7 +155,7 @@ public class HttpAddressingApiTest {
         assertDestinationName(result, "queue1");
         assertDestinationName(result, "addr2");
 
-        assertThat(addressManager.destinationList.size(), is(3));
+        assertThat(addressSpace.getDestinations().size(), is(3));
         assertDestination(new Destination("addr2", "addr2", false, false, Optional.empty(), Optional.empty()));
         assertDestination(new Destination("queue1", "queue1", true, false, Optional.of("vanilla"), Optional.empty()));
         assertDestination(new Destination("addr1", "addr1", false, false, Optional.empty(), Optional.empty()));
@@ -171,19 +175,19 @@ public class HttpAddressingApiTest {
 
     @Test
     public void testAppendException() {
-        addressManager.throwException = true;
+        addressSpace.throwException = true;
         Response response = addressingService.appendAddress(new Address(
                 new Destination("newaddr", "newaddr", true, false, Optional.of("vanilla"), Optional.empty())));
         assertThat(response.getStatus(), is(500));
     }
 
     private void assertNotDestination(Destination destination) {
-        assertFalse(addressManager.destinationList.contains(destination));
+        assertFalse(addressSpace.getDestinations().contains(destination));
     }
 
     private void assertDestination(Destination dest) {
         Destination actual = null;
-        for (DestinationGroup group : addressManager.destinationList) {
+        for (DestinationGroup group : addressSpace.getDestinations()) {
             for (Destination d : group.getDestinations()) {
                 if (d.address().equals(dest.address())) {
                     actual = d;

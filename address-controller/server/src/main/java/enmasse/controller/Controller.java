@@ -16,8 +16,8 @@
 
 package enmasse.controller;
 
-import enmasse.controller.address.AddressManagerFactory;
-import enmasse.controller.address.AddressManagerFactoryImpl;
+import enmasse.controller.address.AddressManager;
+import enmasse.controller.address.AddressManagerImpl;
 import enmasse.controller.common.OpenShift;
 import enmasse.controller.common.OpenShiftHelper;
 import enmasse.controller.flavor.FlavorController;
@@ -37,7 +37,7 @@ import java.io.IOException;
 public class Controller extends AbstractVerticle {
     private final AMQPServer server;
     private final HTTPServer restServer;
-    private final AddressManagerFactory addressManagerFactory;
+    private final AddressManager addressManager;
     private final InstanceManagerImpl instanceManager;
     private final FlavorController flavorController;
 
@@ -58,9 +58,9 @@ public class Controller extends AbstractVerticle {
             instanceManager.create(new Instance.Builder(openShift.getInstanceId()).build());
         }
 
-        this.addressManagerFactory = new AddressManagerFactoryImpl(openShift, instanceManager, flavorManager);
-        this.server = new AMQPServer(openShift.getInstanceId(), addressManagerFactory, flavorManager, options.port());
-        this.restServer = new HTTPServer(openShift.getInstanceId(), addressManagerFactory, instanceManager, flavorManager);
+        this.addressManager = new AddressManagerImpl(openShift, flavorManager);
+        this.server = new AMQPServer(openShift.getInstanceId(), addressManager, instanceManager, flavorManager, options.port());
+        this.restServer = new HTTPServer(openShift.getInstanceId(), addressManager, instanceManager, flavorManager);
         this.flavorController = new FlavorController(controllerClient, flavorManager);
     }
 

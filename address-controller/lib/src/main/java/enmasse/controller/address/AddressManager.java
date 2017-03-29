@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Red Hat Inc.
+ * Copyright 2017 Red Hat Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,17 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package enmasse.controller.address;
 
-import enmasse.controller.model.DestinationGroup;
-
-import java.util.Set;
+import enmasse.controller.model.Instance;
 
 /**
- * Manages the address space state
+ * Interface for retriving address spaces per instance.
  */
 public interface AddressManager {
-    void destinationsUpdated(Set<DestinationGroup> destinationGroups);
-    Set<DestinationGroup> listDestinationGroups();
+    AddressSpace getAddressSpace(Instance instance);
 }

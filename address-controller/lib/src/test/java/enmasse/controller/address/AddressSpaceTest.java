@@ -20,9 +20,6 @@ import enmasse.controller.common.DestinationClusterGenerator;
 import enmasse.controller.model.Destination;
 import enmasse.controller.model.DestinationGroup;
 import enmasse.controller.model.Flavor;
-import enmasse.controller.address.DestinationCluster;
-import enmasse.controller.address.AddressManager;
-import enmasse.controller.address.AddressManagerImpl;
 import enmasse.controller.common.OpenShiftHelper;
 import enmasse.controller.flavor.FlavorManager;
 import io.fabric8.kubernetes.api.model.KubernetesList;
@@ -37,9 +34,9 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
-public class AddressManagerTest {
+public class AddressSpaceTest {
     private OpenShiftHelper mockHelper;
-    private AddressManager manager;
+    private AddressSpace manager;
     private FlavorManager flavorManager = new FlavorManager();
     private DestinationClusterGenerator mockGenerator;
 
@@ -48,7 +45,7 @@ public class AddressManagerTest {
         mockHelper = mock(OpenShiftHelper.class);
         mockGenerator = mock(DestinationClusterGenerator.class);
 
-        manager = new AddressManagerImpl(mockHelper, mockGenerator);
+        manager = new AddressSpaceImpl(mockHelper, mockGenerator);
         Map<String, Flavor> flavorMap = new LinkedHashMap<>();
         flavorMap.put("vanilla", new Flavor.Builder("vanilla", "test").build());
         flavorMap.put("shared", new Flavor.Builder("shared", "test").build());
@@ -65,7 +62,7 @@ public class AddressManagerTest {
         when(mockGenerator.generateCluster(group)).thenReturn(cluster);
         ArgumentCaptor<DestinationGroup> arg = ArgumentCaptor.forClass(DestinationGroup.class);
 
-        manager.destinationsUpdated(Collections.singleton(group));
+        manager.setDestinations(Collections.singleton(group));
         verify(mockGenerator).generateCluster(arg.capture());
         assertThat(arg.getValue(), is(group));
         verify(cluster).create();
@@ -86,7 +83,7 @@ public class AddressManagerTest {
         when(mockGenerator.generateCluster(newGroup)).thenReturn(newCluster);
         ArgumentCaptor<DestinationGroup> arg = ArgumentCaptor.forClass(DestinationGroup.class);
 
-        manager.destinationsUpdated(new LinkedHashSet<>(Arrays.asList(group, newGroup)));
+        manager.setDestinations(new LinkedHashSet<>(Arrays.asList(group, newGroup)));
 
         verify(mockGenerator).generateCluster(arg.capture());
         assertThat(arg.getValue(), is(newGroup));
@@ -108,7 +105,7 @@ public class AddressManagerTest {
         when(mockHelper.listClusters()).thenReturn(Arrays.asList(existing, newCluster));
 
 
-        manager.destinationsUpdated(Collections.singleton(newGroup));
+        manager.setDestinations(Collections.singleton(newGroup));
 
         verify(existing, VerificationModeFactory.atLeastOnce()).getDestinationGroup();
         verify(newCluster, VerificationModeFactory.atLeastOnce()).getDestinationGroup();
@@ -140,7 +137,7 @@ public class AddressManagerTest {
         destinationGroups.add(group1);
         destinationGroups.add(group2);
 
-        manager.destinationsUpdated(destinationGroups);
+        manager.setDestinations(destinationGroups);
 
         List<DestinationGroup> generated = arg.getAllValues();
         assertThat(generated.size(), is(2));

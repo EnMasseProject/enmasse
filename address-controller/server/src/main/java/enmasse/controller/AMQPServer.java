@@ -17,10 +17,11 @@
 package enmasse.controller;
 
 import enmasse.controller.flavor.FlavorRepository;
-import enmasse.controller.address.AddressManagerFactory;
+import enmasse.controller.address.AddressManager;
 import enmasse.controller.api.v3.ApiHandler;
 import enmasse.controller.api.v3.amqp.AddressingService;
 import enmasse.controller.api.v3.amqp.FlavorsService;
+import enmasse.controller.instance.InstanceManager;
 import enmasse.controller.model.InstanceId;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.proton.*;
@@ -46,9 +47,9 @@ public class AMQPServer extends AbstractVerticle {
     private final Map<String, HandlerContext> replyHandlers = new ConcurrentHashMap<>();
     private ProtonServer server;
 
-    public AMQPServer(InstanceId instanceId, AddressManagerFactory addressManagerFactory, FlavorRepository repository, int port) {
+    public AMQPServer(InstanceId instanceId, AddressManager addressManager, InstanceManager instanceManager, FlavorRepository repository, int port) {
         this.port = port;
-        this.addressingService = new AddressingService(instanceId, new ApiHandler(addressManagerFactory));
+        this.addressingService = new AddressingService(instanceId, new ApiHandler(instanceManager, addressManager));
         this.flavorsService = new FlavorsService(repository);
     }
 

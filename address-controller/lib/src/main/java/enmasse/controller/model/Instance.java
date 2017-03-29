@@ -10,12 +10,14 @@ public class Instance {
     private final Optional<String> messagingHost;
     private final Optional<String> mqttHost;
     private final Optional<String> consoleHost;
+    private final Optional<String> uuid;
 
-    public Instance(InstanceId instanceId, Optional<String> messagingHost, Optional<String> mqttHost, Optional<String> consoleHost) {
+    public Instance(InstanceId instanceId, Optional<String> messagingHost, Optional<String> mqttHost, Optional<String> consoleHost, Optional<String> uuid) {
         this.instanceId = instanceId;
         this.messagingHost = messagingHost;
         this.mqttHost = mqttHost;
         this.consoleHost = consoleHost;
+        this.uuid = uuid;
     }
 
     public Optional<String> messagingHost() {
@@ -28,6 +30,10 @@ public class Instance {
 
     public Optional<String> consoleHost() {
         return consoleHost;
+    }
+
+    public Optional<String> uuid() {
+        return uuid;
     }
 
     public InstanceId id() {
@@ -54,6 +60,7 @@ public class Instance {
         private Optional<String> messagingHost = Optional.empty();
         private Optional<String> mqttHost = Optional.empty();
         private Optional<String> consoleHost = Optional.empty();
+        private Optional<String> uuid = Optional.empty();
 
         public Builder(InstanceId instanceId) {
             this.instanceId = instanceId;
@@ -79,8 +86,13 @@ public class Instance {
             return this;
         }
 
+        public Builder uuid(Optional<String> uuid) {
+            this.uuid = uuid;
+            return this;
+        }
+
         public Instance build() {
-            return new Instance(instanceId, messagingHost, mqttHost, consoleHost);
+            return new Instance(instanceId, messagingHost, mqttHost, consoleHost, uuid);
         }
     }
 }

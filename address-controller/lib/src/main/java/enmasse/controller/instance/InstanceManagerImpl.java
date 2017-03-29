@@ -1,10 +1,12 @@
 package enmasse.controller.instance;
 
+import enmasse.config.LabelKeys;
 import enmasse.controller.common.OpenShift;
 import enmasse.controller.common.TemplateParameter;
 import enmasse.controller.model.Instance;
 import enmasse.controller.model.InstanceId;
 import io.fabric8.kubernetes.api.model.KubernetesList;
+import io.fabric8.kubernetes.api.model.Namespace;
 import io.fabric8.openshift.api.model.Route;
 import io.fabric8.openshift.client.ParameterValue;
 
@@ -26,7 +28,7 @@ public class InstanceManagerImpl implements InstanceManager {
     public Optional<Instance> get(InstanceId instanceId) {
         if (isMultitenant) {
             Map<String, String> labelMap = new LinkedHashMap<>();
-            labelMap.put("instance", instanceId.getId());
+            labelMap.put(LabelKeys.INSTANCE, instanceId.getId());
             labelMap.put("app", "enmasse");
             labelMap.put("type", "instance");
             return list(labelMap).stream().findAny();
@@ -78,6 +80,7 @@ public class InstanceManagerImpl implements InstanceManager {
         instance.consoleHost().ifPresent(h -> parameterValues.add(new ParameterValue(TemplateParameter.CONSOLE_HOSTNAME, h)));
 
         KubernetesList items = openShift.processTemplate(instanceTemplateName, parameterValues.toArray(new ParameterValue[0]));
+        instance.uuid().ifPresent(uuid -> OpenShift.addObjectLabel(items, LabelKeys.UUID, uuid));
 
         OpenShift instanceClient = openShift.mutateClient(instance.id());
         instanceClient.create(items);

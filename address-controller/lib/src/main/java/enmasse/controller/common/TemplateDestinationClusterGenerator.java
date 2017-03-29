@@ -23,7 +23,6 @@ import enmasse.controller.model.Flavor;
 import enmasse.controller.model.InstanceId;
 import enmasse.controller.address.DestinationCluster;
 import enmasse.config.LabelKeys;
-import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.openshift.client.ParameterValue;
@@ -91,17 +90,9 @@ public class TemplateDestinationClusterGenerator implements DestinationClusterGe
         KubernetesList items = openShift.processTemplate(flavor.templateName(), parameters);
 
         // These are attributes that we need to identify components belonging to this address
-        addObjectLabel(items, LabelKeys.GROUP_ID, OpenShift.sanitizeName(destinationGroup.getGroupId()));
-        addObjectLabel(items, LabelKeys.ADDRESS_CONFIG, OpenShift.sanitizeName("address-config-" + instance.getId() + "-" + destinationGroup.getGroupId()));
+        OpenShift.addObjectLabel(items, LabelKeys.GROUP_ID, OpenShift.sanitizeName(destinationGroup.getGroupId()));
+        OpenShift.addObjectLabel(items, LabelKeys.ADDRESS_CONFIG, OpenShift.sanitizeName("address-config-" + instance.getId() + "-" + destinationGroup.getGroupId()));
+        first.uuid().ifPresent(uuid -> OpenShift.addObjectLabel(items, LabelKeys.UUID, uuid));
         return items;
-    }
-
-
-    private void addObjectLabel(KubernetesList items, String labelKey, String labelValue) {
-        for (HasMetadata item : items.getItems()) {
-            Map<String, String> labels = item.getMetadata().getLabels();
-            labels.put(labelKey, labelValue);
-            item.getMetadata().setLabels(labels);
-        }
     }
 }
