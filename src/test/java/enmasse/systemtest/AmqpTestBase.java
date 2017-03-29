@@ -25,6 +25,8 @@ import org.apache.qpid.proton.engine.SslPeerDetails;
 import org.junit.After;
 import org.junit.Before;
 
+import java.net.Inet4Address;
+import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
@@ -91,16 +93,31 @@ public abstract class AmqpTestBase {
 
     protected AmqpClient createClient(TerminusFactory terminusFactory) throws UnknownHostException {
         if (environment.useTLS()) {
-            Endpoint endpoint = openShift.getRouteEndpoint("messaging");
+            Endpoint messagingEndpoint = openShift.getRouteEndpoint("messaging");
+            Endpoint clientEndpoint;
+            if (resolvable(messagingEndpoint)) {
+                clientEndpoint = messagingEndpoint;
+            } else {
+                clientEndpoint = new Endpoint("localhost", 443);
+            }
             SslDomain sslDomain = SslDomain.Factory.create();
             sslDomain.init(SslDomain.Mode.CLIENT);
             sslDomain.setPeerAuthentication(SslDomain.VerifyMode.ANONYMOUS_PEER);
-            SslPeerDetails sslPeerDetails = SslPeerDetails.Factory.create(endpoint.getHost(), endpoint.getPort());
+            SslPeerDetails sslPeerDetails = SslPeerDetails.Factory.create(messagingEndpoint.getHost(), messagingEndpoint.getPort());
             SslOptions sslOptions = new SslOptions(sslDomain, sslPeerDetails);
-            System.out.println("Endpoint: " + endpoint);
-            return createClient(terminusFactory, endpoint, Optional.of(sslOptions));
+            System.out.println("External endpoint: " + clientEndpoint + ", internal: " + messagingEndpoint);
+            return createClient(terminusFactory, clientEndpoint, Optional.of(sslOptions));
         } else {
             return createClient(terminusFactory, openShift.getInsecureEndpoint(), Optional.empty());
+        }
+    }
+
+    private boolean resolvable(Endpoint endpoint) {
+        try {
+            InetAddress[] addresses = Inet4Address.getAllByName(endpoint.getHost());
+            return addresses.length > 0;
+        } catch (Exception e) {
+            return false;
         }
     }
 
