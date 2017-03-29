@@ -51,8 +51,8 @@ curl https://raw.githubusercontent.com/EnMasseProject/enmasse/master/scripts/enm
 chmod 755 enmasse-deploy.sh
 
 failure=0
-setup_test_secure enmasse-ci-single
-run_test enmasse-ci-single true false || failure=$(($failure + 1))
+setup_test enmasse-ci-single
+run_test enmasse-ci-single false false || failure=$(($failure + 1))
 teardown_test enmasse-ci-single
 
 #setup_test_multitenant enmasse-ci-multi
