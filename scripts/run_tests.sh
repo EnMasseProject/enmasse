@@ -23,6 +23,7 @@ function setup_test_multitenant() {
 }
 
 function setup_test_secure() {
+    PROJECT_NAME=$1
     openssl req -x509 -newkey rsa:4096 -keyout server-key.pem -out server-cert.pem -days 1 -nodes -batch
     ./enmasse-deploy.sh -p $PROJECT_NAME -u test -c https://localhost:8443 -k server-key.pem -s server-cert.pem
     export OPENSHIFT_USE_TLS="true"
