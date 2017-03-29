@@ -5,7 +5,6 @@ import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.messaging.Accepted;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.amqp.messaging.Source;
-import org.apache.qpid.proton.amqp.transport.DeliveryState;
 import org.apache.qpid.proton.engine.*;
 import org.apache.qpid.proton.message.Message;
 import org.apache.qpid.proton.reactor.FlowController;
@@ -26,7 +25,7 @@ public class ReceiveHandler extends ClientHandlerBase {
 
     protected void openLink(Session session) {
         Source source = clientOptions.getSource();
-        Receiver receiver = session.receiver(source.getAddress());
+        Receiver receiver = session.receiver(clientOptions.getLinkName().orElse(source.getAddress()));
         receiver.setSource(source);
 
         receiver.open();
@@ -47,19 +46,20 @@ public class ReceiveHandler extends ClientHandlerBase {
     @Override
     public void onLinkRemoteClose(Event event) {
         Link link = event.getLink();
-        if (link.getCondition() != null && AMQP_LINK_REDIRECT.equals(link.getCondition().getCondition())) {
-            String relocated = (String) link.getCondition().getInfo().get("address");
+        System.out.println("onLinkRemoteClose condition: " + link.getCondition());
+        System.out.println("onLinkRemoteClose remoteCondition: " + link.getRemoteCondition());
+        if (link.getRemoteCondition() != null && AMQP_LINK_REDIRECT.equals(link.getRemoteCondition().getCondition())) {
+            String relocated = (String) link.getRemoteCondition().getInfo().get("address");
             System.out.println("Receiver link redirected to " + relocated);
             Source newSource = clientOptions.getSource();
             newSource.setAddress(relocated);
+            String linkName = clientOptions.getLinkName().orElse(newSource.getAddress());
 
-            Receiver receiver = event.getSession().receiver(relocated);
-            receiver.setSource(newSource);
-            receiver.open();
+            event.getReactor().schedule(0, new ReconnectHandler(link.getSession(), newSource, linkName));
         } else {
-            link.close();
-            handleError(link.getCondition());
+            handleError(link.getRemoteCondition());
         }
+        link.close();
     }
 
 
@@ -83,6 +83,25 @@ public class ReceiveHandler extends ClientHandlerBase {
                 event.getConnection().close();
                 promise.complete(messages);
             }
+        }
+    }
+
+    private static class ReconnectHandler extends BaseHandler {
+        private final Session session;
+        private final Source source;
+        private final String linkName;
+
+        public ReconnectHandler(Session session, Source source, String linkName) {
+            this.session = session;
+            this.source = source;
+            this.linkName = linkName;
+        }
+
+        @Override
+        public void onTimerTask(Event event) {
+            Receiver receiver = session.receiver(linkName);
+            receiver.setSource(source);
+            receiver.open();
         }
     }
 }

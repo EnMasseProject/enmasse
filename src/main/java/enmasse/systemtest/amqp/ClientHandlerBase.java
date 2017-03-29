@@ -30,7 +30,7 @@ public abstract class ClientHandlerBase extends BaseHandler {
     @Override
     public void onConnectionInit(Event event) {
         Connection connection = event.getConnection();
-        connection.setHostname("enmasse-systemtest-client");
+        connection.setContainer("enmasse-systemtest-client");
         connection.open();
     }
 

@@ -54,14 +54,14 @@ public abstract class AmqpTestBase {
         cleanup();
         addressApiClient.close();
         vertx.close();
-        for (AmqpClient client : clients) {
-            client.close();
-        }
         clients.clear();
     }
 
     private void cleanup() throws Exception {
         deploy();
+        for (AmqpClient client : clients) {
+            client.close();
+        }
     }
 
     protected void deploy(Destination ... destinations) throws Exception {

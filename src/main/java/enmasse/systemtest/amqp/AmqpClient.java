@@ -46,22 +46,22 @@ public class AmqpClient implements AutoCloseable {
     }
 
     public Future<List<String>> recvMessages(String address, int numMessages, long connectTimeout, TimeUnit timeUnit) throws InterruptedException, IOException {
-        return recvMessages(terminusFactory.getSource(address), numMessages, connectTimeout, timeUnit);
+        return recvMessages(terminusFactory.getSource(address), numMessages, Optional.empty(), connectTimeout, timeUnit);
     }
 
-    public Future<List<String>> recvMessages(Source source, int numMessages) throws InterruptedException, IOException {
-        return recvMessages(source, numMessages, 1, TimeUnit.MINUTES);
+    public Future<List<String>> recvMessages(Source source, String linkName, int numMessages) throws InterruptedException, IOException {
+        return recvMessages(source, numMessages, Optional.of(linkName), 1, TimeUnit.MINUTES);
     }
 
-    public Future<List<String>> recvMessages(Source source, Predicate<Message> done) throws InterruptedException, IOException {
-        return recvMessages(source, done, 1, TimeUnit.MINUTES);
+    public Future<List<String>> recvMessages(Source source,String linkName, Predicate<Message> done) throws InterruptedException, IOException {
+        return recvMessages(source, done, Optional.of(linkName), 1, TimeUnit.MINUTES);
     }
 
-    public Future<List<String>> recvMessages(Source source, Predicate<Message> done, long connectTimeout, TimeUnit timeUnit) throws InterruptedException, IOException {
+    public Future<List<String>> recvMessages(Source source, Predicate<Message> done, Optional<String> linkName, long connectTimeout, TimeUnit timeUnit) throws InterruptedException, IOException {
         CompletableFuture<List<String>> promise = new CompletableFuture<>();
         CountDownLatch connectLatch = new CountDownLatch(1);
         Reactor reactor = Reactor.Factory.create();
-        reactor.setHandler(new ReceiveHandler(endpoint, done, promise, new ClientOptions(source, new Target(), sslOptions), connectLatch));
+        reactor.setHandler(new ReceiveHandler(endpoint, done, promise, new ClientOptions(source, new Target(), sslOptions, linkName), connectLatch));
         reactors.add(reactor);
         executorService.execute(reactor::run);
         if (!connectLatch.await(connectTimeout, timeUnit)) {
@@ -93,8 +93,8 @@ public class AmqpClient implements AutoCloseable {
         }
     }
 
-    public Future<List<String>> recvMessages(Source source, int numMessages, long connectTimeout, TimeUnit timeUnit) throws InterruptedException, IOException {
-        return recvMessages(source, new Count(numMessages), connectTimeout, timeUnit);
+    public Future<List<String>> recvMessages(Source source, int numMessages, Optional<String> linkName, long connectTimeout, TimeUnit timeUnit) throws InterruptedException, IOException {
+        return recvMessages(source, new Count(numMessages), linkName, connectTimeout, timeUnit);
     }
 
     public Future<Integer> sendMessages(String address, List<String> messages) throws IOException, InterruptedException {
@@ -119,7 +119,7 @@ public class AmqpClient implements AutoCloseable {
         CountDownLatch connectLatch = new CountDownLatch(1);
         Queue<Message> messageQueue = new LinkedList<>(Arrays.asList(messages));
         Reactor reactor = Reactor.Factory.create();
-        reactor.setHandler(new SendHandler(endpoint, new ClientOptions(terminusFactory.getSource(address), terminusFactory.getTarget(address), sslOptions), connectLatch, promise, messageQueue));
+        reactor.setHandler(new SendHandler(endpoint, new ClientOptions(terminusFactory.getSource(address), terminusFactory.getTarget(address), sslOptions, Optional.empty()), connectLatch, promise, messageQueue));
         reactors.add(reactor);
         executorService.execute(reactor::run);
         if (!connectLatch.await(connectTimeout, timeUnit)) {

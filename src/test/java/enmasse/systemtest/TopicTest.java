@@ -59,6 +59,7 @@ public class TopicTest extends AmqpTestBase {
     @Test
     public void testDurableLinkRoutedSubscription() throws Exception {
         Destination dest = Destination.topic("mytopic");
+        String linkName = "systest-durable";
         deploy(dest);
         scale(dest, 4);
 
@@ -71,20 +72,27 @@ public class TopicTest extends AmqpTestBase {
         List<String> batch1 = Arrays.asList("one", "two", "three");
 
         System.out.println("Receiving first batch");
-        Future<List<String>> recvResults = client.recvMessages(source, batch1.size());
+        Future<List<String>> recvResults = client.recvMessages(source, linkName, batch1.size());
+
+        // Wait for the redirect to kick in
+        Thread.sleep(30_000);
+
         System.out.println("Sending first batch");
-        assertThat(client.sendMessages(dest.getAddress(), batch1).get(1, TimeUnit.MINUTES), is(batch1.size()));
-        assertThat(recvResults.get(1, TimeUnit.MINUTES), is(batch1));
+        assertThat(client.sendMessages(dest.getAddress(), batch1).get(20, TimeUnit.SECONDS), is(batch1.size()));
+        assertThat(recvResults.get(20, TimeUnit.SECONDS), is(batch1));
 
         System.out.println("Sending second batch");
         List<String> batch2 = Arrays.asList("four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve");
         assertThat(client.sendMessages(dest.getAddress(), batch2).get(1, TimeUnit.MINUTES), is(batch2.size()));
 
+        System.out.println("Done, waiting for 20 seconds");
+        Thread.sleep(20_000);
+
         source.setAddress("locate/" + dest.getAddress());
         //at present may get one or more of the first three messages
         //redelivered due to DISPATCH-595, so use more lenient checks
         System.out.println("Receiving second batch again");
-        recvResults = client.recvMessages(source, message -> {
+        recvResults = client.recvMessages(source, linkName, message -> {
                 String body = (String) ((AmqpValue) message.getBody()).getValue();
                 System.out.println("received " + body);
                 return "twelve".equals(body);

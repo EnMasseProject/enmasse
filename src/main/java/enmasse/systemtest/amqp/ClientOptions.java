@@ -12,11 +12,13 @@ public class ClientOptions {
     private final Source source;
     private final Target target;
     private final Optional<SslOptions> sslOptions;
+    private final Optional<String> linkName;
 
-    public ClientOptions(Source source, Target target, Optional<SslOptions> sslOptions) {
+    public ClientOptions(Source source, Target target, Optional<SslOptions> sslOptions, Optional<String> linkName) {
         this.source = source;
         this.target = target;
         this.sslOptions = sslOptions;
+        this.linkName = linkName;
     }
 
     public Source getSource() {
@@ -29,5 +31,9 @@ public class ClientOptions {
 
     public Target getTarget() {
         return target;
+    }
+
+    public Optional<String> getLinkName() {
+        return linkName;
     }
 }
