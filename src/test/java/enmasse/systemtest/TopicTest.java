@@ -148,7 +148,7 @@ public class TopicTest extends AmqpTestBase {
 
         System.out.println("Receiving another 61 messages");
         recvResult = queueClient.recvMessages(address, 61);
-        assertThat(recvResult.get(1, TimeUnit.MINUTES).size(), is(61);
+        assertThat(recvResult.get(1, TimeUnit.MINUTES).size(), is(61));
 
         Message unsub = Message.Factory.create();
         unsub.setAddress("$subctrl");
