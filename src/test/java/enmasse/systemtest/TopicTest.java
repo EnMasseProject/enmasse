@@ -124,19 +124,18 @@ public class TopicTest extends AmqpTestBase {
         System.out.println("Sending subscribe");
         subClient.sendMessages("$subctrl", sub).get(1, TimeUnit.MINUTES);
 
-        System.out.println("Sending 122 messages");
+        System.out.println("Sending 12 messages");
 
-        List<String> msgs = TestUtils.generateMessages(122);
+        List<String> msgs = TestUtils.generateMessages(12);
         assertThat(topicClient.sendMessages(dest.getAddress(),msgs).get(1, TimeUnit.MINUTES), is(msgs.size()));
 
-        System.out.println("Receiving 61 messages");
-        Future<List<String>> recvResult = queueClient.recvMessages(address, 61);
-        assertThat(recvResult.get(1, TimeUnit.MINUTES).size(), is(61));
+        System.out.println("Receiving 6 messages");
+        Future<List<String>> recvResult = queueClient.recvMessages(address, 6);
+        assertThat(recvResult.get(1, TimeUnit.MINUTES).size(), is(6));
 
         // Do scaledown and 'reconnect' receiver and verify that we got everything
 
         /*
-        System.out.println("Scale down brokers");
         scale(dest, 3);
         Thread.sleep(5_000);
         scale(dest, 2);
@@ -146,9 +145,9 @@ public class TopicTest extends AmqpTestBase {
         Thread.sleep(30_000);
         */
 
-        System.out.println("Receiving another 61 messages");
-        recvResult = queueClient.recvMessages(address, 61);
-        assertThat(recvResult.get(1, TimeUnit.MINUTES).size(), is(61));
+        System.out.println("Receiving another 6 messages");
+        recvResult = queueClient.recvMessages(address, 6);
+        assertThat(recvResult.get(1, TimeUnit.MINUTES).size(), is(6));
 
         Message unsub = Message.Factory.create();
         unsub.setAddress("$subctrl");
