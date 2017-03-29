@@ -78,8 +78,8 @@ public class TopicTest extends AmqpTestBase {
         Thread.sleep(30_000);
 
         System.out.println("Sending first batch");
-        assertThat(client.sendMessages(dest.getAddress(), batch1).get(20, TimeUnit.SECONDS), is(batch1.size()));
-        assertThat(recvResults.get(20, TimeUnit.SECONDS), is(batch1));
+        assertThat(client.sendMessages(dest.getAddress(), batch1).get(1, TimeUnit.MINUTES), is(batch1.size()));
+        assertThat(recvResults.get(1, TimeUnit.MINUTES), is(batch1));
 
         System.out.println("Sending second batch");
         List<String> batch2 = Arrays.asList("four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve");
