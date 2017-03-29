@@ -4,6 +4,7 @@ import org.apache.qpid.proton.amqp.messaging.Accepted;
 import org.apache.qpid.proton.engine.*;
 import org.apache.qpid.proton.message.Message;
 import org.apache.qpid.proton.message.impl.MessageImpl;
+import org.apache.qpid.proton.reactor.FlowController;
 
 import java.util.Queue;
 import java.util.concurrent.CompletableFuture;
@@ -21,6 +22,7 @@ class SendHandler extends ClientHandlerBase {
 
     public SendHandler(enmasse.systemtest.Endpoint endpoint, ClientOptions clientOptions, CountDownLatch connectLatch, CompletableFuture<Integer> promise, Queue<Message> messages) {
         super(endpoint, clientOptions, connectLatch);
+        add(new FlowController());
         this.promise = promise;
         this.messageQueue = messages;
         this.numToSend = messages.size();

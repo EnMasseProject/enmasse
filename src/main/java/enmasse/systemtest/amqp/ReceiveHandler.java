@@ -29,6 +29,7 @@ public class ReceiveHandler extends ClientHandlerBase {
         receiver.setSource(source);
 
         receiver.open();
+        receiver.flow(1);
     }
 
     public ReceiveHandler(enmasse.systemtest.Endpoint endpoint, Predicate<Message> done, CompletableFuture<List<String>> promise, ClientOptions clientOptions, CountDownLatch connectLatch) {
@@ -82,6 +83,8 @@ public class ReceiveHandler extends ClientHandlerBase {
             if (done.test(message)) {
                 event.getConnection().close();
                 promise.complete(messages);
+            } else {
+                receiver.flow(1);
             }
         }
     }
@@ -102,6 +105,7 @@ public class ReceiveHandler extends ClientHandlerBase {
             Receiver receiver = session.receiver(linkName);
             receiver.setSource(source);
             receiver.open();
+            receiver.flow(1);
         }
     }
 }

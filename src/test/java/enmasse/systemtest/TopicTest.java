@@ -34,9 +34,8 @@ import static org.junit.Assert.assertTrue;
 
 public class TopicTest extends AmqpTestBase {
 
-    @Test
     public void testMultipleSubscribers() throws Exception {
-        Destination dest = Destination.topic("mytopic");
+        Destination dest = Destination.topic("manytopic");
         deploy(dest);
         scale(dest, 4);
         AmqpClient client = createTopicClient();
@@ -56,9 +55,8 @@ public class TopicTest extends AmqpTestBase {
         assertThat(recvResults.get(2).get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
     }
 
-    @Test
     public void testDurableLinkRoutedSubscription() throws Exception {
-        Destination dest = Destination.topic("mytopic");
+        Destination dest = Destination.topic("lrtopic");
         String linkName = "systest-durable";
         deploy(dest);
         scale(dest, 4);
@@ -102,7 +100,7 @@ public class TopicTest extends AmqpTestBase {
 
     @Test
     public void testDurableMessageRoutedSubscription() throws Exception {
-        Destination dest = Destination.topic("mytopic");
+        Destination dest = Destination.topic("mrtopic");
         String address = "myaddress";
         System.out.println("Deploying");
         deploy(dest);
@@ -111,7 +109,7 @@ public class TopicTest extends AmqpTestBase {
 
         Thread.sleep(60_000);
 
-        AmqpClient subClient = createClient(new QueueTerminusFactory(), openShift.getEndpoint("subscription", "amqp"));
+        AmqpClient subClient = createQueueClient();
         AmqpClient queueClient = createQueueClient();
         AmqpClient topicClient = createTopicClient();
 

@@ -15,7 +15,6 @@ public abstract class ClientHandlerBase extends BaseHandler {
 
     public ClientHandlerBase(enmasse.systemtest.Endpoint endpoint, ClientOptions clientOptions, CountDownLatch connectLatch) {
         add(new Handshaker());
-        add(new FlowController());
         this.endpoint = endpoint;
         this.clientOptions = clientOptions;
         this.connectLatch = connectLatch;
