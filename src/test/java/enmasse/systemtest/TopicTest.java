@@ -130,11 +130,12 @@ public class TopicTest extends AmqpTestBase {
         assertThat(topicClient.sendMessages(dest.getAddress(),msgs).get(1, TimeUnit.MINUTES), is(msgs.size()));
 
         System.out.println("Receiving 61 messages");
-        Future<List<String>> recvResult = queueClient.recvMessages(address, 1);
-        assertThat(recvResult.get(1, TimeUnit.MINUTES).size(), is(1));
+        Future<List<String>> recvResult = queueClient.recvMessages(address, 61);
+        assertThat(recvResult.get(1, TimeUnit.MINUTES).size(), is(61));
 
         // Do scaledown and 'reconnect' receiver and verify that we got everything
 
+        /*
         System.out.println("Scale down brokers");
         scale(dest, 3);
         Thread.sleep(5_000);
@@ -143,10 +144,11 @@ public class TopicTest extends AmqpTestBase {
         scale(dest, 1);
 
         Thread.sleep(30_000);
+        */
 
         System.out.println("Receiving another 61 messages");
-        recvResult = queueClient.recvMessages(address, 2);
-        assertThat(recvResult.get(1, TimeUnit.MINUTES).size(), is(2));
+        recvResult = queueClient.recvMessages(address, 61);
+        assertThat(recvResult.get(1, TimeUnit.MINUTES).size(), is(61);
 
         Message unsub = Message.Factory.create();
         unsub.setAddress("$subctrl");
