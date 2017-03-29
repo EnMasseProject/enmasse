@@ -34,6 +34,7 @@ import static org.junit.Assert.assertTrue;
 
 public class TopicTest extends AmqpTestBase {
 
+    @Test
     public void testMultipleSubscribers() throws Exception {
         Destination dest = Destination.topic("manytopic");
         deploy(dest);
@@ -55,6 +56,7 @@ public class TopicTest extends AmqpTestBase {
         assertThat(recvResults.get(2).get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
     }
 
+    @Test
     public void testDurableLinkRoutedSubscription() throws Exception {
         Destination dest = Destination.topic("lrtopic");
         String linkName = "systest-durable";
