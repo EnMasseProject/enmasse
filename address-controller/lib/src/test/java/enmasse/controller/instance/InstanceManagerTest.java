@@ -1,6 +1,8 @@
 package enmasse.controller.instance;
 
+import enmasse.controller.address.DestinationCluster;
 import enmasse.controller.common.OpenShift;
+import enmasse.controller.model.DestinationGroup;
 import enmasse.controller.model.Instance;
 import enmasse.controller.model.InstanceId;
 import io.fabric8.kubernetes.api.model.KubernetesList;
@@ -8,6 +10,8 @@ import io.fabric8.openshift.client.ParameterValue;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -15,6 +19,7 @@ import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.matches;
 import static org.mockito.Mockito.*;
@@ -47,6 +52,20 @@ public class InstanceManagerTest {
         assertParameter(values, "INSTANCE", "myid2");
         assertParameter(values, "MESSAGING_HOSTNAME", "messaging.example.com");
         assertParameter(values, "MQTT_GATEWAY_HOSTNAME", "mqtt.example.com");
+
+        // Try to delete instance that has addresses
+        when(mockClient.listClusters()).thenReturn(Arrays.asList(new DestinationCluster(mockClient, new DestinationGroup("foo", Collections.emptySet()), new KubernetesList())))
+                .thenReturn(Collections.emptyList());
+
+        try {
+            controller.delete(i1);
+            fail("Expected exception when deleting instance that is in use");
+        } catch (IllegalArgumentException e) {
+            // pass
+        }
+
+        // second time works
+        controller.delete(i1);
     }
 
     private void assertParameter(List<ParameterValue> values, String name, String value) {

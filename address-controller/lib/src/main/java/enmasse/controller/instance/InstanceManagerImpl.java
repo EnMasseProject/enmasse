@@ -85,7 +85,11 @@ public class InstanceManagerImpl implements InstanceManager {
 
     @Override
     public void delete(Instance instance) {
-        openShift.deleteNamespace(instance.id().getNamespace());
+        if (openShift.mutateClient(instance.id()).listClusters().isEmpty()) {
+            openShift.deleteNamespace(instance.id().getNamespace());
+        } else {
+            throw new IllegalArgumentException("Instance " + instance.id() + " still has active destinations");
+        }
     }
 
     @Override
