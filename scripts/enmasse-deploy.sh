@@ -50,8 +50,9 @@ TEMPLATE_PARAMS=""
 
 DEFAULT_OPENSHIFT_USER=developer
 DEFAULT_OPENSHIFT_PROJECT=myproject
+OC_ARGS=""
 
-while getopts c:dgk:mo:p:s:t:u:h opt; do
+while getopts c:dgk:mo:p:s:t:u:yh opt; do
     case $opt in
         c)
             OS_CLUSTER=$OPTARG
@@ -83,6 +84,9 @@ while getopts c:dgk:mo:p:s:t:u:h opt; do
         u)
             OS_USER=$OPTARG
             USER_REQUESTED=true
+            ;;
+        y)
+            OC_ARGS="--insecure-skip-tls-verify=true"
             ;;
         h)
             echo "usage: enmasse-deploy.sh [options]"
@@ -138,7 +142,7 @@ then
 fi
 
 
-runcmd "oc login $OS_CLUSTER -u $OS_USER" "Login as $OS_USER"
+runcmd "oc login $OS_CLUSTER -u $OS_USER $OC_ARGS" "Login as $OS_USER"
 
 AVAILABLE_PROJECTS=`docmd "oc projects -q"`
 
