@@ -5,7 +5,7 @@ set -x
 function setup_test() {
     PROJECT_NAME=$1
 
-    ./enmasse-deploy.sh -p $PROJECT_NAME -u test -c https://localhost:8443
+    ./enmasse-deploy.sh -y -p $PROJECT_NAME -u test -c https://localhost:8443
 }
 
 function teardown_test() {
@@ -16,7 +16,7 @@ function teardown_test() {
 
 function setup_test_multitenant() {
     PROJECT_NAME=$1
-    ./enmasse-deploy.sh -p $PROJECT_NAME -u test -c https://localhost:8443 -m
+    ./enmasse-deploy.sh -y -p $PROJECT_NAME -u test -c https://localhost:8443 -m
 
     sudo ./openshift/oadm --config openshift.local.config/master/admin.kubeconfig policy add-cluster-role-to-user cluster-admin system:serviceaccount:$(oc project -q):enmasse-service-account
     sudo ./openshift/oadm --config openshift.local.config/master/admin.kubeconfig policy add-cluster-role-to-user cluster-admin test
@@ -25,7 +25,7 @@ function setup_test_multitenant() {
 function setup_test_secure() {
     PROJECT_NAME=$1
     openssl req -x509 -newkey rsa:4096 -keyout server-key.pem -out server-cert.pem -days 1 -nodes -batch
-    ./enmasse-deploy.sh -p $PROJECT_NAME -u test -c https://localhost:8443 -k server-key.pem -s server-cert.pem
+    ./enmasse-deploy.sh -y -p $PROJECT_NAME -u test -c https://localhost:8443 -k server-key.pem -s server-cert.pem
     export OPENSHIFT_USE_TLS="true"
     export OPENSHIFT_SERVER_CERT=`cat server-cert.pem`
 }
