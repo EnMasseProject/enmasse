@@ -1,6 +1,6 @@
 package enmasse.controller.common;
 
-import enmasse.controller.model.DestinationGroup;
+import enmasse.controller.model.Destination;
 import enmasse.controller.model.InstanceId;
 import enmasse.controller.address.DestinationCluster;
 import io.fabric8.kubernetes.api.model.ConfigMap;
@@ -12,6 +12,7 @@ import io.fabric8.openshift.client.ParameterValue;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Interface for OpenShift operations done by the address controller
@@ -34,10 +35,10 @@ public interface OpenShift {
     OpenShift mutateClient(InstanceId instance);
 
     List<DestinationCluster> listClusters();
-    void updateDestinations(DestinationGroup destinationGroup);
+    void updateDestinations(Set<Destination> destinations);
     void create(KubernetesList resources);
     void delete(KubernetesList resources);
-    ConfigMap createAddressConfig(DestinationGroup destinationGroup);
+    ConfigMap createAddressConfig(Set<Destination> destinations);
     KubernetesList processTemplate(String templateName, ParameterValue ... parameterValues);
 
     Namespace createNamespace(InstanceId instance);

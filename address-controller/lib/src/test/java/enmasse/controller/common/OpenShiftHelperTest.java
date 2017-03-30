@@ -17,13 +17,11 @@
 package enmasse.controller.common;
 
 import enmasse.controller.model.Destination;
-import enmasse.controller.model.DestinationGroup;
 import enmasse.controller.model.Flavor;
 import enmasse.controller.model.InstanceId;
 import enmasse.controller.address.DestinationCluster;
 import enmasse.config.AddressEncoder;
 import enmasse.config.LabelKeys;
-import enmasse.controller.common.OpenShiftHelper;
 import enmasse.controller.flavor.FlavorManager;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.extensions.Deployment;
@@ -142,23 +140,23 @@ public class OpenShiftHelperTest {
         assertThat(clusters.size(), is(2));
 
         DestinationCluster cluster = clusters.get(1);
-        DestinationGroup group = cluster.getDestinationGroup();
-        assertThat(group.getDestinations().size(), is(1));
-        assertDestination(group.getDestinations(), "anycast", false, false, Optional.empty());
+        Set<Destination> group = cluster.getDestinations();
+        assertThat(group.size(), is(1));
+        assertDestination(group, "anycast", false, false, Optional.empty());
 
         cluster = clusters.get(0);
-        group = cluster.getDestinationGroup();
-        assertThat(group.getDestinations().size(), is(2));
-        assertDestination(group.getDestinations(), "myqueue", true, false, Optional.of("vanilla"));
-        assertDestination(group.getDestinations(), "myqueue2", true, false, Optional.of("vanilla"));
+        group = cluster.getDestinations();
+        assertThat(group.size(), is(2));
+        assertDestination(group, "myqueue", true, false, Optional.of("vanilla"));
+        assertDestination(group, "myqueue2", true, false, Optional.of("vanilla"));
     }
 
     @Test
     public void testCreateAddressConfig() {
         OpenShiftClient mockClient = mock(OpenShiftClient.class);
         OpenShiftHelper helper = new OpenShiftHelper(InstanceId.withId("myinstance"), mockClient);
-        DestinationGroup group = new DestinationGroup("group1", Sets.newSet(new Destination("queue1", "group1", true, false, Optional.of("vanilla"), Optional.empty()),
-                new Destination("queue2", "group1", true, false, Optional.of("vanilla"), Optional.empty())));
+        Set<Destination> group = Sets.newSet(new Destination("queue1", "group1", true, false, Optional.of("vanilla"), Optional.empty()),
+                new Destination("queue2", "group1", true, false, Optional.of("vanilla"), Optional.empty()));
 
         ConfigMap addressConfig = helper.createAddressConfig(group);
 

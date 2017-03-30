@@ -16,13 +16,12 @@
 
 package enmasse.controller.common;
 
+import enmasse.config.LabelKeys;
+import enmasse.controller.address.DestinationCluster;
 import enmasse.controller.flavor.FlavorRepository;
 import enmasse.controller.model.Destination;
-import enmasse.controller.model.DestinationGroup;
 import enmasse.controller.model.Flavor;
 import enmasse.controller.model.InstanceId;
-import enmasse.controller.address.DestinationCluster;
-import enmasse.config.LabelKeys;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.openshift.client.ParameterValue;
@@ -30,6 +29,7 @@ import io.fabric8.openshift.client.ParameterValue;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -52,30 +52,31 @@ public class TemplateDestinationClusterGenerator implements DestinationClusterGe
      *
      * NOTE: This method assumes that all destinations within a group share the same properties.
      *
-     * @param destinationGroup The group of destinations to generate cluster for
+     * @param destinations The set of destinations to generate cluster for
      */
-    public DestinationCluster generateCluster(DestinationGroup destinationGroup) {
-        Destination first = destinationGroup.getDestinations().iterator().next();
+    public DestinationCluster generateCluster(Set<Destination> destinations) {
+        Destination first = destinations.iterator().next();
         Optional<Flavor> flavor = first.flavor()
                 .map(f -> flavorRepository.getFlavor(f, TimeUnit.SECONDS.toMillis(60)));
 
-        KubernetesList resources = flavor.map(f -> processTemplate(first, destinationGroup, f)).orElse(new KubernetesList());
+        KubernetesList resources = flavor.map(f -> processTemplate(first, destinations, f)).orElse(new KubernetesList());
 
         KubernetesListBuilder combined = new KubernetesListBuilder(resources);
-        combined.addToItems(openShift.createAddressConfig(destinationGroup));
+        combined.addToItems(openShift.createAddressConfig(destinations));
 
-        return new DestinationCluster(openShift, destinationGroup, combined.build());
+        return new DestinationCluster(openShift, destinations, combined.build());
     }
 
-    private KubernetesList processTemplate(Destination first, DestinationGroup destinationGroup, Flavor flavor) {
+    private KubernetesList processTemplate(Destination first, Set<Destination> destinations, Flavor flavor) {
+        String groupId = destinations.iterator().next().group();
         Map<String, String> paramMap = new LinkedHashMap<>(flavor.templateParameters());
 
         // If the flavor is shared, there is only one instance of it, so give it the name of the flavor
-        paramMap.put(TemplateParameter.NAME, OpenShift.sanitizeName(destinationGroup.getGroupId()));
+        paramMap.put(TemplateParameter.NAME, OpenShift.sanitizeName(groupId));
         paramMap.put(TemplateParameter.INSTANCE, OpenShift.sanitizeName(instance.getId()));
 
         // If the name of the group matches that of the address, assume a scalable queue
-        if (destinationGroup.getGroupId().equals(first.address()) && destinationGroup.getDestinations().size() == 1) {
+        if (groupId.equals(first.address()) && destinations.size() == 1) {
             paramMap.put(TemplateParameter.ADDRESS, first.address());
         } else {
             paramMap.put(TemplateParameter.ADDRESS, "ENMASSE_INTERNAL_RESERVED");
@@ -90,8 +91,8 @@ public class TemplateDestinationClusterGenerator implements DestinationClusterGe
         KubernetesList items = openShift.processTemplate(flavor.templateName(), parameters);
 
         // These are attributes that we need to identify components belonging to this address
-        OpenShift.addObjectLabel(items, LabelKeys.GROUP_ID, OpenShift.sanitizeName(destinationGroup.getGroupId()));
-        OpenShift.addObjectLabel(items, LabelKeys.ADDRESS_CONFIG, OpenShift.sanitizeName("address-config-" + instance.getId() + "-" + destinationGroup.getGroupId()));
+        OpenShift.addObjectLabel(items, LabelKeys.GROUP_ID, OpenShift.sanitizeName(groupId));
+        OpenShift.addObjectLabel(items, LabelKeys.ADDRESS_CONFIG, OpenShift.sanitizeName("address-config-" + instance.getId() + "-" + groupId));
         first.uuid().ifPresent(uuid -> OpenShift.addObjectLabel(items, LabelKeys.UUID, uuid));
         return items;
     }

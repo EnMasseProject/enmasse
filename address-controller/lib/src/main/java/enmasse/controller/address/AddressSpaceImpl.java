@@ -19,14 +19,10 @@ package enmasse.controller.address;
 import enmasse.controller.common.OpenShift;
 import enmasse.controller.common.DestinationClusterGenerator;
 import enmasse.controller.model.Destination;
-import enmasse.controller.model.DestinationGroup;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -39,74 +35,124 @@ public class AddressSpaceImpl implements AddressSpace {
     private final DestinationClusterGenerator generator;
 
     public AddressSpaceImpl(OpenShift openShift, DestinationClusterGenerator generator) {
-        this.   openShift = openShift;
+        this.openShift = openShift;
         this.generator = generator;
+    }
+
+    @Override
+    public Set<Destination> addDestination(Destination destination) {
+        List<DestinationCluster> clusterList = openShift.listClusters();
+        Set<Destination> destinations = getClusterDestinations(clusterList);
+        destinations.add(destination);
+        setDestinations(destinations, clusterList);
+        return destinations;
+    }
+
+    @Override
+    public Set<Destination> addDestinations(Set<Destination> destinations) {
+        List<DestinationCluster> clusterList = openShift.listClusters();
+        Set<Destination> currentDestinations = getClusterDestinations(clusterList);
+        currentDestinations.addAll(destinations);
+        setDestinations(destinations, clusterList);
+        return currentDestinations;
+    }
+
+    private Set<Destination> getClusterDestinations(List<DestinationCluster> clusterList) {
+        return clusterList.stream().map(DestinationCluster::getDestinations).flatMap(Collection::stream).collect(Collectors.toSet());
+    }
+
+    @Override
+    public Set<Destination> deleteDestination(String address) {
+        List<DestinationCluster> clusterList = openShift.listClusters();
+        Set<Destination> destinations = getClusterDestinations(clusterList);
+        Iterator<Destination> it = destinations.iterator();
+        while (it.hasNext()) {
+            Destination destination = it.next();
+            if (destination.address().equals(address)) {
+                it.remove();
+            }
+        }
+        setDestinations(destinations, clusterList);
+        return destinations;
+    }
+
+    @Override
+    public Set<Destination> setDestinations(Set<Destination> destinations) {
+        List<DestinationCluster> clusterList = openShift.listClusters();
+        setDestinations(destinations, clusterList);
+        return destinations;
     }
 
     /**
      * Set the destinations for this address space.
      */
-    @Override
-    public synchronized void setDestinations(Set<DestinationGroup> newGroups) {
-        newGroups.forEach(AddressSpaceImpl::validateDestinationGroup);
+    private void setDestinations(Set<Destination> newDestinations, List<DestinationCluster> clusterList) {
+        Map<String, Set<Destination>> destinationByGroup = newDestinations.stream().collect(Collectors.groupingBy(Destination::group, Collectors.toSet()));
+        validateDestinationGroups(destinationByGroup);
 
-        List<DestinationCluster> clusterList = openShift.listClusters();
-        log.info("Brokers got updated to " + newGroups.size() + " groups. We have " + clusterList.size() + " groups: " + clusterList.stream().map(DestinationCluster::getDestinationGroup).collect(Collectors.toList()));
-        createBrokers(clusterList, newGroups);
-        updateBrokers(clusterList, newGroups);
-        deleteBrokers(clusterList, newGroups);
+
+        log.info("Brokers got updated to " + destinationByGroup.size() + " groups. We have " + clusterList.size() + " groups: " + getClusterDestinations(clusterList));
+        createBrokers(clusterList, destinationByGroup);
+        updateBrokers(clusterList, destinationByGroup);
+        deleteBrokers(clusterList, destinationByGroup);
     }
+
 
     /**
      * Return the destinations for this address space.
      */
     @Override
-    public synchronized Set<DestinationGroup> getDestinations() {
-        return openShift.listClusters().stream().map(DestinationCluster::getDestinationGroup).collect(Collectors.toSet());
+    public synchronized Set<Destination> getDestinations() {
+        return getClusterDestinations(openShift.listClusters());
     }
 
     /*
      * Ensure that a destination groups meet the criteria of all destinations sharing the same properties, until we can
      * support a mix.
      */
-    private static void validateDestinationGroup(DestinationGroup destinationGroup) {
-        Iterator<Destination> it = destinationGroup.getDestinations().iterator();
-        Destination first = it.next();
-        while (it.hasNext()) {
-            Destination current = it.next();
-            if (current.storeAndForward() != first.storeAndForward() &&
-                    current.multicast() != first.multicast() &&
-                    current.flavor() != first.flavor()) {
-                throw new IllegalArgumentException("All destinations in a destination group must share the same properties. Found: " + destinationGroup);
+    private static void validateDestinationGroups(Map<String, Set<Destination>> destinationByGroup) {
+        for (Map.Entry<String, Set<Destination>> entry : destinationByGroup.entrySet()) {
+            Iterator<Destination> it = entry.getValue().iterator();
+            Destination first = it.next();
+            while (it.hasNext()) {
+                Destination current = it.next();
+                if (current.storeAndForward() != first.storeAndForward() ||
+                    current.multicast() != first.multicast() ||
+                    !current.flavor().equals(first.flavor()) ||
+                    !current.group().equals(first.group())) {
+
+                    throw new IllegalArgumentException("All destinations in a destination group must share the same properties. Found: " + current + " and " + first);
+                }
             }
         }
     }
 
-    private static boolean brokerExists(Collection<DestinationCluster> clusterList, DestinationGroup destinationGroup) {
-        return clusterList.stream()
-                .anyMatch(cluster -> cluster.getDestinationGroup().equals(destinationGroup));
+    private static boolean brokerExists(Collection<DestinationCluster> clusterList, String groupId) {
+        return clusterList.stream().anyMatch(cluster -> cluster.getClusterId().equals(groupId));
     }
 
-    private void createBrokers(Collection<DestinationCluster> clusterList, Collection<DestinationGroup> newDestinationGroups) {
-        newDestinationGroups.stream()
-                .filter(group -> !brokerExists(clusterList, group))
-                .map(generator::generateCluster)
+    private void createBrokers(Collection<DestinationCluster> clusterList, Map<String, Set<Destination>> newDestinationGroups) {
+        newDestinationGroups.entrySet().stream()
+                .filter(group -> !brokerExists(clusterList, group.getKey()))
+                .map(group -> {
+                    return generator.generateCluster(group.getValue());
+                })
                 .forEach(DestinationCluster::create);
     }
 
 
-    private void updateBrokers(Collection<DestinationCluster> clusterList, Collection<DestinationGroup> newDestinationGroups) {
-        clusterList.forEach(cluster -> newDestinationGroups.forEach(destinationGroup -> {
-            if (cluster.getDestinationGroup().equals(destinationGroup)) {
-                cluster.updateDestinations(destinationGroup);
+    private void updateBrokers(Collection<DestinationCluster> clusterList, Map<String, Set<Destination>> newDestinationGroups) {
+        clusterList.forEach(cluster -> newDestinationGroups.forEach((groupId, list) -> {
+            if (cluster.getClusterId().equals(groupId)) {
+                cluster.updateDestinations(list);
             }
         }));
     }
 
-    private void deleteBrokers(Collection<DestinationCluster> clusterList, Collection<DestinationGroup> newDestinationGroups) {
+    private void deleteBrokers(Collection<DestinationCluster> clusterList, Map<String, Set<Destination>> newDestinationGroups) {
         clusterList.stream()
-                .filter(cluster -> newDestinationGroups.stream()
-                        .noneMatch(destinationGroup -> cluster.getDestinationGroup().equals(destinationGroup)))
+                .filter(cluster -> newDestinationGroups.entrySet().stream()
+                        .noneMatch(destinationGroup -> cluster.getClusterId().equals(destinationGroup.getKey())))
                 .forEach(DestinationCluster::delete);
     }
 }

@@ -15,8 +15,10 @@
  */
 package enmasse.controller.common;
 
-import enmasse.controller.model.DestinationGroup;
 import enmasse.controller.address.DestinationCluster;
+import enmasse.controller.model.Destination;
+
+import java.util.Set;
 
 /**
  * Generates clusters for a set of destinations
@@ -26,7 +28,7 @@ public interface DestinationClusterGenerator {
     /**
      * Generate cluster for a given destination.
      *
-     * @param destinationGroup The group of destinations to generate a cluster for.
+     * @param destinations The set of destinations to generate a cluster for.
      */
-    DestinationCluster generateCluster(DestinationGroup destinationGroup);
+    DestinationCluster generateCluster(Set<Destination> destinations);
 }

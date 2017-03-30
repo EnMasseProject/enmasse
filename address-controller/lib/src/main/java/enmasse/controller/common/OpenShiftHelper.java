@@ -17,7 +17,6 @@
 package enmasse.controller.common;
 
 import enmasse.controller.model.Destination;
-import enmasse.controller.model.DestinationGroup;
 import enmasse.controller.model.InstanceId;
 import enmasse.controller.address.DestinationCluster;
 import enmasse.config.AddressDecoder;
@@ -52,7 +51,7 @@ public class OpenShiftHelper implements OpenShift {
     @Override
     public List<DestinationCluster> listClusters() {
         Map<String, List<HasMetadata>> resourceMap = new HashMap<>();
-        Map<String, DestinationGroup> groupMap = new HashMap<>();
+        Map<String, Set<Destination>> groupMap = new HashMap<>();
 
         // Add other resources part of a destination cluster
         List<HasMetadata> objects = new ArrayList<>();
@@ -88,9 +87,8 @@ public class OpenShiftHelper implements OpenShift {
                         destinations.add(destBuilder.build());
                     }
 
-                    DestinationGroup destinationGroup = new DestinationGroup(groupId, destinations);
                     resourceMap.put(groupId, new ArrayList<>());
-                    groupMap.put(groupId, destinationGroup);
+                    groupMap.put(groupId, destinations);
                 }
                 resourceMap.get(groupId).add(config);
             }
@@ -120,23 +118,24 @@ public class OpenShiftHelper implements OpenShift {
     }
 
     @Override
-    public void updateDestinations(DestinationGroup destinationGroup) {
-        client.configMaps().inNamespace(instance.getNamespace()).createOrReplace(createAddressConfig(destinationGroup));
+    public void updateDestinations(Set<Destination> destinations) {
+        client.configMaps().inNamespace(instance.getNamespace()).createOrReplace(createAddressConfig(destinations));
     }
 
     @Override
-    public ConfigMap createAddressConfig(DestinationGroup destinationGroup) {
-        String name = OpenShift.sanitizeName("address-config-" + instance.getId() + "-" + destinationGroup.getGroupId());
+    public ConfigMap createAddressConfig(Set<Destination> destinations) {
+        String groupId = destinations.iterator().next().group();
+        String name = OpenShift.sanitizeName("address-config-" + instance.getId() + "-" + groupId);
         ConfigMapBuilder builder = new ConfigMapBuilder()
                 .withNewMetadata()
                 .withName(name)
-                .addToLabels(LabelKeys.GROUP_ID, OpenShift.sanitizeName(destinationGroup.getGroupId()))
+                .addToLabels(LabelKeys.GROUP_ID, OpenShift.sanitizeName(groupId))
                 .addToLabels(LabelKeys.ADDRESS_CONFIG, name)
                 .addToLabels("type", "address-config")
                 .addToLabels("instance", OpenShift.sanitizeName(instance.getId()))
                 .endMetadata();
 
-        for (Destination destination : destinationGroup.getDestinations()) {
+        for (Destination destination : destinations) {
             AddressEncoder encoder = new AddressEncoder();
             encoder.encode(destination.storeAndForward(), destination.multicast(), destination.flavor(), destination.uuid());
             builder.addToData(destination.address(), encoder.toJson());

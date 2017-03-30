@@ -73,8 +73,9 @@ public class AMQPServerTest {
 
     @Test
     public void testAddressingService() throws InterruptedException, ExecutionException, TimeoutException, IOException {
-        DestinationGroup gr = new DestinationGroup("group0", Sets.newSet(new Destination("addr1", "group0", false, false, Optional.empty(), Optional.empty())));
-        testAddressSpace.setDestinations(Sets.newSet(gr));
+        Destination destination =
+                new Destination("addr1", "group0", false, false, Optional.empty(), Optional.empty());
+        testAddressSpace.setDestinations(Sets.newSet(destination));
 
         SyncRequestClient client = new SyncRequestClient("localhost", port, vertx);
         Message request = Message.Factory.create();
@@ -86,7 +87,7 @@ public class AMQPServerTest {
 
         ObjectMapper mapper = new ObjectMapper();
         AddressList list = mapper.readValue((String)((AmqpValue)response.getBody()).getValue(), AddressList.class);
-        assertThat(list.getDestinationGroups(), hasItem(gr));
+        assertThat(list.getDestinations(), hasItem(destination));
     }
 
     @Test

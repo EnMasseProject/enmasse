@@ -2,7 +2,6 @@ package enmasse.controller.instance;
 
 import enmasse.controller.address.DestinationCluster;
 import enmasse.controller.common.OpenShift;
-import enmasse.controller.model.DestinationGroup;
 import enmasse.controller.model.Instance;
 import enmasse.controller.model.InstanceId;
 import io.fabric8.kubernetes.api.model.KubernetesList;
@@ -54,7 +53,7 @@ public class InstanceManagerTest {
         assertParameter(values, "MQTT_GATEWAY_HOSTNAME", "mqtt.example.com");
 
         // Try to delete instance that has addresses
-        when(mockClient.listClusters()).thenReturn(Arrays.asList(new DestinationCluster(mockClient, new DestinationGroup("foo", Collections.emptySet()), new KubernetesList())))
+        when(mockClient.listClusters()).thenReturn(Arrays.asList(new DestinationCluster(mockClient, Collections.emptySet(), new KubernetesList())))
                 .thenReturn(Collections.emptyList());
 
         try {

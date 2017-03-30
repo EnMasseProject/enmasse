@@ -16,12 +16,8 @@
 
 package enmasse.controller.common;
 
-import enmasse.controller.common.DestinationClusterGenerator;
-import enmasse.controller.common.TemplateDestinationClusterGenerator;
 import enmasse.controller.flavor.FlavorManager;
-import enmasse.controller.common.OpenShiftHelper;
 import enmasse.controller.model.Destination;
-import enmasse.controller.model.DestinationGroup;
 import enmasse.controller.model.Flavor;
 import enmasse.controller.model.InstanceId;
 import enmasse.controller.address.DestinationCluster;
@@ -61,10 +57,10 @@ public class TemplateDestinationClusterGeneratorTest {
 
     @Test
     public void testDirect() {
-        Destination dest = new Destination("foo.bar_baz.cockooA", "gr0", false, false, Optional.empty(), Optional.empty());
+        Destination dest = new Destination("foo.bar_baz.cockooA", "foo.bar_baz.cockooA", false, false, Optional.empty(), Optional.empty());
         ArgumentCaptor<ParameterValue> captor = ArgumentCaptor.forClass(ParameterValue.class);
         DestinationCluster clusterList = generateCluster(dest, captor);
-        Destination first = clusterList.getDestinationGroup().getDestinations().iterator().next();
+        Destination first = clusterList.getDestinations().iterator().next();
         assertThat(first, is(dest));
         List<HasMetadata> resources = clusterList.getResources();
         assertThat(resources.size(), is(1));
@@ -83,10 +79,10 @@ public class TemplateDestinationClusterGeneratorTest {
 
     @Test
     public void testStoreAndForward() {
-        Destination dest = new Destination("foo.bar", "gr1", true, false, Optional.of("vanilla"), Optional.empty());
+        Destination dest = new Destination("foo.bar", "foo.bar", true, false, Optional.of("vanilla"), Optional.empty());
         ArgumentCaptor<ParameterValue> captor = ArgumentCaptor.forClass(ParameterValue.class);
         DestinationCluster clusterList = generateCluster(dest, captor);
-        assertThat(clusterList.getDestinationGroup().getDestinations(), hasItem(dest));
+        assertThat(clusterList.getDestinations(), hasItem(dest));
         List<HasMetadata> resources = clusterList.getResources();
         assertThat(resources.size(), is(2));
         for (HasMetadata resource : resources) {
@@ -116,7 +112,7 @@ public class TemplateDestinationClusterGeneratorTest {
         when(templateResource.process(captor.capture())).thenReturn(new KubernetesListBuilder().addNewConfigMapItem().withNewMetadata().withName("testmap").endMetadata().endConfigMapItem().build());
         when(mockClient.templates()).thenReturn(templateOp);
 
-        return generator.generateCluster(new DestinationGroup(destination.address(), Collections.singleton(destination)));
+        return generator.generateCluster(Collections.singleton(destination));
     }
 
 }

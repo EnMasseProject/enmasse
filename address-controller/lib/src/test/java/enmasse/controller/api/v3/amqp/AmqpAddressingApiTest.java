@@ -24,7 +24,6 @@ import enmasse.controller.api.v3.Address;
 import enmasse.controller.api.v3.AddressList;
 import enmasse.controller.api.v3.ApiHandler;
 import enmasse.controller.model.Destination;
-import enmasse.controller.model.DestinationGroup;
 import enmasse.controller.model.Instance;
 import enmasse.controller.model.InstanceId;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
@@ -51,9 +50,8 @@ public class AmqpAddressingApiTest {
         instanceManager = new TestInstanceManager();
         instanceManager.create(new Instance.Builder(InstanceId.withId("myinstance")).build());
         addressSpace = new TestAddressSpace();
-        addressSpace.setDestinations(Sets.newSet(
-                createGroup(new Destination("addr1", "addr1", false, false, Optional.empty(), Optional.empty())),
-                createGroup(new Destination("queue1", "queue1", true, false, Optional.of("vanilla"), Optional.empty()))));
+        addressSpace.addDestination(new Destination("addr1", "addr1", false, false, Optional.empty(), Optional.empty()));
+        addressSpace.addDestination(new Destination("queue1", "queue1", true, false, Optional.of("vanilla"), Optional.empty()));
         TestAddressManager addressManager = new TestAddressManager();
         addressManager.addManager(InstanceId.withId("myinstance"), addressSpace);
         addressingService = new AddressingService(InstanceId.withId("myinstance"), new ApiHandler(instanceManager, addressManager));
@@ -154,8 +152,8 @@ public class AmqpAddressingApiTest {
         doRequest("DELETE", "", Optional.of("throw"));
     }
 
-    private static DestinationGroup createGroup(Destination destination) {
-        return new DestinationGroup(destination.address(), Collections.singleton(destination));
+    private static Set<Destination> createGroup(Destination destination) {
+        return Collections.singleton(destination);
     }
 
     @Test
@@ -198,12 +196,10 @@ public class AmqpAddressingApiTest {
 
     private void assertDestination(Destination dest) {
         Destination actual = null;
-        for (DestinationGroup group : addressSpace.getDestinations()) {
-            for (Destination d : group.getDestinations()) {
-                if (d.address().equals(dest.address())) {
-                    actual = d;
-                    break;
-                }
+        for (Destination d : addressSpace.getDestinations()) {
+            if (d.address().equals(dest.address())) {
+                actual = d;
+                break;
             }
         }
         assertNotNull(actual);

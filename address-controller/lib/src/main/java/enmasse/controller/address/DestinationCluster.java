@@ -18,13 +18,13 @@ package enmasse.controller.address;
 
 import enmasse.controller.common.OpenShift;
 import enmasse.controller.model.Destination;
-import enmasse.controller.model.DestinationGroup;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -35,18 +35,18 @@ public class DestinationCluster {
 
     private final OpenShift openShift;
     private final KubernetesList resources;
-    private DestinationGroup destinationGroup;
+    private Set<Destination> destinations;
 
-    public DestinationCluster(OpenShift openShift, DestinationGroup destinationGroup, KubernetesList resources) {
+    public DestinationCluster(OpenShift openShift, Set<Destination> destinations, KubernetesList resources) {
         this.openShift = openShift;
-        this.destinationGroup = destinationGroup;
+        this.destinations = destinations;
         this.resources = resources;
     }
 
     public void create() {
         log.info("Adding " + resources.getItems().size() + " resources: " + resources.getItems().stream().map(r -> "name=" + r.getMetadata().getName() + ",kind=" + r.getKind()).collect(Collectors.joining(",")));
         openShift.create(resources);
-        updateDestinations(destinationGroup);
+        updateDestinations(destinations);
     }
 
     public void delete() {
@@ -54,20 +54,24 @@ public class DestinationCluster {
         openShift.delete(resources);
     }
 
-    public DestinationGroup getDestinationGroup() {
-        return destinationGroup;
+    public Set<Destination> getDestinations() {
+        return destinations;
     }
 
     public List<HasMetadata> getResources() {
         return resources.getItems();
     }
 
-    public void updateDestinations(DestinationGroup destinationGroup) {
-        this.destinationGroup = destinationGroup;
-        Destination first = destinationGroup.getDestinations().iterator().next();
+    public void updateDestinations(Set<Destination> destinations) {
+        this.destinations = destinations;
+        Destination first = destinations.iterator().next();
         // This is a workaround for direct addresses, which store everything in a single configmap that
         if (first.storeAndForward()) {
-            openShift.updateDestinations(destinationGroup);
+            openShift.updateDestinations(destinations);
         }
+    }
+
+    public String getClusterId() {
+        return destinations.iterator().next().group();
     }
 }
