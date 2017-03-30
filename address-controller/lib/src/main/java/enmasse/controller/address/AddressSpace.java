@@ -10,6 +10,7 @@ import java.util.Set;
 public interface AddressSpace {
     Set<Destination> addDestination(Destination destination);
     Set<Destination> deleteDestination(String address);
+    Set<Destination> deleteDestinationWithUuid(String uuid);
 
     Set<Destination> setDestinations(Set<Destination> destinations);
     Set<Destination> addDestinations(Set<Destination> destination);
