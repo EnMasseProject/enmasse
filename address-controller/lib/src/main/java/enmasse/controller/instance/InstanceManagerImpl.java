@@ -37,6 +37,19 @@ public class InstanceManagerImpl implements InstanceManager {
         }
     }
 
+    @Override
+    public Optional<Instance> get(String uuid) {
+        if (isMultitenant) {
+            Map<String, String> labelMap = new LinkedHashMap<>();
+            labelMap.put(LabelKeys.UUID, uuid);
+            labelMap.put("app", "enmasse");
+            labelMap.put("type", "instance");
+            return list(labelMap).stream().findAny();
+        } else {
+            return Optional.empty();
+        }
+    }
+
     private Instance buildInstance(InstanceId instanceId) {
         List<Route> routes = openShift.getRoutes(instanceId);
         return new Instance.Builder(instanceId)

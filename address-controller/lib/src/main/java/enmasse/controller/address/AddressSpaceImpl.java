@@ -23,6 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 /**
@@ -63,17 +64,20 @@ public class AddressSpaceImpl implements AddressSpace {
 
     @Override
     public Set<Destination> deleteDestination(String address) {
+        return deleteWithPredicate(destination -> destination.address().equals(address));
+    }
+
+    private Set<Destination> deleteWithPredicate(Predicate<Destination> predicate) {
         List<DestinationCluster> clusterList = openShift.listClusters();
         Set<Destination> destinations = getClusterDestinations(clusterList);
-        Iterator<Destination> it = destinations.iterator();
-        while (it.hasNext()) {
-            Destination destination = it.next();
-            if (destination.address().equals(address)) {
-                it.remove();
-            }
-        }
+        destinations.removeIf(predicate::test);
         setDestinations(destinations, clusterList);
         return destinations;
+    }
+
+    @Override
+    public Set<Destination> deleteDestinationWithUuid(String uuid) {
+        return deleteWithPredicate(destination -> destination.uuid().filter(u -> u.equals(uuid)).isPresent());
     }
 
     @Override

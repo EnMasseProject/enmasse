@@ -46,6 +46,15 @@ public class TestAddressSpace implements AddressSpace {
     }
 
     @Override
+    public Set<Destination> deleteDestinationWithUuid(String uuid) {
+        if (throwException) {
+            throw new RuntimeException("exception");
+        }
+        destinations.removeIf(destination -> destination.uuid().filter(u -> u.equals(uuid)).isPresent());
+        return new LinkedHashSet<>(destinations);
+    }
+
+    @Override
     public Set<Destination> setDestinations(Set<Destination> destinations) {
         if (throwException) {
             throw new RuntimeException("exception");

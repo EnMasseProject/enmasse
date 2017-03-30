@@ -19,6 +19,16 @@ public class TestInstanceManager implements InstanceManager {
     }
 
     @Override
+    public Optional<Instance> get(String uuid) {
+        for (Instance i : instances.values()) {
+            if (i.uuid().filter(u -> uuid.equals(u)).isPresent()) {
+                return Optional.of(i);
+            }
+        }
+        return Optional.empty();
+    }
+
+    @Override
     public void create(Instance instance) {
         if (throwException) {
             throw new RuntimeException("foo");

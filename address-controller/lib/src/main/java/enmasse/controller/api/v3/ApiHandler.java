@@ -61,10 +61,14 @@ public class ApiHandler {
         return address;
     }
 
-
     public AddressList deleteAddress(InstanceId instanceId, String address) {
         Optional<Instance> instance = instanceManager.get(instanceId);
         return AddressList.fromSet(instance.map(i -> addressManager.getAddressSpace(i).deleteDestination(address)).orElse(Collections.emptySet()));
+    }
+
+    public AddressList deleteAddressByUuid(InstanceId instanceId, String uuid) {
+        Optional<Instance> instance = instanceManager.get(instanceId);
+        return AddressList.fromSet(instance.map(i -> addressManager.getAddressSpace(i).deleteDestinationWithUuid(uuid)).orElse(Collections.emptySet()));
     }
 
     public AddressList appendAddresses(InstanceId instanceId, AddressList list) {
