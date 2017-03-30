@@ -8,10 +8,10 @@ function setup_test() {
     local PROJECT_NAME=$1
     local SECURE=${2:-false}
     local MULTITENANT=${3:-false}
-    local OPENSHIFT_HOST=${4:-"localhost:8443"}
+    local OPENSHIFT_HOST=${4:-"https://localhost:8443"}
     local OPENSHIFT_USER=${5:-"test"}
 
-    DEPLOY_ARGS="-y -p $PROJECT_NAME -u $OPENSHIFT_USER -c https://$OPENSHIFT_HOST"
+    DEPLOY_ARGS="-y -p $PROJECT_NAME -u $OPENSHIFT_USER -c $OPENSHIFT_HOST"
     if [ "$SECURE" == true ]; then
         openssl req -x509 -newkey rsa:4096 -keyout server-key.pem -out server-cert.pem -days 1 -nodes -batch
         DEPLOY_ARGS="$DEPLOY_ARGS -k server-key.pem -s server-cert.pem"
@@ -26,8 +26,8 @@ function setup_test() {
     enmasse-deploy.sh $DEPLOY_ARGS
 
     if [ "$MULTITENANT" == true ]; then
-        sudo $OADM add-cluster-role-to-user cluster-admin system:serviceaccount:$(oc project -q):enmasse-service-account
-        sudo $OADM policy add-cluster-role-to-user cluster-admin $OPENSHIFT_USER
+        $OADM add-cluster-role-to-user cluster-admin system:serviceaccount:$(oc project -q):enmasse-service-account
+        $OADM policy add-cluster-role-to-user cluster-admin $OPENSHIFT_USER
     fi
 }
 
@@ -35,7 +35,7 @@ function run_test() {
     local PROJECT_NAME=$1
     local SECURE=${2:-false}
     local MULTITENANT=${3:-false}
-    local OPENSHIFT_HOST=${4:-"localhost:8443"}
+    local OPENSHIFT_URL=${4:-"https://localhost:8443"}
     local OPENSHIFT_USER=${5:-"test"}
 
     if [ "$MULTITENANT" == false ]; then
@@ -50,7 +50,7 @@ function run_test() {
     export OPENSHIFT_USER=$OPENSHIFT_USER
     export OPENSHIFT_MULTITENANT=$MULTITENANT
     export OPENSHIFT_TOKEN=`oc whoami -t`
-    export OPENSHIFT_MASTER_URL=https://$OPENSHIFT_HOST
+    export OPENSHIFT_MASTER_URL=$OPENSHIFT_HOST
     gradle check -i --rerun-tasks -Djava.net.preferIPv4Stack=true
 }
 
