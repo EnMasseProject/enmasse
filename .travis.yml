@@ -21,7 +21,7 @@ script:
 - export PATH=$PATH:openshift
 - sleep 20
 - cat /etc/hosts
-- ./scripts/run_tests.sh
+- ./scripts/run_test_travis.sh
 after_failure:
 - ./scripts/print_logs.sh
 env:
