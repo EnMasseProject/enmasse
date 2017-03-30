@@ -8,10 +8,10 @@ function setup_test() {
     local PROJECT_NAME=$1
     local SECURE=${2:-false}
     local MULTITENANT=${3:-false}
-    local OPENSHIFT_HOST=${4:-"https://localhost:8443"}
+    local OPENSHIFT_URL=${4:-"https://localhost:8443"}
     local OPENSHIFT_USER=${5:-"test"}
 
-    DEPLOY_ARGS="-y -p $PROJECT_NAME -u $OPENSHIFT_USER -c $OPENSHIFT_HOST"
+    DEPLOY_ARGS="-y -p $PROJECT_NAME -u $OPENSHIFT_USER -c $OPENSHIFT_URL"
     if [ "$SECURE" == true ]; then
         openssl req -x509 -newkey rsa:4096 -keyout server-key.pem -out server-cert.pem -days 1 -nodes -batch
         DEPLOY_ARGS="$DEPLOY_ARGS -k server-key.pem -s server-cert.pem"
@@ -50,7 +50,7 @@ function run_test() {
     export OPENSHIFT_USER=$OPENSHIFT_USER
     export OPENSHIFT_MULTITENANT=$MULTITENANT
     export OPENSHIFT_TOKEN=`oc whoami -t`
-    export OPENSHIFT_MASTER_URL=$OPENSHIFT_HOST
+    export OPENSHIFT_MASTER_URL=$OPENSHIFT_URL
     gradle check -i --rerun-tasks -Djava.net.preferIPv4Stack=true
 }
 
