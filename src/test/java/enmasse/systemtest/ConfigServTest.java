@@ -62,7 +62,6 @@ public class ConfigServTest extends AmqpTestBase {
     }
 
     @SuppressWarnings("unchecked")
-    @Test
     public void testPodSense() throws Exception {
         Endpoint configserv = getConfigServEndpoint();
         BlockingQueue<List<String>> latestPods = new LinkedBlockingDeque<>();
