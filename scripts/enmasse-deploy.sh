@@ -15,7 +15,6 @@
 # further it will use the user `developer` and project `myproject`, asking
 # for a login when appropriate.
 # for further parameters please see the help text.
-
 if which oc &> /dev/null
 then :
 else
@@ -52,7 +51,7 @@ DEFAULT_OPENSHIFT_USER=developer
 DEFAULT_OPENSHIFT_PROJECT=myproject
 OC_ARGS=""
 
-while getopts c:dgk:mo:p:s:t:u:yh opt; do
+while getopts c:dgk:mo:p:s:t:u:yhv opt; do
     case $opt in
         c)
             OS_CLUSTER=$OPTARG
@@ -87,6 +86,9 @@ while getopts c:dgk:mo:p:s:t:u:yh opt; do
             ;;
         y)
             OC_ARGS="--insecure-skip-tls-verify=true"
+            ;;
+        v)
+            set -x
             ;;
         h)
             echo "usage: enmasse-deploy.sh [options]"
@@ -142,7 +144,7 @@ then
 fi
 
 
-runcmd "oc login $OS_CLUSTER -u $OS_USER $OC_ARGS" "Login as $OS_USER"
+runcmd "oc login -u $OS_USER $OC_ARGS $OC_CLUSTER" "Login as $OS_USER"
 
 AVAILABLE_PROJECTS=`docmd "oc projects -q"`
 
