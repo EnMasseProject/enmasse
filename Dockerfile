@@ -1,8 +1,10 @@
-FROM openjdk:8-jre-alpine
+FROM centos:7
+
+RUN yum -y install java-1.8.0-openjdk-devel && yum clean all
+ENV JAVA_HOME /usr/lib/jvm/java
 
 ARG version=latest
 ENV VERSION ${version}
-RUN apk add --no-cache bash
 ADD build/distributions/topic-forwarder-${version}.tar /
 
 EXPOSE 8080
