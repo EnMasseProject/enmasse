@@ -103,6 +103,7 @@ function AddressService() {
     this.addresses = [];
     this.flavors = [];
     this.connections = [];
+    this.users = [];
     var ws = rhea.websocket_connect(WebSocket);
     this.connection = rhea.connect({"connection_details":ws("ws://" + location.hostname + ":56720", ["binary", "AMQPWSB10"]), "reconnect":true});
     this.connection.on('message', this.on_message.bind(this));
@@ -180,12 +181,36 @@ AddressService.prototype.is_unique_name = function (name) {
     return !this.addresses.some(function (a) { return a.address === name; });
 }
 
+AddressService.prototype.create_user = function (obj) {
+    console.log('creating user: ' + JSON.stringify(obj));
+    this.sender.send({subject: 'create_user', body: obj});
+}
+
+AddressService.prototype.delete_selected_users = function () {
+    for (var i = 0; i < this.users.length;) {
+        if (this.users[i].selected) {
+            this.sender.send({subject: 'delete_user', body: this.users[i].name});
+            this.users.splice(i, 1);
+        } else {
+            i++;
+        }
+    }
+}
+
 AddressService.prototype.update_connection = function (c) {
     var i = 0;
     while (i < this.connections.length && c.id !== this.connections[i].id) {
         i++;
     }
     this.connections[i] = c;
+}
+
+AddressService.prototype.update_user = function (c) {
+    var i = 0;
+    while (i < this.users.length && c.name !== this.users[i].name) {
+        i++;
+    }
+    this.users[i] = c;
 }
 
 AddressService.prototype.on_message = function (context) {
@@ -214,6 +239,21 @@ AddressService.prototype.on_message = function (context) {
         for (var i = 0; i < this.connections.length;) {
             if (this.connections[i].id === context.message.body) {
                 this.connections.splice(i, 1);
+                changed = true;
+            } else {
+                i++;
+            }
+        }
+        if (changed && this.callback) this.callback();
+    } else if (context.message.subject === 'user') {
+        console.log('got user: ' + JSON.stringify(context.message.body));
+        this.update_user(context.message.body);
+        if (this.callback) this.callback();
+    } else if (context.message.subject === 'user_deleted') {
+        var changed = false;
+        for (var i = 0; i < this.users.length;) {
+            if (this.users[i].id === context.message.body) {
+                this.users.splice(i, 1);
                 changed = true;
             } else {
                 i++;
