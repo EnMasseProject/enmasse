@@ -61,6 +61,44 @@ Instantiate EnMasse template:
 
     oc process -f https://raw.githubusercontent.com/EnMasseProject/enmasse/master/generated/enmasse-template.yaml  | oc create -n enmasse -f -
 
+#### Deploying EnMasse with authentication enabled
+
+The initial support for authentication relies on a user database that
+the messaging service uses to authenticate against. This requires a
+persistent volume on which the user database exists, that is then
+mounted into the necessary pods.
+
+To create a local host based persistent volume for development or
+evaluation purposes, you must first login as the admin user:
+
+    oc login https://localhost:8443 -u system:admin
+
+Then create a directory, with read and write permissions for all, that
+will be used for the persistent volume. E.g.
+
+    mkdir /tmp/sasldb && chmod a+x /tmp/sasldb
+
+Then create the peristent volume, e.g. using the example yaml
+https://github.com/EnMasseProject/enmasse/tree/master/include/sasldb-persistent-volume.yaml:
+
+    oc create -f https://raw.githubusercontent.com/EnMasseProject/enmasse/tree/master/include/sasldb-persistent-volume.yaml
+
+Then log in again as developer:
+
+    oc login https://localhost:8443 -u developer
+
+Then follow the instructions for manual deployment above, substituting
+sasldb-enmasse-template.yaml for enmasse-template.yaml in the last
+step.
+
+The users can be managed through the console. Note that when
+authenticating against the messaging service you need to specify the
+domain which is 'enmasse', e.g. myuser@enmasse.
+
+[Note also that anonymous is still enabled on the routers, until all
+internal services have been updated to authenticate when connecting to
+the messaging service.]
+
 ### Configuring addresses
 
 EnMasse is configured with a set of addresses that you can use for messages. Currently, EnMasse supports 4 different address types:
