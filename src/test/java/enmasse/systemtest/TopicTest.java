@@ -39,7 +39,7 @@ public class TopicTest extends AmqpTestBase {
         Destination dest = Destination.topic("manytopic");
         deploy(dest);
         scale(dest, 4);
-        Thread.sleep(30_000);
+        Thread.sleep(120_000);
         AmqpClient client = createTopicClient();
         List<String> msgs = TestUtils.generateMessages(1000);
 
@@ -48,7 +48,7 @@ public class TopicTest extends AmqpTestBase {
                 client.recvMessages(dest.getAddress(), msgs.size()),
                 client.recvMessages(dest.getAddress(), msgs.size()));
 
-        Thread.sleep(60_000);
+        Thread.sleep(120_000);
 
         assertThat(client.sendMessages(dest.getAddress(), msgs).get(1, TimeUnit.MINUTES), is(msgs.size()));
 
