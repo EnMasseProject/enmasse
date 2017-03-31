@@ -797,6 +797,11 @@ objects:
             - containerPort: 56720
               name: amqp-ws
               protocol: TCP
+            resources:
+              limits:
+                memory: 64Mi
+              requests:
+                memory: 64Mi
           - env: []
             image: "${CONFIGSERV_REPO}:latest"
             livenessProbe:

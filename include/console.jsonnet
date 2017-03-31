@@ -15,6 +15,14 @@ local common = import "common.jsonnet";
       "image": image_repo + ":" + version,
       "name": "console",
       "env": env + (if use_sasldb then sasldb_env else []),
+      "resources": {
+        "requests": {
+          "memory": "64Mi",
+        },
+        "limits": {
+          "memory": "64Mi",
+        }
+      },
       "ports": [
         {
           "name": "http",
