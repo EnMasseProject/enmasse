@@ -1,4 +1,6 @@
 local version = std.extVar("VERSION");
+local router = import "router.jsonnet";
+local console = import "console.jsonnet";
 local common = import "common.jsonnet";
 {
   services(instance)::
@@ -26,6 +28,14 @@ local common = import "common.jsonnet";
           {
             "name": "queue-scheduler",
             "port": 55667
+          },
+          {
+            "name": "console-ws",
+            "port": 56720
+          },
+          {
+            "name": "console-http",
+            "port": 8080
           }
         ],
         "selector": {
@@ -35,7 +45,7 @@ local common = import "common.jsonnet";
       }
     }
   ],
-  deployment(instance, configserv_image, ragent_image, scheduler_image)::
+  deployment(use_sasldb, instance, configserv_image, ragent_image, scheduler_image, console_image)::
   {
     "apiVersion": "extensions/v1beta1",
     "kind": "Deployment",
@@ -77,8 +87,18 @@ local common = import "common.jsonnet";
                         "name": "CONFIGURATION_SERVICE_PORT",
                         "value": "5672"
                       }]),
+            console.container(use_sasldb, console_image, [
+                      {
+                        "name": "CONFIGURATION_SERVICE_HOST",
+                        "value": "localhost"
+                      },
+                      {
+                        "name": "CONFIGURATION_SERVICE_PORT",
+                        "value": "5672"
+                      }]),
             common.container("configserv", configserv_image, "amqp", 5672, "256Mi", []),
-          ]
+          ],
+          [if use_sasldb then "volumes" ]: [router.sasldb_volume()]
         }
       }
     }

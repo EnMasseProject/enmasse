@@ -780,6 +780,23 @@ objects:
                 memory: 128Mi
               requests:
                 memory: 128Mi
+          - env:
+            - name: CONFIGURATION_SERVICE_HOST
+              value: localhost
+            - name: CONFIGURATION_SERVICE_PORT
+              value: '5672'
+            image: "${CONSOLE_REPO}:latest"
+            livenessProbe:
+              tcpSocket:
+                port: http
+            name: console
+            ports:
+            - containerPort: 8080
+              name: http
+              protocol: TCP
+            - containerPort: 56720
+              name: amqp-ws
+              protocol: TCP
           - env: []
             image: "${CONFIGSERV_REPO}:latest"
             livenessProbe:
@@ -810,6 +827,10 @@ objects:
         port: 5672
       - name: queue-scheduler
         port: 55667
+      - name: console-ws
+        port: 56720
+      - name: console-http
+        port: 8080
       selector:
         instance: "${INSTANCE}"
         name: admin
@@ -911,6 +932,9 @@ objects:
   - description: The image to use for the subscription services
     name: SUBSERV_REPO
     value: enmasseproject/subserv
+  - description: The image to use for the console
+    name: CONSOLE_REPO
+    value: enmasseproject/console
   - description: The hostname to use for the exposed route for messaging (TLS only)
     name: MESSAGING_HOSTNAME
   - description: The image to use for the MQTT gateway

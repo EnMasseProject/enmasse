@@ -19,9 +19,9 @@ local amqpKafkaBridge = import "amqp-kafka-bridge.jsonnet";
 local amqpKafkaBridgeService = import "amqp-kafka-bridge-service.jsonnet";
 local hawkularConfig = import "hawkular-broker-config.jsonnet";
 {
-  generate(secure, compact, with_kafka)::
+  generate(use_tls, use_sasldb, compact, with_kafka)::
   {
-    local templateName = (if secure then "tls-enmasse-instance-infra" else "enmasse-instance-infra"),
+    local templateName = (if use_tls then"tls-enmasse-instance-infra" else "enmasse-instance-infra"),
     "apiVersion": "v1",
     "kind": "Template",
     "metadata": {
@@ -31,18 +31,18 @@ local hawkularConfig = import "hawkular-broker-config.jsonnet";
       "name": templateName
     },
     local common = [
-      qdrouterd.deployment(secure, "${INSTANCE}", "${ROUTER_REPO}"),
-      messagingService.generate(secure, "${INSTANCE}", true),
+      qdrouterd.deployment(use_tls, use_sasldb, "${INSTANCE}", "${ROUTER_REPO}"),
+      messagingService.generate(use_tls, "${INSTANCE}", true),
       subserv.deployment("${INSTANCE}", "${SUBSERV_REPO}"),
       subserv.service("${INSTANCE}"),
-      mqttGateway.deployment(secure, "${INSTANCE}", "${MQTT_GATEWAY_REPO}"),
-      mqttService.generate(secure, "${INSTANCE}"),
+      mqttGateway.deployment(use_tls, "${INSTANCE}", "${MQTT_GATEWAY_REPO}"),
+      mqttService.generate(use_tls, "${INSTANCE}"),
       mqttLwt.deployment("${INSTANCE}", "${MQTT_LWT_REPO}"),
       hawkularConfig
     ],
 
     local compactAdmin = [
-      admin.deployment("${INSTANCE}", "${CONFIGSERV_REPO}", "${RAGENT_REPO}", "${QUEUE_SCHEDULER_REPO}")
+      admin.deployment(use_sasldb, "${INSTANCE}", "${CONFIGSERV_REPO}", "${RAGENT_REPO}", "${QUEUE_SCHEDULER_REPO}", "${CONSOLE_REPO}")
     ] + admin.services("${INSTANCE}"),
 
     local fullAdmin = [
@@ -55,13 +55,13 @@ local hawkularConfig = import "hawkular-broker-config.jsonnet";
     ],
 
     local kafka = [
-      amqpKafkaBridgeService.generate(secure, "${INSTANCE}"),
+      amqpKafkaBridgeService.generate(use_tls, "${INSTANCE}"),
       amqpKafkaBridge.deployment("${INSTANCE}", "${AMQP_KAFKA_BRIDGE_REPO}")
     ],
 
     local securedRoutes = [ messagingRoute.generate("${INSTANCE}", "${MESSAGING_HOSTNAME}"), mqttRoute.generate("${INSTANCE}", "${MQTT_GATEWAY_HOSTNAME}") ],
 
-    "objects": common + (if compact then compactAdmin else fullAdmin) + (if with_kafka then kafka else []) + (if secure then securedRoutes else []),
+    "objects": (if use_sasldb then [router.sasldb_pvc()] else []) + common + (if compact then compactAdmin else fullAdmin) + (if with_kafka then kafka else []) + (if use_tls then securedRoutes else []),
 
     "parameters": [
       {
@@ -93,6 +93,11 @@ local hawkularConfig = import "hawkular-broker-config.jsonnet";
         "name": "SUBSERV_REPO",
         "description": "The image to use for the subscription services",
         "value": "enmasseproject/subserv"
+      },
+      {
+        "name": "CONSOLE_REPO",
+        "description": "The image to use for the console",
+        "value": "enmasseproject/console"
       },
       {
         "name": "MESSAGING_HOSTNAME",

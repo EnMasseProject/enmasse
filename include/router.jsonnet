@@ -1,7 +1,7 @@
 local version = std.extVar("VERSION");
 local common = import "common.jsonnet";
 {
-  container(secure, image_repo, addressEnv, mem_request)::
+  container(use_tls, use_sasldb, image_repo, addressEnv, mem_request)::
     local routerPort = {
         "name": "amqp",
         "containerPort": 5672,
@@ -35,22 +35,25 @@ local common = import "common.jsonnet";
       "env": if addressEnv == ""
         then [linkEnv]
         else [linkEnv, addressEnv],
-      "ports": if secure
-        then [routerPort, internalPort, secureRouterPort] 
+      "ports": if use_tls
+        then [routerPort, internalPort, secureRouterPort]
         else [routerPort, internalPort],
       "livenessProbe": {
         "tcpSocket": {
           "port": "amqp"
         }
       },
-      [if mem_request != "" then "resources"]: resources,
-      [if secure then "volumeMounts"]: [
-        {
+      local ssl_certs = [{
           "name": "ssl-certs",
           "mountPath": "/etc/qpid-dispatch/ssl",
           "readOnly": true
-        }
-      ]
+        }],
+      local sasldb_vol = [{
+          "name": "sasldb-vol",
+          "mountPath": "/var/lib/qdrouterd"
+        }],
+      [if mem_request != "" then "resources"]: resources,
+      [if use_sasldb || use_tls then "volumeMounts"]: (if use_tls then ssl_certs else []) + (if use_sasldb then sasldb_vol else [])
     },
 
   secret_volume()::
@@ -59,5 +62,32 @@ local common = import "common.jsonnet";
       "secret": {
         "secretName": "qdrouterd-certs"
       }
+    },
+
+  sasldb_volume()::
+    {
+      "name": "sasldb-vol",
+       "persistentVolumeClaim": {
+          "claimName": "pvc-sasldb"
+        }
+    },
+
+  sasldb_pvc()::
+    {
+        "apiVersion": "v1",
+        "kind": "PersistentVolumeClaim",
+        "metadata": {
+          "name": "pvc-sasldb",
+        },
+        "spec": {
+          "accessModes": [
+            "ReadWriteMany"
+          ],
+          "resources": {
+            "requests": {
+              "storage": "1Gi"
+            }
+          }
+        }
     }
 }

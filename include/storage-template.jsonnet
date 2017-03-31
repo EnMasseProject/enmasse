@@ -54,7 +54,7 @@ local forwarder = import "forwarder.jsonnet";
                 else [brokerVolume, broker.hawkularVolume()],
 
               "containers": if multicast
-                then [ broker.container(secure, volumeName, broker_repo, addressEnv), router.container(secure, router_repo, addressEnv, "256Mi"), forwarder.container(forwarder_repo, addressEnv) ]
+                then [ broker.container(secure, volumeName, broker_repo, addressEnv), router.container(secure, false, router_repo, addressEnv, "256Mi"), forwarder.container(forwarder_repo, addressEnv) ]
                 else [ broker.container(secure, volumeName, broker_repo, addressEnv) ]
             }
           }
