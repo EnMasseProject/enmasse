@@ -31,7 +31,7 @@ app.set('port', 8080);
 app.use(express.static(path.join(__dirname, '../www/')))
 var http_server = app.listen(app.get('port'));
 
-var ws_server = WebSocketServer({'port':56720});
+var ws_server = new WebSocketServer({'port':56720});
 var amqp_container = rhea.create_container({autoaccept:false});
 ws_server.on('connection', function (ws) {
     console.log('Accepted incoming websocket connection');
