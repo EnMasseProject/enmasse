@@ -35,25 +35,40 @@ specification yet, but following is an example of each.
 {
     "apiVersion": "v3",
     "kind": "AddressList",
-    "spec": {
-        "queue1": {
-            "store_and_forward": true,
-            "multicast": false,
-            "flavor": "small-queue"
+    "items": [
+        {
+            "metadata": {
+                "name": "queue1"
+            },
+            "spec": {
+                "store_and_forward": true,
+                "multicast": false,
+                "flavor": "small-queue"
+            }
         },
-        "queue2": {
-            "store_and_forward": true,
-            "multicast": false,
-            "flavor": "standard-queue",
-            "group_id": "shared-group"
+        {
+            "metadata": {
+                "name": "queue2"
+            },
+            "spec": {
+                "store_and_forward": true,
+                "multicast": false,
+                "flavor": "standard-queue",
+                "group_id": "shared-group"
+            }
         },
-        "queue2": {
-            "store_and_forward": true,
-            "multicast": false,
-            "flavor": "standard-queue",
-            "group_id": "shared-group"
+        {
+            "metadata": {
+                "name": "queue3"
+            },
+            "spec": {
+                "store_and_forward": true,
+                "multicast": false,
+                "flavor": "standard-queue",
+                "group_id": "shared-group"
+            }
         }
-    }
+    ]
 }
 ```
 
