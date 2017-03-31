@@ -17,13 +17,13 @@
             "port": 8080,
             "protocol": "TCP",
             "targetPort": 8080,
-            "name": "console"
+            "name": "http"
           },
           {
-            "port": 8088,
+            "port": 50672,
             "protocol": "TCP",
-            "targetPort": 8088,
-            "name": "ws-proxy"
+            "targetPort": 50672,
+            "name": "ws-amqp"
           }
         ],
         "selector": {
@@ -44,20 +44,16 @@
         "containers": [
           {
             "name": "console",
-            "image": "gordons/dispatch-console:v1",
+            "image": "enmasseproject/console:latest",
             "ports": [
-              {
-                "containerPort": 8080
-              }
-            ]
-          },
-          {
-            "name": "wsproxy",
-            "image": "gordons/ws-proxy:v1",
-            "ports": [
-              {
-                "containerPort": 8088
-              }
+                {
+                    "containerPort": 8080,
+                    "name": "http"
+                },
+                {
+                    "containerPort": 56720,
+                    "name": "ws-amqp"
+                }
             ]
           }
         ]

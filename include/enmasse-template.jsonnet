@@ -4,9 +4,9 @@ local restapiRoute = import "restapi-route.jsonnet";
 local flavorConfig = import "flavor.jsonnet";
 local enmasseInfra = import "enmasse-instance-infra.jsonnet";
 {
-  generate(secure, compact, with_kafka)::
+  generate(use_tls, use_sasl, compact, with_kafka)::
   {
-    local templateName = (if secure then "tls-enmasse-infra" else "enmasse-infra"),
+    local templateName = (if use_tls then "tls-enmasse-infra" else "enmasse-infra"),
     "apiVersion": "v1",
     "kind": "Template",
     "metadata": {
@@ -15,15 +15,15 @@ local enmasseInfra = import "enmasse-instance-infra.jsonnet";
       },
       "name": templateName
     },
-    "objects": [ storage.template(false, false, secure),
-                 storage.template(false, true, secure),
-                 storage.template(true, false, secure),
-                 storage.template(true, true, secure),
-                 enmasseInfra.generate(secure, compact, with_kafka),
-                 addressController.deployment(std.toString(secure), "${ADDRESS_CONTROLLER_REPO}", "${MULTIINSTANCE}"),
+    "objects": [ storage.template(false, false, use_tls),
+                 storage.template(false, true, use_tls),
+                 storage.template(true, false, use_tls),
+                 storage.template(true, true, use_tls),
+                 enmasseInfra.generate(use_tls, use_sasl, compact, with_kafka),
+                 addressController.deployment(std.toString(use_tls), "${ADDRESS_CONTROLLER_REPO}", "${MULTIINSTANCE}"),
                  addressController.service,
                  restapiRoute.generate("${RESTAPI_HOSTNAME}"),
-                 flavorConfig.generate(secure) ],
+                 flavorConfig.generate(use_tls) ],
     "parameters": [
       {
         "name": "RESTAPI_HOSTNAME",
