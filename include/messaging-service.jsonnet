@@ -34,6 +34,11 @@
           "name":"mqtt",
           "namespace":"",
           "kind":"Service"
+        },
+        {
+          "name":"mqtt-lwt",
+          "namespace":"",
+          "kind":"Deployment"
         }
       ],
       local full_deps = [
@@ -56,6 +61,11 @@
           "name":"mqtt",
           "namespace":"",
           "kind":"Service"
+        },
+        {
+          "name":"mqtt-lwt",
+          "namespace":"",
+          "kind":"Deployment"
         }
       ],
       "apiVersion": "v1",
