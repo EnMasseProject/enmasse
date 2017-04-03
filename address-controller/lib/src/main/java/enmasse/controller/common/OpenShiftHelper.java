@@ -168,7 +168,7 @@ public class OpenShiftHelper implements OpenShift {
     @Override
     public KubernetesList processTemplate(String templateName, ParameterValue... parameterValues) {
         File templateFile = new File(templateDir, templateName + TEMPLATE_SUFFIX);
-        return client.templates().load(templateFile).processLocally(parameterValues);
+        return client.templates().load(templateFile).process(parameterValues);
     }
 
     @Override
