@@ -7,7 +7,6 @@ import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.Namespace;
-import io.fabric8.openshift.api.model.Route;
 import io.fabric8.openshift.client.ParameterValue;
 
 import java.util.List;

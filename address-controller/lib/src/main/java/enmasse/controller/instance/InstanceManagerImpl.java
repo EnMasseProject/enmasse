@@ -2,12 +2,11 @@ package enmasse.controller.instance;
 
 import enmasse.config.LabelKeys;
 import enmasse.controller.common.OpenShift;
+import enmasse.controller.common.Route;
 import enmasse.controller.common.TemplateParameter;
 import enmasse.controller.model.Instance;
 import enmasse.controller.model.InstanceId;
 import io.fabric8.kubernetes.api.model.KubernetesList;
-import io.fabric8.kubernetes.api.model.Namespace;
-import io.fabric8.openshift.api.model.Route;
 import io.fabric8.openshift.client.ParameterValue;
 
 import java.util.*;
@@ -72,8 +71,8 @@ public class InstanceManagerImpl implements InstanceManager {
 
     private Optional<String> getRouteHost(List<Route> routes, String routeName) {
         for (Route route : routes) {
-            if (route.getMetadata().getName().equals(routeName)) {
-                return Optional.of(route.getSpec().getHost());
+            if (route.getName().equals(routeName)) {
+                return Optional.of(route.getHostName());
             }
         }
         return Optional.empty();

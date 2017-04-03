@@ -23,10 +23,10 @@ import enmasse.config.AddressDecoder;
 import enmasse.config.AddressEncoder;
 import enmasse.config.LabelKeys;
 import io.fabric8.kubernetes.api.model.*;
+import io.fabric8.kubernetes.api.model.extensions.Ingress;
 import io.fabric8.kubernetes.client.dsl.Resource;
 import io.fabric8.openshift.api.model.DoneablePolicyBinding;
 import io.fabric8.openshift.api.model.PolicyBinding;
-import io.fabric8.openshift.api.model.Route;
 import io.fabric8.openshift.client.OpenShiftClient;
 import io.fabric8.openshift.client.ParameterValue;
 import org.slf4j.Logger;
@@ -217,7 +217,34 @@ public class OpenShiftHelper implements OpenShift {
 
     @Override
     public List<Route> getRoutes(InstanceId instanceId) {
-        return client.routes().inNamespace(instanceId.getNamespace()).list().getItems();
+        List<Ingress> items = client.extensions().ingresses().inNamespace(instanceId.getNamespace()).list().getItems();
+        if (items.isEmpty()) {
+            return client.routes().inNamespace(instanceId.getNamespace()).list().getItems().stream()
+                    .map(r -> new Route() {
+                        @Override
+                        public String getName() {
+                            return r.getMetadata().getName();
+                        }
+
+                        @Override
+                        public String getHostName() {
+                            return r.getSpec().getHost();
+                        }
+                    }).collect(Collectors.toList());
+        } else {
+            return items.stream()
+                    .map(i -> new Route() {
+                        @Override
+                        public String getName() {
+                            return i.getMetadata().getName();
+                        }
+
+                        @Override
+                        public String getHostName() {
+                            return i.getSpec().getRules().get(0).getHost();
+                        }
+                    }).collect(Collectors.toList());
+        }
     }
 
     @Override
