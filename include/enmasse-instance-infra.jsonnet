@@ -73,7 +73,7 @@ local hawkularConfig = import "hawkular-broker-config.jsonnet";
       (if use_tls && use_routes then securedRoutes else []) +
       (if use_routes then routeConfig else []),
 
-    "parameters": [
+    local commonParameters = [
       {
         "name": "ROUTER_REPO",
         "description": "The image to use for the router",
@@ -132,6 +132,13 @@ local hawkularConfig = import "hawkular-broker-config.jsonnet";
         "value": "enmasseproject/mqtt-lwt"
       },
       {
+        "name": "INSTANCE",
+        "description": "The instance this infrastructure is deployed for",
+        "required": true
+      }
+    ],
+    local kafkaParameters = [
+      {
         "name" : "AMQP_KAFKA_BRIDGE_REPO",
         "description": "The image to use for the AMQP Kafka Bridge",
         "value": "enmasseproject/amqp-kafka-bridge"
@@ -140,12 +147,8 @@ local hawkularConfig = import "hawkular-broker-config.jsonnet";
         "name" : "KAFKA_BOOTSTRAP_SERVERS",
         "description": "A list of host/port pairs to use for establishing the initial connection to the Kafka cluster"
       },
-      {
-        "name": "INSTANCE",
-        "description": "The instance this infrastructure is deployed for",
-        "required": true
-      }
-    ]
-
+    ],
+    "parameters": commonParameters + 
+      (if with_kafka then kafkaParameters else [])
   }
 }
