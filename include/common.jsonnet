@@ -27,11 +27,12 @@ local version = std.extVar("VERSION");
     }
   },
 
-  container2(name, image, port_name, port, port2_name, port2_port, mem_request, env)::
+  container2(name, image, port_name, port, port2_name, port2_port, mem_request, env, volumeMounts)::
   {
     "image": image + ":" + version,
     "name": name,
     "env": env,
+    "volumeMounts": volumeMounts,
     "resources": {
         "requests": {
             "memory": mem_request,
