@@ -42,8 +42,11 @@ local hawkularConfig = import "hawkular-broker-config.jsonnet";
       hawkularConfig
     ],
 
-    local routeConfig = [
-      console.route("${INSTANCE}", "${CONSOLE_HOSTNAME}"),
+    local routeConfig = [ console.route("${INSTANCE}", "${CONSOLE_HOSTNAME}"), ] +
+      (if use_tls then [ messagingRoute.generate("${INSTANCE}", "${MESSAGING_HOSTNAME}"), mqttRoute.generate("${INSTANCE}", "${MQTT_GATEWAY_HOSTNAME}") ] else []),
+
+    local ingressConfig = [
+      console.ingress("${INSTANCE}", "${CONSOLE_HOSTNAME}")
     ],
 
     local compactAdmin = [
@@ -64,14 +67,13 @@ local hawkularConfig = import "hawkular-broker-config.jsonnet";
       amqpKafkaBridge.deployment("${INSTANCE}", "${AMQP_KAFKA_BRIDGE_REPO}")
     ],
 
-    local securedRoutes = [ messagingRoute.generate("${INSTANCE}", "${MESSAGING_HOSTNAME}"), mqttRoute.generate("${INSTANCE}", "${MQTT_GATEWAY_HOSTNAME}") ],
+    local routes = if use_routes then routeConfig else ingressConfig,
 
     "objects": (if use_sasldb then [router.sasldb_pvc()] else []) + 
       common +
+      routes +
       (if compact then compactAdmin else fullAdmin) +
-      (if with_kafka then kafka else []) +
-      (if use_tls && use_routes then securedRoutes else []) +
-      (if use_routes then routeConfig else []),
+      (if with_kafka then kafka else []),
 
     local commonParameters = [
       {

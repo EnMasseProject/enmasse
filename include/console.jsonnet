@@ -81,7 +81,8 @@ local common = import "common.jsonnet";
       "apiVersion": "v1",
       "metadata": {
         "labels": {
-          "app": "enmasse"
+          "app": "enmasse",
+          "instance": instance
         },
         "name": "console"
       },
@@ -97,4 +98,34 @@ local common = import "common.jsonnet";
       }
     },
 
+  ingress(instance, hostname)::
+    {
+      "kind": "Ingress",
+      "apiVersion": "extensions/v1beta1",
+      "metadata": {
+          "labels": {
+            "app": "enmasse",
+            "instance": instance
+          },
+          "name": "console"
+      },
+      "spec": {
+        "rules": [
+          {
+            "host": hostname,
+            "http": {
+              "paths": [
+                {
+                  "path": "/",
+                  "backend": {
+                    "serviceName": "admin",
+                    "servicePort": 8080
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
 }
