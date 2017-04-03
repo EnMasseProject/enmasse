@@ -32,6 +32,7 @@ import io.vertx.core.AbstractVerticle;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
 
+import java.io.File;
 import java.io.IOException;
 
 public class Controller extends AbstractVerticle {
@@ -49,7 +50,7 @@ public class Controller extends AbstractVerticle {
                 .withNamespace(options.openshiftNamespace())
                 .build());
 
-        OpenShift openShift = new OpenShiftHelper(InstanceId.withIdAndNamespace(options.openshiftNamespace(), options.openshiftNamespace()), controllerClient);
+        OpenShift openShift = new OpenShiftHelper(InstanceId.withIdAndNamespace(options.openshiftNamespace(), options.openshiftNamespace()), controllerClient, new File("/templates"));
         String templateName = options.useTLS() ? "tls-enmasse-instance-infra" : "enmasse-instance-infra";
 
         FlavorManager flavorManager = new FlavorManager();

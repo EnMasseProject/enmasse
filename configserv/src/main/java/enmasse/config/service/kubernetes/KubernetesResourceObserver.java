@@ -24,7 +24,7 @@ import io.fabric8.kubernetes.api.model.KubernetesResourceList;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.Watch;
 import io.fabric8.kubernetes.client.Watcher;
-import io.fabric8.kubernetes.client.dsl.ClientOperation;
+import io.fabric8.kubernetes.client.dsl.Operation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,13 +52,13 @@ public class KubernetesResourceObserver<T extends Resource> implements AutoClose
 
     @SuppressWarnings("unchecked")
     public void start() {
-        Map<ClientOperation<? extends HasMetadata, ?, ?, ?>, KubernetesResourceList>  initialResources = new LinkedHashMap<>();
-        for (ClientOperation<? extends HasMetadata, ?, ?, ?> operation : observerOptions.getOperations()) {
+        Map<Operation<? extends HasMetadata, ?, ?, ?>, KubernetesResourceList>  initialResources = new LinkedHashMap<>();
+        for (Operation<? extends HasMetadata, ?, ?, ?> operation : observerOptions.getOperations()) {
             KubernetesResourceList list = (KubernetesResourceList) operation.withLabels(observerOptions.getLabelMap()).list();
             initialResources.put(operation, list);
         }
         initializeResources(initialResources.values());
-        for (Map.Entry<ClientOperation<? extends HasMetadata, ?, ?, ?>, KubernetesResourceList> entry : initialResources.entrySet()) {
+        for (Map.Entry<Operation<? extends HasMetadata, ?, ?, ?>, KubernetesResourceList> entry : initialResources.entrySet()) {
             watches.add(entry.getKey().withLabels(observerOptions.getLabelMap()).withResourceVersion(entry.getValue().getMetadata().getResourceVersion()).watch(this));
         }
     }

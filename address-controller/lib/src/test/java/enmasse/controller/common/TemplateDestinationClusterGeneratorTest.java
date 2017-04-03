@@ -28,12 +28,14 @@ import io.fabric8.openshift.api.model.TemplateBuilder;
 import io.fabric8.openshift.api.model.TemplateListBuilder;
 import io.fabric8.openshift.client.OpenShiftClient;
 import io.fabric8.openshift.client.ParameterValue;
-import io.fabric8.openshift.client.dsl.ClientTemplateResource;
+import io.fabric8.openshift.client.dsl.TemplateResource;
 import io.fabric8.openshift.client.dsl.TemplateOperation;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
+import java.io.File;
 import java.util.*;
 
 import static org.hamcrest.CoreMatchers.hasItem;
@@ -51,7 +53,7 @@ public class TemplateDestinationClusterGeneratorTest {
     @Before
     public void setUp() {
         mockClient = mock(OpenShiftClient.class);
-        generator = new TemplateDestinationClusterGenerator(InstanceId.withId("myinstance"), new OpenShiftHelper(InstanceId.withId("myinstance"), mockClient), flavorManager);
+        generator = new TemplateDestinationClusterGenerator(InstanceId.withId("myinstance"), new OpenShiftHelper(InstanceId.withId("myinstance"), mockClient, new File("src/test/resources/templates")), flavorManager);
         flavorManager.flavorsUpdated(Collections.singletonMap("vanilla", new Flavor.Builder("vanilla", "test").build()));
     }
 
@@ -105,11 +107,9 @@ public class TemplateDestinationClusterGeneratorTest {
                 .build();
 
         TemplateOperation templateOp = mock(TemplateOperation.class);
-        ClientTemplateResource templateResource = mock(ClientTemplateResource.class);
-        when(templateOp.list()).thenReturn(new TemplateListBuilder().addToItems(template).build());
-        when(templateOp.withName(anyString())).thenReturn(templateResource);
-        when(templateResource.get()).thenReturn(template);
-        when(templateResource.process(captor.capture())).thenReturn(new KubernetesListBuilder().addNewConfigMapItem().withNewMetadata().withName("testmap").endMetadata().endConfigMapItem().build());
+        TemplateResource templateResource = mock(TemplateResource.class);
+        when(templateOp.load(any(File.class))).thenReturn(templateResource);
+        when(templateResource.processLocally(captor.capture())).thenReturn(new KubernetesListBuilder().addNewConfigMapItem().withNewMetadata().withName("testmap").endMetadata().endConfigMapItem().build());
         when(mockClient.templates()).thenReturn(templateOp);
 
         return generator.generateCluster(Collections.singleton(destination));

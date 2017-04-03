@@ -27,14 +27,15 @@ import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.extensions.Deployment;
 import io.fabric8.kubernetes.api.model.extensions.DeploymentBuilder;
 import io.fabric8.kubernetes.api.model.extensions.DeploymentListBuilder;
-import io.fabric8.kubernetes.client.dsl.ClientMixedOperation;
-import io.fabric8.kubernetes.client.dsl.ClientResource;
+import io.fabric8.kubernetes.client.dsl.MixedOperation;
+import io.fabric8.kubernetes.client.dsl.Resource;
 import io.fabric8.kubernetes.client.dsl.ExtensionsAPIGroupDSL;
 import io.fabric8.openshift.api.model.DeploymentConfigListBuilder;
 import io.fabric8.openshift.client.OpenShiftClient;
 import org.junit.Test;
 import org.mockito.internal.util.collections.Sets;
 
+import java.io.File;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -89,19 +90,19 @@ public class OpenShiftHelperTest {
                         .addToData("anycast", encoder.toJson())
                         .build();
 
-        ClientMixedOperation dcOp = mock(ClientMixedOperation.class);
-        ClientMixedOperation dOp = mock(ClientMixedOperation.class);
-        ClientMixedOperation pvcOp = mock(ClientMixedOperation.class);
-        ClientMixedOperation mapOp = mock(ClientMixedOperation.class);
+        MixedOperation dcOp = mock(MixedOperation.class);
+        MixedOperation dOp = mock(MixedOperation.class);
+        MixedOperation pvcOp = mock(MixedOperation.class);
+        MixedOperation mapOp = mock(MixedOperation.class);
 
-        ClientResource mapQueueResource = mock(ClientResource.class);
-        ClientResource mapDirectResource = mock(ClientResource.class);
+        Resource mapQueueResource = mock(Resource.class);
+        Resource mapDirectResource = mock(Resource.class);
 
-        ClientMixedOperation rcOp = mock(ClientMixedOperation.class);
+        MixedOperation rcOp = mock(MixedOperation.class);
         ExtensionsAPIGroupDSL extensions = mock(ExtensionsAPIGroupDSL.class);
 
         OpenShiftClient mockClient = mock(OpenShiftClient.class);
-        OpenShiftHelper helper = new OpenShiftHelper(InstanceId.withId("myinstance"), mockClient);
+        OpenShiftHelper helper = new OpenShiftHelper(InstanceId.withId("myinstance"), mockClient, new File("src/test/resources/templates"));
         when(mockClient.deploymentConfigs()).thenReturn(dcOp);
         when(mockClient.extensions()).thenReturn(extensions);
         when(extensions.deployments()).thenReturn(dOp);
@@ -154,7 +155,7 @@ public class OpenShiftHelperTest {
     @Test
     public void testCreateAddressConfig() {
         OpenShiftClient mockClient = mock(OpenShiftClient.class);
-        OpenShiftHelper helper = new OpenShiftHelper(InstanceId.withId("myinstance"), mockClient);
+        OpenShiftHelper helper = new OpenShiftHelper(InstanceId.withId("myinstance"), mockClient, new File("src/test/resources/templates"));
         Set<Destination> group = Sets.newSet(new Destination("queue1", "group1", true, false, Optional.of("vanilla"), Optional.empty()),
                 new Destination("queue2", "group1", true, false, Optional.of("vanilla"), Optional.empty()));
 

@@ -7,7 +7,7 @@ import enmasse.config.service.kubernetes.ObserverOptions;
 import enmasse.config.service.kubernetes.SubscriptionConfig;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.client.KubernetesClient;
-import io.fabric8.kubernetes.client.dsl.ClientOperation;
+import io.fabric8.kubernetes.client.dsl.Operation;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -27,7 +27,7 @@ public class ConfigSubscriptionConfig implements SubscriptionConfig<ConfigResour
     @SuppressWarnings("unchecked")
     @Override
     public ObserverOptions getObserverOptions(KubernetesClient client, Map<String, String> filter) {
-        ClientOperation<ConfigMap, ?, ?, ?>[] ops = new ClientOperation[1];
+        Operation<ConfigMap, ?, ?, ?>[] ops = new Operation[1];
         ops[0] = client.configMaps();
         Map<String, String> labelMap = new LinkedHashMap<>(filter);
         if (labelMap.isEmpty()) {

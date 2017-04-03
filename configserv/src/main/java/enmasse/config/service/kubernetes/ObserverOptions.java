@@ -2,7 +2,7 @@ package enmasse.config.service.kubernetes;
 
 import enmasse.config.service.model.LabelSet;
 import io.fabric8.kubernetes.api.model.HasMetadata;
-import io.fabric8.kubernetes.client.dsl.ClientOperation;
+import io.fabric8.kubernetes.client.dsl.Operation;
 
 import java.util.Map;
 
@@ -11,15 +11,15 @@ import java.util.Map;
  */
 public class ObserverOptions {
     private final LabelSet labelSet;
-    private final ClientOperation<? extends HasMetadata, ?, ?, ?>[] operations;
+    private final Operation<? extends HasMetadata, ?, ?, ?>[] operations;
 
-    public ObserverOptions(LabelSet labelSet, ClientOperation<? extends HasMetadata, ?, ?, ?>[] operations) {
+    public ObserverOptions(LabelSet labelSet, Operation<? extends HasMetadata, ?, ?, ?>[] operations) {
         this.labelSet = labelSet;
         this.operations = operations;
     }
 
 
-    public ClientOperation<? extends HasMetadata, ?, ?, ?>[] getOperations() {
+    public Operation<? extends HasMetadata, ?, ?, ?>[] getOperations() {
         return operations;
     }
 

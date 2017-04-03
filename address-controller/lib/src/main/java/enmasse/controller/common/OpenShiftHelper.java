@@ -23,7 +23,7 @@ import enmasse.config.AddressDecoder;
 import enmasse.config.AddressEncoder;
 import enmasse.config.LabelKeys;
 import io.fabric8.kubernetes.api.model.*;
-import io.fabric8.kubernetes.client.dsl.ClientResource;
+import io.fabric8.kubernetes.client.dsl.Resource;
 import io.fabric8.openshift.api.model.DoneablePolicyBinding;
 import io.fabric8.openshift.api.model.PolicyBinding;
 import io.fabric8.openshift.api.model.Route;
@@ -32,6 +32,7 @@ import io.fabric8.openshift.client.ParameterValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -40,12 +41,16 @@ import java.util.stream.Collectors;
  */
 public class OpenShiftHelper implements OpenShift {
     private static final Logger log = LoggerFactory.getLogger(OpenShiftHelper.class.getName());
+    private static final String TEMPLATE_SUFFIX = ".json";
+
     private final OpenShiftClient client;
     private final InstanceId instance;
+    private final File templateDir;
 
-    public OpenShiftHelper(InstanceId instance, OpenShiftClient client) {
+    public OpenShiftHelper(InstanceId instance, OpenShiftClient client, File templateDir) {
         this.client = client;
         this.instance = instance;
+        this.templateDir = templateDir;
     }
 
     @Override
@@ -157,17 +162,18 @@ public class OpenShiftHelper implements OpenShift {
 
     @Override
     public OpenShift mutateClient(InstanceId newInstance) {
-        return new OpenShiftHelper(newInstance, client);
+        return new OpenShiftHelper(newInstance, client, templateDir);
     }
 
     @Override
     public KubernetesList processTemplate(String templateName, ParameterValue... parameterValues) {
-        return client.templates().withName(templateName).process(parameterValues);
+        File templateFile = new File(templateDir, templateName + TEMPLATE_SUFFIX);
+        return client.templates().load(templateFile).processLocally(parameterValues);
     }
 
     @Override
     public void addDefaultViewPolicy(InstanceId instance) {
-        ClientResource<PolicyBinding, DoneablePolicyBinding> bindingResource = client.policyBindings()
+        Resource<PolicyBinding, DoneablePolicyBinding> bindingResource = client.policyBindings()
                 .inNamespace(instance.getNamespace())
                 .withName(":default");
 

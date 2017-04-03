@@ -4,7 +4,7 @@ import enmasse.config.service.TestResource;
 import enmasse.config.service.model.LabelSet;
 import enmasse.config.service.model.ResourceFactory;
 import io.fabric8.kubernetes.client.KubernetesClient;
-import io.fabric8.kubernetes.client.dsl.ClientMixedOperation;
+import io.fabric8.kubernetes.client.dsl.MixedOperation;
 import org.apache.qpid.proton.amqp.messaging.AmqpSequence;
 import org.apache.qpid.proton.message.Message;
 
@@ -29,7 +29,7 @@ public class TestSubscriptionConfig implements SubscriptionConfig<TestResource> 
     public ObserverOptions getObserverOptions(KubernetesClient client, Map<String, String> filter) {
         Map<String, String> filterMap = new LinkedHashMap<>(filter);
         filterMap.put("key", "value");
-        return new ObserverOptions(LabelSet.fromMap(filterMap), new ClientMixedOperation[] {client.configMaps() });
+        return new ObserverOptions(LabelSet.fromMap(filterMap), new MixedOperation[] {client.configMaps() });
     }
 
     @Override

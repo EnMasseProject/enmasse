@@ -10,7 +10,7 @@ import enmasse.config.service.podsense.PodResource;
 import enmasse.config.service.podsense.PodSenseMessageEncoder;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.client.KubernetesClient;
-import io.fabric8.kubernetes.client.dsl.ClientOperation;
+import io.fabric8.kubernetes.client.dsl.Operation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,7 +36,7 @@ public class BrokerSenseSubscriptionConfig implements enmasse.config.service.kub
     @SuppressWarnings("unchecked")
     @Override
     public ObserverOptions getObserverOptions(KubernetesClient client, Map<String, String> filter) {
-        ClientOperation<Pod, ?, ?, ?>[] ops = new ClientOperation[1];
+        Operation<Pod, ?, ?, ?>[] ops = new Operation[1];
         ops[0] = client.pods();
         return new ObserverOptions(LabelSet.fromMap(Collections.singletonMap("role", "broker")), ops);
     }

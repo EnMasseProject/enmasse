@@ -25,8 +25,8 @@ import io.fabric8.kubernetes.api.model.ListMeta;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.Watch;
 import io.fabric8.kubernetes.client.Watcher;
-import io.fabric8.kubernetes.client.dsl.ClientMixedOperation;
-import io.fabric8.kubernetes.client.dsl.ClientResource;
+import io.fabric8.kubernetes.client.dsl.MixedOperation;
+import io.fabric8.kubernetes.client.dsl.Resource;
 import org.apache.qpid.proton.amqp.messaging.AmqpSequence;
 import org.apache.qpid.proton.message.Message;
 import org.junit.After;
@@ -49,7 +49,7 @@ public class KubernetesResourceDatabaseTest {
     private KubernetesResourceDatabase<TestResource> database;
     private KubernetesClient client;
     private ScheduledExecutorService executor;
-    private ClientMixedOperation<ConfigMap, ConfigMapList, DoneableConfigMap, ClientResource<ConfigMap, DoneableConfigMap>> mapOp = mock(ClientMixedOperation.class);
+    private MixedOperation<ConfigMap, ConfigMapList, DoneableConfigMap, Resource<ConfigMap, DoneableConfigMap>> mapOp = mock(MixedOperation.class);
 
     @Before
     public void setup() {
