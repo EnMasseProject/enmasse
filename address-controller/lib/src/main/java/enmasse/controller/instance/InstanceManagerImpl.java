@@ -88,9 +88,9 @@ public class InstanceManagerImpl implements InstanceManager {
 
         List<ParameterValue> parameterValues = new ArrayList<>();
         parameterValues.add(new ParameterValue(TemplateParameter.INSTANCE, OpenShift.sanitizeName(instance.id().getId())));
-        instance.messagingHost().ifPresent(h -> parameterValues.add(new ParameterValue(TemplateParameter.MESSAGING_HOSTNAME, h)));
-        instance.mqttHost().ifPresent(h -> parameterValues.add(new ParameterValue(TemplateParameter.MQTT_HOSTNAME, h)));
-        instance.consoleHost().ifPresent(h -> parameterValues.add(new ParameterValue(TemplateParameter.CONSOLE_HOSTNAME, h)));
+        parameterValues.add(new ParameterValue(TemplateParameter.MESSAGING_HOSTNAME, instance.messagingHost().orElse("")));
+        parameterValues.add(new ParameterValue(TemplateParameter.MQTT_HOSTNAME, instance.mqttHost().orElse("")));
+        parameterValues.add(new ParameterValue(TemplateParameter.CONSOLE_HOSTNAME, instance.consoleHost().orElse("")));
 
         KubernetesList items = openShift.processTemplate(instanceTemplateName, parameterValues.toArray(new ParameterValue[0]));
         instance.uuid().ifPresent(uuid -> OpenShift.addObjectLabel(items, LabelKeys.UUID, uuid));

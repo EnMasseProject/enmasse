@@ -46,7 +46,7 @@ public class InstanceManagerTest {
         assertThat(idCaptor.getAllValues(), hasItem(i2.id()));
 
         List<ParameterValue> values = captor.getAllValues();
-        assertThat(values.size(), is(4));
+        assertThat(values.size(), is(8));
         assertParameter(values, "INSTANCE", "myid");
         assertParameter(values, "INSTANCE", "myid2");
         assertParameter(values, "MESSAGING_HOSTNAME", "messaging.example.com");

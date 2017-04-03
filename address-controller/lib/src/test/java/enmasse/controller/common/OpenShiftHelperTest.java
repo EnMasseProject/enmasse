@@ -31,7 +31,9 @@ import io.fabric8.kubernetes.client.dsl.MixedOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
 import io.fabric8.kubernetes.client.dsl.ExtensionsAPIGroupDSL;
 import io.fabric8.openshift.api.model.DeploymentConfigListBuilder;
+import io.fabric8.openshift.client.DefaultOpenShiftClient;
 import io.fabric8.openshift.client.OpenShiftClient;
+import io.fabric8.openshift.client.ParameterValue;
 import org.junit.Test;
 import org.mockito.internal.util.collections.Sets;
 
@@ -150,6 +152,13 @@ public class OpenShiftHelperTest {
         assertThat(group.size(), is(2));
         assertDestination(group, "myqueue", true, false, Optional.of("vanilla"));
         assertDestination(group, "myqueue2", true, false, Optional.of("vanilla"));
+    }
+
+    @Test
+    public void testProcessTemplate() {
+        OpenShiftHelper helper = new OpenShiftHelper(InstanceId.withId("myinstance"), new DefaultOpenShiftClient(), new File("src/test/resources/templates"));
+        KubernetesList list = helper.processTemplate("test", new ParameterValue("MYPARAM", "value"), new ParameterValue("SECONDPARAM", ""));
+        assertThat(list.getItems().size(), is(1));
     }
 
     @Test
