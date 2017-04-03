@@ -60,7 +60,6 @@ public class OpenShiftHelper implements OpenShift {
 
         // Add other resources part of a destination cluster
         List<HasMetadata> objects = new ArrayList<>();
-        objects.addAll(client.deploymentConfigs().inNamespace(instance.getNamespace()).list().getItems());
         objects.addAll(client.extensions().deployments().inNamespace(instance.getNamespace()).list().getItems());
         objects.addAll(client.persistentVolumeClaims().inNamespace(instance.getNamespace()).list().getItems());
         objects.addAll(client.configMaps().inNamespace(instance.getNamespace()).list().getItems());
