@@ -1,7 +1,7 @@
 local storage = import "storage-template.jsonnet";
 local enmasseInfra = import "enmasse-instance-infra.jsonnet";
 {
-  generate(use_tls, use_sasl, compact, with_kafka)::
+  generate(use_tls, use_sasl, compact, with_kafka, use_routes)::
   {
     "apiVersion": "v1",
     "kind": "ConfigMap",
@@ -20,8 +20,8 @@ local enmasseInfra = import "enmasse-instance-infra.jsonnet";
       "tls-topic-inmemory.json": std.toString(storage.template(true, false, true)),
       "topic-persisted.json": std.toString(storage.template(true, true, false)),
       "tls-topic-persisted.json": std.toString(storage.template(true, true, true)),
-      "enmasse-instance-infra.json": std.toString(enmasseInfra.generate(true, use_sasl, compact, with_kafka)),
-      "tls-enmasse-instance-infra.json": std.toString(enmasseInfra.generate(true, use_sasl, compact, with_kafka))
+      "enmasse-instance-infra.json": std.toString(enmasseInfra.generate(true, use_sasl, compact, with_kafka, use_routes)),
+      "tls-enmasse-instance-infra.json": std.toString(enmasseInfra.generate(true, use_sasl, compact, with_kafka, use_routes))
     }
   }
 }
