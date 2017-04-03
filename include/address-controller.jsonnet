@@ -60,7 +60,20 @@ local common = import "common.jsonnet";
               }, {
                 "name": "TLS",
                 "value": secure
-              }])
+              }], [
+                {
+                  "name": "templates",
+                  "mountPath": "/templates"
+                }
+              ])
+            ],
+            "volumes": [
+              {
+                "name": "templates",
+                "configMap": {
+                  "name": "enmasse-template-config"
+                }
+              }
             ]
           }
         }

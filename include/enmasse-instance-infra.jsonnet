@@ -20,7 +20,7 @@ local amqpKafkaBridge = import "amqp-kafka-bridge.jsonnet";
 local amqpKafkaBridgeService = import "amqp-kafka-bridge-service.jsonnet";
 local hawkularConfig = import "hawkular-broker-config.jsonnet";
 {
-  generate(use_tls, use_sasldb, compact, with_kafka)::
+  generate(use_tls, use_sasldb, compact, with_kafka, use_routes)::
   {
     local templateName = (if use_tls then"tls-enmasse-instance-infra" else "enmasse-instance-infra"),
     "apiVersion": "v1",
@@ -39,8 +39,11 @@ local hawkularConfig = import "hawkular-broker-config.jsonnet";
       mqttGateway.deployment(use_tls, "${INSTANCE}", "${MQTT_GATEWAY_REPO}"),
       mqttService.generate(use_tls, "${INSTANCE}"),
       mqttLwt.deployment("${INSTANCE}", "${MQTT_LWT_REPO}"),
-      console.route("${INSTANCE}", "${CONSOLE_HOSTNAME}"),
       hawkularConfig
+    ],
+
+    local routeConfig = [
+      console.route("${INSTANCE}", "${CONSOLE_HOSTNAME}"),
     ],
 
     local compactAdmin = [
@@ -63,7 +66,12 @@ local hawkularConfig = import "hawkular-broker-config.jsonnet";
 
     local securedRoutes = [ messagingRoute.generate("${INSTANCE}", "${MESSAGING_HOSTNAME}"), mqttRoute.generate("${INSTANCE}", "${MQTT_GATEWAY_HOSTNAME}") ],
 
-    "objects": (if use_sasldb then [router.sasldb_pvc()] else []) + common + (if compact then compactAdmin else fullAdmin) + (if with_kafka then kafka else []) + (if use_tls then securedRoutes else []),
+    "objects": (if use_sasldb then [router.sasldb_pvc()] else []) + 
+      common +
+      (if compact then compactAdmin else fullAdmin) +
+      (if with_kafka then kafka else []) +
+      (if use_tls && use_routes then securedRoutes else []) +
+      (if use_routes then routeConfig else []),
 
     "parameters": [
       {
