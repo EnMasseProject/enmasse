@@ -72,7 +72,7 @@ public class InstanceManagerImpl implements InstanceManager {
     private Optional<String> getRouteHost(List<Route> routes, String routeName) {
         for (Route route : routes) {
             if (route.getName().equals(routeName)) {
-                return Optional.of(route.getHostName());
+                return Optional.ofNullable(route.getHostName());
             }
         }
         return Optional.empty();
