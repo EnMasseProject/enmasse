@@ -649,12 +649,11 @@ objects:
       name: console
     spec:
       host: "${CONSOLE_HOSTNAME}"
-      path: "/console"
       port:
-        targetPort: http
+        targetPort: console-http
       to:
         kind: Service
-        name: console
+        name: admin
   - apiVersion: v1
     data:
       hawkular-openshift-agent: '{"endpoints": [{"collection_interval": "60s", "metrics":

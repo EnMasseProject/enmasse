@@ -86,14 +86,13 @@ local common = import "common.jsonnet";
         "name": "console"
       },
       "spec": {
-        "path": "/console",
         "host": hostname,
         "to": {
           "kind": "Service",
-          "name": "console"
+          "name": "admin"
         },
         "port": {
-          "targetPort": "http"
+          "targetPort": "console-http"
         }
       }
     },
