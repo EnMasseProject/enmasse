@@ -20,7 +20,7 @@ local enmasseInfra = import "enmasse-instance-infra.jsonnet";
       "tls-topic-inmemory.json": std.toString(storage.template(true, false, true)),
       "topic-persisted.json": std.toString(storage.template(true, true, false)),
       "tls-topic-persisted.json": std.toString(storage.template(true, true, true)),
-      "enmasse-instance-infra.json": std.toString(enmasseInfra.generate(true, use_sasl, compact, with_kafka, use_routes)),
+      "enmasse-instance-infra.json": std.toString(enmasseInfra.generate(false, use_sasl, compact, with_kafka, use_routes)),
       "tls-enmasse-instance-infra.json": std.toString(enmasseInfra.generate(true, use_sasl, compact, with_kafka, use_routes))
     }
   }
