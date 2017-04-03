@@ -73,5 +73,29 @@ local common = import "common.jsonnet";
           }
         }
       }
-    }
+    },
+
+  route(instance, hostname)::
+    {
+      "kind": "Route",
+      "apiVersion": "v1",
+      "metadata": {
+        "labels": {
+          "app": "enmasse"
+        },
+        "name": "console"
+      },
+      "spec": {
+        "path": "/console",
+        "host": hostname,
+        "to": {
+          "kind": "Service",
+          "name": "console"
+        },
+        "port": {
+          "targetPort": "http"
+        }
+      }
+    },
+
 }

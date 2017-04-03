@@ -10,6 +10,7 @@ local messagingService = import "messaging-service.jsonnet";
 local messagingRoute = import "messaging-route.jsonnet";
 local common = import "common.jsonnet";
 local admin = import "admin.jsonnet";
+local console = import "console.jsonnet";
 local mqttGateway = import "mqtt-gateway.jsonnet";
 local mqtt = import "mqtt.jsonnet";
 local mqttService = import "mqtt-service.jsonnet";
@@ -38,6 +39,7 @@ local hawkularConfig = import "hawkular-broker-config.jsonnet";
       mqttGateway.deployment(use_tls, "${INSTANCE}", "${MQTT_GATEWAY_REPO}"),
       mqttService.generate(use_tls, "${INSTANCE}"),
       mqttLwt.deployment("${INSTANCE}", "${MQTT_LWT_REPO}"),
+      console.route("${INSTANCE}", "${CONSOLE_HOSTNAME}"),
       hawkularConfig
     ],
 
@@ -111,6 +113,10 @@ local hawkularConfig = import "hawkular-broker-config.jsonnet";
       {
         "name": "MQTT_GATEWAY_HOSTNAME",
         "description": "The hostname to use for the exposed route for MQTT (TLS only)"
+      },
+      {
+        "name": "CONSOLE_HOSTNAME",
+        "description": "The hostname to use for the exposed route for the messaging console"
       },
       {
         "name" : "MQTT_LWT_REPO",
