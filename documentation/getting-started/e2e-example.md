@@ -110,6 +110,13 @@ EnMasse is configured with a set of addresses that you can use for messages. Cur
    * Direct anycast addresses
    * Direct broadcast addresses
 
+#### Configuring addresses using the console
+
+The EnMasse console should be available at `http://$(minikube ip)/console`. You can create and
+monitor queues and topics using the UI.
+
+#### Configuring addresses using the REST api
+
 Here is an example config with all 4 variants that you can save to `addresses.json`:
 
 ```
