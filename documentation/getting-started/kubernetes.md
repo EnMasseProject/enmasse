@@ -33,10 +33,7 @@ monitor queues and topics using the UI.
 
 ### Exposing messaging through Ingress resource
 
-If you are using minikube, the IP addresses of the internal services will not be accessible from
-outside of the minikube VM. To open up for AMQP using minikube and the nginx ingress controller, follow [this
-guide](https://github.com/kubernetes/contrib/tree/master/ingress/controllers/nginx/examples/tcp),
-using the port `5672` and the service `default/messaging`.
+If you are using minikube, the IP addresses of the internal services will not be accessible from outside of the minikube VM. To open up for AMQP using minikube and the nginx ingress controller, follow [this](https://github.com/kubernetes/contrib/tree/master/ingress/controllers/nginx/examples/tcp) and [this](https://github.com/kubernetes/ingress/tree/master/controllers/nginx#exposing-tcp-services) guides, using the port `5672` and the service `default/messaging`.
 
 ### Sending and receiving messages
 
