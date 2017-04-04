@@ -24,6 +24,7 @@ import enmasse.config.AddressEncoder;
 import enmasse.config.LabelKeys;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.extensions.Ingress;
+import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.dsl.Resource;
 import io.fabric8.openshift.api.model.DoneablePolicyBinding;
 import io.fabric8.openshift.api.model.PolicyBinding;
@@ -216,7 +217,12 @@ public class OpenShiftHelper implements OpenShift {
 
     @Override
     public List<Route> getRoutes(InstanceId instanceId) {
-        List<Ingress> items = client.extensions().ingresses().inNamespace(instanceId.getNamespace()).list().getItems();
+        List<Ingress> items = Collections.emptyList();
+        try {
+            items = client.extensions().ingresses().inNamespace(instanceId.getNamespace()).list().getItems();
+        } catch (KubernetesClientException e) {
+            // Ignore and try routes
+        }
         if (items.isEmpty()) {
             return client.routes().inNamespace(instanceId.getNamespace()).list().getItems().stream()
                     .map(r -> new Route() {
