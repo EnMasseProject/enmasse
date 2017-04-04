@@ -220,7 +220,7 @@ public class OpenShiftHelper implements OpenShift {
         List<Ingress> items = Collections.emptyList();
         try {
             items = client.extensions().ingresses().inNamespace(instanceId.getNamespace()).list().getItems();
-        } catch (KubernetesClientException e) {
+        } catch (Exception e) {
             // Ignore and try routes
         }
         if (items.isEmpty()) {
