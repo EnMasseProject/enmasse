@@ -38,23 +38,29 @@ public class TopicTest extends AmqpTestBase {
     public void testMultipleSubscribers() throws Exception {
         Destination dest = Destination.topic("manytopic");
         deploy(dest);
-        scale(dest, 4);
-        Thread.sleep(120_000);
+        scale(dest, 2);
+        Thread.sleep(20_000);
         AmqpClient client = createTopicClient();
         List<String> msgs = TestUtils.generateMessages(1000);
 
         List<Future<List<String>>> recvResults = Arrays.asList(
                 client.recvMessages(dest.getAddress(), msgs.size()),
                 client.recvMessages(dest.getAddress(), msgs.size()),
+                client.recvMessages(dest.getAddress(), msgs.size()),
+                client.recvMessages(dest.getAddress(), msgs.size()),
+                client.recvMessages(dest.getAddress(), msgs.size()),
                 client.recvMessages(dest.getAddress(), msgs.size()));
 
-        Thread.sleep(120_000);
+        Thread.sleep(60_000);
 
         assertThat(client.sendMessages(dest.getAddress(), msgs).get(1, TimeUnit.MINUTES), is(msgs.size()));
 
         assertThat(recvResults.get(0).get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
         assertThat(recvResults.get(1).get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
         assertThat(recvResults.get(2).get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
+        assertThat(recvResults.get(3).get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
+        assertThat(recvResults.get(4).get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
+        assertThat(recvResults.get(5).get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
     }
 
     @Test
