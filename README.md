@@ -2,15 +2,9 @@
 [![Systemtest Status](https://travis-ci.org/EnMasseProject/systemtests.svg?branch=master)](https://travis-ci.org/EnMasseProject/systemtests)
 
 --- 
-EnMasse is an elastic messaging platform running on OpenShift with focus on scalability and 
-performance. EnMasse can run on your own infrastructure or in the cloud, and simplifies the 
-deployment of messaging infrastructure.
+EnMasse is an open source messaging platform, with focus on scalability and performance. EnMasse can run on your own infrastructure or in the cloud, and simplifies the deployment of messaging infrastructure.
 
-EnMasse is based on open standards like [AMQP](http://amqp.org/) and [MQTT](http://mqtt.org/), and 
-open source projects like [Apache ActiveMQ Artemis](https://activemq.apache.org/artemis/), [Apache Qpid Dispatch Router](https://qpid.apache.org/components/dispatch-router/index.html) and finally the [Vert.x](http://vertx.io/) toolkit for some of its components.
-
-EnMasse is a great fit for IoT cloud infrastructure, and aims to extend protocol support to both
-HTTP and CoAP.
+The EnMasse project that aims to create, as a community, an open source messaging platform that runs on [Kubernetes](https://kubernetes.io/) and [OpenShift](http://openshift.org/), using open standards like [AMQP](http://amqp.org/) and [MQTT](http://mqtt.org/) etc. EnMasse is based on other open source projects like [Apache ActiveMQ Artemis](https://activemq.apache.org/artemis/), [Apache Qpid Dispatch Router](https://qpid.apache.org/components/dispatch-router/index.html) and finally the [Vert.x](http://vertx.io/) toolkit.
 
 ## Features
 
@@ -18,17 +12,19 @@ HTTP and CoAP.
 * Support for <b>store and forward</b> and <b>direct messaging</b> mechanisms
 * <b>Elastic scaling</b> of message brokers
 * <b>AMQP</b> and <b>MQTT</b> support
-* <b>Simple</b> setup and management
+* <b>Simple</b> setup, management and <b>monitoring</b>.
 * <b>Multitenancy</b>: Manage multiple independent instances
-* Built on <b>OpenShift</b>: deploy <b>on-premise</b> or in the <b>cloud</b>
+* Built on <b>Kubernetes/OpenShift</b>: deploy <b>on-premise</b> or in the <b>cloud</b>
+
+EnMasse can be used for many purposes, such as moving your messaging infrastructure to the cloud (without depending on a specific cloud provider) or building a scalable messaging backbone for IoT.
 
 ## Components
 
-EnMasse is made of different components needed for the OpenShift deployment and for handling the messaging infrastructure based on a Qpid Dispatch Router network and Apache ActiveMQ broker(s).
+EnMasse is made of different components needed for the deployment and for handling the messaging infrastructure based on a Qpid Dispatch Router network and Apache ActiveMQ broker(s).
 
 * [address-controller](https://github.com/EnMasseProject/admin#address-controller): Controls multiple instances (tenants) and per-instance address space
 * [ragent](https://github.com/EnMasseProject/ragent): Controls the router network configuration
-* [configserv](https://github.com/EnMasseProject/admin#configuration-server): A bridge for subscribing to OpenShift resource updates through AMQP
+* [configserv](https://github.com/EnMasseProject/admin#configuration-server): A bridge for subscribing to Kubernetes resource updates through AMQP
 * [queue-scheduler](https://github.com/EnMasseProject/admin#queue-scheduler): Controls the mapping of queues to brokers
 * [subserv](https://github.com/EnMasseProject/subserv): Subscription service for durable subscriptions
 * [mqtt-gateway](https://github.com/EnMasseProject/mqtt-gateway): MQTT gateway for "MQTT over AMQP"
@@ -47,7 +43,7 @@ For questions or feedback, reach us on IRC on #enmasse on Freenode or post to ou
 
 # Contributing
 
-See [HACKING](HACKING.md) for details on how to build the different components of EnMasse. Submit patches using pull requests, or post patches to the mailing lists.
+See [HACKING](HACKING.md) for details on how to build the different components of EnMasse. Submit patches using pull requests, or post patches to the mailing lists. See the [trello board](https://trello.com/enmasseproject) to get an idea of future plans and areas where you can contribute.
 
 # License
 
