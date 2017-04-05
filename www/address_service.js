@@ -120,7 +120,7 @@ AddressService.prototype.update_depth_series = function () {
             changed = true;
         }
     }
-    if (changed && this.callback) this.callback();
+    if (changed && this.callback) this.callback('update_depth_series');
 };
 
 AddressService.prototype.reset_periodic_deltas = function () {
@@ -130,7 +130,7 @@ AddressService.prototype.reset_periodic_deltas = function () {
             changed = true;
         }
     }
-    if (changed && this.callback) this.callback();
+    if (changed && this.callback) this.callback('reset_periodic_deltas');
 };
 
 AddressService.prototype.update = function (a) {
@@ -216,7 +216,7 @@ AddressService.prototype.update_user = function (c) {
 AddressService.prototype.on_message = function (context) {
     if (context.message.subject === 'address') {
         this.update(context.message.body);
-        if (this.callback) this.callback();
+        if (this.callback) this.callback('address');
     } else if (context.message.subject === 'address_deleted') {
         var changed = false;
         for (var i = 0; i < this.addresses.length;) {
@@ -227,13 +227,13 @@ AddressService.prototype.on_message = function (context) {
                 i++;
             }
         }
-        if (changed && this.callback) this.callback();
+        if (changed && this.callback) this.callback('address:deleted');
     } else if (context.message.subject === 'flavors') {
         this.flavors = context.message.body;
-        if (this.callback) this.callback();
+        if (this.callback) this.callback('flavors');
     } else if (context.message.subject === 'connection') {
         this.update_connection(context.message.body);
-        if (this.callback) this.callback();
+        if (this.callback) this.callback('connection');
     } else if (context.message.subject === 'connection_deleted') {
         var changed = false;
         for (var i = 0; i < this.connections.length;) {
@@ -244,11 +244,11 @@ AddressService.prototype.on_message = function (context) {
                 i++;
             }
         }
-        if (changed && this.callback) this.callback();
+        if (changed && this.callback) this.callback("connection:deleted");
     } else if (context.message.subject === 'user') {
         console.log('got user: ' + JSON.stringify(context.message.body));
         this.update_user(context.message.body);
-        if (this.callback) this.callback();
+        if (this.callback) this.callback("user");
     } else if (context.message.subject === 'user_deleted') {
         var changed = false;
         for (var i = 0; i < this.users.length;) {
@@ -259,7 +259,7 @@ AddressService.prototype.on_message = function (context) {
                 i++;
             }
         }
-        if (changed && this.callback) this.callback();
+        if (changed && this.callback) this.callback("user:deleted");
     }
 }
 
