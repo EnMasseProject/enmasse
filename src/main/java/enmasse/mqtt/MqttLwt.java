@@ -24,6 +24,7 @@ import enmasse.mqtt.storage.LwtStorage;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.proton.ProtonClient;
+import io.vertx.proton.ProtonClientOptions;
 import io.vertx.proton.ProtonConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -83,10 +84,12 @@ public class MqttLwt extends AbstractVerticle {
 
         this.client = ProtonClient.create(this.vertx);
 
+        ProtonClientOptions options = this.createClientOptions();
+
         Future<ProtonConnection> lwtConnFuture = Future.future();
 
         // connecting to the messaging service internal (router network)
-        this.client.connect(this.messagingServiceHost, this.messagingServiceInternalPort, done -> {
+        this.client.connect(options, this.messagingServiceHost, this.messagingServiceInternalPort, done -> {
 
             if (done.succeeded()) {
 
@@ -118,7 +121,7 @@ public class MqttLwt extends AbstractVerticle {
 
             Future<ProtonConnection> publishConnFuture = Future.future();
 
-            this.client.connect(this.messagingServiceHost, this.messagingServicePort, done -> {
+            this.client.connect(options, this.messagingServiceHost, this.messagingServicePort, done -> {
 
                 if (done.succeeded()) {
 
@@ -168,6 +171,19 @@ public class MqttLwt extends AbstractVerticle {
             });
 
         }, startFuture);
+    }
+
+    /**
+     * Create an options instance for the ProtonClient
+     *
+     * @return  ProtonClient options instance
+     */
+    private ProtonClientOptions createClientOptions() {
+
+        ProtonClientOptions options = new ProtonClientOptions();
+        options.setConnectTimeout(1000);
+        options.setReconnectAttempts(-1).setReconnectInterval(1000); // reconnect forever, every 1000 millisecs
+        return options;
     }
 
     private void handleWill(WillData willData) {
