@@ -38,8 +38,8 @@ public class TopicTest extends AmqpTestBase {
     public void testMultipleSubscribers() throws Exception {
         Destination dest = Destination.topic("manytopic");
         deploy(dest);
-        scale(dest, 2);
-        Thread.sleep(20_000);
+        scale(dest, 1);
+        Thread.sleep(60_000);
         AmqpClient client = createTopicClient();
         List<String> msgs = TestUtils.generateMessages(1000);
 
