@@ -137,9 +137,7 @@ local hawkularConfig = import "hawkular-broker-config.jsonnet";
         "name": "INSTANCE",
         "description": "The instance this infrastructure is deployed for",
         "required": true
-      }
-    ],
-    local kafkaParameters = [
+      },
       {
         "name" : "AMQP_KAFKA_BRIDGE_REPO",
         "description": "The image to use for the AMQP Kafka Bridge",
@@ -148,9 +146,8 @@ local hawkularConfig = import "hawkular-broker-config.jsonnet";
       {
         "name" : "KAFKA_BOOTSTRAP_SERVERS",
         "description": "A list of host/port pairs to use for establishing the initial connection to the Kafka cluster"
-      },
+      }
     ],
-    "parameters": commonParameters + 
-      (if with_kafka then kafkaParameters else [])
+    "parameters": commonParameters
   }
 }
