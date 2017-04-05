@@ -1,4 +1,4 @@
-# System tests
+# Systemtests
 
 [![Build Status](https://travis-ci.org/EnMasseProject/systemtests.svg?branch=master)](https://travis-ci.org/EnMasseProject/systemtests)
 
