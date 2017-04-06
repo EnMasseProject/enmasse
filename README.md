@@ -1,4 +1,4 @@
-<img src="https://raw.githubusercontent.com/EnMasseProject/enmasse/master/documentation/logo/enmasse_logo.png" width="70%" />
+<img src="https://raw.githubusercontent.com/EnMasseProject/enmasse/master/documentation/logo/enmasse_logo.png" width="50%" />
 
 [![Systemtest Status](https://travis-ci.org/EnMasseProject/systemtests.svg?branch=master)](https://travis-ci.org/EnMasseProject/systemtests)
 
