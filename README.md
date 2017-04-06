@@ -1,4 +1,4 @@
-![EnMasse](/documentation/logo/enmasse_logo.svg)
+![EnMasse](https://raw.githubusercontent.com/EnMasseProject/enmasse/master/documentation/logo/enmasse_logo.svg)
 [![Systemtest Status](https://travis-ci.org/EnMasseProject/systemtests.svg?branch=master)](https://travis-ci.org/EnMasseProject/systemtests)
 --- 
 
