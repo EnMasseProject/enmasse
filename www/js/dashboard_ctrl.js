@@ -19,7 +19,7 @@ var dashboard_ctrl = function($scope, $timeout, address_service) {
             title: 'Messages',
             name: 'pieMessages',
             detail1: 'Total messages processed',
-            detail2: 'for all addresses',
+            detail2: 'for all active clients',
             datafn: function(item) {
                 return item.messages_out
             },
@@ -117,6 +117,7 @@ var dashboard_ctrl = function($scope, $timeout, address_service) {
             type: 'pie',
             colors: {},
             columns: [],
+            empty: { label: { text: "No Data Available" }},
         };
         var addressvals = Object.keys(this.address_map).map(function(address) {
             return {
