@@ -1,8 +1,5 @@
-[![EnMasse][enmasse-logo]][enmasse-repo]
+![EnMasse](/documentation/logo/enmasse_logo.svg)
 [![Systemtest Status](https://travis-ci.org/EnMasseProject/systemtests.svg?branch=master)](https://travis-ci.org/EnMasseProject/systemtests)
-
-[enmasse-repo]: https://github.com/EnMasseProject/enmasse
-[enmasse-logo]: documentation/logo/enmasse_logo.svg
 --- 
 
 EnMasse is an open source messaging platform, with focus on scalability and performance. EnMasse can run on your own infrastructure or in the cloud, and simplifies the deployment of messaging infrastructure.
