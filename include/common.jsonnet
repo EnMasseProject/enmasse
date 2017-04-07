@@ -60,8 +60,20 @@ local version = std.extVar("VERSION");
     }
   },
 
-  clientContainer(name, image, mem_request, env)::
+  clientContainer(name, image, mem_request, env, http_health)::
   {
+    local health_port =
+    {
+      "name": "health",
+      "containerPort": 8080
+    },
+    local health_probe =
+    {
+      "httpGet": {
+        "path": "/health",
+        "port": "health"
+      }
+    },
     "image": image + ":" + version,
     "name": name,
     "env": env,
@@ -72,7 +84,9 @@ local version = std.extVar("VERSION");
         "limits": {
             "memory": mem_request,
         }
-    }
+    },
+    [if http_health then "ports"]: [ health_port ],
+    [if http_health then "livenessProbe"]: health_probe
   },
 
   service(instance, name, selector_name, port_name, port, target_port)::
