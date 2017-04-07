@@ -1,8 +1,8 @@
-FROM fedora:22
+FROM fedora:25
 
 RUN dnf -y install cmake cyrus-sasl-devel gcc libuuid-devel make openssl-devel python-devel swig
 
-ENV PROTON_VERSION 0.12.0
+ENV PROTON_VERSION 0.17.0
 ADD qpid-proton-$PROTON_VERSION.tar.gz /
 RUN mkdir /qpid-proton-$PROTON_VERSION/build
 WORKDIR /qpid-proton-$PROTON_VERSION/build
