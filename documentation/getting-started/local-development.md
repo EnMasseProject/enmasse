@@ -17,7 +17,7 @@ EnMasse comes with a few templates that makes setting it up easy. First, create 
 
     oc new-project enmasse
 
-You can setup EnMasse automatically or manually. 
+You can setup EnMasse automatically or manually.
 
 #### Deploying EnMasse automatically
 
@@ -81,7 +81,7 @@ will be used for the persistent volume. E.g.
 Then create the peristent volume, e.g. using the example yaml
 https://github.com/EnMasseProject/enmasse/tree/master/include/sasldb-persistent-volume.yaml:
 
-    oc create -f https://raw.githubusercontent.com/EnMasseProject/enmasse/tree/master/include/sasldb-persistent-volume.yaml
+    oc create -f https://raw.githubusercontent.com/EnMasseProject/enmasse/master/include/sasldb-persistent-volume.yaml
 
 Then log in again as developer:
 
@@ -130,7 +130,7 @@ Here is an example config with all 4 variants that you can save to `addresses.js
             },
             "spec": {
                 "store_and_forward": false,
-                "multicast": true 
+                "multicast": true
             }
         },
         {
