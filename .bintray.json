@@ -1,0 +1,26 @@
+{
+    "package": {
+        "name": "topic-forwarder",
+        "repo": "master",
+        "subject": "lulf",
+        "desc": "I was pushed completely automatically",
+        "website_url": "enmasseproject.github.io",
+        "issue_tracker_url": "https://github.com/EnMasseProject/topic-forwarder/issues",
+        "vcs_url": "https://github.com/EnMasseProject/topic-forwarder.git",
+        "github_use_tag_release_notes": false,
+        "licenses": ["Apache-2.0"],
+        "labels": ["cool", "awesome", "gorilla"],
+        "public_download_numbers": false,
+        "public_stats": false
+    },
+
+    "version": {
+        "name": "latest"
+    },
+
+    "files":
+        [
+        {"includePattern": "build/distribution/(.*)"}, "uploadPattern": "build/distribution/$1"}
+        ],
+    "publish": true
+}
