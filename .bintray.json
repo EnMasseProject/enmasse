@@ -2,7 +2,7 @@
     "package": {
         "name": "topic-forwarder",
         "repo": "master",
-        "subject": "lulf",
+        "subject": "enmasse",
         "desc": "I was pushed completely automatically",
         "website_url": "enmasseproject.github.io",
         "issue_tracker_url": "https://github.com/EnMasseProject/topic-forwarder/issues",
