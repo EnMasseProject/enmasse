@@ -18,7 +18,8 @@ local mqttRoute = import "mqtt-route.jsonnet";
 local mqttLwt = import "mqtt-lwt.jsonnet";
 local amqpKafkaBridge = import "amqp-kafka-bridge.jsonnet";
 local amqpKafkaBridgeService = import "amqp-kafka-bridge-service.jsonnet";
-local hawkularConfig = import "hawkular-broker-config.jsonnet";
+local hawkularBrokerConfig = import "hawkular-broker-config.jsonnet";
+local hawkularRouterConfig = import "hawkular-router-config.jsonnet";
 {
   generate(use_tls, use_sasldb, compact, with_kafka, use_routes)::
   {
@@ -39,7 +40,8 @@ local hawkularConfig = import "hawkular-broker-config.jsonnet";
       mqttGateway.deployment(use_tls, "${INSTANCE}", "${MQTT_GATEWAY_REPO}"),
       mqttService.generate(use_tls, "${INSTANCE}"),
       mqttLwt.deployment("${INSTANCE}", "${MQTT_LWT_REPO}"),
-      hawkularConfig
+      hawkularBrokerConfig,
+      hawkularRouterConfig
     ],
 
     local routeConfig = [ console.route("${INSTANCE}", "${CONSOLE_HOSTNAME}"), ] +

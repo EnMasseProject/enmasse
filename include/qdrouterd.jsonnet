@@ -27,7 +27,9 @@ local common = import "common.jsonnet";
           },
           "spec": {
             "containers": [ router.container(use_tls, use_sasldb, image_repo, "", "") ],
-            [if use_tls || use_sasldb then "volumes" ]: (if use_tls then [router.secret_volume()] else []) + (if use_sasldb then [router.sasldb_volume()] else [])
+            "volumes": [router.hawkular_volume()] +
+              (if use_tls then [router.secret_volume()] else []) +
+              (if use_sasldb then [router.sasldb_volume()] else [])
           }
         }
       }

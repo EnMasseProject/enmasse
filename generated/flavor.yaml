@@ -1,19 +1,9 @@
 ---
-apiVersion: v1
-data:
-  json: '{"large-persisted-queue": {"description": "Large queue with persistence",
-    "templateName": "queue-persisted", "templateParameters": {"STORAGE_CAPACITY":
-    "10Gi"}, "type": "queue"}, "large-persisted-topic": {"description": "Large topic
-    with persistence", "templateName": "topic-persisted", "templateParameters": {"STORAGE_CAPACITY":
-    "10Gi"}, "type": "topic"}, "small-persisted-queue": {"description": "Small queue
-    with persistence", "templateName": "queue-persisted", "templateParameters": {"STORAGE_CAPACITY":
-    "1Gi"}, "type": "queue"}, "small-persisted-topic": {"description": "Small topic
-    with persistence", "templateName": "topic-persisted", "templateParameters": {"STORAGE_CAPACITY":
-    "1Gi"}, "type": "topic"}, "vanilla-queue": {"description": "Simple in memory queue",
-    "templateName": "queue-inmemory", "type": "queue"}, "vanilla-topic": {"description":
-    "Simple in memory topic", "templateName": "topic-inmemory", "type": "topic"}}'
-kind: ConfigMap
+apiVersion: flavor.enmasse.io/v1
+kind: Flavor
 metadata:
-  labels:
-    app: enmasse
-  name: flavor
+  name: vanilla-queue
+spec:
+  type: queue
+  description: Small in-memory queue
+  templateName: queue-inmemory

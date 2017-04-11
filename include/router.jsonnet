@@ -17,6 +17,11 @@ local common = import "common.jsonnet";
         "containerPort": 5671,
         "protocol": "TCP"
     };
+    local collectorPort = {
+        "name": "metrics",
+        "containerPort": 8080,
+        "protocol": "TCP"
+    };
     local resources = {
         "requests": {
             "memory": mem_request,
@@ -36,8 +41,8 @@ local common = import "common.jsonnet";
         then [linkEnv]
         else [linkEnv, addressEnv],
       "ports": if use_tls
-        then [routerPort, internalPort, secureRouterPort]
-        else [routerPort, internalPort],
+        then [routerPort, collectorPort, internalPort, secureRouterPort]
+        else [routerPort, collectorPort, internalPort],
       "livenessProbe": {
         "tcpSocket": {
           "port": "amqp"
@@ -61,6 +66,14 @@ local common = import "common.jsonnet";
       "name": "ssl-certs",
       "secret": {
         "secretName": "qdrouterd-certs"
+      }
+    },
+
+  hawkular_volume()::
+    {
+      "name": "hawkular-openshift-agent",
+      "configMap": {
+          "name": "hawkular-router-config"
       }
     },
 

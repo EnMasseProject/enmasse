@@ -82,6 +82,9 @@ objects:
           - containerPort: 5672
             name: amqp
             protocol: TCP
+          - containerPort: 8080
+            name: metrics
+            protocol: TCP
           - containerPort: 55673
             name: internal
             protocol: TCP
