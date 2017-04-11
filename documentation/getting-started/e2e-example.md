@@ -23,7 +23,8 @@ Online.
 
 AMQP client examples in this guide assume that [Qpid Proton](https://qpid.apache.org/proton/index.html) with python bindings are installed ( > 0.16.0). The python bindings are also available in [PyPI](https://pypi.python.org/pypi/python-qpid-proton/0.16.0).
 
-MQTT client examples use [Eclipse Paho Python library ](https://github.com/eclipse/paho.mqtt.python).
+MQTT client examples use [Eclipse Paho Python library ](https://github.com/eclipse/paho.mqtt.python). It needs to be installed from the source code, following the instruction on the GitHub site because the TLS needed
+features aren't in the latest release yet. Note that this features are in the "develop" branch and not in the "master" one.
 
 ## Setting up EnMasse
 
