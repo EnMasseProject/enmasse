@@ -20,7 +20,7 @@
 
     "files":
         [
-        {"includePattern": "build/distribution/(.*)", "uploadPattern": "build/distribution/$1"}
+        {"includePattern": "build/distribution/(.*)", "uploadPattern": "build/distribution/$1", "matrixParams": {"override": 1}}
         ],
     "publish": true
 }
