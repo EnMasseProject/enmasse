@@ -5,8 +5,8 @@ ENV JAVA_HOME /usr/lib/jvm/java
 
 ARG version=latest
 ENV VERSION ${version}
-ADD build/distributions/topic-forwarder-${version}.tar /
+ADD build/distributions/topic-forwarder.tar /
 
 EXPOSE 8080
 
-CMD /topic-forwarder-${VERSION}/bin/topic-forwarder
+CMD /topic-forwarder/bin/topic-forwarder
