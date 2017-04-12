@@ -5,9 +5,9 @@ ENV JAVA_HOME /usr/lib/jvm/java
 
 ARG version=latest
 ENV VERSION ${version}
-ADD build/distributions/server-${version}.tar /
+ADD build/distributions/server.tar /
 
 EXPOSE 5672
 EXPOSE 8080
 
-CMD /server-${VERSION}/bin/server
+CMD /server/bin/server

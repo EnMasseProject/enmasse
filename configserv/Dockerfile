@@ -5,8 +5,8 @@ ENV JAVA_HOME /usr/lib/jvm/java
 
 ARG version=latest
 ENV VERSION ${version}
-ADD build/distributions/configserv-${version}.tar /
+ADD build/distributions/configserv.tar /
 
 EXPOSE 5672
 
-CMD /configserv-${VERSION}/bin/configserv
+CMD /configserv/bin/configserv
