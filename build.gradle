@@ -1,6 +1,5 @@
 allprojects  {
     group = 'enmasse'
-    version = 'latest'
 }
 
 ext {
