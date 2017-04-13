@@ -753,7 +753,12 @@ angular.module('patternfly.wizard').controller('UserFormController', ['$rootScop
 
 angular.module('myapp', ['patternfly.navigation', 'ui.router', 'patternfly.views', 'patternfly.toolbars', 'patternfly.charts', 'patternfly.wizard', 'patternfly.validation', 'address_service']).config(
     function ($stateProvider, $urlRouterProvider) {
-        $urlRouterProvider.otherwise('/addresses');
+        $urlRouterProvider.otherwise('/dashboard');
+        $stateProvider.state('dashboard',
+                             { url: '/dashboard',
+                               templateUrl: 'dashboard.html'
+                             }
+                            );
         $stateProvider.state('addresses',
                              { url: '/addresses',
                                templateUrl: 'addresses.html'
@@ -772,6 +777,11 @@ angular.module('myapp', ['patternfly.navigation', 'ui.router', 'patternfly.views
     }).controller('NavCtrl', ['$scope',
     function ($scope) {
         $scope.navigationItems = [
+            {
+                title: "Dashboard",
+                iconClass: "fa fa-tachometer",
+                uiSref: "dashboard"
+            },
             {
                 title: "Addresses",
                 iconClass: "fa pficon-topology",
