@@ -105,6 +105,9 @@ public class AmqpLwtEndpoint {
                     .closeHandler(ar -> {
                         this.closeHandler(receiver, ar);
                     })
+                    .detachHandler(ar -> {
+                        this.closeHandler(receiver, ar);
+                    })
                     .setPrefetch(0)
                     .open();
 
