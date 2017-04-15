@@ -24,7 +24,7 @@ script:
 - gradle build -i
 - gradle distTar
 - gradle downloadArtemis
-- gradle buildZip
+- gradle buildTar
 - curl -s https://raw.githubusercontent.com/EnMasseProject/travis-scripts/master/docker-build.sh
   | bash /dev/stdin enmasseproject/artemis .
 - curl -s https://raw.githubusercontent.com/EnMasseProject/travis-scripts/master/generate-bintray-descriptor.sh
