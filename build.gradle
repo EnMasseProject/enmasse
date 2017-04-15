@@ -22,3 +22,22 @@ task buildArtemis {
   }
 }
 
+task buildZip(type: Zip) {
+    from('activemq-artemis/integration/activemq-amqp-connector/target') {
+        into('connector')
+    }
+    from('config_templates') {
+        into('config')
+    }
+    from('utils') {
+        into('utils')
+    }
+    from('artemis-launcher/build/exe/main/main') {
+        into('launcher')
+    }
+    from('artemis-shutdown-hook/build/distributions/artemis-shutdown-hook.tar') {
+        into('shutdown-hook')
+    }
+    archiveName 'artemis-image.zip'
+    destinationDir file('build')
+}

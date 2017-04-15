@@ -24,10 +24,11 @@ script:
 - gradle build -i
 - gradle distTar
 - gradle downloadArtemis
+- gradle buildZip
 - curl -s https://raw.githubusercontent.com/EnMasseProject/travis-scripts/master/docker-build.sh
   | bash /dev/stdin enmasseproject/artemis .
 - curl -s https://raw.githubusercontent.com/EnMasseProject/travis-scripts/master/generate-bintray-descriptor.sh
-  | bash /dev/stdin artemis-image build/apache-artemis-bin.tar.gz activemq-artemis/integration/activemq-amqp-connector/target/artemis-amqp-connector-2.0.0-SNAPSHOT.jar "config_templates/(.*)" "utils/(.*)" artemis-launcher/build/exe/main/main > .bintray.json
+  | bash /dev/stdin artemis-image build/artemis-image.zip
 after_success:
 - curl -s https://raw.githubusercontent.com/EnMasseProject/travis-scripts/master/trigger-travis.sh
   | bash /dev/stdin
