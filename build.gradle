@@ -6,6 +6,10 @@ allprojects  {
     group = 'enmasse'
 }
 
+ext {
+    home = 'opt/apache-artemis-2.0.0-SNAPSHOT'
+}
+
 import de.undercouch.gradle.tasks.download.Download
 
 task downloadArtemis(type: Download) {
@@ -22,22 +26,22 @@ task buildArtemis {
   }
 }
 
-task buildZip(type: Zip) {
-    from('activemq-artemis/integration/activemq-amqp-connector/target') {
-        into('connector')
+task buildTar(type: Tar) {
+    from('activemq-artemis/integration/activemq-amqp-connector/target/artemis-amqp-connector-2.0.0-SNAPSHOT.jar') {
+        into("${home}/lib")
     }
     from('config_templates') {
-        into('config')
+        into('config_templates')
     }
     from('utils') {
-        into('utils')
+        into("${home}/bin/")
     }
     from('artemis-launcher/build/exe/main/main') {
-        into('launcher')
+        into("${home}/bin/")
     }
-    from('artemis-shutdown-hook/build/distributions/artemis-shutdown-hook.tar') {
-        into('shutdown-hook')
+    from(tarTree('artemis-shutdown-hook/build/distributions/artemis-shutdown-hook.tar')) {
+        into("opt/")
     }
-    archiveName 'artemis-image.zip'
+    archiveName 'artemis-image.tar'
     destinationDir file('build')
 }
