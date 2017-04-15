@@ -105,7 +105,7 @@ function AddressService() {
     this.connections = [];
     this.users = [];
     var ws = rhea.websocket_connect(WebSocket);
-    this.connection = rhea.connect({"connection_details":ws("ws://" + location.hostname + ":56720", ["binary", "AMQPWSB10"]), "reconnect":true});
+    this.connection = rhea.connect({"connection_details":ws("ws://" + location.hostname + ":" + location.port + "/websocket", ["binary", "AMQPWSB10"]), "reconnect":true});
     this.connection.on('message', this.on_message.bind(this));
     this.sender = this.connection.open_sender();
     this.connection.open_receiver();

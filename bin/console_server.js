@@ -25,13 +25,15 @@ var router_stats = require('../lib/router_stats.js');
 var broker_stats = require('../lib/broker_stats.js');
 var UserCtrl = require('../lib/user_ctrl.js');
 var Registry = require('../lib/registry.js');
+var http = require('http');
 
 var app = express();
-app.set('port', 8080);
-app.use(express.static(path.join(__dirname, '../www/')))
-var http_server = app.listen(app.get('port'));
+app.use('/', express.static(path.join(__dirname, '../www/')))
 
-var ws_server = new WebSocketServer({'port':56720});
+var server = http.createServer(app);
+server.listen(8080);
+
+var ws_server = new WebSocketServer({server: server, 'path': '/websocket'});
 var amqp_container = rhea.create_container({autoaccept:false});
 ws_server.on('connection', function (ws) {
     console.log('Accepted incoming websocket connection');
