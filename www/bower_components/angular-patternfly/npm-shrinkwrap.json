@@ -1,6 +1,6 @@
 {
   "name": "angular-patternfly",
-  "version": "3.19.0",
+  "version": "3.23.2",
   "dependencies": {
     "angular": {
       "version": "1.5.11",
@@ -15,8 +15,7 @@
     "angular-drag-and-drop-lists": {
       "version": "2.0.0",
       "from": "angular-drag-and-drop-lists@2.0.0",
-      "resolved": "https://registry.npmjs.org/angular-drag-and-drop-lists/-/angular-drag-and-drop-lists-2.0.0.tgz",
-      "optional": true
+      "resolved": "https://registry.npmjs.org/angular-drag-and-drop-lists/-/angular-drag-and-drop-lists-2.0.0.tgz"
     },
     "angular-sanitize": {
       "version": "1.5.11",
@@ -34,9 +33,9 @@
       "resolved": "https://registry.npmjs.org/lodash/-/lodash-3.10.1.tgz"
     },
     "patternfly": {
-      "version": "3.19.0",
-      "from": "patternfly@>=3.19.0 <3.20.0",
-      "resolved": "https://registry.npmjs.org/patternfly/-/patternfly-3.19.0.tgz",
+      "version": "3.23.2",
+      "from": "patternfly@>=3.23.2 <3.24.0",
+      "resolved": "https://registry.npmjs.org/patternfly/-/patternfly-3.23.2.tgz",
       "dependencies": {
         "bootstrap": {
           "version": "3.3.7",

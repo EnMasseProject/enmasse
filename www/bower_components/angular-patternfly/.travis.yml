@@ -21,16 +21,3 @@ script:
 
 after_success:
   - ./scripts/publish-ghpages.sh -t docs
-
-# OpenShift expects its deployment branch to be "master-dist". This can be changed using:
-# rhc app-configure patternfly/angular --deployment-branch master-dist
-deploy:
-  provider: openshift
-  user: "$OPENSHIFT_USER"
-  password: "$OPENSHIFT_PWD"
-  domain: "patternfly"
-  app: angular
-  skip_cleanup: true
-  on: # The branch and repo that triggered the build
-    branch: master
-    condition: $TRAVIS_REPO_SLUG = "patternfly/angular-patternfly"

@@ -1,4 +1,4 @@
-<a href="https://github.com/patternfly/angular-patternfly/edit/master/src/views/listview/list-view-directive.js" class="improve-docs"><i class="icon-edit"> </i>Improve this doc</a><a href="https://github.com/patternfly/angular-patternfly/blob/aed2484/src/views/listview/list-view-directive.js#L422" class="view-source"><i class="icon-eye-open"> </i>View source</a><h1><code ng:non-bindable="">pfListView</code>
+<a href="https://github.com/patternfly/angular-patternfly/edit/master/src/views/listview/list-view-directive.js" class="improve-docs"><i class="icon-edit"> </i>Improve this doc</a><a href="https://github.com/patternfly/angular-patternfly/blob/56275b2/src/views/listview/list-view-directive.js#L422" class="view-source"><i class="icon-eye-open"> </i>View source</a><h1><code ng:non-bindable="">pfListView</code>
 <div><span class="hint">directive in module <code ng:non-bindable="">patternfly.views</code>
 </span>
 </div>
@@ -41,7 +41,7 @@ If using expanding rows, use a list-expanded-content element containing expandab
 <li>.onCheckBoxChange       - ( function(item) ) Called to notify when a checkbox selection changes, default is none
 <li>.onSelect               - ( function(item, event) ) Called to notify of item selection, default is none
 <li>.onSelectionChange      - ( function(items) ) Called to notify when item selections change, default is none
-<li>.onClick                - ( function(item, event) ) Called to notify when an item is clicked, default is none
+<li>.onClick                - ( function(item, event) ) Called to notify when an item is clicked, default is none. Note: row expansion is the default behavior after onClick performed, but user can stop such default behavior by adding the sentence &quot;return false;&quot; to the end of onClick function body
 <li>.onDblClick             - ( function(item, event) ) Called to notify when an item is double clicked, default is none
 </ul></div></td></tr><tr><td>actionButtons</td><td><a href="" class="label type-hint type-hint-array">array</a></td><td><div class="patternfly-views-directive-page patternfly-views-directive-pflistview-page"><p>List of action buttons in each row</p>
 <ul style='list-style-type: none'>

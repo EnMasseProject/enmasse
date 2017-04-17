@@ -514,7 +514,7 @@ describe('Directive:  pfDataList', function () {
     expect(alteredKebab.length).toBe(1);
   });
 
-  it('should allow expanding rows', function () {
+  it('should allow expanding rows by clicking the caret icon', function () {
     var items;
     $scope.listConfig.useExpandingRows = true;
 
@@ -523,6 +523,19 @@ describe('Directive:  pfDataList', function () {
     items = element.find('.list-view-pf-expand .fa-angle-right');
     expect(items.length).toBe(5);
 
+    eventFire(items[0], 'click');
+
+    var openItem = element.find('.list-group-item-container');
+    expect(openItem.length).toBe(1);
+  });
+
+  it('should allow expanding rows by clicking the main-info section', function () {
+    var items;
+    $scope.listConfig.useExpandingRows = true;
+
+    $scope.$digest();
+
+    items = element.find('.list-view-pf-main-info');
     eventFire(items[0], 'click');
 
     var openItem = element.find('.list-group-item-container');
