@@ -6,12 +6,15 @@ var dashboard_ctrl = function($scope, $timeout, address_service) {
         this.detail1 = obj.detail1 || ''
         this.detail2 = obj.detail2 || ''
         this.current_value = obj.current_value || 0
-        this.address_map = obj.address_map || {}
-        this.reference = obj.reference || undefined
+        this.address_map = obj.address_map || {};     // the latest value for each address in the pie chart
         this.datafn = obj.datafn || function() {
             return null
         }
         this.data = obj.data || []
+        // save the generated chart so we can destroy it when page unloads
+        this.get_chart = function (chart) {
+            this.chart = chart
+        }
     }
 
     $scope.pies = [
@@ -42,19 +45,6 @@ var dashboard_ctrl = function($scope, $timeout, address_service) {
         }),
     ];
 
-    // called by address_service each time an address' data changes
-    var on_update = function (reason) {
-        $timeout(function () {
-          if (!reason) reason = '';
-          if (reason.split(':')[0] !== 'address') {
-              return;
-          }
-          $scope.pies.forEach(function(pie, i) {
-              pie.update()
-          })
-        })
-    };
-
     // ensure all pie charts use same color for each address
     var pieColors = [$.pfPaletteColors.red, $.pfPaletteColors.blue, $.pfPaletteColors.orange,
         $.pfPaletteColors.green, $.pfPaletteColors.red200
@@ -72,7 +62,7 @@ var dashboard_ctrl = function($scope, $timeout, address_service) {
         return address_color_map[a]
     }
 
-    PieChart.prototype.update = function (piedata) {
+    PieChart.prototype.update = function () {
         var piedata = 0
         this.address_map = {}
         items.forEach(function(item) {
@@ -89,36 +79,7 @@ var dashboard_ctrl = function($scope, $timeout, address_service) {
         while (this.data.length > 10) {
             this.data.shift()
         }
-        this.draw_pie()
-        this.draw_lines()
-    }
-
-    PieChart.prototype.draw_lines = function() {
-        var data = {
-            columns: [
-                [this.title]
-            ],
-            type: 'area'
-        };
-        Array.prototype.push.apply(data.columns[0], this.data)
-
-        if (!this.spark_reference) {
-            var sparklineChartConfig = $().c3ChartDefaults().getDefaultSparklineConfig();
-            sparklineChartConfig.bindto = '#chart-pf-sparkline-' + this.name;
-            sparklineChartConfig.data = data
-            this.spark_reference = c3.generate(sparklineChartConfig);
-        } else {
-            this.spark_reference.load(data)
-        }
-    }
-
-    PieChart.prototype.draw_pie = function() {
-        var pieData = {
-            type: 'pie',
-            colors: {},
-            columns: [],
-            empty: { label: { text: "No Data Available" }},
-        };
+        // create the pie chart's data columns
         var addressvals = Object.keys(this.address_map).map(function(address) {
             return {
                 address: address,
@@ -141,36 +102,78 @@ var dashboard_ctrl = function($scope, $timeout, address_service) {
             })
         }
         addressvals.forEach(function(av) {
-            pieData.colors[av.address] = color4Address(av.address)
-            pieData.columns.push([av.address, av.value])
-        })
+            this.config.data.colors[av.address] = color4Address(av.address)
+            this.config.data.columns.push([av.address, av.value])
+        }, this)
+        this.draw_lines()
+    }
 
-        // only call c3.generate() once. after that call .load()
-        // otherwise c3 will leak memory. https://github.com/c3js/c3/issues/926
-        if (!this.reference) {
-            var c3ChartDefaults = $().c3ChartDefaults();
-            var pieChartSmallConfig = c3ChartDefaults.getDefaultPieConfig();
-            pieChartSmallConfig.bindto = '#pie-chart-' + this.name;
-            pieChartSmallConfig.data = pieData;
-            pieChartSmallConfig.legend = {
-                show: true,
-                position: 'right'
-            };
-            pieChartSmallConfig.size = {
-                width: 260,
-                height: 115
-            };
-            this.reference = c3.generate(pieChartSmallConfig);
+    PieChart.prototype.draw_lines = function() {
+        var data = {
+            columns: [
+                [this.title]
+            ],
+            type: 'area'
+        };
+        Array.prototype.push.apply(data.columns[0], this.data)
+
+        if (!this.spark_reference) {
+            var sparklineChartConfig = $().c3ChartDefaults().getDefaultSparklineConfig();
+            sparklineChartConfig.bindto = '#chart-pf-sparkline-' + this.name;
+            sparklineChartConfig.data = data
+            this.spark_reference = c3.generate(sparklineChartConfig);
         } else {
-            this.reference.load(pieData)
+            this.spark_reference.load(data)
         }
+    }
+
+    PieChart.prototype.get_config = function() {
+        if (this.config) {
+            return this.config
+        }
+        var pieData = {
+            type: 'pie',
+            colors: {},
+            columns: [],
+            empty: { label: { text: "No Data Available" }},
+        };
+        var c3ChartDefaults = $().c3ChartDefaults();
+        var pieChartSmallConfig = c3ChartDefaults.getDefaultPieConfig();
+        pieChartSmallConfig.bindto = '#pie-chart-' + this.name;
+        pieChartSmallConfig.data = pieData;
+        pieChartSmallConfig.legend = {
+            show: true,
+            position: 'right'
+        };
+        pieChartSmallConfig.size = {
+            width: 260,
+            height: 115
+        };
+        this.config = pieChartSmallConfig;
+        return this.config;
+    }
+    $scope.get_chart_config = function (pie) {
+        return pie.get_config()
     }
     $scope.$on('$destroy', function() {
         $scope.pies.forEach(function(pie) {
-            if (pie.reference) pie.reference.destroy()
+            if (pie.chart) pie.chart.destroy()
             if (pie.spark_reference) pie.spark_reference.destroy()
         })
     })
+
+    // called by address_service each time an address' data changes
+    var on_update = function (reason) {
+        $timeout(function () {
+          if (!reason) reason = '';
+          if (reason.split(':')[0] !== 'address') {
+              return;
+          }
+          $scope.pies.forEach(function(pie, i) {
+              pie.update()
+          })
+        })
+    };
 
     var items = address_service.addresses;
     address_service.on_update(on_update)
@@ -180,3 +183,4 @@ var dashboard_ctrl = function($scope, $timeout, address_service) {
 }
 
 angular.module('patternfly.toolbars').controller('DashCtrl', ['$scope', '$timeout', 'address_service', dashboard_ctrl])
+
