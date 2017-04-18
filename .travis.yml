@@ -6,7 +6,8 @@ jdk:
 - oraclejdk8
 services:
 - docker
-script: make
+script:
+- make
 - curl -s https://raw.githubusercontent.com/EnMasseProject/travis-scripts/master/generate-bintray-descriptor.sh
   | bash /dev/stdin router-image qpid-dispatch-image.tar.gz > .bintray.json
 after_success:
