@@ -1,9 +1,7 @@
 {
   "name": "enmasse",
-  "homepage": "https://github.com/ErnieAllen/routilities",
-  "authors": [
-    "Ernest Allen <eallen@redhat.com>"
-  ],
+  "homepage": "https://github.com/EnMasseProject/routilities",
+  "authors": [],
   "description": "Bower components for enmasse",
   "main": "",
   "license": "Apache 2",
