@@ -19,4 +19,6 @@ patch -d qpid-dispatch-src -p1 < $MESH_PATCH
 cd proton_build
 cmake -DCMAKE_INSTALL_PREFIX=$WORKING/proton_install -DCMAKE_BUILD_TYPE=RelWithDebInfo -DBUILD_CPP=OFF -DBUILD_PERL=OFF -DBUILD_RUBY=OFF -DBUILD_JAVA=OFF -DBUILD_GO=OFF -DBUILD_JAVASCRIPT=OFF -DBUILD_PHP=OFF $WORKING/qpid-proton-src/ && make && make install
 cd $WORKING/build
-CMAKE_PREFIX_PATH=$WORKING/proton_install cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DBUILD_DOCS=OFF -DCONSOLE_INSTALL=OFF -DCMAKE_INSTALL_PREFIX=/usr $WORKING/qpid-dispatch-src/ && make && make DESTDIR=$WORKING/staging/ install && tar -z -C $WORKING/staging/ -cf $OUTDIR/qpid-dispatch-binary.tar.gz usr etc
+CMAKE_PREFIX_PATH=$WORKING/proton_install cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DBUILD_DOCS=OFF -DCONSOLE_INSTALL=OFF -DCMAKE_INSTALL_PREFIX=/usr $WORKING/qpid-dispatch-src/ && make && make DESTDIR=$WORKING/staging/ install || exit 1
+
+tar -z -C $WORKING/staging/ -cf $OUTDIR/qpid-dispatch-image.tar.gz usr etc $ABS_BASE/run_qdr.sh $ABS_BASE/qdrouterd.conf.template $ABS_BASE/*.snippet
