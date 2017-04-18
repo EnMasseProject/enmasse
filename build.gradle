@@ -18,6 +18,9 @@ subprojects {
     apply plugin: 'java'
     sourceCompatibility = 1.8
     targetCompatibility = 1.8
+    tasks.withType(Tar){
+        compression = Compression.GZIP
+    }
     repositories {
         mavenLocal()
         mavenCentral()
