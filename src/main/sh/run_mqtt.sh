@@ -7,4 +7,4 @@ if [ -d /etc/mqtt-gateway/ssl ]; then
   export ENMASSE_MQTT_LISTENPORT=8883
 fi
 
-exec java -Dvertx.disableFileCaching=true -Dvertx.disableFileCPResolving=true -jar /mqtt-gateway-1.0-SNAPSHOT.jar
+exec java -Dvertx.cacheDirBase=/tmp -jar /mqtt-gateway.jar
