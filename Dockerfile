@@ -8,10 +8,11 @@ RUN yum -y update  \
 RUN mkdir -p /opt/app-root/src/
 WORKDIR /opt/app-root/src/
 
-COPY package.json /opt/app-root/src/
+ARG version=latest
+ADD console-${version}.tar.gz /opt/app-root/src/
+
 RUN ["/bin/bash", "-c", "npm install"]
 
-COPY . /opt/app-root/src/
 EXPOSE 56720 8080
 
 CMD ["node", "/opt/app-root/src/bin/console_server.js"]
