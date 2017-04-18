@@ -19,6 +19,11 @@ deploy:
   file:
   - generated/enmasse-template.yaml
   - generated/tls-enmasse-template.yaml
+  - generated/enmasse-kubernetes.yaml
+  - generated/enmasse-template-with-kafka.yaml
+  - generated/tls-enmasse-template-with-kafka.yaml
+  - generated/sasldb-enmasse-template.yaml
+  - generated/sasldb-tls-enmasse-template.yaml
   - scripts/enmasse-deploy.sh
   on:
     tags: true
