@@ -9,8 +9,9 @@ RUN yum -y update  \
 RUN mkdir -p /opt/app-root/src/
 RUN cd /opt/app-root/src/
 RUN ["/bin/bash", "-c", "npm install debug && npm install rhea"]
+ARG version=latest
 
-COPY ragent.js future.js router.js kube_utils.js utils.js /opt/app-root/src/
+ADD ragent-${version}.tar.gz /opt/app-root/src/
 EXPOSE 55672
 
 CMD ["node", "/opt/app-root/src/ragent.js"]
