@@ -1,5 +1,8 @@
 #!/bin/bash
 DIR=`dirname $0`
+OPENSHIFT_URL=$1
+ROUTER_HOST=$2
+
 set -x
 source $DIR/common.sh
 
@@ -7,11 +10,11 @@ curl https://raw.githubusercontent.com/EnMasseProject/enmasse/master/scripts/enm
 chmod 755 $DIR/enmasse-deploy.sh
 export PATH="$PATH:$DIR"
 
-oc login -u test -p test --insecure-skip-tls-verify=true https://localhost:8443
+oc login -u test -p test --insecure-skip-tls-verify=true $OPENSHIFT_URL
 
-setup_test enmasse-ci true
-run_test enmasse-ci true || failure=$(($failure + 1))
-# teardown_test enmasse-ci
+setup_test enmasse-ci true false $OPENSHIFT_URL
+run_test enmasse-ci true false $OPENSHIFT_URL || failure=$(($failure + 1))
+teardown_test enmasse-ci
 
 if [ $failure -gt 0 ]
 then
