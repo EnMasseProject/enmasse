@@ -690,10 +690,10 @@ angular.module('patternfly.card').directive('pfCard', function () {
  </file>
  </example>
  */
-;(function () {
+;(function (patternfly) {
   'use strict';
 
-  var patternflyDefaults = $().c3ChartDefaults();
+  var patternflyDefaults = patternfly.c3ChartDefaults();
 
   angular.module('patternfly.charts').constant('c3ChartDefaults', {
     getDefaultColors: patternflyDefaults.getDefaultColors,
@@ -712,7 +712,7 @@ angular.module('patternfly.card').directive('pfCard', function () {
     getDefaultSparklineConfig: patternflyDefaults.getDefaultSparklineConfig,
     getDefaultLineConfig: patternflyDefaults.getDefaultLineConfig
   });
-})();
+})(patternfly);
 ;/**
  * @ngdoc directive
  * @name patternfly.charts.directive:pfC3Chart
@@ -753,7 +753,7 @@ angular.module('patternfly.card').directive('pfCard', function () {
        $scope.total = 1000;
        $scope.available =  $scope.total - $scope.used;
 
-       $scope.chartConfig = $().c3ChartDefaults().getDefaultDonutConfig('MHz Used');
+       $scope.chartConfig = patternfly.c3ChartDefaults().getDefaultDonutConfig('MHz Used');
        $scope.chartConfig.data = {
          type: "donut",
          columns: [
@@ -787,7 +787,7 @@ angular.module('patternfly.card').directive('pfCard', function () {
    </file>
  </example>
  */
-(function () {
+(function (patternfly) {
   'use strict';
 
   angular.module('patternfly.charts').directive('pfC3Chart', ["$timeout", function ($timeout) {
@@ -800,15 +800,21 @@ angular.module('patternfly.card').directive('pfCard', function () {
       template: '<div id=""></div>',
       replace: true,
       link: function (scope, element, attrs) {
+        // store the chart object
+        var chart = undefined;
         scope.$watch('config', function () {
           $timeout(function () {
-            // store the chart object
-            var chart;
             //generate c3 chart data
             var chartData = scope.config;
             if (chartData) {
               chartData.bindto = '#' + attrs.id;
-              chart = c3.generate(chartData);
+              //checks if the chart is created
+              if (!chart) {
+                chart = c3.generate(chartData);
+              }else {
+                //if it is created, then, we only need to load changes
+                chart.load(scope.config.data);
+              }
               if (scope.getChartCallback) {
                 scope.getChartCallback(chart);
               }
@@ -818,7 +824,7 @@ angular.module('patternfly.card').directive('pfCard', function () {
       }
     };
   }]);
-}());
+}(patternfly));
 ;/**
  * @ngdoc directive
  * @name patternfly.charts.directive:pfDonutPctChart
@@ -1078,182 +1084,183 @@ angular.module('patternfly.card').directive('pfCard', function () {
    </file>
  </example>
  */
-angular.module('patternfly.charts').directive('pfDonutPctChart', ["pfUtils", "$timeout", function (pfUtils, $timeout) {
+(function (patternfly) {
   'use strict';
+  angular.module('patternfly.charts').directive('pfDonutPctChart', ["pfUtils", "$timeout", function (pfUtils, $timeout) {
+    return {
+      restrict: 'A',
+      scope: {
+        config: '=',
+        data: '=',
+        chartHeight: '=?',
+        centerLabel: '=?'
+      },
+      replace: true,
+      templateUrl: 'charts/donut/donut-pct-chart.html',
+      controller: ['$scope',
+        function ($scope) {
+          var donutTooltip;
 
-  return {
-    restrict: 'A',
-    scope: {
-      config: '=',
-      data: '=',
-      chartHeight: '=?',
-      centerLabel: '=?'
-    },
-    replace: true,
-    templateUrl: 'charts/donut/donut-pct-chart.html',
-    controller: ['$scope',
-      function ($scope) {
-        var donutTooltip;
-
-        $scope.donutChartId = 'donutChart';
-        if ($scope.config.chartId) {
-          $scope.donutChartId = $scope.config.chartId + $scope.donutChartId;
-        }
-
-        $scope.updateAvailable = function () {
-          $scope.data.available = $scope.data.total - $scope.data.used;
-        };
-
-        if ($scope.data.available === undefined) {
-          $scope.updateAvailable();
-        }
-
-        $scope.getStatusColor = function (used, thresholds) {
-          var color = pfUtils.colorPalette.blue;
-
-          if (thresholds) {
-            color = pfUtils.colorPalette.green;
-            if (used >= thresholds.error) {
-              color = pfUtils.colorPalette.red;
-            } else if (used >= thresholds.warning) {
-              color = pfUtils.colorPalette.orange;
-            }
+          $scope.donutChartId = 'donutChart';
+          if ($scope.config.chartId) {
+            $scope.donutChartId = $scope.config.chartId + $scope.donutChartId;
           }
 
-          return color;
-        };
-
-        $scope.statusDonutColor = function (scope) {
-          var color, percentUsed;
-
-          color = { pattern: [] };
-          percentUsed = scope.data.used / scope.data.total * 100.0;
-          color.pattern[0] = $scope.getStatusColor(percentUsed, scope.config.thresholds);
-          color.pattern[1] = pfUtils.colorPalette.black300;
-          return color;
-        };
-
-        donutTooltip = function (scope) {
-          return {
-            contents: function (d) {
-              var tooltipHtml;
-
-              if (scope.config.tooltipFn) {
-                tooltipHtml = '<span class="donut-tooltip-pf" style="white-space: nowrap;">' +
-                                scope.config.tooltipFn(d) +
-                             '</span>';
-              } else {
-                tooltipHtml = '<span class="donut-tooltip-pf" style="white-space: nowrap;">' +
-                          Math.round(d[0].ratio * 100) + '%' + ' ' + $scope.config.units + ' ' + d[0].name +
-                       '</span>';
-              }
-
-              return tooltipHtml;
-            }
+          $scope.updateAvailable = function () {
+            $scope.data.available = $scope.data.total - $scope.data.used;
           };
-        };
 
-        $scope.getDonutData = function (scope) {
-          return {
-            columns: [
-              ['Used', scope.data.used],
-              ['Available', scope.data.available]
-            ],
-            type: 'donut',
-            donut: {
-              label: {
-                show: false
-              }
-            },
-            groups: [
-              ['used', 'available']
-            ],
-            order: null
-          };
-        };
-
-        $scope.getCenterLabelText = function () {
-          var centerLabelText;
-
-          // default to 'used' info.
-          centerLabelText = { bigText: $scope.data.used,
-                              smText:  $scope.config.units + ' Used' };
-
-          if ($scope.config.centerLabelFn) {
-            centerLabelText.bigText = $scope.config.centerLabelFn();
-            centerLabelText.smText = '';
-          } else if ($scope.centerLabel === 'none') {
-            centerLabelText.bigText = '';
-            centerLabelText.smText = '';
-          } else if ($scope.centerLabel === 'available') {
-            centerLabelText.bigText = $scope.data.available;
-            centerLabelText.smText = $scope.config.units + ' Available';
-          } else if ($scope.centerLabel === 'percent') {
-            centerLabelText.bigText = Math.round($scope.data.used / $scope.data.total * 100.0) + '%';
-            centerLabelText.smText = 'of ' + $scope.data.total + ' ' + $scope.config.units;
+          if ($scope.data.available === undefined) {
+            $scope.updateAvailable();
           }
 
-          return centerLabelText;
+          $scope.getStatusColor = function (used, thresholds) {
+            var color = pfUtils.colorPalette.blue;
+
+            if (thresholds) {
+              color = pfUtils.colorPalette.green;
+              if (used >= thresholds.error) {
+                color = pfUtils.colorPalette.red;
+              } else if (used >= thresholds.warning) {
+                color = pfUtils.colorPalette.orange;
+              }
+            }
+
+            return color;
+          };
+
+          $scope.statusDonutColor = function (scope) {
+            var color, percentUsed;
+
+            color = { pattern: [] };
+            percentUsed = scope.data.used / scope.data.total * 100.0;
+            color.pattern[0] = $scope.getStatusColor(percentUsed, scope.config.thresholds);
+            color.pattern[1] = pfUtils.colorPalette.black300;
+            return color;
+          };
+
+          donutTooltip = function (scope) {
+            return {
+              contents: function (d) {
+                var tooltipHtml;
+
+                if (scope.config.tooltipFn) {
+                  tooltipHtml = '<span class="donut-tooltip-pf" style="white-space: nowrap;">' +
+                                  scope.config.tooltipFn(d) +
+                               '</span>';
+                } else {
+                  tooltipHtml = '<span class="donut-tooltip-pf" style="white-space: nowrap;">' +
+                            Math.round(d[0].ratio * 100) + '%' + ' ' + $scope.config.units + ' ' + d[0].name +
+                         '</span>';
+                }
+
+                return tooltipHtml;
+              }
+            };
+          };
+
+          $scope.getDonutData = function (scope) {
+            return {
+              columns: [
+                ['Used', scope.data.used],
+                ['Available', scope.data.available]
+              ],
+              type: 'donut',
+              donut: {
+                label: {
+                  show: false
+                }
+              },
+              groups: [
+                ['used', 'available']
+              ],
+              order: null
+            };
+          };
+
+          $scope.getCenterLabelText = function () {
+            var centerLabelText;
+
+            // default to 'used' info.
+            centerLabelText = { bigText: $scope.data.used,
+                                smText:  $scope.config.units + ' Used' };
+
+            if ($scope.config.centerLabelFn) {
+              centerLabelText.bigText = $scope.config.centerLabelFn();
+              centerLabelText.smText = '';
+            } else if ($scope.centerLabel === 'none') {
+              centerLabelText.bigText = '';
+              centerLabelText.smText = '';
+            } else if ($scope.centerLabel === 'available') {
+              centerLabelText.bigText = $scope.data.available;
+              centerLabelText.smText = $scope.config.units + ' Available';
+            } else if ($scope.centerLabel === 'percent') {
+              centerLabelText.bigText = Math.round($scope.data.used / $scope.data.total * 100.0) + '%';
+              centerLabelText.smText = 'of ' + $scope.data.total + ' ' + $scope.config.units;
+            }
+
+            return centerLabelText;
+          };
+
+
+          $scope.updateAll = function (scope) {
+            $scope.updateAvailable();
+            $scope.config.data = pfUtils.merge($scope.config.data, $scope.getDonutData($scope));
+            $scope.config.color = $scope.statusDonutColor($scope);
+            $scope.config.tooltip = donutTooltip(scope);
+            $scope.config.data.onclick = $scope.config.onClickFn;
+          };
+
+          $scope.config = pfUtils.merge(patternfly.c3ChartDefaults().getDefaultDonutConfig(), $scope.config);
+          $scope.updateAll($scope);
+
+
+        }
+      ],
+      link: function (scope, element) {
+        var setupDonutChartTitle = function () {
+          $timeout(function () {
+            var donutChartTitle, centerLabelText;
+
+            donutChartTitle = d3.select(element[0]).select('text.c3-chart-arcs-title');
+            if (!donutChartTitle) {
+              return;
+            }
+
+            centerLabelText = scope.getCenterLabelText();
+
+            // Remove any existing title.
+            donutChartTitle.selectAll('*').remove();
+            if (centerLabelText.bigText && !centerLabelText.smText) {
+              donutChartTitle.text(centerLabelText.bigText);
+            } else {
+              donutChartTitle.insert('tspan').text(centerLabelText.bigText).classed('donut-title-big-pf', true).attr('dy', 0).attr('x', 0);
+              donutChartTitle.insert('tspan').text(centerLabelText.smText).classed('donut-title-small-pf', true).attr('dy', 20).attr('x', 0);
+            }
+          }, 300);
         };
 
+        scope.$watch('config', function () {
+          scope.updateAll(scope);
+          setupDonutChartTitle();
+        }, true);
+        scope.$watch('chartHeight', function () {
+          if (scope.chartHeight) {
+            scope.config.size.height = scope.chartHeight;
+          }
+        });
+        scope.$watch('data', function () {
+          scope.updateAll(scope);
+          setupDonutChartTitle();
+        }, true);
 
-        $scope.updateAll = function (scope) {
-          $scope.updateAvailable();
-          $scope.config.data = pfUtils.merge($scope.config.data, $scope.getDonutData($scope));
-          $scope.config.color = $scope.statusDonutColor($scope);
-          $scope.config.tooltip = donutTooltip(scope);
-          $scope.config.data.onclick = $scope.config.onClickFn;
-        };
-
-        $scope.config = pfUtils.merge($().c3ChartDefaults().getDefaultDonutConfig(), $scope.config);
-        $scope.updateAll($scope);
-
-
+        scope.$watch('centerLabel', function () {
+          setupDonutChartTitle();
+        });
       }
-    ],
-    link: function (scope, element) {
-      var setupDonutChartTitle = function () {
-        $timeout(function () {
-          var donutChartTitle, centerLabelText;
-
-          donutChartTitle = d3.select(element[0]).select('text.c3-chart-arcs-title');
-          if (!donutChartTitle) {
-            return;
-          }
-
-          centerLabelText = scope.getCenterLabelText();
-
-          // Remove any existing title.
-          donutChartTitle.selectAll('*').remove();
-          if (centerLabelText.bigText && !centerLabelText.smText) {
-            donutChartTitle.text(centerLabelText.bigText);
-          } else {
-            donutChartTitle.insert('tspan').text(centerLabelText.bigText).classed('donut-title-big-pf', true).attr('dy', 0).attr('x', 0);
-            donutChartTitle.insert('tspan').text(centerLabelText.smText).classed('donut-title-small-pf', true).attr('dy', 20).attr('x', 0);
-          }
-        }, 300);
-      };
-
-      scope.$watch('config', function () {
-        scope.updateAll(scope);
-        setupDonutChartTitle();
-      }, true);
-      scope.$watch('chartHeight', function () {
-        if (scope.chartHeight) {
-          scope.config.size.height = scope.chartHeight;
-        }
-      });
-      scope.$watch('data', function () {
-        scope.updateAll(scope);
-        setupDonutChartTitle();
-      }, true);
-
-      scope.$watch('centerLabel', function () {
-        setupDonutChartTitle();
-      });
-    }
-  };
-}]);
+    };
+  }]);
+}(patternfly));
 ;/**
  *
  * @description
@@ -1782,6 +1789,7 @@ angular.module('patternfly.charts').directive('pfHeatmap', ["$compile", "$window
            </div>
            <div class="col-md-3">
                  <button ng-click="addDataPoint()">Add Data Point</button>
+                 <button ng-click="resetData()">Reset Data</button>
            </div>
          </div>
        </div>
@@ -1820,8 +1828,8 @@ angular.module('patternfly.charts').directive('pfHeatmap', ["$compile", "$window
        $scope.data = {
          dataAvailable: true,
          xData: dates,
-         yData0: ['Created', 12, 10,10, 62, 17, 10, 15, 13, 17, 10, 12, 10, 10, 12, 17, 16, 15, 13, 17, 10],
-         yData1: ['Deleted', 10, 17, 76,14, 10, 10, 10, 10, 10, 10, 10, 17, 17, 14, 10, 10, 10, 10, 10, 10]
+         yData0: ['Created', 12, 10, 10, 62, 17, 10, 15, 13, 17, 10, 12, 10, 10, 12, 17, 16, 15, 13, 17, 10],
+         yData1: ['Deleted', 10, 17, 76, 14, 10, 10, 10, 10, 10, 10, 10, 17, 17, 14, 10, 10, 10, 10, 10, 10]
        };
 
        $scope.custShowXAxis = false;
@@ -1833,125 +1841,135 @@ angular.module('patternfly.charts').directive('pfHeatmap', ["$compile", "$window
          $scope.data.yData0.push(Math.round(Math.random() * 100));
          $scope.data.yData1.push(Math.round(Math.random() * 100));
        };
+
+       $scope.resetData = function () {
+         $scope.data = {
+           xData: dates,
+           yData0: ['Created', 12, 10, 10, 62],
+           yData1: ['Deleted', 10, 17, 76, 14]
+         };
+       };
      });
    </file>
  </example>
  */
-angular.module('patternfly.charts').directive('pfLineChart', ["pfUtils", function (pfUtils) {
+(function (patternfly) {
   'use strict';
-  return {
-    restrict: 'A',
-    scope: {
-      config: '=',
-      chartData: '=',
-      showXAxis: '=?',
-      showYAxis: '=?',
-      setAreaChart: '=?'
-    },
-    replace: true,
-    templateUrl: 'charts/line/line-chart.html',
-    controller: ['$scope',
-      function ($scope) {
+  angular.module('patternfly.charts').directive('pfLineChart', ["pfUtils", function (pfUtils) {
+    return {
+      restrict: 'A',
+      scope: {
+        config: '=',
+        chartData: '=',
+        showXAxis: '=?',
+        showYAxis: '=?',
+        setAreaChart: '=?'
+      },
+      replace: true,
+      templateUrl: 'charts/line/line-chart.html',
+      controller: ['$scope',
+        function ($scope) {
 
-        // Create an ID for the chart based on the chartId in the config if given
-        $scope.lineChartId = 'lineChart';
-        if ($scope.config.chartId) {
-          $scope.lineChartId = $scope.config.chartId + $scope.lineChartId;
-        }
+          // Create an ID for the chart based on the chartId in the config if given
+          $scope.lineChartId = 'lineChart';
+          if ($scope.config.chartId) {
+            $scope.lineChartId = $scope.config.chartId + $scope.lineChartId;
+          }
 
-        /*
-         * Convert the config data to C3 Data
-         */
-        $scope.getLineData = function (chartData) {
-          var lineData  = {
-            type: $scope.setAreaChart ? "area" : "line"
+          /*
+           * Convert the config data to C3 Data
+           */
+          $scope.getLineData = function (chartData) {
+            var lineData  = {
+              type: $scope.setAreaChart ? "area" : "line"
+            };
+
+            if (chartData && chartData.dataAvailable !== false && chartData.xData) {
+              lineData.x = chartData.xData[0];
+              // Convert the chartData dictionary into a C3 columns data arrays
+              lineData.columns = Object.keys (chartData).map (function (key) {
+                return chartData[key];
+              });
+            }
+
+            return lineData;
           };
 
-          if (chartData && chartData.dataAvailable !== false && chartData.xData) {
-            lineData.x = chartData.xData[0];
-            // Convert the chartData dictionary into a C3 columns data arrays
-            lineData.columns = Object.keys (chartData).map (function (key) {
-              return chartData[key];
-            });
+          /*
+           * Setup Axis options. Default is to not show either axis. This can be overridden in two ways:
+           *   1) in the config, setting showAxis to true will show both axes
+           *   2) in the attributes showXAxis and showYAxis will override the config if set
+           *
+           * By default only line and the tick marks are shown, no labels. This is a line and should be used
+           * only to show a brief idea of trending. This can be overridden by setting the config.axis options per C3
+           */
+
+          if ($scope.showXAxis === undefined) {
+            $scope.showXAxis = ($scope.config.showAxis !== undefined) && $scope.config.showAxis;
           }
 
-          return lineData;
-        };
-
-        /*
-         * Setup Axis options. Default is to not show either axis. This can be overridden in two ways:
-         *   1) in the config, setting showAxis to true will show both axes
-         *   2) in the attributes showXAxis and showYAxis will override the config if set
-         *
-         * By default only line and the tick marks are shown, no labels. This is a line and should be used
-         * only to show a brief idea of trending. This can be overridden by setting the config.axis options per C3
-         */
-
-        if ($scope.showXAxis === undefined) {
-          $scope.showXAxis = ($scope.config.showAxis !== undefined) && $scope.config.showAxis;
-        }
-
-        if ($scope.showYAxis === undefined) {
-          $scope.showYAxis = ($scope.config.showAxis !== undefined) && $scope.config.showAxis;
-        }
-
-        $scope.defaultConfig = $().c3ChartDefaults().getDefaultLineConfig();
-        $scope.defaultConfig.axis = {
-          x: {
-            show: $scope.showXAxis === true,
-            type: 'timeseries',
-            tick: {
-              format: function () {
-                return '';
-              }
-            }
-          },
-          y: {
-            show: $scope.showYAxis === true,
-            tick: {
-              format: function () {
-                return '';
-              }
-            }
+          if ($scope.showYAxis === undefined) {
+            $scope.showYAxis = ($scope.config.showAxis !== undefined) && $scope.config.showAxis;
           }
-        };
 
-        /*
-         * Setup Chart type option. Default is Line Chart.
-         */
-        if ($scope.setAreaChart === undefined) {
-          $scope.setAreaChart = ($scope.config.setAreaChart !== undefined) && $scope.config.setAreaChart;
+          $scope.defaultConfig = patternfly.c3ChartDefaults().getDefaultLineConfig();
+          $scope.defaultConfig.axis = {
+            x: {
+              show: $scope.showXAxis === true,
+              type: 'timeseries',
+              tick: {
+                format: function () {
+                  return '';
+                }
+              }
+            },
+            y: {
+              show: $scope.showYAxis === true,
+              tick: {
+                format: function () {
+                  return '';
+                }
+              }
+            }
+          };
+
+          /*
+           * Setup Chart type option. Default is Line Chart.
+           */
+          if ($scope.setAreaChart === undefined) {
+            $scope.setAreaChart = ($scope.config.setAreaChart !== undefined) && $scope.config.setAreaChart;
+          }
+
+          // Convert the given data to C3 chart format
+          $scope.config.data = pfUtils.merge($scope.config.data, $scope.getLineData($scope.chartData));
+
+          // Override defaults with callers specifications
+          $scope.defaultConfig = pfUtils.merge($scope.defaultConfig, $scope.config);
         }
+      ],
 
-        // Convert the given data to C3 chart format
-        $scope.config.data = pfUtils.merge($scope.config.data, $scope.getLineData($scope.chartData));
-
-        // Override defaults with callers specifications
-        $scope.defaultConfig = pfUtils.merge($scope.defaultConfig, $scope.config);
+      link: function (scope) {
+        scope.$watch('config', function () {
+          scope.config.data = pfUtils.merge(scope.config.data, scope.getLineData(scope.chartData));
+          scope.chartConfig = pfUtils.merge(scope.defaultConfig, scope.config);
+        }, true);
+        scope.$watch('showXAxis', function () {
+          scope.chartConfig.axis.x.show = scope.showXAxis === true;
+        });
+        scope.$watch('showYAxis', function () {
+          scope.chartConfig.axis.y.show = scope.showYAxis === true;
+        });
+        scope.$watch('setAreaChart', function () {
+          scope.chartConfig.data.type = scope.setAreaChart ? "area" : "line";
+        });
+        scope.$watch('chartData', function () {
+          scope.chartConfig.data = scope.getLineData(scope.chartData);
+        }, true);
       }
-    ],
+    };
+  }]);
+}(patternfly));
 
-    link: function (scope) {
-      scope.$watch('config', function () {
-        scope.config.data = pfUtils.merge(scope.config.data, scope.getLineData(scope.chartData));
-        scope.chartConfig = pfUtils.merge(scope.defaultConfig, scope.config);
-      }, true);
-      scope.$watch('showXAxis', function () {
-        scope.chartConfig.axis.x.show = scope.showXAxis === true;
-      });
-      scope.$watch('showYAxis', function () {
-        scope.chartConfig.axis.y.show = scope.showYAxis === true;
-      });
-      scope.$watch('setAreaChart', function () {
-        scope.chartConfig.data.type = scope.setAreaChart ? "area" : "line";
-      });
-      scope.$watch('chartData', function () {
-        scope.chartConfig.data = pfUtils.merge(scope.chartConfig.data, scope.getLineData(scope.chartData));
-      }, true);
-    }
-  };
-}]
-);
 ;/**
  * @ngdoc directive
  * @name patternfly.charts.directive:pfSparklineChart
@@ -2097,200 +2115,201 @@ angular.module('patternfly.charts').directive('pfLineChart', ["pfUtils", functio
    </file>
  </example>
  */
-angular.module('patternfly.charts').directive('pfSparklineChart', ["pfUtils", function (pfUtils) {
+(function (patternfly) {
   'use strict';
-  return {
-    restrict: 'A',
-    scope: {
-      config: '=',
-      chartData: '=',
-      chartHeight: '=?',
-      showXAxis: '=?',
-      showYAxis: '=?'
-    },
-    replace: true,
-    templateUrl: 'charts/sparkline/sparkline-chart.html',
-    controller: ['$scope',
-      function ($scope) {
+  angular.module('patternfly.charts').directive('pfSparklineChart', ["pfUtils", function (pfUtils) {
+    return {
+      restrict: 'A',
+      scope: {
+        config: '=',
+        chartData: '=',
+        chartHeight: '=?',
+        showXAxis: '=?',
+        showYAxis: '=?'
+      },
+      replace: true,
+      templateUrl: 'charts/sparkline/sparkline-chart.html',
+      controller: ['$scope',
+        function ($scope) {
 
-        // Create an ID for the chart based on the chartId in the config if given
-        $scope.sparklineChartId = 'sparklineChart';
-        if ($scope.config.chartId) {
-          $scope.sparklineChartId = $scope.config.chartId + $scope.sparklineChartId;
-        }
-
-        /*
-         * Convert the config data to C3 Data
-         */
-        $scope.getSparklineData = function (chartData) {
-          var sparklineData  = {
-            type: 'area'
-          };
-
-          if (chartData && chartData.dataAvailable !== false && chartData.xData && chartData.yData) {
-            sparklineData.x = chartData.xData[0];
-            sparklineData.columns = [
-              chartData.xData,
-              chartData.yData
-            ];
+          // Create an ID for the chart based on the chartId in the config if given
+          $scope.sparklineChartId = 'sparklineChart';
+          if ($scope.config.chartId) {
+            $scope.sparklineChartId = $scope.config.chartId + $scope.sparklineChartId;
           }
 
-          return sparklineData;
-        };
+          /*
+           * Convert the config data to C3 Data
+           */
+          $scope.getSparklineData = function (chartData) {
+            var sparklineData  = {
+              type: 'area'
+            };
 
-        $scope.getTooltipTableHTML = function (tipRows) {
-          return '<div class="module-triangle-bottom">' +
-            '  <table class="c3-tooltip">' +
-            '    <tbody>' +
-            tipRows +
-            '    </tbody>' +
-            '  </table>' +
-            '</div>';
-        };
+            if (chartData && chartData.dataAvailable !== false && chartData.xData && chartData.yData) {
+              sparklineData.x = chartData.xData[0];
+              sparklineData.columns = [
+                chartData.xData,
+                chartData.yData
+              ];
+            }
 
-        $scope.sparklineTooltip = function () {
-          return {
-            contents: function (d) {
-              var tipRows;
-              var percentUsed = 0;
+            return sparklineData;
+          };
 
-              if ($scope.config.tooltipFn) {
-                tipRows = $scope.config.tooltipFn(d);
-              } else {
-                switch ($scope.config.tooltipType) {
-                case 'usagePerDay':
-                  if ($scope.chartData.dataAvailable !== false && $scope.chartData.total > 0) {
+          $scope.getTooltipTableHTML = function (tipRows) {
+            return '<div class="module-triangle-bottom">' +
+              '  <table class="c3-tooltip">' +
+              '    <tbody>' +
+              tipRows +
+              '    </tbody>' +
+              '  </table>' +
+              '</div>';
+          };
+
+          $scope.sparklineTooltip = function () {
+            return {
+              contents: function (d) {
+                var tipRows;
+                var percentUsed = 0;
+
+                if ($scope.config.tooltipFn) {
+                  tipRows = $scope.config.tooltipFn(d);
+                } else {
+                  switch ($scope.config.tooltipType) {
+                  case 'usagePerDay':
+                    if ($scope.chartData.dataAvailable !== false && $scope.chartData.total > 0) {
+                      percentUsed = Math.round(d[0].value / $scope.chartData.total * 100.0);
+                    }
+                    tipRows =
+                      '<tr>' +
+                      '  <th colspan="2">' + d[0].x.toLocaleDateString() + '</th>' +
+                      '</tr>' +
+                      '<tr>' +
+                      '  <td class="name">' + percentUsed + '%:' + '</td>' +
+                      '  <td class="value text-nowrap">' + d[0].value + ' ' +  ($scope.config.units ? $scope.config.units + ' ' : '') + d[0].name + '</td>' +
+                      '</tr>';
+                    break;
+                  case 'valuePerDay':
+                    tipRows =
+                      '<tr>' +
+                      '  <td class="value">' +  d[0].x.toLocaleDateString() + '</td>' +
+                      '  <td class="value text-nowrap">' +  d[0].value + ' ' + d[0].name + '</td>' +
+                      '</tr>';
+                    break;
+                  case 'percentage':
                     percentUsed = Math.round(d[0].value / $scope.chartData.total * 100.0);
+                    tipRows =
+                      '<tr>' +
+                      '  <td class="name">' + percentUsed + '%' + '</td>' +
+                      '</tr>';
+                    break;
+                  default:
+                    tipRows = patternfly.c3ChartDefaults().getDefaultSparklineTooltip().contents(d);
                   }
-                  tipRows =
-                    '<tr>' +
-                    '  <th colspan="2">' + d[0].x.toLocaleDateString() + '</th>' +
-                    '</tr>' +
-                    '<tr>' +
-                    '  <td class="name">' + percentUsed + '%:' + '</td>' +
-                    '  <td class="value text-nowrap">' + d[0].value + ' ' +  ($scope.config.units ? $scope.config.units + ' ' : '') + d[0].name + '</td>' +
-                    '</tr>';
-                  break;
-                case 'valuePerDay':
-                  tipRows =
-                    '<tr>' +
-                    '  <td class="value">' +  d[0].x.toLocaleDateString() + '</td>' +
-                    '  <td class="value text-nowrap">' +  d[0].value + ' ' + d[0].name + '</td>' +
-                    '</tr>';
-                  break;
-                case 'percentage':
-                  percentUsed = Math.round(d[0].value / $scope.chartData.total * 100.0);
-                  tipRows =
-                    '<tr>' +
-                    '  <td class="name">' + percentUsed + '%' + '</td>' +
-                    '</tr>';
-                  break;
-                default:
-                  tipRows = $().c3ChartDefaults().getDefaultSparklineTooltip().contents(d);
+                }
+                return $scope.getTooltipTableHTML(tipRows);
+              },
+              position: function (data, width, height, element) {
+                var center;
+                var top;
+                var chartBox;
+                var graphOffsetX;
+                var x;
+
+                try {
+                  center = parseInt(element.getAttribute('x'));
+                  top = parseInt(element.getAttribute('y'));
+                  chartBox = document.querySelector('#' + $scope.sparklineChartId).getBoundingClientRect();
+                  graphOffsetX = document.querySelector('#' + $scope.sparklineChartId + ' g.c3-axis-y').getBoundingClientRect().right;
+                  x = Math.max(0, center + graphOffsetX - chartBox.left - Math.floor(width / 2));
+
+                  return {
+                    top: top - height,
+                    left: Math.min(x, chartBox.width - width)
+                  };
+                } catch (e) {
                 }
               }
-              return $scope.getTooltipTableHTML(tipRows);
+            };
+          };
+
+          /*
+           * Setup Axis options. Default is to not show either axis. This can be overridden in two ways:
+           *   1) in the config, setting showAxis to true will show both axes
+           *   2) in the attributes showXAxis and showYAxis will override the config if set
+           *
+           * By default only line and the tick marks are shown, no labels. This is a sparkline and should be used
+           * only to show a brief idea of trending. This can be overridden by setting the config.axis options per C3
+           */
+
+          if ($scope.showXAxis === undefined) {
+            $scope.showXAxis = ($scope.config.showAxis !== undefined) && $scope.config.showAxis;
+          }
+
+          if ($scope.showYAxis === undefined) {
+            $scope.showYAxis = ($scope.config.showAxis !== undefined) && $scope.config.showAxis;
+          }
+
+          $scope.defaultConfig = patternfly.c3ChartDefaults().getDefaultSparklineConfig();
+          $scope.defaultConfig.axis = {
+            x: {
+              show: $scope.showXAxis === true,
+              type: 'timeseries',
+              tick: {
+                format: function () {
+                  return '';
+                }
+              }
             },
-            position: function (data, width, height, element) {
-              var center;
-              var top;
-              var chartBox;
-              var graphOffsetX;
-              var x;
-
-              try {
-                center = parseInt(element.getAttribute('x'));
-                top = parseInt(element.getAttribute('y'));
-                chartBox = document.querySelector('#' + $scope.sparklineChartId).getBoundingClientRect();
-                graphOffsetX = document.querySelector('#' + $scope.sparklineChartId + ' g.c3-axis-y').getBoundingClientRect().right;
-                x = Math.max(0, center + graphOffsetX - chartBox.left - Math.floor(width / 2));
-
-                return {
-                  top: top - height,
-                  left: Math.min(x, chartBox.width - width)
-                };
-              } catch (e) {
+            y: {
+              show: $scope.showYAxis === true,
+              tick: {
+                format: function () {
+                  return '';
+                }
               }
             }
           };
-        };
 
-        /*
-         * Setup Axis options. Default is to not show either axis. This can be overridden in two ways:
-         *   1) in the config, setting showAxis to true will show both axes
-         *   2) in the attributes showXAxis and showYAxis will override the config if set
-         *
-         * By default only line and the tick marks are shown, no labels. This is a sparkline and should be used
-         * only to show a brief idea of trending. This can be overridden by setting the config.axis options per C3
-         */
-
-        if ($scope.showXAxis === undefined) {
-          $scope.showXAxis = ($scope.config.showAxis !== undefined) && $scope.config.showAxis;
-        }
-
-        if ($scope.showYAxis === undefined) {
-          $scope.showYAxis = ($scope.config.showAxis !== undefined) && $scope.config.showAxis;
-        }
-
-        $scope.defaultConfig = $().c3ChartDefaults().getDefaultSparklineConfig();
-        $scope.defaultConfig.axis = {
-          x: {
-            show: $scope.showXAxis === true,
-            type: 'timeseries',
-            tick: {
-              format: function () {
-                return '';
-              }
-            }
-          },
-          y: {
-            show: $scope.showYAxis === true,
-            tick: {
-              format: function () {
-                return '';
-              }
-            }
+          // Setup the default configuration
+          $scope.defaultConfig.tooltip = $scope.sparklineTooltip();
+          if ($scope.chartHeight) {
+            $scope.defaultConfig.size.height = $scope.chartHeight;
           }
-        };
+          $scope.defaultConfig.units = '';
 
-        // Setup the default configuration
-        $scope.defaultConfig.tooltip = $scope.sparklineTooltip();
-        if ($scope.chartHeight) {
-          $scope.defaultConfig.size.height = $scope.chartHeight;
+          // Convert the given data to C3 chart format
+          $scope.config.data = pfUtils.merge($scope.config.data, $scope.getSparklineData($scope.chartData));
+
+          // Override defaults with callers specifications
+          $scope.chartConfig = pfUtils.merge($scope.defaultConfig, $scope.config);
         }
-        $scope.defaultConfig.units = '';
+      ],
 
-        // Convert the given data to C3 chart format
-        $scope.config.data = pfUtils.merge($scope.config.data, $scope.getSparklineData($scope.chartData));
-
-        // Override defaults with callers specifications
-        $scope.chartConfig = pfUtils.merge($scope.defaultConfig, $scope.config);
+      link: function (scope) {
+        scope.$watch('config', function () {
+          scope.config.data = pfUtils.merge(scope.config.data, scope.getSparklineData(scope.chartData));
+          scope.chartConfig = pfUtils.merge(scope.defaultConfig, scope.config);
+        }, true);
+        scope.$watch('chartHeight', function () {
+          if (scope.chartHeight) {
+            scope.chartConfig.size.height = scope.chartHeight;
+          }
+        });
+        scope.$watch('showXAxis', function () {
+          scope.chartConfig.axis.x.show = scope.showXAxis === true;
+        });
+        scope.$watch('showYAxis', function () {
+          scope.chartConfig.axis.y.show = scope.showYAxis === true;
+        });
+        scope.$watch('chartData', function () {
+          scope.chartConfig.data = pfUtils.merge(scope.chartConfig.data, scope.getSparklineData(scope.chartData));
+        }, true);
       }
-    ],
-
-    link: function (scope) {
-      scope.$watch('config', function () {
-        scope.config.data = pfUtils.merge(scope.config.data, scope.getSparklineData(scope.chartData));
-        scope.chartConfig = pfUtils.merge(scope.defaultConfig, scope.config);
-      }, true);
-      scope.$watch('chartHeight', function () {
-        if (scope.chartHeight) {
-          scope.chartConfig.size.height = scope.chartHeight;
-        }
-      });
-      scope.$watch('showXAxis', function () {
-        scope.chartConfig.axis.x.show = scope.showXAxis === true;
-      });
-      scope.$watch('showYAxis', function () {
-        scope.chartConfig.axis.y.show = scope.showYAxis === true;
-      });
-      scope.$watch('chartData', function () {
-        scope.chartConfig.data = pfUtils.merge(scope.chartConfig.data, scope.getSparklineData(scope.chartData));
-      }, true);
-    }
-  };
-}]
-);
+    };
+  }]);
+}(patternfly));
 ;/**
  * @ngdoc directive
  * @name patternfly.charts.directive:pfTrendsChart
@@ -3002,11 +3021,12 @@ angular.module('patternfly.charts').directive('pfUtilizationTrendChart', functio
 
         var matchesFilter = function (item, filter) {
           var match = true;
+          var re = new RegExp(filter.value, 'i');
 
           if (filter.id === 'name') {
-            match = item.name.match(filter.value) !== null;
+            match = item.name.match(re) !== null;
           } else if (filter.id === 'address') {
-            match = item.address.match(filter.value) !== null;
+            match = item.address.match(re) !== null;
           } else if (filter.id === 'birthMonth') {
             match = item.birthMonth === filter.value;
           }
@@ -7076,13 +7096,14 @@ angular.module('patternfly.sort').directive('pfSort', function () {
 
       var matchesFilter = function (item, filter) {
         var match = true;
+        var re = new RegExp(filter.value, 'i');
 
         if (filter.id === 'name') {
-          match = item.name.match(filter.value) !== null;
+          match = item.name.match(re) !== null;
         } else if (filter.id === 'age') {
           match = item.age === parseInt(filter.value);
         } else if (filter.id === 'address') {
-          match = item.address.match(filter.value) !== null;
+          match = item.address.match(re) !== null;
         } else if (filter.id === 'birthMonth') {
           match = item.birthMonth === filter.value;
         }
@@ -8241,7 +8262,7 @@ angular.module('patternfly.views').directive('pfCardView', ["pfUtils", function 
  * <li>.onCheckBoxChange       - ( function(item) ) Called to notify when a checkbox selection changes, default is none
  * <li>.onSelect               - ( function(item, event) ) Called to notify of item selection, default is none
  * <li>.onSelectionChange      - ( function(items) ) Called to notify when item selections change, default is none
- * <li>.onClick                - ( function(item, event) ) Called to notify when an item is clicked, default is none
+ * <li>.onClick                - ( function(item, event) ) Called to notify when an item is clicked, default is none. Note: row expansion is the default behavior after onClick performed, but user can stop such default behavior by adding the sentence "return false;" to the end of onClick function body
  * <li>.onDblClick             - ( function(item, event) ) Called to notify when an item is double clicked, default is none
  * </ul>
  * @param {array} actionButtons List of action buttons in each row
@@ -8633,7 +8654,7 @@ angular.module('patternfly.views').directive('pfCardView', ["pfUtils", function 
   </file>
 </example>
  */
-angular.module('patternfly.views').directive('pfListView', ["$timeout", "$window", "pfUtils", function ($timeout, $window, pfUtils) {
+angular.module('patternfly.views').directive('pfListView', ["$window", "pfUtils", function ($window, pfUtils) {
   'use strict';
   return {
     restrict: 'A',
@@ -8759,7 +8780,7 @@ angular.module('patternfly.views').directive('pfListView', ["$timeout", "$window
           // update the actions based on the current item
           $scope.updateActions(item);
 
-          $timeout(function () {
+          $window.requestAnimationFrame(function () {
             var parentDiv = undefined;
             var nextElement;
 
@@ -8792,6 +8813,7 @@ angular.module('patternfly.views').directive('pfListView', ["$timeout", "$window
         var alreadySelected;
         var selectionChanged = false;
         var continueEvent = true;
+        var enableRowExpansion = scope.config && scope.config.useExpandingRows && item && !item.disableRowExpansion;
 
         // Ignore disabled item clicks completely
         if (scope.checkDisabled(item)) {
@@ -8834,7 +8856,11 @@ angular.module('patternfly.views').directive('pfListView', ["$timeout", "$window
           }
         }
         if (scope.config.onClick) {
-          scope.config.onClick(item, e);
+          if (scope.config.onClick(item, e) !== false && enableRowExpansion) {
+            scope.toggleItemExpansion(item);
+          }
+        } else if (enableRowExpansion) {
+          scope.toggleItemExpansion(item);
         }
 
         return continueEvent;
@@ -10415,7 +10441,7 @@ angular.module('patternfly.wizard').directive('pfWizardSubstep', function () {
 
 
   $templateCache.put('views/listview/list-view.html',
-    "<div class=\"list-group list-view-pf\" dnd-list=items ng-class=\"{'list-view-pf-dnd': config.dragEnabled === true}\"><div class=dndPlaceholder></div><div class=\"list-group-item {{item.rowClass}}\" ng-repeat=\"item in items track by $index\" dnd-draggable=item dnd-effect-allowed=move dnd-disable-if=\"config.dragEnabled !== true\" dnd-dragstart=dragStart(item) dnd-moved=dragMoved() dnd-dragend=dragEnd() ng-class=\"{'drag-original': isDragOriginal(item), 'pf-selectable': selectItems, 'active': isSelected(item), 'disabled': checkDisabled(item), 'list-view-pf-expand-active': item.isExpanded}\"><div class=list-group-item-header><div class=list-view-pf-dnd-drag-items ng-if=\"config.dragEnabled === true\"><div pf-transclude=parent class=list-view-pf-main-info></div></div><div ng-class=\"{'list-view-pf-dnd-original-items': config.dragEnabled === true}\"><div class=list-view-pf-expand ng-if=config.useExpandingRows><span class=\"fa fa-angle-right\" ng-show=!item.disableRowExpansion ng-click=toggleItemExpansion(item) ng-class=\"{'fa-angle-down': item.isExpanded}\"></span> <span class=pf-expand-placeholder ng-show=item.disableRowExpansion></span></div><div class=list-view-pf-checkbox ng-if=config.showSelectBox><input type=checkbox value=item.selected ng-model=item.selected ng-disabled=checkDisabled(item) ng-change=\"checkBoxChange(item)\"></div><div class=list-view-pf-actions ng-if=\"(actionButtons && actionButtons.length > 0) || (menuActions && menuActions.length > 0)\"><button class=\"btn btn-default {{actionButton.class}}\" ng-repeat=\"actionButton in actionButtons\" title={{actionButton.title}} ng-class=\"{'disabled' : checkDisabled(item) || !enableButtonForItem(actionButton, item)}\" ng-click=\"handleButtonAction(actionButton, item)\"><div ng-if=actionButton.include class=actionButton.includeClass ng-include src=actionButton.include></div><span ng-if=!actionButton.include>{{actionButton.name}}</span></button><div uib-dropdown class=\"{{dropdownClass}} pull-right dropdown-kebab-pf {{getMenuClassForItem(item)}} {{hideMenuForItem(item) ? 'invisible' : ''}}\" id=kebab_{{$index}} ng-if=\"menuActions && menuActions.length > 0\"><button uib-dropdown-toggle class=\"btn btn-link\" type=button id=dropdownKebabRight_{{$index}} ng-class=\"{'disabled': checkDisabled(item)}\" ng-click=\"setupActions(item, $event)\"><span class=\"fa fa-ellipsis-v\"></span></button><ul uib-dropdown-menu class=\"dropdown-menu dropdown-menu-right {{$index}}\" aria-labelledby=dropdownKebabRight_{{$index}}><li ng-repeat=\"menuAction in menuActions\" ng-if=\"menuAction.isVisible !== false\" role=\"{{menuAction.isSeparator === true ? 'separator' : 'menuitem'}}\" ng-class=\"{'divider': (menuAction.isSeparator === true), 'disabled': (menuAction.isDisabled === true)}\"><a ng-if=\"menuAction.isSeparator !== true\" title={{menuAction.title}} ng-click=\"handleMenuAction(menuAction, item)\">{{menuAction.name}}</a></li></ul></div></div><div pf-transclude=parent class=list-view-pf-main-info ng-click=\"itemClick($event, item)\" ng-dblclick=\"dblClick($event, item)\"></div><div class=\"list-group-item-container container-fluid\" ng-transclude=expandedContent ng-if=\"config.useExpandingRows && item.isExpanded\"></div></div></div></div></div>"
+    "<div class=\"list-group list-view-pf list-view-pf-view\" dnd-list=items ng-class=\"{'list-view-pf-dnd': config.dragEnabled === true}\"><div class=dndPlaceholder></div><div class=\"list-group-item {{item.rowClass}}\" ng-repeat=\"item in items track by $index\" dnd-draggable=item dnd-effect-allowed=move dnd-disable-if=\"config.dragEnabled !== true\" dnd-dragstart=dragStart(item) dnd-moved=dragMoved() dnd-dragend=dragEnd() ng-class=\"{'drag-original': isDragOriginal(item), 'pf-selectable': selectItems, 'active': isSelected(item), 'disabled': checkDisabled(item), 'list-view-pf-expand-active': item.isExpanded}\"><div class=list-group-item-header><div class=list-view-pf-dnd-drag-items ng-if=\"config.dragEnabled === true\"><div pf-transclude=parent class=list-view-pf-main-info></div></div><div ng-class=\"{'list-view-pf-dnd-original-items': config.dragEnabled === true}\"><div class=list-view-pf-expand ng-if=config.useExpandingRows><span class=\"fa fa-angle-right\" ng-show=!item.disableRowExpansion ng-click=toggleItemExpansion(item) ng-class=\"{'fa-angle-down': item.isExpanded}\"></span> <span class=pf-expand-placeholder ng-show=item.disableRowExpansion></span></div><div class=list-view-pf-checkbox ng-if=config.showSelectBox><input type=checkbox value=item.selected ng-model=item.selected ng-disabled=checkDisabled(item) ng-change=\"checkBoxChange(item)\"></div><div class=list-view-pf-actions ng-if=\"(actionButtons && actionButtons.length > 0) || (menuActions && menuActions.length > 0)\"><button class=\"btn btn-default {{actionButton.class}}\" ng-repeat=\"actionButton in actionButtons\" title={{actionButton.title}} ng-class=\"{'disabled' : checkDisabled(item) || !enableButtonForItem(actionButton, item)}\" ng-click=\"handleButtonAction(actionButton, item)\"><div ng-if=actionButton.include class=actionButton.includeClass ng-include src=actionButton.include></div><span ng-if=!actionButton.include>{{actionButton.name}}</span></button><div uib-dropdown class=\"{{dropdownClass}} pull-right dropdown-kebab-pf {{getMenuClassForItem(item)}} {{hideMenuForItem(item) ? 'invisible' : ''}}\" id=kebab_{{$index}} ng-if=\"menuActions && menuActions.length > 0\"><button uib-dropdown-toggle class=\"btn btn-link\" type=button id=dropdownKebabRight_{{$index}} ng-class=\"{'disabled': checkDisabled(item)}\" ng-click=\"setupActions(item, $event)\"><span class=\"fa fa-ellipsis-v\"></span></button><ul uib-dropdown-menu class=\"dropdown-menu dropdown-menu-right {{$index}}\" aria-labelledby=dropdownKebabRight_{{$index}}><li ng-repeat=\"menuAction in menuActions\" ng-if=\"menuAction.isVisible !== false\" role=\"{{menuAction.isSeparator === true ? 'separator' : 'menuitem'}}\" ng-class=\"{'divider': (menuAction.isSeparator === true), 'disabled': (menuAction.isDisabled === true)}\"><a ng-if=\"menuAction.isSeparator !== true\" title={{menuAction.title}} ng-click=\"handleMenuAction(menuAction, item)\">{{menuAction.name}}</a></li></ul></div></div><div pf-transclude=parent class=list-view-pf-main-info ng-click=\"itemClick($event, item)\" ng-dblclick=\"dblClick($event, item)\"></div><div class=\"list-group-item-container container-fluid\" ng-transclude=expandedContent ng-if=\"config.useExpandingRows && item.isExpanded\"></div></div></div></div></div>"
   );
 
 }]);

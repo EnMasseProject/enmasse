@@ -1,6 +1,6 @@
 {
   "name": "angular-patternfly",
-  "version": "3.19.0",
+  "version": "3.23.2",
   "authors": [
     "Red Hat"
   ],
@@ -39,13 +39,17 @@
   "dependencies": {
     "angular": "1.3.0 - 1.5.*",
     "angular-animate": "1.3.0 - 1.5.*",
+    "angular-drag-and-drop-lists": "2.0.0",
     "angular-sanitize": "1.3.0 - 1.5.*",
     "angular-bootstrap": "0.14.x",
     "lodash": "3.x",
-    "patternfly": "~3.19.0"
+    "patternfly": "~3.23.2"
   },
   "devDependencies": {
     "angular-mocks": "1.3.0 - 1.5.*",
     "angular-ui-router": "1.0.0-beta.3"
+  },
+  "resolutions": {
+    "jquery": "~2.1.4"
   }
 }

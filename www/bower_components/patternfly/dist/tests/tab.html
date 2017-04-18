@@ -35,7 +35,7 @@
     <script src="../../dist/js/patternfly.dataTables.pfFilter.js"></script>
     <script src="../../dist/js/patternfly.dataTables.pfResize.js"></script>
     <script src="../../dist/js/patternfly.dataTables.pfSelect.js"></script>
-    <script src="../../dist/js/patternfly.min.js"></script>
+    <script src="./../../dist/js/patternfly.min.js"></script>
   </head>
   <div class="toast-notifications-list-pf">
     <div class="toast-pf alert alert-warning alert-dismissable">
@@ -57,7 +57,7 @@
           <span class="icon-bar"></span>
         </button>
         <a class="navbar-brand" href="/">
-          <img src="../../dist/img/brand.svg" alt="PatternFly Enterprise Application" />
+          <img src="./../../dist/img/brand.svg" alt="PatternFly Enterprise Application" />
         </a>
       </div>
       <div class="collapse navbar-collapse navbar-collapse-1">
@@ -138,6 +138,9 @@
           </li>
           <li>
             <a href="cards.html">Cards</a>
+          </li>
+          <li>
+            <a href="pagination-card-view.html">Pagination - Card View</a>
           </li>
         </ul>
       </div>
@@ -259,12 +262,11 @@
   </thead>
 </table>
 
-<!-- Pagination -->
 <form class="content-view-pf-pagination table-view-pf-pagination clearfix" id="pagination1">
   <div class="form-group">
     <select class="selectpicker pagination-pf-pagesize">
       <option value="6">6</option>
-      <option value="10">10</option>
+      <option value="10" >10</option>
       <option value="15" selected="selected">15</option>
       <option value="25">25</option>
       <option value="50">50</option>
@@ -729,7 +731,8 @@ $("#table1").DataTable({
     ],
     paginationSelector: "#pagination1",
     toolbarSelector: "#toolbar1",
-    selectAllSelector: 'th:first-child input[type="checkbox"]'
+    selectAllSelector: 'th:first-child input[type="checkbox"]',
+    colvisMenuSelector: '.table-view-pf-colvis-menu'
   },
   select: {
     selector: 'td:first-child input[type="checkbox"]',

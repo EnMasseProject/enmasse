@@ -1,7 +1,6 @@
 {
   "name": "bootstrap-switch",
   "description": "Turn checkboxes and radio buttons into toggle switches.",
-  "version": "3.3.3",
   "license": "Apache-2.0",
   "main": [
     "./dist/js/bootstrap-switch.js",
@@ -18,19 +17,18 @@
   ],
   "dependencies": {
     "bootstrap": ">=2.3.2",
-    "jquery": ">=1.9.0"
-  },
-  "devDependencies": {
-    "jquery": "~2.1"
+    "jquery": "~1.9.0"
   },
   "homepage": "https://github.com/nostalgiaz/bootstrap-switch",
-  "_release": "3.3.3",
+  "version": "3.3.4",
+  "_release": "3.3.4",
   "_resolution": {
     "type": "version",
-    "tag": "v3.3.3",
-    "commit": "e1a9a9c135ed062ac362d2f8345a71417fb10758"
+    "tag": "v3.3.4",
+    "commit": "02721b769a6ac83eabe733fd9f08a2ddc7320756"
   },
   "_source": "https://github.com/nostalgiaz/bootstrap-switch.git",
-  "_target": "~3.3.2",
-  "_originalSource": "bootstrap-switch"
+  "_target": "^3.3.4",
+  "_originalSource": "bootstrap-switch",
+  "_direct": true
 }

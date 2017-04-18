@@ -1,0 +1,31 @@
+{
+  "name": "enmasse",
+  "homepage": "https://github.com/ErnieAllen/routilities",
+  "authors": [
+    "Ernest Allen <eallen@redhat.com>"
+  ],
+  "description": "Bower components for enmasse",
+  "main": "",
+  "license": "Apache 2",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "angular-patternfly": "^3.23.2",
+    "angular": "^1.6.4",
+    "bootstrap-datetimepicker": "^0.0.11",
+    "angular-ui-router": "^0.4.2",
+    "bootstrap-switch": "^3.3.4"
+  },
+  "resolutions": {
+    "angular": "^1.6.4",
+    "patternfly": "~3.23.2",
+    "bootstrap": "~3.3.7",
+    "jquery": "1.9.1 - 3"
+  }
+}
