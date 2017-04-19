@@ -20,7 +20,6 @@
 
 """
 A simple client for retrieving router metrics and exposing them
-
 """
 from __future__ import print_function, unicode_literals
 
@@ -34,6 +33,9 @@ import random
 import time
 from prometheus_client.core import GaugeMetricFamily, CounterMetricFamily, REGISTRY
 
+# TODO: Expose
+# * Connection count with container id
+# * Container id label per address
 class MetricCollector(object):
     def __init__(self, name, description, labels, mtype="GAUGE"):
         self.name = name
