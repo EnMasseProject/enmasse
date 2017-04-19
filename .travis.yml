@@ -8,23 +8,46 @@ script:
 after_success:
 - curl -s https://raw.githubusercontent.com/EnMasseProject/travis-scripts/master/trigger-travis.sh
   | bash /dev/stdin
+- curl -s https://raw.githubusercontent.com/EnMasseProject/travis-scripts/master/generate-bintray-descriptor.sh
+  | bash /dev/stdin enmasse
+    generated/enmasse-template.yaml
+    generated/tls-enmasse-template.yaml
+    generated/enmasse-kubernetes.yaml
+    generated/enmasse-template-with-kafka.yaml
+    generated/tls-enmasse-template-with-kafka.yaml
+    generated/sasldb-enmasse-template.yaml
+    generated/sasldb-tls-enmasse-template.yaml
+    scripts/enmasse-deploy.sh > .bintray.json
 env:
   global:
-    secure: AsrU/VbVvXQyhFpL0cumYC4olghWOf+zCRgBu3sg+Ozx9LRF/4ikBECuh1DWvXMmxmUbWrDDTeIlYPgc8Wz7/Nzic5dZ8K2SFLJsWu+LKHriVsQcWuL9PRmh80PfSos0ouMK0L3LYXIVnilGE1b+uJmRDXRGAxCkcGZUObOgBUiwKduxFpZbwwr/nvibsQxUZ12VEDZooh7b1yOCv8t7E4WJo1kGxCGNaZqq9PfebwLmposLib2SyAWb/HpzV75yd4y6z5OOUUEGHIMZJl3t4iM08U+fQj2iAax+uEoy+bu7r7yD5macRSfoOZH8Y/EPrQk/0b2Y70qN2PYbeHNp4uj67snVRVcVLTFjFNzSY840Aq/uKg2tmFqIhWBdgrjnSxrYcRZG15Szfx35jLnFts0kkrKP/9Uw/XqcUwNVbsETq5WzIilSu12UtTcPp2OO/coIiHyZQ7ub0Zwolsdmrg0OE14cSGuc79RulOP6KpxJfizkP9erWilnYLHTdDd/8IAkBwDdelLqpgIBS8dbQXVkJGvH505HO3mbUeXg2IdEdl1Ba9BK8Y0DbehmjjjJcichEkFLgFB0av2sIiuO7PmO+CKHYvAu4keykdPSwAsk8fknAur5K3uLfMz+TdS5zQoP5NAx5FtOa+ynwEgtsEZRa0C4Yph7wDs4B45Dfyw=
+  - secure: AsrU/VbVvXQyhFpL0cumYC4olghWOf+zCRgBu3sg+Ozx9LRF/4ikBECuh1DWvXMmxmUbWrDDTeIlYPgc8Wz7/Nzic5dZ8K2SFLJsWu+LKHriVsQcWuL9PRmh80PfSos0ouMK0L3LYXIVnilGE1b+uJmRDXRGAxCkcGZUObOgBUiwKduxFpZbwwr/nvibsQxUZ12VEDZooh7b1yOCv8t7E4WJo1kGxCGNaZqq9PfebwLmposLib2SyAWb/HpzV75yd4y6z5OOUUEGHIMZJl3t4iM08U+fQj2iAax+uEoy+bu7r7yD5macRSfoOZH8Y/EPrQk/0b2Y70qN2PYbeHNp4uj67snVRVcVLTFjFNzSY840Aq/uKg2tmFqIhWBdgrjnSxrYcRZG15Szfx35jLnFts0kkrKP/9Uw/XqcUwNVbsETq5WzIilSu12UtTcPp2OO/coIiHyZQ7ub0Zwolsdmrg0OE14cSGuc79RulOP6KpxJfizkP9erWilnYLHTdDd/8IAkBwDdelLqpgIBS8dbQXVkJGvH505HO3mbUeXg2IdEdl1Ba9BK8Y0DbehmjjjJcichEkFLgFB0av2sIiuO7PmO+CKHYvAu4keykdPSwAsk8fknAur5K3uLfMz+TdS5zQoP5NAx5FtOa+ynwEgtsEZRa0C4Yph7wDs4B45Dfyw=
+  - secure: 0+0ZUl963hqKvZtxprYgXhwLEvWTdgV8PEzVjQ8AoRkJquEjJZ2kc/qaxgftIqsb0SlwRLTF1tsNDw6uHcGsTW4ywQK5Kxs5+78HSKxn8oFzDi7zLcsrAOtB3kP3zV0oRSTZf0jC7GYEJczOGDuXIUQ52wiVbFZzoHOCe7Z7riFuaI5c7Aj2osMd1LISfmusJa83q6G3bxOG2yLy1R6F4YGYW4NF80GYmBCMVwGSympfgvSprFWR3XHDatoU0X0gjxb0UijUDHMQfSW9LIk99U2gfsKyfdSrhjVJxNDBVEkCcJSaKk8TYeXIlkkVVHxCChDvljwqIQUJDdV5liysSVCoKpxA5gK3Gi3x85HMzegySVIRIeqB20C7avnNwnyePnA9jYuaVmuFiqoPOlj4WvpabzVbpJvwdWHL8T9Q7Y/x9DRlkdum2PxnpTa1hlc4Tya2iKbSQzDtM1YcZ9UPw9aG2iHwuwU9v4FH1lREgAySl+YL55yL7Got4Lqz9r8JfWZnWMyNBYS7HeV9P6nNmsxfiJwdJ1WK2om9eYCjg2ilm7e/JD2F8BDssaRGu9j4x6aYodGNHCkytdu6OnSO3+69sldtbexbzieV+4DvqChJ/z1+IwCcVDpf8n/pRzBIO14EgV9kt+IwPf7+f6DHDOUyHrdo0yO2bSqqd9RWVZ8=
 deploy:
-  skip_cleanup: true
-  provider: releases
-  api_key:
-    secure: HepZcALZznJ9XL1gumw4EqtG2doiWX+dEdUy0Qug+DcFM6mTb7m61YIrYmiw0h2FCqzozsSjlDjKfBLUgnUalj6f6LZCQKqThh04VKQoBmDJbUoOX7nSiaGeV9SJ18zeG8MrIkoHriJVGnfKUTL870RSQGzRvCXOUyQdx9gy/kfFFM4R9eUN8XOH/nMdmMhtoqwlhfjcY8T0qeKlCISqFCXlan+uIV7KERVSiiBdK4L4fsA5VB8Dd3SUHKe2zpcntowsBXfGI9wemWe++FysZ4Wsg+bBohiZ11A2xeHWCpswosvUHl8OcRyQDK5RqLsphdhTcFxaKvuyXl8v0eecg4ktdHkVQ0EbEauTtd/19lDa4oNpv/Thm3ElKpM77xq4gf0CLW/QNCO6OSQ9zPKughyaH3b/lseLWvVxYEKsPanRdYCZO0PjVOUGtbUpPRxP5CkNDEkW7mpfbK0IgxAemGy0mcTnSWFKQOgdB9iyiZA+lrHdrF9pc1rj5QPbDE8e7mn7FoosPsZuwGjZAb/7lBdZ4aerUXHHsBoyRrVEMvj1qABv9UJtokgo3rBoY/JGdHX9Rq9gsVVQeLLFir5EIFlsTXoaj4z+NvwC5ODklNdBoQvkXYzZ6z9OYsCGDjl09rFi7AbMXCM7nLeKzUv3XQbuEr9iHHpkWhKO8gc8hNw=
-  file:
-  - generated/enmasse-template.yaml
-  - generated/tls-enmasse-template.yaml
-  - generated/enmasse-kubernetes.yaml
-  - generated/enmasse-template-with-kafka.yaml
-  - generated/tls-enmasse-template-with-kafka.yaml
-  - generated/sasldb-enmasse-template.yaml
-  - generated/sasldb-tls-enmasse-template.yaml
-  - scripts/enmasse-deploy.sh
-  on:
-    tags: true
-    repo: EnMasseProject/enmasse
+  - provider: releases
+    skip_cleanup: true
+    api_key:
+      secure: HepZcALZznJ9XL1gumw4EqtG2doiWX+dEdUy0Qug+DcFM6mTb7m61YIrYmiw0h2FCqzozsSjlDjKfBLUgnUalj6f6LZCQKqThh04VKQoBmDJbUoOX7nSiaGeV9SJ18zeG8MrIkoHriJVGnfKUTL870RSQGzRvCXOUyQdx9gy/kfFFM4R9eUN8XOH/nMdmMhtoqwlhfjcY8T0qeKlCISqFCXlan+uIV7KERVSiiBdK4L4fsA5VB8Dd3SUHKe2zpcntowsBXfGI9wemWe++FysZ4Wsg+bBohiZ11A2xeHWCpswosvUHl8OcRyQDK5RqLsphdhTcFxaKvuyXl8v0eecg4ktdHkVQ0EbEauTtd/19lDa4oNpv/Thm3ElKpM77xq4gf0CLW/QNCO6OSQ9zPKughyaH3b/lseLWvVxYEKsPanRdYCZO0PjVOUGtbUpPRxP5CkNDEkW7mpfbK0IgxAemGy0mcTnSWFKQOgdB9iyiZA+lrHdrF9pc1rj5QPbDE8e7mn7FoosPsZuwGjZAb/7lBdZ4aerUXHHsBoyRrVEMvj1qABv9UJtokgo3rBoY/JGdHX9Rq9gsVVQeLLFir5EIFlsTXoaj4z+NvwC5ODklNdBoQvkXYzZ6z9OYsCGDjl09rFi7AbMXCM7nLeKzUv3XQbuEr9iHHpkWhKO8gc8hNw=
+    file:
+    - generated/enmasse-template.yaml
+    - generated/tls-enmasse-template.yaml
+    - generated/enmasse-kubernetes.yaml
+    - generated/enmasse-template-with-kafka.yaml
+    - generated/tls-enmasse-template-with-kafka.yaml
+    - generated/sasldb-enmasse-template.yaml
+    - generated/sasldb-tls-enmasse-template.yaml
+    - scripts/enmasse-deploy.sh
+    on:
+      tags: true
+      repo: EnMasseProject/enmasse
+  - provider: bintray
+    file: ".bintray.json"
+    user: "${BINTRAY_API_USER}"
+    on:
+      tags: true
+    key:
+      secure: Ah+rCOJtb6z/ZEwXaZ2buHNbVSIAYkFFOGyaC6hYrpIHixg0c3PviHxuYzuvZehHtnmzlFhDFwvsfvkY7fbqIIgMuGG5VECHfVcI/krGWCrWbQjfePEI6cyvva+wRDBhQPtUe0UVd55Uc9jn2W4mzsEc7de2FD+pEs8kbu0WwUWANwpOJmmqeU8xbDjfPNH68djw5pqrC8XUglCQXgAPKbSDdorhm3WLh8cEMG9tfZJvXb3aILB6/TMkIQ5mTacdOw5czD5AaMFCFrRQ9zP6va1gnVL4w1E4wrOH3j4um9isl10FRQ6ULliUz5XwubwhBobJR5CDGEuVTqQtDD3XzpmgIX3attY9OayS9J1Yph4QAv/YZLR/mGnPZSRf5QHfHrZUl2I947VazJvrl77Z3e2t/q2gFBqZBlqvBrUEDUiwofZAhQ3uWe1bo6F+CjCO/0HBwkjDrLYqqv/UN1vciXLStE/K4HLq6Zh+t3NOx9BdmsXmyCPWMkzM1h6Lpgf3qSsKP+ygctlMIpqwkqoexvw7O/s0fS+FBLlQqUeNCAVrci/NXc9LpQF/3LeoRyTKLxoIB7m5klzWzXRRV/QdieH9mX2OJ4BX3E1uT+4dfkSy7fh3JImRvZ0meMNTSsHUiHoVBFvUIfnuchu6g9lYV/7Vevvy6O1yzjZIHPXYscI=
+  - provider: bintray
+    file: ".bintray.json"
+    user: "${BINTRAY_API_USER}"
+    key:
+      secure: Ah+rCOJtb6z/ZEwXaZ2buHNbVSIAYkFFOGyaC6hYrpIHixg0c3PviHxuYzuvZehHtnmzlFhDFwvsfvkY7fbqIIgMuGG5VECHfVcI/krGWCrWbQjfePEI6cyvva+wRDBhQPtUe0UVd55Uc9jn2W4mzsEc7de2FD+pEs8kbu0WwUWANwpOJmmqeU8xbDjfPNH68djw5pqrC8XUglCQXgAPKbSDdorhm3WLh8cEMG9tfZJvXb3aILB6/TMkIQ5mTacdOw5czD5AaMFCFrRQ9zP6va1gnVL4w1E4wrOH3j4um9isl10FRQ6ULliUz5XwubwhBobJR5CDGEuVTqQtDD3XzpmgIX3attY9OayS9J1Yph4QAv/YZLR/mGnPZSRf5QHfHrZUl2I947VazJvrl77Z3e2t/q2gFBqZBlqvBrUEDUiwofZAhQ3uWe1bo6F+CjCO/0HBwkjDrLYqqv/UN1vciXLStE/K4HLq6Zh+t3NOx9BdmsXmyCPWMkzM1h6Lpgf3qSsKP+ygctlMIpqwkqoexvw7O/s0fS+FBLlQqUeNCAVrci/NXc9LpQF/3LeoRyTKLxoIB7m5klzWzXRRV/QdieH9mX2OJ4BX3E1uT+4dfkSy7fh3JImRvZ0meMNTSsHUiHoVBFvUIfnuchu6g9lYV/7Vevvy6O1yzjZIHPXYscI=
