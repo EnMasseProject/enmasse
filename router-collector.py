@@ -34,26 +34,65 @@ import random
 import time
 from prometheus_client.core import GaugeMetricFamily, CounterMetricFamily, REGISTRY
 
+class MetricCollector(object):
+    def __init__(self, name, description, labels, mtype="GAUGE"):
+        self.name = name
+        self.description = description
+        self.labels = labels
+        self.mtype = mtype
+
+    def metric(self, label_values, value):
+        m = None
+        if self.mtype == "GAUGE":
+            m = GaugeMetricFamily(self.name, self.description, labels=self.labels)
+        elif self.mtype == "COUNTER":
+            m = CounterMetricFamily(self.name, self.description, labels=self.labels)
+        else:
+            raise("Unknown type " + self.mtype)
+        m.add_metric(label_values, value)
+        return m
+
 class RouterCollector(object):
+    def __init__(self):
+        self.collectormap = {'org.apache.qpid.dispatch.router': [
+                MetricCollector('connectionCount', 'Number of connections to router', ['routerId']),
+                MetricCollector('linkCount', 'Number of links to router', ['routerId']),
+                MetricCollector('addrCount', 'Number of addresses defined in router', ['routerId']),
+                MetricCollector('autoLinkCount', 'Number of auto links defined in router', ['routerId']),
+                MetricCollector('linkRouteCount', 'Number of link routers defined in router', ['routerId'])
+            ],
+            'org.apache.qpid.dispatch.router.link': [
+                MetricCollector('unsettledCount', 'Number of unsettled messages', ['name', 'connectionId']),
+                MetricCollector('deliveryCount', 'Number of delivered messages', ['name', 'connectionId'], "COUNTER"),
+                MetricCollector('releasedCount', 'Number of released messages', ['name', 'connectionId'], "COUNTER"),
+                MetricCollector('rejectedCount', 'Number of rejected messages', ['name', 'connectionId'], "COUNTER"),
+                MetricCollector('acceptedCount', 'Number of accepted messages', ['name', 'connectionId'], "COUNTER"),
+                MetricCollector('undeliveredCount', 'Number of undelivered messages', ['name', 'connectionId']),
+                MetricCollector('capacity', 'Capacity of link', ['name', 'connectionId'])
+            ]}
+
     def collect(self):
-        response = self.get_metrics()
-        if response != None:
-            m = GaugeMetricFamily('num_connections', 'Number of connections to router', labels=['container', 'role', 'dir'])
-            attributes = response.body["attributeNames"]
-            for result in response.body["results"]:
-                result_map = {}
-                for i in range(0, len(attributes)):
-                    result_map[attributes[i]] = result[i]
-                m.add_metric([result_map["container"], result_map["role"], result_map["dir"]], 1.0)
+        for entity in self.collectormap:
+            response = self.collect_metric(entity)
+            if response != None:
+                attributes = response.body["attributeNames"]
+                for result in response.body["results"]:
+                    result_map = {}
+                    for i in range(0, len(attributes)):
+                        result_map[attributes[i]] = result[i]
 
-            yield m
+                    for collector in self.collectormap[entity]:
+                        labels = []
+                        for l in collector.labels:
+                            labels.append(result_map[l])
+                        yield collector.metric(labels, int(result_map[collector.name]))
 
-    def get_metrics(self):
+    def collect_metric(self, entityType):
         try:
             client = SyncRequestResponse(BlockingConnection("127.0.0.1:5672", 30), "$management")
             try:
                 properties = {}
-                properties["entityType"] = "org.apache.qpid.dispatch.connection"
+                properties["entityType"] = entityType
                 properties["operation"] = "QUERY"
                 properties["name"] = "self"
                 message = Message(body=None, properties=properties)
