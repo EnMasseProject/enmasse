@@ -11,8 +11,8 @@ script:
 - curl -s https://raw.githubusercontent.com/EnMasseProject/travis-scripts/master/generate-bintray-descriptor.sh
   | bash /dev/stdin router-image qpid-dispatch-image.tar.gz router-collector.py > .bintray.json
 after_success:
-- curl -s https://raw.githubusercontent.com/EnMasseProject/travis-scripts/master/trigger-travis.sh dockerfiles
-  | bash /dev/stdin
+- curl -s https://raw.githubusercontent.com/EnMasseProject/travis-scripts/master/trigger-travis.sh
+  | bash /dev/stdin dockerfiles
 env:
   global:
   - COMMIT=${TRAVIS_COMMIT::8}
