@@ -13,6 +13,11 @@ local common = import "common.jsonnet";
               "memory": mem_request
           }
       },
+      "livenessProbe": {
+        "tcpSocket": {
+          "port": "metrics"
+        }
+      },
       "ports": [
         {
           "name": "metrics",

@@ -55,6 +55,9 @@ objects:
           - mountPath: "/var/run/artemis"
             name: vol-${NAME}
         - image: "${ROUTER_COLLECTOR_REPO}:latest"
+          livenessProbe:
+            tcpSocket:
+              port: metrics
           name: collector
           ports:
           - containerPort: 8080
