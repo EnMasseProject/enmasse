@@ -33,8 +33,15 @@ after_success:
 - curl -s https://raw.githubusercontent.com/EnMasseProject/travis-scripts/master/trigger-travis.sh
   | bash /dev/stdin
 deploy:
-  provider: bintray
-  file: ".bintray.json"
-  user: "${BINTRAY_API_USER}"
-  key:
-    secure: ojICtkA+kNqkSH2G8taHBrpHRO3HB3Om68OJxh2g5g1gsP37joS/9qtEqFoB9Me/CrMbQ/XmVYNn6oqRGEbEDqz3Zi7UJQsdtYLo//SFkEsSIOspoZz4Mdl0U+Y1A/ktQuDEJiz/ZUt290iPuKWE/JL2qBbLJ0xe5YIfAtnTcQ3j0YKSmPBZUCG76TGyOyrX2kmGVQQP+jETSdAKB1dw5EiLIkoSF9q7pKfEP3H6AvjW/fpLoiz+TO85ezRk4ZFgNVrsbysNx7x4OZT38UT0NgXN9tuf1EQ01qXfVYLYEqnjBzfnyuz/WhuooJiJzf1+bfCja61XQ+6grmGMXfpvKUsvXMXwcjbUFQcJKsUFG2kRC4lY5vUrYmrlUYYGLsNKxyuNZI5PSnOQttyS4Qz2G217Med7YyuClzKQtS8DA25cDJxBz0ZPuOy/LNL7OCa9VriU6mNQYCC885tlwYYLJcrXerXnTbj7Wd8zG9W/e71Lm3N+ye5hn/7OtKZraVjmPYF6l/hkiN9iXL75pnSEiPWAySdI7KeqVY5kvn9P4Gr6gonwPGxaoK9LVRF8Ub+u0W2phnjMyAtwJr6ZblbrocmTO909IA+mZNcjZnngqzRq3LD/Oua2Cm7E4OMA1Q189qgv3tKYU0dMkQERg2eVmg9a2+ssnjo7uWiMCIq3aHY=
+  - provider: bintray
+    file: ".bintray.json"
+    user: "${BINTRAY_API_USER}"
+    on:
+      tags: true
+    key:
+      secure: ojICtkA+kNqkSH2G8taHBrpHRO3HB3Om68OJxh2g5g1gsP37joS/9qtEqFoB9Me/CrMbQ/XmVYNn6oqRGEbEDqz3Zi7UJQsdtYLo//SFkEsSIOspoZz4Mdl0U+Y1A/ktQuDEJiz/ZUt290iPuKWE/JL2qBbLJ0xe5YIfAtnTcQ3j0YKSmPBZUCG76TGyOyrX2kmGVQQP+jETSdAKB1dw5EiLIkoSF9q7pKfEP3H6AvjW/fpLoiz+TO85ezRk4ZFgNVrsbysNx7x4OZT38UT0NgXN9tuf1EQ01qXfVYLYEqnjBzfnyuz/WhuooJiJzf1+bfCja61XQ+6grmGMXfpvKUsvXMXwcjbUFQcJKsUFG2kRC4lY5vUrYmrlUYYGLsNKxyuNZI5PSnOQttyS4Qz2G217Med7YyuClzKQtS8DA25cDJxBz0ZPuOy/LNL7OCa9VriU6mNQYCC885tlwYYLJcrXerXnTbj7Wd8zG9W/e71Lm3N+ye5hn/7OtKZraVjmPYF6l/hkiN9iXL75pnSEiPWAySdI7KeqVY5kvn9P4Gr6gonwPGxaoK9LVRF8Ub+u0W2phnjMyAtwJr6ZblbrocmTO909IA+mZNcjZnngqzRq3LD/Oua2Cm7E4OMA1Q189qgv3tKYU0dMkQERg2eVmg9a2+ssnjo7uWiMCIq3aHY=
+  - provider: bintray
+    file: ".bintray.json"
+    user: "${BINTRAY_API_USER}"
+    key:
+      secure: ojICtkA+kNqkSH2G8taHBrpHRO3HB3Om68OJxh2g5g1gsP37joS/9qtEqFoB9Me/CrMbQ/XmVYNn6oqRGEbEDqz3Zi7UJQsdtYLo//SFkEsSIOspoZz4Mdl0U+Y1A/ktQuDEJiz/ZUt290iPuKWE/JL2qBbLJ0xe5YIfAtnTcQ3j0YKSmPBZUCG76TGyOyrX2kmGVQQP+jETSdAKB1dw5EiLIkoSF9q7pKfEP3H6AvjW/fpLoiz+TO85ezRk4ZFgNVrsbysNx7x4OZT38UT0NgXN9tuf1EQ01qXfVYLYEqnjBzfnyuz/WhuooJiJzf1+bfCja61XQ+6grmGMXfpvKUsvXMXwcjbUFQcJKsUFG2kRC4lY5vUrYmrlUYYGLsNKxyuNZI5PSnOQttyS4Qz2G217Med7YyuClzKQtS8DA25cDJxBz0ZPuOy/LNL7OCa9VriU6mNQYCC885tlwYYLJcrXerXnTbj7Wd8zG9W/e71Lm3N+ye5hn/7OtKZraVjmPYF6l/hkiN9iXL75pnSEiPWAySdI7KeqVY5kvn9P4Gr6gonwPGxaoK9LVRF8Ub+u0W2phnjMyAtwJr6ZblbrocmTO909IA+mZNcjZnngqzRq3LD/Oua2Cm7E4OMA1Q189qgv3tKYU0dMkQERg2eVmg9a2+ssnjo7uWiMCIq3aHY=
