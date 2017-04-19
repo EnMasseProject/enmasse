@@ -39,41 +39,82 @@ class MetricCollector(object):
         self.name = name
         self.description = description
         self.labels = labels
-        self.mtype = mtype
-
-    def metric(self, label_values, value):
-        m = None
-        if self.mtype == "GAUGE":
-            m = GaugeMetricFamily(self.name, self.description, labels=self.labels)
-        elif self.mtype == "COUNTER":
-            m = CounterMetricFamily(self.name, self.description, labels=self.labels)
+        self.label_list = []
+        self.value_list = []
+        if mtype == "GAUGE":
+            self.metric_family = GaugeMetricFamily(self.name, self.description, labels=self.labels)
+        elif mtype == "COUNTER":
+            self.metric_family = CounterMetricFamily(self.name, self.description, labels=self.labels)
         else:
-            raise("Unknown type " + self.mtype)
-        m.add_metric(label_values, value)
-        return m
+            raise("Unknown type " + mtype)
+
+    def add(self, label_values, value):
+        for idx, val in enumerate(self.label_list):
+            if val == label_values:
+                self.value_list[idx] += value
+                return
+
+        self.label_list.append(label_values)
+        self.value_list.append(value)
+
+    def metric(self):
+        for idx, val in enumerate(self.label_list):
+            self.metric_family.add_metric(val, self.value_list[idx])
+        return self.metric_family
+
+def clean_address(address):
+    if address == None:
+        return address
+    elif address[0] == 'M':
+        return address[2:]
+    else:
+        return address[1:]
+
 
 class RouterCollector(object):
-    def __init__(self):
-        self.collectormap = {'org.apache.qpid.dispatch.router': [
+    def get_collectormap(self):
+        return {self.get_router: [
                 MetricCollector('connectionCount', 'Number of connections to router', ['routerId']),
                 MetricCollector('linkCount', 'Number of links to router', ['routerId']),
+
                 MetricCollector('addrCount', 'Number of addresses defined in router', ['routerId']),
                 MetricCollector('autoLinkCount', 'Number of auto links defined in router', ['routerId']),
                 MetricCollector('linkRouteCount', 'Number of link routers defined in router', ['routerId'])
             ],
-            'org.apache.qpid.dispatch.router.link': [
-                MetricCollector('unsettledCount', 'Number of unsettled messages', ['name', 'connectionId']),
-                MetricCollector('deliveryCount', 'Number of delivered messages', ['name', 'connectionId'], "COUNTER"),
-                MetricCollector('releasedCount', 'Number of released messages', ['name', 'connectionId'], "COUNTER"),
-                MetricCollector('rejectedCount', 'Number of rejected messages', ['name', 'connectionId'], "COUNTER"),
-                MetricCollector('acceptedCount', 'Number of accepted messages', ['name', 'connectionId'], "COUNTER"),
-                MetricCollector('undeliveredCount', 'Number of undelivered messages', ['name', 'connectionId']),
-                MetricCollector('capacity', 'Capacity of link', ['name', 'connectionId'])
+            self.get_links: [
+                MetricCollector('linkCount', 'Number of links to router', ['address']),
+                MetricCollector('unsettledCount', 'Number of unsettled messages', ['address']),
+                MetricCollector('deliveryCount', 'Number of delivered messages', ['address'], "COUNTER"),
+                MetricCollector('releasedCount', 'Number of released messages', ['address'], "COUNTER"),
+                MetricCollector('rejectedCount', 'Number of rejected messages', ['address'], "COUNTER"),
+                MetricCollector('acceptedCount', 'Number of accepted messages', ['address'], "COUNTER"),
+                MetricCollector('undeliveredCount', 'Number of undelivered messages', ['address']),
+                MetricCollector('capacity', 'Capacity of link', ['address'])
             ]}
 
+    def get_router(self):
+        return self.collect_metric('org.apache.qpid.dispatch.router')
+
+    def get_links(self):
+        response = self.collect_metric('org.apache.qpid.dispatch.router.link')
+        if response == None:
+            return None
+        ownedIdx = response.body["attributeNames"].index("owningAddr")
+        for result in response.body["results"]:
+            result.append(clean_address(result[ownedIdx]))
+            result.append(1)
+        response.body["attributeNames"].append("address")
+        response.body["attributeNames"].append("linkCount")
+        return response
+
+
+    def get_connections(self):
+        return self.collect_metric('org.apache.qpid.dispatch.router.connection')
+
     def collect(self):
-        for entity in self.collectormap:
-            response = self.collect_metric(entity)
+        collectormap = self.get_collectormap()
+        for collectorfn in collectormap:
+            response = collectorfn()
             if response != None:
                 attributes = response.body["attributeNames"]
                 for result in response.body["results"]:
@@ -81,11 +122,14 @@ class RouterCollector(object):
                     for i in range(0, len(attributes)):
                         result_map[attributes[i]] = result[i]
 
-                    for collector in self.collectormap[entity]:
+                    for collector in collectormap[collectorfn]:
                         labels = []
                         for l in collector.labels:
                             labels.append(result_map[l])
-                        yield collector.metric(labels, int(result_map[collector.name]))
+                        collector.add(labels, int(result_map[collector.name]))
+                for collector in collectormap[collectorfn]:
+                    yield collector.metric()
+        
 
     def collect_metric(self, entityType):
         try:
