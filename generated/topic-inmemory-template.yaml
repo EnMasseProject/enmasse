@@ -54,6 +54,17 @@ objects:
           volumeMounts:
           - mountPath: "/var/run/artemis"
             name: vol-${NAME}
+        - image: "${ROUTER_COLLECTOR_REPO}:latest"
+          name: collector
+          ports:
+          - containerPort: 8080
+            name: metrics
+            protocol: TCP
+          resources:
+            limits:
+              memory: 32Mi
+            requests:
+              memory: 32Mi
         - env:
           - name: LINK_CAPACITY
             value: "${ROUTER_LINK_CAPACITY}"
@@ -67,9 +78,6 @@ objects:
           ports:
           - containerPort: 5672
             name: amqp
-            protocol: TCP
-          - containerPort: 8080
-            name: metrics
             protocol: TCP
           - containerPort: 55673
             name: internal
@@ -111,6 +119,9 @@ parameters:
 - description: The docker image to use for the message broker
   name: BROKER_REPO
   value: enmasseproject/artemis
+- description: The docker image to use for the router collector
+  name: ROUTER_COLLECTOR_REPO
+  value: enmasseproject/router-collector
 - description: The default image to use as topic forwarder
   name: TOPIC_FORWARDER_REPO
   value: enmasseproject/topic-forwarder

@@ -82,6 +82,9 @@ parameters:
 - description: The docker image to use for the message broker
   name: BROKER_REPO
   value: enmasseproject/artemis
+- description: The docker image to use for the router collector
+  name: ROUTER_COLLECTOR_REPO
+  value: enmasseproject/router-collector
 - description: The default image to use as topic forwarder
   name: TOPIC_FORWARDER_REPO
   value: enmasseproject/topic-forwarder

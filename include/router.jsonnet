@@ -1,6 +1,28 @@
 local version = std.extVar("VERSION");
 local common = import "common.jsonnet";
 {
+  collector(image_repo, mem_request)::
+    {
+      "image": image_repo + ":" + version,
+      "name": "collector",
+      "resources": {
+          "requests": {
+              "memory": mem_request
+          },
+          "limits": {
+              "memory": mem_request
+          }
+      },
+      "ports": [
+        {
+          "name": "metrics",
+          "containerPort": 8080,
+          "protocol": "TCP"
+        }
+      ]
+
+    },
+
   container(use_tls, use_sasldb, image_repo, addressEnv, mem_request)::
     local routerPort = {
         "name": "amqp",
@@ -15,11 +37,6 @@ local common = import "common.jsonnet";
     local secureRouterPort = {
         "name": "amqps",
         "containerPort": 5671,
-        "protocol": "TCP"
-    };
-    local collectorPort = {
-        "name": "metrics",
-        "containerPort": 8080,
         "protocol": "TCP"
     };
     local resources = {
@@ -41,8 +58,8 @@ local common = import "common.jsonnet";
         then [linkEnv]
         else [linkEnv, addressEnv],
       "ports": if use_tls
-        then [routerPort, collectorPort, internalPort, secureRouterPort]
-        else [routerPort, collectorPort, internalPort],
+        then [routerPort, internalPort, secureRouterPort]
+        else [routerPort, internalPort],
       "livenessProbe": {
         "tcpSocket": {
           "port": "amqp"

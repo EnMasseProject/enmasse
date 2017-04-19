@@ -33,7 +33,7 @@ local hawkularRouterConfig = import "hawkular-router-config.jsonnet";
       "name": templateName
     },
     local common = [
-      qdrouterd.deployment(use_tls, use_sasldb, "${INSTANCE}", "${ROUTER_REPO}"),
+      qdrouterd.deployment(use_tls, use_sasldb, "${INSTANCE}", "${ROUTER_REPO}", "${ROUTER_COLLECTOR_REPO}"),
       messagingService.generate(use_tls, "${INSTANCE}", true),
       subserv.deployment("${INSTANCE}", "${SUBSERV_REPO}"),
       subserv.service("${INSTANCE}"),
@@ -82,6 +82,11 @@ local hawkularRouterConfig = import "hawkular-router-config.jsonnet";
         "name": "ROUTER_REPO",
         "description": "The image to use for the router",
         "value": "enmasseproject/qdrouterd"
+      },
+      {
+        "name": "ROUTER_COLLECTOR_REPO",
+        "description": "The image to use for the router collector",
+        "value": "enmasseproject/router-collector"
       },
       {
         "name": "ROUTER_LINK_CAPACITY",
