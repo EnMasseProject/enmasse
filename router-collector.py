@@ -33,9 +33,6 @@ import random
 import time
 from prometheus_client.core import GaugeMetricFamily, CounterMetricFamily, REGISTRY
 
-# TODO: Expose
-# * Connection count with container id
-# * Container id label per address
 class MetricCollector(object):
     def __init__(self, name, description, labels, mtype="GAUGE"):
         self.name = name
@@ -64,6 +61,21 @@ class MetricCollector(object):
             self.metric_family.add_metric(val, self.value_list[idx])
         return self.metric_family
 
+def to_map(response):
+    retval = []
+    if response == None:
+        return retval
+
+    attributes = response.body["attributeNames"]
+    for result in response.body["results"]:
+        m = {}
+        for i in range(0, len(attributes)):
+            m[attributes[i]] = result[i]
+        retval.append(m)
+    return retval
+
+
+
 def clean_address(address):
     if address == None:
         return address
@@ -72,6 +84,11 @@ def clean_address(address):
     else:
         return address[1:]
 
+def get_container_from_connections(connection_id, connections):
+    for connection in connections:
+        if connection_id == connection["identity"]:
+            return connection["container"]
+    return None
 
 class RouterCollector(object):
     def get_collectormap(self):
@@ -85,6 +102,7 @@ class RouterCollector(object):
             ],
             self.get_links: [
                 MetricCollector('linkCount', 'Number of links to router', ['address']),
+                MetricCollector('linkCount', 'Number of links to router', ['address', 'container']),
                 MetricCollector('unsettledCount', 'Number of unsettled messages', ['address']),
                 MetricCollector('deliveryCount', 'Number of delivered messages', ['address'], "COUNTER"),
                 MetricCollector('releasedCount', 'Number of released messages', ['address'], "COUNTER"),
@@ -92,45 +110,45 @@ class RouterCollector(object):
                 MetricCollector('acceptedCount', 'Number of accepted messages', ['address'], "COUNTER"),
                 MetricCollector('undeliveredCount', 'Number of undelivered messages', ['address']),
                 MetricCollector('capacity', 'Capacity of link', ['address'])
+            ],
+            self.get_connections: [
+                MetricCollector('connectionCount', 'Number of connections to router', ['container']),
             ]}
 
     def get_router(self):
         return self.collect_metric('org.apache.qpid.dispatch.router')
 
     def get_links(self):
-        response = self.collect_metric('org.apache.qpid.dispatch.router.link')
-        if response == None:
-            return None
-        ownedIdx = response.body["attributeNames"].index("owningAddr")
-        for result in response.body["results"]:
-            result.append(clean_address(result[ownedIdx]))
-            result.append(1)
-        response.body["attributeNames"].append("address")
-        response.body["attributeNames"].append("linkCount")
-        return response
+        links = self.collect_metric('org.apache.qpid.dispatch.router.link')
+        connections = self.get_connections()
 
+        for link in links:
+            link["address"] = clean_address(link["owningAddr"])
+            link["linkCount"] = 1
+            link["container"] = get_container_from_connections(link["connectionId"], connections)
+
+        return links
 
     def get_connections(self):
-        return self.collect_metric('org.apache.qpid.dispatch.router.connection')
+        response = self.collect_metric('org.apache.qpid.dispatch.connection')
+        for result in response:
+            result["connectionCount"] = 1
+        return response
 
     def collect(self):
         collectormap = self.get_collectormap()
         for collectorfn in collectormap:
-            response = collectorfn()
-            if response != None:
-                attributes = response.body["attributeNames"]
-                for result in response.body["results"]:
-                    result_map = {}
-                    for i in range(0, len(attributes)):
-                        result_map[attributes[i]] = result[i]
-
-                    for collector in collectormap[collectorfn]:
-                        labels = []
-                        for l in collector.labels:
-                            labels.append(result_map[l])
-                        collector.add(labels, int(result_map[collector.name]))
-                for collector in collectormap[collectorfn]:
-                    yield collector.metric()
+            entities = collectorfn()
+            for collector in collectormap[collectorfn]:
+                for entity in entities:
+                    labels = []
+                    for l in collector.labels:
+                        if entity[l] != None:
+                            labels.append(entity[l])
+                    value = entity[collector.name]
+                    if len(labels) == len(collector.labels):
+                        collector.add(labels, int(value))
+                yield collector.metric()
         
 
     def collect_metric(self, entityType):
@@ -143,7 +161,7 @@ class RouterCollector(object):
                 properties["name"] = "self"
                 message = Message(body=None, properties=properties)
                 response = client.call(message)
-                return response
+                return to_map(response)
             finally:
                 client.connection.close()
         except:
