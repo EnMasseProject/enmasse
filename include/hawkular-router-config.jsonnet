@@ -19,18 +19,18 @@ local metric = import "metric.jsonnet";
             metric.simple("totalLinkCount"),
             metric.simple("producerCount"),
             metric.simple("consumerCount"),
-            metric.simple("connectionCount"),
-            metric.simple("linkCount"),
-            metric.simple("addrCount"),
-            metric.simple("autoLinkCount"),
-            metric.simple("linkRouteCount"),
-            metric.simple("unsettledCount"),
-            metric.simple("deliveryCount"),
+            //metric.simple("connectionCount"),
+            //metric.simple("linkCount"),
+            //metric.simple("addrCount"),
+            //metric.simple("autoLinkCount"),
+            //metric.simple("linkRouteCount"),
+            //metric.simple("unsettledCount"),
+            //metric.simple("deliveryCount"),
             metric.simple("releasedCount"),
             metric.simple("rejectedCount"),
             metric.simple("acceptedCount"),
             metric.simple("undeliveredCount"),
-            metric.simple("capacity")
+            //metric.simple("capacity")
           ]
         }
       ]
