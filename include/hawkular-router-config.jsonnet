@@ -26,10 +26,10 @@ local metric = import "metric.jsonnet";
             //metric.simple("linkRouteCount"),
             //metric.simple("unsettledCount"),
             //metric.simple("deliveryCount"),
-            metric.simple("releasedCount"),
-            metric.simple("rejectedCount"),
-            metric.simple("acceptedCount"),
-            metric.simple("undeliveredCount"),
+            //metric.simple("releasedCount"),
+            //metric.simple("rejectedCount"),
+            //metric.simple("acceptedCount"),
+            //metric.simple("undeliveredCount"),
             //metric.simple("capacity")
           ]
         }

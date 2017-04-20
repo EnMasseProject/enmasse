@@ -81,15 +81,7 @@ objects:
       {\"id\": \"router.producerCount\", \"name\": \"producerCount\", \"tags\": {\"messagingComponent\":
       \"router\", \"messagingMetricType\": \"producerCount\"}}, {\"id\": \"router.consumerCount\",
       \"name\": \"consumerCount\", \"tags\": {\"messagingComponent\": \"router\",
-      \"messagingMetricType\": \"consumerCount\"}}, {\"id\": \"router.releasedCount\",
-      \"name\": \"releasedCount\", \"tags\": {\"messagingComponent\": \"router\",
-      \"messagingMetricType\": \"releasedCount\"}}, {\"id\": \"router.rejectedCount\",
-      \"name\": \"rejectedCount\", \"tags\": {\"messagingComponent\": \"router\",
-      \"messagingMetricType\": \"rejectedCount\"}}, {\"id\": \"router.acceptedCount\",
-      \"name\": \"acceptedCount\", \"tags\": {\"messagingComponent\": \"router\",
-      \"messagingMetricType\": \"acceptedCount\"}}, {\"id\": \"router.undeliveredCount\",
-      \"name\": \"undeliveredCount\", \"tags\": {\"messagingComponent\": \"router\",
-      \"messagingMetricType\": \"undeliveredCount\"}}], \"path\": \"/metrics/\", \"port\":
+      \"messagingMetricType\": \"consumerCount\"}}], \"path\": \"/metrics/\", \"port\":
       8080, \"protocol\": \"http\", \"type\": \"prometheus\"}]}"}, "kind": "ConfigMap",
       "metadata": {"name": "hawkular-router-config"}}, {"apiVersion": "v1", "kind":
       "Route", "metadata": {"labels": {"app": "enmasse", "instance": "${INSTANCE}"},
@@ -287,15 +279,7 @@ objects:
       {\"id\": \"router.producerCount\", \"name\": \"producerCount\", \"tags\": {\"messagingComponent\":
       \"router\", \"messagingMetricType\": \"producerCount\"}}, {\"id\": \"router.consumerCount\",
       \"name\": \"consumerCount\", \"tags\": {\"messagingComponent\": \"router\",
-      \"messagingMetricType\": \"consumerCount\"}}, {\"id\": \"router.releasedCount\",
-      \"name\": \"releasedCount\", \"tags\": {\"messagingComponent\": \"router\",
-      \"messagingMetricType\": \"releasedCount\"}}, {\"id\": \"router.rejectedCount\",
-      \"name\": \"rejectedCount\", \"tags\": {\"messagingComponent\": \"router\",
-      \"messagingMetricType\": \"rejectedCount\"}}, {\"id\": \"router.acceptedCount\",
-      \"name\": \"acceptedCount\", \"tags\": {\"messagingComponent\": \"router\",
-      \"messagingMetricType\": \"acceptedCount\"}}, {\"id\": \"router.undeliveredCount\",
-      \"name\": \"undeliveredCount\", \"tags\": {\"messagingComponent\": \"router\",
-      \"messagingMetricType\": \"undeliveredCount\"}}], \"path\": \"/metrics/\", \"port\":
+      \"messagingMetricType\": \"consumerCount\"}}], \"path\": \"/metrics/\", \"port\":
       8080, \"protocol\": \"http\", \"type\": \"prometheus\"}]}"}, "kind": "ConfigMap",
       "metadata": {"name": "hawkular-router-config"}}, {"apiVersion": "v1", "kind":
       "Route", "metadata": {"labels": {"app": "enmasse", "instance": "${INSTANCE}"},
