@@ -34,16 +34,20 @@ import time
 from prometheus_client.core import GaugeMetricFamily, CounterMetricFamily, REGISTRY
 
 class MetricCollector(object):
-    def __init__(self, name, description, labels, mtype="GAUGE"):
+    def __init__(self, name, description, labels, mtype="GAUGE", id=None):
         self.name = name
+        if id == None:
+            self.id = name
+        else:
+            self.id = id
         self.description = description
         self.labels = labels
         self.label_list = []
         self.value_list = []
         if mtype == "GAUGE":
-            self.metric_family = GaugeMetricFamily(self.name, self.description, labels=self.labels)
+            self.metric_family = GaugeMetricFamily(self.id, self.description, labels=self.labels)
         elif mtype == "COUNTER":
-            self.metric_family = CounterMetricFamily(self.name, self.description, labels=self.labels)
+            self.metric_family = CounterMetricFamily(self.id, self.description, labels=self.labels)
         else:
             raise("Unknown type " + mtype)
 
@@ -104,8 +108,10 @@ def get_container_from_connections(connection_id, connections):
 
 class RouterCollector(object):
     def create_collector_map(self):
-        metrics = [ MetricCollector('connectionCount', 'Number of connections to router', ['routerId', 'container']),
-                    MetricCollector('linkCount', 'Number of links to router', ['routerId', 'address', 'container']),
+        metrics = [ MetricCollector('connectionCount', 'Number of connections to router', ['container']),
+                    MetricCollector('connectionCount', 'Total number of connections to router', ['routerId'], "GAUGE", "totalConnectionCount"),
+                    MetricCollector('linkCount', 'Number of links to router', ['address', 'container']),
+                    MetricCollector('linkCount', 'Total number of links to router', ['routerId'], "GAUGE", "totalLinkCount"),
                     MetricCollector('addrCount', 'Number of addresses defined in router', ['routerId']),
                     MetricCollector('autoLinkCount', 'Number of auto links defined in router', ['routerId']),
                     MetricCollector('linkRouteCount', 'Number of link routers defined in router', ['routerId']),
@@ -118,11 +124,11 @@ class RouterCollector(object):
                     MetricCollector('capacity', 'Capacity of link', ['address']) ]
         m = {}
         for metric in metrics:
-            m[metric.name] = metric
+            m[metric.id] = metric
         return m
 
     def create_entity_map(self, collector_map):
-        return { self.get_router: [collector_map['connectionCount'], collector_map['linkCount'],
+        return { self.get_router: [collector_map['totalConnectionCount'], collector_map['totalLinkCount'],
                                    collector_map['addrCount'], collector_map['autoLinkCount'], collector_map['linkRouteCount']],
                  self.get_connections: [collector_map['connectionCount']],
                  self.get_links: [collector_map['linkCount'], collector_map['unsettledCount'],
