@@ -67,7 +67,10 @@ class RouterResponse(object):
         self.response = response
 
     def get_index(self, attribute):
-        return self.response.body["attributeNames"].index(attribute)
+        try:
+            return self.response.body["attributeNames"].index(attribute)
+        except ValueError:
+            return None
 
     def get_results(self):
         return self.response.body["results"]
@@ -100,29 +103,32 @@ def get_container_from_connections(connection_id, connections):
     return None
 
 class RouterCollector(object):
-    def get_collectormap(self):
-        return {self.get_router: [
-                MetricCollector('connectionCount', 'Number of connections to router', ['routerId']),
-                MetricCollector('linkCount', 'Number of links to router', ['routerId']),
+    def create_collector_map(self):
+        metrics = [ MetricCollector('connectionCount', 'Number of connections to router', ['routerId', 'container']),
+                    MetricCollector('linkCount', 'Number of links to router', ['routerId', 'address', 'container']),
+                    MetricCollector('addrCount', 'Number of addresses defined in router', ['routerId']),
+                    MetricCollector('autoLinkCount', 'Number of auto links defined in router', ['routerId']),
+                    MetricCollector('linkRouteCount', 'Number of link routers defined in router', ['routerId']),
+                    MetricCollector('unsettledCount', 'Number of unsettled messages', ['address']),
+                    MetricCollector('deliveryCount', 'Number of delivered messages', ['address'], "COUNTER"),
+                    MetricCollector('releasedCount', 'Number of released messages', ['address'], "COUNTER"),
+                    MetricCollector('rejectedCount', 'Number of rejected messages', ['address'], "COUNTER"),
+                    MetricCollector('acceptedCount', 'Number of accepted messages', ['address'], "COUNTER"),
+                    MetricCollector('undeliveredCount', 'Number of undelivered messages', ['address']),
+                    MetricCollector('capacity', 'Capacity of link', ['address']) ]
+        m = {}
+        for metric in metrics:
+            m[metric.name] = metric
+        return m
 
-                MetricCollector('addrCount', 'Number of addresses defined in router', ['routerId']),
-                MetricCollector('autoLinkCount', 'Number of auto links defined in router', ['routerId']),
-                MetricCollector('linkRouteCount', 'Number of link routers defined in router', ['routerId'])
-            ],
-            self.get_links: [
-                MetricCollector('linkCount', 'Number of links to router', ['address']),
-                MetricCollector('linkCount', 'Number of links to router', ['address', 'container']),
-                MetricCollector('unsettledCount', 'Number of unsettled messages', ['address']),
-                MetricCollector('deliveryCount', 'Number of delivered messages', ['address'], "COUNTER"),
-                MetricCollector('releasedCount', 'Number of released messages', ['address'], "COUNTER"),
-                MetricCollector('rejectedCount', 'Number of rejected messages', ['address'], "COUNTER"),
-                MetricCollector('acceptedCount', 'Number of accepted messages', ['address'], "COUNTER"),
-                MetricCollector('undeliveredCount', 'Number of undelivered messages', ['address']),
-                MetricCollector('capacity', 'Capacity of link', ['address'])
-            ],
-            self.get_connections: [
-                MetricCollector('connectionCount', 'Number of connections to router', ['container']),
-            ]}
+    def create_entity_map(self, collector_map):
+        return { self.get_router: [collector_map['connectionCount'], collector_map['linkCount'],
+                                   collector_map['addrCount'], collector_map['autoLinkCount'], collector_map['linkRouteCount']],
+                 self.get_connections: [collector_map['connectionCount']],
+                 self.get_links: [collector_map['linkCount'], collector_map['unsettledCount'],
+                                  collector_map['deliveryCount'], collector_map['releasedCount'],
+                                  collector_map['rejectedCount'], collector_map['acceptedCount'],
+                                  collector_map['undeliveredCount'], collector_map['capacity']] }
 
     def get_router(self):
         return self.collect_metric('org.apache.qpid.dispatch.router')
@@ -151,21 +157,26 @@ class RouterCollector(object):
         return response
 
     def collect(self):
-        collectormap = self.get_collectormap()
-        for collectorfn in collectormap:
-            response = collectorfn()
+        collector_map = self.create_collector_map()
+        fetcher_map = self.create_entity_map(collector_map)
+
+        for fetcher in fetcher_map:
+            response = fetcher()
             if response != None:
-                for collector in collectormap[collectorfn]:
+                for collector in fetcher_map[fetcher]:
                     for entity in response.get_results():
                         labels = []
                         for l in collector.labels:
                             label_idx = response.get_index(l)
-                            if entity[label_idx] != None:
+                            if label_idx != None and entity[label_idx] != None:
                                 labels.append(entity[label_idx])
+                            else:
+                                labels.append("")
                         value = entity[response.get_index(collector.name)]
-                        if len(labels) == len(collector.labels):
-                            collector.add(labels, int(value))
-                    yield collector.metric()
+                        collector.add(labels, int(value))
+
+        for collector in collector_map.itervalues():
+            yield collector.metric()
         
 
     def collect_metric(self, entityType):
