@@ -34,7 +34,7 @@ import time
 from prometheus_client.core import GaugeMetricFamily, CounterMetricFamily, REGISTRY
 
 class MetricCollector(object):
-    def __init__(self, name, description, labels, mtype="GAUGE", id=None):
+    def __init__(self, name, description, labels, mtype="GAUGE", id=None, filter=None):
         self.name = name
         if id == None:
             self.id = name
@@ -42,6 +42,7 @@ class MetricCollector(object):
             self.id = id
         self.description = description
         self.labels = labels
+        self.filter = filter
         self.label_list = []
         self.value_list = []
         if mtype == "GAUGE":
@@ -64,7 +65,6 @@ class MetricCollector(object):
         for idx, val in enumerate(self.label_list):
             self.metric_family.add_metric(val, self.value_list[idx])
         return self.metric_family
-
 
 class RouterResponse(object):
     def __init__(self, response):
@@ -90,6 +90,15 @@ class RouterResponse(object):
         for result in self.response.body["results"]:
             result.append(transform(result[from_idx]))
 
+    def contains(self, result, filter):
+        if filter == None:
+            return True
+        for key, value in filter.iteritems():
+            key_idx = self.get_index(key)
+            if result[key_idx] != value:
+                return False
+        return True
+
 def clean_address(address):
     if address == None:
         return address
@@ -109,9 +118,11 @@ def get_container_from_connections(connection_id, connections):
 class RouterCollector(object):
     def create_collector_map(self):
         metrics = [ MetricCollector('connectionCount', 'Number of connections to router', ['container']),
-                    MetricCollector('connectionCount', 'Total number of connections to router', ['routerId'], "GAUGE", "totalConnectionCount"),
+                    MetricCollector('connectionCount', 'Total number of connections to router', ['routerId'], id="totalConnectionCount"),
                     MetricCollector('linkCount', 'Number of links to router', ['address', 'container']),
-                    MetricCollector('linkCount', 'Total number of links to router', ['routerId'], "GAUGE", "totalLinkCount"),
+                    MetricCollector('linkCount', 'Number of consumers to router', ['address', 'container'], id="consumerCount", filter={"linkDir": "out"}),
+                    MetricCollector('linkCount', 'Number of producers to router', ['address', 'container'], id="producerCount", filter={"linkDir": "in"}),
+                    MetricCollector('linkCount', 'Total number of links to router', ['routerId'], id="totalLinkCount"),
                     MetricCollector('addrCount', 'Number of addresses defined in router', ['routerId']),
                     MetricCollector('autoLinkCount', 'Number of auto links defined in router', ['routerId']),
                     MetricCollector('linkRouteCount', 'Number of link routers defined in router', ['routerId']),
@@ -134,7 +145,8 @@ class RouterCollector(object):
                  self.get_links: [collector_map['linkCount'], collector_map['unsettledCount'],
                                   collector_map['deliveryCount'], collector_map['releasedCount'],
                                   collector_map['rejectedCount'], collector_map['acceptedCount'],
-                                  collector_map['undeliveredCount'], collector_map['capacity']] }
+                                  collector_map['undeliveredCount'], collector_map['capacity'],
+                                  collector_map['consumerCount'], collector_map['producerCount']] }
 
     def get_router(self):
         return self.collect_metric('org.apache.qpid.dispatch.router')
@@ -171,15 +183,16 @@ class RouterCollector(object):
             if response != None:
                 for collector in fetcher_map[fetcher]:
                     for entity in response.get_results():
-                        labels = []
-                        for l in collector.labels:
-                            label_idx = response.get_index(l)
-                            if label_idx != None and entity[label_idx] != None:
-                                labels.append(entity[label_idx])
-                            else:
-                                labels.append("")
-                        value = entity[response.get_index(collector.name)]
-                        collector.add(labels, int(value))
+                        if response.contains(entity, collector.filter):
+                            labels = []
+                            for l in collector.labels:
+                                label_idx = response.get_index(l)
+                                if label_idx != None and entity[label_idx] != None:
+                                    labels.append(entity[label_idx])
+                                else:
+                                    labels.append("")
+                            value = entity[response.get_index(collector.name)]
+                            collector.add(labels, int(value))
 
         for collector in collector_map.itervalues():
             yield collector.metric()
