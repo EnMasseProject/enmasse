@@ -119,9 +119,9 @@ class RouterCollector(object):
     def create_collector_map(self):
         metrics = [ MetricCollector('connectionCount', 'Number of connections to router', ['container']),
                     MetricCollector('connectionCount', 'Total number of connections to router', ['routerId'], id="totalConnectionCount"),
-                    MetricCollector('linkCount', 'Number of links to router', ['address', 'container']),
-                    MetricCollector('linkCount', 'Number of consumers to router', ['address', 'container'], id="consumerCount", filter={"linkDir": "out"}),
-                    MetricCollector('linkCount', 'Number of producers to router', ['address', 'container'], id="producerCount", filter={"linkDir": "in"}),
+                    MetricCollector('linkCount', 'Number of links to router', ['address']),
+                    MetricCollector('linkCount', 'Number of consumers to router', ['address'], id="consumerCount", filter={"linkDir": "out"}),
+                    MetricCollector('linkCount', 'Number of producers to router', ['address'], id="producerCount", filter={"linkDir": "in"}),
                     MetricCollector('linkCount', 'Total number of links to router', ['routerId'], id="totalLinkCount"),
                     MetricCollector('addrCount', 'Number of addresses defined in router', ['routerId']),
                     MetricCollector('autoLinkCount', 'Number of auto links defined in router', ['routerId']),
