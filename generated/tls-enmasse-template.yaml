@@ -73,42 +73,71 @@ objects:
       \"type\": \"gauge\"}], \"path\": \"/jolokia/\", \"port\": 8161, \"protocol\":
       \"http\", \"type\": \"jolokia\"}]}"}, "kind": "ConfigMap", "metadata": {"name":
       "hawkular-broker-config"}}, {"apiVersion": "v1", "data": {"hawkular-openshift-agent":
-      "{\"endpoints\": [{\"collection_interval\": \"60s\", \"metrics\": [{\"name\":
-      \"num_connections\", \"tags\": {\"messagingComponent\": \"router\", \"messagingMetricType\":
-      \"numConnections\"}}], \"path\": \"/metrics/\", \"port\": 8080, \"protocol\":
-      \"http\", \"type\": \"prometheus\"}]}"}, "kind": "ConfigMap", "metadata": {"name":
-      "hawkular-router-config"}}, {"apiVersion": "v1", "kind": "Route", "metadata":
-      {"labels": {"app": "enmasse", "instance": "${INSTANCE}"}, "name": "console"},
-      "spec": {"host": "${CONSOLE_HOSTNAME}", "port": {"targetPort": "console-http"},
-      "to": {"kind": "Service", "name": "admin"}}}, {"apiVersion": "extensions/v1beta1",
-      "kind": "Deployment", "metadata": {"labels": {"app": "enmasse", "instance":
-      "${INSTANCE}", "name": "admin"}, "name": "admin"}, "spec": {"replicas": 1, "template":
-      {"metadata": {"labels": {"app": "enmasse", "instance": "${INSTANCE}", "name":
-      "admin"}}, "spec": {"containers": [{"env": [{"name": "CONFIGURATION_SERVICE_HOST",
-      "value": "localhost"}, {"name": "CONFIGURATION_SERVICE_PORT", "value": "5672"}],
-      "image": "${RAGENT_REPO}:latest", "livenessProbe": {"tcpSocket": {"port": "amqp"}},
-      "name": "ragent", "ports": [{"containerPort": 55672, "name": "amqp", "protocol":
-      "TCP"}], "resources": {"limits": {"memory": "64Mi"}, "requests": {"memory":
-      "64Mi"}}}, {"env": [{"name": "CONFIGURATION_SERVICE_HOST", "value": "localhost"},
-      {"name": "CONFIGURATION_SERVICE_PORT", "value": "5672"}], "image": "${QUEUE_SCHEDULER_REPO}:latest",
-      "livenessProbe": {"tcpSocket": {"port": "amqp"}}, "name": "queue-scheduler",
-      "ports": [{"containerPort": 55667, "name": "amqp", "protocol": "TCP"}], "resources":
-      {"limits": {"memory": "128Mi"}, "requests": {"memory": "128Mi"}}}, {"env": [{"name":
-      "CONFIGURATION_SERVICE_HOST", "value": "localhost"}, {"name": "CONFIGURATION_SERVICE_PORT",
-      "value": "5672"}], "image": "${CONSOLE_REPO}:latest", "livenessProbe": {"tcpSocket":
-      {"port": "http"}}, "name": "console", "ports": [{"containerPort": 8080, "name":
-      "http", "protocol": "TCP"}, {"containerPort": 56720, "name": "amqp-ws", "protocol":
-      "TCP"}], "resources": {"limits": {"memory": "64Mi"}, "requests": {"memory":
-      "64Mi"}}}, {"env": [ ], "image": "${CONFIGSERV_REPO}:latest", "livenessProbe":
-      {"tcpSocket": {"port": "amqp"}}, "name": "configserv", "ports": [{"containerPort":
-      5672, "name": "amqp", "protocol": "TCP"}], "resources": {"limits": {"memory":
-      "256Mi"}, "requests": {"memory": "256Mi"}}}]}}}}, {"apiVersion": "v1", "kind":
-      "Service", "metadata": {"labels": {"app": "enmasse", "instance": "${INSTANCE}"},
-      "name": "admin"}, "spec": {"ports": [{"name": "ragent", "port": 55672}, {"name":
-      "configuration", "port": 5672}, {"name": "queue-scheduler", "port": 55667},
-      {"name": "console-ws", "port": 56720}, {"name": "console-http", "port": 8080}],
-      "selector": {"instance": "${INSTANCE}", "name": "admin"}}}], "parameters": [{"description":
-      "The image to use for the router", "name": "ROUTER_REPO", "value": "enmasseproject/qdrouterd"},
+      "{\"endpoints\": [{\"collection_interval\": \"60s\", \"metrics\": [{\"id\":
+      \"router.totalConnectionCount\", \"name\": \"totalConnectionCount\", \"tags\":
+      {\"messagingComponent\": \"router\", \"messagingMetricType\": \"totalConnectionCount\"}},
+      {\"id\": \"router.totalLinkCount\", \"name\": \"totalLinkCount\", \"tags\":
+      {\"messagingComponent\": \"router\", \"messagingMetricType\": \"totalLinkCount\"}},
+      {\"id\": \"router.producerCount\", \"name\": \"producerCount\", \"tags\": {\"messagingComponent\":
+      \"router\", \"messagingMetricType\": \"producerCount\"}}, {\"id\": \"router.consumerCount\",
+      \"name\": \"consumerCount\", \"tags\": {\"messagingComponent\": \"router\",
+      \"messagingMetricType\": \"consumerCount\"}}, {\"id\": \"router.connectionCount\",
+      \"name\": \"connectionCount\", \"tags\": {\"messagingComponent\": \"router\",
+      \"messagingMetricType\": \"connectionCount\"}}, {\"id\": \"router.linkCount\",
+      \"name\": \"linkCount\", \"tags\": {\"messagingComponent\": \"router\", \"messagingMetricType\":
+      \"linkCount\"}}, {\"id\": \"router.addrCount\", \"name\": \"addrCount\", \"tags\":
+      {\"messagingComponent\": \"router\", \"messagingMetricType\": \"addrCount\"}},
+      {\"id\": \"router.autoLinkCount\", \"name\": \"autoLinkCount\", \"tags\": {\"messagingComponent\":
+      \"router\", \"messagingMetricType\": \"autoLinkCount\"}}, {\"id\": \"router.linkRouteCount\",
+      \"name\": \"linkRouteCount\", \"tags\": {\"messagingComponent\": \"router\",
+      \"messagingMetricType\": \"linkRouteCount\"}}, {\"id\": \"router.unsettledCount\",
+      \"name\": \"unsettledCount\", \"tags\": {\"messagingComponent\": \"router\",
+      \"messagingMetricType\": \"unsettledCount\"}}, {\"id\": \"router.deliveryCount\",
+      \"name\": \"deliveryCount\", \"tags\": {\"messagingComponent\": \"router\",
+      \"messagingMetricType\": \"deliveryCount\"}}, {\"id\": \"router.releasedCount\",
+      \"name\": \"releasedCount\", \"tags\": {\"messagingComponent\": \"router\",
+      \"messagingMetricType\": \"releasedCount\"}}, {\"id\": \"router.rejectedCount\",
+      \"name\": \"rejectedCount\", \"tags\": {\"messagingComponent\": \"router\",
+      \"messagingMetricType\": \"rejectedCount\"}}, {\"id\": \"router.acceptedCount\",
+      \"name\": \"acceptedCount\", \"tags\": {\"messagingComponent\": \"router\",
+      \"messagingMetricType\": \"acceptedCount\"}}, {\"id\": \"router.undeliveredCount\",
+      \"name\": \"undeliveredCount\", \"tags\": {\"messagingComponent\": \"router\",
+      \"messagingMetricType\": \"undeliveredCount\"}}, {\"id\": \"router.capacity\",
+      \"name\": \"capacity\", \"tags\": {\"messagingComponent\": \"router\", \"messagingMetricType\":
+      \"capacity\"}}], \"path\": \"/metrics/\", \"port\": 8080, \"protocol\": \"http\",
+      \"type\": \"prometheus\"}]}"}, "kind": "ConfigMap", "metadata": {"name": "hawkular-router-config"}},
+      {"apiVersion": "v1", "kind": "Route", "metadata": {"labels": {"app": "enmasse",
+      "instance": "${INSTANCE}"}, "name": "console"}, "spec": {"host": "${CONSOLE_HOSTNAME}",
+      "port": {"targetPort": "console-http"}, "to": {"kind": "Service", "name": "admin"}}},
+      {"apiVersion": "extensions/v1beta1", "kind": "Deployment", "metadata": {"labels":
+      {"app": "enmasse", "instance": "${INSTANCE}", "name": "admin"}, "name": "admin"},
+      "spec": {"replicas": 1, "template": {"metadata": {"labels": {"app": "enmasse",
+      "instance": "${INSTANCE}", "name": "admin"}}, "spec": {"containers": [{"env":
+      [{"name": "CONFIGURATION_SERVICE_HOST", "value": "localhost"}, {"name": "CONFIGURATION_SERVICE_PORT",
+      "value": "5672"}], "image": "${RAGENT_REPO}:latest", "livenessProbe": {"tcpSocket":
+      {"port": "amqp"}}, "name": "ragent", "ports": [{"containerPort": 55672, "name":
+      "amqp", "protocol": "TCP"}], "resources": {"limits": {"memory": "64Mi"}, "requests":
+      {"memory": "64Mi"}}}, {"env": [{"name": "CONFIGURATION_SERVICE_HOST", "value":
+      "localhost"}, {"name": "CONFIGURATION_SERVICE_PORT", "value": "5672"}], "image":
+      "${QUEUE_SCHEDULER_REPO}:latest", "livenessProbe": {"tcpSocket": {"port": "amqp"}},
+      "name": "queue-scheduler", "ports": [{"containerPort": 55667, "name": "amqp",
+      "protocol": "TCP"}], "resources": {"limits": {"memory": "128Mi"}, "requests":
+      {"memory": "128Mi"}}}, {"env": [{"name": "CONFIGURATION_SERVICE_HOST", "value":
+      "localhost"}, {"name": "CONFIGURATION_SERVICE_PORT", "value": "5672"}], "image":
+      "${CONSOLE_REPO}:latest", "livenessProbe": {"tcpSocket": {"port": "http"}},
+      "name": "console", "ports": [{"containerPort": 8080, "name": "http", "protocol":
+      "TCP"}, {"containerPort": 56720, "name": "amqp-ws", "protocol": "TCP"}], "resources":
+      {"limits": {"memory": "64Mi"}, "requests": {"memory": "64Mi"}}}, {"env": [ ],
+      "image": "${CONFIGSERV_REPO}:latest", "livenessProbe": {"tcpSocket": {"port":
+      "amqp"}}, "name": "configserv", "ports": [{"containerPort": 5672, "name": "amqp",
+      "protocol": "TCP"}], "resources": {"limits": {"memory": "256Mi"}, "requests":
+      {"memory": "256Mi"}}}]}}}}, {"apiVersion": "v1", "kind": "Service", "metadata":
+      {"labels": {"app": "enmasse", "instance": "${INSTANCE}"}, "name": "admin"},
+      "spec": {"ports": [{"name": "ragent", "port": 55672}, {"name": "configuration",
+      "port": 5672}, {"name": "queue-scheduler", "port": 55667}, {"name": "console-ws",
+      "port": 56720}, {"name": "console-http", "port": 8080}], "selector": {"instance":
+      "${INSTANCE}", "name": "admin"}}}], "parameters": [{"description": "The image
+      to use for the router", "name": "ROUTER_REPO", "value": "enmasseproject/qdrouterd"},
       {"description": "The image to use for the router collector", "name": "ROUTER_COLLECTOR_REPO",
       "value": "enmasseproject/router-collector"}, {"description": "The link capacity
       setting for router", "name": "ROUTER_LINK_CAPACITY", "value": "50"}, {"description":
@@ -265,24 +294,52 @@ objects:
       \"type\": \"gauge\"}], \"path\": \"/jolokia/\", \"port\": 8161, \"protocol\":
       \"http\", \"type\": \"jolokia\"}]}"}, "kind": "ConfigMap", "metadata": {"name":
       "hawkular-broker-config"}}, {"apiVersion": "v1", "data": {"hawkular-openshift-agent":
-      "{\"endpoints\": [{\"collection_interval\": \"60s\", \"metrics\": [{\"name\":
-      \"num_connections\", \"tags\": {\"messagingComponent\": \"router\", \"messagingMetricType\":
-      \"numConnections\"}}], \"path\": \"/metrics/\", \"port\": 8080, \"protocol\":
-      \"http\", \"type\": \"prometheus\"}]}"}, "kind": "ConfigMap", "metadata": {"name":
-      "hawkular-router-config"}}, {"apiVersion": "v1", "kind": "Route", "metadata":
-      {"labels": {"app": "enmasse", "instance": "${INSTANCE}"}, "name": "console"},
-      "spec": {"host": "${CONSOLE_HOSTNAME}", "port": {"targetPort": "console-http"},
-      "to": {"kind": "Service", "name": "admin"}}}, {"apiVersion": "v1", "kind": "Route",
-      "metadata": {"labels": {"app": "enmasse", "instance": "${INSTANCE}"}, "name":
-      "messaging"}, "spec": {"host": "${MESSAGING_HOSTNAME}", "port": {"targetPort":
-      "amqps"}, "tls": {"termination": "passthrough"}, "to": {"kind": "Service", "name":
-      "messaging", "weight": 100}}}, {"apiVersion": "v1", "kind": "Route", "metadata":
-      {"labels": {"app": "enmasse", "instance": "${INSTANCE}"}, "name": "mqtt"}, "spec":
-      {"host": "${MQTT_GATEWAY_HOSTNAME}", "port": {"targetPort": "secure-mqtt"},
-      "tls": {"termination": "passthrough"}, "to": {"kind": "Service", "name": "mqtt",
-      "weight": 100}}}, {"apiVersion": "extensions/v1beta1", "kind": "Deployment",
-      "metadata": {"labels": {"app": "enmasse", "instance": "${INSTANCE}", "name":
-      "admin"}, "name": "admin"}, "spec": {"replicas": 1, "template": {"metadata":
+      "{\"endpoints\": [{\"collection_interval\": \"60s\", \"metrics\": [{\"id\":
+      \"router.totalConnectionCount\", \"name\": \"totalConnectionCount\", \"tags\":
+      {\"messagingComponent\": \"router\", \"messagingMetricType\": \"totalConnectionCount\"}},
+      {\"id\": \"router.totalLinkCount\", \"name\": \"totalLinkCount\", \"tags\":
+      {\"messagingComponent\": \"router\", \"messagingMetricType\": \"totalLinkCount\"}},
+      {\"id\": \"router.producerCount\", \"name\": \"producerCount\", \"tags\": {\"messagingComponent\":
+      \"router\", \"messagingMetricType\": \"producerCount\"}}, {\"id\": \"router.consumerCount\",
+      \"name\": \"consumerCount\", \"tags\": {\"messagingComponent\": \"router\",
+      \"messagingMetricType\": \"consumerCount\"}}, {\"id\": \"router.connectionCount\",
+      \"name\": \"connectionCount\", \"tags\": {\"messagingComponent\": \"router\",
+      \"messagingMetricType\": \"connectionCount\"}}, {\"id\": \"router.linkCount\",
+      \"name\": \"linkCount\", \"tags\": {\"messagingComponent\": \"router\", \"messagingMetricType\":
+      \"linkCount\"}}, {\"id\": \"router.addrCount\", \"name\": \"addrCount\", \"tags\":
+      {\"messagingComponent\": \"router\", \"messagingMetricType\": \"addrCount\"}},
+      {\"id\": \"router.autoLinkCount\", \"name\": \"autoLinkCount\", \"tags\": {\"messagingComponent\":
+      \"router\", \"messagingMetricType\": \"autoLinkCount\"}}, {\"id\": \"router.linkRouteCount\",
+      \"name\": \"linkRouteCount\", \"tags\": {\"messagingComponent\": \"router\",
+      \"messagingMetricType\": \"linkRouteCount\"}}, {\"id\": \"router.unsettledCount\",
+      \"name\": \"unsettledCount\", \"tags\": {\"messagingComponent\": \"router\",
+      \"messagingMetricType\": \"unsettledCount\"}}, {\"id\": \"router.deliveryCount\",
+      \"name\": \"deliveryCount\", \"tags\": {\"messagingComponent\": \"router\",
+      \"messagingMetricType\": \"deliveryCount\"}}, {\"id\": \"router.releasedCount\",
+      \"name\": \"releasedCount\", \"tags\": {\"messagingComponent\": \"router\",
+      \"messagingMetricType\": \"releasedCount\"}}, {\"id\": \"router.rejectedCount\",
+      \"name\": \"rejectedCount\", \"tags\": {\"messagingComponent\": \"router\",
+      \"messagingMetricType\": \"rejectedCount\"}}, {\"id\": \"router.acceptedCount\",
+      \"name\": \"acceptedCount\", \"tags\": {\"messagingComponent\": \"router\",
+      \"messagingMetricType\": \"acceptedCount\"}}, {\"id\": \"router.undeliveredCount\",
+      \"name\": \"undeliveredCount\", \"tags\": {\"messagingComponent\": \"router\",
+      \"messagingMetricType\": \"undeliveredCount\"}}, {\"id\": \"router.capacity\",
+      \"name\": \"capacity\", \"tags\": {\"messagingComponent\": \"router\", \"messagingMetricType\":
+      \"capacity\"}}], \"path\": \"/metrics/\", \"port\": 8080, \"protocol\": \"http\",
+      \"type\": \"prometheus\"}]}"}, "kind": "ConfigMap", "metadata": {"name": "hawkular-router-config"}},
+      {"apiVersion": "v1", "kind": "Route", "metadata": {"labels": {"app": "enmasse",
+      "instance": "${INSTANCE}"}, "name": "console"}, "spec": {"host": "${CONSOLE_HOSTNAME}",
+      "port": {"targetPort": "console-http"}, "to": {"kind": "Service", "name": "admin"}}},
+      {"apiVersion": "v1", "kind": "Route", "metadata": {"labels": {"app": "enmasse",
+      "instance": "${INSTANCE}"}, "name": "messaging"}, "spec": {"host": "${MESSAGING_HOSTNAME}",
+      "port": {"targetPort": "amqps"}, "tls": {"termination": "passthrough"}, "to":
+      {"kind": "Service", "name": "messaging", "weight": 100}}}, {"apiVersion": "v1",
+      "kind": "Route", "metadata": {"labels": {"app": "enmasse", "instance": "${INSTANCE}"},
+      "name": "mqtt"}, "spec": {"host": "${MQTT_GATEWAY_HOSTNAME}", "port": {"targetPort":
+      "secure-mqtt"}, "tls": {"termination": "passthrough"}, "to": {"kind": "Service",
+      "name": "mqtt", "weight": 100}}}, {"apiVersion": "extensions/v1beta1", "kind":
+      "Deployment", "metadata": {"labels": {"app": "enmasse", "instance": "${INSTANCE}",
+      "name": "admin"}, "name": "admin"}, "spec": {"replicas": 1, "template": {"metadata":
       {"labels": {"app": "enmasse", "instance": "${INSTANCE}", "name": "admin"}},
       "spec": {"containers": [{"env": [{"name": "CONFIGURATION_SERVICE_HOST", "value":
       "localhost"}, {"name": "CONFIGURATION_SERVICE_PORT", "value": "5672"}], "image":
