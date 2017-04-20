@@ -61,20 +61,27 @@ class MetricCollector(object):
             self.metric_family.add_metric(val, self.value_list[idx])
         return self.metric_family
 
-def to_map(response):
-    retval = []
-    if response == None:
-        return retval
 
-    attributes = response.body["attributeNames"]
-    for result in response.body["results"]:
-        m = {}
-        for i in range(0, len(attributes)):
-            m[attributes[i]] = result[i]
-        retval.append(m)
-    return retval
+class RouterResponse(object):
+    def __init__(self, response):
+        self.response = response
 
+    def get_index(self, attribute):
+        return self.response.body["attributeNames"].index(attribute)
 
+    def get_results(self):
+        return self.response.body["results"]
+
+    def add_field(self, name, value):
+        self.response.body["attributeNames"].append(name)
+        for result in self.response.body["results"]:
+            result.append(value)
+
+    def add_field_from(self, name, from_field, transform):
+        from_idx = self.response.body["attributeNames"].index(from_field)
+        self.response.body["attributeNames"].append(name)
+        for result in self.response.body["results"]:
+            result.append(transform(result[from_idx]))
 
 def clean_address(address):
     if address == None:
@@ -85,9 +92,11 @@ def clean_address(address):
         return address[1:]
 
 def get_container_from_connections(connection_id, connections):
-    for connection in connections:
-        if connection_id == connection["identity"]:
-            return connection["container"]
+    container_idx = connections.get_index("container")
+    id_idx = connections.get_index("identity")
+    for connection in connections.get_results():
+        if connection_id == connection[id_idx]:
+            return connection[container_idx]
     return None
 
 class RouterCollector(object):
@@ -120,35 +129,43 @@ class RouterCollector(object):
 
     def get_links(self):
         links = self.collect_metric('org.apache.qpid.dispatch.router.link')
-        connections = self.get_connections()
+        if links == None:
+            return links
 
-        for link in links:
-            link["address"] = clean_address(link["owningAddr"])
-            link["linkCount"] = 1
-            link["container"] = get_container_from_connections(link["connectionId"], connections)
+        connections = self.get_connections()
+        if connections == None:
+            return connections
+
+        links.add_field_from("address", "owningAddr", clean_address)
+        links.add_field("linkCount", 1)
+        links.add_field_from("container", "connectionId", lambda connection_id: get_container_from_connections(connection_id, connections))
 
         return links
 
     def get_connections(self):
         response = self.collect_metric('org.apache.qpid.dispatch.connection')
-        for result in response:
-            result["connectionCount"] = 1
+        if response == None:
+            return response
+
+        response.add_field("connectionCount", 1)
         return response
 
     def collect(self):
         collectormap = self.get_collectormap()
         for collectorfn in collectormap:
-            entities = collectorfn()
-            for collector in collectormap[collectorfn]:
-                for entity in entities:
-                    labels = []
-                    for l in collector.labels:
-                        if entity[l] != None:
-                            labels.append(entity[l])
-                    value = entity[collector.name]
-                    if len(labels) == len(collector.labels):
-                        collector.add(labels, int(value))
-                yield collector.metric()
+            response = collectorfn()
+            if response != None:
+                for collector in collectormap[collectorfn]:
+                    for entity in response.get_results():
+                        labels = []
+                        for l in collector.labels:
+                            label_idx = response.get_index(l)
+                            if entity[label_idx] != None:
+                                labels.append(entity[label_idx])
+                        value = entity[response.get_index(collector.name)]
+                        if len(labels) == len(collector.labels):
+                            collector.add(labels, int(value))
+                    yield collector.metric()
         
 
     def collect_metric(self, entityType):
@@ -161,7 +178,10 @@ class RouterCollector(object):
                 properties["name"] = "self"
                 message = Message(body=None, properties=properties)
                 response = client.call(message)
-                return to_map(response)
+                if response == None:
+                    return response
+                else:
+                    return RouterResponse(response)
             finally:
                 client.connection.close()
         except:
