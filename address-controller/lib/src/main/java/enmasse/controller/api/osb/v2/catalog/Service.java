@@ -136,7 +136,7 @@ public class Service {
             if (service.getDashboardClient() != null) {
                 node.set("dashboard_client", mapper.valueToTree(service.getDashboardClient()));
             }
-            node.put("plan_updateable", service.isPlanUpdatable());
+            node.put("plan_updateable", service.isPlanUpdatable()); // The e in updateable is in the OSB API spec! Don't change.
 
             ArrayNode plansNode = node.putArray("plans");
             service.getPlans().forEach(plan -> {
