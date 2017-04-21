@@ -435,18 +435,15 @@ objects:
       5673, "name": "amqp"}, {"containerPort": 61616, "name": "core"}, {"containerPort":
       8161, "name": "jolokia"}], "readinessProbe": {"tcpSocket": {"port": "amqp"}},
       "volumeMounts": [{"mountPath": "/var/run/artemis", "name": "vol-${NAME}"}]},
-      {"image": "${ROUTER_COLLECTOR_REPO}:latest", "livenessProbe": {"tcpSocket":
-      {"port": "metrics"}}, "name": "collector", "ports": [{"containerPort": 8080,
-      "name": "metrics", "protocol": "TCP"}], "resources": {"limits": {"memory": "32Mi"},
-      "requests": {"memory": "32Mi"}}}, {"env": [{"name": "LINK_CAPACITY", "value":
-      "${ROUTER_LINK_CAPACITY}"}, {"name": "TOPIC_NAME", "value": "${ADDRESS}"}],
-      "image": "${ROUTER_REPO}:latest", "livenessProbe": {"tcpSocket": {"port": "amqp"}},
-      "name": "router", "ports": [{"containerPort": 5672, "name": "amqp", "protocol":
-      "TCP"}, {"containerPort": 55673, "name": "internal", "protocol": "TCP"}, {"containerPort":
-      5671, "name": "amqps", "protocol": "TCP"}], "resources": {"limits": {"memory":
-      "256Mi"}, "requests": {"memory": "256Mi"}}, "volumeMounts": [{"mountPath": "/etc/qpid-dispatch/ssl",
-      "name": "ssl-certs", "readOnly": true}]}, {"env": [{"name": "TOPIC_NAME", "value":
-      "${ADDRESS}"}, {"name": "GROUP_ID", "value": "${NAME}"}], "image": "${TOPIC_FORWARDER_REPO}:latest",
+      {"env": [{"name": "LINK_CAPACITY", "value": "${ROUTER_LINK_CAPACITY}"}, {"name":
+      "TOPIC_NAME", "value": "${ADDRESS}"}], "image": "${ROUTER_REPO}:latest", "livenessProbe":
+      {"tcpSocket": {"port": "amqp"}}, "name": "router", "ports": [{"containerPort":
+      5672, "name": "amqp", "protocol": "TCP"}, {"containerPort": 55673, "name": "internal",
+      "protocol": "TCP"}, {"containerPort": 5671, "name": "amqps", "protocol": "TCP"}],
+      "resources": {"limits": {"memory": "256Mi"}, "requests": {"memory": "256Mi"}},
+      "volumeMounts": [{"mountPath": "/etc/qpid-dispatch/ssl", "name": "ssl-certs",
+      "readOnly": true}]}, {"env": [{"name": "TOPIC_NAME", "value": "${ADDRESS}"},
+      {"name": "GROUP_ID", "value": "${NAME}"}], "image": "${TOPIC_FORWARDER_REPO}:latest",
       "livenessProbe": {"httpGet": {"path": "/health", "port": "health"}}, "name":
       "forwarder", "ports": [{"containerPort": 8080, "name": "health"}], "resources":
       {"limits": {"memory": "128Mi"}, "requests": {"memory": "128Mi"}}}], "volumes":
@@ -482,18 +479,15 @@ objects:
       5673, "name": "amqp"}, {"containerPort": 61616, "name": "core"}, {"containerPort":
       8161, "name": "jolokia"}], "readinessProbe": {"tcpSocket": {"port": "amqp"}},
       "volumeMounts": [{"mountPath": "/var/run/artemis", "name": "vol-${NAME}"}]},
-      {"image": "${ROUTER_COLLECTOR_REPO}:latest", "livenessProbe": {"tcpSocket":
-      {"port": "metrics"}}, "name": "collector", "ports": [{"containerPort": 8080,
-      "name": "metrics", "protocol": "TCP"}], "resources": {"limits": {"memory": "32Mi"},
-      "requests": {"memory": "32Mi"}}}, {"env": [{"name": "LINK_CAPACITY", "value":
-      "${ROUTER_LINK_CAPACITY}"}, {"name": "TOPIC_NAME", "value": "${ADDRESS}"}],
-      "image": "${ROUTER_REPO}:latest", "livenessProbe": {"tcpSocket": {"port": "amqp"}},
-      "name": "router", "ports": [{"containerPort": 5672, "name": "amqp", "protocol":
-      "TCP"}, {"containerPort": 55673, "name": "internal", "protocol": "TCP"}, {"containerPort":
-      5671, "name": "amqps", "protocol": "TCP"}], "resources": {"limits": {"memory":
-      "256Mi"}, "requests": {"memory": "256Mi"}}, "volumeMounts": [{"mountPath": "/etc/qpid-dispatch/ssl",
-      "name": "ssl-certs", "readOnly": true}]}, {"env": [{"name": "TOPIC_NAME", "value":
-      "${ADDRESS}"}, {"name": "GROUP_ID", "value": "${NAME}"}], "image": "${TOPIC_FORWARDER_REPO}:latest",
+      {"env": [{"name": "LINK_CAPACITY", "value": "${ROUTER_LINK_CAPACITY}"}, {"name":
+      "TOPIC_NAME", "value": "${ADDRESS}"}], "image": "${ROUTER_REPO}:latest", "livenessProbe":
+      {"tcpSocket": {"port": "amqp"}}, "name": "router", "ports": [{"containerPort":
+      5672, "name": "amqp", "protocol": "TCP"}, {"containerPort": 55673, "name": "internal",
+      "protocol": "TCP"}, {"containerPort": 5671, "name": "amqps", "protocol": "TCP"}],
+      "resources": {"limits": {"memory": "256Mi"}, "requests": {"memory": "256Mi"}},
+      "volumeMounts": [{"mountPath": "/etc/qpid-dispatch/ssl", "name": "ssl-certs",
+      "readOnly": true}]}, {"env": [{"name": "TOPIC_NAME", "value": "${ADDRESS}"},
+      {"name": "GROUP_ID", "value": "${NAME}"}], "image": "${TOPIC_FORWARDER_REPO}:latest",
       "livenessProbe": {"httpGet": {"path": "/health", "port": "health"}}, "name":
       "forwarder", "ports": [{"containerPort": 8080, "name": "health"}], "resources":
       {"limits": {"memory": "128Mi"}, "requests": {"memory": "128Mi"}}}], "volumes":
@@ -526,21 +520,18 @@ objects:
       [{"containerPort": 5673, "name": "amqp"}, {"containerPort": 61616, "name": "core"},
       {"containerPort": 8161, "name": "jolokia"}], "readinessProbe": {"tcpSocket":
       {"port": "amqp"}}, "volumeMounts": [{"mountPath": "/var/run/artemis", "name":
-      "vol-${NAME}"}]}, {"image": "${ROUTER_COLLECTOR_REPO}:latest", "livenessProbe":
-      {"tcpSocket": {"port": "metrics"}}, "name": "collector", "ports": [{"containerPort":
-      8080, "name": "metrics", "protocol": "TCP"}], "resources": {"limits": {"memory":
-      "32Mi"}, "requests": {"memory": "32Mi"}}}, {"env": [{"name": "LINK_CAPACITY",
-      "value": "${ROUTER_LINK_CAPACITY}"}, {"name": "TOPIC_NAME", "value": "${ADDRESS}"}],
-      "image": "${ROUTER_REPO}:latest", "livenessProbe": {"tcpSocket": {"port": "amqp"}},
-      "name": "router", "ports": [{"containerPort": 5672, "name": "amqp", "protocol":
-      "TCP"}, {"containerPort": 55673, "name": "internal", "protocol": "TCP"}], "resources":
-      {"limits": {"memory": "256Mi"}, "requests": {"memory": "256Mi"}}}, {"env": [{"name":
-      "TOPIC_NAME", "value": "${ADDRESS}"}, {"name": "GROUP_ID", "value": "${NAME}"}],
-      "image": "${TOPIC_FORWARDER_REPO}:latest", "livenessProbe": {"httpGet": {"path":
-      "/health", "port": "health"}}, "name": "forwarder", "ports": [{"containerPort":
-      8080, "name": "health"}], "resources": {"limits": {"memory": "128Mi"}, "requests":
-      {"memory": "128Mi"}}}], "volumes": [{"emptyDir": { }, "name": "vol-${NAME}"},
-      {"configMap": {"name": "hawkular-broker-config"}, "name": "hawkular-openshift-agent"}]}}}}],
+      "vol-${NAME}"}]}, {"env": [{"name": "LINK_CAPACITY", "value": "${ROUTER_LINK_CAPACITY}"},
+      {"name": "TOPIC_NAME", "value": "${ADDRESS}"}], "image": "${ROUTER_REPO}:latest",
+      "livenessProbe": {"tcpSocket": {"port": "amqp"}}, "name": "router", "ports":
+      [{"containerPort": 5672, "name": "amqp", "protocol": "TCP"}, {"containerPort":
+      55673, "name": "internal", "protocol": "TCP"}], "resources": {"limits": {"memory":
+      "256Mi"}, "requests": {"memory": "256Mi"}}}, {"env": [{"name": "TOPIC_NAME",
+      "value": "${ADDRESS}"}, {"name": "GROUP_ID", "value": "${NAME}"}], "image":
+      "${TOPIC_FORWARDER_REPO}:latest", "livenessProbe": {"httpGet": {"path": "/health",
+      "port": "health"}}, "name": "forwarder", "ports": [{"containerPort": 8080, "name":
+      "health"}], "resources": {"limits": {"memory": "128Mi"}, "requests": {"memory":
+      "128Mi"}}}], "volumes": [{"emptyDir": { }, "name": "vol-${NAME}"}, {"configMap":
+      {"name": "hawkular-broker-config"}, "name": "hawkular-openshift-agent"}]}}}}],
       "parameters": [{"description": "Storage capacity required for volume claims",
       "name": "STORAGE_CAPACITY", "value": "2Gi"}, {"description": "The docker image
       to use for the message broker", "name": "BROKER_REPO", "value": "enmasseproject/artemis"},
@@ -571,27 +562,24 @@ objects:
       5673, "name": "amqp"}, {"containerPort": 61616, "name": "core"}, {"containerPort":
       8161, "name": "jolokia"}], "readinessProbe": {"tcpSocket": {"port": "amqp"}},
       "volumeMounts": [{"mountPath": "/var/run/artemis", "name": "vol-${NAME}"}]},
-      {"image": "${ROUTER_COLLECTOR_REPO}:latest", "livenessProbe": {"tcpSocket":
-      {"port": "metrics"}}, "name": "collector", "ports": [{"containerPort": 8080,
-      "name": "metrics", "protocol": "TCP"}], "resources": {"limits": {"memory": "32Mi"},
-      "requests": {"memory": "32Mi"}}}, {"env": [{"name": "LINK_CAPACITY", "value":
-      "${ROUTER_LINK_CAPACITY}"}, {"name": "TOPIC_NAME", "value": "${ADDRESS}"}],
-      "image": "${ROUTER_REPO}:latest", "livenessProbe": {"tcpSocket": {"port": "amqp"}},
-      "name": "router", "ports": [{"containerPort": 5672, "name": "amqp", "protocol":
-      "TCP"}, {"containerPort": 55673, "name": "internal", "protocol": "TCP"}], "resources":
-      {"limits": {"memory": "256Mi"}, "requests": {"memory": "256Mi"}}}, {"env": [{"name":
-      "TOPIC_NAME", "value": "${ADDRESS}"}, {"name": "GROUP_ID", "value": "${NAME}"}],
-      "image": "${TOPIC_FORWARDER_REPO}:latest", "livenessProbe": {"httpGet": {"path":
-      "/health", "port": "health"}}, "name": "forwarder", "ports": [{"containerPort":
-      8080, "name": "health"}], "resources": {"limits": {"memory": "128Mi"}, "requests":
-      {"memory": "128Mi"}}}], "volumes": [{"name": "vol-${NAME}", "persistentVolumeClaim":
-      {"claimName": "pvc-${NAME}"}}, {"configMap": {"name": "hawkular-broker-config"},
-      "name": "hawkular-openshift-agent"}]}}}}], "parameters": [{"description": "Storage
-      capacity required for volume claims", "name": "STORAGE_CAPACITY", "value": "2Gi"},
-      {"description": "The docker image to use for the message broker", "name": "BROKER_REPO",
-      "value": "enmasseproject/artemis"}, {"description": "The docker image to use
-      for the router collector", "name": "ROUTER_COLLECTOR_REPO", "value": "enmasseproject/router-collector"},
-      {"description": "The default image to use as topic forwarder", "name": "TOPIC_FORWARDER_REPO",
+      {"env": [{"name": "LINK_CAPACITY", "value": "${ROUTER_LINK_CAPACITY}"}, {"name":
+      "TOPIC_NAME", "value": "${ADDRESS}"}], "image": "${ROUTER_REPO}:latest", "livenessProbe":
+      {"tcpSocket": {"port": "amqp"}}, "name": "router", "ports": [{"containerPort":
+      5672, "name": "amqp", "protocol": "TCP"}, {"containerPort": 55673, "name": "internal",
+      "protocol": "TCP"}], "resources": {"limits": {"memory": "256Mi"}, "requests":
+      {"memory": "256Mi"}}}, {"env": [{"name": "TOPIC_NAME", "value": "${ADDRESS}"},
+      {"name": "GROUP_ID", "value": "${NAME}"}], "image": "${TOPIC_FORWARDER_REPO}:latest",
+      "livenessProbe": {"httpGet": {"path": "/health", "port": "health"}}, "name":
+      "forwarder", "ports": [{"containerPort": 8080, "name": "health"}], "resources":
+      {"limits": {"memory": "128Mi"}, "requests": {"memory": "128Mi"}}}], "volumes":
+      [{"name": "vol-${NAME}", "persistentVolumeClaim": {"claimName": "pvc-${NAME}"}},
+      {"configMap": {"name": "hawkular-broker-config"}, "name": "hawkular-openshift-agent"}]}}}}],
+      "parameters": [{"description": "Storage capacity required for volume claims",
+      "name": "STORAGE_CAPACITY", "value": "2Gi"}, {"description": "The docker image
+      to use for the message broker", "name": "BROKER_REPO", "value": "enmasseproject/artemis"},
+      {"description": "The docker image to use for the router collector", "name":
+      "ROUTER_COLLECTOR_REPO", "value": "enmasseproject/router-collector"}, {"description":
+      "The default image to use as topic forwarder", "name": "TOPIC_FORWARDER_REPO",
       "value": "enmasseproject/topic-forwarder"}, {"description": "The image to use
       for the router", "name": "ROUTER_REPO", "value": "enmasseproject/qdrouterd"},
       {"description": "The link capacity setting for router", "name": "ROUTER_LINK_CAPACITY",

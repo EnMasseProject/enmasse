@@ -56,7 +56,6 @@ local forwarder = import "forwarder.jsonnet";
 
               "containers": if multicast
                 then [ broker.container(secure, volumeName, broker_repo, addressEnv),
-                       router.collector(router_collector_repo, "32Mi"),
                        router.container(secure, false, router_repo, addressEnv, "256Mi"),
                        forwarder.container(forwarder_repo, addressEnv) ]
                 else [ broker.container(secure, volumeName, broker_repo, addressEnv) ]
