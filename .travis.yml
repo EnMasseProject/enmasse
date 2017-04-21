@@ -15,7 +15,6 @@ script:
 - if [ -n "${TRAVIS_TAG}" ]; then mvn versions:set -DgenerateBackupPoms=false -DnewVersion=${TRAVIS_TAG};
   fi
 - mvn test package -B
-- ls target/
 - curl -s https://raw.githubusercontent.com/EnMasseProject/travis-scripts/master/generate-bintray-descriptor.sh
   | bash /dev/stdin mqtt-gateway target/mqtt-gateway-${TAG}-bin.tar.gz > .bintray.json
 - curl -s https://raw.githubusercontent.com/EnMasseProject/travis-scripts/master/docker-build.sh
