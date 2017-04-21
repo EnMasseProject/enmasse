@@ -17,6 +17,10 @@
 package enmasse.controller;
 
 import enmasse.controller.address.AddressManager;
+import enmasse.controller.api.osb.v2.OSBExceptionMapper;
+import enmasse.controller.api.osb.v2.bind.OSBBindingService;
+import enmasse.controller.api.osb.v2.catalog.OSBCatalogService;
+import enmasse.controller.api.osb.v2.provision.OSBProvisioningService;
 import enmasse.controller.api.v3.ApiHandler;
 import enmasse.controller.api.v3.http.AddressingService;
 import enmasse.controller.api.v3.http.FlavorsService;
@@ -35,6 +39,7 @@ import org.slf4j.LoggerFactory;
  * HTTP server for deploying address config
  */
 public class HTTPServer extends AbstractVerticle {
+    public static final int PORT = 8080;
     private static final Logger log = LoggerFactory.getLogger(HTTPServer.class.getName());
     private final AddressManager addressManager;
     private final InstanceManager instanceManager;
@@ -52,13 +57,20 @@ public class HTTPServer extends AbstractVerticle {
     public void start() {
         VertxResteasyDeployment deployment = new VertxResteasyDeployment();
         deployment.start();
+
+        deployment.getProviderFactory().registerProvider(OSBExceptionMapper.class);    // TODO: verify if this is ok for the proprietary MaaS API
+
         deployment.getRegistry().addSingletonResource(new AddressingService(globalInstance, new ApiHandler(instanceManager, addressManager)));
         deployment.getRegistry().addSingletonResource(new InstanceService(instanceManager));
         deployment.getRegistry().addSingletonResource(new MultiInstanceAddressingService(new ApiHandler(instanceManager, addressManager)));
         deployment.getRegistry().addSingletonResource(new FlavorsService(flavorRepository));
 
+        deployment.getRegistry().addSingletonResource(new OSBCatalogService(instanceManager, addressManager, flavorRepository));
+        deployment.getRegistry().addSingletonResource(new OSBProvisioningService(instanceManager, addressManager, flavorRepository));
+        deployment.getRegistry().addSingletonResource(new OSBBindingService(instanceManager, addressManager, flavorRepository));
+
         vertx.createHttpServer()
                 .requestHandler(new VertxRequestHandler(vertx, deployment))
-                .listen(8080, ar -> log.info("Started HTTP server"));
+                .listen(PORT, ar -> log.info("Started HTTP server. Listening on port " + PORT));
     }
 }
