@@ -1,7 +1,7 @@
 <a href="https://github.com/EnMasseProject/enmasse"><img src="https://raw.githubusercontent.com/EnMasseProject/enmasse/master/documentation/logo/enmasse_logo.png" width="50%" /></a>
 
 [![Systemtest Status](https://travis-ci.org/EnMasseProject/systemtests.svg?branch=master)](https://travis-ci.org/EnMasseProject/systemtests)
-[![Latest Release](https://api.bintray.com/packages/enmasse/releases/enmasse/images/download.svg)](https://github.com/EnMasseProject/enmasse/releases/latest)
+[![GitHub release](https://img.shields.io/github/release/EnMasseProject/enmasse.svg)](https://github.com/EnMasseProject/enmasse/releases/latest)
 
 --- 
 
