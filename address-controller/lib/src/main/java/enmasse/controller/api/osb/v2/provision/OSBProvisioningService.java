@@ -53,7 +53,7 @@ public class OSBProvisioningService extends OSBServiceBase {
 
         Optional<Destination> existingDestination = findDestination(maasInstanceId, instanceId);
         if (existingDestination.isPresent()) {
-            if (destinationsAreEqual(destination, existingDestination.get())) {
+            if (existingDestination.get().equals(destination)) {
                 return Response.ok(new ProvisionResponse()).build();
             } else {
                 throw new ConflictException("Service instance " + instanceId + " already exists");
@@ -86,14 +86,6 @@ public class OSBProvisioningService extends OSBServiceBase {
         } else {
             throw new GoneException("Service instance " + instanceId + " is gone");
         }
-    }
-
-    private boolean destinationsAreEqual(Destination dest1, Destination dest2) {
-        // TODO: change Destination.equals() and use it instead?
-        return dest1.storeAndForward() == dest2.storeAndForward()
-                && dest1.multicast() == dest2.multicast()
-                && dest1.flavor().equals(dest2.flavor())
-                && dest1.address().equals(dest2.address());
     }
 
     /**

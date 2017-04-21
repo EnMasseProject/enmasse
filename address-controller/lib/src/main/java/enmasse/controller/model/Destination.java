@@ -16,7 +16,8 @@
 
 package enmasse.controller.model;
 
-import java.util.*;
+import java.util.Objects;
+import java.util.Optional;
 
 /**
  * Represents a single destination in the addressing config. It is identified by an address and
@@ -84,13 +85,19 @@ public final class Destination {
 
         if (!address.equals(that.address)) return false;
         if (!uuid.equals(that.uuid)) return false;
-        return group.equals(that.group);
+        if (!group.equals(that.group)) return false;
+        if (storeAndForward != that.storeAndForward) return false;
+        if (multicast != that.multicast) return false;
+        return flavor.equals(that.flavor);
     }
 
     @Override
     public int hashCode() {
         int result = address.hashCode();
         result = 31 * result + group.hashCode();
+        result = 31 * result + (storeAndForward ? 1 : 0);
+        result = 31 * result + (multicast ? 1 : 0);
+        result = 31 * result + flavor.hashCode();
         result = 31 * result + uuid.hashCode();
         return result;
     }
