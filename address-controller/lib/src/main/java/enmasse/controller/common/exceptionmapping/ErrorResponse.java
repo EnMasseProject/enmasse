@@ -1,4 +1,4 @@
-package enmasse.controller.api.osb.v2;
+package enmasse.controller.common.exceptionmapping;
 
 import java.io.IOException;
 

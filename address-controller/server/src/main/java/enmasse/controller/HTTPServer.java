@@ -17,7 +17,6 @@
 package enmasse.controller;
 
 import enmasse.controller.address.AddressManager;
-import enmasse.controller.api.osb.v2.OSBExceptionMapper;
 import enmasse.controller.api.osb.v2.bind.OSBBindingService;
 import enmasse.controller.api.osb.v2.catalog.OSBCatalogService;
 import enmasse.controller.api.osb.v2.provision.OSBProvisioningService;
@@ -26,6 +25,7 @@ import enmasse.controller.api.v3.http.AddressingService;
 import enmasse.controller.api.v3.http.FlavorsService;
 import enmasse.controller.api.v3.http.InstanceService;
 import enmasse.controller.api.v3.http.MultiInstanceAddressingService;
+import enmasse.controller.common.exceptionmapping.DefaultExceptionMapper;
 import enmasse.controller.flavor.FlavorRepository;
 import enmasse.controller.instance.InstanceManager;
 import enmasse.controller.model.InstanceId;
@@ -58,7 +58,7 @@ public class HTTPServer extends AbstractVerticle {
         VertxResteasyDeployment deployment = new VertxResteasyDeployment();
         deployment.start();
 
-        deployment.getProviderFactory().registerProvider(OSBExceptionMapper.class);    // TODO: verify if this is ok for the proprietary MaaS API
+        deployment.getProviderFactory().registerProvider(DefaultExceptionMapper.class);
 
         deployment.getRegistry().addSingletonResource(new AddressingService(globalInstance, new ApiHandler(instanceManager, addressManager)));
         deployment.getRegistry().addSingletonResource(new InstanceService(instanceManager));
