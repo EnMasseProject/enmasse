@@ -112,7 +112,7 @@
               <artifactId>maven-assembly-plugin</artifactId>
               <configuration>
                 <descriptor>src/assembly/bin.xml</descriptor>
-                <finalName>mqtt-gateway-${pom.version}</finalName>
+                <finalName>mqtt-gateway-${project.version}</finalName>
               </configuration>
               <executions>
                 <execution>
