@@ -6,7 +6,7 @@
 
     <groupId>enmasse</groupId>
     <artifactId>mqtt-gateway</artifactId>
-    <version>0.8.0</version>
+    <version>1.0-SNAPSHOT</version>
 
     <name>EnMasse MQTT gateway</name>
     <description>MQTT gateway for EnMasse</description>
