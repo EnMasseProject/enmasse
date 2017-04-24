@@ -1,5 +1,6 @@
 package enmasse.systemtest.amqp;
 
+import io.vertx.proton.ProtonQoS;
 import org.apache.qpid.proton.amqp.messaging.Accepted;
 import org.apache.qpid.proton.engine.*;
 import org.apache.qpid.proton.message.Message;
@@ -19,13 +20,15 @@ class SendHandler extends ClientHandlerBase {
     private final AtomicInteger numSent = new AtomicInteger(0);
     private final Queue<Message> messageQueue;
     private final int numToSend;
+    private final boolean presettle;
 
-    public SendHandler(enmasse.systemtest.Endpoint endpoint, ClientOptions clientOptions, CountDownLatch connectLatch, CompletableFuture<Integer> promise, Queue<Message> messages) {
+    public SendHandler(enmasse.systemtest.Endpoint endpoint, ClientOptions clientOptions, CountDownLatch connectLatch, CompletableFuture<Integer> promise, Queue<Message> messages, ProtonQoS qos) {
         super(endpoint, clientOptions, connectLatch);
         add(new FlowController());
         this.promise = promise;
         this.messageQueue = messages;
         this.numToSend = messages.size();
+        this.presettle = qos.equals(ProtonQoS.AT_MOST_ONCE);
     }
 
     @Override
@@ -72,6 +75,9 @@ class SendHandler extends ClientHandlerBase {
             if (message != null) {
                 Delivery delivery = sender.delivery(String.valueOf(numSent.get()).getBytes());
 
+                if (presettle) {
+                    delivery.settle();
+                }
                 int BUFFER_SIZE = 1024;
                 byte encodedMessage[] = new byte[BUFFER_SIZE];
                 MessageImpl msg = (MessageImpl) message;
@@ -85,6 +91,11 @@ class SendHandler extends ClientHandlerBase {
                 sender.send(encodedMessage, 0, len);
 
                 sender.advance();
+                if (presettle) {
+                    if (numSent.incrementAndGet() == numToSend) {
+                        promise.complete(numToSend);
+                    }
+                }
             }
         }
     }

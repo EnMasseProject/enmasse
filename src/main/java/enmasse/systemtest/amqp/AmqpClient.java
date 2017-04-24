@@ -16,6 +16,7 @@
 
 package enmasse.systemtest.amqp;
 
+import io.vertx.proton.ProtonQoS;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.amqp.messaging.Source;
 import org.apache.qpid.proton.amqp.messaging.Target;
@@ -34,11 +35,17 @@ public class AmqpClient implements AutoCloseable {
     private final ExecutorService  executorService = Executors.newCachedThreadPool();
     private final Optional<SslOptions> sslOptions;
     private final List<Reactor> reactors = new ArrayList<>();
+    private final ProtonQoS qos;
 
     public AmqpClient(enmasse.systemtest.Endpoint endpoint, TerminusFactory terminusFactory, Optional<SslOptions> sslOptions) {
+        this(endpoint, terminusFactory, sslOptions, ProtonQoS.AT_LEAST_ONCE);
+    }
+
+    public AmqpClient(enmasse.systemtest.Endpoint endpoint, TerminusFactory terminusFactory, Optional<SslOptions> sslOptions, ProtonQoS qos) {
         this.endpoint = endpoint;
         this.terminusFactory = terminusFactory;
         this.sslOptions = sslOptions;
+        this.qos = qos;
     }
 
     public Future<List<String>> recvMessages(String address, int numMessages) throws InterruptedException, IOException {
@@ -119,7 +126,7 @@ public class AmqpClient implements AutoCloseable {
         CountDownLatch connectLatch = new CountDownLatch(1);
         Queue<Message> messageQueue = new LinkedList<>(Arrays.asList(messages));
         Reactor reactor = Reactor.Factory.create();
-        reactor.setHandler(new SendHandler(endpoint, new ClientOptions(terminusFactory.getSource(address), terminusFactory.getTarget(address), sslOptions, Optional.empty()), connectLatch, promise, messageQueue));
+        reactor.setHandler(new SendHandler(endpoint, new ClientOptions(terminusFactory.getSource(address), terminusFactory.getTarget(address), sslOptions, Optional.empty()), connectLatch, promise, messageQueue, qos));
         reactors.add(reactor);
         executorService.execute(reactor::run);
         if (!connectLatch.await(connectTimeout, timeUnit)) {
