@@ -49,7 +49,7 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class OpenShiftHelperTest {
+public class KubernetesHelperTest {
 
     @Test
     public void testListClusters() {
@@ -104,7 +104,7 @@ public class OpenShiftHelperTest {
         ExtensionsAPIGroupDSL extensions = mock(ExtensionsAPIGroupDSL.class);
 
         OpenShiftClient mockClient = mock(OpenShiftClient.class);
-        OpenShiftHelper helper = new OpenShiftHelper(InstanceId.withId("myinstance"), mockClient, new File("src/test/resources/templates"));
+        KubernetesHelper helper = new KubernetesHelper(InstanceId.withId("myinstance"), mockClient, new File("src/test/resources/templates"));
         when(mockClient.deploymentConfigs()).thenReturn(dcOp);
         when(mockClient.extensions()).thenReturn(extensions);
         when(extensions.deployments()).thenReturn(dOp);
@@ -156,7 +156,7 @@ public class OpenShiftHelperTest {
 
     @Test
     public void testProcessTemplate() {
-        OpenShiftHelper helper = new OpenShiftHelper(InstanceId.withId("myinstance"), new DefaultOpenShiftClient(), new File("src/test/resources/templates"));
+        KubernetesHelper helper = new KubernetesHelper(InstanceId.withId("myinstance"), new DefaultOpenShiftClient(), new File("src/test/resources/templates"));
         KubernetesList list = helper.processTemplate("test", new ParameterValue("MYPARAM", "value"), new ParameterValue("SECONDPARAM", ""));
         assertThat(list.getItems().size(), is(1));
     }
@@ -164,7 +164,7 @@ public class OpenShiftHelperTest {
     @Test
     public void testCreateAddressConfig() {
         OpenShiftClient mockClient = mock(OpenShiftClient.class);
-        OpenShiftHelper helper = new OpenShiftHelper(InstanceId.withId("myinstance"), mockClient, new File("src/test/resources/templates"));
+        KubernetesHelper helper = new KubernetesHelper(InstanceId.withId("myinstance"), mockClient, new File("src/test/resources/templates"));
         Set<Destination> group = Sets.newSet(new Destination("queue1", "group1", true, false, Optional.of("vanilla"), Optional.empty()),
                 new Destination("queue2", "group1", true, false, Optional.of("vanilla"), Optional.empty()));
 

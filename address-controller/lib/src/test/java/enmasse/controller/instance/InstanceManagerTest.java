@@ -1,7 +1,7 @@
 package enmasse.controller.instance;
 
 import enmasse.controller.address.DestinationCluster;
-import enmasse.controller.common.OpenShift;
+import enmasse.controller.common.Kubernetes;
 import enmasse.controller.model.Instance;
 import enmasse.controller.model.InstanceId;
 import io.fabric8.kubernetes.api.model.KubernetesList;
@@ -26,7 +26,7 @@ import static org.mockito.Mockito.*;
 public class InstanceManagerTest {
     @Test
     public void testMultitenantController() {
-        OpenShift mockClient = mock(OpenShift.class);
+        Kubernetes mockClient = mock(Kubernetes.class);
         when(mockClient.mutateClient(any())).thenReturn(mockClient);
         ArgumentCaptor<ParameterValue> captor = ArgumentCaptor.forClass(ParameterValue.class);
         when(mockClient.processTemplate(matches("test"), captor.capture())).thenReturn(new KubernetesList());

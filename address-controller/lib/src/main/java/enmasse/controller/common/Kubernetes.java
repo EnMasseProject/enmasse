@@ -14,9 +14,9 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Interface for OpenShift operations done by the address controller
+ * Interface for Kubernetes operations done by the address controller
  */
-public interface OpenShift {
+public interface Kubernetes {
 
     static String sanitizeName(String name) {
         return name.toLowerCase().replaceAll("[^a-z0-9]", "-");
@@ -31,7 +31,7 @@ public interface OpenShift {
     }
 
     InstanceId getInstanceId();
-    OpenShift mutateClient(InstanceId instance);
+    Kubernetes mutateClient(InstanceId instance);
 
     List<DestinationCluster> listClusters();
     void updateDestinations(Set<Destination> destinations);

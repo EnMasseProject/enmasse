@@ -16,7 +16,7 @@
 
 package enmasse.controller.address;
 
-import enmasse.controller.common.OpenShift;
+import enmasse.controller.common.Kubernetes;
 import enmasse.controller.common.DestinationClusterGenerator;
 import enmasse.controller.model.Destination;
 import org.slf4j.Logger;
@@ -32,17 +32,17 @@ import java.util.stream.Collectors;
 public class AddressSpaceImpl implements AddressSpace {
     private static final Logger log = LoggerFactory.getLogger(AddressSpaceImpl.class.getName());
 
-    private final OpenShift openShift;
+    private final Kubernetes kubernetes;
     private final DestinationClusterGenerator generator;
 
-    public AddressSpaceImpl(OpenShift openShift, DestinationClusterGenerator generator) {
-        this.openShift = openShift;
+    public AddressSpaceImpl(Kubernetes kubernetes, DestinationClusterGenerator generator) {
+        this.kubernetes = kubernetes;
         this.generator = generator;
     }
 
     @Override
     public Set<Destination> addDestination(Destination destination) {
-        List<DestinationCluster> clusterList = openShift.listClusters();
+        List<DestinationCluster> clusterList = kubernetes.listClusters();
         Set<Destination> destinations = getClusterDestinations(clusterList);
         destinations.add(destination);
         setDestinations(destinations, clusterList);
@@ -51,7 +51,7 @@ public class AddressSpaceImpl implements AddressSpace {
 
     @Override
     public Set<Destination> addDestinations(Set<Destination> destinations) {
-        List<DestinationCluster> clusterList = openShift.listClusters();
+        List<DestinationCluster> clusterList = kubernetes.listClusters();
         Set<Destination> currentDestinations = getClusterDestinations(clusterList);
         currentDestinations.addAll(destinations);
         setDestinations(destinations, clusterList);
@@ -68,7 +68,7 @@ public class AddressSpaceImpl implements AddressSpace {
     }
 
     private Set<Destination> deleteWithPredicate(Predicate<Destination> predicate) {
-        List<DestinationCluster> clusterList = openShift.listClusters();
+        List<DestinationCluster> clusterList = kubernetes.listClusters();
         Set<Destination> destinations = getClusterDestinations(clusterList);
         destinations.removeIf(predicate::test);
         setDestinations(destinations, clusterList);
@@ -82,7 +82,7 @@ public class AddressSpaceImpl implements AddressSpace {
 
     @Override
     public Set<Destination> setDestinations(Set<Destination> destinations) {
-        List<DestinationCluster> clusterList = openShift.listClusters();
+        List<DestinationCluster> clusterList = kubernetes.listClusters();
         setDestinations(destinations, clusterList);
         return destinations;
     }
@@ -107,7 +107,7 @@ public class AddressSpaceImpl implements AddressSpace {
      */
     @Override
     public synchronized Set<Destination> getDestinations() {
-        return getClusterDestinations(openShift.listClusters());
+        return getClusterDestinations(kubernetes.listClusters());
     }
 
     /*

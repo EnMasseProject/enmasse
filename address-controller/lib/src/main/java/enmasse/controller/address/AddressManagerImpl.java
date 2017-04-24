@@ -16,7 +16,7 @@
 package enmasse.controller.address;
 
 import enmasse.controller.common.DestinationClusterGenerator;
-import enmasse.controller.common.OpenShift;
+import enmasse.controller.common.Kubernetes;
 import enmasse.controller.common.TemplateDestinationClusterGenerator;
 import enmasse.controller.flavor.FlavorRepository;
 import enmasse.controller.model.Instance;
@@ -25,17 +25,17 @@ import enmasse.controller.model.Instance;
  * Manages address spaces
  */
 public class AddressManagerImpl implements AddressManager {
-    private final OpenShift openShift;
+    private final Kubernetes kubernetes;
     private final FlavorRepository flavorRepository;
 
-    public AddressManagerImpl(OpenShift openShift, FlavorRepository flavorRepository) {
-        this.openShift = openShift;
+    public AddressManagerImpl(Kubernetes kubernetes, FlavorRepository flavorRepository) {
+        this.kubernetes = kubernetes;
         this.flavorRepository = flavorRepository;
     }
 
     @Override
     public AddressSpace getAddressSpace(Instance instance) {
-        OpenShift instanceClient = openShift.mutateClient(instance.id());
+        Kubernetes instanceClient = kubernetes.mutateClient(instance.id());
         DestinationClusterGenerator generator = new TemplateDestinationClusterGenerator(instance.id(), instanceClient, flavorRepository);
         return new AddressSpaceImpl(instanceClient, generator);
     }

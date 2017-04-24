@@ -29,7 +29,7 @@ import java.io.IOException;
 import java.util.Collections;
 
 /**
- * Watches OpenShift configmap of flavors and updates the flavor manager
+ * Watches Kubernetes configmap of flavors and updates the flavor manager
  */
 public class FlavorController extends AbstractVerticle implements ConfigSubscriber {
     private static final Logger log = LoggerFactory.getLogger(FlavorController.class.getName());

@@ -16,15 +16,13 @@
 
 package enmasse.controller.common;
 
-import enmasse.controller.model.Destination;
-import enmasse.controller.model.InstanceId;
-import enmasse.controller.address.DestinationCluster;
 import enmasse.config.AddressDecoder;
 import enmasse.config.AddressEncoder;
 import enmasse.config.LabelKeys;
+import enmasse.controller.address.DestinationCluster;
+import enmasse.controller.model.Destination;
+import enmasse.controller.model.InstanceId;
 import io.fabric8.kubernetes.api.model.*;
-import io.fabric8.kubernetes.api.model.extensions.Ingress;
-import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.dsl.Resource;
 import io.fabric8.openshift.api.model.DoneablePolicyBinding;
 import io.fabric8.openshift.api.model.PolicyBinding;
@@ -38,17 +36,17 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * Wraps the OpenShift client and adds some helper methods.
+ * Wraps the Kubernetes client and adds some helper methods.
  */
-public class OpenShiftHelper implements OpenShift {
-    private static final Logger log = LoggerFactory.getLogger(OpenShiftHelper.class.getName());
+public class KubernetesHelper implements Kubernetes {
+    private static final Logger log = LoggerFactory.getLogger(KubernetesHelper.class.getName());
     private static final String TEMPLATE_SUFFIX = ".json";
 
     private final OpenShiftClient client;
     private final InstanceId instance;
     private final File templateDir;
 
-    public OpenShiftHelper(InstanceId instance, OpenShiftClient client, File templateDir) {
+    public KubernetesHelper(InstanceId instance, OpenShiftClient client, File templateDir) {
         this.client = client;
         this.instance = instance;
         this.templateDir = templateDir;
@@ -130,14 +128,14 @@ public class OpenShiftHelper implements OpenShift {
     @Override
     public ConfigMap createAddressConfig(Set<Destination> destinations) {
         String groupId = destinations.iterator().next().group();
-        String name = OpenShift.sanitizeName("address-config-" + instance.getId() + "-" + groupId);
+        String name = Kubernetes.sanitizeName("address-config-" + instance.getId() + "-" + groupId);
         ConfigMapBuilder builder = new ConfigMapBuilder()
                 .withNewMetadata()
                 .withName(name)
-                .addToLabels(LabelKeys.GROUP_ID, OpenShift.sanitizeName(groupId))
+                .addToLabels(LabelKeys.GROUP_ID, Kubernetes.sanitizeName(groupId))
                 .addToLabels(LabelKeys.ADDRESS_CONFIG, name)
                 .addToLabels("type", "address-config")
-                .addToLabels("instance", OpenShift.sanitizeName(instance.getId()))
+                .addToLabels("instance", Kubernetes.sanitizeName(instance.getId()))
                 .endMetadata();
 
         for (Destination destination : destinations) {
@@ -161,8 +159,8 @@ public class OpenShiftHelper implements OpenShift {
     }
 
     @Override
-    public OpenShift mutateClient(InstanceId newInstance) {
-        return new OpenShiftHelper(newInstance, client, templateDir);
+    public Kubernetes mutateClient(InstanceId newInstance) {
+        return new KubernetesHelper(newInstance, client, templateDir);
     }
 
     @Override
@@ -173,42 +171,47 @@ public class OpenShiftHelper implements OpenShift {
 
     @Override
     public void addDefaultViewPolicy(InstanceId instance) {
-        Resource<PolicyBinding, DoneablePolicyBinding> bindingResource = client.policyBindings()
-                .inNamespace(instance.getNamespace())
-                .withName(":default");
+        if (client.isAdaptable(OpenShiftClient.class)) {
+            Resource<PolicyBinding, DoneablePolicyBinding> bindingResource = client.policyBindings()
+                    .inNamespace(instance.getNamespace())
+                    .withName(":default");
 
-        DoneablePolicyBinding binding;
-        if (bindingResource.get() == null) {
-            binding = bindingResource.createNew();
-        } else {
-            binding = bindingResource.edit();
-        }
-        binding.editOrNewMetadata()
+            DoneablePolicyBinding binding;
+            if (bindingResource.get() == null) {
+                binding = bindingResource.createNew();
+            } else {
+                binding = bindingResource.edit();
+            }
+            binding.editOrNewMetadata()
                     .withName(":default")
-                .endMetadata()
-                .editOrNewPolicyRef()
+                    .endMetadata()
+                    .editOrNewPolicyRef()
                     .withName("default")
-                .endPolicyRef()
-                .addNewRoleBinding()
+                    .endPolicyRef()
+                    .addNewRoleBinding()
                     .withName("view")
                     .editOrNewRoleBinding()
-                        .editOrNewMetadata()
-                            .withName("view")
-                            .withNamespace(instance.getNamespace())
-                        .endMetadata()
-                        .addToUserNames("system:serviceaccount:" + instance.getNamespace() + ":default")
-                        .addNewSubject()
-                            .withName("default")
-                            .withNamespace(instance.getNamespace())
-                            .withKind("ServiceAccount")
-                        .endSubject()
-                        .withNewRoleRef()
-                            .withName("view")
-                        .endRoleRef()
+                    .editOrNewMetadata()
+                    .withName("view")
+                    .withNamespace(instance.getNamespace())
+                    .endMetadata()
+                    .addToUserNames("system:serviceaccount:" + instance.getNamespace() + ":default")
+                    .addNewSubject()
+                    .withName("default")
+                    .withNamespace(instance.getNamespace())
+                    .withKind("ServiceAccount")
+                    .endSubject()
+                    .withNewRoleRef()
+                    .withName("view")
+                    .endRoleRef()
                     .endRoleBinding()
-                .endRoleBinding()
-                .done();
+                    .endRoleBinding()
+                    .done();
+        } else {
+            // TODO: Add supoport for Kubernetes RBAC policies
+        }
     }
+
 
     @Override
     public List<Namespace> listNamespaces(Map<String, String> labelMap) {
@@ -217,13 +220,7 @@ public class OpenShiftHelper implements OpenShift {
 
     @Override
     public List<Route> getRoutes(InstanceId instanceId) {
-        List<Ingress> items = Collections.emptyList();
-        try {
-            items = client.extensions().ingresses().inNamespace(instanceId.getNamespace()).list().getItems();
-        } catch (Exception e) {
-            // Ignore and try routes
-        }
-        if (items.isEmpty()) {
+        if (client.isAdaptable(OpenShiftClient.class)) {
             return client.routes().inNamespace(instanceId.getNamespace()).list().getItems().stream()
                     .map(r -> new Route() {
                         @Override
@@ -237,7 +234,7 @@ public class OpenShiftHelper implements OpenShift {
                         }
                     }).collect(Collectors.toList());
         } else {
-            return items.stream()
+            return client.extensions().ingresses().inNamespace(instanceId.getNamespace()).list().getItems().stream()
                     .map(i -> new Route() {
                         @Override
                         public String getName() {

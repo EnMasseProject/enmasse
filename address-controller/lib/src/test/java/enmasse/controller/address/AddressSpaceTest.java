@@ -17,9 +17,9 @@
 package enmasse.controller.address;
 
 import enmasse.controller.common.DestinationClusterGenerator;
+import enmasse.controller.common.KubernetesHelper;
 import enmasse.controller.model.Destination;
 import enmasse.controller.model.Flavor;
-import enmasse.controller.common.OpenShiftHelper;
 import enmasse.controller.flavor.FlavorManager;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import org.junit.Before;
@@ -37,14 +37,14 @@ import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
 public class AddressSpaceTest {
-    private OpenShiftHelper mockHelper;
+    private KubernetesHelper mockHelper;
     private AddressSpace manager;
     private FlavorManager flavorManager = new FlavorManager();
     private DestinationClusterGenerator mockGenerator;
 
     @Before
     public void setUp() {
-        mockHelper = mock(OpenShiftHelper.class);
+        mockHelper = mock(KubernetesHelper.class);
         mockGenerator = mock(DestinationClusterGenerator.class);
 
         manager = new AddressSpaceImpl(mockHelper, mockGenerator);

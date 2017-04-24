@@ -18,8 +18,8 @@ package enmasse.controller;
 
 import enmasse.controller.address.AddressManager;
 import enmasse.controller.address.AddressManagerImpl;
-import enmasse.controller.common.OpenShift;
-import enmasse.controller.common.OpenShiftHelper;
+import enmasse.controller.common.Kubernetes;
+import enmasse.controller.common.KubernetesHelper;
 import enmasse.controller.flavor.FlavorController;
 import enmasse.controller.flavor.FlavorManager;
 import enmasse.controller.instance.InstanceManagerImpl;
@@ -50,18 +50,18 @@ public class Controller extends AbstractVerticle {
                 .withNamespace(options.openshiftNamespace())
                 .build());
 
-        OpenShift openShift = new OpenShiftHelper(InstanceId.withIdAndNamespace(options.openshiftNamespace(), options.openshiftNamespace()), controllerClient, new File("/templates"));
+        Kubernetes kubernetes = new KubernetesHelper(InstanceId.withIdAndNamespace(options.openshiftNamespace(), options.openshiftNamespace()), controllerClient, new File("/templates"));
         String templateName = options.useTLS() ? "tls-enmasse-instance-infra" : "enmasse-instance-infra";
 
         FlavorManager flavorManager = new FlavorManager();
-        this.instanceManager = new InstanceManagerImpl(openShift, templateName, options.isMultiinstance());
-        if (!options.isMultiinstance() && !openShift.hasService("messaging")) {
-            instanceManager.create(new Instance.Builder(openShift.getInstanceId()).build());
+        this.instanceManager = new InstanceManagerImpl(kubernetes, templateName, options.isMultiinstance());
+        if (!options.isMultiinstance() && !kubernetes.hasService("messaging")) {
+            instanceManager.create(new Instance.Builder(kubernetes.getInstanceId()).build());
         }
 
-        this.addressManager = new AddressManagerImpl(openShift, flavorManager);
-        this.server = new AMQPServer(openShift.getInstanceId(), addressManager, instanceManager, flavorManager, options.port());
-        this.restServer = new HTTPServer(openShift.getInstanceId(), addressManager, instanceManager, flavorManager);
+        this.addressManager = new AddressManagerImpl(kubernetes, flavorManager);
+        this.server = new AMQPServer(kubernetes.getInstanceId(), addressManager, instanceManager, flavorManager, options.port());
+        this.restServer = new HTTPServer(kubernetes.getInstanceId(), addressManager, instanceManager, flavorManager);
         this.flavorController = new FlavorController(controllerClient, flavorManager);
     }
 

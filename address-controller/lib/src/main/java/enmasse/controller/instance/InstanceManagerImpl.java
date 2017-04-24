@@ -1,7 +1,7 @@
 package enmasse.controller.instance;
 
 import enmasse.config.LabelKeys;
-import enmasse.controller.common.OpenShift;
+import enmasse.controller.common.Kubernetes;
 import enmasse.controller.common.Route;
 import enmasse.controller.common.TemplateParameter;
 import enmasse.controller.model.Instance;
@@ -13,12 +13,12 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class InstanceManagerImpl implements InstanceManager {
-    private final OpenShift openShift;
+    private final Kubernetes kubernetes;
     private final String instanceTemplateName;
     private final boolean isMultitenant;
 
-    public InstanceManagerImpl(OpenShift openShift, String instanceTemplateName, boolean isMultitenant) {
-        this.openShift = openShift;
+    public InstanceManagerImpl(Kubernetes kubernetes, String instanceTemplateName, boolean isMultitenant) {
+        this.kubernetes = kubernetes;
         this.instanceTemplateName = instanceTemplateName;
         this.isMultitenant = isMultitenant;
     }
@@ -50,7 +50,7 @@ public class InstanceManagerImpl implements InstanceManager {
     }
 
     private Instance buildInstance(InstanceId instanceId) {
-        List<Route> routes = openShift.getRoutes(instanceId);
+        List<Route> routes = kubernetes.getRoutes(instanceId);
         return new Instance.Builder(instanceId)
                 .messagingHost(getRouteHost(routes, "messaging"))
                 .mqttHost(getRouteHost(routes, "mqtt"))
@@ -60,7 +60,7 @@ public class InstanceManagerImpl implements InstanceManager {
 
     private Set<Instance> list(Map<String, String> labelMap) {
         if (isMultitenant) {
-            return openShift.listNamespaces(labelMap).stream()
+            return kubernetes.listNamespaces(labelMap).stream()
                     .map(namespace -> InstanceId.withIdAndNamespace(namespace.getMetadata().getLabels().get("instance"), namespace.getMetadata().getName()))
                     .map(this::buildInstance)
                     .collect(Collectors.toSet());
@@ -81,28 +81,28 @@ public class InstanceManagerImpl implements InstanceManager {
     @Override
     public void create(Instance instance) {
         if (isMultitenant) {
-            openShift.createNamespace(instance.id());
-            openShift.addDefaultViewPolicy(instance.id());
+            kubernetes.createNamespace(instance.id());
+            kubernetes.addDefaultViewPolicy(instance.id());
         }
 
         List<ParameterValue> parameterValues = new ArrayList<>();
-        parameterValues.add(new ParameterValue(TemplateParameter.INSTANCE, OpenShift.sanitizeName(instance.id().getId())));
+        parameterValues.add(new ParameterValue(TemplateParameter.INSTANCE, Kubernetes.sanitizeName(instance.id().getId())));
         parameterValues.add(new ParameterValue(TemplateParameter.MESSAGING_HOSTNAME, instance.messagingHost().orElse("")));
         parameterValues.add(new ParameterValue(TemplateParameter.MQTT_HOSTNAME, instance.mqttHost().orElse("")));
         parameterValues.add(new ParameterValue(TemplateParameter.CONSOLE_HOSTNAME, instance.consoleHost().orElse("")));
         parameterValues.add(new ParameterValue(TemplateParameter.KAFKA_BOOTSTRAP_SERVERS, ""));
 
-        KubernetesList items = openShift.processTemplate(instanceTemplateName, parameterValues.toArray(new ParameterValue[0]));
-        instance.uuid().ifPresent(uuid -> OpenShift.addObjectLabel(items, LabelKeys.UUID, uuid));
+        KubernetesList items = kubernetes.processTemplate(instanceTemplateName, parameterValues.toArray(new ParameterValue[0]));
+        instance.uuid().ifPresent(uuid -> Kubernetes.addObjectLabel(items, LabelKeys.UUID, uuid));
 
-        OpenShift instanceClient = openShift.mutateClient(instance.id());
+        Kubernetes instanceClient = kubernetes.mutateClient(instance.id());
         instanceClient.create(items);
     }
 
     @Override
     public void delete(Instance instance) {
-        if (openShift.mutateClient(instance.id()).listClusters().isEmpty()) {
-            openShift.deleteNamespace(instance.id().getNamespace());
+        if (kubernetes.mutateClient(instance.id()).listClusters().isEmpty()) {
+            kubernetes.deleteNamespace(instance.id().getNamespace());
         } else {
             throw new IllegalArgumentException("Instance " + instance.id() + " still has active destinations");
         }

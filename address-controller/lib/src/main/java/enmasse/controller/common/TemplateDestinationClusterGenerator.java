@@ -37,13 +37,13 @@ import java.util.stream.Collectors;
  * Generates destination clusters using Openshift templates.
  */
 public class TemplateDestinationClusterGenerator implements DestinationClusterGenerator {
-    private final OpenShift openShift;
+    private final Kubernetes kubernetes;
     private final FlavorRepository flavorRepository;
     private final InstanceId instance;
 
-    public TemplateDestinationClusterGenerator(InstanceId instance, OpenShift openShift, FlavorRepository flavorRepository) {
+    public TemplateDestinationClusterGenerator(InstanceId instance, Kubernetes kubernetes, FlavorRepository flavorRepository) {
         this.instance = instance;
-        this.openShift = openShift;
+        this.kubernetes = kubernetes;
         this.flavorRepository = flavorRepository;
     }
 
@@ -62,9 +62,9 @@ public class TemplateDestinationClusterGenerator implements DestinationClusterGe
         KubernetesList resources = flavor.map(f -> processTemplate(first, destinations, f)).orElse(new KubernetesList());
 
         KubernetesListBuilder combined = new KubernetesListBuilder(resources);
-        combined.addToItems(openShift.createAddressConfig(destinations));
+        combined.addToItems(kubernetes.createAddressConfig(destinations));
 
-        return new DestinationCluster(openShift, destinations, combined.build());
+        return new DestinationCluster(kubernetes, destinations, combined.build());
     }
 
     private KubernetesList processTemplate(Destination first, Set<Destination> destinations, Flavor flavor) {
@@ -72,8 +72,8 @@ public class TemplateDestinationClusterGenerator implements DestinationClusterGe
         Map<String, String> paramMap = new LinkedHashMap<>(flavor.templateParameters());
 
         // If the flavor is shared, there is only one instance of it, so give it the name of the flavor
-        paramMap.put(TemplateParameter.NAME, OpenShift.sanitizeName(groupId));
-        paramMap.put(TemplateParameter.INSTANCE, OpenShift.sanitizeName(instance.getId()));
+        paramMap.put(TemplateParameter.NAME, Kubernetes.sanitizeName(groupId));
+        paramMap.put(TemplateParameter.INSTANCE, Kubernetes.sanitizeName(instance.getId()));
 
         // If the name of the group matches that of the address, assume a scalable queue
         if (groupId.equals(first.address()) && destinations.size() == 1) {
@@ -88,12 +88,12 @@ public class TemplateDestinationClusterGenerator implements DestinationClusterGe
                 .toArray(new ParameterValue[0]);
 
 
-        KubernetesList items = openShift.processTemplate(flavor.templateName(), parameters);
+        KubernetesList items = kubernetes.processTemplate(flavor.templateName(), parameters);
 
         // These are attributes that we need to identify components belonging to this address
-        OpenShift.addObjectLabel(items, LabelKeys.GROUP_ID, OpenShift.sanitizeName(groupId));
-        OpenShift.addObjectLabel(items, LabelKeys.ADDRESS_CONFIG, OpenShift.sanitizeName("address-config-" + instance.getId() + "-" + groupId));
-        first.uuid().ifPresent(uuid -> OpenShift.addObjectLabel(items, LabelKeys.UUID, uuid));
+        Kubernetes.addObjectLabel(items, LabelKeys.GROUP_ID, Kubernetes.sanitizeName(groupId));
+        Kubernetes.addObjectLabel(items, LabelKeys.ADDRESS_CONFIG, Kubernetes.sanitizeName("address-config-" + instance.getId() + "-" + groupId));
+        first.uuid().ifPresent(uuid -> Kubernetes.addObjectLabel(items, LabelKeys.UUID, uuid));
         return items;
     }
 }

@@ -25,13 +25,11 @@ import enmasse.config.LabelKeys;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.openshift.api.model.Template;
 import io.fabric8.openshift.api.model.TemplateBuilder;
-import io.fabric8.openshift.api.model.TemplateListBuilder;
 import io.fabric8.openshift.client.OpenShiftClient;
 import io.fabric8.openshift.client.ParameterValue;
 import io.fabric8.openshift.client.dsl.TemplateResource;
 import io.fabric8.openshift.client.dsl.TemplateOperation;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
@@ -53,7 +51,7 @@ public class TemplateDestinationClusterGeneratorTest {
     @Before
     public void setUp() {
         mockClient = mock(OpenShiftClient.class);
-        generator = new TemplateDestinationClusterGenerator(InstanceId.withId("myinstance"), new OpenShiftHelper(InstanceId.withId("myinstance"), mockClient, new File("src/test/resources/templates")), flavorManager);
+        generator = new TemplateDestinationClusterGenerator(InstanceId.withId("myinstance"), new KubernetesHelper(InstanceId.withId("myinstance"), mockClient, new File("src/test/resources/templates")), flavorManager);
         flavorManager.flavorsUpdated(Collections.singletonMap("vanilla", new Flavor.Builder("vanilla", "test").build()));
     }
 

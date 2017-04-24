@@ -16,7 +16,7 @@
 
 package enmasse.controller.address;
 
-import enmasse.controller.common.OpenShift;
+import enmasse.controller.common.Kubernetes;
 import enmasse.controller.model.Destination;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesList;
@@ -33,25 +33,25 @@ import java.util.stream.Collectors;
 public class DestinationCluster {
     private static final Logger log = LoggerFactory.getLogger(DestinationCluster.class.getName());
 
-    private final OpenShift openShift;
+    private final Kubernetes kubernetes;
     private final KubernetesList resources;
     private Set<Destination> destinations;
 
-    public DestinationCluster(OpenShift openShift, Set<Destination> destinations, KubernetesList resources) {
-        this.openShift = openShift;
+    public DestinationCluster(Kubernetes kubernetes, Set<Destination> destinations, KubernetesList resources) {
+        this.kubernetes = kubernetes;
         this.destinations = destinations;
         this.resources = resources;
     }
 
     public void create() {
         log.info("Adding " + resources.getItems().size() + " resources: " + resources.getItems().stream().map(r -> "name=" + r.getMetadata().getName() + ",kind=" + r.getKind()).collect(Collectors.joining(",")));
-        openShift.create(resources);
+        kubernetes.create(resources);
         updateDestinations(destinations);
     }
 
     public void delete() {
         log.info("Deleting " + resources.getItems().size() + " resources: " + resources.getItems().stream().map(r -> "name=" + r.getMetadata().getName() + ",kind=" + r.getKind()).collect(Collectors.joining(",")));
-        openShift.delete(resources);
+        kubernetes.delete(resources);
     }
 
     public Set<Destination> getDestinations() {
@@ -67,7 +67,7 @@ public class DestinationCluster {
         Destination first = destinations.iterator().next();
         // This is a workaround for direct addresses, which store everything in a single configmap that
         if (first.storeAndForward()) {
-            openShift.updateDestinations(destinations);
+            kubernetes.updateDestinations(destinations);
         }
     }
 
