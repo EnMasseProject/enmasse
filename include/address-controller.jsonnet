@@ -61,7 +61,7 @@ local common = import "common.jsonnet";
                 "name": "TLS",
                 "value": secure
               }, {
-                "name": "INSTANCE_IDLE_TIMEOUT",
+                "name": "INSTANCE_IDLE_TIMEOUT_SECONDS",
                 "value": std.toString(instance_idle_timeout)
               }], [
                 {

@@ -613,8 +613,8 @@ objects:
             value: "${MULTIINSTANCE}"
           - name: TLS
             value: 'true'
-          - name: INSTANCE_IDLE_TIMEOUT
-            value: "${INSTANCE_IDLE_TIMEOUT}"
+          - name: INSTANCE_IDLE_TIMEOUT_SECONDS
+            value: "${INSTANCE_IDLE_TIMEOUT_SECONDS}"
           image: "${ADDRESS_CONTROLLER_REPO}:latest"
           livenessProbe:
             tcpSocket:
@@ -706,5 +706,5 @@ parameters:
   name: ADDRESS_CONTROLLER_REPO
   value: enmasseproject/address-controller
 - description: The time before garbage collecting idle (no addresses defined) instances
-  name: INSTANCE_IDLE_TIMEOUT
+  name: INSTANCE_IDLE_TIMEOUT_SECONDS
   value: '0'

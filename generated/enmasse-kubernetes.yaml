@@ -587,7 +587,7 @@ items:
             value: 'false'
           - name: TLS
             value: 'false'
-          - name: INSTANCE_IDLE_TIMEOUT
+          - name: INSTANCE_IDLE_TIMEOUT_SECONDS
             value: '0'
           image: enmasseproject/address-controller:latest
           livenessProbe:
