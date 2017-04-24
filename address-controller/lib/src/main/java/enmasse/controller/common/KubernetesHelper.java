@@ -211,6 +211,7 @@ public class KubernetesHelper implements Kubernetes {
                     .done();
         } else {
             // TODO: Add support for Kubernetes RBAC policies
+            log.info("No support for Kubernetes RBAC policies yet, won't add any default view policy");
         }
     }
 
