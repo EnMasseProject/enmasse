@@ -4,9 +4,8 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import enmasse.config.AddressConfigKeys;
 import enmasse.config.service.kubernetes.MessageEncoder;
-import enmasse.config.AddressEncoder;
-import enmasse.config.AddressDecoder;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.amqp.messaging.Section;
 import org.apache.qpid.proton.message.Message;
@@ -16,7 +15,6 @@ import org.slf4j.LoggerFactory;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -31,14 +29,12 @@ public class ConfigMessageEncoder implements MessageEncoder<ConfigResource> {
         Message message = Message.Factory.create();
         ObjectNode root = mapper.createObjectNode();
         for (ConfigResource config : resources) {
-            for (Map.Entry<String, String> entry : config.getData().entrySet()) {
-                AddressDecoder decoder = new AddressDecoder(entry.getValue());
+            Map<String, String> data = config.getData();
 
-                ObjectNode address = root.putObject(entry.getKey());
-                address.put("store_and_forward", decoder.storeAndForward());
-                address.put("multicast", decoder.multicast());
-                address.put("group_id", config.getGroup());
-            }
+            ObjectNode address = root.putObject(data.get(AddressConfigKeys.ADDRESS));
+            address.put("store_and_forward", Boolean.parseBoolean(data.get(AddressConfigKeys.STORE_AND_FORWARD)));
+            address.put("multicast", Boolean.parseBoolean(data.get(AddressConfigKeys.MULTICAST)));
+            address.put("group_id", data.get(AddressConfigKeys.GROUP_ID));
         }
         message.setBody(createBody(root));
         message.setContentType("application/json");

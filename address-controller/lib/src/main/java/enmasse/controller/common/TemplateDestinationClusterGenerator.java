@@ -62,7 +62,9 @@ public class TemplateDestinationClusterGenerator implements DestinationClusterGe
         KubernetesList resources = flavor.map(f -> processTemplate(first, destinations, f)).orElse(new KubernetesList());
 
         KubernetesListBuilder combined = new KubernetesListBuilder(resources);
-        combined.addToItems(kubernetes.createAddressConfig(destinations));
+        for (Destination destination : destinations) {
+            combined.addToItems(kubernetes.createAddressConfig(destination));
+        }
 
         return new DestinationCluster(kubernetes, destinations, combined.build());
     }
@@ -92,7 +94,7 @@ public class TemplateDestinationClusterGenerator implements DestinationClusterGe
 
         // These are attributes that we need to identify components belonging to this address
         Kubernetes.addObjectLabel(items, LabelKeys.GROUP_ID, Kubernetes.sanitizeName(groupId));
-        Kubernetes.addObjectLabel(items, LabelKeys.ADDRESS_CONFIG, Kubernetes.sanitizeName("address-config-" + instance.getId() + "-" + groupId));
+        Kubernetes.addObjectLabel(items, LabelKeys.ADDRESS_CONFIG, Kubernetes.sanitizeName("address-config-" + groupId));
         first.uuid().ifPresent(uuid -> Kubernetes.addObjectLabel(items, LabelKeys.UUID, uuid));
         return items;
     }

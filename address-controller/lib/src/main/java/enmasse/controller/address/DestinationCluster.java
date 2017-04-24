@@ -64,10 +64,8 @@ public class DestinationCluster {
 
     public void updateDestinations(Set<Destination> destinations) {
         this.destinations = destinations;
-        Destination first = destinations.iterator().next();
-        // This is a workaround for direct addresses, which store everything in a single configmap that
-        if (first.storeAndForward()) {
-            kubernetes.updateDestinations(destinations);
+        for (Destination destination : destinations) {
+            kubernetes.updateAddressConfig(destination);
         }
     }
 

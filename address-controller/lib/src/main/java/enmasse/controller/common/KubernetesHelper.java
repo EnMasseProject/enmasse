@@ -16,8 +16,7 @@
 
 package enmasse.controller.common;
 
-import enmasse.config.AddressDecoder;
-import enmasse.config.AddressEncoder;
+import enmasse.config.AddressConfigKeys;
 import enmasse.config.LabelKeys;
 import enmasse.controller.address.DestinationCluster;
 import enmasse.controller.model.Destination;
@@ -70,23 +69,27 @@ public class KubernetesHelper implements Kubernetes {
             if (labels != null && labels.containsKey(LabelKeys.GROUP_ID)) {
                 String groupId = labels.get(LabelKeys.GROUP_ID);
 
-                // First time we encounter this group, fetch the address config for it
+                // First time we encounter this group, fetch the address configs for it
                 if (!resourceMap.containsKey(groupId)) {
-                    String addressConfig = labels.get(LabelKeys.ADDRESS_CONFIG);
-                    if (addressConfig == null) {
-                        log.info("Encounted grouped resource without address config: " + config);
+                    // Skip the address configs themselves
+                    if ("address-config".equals(labels.get(LabelKeys.ADDRESS))) {
                         continue;
                     }
-                    Map<String, String> addressConfigMap = client.configMaps().inNamespace(instance.getNamespace()).withName(addressConfig).get().getData();
+
+                    Map<String, String> configLabels = new LinkedHashMap<>();
+                    configLabels.put(LabelKeys.TYPE, "address-config");
+                    configLabels.put(LabelKeys.GROUP_ID, groupId);
 
                     Set<Destination> destinations = new HashSet<>();
-                    for (Map.Entry<String, String> entry : addressConfigMap.entrySet()) {
-                        Destination.Builder destBuilder = new Destination.Builder(entry.getKey(), groupId);
-                        AddressDecoder addressDecoder = new AddressDecoder(entry.getValue());
-                        destBuilder.storeAndForward(addressDecoder.storeAndForward());
-                        destBuilder.multicast(addressDecoder.multicast());
-                        destBuilder.flavor(addressDecoder.flavor());
-                        destBuilder.uuid(addressDecoder.uuid());
+                    for (ConfigMap addressConfig : client.configMaps().withLabels(configLabels).list().getItems()) {
+                        Map<String, String> data = addressConfig.getData();
+
+                        Destination.Builder destBuilder = new Destination.Builder(data.get(AddressConfigKeys.ADDRESS), data.get(AddressConfigKeys.GROUP_ID));
+                        destBuilder.storeAndForward(Boolean.parseBoolean(data.get(AddressConfigKeys.STORE_AND_FORWARD)));
+                        destBuilder.multicast(Boolean.parseBoolean(data.get(AddressConfigKeys.MULTICAST)));
+                        destBuilder.flavor(Optional.ofNullable(data.get(AddressConfigKeys.FLAVOR)));
+                        destBuilder.uuid(Optional.ofNullable(data.get(AddressConfigKeys.UUID)));
+
                         destinations.add(destBuilder.build());
                     }
 
@@ -121,28 +124,27 @@ public class KubernetesHelper implements Kubernetes {
     }
 
     @Override
-    public void updateDestinations(Set<Destination> destinations) {
-        client.configMaps().inNamespace(instance.getNamespace()).createOrReplace(createAddressConfig(destinations));
+    public void updateAddressConfig(Destination destination) {
+        client.configMaps().inNamespace(instance.getNamespace()).createOrReplace(createAddressConfig(destination));
     }
 
     @Override
-    public ConfigMap createAddressConfig(Set<Destination> destinations) {
-        String groupId = destinations.iterator().next().group();
-        String name = Kubernetes.sanitizeName("address-config-" + instance.getId() + "-" + groupId);
+    public ConfigMap createAddressConfig(Destination destination) {
+        String name = Kubernetes.sanitizeName("address-config-" + destination.address());
         ConfigMapBuilder builder = new ConfigMapBuilder()
                 .withNewMetadata()
                 .withName(name)
-                .addToLabels(LabelKeys.GROUP_ID, Kubernetes.sanitizeName(groupId))
-                .addToLabels(LabelKeys.ADDRESS_CONFIG, name)
-                .addToLabels("type", "address-config")
-                .addToLabels("instance", Kubernetes.sanitizeName(instance.getId()))
+                .addToLabels(LabelKeys.GROUP_ID, Kubernetes.sanitizeName(destination.group()))
+                .addToLabels(LabelKeys.TYPE, "address-config")
+                .addToLabels(LabelKeys.INSTANCE, Kubernetes.sanitizeName(instance.getId()))
                 .endMetadata();
 
-        for (Destination destination : destinations) {
-            AddressEncoder encoder = new AddressEncoder();
-            encoder.encode(destination.storeAndForward(), destination.multicast(), destination.flavor(), destination.uuid());
-            builder.addToData(destination.address(), encoder.toJson());
-        }
+        builder.addToData(AddressConfigKeys.ADDRESS, destination.address());
+        builder.addToData(AddressConfigKeys.GROUP_ID, destination.group());
+        builder.addToData(AddressConfigKeys.STORE_AND_FORWARD, String.valueOf(destination.storeAndForward()));
+        builder.addToData(AddressConfigKeys.MULTICAST, String.valueOf(destination.multicast()));
+        destination.flavor().ifPresent(f -> builder.addToData(AddressConfigKeys.FLAVOR, f));
+        destination.uuid().ifPresent(f -> builder.addToData(AddressConfigKeys.UUID, f));
         return builder.build();
     }
 
@@ -208,7 +210,7 @@ public class KubernetesHelper implements Kubernetes {
                     .endRoleBinding()
                     .done();
         } else {
-            // TODO: Add supoport for Kubernetes RBAC policies
+            // TODO: Add support for Kubernetes RBAC policies
         }
     }
 

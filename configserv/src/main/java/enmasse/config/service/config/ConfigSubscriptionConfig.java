@@ -1,5 +1,6 @@
 package enmasse.config.service.config;
 
+import enmasse.config.LabelKeys;
 import enmasse.config.service.model.LabelSet;
 import enmasse.config.service.model.ResourceFactory;
 import enmasse.config.service.kubernetes.MessageEncoder;
@@ -31,7 +32,7 @@ public class ConfigSubscriptionConfig implements SubscriptionConfig<ConfigResour
         ops[0] = client.configMaps();
         Map<String, String> labelMap = new LinkedHashMap<>(filter);
         if (labelMap.isEmpty()) {
-            labelMap.put("type", "address-config");
+            labelMap.put(LabelKeys.TYPE, "address-config");
         }
         return new ObserverOptions(LabelSet.fromMap(labelMap), ops);
     }

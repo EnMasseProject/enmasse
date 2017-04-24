@@ -20,10 +20,11 @@ package enmasse.config;
  * Labels that are applied to a destination cluster.
  */
 public interface LabelKeys {
-    String ADDRESS_TYPE = "type";
+    String TYPE = "type";
 
     String GROUP_ID = "group_id";
     String ADDRESS_CONFIG = "address_config";
     String INSTANCE = "instance";
     String UUID = "uuid";
+    String ADDRESS = "address";
 }

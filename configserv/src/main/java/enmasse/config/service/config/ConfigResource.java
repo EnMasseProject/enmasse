@@ -60,8 +60,4 @@ public class ConfigResource extends Resource {
     public String toString() {
         return kind + ":" + name;
     }
-
-    public String getGroup() {
-        return this.labels.get(LabelKeys.GROUP_ID);
-    }
 }

@@ -70,8 +70,7 @@ public class TemplateDestinationClusterGeneratorTest {
             Map<String, String> rlabel = resource.getMetadata().getLabels();
             assertNotNull(rlabel.get(LabelKeys.GROUP_ID));
             assertThat(rlabel.get(LabelKeys.GROUP_ID), is("foo-bar-baz-cockooa"));
-            assertThat(rlabel.get(LabelKeys.ADDRESS_CONFIG), is("address-config-myinstance-foo-bar-baz-cockooa"));
-            assertThat(map.getData().size(), is(1));
+            assertThat(map.getData().size(), is(4));
         }
         List<ParameterValue> parameters = captor.getAllValues();
         assertThat(parameters.size(), is(0));
@@ -89,21 +88,12 @@ public class TemplateDestinationClusterGeneratorTest {
             Map<String, String> rlabel = resource.getMetadata().getLabels();
             assertNotNull(rlabel.get(LabelKeys.GROUP_ID));
             assertThat(rlabel.get(LabelKeys.GROUP_ID), is("foo-bar"));
-            assertThat(rlabel.get(LabelKeys.ADDRESS_CONFIG), is("address-config-myinstance-foo-bar"));
         }
         List<ParameterValue> parameters = captor.getAllValues();
         assertThat(parameters.size(), is(3));
     }
 
     private DestinationCluster generateCluster(Destination destination, ArgumentCaptor<ParameterValue> captor) {
-        Map<String, String> labels = new LinkedHashMap<>();
-        Template template = new TemplateBuilder()
-                .withMetadata(new ObjectMetaBuilder()
-                    .withName("vanilla")
-                    .withLabels(labels)
-                    .build())
-                .build();
-
         TemplateOperation templateOp = mock(TemplateOperation.class);
         TemplateResource templateResource = mock(TemplateResource.class);
         when(templateOp.load(any(File.class))).thenReturn(templateResource);
