@@ -45,12 +45,12 @@ public class Controller extends AbstractVerticle {
 
     public Controller(ControllerOptions options) throws IOException {
         OpenShiftClient controllerClient = new DefaultOpenShiftClient(new ConfigBuilder()
-                .withMasterUrl(options.openshiftUrl())
-                .withOauthToken(options.openshiftToken())
-                .withNamespace(options.openshiftNamespace())
+                .withMasterUrl(options.masterUrl())
+                .withOauthToken(options.token())
+                .withNamespace(options.namespace())
                 .build());
 
-        Kubernetes kubernetes = new KubernetesHelper(InstanceId.withIdAndNamespace(options.openshiftNamespace(), options.openshiftNamespace()), controllerClient, new File("/templates"));
+        Kubernetes kubernetes = new KubernetesHelper(InstanceId.withIdAndNamespace(options.namespace(), options.namespace()), controllerClient, options.templateDir());
         String templateName = options.useTLS() ? "tls-enmasse-instance-infra" : "enmasse-instance-infra";
 
         FlavorManager flavorManager = new FlavorManager();
