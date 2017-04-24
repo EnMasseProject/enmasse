@@ -15,7 +15,7 @@ local flavorConfig = import "flavor.jsonnet";
       "name": templateName
     },
     "objects": [ templateConfig.generate(use_tls, use_sasl, compact, with_kafka, true),
-                 addressController.deployment(std.toString(use_tls), "${ADDRESS_CONTROLLER_REPO}", "${MULTIINSTANCE}"),
+                 addressController.deployment(std.toString(use_tls), "${ADDRESS_CONTROLLER_REPO}", "${MULTIINSTANCE}", "${INSTANCE_IDLE_TIMEOUT}"),
                  addressController.service,
                  restapiRoute.route("${RESTAPI_HOSTNAME}"),
                  flavorConfig.generate(use_tls) ],
@@ -33,6 +33,11 @@ local flavorConfig = import "flavor.jsonnet";
         "name": "ADDRESS_CONTROLLER_REPO",
         "description": "The docker image to use for the address controller",
         "value": "enmasseproject/address-controller"
+      },
+      {
+        "name": "INSTANCE_IDLE_TIMEOUT",
+        "description": "The time before garbage collecting idle (no addresses defined) instances",
+        "value": "0"
       }
     ]
   }

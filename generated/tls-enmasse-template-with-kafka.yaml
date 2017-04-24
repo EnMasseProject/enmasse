@@ -624,6 +624,8 @@ objects:
             value: "${MULTIINSTANCE}"
           - name: TLS
             value: 'true'
+          - name: INSTANCE_IDLE_TIMEOUT
+            value: "${INSTANCE_IDLE_TIMEOUT}"
           image: "${ADDRESS_CONTROLLER_REPO}:latest"
           livenessProbe:
             tcpSocket:
@@ -714,3 +716,6 @@ parameters:
 - description: The docker image to use for the address controller
   name: ADDRESS_CONTROLLER_REPO
   value: enmasseproject/address-controller
+- description: The time before garbage collecting idle (no addresses defined) instances
+  name: INSTANCE_IDLE_TIMEOUT
+  value: '0'

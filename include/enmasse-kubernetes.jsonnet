@@ -9,7 +9,7 @@ local flavorConfig = import "flavor.jsonnet";
     "apiVersion": "v1",
     "kind": "List",
     "items": [ templateConfig.generate(use_tls, use_sasl, compact, with_kafka, false),
-               addressController.deployment(std.toString(use_tls), "enmasseproject/address-controller", "false"),
+               addressController.deployment(std.toString(use_tls), "enmasseproject/address-controller", "false", 0),
                restapiRoute.ingress(""),
                addressController.service,
                flavorConfig.generate(use_tls) ]

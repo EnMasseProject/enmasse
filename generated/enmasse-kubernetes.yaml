@@ -587,6 +587,8 @@ items:
             value: 'false'
           - name: TLS
             value: 'false'
+          - name: INSTANCE_IDLE_TIMEOUT
+            value: '0'
           image: enmasseproject/address-controller:latest
           livenessProbe:
             tcpSocket:

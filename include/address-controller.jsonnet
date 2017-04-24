@@ -31,7 +31,7 @@ local common = import "common.jsonnet";
       }
     }
   },
-  deployment(secure, image_repo, multiinstance)::
+  deployment(secure, image_repo, multiinstance, instance_idle_timeout)::
     {
       "apiVersion": "extensions/v1beta1",
       "kind": "Deployment",
@@ -60,6 +60,9 @@ local common = import "common.jsonnet";
               }, {
                 "name": "TLS",
                 "value": secure
+              }, {
+                "name": "INSTANCE_IDLE_TIMEOUT",
+                "value": std.toString(instance_idle_timeout)
               }], [
                 {
                   "name": "templates",
