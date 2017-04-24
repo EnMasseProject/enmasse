@@ -138,9 +138,7 @@ public class AddressSpaceImpl implements AddressSpace {
     private void createBrokers(Collection<DestinationCluster> clusterList, Map<String, Set<Destination>> newDestinationGroups) {
         newDestinationGroups.entrySet().stream()
                 .filter(group -> !brokerExists(clusterList, group.getKey()))
-                .map(group -> {
-                    return generator.generateCluster(group.getValue());
-                })
+                .map(group -> generator.generateCluster(group.getValue()))
                 .forEach(DestinationCluster::create);
     }
 
