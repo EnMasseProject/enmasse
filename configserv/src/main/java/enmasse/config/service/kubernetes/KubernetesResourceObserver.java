@@ -51,7 +51,7 @@ public class KubernetesResourceObserver<T extends Resource> implements AutoClose
     }
 
     @SuppressWarnings("unchecked")
-    public void start() {
+    public void open() {
         Map<Operation<? extends HasMetadata, ?, ?, ?>, KubernetesResourceList>  initialResources = new LinkedHashMap<>();
         for (Operation<? extends HasMetadata, ?, ?, ?> operation : observerOptions.getOperations()) {
             KubernetesResourceList list = (KubernetesResourceList) operation.withLabels(observerOptions.getLabelMap()).list();
@@ -75,7 +75,7 @@ public class KubernetesResourceObserver<T extends Resource> implements AutoClose
     }
 
     @Override
-    public void close() throws Exception {
+    public void close() {
         for (Watch watch : watches) {
             watch.close();
         }
@@ -115,8 +115,9 @@ public class KubernetesResourceObserver<T extends Resource> implements AutoClose
 
     @Override
     public void onClose(KubernetesClientException cause) {
-        if (cause != null) {
-            log.error("Exception from watcher: ", cause);
-        }
+        log.debug("Exception from watcher: ", cause);
+        log.info("Watch for " + observerOptions.getLabelMap() + " + closed, restarting");
+        close();
+        open();
     }
 }

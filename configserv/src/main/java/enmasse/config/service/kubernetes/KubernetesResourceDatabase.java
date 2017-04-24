@@ -59,7 +59,7 @@ public class KubernetesResourceDatabase<T extends Resource> implements AutoClose
             observerMap.put(key, observer);
 
             observer.subscribe(subscriber);
-            observer.start();
+            observer.open();
         } else {
             log.debug("Subscribing to existing observer");
             observer.subscribe(subscriber);

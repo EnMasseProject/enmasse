@@ -71,6 +71,9 @@ public class ConfigAdapter implements Watcher<ConfigMap> {
 
     @Override
     public void onClose(KubernetesClientException cause) {
-        log.info("Received onClose for watcher", cause);
+        log.debug("Received onClose for watcher", cause);
+        log.info("Watch for " + configName + " closed, recreating");
+        stop();
+        start();
     }
 }
