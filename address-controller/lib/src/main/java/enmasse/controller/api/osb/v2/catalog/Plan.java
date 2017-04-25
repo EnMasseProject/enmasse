@@ -19,7 +19,7 @@ public class Plan {
     private UUID uuid;
     private String name;
     private String description;
-    private Map<String, Object> metadata = new HashMap<>();
+    private Map<String, String> metadata = new HashMap<>();
     private boolean free;
     private boolean bindable;
 
@@ -58,11 +58,11 @@ public class Plan {
         this.description = description;
     }
 
-    public Map<String, Object> getMetadata() {
+    public Map<String, String> getMetadata() {
         return metadata;
     }
 
-    public void setMetadata(Map<String, Object> metadata) {
+    public void setMetadata(Map<String, String> metadata) {
         this.metadata = metadata;
     }
 
@@ -89,9 +89,12 @@ public class Plan {
             node.put("id", value.getUuid().toString());
             node.put("name", value.getName());
             node.put("description", value.getDescription());
-            // TODO: add metadata
             node.put("free", value.isFree());
             node.put("bindable", value.isBindable());
+
+            ObjectNode metadataNode = node.putObject("metadata");
+            value.getMetadata().forEach(metadataNode::put);
+
             mapper.writeValue(gen, node);
         }
     }

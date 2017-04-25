@@ -27,7 +27,7 @@ public class Service {
     private List<String> requires = new ArrayList<>();
     private boolean bindable;
     private boolean planUpdatable;
-    private Map<String, Object> metadata = new HashMap<>();
+    private Map<String, String> metadata = new HashMap<>();
     private DashboardClient dashboardClient;
     private List<Plan> plans = new ArrayList<>();
 
@@ -98,11 +98,11 @@ public class Service {
         this.planUpdatable = planUpdatable;
     }
 
-    public Map<String, Object> getMetadata() {
+    public Map<String, String> getMetadata() {
         return metadata;
     }
 
-    public void setMetadata(Map<String, Object> metadata) {
+    public void setMetadata(Map<String, String> metadata) {
         this.metadata = metadata;
     }
 
@@ -130,9 +130,17 @@ public class Service {
             node.put("id", service.getUuid().toString());
             node.put("name", service.getName());
             node.put("description", service.getDescription());
-            // TODO: tags, requires
             node.put("bindable", service.isBindable());
-            // TODO: metadata
+
+            ArrayNode tagsNode = node.putArray("tags");
+            service.getTags().forEach(tagsNode::add);
+
+            ArrayNode requiresNode = node.putArray("requires");
+            service.getRequires().forEach(requiresNode::add);
+
+            ObjectNode metadataNode = node.putObject("metadata");
+            service.getMetadata().forEach(metadataNode::put);
+
             if (service.getDashboardClient() != null) {
                 node.set("dashboard_client", mapper.valueToTree(service.getDashboardClient()));
             }
