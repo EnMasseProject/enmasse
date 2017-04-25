@@ -4,6 +4,8 @@ This document explains how to run and use EnMasse through the OpenShift Service 
 These instructions assume the use of `oc cluster up` to run a local OpenShift instance and must be adjusted accordingly 
 when using other methods of running OpenShift.
 
+*Note: OpenShift v3.6.0-alpha.1 or newer is required*
+
 ## Setting up OpenShift and enabling the Catalog UI
 
 - Initialize the OpenShift config files:
@@ -93,28 +95,56 @@ At this point, the Service Catalog will contact the broker and retrieve the list
 ## Provisioning addresses through the CLI
 
 ### Provisioning a queue 
+- Login as a regular user
+  - `oc login -u developer -p developer`
 - Create a new project/namespace:
   - `oc new-project my-messaging-project`
 - Create the service instance:
-  - `sc create -f https://raw.githubusercontent.com/EnMasseProject/service-broker/master/examples/service-catalog/instance-queue.yaml -n my-messaging-project`
+  ```
+  cat <<EOF | sc create -f -
+  apiVersion: servicecatalog.k8s.io/v1alpha1
+  kind: Instance
+  metadata:
+    name: my-vanilla-queue
+  spec:
+    serviceClassName: queue
+    planName: vanilla-queue
+    parameters:
+      name: my-vanilla-queue
+  EOF
+  ```
 - Check the service instance's status:
   - `sc get instances -n my-messaging-project -o yaml`
   - The `status.conditions.message` should show "The instance was provisioned successfully"
 - Verify the MaaS infra pods and the broker pod have been created:
   - Login as admin:
-    - `oc login -u admin`
+    - `oc login -u system:admin`
   - List projects:
     - `oc get projects`
-    - Find a project named like "_enmasse-63a14329_"
+    - Find a project named something like "_enmasse-63a14329_"
   - List pods in said project:
     - `oc get pods -n enmasse-63a14329`
     - One of the pods should be called "my-vanilla-queue-<something>"
+  - Login as developer again and switch to my-messaging-project:
+    - `oc login -u developer -p developer`
+    - `oc project my-messaging-project`
 
-### Binding the queue
+### Binding the queue service instance
 - Create the binding:
-  - `sc create -f https://raw.githubusercontent.com/EnMasseProject/service-broker/master/examples/service-catalog/binding-queue.yaml -n my-messaging-project`
+  ```
+  cat <<EOF | sc create -f -
+  apiVersion: servicecatalog.k8s.io/v1alpha1
+  kind: Binding
+  metadata:
+    name: my-vanilla-queue-binding
+  spec:
+    instanceRef:
+      name: my-vanilla-queue
+    secretName: my-vanilla-queue
+  EOF
+  ```
 - Verify the binding's status:
-  - `sc get bindings -n my-messaging-project -o yaml`
+  - `sc get bindings -o yaml`
   - The `status.conditions.message` property should show "Injected bind result"
 - Verify the secret has been created:
   - `oc get secret my-vanilla-queue -o yaml`
@@ -123,15 +153,11 @@ At this point, the Service Catalog will contact the broker and retrieve the list
 - Delete the binding:
   - `sc delete binding my-vanilla-queue-binding`
 - Verify the secret has been deleted:
-  - `oc get secrets -n my-messaging-project`
+  - `oc get secrets`
 
-### Provisioning a topic in the same network
-- Create the service instance:
-  - `sc create -f https://raw.githubusercontent.com/EnMasseProject/service-broker/master/examples/service-catalog/instance-topic.yaml -n my-messaging-project`
-    
-### Deprovisioning a queue
+### Deprovisioning the queue
 - Delete the instance object:
-  - `sc delete instance my-vanilla-queue -n my-messaging-project`
+  - `sc delete instance my-vanilla-queue`
 - Verify the broker pod is terminating:
   - `oc get pods -n enmasse-63a14329`
   
