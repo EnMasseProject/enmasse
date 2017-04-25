@@ -30,6 +30,8 @@ public class OSBBindingService extends OSBServiceBase {
 
     @PUT
     public Response bindServiceInstance(@PathParam("instanceId") String instanceId, @PathParam("bindingId") String bindingId, BindRequest bindRequest) {
+        log.info("Received bind request for instance {}, binding {} (service id {}, plan id {})",
+                instanceId, bindingId, bindRequest.getServiceId(), bindRequest.getPlanId());
         Instance instance = findInstanceByDestinationUuid(instanceId)
                 .orElseThrow(() -> new NotFoundException("Service instance " + instanceId + " does not exist"));
 
@@ -45,6 +47,8 @@ public class OSBBindingService extends OSBServiceBase {
 
     @DELETE
     public Response unbindServiceInstance(@PathParam("instanceId") String instanceId, @PathParam("bindingId") String bindingId) {
+        log.info("Received unbind request for instance {}, binding {}",
+                instanceId, bindingId);
         Instance instance = findInstanceByDestinationUuid(instanceId)
                 .orElseThrow(() -> new NotFoundException("Service instance " + instanceId + " does not exist"));
 

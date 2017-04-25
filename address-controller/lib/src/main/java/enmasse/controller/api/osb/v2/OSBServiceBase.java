@@ -52,6 +52,8 @@ public abstract class OSBServiceBase {
     }
 
     protected void provisionDestination(InstanceId instanceId, Destination destination) {
+        log.info("Creating destination {} in group {} of MaaS instance {} (namespace {})",
+                destination.address(), destination.group(), instanceId.getId(), instanceId.getNamespace());
         Instance instance = getOrCreateInstance(instanceId);
         getAddressSpace(instance).addDestination(destination);
     }
@@ -65,13 +67,17 @@ public abstract class OSBServiceBase {
     }
 
     protected boolean deleteDestinationByUuid(String destinationUuid) {
+        log.info("Deleting destination with UUID {}", destinationUuid);
         for (Instance instance : instanceManager.list()) {
             Optional<Destination> destination = findDestination(instance, destinationUuid);
             if (destination.isPresent()) {
+                log.info("Destination found in MaaS instance {} (namespace {}). Deleting it now.",
+                        instance.id().getId(), instance.id().getNamespace());
                 getAddressSpace(instance).deleteDestination(destination.get().address());
                 return true;
             }
         }
+        log.info("Destination with UUID {} not found in any MaaS instance", destinationUuid);
         return false;
     }
 

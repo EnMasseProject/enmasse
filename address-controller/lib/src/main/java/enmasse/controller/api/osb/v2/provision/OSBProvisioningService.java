@@ -39,6 +39,10 @@ public class OSBProvisioningService extends OSBServiceBase {
         String shortOrganizationId = shortenUuid(request.getOrganizationId()); // TODO: remove the need for doing this
         InstanceId maasInstanceId = InstanceId.withId(shortOrganizationId);
 
+        log.info("Received provision request for instance {} (service id {}, plan id {}, org id {}, name {})",
+                instanceId, request.getServiceId(), request.getPlanId(),
+                shortOrganizationId, request.getParameter("name").orElse(null));
+
         ServiceType serviceType = ServiceType.valueOf(request.getServiceId())
                 .orElseThrow(() -> new BadRequestException("Invalid service_id " + request.getServiceId()));
 
@@ -74,6 +78,9 @@ public class OSBProvisioningService extends OSBServiceBase {
 
     @DELETE
     public Response deprovisionService(@PathParam("instanceId") String instanceId, @QueryParam("service_id") String serviceId, @QueryParam("plan_id") String planId) {
+        log.info("Received deprovision request for instance {} (service id {}, plan id {})",
+                instanceId, serviceId, planId);
+
         if (serviceId == null) {
             throw new BadRequestException("Missing service_id parameter");
         }
