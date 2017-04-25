@@ -39,6 +39,8 @@ public class OSBCatalogService extends OSBServiceBase {
         if (!plans.isEmpty()) {
             Service queueService = new Service(serviceType.uuid(), name, description, true);
             queueService.getPlans().addAll(plans);
+            queueService.getTags().add("middleware");
+            queueService.getTags().add("amq");
             queueService.getTags().add("messaging");
             queueService.getTags().add("enmasse");
             queueService.getMetadata().put("displayName", displayName);
