@@ -34,7 +34,7 @@
 	<example title="Add a class to the reordered column"><![CDATA[
 
 var table = $('#example').DataTable( {
-	columnReorder: true
+	colReorder: true
 } );
 
 table.on( 'column-reorder', function ( e, settings, details ) {
