@@ -35,7 +35,8 @@ public class OSBProvisioningService extends OSBServiceBase {
 
     @PUT
     public Response provisionService(@PathParam("instanceId") String instanceId, ProvisionRequest request) {
-        String shortOrganizationId = hack_shortenInfraId(request.getOrganizationId());
+        // We must shorten the organizationId so the resulting address configmap name isn't too long
+        String shortOrganizationId = shortenUuid(request.getOrganizationId()); // TODO: remove the need for doing this
         InstanceId maasInstanceId = InstanceId.withId(shortOrganizationId);
 
         ServiceType serviceType = ServiceType.valueOf(request.getServiceId())
@@ -46,7 +47,7 @@ public class OSBProvisioningService extends OSBServiceBase {
         }
 
         String name = request.getParameter("name")
-                .orElseThrow(() -> new BadRequestException("Missing parameter: name"));
+                .orElse(shortenUuid(instanceId));
 
         Optional<String> flavorName = serviceType.supportsOnlyDefaultPlan() ? Optional.empty() : getFlavorName(request.getPlanId());
         Destination destination = new Destination(name, name, serviceType.storeAndForward(), serviceType.multicast(), flavorName, Optional.of(instanceId));
@@ -88,10 +89,7 @@ public class OSBProvisioningService extends OSBServiceBase {
         }
     }
 
-    /**
-     * Shortens the organization id, otherwise the resulting address configmap name is too long
-     */
-    private String hack_shortenInfraId(String organizationId) {
-        return organizationId.substring(0, organizationId.indexOf('-'));
+    private String shortenUuid(String uuid) {
+        return uuid.substring(0, uuid.indexOf('-'));
     }
 }
