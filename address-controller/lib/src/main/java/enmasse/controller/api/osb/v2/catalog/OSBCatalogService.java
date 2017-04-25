@@ -26,10 +26,10 @@ public class OSBCatalogService extends OSBServiceBase {
     public Response getCatalog() {
         log.info("Received catalog request");
         List<Service> services = new ArrayList<>(4);
-        addService(services, ServiceType.ANYCAST, "direct-anycast-network", "Enmasse Anycast", "A brokerless network for direct anycast messaging");
-        addService(services, ServiceType.MULTICAST, "direct-multicast-network", "Enmasse Multicast", "A brokerless network for direct multicast messaging");
-        addService(services, ServiceType.QUEUE, "queue", "Enmasse Queue", "A messaging queue");
-        addService(services, ServiceType.TOPIC, "topic", "Enmasse Topic", "A messaging topic");
+        addService(services, ServiceType.ANYCAST, "enmasse-anycast", "Enmasse Anycast", "A brokerless network for direct anycast messaging");
+        addService(services, ServiceType.MULTICAST, "enmasse-multicast", "Enmasse Multicast", "A brokerless network for direct multicast messaging");
+        addService(services, ServiceType.QUEUE, "enmasse-queue", "Enmasse Queue", "A messaging queue");
+        addService(services, ServiceType.TOPIC, "enmasse-topic", "Enmasse Topic", "A messaging topic");
         log.info("Returning {} services", services.size());
         return Response.ok(new CatalogResponse(services)).build();
     }
