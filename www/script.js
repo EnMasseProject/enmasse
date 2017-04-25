@@ -78,8 +78,8 @@ function get_total(objects, property) {
     return objects.map(function (s) { return s[property]; }).reduce(function (a, b) { return a + b; });
 }
 
-angular.module('patternfly.toolbars').controller('ViewCtrl', ['$scope', 'pfViewUtils', 'address_service',
-    function ($scope, pfViewUtils, address_service) {
+angular.module('patternfly.toolbars').controller('ViewCtrl', ['$scope', '$timeout', '$sce', '$templateCache', 'pfViewUtils', 'address_service',
+    function ($scope, $timeout, $sce, $templateCache, pfViewUtils, address_service) {
         $scope.get_stored_chart_config = function (address) {
             var chart = get_donut_chart(address, 'shard_depth_chart', 'Stored', get_tooltip_for_shard(address));
             if (address.shards) {
@@ -125,7 +125,102 @@ angular.module('patternfly.toolbars').controller('ViewCtrl', ['$scope', 'pfViewU
             return chart;
         };
 
-        address_service.on_update(function () { $scope.$apply(); });
+        // comment this out if you don't want to support expanding/collapsing the list item by clicking anywhere on the item
+        $templateCache.put('views/listview/list-view.html',
+          "<div class=\"list-group list-view-pf list-view-pf-view\" dnd-list=items ng-class=\"{'list-view-pf-dnd': config.dragEnabled === true}\"><div class=dndPlaceholder></div><div ng-click=\"toggleItemExpansion(item)\" class=\"list-group-item {{item.rowClass}}\" ng-repeat=\"item in items track by $index\" dnd-draggable=item dnd-effect-allowed=move dnd-disable-if=\"config.dragEnabled !== true\" dnd-dragstart=dragStart(item) dnd-moved=dragMoved() dnd-dragend=dragEnd() ng-class=\"{'drag-original': isDragOriginal(item), 'pf-selectable': selectItems, 'active': isSelected(item), 'disabled': checkDisabled(item), 'list-view-pf-expand-active': item.isExpanded}\"><div class=list-group-item-header><div class=list-view-pf-dnd-drag-items ng-if=\"config.dragEnabled === true\"><div pf-transclude=parent class=list-view-pf-main-info></div></div><div ng-class=\"{'list-view-pf-dnd-original-items': config.dragEnabled === true}\"><div class=list-view-pf-expand ng-if=config.useExpandingRows><span class=\"fa fa-angle-right\" ng-show=!item.disableRowExpansion ng-click=toggleItemExpansion(item) ng-class=\"{'fa-angle-down': item.isExpanded}\"></span> <span class=pf-expand-placeholder ng-show=item.disableRowExpansion></span></div><div class=list-view-pf-checkbox ng-if=config.showSelectBox><input type=checkbox value=item.selected ng-model=item.selected ng-disabled=checkDisabled(item) ng-change=\"checkBoxChange(item)\"></div><div class=list-view-pf-actions ng-if=\"(actionButtons && actionButtons.length > 0) || (menuActions && menuActions.length > 0)\"><button class=\"btn btn-default {{actionButton.class}}\" ng-repeat=\"actionButton in actionButtons\" title={{actionButton.title}} ng-class=\"{'disabled' : checkDisabled(item) || !enableButtonForItem(actionButton, item)}\" ng-click=\"handleButtonAction(actionButton, item)\"><div ng-if=actionButton.include class=actionButton.includeClass ng-include src=actionButton.include></div><span ng-if=!actionButton.include>{{actionButton.name}}</span></button><div uib-dropdown class=\"{{dropdownClass}} pull-right dropdown-kebab-pf {{getMenuClassForItem(item)}} {{hideMenuForItem(item) ? 'invisible' : ''}}\" id=kebab_{{$index}} ng-if=\"menuActions && menuActions.length > 0\"><button uib-dropdown-toggle class=\"btn btn-link\" type=button id=dropdownKebabRight_{{$index}} ng-class=\"{'disabled': checkDisabled(item)}\" ng-click=\"setupActions(item, $event)\"><span class=\"fa fa-ellipsis-v\"></span></button><ul uib-dropdown-menu class=\"dropdown-menu dropdown-menu-right {{$index}}\" aria-labelledby=dropdownKebabRight_{{$index}}><li ng-repeat=\"menuAction in menuActions\" ng-if=\"menuAction.isVisible !== false\" role=\"{{menuAction.isSeparator === true ? 'separator' : 'menuitem'}}\" ng-class=\"{'divider': (menuAction.isSeparator === true), 'disabled': (menuAction.isDisabled === true)}\"><a ng-if=\"menuAction.isSeparator !== true\" title={{menuAction.title}} ng-click=\"handleMenuAction(menuAction, item)\">{{menuAction.name}}</a></li></ul></div></div><div pf-transclude=parent class=list-view-pf-main-info ng-click=\"\" ng-dblclick=\"\"></div><div class=\"list-group-item-container container-fluid\" ng-transclude=expandedContent ng-if=\"config.useExpandingRows && item.isExpanded\"></div></div></div></div></div>"
+        );
+        //
+
+        var lastLinkInfo = {}
+        var saveLastLinkInfo = function (item) {
+          lastLinkInfo[item.address] =
+            {
+              messages_in: item.messages_in,
+              ingress: angular.copy(item.outcomes.ingress.links),
+              egress: angular.copy(item.outcomes.egress.links)
+            }
+        }
+        var calcRates = function (item) {
+          var lastInfo = lastLinkInfo[item.address]
+          if (lastInfo) {
+            var calc = function (iLinks, curLinks) {
+              iLinks.forEach( function (iLink) {
+                curLinks.some( function (curLink) {
+                  if (iLink.identity === curLink.identity) {
+                    var elapsed = curLink.lastUpdated - iLink.lastUpdated
+                    var rate = iLink.deliveryRate
+                    if (elapsed) {
+                      rate = (curLink.deliveryCount - iLink.deliveryCount) / (elapsed/1000)
+                      rate = rate.toFixed(2)
+                    }
+                    if (isNaN(rate))
+                      rate = 0
+                    curLink.deliveryRate = rate
+                    return true
+                  }
+                  return false
+                })
+              })
+            }
+            calc(lastInfo.ingress, item.outcomes.ingress.links)
+            calc(lastInfo.egress, item.outcomes.egress.links)
+          }
+        }
+
+        // construct the html tooltop for a link details row
+        $scope.linkTooltip = function (row) {
+          var tipHtml = "<table>"
+          Object.keys(row).forEach( function (key) {
+            if (['$$hashKey', 'lastUpdated', 'backlog', 'deliveryRate', 'routerName'].indexOf(key) == -1) {
+              tipHtml += "<tr><td>" + key + "&nbsp;</td><td align='right'>" + (isNaN(row[key]) ? row[key] : row[key].toLocaleString()) + "</td></tr>"
+            }
+          })
+          tipHtml += "</table>"
+          return tipHtml
+        }
+        // each address that has senders and/or receivers gets a link detail table
+        var linkTableConfig = function () {
+          this.data = []
+          this.columnDefs = [
+            {field: 'routerName', displayName: 'Id'},
+            {field: 'deliveryRate', displayName: 'Delivery Rate', cellClass: 'text-right', headerCellClass: 'ui-grid-cell-right-align'},
+            {field: 'backlog', displayName: 'Backlog', cellClass: 'text-right', headerCellClass: 'ui-grid-cell-right-align'},
+          ]
+          this.enableHorizontalScrollbar = 0
+          this.enableVerticalScrollbar = 0
+          this.enableColumnMenus = false
+          this.rowTemplate = "link-grid-row.html"
+        }
+        address_service.on_update(function (reason) {
+          if (reason.split('_')[0] !== 'address') {
+            return
+          }
+
+          $timeout( function () {
+            $scope.items.forEach( function (item) {
+              if (item.senders + item.receivers > 0) {
+                if (!item.ingress_outcomes_link_table) {
+                  item.ingress_outcomes_link_table = new linkTableConfig()
+                  item.egress_outcomes_link_table = new linkTableConfig()
+                }
+                calcRates(item)
+                saveLastLinkInfo(item)
+
+                // needed to force the grid to update the data
+                item.ingress_outcomes_link_table.data = item.outcomes.ingress.links
+                item.egress_outcomes_link_table.data = item.outcomes.egress.links
+              }
+            })
+          })
+        });
+
+        $scope.getTableHeight = function(item, xgress) {
+          var rowHeight = 30;   // default row height
+          var headerHeight = 30;
+          return {
+            height: (item.outcomes[xgress].links.length * rowHeight + headerHeight) + "px"
+          };
+        };
 
         $scope.filtersText = '';
         $scope.items = address_service.addresses;
@@ -297,7 +392,8 @@ angular.module('patternfly.toolbars').controller('ViewCtrl', ['$scope', 'pfViewU
             selectionMatchProp: 'address',
             onSelectionChange: handleSelectionChange,
             useExpandingRows: true,
-            checkDisabled: false
+            checkDisabled: false,
+            onClick: (item) => item.isExpanded = !item.isExpanded
         };
         $scope.exampleChartConfig = {
             'chartId': 'pctChart',
@@ -751,7 +847,9 @@ angular.module('patternfly.wizard').controller('UserFormController', ['$rootScop
         }
     ]);
 
-angular.module('myapp', ['patternfly.navigation', 'ui.router', 'patternfly.views', 'patternfly.toolbars', 'patternfly.charts', 'patternfly.wizard', 'patternfly.validation', 'address_service']).config(
+angular.module('myapp', ['patternfly.navigation', 'ui.router', 'patternfly.views', 'ui.grid', 'ui.grid.autoResize',
+        'ui.grid.resizeColumns', 'ui.bootstrap', 'patternfly.toolbars', 'patternfly.charts', 'patternfly.wizard',
+        'patternfly.validation', 'address_service']).config(
     function ($stateProvider, $urlRouterProvider) {
         $urlRouterProvider.otherwise('/dashboard');
         $stateProvider.state('dashboard',
