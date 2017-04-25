@@ -68,35 +68,29 @@ public class KubernetesHelper implements Kubernetes {
 
             if (labels != null && labels.containsKey(LabelKeys.GROUP_ID)) {
                 String groupId = labels.get(LabelKeys.GROUP_ID);
-
-                // First time we encounter this group, fetch the address configs for it
                 if (!resourceMap.containsKey(groupId)) {
-                    // Skip the address configs themselves
-                    if ("address-config".equals(labels.get(LabelKeys.ADDRESS))) {
-                        continue;
-                    }
-
-                    Map<String, String> configLabels = new LinkedHashMap<>();
-                    configLabels.put(LabelKeys.TYPE, "address-config");
-                    configLabels.put(LabelKeys.GROUP_ID, groupId);
-
-                    Set<Destination> destinations = new HashSet<>();
-                    for (ConfigMap addressConfig : client.configMaps().withLabels(configLabels).list().getItems()) {
-                        Map<String, String> data = addressConfig.getData();
-
-                        Destination.Builder destBuilder = new Destination.Builder(data.get(AddressConfigKeys.ADDRESS), data.get(AddressConfigKeys.GROUP_ID));
-                        destBuilder.storeAndForward(Boolean.parseBoolean(data.get(AddressConfigKeys.STORE_AND_FORWARD)));
-                        destBuilder.multicast(Boolean.parseBoolean(data.get(AddressConfigKeys.MULTICAST)));
-                        destBuilder.flavor(Optional.ofNullable(data.get(AddressConfigKeys.FLAVOR)));
-                        destBuilder.uuid(Optional.ofNullable(data.get(AddressConfigKeys.UUID)));
-
-                        destinations.add(destBuilder.build());
-                    }
-
                     resourceMap.put(groupId, new ArrayList<>());
-                    groupMap.put(groupId, destinations);
                 }
+
+                if (!groupMap.containsKey(groupId)) {
+                    groupMap.put(groupId, new LinkedHashSet<>());
+                }
+
                 resourceMap.get(groupId).add(config);
+
+                // Add the destinations for a particular address config
+                if ("address-config".equals(labels.get(LabelKeys.TYPE))) {
+                    ConfigMap configMap = (ConfigMap) config;
+                    Map<String, String> data = configMap.getData();
+
+                    Destination.Builder destBuilder = new Destination.Builder(data.get(AddressConfigKeys.ADDRESS), data.get(AddressConfigKeys.GROUP_ID));
+                    destBuilder.storeAndForward(Boolean.parseBoolean(data.get(AddressConfigKeys.STORE_AND_FORWARD)));
+                    destBuilder.multicast(Boolean.parseBoolean(data.get(AddressConfigKeys.MULTICAST)));
+                    destBuilder.flavor(Optional.ofNullable(data.get(AddressConfigKeys.FLAVOR)));
+                    destBuilder.uuid(Optional.ofNullable(data.get(AddressConfigKeys.UUID)));
+
+                    groupMap.get(groupId).add(destBuilder.build());
+                }
             }
         }
 
