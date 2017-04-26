@@ -4,23 +4,25 @@ import java.util.Optional;
 import java.util.UUID;
 
 public enum ServiceType {
-    ANYCAST("ac6348d6-eeea-43e5-9b97-5ed18da5dcaf", false, false, null, "914e9acc-242e-42e3-8995-4ec90d928c2b"),
-    MULTICAST("7739ea7d-8de4-4fe8-8297-90f703904587", false, true, null, "6373d6b9-b701-4636-a5ff-dc5b835c9223"),
-    QUEUE("7739ea7d-8de4-4fe8-8297-90f703904589", true, false, "queue"),
-    TOPIC("7739ea7d-8de4-4fe8-8297-90f703904590", true, true, "topic");
+    ANYCAST("ac6348d6-eeea-43e5-9b97-5ed18da5dcaf", "enmasse-anycast", false, false, null, "914e9acc-242e-42e3-8995-4ec90d928c2b"),
+    MULTICAST("7739ea7d-8de4-4fe8-8297-90f703904587", "enmasse-multicast", false, true, null, "6373d6b9-b701-4636-a5ff-dc5b835c9223"),
+    QUEUE("7739ea7d-8de4-4fe8-8297-90f703904589", "enmasse-queue", true, false, "queue"),
+    TOPIC("7739ea7d-8de4-4fe8-8297-90f703904590", "enmasse-topic", true, true, "topic");
 
     private UUID uuid;
+    private String serviceName;
     private boolean storeAndForward;
     private boolean multicast;
     private String flavorType;
     private UUID defaultPlanUuid;
 
-    ServiceType(String uuid, boolean storeAndForward, boolean multicast, String flavorType) {
-        this(uuid, storeAndForward, multicast, flavorType, null);
+    ServiceType(String uuid, String serviceName, boolean storeAndForward, boolean multicast, String flavorType) {
+        this(uuid, serviceName, storeAndForward, multicast, flavorType, null);
     }
 
-    ServiceType(String uuid, boolean storeAndForward, boolean multicast, String flavorType, String defaultPlanUuid) {
+    ServiceType(String uuid, String serviceName, boolean storeAndForward, boolean multicast, String flavorType, String defaultPlanUuid) {
         this.uuid = UUID.fromString(uuid);
+        this.serviceName = serviceName;
         this.storeAndForward = storeAndForward;
         this.multicast = multicast;
         this.flavorType = flavorType;
@@ -40,6 +42,10 @@ public enum ServiceType {
 
     public UUID uuid() {
         return uuid;
+    }
+
+    public String serviceName() {
+        return serviceName;
     }
 
     public boolean storeAndForward() {

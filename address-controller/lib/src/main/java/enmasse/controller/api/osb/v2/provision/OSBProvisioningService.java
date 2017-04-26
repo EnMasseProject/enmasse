@@ -52,7 +52,7 @@ public class OSBProvisioningService extends OSBServiceBase {
         }
 
         String name = request.getParameter("name")
-                .orElse(shortenUuid(instanceId));
+                .orElse(serviceType.serviceName() + "-" + shortenUuid(instanceId));
 
         Optional<String> flavorName = serviceType.supportsOnlyDefaultPlan() ? Optional.empty() : getFlavorName(request.getPlanId());
         Destination destination = new Destination(name, name, serviceType.storeAndForward(), serviceType.multicast(), flavorName, Optional.of(instanceId));

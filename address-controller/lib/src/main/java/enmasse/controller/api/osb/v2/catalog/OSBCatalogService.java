@@ -26,18 +26,18 @@ public class OSBCatalogService extends OSBServiceBase {
     public Response getCatalog() {
         log.info("Received catalog request");
         List<Service> services = new ArrayList<>(4);
-        addService(services, ServiceType.ANYCAST, "enmasse-anycast", "Enmasse Anycast", "A brokerless network for direct anycast messaging");
-        addService(services, ServiceType.MULTICAST, "enmasse-multicast", "Enmasse Multicast", "A brokerless network for direct multicast messaging");
-        addService(services, ServiceType.QUEUE, "enmasse-queue", "Enmasse Queue", "A messaging queue");
-        addService(services, ServiceType.TOPIC, "enmasse-topic", "Enmasse Topic", "A messaging topic");
+        addService(services, ServiceType.ANYCAST, "Enmasse Anycast", "A brokerless network for direct anycast messaging");
+        addService(services, ServiceType.MULTICAST, "Enmasse Multicast", "A brokerless network for direct multicast messaging");
+        addService(services, ServiceType.QUEUE, "Enmasse Queue", "A messaging queue");
+        addService(services, ServiceType.TOPIC, "Enmasse Topic", "A messaging topic");
         log.info("Returning {} services", services.size());
         return Response.ok(new CatalogResponse(services)).build();
     }
 
-    private void addService(List<Service> services, ServiceType serviceType, String name, String displayName, String description) {
+    private void addService(List<Service> services, ServiceType serviceType, String displayName, String description) {
         List<Plan> plans = getPlans(serviceType);
         if (!plans.isEmpty()) {
-            Service queueService = new Service(serviceType.uuid(), name, description, true);
+            Service queueService = new Service(serviceType.uuid(), serviceType.serviceName(), description, true);
             queueService.getPlans().addAll(plans);
             queueService.getTags().add("middleware");
             queueService.getTags().add("amq");
