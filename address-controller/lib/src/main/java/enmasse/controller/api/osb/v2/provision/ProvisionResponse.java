@@ -19,6 +19,10 @@ public class ProvisionResponse {
     public ProvisionResponse() {
     }
 
+    public ProvisionResponse(String dashboardUrl) {
+        this(dashboardUrl, null);
+    }
+
     public ProvisionResponse(String dashboardUrl, String operation) {
         this.dashboardUrl = dashboardUrl;
         this.operation = operation;
