@@ -26,10 +26,10 @@ public class OSBCatalogService extends OSBServiceBase {
     public Response getCatalog() {
         log.info("Received catalog request");
         List<Service> services = new ArrayList<>(4);
-        addService(services, ServiceType.ANYCAST, "Enmasse Anycast", "A brokerless network for direct anycast messaging");
-        addService(services, ServiceType.MULTICAST, "Enmasse Multicast", "A brokerless network for direct multicast messaging");
-        addService(services, ServiceType.QUEUE, "Enmasse Queue", "A messaging queue");
-        addService(services, ServiceType.TOPIC, "Enmasse Topic", "A messaging topic");
+        addService(services, ServiceType.ANYCAST, "EnMasse Anycast", "A brokerless network for direct anycast messaging");
+        addService(services, ServiceType.MULTICAST, "EnMasse Multicast", "A brokerless network for direct multicast messaging");
+        addService(services, ServiceType.QUEUE, "EnMasse Queue", "A messaging queue");
+        addService(services, ServiceType.TOPIC, "EnMasse Topic", "A messaging topic");
         log.info("Returning {} services", services.size());
         return Response.ok(new CatalogResponse(services)).build();
     }
@@ -44,7 +44,7 @@ public class OSBCatalogService extends OSBServiceBase {
             queueService.getTags().add("messaging");
             queueService.getTags().add("enmasse");
             queueService.getMetadata().put("displayName", displayName);
-            queueService.getMetadata().put("providerDisplayName", "Enmasse");
+            queueService.getMetadata().put("providerDisplayName", "EnMasse");
             queueService.getMetadata().put("longDescription", "Long description of " + description + " (TODO)");
             queueService.getMetadata().put("console.openshift.io/iconClass", "fa fa-exchange");
             services.add(queueService);
