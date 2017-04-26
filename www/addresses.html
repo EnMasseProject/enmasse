@@ -60,17 +60,38 @@
             <div pf-c3-chart id="{{$parent.$parent.item.address}}" config="get_stored_chart_config($parent.$parent.item)"></div>
             <!-- div style="text-align: center; width: 220px;"><strong>{{$parent.$parent.item.depth}}</strong> Messages Stored</div -->
           </div>
-          <div class="col-md-6" ng-if="$parent.item.store_and_forward">
+          <div class="col-md-4" ng-if="$parent.item.store_and_forward">
             <div pf-sparkline-chart config="$parent.$parent.item.depth_series_config" chart-data="$parent.$parent.item.depth_series" chart-height="115" show-x-axis="false" show-y-axis="false"></div>
           </div>
+<!--
           <div class="col-md-2" ng-if="!$parent.item.store_and_forward">
             <div pf-c3-chart id="{{'ingress-outcomes-' + $parent.$parent.item.address}}" config="get_outcomes_chart_config($parent.$parent.item, 'ingress')"></div>
           </div>
           <div class="col-md-2" ng-if="!$parent.item.store_and_forward">
             <div pf-c3-chart id="{{'egress-outcomes-' + $parent.$parent.item.address}}" config="get_outcomes_chart_config($parent.$parent.item, 'egress')"></div>
           </div>
+-->
+          <div class="col-md-4" ng-if="$parent.item.senders + $parent.item.receivers > 0">
+            <span>Incoming links</span>
+            <div ui-grid="$parent.$parent.item.ingress_outcomes_link_table" class="link-grid" ui-grid-auto-resize ui-grid-resize-columns ng-style="getTableHeight($parent.$parent.item, 'ingress')"></div>
+          </div>
+          <div class="col-md-4" ng-if="$parent.item.senders + $parent.item.receivers > 0">
+            <span>Outgoing links</span>
+            <div ui-grid="$parent.$parent.item.egress_outcomes_link_table" class="link-grid" ui-grid-auto-resize ui-grid-resize-columns ng-style="getTableHeight($parent.$parent.item, 'egress')"></div>
+          </div>
         </div>
       </list-expanded-content>
     </div>
   </div>
 </div>
+
+<script type="text/ng-template" id="link-grid-row.html">
+  <div uib-tooltip-html="grid.appScope.linkTooltip(row.entity)" tooltip-append-to-body="true" tooltip-placement="auto top" tooltip-class="link-tip"
+       ng-repeat="(colRenderIndex, col) in colContainer.renderedColumns track by col.uid"
+       ui-grid-one-bind-id-grid="rowRenderIndex + '-' + col.uid + '-cell'"
+       class="ui-grid-cell"
+       ng-class="{ 'ui-grid-row-header-cell': col.isRowHeader }"
+       role="{{col.isRowHeader ? 'rowheader' : 'gridcell'}}"
+       ui-grid-cell>
+  </div>
+</script>
