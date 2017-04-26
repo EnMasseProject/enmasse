@@ -22,6 +22,7 @@ import enmasse.controller.api.osb.v2.ServiceType;
 import enmasse.controller.flavor.FlavorRepository;
 import enmasse.controller.instance.InstanceManager;
 import enmasse.controller.model.Destination;
+import enmasse.controller.model.Instance;
 import enmasse.controller.model.InstanceId;
 
 @Path("/v2/service_instances/{instanceId}")
@@ -56,7 +57,8 @@ public class OSBProvisioningService extends OSBServiceBase {
         Optional<String> flavorName = serviceType.supportsOnlyDefaultPlan() ? Optional.empty() : getFlavorName(request.getPlanId());
         Destination destination = new Destination(name, name, serviceType.storeAndForward(), serviceType.multicast(), flavorName, Optional.of(instanceId));
 
-        Optional<Destination> existingDestination = findDestination(maasInstanceId, instanceId);
+        Instance maasInstance = getOrCreateInstance(maasInstanceId);
+        Optional<Destination> existingDestination = findDestination(maasInstance, instanceId);
         if (existingDestination.isPresent()) {
             if (existingDestination.get().equals(destination)) {
                 return Response.ok(new ProvisionResponse()).build();
@@ -65,7 +67,7 @@ public class OSBProvisioningService extends OSBServiceBase {
             }
         }
 
-        provisionDestination(maasInstanceId, destination);
+        provisionDestination(maasInstance, destination);
 
         return Response.status(Response.Status.CREATED).entity(new ProvisionResponse()).build();
     }

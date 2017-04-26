@@ -39,10 +39,6 @@ public abstract class OSBServiceBase {
                 .findAny();
     }
 
-    protected Optional<Destination> findDestination(InstanceId maasInstanceId, String destinationUuid) {
-        return instanceManager.get(maasInstanceId).flatMap(instance -> findDestination(instance, destinationUuid));
-    }
-
     protected Optional<Destination> findDestination(Instance maasInstance, String destinationUuid) {
         return getAddressSpace(maasInstance)
                 .getDestinations()
@@ -51,10 +47,9 @@ public abstract class OSBServiceBase {
                 .findAny();
     }
 
-    protected void provisionDestination(InstanceId instanceId, Destination destination) {
+    protected void provisionDestination(Instance instance, Destination destination) {
         log.info("Creating destination {} in group {} of MaaS instance {} (namespace {})",
-                destination.address(), destination.group(), instanceId.getId(), instanceId.getNamespace());
-        Instance instance = getOrCreateInstance(instanceId);
+                destination.address(), destination.group(), instance.id().getId(), instance.id().getNamespace());
         getAddressSpace(instance).addDestination(destination);
     }
 
