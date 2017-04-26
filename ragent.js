@@ -17,6 +17,7 @@
 
 var amqp = require('rhea');
 var rtr = require('./router.js');
+var podwatch = require('./podwatch.js');
 
 var known_routers = {};
 var connected_routers = {};
@@ -161,6 +162,28 @@ function on_router_agent_disconnect (context) {
     delete context.connection.connection_id;
 }
 
+function watch_pods(connection) {
+    var watcher = undefined;
+    if (process.env.ADMIN_SERVICE_HOST) {
+        watcher = podwatch.watch_pods(connection, {"name": "admin"});
+    } else {
+        watcher = podwatch.watch_pods(connection, {"name": "ragent"});
+    }
+    watcher.on('added', function (pods) {
+        for (var pod_name in pods) {
+            var pod = pods[pod_name];
+
+            //pod name will be containerid, use that as the id for debug logging
+            var agent_conn = {host:pod.host, port:port, id:pod.name, properties:connection_properties};
+            amqp.connect(agent_conn);
+            console.log('connecting to new agent ' + JSON.stringify(agent_conn));
+        }
+    });
+    watcher.on('removed', function (pods) {
+        console.log('agents removed from service: ' + JSON.stringify(pods));
+    });
+}
+
 var connection_properties = {product:'qdconfigd', container_id:process.env.HOSTNAME};
 
 function on_message(context) {
@@ -264,26 +287,9 @@ amqp.on('receiver_open', function(context) {
     }
 });
 
+var port = 55672;
 amqp.sasl_server_mechanisms.enable_anonymous();
-amqp.listen({port:55672, properties:connection_properties});
-
-if (process.env.KUBERNETES_SERVICE_HOST) {
-    var watcher = require('./kube_utils.js').watch_service('ragent');
-    watcher.on('added', function (procs) {
-	for (var name in procs) {
-            if (name < process.env.HOSTNAME) {
-	        var proc = procs[name];
-	        proc.id = name;//hostname will be containerid, use that as the id for debug logging
-                proc.properties = connection_properties;
-	        amqp.connect(proc);
-	        console.log('connecting to new agent ' + JSON.stringify(proc));
-            }
-	}
-    });
-    watcher.on('removed', function (procs) {
-	console.log('agents removed from service: ' + JSON.stringify(procs));
-    });
-}
+amqp.listen({port:port, properties:connection_properties});
 
 var config_host = process.env.ADMIN_SERVICE_HOST
 var config_port = process.env.ADMIN_SERVICE_PORT_CONFIGURATION
@@ -297,4 +303,5 @@ if (config_host) {
     amqp.options.username = 'ragent';
     var conn = amqp.connect({host:config_host, port:config_port, properties:connection_properties});
     conn.open_receiver('maas');
+    watch_pods(conn);
 }
