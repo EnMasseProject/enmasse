@@ -1,6 +1,6 @@
 # EnMasse
 
-Documents relating to EnMasse project. For setting up EnMasse, see [Getting Started](getting-started/README.md)
+Documents relating to EnMasse project. For setting up EnMasse, see [Getting Started](getting-started/README.md). To setup EnMasse with the OpenShift Service Catalog, see [Service Catalog](https://github.com/EnMasseProject/enmasse/tree/master/documentation/servicecatalog/README.md)
 
 ## Design documents
 
