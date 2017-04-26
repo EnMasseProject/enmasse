@@ -42,7 +42,7 @@ when using other methods of running OpenShift.
 - Grant admin rights to the service catalog's service account:
   - `oc adm policy add-cluster-role-to-user admin system:serviceaccount:service-catalog:default`
 - Deploy the Service Catalog resources
-  - `curl -q https://gist.githubusercontent.com/jwforres/78d8c2a939e5e69e31ddd32471ce79fd/raw/518ffcd3139671f04aad9f21342f845c992f5543/gistfile1.txt | sed s/canary/v0.0.3/g | oc process -v CORS_ALLOWED_ORIGIN='.*' -f - | oc apply -f -`
+  - `curl -q https://gist.githubusercontent.com/jwforres/78d8c2a939e5e69e31ddd32471ce79fd/raw/f1844810d036e132304ab82765ca253130cdbd54/gistfile1.txt | oc process -v CORS_ALLOWED_ORIGIN='.*' -f - | oc apply -f -`
 
 ## Deploy EnMasse
 - Deploy EnMasse global infrastructure:
