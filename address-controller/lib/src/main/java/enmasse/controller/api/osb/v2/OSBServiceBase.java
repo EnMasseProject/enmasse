@@ -57,7 +57,8 @@ public abstract class OSBServiceBase {
         return instanceManager.get(instanceId).orElseGet(() -> {
             Instance i = new Instance.Builder(instanceId).build();
             instanceManager.create(i);
-            return i;
+            log.info("Created MaaS instance {}", i.id());
+            return instanceManager.get(instanceId).get();
         });
     }
 
