@@ -51,11 +51,11 @@ public class OSBProvisioningService extends OSBServiceBase {
             throw new BadRequestException("Invalid plan_id " + request.getPlanId());
         }
 
-        String name = request.getParameter("name")
-                .orElse(serviceType.serviceName() + "-" + shortenUuid(instanceId));
+        String name = request.getParameter("name").orElse(serviceType.serviceName() + "-" + shortenUuid(instanceId));
+        String group = request.getParameter("group").orElse(name);
 
         Optional<String> flavorName = serviceType.supportsOnlyDefaultPlan() ? Optional.empty() : getFlavorName(request.getPlanId());
-        Destination destination = new Destination(name, name, serviceType.storeAndForward(), serviceType.multicast(), flavorName, Optional.of(instanceId));
+        Destination destination = new Destination(name, group, serviceType.storeAndForward(), serviceType.multicast(), flavorName, Optional.of(instanceId));
 
         Instance maasInstance = getOrCreateInstance(maasInstanceId);
         Optional<Destination> existingDestination = findDestination(maasInstance, instanceId);
