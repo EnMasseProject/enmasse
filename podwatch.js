@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Red Hat Inc.
+ * Copyright 2017 Red Hat Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -74,13 +74,8 @@ function create_pod_handler() {
         var added = difference(newpods, this.pods);
         var removed = difference(this.pods, newpods);
 
-        if (added !== undefined) {
-            this.emit('added', added);
-        }
-
-        if (removed !== undefined) {
-            this.emit('removed', removed);
-        }
+        added && this.emit('added', added);
+        removed && this.emit('removed', removed);
 
         this.pods = newpods;
     }

@@ -169,18 +169,26 @@ function watch_pods(connection) {
     } else {
         watcher = podwatch.watch_pods(connection, {"name": "ragent"});
     }
+    var agent_connections = {}
     watcher.on('added', function (pods) {
         for (var pod_name in pods) {
             var pod = pods[pod_name];
 
             //pod name will be containerid, use that as the id for debug logging
-            var agent_conn = {host:pod.host, port:port, id:pod.name, properties:connection_properties};
-            amqp.connect(agent_conn);
-            console.log('connecting to new agent ' + JSON.stringify(agent_conn));
+            var agent_conn_info = {host:pod.host, port:port, id:pod.name, properties:connection_properties};
+            var agent_conn = amqp.connect(agent_conn_info);
+            agent_connections[pod_name] = agent_conn;
+            console.log('connecting to new agent ' + JSON.stringify(agent_conn_info));
         }
     });
     watcher.on('removed', function (pods) {
-        console.log('agents removed from service: ' + JSON.stringify(pods));
+        for (var pod_name in pods) {
+            var conn = agent_connections[pod_name];
+            if (conn !== undefined) {
+                console.log('disconnecting from agent ' + pod_name);
+                conn.close();
+            }
+        }
     });
 }
 
