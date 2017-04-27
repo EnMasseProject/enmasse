@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>enmasse</groupId>
+    <artifactId>artemis-base-image</artifactId>
+    <version>1.0-SNAPSHOT</version>
+
+    <properties>
+        <artemis.version>2.0.0</artemis.version>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.apache.activemq</groupId>
+            <artifactId>apache-artemis</artifactId>
+            <version>${artemis.version}</version>
+            <classifier>bin</classifier>
+            <type>tar.gz</type>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>2.10</version>
+                <executions>
+                    <execution>
+                        <id>unpack-artemis</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>unpack</goal>
+                        </goals>
+                        <configuration>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>org.apache.activemq</groupId>
+                                    <artifactId>apache-artemis</artifactId>
+                                    <classifier>bin</classifier>
+                                    <type>tar.gz</type>
+                                    <outputDirectory>target/dependencies/artemis</outputDirectory>
+                                </artifactItem>
+                            </artifactItems>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>io.fabric8</groupId>
+                <artifactId>docker-maven-plugin</artifactId>
+                <configuration>
+                    <images>
+                        <image>
+                            <alias>activemq-artemis</alias>
+                            <name>enmasse/activemq-artemis:${artemis.version}</name>
+                            <build>
+                                <from>java:8u40</from>
+                                <assembly>
+                                    <descriptor>descriptors/artemis.xml</descriptor>
+                                    <!-- TODO required on windows machine, try to find better solution -->
+                                    <permissions>exec</permissions>
+                                </assembly>
+                                <runCmds>
+                                    <run>/maven/bin/artemis create artemis --user admin --password admin --role admins --require-login</run>
+                                </runCmds>
+                                <entryPoint>
+                                    <shell>/artemis/bin/artemis run</shell>
+                                </entryPoint>
+                                <ports>
+                                    <port>5672</port>
+                                </ports>
+                                <volumes>
+                                    <volume>/maven/data</volume>
+                                </volumes>
+                            </build>
+                        </image>
+                    </images>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>build</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>

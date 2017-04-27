@@ -26,6 +26,15 @@ task buildArtemis {
   }
 }
 
+task buildArtemisBaseImage {
+    doLast {
+        exec {
+            workingDir 'artemis-base-image'
+            commandLine 'mvn', 'install'
+        }
+    }
+}
+
 task buildTar(type: Tar) {
     from('activemq-artemis/integration/activemq-amqp-connector/target/artemis-amqp-connector-2.0.0-SNAPSHOT.jar') {
         into("${home}/lib")
