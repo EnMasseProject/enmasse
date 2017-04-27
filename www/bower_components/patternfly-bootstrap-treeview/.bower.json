@@ -1,9 +1,9 @@
 {
   "name": "patternfly-bootstrap-treeview",
   "description": "Tree View for Twitter Bootstrap",
-  "version": "2.1.1",
+  "version": "2.1.3",
   "homepage": "https://github.com/patternfly/patternfly-bootstrap-treeview",
-  "main": "dist/bootstrap-treeview.min.js",
+  "main": "dist/bootstrap-treeview.js",
   "keywords": [
     "twitter",
     "bootstrap",
@@ -26,11 +26,11 @@
     "bootstrap": ">= 3.0.0"
   },
   "devDependencies": {},
-  "_release": "2.1.1",
+  "_release": "2.1.3",
   "_resolution": {
     "type": "version",
-    "tag": "v2.1.1",
-    "commit": "48fdfc77046cea258d5343037a3a0c3a73a71415"
+    "tag": "v2.1.3",
+    "commit": "48da5adf71d228fa073ca12a243fb37bb7c5477b"
   },
   "_source": "https://github.com/patternfly/patternfly-bootstrap-treeview.git",
   "_target": "~2.1.0",
