@@ -56,7 +56,7 @@
                     <images>
                         <image>
                             <alias>activemq-artemis</alias>
-                            <name>enmasse/activemq-artemis:${artemis.version}</name>
+                            <name>enmasseproject/activemq-artemis:${artemis.version}</name>
                             <build>
                                 <from>java:8u40</from>
                                 <assembly>
