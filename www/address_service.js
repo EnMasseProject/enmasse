@@ -25,20 +25,40 @@ TimeSeries.prototype.push_delta = function (value) {
     this.last = value;
 }
 
+function WindowedDelta(window) {
+    this.last = undefined;
+    this.deltas = new Array(window);
+    this.current = 0;
+}
+
+WindowedDelta.prototype.push = function (value) {
+    this.deltas[this.current++] = value;
+    if (this.current >= this.deltas.length) {
+        this.current = this.current % this.deltas.length;
+    }
+};
+
+WindowedDelta.prototype.update = function (value) {
+    if (this.last === undefined || this.last > value) {
+        this.push(value);
+    } else {
+        this.push(value - this.last);
+    }
+    this.last = value;
+};
+
+WindowedDelta.prototype.total = function (current) {
+    var t = this.last === undefined ? current : current - this.last;
+    for (var i = 0; i < this.deltas.length; i++) {
+        if (this.deltas[i] != undefined) {
+            t += this.deltas[i];
+        }
+    }
+    return t;
+};
+
 function AddressDefinition(a) {
     this.update(a);
-    /*
-    this.messages_in_series = new TimeSeries('messages-in');
-    this.messages_out_series = new TimeSeries('messages-out');
-    this.message_in_series_config = {
-        chartId: 'ingress-' + this.address,
-        tooltipType: 'default'
-    };
-    this.message_out_series_config = {
-        chartId: 'egress-' + this.address,
-        tooltipType: 'default'
-    };
-    */
     this.depth_series = new TimeSeries('messages-stored');
     this.depth_series_config = {
         chartId      : 'depth-' + this.address,
@@ -51,12 +71,17 @@ function AddressDefinition(a) {
         units        : ''
     };
     this.update_depth_series();
-    this.periodic_deltas = ['messages_in', 'messages_out'];
-    for (var i = 0; i < this.periodic_deltas.length; i++) {
-        var name = this.periodic_deltas[i];
-        this['_last_' + name] = 0;
-        Object.defineProperty(this, name + '_delta', { get: function () { return this[name] - this['_last_' + name]; } });
+    this.periodic_deltas = {
+        'messages_in': new WindowedDelta(10),
+        'messages_out': new WindowedDelta(10)
+    };
+    for (var name in this.periodic_deltas) {
+        this.define_periodic_delta(name);
     }
+}
+
+AddressDefinition.prototype.define_periodic_delta = function (name) {
+    Object.defineProperty(this, name + '_delta', { get: function () { return this.periodic_deltas[name].total(this[name]); } });
 }
 
 AddressDefinition.prototype.update = function (a) {
@@ -87,16 +112,11 @@ AddressDefinition.prototype.update_depth_series = function () {
     }
 }
 
-AddressDefinition.prototype.reset_periodic_deltas = function () {
-    var changed = false;
-    for (var i = 0; i < this.periodic_deltas.length; i++) {
-        var name = this.periodic_deltas[i];
-        if (this['_last_' + name] !== this[name]) {
-            this['_last_' + name] = this[name];
-            changed = true;
-        }
+AddressDefinition.prototype.update_periodic_deltas = function () {
+    for (var name in this.periodic_deltas) {
+        this.periodic_deltas[name].update(this[name]);
     }
-    return changed;
+    return true;
 }
 
 function AddressService() {
@@ -109,7 +129,7 @@ function AddressService() {
     this.connection.on('message', this.on_message.bind(this));
     this.sender = this.connection.open_sender();
     this.connection.open_receiver();
-    setInterval(this.reset_periodic_deltas.bind(this), 5*60000);
+    setInterval(this.update_periodic_deltas.bind(this), 30000);
     setInterval(this.update_depth_series.bind(this), 30000);
 }
 
@@ -123,14 +143,11 @@ AddressService.prototype.update_depth_series = function () {
     if (changed && this.callback) this.callback('update_depth_series');
 };
 
-AddressService.prototype.reset_periodic_deltas = function () {
-    var changed = false;
+AddressService.prototype.update_periodic_deltas = function () {
     for (var i = 0; i < this.addresses.length; i++) {
-        if (this.addresses[i].reset_periodic_deltas()) {
-            changed = true;
-        }
+        this.addresses[i].update_periodic_deltas();
     }
-    if (changed && this.callback) this.callback('reset_periodic_deltas');
+    if (this.callback) this.callback('reset_periodic_deltas');
 };
 
 AddressService.prototype.update = function (a) {
