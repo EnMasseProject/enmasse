@@ -30,7 +30,7 @@
     }
   ],
   "id": null,
-  "title": "enmasse",
+  "title": "EnMasse",
   "description": "Dashboard for EnMasse",
   "tags": [],
   "style": "dark",
@@ -39,6 +39,288 @@
   "hideControls": false,
   "sharedCrosshair": false,
   "rows": [
+    {
+      "collapse": false,
+      "editable": true,
+      "height": "250px",
+      "panels": [
+        {
+          "title": "Router producer count",
+          "error": false,
+          "span": 12,
+          "editable": true,
+          "type": "graph",
+          "isNew": true,
+          "id": 5,
+          "targets": [
+            {
+              "refId": "A",
+              "queryBy": "tags",
+              "type": "gauge",
+              "target": "select metric",
+              "rate": false,
+              "tags": [
+                {
+                  "name": "messagingMetricType",
+                  "value": "producerCount"
+                }
+              ],
+              "seriesAggFn": "none",
+              "timeAggFn": "avg"
+            }
+          ],
+          "datasource": "${DS_HAWKIE}",
+          "renderer": "flot",
+          "yaxes": [
+            {
+              "label": null,
+              "show": true,
+              "logBase": 1,
+              "min": null,
+              "max": null,
+              "format": "short"
+            },
+            {
+              "label": null,
+              "show": true,
+              "logBase": 1,
+              "min": null,
+              "max": null,
+              "format": "short"
+            }
+          ],
+          "xaxis": {
+            "show": true
+          },
+          "grid": {
+            "threshold1": null,
+            "threshold2": null,
+            "threshold1Color": "rgba(216, 200, 27, 0.27)",
+            "threshold2Color": "rgba(234, 112, 112, 0.22)"
+          },
+          "lines": true,
+          "fill": 1,
+          "linewidth": 2,
+          "points": false,
+          "pointradius": 5,
+          "bars": false,
+          "stack": true,
+          "percentage": false,
+          "legend": {
+            "show": true,
+            "values": true,
+            "min": false,
+            "max": false,
+            "current": true,
+            "total": false,
+            "avg": false,
+            "alignAsTable": true
+          },
+          "nullPointMode": "connected",
+          "steppedLine": true,
+          "tooltip": {
+            "value_type": "cumulative",
+            "shared": true,
+            "sort": 0,
+            "msResolution": true
+          },
+          "timeFrom": null,
+          "timeShift": null,
+          "aliasColors": {},
+          "seriesOverrides": [],
+          "links": []
+        }
+      ],
+      "title": "Row"
+    },
+    {
+      "collapse": false,
+      "editable": true,
+      "height": "250px",
+      "panels": [
+        {
+          "title": "Router consumer count",
+          "error": false,
+          "span": 12,
+          "editable": true,
+          "type": "graph",
+          "isNew": true,
+          "id": 4,
+          "targets": [
+            {
+              "refId": "A",
+              "queryBy": "tags",
+              "type": "gauge",
+              "target": "select metric",
+              "rate": false,
+              "tags": [
+                {
+                  "name": "messagingMetricType",
+                  "value": "consumerCount"
+                }
+              ],
+              "seriesAggFn": "none",
+              "timeAggFn": "avg"
+            }
+          ],
+          "datasource": "${DS_HAWKIE}",
+          "renderer": "flot",
+          "yaxes": [
+            {
+              "label": null,
+              "show": true,
+              "logBase": 1,
+              "min": null,
+              "max": null,
+              "format": "short"
+            },
+            {
+              "label": null,
+              "show": true,
+              "logBase": 1,
+              "min": null,
+              "max": null,
+              "format": "short"
+            }
+          ],
+          "xaxis": {
+            "show": true
+          },
+          "grid": {
+            "threshold1": null,
+            "threshold2": null,
+            "threshold1Color": "rgba(216, 200, 27, 0.27)",
+            "threshold2Color": "rgba(234, 112, 112, 0.22)"
+          },
+          "lines": true,
+          "fill": 1,
+          "linewidth": 2,
+          "points": false,
+          "pointradius": 5,
+          "bars": false,
+          "stack": true,
+          "percentage": false,
+          "legend": {
+            "show": true,
+            "values": true,
+            "min": false,
+            "max": false,
+            "current": true,
+            "total": false,
+            "avg": false,
+            "alignAsTable": true
+          },
+          "nullPointMode": "connected",
+          "steppedLine": true,
+          "tooltip": {
+            "value_type": "cumulative",
+            "shared": true,
+            "sort": 0,
+            "msResolution": true
+          },
+          "timeFrom": null,
+          "timeShift": null,
+          "aliasColors": {},
+          "seriesOverrides": [],
+          "links": []
+        }
+      ],
+      "title": "New row"
+    },
+    {
+      "collapse": false,
+      "editable": true,
+      "height": "250px",
+      "panels": [
+        {
+          "title": "Router connections",
+          "error": false,
+          "span": 12,
+          "editable": true,
+          "type": "graph",
+          "isNew": true,
+          "id": 6,
+          "targets": [
+            {
+              "refId": "A",
+              "queryBy": "tags",
+              "type": "gauge",
+              "target": "select metric",
+              "rate": false,
+              "tags": [
+                {
+                  "name": "messagingMetricType",
+                  "value": "totalConnectionCount"
+                }
+              ],
+              "seriesAggFn": "none",
+              "timeAggFn": "avg"
+            }
+          ],
+          "datasource": "${DS_HAWKIE}",
+          "renderer": "flot",
+          "yaxes": [
+            {
+              "label": null,
+              "show": true,
+              "logBase": 1,
+              "min": null,
+              "max": null,
+              "format": "short"
+            },
+            {
+              "label": null,
+              "show": true,
+              "logBase": 1,
+              "min": null,
+              "max": null,
+              "format": "short"
+            }
+          ],
+          "xaxis": {
+            "show": true
+          },
+          "grid": {
+            "threshold1": null,
+            "threshold2": null,
+            "threshold1Color": "rgba(216, 200, 27, 0.27)",
+            "threshold2Color": "rgba(234, 112, 112, 0.22)"
+          },
+          "lines": true,
+          "fill": 1,
+          "linewidth": 2,
+          "points": false,
+          "pointradius": 5,
+          "bars": false,
+          "stack": true,
+          "percentage": false,
+          "legend": {
+            "show": true,
+            "values": true,
+            "min": false,
+            "max": false,
+            "current": true,
+            "total": false,
+            "avg": false,
+            "alignAsTable": true
+          },
+          "nullPointMode": "connected",
+          "steppedLine": false,
+          "tooltip": {
+            "value_type": "cumulative",
+            "shared": true,
+            "sort": 0,
+            "msResolution": true
+          },
+          "timeFrom": null,
+          "timeShift": null,
+          "aliasColors": {},
+          "seriesOverrides": [],
+          "links": []
+        }
+      ],
+      "title": "New row"
+    },
     {
       "collapse": false,
       "editable": true,
@@ -61,12 +343,13 @@
           "isNew": true,
           "legend": {
             "avg": false,
-            "current": false,
+            "current": true,
             "max": false,
             "min": false,
             "show": true,
             "total": false,
-            "values": false
+            "values": true,
+            "alignAsTable": true
           },
           "lines": true,
           "linewidth": 2,
@@ -78,7 +361,7 @@
           "renderer": "flot",
           "seriesOverrides": [],
           "span": 12,
-          "stack": false,
+          "stack": true,
           "steppedLine": false,
           "targets": [
             {
@@ -130,12 +413,13 @@
           ]
         }
       ],
-      "title": "Row"
+      "title": "New row"
     },
     {
-      "collapse": false,
-      "editable": true,
+      "title": "New row",
       "height": "250px",
+      "editable": true,
+      "collapse": false,
       "panels": [
         {
           "aliasColors": {},
@@ -154,12 +438,13 @@
           "isNew": true,
           "legend": {
             "avg": false,
-            "current": false,
+            "current": true,
             "max": false,
             "min": false,
             "show": true,
             "total": false,
-            "values": false
+            "values": true,
+            "alignAsTable": true
           },
           "lines": true,
           "linewidth": 2,
@@ -171,7 +456,7 @@
           "renderer": "flot",
           "seriesOverrides": [],
           "span": 12,
-          "stack": false,
+          "stack": true,
           "steppedLine": false,
           "targets": [
             {
@@ -192,7 +477,7 @@
           ],
           "timeFrom": null,
           "timeShift": null,
-          "title": "Number of consumers",
+          "title": "Queue consumers",
           "tooltip": {
             "msResolution": true,
             "shared": true,
@@ -222,13 +507,13 @@
             }
           ]
         }
-      ],
-      "title": "New row"
+      ]
     },
     {
-      "collapse": false,
-      "editable": true,
+      "title": "New row",
       "height": "250px",
+      "editable": true,
+      "collapse": false,
       "panels": [
         {
           "aliasColors": {},
@@ -319,8 +604,7 @@
             }
           ]
         }
-      ],
-      "title": "New row"
+      ]
     }
   ],
   "time": {
@@ -360,7 +644,7 @@
   },
   "refresh": "10s",
   "schemaVersion": 12,
-  "version": 2,
+  "version": 4,
   "links": [],
   "gnetId": null
 }
