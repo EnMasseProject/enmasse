@@ -17,6 +17,12 @@
     "protocol": "TCP",
     "targetPort": 55673
   },
+  local interRouterPort = {
+    "name": "inter-router",
+    "port": 55672,
+    "protocol": "TCP",
+    "targetPort": 55672
+  },
   generate(secure, instance, admin)::
     {
       local admin_deps = [
@@ -72,7 +78,7 @@
         }
       },
       "spec": {
-        "ports": if secure then [port, securePort, internalPort] else [port, internalPort],
+        "ports": if secure then [port, securePort, internalPort, interRouterPort] else [port, internalPort, interRouterPort],
         "selector": {
           "capability": "router",
           "instance": instance
