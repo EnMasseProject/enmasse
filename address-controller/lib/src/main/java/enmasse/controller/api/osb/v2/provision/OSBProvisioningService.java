@@ -61,7 +61,7 @@ public class OSBProvisioningService extends OSBServiceBase {
         Optional<Destination> existingDestination = findDestination(maasInstance, instanceId);
         if (existingDestination.isPresent()) {
             if (existingDestination.get().equals(destination)) {
-                return Response.ok(new ProvisionResponse(maasInstance.consoleHost().orElse(null))).build();
+                return Response.ok(new ProvisionResponse(getConsoleURL(maasInstance).orElse(null))).build();
             } else {
                 throw new ConflictException("Service instance " + instanceId + " already exists");
             }
@@ -69,10 +69,14 @@ public class OSBProvisioningService extends OSBServiceBase {
 
         provisionDestination(maasInstance, destination);
 
-        log.info("Returning ProvisionResponse with dashboardUrl {}", maasInstance.consoleHost().orElse(null));
+        log.info("Returning ProvisionResponse with dashboardUrl {}", getConsoleURL(maasInstance).orElse(null));
         return Response.status(Response.Status.CREATED)
-                .entity(new ProvisionResponse(maasInstance.consoleHost().orElse(null)))
+                .entity(new ProvisionResponse(getConsoleURL(maasInstance).orElse(null)))
                 .build();
+    }
+
+    private Optional<String> getConsoleURL(Instance maasInstance) {
+        return maasInstance.consoleHost().map(s -> "http://" + s);
     }
 
     private boolean isValidPlan(ServiceType serviceType, UUID planId) {
