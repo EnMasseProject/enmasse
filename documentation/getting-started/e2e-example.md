@@ -3,7 +3,7 @@
 This guide will walk through the process of setting up a TLS-enabled EnMasse on OpenShift together
 with clients for sending and receiving messages.
 
-## Preqrequisites
+## Prerequisites
 
 In this guide, you need the OpenShift client tools, an OpenShift server, and a recent version of Qpid
 Proton for the clients.

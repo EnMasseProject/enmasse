@@ -45,8 +45,12 @@ when using other methods of running OpenShift.
   - `curl -q https://gist.githubusercontent.com/jwforres/78d8c2a939e5e69e31ddd32471ce79fd/raw/f1844810d036e132304ab82765ca253130cdbd54/gistfile1.txt | oc process -v CORS_ALLOWED_ORIGIN='.*' -f - | oc apply -f -`
 
 ## Deploy EnMasse
-- Deploy EnMasse global infrastructure:
-  - `bash <(curl https://raw.githubusercontent.com/EnMasseProject/enmasse/master/scripts/enmasse-deploy.sh) -c "https://localhost:8443" -u system:admin -p enmasse -m`
+- Deploy EnMasse global infrastructure (choose one of two options):
+  - A TLS-enabled deployment (which allows external messaging clients to connect through routes):
+    - `openssl req -new -x509 -batch -nodes -out server-cert.pem -keyout server-key.pem`
+    - `bash <(curl https://raw.githubusercontent.com/EnMasseProject/enmasse/master/scripts/enmasse-deploy.sh) -c "https://localhost:8443" -u system:admin -p enmasse -m -k server-key.pem -s server-cert.pem`
+  - A non-TLS enabled deployment:
+    - `bash <(curl https://raw.githubusercontent.com/EnMasseProject/enmasse/master/scripts/enmasse-deploy.sh) -c "https://localhost:8443" -u system:admin -p enmasse -m`
 - Grant proper roles to enmasse service accounts:
   - `oc adm policy add-cluster-role-to-user cluster-admin system:serviceaccount:enmasse:enmasse-service-account`
   - `oc adm policy add-cluster-role-to-user edit system:serviceaccount:enmasse:default`
@@ -82,15 +86,27 @@ At this point, the Service Catalog will contact the broker and retrieve the list
 
 ## Provisioning addresses through the Catalog UI   
 
-- Open https://apiserver-service-catalog.127.0.0.1.nip.io/ and confirm the security exception
-- Open https://localhost:8443
-- Login as developer:developer
-  - NOTE: if after logging in, you get redirected back to the login page, you didn't confirm the security exception in the first step of this section)
-- You should see the queue, topic, direct-anycast-network and direct-multicast-network services in the catalog.
-- Click on "queue"
-- Select the "vanilla-queue" plan & click next
-- Select the project you'd like the service instance to be provisioned in (NOTE: the actual queue will be deployed in a different project; this is just where the ServiceInstance object will be created in)
-  
+- Accessing the Catalog UI
+  - Open https://apiserver-service-catalog.127.0.0.1.nip.io/ and confirm the security exception
+  - Open https://localhost:8443
+  - Login as `developer:developer`
+    - NOTE: if after logging in, you get redirected back to the login page, you didn't confirm the security exception in the first step of this section)
+  - You should see the four EnMasse services in the catalog.
+- Provisioning a queue
+  - Click on _EnMasse Queue_
+  - Select the _vanilla-queue_ plan & click _Next_
+  - Select the project you'd like the service instance to be provisioned in and click _Create_ (NOTE: the actual queue will be deployed in a different project; this is just where the ServiceInstance object will be created in)
+  - Now click _View project_ and you should see a list of provisioned services.
+- Binding the queue service
+  - Click on _Create binding_ to bind the service (this currently simply creates a secret)
+  - Select _Create a secret in my project_ and click _Bind_
+- Accessing the EnMasse console
+  - After you bind the service, click on the secret mentioned in the dialog box
+  - Click on _Reveal Secret_ 
+  - Copy the _consoleHost_ URL and open it in another browser window
+  - You should see the queue listed under _Addresses_
+- Using the deployed queue
+  - Follow the [TLS getting started](../getting-started/e2e-example.md#sending-and-receiving-messages) instructions or the [non-TLS instructions](../getting-started/local-development.md#sending-and-receiving-messages) to try out the queue 
 
 ## Provisioning addresses through the CLI
 
