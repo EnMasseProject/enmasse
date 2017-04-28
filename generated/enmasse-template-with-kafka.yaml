@@ -30,7 +30,8 @@ objects:
       "labels": {"app": "enmasse", "instance": "${INSTANCE}"}, "name": "messaging"},
       "spec": {"ports": [{"name": "amqp", "port": 5672, "protocol": "TCP", "targetPort":
       5672}, {"name": "internal", "port": 55673, "protocol": "TCP", "targetPort":
-      55673}], "selector": {"capability": "router", "instance": "${INSTANCE}"}}},
+      55673}, {"name": "inter-router", "port": 55672, "protocol": "TCP", "targetPort":
+      55672}], "selector": {"capability": "router", "instance": "${INSTANCE}"}}},
       {"apiVersion": "extensions/v1beta1", "kind": "Deployment", "metadata": {"labels":
       {"app": "enmasse", "instance": "${INSTANCE}", "name": "subserv"}, "name": "subserv"},
       "spec": {"replicas": 1, "template": {"metadata": {"labels": {"app": "enmasse",
@@ -235,7 +236,8 @@ objects:
       "true"}, "labels": {"app": "enmasse", "instance": "${INSTANCE}"}, "name": "messaging"},
       "spec": {"ports": [{"name": "amqp", "port": 5672, "protocol": "TCP", "targetPort":
       5672}, {"name": "amqps", "port": 5671, "protocol": "TCP", "targetPort": 5671},
-      {"name": "internal", "port": 55673, "protocol": "TCP", "targetPort": 55673}],
+      {"name": "internal", "port": 55673, "protocol": "TCP", "targetPort": 55673},
+      {"name": "inter-router", "port": 55672, "protocol": "TCP", "targetPort": 55672}],
       "selector": {"capability": "router", "instance": "${INSTANCE}"}}}, {"apiVersion":
       "extensions/v1beta1", "kind": "Deployment", "metadata": {"labels": {"app": "enmasse",
       "instance": "${INSTANCE}", "name": "subserv"}, "name": "subserv"}, "spec": {"replicas":
