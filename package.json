@@ -13,7 +13,8 @@
         "rhea": ">=0.2.0",
         "ws": "*",
         "bluebird": "*",
-        "express": "*"
+        "express": "*",
+        "express-basic-auth": "*"
     },
     "devDependencies": {
         "eslint":"",

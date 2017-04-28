@@ -16,6 +16,7 @@
 'use strict';
 
 var express = require('express');
+var basic_auth = require('express-basic-auth');
 var path = require('path');
 var rhea = require('rhea');
 var WebSocketServer = require('ws').Server;
@@ -28,6 +29,13 @@ var Registry = require('../lib/registry.js');
 var http = require('http');
 
 var app = express();
+if (process.env.ADMIN_PASSWORD !== undefined) {
+    app.use(basic_auth({
+        users: {'admin': process.env.ADMIN_PASSWORD},
+        challenge: true
+    }));
+}
+
 app.use('/', express.static(path.join(__dirname, '../www/')))
 
 var server = http.createServer(app);
