@@ -95,7 +95,9 @@ public class AddressSpaceImpl implements AddressSpace {
         validateDestinationGroups(destinationByGroup);
 
 
-        log.info("Brokers got updated to " + destinationByGroup.size() + " groups. We have " + clusterList.size() + " groups: " + getClusterDestinations(clusterList));
+        Set<Destination> currentDestinations = clusterList.stream().flatMap(cluster -> cluster.getDestinations().stream()).collect(Collectors.toSet());
+
+        log.info("Destinations updated from " + currentDestinations + " to " + newDestinations);
         createBrokers(clusterList, destinationByGroup);
         updateBrokers(clusterList, destinationByGroup);
         deleteBrokers(clusterList, destinationByGroup);
