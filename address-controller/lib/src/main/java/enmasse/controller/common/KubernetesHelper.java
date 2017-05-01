@@ -118,8 +118,9 @@ public class KubernetesHelper implements Kubernetes {
     }
 
     @Override
-    public void updateAddressConfig(Destination destination) {
-        client.configMaps().inNamespace(instance.getNamespace()).createOrReplace(createAddressConfig(destination));
+    public void deleteAddressConfig(Destination destination) {
+        String name = Kubernetes.sanitizeName("address-config-" + destination.address());
+        client.configMaps().inNamespace(instance.getNamespace()).withName(name).delete();
     }
 
     @Override

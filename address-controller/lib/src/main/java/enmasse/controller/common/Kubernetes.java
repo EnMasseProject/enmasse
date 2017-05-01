@@ -33,7 +33,7 @@ public interface Kubernetes {
     Kubernetes mutateClient(InstanceId instance);
 
     ConfigMap createAddressConfig(Destination destination);
-    void updateAddressConfig(Destination destination);
+    void deleteAddressConfig(Destination destination);
 
     List<DestinationCluster> listClusters();
     void create(KubernetesList resources);

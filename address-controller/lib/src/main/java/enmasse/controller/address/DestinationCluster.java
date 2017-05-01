@@ -20,9 +20,11 @@ import enmasse.controller.common.Kubernetes;
 import enmasse.controller.model.Destination;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesList;
+import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -63,10 +65,20 @@ public class DestinationCluster {
     }
 
     public void updateDestinations(Set<Destination> destinations) {
-        this.destinations = destinations;
-        for (Destination destination : destinations) {
-            kubernetes.updateAddressConfig(destination);
+        Set<Destination> added = new LinkedHashSet<>(destinations);
+        added.removeAll(this.destinations);
+
+        Set<Destination> removed = new LinkedHashSet<>(this.destinations);
+        removed.removeAll(destinations);
+
+        for (Destination destination : added) {
+            kubernetes.create(new KubernetesListBuilder().addToItems(kubernetes.createAddressConfig(destination)).build());
         }
+
+        for (Destination destination : removed) {
+            kubernetes.deleteAddressConfig(destination);
+        }
+        this.destinations = destinations;
     }
 
     public String getClusterId() {
