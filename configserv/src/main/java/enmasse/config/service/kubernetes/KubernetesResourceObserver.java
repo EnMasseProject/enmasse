@@ -115,9 +115,13 @@ public class KubernetesResourceObserver<T extends Resource> implements AutoClose
 
     @Override
     public void onClose(KubernetesClientException cause) {
-        log.debug("Exception from watcher: ", cause);
-        log.info("Watch for " + observerOptions.getLabelMap() + " + closed, restarting");
-        close();
-        open();
+        if (cause != null) {
+            log.info("Exception from watcher: ", cause);
+            close();
+            log.info("Watch for " + observerOptions.getLabelMap() + " + closed, restarting");
+            open();
+        } else {
+            log.info("Watch for " + observerOptions.getLabelMap() + " force closed, stopping");
+        }
     }
 }
