@@ -24,6 +24,10 @@ import io.fabric8.openshift.client.OpenShiftClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
 /**
  * An adapter for subscribing to updates to a config map that manages the watch.
  */
@@ -34,6 +38,7 @@ public class ConfigAdapter implements Watcher<ConfigMap> {
     private final OpenShiftClient openshiftClient;
     private final String configName;
     private final ConfigSubscriber configSubscriber;
+    private final ScheduledExecutorService service = Executors.newScheduledThreadPool(1);
 
     public ConfigAdapter(OpenShiftClient openshiftClient, String configName, ConfigSubscriber configSubscriber) {
         this.openshiftClient = openshiftClient;
@@ -75,7 +80,12 @@ public class ConfigAdapter implements Watcher<ConfigMap> {
             log.info("Received onClose for watcher", cause);
             stop();
             log.info("Watch for " + configName + " closed, recreating");
-            start();
+            service.schedule(new Runnable() {
+                @Override
+                public void run() {
+                    start();
+                }
+            }, 1, TimeUnit.MINUTES);
         } else {
             log.info("Watch for " + configName + " force closed, stopping");
         }
