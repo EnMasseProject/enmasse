@@ -147,7 +147,9 @@ amqp_container.on('connection_close', function (context) {
     unsubscribe(context.connection.remote.open.container_id);
 });
 amqp_container.on('disconnected', function (context) {
-    unsubscribe(context.connection.remote.open.container_id);
+    if (context.connection.remote.open) {
+        unsubscribe(context.connection.remote.open.container_id);
+    }
 });
 amqp_container.on('message', function (context) {
     var accept = function () {
