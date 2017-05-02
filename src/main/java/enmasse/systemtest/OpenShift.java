@@ -60,8 +60,8 @@ public class OpenShift {
     }
 
     public Endpoint getRestEndpoint() {
-        Service service = client.services().inNamespace(environment.namespace()).withName("address-controller").get();
-        return new Endpoint(service.getSpec().getClusterIP(), getPort(service, "http"));
+        Route route = client.routes().inNamespace(environment.namespace()).withName("restapi").get();
+        return new Endpoint(route.getSpec().getHost(), 80);
     }
 
     public void setDeploymentReplicas(String name, int numReplicas) {
