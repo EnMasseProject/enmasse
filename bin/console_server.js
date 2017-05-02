@@ -16,7 +16,7 @@
 'use strict';
 
 var express = require('express');
-var basic_auth = require('express-basic-auth');
+var basic_auth = require('basic-auth');
 var path = require('path');
 var rhea = require('rhea');
 var WebSocketServer = require('ws').Server;
@@ -30,10 +30,22 @@ var http = require('http');
 
 var app = express();
 if (process.env.ADMIN_PASSWORD !== undefined) {
-    app.use(basic_auth({
-        users: {'admin': process.env.ADMIN_PASSWORD},
-        challenge: true
-    }));
+    var auth = function (req, res, next) {
+        //don't require auth for localhost to simplify use of probes
+        if (req.host === 'localhost') {
+            return next();
+        }
+
+        var user = basic_auth(req);
+        if (user && user.name === 'admin' && user.pass === process.env.ADMIN_PASSWORD) {
+            return next();
+        } else {
+            res.set('WWW-Authenticate', 'Basic realm=Authorization Required');
+            return res.send(401);
+        };
+    };
+
+    app.use(auth);
 }
 
 app.use('/', express.static(path.join(__dirname, '../www/')))

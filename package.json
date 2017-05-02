@@ -14,7 +14,7 @@
         "ws": "*",
         "bluebird": "*",
         "express": "*",
-        "express-basic-auth": "*"
+        "basic-auth": "*"
     },
     "devDependencies": {
         "eslint":"",
