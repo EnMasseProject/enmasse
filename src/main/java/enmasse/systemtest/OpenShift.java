@@ -61,7 +61,12 @@ public class OpenShift {
 
     public Endpoint getRestEndpoint() {
         Route route = client.routes().inNamespace(environment.namespace()).withName("restapi").get();
-        return new Endpoint(route.getSpec().getHost(), 80);
+        Endpoint endpoint = new Endpoint(route.getSpec().getHost(), 80);
+        if (TestUtils.resolvable(endpoint)) {
+            return endpoint;
+        } else {
+            return new Endpoint("localhost", 80);
+        }
     }
 
     public void setDeploymentReplicas(String name, int numReplicas) {

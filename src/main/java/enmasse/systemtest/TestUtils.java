@@ -28,6 +28,8 @@ import io.vertx.core.http.HttpClientRequest;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.message.Message;
 
+import java.net.Inet4Address;
+import java.net.InetAddress;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -171,5 +173,14 @@ public class TestUtils {
 
     public static List<String> generateMessages(int numMessages) {
         return generateMessages("testmessage", numMessages);
+    }
+
+    public static boolean resolvable(Endpoint endpoint) {
+        try {
+            InetAddress[] addresses = Inet4Address.getAllByName(endpoint.getHost());
+            return addresses.length > 0;
+        } catch (Exception e) {
+            return false;
+        }
     }
 }

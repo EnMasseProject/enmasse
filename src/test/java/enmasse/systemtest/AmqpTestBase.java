@@ -16,23 +16,16 @@
 package enmasse.systemtest;
 
 import enmasse.systemtest.amqp.AmqpClient;
-import enmasse.systemtest.amqp.SslOptions;
 import enmasse.systemtest.amqp.TerminusFactory;
 import io.vertx.core.Vertx;
 import io.vertx.proton.ProtonClientOptions;
 import io.vertx.proton.ProtonQoS;
-import org.apache.qpid.proton.amqp.transport.End;
-import org.apache.qpid.proton.engine.SslDomain;
-import org.apache.qpid.proton.engine.SslPeerDetails;
 import org.junit.After;
 import org.junit.Before;
 
-import java.net.Inet4Address;
-import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 public abstract class AmqpTestBase {
@@ -106,7 +99,7 @@ public abstract class AmqpTestBase {
             clientOptions.setTrustAll(true);
             clientOptions.setHostnameVerificationAlgorithm("");
 
-            if (resolvable(messagingEndpoint)) {
+            if (TestUtils.resolvable(messagingEndpoint)) {
                 clientEndpoint = messagingEndpoint;
             } else {
                 clientEndpoint = new Endpoint("localhost", 443);
@@ -117,15 +110,6 @@ public abstract class AmqpTestBase {
             return createClient(terminusFactory, clientEndpoint, clientOptions, qos);
         } else {
             return createClient(terminusFactory, openShift.getInsecureEndpoint(), qos);
-        }
-    }
-
-    private boolean resolvable(Endpoint endpoint) {
-        try {
-            InetAddress[] addresses = Inet4Address.getAllByName(endpoint.getHost());
-            return addresses.length > 0;
-        } catch (Exception e) {
-            return false;
         }
     }
 
