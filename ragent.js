@@ -28,9 +28,8 @@ var clients = {};
 function subscribe(context) {
     subscribers[context.connection.container_id] = context.sender;
     //send initial routers:
-    for (var id in connected_routers) {
-        context.sender.send({subject:'routers', body:connected_routers[id].listeners});
-    }
+    var payload = wrap_known_routers(connected_routers);
+    context.sender.send({subject:'routers', body:payload});
 }
 
 function unsubscribe (context) {
@@ -116,7 +115,8 @@ function connected_routers_updated (router) {
     check_connectivity();
     for (var id in subscribers) {
         var sender = subscribers[id];
-        sender.send({subject:'routers', kind:'router', status:'defined', body:router.listeners});
+        var payload = wrap_known_routers(connected_routers);
+        sender.send({subject:'routers', body:payload});
     }
 }
 
