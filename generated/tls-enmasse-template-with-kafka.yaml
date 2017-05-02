@@ -102,11 +102,11 @@ objects:
       "ports": [{"containerPort": 55667, "name": "amqp", "protocol": "TCP"}], "resources":
       {"limits": {"memory": "128Mi"}, "requests": {"memory": "128Mi"}}}, {"env": [{"name":
       "CONFIGURATION_SERVICE_HOST", "value": "localhost"}, {"name": "CONFIGURATION_SERVICE_PORT",
-      "value": "5672"}], "image": "${CONSOLE_REPO}:latest", "livenessProbe": {"tcpSocket":
-      {"port": "http"}}, "name": "console", "ports": [{"containerPort": 8080, "name":
-      "http", "protocol": "TCP"}, {"containerPort": 56720, "name": "amqp-ws", "protocol":
-      "TCP"}], "resources": {"limits": {"memory": "64Mi"}, "requests": {"memory":
-      "64Mi"}}}, {"env": [ ], "image": "${CONFIGSERV_REPO}:latest", "livenessProbe":
+      "value": "5672"}], "image": "${CONSOLE_REPO}:latest", "livenessProbe": {"httpGet":
+      {"path": "/", "port": "http"}}, "name": "console", "ports": [{"containerPort":
+      8080, "name": "http", "protocol": "TCP"}, {"containerPort": 56720, "name": "amqp-ws",
+      "protocol": "TCP"}], "resources": {"limits": {"memory": "64Mi"}, "requests":
+      {"memory": "64Mi"}}}, {"env": [ ], "image": "${CONFIGSERV_REPO}:latest", "livenessProbe":
       {"tcpSocket": {"port": "amqp"}}, "name": "configserv", "ports": [{"containerPort":
       5672, "name": "amqp", "protocol": "TCP"}], "resources": {"limits": {"memory":
       "256Mi"}, "requests": {"memory": "256Mi"}}}]}}}}, {"apiVersion": "v1", "kind":
@@ -322,11 +322,11 @@ objects:
       "ports": [{"containerPort": 55667, "name": "amqp", "protocol": "TCP"}], "resources":
       {"limits": {"memory": "128Mi"}, "requests": {"memory": "128Mi"}}}, {"env": [{"name":
       "CONFIGURATION_SERVICE_HOST", "value": "localhost"}, {"name": "CONFIGURATION_SERVICE_PORT",
-      "value": "5672"}], "image": "${CONSOLE_REPO}:latest", "livenessProbe": {"tcpSocket":
-      {"port": "http"}}, "name": "console", "ports": [{"containerPort": 8080, "name":
-      "http", "protocol": "TCP"}, {"containerPort": 56720, "name": "amqp-ws", "protocol":
-      "TCP"}], "resources": {"limits": {"memory": "64Mi"}, "requests": {"memory":
-      "64Mi"}}}, {"env": [ ], "image": "${CONFIGSERV_REPO}:latest", "livenessProbe":
+      "value": "5672"}], "image": "${CONSOLE_REPO}:latest", "livenessProbe": {"httpGet":
+      {"path": "/", "port": "http"}}, "name": "console", "ports": [{"containerPort":
+      8080, "name": "http", "protocol": "TCP"}, {"containerPort": 56720, "name": "amqp-ws",
+      "protocol": "TCP"}], "resources": {"limits": {"memory": "64Mi"}, "requests":
+      {"memory": "64Mi"}}}, {"env": [ ], "image": "${CONFIGSERV_REPO}:latest", "livenessProbe":
       {"tcpSocket": {"port": "amqp"}}, "name": "configserv", "ports": [{"containerPort":
       5672, "name": "amqp", "protocol": "TCP"}], "resources": {"limits": {"memory":
       "256Mi"}, "requests": {"memory": "256Mi"}}}]}}}}, {"apiVersion": "v1", "kind":

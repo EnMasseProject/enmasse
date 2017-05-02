@@ -36,8 +36,9 @@ local common = import "common.jsonnet";
         }
       ],
       "livenessProbe": {
-        "tcpSocket": {
-          "port": "http"
+        "httpGet": {
+          "port": "http",
+          "path": "/"
         }
       },
       [if use_sasldb then "volumeMounts"]: [{"name": "sasldb-vol","mountPath": mount_path}]
