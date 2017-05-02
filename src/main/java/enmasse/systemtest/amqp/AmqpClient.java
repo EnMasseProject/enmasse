@@ -23,7 +23,6 @@ import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.amqp.messaging.Source;
 import org.apache.qpid.proton.amqp.messaging.Target;
 import org.apache.qpid.proton.message.Message;
-import org.apache.qpid.proton.reactor.Reactor;
 
 import java.io.IOException;
 import java.util.*;
@@ -74,14 +73,7 @@ public class AmqpClient implements AutoCloseable {
         CompletableFuture<List<String>> promise = new CompletableFuture<>();
         CountDownLatch connectLatch = new CountDownLatch(1);
 
-        vertx.deployVerticle(new Receiver(endpoint, done, promise, new ClientOptions(source, new Target(), protonClientOptions, linkName), connectLatch),
-                id -> {
-                    if (id.succeeded()) {
-                        clients.add(id.result());
-                    } else {
-                        promise.completeExceptionally(new RuntimeException("Error creating client"));
-                    }
-                });
+        vertx.deployVerticle(new Receiver(endpoint, done, promise, new ClientOptions(source, new Target(), protonClientOptions, linkName), connectLatch));
         if (!connectLatch.await(connectTimeout, timeUnit)) {
             throw new RuntimeException("Timeout waiting for client to connect");
         }
@@ -90,9 +82,6 @@ public class AmqpClient implements AutoCloseable {
 
     @Override
     public void close() throws Exception {
-        for (String client : clients) {
-            vertx.undeploy(client);
-        }
     }
 
 
@@ -134,15 +123,7 @@ public class AmqpClient implements AutoCloseable {
         CompletableFuture<Integer> promise = new CompletableFuture<>();
         CountDownLatch connectLatch = new CountDownLatch(1);
         Queue<Message> messageQueue = new LinkedList<>(Arrays.asList(messages));
-        Reactor reactor = Reactor.Factory.create();
-        vertx.deployVerticle(new Sender(endpoint, new ClientOptions(terminusFactory.getSource(address), terminusFactory.getTarget(address), protonClientOptions, Optional.empty()), connectLatch, promise, messageQueue, qos),
-                id -> {
-                    if (id.succeeded()) {
-                        clients.add(id.result());
-                    } else {
-                        promise.completeExceptionally(new RuntimeException("Error creating sender"));
-                    }
-                });
+        vertx.deployVerticle(new Sender(endpoint, new ClientOptions(terminusFactory.getSource(address), terminusFactory.getTarget(address), protonClientOptions, Optional.empty()), connectLatch, promise, messageQueue, qos));
         if (!connectLatch.await(connectTimeout, timeUnit)) {
             throw new RuntimeException("Timeout waiting for client to connect");
         }

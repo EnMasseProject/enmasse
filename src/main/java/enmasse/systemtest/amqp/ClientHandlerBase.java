@@ -47,6 +47,12 @@ public abstract class ClientHandlerBase<T> extends AbstractVerticle {
                 promise.completeExceptionally(connection.cause());
             }
         });
+        System.out.println("Client started");
+    }
+
+    @Override
+    public void stop() {
+        System.out.println("Client stopped");
     }
 
     protected abstract void connectionOpened(ProtonConnection conn);

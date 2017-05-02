@@ -1,18 +1,11 @@
 package enmasse.systemtest.amqp;
 
 import io.vertx.proton.ProtonConnection;
-import io.vertx.proton.ProtonDelivery;
-import io.vertx.proton.ProtonMessageHandler;
 import io.vertx.proton.ProtonReceiver;
-import org.apache.qpid.proton.Proton;
 import org.apache.qpid.proton.amqp.Symbol;
-import org.apache.qpid.proton.amqp.messaging.Accepted;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.amqp.messaging.Source;
-import org.apache.qpid.proton.engine.*;
 import org.apache.qpid.proton.message.Message;
-import org.apache.qpid.proton.reactor.FlowController;
-import org.apache.qpid.proton.reactor.Handshaker;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,10 +18,12 @@ public class Receiver extends ClientHandlerBase<List<String>> {
 
     private final List<String> messages = new ArrayList<>();
     private final Predicate<Message> done;
+    private final CountDownLatch connectLatch;
 
     public Receiver(enmasse.systemtest.Endpoint endpoint, Predicate<Message> done, CompletableFuture<List<String>> promise, ClientOptions clientOptions, CountDownLatch connectLatch) {
         super(endpoint, clientOptions, promise);
         this.done = done;
+        this.connectLatch = connectLatch;
     }
 
     @Override
@@ -50,6 +45,7 @@ public class Receiver extends ClientHandlerBase<List<String>> {
         });
         receiver.openHandler(result -> {
             receiver.flow(1);
+            connectLatch.countDown();
         });
 
         receiver.closeHandler(closed -> {
