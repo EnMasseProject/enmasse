@@ -19,6 +19,7 @@ import enmasse.systemtest.amqp.AmqpClient;
 import enmasse.systemtest.amqp.SslOptions;
 import enmasse.systemtest.amqp.TerminusFactory;
 import io.vertx.core.Vertx;
+import io.vertx.proton.ProtonClientOptions;
 import io.vertx.proton.ProtonQoS;
 import org.apache.qpid.proton.amqp.transport.End;
 import org.apache.qpid.proton.engine.SslDomain;
@@ -100,20 +101,21 @@ public abstract class AmqpTestBase {
         if (environment.useTLS()) {
             Endpoint messagingEndpoint = openShift.getRouteEndpoint("messaging");
             Endpoint clientEndpoint;
+            ProtonClientOptions clientOptions = new ProtonClientOptions();
+            clientOptions.setSsl(true);
+            clientOptions.setTrustAll(true);
+
             if (resolvable(messagingEndpoint)) {
                 clientEndpoint = messagingEndpoint;
             } else {
                 clientEndpoint = new Endpoint("localhost", 443);
+                clientOptions.setSniServerName(messagingEndpoint.getHost());
             }
-            SslDomain sslDomain = SslDomain.Factory.create();
-            sslDomain.init(SslDomain.Mode.CLIENT);
-            sslDomain.setPeerAuthentication(SslDomain.VerifyMode.ANONYMOUS_PEER);
-            SslPeerDetails sslPeerDetails = SslPeerDetails.Factory.create(messagingEndpoint.getHost(), messagingEndpoint.getPort());
-            SslOptions sslOptions = new SslOptions(sslDomain, sslPeerDetails);
             System.out.println("External endpoint: " + clientEndpoint + ", internal: " + messagingEndpoint);
-            return createClient(terminusFactory, clientEndpoint, Optional.of(sslOptions), qos);
+
+            return createClient(terminusFactory, clientEndpoint, clientOptions, qos);
         } else {
-            return createClient(terminusFactory, openShift.getInsecureEndpoint(), Optional.empty(), qos);
+            return createClient(terminusFactory, openShift.getInsecureEndpoint(), qos);
         }
     }
 
@@ -127,11 +129,11 @@ public abstract class AmqpTestBase {
     }
 
     protected AmqpClient createClient(TerminusFactory terminusFactory, Endpoint endpoint, ProtonQoS qos) {
-        return createClient(terminusFactory, endpoint, Optional.empty(), qos);
+        return createClient(terminusFactory, endpoint, new ProtonClientOptions(), qos);
     }
 
-    protected AmqpClient createClient(TerminusFactory terminusFactory, Endpoint endpoint, Optional<SslOptions> sslOptions,  ProtonQoS qos) {
-        AmqpClient client = new AmqpClient(endpoint, terminusFactory, sslOptions, qos);
+    protected AmqpClient createClient(TerminusFactory terminusFactory, Endpoint endpoint, ProtonClientOptions protonOptions, ProtonQoS qos) {
+        AmqpClient client = new AmqpClient(vertx, endpoint, terminusFactory, protonOptions, qos);
         clients.add(client);
         return client;
     }
