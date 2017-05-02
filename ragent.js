@@ -116,7 +116,7 @@ function connected_routers_updated (router) {
     check_connectivity();
     for (var id in subscribers) {
         var sender = subscribers[id];
-        sender.send({subject:router.container_id, kind:'router', status:'defined', body:router.listeners});
+        sender.send({subject:'routers', kind:'router', status:'defined', body:router.listeners});
     }
 }
 
@@ -175,8 +175,9 @@ function watch_pods(connection) {
             var pod = pods[pod_name];
 
             //pod name will be containerid, use that as the id for debug logging
-            var agent_conn_info = {host:pod.host, port:port, id:pod.name, properties:connection_properties};
+            var agent_conn_info = {host:pod.host, port:port, id:pod_name, properties:connection_properties};
             var agent_conn = amqp.connect(agent_conn_info);
+            agent_conn.open_receiver('routers');
             agent_connections[pod_name] = agent_conn;
             console.log('connecting to new agent ' + JSON.stringify(agent_conn_info));
         }
