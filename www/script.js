@@ -125,14 +125,6 @@ angular.module('patternfly.toolbars').controller('ViewCtrl', ['$scope', '$timeou
             return chart;
         };
 
-        // comment this out if you don't want to support expanding/collapsing the list item by clicking anywhere on the item
-/*
-        $templateCache.put('views/listview/list-view.html',
-          "<div class=\"list-group list-view-pf list-view-pf-view\" dnd-list=items ng-class=\"{'list-view-pf-dnd': config.dragEnabled === true}\"><div class=dndPlaceholder></div><div ng-click=\"toggleItemExpansion(item)\" class=\"list-group-item {{item.rowClass}}\" ng-repeat=\"item in items track by $index\" dnd-draggable=item dnd-effect-allowed=move dnd-disable-if=\"config.dragEnabled !== true\" dnd-dragstart=dragStart(item) dnd-moved=dragMoved() dnd-dragend=dragEnd() ng-class=\"{'drag-original': isDragOriginal(item), 'pf-selectable': selectItems, 'active': isSelected(item), 'disabled': checkDisabled(item), 'list-view-pf-expand-active': item.isExpanded}\"><div class=list-group-item-header><div class=list-view-pf-dnd-drag-items ng-if=\"config.dragEnabled === true\"><div pf-transclude=parent class=list-view-pf-main-info></div></div><div ng-class=\"{'list-view-pf-dnd-original-items': config.dragEnabled === true}\"><div class=list-view-pf-expand ng-if=config.useExpandingRows><span class=\"fa fa-angle-right\" ng-show=!item.disableRowExpansion ng-click=toggleItemExpansion(item) ng-class=\"{'fa-angle-down': item.isExpanded}\"></span> <span class=pf-expand-placeholder ng-show=item.disableRowExpansion></span></div><div class=list-view-pf-checkbox ng-if=config.showSelectBox><input type=checkbox value=item.selected ng-model=item.selected ng-disabled=checkDisabled(item) ng-change=\"checkBoxChange(item)\"></div><div class=list-view-pf-actions ng-if=\"(actionButtons && actionButtons.length > 0) || (menuActions && menuActions.length > 0)\"><button class=\"btn btn-default {{actionButton.class}}\" ng-repeat=\"actionButton in actionButtons\" title={{actionButton.title}} ng-class=\"{'disabled' : checkDisabled(item) || !enableButtonForItem(actionButton, item)}\" ng-click=\"handleButtonAction(actionButton, item)\"><div ng-if=actionButton.include class=actionButton.includeClass ng-include src=actionButton.include></div><span ng-if=!actionButton.include>{{actionButton.name}}</span></button><div uib-dropdown class=\"{{dropdownClass}} pull-right dropdown-kebab-pf {{getMenuClassForItem(item)}} {{hideMenuForItem(item) ? 'invisible' : ''}}\" id=kebab_{{$index}} ng-if=\"menuActions && menuActions.length > 0\"><button uib-dropdown-toggle class=\"btn btn-link\" type=button id=dropdownKebabRight_{{$index}} ng-class=\"{'disabled': checkDisabled(item)}\" ng-click=\"setupActions(item, $event)\"><span class=\"fa fa-ellipsis-v\"></span></button><ul uib-dropdown-menu class=\"dropdown-menu dropdown-menu-right {{$index}}\" aria-labelledby=dropdownKebabRight_{{$index}}><li ng-repeat=\"menuAction in menuActions\" ng-if=\"menuAction.isVisible !== false\" role=\"{{menuAction.isSeparator === true ? 'separator' : 'menuitem'}}\" ng-class=\"{'divider': (menuAction.isSeparator === true), 'disabled': (menuAction.isDisabled === true)}\"><a ng-if=\"menuAction.isSeparator !== true\" title={{menuAction.title}} ng-click=\"handleMenuAction(menuAction, item)\">{{menuAction.name}}</a></li></ul></div></div><div pf-transclude=parent class=list-view-pf-main-info ng-click=\"\" ng-dblclick=\"\"></div><div class=\"list-group-item-container container-fluid\" ng-transclude=expandedContent ng-if=\"config.useExpandingRows && item.isExpanded\"></div></div></div></div></div>"
-        );
-*/
-        //
-
         var lastLinkInfo = {}
         var saveLastLinkInfo = function (item) {
           lastLinkInfo[item.address] =
@@ -151,7 +143,7 @@ angular.module('patternfly.toolbars').controller('ViewCtrl', ['$scope', '$timeou
             var calc = function (iLinks, curLinks) {
               curLinks.forEach( function (curLink) {
                 var matched = iLinks.some( function (iLink) {
-                  if (iLink.identity === curLink.identity && iLink.name === curLink.name) {
+                  if (iLink.routerName === curLink.routerName && iLink.identity === curLink.identity && iLink.name === curLink.name) {
                     var elapsed = curLink.lastUpdated - iLink.lastUpdated
                     var rate = iLink.deliveryRate || 0
                     if (elapsed) {
