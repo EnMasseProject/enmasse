@@ -104,6 +104,7 @@ public abstract class AmqpTestBase {
             ProtonClientOptions clientOptions = new ProtonClientOptions();
             clientOptions.setSsl(true);
             clientOptions.setTrustAll(true);
+            clientOptions.setHostnameVerificationAlgorithm("");
 
             if (resolvable(messagingEndpoint)) {
                 clientEndpoint = messagingEndpoint;
