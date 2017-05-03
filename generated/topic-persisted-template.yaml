@@ -24,7 +24,7 @@ objects:
   kind: Deployment
   metadata:
     labels:
-      address_config: address-config-${INSTANCE}-${NAME}
+      address_config: address-config-${NAME}
       app: enmasse
       group_id: "${NAME}"
       instance: "${INSTANCE}"
@@ -85,11 +85,18 @@ objects:
           - containerPort: 55673
             name: internal
             protocol: TCP
+          - containerPort: 5671
+            name: amqps
+            protocol: TCP
           resources:
             limits:
               memory: 256Mi
             requests:
               memory: 256Mi
+          volumeMounts:
+          - - mountPath: "/etc/qpid-dispatch/ssl"
+              name: ssl-certs
+              readOnly: true
         - env:
           - name: TOPIC_NAME
             value: "${ADDRESS}"
@@ -113,6 +120,9 @@ objects:
         - name: vol-${NAME}
           persistentVolumeClaim:
             claimName: pvc-${NAME}
+        - name: ssl-certs
+          secret:
+            secretName: "${COLOCATED_ROUTER_SECRET}"
         - configMap:
             name: hawkular-broker-config
           name: hawkular-openshift-agent
@@ -143,4 +153,7 @@ parameters:
   required: true
 - description: The address to use for the topic
   name: ADDRESS
+  required: true
+- description: Name of secret containing router key and certificate
+  name: COLOCATED_ROUTER_SECRET
   required: true

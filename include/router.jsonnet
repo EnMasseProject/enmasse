@@ -28,7 +28,7 @@ local common = import "common.jsonnet";
 
     },
 
-  container(use_tls, use_sasldb, image_repo, addressEnv, mem_request)::
+  container(use_sasldb, image_repo, addressEnv, mem_request)::
     local routerPort = {
         "name": "amqp",
         "containerPort": 5672,
@@ -62,9 +62,7 @@ local common = import "common.jsonnet";
       "env": if addressEnv == ""
         then [linkEnv]
         else [linkEnv, addressEnv],
-      "ports": if use_tls
-        then [routerPort, internalPort, secureRouterPort]
-        else [routerPort, internalPort],
+      "ports": [routerPort, internalPort, secureRouterPort],
       "livenessProbe": {
         "tcpSocket": {
           "port": "amqp"
@@ -80,14 +78,14 @@ local common = import "common.jsonnet";
           "mountPath": "/var/lib/qdrouterd"
         }],
       [if mem_request != "" then "resources"]: resources,
-      [if use_sasldb || use_tls then "volumeMounts"]: (if use_tls then ssl_certs else []) + (if use_sasldb then sasldb_vol else [])
+      "volumeMounts": [ssl_certs] + (if use_sasldb then sasldb_vol else [])
     },
 
-  secret_volume()::
+  secret_volume(router_secret)::
     {
       "name": "ssl-certs",
       "secret": {
-        "secretName": "qdrouterd-certs"
+        "secretName": router_secret
       }
     },
 

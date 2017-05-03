@@ -21,60 +21,51 @@ local amqpKafkaBridgeService = import "amqp-kafka-bridge-service.jsonnet";
 local hawkularBrokerConfig = import "hawkular-broker-config.jsonnet";
 local hawkularRouterConfig = import "hawkular-router-config.jsonnet";
 {
-  generate(use_tls, use_sasldb, compact, with_kafka, use_routes)::
+  generate(use_sasldb, with_kafka, use_routes)::
   {
-    local templateName = (if use_tls then"tls-enmasse-instance-infra" else "enmasse-instance-infra"),
     "apiVersion": "v1",
     "kind": "Template",
     "metadata": {
       "labels": {
         "app": "enmasse"
       },
-      "name": templateName
+      "name": "enmasse-instance-infra"
     },
     local common = [
-      qdrouterd.deployment(use_tls, use_sasldb, "${INSTANCE}", "${ROUTER_REPO}", "${ROUTER_COLLECTOR_REPO}"),
-      messagingService.generate(use_tls, "${INSTANCE}", true),
+      qdrouterd.deployment(use_sasldb, "${INSTANCE}", "${ROUTER_REPO}", "${ROUTER_COLLECTOR_REPO}", "${ROUTER_SECRET}"),
+      messagingService.generate("${INSTANCE}"),
       subserv.deployment("${INSTANCE}", "${SUBSERV_REPO}"),
       subserv.service("${INSTANCE}"),
-      mqttGateway.deployment(use_tls, "${INSTANCE}", "${MQTT_GATEWAY_REPO}"),
-      mqttService.generate(use_tls, "${INSTANCE}"),
+      mqttGateway.deployment("${INSTANCE}", "${MQTT_GATEWAY_REPO}", "${MQTT_SECRET}"),
+      mqttService.generate("${INSTANCE}"),
       mqttLwt.deployment("${INSTANCE}", "${MQTT_LWT_REPO}"),
       hawkularBrokerConfig,
       hawkularRouterConfig
     ],
 
-    local routeConfig = [ console.route("${INSTANCE}", "${CONSOLE_HOSTNAME}"), ] +
-      (if use_tls then [ messagingRoute.generate("${INSTANCE}", "${MESSAGING_HOSTNAME}"), mqttRoute.generate("${INSTANCE}", "${MQTT_GATEWAY_HOSTNAME}") ] else []),
+    local routeConfig = [ console.route("${INSTANCE}", "${CONSOLE_HOSTNAME}"),
+      messagingRoute.generate("${INSTANCE}", "${MESSAGING_HOSTNAME}"),
+      mqttRoute.generate("${INSTANCE}", "${MQTT_GATEWAY_HOSTNAME}") ],
 
     local ingressConfig = [
       console.ingress("${INSTANCE}", "${CONSOLE_HOSTNAME}")
     ],
 
-    local compactAdmin = [
+    local adminObj = [
       admin.deployment(use_sasldb, "${INSTANCE}", "${CONFIGSERV_REPO}", "${RAGENT_REPO}", "${QUEUE_SCHEDULER_REPO}", "${CONSOLE_REPO}")
     ] + admin.services("${INSTANCE}"),
 
-    local fullAdmin = [
-      configserv.deployment("${INSTANCE}", "${CONFIGSERV_REPO}"),
-      configserv.service("${INSTANCE}"),
-      ragent.deployment("${INSTANCE}", "${RAGENT_REPO}"),
-      ragent.service("${INSTANCE}"),
-      queueScheduler.service("${INSTANCE}"),
-      queueScheduler.deployment("${INSTANCE}", "${QUEUE_SCHEDULER_REPO}")
-    ],
-
     local kafka = [
-      amqpKafkaBridgeService.generate(use_tls, "${INSTANCE}"),
+      amqpKafkaBridgeService.generate("${INSTANCE}"),
       amqpKafkaBridge.deployment("${INSTANCE}", "${AMQP_KAFKA_BRIDGE_REPO}")
     ],
 
     local routes = if use_routes then routeConfig else ingressConfig,
 
+      //adminObj +
     "objects": (if use_sasldb then [router.sasldb_pvc()] else []) + 
       common +
       routes +
-      (if compact then compactAdmin else fullAdmin) +
       (if with_kafka then kafka else []),
 
     local commonParameters = [
@@ -120,7 +111,7 @@ local hawkularRouterConfig = import "hawkular-router-config.jsonnet";
       },
       {
         "name": "MESSAGING_HOSTNAME",
-        "description": "The hostname to use for the exposed route for messaging (TLS only)"
+        "description": "The hostname to use for the exposed route for messaging"
       },
       {
         "name" : "MQTT_GATEWAY_REPO",
@@ -129,11 +120,21 @@ local hawkularRouterConfig = import "hawkular-router-config.jsonnet";
       },
       {
         "name": "MQTT_GATEWAY_HOSTNAME",
-        "description": "The hostname to use for the exposed route for MQTT (TLS only)"
+        "description": "The hostname to use for the exposed route for MQTT"
       },
       {
         "name": "CONSOLE_HOSTNAME",
         "description": "The hostname to use for the exposed route for the messaging console"
+      },
+      {
+        "name": "ROUTER_SECRET",
+        "description": "The secret to mount for router private key and certificate",
+        "required": true
+      },
+      {
+        "name": "MQTT_SECRET",
+        "description": "The secret to mount for MQTT private key and certificate",
+        "required": true
       },
       {
         "name" : "MQTT_LWT_REPO",

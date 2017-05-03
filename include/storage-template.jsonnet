@@ -7,11 +7,11 @@ local router_collector_repo = "${ROUTER_COLLECTOR_REPO}";
 local forwarder_repo = "${TOPIC_FORWARDER_REPO}";
 local forwarder = import "forwarder.jsonnet";
 {
-  template(multicast, persistence, secure)::
+  template(multicast, persistence)::
     local addrtype = (if multicast then "topic" else "queue");
     local addressEnv = (if multicast then { name: "TOPIC_NAME", value: "${ADDRESS}" } else { name: "QUEUE_NAME", value: "${ADDRESS}" });
     local volumeName = "vol-${NAME}";
-    local templateName = "%s%s-%s" % [if secure then "tls-" else "", addrtype, (if persistence then "persisted" else "inmemory")];
+    local templateName = "%s-%s" % [addrtype, (if persistence then "persisted" else "inmemory")];
     local claimName = "pvc-${NAME}";
     {
       "apiVersion": "v1",
@@ -32,7 +32,7 @@ local forwarder = import "forwarder.jsonnet";
             "app": "enmasse",
             "group_id": "${NAME}",
             "instance": "${INSTANCE}",
-            "address_config": "address-config-${INSTANCE}-${NAME}"
+            "address_config": "address-config-${NAME}"
           }
         },
         "spec": {
@@ -50,15 +50,13 @@ local forwarder = import "forwarder.jsonnet";
               local brokerVolume = if persistence
                 then broker.persistedVolume(volumeName, claimName)
                 else broker.volume(volumeName),
-              "volumes": if secure
-                then [brokerVolume, router.secret_volume(), broker.hawkularVolume()]
-                else [brokerVolume, broker.hawkularVolume()],
+              "volumes": [brokerVolume, router.secret_volume("${COLOCATED_ROUTER_SECRET}"), broker.hawkularVolume()],
 
               "containers": if multicast
-                then [ broker.container(secure, volumeName, broker_repo, addressEnv),
-                       router.container(secure, false, router_repo, addressEnv, "256Mi"),
+                then [ broker.container(volumeName, broker_repo, addressEnv),
+                       router.container(false, router_repo, addressEnv, "256Mi"),
                        forwarder.container(forwarder_repo, addressEnv) ]
-                else [ broker.container(secure, volumeName, broker_repo, addressEnv) ]
+                else [ broker.container(volumeName, broker_repo, addressEnv) ]
             }
           }
         }
@@ -133,6 +131,11 @@ local forwarder = import "forwarder.jsonnet";
         {
           "name": "ADDRESS",
           "description": "The address to use for the %s" % [addrtype],
+          "required": true
+        },
+        {
+          "name": "COLOCATED_ROUTER_SECRET",
+          "description": "Name of secret containing router key and certificate",
           "required": true
         }
       ]

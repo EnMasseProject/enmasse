@@ -11,7 +11,7 @@
     "protocol": "TCP",
     "targetPort": 8883
   },
-  generate(secure, instance)::
+  generate(instance)::
     {
       "apiVersion": "v1",
       "kind": "Service",
@@ -23,7 +23,7 @@
         "name": "mqtt"
       },
       "spec": {
-        "ports": if secure then [port, securePort] else [port],
+        "ports": [port, securePort],
         "selector": {
           "name": "mqtt-gateway",
           "instance": instance

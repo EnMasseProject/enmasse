@@ -5,7 +5,7 @@
     "protocol": "TCP",
     "targetPort": 5672
   },
-  generate(secure, instance)::
+  generate(instance)::
     {
       "apiVersion": "v1",
       "kind": "Service",
