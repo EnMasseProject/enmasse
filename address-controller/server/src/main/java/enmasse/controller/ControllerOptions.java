@@ -20,23 +20,30 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Map;
+import java.util.Optional;
 
 public final class ControllerOptions {
 
     private final String masterUrl;
     private final boolean isMultiinstance;
-    private final boolean useTLS;
     private final String namespace;
     private final String token;
     private final File templateDir;
+    private final Optional<String> messagingHost;
+    private final Optional<String> mqttHost;
+    private final Optional<String> consoleHost;
+    private final Optional<String> certSecret;
 
-    private ControllerOptions(String masterUrl, boolean isMultiinstance, boolean useTLS, String namespace, String token, File templateDir) {
+    private ControllerOptions(String masterUrl, boolean isMultiinstance, String namespace, String token, File templateDir, Optional<String> messagingHost, Optional<String> mqttHost, Optional<String> consoleHost, Optional<String> certSecret) {
         this.masterUrl = masterUrl;
         this.isMultiinstance = isMultiinstance;
-        this.useTLS = useTLS;
         this.namespace = namespace;
         this.token = token;
         this.templateDir = templateDir;
+        this.messagingHost = messagingHost;
+        this.mqttHost = mqttHost;
+        this.consoleHost = consoleHost;
+        this.certSecret = certSecret;
     }
 
     public String masterUrl() {
@@ -47,7 +54,6 @@ public final class ControllerOptions {
         String masterHost = getEnvOrThrow(env, "KUBERNETES_SERVICE_HOST");
         String masterPort = getEnvOrThrow(env, "KUBERNETES_SERVICE_PORT");
         boolean isMultiinstance = Boolean.parseBoolean(env.get("MULTIINSTANCE"));
-        boolean useTLS = Boolean.parseBoolean(env.get("TLS"));
 
         File namespaceFile = new File(SERVICEACCOUNT_PATH, "namespace");
         String namespace;
@@ -70,7 +76,16 @@ public final class ControllerOptions {
             templateDir = new File(env.get("TEMPLATE_DIR"));
         }
 
-        return new ControllerOptions(String.format("https://%s:%s", masterHost, masterPort), isMultiinstance, useTLS, namespace, token, templateDir);
+        Optional<String> messagingHost = getEnv(env, "INSTANCE_MESSAGING_HOST");
+        Optional<String> mqttHost = getEnv(env, "INSTANCE_MQTT_HOST");
+        Optional<String> consoleHost = getEnv(env, "INSTANCE_CONSOLE_HOST");
+        Optional<String> certSecret = getEnv(env, "INSTANCE_CERT_SECRET");
+
+        return new ControllerOptions(String.format("https://%s:%s", masterHost, masterPort), isMultiinstance, namespace, token, templateDir, messagingHost, mqttHost, consoleHost, certSecret);
+    }
+
+    private static Optional<String> getEnv(Map<String, String> env, String envVar) {
+        return Optional.ofNullable(env.get(envVar));
     }
 
     private static String getEnvOrThrow(Map<String, String> env, String envVar) {
@@ -103,11 +118,24 @@ public final class ControllerOptions {
         return 5672;
     }
 
-    public boolean useTLS() {
-        return useTLS;
-    }
-
     public File templateDir() {
         return templateDir;
+    }
+
+    public Optional<String> messagingHost() {
+        return messagingHost;
+    }
+
+    public Optional<String> mqttHost() {
+        return mqttHost;
+
+    }
+
+    public Optional<String> consoleHost() {
+        return consoleHost;
+    }
+
+    public Optional<String> certSecret() {
+        return certSecret;
     }
 }

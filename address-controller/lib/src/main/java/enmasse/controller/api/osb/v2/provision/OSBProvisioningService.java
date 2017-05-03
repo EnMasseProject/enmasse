@@ -35,7 +35,7 @@ public class OSBProvisioningService extends OSBServiceBase {
     }
 
     @PUT
-    public Response provisionService(@PathParam("instanceId") String instanceId, ProvisionRequest request) {
+    public Response provisionService(@PathParam("instanceId") String instanceId, ProvisionRequest request) throws Exception {
         // We must shorten the organizationId so the resulting address configmap name isn't too long
         String shortOrganizationId = shortenUuid(request.getOrganizationId()); // TODO: remove the need for doing this
         InstanceId maasInstanceId = InstanceId.withId(shortOrganizationId);

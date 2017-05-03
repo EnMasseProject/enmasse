@@ -20,4 +20,5 @@ public interface ResourceKeys {
     String MQTT_HOST = "mqttHost";
     String CONSOLE_HOST = "consoleHost";
     String ITEMS = "items";
+    String CERT_SECRET = "certSecret";
 }

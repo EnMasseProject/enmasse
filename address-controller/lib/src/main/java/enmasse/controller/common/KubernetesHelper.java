@@ -27,10 +27,12 @@ import io.fabric8.openshift.api.model.DoneablePolicyBinding;
 import io.fabric8.openshift.api.model.PolicyBinding;
 import io.fabric8.openshift.client.OpenShiftClient;
 import io.fabric8.openshift.client.ParameterValue;
+import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -255,5 +257,28 @@ public class KubernetesHelper implements Kubernetes {
     @Override
     public boolean hasService(String service) {
         return client.services().withName(service).get() != null;
+    }
+
+    @Override
+    public String createCertSecret(InstanceId instanceId, File keyFile, File certFile) throws IOException {
+        String secretName = instanceId.getId() + "-certs";
+        Map<String, String> data = new LinkedHashMap<>();
+        Base64.Encoder encoder = Base64.getEncoder();
+        data.put("server-key.pem", encoder.encodeToString(FileUtils.readFileToByteArray(keyFile)));
+        data.put("server-cert.pem", encoder.encodeToString(FileUtils.readFileToByteArray(certFile)));
+        Secret secret = client.secrets().inNamespace(instanceId.getNamespace()).createNew()
+                .editOrNewMetadata()
+                .withName(secretName)
+                .endMetadata()
+                .withData(data)
+                .done();
+        client.serviceAccounts().inNamespace(instanceId.getNamespace()).withName("default").edit()
+                .addToSecrets(new ObjectReferenceBuilder()
+                        .withKind(secret.getKind())
+                        .withName(secret.getMetadata().getName())
+                        .withApiVersion(secret.getApiVersion())
+                        .build())
+                .done();
+        return secretName;
     }
 }

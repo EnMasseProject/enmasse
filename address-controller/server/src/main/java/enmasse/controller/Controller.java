@@ -43,7 +43,7 @@ public class Controller extends AbstractVerticle {
     private final FlavorController flavorController;
 
 
-    public Controller(ControllerOptions options) throws IOException {
+    public Controller(ControllerOptions options) throws Exception {
         OpenShiftClient controllerClient = new DefaultOpenShiftClient(new ConfigBuilder()
                 .withMasterUrl(options.masterUrl())
                 .withOauthToken(options.token())
@@ -51,12 +51,17 @@ public class Controller extends AbstractVerticle {
                 .build());
 
         Kubernetes kubernetes = new KubernetesHelper(InstanceId.withIdAndNamespace(options.namespace(), options.namespace()), controllerClient, options.templateDir());
-        String templateName = options.useTLS() ? "tls-enmasse-instance-infra" : "enmasse-instance-infra";
+        String templateName = "enmasse-instance-infra";
 
         FlavorManager flavorManager = new FlavorManager();
         this.instanceManager = new InstanceManagerImpl(kubernetes, templateName, options.isMultiinstance());
         if (!options.isMultiinstance() && !kubernetes.hasService("messaging")) {
-            instanceManager.create(new Instance.Builder(kubernetes.getInstanceId()).build());
+            Instance.Builder builder = new Instance.Builder(kubernetes.getInstanceId());
+            builder.messagingHost(options.messagingHost());
+            builder.mqttHost(options.mqttHost());
+            builder.consoleHost(options.consoleHost());
+            builder.certSecret(options.certSecret());
+            instanceManager.create(builder.build());
         }
 
         this.addressManager = new AddressManagerImpl(kubernetes, flavorManager);
@@ -79,7 +84,7 @@ public class Controller extends AbstractVerticle {
         } catch (IllegalArgumentException e) {
             System.out.println(String.format("Unable to parse arguments: %s", e.getMessage()));
             System.exit(1);
-        } catch (IOException e) {
+        } catch (Exception e) {
             System.out.println("Error starting address controller: " + e.getMessage());
             System.exit(1);
         }

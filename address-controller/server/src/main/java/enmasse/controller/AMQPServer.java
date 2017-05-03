@@ -158,7 +158,7 @@ public class AMQPServer extends AbstractVerticle {
     }
 
     private interface RequestHandler {
-        Message handleMessage(Message message) throws IOException;
+        Message handleMessage(Message message) throws Exception;
     }
 }
 

@@ -59,7 +59,7 @@ public class AmqpAddressingApiTest {
     }
 
     @Test
-    public void testList() throws IOException {
+    public void testList() throws Exception {
         Message response = doRequest("GET", "", Optional.empty());
         Set<Destination> data = decodeAs(AddressList.class, response).getDestinations();
 
@@ -73,7 +73,7 @@ public class AmqpAddressingApiTest {
         return mapper.readValue((String)((AmqpValue)message.getBody()).getValue(), clazz);
     }
 
-    private Message doRequest(String method, Object body, Optional<String> addressProperty) throws IOException {
+    private Message doRequest(String method, Object body, Optional<String> addressProperty) throws Exception {
         Message message = Message.Factory.create();
         message.setAddress("$address");
         message.setContentType("application/json");
@@ -87,7 +87,7 @@ public class AmqpAddressingApiTest {
     }
 
     @Test
-    public void testGet() throws IOException {
+    public void testGet() throws Exception {
         Message response = doRequest("GET", "", Optional.of("queue1"));
         Destination data = decodeAs(Address.class, response).getDestination();
 
@@ -98,19 +98,19 @@ public class AmqpAddressingApiTest {
     }
 
     @Test(expected = RuntimeException.class)
-    public void testGetException() throws IOException {
+    public void testGetException() throws Exception {
         addressSpace.throwException = true;
         doRequest("GET", "", Optional.empty());
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testGetUnknown() throws IOException {
+    public void testGetUnknown() throws Exception {
         doRequest("GET", "", Optional.of("unknown"));
     }
 
 
     @Test
-    public void testPut() throws IOException {
+    public void testPut() throws Exception {
         Set<Destination> input = Sets.newSet(
                 new Destination("addr2", "addr2", false, false, Optional.empty(), Optional.empty()),
                 new Destination("topic", "topic", true, true, Optional.of("vanilla"), Optional.empty()));
@@ -127,13 +127,13 @@ public class AmqpAddressingApiTest {
     }
 
     @Test(expected = RuntimeException.class)
-    public void testPutException() throws IOException {
+    public void testPutException() throws Exception {
         addressSpace.throwException = true;
         doRequest("PUT", AddressList.fromSet(Collections.singleton( new Destination("newaddr", "newaddr", true, false, Optional.of("vanilla"), Optional.empty()))), Optional.empty());
     }
 
     @Test
-    public void testDelete() throws IOException {
+    public void testDelete() throws Exception {
 
         Message response = doRequest("DELETE", "", Optional.of("addr1"));
         Set<Destination> result = decodeAs(AddressList.class, response).getDestinations();
@@ -147,7 +147,7 @@ public class AmqpAddressingApiTest {
     }
 
     @Test(expected = RuntimeException.class)
-    public void testDeleteException() throws IOException {
+    public void testDeleteException() throws Exception {
         addressSpace.throwException = true;
         doRequest("DELETE", "", Optional.of("throw"));
     }
@@ -157,7 +157,7 @@ public class AmqpAddressingApiTest {
     }
 
     @Test
-    public void testAppend() throws IOException {
+    public void testAppend() throws Exception {
         Message response = doRequest("POST", new Address(new Destination("addr2", "addr2", false, false, Optional.empty(), Optional.empty())), Optional.empty());
         Set<Destination> result = decodeAs(AddressList.class, response).getDestinations();
 
@@ -185,7 +185,7 @@ public class AmqpAddressingApiTest {
     }
 
     @Test(expected = RuntimeException.class)
-    public void testAppendException() throws IOException {
+    public void testAppendException() throws Exception {
         addressSpace.throwException = true;
         doRequest("POST", new Address(new Destination("newaddr", "newaddr", true, false, Optional.of("vanilla"), Optional.empty())), Optional.empty());
     }

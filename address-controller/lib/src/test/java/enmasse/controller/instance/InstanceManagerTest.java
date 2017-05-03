@@ -25,7 +25,7 @@ import static org.mockito.Mockito.*;
 
 public class InstanceManagerTest {
     @Test
-    public void testMultitenantController() {
+    public void testMultitenantController() throws Exception {
         Kubernetes mockClient = mock(Kubernetes.class);
         when(mockClient.mutateClient(any())).thenReturn(mockClient);
         ArgumentCaptor<ParameterValue> captor = ArgumentCaptor.forClass(ParameterValue.class);
@@ -46,7 +46,7 @@ public class InstanceManagerTest {
         assertThat(idCaptor.getAllValues(), hasItem(i2.id()));
 
         List<ParameterValue> values = captor.getAllValues();
-        assertThat(values.size(), is(10));
+        assertThat(values.size(), is(14));
         assertParameter(values, "INSTANCE", "myid");
         assertParameter(values, "INSTANCE", "myid2");
         assertParameter(values, "MESSAGING_HOSTNAME", "messaging.example.com");

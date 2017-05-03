@@ -36,7 +36,7 @@ public class AddressingService {
         this.apiHandler = apiHandler;
     }
 
-    public Message handleMessage(Message message) throws IOException {
+    public Message handleMessage(Message message) throws Exception {
         ApplicationProperties properties = message.getApplicationProperties();
         if (properties == null) {
             throw new IllegalArgumentException("Missing message properties");
@@ -76,7 +76,7 @@ public class AddressingService {
         }
     }
 
-    private Message handlePut(Message message) throws IOException {
+    private Message handlePut(Message message) throws Exception {
         String json = (String)((AmqpValue) message.getBody()).getValue();
         String kind = getKind(json);
         if (Address.kind().equals(kind)) {
@@ -90,7 +90,7 @@ public class AddressingService {
         }
     }
 
-    private Message handleAppend(Message message) throws IOException {
+    private Message handleAppend(Message message) throws Exception {
         String json = (String)((AmqpValue) message.getBody()).getValue();
         String kind = getKind(json);
         if (Address.kind().equals(kind)) {

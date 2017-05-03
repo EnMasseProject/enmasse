@@ -90,7 +90,7 @@ public class TemplateDestinationClusterGeneratorTest {
             assertThat(rlabel.get(LabelKeys.GROUP_ID), is("foo-bar"));
         }
         List<ParameterValue> parameters = captor.getAllValues();
-        assertThat(parameters.size(), is(3));
+        assertThat(parameters.size(), is(4));
     }
 
     private DestinationCluster generateCluster(Destination destination, ArgumentCaptor<ParameterValue> captor) {

@@ -76,6 +76,7 @@ public class TemplateDestinationClusterGenerator implements DestinationClusterGe
         // If the flavor is shared, there is only one instance of it, so give it the name of the flavor
         paramMap.put(TemplateParameter.NAME, Kubernetes.sanitizeName(groupId));
         paramMap.put(TemplateParameter.INSTANCE, Kubernetes.sanitizeName(instance.getId()));
+        paramMap.put(TemplateParameter.COLOCATED_ROUTER_SECRET, instance.getId() + "-certs");
 
         // If the name of the group matches that of the address, assume a scalable queue
         if (groupId.equals(first.address()) && destinations.size() == 1) {

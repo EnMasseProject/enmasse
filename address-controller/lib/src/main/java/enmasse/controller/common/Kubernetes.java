@@ -9,6 +9,8 @@ import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.Namespace;
 import io.fabric8.openshift.client.ParameterValue;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -49,4 +51,5 @@ public interface Kubernetes {
     List<Route> getRoutes(InstanceId instanceId);
 
     boolean hasService(String service);
+    String createCertSecret(InstanceId instanceId, File keyFile, File certFile) throws IOException;
 }

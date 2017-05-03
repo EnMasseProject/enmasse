@@ -53,13 +53,16 @@ public abstract class OSBServiceBase {
         getAddressSpace(instance).addDestination(destination);
     }
 
-    protected Instance getOrCreateInstance(InstanceId instanceId) {
-        return instanceManager.get(instanceId).orElseGet(() -> {
+    protected Instance getOrCreateInstance(InstanceId instanceId) throws Exception {
+        Optional<Instance> instance = instanceManager.get(instanceId);
+        if (!instance.isPresent()) {
             Instance i = new Instance.Builder(instanceId).build();
             instanceManager.create(i);
             log.info("Created MaaS instance {}", i.id());
-            return instanceManager.get(instanceId).get();
-        });
+            return i;
+        } else {
+            return instance.get();
+        }
     }
 
     protected boolean deleteDestinationByUuid(String destinationUuid) {
