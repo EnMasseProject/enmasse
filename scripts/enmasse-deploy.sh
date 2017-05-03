@@ -69,7 +69,7 @@ while getopts c:dgk:mo:p:s:t:u:yhv opt; do
             TEMPLATE_PARAMS="MULTIINSTANCE=true $TEMPLATE_PARAMS"
             ;;
         o)
-            TEMPLATE_PARAMS="MESSAGING_HOSTNAME=$OPTARG $TEMPLATE_PARAMS"
+            TEMPLATE_PARAMS="INSTANCE_MESSAGING_HOST=$OPTARG $TEMPLATE_PARAMS"
             ;;
         p)
             PROJECT=$OPTARG
@@ -169,13 +169,11 @@ if [ -n "$MULTIINSTANCE" ]; then
     echo "Please grant cluster-admin rights to system:serviceaccount:${PROJECT}:enmasse-service-account before creating instances: 'oadm policy add-cluster-role-to-user cluster-admin system:serviceaccount:${PROJECT}:enmasse-service-account'"
 fi
 
-if [ -n "$SERVER_KEY" ] && [ -n "$SERVER_CERT" ]
+if [ -z "$MULTIINSTANCE" ] && [ -n "$SERVER_KEY" ] && [ -n "$SERVER_CERT" ]
 then
-    TEMPLATE_NAME=tls-enmasse
-    runcmd "oc secret new qdrouterd-certs ${SERVER_CERT} ${SERVER_KEY}" "Create certificate secret for router"
-    runcmd "oc secret add serviceaccount/default secrets/qdrouterd-certs --for=mount" "Add router secret to default service account"
-    runcmd "oc secret new mqtt-certs ${SERVER_CERT} ${SERVER_KEY}" "Create certificate secret for MQTT gateway"
-    runcmd "oc secret add serviceaccount/default secrets/mqtt-certs --for=mount" "Add MQTT secret to default service account"
+    runcmd "oc secret new ${PROJECT}-certs ${SERVER_CERT} ${SERVER_KEY}" "Create certificate secret"
+    runcmd "oc secret add serviceaccount/default secrets/${PROJECT}-certs --for=mount" "Add certificate secret to default service account"
+    TEMPLATE_PARAMS="INSTANCE_CERT_SECRET=${PROJECT}-certs ${TEMPLATE_PARAMS}"
 fi
 
 if [ -n "$ALT_TEMPLATE" ]
