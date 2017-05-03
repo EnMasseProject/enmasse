@@ -21,8 +21,8 @@ objects:
       {"tcpSocket": {"port": "amqp"}}, "name": "router", "ports": [{"containerPort":
       5672, "name": "amqp", "protocol": "TCP"}, {"containerPort": 55673, "name": "internal",
       "protocol": "TCP"}, {"containerPort": 5671, "name": "amqps", "protocol": "TCP"}],
-      "volumeMounts": [[{"mountPath": "/etc/qpid-dispatch/ssl", "name": "ssl-certs",
-      "readOnly": true}], {"mountPath": "/var/lib/qdrouterd", "name": "sasldb-vol"}]},
+      "volumeMounts": [{"mountPath": "/etc/qpid-dispatch/ssl", "name": "ssl-certs",
+      "readOnly": true}, {"mountPath": "/var/lib/qdrouterd", "name": "sasldb-vol"}]},
       {"image": "${ROUTER_COLLECTOR_REPO}:latest", "livenessProbe": {"tcpSocket":
       {"port": "metrics"}}, "name": "collector", "ports": [{"containerPort": 8080,
       "name": "metrics", "protocol": "TCP"}], "resources": {"limits": {"memory": "32Mi"},
@@ -186,8 +186,8 @@ objects:
       [{"containerPort": 5672, "name": "amqp", "protocol": "TCP"}, {"containerPort":
       55673, "name": "internal", "protocol": "TCP"}, {"containerPort": 5671, "name":
       "amqps", "protocol": "TCP"}], "resources": {"limits": {"memory": "256Mi"}, "requests":
-      {"memory": "256Mi"}}, "volumeMounts": [[{"mountPath": "/etc/qpid-dispatch/ssl",
-      "name": "ssl-certs", "readOnly": true}]]}, {"env": [{"name": "TOPIC_NAME", "value":
+      {"memory": "256Mi"}}, "volumeMounts": [{"mountPath": "/etc/qpid-dispatch/ssl",
+      "name": "ssl-certs", "readOnly": true}]}, {"env": [{"name": "TOPIC_NAME", "value":
       "${ADDRESS}"}, {"name": "GROUP_ID", "value": "${NAME}"}], "image": "${TOPIC_FORWARDER_REPO}:latest",
       "livenessProbe": {"httpGet": {"path": "/health", "port": "health"}}, "name":
       "forwarder", "ports": [{"containerPort": 8080, "name": "health"}], "resources":
@@ -259,8 +259,8 @@ objects:
       [{"containerPort": 5672, "name": "amqp", "protocol": "TCP"}, {"containerPort":
       55673, "name": "internal", "protocol": "TCP"}, {"containerPort": 5671, "name":
       "amqps", "protocol": "TCP"}], "resources": {"limits": {"memory": "256Mi"}, "requests":
-      {"memory": "256Mi"}}, "volumeMounts": [[{"mountPath": "/etc/qpid-dispatch/ssl",
-      "name": "ssl-certs", "readOnly": true}]]}, {"env": [{"name": "TOPIC_NAME", "value":
+      {"memory": "256Mi"}}, "volumeMounts": [{"mountPath": "/etc/qpid-dispatch/ssl",
+      "name": "ssl-certs", "readOnly": true}]}, {"env": [{"name": "TOPIC_NAME", "value":
       "${ADDRESS}"}, {"name": "GROUP_ID", "value": "${NAME}"}], "image": "${TOPIC_FORWARDER_REPO}:latest",
       "livenessProbe": {"httpGet": {"path": "/health", "port": "health"}}, "name":
       "forwarder", "ports": [{"containerPort": 8080, "name": "health"}], "resources":

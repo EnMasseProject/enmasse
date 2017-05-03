@@ -78,7 +78,7 @@ local common = import "common.jsonnet";
           "mountPath": "/var/lib/qdrouterd"
         }],
       [if mem_request != "" then "resources"]: resources,
-      "volumeMounts": [ssl_certs] + (if use_sasldb then sasldb_vol else [])
+      "volumeMounts": ssl_certs + (if use_sasldb then sasldb_vol else [])
     },
 
   secret_volume(router_secret)::

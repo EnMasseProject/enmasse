@@ -94,9 +94,9 @@ objects:
             requests:
               memory: 256Mi
           volumeMounts:
-          - - mountPath: "/etc/qpid-dispatch/ssl"
-              name: ssl-certs
-              readOnly: true
+          - mountPath: "/etc/qpid-dispatch/ssl"
+            name: ssl-certs
+            readOnly: true
         - env:
           - name: TOPIC_NAME
             value: "${ADDRESS}"
