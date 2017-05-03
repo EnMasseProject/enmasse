@@ -78,11 +78,16 @@ public class AddressApiClient {
         }
         request.putHeader("content-type", "application/json");
         request.handler(event -> {
+            event.bodyHandler(buffer -> {
+                System.out.println("Got response from rest api: " + buffer.toString());
+            });
             if (event.statusCode() >= 200 && event.statusCode() < 300) {
                 latch.countDown();
             }
         });
         request.end(Buffer.buffer(mapper.writeValueAsBytes(config)));
-        latch.await(30, TimeUnit.SECONDS);
+        if (!latch.await(30, TimeUnit.SECONDS)) {
+            throw new RuntimeException("Timeout deploying address config");
+        }
     }
 }
