@@ -10,3 +10,7 @@
 .link-grid .ui-grid-invisible {
     display: none;
 }
+
+.list-group-item.disabled {
+  display: none !important;
+}

@@ -559,9 +559,16 @@ angular.module('patternfly.wizard').controller('SummaryController', ['$rootScope
       }
     ]);
 
-angular.module('patternfly.toolbars').controller('ConnectionViewCtrl', ['$scope', 'pfViewUtils', 'address_service',
-    function ($scope, pfViewUtils, address_service) {
-        address_service.on_update(function () { $scope.$apply(); });
+angular.module('patternfly.toolbars').controller('ConnectionViewCtrl', ['$scope', '$timeout', 'pfViewUtils', 'address_service',
+    function ($scope, $timeout, pfViewUtils, address_service) {
+        address_service.on_update(function (reason) {
+          if (reason.split('_')[0] !== 'connection') {
+            return
+          }
+          $timeout( function () {
+            reExpandItems($scope.items);
+          })
+        });
 
         function get_filter_function(filter) {
             if (filter.id === 'host' || filter.id === 'container' || filter.id === 'user') {
@@ -588,10 +595,50 @@ angular.module('patternfly.toolbars').controller('ConnectionViewCtrl', ['$scope'
             }
         }
 
+        // keep track of which items are expanded and re-expand them when an update or filter occurs
+        var expandedItems = {}
+        var reExpandItems = function (items) {
+          items.forEach( function (item) {
+            if (expandedItems[item.host]) {
+              item.isExpanded = true
+            }
+          })
+        }
+        // called by pf-list-view directive when an item is clicked
+        // remember which items are expanded
+        var handleClick = function (item, e) {
+          // do this in a $timeout since item.isExpanded isn't set by the directive yet
+          $timeout(function () {
+            if (item.isExpanded) {
+              expandedItems[item.host] = true
+            }
+            else {
+              if (expandedItems[item.host]) {
+                delete expandedItems[item.host]
+              }
+            }
+          })
+        }
+
+        // keep track of which items are filtered out (hidden)
+        var hiddenItems = {}
+        // called by pf-list-view directive to get disabled items
+        // this sets the disabled class on our filtered items. a css rule hides disabled items
+        var checkHiddenItem = function (item) {
+          return hiddenItems[item.host]
+        }
         var filterChange = function (filters) {
+            hiddenItems = {}
             $scope.filtersText = filters.map(function (filter) { return  filter.title + " : " + filter.value + "\n"; }).join();
-            $scope.items = address_service.connections.filter(all(filters.map(get_filter_function)));
-            $scope.toolbarConfig.filterConfig.resultsCount = $scope.items.length;
+            var visibleItems = address_service.connections.filter(all(filters.map(get_filter_function)))
+            // we can't set $scope.items to visiblItems since visibleItems is a filtered list which is actually a
+            // separate array and would not get updated when the connection's data changes
+            $scope.items.forEach( function (item) {
+              if (!visibleItems.some ( (vis) => item.host === vis.host )) {
+                hiddenItems[item.host] = true
+              }
+            })
+            $scope.toolbarConfig.filterConfig.resultsCount = $scope.items.length - Object.keys(hiddenItems).length;
         };
 
         $scope.filtersText = '';
@@ -687,7 +734,9 @@ angular.module('patternfly.toolbars').controller('ConnectionViewCtrl', ['$scope'
         $scope.connectionListConfig = {
             showSelectBox: false,
             useExpandingRows: true,
-            checkDisabled: false
+            checkDisabled: false,
+            onClick: handleClick,
+            checkDisabled: checkHiddenItem
         };
       }
     ]);
