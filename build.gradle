@@ -45,9 +45,6 @@ task buildTar(type: Tar) {
     from('utils') {
         into("${home}/bin/")
     }
-    from('artemis-launcher/build/exe/main/main') {
-        into("${home}/bin/")
-    }
     from(tarTree('artemis-shutdown-hook/build/distributions/artemis-shutdown-hook.tar')) {
         into("opt/")
     }
