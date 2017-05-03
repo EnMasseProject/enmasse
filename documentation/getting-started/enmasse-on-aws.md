@@ -78,9 +78,13 @@ You can find the latest version of EnMasse [here](https://github.com/EnMasseProj
     curl -L https://github.com/EnMasseProject/enmasse/releases/download/0.9.0/enmasse-deploy.sh -o enmasse-deploy.sh
     bash enmasse-deploy.sh -c https://openshift.<yourdomain>:8443 -p enmasse -t https://github.com/EnMasseProject/enmasse/releases/download/0.9.0/enmasse-template.yaml -u <myuser> -k server-key.pem -s server-cert.pem -p enmasse
 
-Now you have EnMasse deployed and ready to use. The messaging endpoint will be messaging-enmasse.<yourdomain> for AMQP, mqtt-enmasse.<yourdomain> for MQTT, and the console will be available at console-enmasse.<yourdomain>, where you can create and delete addresses and monitor your system.
+Now you have EnMasse deployed and ready to use. The endpoints will be:
 
-Have a look at [Apache Qpid](http://qpid.apache.org/) for AMQP client libraries.
+    * AMQP: `messaging-enmasse.<yourdomain>`
+    * MQTT: `mqtt-enmasse.<yourdomain>`
+    * Console: `console-enmasse.<yourdomain>`
+
+The console can be used for creating and deleting addresses. You should be able to use any AMQP or MQTT client that supports TLS to send and receive messages. Have a look at [Apache Qpid](http://qpid.apache.org/) for AMQP client libraries.
 
 ## (Optional) Setting up metrics
 
