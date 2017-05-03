@@ -393,6 +393,11 @@ parameters:
 - description: The docker image to use for the address controller
   name: ADDRESS_CONTROLLER_REPO
   value: enmasseproject/address-controller
-- description: The time before garbage collecting idle (no addresses defined) instances
-  name: INSTANCE_IDLE_TIMEOUT_SECONDS
-  value: '0'
+- description: The secret to use to mount certificates. Only consumed if MULTIINSTANCE=false.
+  name: INSTANCE_CERT_SECRET
+- description: The messaging host to use for this instance. Only consumed if MULTIINSTANCE=false.
+  name: INSTANCE_MESSAGING_HOST
+- description: The mqtt host to use for this instance. Only consumed if MULTIINSTANCE=false.
+  name: INSTANCE_MQTT_HOST
+- description: The console host to use for this instance. Only consumed if MULTIINSTANCE=false.
+  name: INSTANCE_CONSOLE_HOST

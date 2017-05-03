@@ -34,9 +34,20 @@ local flavorConfig = import "flavor.jsonnet";
         "value": "enmasseproject/address-controller"
       },
       {
-        "name": "INSTANCE_IDLE_TIMEOUT_SECONDS",
-        "description": "The time before garbage collecting idle (no addresses defined) instances",
-        "value": "0"
+        "name": "INSTANCE_CERT_SECRET",
+        "description": "The secret to use to mount certificates. Only consumed if MULTIINSTANCE=false."
+      },
+      {
+        "name": "INSTANCE_MESSAGING_HOST",
+        "description": "The messaging host to use for this instance. Only consumed if MULTIINSTANCE=false."
+      },
+      {
+        "name": "INSTANCE_MQTT_HOST",
+        "description": "The mqtt host to use for this instance. Only consumed if MULTIINSTANCE=false."
+      },
+      {
+        "name": "INSTANCE_CONSOLE_HOST",
+        "description": "The console host to use for this instance. Only consumed if MULTIINSTANCE=false."
       }
     ]
   }
