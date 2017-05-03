@@ -1,12 +1,11 @@
 {
-  generate(name, uuid, secure, type, description, templateName, capacity)::
-  local prefix = if secure then "tls-" else "";
+  generate(name, uuid, type, description, templateName, capacity)::
   {
     "name": name,
     "uuid": uuid,
     "type": type,
     "description": description,
-    "templateName": prefix + templateName,
+    "templateName": templateName,
     [if capacity != null then "templateParameters"]: {
       "STORAGE_CAPACITY": capacity
     }

@@ -3,22 +3,21 @@ local addressController = import "address-controller.jsonnet";
 local restapiRoute = import "restapi-route.jsonnet";
 local flavorConfig = import "flavor.jsonnet";
 {
-  generate(use_tls, use_sasl, compact, with_kafka)::
+  generate(use_sasl, with_kafka)::
   {
-    local templateName = (if use_tls then "tls-enmasse-infra" else "enmasse-infra"),
     "apiVersion": "v1",
     "kind": "Template",
     "metadata": {
       "labels": {
         "app": "enmasse"
       },
-      "name": templateName
+      "name": "enmasse"
     },
-    "objects": [ templateConfig.generate(use_tls, use_sasl, compact, with_kafka, true),
-                 addressController.deployment(std.toString(use_tls), "${ADDRESS_CONTROLLER_REPO}", "${MULTIINSTANCE}", "${INSTANCE_IDLE_TIMEOUT_SECONDS}"),
+    "objects": [ templateConfig.generate(use_sasl, with_kafka, true),
+                 addressController.deployment("${ADDRESS_CONTROLLER_REPO}", "${MULTIINSTANCE}", "${INSTANCE_IDLE_TIMEOUT_SECONDS}"),
                  addressController.service,
                  restapiRoute.route("${RESTAPI_HOSTNAME}"),
-                 flavorConfig.generate(use_tls) ],
+                 flavorConfig.generate() ],
     "parameters": [
       {
         "name": "RESTAPI_HOSTNAME",
@@ -35,9 +34,20 @@ local flavorConfig = import "flavor.jsonnet";
         "value": "enmasseproject/address-controller"
       },
       {
-        "name": "INSTANCE_IDLE_TIMEOUT_SECONDS",
-        "description": "The time before garbage collecting idle (no addresses defined) instances",
-        "value": "0"
+        "name": "INSTANCE_CERT_SECRET",
+        "description": "The secret to use to mount certificates. Only consumed if MULTIINSTANCE=false."
+      },
+      {
+        "name": "INSTANCE_MESSAGING_HOST",
+        "description": "The messaging host to use for this instance. Only consumed if MULTIINSTANCE=false."
+      },
+      {
+        "name": "INSTANCE_MQTT_HOST",
+        "description": "The mqtt host to use for this instance. Only consumed if MULTIINSTANCE=false."
+      },
+      {
+        "name": "INSTANCE_CONSOLE_HOST",
+        "description": "The console host to use for this instance. Only consumed if MULTIINSTANCE=false."
       }
     ]
   }

@@ -2,7 +2,7 @@ local version = std.extVar("VERSION");
 local mqtt = import "mqtt.jsonnet";
 local common = import "common.jsonnet";
 {
-  deployment(secure, instance, image_repo)::
+  deployment(instance, image_repo, mqtt_secret)::
     {
       "apiVersion": "extensions/v1beta1",
       "kind": "Deployment",
@@ -25,12 +25,12 @@ local common = import "common.jsonnet";
             }
           },
           "spec": {
-            "containers":
-            if secure
-            then [ mqtt.container(true, image_repo), mqtt.container(false, image_repo) ]
-            else [ mqtt.container(false, image_repo) ],
-            [if secure then "volumes" ]: [
-              mqtt.secret_volume()
+            "containers": [
+              mqtt.container(true, image_repo),
+              mqtt.container(false, image_repo)
+            ],
+            "volumes": [
+              mqtt.secret_volume(mqtt_secret)
             ]
           }
         }

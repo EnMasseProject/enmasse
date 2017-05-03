@@ -40,11 +40,11 @@ local common = import "common.jsonnet";
       ]
     },
 
-  secret_volume()::
+  secret_volume(mqtt_secret)::
     {
       "name": "ssl-certs",
       "secret": {
-        "secretName": "mqtt-certs"
+        "secretName": mqtt_secret
       }
     }
 }

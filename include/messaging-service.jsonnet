@@ -23,33 +23,11 @@
     "protocol": "TCP",
     "targetPort": 55672
   },
-  generate(secure, instance, admin)::
+  generate(instance)::
     {
       local admin_deps = [
         {
           "name":"admin",
-          "namespace":"",
-          "kind":"Service"
-        },
-        {
-          "name":"subscription",
-          "namespace":"",
-          "kind":"Service"
-        },
-        {
-          "name":"mqtt",
-          "namespace":"",
-          "kind":"Service"
-        }
-      ],
-      local full_deps = [
-        {
-          "name":"configuration",
-          "namespace":"",
-          "kind":"Service"
-        },
-        {
-          "name":"ragent",
           "namespace":"",
           "kind":"Service"
         },
@@ -74,11 +52,11 @@
         "name": "messaging",
         "annotations": {
           "service.alpha.openshift.io/infrastructure": "true",
-          "service.alpha.openshift.io/dependencies": if admin then std.toString(admin_deps) else std.toString(full_deps)
+          "service.alpha.openshift.io/dependencies": std.toString(admin_deps)
         }
       },
       "spec": {
-        "ports": if secure then [port, securePort, internalPort, interRouterPort] else [port, internalPort, interRouterPort],
+        "ports": [port, securePort, internalPort, interRouterPort],
         "selector": {
           "capability": "router",
           "instance": instance
