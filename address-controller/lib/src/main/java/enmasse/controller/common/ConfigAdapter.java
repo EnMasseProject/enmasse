@@ -58,7 +58,7 @@ public class ConfigAdapter implements Watcher<ConfigMap> {
     public void start() {
         ConfigMap initial = openshiftClient.configMaps().withName(configName).get();
         configUpdated(initial);
-        watch = openshiftClient.configMaps().withName(configName).withResourceVersion(initial.getMetadata().getResourceVersion()).watch(this);
+        watch = openshiftClient.configMaps().withName(configName).watch(this);
     }
 
     public void stop() {
@@ -80,12 +80,7 @@ public class ConfigAdapter implements Watcher<ConfigMap> {
             log.info("Received onClose for watcher", cause);
             stop();
             log.info("Watch for " + configName + " closed, recreating");
-            service.schedule(new Runnable() {
-                @Override
-                public void run() {
-                    start();
-                }
-            }, 1, TimeUnit.MINUTES);
+            start();
         } else {
             log.info("Watch for " + configName + " force closed, stopping");
         }
