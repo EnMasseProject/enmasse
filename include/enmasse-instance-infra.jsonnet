@@ -62,10 +62,10 @@ local hawkularRouterConfig = import "hawkular-router-config.jsonnet";
 
     local routes = if use_routes then routeConfig else ingressConfig,
 
-      //adminObj +
     "objects": (if use_sasldb then [router.sasldb_pvc()] else []) + 
       common +
       routes +
+      adminObj +
       (if with_kafka then kafka else []),
 
     local commonParameters = [
