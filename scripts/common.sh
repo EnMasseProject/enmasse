@@ -6,18 +6,11 @@ OADM="oadm --config openshift.local.config/master/admin.kubeconfig"
 
 function setup_test() {
     local PROJECT_NAME=$1
-    local SECURE=${2:-false}
-    local MULTITENANT=${3:-false}
-    local OPENSHIFT_URL=${4:-"https://localhost:8443"}
-    local OPENSHIFT_USER=${5:-"test"}
+    local MULTITENANT=${2:-false}
+    local OPENSHIFT_URL=${3:-"https://localhost:8443"}
+    local OPENSHIFT_USER=${4:-"test"}
 
     DEPLOY_ARGS="-y -p $PROJECT_NAME -u $OPENSHIFT_USER -c $OPENSHIFT_URL"
-    if [ "$SECURE" == true ]; then
-        openssl req -x509 -newkey rsa:4096 -keyout server-key.pem -out server-cert.pem -days 1 -nodes -batch
-        DEPLOY_ARGS="$DEPLOY_ARGS -k server-key.pem -s server-cert.pem"
-        export OPENSHIFT_USE_TLS="true"
-        export OPENSHIFT_SERVER_CERT=`cat server-cert.pem`
-    fi
 
     if [ "$MULTITENANT" == true ]; then
         DEPLOY_ARGS="$DEPLOY_ARGS -m"
@@ -46,6 +39,7 @@ function run_test() {
 
     sleep 120
 
+    export OPENSHIFT_USE_TLS=$SECURE
     export OPENSHIFT_NAMESPACE=$PROJECT_NAME
     export OPENSHIFT_USER=$OPENSHIFT_USER
     export OPENSHIFT_MULTITENANT=$MULTITENANT

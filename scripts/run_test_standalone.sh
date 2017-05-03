@@ -12,7 +12,7 @@ export PATH="$PATH:$DIR"
 
 oc login -u test -p test --insecure-skip-tls-verify=true $OPENSHIFT_URL
 
-setup_test enmasse-ci true false $OPENSHIFT_URL
+setup_test enmasse-ci false $OPENSHIFT_URL
 run_test enmasse-ci true false $OPENSHIFT_URL || failure=$(($failure + 1))
 teardown_test enmasse-ci
 

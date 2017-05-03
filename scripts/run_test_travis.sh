@@ -9,7 +9,7 @@ export PATH="$PATH:$DIR"
 
 oc login -u test -p test --insecure-skip-tls-verify=true https://localhost:8443
 
-setup_test enmasse-ci true
+setup_test enmasse-ci
 run_test enmasse-ci true || failure=$(($failure + 1))
 # teardown_test enmasse-ci
 
