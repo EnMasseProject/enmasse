@@ -40,6 +40,7 @@ public class Receiver extends ClientHandlerBase<List<String>> {
         receiver.handler((protonDelivery, message) -> {
             messages.add((String) ((AmqpValue) message.getBody()).getValue());
             if (done.test(message)) {
+                conn.close();
                 promise.complete(messages);
             } else {
                 receiver.flow(1);
@@ -61,7 +62,7 @@ public class Receiver extends ClientHandlerBase<List<String>> {
 
                 vertx.runOnContext(id -> connectionOpened(conn, newLinkName, newSource));
             } else {
-                handleError(receiver.getRemoteCondition());
+                handleError(conn, receiver.getRemoteCondition());
             }
             receiver.close();
         });
@@ -70,11 +71,13 @@ public class Receiver extends ClientHandlerBase<List<String>> {
 
     @Override
     protected void connectionClosed(ProtonConnection conn) {
+        conn.close();
         promise.complete(messages);
     }
 
     @Override
     protected void connectionDisconnected(ProtonConnection conn) {
+        conn.close();
         promise.complete(messages);
     }
 }

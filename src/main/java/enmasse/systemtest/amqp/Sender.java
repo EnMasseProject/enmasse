@@ -36,18 +36,20 @@ class Sender extends ClientHandlerBase<Integer> {
             sendNext(connection, sender);
         });
         sender.closeHandler(result -> {
-            handleError(sender.getCondition());
+            handleError(connection, sender.getCondition());
         });
         sender.open();
     }
 
     @Override
     protected void connectionClosed(ProtonConnection conn) {
+        conn.close();
         promise.complete(numSent.get());
     }
 
     @Override
     protected void connectionDisconnected(ProtonConnection conn) {
+        conn.close();
         promise.complete(numSent.get());
     }
 

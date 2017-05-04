@@ -29,6 +29,7 @@ public abstract class ClientHandlerBase<T> extends AbstractVerticle {
                 conn.setContainer("enmasse-systemtest-client");
                 conn.openHandler(result -> {
                     if (result.failed()) {
+                        conn.close();
                         promise.completeExceptionally(result.cause());
                     } else {
                         connectionOpened(conn);
@@ -36,6 +37,7 @@ public abstract class ClientHandlerBase<T> extends AbstractVerticle {
                 });
                 conn.closeHandler(result -> {
                     if (result.failed()) {
+                        conn.close();
                         promise.completeExceptionally(result.cause());
                     } else {
                         connectionClosed(conn);
@@ -54,11 +56,12 @@ public abstract class ClientHandlerBase<T> extends AbstractVerticle {
     protected abstract void connectionClosed(ProtonConnection conn);
     protected abstract void connectionDisconnected(ProtonConnection conn);
 
-    protected void handleError(ErrorCondition error) {
+    protected void handleError(ProtonConnection connection, ErrorCondition error) {
         if (error == null || error.getCondition() == null) {
             Logging.log.info("Link closed without error");
         } else {
             Logging.log.info("Link closed with " + error);
+            connection.close();
             promise.completeExceptionally(new RuntimeException(error.getDescription()));
         }
     }
