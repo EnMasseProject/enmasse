@@ -116,7 +116,7 @@ public class TopicTest extends AmqpTestBase {
         Logging.log.info("Scaling");
         scale(dest, 1);
 
-        Thread.sleep(60_000);
+        Thread.sleep(120_000);
 
         AmqpClient subClient = createQueueClient();
         AmqpClient queueClient = createQueueClient();
