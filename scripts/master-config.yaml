@@ -1,0 +1,225 @@
+admissionConfig:
+  pluginConfig:
+    openshift.io/ImagePolicy:
+      configuration:
+        apiVersion: v1
+        executionRules:
+        - ignoreNamespaceOverride: false
+          invertMatch: false
+          matchDockerImageLabels: null
+          matchImageAnnotations:
+          - key: images.openshift.io/deny-execution
+            set: false
+            value: "true"
+          matchImageLabels: null
+          matchIntegratedRegistry: false
+          matchRegistries: null
+          name: execution-denied
+          onResources:
+          - group: ""
+            resource: pods
+          - group: ""
+            resource: builds
+          reject: true
+          skipOnResolutionFailure: true
+        kind: ImagePolicyConfig
+        resolveImages: Attempt
+      location: ""
+apiLevels:
+- v1
+apiVersion: v1
+assetConfig:
+  extensionDevelopment: false
+  extensionProperties: null
+  extensionScripts: null
+  extensionStylesheets: null
+  extensions: null
+  loggingPublicURL: ""
+  logoutURL: ""
+  masterPublicURL: https://${MYIP}:8443
+  metricsPublicURL: ""
+  publicURL: https://${MYIP}:8443/console/
+  servingInfo:
+    bindAddress: 0.0.0.0:8443
+    bindNetwork: tcp4
+    certFile: master.server.crt
+    clientCA: ""
+    keyFile: master.server.key
+    maxRequestsInFlight: 0
+    namedCertificates: null
+    requestTimeoutSeconds: 0
+auditConfig:
+  auditFilePath: ""
+  enabled: false
+  maximumFileRetentionDays: 0
+  maximumFileSizeMegabytes: 0
+  maximumRetainedFiles: 0
+controllerConfig:
+  serviceServingCert:
+    signer:
+      certFile: service-signer.crt
+      keyFile: service-signer.key
+controllerLeaseTTL: 0
+controllers: '*'
+corsAllowedOrigins:
+- 127.0.0.1
+- ${MYIP}:8443
+- localhost
+disabledFeatures: null
+dnsConfig:
+  allowRecursiveQueries: true
+  bindAddress: 0.0.0.0:8053
+  bindNetwork: tcp4
+etcdClientInfo:
+  ca: ca.crt
+  certFile: master.etcd-client.crt
+  keyFile: master.etcd-client.key
+  urls:
+  - https://${MYIP}:4001
+etcdConfig:
+  address: ${MYIP}:4001
+  peerAddress: ${MYIP}:7001
+  peerServingInfo:
+    bindAddress: 0.0.0.0:7001
+    bindNetwork: tcp4
+    certFile: etcd.server.crt
+    clientCA: ca.crt
+    keyFile: etcd.server.key
+    namedCertificates: null
+  servingInfo:
+    bindAddress: 0.0.0.0:4001
+    bindNetwork: tcp4
+    certFile: etcd.server.crt
+    clientCA: ca.crt
+    keyFile: etcd.server.key
+    namedCertificates: null
+  storageDirectory: /var/lib/origin/openshift.local.etcd
+etcdStorageConfig:
+  kubernetesStoragePrefix: kubernetes.io
+  kubernetesStorageVersion: v1
+  openShiftStoragePrefix: openshift.io
+  openShiftStorageVersion: v1
+imageConfig:
+  format: openshift/origin-${component}:v1.4.1
+  latest: false
+imagePolicyConfig:
+  disableScheduledImport: false
+  maxImagesBulkImportedPerRepository: 5
+  maxScheduledImageImportsPerMinute: 60
+  scheduledImageImportMinimumIntervalSeconds: 900
+jenkinsPipelineConfig:
+  autoProvisionEnabled: true
+  parameters: null
+  serviceName: jenkins
+  templateName: jenkins-ephemeral
+  templateNamespace: openshift
+kind: MasterConfig
+kubeletClientInfo:
+  ca: ca.crt
+  certFile: master.kubelet-client.crt
+  keyFile: master.kubelet-client.key
+  port: 10250
+kubernetesMasterConfig:
+  admissionConfig:
+    pluginConfig: null
+  apiLevels: null
+  apiServerArguments: null
+  controllerArguments: null
+  disabledAPIGroupVersions: {}
+  masterCount: 1
+  masterIP: ${MYIP}
+  podEvictionTimeout: 5m
+  proxyClientInfo:
+    certFile: master.proxy-client.crt
+    keyFile: master.proxy-client.key
+  schedulerArguments: null
+  schedulerConfigFile: ""
+  servicesNodePortRange: 30000-32767
+  servicesSubnet: 172.30.0.0/16
+  staticNodeNames: null
+masterClients:
+  externalKubernetesClientConnectionOverrides:
+    acceptContentTypes: application/vnd.kubernetes.protobuf,application/json
+    burst: 400
+    contentType: application/vnd.kubernetes.protobuf
+    qps: 200
+  externalKubernetesKubeConfig: ""
+  openshiftLoopbackClientConnectionOverrides:
+    acceptContentTypes: application/vnd.kubernetes.protobuf,application/json
+    burst: 600
+    contentType: application/vnd.kubernetes.protobuf
+    qps: 300
+  openshiftLoopbackKubeConfig: openshift-master.kubeconfig
+masterPublicURL: https://${MYIP}:8443
+networkConfig:
+  clusterNetworkCIDR: 10.128.0.0/14
+  externalIPNetworkCIDRs: null
+  hostSubnetLength: 9
+  ingressIPNetworkCIDR: 172.46.0.0/16
+  networkPluginName: ""
+  serviceNetworkCIDR: 172.30.0.0/16
+oauthConfig:
+  alwaysShowProviderSelection: false
+  assetPublicURL: https://${MYIP}:8443/console/
+  grantConfig:
+    method: auto
+    serviceAccountMethod: prompt
+  identityProviders:
+  - challenge: true
+    login: true
+    mappingMethod: claim
+    name: anypassword
+    provider:
+      apiVersion: v1
+      kind: AllowAllPasswordIdentityProvider
+  masterCA: ca-bundle.crt
+  masterPublicURL: https://${MYIP}:8443
+  masterURL: https://${MYIP}:8443
+  sessionConfig:
+    sessionMaxAgeSeconds: 300
+    sessionName: ssn
+    sessionSecretsFile: ""
+  templates: null
+  tokenConfig:
+    accessTokenMaxAgeSeconds: 86400
+    authorizeTokenMaxAgeSeconds: 300
+pauseControllers: false
+policyConfig:
+  bootstrapPolicyFile: policy.json
+  openshiftInfrastructureNamespace: openshift-infra
+  openshiftSharedResourcesNamespace: openshift
+  userAgentMatchingConfig:
+    defaultRejectionMessage: ""
+    deniedClients: null
+    requiredClients: null
+projectConfig:
+  defaultNodeSelector: ""
+  projectRequestMessage: ""
+  projectRequestTemplate: ""
+  securityAllocator:
+    mcsAllocatorRange: s0:/2
+    mcsLabelsPerProject: 5
+    uidAllocatorRange: 1000000000-1999999999/10000
+routingConfig:
+  subdomain: ${MYIP}.nip.io
+serviceAccountConfig:
+  limitSecretReferences: false
+  managedNames:
+  - default
+  - builder
+  - deployer
+  masterCA: ca-bundle.crt
+  privateKeyFile: serviceaccounts.private.key
+  publicKeyFiles:
+  - serviceaccounts.public.key
+servingInfo:
+  bindAddress: 0.0.0.0:8443
+  bindNetwork: tcp4
+  certFile: master.server.crt
+  clientCA: ca.crt
+  keyFile: master.server.key
+  maxRequestsInFlight: 500
+  namedCertificates: null
+  requestTimeoutSeconds: 3600
+volumeConfig:
+  dynamicProvisioningEnabled: true
