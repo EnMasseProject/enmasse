@@ -1,5 +1,6 @@
 package enmasse.systemtest.amqp;
 
+import enmasse.systemtest.Logging;
 import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.ProtonQoS;
 import io.vertx.proton.ProtonSender;
@@ -30,6 +31,7 @@ class Sender extends ClientHandlerBase<Integer> {
         sender.setTarget(clientOptions.getTarget());
         sender.setQoS(qos);
         sender.openHandler(result -> {
+            Logging.log.info("Sender link " + sender.getTarget().getAddress() + " opened, sending messages");
             connectLatch.countDown();
             sendNext(connection, sender);
         });
@@ -59,7 +61,7 @@ class Sender extends ClientHandlerBase<Integer> {
             if (sender.getQoS().equals(ProtonQoS.AT_MOST_ONCE)) {
                 sender.send(message);
                 numSent.incrementAndGet();
-                vertx.setTimer(0, id -> sendNext(connection, sender));
+                vertx.runOnContext(id -> sendNext(connection, sender));
             } else {
                 sender.send(message, protonDelivery -> {
                     if (protonDelivery.getRemoteState().equals(Accepted.getInstance())) {

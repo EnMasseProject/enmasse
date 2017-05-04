@@ -45,23 +45,20 @@ public class Receiver extends ClientHandlerBase<List<String>> {
             }
         });
         receiver.openHandler(result -> {
+            Logging.log.info("Receiver link " + source.getAddress() + " opened, granting credits");
             receiver.flow(1);
             connectLatch.countDown();
         });
 
         receiver.closeHandler(closed -> {
-            if (closed.succeeded()) {
-                if (receiver.getRemoteCondition() != null && AMQP_LINK_REDIRECT.equals(receiver.getRemoteCondition().getCondition())) {
-                    String relocated = (String) receiver.getRemoteCondition().getInfo().get("address");
-                    Logging.log.info("Receiver link redirected to " + relocated);
-                    Source newSource = clientOptions.getSource();
-                    newSource.setAddress(relocated);
-                    String newLinkName = clientOptions.getLinkName().orElse(newSource.getAddress());
+            if (receiver.getRemoteCondition() != null && AMQP_LINK_REDIRECT.equals(receiver.getRemoteCondition().getCondition())) {
+                String relocated = (String) receiver.getRemoteCondition().getInfo().get("address");
+                Logging.log.info("Receiver link redirected to " + relocated);
+                Source newSource = clientOptions.getSource();
+                newSource.setAddress(relocated);
+                String newLinkName = clientOptions.getLinkName().orElse(newSource.getAddress());
 
-                    vertx.setTimer(0, id -> {
-                        connectionOpened(conn, newLinkName, newSource);
-                    });
-                }
+                vertx.runOnContext(id -> connectionOpened(conn, newLinkName, newSource));
             } else {
                 handleError(receiver.getRemoteCondition());
             }
