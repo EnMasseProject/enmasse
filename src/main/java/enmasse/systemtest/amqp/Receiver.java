@@ -1,5 +1,6 @@
 package enmasse.systemtest.amqp;
 
+import enmasse.systemtest.Logging;
 import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.ProtonReceiver;
 import org.apache.qpid.proton.amqp.Symbol;
@@ -52,7 +53,7 @@ public class Receiver extends ClientHandlerBase<List<String>> {
             if (closed.succeeded()) {
                 if (receiver.getRemoteCondition() != null && AMQP_LINK_REDIRECT.equals(receiver.getRemoteCondition().getCondition())) {
                     String relocated = (String) receiver.getRemoteCondition().getInfo().get("address");
-                    System.out.println("Receiver link redirected to " + relocated);
+                    Logging.log.info("Receiver link redirected to " + relocated);
                     Source newSource = clientOptions.getSource();
                     newSource.setAddress(relocated);
                     String newLinkName = clientOptions.getLinkName().orElse(newSource.getAddress());

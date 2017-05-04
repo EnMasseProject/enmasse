@@ -1,5 +1,6 @@
 package enmasse.systemtest.amqp;
 
+import enmasse.systemtest.Logging;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.proton.ProtonClient;
 import io.vertx.proton.ProtonConnection;
@@ -43,7 +44,7 @@ public abstract class ClientHandlerBase<T> extends AbstractVerticle {
                 conn.disconnectHandler(result -> connectionDisconnected(conn));
                 conn.open();
             } else {
-                System.out.println("Connection to " + endpoint.getHost() + ":" + endpoint.getPort() + " failed: " + connection.cause().getMessage());
+                Logging.log.info("Connection to " + endpoint.getHost() + ":" + endpoint.getPort() + " failed: " + connection.cause().getMessage());
                 promise.completeExceptionally(connection.cause());
             }
         });
@@ -55,9 +56,9 @@ public abstract class ClientHandlerBase<T> extends AbstractVerticle {
 
     protected void handleError(ErrorCondition error) {
         if (error == null || error.getCondition() == null) {
-            System.out.println("Link closed without error");
+            Logging.log.info("Link closed without error");
         } else {
-            System.out.println("Link closed with " + error);
+            Logging.log.info("Link closed with " + error);
             promise.completeExceptionally(new RuntimeException(error.getDescription()));
         }
     }

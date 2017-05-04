@@ -10,7 +10,6 @@ import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.amqp.messaging.Source;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Test;
 
 import java.util.*;
 import java.util.concurrent.BlockingQueue;
@@ -83,7 +82,7 @@ public class ConfigServTest extends AmqpTestBase {
                         Map<String, Object> pod = (Map<String, Object>) obj;
                         pods.add((String) pod.get("host"));
                     }
-                    System.out.println("Got pods: " + pods);
+                    Logging.log.info("Got pods: " + pods);
                     try {
                         latestPods.put(pods);
                     } catch (InterruptedException e) {

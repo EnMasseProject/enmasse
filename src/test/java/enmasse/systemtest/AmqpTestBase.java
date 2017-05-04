@@ -101,7 +101,7 @@ public abstract class AmqpTestBase {
                 clientEndpoint = new Endpoint("localhost", 443);
                 clientOptions.setSniServerName(messagingEndpoint.getHost());
             }
-            System.out.println("External endpoint: " + clientEndpoint + ", internal: " + messagingEndpoint);
+            Logging.log.info("External endpoint: " + clientEndpoint + ", internal: " + messagingEndpoint);
 
             return createClient(terminusFactory, clientEndpoint, clientOptions, qos);
         } else {
