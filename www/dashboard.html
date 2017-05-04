@@ -10,7 +10,7 @@
                     <div ng-repeat="pie in pies track by $index">
                         <div class="col-xs-12 col-sm-4 col-md-4">
                             <h3 class="card-pf-subtitle">{{pie.title}}</h3>
-                            <div id="pie-chart-{{pie.name}}" class="pie-chart-pf example-pie-chart-mini"></div>
+                            <div pf-c3-chart id="pie-chart-{{pie.name}}" config="get_chart_config(pie)" getChartCallback="pie.get_chart"></div>
                         </div>
                     </div>
                 </div>
