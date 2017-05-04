@@ -16,9 +16,9 @@ jdk:
 services:
 - docker
 script:
-- ./scripts/install_openshift.sh openshift
-- ./scripts/start_openshift.sh openshift
-- export PATH=$PATH:openshift
+- ./scripts/install_openshift.sh `pwd`/openshift
+- ./scripts/start_openshift.sh `pwd`/openshift
+- export PATH=$PATH:`pwd`/openshift
 - sleep 20
 - cat /etc/hosts
 - ./scripts/run_test_travis.sh
