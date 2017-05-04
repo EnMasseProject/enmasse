@@ -2,6 +2,7 @@ package enmasse.systemtest.amqp;
 
 import enmasse.systemtest.Logging;
 import io.vertx.proton.ProtonConnection;
+import io.vertx.proton.ProtonLinkOptions;
 import io.vertx.proton.ProtonReceiver;
 import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
@@ -33,7 +34,7 @@ public class Receiver extends ClientHandlerBase<List<String>> {
     }
 
     private void connectionOpened(ProtonConnection conn, String linkName, Source source) {
-        ProtonReceiver receiver = conn.createReceiver(linkName);
+        ProtonReceiver receiver = conn.createReceiver(source.getAddress(), new ProtonLinkOptions().setLinkName(linkName));
         receiver.setSource(source);
         receiver.setPrefetch(0);
         receiver.handler((protonDelivery, message) -> {
