@@ -5,8 +5,10 @@ import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.ProtonLinkOptions;
 import io.vertx.proton.ProtonReceiver;
 import org.apache.qpid.proton.amqp.Symbol;
+import org.apache.qpid.proton.amqp.messaging.Accepted;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.amqp.messaging.Source;
+import org.apache.qpid.proton.amqp.transport.DeliveryState;
 import org.apache.qpid.proton.message.Message;
 
 import java.util.ArrayList;
@@ -39,6 +41,7 @@ public class Receiver extends ClientHandlerBase<List<String>> {
         receiver.setPrefetch(0);
         receiver.handler((protonDelivery, message) -> {
             messages.add((String) ((AmqpValue) message.getBody()).getValue());
+            protonDelivery.disposition(Accepted.getInstance(), true);
             if (done.test(message)) {
                 conn.close();
                 promise.complete(messages);
