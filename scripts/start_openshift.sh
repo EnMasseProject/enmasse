@@ -11,3 +11,5 @@ $DIR/oadm --config openshift.local.config/master/admin.kubeconfig router
 
 IP=`hostname -I`
 echo "START : $IP"
+OTHERIP=`ip route get 8.8.8.8 | head -1 | cut -d' ' -f7`
+echo "OTHERIP: $OTHERIP"
