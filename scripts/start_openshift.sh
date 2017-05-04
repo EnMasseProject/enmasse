@@ -9,4 +9,5 @@ MYIP=`ip route get 8.8.8.8 | head -1 | cut -d' ' -f8`
 echo "MYIP: $MYIP"
 $DIR/oadm --config openshift.local.config/master/admin.kubeconfig policy add-scc-to-user hostnetwork system:serviceaccount:default:router
 $DIR/oadm --config openshift.local.config/master/admin.kubeconfig policy add-cluster-role-to-user cluster-reader system:serviceaccount:default:router
-$DIR/oadm --config openshift.local.config/master/admin.kubeconfig router --subdomain="${MYIP}.nip.io"
+$DIR/oadm --config openshift.local.config/master/admin.kubeconfig router --force-subdomain="\${name}-\${namespace}.${MYIP}.nip.io"
+k
