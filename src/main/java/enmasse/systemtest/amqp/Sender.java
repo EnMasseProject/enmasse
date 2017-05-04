@@ -57,8 +57,9 @@ class Sender extends ClientHandlerBase<Integer> {
             promise.complete(numSent.get());
         } else {
             if (sender.getQoS().equals(ProtonQoS.AT_MOST_ONCE)) {
+                sender.send(message);
                 numSent.incrementAndGet();
-                sender.send(message).settle();
+                vertx.setTimer(0, id -> sendNext(connection, sender));
             } else {
                 sender.send(message, protonDelivery -> {
                     if (protonDelivery.getRemoteState().equals(Accepted.getInstance())) {
