@@ -17,7 +17,6 @@ package enmasse.systemtest;
 
 import enmasse.systemtest.amqp.AmqpClient;
 import enmasse.systemtest.amqp.TerminusFactory;
-import io.vertx.core.Vertx;
 import io.vertx.proton.ProtonClientOptions;
 import io.vertx.proton.ProtonQoS;
 import org.junit.After;
@@ -29,7 +28,6 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public abstract class AmqpTestBase {
-    protected Vertx vertx;
     protected AddressApiClient addressApiClient;
     protected Environment environment = new Environment();
     protected OpenShift openShift;
@@ -40,9 +38,8 @@ public abstract class AmqpTestBase {
     @Before
     public void setup() throws Exception {
         clients.clear();
-        vertx = Vertx.vertx();
         openShift = new OpenShift(environment, environment.isMultitenant() ? getInstanceName().toLowerCase() : environment.namespace());
-        addressApiClient = new AddressApiClient(vertx, openShift.getRestEndpoint(), environment.isMultitenant());
+        addressApiClient = new AddressApiClient(openShift.getRestEndpoint(), environment.isMultitenant());
         addressApiClient.deployInstance(getInstanceName().toLowerCase());
     }
 
@@ -50,7 +47,6 @@ public abstract class AmqpTestBase {
     public void teardown() throws Exception {
         cleanup();
         addressApiClient.close();
-        vertx.close();
         clients.clear();
     }
 
