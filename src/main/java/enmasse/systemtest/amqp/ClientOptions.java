@@ -23,7 +23,7 @@ public class ClientOptions {
     }
 
     public Source getSource() {
-        return source;
+        return (Source) source.copy();
     }
 
     public ProtonClientOptions getProtonClientOptions() {
@@ -31,7 +31,7 @@ public class ClientOptions {
     }
 
     public Target getTarget() {
-        return target;
+        return (Target) target.copy();
     }
 
     public Optional<String> getLinkName() {
