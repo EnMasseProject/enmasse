@@ -78,9 +78,6 @@ public class AddressApiClient {
         }
         request.putHeader("content-type", "application/json");
         request.handler(event -> {
-            event.bodyHandler(buffer -> {
-                System.out.println("Got response from rest api: " + buffer.toString());
-            });
             if (event.statusCode() >= 200 && event.statusCode() < 300) {
                 latch.countDown();
             }
