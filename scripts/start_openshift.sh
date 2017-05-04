@@ -25,8 +25,6 @@ sed -i -e "s/router.default.svc.cluster.local/${MYIP}.nip.io/g" $MASTER_CONFIG
 # Start OpenShift with config
 sudo $DIR/openshift start --master-config=$MASTER_CONFIG --node-config=$NODE_CONFIG 2> logs/os.err > logs/os.log &
 sleep 30
-cat logs/os.err
-cat logs/os.log
 
 # Deploy HAProxy router
 $DIR/oadm --config $CDIR/master/admin.kubeconfig policy add-scc-to-user hostnetwork system:serviceaccount:default:router
