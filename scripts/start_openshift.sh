@@ -2,14 +2,14 @@
 set -x
 DIR=$1
 mkdir -p logs
-sudo $DIR/openshift start --write-config=. 2> logs/os.err > logs/os.log &
-ls
+sudo $DIR/openshift start --write-config=$DIR 2> logs/os.err > logs/os.log &
+ls $DIR
 
 export MYIP=`ip route get 8.8.8.8 | head -1 | cut -d' ' -f8`
 echo "MYIP: $MYIP"
-sed -i -e "s/router.default.svc.cluster.local/${MYIP}.nip.io/g" master-config.yaml
+sed -i -e "s/router.default.svc.cluster.local/${MYIP}.nip.io/g" $DIR/master-config.yaml
 echo "NEW CONFIG: "
-cat master-config.yaml
+cat $DIR/master-config.yaml
 sudo $DIR/openshift start --master-config=master-config.yaml 2> logs/os.err > logs/os.log &
 sleep 30
 sudo chown -R $USER openshift.local.config
