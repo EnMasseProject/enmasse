@@ -62,9 +62,11 @@ public class OpenShift {
     public Endpoint getRestEndpoint() {
         Route route = client.routes().inNamespace(environment.namespace()).withName("restapi").get();
         Endpoint endpoint = new Endpoint(route.getSpec().getHost(), 80);
+        System.out.println("Testing endpoint : " + endpoint);
         if (TestUtils.resolvable(endpoint)) {
             return endpoint;
         } else {
+            System.out.println("Endpoint didn't resolve, falling back to localhost");
             return new Endpoint("localhost", 80);
         }
     }
