@@ -114,7 +114,7 @@ public abstract class AmqpTestBase {
     }
 
     protected AmqpClient createClient(TerminusFactory terminusFactory, Endpoint endpoint, ProtonClientOptions protonOptions, ProtonQoS qos) {
-        AmqpClient client = new AmqpClient(vertx, endpoint, terminusFactory, protonOptions, qos);
+        AmqpClient client = new AmqpClient(endpoint, terminusFactory, protonOptions, qos);
         clients.add(client);
         return client;
     }

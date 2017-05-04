@@ -1,6 +1,7 @@
 package enmasse.systemtest;
 
 import io.fabric8.openshift.client.OpenShiftClient;
+import io.vertx.core.Vertx;
 import io.vertx.proton.ProtonClient;
 import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.ProtonReceiver;
@@ -22,9 +23,11 @@ import static org.junit.Assert.*;
 public class ConfigServTest extends AmqpTestBase {
 
     private Set<String> pods;
+    private Vertx vertx;
 
     @Before
     public void setupPodList() {
+        vertx = VertxFactory.create();
         pods = new LinkedHashSet<>();
     }
 
@@ -35,6 +38,7 @@ public class ConfigServTest extends AmqpTestBase {
             assertTrue(client.pods().withName(pod).delete());
         }
         pods.clear();
+        vertx.close();
     }
 
     public void createPod(String name) throws Exception {
