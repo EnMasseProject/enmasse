@@ -34,19 +34,17 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public class AmqpClient implements AutoCloseable {
-    private final Vertx vertx;
     private final enmasse.systemtest.Endpoint endpoint;
     private final TerminusFactory terminusFactory;
-    private final List<String> clients = new ArrayList<>();
+    private final List<Vertx> clients = new ArrayList<>();
     private final ProtonClientOptions protonClientOptions;
     private final ProtonQoS qos;
 
-    public AmqpClient(Vertx vertx, enmasse.systemtest.Endpoint endpoint, TerminusFactory terminusFactory, ProtonClientOptions protonClientOptions) {
-        this(vertx, endpoint, terminusFactory, protonClientOptions, ProtonQoS.AT_LEAST_ONCE);
+    public AmqpClient(enmasse.systemtest.Endpoint endpoint, TerminusFactory terminusFactory, ProtonClientOptions protonClientOptions) {
+        this(endpoint, terminusFactory, protonClientOptions, ProtonQoS.AT_LEAST_ONCE);
     }
 
-    public AmqpClient(Vertx vertx, enmasse.systemtest.Endpoint endpoint, TerminusFactory terminusFactory, ProtonClientOptions protonClientOptions, ProtonQoS qos) {
-        this.vertx = vertx;
+    public AmqpClient(enmasse.systemtest.Endpoint endpoint, TerminusFactory terminusFactory, ProtonClientOptions protonClientOptions, ProtonQoS qos) {
         this.endpoint = endpoint;
         this.terminusFactory = terminusFactory;
         this.protonClientOptions = protonClientOptions;
@@ -73,6 +71,7 @@ public class AmqpClient implements AutoCloseable {
         CompletableFuture<List<String>> promise = new CompletableFuture<>();
         CountDownLatch connectLatch = new CountDownLatch(1);
 
+        Vertx vertx = Vertx.vertx();
         vertx.deployVerticle(new Receiver(endpoint, done, promise, new ClientOptions(source, new Target(), protonClientOptions, linkName), connectLatch));
         if (!connectLatch.await(connectTimeout, timeUnit)) {
             throw new RuntimeException("Timeout waiting for client to connect");
@@ -82,6 +81,9 @@ public class AmqpClient implements AutoCloseable {
 
     @Override
     public void close() throws Exception {
+        for (Vertx client : clients) {
+            client.close();
+        }
     }
 
 
@@ -123,6 +125,7 @@ public class AmqpClient implements AutoCloseable {
         CompletableFuture<Integer> promise = new CompletableFuture<>();
         CountDownLatch connectLatch = new CountDownLatch(1);
         Queue<Message> messageQueue = new LinkedList<>(Arrays.asList(messages));
+        Vertx vertx = Vertx.vertx();
         vertx.deployVerticle(new Sender(endpoint, new ClientOptions(terminusFactory.getSource(address), terminusFactory.getTarget(address), protonClientOptions, Optional.empty()), connectLatch, promise, messageQueue, qos));
         if (!connectLatch.await(connectTimeout, timeUnit)) {
             throw new RuntimeException("Timeout waiting for client to connect");
