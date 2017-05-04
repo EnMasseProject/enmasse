@@ -358,13 +358,13 @@ ConnectedRouter.prototype.on_addresses_updated = function (error) {
 
 ConnectedRouter.prototype.request = function (operation, properties, body, callback) {
     if (this.sender) {
-	this.counter++;
-	var id = this.counter.toString();
-	var req = {reply_to:this.address, correlation_id:id};
+        this.counter++;
+        var id = this.counter.toString();
+        var req = {reply_to:this.address, correlation_id:id};
         req.application_properties = properties || {};
         req.application_properties.operation = operation;
         req.body = body;
-	this.requests[id] = callback || function (response) { console.log('got response: ' + JSON.stringify(req) + ' => ' + JSON.stringify(response)); };
+        this.requests[id] = callback || function (response) { console.log('got response: ' + JSON.stringify(req) + ' => ' + JSON.stringify(response)); };
         this.sender.send(req);
     }
 };
@@ -475,13 +475,13 @@ ConnectedRouter.prototype.incoming = function (context) {
     var handler = this.requests[message.correlation_id];
     if (handler) {
         if (typeof handler === 'function') {
-	    delete this.requests[message.correlation_id];
-	    handler(message);
+            delete this.requests[message.correlation_id];
+            handler(message);
         } else {
-	    console.log('ERROR: handler not a function: ' + handler + ' [' + JSON.stringify(message) + ']');
+            console.log('ERROR: handler not a function: ' + handler + ' [' + JSON.stringify(message) + ']');
         }
     } else {
-	console.log('WARNING: unexpected response: ' + message.correlation_id + ' [' + JSON.stringify(message) + ']');
+        console.log('WARNING: unexpected response: ' + message.correlation_id + ' [' + JSON.stringify(message) + ']');
     }
 };
 
