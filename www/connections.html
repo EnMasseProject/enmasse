@@ -49,40 +49,14 @@
           </div>
           -->
           <div class="col-md-12">
-            <table class="table-bordered col-md-12">
-              <tr><td colspan="9">Senders</td></tr>
-              <tr><td>Name</td><td>Address</td><td>Deliveries</td><td>Accepted</td><td>Rejected</td><td>Released</td><td>Modified</td><td>Presettled</td><td>Undelivered</td></tr>
-              <tr ng-repeat="link in $parent.$parent.item.senders">
-                <td>{{link.name}}</td>
-                <td>{{link.address}}</td>
-                <td>{{link.deliveries}}</td>
-                <td>{{link.accepted}}</td>
-                <td>{{link.rejected}}</td>
-                <td>{{link.released}}</td>
-                <td>{{link.modified}}</td>
-                <td>{{link.presettled}}</td>
-                <td>{{link.undelivered}}</td>
-              </tr>
-            </table>
+              <span>Senders</span>
+              <div ui-grid="$parent.$parent.item.senders_config" class="link-grid" ui-grid-auto-resize ui-grid-resize-columns ng-style="getTableHeight($parent.$parent.item, 'senders')"></div>
           </div>
         </div>
         <div class="row" ng-if="$parent.item.receivers.length > 0">
           <div class="col-md-12">
-            <table class="table-bordered col-md-12">
-              <tr><td colspan="9">Receivers</td></tr>
-              <tr><td>Name</td><td>Address</td><td>Deliveries</td><td>Accepted</td><td>Rejected</td><td>Released</td><td>Modified</td><td>Presettled</td><td>Undelivered</td></tr>
-              <tr ng-repeat="link in $parent.$parent.item.receivers">
-                <td>{{link.name}}</td>
-                <td>{{link.address}}</td>
-                <td>{{link.deliveries}}</td>
-                <td>{{link.accepted}}</td>
-                <td>{{link.rejected}}</td>
-                <td>{{link.released}}</td>
-                <td>{{link.modified}}</td>
-                <td>{{link.presettled}}</td>
-                <td>{{link.undelivered}}</td>
-              </tr>
-            </table>
+            <span>Receivers</span>
+            <div ui-grid="$parent.$parent.item.receivers_config" class="link-grid" ui-grid-auto-resize ui-grid-resize-columns ng-style="getTableHeight($parent.$parent.item, 'receivers')"></div>
           </div>
         </div>
       </list-expanded-content>

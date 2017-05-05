@@ -219,7 +219,11 @@ AddressService.prototype.update_connection = function (c) {
     while (i < this.connections.length && c.id !== this.connections[i].id) {
         i++;
     }
-    this.connections[i] = c;
+    if (i >= this.connections.length)
+      this.connections[i] = c
+    else
+    // don't replace existing connection items, just update them
+      Object.assign(this.connections[i], c)
 }
 
 AddressService.prototype.update_user = function (c) {
