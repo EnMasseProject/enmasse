@@ -1,5 +1,13 @@
 package enmasse.controller.api.osb.v2.bind;
 
+import enmasse.controller.address.AddressManager;
+import enmasse.controller.api.osb.v2.EmptyResponse;
+import enmasse.controller.api.osb.v2.OSBServiceBase;
+import enmasse.controller.flavor.FlavorRepository;
+import enmasse.controller.instance.InstanceManager;
+import enmasse.controller.model.Destination;
+import enmasse.controller.model.Instance;
+
 import java.util.HashMap;
 import java.util.Map;
 import javax.ws.rs.Consumes;
@@ -11,13 +19,6 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-
-import enmasse.controller.address.AddressManager;
-import enmasse.controller.api.osb.v2.EmptyResponse;
-import enmasse.controller.api.osb.v2.OSBServiceBase;
-import enmasse.controller.flavor.FlavorRepository;
-import enmasse.controller.instance.InstanceManager;
-import enmasse.controller.model.Instance;
 
 @Path("/v2/service_instances/{instanceId}/service_bindings/{bindingId}")
 @Consumes({MediaType.APPLICATION_JSON})
@@ -35,11 +36,17 @@ public class OSBBindingService extends OSBServiceBase {
         Instance instance = findInstanceByDestinationUuid(instanceId)
                 .orElseThrow(() -> new NotFoundException("Service instance " + instanceId + " does not exist"));
 
+        Destination destination = findDestination(instance, instanceId)  // TODO: replace this and findInstanceByDestinationUuid so it returns both objects
+                .orElseThrow(() -> new NotFoundException("Service instance " + instanceId + " does not exist"));
+
         Map<String, String> credentials = new HashMap<>();
         credentials.put("namespace", instance.id().getNamespace());
         instance.messagingHost().ifPresent(s -> credentials.put("messagingHost", s));
         instance.mqttHost().ifPresent(s -> credentials.put("mqttHost", s));
         instance.consoleHost().ifPresent(s -> credentials.put("consoleHost", s));
+        credentials.put("destination-address", destination.address());
+        credentials.put("internal-messaging-host", "messaging." + instance.id().getNamespace() + ".svc.cluster.local");
+        credentials.put("internal-mqtt-host", "mqtt." + instance.id().getNamespace() + ".svc.cluster.local");
 
         BindResponse response = new BindResponse(credentials);
         return Response.status(Response.Status.CREATED).entity(response).build();        // TODO: return 200 OK, when binding already exists
