@@ -201,31 +201,31 @@ angular.module('patternfly.toolbars').controller('ViewCtrl', ['$scope', '$timeou
             })
         }
 
-        address_service.on_update(function (reason) {
+        var on_update = function (reason) {
           if (reason.split('_')[0] !== 'address') {
             return
           }
-          $timeout( function () {
-            $scope.items.forEach( function (item) {
-              if (item.senders + item.receivers > 0) {
-                if (!item.ingress_outcomes_link_table) {
-                  item.ingress_outcomes_link_table = new linkTableConfig()
-                  item.egress_outcomes_link_table = new linkTableConfig()
-                }
-                calcRates(item)
-                saveLastLinkInfo(item)
-
-                // needed to force the grid to update the data
-                item.ingress_outcomes_link_table.data = item.outcomes.ingress.links
-                item.egress_outcomes_link_table.data = item.outcomes.egress.links
+          $scope.items.forEach( function (item) {
+            if (item.senders + item.receivers > 0) {
+              if (!item.ingress_outcomes_link_table) {
+                item.ingress_outcomes_link_table = new linkTableConfig()
+                item.egress_outcomes_link_table = new linkTableConfig()
               }
-            })
+              calcRates(item)
+              saveLastLinkInfo(item)
+
+              // needed to force the grid to update the data
+              item.ingress_outcomes_link_table.data = item.outcomes.ingress.links
+              item.egress_outcomes_link_table.data = item.outcomes.egress.links
+            }
           })
+          $timeout(() => {}) // safely apply any changes to scope variables
           // force a rate updated even if there was no change in the address
           if (rateTimer)
             clearTimeout(rateTimer)
           rateTimer = setTimeout(forceDeliveryRateUpdate, 7500)
-        });
+        };
+        address_service.on_update(on_update);
 
         $scope.getTableHeight = function(item, xgress) {
           var rowHeight = 30;   // default row height
@@ -237,6 +237,7 @@ angular.module('patternfly.toolbars').controller('ViewCtrl', ['$scope', '$timeou
 
         $scope.filtersText = '';
         $scope.items = address_service.addresses;
+        on_update("address")
 
         var matchesFilter = function (item, filter) {
           var match = true;
@@ -561,13 +562,61 @@ angular.module('patternfly.wizard').controller('SummaryController', ['$rootScope
 
 angular.module('patternfly.toolbars').controller('ConnectionViewCtrl', ['$scope', '$timeout', 'pfViewUtils', 'address_service',
     function ($scope, $timeout, pfViewUtils, address_service) {
+
+        var connectionGridConfig = function () {
+          this.data = []
+          this.columnDefs = [
+            {field: 'name', displayName: 'Name'},
+            {field: 'address', displayName: 'Address'},
+            {field: 'deliveries', displayName: 'Deliveries', cellClass: 'text-right', headerCellClass: 'ui-grid-cell-right-align'},
+            {field: 'accepted', displayName: 'Accepted', cellClass: 'text-right', headerCellClass: 'ui-grid-cell-right-align'},
+            {field: 'rejected', displayName: 'Rejected', cellClass: 'text-right', headerCellClass: 'ui-grid-cell-right-align'},
+            {field: 'released', displayName: 'Released', cellClass: 'text-right', headerCellClass: 'ui-grid-cell-right-align'},
+            {field: 'modified', displayName: 'Modified', cellClass: 'text-right', headerCellClass: 'ui-grid-cell-right-align'},
+            {field: 'presettled', displayName: 'Presettled', cellClass: 'text-right', headerCellClass: 'ui-grid-cell-right-align'},
+            {field: 'undelivered', displayName: 'Undelivered', cellClass: 'text-right', headerCellClass: 'ui-grid-cell-right-align'}
+          ]
+          this.enableHorizontalScrollbar = 0
+          this.enableVerticalScrollbar = 0
+          this.enableColumnMenus = false
+        }
+
+        $scope.getTableHeight = function(item, direction) {
+          var rowHeight = 30;   // default row height
+          var headerHeight = 30;
+          return {
+            height: (item[direction].length * rowHeight + headerHeight) + "px"
+          };
+        };
+
+        var connectionGridConfigs = {}
+        // make sure each item that has senders or receivers has a ui-grid config
+        var ensureGridConfigs = function (items) {
+            var getConfig = function (item, dir) {
+                if (!connectionGridConfigs[item.host])
+                  connectionGridConfigs[item.host] = {}
+                if (!connectionGridConfigs[item.host][dir])
+                  connectionGridConfigs[item.host][dir] = new connectionGridConfig()
+              return connectionGridConfigs[item.host][dir]
+            }
+            items.forEach( function (item) {
+              if (item.senders.length > 0) {
+                item.senders_config = getConfig(item, 'senders')
+                item.senders_config.data = item.senders
+              }
+              if (item.receivers.length > 0) {
+                item.receivers_config = getConfig(item, 'receivers')
+                item.receivers_config.data = item.receivers
+              }
+            })
+        }
+
         address_service.on_update(function (reason) {
           if (reason.split('_')[0] !== 'connection') {
             return
           }
-          $timeout( function () {
-            reExpandItems($scope.items);
-          })
+          ensureGridConfigs($scope.items)
+          $timeout(() => {}) // safely apply any changes to scope variables
         });
 
         function get_filter_function(filter) {
@@ -595,31 +644,6 @@ angular.module('patternfly.toolbars').controller('ConnectionViewCtrl', ['$scope'
             }
         }
 
-        // keep track of which items are expanded and re-expand them when an update or filter occurs
-        var expandedItems = {}
-        var reExpandItems = function (items) {
-          items.forEach( function (item) {
-            if (expandedItems[item.host]) {
-              item.isExpanded = true
-            }
-          })
-        }
-        // called by pf-list-view directive when an item is clicked
-        // remember which items are expanded
-        var handleClick = function (item, e) {
-          // do this in a $timeout since item.isExpanded isn't set by the directive yet
-          $timeout(function () {
-            if (item.isExpanded) {
-              expandedItems[item.host] = true
-            }
-            else {
-              if (expandedItems[item.host]) {
-                delete expandedItems[item.host]
-              }
-            }
-          })
-        }
-
         // keep track of which items are filtered out (hidden)
         var hiddenItems = {}
         // called by pf-list-view directive to get disabled items
@@ -643,6 +667,7 @@ angular.module('patternfly.toolbars').controller('ConnectionViewCtrl', ['$scope'
 
         $scope.filtersText = '';
         $scope.items = address_service.connections;
+        ensureGridConfigs($scope.items)
         $scope.filterConfig = {
             fields: [
                 {
@@ -735,7 +760,6 @@ angular.module('patternfly.toolbars').controller('ConnectionViewCtrl', ['$scope'
             showSelectBox: false,
             useExpandingRows: true,
             checkDisabled: false,
-            onClick: handleClick,
             checkDisabled: checkHiddenItem
         };
       }
