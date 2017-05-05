@@ -59,9 +59,10 @@ public class OSBProvisioningService extends OSBServiceBase {
 
         Instance maasInstance = getOrCreateInstance(maasInstanceId);
         Optional<Destination> existingDestination = findDestination(maasInstance, instanceId);
+        String dashboardUrl = getConsoleURL(maasInstance).orElse(null);
         if (existingDestination.isPresent()) {
             if (existingDestination.get().equals(destination)) {
-                return Response.ok(new ProvisionResponse(getConsoleURL(maasInstance).orElse(null))).build();
+                return Response.ok(new ProvisionResponse(dashboardUrl)).build();
             } else {
                 throw new ConflictException("Service instance " + instanceId + " already exists");
             }
@@ -69,9 +70,9 @@ public class OSBProvisioningService extends OSBServiceBase {
 
         provisionDestination(maasInstance, destination);
 
-        log.info("Returning ProvisionResponse with dashboardUrl {}", getConsoleURL(maasInstance).orElse(null));
+        log.info("Returning ProvisionResponse with dashboardUrl {}", dashboardUrl);
         return Response.status(Response.Status.CREATED)
-                .entity(new ProvisionResponse(getConsoleURL(maasInstance).orElse(null)))
+                .entity(new ProvisionResponse(dashboardUrl))
                 .build();
     }
 
