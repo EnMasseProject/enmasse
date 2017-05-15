@@ -12,25 +12,26 @@ public class DefaultExceptionMapper implements ExceptionMapper<Exception> {
 
     @Override
     public Response toResponse(Exception exception) {
-        Response.Status status = getResponseStatus(exception);
+        Response.StatusType status;
+        Response response;
+        if (exception instanceof WebApplicationException) {
+            WebApplicationException webApplicationException = (WebApplicationException) exception;
+            status = Response.Status.fromStatusCode(webApplicationException.getResponse().getStatus());
+            response = webApplicationException.getResponse();
+        } else {
+            status = Response.Status.INTERNAL_SERVER_ERROR;
+            response = Response.status(status)
+                    .entity(new ErrorResponse(null, exception.getMessage()))
+                    .build();
+        }
+
         if (status.getFamily() == Response.Status.Family.CLIENT_ERROR) {
             log.info("Returning client error HTTP status {}: {}", status.getStatusCode(), exception.getMessage());
         } else {
             log.warn("Returning server error HTTP status " + status.getStatusCode(), exception);
         }
 
-        return Response.status(status)
-                .entity(new ErrorResponse(exception.getMessage()))
-                .build();
-    }
-
-    private Response.Status getResponseStatus(Exception exception) {
-        if (exception instanceof WebApplicationException) {
-            WebApplicationException webApplicationException = (WebApplicationException) exception;
-            return Response.Status.fromStatusCode(webApplicationException.getResponse().getStatus());
-        } else {
-            return Response.Status.INTERNAL_SERVER_ERROR;
-        }
+        return response;
     }
 
 }

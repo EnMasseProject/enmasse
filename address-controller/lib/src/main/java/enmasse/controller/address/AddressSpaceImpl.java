@@ -16,13 +16,17 @@
 
 package enmasse.controller.address;
 
-import enmasse.controller.common.Kubernetes;
 import enmasse.controller.common.DestinationClusterGenerator;
+import enmasse.controller.common.Kubernetes;
 import enmasse.controller.model.Destination;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -38,6 +42,31 @@ public class AddressSpaceImpl implements AddressSpace {
     public AddressSpaceImpl(Kubernetes kubernetes, DestinationClusterGenerator generator) {
         this.kubernetes = kubernetes;
         this.generator = generator;
+    }
+
+    /*
+     * Ensure that a destination groups meet the criteria of all destinations sharing the same properties, until we can
+     * support a mix.
+     */
+    private static void validateDestinationGroups(Map<String, Set<Destination>> destinationByGroup) {
+        for (Map.Entry<String, Set<Destination>> entry : destinationByGroup.entrySet()) {
+            Iterator<Destination> it = entry.getValue().iterator();
+            Destination first = it.next();
+            while (it.hasNext()) {
+                Destination current = it.next();
+                if (current.storeAndForward() != first.storeAndForward() ||
+                    current.multicast() != first.multicast() ||
+                    !current.flavor().equals(first.flavor()) ||
+                    !current.group().equals(first.group())) {
+
+                    throw new IllegalArgumentException("All destinations in a destination group must share the same properties. Found: " + current + " and " + first);
+                }
+            }
+        }
+    }
+
+    private static boolean brokerExists(Collection<DestinationCluster> clusterList, String groupId) {
+        return clusterList.stream().anyMatch(cluster -> cluster.getClusterId().equals(groupId));
     }
 
     @Override
@@ -103,38 +132,12 @@ public class AddressSpaceImpl implements AddressSpace {
         deleteBrokers(clusterList, destinationByGroup);
     }
 
-
     /**
      * Return the destinations for this address space.
      */
     @Override
     public synchronized Set<Destination> getDestinations() {
         return getClusterDestinations(kubernetes.listClusters());
-    }
-
-    /*
-     * Ensure that a destination groups meet the criteria of all destinations sharing the same properties, until we can
-     * support a mix.
-     */
-    private static void validateDestinationGroups(Map<String, Set<Destination>> destinationByGroup) {
-        for (Map.Entry<String, Set<Destination>> entry : destinationByGroup.entrySet()) {
-            Iterator<Destination> it = entry.getValue().iterator();
-            Destination first = it.next();
-            while (it.hasNext()) {
-                Destination current = it.next();
-                if (current.storeAndForward() != first.storeAndForward() ||
-                    current.multicast() != first.multicast() ||
-                    !current.flavor().equals(first.flavor()) ||
-                    !current.group().equals(first.group())) {
-
-                    throw new IllegalArgumentException("All destinations in a destination group must share the same properties. Found: " + current + " and " + first);
-                }
-            }
-        }
-    }
-
-    private static boolean brokerExists(Collection<DestinationCluster> clusterList, String groupId) {
-        return clusterList.stream().anyMatch(cluster -> cluster.getClusterId().equals(groupId));
     }
 
     private void createBrokers(Collection<DestinationCluster> clusterList, Map<String, Set<Destination>> newDestinationGroups) {
@@ -158,5 +161,10 @@ public class AddressSpaceImpl implements AddressSpace {
                 .filter(cluster -> newDestinationGroups.entrySet().stream()
                         .noneMatch(destinationGroup -> cluster.getClusterId().equals(destinationGroup.getKey())))
                 .forEach(DestinationCluster::delete);
+    }
+
+    @Override
+    public boolean isDestinationReady(Destination destination) {
+        return kubernetes.isDestinationReady(destination);
     }
 }

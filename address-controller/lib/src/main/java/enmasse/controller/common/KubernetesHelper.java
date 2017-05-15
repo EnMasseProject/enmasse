@@ -24,20 +24,31 @@ import enmasse.controller.address.DestinationCluster;
 import enmasse.controller.model.Destination;
 import enmasse.controller.model.Instance;
 import enmasse.controller.model.InstanceId;
-import io.fabric8.kubernetes.api.model.*;
+import io.fabric8.kubernetes.api.model.ConfigMap;
+import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
+import io.fabric8.kubernetes.api.model.HasMetadata;
+import io.fabric8.kubernetes.api.model.KubernetesList;
+import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
+import io.fabric8.kubernetes.api.model.Namespace;
+import io.fabric8.kubernetes.api.model.ObjectReferenceBuilder;
+import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.client.dsl.Resource;
 import io.fabric8.openshift.api.model.DoneablePolicyBinding;
 import io.fabric8.openshift.api.model.PolicyBinding;
 import io.fabric8.openshift.client.OpenShiftClient;
 import io.fabric8.openshift.client.ParameterValue;
-import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URI;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -314,5 +325,12 @@ public class KubernetesHelper implements Kubernetes {
                         .build())
                 .done();
         return secretName;
+    }
+
+    @Override
+    public boolean isDestinationReady(Destination destination) {
+        // TODO: improve this so it only checks the given destination's Kubernetes resources
+        return client.extensions().deployments().inNamespace(instance.getNamespace()).list().getItems().stream()
+                .allMatch(deployment -> Optional.ofNullable(deployment.getStatus().getUnavailableReplicas()).orElse(0) == 0);
     }
 }

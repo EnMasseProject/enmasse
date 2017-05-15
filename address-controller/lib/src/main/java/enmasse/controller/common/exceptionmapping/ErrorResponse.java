@@ -13,10 +13,16 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 public class ErrorResponse {
     private static final ObjectMapper mapper = new ObjectMapper();
 
+    private String error;
     private String description;
 
-    public ErrorResponse(String description) {
+    public ErrorResponse(String error, String description) {
+        this.error = error;
         this.description = description;
+    }
+
+    public String getError() {
+        return error;
     }
 
     public String getDescription() {
@@ -31,6 +37,9 @@ public class ErrorResponse {
         @Override
         public void serialize(ErrorResponse value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
             ObjectNode node = mapper.createObjectNode();
+            if (value.getError() != null) {
+                node.put("error", value.getError());
+            }
             if (value.getDescription() != null) {
                 node.put("description", value.getDescription());
             }

@@ -2,9 +2,9 @@ package enmasse.controller.api.osb.v2.provision;
 
 import java.util.Optional;
 import java.util.UUID;
-import javax.ws.rs.BadRequestException;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -14,9 +14,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import enmasse.controller.address.AddressManager;
-import enmasse.controller.api.osb.v2.ConflictException;
 import enmasse.controller.api.osb.v2.EmptyResponse;
-import enmasse.controller.api.osb.v2.GoneException;
+import enmasse.controller.api.osb.v2.OSBExceptions;
 import enmasse.controller.api.osb.v2.OSBServiceBase;
 import enmasse.controller.api.osb.v2.ServiceType;
 import enmasse.controller.flavor.FlavorRepository;
@@ -35,7 +34,14 @@ public class OSBProvisioningService extends OSBServiceBase {
     }
 
     @PUT
-    public Response provisionService(@PathParam("instanceId") String instanceId, ProvisionRequest request) throws Exception {
+    public Response provisionService(@PathParam("instanceId") String instanceId,
+                                     @QueryParam("accepts_incomplete") @DefaultValue("false") boolean acceptsIncomplete,
+                                     ProvisionRequest request) throws Exception {
+
+        if (!acceptsIncomplete) {
+            throw OSBExceptions.unprocessableEntityException("AsyncRequired", "This service plan requires client support for asynchronous service operations.");
+        }
+
         // We must shorten the organizationId so the resulting address configmap name isn't too long
         String shortOrganizationId = shortenUuid(request.getOrganizationId()); // TODO: remove the need for doing this
         InstanceId maasInstanceId = InstanceId.withId(shortOrganizationId);
@@ -45,10 +51,10 @@ public class OSBProvisioningService extends OSBServiceBase {
                 shortOrganizationId, request.getParameter("name").orElse(null));
 
         ServiceType serviceType = ServiceType.valueOf(request.getServiceId())
-                .orElseThrow(() -> new BadRequestException("Invalid service_id " + request.getServiceId()));
+                .orElseThrow(() -> OSBExceptions.badRequestException("Invalid service_id " + request.getServiceId()));
 
         if (!isValidPlan(serviceType, request.getPlanId())) {
-            throw new BadRequestException("Invalid plan_id " + request.getPlanId());
+            throw OSBExceptions.badRequestException("Invalid plan_id " + request.getPlanId());
         }
 
         String name = request.getParameter("name").orElse(serviceType.serviceName() + "-" + shortenUuid(instanceId));
@@ -62,17 +68,17 @@ public class OSBProvisioningService extends OSBServiceBase {
         String dashboardUrl = getConsoleURL(maasInstance).orElse(null);
         if (existingDestination.isPresent()) {
             if (existingDestination.get().equals(destination)) {
-                return Response.ok(new ProvisionResponse(dashboardUrl)).build();
+                return Response.ok(new ProvisionResponse(dashboardUrl, "provision")).build();
             } else {
-                throw new ConflictException("Service instance " + instanceId + " already exists");
+                throw OSBExceptions.conflictException("Service instance " + instanceId + " already exists");
             }
         }
 
         provisionDestination(maasInstance, destination);
 
         log.info("Returning ProvisionResponse with dashboardUrl {}", dashboardUrl);
-        return Response.status(Response.Status.CREATED)
-                .entity(new ProvisionResponse(dashboardUrl))
+        return Response.status(Response.Status.ACCEPTED)
+                .entity(new ProvisionResponse(dashboardUrl, "provision"))
                 .build();
     }
 
@@ -92,17 +98,17 @@ public class OSBProvisioningService extends OSBServiceBase {
                 instanceId, serviceId, planId);
 
         if (serviceId == null) {
-            throw new BadRequestException("Missing service_id parameter");
+            throw OSBExceptions.badRequestException("Missing service_id parameter");
         }
         if (planId == null) {
-            throw new BadRequestException("Missing plan_id parameter");
+            throw OSBExceptions.badRequestException("Missing plan_id parameter");
         }
 
         boolean deleted = deleteDestinationByUuid(instanceId);
         if (deleted) {
             return Response.ok(new EmptyResponse()).build();
         } else {
-            throw new GoneException("Service instance " + instanceId + " is gone");
+            throw OSBExceptions.goneException("Service instance " + instanceId + " is gone");
         }
     }
 

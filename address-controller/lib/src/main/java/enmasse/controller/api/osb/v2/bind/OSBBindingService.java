@@ -2,6 +2,7 @@ package enmasse.controller.api.osb.v2.bind;
 
 import enmasse.controller.address.AddressManager;
 import enmasse.controller.api.osb.v2.EmptyResponse;
+import enmasse.controller.api.osb.v2.OSBExceptions;
 import enmasse.controller.api.osb.v2.OSBServiceBase;
 import enmasse.controller.flavor.FlavorRepository;
 import enmasse.controller.instance.InstanceManager;
@@ -12,7 +13,6 @@ import java.util.HashMap;
 import java.util.Map;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
-import javax.ws.rs.NotFoundException;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -34,10 +34,10 @@ public class OSBBindingService extends OSBServiceBase {
         log.info("Received bind request for instance {}, binding {} (service id {}, plan id {})",
                 instanceId, bindingId, bindRequest.getServiceId(), bindRequest.getPlanId());
         Instance instance = findInstanceByDestinationUuid(instanceId)
-                .orElseThrow(() -> new NotFoundException("Service instance " + instanceId + " does not exist"));
+                .orElseThrow(() -> OSBExceptions.notFoundException("Service instance " + instanceId + " does not exist"));
 
         Destination destination = findDestination(instance, instanceId)  // TODO: replace this and findInstanceByDestinationUuid so it returns both objects
-                .orElseThrow(() -> new NotFoundException("Service instance " + instanceId + " does not exist"));
+                .orElseThrow(() -> OSBExceptions.notFoundException("Service instance " + instanceId + " does not exist"));
 
         Map<String, String> credentials = new HashMap<>();
         credentials.put("namespace", instance.id().getNamespace());
@@ -57,7 +57,7 @@ public class OSBBindingService extends OSBServiceBase {
         log.info("Received unbind request for instance {}, binding {}",
                 instanceId, bindingId);
         Instance instance = findInstanceByDestinationUuid(instanceId)
-                .orElseThrow(() -> new NotFoundException("Service instance " + instanceId + " does not exist"));
+                .orElseThrow(() -> OSBExceptions.notFoundException("Service instance " + instanceId + " does not exist"));
 
         return Response.ok(new EmptyResponse()).build();
     }

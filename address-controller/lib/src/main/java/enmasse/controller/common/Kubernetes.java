@@ -8,13 +8,9 @@ import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.Namespace;
-import io.fabric8.kubernetes.client.Watch;
-import io.fabric8.kubernetes.client.Watcher;
 import io.fabric8.openshift.client.ParameterValue;
 
-import java.io.File;
 import java.io.IOException;
-import java.net.URI;
 import java.util.List;
 import java.util.Map;
 
@@ -61,4 +57,6 @@ public interface Kubernetes {
 
     boolean hasService(String service);
     String createInstanceSecret(InstanceId instanceId) throws IOException;
+
+    boolean isDestinationReady(Destination destination);
 }

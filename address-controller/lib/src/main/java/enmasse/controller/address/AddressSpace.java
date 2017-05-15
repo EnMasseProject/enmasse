@@ -15,4 +15,6 @@ public interface AddressSpace {
     Set<Destination> setDestinations(Set<Destination> destinations);
     Set<Destination> addDestinations(Set<Destination> destination);
     Set<Destination> getDestinations();
+
+    boolean isDestinationReady(Destination destination);
 }

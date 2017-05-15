@@ -80,4 +80,9 @@ public class TestAddressSpace implements AddressSpace {
         }
         return new LinkedHashSet<>(destinations);
     }
+
+    @Override
+    public boolean isDestinationReady(Destination destination) {
+        return false;
+    }
 }

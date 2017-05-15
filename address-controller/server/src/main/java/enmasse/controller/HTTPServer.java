@@ -19,6 +19,7 @@ package enmasse.controller;
 import enmasse.controller.address.AddressManager;
 import enmasse.controller.api.osb.v2.bind.OSBBindingService;
 import enmasse.controller.api.osb.v2.catalog.OSBCatalogService;
+import enmasse.controller.api.osb.v2.lastoperation.OSBLastOperationService;
 import enmasse.controller.api.osb.v2.provision.OSBProvisioningService;
 import enmasse.controller.api.v3.ApiHandler;
 import enmasse.controller.api.v3.http.AddressingService;
@@ -68,6 +69,7 @@ public class HTTPServer extends AbstractVerticle {
         deployment.getRegistry().addSingletonResource(new OSBCatalogService(instanceManager, addressManager, flavorRepository));
         deployment.getRegistry().addSingletonResource(new OSBProvisioningService(instanceManager, addressManager, flavorRepository));
         deployment.getRegistry().addSingletonResource(new OSBBindingService(instanceManager, addressManager, flavorRepository));
+        deployment.getRegistry().addSingletonResource(new OSBLastOperationService(instanceManager, addressManager, flavorRepository));
 
         vertx.createHttpServer()
                 .requestHandler(new VertxRequestHandler(vertx, deployment))

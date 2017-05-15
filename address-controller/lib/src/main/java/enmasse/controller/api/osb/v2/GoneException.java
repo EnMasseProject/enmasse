@@ -5,7 +5,7 @@ import javax.ws.rs.core.Response;
 
 public class GoneException extends ClientErrorException {
 
-    public GoneException(String message) {
-        super(message, Response.Status.GONE);
+    public GoneException(String message, Response response) {
+        super(message, response);
     }
 }
