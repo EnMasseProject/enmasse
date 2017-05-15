@@ -15,7 +15,11 @@
  */
 package enmasse.systemtest;
 
-import enmasse.systemtest.amqp.*;
+import enmasse.systemtest.amqp.AmqpClient;
+import enmasse.systemtest.amqp.DurableTopicTerminusFactory;
+import enmasse.systemtest.amqp.QueueTerminusFactory;
+import enmasse.systemtest.amqp.TerminusFactory;
+import enmasse.systemtest.amqp.TopicTerminusFactory;
 import io.vertx.proton.ProtonClientOptions;
 import io.vertx.proton.ProtonQoS;
 import org.junit.After;
@@ -24,49 +28,22 @@ import org.junit.Before;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
-public abstract class AmqpTestBase {
-    protected AddressApiClient addressApiClient;
-    protected Environment environment = new Environment();
-    protected OpenShift openShift;
+public abstract class AmqpTestBase extends TestBase {
+
     private final List<AmqpClient> clients = new ArrayList<>();
 
-    protected abstract String getInstanceName();
-
     @Before
-    public void setup() throws Exception {
+    public void setupAmqpTest() throws Exception {
         clients.clear();
-        openShift = new OpenShift(environment, environment.isMultitenant() ? getInstanceName().toLowerCase() : environment.namespace());
-        addressApiClient = new AddressApiClient(openShift.getRestEndpoint(), environment.isMultitenant());
-        addressApiClient.deployInstance(getInstanceName().toLowerCase());
     }
 
     @After
-    public void teardown() throws Exception {
-        cleanup();
-        addressApiClient.close();
-        clients.clear();
-    }
-
-    private void cleanup() throws Exception {
-        deploy();
+    public void teardownAmqpTest() throws Exception {
         for (AmqpClient client : clients) {
             client.close();
         }
-    }
-
-    protected void deploy(Destination ... destinations) throws Exception {
-        TimeoutBudget budget = new TimeoutBudget(5, TimeUnit.MINUTES);
-        TestUtils.deploy(addressApiClient, openShift, budget, getInstanceName().toLowerCase(), destinations);
-    }
-
-    protected void scale(Destination destination, int numReplicas) throws Exception {
-        TimeoutBudget budget = new TimeoutBudget(5, TimeUnit.MINUTES);
-        TestUtils.setReplicas(openShift, destination, numReplicas, budget);
-        if (destination.isStoreAndForward() && !destination.isMulticast()) {
-            TestUtils.waitForAddress(openShift, destination.getAddress(), budget);
-        }
+        clients.clear();
     }
 
     protected AmqpClient createQueueClient() throws UnknownHostException {
