@@ -22,6 +22,8 @@ import enmasse.systemtest.amqp.TerminusFactory;
 import enmasse.systemtest.amqp.TopicTerminusFactory;
 import io.vertx.proton.ProtonClientOptions;
 import io.vertx.proton.ProtonQoS;
+import org.junit.After;
+import org.junit.Before;
 
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -31,13 +33,13 @@ public abstract class AmqpTestBase extends TestBase {
 
     private final List<AmqpClient> clients = new ArrayList<>();
 
-    @Override
-    protected void setup() throws Exception {
+    @Before
+    public void setupAmqpTest() throws Exception {
         clients.clear();
     }
 
-    @Override
-    protected void teardown() throws Exception {
+    @After
+    public void teardownAmqpTest() throws Exception {
         for (AmqpClient client : clients) {
             client.close();
         }

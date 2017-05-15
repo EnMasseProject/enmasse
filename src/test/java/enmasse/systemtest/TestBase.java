@@ -32,21 +32,15 @@ public abstract class TestBase {
 
     protected abstract String getInstanceName();
 
-    protected abstract void setup() throws Exception;
-
-    protected abstract void teardown() throws Exception;
-
     @Before
-    public void before() throws Exception {
+    public void setup() throws Exception {
         openShift = new OpenShift(environment, environment.isMultitenant() ? getInstanceName().toLowerCase() : environment.namespace());
         addressApiClient = new AddressApiClient(openShift.getRestEndpoint(), environment.isMultitenant());
         addressApiClient.deployInstance(getInstanceName().toLowerCase());
-        setup();
     }
 
     @After
-    public void after() throws Exception {
-        teardown();
+    public void teardown() throws Exception {
         deploy();
         addressApiClient.close();
     }
