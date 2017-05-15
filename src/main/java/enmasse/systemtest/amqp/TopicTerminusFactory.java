@@ -14,24 +14,24 @@
  * limitations under the License.
  */
 
-package enmasse.systemtest;
+package enmasse.systemtest.amqp;
 
-import enmasse.systemtest.amqp.TerminusFactory;
+import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.messaging.Source;
 import org.apache.qpid.proton.amqp.messaging.Target;
 
-public class QueueTerminusFactory implements TerminusFactory {
+public class TopicTerminusFactory extends QueueTerminusFactory {
     @Override
     public Source getSource(String address) {
-        Source source = new Source();
-        source.setAddress(address);
+        Source source = super.getSource(address);
+        source.setCapabilities(Symbol.getSymbol("topic"));
         return source;
     }
 
     @Override
     public Target getTarget(String address) {
-        Target target = new Target();
-        target.setAddress(address);
+        Target target = super.getTarget(address);
+        target.setCapabilities(Symbol.getSymbol("topic"));
         return target;
     }
 }

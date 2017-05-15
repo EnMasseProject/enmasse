@@ -15,26 +15,18 @@
  */
 package enmasse.systemtest;
 
-import enmasse.systemtest.amqp.AmqpClient;
-import enmasse.systemtest.amqp.SslOptions;
-import enmasse.systemtest.amqp.TerminusFactory;
-import io.vertx.core.Vertx;
-import org.apache.qpid.proton.amqp.transport.End;
-import org.apache.qpid.proton.engine.SslDomain;
-import org.apache.qpid.proton.engine.SslPeerDetails;
+import enmasse.systemtest.amqp.*;
+import io.vertx.proton.ProtonClientOptions;
+import io.vertx.proton.ProtonQoS;
 import org.junit.After;
 import org.junit.Before;
 
-import java.net.Inet4Address;
-import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 public abstract class AmqpTestBase {
-    protected Vertx vertx;
     protected AddressApiClient addressApiClient;
     protected Environment environment = new Environment();
     protected OpenShift openShift;
@@ -45,9 +37,8 @@ public abstract class AmqpTestBase {
     @Before
     public void setup() throws Exception {
         clients.clear();
-        vertx = Vertx.vertx();
         openShift = new OpenShift(environment, environment.isMultitenant() ? getInstanceName().toLowerCase() : environment.namespace());
-        addressApiClient = new AddressApiClient(vertx, openShift.getRestEndpoint(), environment.isMultitenant());
+        addressApiClient = new AddressApiClient(openShift.getRestEndpoint(), environment.isMultitenant());
         addressApiClient.deployInstance(getInstanceName().toLowerCase());
     }
 
@@ -55,7 +46,6 @@ public abstract class AmqpTestBase {
     public void teardown() throws Exception {
         cleanup();
         addressApiClient.close();
-        vertx.close();
         clients.clear();
     }
 
@@ -80,53 +70,50 @@ public abstract class AmqpTestBase {
     }
 
     protected AmqpClient createQueueClient() throws UnknownHostException {
-        return createClient(new QueueTerminusFactory());
+        return createClient(new QueueTerminusFactory(), ProtonQoS.AT_LEAST_ONCE);
     }
 
     protected AmqpClient createTopicClient() throws UnknownHostException {
-        return createClient(new TopicTerminusFactory());
+        return createClient(new TopicTerminusFactory(), ProtonQoS.AT_LEAST_ONCE);
     }
 
     protected AmqpClient createDurableTopicClient() throws UnknownHostException {
-        return createClient(new DurableTopicTerminusFactory());
+        return createClient(new DurableTopicTerminusFactory(), ProtonQoS.AT_LEAST_ONCE);
     }
 
-    protected AmqpClient createClient(TerminusFactory terminusFactory) throws UnknownHostException {
+    protected AmqpClient createBroadcastClient() throws UnknownHostException {
+        return createClient(new QueueTerminusFactory(), ProtonQoS.AT_MOST_ONCE);
+    }
+
+    protected AmqpClient createClient(TerminusFactory terminusFactory, ProtonQoS qos) throws UnknownHostException {
         if (environment.useTLS()) {
             Endpoint messagingEndpoint = openShift.getRouteEndpoint("messaging");
             Endpoint clientEndpoint;
-            if (resolvable(messagingEndpoint)) {
+            ProtonClientOptions clientOptions = new ProtonClientOptions();
+            clientOptions.setSsl(true);
+            clientOptions.setTrustAll(true);
+            clientOptions.setHostnameVerificationAlgorithm("");
+
+            if (TestUtils.resolvable(messagingEndpoint)) {
                 clientEndpoint = messagingEndpoint;
             } else {
                 clientEndpoint = new Endpoint("localhost", 443);
+                clientOptions.setSniServerName(messagingEndpoint.getHost());
             }
-            SslDomain sslDomain = SslDomain.Factory.create();
-            sslDomain.init(SslDomain.Mode.CLIENT);
-            sslDomain.setPeerAuthentication(SslDomain.VerifyMode.ANONYMOUS_PEER);
-            SslPeerDetails sslPeerDetails = SslPeerDetails.Factory.create(messagingEndpoint.getHost(), messagingEndpoint.getPort());
-            SslOptions sslOptions = new SslOptions(sslDomain, sslPeerDetails);
-            System.out.println("External endpoint: " + clientEndpoint + ", internal: " + messagingEndpoint);
-            return createClient(terminusFactory, clientEndpoint, Optional.of(sslOptions));
+            Logging.log.info("External endpoint: " + clientEndpoint + ", internal: " + messagingEndpoint);
+
+            return createClient(terminusFactory, clientEndpoint, clientOptions, qos);
         } else {
-            return createClient(terminusFactory, openShift.getInsecureEndpoint(), Optional.empty());
+            return createClient(terminusFactory, openShift.getInsecureEndpoint(), qos);
         }
     }
 
-    private boolean resolvable(Endpoint endpoint) {
-        try {
-            InetAddress[] addresses = Inet4Address.getAllByName(endpoint.getHost());
-            return addresses.length > 0;
-        } catch (Exception e) {
-            return false;
-        }
+    protected AmqpClient createClient(TerminusFactory terminusFactory, Endpoint endpoint, ProtonQoS qos) {
+        return createClient(terminusFactory, endpoint, new ProtonClientOptions(), qos);
     }
 
-    protected AmqpClient createClient(TerminusFactory terminusFactory, Endpoint endpoint) {
-        return createClient(terminusFactory, endpoint, Optional.empty());
-    }
-
-    protected AmqpClient createClient(TerminusFactory terminusFactory, Endpoint endpoint, Optional<SslOptions> sslOptions) {
-        AmqpClient client = new AmqpClient(endpoint, terminusFactory, sslOptions);
+    protected AmqpClient createClient(TerminusFactory terminusFactory, Endpoint endpoint, ProtonClientOptions protonOptions, ProtonQoS qos) {
+        AmqpClient client = new AmqpClient(endpoint, terminusFactory, protonOptions, qos);
         clients.add(client);
         return client;
     }

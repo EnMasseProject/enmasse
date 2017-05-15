@@ -1,5 +1,6 @@
 package enmasse.systemtest.amqp;
 
+import io.vertx.proton.ProtonClientOptions;
 import org.apache.qpid.proton.amqp.messaging.Source;
 import org.apache.qpid.proton.amqp.messaging.Target;
 
@@ -11,26 +12,26 @@ import java.util.Optional;
 public class ClientOptions {
     private final Source source;
     private final Target target;
-    private final Optional<SslOptions> sslOptions;
+    private final ProtonClientOptions protonClientOptions;
     private final Optional<String> linkName;
 
-    public ClientOptions(Source source, Target target, Optional<SslOptions> sslOptions, Optional<String> linkName) {
+    public ClientOptions(Source source, Target target, ProtonClientOptions protonClientOptions, Optional<String> linkName) {
         this.source = source;
         this.target = target;
-        this.sslOptions = sslOptions;
+        this.protonClientOptions = protonClientOptions;
         this.linkName = linkName;
     }
 
     public Source getSource() {
-        return source;
+        return (Source) source.copy();
     }
 
-    public Optional<SslOptions> getSslOptions() {
-        return sslOptions;
+    public ProtonClientOptions getProtonClientOptions() {
+        return protonClientOptions;
     }
 
     public Target getTarget() {
-        return target;
+        return (Target) target.copy();
     }
 
     public Optional<String> getLinkName() {

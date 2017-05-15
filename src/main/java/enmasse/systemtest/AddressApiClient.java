@@ -8,7 +8,6 @@ import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientRequest;
 
-import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -18,8 +17,10 @@ public class AddressApiClient {
     private final HttpClient httpClient;
     private final Endpoint endpoint;
     private final boolean isMultitenant;
+    private final Vertx vertx;
 
-    public AddressApiClient(Vertx vertx, Endpoint endpoint, boolean isMultitenant) {
+    public AddressApiClient(Endpoint endpoint, boolean isMultitenant) {
+        this.vertx = VertxFactory.create();
         this.httpClient = vertx.createHttpClient();
         this.endpoint = endpoint;
         this.isMultitenant = isMultitenant;
@@ -27,6 +28,7 @@ public class AddressApiClient {
 
     public void close() {
         httpClient.close();
+        vertx.close();
     }
 
     public void deployInstance(String instanceName) throws JsonProcessingException, InterruptedException {
@@ -83,6 +85,8 @@ public class AddressApiClient {
             }
         });
         request.end(Buffer.buffer(mapper.writeValueAsBytes(config)));
-        latch.await(30, TimeUnit.SECONDS);
+        if (!latch.await(30, TimeUnit.SECONDS)) {
+            throw new RuntimeException("Timeout deploying address config");
+        }
     }
 }

@@ -17,6 +17,7 @@
 package enmasse.systemtest;
 
 import enmasse.systemtest.amqp.AmqpClient;
+import enmasse.systemtest.amqp.TopicTerminusFactory;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.amqp.messaging.Source;
 import org.apache.qpid.proton.amqp.messaging.TerminusDurability;
@@ -78,30 +79,30 @@ public class TopicTest extends AmqpTestBase {
         AmqpClient client = createTopicClient();
         List<String> batch1 = Arrays.asList("one", "two", "three");
 
-        System.out.println("Receiving first batch");
+        Logging.log.info("Receiving first batch");
         Future<List<String>> recvResults = client.recvMessages(source, linkName, batch1.size());
 
         // Wait for the redirect to kick in
         Thread.sleep(30_000);
 
-        System.out.println("Sending first batch");
+        Logging.log.info("Sending first batch");
         assertThat(client.sendMessages(dest.getAddress(), batch1).get(1, TimeUnit.MINUTES), is(batch1.size()));
         assertThat(recvResults.get(1, TimeUnit.MINUTES), is(batch1));
 
-        System.out.println("Sending second batch");
+        Logging.log.info("Sending second batch");
         List<String> batch2 = Arrays.asList("four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve");
         assertThat(client.sendMessages(dest.getAddress(), batch2).get(1, TimeUnit.MINUTES), is(batch2.size()));
 
-        System.out.println("Done, waiting for 20 seconds");
+        Logging.log.info("Done, waiting for 20 seconds");
         Thread.sleep(20_000);
 
         source.setAddress("locate/" + dest.getAddress());
         //at present may get one or more of the first three messages
         //redelivered due to DISPATCH-595, so use more lenient checks
-        System.out.println("Receiving second batch again");
+        Logging.log.info("Receiving second batch again");
         recvResults = client.recvMessages(source, linkName, message -> {
                 String body = (String) ((AmqpValue) message.getBody()).getValue();
-                System.out.println("received " + body);
+                Logging.log.info("received " + body);
                 return "twelve".equals(body);
             });
         assertTrue(recvResults.get(1, TimeUnit.MINUTES).containsAll(batch2));
@@ -111,12 +112,12 @@ public class TopicTest extends AmqpTestBase {
     public void testDurableMessageRoutedSubscription() throws Exception {
         Destination dest = Destination.topic("mrtopic");
         String address = "myaddress";
-        System.out.println("Deploying");
+        Logging.log.info("Deploying");
         deploy(dest);
-        System.out.println("Scaling");
+        Logging.log.info("Scaling");
         scale(dest, 1);
 
-        Thread.sleep(60_000);
+        Thread.sleep(120_000);
 
         AmqpClient subClient = createQueueClient();
         AmqpClient queueClient = createQueueClient();
@@ -128,15 +129,15 @@ public class TopicTest extends AmqpTestBase {
         sub.setSubject("subscribe");
         sub.setBody(new AmqpValue(dest.getAddress()));
 
-        System.out.println("Sending subscribe");
+        Logging.log.info("Sending subscribe");
         subClient.sendMessages("$subctrl", sub).get(1, TimeUnit.MINUTES);
 
-        System.out.println("Sending 12 messages");
+        Logging.log.info("Sending 12 messages");
 
         List<String> msgs = TestUtils.generateMessages(12);
         assertThat(topicClient.sendMessages(dest.getAddress(),msgs).get(1, TimeUnit.MINUTES), is(msgs.size()));
 
-        System.out.println("Receiving 6 messages");
+        Logging.log.info("Receiving 6 messages");
         Future<List<String>> recvResult = queueClient.recvMessages(address, 6);
         assertThat(recvResult.get(1, TimeUnit.MINUTES).size(), is(6));
 
@@ -152,7 +153,7 @@ public class TopicTest extends AmqpTestBase {
         Thread.sleep(30_000);
         */
 
-        System.out.println("Receiving another 6 messages");
+        Logging.log.info("Receiving another 6 messages");
         recvResult = queueClient.recvMessages(address, 6);
         assertThat(recvResult.get(1, TimeUnit.MINUTES).size(), is(6));
 
@@ -161,7 +162,7 @@ public class TopicTest extends AmqpTestBase {
         unsub.setCorrelationId(address);
         sub.setBody(new AmqpValue(dest.getAddress()));
         unsub.setSubject("unsubscribe");
-        System.out.println("Sending unsubscribe");
+        Logging.log.info("Sending unsubscribe");
         subClient.sendMessages("$subctrl", unsub).get(1, TimeUnit.MINUTES);
     }
 

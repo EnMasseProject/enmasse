@@ -1,92 +1,68 @@
 package enmasse.systemtest.amqp;
 
+import enmasse.systemtest.Logging;
+import io.vertx.core.AbstractVerticle;
+import io.vertx.proton.ProtonClient;
+import io.vertx.proton.ProtonConnection;
 import org.apache.qpid.proton.amqp.transport.ErrorCondition;
-import org.apache.qpid.proton.engine.*;
-import org.apache.qpid.proton.reactor.FlowController;
-import org.apache.qpid.proton.reactor.Handshaker;
 
-import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.CompletableFuture;
 
-public abstract class ClientHandlerBase extends BaseHandler {
+public abstract class ClientHandlerBase<T> extends AbstractVerticle {
 
     private final enmasse.systemtest.Endpoint endpoint;
-    private final CountDownLatch connectLatch;
     protected final ClientOptions clientOptions;
+    protected final CompletableFuture<T> promise;
 
-    public ClientHandlerBase(enmasse.systemtest.Endpoint endpoint, ClientOptions clientOptions, CountDownLatch connectLatch) {
-        add(new Handshaker());
+    public ClientHandlerBase(enmasse.systemtest.Endpoint endpoint, ClientOptions clientOptions, CompletableFuture<T> promise) {
         this.endpoint = endpoint;
         this.clientOptions = clientOptions;
-        this.connectLatch = connectLatch;
-    }
-
-
-    @Override
-    public void onReactorInit(Event event) {
-        event.getReactor().connectionToHost(endpoint.getHost(), endpoint.getPort(), this);
+        this.promise = promise;
     }
 
     @Override
-    public void onConnectionInit(Event event) {
-        Connection connection = event.getConnection();
-        connection.setContainer("enmasse-systemtest-client");
-        connection.open();
+    public void start() {
+        ProtonClient client = ProtonClient.create(vertx);
+        client.connect(clientOptions.getProtonClientOptions(), endpoint.getHost(), endpoint.getPort(), connection -> {
+            if (connection.succeeded()) {
+                ProtonConnection conn = connection.result();
+                conn.setContainer("enmasse-systemtest-client");
+                conn.openHandler(result -> {
+                    if (result.failed()) {
+                        conn.close();
+                        promise.completeExceptionally(result.cause());
+                    } else {
+                        connectionOpened(conn);
+                    }
+                });
+                conn.closeHandler(result -> {
+                    if (result.failed()) {
+                        conn.close();
+                        promise.completeExceptionally(result.cause());
+                    } else {
+                        connectionClosed(conn);
+                    }
+                });
+                conn.disconnectHandler(result -> connectionDisconnected(conn));
+                conn.open();
+            } else {
+                Logging.log.info("Connection to " + endpoint.getHost() + ":" + endpoint.getPort() + " failed: " + connection.cause().getMessage());
+                promise.completeExceptionally(connection.cause());
+            }
+        });
     }
 
-    @Override
-    public void onConnectionBound(Event event) {
-        Connection connection = event.getConnection();
-        if (clientOptions.getSslOptions().isPresent()) {
-            connection.getTransport().ssl(clientOptions.getSslOptions().get().getSslDomain(), clientOptions.getSslOptions().get().getSslPeerDetails());
-        }
-    }
+    protected abstract void connectionOpened(ProtonConnection conn);
+    protected abstract void connectionClosed(ProtonConnection conn);
+    protected abstract void connectionDisconnected(ProtonConnection conn);
 
-    @Override
-    public void onConnectionRemoteOpen(Event event) {
-        Connection connection = event.getConnection();
-        Session session = connection.session();
-        session.open();
-
-        openLink(session);
-
-    }
-
-    protected abstract void openLink(Session session);
-
-    @Override
-    public void onConnectionFinal(Event event) {
-        handleError(event.getConnection().getCondition());
-    }
-
-    @Override
-    public void onSessionFinal(Event event) {
-        handleError(event.getSession().getCondition());
-    }
-
-    @Override
-    public void onLinkFinal(Event event) {
-        handleError(event.getLink().getCondition());
-    }
-
-    @Override
-    public void onTransportError(Event event) {
-        handleError(event.getConnection().getCondition());
-    }
-
-    @Override
-    public void onLinkRemoteOpen(Event event) {
-        System.out.println("Client connected");
-        connectLatch.countDown();
-    }
-
-    protected void handleError(ErrorCondition error) {
+    protected void handleError(ProtonConnection connection, ErrorCondition error) {
         if (error == null || error.getCondition() == null) {
-            System.out.println("Link closed without error");
+            Logging.log.info("Link closed without error");
         } else {
-            System.out.println("Link closed with " + error);
-            reportException(new RuntimeException(error.getDescription()));
+            Logging.log.info("Link closed with " + error);
+            connection.close();
+            promise.completeExceptionally(new RuntimeException(error.getDescription()));
         }
     }
-
-    protected abstract void reportException(Exception e);
 }

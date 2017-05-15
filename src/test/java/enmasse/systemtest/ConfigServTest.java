@@ -1,6 +1,7 @@
 package enmasse.systemtest;
 
 import io.fabric8.openshift.client.OpenShiftClient;
+import io.vertx.core.Vertx;
 import io.vertx.proton.ProtonClient;
 import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.ProtonReceiver;
@@ -9,7 +10,6 @@ import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.amqp.messaging.Source;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Test;
 
 import java.util.*;
 import java.util.concurrent.BlockingQueue;
@@ -22,9 +22,11 @@ import static org.junit.Assert.*;
 public class ConfigServTest extends AmqpTestBase {
 
     private Set<String> pods;
+    private Vertx vertx;
 
     @Before
     public void setupPodList() {
+        vertx = VertxFactory.create();
         pods = new LinkedHashSet<>();
     }
 
@@ -35,6 +37,7 @@ public class ConfigServTest extends AmqpTestBase {
             assertTrue(client.pods().withName(pod).delete());
         }
         pods.clear();
+        vertx.close();
     }
 
     public void createPod(String name) throws Exception {
@@ -79,7 +82,7 @@ public class ConfigServTest extends AmqpTestBase {
                         Map<String, Object> pod = (Map<String, Object>) obj;
                         pods.add((String) pod.get("host"));
                     }
-                    System.out.println("Got pods: " + pods);
+                    Logging.log.info("Got pods: " + pods);
                     try {
                         latestPods.put(pods);
                     } catch (InterruptedException e) {

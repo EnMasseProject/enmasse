@@ -21,15 +21,12 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import enmasse.amqp.SyncRequestClient;
 import io.fabric8.kubernetes.api.model.Pod;
-import io.fabric8.kubernetes.api.model.PodStatus;
-import io.vertx.core.buffer.Buffer;
-import io.vertx.core.http.HttpClient;
-import io.vertx.core.http.HttpClientRequest;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.message.Message;
 
+import java.net.Inet4Address;
+import java.net.InetAddress;
 import java.util.*;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -48,7 +45,7 @@ public class TestUtils {
         do {
             List<Pod> pods = openShift.listPods(Collections.singletonMap("group_id", group));
             actualReplicas = numReady(pods);
-            System.out.println("Have " + actualReplicas + " out of " + pods.size() + " replicas. Expecting " + expectedReplicas);
+            Logging.log.info("Have " + actualReplicas + " out of " + pods.size() + " replicas. Expecting " + expectedReplicas);
             if (actualReplicas != pods.size() || actualReplicas != expectedReplicas) {
                 Thread.sleep(5000);
             } else {
@@ -67,7 +64,7 @@ public class TestUtils {
             if ("Running".equals(pod.getStatus().getPhase())) {
                 numReady++;
             } else {
-                System.out.println("POD " + pod.getMetadata().getName() + " in status : " + pod.getStatus().getPhase());
+                Logging.log.info("POD " + pod.getMetadata().getName() + " in status : " + pod.getStatus().getPhase());
             }
         }
         return numReady;
@@ -129,7 +126,7 @@ public class TestUtils {
             }
         }
         int expectedPods = openShift.getExpectedPods() + groups.size();
-        System.out.println("Waiting for " + expectedPods + " pods");
+        Logging.log.info("Waiting for " + expectedPods + " pods");
         waitForExpectedPods(openShift, expectedPods, budget);
     }
 
@@ -171,5 +168,14 @@ public class TestUtils {
 
     public static List<String> generateMessages(int numMessages) {
         return generateMessages("testmessage", numMessages);
+    }
+
+    public static boolean resolvable(Endpoint endpoint) {
+        try {
+            InetAddress[] addresses = Inet4Address.getAllByName(endpoint.getHost());
+            return addresses.length > 0;
+        } catch (Exception e) {
+            return false;
+        }
     }
 }

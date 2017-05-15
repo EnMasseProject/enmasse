@@ -60,8 +60,15 @@ public class OpenShift {
     }
 
     public Endpoint getRestEndpoint() {
-        Service service = client.services().inNamespace(environment.namespace()).withName("address-controller").get();
-        return new Endpoint(service.getSpec().getClusterIP(), getPort(service, "http"));
+        Route route = client.routes().inNamespace(environment.namespace()).withName("restapi").get();
+        Endpoint endpoint = new Endpoint(route.getSpec().getHost(), 80);
+        Logging.log.info("Testing endpoint : " + endpoint);
+        if (TestUtils.resolvable(endpoint)) {
+            return endpoint;
+        } else {
+            Logging.log.info("Endpoint didn't resolve, falling back to localhost");
+            return new Endpoint("localhost", 80);
+        }
     }
 
     public void setDeploymentReplicas(String name, int numReplicas) {

@@ -35,7 +35,7 @@ public class BroadcastTest extends AmqpTestBase {
         Destination dest = Destination.broadcast("broadcast");
         deploy(dest);
         Thread.sleep(20_000);
-        AmqpClient client = createTopicClient();
+        AmqpClient client = createBroadcastClient();
         List<String> msgs = Arrays.asList("foo");
 
         List<Future<List<String>>> recvResults = Arrays.asList(

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package enmasse.systemtest;
+package enmasse.systemtest.amqp;
 
 import org.apache.qpid.proton.amqp.messaging.Source;
 import org.apache.qpid.proton.amqp.messaging.Target;
