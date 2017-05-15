@@ -15,8 +15,7 @@
  */
 package enmasse.systemtest;
 
-import enmasse.systemtest.amqp.AmqpClient;
-import enmasse.systemtest.amqp.TerminusFactory;
+import enmasse.systemtest.amqp.*;
 import io.vertx.proton.ProtonClientOptions;
 import io.vertx.proton.ProtonQoS;
 import org.junit.After;
