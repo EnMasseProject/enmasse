@@ -38,15 +38,10 @@ public abstract class AmqpTestBase extends TestBase {
 
     @Override
     protected void teardown() throws Exception {
-        cleanup();
-        clients.clear();
-    }
-
-    private void cleanup() throws Exception {
-        deploy();
         for (AmqpClient client : clients) {
             client.close();
         }
+        clients.clear();
     }
 
     protected AmqpClient createQueueClient() throws UnknownHostException {

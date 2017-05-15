@@ -47,6 +47,7 @@ public abstract class TestBase {
     @After
     public void after() throws Exception {
         teardown();
+        deploy();
         addressApiClient.close();
     }
 
