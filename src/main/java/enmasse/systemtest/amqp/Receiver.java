@@ -9,6 +9,7 @@ import org.apache.qpid.proton.amqp.messaging.Accepted;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.amqp.messaging.Source;
 import org.apache.qpid.proton.amqp.transport.DeliveryState;
+import org.apache.qpid.proton.amqp.transport.LinkError;
 import org.apache.qpid.proton.message.Message;
 
 import java.util.ArrayList;
@@ -18,7 +19,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.function.Predicate;
 
 public class Receiver extends ClientHandlerBase<List<String>> {
-    private static final Symbol AMQP_LINK_REDIRECT = Symbol.valueOf("amqp:link:redirect");
 
     private final List<String> messages = new ArrayList<>();
     private final Predicate<Message> done;
@@ -56,7 +56,7 @@ public class Receiver extends ClientHandlerBase<List<String>> {
         });
 
         receiver.closeHandler(closed -> {
-            if (receiver.getRemoteCondition() != null && AMQP_LINK_REDIRECT.equals(receiver.getRemoteCondition().getCondition())) {
+            if (receiver.getRemoteCondition() != null && LinkError.REDIRECT.equals(receiver.getRemoteCondition().getCondition())) {
                 String relocated = (String) receiver.getRemoteCondition().getInfo().get("address");
                 Logging.log.info("Receiver link redirected to " + relocated);
                 Source newSource = clientOptions.getSource();
