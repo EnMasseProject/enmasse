@@ -77,6 +77,7 @@ public class AmqpClient implements AutoCloseable {
         if (!connectLatch.await(connectTimeout, timeUnit)) {
             throw new RuntimeException("Timeout waiting for client to connect");
         }
+        clients.add(vertx);
         return promise;
     }
 
@@ -131,6 +132,7 @@ public class AmqpClient implements AutoCloseable {
         if (!connectLatch.await(connectTimeout, timeUnit)) {
             throw new RuntimeException("Timeout waiting for client to connect");
         }
+        clients.add(vertx);
         return promise;
     }
 }
