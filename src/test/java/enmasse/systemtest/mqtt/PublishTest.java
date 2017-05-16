@@ -16,6 +16,17 @@
 
 package enmasse.systemtest.mqtt;
 
+import enmasse.systemtest.Destination;
+import org.junit.Test;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
+
 /**
  * Tests related to publish messages via MQTT
  */
@@ -24,5 +35,23 @@ public class PublishTest extends MqttTestBase {
     @Override
     protected String getInstanceName() {
         return this.getClass().getSimpleName();
+    }
+
+    @Test
+    public void testSimplePublish() throws Exception {
+
+        Destination dest = Destination.topic("mytopic");
+        deploy(dest);
+        Thread.sleep(20_000);
+
+        MqttClient client = this.createClient();
+
+        List<String> msgs = Arrays.asList("foo", "bar", "baz");
+
+        Future<List<String>> recvResult = client.recvMessages(dest.getAddress(), msgs.size());
+        Future<Integer> sendResult = client.sendMessages(dest.getAddress(), msgs);
+
+        assertThat(sendResult.get(1, TimeUnit.MINUTES), is(msgs.size()));
+        assertThat(recvResult.get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
     }
 }

@@ -17,15 +17,58 @@
 package enmasse.systemtest.mqtt;
 
 import enmasse.systemtest.Endpoint;
+import org.eclipse.paho.client.mqttv3.MqttException;
+import org.eclipse.paho.client.mqttv3.MqttMessage;
 
-public class Publisher extends ClientHandlerBase {
+import java.util.Queue;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicInteger;
 
-    public Publisher(Endpoint endpoint) {
-        super(endpoint);
+public class Publisher extends ClientHandlerBase<Integer> {
+
+    private final AtomicInteger numSent = new AtomicInteger(0);
+    private final Queue<MqttMessage> messageQueue;
+    private final CountDownLatch connectLatch;
+
+    public Publisher(Endpoint endpoint, String topic, Queue<MqttMessage> messages, CompletableFuture<Integer> promise, CountDownLatch connectLatch) {
+        super(endpoint, topic, promise);
+        this.messageQueue = messages;
+        this.connectLatch = connectLatch;
     }
 
     @Override
     protected void connectionOpened() {
 
+        this.connectLatch.countDown();
+        this.sendNext();
+    }
+
+    private void sendNext() {
+
+        MqttMessage message = this.messageQueue.poll();
+
+        if (message == null) {
+
+            // NOTE : Eclipse Paho doesn't allow to call "disconnect" from a callback
+            //        an exception is raised for that !
+            /* if (this.client.isConnected()) {
+                this.client.disconnect();
+            } */
+            this.promise.complete(this.numSent.get());
+
+        } else {
+
+            try {
+
+                this.client.publish(this.topic, message);
+                this.numSent.incrementAndGet();
+                this.sendNext();
+
+            } catch (MqttException e) {
+                e.printStackTrace();
+            }
+
+        }
     }
 }

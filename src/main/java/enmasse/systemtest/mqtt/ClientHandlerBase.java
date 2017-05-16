@@ -17,19 +17,30 @@
 package enmasse.systemtest.mqtt;
 
 import enmasse.systemtest.Endpoint;
-import org.eclipse.paho.client.mqttv3.*;
-import org.eclipse.paho.client.mqttv3.MqttClient;
+import enmasse.systemtest.Logging;
+import org.eclipse.paho.client.mqttv3.IMqttActionListener;
+import org.eclipse.paho.client.mqttv3.IMqttAsyncClient;
+import org.eclipse.paho.client.mqttv3.IMqttToken;
+import org.eclipse.paho.client.mqttv3.MqttAsyncClient;
+import org.eclipse.paho.client.mqttv3.MqttException;
 
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
-public abstract class ClientHandlerBase {
+public abstract class ClientHandlerBase<T> {
+
+    private final String SERVER_URI_TEMPLATE = "tcp://%s:%s";
 
     private final Endpoint endpoint;
+    protected final String topic;
+    protected final CompletableFuture<T> promise;
 
-    protected org.eclipse.paho.client.mqttv3.MqttClient client;
+    protected IMqttAsyncClient client;
 
-    public ClientHandlerBase(Endpoint endpoint) {
+    public ClientHandlerBase(Endpoint endpoint, String topic, CompletableFuture<T> promise) {
         this.endpoint = endpoint;
+        this.topic = topic;
+        this.promise = promise;
     }
 
     public void start() {
@@ -37,17 +48,41 @@ public abstract class ClientHandlerBase {
         try {
 
             this.client =
-                    new MqttClient(String.format("tcp://%s:%s", this.endpoint.getHost(), this.endpoint.getPort()),
+                    new MqttAsyncClient(String.format(SERVER_URI_TEMPLATE, this.endpoint.getHost(), this.endpoint.getPort()),
                             UUID.randomUUID().toString());
 
-            this.client.connect();
-            this.connectionOpened();
+            this.client.connect(null, new IMqttActionListener() {
+
+                @Override
+                public void onSuccess(IMqttToken iMqttToken) {
+                    connectionOpened();
+                }
+
+                @Override
+                public void onFailure(IMqttToken iMqttToken, Throwable throwable) {
+                    Logging.log.info("Connection to " + endpoint.getHost() + ":" + endpoint.getPort() + " failed: " + throwable.getMessage());
+                    promise.completeExceptionally(throwable);
+                }
+            });
+
 
         } catch (MqttException e) {
 
             e.printStackTrace();
         }
 
+    }
+
+    public void close() {
+
+        try {
+
+            this.client.disconnect();
+            this.client.close();
+
+        } catch (MqttException e) {
+            e.printStackTrace();
+        }
     }
 
     protected abstract void connectionOpened();
