@@ -74,10 +74,10 @@ public class AmqpClient implements AutoCloseable {
 
         Vertx vertx = VertxFactory.create();
         vertx.deployVerticle(new Receiver(endpoint, done, promise, new ClientOptions(source, new Target(), protonClientOptions, linkName), connectLatch));
+        clients.add(vertx);
         if (!connectLatch.await(connectTimeout, timeUnit)) {
             throw new RuntimeException("Timeout waiting for client to connect");
         }
-        clients.add(vertx);
         return promise;
     }
 
@@ -129,10 +129,10 @@ public class AmqpClient implements AutoCloseable {
         Queue<Message> messageQueue = new LinkedList<>(Arrays.asList(messages));
         Vertx vertx = VertxFactory.create();
         vertx.deployVerticle(new Sender(endpoint, new ClientOptions(terminusFactory.getSource(address), terminusFactory.getTarget(address), protonClientOptions, Optional.empty()), connectLatch, promise, messageQueue, qos));
+        clients.add(vertx);
         if (!connectLatch.await(connectTimeout, timeUnit)) {
             throw new RuntimeException("Timeout waiting for client to connect");
         }
-        clients.add(vertx);
         return promise;
     }
 }
