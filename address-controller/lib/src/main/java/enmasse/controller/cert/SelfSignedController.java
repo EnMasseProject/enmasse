@@ -2,7 +2,6 @@ package enmasse.controller.cert;
 
 import enmasse.controller.model.Instance;
 import io.fabric8.openshift.client.OpenShiftClient;
-import io.vertx.core.AbstractVerticle;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,8 +34,10 @@ public class SelfSignedController extends InstanceWatcher {
 
             File keyFile = new File("/tmp/server-key.pem");
             File certFile = new File("/tmp/server-cert.pem");
-            Process keyGen = new ProcessBuilder("openssl", "req", "-new", "-x509", "-batch", "-nodes",
-                    "-out", certFile.getAbsolutePath(), "-keyout", keyFile.getAbsolutePath(), "-subj", "/CN=" + instance.messagingHost().get() + "," + instance.mqttHost().get() + "," + instance.consoleHost().get()).start();
+            ProcessBuilder keyGenBuilder = new ProcessBuilder("openssl", "req", "-new", "-x509", "-batch", "-nodes",
+                    "-out", certFile.getAbsolutePath(), "-keyout", keyFile.getAbsolutePath(), "-subj", "/CN=" + instance.messagingHost().get() + "," + instance.mqttHost().get() + "," + instance.consoleHost().get());
+            log.info("Generating keys using " + keyGenBuilder.command());
+            Process keyGen = keyGenBuilder.start();
             if (!keyGen.waitFor(1, TimeUnit.MINUTES)) {
                 throw new RuntimeException("Key generation timed out");
             }
