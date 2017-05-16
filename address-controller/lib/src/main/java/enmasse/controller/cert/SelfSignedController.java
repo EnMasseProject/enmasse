@@ -35,7 +35,7 @@ public class SelfSignedController extends InstanceWatcher {
             File keyFile = new File("/tmp/server-key.pem");
             File certFile = new File("/tmp/server-cert.pem");
             ProcessBuilder keyGenBuilder = new ProcessBuilder("openssl", "req", "-new", "-x509", "-batch", "-nodes",
-                    "-out", certFile.getAbsolutePath(), "-keyout", keyFile.getAbsolutePath(), "-subj", "/CN=" + instance.messagingHost().get() + "," + instance.mqttHost().get() + "," + instance.consoleHost().get());
+                    "-out", certFile.getAbsolutePath(), "-keyout", keyFile.getAbsolutePath()); //, "-subj", "/CN=" + instance.messagingHost().get() + "," + instance.mqttHost().get() + "," + instance.consoleHost().get());
             log.info("Generating keys using " + keyGenBuilder.command());
             Process keyGen = keyGenBuilder.start();
             if (!keyGen.waitFor(1, TimeUnit.MINUTES)) {
