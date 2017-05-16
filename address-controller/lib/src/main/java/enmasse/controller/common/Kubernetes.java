@@ -60,5 +60,5 @@ public interface Kubernetes {
     List<Route> getRoutes(InstanceId instanceId);
 
     boolean hasService(String service);
-    String createCertSecret(InstanceId instanceId, File keyFile, File certFile) throws IOException;
+    String createInstanceSecret(InstanceId instanceId) throws IOException;
 }

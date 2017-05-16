@@ -18,6 +18,7 @@ package enmasse.controller;
 
 import enmasse.controller.address.AddressManager;
 import enmasse.controller.address.AddressManagerImpl;
+import enmasse.controller.cert.SelfSignedController;
 import enmasse.controller.common.Kubernetes;
 import enmasse.controller.common.KubernetesHelper;
 import enmasse.controller.flavor.FlavorController;
@@ -33,9 +34,6 @@ import io.vertx.core.AbstractVerticle;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
 
-import java.io.File;
-import java.io.IOException;
-
 public class Controller extends AbstractVerticle {
     private final AMQPServer server;
     private final HTTPServer restServer;
@@ -43,6 +41,7 @@ public class Controller extends AbstractVerticle {
     private final InstanceManagerImpl instanceManager;
     private final FlavorController flavorController;
     private final InstanceController instanceController;
+    private final AbstractVerticle certController;
 
 
     public Controller(ControllerOptions options) throws Exception {
@@ -71,6 +70,7 @@ public class Controller extends AbstractVerticle {
         this.restServer = new HTTPServer(kubernetes.getInstanceId(), addressManager, instanceManager, flavorManager);
         this.flavorController = new FlavorController(controllerClient, flavorManager);
         this.instanceController = new InstanceController(controllerClient, kubernetes);
+        this.certController = SelfSignedController.create(controllerClient);
     }
 
     @Override
@@ -79,6 +79,7 @@ public class Controller extends AbstractVerticle {
         vertx.deployVerticle(server);
         vertx.deployVerticle(restServer, new DeploymentOptions().setWorker(true));
         vertx.deployVerticle(instanceController);
+        vertx.deployVerticle(certController);
     }
 
     public static void main(String args[]) {
