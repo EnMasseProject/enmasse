@@ -38,7 +38,6 @@ public class ConfigAdapter implements Watcher<ConfigMap> {
     private final OpenShiftClient openshiftClient;
     private final String configName;
     private final ConfigSubscriber configSubscriber;
-    private final ScheduledExecutorService service = Executors.newScheduledThreadPool(1);
 
     public ConfigAdapter(OpenShiftClient openshiftClient, String configName, ConfigSubscriber configSubscriber) {
         this.openshiftClient = openshiftClient;
@@ -46,18 +45,11 @@ public class ConfigAdapter implements Watcher<ConfigMap> {
         this.configSubscriber = configSubscriber;
     }
 
-    private void configUpdated(ConfigMap configMap) {
-        try {
-            configSubscriber.configUpdated(configMap);
-        } catch (Exception e) {
-            log.warn("Error handling address config update", e);
-        }
-
-    }
-
     public void start() {
         ConfigMap initial = openshiftClient.configMaps().withName(configName).get();
-        configUpdated(initial);
+        if (initial != null) {
+            eventReceived(Action.ADDED, initial);
+        }
         watch = openshiftClient.configMaps().withName(configName).watch(this);
     }
 
@@ -69,8 +61,10 @@ public class ConfigAdapter implements Watcher<ConfigMap> {
 
     @Override
     public void eventReceived(Action action, ConfigMap resource) {
-        if (!action.equals(Action.ERROR)) {
-            configUpdated(resource);
+        try {
+            configSubscriber.configUpdated(action, resource);
+        } catch (Exception e) {
+            log.warn("Error handling config update", e);
         }
     }
 

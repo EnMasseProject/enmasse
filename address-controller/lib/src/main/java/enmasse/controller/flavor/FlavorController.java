@@ -20,6 +20,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import enmasse.controller.common.ConfigAdapter;
 import enmasse.controller.common.ConfigSubscriber;
 import io.fabric8.kubernetes.api.model.ConfigMap;
+import io.fabric8.kubernetes.client.Watcher;
 import io.fabric8.openshift.client.OpenShiftClient;
 import io.vertx.core.AbstractVerticle;
 import org.slf4j.Logger;
@@ -53,15 +54,16 @@ public class FlavorController extends AbstractVerticle implements ConfigSubscrib
     }
 
     @Override
-    public void configUpdated(ConfigMap configMap) throws IOException {
-
-        if (configMap.getData().containsKey("json")) {
-            log.debug("Got new config for " + configMap.getMetadata().getName() + " with data: " + configMap.getData().get("json"));
-            JsonNode root = mapper.readTree(configMap.getData().get("json"));
-            flavorManager.flavorsUpdated(FlavorParser.parse(root));
-        } else {
-            log.debug("Got empty config for " + configMap.getMetadata().getName());
-            flavorManager.flavorsUpdated(Collections.emptyMap());
+    public void configUpdated(Watcher.Action action, ConfigMap configMap) throws IOException {
+        if (action.equals(Watcher.Action.MODIFIED) || action.equals(Watcher.Action.ADDED)) {
+            if (configMap.getData().containsKey("json")) {
+                log.debug("Got new config for " + configMap.getMetadata().getName() + " with data: " + configMap.getData().get("json"));
+                JsonNode root = mapper.readTree(configMap.getData().get("json"));
+                flavorManager.flavorsUpdated(FlavorParser.parse(root));
+            } else {
+                log.debug("Got empty config for " + configMap.getMetadata().getName());
+                flavorManager.flavorsUpdated(Collections.emptyMap());
+            }
         }
     }
 }
