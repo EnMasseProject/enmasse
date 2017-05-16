@@ -87,7 +87,7 @@ public class InstanceManagerImpl implements InstanceManager {
 
         String secretName = instance.certSecret().orElse(kubernetes.createInstanceSecret(instance.id()));
         Instance.Builder builder = new Instance.Builder(instance);
-        builder.certSecret(Optional.of(secretName));
+        builder.certSecret(Optional.ofNullable(secretName));
         instance = builder.build();
 
         List<ParameterValue> parameterValues = new ArrayList<>();
