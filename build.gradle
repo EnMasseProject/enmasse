@@ -8,7 +8,7 @@ ext {
     junitVersion = '4.12'
     mockitoVersion = '2.0.52-beta'
     vertxVersion = '3.4.1'
-    openshiftClientVersion = '2.2.9'
+    openshiftClientVersion = '2.3.1'
     resteasyVersion = '3.1.0.Final'
     artemisVersion = '2.0.0'
 }

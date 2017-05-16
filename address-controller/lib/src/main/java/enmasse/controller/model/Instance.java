@@ -69,6 +69,15 @@ public class Instance {
         private Optional<String> uuid = Optional.empty();
         private Optional<String> certSecret = Optional.empty();
 
+        public Builder(Instance instance) {
+            this.instanceId = instance.id();
+            this.messagingHost = instance.messagingHost;
+            this.mqttHost = instance.mqttHost;
+            this.consoleHost = instance.consoleHost;
+            this.uuid = instance.uuid;
+            this.certSecret = instance.certSecret;
+        }
+
         public Builder(InstanceId instanceId) {
             this.instanceId = instanceId;
         }

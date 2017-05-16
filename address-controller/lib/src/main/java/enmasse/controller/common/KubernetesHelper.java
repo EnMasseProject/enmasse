@@ -16,10 +16,13 @@
 
 package enmasse.controller.common;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import enmasse.config.AddressConfigKeys;
 import enmasse.config.LabelKeys;
 import enmasse.controller.address.DestinationCluster;
 import enmasse.controller.model.Destination;
+import enmasse.controller.model.Instance;
 import enmasse.controller.model.InstanceId;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.client.dsl.Resource;
@@ -33,6 +36,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -42,6 +46,7 @@ import java.util.stream.Collectors;
 public class KubernetesHelper implements Kubernetes {
     private static final Logger log = LoggerFactory.getLogger(KubernetesHelper.class.getName());
     private static final String TEMPLATE_SUFFIX = ".json";
+    private static final ObjectMapper mapper = new ObjectMapper();
 
     private final OpenShiftClient client;
     private final InstanceId instance;
@@ -105,6 +110,13 @@ public class KubernetesHelper implements Kubernetes {
     }
 
     @Override
+    public void create(HasMetadata... resources) {
+        create(new KubernetesListBuilder()
+                .addToItems(resources)
+                .build());
+    }
+
+    @Override
     public void create(KubernetesList resources) {
         client.lists().inNamespace(instance.getNamespace()).create(resources);
     }
@@ -123,6 +135,33 @@ public class KubernetesHelper implements Kubernetes {
     public void deleteAddressConfig(Destination destination) {
         String name = Kubernetes.sanitizeName("address-config-" + destination.address());
         client.configMaps().inNamespace(instance.getNamespace()).withName(name).delete();
+    }
+
+    @Override
+    public ConfigMap getInstanceConfig(InstanceId instanceId) {
+        return client.configMaps().withName(Kubernetes.sanitizeName("instance-config-" + instanceId.getId())).get();
+    }
+
+    @Override
+    public ConfigMap createInstanceConfig(Instance instance) {
+        String name = Kubernetes.sanitizeName("instance-config-" + instance.id().getId());
+        ConfigMapBuilder builder = new ConfigMapBuilder()
+                .withNewMetadata()
+                .withName(name)
+                .addToLabels(LabelKeys.TYPE, "instance-config")
+                .endMetadata();
+        try {
+            builder.addToData("config.json", mapper.writeValueAsString(new enmasse.controller.api.v3.Instance(instance)));
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+        return builder.build();
+    }
+
+    @Override
+    public void deleteInstanceConfig(Instance instance) {
+        String name = Kubernetes.sanitizeName("instance-config-" + instance.id().getId());
+        client.configMaps().withName(name).delete();
     }
 
     @Override

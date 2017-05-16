@@ -108,6 +108,8 @@ public class InstanceManagerImpl implements InstanceManager {
 
         Kubernetes instanceClient = kubernetes.mutateClient(instance.id());
         instanceClient.create(items);
+
+        kubernetes.create(kubernetes.createInstanceConfig(instance));
     }
 
     // TODO: Have this generate certificates from OpenShift CA
@@ -126,6 +128,7 @@ public class InstanceManagerImpl implements InstanceManager {
     public void delete(Instance instance) {
         if (kubernetes.mutateClient(instance.id()).listClusters().isEmpty()) {
             kubernetes.deleteNamespace(instance.id().getNamespace());
+            kubernetes.deleteInstanceConfig(instance);
         } else {
             throw new IllegalArgumentException("Instance " + instance.id() + " still has active destinations");
         }
