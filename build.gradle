@@ -2,6 +2,7 @@ ext {
    openshiftClientVersion = '2.0.1'
    vertxVersion = '3.4.2-SNAPSHOT'
    junitVersion = '4.12'
+   pahoVersion = '1.1.0'
 }
 
 apply plugin: 'java'
@@ -18,5 +19,6 @@ dependencies {
     compile 'com.github.EnMasseProject:admin:master-SNAPSHOT'
     compile "io.fabric8:openshift-client:${openshiftClientVersion}"
     compile "io.vertx:vertx-proton:${vertxVersion}"
+    compile "org.eclipse.paho:org.eclipse.paho.client.mqttv3:${pahoVersion}"
     testCompile "junit:junit:${junitVersion}"
 }
