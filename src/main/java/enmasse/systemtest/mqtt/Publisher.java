@@ -17,6 +17,7 @@
 package enmasse.systemtest.mqtt;
 
 import enmasse.systemtest.Endpoint;
+import enmasse.systemtest.Logging;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 
@@ -40,6 +41,7 @@ public class Publisher extends ClientHandlerBase<Integer> {
     @Override
     protected void connectionOpened() {
 
+        Logging.log.info("Publisher on '{}' connected, publishing messages", this.topic);
         this.connectLatch.countDown();
         this.sendNext();
     }

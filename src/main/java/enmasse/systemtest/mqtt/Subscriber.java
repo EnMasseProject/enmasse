@@ -17,6 +17,7 @@
 package enmasse.systemtest.mqtt;
 
 import enmasse.systemtest.Endpoint;
+import enmasse.systemtest.Logging;
 import org.eclipse.paho.client.mqttv3.IMqttActionListener;
 import org.eclipse.paho.client.mqttv3.IMqttMessageListener;
 import org.eclipse.paho.client.mqttv3.IMqttToken;
@@ -51,12 +52,15 @@ public class Subscriber extends ClientHandlerBase<List<String>> {
                 @Override
                 public void onSuccess(IMqttToken iMqttToken) {
 
+                    Logging.log.info("Subscribed at '{}'", iMqttToken.getTopics()[0]);
                     connectLatch.countDown();
                 }
 
                 @Override
                 public void onFailure(IMqttToken iMqttToken, Throwable throwable) {
 
+                    Logging.log.info("Subscribe to '{}' failed: {}", iMqttToken.getTopics()[0], throwable.getMessage());
+                    promise.completeExceptionally(throwable);
                 }
             }, new IMqttMessageListener() {
 
