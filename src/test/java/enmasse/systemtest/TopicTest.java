@@ -64,7 +64,6 @@ public class TopicTest extends AmqpTestBase {
         assertThat(recvResults.get(5).get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
     }
 
-    @Test
     public void testDurableLinkRoutedSubscription() throws Exception {
         Destination dest = Destination.topic("lrtopic");
         String linkName = "systest-durable";
