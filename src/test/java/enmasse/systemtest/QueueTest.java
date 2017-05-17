@@ -54,6 +54,7 @@ public class QueueTest extends AmqpTestBase {
         runQueueTest(client, q3);
     }
 
+    @Test
     public void testScaledown() throws Exception {
         Destination dest = Destination.queue("scalequeue");
         deploy(dest);
@@ -70,11 +71,14 @@ public class QueueTest extends AmqpTestBase {
         assertThat(sent.get(2).get(1, TimeUnit.MINUTES), is(1000));
         assertThat(sent.get(3).get(1, TimeUnit.MINUTES), is(1000));
 
+        Future<List<String>> received = client.recvMessages(dest.getAddress(), 500);
+        assertThat(received.get(1, TimeUnit.MINUTES).size(), is(500));
+
         scale(dest, 1);
 
-        Future<List<String>> received = client.recvMessages(dest.getAddress(), 4000);
+        received = client.recvMessages(dest.getAddress(), 3500);
 
-        assertThat(received.get(1, TimeUnit.MINUTES).size(), is(4000));
+        assertThat(received.get(1, TimeUnit.MINUTES).size(), is(3500));
     }
 
     private static void runQueueTest(AmqpClient client, Destination dest) throws InterruptedException, TimeoutException, ExecutionException, IOException {
