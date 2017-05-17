@@ -33,11 +33,13 @@ import java.util.function.Predicate;
 public class Subscriber extends ClientHandlerBase<List<String>> {
 
     private final List<String> messages = new ArrayList<>();
+    private final int qos;
     private final Predicate<MqttMessage> done;
     private final CountDownLatch connectLatch;
 
-    public Subscriber(Endpoint endpoint, String topic, Predicate<MqttMessage> done, CompletableFuture<List<String>> promise, CountDownLatch connectLatch) {
+    public Subscriber(Endpoint endpoint, String topic, int qos, Predicate<MqttMessage> done, CompletableFuture<List<String>> promise, CountDownLatch connectLatch) {
         super(endpoint, topic, promise);
+        this.qos = qos;
         this.done = done;
         this.connectLatch = connectLatch;
     }
@@ -47,7 +49,7 @@ public class Subscriber extends ClientHandlerBase<List<String>> {
 
         try {
 
-            this.client.subscribe(this.topic, 0, null, new IMqttActionListener() {
+            this.client.subscribe(this.topic, this.qos, null, new IMqttActionListener() {
 
                 @Override
                 public void onSuccess(IMqttToken iMqttToken) {

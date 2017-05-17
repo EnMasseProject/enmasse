@@ -20,7 +20,8 @@ import enmasse.systemtest.Endpoint;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
@@ -29,7 +30,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 public class MqttClient implements AutoCloseable {
 
@@ -41,19 +41,27 @@ public class MqttClient implements AutoCloseable {
     }
 
     public Future<List<String>> recvMessages(String topic, int numMessages) throws InterruptedException {
-        return this.recvMessages(topic, numMessages, 1, TimeUnit.MINUTES);
+        return this.recvMessages(topic, numMessages, 0,  1, TimeUnit.MINUTES);
+    }
+
+    public Future<List<String>> recvMessages(String topic, int numMessages, int qos) throws InterruptedException {
+        return this.recvMessages(topic, numMessages, qos, 1, TimeUnit.MINUTES);
     }
 
     public Future<Integer> sendMessages(String topic, List<String> messages) throws InterruptedException {
-        return this.sendMessages(topic, messages, 1, TimeUnit.MINUTES);
+        return this.sendMessages(topic, messages, Collections.nCopies(messages.size(), 0), 1, TimeUnit.MINUTES);
     }
 
-    public Future<List<String>> recvMessages(String topic, int numMessages, long connectTimeout, TimeUnit timeUnit) throws InterruptedException {
+    public Future<Integer> sendMessages(String topic, List<String> messages, List<Integer> qos) throws InterruptedException {
+        return this.sendMessages(topic, messages, qos, 1, TimeUnit.MINUTES);
+    }
+
+    public Future<List<String>> recvMessages(String topic, int numMessages, int qos, long connectTimeout, TimeUnit timeUnit) throws InterruptedException {
 
         CompletableFuture<List<String>> promise = new CompletableFuture<>();
         CountDownLatch connectLatch = new CountDownLatch(1);
 
-        Subscriber subscriber = new Subscriber(this.endpoint, topic, new Count(numMessages), promise, connectLatch);
+        Subscriber subscriber = new Subscriber(this.endpoint, topic, qos, new Count(numMessages), promise, connectLatch);
         subscriber.start();
 
         this.clients.add(subscriber);
@@ -63,18 +71,24 @@ public class MqttClient implements AutoCloseable {
         return promise;
     }
 
-    public Future<Integer> sendMessages(String topic, List<String> messages, long connectTimeout, TimeUnit timeUnit) throws InterruptedException {
+    public Future<Integer> sendMessages(String topic, List<String> messages, List<Integer> qos, long connectTimeout, TimeUnit timeUnit) throws InterruptedException {
 
-        MqttMessage[] messageList =
-                messages.stream()
-                        .map(body -> {
-                            MqttMessage message = new MqttMessage();
-                            message.setPayload(body.getBytes());
-                            message.setQos(0);
-                            return message;
-                        }).collect(Collectors.toList()).toArray(new MqttMessage[0]);
+        if (messages.size() != qos.size())
+            throw new IllegalArgumentException("Number of messages and qos don't match");
 
-        Queue<MqttMessage> messageQueue = new LinkedList<>(Arrays.asList(messageList));
+        Iterator<String> messageIterator = messages.iterator();
+        Iterator<Integer> qosIterator = qos.iterator();
+
+        Queue<MqttMessage> messageQueue = new LinkedList<>();
+        int messageId = 0;
+
+        while (messageIterator.hasNext() && qosIterator.hasNext()) {
+            MqttMessage message = new MqttMessage();
+            message.setId(++messageId);
+            message.setPayload(messageIterator.next().getBytes());
+            message.setQos(qosIterator.next());
+            messageQueue.add(message);
+        }
 
         CompletableFuture<Integer> promise = new CompletableFuture<>();
         CountDownLatch connectLatch = new CountDownLatch(1);

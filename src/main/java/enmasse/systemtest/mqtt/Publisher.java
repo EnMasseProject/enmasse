@@ -18,6 +18,8 @@ package enmasse.systemtest.mqtt;
 
 import enmasse.systemtest.Endpoint;
 import enmasse.systemtest.Logging;
+import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
+import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 
@@ -42,6 +44,28 @@ public class Publisher extends ClientHandlerBase<Integer> {
     protected void connectionOpened() {
 
         Logging.log.info("Publisher on '{}' connected, publishing messages", this.topic);
+
+        this.client.setCallback(new MqttCallback() {
+
+            @Override
+            public void connectionLost(Throwable throwable) {
+
+            }
+
+            @Override
+            public void messageArrived(String s, MqttMessage mqttMessage) throws Exception {
+
+            }
+
+            @Override
+            public void deliveryComplete(IMqttDeliveryToken iMqttDeliveryToken) {
+
+                Logging.log.info("Delivered message-id {}", iMqttDeliveryToken.getMessageId());
+                numSent.incrementAndGet();
+                sendNext();
+            }
+        });
+
         this.connectLatch.countDown();
         this.sendNext();
     }
@@ -64,8 +88,6 @@ public class Publisher extends ClientHandlerBase<Integer> {
             try {
 
                 this.client.publish(this.topic, message);
-                this.numSent.incrementAndGet();
-                this.sendNext();
 
             } catch (MqttException e) {
                 e.printStackTrace();
