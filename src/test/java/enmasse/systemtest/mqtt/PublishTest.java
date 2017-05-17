@@ -38,7 +38,33 @@ public class PublishTest extends MqttTestBase {
     }
 
     @Test
-    public void testSimplePublish() throws Exception {
+    public void testPublishQoS0() throws Exception {
+
+        List<String> messages = Arrays.asList("foo", "bar", "baz");
+        List<Integer> publisherQos = Arrays.asList(0, 0, 0);
+
+        this.publish(messages, publisherQos, 0);
+    }
+
+    @Test
+    public void testPublishQoS1() throws Exception {
+
+        List<String> messages = Arrays.asList("foo", "bar", "baz");
+        List<Integer> publisherQos = Arrays.asList(1, 1, 1);
+
+        this.publish(messages, publisherQos, 1);
+    }
+
+    @Test
+    public void testPublishQoS2() throws Exception {
+
+        List<String> messages = Arrays.asList("foo", "bar", "baz");
+        List<Integer> publisherQos = Arrays.asList(2, 2, 2);
+
+        this.publish(messages, publisherQos, 2);
+    }
+
+    private void publish(List<String> messages, List<Integer> publisherQos, int subscriberQos) throws Exception {
 
         Destination dest = Destination.topic("mytopic");
         deploy(dest);
@@ -46,12 +72,10 @@ public class PublishTest extends MqttTestBase {
 
         MqttClient client = this.createClient();
 
-        List<String> msgs = Arrays.asList("foo", "bar", "baz");
+        Future<List<String>> recvResult = client.recvMessages(dest.getAddress(), messages.size(), subscriberQos);
+        Future<Integer> sendResult = client.sendMessages(dest.getAddress(), messages, publisherQos);
 
-        Future<List<String>> recvResult = client.recvMessages(dest.getAddress(), msgs.size());
-        Future<Integer> sendResult = client.sendMessages(dest.getAddress(), msgs);
-
-        assertThat(sendResult.get(1, TimeUnit.MINUTES), is(msgs.size()));
-        assertThat(recvResult.get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
+        assertThat(sendResult.get(1, TimeUnit.MINUTES), is(messages.size()));
+        assertThat(recvResult.get(1, TimeUnit.MINUTES).size(), is(messages.size()));
     }
 }
