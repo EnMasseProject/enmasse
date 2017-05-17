@@ -108,7 +108,6 @@ public class TopicTest extends AmqpTestBase {
         assertTrue(recvResults.get(1, TimeUnit.MINUTES).containsAll(batch2));
     }
 
-    @Test
     public void testDurableMessageRoutedSubscription() throws Exception {
         Destination dest = Destination.topic("mrtopic");
         String address = "myaddress";

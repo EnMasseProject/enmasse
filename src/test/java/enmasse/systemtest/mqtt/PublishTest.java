@@ -37,7 +37,6 @@ public class PublishTest extends MqttTestBase {
         return this.getClass().getSimpleName();
     }
 
-    @Test
     public void testPublishQoS0() throws Exception {
 
         List<String> messages = Arrays.asList("foo", "bar", "baz");
@@ -46,7 +45,6 @@ public class PublishTest extends MqttTestBase {
         this.publish(messages, publisherQos, 0);
     }
 
-    @Test
     public void testPublishQoS1() throws Exception {
 
         List<String> messages = Arrays.asList("foo", "bar", "baz");
@@ -55,7 +53,6 @@ public class PublishTest extends MqttTestBase {
         this.publish(messages, publisherQos, 1);
     }
 
-    @Test
     public void testPublishQoS2() throws Exception {
 
         List<String> messages = Arrays.asList("foo", "bar", "baz");

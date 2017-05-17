@@ -54,7 +54,6 @@ public class QueueTest extends AmqpTestBase {
         runQueueTest(client, q3);
     }
 
-    @Test
     public void testScaledown() throws Exception {
         Destination dest = Destination.queue("scalequeue");
         deploy(dest);
