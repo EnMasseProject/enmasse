@@ -5,10 +5,14 @@ import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServicePort;
 import io.fabric8.kubernetes.client.Config;
 import io.fabric8.kubernetes.client.ConfigBuilder;
+import io.fabric8.kubernetes.client.Watch;
+import io.fabric8.kubernetes.client.Watcher;
+import io.fabric8.kubernetes.client.dsl.LogWatch;
 import io.fabric8.openshift.api.model.Route;
 import io.fabric8.openshift.client.DefaultOpenShiftClient;
 import io.fabric8.openshift.client.OpenShiftClient;
 
+import java.io.OutputStream;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -59,7 +63,7 @@ public class OpenShift {
         throw new IllegalArgumentException("Unable to find port " + portName + " for service " + service.getMetadata().getName());
     }
 
-    public Endpoint getRestEndpoint() {
+    public Endpoint getRestEndpoint() throws InterruptedException {
         Route route = client.routes().inNamespace(environment.namespace()).withName("restapi").get();
         Endpoint endpoint = new Endpoint(route.getSpec().getHost(), 80);
         Logging.log.info("Testing endpoint : " + endpoint);
@@ -116,5 +120,17 @@ public class OpenShift {
     public Endpoint getRouteEndpoint(String routeName) {
         Route route = client.routes().inNamespace(namespace).withName(routeName).get();
         return new Endpoint(route.getSpec().getHost(), 443);
+    }
+
+    public Watch watchPods(Watcher<Pod> podWatcher) {
+        return client.pods().watch(podWatcher);
+    }
+
+    public LogWatch watchPodLog(String name, String container, OutputStream outputStream) {
+        return client.pods().withName(name).inContainer(container).watchLog(outputStream);
+    }
+
+    public Pod getPod(String name) {
+        return client.pods().withName(name).get();
     }
 }

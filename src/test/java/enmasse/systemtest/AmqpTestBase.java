@@ -46,23 +46,23 @@ public abstract class AmqpTestBase extends TestBase {
         clients.clear();
     }
 
-    protected AmqpClient createQueueClient() throws UnknownHostException {
+    protected AmqpClient createQueueClient() throws UnknownHostException, InterruptedException {
         return createClient(new QueueTerminusFactory(), ProtonQoS.AT_LEAST_ONCE);
     }
 
-    protected AmqpClient createTopicClient() throws UnknownHostException {
+    protected AmqpClient createTopicClient() throws UnknownHostException, InterruptedException {
         return createClient(new TopicTerminusFactory(), ProtonQoS.AT_LEAST_ONCE);
     }
 
-    protected AmqpClient createDurableTopicClient() throws UnknownHostException {
+    protected AmqpClient createDurableTopicClient() throws UnknownHostException, InterruptedException {
         return createClient(new DurableTopicTerminusFactory(), ProtonQoS.AT_LEAST_ONCE);
     }
 
-    protected AmqpClient createBroadcastClient() throws UnknownHostException {
+    protected AmqpClient createBroadcastClient() throws UnknownHostException, InterruptedException {
         return createClient(new QueueTerminusFactory(), ProtonQoS.AT_MOST_ONCE);
     }
 
-    protected AmqpClient createClient(TerminusFactory terminusFactory, ProtonQoS qos) throws UnknownHostException {
+    protected AmqpClient createClient(TerminusFactory terminusFactory, ProtonQoS qos) throws UnknownHostException, InterruptedException {
         if (environment.useTLS()) {
             Endpoint messagingEndpoint = openShift.getRouteEndpoint("messaging");
             Endpoint clientEndpoint;

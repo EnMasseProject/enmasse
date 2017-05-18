@@ -19,6 +19,7 @@ package enmasse.systemtest;
 import org.junit.After;
 import org.junit.Before;
 
+import java.io.File;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -26,15 +27,20 @@ import java.util.concurrent.TimeUnit;
  */
 public abstract class TestBase {
 
+    private LogCollector logCollector;
     protected AddressApiClient addressApiClient;
     protected Environment environment = new Environment();
     protected OpenShift openShift;
+
 
     protected abstract String getInstanceName();
 
     @Before
     public void setup() throws Exception {
         openShift = new OpenShift(environment, environment.isMultitenant() ? getInstanceName().toLowerCase() : environment.namespace());
+        File testLogs = new File("/tmp/testlogs");
+        testLogs.mkdirs();
+        logCollector = new LogCollector(openShift, testLogs);
         addressApiClient = new AddressApiClient(openShift.getRestEndpoint(), environment.isMultitenant());
         addressApiClient.deployInstance(getInstanceName().toLowerCase());
     }
@@ -43,6 +49,7 @@ public abstract class TestBase {
     public void teardown() throws Exception {
         deploy();
         addressApiClient.close();
+        logCollector.close();
     }
 
     protected void deploy(Destination ... destinations) throws Exception {

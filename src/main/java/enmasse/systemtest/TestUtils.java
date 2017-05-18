@@ -170,12 +170,15 @@ public class TestUtils {
         return generateMessages("testmessage", numMessages);
     }
 
-    public static boolean resolvable(Endpoint endpoint) {
-        try {
-            InetAddress[] addresses = Inet4Address.getAllByName(endpoint.getHost());
-            return addresses.length > 0;
-        } catch (Exception e) {
-            return false;
+    public static boolean resolvable(Endpoint endpoint) throws InterruptedException {
+        for (int i = 0; i < 10; i++) {
+            try {
+                InetAddress[] addresses = Inet4Address.getAllByName(endpoint.getHost());
+                return addresses.length > 0;
+            } catch (Exception e) {
+            }
+            Thread.sleep(1000);
         }
+        return false;
     }
 }

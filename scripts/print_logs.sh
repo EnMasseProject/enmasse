@@ -20,6 +20,11 @@ do
     done
 done
 
+for log in `find /tmp/testlogs`
+do
+    runcmd "cat $log"
+done
+
 echo "OPENSHIFT LOGS"
 cat logs/os.err
 cat logs/os.log
