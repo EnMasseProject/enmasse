@@ -12,7 +12,7 @@ script:
   | bash /dev/stdin router-image qpid-dispatch-image.tar.gz router-collector.py >
   .bintray.json
 - curl -s https://raw.githubusercontent.com/EnMasseProject/travis-scripts/master/docker-build.sh
-  | bash /dev/stdin enmasseproject/qdrouterd-base. 0.8.0-1
+  | bash /dev/stdin enmasseproject/qdrouterd-base . 0.8.0-1
 after_success:
 - curl -s https://raw.githubusercontent.com/EnMasseProject/travis-scripts/master/trigger-travis.sh
   | bash /dev/stdin dockerfiles
