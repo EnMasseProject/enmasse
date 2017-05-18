@@ -69,6 +69,7 @@ public class Subscriber extends ClientHandlerBase<List<String>> {
                 @Override
                 public void messageArrived(String s, MqttMessage message) throws Exception {
 
+                    Logging.log.info("Arrived message-id {}", message.getId());
                     messages.add(String.valueOf(message.getPayload()));
                     if (done.test(message)) {
 

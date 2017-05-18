@@ -37,6 +37,7 @@ public class PublishTest extends MqttTestBase {
         return this.getClass().getSimpleName();
     }
 
+    @Test
     public void testPublishQoS0() throws Exception {
 
         List<String> messages = Arrays.asList("foo", "bar", "baz");
