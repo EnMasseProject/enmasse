@@ -54,7 +54,12 @@ public class Subscriber extends ClientHandlerBase<List<String>> {
                 @Override
                 public void onSuccess(IMqttToken iMqttToken) {
 
-                    Logging.log.info("Subscribed at '{}'", iMqttToken.getTopics()[0]);
+                    Logging.log.info("Subscription response code {}", iMqttToken.getGrantedQos()[0]);
+
+                    if (iMqttToken.getGrantedQos()[0] == 0x80) {
+                        promise.completeExceptionally(new RuntimeException("Subscription refused"));
+                    }
+
                     connectLatch.countDown();
                 }
 
