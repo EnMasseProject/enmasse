@@ -215,7 +215,7 @@ Artemis.prototype.getBoundQueues = function (address) {
 };
 
 Artemis.prototype.createDivert = function (name, source, target) {
-    return this._request('broker', 'createDivert', [name, name, source, target, false, null, null]);
+    return this._request('broker', 'createDivert', [name, name, source, target, false, null, null, "ANYCAST"]);
 }
 
 Artemis.prototype.destroyDivert = function (name) {
