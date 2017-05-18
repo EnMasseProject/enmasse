@@ -7,23 +7,14 @@ allprojects  {
 }
 
 ext {
-    home = 'opt/apache-artemis-2.0.0-SNAPSHOT'
+    home = 'opt/apache-artemis-2.1.0'
 }
 
 import de.undercouch.gradle.tasks.download.Download
 
 task downloadArtemis(type: Download) {
-    src 'http://people.redhat.com/~ulilleen/apache-artemis-2.0.0-SNAPSHOT-bin.tar.gz'
+    src 'http://www-eu.apache.org/dist/activemq/activemq-artemis/2.1.0/apache-artemis-2.1.0-bin.tar.gz'
     dest new File(buildDir, 'apache-artemis-bin.tar.gz')
-}
-
-task buildArtemis {
-  doLast {
-    exec {
-      workingDir 'activemq-artemis/integration/activemq-amqp-connector'
-      commandLine 'mvn', 'install'
-    }
-  }
 }
 
 task buildArtemisBaseImage {
@@ -36,7 +27,7 @@ task buildArtemisBaseImage {
 }
 
 task buildTar(type: Tar) {
-    from('activemq-artemis/integration/activemq-amqp-connector/target/artemis-amqp-connector-2.0.0-SNAPSHOT.jar') {
+    from('artemis-amqp-connector/build/libs/artemis-amqp-connector.jar') {
         into("${home}/lib")
     }
     from('config_templates') {

@@ -1,3 +1,4 @@
 rootProject.name = 'artemis-image'
 
 include ':artemis-shutdown-hook'
+include ':artemis-amqp-connector'

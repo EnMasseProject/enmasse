@@ -1,6 +1,6 @@
 buildscript {
    ext.vertxProtonVersion = '3.4.1'
-   ext.artemisVersion = '2.0.0'
+   ext.artemisVersion = '2.1.0'
 }
 
 apply plugin: 'java'

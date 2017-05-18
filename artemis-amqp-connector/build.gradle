@@ -1,0 +1,19 @@
+buildscript {
+   ext.artemisVersion = '2.1.0'
+   ext.jbossLoggingVersion = '3.3.0.Final'
+   ext.jbossLoggingProcessorVersion = '2.0.0.Alpha2'
+}
+
+apply plugin: 'java'
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+}
+
+dependencies {
+    compile "org.apache.activemq:artemis-server:${artemisVersion}"
+    compile "org.apache.activemq:artemis-amqp-protocol:${artemisVersion}"
+    compile "org.jboss.logging:jboss-logging:${jbossLoggingVersion}"
+    compileOnly "org.jboss.logging:jboss-logging-processor:${jbossLoggingProcessorVersion}"
+}

@@ -17,9 +17,6 @@ jdk:
 - oraclejdk8
 services:
 - docker
-install:
-- gradle buildArtemis
-- gradle assemble
 script:
 - gradle build -i
 - gradle distTar
