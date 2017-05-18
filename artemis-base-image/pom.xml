@@ -9,7 +9,7 @@
     <version>1.0-SNAPSHOT</version>
 
     <properties>
-        <artemis.version>2.1.0-SNAPSHOT</artemis.version>
+        <artemis.version>2.1.0</artemis.version>
     </properties>
 
     <dependencies>
