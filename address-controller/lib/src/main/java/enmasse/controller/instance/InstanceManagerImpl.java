@@ -2,6 +2,7 @@ package enmasse.controller.instance;
 
 import enmasse.config.LabelKeys;
 import enmasse.controller.common.Kubernetes;
+import enmasse.controller.common.KubernetesHelper;
 import enmasse.controller.common.Route;
 import enmasse.controller.common.TemplateParameter;
 import enmasse.controller.model.Instance;
@@ -9,7 +10,14 @@ import enmasse.controller.model.InstanceId;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.openshift.client.ParameterValue;
 
-import java.util.*;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class InstanceManagerImpl implements InstanceManager {
@@ -90,6 +98,15 @@ public class InstanceManagerImpl implements InstanceManager {
         builder.certSecret(Optional.ofNullable(secretName));
         instance = builder.build();
 
+        KubernetesList items = createResourceList(instance, secretName);
+
+        Kubernetes instanceClient = getClient(instance);
+        instanceClient.create(items);
+
+        kubernetes.create(kubernetes.createInstanceConfig(instance));
+    }
+
+    private KubernetesList createResourceList(Instance instance, String secretName) {
         List<ParameterValue> parameterValues = new ArrayList<>();
         parameterValues.add(new ParameterValue(TemplateParameter.INSTANCE, Kubernetes.sanitizeName(instance.id().getId())));
         instance.messagingHost().ifPresent(h -> parameterValues.add(new ParameterValue(TemplateParameter.MESSAGING_HOSTNAME, h)));
@@ -101,16 +118,12 @@ public class InstanceManagerImpl implements InstanceManager {
         KubernetesList items = kubernetes.processTemplate(instanceTemplateName, parameterValues.toArray(new ParameterValue[0]));
 
         instance.uuid().ifPresent(uuid -> Kubernetes.addObjectLabel(items, LabelKeys.UUID, uuid));
-
-        Kubernetes instanceClient = kubernetes.mutateClient(instance.id());
-        instanceClient.create(items);
-
-        kubernetes.create(kubernetes.createInstanceConfig(instance));
+        return items;
     }
 
     @Override
     public void delete(Instance instance) {
-        if (kubernetes.mutateClient(instance.id()).listClusters().isEmpty()) {
+        if (getClient(instance).listClusters().isEmpty()) {
             kubernetes.deleteNamespace(instance.id().getNamespace());
             kubernetes.deleteInstanceConfig(instance);
         } else {
@@ -124,5 +137,23 @@ public class InstanceManagerImpl implements InstanceManager {
         labelMap.put("app", "enmasse");
         labelMap.put("type", "instance");
         return list(labelMap);
+    }
+
+    @Override
+    public boolean isReady(Instance instance) throws IOException, InterruptedException {
+        Set<String> readyDeployments = getClient(instance).getReadyDeployments().stream()
+                .map(deployment -> deployment.getMetadata().getName())
+                .collect(Collectors.toSet());
+
+        Set<String> requiredDeployments = createResourceList(instance, "dummy-secret").getItems().stream()
+                .filter(KubernetesHelper::isDeployment)
+                .map(item -> item.getMetadata().getName())
+                .collect(Collectors.toSet());
+
+        return readyDeployments.containsAll(requiredDeployments);
+    }
+
+    private Kubernetes getClient(Instance instance) {
+        return kubernetes.mutateClient(instance.id());
     }
 }

@@ -4,7 +4,11 @@ import enmasse.controller.instance.InstanceManager;
 import enmasse.controller.model.Instance;
 import enmasse.controller.model.InstanceId;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 
 public class TestInstanceManager implements InstanceManager {
     Map<InstanceId, Instance> instances = new HashMap<>();
@@ -50,5 +54,10 @@ public class TestInstanceManager implements InstanceManager {
             throw new RuntimeException("foo");
         }
         return new LinkedHashSet<>(instances.values());
+    }
+
+    @Override
+    public boolean isReady(Instance instance) throws Exception {
+        return false;
     }
 }

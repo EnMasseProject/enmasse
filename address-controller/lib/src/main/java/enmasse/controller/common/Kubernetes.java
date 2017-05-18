@@ -8,11 +8,13 @@ import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.Namespace;
+import io.fabric8.kubernetes.api.model.extensions.Deployment;
 import io.fabric8.openshift.client.ParameterValue;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Interface for Kubernetes operations done by the address controller
@@ -57,6 +59,8 @@ public interface Kubernetes {
 
     boolean hasService(String service);
     String createInstanceSecret(InstanceId instanceId) throws IOException;
+
+    Set<Deployment> getReadyDeployments();
 
     boolean isDestinationReady(Destination destination);
 }

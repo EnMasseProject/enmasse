@@ -15,4 +15,5 @@ public interface InstanceManager {
     void create(Instance instance) throws Exception;
     void delete(Instance instance);
     Set<Instance> list();
+    boolean isReady(Instance instance) throws Exception;
 }

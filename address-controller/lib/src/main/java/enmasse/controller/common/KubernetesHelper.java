@@ -32,6 +32,7 @@ import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.kubernetes.api.model.Namespace;
 import io.fabric8.kubernetes.api.model.ObjectReferenceBuilder;
 import io.fabric8.kubernetes.api.model.Secret;
+import io.fabric8.kubernetes.api.model.extensions.Deployment;
 import io.fabric8.kubernetes.client.dsl.Resource;
 import io.fabric8.openshift.api.model.DoneablePolicyBinding;
 import io.fabric8.openshift.api.model.PolicyBinding;
@@ -328,9 +329,29 @@ public class KubernetesHelper implements Kubernetes {
     }
 
     @Override
-    public boolean isDestinationReady(Destination destination) {
-        // TODO: improve this so it only checks the given destination's Kubernetes resources
+    public Set<Deployment> getReadyDeployments() {
         return client.extensions().deployments().inNamespace(instance.getNamespace()).list().getItems().stream()
-                .allMatch(deployment -> Optional.ofNullable(deployment.getStatus().getUnavailableReplicas()).orElse(0) == 0);
+                .filter(KubernetesHelper::isReady)
+                .collect(Collectors.toSet());
+    }
+
+    @Override
+    public boolean isDestinationReady(Destination destination) {
+        return listClusters().stream()
+                .filter(dc -> dc.getDestinations().contains(destination))
+                .anyMatch(KubernetesHelper::areAllDeploymentsReady);
+    }
+
+    public static boolean isDeployment(HasMetadata res) {
+        return res.getKind().equals("Deployment");  // TODO: is there an existing constant for this somewhere?
+    }
+
+    private static boolean areAllDeploymentsReady(DestinationCluster dc) {
+        return dc.getResources().stream().filter(KubernetesHelper::isDeployment).allMatch(d -> isReady((Deployment) d));
+    }
+
+    private static boolean isReady(Deployment deployment) {
+        Integer unavailableReplicas = deployment.getStatus().getUnavailableReplicas();
+        return unavailableReplicas == null || unavailableReplicas == 0;
     }
 }

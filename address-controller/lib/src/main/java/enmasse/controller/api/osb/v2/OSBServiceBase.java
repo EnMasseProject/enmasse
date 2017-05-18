@@ -80,8 +80,8 @@ public abstract class OSBServiceBase {
         return false;
     }
 
-    protected boolean isAddressReady(Instance maasInstance, Destination destination) {
-        return getAddressSpace(maasInstance).isDestinationReady(destination);
+    protected boolean isAddressReady(Instance maasInstance, Destination destination) throws Exception {
+        return instanceManager.isReady(maasInstance) && getAddressSpace(maasInstance).isDestinationReady(destination);
     }
 
     protected AddressSpace getAddressSpace(Instance maasInstance) {
