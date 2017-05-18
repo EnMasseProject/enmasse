@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
@@ -40,11 +41,11 @@ public class MqttClient implements AutoCloseable {
         this.endpoint = endpoint;
     }
 
-    public Future<List<String>> recvMessages(String topic, int numMessages) throws InterruptedException {
+    public Future<List<String>> recvMessages(String topic, int numMessages) throws ExecutionException, InterruptedException {
         return this.recvMessages(topic, numMessages, 0,  1, TimeUnit.MINUTES);
     }
 
-    public Future<List<String>> recvMessages(String topic, int numMessages, int qos) throws InterruptedException {
+    public Future<List<String>> recvMessages(String topic, int numMessages, int qos) throws ExecutionException, InterruptedException {
         return this.recvMessages(topic, numMessages, qos, 1, TimeUnit.MINUTES);
     }
 
@@ -56,7 +57,7 @@ public class MqttClient implements AutoCloseable {
         return this.sendMessages(topic, messages, qos, 1, TimeUnit.MINUTES);
     }
 
-    public Future<List<String>> recvMessages(String topic, int numMessages, int qos, long connectTimeout, TimeUnit timeUnit) throws InterruptedException {
+    public Future<List<String>> recvMessages(String topic, int numMessages, int qos, long connectTimeout, TimeUnit timeUnit) throws ExecutionException, InterruptedException {
 
         CompletableFuture<List<String>> promise = new CompletableFuture<>();
         CountDownLatch connectLatch = new CountDownLatch(1);
@@ -67,6 +68,9 @@ public class MqttClient implements AutoCloseable {
         this.clients.add(subscriber);
         if (!connectLatch.await(connectTimeout, timeUnit)) {
             throw new RuntimeException("Timeout waiting for client to connect");
+        }
+        if (promise.isCompletedExceptionally()) {
+            promise.get();
         }
         return promise;
     }
