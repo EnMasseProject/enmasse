@@ -71,15 +71,23 @@ public class AMQPServer extends AbstractVerticle {
         sender.setSource(sender.getRemoteSource());
         Source source = (Source) sender.getRemoteSource();
 
-        try {
-            ResourceDatabase database = lookupDatabase(source.getAddress());
-            database.subscribe(createStringFilter(source.getFilter()), sender::send);
-            sender.open();
-            log.info("Added subscriber {} for config {}", connection.getRemoteContainer(), sender.getRemoteSource().getAddress());
-        } catch (Exception e) {
-            log.info("Failed creating subscriber {} for config {}", connection.getRemoteContainer(), sender.getRemoteSource().getAddress(), e);
-            sender.close();
-        }
+        vertx.executeBlocking(promise -> {
+            try {
+                ResourceDatabase database = lookupDatabase(source.getAddress());
+                database.subscribe(createStringFilter(source.getFilter()), sender::send);
+                promise.complete(database);
+            } catch (Exception e) {
+                promise.fail(e);
+            }
+        }, result -> {
+            if (result.succeeded()) {
+                sender.open();
+                log.info("Added subscriber {} for config {}", connection.getRemoteContainer(), sender.getRemoteSource().getAddress());
+            } else {
+                sender.close();
+                log.info("Failed creating subscriber {} for config {}", connection.getRemoteContainer(), sender.getRemoteSource().getAddress(), result.cause());
+            }
+        });
     }
 
     private ResourceDatabase lookupDatabase(String address) {
