@@ -2,8 +2,8 @@ package enmasse.controller.api.v3.http;
 
 import enmasse.controller.api.TestAddressManager;
 import enmasse.controller.api.TestAddressSpace;
-import enmasse.controller.api.TestInstanceManager;
-import enmasse.controller.api.v3.Address;
+import enmasse.controller.api.TestInstanceApi;
+import enmasse.controller.address.v3.Address;
 import enmasse.controller.model.Destination;
 import enmasse.controller.model.Instance;
 import enmasse.controller.model.InstanceId;
@@ -18,13 +18,13 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
 public class HttpUuidServiceTest {
-    private TestInstanceManager instanceManager;
+    private TestInstanceApi instanceManager;
     private TestAddressSpace addressSpace;
     private UuidService uuidService;
 
     @Before
     public void setup() {
-        instanceManager = new TestInstanceManager();
+        instanceManager = new TestInstanceApi();
         instanceManager.create(new Instance.Builder(InstanceId.withId("myinstance")).uuid(Optional.of("iuid1")).build());
         addressSpace = new TestAddressSpace();
         addressSpace.setDestinations(Sets.newSet(
@@ -45,7 +45,7 @@ public class HttpUuidServiceTest {
 
         response = uuidService.getResource("iuid1");
         assertThat(response.getStatus(), is(200));
-        Instance instance = ((enmasse.controller.api.v3.Instance)response.getEntity()).getInstance();
+        Instance instance = ((enmasse.controller.instance.v3.Instance)response.getEntity()).getInstance();
         assertThat(instance.id().getId(), is("myinstance"));
 
         response = uuidService.getResource("notexists");

@@ -1,6 +1,5 @@
 package enmasse.controller.instance;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import enmasse.config.LabelKeys;
 import enmasse.controller.common.Kubernetes;
@@ -35,13 +34,14 @@ import java.util.Optional;
 
 public class InstanceController extends AbstractVerticle implements Watcher {
     private static final Logger log = LoggerFactory.getLogger(InstanceController.class.getName());
-    private static final ObjectMapper mapper = new ObjectMapper();
     private Watch configWatch;
     private final Map<InstanceId, Watch> instanceWatches = new HashMap<>();
     private final OpenShiftClient client;
     private final Kubernetes kubernetes;
+    private final InstanceFactory instanceFactory;
 
-    public InstanceController(OpenShiftClient client, Kubernetes kubernetes) {
+    public InstanceController(InstanceFactory instanceFactory, OpenShiftClient client, Kubernetes kubernetes) {
+        this.instanceFactory = instanceFactory;
         this.client = client;
         this.kubernetes = kubernetes;
     }
@@ -99,14 +99,14 @@ public class InstanceController extends AbstractVerticle implements Watcher {
     }
 
     private Instance getInstance(String name) throws IOException {
-        return decodeInstance(kubernetes.getInstanceConfig(InstanceId.withId(name)));
+        return kubernetes.getInstanceWithId(InstanceId.withId(name)).get();
     }
 
-    private void putInstance(Instance instance) throws JsonProcessingException {
-        client.configMaps().createOrReplace(kubernetes.createInstanceConfig(instance));
+    private void putInstance(Instance instance) throws Exception {
+        kubernetes.createInstance(instance);
     }
 
-    private void routeEventReceived(Action action, Route route) throws IOException {
+    private void routeEventReceived(Action action, Route route) throws Exception {
         switch (action) {
             case ADDED:
             case MODIFIED:
@@ -132,7 +132,7 @@ public class InstanceController extends AbstractVerticle implements Watcher {
         }
     }
 
-    private void ingressEventReceived(Action action, Ingress ingress) throws IOException {
+    private void ingressEventReceived(Action action, Ingress ingress) throws Exception {
         switch (action) {
             case ADDED:
             case MODIFIED:
@@ -147,13 +147,17 @@ public class InstanceController extends AbstractVerticle implements Watcher {
         }
     }
 
-    private void configEventReceived(Action action, ConfigMap resource) throws IOException {
+    private void configEventReceived(Action action, ConfigMap resource) throws Exception {
         if (action.equals(Action.ADDED)) {
-            watchInstance(decodeInstance(resource));
+            Instance instance = kubernetes.getInstanceFromConfig(resource);
+            instanceFactory.create(instance);
+            watchInstance(instance);
         } else if (action.equals(Action.MODIFIED)) {
             // We are the ones modifying, so ignore
         } else if (action.equals(Action.DELETED)) {
-            unwatchInstance(decodeInstance(resource));
+            Instance instance = kubernetes.getInstanceFromConfig(resource);
+            unwatchInstance(instance);
+            instanceFactory.delete(instance);
         }
 
     }
@@ -174,10 +178,6 @@ public class InstanceController extends AbstractVerticle implements Watcher {
             instanceWatches.get(instance.id()).close();
             instanceWatches.remove(instance.id());
         }
-    }
-
-    private Instance decodeInstance(ConfigMap resource) throws IOException {
-        return mapper.readValue(resource.getData().get("config.json"), enmasse.controller.api.v3.Instance.class).getInstance();
     }
 
     private Watch startWatch(Operation<? extends HasMetadata, ?, ?, ?> operation, Map<String, String> labelMap, String namespace) {

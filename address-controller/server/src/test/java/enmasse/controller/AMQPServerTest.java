@@ -3,7 +3,7 @@ package enmasse.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import enmasse.controller.flavor.FlavorManager;
-import enmasse.controller.api.v3.AddressList;
+import enmasse.controller.address.v3.AddressList;
 import enmasse.controller.model.*;
 import enmasse.amqp.SyncRequestClient;
 import io.vertx.core.Vertx;
@@ -44,7 +44,7 @@ public class AMQPServerTest {
         InstanceId instanceId = InstanceId.withId("myinstance");
         testAddressManager = new TestAddressManager().addManager(instanceId, testAddressSpace);
         testRepository = new FlavorManager();
-        TestInstanceManager testInstanceManager = new TestInstanceManager();
+        TestInstanceApi testInstanceManager = new TestInstanceApi();
         testInstanceManager.create(new Instance.Builder(instanceId).build());
         CountDownLatch latch = new CountDownLatch(1);
         AMQPServer server = new AMQPServer(instanceId, testAddressManager, testInstanceManager, testRepository, 0);

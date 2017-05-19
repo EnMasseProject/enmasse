@@ -17,6 +17,8 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 
 /**
  * Interface for Kubernetes operations done by the address controller
@@ -36,19 +38,13 @@ public interface Kubernetes {
     }
 
     InstanceId getInstanceId();
-    Kubernetes mutateClient(InstanceId instance);
-
-    ConfigMap createAddressConfig(Destination destination);
-    void deleteAddressConfig(Destination destination);
-
-    ConfigMap getInstanceConfig(InstanceId instanceId);
-    ConfigMap createInstanceConfig(Instance instance);
-    void deleteInstanceConfig(Instance instance);
+    Kubernetes withInstance(InstanceId instance);
 
     List<DestinationCluster> listClusters();
     void create(HasMetadata ... resources);
     void create(KubernetesList resources);
     void delete(KubernetesList resources);
+    void delete(HasMetadata ... resources);
     KubernetesList processTemplate(String templateName, ParameterValue ... parameterValues);
 
     Namespace createNamespace(InstanceId instance);
@@ -61,4 +57,24 @@ public interface Kubernetes {
 
     boolean hasService(String service);
     String createInstanceSecret(InstanceId instanceId) throws IOException;
+
+    /**
+     * Operations for addresses.
+     */
+    Optional<Destination> getDestinationWithAddress(String address);
+    Optional<Destination> getDestinationWithUuid(String uuid);
+    Set<Destination> listDestinations();
+    void createDestination(Destination destination);
+    void deleteDestination(Destination destination);
+
+    /**
+     * Operations for instances.
+     */
+    Optional<Instance> getInstanceWithId(InstanceId instanceId) throws IOException;
+    Optional<Instance> getInstanceWithUuid(String uuid) throws IOException;
+    void createInstance(Instance instance) throws Exception;
+    void deleteInstance(Instance instance);
+    Set<Instance> listInstances() throws IOException;
+    Instance getInstanceFromConfig(ConfigMap resource) throws IOException;
+
 }

@@ -1,8 +1,8 @@
 package enmasse.controller.api.v3.http;
 
-import enmasse.controller.instance.InstanceManager;
-import enmasse.controller.api.v3.Instance;
-import enmasse.controller.api.v3.InstanceList;
+import enmasse.controller.common.Kubernetes;
+import enmasse.controller.instance.v3.Instance;
+import enmasse.controller.instance.v3.InstanceList;
 import enmasse.controller.model.InstanceId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,17 +16,17 @@ import java.util.Optional;
 @Path("/v3/instance")
 public class InstanceService {
     private static final Logger log = LoggerFactory.getLogger(InstanceService.class.getName());
-    private final InstanceManager instanceManager;
+    private final Kubernetes kubernetes;
 
-    public InstanceService(@Context InstanceManager instanceManager) {
-        this.instanceManager = instanceManager;
+    public InstanceService(@Context Kubernetes kubernetes) {
+        this.kubernetes = kubernetes;
     }
 
     @GET
     @Produces({MediaType.APPLICATION_JSON})
     public Response listInstances() {
         try {
-            return Response.ok(InstanceList.fromSet(instanceManager.list())).build();
+            return Response.ok(InstanceList.fromSet(kubernetes.listInstances())).build();
         } catch (Exception e) {
             log.warn("Error listing instances", e);
             return Response.serverError().build();
@@ -38,7 +38,7 @@ public class InstanceService {
     @Consumes({MediaType.APPLICATION_JSON})
     public Response createInstance(Instance instance) {
         try {
-            instanceManager.create(instance.getInstance());
+            kubernetes.createInstance(instance.getInstance());
             return Response.ok().build();
         } catch (Exception e) {
             log.warn("Error creating instance", e);
@@ -52,7 +52,7 @@ public class InstanceService {
     @Consumes({MediaType.APPLICATION_JSON})
     public Response deleteInstance(@PathParam("instance") String instanceId, Instance instance) {
         try {
-            instanceManager.delete(instance.getInstance());
+            kubernetes.deleteInstance(instance.getInstance());
             return Response.ok().build();
         } catch (Exception e) {
             log.warn("Error deleting instance", e);
@@ -65,7 +65,7 @@ public class InstanceService {
     @Produces({MediaType.APPLICATION_JSON})
     public Response getInstance(@PathParam("instance") String instanceId) {
         try {
-            Optional<Instance> instance = instanceManager.get(InstanceId.withId(instanceId)).map(Instance::new);
+            Optional<Instance> instance = kubernetes.getInstanceWithId(InstanceId.withId(instanceId)).map(Instance::new);
 
             if (instance.isPresent()) {
                 return Response.ok(instance.get()).build();

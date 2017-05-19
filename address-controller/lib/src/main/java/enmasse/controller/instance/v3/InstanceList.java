@@ -1,4 +1,4 @@
-package enmasse.controller.api.v3;
+package enmasse.controller.instance.v3;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
@@ -46,7 +46,7 @@ public class InstanceList {
             ArrayNode items = node.has(ResourceKeys.ITEMS) ? (ArrayNode) node.get(ResourceKeys.ITEMS) : mapper.createArrayNode();
             Set<Instance> instances = new HashSet<>();
             for (int i = 0; i < items.size(); i++) {
-                instances.add(mapper.convertValue(items.get(i), enmasse.controller.api.v3.Instance.class).getInstance());
+                instances.add(mapper.convertValue(items.get(i), enmasse.controller.instance.v3.Instance.class).getInstance());
             }
             return new InstanceList(instances);
         }
@@ -63,7 +63,7 @@ public class InstanceList {
             ArrayNode items = node.putArray(ResourceKeys.ITEMS);
 
             for (Instance instance : value.instances) {
-                items.add(mapper.valueToTree(new enmasse.controller.api.v3.Instance(instance)));
+                items.add(mapper.valueToTree(new enmasse.controller.instance.v3.Instance(instance)));
             }
             mapper.writeValue(gen, node);
         }

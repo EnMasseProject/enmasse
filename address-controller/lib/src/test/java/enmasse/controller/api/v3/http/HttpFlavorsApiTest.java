@@ -17,7 +17,7 @@
 package enmasse.controller.api.v3.http;
 
 import enmasse.controller.flavor.FlavorManager;
-import enmasse.controller.api.v3.FlavorList;
+import enmasse.controller.flavor.v3.FlavorList;
 import enmasse.controller.model.Flavor;
 import org.junit.Before;
 import org.junit.Test;
@@ -60,7 +60,7 @@ public class HttpFlavorsApiTest {
     public void testGet() throws IOException {
         Response response = flavorsService.getFlavor("flavor1");
 
-        enmasse.controller.api.v3.Flavor flavor = (enmasse.controller.api.v3.Flavor) response.getEntity();
+        enmasse.controller.flavor.v3.Flavor flavor = (enmasse.controller.flavor.v3.Flavor) response.getEntity();
         Flavor f = flavor.getFlavor();
         assertThat(f.name(), is("flavor1"));
         assertThat(f.type(), is("queue"));

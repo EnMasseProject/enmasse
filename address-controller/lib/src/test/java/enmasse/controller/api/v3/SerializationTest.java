@@ -2,6 +2,10 @@ package enmasse.controller.api.v3;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import enmasse.controller.address.v3.Address;
+import enmasse.controller.address.v3.AddressList;
+import enmasse.controller.flavor.v3.FlavorList;
+import enmasse.controller.instance.v3.InstanceList;
 import enmasse.controller.model.Destination;
 import enmasse.controller.model.Flavor;
 import enmasse.controller.model.Instance;
@@ -78,7 +82,7 @@ public class SerializationTest {
     public void testSerializeFlavor() throws IOException {
         Flavor flavor = new Flavor.Builder("flavor1", "template1").type("queue").description("Simple queue").build();
 
-        String serialized = mapper.writeValueAsString(new enmasse.controller.api.v3.Flavor(flavor));
+        String serialized = mapper.writeValueAsString(new enmasse.controller.flavor.v3.Flavor(flavor));
 
         ObjectNode deserialized = mapper.readValue(serialized, ObjectNode.class);
         assertThat(deserialized.get("kind").asText(), is("Flavor"));
@@ -94,9 +98,9 @@ public class SerializationTest {
                 .mqttHost(Optional.of("mqtt.com"))
                 .build();
 
-        String serialized = mapper.writeValueAsString(new enmasse.controller.api.v3.Instance(instance));
+        String serialized = mapper.writeValueAsString(new enmasse.controller.instance.v3.Instance(instance));
 
-        Instance deserialized = mapper.readValue(serialized, enmasse.controller.api.v3.Instance.class).getInstance();
+        Instance deserialized = mapper.readValue(serialized, enmasse.controller.instance.v3.Instance.class).getInstance();
 
         assertThat(deserialized.id(), is(instance.id()));
         assertThat(deserialized.messagingHost(), is(instance.messagingHost()));

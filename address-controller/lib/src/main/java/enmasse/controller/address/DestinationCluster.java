@@ -16,18 +16,12 @@
 
 package enmasse.controller.address;
 
-import enmasse.controller.common.Kubernetes;
 import enmasse.controller.model.Destination;
-import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesList;
-import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * Represents a cluster of resources for a given destination.
@@ -35,50 +29,39 @@ import java.util.stream.Collectors;
 public class DestinationCluster {
     private static final Logger log = LoggerFactory.getLogger(DestinationCluster.class.getName());
 
-    private final Kubernetes kubernetes;
     private final KubernetesList resources;
-    private Set<Destination> destinations;
 
-    public DestinationCluster(Kubernetes kubernetes, Set<Destination> destinations, KubernetesList resources) {
-        this.kubernetes = kubernetes;
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        DestinationCluster that = (DestinationCluster) o;
+
+        if (resources != null ? !resources.equals(that.resources) : that.resources != null) return false;
+        return destinations != null ? destinations.equals(that.destinations) : that.destinations == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = resources != null ? resources.hashCode() : 0;
+        result = 31 * result + (destinations != null ? destinations.hashCode() : 0);
+        return result;
+    }
+
+    private final Set<Destination> destinations;
+
+    public DestinationCluster(Set<Destination> destinations, KubernetesList resources) {
         this.destinations = destinations;
         this.resources = resources;
-    }
-
-    public void create() {
-        log.info("Adding " + resources.getItems().size() + " resources: " + resources.getItems().stream().map(r -> "name=" + r.getMetadata().getName() + ",kind=" + r.getKind()).collect(Collectors.joining(",")));
-        kubernetes.create(resources);
-        updateDestinations(destinations);
-    }
-
-    public void delete() {
-        log.info("Deleting " + resources.getItems().size() + " resources: " + resources.getItems().stream().map(r -> "name=" + r.getMetadata().getName() + ",kind=" + r.getKind()).collect(Collectors.joining(",")));
-        kubernetes.delete(resources);
     }
 
     public Set<Destination> getDestinations() {
         return destinations;
     }
 
-    public List<HasMetadata> getResources() {
-        return resources.getItems();
-    }
-
-    public void updateDestinations(Set<Destination> destinations) {
-        Set<Destination> added = new LinkedHashSet<>(destinations);
-        added.removeAll(this.destinations);
-
-        Set<Destination> removed = new LinkedHashSet<>(this.destinations);
-        removed.removeAll(destinations);
-
-        for (Destination destination : added) {
-            kubernetes.create(new KubernetesListBuilder().addToItems(kubernetes.createAddressConfig(destination)).build());
-        }
-
-        for (Destination destination : removed) {
-            kubernetes.deleteAddressConfig(destination);
-        }
-        this.destinations = destinations;
+    public KubernetesList getResources() {
+        return resources;
     }
 
     public String getClusterId() {

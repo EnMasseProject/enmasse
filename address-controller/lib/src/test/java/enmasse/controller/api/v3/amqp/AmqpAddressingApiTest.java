@@ -19,10 +19,10 @@ package enmasse.controller.api.v3.amqp;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import enmasse.controller.api.TestAddressManager;
 import enmasse.controller.api.TestAddressSpace;
-import enmasse.controller.api.TestInstanceManager;
-import enmasse.controller.api.v3.Address;
-import enmasse.controller.api.v3.AddressList;
-import enmasse.controller.api.v3.ApiHandler;
+import enmasse.controller.api.TestInstanceApi;
+import enmasse.controller.address.v3.Address;
+import enmasse.controller.address.v3.AddressList;
+import enmasse.controller.api.v3.AddressApi;
 import enmasse.controller.model.Destination;
 import enmasse.controller.model.Instance;
 import enmasse.controller.model.InstanceId;
@@ -42,19 +42,19 @@ import static org.junit.Assert.*;
 public class AmqpAddressingApiTest {
     private static ObjectMapper mapper = new ObjectMapper();
     private AddressingService addressingService;
-    private TestInstanceManager instanceManager;
+    private TestInstanceApi instanceManager;
     private TestAddressSpace addressSpace;
 
     @Before
     public void setup() {
-        instanceManager = new TestInstanceManager();
+        instanceManager = new TestInstanceApi();
         instanceManager.create(new Instance.Builder(InstanceId.withId("myinstance")).build());
         addressSpace = new TestAddressSpace();
         addressSpace.addDestination(new Destination("addr1", "addr1", false, false, Optional.empty(), Optional.empty()));
         addressSpace.addDestination(new Destination("queue1", "queue1", true, false, Optional.of("vanilla"), Optional.empty()));
         TestAddressManager addressManager = new TestAddressManager();
         addressManager.addManager(InstanceId.withId("myinstance"), addressSpace);
-        addressingService = new AddressingService(InstanceId.withId("myinstance"), new ApiHandler(instanceManager, addressManager));
+        addressingService = new AddressingService(InstanceId.withId("myinstance"), new AddressApi(instanceManager, addressManager));
 
     }
 

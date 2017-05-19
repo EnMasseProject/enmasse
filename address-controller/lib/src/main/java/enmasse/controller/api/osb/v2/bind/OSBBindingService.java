@@ -12,7 +12,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import enmasse.controller.address.AddressManager;
 import enmasse.controller.api.osb.v2.EmptyResponse;
 import enmasse.controller.api.osb.v2.OSBServiceBase;
 import enmasse.controller.flavor.FlavorRepository;

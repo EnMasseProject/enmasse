@@ -1,7 +1,5 @@
 package enmasse.controller;
 
-import enmasse.controller.address.AddressManager;
-import enmasse.controller.address.AddressSpace;
 import enmasse.controller.model.Instance;
 import enmasse.controller.model.InstanceId;
 

@@ -2,9 +2,9 @@ package enmasse.controller.api.v3.amqp;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import enmasse.controller.api.v3.Address;
-import enmasse.controller.api.v3.AddressList;
-import enmasse.controller.api.v3.ApiHandler;
+import enmasse.controller.address.v3.Address;
+import enmasse.controller.address.v3.AddressList;
+import enmasse.controller.api.v3.AddressApi;
 import enmasse.controller.api.v3.ApiResource;
 import enmasse.controller.model.InstanceId;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
@@ -29,11 +29,11 @@ public class AddressingService {
     private static final String METHOD_DELETE = "DELETE";
 
     private final InstanceId instance;
-    private final ApiHandler apiHandler;
+    private final AddressApi addressApi;
 
-    public AddressingService(InstanceId instance, ApiHandler apiHandler) {
+    public AddressingService(InstanceId instance, AddressApi addressApi) {
         this.instance = instance;
-        this.apiHandler = apiHandler;
+        this.addressApi = addressApi;
     }
 
     public Message handleMessage(Message message) throws Exception {
@@ -65,14 +65,14 @@ public class AddressingService {
         Optional<String> address = getAddressProperty(message);
 
         if (address.isPresent()) {
-            Optional<Address> addr = apiHandler.getAddress(instance, address.get());
+            Optional<Address> addr = addressApi.getAddress(instance, address.get());
             if (addr.isPresent()) {
                 return createResponse(addr.get());
             } else {
                 throw new IllegalArgumentException("Address " + address.get() + " not found");
             }
         } else {
-            return createResponse(apiHandler.getAddresses(instance));
+            return createResponse(addressApi.getAddresses(instance));
         }
     }
 
@@ -81,10 +81,10 @@ public class AddressingService {
         String kind = getKind(json);
         if (Address.kind().equals(kind)) {
             Address address = mapper.readValue(json, Address.class);
-            return createResponse(apiHandler.putAddress(instance, address));
+            return createResponse(addressApi.putAddress(instance, address));
         } else if (AddressList.kind().equals(kind)) {
             AddressList list = mapper.readValue(json, AddressList.class);
-            return createResponse(apiHandler.putAddresses(instance, list));
+            return createResponse(addressApi.putAddresses(instance, list));
         } else {
             throw new IllegalArgumentException("Unknown kind " + kind);
         }
@@ -95,10 +95,10 @@ public class AddressingService {
         String kind = getKind(json);
         if (Address.kind().equals(kind)) {
             Address address = mapper.readValue(json, Address.class);
-            return createResponse(apiHandler.appendAddress(instance, address));
+            return createResponse(addressApi.appendAddress(instance, address));
         } else if (AddressList.kind().equals(kind)) {
             AddressList list = mapper.readValue(json, AddressList.class);
-            return createResponse(apiHandler.appendAddresses(instance, list));
+            return createResponse(addressApi.appendAddresses(instance, list));
         } else {
             throw new IllegalArgumentException("Unknown kind " + kind);
         }
@@ -109,7 +109,7 @@ public class AddressingService {
         Optional<String> address = getAddressProperty(message);
 
         if (address.isPresent()) {
-            AddressList list = apiHandler.deleteAddress(instance, address.get());
+            AddressList list = addressApi.deleteAddress(instance, address.get());
             return createResponse(list);
         } else {
             throw new IllegalArgumentException("Address to delete was not specified in application properties");

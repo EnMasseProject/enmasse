@@ -1,4 +1,4 @@
-package enmasse.controller.api.v3;
+package enmasse.controller.flavor.v3;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonSerializer;
@@ -45,7 +45,7 @@ public class FlavorList {
             ArrayNode items = node.putArray(ResourceKeys.ITEMS);
 
             for (Flavor flavor : value.flavors) {
-                items.add(mapper.valueToTree(new enmasse.controller.api.v3.Flavor(flavor)));
+                items.add(mapper.valueToTree(new enmasse.controller.flavor.v3.Flavor(flavor)));
             }
             mapper.writeValue(gen, node);
         }

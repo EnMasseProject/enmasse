@@ -16,15 +16,13 @@
 
 package enmasse.controller;
 
-import enmasse.controller.address.AddressManager;
-import enmasse.controller.address.AddressManagerImpl;
 import enmasse.controller.cert.SelfSignedController;
 import enmasse.controller.common.Kubernetes;
 import enmasse.controller.common.KubernetesHelper;
 import enmasse.controller.flavor.FlavorController;
 import enmasse.controller.flavor.FlavorManager;
 import enmasse.controller.instance.InstanceController;
-import enmasse.controller.instance.InstanceManagerImpl;
+import enmasse.controller.instance.InstanceFactoryImpl;
 import enmasse.controller.model.Instance;
 import enmasse.controller.model.InstanceId;
 import io.fabric8.kubernetes.client.ConfigBuilder;
@@ -38,7 +36,7 @@ public class Controller extends AbstractVerticle {
     private final AMQPServer server;
     private final HTTPServer restServer;
     private final AddressManager addressManager;
-    private final InstanceManagerImpl instanceManager;
+    private final InstanceFactoryImpl instanceManager;
     private final FlavorController flavorController;
     private final InstanceController instanceController;
     private final AbstractVerticle certController;
@@ -55,7 +53,7 @@ public class Controller extends AbstractVerticle {
         String templateName = "enmasse-instance-infra";
 
         FlavorManager flavorManager = new FlavorManager();
-        this.instanceManager = new InstanceManagerImpl(kubernetes, templateName, options.isMultiinstance());
+        this.instanceManager = new InstanceFactoryImpl(kubernetes, templateName, options.isMultiinstance());
         if (!options.isMultiinstance() && !kubernetes.hasService("messaging")) {
             Instance.Builder builder = new Instance.Builder(kubernetes.getInstanceId());
             builder.messagingHost(options.messagingHost());

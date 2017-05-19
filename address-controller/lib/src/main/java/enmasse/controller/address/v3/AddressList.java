@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package enmasse.controller.api.v3;
+package enmasse.controller.address.v3;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
@@ -62,7 +62,7 @@ public class AddressList {
             Set<Destination> destinations = new LinkedHashSet<>();
 
             for (int i = 0; i < items.size(); i++) {
-                destinations.add(mapper.convertValue(items.get(i), enmasse.controller.api.v3.Address.class).getDestination());
+                destinations.add(mapper.convertValue(items.get(i), Address.class).getDestination());
             }
             return new AddressList(destinations);
         }
@@ -79,7 +79,7 @@ public class AddressList {
             ArrayNode items = node.putArray(ResourceKeys.ITEMS);
 
             for (Destination destination : value.destinations) {
-                items.add(mapper.valueToTree(new enmasse.controller.api.v3.Address(destination)));
+                items.add(mapper.valueToTree(new Address(destination)));
             }
             mapper.writeValue(gen, node);
         }

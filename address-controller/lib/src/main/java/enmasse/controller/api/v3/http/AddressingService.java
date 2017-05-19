@@ -1,8 +1,8 @@
 package enmasse.controller.api.v3.http;
 
-import enmasse.controller.api.v3.Address;
-import enmasse.controller.api.v3.AddressList;
-import enmasse.controller.api.v3.ApiHandler;
+import enmasse.controller.address.v3.Address;
+import enmasse.controller.address.v3.AddressList;
+import enmasse.controller.api.v3.AddressApi;
 import enmasse.controller.model.InstanceId;
 
 import javax.ws.rs.*;
@@ -14,8 +14,8 @@ import javax.ws.rs.core.Response;
 public class AddressingService extends AddressingServiceBase {
     private final InstanceId instanceId;
 
-    public AddressingService(@Context InstanceId instanceId, @Context ApiHandler apiHandler) {
-        super(apiHandler);
+    public AddressingService(@Context InstanceId instanceId, @Context AddressApi addressApi) {
+        super(addressApi);
         this.instanceId = instanceId;
     }
 

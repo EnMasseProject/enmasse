@@ -16,8 +16,6 @@
 
 package enmasse.controller.common;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import enmasse.config.AddressConfigKeys;
 import enmasse.config.LabelKeys;
 import enmasse.controller.address.DestinationCluster;
@@ -30,13 +28,11 @@ import io.fabric8.openshift.api.model.DoneablePolicyBinding;
 import io.fabric8.openshift.api.model.PolicyBinding;
 import io.fabric8.openshift.client.OpenShiftClient;
 import io.fabric8.openshift.client.ParameterValue;
-import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URI;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -46,7 +42,6 @@ import java.util.stream.Collectors;
 public class KubernetesHelper implements Kubernetes {
     private static final Logger log = LoggerFactory.getLogger(KubernetesHelper.class.getName());
     private static final String TEMPLATE_SUFFIX = ".json";
-    private static final ObjectMapper mapper = new ObjectMapper();
 
     private final OpenShiftClient client;
     private final InstanceId instance;
@@ -83,8 +78,6 @@ public class KubernetesHelper implements Kubernetes {
                     groupMap.put(groupId, new LinkedHashSet<>());
                 }
 
-                resourceMap.get(groupId).add(config);
-
                 // Add the destinations for a particular address config
                 if ("address-config".equals(labels.get(LabelKeys.TYPE))) {
                     ConfigMap configMap = (ConfigMap) config;
@@ -97,6 +90,8 @@ public class KubernetesHelper implements Kubernetes {
                     destBuilder.uuid(Optional.ofNullable(data.get(AddressConfigKeys.UUID)));
 
                     groupMap.get(groupId).add(destBuilder.build());
+                } else {
+                    resourceMap.get(groupId).add(config);
                 }
             }
         }
@@ -105,7 +100,7 @@ public class KubernetesHelper implements Kubernetes {
                 .map(entry -> {
                     KubernetesList list = new KubernetesList();
                     list.setItems(entry.getValue());
-                    return new DestinationCluster(this, groupMap.get(entry.getKey()), list);
+                    return new DestinationCluster(groupMap.get(entry.getKey()), list);
                 }).collect(Collectors.toList());
     }
 
@@ -132,56 +127,8 @@ public class KubernetesHelper implements Kubernetes {
     }
 
     @Override
-    public void deleteAddressConfig(Destination destination) {
-        String name = Kubernetes.sanitizeName("address-config-" + destination.address());
-        client.configMaps().inNamespace(instance.getNamespace()).withName(name).delete();
-    }
+    public void delete(HasMetadata... resources) {
 
-    @Override
-    public ConfigMap getInstanceConfig(InstanceId instanceId) {
-        return client.configMaps().withName(Kubernetes.sanitizeName("instance-config-" + instanceId.getId())).get();
-    }
-
-    @Override
-    public ConfigMap createInstanceConfig(Instance instance) {
-        String name = Kubernetes.sanitizeName("instance-config-" + instance.id().getId());
-        ConfigMapBuilder builder = new ConfigMapBuilder()
-                .withNewMetadata()
-                .withName(name)
-                .addToLabels(LabelKeys.TYPE, "instance-config")
-                .endMetadata();
-        try {
-            builder.addToData("config.json", mapper.writeValueAsString(new enmasse.controller.api.v3.Instance(instance)));
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
-        return builder.build();
-    }
-
-    @Override
-    public void deleteInstanceConfig(Instance instance) {
-        String name = Kubernetes.sanitizeName("instance-config-" + instance.id().getId());
-        client.configMaps().withName(name).delete();
-    }
-
-    @Override
-    public ConfigMap createAddressConfig(Destination destination) {
-        String name = Kubernetes.sanitizeName("address-config-" + destination.address());
-        ConfigMapBuilder builder = new ConfigMapBuilder()
-                .withNewMetadata()
-                .withName(name)
-                .addToLabels(LabelKeys.GROUP_ID, Kubernetes.sanitizeName(destination.group()))
-                .addToLabels(LabelKeys.TYPE, "address-config")
-                .addToLabels(LabelKeys.INSTANCE, Kubernetes.sanitizeName(instance.getId()))
-                .endMetadata();
-
-        builder.addToData(AddressConfigKeys.ADDRESS, destination.address());
-        builder.addToData(AddressConfigKeys.GROUP_ID, destination.group());
-        builder.addToData(AddressConfigKeys.STORE_AND_FORWARD, String.valueOf(destination.storeAndForward()));
-        builder.addToData(AddressConfigKeys.MULTICAST, String.valueOf(destination.multicast()));
-        destination.flavor().ifPresent(f -> builder.addToData(AddressConfigKeys.FLAVOR, f));
-        destination.uuid().ifPresent(f -> builder.addToData(AddressConfigKeys.UUID, f));
-        return builder.build();
     }
 
     @Override
@@ -197,7 +144,7 @@ public class KubernetesHelper implements Kubernetes {
     }
 
     @Override
-    public Kubernetes mutateClient(InstanceId newInstance) {
+    public Kubernetes withInstance(InstanceId newInstance) {
         return new KubernetesHelper(newInstance, client, templateDir);
     }
 
@@ -314,5 +261,133 @@ public class KubernetesHelper implements Kubernetes {
                         .build())
                 .done();
         return secretName;
+    }
+
+    @Override
+    public Optional<Destination> getDestinationWithAddress(String address) {
+        ConfigMap map = client.configMaps().inNamespace(instance.getNamespace()).withName(Kubernetes.sanitizeName(Kubernetes.sanitizeName("address-config-" + address))).get();
+        if (map == null) {
+            return Optional.empty();
+        } else {
+            return Optional.of(getDestinationFromConfig(map));
+        }
+    }
+
+    @Override
+    public Optional<Destination> getDestinationWithUuid(String uuid) {
+        Map<String, String> labels = new LinkedHashMap<>();
+        labels.put(LabelKeys.TYPE, "address-config");
+        labels.put(LabelKeys.UUID, uuid);
+
+        ConfigMapList list = client.configMaps().inNamespace(instance.getNamespace()).withLabels(labels).list();
+        if (list.getItems().isEmpty()) {
+            return Optional.empty();
+        } else {
+            return Optional.of(getDestinationFromConfig(list.getItems().get(0)));
+        }
+    }
+
+    public Destination getDestinationFromConfig(ConfigMap configMap) {
+        Map<String, String> data = configMap.getData();
+
+        Destination.Builder destBuilder = new Destination.Builder(data.get(AddressConfigKeys.ADDRESS), data.get(AddressConfigKeys.GROUP_ID));
+        destBuilder.storeAndForward(Boolean.parseBoolean(data.get(AddressConfigKeys.STORE_AND_FORWARD)));
+        destBuilder.multicast(Boolean.parseBoolean(data.get(AddressConfigKeys.MULTICAST)));
+        destBuilder.flavor(Optional.ofNullable(data.get(AddressConfigKeys.FLAVOR)));
+        destBuilder.uuid(Optional.ofNullable(data.get(AddressConfigKeys.UUID)));
+        return destBuilder.build();
+    }
+
+    @Override
+    public Set<Destination> listDestinations() {
+        Map<String, String> labels = new LinkedHashMap<>();
+        labels.put(LabelKeys.TYPE, "address-config");
+
+        Set<Destination> destinations = new LinkedHashSet<>();
+        ConfigMapList list = client.configMaps().inNamespace(instance.getNamespace()).withLabels(labels).list();
+        for (ConfigMap config : list.getItems()) {
+            destinations.add(getDestinationFromConfig(config));
+        }
+        return destinations;
+    }
+
+    @Override
+    public void createDestination(Destination destination) {
+        String name = Kubernetes.sanitizeName("address-config-" + destination.address());
+        ConfigMapBuilder builder = new ConfigMapBuilder()
+                .withNewMetadata()
+                .withName(name)
+                .addToLabels(LabelKeys.GROUP_ID, Kubernetes.sanitizeName(destination.group()))
+                .addToLabels(LabelKeys.TYPE, "address-config")
+                .addToLabels(LabelKeys.INSTANCE, Kubernetes.sanitizeName(instance.getId()))
+                .endMetadata();
+
+        builder.addToData(AddressConfigKeys.ADDRESS, destination.address());
+        builder.addToData(AddressConfigKeys.GROUP_ID, destination.group());
+        builder.addToData(AddressConfigKeys.STORE_AND_FORWARD, String.valueOf(destination.storeAndForward()));
+        builder.addToData(AddressConfigKeys.MULTICAST, String.valueOf(destination.multicast()));
+        destination.flavor().ifPresent(f -> builder.addToData(AddressConfigKeys.FLAVOR, f));
+        destination.uuid().ifPresent(f -> builder.addToData(AddressConfigKeys.UUID, f));
+        create(builder.build());
+    }
+
+    @Override
+    public void deleteDestination(Destination destination) {
+        String name = Kubernetes.sanitizeName("address-config-" + destination.address());
+        client.configMaps().inNamespace(instance.getNamespace()).withName(name).delete();
+    }
+
+    @Override
+    public Optional<Instance> getInstanceWithId(InstanceId instanceId) throws IOException {
+        ConfigMap map = client.configMaps().withName(Kubernetes.sanitizeName("instance-config-" + instanceId.getId())).get();
+        if (map == null) {
+            return Optional.empty();
+        } else {
+            return Optional.of(getInstanceFromConfig(map));
+        }
+    }
+
+    @Override
+    public Optional<Instance> getInstanceWithUuid(String uuid) throws IOException {
+        ConfigMapList list = client.configMaps().withLabel(LabelKeys.UUID, uuid).list();
+        if (list.getItems().isEmpty()) {
+            return Optional.empty();
+        } else {
+            return Optional.of(getInstanceFromConfig(list.getItems().get(0)));
+        }
+    }
+
+    @Override
+    public void createInstance(Instance instance) throws Exception {
+        String name = Kubernetes.sanitizeName("instance-config-" + instance.id().getId());
+        ConfigMapBuilder builder = new ConfigMapBuilder()
+                .withNewMetadata()
+                .withName(name)
+                .addToLabels(LabelKeys.TYPE, "instance-config")
+                .endMetadata();
+
+        builder.addToData("config.json", enmasse.controller.instance.v3.Instance.toJson(instance));
+        create(builder.build());
+    }
+
+    @Override
+    public void deleteInstance(Instance instance) {
+        String name = Kubernetes.sanitizeName("instance-config-" + instance.id().getId());
+        client.configMaps().withName(name).delete();
+    }
+
+    @Override
+    public Set<Instance> listInstances() throws IOException {
+        Set<Instance> instances = new LinkedHashSet<>();
+        ConfigMapList list = client.configMaps().withLabel(LabelKeys.TYPE, "instance-config").list();
+        for (ConfigMap map : list.getItems()) {
+            instances.add(getInstanceFromConfig(map));
+        }
+        return instances;
+    }
+
+    @Override
+    public Instance getInstanceFromConfig(ConfigMap map) throws IOException {
+        return enmasse.controller.instance.v3.Instance.fromJson(map.getData().get("config.json"));
     }
 }

@@ -1,12 +1,12 @@
-package enmasse.controller.api;
+package enmasse.controller;
 
-import enmasse.controller.instance.InstanceManager;
+import enmasse.controller.api.instance.InstanceApi;
 import enmasse.controller.model.Instance;
 import enmasse.controller.model.InstanceId;
 
 import java.util.*;
 
-public class TestInstanceManager implements InstanceManager {
+public class TestInstanceApi implements InstanceApi {
     Map<InstanceId, Instance> instances = new HashMap<>();
     public boolean throwException = false;
 

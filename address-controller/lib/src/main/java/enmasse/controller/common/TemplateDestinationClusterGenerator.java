@@ -23,7 +23,6 @@ import enmasse.controller.model.Destination;
 import enmasse.controller.model.Flavor;
 import enmasse.controller.model.InstanceId;
 import io.fabric8.kubernetes.api.model.KubernetesList;
-import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.openshift.client.ParameterValue;
 
 import java.util.LinkedHashMap;
@@ -60,13 +59,7 @@ public class TemplateDestinationClusterGenerator implements DestinationClusterGe
                 .map(f -> flavorRepository.getFlavor(f, TimeUnit.SECONDS.toMillis(60)));
 
         KubernetesList resources = flavor.map(f -> processTemplate(first, destinations, f)).orElse(new KubernetesList());
-
-        KubernetesListBuilder combined = new KubernetesListBuilder(resources);
-        for (Destination destination : destinations) {
-            combined.addToItems(kubernetes.createAddressConfig(destination));
-        }
-
-        return new DestinationCluster(kubernetes, destinations, combined.build());
+        return new DestinationCluster(kubernetes, destinations, resources);
     }
 
     private KubernetesList processTemplate(Destination first, Set<Destination> destinations, Flavor flavor) {

@@ -1,4 +1,4 @@
-package enmasse.controller.api.v3;
+package enmasse.controller.flavor.v3;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonSerializer;
@@ -33,16 +33,16 @@ public class Flavor {
             ObjectNode node = mapper.createObjectNode();
             enmasse.controller.model.Flavor flavor = value.flavor;
 
-            node.put(ResourceKeys.KIND, kind());
-            node.put(ResourceKeys.APIVERSION, "v3");
+            node.put(enmasse.controller.instance.v3.ResourceKeys.KIND, kind());
+            node.put(enmasse.controller.instance.v3.ResourceKeys.APIVERSION, "v3");
 
-            ObjectNode metadata = node.putObject(ResourceKeys.METADATA);
-            metadata.put(ResourceKeys.NAME, flavor.name());
-            flavor.uuid().ifPresent(u -> metadata.put(ResourceKeys.UUID, u));
+            ObjectNode metadata = node.putObject(enmasse.controller.instance.v3.ResourceKeys.METADATA);
+            metadata.put(enmasse.controller.instance.v3.ResourceKeys.NAME, flavor.name());
+            flavor.uuid().ifPresent(u -> metadata.put(enmasse.controller.instance.v3.ResourceKeys.UUID, u));
 
-            ObjectNode spec = node.putObject(ResourceKeys.SPEC);
-            spec.put(ResourceKeys.TYPE, flavor.type());
-            spec.put(ResourceKeys.DESCRIPTION, flavor.description());
+            ObjectNode spec = node.putObject(enmasse.controller.instance.v3.ResourceKeys.SPEC);
+            spec.put(enmasse.controller.instance.v3.ResourceKeys.TYPE, flavor.type());
+            spec.put(enmasse.controller.instance.v3.ResourceKeys.DESCRIPTION, flavor.description());
 
             mapper.writeValue(gen, node);
         }

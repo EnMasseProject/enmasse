@@ -1,7 +1,8 @@
-package enmasse.controller.api.v3;
+package enmasse.controller.instance.v3;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -24,6 +25,14 @@ public class Instance {
 
     public enmasse.controller.model.Instance getInstance() {
         return instance;
+    }
+
+    public static String toJson(enmasse.controller.model.Instance instance) throws JsonProcessingException {
+        return mapper.writeValueAsString(new Instance(instance));
+    }
+
+    public static enmasse.controller.model.Instance fromJson(String json) throws IOException {
+        return mapper.readValue(json, Instance.class).getInstance();
     }
 
     public static String kind() {

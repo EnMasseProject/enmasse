@@ -1,8 +1,8 @@
 package enmasse.controller.api.v3.http;
 
 import enmasse.controller.flavor.FlavorRepository;
-import enmasse.controller.api.v3.Flavor;
-import enmasse.controller.api.v3.FlavorList;
+import enmasse.controller.flavor.v3.Flavor;
+import enmasse.controller.flavor.v3.FlavorList;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;

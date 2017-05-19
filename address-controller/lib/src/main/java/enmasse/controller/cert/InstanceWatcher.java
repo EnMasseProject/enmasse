@@ -73,7 +73,7 @@ public abstract class InstanceWatcher extends AbstractVerticle implements Watche
     }
 
     private Instance decodeInstance(ConfigMap resource) throws IOException {
-        return mapper.readValue(resource.getData().get("config.json"), enmasse.controller.api.v3.Instance.class).getInstance();
+        return mapper.readValue(resource.getData().get("config.json"), enmasse.controller.instance.v3.Instance.class).getInstance();
     }
 
 

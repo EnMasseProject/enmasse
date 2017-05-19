@@ -7,8 +7,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import enmasse.controller.address.AddressManager;
-import enmasse.controller.address.AddressSpace;
 import enmasse.controller.api.osb.v2.catalog.Plan;
 import enmasse.controller.flavor.FlavorRepository;
 import enmasse.controller.instance.InstanceManager;

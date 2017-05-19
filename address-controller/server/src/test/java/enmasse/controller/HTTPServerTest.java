@@ -40,7 +40,7 @@ public class HTTPServerTest {
 
     private Vertx vertx;
     private TestAddressManager testAddressManager;
-    private TestInstanceManager testInstanceManager;
+    private TestInstanceApi testInstanceManager;
     private TestAddressSpace testAddressSpace;
     private FlavorManager testRepository;
 
@@ -48,7 +48,7 @@ public class HTTPServerTest {
     public void setup() throws InterruptedException {
         vertx = Vertx.vertx();
         testAddressSpace = new TestAddressSpace();
-        testInstanceManager = new TestInstanceManager();
+        testInstanceManager = new TestInstanceApi();
         InstanceId instanceId = InstanceId.withId("myinstance");
         testAddressManager = new TestAddressManager().addManager(instanceId, testAddressSpace);
         testRepository = new FlavorManager();

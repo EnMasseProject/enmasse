@@ -1,6 +1,7 @@
 package enmasse.controller.instance;
 
 import enmasse.controller.address.DestinationCluster;
+import enmasse.controller.api.instance.InstanceApi;
 import enmasse.controller.common.Kubernetes;
 import enmasse.controller.model.Instance;
 import enmasse.controller.model.InstanceId;
@@ -23,15 +24,15 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.matches;
 import static org.mockito.Mockito.*;
 
-public class InstanceManagerTest {
+public class InstanceApiTest {
     @Test
     public void testMultitenantController() throws Exception {
         Kubernetes mockClient = mock(Kubernetes.class);
-        when(mockClient.mutateClient(any())).thenReturn(mockClient);
+        when(mockClient.withInstance(any())).thenReturn(mockClient);
         ArgumentCaptor<ParameterValue> captor = ArgumentCaptor.forClass(ParameterValue.class);
         when(mockClient.processTemplate(matches("test"), captor.capture())).thenReturn(new KubernetesList());
 
-        InstanceManager controller = new InstanceManagerImpl(mockClient, "test", true);
+        InstanceApi controller = new InstanceFactoryImpl(mockClient, "test", true);
 
         Instance i1 = new Instance.Builder(InstanceId.withIdAndNamespace("myid", "mynamespace")).messagingHost(Optional.of("messaging.example.com")).build();
         Instance i2 = new Instance.Builder(InstanceId.withIdAndNamespace("myid2", "other")).mqttHost(Optional.of("mqtt.example.com")).build();

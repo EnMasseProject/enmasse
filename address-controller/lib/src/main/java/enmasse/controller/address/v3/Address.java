@@ -1,4 +1,4 @@
-package enmasse.controller.api.v3;
+package enmasse.controller.address.v3;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import enmasse.controller.instance.v3.ResourceKeys;
 import enmasse.controller.model.Destination;
 
 import java.io.IOException;

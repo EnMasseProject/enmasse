@@ -16,7 +16,6 @@
 
 package enmasse.controller.api;
 
-import enmasse.controller.address.AddressSpace;
 import enmasse.controller.model.Destination;
 
 import java.util.LinkedHashSet;
