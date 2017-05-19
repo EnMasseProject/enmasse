@@ -53,14 +53,14 @@ public class AMQPServer extends AbstractVerticle {
     private void connectHandler(ProtonConnection connection) {
         connection.setContainer("configuration-service");
         connection.openHandler(conn -> {
-            log.info("Connection opened");
+            log.debug("Connection opened");
         }).closeHandler(conn -> {
             connection.close();
             connection.disconnect();
-            log.info("Connection closed");
+            log.debug("Connection closed");
         }).disconnectHandler(protonConnection -> {
             connection.disconnect();
-            log.info("Disconnected");
+            log.debug("Disconnected");
         }).open();
 
         connection.sessionOpenHandler(ProtonSession::open);
