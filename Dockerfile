@@ -8,7 +8,7 @@ RUN yum -y update  \
 
 RUN mkdir -p /opt/app-root/src/
 RUN cd /opt/app-root/src/
-RUN ["/bin/bash", "-c", "npm install debug && npm install rhea"]
+RUN ["/bin/bash", "-c", "npm install debug && npm install log4js && npm install rhea"]
 ARG version=latest
 
 ADD ragent-${version}.tar.gz /opt/app-root/src/

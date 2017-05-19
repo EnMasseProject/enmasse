@@ -18,6 +18,7 @@
 var amqp = require('rhea');
 var rtr = require('./router.js');
 var podwatch = require('./podwatch.js');
+var log = require("log4js").getLogger();
 
 var known_routers = {};
 var connected_routers = {};
@@ -74,7 +75,7 @@ function print_routers(routers) {
     for (var r in routers) {
         var router = routers[r];
         if (router) {
-            console.log('   ' + r + ' => ' + router.listeners);
+            log.info('   ' + r + ' => ' + router.listeners);
         }
     }
 }
@@ -104,10 +105,10 @@ function check_connectivity() {
 
 function check_router_connectors (router, all_routers) {
     if (router.is_ready_for_connectivity_check()) {
-        console.log('checking connectivity for ' + router.container_id);
+        log.info('checking connectivity for ' + router.container_id);
         router.check_connectors(all_routers || get_all_routers());
     } else {
-        console.log(router.container_id + ' not ready for connectivity check: ' + router.initial_provisioning_completed + ' ' + (router.connectors !== undefined));
+        log.info(router.container_id + ' not ready for connectivity check: ' + router.initial_provisioning_completed + ' ' + (router.connectors !== undefined));
     }
 }
 
@@ -122,7 +123,7 @@ function connected_routers_updated (router) {
 
 function router_disconnected (context) {
     delete connected_routers[context.connection.container_id];
-    console.log('router ' + context.connection.container_id + ' disconnected');
+    log.info('router ' + context.connection.container_id + ' disconnected');
     //update now, or wait a bit?
     //connected_routers_updated();
 }
@@ -132,19 +133,19 @@ function addresses_updated () {
         try {
             sync_router_addresses(connected_routers[r]);
         } catch (e) {
-            console.log('ERROR: failed to check addresses on router ' + r + ': ' + e + '; ' + addresses);
+            log.info('ERROR: failed to check addresses on router ' + r + ': ' + e + '; ' + addresses);
         }
     }
 }
 
 function sync_addresses (updated) {
-    console.log('updating addresses: ' + JSON.stringify(updated));
+    log.info('updating addresses: ' + JSON.stringify(updated));
     addresses = updated;
     addresses_updated();
 }
 
 function verify_addresses (expected) {
-    console.log('verifying addresses to match: ' + JSON.stringify(expected));
+    log.info('verifying addresses to match: ' + JSON.stringify(expected));
     for (var r in connected_routers) {
         if (!connected_routers[r].verify_addresses(expected)) {
             return false;
@@ -154,7 +155,7 @@ function verify_addresses (expected) {
 }
 
 function sync_router_addresses (router) {
-    console.log('updating addresses for ' + router.container_id);
+    log.info('updating addresses for ' + router.container_id);
     router.sync_addresses(addresses);
 }
 
@@ -179,14 +180,14 @@ function watch_pods(connection) {
             var agent_conn = amqp.connect(agent_conn_info);
             agent_conn.open_receiver('routers');
             agent_connections[pod_name] = agent_conn;
-            console.log('connecting to new agent ' + JSON.stringify(agent_conn_info));
+            log.info('connecting to new agent ' + JSON.stringify(agent_conn_info));
         }
     });
     watcher.on('removed', function (pods) {
         for (var pod_name in pods) {
             var conn = agent_connections[pod_name];
             if (conn !== undefined) {
-                console.log('disconnecting from agent ' + pod_name);
+                log.info('disconnecting from agent ' + pod_name);
                 conn.close();
             }
         }
@@ -218,12 +219,12 @@ function on_message(context) {
                 }
                 sync_addresses(content);
             } catch (e) {
-                console.log('ERROR: failed to parse addresses as JSON: ' + e + '; ' + context.message.body);
+                log.info('ERROR: failed to parse addresses as JSON: ' + e + '; ' + context.message.body);
             }
         } else if (body_type  === 'object') {
             sync_addresses(context.message.body);
         } else {
-            console.log('ERROR: unrecognised type for addresses: ' + body_type + ' ' + context.message.body);
+            log.info('ERROR: unrecognised type for addresses: ' + body_type + ' ' + context.message.body);
         }
     } else if (context.message.subject === 'health-check') {
         var request = context.message;
@@ -243,7 +244,7 @@ function on_message(context) {
         details.properties = connection_properties;
         amqp.connect();
     } else {
-        console.log('ERROR: unrecognised subject ' + context.message.subject);
+        log.info('ERROR: unrecognised subject ' + context.message.subject);
     }
 }
 
@@ -251,7 +252,7 @@ amqp.on('connection_open', function(context) {
     var product = get_product(context.connection);
     if (product === 'qpid-dispatch-router') {
         var r = rtr.connected(context.connection);
-        console.log('Router connected from ' + r.container_id);
+        log.info('Router connected from ' + r.container_id);
         connected_routers[r.container_id] = r;
         context.connection.on('disconnected', router_disconnected);//todo: wait for a bit?
         r.on('ready', function (router) {
