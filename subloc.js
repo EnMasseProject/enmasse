@@ -16,7 +16,7 @@
 'use strict';
 
 var Promise = require('bluebird');
-var log = require('log4js').getLogger();
+var log = require('log4js').getLogger("subloc");
 
 function SubscriptionLocator(pods) {
     this.pods = pods;
@@ -37,9 +37,9 @@ SubscriptionLocator.prototype.locate = function (subscription_id, topic) {
                             if (results[i][j].indexOf(subscription_id) >= 0) {
                                 address = topic + '/' + pod_list[i].name;
                                 found = true;
-                                log.info('matched result ' + i + ','  + j + ' of ' + results[i].length + ': ' + results[i][j]);
+                                log.debug('matched result ' + i + ','  + j + ' of ' + results[i].length + ': ' + results[i][j]);
                             } else {
-                                log.info('did not match result ' + i + ','  + j + ' of ' + results.length + ': ' + results[i][j]);
+                                log.debug('did not match result ' + i + ','  + j + ' of ' + results.length + ': ' + results[i][j]);
                             }
                         }
                         if (!found && (min === undefined || results[i].length < min)) {
@@ -47,7 +47,7 @@ SubscriptionLocator.prototype.locate = function (subscription_id, topic) {
                             address = topic + '/' + pod_list[i].name;
                         }
                     }
-                    log.info('resolved ' + subscription_id + ' on ' + topic + ' to ' + address);
+                    log.debug('resolved ' + subscription_id + ' on ' + topic + ' to ' + address);
                     resolve(address);
                 }
             ).catch (

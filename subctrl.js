@@ -16,7 +16,7 @@
 'use strict';
 
 var Promise = require('bluebird');
-var log = require('log4js').getLogger();
+var log = require('log4js').getLogger("subctrl");
 
 function SubscriptionControl(pods) {
     this.pods = pods;
@@ -104,7 +104,7 @@ function get_divert_name(subscription_id, topic, tag) {
 }
 
 SubscriptionControl.prototype.subscribe = function (subscription_id, topics) {
-    log.info('subscribing to ' + JSON.stringify(topics));
+    log.debug('subscribing to ' + JSON.stringify(topics));
     return ensure_queue(subscription_id, this.pods.pod_list()).then(
         function (pod) {
             return pod.broker.ensureConnectorService(subscription_id, subscription_id, subscription_id).then(

@@ -20,7 +20,7 @@ var config_service = require('./config_service.js');
 var Promise = require('bluebird');
 var amqp = require('rhea').create_container();
 var create_topic = require('./topic.js');
-var log = require('log4js').getLogger();
+var log = require('log4js').getLogger("subserv");
 
 var topics = {};
 
@@ -43,12 +43,12 @@ function addresses_updated(addresses) {
         if (is_topic(address)) {
             var topic = topics[name];
             if (topic === undefined) {
-                log.info('starting to watch pods for topic ' + name);
+                log.debug('starting to watch pods for topic ' + name);
                 topic = create_topic(name);
                 topic.watch_pods();
                 topics[name] = topic;
             } else {
-                log.info('already watching pods for topic ' + name);
+                log.debug('already watching pods for topic ' + name);
             }
         }
     }
@@ -148,7 +148,7 @@ function subreqs(input) {
             grouped[root][address] = input[address];
         }
     }
-    log.info('in subreqs(' + input + '): type=' + (typeof input) + ', grouped=' + JSON.stringify(grouped));
+    log.debug('in subreqs(' + input + '): type=' + (typeof input) + ', grouped=' + JSON.stringify(grouped));
     return Object.keys(grouped).map(
         function(key) {
             return {
@@ -160,15 +160,15 @@ function subreqs(input) {
 }
 
 function handle_control_message(context) {
-    log.info('received message: ' + context.message);
+    log.debug('received message: ' + context.message);
     if (context.message.to === SUBCTRL || (context.receiver.target && context.receiver.target.address === SUBCTRL)) {
         var subscription_id = context.message.correlation_id;
         var accept = function () {
-            log.info(request_string(context.message) + ' succeeded');
+            log.debug(request_string(context.message) + ' succeeded');
             context.delivery.accept();
         };
         var reject = function (e, code) {
-            log.info(request_string(context.message) + ' failed: ' + e);
+            log.debug(request_string(context.message) + ' failed: ' + e);
             context.delivery.reject({condition: code || 'amqp:internal-error', description: '' + e});
         };
         var reply = function (type, value) {
@@ -178,7 +178,7 @@ function handle_control_message(context) {
             accept();
         };
 
-        log.info(request_string(context.message));
+        log.debug(request_string(context.message));
         try {
             if (context.message.subject === 'list') {
                 Promise.all(Object.keys(topics).map(list.bind(null, subscription_id))).then(
@@ -203,7 +203,7 @@ function handle_control_message(context) {
             var topic = get_or_create_topic(context.receiver.target.address);
             topic.pods.update(context.message.body);
         } else {
-            log.info('Must specify topic as target address for messages with pods as subject');
+            log.warn('Must specify topic as target address for messages with pods as subject');
         }
     } else if (context.message.subject === 'addresses' || !context.message.subject) {
         var body_type = typeof context.message.body;
@@ -212,7 +212,7 @@ function handle_control_message(context) {
             try {
                 content = JSON.parse(context.message.body);
             } catch (e) {
-                log.info('ERROR: failed to parse addresses as JSON: ' + e + '; ' + context.message.body);
+                log.warn('ERROR: failed to parse addresses as JSON: ' + e + '; ' + context.message.body);
             }
             if (content) {
                 if (content.json !== undefined) {
@@ -232,7 +232,7 @@ function handle_control_message(context) {
         } else if (body_type  === 'object') {
             addresses_updated(context.message.body);
         } else {
-            log.info('ERROR: unrecognised type for addresses: ' + body_type + ' ' + context.message.body);
+            log.warn('ERROR: unrecognised type for addresses: ' + body_type + ' ' + context.message.body);
         }
     }
 }
@@ -250,7 +250,7 @@ amqp.on('sender_open', function (context) {
         context.sender.close({condition:'amqp:not-found', description:'unknown topic ' + source});
     } else {
         var subscription_id = context.sender.name;
-        log.info('got attach request from subscribing client: ' + topic.name + ' ' + subscription_id);
+        log.debug('got attach request from subscribing client: ' + topic.name + ' ' + subscription_id);
         var link = context.sender;
         topic.locator.locate(subscription_id, topic.name).then(
             function (address) {
@@ -266,10 +266,10 @@ amqp.on('sender_open', function (context) {
 });
 
 amqp.on('connection_open', function (context) {
-    log.info('connected ' + context.connection.container_id + ' [' + context.connection.options.id + ']');
+    log.debug('connected ' + context.connection.container_id + ' [' + context.connection.options.id + ']');
 });
 amqp.on('disconnected', function (context) {
-    log.info('disconnected ' + context.connection.container_id + ' [' + context.connection.options.id + ']');
+    log.debug('disconnected ' + context.connection.container_id + ' [' + context.connection.options.id + ']');
 });
 
 var connection_properties = {product:'subserv', container_id:process.env.HOSTNAME};
@@ -285,12 +285,12 @@ if (process.env.MESSAGING_SERVICE_HOST) {
     conn.open_receiver({autoaccept: false, source:SUBCTRL, target:SUBCTRL});
     sender = conn.open_sender({target:{}});
     conn.on('sender_open', function (context) {
-        log.info('opened anonymous sender');
+        log.debug('opened anonymous sender');
     });
 }
 
 var conn = config_service.connect(amqp, 'configuration-service');
 if (conn) {
-    log.info('opening link to configuration service...');
+    log.debug('opening link to configuration service...');
     conn.open_receiver('maas');
 }
