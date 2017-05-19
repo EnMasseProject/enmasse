@@ -1,8 +1,7 @@
 package enmasse.controller.instance;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import enmasse.config.LabelKeys;
-import enmasse.controller.common.Kubernetes;
+import enmasse.controller.instance.api.InstanceApi;
 import enmasse.controller.model.Instance;
 import enmasse.controller.model.InstanceId;
 import io.fabric8.kubernetes.api.model.ConfigMap;
@@ -37,13 +36,13 @@ public class InstanceController extends AbstractVerticle implements Watcher {
     private Watch configWatch;
     private final Map<InstanceId, Watch> instanceWatches = new HashMap<>();
     private final OpenShiftClient client;
-    private final Kubernetes kubernetes;
     private final InstanceFactory instanceFactory;
+    private final InstanceApi instanceApi;
 
-    public InstanceController(InstanceFactory instanceFactory, OpenShiftClient client, Kubernetes kubernetes) {
+    public InstanceController(InstanceFactory instanceFactory, OpenShiftClient client, InstanceApi instanceApi) {
         this.instanceFactory = instanceFactory;
         this.client = client;
-        this.kubernetes = kubernetes;
+        this.instanceApi = instanceApi;
     }
 
     public void start() {
@@ -99,11 +98,11 @@ public class InstanceController extends AbstractVerticle implements Watcher {
     }
 
     private Instance getInstance(String name) throws IOException {
-        return kubernetes.getInstanceWithId(InstanceId.withId(name)).get();
+        return instanceApi.getInstanceWithId(InstanceId.withId(name)).get();
     }
 
     private void putInstance(Instance instance) throws Exception {
-        kubernetes.createInstance(instance);
+        instanceApi.createInstance(instance);
     }
 
     private void routeEventReceived(Action action, Route route) throws Exception {
@@ -149,13 +148,13 @@ public class InstanceController extends AbstractVerticle implements Watcher {
 
     private void configEventReceived(Action action, ConfigMap resource) throws Exception {
         if (action.equals(Action.ADDED)) {
-            Instance instance = kubernetes.getInstanceFromConfig(resource);
+            Instance instance = instanceApi.getInstanceFromConfig(resource);
             instanceFactory.create(instance);
             watchInstance(instance);
         } else if (action.equals(Action.MODIFIED)) {
             // We are the ones modifying, so ignore
         } else if (action.equals(Action.DELETED)) {
-            Instance instance = kubernetes.getInstanceFromConfig(resource);
+            Instance instance = instanceApi.getInstanceFromConfig(resource);
             unwatchInstance(instance);
             instanceFactory.delete(instance);
         }

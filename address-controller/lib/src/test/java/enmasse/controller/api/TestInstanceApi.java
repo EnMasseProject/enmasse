@@ -1,17 +1,20 @@
 package enmasse.controller.api;
 
-import enmasse.controller.api.instance.InstanceApi;
+import enmasse.controller.address.api.DestinationApi;
+import enmasse.controller.instance.api.InstanceApi;
 import enmasse.controller.model.Instance;
 import enmasse.controller.model.InstanceId;
+import io.fabric8.kubernetes.api.model.ConfigMap;
 
 import java.util.*;
 
 public class TestInstanceApi implements InstanceApi {
     Map<InstanceId, Instance> instances = new HashMap<>();
+    Map<InstanceId, DestinationApi> destinationApiMap = new LinkedHashMap<>();
     public boolean throwException = false;
 
     @Override
-    public Optional<Instance> get(InstanceId instanceId) {
+    public Optional<Instance> getInstanceWithId(InstanceId instanceId) {
         if (throwException) {
             throw new RuntimeException("foo");
         }
@@ -19,7 +22,7 @@ public class TestInstanceApi implements InstanceApi {
     }
 
     @Override
-    public Optional<Instance> get(String uuid) {
+    public Optional<Instance> getInstanceWithUuid(String uuid) {
         for (Instance i : instances.values()) {
             if (i.uuid().filter(u -> uuid.equals(u)).isPresent()) {
                 return Optional.of(i);
@@ -29,7 +32,7 @@ public class TestInstanceApi implements InstanceApi {
     }
 
     @Override
-    public void create(Instance instance) {
+    public void createInstance(Instance instance) {
         if (throwException) {
             throw new RuntimeException("foo");
         }
@@ -37,7 +40,7 @@ public class TestInstanceApi implements InstanceApi {
     }
 
     @Override
-    public void delete(Instance instance) {
+    public void deleteInstance(Instance instance) {
         if (throwException) {
             throw new RuntimeException("foo");
         }
@@ -45,10 +48,23 @@ public class TestInstanceApi implements InstanceApi {
     }
 
     @Override
-    public Set<Instance> list() {
+    public Set<Instance> listInstances() {
         if (throwException) {
             throw new RuntimeException("foo");
         }
         return new LinkedHashSet<>(instances.values());
+    }
+
+    @Override
+    public Instance getInstanceFromConfig(ConfigMap resource) {
+        return enmasse.controller.instance.v3.Instance.fromJson(resource.getData().get("config.json"));
+    }
+
+    @Override
+    public DestinationApi withInstance(InstanceId id) {
+        if (!destinationApiMap.containsKey(id)) {
+            destinationApiMap.put(id, new TestDestinationApi());
+        }
+        return destinationApiMap.get(id);
     }
 }

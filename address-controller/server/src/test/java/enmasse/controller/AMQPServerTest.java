@@ -13,7 +13,6 @@ import org.apache.qpid.proton.message.Message;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.internal.util.collections.Sets;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -32,22 +31,19 @@ import static org.junit.Assert.assertTrue;
 
 public class AMQPServerTest {
     private Vertx vertx;
-    private TestAddressManager testAddressManager;
-    private TestAddressSpace testAddressSpace;
+    private TestInstanceApi instanceApi;
     private FlavorManager testRepository;
     private int port;
 
     @Before
     public void setup() throws InterruptedException {
         vertx = Vertx.vertx();
-        testAddressSpace = new TestAddressSpace();
+        instanceApi = new TestInstanceApi();
         InstanceId instanceId = InstanceId.withId("myinstance");
-        testAddressManager = new TestAddressManager().addManager(instanceId, testAddressSpace);
         testRepository = new FlavorManager();
-        TestInstanceApi testInstanceManager = new TestInstanceApi();
-        testInstanceManager.create(new Instance.Builder(instanceId).build());
+        instanceApi.createInstance(new Instance.Builder(instanceId).build());
         CountDownLatch latch = new CountDownLatch(1);
-        AMQPServer server = new AMQPServer(instanceId, testAddressManager, testInstanceManager, testRepository, 0);
+        AMQPServer server = new AMQPServer(instanceId, instanceApi, testRepository, 0);
         vertx.deployVerticle(server, c -> {
             latch.countDown();
         });
@@ -74,8 +70,8 @@ public class AMQPServerTest {
     @Test
     public void testAddressingService() throws InterruptedException, ExecutionException, TimeoutException, IOException {
         Destination destination =
-                new Destination("addr1", "group0", false, false, Optional.empty(), Optional.empty());
-        testAddressSpace.setDestinations(Sets.newSet(destination));
+                new Destination("addr1", "group0", false, false, Optional.empty(), Optional.empty(), new Destination.Status(false));
+        instanceApi.withInstance(InstanceId.withId("myinstance")).createDestination(destination);
 
         SyncRequestClient client = new SyncRequestClient("localhost", port, vertx);
         Message request = Message.Factory.create();

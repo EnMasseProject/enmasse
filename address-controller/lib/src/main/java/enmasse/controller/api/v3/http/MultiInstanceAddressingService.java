@@ -2,7 +2,7 @@ package enmasse.controller.api.v3.http;
 
 import enmasse.controller.address.v3.Address;
 import enmasse.controller.address.v3.AddressList;
-import enmasse.controller.api.v3.AddressApi;
+import enmasse.controller.api.v3.AddressApiHelper;
 import enmasse.controller.model.InstanceId;
 
 import javax.ws.rs.*;
@@ -12,7 +12,7 @@ import javax.ws.rs.core.Response;
 
 @Path("/v3/instance/{instance}/address")
 public class MultiInstanceAddressingService extends AddressingServiceBase {
-    public MultiInstanceAddressingService(@Context AddressApi addressApi) {
+    public MultiInstanceAddressingService(@Context AddressApiHelper addressApi) {
         super(addressApi);
     }
 

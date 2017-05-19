@@ -14,66 +14,54 @@
  * limitations under the License.
  */
 
-package enmasse.controller;
+package enmasse.controller.api;
 
+import enmasse.controller.address.api.DestinationApi;
 import enmasse.controller.model.Destination;
 
 import java.util.LinkedHashSet;
+import java.util.Optional;
 import java.util.Set;
 
-public class TestAddressSpace implements AddressSpace {
+public class TestDestinationApi implements DestinationApi {
     public boolean throwException = false;
 
     private final Set<Destination> destinations = new LinkedHashSet<>();
 
     @Override
-    public Set<Destination> addDestination(Destination destination) {
+    public void createDestination(Destination destination) {
         if (throwException) {
             throw new RuntimeException("exception");
         }
         destinations.add(destination);
-        return new LinkedHashSet<>(destinations);
     }
 
     @Override
-    public Set<Destination> deleteDestination(String address) {
+    public void deleteDestination(Destination destination) {
         if (throwException) {
             throw new RuntimeException("exception");
         }
-        destinations.removeIf(destination -> destination.address().equals(address));
-        return new LinkedHashSet<>(destinations);
+        destinations.remove(destination);
     }
 
     @Override
-    public Set<Destination> deleteDestinationWithUuid(String uuid) {
+    public Optional<Destination> getDestinationWithAddress(String address) {
         if (throwException) {
             throw new RuntimeException("exception");
         }
-        destinations.removeIf(destination -> destination.uuid().filter(u -> u.equals(uuid)).isPresent());
-        return new LinkedHashSet<>(destinations);
+        return destinations.stream().filter(d -> d.address().equals(address)).findAny();
     }
 
     @Override
-    public Set<Destination> setDestinations(Set<Destination> destinations) {
+    public Optional<Destination> getDestinationWithUuid(String uuid) {
         if (throwException) {
             throw new RuntimeException("exception");
         }
-        this.destinations.clear();
-        this.destinations.addAll(destinations);
-        return new LinkedHashSet<>(destinations);
+        return destinations.stream().filter(d -> d.uuid().isPresent() && d.uuid().get().equals(uuid)).findAny();
     }
 
     @Override
-    public Set<Destination> addDestinations(Set<Destination> destinations) {
-        if (throwException) {
-            throw new RuntimeException("exception");
-        }
-        this.destinations.addAll(destinations);
-        return new LinkedHashSet<>(this.destinations);
-    }
-
-    @Override
-    public Set<Destination> getDestinations() {
+    public Set<Destination> listDestinations() {
         if (throwException) {
             throw new RuntimeException("exception");
         }

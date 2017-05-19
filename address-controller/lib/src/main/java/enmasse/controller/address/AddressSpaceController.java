@@ -1,6 +1,7 @@
 package enmasse.controller.address;
 
 import enmasse.config.LabelKeys;
+import enmasse.controller.address.api.DestinationApi;
 import enmasse.controller.common.DestinationClusterGenerator;
 import enmasse.controller.common.Kubernetes;
 import enmasse.controller.model.Destination;
@@ -23,13 +24,14 @@ import java.util.stream.Collectors;
  */
 public class AddressSpaceController extends AbstractVerticle implements Watcher<ConfigMap> {
     private static final Logger log = LoggerFactory.getLogger(AddressController.class);
+    private final DestinationApi destinationApi;
     private final Kubernetes kubernetes;
     private final OpenShiftClient client;
     private final DestinationClusterGenerator clusterGenerator;
     private Watch addressWatch;
 
-
-    public AddressSpaceController(Kubernetes kubernetes, OpenShiftClient client, DestinationClusterGenerator clusterGenerator) {
+    public AddressSpaceController(DestinationApi destinationApi, Kubernetes kubernetes, OpenShiftClient client, DestinationClusterGenerator clusterGenerator) {
+        this.destinationApi = destinationApi;
         this.kubernetes = kubernetes;
         this.client = client;
         this.clusterGenerator = clusterGenerator;
@@ -84,7 +86,7 @@ public class AddressSpaceController extends AbstractVerticle implements Watcher<
     private void updateDestinations() {
 
         List<DestinationCluster> clusterList = kubernetes.listClusters();
-        Set<Destination> newDestinations = kubernetes.listDestinations();
+        Set<Destination> newDestinations = destinationApi.listDestinations();
         Map<String, Set<Destination>> destinationByGroup = newDestinations.stream().collect(Collectors.groupingBy(Destination::group, Collectors.toSet()));
         validateDestinationGroups(destinationByGroup);
 

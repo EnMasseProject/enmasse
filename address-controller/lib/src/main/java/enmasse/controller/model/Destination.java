@@ -30,8 +30,9 @@ public final class Destination {
     private final boolean multicast;
     private final Optional<String> flavor;
     private final Optional<String> uuid;
+    private final Status status;
 
-    public Destination(String address, String group, boolean storeAndForward, boolean multicast, Optional<String> flavor, Optional<String> uuid) {
+    public Destination(String address, String group, boolean storeAndForward, boolean multicast, Optional<String> flavor, Optional<String> uuid, Status status) {
         Objects.requireNonNull(flavor);
         Objects.requireNonNull(uuid);
         this.group = group;
@@ -40,6 +41,7 @@ public final class Destination {
         this.multicast = multicast;
         this.flavor = flavor;
         this.uuid = uuid;
+        this.status = status;
     }
 
     public String address() {
@@ -62,6 +64,10 @@ public final class Destination {
 
     public Optional<String> uuid() {
         return uuid;
+    }
+
+    public Status status() {
+        return status;
     }
 
     @Override
@@ -109,6 +115,7 @@ public final class Destination {
         private boolean multicast = false;
         private Optional<String> flavor = Optional.empty();
         private Optional<String> uuid = Optional.empty();
+        private Status status = new Status(false);
 
         public Builder(String address, String group) {
             this.address = address;
@@ -147,12 +154,44 @@ public final class Destination {
             return this;
         }
 
+        public Builder status(Status status) {
+            this.status = status;
+            return this;
+        }
+
         public Optional<String> flavor() {
             return flavor;
         }
 
         public Destination build() {
-            return new Destination(address, group, storeAndForward, multicast, flavor, uuid);
+            return new Destination(address, group, storeAndForward, multicast, flavor, uuid, status);
+        }
+    }
+
+    public static class Status {
+        private final boolean isReady;
+
+        public Status(boolean isReady) {
+            this.isReady = isReady;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            Status status = (Status) o;
+
+            return isReady == status.isReady;
+        }
+
+        @Override
+        public int hashCode() {
+            return (isReady ? 1 : 0);
+        }
+
+        public boolean isReady() {
+            return isReady;
         }
     }
 }

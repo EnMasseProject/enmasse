@@ -8,8 +8,9 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import enmasse.controller.api.osb.v2.catalog.Plan;
+import enmasse.controller.api.v3.UuidApi;
 import enmasse.controller.flavor.FlavorRepository;
-import enmasse.controller.instance.InstanceManager;
+import enmasse.controller.instance.api.InstanceApi;
 import enmasse.controller.model.Destination;
 import enmasse.controller.model.Flavor;
 import enmasse.controller.model.Instance;
@@ -21,26 +22,24 @@ public abstract class OSBServiceBase {
 
     protected final Logger log = LoggerFactory.getLogger(getClass().getName());
 
-    private final InstanceManager instanceManager;
-    private final AddressManager addressManager;
+    private final InstanceApi instanceApi;
+    private final UuidApi uuidApi;
     private final FlavorRepository flavorRepository;
 
-    public OSBServiceBase(InstanceManager instanceManager, AddressManager addressManager, FlavorRepository repository) {
-        this.instanceManager = instanceManager;
-        this.addressManager = addressManager;
+    public OSBServiceBase(InstanceApi instanceApi, UuidApi uuidApi, FlavorRepository repository) {
+        this.instanceApi = instanceApi;
+        this.uuidApi = uuidApi;
         this.flavorRepository = repository;
     }
 
     protected Optional<Instance> findInstanceByDestinationUuid(String destinationUuid) {
-        return instanceManager.list().stream()
+        return instanceApi.listInstances().stream()
                 .filter(instance -> findDestination(instance, destinationUuid).isPresent())
                 .findAny();
     }
 
     protected Optional<Destination> findDestination(Instance maasInstance, String destinationUuid) {
-        return getAddressSpace(maasInstance)
-                .getDestinations()
-                .stream()
+        return instanceApi.withInstance(maasInstance.id()).listDestinations().stream()
                 .filter(dest -> destinationUuid.equals(dest.uuid().orElse(null)))
                 .findAny();
     }
@@ -48,14 +47,14 @@ public abstract class OSBServiceBase {
     protected void provisionDestination(Instance instance, Destination destination) {
         log.info("Creating destination {} in group {} of MaaS instance {} (namespace {})",
                 destination.address(), destination.group(), instance.id().getId(), instance.id().getNamespace());
-        getAddressSpace(instance).addDestination(destination);
+        instanceApi.withInstance(instance.id()).createDestination(destination);
     }
 
     protected Instance getOrCreateInstance(InstanceId instanceId) throws Exception {
-        Optional<Instance> instance = instanceManager.get(instanceId);
+        Optional<Instance> instance = instanceApi.getInstanceWithId(instanceId);
         if (!instance.isPresent()) {
             Instance i = new Instance.Builder(instanceId).build();
-            instanceManager.create(i);
+            instanceApi.createInstance(i);
             log.info("Created MaaS instance {}", i.id());
             return i;
         } else {
@@ -64,22 +63,11 @@ public abstract class OSBServiceBase {
     }
 
     protected boolean deleteDestinationByUuid(String destinationUuid) {
-        log.info("Deleting destination with UUID {}", destinationUuid);
-        for (Instance instance : instanceManager.list()) {
-            Optional<Destination> destination = findDestination(instance, destinationUuid);
-            if (destination.isPresent()) {
-                log.info("Destination found in MaaS instance {} (namespace {}). Deleting it now.",
-                        instance.id().getId(), instance.id().getNamespace());
-                getAddressSpace(instance).deleteDestination(destination.get().address());
-                return true;
-            }
-        }
-        log.info("Destination with UUID {} not found in any MaaS instance", destinationUuid);
-        return false;
+        return uuidApi.deleteResource(destinationUuid);
     }
 
-    protected AddressSpace getAddressSpace(Instance maasInstance) {
-        return addressManager.getAddressSpace(maasInstance);
+    protected boolean isAddressReady(Instance maasInstance, Destination destination) throws Exception {
+        return maasInstance.status().isReady() && destination.status().isReady();
     }
 
     protected List<Plan> getPlans(ServiceType serviceType) {

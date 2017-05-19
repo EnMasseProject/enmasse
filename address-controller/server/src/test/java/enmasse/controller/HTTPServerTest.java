@@ -25,7 +25,6 @@ import io.vertx.core.json.JsonObject;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.internal.util.collections.Sets;
 
 import java.util.Collections;
 import java.util.Optional;
@@ -39,22 +38,18 @@ import static org.junit.Assert.assertTrue;
 public class HTTPServerTest {
 
     private Vertx vertx;
-    private TestAddressManager testAddressManager;
-    private TestInstanceApi testInstanceManager;
-    private TestAddressSpace testAddressSpace;
+    private TestInstanceApi instanceApi;
     private FlavorManager testRepository;
 
     @Before
     public void setup() throws InterruptedException {
         vertx = Vertx.vertx();
-        testAddressSpace = new TestAddressSpace();
-        testInstanceManager = new TestInstanceApi();
+        instanceApi = new TestInstanceApi();
         InstanceId instanceId = InstanceId.withId("myinstance");
-        testAddressManager = new TestAddressManager().addManager(instanceId, testAddressSpace);
         testRepository = new FlavorManager();
-        testInstanceManager.create(new Instance.Builder(instanceId).build());
+        instanceApi.createInstance(new Instance.Builder(instanceId).build());
         CountDownLatch latch = new CountDownLatch(1);
-        vertx.deployVerticle(new HTTPServer(instanceId, testAddressManager, testInstanceManager, testRepository), c -> {
+        vertx.deployVerticle(new HTTPServer(instanceId, instanceApi, testRepository), c -> {
             latch.countDown();
         });
         latch.await(1, TimeUnit.MINUTES);
@@ -67,8 +62,8 @@ public class HTTPServerTest {
 
     @Test
     public void testAddressingApi() throws InterruptedException {
-        testAddressSpace.setDestinations(Sets.newSet(
-                new Destination("addr1", "group0", false, false, Optional.empty(), Optional.empty())));
+        instanceApi.withInstance(InstanceId.withId("myinstance")).createDestination(
+                new Destination("addr1", "group0", false, false, Optional.empty(), Optional.empty(), new Destination.Status(false)));
         HttpClient client = vertx.createHttpClient();
         try {
             CountDownLatch latch = new CountDownLatch(2);
@@ -133,7 +128,7 @@ public class HTTPServerTest {
         Instance instance = new Instance.Builder(InstanceId.withId("myinstance"))
                 .messagingHost(Optional.of("messaging.example.com"))
                 .build();
-        testInstanceManager.create(instance);
+        instanceApi.createInstance(instance);
 
         HttpClient client = vertx.createHttpClient();
         try {

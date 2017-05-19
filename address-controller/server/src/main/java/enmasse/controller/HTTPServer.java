@@ -18,15 +18,18 @@ package enmasse.controller;
 
 import enmasse.controller.api.osb.v2.bind.OSBBindingService;
 import enmasse.controller.api.osb.v2.catalog.OSBCatalogService;
+import enmasse.controller.api.osb.v2.lastoperation.OSBLastOperationService;
 import enmasse.controller.api.osb.v2.provision.OSBProvisioningService;
-import enmasse.controller.api.v3.AddressApi;
+import enmasse.controller.api.v3.AddressApiHelper;
+import enmasse.controller.api.v3.UuidApi;
 import enmasse.controller.api.v3.http.AddressingService;
 import enmasse.controller.api.v3.http.FlavorsService;
 import enmasse.controller.api.v3.http.InstanceService;
 import enmasse.controller.api.v3.http.MultiInstanceAddressingService;
+import enmasse.controller.common.Kubernetes;
 import enmasse.controller.common.exceptionmapping.DefaultExceptionMapper;
 import enmasse.controller.flavor.FlavorRepository;
-import enmasse.controller.api.instance.InstanceApi;
+import enmasse.controller.instance.api.InstanceApi;
 import enmasse.controller.model.InstanceId;
 import io.vertx.core.AbstractVerticle;
 import org.jboss.resteasy.plugins.server.vertx.VertxRequestHandler;
@@ -40,14 +43,12 @@ import org.slf4j.LoggerFactory;
 public class HTTPServer extends AbstractVerticle {
     public static final int PORT = 8080;
     private static final Logger log = LoggerFactory.getLogger(HTTPServer.class.getName());
-    private final AddressManager addressManager;
     private final InstanceApi instanceApi;
     private final FlavorRepository flavorRepository;
     private final InstanceId globalInstance;
 
-    public HTTPServer(InstanceId globalInstance, AddressManager addressManager, InstanceApi instanceApi, FlavorRepository flavorRepository) {
+    public HTTPServer(InstanceId globalInstance, InstanceApi instanceApi, FlavorRepository flavorRepository) {
         this.globalInstance = globalInstance;
-        this.addressManager = addressManager;
         this.instanceApi = instanceApi;
         this.flavorRepository = flavorRepository;
     }
@@ -59,14 +60,17 @@ public class HTTPServer extends AbstractVerticle {
 
         deployment.getProviderFactory().registerProvider(DefaultExceptionMapper.class);
 
-        deployment.getRegistry().addSingletonResource(new AddressingService(globalInstance, new AddressApi(instanceApi, addressManager)));
+        AddressApiHelper addressApi = new AddressApiHelper(instanceApi);
+        deployment.getRegistry().addSingletonResource(new AddressingService(globalInstance, addressApi));
         deployment.getRegistry().addSingletonResource(new InstanceService(instanceApi));
-        deployment.getRegistry().addSingletonResource(new MultiInstanceAddressingService(new AddressApi(instanceApi, addressManager)));
+        deployment.getRegistry().addSingletonResource(new MultiInstanceAddressingService(addressApi));
         deployment.getRegistry().addSingletonResource(new FlavorsService(flavorRepository));
 
-        deployment.getRegistry().addSingletonResource(new OSBCatalogService(instanceApi, addressManager, flavorRepository));
-        deployment.getRegistry().addSingletonResource(new OSBProvisioningService(instanceApi, addressManager, flavorRepository));
-        deployment.getRegistry().addSingletonResource(new OSBBindingService(instanceApi, addressManager, flavorRepository));
+        UuidApi uuidApi = new UuidApi(instanceApi);
+        deployment.getRegistry().addSingletonResource(new OSBCatalogService(instanceApi, uuidApi, flavorRepository));
+        deployment.getRegistry().addSingletonResource(new OSBProvisioningService(instanceApi, uuidApi, flavorRepository));
+        deployment.getRegistry().addSingletonResource(new OSBBindingService(instanceApi, uuidApi, flavorRepository));
+        deployment.getRegistry().addSingletonResource(new OSBLastOperationService(instanceApi, uuidApi, flavorRepository));
 
         vertx.createHttpServer()
                 .requestHandler(new VertxRequestHandler(vertx, deployment))

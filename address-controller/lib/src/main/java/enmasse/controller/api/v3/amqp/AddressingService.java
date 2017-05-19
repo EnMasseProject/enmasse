@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import enmasse.controller.address.v3.Address;
 import enmasse.controller.address.v3.AddressList;
-import enmasse.controller.api.v3.AddressApi;
+import enmasse.controller.api.v3.AddressApiHelper;
 import enmasse.controller.api.v3.ApiResource;
 import enmasse.controller.model.InstanceId;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
@@ -29,9 +29,9 @@ public class AddressingService {
     private static final String METHOD_DELETE = "DELETE";
 
     private final InstanceId instance;
-    private final AddressApi addressApi;
+    private final AddressApiHelper addressApi;
 
-    public AddressingService(InstanceId instance, AddressApi addressApi) {
+    public AddressingService(InstanceId instance, AddressApiHelper addressApi) {
         this.instance = instance;
         this.addressApi = addressApi;
     }

@@ -5,7 +5,9 @@ import javax.ws.rs.core.Response;
 
 public class ConflictException extends ClientErrorException {
 
-    public ConflictException(String message) {
-        super(message, Response.Status.CONFLICT);
+    public static final Response.Status STATUS = Response.Status.CONFLICT;
+
+    public ConflictException(String message, Response response) {
+        super(message, response);
     }
 }

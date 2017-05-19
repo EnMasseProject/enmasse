@@ -19,10 +19,12 @@ package enmasse.controller.common;
 import enmasse.config.AddressConfigKeys;
 import enmasse.config.LabelKeys;
 import enmasse.controller.address.DestinationCluster;
+import enmasse.controller.instance.api.InstanceApi;
+import enmasse.controller.instance.api.InstanceApiImpl;
 import enmasse.controller.model.Destination;
-import enmasse.controller.model.Instance;
 import enmasse.controller.model.InstanceId;
 import io.fabric8.kubernetes.api.model.*;
+import io.fabric8.kubernetes.api.model.extensions.Deployment;
 import io.fabric8.kubernetes.client.dsl.Resource;
 import io.fabric8.openshift.api.model.DoneablePolicyBinding;
 import io.fabric8.openshift.api.model.PolicyBinding;
@@ -32,8 +34,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -246,7 +254,7 @@ public class KubernetesHelper implements Kubernetes {
     }
 
     @Override
-    public String createInstanceSecret(InstanceId instanceId) throws IOException {
+    public String createInstanceSecret(InstanceId instanceId) {
         String secretName = instanceId.getId() + "-certs";
         Secret secret = client.secrets().inNamespace(instanceId.getNamespace()).createNew()
                 .editOrNewMetadata()
@@ -263,131 +271,29 @@ public class KubernetesHelper implements Kubernetes {
         return secretName;
     }
 
-    @Override
-    public Optional<Destination> getDestinationWithAddress(String address) {
-        ConfigMap map = client.configMaps().inNamespace(instance.getNamespace()).withName(Kubernetes.sanitizeName(Kubernetes.sanitizeName("address-config-" + address))).get();
-        if (map == null) {
-            return Optional.empty();
-        } else {
-            return Optional.of(getDestinationFromConfig(map));
-        }
+    public Set<Deployment> getReadyDeployments() {
+        return client.extensions().deployments().inNamespace(instance.getNamespace()).list().getItems().stream()
+                .filter(KubernetesHelper::isReady)
+                .collect(Collectors.toSet());
     }
 
     @Override
-    public Optional<Destination> getDestinationWithUuid(String uuid) {
-        Map<String, String> labels = new LinkedHashMap<>();
-        labels.put(LabelKeys.TYPE, "address-config");
-        labels.put(LabelKeys.UUID, uuid);
-
-        ConfigMapList list = client.configMaps().inNamespace(instance.getNamespace()).withLabels(labels).list();
-        if (list.getItems().isEmpty()) {
-            return Optional.empty();
-        } else {
-            return Optional.of(getDestinationFromConfig(list.getItems().get(0)));
-        }
+    public boolean isDestinationReady(Destination destination) {
+        return listClusters().stream()
+                .filter(dc -> dc.getDestinations().contains(destination))
+                .anyMatch(KubernetesHelper::areAllDeploymentsReady);
     }
 
-    public Destination getDestinationFromConfig(ConfigMap configMap) {
-        Map<String, String> data = configMap.getData();
-
-        Destination.Builder destBuilder = new Destination.Builder(data.get(AddressConfigKeys.ADDRESS), data.get(AddressConfigKeys.GROUP_ID));
-        destBuilder.storeAndForward(Boolean.parseBoolean(data.get(AddressConfigKeys.STORE_AND_FORWARD)));
-        destBuilder.multicast(Boolean.parseBoolean(data.get(AddressConfigKeys.MULTICAST)));
-        destBuilder.flavor(Optional.ofNullable(data.get(AddressConfigKeys.FLAVOR)));
-        destBuilder.uuid(Optional.ofNullable(data.get(AddressConfigKeys.UUID)));
-        return destBuilder.build();
+    public static boolean isDeployment(HasMetadata res) {
+        return res.getKind().equals("Deployment");  // TODO: is there an existing constant for this somewhere?
     }
 
-    @Override
-    public Set<Destination> listDestinations() {
-        Map<String, String> labels = new LinkedHashMap<>();
-        labels.put(LabelKeys.TYPE, "address-config");
-
-        Set<Destination> destinations = new LinkedHashSet<>();
-        ConfigMapList list = client.configMaps().inNamespace(instance.getNamespace()).withLabels(labels).list();
-        for (ConfigMap config : list.getItems()) {
-            destinations.add(getDestinationFromConfig(config));
-        }
-        return destinations;
+    private static boolean areAllDeploymentsReady(DestinationCluster dc) {
+        return dc.getResources().getItems().stream().filter(KubernetesHelper::isDeployment).allMatch(d -> isReady((Deployment) d));
     }
 
-    @Override
-    public void createDestination(Destination destination) {
-        String name = Kubernetes.sanitizeName("address-config-" + destination.address());
-        ConfigMapBuilder builder = new ConfigMapBuilder()
-                .withNewMetadata()
-                .withName(name)
-                .addToLabels(LabelKeys.GROUP_ID, Kubernetes.sanitizeName(destination.group()))
-                .addToLabels(LabelKeys.TYPE, "address-config")
-                .addToLabels(LabelKeys.INSTANCE, Kubernetes.sanitizeName(instance.getId()))
-                .endMetadata();
-
-        builder.addToData(AddressConfigKeys.ADDRESS, destination.address());
-        builder.addToData(AddressConfigKeys.GROUP_ID, destination.group());
-        builder.addToData(AddressConfigKeys.STORE_AND_FORWARD, String.valueOf(destination.storeAndForward()));
-        builder.addToData(AddressConfigKeys.MULTICAST, String.valueOf(destination.multicast()));
-        destination.flavor().ifPresent(f -> builder.addToData(AddressConfigKeys.FLAVOR, f));
-        destination.uuid().ifPresent(f -> builder.addToData(AddressConfigKeys.UUID, f));
-        create(builder.build());
-    }
-
-    @Override
-    public void deleteDestination(Destination destination) {
-        String name = Kubernetes.sanitizeName("address-config-" + destination.address());
-        client.configMaps().inNamespace(instance.getNamespace()).withName(name).delete();
-    }
-
-    @Override
-    public Optional<Instance> getInstanceWithId(InstanceId instanceId) throws IOException {
-        ConfigMap map = client.configMaps().withName(Kubernetes.sanitizeName("instance-config-" + instanceId.getId())).get();
-        if (map == null) {
-            return Optional.empty();
-        } else {
-            return Optional.of(getInstanceFromConfig(map));
-        }
-    }
-
-    @Override
-    public Optional<Instance> getInstanceWithUuid(String uuid) throws IOException {
-        ConfigMapList list = client.configMaps().withLabel(LabelKeys.UUID, uuid).list();
-        if (list.getItems().isEmpty()) {
-            return Optional.empty();
-        } else {
-            return Optional.of(getInstanceFromConfig(list.getItems().get(0)));
-        }
-    }
-
-    @Override
-    public void createInstance(Instance instance) throws Exception {
-        String name = Kubernetes.sanitizeName("instance-config-" + instance.id().getId());
-        ConfigMapBuilder builder = new ConfigMapBuilder()
-                .withNewMetadata()
-                .withName(name)
-                .addToLabels(LabelKeys.TYPE, "instance-config")
-                .endMetadata();
-
-        builder.addToData("config.json", enmasse.controller.instance.v3.Instance.toJson(instance));
-        create(builder.build());
-    }
-
-    @Override
-    public void deleteInstance(Instance instance) {
-        String name = Kubernetes.sanitizeName("instance-config-" + instance.id().getId());
-        client.configMaps().withName(name).delete();
-    }
-
-    @Override
-    public Set<Instance> listInstances() throws IOException {
-        Set<Instance> instances = new LinkedHashSet<>();
-        ConfigMapList list = client.configMaps().withLabel(LabelKeys.TYPE, "instance-config").list();
-        for (ConfigMap map : list.getItems()) {
-            instances.add(getInstanceFromConfig(map));
-        }
-        return instances;
-    }
-
-    @Override
-    public Instance getInstanceFromConfig(ConfigMap map) throws IOException {
-        return enmasse.controller.instance.v3.Instance.fromJson(map.getData().get("config.json"));
+    private static boolean isReady(Deployment deployment) {
+        Integer unavailableReplicas = deployment.getStatus().getUnavailableReplicas();
+        return unavailableReplicas == null || unavailableReplicas == 0;
     }
 }

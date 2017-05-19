@@ -2,7 +2,7 @@ package enmasse.controller.api.v3.http;
 
 import enmasse.controller.address.v3.Address;
 import enmasse.controller.address.v3.AddressList;
-import enmasse.controller.api.v3.AddressApi;
+import enmasse.controller.api.v3.AddressApiHelper;
 import enmasse.controller.model.InstanceId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,9 +12,9 @@ import java.util.Optional;
 
 public class AddressingServiceBase {
     private static final Logger log = LoggerFactory.getLogger(AddressingServiceBase.class.getName());
-    private final AddressApi addressApi;
+    private final AddressApiHelper addressApi;
 
-    public AddressingServiceBase(AddressApi addressApi) {
+    public AddressingServiceBase(AddressApiHelper addressApi) {
         this.addressApi = addressApi;
     }
 

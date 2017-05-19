@@ -1,8 +1,9 @@
 package enmasse.controller.api.v3;
 
+import enmasse.controller.address.api.DestinationApi;
 import enmasse.controller.address.v3.Address;
 import enmasse.controller.address.v3.AddressList;
-import enmasse.controller.common.Kubernetes;
+import enmasse.controller.instance.api.InstanceApi;
 import enmasse.controller.model.Destination;
 import enmasse.controller.model.Instance;
 import enmasse.controller.model.InstanceId;
@@ -14,35 +15,35 @@ import java.util.Set;
 /**
  * This is a handler for doing operations on the addressing manager that works independent of AMQP and HTTP.
  */
-public class AddressApi {
-    private final Kubernetes kubernetes;
+public class AddressApiHelper {
+    private final InstanceApi instanceApi;
 
-    public AddressApi(Kubernetes kubernetes) {
-        this.kubernetes = kubernetes;
+    public AddressApiHelper(InstanceApi instanceApi) {
+        this.instanceApi = instanceApi;
     }
 
     public AddressList getAddresses(InstanceId instanceId) throws IOException {
         return AddressList.fromSet(
-                kubernetes.withInstance(instanceId)
+                instanceApi.withInstance(instanceId)
                 .listDestinations());
     }
 
     public AddressList putAddresses(InstanceId instanceId, AddressList addressList) throws Exception {
         Instance instance = getOrCreateInstance(instanceId);
-        Kubernetes instanceKube = kubernetes.withInstance(instance.id());
-        Set<Destination> toRemove = instanceKube.listDestinations();
+        DestinationApi destinationApi = instanceApi.withInstance(instance.id());
+        Set<Destination> toRemove = destinationApi.listDestinations();
         toRemove.removeAll(addressList.getDestinations());
 
-        toRemove.forEach(instanceKube::deleteDestination);
-        addressList.getDestinations().forEach(instanceKube::createDestination);
+        toRemove.forEach(destinationApi::deleteDestination);
+        addressList.getDestinations().forEach(destinationApi::createDestination);
         return addressList;
     }
 
     private Instance getOrCreateInstance(InstanceId instanceId) throws Exception {
-        Optional<Instance> instance = kubernetes.getInstanceWithId(instanceId);
+        Optional<Instance> instance = instanceApi.getInstanceWithId(instanceId);
         if (!instance.isPresent()) {
             Instance i = new Instance.Builder(instanceId).build();
-            kubernetes.createInstance(i);
+            instanceApi.createInstance(i);
             return i;
         } else {
             return instance.get();
@@ -51,13 +52,14 @@ public class AddressApi {
 
     public AddressList appendAddress(InstanceId instanceId, Address address) throws Exception {
         getOrCreateInstance(instanceId);
-        kubernetes.withInstance(instanceId).createDestination(address.getDestination());
-        return AddressList.fromSet(kubernetes.withInstance(instanceId).listDestinations());
+        DestinationApi destinationApi = instanceApi.withInstance(instanceId);
+        destinationApi.createDestination(address.getDestination());
+        return AddressList.fromSet(destinationApi.listDestinations());
     }
 
 
     public Optional<Address> getAddress(InstanceId instanceId, String address) {
-        return kubernetes.withInstance(instanceId).getDestinationWithAddress(address).map(Address::new);
+        return instanceApi.withInstance(instanceId).getDestinationWithAddress(address).map(Address::new);
     }
 
     public Address putAddress(InstanceId instance, Address address) throws Exception {
@@ -66,26 +68,19 @@ public class AddressApi {
     }
 
     public AddressList deleteAddress(InstanceId instanceId, String address) throws IOException {
-        Kubernetes instanceKube = kubernetes.withInstance(instanceId);
-        instanceKube.getDestinationWithAddress(address).ifPresent(instanceKube::deleteDestination);
+        DestinationApi destinationApi = instanceApi.withInstance(instanceId);
+        destinationApi.getDestinationWithAddress(address).ifPresent(destinationApi::deleteDestination);
 
-        return AddressList.fromSet(instanceKube.listDestinations());
-    }
-
-    public AddressList deleteAddressByUuid(InstanceId instanceId, String uuid) {
-        Kubernetes instanceKube = kubernetes.withInstance(instanceId);
-        instanceKube.getDestinationWithUuid(uuid).ifPresent(instanceKube::deleteDestination);
-
-        return AddressList.fromSet(instanceKube.listDestinations());
+        return AddressList.fromSet(destinationApi.listDestinations());
     }
 
     public AddressList appendAddresses(InstanceId instanceId, AddressList list) throws Exception {
-        Instance instance = getOrCreateInstance(instanceId);
-        Kubernetes instanceKube = kubernetes.withInstance(instance.id());
+        getOrCreateInstance(instanceId);
+        DestinationApi destinationApi = instanceApi.withInstance(instanceId);
         for (Destination destination : list.getDestinations()) {
-            instanceKube.createDestination(destination);
+            destinationApi.createDestination(destination);
         }
-        return AddressList.fromSet(instanceKube.listDestinations());
+        return AddressList.fromSet(destinationApi.listDestinations());
     }
 
 }

@@ -12,14 +12,16 @@ public class Instance {
     private final Optional<String> consoleHost;
     private final Optional<String> uuid;
     private final Optional<String> certSecret;
+    private final Status status;
 
-    public Instance(InstanceId instanceId, Optional<String> messagingHost, Optional<String> mqttHost, Optional<String> consoleHost, Optional<String> uuid, Optional<String> certSecret) {
+    public Instance(InstanceId instanceId, Optional<String> messagingHost, Optional<String> mqttHost, Optional<String> consoleHost, Optional<String> uuid, Optional<String> certSecret, Status status) {
         this.instanceId = instanceId;
         this.messagingHost = messagingHost;
         this.mqttHost = mqttHost;
         this.consoleHost = consoleHost;
         this.uuid = uuid;
         this.certSecret = certSecret;
+        this.status = status;
     }
 
     public Optional<String> messagingHost() {
@@ -46,6 +48,10 @@ public class Instance {
         return instanceId;
     }
 
+    public Status status() {
+        return status;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -68,6 +74,7 @@ public class Instance {
         private Optional<String> consoleHost = Optional.empty();
         private Optional<String> uuid = Optional.empty();
         private Optional<String> certSecret = Optional.empty();
+        private Status status = new Status(false);
 
         public Builder(Instance instance) {
             this.instanceId = instance.id();
@@ -76,6 +83,7 @@ public class Instance {
             this.consoleHost = instance.consoleHost;
             this.uuid = instance.uuid;
             this.certSecret = instance.certSecret;
+            this.status = instance.status;
         }
 
         public Builder(InstanceId instanceId) {
@@ -112,8 +120,40 @@ public class Instance {
             return this;
         }
 
+        public Builder status(Status status) {
+            this.status = status;
+            return this;
+        }
+
         public Instance build() {
-            return new Instance(instanceId, messagingHost, mqttHost, consoleHost, uuid, certSecret);
+            return new Instance(instanceId, messagingHost, mqttHost, consoleHost, uuid, certSecret, status);
+        }
+    }
+
+    public static class Status {
+        private final boolean isReady;
+
+        public Status(boolean isReady) {
+            this.isReady = isReady;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            Status status = (Status) o;
+
+            return isReady == status.isReady;
+        }
+
+        @Override
+        public int hashCode() {
+            return (isReady ? 1 : 0);
+        }
+
+        public boolean isReady() {
+            return isReady;
         }
     }
 }

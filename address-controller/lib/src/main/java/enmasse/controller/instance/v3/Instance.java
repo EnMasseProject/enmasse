@@ -27,12 +27,20 @@ public class Instance {
         return instance;
     }
 
-    public static String toJson(enmasse.controller.model.Instance instance) throws JsonProcessingException {
-        return mapper.writeValueAsString(new Instance(instance));
+    public static String toJson(enmasse.controller.model.Instance instance) {
+        try {
+            return mapper.writeValueAsString(new Instance(instance));
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
     }
 
-    public static enmasse.controller.model.Instance fromJson(String json) throws IOException {
-        return mapper.readValue(json, Instance.class).getInstance();
+    public static enmasse.controller.model.Instance fromJson(String json) {
+        try {
+            return mapper.readValue(json, Instance.class).getInstance();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public static String kind() {

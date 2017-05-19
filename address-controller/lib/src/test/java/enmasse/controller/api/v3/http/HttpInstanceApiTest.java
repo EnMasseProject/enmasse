@@ -21,6 +21,7 @@ public class HttpInstanceApiTest {
     private Instance instance1;
     private Instance instance2;
 
+    /*
     @Before
     public void setup() {
         instanceManager = new TestInstanceApi();
@@ -113,4 +114,5 @@ public class HttpInstanceApiTest {
         Response response = instanceService.deleteInstance("instance1", new enmasse.controller.instance.v3.Instance(instance1));
         assertThat(response.getStatus(), is(500));
     }
+    */
 }

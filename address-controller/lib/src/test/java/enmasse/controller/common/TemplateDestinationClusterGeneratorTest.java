@@ -23,8 +23,6 @@ import enmasse.controller.model.InstanceId;
 import enmasse.controller.address.DestinationCluster;
 import enmasse.config.LabelKeys;
 import io.fabric8.kubernetes.api.model.*;
-import io.fabric8.openshift.api.model.Template;
-import io.fabric8.openshift.api.model.TemplateBuilder;
 import io.fabric8.openshift.client.OpenShiftClient;
 import io.fabric8.openshift.client.ParameterValue;
 import io.fabric8.openshift.client.dsl.TemplateResource;
@@ -57,33 +55,25 @@ public class TemplateDestinationClusterGeneratorTest {
 
     @Test
     public void testDirect() {
-        Destination dest = new Destination("foo.bar_baz.cockooA", "foo.bar_baz.cockooA", false, false, Optional.empty(), Optional.empty());
+        Destination dest = new Destination("foo.bar_baz.cockooA", "foo.bar_baz.cockooA", false, false, Optional.empty(), Optional.empty(), new Destination.Status(false));
         ArgumentCaptor<ParameterValue> captor = ArgumentCaptor.forClass(ParameterValue.class);
         DestinationCluster clusterList = generateCluster(dest, captor);
         Destination first = clusterList.getDestinations().iterator().next();
         assertThat(first, is(dest));
-        List<HasMetadata> resources = clusterList.getResources();
-        assertThat(resources.size(), is(1));
-        assertTrue(resources.get(0) instanceof ConfigMap);
-        for (HasMetadata resource : resources) {
-            ConfigMap map = (ConfigMap) resource;
-            Map<String, String> rlabel = resource.getMetadata().getLabels();
-            assertNotNull(rlabel.get(LabelKeys.GROUP_ID));
-            assertThat(rlabel.get(LabelKeys.GROUP_ID), is("foo-bar-baz-cockooa"));
-            assertThat(map.getData().size(), is(4));
-        }
+        List<HasMetadata> resources = clusterList.getResources().getItems();
+        assertThat(resources.size(), is(0));
         List<ParameterValue> parameters = captor.getAllValues();
         assertThat(parameters.size(), is(0));
     }
 
     @Test
     public void testStoreAndForward() {
-        Destination dest = new Destination("foo.bar", "foo.bar", true, false, Optional.of("vanilla"), Optional.empty());
+        Destination dest = new Destination("foo.bar", "foo.bar", true, false, Optional.of("vanilla"), Optional.empty(), new Destination.Status(false));
         ArgumentCaptor<ParameterValue> captor = ArgumentCaptor.forClass(ParameterValue.class);
         DestinationCluster clusterList = generateCluster(dest, captor);
         assertThat(clusterList.getDestinations(), hasItem(dest));
-        List<HasMetadata> resources = clusterList.getResources();
-        assertThat(resources.size(), is(2));
+        List<HasMetadata> resources = clusterList.getResources().getItems();
+        assertThat(resources.size(), is(1));
         for (HasMetadata resource : resources) {
             Map<String, String> rlabel = resource.getMetadata().getLabels();
             assertNotNull(rlabel.get(LabelKeys.GROUP_ID));

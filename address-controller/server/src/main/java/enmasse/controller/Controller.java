@@ -16,13 +16,17 @@
 
 package enmasse.controller;
 
+import enmasse.controller.address.AddressController;
 import enmasse.controller.cert.SelfSignedController;
 import enmasse.controller.common.Kubernetes;
 import enmasse.controller.common.KubernetesHelper;
 import enmasse.controller.flavor.FlavorController;
 import enmasse.controller.flavor.FlavorManager;
 import enmasse.controller.instance.InstanceController;
+import enmasse.controller.instance.InstanceFactory;
 import enmasse.controller.instance.InstanceFactoryImpl;
+import enmasse.controller.instance.api.InstanceApi;
+import enmasse.controller.instance.api.InstanceApiImpl;
 import enmasse.controller.model.Instance;
 import enmasse.controller.model.InstanceId;
 import io.fabric8.kubernetes.client.ConfigBuilder;
@@ -35,10 +39,9 @@ import io.vertx.core.Vertx;
 public class Controller extends AbstractVerticle {
     private final AMQPServer server;
     private final HTTPServer restServer;
-    private final AddressManager addressManager;
-    private final InstanceFactoryImpl instanceManager;
     private final FlavorController flavorController;
     private final InstanceController instanceController;
+    private final AddressController addressController;
     private final AbstractVerticle certController;
 
 
@@ -53,21 +56,23 @@ public class Controller extends AbstractVerticle {
         String templateName = "enmasse-instance-infra";
 
         FlavorManager flavorManager = new FlavorManager();
-        this.instanceManager = new InstanceFactoryImpl(kubernetes, templateName, options.isMultiinstance());
+        InstanceFactory instanceFactory = new InstanceFactoryImpl(kubernetes, templateName, options.isMultiinstance());
+        InstanceApi instanceApi = new InstanceApiImpl(controllerClient);
+
         if (!options.isMultiinstance() && !kubernetes.hasService("messaging")) {
             Instance.Builder builder = new Instance.Builder(kubernetes.getInstanceId());
             builder.messagingHost(options.messagingHost());
             builder.mqttHost(options.mqttHost());
             builder.consoleHost(options.consoleHost());
             builder.certSecret(options.certSecret());
-            instanceManager.create(builder.build());
+            instanceApi.createInstance(builder.build());
         }
 
-        this.addressManager = new AddressManagerImpl(kubernetes, flavorManager);
-        this.server = new AMQPServer(kubernetes.getInstanceId(), addressManager, instanceManager, flavorManager, options.port());
-        this.restServer = new HTTPServer(kubernetes.getInstanceId(), addressManager, instanceManager, flavorManager);
+        this.addressController = new AddressController(instanceApi, kubernetes, controllerClient, flavorManager);
+        this.server = new AMQPServer(kubernetes.getInstanceId(), instanceApi, flavorManager, options.port());
+        this.restServer = new HTTPServer(kubernetes.getInstanceId(), instanceApi, flavorManager);
         this.flavorController = new FlavorController(controllerClient, flavorManager);
-        this.instanceController = new InstanceController(controllerClient, kubernetes);
+        this.instanceController = new InstanceController(instanceFactory, controllerClient, instanceApi);
         this.certController = SelfSignedController.create(controllerClient);
     }
 

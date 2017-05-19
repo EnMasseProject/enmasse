@@ -59,7 +59,7 @@ public class TemplateDestinationClusterGenerator implements DestinationClusterGe
                 .map(f -> flavorRepository.getFlavor(f, TimeUnit.SECONDS.toMillis(60)));
 
         KubernetesList resources = flavor.map(f -> processTemplate(first, destinations, f)).orElse(new KubernetesList());
-        return new DestinationCluster(kubernetes, destinations, resources);
+        return new DestinationCluster(destinations, resources);
     }
 
     private KubernetesList processTemplate(Destination first, Set<Destination> destinations, Flavor flavor) {
