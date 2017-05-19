@@ -16,7 +16,7 @@
 'use strict';
 
 var Promise = require('bluebird');
-var log = require('log4js').getLogger("qdr");
+var log = require('./log.js').logger("subserv:qdr");
 
 var Router = function (connection) {
     this.connection = connection;

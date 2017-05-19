@@ -8,10 +8,11 @@ RUN yum -y update  \
 
 RUN mkdir -p /opt/app-root/src/
 RUN cd /opt/app-root/src/
-RUN ["/bin/bash", "-c", "npm install debug && npm install bluebird && npm install log4js && npm install rhea"]
+RUN ["/bin/bash", "-c", "npm install debug && npm install bluebird && npm install debug && npm install rhea"]
 ARG version=latest
+ENV DEBUG "subserv:*"
 
 ADD subserv-${version}.tar.gz /opt/app-root/src/
 EXPOSE 5672
 
-CMD ["node", "/opt/app-root/src/subserv.js"]
+CMD ["node", "/opt/app-root/src/subserv.js", ">", "/dev/stdout"]

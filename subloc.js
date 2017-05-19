@@ -16,7 +16,7 @@
 'use strict';
 
 var Promise = require('bluebird');
-var log = require('log4js').getLogger("subloc");
+var log = require('./log.js').logger("subserv:subloc");
 
 function SubscriptionLocator(pods) {
     this.pods = pods;

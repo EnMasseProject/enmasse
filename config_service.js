@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-var log = require('log4js').getLogger("config_service");
+var log = require('./log.js').logger("subserv:config_service");
 
 module.exports.connect = function(container, id) {
     var config_host = process.env.ADMIN_SERVICE_HOST;
