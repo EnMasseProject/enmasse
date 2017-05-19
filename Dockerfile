@@ -15,4 +15,4 @@ ENV DEBUG "subserv:*"
 ADD subserv-${version}.tar.gz /opt/app-root/src/
 EXPOSE 5672
 
-CMD ["node", "/opt/app-root/src/subserv.js", ">", "/dev/stdout"]
+CMD ["node", "/opt/app-root/src/subserv.js"]
