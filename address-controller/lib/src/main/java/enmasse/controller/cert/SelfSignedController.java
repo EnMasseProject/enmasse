@@ -26,9 +26,9 @@ public class SelfSignedController extends InstanceWatcher {
 
     @Override
     protected void instanceChanged(Instance instance) throws Exception {
-        String secret = instance.certSecret().get();
 
-        if (instance.messagingHost().isPresent() && instance.mqttHost().isPresent() && instance.consoleHost().isPresent()) {
+        if (instance.certSecret().isPresent() && instance.messagingHost().isPresent() && instance.mqttHost().isPresent() && instance.consoleHost().isPresent()) {
+            String secret = instance.certSecret().get();
             // TODO: Have this sign certificates with OpenShift CA
             log.info("Creating self-signed certificates for " + instance);
 

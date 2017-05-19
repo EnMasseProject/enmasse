@@ -46,6 +46,7 @@ public class AddressController extends AbstractVerticle implements Watcher<Confi
     public void start() {
         Map<String, String> labelMap = new HashMap<>();
         labelMap.put(LabelKeys.TYPE, "instance-config");
+        log.info("Starting address controller verticle");
         vertx.executeBlocking((Future<Watch> promise) -> {
             try {
                 promise.complete(startWatch(labelMap, client.getNamespace()));
@@ -94,6 +95,7 @@ public class AddressController extends AbstractVerticle implements Watcher<Confi
                             kubernetes.withInstance(addedInstance.id()),
                             client,
                             clusterGenerator);
+                    log.info("Deploying address space controller for " + addedInstance.id());
                     vertx.deployVerticle(addressSpaceController, result -> {
                         if (result.succeeded()) {
                             addressSpaceMap.put(addedInstance.id(), result.result());

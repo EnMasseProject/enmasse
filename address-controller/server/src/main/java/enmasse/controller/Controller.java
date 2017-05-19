@@ -83,6 +83,7 @@ public class Controller extends AbstractVerticle {
         vertx.deployVerticle(restServer, new DeploymentOptions().setWorker(true));
         vertx.deployVerticle(instanceController);
         vertx.deployVerticle(certController);
+        vertx.deployVerticle(addressController);
     }
 
     public static void main(String args[]) {

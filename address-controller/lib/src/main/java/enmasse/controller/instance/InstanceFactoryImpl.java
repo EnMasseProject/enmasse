@@ -34,6 +34,7 @@ public class InstanceFactoryImpl implements InstanceFactory {
         Kubernetes instanceClient = kubernetes.withInstance(instance.id());
         if (!instanceClient.getRoutes(instance.id()).isEmpty()) {
             log.info("Instance " + instance.id() + " already created, ignoring");
+            return;
         }
         if (isMultitenant) {
             kubernetes.createNamespace(instance.id());

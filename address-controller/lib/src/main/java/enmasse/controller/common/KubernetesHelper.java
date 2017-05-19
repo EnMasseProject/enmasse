@@ -78,13 +78,6 @@ public class KubernetesHelper implements Kubernetes {
 
             if (labels != null && labels.containsKey(LabelKeys.GROUP_ID)) {
                 String groupId = labels.get(LabelKeys.GROUP_ID);
-                if (!resourceMap.containsKey(groupId)) {
-                    resourceMap.put(groupId, new ArrayList<>());
-                }
-
-                if (!groupMap.containsKey(groupId)) {
-                    groupMap.put(groupId, new LinkedHashSet<>());
-                }
 
                 // Add the destinations for a particular address config
                 if ("address-config".equals(labels.get(LabelKeys.TYPE))) {
@@ -97,8 +90,14 @@ public class KubernetesHelper implements Kubernetes {
                     destBuilder.flavor(Optional.ofNullable(data.get(AddressConfigKeys.FLAVOR)));
                     destBuilder.uuid(Optional.ofNullable(data.get(AddressConfigKeys.UUID)));
 
+                    if (!groupMap.containsKey(groupId)) {
+                        groupMap.put(groupId, new LinkedHashSet<>());
+                    }
                     groupMap.get(groupId).add(destBuilder.build());
                 } else {
+                    if (!resourceMap.containsKey(groupId)) {
+                        resourceMap.put(groupId, new ArrayList<>());
+                    }
                     resourceMap.get(groupId).add(config);
                 }
             }

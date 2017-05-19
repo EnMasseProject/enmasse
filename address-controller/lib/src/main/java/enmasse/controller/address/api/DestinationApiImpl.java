@@ -73,7 +73,7 @@ public class DestinationApiImpl implements DestinationApi {
     @Override
     public void createDestination(Destination destination) {
         String name = Kubernetes.sanitizeName("address-config-" + destination.address());
-        DoneableConfigMap builder = client.configMaps().createNew()
+        DoneableConfigMap builder = client.configMaps().inNamespace(instanceId.getNamespace()).createOrReplaceWithNew()
                 .withNewMetadata()
                 .withName(name)
                 .addToLabels(LabelKeys.GROUP_ID, Kubernetes.sanitizeName(destination.group()))
