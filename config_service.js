@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+var log = require('log4js').getLogger();
+
 module.exports.connect = function(container, id) {
     var config_host = process.env.ADMIN_SERVICE_HOST;
     var config_port = process.env.ADMIN_SERVICE_PORT_CONFIGURATION;
@@ -23,7 +25,7 @@ module.exports.connect = function(container, id) {
     }
 
     if (config_host && config_port) {
-        console.log("Connecting to config service " + config_host + ":" + config_port + " with id=" + id);
+        log.info("Connecting to config service " + config_host + ":" + config_port + " with id=" + id);
         var connection_properties = {product:'subserv', container_id:process.env.HOSTNAME};
         container.options.username = 'subserv';
         return container.connect({host:config_host, port:config_port, properties:connection_properties, id:id});
