@@ -95,15 +95,15 @@ public class KubernetesResourceObserver<T extends Resource> implements AutoClose
         if (action.equals(Action.ADDED)) {
             deleteFromSet(resource);
             resourceSet.add(resource);
-            log.info("Resource " + resource + " added!");
+            log.debug("Resource " + resource + " added!");
         } else if (action.equals(Action.DELETED)) {
             deleteFromSet(resource);
             resourceSet.remove(resource);
-            log.info("Resource " + resource + " deleted!");
+            log.debug("Resource " + resource + " deleted!");
         } else if (action.equals(Action.MODIFIED)) {
             deleteFromSet(resource);
             resourceSet.add(resource);
-            log.info("Resource " + resource + " updated!");
+            log.debug("Resource " + resource + " updated!");
         } else if (action.equals(Action.ERROR)) {
             log.error("Received an error event for resource " + resource);
         }

@@ -61,6 +61,7 @@ public class SubscriptionManager<T extends Resource> {
      * Notify subscribers that the set of configs has been updated.
      */
     private void notifySubscribers() {
+        log.info("Notifying subscribers with updated resources: " + resources);
         Optional<Message> message = encodeAndLog();
         message.ifPresent(m -> subscriberList.forEach(s -> s.resourcesUpdated(m)));
     }
