@@ -93,6 +93,7 @@ public class KubernetesResourceObserver<T extends Resource> implements AutoClose
         }
         T resource = resourceFactory.createResource((HasMetadata) obj);
         if (action.equals(Action.ADDED)) {
+            deleteFromSet(resource);
             resourceSet.add(resource);
             log.info("Resource " + resource + " added!");
         } else if (action.equals(Action.DELETED)) {
