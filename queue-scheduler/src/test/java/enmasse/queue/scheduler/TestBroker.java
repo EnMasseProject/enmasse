@@ -17,6 +17,7 @@
 package enmasse.queue.scheduler;
 
 import io.vertx.core.AbstractVerticle;
+import io.vertx.core.Future;
 import io.vertx.proton.ProtonClient;
 import io.vertx.proton.ProtonConnection;
 
@@ -39,19 +40,20 @@ public class TestBroker extends AbstractVerticle implements Broker {
     }
 
     @Override
-    public void start() throws Exception {
+    public void start(Future<Void> promise) throws Exception {
         ProtonClient client = ProtonClient.create(vertx);
-        connectToScheduler(client);
+        connectToScheduler(client, promise);
     }
 
-    private void connectToScheduler(ProtonClient client) {
+    private void connectToScheduler(ProtonClient client, Future<Void> promise) {
         client.connect(schedulerHost, schedulerPort, openResult -> {
             if (openResult.succeeded()) {
                 connection = openResult.result();
                 connection.setContainer(id);
                 connection.open();
+                vertx.runOnContext(id -> promise.complete());
             } else {
-                vertx.setTimer(2000, id -> connectToScheduler(client));
+                vertx.setTimer(2000, id -> connectToScheduler(client, promise));
             }
         });
     }
