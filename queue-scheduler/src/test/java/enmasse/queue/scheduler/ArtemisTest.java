@@ -59,6 +59,12 @@ public class ArtemisTest {
         artemis.deployQueue("queue1");
         artemis.deployQueue("queue2");
 
-        assertThat(artemis.getNumQueues(), is(2L));
+        long numQueues = artemis.getNumQueues();
+        long endTime = System.currentTimeMillis() + 60_000;
+        while (numQueues != 2L && System.currentTimeMillis() < endTime) {
+            Thread.sleep(2000);
+            numQueues = artemis.getNumQueues();
+        }
+        assertThat(numQueues, is(2L));
     }
 }
