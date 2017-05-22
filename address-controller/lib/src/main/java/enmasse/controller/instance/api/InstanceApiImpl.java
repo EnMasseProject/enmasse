@@ -35,16 +35,6 @@ public class InstanceApiImpl implements InstanceApi {
     }
 
     @Override
-    public Optional<Instance> getInstanceWithUuid(String uuid) {
-        ConfigMapList list = client.configMaps().withLabel(LabelKeys.UUID, uuid).list();
-        if (list.getItems().isEmpty()) {
-            return Optional.empty();
-        } else {
-            return Optional.of(getInstanceFromConfig(list.getItems().get(0)));
-        }
-    }
-
-    @Override
     public void createInstance(Instance instance) {
         replaceInstance(instance);
     }

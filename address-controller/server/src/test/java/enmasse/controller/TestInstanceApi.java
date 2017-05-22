@@ -22,21 +22,16 @@ public class TestInstanceApi implements InstanceApi {
     }
 
     @Override
-    public Optional<Instance> getInstanceWithUuid(String uuid) {
-        for (Instance i : instances.values()) {
-            if (i.uuid().filter(u -> uuid.equals(u)).isPresent()) {
-                return Optional.of(i);
-            }
-        }
-        return Optional.empty();
-    }
-
-    @Override
     public void createInstance(Instance instance) {
         if (throwException) {
             throw new RuntimeException("foo");
         }
         instances.put(instance.id(), instance);
+    }
+
+    @Override
+    public void replaceInstance(Instance instance) {
+        createInstance(instance);
     }
 
     @Override

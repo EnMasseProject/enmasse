@@ -37,6 +37,11 @@ public class TestDestinationApi implements DestinationApi {
     }
 
     @Override
+    public void replaceDestination(Destination destination) {
+        createDestination(destination);
+    }
+
+    @Override
     public void deleteDestination(Destination destination) {
         if (throwException) {
             throw new RuntimeException("exception");

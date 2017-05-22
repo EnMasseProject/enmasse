@@ -16,8 +16,6 @@
 
 package enmasse.controller.model;
 
-import sun.security.krb5.internal.crypto.Des;
-
 import java.util.Objects;
 import java.util.Optional;
 

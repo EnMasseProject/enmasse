@@ -16,7 +16,6 @@ public interface InstanceApi {
      * Operations for instances.
      */
     Optional<Instance> getInstanceWithId(InstanceId instanceId);
-    Optional<Instance> getInstanceWithUuid(String uuid);
     void createInstance(Instance instance);
     void replaceInstance(Instance instance);
     void deleteInstance(Instance instance);
