@@ -16,6 +16,7 @@
 'use strict';
 
 var Promise = require('bluebird');
+var log = require('./log.js').logger();
 
 var Router = function (connection) {
     this.connection = connection;
@@ -32,7 +33,7 @@ var Router = function (connection) {
 
 Router.prototype.closed = function (context) {
     if (context.connection.error) {
-        console.log('ERROR: router closed connection with ' + context.connection.error.description);
+        log.warn('ERROR: router closed connection with ' + context.connection.error.description);
     }
     this.connection = undefined;
     this.sender = undefined;
@@ -82,7 +83,7 @@ Router.prototype._send_pending_requests = function () {
 Router.prototype._send_request = function (request) {
     request.reply_to = this.address;
     this.sender.send(request);
-    //console.log('sent: ' + JSON.stringify(request));
+    //log.debug('sent: ' + JSON.stringify(request));
 }
 
 Router.prototype.request = function (operation, properties, body) {
@@ -118,13 +119,13 @@ Router.prototype.delete_entity = function (type, name) {
 };
 
 Router.prototype.incoming = function (context) {
-    //console.log('Got message: ' + JSON.stringify(context.message));
+    //log.debug('Got message: ' + JSON.stringify(context.message));
     var message = context.message;
     var handler = this.handlers[message.correlation_id];
     if (handler) {
         handler(context);
     } else {
-	console.log('WARNING: unexpected response: ' + message.correlation_id + ' [' + JSON.stringify(message) + ']');
+        log.warn('WARNING: unexpected response: ' + message.correlation_id + ' [' + JSON.stringify(message) + ']');
     }
 };
 

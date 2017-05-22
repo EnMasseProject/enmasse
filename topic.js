@@ -18,6 +18,7 @@
 var create_podgroup = require('./podgroup.js');
 var create_locator = require('./subloc.js');
 var create_controller = require('./subctrl.js');
+var log = require('./log.js').logger();
 
 function Topic (name) {
     this.name = name;
@@ -28,12 +29,11 @@ function Topic (name) {
 
 Topic.prototype.watch_pods = function () {
     var topic = this;
-    console.log('watching pods serving ' + topic.name);
+    log.debug('watching pods serving ' + topic.name);
     var current = {};
     this.watcher = require('./podwatch.js').watch_pods({"group_id": topic.name});
     var changed = function (pods) {
         var newpods = {};
-        console.log("Got new pods");
         for (var i in pods) {
             newpods[pods[i].name] = pods[i];
         }
@@ -41,16 +41,16 @@ Topic.prototype.watch_pods = function () {
             if (current[pod] === undefined) {
                 current[pod] = newpods[pod];
                 topic.pods.added(newpods[pod]);
-                console.log('pod added for ' + topic.name + ': ' + JSON.stringify(pod));
+                log.debug('pod added for ' + topic.name + ': ' + JSON.stringify(pod));
             } else {
-                console.log('pod updated: now ' + JSON.stringify(pod) + ' was ' + JSON.stringify(current[pod]));
+                log.debug('pod updated: now ' + JSON.stringify(pod) + ' was ' + JSON.stringify(current[pod]));
             }
         }
 
         for (var pod in current) {
             if (newpods[pod] === undefined) {
                 topic.pods.removed(current[pod]);
-                console.log('pod removed for ' + topic.name + ': ' + JSON.stringify(current[pod]));
+                log.debug('pod removed for ' + topic.name + ': ' + JSON.stringify(current[pod]));
                 delete current[pod];
             }
         }
