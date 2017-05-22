@@ -18,6 +18,7 @@ public interface InstanceApi {
     Optional<Instance> getInstanceWithId(InstanceId instanceId);
     Optional<Instance> getInstanceWithUuid(String uuid);
     void createInstance(Instance instance);
+    void replaceInstance(Instance instance);
     void deleteInstance(Instance instance);
     Set<Instance> listInstances();
     Instance getInstanceFromConfig(ConfigMap resource);

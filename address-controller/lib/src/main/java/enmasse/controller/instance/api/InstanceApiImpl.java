@@ -46,6 +46,11 @@ public class InstanceApiImpl implements InstanceApi {
 
     @Override
     public void createInstance(Instance instance) {
+        replaceInstance(instance);
+    }
+
+    @Override
+    public void replaceInstance(Instance instance) {
         String name = Kubernetes.sanitizeName("instance-config-" + instance.id().getId());
         client.configMaps().createOrReplaceWithNew()
                 .withNewMetadata()

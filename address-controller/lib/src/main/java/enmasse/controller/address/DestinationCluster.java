@@ -29,8 +29,6 @@ import java.util.Set;
 public class DestinationCluster {
     private static final Logger log = LoggerFactory.getLogger(DestinationCluster.class.getName());
 
-    private final KubernetesList resources;
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -38,26 +36,23 @@ public class DestinationCluster {
 
         DestinationCluster that = (DestinationCluster) o;
 
-        if (resources != null ? !resources.equals(that.resources) : that.resources != null) return false;
-        return destinations != null ? destinations.equals(that.destinations) : that.destinations == null;
+        if (!clusterId.equals(that.clusterId)) return false;
+        return resources.equals(that.resources);
     }
 
     @Override
     public int hashCode() {
-        int result = resources != null ? resources.hashCode() : 0;
-        result = 31 * result + (destinations != null ? destinations.hashCode() : 0);
+        int result = clusterId.hashCode();
+        result = 31 * result + resources.hashCode();
         return result;
     }
 
-    private final Set<Destination> destinations;
+    private final String clusterId;
+    private final KubernetesList resources;
 
-    public DestinationCluster(Set<Destination> destinations, KubernetesList resources) {
-        this.destinations = destinations;
+    public DestinationCluster(String clusterId, KubernetesList resources) {
+        this.clusterId = clusterId;
         this.resources = resources;
-    }
-
-    public Set<Destination> getDestinations() {
-        return destinations;
     }
 
     public KubernetesList getResources() {
@@ -65,6 +60,6 @@ public class DestinationCluster {
     }
 
     public String getClusterId() {
-        return destinations.iterator().next().group();
+        return clusterId;
     }
 }

@@ -3,7 +3,6 @@ package enmasse.controller.api.osb.v2.bind;
 import enmasse.controller.api.osb.v2.EmptyResponse;
 import enmasse.controller.api.osb.v2.OSBExceptions;
 import enmasse.controller.api.osb.v2.OSBServiceBase;
-import enmasse.controller.api.v3.UuidApi;
 import enmasse.controller.flavor.FlavorRepository;
 import enmasse.controller.instance.api.InstanceApi;
 import enmasse.controller.model.Destination;
@@ -25,8 +24,8 @@ import javax.ws.rs.core.Response;
 @Produces({MediaType.APPLICATION_JSON})
 public class OSBBindingService extends OSBServiceBase {
 
-    public OSBBindingService(InstanceApi instanceApi, UuidApi uuidApi, FlavorRepository flavorRepository) {
-        super(instanceApi, uuidApi, flavorRepository);
+    public OSBBindingService(InstanceApi instanceApi, FlavorRepository flavorRepository) {
+        super(instanceApi, flavorRepository);
     }
 
     @PUT

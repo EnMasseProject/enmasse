@@ -16,6 +16,8 @@
 
 package enmasse.controller.model;
 
+import sun.security.krb5.internal.crypto.Des;
+
 import java.util.Objects;
 import java.util.Optional;
 
@@ -120,6 +122,16 @@ public final class Destination {
         public Builder(String address, String group) {
             this.address = address;
             this.group = group;
+        }
+
+        public Builder(Destination destination) {
+            this.address = destination.address();
+            this.group = destination.group();
+            this.storeAndForward = destination.storeAndForward();
+            this.multicast = destination.multicast();
+            this.flavor = destination.flavor();
+            this.uuid = destination.uuid();
+            this.status = destination.status();
         }
 
         public Builder() {}

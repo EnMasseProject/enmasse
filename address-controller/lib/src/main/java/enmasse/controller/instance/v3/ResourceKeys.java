@@ -15,4 +15,6 @@ interface ResourceKeys {
     String CONSOLE_HOST = "consoleHost";
     String ITEMS = "items";
     String CERT_SECRET = "certSecret";
+    String STATUS = "status";
+    String READY = "ready";
 }

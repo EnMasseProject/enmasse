@@ -33,7 +33,7 @@ public class InstanceApiTest {
         ArgumentCaptor<ParameterValue> captor = ArgumentCaptor.forClass(ParameterValue.class);
         when(mockClient.processTemplate(matches("test"), captor.capture())).thenReturn(new KubernetesList());
 
-        InstanceApi controller = new InstanceFactoryImpl(mockClient, "test", true);
+        InstanceApi controller = new InstanceManagerImpl(mockClient, "test", true);
 
         Instance i1 = new Instance.Builder(InstanceId.withIdAndNamespace("myid", "mynamespace")).messagingHost(Optional.of("messaging.example.com")).build();
         Instance i2 = new Instance.Builder(InstanceId.withIdAndNamespace("myid2", "other")).mqttHost(Optional.of("mqtt.example.com")).build();

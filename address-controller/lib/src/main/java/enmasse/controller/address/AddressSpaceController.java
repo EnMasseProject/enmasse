@@ -44,6 +44,7 @@ public class AddressSpaceController extends AbstractVerticle implements Watcher<
         log.info("Starting address space controller verticle for " + kubernetes.getInstanceId());
         vertx.executeBlocking((Future<Watch> promise) -> {
             try {
+                vertx.setPeriodic(5000, id -> checkDestinations());
                 promise.complete(startWatch(labelMap, kubernetes.getInstanceId().getNamespace()));
             } catch (Exception e) {
                 promise.fail(e);
@@ -87,14 +88,12 @@ public class AddressSpaceController extends AbstractVerticle implements Watcher<
 
     private void updateDestinations() {
 
-        List<DestinationCluster> clusterList = kubernetes.listClusters();
         Set<Destination> newDestinations = destinationApi.listDestinations();
         Map<String, Set<Destination>> destinationByGroup = newDestinations.stream().collect(Collectors.groupingBy(Destination::group, Collectors.toSet()));
         validateDestinationGroups(destinationByGroup);
 
-        Set<Destination> currentDestinations = clusterList.stream().flatMap(cluster -> cluster.getDestinations().stream()).collect(Collectors.toSet());
-
-        log.info("Destinations updated from " + currentDestinations + " to " + newDestinations);
+        log.info("Destinations updated to " + newDestinations);
+        List<DestinationCluster> clusterList = kubernetes.listClusters();
         createBrokers(clusterList, destinationByGroup);
         deleteBrokers(clusterList, destinationByGroup);
     }
@@ -120,7 +119,7 @@ public class AddressSpaceController extends AbstractVerticle implements Watcher<
         }
     }
 
-    private void createBrokers(Collection<DestinationCluster> clusterList, Map<String, Set<Destination>> newDestinationGroups) {
+    private void createBrokers(List<DestinationCluster> clusterList, Map<String, Set<Destination>> newDestinationGroups) {
         newDestinationGroups.entrySet().stream()
                 .map(group -> clusterGenerator.generateCluster(group.getValue()))
                 .filter(cluster -> !clusterList.contains(cluster))
@@ -133,6 +132,27 @@ public class AddressSpaceController extends AbstractVerticle implements Watcher<
                         .noneMatch(destinationGroup -> cluster.getClusterId().equals(destinationGroup.getKey())))
                 .forEach(cluster -> kubernetes.delete(cluster.getResources()));
     }
+
+    private void checkDestinations() {
+        vertx.executeBlocking(promise -> {
+            try {
+                for (Destination destination : destinationApi.listDestinations()) {
+                    boolean isReady = kubernetes.isDestinationClusterReady(destination.group());
+                    Destination.Builder updated = new Destination.Builder(destination);
+                    updated.status(new Destination.Status(isReady));
+                    destinationApi.replaceDestination(updated.build());
+                }
+                promise.complete();
+            } catch (Exception e) {
+                promise.fail(e);
+            }
+        }, result -> {
+            if (result.failed()) {
+                log.warn("Error checking destinations", result.cause());
+            }
+        });
+    }
+
 
     @Override
     public void onClose(KubernetesClientException cause) {

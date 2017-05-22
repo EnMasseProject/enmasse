@@ -17,7 +17,6 @@ import enmasse.controller.api.osb.v2.EmptyResponse;
 import enmasse.controller.api.osb.v2.OSBExceptions;
 import enmasse.controller.api.osb.v2.OSBServiceBase;
 import enmasse.controller.api.osb.v2.ServiceType;
-import enmasse.controller.api.v3.UuidApi;
 import enmasse.controller.flavor.FlavorRepository;
 import enmasse.controller.instance.api.InstanceApi;
 import enmasse.controller.model.Destination;
@@ -29,8 +28,8 @@ import enmasse.controller.model.InstanceId;
 @Produces({MediaType.APPLICATION_JSON})
 public class OSBProvisioningService extends OSBServiceBase {
 
-    public OSBProvisioningService(InstanceApi instanceApi, UuidApi uuidApi, FlavorRepository flavorRepository) {
-        super(instanceApi, uuidApi, flavorRepository);
+    public OSBProvisioningService(InstanceApi instanceApi, FlavorRepository flavorRepository) {
+        super(instanceApi, flavorRepository);
     }
 
     @PUT

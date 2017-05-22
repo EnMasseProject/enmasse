@@ -10,20 +10,19 @@ import io.fabric8.openshift.client.ParameterValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class InstanceFactoryImpl implements InstanceFactory {
-    private static final Logger log = LoggerFactory.getLogger(InstanceFactoryImpl.class.getName());
+public class InstanceManagerImpl implements InstanceManager {
+    private static final Logger log = LoggerFactory.getLogger(InstanceManagerImpl.class.getName());
     private final Kubernetes kubernetes;
     private final String instanceTemplateName;
     private final boolean isMultitenant;
 
-    public InstanceFactoryImpl(Kubernetes kubernetes, String instanceTemplateName, boolean isMultitenant) {
+    public InstanceManagerImpl(Kubernetes kubernetes, String instanceTemplateName, boolean isMultitenant) {
         this.kubernetes = kubernetes;
         this.instanceTemplateName = instanceTemplateName;
         this.isMultitenant = isMultitenant;
@@ -64,12 +63,9 @@ public class InstanceFactoryImpl implements InstanceFactory {
         return items;
     }
 
-    private Kubernetes getClient(Instance instance) {
-        return kubernetes.withInstance(instance.id());
-    }
-
-    public boolean isReady(Instance instance) throws IOException, InterruptedException {
-        Set<String> readyDeployments = getClient(instance).getReadyDeployments().stream()
+    @Override
+    public boolean isReady(Instance instance) {
+        Set<String> readyDeployments = kubernetes.withInstance(instance.id()).getReadyDeployments().stream()
                 .map(deployment -> deployment.getMetadata().getName())
                 .collect(Collectors.toSet());
 

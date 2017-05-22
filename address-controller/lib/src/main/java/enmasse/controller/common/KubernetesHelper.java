@@ -16,12 +16,8 @@
 
 package enmasse.controller.common;
 
-import enmasse.config.AddressConfigKeys;
 import enmasse.config.LabelKeys;
 import enmasse.controller.address.DestinationCluster;
-import enmasse.controller.instance.api.InstanceApi;
-import enmasse.controller.instance.api.InstanceApiImpl;
-import enmasse.controller.model.Destination;
 import enmasse.controller.model.InstanceId;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.extensions.Deployment;
@@ -34,14 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -64,7 +53,6 @@ public class KubernetesHelper implements Kubernetes {
     @Override
     public List<DestinationCluster> listClusters() {
         Map<String, List<HasMetadata>> resourceMap = new HashMap<>();
-        Map<String, Set<Destination>> groupMap = new HashMap<>();
 
         // Add other resources part of a destination cluster
         List<HasMetadata> objects = new ArrayList<>();
@@ -79,22 +67,7 @@ public class KubernetesHelper implements Kubernetes {
             if (labels != null && labels.containsKey(LabelKeys.GROUP_ID)) {
                 String groupId = labels.get(LabelKeys.GROUP_ID);
 
-                // Add the destinations for a particular address config
-                if ("address-config".equals(labels.get(LabelKeys.TYPE))) {
-                    ConfigMap configMap = (ConfigMap) config;
-                    Map<String, String> data = configMap.getData();
-
-                    Destination.Builder destBuilder = new Destination.Builder(data.get(AddressConfigKeys.ADDRESS), data.get(AddressConfigKeys.GROUP_ID));
-                    destBuilder.storeAndForward(Boolean.parseBoolean(data.get(AddressConfigKeys.STORE_AND_FORWARD)));
-                    destBuilder.multicast(Boolean.parseBoolean(data.get(AddressConfigKeys.MULTICAST)));
-                    destBuilder.flavor(Optional.ofNullable(data.get(AddressConfigKeys.FLAVOR)));
-                    destBuilder.uuid(Optional.ofNullable(data.get(AddressConfigKeys.UUID)));
-
-                    if (!groupMap.containsKey(groupId)) {
-                        groupMap.put(groupId, new LinkedHashSet<>());
-                    }
-                    groupMap.get(groupId).add(destBuilder.build());
-                } else {
+                if (!"address-config".equals(labels.get(LabelKeys.TYPE))) {
                     if (!resourceMap.containsKey(groupId)) {
                         resourceMap.put(groupId, new ArrayList<>());
                     }
@@ -107,7 +80,7 @@ public class KubernetesHelper implements Kubernetes {
                 .map(entry -> {
                     KubernetesList list = new KubernetesList();
                     list.setItems(entry.getValue());
-                    return new DestinationCluster(groupMap.get(entry.getKey()), list);
+                    return new DestinationCluster(entry.getKey(), list);
                 }).collect(Collectors.toList());
     }
 
@@ -205,12 +178,6 @@ public class KubernetesHelper implements Kubernetes {
         }
     }
 
-
-    @Override
-    public List<Namespace> listNamespaces(Map<String, String> labelMap) {
-        return client.namespaces().withLabels(labelMap).list().getItems();
-    }
-
     @Override
     public List<Route> getRoutes(InstanceId instanceId) {
         if (client.isAdaptable(OpenShiftClient.class)) {
@@ -277,9 +244,9 @@ public class KubernetesHelper implements Kubernetes {
     }
 
     @Override
-    public boolean isDestinationReady(Destination destination) {
+    public boolean isDestinationClusterReady(String clusterId) {
         return listClusters().stream()
-                .filter(dc -> dc.getDestinations().contains(destination))
+                .filter(dc -> clusterId.equals(dc.getClusterId()))
                 .anyMatch(KubernetesHelper::areAllDeploymentsReady);
     }
 

@@ -10,7 +10,8 @@ interface ResourceKeys {
     String GROUP = "group";
     String FLAVOR = "flavor";
     String SPEC = "spec";
-    String STATUS = "status";
     String UUID = "uuid";
     String ITEMS = "items";
+    String STATUS = "status";
+    String READY = "ready";
 }

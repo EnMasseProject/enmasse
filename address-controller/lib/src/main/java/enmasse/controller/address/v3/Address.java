@@ -37,6 +37,7 @@ public class Address {
         public Address deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JsonProcessingException {
             ObjectNode node = mapper.readValue(p, ObjectNode.class);
             ObjectNode spec = (ObjectNode) node.get(ResourceKeys.SPEC);
+            ObjectNode status = (ObjectNode) node.get(ResourceKeys.STATUS);
             ObjectNode metadata = (ObjectNode) node.get(ResourceKeys.METADATA);
             String address = metadata.get(ResourceKeys.NAME).asText();
             String group = spec.has(ResourceKeys.GROUP) ? spec.get(ResourceKeys.GROUP).asText() : address;
@@ -46,6 +47,7 @@ public class Address {
                 .multicast(spec.get(ResourceKeys.MULTICAST).asBoolean())
                 .flavor(Optional.ofNullable(spec.get(ResourceKeys.FLAVOR)).map(JsonNode::asText))
                 .uuid(Optional.ofNullable(metadata.get(ResourceKeys.UUID)).map(JsonNode::asText))
+                .status(new Destination.Status(Optional.ofNullable(status.get(ResourceKeys.READY).asBoolean()).orElse(false)))
                 .build());
         }
     }
@@ -58,7 +60,6 @@ public class Address {
 
             node.put(ResourceKeys.KIND, kind());
             node.put(ResourceKeys.APIVERSION, "v3");
-            node.put(ResourceKeys.STATUS, "/api/v3/status/" + destination.address());
 
             ObjectNode metadata = node.putObject(ResourceKeys.METADATA);
             metadata.put(ResourceKeys.NAME, destination.address());
@@ -69,6 +70,9 @@ public class Address {
             spec.put(ResourceKeys.MULTICAST, destination.multicast());
             spec.put(ResourceKeys.GROUP, destination.group());
             destination.flavor().ifPresent(f -> spec.put(ResourceKeys.FLAVOR, f));
+
+            ObjectNode status = node.putObject(ResourceKeys.STATUS);
+            status.put(ResourceKeys.READY, destination.status().isReady());
 
             mapper.writeValue(gen, node);
         }

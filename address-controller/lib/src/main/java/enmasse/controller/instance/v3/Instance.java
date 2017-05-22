@@ -53,6 +53,7 @@ public class Instance {
         public Instance deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
             ObjectNode node = mapper.readValue(p, ObjectNode.class);
             ObjectNode spec = (ObjectNode) node.get(ResourceKeys.SPEC);
+            ObjectNode status = (ObjectNode) node.get(ResourceKeys.STATUS);
             ObjectNode metadata = (ObjectNode) node.get(ResourceKeys.METADATA);
             String name = metadata.get(ResourceKeys.NAME).asText();
 
@@ -63,6 +64,7 @@ public class Instance {
             instance.mqttHost(Optional.ofNullable(spec.get(ResourceKeys.MQTT_HOST)).map(JsonNode::asText));
             instance.consoleHost(Optional.ofNullable(spec.get(ResourceKeys.CONSOLE_HOST)).map(JsonNode::asText));
             instance.certSecret(Optional.ofNullable(spec.get(ResourceKeys.CERT_SECRET)).map(JsonNode::asText));
+            instance.status(new enmasse.controller.model.Instance.Status(Optional.ofNullable(status.get(ResourceKeys.READY).asBoolean()).orElse(false)));
 
             return new Instance(instance.build());
         }
@@ -85,6 +87,9 @@ public class Instance {
             value.instance.mqttHost().ifPresent(h -> spec.put(ResourceKeys.MQTT_HOST, h));
             value.instance.consoleHost().ifPresent(h -> spec.put(ResourceKeys.CONSOLE_HOST, h));
             value.instance.certSecret().ifPresent(c -> spec.put(ResourceKeys.CERT_SECRET, c));
+
+            ObjectNode status = node.putObject(ResourceKeys.STATUS);
+            status.put(ResourceKeys.READY, value.instance.status().isReady());
 
             mapper.writeValue(gen, node);
         }

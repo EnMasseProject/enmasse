@@ -23,8 +23,8 @@ import enmasse.controller.common.KubernetesHelper;
 import enmasse.controller.flavor.FlavorController;
 import enmasse.controller.flavor.FlavorManager;
 import enmasse.controller.instance.InstanceController;
-import enmasse.controller.instance.InstanceFactory;
-import enmasse.controller.instance.InstanceFactoryImpl;
+import enmasse.controller.instance.InstanceManager;
+import enmasse.controller.instance.InstanceManagerImpl;
 import enmasse.controller.instance.api.InstanceApi;
 import enmasse.controller.instance.api.InstanceApiImpl;
 import enmasse.controller.model.Instance;
@@ -56,7 +56,7 @@ public class Controller extends AbstractVerticle {
         String templateName = "enmasse-instance-infra";
 
         FlavorManager flavorManager = new FlavorManager();
-        InstanceFactory instanceFactory = new InstanceFactoryImpl(kubernetes, templateName, options.isMultiinstance());
+        InstanceManager instanceManager = new InstanceManagerImpl(kubernetes, templateName, options.isMultiinstance());
         InstanceApi instanceApi = new InstanceApiImpl(controllerClient);
 
         if (!options.isMultiinstance() && !kubernetes.hasService("messaging")) {
@@ -72,7 +72,7 @@ public class Controller extends AbstractVerticle {
         this.server = new AMQPServer(kubernetes.getInstanceId(), instanceApi, flavorManager, options.port());
         this.restServer = new HTTPServer(kubernetes.getInstanceId(), instanceApi, flavorManager);
         this.flavorController = new FlavorController(controllerClient, flavorManager);
-        this.instanceController = new InstanceController(instanceFactory, controllerClient, instanceApi);
+        this.instanceController = new InstanceController(instanceManager, controllerClient, instanceApi);
         this.certController = SelfSignedController.create(controllerClient);
     }
 

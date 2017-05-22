@@ -54,6 +54,7 @@ public class DestinationApiImpl implements DestinationApi {
         destBuilder.multicast(Boolean.parseBoolean(data.get(AddressConfigKeys.MULTICAST)));
         destBuilder.flavor(Optional.ofNullable(data.get(AddressConfigKeys.FLAVOR)));
         destBuilder.uuid(Optional.ofNullable(data.get(AddressConfigKeys.UUID)));
+        destBuilder.status(new Destination.Status(Boolean.parseBoolean(data.get(AddressConfigKeys.READY))));
         return destBuilder.build();
     }
 
@@ -72,6 +73,11 @@ public class DestinationApiImpl implements DestinationApi {
 
     @Override
     public void createDestination(Destination destination) {
+        replaceDestination(destination);
+    }
+
+    @Override
+    public void replaceDestination(Destination destination) {
         String name = Kubernetes.sanitizeName("address-config-" + destination.address());
         DoneableConfigMap builder = client.configMaps().inNamespace(instanceId.getNamespace()).createOrReplaceWithNew()
                 .withNewMetadata()
@@ -84,6 +90,7 @@ public class DestinationApiImpl implements DestinationApi {
         builder.addToData(AddressConfigKeys.GROUP_ID, destination.group());
         builder.addToData(AddressConfigKeys.STORE_AND_FORWARD, String.valueOf(destination.storeAndForward()));
         builder.addToData(AddressConfigKeys.MULTICAST, String.valueOf(destination.multicast()));
+        builder.addToData(AddressConfigKeys.READY, String.valueOf(destination.status().isReady()));
         destination.flavor().ifPresent(f -> builder.addToData(AddressConfigKeys.FLAVOR, f));
         destination.uuid().ifPresent(f -> builder.addToData(AddressConfigKeys.UUID, f));
         builder.done();

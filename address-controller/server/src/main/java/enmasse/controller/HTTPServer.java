@@ -21,12 +21,10 @@ import enmasse.controller.api.osb.v2.catalog.OSBCatalogService;
 import enmasse.controller.api.osb.v2.lastoperation.OSBLastOperationService;
 import enmasse.controller.api.osb.v2.provision.OSBProvisioningService;
 import enmasse.controller.api.v3.AddressApiHelper;
-import enmasse.controller.api.v3.UuidApi;
 import enmasse.controller.api.v3.http.AddressingService;
 import enmasse.controller.api.v3.http.FlavorsService;
 import enmasse.controller.api.v3.http.InstanceService;
 import enmasse.controller.api.v3.http.MultiInstanceAddressingService;
-import enmasse.controller.common.Kubernetes;
 import enmasse.controller.common.exceptionmapping.DefaultExceptionMapper;
 import enmasse.controller.flavor.FlavorRepository;
 import enmasse.controller.instance.api.InstanceApi;
@@ -66,11 +64,10 @@ public class HTTPServer extends AbstractVerticle {
         deployment.getRegistry().addSingletonResource(new MultiInstanceAddressingService(addressApi));
         deployment.getRegistry().addSingletonResource(new FlavorsService(flavorRepository));
 
-        UuidApi uuidApi = new UuidApi(instanceApi);
-        deployment.getRegistry().addSingletonResource(new OSBCatalogService(instanceApi, uuidApi, flavorRepository));
-        deployment.getRegistry().addSingletonResource(new OSBProvisioningService(instanceApi, uuidApi, flavorRepository));
-        deployment.getRegistry().addSingletonResource(new OSBBindingService(instanceApi, uuidApi, flavorRepository));
-        deployment.getRegistry().addSingletonResource(new OSBLastOperationService(instanceApi, uuidApi, flavorRepository));
+        deployment.getRegistry().addSingletonResource(new OSBCatalogService(instanceApi, flavorRepository));
+        deployment.getRegistry().addSingletonResource(new OSBProvisioningService(instanceApi, flavorRepository));
+        deployment.getRegistry().addSingletonResource(new OSBBindingService(instanceApi, flavorRepository));
+        deployment.getRegistry().addSingletonResource(new OSBLastOperationService(instanceApi, flavorRepository));
 
         vertx.createHttpServer()
                 .requestHandler(new VertxRequestHandler(vertx, deployment))

@@ -7,4 +7,5 @@ public interface AddressConfigKeys {
     String STORE_AND_FORWARD = "store_and_forward";
     String MULTICAST = "multicast";
     String FLAVOR = "flavor";
+    String READY = "ready";
 }

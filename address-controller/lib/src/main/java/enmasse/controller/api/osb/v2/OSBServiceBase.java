@@ -7,8 +7,8 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import enmasse.controller.address.api.DestinationApi;
 import enmasse.controller.api.osb.v2.catalog.Plan;
-import enmasse.controller.api.v3.UuidApi;
 import enmasse.controller.flavor.FlavorRepository;
 import enmasse.controller.instance.api.InstanceApi;
 import enmasse.controller.model.Destination;
@@ -23,12 +23,10 @@ public abstract class OSBServiceBase {
     protected final Logger log = LoggerFactory.getLogger(getClass().getName());
 
     private final InstanceApi instanceApi;
-    private final UuidApi uuidApi;
     private final FlavorRepository flavorRepository;
 
-    public OSBServiceBase(InstanceApi instanceApi, UuidApi uuidApi, FlavorRepository repository) {
+    public OSBServiceBase(InstanceApi instanceApi, FlavorRepository repository) {
         this.instanceApi = instanceApi;
-        this.uuidApi = uuidApi;
         this.flavorRepository = repository;
     }
 
@@ -63,7 +61,18 @@ public abstract class OSBServiceBase {
     }
 
     protected boolean deleteDestinationByUuid(String destinationUuid) {
-        return uuidApi.deleteResource(destinationUuid);
+        log.info("Deleting destination with UUID {}", destinationUuid);
+        Set<Instance> instances = instanceApi.listInstances();
+        for (Instance i : instances) {
+            DestinationApi destinationApi = instanceApi.withInstance(i.id());
+            Optional<Destination> d = destinationApi.getDestinationWithUuid(destinationUuid);
+            log.info("Destination found in instance {} (namespace {}). Deleting it now.",
+                    i.id().getId(), i.id().getNamespace());
+            d.ifPresent(destinationApi::deleteDestination);
+            return d.isPresent();
+        }
+        log.info("Destination with UUID {} not found in any instance", destinationUuid);
+        return false;
     }
 
     protected boolean isAddressReady(Instance maasInstance, Destination destination) throws Exception {

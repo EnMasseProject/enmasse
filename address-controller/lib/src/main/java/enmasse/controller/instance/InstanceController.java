@@ -36,11 +36,11 @@ public class InstanceController extends AbstractVerticle implements Watcher {
     private Watch configWatch;
     private final Map<InstanceId, Watch> instanceWatches = new HashMap<>();
     private final OpenShiftClient client;
-    private final InstanceFactory instanceFactory;
+    private final InstanceManager instanceManager;
     private final InstanceApi instanceApi;
 
-    public InstanceController(InstanceFactory instanceFactory, OpenShiftClient client, InstanceApi instanceApi) {
-        this.instanceFactory = instanceFactory;
+    public InstanceController(InstanceManager instanceManager, OpenShiftClient client, InstanceApi instanceApi) {
+        this.instanceManager = instanceManager;
         this.client = client;
         this.instanceApi = instanceApi;
     }
@@ -50,6 +50,7 @@ public class InstanceController extends AbstractVerticle implements Watcher {
         labelMap.put(LabelKeys.TYPE, "instance-config");
         vertx.executeBlocking((Future<Watch> promise) -> {
             try {
+                vertx.setPeriodic(5000, id -> checkInstances());
                 promise.complete(startWatch(client.configMaps(), labelMap, client.getNamespace()));
             } catch (Exception e) {
                 promise.fail(e);
@@ -101,8 +102,8 @@ public class InstanceController extends AbstractVerticle implements Watcher {
         return instanceApi.getInstanceWithId(InstanceId.withId(name)).get();
     }
 
-    private void putInstance(Instance instance) throws Exception {
-        instanceApi.createInstance(instance);
+    private void putInstance(Instance instance) {
+        instanceApi.replaceInstance(instance);
     }
 
     private void routeEventReceived(Action action, Route route) throws Exception {
@@ -149,14 +150,14 @@ public class InstanceController extends AbstractVerticle implements Watcher {
     private void configEventReceived(Action action, ConfigMap resource) throws Exception {
         if (action.equals(Action.ADDED)) {
             Instance instance = instanceApi.getInstanceFromConfig(resource);
-            instanceFactory.create(instance);
+            instanceManager.create(instance);
             watchInstance(instance);
         } else if (action.equals(Action.MODIFIED)) {
             // We are the ones modifying, so ignore
         } else if (action.equals(Action.DELETED)) {
             Instance instance = instanceApi.getInstanceFromConfig(resource);
             unwatchInstance(instance);
-            instanceFactory.delete(instance);
+            instanceManager.delete(instance);
         }
 
     }
@@ -165,11 +166,34 @@ public class InstanceController extends AbstractVerticle implements Watcher {
         Map<String, String> labelMap = new HashMap<>();
         labelMap.put(LabelKeys.INSTANCE, instance.id().getId());
 
+        /* Watch for routes and ingress */
         if (client.isAdaptable(OpenShiftClient.class)) {
             instanceWatches.put(instance.id(), startWatch(client.routes(), labelMap, instance.id().getNamespace()));
         } else {
             instanceWatches.put(instance.id(), startWatch(client.extensions().ingresses(), labelMap, instance.id().getNamespace()));
         }
+    }
+
+    private void checkInstances() {
+        vertx.executeBlocking(promise -> {
+            try {
+                for (Instance instance : instanceApi.listInstances()) {
+                    boolean isReady = instanceManager.isReady(instance);
+                    if (instance.status().isReady() != isReady) {
+                        Instance.Builder updated = new Instance.Builder(instance);
+                        updated.status(new Instance.Status(isReady));
+                        putInstance(updated.build());
+                    }
+                }
+                promise.complete();
+            } catch (Exception e) {
+                promise.fail(e);
+            }
+        }, result -> {
+            if (result.failed()) {
+                log.warn("Error checking instances", result.cause());
+            }
+        });
     }
 
     private void unwatchInstance(Instance instance) {

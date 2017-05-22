@@ -1,21 +1,16 @@
 package enmasse.controller.common;
 
 import enmasse.controller.address.DestinationCluster;
-import enmasse.controller.instance.api.InstanceApi;
 import enmasse.controller.model.Destination;
-import enmasse.controller.model.Instance;
 import enmasse.controller.model.InstanceId;
-import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.Namespace;
 import io.fabric8.kubernetes.api.model.extensions.Deployment;
 import io.fabric8.openshift.client.ParameterValue;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -46,7 +41,6 @@ public interface Kubernetes {
     KubernetesList processTemplate(String templateName, ParameterValue ... parameterValues);
 
     Namespace createNamespace(InstanceId instance);
-    List<Namespace> listNamespaces(Map<String, String> labelMap);
     void deleteNamespace(String namespace);
 
     void addDefaultViewPolicy(InstanceId instance);
@@ -58,5 +52,5 @@ public interface Kubernetes {
 
     Set<Deployment> getReadyDeployments();
 
-    boolean isDestinationReady(Destination destination);
+    boolean isDestinationClusterReady(String clusterId);
 }

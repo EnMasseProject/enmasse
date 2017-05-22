@@ -5,7 +5,8 @@ import enmasse.controller.model.Instance;
 /**
  * Factory for instances
  */
-public interface InstanceFactory {
+public interface InstanceManager {
     void create(Instance instance);
+    boolean isReady(Instance instance);
     void delete(Instance instance);
 }
