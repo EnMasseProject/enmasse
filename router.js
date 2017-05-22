@@ -19,7 +19,7 @@ var util = require("util");
 var events = require("events");
 var futurejs = require("./future.js");
 var myutils = require("./utils.js");
-var log = require("log4js").getLogger();
+var log = require("./log.js").logger();
 
 /**
  * A KnownRouter instance represents routers this process knows about

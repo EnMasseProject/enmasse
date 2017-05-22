@@ -15,10 +15,10 @@
  */
 'use strict';
 
+var log = require("./log.js").logger();
 var amqp = require('rhea');
 var rtr = require('./router.js');
 var podwatch = require('./podwatch.js');
-var log = require("log4js").getLogger();
 
 var known_routers = {};
 var connected_routers = {};
@@ -296,6 +296,8 @@ amqp.on('receiver_open', function(context) {
         context.receiver.set_target({address:context.receiver.remote.attach.target.address});
     }
 });
+
+log.info("Router agent starting");
 
 var port = 55672;
 amqp.sasl_server_mechanisms.enable_anonymous();

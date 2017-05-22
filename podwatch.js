@@ -16,7 +16,7 @@
 var util = require("util");
 var events = require("events");
 var rhea = require('rhea');
-var log = require("log4js").getLogger();
+var log = require("./log.js").logger();
 
 function difference(a, b) {
     var diff = undefined;
