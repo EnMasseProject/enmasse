@@ -52,4 +52,6 @@ public interface Kubernetes {
     Set<Deployment> getReadyDeployments();
 
     boolean isDestinationClusterReady(String clusterId);
+
+    List<Namespace> listNamespaces(Map<String, String> labels);
 }

@@ -7,7 +7,6 @@ import enmasse.controller.instance.cert.CertManager;
 import enmasse.controller.model.Instance;
 import io.fabric8.kubernetes.api.model.extensions.Ingress;
 import io.fabric8.kubernetes.api.model.extensions.IngressList;
-import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.openshift.api.model.Route;
 import io.fabric8.openshift.api.model.RouteList;
 import io.fabric8.openshift.client.OpenShiftClient;
@@ -61,16 +60,7 @@ public class InstanceController extends ConfigWatcher<Instance> {
     }
 
     private void retainInstances(Set<Instance> desiredInstances) {
-        String[] ids = desiredInstances.stream()
-                .map(instance -> instance.id().getId())
-                .collect(Collectors.toList()).toArray(new String[0]);
-
-
-        try {
-            client.namespaces().withLabelNotIn(LabelKeys.INSTANCE, ids).withLabel(LabelKeys.APP, "enmasse").withLabel(LabelKeys.TYPE, "instance").delete();
-        } catch (KubernetesClientException e) {
-            log.info("Exception when deleting namespace (may already be in progress): " + e.getMessage());
-        }
+        instanceManager.retainInstances(desiredInstances.stream().map(Instance::id).collect(Collectors.toSet()));
     }
 
     private void createInstances(Set<Instance> instances) {

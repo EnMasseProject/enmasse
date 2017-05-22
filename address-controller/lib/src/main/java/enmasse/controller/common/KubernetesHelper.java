@@ -250,6 +250,11 @@ public class KubernetesHelper implements Kubernetes {
                 .anyMatch(KubernetesHelper::areAllDeploymentsReady);
     }
 
+    @Override
+    public List<Namespace> listNamespaces(Map<String, String> labels) {
+        return client.namespaces().withLabels(labels).list().getItems();
+    }
+
     public static boolean isDeployment(HasMetadata res) {
         return res.getKind().equals("Deployment");  // TODO: is there an existing constant for this somewhere?
     }
