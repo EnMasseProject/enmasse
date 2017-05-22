@@ -36,11 +36,20 @@ public class InstanceApiImpl implements InstanceApi {
 
     @Override
     public void createInstance(Instance instance) {
-        replaceInstance(instance);
+        createOrReplace(instance);
     }
 
     @Override
     public void replaceInstance(Instance instance) {
+        String name = Kubernetes.sanitizeName("instance-config-" + instance.id().getId());
+        ConfigMap previous = client.configMaps().withName(name).get();
+        if (previous == null) {
+            return;
+        }
+        createOrReplace(instance);
+    }
+
+    public void createOrReplace(Instance instance) {
         String name = Kubernetes.sanitizeName("instance-config-" + instance.id().getId());
         client.configMaps().createOrReplaceWithNew()
                 .withNewMetadata()

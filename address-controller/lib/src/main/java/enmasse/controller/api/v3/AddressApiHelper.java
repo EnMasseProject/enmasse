@@ -31,9 +31,11 @@ public class AddressApiHelper {
     public AddressList putAddresses(InstanceId instanceId, AddressList addressList) throws Exception {
         Instance instance = getOrCreateInstance(instanceId);
         DestinationApi destinationApi = instanceApi.withInstance(instance.id());
+
         Set<Destination> toRemove = destinationApi.listDestinations();
         toRemove.removeAll(addressList.getDestinations());
 
+        System.out.println("Going to remove: " + toRemove);
         toRemove.forEach(destinationApi::deleteDestination);
         addressList.getDestinations().forEach(destinationApi::createDestination);
         return addressList;

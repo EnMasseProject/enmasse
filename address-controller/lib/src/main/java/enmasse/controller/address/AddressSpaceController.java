@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
  * Controller for a single address space
  */
 public class AddressSpaceController extends ConfigWatcher<Destination> {
-    private static final Logger log = LoggerFactory.getLogger(AddressController.class);
+    private static final Logger log = LoggerFactory.getLogger(AddressSpaceController.class);
     private final DestinationApi destinationApi;
     private final Kubernetes kubernetes;
     private final DestinationClusterGenerator clusterGenerator;
@@ -74,8 +74,8 @@ public class AddressSpaceController extends ConfigWatcher<Destination> {
 
     private void createBrokers(List<DestinationCluster> clusterList, Map<String, Set<Destination>> newDestinationGroups) {
         newDestinationGroups.entrySet().stream()
+                .filter(group -> !brokerExists(clusterList, group.getKey()))
                 .map(group -> clusterGenerator.generateCluster(group.getValue()))
-                .filter(cluster -> !brokerExists(clusterList, cluster))
                 .forEach(cluster -> {
                     if (!cluster.getResources().getItems().isEmpty()) {
                         log.info("Creating cluster {}", cluster.getClusterId());
@@ -84,9 +84,9 @@ public class AddressSpaceController extends ConfigWatcher<Destination> {
                 });
     }
 
-    private boolean brokerExists(List<DestinationCluster> clusterList, DestinationCluster cluster) {
+    private boolean brokerExists(List<DestinationCluster> clusterList, String clusterId) {
         for (DestinationCluster existing : clusterList) {
-            if (existing.getClusterId().equals(cluster.getClusterId())) {
+            if (existing.getClusterId().equals(clusterId)) {
                 return true;
             }
         }

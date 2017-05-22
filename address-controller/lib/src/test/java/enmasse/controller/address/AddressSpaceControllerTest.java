@@ -23,6 +23,8 @@ import enmasse.controller.common.KubernetesHelper;
 import enmasse.controller.model.Destination;
 import enmasse.controller.model.Flavor;
 import enmasse.controller.flavor.FlavorManager;
+import enmasse.controller.model.InstanceId;
+import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.openshift.client.OpenShiftClient;
 import org.junit.Before;
@@ -55,6 +57,7 @@ public class AddressSpaceControllerTest {
         mockApi = mock(DestinationApi.class);
         mockClient = mock(OpenShiftClient.class);
 
+        when(mockHelper.getInstanceId()).thenReturn(InstanceId.withId("myinstance"));
         controller = new AddressSpaceController(mockApi, mockHelper, mockClient, mockGenerator);
         Map<String, Flavor> flavorMap = new LinkedHashMap<>();
         flavorMap.put("vanilla", new Flavor.Builder("vanilla", "test").build());
@@ -62,80 +65,97 @@ public class AddressSpaceControllerTest {
         flavorManager.flavorsUpdated(flavorMap);
     }
 
-    /*
     @Test
     public void testClusterIsCreated() {
-        Destination queue = new Destination("myqueue", "gr0", true, false, Optional.of("vanilla"), Optional.empty(), status);
-        DestinationCluster cluster = mock(DestinationCluster.class);
+        Destination queue = new Destination.Builder("myqueue", "gr0")
+                .storeAndForward(true)
+                .multicast(false)
+                .flavor(Optional.of("vanilla"))
+                .build();
+        KubernetesList resources = new KubernetesList();
+        resources.setItems(Arrays.asList(new ConfigMap()));
+        DestinationCluster cluster = new DestinationCluster("gr0", resources);
 
         when(mockHelper.listClusters()).thenReturn(Collections.emptyList());
         when(mockGenerator.generateCluster(Collections.singleton(queue))).thenReturn(cluster);
         ArgumentCaptor<Set<Destination>> arg = ArgumentCaptor.forClass(Set.class);
 
-        controller.eventReceived().setDestinations(Collections.singleton(queue));
+        controller.checkConfigs(Collections.singleton(queue));
         verify(mockGenerator).generateCluster(arg.capture());
         assertThat(arg.getValue(), hasItem(queue));
-        verify(cluster).create();
+        verify(mockHelper).create(resources);
     }
 
 
     @Test
     public void testNodesAreRetained() {
-        Destination queue = new Destination("myqueue", "gr0", true, false, Optional.of("vanilla"), Optional.empty(), status);
-        DestinationCluster existing = new DestinationCluster(mockHelper, Sets.newSet(queue), new KubernetesList());
+        Destination queue = new Destination.Builder("myqueue", "gr0")
+                .storeAndForward(true)
+                .flavor(Optional.of("vanilla"))
+                .build();
+
+        KubernetesList resources = new KubernetesList();
+        resources.setItems(Arrays.asList(new ConfigMap()));
+        DestinationCluster existing = new DestinationCluster("gr0", resources);
         when(mockHelper.listClusters()).thenReturn(Collections.singletonList(existing));
 
-        Destination newQueue = new Destination("newqueue", "gr1", true, false, Optional.of("vanilla"), Optional.empty(), status);
-        DestinationCluster newCluster = mock(DestinationCluster.class);
+        Destination newQueue = new Destination.Builder("newqueue", "gr1")
+                .storeAndForward(true)
+                .flavor(Optional.of("vanilla"))
+                .build();
+        DestinationCluster newCluster = new DestinationCluster("gr1", resources);
 
         when(mockGenerator.generateCluster(Collections.singleton(newQueue))).thenReturn(newCluster);
         ArgumentCaptor<Set<Destination>> arg = ArgumentCaptor.forClass(Set.class);
 
-        manager.setDestinations(Sets.newSet(queue, newQueue));
+        controller.checkConfigs(Sets.newSet(queue, newQueue));
 
         verify(mockGenerator).generateCluster(arg.capture());
         assertThat(arg.getValue(), is(Sets.newSet(newQueue)));
-        verify(newCluster).create();
+        verify(mockHelper).create(resources);
     }
 
     @Test
     public void testClusterIsRemoved () {
-        Destination queue = new Destination("myqueue", "gr0", true, false, Optional.of("vanilla"), Optional.empty(), status);
-        DestinationCluster existing = mock(DestinationCluster.class);
-        when(existing.getDestinations()).thenReturn(Sets.newSet(queue));
-        when(existing.getClusterId()).thenReturn("gr0");
+        Destination queue = new Destination.Builder("myqueue", "gr0")
+                .storeAndForward(true)
+                .flavor(Optional.of("vanilla"))
+                .build();
 
-        Destination newQueue = new Destination("newqueue", "gr1", true, false, Optional.of("vanilla"), Optional.empty(), status);
-        DestinationCluster newCluster = mock(DestinationCluster.class);
-        when(newCluster.getDestinations()).thenReturn(Sets.newSet(newQueue));
-        when(newCluster.getClusterId()).thenReturn("gr1");
+        KubernetesList resources = new KubernetesList();
+        resources.setItems(Arrays.asList(new ConfigMap()));
+        DestinationCluster existing = new DestinationCluster("gr0", resources);
+
+        Destination newQueue = new Destination.Builder("newqueue", "gr1")
+                .storeAndForward(true)
+                .flavor(Optional.of("vanilla"))
+                .build();
+
+        DestinationCluster newCluster = new DestinationCluster("gr1", resources);
 
         when(mockHelper.listClusters()).thenReturn(Arrays.asList(existing, newCluster));
 
-        manager.setDestinations(Collections.singleton(newQueue));
+        controller.checkConfigs(Collections.singleton(newQueue));
 
-        verify(existing, VerificationModeFactory.atLeastOnce()).getDestinations();
-        verify(newCluster, VerificationModeFactory.atLeastOnce()).getDestinations();
-        verify(existing).delete();
+        verify(mockHelper, VerificationModeFactory.atMost(1)).delete(resources);
     }
 
     @Test
     public void testDestinationsAreGrouped() {
-        Destination addr0 = new Destination("myqueue0", "group0", true, false, Optional.of("vanilla"), Optional.empty(), status);
-        Destination addr1 = new Destination("myqueue1", "group1", true, false, Optional.of("vanilla"), Optional.empty(), status);
-        Destination addr2 = new Destination("myqueue2", "group1", true, false, Optional.of("vanilla"), Optional.empty(), status);
-        Destination addr3 = new Destination("myqueue3", "group2", true, false, Optional.of("vanilla"), Optional.empty(), status);
+        Destination addr0 = new Destination("myqueue0", "group0", true, false, Optional.of("vanilla"), Optional.empty(), new Destination.Status(false));
+        Destination addr1 = new Destination("myqueue1", "group1", true, false, Optional.of("vanilla"), Optional.empty(), new Destination.Status(false));
+        Destination addr2 = new Destination("myqueue2", "group1", true, false, Optional.of("vanilla"), Optional.empty(), new Destination.Status(false));
+        Destination addr3 = new Destination("myqueue3", "group2", true, false, Optional.of("vanilla"), Optional.empty(), new Destination.Status(false));
 
-        DestinationCluster existing = mock(DestinationCluster.class);
-        when(existing.getDestinations()).thenReturn(Sets.newSet(addr0));
-        when(existing.getClusterId()).thenReturn("group0");
-        DestinationCluster cluster = mock(DestinationCluster.class);
+        KubernetesList resources = new KubernetesList();
+        resources.setItems(Arrays.asList(new ConfigMap()));
+        DestinationCluster existing = new DestinationCluster("group0", resources);
 
         when(mockHelper.listClusters()).thenReturn(Collections.singletonList(existing));
         ArgumentCaptor<Set<Destination>> arg = ArgumentCaptor.forClass(Set.class);
-        when(mockGenerator.generateCluster(arg.capture())).thenReturn(cluster);
+        when(mockGenerator.generateCluster(arg.capture())).thenReturn(new DestinationCluster("foo", resources));
 
-        manager.setDestinations(Sets.newSet(addr0, addr1, addr2, addr3));
+        controller.checkConfigs(Sets.newSet(addr0, addr1, addr2, addr3));
 
         Set<Destination> generated = arg.getAllValues().stream().flatMap(Collection::stream).collect(Collectors.toSet());
         assertThat(generated.size(), is(3));
@@ -149,5 +169,4 @@ public class AddressSpaceControllerTest {
     private Set<Destination> filterDestinationsByGroup(Set<Destination> destinations, String groupId) {
         return destinations.stream().filter(d -> d.group().equals(groupId)).collect(Collectors.toSet());
     }
-    */
 }

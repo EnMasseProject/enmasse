@@ -9,11 +9,14 @@ import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.ConfigMapList;
 import io.fabric8.kubernetes.api.model.DoneableConfigMap;
 import io.fabric8.openshift.client.OpenShiftClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
 public class DestinationApiImpl implements DestinationApi {
 
+    private static final Logger log = LoggerFactory.getLogger(DestinationApiImpl.class);
     private final OpenShiftClient client;
     private final InstanceId instanceId;
 
@@ -24,7 +27,7 @@ public class DestinationApiImpl implements DestinationApi {
 
     @Override
     public Optional<Destination> getDestinationWithAddress(String address) {
-        ConfigMap map = client.configMaps().inNamespace(instanceId.getNamespace()).withName(Kubernetes.sanitizeName(Kubernetes.sanitizeName("address-config-" + address))).get();
+        ConfigMap map = client.configMaps().inNamespace(instanceId.getNamespace()).withName(Kubernetes.sanitizeName("address-config-" + address)).get();
         if (map == null) {
             return Optional.empty();
         } else {
@@ -73,13 +76,22 @@ public class DestinationApiImpl implements DestinationApi {
 
     @Override
     public void createDestination(Destination destination) {
-        replaceDestination(destination);
+        createOrReplace(destination);
     }
 
     @Override
     public void replaceDestination(Destination destination) {
         String name = Kubernetes.sanitizeName("address-config-" + destination.address());
-        DoneableConfigMap builder = client.configMaps().inNamespace(instanceId.getNamespace()).createOrReplaceWithNew()
+        ConfigMap previous = client.configMaps().inNamespace(instanceId.getNamespace()).withName(name).get();
+        if (previous == null) {
+            return;
+        }
+        createOrReplace(destination);
+    }
+
+    private void createOrReplace(Destination destination) {
+        String name = Kubernetes.sanitizeName("address-config-" + destination.address());
+        DoneableConfigMap builder = client.configMaps().inNamespace(instanceId.getNamespace()).withName(name).createOrReplaceWithNew()
                 .withNewMetadata()
                 .withName(name)
                 .addToLabels(LabelKeys.GROUP_ID, Kubernetes.sanitizeName(destination.group()))
