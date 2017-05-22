@@ -17,7 +17,6 @@
 package enmasse.controller;
 
 import enmasse.controller.address.AddressController;
-import enmasse.controller.cert.SelfSignedController;
 import enmasse.controller.common.Kubernetes;
 import enmasse.controller.common.KubernetesHelper;
 import enmasse.controller.flavor.FlavorController;
@@ -27,6 +26,8 @@ import enmasse.controller.instance.InstanceManager;
 import enmasse.controller.instance.InstanceManagerImpl;
 import enmasse.controller.instance.api.InstanceApi;
 import enmasse.controller.instance.api.InstanceApiImpl;
+import enmasse.controller.instance.cert.CertManager;
+import enmasse.controller.instance.cert.SelfSignedCertManager;
 import enmasse.controller.model.Instance;
 import enmasse.controller.model.InstanceId;
 import io.fabric8.kubernetes.client.ConfigBuilder;
@@ -42,7 +43,6 @@ public class Controller extends AbstractVerticle {
     private final FlavorController flavorController;
     private final InstanceController instanceController;
     private final AddressController addressController;
-    private final AbstractVerticle certController;
 
 
     public Controller(ControllerOptions options) throws Exception {
@@ -64,7 +64,7 @@ public class Controller extends AbstractVerticle {
             builder.messagingHost(options.messagingHost());
             builder.mqttHost(options.mqttHost());
             builder.consoleHost(options.consoleHost());
-            builder.certSecret(options.certSecret());
+            options.certSecret().ifPresent(builder::certSecret);
             instanceApi.createInstance(builder.build());
         }
 
@@ -72,8 +72,9 @@ public class Controller extends AbstractVerticle {
         this.server = new AMQPServer(kubernetes.getInstanceId(), instanceApi, flavorManager, options.port());
         this.restServer = new HTTPServer(kubernetes.getInstanceId(), instanceApi, flavorManager);
         this.flavorController = new FlavorController(controllerClient, flavorManager);
-        this.instanceController = new InstanceController(instanceManager, controllerClient, instanceApi);
-        this.certController = SelfSignedController.create(controllerClient);
+
+        CertManager certManager = SelfSignedCertManager.create(controllerClient);
+        this.instanceController = new InstanceController(instanceManager, controllerClient, instanceApi, certManager);
     }
 
     @Override
@@ -82,7 +83,6 @@ public class Controller extends AbstractVerticle {
         vertx.deployVerticle(server);
         vertx.deployVerticle(restServer, new DeploymentOptions().setWorker(true));
         vertx.deployVerticle(instanceController);
-        vertx.deployVerticle(certController);
         vertx.deployVerticle(addressController);
     }
 

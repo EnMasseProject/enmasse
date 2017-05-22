@@ -108,7 +108,9 @@ public class KubernetesHelper implements Kubernetes {
 
     @Override
     public void delete(HasMetadata... resources) {
-
+        delete(new KubernetesListBuilder()
+                .addToItems(resources)
+                .build());
     }
 
     @Override
@@ -220,8 +222,7 @@ public class KubernetesHelper implements Kubernetes {
     }
 
     @Override
-    public String createInstanceSecret(InstanceId instanceId) {
-        String secretName = instanceId.getId() + "-certs";
+    public void createInstanceSecret(String secretName, InstanceId instanceId) {
         Secret secret = client.secrets().inNamespace(instanceId.getNamespace()).createNew()
                 .editOrNewMetadata()
                 .withName(secretName)
@@ -234,7 +235,6 @@ public class KubernetesHelper implements Kubernetes {
                         .withApiVersion(secret.getApiVersion())
                         .build())
                 .done();
-        return secretName;
     }
 
     public Set<Deployment> getReadyDeployments() {

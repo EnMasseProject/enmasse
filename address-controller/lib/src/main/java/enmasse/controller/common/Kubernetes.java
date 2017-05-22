@@ -1,7 +1,6 @@
 package enmasse.controller.common;
 
 import enmasse.controller.address.DestinationCluster;
-import enmasse.controller.model.Destination;
 import enmasse.controller.model.InstanceId;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesList;
@@ -48,7 +47,7 @@ public interface Kubernetes {
     List<Route> getRoutes(InstanceId instanceId);
 
     boolean hasService(String service);
-    String createInstanceSecret(InstanceId instanceId);
+    void createInstanceSecret(String secretName, InstanceId instanceId);
 
     Set<Deployment> getReadyDeployments();
 

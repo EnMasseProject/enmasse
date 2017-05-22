@@ -63,8 +63,14 @@ public class Instance {
             instance.messagingHost(Optional.ofNullable(spec.get(ResourceKeys.MESSAGING_HOST)).map(JsonNode::asText));
             instance.mqttHost(Optional.ofNullable(spec.get(ResourceKeys.MQTT_HOST)).map(JsonNode::asText));
             instance.consoleHost(Optional.ofNullable(spec.get(ResourceKeys.CONSOLE_HOST)).map(JsonNode::asText));
-            instance.certSecret(Optional.ofNullable(spec.get(ResourceKeys.CERT_SECRET)).map(JsonNode::asText));
-            instance.status(new enmasse.controller.model.Instance.Status(Optional.ofNullable(status.get(ResourceKeys.READY).asBoolean()).orElse(false)));
+
+            Optional<String> secret = Optional.ofNullable(spec.get(ResourceKeys.CERT_SECRET)).map(JsonNode::asText);
+            secret.ifPresent(instance::certSecret);
+
+            if (status != null) {
+                Optional<Boolean> ready = Optional.ofNullable(status.get(ResourceKeys.READY)).map(JsonNode::asBoolean);
+                ready.ifPresent(r -> instance.status(new enmasse.controller.model.Instance.Status(r)));
+            }
 
             return new Instance(instance.build());
         }
@@ -86,7 +92,7 @@ public class Instance {
             value.instance.messagingHost().ifPresent(h -> spec.put(ResourceKeys.MESSAGING_HOST, h));
             value.instance.mqttHost().ifPresent(h -> spec.put(ResourceKeys.MQTT_HOST, h));
             value.instance.consoleHost().ifPresent(h -> spec.put(ResourceKeys.CONSOLE_HOST, h));
-            value.instance.certSecret().ifPresent(c -> spec.put(ResourceKeys.CERT_SECRET, c));
+            spec.put(ResourceKeys.CERT_SECRET, value.instance.certSecret());
 
             ObjectNode status = node.putObject(ResourceKeys.STATUS);
             status.put(ResourceKeys.READY, value.instance.status().isReady());

@@ -42,13 +42,15 @@ public class Address {
             String address = metadata.get(ResourceKeys.NAME).asText();
             String group = spec.has(ResourceKeys.GROUP) ? spec.get(ResourceKeys.GROUP).asText() : address;
 
-            return new Address(new Destination.Builder(address, group)
+            Destination.Builder builder = new Destination.Builder(address, group)
                 .storeAndForward(spec.get(ResourceKeys.STORE_AND_FORWARD).asBoolean())
                 .multicast(spec.get(ResourceKeys.MULTICAST).asBoolean())
                 .flavor(Optional.ofNullable(spec.get(ResourceKeys.FLAVOR)).map(JsonNode::asText))
-                .uuid(Optional.ofNullable(metadata.get(ResourceKeys.UUID)).map(JsonNode::asText))
-                .status(new Destination.Status(Optional.ofNullable(status.get(ResourceKeys.READY).asBoolean()).orElse(false)))
-                .build());
+                .uuid(Optional.ofNullable(metadata.get(ResourceKeys.UUID)).map(JsonNode::asText));
+            if (status != null) {
+                builder.status(new Destination.Status(Optional.ofNullable(status.get(ResourceKeys.READY).asBoolean()).orElse(false)));
+            }
+            return new Address(builder.build());
         }
     }
 

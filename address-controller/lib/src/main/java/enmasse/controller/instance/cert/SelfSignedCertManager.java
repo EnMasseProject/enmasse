@@ -1,6 +1,7 @@
-package enmasse.controller.cert;
+package enmasse.controller.instance.cert;
 
 import enmasse.controller.model.Instance;
+import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.openshift.client.OpenShiftClient;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
@@ -15,23 +16,27 @@ import java.util.concurrent.TimeUnit;
 /**
  * Controller that creates self-signed certificates for instances.
  */
-public class SelfSignedController extends InstanceWatcher {
-    private static final Logger log = LoggerFactory.getLogger(SelfSignedController.class.getName());
+public class SelfSignedCertManager implements CertManager {
+    private static final Logger log = LoggerFactory.getLogger(SelfSignedCertManager.class.getName());
     private final OpenShiftClient client;
 
-    private SelfSignedController(OpenShiftClient client) {
-        super(client);
-        this.client = client;
+    public SelfSignedCertManager(OpenShiftClient controllerClient) {
+        this.client = controllerClient;
     }
 
     @Override
-    protected void instanceChanged(Instance instance) throws Exception {
-
-        if (instance.certSecret().isPresent() && instance.messagingHost().isPresent() && instance.mqttHost().isPresent() && instance.consoleHost().isPresent()) {
-            String secret = instance.certSecret().get();
+    public void updateCerts(Instance instance) throws Exception {
+        Secret secret = client.secrets().inNamespace(instance.id().getNamespace()).withName(instance.certSecret()).get();
+        if (secret != null && instance.messagingHost().isPresent() && instance.mqttHost().isPresent() && instance.consoleHost().isPresent()) {
             // TODO: Have this sign certificates with OpenShift CA
-            log.info("Creating self-signed certificates for " + instance);
 
+            String keyKey = "server-key.pem";
+            String certKey = "server-cert.pem";
+            if (secret.getData() != null && secret.getData().containsKey(keyKey) && secret.getData().containsKey(certKey)) {
+                return;
+            }
+
+            log.info("Creating self-signed certificates for " + instance);
             File keyFile = new File("/tmp/server-key.pem");
             File certFile = new File("/tmp/server-cert.pem");
             ProcessBuilder keyGenBuilder = new ProcessBuilder("openssl", "req", "-new", "-x509", "-batch", "-nodes",
@@ -44,19 +49,16 @@ public class SelfSignedController extends InstanceWatcher {
 
             Map<String, String> data = new LinkedHashMap<>();
             Base64.Encoder encoder = Base64.getEncoder();
-            data.put("server-key.pem", encoder.encodeToString(FileUtils.readFileToByteArray(keyFile)));
-            data.put("server-cert.pem", encoder.encodeToString(FileUtils.readFileToByteArray(certFile)));
-            client.secrets().inNamespace(instance.id().getNamespace()).withName(secret).edit()
+            data.put(keyKey, encoder.encodeToString(FileUtils.readFileToByteArray(keyFile)));
+            data.put(certKey, encoder.encodeToString(FileUtils.readFileToByteArray(certFile)));
+            client.secrets().inNamespace(instance.id().getNamespace()).withName(instance.certSecret()).edit()
                     .addToData(data)
                     .done();
         }
     }
 
-    @Override
-    protected void instanceDeleted(Instance instance) {
+    public static SelfSignedCertManager create(OpenShiftClient controllerClient) {
+        return new SelfSignedCertManager(controllerClient);
     }
 
-    public static SelfSignedController create(OpenShiftClient controllerClient) {
-        return new SelfSignedController(controllerClient);
-    }
 }

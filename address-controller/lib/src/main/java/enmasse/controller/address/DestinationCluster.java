@@ -47,6 +47,11 @@ public class DestinationCluster {
         return result;
     }
 
+    @Override
+    public String toString() {
+        return clusterId;
+    }
+
     private final String clusterId;
     private final KubernetesList resources;
 

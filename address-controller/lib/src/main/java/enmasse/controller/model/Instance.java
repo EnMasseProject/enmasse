@@ -11,10 +11,10 @@ public class Instance {
     private final Optional<String> mqttHost;
     private final Optional<String> consoleHost;
     private final Optional<String> uuid;
-    private final Optional<String> certSecret;
+    private final String certSecret;
     private final Status status;
 
-    public Instance(InstanceId instanceId, Optional<String> messagingHost, Optional<String> mqttHost, Optional<String> consoleHost, Optional<String> uuid, Optional<String> certSecret, Status status) {
+    public Instance(InstanceId instanceId, Optional<String> messagingHost, Optional<String> mqttHost, Optional<String> consoleHost, Optional<String> uuid, String certSecret, Status status) {
         this.instanceId = instanceId;
         this.messagingHost = messagingHost;
         this.mqttHost = mqttHost;
@@ -40,7 +40,7 @@ public class Instance {
         return uuid;
     }
 
-    public Optional<String> certSecret() {
+    public String certSecret() {
         return certSecret;
     }
 
@@ -67,13 +67,18 @@ public class Instance {
         return instanceId.hashCode();
     }
 
+    @Override
+    public String toString() {
+        return instanceId.toString();
+    }
+
     public static class Builder {
         private InstanceId instanceId;
         private Optional<String> messagingHost = Optional.empty();
         private Optional<String> mqttHost = Optional.empty();
         private Optional<String> consoleHost = Optional.empty();
         private Optional<String> uuid = Optional.empty();
-        private Optional<String> certSecret = Optional.empty();
+        private String certSecret;
         private Status status = new Status(false);
 
         public Builder(Instance instance) {
@@ -88,10 +93,12 @@ public class Instance {
 
         public Builder(InstanceId instanceId) {
             this.instanceId = instanceId;
+            this.certSecret = "certs-" + instanceId.getId();
         }
 
         public Builder instanceId(InstanceId instanceId) {
             this.instanceId = instanceId;
+            this.certSecret = "certs-" + instanceId.getId();
             return this;
         }
 
@@ -115,7 +122,7 @@ public class Instance {
             return this;
         }
 
-        public Builder certSecret(Optional<String> certSecret) {
+        public Builder certSecret(String certSecret) {
             this.certSecret = certSecret;
             return this;
         }
@@ -127,6 +134,10 @@ public class Instance {
 
         public Instance build() {
             return new Instance(instanceId, messagingHost, mqttHost, consoleHost, uuid, certSecret, status);
+        }
+
+        public InstanceId id() {
+            return instanceId;
         }
     }
 

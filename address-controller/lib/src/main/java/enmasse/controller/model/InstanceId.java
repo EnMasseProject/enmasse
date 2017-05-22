@@ -57,4 +57,12 @@ public final class InstanceId {
     public int hashCode() {
         return id.hashCode();
     }
+
+    @Override
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("id=").append(id).append(",")
+                .append("namespace=").append(namespace);
+        return builder.toString();
+    }
 }
