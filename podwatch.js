@@ -16,7 +16,7 @@
 var util = require("util");
 var events = require("events");
 var rhea = require('rhea');
-
+var log = require("./log.js").logger();
 
 function difference(a, b) {
     var diff = undefined;
@@ -48,7 +48,7 @@ Subscription.prototype.close = function () {
 }
 
 Subscription.prototype.subscribe = function (selector, handler) {
-    console.log('Subscribing with selector: ' + JSON.stringify(selector));
+    log.info('Subscribing with selector: ' + JSON.stringify(selector));
     var receiver = this.podsense.open_receiver({source:{address:"podsense", filter:selector}});
     if (receiver) {
         receiver.on('message', handler);
@@ -63,7 +63,7 @@ function create_pod_handler() {
             return;
         }
         var myhost = this.localhost;
-        console.log('Current pods: ' + JSON.stringify(this.pods) + '. Received updated pods: ' + JSON.stringify(content));
+        log.info('Current pods: ' + JSON.stringify(this.pods) + '. Received updated pods: ' + JSON.stringify(content));
         newpods = content.filter(function (pod) {
             return pod.ready === 'True' && pod.phase === 'Running' && pod.name != myhost;
         }).reduce(function (map, pod) {
