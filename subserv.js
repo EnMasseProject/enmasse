@@ -15,12 +15,12 @@
  */
 'use strict';
 
+var log = require('./log.js').logger();
 var util = require('util');
 var config_service = require('./config_service.js');
 var Promise = require('bluebird');
 var amqp = require('rhea').create_container();
 var create_topic = require('./topic.js');
-var log = require('./log.js').logger();
 
 var topics = {};
 
