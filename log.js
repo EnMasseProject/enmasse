@@ -15,7 +15,7 @@
  */
 'use strict';
 
-var debug = require('debug');
+var path = require('path');
 
 var levels = {
     "error": 0,
@@ -25,8 +25,9 @@ var levels = {
 };
 
 function Logger (name) {
-    this.logger = debug(name);
+    this.logger = require('debug')(name);
     this.level = 3;
+
     if (process.env.LOGLEVEL) {
         var desired_level = levels[process.env.LOGLEVEL];
         if (desired_level !== undefined) {
@@ -57,6 +58,11 @@ Logger.prototype.error = function (msg) {
     this.log("error", msg)
 }
 
-module.exports.logger = function (name) {
+
+module.exports.logger = function() {
+    var name = path.basename(process.argv[1], ".js");
+    if (!process.env.DEBUG) {
+        process.env.DEBUG = name + "*";
+    }
     return new Logger(name);
 }

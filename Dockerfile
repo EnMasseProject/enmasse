@@ -10,7 +10,6 @@ RUN mkdir -p /opt/app-root/src/
 RUN cd /opt/app-root/src/
 RUN ["/bin/bash", "-c", "npm install debug && npm install bluebird && npm install debug && npm install rhea"]
 ARG version=latest
-ENV DEBUG "subserv:*"
 
 ADD subserv-${version}.tar.gz /opt/app-root/src/
 EXPOSE 5672

@@ -18,7 +18,7 @@
 var create_podgroup = require('./podgroup.js');
 var create_locator = require('./subloc.js');
 var create_controller = require('./subctrl.js');
-var log = require('./log.js').logger("subserv:topic");
+var log = require('./log.js').logger();
 
 function Topic (name) {
     this.name = name;

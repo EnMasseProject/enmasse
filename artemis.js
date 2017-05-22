@@ -16,7 +16,7 @@
 'use strict';
 
 var Promise = require('bluebird');
-var log = require('./log.js').logger("subserv:artemis");
+var log = require('./log.js').logger();
 
 var Artemis = function (connection) {
     this.connection = connection;
