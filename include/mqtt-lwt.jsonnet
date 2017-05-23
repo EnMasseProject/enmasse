@@ -8,8 +8,10 @@ local common = import "common.jsonnet";
       "metadata": {
         "labels": {
           "name": "mqtt-lwt",
-          "instance": instance,
           "app": "enmasse"
+        },
+        "annotations": {
+          "instance": instance
         },
         "name": "mqtt-lwt"
       },
@@ -19,8 +21,10 @@ local common = import "common.jsonnet";
           "metadata": {
             "labels": {
               "name": "mqtt-lwt",
-              "instance": instance,
               "app": "enmasse"
+            },
+            "annotations": {
+              "instance": instance
             }
           },
           "spec": {

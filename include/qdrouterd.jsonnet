@@ -9,7 +9,9 @@ local common = import "common.jsonnet";
       "metadata": {
         "labels": {
           "name": "qdrouterd",
-          "app": "enmasse",
+          "app": "enmasse"
+        },
+        "annotations": {
           "instance": instance
         },
         "name": "qdrouterd"
@@ -21,7 +23,9 @@ local common = import "common.jsonnet";
             "labels": {
               "capability": "router",
               "name": "qdrouterd",
-              "app": "enmasse",
+              "app": "enmasse"
+            },
+            "annotations": {
               "instance": instance
             }
           },

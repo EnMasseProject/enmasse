@@ -6,6 +6,8 @@
     "metadata": {
         "labels": {
           "app": "enmasse",
+        },
+        "annotations": {
           "instance": instance
         },
         "name": "mqtt"

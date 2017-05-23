@@ -29,10 +29,11 @@ local forwarder = import "forwarder.jsonnet";
         "metadata": {
           "name": "${NAME}",
           "labels": {
-            "app": "enmasse",
-            "group_id": "${NAME}",
-            "instance": "${INSTANCE}",
-            "address_config": "address-config-${NAME}"
+            "app": "enmasse"
+          },
+          "annotations": {
+            "group_id": "${GROUP_ID}",
+            "instance": "${INSTANCE}"
           }
         },
         "spec": {
@@ -41,8 +42,10 @@ local forwarder = import "forwarder.jsonnet";
             "metadata": {
               "labels": {
                 "app": "enmasse",
-                "role": "broker",
-                "group_id": "${NAME}",
+                "role": "broker"
+              },
+              "annotations": {
+                "group_id": "${GROUP_ID}",
                 "instance": "${INSTANCE}"
               }
             },
@@ -68,9 +71,11 @@ local forwarder = import "forwarder.jsonnet";
         "metadata": {
           "name": claimName,
           "labels": {
-            "group_id": "${NAME}",
-            "instance": "${INSTANCE}",
             "app": "enmasse"
+          },
+          "annotations": {
+            "group_id": "${GROUP_ID}",
+            "instance": "${INSTANCE}",
           }
         },
         "spec": {
@@ -126,6 +131,11 @@ local forwarder = import "forwarder.jsonnet";
         {
           "name": "NAME",
           "description": "A valid name for the instance",
+          "required": true
+        },
+        {
+          "name": "GROUP_ID",
+          "description": "A valid group id for the instance",
           "required": true
         },
         {

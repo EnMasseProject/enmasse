@@ -51,7 +51,9 @@ local common = import "common.jsonnet";
       "metadata": {
         "labels": {
           "name": "console",
-          "app": "enmasse",
+          "app": "enmasse"
+        },
+        "annotations": {
           "instance": instance
         },
         "name": "console"
@@ -62,8 +64,10 @@ local common = import "common.jsonnet";
           "metadata": {
             "labels": {
               "name": "console",
-              "instance": instance,
               "app": "enmasse"
+            },
+            "annotations": {
+              "instance": instance
             }
           },
           "spec": {
@@ -82,7 +86,9 @@ local common = import "common.jsonnet";
       "apiVersion": "v1",
       "metadata": {
         "labels": {
-          "app": "enmasse",
+          "app": "enmasse"
+        },
+        "annotations": {
           "instance": instance
         },
         "name": "console"
@@ -106,6 +112,8 @@ local common = import "common.jsonnet";
       "metadata": {
           "labels": {
             "app": "enmasse",
+          },
+          "annotations": {
             "instance": instance
           },
           "name": "console"

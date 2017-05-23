@@ -17,7 +17,9 @@
       "kind": "Service",
       "metadata": {
         "labels": {
-          "app": "enmasse",
+          "app": "enmasse"
+        },
+        "annotations": {
           "instance": instance
         },
         "name": "mqtt"
@@ -25,8 +27,7 @@
       "spec": {
         "ports": [port, securePort],
         "selector": {
-          "name": "mqtt-gateway",
-          "instance": instance
+          "name": "mqtt-gateway"
         }
       }
     }

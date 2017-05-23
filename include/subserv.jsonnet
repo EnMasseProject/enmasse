@@ -10,8 +10,10 @@ local common = import "common.jsonnet";
     "metadata": {
       "labels": {
         "name": "subserv",
-        "instance": instance,
         "app": "enmasse"
+      },
+      "annotations": {
+        "instance": instance
       },
       "name": "subserv"
     },
@@ -21,8 +23,10 @@ local common = import "common.jsonnet";
         "metadata": {
           "labels": {
             "name": "subserv",
-            "instance": instance,
             "app": "enmasse"
+          },
+          "annotations": {
+            "instance": instance
           }
         },
         "spec": {

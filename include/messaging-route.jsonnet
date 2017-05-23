@@ -5,7 +5,9 @@
     "apiVersion": "v1",
     "metadata": {
         "labels": {
-          "app": "enmasse",
+          "app": "enmasse"
+        },
+        "annotations": {
           "instance": instance
         },
         "name": "messaging"
