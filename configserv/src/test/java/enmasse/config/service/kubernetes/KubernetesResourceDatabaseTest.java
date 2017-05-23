@@ -17,11 +17,9 @@
 package enmasse.config.service.kubernetes;
 
 import enmasse.config.service.TestResource;
+import enmasse.config.service.model.ObserverKey;
 import enmasse.config.service.model.Subscriber;
-import io.fabric8.kubernetes.api.model.ConfigMap;
-import io.fabric8.kubernetes.api.model.ConfigMapList;
-import io.fabric8.kubernetes.api.model.DoneableConfigMap;
-import io.fabric8.kubernetes.api.model.ListMeta;
+import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.Watch;
 import io.fabric8.kubernetes.client.Watcher;
@@ -50,10 +48,13 @@ public class KubernetesResourceDatabaseTest {
     private KubernetesClient client;
     private ScheduledExecutorService executor;
     private MixedOperation<ConfigMap, ConfigMapList, DoneableConfigMap, Resource<ConfigMap, DoneableConfigMap>> mapOp = mock(MixedOperation.class);
+    private Map<String, String> testLabels = Collections.singletonMap("l1", "v1");
+    private Map<String, String> testAnnotations = Collections.singletonMap("a1", "v1");
 
     @Before
     public void setup() {
         MockitoAnnotations.initMocks(this);
+
         client = mock(KubernetesClient.class);
         Watch mockWatcher = mock(Watch.class);
         executor = Executors.newSingleThreadScheduledExecutor();
@@ -64,9 +65,9 @@ public class KubernetesResourceDatabaseTest {
         when(mapOp.withResourceVersion(anyString())).thenReturn(mapOp);
         when(mapOp.watch(any())).thenReturn(() -> {});
 
-        ListMeta listMeta = new ListMeta();
-        listMeta.setResourceVersion("1234");
-        when(mapOp.list()).thenReturn(new ConfigMapList("v1", Collections.emptyList(), "List", listMeta));
+        when(mapOp.list()).thenReturn(new ConfigMapListBuilder().withNewMetadata()
+                .withResourceVersion("1234")
+                .endMetadata().addToItems(createResource("r1")).build());
     }
 
     public Watcher getListener() {
@@ -84,8 +85,9 @@ public class KubernetesResourceDatabaseTest {
     public void testSubscribeAfterConnected() throws Exception {
 
         TestSubscriber sub = new TestSubscriber();
+        ObserverKey key = new ObserverKey(Collections.emptyMap(), Collections.emptyMap());
 
-        database.subscribe(Collections.emptyMap(), sub);
+        database.subscribe(key, sub);
         waitForExecutor();
         Watcher listener = getListener();
 
@@ -104,8 +106,9 @@ public class KubernetesResourceDatabaseTest {
     @Test
     public void testUpdates() throws Exception {
         TestSubscriber sub = new TestSubscriber();
+        ObserverKey key = new ObserverKey(testLabels, testAnnotations);
 
-        database.subscribe(Collections.emptyMap(), sub);
+        database.subscribe(key, sub);
         waitForExecutor();
 
         Watcher listener = getListener();
@@ -138,12 +141,12 @@ public class KubernetesResourceDatabaseTest {
         assertEquals(expected, actual);
     }
 
-    private static TestResource.TestValue createResource(String name) {
+    private TestResource.TestValue createResource(String name) {
         return createResource(name, "val");
     }
 
-    private static TestResource.TestValue createResource(String name, String value) {
-        return new TestResource.TestValue(name, Collections.singletonMap("key", "value"), value);
+    private TestResource.TestValue createResource(String name, String value) {
+        return new TestResource.TestValue(name, testLabels, testAnnotations, value);
     }
 
     public static class TestSubscriber implements Subscriber {

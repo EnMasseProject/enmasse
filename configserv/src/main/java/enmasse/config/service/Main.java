@@ -17,7 +17,6 @@
 package enmasse.config.service;
 
 import enmasse.config.service.amqp.AMQPServer;
-import enmasse.config.service.brokersense.BrokerSenseSubscriptionConfig;
 import enmasse.config.service.config.ConfigSubscriptionConfig;
 import enmasse.config.service.model.ResourceDatabase;
 import enmasse.config.service.kubernetes.KubernetesResourceDatabase;
@@ -54,7 +53,6 @@ public class Main {
             Map<String, ResourceDatabase> databaseMap = new LinkedHashMap<>();
             databaseMap.put("maas", new KubernetesResourceDatabase<>(client, new ConfigSubscriptionConfig()));
             databaseMap.put("podsense", new KubernetesResourceDatabase<>(client, new PodSenseSubscriptionConfig()));
-            databaseMap.put("brokersense", new KubernetesResourceDatabase<>(client, new BrokerSenseSubscriptionConfig()));
 
             AMQPServer server = new AMQPServer(listenAddress, listenPort, databaseMap);
 

@@ -16,10 +16,7 @@
 
 package enmasse.config.service.kubernetes;
 
-import enmasse.config.service.model.LabelSet;
-import enmasse.config.service.model.Resource;
-import enmasse.config.service.model.Subscriber;
-import enmasse.config.service.model.ResourceDatabase;
+import enmasse.config.service.model.*;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,7 +31,7 @@ public class KubernetesResourceDatabase<T extends Resource> implements AutoClose
     private static final Logger log = LoggerFactory.getLogger(KubernetesResourceDatabase.class.getName());
     private final KubernetesClient client;
 
-    private final Map<LabelSet, KubernetesResourceObserver<T>> observerMap = new LinkedHashMap<>();
+    private final Map<ObserverKey, KubernetesResourceObserver<T>> observerMap = new LinkedHashMap<>();
     private final SubscriptionConfig<T> subscriptionConfig;
 
     public KubernetesResourceDatabase(KubernetesClient client, SubscriptionConfig<T> subscriptionConfig) {
@@ -49,14 +46,13 @@ public class KubernetesResourceDatabase<T extends Resource> implements AutoClose
         }
     }
 
-    public synchronized void subscribe(Map<String, String> filter, Subscriber subscriber) throws Exception {
-        LabelSet key = LabelSet.fromMap(filter);
-        KubernetesResourceObserver<T> observer = observerMap.get(key);
+    public synchronized void subscribe(ObserverKey observerKey, Subscriber subscriber) throws Exception {
+        KubernetesResourceObserver<T> observer = observerMap.get(observerKey);
         if (observer == null) {
-            log.info("Creating new observer with filter " + filter);
-            SubscriptionManager<T> subscriptionManager = new SubscriptionManager<>(subscriptionConfig.getMessageEncoder(), subscriptionConfig.getResourceFilter(filter));
-            observer = new KubernetesResourceObserver<>(subscriptionConfig.getResourceFactory(), subscriptionConfig.getObserverOptions(client, filter), subscriptionManager);
-            observerMap.put(key, observer);
+            log.info("Creating new observer with filter " + observerKey);
+            SubscriptionManager<T> subscriptionManager = new SubscriptionManager<>(subscriptionConfig.getMessageEncoder(), subscriptionConfig.getResourceFilter());
+            observer = new KubernetesResourceObserver<>(observerKey, subscriptionConfig.getResourceFactory(), subscriptionConfig.getObserverOptions(client), subscriptionManager);
+            observerMap.put(observerKey, observer);
 
             observer.subscribe(subscriber);
             observer.open();

@@ -16,11 +16,9 @@
 
 package enmasse.config.service.model;
 
-import java.util.Map;
-
 /**
  * Represents a database of resources that can be subscribed to.
  */
 public interface ResourceDatabase {
-    void subscribe(Map<String, String> filter, Subscriber subscriber) throws Exception;
+    void subscribe(ObserverKey observerKey, Subscriber subscriber) throws Exception;
 }

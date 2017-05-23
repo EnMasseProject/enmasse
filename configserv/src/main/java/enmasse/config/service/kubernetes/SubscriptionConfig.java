@@ -4,7 +4,6 @@ import enmasse.config.service.model.Resource;
 import enmasse.config.service.model.ResourceFactory;
 import io.fabric8.kubernetes.client.KubernetesClient;
 
-import java.util.Map;
 import java.util.function.Predicate;
 
 /**
@@ -12,7 +11,7 @@ import java.util.function.Predicate;
  */
 public interface SubscriptionConfig<T extends Resource> {
     MessageEncoder<T> getMessageEncoder();
-    ObserverOptions getObserverOptions(KubernetesClient client, Map<String, String> filter);
+    ObserverOptions getObserverOptions(KubernetesClient client);
     ResourceFactory<T> getResourceFactory();
-    Predicate<T> getResourceFilter(Map<String, String> filter);
+    Predicate<T> getResourceFilter();
 }

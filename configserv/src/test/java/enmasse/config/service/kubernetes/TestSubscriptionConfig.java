@@ -1,8 +1,8 @@
 package enmasse.config.service.kubernetes;
 
 import enmasse.config.service.TestResource;
-import enmasse.config.service.model.LabelSet;
 import enmasse.config.service.model.ResourceFactory;
+import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.MixedOperation;
 import org.apache.qpid.proton.amqp.messaging.AmqpSequence;
@@ -26,19 +26,19 @@ public class TestSubscriptionConfig implements SubscriptionConfig<TestResource> 
 
     @SuppressWarnings("unchecked")
     @Override
-    public ObserverOptions getObserverOptions(KubernetesClient client, Map<String, String> filter) {
-        Map<String, String> filterMap = new LinkedHashMap<>(filter);
+    public ObserverOptions getObserverOptions(KubernetesClient client) {
+        Map<String, String> filterMap = new LinkedHashMap<>();
         filterMap.put("key", "value");
-        return new ObserverOptions(LabelSet.fromMap(filterMap), new MixedOperation[] {client.configMaps() });
+        return new ObserverOptions(filterMap, new MixedOperation[] {client.configMaps() });
     }
 
     @Override
     public ResourceFactory<TestResource> getResourceFactory() {
-        return in -> new TestResource((TestResource.TestValue) in);
+        return in -> new TestResource((ConfigMap) in);
     }
 
     @Override
-    public Predicate<TestResource> getResourceFilter(Map<String, String> filter) {
+    public Predicate<TestResource> getResourceFilter() {
         return TestResource -> true;
     }
 }

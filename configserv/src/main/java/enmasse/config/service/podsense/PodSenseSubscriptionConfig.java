@@ -1,6 +1,5 @@
 package enmasse.config.service.podsense;
 
-import enmasse.config.service.model.LabelSet;
 import enmasse.config.service.model.ResourceFactory;
 import enmasse.config.service.kubernetes.MessageEncoder;
 import enmasse.config.service.kubernetes.ObserverOptions;
@@ -9,7 +8,7 @@ import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.Operation;
 
-import java.util.Map;
+import java.util.Collections;
 import java.util.function.Predicate;
 
 /**
@@ -24,10 +23,10 @@ public class PodSenseSubscriptionConfig implements SubscriptionConfig<PodResourc
 
     @SuppressWarnings("unchecked")
     @Override
-    public ObserverOptions getObserverOptions(KubernetesClient client, Map<String, String> filter) {
+    public ObserverOptions getObserverOptions(KubernetesClient client) {
         Operation<Pod , ?, ?, ?>[] ops = new Operation[1];
         ops[0] = client.pods();
-        return new ObserverOptions(LabelSet.fromMap(filter), ops);
+        return new ObserverOptions(Collections.emptyMap(), ops);
     }
 
     @Override
@@ -36,7 +35,7 @@ public class PodSenseSubscriptionConfig implements SubscriptionConfig<PodResourc
     }
 
     @Override
-    public Predicate<PodResource> getResourceFilter(Map<String, String> filter) {
+    public Predicate<PodResource> getResourceFilter() {
         return podResource -> podResource.getHost() != null && !podResource.getHost().isEmpty();
     }
 }

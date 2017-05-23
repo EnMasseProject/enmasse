@@ -55,7 +55,6 @@ public class ConfigMessageEncoderTest {
         return new ConfigMapBuilder()
                 .withMetadata(new ObjectMetaBuilder()
                         .withName(name)
-                        .addToLabels(LabelKeys.GROUP_ID, name)
                         .build())
                 .withData(data)
                 .build();

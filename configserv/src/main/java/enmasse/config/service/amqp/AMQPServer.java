@@ -16,12 +16,14 @@
 
 package enmasse.config.service.amqp;
 
+import enmasse.config.service.model.ObserverKey;
 import enmasse.config.service.model.ResourceDatabase;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.ProtonSender;
 import io.vertx.proton.ProtonServer;
 import io.vertx.proton.ProtonSession;
+import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.messaging.Source;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,6 +44,8 @@ public class AMQPServer extends AbstractVerticle {
     private final String hostname;
     private final int port;
     private volatile ProtonServer server;
+    private static final Symbol LABELS = Symbol.getSymbol("labels");
+    private static final Symbol ANNOTATIONS = Symbol.getSymbol("annotations");
 
     public AMQPServer(String hostname, int port, Map<String, ResourceDatabase> databaseMap)
     {
@@ -74,7 +78,9 @@ public class AMQPServer extends AbstractVerticle {
         vertx.executeBlocking(promise -> {
             try {
                 ResourceDatabase database = lookupDatabase(source.getAddress());
-                database.subscribe(createStringFilter(source.getFilter()), sender::send);
+                Map<String, String> labelFilter = createLabelFilter(source.getFilter());
+                Map<String, String> annotationFilter = createAnnotationFilter(source.getFilter());
+                database.subscribe(new ObserverKey(labelFilter, annotationFilter), sender::send);
                 promise.complete(database);
             } catch (Exception e) {
                 promise.fail(e);
@@ -98,14 +104,30 @@ public class AMQPServer extends AbstractVerticle {
         }
     }
 
-    private Map<String, String> createStringFilter(Map filter) {
-        Map<String, String> filterMap = new LinkedHashMap<>();
+    private Map<String, String> createLabelFilter(Map filter) {
+        Map<String, String> labelFilter = new LinkedHashMap<>();
         if (filter != null) {
+            if (filter.containsKey(LABELS)) {
+                filter = (Map) filter.get(LABELS);
+            }
             for (Object key : filter.keySet()) {
-                filterMap.put(key.toString(), filter.get(key).toString());
+                labelFilter.put(key.toString(), filter.get(key).toString());
             }
         }
-        return filterMap;
+        return labelFilter;
+    }
+
+    public Map<String, String> createAnnotationFilter(Map filter) {
+        Map<String, String> annotationFilter = new LinkedHashMap<>();
+        if (filter != null) {
+            if (filter.containsKey(ANNOTATIONS)) {
+                filter = (Map) filter.get(ANNOTATIONS);
+                for (Object key : filter.keySet()) {
+                    annotationFilter.put(key.toString(), filter.get(key).toString());
+                }
+            }
+        }
+        return annotationFilter;
     }
 
     @Override

@@ -1,7 +1,6 @@
 package enmasse.config.service.config;
 
 import enmasse.config.LabelKeys;
-import enmasse.config.service.model.LabelSet;
 import enmasse.config.service.model.ResourceFactory;
 import enmasse.config.service.kubernetes.MessageEncoder;
 import enmasse.config.service.kubernetes.ObserverOptions;
@@ -27,14 +26,12 @@ public class ConfigSubscriptionConfig implements SubscriptionConfig<ConfigResour
 
     @SuppressWarnings("unchecked")
     @Override
-    public ObserverOptions getObserverOptions(KubernetesClient client, Map<String, String> filter) {
+    public ObserverOptions getObserverOptions(KubernetesClient client) {
         Operation<ConfigMap, ?, ?, ?>[] ops = new Operation[1];
         ops[0] = client.configMaps();
-        Map<String, String> labelMap = new LinkedHashMap<>(filter);
-        if (labelMap.isEmpty()) {
-            labelMap.put(LabelKeys.TYPE, "address-config");
-        }
-        return new ObserverOptions(LabelSet.fromMap(labelMap), ops);
+        Map<String, String> labelMap = new LinkedHashMap<>();
+        labelMap.put(LabelKeys.TYPE, "address-config");
+        return new ObserverOptions(labelMap, ops);
     }
 
     @Override
@@ -43,7 +40,7 @@ public class ConfigSubscriptionConfig implements SubscriptionConfig<ConfigResour
     }
 
     @Override
-    public Predicate<ConfigResource> getResourceFilter(Map<String, String> filter) {
+    public Predicate<ConfigResource> getResourceFilter() {
         return configResource -> !configResource.getData().containsKey("ENMASSE_INTERNAL_RESERVED");
     }
 }

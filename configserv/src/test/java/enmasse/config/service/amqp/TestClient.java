@@ -24,6 +24,8 @@ import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.messaging.Source;
 
 import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -51,7 +53,10 @@ public class TestClient {
                 System.out.println("Creating receiver");
                 Source source = new Source();
                 source.setAddress(address);
-                source.setFilter(Collections.singletonMap(Symbol.getSymbol("my"), "label"));
+                Map<Symbol, Map<String, String>> filter = new LinkedHashMap<>();
+                filter.put(Symbol.getSymbol("labels"), Collections.singletonMap("my", "label"));
+                filter.put(Symbol.getSymbol("annotations"), Collections.singletonMap("my", "annotation"));
+                source.setFilter(filter);
                 connection.createReceiver(address).setSource(source).closeHandler(closeHandler).handler(handler).open();
             } else {
                 System.out.println("Connection failed: " + connectResult.cause().getMessage());

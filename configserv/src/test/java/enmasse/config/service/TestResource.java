@@ -1,9 +1,11 @@
 package enmasse.config.service;
 
 import enmasse.config.service.model.Resource;
+import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 
+import java.util.Collections;
 import java.util.Map;
 
 public class TestResource extends Resource {
@@ -15,6 +17,10 @@ public class TestResource extends Resource {
         this.name = name;
         this.labels = labelMap;
         this.value = value;
+    }
+
+    public TestResource(ConfigMap value) {
+        this(value.getMetadata().getName(), value.getMetadata().getLabels(), value.getData().get("value"));
     }
 
     public TestResource(TestValue value) {
@@ -60,13 +66,14 @@ public class TestResource extends Resource {
         return name;
     }
 
-    public static class TestValue implements HasMetadata {
+    public static class TestValue extends ConfigMap {
         private ObjectMeta meta = new ObjectMeta();
         private final String value;
 
-        public TestValue(String name, Map<String, String> labels, String value) {
+        public TestValue(String name, Map<String, String> labels, Map<String, String> annotations, String value) {
             meta.setName(name);
             meta.setLabels(labels);
+            meta.setAnnotations(annotations);
             this.value = value;
         }
 
@@ -77,6 +84,11 @@ public class TestResource extends Resource {
         @Override
         public ObjectMeta getMetadata() {
             return meta;
+        }
+
+        @Override
+        public Map<String, String> getData() {
+            return Collections.singletonMap("value", value);
         }
 
         @Override

@@ -16,6 +16,7 @@
 
 package enmasse.config.service.amqp;
 
+import enmasse.config.service.model.ObserverKey;
 import enmasse.config.service.model.ResourceDatabase;
 import enmasse.config.service.model.Subscriber;
 import io.vertx.core.Vertx;
@@ -46,9 +47,6 @@ public class AMQPServerTest {
     private AMQPServer server;
     private ResourceDatabase database;
     private TestClient client;
-
-    @Captor
-    private ArgumentCaptor<Map<String, String>> mapCapture;
 
     @Before
     public void setup() throws InterruptedException {
@@ -82,13 +80,20 @@ public class AMQPServerTest {
         ProtonMessageHandler msgHandler = mock(ProtonMessageHandler.class);
         client.subscribe("foo", result -> {}, msgHandler);
 
+        ArgumentCaptor<ObserverKey> keyCapture = ArgumentCaptor.forClass(ObserverKey.class);
         ArgumentCaptor<Subscriber> subCapture = ArgumentCaptor.forClass(Subscriber.class);
-        verify(database, timeout(10000)).subscribe(mapCapture.capture(), subCapture.capture());
+        verify(database, timeout(10000)).subscribe(keyCapture.capture(), subCapture.capture());
 
-        Map<String, String> filter = mapCapture.getValue();
+        ObserverKey key = keyCapture.getValue();
+        Map<String, String> filter = key.getLabelFilter();
         assertThat(filter.size(), is(1));
         assertTrue(filter.containsKey("my"));
         assertThat(filter.get("my"), is("label"));
+
+        Map<String, String> afilter = key.getAnnotationFilter();
+        assertThat(afilter.size(), is(1));
+        assertTrue(afilter.containsKey("my"));
+        assertThat(afilter.get("my"), is("annotation"));
 
         Subscriber sub = subCapture.getValue();
         Message testMessage = Message.Factory.create();

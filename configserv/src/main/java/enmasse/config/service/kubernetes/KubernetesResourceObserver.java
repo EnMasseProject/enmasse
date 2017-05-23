@@ -16,6 +16,7 @@
 
 package enmasse.config.service.kubernetes;
 
+import enmasse.config.service.model.ObserverKey;
 import enmasse.config.service.model.Resource;
 import enmasse.config.service.model.ResourceFactory;
 import enmasse.config.service.model.Subscriber;
@@ -40,11 +41,13 @@ public class KubernetesResourceObserver<T extends Resource> implements AutoClose
 
     private final ObserverOptions observerOptions;
 
+    private final ObserverKey observerKey;
     private final Set<T> resourceSet = new LinkedHashSet<>();
     private final ResourceFactory<T> resourceFactory;
     private final SubscriptionManager<T> subscriptionManager;
 
-    public KubernetesResourceObserver(ResourceFactory<T> resourceFactory, ObserverOptions observerOptions, SubscriptionManager<T> subscriptionManager) {
+    public KubernetesResourceObserver(ObserverKey observerKey, ResourceFactory<T> resourceFactory, ObserverOptions observerOptions, SubscriptionManager<T> subscriptionManager) {
+        this.observerKey = observerKey;
         this.resourceFactory = resourceFactory;
         this.observerOptions = observerOptions;
         this.subscriptionManager = subscriptionManager;
@@ -53,20 +56,42 @@ public class KubernetesResourceObserver<T extends Resource> implements AutoClose
     @SuppressWarnings("unchecked")
     public void open() {
         Map<Operation<? extends HasMetadata, ?, ?, ?>, KubernetesResourceList>  initialResources = new LinkedHashMap<>();
+        Map<String, String> labelFilter = new LinkedHashMap<>(observerKey.getLabelFilter());
+        labelFilter.putAll(observerOptions.getObserverFilter());
         for (Operation<? extends HasMetadata, ?, ?, ?> operation : observerOptions.getOperations()) {
-            KubernetesResourceList list = (KubernetesResourceList) operation.withLabels(observerOptions.getLabelMap()).list();
+            KubernetesResourceList list = (KubernetesResourceList) operation.withLabels(labelFilter).list();
             initialResources.put(operation, list);
         }
         initializeResources(initialResources.values());
         for (Map.Entry<Operation<? extends HasMetadata, ?, ?, ?>, KubernetesResourceList> entry : initialResources.entrySet()) {
-            watches.add(entry.getKey().withLabels(observerOptions.getLabelMap()).withResourceVersion(entry.getValue().getMetadata().getResourceVersion()).watch(this));
+            watches.add(entry.getKey().withLabels(labelFilter).withResourceVersion(entry.getValue().getMetadata().getResourceVersion()).watch(this));
         }
+    }
+
+    private boolean annotationFilter(HasMetadata resource) {
+        Map<String, String> annotationFilter = observerKey.getAnnotationFilter();
+        Map<String, String> annotations = resource.getMetadata().getAnnotations();
+        if (annotationFilter.isEmpty()) {
+            return true;
+        }
+
+        if (annotations == null) {
+            return false;
+        }
+
+        for (Map.Entry<String, String> filterEntry : annotationFilter.entrySet()) {
+            String annotationValue = annotations.get(filterEntry.getKey());
+            if (annotationValue == null || !annotationValue.equals(filterEntry.getValue())) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private synchronized void initializeResources(Collection<KubernetesResourceList> initialResources) {
         for (KubernetesResourceList list : initialResources) {
             for (Object item : list.getItems()) {
-                if (item instanceof HasMetadata) {
+                if (item instanceof HasMetadata && annotationFilter((HasMetadata) item)) {
                     resourceSet.add(resourceFactory.createResource((HasMetadata) item));
                 }
             }
@@ -91,6 +116,11 @@ public class KubernetesResourceObserver<T extends Resource> implements AutoClose
         if (!(obj instanceof HasMetadata)) {
             throw new IllegalArgumentException("Invalid resource instance: " + obj.getClass().getName());
         }
+
+        if (!annotationFilter((HasMetadata) obj)) {
+            return;
+        }
+
         T resource = resourceFactory.createResource((HasMetadata) obj);
         if (action.equals(Action.ADDED)) {
             deleteFromSet(resource);
@@ -119,10 +149,10 @@ public class KubernetesResourceObserver<T extends Resource> implements AutoClose
         if (cause != null) {
             log.info("Exception from watcher: ", cause);
             close();
-            log.info("Watch for " + observerOptions.getLabelMap() + " + closed, restarting");
+            log.info("Watch for " + observerOptions.getObserverFilter() + " + closed, restarting");
             open();
         } else {
-            log.info("Watch for " + observerOptions.getLabelMap() + " force closed, stopping");
+            log.info("Watch for " + observerOptions.getObserverFilter() + " force closed, stopping");
         }
     }
 }

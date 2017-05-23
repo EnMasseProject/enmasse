@@ -12,13 +12,11 @@ import java.util.Map;
 public class ConfigResource extends Resource {
     private final String kind;
     private final String name;
-    private final Map<String, String> labels;
     private final Map<String, String> data;
 
     public ConfigResource(ConfigMap configMap) {
         this.kind = configMap.getKind();
         this.name = configMap.getMetadata().getName();
-        this.labels = configMap.getMetadata().getLabels();
         this.data = configMap.getData();
     }
 
@@ -31,7 +29,7 @@ public class ConfigResource extends Resource {
 
         if (!kind.equals(that.kind)) return false;
         if (!name.equals(that.name)) return false;
-        return labels != null ? labels.equals(that.labels) : that.labels == null;
+        return true;
     }
 
     @Override
@@ -48,7 +46,6 @@ public class ConfigResource extends Resource {
     public int hashCode() {
         int result = kind.hashCode();
         result = 31 * result + name.hashCode();
-        result = 31 * result + (labels != null ? labels.hashCode() : 0);
         return result;
     }
 

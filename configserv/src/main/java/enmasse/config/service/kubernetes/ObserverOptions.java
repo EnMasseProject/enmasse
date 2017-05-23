@@ -1,6 +1,5 @@
 package enmasse.config.service.kubernetes;
 
-import enmasse.config.service.model.LabelSet;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.client.dsl.Operation;
 
@@ -10,11 +9,11 @@ import java.util.Map;
  * Options to configure an a resource observer.
  */
 public class ObserverOptions {
-    private final LabelSet labelSet;
+    private final Map<String, String> labelFilter;
     private final Operation<? extends HasMetadata, ?, ?, ?>[] operations;
 
-    public ObserverOptions(LabelSet labelSet, Operation<? extends HasMetadata, ?, ?, ?>[] operations) {
-        this.labelSet = labelSet;
+    public ObserverOptions(Map<String, String> labelFilter, Operation<? extends HasMetadata, ?, ?, ?>[] operations) {
+        this.labelFilter = labelFilter;
         this.operations = operations;
     }
 
@@ -23,7 +22,7 @@ public class ObserverOptions {
         return operations;
     }
 
-    public Map<String, String> getLabelMap() {
-        return labelSet.getLabelMap();
+    public Map<String, String> getObserverFilter() {
+        return labelFilter;
     }
 }
