@@ -34,7 +34,7 @@ Subscription.prototype.subscribe = function (selector, handler) {
     amqp.on('message', handler);
     var conn = config_service.connect(amqp, "podsense-" + selector.group_id);
     if (conn) {
-        conn.open_receiver({source:{address:"podsense", filter:{"labels": {"role": "broker"}, "annotations": selector}});
+        conn.open_receiver({source:{address:"podsense", filter:{"labels": {"role": "broker"}, "annotations": selector}}});
         this.conn = conn;
     }
 }
