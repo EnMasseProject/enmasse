@@ -10,7 +10,9 @@ local common = import "common.jsonnet";
       "metadata": {
         "labels": {
           "name": "queue-scheduler",
-          "app": "enmasse",
+          "app": "enmasse"
+        },
+        "annotations": {
           "instance": instance
         },
         "name": "queue-scheduler"
@@ -21,7 +23,9 @@ local common = import "common.jsonnet";
           "metadata": {
             "labels": {
               "name": "queue-scheduler",
-              "app": "enmasse",
+              "app": "enmasse"
+            },
+            "annotations": {
               "instance": instance
             }
           },

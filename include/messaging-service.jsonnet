@@ -46,11 +46,11 @@
       "kind": "Service",
       "metadata": {
         "labels": {
-          "app": "enmasse",
-          "instance": instance
+          "app": "enmasse"
         },
         "name": "messaging",
         "annotations": {
+          "instance": instance,
           "service.alpha.openshift.io/infrastructure": "true",
           "service.alpha.openshift.io/dependencies": std.toString(admin_deps)
         }
@@ -58,8 +58,7 @@
       "spec": {
         "ports": [port, securePort, internalPort, interRouterPort],
         "selector": {
-          "capability": "router",
-          "instance": instance
+          "capability": "router"
         }
       }
     }

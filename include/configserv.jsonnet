@@ -10,7 +10,9 @@ local common = import "common.jsonnet";
       "metadata": {
         "labels": {
           "app": "enmasse",
-          "name": "configserv",
+          "name": "configserv"
+        },
+        "annotations": {
           "instance": instance
         },
         "name": "configserv"
@@ -21,7 +23,9 @@ local common = import "common.jsonnet";
           "metadata": {
             "labels": {
               "app": "enmasse",
-              "name": "configserv",
+              "name": "configserv"
+            },
+            "annotations": {
               "instance": instance
             }
           },

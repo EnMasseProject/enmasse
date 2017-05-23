@@ -96,7 +96,9 @@ local version = std.extVar("VERSION");
     "metadata": {
       "name": name,
       "labels": {
-        "app": "enmasse",
+        "app": "enmasse"
+      },
+      "annotations": {
         "instance": instance
       }
     },
@@ -110,8 +112,7 @@ local version = std.extVar("VERSION");
         }
       ],
       "selector": {
-        "name": selector_name,
-        "instance": instance
+        "name": selector_name
       }
     }
   }

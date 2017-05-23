@@ -12,6 +12,8 @@
       "metadata": {
         "labels": {
           "app": "enmasse",
+        },
+        "annotations": {
           "instance": instance
         },
         "name": "amqp-kafka-bridge"
@@ -19,8 +21,7 @@
       "spec": {
         "ports": [port],
         "selector": {
-          "capability": "bridge",
-          "instance": instance
+          "capability": "bridge"
         }
       }
     }

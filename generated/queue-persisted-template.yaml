@@ -9,10 +9,11 @@ objects:
 - apiVersion: v1
   kind: PersistentVolumeClaim
   metadata:
+    annotations:
+      group_id: "${GROUP_ID}"
+      instance: "${INSTANCE}"
     labels:
       app: enmasse
-      group_id: "${NAME}"
-      instance: "${INSTANCE}"
     name: pvc-${NAME}
   spec:
     accessModes:
@@ -23,20 +24,21 @@ objects:
 - apiVersion: extensions/v1beta1
   kind: Deployment
   metadata:
-    labels:
-      address_config: address-config-${NAME}
-      app: enmasse
-      group_id: "${NAME}"
+    annotations:
+      group_id: "${GROUP_ID}"
       instance: "${INSTANCE}"
+    labels:
+      app: enmasse
     name: "${NAME}"
   spec:
     replicas: 1
     template:
       metadata:
+        annotations:
+          group_id: "${GROUP_ID}"
+          instance: "${INSTANCE}"
         labels:
           app: enmasse
-          group_id: "${NAME}"
-          instance: "${INSTANCE}"
           role: broker
       spec:
         containers:
@@ -44,7 +46,7 @@ objects:
           - name: QUEUE_NAME
             value: "${ADDRESS}"
           - name: GROUP_ID
-            value: "${NAME}"
+            value: "${GROUP_ID}"
           image: "${BROKER_REPO}:latest"
           lifecycle:
             preStop:
@@ -102,6 +104,9 @@ parameters:
   required: true
 - description: A valid name for the instance
   name: NAME
+  required: true
+- description: A valid group id for the instance
+  name: GROUP_ID
   required: true
 - description: The address to use for the queue
   name: ADDRESS

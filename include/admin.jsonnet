@@ -11,7 +11,9 @@ local common = import "common.jsonnet";
       "metadata": {
         "name": "admin",
         "labels": {
-          "app": "enmasse",
+          "app": "enmasse"
+        },
+        "annotations": {
           "instance": instance
         }
       },
@@ -39,8 +41,7 @@ local common = import "common.jsonnet";
           }
         ],
         "selector": {
-          "name": "admin",
-          "instance": instance
+          "name": "admin"
         }
       }
     }
@@ -53,6 +54,8 @@ local common = import "common.jsonnet";
       "labels": {
         "app": "enmasse",
         "name": "admin",
+      },
+      "annotations": {
         "instance": instance
       },
       "name": "admin"
@@ -64,6 +67,8 @@ local common = import "common.jsonnet";
           "labels": {
             "name": "admin",
             "app": "enmasse",
+          },
+          "annotations": {
             "instance": instance
           }
         },

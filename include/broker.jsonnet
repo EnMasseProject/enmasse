@@ -19,7 +19,7 @@ local common = import "common.jsonnet";
           "containerPort": 8161 
         }
       ],
-      "env": [ addressEnv, {"name": "GROUP_ID", "value": "${NAME}"} ],
+      "env": [ addressEnv, {"name": "GROUP_ID", "value": "${GROUP_ID}"} ],
       "volumeMounts": [
         {
           "name": volumeName,

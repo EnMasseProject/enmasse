@@ -8,8 +8,10 @@ local common = import "common.jsonnet";
       "metadata": {
         "labels": {
           "name": "amqp-kafka-bridge",
-          "instance": instance,
           "app": "enmasse"
+        },
+        "annotations": {
+          "instance": instance
         },
         "name": "amqp-kafka-bridge"
       },
@@ -20,8 +22,10 @@ local common = import "common.jsonnet";
             "labels": {
               "capability": "bridge",
               "name": "amqp-kafka-bridge",
-              "instance": instance,
               "app": "enmasse"
+            },
+            "annotations": {
+              "instance": instance
             }
           },
           "spec": {
