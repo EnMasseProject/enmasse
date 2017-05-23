@@ -57,7 +57,7 @@ public class KubernetesResourceDatabase<T extends Resource> implements AutoClose
             observer.subscribe(subscriber);
             observer.open();
         } else {
-            log.debug("Subscribing to existing observer");
+            log.info("Subscribed to existing observer with filter " + observerKey);
             observer.subscribe(subscriber);
         }
     }

@@ -82,7 +82,13 @@ public class PodResource extends Resource {
 
     @Override
     public String toString() {
-        return kind + ":" + name;
+        StringBuilder builder = new StringBuilder();
+        builder.append("kind=").append(kind);
+        builder.append(", name=").append(name);
+        builder.append(", host=").append(host);
+        builder.append(", phase=").append(phase);
+        builder.append(", ready=").append(ready);
+        return builder.toString();
     }
 
     @Override
