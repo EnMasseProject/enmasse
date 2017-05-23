@@ -34,7 +34,7 @@ import static org.junit.Assert.assertThat;
 public class QueueTest extends AmqpTestBase {
     @Test
     public void testQueue() throws Exception {
-        Destination dest = Destination.queue("myqueue");
+        Destination dest = Destination.queue("/myqueue");
         deploy(dest);
         AmqpClient client = createQueueClient();
 
