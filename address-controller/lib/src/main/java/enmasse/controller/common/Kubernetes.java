@@ -19,7 +19,14 @@ import java.util.Set;
 public interface Kubernetes {
 
     static String sanitizeName(String name) {
-        return name.toLowerCase().replaceAll("[^a-z0-9]", "-");
+        String replaced = name.toLowerCase().replaceAll("[^a-z0-9]", "-");
+        if (replaced.startsWith("-")) {
+            replaced = replaced.replaceFirst("-", "1");
+        }
+        if (replaced.endsWith("-")) {
+            replaced = replaced.substring(0, replaced.length() - 2) + "1";
+        }
+        return replaced;
     }
 
     static void addObjectLabel(KubernetesList items, String labelKey, String labelValue) {
