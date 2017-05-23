@@ -32,7 +32,7 @@ public class BroadcastTest extends AmqpTestBase {
 
     @Test
     public void testMultipleRecievers() throws Exception {
-        Destination dest = Destination.broadcast("broadcast");
+        Destination dest = Destination.broadcast("/broadcast");
         deploy(dest);
         Thread.sleep(20_000);
         AmqpClient client = createBroadcastClient();
