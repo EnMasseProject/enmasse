@@ -31,7 +31,7 @@ import org.slf4j.LoggerFactory;
 import java.util.*;
 
 public class DiscoveryClient extends AbstractVerticle {
-    private final Map<Symbol, String> labelFilter;
+    private final Map<Symbol, Map<String, String>> sourceFilter;
     private final List<DiscoveryListener> listeners = new ArrayList<>();
     private final Logger log = LoggerFactory.getLogger(DiscoveryClient.class.getName());
     private final Endpoint endpoint;
@@ -40,15 +40,15 @@ public class DiscoveryClient extends AbstractVerticle {
     private Set<Host> currentHosts = new LinkedHashSet<>();
     private volatile ProtonConnection connection;
 
-    public DiscoveryClient(Endpoint endpoint, String address, Map<String, String> labelFilter, Optional<String> containerName) {
+    public DiscoveryClient(Endpoint endpoint, String address, Map<String, String> labelFilter, Map<String, String> annotationFilter, Optional<String> containerName) {
         this.endpoint = endpoint;
         this.address = address;
-        this.labelFilter = toSymbolMap(labelFilter);
+        this.sourceFilter = toSymbolMap(labelFilter, annotationFilter);
         this.containerName = containerName;
     }
 
-    public DiscoveryClient(String address, Map<String, String> labelFilter, Optional<String> containerName) {
-        this(getEndpoint(), address, labelFilter, containerName);
+    public DiscoveryClient(String address, Map<String, String> labelFilter, Map<String, String> annotationFilter, Optional<String> containerName) {
+        this(getEndpoint(), address, labelFilter, annotationFilter, containerName);
     }
 
     private static Endpoint getEndpoint() {
@@ -61,11 +61,10 @@ public class DiscoveryClient extends AbstractVerticle {
         return new Endpoint(host, Integer.parseInt(port));
     }
 
-    private static Map<Symbol, String> toSymbolMap(Map<String, String> labelFilter) {
-        Map<Symbol, String> symbolMap = new HashMap<>();
-        for (Map.Entry<String, String> entry : labelFilter.entrySet()) {
-            symbolMap.put(Symbol.getSymbol(entry.getKey()), entry.getValue());
-        }
+    private static Map<Symbol, Map<String, String>> toSymbolMap(Map<String, String> labelFilter, Map<String, String> annotationFilter) {
+        Map<Symbol, Map<String, String>> symbolMap = new HashMap<>();
+        symbolMap.put(Symbol.getSymbol("labels"), labelFilter);
+        symbolMap.put(Symbol.getSymbol("annotations"), annotationFilter);
         return symbolMap;
     }
 
@@ -94,7 +93,7 @@ public class DiscoveryClient extends AbstractVerticle {
 
                 Source source = new Source();
                 source.setAddress(address);
-                source.setFilter(labelFilter);
+                source.setFilter(sourceFilter);
                 ProtonReceiver receiver = connection.createReceiver(address);
                 receiver.openHandler(o -> startFuture.complete());
                 receiver.setSource(source);

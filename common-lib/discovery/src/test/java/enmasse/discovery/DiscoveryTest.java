@@ -33,17 +33,19 @@ public class DiscoveryTest {
 
     @Test
     public void testDiscovery() throws InterruptedException, IOException, TimeoutException, ExecutionException {
-        Map<String, String> expectedFilter = Collections.singletonMap("my", "key");
+        Map<String, String> expectedLabelFilter = Collections.singletonMap("my", "key");
+        Map<String, String> expectedAnnotationFilter = Collections.singletonMap("my", "annotation");
         CompletableFuture<Set<Host>> changedHosts = new CompletableFuture<>();
 
         BlockingQueue<Subscriber> subscriptionQueue = new LinkedBlockingDeque<>();
-        AMQPServer testServer = new AMQPServer("0.0.0.0", 0, Collections.singletonMap("podsense", (map, subscriber) -> {
-            assertThat(map, is(expectedFilter));
+        AMQPServer testServer = new AMQPServer("0.0.0.0", 0, Collections.singletonMap("podsense", (observerKey, subscriber) -> {
+            assertThat(observerKey.getLabelFilter(), is(expectedLabelFilter));
+            assertThat(observerKey.getAnnotationFilter(), is(expectedAnnotationFilter));
             subscriptionQueue.put(subscriber);
         }));
 
         vertx.deployVerticle(testServer);
-        DiscoveryClient client = new DiscoveryClient(new Endpoint("127.0.0.1", waitForPort(testServer)), "podsense", expectedFilter, Optional.empty());
+        DiscoveryClient client = new DiscoveryClient(new Endpoint("127.0.0.1", waitForPort(testServer)), "podsense", expectedLabelFilter, expectedAnnotationFilter, Optional.empty());
         client.addListener(changedHosts::complete);
         vertx.deployVerticle(client);
 
