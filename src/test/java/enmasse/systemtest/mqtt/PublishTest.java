@@ -66,7 +66,7 @@ public class PublishTest extends MqttTestBase {
 
         Destination dest = Destination.topic("mytopic");
         deploy(dest);
-        Thread.sleep(120_000);
+        Thread.sleep(60_000);
 
         MqttClient client = this.createClient();
 
