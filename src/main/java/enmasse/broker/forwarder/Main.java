@@ -36,10 +36,11 @@ public class Main {
     public static void main(String [] args) throws IOException, InterruptedException {
         Map<String, String> env = System.getenv();
         Map<String, String> labelFilter = getLabelFilter(env);
+        Map<String, String> annotationFilter = getAnnotationFilter(env);
         Host localHost = getLocalHost();
         String address = getAddress(env);
 
-        DiscoveryClient discoveryClient = new DiscoveryClient("podsense", labelFilter, Optional.of("broker"));
+        DiscoveryClient discoveryClient = new DiscoveryClient("podsense", labelFilter, annotationFilter, Optional.of("broker"));
         ForwarderController replicator = new ForwarderController(localHost, address);
         discoveryClient.addListener(replicator);
 
@@ -66,11 +67,17 @@ public class Main {
     private static Map<String,String> getLabelFilter(Map<String, String> env) {
         Map<String, String> labelMap = new LinkedHashMap<>();
         labelMap.put("role", "broker");
+        return labelMap;
+    }
+
+    private static Map<String,String> getAnnotationFilter(Map<String, String> env) {
+        Map<String, String> labelMap = new LinkedHashMap<>();
         labelMap.put("group_id", getBrokerName(env));
         return labelMap;
     }
 
-    private static String getEnvOrThrow(Map<String, String> env, String envVar) {
+    private static String
+    getEnvOrThrow(Map<String, String> env, String envVar) {
         String var = env.get(envVar);
         if (var == null) {
             throw new IllegalArgumentException(String.format("Unable to find value for required environment var '%s'", envVar));
