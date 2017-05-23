@@ -44,11 +44,12 @@ public class Main {
             String groupId = System.getenv("GROUP_ID");
             Endpoint messagingEndpoint = new Endpoint(System.getenv("MESSAGING_SERVICE_HOST"), Integer.parseInt(System.getenv("MESSAGING_SERVICE_PORT_INTERNAL")));
 
-            Map<String, String> filter = new LinkedHashMap<>();
-            filter.put("role", "broker");
-            filter.put("group_id", groupId);
+            Map<String, String> labelFilter = new LinkedHashMap<>();
+            labelFilter.put("role", "broker");
+            Map<String, String> annotationFilter = new LinkedHashMap<>();
+            annotationFilter.put("group_id", groupId);
 
-            DiscoveryClient discoveryClient = new DiscoveryClient("podsense", filter, Optional.of("broker"));
+            DiscoveryClient discoveryClient = new DiscoveryClient("podsense", labelFilter, annotationFilter, Optional.of("broker"));
             TopicMigrator migrator = new TopicMigrator(vertx, localHost, messagingEndpoint);
             discoveryClient.addListener(migrator);
             vertx.deployVerticle(discoveryClient);
