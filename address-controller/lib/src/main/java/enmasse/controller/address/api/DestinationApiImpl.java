@@ -2,6 +2,7 @@ package enmasse.controller.address.api;
 
 import enmasse.config.AddressConfigKeys;
 import enmasse.config.LabelKeys;
+import enmasse.config.AnnotationKeys;
 import enmasse.controller.common.Kubernetes;
 import enmasse.controller.model.Destination;
 import enmasse.controller.model.InstanceId;
@@ -94,9 +95,9 @@ public class DestinationApiImpl implements DestinationApi {
         DoneableConfigMap builder = client.configMaps().inNamespace(instanceId.getNamespace()).withName(name).createOrReplaceWithNew()
                 .withNewMetadata()
                 .withName(name)
-                .addToLabels(LabelKeys.GROUP_ID, Kubernetes.sanitizeName(destination.group()))
                 .addToLabels(LabelKeys.TYPE, "address-config")
-                .addToLabels(LabelKeys.INSTANCE, Kubernetes.sanitizeName(instanceId.getId()))
+                .addToAnnotations(AnnotationKeys.GROUP_ID, destination.group())
+                .addToAnnotations(AnnotationKeys.INSTANCE, instanceId.getId())
                 .endMetadata();
         builder.addToData(AddressConfigKeys.ADDRESS, destination.address());
         builder.addToData(AddressConfigKeys.GROUP_ID, destination.group());

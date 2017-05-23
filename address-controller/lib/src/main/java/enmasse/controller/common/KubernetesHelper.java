@@ -16,6 +16,7 @@
 
 package enmasse.controller.common;
 
+import enmasse.config.AnnotationKeys;
 import enmasse.config.LabelKeys;
 import enmasse.controller.address.DestinationCluster;
 import enmasse.controller.model.InstanceId;
@@ -62,12 +63,14 @@ public class KubernetesHelper implements Kubernetes {
         objects.addAll(client.replicationControllers().inNamespace(instance.getNamespace()).list().getItems());
 
         for (HasMetadata config : objects) {
-            Map<String, String> labels = config.getMetadata().getLabels();
+            Map<String, String> annotations = config.getMetadata().getAnnotations();
 
-            if (labels != null && labels.containsKey(LabelKeys.GROUP_ID)) {
-                String groupId = labels.get(LabelKeys.GROUP_ID);
+            if (annotations != null && annotations.containsKey(AnnotationKeys.GROUP_ID)) {
+                String groupId = annotations.get(AnnotationKeys.GROUP_ID);
 
-                if (!"address-config".equals(labels.get(LabelKeys.TYPE))) {
+                Map<String, String> labels = config.getMetadata().getLabels();
+
+                if (labels != null && !"address-config".equals(labels.get(LabelKeys.TYPE))) {
                     if (!resourceMap.containsKey(groupId)) {
                         resourceMap.put(groupId, new ArrayList<>());
                     }

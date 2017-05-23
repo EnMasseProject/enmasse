@@ -1,5 +1,6 @@
 package enmasse.controller.instance;
 
+import enmasse.config.AnnotationKeys;
 import enmasse.config.LabelKeys;
 import enmasse.controller.common.Kubernetes;
 import enmasse.controller.common.KubernetesHelper;
@@ -47,7 +48,7 @@ public class InstanceManagerImpl implements InstanceManager {
 
     private KubernetesList createResourceList(Instance instance) {
         List<ParameterValue> parameterValues = new ArrayList<>();
-        parameterValues.add(new ParameterValue(TemplateParameter.INSTANCE, Kubernetes.sanitizeName(instance.id().getId())));
+        parameterValues.add(new ParameterValue(TemplateParameter.INSTANCE, instance.id().getId()));
         instance.messagingHost().ifPresent(h -> parameterValues.add(new ParameterValue(TemplateParameter.MESSAGING_HOSTNAME, h)));
         instance.mqttHost().ifPresent(h -> parameterValues.add(new ParameterValue(TemplateParameter.MQTT_HOSTNAME, h)));
         instance.consoleHost().ifPresent(h -> parameterValues.add(new ParameterValue(TemplateParameter.CONSOLE_HOSTNAME, h)));
@@ -82,7 +83,7 @@ public class InstanceManagerImpl implements InstanceManager {
                 labels.put(LabelKeys.APP, "enmasse");
                 labels.put(LabelKeys.TYPE, "instance");
                 for (Namespace namespace : kubernetes.listNamespaces(labels)) {
-                    String id = namespace.getMetadata().getLabels().get(LabelKeys.INSTANCE);
+                    String id = namespace.getMetadata().getAnnotations().get(AnnotationKeys.INSTANCE);
                     InstanceId instanceId = InstanceId.withIdAndNamespace(id, namespace.getMetadata().getName());
                     if (!desiredInstances.contains(instanceId)) {
                         delete(instanceId);

@@ -22,9 +22,6 @@ package enmasse.config;
 public interface LabelKeys {
     String TYPE = "type";
 
-    String GROUP_ID = "group_id";
-    String ADDRESS_CONFIG = "address_config";
-    String INSTANCE = "instance";
     String UUID = "uuid";
     String ADDRESS = "address";
     String APP = "app";

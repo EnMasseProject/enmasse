@@ -23,6 +23,7 @@ public interface TemplateParameter {
     String NAME = "NAME";
     String ADDRESS = "ADDRESS";
     String INSTANCE = "INSTANCE";
+    String GROUP_ID = "GROUP_ID";
     String MESSAGING_HOSTNAME = "MESSAGING_HOSTNAME";
     String MQTT_HOSTNAME = "MQTT_GATEWAY_HOSTNAME";
     String CONSOLE_HOSTNAME = "CONSOLE_HOSTNAME";

@@ -16,6 +16,7 @@
 
 package enmasse.controller.common;
 
+import enmasse.config.AnnotationKeys;
 import enmasse.config.LabelKeys;
 import enmasse.controller.address.DestinationCluster;
 import enmasse.controller.flavor.FlavorRepository;
@@ -69,7 +70,8 @@ public class TemplateDestinationClusterGenerator implements DestinationClusterGe
 
         // If the flavor is shared, there is only one instance of it, so give it the name of the flavor
         paramMap.put(TemplateParameter.NAME, Kubernetes.sanitizeName(groupId));
-        paramMap.put(TemplateParameter.INSTANCE, Kubernetes.sanitizeName(instance.id().getId()));
+        paramMap.put(TemplateParameter.GROUP_ID, groupId);
+        paramMap.put(TemplateParameter.INSTANCE, instance.id().getId());
         paramMap.put(TemplateParameter.COLOCATED_ROUTER_SECRET, instance.certSecret());
 
         // If the name of the group matches that of the address, assume a scalable queue
@@ -88,8 +90,8 @@ public class TemplateDestinationClusterGenerator implements DestinationClusterGe
         KubernetesList items = kubernetes.processTemplate(flavor.templateName(), parameters);
 
         // These are attributes that we need to identify components belonging to this address
-        Kubernetes.addObjectLabel(items, LabelKeys.GROUP_ID, Kubernetes.sanitizeName(groupId));
-        Kubernetes.addObjectLabel(items, LabelKeys.ADDRESS_CONFIG, Kubernetes.sanitizeName("address-config-" + groupId));
+        Kubernetes.addObjectAnnotation(items, AnnotationKeys.GROUP_ID, groupId);
+        Kubernetes.addObjectAnnotation(items, AnnotationKeys.INSTANCE, instance.id().getId());
         first.uuid().ifPresent(uuid -> Kubernetes.addObjectLabel(items, LabelKeys.UUID, uuid));
         return items;
     }

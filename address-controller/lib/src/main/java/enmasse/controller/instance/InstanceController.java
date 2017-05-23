@@ -1,10 +1,12 @@
 package enmasse.controller.instance;
 
+import enmasse.config.AnnotationKeys;
 import enmasse.config.LabelKeys;
 import enmasse.controller.common.ConfigWatcher;
 import enmasse.controller.instance.api.InstanceApi;
 import enmasse.controller.instance.cert.CertManager;
 import enmasse.controller.model.Instance;
+import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.extensions.Ingress;
 import io.fabric8.kubernetes.api.model.extensions.IngressList;
 import io.fabric8.openshift.api.model.Route;
@@ -15,7 +17,9 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 
 /**
@@ -70,27 +74,23 @@ public class InstanceController extends ConfigWatcher<Instance> {
     }
 
     private void updateRoutes(Instance.Builder instance) throws IOException {
-        Map<String, String> labelMap = new HashMap<>();
-        labelMap.put(LabelKeys.INSTANCE, instance.id().getId());
+        Map<String, String> annotations = new HashMap<>();
+        annotations.put(AnnotationKeys.INSTANCE, instance.id().getId());
 
         /* Watch for routes and ingress */
         if (client.isAdaptable(OpenShiftClient.class)) {
-            updateRoutes(instance, client.routes().inNamespace(instance.id().getNamespace()).withLabels(labelMap).list());
+            client.routes().inNamespace(instance.id().getNamespace()).list().getItems().stream()
+                    .filter(route -> isPartOfInstance(instance.id().getId(), route))
+                    .forEach(route -> updateRoute(instance, route.getMetadata().getName(), route.getSpec().getHost()));
         } else {
-            updateIngresses(instance, client.extensions().ingresses().inNamespace(instance.id().getNamespace()).withLabels(labelMap).list());
+            client.extensions().ingresses().inNamespace(instance.id().getNamespace()).list().getItems().stream()
+                    .filter(ingress -> isPartOfInstance(instance.id().getId(), ingress))
+                    .forEach(ingress -> updateRoute(instance, ingress.getMetadata().getName(), ingress.getSpec().getRules().get(0).getHost()));
         }
     }
 
-    private void updateIngresses(Instance.Builder instance, IngressList list) {
-        for (Ingress ingress : list.getItems()) {
-            updateRoute(instance, ingress.getMetadata().getName(), ingress.getSpec().getRules().get(0).getHost());
-        }
-    }
-
-    private void updateRoutes(Instance.Builder instance, RouteList list) throws IOException {
-        for (Route route : list.getItems()) {
-            updateRoute(instance, route.getMetadata().getName(), route.getSpec().getHost());
-        }
+    private static boolean isPartOfInstance(String id, HasMetadata resource) {
+        return resource.getMetadata().getAnnotations() != null && id.equals(resource.getMetadata().getAnnotations().get(AnnotationKeys.INSTANCE));
     }
 
     private void updateRoute(Instance.Builder builder, String name, String host) {

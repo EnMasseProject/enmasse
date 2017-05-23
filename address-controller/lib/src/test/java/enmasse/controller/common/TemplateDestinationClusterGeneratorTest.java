@@ -16,6 +16,7 @@
 
 package enmasse.controller.common;
 
+import enmasse.config.AnnotationKeys;
 import enmasse.controller.flavor.FlavorManager;
 import enmasse.controller.model.Destination;
 import enmasse.controller.model.Flavor;
@@ -71,12 +72,12 @@ public class TemplateDestinationClusterGeneratorTest {
         List<HasMetadata> resources = clusterList.getResources().getItems();
         assertThat(resources.size(), is(1));
         for (HasMetadata resource : resources) {
-            Map<String, String> rlabel = resource.getMetadata().getLabels();
-            assertNotNull(rlabel.get(LabelKeys.GROUP_ID));
-            assertThat(rlabel.get(LabelKeys.GROUP_ID), is("foo-bar"));
+            Map<String, String> annotations = resource.getMetadata().getAnnotations();
+            assertNotNull(annotations.get(AnnotationKeys.GROUP_ID));
+            assertThat(annotations.get(AnnotationKeys.GROUP_ID), is("foo.bar"));
         }
         List<ParameterValue> parameters = captor.getAllValues();
-        assertThat(parameters.size(), is(4));
+        assertThat(parameters.size(), is(5));
     }
 
     private DestinationCluster generateCluster(Destination destination, ArgumentCaptor<ParameterValue> captor) {
