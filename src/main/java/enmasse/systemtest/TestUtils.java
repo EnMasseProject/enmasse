@@ -43,7 +43,7 @@ public class TestUtils {
         boolean done = false;
         int actualReplicas = 0;
         do {
-            List<Pod> pods = openShift.listPods(Collections.singletonMap("group_id", group));
+            List<Pod> pods = openShift.listPods(Collections.singletonMap("role", "broker"), Collections.singletonMap("group_id", group));
             actualReplicas = numReady(pods);
             Logging.log.info("Have " + actualReplicas + " out of " + pods.size() + " replicas. Expecting " + expectedReplicas);
             if (actualReplicas != pods.size() || actualReplicas != expectedReplicas) {
@@ -95,14 +95,16 @@ public class TestUtils {
 
     public static void waitForBrokerPod(OpenShift openShift, String group, TimeoutBudget budget) throws InterruptedException {
         Map<String, String> labels = new LinkedHashMap<>();
-        labels.put("group_id", group);
         labels.put("role", "broker");
+
+        Map<String, String> annotations = new LinkedHashMap<>();
+        annotations.put("group_id", group);
 
 
         int numReady = 0;
         List<Pod> pods = null;
         while (budget.timeLeft() >= 0 && numReady != 1) {
-            pods = openShift.listPods(labels);
+            pods = openShift.listPods(labels, annotations);
             numReady = numReady(pods);
             if (numReady != 1) {
                 Thread.sleep(5000);

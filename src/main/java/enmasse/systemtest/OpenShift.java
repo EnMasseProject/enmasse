@@ -13,6 +13,7 @@ import io.fabric8.openshift.client.DefaultOpenShiftClient;
 import io.fabric8.openshift.client.OpenShiftClient;
 
 import java.io.OutputStream;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -91,11 +92,24 @@ public class OpenShift {
     }
 
     public List<Pod> listPods(Map<String, String> labelSelector) {
+        return listPods(labelSelector, Collections.emptyMap());
+    }
+
+    public List<Pod> listPods(Map<String, String> labelSelector, Map<String, String> annotationSelector) {
         return client.pods()
                 .inNamespace(namespace)
                 .withLabels(labelSelector)
                 .list()
                 .getItems().stream()
+                    .filter(pod -> {
+                        for (Map.Entry<String, String> entry : annotationSelector.entrySet()) {
+                            if (pod.getMetadata().getAnnotations() == null || pod.getMetadata().getAnnotations().get(entry.getKey()) == null || !pod.getMetadata().getAnnotations().get(entry.getKey()).equals(entry.getValue())) {
+                                return false;
+                            }
+                            return true;
+                        }
+                        return true;
+                    })
                     .collect(Collectors.toList());
     }
 
