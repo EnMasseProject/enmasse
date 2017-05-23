@@ -1,3 +1,13 @@
+## 0.10.0 (May 3, 2017)
+* Merged non-TLS and TLS-based templates into one, making EnMasse TLS-enabled by default. This
+  simplifies deployment of EnMasse but also the maintenance of the templates.
+* Guide for deploying EnMasse on AWS
+
+## 0.9.0 (April 27, 2017)
+* Various UI fixes to the console for demo purposes
+* Improved documentation for deploying EnMasse with Open Service Broker API
+* Dashboard for router metrics
+
 ## 0.8.0 (April 21, 2017)
 * Support for pushing router metrics to [Hawkular](http://www.hawkular.org/) using the [Hawkular OpenShift Agent](https://github.com/hawkular/hawkular-openshift-agent)
 
