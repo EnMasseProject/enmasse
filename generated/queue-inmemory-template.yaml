@@ -24,6 +24,7 @@ objects:
           instance: "${INSTANCE}"
         labels:
           app: enmasse
+          name: "${NAME}"
           role: broker
       spec:
         containers:

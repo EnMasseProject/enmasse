@@ -42,7 +42,8 @@ local forwarder = import "forwarder.jsonnet";
             "metadata": {
               "labels": {
                 "app": "enmasse",
-                "role": "broker"
+                "role": "broker",
+                "name": "${NAME}"
               },
               "annotations": {
                 "group_id": "${GROUP_ID}",
