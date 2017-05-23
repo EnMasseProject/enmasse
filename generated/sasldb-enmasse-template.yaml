@@ -173,10 +173,10 @@ objects:
       "kind": "Deployment", "metadata": {"annotations": {"group_id": "${GROUP_ID}",
       "instance": "${INSTANCE}"}, "labels": {"app": "enmasse"}, "name": "${NAME}"},
       "spec": {"replicas": 1, "template": {"metadata": {"annotations": {"group_id":
-      "${GROUP_ID}", "instance": "${INSTANCE}"}, "labels": {"app": "enmasse", "role":
-      "broker"}}, "spec": {"containers": [{"env": [{"name": "QUEUE_NAME", "value":
-      "${ADDRESS}"}, {"name": "GROUP_ID", "value": "${GROUP_ID}"}], "image": "${BROKER_REPO}:latest",
-      "lifecycle": {"preStop": {"exec": {"command": ["/opt/artemis-shutdown-hook/bin/artemis-shutdown-hook"]}}},
+      "${GROUP_ID}", "instance": "${INSTANCE}"}, "labels": {"app": "enmasse", "name":
+      "${NAME}", "role": "broker"}}, "spec": {"containers": [{"env": [{"name": "QUEUE_NAME",
+      "value": "${ADDRESS}"}, {"name": "GROUP_ID", "value": "${GROUP_ID}"}], "image":
+      "${BROKER_REPO}:latest", "lifecycle": {"preStop": {"exec": {"command": ["/opt/artemis-shutdown-hook/bin/artemis-shutdown-hook"]}}},
       "livenessProbe": {"tcpSocket": {"port": "amqp"}}, "name": "broker", "ports":
       [{"containerPort": 5673, "name": "amqp"}, {"containerPort": 61616, "name": "core"},
       {"containerPort": 8161, "name": "jolokia"}], "readinessProbe": {"tcpSocket":
@@ -209,10 +209,10 @@ objects:
       "metadata": {"annotations": {"group_id": "${GROUP_ID}", "instance": "${INSTANCE}"},
       "labels": {"app": "enmasse"}, "name": "${NAME}"}, "spec": {"replicas": 1, "template":
       {"metadata": {"annotations": {"group_id": "${GROUP_ID}", "instance": "${INSTANCE}"},
-      "labels": {"app": "enmasse", "role": "broker"}}, "spec": {"containers": [{"env":
-      [{"name": "QUEUE_NAME", "value": "${ADDRESS}"}, {"name": "GROUP_ID", "value":
-      "${GROUP_ID}"}], "image": "${BROKER_REPO}:latest", "lifecycle": {"preStop":
-      {"exec": {"command": ["/opt/artemis-shutdown-hook/bin/artemis-shutdown-hook"]}}},
+      "labels": {"app": "enmasse", "name": "${NAME}", "role": "broker"}}, "spec":
+      {"containers": [{"env": [{"name": "QUEUE_NAME", "value": "${ADDRESS}"}, {"name":
+      "GROUP_ID", "value": "${GROUP_ID}"}], "image": "${BROKER_REPO}:latest", "lifecycle":
+      {"preStop": {"exec": {"command": ["/opt/artemis-shutdown-hook/bin/artemis-shutdown-hook"]}}},
       "livenessProbe": {"tcpSocket": {"port": "amqp"}}, "name": "broker", "ports":
       [{"containerPort": 5673, "name": "amqp"}, {"containerPort": 61616, "name": "core"},
       {"containerPort": 8161, "name": "jolokia"}], "readinessProbe": {"tcpSocket":
@@ -241,10 +241,10 @@ objects:
       "kind": "Deployment", "metadata": {"annotations": {"group_id": "${GROUP_ID}",
       "instance": "${INSTANCE}"}, "labels": {"app": "enmasse"}, "name": "${NAME}"},
       "spec": {"replicas": 1, "template": {"metadata": {"annotations": {"group_id":
-      "${GROUP_ID}", "instance": "${INSTANCE}"}, "labels": {"app": "enmasse", "role":
-      "broker"}}, "spec": {"containers": [{"env": [{"name": "TOPIC_NAME", "value":
-      "${ADDRESS}"}, {"name": "GROUP_ID", "value": "${GROUP_ID}"}], "image": "${BROKER_REPO}:latest",
-      "lifecycle": {"preStop": {"exec": {"command": ["/opt/artemis-shutdown-hook/bin/artemis-shutdown-hook"]}}},
+      "${GROUP_ID}", "instance": "${INSTANCE}"}, "labels": {"app": "enmasse", "name":
+      "${NAME}", "role": "broker"}}, "spec": {"containers": [{"env": [{"name": "TOPIC_NAME",
+      "value": "${ADDRESS}"}, {"name": "GROUP_ID", "value": "${GROUP_ID}"}], "image":
+      "${BROKER_REPO}:latest", "lifecycle": {"preStop": {"exec": {"command": ["/opt/artemis-shutdown-hook/bin/artemis-shutdown-hook"]}}},
       "livenessProbe": {"tcpSocket": {"port": "amqp"}}, "name": "broker", "ports":
       [{"containerPort": 5673, "name": "amqp"}, {"containerPort": 61616, "name": "core"},
       {"containerPort": 8161, "name": "jolokia"}], "readinessProbe": {"tcpSocket":
@@ -288,10 +288,10 @@ objects:
       "metadata": {"annotations": {"group_id": "${GROUP_ID}", "instance": "${INSTANCE}"},
       "labels": {"app": "enmasse"}, "name": "${NAME}"}, "spec": {"replicas": 1, "template":
       {"metadata": {"annotations": {"group_id": "${GROUP_ID}", "instance": "${INSTANCE}"},
-      "labels": {"app": "enmasse", "role": "broker"}}, "spec": {"containers": [{"env":
-      [{"name": "TOPIC_NAME", "value": "${ADDRESS}"}, {"name": "GROUP_ID", "value":
-      "${GROUP_ID}"}], "image": "${BROKER_REPO}:latest", "lifecycle": {"preStop":
-      {"exec": {"command": ["/opt/artemis-shutdown-hook/bin/artemis-shutdown-hook"]}}},
+      "labels": {"app": "enmasse", "name": "${NAME}", "role": "broker"}}, "spec":
+      {"containers": [{"env": [{"name": "TOPIC_NAME", "value": "${ADDRESS}"}, {"name":
+      "GROUP_ID", "value": "${GROUP_ID}"}], "image": "${BROKER_REPO}:latest", "lifecycle":
+      {"preStop": {"exec": {"command": ["/opt/artemis-shutdown-hook/bin/artemis-shutdown-hook"]}}},
       "livenessProbe": {"tcpSocket": {"port": "amqp"}}, "name": "broker", "ports":
       [{"containerPort": 5673, "name": "amqp"}, {"containerPort": 61616, "name": "core"},
       {"containerPort": 8161, "name": "jolokia"}], "readinessProbe": {"tcpSocket":
