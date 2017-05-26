@@ -96,11 +96,11 @@ public class InstanceController extends ConfigWatcher<Instance> {
     private void updateRoute(Instance.Builder builder, String name, String host) {
         log.debug("Updating routes for " + name + " to " + host);
         if ("messaging".equals(name)) {
-            builder.messagingHost(Optional.of(host));
+            builder.messagingHost(Optional.ofNullable(host));
         } else if ("mqtt".equals(name)) {
-            builder.mqttHost(Optional.of(host));
+            builder.mqttHost(Optional.ofNullable(host));
         } else if ("console".equals(name)) {
-            builder.consoleHost(Optional.of(host));
+            builder.consoleHost(Optional.ofNullable(host));
         }
     }
 
