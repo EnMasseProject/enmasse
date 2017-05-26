@@ -15,7 +15,7 @@ items:
       5672, "name": "amqp", "protocol": "TCP"}, {"containerPort": 55673, "name": "internal",
       "protocol": "TCP"}, {"containerPort": 5671, "name": "amqps", "protocol": "TCP"}],
       "volumeMounts": [{"mountPath": "/etc/qpid-dispatch/ssl", "name": "ssl-certs",
-      "readOnly": true}]}, {"image": "${ROUTER_COLLECTOR_REPO}:latest", "livenessProbe":
+      "readOnly": true}]}, {"image": "${ROUTER_METRICS_REPO}:latest", "livenessProbe":
       {"tcpSocket": {"port": "metrics"}}, "name": "metrics", "ports": [{"containerPort":
       8080, "name": "metrics", "protocol": "TCP"}], "resources": {"limits": {"memory":
       "32Mi"}, "requests": {"memory": "32Mi"}}}], "volumes": [{"configMap": {"name":

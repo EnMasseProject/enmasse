@@ -32,7 +32,7 @@ local hawkularRouterConfig = import "hawkular-router-config.jsonnet";
       "name": "enmasse-instance-infra"
     },
     local common = [
-      qdrouterd.deployment(use_sasldb, "${INSTANCE}", "${ROUTER_REPO}", "${ROUTER_COLLECTOR_REPO}", "${ROUTER_SECRET}"),
+      qdrouterd.deployment(use_sasldb, "${INSTANCE}", "${ROUTER_REPO}", "${ROUTER_METRICS_REPO}", "${ROUTER_SECRET}"),
       messagingService.generate("${INSTANCE}"),
       subserv.deployment("${INSTANCE}", "${SUBSERV_REPO}"),
       subserv.service("${INSTANCE}"),
