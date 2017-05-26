@@ -144,7 +144,7 @@ then
 fi
 
 
-runcmd "oc login -u $OS_USER $OC_ARGS $OC_CLUSTER" "Login as $OS_USER"
+runcmd "oc login -u $OS_USER $OC_ARGS $OS_CLUSTER" "Login as $OS_USER"
 
 AVAILABLE_PROJECTS=`docmd "oc projects -q"`
 
