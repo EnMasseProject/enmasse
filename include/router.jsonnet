@@ -1,10 +1,10 @@
 local version = std.extVar("VERSION");
 local common = import "common.jsonnet";
 {
-  collector(image_repo, mem_request)::
+  metrics(image_repo, mem_request)::
     {
       "image": image_repo + ":" + version,
-      "name": "collector",
+      "name": "metrics",
       "resources": {
           "requests": {
               "memory": mem_request

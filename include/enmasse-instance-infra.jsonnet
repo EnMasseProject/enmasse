@@ -75,9 +75,9 @@ local hawkularRouterConfig = import "hawkular-router-config.jsonnet";
         "value": "enmasseproject/qdrouterd"
       },
       {
-        "name": "ROUTER_COLLECTOR_REPO",
-        "description": "The image to use for the router collector",
-        "value": "enmasseproject/router-collector"
+        "name": "ROUTER_METRICS_REPO",
+        "description": "The image to use for the router metrics collector",
+        "value": "enmasseproject/router-metrics"
       },
       {
         "name": "ROUTER_LINK_CAPACITY",

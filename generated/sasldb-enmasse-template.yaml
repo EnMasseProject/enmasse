@@ -24,7 +24,7 @@ objects:
       5671, "name": "amqps", "protocol": "TCP"}], "volumeMounts": [{"mountPath": "/etc/qpid-dispatch/ssl",
       "name": "ssl-certs", "readOnly": true}, {"mountPath": "/var/lib/qdrouterd",
       "name": "sasldb-vol"}]}, {"image": "${ROUTER_COLLECTOR_REPO}:latest", "livenessProbe":
-      {"tcpSocket": {"port": "metrics"}}, "name": "collector", "ports": [{"containerPort":
+      {"tcpSocket": {"port": "metrics"}}, "name": "metrics", "ports": [{"containerPort":
       8080, "name": "metrics", "protocol": "TCP"}], "resources": {"limits": {"memory":
       "32Mi"}, "requests": {"memory": "32Mi"}}}], "volumes": [{"configMap": {"name":
       "hawkular-router-config"}, "name": "hawkular-openshift-agent"}, {"name": "ssl-certs",
@@ -142,8 +142,8 @@ objects:
       "port": 56720}, {"name": "console-http", "port": 8080}], "selector": {"name":
       "admin"}}}], "parameters": [{"description": "The image to use for the router",
       "name": "ROUTER_REPO", "value": "enmasseproject/qdrouterd"}, {"description":
-      "The image to use for the router collector", "name": "ROUTER_COLLECTOR_REPO",
-      "value": "enmasseproject/router-collector"}, {"description": "The link capacity
+      "The image to use for the router metrics collector", "name": "ROUTER_METRICS_REPO",
+      "value": "enmasseproject/router-metrics"}, {"description": "The link capacity
       setting for router", "name": "ROUTER_LINK_CAPACITY", "value": "50"}, {"description":
       "The image to use for the configuration service", "name": "CONFIGSERV_REPO",
       "value": "enmasseproject/configserv"}, {"description": "The docker image to
@@ -187,9 +187,7 @@ objects:
       "parameters": [{"description": "Storage capacity required for volume claims",
       "name": "STORAGE_CAPACITY", "value": "2Gi"}, {"description": "The docker image
       to use for the message broker", "name": "BROKER_REPO", "value": "enmasseproject/artemis"},
-      {"description": "The docker image to use for the router collector", "name":
-      "ROUTER_COLLECTOR_REPO", "value": "enmasseproject/router-collector"}, {"description":
-      "The default image to use as topic forwarder", "name": "TOPIC_FORWARDER_REPO",
+      {"description": "The default image to use as topic forwarder", "name": "TOPIC_FORWARDER_REPO",
       "value": "enmasseproject/topic-forwarder"}, {"description": "The image to use
       for the router", "name": "ROUTER_REPO", "value": "enmasseproject/qdrouterd"},
       {"description": "The link capacity setting for router", "name": "ROUTER_LINK_CAPACITY",
@@ -223,19 +221,17 @@ objects:
       "name": "hawkular-openshift-agent"}]}}}}], "parameters": [{"description": "Storage
       capacity required for volume claims", "name": "STORAGE_CAPACITY", "value": "2Gi"},
       {"description": "The docker image to use for the message broker", "name": "BROKER_REPO",
-      "value": "enmasseproject/artemis"}, {"description": "The docker image to use
-      for the router collector", "name": "ROUTER_COLLECTOR_REPO", "value": "enmasseproject/router-collector"},
-      {"description": "The default image to use as topic forwarder", "name": "TOPIC_FORWARDER_REPO",
-      "value": "enmasseproject/topic-forwarder"}, {"description": "The image to use
-      for the router", "name": "ROUTER_REPO", "value": "enmasseproject/qdrouterd"},
-      {"description": "The link capacity setting for router", "name": "ROUTER_LINK_CAPACITY",
-      "value": "50"}, {"description": "A valid instance name for the instance", "name":
-      "INSTANCE", "required": true}, {"description": "A valid name for the instance",
-      "name": "NAME", "required": true}, {"description": "A valid group id for the
-      instance", "name": "GROUP_ID", "required": true}, {"description": "The address
-      to use for the queue", "name": "ADDRESS", "required": true}, {"description":
-      "Name of secret containing router key and certificate", "name": "COLOCATED_ROUTER_SECRET",
-      "required": true}]}'
+      "value": "enmasseproject/artemis"}, {"description": "The default image to use
+      as topic forwarder", "name": "TOPIC_FORWARDER_REPO", "value": "enmasseproject/topic-forwarder"},
+      {"description": "The image to use for the router", "name": "ROUTER_REPO", "value":
+      "enmasseproject/qdrouterd"}, {"description": "The link capacity setting for
+      router", "name": "ROUTER_LINK_CAPACITY", "value": "50"}, {"description": "A
+      valid instance name for the instance", "name": "INSTANCE", "required": true},
+      {"description": "A valid name for the instance", "name": "NAME", "required":
+      true}, {"description": "A valid group id for the instance", "name": "GROUP_ID",
+      "required": true}, {"description": "The address to use for the queue", "name":
+      "ADDRESS", "required": true}, {"description": "Name of secret containing router
+      key and certificate", "name": "COLOCATED_ROUTER_SECRET", "required": true}]}'
     topic-inmemory.json: '{"apiVersion": "v1", "kind": "Template", "metadata": {"labels":
       {"app": "enmasse"}, "name": "topic-inmemory"}, "objects": [{"apiVersion": "extensions/v1beta1",
       "kind": "Deployment", "metadata": {"annotations": {"group_id": "${GROUP_ID}",
@@ -266,19 +262,17 @@ objects:
       "name": "hawkular-openshift-agent"}]}}}}], "parameters": [{"description": "Storage
       capacity required for volume claims", "name": "STORAGE_CAPACITY", "value": "2Gi"},
       {"description": "The docker image to use for the message broker", "name": "BROKER_REPO",
-      "value": "enmasseproject/artemis"}, {"description": "The docker image to use
-      for the router collector", "name": "ROUTER_COLLECTOR_REPO", "value": "enmasseproject/router-collector"},
-      {"description": "The default image to use as topic forwarder", "name": "TOPIC_FORWARDER_REPO",
-      "value": "enmasseproject/topic-forwarder"}, {"description": "The image to use
-      for the router", "name": "ROUTER_REPO", "value": "enmasseproject/qdrouterd"},
-      {"description": "The link capacity setting for router", "name": "ROUTER_LINK_CAPACITY",
-      "value": "50"}, {"description": "A valid instance name for the instance", "name":
-      "INSTANCE", "required": true}, {"description": "A valid name for the instance",
-      "name": "NAME", "required": true}, {"description": "A valid group id for the
-      instance", "name": "GROUP_ID", "required": true}, {"description": "The address
-      to use for the topic", "name": "ADDRESS", "required": true}, {"description":
-      "Name of secret containing router key and certificate", "name": "COLOCATED_ROUTER_SECRET",
-      "required": true}]}'
+      "value": "enmasseproject/artemis"}, {"description": "The default image to use
+      as topic forwarder", "name": "TOPIC_FORWARDER_REPO", "value": "enmasseproject/topic-forwarder"},
+      {"description": "The image to use for the router", "name": "ROUTER_REPO", "value":
+      "enmasseproject/qdrouterd"}, {"description": "The link capacity setting for
+      router", "name": "ROUTER_LINK_CAPACITY", "value": "50"}, {"description": "A
+      valid instance name for the instance", "name": "INSTANCE", "required": true},
+      {"description": "A valid name for the instance", "name": "NAME", "required":
+      true}, {"description": "A valid group id for the instance", "name": "GROUP_ID",
+      "required": true}, {"description": "The address to use for the topic", "name":
+      "ADDRESS", "required": true}, {"description": "Name of secret containing router
+      key and certificate", "name": "COLOCATED_ROUTER_SECRET", "required": true}]}'
     topic-persisted.json: '{"apiVersion": "v1", "kind": "Template", "metadata": {"labels":
       {"app": "enmasse"}, "name": "topic-persisted"}, "objects": [{"apiVersion": "v1",
       "kind": "PersistentVolumeClaim", "metadata": {"annotations": {"group_id": "${GROUP_ID}",
@@ -314,9 +308,7 @@ objects:
       "parameters": [{"description": "Storage capacity required for volume claims",
       "name": "STORAGE_CAPACITY", "value": "2Gi"}, {"description": "The docker image
       to use for the message broker", "name": "BROKER_REPO", "value": "enmasseproject/artemis"},
-      {"description": "The docker image to use for the router collector", "name":
-      "ROUTER_COLLECTOR_REPO", "value": "enmasseproject/router-collector"}, {"description":
-      "The default image to use as topic forwarder", "name": "TOPIC_FORWARDER_REPO",
+      {"description": "The default image to use as topic forwarder", "name": "TOPIC_FORWARDER_REPO",
       "value": "enmasseproject/topic-forwarder"}, {"description": "The image to use
       for the router", "name": "ROUTER_REPO", "value": "enmasseproject/qdrouterd"},
       {"description": "The link capacity setting for router", "name": "ROUTER_LINK_CAPACITY",

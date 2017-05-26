@@ -3,7 +3,6 @@ local broker = import "broker.jsonnet";
 local router = import "router.jsonnet";
 local broker_repo = "${BROKER_REPO}";
 local router_repo = "${ROUTER_REPO}";
-local router_collector_repo = "${ROUTER_COLLECTOR_REPO}";
 local forwarder_repo = "${TOPIC_FORWARDER_REPO}";
 local forwarder = import "forwarder.jsonnet";
 {
@@ -103,11 +102,6 @@ local forwarder = import "forwarder.jsonnet";
           "name": "BROKER_REPO",
           "description": "The docker image to use for the message broker",
           "value": "enmasseproject/artemis"
-        },
-        {
-          "name": "ROUTER_COLLECTOR_REPO",
-          "description": "The docker image to use for the router collector",
-          "value": "enmasseproject/router-collector"
         },
         {
           "name": "TOPIC_FORWARDER_REPO",
