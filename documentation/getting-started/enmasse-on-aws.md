@@ -64,19 +64,11 @@ instance, and create the user:
 Where `<myuser>` is the username you want to use. The command will prompt you for a password that
 you will later use when deploying EnMasse.
 
-## Creating certificates
-
-To be able to access your EnMasse cluster outside OpenShift, you must create a certificate for it.
-For testing purposes, you can create a self-signed key and certificate like this:
-
-    openssl req -new -x509 -batch -nodes -out server-cert.pem -keyout server-key.pem
-
 ## Setting up EnMasse
 
-You can find the latest version of EnMasse [here](https://github.com/EnMasseProject/enmasse/releases/latest). To deploy EnMasse, it is recommended to use the deploy script together with a template of the latest version. At the time of writing, the latest version is 0.9.0, which can be deployed as follows:
+You can find the latest version of EnMasse [here](https://github.com/EnMasseProject/enmasse/releases/latest). To deploy EnMasse, it is recommended to use the deploy script together with a template of the latest version. At the time of writing, the latest version is 0.10.0, which can be deployed as follows:
 
-    curl -L https://github.com/EnMasseProject/enmasse/releases/download/0.9.0/enmasse-deploy.sh -o enmasse-deploy.sh
-    bash enmasse-deploy.sh -c https://openshift.<yourdomain>:8443 -p enmasse -t https://github.com/EnMasseProject/enmasse/releases/download/0.9.0/enmasse-template.yaml -u <myuser> -k server-key.pem -s server-cert.pem -p enmasse
+    curl -L https://github.com/EnMasseProject/enmasse/releases/download/0.10.0/enmasse-deploy.sh | sh - -c "https://openshift.<yourdomain>:8443" -p enmasse -u <myuser>
 
 Now you have EnMasse deployed and ready to use. The endpoints will be:
 

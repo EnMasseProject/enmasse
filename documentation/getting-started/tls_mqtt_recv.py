@@ -34,7 +34,7 @@ parser.add_option("-t", "--topic", default="mytopic",
 parser.add_option("-q", "--qos", default="0",
                   help="quality of service (default %default)")
 
-parser.add_option("-s", "--serverCert", default="server-cert.pem",
+parser.add_option("-s", "--serverCert", default=None,
                   help="server certificate file path (default %default)")
 
 opts, args = parser.parse_args()
@@ -45,7 +45,11 @@ client.on_message = on_message
 client.on_log = on_log
 
 context = ssl.create_default_context()
-context.load_verify_locations(cafile=opts.serverCert)
+if opts.serverCert == None:
+    context.check_hostname = False
+    context.verify_mode = ssl.CERT_NONE
+else:
+    context.load_verify_locations(cafile=opts.serverCert)
 
 # just useful to activate for decrypting local TLS traffic with Wireshark
 #context.set_ciphers("RSA")
