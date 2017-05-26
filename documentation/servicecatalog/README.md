@@ -106,7 +106,7 @@ At this point, the Service Catalog will contact the broker and retrieve the list
   - Copy the _consoleHost_ URL and open it in another browser window
   - You should see the queue listed under _Addresses_
 - Using the deployed queue
-  - Follow the [TLS getting started](../getting-started/e2e-example.md#sending-and-receiving-messages) instructions or the [non-TLS instructions](../getting-started/local-development.md#sending-and-receiving-messages) to try out the queue 
+  - Follow the [OpenShift getting started](../getting-started/openshift.md#sending-and-receiving-messages) instructions to try out the queue
 
 ## Provisioning addresses through the CLI
 

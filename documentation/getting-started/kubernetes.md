@@ -2,9 +2,8 @@
 
 This guide will walk through the process of setting up EnMasse on a Kubernetes
 cluster together with clients for sending and receiving messages. Some of the concepts like
-addresses and flavors are described in more detail [here](e2e-example.md). This guide does not
-explain how to setup a TLS-enabled EnMasse cluster. See the [OpenShift E2E example](e2e-example.md)
-for how to do that.
+addresses and flavors are described in more detail [here](openshift.md). Currently, TLS is not
+supported on Kubernetes.
 
 ## Preqrequisites
 
