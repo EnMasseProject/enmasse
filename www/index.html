@@ -1,5 +1,5 @@
 <!doctype html>
-<html ng-app="myapp">
+<html ng-app="enmasse">
   <head>
     <meta charset="utf-8"></meta>
     <!-- PatternFly Styles -->
@@ -10,7 +10,7 @@
     <!-- Angular-PatternFly Styles -->
     <link rel="stylesheet" href="bower_components/angular-patternfly/dist/styles/angular-patternfly.min.css" />
     <link rel="stylesheet" type="text/css" href="bower_components/angular-ui-grid/ui-grid.min.css">
-    <link rel="stylesheet" href="css/enmasse.css" />
+    <link rel="stylesheet" href="assets/css/enmasse.css" />
 
     <script src="bower_components/jquery/dist/jquery.min.js"></script>
     <script src="bower_components/moment/moment.js"></script>
@@ -40,10 +40,15 @@
     <script src="bower_components/lodash/lodash.min.js"></script>
     <script src="bower_components/angular-drag-and-drop-lists/angular-drag-and-drop-lists.min.js"></script>
 
-    <script src="script.js"></script>
-    <script src="js/dashboard_ctrl.js"></script>
-    <script src="rhea.js"></script>
-    <script src="address_service.js"></script>
+    <script src="app.module.js"></script>
+    <script src="shared/script.js"></script>
+    <script src="assets/js/rhea.js"></script>
+    <script src="shared/address_service.js"></script>
+
+    <script src="components/dashboard/dashboard_ctrl.js"></script>
+    <script src="components/addresses/addresses_ctrl.js"></script>
+    <script src="components/connections/connections_ctrl.js"></script>
+    <script src="components/users/users_ctrl.js"></script>
   </head>
   <body>
   <div id="verticalNavLayout" class="layout-pf layout-pf-fixed faux-layout" ng-controller="NavCtrl">
