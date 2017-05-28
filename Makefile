@@ -1,8 +1,9 @@
 SRCS=$(wildcard *.jsonnet)
 OBJS=$(patsubst %.jsonnet,%.json,$(SRCS))
-TRAVIS_TAG ?= "latest"
+TRAVIS_TAG?=latest
 
 all: prepare $(OBJS) yaml
+	tar -czf enmasse-${TRAVIS_TAG}.tar.gz install/kubernetes install/openshift scripts/enmasse-deploy.sh
 
 %.json: %.jsonnet
 	VERSION=$(TRAVIS_TAG) jsonnet/jsonnet --ext-str VERSION -m generated $<
