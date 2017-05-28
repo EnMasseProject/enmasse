@@ -31,13 +31,14 @@ local hawkularRouterConfig = import "hawkular-router-config.jsonnet";
       },
       "name": "enmasse-instance-infra"
     },
+    local lbType = if use_routes then "ClusterIP" else "LoadBalancer",
     local common = [
       qdrouterd.deployment(use_sasldb, "${INSTANCE}", "${ROUTER_REPO}", "${ROUTER_METRICS_REPO}", "${ROUTER_SECRET}"),
-      messagingService.generate("${INSTANCE}"),
+      messagingService.generate("${INSTANCE}", lbType),
       subserv.deployment("${INSTANCE}", "${SUBSERV_REPO}"),
       subserv.service("${INSTANCE}"),
       mqttGateway.deployment("${INSTANCE}", "${MQTT_GATEWAY_REPO}", "${MQTT_SECRET}"),
-      mqttService.generate("${INSTANCE}"),
+      mqttService.generate("${INSTANCE}", lbType),
       mqttLwt.deployment("${INSTANCE}", "${MQTT_LWT_REPO}"),
       hawkularBrokerConfig,
       hawkularRouterConfig
@@ -53,7 +54,7 @@ local hawkularRouterConfig = import "hawkular-router-config.jsonnet";
 
     local adminObj = [
       admin.deployment(use_sasldb, "${INSTANCE}", "${CONFIGSERV_REPO}", "${RAGENT_REPO}", "${QUEUE_SCHEDULER_REPO}", "${CONSOLE_REPO}")
-    ] + admin.services("${INSTANCE}"),
+    ] + admin.services("${INSTANCE}", lbType),
 
     local kafka = [
       amqpKafkaBridgeService.generate("${INSTANCE}"),

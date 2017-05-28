@@ -15,7 +15,7 @@ local flavorConfig = import "flavor.jsonnet";
     },
     "objects": [ templateConfig.generate(use_sasl, with_kafka, true),
                  addressController.deployment("${ADDRESS_CONTROLLER_REPO}", "${MULTIINSTANCE}", "${INSTANCE_IDLE_TIMEOUT_SECONDS}"),
-                 addressController.service,
+                 addressController.internal_service,
                  restapiRoute.route("${RESTAPI_HOSTNAME}"),
                  flavorConfig.generate() ],
     "parameters": [

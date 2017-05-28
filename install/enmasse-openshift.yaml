@@ -35,34 +35,35 @@ objects:
       "amqps", "port": 5671, "protocol": "TCP", "targetPort": 5671}, {"name": "internal",
       "port": 55673, "protocol": "TCP", "targetPort": 55673}, {"name": "inter-router",
       "port": 55672, "protocol": "TCP", "targetPort": 55672}], "selector": {"capability":
-      "router"}}}, {"apiVersion": "extensions/v1beta1", "kind": "Deployment", "metadata":
-      {"annotations": {"instance": "${INSTANCE}"}, "labels": {"app": "enmasse", "name":
-      "subserv"}, "name": "subserv"}, "spec": {"replicas": 1, "template": {"metadata":
-      {"annotations": {"instance": "${INSTANCE}"}, "labels": {"app": "enmasse", "name":
-      "subserv"}}, "spec": {"containers": [{"env": [ ], "image": "${SUBSERV_REPO}:latest",
-      "livenessProbe": {"tcpSocket": {"port": "amqp"}}, "name": "subserv", "ports":
-      [{"containerPort": 5672, "name": "amqp", "protocol": "TCP"}], "resources": {"limits":
-      {"memory": "64Mi"}, "requests": {"memory": "64Mi"}}}]}}}}, {"apiVersion": "v1",
-      "kind": "Service", "metadata": {"annotations": {"instance": "${INSTANCE}"},
-      "labels": {"app": "enmasse"}, "name": "subscription"}, "spec": {"ports": [{"name":
-      "amqp", "port": 5672, "protocol": "TCP", "targetPort": 5672}], "selector": {"name":
-      "subserv"}}}, {"apiVersion": "extensions/v1beta1", "kind": "Deployment", "metadata":
-      {"annotations": {"instance": "${INSTANCE}"}, "labels": {"app": "enmasse", "name":
-      "mqtt-gateway"}, "name": "mqtt-gateway"}, "spec": {"replicas": 1, "template":
-      {"metadata": {"annotations": {"instance": "${INSTANCE}"}, "labels": {"app":
-      "enmasse", "name": "mqtt-gateway"}}, "spec": {"containers": [{"image": "${MQTT_GATEWAY_REPO}:latest",
-      "livenessProbe": {"initialDelaySeconds": 60, "tcpSocket": {"port": "secure-mqtt"}},
-      "name": "mqtt-gateway-tls", "ports": [{"containerPort": 8883, "name": "secure-mqtt",
-      "protocol": "TCP"}], "volumeMounts": [{"mountPath": "/etc/mqtt-gateway/ssl",
-      "name": "ssl-certs", "readOnly": true}]}, {"image": "${MQTT_GATEWAY_REPO}:latest",
-      "livenessProbe": {"initialDelaySeconds": 60, "tcpSocket": {"port": "mqtt"}},
-      "name": "mqtt-gateway", "ports": [{"containerPort": 1883, "name": "mqtt", "protocol":
-      "TCP"}]}], "volumes": [{"name": "ssl-certs", "secret": {"secretName": "${MQTT_SECRET}"}}]}}}},
-      {"apiVersion": "v1", "kind": "Service", "metadata": {"annotations": {"instance":
-      "${INSTANCE}"}, "labels": {"app": "enmasse"}, "name": "mqtt"}, "spec": {"ports":
-      [{"name": "mqtt", "port": 1883, "protocol": "TCP", "targetPort": 1883}, {"name":
-      "secure-mqtt", "port": 8883, "protocol": "TCP", "targetPort": 8883}], "selector":
-      {"name": "mqtt-gateway"}}}, {"apiVersion": "extensions/v1beta1", "kind": "Deployment",
+      "router"}}, "type": "ClusterIP"}, {"apiVersion": "extensions/v1beta1", "kind":
+      "Deployment", "metadata": {"annotations": {"instance": "${INSTANCE}"}, "labels":
+      {"app": "enmasse", "name": "subserv"}, "name": "subserv"}, "spec": {"replicas":
+      1, "template": {"metadata": {"annotations": {"instance": "${INSTANCE}"}, "labels":
+      {"app": "enmasse", "name": "subserv"}}, "spec": {"containers": [{"env": [ ],
+      "image": "${SUBSERV_REPO}:latest", "livenessProbe": {"tcpSocket": {"port": "amqp"}},
+      "name": "subserv", "ports": [{"containerPort": 5672, "name": "amqp", "protocol":
+      "TCP"}], "resources": {"limits": {"memory": "64Mi"}, "requests": {"memory":
+      "64Mi"}}}]}}}}, {"apiVersion": "v1", "kind": "Service", "metadata": {"annotations":
+      {"instance": "${INSTANCE}"}, "labels": {"app": "enmasse"}, "name": "subscription"},
+      "spec": {"ports": [{"name": "amqp", "port": 5672, "protocol": "TCP", "targetPort":
+      5672}], "selector": {"name": "subserv"}}}, {"apiVersion": "extensions/v1beta1",
+      "kind": "Deployment", "metadata": {"annotations": {"instance": "${INSTANCE}"},
+      "labels": {"app": "enmasse", "name": "mqtt-gateway"}, "name": "mqtt-gateway"},
+      "spec": {"replicas": 1, "template": {"metadata": {"annotations": {"instance":
+      "${INSTANCE}"}, "labels": {"app": "enmasse", "name": "mqtt-gateway"}}, "spec":
+      {"containers": [{"image": "${MQTT_GATEWAY_REPO}:latest", "livenessProbe": {"initialDelaySeconds":
+      60, "tcpSocket": {"port": "secure-mqtt"}}, "name": "mqtt-gateway-tls", "ports":
+      [{"containerPort": 8883, "name": "secure-mqtt", "protocol": "TCP"}], "volumeMounts":
+      [{"mountPath": "/etc/mqtt-gateway/ssl", "name": "ssl-certs", "readOnly": true}]},
+      {"image": "${MQTT_GATEWAY_REPO}:latest", "livenessProbe": {"initialDelaySeconds":
+      60, "tcpSocket": {"port": "mqtt"}}, "name": "mqtt-gateway", "ports": [{"containerPort":
+      1883, "name": "mqtt", "protocol": "TCP"}]}], "volumes": [{"name": "ssl-certs",
+      "secret": {"secretName": "${MQTT_SECRET}"}}]}}}}, {"apiVersion": "v1", "kind":
+      "Service", "metadata": {"annotations": {"instance": "${INSTANCE}"}, "labels":
+      {"app": "enmasse"}, "name": "mqtt"}, "spec": {"ports": [{"name": "mqtt", "port":
+      1883, "protocol": "TCP", "targetPort": 1883}, {"name": "secure-mqtt", "port":
+      8883, "protocol": "TCP", "targetPort": 8883}], "selector": {"name": "mqtt-gateway"}},
+      "type": "ClusterIP"}, {"apiVersion": "extensions/v1beta1", "kind": "Deployment",
       "metadata": {"annotations": {"instance": "${INSTANCE}"}, "labels": {"app": "enmasse",
       "name": "mqtt-lwt"}, "name": "mqtt-lwt"}, "spec": {"replicas": 1, "template":
       {"metadata": {"annotations": {"instance": "${INSTANCE}"}, "labels": {"app":
@@ -97,7 +98,7 @@ objects:
       "metadata": {"name": "hawkular-router-config"}}, {"apiVersion": "v1", "kind":
       "Route", "metadata": {"annotations": {"instance": "${INSTANCE}"}, "labels":
       {"app": "enmasse"}, "name": "console"}, "spec": {"host": "${CONSOLE_HOSTNAME}",
-      "port": {"targetPort": "console-http"}, "to": {"kind": "Service", "name": "admin"}}},
+      "port": {"targetPort": "console-http"}, "to": {"kind": "Service", "name": "console"}}},
       {"apiVersion": "v1", "kind": "Route", "metadata": {"annotations": {"instance":
       "${INSTANCE}"}, "labels": {"app": "enmasse"}, "name": "messaging"}, "spec":
       {"host": "${MESSAGING_HOSTNAME}", "port": {"targetPort": "amqps"}, "tls": {"termination":
@@ -132,22 +133,12 @@ objects:
       "Service", "metadata": {"annotations": {"instance": "${INSTANCE}"}, "labels":
       {"app": "enmasse"}, "name": "admin"}, "spec": {"ports": [{"name": "ragent",
       "port": 55672}, {"name": "configuration", "port": 5672}, {"name": "queue-scheduler",
-      "port": 55667}, {"name": "console-ws", "port": 56720}, {"name": "console-http",
-      "port": 8080}], "selector": {"name": "admin"}}}, {"apiVersion": "v1", "kind":
+      "port": 55667}], "selector": {"name": "admin"}}}, {"apiVersion": "v1", "kind":
       "Service", "metadata": {"annotations": {"instance": "${INSTANCE}"}, "labels":
-      {"app": "enmasse"}, "name": "amqp-kafka-bridge"}, "spec": {"ports": [{"name":
-      "amqp", "port": 5672, "protocol": "TCP", "targetPort": 5672}], "selector": {"capability":
-      "bridge"}}}, {"apiVersion": "extensions/v1beta1", "kind": "Deployment", "metadata":
-      {"annotations": {"instance": "${INSTANCE}"}, "labels": {"app": "enmasse", "name":
-      "amqp-kafka-bridge"}, "name": "amqp-kafka-bridge"}, "spec": {"replicas": 1,
-      "template": {"metadata": {"annotations": {"instance": "${INSTANCE}"}, "labels":
-      {"app": "enmasse", "capability": "bridge", "name": "amqp-kafka-bridge"}}, "spec":
-      {"containers": [{"env": [{"name": "KAFKA_BOOTSTRAP_SERVERS", "value": "${KAFKA_BOOTSTRAP_SERVERS}"}],
-      "image": "${AMQP_KAFKA_BRIDGE_REPO}:latest", "livenessProbe": {"httpGet": {"path":
-      "/health", "port": "health"}}, "name": "amqp-kafka-bridge", "ports": [{"containerPort":
-      8080, "name": "health"}], "resources": {"limits": {"memory": "512Mi"}, "requests":
-      {"memory": "512Mi"}}}]}}}}], "parameters": [{"description": "The image to use
-      for the router", "name": "ROUTER_REPO", "value": "enmasseproject/qdrouterd"},
+      {"app": "enmasse"}, "name": "console"}, "spec": {"ports": [{"name": "console-ws",
+      "port": 56720}, {"name": "console-http", "port": 8080}], "selector": {"name":
+      "admin"}, "type": "ClusterIP"}}], "parameters": [{"description": "The image
+      to use for the router", "name": "ROUTER_REPO", "value": "enmasseproject/qdrouterd"},
       {"description": "The image to use for the router metrics collector", "name":
       "ROUTER_METRICS_REPO", "value": "enmasseproject/router-metrics"}, {"description":
       "The link capacity setting for router", "name": "ROUTER_LINK_CAPACITY", "value":
@@ -381,7 +372,7 @@ objects:
   metadata:
     labels:
       app: enmasse
-    name: address-controller
+    name: address-controller-internal
   spec:
     ports:
     - name: http
@@ -394,6 +385,7 @@ objects:
       targetPort: amqp
     selector:
       name: address-controller
+    type: ClusterIP
 - apiVersion: v1
   kind: Route
   metadata:

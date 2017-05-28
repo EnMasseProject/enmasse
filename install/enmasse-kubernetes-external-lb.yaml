@@ -1,0 +1,23 @@
+---
+apiVersion: v1
+items:
+- apiVersion: v1
+  kind: Service
+  metadata:
+    labels:
+      app: enmasse
+    name: address-controller
+  spec:
+    ports:
+    - name: http
+      port: 8080
+      protocol: TCP
+      targetPort: http
+    - name: amqp
+      port: 5672
+      protocol: TCP
+      targetPort: amqp
+    selector:
+      name: address-controller
+    type: LoadBalancer
+kind: List

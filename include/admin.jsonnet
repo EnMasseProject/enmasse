@@ -3,7 +3,7 @@ local router = import "router.jsonnet";
 local console = import "console.jsonnet";
 local common = import "common.jsonnet";
 {
-  services(instance)::
+  services(instance, type="ClusterIP")::
   [
     {
       "apiVersion": "v1",
@@ -30,7 +30,27 @@ local common = import "common.jsonnet";
           {
             "name": "queue-scheduler",
             "port": 55667
-          },
+          }
+        ],
+        "selector": {
+          "name": "admin"
+        }
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Service",
+      "metadata": {
+        "name": "console",
+        "labels": {
+          "app": "enmasse"
+        },
+        "annotations": {
+          "instance": instance
+        }
+      },
+      "spec": {
+        "ports": [
           {
             "name": "console-ws",
             "port": 56720
@@ -42,7 +62,8 @@ local common = import "common.jsonnet";
         ],
         "selector": {
           "name": "admin"
-        }
+        },
+        "type": type
       }
     }
   ],

@@ -11,7 +11,7 @@
     "protocol": "TCP",
     "targetPort": 8883
   },
-  generate(instance)::
+  generate(instance, type)::
     {
       "apiVersion": "v1",
       "kind": "Service",
@@ -29,6 +29,7 @@
         "selector": {
           "name": "mqtt-gateway"
         }
-      }
+      },
+      "type": type
     }
 }

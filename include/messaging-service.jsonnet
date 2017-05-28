@@ -23,7 +23,7 @@
     "protocol": "TCP",
     "targetPort": 55672
   },
-  generate(instance)::
+  generate(instance, type="ClusterIP")::
     {
       local admin_deps = [
         {
@@ -60,6 +60,7 @@
         "selector": {
           "capability": "router"
         }
-      }
+      },
+      "type": type
     }
 }
