@@ -43,7 +43,7 @@ function docmd() {
     fi
 }
 
-ENMASSE_TEMPLATE_MASTER_URL=https://raw.githubusercontent.com/EnMasseProject/enmasse/master/generated
+ENMASSE_TEMPLATE_MASTER_URL=https://raw.githubusercontent.com/EnMasseProject/enmasse/master/install/openshift
 TEMPLATE_NAME=enmasse
 TEMPLATE_PARAMS=""
 
@@ -180,7 +180,7 @@ if [ -n "$ALT_TEMPLATE" ]
 then
     ENMASSE_TEMPLATE=$ALT_TEMPLATE
 else
-    ENMASSE_TEMPLATE=${ENMASSE_TEMPLATE_MASTER_URL}/${TEMPLATE_NAME}-template.yaml
+    ENMASSE_TEMPLATE=${ENMASSE_TEMPLATE_MASTER_URL}/${TEMPLATE_NAME}.yaml
 fi
 
 runcmd "oc process -f $ENMASSE_TEMPLATE $TEMPLATE_PARAMS | oc create -n $PROJECT -f -" "Instantiate EnMasse template"
