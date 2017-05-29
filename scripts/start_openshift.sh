@@ -8,6 +8,7 @@ mkdir -p logs
 mkdir -p $CDIR
 
 # Write initial config and make it accessible
+pushd $DIR
 sudo $DIR/openshift start --write-config=$CDIR
 sudo chown -R $USER $CDIR
 
@@ -24,6 +25,7 @@ sed -i -e "s/router.default.svc.cluster.local/${MYIP}.nip.io/g" $MASTER_CONFIG
 
 # Start OpenShift with config
 sudo $DIR/openshift start --master-config=$MASTER_CONFIG --node-config=$NODE_CONFIG 2> logs/os.err > logs/os.log &
+popd
 sleep 30
 
 # Deploy HAProxy router
