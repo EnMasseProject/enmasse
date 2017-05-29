@@ -1,4 +1,3 @@
-local version = std.extVar("VERSION");
 local common = import "common.jsonnet";
 {
   common_service(name, type)::

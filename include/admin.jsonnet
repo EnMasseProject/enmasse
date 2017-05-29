@@ -1,4 +1,3 @@
-local version = std.extVar("VERSION");
 local router = import "router.jsonnet";
 local console = import "console.jsonnet";
 local common = import "common.jsonnet";

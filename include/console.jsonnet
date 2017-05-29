@@ -1,4 +1,3 @@
-local version = std.extVar("VERSION");
 local router = import "router.jsonnet";
 local common = import "common.jsonnet";
 {
@@ -12,7 +11,7 @@ local common = import "common.jsonnet";
           "name": "SASLDB",
           "value": mount_path + "/qdrouterd.sasldb"
         }],
-      "image": image_repo + ":" + version,
+      "image": image_repo,
       "name": "console",
       "env": env + (if use_sasldb then sasldb_env else []),
       "resources": {

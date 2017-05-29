@@ -1,4 +1,3 @@
-local version = std.extVar("VERSION");
 local common = import "common.jsonnet";
 {
   deployment(instance, image_repo)::
@@ -30,7 +29,7 @@ local common = import "common.jsonnet";
           "spec": {
             "containers": [
               {
-                "image": image_repo + ":" + version,
+                "image": image_repo,
                 "name": "mqtt-lwt"
               }
             ]

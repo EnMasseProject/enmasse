@@ -2,6 +2,7 @@ local templateConfig = import "template-config.jsonnet";
 local addressController = import "address-controller.jsonnet";
 local restapiRoute = import "restapi-route.jsonnet";
 local flavorConfig = import "flavor.jsonnet";
+local version = std.extVar("VERSION");
 {
   generate(use_sasl, with_kafka)::
   {
@@ -31,7 +32,7 @@ local flavorConfig = import "flavor.jsonnet";
       {
         "name": "ADDRESS_CONTROLLER_REPO",
         "description": "The docker image to use for the address controller",
-        "value": "enmasseproject/address-controller"
+        "value": "enmasseproject/address-controller:" + version
       },
       {
         "name": "INSTANCE_CERT_SECRET",

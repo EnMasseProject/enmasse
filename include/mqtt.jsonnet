@@ -1,4 +1,3 @@
-local version = std.extVar("VERSION");
 local common = import "common.jsonnet";
 {
   imagestream(image_name)::
@@ -16,7 +15,7 @@ local common = import "common.jsonnet";
       "protocol": "TCP"
     };
     {
-      "image": image_repo + ":" + version,
+      "image": image_repo,
       "name": if secure
         then "mqtt-gateway-tls"
         else "mqtt-gateway",

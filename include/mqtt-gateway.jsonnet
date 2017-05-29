@@ -1,4 +1,3 @@
-local version = std.extVar("VERSION");
 local mqtt = import "mqtt.jsonnet";
 local common = import "common.jsonnet";
 {

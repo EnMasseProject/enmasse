@@ -1,10 +1,9 @@
-local version = std.extVar("VERSION");
 local common = import "common.jsonnet";
 {
   container(volumeName, image_repo, addressEnv)::
     {
       "name": "broker",
-      "image": image_repo + ":" + version,
+      "image": image_repo,
       "ports": [
         {
           "name": "amqp",

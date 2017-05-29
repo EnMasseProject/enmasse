@@ -1,9 +1,8 @@
-local version = std.extVar("VERSION");
 local common = import "common.jsonnet";
 {
   metrics(image_repo, mem_request)::
     {
-      "image": image_repo + ":" + version,
+      "image": image_repo,
       "name": "metrics",
       "resources": {
           "requests": {
@@ -53,7 +52,7 @@ local common = import "common.jsonnet";
         }
     };
     {
-      "image": image_repo + ":" + version,
+      "image": image_repo,
       "name": "router",
       local linkEnv = {
           "name": "LINK_CAPACITY",

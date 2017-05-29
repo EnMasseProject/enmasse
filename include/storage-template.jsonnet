@@ -101,17 +101,17 @@ local forwarder = import "forwarder.jsonnet";
         {
           "name": "BROKER_REPO",
           "description": "The docker image to use for the message broker",
-          "value": "enmasseproject/artemis"
+          "value": "enmasseproject/artemis:" + version
         },
         {
           "name": "TOPIC_FORWARDER_REPO",
           "description": "The default image to use as topic forwarder",
-          "value": "enmasseproject/topic-forwarder"
+          "value": "enmasseproject/topic-forwarder:" + version
         },
         {
           "name": "ROUTER_REPO",
           "description": "The image to use for the router",
-          "value": "enmasseproject/qdrouterd"
+          "value": "enmasseproject/qdrouterd:" + version
         },
         {
           "name": "ROUTER_LINK_CAPACITY",

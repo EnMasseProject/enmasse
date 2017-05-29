@@ -20,6 +20,7 @@ local amqpKafkaBridge = import "amqp-kafka-bridge.jsonnet";
 local amqpKafkaBridgeService = import "amqp-kafka-bridge-service.jsonnet";
 local hawkularBrokerConfig = import "hawkular-broker-config.jsonnet";
 local hawkularRouterConfig = import "hawkular-router-config.jsonnet";
+local version = std.extVar("VERSION");
 {
   generate(use_sasldb, with_kafka, use_routes)::
   {
@@ -72,12 +73,12 @@ local hawkularRouterConfig = import "hawkular-router-config.jsonnet";
       {
         "name": "ROUTER_REPO",
         "description": "The image to use for the router",
-        "value": "enmasseproject/qdrouterd"
+        "value": "enmasseproject/qdrouterd:" + version
       },
       {
         "name": "ROUTER_METRICS_REPO",
         "description": "The image to use for the router metrics collector",
-        "value": "enmasseproject/router-metrics"
+        "value": "enmasseproject/router-metrics:" + version
       },
       {
         "name": "ROUTER_LINK_CAPACITY",
@@ -87,27 +88,27 @@ local hawkularRouterConfig = import "hawkular-router-config.jsonnet";
       {
         "name": "CONFIGSERV_REPO",
         "description": "The image to use for the configuration service",
-        "value": "enmasseproject/configserv"
+        "value": "enmasseproject/configserv:" + version
       },
       {
         "name": "QUEUE_SCHEDULER_REPO",
         "description": "The docker image to use for the queue scheduler",
-        "value": "enmasseproject/queue-scheduler"
+        "value": "enmasseproject/queue-scheduler:" + version
       },
       {
         "name": "RAGENT_REPO",
         "description": "The image to use for the router agent",
-        "value": "enmasseproject/ragent"
+        "value": "enmasseproject/ragent:" + version
       },
       {
         "name": "SUBSERV_REPO",
         "description": "The image to use for the subscription services",
-        "value": "enmasseproject/subserv"
+        "value": "enmasseproject/subserv:" + version
       },
       {
         "name": "CONSOLE_REPO",
         "description": "The image to use for the console",
-        "value": "enmasseproject/console"
+        "value": "enmasseproject/console:" + version
       },
       {
         "name": "MESSAGING_HOSTNAME",
@@ -116,7 +117,7 @@ local hawkularRouterConfig = import "hawkular-router-config.jsonnet";
       {
         "name" : "MQTT_GATEWAY_REPO",
         "description": "The image to use for the MQTT gateway",
-        "value": "enmasseproject/mqtt-gateway"
+        "value": "enmasseproject/mqtt-gateway:" + version
       },
       {
         "name": "MQTT_GATEWAY_HOSTNAME",
@@ -139,7 +140,7 @@ local hawkularRouterConfig = import "hawkular-router-config.jsonnet";
       {
         "name" : "MQTT_LWT_REPO",
         "description": "The image to use for the MQTT LWT",
-        "value": "enmasseproject/mqtt-lwt"
+        "value": "enmasseproject/mqtt-lwt:" + version
       },
       {
         "name": "INSTANCE",
@@ -149,7 +150,7 @@ local hawkularRouterConfig = import "hawkular-router-config.jsonnet";
       {
         "name" : "AMQP_KAFKA_BRIDGE_REPO",
         "description": "The image to use for the AMQP Kafka Bridge",
-        "value": "enmasseproject/amqp-kafka-bridge"
+        "value": "enmasseproject/amqp-kafka-bridge:" + version
       },
       {
         "name" : "KAFKA_BOOTSTRAP_SERVERS",
