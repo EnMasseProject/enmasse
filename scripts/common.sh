@@ -48,7 +48,7 @@ function run_test() {
         $DIR/wait_until_up.sh 1 || exit 1
     fi
 
-    sleep 120
+    sleep 60
 
     export OPENSHIFT_USE_TLS=$SECURE
     export OPENSHIFT_NAMESPACE=$PROJECT_NAME
