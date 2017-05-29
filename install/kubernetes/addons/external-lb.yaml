@@ -38,7 +38,7 @@ items:
       targetPort: 5671
     selector:
       capability: router
-  type: LoadBalancer
+    type: LoadBalancer
 - apiVersion: v1
   kind: Service
   metadata:
@@ -58,7 +58,7 @@ items:
       targetPort: 8883
     selector:
       name: mqtt-gateway
-  type: LoadBalancer
+    type: LoadBalancer
 - apiVersion: v1
   kind: Service
   metadata:
