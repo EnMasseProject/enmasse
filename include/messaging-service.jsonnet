@@ -23,7 +23,8 @@
     "protocol": "TCP",
     "targetPort": 55672
   },
-  generate(instance, type="ClusterIP")::
+
+  internal(instance)::
     {
       local admin_deps = [
         {
@@ -60,7 +61,25 @@
         "selector": {
           "capability": "router"
         }
+      }
+    },
+
+  external::
+    {
+      "apiVersion": "v1",
+      "kind": "Service",
+      "metadata": {
+        "labels": {
+          "app": "enmasse"
+        },
+        "name": "messaging-external"
       },
-      "type": type
+      "spec": {
+        "ports": [port, securePort],
+        "selector": {
+          "capability": "router"
+        }
+      },
+      "type": "LoadBalancer"
     }
 }

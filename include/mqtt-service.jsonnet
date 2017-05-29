@@ -11,7 +11,7 @@
     "protocol": "TCP",
     "targetPort": 8883
   },
-  generate(instance, type)::
+  common(name, type, annotations)::
     {
       "apiVersion": "v1",
       "kind": "Service",
@@ -19,10 +19,8 @@
         "labels": {
           "app": "enmasse"
         },
-        "annotations": {
-          "instance": instance
-        },
-        "name": "mqtt"
+        "annotations": annotations,
+        "name": name
       },
       "spec": {
         "ports": [port, securePort],
@@ -31,5 +29,11 @@
         }
       },
       "type": type
-    }
+    },
+
+  internal(instance)::
+    self.common("mqtt", "ClusterIP", {"instance": instance}),
+
+  external::
+    self.common("mqtt-external", "LoadBalancer", {})
 }

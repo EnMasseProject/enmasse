@@ -1,7 +1,7 @@
 local version = std.extVar("VERSION");
 local common = import "common.jsonnet";
 {
-  common_service(name, type="ClusterIP")::
+  common_service(name, type)::
   {
     "apiVersion": "v1",
     "kind": "Service",
@@ -34,10 +34,10 @@ local common = import "common.jsonnet";
   },
   
   internal_service::
-    self.common_service("address-controller-internal"),
+    self.common_service("address-controller", "ClusterIP"),
 
   external_service::
-    self.common_service("address-controller", "LoadBalancer"),
+    self.common_service("address-controller-external", "LoadBalancer"),
 
   deployment(image_repo, multiinstance, instance_idle_timeout)::
     {
