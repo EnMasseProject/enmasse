@@ -1,9 +1,12 @@
 SRCS=$(wildcard *.jsonnet)
 OBJS=$(patsubst %.jsonnet,%.json,$(SRCS))
 TAG?=latest
+INSTALLDIR=enmasse-$(TAG)
 
 all: prepare $(OBJS) yaml
-	tar -czf enmasse-${TAG}.tar.gz install/kubernetes install/openshift scripts/common.sh scripts/deploy-kubernetes.sh scripts/deploy-openshift.sh
+	mkdir -p $(INSTALLDIR)
+	cp -r install/* $(INSTALLDIR)
+	tar -czf $(INSTALLDIR).tar.gz $(INSTALLDIR)
 
 %.json: %.jsonnet
 	VERSION=$(TAG) jsonnet/jsonnet --ext-str VERSION -m generated $<
@@ -18,7 +21,7 @@ prepare:
 	cp include/*.json generated
 
 clean:
-	rm -rf generated
+	rm -rf generated $(INSTALLDIR) $(INSTALLDIR).tar.gz
 
 test:
 	@echo $(TAG)

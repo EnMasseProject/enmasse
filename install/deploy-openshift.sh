@@ -23,7 +23,7 @@ else
     exit 1
 fi
 
-ENMASSE_TEMPLATE=install/openshift/enmasse.yaml
+ENMASSE_TEMPLATE=openshift/enmasse.yaml
 TEMPLATE_NAME=enmasse
 TEMPLATE_PARAMS=""
 

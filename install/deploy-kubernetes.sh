@@ -22,7 +22,7 @@ else
 fi
 
 TEMPLATE_PARAMS=""
-ENMASSE_TEMPLATE=install/kubernetes/enmasse.yaml
+ENMASSE_TEMPLATE=kubernetes/enmasse.yaml
 DEFAULT_NAMESPACE=enmasse
 GUIDE=false
 

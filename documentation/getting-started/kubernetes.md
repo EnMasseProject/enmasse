@@ -22,7 +22,7 @@ Once unpacked, you can either deploy EnMasse using an automated script or follow
 The deployment script simplifies the process of deploying the enmasse cluster. You
 can invoke it with `-h` to get a list of options. To deploy:
 
-    ./scripts/deploy-kubernetes.sh -m "https://localhost:8443" -n enmasse
+    ./deploy-kubernetes.sh -m "https://localhost:8443" -n enmasse
 
 This will create the deployments required for running EnMasse. Starting up EnMasse will take a while,
 usually depending on how fast it is able to download the docker images for the various components.
