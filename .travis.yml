@@ -1,6 +1,13 @@
 language: ruby
 notifications:
   email: false
+  irc:
+    template:
+      - "%{repository}#%{build_number} (%{branch} - %{commit} : %{author}): %{message}"
+    channels:
+      - "chat.freenode.net#enmasse"
+    use_notice: true
+    skip_join: true
 sudo: required
 services:
 - docker
