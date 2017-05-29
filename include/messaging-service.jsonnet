@@ -78,8 +78,8 @@
         "ports": [port, securePort],
         "selector": {
           "capability": "router"
-        }
-      },
-      "type": "LoadBalancer"
+        },
+        "type": "LoadBalancer"
+      }
     }
 }

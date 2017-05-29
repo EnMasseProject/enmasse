@@ -26,9 +26,9 @@
         "ports": [port, securePort],
         "selector": {
           "name": "mqtt-gateway"
-        }
-      },
-      "type": type
+        },
+        "type": type
+      }
     },
 
   internal(instance)::
