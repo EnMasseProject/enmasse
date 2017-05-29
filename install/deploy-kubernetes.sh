@@ -21,8 +21,9 @@ else
     exit 1
 fi
 
+SCRIPTDIR=`dirname $0`
 TEMPLATE_PARAMS=""
-ENMASSE_TEMPLATE=kubernetes/enmasse.yaml
+ENMASSE_TEMPLATE=$SCRIPTDIR/kubernetes/enmasse.yaml
 DEFAULT_NAMESPACE=enmasse
 GUIDE=false
 
@@ -79,7 +80,7 @@ while getopts dgk:lm:n:s:t:vh opt; do
     esac
 done
 
-source `dirname $0`/common.sh
+source $SCRIPTDIR/common.sh
 
 if [ -z "$NAMESPACE" ]
 then

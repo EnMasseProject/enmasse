@@ -23,7 +23,8 @@ else
     exit 1
 fi
 
-ENMASSE_TEMPLATE=openshift/enmasse.yaml
+SCRIPTDIR=`dirname $0`
+ENMASSE_TEMPLATE=$SCRIPTDIR/openshift/enmasse.yaml
 TEMPLATE_NAME=enmasse
 TEMPLATE_PARAMS=""
 
@@ -93,7 +94,7 @@ while getopts dgk:m:n:p:s:t:u:yvh opt; do
     esac
 done
 
-source `dirname $0`/common.sh
+source $SCRIPTDIR/common.sh
 
 if [ -z "$OS_USER" ]
 then
