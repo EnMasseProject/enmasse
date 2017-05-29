@@ -16,7 +16,7 @@ function setup_test() {
         DEPLOY_ARGS="$DEPLOY_ARGS -p MULTIINSTANCE=true"
     fi
 
-    enmasse-deploy.sh $DEPLOY_ARGS
+    deploy-openshift.sh $DEPLOY_ARGS
 
     if [ "$MULTITENANT" == true ]; then
         $OADM add-cluster-role-to-user cluster-admin system:serviceaccount:$(oc project -q):enmasse-service-account
