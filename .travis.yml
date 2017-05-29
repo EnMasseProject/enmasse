@@ -15,8 +15,6 @@ script:
 - curl -s ${SCRIPTS}/run-tests.sh | bash /dev/stdin ${COMMIT} enmasseproject/topic-forwarder
 after_success:
 - curl -s ${SCRIPTS}/docker-push.sh | bash /dev/stdin enmasseproject/topic-forwarder
-after_failure:
-- curl -s ${SCRIPTS}/teardown-tests.sh | bash /dev/stdin
 env:
   global:
   - SCRIPTS=https://raw.githubusercontent.com/EnMasseProject/travis-scripts/master
