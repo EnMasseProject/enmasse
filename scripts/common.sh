@@ -7,12 +7,12 @@ OADM="oadm --config openshift.local.config/master/admin.kubeconfig"
 function download_enmasse() {
     curl -0 https://dl.bintray.com/enmasse/snapshots/latest/enmasse-latest.tar.gz | tar -zx
     D=`readlink -f enmasse-latest`
-    export PATH="$PATH:$D"
+    echo $D
 }
 
 function setup_test() {
     local PROJECT_NAME=$1
-    local TEMPLATE=$2
+    local ENMASSE_DIR=$2
     local MULTITENANT=${3:-false}
     local OPENSHIFT_URL=${4:-"https://localhost:8443"}
     local OPENSHIFT_USER=${5:-"test"}
@@ -23,11 +23,7 @@ function setup_test() {
         DEPLOY_ARGS="$DEPLOY_ARGS -p MULTIINSTANCE=true"
     fi
 
-    if [ -n "$TEMPLATE" ] && [ "$TEMPLATE" != "" ]; then
-        DEPLOY_ARGS="$DEPLOY_ARGS -t $TEMPLATE"
-    fi
-
-    deploy-openshift.sh $DEPLOY_ARGS
+    $ENMASSE_DIR/deploy-openshift.sh $DEPLOY_ARGS
 
     if [ "$MULTITENANT" == true ]; then
         $OADM add-cluster-role-to-user cluster-admin system:serviceaccount:$(oc project -q):enmasse-service-account
