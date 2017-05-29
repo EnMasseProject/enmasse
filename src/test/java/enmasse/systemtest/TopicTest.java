@@ -37,7 +37,7 @@ public class TopicTest extends AmqpTestBase {
 
     @Test
     public void testMultipleSubscribers() throws Exception {
-        Destination dest = Destination.topic("manytopic");
+        Destination dest = Destination.topic("subtopic");
         deploy(dest);
         scale(dest, 1);
         Thread.sleep(60_000);
