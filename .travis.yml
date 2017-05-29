@@ -27,8 +27,6 @@ after_success:
 - curl -s ${SCRIPTS}/docker-push.sh | bash /dev/stdin enmasseproject/address-controller
 - curl -s ${SCRIPTS}/docker-push.sh | bash /dev/stdin enmasseproject/configserv
 - curl -s ${SCRIPTS}/docker-push.sh | bash /dev/stdin enmasseproject/queue-scheduler
-after_failure:
-- curl -s ${SCRIPTS}/teardown-tests.sh | bash /dev/stdin
 env:
   global:
   - SCRIPTS=https://raw.githubusercontent.com/EnMasseProject/travis-scripts/master
