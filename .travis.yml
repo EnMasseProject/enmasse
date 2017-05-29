@@ -9,10 +9,10 @@ services:
 before_script:
 - curl -s ${SCRIPTS}/setup-tests.sh | bash /dev/stdin
 script:
-- gradle check -i
+- gradle check -i || exit 1
 - curl -s ${SCRIPTS}/generate-bintray-descriptor.sh | bash /dev/stdin topic-forwarder build/distributions/topic-forwarder.tgz > .bintray.json
 - curl -s ${SCRIPTS}/docker-build.sh | bash /dev/stdin enmasseproject/topic-forwarder . 
-- curl -s ${SCRIPTS}/run-tests.sh | bash /dev/stdin enmasseproject/topic-forwarder ${COMMIT}
+- curl -s ${SCRIPTS}/run-tests.sh | bash /dev/stdin ${COMMIT} enmasseproject/topic-forwarder
 after_success:
 - curl -s ${SCRIPTS}/docker-push.sh | bash /dev/stdin enmasseproject/topic-forwarder
 after_failure:
