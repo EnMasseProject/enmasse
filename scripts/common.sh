@@ -4,6 +4,12 @@ set -x
 
 OADM="oadm --config openshift.local.config/master/admin.kubeconfig"
 
+function download_enmasse() {
+    curl -0 https://dl.bintray.com/enmasse/snapshots/latest/enmasse-latest.tar.gz | tar -zx
+    ls $DIR/enmasse-latest
+    export PATH="$PATH:$DIR/enmasse-latest"
+}
+
 function setup_test() {
     local PROJECT_NAME=$1
     local MULTITENANT=${2:-false}
