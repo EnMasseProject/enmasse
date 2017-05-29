@@ -17,7 +17,7 @@
 if which kubectl &> /dev/null
 then :
 else
-    echo "Cannot find oc command, please check path to ensure it is installed"
+    echo "Cannot find kubectl command, please check path to ensure it is installed"
     exit 1
 fi
 
