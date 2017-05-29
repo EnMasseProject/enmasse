@@ -16,8 +16,6 @@
 # for a login when appropriate.
 # for further parameters please see the help text.
 
-source `dirname $0`/common.sh
-
 if which oc &> /dev/null
 then :
 else
@@ -32,8 +30,9 @@ TEMPLATE_PARAMS=""
 DEFAULT_USER=developer
 DEFAULT_NAMESPACE=myproject
 OC_ARGS=""
+GUIDE=false
 
-while getopts c:dgk:mo:p:s:t:u:yhv opt; do
+while getopts dgk:m:n:p:s:t:u:yvh opt; do
     case $opt in
         d)
             OS_ALLINONE=true
@@ -70,7 +69,7 @@ while getopts c:dgk:mo:p:s:t:u:yhv opt; do
             set -x
             ;;
         h)
-            echo "usage: enmasse-deploy.sh [options]"
+            echo "usage: deploy-openshift.sh [options]"
             echo
             echo "deploy the EnMasse suite into a running OpenShift cluster"
             echo
@@ -93,6 +92,8 @@ while getopts c:dgk:mo:p:s:t:u:yhv opt; do
             ;;
     esac
 done
+
+source `dirname $0`/common.sh
 
 if [ -z "$OS_USER" ]
 then

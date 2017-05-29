@@ -10,16 +10,17 @@ If you have an OpenShift instance running already, you can start setting up EnMa
 
 ## Setting up EnMasse
 
-### Creating project
+### Installing
 
-You can setup EnMasse automatically or manually.
+Download one of the releases from https://github.com/EnMasseProject/enmasse/releases and unpack it.
+Once unpacked, you can either deploy EnMasse using an automated script or follow the below steps.
 
 #### Deploying EnMasse automatically
 
 The deployment script simplifies the process of deploying the enmasse cluster. You
 can invoke it with `-h` to get a list of options. To deploy:
 
-    curl -L https://git.io/getEnMasse | sh /dev/stdin -c "https://localhost:8443" -p enmasse
+    ./scripts/deploy-openshift.sh -m "https://localhost:8443" -n enmasse
 
 This will create the deployments required for running EnMasse. Starting up EnMasse will take a while,
 usually depending on how fast it is able to download the docker images for the various components.
@@ -49,7 +50,7 @@ Add permissions for editing OpenShift resources to EnMasse service account:
 
 Instantiate EnMasse template:
 
-    oc process -f https://raw.githubusercontent.com/EnMasseProject/enmasse/master/generated/enmasse-template.yaml  | oc create -n enmasse -f -
+    oc process -f openshift/enmasse.yaml  | oc create -n enmasse -f -
 
 #### Deploying EnMasse with authentication enabled
 
@@ -78,7 +79,7 @@ Then log in again as developer:
     oc login https://localhost:8443 -u developer
 
 Then follow the instructions for manual deployment above, substituting
-sasldb-enmasse-template.yaml for enmasse-template.yaml in the last
+enmasse-with-sasldb.yaml for enmasse.yaml in the last
 step.
 
 The users can be managed through the console. Note that when

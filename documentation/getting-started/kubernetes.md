@@ -14,16 +14,35 @@ This guide assumes that you already have a Kubernetes cluster installed. If not,
 
 ### Creating project and importing template
 
-Before deploying EnMasse, the enmasse-service-account must be created:
-    
-    kubectl create sa enmasse-service-account
+Download one of the releases from https://github.com/EnMasseProject/enmasse/releases and unpack it.
+Once unpacked, you can either deploy EnMasse using an automated script or follow the below steps.
 
-Then, to deploy EnMasse:
-    
-    kubectl create -f https://raw.githubusercontent.com/EnMasseProject/enmasse/master/generated/enmasse-kubernetes.yaml
+#### Deploying EnMasse automatically
+
+The deployment script simplifies the process of deploying the enmasse cluster. You
+can invoke it with `-h` to get a list of options. To deploy:
+
+    ./scripts/deploy-kubernetes.sh -m "https://localhost:8443" -n enmasse
 
 This will create the deployments required for running EnMasse. Starting up EnMasse will take a while,
 usually depending on how fast it is able to download the docker images for the various components.
+In the meantime, you can start to create your address configuration.
+
+#### Deploying EnMasse manually
+
+Create service account for address controller:
+
+    kubectl create sa enmasse-service-account -n enmasse
+
+Deploy EnMasse to enmasse:
+
+    kubectl apply -f kubernetes/enmasse.yaml -n enmasse
+
+### Deploying external load balancers
+
+If you're running EnMasse in your own Kubernetes instance on any of the cloud providers, and if you don't have or don't want to deploy an ingress controller, you can deploy the external load balancer services to expose EnMasse ports:
+
+	kubectl apply -f kubernetes/addons/external-lb.yaml -n enmasse
 
 ### Configuring addresses using the console
 

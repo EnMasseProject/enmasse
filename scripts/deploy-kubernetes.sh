@@ -14,8 +14,6 @@
 # and apply the external load balancer support for Azure, AWS etc.  For further
 # parameters please see the help text.
 
-source `dirname $0`/common.sh
-
 if which kubectl &> /dev/null
 then :
 else
@@ -26,6 +24,7 @@ fi
 TEMPLATE_PARAMS=""
 ENMASSE_TEMPLATE=kubernetes/enmasse.yaml
 DEFAULT_NAMESPACE=enmasse
+GUIDE=false
 
 while getopts dgk:lm:n:s:t:vh opt; do
     case $opt in
@@ -57,7 +56,7 @@ while getopts dgk:lm:n:s:t:vh opt; do
             set -x
             ;;
         h)
-            echo "usage: enmasse-deploy.sh [options]"
+            echo "usage: deploy-kubernetes.sh [options]"
             echo
             echo "deploy the EnMasse suite into a running Kubernetes cluster"
             echo
@@ -79,6 +78,8 @@ while getopts dgk:lm:n:s:t:vh opt; do
             ;;
     esac
 done
+
+source `dirname $0`/common.sh
 
 if [ -z "$NAMESPACE" ]
 then

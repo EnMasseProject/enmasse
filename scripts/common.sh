@@ -3,19 +3,19 @@ function runcmd() {
     local cmd=$1
     local description=$2
 
-    if [ -z $GUIDE ]; then
-        eval $cmd
-    else
+    if [ "$GUIDE" == "true" ]; then
         echo "$description:"
         echo ""
         echo "    $cmd"
         echo ""
+    else
+        eval $cmd
     fi
 }
 
 function docmd() {
     local cmd=$1
-    if [ -z $GUIDE ]; then
+    if [ -z $GUIDE ] || [ "$GUIDE" == "false" ]; then
         $cmd
     fi
 }
