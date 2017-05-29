@@ -6,8 +6,8 @@ OADM="oadm --config openshift.local.config/master/admin.kubeconfig"
 
 function download_enmasse() {
     curl -0 https://dl.bintray.com/enmasse/snapshots/latest/enmasse-latest.tar.gz | tar -zx
-    ls $DIR/enmasse-latest
-    export PATH="$PATH:$DIR/enmasse-latest"
+    D=`readlink -f enmasse-latest`
+    export PATH="$PATH:$D"
 }
 
 function setup_test() {
