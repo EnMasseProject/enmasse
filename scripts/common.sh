@@ -56,7 +56,7 @@ function run_test() {
     export OPENSHIFT_MULTITENANT=$MULTITENANT
     export OPENSHIFT_TOKEN=`oc whoami -t`
     export OPENSHIFT_MASTER_URL=$OPENSHIFT_URL
-    gradle check -i --rerun-tasks -Djava.net.preferIPv4Stack=true
+    mvn test -Djava.net.preferIPv4Stack=true
 }
 
 function teardown_test() {
