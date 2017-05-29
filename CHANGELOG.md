@@ -1,3 +1,10 @@
+## 0.11.0 (May 29, 2027)
+* Remove restrictions on address names. These were earlier restructed by k8s labels
+* Add simple logging library to router agent and subscription service
+* Update Artemis broker flavor to 2.1.0
+* New install 'bundle' containing both scripts and templates for deploying EnMasse
+* Simple template for exposing Kubernetes services on cloud providers without ingress controllers
+
 ## 0.10.0 (May 3, 2017)
 * Merged non-TLS and TLS-based templates into one, making EnMasse TLS-enabled by default. This
   simplifies deployment of EnMasse but also the maintenance of the templates.
