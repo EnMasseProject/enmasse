@@ -2,7 +2,7 @@
 DIR=`dirname $0`
 set -x
 source $DIR/common.sh
-
+failure=0
 
 oc login -u test -p test --insecure-skip-tls-verify=true https://localhost:8443
 
