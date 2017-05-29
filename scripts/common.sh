@@ -6,14 +6,15 @@ OADM="oadm --config openshift.local.config/master/admin.kubeconfig"
 
 function setup_test() {
     local PROJECT_NAME=$1
-    local MULTITENANT=${2:-false}
-    local OPENSHIFT_URL=${3:-"https://localhost:8443"}
-    local OPENSHIFT_USER=${4:-"test"}
+    local TEMPLATE=$2
+    local MULTITENANT=${3:-false}
+    local OPENSHIFT_URL=${4:-"https://localhost:8443"}
+    local OPENSHIFT_USER=${5:-"test"}
 
-    DEPLOY_ARGS="-y -p $PROJECT_NAME -u $OPENSHIFT_USER -c $OPENSHIFT_URL"
+    DEPLOY_ARGS="-y -n $PROJECT_NAME -u $OPENSHIFT_USER -m $OPENSHIFT_URL -t $TEMPLATE"
 
     if [ "$MULTITENANT" == true ]; then
-        DEPLOY_ARGS="$DEPLOY_ARGS -m"
+        DEPLOY_ARGS="$DEPLOY_ARGS -p MULTIINSTANCE=true"
     fi
 
     enmasse-deploy.sh $DEPLOY_ARGS
