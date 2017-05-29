@@ -1,6 +1,6 @@
 #!/bin/bash
 set -x
-DIR=$1
+DIR=`readlink -f $1`
 SDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 CDIR=$SDIR/config
 
