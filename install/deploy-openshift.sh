@@ -119,7 +119,7 @@ then
         echo "Please choose either all-in-one or a cluster deployment if you need to use a specific user."
         exit 1
     fi
-    runcmd "sudo oc cluster up" "Start local OpenShift cluster"
+    runcmd "oc cluster up" "Start local OpenShift cluster"
 fi
 
 
