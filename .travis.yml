@@ -23,7 +23,7 @@ script:
 - cat /etc/hosts
 - ./scripts/run_test_travis.sh
 after_failure:
-- ./scripts/print_logs.sh
+- ./scripts/print_logs.sh openshift
 env:
   global:
   - secure: iZYkPrDvU/EXON5/7M5q7n7ZkZ9lm1Nh3zscT2h1t91BQ34t4Vdf9GTCyGSlCaBozo5xsx3lsheA4NjjBEEImPAPXS5kvSXlwpzyqQdkStR0yXlynMU/baygWLx+l+ZYa4b0CGZgEiuULdV+PnVGFxE0fIEnU0NVlrhZEuninWTiCX/X4uPrAY8J64SYzymbqL+pQqKlpXAEURMMNYYnTWhd2rrYn2XJthxYtoRuddCfh2O1HlGZf8Wsgno9E9bsEGD0a8MTtBJ5/TP8T1h7RZ7c0DdmJkUauP8ooX410swiox6jXFTa14aFK4KuRziNuf+KkN1NZC5gns2+eRbQ4EO9Tyg7eyH9RADMiEeo6cxVVw8ipcj4HMA7U5aXVNoZfDZN+4CxwZ7oazWkXV1gcmQQaq0gkjpwv0iV+9fT+/hb+KWezm0EktAr4XuoV55LZVhuphjOxBbXRAnTq/JzbRfS+GHypG9bYIGN9MSWVj3dUk7tzYpLlo/lCp7Y9zBdV80P/pCpb0FREkbQRu3kZXi0hGE+V3BoOfP5BOMuXbjapSNhowS1j6T4UKLAimyMKKDEtjlFwz/KQyDdYvXjieJoze3+7XJ5toj2RpcY+LIFRsBxTaWiCLHIZisMOEWT+ZbW3tAlbf+rgBWdUXBoGJawHPXNg5+NFpGGqWbZO48=

@@ -1,4 +1,6 @@
 #!/bin/bash
+DIR=$1
+
 function runcmd {
     echo ''
     echo "$1 : "
@@ -26,5 +28,5 @@ do
 done
 
 echo "OPENSHIFT LOGS"
-cat logs/os.err
-cat logs/os.log
+cat $DIR/logs/os.err
+cat $DIR/logs/os.log

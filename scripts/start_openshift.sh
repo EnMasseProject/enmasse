@@ -4,11 +4,13 @@ DIR=$1
 SDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 CDIR=$SDIR/config
 
-mkdir -p logs
+mkdir -p $DIR/logs
 mkdir -p $CDIR
 
 # Write initial config and make it accessible
 pushd $DIR
+ls
+pwd
 sudo $DIR/openshift start --write-config=$CDIR
 sudo chown -R $USER $CDIR
 
@@ -24,7 +26,7 @@ echo "MYIP: $MYIP"
 sed -i -e "s/router.default.svc.cluster.local/${MYIP}.nip.io/g" $MASTER_CONFIG
 
 # Start OpenShift with config
-sudo $DIR/openshift start --master-config=$MASTER_CONFIG --node-config=$NODE_CONFIG 2> logs/os.err > logs/os.log &
+sudo $DIR/openshift start --master-config=$MASTER_CONFIG --node-config=$NODE_CONFIG 2> $DIR/logs/os.err > $DIR/logs/os.log &
 popd
 sleep 30
 
