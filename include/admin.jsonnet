@@ -3,7 +3,7 @@ local router = import "router.jsonnet";
 local console = import "console.jsonnet";
 local common = import "common.jsonnet";
 {
-  services(instance, type="ClusterIP")::
+  services(instance)::
   [
     {
       "apiVersion": "v1",
@@ -36,37 +36,9 @@ local common = import "common.jsonnet";
           "name": "admin"
         }
       }
-    },
-    {
-      "apiVersion": "v1",
-      "kind": "Service",
-      "metadata": {
-        "name": "console",
-        "labels": {
-          "app": "enmasse"
-        },
-        "annotations": {
-          "instance": instance
-        }
-      },
-      "spec": {
-        "ports": [
-          {
-            "name": "console-ws",
-            "port": 56720
-          },
-          {
-            "name": "console-http",
-            "port": 8080
-          }
-        ],
-        "selector": {
-          "name": "admin"
-        },
-        "type": type
-      }
     }
   ],
+
   deployment(use_sasldb, instance, configserv_image, ragent_image, scheduler_image, console_image)::
   {
     "apiVersion": "extensions/v1beta1",
