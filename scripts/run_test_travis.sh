@@ -3,14 +3,13 @@ DIR=`dirname $0`
 set -x
 source $DIR/common.sh
 
-curl https://raw.githubusercontent.com/EnMasseProject/enmasse/master/scripts/deploy-openshift.sh -o $DIR/enmasse-deploy.sh
-curl https://raw.githubusercontent.com/EnMasseProject/enmasse/master/install/openshift/enmasse.yaml -o $DIR/enmasse.yaml
-chmod 755 $DIR/enmasse-deploy.sh
-export PATH="$PATH:$DIR"
+curl https://dl.bintray.com/enmasse/snapshots/latest/enmasse-latest.tar.gz -o $DIR/enmasse-latest.tar.gz
+tar xzvf $DIR/enmasse-latest.tar.gz
+export PATH="$PATH:$DIR/enmasse-latest"
 
 oc login -u test -p test --insecure-skip-tls-verify=true https://localhost:8443
 
-setup_test enmasse-ci $DIR/enmasse.yaml
+setup_test enmasse-ci
 run_test enmasse-ci true || failure=$(($failure + 1))
 # teardown_test enmasse-ci
 
