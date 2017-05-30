@@ -92,7 +92,7 @@ items:
       "metadata": {"name": "hawkular-router-config"}}, {"apiVersion": "extensions/v1beta1",
       "kind": "Ingress", "metadata": {"annotations": {"instance": "${INSTANCE}"},
       "labels": {"app": "enmasse"}, "name": "console"}, "spec": {"rules": [{"host":
-      "${CONSOLE_HOSTNAME}", "http": {"paths": [{"backend": {"serviceName": "console",
+      "${CONSOLE_HOSTNAME}", "http": {"paths": [{"backend": {"serviceName": "admin",
       "servicePort": 8080}, "path": "/"}]}}]}}, {"apiVersion": "extensions/v1beta1",
       "kind": "Deployment", "metadata": {"annotations": {"instance": "${INSTANCE}"},
       "labels": {"app": "enmasse", "name": "admin"}, "name": "admin"}, "spec": {"replicas":
@@ -119,7 +119,8 @@ items:
       "256Mi"}}}]}}}}, {"apiVersion": "v1", "kind": "Service", "metadata": {"annotations":
       {"instance": "${INSTANCE}"}, "labels": {"app": "enmasse"}, "name": "admin"},
       "spec": {"ports": [{"name": "ragent", "port": 55672}, {"name": "configuration",
-      "port": 5672}, {"name": "queue-scheduler", "port": 55667}], "selector": {"name":
+      "port": 5672}, {"name": "queue-scheduler", "port": 55667}, {"name": "console-ws",
+      "port": 56720}, {"name": "console-http", "port": 8080}], "selector": {"name":
       "admin"}}}], "parameters": [{"description": "The image to use for the router",
       "name": "ROUTER_REPO", "value": "enmasseproject/qdrouterd:latest"}, {"description":
       "The image to use for the router metrics collector", "name": "ROUTER_METRICS_REPO",

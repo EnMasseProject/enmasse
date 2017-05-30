@@ -97,7 +97,7 @@ objects:
       "metadata": {"name": "hawkular-router-config"}}, {"apiVersion": "v1", "kind":
       "Route", "metadata": {"annotations": {"instance": "${INSTANCE}"}, "labels":
       {"app": "enmasse"}, "name": "console"}, "spec": {"host": "${CONSOLE_HOSTNAME}",
-      "port": {"targetPort": "console-http"}, "to": {"kind": "Service", "name": "console"}}},
+      "port": {"targetPort": "console-http"}, "to": {"kind": "Service", "name": "admin"}}},
       {"apiVersion": "v1", "kind": "Route", "metadata": {"annotations": {"instance":
       "${INSTANCE}"}, "labels": {"app": "enmasse"}, "name": "messaging"}, "spec":
       {"host": "${MESSAGING_HOSTNAME}", "port": {"targetPort": "amqps"}, "tls": {"termination":
@@ -132,7 +132,8 @@ objects:
       "Service", "metadata": {"annotations": {"instance": "${INSTANCE}"}, "labels":
       {"app": "enmasse"}, "name": "admin"}, "spec": {"ports": [{"name": "ragent",
       "port": 55672}, {"name": "configuration", "port": 5672}, {"name": "queue-scheduler",
-      "port": 55667}], "selector": {"name": "admin"}}}, {"apiVersion": "v1", "kind":
+      "port": 55667}, {"name": "console-ws", "port": 56720}, {"name": "console-http",
+      "port": 8080}], "selector": {"name": "admin"}}}, {"apiVersion": "v1", "kind":
       "Service", "metadata": {"annotations": {"instance": "${INSTANCE}"}, "labels":
       {"app": "enmasse"}, "name": "amqp-kafka-bridge"}, "spec": {"ports": [{"name":
       "amqp", "port": 5672, "protocol": "TCP", "targetPort": 5672}], "selector": {"capability":

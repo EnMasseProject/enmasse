@@ -96,7 +96,7 @@ local common = import "common.jsonnet";
         "host": hostname,
         "to": {
           "kind": "Service",
-          "name": "console"
+          "name": "admin"
         },
         "port": {
           "targetPort": "console-http"
@@ -126,7 +126,7 @@ local common = import "common.jsonnet";
                 {
                   "path": "/",
                   "backend": {
-                    "serviceName": "console",
+                    "serviceName": "admin",
                     "servicePort": 8080
                   }
                 }

@@ -29,6 +29,14 @@ local common = import "common.jsonnet";
           {
             "name": "queue-scheduler",
             "port": 55667
+          },
+          {
+            "name": "console-ws",
+            "port": 56720
+          },
+          {
+            "name": "console-http",
+            "port": 8080
           }
         ],
         "selector": {
