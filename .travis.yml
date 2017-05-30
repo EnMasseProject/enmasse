@@ -10,20 +10,21 @@ before_install:
 - docker pull ppatierno/qdrouterd:0.8.0-repo
 - docker run -d --name qdrouterd -p 5672:5672 -p 55673:55673 -v $TRAVIS_BUILD_DIR/src/test/resources:/conf
   ppatierno/qdrouterd:0.8.0-repo qdrouterd --conf /conf/qdrouterd.conf
+before_script:
+- curl -s ${SCRIPTS}/setup-tests.sh | bash /dev/stdin
 script:
 - export TAG=${TRAVIS_TAG:-1.0-SNAPSHOT}
 - if [ -n "${TRAVIS_TAG}" ]; then mvn versions:set -DgenerateBackupPoms=false -DnewVersion=${TRAVIS_TAG};
   fi
-- mvn test package -B
-- curl -s https://raw.githubusercontent.com/EnMasseProject/travis-scripts/master/docker-build.sh
-  | bash /dev/stdin enmasseproject/mqtt-lwt . $TAG
-- curl -s https://raw.githubusercontent.com/EnMasseProject/travis-scripts/master/generate-bintray-descriptor.sh
-  | bash /dev/stdin mqtt-lwt target/mqtt-lwt-${TAG}-bin.tar.gz > .bintray.json
+- mvn test package -B || exit 1
+- curl -s ${SCRIPTS}/generate-bintray-descriptor.sh | bash /dev/stdin mqtt-lwt target/mqtt-lwt-${TAG}-bin.tar.gz > .bintray.json
+- curl -s ${SCRIPTS}/docker-build.sh | bash /dev/stdin enmasseproject/mqtt-lwt . $TAG
+- curl -s ${SCRIPTS}/run-tests.sh | bash /dev/stdin ${COMMIT} "" enmasseproject/mqtt-lwt
 after_success:
-- curl -s https://raw.githubusercontent.com/EnMasseProject/travis-scripts/master/trigger-travis.sh
-  | bash /dev/stdin
+- curl -s ${SCRIPTS}/docker-push.sh | bash /dev/stdin enmasseproject/mqtt-lwt
 env:
   global:
+  - SCRIPTS=https://raw.githubusercontent.com/EnMasseProject/travis-scripts/master
   - COMMIT=${TRAVIS_COMMIT::8}
   - secure: ddjiAvbKpSXNBCEYQCbwWw1RfeO/kam0c5ysCjqif6XoPygV4AIT/mzDI3WOeyJEQZgEyemF8D6L3G4hZx26qxvtA5mbSxZmQH5eB5FLeoa/MsK97MKMTFNwY1apl2PPcb8E/EqIdc4irsxW79GosRpnfHkubR9WQXXvJA4msfviVNH2eU+JEDKEtAdIH7RivsL1W/kRw4ePNjLVq4+Mf6VWzwY7l9CtDHfmvkT31tY/f+fRDpmLhGujrKKuVq5ovSeVn4Y8WeoYq3GExsjrfV8oASFnSA546+I1+5ugXIFcQw87u3iAr6gh8WLHMCCZGqpp20ymn96HtNv0SNz/jeZTN+BHVJuMFN1GSa3nInApB6Y9UYTjSJgAe4m6a/kxMaOBL40l13IHMnaFWzdSIWpE2ub2lEe58ryDan0mJdvq67QCBSsnVubwv18CLBEO1wKJuNL9bCbfebdBCoj7QMW8O9GaN8km6JLq9lSGMlQeBt+kyO03v+qb8vDRz15uNT/PowK4JvbM8VD0WWi51k3PFZ5uAaqbNIP1m7R4cE1Uvu/m4h8Na+88wI62eOXF0MljftQ+6Jt1W58p77izpazpcOM01PYmn5JbYfC9pncJfxnIxsYnJMIc8hJUiXSfBFsP/a0m756cokSsOkiGTy2T3MbYds+Xg/bQqVdAh/g=
   - secure: rjIr6ntAK1gXdNg0ZZheQyS0HyQz8VKx0oM/KSbxDHM3b55+kWDuatS4lwHj2oWarQiLiyKVcx2CsCIeLPgkWNsm+cKTFswYblDox+trvWiOp7qNOkLbcfPcmP1LoEXyQFK8kSJt/4QxDVzFJjH9IRduZLI5llDAKEFy6TTSVZHmxRmprjfmz7RkuEqAarfPrcvo7Njyv985OVbR9+8GN4WUmn+nbeAEq9/Crn/zqOoha6i9hABm5hd32qn294tW/NmWl7lQ/A29V0cTu/UqfJt9JUryTEH08Fi8DfJh4E5eIet+VT2HKRarWObmnRDTeLUMqZdEFono+CFlXxrNrfYjze2NlR5zeqFBwAsDkgbfvQXcYGygDKUaa3GNc0dJbZeEwbQuLux/VE3PRkEHyl7oAGYaEFlTR6r2cFRgthRLKurYViWLbxCMukm14yfkO5mvy2/LlVyvFkDNFodWHl8B0kPOVR17Ichc3SpdFhWqVWIFVU8A4SwTyD0IlvTcbmkkvBjMq7sLLNzgGWEgfg+tPbGBBVLhdVDSBkvyw8Czygr5wMtcPKC9fXGliyY1yj3GATHbLRCKbp4r029TyaQ0nQF8h5+CuIYkwGX+fx416gRG0MaF+UmFfEz/WQ20Cnk2zFxht3p2HTDduvGkzbpZ/PcHyaBYNhMTatT9knM=
