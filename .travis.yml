@@ -6,18 +6,19 @@ node_js:
 - '0.12'
 services:
 - docker
+before_script:
+- curl -s ${SCRIPTS}/setup-tests.sh | bash /dev/stdin
 script:
 - TAG=${TRAVIS_TAG:-latest}
-- make
-- curl -s https://raw.githubusercontent.com/EnMasseProject/travis-scripts/master/generate-bintray-descriptor.sh
-  | bash /dev/stdin ragent ragent-${TAG}.tar.gz > .bintray.json
-- curl -s https://raw.githubusercontent.com/EnMasseProject/travis-scripts/master/docker-build.sh
-  | bash /dev/stdin enmasseproject/ragent .
+- make || exit 1
+- curl -s ${SCRIPTS}/generate-bintray-descriptor.sh | bash /dev/stdin ragent ragent-${TAG}.tar.gz > .bintray.json
+- curl -s ${SCRIPTS}/docker-build.sh | bash /dev/stdin enmasseproject/ragent .
+- curl -s ${SCRIPTS}/run-tests.sh | bash /dev/stdin ${COMMIT} "" enmasseproject/ragent
 after_success:
-- curl -s https://raw.githubusercontent.com/EnMasseProject/travis-scripts/master/trigger-travis.sh
-  | bash /dev/stdin
+- curl -s ${SCRIPTS}/docker-push.sh | bash /dev/stdin enmasseproject/ragent
 env:
   global:
+  - SCRIPTS=https://raw.githubusercontent.com/EnMasseProject/travis-scripts/master
   - COMMIT=${TRAVIS_COMMIT::8}
   - secure: LLyy1zG28VZc+vzkCLhceUZQ1T3L+KvSbo4plYBiUI3ZnilWa5mjenxFHXeoACvtEfxMbF8dnONmcy2QwMCufy9J4Cbxzqg+9FSgRQGxguCA5bdBKXG62/CQLFAEUl2EhNFcxZB7aWeeF4xBhfOmyXHbpasZb5c1l41hdljCjvcGRP7iWaivNilysakC1yhJ4/QzLcnUIJPp8o++U2n7LkS2kCfgGUG7ymRXndycDwf74vsJVDekYlwuSufjx9E0SAGjMTHXm3IAYUWiYsCTKzLUuc0Tj6pPwpjzy5Fj+kqthISybAUIFsdqxTRpLyjM/0nCpH3TZgKZffHnbtk5bHEJdoQjMCMJm8KgcEfrD1cXK6X4P3Icd6vr++Rlqm4MPARfi6Ac8f1VskG3Ap8IR6rhFw8435hH0RW4oMUNjvfbqFovR8EOeCOzbvIGwqxYiZWfj0VQOkD8o2vkremdJ8SsVb3ZmCvKNRDnNJ1nbnllDjmiErEbUnMZeR9XE48/dl+76u7UAXJE0vLaV6oL7UoWNhJ6neq3bGqBXViFEMjQaICBdoZJwqv/v5RBDMZiQRAvqvx5+/MdZw47fMl+IuJELL9rUfy4BuvsOC5gy+8b9uE39B86ZkhuMjL9A9YNnuwot9oXpP+AKKiu1Lw9shJLYa4vazfQSvnfP67Q378=
   - secure: UtirJjQW+5I8UTmcTx/IZPXHOOJAVDZoCkkaGG8viIoWbrOZqG94JEZApgBzRwzSClpxZfeWb2l/jXXVGxbh/3J0ISWrz2zmFdM/sbaEp31xAkoBQ5NL6IbXEh8cw9TiJ5DdyoAn5yyevmK/99sgU3/6M3j8OTZml3x5XsXZWrrVAGSVcdcqtnAVfXHAiIyXeKS3QoOWWQtehJj8UWZKuFNHasji9ZX23qaWlItmF2A6HR3mcIIH603z7YU1Pr8HshaZmdjx4Yp0iSLEonfA2Ha392IKR+oT0p5NeS+8FZrGLzpQyEx7VqQI/5eSph56GY8JctbFWpKBRl2EpjjKoLqf9Pv0Qlndyq+LubClwHs9juJEJt4wBkQWY18gMmapnVzej0eiDtyLprp1MPrWCWHDeXvyaTycmnZwMI/qE65SVd8Y0TKLJp81xA3NFk9z8XvHmmvdlpX9MnZMhwh2hcTDM0dtoJObfs/vkl5DGA7aQNufVoPOX5IYKCIaIAMwq4U1GsPWFxAI+/sh+PWF3pra1hj6w4ebq5xGkhxNWkN5zip6xNhgAX6p2EdjiTc0nnvuQr1oqsjJ6Flk/k/FrLB0fixnvYz/gAM/Nwu8fCBqy7Vm7MfiMO9kpK/HpEuSTU61JOz21Hi+i6V2zurrv5XRWPrACYf11USSbZx7uOM=
