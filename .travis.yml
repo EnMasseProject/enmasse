@@ -6,18 +6,19 @@ notifications:
   email: false
 services:
 - docker
+before_script:
+- curl -s ${SCRIPTS}/setup-tests.sh | bash /dev/stdin
 script:
 - export TAG=${TRAVIS_TAG:-1.0-SNAPSHOT}
-- sh build.sh ${TRAVIS_TAG}
-- curl -s https://raw.githubusercontent.com/EnMasseProject/travis-scripts/master/generate-bintray-descriptor.sh
-  | bash /dev/stdin mqtt-gateway target/mqtt-gateway-${TAG}-bin.tar.gz > .bintray.json
-- curl -s https://raw.githubusercontent.com/EnMasseProject/travis-scripts/master/docker-build.sh
-  | bash /dev/stdin enmasseproject/mqtt-gateway . $TAG
+- sh build.sh ${TRAVIS_TAG} || exit 1
+- curl -s ${SCRIPTS}/generate-bintray-descriptor.sh | bash /dev/stdin mqtt-gateway target/mqtt-gateway-${TAG}-bin.tar.gz > .bintray.json
+- curl -s ${SCRIPTS}/docker-build.sh | bash /dev/stdin enmasseproject/mqtt-gateway . $TAG
+- curl -s ${SCRIPTS}/run-tests.sh | bash /dev/stdin ${COMMIT} "" enmasseproject/mqtt-gateway
 after_success:
-- curl -s https://raw.githubusercontent.com/EnMasseProject/travis-scripts/master/trigger-travis.sh
-  | bash /dev/stdin
+- curl -s ${SCRIPTS}/docker-push.sh | bash /dev/stdin enmasseproject/mqtt-gateway
 env:
   global:
+  - SCRIPTS=https://raw.githubusercontent.com/EnMasseProject/travis-scripts/master
   - COMMIT=${TRAVIS_COMMIT::8}
   - secure: u4c9iRUFD6Sz5mcsFp0jFY6zAf/vpxVeJs5LPi2Q/sU3ByFHi9ZllU9GMEB/ECnJqK9Mth8s82K5QtKkNpYAqZadResUlheKTXFyAhkKR2c5dQ2Vjc/wWGyRr2QV042IvvMBfnrzyr6+zaG334aKJ2C3tVJWQHmfvzktIln838CTfgnBN9NShnQ0oRr7EkQBngdyuSPybCJPch+87//HKT7TnOm6Wt9Y/w1F5CzOYjcf1IkG32p/fzGxn+wPOEA4Q5LO8syW7F4uKnBzJv0U7aF8Pp9FwDMIF5llXYLxRvj2/4Ly7JctUiQ6jGiTrbhODMBiQTFOsRfDYPlnyefW1Wv7WSRX+Vj9kFxRjYrw4ls6BBpOzDKkOeHEk6ZLJyXk61eJZGruVqwKyknu+keo5gO9/vsfFau9XJyK6zCPSy3kBjpjvEtbeej4o+OdgbZHBg0wPSfArNN3Qqwkb8sfJIm83MBksxAXq/e6z38ukalAmPai3CN5flf6fXBpjGb7d4pH3HGb+J56SkrcwM00/3S+0IX2e39yCKZ7qSle/cNEARrsKtWV/068s5whRcvKzfj2/MfC+L21gYJjFEHtWM369sg7T9KSckFLIurJU1/xrL8JfUh7GyshYx0/DK3zh0hpfKTT3cYCcTCGD/IkraKm+2R94Am671AD0KCXRPY=
   - secure: mz4KFuPiTqMpfI6om3jmkyIRCJtW6LMeMh48p3hXnqSJKRIf7KvU22MeGnP09j3QJz7iy5GAaYvAWJm0UsIvVQIXGMCrFWQsgWZbtG+Ed6ElQp9b4BZz9aFpHOPnahG5FVJ0MZ8TBxNKuBrXG5f6dfxS5PS2AEBuck/JF2qL4imBrApkf6F+BWk/UZVnMsyQeLD1HqJjRSFy3QQUUWvzTED8VvRpsM+EOYAE8iSBMW/H1DwN1gf4SxvBB7MNMaw9eyy7V29HemCSWSdfMj290VzmKIOXqOSrplGYf9EXUWWwK6x/tL/sjBAE2TUJWjcUp+6ijeu2EGOFp3SWPOWOPSafdWod3iGMJiGrOY5GPzflYKdOqdkqpZg9bUH+1B+ug4GSDjqk8q2EGbjdyTM6iyjIJLrmqfQ1PWA/P5yZr/PImhd3mkUFo/jyej2g/lkPsTUMooB/A1HaF3mFZ55vc78fetaKSBl6x81P+GaKJ2rP7TIpJ108o36+KgmR7a7AIz33CdGgSq4vw2eyvwNW+RIqr+Z/pXOclmO1hihCg++YSUlCF77njJlLAgwB58SNea2RUJ2TjZP+zvEBhgBwsN+oVpR1LsAmWn8HN6ZZoJp+GDU/+lxOhZ2epePAaBmgjlKLfUnaAH/GyWkQSU0zDDHqVds95nt7Y0620UahXNc=
