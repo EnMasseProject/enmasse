@@ -4,6 +4,7 @@ notifications:
   email: false
 env:
   global:
+  - SCRIPTS=https://raw.githubusercontent.com/EnMasseProject/travis-scripts/master
   - COMMIT=${TRAVIS_COMMIT::8}
   - secure: 0Kj5gwNt1zgks62VA9WuPKJHfIqAt/n1KFLDedaSr+mEqnR/mrbdSVn/zeeeIjCjvKRWuHrinWoInpBiOI17MG90Mn5siYC1zP+xx0O0J7NmNRs0UEJG7C/2qqI5BZzZjlA4Eh16/Gg+MgCPeyEWFd8tN1dAYn76q7QBmzwlSMda6d42/YJZNOeUjvNuKmBgSBPulVjdwJaF6kIdmdRSVkVFjAzHtisTt1istfzsR3ELaAjKBVsTnzj4DhbROPn+VUYZuAIyGjlN1Q+m8MmnThmIoLVNZVPhmzK9Ha88NWltA1DVCK42wEYAyyresARuqNABROlldrvL0ljqPHO0Hwf7NJIqPWidM1ul9h6uquFVJOacQzQEybsMM3D4SLk7crTbels2hmW5NmTywy+w7tRSKWYPGkoBMnk/4wutpmkk98GV4e120vjV+Irs015r3A9FaF5wZISaXkyON8lVtC8X1VJXZ34QZBLwPtaYfeQkKKWgkF6vm8g4u/ZgnY6h4vNhnDLtsyG6wkPQwwVKuzSBp63uNX1h6xHOX8cVH7O0VftNXGWkAGfuQONmiVQh5Bp4LDhTWQDXA5ZHtyP1UGuJ/mRqxjoFzBtTp4ATV6DVCDrQhK5lPSi3TgNt1oTNf51VinDdHpQYWHmGB4/jQaHV4Cipymu9d4Oe8G7DHlA=
   - secure: eJUMa81c+vwefPJgIuN/V9D2ahQP39EFYSzMZSSDvA6CthFoHBcwiBM/318gLv6qMEVkBTWYkU9nc4+Vq+Zm/qE6A/Mmy1jLucHb/bTVVVOVOvRo03tvCKE424aB2mumD69E8qi1FkjZnQ51/h+ivBXxyqA/UXu4J9A/RNqn2Z/VUpb4HeEUuuDWKaFq99NqV5RW+9QU+UVeEQHWTJAGhgX7ieAexgrWhnvFR8Rh1Qi6qjYp3S2iuFqId+u7ri5EMQGTBd4NkR6K7PgqzwJ+4IMy+iX6xsTPyhit07wjvKPeM1jDCeU2rXGsUBtuavGJs6ekrn9WLnCkwEyrgTuev3VlcsCxCPIahaxg4oNvedd79l+zT/J933/Z0UvvDu6wm03bf4bIGPjd/u27OLzL5FS7JA9+HLqgClZPl8nJ8J+oNvYGQRBVJSx27rHNuWlNkoATxQSC1fOM1LRXKTH55ywblvHYyAJb3/HVqwuZATRQ0TD1eLZjKVSAF7qduz7aNKJAjkjfP2EOOXMnj/TfXxzaVolbT71I6dilvzXSysyCV7rAL7rzHwFAnPkGY5awW6NL84XaDIHseVFO+A3qDWPQtUpWbdEU7SGkW+1bYcAHoAwA0TQRO/fgVr4C9vK7v2PmDajJL/a4PpnQFU9rUN22kCJkG/sDWnMgGMv+fx8=
@@ -17,18 +18,18 @@ jdk:
 - oraclejdk8
 services:
 - docker
+before_script:
+- curl -s ${SCRIPTS}/setup-tests.sh | bash /dev/stdin
 script:
-- gradle build -i
+- gradle build -i || exit 1
 - gradle distTar
 - gradle downloadArtemis
 - gradle buildTar
-- curl -s https://raw.githubusercontent.com/EnMasseProject/travis-scripts/master/docker-build.sh
-  | bash /dev/stdin enmasseproject/artemis .
-- curl -s https://raw.githubusercontent.com/EnMasseProject/travis-scripts/master/generate-bintray-descriptor.sh
-  | bash /dev/stdin artemis-image build/artemis-image.tar > .bintray.json
+- curl -s ${SCRIPTS}/generate-bintray-descriptor.sh | bash /dev/stdin artemis-image build/artemis-image.tar > .bintray.json
+- curl -s ${SCRIPTS}/docker-build.sh | bash /dev/stdin enmasseproject/artemis .
+- curl -s ${SCRIPTS}/run-tests.sh | bash /dev/stdin ${COMMIT} "" enmasseproject/artemis
 after_success:
-- curl -s https://raw.githubusercontent.com/EnMasseProject/travis-scripts/master/trigger-travis.sh
-  | bash /dev/stdin
+- curl -s ${SCRIPTS}/docker-push.sh | bash /dev/stdin enmasseproject/artemis
 deploy:
   - provider: bintray
     file: ".bintray.json"
