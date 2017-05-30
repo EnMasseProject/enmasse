@@ -7,7 +7,7 @@
 
 EnMasse is an open source messaging platform, with focus on scalability and performance. EnMasse can run on your own infrastructure or in the cloud, and simplifies the deployment of messaging infrastructure.
 
-The EnMasse project that aims to create, as a community, an open source messaging platform that runs on [Kubernetes](https://kubernetes.io/) and [OpenShift](http://openshift.org/), using open standards like [AMQP](http://amqp.org/) and [MQTT](http://mqtt.org/) etc. EnMasse is based on other open source projects like [Apache ActiveMQ Artemis](https://activemq.apache.org/artemis/), [Apache Qpid Dispatch Router](https://qpid.apache.org/components/dispatch-router/index.html) and finally the [Vert.x](http://vertx.io/) toolkit.
+The EnMasse project that aims to create, as a community, an open source messaging platform that runs on [Kubernetes](https://kubernetes.io/) and [OpenShift](http://openshift.org/), using open standards like [AMQP](http://amqp.org/), [MQTT](http://mqtt.org/), HTTP etc. EnMasse is based on other open source projects like [Apache ActiveMQ Artemis](https://activemq.apache.org/artemis/), [Apache Qpid Dispatch Router](https://qpid.apache.org/components/dispatch-router/index.html) and finally the [Vert.x](http://vertx.io/) toolkit.
 
 ## Features
 
@@ -23,7 +23,7 @@ EnMasse can be used for many purposes, such as moving your messaging infrastruct
 
 ## Components
 
-EnMasse is made of different components needed for the deployment and for handling the messaging infrastructure based on a Qpid Dispatch Router network and Apache ActiveMQ broker(s).
+EnMasse is made of different components needed for the deployment and for handling the messaging infrastructure based on a Qpid Dispatch Router network and Apache ActiveMQ broker(s). Other broker implementations such as Apache Kafka may also be used.
 
 * [address-controller](https://github.com/EnMasseProject/admin#address-controller): Controls multiple instances (tenants) and per-instance address space
 * [ragent](https://github.com/EnMasseProject/ragent): Controls the router network configuration
@@ -33,10 +33,11 @@ EnMasse is made of different components needed for the deployment and for handli
 * [console](https://github.com/EnMasseProject/routilities): Messaging-centric console for managing and monitoring addresses
 * [mqtt-gateway](https://github.com/EnMasseProject/mqtt-gateway): MQTT gateway for "MQTT over AMQP"
 * [mqtt-lwt](https://github.com/EnMasseProject/mqtt-lwt): MQTT Last Will and Testament Service for "MQTT over AMQP"
+* [amqp-kafa-bridge](https://github.com/EnMasseProject/amqp-kafka-bridge): A bridge between AMQP and Apache Kafka
 
 # Getting started
 
-See the [Getting Started](documentation/getting-started/README.md) for how to setup EnMasse. For
+See the [Getting Started](documentation/getting-started/README.md) for how to install EnMasse. For
 more details on architecture and implementation, see [documentation](documentation/README.md).
 
 # Getting help
