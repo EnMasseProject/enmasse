@@ -52,7 +52,7 @@ function run_test() {
     export OPENSHIFT_MULTITENANT=$MULTITENANT
     export OPENSHIFT_TOKEN=`oc whoami -t`
     export OPENSHIFT_MASTER_URL=$OPENSHIFT_URL
-    mvn test -Djava.net.preferIPv4Stack=true
+    mvn -B test -Djava.net.preferIPv4Stack=true
 }
 
 function teardown_test() {
