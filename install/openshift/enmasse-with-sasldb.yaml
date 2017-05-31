@@ -31,14 +31,17 @@ objects:
       "secret": {"secretName": "${ROUTER_SECRET}"}}, {"name": "sasldb-vol", "persistentVolumeClaim":
       {"claimName": "pvc-sasldb"}}]}}}}, {"apiVersion": "v1", "kind": "Service", "metadata":
       {"annotations": {"instance": "${INSTANCE}", "service.alpha.openshift.io/dependencies":
-      "[{\"kind\": \"Service\", \"name\": \"admin\", \"namespace\": \"\"}, {\"kind\":
-      \"Service\", \"name\": \"subscription\", \"namespace\": \"\"}, {\"kind\": \"Service\",
-      \"name\": \"mqtt\", \"namespace\": \"\"}]", "service.alpha.openshift.io/infrastructure":
-      "true"}, "labels": {"app": "enmasse"}, "name": "messaging"}, "spec": {"ports":
-      [{"name": "amqp", "port": 5672, "protocol": "TCP", "targetPort": 5672}, {"name":
-      "amqps", "port": 5671, "protocol": "TCP", "targetPort": 5671}, {"name": "internal",
-      "port": 55673, "protocol": "TCP", "targetPort": 55673}, {"name": "inter-router",
-      "port": 55672, "protocol": "TCP", "targetPort": 55672}], "selector": {"capability":
+      "[{\"kind\": \"Service\", \"name\": \"queue-scheduler\", \"namespace\": \"\"},
+      {\"kind\": \"Service\", \"name\": \"configuration\", \"namespace\": \"\"}, {\"kind\":
+      \"Service\", \"name\": \"ragent\", \"namespace\": \"\"}, {\"kind\": \"Service\",
+      \"name\": \"console\", \"namespace\": \"\"}, {\"kind\": \"Service\", \"name\":
+      \"subscription\", \"namespace\": \"\"}, {\"kind\": \"Service\", \"name\": \"mqtt\",
+      \"namespace\": \"\"}]", "service.alpha.openshift.io/infrastructure": "true"},
+      "labels": {"app": "enmasse"}, "name": "messaging"}, "spec": {"ports": [{"name":
+      "amqp", "port": 5672, "protocol": "TCP", "targetPort": 5672}, {"name": "amqps",
+      "port": 5671, "protocol": "TCP", "targetPort": 5671}, {"name": "internal", "port":
+      55673, "protocol": "TCP", "targetPort": 55673}, {"name": "inter-router", "port":
+      55672, "protocol": "TCP", "targetPort": 55672}], "selector": {"capability":
       "router"}}}, {"apiVersion": "extensions/v1beta1", "kind": "Deployment", "metadata":
       {"annotations": {"instance": "${INSTANCE}"}, "labels": {"app": "enmasse", "name":
       "subserv"}, "name": "subserv"}, "spec": {"replicas": 1, "template": {"metadata":

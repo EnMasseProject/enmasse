@@ -28,7 +28,22 @@
     {
       local admin_deps = [
         {
-          "name":"admin",
+          "name":"queue-scheduler",
+          "namespace":"",
+          "kind":"Service"
+        },
+        {
+          "name":"configuration",
+          "namespace":"",
+          "kind":"Service"
+        },
+        {
+          "name":"ragent",
+          "namespace":"",
+          "kind":"Service"
+        },
+        {
+          "name":"console",
           "namespace":"",
           "kind":"Service"
         },
