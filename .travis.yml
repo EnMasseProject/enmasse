@@ -22,7 +22,7 @@ script:
 - curl -s ${SCRIPTS}/docker-build.sh | bash /dev/stdin enmasseproject/address-controller address-controller/server
 - curl -s ${SCRIPTS}/docker-build.sh | bash /dev/stdin enmasseproject/configserv configserv
 - curl -s ${SCRIPTS}/docker-build.sh | bash /dev/stdin enmasseproject/queue-scheduler queue-scheduler
-- curl -s ${SCRIPTS}/run-tests.sh | bash /dev/stdin ${COMMIT} "" enmasseproject/address-controller enmasseproject/configserv enmasseproject/queue-scheduler || exit 1
+- curl -s ${SCRIPTS}/run-tests.sh | bash /dev/stdin ${COMMIT} "" enmasseproject/address-controller enmasseproject/configserv enmasseproject/queue-scheduler
 after_success:
 - curl -s ${SCRIPTS}/docker-push.sh | bash /dev/stdin enmasseproject/address-controller
 - curl -s ${SCRIPTS}/docker-push.sh | bash /dev/stdin enmasseproject/configserv
