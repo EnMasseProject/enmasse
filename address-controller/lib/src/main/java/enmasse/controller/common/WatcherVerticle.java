@@ -35,7 +35,6 @@ public class WatcherVerticle<T> extends AbstractVerticle implements io.fabric8.k
             try {
                 changeHandler.resourcesUpdated(resource.listResources());
                 promise.complete(resource.watchResources(this));
-                 //client.configMaps().inNamespace(namespace).withLabels(labels).watch(this));
                 vertx.setTimer(nextCheck(), id -> checkResources());
             } catch (Exception e) {
                 promise.fail(e);
@@ -48,10 +47,6 @@ public class WatcherVerticle<T> extends AbstractVerticle implements io.fabric8.k
             }
         });
     }
-
-    /*private Set<T> listConfigs() {
-        return decoder.decodeConfigs(client.configMaps().inNamespace(namespace).withLabels(labels).list().getItems());
-    }*/
 
     private void checkResources() {
         vertx.executeBlocking(promise -> {
