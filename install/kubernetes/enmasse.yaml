@@ -90,35 +90,35 @@ items:
       \"messagingMetricType\": \"consumerCount\"}}], \"path\": \"/metrics/\", \"port\":
       8080, \"protocol\": \"http\", \"type\": \"prometheus\"}]}"}, "kind": "ConfigMap",
       "metadata": {"name": "hawkular-router-config"}}, {"apiVersion": "extensions/v1beta1",
-      "kind": "Ingress", "metadata": {"annotations": {"instance": "${INSTANCE}"},
-      "labels": {"app": "enmasse"}, "name": "console"}, "spec": {"rules": [{"host":
-      "${CONSOLE_HOSTNAME}", "http": {"paths": [{"backend": {"serviceName": "admin",
-      "servicePort": 8080}, "path": "/"}]}}]}}, {"apiVersion": "extensions/v1beta1",
-      "kind": "Deployment", "metadata": {"annotations": {"instance": "${INSTANCE}"},
-      "labels": {"app": "enmasse", "name": "admin"}, "name": "admin"}, "spec": {"replicas":
-      1, "template": {"metadata": {"annotations": {"instance": "${INSTANCE}"}, "labels":
-      {"app": "enmasse", "name": "admin"}}, "spec": {"containers": [{"env": [{"name":
+      "kind": "Ingress", "metadata": {"annotations": {"ingress.kubernetes.io/ssl-redirect":
+      "false", "instance": "${INSTANCE}"}, "labels": {"app": "enmasse"}, "name": "console"},
+      "spec": {"rules": [{"host": "${CONSOLE_HOSTNAME}", "http": {"paths": [{"backend":
+      {"serviceName": "admin", "servicePort": 8080}, "path": "/"}]}}]}}, {"apiVersion":
+      "extensions/v1beta1", "kind": "Deployment", "metadata": {"annotations": {"instance":
+      "${INSTANCE}"}, "labels": {"app": "enmasse", "name": "admin"}, "name": "admin"},
+      "spec": {"replicas": 1, "template": {"metadata": {"annotations": {"instance":
+      "${INSTANCE}"}, "labels": {"app": "enmasse", "name": "admin"}}, "spec": {"containers":
+      [{"env": [{"name": "CONFIGURATION_SERVICE_HOST", "value": "localhost"}, {"name":
+      "CONFIGURATION_SERVICE_PORT", "value": "5672"}], "image": "${RAGENT_REPO}",
+      "livenessProbe": {"tcpSocket": {"port": "amqp"}}, "name": "ragent", "ports":
+      [{"containerPort": 55672, "name": "amqp", "protocol": "TCP"}], "resources":
+      {"limits": {"memory": "64Mi"}, "requests": {"memory": "64Mi"}}}, {"env": [{"name":
       "CONFIGURATION_SERVICE_HOST", "value": "localhost"}, {"name": "CONFIGURATION_SERVICE_PORT",
-      "value": "5672"}], "image": "${RAGENT_REPO}", "livenessProbe": {"tcpSocket":
-      {"port": "amqp"}}, "name": "ragent", "ports": [{"containerPort": 55672, "name":
-      "amqp", "protocol": "TCP"}], "resources": {"limits": {"memory": "64Mi"}, "requests":
-      {"memory": "64Mi"}}}, {"env": [{"name": "CONFIGURATION_SERVICE_HOST", "value":
-      "localhost"}, {"name": "CONFIGURATION_SERVICE_PORT", "value": "5672"}], "image":
-      "${QUEUE_SCHEDULER_REPO}", "livenessProbe": {"tcpSocket": {"port": "amqp"}},
-      "name": "queue-scheduler", "ports": [{"containerPort": 55667, "name": "amqp",
-      "protocol": "TCP"}], "resources": {"limits": {"memory": "128Mi"}, "requests":
-      {"memory": "128Mi"}}}, {"env": [{"name": "CONFIGURATION_SERVICE_HOST", "value":
-      "localhost"}, {"name": "CONFIGURATION_SERVICE_PORT", "value": "5672"}], "image":
-      "${CONSOLE_REPO}", "livenessProbe": {"httpGet": {"path": "/", "port": "http"}},
-      "name": "console", "ports": [{"containerPort": 8080, "name": "http", "protocol":
-      "TCP"}, {"containerPort": 56720, "name": "amqp-ws", "protocol": "TCP"}], "resources":
-      {"limits": {"memory": "64Mi"}, "requests": {"memory": "64Mi"}}}, {"env": [ ],
-      "image": "${CONFIGSERV_REPO}", "livenessProbe": {"tcpSocket": {"port": "amqp"}},
-      "name": "configserv", "ports": [{"containerPort": 5672, "name": "amqp", "protocol":
-      "TCP"}], "resources": {"limits": {"memory": "256Mi"}, "requests": {"memory":
-      "256Mi"}}}]}}}}, {"apiVersion": "v1", "kind": "Service", "metadata": {"annotations":
-      {"instance": "${INSTANCE}"}, "labels": {"app": "enmasse"}, "name": "admin"},
-      "spec": {"ports": [{"name": "ragent", "port": 55672}, {"name": "configuration",
+      "value": "5672"}], "image": "${QUEUE_SCHEDULER_REPO}", "livenessProbe": {"tcpSocket":
+      {"port": "amqp"}}, "name": "queue-scheduler", "ports": [{"containerPort": 55667,
+      "name": "amqp", "protocol": "TCP"}], "resources": {"limits": {"memory": "128Mi"},
+      "requests": {"memory": "128Mi"}}}, {"env": [{"name": "CONFIGURATION_SERVICE_HOST",
+      "value": "localhost"}, {"name": "CONFIGURATION_SERVICE_PORT", "value": "5672"}],
+      "image": "${CONSOLE_REPO}", "livenessProbe": {"httpGet": {"path": "/", "port":
+      "http"}}, "name": "console", "ports": [{"containerPort": 8080, "name": "http",
+      "protocol": "TCP"}, {"containerPort": 56720, "name": "amqp-ws", "protocol":
+      "TCP"}], "resources": {"limits": {"memory": "64Mi"}, "requests": {"memory":
+      "64Mi"}}}, {"env": [ ], "image": "${CONFIGSERV_REPO}", "livenessProbe": {"tcpSocket":
+      {"port": "amqp"}}, "name": "configserv", "ports": [{"containerPort": 5672, "name":
+      "amqp", "protocol": "TCP"}], "resources": {"limits": {"memory": "256Mi"}, "requests":
+      {"memory": "256Mi"}}}]}}}}, {"apiVersion": "v1", "kind": "Service", "metadata":
+      {"annotations": {"instance": "${INSTANCE}"}, "labels": {"app": "enmasse"}, "name":
+      "admin"}, "spec": {"ports": [{"name": "ragent", "port": 55672}, {"name": "configuration",
       "port": 5672}, {"name": "queue-scheduler", "port": 55667}, {"name": "console-ws",
       "port": 56720}, {"name": "console-http", "port": 8080}], "selector": {"name":
       "admin"}}}], "parameters": [{"description": "The image to use for the router",
@@ -354,6 +354,8 @@ items:
 - apiVersion: extensions/v1beta1
   kind: Ingress
   metadata:
+    annotations:
+      ingress.kubernetes.io/ssl-redirect: 'false'
     labels:
       app: enmasse
     name: restapi

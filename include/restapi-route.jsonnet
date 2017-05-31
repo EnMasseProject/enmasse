@@ -30,6 +30,9 @@
         "labels": {
           "app": "enmasse"
         },
+        "annotations": {
+          "ingress.kubernetes.io/ssl-redirect": "false"
+        },
         "name": "restapi"
     },
     "spec": {

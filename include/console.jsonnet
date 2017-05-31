@@ -113,7 +113,8 @@ local common = import "common.jsonnet";
             "app": "enmasse",
           },
           "annotations": {
-            "instance": instance
+            "instance": instance,
+            "ingress.kubernetes.io/ssl-redirect": "false"
           },
           "name": "console"
       },
