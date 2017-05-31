@@ -2,13 +2,12 @@ local router = import "router.jsonnet";
 local console = import "console.jsonnet";
 local common = import "common.jsonnet";
 {
-  services(instance)::
-  [
+  service(name, instance, ports)::
     {
       "apiVersion": "v1",
       "kind": "Service",
       "metadata": {
-        "name": "admin",
+        "name": name,
         "labels": {
           "app": "enmasse"
         },
@@ -17,33 +16,19 @@ local common = import "common.jsonnet";
         }
       },
       "spec": {
-        "ports": [
-          {
-            "name": "ragent",
-            "port": 55672
-          },
-          {
-            "name": "configuration",
-            "port": 5672
-          },
-          {
-            "name": "queue-scheduler",
-            "port": 55667
-          },
-          {
-            "name": "console-ws",
-            "port": 56720
-          },
-          {
-            "name": "console-http",
-            "port": 8080
-          }
-        ],
+        "ports": ports,
         "selector": {
           "name": "admin"
         }
       }
-    }
+    },
+
+  services(instance)::
+  [
+    self.service("ragent", instance, [{"name": "amqp", "port": 5672, "targetPort": 55672}]),
+    self.service("configuration", instance, [{"name": "amqp", "port": 5672}]),
+    self.service("queue-scheduler", instance, [{"name": "amqp", "port": 5672, "targetPort": 55667}]),
+    self.service("console", instance, [{"name": "amqp-ws", "port": 5672, "targetPort": 56720}, {"name": "http", "port": 8080}])
   ],
 
   deployment(use_sasldb, instance, configserv_image, ragent_image, scheduler_image, console_image)::

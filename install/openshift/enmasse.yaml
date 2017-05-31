@@ -97,7 +97,7 @@ objects:
       "metadata": {"name": "hawkular-router-config"}}, {"apiVersion": "v1", "kind":
       "Route", "metadata": {"annotations": {"instance": "${INSTANCE}"}, "labels":
       {"app": "enmasse"}, "name": "console"}, "spec": {"host": "${CONSOLE_HOSTNAME}",
-      "port": {"targetPort": "console-http"}, "to": {"kind": "Service", "name": "admin"}}},
+      "port": {"targetPort": "http"}, "to": {"kind": "Service", "name": "console"}}},
       {"apiVersion": "v1", "kind": "Route", "metadata": {"annotations": {"instance":
       "${INSTANCE}"}, "labels": {"app": "enmasse"}, "name": "messaging"}, "spec":
       {"host": "${MESSAGING_HOSTNAME}", "port": {"targetPort": "amqps"}, "tls": {"termination":
@@ -130,10 +130,18 @@ objects:
       5672, "name": "amqp", "protocol": "TCP"}], "resources": {"limits": {"memory":
       "256Mi"}, "requests": {"memory": "256Mi"}}}]}}}}, {"apiVersion": "v1", "kind":
       "Service", "metadata": {"annotations": {"instance": "${INSTANCE}"}, "labels":
-      {"app": "enmasse"}, "name": "admin"}, "spec": {"ports": [{"name": "ragent",
-      "port": 55672}, {"name": "configuration", "port": 5672}, {"name": "queue-scheduler",
-      "port": 55667}, {"name": "console-ws", "port": 56720}, {"name": "console-http",
-      "port": 8080}], "selector": {"name": "admin"}}}], "parameters": [{"description":
+      {"app": "enmasse"}, "name": "ragent"}, "spec": {"ports": [{"name": "amqp", "port":
+      5672, "targetPort": 55672}], "selector": {"name": "admin"}}}, {"apiVersion":
+      "v1", "kind": "Service", "metadata": {"annotations": {"instance": "${INSTANCE}"},
+      "labels": {"app": "enmasse"}, "name": "configuration"}, "spec": {"ports": [{"name":
+      "amqp", "port": 5672}], "selector": {"name": "admin"}}}, {"apiVersion": "v1",
+      "kind": "Service", "metadata": {"annotations": {"instance": "${INSTANCE}"},
+      "labels": {"app": "enmasse"}, "name": "queue-scheduler"}, "spec": {"ports":
+      [{"name": "amqp", "port": 5672, "targetPort": 55667}], "selector": {"name":
+      "admin"}}}, {"apiVersion": "v1", "kind": "Service", "metadata": {"annotations":
+      {"instance": "${INSTANCE}"}, "labels": {"app": "enmasse"}, "name": "console"},
+      "spec": {"ports": [{"name": "amqp-ws", "port": 5672, "targetPort": 56720}, {"name":
+      "http", "port": 8080}], "selector": {"name": "admin"}}}], "parameters": [{"description":
       "The image to use for the router", "name": "ROUTER_REPO", "value": "enmasseproject/qdrouterd:latest"},
       {"description": "The image to use for the router metrics collector", "name":
       "ROUTER_METRICS_REPO", "value": "enmasseproject/router-metrics:latest"}, {"description":
