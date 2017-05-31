@@ -1,12 +1,10 @@
 package enmasse.controller.address;
 
-import enmasse.config.LabelKeys;
 import enmasse.controller.address.api.DestinationApi;
-import enmasse.controller.common.ConfigWatcher;
-import enmasse.controller.common.DestinationClusterGenerator;
-import enmasse.controller.common.Kubernetes;
+import enmasse.controller.common.*;
 import enmasse.controller.model.Destination;
 import io.fabric8.openshift.client.OpenShiftClient;
+import io.vertx.core.AbstractVerticle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,21 +14,33 @@ import java.util.stream.Collectors;
 /**
  * Controller for a single address space
  */
-public class AddressSpaceController extends ConfigWatcher<Destination> {
+public class AddressSpaceController extends AbstractVerticle implements Watcher<Destination> {
     private static final Logger log = LoggerFactory.getLogger(AddressSpaceController.class);
     private final DestinationApi destinationApi;
     private final Kubernetes kubernetes;
     private final DestinationClusterGenerator clusterGenerator;
+    private Watch watch;
 
     public AddressSpaceController(DestinationApi destinationApi, Kubernetes kubernetes, OpenShiftClient client, DestinationClusterGenerator clusterGenerator) {
-        super(Collections.singletonMap(LabelKeys.TYPE, "address-config"), kubernetes.getInstanceId().getNamespace(), client);
         this.destinationApi = destinationApi;
         this.kubernetes = kubernetes;
         this.clusterGenerator = clusterGenerator;
     }
 
     @Override
-    protected synchronized void checkConfigs(Set<Destination> newDestinations) {
+    public void start() throws Exception {
+        this.watch = destinationApi.watchDestinations(this);
+    }
+
+    @Override
+    public void stop() throws Exception {
+        if (this.watch != null) {
+            this.watch.close();
+        }
+    }
+
+    @Override
+    public synchronized void resourcesUpdated(Set<Destination> newDestinations) {
         log.debug("Check destinations in address space controller: " + newDestinations);
 
         Map<String, Set<Destination>> destinationByGroup = newDestinations.stream().collect(Collectors.groupingBy(Destination::group, Collectors.toSet()));
@@ -44,11 +54,6 @@ public class AddressSpaceController extends ConfigWatcher<Destination> {
         for (Destination destination : newDestinations) {
             checkStatus(destination);
         }
-    }
-
-    @Override
-    public Set<Destination> listConfigs() {
-        return destinationApi.listDestinations();
     }
 
     /*

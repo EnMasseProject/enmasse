@@ -1,10 +1,7 @@
 package enmasse.controller.common;
 
-import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.Watch;
-import io.fabric8.kubernetes.client.Watcher;
-import io.fabric8.openshift.client.OpenShiftClient;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import org.slf4j.Logger;
@@ -13,25 +10,21 @@ import org.slf4j.LoggerFactory;
 import java.util.*;
 
 /**
- * Common functionality for monitoring instances
+ * A verticle that handles watching a resource with the appropriate reconnect and retry logic,
+ * which notifies a resource interface when things change.
  */
-public abstract class ConfigWatcher<T> extends AbstractVerticle implements Watcher<ConfigMap> {
-    private static final Logger log = LoggerFactory.getLogger(ConfigWatcher.class.getName());
-    private final OpenShiftClient client;
-    private final String namespace;
+public class WatcherVerticle<T> extends AbstractVerticle implements io.fabric8.kubernetes.client.Watcher {
+    private static final Logger log = LoggerFactory.getLogger(WatcherVerticle.class.getName());
     private final Random random;
-    private Watch configWatch;
-    private final Map<String, String> labels;
+    private Watch watch;
+    private final Resource<T> resource;
+    private final Watcher<T> changeHandler;
 
-    public ConfigWatcher(Map<String, String> labels, String namespace, OpenShiftClient client) {
-        this.labels = labels;
-        this.namespace = namespace;
-        this.client = client;
+    public WatcherVerticle(Resource<T> resource, Watcher<T> changeHandler) {
         this.random = new Random(System.currentTimeMillis());
+        this.resource = resource;
+        this.changeHandler = changeHandler;
     }
-
-    protected abstract void checkConfigs(Set<T> configs) throws Exception;
-    protected abstract Set<T> listConfigs() throws Exception;
 
     private long nextCheck() {
         return 5000 + Math.abs(random.nextLong()) % 10000;
@@ -40,25 +33,30 @@ public abstract class ConfigWatcher<T> extends AbstractVerticle implements Watch
     public void start() {
         vertx.executeBlocking((Future<Watch> promise) -> {
             try {
-                checkConfigs(listConfigs());
-                promise.complete(client.configMaps().inNamespace(namespace).withLabels(labels).watch(this));
-                vertx.setTimer(nextCheck(), id -> checkConfigs());
+                changeHandler.resourcesUpdated(resource.listResources());
+                promise.complete(resource.watchResources(this));
+                 //client.configMaps().inNamespace(namespace).withLabels(labels).watch(this));
+                vertx.setTimer(nextCheck(), id -> checkResources());
             } catch (Exception e) {
                 promise.fail(e);
             }
         }, result -> {
             if (result.succeeded()) {
-                configWatch = result.result();
+                watch = result.result();
             } else {
                 log.error("Error starting watch", result.cause());
             }
         });
     }
 
-    private void checkConfigs() {
+    /*private Set<T> listConfigs() {
+        return decoder.decodeConfigs(client.configMaps().inNamespace(namespace).withLabels(labels).list().getItems());
+    }*/
+
+    private void checkResources() {
         vertx.executeBlocking(promise -> {
             try {
-                checkConfigs(listConfigs());
+                changeHandler.resourcesUpdated(resource.listResources());
                 promise.complete();
             } catch (Exception e) {
                 promise.fail(e);
@@ -67,21 +65,21 @@ public abstract class ConfigWatcher<T> extends AbstractVerticle implements Watch
             if (result.failed()) {
                 log.warn("Error checking instances", result.cause());
             }
-            vertx.setTimer(nextCheck(), id -> checkConfigs());
+            vertx.setTimer(nextCheck(), id -> checkResources());
         });
     }
 
 
     public void stop() {
-        if (configWatch != null) {
-            configWatch.close();
+        if (watch != null) {
+            watch.close();
         }
     }
 
     @Override
-    public void eventReceived(Action action, ConfigMap resource) {
+    public void eventReceived(Action action, Object obj) {
         if (action.equals(Action.ERROR)) {
-            log.error("Got error event while watching resource " + resource);
+            log.error("Got error event while watching resource " + obj);
             return;
         }
 
@@ -90,7 +88,7 @@ public abstract class ConfigWatcher<T> extends AbstractVerticle implements Watch
                 case MODIFIED:
                 case ADDED:
                 case DELETED:
-                    checkConfigs(listConfigs());
+                    changeHandler.resourcesUpdated(resource.listResources());
                     break;
             }
         } catch (Exception e) {
@@ -101,12 +99,12 @@ public abstract class ConfigWatcher<T> extends AbstractVerticle implements Watch
     @Override
     public void onClose(KubernetesClientException cause) {
         if (cause != null) {
-            log.info("Received onClose for instance config watcher", cause);
+            log.info("Received onClose for instance config resource", cause);
             stop();
             start();
         } else {
             log.info("Watch for instance configs force closed, stopping");
-            configWatch = null;
+            watch = null;
             stop();
         }
     }

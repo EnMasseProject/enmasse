@@ -33,31 +33,29 @@ import enmasse.controller.model.InstanceId;
 import io.fabric8.kubernetes.client.ConfigBuilder;
 import io.fabric8.openshift.client.DefaultOpenShiftClient;
 import io.fabric8.openshift.client.OpenShiftClient;
-import io.vertx.core.AbstractVerticle;
-import io.vertx.core.DeploymentOptions;
-import io.vertx.core.Vertx;
+import io.vertx.core.*;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class Controller extends AbstractVerticle {
-    private final AMQPServer server;
-    private final HTTPServer restServer;
-    private final FlavorController flavorController;
-    private final InstanceController instanceController;
-    private final AddressController addressController;
-
+    private final OpenShiftClient controllerClient;
+    private final ControllerOptions options;
+    private final Kubernetes kubernetes;
 
     public Controller(ControllerOptions options) throws Exception {
-        OpenShiftClient controllerClient = new DefaultOpenShiftClient(new ConfigBuilder()
+        this.controllerClient = new DefaultOpenShiftClient(new ConfigBuilder()
                 .withMasterUrl(options.masterUrl())
                 .withOauthToken(options.token())
                 .withNamespace(options.namespace())
                 .build());
+        this.options = options;
+        this.kubernetes = new KubernetesHelper(InstanceId.withIdAndNamespace(options.namespace(), options.namespace()), controllerClient, options.templateDir());
+    }
 
-        Kubernetes kubernetes = new KubernetesHelper(InstanceId.withIdAndNamespace(options.namespace(), options.namespace()), controllerClient, options.templateDir());
-        String templateName = "enmasse-instance-infra";
-
-        FlavorManager flavorManager = new FlavorManager();
-        InstanceManager instanceManager = new InstanceManagerImpl(kubernetes, templateName, options.isMultiinstance());
-        InstanceApi instanceApi = new InstanceApiImpl(controllerClient);
+    @Override
+    public void start(Future<Void> startPromise) {
+        InstanceApi instanceApi = new InstanceApiImpl(vertx, controllerClient);
 
         if (!options.isMultiinstance() && !kubernetes.hasService("messaging")) {
             Instance.Builder builder = new Instance.Builder(kubernetes.getInstanceId());
@@ -68,22 +66,54 @@ public class Controller extends AbstractVerticle {
             instanceApi.createInstance(builder.build());
         }
 
-        this.addressController = new AddressController(instanceApi, kubernetes, controllerClient, flavorManager);
-        this.server = new AMQPServer(kubernetes.getInstanceId(), instanceApi, flavorManager, options.port());
-        this.restServer = new HTTPServer(kubernetes.getInstanceId(), instanceApi, flavorManager);
-        this.flavorController = new FlavorController(controllerClient, flavorManager);
-
+        FlavorManager flavorManager = new FlavorManager();
         CertManager certManager = SelfSignedCertManager.create(controllerClient);
-        this.instanceController = new InstanceController(instanceManager, controllerClient, instanceApi, certManager);
+
+        String templateName = "enmasse-instance-infra";
+        InstanceManager instanceManager = new InstanceManagerImpl(kubernetes, templateName, options.isMultiinstance());
+
+        deployVerticles(startPromise, new Deployment(new AddressController(instanceApi, kubernetes, controllerClient, flavorManager)),
+                new Deployment(new InstanceController(instanceManager, controllerClient, instanceApi, certManager)),
+                new Deployment(new FlavorController(controllerClient, flavorManager)),
+                new Deployment(new AMQPServer(kubernetes.getInstanceId(), instanceApi, flavorManager, options.port())),
+                new Deployment(new HTTPServer(kubernetes.getInstanceId(), instanceApi, flavorManager), new DeploymentOptions().setWorker(true)));
     }
 
-    @Override
-    public void start() {
-        vertx.deployVerticle(flavorController);
-        vertx.deployVerticle(server);
-        vertx.deployVerticle(restServer, new DeploymentOptions().setWorker(true));
-        vertx.deployVerticle(instanceController);
-        vertx.deployVerticle(addressController);
+    private void deployVerticles(Future<Void> startPromise, Deployment ... deployments) {
+        List<Future> futures = new ArrayList<>();
+        for (Deployment deployment : deployments) {
+            Future<Void> promise = Future.future();
+            futures.add(promise);
+            vertx.deployVerticle(deployment.verticle, deployment.options, result -> {
+                if (result.succeeded()) {
+                    promise.complete();
+                } else {
+                    promise.fail(result.cause());
+                }
+            });
+        }
+
+        CompositeFuture.all(futures).setHandler(result -> {
+            if (result.succeeded()) {
+                startPromise.complete();
+            } else {
+                startPromise.fail(result.cause());
+            }
+        });
+    }
+
+    private static class Deployment {
+        final Verticle verticle;
+        final DeploymentOptions options;
+
+        private Deployment(Verticle verticle) {
+            this(verticle, new DeploymentOptions());
+        }
+
+        private Deployment(Verticle verticle, DeploymentOptions options) {
+            this.verticle = verticle;
+            this.options = options;
+        }
     }
 
     public static void main(String args[]) {

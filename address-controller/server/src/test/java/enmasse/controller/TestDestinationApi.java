@@ -17,6 +17,8 @@
 package enmasse.controller;
 
 import enmasse.controller.address.api.DestinationApi;
+import enmasse.controller.common.Watch;
+import enmasse.controller.common.Watcher;
 import enmasse.controller.model.Destination;
 
 import java.util.LinkedHashSet;
@@ -47,6 +49,11 @@ public class TestDestinationApi implements DestinationApi {
             throw new RuntimeException("exception");
         }
         destinations.remove(destination);
+    }
+
+    @Override
+    public Watch watchDestinations(Watcher<Destination> watcher) throws Exception {
+        return null;
     }
 
     @Override

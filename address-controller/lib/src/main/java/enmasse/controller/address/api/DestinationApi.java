@@ -1,5 +1,7 @@
 package enmasse.controller.address.api;
 
+import enmasse.controller.common.Watch;
+import enmasse.controller.common.Watcher;
 import enmasse.controller.model.Destination;
 
 import java.util.Optional;
@@ -16,4 +18,6 @@ public interface DestinationApi {
     void createDestination(Destination destination);
     void replaceDestination(Destination destination);
     void deleteDestination(Destination destination);
+
+    Watch watchDestinations(Watcher<Destination> watcher) throws Exception;
 }

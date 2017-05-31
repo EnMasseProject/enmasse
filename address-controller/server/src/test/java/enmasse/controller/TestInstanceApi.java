@@ -1,6 +1,8 @@
 package enmasse.controller;
 
 import enmasse.controller.address.api.DestinationApi;
+import enmasse.controller.common.Watch;
+import enmasse.controller.common.Watcher;
 import enmasse.controller.instance.api.InstanceApi;
 import enmasse.controller.model.Instance;
 import enmasse.controller.model.InstanceId;
@@ -53,6 +55,11 @@ public class TestInstanceApi implements InstanceApi {
     @Override
     public Instance getInstanceFromConfig(ConfigMap resource) {
         return enmasse.controller.instance.v3.Instance.fromJson(resource.getData().get("config.json"));
+    }
+
+    @Override
+    public Watch watchInstances(Watcher<Instance> watcher) throws Exception {
+        return null;
     }
 
     @Override

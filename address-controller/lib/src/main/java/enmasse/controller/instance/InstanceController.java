@@ -1,25 +1,23 @@
 package enmasse.controller.instance;
 
 import enmasse.config.AnnotationKeys;
-import enmasse.config.LabelKeys;
-import enmasse.controller.common.ConfigWatcher;
+import enmasse.controller.common.Watch;
+import enmasse.controller.common.Watcher;
 import enmasse.controller.instance.api.InstanceApi;
 import enmasse.controller.instance.cert.CertManager;
 import enmasse.controller.model.Instance;
 import io.fabric8.kubernetes.api.model.HasMetadata;
-import io.fabric8.kubernetes.api.model.extensions.Ingress;
-import io.fabric8.kubernetes.api.model.extensions.IngressList;
-import io.fabric8.openshift.api.model.Route;
-import io.fabric8.openshift.api.model.RouteList;
 import io.fabric8.openshift.client.OpenShiftClient;
+import io.vertx.core.AbstractVerticle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.*;
-import java.util.function.Consumer;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 
 /**
@@ -27,16 +25,16 @@ import java.util.stream.Stream;
  * propagating any relevant status for a given instance back to the instance resource.
  */
 
-public class InstanceController extends ConfigWatcher<Instance> {
+public class InstanceController extends AbstractVerticle implements Watcher<Instance> {
     private static final Logger log = LoggerFactory.getLogger(InstanceController.class.getName());
     private final OpenShiftClient client;
 
     private final CertManager certManager;
     private final InstanceManager instanceManager;
     private final InstanceApi instanceApi;
+    private Watch watch;
 
     public InstanceController(InstanceManager instanceManager, OpenShiftClient client, InstanceApi instanceApi, CertManager certManager) {
-        super(Collections.singletonMap(LabelKeys.TYPE, "instance-config"), client.getNamespace(), client);
         this.instanceManager = instanceManager;
         this.client = client;
         this.instanceApi = instanceApi;
@@ -44,7 +42,19 @@ public class InstanceController extends ConfigWatcher<Instance> {
     }
 
     @Override
-    protected synchronized void checkConfigs(Set<Instance> instances) throws Exception {
+    public void start() throws Exception {
+        this.watch = instanceApi.watchInstances(this);
+    }
+
+    @Override
+    public void stop() throws Exception {
+        if (watch != null) {
+            watch.close();
+        }
+    }
+
+    @Override
+    public synchronized void resourcesUpdated(Set<Instance> instances) throws Exception {
         log.debug("Check instances in instance controller: " + instances);
         createInstances(instances);
         retainInstances(instances);
@@ -56,11 +66,6 @@ public class InstanceController extends ConfigWatcher<Instance> {
             updateRoutes(mutableInstance);
             instanceApi.replaceInstance(mutableInstance.build());
         }
-    }
-
-    @Override
-    protected Set<Instance> listConfigs() throws Exception {
-        return instanceApi.listInstances();
     }
 
     private void retainInstances(Set<Instance> desiredInstances) {

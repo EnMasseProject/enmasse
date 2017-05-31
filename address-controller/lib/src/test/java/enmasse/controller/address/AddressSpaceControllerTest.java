@@ -80,7 +80,7 @@ public class AddressSpaceControllerTest {
         when(mockGenerator.generateCluster(Collections.singleton(queue))).thenReturn(cluster);
         ArgumentCaptor<Set<Destination>> arg = ArgumentCaptor.forClass(Set.class);
 
-        controller.checkConfigs(Collections.singleton(queue));
+        controller.resourcesUpdated(Collections.singleton(queue));
         verify(mockGenerator).generateCluster(arg.capture());
         assertThat(arg.getValue(), hasItem(queue));
         verify(mockHelper).create(resources);
@@ -108,7 +108,7 @@ public class AddressSpaceControllerTest {
         when(mockGenerator.generateCluster(Collections.singleton(newQueue))).thenReturn(newCluster);
         ArgumentCaptor<Set<Destination>> arg = ArgumentCaptor.forClass(Set.class);
 
-        controller.checkConfigs(Sets.newSet(queue, newQueue));
+        controller.resourcesUpdated(Sets.newSet(queue, newQueue));
 
         verify(mockGenerator).generateCluster(arg.capture());
         assertThat(arg.getValue(), is(Sets.newSet(newQueue)));
@@ -135,7 +135,7 @@ public class AddressSpaceControllerTest {
 
         when(mockHelper.listClusters()).thenReturn(Arrays.asList(existing, newCluster));
 
-        controller.checkConfigs(Collections.singleton(newQueue));
+        controller.resourcesUpdated(Collections.singleton(newQueue));
 
         verify(mockHelper, VerificationModeFactory.atMost(1)).delete(resources);
     }
@@ -155,7 +155,7 @@ public class AddressSpaceControllerTest {
         ArgumentCaptor<Set<Destination>> arg = ArgumentCaptor.forClass(Set.class);
         when(mockGenerator.generateCluster(arg.capture())).thenReturn(new DestinationCluster("foo", resources));
 
-        controller.checkConfigs(Sets.newSet(addr0, addr1, addr2, addr3));
+        controller.resourcesUpdated(Sets.newSet(addr0, addr1, addr2, addr3));
 
         Set<Destination> generated = arg.getAllValues().stream().flatMap(Collection::stream).collect(Collectors.toSet());
         assertThat(generated.size(), is(3));

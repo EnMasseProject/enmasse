@@ -3,25 +3,30 @@ package enmasse.controller.instance.api;
 import enmasse.config.LabelKeys;
 import enmasse.controller.address.api.DestinationApi;
 import enmasse.controller.address.api.DestinationApiImpl;
-import enmasse.controller.common.Kubernetes;
+import enmasse.controller.common.*;
+import enmasse.controller.common.Watch;
+import enmasse.controller.common.Watcher;
 import enmasse.controller.model.Instance;
 import enmasse.controller.model.InstanceId;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.ConfigMapList;
 import io.fabric8.openshift.client.OpenShiftClient;
+import io.vertx.core.Vertx;
 
-import java.util.LinkedHashSet;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Implementation of the Instance API towards Kubernetes
  */
 public class InstanceApiImpl implements InstanceApi {
     private final OpenShiftClient client;
+    private final Vertx vertx;
 
-    public InstanceApiImpl(OpenShiftClient client) {
+    public InstanceApiImpl(Vertx vertx, OpenShiftClient client) {
         this.client = client;
+        this.vertx = vertx;
     }
 
     @Override
@@ -82,7 +87,36 @@ public class InstanceApiImpl implements InstanceApi {
     }
 
     @Override
+    public Watch watchInstances(Watcher<Instance> watcher) throws Exception {
+        Map<String, String> labels = new LinkedHashMap<>();
+        labels.put(LabelKeys.TYPE, "instance-config");
+        WatcherVerticle<Instance> verticle = new WatcherVerticle<>(new Resource<Instance>() {
+            @Override
+            public io.fabric8.kubernetes.client.Watch watchResources(io.fabric8.kubernetes.client.Watcher w) {
+                return client.configMaps().withLabels(labels).watch(w);
+            }
+
+            @Override
+            public Set<Instance> listResources() {
+                return listInstances();
+            }
+        }, watcher);
+
+        CompletableFuture<String> promise = new CompletableFuture<>();
+        vertx.deployVerticle(verticle, result -> {
+            if (result.succeeded()) {
+                promise.complete(result.result());
+            } else {
+                promise.completeExceptionally(result.cause());
+            }
+        });
+
+        String id = promise.get(1, TimeUnit.MINUTES);
+        return () -> vertx.undeploy(id);
+    }
+
+    @Override
     public DestinationApi withInstance(InstanceId id) {
-        return new DestinationApiImpl(client, id);
+        return new DestinationApiImpl(vertx, client, id);
     }
 }
