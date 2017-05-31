@@ -112,11 +112,7 @@ public class ConfigServTest extends AmqpTestBase {
     }
 
     private Endpoint getConfigServEndpoint() {
-        if (openShift.isFullTemplate()) {
-            return openShift.getEndpoint("configuration", "amqp");
-        } else {
-            return openShift.getEndpoint("admin", "configuration");
-        }
+        return openShift.getEndpoint("configuration", "amqp");
     }
 
     @Override

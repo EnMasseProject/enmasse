@@ -113,21 +113,11 @@ public class OpenShift {
                     .collect(Collectors.toList());
     }
 
-    // Heuristic: if restapi service exists, we are running with a full template
-    public boolean isFullTemplate() {
-        Service service = client.services().inNamespace(namespace).withName("admin").get();
-        return service == null;
-    }
-
     public int getExpectedPods() {
-        if (isFullTemplate()) {
-            return 8; // configserv, address-controller, queue-scheduler, ragent, qdrouterd, subscription, mqtt gateway, mqtt lwt
+        if (environment.isMultitenant()) {
+            return 5; // admin, qdrouterd, subscription, mqtt gateway, mqtt lwt
         } else {
-            if (environment.isMultitenant()) {
-                return 5; // admin, qdrouterd, subscription, mqtt gateway, mqtt lwt
-            } else {
-                return 6; // address-controller, admin, qdrouterd, subscription, mqtt gateway, mqtt lwt
-            }
+            return 6; // address-controller, admin, qdrouterd, subscription, mqtt gateway, mqtt lwt
         }
     }
 
