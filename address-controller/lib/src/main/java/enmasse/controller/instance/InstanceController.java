@@ -9,6 +9,7 @@ import enmasse.controller.model.Instance;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.openshift.client.OpenShiftClient;
 import io.vertx.core.AbstractVerticle;
+import io.vertx.core.Future;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,15 +43,41 @@ public class InstanceController extends AbstractVerticle implements Watcher<Inst
     }
 
     @Override
-    public void start() throws Exception {
-        this.watch = instanceApi.watchInstances(this);
+    public void start(Future<Void> startPromise) throws Exception {
+        vertx.executeBlocking((Future<Watch> promise) -> {
+            try {
+                promise.complete(instanceApi.watchInstances(this));
+            } catch (Exception e) {
+                promise.fail(e);
+            }
+        }, result -> {
+            if (result.succeeded()) {
+                this.watch = result.result();
+                startPromise.complete();
+            } else {
+                startPromise.fail(result.cause());
+            }
+        });
     }
 
     @Override
-    public void stop() throws Exception {
-        if (watch != null) {
-            watch.close();
-        }
+    public void stop(Future<Void> stopFuture) throws Exception {
+        vertx.executeBlocking(promise -> {
+            try {
+                if (watch != null) {
+                    watch.close();
+                }
+                promise.complete();
+            } catch (Exception e) {
+                promise.fail(e);
+            }
+        }, result -> {
+            if (result.succeeded()) {
+                stopFuture.complete();
+            } else {
+                stopFuture.fail(result.cause());
+            }
+        });
     }
 
     @Override
