@@ -87,6 +87,11 @@ then
     NAMESPACE=$DEFAULT_NAMESPACE
 fi
 
+`kubectl get namespace $NAMESPACE 2> /dev/null`
+if [ $? -gt 0 ]; then
+    runcmd "kubectl create namespace $NAMESPACE" "Create namespace $NAMESPACE"
+fi
+
 if [ -n "$ALLINONE" ]
 then
     if [ -n "$MASTER_URI" ]
