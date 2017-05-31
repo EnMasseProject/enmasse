@@ -10,6 +10,13 @@ supported on Kubernetes.
 This guide assumes that you already have a Kubernetes cluster installed. If not, have a look at
 [minikube](https://github.com/kubernetes/minikube), which is kind of kubernetes-in-a-box.
 
+The address-controller and console is configured using ingress, so enable the ingress controller in
+your minikube setup:
+
+    minikube addons enable ingress
+
+This will cause an nginx ingress controller to get launched.
+
 ## Setting up EnMasse
 
 ### Creating project and importing template
@@ -46,12 +53,12 @@ If you're running EnMasse in your own Kubernetes instance on any of the cloud pr
 
 ### Configuring addresses using the console
 
-The EnMasse console should be available at `http://$(minikube ip)/console`. You can create and
+The EnMasse console should be available at `http://$(minikube ip)/`. You can create and
 monitor queues and topics using the UI.
 
 ### Exposing messaging through Ingress resource
 
-If you are using minikube, the IP addresses of the internal services will not be accessible from outside of the minikube VM. To open up for AMQP using minikube and the nginx ingress controller, follow [this](https://github.com/kubernetes/contrib/tree/master/ingress/controllers/nginx/examples/tcp) and [this](https://github.com/kubernetes/ingress/tree/master/controllers/nginx#exposing-tcp-services) guides, using the port `5672` and the service `default/messaging`.
+To open up for AMQP using minikube and the nginx ingress controller, follow [this](https://github.com/kubernetes/contrib/tree/master/ingress/controllers/nginx/examples/tcp) and [this](https://github.com/kubernetes/ingress/tree/master/controllers/nginx#exposing-tcp-services) guides, using the port `5672` and the service `default/messaging`.
 
 ### Sending and receiving messages
 
