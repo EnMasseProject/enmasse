@@ -18,14 +18,14 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
-public class DestinationApiImpl implements DestinationApi {
+public class ConfigMapDestinationApi implements DestinationApi {
 
-    private static final Logger log = LoggerFactory.getLogger(DestinationApiImpl.class);
+    private static final Logger log = LoggerFactory.getLogger(ConfigMapDestinationApi.class);
     private final Vertx vertx;
     private final OpenShiftClient client;
     private final InstanceId instanceId;
 
-    public DestinationApiImpl(Vertx vertx, OpenShiftClient client, InstanceId instanceId) {
+    public ConfigMapDestinationApi(Vertx vertx, OpenShiftClient client, InstanceId instanceId) {
         this.vertx = vertx;
         this.client = client;
         this.instanceId = instanceId;

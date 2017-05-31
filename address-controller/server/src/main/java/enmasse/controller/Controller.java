@@ -25,7 +25,7 @@ import enmasse.controller.instance.InstanceController;
 import enmasse.controller.instance.InstanceManager;
 import enmasse.controller.instance.InstanceManagerImpl;
 import enmasse.controller.instance.api.InstanceApi;
-import enmasse.controller.instance.api.InstanceApiImpl;
+import enmasse.controller.instance.api.ConfigMapInstanceApi;
 import enmasse.controller.instance.cert.CertManager;
 import enmasse.controller.instance.cert.SelfSignedCertManager;
 import enmasse.controller.model.Instance;
@@ -55,7 +55,7 @@ public class Controller extends AbstractVerticle {
 
     @Override
     public void start(Future<Void> startPromise) {
-        InstanceApi instanceApi = new InstanceApiImpl(vertx, controllerClient);
+        InstanceApi instanceApi = new ConfigMapInstanceApi(vertx, controllerClient);
 
         if (!options.isMultiinstance() && !kubernetes.hasService("messaging")) {
             Instance.Builder builder = new Instance.Builder(kubernetes.getInstanceId());

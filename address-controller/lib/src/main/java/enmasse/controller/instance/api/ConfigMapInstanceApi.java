@@ -2,7 +2,7 @@ package enmasse.controller.instance.api;
 
 import enmasse.config.LabelKeys;
 import enmasse.controller.address.api.DestinationApi;
-import enmasse.controller.address.api.DestinationApiImpl;
+import enmasse.controller.address.api.ConfigMapDestinationApi;
 import enmasse.controller.common.*;
 import enmasse.controller.common.Watch;
 import enmasse.controller.common.Watcher;
@@ -20,11 +20,11 @@ import java.util.concurrent.TimeUnit;
 /**
  * Implementation of the Instance API towards Kubernetes
  */
-public class InstanceApiImpl implements InstanceApi {
+public class ConfigMapInstanceApi implements InstanceApi {
     private final OpenShiftClient client;
     private final Vertx vertx;
 
-    public InstanceApiImpl(Vertx vertx, OpenShiftClient client) {
+    public ConfigMapInstanceApi(Vertx vertx, OpenShiftClient client) {
         this.client = client;
         this.vertx = vertx;
     }
@@ -117,6 +117,6 @@ public class InstanceApiImpl implements InstanceApi {
 
     @Override
     public DestinationApi withInstance(InstanceId id) {
-        return new DestinationApiImpl(vertx, client, id);
+        return new ConfigMapDestinationApi(vertx, client, id);
     }
 }
