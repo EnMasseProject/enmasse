@@ -326,7 +326,7 @@ items:
             value: 'false'
           - name: INSTANCE_IDLE_TIMEOUT_SECONDS
             value: '0'
-          image: enmasseproject/address-controller
+          image: enmasseproject/address-controller:latest
           livenessProbe:
             tcpSocket:
               port: amqp
