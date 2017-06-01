@@ -2,11 +2,10 @@
 
 The address controller is about more than controller addresses. The main tasks performed by the address controller are:
 
-    * API server for managing instances, addresses and flavors (HTTP and AMQP)
-    * Implementation of Open Service Broker API for EnMasse
-    * Controller for taking action based on instances (create/destroy enmasse infrastructure and managing routing + certs)
-      etc.)
-    * Controller for taking action based on addresses (create/destroy deployments for addresses pointing to flavors for brokers for instance)
+   * API server for managing instances, addresses and flavors (HTTP and AMQP)
+   * Implementation of Open Service Broker API for EnMasse
+   * Controller for taking action based on instances (create/destroy enmasse infrastructure and managing routing + certs) etc.)
+   * Controller for taking action based on addresses (create/destroy deployments for addresses pointing to flavors for brokers for instance)
 
 ## API server
 
@@ -49,10 +48,10 @@ The `status` field is populated by the address controller and should not be set 
 
 Any of the fields in the `spec` object may be omitted, but they have defaults:
 
-    * namespace: a namespace on the form `enmasse-$name` is created. 
-    * messagingHost: host taken by hostname generated for the `messaging` route
-    * mqttHost : host taken by hostname generated for the `mqtt` route
-    * consoleHost: host taken by hostname generated for the `console` route
+   * namespace: a namespace on the form `enmasse-$name` is created. 
+   * messagingHost: host taken by hostname generated for the `messaging` route
+   * mqttHost : host taken by hostname generated for the `mqtt` route
+   * consoleHost: host taken by hostname generated for the `console` route
 
 ##### InstanceList
 
