@@ -48,7 +48,7 @@ The `status` field is populated by the address controller and should not be set 
 
 Any of the fields in the `spec` object may be omitted, but they have defaults:
 
-   * namespace: a namespace on the form `enmasse-$name` is created. 
+   * namespace: a namespace on the form `enmasse-$name` is created.
    * messagingHost: host taken by hostname generated for the `messaging` route
    * mqttHost : host taken by hostname generated for the `mqtt` route
    * consoleHost: host taken by hostname generated for the `console` route
@@ -150,6 +150,7 @@ specification yet, but following is an example of each.
 | GET    | /v3/address           | N/A            | v3.AddressList | Retrieves the list of all addresses                                           |
 | GET    | /v3/address/[address] | N/A            | v3.Address     | Retrieves the definition of a single address                                  |
 | PUT    | /v3/address           | v3.AddressList | v3.AddressList | Replaces the entire addressing config with provided config                    |
+| PUT    | /v3/address/[address] | v3.Address     | v3.AddressList | Replaces the specified address config with provided config                    |
 | POST   | /v3/address           | v3.Address     | v3.AddressList | Appends an address to the list of addresses                                   |
 | DELETE | /v3/address/[address] | N/A            | v3.AddressList | Deletes an address and returns the remaining addresses                        |
 
