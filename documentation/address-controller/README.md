@@ -78,6 +78,7 @@ Any of the fields in the `spec` object may be omitted, but they have defaults:
         ...
     ]
 }
+```
 
 #### HTTP
 
