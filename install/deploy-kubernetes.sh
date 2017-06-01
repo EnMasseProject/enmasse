@@ -101,6 +101,7 @@ then
         exit 1
     fi
     runcmd "minikube start" "Start local minikube cluster"
+    runcmd "minikube addons enable ingress" "Enabling ingress controller"
 fi
 
 runcmd "kubectl create sa enmasse-service-account -n $NAMESPACE" "Create service account for address controller"
