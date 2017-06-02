@@ -28,13 +28,13 @@ public final class ControllerOptions {
     private final boolean isMultiinstance;
     private final String namespace;
     private final String token;
-    private final File templateDir;
+    private final Optional<File> templateDir;
     private final Optional<String> messagingHost;
     private final Optional<String> mqttHost;
     private final Optional<String> consoleHost;
     private final Optional<String> certSecret;
 
-    private ControllerOptions(String masterUrl, boolean isMultiinstance, String namespace, String token, File templateDir, Optional<String> messagingHost, Optional<String> mqttHost, Optional<String> consoleHost, Optional<String> certSecret) {
+    private ControllerOptions(String masterUrl, boolean isMultiinstance, String namespace, String token, Optional<File> templateDir, Optional<String> messagingHost, Optional<String> mqttHost, Optional<String> consoleHost, Optional<String> certSecret) {
         this.masterUrl = masterUrl;
         this.isMultiinstance = isMultiinstance;
         this.namespace = namespace;
@@ -71,7 +71,7 @@ public final class ControllerOptions {
             token = getEnvOrThrow(env, "TOKEN");
         }
 
-        File templateDir = new File("/templates");
+        File templateDir = new File("/enmasse-templates");
         if (env.containsKey("TEMPLATE_DIR")) {
             templateDir = new File(env.get("TEMPLATE_DIR"));
         }
@@ -80,8 +80,9 @@ public final class ControllerOptions {
         Optional<String> mqttHost = getEnv(env, "INSTANCE_MQTT_HOST");
         Optional<String> consoleHost = getEnv(env, "INSTANCE_CONSOLE_HOST");
         Optional<String> certSecret = getEnv(env, "INSTANCE_CERT_SECRET");
+        Optional<File> maybeDir = Optional.ofNullable(templateDir.exists() ? templateDir : null);
 
-        return new ControllerOptions(String.format("https://%s:%s", masterHost, masterPort), isMultiinstance, namespace, token, templateDir, messagingHost, mqttHost, consoleHost, certSecret);
+        return new ControllerOptions(String.format("https://%s:%s", masterHost, masterPort), isMultiinstance, namespace, token, maybeDir, messagingHost, mqttHost, consoleHost, certSecret);
     }
 
     private static Optional<String> getEnv(Map<String, String> env, String envVar) {
@@ -118,7 +119,7 @@ public final class ControllerOptions {
         return 5672;
     }
 
-    public File templateDir() {
+    public Optional<File> templateDir() {
         return templateDir;
     }
 

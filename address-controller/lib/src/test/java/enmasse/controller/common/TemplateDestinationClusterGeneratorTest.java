@@ -49,7 +49,7 @@ public class TemplateDestinationClusterGeneratorTest {
     @Before
     public void setUp() {
         mockClient = mock(OpenShiftClient.class);
-        generator = new TemplateDestinationClusterGenerator(new Instance.Builder(InstanceId.withId("myinstance")).build(), new KubernetesHelper(InstanceId.withId("myinstance"), mockClient, new File("src/test/resources/templates")), flavorManager);
+        generator = new TemplateDestinationClusterGenerator(new Instance.Builder(InstanceId.withId("myinstance")).build(), new KubernetesHelper(InstanceId.withId("myinstance"), mockClient, Optional.of(new File("src/test/resources/templates"))), flavorManager);
         flavorManager.flavorsUpdated(Collections.singletonMap("vanilla", new Flavor.Builder("vanilla", "test").build()));
     }
 

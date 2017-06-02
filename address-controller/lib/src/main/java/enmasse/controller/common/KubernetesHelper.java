@@ -43,9 +43,9 @@ public class KubernetesHelper implements Kubernetes {
 
     private final OpenShiftClient client;
     private final InstanceId instance;
-    private final File templateDir;
+    private final Optional<File> templateDir;
 
-    public KubernetesHelper(InstanceId instance, OpenShiftClient client, File templateDir) {
+    public KubernetesHelper(InstanceId instance, OpenShiftClient client, Optional<File> templateDir) {
         this.client = client;
         this.instance = instance;
         this.templateDir = templateDir;
@@ -135,8 +135,12 @@ public class KubernetesHelper implements Kubernetes {
 
     @Override
     public KubernetesList processTemplate(String templateName, ParameterValue... parameterValues) {
-        File templateFile = new File(templateDir, templateName + TEMPLATE_SUFFIX);
-        return client.templates().load(templateFile).processLocally(parameterValues);
+        if (templateDir.isPresent()) {
+            File templateFile = new File(templateDir.get(), templateName + TEMPLATE_SUFFIX);
+            return client.templates().load(templateFile).processLocally(parameterValues);
+        } else {
+            return client.templates().withName(templateName).process(parameterValues);
+        }
     }
 
     @Override
