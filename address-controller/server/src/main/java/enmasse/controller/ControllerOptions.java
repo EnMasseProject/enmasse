@@ -72,6 +72,9 @@ public final class ControllerOptions {
         }
 
         File templateDir = new File("/enmasse-templates");
+        if (!templateDir.exists()) {
+            templateDir = new File("/templates");
+        }
         if (env.containsKey("TEMPLATE_DIR")) {
             templateDir = new File(env.get("TEMPLATE_DIR"));
         }
