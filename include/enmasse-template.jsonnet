@@ -1,4 +1,5 @@
-local templateConfig = import "template-config.jsonnet";
+local storage = import "storage-template.jsonnet";
+local enmasseInfra = import "enmasse-instance-infra.jsonnet";
 local addressController = import "address-controller.jsonnet";
 local restapiRoute = import "restapi-route.jsonnet";
 local flavorConfig = import "flavor.jsonnet";
@@ -14,8 +15,12 @@ local version = std.extVar("VERSION");
       },
       "name": "enmasse"
     },
-    "objects": [ templateConfig.generate(use_sasl, with_kafka, true),
-                 addressController.deployment("${ADDRESS_CONTROLLER_REPO}", "${MULTIINSTANCE}", "${INSTANCE_IDLE_TIMEOUT_SECONDS}"),
+    "objects": [ storage.template(false, false),
+                 storage.template(false, true),
+                 storage.template(true, false),
+                 storage.template(true, true),
+                 enmasseInfra.generate(use_sasl, with_kafka, true),
+                 addressController.deployment("${ADDRESS_CONTROLLER_REPO}", "${MULTIINSTANCE}", "", "${INSTANCE_IDLE_TIMEOUT_SECONDS}"),
                  addressController.internal_service,
                  restapiRoute.route("${RESTAPI_HOSTNAME}"),
                  flavorConfig.generate() ],

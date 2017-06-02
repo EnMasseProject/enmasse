@@ -354,7 +354,7 @@ items:
             requests:
               memory: 256Mi
           volumeMounts:
-          - mountPath: "/templates"
+          - mountPath: "/enmasse-templates"
             name: templates
         serviceAccount: enmasse-service-account
         volumes:

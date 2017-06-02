@@ -38,7 +38,7 @@ local common = import "common.jsonnet";
   external_service::
     self.common_service("address-controller-external", "LoadBalancer"),
 
-  deployment(image_repo, multiinstance, instance_idle_timeout)::
+  deployment(image_repo, multiinstance, template_config="", instance_idle_timeout=0)::
     {
       "apiVersion": "extensions/v1beta1",
       "kind": "Deployment",
@@ -58,6 +58,12 @@ local common = import "common.jsonnet";
               "app": "enmasse"
             }
           },
+          local mounts = if template_config != "" then [
+            {
+              "name": "templates",
+              "mountPath": "/enmasse-templates"
+            }
+          ] else [],
           "spec": {
             "serviceAccount": "enmasse-service-account",
             "containers": [
@@ -67,18 +73,14 @@ local common = import "common.jsonnet";
               }, {
                 "name": "INSTANCE_IDLE_TIMEOUT_SECONDS",
                 "value": std.toString(instance_idle_timeout)
-              }], [
-                {
-                  "name": "templates",
-                  "mountPath": "/templates"
-                }
-              ])
+              }], mounts)
+
             ],
-            "volumes": [
+            [if template_config != "" then "volumes"]: [
               {
                 "name": "templates",
                 "configMap": {
-                  "name": "enmasse-template-config"
+                  "name": template_config
                 }
               }
             ]
