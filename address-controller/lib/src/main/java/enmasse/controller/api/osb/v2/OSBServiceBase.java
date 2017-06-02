@@ -7,8 +7,14 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import com.fasterxml.jackson.module.jsonSchema.types.BooleanSchema;
+import com.fasterxml.jackson.module.jsonSchema.types.ObjectSchema;
+import com.fasterxml.jackson.module.jsonSchema.types.StringSchema;
 import enmasse.controller.address.api.DestinationApi;
+import enmasse.controller.api.osb.v2.catalog.InputParameters;
 import enmasse.controller.api.osb.v2.catalog.Plan;
+import enmasse.controller.api.osb.v2.catalog.Schemas;
+import enmasse.controller.api.osb.v2.catalog.ServiceInstanceSchema;
 import enmasse.controller.flavor.FlavorRepository;
 import enmasse.controller.instance.api.InstanceApi;
 import enmasse.controller.model.Destination;
@@ -87,7 +93,9 @@ public abstract class OSBServiceBase {
                     .map(this::convertFlavorToPlan)
                     .collect(Collectors.toList());
         } else {
-            return Collections.singletonList(new Plan(serviceType.defaultPlanUuid(), "default", "Default plan", true, true));
+            Plan defaultPlan = new Plan(serviceType.defaultPlanUuid(), "default", "Default plan", true, true);
+            defaultPlan.setSchemas(createSchemas());
+            return Collections.singletonList(defaultPlan);
         }
     }
 
@@ -104,11 +112,24 @@ public abstract class OSBServiceBase {
     }
 
     private Plan convertFlavorToPlan(Flavor flavor) {
-        return new Plan(
+        Plan plan = new Plan(
                 UUID.fromString(flavor.uuid().get()),
                 sanitizePlanName(flavor.name()),
                 flavor.description(),
                 true, true);
+
+        plan.setSchemas(createSchemas());
+        return plan;
+    }
+
+    private Schemas createSchemas() {
+        ObjectSchema serviceInstanceSchema = new ObjectSchema();
+        StringSchema namePropertySchema = new StringSchema();
+        namePropertySchema.setMinLength(2);
+        serviceInstanceSchema.putProperty("name", namePropertySchema);
+        serviceInstanceSchema.putOptionalProperty("transactional", new BooleanSchema());
+
+        return new Schemas(new ServiceInstanceSchema(new InputParameters(serviceInstanceSchema), null), null);
     }
 
     private String sanitizePlanName(String name) {

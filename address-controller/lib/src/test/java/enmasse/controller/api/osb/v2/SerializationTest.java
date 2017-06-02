@@ -6,10 +6,14 @@ import static org.hamcrest.CoreMatchers.nullValue;
 import static org.junit.Assert.assertThat;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.module.jsonSchema.types.ObjectSchema;
 import enmasse.controller.api.osb.v2.bind.BindResponse;
 import enmasse.controller.api.osb.v2.catalog.CatalogResponse;
+import enmasse.controller.api.osb.v2.catalog.InputParameters;
 import enmasse.controller.api.osb.v2.catalog.Plan;
+import enmasse.controller.api.osb.v2.catalog.Schemas;
 import enmasse.controller.api.osb.v2.catalog.Service;
+import enmasse.controller.api.osb.v2.catalog.ServiceInstanceSchema;
 import enmasse.controller.api.osb.v2.lastoperation.LastOperationResponse;
 import enmasse.controller.api.osb.v2.lastoperation.LastOperationState;
 import enmasse.controller.api.osb.v2.provision.ProvisionResponse;
@@ -36,7 +40,9 @@ public class SerializationTest {
         service.setPlanUpdatable(false);
 
         UUID planId = UUID.randomUUID();
-        service.getPlans().add(new Plan(planId, "test-plan", "test-plan-description", true, true));
+        Plan plan = new Plan(planId, "test-plan", "test-plan-description", true, true);
+        plan.setSchemas(new Schemas(new ServiceInstanceSchema(new InputParameters(new ObjectSchema()), null), null));
+        service.getPlans().add(plan);
 
         CatalogResponse response = new CatalogResponse(Collections.singletonList(service));
 
@@ -67,6 +73,8 @@ public class SerializationTest {
         assertThat(planMap.get("metadata"), notNullValue());
         assertThat(planMap.get("free"), is(true));
         assertThat(planMap.get("bindable"), is(true));
+
+        assertThat(planMap.get("schemas"), notNullValue()); // TODO: expand this
     }
 
     @Test

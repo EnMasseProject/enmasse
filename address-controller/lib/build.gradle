@@ -7,6 +7,7 @@ dependencies {
     compile "io.fabric8:openshift-client:${openshiftClientVersion}"
     compile "com.fasterxml.jackson.core:jackson-core:${jacksonVersion}"
     compile "com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}"
+    compile "com.fasterxml.jackson.module:jackson-module-jsonSchema:${jacksonVersion}"
     compile "org.jboss.resteasy:resteasy-jackson2-provider:${resteasyVersion}"
     compile "org.jboss.resteasy:resteasy-vertx:${resteasyVersion}"
     testCompile "junit:junit:${junitVersion}"

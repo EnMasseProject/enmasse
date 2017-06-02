@@ -22,6 +22,7 @@ public class Plan {
     private Map<String, String> metadata = new HashMap<>();
     private boolean free;
     private boolean bindable;
+    private Schemas schemas;
 
     public Plan() {
     }
@@ -82,6 +83,14 @@ public class Plan {
         this.bindable = bindable;
     }
 
+    public Schemas getSchemas() {
+        return schemas;
+    }
+
+    public void setSchemas(Schemas schemas) {
+        this.schemas = schemas;
+    }
+
     protected static class Serializer extends JsonSerializer<Plan> {
         @Override
         public void serialize(Plan value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
@@ -94,6 +103,8 @@ public class Plan {
 
             ObjectNode metadataNode = node.putObject("metadata");
             value.getMetadata().forEach(metadataNode::put);
+
+            node.set("schemas", mapper.valueToTree(value.getSchemas()));
 
             mapper.writeValue(gen, node);
         }
