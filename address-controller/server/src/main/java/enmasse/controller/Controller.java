@@ -76,7 +76,7 @@ public class Controller extends AbstractVerticle {
                 new Deployment(new InstanceController(instanceManager, controllerClient, instanceApi, certManager)),
                 new Deployment(new FlavorController(controllerClient, flavorManager)),
                 new Deployment(new AMQPServer(kubernetes.getInstanceId(), instanceApi, flavorManager, options.port())),
-                new Deployment(new HTTPServer(kubernetes.getInstanceId(), instanceApi, flavorManager), new DeploymentOptions().setWorker(true)));
+                new Deployment(new HTTPServer(kubernetes.getInstanceId(), instanceApi, flavorManager, options.certDir()), new DeploymentOptions().setWorker(true)));
     }
 
     private void deployVerticles(Future<Void> startPromise, Deployment ... deployments) {

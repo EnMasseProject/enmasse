@@ -28,13 +28,14 @@ public final class ControllerOptions {
     private final boolean isMultiinstance;
     private final String namespace;
     private final String token;
+    private final String certDir;
     private final Optional<File> templateDir;
     private final Optional<String> messagingHost;
     private final Optional<String> mqttHost;
     private final Optional<String> consoleHost;
     private final Optional<String> certSecret;
 
-    private ControllerOptions(String masterUrl, boolean isMultiinstance, String namespace, String token, Optional<File> templateDir, Optional<String> messagingHost, Optional<String> mqttHost, Optional<String> consoleHost, Optional<String> certSecret) {
+    private ControllerOptions(String masterUrl, boolean isMultiinstance, String namespace, String token, Optional<File> templateDir, Optional<String> messagingHost, Optional<String> mqttHost, Optional<String> consoleHost, Optional<String> certSecret, String certDir) {
         this.masterUrl = masterUrl;
         this.isMultiinstance = isMultiinstance;
         this.namespace = namespace;
@@ -44,6 +45,7 @@ public final class ControllerOptions {
         this.mqttHost = mqttHost;
         this.consoleHost = consoleHost;
         this.certSecret = certSecret;
+        this.certDir = certDir;
     }
 
     public String masterUrl() {
@@ -72,6 +74,7 @@ public final class ControllerOptions {
         }
 
         File templateDir = new File("/enmasse-templates");
+        // Fall back to path used in 0.11.0
         if (!templateDir.exists()) {
             templateDir = new File("/templates");
         }
@@ -85,7 +88,8 @@ public final class ControllerOptions {
         Optional<String> certSecret = getEnv(env, "INSTANCE_CERT_SECRET");
         Optional<File> maybeDir = Optional.ofNullable(templateDir.exists() ? templateDir : null);
 
-        return new ControllerOptions(String.format("https://%s:%s", masterHost, masterPort), isMultiinstance, namespace, token, maybeDir, messagingHost, mqttHost, consoleHost, certSecret);
+        String certDir = getEnv(env, "CERT_PATH").orElse("/ssl-certs");
+        return new ControllerOptions(String.format("https://%s:%s", masterHost, masterPort), isMultiinstance, namespace, token, maybeDir, messagingHost, mqttHost, consoleHost, certSecret, certDir);
     }
 
     private static Optional<String> getEnv(Map<String, String> env, String envVar) {
@@ -141,5 +145,9 @@ public final class ControllerOptions {
 
     public Optional<String> certSecret() {
         return certSecret;
+    }
+
+    public String certDir() {
+        return certDir;
     }
 }

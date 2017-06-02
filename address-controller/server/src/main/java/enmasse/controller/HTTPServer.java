@@ -30,10 +30,15 @@ import enmasse.controller.flavor.FlavorRepository;
 import enmasse.controller.instance.api.InstanceApi;
 import enmasse.controller.model.InstanceId;
 import io.vertx.core.AbstractVerticle;
+import io.vertx.core.http.HttpServerOptions;
+import io.vertx.core.net.PemKeyCertOptions;
 import org.jboss.resteasy.plugins.server.vertx.VertxRequestHandler;
 import org.jboss.resteasy.plugins.server.vertx.VertxResteasyDeployment;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.util.logging.FileHandler;
 
 /**
  * HTTP server for deploying address config
@@ -44,11 +49,13 @@ public class HTTPServer extends AbstractVerticle {
     private final InstanceApi instanceApi;
     private final FlavorRepository flavorRepository;
     private final InstanceId globalInstance;
+    private final String certDir;
 
-    public HTTPServer(InstanceId globalInstance, InstanceApi instanceApi, FlavorRepository flavorRepository) {
+    public HTTPServer(InstanceId globalInstance, InstanceApi instanceApi, FlavorRepository flavorRepository, String certDir) {
         this.globalInstance = globalInstance;
         this.instanceApi = instanceApi;
         this.flavorRepository = flavorRepository;
+        this.certDir = certDir;
     }
 
     @Override
@@ -69,7 +76,15 @@ public class HTTPServer extends AbstractVerticle {
         deployment.getRegistry().addSingletonResource(new OSBBindingService(instanceApi, flavorRepository));
         deployment.getRegistry().addSingletonResource(new OSBLastOperationService(instanceApi, flavorRepository));
 
-        vertx.createHttpServer()
+        HttpServerOptions options = new HttpServerOptions();
+        if (new File(certDir).exists()) {
+            options.setPemKeyCertOptions(new PemKeyCertOptions()
+                    .setKeyPath(certDir + "/server-key.pem")
+                    .setCertPath(certDir + "/server-cert.pem"));
+            options.setSsl(true);
+        }
+
+        vertx.createHttpServer(options)
                 .requestHandler(new VertxRequestHandler(vertx, deployment))
                 .listen(PORT, ar -> log.info("Started HTTP server. Listening on port " + PORT));
     }
