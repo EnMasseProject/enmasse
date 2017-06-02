@@ -49,7 +49,7 @@ public class HTTPServerTest {
         testRepository = new FlavorManager();
         instanceApi.createInstance(new Instance.Builder(instanceId).build());
         CountDownLatch latch = new CountDownLatch(1);
-        vertx.deployVerticle(new HTTPServer(instanceId, instanceApi, testRepository), c -> {
+        vertx.deployVerticle(new HTTPServer(instanceId, instanceApi, testRepository, "/doesnotexist"), c -> {
             latch.countDown();
         });
         latch.await(1, TimeUnit.MINUTES);
