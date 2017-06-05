@@ -9,7 +9,7 @@
      back-callback="backCallback"
      wizard-done="deployComplete || deployInProgress">
   <div pf-wizard-step step-title="Semantics" substeps="false" step-id="semantics" step-priority="0" show-review="true" show-review-details="true"
-       review-template="pattern-review.html" next-enabled="semantics_complete" on-show="onShow">
+       review-template="components/addresses/pattern-review.html" next-enabled="semantics_complete" on-show="onShow">
     <div ng-controller="SemanticsController">
       <form class="form-horizontal">
         <div pf-form-group pf-label="Name" required>
@@ -28,7 +28,7 @@
       </form>
     </div>
   </div>
-  <div pf-wizard-step step-title="Plan" substeps="false" step-id="plan" step-priority="1" show-review="true" show-review-details="true" review-template="plan-review.html">
+  <div pf-wizard-step step-title="Plan" substeps="false" step-id="plan" step-priority="1" show-review="true" show-review-details="true" review-template="components/addresses/plan-review.html">
     <form class="form-horizontal" ng-if="!no_plan">
       <div ng-repeat="f in valid_flavors()">
         <div pf-form-group pf-label-class="col-sm-3" pf-input-class="col-sm-8" pf-label="{{f.name}}">
