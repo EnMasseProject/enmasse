@@ -161,7 +161,7 @@ if [ -z "$SERVER_KEY" ] || [ -z "$SERVER_CERT" ]; then
     runcmd "openssl pkcs8 -topk8 -inform PEM -outform PEM -nocrypt -in enmasse-controller-pkcs1.key -out ${SERVER_KEY}" "Convert key to correct PKCS#8 format"
 fi
 
-runcmd "oc secret new --type=kubernetes.io/tls =enmasse-controller-certs tls.crt=${SERVER_CERT} tls.key=${SERVER_KEY}" "Create secret for controller certificate"
+runcmd "oc secret new enmasse-controller-certs tls.crt=${SERVER_CERT} tls.key=${SERVER_KEY}" "Create secret for controller certificate"
 runcmd "oc secret add serviceaccount/enmasse-service-account secrets/enmasse-controller-certs --for=mount" "Add controller secret mount permissions for enmasse-service-account"
 
 runcmd "oc process -f $ENMASSE_TEMPLATE $TEMPLATE_PARAMS | oc create -n $NAMESPACE -f -" "Instantiate EnMasse template"
