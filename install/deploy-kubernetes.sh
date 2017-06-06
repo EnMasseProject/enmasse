@@ -112,8 +112,20 @@ if [ -z "$SERVER_KEY" ] || [ -z "$SERVER_CERT" ]; then
     runcmd "openssl req -new -x509 -batch -nodes -out ${SERVER_CERT} -keyout ${SERVER_KEY}" "Create self-signed certificate"
 fi
 
-runcmd "kubectl secret new enmasse-controller-certs tls.crt=${SERVER_CERT} tls.key=${SERVER_KEY} -n $NAMESPACE" "Create secret for controller certificate"
-runcmd "kubectl secret add serviceaccount/enmasse-service-account secrets/enmasse-controller-certs --for=mount -n $NAMESPACE" "Add controller secret mount permissions for enmasse-service-account"
+runcmd "cat <<EOF | kubectl create -n ${NAMESPACE} -f -
+{
+    \"apiVersion\": \"v1\",
+    \"kind\": \"Secret\",
+    \"metadata\": {
+        \"name\": \"enmasse-controller-certs\"
+    },
+    \"type\": \"kubernetes.io/tls\",
+    \"data\": {
+        \"tls.key\": \"\$(base64 -w 0 ${SERVER_KEY})\",
+        \"tls.crt\": \"\$(base64 -w 0 ${SERVER_CERT})\"
+    }
+}
+EOF" "Create secret for controller certificate"
 
 if [ -n "$ALT_TEMPLATE" ]
 then
