@@ -41,9 +41,31 @@ Create service account for address controller:
 
     kubectl create sa enmasse-service-account -n enmasse
 
+Create self-signed certificate:
+
+    openssl req -new -x509 -batch -nodes -out enmasse-controller.crt -keyout enmasse-controller.key
+
+Create secret for controller certificate:
+
+    cat <<EOF | kubectl create -n enmasse -f -
+    {
+        "apiVersion": "v1",
+        "kind": "Secret",
+        "metadata": {
+            "name": "enmasse-controller-certs"
+        },
+        "type": "kubernetes.io/tls",
+        "data": {
+            "tls.key": "$(base64 -w 0 enmasse-controller.key)",
+            "tls.crt": "$(base64 -w 0 enmasse-controller.crt)"
+        }
+    }
+    EOF
+
 Deploy EnMasse to enmasse:
 
-    kubectl apply -f kubernetes/enmasse.yaml -n enmasse
+    kubectl apply -f ./kubernetes/enmasse.yaml -n enmasse
+
 
 ### Deploying external load balancers
 
