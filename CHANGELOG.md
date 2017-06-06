@@ -1,3 +1,6 @@
+## 0.11.2 (June 2, 2027)
+* Minor bugfixes to console and templates
+
 ## 0.11.0 (May 29, 2027)
 * Remove restrictions on address names. These were earlier restructed by k8s labels
 * Add simple logging library to router agent and subscription service
