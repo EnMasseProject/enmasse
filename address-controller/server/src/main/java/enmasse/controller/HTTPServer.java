@@ -78,9 +78,12 @@ public class HTTPServer extends AbstractVerticle {
 
         HttpServerOptions options = new HttpServerOptions();
         if (new File(certDir).exists()) {
-            options.setPemKeyCertOptions(new PemKeyCertOptions()
-                    .setKeyPath(certDir + "/tls.key")
-                    .setCertPath(certDir + "/tls.crt"));
+            File keyFile = new File(certDir, "tls.key");
+            File certFile = new File(certDir, "tls.crt");
+            log.info("Loading key from " + keyFile.getAbsolutePath() + ", cert from " + certFile.getAbsolutePath());
+            options.setKeyCertOptions(new PemKeyCertOptions()
+                    .setKeyPath(keyFile.getAbsolutePath())
+                    .setCertPath(certFile.getAbsolutePath()));
             options.setSsl(true);
         }
 
