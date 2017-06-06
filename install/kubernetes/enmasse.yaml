@@ -132,12 +132,13 @@ items:
       {"instance": "${INSTANCE}"}, "labels": {"app": "enmasse"}, "name": "console"},
       "spec": {"ports": [{"name": "amqp-ws", "port": 5672, "targetPort": 56720}, {"name":
       "http", "port": 8080}], "selector": {"name": "admin"}}}], "parameters": [{"description":
-      "The image to use for the router", "name": "ROUTER_REPO", "value": "enmasseproject/qdrouterd:latest"},
-      {"description": "The image to use for the router metrics collector", "name":
-      "ROUTER_METRICS_REPO", "value": "enmasseproject/router-metrics:latest"}, {"description":
-      "The link capacity setting for router", "name": "ROUTER_LINK_CAPACITY", "value":
-      "50"}, {"description": "The image to use for the configuration service", "name":
-      "CONFIGSERV_REPO", "value": "enmasseproject/configserv:latest"}, {"description":
+      "Hostname where API server can be reached", "name": "API_SERVER_HOSTNAME", "value":
+      ""}, {"description": "The image to use for the router", "name": "ROUTER_REPO",
+      "value": "enmasseproject/qdrouterd:latest"}, {"description": "The image to use
+      for the router metrics collector", "name": "ROUTER_METRICS_REPO", "value": "enmasseproject/router-metrics:latest"},
+      {"description": "The link capacity setting for router", "name": "ROUTER_LINK_CAPACITY",
+      "value": "50"}, {"description": "The image to use for the configuration service",
+      "name": "CONFIGSERV_REPO", "value": "enmasseproject/configserv:latest"}, {"description":
       "The docker image to use for the queue scheduler", "name": "QUEUE_SCHEDULER_REPO",
       "value": "enmasseproject/queue-scheduler:latest"}, {"description": "The image
       to use for the router agent", "name": "RAGENT_REPO", "value": "enmasseproject/ragent:latest"},

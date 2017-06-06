@@ -71,6 +71,11 @@ local version = std.extVar("VERSION");
 
     local commonParameters = [
       {
+        "name": "API_SERVER_HOSTNAME",
+        "description": "Hostname where API server can be reached",
+        "value": ""
+      },
+      {
         "name": "ROUTER_REPO",
         "description": "The image to use for the router",
         "value": "enmasseproject/qdrouterd:" + version
