@@ -12,7 +12,7 @@ local version = std.extVar("VERSION");
     "apiVersion": "v1",
     "kind": "List",
     "items": [ templateConfig.generate(use_sasl, with_kafka, false),
-               addressController.deployment("enmasseproject/address-controller:" + version, "false", "enmasse-template-config"),
+               addressController.deployment("enmasseproject/address-controller:" + version, "false", "enmasse-controller-certs", "enmasse-template-config", 0),
                restapiRoute.ingress(""),
                addressController.internal_service,
                flavorConfig.generate() ]

@@ -77,12 +77,11 @@ while getopts dgk:m:n:p:s:t:u:yvh opt; do
             echo "optional arguments:"
             echo "  -h             show this help message"
             echo "  -d             create an all-in-one docker OpenShift on localhost"
-            echo "  -k KEY         Server key file (default: none)"
             echo "  -n NAMESPACE   OpenShift project name to install EnMasse into (default: $DEFAULT_NAMESPACE)"
             echo "  -m MASTER      OpenShift master URI to login against (default: https://localhost:8443)"
-            echo "  -p PARAMS      Custom template parameters to pass to EnMasse template"
-            echo "  -s CERT        Server certificate file (default: none)"
-            echo "  -t TEMPLATE    An alternative opan OpenShift template file to deploy EnMasse"
+            echo "  -p PARAMS      Custom template parameters to pass to EnMasse template ('cat $SCRIPTDIR/openshift/enmasse.yaml' to get a list of available parameters)"
+            echo "  -s SECRET      Address controller secret (default: enmasse-controller-certs)"
+            echo "  -t TEMPLATE    An alternative OpenShift template file to deploy EnMasse"
             echo "  -u USER        OpenShift user to run commands as (default: $DEFAULT_USER)"
             echo
             exit
@@ -149,16 +148,20 @@ if [[ $TEMPLATE_PARAMS == *"MULTIINSTANCE=true"* ]]; then
     echo "Please grant cluster-admin rights to system:serviceaccount:${NAMESPACE}:enmasse-service-account before creating instances: 'oadm policy add-cluster-role-to-user cluster-admin system:serviceaccount:${NAMESPACE}:enmasse-service-account'"
 fi
 
-if [ -z "$MULTIINSTANCE" ] && [ -n "$SERVER_KEY" ] && [ -n "$SERVER_CERT" ]
-then
-    runcmd "oc secret new ${NAMESPACE}-certs ${SERVER_CERT} ${SERVER_KEY}" "Create certificate secret"
-    runcmd "oc secret add serviceaccount/default secrets/${NAMESPACE}-certs --for=mount" "Add certificate secret to default service account"
-    TEMPLATE_PARAMS="INSTANCE_CERT_SECRET=${NAMESPACE}-certs ${TEMPLATE_PARAMS}"
-fi
-
 if [ -n "$ALT_TEMPLATE" ]
 then
     ENMASSE_TEMPLATE=$ALT_TEMPLATE
 fi
+
+if [ -z "$SERVER_KEY" ] || [ -z "$SERVER_CERT" ]; then
+    SERVER_KEY=enmasse-controller.key
+    SERVER_CERT=enmasse-controller.crt
+    runcmd "oc adm ca create-signer-cert --key=ca.key --cert=ca.crt --serial=ca.serial.txt --name=enmasse-signer@\$(date +%s)" "Create signer CA"
+    runcmd "oc adm ca create-server-cert --key=enmasse-controller-pkcs1.key --cert=${SERVER_CERT} --hostnames=address-controller.${NAMESPACE}.svc.cluster.local --signer-cert=ca.crt --signer-key=ca.key --signer-serial=ca.serial.txt" "Create signed server certificate for address-controller"
+    runcmd "openssl pkcs8 -topk8 -inform PEM -outform PEM -nocrypt -in enmasse-controller-pkcs1.key -out ${SERVER_KEY}" "Convert key to correct PKCS#8 format"
+fi
+
+runcmd "oc secret new --type=kubernetes.io/tls =enmasse-controller-certs tls.crt=${SERVER_CERT} tls.key=${SERVER_KEY}" "Create secret for controller certificate"
+runcmd "oc secret add serviceaccount/enmasse-service-account secrets/enmasse-controller-certs --for=mount" "Add controller secret mount permissions for enmasse-service-account"
 
 runcmd "oc process -f $ENMASSE_TEMPLATE $TEMPLATE_PARAMS | oc create -n $NAMESPACE -f -" "Instantiate EnMasse template"
