@@ -1012,6 +1012,9 @@ objects:
       selector:
         name: admin
   parameters:
+  - description: Hostname where API server can be reached
+    name: API_SERVER_HOSTNAME
+    value: ''
   - description: The image to use for the router
     name: ROUTER_REPO
     value: enmasseproject/qdrouterd:latest
