@@ -70,7 +70,7 @@ Add controller secret mount permissions for enmasse-service-account:
 
 Instantiate EnMasse template:
 
-    oc process -f ./openshift/enmasse.yaml  | oc create -n enmasse -f -
+    oc process -f openshift/enmasse.yaml  | oc create -n enmasse -f -
 
 
 #### Deploying EnMasse with authentication enabled
