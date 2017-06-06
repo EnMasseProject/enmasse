@@ -48,9 +48,30 @@ Add permissions for editing OpenShift resources to EnMasse service account:
 
     oc policy add-role-to-user edit system:serviceaccount:enmasse:enmasse-service-account
 
+Create signer CA:
+
+    oc adm ca create-signer-cert --key=ca.key --cert=ca.crt --serial=ca.serial.txt --name=enmasse-signer@$(date +%s)
+
+Create signed server certificate for address-controller:
+
+    oc adm ca create-server-cert --key=enmasse-controller-pkcs1.key --cert=enmasse-controller.crt --hostnames=address-controller.enmasse.svc.cluster.local --signer-cert=ca.crt --signer-key=ca.key --signer-serial=ca.serial.txt
+
+Convert key to correct PKCS#8 format:
+
+    openssl pkcs8 -topk8 -inform PEM -outform PEM -nocrypt -in enmasse-controller-pkcs1.key -out enmasse-controller.key
+
+Create secret for controller certificate:
+
+    oc secret new enmasse-controller-certs tls.crt=enmasse-controller.crt tls.key=enmasse-controller.key
+
+Add controller secret mount permissions for enmasse-service-account:
+
+    oc secret add serviceaccount/enmasse-service-account secrets/enmasse-controller-certs --for=mount
+
 Instantiate EnMasse template:
 
-    oc process -f openshift/enmasse.yaml  | oc create -n enmasse -f -
+    oc process -f ./openshift/enmasse.yaml  | oc create -n enmasse -f -
+
 
 #### Deploying EnMasse with authentication enabled
 
