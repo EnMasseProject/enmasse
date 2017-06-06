@@ -121,7 +121,7 @@ public class MqttGateway extends AbstractVerticle {
      * @param certFile  server certificate file path
      * @return  current MQTT gateway instance
      */
-    @Value(value = "${enmasse.mqtt.certfile:./src/test/resources/tls/server-key.pem}")
+    @Value(value = "${enmasse.mqtt.certfile:./src/test/resources/tls/server-cert.pem}")
     public MqttGateway setCertFile(String certFile) {
         this.certFile = certFile;
         return this;
@@ -133,7 +133,7 @@ public class MqttGateway extends AbstractVerticle {
      * @param keyFile   server private key file path
      * @return  current MQTT gateway instance
      */
-    @Value(value = "${enmasse.mqtt.keyfile:./src/test/resources/tls/server-cert.pem}")
+    @Value(value = "${enmasse.mqtt.keyfile:./src/test/resources/tls/server-key.pem}")
     public MqttGateway setKeyFile(String keyFile) {
         this.keyFile = keyFile;
         return this;
