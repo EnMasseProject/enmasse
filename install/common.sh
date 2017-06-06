@@ -9,7 +9,7 @@ function runcmd() {
         echo "    $cmd"
         echo ""
     else
-        eval $cmd
+        bash -c "$cmd"
     fi
 }
 

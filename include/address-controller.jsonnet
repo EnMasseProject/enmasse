@@ -38,7 +38,7 @@ local common = import "common.jsonnet";
   external_service::
     self.common_service("address-controller-external", "LoadBalancer"),
 
-  deployment(image_repo, multiinstance, template_config="", instance_idle_timeout=0)::
+  deployment(image_repo, multiinstance, secret_name, template_config, instance_idle_timeout)::
     {
       "apiVersion": "extensions/v1beta1",
       "kind": "Deployment",
@@ -58,12 +58,22 @@ local common = import "common.jsonnet";
               "app": "enmasse"
             }
           },
-          local mounts = if template_config != "" then [
-            {
+
+          local template_mount = [{
               "name": "templates",
               "mountPath": "/enmasse-templates"
-            }
-          ] else [],
+          }],
+
+          local ssl_certs = [{
+            "name": "ssl-certs",
+            "mountPath": "/ssl-certs",
+            "readOnly": true
+          }],
+
+          local mounts = if template_config != ""
+            then template_mount + ssl_certs
+            else ssl_certs,
+
           "spec": {
             "serviceAccount": "enmasse-service-account",
             "containers": [
@@ -76,14 +86,23 @@ local common = import "common.jsonnet";
               }], mounts)
 
             ],
-            [if template_config != "" then "volumes"]: [
-              {
+            local template_volume = [{
                 "name": "templates",
                 "configMap": {
                   "name": template_config
                 }
-              }
-            ]
+            }],
+
+            local secret_volume = [{
+                "name": "ssl-certs",
+                "secret": {
+                  "secretName": secret_name
+                }
+            }],
+
+            "volumes": if template_config != ""
+              then template_volume + secret_volume
+              else secret_volume
           }
         }
       }

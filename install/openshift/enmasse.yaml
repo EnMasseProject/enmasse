@@ -1101,8 +1101,15 @@ objects:
               memory: 256Mi
             requests:
               memory: 256Mi
-          volumeMounts: []
+          volumeMounts:
+          - mountPath: "/ssl-certs"
+            name: ssl-certs
+            readOnly: true
         serviceAccount: enmasse-service-account
+        volumes:
+        - name: ssl-certs
+          secret:
+            secretName: "${ADDRESS_CONTROLLER_SECRET}"
 - apiVersion: v1
   kind: Service
   metadata:
@@ -1169,6 +1176,9 @@ parameters:
 - description: The docker image to use for the address controller
   name: ADDRESS_CONTROLLER_REPO
   value: enmasseproject/address-controller:latest
+- description: The secret containing the certificate for the address-controller
+  name: ADDRESS_CONTROLLER_SECRET
+  value: enmasse-controller-certs
 - description: The secret to use to mount certificates. Only consumed if MULTIINSTANCE=false.
   name: INSTANCE_CERT_SECRET
 - description: The messaging host to use for this instance. Only consumed if MULTIINSTANCE=false.

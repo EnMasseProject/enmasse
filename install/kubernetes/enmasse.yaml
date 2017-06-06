@@ -356,11 +356,17 @@ items:
           volumeMounts:
           - mountPath: "/enmasse-templates"
             name: templates
+          - mountPath: "/ssl-certs"
+            name: ssl-certs
+            readOnly: true
         serviceAccount: enmasse-service-account
         volumes:
         - configMap:
             name: enmasse-template-config
           name: templates
+        - name: ssl-certs
+          secret:
+            secretName: enmasse-controller-certs
 - apiVersion: extensions/v1beta1
   kind: Ingress
   metadata:
