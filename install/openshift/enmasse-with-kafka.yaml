@@ -1233,11 +1233,3 @@ parameters:
 - description: The secret containing the certificate for the address-controller
   name: ADDRESS_CONTROLLER_SECRET
   value: enmasse-controller-certs
-- description: The secret to use to mount certificates. Only consumed if MULTIINSTANCE=false.
-  name: INSTANCE_CERT_SECRET
-- description: The messaging host to use for this instance. Only consumed if MULTIINSTANCE=false.
-  name: INSTANCE_MESSAGING_HOST
-- description: The mqtt host to use for this instance. Only consumed if MULTIINSTANCE=false.
-  name: INSTANCE_MQTT_HOST
-- description: The console host to use for this instance. Only consumed if MULTIINSTANCE=false.
-  name: INSTANCE_CONSOLE_HOST
