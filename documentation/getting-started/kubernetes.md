@@ -64,7 +64,7 @@ Create secret for controller certificate:
 
 Deploy EnMasse to enmasse:
 
-    kubectl apply -f ./kubernetes/enmasse.yaml -n enmasse
+    kubectl apply -f kubernetes/enmasse.yaml -n enmasse
 
 
 ### Deploying external load balancers
