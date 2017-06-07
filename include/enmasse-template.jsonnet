@@ -20,7 +20,7 @@ local version = std.extVar("VERSION");
                  storage.template(true, false),
                  storage.template(true, true),
                  enmasseInfra.generate(use_sasl, with_kafka, true),
-                 addressController.deployment("${ADDRESS_CONTROLLER_REPO}", "${MULTIINSTANCE}", "", "${INSTANCE_IDLE_TIMEOUT_SECONDS}"),
+                 addressController.deployment("${ADDRESS_CONTROLLER_REPO}", "${MULTIINSTANCE}", "${ADDRESS_CONTROLLER_SECRET}", "", "${INSTANCE_IDLE_TIMEOUT_SECONDS}"),
                  addressController.internal_service,
                  restapiRoute.route("${RESTAPI_HOSTNAME}"),
                  flavorConfig.generate() ],
@@ -40,20 +40,9 @@ local version = std.extVar("VERSION");
         "value": "enmasseproject/address-controller:" + version
       },
       {
-        "name": "INSTANCE_CERT_SECRET",
-        "description": "The secret to use to mount certificates. Only consumed if MULTIINSTANCE=false."
-      },
-      {
-        "name": "INSTANCE_MESSAGING_HOST",
-        "description": "The messaging host to use for this instance. Only consumed if MULTIINSTANCE=false."
-      },
-      {
-        "name": "INSTANCE_MQTT_HOST",
-        "description": "The mqtt host to use for this instance. Only consumed if MULTIINSTANCE=false."
-      },
-      {
-        "name": "INSTANCE_CONSOLE_HOST",
-        "description": "The console host to use for this instance. Only consumed if MULTIINSTANCE=false."
+        "name": "ADDRESS_CONTROLLER_SECRET",
+        "description": "The secret containing the certificate for the address-controller",
+        "value": "enmasse-controller-certs"
       }
     ]
   }

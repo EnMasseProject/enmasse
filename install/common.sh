@@ -9,7 +9,7 @@ function runcmd() {
         echo "    $cmd"
         echo ""
     else
-        eval $cmd
+        bash -c "$cmd"
     fi
 }
 
@@ -18,4 +18,8 @@ function docmd() {
     if [ -z $GUIDE ] || [ "$GUIDE" == "false" ]; then
         $cmd
     fi
+}
+
+function tempdir() {
+    echo `mktemp -d /tmp/enmasse-deploy.XXXXXX`
 }

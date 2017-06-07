@@ -1066,6 +1066,9 @@ objects:
               requests:
                 memory: 512Mi
   parameters:
+  - description: Hostname where API server can be reached
+    name: API_SERVER_HOSTNAME
+    value: ''
   - description: The image to use for the router
     name: ROUTER_REPO
     value: enmasseproject/qdrouterd:latest
@@ -1155,8 +1158,15 @@ objects:
               memory: 256Mi
             requests:
               memory: 256Mi
-          volumeMounts: []
+          volumeMounts:
+          - mountPath: "/ssl-certs"
+            name: ssl-certs
+            readOnly: true
         serviceAccount: enmasse-service-account
+        volumes:
+        - name: ssl-certs
+          secret:
+            secretName: "${ADDRESS_CONTROLLER_SECRET}"
 - apiVersion: v1
   kind: Service
   metadata:
@@ -1223,11 +1233,6 @@ parameters:
 - description: The docker image to use for the address controller
   name: ADDRESS_CONTROLLER_REPO
   value: enmasseproject/address-controller:latest
-- description: The secret to use to mount certificates. Only consumed if MULTIINSTANCE=false.
-  name: INSTANCE_CERT_SECRET
-- description: The messaging host to use for this instance. Only consumed if MULTIINSTANCE=false.
-  name: INSTANCE_MESSAGING_HOST
-- description: The mqtt host to use for this instance. Only consumed if MULTIINSTANCE=false.
-  name: INSTANCE_MQTT_HOST
-- description: The console host to use for this instance. Only consumed if MULTIINSTANCE=false.
-  name: INSTANCE_CONSOLE_HOST
+- description: The secret containing the certificate for the address-controller
+  name: ADDRESS_CONTROLLER_SECRET
+  value: enmasse-controller-certs
