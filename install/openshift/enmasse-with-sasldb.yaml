@@ -1114,21 +1114,27 @@ objects:
           image: "${ADDRESS_CONTROLLER_REPO}"
           livenessProbe:
             tcpSocket:
-              port: amqp
+              port: http
           name: address-controller
           ports:
-          - containerPort: 5672
-            name: amqp
-            protocol: TCP
           - containerPort: 8080
             name: http
+            protocol: TCP
+          - containerPort: 8081
+            name: https
+            protocol: TCP
+          - containerPort: 5672
+            name: amqp
             protocol: TCP
           resources:
             limits:
               memory: 256Mi
             requests:
               memory: 256Mi
-          volumeMounts: []
+          volumeMounts:
+          - mountPath: "/ssl-certs"
+            name: ssl-certs
+            readOnly: true
         serviceAccount: enmasse-service-account
         volumes:
         - name: ssl-certs
@@ -1146,6 +1152,10 @@ objects:
       port: 8080
       protocol: TCP
       targetPort: http
+    - name: https
+      port: 8081
+      protocol: TCP
+      targetPort: https
     - name: amqp
       port: 5672
       protocol: TCP
@@ -1161,9 +1171,10 @@ objects:
     name: restapi
   spec:
     host: "${RESTAPI_HOSTNAME}"
-    path: "/v3"
     port:
-      targetPort: http
+      targetPort: https
+    tls:
+      termination: passthrough
     to:
       kind: Service
       name: address-controller

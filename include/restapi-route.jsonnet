@@ -10,14 +10,16 @@
         "name": "restapi"
     },
     "spec": {
-        "path": "/v3",
         "host": hostname,
         "to": {
             "kind": "Service",
             "name": "address-controller"
         },
         "port": {
-            "targetPort": "http"
+            "targetPort": "https"
+        },
+        "tls": {
+          "termination": "passthrough"
         }
     }
   },
@@ -30,12 +32,15 @@
         "labels": {
           "app": "enmasse"
         },
-        "annotations": {
-          "ingress.kubernetes.io/ssl-redirect": "false"
-        },
         "name": "restapi"
     },
     "spec": {
+      "tls": {
+        "hosts": [
+          hostname
+        ],
+        "secretName": ""
+      },
       "rules": [
         {
           "host": hostname,

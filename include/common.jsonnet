@@ -26,39 +26,6 @@
     }
   },
 
-  container2(name, image, port_name, port, port2_name, port2_port, mem_request, env, volumeMounts)::
-  {
-    "image": image,
-    "name": name,
-    "env": env,
-    "volumeMounts": volumeMounts,
-    "resources": {
-        "requests": {
-            "memory": mem_request,
-        },
-        "limits": {
-            "memory": mem_request,
-        }
-    },
-    "ports": [
-      {
-        "name": port_name,
-        "containerPort": port,
-        "protocol": "TCP"
-      },
-      {
-        "name": port2_name,
-        "containerPort": port2_port,
-        "protocol": "TCP"
-      }
-    ],
-    "livenessProbe": {
-      "tcpSocket": {
-        "port": port_name
-      }
-    }
-  },
-
   clientContainer(name, image, mem_request, env, http_health)::
   {
     local health_port =

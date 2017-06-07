@@ -340,14 +340,17 @@ items:
           image: enmasseproject/address-controller:latest
           livenessProbe:
             tcpSocket:
-              port: amqp
+              port: http
           name: address-controller
           ports:
-          - containerPort: 5672
-            name: amqp
-            protocol: TCP
           - containerPort: 8080
             name: http
+            protocol: TCP
+          - containerPort: 8081
+            name: https
+            protocol: TCP
+          - containerPort: 5672
+            name: amqp
             protocol: TCP
           resources:
             limits:
@@ -357,6 +360,9 @@ items:
           volumeMounts:
           - mountPath: "/enmasse-templates"
             name: templates
+          - mountPath: "/ssl-certs"
+            name: ssl-certs
+            readOnly: true
         serviceAccount: enmasse-service-account
         volumes:
         - configMap:
@@ -368,8 +374,6 @@ items:
 - apiVersion: extensions/v1beta1
   kind: Ingress
   metadata:
-    annotations:
-      ingress.kubernetes.io/ssl-redirect: 'false'
     labels:
       app: enmasse
     name: restapi
@@ -382,6 +386,10 @@ items:
             serviceName: address-controller
             servicePort: 8080
           path: "/v3"
+    tls:
+      hosts:
+      - ''
+      secretName: ''
 - apiVersion: v1
   kind: Service
   metadata:
@@ -394,6 +402,10 @@ items:
       port: 8080
       protocol: TCP
       targetPort: http
+    - name: https
+      port: 8081
+      protocol: TCP
+      targetPort: https
     - name: amqp
       port: 5672
       protocol: TCP

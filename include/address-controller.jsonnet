@@ -19,6 +19,12 @@ local common = import "common.jsonnet";
           "targetPort": "http"
         },
         {
+          "name": "https",
+          "port": 8081,
+          "protocol": "TCP",
+          "targetPort": "https"
+        },
+        {
           "name": "amqp",
           "port": 5672,
           "protocol": "TCP",
@@ -71,20 +77,55 @@ local common = import "common.jsonnet";
           }],
 
           local mounts = if template_config != ""
-            then template_mount
-            else [],
+            then template_mount + ssl_certs
+            else ssl_certs,
 
+          local ports = [
+            {
+              "name": "http",
+              "containerPort": 8080,
+              "protocol": "TCP"
+            },
+            {
+              "name": "https",
+              "containerPort": 8081,
+              "protocol": "TCP"
+            },
+            {
+              "name": "amqp",
+              "containerPort": 5672,
+              "protocol": "TCP"
+            }
+          ],
           "spec": {
             "serviceAccount": "enmasse-service-account",
             "containers": [
-              common.container2("address-controller", image_repo, "amqp", 5672, "http", 8080, "256Mi", [{
-                "name": "MULTIINSTANCE",
-                "value": multiinstance
-              }, {
-                "name": "INSTANCE_IDLE_TIMEOUT_SECONDS",
-                "value": std.toString(instance_idle_timeout)
-              }], mounts)
-
+              {
+                "image": image_repo,
+                "name": "address-controller",
+                "env": [{
+                  "name": "MULTIINSTANCE",
+                  "value": multiinstance
+                }, {
+                  "name": "INSTANCE_IDLE_TIMEOUT_SECONDS",
+                  "value": std.toString(instance_idle_timeout)
+                }],
+                "volumeMounts": mounts,
+                "resources": {
+                    "requests": {
+                        "memory": "256Mi",
+                    },
+                    "limits": {
+                        "memory": "256Mi",
+                    }
+                },
+                "ports": ports,
+                "livenessProbe": {
+                  "tcpSocket": {
+                    "port": "http"
+                  }
+                }
+              }
             ],
             local template_volume = [{
                 "name": "templates",
