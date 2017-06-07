@@ -19,3 +19,7 @@ function docmd() {
         $cmd
     fi
 }
+
+function tempdir() {
+    echo `mktemp -d /tmp/enmasse-deploy.XXXXXX`
+}
