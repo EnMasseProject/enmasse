@@ -30,6 +30,7 @@ import enmasse.controller.flavor.FlavorRepository;
 import enmasse.controller.instance.api.InstanceApi;
 import enmasse.controller.model.InstanceId;
 import io.vertx.core.AbstractVerticle;
+import io.vertx.core.http.HttpServer;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.net.PemKeyCertOptions;
 import org.jboss.resteasy.plugins.server.vertx.VertxRequestHandler;
@@ -38,18 +39,21 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.util.logging.FileHandler;
 
 /**
  * HTTP server for deploying address config
  */
 public class HTTPServer extends AbstractVerticle {
     public static final int PORT = 8080;
+    public static final int SECURE_PORT = 8081;
     private static final Logger log = LoggerFactory.getLogger(HTTPServer.class.getName());
     private final InstanceApi instanceApi;
     private final FlavorRepository flavorRepository;
     private final InstanceId globalInstance;
     private final String certDir;
+
+    private HttpServer httpServer;
+    private HttpServer httpsServer;
 
     public HTTPServer(InstanceId globalInstance, InstanceApi instanceApi, FlavorRepository flavorRepository, String certDir) {
         this.globalInstance = globalInstance;
@@ -76,8 +80,25 @@ public class HTTPServer extends AbstractVerticle {
         deployment.getRegistry().addSingletonResource(new OSBBindingService(instanceApi, flavorRepository));
         deployment.getRegistry().addSingletonResource(new OSBLastOperationService(instanceApi, flavorRepository));
 
-        HttpServerOptions options = new HttpServerOptions();
+
+        VertxRequestHandler requestHandler = new VertxRequestHandler(vertx, deployment);
+        createSecureServer(requestHandler);
+        createOpenServer(requestHandler);
+    }
+
+    @Override
+    public void stop() {
+        if (httpServer != null) {
+            httpServer.close();
+        }
+        if (httpsServer != null) {
+            httpsServer.close();
+        }
+    }
+
+    private void createSecureServer(VertxRequestHandler requestHandler) {
         if (new File(certDir).exists()) {
+            HttpServerOptions options = new HttpServerOptions();
             File keyFile = new File(certDir, "tls.key");
             File certFile = new File(certDir, "tls.crt");
             log.info("Loading key from " + keyFile.getAbsolutePath() + ", cert from " + certFile.getAbsolutePath());
@@ -85,10 +106,17 @@ public class HTTPServer extends AbstractVerticle {
                     .setKeyPath(keyFile.getAbsolutePath())
                     .setCertPath(certFile.getAbsolutePath()));
             options.setSsl(true);
-        }
 
-        vertx.createHttpServer(options)
-                .requestHandler(new VertxRequestHandler(vertx, deployment))
+            httpsServer = vertx.createHttpServer(options)
+                    .requestHandler(requestHandler)
+                    .listen(SECURE_PORT, ar -> log.info("Started HTTPS server. Listening on port " + SECURE_PORT));
+        }
+    }
+
+
+    private void createOpenServer(VertxRequestHandler requestHandler) {
+        httpServer = vertx.createHttpServer()
+                .requestHandler(requestHandler)
                 .listen(PORT, ar -> log.info("Started HTTP server. Listening on port " + PORT));
     }
 }
