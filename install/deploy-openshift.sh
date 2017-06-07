@@ -77,10 +77,11 @@ while getopts dgk:m:n:p:s:t:u:yvh opt; do
             echo "optional arguments:"
             echo "  -h             show this help message"
             echo "  -d             create an all-in-one docker OpenShift on localhost"
+            echo "  -k KEY         Address controller private key (default: self-signed)"
             echo "  -n NAMESPACE   OpenShift project name to install EnMasse into (default: $DEFAULT_NAMESPACE)"
             echo "  -m MASTER      OpenShift master URI to login against (default: https://localhost:8443)"
             echo "  -p PARAMS      Custom template parameters to pass to EnMasse template ('cat $SCRIPTDIR/openshift/enmasse.yaml' to get a list of available parameters)"
-            echo "  -s SECRET      Address controller secret (default: enmasse-controller-certs)"
+            echo "  -s CERT        Address controller certificate (default: self-signed)"
             echo "  -t TEMPLATE    An alternative OpenShift template file to deploy EnMasse"
             echo "  -u USER        OpenShift user to run commands as (default: $DEFAULT_USER)"
             echo
@@ -94,6 +95,7 @@ while getopts dgk:m:n:p:s:t:u:yvh opt; do
 done
 
 source $SCRIPTDIR/common.sh
+TEMPDIR=`tempdir`
 
 if [ -z "$OS_USER" ]
 then
@@ -154,11 +156,11 @@ then
 fi
 
 if [ -z "$SERVER_KEY" ] || [ -z "$SERVER_CERT" ]; then
-    SERVER_KEY=enmasse-controller.key
-    SERVER_CERT=enmasse-controller.crt
-    runcmd "oc adm ca create-signer-cert --key=ca.key --cert=ca.crt --serial=ca.serial.txt --name=enmasse-signer@\$(date +%s)" "Create signer CA"
-    runcmd "oc adm ca create-server-cert --key=enmasse-controller-pkcs1.key --cert=${SERVER_CERT} --hostnames=address-controller.${NAMESPACE}.svc.cluster.local --signer-cert=ca.crt --signer-key=ca.key --signer-serial=ca.serial.txt" "Create signed server certificate for address-controller"
-    runcmd "openssl pkcs8 -topk8 -inform PEM -outform PEM -nocrypt -in enmasse-controller-pkcs1.key -out ${SERVER_KEY}" "Convert key to correct PKCS#8 format"
+    SERVER_KEY=${TEMPDIR}/enmasse-controller.key
+    SERVER_CERT=${TEMPDIR}/enmasse-controller.crt
+    runcmd "oc adm ca create-signer-cert --key=${TEMPDIR}/ca.key --cert=${TEMPDIR}/ca.crt --serial=${TEMPDIR}/ca.serial.txt --name=enmasse-signer@\$(date +%s)" "Create signer CA"
+    runcmd "oc adm ca create-server-cert --key=${TEMPDIR}/enmasse-controller-pkcs1.key --cert=${SERVER_CERT} --hostnames=address-controller.${NAMESPACE}.svc.cluster.local --signer-cert=${TEMPDIR}/ca.crt --signer-key=${TEMPDIR}/ca.key --signer-serial=${TEMPDIR}/ca.serial.txt" "Create signed server certificate for address-controller"
+    runcmd "openssl pkcs8 -topk8 -inform PEM -outform PEM -nocrypt -in ${TEMPDIR}/enmasse-controller-pkcs1.key -out ${SERVER_KEY}" "Convert key to correct PKCS#8 format"
 fi
 
 runcmd "oc secret new enmasse-controller-certs tls.crt=${SERVER_CERT} tls.key=${SERVER_KEY}" "Create secret for controller certificate"

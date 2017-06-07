@@ -81,6 +81,7 @@ while getopts dgk:lm:n:s:t:vh opt; do
 done
 
 source $SCRIPTDIR/common.sh
+TEMPDIR=`tempdir`
 
 if [ -z "$NAMESPACE" ]
 then
@@ -107,8 +108,8 @@ fi
 runcmd "kubectl create sa enmasse-service-account -n $NAMESPACE" "Create service account for address controller"
 
 if [ -z "$SERVER_KEY" ] || [ -z "$SERVER_CERT" ]; then
-    SERVER_KEY=enmasse-controller.key
-    SERVER_CERT=enmasse-controller.crt
+    SERVER_KEY=${TEMPDIR}/enmasse-controller.key
+    SERVER_CERT=${TEMPDIR}/enmasse-controller.crt
     runcmd "openssl req -new -x509 -batch -nodes -out ${SERVER_CERT} -keyout ${SERVER_KEY}" "Create self-signed certificate"
 fi
 
