@@ -8,10 +8,7 @@ import io.fabric8.kubernetes.api.model.Namespace;
 import io.fabric8.kubernetes.api.model.extensions.Deployment;
 import io.fabric8.openshift.client.ParameterValue;
 
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Interface for Kubernetes operations done by the address controller
@@ -62,11 +59,12 @@ public interface Kubernetes {
     KubernetesList processTemplate(String templateName, ParameterValue ... parameterValues);
 
     Namespace createNamespace(InstanceId instance);
+
+    Optional<String> getRouteHost(String name);
+
     void deleteNamespace(String namespace);
 
     void addDefaultViewPolicy(InstanceId instance);
-
-    List<Route> getRoutes(InstanceId instanceId);
 
     boolean hasService(String service);
     void createInstanceSecret(String secretName, InstanceId instanceId);

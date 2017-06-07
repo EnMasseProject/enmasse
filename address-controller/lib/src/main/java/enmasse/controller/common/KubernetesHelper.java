@@ -188,33 +188,17 @@ public class KubernetesHelper implements Kubernetes {
     }
 
     @Override
-    public List<Route> getRoutes(InstanceId instanceId) {
+    public Optional<String> getRouteHost(String name) {
         if (client.isAdaptable(OpenShiftClient.class)) {
-            return client.routes().inNamespace(instanceId.getNamespace()).list().getItems().stream()
-                    .map(r -> new Route() {
-                        @Override
-                        public String getName() {
-                            return r.getMetadata().getName();
-                        }
-
-                        @Override
-                        public String getHostName() {
-                            return r.getSpec().getHost();
-                        }
-                    }).collect(Collectors.toList());
+            return client.routes().inNamespace(instance.getNamespace()).list().getItems().stream()
+                    .filter(r -> name.equals(r.getMetadata().getName()))
+                    .map(r -> r.getSpec().getHost())
+                    .findAny();
         } else {
-            return client.extensions().ingresses().inNamespace(instanceId.getNamespace()).list().getItems().stream()
-                    .map(i -> new Route() {
-                        @Override
-                        public String getName() {
-                            return i.getMetadata().getName();
-                        }
-
-                        @Override
-                        public String getHostName() {
-                            return i.getSpec().getRules().get(0).getHost();
-                        }
-                    }).collect(Collectors.toList());
+            return client.extensions().ingresses().inNamespace(instance.getNamespace()).list().getItems().stream()
+                    .filter(i -> name.equals(i.getMetadata().getName()))
+                    .map(i -> i.getSpec().getRules().get(0).getHost())
+                    .findAny();
         }
     }
 

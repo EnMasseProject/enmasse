@@ -54,11 +54,17 @@ public class InstanceManagerImpl implements InstanceManager {
         instance.consoleHost().ifPresent(h -> parameterValues.add(new ParameterValue(TemplateParameter.CONSOLE_HOSTNAME, h)));
         parameterValues.add(new ParameterValue(TemplateParameter.ROUTER_SECRET, instance.certSecret()));
         parameterValues.add(new ParameterValue(TemplateParameter.MQTT_SECRET, instance.certSecret()));
+        Optional<String> apiServerHost = getApiServer();
+        apiServerHost.ifPresent(host -> parameterValues.add(new ParameterValue(TemplateParameter.API_SERVER_HOSTNAME, host)));
 
         KubernetesList items = kubernetes.processTemplate(instanceTemplateName, parameterValues.toArray(new ParameterValue[0]));
 
         instance.uuid().ifPresent(uuid -> Kubernetes.addObjectLabel(items, LabelKeys.UUID, uuid));
         return items;
+    }
+
+    private Optional<String> getApiServer() {
+        return kubernetes.getRouteHost("restapi");
     }
 
     @Override
