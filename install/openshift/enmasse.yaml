@@ -1104,10 +1104,7 @@ objects:
               memory: 256Mi
             requests:
               memory: 256Mi
-          volumeMounts:
-          - mountPath: "/ssl-certs"
-            name: ssl-certs
-            readOnly: true
+          volumeMounts: []
         serviceAccount: enmasse-service-account
         volumes:
         - name: ssl-certs

@@ -71,8 +71,8 @@ local common = import "common.jsonnet";
           }],
 
           local mounts = if template_config != ""
-            then template_mount + ssl_certs
-            else ssl_certs,
+            then template_mount
+            else [],
 
           "spec": {
             "serviceAccount": "enmasse-service-account",
