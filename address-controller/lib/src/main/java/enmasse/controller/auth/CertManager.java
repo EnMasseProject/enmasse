@@ -1,4 +1,4 @@
-package enmasse.controller.instance.cert;
+package enmasse.controller.auth;
 
 import enmasse.controller.model.Instance;
 
@@ -8,5 +8,5 @@ import java.io.IOException;
  * Interface for certificate managers
  */
 public interface CertManager {
-    void updateCerts(Instance instance) throws Exception;
+    void issueCert(String secretName, String namespace, String... hostnames) throws Exception;
 }

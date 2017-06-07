@@ -4,7 +4,6 @@ import enmasse.config.AnnotationKeys;
 import enmasse.controller.common.Watch;
 import enmasse.controller.common.Watcher;
 import enmasse.controller.instance.api.InstanceApi;
-import enmasse.controller.instance.cert.CertManager;
 import enmasse.controller.model.Instance;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.openshift.client.OpenShiftClient;
@@ -30,16 +29,14 @@ public class InstanceController extends AbstractVerticle implements Watcher<Inst
     private static final Logger log = LoggerFactory.getLogger(InstanceController.class.getName());
     private final OpenShiftClient client;
 
-    private final CertManager certManager;
     private final InstanceManager instanceManager;
     private final InstanceApi instanceApi;
     private Watch watch;
 
-    public InstanceController(InstanceManager instanceManager, OpenShiftClient client, InstanceApi instanceApi, CertManager certManager) {
+    public InstanceController(InstanceManager instanceManager, OpenShiftClient client, InstanceApi instanceApi) {
         this.instanceManager = instanceManager;
         this.client = client;
         this.instanceApi = instanceApi;
-        this.certManager = certManager;
     }
 
     @Override
@@ -87,7 +84,6 @@ public class InstanceController extends AbstractVerticle implements Watcher<Inst
         retainInstances(instances);
 
         for (Instance instance : instanceApi.listInstances()) {
-            certManager.updateCerts(instance);
             Instance.Builder mutableInstance = new Instance.Builder(instance);
             updateReadiness(mutableInstance);
             updateRoutes(mutableInstance);

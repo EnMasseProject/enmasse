@@ -1,4 +1,4 @@
-package enmasse.controller.instance.cert;
+package enmasse.controller.auth;
 
 import enmasse.controller.model.Instance;
 import io.fabric8.kubernetes.api.model.Secret;
@@ -25,8 +25,8 @@ public class SelfSignedCertManager implements CertManager {
     }
 
     @Override
-    public void updateCerts(Instance instance) throws Exception {
-        Secret secret = client.secrets().inNamespace(instance.id().getNamespace()).withName(instance.certSecret()).get();
+    public void issueCert(String secretName, String namespace, String ... hostnames) throws Exception {
+        Secret secret = client.secrets().inNamespace(namespace).withName(secretName).get();
         if (secret != null) { // && instance.messagingHost().isPresent() && instance.mqttHost().isPresent() && instance.consoleHost().isPresent()) {
             // TODO: Have this sign certificates with OpenShift CA
 
@@ -36,7 +36,7 @@ public class SelfSignedCertManager implements CertManager {
                 return;
             }
 
-            log.info("Creating self-signed certificates for " + instance);
+            log.info("Creating self-signed certificates for " + hostnames);
             File keyFile = new File("/tmp/server-key.pem");
             File certFile = new File("/tmp/server-cert.pem");
             ProcessBuilder keyGenBuilder = new ProcessBuilder("openssl", "req", "-new", "-x509", "-batch", "-nodes",
@@ -51,7 +51,7 @@ public class SelfSignedCertManager implements CertManager {
             Base64.Encoder encoder = Base64.getEncoder();
             data.put(keyKey, encoder.encodeToString(FileUtils.readFileToByteArray(keyFile)));
             data.put(certKey, encoder.encodeToString(FileUtils.readFileToByteArray(certFile)));
-            client.secrets().inNamespace(instance.id().getNamespace()).withName(instance.certSecret()).edit()
+            client.secrets().inNamespace(namespace).withName(secretName).edit()
                     .addToData(data)
                     .done();
         }

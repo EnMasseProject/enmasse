@@ -17,6 +17,7 @@
 package enmasse.controller;
 
 import enmasse.controller.address.AddressController;
+import enmasse.controller.auth.AuthController;
 import enmasse.controller.common.Kubernetes;
 import enmasse.controller.common.KubernetesHelper;
 import enmasse.controller.flavor.FlavorController;
@@ -26,8 +27,8 @@ import enmasse.controller.instance.InstanceManager;
 import enmasse.controller.instance.InstanceManagerImpl;
 import enmasse.controller.instance.api.InstanceApi;
 import enmasse.controller.instance.api.ConfigMapInstanceApi;
-import enmasse.controller.instance.cert.CertManager;
-import enmasse.controller.instance.cert.SelfSignedCertManager;
+import enmasse.controller.auth.CertManager;
+import enmasse.controller.auth.SelfSignedCertManager;
 import enmasse.controller.model.Instance;
 import enmasse.controller.model.InstanceId;
 import io.fabric8.kubernetes.client.ConfigBuilder;
@@ -73,7 +74,8 @@ public class Controller extends AbstractVerticle {
         InstanceManager instanceManager = new InstanceManagerImpl(kubernetes, templateName, options.isMultiinstance());
 
         deployVerticles(startPromise, new Deployment(new AddressController(instanceApi, kubernetes, controllerClient, flavorManager)),
-                new Deployment(new InstanceController(instanceManager, controllerClient, instanceApi, certManager)),
+                new Deployment(new AuthController(certManager, instanceApi)),
+                new Deployment(new InstanceController(instanceManager, controllerClient, instanceApi)),
                 new Deployment(new FlavorController(controllerClient, flavorManager)),
                 new Deployment(new AMQPServer(kubernetes.getInstanceId(), instanceApi, flavorManager, options.port())),
                 new Deployment(new HTTPServer(kubernetes.getInstanceId(), instanceApi, flavorManager, options.certDir()), new DeploymentOptions().setWorker(true)));
