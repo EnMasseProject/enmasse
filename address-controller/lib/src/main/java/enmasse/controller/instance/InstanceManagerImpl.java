@@ -87,19 +87,19 @@ public class InstanceManagerImpl implements InstanceManager {
     @Override
     public void retainInstances(Set<InstanceId> desiredInstances) {
         if (isMultitenant) {
-            try {
-                Map<String, String> labels = new LinkedHashMap<>();
-                labels.put(LabelKeys.APP, "enmasse");
-                labels.put(LabelKeys.TYPE, "instance");
-                for (Namespace namespace : kubernetes.listNamespaces(labels)) {
-                    String id = namespace.getMetadata().getAnnotations().get(AnnotationKeys.INSTANCE);
-                    InstanceId instanceId = InstanceId.withIdAndNamespace(id, namespace.getMetadata().getName());
-                    if (!desiredInstances.contains(instanceId)) {
+            Map<String, String> labels = new LinkedHashMap<>();
+            labels.put(LabelKeys.APP, "enmasse");
+            labels.put(LabelKeys.TYPE, "instance");
+            for (Namespace namespace : kubernetes.listNamespaces(labels)) {
+                String id = namespace.getMetadata().getAnnotations().get(AnnotationKeys.INSTANCE);
+                InstanceId instanceId = InstanceId.withIdAndNamespace(id, namespace.getMetadata().getName());
+                if (!desiredInstances.contains(instanceId)) {
+                    try {
                         delete(instanceId);
+                    } catch(KubernetesClientException e){
+                        log.info("Exception when deleting namespace (may already be in progress): " + e.getMessage());
                     }
                 }
-            } catch(KubernetesClientException e){
-                log.info("Exception when deleting namespace (may already be in progress): " + e.getMessage());
             }
         }
     }
