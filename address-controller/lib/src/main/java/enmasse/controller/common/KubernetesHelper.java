@@ -194,7 +194,7 @@ public class KubernetesHelper implements Kubernetes {
 
     @Override
     public boolean hasService(String service) {
-        return client.services().withName(service).get() != null;
+        return client.services().inNamespace(instance.getNamespace()).withName(service).get() != null;
     }
 
     @Override
