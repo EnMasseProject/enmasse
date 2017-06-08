@@ -72,7 +72,7 @@ public class HTTPServer extends AbstractVerticle {
         AddressApiHelper addressApi = new AddressApiHelper(instanceApi);
         deployment.getRegistry().addSingletonResource(new AddressingService(globalInstance, addressApi));
         deployment.getRegistry().addSingletonResource(new InstanceService(instanceApi));
-        deployment.getRegistry().addSingletonResource(new MultiInstanceAddressingService(addressApi));
+        deployment.getRegistry().addSingletonResource(new MultiInstanceAddressingService(addressApi, instanceApi));
         deployment.getRegistry().addSingletonResource(new FlavorsService(flavorRepository));
 
         deployment.getRegistry().addSingletonResource(new OSBCatalogService(instanceApi, flavorRepository));
