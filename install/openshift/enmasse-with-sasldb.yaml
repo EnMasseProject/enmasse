@@ -1171,10 +1171,9 @@ objects:
     name: restapi
   spec:
     host: "${RESTAPI_HOSTNAME}"
+    path: "/v3"
     port:
-      targetPort: https
-    tls:
-      termination: passthrough
+      targetPort: http
     to:
       kind: Service
       name: address-controller

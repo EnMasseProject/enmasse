@@ -11,15 +11,13 @@
     },
     "spec": {
         "host": hostname,
+        "path": "/v3",
         "to": {
             "kind": "Service",
             "name": "address-controller"
         },
         "port": {
-            "targetPort": "https"
-        },
-        "tls": {
-          "termination": "passthrough"
+            "targetPort": "http"
         }
     }
   },
@@ -35,12 +33,6 @@
         "name": "restapi"
     },
     "spec": {
-      "tls": {
-        "hosts": [
-          hostname
-        ],
-        "secretName": ""
-      },
       "rules": [
         {
           "host": hostname,
