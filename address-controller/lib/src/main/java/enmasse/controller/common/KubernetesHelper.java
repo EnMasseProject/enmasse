@@ -122,8 +122,8 @@ public class KubernetesHelper implements Kubernetes {
                 .editOrNewMetadata()
                     .withName(instance.getNamespace())
                     .addToLabels("app", "enmasse")
-                    .addToLabels("instance", instance.getId())
-                    .addToLabels("type", "instance")
+                    .addToLabels(LabelKeys.TYPE, "instance")
+                    .addToAnnotations(AnnotationKeys.INSTANCE, instance.getId())
                 .endMetadata()
                 .done();
     }
