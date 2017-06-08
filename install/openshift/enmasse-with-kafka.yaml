@@ -917,6 +917,10 @@ objects:
               value: localhost
             - name: CONFIGURATION_SERVICE_PORT
               value: '5672'
+            - name: API_SERVER_HOSTNAME
+              value: "${API_SERVER_HOSTNAME}"
+            - name: INSTANCE
+              value: "${INSTANCE}"
             image: "${CONSOLE_REPO}"
             livenessProbe:
               httpGet:
