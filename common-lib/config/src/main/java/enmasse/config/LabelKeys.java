@@ -25,4 +25,5 @@ public interface LabelKeys {
     String UUID = "uuid";
     String ADDRESS = "address";
     String APP = "app";
+    String CAPABILITY = "capability";
 }

@@ -176,14 +176,27 @@ public final class Destination {
         public Destination build() {
             return new Destination(address, group, storeAndForward, multicast, flavor, uuid, status);
         }
+
+        public String group() {
+            return group;
+        }
+
+        public boolean storeAndForward() {
+            return storeAndForward;
+        }
+
+        public boolean multicast() {
+            return multicast;
+        }
+
+        public String address() {
+            return address;
+        }
     }
 
     public static class Status {
         private final boolean isReady;
-
-        public Status(boolean isReady) {
-            this.isReady = isReady;
-        }
+        private final Optional<String> message;
 
         @Override
         public boolean equals(Object o) {
@@ -192,16 +205,32 @@ public final class Destination {
 
             Status status = (Status) o;
 
-            return isReady == status.isReady;
+            if (isReady != status.isReady) return false;
+            return message.equals(status.message);
         }
 
         @Override
         public int hashCode() {
-            return (isReady ? 1 : 0);
+            int result = (isReady ? 1 : 0);
+            result = 31 * result + message.hashCode();
+            return result;
+        }
+
+        public Status(boolean isReady) {
+            this(isReady, null);
+        }
+
+        public Status(boolean isReady, String message) {
+            this.isReady = isReady;
+            this.message = Optional.ofNullable(message);
         }
 
         public boolean isReady() {
             return isReady;
+        }
+
+        public Optional<String> getMessage() {
+            return message;
         }
     }
 }

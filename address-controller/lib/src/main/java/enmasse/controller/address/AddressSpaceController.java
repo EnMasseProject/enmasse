@@ -1,15 +1,22 @@
 package enmasse.controller.address;
 
+import enmasse.amqp.SyncRequestClient;
 import enmasse.controller.address.api.DestinationApi;
 import enmasse.controller.common.*;
 import enmasse.controller.model.Destination;
+import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.openshift.client.OpenShiftClient;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
+import org.apache.qpid.proton.Proton;
+import org.apache.qpid.proton.amqp.messaging.AmqpValue;
+import org.apache.qpid.proton.amqp.messaging.ApplicationProperties;
+import org.apache.qpid.proton.message.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -67,7 +74,7 @@ public class AddressSpaceController extends AbstractVerticle implements Watcher<
     }
 
     @Override
-    public synchronized void resourcesUpdated(Set<Destination> newDestinations) {
+    public synchronized void resourcesUpdated(Set<Destination> newDestinations) throws Exception {
         log.debug("Check destinations in address space controller: " + newDestinations);
 
         Map<String, Set<Destination>> destinationByGroup = newDestinations.stream().collect(Collectors.groupingBy(Destination::group, Collectors.toSet()));
@@ -78,9 +85,15 @@ public class AddressSpaceController extends AbstractVerticle implements Watcher<
         createBrokers(clusterList, destinationByGroup);
         deleteBrokers(clusterList, destinationByGroup);
 
-        for (Destination destination : newDestinations) {
-            checkStatus(destination);
-        }
+
+        List<Destination.Builder> mutableDestinations = newDestinations.stream()
+                .map(Destination.Builder::new)
+                .map(b -> b.status(new Destination.Status(true)))
+                .collect(Collectors.toList());
+        checkStatuses(mutableDestinations);
+        mutableDestinations.stream()
+                .map(Destination.Builder::build)
+                .forEach(destinationApi::replaceDestination);
     }
 
     /*
@@ -136,11 +149,64 @@ public class AddressSpaceController extends AbstractVerticle implements Watcher<
                 });
     }
 
-    private void checkStatus(Destination destination) {
-        // TODO: Check non-store-and-forward clusters as well
-        boolean isReady = !destination.storeAndForward() || kubernetes.isDestinationClusterReady(destination.group());
-        Destination.Builder updated = new Destination.Builder(destination);
-        updated.status(new Destination.Status(isReady));
-        destinationApi.replaceDestination(updated.build());
+    private void checkStatuses(List<Destination.Builder> destinations) throws Exception {
+        for (Pod router : kubernetes.listRouters()) {
+            if (router.getStatus().getPodIP() != null && !"".equals(router.getStatus().getPodIP())) {
+                checkRouterStatus(router, destinations);
+            }
+        }
+
+        for (Destination.Builder destination : destinations) {
+            checkClusterStatus(destination);
+        }
+    }
+
+    private void checkClusterStatus(Destination.Builder destination) {
+        if (destination.storeAndForward() && !kubernetes.isDestinationClusterReady(destination.group())) {
+            destination.status(new Destination.Status(false, "Cluster is unavailable"));
+        }
+    }
+
+
+    private void checkRouterStatus(Pod router, List<Destination.Builder> destinations) throws Exception {
+        SyncRequestClient client = new SyncRequestClient(router.getStatus().getPodIP(), 5672, vertx);
+        Map<String, String> properties = new LinkedHashMap<>();
+        properties.put("operation", "QUERY");
+        properties.put("entityType", "org.apache.qpid.dispatch.router.config.address");
+        Map body = new LinkedHashMap<>();
+        body.put("attributeNames", Arrays.asList("prefix"));
+
+        Message message = Proton.message();
+        message.setAddress("$management");
+        message.setApplicationProperties(new ApplicationProperties(properties));
+        message.setBody(new AmqpValue(body));
+
+        try {
+            Message response = client.request(message, 10, TimeUnit.SECONDS);
+            AmqpValue value = (AmqpValue) response.getBody();
+            Map values = (Map) value.getValue();
+            List<List<String>> results = (List<List<String>>) values.get("results");
+            for (Destination.Builder destination : destinations) {
+                if (!(destination.storeAndForward() && destination.multicast())) {
+                    boolean found = findAttribute(destination.address(), results);
+                    if (!found) {
+                        destination.status(new Destination.Status(false, "Address " + destination.address() + " not found on " + router.getMetadata().getName()));
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.info("Error requesting router status. Ignoring", e);
+        }
+    }
+
+    private boolean findAttribute(String needle, List<List<String>> results) {
+        for (List<String> result : results) {
+            for (String r : result) {
+                if (r.equals(needle)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 }

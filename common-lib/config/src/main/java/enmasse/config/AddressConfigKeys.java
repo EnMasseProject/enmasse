@@ -8,4 +8,5 @@ public interface AddressConfigKeys {
     String MULTICAST = "multicast";
     String FLAVOR = "flavor";
     String READY = "ready";
+    String READY_MESSAGE = "ready_message";
 }

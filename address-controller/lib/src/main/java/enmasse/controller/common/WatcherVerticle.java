@@ -43,6 +43,7 @@ public class WatcherVerticle<T> extends AbstractVerticle implements io.fabric8.k
             if (result.succeeded()) {
                 watch = result.result();
             } else {
+                result.cause().printStackTrace();
                 log.error("Error starting watch", result.cause());
             }
         });
@@ -78,16 +79,24 @@ public class WatcherVerticle<T> extends AbstractVerticle implements io.fabric8.k
             return;
         }
 
-        try {
-            switch (action) {
-                case MODIFIED:
-                case ADDED:
-                case DELETED:
-                    changeHandler.resourcesUpdated(resource.listResources());
-                    break;
-            }
-        } catch (Exception e) {
-            log.error("Error handling event", e);
+        switch (action) {
+            case MODIFIED:
+            case ADDED:
+            case DELETED:
+                vertx.executeBlocking(promise -> {
+                    try {
+                        changeHandler.resourcesUpdated(resource.listResources());
+                        promise.complete();
+                    } catch (Exception e) {
+                        promise.fail(e);
+                    }
+
+                }, result -> {
+                    if (result.failed()) {
+                        log.error("Error handling event", result.cause());
+                    }
+                });
+                break;
         }
     }
 

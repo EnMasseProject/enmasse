@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import enmasse.controller.common.Resource;
 import enmasse.controller.model.Destination;
 
 import java.io.IOException;
@@ -48,7 +49,8 @@ public class Address {
                 .flavor(Optional.ofNullable(spec.get(ResourceKeys.FLAVOR)).map(JsonNode::asText))
                 .uuid(Optional.ofNullable(metadata.get(ResourceKeys.UUID)).map(JsonNode::asText));
             if (status != null) {
-                builder.status(new Destination.Status(Optional.ofNullable(status.get(ResourceKeys.READY).asBoolean()).orElse(false)));
+                builder.status(new Destination.Status(Optional.ofNullable(status.get(ResourceKeys.READY).asBoolean()).orElse(false),
+                        Optional.ofNullable(status.get(ResourceKeys.MESSAGE)).map(JsonNode::asText).orElse(null)));
             }
             return new Address(builder.build());
         }
@@ -75,6 +77,7 @@ public class Address {
 
             ObjectNode status = node.putObject(ResourceKeys.STATUS);
             status.put(ResourceKeys.READY, destination.status().isReady());
+            destination.status().getMessage().ifPresent(m -> status.put(ResourceKeys.MESSAGE, m));
 
             mapper.writeValue(gen, node);
         }

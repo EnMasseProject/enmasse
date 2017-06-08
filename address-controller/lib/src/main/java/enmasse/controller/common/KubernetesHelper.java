@@ -231,6 +231,11 @@ public class KubernetesHelper implements Kubernetes {
         return client.namespaces().withLabels(labels).list().getItems();
     }
 
+    @Override
+    public List<Pod> listRouters() {
+        return client.pods().withLabel(LabelKeys.CAPABILITY, "router").list().getItems();
+    }
+
     public static boolean isDeployment(HasMetadata res) {
         return res.getKind().equals("Deployment");  // TODO: is there an existing constant for this somewhere?
     }

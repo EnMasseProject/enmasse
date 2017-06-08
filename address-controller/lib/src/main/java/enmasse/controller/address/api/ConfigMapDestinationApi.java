@@ -63,7 +63,7 @@ public class ConfigMapDestinationApi implements DestinationApi {
         destBuilder.multicast(Boolean.parseBoolean(data.get(AddressConfigKeys.MULTICAST)));
         destBuilder.flavor(Optional.ofNullable(data.get(AddressConfigKeys.FLAVOR)));
         destBuilder.uuid(Optional.ofNullable(data.get(AddressConfigKeys.UUID)));
-        destBuilder.status(new Destination.Status(Boolean.parseBoolean(data.get(AddressConfigKeys.READY))));
+        destBuilder.status(new Destination.Status(Boolean.parseBoolean(data.get(AddressConfigKeys.READY)), data.get(AddressConfigKeys.READY_MESSAGE)));
         return destBuilder.build();
     }
 
@@ -109,6 +109,7 @@ public class ConfigMapDestinationApi implements DestinationApi {
         builder.addToData(AddressConfigKeys.STORE_AND_FORWARD, String.valueOf(destination.storeAndForward()));
         builder.addToData(AddressConfigKeys.MULTICAST, String.valueOf(destination.multicast()));
         builder.addToData(AddressConfigKeys.READY, String.valueOf(destination.status().isReady()));
+        destination.status().getMessage().ifPresent(m -> builder.addToData(AddressConfigKeys.READY_MESSAGE, m));
         destination.flavor().ifPresent(f -> builder.addToData(AddressConfigKeys.FLAVOR, f));
         destination.uuid().ifPresent(f -> builder.addToData(AddressConfigKeys.UUID, f));
         builder.done();
