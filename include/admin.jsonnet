@@ -85,7 +85,16 @@ local common = import "common.jsonnet";
                       {
                         "name": "CONFIGURATION_SERVICE_PORT",
                         "value": "5672"
-                      }]),
+                      },
+                      {
+                        "name": "API_SERVER_HOSTNAME",
+                        "value": "${API_SERVER_HOSTNAME}"
+                      },
+                      {
+                        "name": "INSTANCE",
+                        "value": instance
+                      }
+                      ]),
             common.container("configserv", configserv_image, "amqp", 5672, "256Mi", []),
           ],
           [if use_sasldb then "volumes" ]: [router.sasldb_volume()]

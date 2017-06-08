@@ -932,6 +932,10 @@ objects:
               value: localhost
             - name: CONFIGURATION_SERVICE_PORT
               value: '5672'
+            - name: API_SERVER_HOSTNAME
+              value: "${API_SERVER_HOSTNAME}"
+            - name: INSTANCE
+              value: "${INSTANCE}"
             - name: SASLDB
               value: "/var/lib/qdrouterd/qdrouterd.sasldb"
             image: "${CONSOLE_REPO}"
