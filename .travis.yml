@@ -9,6 +9,9 @@ notifications:
     use_notice: true
     skip_join: true
 sudo: required
+cache:
+  directories:
+    - $HOME/.m2
 services:
 - docker
 rvm:
