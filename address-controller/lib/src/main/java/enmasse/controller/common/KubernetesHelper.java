@@ -188,21 +188,6 @@ public class KubernetesHelper implements Kubernetes {
     }
 
     @Override
-    public Optional<String> getRouteHost(String name) {
-        if (client.isAdaptable(OpenShiftClient.class)) {
-            return client.routes().inNamespace(instance.getNamespace()).list().getItems().stream()
-                    .filter(r -> name.equals(r.getMetadata().getName()))
-                    .map(r -> r.getSpec().getHost())
-                    .findAny();
-        } else {
-            return client.extensions().ingresses().inNamespace(instance.getNamespace()).list().getItems().stream()
-                    .filter(i -> name.equals(i.getMetadata().getName()))
-                    .map(i -> i.getSpec().getRules().get(0).getHost())
-                    .findAny();
-        }
-    }
-
-    @Override
     public void deleteNamespace(String namespace) {
         client.namespaces().withName(namespace).delete();
     }

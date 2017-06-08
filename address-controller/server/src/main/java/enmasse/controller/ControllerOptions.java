@@ -106,11 +106,11 @@ public final class ControllerOptions {
 
     private static final String SERVICEACCOUNT_PATH = "/var/run/secrets/kubernetes.io/serviceaccount";
 
-    public String namespace() throws IOException {
+    public String namespace() {
         return namespace;
     }
 
-    public String token() throws IOException {
+    public String token() {
         return token;
     }
 

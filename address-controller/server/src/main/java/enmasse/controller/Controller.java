@@ -71,7 +71,7 @@ public class Controller extends AbstractVerticle {
         CertManager certManager = SelfSignedCertManager.create(controllerClient);
 
         String templateName = "enmasse-instance-infra";
-        InstanceManager instanceManager = new InstanceManagerImpl(kubernetes, templateName, options.isMultiinstance());
+        InstanceManager instanceManager = new InstanceManagerImpl(kubernetes, templateName, options.isMultiinstance(), options.namespace());
 
         deployVerticles(startPromise, new Deployment(new AddressController(instanceApi, kubernetes, controllerClient, flavorManager)),
                 new Deployment(new AuthController(certManager, instanceApi)),

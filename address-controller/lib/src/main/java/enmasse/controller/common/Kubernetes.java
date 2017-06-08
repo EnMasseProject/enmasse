@@ -60,8 +60,6 @@ public interface Kubernetes {
 
     Namespace createNamespace(InstanceId instance);
 
-    Optional<String> getRouteHost(String name);
-
     void deleteNamespace(String namespace);
 
     void addDefaultViewPolicy(InstanceId instance);
