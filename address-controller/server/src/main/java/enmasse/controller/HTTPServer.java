@@ -39,6 +39,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.util.concurrent.TimeUnit;
 
 /**
  * HTTP server for deploying address config
@@ -100,16 +101,32 @@ public class HTTPServer extends AbstractVerticle {
         if (new File(certDir).exists()) {
             HttpServerOptions options = new HttpServerOptions();
             File keyFile = new File(certDir, "tls.key");
+            // TODO: Remove once Vert.x supports PKCS#1: https://github.com/eclipse/vert.x/issues/1851
+            // This also implies that _KEY ROTATION DOES NOT WORK_
+            File outputFile = new File(certDir, "/tmp/pkcs8.key");
+            convertKey(keyFile, outputFile);
+
             File certFile = new File(certDir, "tls.crt");
             log.info("Loading key from " + keyFile.getAbsolutePath() + ", cert from " + certFile.getAbsolutePath());
             options.setKeyCertOptions(new PemKeyCertOptions()
-                    .setKeyPath(keyFile.getAbsolutePath())
+                    .setKeyPath(outputFile.getAbsolutePath())
                     .setCertPath(certFile.getAbsolutePath()));
             options.setSsl(true);
 
             httpsServer = vertx.createHttpServer(options)
                     .requestHandler(requestHandler)
                     .listen(SECURE_PORT, ar -> log.info("Started HTTPS server. Listening on port " + SECURE_PORT));
+        }
+    }
+
+    private void convertKey(File keyFile, File outputFile) {
+        try {
+            Process p = new ProcessBuilder("openssl", "pkcs8", "-topk8", "-inform", "PEM",
+                    "-outform", "PEM", "-nocrypt", "-in", keyFile.getAbsolutePath(), "-out", outputFile.getAbsolutePath())
+                    .start();
+            p.waitFor(1, TimeUnit.MINUTES);
+        } catch (Exception e) {
+            log.info("Error converting key from PKCS#1 to PKCS#8");
         }
     }
 
