@@ -121,18 +121,21 @@ items:
       {"tcpSocket": {"port": "amqp"}}, "name": "configserv", "ports": [{"containerPort":
       5672, "name": "amqp", "protocol": "TCP"}], "resources": {"limits": {"memory":
       "256Mi"}, "requests": {"memory": "256Mi"}}}]}}}}, {"apiVersion": "v1", "kind":
-      "Service", "metadata": {"annotations": {"instance": "${INSTANCE}"}, "labels":
-      {"app": "enmasse"}, "name": "ragent"}, "spec": {"ports": [{"name": "amqp", "port":
-      5672, "targetPort": 55672}], "selector": {"name": "admin"}}}, {"apiVersion":
-      "v1", "kind": "Service", "metadata": {"annotations": {"instance": "${INSTANCE}"},
-      "labels": {"app": "enmasse"}, "name": "configuration"}, "spec": {"ports": [{"name":
-      "amqp", "port": 5672}], "selector": {"name": "admin"}}}, {"apiVersion": "v1",
-      "kind": "Service", "metadata": {"annotations": {"instance": "${INSTANCE}"},
+      "Service", "metadata": {"annotations": {"instance": "${INSTANCE}", "service.alpha.openshift.io/serving-cert-secret-name":
+      "ragent-certs"}, "labels": {"app": "enmasse"}, "name": "ragent"}, "spec": {"ports":
+      [{"name": "amqp", "port": 5672, "targetPort": 55672}], "selector": {"name":
+      "admin"}}}, {"apiVersion": "v1", "kind": "Service", "metadata": {"annotations":
+      {"instance": "${INSTANCE}", "service.alpha.openshift.io/serving-cert-secret-name":
+      "configuration-certs"}, "labels": {"app": "enmasse"}, "name": "configuration"},
+      "spec": {"ports": [{"name": "amqp", "port": 5672}], "selector": {"name": "admin"}}},
+      {"apiVersion": "v1", "kind": "Service", "metadata": {"annotations": {"instance":
+      "${INSTANCE}", "service.alpha.openshift.io/serving-cert-secret-name": "queue-scheduler-certs"},
       "labels": {"app": "enmasse"}, "name": "queue-scheduler"}, "spec": {"ports":
       [{"name": "amqp", "port": 5672, "targetPort": 55667}], "selector": {"name":
       "admin"}}}, {"apiVersion": "v1", "kind": "Service", "metadata": {"annotations":
-      {"instance": "${INSTANCE}"}, "labels": {"app": "enmasse"}, "name": "console"},
-      "spec": {"ports": [{"name": "amqp-ws", "port": 5672, "targetPort": 56720}, {"name":
+      {"instance": "${INSTANCE}", "service.alpha.openshift.io/serving-cert-secret-name":
+      "console-certs"}, "labels": {"app": "enmasse"}, "name": "console"}, "spec":
+      {"ports": [{"name": "amqp-ws", "port": 5672, "targetPort": 56720}, {"name":
       "http", "port": 8080}], "selector": {"name": "admin"}}}], "parameters": [{"description":
       "Hostname where API server can be reached", "name": "ADDRESS_SPACE_SERVICE_HOST",
       "value": ""}, {"description": "The image to use for the router", "name": "ROUTER_REPO",
@@ -391,6 +394,8 @@ items:
 - apiVersion: v1
   kind: Service
   metadata:
+    annotations:
+      service.alpha.openshift.io/serving-cert-secret-name: address-controller-certs
     labels:
       app: enmasse
     name: address-controller

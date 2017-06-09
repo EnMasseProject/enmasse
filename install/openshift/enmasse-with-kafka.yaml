@@ -959,6 +959,7 @@ objects:
     metadata:
       annotations:
         instance: "${INSTANCE}"
+        service.alpha.openshift.io/serving-cert-secret-name: ragent-certs
       labels:
         app: enmasse
       name: ragent
@@ -974,6 +975,7 @@ objects:
     metadata:
       annotations:
         instance: "${INSTANCE}"
+        service.alpha.openshift.io/serving-cert-secret-name: configuration-certs
       labels:
         app: enmasse
       name: configuration
@@ -988,6 +990,7 @@ objects:
     metadata:
       annotations:
         instance: "${INSTANCE}"
+        service.alpha.openshift.io/serving-cert-secret-name: queue-scheduler-certs
       labels:
         app: enmasse
       name: queue-scheduler
@@ -1003,6 +1006,7 @@ objects:
     metadata:
       annotations:
         instance: "${INSTANCE}"
+        service.alpha.openshift.io/serving-cert-secret-name: console-certs
       labels:
         app: enmasse
       name: console
@@ -1177,6 +1181,8 @@ objects:
 - apiVersion: v1
   kind: Service
   metadata:
+    annotations:
+      service.alpha.openshift.io/serving-cert-secret-name: address-controller-certs
     labels:
       app: enmasse
     name: address-controller

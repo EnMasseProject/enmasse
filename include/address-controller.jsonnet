@@ -1,6 +1,6 @@
 local common = import "common.jsonnet";
 {
-  common_service(name, type)::
+  common_service(name, type, annotations)::
   {
     "apiVersion": "v1",
     "kind": "Service",
@@ -8,7 +8,8 @@ local common = import "common.jsonnet";
       "name": name,
       "labels": {
         "app": "enmasse"
-      }
+      },
+      "annotations": annotations
     },
     "spec": {
       "ports": [
@@ -39,10 +40,10 @@ local common = import "common.jsonnet";
   },
   
   internal_service::
-    self.common_service("address-controller", "ClusterIP"),
+    self.common_service("address-controller", "ClusterIP", {"service.alpha.openshift.io/serving-cert-secret-name": "address-controller-certs"}),
 
   external_service::
-    self.common_service("address-controller-external", "LoadBalancer"),
+    self.common_service("address-controller-external", "LoadBalancer", {}),
 
   deployment(image_repo, multiinstance, secret_name, template_config, instance_idle_timeout)::
     {

@@ -4,6 +4,7 @@ items:
 - apiVersion: v1
   kind: Service
   metadata:
+    annotations: {}
     labels:
       app: enmasse
     name: address-controller-external
