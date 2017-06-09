@@ -132,31 +132,37 @@ public class HTTPServerTest {
 
         HttpClient client = vertx.createHttpClient();
         try {
-            CountDownLatch latch = new CountDownLatch(2);
-            client.getNow(8080, "localhost", "/v3/instance", response -> {
-                response.bodyHandler(buffer -> {
-                    JsonObject data = buffer.toJsonObject();
-                    assertTrue(data.containsKey("kind"));
-                    assertThat(data.getString("kind"), is("InstanceList"));
-                    assertTrue(data.containsKey("items"));
-                    JsonArray items = data.getJsonArray("items");
-                    assertThat(items.size(), is(1));
-                    assertThat(items.getJsonObject(0).getJsonObject("spec").getString("messagingHost"), is("messaging.example.com"));
-                    latch.countDown();
+            {
+                final CountDownLatch latch = new CountDownLatch(1);
+                client.getNow(8080, "localhost", "/v3/instance", response -> {
+                    response.bodyHandler(buffer -> {
+                        JsonObject data = buffer.toJsonObject();
+                        assertTrue(data.containsKey("kind"));
+                        assertThat(data.getString("kind"), is("InstanceList"));
+                        assertTrue(data.containsKey("items"));
+                        JsonArray items = data.getJsonArray("items");
+                        assertThat(items.size(), is(1));
+                        assertThat(items.getJsonObject(0).getJsonObject("spec").getString("messagingHost"), is("messaging.example.com"));
+                        latch.countDown();
+                    });
                 });
-            });
+                assertTrue(latch.await(1, TimeUnit.MINUTES));
+            }
 
-            client.getNow(8080, "localhost", "/v3/instance/myinstance", response -> {
-                response.bodyHandler(buffer -> {
-                    JsonObject data = buffer.toJsonObject();
-                    assertTrue(data.containsKey("metadata"));
-                    assertThat(data.getJsonObject("metadata").getString("name"), is("myinstance"));
-                    assertThat(data.getString("kind"), is("Instance"));
-                    assertThat(data.getJsonObject("spec").getString("messagingHost"), is("messaging.example.com"));
-                    latch.countDown();
+            {
+                final CountDownLatch latch = new CountDownLatch(1);
+                client.getNow(8080, "localhost", "/v3/instance/myinstance", response -> {
+                    response.bodyHandler(buffer -> {
+                        JsonObject data = buffer.toJsonObject();
+                        assertTrue(data.containsKey("metadata"));
+                        assertThat(data.getJsonObject("metadata").getString("name"), is("myinstance"));
+                        assertThat(data.getString("kind"), is("Instance"));
+                        assertThat(data.getJsonObject("spec").getString("messagingHost"), is("messaging.example.com"));
+                        latch.countDown();
+                    });
                 });
-            });
-            assertTrue(latch.await(1, TimeUnit.MINUTES));
+                assertTrue(latch.await(1, TimeUnit.MINUTES));
+            }
         } finally {
             client.close();
         }
