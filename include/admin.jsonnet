@@ -87,8 +87,8 @@ local common = import "common.jsonnet";
                         "value": "5672"
                       },
                       {
-                        "name": "API_SERVER_HOSTNAME",
-                        "value": "${API_SERVER_HOSTNAME}"
+                        "name": "ADDRESS_SPACE_SERVICE_HOST",
+                        "value": "${ADDRESS_SPACE_SERVICE_HOST}"
                       },
                       {
                         "name": "INSTANCE",

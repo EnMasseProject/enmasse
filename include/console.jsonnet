@@ -71,7 +71,7 @@ local common = import "common.jsonnet";
           },
           "spec": {
             "containers": [
-              self.container(use_sasldb, image_repo, [{"name":"API_SERVER_HOSTNAME","value":"${API_SERVER_HOSTNAME}"}])
+              self.container(use_sasldb, image_repo, [{"name":"ADDRESS_SPACE_SERVICE_HOST","value":"${ADDRESS_SPACE_SERVICE_HOST}"}])
             ],
             [if use_sasldb then "volumes" ]: [router.sasldb_volume()]
           }

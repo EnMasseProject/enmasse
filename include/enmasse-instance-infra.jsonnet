@@ -71,7 +71,7 @@ local version = std.extVar("VERSION");
 
     local commonParameters = [
       {
-        "name": "API_SERVER_HOSTNAME",
+        "name": "ADDRESS_SPACE_SERVICE_HOST",
         "description": "Hostname where API server can be reached",
         "value": ""
       },
