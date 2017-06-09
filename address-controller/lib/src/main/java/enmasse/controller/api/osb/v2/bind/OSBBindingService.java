@@ -38,6 +38,13 @@ public class OSBBindingService extends OSBServiceBase {
         Destination destination = findDestination(instance, instanceId)  // TODO: replace this and findInstanceByDestinationUuid so it returns both objects
                 .orElseThrow(() -> OSBExceptions.notFoundException("Service instance " + instanceId + " does not exist"));
 
+        if (bindRequest.getServiceId() == null) {
+            throw OSBExceptions.badRequestException("Missing service_id in request");
+        }
+        if (bindRequest.getPlanId() == null) {
+            throw OSBExceptions.badRequestException("Missing plan_id in request");
+        }
+
         Map<String, String> credentials = new HashMap<>();
         credentials.put("namespace", instance.id().getNamespace());
         instance.messagingHost().ifPresent(s -> credentials.put("messagingHost", s));
@@ -53,8 +60,7 @@ public class OSBBindingService extends OSBServiceBase {
 
     @DELETE
     public Response unbindServiceInstance(@PathParam("instanceId") String instanceId, @PathParam("bindingId") String bindingId) {
-        log.info("Received unbind request for instance {}, binding {}",
-                instanceId, bindingId);
+        log.info("Received unbind request for instance {}, binding {}", instanceId, bindingId);
         Instance instance = findInstanceByDestinationUuid(instanceId)
                 .orElseThrow(() -> OSBExceptions.notFoundException("Service instance " + instanceId + " does not exist"));
 

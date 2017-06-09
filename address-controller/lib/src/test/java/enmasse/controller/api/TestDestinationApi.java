@@ -40,6 +40,7 @@ public class TestDestinationApi implements DestinationApi {
 
     @Override
     public void replaceDestination(Destination destination) {
+        deleteDestination(destination); // necessary, because a simple set.add() doesn't replace the element
         createDestination(destination);
     }
 
@@ -78,5 +79,9 @@ public class TestDestinationApi implements DestinationApi {
             throw new RuntimeException("exception");
         }
         return new LinkedHashSet<>(destinations);
+    }
+
+    public void setAllDestinationsReady(boolean ready) {
+        destinations.stream().forEach(d -> replaceDestination(new Destination.Builder(d).status(new Destination.Status(ready)).build()));
     }
 }

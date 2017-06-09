@@ -122,6 +122,22 @@ public class Service {
         this.plans = plans;
     }
 
+    @Override
+    public String toString() {
+        return "Service{" +
+                "uuid=" + uuid +
+                ", name='" + name + '\'' +
+                ", description='" + description + '\'' +
+                ", tags=" + tags +
+                ", requires=" + requires +
+                ", bindable=" + bindable +
+                ", planUpdatable=" + planUpdatable +
+                ", metadata=" + metadata +
+                ", dashboardClient=" + dashboardClient +
+                ", plans=" + plans +
+                '}';
+    }
+
     protected static class Serializer extends JsonSerializer<Service> {
         @Override
         public void serialize(Service service, JsonGenerator gen, SerializerProvider serializers) throws IOException {

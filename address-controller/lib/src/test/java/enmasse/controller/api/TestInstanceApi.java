@@ -4,15 +4,19 @@ import enmasse.controller.address.api.DestinationApi;
 import enmasse.controller.common.Watch;
 import enmasse.controller.common.Watcher;
 import enmasse.controller.instance.api.InstanceApi;
+import enmasse.controller.model.Destination;
 import enmasse.controller.model.Instance;
 import enmasse.controller.model.InstanceId;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 
 import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class TestInstanceApi implements InstanceApi {
     Map<InstanceId, Instance> instances = new HashMap<>();
-    Map<InstanceId, DestinationApi> destinationApiMap = new LinkedHashMap<>();
+    Map<InstanceId, TestDestinationApi> destinationApiMap = new LinkedHashMap<>();
     public boolean throwException = false;
 
     @Override
@@ -67,6 +71,26 @@ public class TestInstanceApi implements InstanceApi {
         if (!destinationApiMap.containsKey(id)) {
             destinationApiMap.put(id, new TestDestinationApi());
         }
+        return getDestinationApi(id);
+    }
+
+    public TestDestinationApi getDestinationApi(InstanceId id) {
         return destinationApiMap.get(id);
+    }
+
+    public Set<Destination> getDestinations() {
+        return getDestinationApis().stream()
+                .flatMap(d -> d.listDestinations().stream())
+                .collect(Collectors.toSet());
+    }
+
+    public Collection<TestDestinationApi> getDestinationApis() {
+        return destinationApiMap.values();
+    }
+
+    public void setAllInstancesReady(boolean ready) {
+        instances.entrySet().stream().forEach(entry -> instances.put(
+                entry.getKey(),
+                new Instance.Builder(entry.getValue()).status(new Instance.Status(ready)).build()));
     }
 }

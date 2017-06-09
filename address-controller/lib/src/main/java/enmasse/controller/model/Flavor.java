@@ -131,6 +131,10 @@ public class Flavor {
             return this;
         }
 
+        public Builder uuid(String uuid) {
+            return uuid(Optional.ofNullable(uuid));
+        }
+
         public Flavor build() {
             return new Flavor(name, type, description, templateName, templateParameters, uuid);
         }

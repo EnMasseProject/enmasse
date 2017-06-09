@@ -27,15 +27,13 @@ public class ProvisionRequest {
     private UUID serviceId;
     private UUID planId;
     private Map<String, String> parameters = new HashMap<>();
-    private boolean acceptsIncomplete;
 
     public ProvisionRequest() {
     }
 
-    public ProvisionRequest(UUID serviceId, UUID planId, boolean acceptsIncomplete, String organizationId, String spaceId) {
+    public ProvisionRequest(UUID serviceId, UUID planId, String organizationId, String spaceId) {
         this.serviceId = serviceId;
         this.planId = planId;
-        this.acceptsIncomplete = acceptsIncomplete;
         this.organizationId = organizationId;
         this.spaceId = spaceId;
     }
@@ -80,16 +78,12 @@ public class ProvisionRequest {
         this.parameters = parameters;
     }
 
-    public boolean isAcceptsIncomplete() {
-        return acceptsIncomplete;
-    }
-
-    public void setAcceptsIncomplete(boolean acceptsIncomplete) {
-        this.acceptsIncomplete = acceptsIncomplete;
-    }
-
     public Optional<String> getParameter(String name) {
         return Optional.ofNullable(parameters.get(name));
+    }
+
+    public void putParameter(String name, String value) {
+        parameters.put(name, value);
     }
 
     protected static class Deserializer extends JsonDeserializer<ProvisionRequest> {
@@ -97,12 +91,10 @@ public class ProvisionRequest {
         @Override
         public ProvisionRequest deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
             ObjectNode node = mapper.readValue(p, ObjectNode.class);
-            JsonNode acceptsIncomplete = node.get("accepts_incomplete");
 
             ProvisionRequest provisionRequest = new ProvisionRequest(
                     getUuid(node, "service_id"),
                     getUuid(node, "plan_id"),
-                    acceptsIncomplete != null && acceptsIncomplete.asBoolean(),
                     getRequiredField(node, "organization_guid").asText(),
                     getRequiredField(node, "space_guid").asText());
 

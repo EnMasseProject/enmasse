@@ -34,6 +34,10 @@ public final class Destination {
     private final Optional<String> uuid;
     private final Status status;
 
+    public Destination(String address, String group, boolean storeAndForward, boolean multicast, String flavor, String uuid, Status status) {
+        this(address, group, storeAndForward, multicast, Optional.ofNullable(flavor), Optional.ofNullable(uuid), status);
+    }
+
     public Destination(String address, String group, boolean storeAndForward, boolean multicast, Optional<String> flavor, Optional<String> uuid, Status status) {
         Objects.requireNonNull(flavor);
         Objects.requireNonNull(uuid);

@@ -117,6 +117,10 @@ public class OSBProvisioningService extends OSBServiceBase {
     }
 
     private String shortenUuid(String uuid) {
-        return uuid.substring(0, uuid.indexOf('-'));
+        int dashIndex = uuid.indexOf('-');
+        if (dashIndex == -1) {
+            throw OSBExceptions.badRequestException("Bad UUID: " + uuid);
+        }
+        return uuid.substring(0, dashIndex);
     }
 }
