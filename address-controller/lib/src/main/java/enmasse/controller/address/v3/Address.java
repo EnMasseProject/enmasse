@@ -6,8 +6,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import enmasse.controller.common.Resource;
 import enmasse.controller.model.Destination;
 
 import java.io.IOException;
@@ -49,8 +49,13 @@ public class Address {
                 .flavor(Optional.ofNullable(spec.get(ResourceKeys.FLAVOR)).map(JsonNode::asText))
                 .uuid(Optional.ofNullable(metadata.get(ResourceKeys.UUID)).map(JsonNode::asText));
             if (status != null) {
-                builder.status(new Destination.Status(Optional.ofNullable(status.get(ResourceKeys.READY).asBoolean()).orElse(false),
-                        Optional.ofNullable(status.get(ResourceKeys.MESSAGE)).map(JsonNode::asText).orElse(null)));
+                Destination.Status dstatus = new Destination.Status(Optional.ofNullable(status.get(ResourceKeys.READY).asBoolean()).orElse(false));
+                if (status.get(ResourceKeys.MESSAGES) != null) {
+                    ArrayNode messages = (ArrayNode) status.get(ResourceKeys.MESSAGES);
+                    for (int i = 0; i < messages.size(); i++) {
+                        dstatus.appendMessage(messages.get(i).asText());
+                    }
+                }
             }
             return new Address(builder.build());
         }
@@ -77,7 +82,12 @@ public class Address {
 
             ObjectNode status = node.putObject(ResourceKeys.STATUS);
             status.put(ResourceKeys.READY, destination.status().isReady());
-            destination.status().getMessage().ifPresent(m -> status.put(ResourceKeys.MESSAGE, m));
+            if (!destination.status().getMessages().isEmpty()) {
+                ArrayNode messages = status.putArray(ResourceKeys.MESSAGES);
+                for (String message : destination.status().getMessages()) {
+                    messages.add(message);
+                }
+            }
 
             mapper.writeValue(gen, node);
         }

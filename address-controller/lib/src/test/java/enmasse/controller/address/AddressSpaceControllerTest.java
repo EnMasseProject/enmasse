@@ -19,7 +19,6 @@ package enmasse.controller.address;
 import enmasse.controller.address.api.DestinationApi;
 import enmasse.controller.common.DestinationClusterGenerator;
 import enmasse.controller.common.Kubernetes;
-import enmasse.controller.common.KubernetesHelper;
 import enmasse.controller.model.Destination;
 import enmasse.controller.model.Flavor;
 import enmasse.controller.flavor.FlavorManager;
@@ -36,7 +35,6 @@ import org.mockito.internal.verification.VerificationModeFactory;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static org.hamcrest.CoreMatchers.describedAs;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.*;
@@ -66,7 +64,7 @@ public class AddressSpaceControllerTest {
     }
 
     @Test
-    public void testClusterIsCreated() {
+    public void testClusterIsCreated() throws Exception {
         Destination queue = new Destination.Builder("myqueue", "gr0")
                 .storeAndForward(true)
                 .multicast(false)
@@ -88,7 +86,7 @@ public class AddressSpaceControllerTest {
 
 
     @Test
-    public void testNodesAreRetained() {
+    public void testNodesAreRetained() throws Exception {
         Destination queue = new Destination.Builder("myqueue", "gr0")
                 .storeAndForward(true)
                 .flavor(Optional.of("vanilla"))
@@ -116,7 +114,7 @@ public class AddressSpaceControllerTest {
     }
 
     @Test
-    public void testClusterIsRemoved () {
+    public void testClusterIsRemoved () throws Exception {
         Destination queue = new Destination.Builder("myqueue", "gr0")
                 .storeAndForward(true)
                 .flavor(Optional.of("vanilla"))
@@ -141,7 +139,7 @@ public class AddressSpaceControllerTest {
     }
 
     @Test
-    public void testDestinationsAreGrouped() {
+    public void testDestinationsAreGrouped() throws Exception {
         Destination addr0 = new Destination("myqueue0", "group0", true, false, Optional.of("vanilla"), Optional.empty(), new Destination.Status(false));
         Destination addr1 = new Destination("myqueue1", "group1", true, false, Optional.of("vanilla"), Optional.empty(), new Destination.Status(false));
         Destination addr2 = new Destination("myqueue2", "group1", true, false, Optional.of("vanilla"), Optional.empty(), new Destination.Status(false));

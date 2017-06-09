@@ -7,6 +7,6 @@ public interface AddressConfigKeys {
     String STORE_AND_FORWARD = "store_and_forward";
     String MULTICAST = "multicast";
     String FLAVOR = "flavor";
-    String READY = "ready";
-    String READY_MESSAGE = "ready_message";
+    String STATUS_READY = "ready";
+    String STATUS_MESSAGES = "messages";
 }

@@ -14,5 +14,5 @@ interface ResourceKeys {
     String ITEMS = "items";
     String STATUS = "status";
     String READY = "ready";
-    String MESSAGE = "message";
+    String MESSAGES = "messages";
 }

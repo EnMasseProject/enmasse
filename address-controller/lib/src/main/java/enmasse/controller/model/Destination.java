@@ -16,6 +16,8 @@
 
 package enmasse.controller.model;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -195,8 +197,8 @@ public final class Destination {
     }
 
     public static class Status {
-        private final boolean isReady;
-        private final Optional<String> message;
+        private boolean isReady = false;
+        private List<String> messages = new ArrayList<>();
 
         @Override
         public boolean equals(Object o) {
@@ -206,31 +208,41 @@ public final class Destination {
             Status status = (Status) o;
 
             if (isReady != status.isReady) return false;
-            return message.equals(status.message);
+            return messages.equals(status.messages);
         }
 
         @Override
         public int hashCode() {
             int result = (isReady ? 1 : 0);
-            result = 31 * result + message.hashCode();
+            result = 31 * result + messages.hashCode();
             return result;
         }
 
         public Status(boolean isReady) {
-            this(isReady, null);
-        }
-
-        public Status(boolean isReady, String message) {
             this.isReady = isReady;
-            this.message = Optional.ofNullable(message);
         }
 
         public boolean isReady() {
             return isReady;
         }
 
-        public Optional<String> getMessage() {
-            return message;
+        public Status setReady(boolean isReady) {
+            this.isReady = isReady;
+            return this;
+        }
+
+        public List<String> getMessages() {
+            return messages;
+        }
+
+        public Status appendMessage(String message) {
+            this.messages.add(message);
+            return this;
+        }
+
+        public Status clearMessages() {
+            this.messages.clear();
+            return this;
         }
     }
 }

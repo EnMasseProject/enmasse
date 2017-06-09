@@ -1,5 +1,6 @@
 package enmasse.controller.address.api;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import enmasse.config.AddressConfigKeys;
 import enmasse.config.LabelKeys;
 import enmasse.config.AnnotationKeys;
@@ -20,6 +21,7 @@ import java.util.concurrent.TimeUnit;
 
 public class ConfigMapDestinationApi implements DestinationApi {
 
+    private static final ObjectMapper mapper = new ObjectMapper();
     private static final Logger log = LoggerFactory.getLogger(ConfigMapDestinationApi.class);
     private final Vertx vertx;
     private final OpenShiftClient client;
@@ -55,7 +57,8 @@ public class ConfigMapDestinationApi implements DestinationApi {
         }
     }
 
-    public Destination getDestinationFromConfig(ConfigMap configMap) {
+    @SuppressWarnings("unchecked")
+    private Destination getDestinationFromConfig(ConfigMap configMap) {
         Map<String, String> data = configMap.getData();
 
         Destination.Builder destBuilder = new Destination.Builder(data.get(AddressConfigKeys.ADDRESS), data.get(AddressConfigKeys.GROUP_ID));
@@ -63,7 +66,19 @@ public class ConfigMapDestinationApi implements DestinationApi {
         destBuilder.multicast(Boolean.parseBoolean(data.get(AddressConfigKeys.MULTICAST)));
         destBuilder.flavor(Optional.ofNullable(data.get(AddressConfigKeys.FLAVOR)));
         destBuilder.uuid(Optional.ofNullable(data.get(AddressConfigKeys.UUID)));
-        destBuilder.status(new Destination.Status(Boolean.parseBoolean(data.get(AddressConfigKeys.READY)), data.get(AddressConfigKeys.READY_MESSAGE)));
+
+        Destination.Status status = new Destination.Status(Boolean.parseBoolean(data.get(AddressConfigKeys.STATUS_READY)));
+        if (data.containsKey(AddressConfigKeys.STATUS_MESSAGES)) {
+            try {
+                List<String> messages = mapper.readValue(data.get(AddressConfigKeys.STATUS_MESSAGES), List.class);
+                for (String message : messages) {
+                    status.appendMessage(message);
+                }
+            } catch (Exception e) {
+                log.info("Error deserializing {}", destBuilder.address(), e);
+            }
+        }
+        destBuilder.status(status);
         return destBuilder.build();
     }
 
@@ -108,8 +123,16 @@ public class ConfigMapDestinationApi implements DestinationApi {
         builder.addToData(AddressConfigKeys.GROUP_ID, destination.group());
         builder.addToData(AddressConfigKeys.STORE_AND_FORWARD, String.valueOf(destination.storeAndForward()));
         builder.addToData(AddressConfigKeys.MULTICAST, String.valueOf(destination.multicast()));
-        builder.addToData(AddressConfigKeys.READY, String.valueOf(destination.status().isReady()));
-        destination.status().getMessage().ifPresent(m -> builder.addToData(AddressConfigKeys.READY_MESSAGE, m));
+        builder.addToData(AddressConfigKeys.STATUS_READY, String.valueOf(destination.status().isReady()));
+
+        try {
+            if (!destination.status().getMessages().isEmpty()) {
+                String messages = mapper.writeValueAsString(destination.status().getMessages());
+                builder.addToData(AddressConfigKeys.STATUS_MESSAGES, messages);
+            }
+        } catch (Exception e) {
+            log.info("Error serializing messages for {}", destination, e);
+        }
         destination.flavor().ifPresent(f -> builder.addToData(AddressConfigKeys.FLAVOR, f));
         destination.uuid().ifPresent(f -> builder.addToData(AddressConfigKeys.UUID, f));
         builder.done();

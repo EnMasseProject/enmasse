@@ -86,14 +86,8 @@ public class AddressSpaceController extends AbstractVerticle implements Watcher<
         createBrokers(clusterList, destinationByGroup);
 
 
-        List<Destination.Builder> mutableDestinations = newDestinations.stream()
-                .map(Destination.Builder::new)
-                .map(b -> b.status(new Destination.Status(true)))
-                .collect(Collectors.toList());
-        checkStatuses(mutableDestinations);
-        mutableDestinations.stream()
-                .map(Destination.Builder::build)
-                .forEach(destinationApi::replaceDestination);
+        checkStatuses(newDestinations);
+        newDestinations.forEach(destinationApi::replaceDestination);
     }
 
     /*
@@ -149,32 +143,65 @@ public class AddressSpaceController extends AbstractVerticle implements Watcher<
                 });
     }
 
-    private void checkStatuses(List<Destination.Builder> destinations) throws Exception {
+    private void checkStatuses(Set<Destination> destinations) throws Exception {
+        for (Destination destination : destinations) {
+            destination.status().setReady(true).clearMessages();
+        }
+        // TODO: Instead of going to the routers directly, list routers, and perform a request against the
+        // router agent to do the check
         for (Pod router : kubernetes.listRouters()) {
             if (router.getStatus().getPodIP() != null && !"".equals(router.getStatus().getPodIP())) {
                 checkRouterStatus(router, destinations);
             }
         }
 
-        for (Destination.Builder destination : destinations) {
+        for (Destination destination : destinations) {
             checkClusterStatus(destination);
         }
     }
 
-    private void checkClusterStatus(Destination.Builder destination) {
+    private void checkClusterStatus(Destination destination) {
         if (destination.storeAndForward() && !kubernetes.isDestinationClusterReady(destination.group())) {
-            destination.status(new Destination.Status(false, "Cluster is unavailable"));
+            destination.status().setReady(false).appendMessage("Cluster is unavailable");
         }
     }
 
 
-    private void checkRouterStatus(Pod router, List<Destination.Builder> destinations) throws Exception {
-        SyncRequestClient client = new SyncRequestClient(router.getStatus().getPodIP(), 5672, vertx);
+    private void checkRouterStatus(Pod router, Set<Destination> destinations) throws Exception {
+
+        List<String> addresses = checkRouter(router.getStatus().getPodIP(), "org.apache.qpid.dispatch.router.config.address", "prefix");
+        List<String> autoLinks = checkRouter(router.getStatus().getPodIP(), "org.apache.qpid.dispatch.router.config.autoLink", "addr");
+        List<String> linkRoutes = checkRouter(router.getStatus().getPodIP(), "org.apache.qpid.dispatch.router.config.linkRoute", "prefix");
+
+        for (Destination destination : destinations) {
+            if (!(destination.storeAndForward() && destination.multicast())) {
+                boolean found = addresses.contains(destination.address());
+                if (!found) {
+                    destination.status().setReady(false).appendMessage("Address " + destination.address() + " not found on " + router.getMetadata().getName());
+                }
+                if (destination.storeAndForward()) {
+                    found = autoLinks.contains(destination.address());
+                    if (!found) {
+                        destination.status().setReady(false).appendMessage("Address " + destination.address() + " is missing autoLinks on " + router.getMetadata().getName());
+                    }
+                }
+            } else {
+                boolean found = linkRoutes.contains(destination.address());
+                if (!found) {
+                    destination.status().setReady(false).appendMessage("Address " + destination.address() + " is missing linkRoutes on " + router.getMetadata().getName());
+                }
+            }
+        }
+    }
+
+    private List<String> checkRouter(String hostname, String entityType, String attributeName) {
+        SyncRequestClient client = new SyncRequestClient(hostname, 5672, vertx);
         Map<String, String> properties = new LinkedHashMap<>();
         properties.put("operation", "QUERY");
-        properties.put("entityType", "org.apache.qpid.dispatch.router.config.address");
+        properties.put("entityType", entityType);
         Map body = new LinkedHashMap<>();
-        body.put("attributeNames", Arrays.asList("prefix"));
+
+        body.put("attributeNames", Arrays.asList(attributeName));
 
         Message message = Proton.message();
         message.setAddress("$management");
@@ -186,27 +213,10 @@ public class AddressSpaceController extends AbstractVerticle implements Watcher<
             AmqpValue value = (AmqpValue) response.getBody();
             Map values = (Map) value.getValue();
             List<List<String>> results = (List<List<String>>) values.get("results");
-            for (Destination.Builder destination : destinations) {
-                if (!(destination.storeAndForward() && destination.multicast())) {
-                    boolean found = findAttribute(destination.address(), results);
-                    if (!found) {
-                        destination.status(new Destination.Status(false, "Address " + destination.address() + " not found on " + router.getMetadata().getName()));
-                    }
-                }
-            }
+            return results.stream().map(l -> l.get(0)).collect(Collectors.toList());
         } catch (Exception e) {
             log.info("Error requesting router status. Ignoring", e);
+            return Collections.emptyList();
         }
-    }
-
-    private boolean findAttribute(String needle, List<List<String>> results) {
-        for (List<String> result : results) {
-            for (String r : result) {
-                if (r.equals(needle)) {
-                    return true;
-                }
-            }
-        }
-        return false;
     }
 }
