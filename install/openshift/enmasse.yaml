@@ -917,8 +917,8 @@ objects:
               value: localhost
             - name: CONFIGURATION_SERVICE_PORT
               value: '5672'
-            - name: API_SERVER_HOSTNAME
-              value: "${API_SERVER_HOSTNAME}"
+            - name: ADDRESS_SPACE_SERVICE_HOST
+              value: "${ADDRESS_SPACE_SERVICE_HOST}"
             - name: INSTANCE
               value: "${INSTANCE}"
             image: "${CONSOLE_REPO}"
@@ -1017,7 +1017,7 @@ objects:
         name: admin
   parameters:
   - description: Hostname where API server can be reached
-    name: API_SERVER_HOSTNAME
+    name: ADDRESS_SPACE_SERVICE_HOST
     value: ''
   - description: The image to use for the router
     name: ROUTER_REPO

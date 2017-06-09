@@ -112,8 +112,8 @@ items:
       "name": "amqp", "protocol": "TCP"}], "resources": {"limits": {"memory": "128Mi"},
       "requests": {"memory": "128Mi"}}}, {"env": [{"name": "CONFIGURATION_SERVICE_HOST",
       "value": "localhost"}, {"name": "CONFIGURATION_SERVICE_PORT", "value": "5672"},
-      {"name": "API_SERVER_HOSTNAME", "value": "${API_SERVER_HOSTNAME}"}, {"name":
-      "INSTANCE", "value": "${INSTANCE}"}], "image": "${CONSOLE_REPO}", "livenessProbe":
+      {"name": "ADDRESS_SPACE_SERVICE_HOST", "value": "${ADDRESS_SPACE_SERVICE_HOST}"},
+      {"name": "INSTANCE", "value": "${INSTANCE}"}], "image": "${CONSOLE_REPO}", "livenessProbe":
       {"httpGet": {"path": "/", "port": "http"}}, "name": "console", "ports": [{"containerPort":
       8080, "name": "http", "protocol": "TCP"}, {"containerPort": 56720, "name": "amqp-ws",
       "protocol": "TCP"}], "resources": {"limits": {"memory": "64Mi"}, "requests":
@@ -134,8 +134,8 @@ items:
       {"instance": "${INSTANCE}"}, "labels": {"app": "enmasse"}, "name": "console"},
       "spec": {"ports": [{"name": "amqp-ws", "port": 5672, "targetPort": 56720}, {"name":
       "http", "port": 8080}], "selector": {"name": "admin"}}}], "parameters": [{"description":
-      "Hostname where API server can be reached", "name": "API_SERVER_HOSTNAME", "value":
-      ""}, {"description": "The image to use for the router", "name": "ROUTER_REPO",
+      "Hostname where API server can be reached", "name": "ADDRESS_SPACE_SERVICE_HOST",
+      "value": ""}, {"description": "The image to use for the router", "name": "ROUTER_REPO",
       "value": "enmasseproject/qdrouterd:latest"}, {"description": "The image to use
       for the router metrics collector", "name": "ROUTER_METRICS_REPO", "value": "enmasseproject/router-metrics:latest"},
       {"description": "The link capacity setting for router", "name": "ROUTER_LINK_CAPACITY",
