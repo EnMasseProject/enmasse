@@ -103,7 +103,7 @@ public class HTTPServer extends AbstractVerticle {
             File keyFile = new File(certDir, "tls.key");
             // TODO: Remove once Vert.x supports PKCS#1: https://github.com/eclipse/vert.x/issues/1851
             // This also implies that _KEY ROTATION DOES NOT WORK_
-            File outputFile = new File(certDir, "/tmp/pkcs8.key");
+            File outputFile = new File("/tmp/pkcs8.key");
             convertKey(keyFile, outputFile);
 
             File certFile = new File(certDir, "tls.crt");
