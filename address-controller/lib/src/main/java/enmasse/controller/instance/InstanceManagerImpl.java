@@ -65,9 +65,7 @@ public class InstanceManagerImpl implements InstanceManager {
     }
 
     private String getApiServer() {
-        return "address-controller." +
-                namespace +
-                ".svc.cluster.local";
+        return "address-controller." + namespace + ".svc";
     }
 
     @Override
