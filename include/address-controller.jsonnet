@@ -45,7 +45,7 @@ local common = import "common.jsonnet";
   external_service::
     self.common_service("address-controller-external", "LoadBalancer", {}),
 
-  deployment(image_repo, multiinstance, secret_name, template_config, instance_idle_timeout)::
+  deployment(image_repo, multiinstance, template_config, instance_idle_timeout)::
     {
       "apiVersion": "extensions/v1beta1",
       "kind": "Deployment",
@@ -138,7 +138,7 @@ local common = import "common.jsonnet";
             local secret_volume = [{
                 "name": "ssl-certs",
                 "secret": {
-                  "secretName": secret_name
+                  "secretName": "address-controller-certs"
                 }
             }],
 

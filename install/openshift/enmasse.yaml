@@ -1123,7 +1123,7 @@ objects:
         volumes:
         - name: ssl-certs
           secret:
-            secretName: "${ADDRESS_CONTROLLER_SECRET}"
+            secretName: address-controller-certs
 - apiVersion: v1
   kind: Service
   metadata:
@@ -1196,6 +1196,3 @@ parameters:
 - description: The docker image to use for the address controller
   name: ADDRESS_CONTROLLER_REPO
   value: enmasseproject/address-controller:latest
-- description: The secret containing the certificate for the address-controller
-  name: ADDRESS_CONTROLLER_SECRET
-  value: enmasse-controller-certs

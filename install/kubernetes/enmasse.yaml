@@ -375,7 +375,7 @@ items:
           name: templates
         - name: ssl-certs
           secret:
-            secretName: enmasse-controller-certs
+            secretName: address-controller-certs
 - apiVersion: extensions/v1beta1
   kind: Ingress
   metadata:

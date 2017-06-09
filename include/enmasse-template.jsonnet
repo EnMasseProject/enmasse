@@ -20,7 +20,7 @@ local version = std.extVar("VERSION");
                  storage.template(true, false),
                  storage.template(true, true),
                  enmasseInfra.generate(use_sasl, with_kafka, true),
-                 addressController.deployment("${ADDRESS_CONTROLLER_REPO}", "${MULTIINSTANCE}", "${ADDRESS_CONTROLLER_SECRET}", "", "${INSTANCE_IDLE_TIMEOUT_SECONDS}"),
+                 addressController.deployment("${ADDRESS_CONTROLLER_REPO}", "${MULTIINSTANCE}", "", "${INSTANCE_IDLE_TIMEOUT_SECONDS}"),
                  addressController.internal_service,
                  restapiRoute.route("${RESTAPI_HOSTNAME}"),
                  flavorConfig.generate() ],
@@ -38,11 +38,6 @@ local version = std.extVar("VERSION");
         "name": "ADDRESS_CONTROLLER_REPO",
         "description": "The docker image to use for the address controller",
         "value": "enmasseproject/address-controller:" + version
-      },
-      {
-        "name": "ADDRESS_CONTROLLER_SECRET",
-        "description": "The secret containing the certificate for the address-controller",
-        "value": "enmasse-controller-certs"
       }
     ]
   }
