@@ -82,8 +82,8 @@ public class AddressSpaceController extends AbstractVerticle implements Watcher<
 
         List<DestinationCluster> clusterList = kubernetes.listClusters();
         log.debug("Current set of clusters: " + clusterList);
-        createBrokers(clusterList, destinationByGroup);
         deleteBrokers(clusterList, destinationByGroup);
+        createBrokers(clusterList, destinationByGroup);
 
 
         List<Destination.Builder> mutableDestinations = newDestinations.stream()
