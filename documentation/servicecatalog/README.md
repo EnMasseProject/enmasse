@@ -42,15 +42,13 @@ when using other methods of running OpenShift.
 - Grant admin rights to the service catalog's service account:
   - `oc adm policy add-cluster-role-to-user admin system:serviceaccount:service-catalog:default`
 - Deploy the Service Catalog resources
-  - `curl -q https://gist.githubusercontent.com/jwforres/78d8c2a939e5e69e31ddd32471ce79fd/raw/f1844810d036e132304ab82765ca253130cdbd54/gistfile1.txt | oc process -v CORS_ALLOWED_ORIGIN='.*' -f - | oc apply -f -`
+  - `curl -q https://gist.githubusercontent.com/jwforres/78d8c2a939e5e69e31ddd32471ce79fd/raw/cf4c55fc38a1bd20baa90a97ca5def03b1aceec3/gistfile1.txt | oc process -v CORS_ALLOWED_ORIGIN='.*' -f - | oc apply -f -`
 
 ## Deploy EnMasse
-- Deploy EnMasse global infrastructure (choose one of two options):
-  - A TLS-enabled deployment (which allows external messaging clients to connect through routes):
-    - `openssl req -new -x509 -batch -nodes -out server-cert.pem -keyout server-key.pem`
-    - `bash <(curl https://raw.githubusercontent.com/EnMasseProject/enmasse/master/scripts/enmasse-deploy.sh) -c "https://localhost:8443" -u system:admin -p enmasse -m -k server-key.pem -s server-cert.pem`
-  - A non-TLS enabled deployment:
-    - `bash <(curl https://raw.githubusercontent.com/EnMasseProject/enmasse/master/scripts/enmasse-deploy.sh) -c "https://localhost:8443" -u system:admin -p enmasse -m`
+- Deploy EnMasse global infrastructure:
+  - Download release from https://github.com/EnMasseProject/enmasse/releases
+  - Untar and run:
+    - `deploy-openshift.sh -m https://localhost:8443 -n enmasse -p MULTIINSTANCE=true`
 - Grant proper roles to enmasse service accounts:
   - `oc adm policy add-cluster-role-to-user cluster-admin system:serviceaccount:enmasse:enmasse-service-account`
   - `oc adm policy add-cluster-role-to-user edit system:serviceaccount:enmasse:default`
@@ -123,7 +121,7 @@ At this point, the Service Catalog will contact the broker and retrieve the list
   metadata:
     name: my-vanilla-queue
   spec:
-    serviceClassName: queue
+    serviceClassName: enmasse-queue
     planName: vanilla-queue
     parameters:
       name: my-vanilla-queue
