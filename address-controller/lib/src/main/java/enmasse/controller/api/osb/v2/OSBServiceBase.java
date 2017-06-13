@@ -90,11 +90,11 @@ public abstract class OSBServiceBase {
             String flavorType = serviceType.flavorType().get();
             return getFlavors().stream()
                     .filter(flavor -> flavor.uuid().isPresent() && flavor.type().equals(flavorType))
-                    .map(this::convertFlavorToPlan)
+                    .map(f -> convertFlavorToPlan(f, serviceType))
                     .collect(Collectors.toList());
         } else {
             Plan defaultPlan = new Plan(serviceType.defaultPlanUuid(), "default", "Default plan", true, true);
-            defaultPlan.setSchemas(createSchemas());
+            defaultPlan.setSchemas(createSchemas(serviceType));
             return Collections.singletonList(defaultPlan);
         }
     }
@@ -111,23 +111,37 @@ public abstract class OSBServiceBase {
         return flavorRepository.getFlavors();
     }
 
-    private Plan convertFlavorToPlan(Flavor flavor) {
+    private Plan convertFlavorToPlan(Flavor flavor, ServiceType serviceType) {
         Plan plan = new Plan(
                 UUID.fromString(flavor.uuid().get()),
                 sanitizePlanName(flavor.name()),
                 flavor.description(),
                 true, true);
-
-        plan.setSchemas(createSchemas());
+        plan.setSchemas(createSchemas(serviceType));
         return plan;
     }
 
-    private Schemas createSchemas() {
+    private Schemas createSchemas(ServiceType serviceType) {
         ObjectSchema serviceInstanceSchema = new ObjectSchema();
         StringSchema namePropertySchema = new StringSchema();
+        namePropertySchema.setTitle("Address name");
+        namePropertySchema.setDescription("Enter the name of this address");
         namePropertySchema.setMinLength(2);
         serviceInstanceSchema.putProperty("name", namePropertySchema);
-        serviceInstanceSchema.putOptionalProperty("transactional", new BooleanSchema());
+
+        if (serviceType.storeAndForward()) {
+            BooleanSchema transactionalSchema = new BooleanSchema();
+            transactionalSchema.setTitle("Transactional");
+            transactionalSchema.setDescription("Is this a transactional queue/topic or not");
+            serviceInstanceSchema.putOptionalProperty("transactional", transactionalSchema);
+
+            if (!serviceType.multicast()) {
+                BooleanSchema pooledSchema = new BooleanSchema();
+                pooledSchema.setTitle("Pooled");
+                pooledSchema.setDescription("Is this a pooled queue or not");
+                serviceInstanceSchema.putOptionalProperty("pooled", pooledSchema);
+            }
+        }
 
         return new Schemas(new ServiceInstanceSchema(new InputParameters(serviceInstanceSchema), null), null);
     }

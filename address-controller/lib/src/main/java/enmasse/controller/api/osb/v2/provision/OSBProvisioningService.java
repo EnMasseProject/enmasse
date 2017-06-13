@@ -58,7 +58,8 @@ public class OSBProvisioningService extends OSBServiceBase {
 
         String name = request.getParameter("name").orElse(serviceType.serviceName() + "-" + shortenUuid(instanceId));
         boolean transactional = Boolean.valueOf(request.getParameter("transactional").orElse("false"));
-        String group = transactional ? "transactional" : name;
+        boolean pooled = Boolean.valueOf(request.getParameter("pooled").orElse("false"));
+        String group = transactional ? "transactional" : (pooled ? "pooled" : name);
 
         Optional<String> flavorName = serviceType.supportsOnlyDefaultPlan() ? Optional.empty() : getFlavorName(request.getPlanId());
         Destination destination = new Destination.Builder(name, group)
