@@ -5,4 +5,4 @@ ARG version=latest
 ENV VERSION=${version}
 
 EXPOSE 5672 55672 5671
-CMD ["/sbin/qdrouterd", "/etc/qpid-dispatch/qdrouterd.conf"]
+CMD ["/sbin/qdrouterd", "-c", "/etc/qpid-dispatch/qdrouterd.conf"]
