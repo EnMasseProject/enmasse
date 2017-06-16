@@ -99,25 +99,31 @@ public class HTTPServerTest {
         testRepository.flavorsUpdated(Collections.singletonMap("vanilla", flavor));
         HttpClient client = vertx.createHttpClient();
         try {
-            CountDownLatch latch = new CountDownLatch(2);
-            client.getNow(8080, "localhost", "/v3/flavor", response -> {
-                response.bodyHandler(buffer -> {
-                    JsonObject data = buffer.toJsonObject();
-                    assertTrue(data.containsKey("items"));
-                    assertThat(data.getJsonArray("items").getJsonObject(0).getJsonObject("metadata").getString("name"), is("vanilla"));
-                    latch.countDown();
+            {
+                CountDownLatch latch = new CountDownLatch(1);
+                client.getNow(8080, "localhost", "/v3/flavor", response -> {
+                    response.bodyHandler(buffer -> {
+                        JsonObject data = buffer.toJsonObject();
+                        assertTrue(data.containsKey("items"));
+                        assertThat(data.getJsonArray("items").getJsonObject(0).getJsonObject("metadata").getString("name"), is("vanilla"));
+                        latch.countDown();
+                    });
                 });
-            });
+                assertTrue(latch.await(1, TimeUnit.MINUTES));
+            }
 
-            client.getNow(8080, "localhost", "/v3/flavor/vanilla", response -> {
-                response.bodyHandler(buffer -> {
-                    JsonObject data = buffer.toJsonObject();
-                    assertTrue(data.containsKey("metadata"));
-                    assertThat(data.getJsonObject("metadata").getString("name"), is("vanilla"));
-                    latch.countDown();
+            {
+                CountDownLatch latch = new CountDownLatch(1);
+                client.getNow(8080, "localhost", "/v3/flavor/vanilla", response -> {
+                    response.bodyHandler(buffer -> {
+                        JsonObject data = buffer.toJsonObject();
+                        assertTrue(data.containsKey("metadata"));
+                        assertThat(data.getJsonObject("metadata").getString("name"), is("vanilla"));
+                        latch.countDown();
+                    });
                 });
-            });
-            assertTrue(latch.await(1, TimeUnit.MINUTES));
+                assertTrue(latch.await(1, TimeUnit.MINUTES));
+            }
         } finally {
             client.close();
         }
