@@ -40,7 +40,7 @@ public class ProvisionServiceTest extends OSBTestBase {
     public static final String QUEUE_PLAN_ID_STRING = QUEUE_PLAN_ID.toString();
 
     public static final String ADDRESS = "my-queue";
-    public static final String GROUP = "my-group";
+    public static final String TRANSACTIONAL = "transactional";
 
     @Test(expected = UnprocessableEntityException.class)
     public void testSyncProvisioningRequest() throws Exception {
@@ -66,7 +66,7 @@ public class ProvisionServiceTest extends OSBTestBase {
     public void testProvision() throws Exception {
         ProvisionRequest provisionRequest = new ProvisionRequest(QUEUE_SERVICE_ID, QUEUE_PLAN_ID, ORGANIZATION_ID, SPACE_ID);
         provisionRequest.putParameter("name", ADDRESS);
-        provisionRequest.putParameter("group", GROUP);
+        provisionRequest.putParameter("transactional", "true");
         Response response = provisioningService.provisionService(SERVICE_INSTANCE_ID, true, provisionRequest);
         ProvisionResponse provisionResponse = (ProvisionResponse) response.getEntity();
 
@@ -74,7 +74,7 @@ public class ProvisionServiceTest extends OSBTestBase {
 //        assertThat(provisionResponse.getDashboardUrl(), notNullValue());
         assertThat(provisionResponse.getOperation(), notNullValue());
 
-        Destination destination = new Destination(ADDRESS, GROUP, true, false,
+        Destination destination = new Destination(ADDRESS, TRANSACTIONAL, true, false,
                 QUEUE_FLAVOR_NAME, SERVICE_INSTANCE_ID, new Destination.Status(false));
         assertThat(instanceApi.getDestinations(), is(new HashSet<>(Collections.singletonList(destination))));
 
@@ -91,7 +91,7 @@ public class ProvisionServiceTest extends OSBTestBase {
         lastOperationResponse = getLastOperationResponse(SERVICE_INSTANCE_ID, QUEUE_SERVICE_ID_STRING, QUEUE_PLAN_ID_STRING, provisionResponse.getOperation());
         assertThat(lastOperationResponse.getState(), is(LastOperationState.SUCCEEDED));
 
-        destination = new Destination(ADDRESS, GROUP, true, false,
+        destination = new Destination(ADDRESS, TRANSACTIONAL, true, false,
                 QUEUE_FLAVOR_NAME, SERVICE_INSTANCE_ID, new Destination.Status(true));
         assertThat(instanceApi.getDestinations(), is(new HashSet<>(Collections.singletonList(destination))));
     }
