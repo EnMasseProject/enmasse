@@ -1,4 +1,4 @@
-local version = std.extVar("VERSION");
+local images = import "images.jsonnet";
 local broker = import "broker.jsonnet";
 local router = import "router.jsonnet";
 local broker_repo = "${BROKER_REPO}";
@@ -101,17 +101,17 @@ local forwarder = import "forwarder.jsonnet";
         {
           "name": "BROKER_REPO",
           "description": "The docker image to use for the message broker",
-          "value": "enmasseproject/artemis:" + version
+          "value": images.artemis
         },
         {
           "name": "TOPIC_FORWARDER_REPO",
           "description": "The default image to use as topic forwarder",
-          "value": "enmasseproject/topic-forwarder:" + version
+          "value": images.topic_forwarder
         },
         {
           "name": "ROUTER_REPO",
           "description": "The image to use for the router",
-          "value": "enmasseproject/qdrouterd:" + version
+          "value": images.router
         },
         {
           "name": "ROUTER_LINK_CAPACITY",

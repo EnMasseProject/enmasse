@@ -3,7 +3,7 @@ local enmasseInfra = import "enmasse-instance-infra.jsonnet";
 local addressController = import "address-controller.jsonnet";
 local restapiRoute = import "restapi-route.jsonnet";
 local flavorConfig = import "flavor.jsonnet";
-local version = std.extVar("VERSION");
+local images = import "images.jsonnet";
 {
   generate(use_sasl, with_kafka)::
   {
@@ -37,7 +37,7 @@ local version = std.extVar("VERSION");
       {
         "name": "ADDRESS_CONTROLLER_REPO",
         "description": "The docker image to use for the address controller",
-        "value": "enmasseproject/address-controller:" + version
+        "value": images.address_controller
       }
     ]
   }
