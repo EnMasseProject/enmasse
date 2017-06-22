@@ -29,10 +29,12 @@ var Registry = require('../lib/registry.js');
 var http = require('http');
 
 var app = express();
+app.get('/probe', function (req, res) { res.send('OK'); });
+
 if (process.env.ADMIN_PASSWORD !== undefined) {
     var auth = function (req, res, next) {
         //don't require auth for localhost to simplify use of probes
-        if (req.host === 'localhost') {
+        if (req.hostname === 'localhost') {
             return next();
         }
 
@@ -41,7 +43,7 @@ if (process.env.ADMIN_PASSWORD !== undefined) {
             return next();
         } else {
             res.set('WWW-Authenticate', 'Basic realm=Authorization Required');
-            return res.send(401);
+            return res.sendStatus(401);
         };
     };
 
