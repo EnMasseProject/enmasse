@@ -1,0 +1,22 @@
+sudo: required
+language: java
+notifications:
+  email: false
+env:
+  global:
+  - SCRIPTS=https://raw.githubusercontent.com/EnMasseProject/travis-scripts/master
+  - COMMIT=${TRAVIS_COMMIT::8}
+  - secure: BOFBw/IGqf936pEFrJY/jMjbt72ehLLfJDWWIGHrda5TFD9yaTwHs/0oaTja3KLebrRbWE3OFzlenbqnTKdSVfb2b+0+O3ZpGeWkRGFiFC8D0ymyS9h+/tfj5EcV3hyy1ZLK7CnTivdUrPHQmhIU+TwYBCFtog584pqycaiH+8qU/DRbwhjpyX7mzaCvvgephqa8V0CNqH6zRWISlD9Ky079nqAGmxjdVO5E2HLKZ4iD3tHPl4wdhAKC6TrqW/ek64bQQyvLgV1IfflbMBopoeka7koUBoooUoofvanWExz7vfDPq6G4TRwBEFTZGboR+LudYzxUIupH3EdxRPE7z5m/dufGW7go5MiZ0nohRrAEzLGHc0V//WSjF03bYOUZUaBg/FiA2KoKPzQRxfcCMc0hooKhnB9o5nlsUtTMGo/hfLNohhTI3DQPyCp4nEm7x/qjTHxXh7u01Ol0N+2yvaw0DyWQKKmDvNCaZPOxaYYIaQSWS7RG3ZidlE2BZwRywtNlcJu1LqqDst2ONjQggTNdvlrUBinJbOfUQMzQURF8w4/wv+Zg+V7osAyOjbLSRfpJzrUya5HYEf5kQ2z0GeB3yyPvninpFE0nPFP5Bl0hcaXxR5AZJgD34t8X0RNWNJEeJhLEAxEfBjvQGq/h0CrHn4I5I+vxUHK/fQwPAVc=
+  - secure: VJFzGm5TEt99rj6vbr5CdgKbr+BOsMPI68xyF0b32asELZeSXjz9WeB9H6PVwpNN7T5fYzN3DeVngnAHQo0H08roK1HNA26GoFFcyo5uMs3cAiwaja6GAqg3bs9rZBdFfgv1k4org3cBYEr5g1ZJc6sHfBZALwZhsHePV7sxkXT4xbIRc5S+ISC6r73kqCGUzrvNc4lQgowOsC+nOdxMR0UVwXHeFEN222Ai42zy2BNqeMerKhCSpIfkr4O+gxj9nSTlGXzyKnCzWPz5uf07JN2EefJS/m6UNoDYZlmW5RTtQ76c7G9BAklSbg+/vYpIOuBsncIJgPe6D14BmpYClLC5woUVUhwIXu+3+iRFMHwP/Z81ErvCoVrHkqhiwlTGyvM+Ny12hjgDbriigUqd4qlBeN9ab0wJpn6nuv1tgwspuxaQeSSyEUJT0HTzOjkIywKJ/Wc2CahUKqiLmGn96/1nvzaWBfu6LO5b0a/bw+Jat3eWJI12kr2y3SdKnj7YE1jCGhLoBbofiXdF9ADLDkH3zYtF4y/cl2Qz7Gv4/e+2/q7uAkSUOgx4CrRn3tr3hfFZxNUnUzX7dYbJi2+tGpwcZtaEdAnHKWt/1GBg9rb0gYWLgKr6r4wkGGLKY35pOpVcZsjGg6aatveh/Mt1oNVIClqueep74aG26KmP7ag=
+jdk:
+- oraclejdk8
+services:
+- docker
+before_script:
+- curl -s ${SCRIPTS}/setup-tests.sh | bash /dev/stdin
+script:
+- curl -s ${SCRIPTS}/docker-build.sh | bash /dev/stdin enmasseproject/router-metrics
+  .
+- curl -s ${SCRIPTS}/run-tests.sh | bash /dev/stdin ${COMMIT} "" enmasseproject/router-metrics
+after_success:
+- curl -s ${SCRIPTS}/docker-push.sh | bash /dev/stdin enmasseproject/router-metrics
