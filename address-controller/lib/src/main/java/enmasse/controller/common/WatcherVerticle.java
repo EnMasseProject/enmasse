@@ -8,67 +8,102 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingDeque;
 
 /**
  * A verticle that handles watching a resource with the appropriate reconnect and retry logic,
  * which notifies a resource interface when things change.
  */
-public class WatcherVerticle<T> extends AbstractVerticle implements io.fabric8.kubernetes.client.Watcher {
+public class WatcherVerticle<T> extends AbstractVerticle implements io.fabric8.kubernetes.client.Watcher, Runnable {
     private static final Logger log = LoggerFactory.getLogger(WatcherVerticle.class.getName());
     private final Random random;
     private Watch watch;
     private final Resource<T> resource;
     private final Watcher<T> changeHandler;
+    private final Thread watcherThread;
+    private final BlockingQueue<Action> events = new LinkedBlockingDeque<>();
+    private volatile boolean running;
 
     public WatcherVerticle(Resource<T> resource, Watcher<T> changeHandler) {
         this.random = new Random(System.currentTimeMillis());
         this.resource = resource;
         this.changeHandler = changeHandler;
+        this.watcherThread = new Thread(this);
     }
 
-    private long nextCheck() {
-        return 5000 + Math.abs(random.nextLong()) % 10000;
+    private long resyncInterval() {
+        return 30000 + Math.abs(random.nextLong()) % 30000;
     }
 
+    @Override
     public void start() {
+        running = true;
         vertx.executeBlocking((Future<Watch> promise) -> {
             try {
-                changeHandler.resourcesUpdated(resource.listResources());
                 promise.complete(resource.watchResources(this));
-                vertx.setTimer(nextCheck(), id -> checkResources());
             } catch (Exception e) {
                 promise.fail(e);
             }
         }, result -> {
             if (result.succeeded()) {
+                log.debug("Watcher created, setting result and starting timer + watcher thread");
                 watch = result.result();
+                scheduleResync();
+                watcherThread.start();
             } else {
-                result.cause().printStackTrace();
-                log.error("Error starting watch", result.cause());
+                log.warn("Error starting watcher", result.cause());
+                vertx.setTimer(10000, id -> start());
             }
         });
     }
 
-    private void checkResources() {
+    private void scheduleResync() {
+        if (!running) {
+            return;
+        }
         vertx.executeBlocking(promise -> {
             try {
-                changeHandler.resourcesUpdated(resource.listResources());
+                log.debug("Putting event on queue");
+                events.put(Action.ADDED);
                 promise.complete();
             } catch (Exception e) {
                 promise.fail(e);
             }
+
         }, result -> {
             if (result.failed()) {
-                log.warn("Error checking instances", result.cause());
+                log.warn("Error posting resync event", result.cause());
             }
-            vertx.setTimer(nextCheck(), id -> checkResources());
+            vertx.setTimer(resyncInterval(), id -> scheduleResync());
         });
     }
 
+    @Override
+    public void run() {
+        while (running) {
+            try {
+                Action action = events.take();
+                if (action != null) {
+                    // TODO: Use action and resource instead of relisting
+                    changeHandler.resourcesUpdated(resource.listResources());
+                }
+            } catch (Exception e) {
+                log.warn("Exception doing resource update", e);
+            }
+        }
+    }
 
+    @Override
     public void stop() {
+        running = false;
         if (watch != null) {
             watch.close();
+        }
+        try {
+            log.debug("Putting poison pill event");
+            events.put(null);
+        } catch (InterruptedException ignored) {
         }
     }
 
@@ -80,22 +115,16 @@ public class WatcherVerticle<T> extends AbstractVerticle implements io.fabric8.k
         }
 
         switch (action) {
-            case MODIFIED:
             case ADDED:
             case DELETED:
-                vertx.executeBlocking(promise -> {
-                    try {
-                        changeHandler.resourcesUpdated(resource.listResources());
-                        promise.complete();
-                    } catch (Exception e) {
-                        promise.fail(e);
-                    }
-
-                }, result -> {
-                    if (result.failed()) {
-                        log.error("Error handling event", result.cause());
-                    }
-                });
+                try {
+                    log.debug("Putting action {} on queue", action);
+                    events.put(action);
+                } catch (InterruptedException e) {
+                    log.warn("Interrupted while posting event", e);
+                }
+                break;
+            case MODIFIED:
                 break;
         }
     }
