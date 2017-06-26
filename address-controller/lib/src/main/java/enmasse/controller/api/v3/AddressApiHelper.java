@@ -35,7 +35,6 @@ public class AddressApiHelper {
         Set<Destination> toRemove = destinationApi.listDestinations();
         toRemove.removeAll(addressList.getDestinations());
 
-        System.out.println("Going to remove: " + toRemove);
         toRemove.forEach(destinationApi::deleteDestination);
         addressList.getDestinations().forEach(destinationApi::createDestination);
         return addressList;
