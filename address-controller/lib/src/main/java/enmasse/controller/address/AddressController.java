@@ -78,7 +78,6 @@ public class AddressController extends AbstractVerticle implements Watcher<Insta
                 AddressSpaceController addressSpaceController = new AddressSpaceController(
                         instanceApi.withInstance(instance.id()),
                         kubernetes.withInstance(instance.id()),
-                        client,
                         clusterGenerator);
                 log.info("Deploying address space controller for " + instance.id());
                 vertx.deployVerticle(addressSpaceController, result -> {

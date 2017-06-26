@@ -29,7 +29,7 @@ public class AddressSpaceController extends AbstractVerticle implements Watcher<
     private final DestinationClusterGenerator clusterGenerator;
     private Watch watch;
 
-    public AddressSpaceController(DestinationApi destinationApi, Kubernetes kubernetes, OpenShiftClient client, DestinationClusterGenerator clusterGenerator) {
+    public AddressSpaceController(DestinationApi destinationApi, Kubernetes kubernetes, DestinationClusterGenerator clusterGenerator) {
         this.destinationApi = destinationApi;
         this.kubernetes = kubernetes;
         this.clusterGenerator = clusterGenerator;
@@ -75,13 +75,13 @@ public class AddressSpaceController extends AbstractVerticle implements Watcher<
 
     @Override
     public synchronized void resourcesUpdated(Set<Destination> newDestinations) throws Exception {
-        log.debug("Check destinations in address space controller: " + newDestinations);
+        log.info("Check destinations in address space controller: " + newDestinations);
 
         Map<String, Set<Destination>> destinationByGroup = newDestinations.stream().collect(Collectors.groupingBy(Destination::group, Collectors.toSet()));
         validateDestinationGroups(destinationByGroup);
 
         List<DestinationCluster> clusterList = kubernetes.listClusters();
-        log.debug("Current set of clusters: " + clusterList);
+        log.info("Current set of clusters: " + clusterList);
         deleteBrokers(clusterList, destinationByGroup);
         createBrokers(clusterList, destinationByGroup);
 

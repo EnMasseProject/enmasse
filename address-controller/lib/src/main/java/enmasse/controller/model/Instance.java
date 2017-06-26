@@ -93,12 +93,12 @@ public class Instance {
 
         public Builder(InstanceId instanceId) {
             this.instanceId = instanceId;
-            this.certSecret = "certs-" + instanceId.getId();
+            this.certSecret = "certs";
         }
 
         public Builder instanceId(InstanceId instanceId) {
             this.instanceId = instanceId;
-            this.certSecret = "certs-" + instanceId.getId();
+            this.certSecret = "certs";
             return this;
         }
 

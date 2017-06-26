@@ -56,7 +56,7 @@ public class AddressSpaceControllerTest {
         mockClient = mock(OpenShiftClient.class);
 
         when(mockHelper.getInstanceId()).thenReturn(InstanceId.withId("myinstance"));
-        controller = new AddressSpaceController(mockApi, mockHelper, mockClient, mockGenerator);
+        controller = new AddressSpaceController(mockApi, mockHelper, mockGenerator);
         Map<String, Flavor> flavorMap = new LinkedHashMap<>();
         flavorMap.put("vanilla", new Flavor.Builder("vanilla", "test").build());
         flavorMap.put("shared", new Flavor.Builder("shared", "test").build());
