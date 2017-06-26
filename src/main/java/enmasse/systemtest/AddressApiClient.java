@@ -82,6 +82,8 @@ public class AddressApiClient {
         request.handler(event -> {
             if (event.statusCode() >= 200 && event.statusCode() < 300) {
                 latch.countDown();
+            } else {
+                System.out.println("Error when deploying addresses: " + event.statusCode() + ": " + event.statusMessage());
             }
         });
         request.end(Buffer.buffer(mapper.writeValueAsBytes(config)));
