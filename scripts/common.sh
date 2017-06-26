@@ -53,8 +53,6 @@ function run_test() {
     export OPENSHIFT_TOKEN=`oc whoami -t`
     export OPENSHIFT_MASTER_URL=$OPENSHIFT_URL
     mvn -B test -Djava.net.preferIPv4Stack=true
-
-    oc get pods
 }
 
 function teardown_test() {
