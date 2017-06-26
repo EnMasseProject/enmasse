@@ -12,6 +12,8 @@ protocol). This means that clients connected to the endpoints of an address spac
 it is _authorized_ to send or receive messages to within that address space. An address space may
 support multiple protocols, which is defined by the address space type.
 
+TODO: How should multiple protocols be handled? How does it relate to plans?
+
 ### Address
 
 An Address is part of an Address Space, and represents a destination used for sending and receiving
@@ -63,6 +65,8 @@ the client and the routers with a well defined API. This address space type is a
 have many connections and addresses, but requires message ordering to be enforced by clients. 
 
 Clients connect and send/receive messages in this address space using the [AMQP](www.amqp.org) or [MQTT](www.mqtt.org) protocols. See [MQTT over AMQP](documentation/mqtt-over-amqp) for how MQTT and AMQP addresses co-exists in this address space.
+
+TODO: This reflects the status quo, but how should multiple protocols actually be surfaced?
 
 #### Address types
 
