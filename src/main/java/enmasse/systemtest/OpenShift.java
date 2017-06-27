@@ -71,8 +71,8 @@ public class OpenShift {
         if (TestUtils.resolvable(endpoint)) {
             return endpoint;
         } else {
-            Logging.log.info("Endpoint didn't resolve, falling back to localhost");
-            return new Endpoint("localhost", 80);
+            Logging.log.info("Endpoint didn't resolve, falling back to address controller service");
+            return getEndpoint("address-controller", "http");
         }
     }
 
