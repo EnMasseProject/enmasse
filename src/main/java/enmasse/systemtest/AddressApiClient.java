@@ -78,12 +78,16 @@ public class AddressApiClient {
         } else {
             request = httpClient.put(endpoint.getPort(), endpoint.getHost(), "/v3/address");
         }
+        request.setTimeout(30_000);
         request.putHeader("content-type", "application/json");
+        request.exceptionHandler(event -> {
+            Logging.log.warn("Exception while performing request", event.getCause());
+        });
         request.handler(event -> {
             if (event.statusCode() >= 200 && event.statusCode() < 300) {
                 latch.countDown();
             } else {
-                System.out.println("Error when deploying addresses: " + event.statusCode() + ": " + event.statusMessage());
+                Logging.log.warn("Error when deploying addresses: " + event.statusCode() + ": " + event.statusMessage());
             }
         });
         request.end(Buffer.buffer(mapper.writeValueAsBytes(config)));
