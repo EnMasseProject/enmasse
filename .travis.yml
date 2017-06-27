@@ -9,7 +9,6 @@ notifications:
     use_notice: true
     skip_join: true
 sudo: required
-group: deprecated-2017Q2
 cache:
   directories:
     - $HOME/.m2
