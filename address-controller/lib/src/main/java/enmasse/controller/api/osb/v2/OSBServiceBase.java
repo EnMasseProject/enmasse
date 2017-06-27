@@ -68,14 +68,15 @@ public abstract class OSBServiceBase {
 
     protected boolean deleteDestinationByUuid(String destinationUuid) {
         log.info("Deleting destination with UUID {}", destinationUuid);
-        Set<Instance> instances = instanceApi.listInstances();
-        for (Instance i : instances) {
+        for (Instance i : instanceApi.listInstances()) {
             DestinationApi destinationApi = instanceApi.withInstance(i.id());
             Optional<Destination> d = destinationApi.getDestinationWithUuid(destinationUuid);
-            log.info("Destination found in instance {} (namespace {}). Deleting it now.",
-                    i.id().getId(), i.id().getNamespace());
-            d.ifPresent(destinationApi::deleteDestination);
-            return d.isPresent();
+            if (d.isPresent()) {
+                log.info("Destination found in instance {} (namespace {}). Deleting it now.",
+                        i.id().getId(), i.id().getNamespace());
+                destinationApi.deleteDestination(d.get());
+                return true;
+            }
         }
         log.info("Destination with UUID {} not found in any instance", destinationUuid);
         return false;

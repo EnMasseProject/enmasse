@@ -18,6 +18,7 @@ package enmasse.controller.api.osb.v2;
 
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.junit.Assert.assertThat;
 
@@ -31,6 +32,7 @@ import org.junit.Test;
 
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.UUID;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.core.Response;
 
@@ -147,6 +149,29 @@ public class ProvisionServiceTest extends OSBTestBase {
 
         exceptionGrabber.expect(GoneException.class);
         provisioningService.deprovisionService(SERVICE_INSTANCE_ID, QUEUE_SERVICE_ID_STRING, QUEUE_PLAN_ID_STRING);
+    }
+
+    @Test
+    public void testDeprovisionGivenMultipleOrganizations() throws Exception {
+        String serviceId11 = provisionService(randomUUID(), ORGANIZATION_ID, SPACE_ID);
+        provisionService(randomUUID(), ORGANIZATION_ID, SPACE_ID);
+
+        String organizationId2 = randomUUID();
+        String spaceId2 = randomUUID();
+        String serviceId21 = provisionService(randomUUID(), organizationId2, spaceId2);
+        provisionService(randomUUID(), organizationId2, spaceId2);
+
+        Response response = provisioningService.deprovisionService(serviceId21, QUEUE_SERVICE_ID_STRING, QUEUE_PLAN_ID_STRING);
+        assertThat(response.getStatus(), is(HttpResponseCodes.SC_OK));
+        assertThat(instanceApi.getDestinationUuids(), not(hasItem(serviceId21)));
+
+        response = provisioningService.deprovisionService(serviceId11, QUEUE_SERVICE_ID_STRING, QUEUE_PLAN_ID_STRING);
+        assertThat(response.getStatus(), is(HttpResponseCodes.SC_OK));
+        assertThat(instanceApi.getDestinationUuids(), not(hasItem(serviceId11)));
+    }
+
+    private String randomUUID() {
+        return UUID.randomUUID().toString();
     }
 
 

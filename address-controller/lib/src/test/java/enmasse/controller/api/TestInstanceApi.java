@@ -84,6 +84,10 @@ public class TestInstanceApi implements InstanceApi {
                 .collect(Collectors.toSet());
     }
 
+    public Set<String> getDestinationUuids() {
+        return getDestinations().stream().map(d -> d.uuid().get()).collect(Collectors.toSet());
+    }
+
     public Collection<TestDestinationApi> getDestinationApis() {
         return destinationApiMap.values();
     }

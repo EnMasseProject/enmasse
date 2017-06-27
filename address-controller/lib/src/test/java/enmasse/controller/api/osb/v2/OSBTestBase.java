@@ -57,10 +57,15 @@ public class OSBTestBase {
     }
 
     protected void provisionService(String serviceInstanceId) throws Exception {
-        ProvisionRequest provisionRequest = new ProvisionRequest(QUEUE_SERVICE_ID, QUEUE_PLAN_ID, ORGANIZATION_ID, SPACE_ID);
+        provisionService(serviceInstanceId, ORGANIZATION_ID, SPACE_ID);
+    }
+
+    protected String provisionService(String serviceInstanceId, String organizationId, String spaceId) throws Exception {
+        ProvisionRequest provisionRequest = new ProvisionRequest(QUEUE_SERVICE_ID, QUEUE_PLAN_ID, organizationId, spaceId);
         provisionRequest.putParameter("name", "my-queue");
         provisionRequest.putParameter("group", "my-group");
         provisioningService.provisionService(serviceInstanceId, true, provisionRequest);
         // TODO: wait for provisioning to finish (poll lastOperation endpoint)
+        return serviceInstanceId;
     }
 }
