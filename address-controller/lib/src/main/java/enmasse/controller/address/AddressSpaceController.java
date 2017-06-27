@@ -5,7 +5,6 @@ import enmasse.controller.address.api.DestinationApi;
 import enmasse.controller.common.*;
 import enmasse.controller.model.Destination;
 import io.fabric8.kubernetes.api.model.Pod;
-import io.fabric8.openshift.client.OpenShiftClient;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import org.apache.qpid.proton.Proton;

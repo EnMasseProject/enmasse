@@ -165,6 +165,7 @@ public class ConfigMapDestinationApi implements DestinationApi {
             if (result.succeeded()) {
                 promise.complete(result.result());
             } else {
+                log.error("Error deploying verticle: {}", result.cause());
                 promise.completeExceptionally(result.cause());
             }
         });
