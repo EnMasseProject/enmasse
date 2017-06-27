@@ -1,6 +1,6 @@
 # EnMasse resource definition
 
-This document defines the resources consumed and produced by APIs and can be considered a base for writing the schema for the data formats. The [conceptual model](model.md) defines address spaces and addresses which translates to these resources.
+This document defines the resources consumed and produced by APIs and can be considered a base for writing the schema for the data formats. The [address model](model.md) defines address spaces and addresses which translates to these resources.
 
 The resources defined herein may be created, deleted and updated through different APIs. Either the
 Open Service Broker API, the custom HTTP API, or using AMQP management.
@@ -66,4 +66,3 @@ The `Address` resource defines an address and its semantics.
 }
 ```
 
-AddressBinding
