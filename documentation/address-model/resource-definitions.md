@@ -23,7 +23,7 @@ The `AddressSpace` resource defines the type of address space and endpoint for c
         "plan": "small", // Required. This is the aggregate 'size' of the address space (i.e. controls how
                          // many addresses and how many resources each address may consume
         "endpoints": { // Optional. If not provided, the default generated hostnames will be provided
-           "messaging" { // Required. The available types are defined by the address space type
+           "messaging": { // Required. The available types are defined by the address space type
                 "host": "messaging.example.com", // Optional. The host name for this endpoint to use for routing by the load balancer
                 "cert": { // Optional. Self-signed certificates are generated if not specified
                     "provider": "secret", // Provider of certs may be through secrets or ACME. For 'secret', the secret name must be passed
