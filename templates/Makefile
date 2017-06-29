@@ -4,9 +4,6 @@ TAG?=latest
 INSTALLDIR=enmasse-$(TAG)
 
 all: prepare $(OBJS) yaml
-	mkdir -p $(INSTALLDIR)
-	cp -r install/* $(INSTALLDIR)
-	tar -czf $(INSTALLDIR).tar.gz $(INSTALLDIR)
 
 %.json: %.jsonnet
 	VERSION=$(TAG) jsonnet/jsonnet --ext-str VERSION -m generated $<

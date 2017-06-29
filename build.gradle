@@ -15,7 +15,7 @@ buildscript {
 ext {
     dockerorg = 'lulf'
     commit = System.getenv("COMMIT") ?: "latest"
-    version = System.getenv("VERSION") ?: "latest"
+    dockerImageVersion = System.getenv("VERSION") ?: "latest"
 
     slf4jVersion = '1.7.21'
     jacksonVersion = '2.7.4'
@@ -53,14 +53,27 @@ subprojects {
 
     if (new File(projectDir, "Dockerfile").exists()) {
         task buildImage(type: com.bmuschko.gradle.docker.tasks.image.DockerBuildImage) {
-            println "Executing buildimage for $projectDir"
+            println "Executing buildimage for $projectDir commit ${commit}"
             inputDir = projectDir
             tag = "${dockerorg}/${project.name}:${commit}"
         }
 
         task pushImage(type: com.bmuschko.gradle.docker.tasks.image.DockerPushImage) {
-            tag = "${commit}"
+            tag = commit
             imageName = "${dockerorg}/${project.name}"
+        }
+
+        task pushVersion(type: com.bmuschko.gradle.docker.tasks.image.DockerPushImage) {
+            tag = dockerImageVersion
+            imageName = "${dockerorg}/${project.name}"
+        }
+
+        task tagVersion(type: com.bmuschko.gradle.docker.tasks.image.DockerTagImage) {
+            dependsOn buildImage
+            force = true
+            imageId = buildImage.getTag()
+            repository = "${dockerorg}/${project.name}"
+            tag = dockerImageVersion
         }
     }
 }
