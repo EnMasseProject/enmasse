@@ -1,4 +1,4 @@
-language: ruby
+language: java
 notifications:
   email: false
   irc:
@@ -9,13 +9,13 @@ notifications:
     use_notice: true
     skip_join: true
 sudo: required
-cache:
-  directories:
-    - $HOME/.m2
 services:
 - docker
-rvm:
-- 2.2
+cache:
+  directories:
+  - "$HOME/.m2"
+jdk:
+- oraclejdk8
 before_script:
   #- curl -s ${SCRIPTS}/setup-tests.sh | bash /dev/stdin
 script:
