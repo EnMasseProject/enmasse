@@ -20,7 +20,7 @@ before_script:
   #- curl -s ${SCRIPTS}/setup-tests.sh | bash /dev/stdin
 script:
 - export TAG=${TRAVIS_TAG:-latest}
-- gradle clean build
+- gradle clean build -i
 - curl -s ${SCRIPTS}/generate-bintray-descriptor.sh | bash /dev/stdin enmasse enmasse-${TAG}.tar.gz > .bintray.json
   #- curl -s ${SCRIPTS}/run-tests.sh | bash /dev/stdin "" install
 env:
