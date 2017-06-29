@@ -13,8 +13,9 @@ buildscript {
 
 
 ext {
-    dockerorg = 'enmasseproject'
+    dockerorg = 'lulf'
     commit = System.getenv("COMMIT") ?: "latest"
+    version = System.getenv("VERSION") ?: "latest"
 
     slf4jVersion = '1.7.21'
     jacksonVersion = '2.7.4'
@@ -43,11 +44,23 @@ subprojects {
 
     apply plugin: 'com.bmuschko.docker-remote-api'
 
+    docker {
+        registryCredentials {
+            username = System.getenv("DOCKER_USER")
+            password = System.getenv("DOCKER_PASS")
+        }
+    }
+
     if (new File(projectDir, "Dockerfile").exists()) {
         task buildImage(type: com.bmuschko.gradle.docker.tasks.image.DockerBuildImage) {
             println "Executing buildimage for $projectDir"
             inputDir = projectDir
             tag = "${dockerorg}/${project.name}:${commit}"
+        }
+
+        task pushImage(type: com.bmuschko.gradle.docker.tasks.image.DockerPushImage) {
+            tag = "${commit}"
+            imageName = "${dockerorg}/${project.name}"
         }
     }
 }
