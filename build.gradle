@@ -77,13 +77,3 @@ subprojects {
         }
     }
 }
-
-task all {
-//    dependsOn 'build'
-//    dependsOn 'buildTar'
-//    dependsOn 'fetchDependencies'
-//    dependsOn 'buildImage'
-    doLast {
-        println "Done building project"
-    }
-}

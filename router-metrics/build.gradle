@@ -1,7 +1,7 @@
 description = 'Router Metrics Collector'
 apply plugin: 'distribution'
 
-task buildTar(type: Tar) {
+task buildModule(type: Tar) {
     from (projectDir) {
         include '*.py'
     }

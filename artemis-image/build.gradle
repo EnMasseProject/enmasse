@@ -42,3 +42,8 @@ task buildTar(type: Tar) {
     archiveName 'artemis-image.tar'
     destinationDir file('build')
 }
+
+task buildModule {
+    dependsOn buildTar
+    dependsOn fetchDependencies
+}

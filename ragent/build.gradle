@@ -1,7 +1,7 @@
 description = 'Router agent'
 apply plugin: 'distribution'
 
-task buildTar(type: Tar) {
+task buildModule(type: Tar) {
     from (projectDir) {
         include '*.js'
     }

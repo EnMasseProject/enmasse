@@ -1,7 +1,19 @@
 description = 'EnMasse templates'
 apply plugin: 'distribution'
 
-task buildTar(type: Tar) {
+task buildJsonnet(type: Exec) {
+    workingDir 'jsonnet'
+    commandLine 'make'
+}
+
+task buildTemplates(type: Exec) {
+    dependsOn buildJsonnet
+    workingDir projectDir
+    commandLine 'make'
+}
+
+task buildModule(type: Tar) {
+    dependsOn buildTemplates
     from ('install') {
         into "enmasse-${version}"
     }
@@ -10,12 +22,3 @@ task buildTar(type: Tar) {
     destinationDir file('build')
 }
 
-task buildJsonnet(type: Exec) {
-    workingDir 'jsonnet'
-    commandLine 'make'
-}
-
-task buildTemplates(type: Exec) {
-    workingDir projectDir
-    commandLine 'make'
-}
