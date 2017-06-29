@@ -5,14 +5,17 @@ buildscript {
 
 apply plugin: 'java'
 
+tasks.withType(Tar){
+    compression = Compression.NONE
+}
+
 repositories {
     mavenLocal()
     mavenCentral()
-    maven { url "https://jitpack.io" }
 }
 
 dependencies {
-    compile 'com.github.EnMasseProject:admin:master-SNAPSHOT'
+    compile project(':admin:common-lib:discovery')
     compile "io.vertx:vertx-proton:${vertxProtonVersion}"
     compile("org.apache.activemq:artemis-core-client:${artemisVersion}") {
         exclude group: "io.netty", module: "netty-all"

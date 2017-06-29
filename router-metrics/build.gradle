@@ -1,0 +1,11 @@
+description = 'Router Metrics Collector'
+apply plugin: 'distribution'
+
+task buildTar(type: Tar) {
+    from (projectDir) {
+        include '*.py'
+    }
+    compression = Compression.GZIP
+    archiveName "router-metrics.tgz"
+    destinationDir file('build')
+}

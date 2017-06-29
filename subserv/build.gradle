@@ -1,0 +1,11 @@
+description = 'Subscription service'
+apply plugin: 'distribution'
+
+task buildTar(type: Tar) {
+    from (projectDir) {
+        include '*.js'
+    }
+    compression = Compression.GZIP
+    archiveName "subserv.tgz"
+    destinationDir file('build')
+}

@@ -1,0 +1,21 @@
+description = 'EnMasse templates'
+apply plugin: 'distribution'
+
+task buildTar(type: Tar) {
+    from ('install') {
+        into "enmasse-${version}"
+    }
+    compression = Compression.GZIP
+    archiveName "enmasse-${version}.tgz"
+    destinationDir file('build')
+}
+
+task buildJsonnet(type: Exec) {
+    workingDir 'jsonnet'
+    commandLine 'make'
+}
+
+task buildTemplates(type: Exec) {
+    workingDir projectDir
+    commandLine 'make'
+}
