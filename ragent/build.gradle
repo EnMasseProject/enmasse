@@ -1,0 +1,11 @@
+description = 'Router agent'
+apply plugin: 'distribution'
+
+task buildTar(type: Tar) {
+    from (projectDir) {
+        include '*.js'
+    }
+    compression = Compression.GZIP
+    archiveName "ragent.tgz"
+    destinationDir file('build')
+}

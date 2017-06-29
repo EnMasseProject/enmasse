@@ -17,12 +17,12 @@ services:
 rvm:
 - 2.2
 before_script:
-- curl -s ${SCRIPTS}/setup-tests.sh | bash /dev/stdin
+  #- curl -s ${SCRIPTS}/setup-tests.sh | bash /dev/stdin
 script:
 - export TAG=${TRAVIS_TAG:-latest}
-- make
+- gradle clean build
 - curl -s ${SCRIPTS}/generate-bintray-descriptor.sh | bash /dev/stdin enmasse enmasse-${TAG}.tar.gz > .bintray.json
-- curl -s ${SCRIPTS}/run-tests.sh | bash /dev/stdin "" install
+  #- curl -s ${SCRIPTS}/run-tests.sh | bash /dev/stdin "" install
 env:
   global:
   - SCRIPTS=https://raw.githubusercontent.com/EnMasseProject/travis-scripts/master

@@ -1,7 +1,7 @@
 description = 'Address Controller Library'
 dependencies {
-    compile project(':common-lib:config')
-    compile project(':common-lib:amqp')
+    compile project(':admin:common-lib:config')
+    compile project(':admin:common-lib:amqp')
     compile "org.slf4j:slf4j-api:${slf4jVersion}"
     compile "io.vertx:vertx-proton:${vertxVersion}"
     compile "io.fabric8:openshift-client:${openshiftClientVersion}"

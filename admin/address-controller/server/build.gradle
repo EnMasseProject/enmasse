@@ -1,7 +1,7 @@
 description = 'Address Controller Server'
 dependencies {
-    compile project(':address-controller:lib')
-    compile project(':common-lib:amqp')
+    compile project(':admin:address-controller:lib')
+    compile project(':admin:common-lib:amqp')
     compile "io.fabric8:openshift-client:${openshiftClientVersion}"
     compile "io.vertx:vertx-core:${vertxVersion}"
     compile "io.vertx:vertx-proton:${vertxVersion}"

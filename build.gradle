@@ -1,8 +1,21 @@
 allprojects  {
-    group = 'enmasse'
+    group = 'io.enmasse'
 }
 
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath 'com.bmuschko:gradle-docker-plugin:3.0.8'
+    }
+}
+
+
 ext {
+    dockerorg = 'enmasseproject'
+    commit = System.getenv("COMMIT") ?: "latest"
+
     slf4jVersion = '1.7.21'
     jacksonVersion = '2.7.4'
     junitVersion = '4.12'
@@ -20,10 +33,21 @@ subprojects {
     tasks.withType(Tar){
         compression = Compression.GZIP
     }
+
     repositories {
         mavenLocal()
         mavenCentral()
         maven { url "http://repo.maven.apache.org/maven2" }
         maven { url "https://repository.jboss.org/nexus/content/repositories/snapshots/" }
+    }
+
+    apply plugin: 'com.bmuschko.docker-remote-api'
+
+    if (new File(projectDir, "Dockerfile").exists()) {
+        task buildImage(type: com.bmuschko.gradle.docker.tasks.image.DockerBuildImage) {
+            println "Executing buildimage for $projectDir"
+            inputDir = projectDir
+            tag = "${dockerorg}/${project.name}:${commit}"
+        }
     }
 }

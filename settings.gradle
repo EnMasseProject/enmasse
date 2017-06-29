@@ -1,0 +1,8 @@
+include ':admin:configserv'
+include ':admin:queue-scheduler'
+include ':admin:address-controller:lib'
+include ':admin:address-controller:server'
+include ':admin:common-lib:amqp'
+include ':admin:common-lib:config'
+include ':admin:common-lib:discovery'
+include ':ragent'
