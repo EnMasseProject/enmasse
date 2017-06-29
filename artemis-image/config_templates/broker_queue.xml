@@ -1,0 +1,20 @@
+      <addresses>
+         <address name="$nodes">
+             <multicast />
+         </address>
+         <address name="$QUEUE_NAME">
+            <anycast>
+               <queue name="$QUEUE_NAME" />
+            </anycast>
+         </address>
+      </addresses>
+
+      <connector-services>
+        <connector-service name="amqp-connector">
+          <factory-class>org.apache.activemq.artemis.integration.amqp.AMQPConnectorServiceFactory</factory-class>
+          <param key="host" value="$MESSAGING_SERVICE_HOST" />
+          <param key="port" value="$MESSAGING_SERVICE_PORT_INTERNAL" />
+          <param key="containerId" value="$QUEUE_NAME" />
+          <param key="groupId" value="$QUEUE_NAME" />
+        </connector-service>
+      </connector-services>

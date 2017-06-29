@@ -1,0 +1,31 @@
+buildscript {
+   ext.vertxProtonVersion = '3.4.1'
+   ext.artemisVersion = '2.1.0'
+}
+
+apply plugin: 'java'
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+    maven { url "https://jitpack.io" }
+}
+
+dependencies {
+    compile 'com.github.EnMasseProject:admin:master-SNAPSHOT'
+    compile "io.vertx:vertx-proton:${vertxProtonVersion}"
+    compile("org.apache.activemq:artemis-core-client:${artemisVersion}") {
+        exclude group: "io.netty", module: "netty-all"
+    }
+    testCompile 'junit:junit:4.12'
+    testCompile("org.apache.activemq:artemis-server:${artemisVersion}") {
+        exclude group: "io.netty", module: "netty-all"
+    }
+    testCompile("org.apache.activemq:artemis-amqp-protocol:${artemisVersion}") {
+        exclude group: "io.netty", module: "netty-all"
+    }
+}
+
+apply plugin: 'application'
+mainClassName = 'enmasse.broker.prestop.Main'
+applicationDefaultJvmArgs = ["-Dvertx.cacheDirBase=/tmp"]

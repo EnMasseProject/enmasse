@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>enmasse</groupId>
+    <artifactId>artemis-base-image</artifactId>
+    <version>1.0-SNAPSHOT</version>
+
+    <properties>
+        <artemis.version>2.1.0</artemis.version>
+        <image.tag>1</image.tag>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.apache.activemq</groupId>
+            <artifactId>apache-artemis</artifactId>
+            <version>${artemis.version}</version>
+            <classifier>bin</classifier>
+            <type>tar.gz</type>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>2.10</version>
+                <executions>
+                    <execution>
+                        <id>unpack-artemis</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>unpack</goal>
+                        </goals>
+                        <configuration>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>org.apache.activemq</groupId>
+                                    <artifactId>apache-artemis</artifactId>
+                                    <classifier>bin</classifier>
+                                    <type>tar.gz</type>
+                                    <outputDirectory>target/dependencies/artemis</outputDirectory>
+                                </artifactItem>
+                            </artifactItems>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>io.fabric8</groupId>
+                <artifactId>docker-maven-plugin</artifactId>
+                <version>0.21.0</version>
+                <configuration>
+                    <images>
+                        <image>
+                            <alias>activemq-artemis</alias>
+                            <name>enmasseproject/activemq-artemis:${artemis.version}-${image.tag}</name>
+                            <build>
+                                <from>openjdk:8-jre-alpine</from>
+                                <user>artemis</user>
+                                <workdir>/home/artemis</workdir>
+                                <assembly>
+                                    <descriptor>descriptors/artemis.xml</descriptor>
+                                </assembly>
+                                <runCmds>
+                                    <run>adduser -S -D artemis nogroup</run>
+                                    <run>/maven/bin/artemis create /opt/artemis --user admin --password admin --role admins --require-login</run>
+                                    <run>chown -R artemis:nogroup /opt/artemis</run>
+                                    <run>chmod -R a+rw /opt/artemis</run>
+                                    <run>find /opt/artemis -type d -exec chmod a+x {} +</run>
+                                </runCmds>
+                                <entryPoint>
+                                    <shell>/opt/artemis/bin/artemis run</shell>
+                                </entryPoint>
+                                <ports>
+                                    <port>5672</port>
+                                </ports>
+                                <volumes>
+                                    <volume>/opt/artemis/data</volume>
+                                </volumes>
+                            </build>
+                        </image>
+                    </images>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>build</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+    <repositories>
+        <repository>
+            <id>apache.snapshots</id>
+            <name>Apache Development Snapshot Repository</name>
+            <url>https://repository.apache.org/content/repositories/snapshots/</url>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
+
+</project>
