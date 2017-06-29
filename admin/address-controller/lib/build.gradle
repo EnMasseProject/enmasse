@@ -1,0 +1,15 @@
+description = 'Address Controller Library'
+dependencies {
+    compile project(':common-lib:config')
+    compile project(':common-lib:amqp')
+    compile "org.slf4j:slf4j-api:${slf4jVersion}"
+    compile "io.vertx:vertx-proton:${vertxVersion}"
+    compile "io.fabric8:openshift-client:${openshiftClientVersion}"
+    compile "com.fasterxml.jackson.core:jackson-core:${jacksonVersion}"
+    compile "com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}"
+    compile "com.fasterxml.jackson.module:jackson-module-jsonSchema:${jacksonVersion}"
+    compile "org.jboss.resteasy:resteasy-jackson2-provider:${resteasyVersion}"
+    compile "org.jboss.resteasy:resteasy-vertx:${resteasyVersion}"
+    testCompile "junit:junit:${junitVersion}"
+    testCompile "org.mockito:mockito-core:${mockitoVersion}"
+}

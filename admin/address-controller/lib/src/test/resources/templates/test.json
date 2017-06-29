@@ -1,0 +1,29 @@
+{
+  "apiVersion": "v1",
+  "kind": "Template",
+  "metadata": {
+    "name": "test"
+  },
+  "objects": [
+    {
+      "kind": "ConfigMap",
+      "apiVersion": "v1",
+      "metadata": {
+        "name": "mymap"
+      },
+      "data": {
+        "key": "${MYPARAM}"
+      }
+    }
+  ],
+  "parameters": [
+    {
+      "name": "MYPARAM",
+      "description": "desc"
+    },
+    {
+      "name": "SECONDPARAM",
+      "description": "desc"
+    }
+  ]
+}

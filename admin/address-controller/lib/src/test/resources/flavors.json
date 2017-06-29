@@ -1,0 +1,15 @@
+[
+  {
+    "name": "test-queue",
+    "templateName": "queue-persisted",
+    "templateParameters": {
+      "STORAGE_CAPACITY": "2Gi"
+    }
+  },
+  {
+    "name": "descriptive-queue",
+    "templateName": "queue-inmemory",
+    "type": "queue",
+    "description": "This is a simple queue"
+  }
+]

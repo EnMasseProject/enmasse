@@ -1,0 +1,6 @@
+description = 'AMQP utilities'
+dependencies {
+    compile "io.vertx:vertx-proton:${vertxVersion}"
+    testCompile "junit:junit:${junitVersion}"
+    testCompile "org.mockito:mockito-core:${mockitoVersion}"
+}

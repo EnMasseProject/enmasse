@@ -1,0 +1,29 @@
+allprojects  {
+    group = 'enmasse'
+}
+
+ext {
+    slf4jVersion = '1.7.21'
+    jacksonVersion = '2.7.4'
+    junitVersion = '4.12'
+    mockitoVersion = '2.0.52-beta'
+    vertxVersion = '3.4.1'
+    openshiftClientVersion = '2.3.1'
+    resteasyVersion = '3.1.0.Final'
+    artemisVersion = '2.0.0'
+}
+
+subprojects {
+    apply plugin: 'java'
+    sourceCompatibility = 1.8
+    targetCompatibility = 1.8
+    tasks.withType(Tar){
+        compression = Compression.GZIP
+    }
+    repositories {
+        mavenLocal()
+        mavenCentral()
+        maven { url "http://repo.maven.apache.org/maven2" }
+        maven { url "https://repository.jboss.org/nexus/content/repositories/snapshots/" }
+    }
+}
