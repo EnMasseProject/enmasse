@@ -43,7 +43,7 @@ task buildTar(type: Tar) {
     destinationDir file('build')
 }
 
-task buildModule {
+task pack {
     dependsOn buildTar
     dependsOn fetchDependencies
 }

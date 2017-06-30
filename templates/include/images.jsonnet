@@ -8,7 +8,7 @@ local project = "enmasseproject";
     self.image("address-controller"),
 
   router::
-    self.image("qdrouterd"),
+    self.image("router"),
 
   artemis::
     self.image("artemis"),

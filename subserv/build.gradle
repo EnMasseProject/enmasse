@@ -1,7 +1,7 @@
 description = 'Subscription service'
 apply plugin: 'distribution'
 
-task buildModule(type: Tar) {
+task pack(type: Tar) {
     from (projectDir) {
         include '*.js'
     }

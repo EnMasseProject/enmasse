@@ -12,7 +12,7 @@ task buildTemplates(type: Exec) {
     commandLine 'make'
 }
 
-task buildModule(type: Tar) {
+task pack(type: Tar) {
     dependsOn buildTemplates
     from ('install') {
         into "enmasse-${version}"
