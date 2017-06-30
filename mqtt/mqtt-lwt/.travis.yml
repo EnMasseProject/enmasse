@@ -1,0 +1,45 @@
+sudo: required
+language: java
+jdk:
+- oraclejdk8
+notifications:
+  email: false
+services:
+- docker
+before_install:
+- docker pull ppatierno/qdrouterd:0.8.0-repo
+- docker run -d --name qdrouterd -p 5672:5672 -p 55673:55673 -v $TRAVIS_BUILD_DIR/src/test/resources:/conf
+  ppatierno/qdrouterd:0.8.0-repo qdrouterd --conf /conf/qdrouterd.conf
+before_script:
+- curl -s ${SCRIPTS}/setup-tests.sh | bash /dev/stdin
+script:
+- export TAG=${TRAVIS_TAG:-1.0-SNAPSHOT}
+- if [ -n "${TRAVIS_TAG}" ]; then mvn versions:set -DgenerateBackupPoms=false -DnewVersion=${TRAVIS_TAG};
+  fi
+- mvn test package -B || exit 1
+- curl -s ${SCRIPTS}/generate-bintray-descriptor.sh | bash /dev/stdin mqtt-lwt target/mqtt-lwt-${TAG}-bin.tar.gz > .bintray.json
+- curl -s ${SCRIPTS}/docker-build.sh | bash /dev/stdin enmasseproject/mqtt-lwt . $TAG
+- curl -s ${SCRIPTS}/run-tests.sh | bash /dev/stdin ${COMMIT} "" enmasseproject/mqtt-lwt
+after_success:
+- curl -s ${SCRIPTS}/docker-push.sh | bash /dev/stdin enmasseproject/mqtt-lwt
+env:
+  global:
+  - SCRIPTS=https://raw.githubusercontent.com/EnMasseProject/travis-scripts/master
+  - COMMIT=${TRAVIS_COMMIT::8}
+  - secure: ddjiAvbKpSXNBCEYQCbwWw1RfeO/kam0c5ysCjqif6XoPygV4AIT/mzDI3WOeyJEQZgEyemF8D6L3G4hZx26qxvtA5mbSxZmQH5eB5FLeoa/MsK97MKMTFNwY1apl2PPcb8E/EqIdc4irsxW79GosRpnfHkubR9WQXXvJA4msfviVNH2eU+JEDKEtAdIH7RivsL1W/kRw4ePNjLVq4+Mf6VWzwY7l9CtDHfmvkT31tY/f+fRDpmLhGujrKKuVq5ovSeVn4Y8WeoYq3GExsjrfV8oASFnSA546+I1+5ugXIFcQw87u3iAr6gh8WLHMCCZGqpp20ymn96HtNv0SNz/jeZTN+BHVJuMFN1GSa3nInApB6Y9UYTjSJgAe4m6a/kxMaOBL40l13IHMnaFWzdSIWpE2ub2lEe58ryDan0mJdvq67QCBSsnVubwv18CLBEO1wKJuNL9bCbfebdBCoj7QMW8O9GaN8km6JLq9lSGMlQeBt+kyO03v+qb8vDRz15uNT/PowK4JvbM8VD0WWi51k3PFZ5uAaqbNIP1m7R4cE1Uvu/m4h8Na+88wI62eOXF0MljftQ+6Jt1W58p77izpazpcOM01PYmn5JbYfC9pncJfxnIxsYnJMIc8hJUiXSfBFsP/a0m756cokSsOkiGTy2T3MbYds+Xg/bQqVdAh/g=
+  - secure: rjIr6ntAK1gXdNg0ZZheQyS0HyQz8VKx0oM/KSbxDHM3b55+kWDuatS4lwHj2oWarQiLiyKVcx2CsCIeLPgkWNsm+cKTFswYblDox+trvWiOp7qNOkLbcfPcmP1LoEXyQFK8kSJt/4QxDVzFJjH9IRduZLI5llDAKEFy6TTSVZHmxRmprjfmz7RkuEqAarfPrcvo7Njyv985OVbR9+8GN4WUmn+nbeAEq9/Crn/zqOoha6i9hABm5hd32qn294tW/NmWl7lQ/A29V0cTu/UqfJt9JUryTEH08Fi8DfJh4E5eIet+VT2HKRarWObmnRDTeLUMqZdEFono+CFlXxrNrfYjze2NlR5zeqFBwAsDkgbfvQXcYGygDKUaa3GNc0dJbZeEwbQuLux/VE3PRkEHyl7oAGYaEFlTR6r2cFRgthRLKurYViWLbxCMukm14yfkO5mvy2/LlVyvFkDNFodWHl8B0kPOVR17Ichc3SpdFhWqVWIFVU8A4SwTyD0IlvTcbmkkvBjMq7sLLNzgGWEgfg+tPbGBBVLhdVDSBkvyw8Czygr5wMtcPKC9fXGliyY1yj3GATHbLRCKbp4r029TyaQ0nQF8h5+CuIYkwGX+fx416gRG0MaF+UmFfEz/WQ20Cnk2zFxht3p2HTDduvGkzbpZ/PcHyaBYNhMTatT9knM=
+  - secure: Vy/YlOQUe+wgOtn/774V6eVHSBbcgaaqMrMFRY6ExLT98exex3fHxFxfYVW28NP0J66Bh1I0QgT4wVWNABQfWs4zjx6hzfJMAL4qdXzRVrhOX8zOEVscE/1del23uILzM6w1sjwWIbcnXE0VEIQwtkkfj13EwKpnCpEiCQuABIcOHQRljo+sMH//Xhr6QDwghT/aDGY/oXFG/tH/UgLZf6mLrvKW7+ih6LwxAaQn7RPGdXeBdDatmcjJKoxmj6idKlSHRIznnKuHgFjaHzdPxGf7jlqgeq+27VcvHJSPRwUhmWEZTcpcrY5Xy3+Suuq4SMTZlfj+l6LKuPxGhKHD8+Xpzq4OTIGQtQB88GeOQ/cZRQwRIzW/yjE1D3CJ82bxBYd7PtSVIHWUSxB45erzC+V8ar5vJmMSHzU3u3CwW3erLm/28KGFGSh9AmnGUAKzNO0K3VJSWJPJ1osSl4fl5iJfBlbW5M9cSmUMAmscd0huIQdUCfDhGf4JWyzlLJ5T1Yzbgxq2Omk6qIvNamSg0PBCzBFyN6zLE/J5nJ9qi8oT87DnefAMVisnYqudlRohFB1zPiRycO80qBsMbytfJXyikQyRlWozcDOKyBJNF1ZJzZB5wn0kqbpWZyOLR0rlvfwe3VTZ75htlPe6Qw9nxEOGGI/gMMo36MzAlTIddcE=
+  - secure: aDq5T2VYCiuGkQiCF3UZKu0FuITIegtXWQyyMEy8B8Iol7y//LUh/sMoQIWIg3Egf9Qxuy8eyYz2HPBzg6TN48oxVUaK3lsquyH8qtxlV6GiazlQkjsVIX5GjDub/AEIhtAZJCePaqdMXtCz/JvphpruDQgOqLTnMcftmC1LgRy3sJGIR9TcVUB9xLOjTyQ65NCo7aYRnFgXyp/Xbw9Q7izWu4R9IaeYmDtKB+uiOqsCt0vd4mjXJS1Gnc1WNYJH1wQFY43ZsKgEkiUoK6IRdU8Zhh9PJcx7A9uLkXtt7RTTM2GaJ4HCZExZ2m8V+eHM+GMo8CceUEfmrydw8qRZ4GZ3v85oBhCzXRCEicC49DtsUSNe+ODLG7q3JhPRokmEesqILOO9qBF7xx/HCqsrG1Ku7+BTVeV0XfsP5wWAaLxwlLkUjB7zlPDjqAHybli6PCbUXMJUw6edeCR1N6LxErKYUu7PlShLgt4m9iyecv94Fn17/8VvS7/Wagiv3tKOt0gLi6DrKdeNgJbrrqM0UBsGapOlC5C+ix+2DjsNXXb7SCjd71yUc2OlK8J7zQqmBn+ozRiCMYia0JjCeLZZKc9mmDxQD65XgDa0vbQja1BZIUj4i823HgezrPfPcTWvjDlII+y2hUbIDHTz3MIlKyL2Eu0Jv9QoSs1T4A2wwA4=
+deploy:
+  - provider: bintray
+    file: ".bintray.json"
+    user: "${BINTRAY_API_USER}"
+    on:
+      tags: true
+    key:
+      secure: JLqOD2hKx8adrS47TAegY46AeK+T1f7zbYNcG4M5dtaw+N4LGA7h5U4ay6LTg4qiF9K9iLnLEQIQH0yPgT0cZClMo+DhuqKe1DMcukZSacXrppxIefm4Pwg/SvycLmlynTEe/qAe4FyvvUo9DXPXSmvcnulELxaBqdH9nVkuD5dkWX42enw9h1EX6favAxOhqzqagoi7f2K0uO8djygwqxDjVgNBA7mqgpPCbaqlDWCxWhzg/xxgnX4Bi44uUIMmdfjZ6jeamiTOo3EfIZti3tFOXT2Iw1qHYk70g52yP44ilG4bpOx5/LaQChsEd6+jJdYYWcQrjpweXyoh1OsIyCIHbrHCdCLDeKd232Tcl9uI8Ws+eKQ2ho+yLqadnuUGyCvPr3wbWxvZW7VfRoZ7m/4iEah0cIDbAZIU7tUVVY/dX7+IcaUSOyvqDOA+mh4d5LTCVzA08TYvoh6bqXToU1QgaORKo5DRAsvP6diekhx8RfvzOF13Kxz5mKtyjzIk1b7sNEz5ZWrQ9V8+EXLRBqZtoveoQaEK6yAtG+EVQ8Z1D7+36PMgkwlXWFigaMA/pY5Bu3qsTi4Wk5EPe1Qb4jikDzf/i+zmfY2X3uVX4N8PzUNAf+Fb3Fn6c+/lAeVnKe92v1I/MdV0OoTo3ZqSZWHSW1yTyL8YpLK19LR6xSs=
+  - provider: bintray
+    file: ".bintray.json"
+    user: "${BINTRAY_API_USER}"
+    key:
+      secure: JLqOD2hKx8adrS47TAegY46AeK+T1f7zbYNcG4M5dtaw+N4LGA7h5U4ay6LTg4qiF9K9iLnLEQIQH0yPgT0cZClMo+DhuqKe1DMcukZSacXrppxIefm4Pwg/SvycLmlynTEe/qAe4FyvvUo9DXPXSmvcnulELxaBqdH9nVkuD5dkWX42enw9h1EX6favAxOhqzqagoi7f2K0uO8djygwqxDjVgNBA7mqgpPCbaqlDWCxWhzg/xxgnX4Bi44uUIMmdfjZ6jeamiTOo3EfIZti3tFOXT2Iw1qHYk70g52yP44ilG4bpOx5/LaQChsEd6+jJdYYWcQrjpweXyoh1OsIyCIHbrHCdCLDeKd232Tcl9uI8Ws+eKQ2ho+yLqadnuUGyCvPr3wbWxvZW7VfRoZ7m/4iEah0cIDbAZIU7tUVVY/dX7+IcaUSOyvqDOA+mh4d5LTCVzA08TYvoh6bqXToU1QgaORKo5DRAsvP6diekhx8RfvzOF13Kxz5mKtyjzIk1b7sNEz5ZWrQ9V8+EXLRBqZtoveoQaEK6yAtG+EVQ8Z1D7+36PMgkwlXWFigaMA/pY5Bu3qsTi4Wk5EPe1Qb4jikDzf/i+zmfY2X3uVX4N8PzUNAf+Fb3Fn6c+/lAeVnKe92v1I/MdV0OoTo3ZqSZWHSW1yTyL8YpLK19LR6xSs=
