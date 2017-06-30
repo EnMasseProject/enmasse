@@ -1,0 +1,65 @@
+<div id="connections" ng-controller="ConnectionViewCtrl" class="row example-container">
+  <div class="row card-pf col-md-12" style="height: 15px;"></div>
+  <div class="row col-md-12">
+    <div pf-toolbar id="connectionToolbar" config="toolbarConfig"></div>
+  </div>
+
+  <div class="col-md-12 list-view-container">
+    <div pf-list-view id="connectionListView" items="items" config="connectionListConfig">
+      <div class="list-view-pf-description">
+        <div class="list-view-pf-left">
+          <span class="fa fa-lock" ng-if="item.encrypted"></span>
+          <span class="fa fa-unlock-alt" ng-if="!item.encrypted"></span>
+        </div>
+        <div class="list-group-item-heading">
+          {{item.host}}
+        </div>
+        <div class="list-group-item-text">
+          {{item.container}} &nbsp &nbsp
+          {{item.user}}  &nbsp &nbsp
+          {{item.properties}}
+        </div>
+      </div>
+      <div class="list-view-pf-additional-info">
+        <div class="list-view-pf-additional-info-item">
+          <span class="fa fa-sign-in"></span>
+          <strong>{{item.messages_in}}</strong> Messages In
+        </div>
+        <div class="list-view-pf-additional-info-item">
+          <span class="fa fa-sign-out"></span>
+          <strong>{{item.messages_out}}</strong> Messages Out
+        </div>
+        <div class="list-view-pf-additional-info-item">
+          <span class="fa pficon-import"></span> <strong>{{item.senders.length}}</strong> Senders
+        </div>
+        <div class="list-view-pf-additional-info-item">
+          <span class="fa pficon-export"></span><strong>{{item.receivers.length}}</strong> Receivers
+        </div>
+      </div>
+      <list-expanded-content>
+        <div class="row" ng-if="$parent.item.senders.length > 0">
+          <!--
+          {{$parent.item.senders}}
+          {{$parent.item.receivers}}
+          <div class="col-md-2">
+            <div pf-c3-chart id="{{'ingress-outcomes-' + $parent.$parent.item.address}}" config="get_connection_outcomes_chart_config($parent.$parent.item, 'ingress')"></div>
+          </div>
+          <div class="col-md-2">
+            <div pf-c3-chart id="{{'egress-outcomes-' + $parent.$parent.item.address}}" config="get_connection_outcomes_chart_config($parent.$parent.item, 'egress')"></div>
+          </div>
+          -->
+          <div class="col-md-12">
+              <span>Senders</span>
+              <div ui-grid="$parent.$parent.item.senders_config" class="link-grid" ui-grid-auto-resize ui-grid-resize-columns ng-style="getTableHeight($parent.$parent.item, 'senders')"></div>
+          </div>
+        </div>
+        <div class="row" ng-if="$parent.item.receivers.length > 0">
+          <div class="col-md-12">
+            <span>Receivers</span>
+            <div ui-grid="$parent.$parent.item.receivers_config" class="link-grid" ui-grid-auto-resize ui-grid-resize-columns ng-style="getTableHeight($parent.$parent.item, 'receivers')"></div>
+          </div>
+        </div>
+      </list-expanded-content>
+    </div>
+  </div>
+</div>

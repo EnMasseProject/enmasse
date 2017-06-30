@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<dt-example table-type="html-wide" order="4" table-class="display nowrap">
+
+<css lib="datatables colreorder responsive" />
+<js lib="jquery datatables colreorder responsive">
+<![CDATA[
+
+$(document).ready(function() {
+	var table = $('#example').dataTable( {
+		colReorder: true,
+		responsive: true,
+		columnDefs: [ {
+			targets: 2,
+			responsivePriority: 10001
+		} ]
+	} );
+} );
+
+]]>
+</js>
+
+<title lib="ColReorder">Responsive integration</title>
+
+<info><![CDATA[
+
+This example shows ColReorder being used with the [Responsive extension for DataTables](https://datatables.net/extensions/colreorder). The _"Position"_ column is the first to be hidden through the use of the `r-init columns.responsivePriority` option, and you'll be able to notice that the hidden column is automatically taken account of by ColReorder as the columns are reordered.
+
+]]></info>
+
+</dt-example>

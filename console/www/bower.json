@@ -1,0 +1,26 @@
+{
+  "name": "enmasse",
+  "homepage": "https://github.com/EnMasseProject/routilities",
+  "authors": [],
+  "description": "Bower components for enmasse",
+  "main": "",
+  "license": "Apache 2",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "angular-patternfly": "^3.23.2",
+    "angular-ui-router": "^0.4.2",
+    "bootstrap-switch": "^3.3.4",
+    "angular-dragdrop": "^1.0.13",
+    "angular-ui-grid": "^4.0.4"
+  },
+  "resolutions": {
+    "jquery": "~2.1.4"
+  }
+}

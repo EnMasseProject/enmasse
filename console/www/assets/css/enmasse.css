@@ -1,0 +1,16 @@
+#dashboard {
+    margin: 4em 0.5em 0 0.5em;
+}
+
+.ui-grid-cell-right-align {
+    text-align: right;
+}
+
+/* remove hidden cell menu to allow cell header text to align right */
+.link-grid .ui-grid-invisible {
+    display: none;
+}
+
+.list-group-item.disabled {
+  display: none !important;
+}

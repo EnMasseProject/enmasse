@@ -1,0 +1,91 @@
+<!doctype html>
+<html ng-app="enmasse">
+  <head>
+    <meta charset="utf-8"></meta>
+    <!-- PatternFly Styles -->
+    <!-- Note: No other CSS files are needed regardless of what other JS packages located in patternfly/components that you decide to pull in -->
+
+    <link rel="stylesheet" href="bower_components/patternfly/dist/css/patternfly.min.css">
+    <link rel="stylesheet" href="bower_components/patternfly/dist/css/patternfly-additions.min.css">
+    <!-- Angular-PatternFly Styles -->
+    <link rel="stylesheet" href="bower_components/angular-patternfly/dist/styles/angular-patternfly.min.css" />
+    <link rel="stylesheet" type="text/css" href="bower_components/angular-ui-grid/ui-grid.min.css">
+    <link rel="stylesheet" href="assets/css/enmasse.css" />
+
+    <script src="bower_components/jquery/dist/jquery.min.js"></script>
+    <script src="bower_components/moment/moment.js"></script>
+    <script src="bower_components/c3/c3.min.js"></script>
+    <script src="bower_components/d3/d3.min.js"></script>
+    <script src="bower_components/angular/angular.min.js"></script>
+    <script src="bower_components/angular-ui-grid/ui-grid.min.js">
+    <script src="bower_components/angular-dragdrop/src/angular-dragdrop.min.js"></script>
+
+    <!--    <script src="https://www.patternfly.org/angular-patternfly/grunt-scripts/angular-datatables.min.js"></script>
+    <script src="https://www.patternfly.org/angular-patternfly/grunt-scripts/angular-datatables.select.min.js"></script>
+-->
+    <script src="bower_components/angular-sanitize/angular-sanitize.min.js"></script>
+    <script src="bower_components/angular-animate/angular-animate.min.js"></script>
+    <script src="bower_components/angular-bootstrap/ui-bootstrap-tpls.min.js"></script>
+    <script src="bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script src="bower_components/bootstrap-datepicker/dist/js/bootstrap-datepicker.min.js"></script>
+    <script src="bower_components/bootstrap-select/dist/js/bootstrap-select.min.js"></script>
+    <script src="bower_components/bootstrap-switch/dist/js/bootstrap-switch.min.js"></script>
+    <script src="bower_components/bootstrap-touchspin/dist/jquery.bootstrap-touchspin.min.js"></script>
+    <script src="bower_components/patternfly-bootstrap-combobox/js/bootstrap-combobox.js"></script>
+    <script src="bower_components/patternfly-bootstrap-treeview/dist/bootstrap-treeview.min.js"></script>
+    <script src="bower_components/patternfly/dist/js/patternfly.min.js"></script>
+    <script src="bower_components/angular-patternfly/dist/angular-patternfly.js"></script>
+    <script src="bower_components/angular-ui-router/release/angular-ui-router.min.js"></script>
+    <script src="bower_components/angular-bootstrap/ui-bootstrap.min.js"></script>
+    <script src="bower_components/lodash/lodash.min.js"></script>
+    <script src="bower_components/angular-drag-and-drop-lists/angular-drag-and-drop-lists.min.js"></script>
+
+    <script src="app.module.js"></script>
+    <script src="shared/script.js"></script>
+    <script src="assets/js/rhea.js"></script>
+    <script src="shared/address_service.js"></script>
+
+    <script src="components/dashboard/dashboard_ctrl.js"></script>
+    <script src="components/addresses/addresses_ctrl.js"></script>
+    <script src="components/connections/connections_ctrl.js"></script>
+    <script src="components/users/users_ctrl.js"></script>
+  </head>
+  <body>
+  <div id="verticalNavLayout" class="layout-pf layout-pf-fixed faux-layout" ng-controller="NavCtrl">
+    <div pf-vertical-navigation items="navigationItems" brand-alt="EnMasse"
+          pinnable-menus="true" update-active-items-on-click="true"
+          navigate-callback="handleNavigateClick">
+      <div>
+        <ul class="nav navbar-nav navbar-right navbar-iconic">
+          <li class="dropdown"></li>
+          <li class="dropdown">
+            <a class="dropdown-toggle nav-item-iconic" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+              <span title="Help" class="fa pficon-help"></span>
+              <span class="caret"></span>
+            </a>
+            <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
+              <li><a href="#">Help</a></li>
+              <li><a href="#">About</a></li>
+            </ul>
+          </li>
+          <li class="dropdown">
+            <a class="dropdown-toggle nav-item-iconic" id="dropdownMenu2" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+              <span title="Username" class="fa pficon-user"></span>
+              <span class="caret"></span>
+            </a>
+            <ul class="dropdown-menu" aria-labelledby="dropdownMenu2">
+              <li><a href="#">Preferences</a></li>
+              <li><a href="#">Logout</a></li>
+            </ul>
+          </li>
+        </ul>
+      </div>
+    </div>
+    <div id="contentContainer" class="container-fluid container-cards-pf container-pf-nav-pf-vertical example-page-container">
+      <ui-view>
+        <!-- Content will be added here -->
+      </ui-view>
+    </div>
+  </div>
+  </body>
+</html>

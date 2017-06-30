@@ -1,0 +1,97 @@
+<div id="addresses" ng-controller="ViewCtrl" class="row example-container">
+  <div class="row card-pf col-md-12" style="height: 15px;"></div>
+  <div class="row col-md-12">
+    <div pf-toolbar id="exampleToolbar" config="toolbarConfig">
+      <actions>
+        <button class="btn btn-default primary-action" type="button" ng-controller="WizardModalController" ng-click="openWizardModel()">
+          <span class="fa fa-plus"></span> Create
+        </button>
+        <button class="btn btn-default primary-action" type="button" ng-click="delete_address()">
+          Delete
+        </button>
+      </actions>
+    </div>
+  </div>
+
+  <div class="col-md-12 list-view-container">
+    <div pf-list-view id="exampleListView"
+         items="items" config="listConfig">
+      <div class="list-view-pf-description">
+        <div class="list-view-pf-left">
+          <span class="fa fa-spinner" ng-if="item.propagated !== 100"></span>
+          <span class="fa pficon-ok" ng-if="item.propagated === 100"></span>
+        </div>
+        <div class="list-group-item-heading">
+          {{item.address}}
+        </div>
+        <div class="list-group-item-text">
+          {{item.pattern}} &nbsp &nbsp
+          {{item.flavor}}
+        </div>
+      </div>
+      <div class="list-view-pf-additional-info">
+        <div class="list-view-pf-additional-info-item">
+          <span class="fa fa-sign-in"></span>
+          <strong>{{item.messages_in_delta}}</strong> Messages In
+        </div>
+        <div class="list-view-pf-additional-info-item">
+          <span class="fa fa-sign-out"></span>
+          <strong>{{item.messages_out_delta}}</strong> Messages Out
+        </div>
+        <div class="list-view-pf-additional-info-item">
+          <span class="fa pficon-import"></span> <strong>{{item.senders}}</strong> Senders
+        </div>
+        <div class="list-view-pf-additional-info-item">
+          <span class="fa pficon-export"></span><strong>{{item.receivers}}</strong> Receivers
+        </div>
+        <div class="list-view-pf-additional-info-item"  ng-if="item.store_and_forward">
+          <span class="fa fa-envelope-o"></span><strong>{{item.depth}}</strong> Stored
+        </div>
+        <div class="list-view-pf-additional-info-item"  ng-if="item.store_and_forward">
+          <span class="fa fa-database"></span><strong>{{item.shards.length}}</strong> Shards
+        </div>
+      </div>
+      <list-expanded-content>
+        <div class="row">
+          <div class="col-md-2" ng-if="$parent.item.store_and_forward && $parent.item.multicast">
+            <div pf-c3-chart id="{{'subscribers-' + $parent.$parent.item.address}}" config="get_subscribers_chart_config($parent.$parent.item)"></div>
+          </div>
+          <div class="col-md-2" ng-if="$parent.item.store_and_forward">
+            <div pf-c3-chart id="{{$parent.$parent.item.address}}" config="get_stored_chart_config($parent.$parent.item)"></div>
+            <!-- div style="text-align: center; width: 220px;"><strong>{{$parent.$parent.item.depth}}</strong> Messages Stored</div -->
+          </div>
+          <div class="col-md-4" ng-if="$parent.item.store_and_forward">
+            <div pf-sparkline-chart config="$parent.$parent.item.depth_series_config" chart-data="$parent.$parent.item.depth_series" chart-height="115" show-x-axis="false" show-y-axis="false"></div>
+          </div>
+<!--
+          <div class="col-md-2" ng-if="!$parent.item.store_and_forward">
+            <div pf-c3-chart id="{{'ingress-outcomes-' + $parent.$parent.item.address}}" config="get_outcomes_chart_config($parent.$parent.item, 'ingress')"></div>
+          </div>
+          <div class="col-md-2" ng-if="!$parent.item.store_and_forward">
+            <div pf-c3-chart id="{{'egress-outcomes-' + $parent.$parent.item.address}}" config="get_outcomes_chart_config($parent.$parent.item, 'egress')"></div>
+          </div>
+-->
+          <div class="col-md-4" ng-if="$parent.item.senders + $parent.item.receivers > 0">
+            <span>Incoming links</span>
+            <div ui-grid="$parent.$parent.item.ingress_outcomes_link_table" class="link-grid" ui-grid-auto-resize ui-grid-resize-columns ng-style="getTableHeight($parent.$parent.item, 'ingress')"></div>
+          </div>
+          <div class="col-md-4" ng-if="$parent.item.senders + $parent.item.receivers > 0">
+            <span>Outgoing links</span>
+            <div ui-grid="$parent.$parent.item.egress_outcomes_link_table" class="link-grid" ui-grid-auto-resize ui-grid-resize-columns ng-style="getTableHeight($parent.$parent.item, 'egress')"></div>
+          </div>
+        </div>
+      </list-expanded-content>
+    </div>
+  </div>
+</div>
+
+<script type="text/ng-template" id="link-grid-row.html">
+  <div uib-tooltip-html="grid.appScope.linkTooltip(row.entity)" tooltip-append-to-body="true" tooltip-placement="auto top" tooltip-class="link-tip"
+       ng-repeat="(colRenderIndex, col) in colContainer.renderedColumns track by col.uid"
+       ui-grid-one-bind-id-grid="rowRenderIndex + '-' + col.uid + '-cell'"
+       class="ui-grid-cell"
+       ng-class="{ 'ui-grid-row-header-cell': col.isRowHeader }"
+       role="{{col.isRowHeader ? 'rowheader' : 'gridcell'}}"
+       ui-grid-cell>
+  </div>
+</script>

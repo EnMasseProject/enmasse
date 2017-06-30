@@ -1,0 +1,30 @@
+{
+    "name" : "routilities",
+    "version": "0.0.1",
+    "description": "router utilities for enmasse",
+    "homepage": "http://github.com/enmasseproject",
+    "license": "Apache-2.0",
+    "repository": {
+        "type": "git",
+        "url": "http://github.com/enmasseproject/routilities"
+    },
+    "dependencies": {
+        "debug": ">=0.8.0",
+        "rhea": ">=0.2.0",
+        "ws": "*",
+        "bluebird": "*",
+        "express": "*",
+        "basic-auth": "*"
+    },
+    "devDependencies": {
+        "eslint":"",
+        "mocha":"",
+        "browserify":"",
+        "istanbul": ""
+    },
+    "scripts": {
+        "lint": "eslint lib/*.js",
+        "test": "mocha",
+        "coverage": "istanbul cover _mocha"
+    }
+}
