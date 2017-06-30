@@ -1,0 +1,14 @@
+description = 'Console'
+apply plugin: 'distribution'
+
+task pack(type: Tar) {
+    from (projectDir) {
+        include 'bin'
+        include 'lib'
+        include 'www'
+        include 'package.json'
+    }
+    compression = Compression.GZIP
+    archiveName "console.tgz"
+    destinationDir file('build')
+}

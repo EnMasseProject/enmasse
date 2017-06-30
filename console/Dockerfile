@@ -9,7 +9,7 @@ RUN mkdir -p /opt/app-root/src/
 WORKDIR /opt/app-root/src/
 
 ARG version=latest
-ADD console-${version}.tar.gz /opt/app-root/src/
+ADD build/console.tgz /opt/app-root/src/
 
 RUN ["/bin/bash", "-c", "npm install"]
 

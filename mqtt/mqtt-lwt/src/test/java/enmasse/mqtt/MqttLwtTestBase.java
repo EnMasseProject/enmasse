@@ -21,15 +21,12 @@ import enmasse.mqtt.storage.impl.InMemoryLwtStorage;
 import io.vertx.core.Vertx;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
-import io.vertx.ext.unit.junit.VertxUnitRunner;
-import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * Base class for unit tests
  */
-@RunWith(VertxUnitRunner.class)
 public class MqttLwtTestBase {
 
     protected final Logger LOG = LoggerFactory.getLogger(this.getClass());
