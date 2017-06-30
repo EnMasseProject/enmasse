@@ -1,8 +1,9 @@
 local version = std.extVar("VERSION");
-local project = "enmasseproject";
+local project = std.extVar("PROJECT");
+local registry = std.extVar("REGISTRY");
 {
   image(name)::
-    project + "/" + name + ":" + version,
+    registry + "/" + project + "/" + name + ":" + version,
     
   address_controller::
     self.image("address-controller"),
