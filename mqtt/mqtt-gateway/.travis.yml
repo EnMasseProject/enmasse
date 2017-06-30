@@ -1,0 +1,39 @@
+sudo: required
+language: java
+jdk:
+- oraclejdk8
+notifications:
+  email: false
+services:
+- docker
+before_script:
+- curl -s ${SCRIPTS}/setup-tests.sh | bash /dev/stdin
+script:
+- export TAG=${TRAVIS_TAG:-1.0-SNAPSHOT}
+- sh build.sh ${TRAVIS_TAG} || exit 1
+- curl -s ${SCRIPTS}/generate-bintray-descriptor.sh | bash /dev/stdin mqtt-gateway target/mqtt-gateway-${TAG}-bin.tar.gz > .bintray.json
+- curl -s ${SCRIPTS}/docker-build.sh | bash /dev/stdin enmasseproject/mqtt-gateway . $TAG
+- curl -s ${SCRIPTS}/run-tests.sh | bash /dev/stdin ${COMMIT} "" enmasseproject/mqtt-gateway
+after_success:
+- curl -s ${SCRIPTS}/docker-push.sh | bash /dev/stdin enmasseproject/mqtt-gateway
+env:
+  global:
+  - SCRIPTS=https://raw.githubusercontent.com/EnMasseProject/travis-scripts/master
+  - COMMIT=${TRAVIS_COMMIT::8}
+  - secure: u4c9iRUFD6Sz5mcsFp0jFY6zAf/vpxVeJs5LPi2Q/sU3ByFHi9ZllU9GMEB/ECnJqK9Mth8s82K5QtKkNpYAqZadResUlheKTXFyAhkKR2c5dQ2Vjc/wWGyRr2QV042IvvMBfnrzyr6+zaG334aKJ2C3tVJWQHmfvzktIln838CTfgnBN9NShnQ0oRr7EkQBngdyuSPybCJPch+87//HKT7TnOm6Wt9Y/w1F5CzOYjcf1IkG32p/fzGxn+wPOEA4Q5LO8syW7F4uKnBzJv0U7aF8Pp9FwDMIF5llXYLxRvj2/4Ly7JctUiQ6jGiTrbhODMBiQTFOsRfDYPlnyefW1Wv7WSRX+Vj9kFxRjYrw4ls6BBpOzDKkOeHEk6ZLJyXk61eJZGruVqwKyknu+keo5gO9/vsfFau9XJyK6zCPSy3kBjpjvEtbeej4o+OdgbZHBg0wPSfArNN3Qqwkb8sfJIm83MBksxAXq/e6z38ukalAmPai3CN5flf6fXBpjGb7d4pH3HGb+J56SkrcwM00/3S+0IX2e39yCKZ7qSle/cNEARrsKtWV/068s5whRcvKzfj2/MfC+L21gYJjFEHtWM369sg7T9KSckFLIurJU1/xrL8JfUh7GyshYx0/DK3zh0hpfKTT3cYCcTCGD/IkraKm+2R94Am671AD0KCXRPY=
+  - secure: mz4KFuPiTqMpfI6om3jmkyIRCJtW6LMeMh48p3hXnqSJKRIf7KvU22MeGnP09j3QJz7iy5GAaYvAWJm0UsIvVQIXGMCrFWQsgWZbtG+Ed6ElQp9b4BZz9aFpHOPnahG5FVJ0MZ8TBxNKuBrXG5f6dfxS5PS2AEBuck/JF2qL4imBrApkf6F+BWk/UZVnMsyQeLD1HqJjRSFy3QQUUWvzTED8VvRpsM+EOYAE8iSBMW/H1DwN1gf4SxvBB7MNMaw9eyy7V29HemCSWSdfMj290VzmKIOXqOSrplGYf9EXUWWwK6x/tL/sjBAE2TUJWjcUp+6ijeu2EGOFp3SWPOWOPSafdWod3iGMJiGrOY5GPzflYKdOqdkqpZg9bUH+1B+ug4GSDjqk8q2EGbjdyTM6iyjIJLrmqfQ1PWA/P5yZr/PImhd3mkUFo/jyej2g/lkPsTUMooB/A1HaF3mFZ55vc78fetaKSBl6x81P+GaKJ2rP7TIpJ108o36+KgmR7a7AIz33CdGgSq4vw2eyvwNW+RIqr+Z/pXOclmO1hihCg++YSUlCF77njJlLAgwB58SNea2RUJ2TjZP+zvEBhgBwsN+oVpR1LsAmWn8HN6ZZoJp+GDU/+lxOhZ2epePAaBmgjlKLfUnaAH/GyWkQSU0zDDHqVds95nt7Y0620UahXNc=
+  - secure: DL+lQbO0Ym/3wZVjfcVJcdI/ZcOG5jXJnfKSBZM2HSIaq0TCOet+cimKOCoxmHs6hAqLFywnhQzbV+MpkmPAGUh1ApgEPiiVDkSsDQOkxrL82Y0tUvL9mhvgrl1F8Y/FU42P3k9k2V/wXz3fW+2d20MfYyyO9BVWRqupYfNn/ElI0AEbvuaFFCRmo1eCPmldwYWY89blX3o9loJ/7ErDfv2AaQpgS4seH/wktO3uvQ3dmfe0x5FwWG/jpLtgtfjetVhG6LIPdoCay/dBLXiAZYiRMsOT9rnBgC8HlkkjBX0aoeAPX7FptqZgDI8w+L4oW5cpIh9VCwlLZpSLWuKJyxr8du+6yB5pc6ev7KC9sWXssm9FZho+VhIK5nyTr4LAo5vfqreSQUTc5WtkvR20vJwpSuVXU57HSq7pUXRtqr6I3sRkAQ8N89K3so60DCjEX/xRtDNGoA77WWcMANOoUIk2R5+ozR1wKe14iFG7fuhxwSLdIzU4gCldGkoQ7D/fV21M5TtNOmF8SUyOql1qX8PaO297+VmaCbTXVgLPFf3CqqNbqgJcL5L/tefgPq/sUdBZrHohlzRVJI29X0+di2yy7lF8YJsin9hgReNoH/kYJgraape01JZEMYa1/tzszJW8qVFFTUt68nF54JzvmxN78OGZOgL2IMx1cymb9BU=
+  - secure: RuruaogxvbAVA6K1bzKLum+otd4WCsMHLzzVvOzcKI+U9HibCQa4r7u+4+WOVDVnTveFwPXtRXw4VDyhjE3JznHJ7h/3CN0T2LMmHsC6H06R/TEznwU1uzfuL8J74dQVRLaE8Rh4KOshLSeKSu2sBKMGIYI8MFvOTZBKewiAqQOCE3I042ho2K2zPeCa62mBUhnh+qY4au1ZlNrgDIxo5iTZgt0HESZyTdpiF8ZJf2+kRR8pxJlqOmU2idaMbglu4SeHti3dpwmSy2PmYa4aURVptSHG+paeFe9ssrioAhSzrM9yRCWDe25E/ECFd0DwP6Ds3/wU/RNf6zq2rtofabpnUgHPpgf+9spOr3Bi1VbPk16PtvBkc2e6djYKZfKZoWWHhqg7kOAb8w7vHXPJSwSqHBk8dTvsL4P2yn/i1SyhHqwMa9ctwCsXbnzvmOOoP5FIj3AxjVKUwgBDTxc6VSTfCw3tAM67bCVT1kYk+wCGrhtxJRa7OiBh/yklE9rCdKAWNSFa7k7663Cfe6wFTbD04wBjzLUgf57Gs4EYL5K2QwvxVObFZHUSmCuwWGODLJlbP5oPa49zEXOcEHRBfcQIDFt1OI7hIVmVWL992liUPzkPoq0INuH8b0FteZxX9CAWPyoHtMxkI+lETD9NA61W5vY4BkXWLJvfNdFpbmg=
+deploy:
+  - provider: bintray
+    file: ".bintray.json"
+    user: "${BINTRAY_API_USER}"
+    on:
+      tags: true
+    key:
+      secure: RYUC0HxnM/xhDspRL1KlYyMCi+R/Dt+q/5f1NuXPMSR7+q5N4btpCU2lnrHrSOAN+bNfegA62/IAoxbdB0romAFrYfVJhAc5/dOIHovuAmynDkVSzI4SHcI4UMJEkeBkhmQWqxaUDc22IRtPkWG1hNek4du/R1Ogv2VThsf7o6XK2peWfRjT4qrvMW/sZSgfLTg36cXJ0IUOgkocDsmg+PVsvEfVkmPMIJM9WSVF8i1/eGQqqsf4lyysaNLqV8HVgT8c5A4wOEfj36aIqoOpSv1zm4Osr+BU7kl1QFoggpIFqEGLx6eI7chXZNDAASsxnild2jH5ZSvBCLxocRdvCGa23R3yd71XdNng71cLG8GTORkNQIePLyfrAyh3rirnykBHMxNjXlF1c8rNJWrGa8fB3Thtd4aK6cvyIFX2yo/iP0BR52wtKQytMV755CF0xhTE/67IQ85MzzLwuKY0arfdPHHWG1rCGACjPs54UlTWEQGFX1FSXqRQQKSwkzPnwRgBMg0CwsXYfJg0tsLgfRSmmHhRE3NKCREMEMngHP+Zn9tXm7QCY8v6ndaT28psz/twsy1YlJBn83ZGVWvormF1/tAhAxt1dKJpC6UhrDnBF18mp2yyxhvr1Y/F4qoBdN0rJXFBIkCCFs1vONMWOJrxH0fNyXxLfSf+WK3JuOE=
+  - provider: bintray
+    file: ".bintray.json"
+    user: "${BINTRAY_API_USER}"
+    key:
+      secure: RYUC0HxnM/xhDspRL1KlYyMCi+R/Dt+q/5f1NuXPMSR7+q5N4btpCU2lnrHrSOAN+bNfegA62/IAoxbdB0romAFrYfVJhAc5/dOIHovuAmynDkVSzI4SHcI4UMJEkeBkhmQWqxaUDc22IRtPkWG1hNek4du/R1Ogv2VThsf7o6XK2peWfRjT4qrvMW/sZSgfLTg36cXJ0IUOgkocDsmg+PVsvEfVkmPMIJM9WSVF8i1/eGQqqsf4lyysaNLqV8HVgT8c5A4wOEfj36aIqoOpSv1zm4Osr+BU7kl1QFoggpIFqEGLx6eI7chXZNDAASsxnild2jH5ZSvBCLxocRdvCGa23R3yd71XdNng71cLG8GTORkNQIePLyfrAyh3rirnykBHMxNjXlF1c8rNJWrGa8fB3Thtd4aK6cvyIFX2yo/iP0BR52wtKQytMV755CF0xhTE/67IQ85MzzLwuKY0arfdPHHWG1rCGACjPs54UlTWEQGFX1FSXqRQQKSwkzPnwRgBMg0CwsXYfJg0tsLgfRSmmHhRE3NKCREMEMngHP+Zn9tXm7QCY8v6ndaT28psz/twsy1YlJBn83ZGVWvormF1/tAhAxt1dKJpC6UhrDnBF18mp2yyxhvr1Y/F4qoBdN0rJXFBIkCCFs1vONMWOJrxH0fNyXxLfSf+WK3JuOE=
