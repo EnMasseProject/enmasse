@@ -84,7 +84,7 @@ objects:
     value: enmasseproject/topic-forwarder:latest
   - description: The image to use for the router
     name: ROUTER_REPO
-    value: enmasseproject/qdrouterd:latest
+    value: enmasseproject/router:latest
   - description: The link capacity setting for router
     name: ROUTER_LINK_CAPACITY
     value: '50'
@@ -197,7 +197,7 @@ objects:
     value: enmasseproject/topic-forwarder:latest
   - description: The image to use for the router
     name: ROUTER_REPO
-    value: enmasseproject/qdrouterd:latest
+    value: enmasseproject/router:latest
   - description: The link capacity setting for router
     name: ROUTER_LINK_CAPACITY
     value: '50'
@@ -342,7 +342,7 @@ objects:
     value: enmasseproject/topic-forwarder:latest
   - description: The image to use for the router
     name: ROUTER_REPO
-    value: enmasseproject/qdrouterd:latest
+    value: enmasseproject/router:latest
   - description: The link capacity setting for router
     name: ROUTER_LINK_CAPACITY
     value: '50'
@@ -503,7 +503,7 @@ objects:
     value: enmasseproject/topic-forwarder:latest
   - description: The image to use for the router
     name: ROUTER_REPO
-    value: enmasseproject/qdrouterd:latest
+    value: enmasseproject/router:latest
   - description: The link capacity setting for router
     name: ROUTER_LINK_CAPACITY
     value: '50'
@@ -1079,7 +1079,7 @@ objects:
     value: ''
   - description: The image to use for the router
     name: ROUTER_REPO
-    value: enmasseproject/qdrouterd:latest
+    value: enmasseproject/router:latest
   - description: The image to use for the router metrics collector
     name: ROUTER_METRICS_REPO
     value: enmasseproject/router-metrics:latest

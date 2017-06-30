@@ -139,7 +139,7 @@ items:
       "http", "port": 8080}], "selector": {"name": "admin"}}}], "parameters": [{"description":
       "Hostname where API server can be reached", "name": "ADDRESS_SPACE_SERVICE_HOST",
       "value": ""}, {"description": "The image to use for the router", "name": "ROUTER_REPO",
-      "value": "enmasseproject/qdrouterd:latest"}, {"description": "The image to use
+      "value": "enmasseproject/router:latest"}, {"description": "The image to use
       for the router metrics collector", "name": "ROUTER_METRICS_REPO", "value": "enmasseproject/router-metrics:latest"},
       {"description": "The link capacity setting for router", "name": "ROUTER_LINK_CAPACITY",
       "value": "50"}, {"description": "The image to use for the configuration service",
@@ -186,7 +186,7 @@ items:
       to use for the message broker", "name": "BROKER_REPO", "value": "enmasseproject/artemis:latest"},
       {"description": "The default image to use as topic forwarder", "name": "TOPIC_FORWARDER_REPO",
       "value": "enmasseproject/topic-forwarder:latest"}, {"description": "The image
-      to use for the router", "name": "ROUTER_REPO", "value": "enmasseproject/qdrouterd:latest"},
+      to use for the router", "name": "ROUTER_REPO", "value": "enmasseproject/router:latest"},
       {"description": "The link capacity setting for router", "name": "ROUTER_LINK_CAPACITY",
       "value": "50"}, {"description": "A valid instance name for the instance", "name":
       "INSTANCE", "required": true}, {"description": "A valid name for the instance",
@@ -221,7 +221,7 @@ items:
       "value": "enmasseproject/artemis:latest"}, {"description": "The default image
       to use as topic forwarder", "name": "TOPIC_FORWARDER_REPO", "value": "enmasseproject/topic-forwarder:latest"},
       {"description": "The image to use for the router", "name": "ROUTER_REPO", "value":
-      "enmasseproject/qdrouterd:latest"}, {"description": "The link capacity setting
+      "enmasseproject/router:latest"}, {"description": "The link capacity setting
       for router", "name": "ROUTER_LINK_CAPACITY", "value": "50"}, {"description":
       "A valid instance name for the instance", "name": "INSTANCE", "required": true},
       {"description": "A valid name for the instance", "name": "NAME", "required":
@@ -262,7 +262,7 @@ items:
       "value": "enmasseproject/artemis:latest"}, {"description": "The default image
       to use as topic forwarder", "name": "TOPIC_FORWARDER_REPO", "value": "enmasseproject/topic-forwarder:latest"},
       {"description": "The image to use for the router", "name": "ROUTER_REPO", "value":
-      "enmasseproject/qdrouterd:latest"}, {"description": "The link capacity setting
+      "enmasseproject/router:latest"}, {"description": "The link capacity setting
       for router", "name": "ROUTER_LINK_CAPACITY", "value": "50"}, {"description":
       "A valid instance name for the instance", "name": "INSTANCE", "required": true},
       {"description": "A valid name for the instance", "name": "NAME", "required":
@@ -307,7 +307,7 @@ items:
       to use for the message broker", "name": "BROKER_REPO", "value": "enmasseproject/artemis:latest"},
       {"description": "The default image to use as topic forwarder", "name": "TOPIC_FORWARDER_REPO",
       "value": "enmasseproject/topic-forwarder:latest"}, {"description": "The image
-      to use for the router", "name": "ROUTER_REPO", "value": "enmasseproject/qdrouterd:latest"},
+      to use for the router", "name": "ROUTER_REPO", "value": "enmasseproject/router:latest"},
       {"description": "The link capacity setting for router", "name": "ROUTER_LINK_CAPACITY",
       "value": "50"}, {"description": "A valid instance name for the instance", "name":
       "INSTANCE", "required": true}, {"description": "A valid name for the instance",
