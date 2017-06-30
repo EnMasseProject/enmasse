@@ -24,16 +24,16 @@ dependencies {
 }
 
 task setupRouter(type: Exec) {
-    commandLine 'docker', 'run', '-d', '--name', 'qdrouterd', '-p', '5673:5672', '-p', '55674:55673', '-v', "${projectDir}/src/test/resources:/conf:z", 'ppatierno/qdrouterd:0.8.0-repo', 'qdrouterd', '--conf', '/conf/qdrouterd.conf'
+    commandLine 'docker', 'run', '-d', '--name', 'qdrouterd-lwt', '-p', '5673:5672', '-p', '55674:55673', '-v', "${projectDir}/src/test/resources:/conf:z", 'ppatierno/qdrouterd:0.8.0-repo', 'qdrouterd', '--conf', '/conf/qdrouterd.conf'
 }
 
 task teardownRouter(type: Exec) {
-    commandLine 'docker', 'stop', 'qdrouterd'
+    commandLine 'docker', 'stop', 'qdrouterd-lwt'
 }
 
 task teardownImage(type: Exec) {
     dependsOn teardownRouter
-    commandLine 'docker', 'rm', 'qdrouterd'
+    commandLine 'docker', 'rm', 'qdrouterd-lwt'
 }
 
 test.dependsOn setupRouter
