@@ -20,11 +20,12 @@ before_script:
 - curl -s ${SCRIPTS}/setup-tests.sh | bash /dev/stdin
 script:
 - export TAG=${TRAVIS_TAG:-latest}
-- ./gradlew clean build pack buildImage tagImage pushImage -i
+- ./gradlew clean build pack buildImage tagImage pushImage systemtests -i
   #- curl -s ${SCRIPTS}/run-tests.sh | bash /dev/stdin "" templates/install &&
   #  ./gradlew tagVersion pushVersion
 env:
   global:
+  - COMMIT=${TRAVIS_COMMIT::8}
   - SCRIPTS=https://raw.githubusercontent.com/EnMasseProject/travis-scripts/master
   - secure: AsrU/VbVvXQyhFpL0cumYC4olghWOf+zCRgBu3sg+Ozx9LRF/4ikBECuh1DWvXMmxmUbWrDDTeIlYPgc8Wz7/Nzic5dZ8K2SFLJsWu+LKHriVsQcWuL9PRmh80PfSos0ouMK0L3LYXIVnilGE1b+uJmRDXRGAxCkcGZUObOgBUiwKduxFpZbwwr/nvibsQxUZ12VEDZooh7b1yOCv8t7E4WJo1kGxCGNaZqq9PfebwLmposLib2SyAWb/HpzV75yd4y6z5OOUUEGHIMZJl3t4iM08U+fQj2iAax+uEoy+bu7r7yD5macRSfoOZH8Y/EPrQk/0b2Y70qN2PYbeHNp4uj67snVRVcVLTFjFNzSY840Aq/uKg2tmFqIhWBdgrjnSxrYcRZG15Szfx35jLnFts0kkrKP/9Uw/XqcUwNVbsETq5WzIilSu12UtTcPp2OO/coIiHyZQ7ub0Zwolsdmrg0OE14cSGuc79RulOP6KpxJfizkP9erWilnYLHTdDd/8IAkBwDdelLqpgIBS8dbQXVkJGvH505HO3mbUeXg2IdEdl1Ba9BK8Y0DbehmjjjJcichEkFLgFB0av2sIiuO7PmO+CKHYvAu4keykdPSwAsk8fknAur5K3uLfMz+TdS5zQoP5NAx5FtOa+ynwEgtsEZRa0C4Yph7wDs4B45Dfyw=
   - secure: 0+0ZUl963hqKvZtxprYgXhwLEvWTdgV8PEzVjQ8AoRkJquEjJZ2kc/qaxgftIqsb0SlwRLTF1tsNDw6uHcGsTW4ywQK5Kxs5+78HSKxn8oFzDi7zLcsrAOtB3kP3zV0oRSTZf0jC7GYEJczOGDuXIUQ52wiVbFZzoHOCe7Z7riFuaI5c7Aj2osMd1LISfmusJa83q6G3bxOG2yLy1R6F4YGYW4NF80GYmBCMVwGSympfgvSprFWR3XHDatoU0X0gjxb0UijUDHMQfSW9LIk99U2gfsKyfdSrhjVJxNDBVEkCcJSaKk8TYeXIlkkVVHxCChDvljwqIQUJDdV5liysSVCoKpxA5gK3Gi3x85HMzegySVIRIeqB20C7avnNwnyePnA9jYuaVmuFiqoPOlj4WvpabzVbpJvwdWHL8T9Q7Y/x9DRlkdum2PxnpTa1hlc4Tya2iKbSQzDtM1YcZ9UPw9aG2iHwuwU9v4FH1lREgAySl+YL55yL7Got4Lqz9r8JfWZnWMyNBYS7HeV9P6nNmsxfiJwdJ1WK2om9eYCjg2ilm7e/JD2F8BDssaRGu9j4x6aYodGNHCkytdu6OnSO3+69sldtbexbzieV+4DvqChJ/z1+IwCcVDpf8n/pRzBIO14EgV9kt+IwPf7+f6DHDOUyHrdo0yO2bSqqd9RWVZ8=
