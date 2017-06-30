@@ -20,7 +20,7 @@ before_script:
 - curl -s ${SCRIPTS}/setup-tests.sh | bash /dev/stdin
 script:
 - export TAG=${TRAVIS_TAG:-latest}
-- ./gradlew clean build pack buildImage -i
+- ./gradlew clean build pack buildImage tagImage pushImage -i
   #- curl -s ${SCRIPTS}/run-tests.sh | bash /dev/stdin "" templates/install &&
   #  ./gradlew tagVersion pushVersion
 env:

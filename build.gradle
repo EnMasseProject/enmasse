@@ -16,6 +16,7 @@ ext {
     dockerorg = System.getenv("DOCKER_ORG") ?: "lulf"
     commit = System.getenv("COMMIT") ?: "latest"
     dockerImageVersion = System.getenv("VERSION") ?: "latest"
+    dockerRegistry = System.getenv("DOCKER_REGISTRY") ?: "docker.io"
 
     slf4jVersion = '1.7.21'
     jacksonVersion = '2.7.4'
@@ -59,21 +60,29 @@ subprojects {
             tag = "${dockerorg}/${project.name}:${commit}"
         }
 
+        task tagImage(type: com.bmuschko.gradle.docker.tasks.image.DockerTagImage) {
+            dependsOn buildImage
+            force = true
+            imageId = buildImage.getTag()
+            repository = "${dockerRegistry}/${dockerorg}/${project.name}"
+            tag = commit
+        }
+
         task pushImage(type: com.bmuschko.gradle.docker.tasks.image.DockerPushImage) {
             tag = commit
-            imageName = "${dockerorg}/${project.name}"
+            imageName = "${dockerRegistry}/${dockerorg}/${project.name}"
         }
 
         task pushVersion(type: com.bmuschko.gradle.docker.tasks.image.DockerPushImage) {
             tag = dockerImageVersion
-            imageName = "${dockerorg}/${project.name}"
+            imageName = "${dockerRegistry}/${dockerorg}/${project.name}"
         }
 
         task tagVersion(type: com.bmuschko.gradle.docker.tasks.image.DockerTagImage) {
             dependsOn buildImage
             force = true
             imageId = buildImage.getTag()
-            repository = "${dockerorg}/${project.name}"
+            repository = "${dockerRegistry}/${dockerorg}/${project.name}"
             tag = dockerImageVersion
         }
     }
