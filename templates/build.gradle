@@ -7,6 +7,7 @@ task buildJsonnet(type: Exec) {
 }
 
 task buildTemplates(type: Exec) {
+    // TODO: Move Makefile stuff into this
     dependsOn buildJsonnet
     workingDir projectDir
     commandLine 'make'

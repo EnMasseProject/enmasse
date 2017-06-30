@@ -13,7 +13,7 @@ buildscript {
 
 
 ext {
-    dockerorg = 'lulf'
+    dockerorg = System.getenv("DOCKER_ORG") ?: "lulf"
     commit = System.getenv("COMMIT") ?: "latest"
     dockerImageVersion = System.getenv("VERSION") ?: "latest"
 
