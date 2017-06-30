@@ -17,7 +17,7 @@ cache:
 jdk:
 - oraclejdk8
 before_script:
-  #- curl -s ${SCRIPTS}/setup-tests.sh | bash /dev/stdin
+- curl -s ${SCRIPTS}/setup-tests.sh | bash /dev/stdin
 script:
 - export TAG=${TRAVIS_TAG:-latest}
 - ./gradlew clean build pack buildImage -i
