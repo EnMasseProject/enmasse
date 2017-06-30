@@ -1,12 +1,12 @@
 {
-    "name" : "routilities",
+    "name" : "console",
     "version": "0.0.1",
-    "description": "router utilities for enmasse",
+    "description": "console for enmasse",
     "homepage": "http://github.com/enmasseproject",
     "license": "Apache-2.0",
     "repository": {
         "type": "git",
-        "url": "http://github.com/enmasseproject/routilities"
+        "url": "http://github.com/enmasseproject/enmasse"
     },
     "dependencies": {
         "debug": ">=0.8.0",
