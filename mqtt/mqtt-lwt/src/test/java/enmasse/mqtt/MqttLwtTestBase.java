@@ -36,8 +36,8 @@ public class MqttLwtTestBase {
     protected LwtStorage lwtStorage;
 
     public static final String MESSAGING_SERVICE_HOST = "localhost";
-    public static final int MESSAGING_SERVICE_PORT = 5672;
-    public static final int MESSAGING_SERVICE_INTERNAL_PORT = 55673;
+    public static final int MESSAGING_SERVICE_PORT = 5673;
+    public static final int MESSAGING_SERVICE_INTERNAL_PORT = 55674;
 
     public static final String LWT_SERVICE_ENDPOINT = "$lwt";
 

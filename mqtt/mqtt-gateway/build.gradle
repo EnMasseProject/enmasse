@@ -39,6 +39,7 @@ task teardownImage(type: Exec) {
 
 test.dependsOn setupRouter
 test.finalizedBy teardownImage
+clean.dependsOn teardownImage
 
 task pack(type: Tar) {
     from ('build/libs') {
