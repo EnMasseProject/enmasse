@@ -21,8 +21,8 @@ before_script:
 script:
 - export TAG=${TRAVIS_TAG:-latest}
 - ./gradlew clean build pack buildImage pushImage -i
-- curl -s ${SCRIPTS}/generate-bintray-descriptor.sh | bash /dev/stdin enmasse enmasse-${TAG}.tar.gz > .bintray.json
-  #- curl -s ${SCRIPTS}/run-tests.sh | bash /dev/stdin "" templates/install
+  #- curl -s ${SCRIPTS}/run-tests.sh | bash /dev/stdin "" templates/install &&
+  #  ./gradlew tagVersion pushVersion
 env:
   global:
   - SCRIPTS=https://raw.githubusercontent.com/EnMasseProject/travis-scripts/master
