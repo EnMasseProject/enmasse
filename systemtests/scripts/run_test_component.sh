@@ -23,6 +23,8 @@ popd
 oc get pods
 #teardown_test $OPENSHIFT_PROJECT
 
+cat build/test-results/test/*.xml
+
 if [ $failure -gt 0 ]
 then
     echo "Systemtests failed"
