@@ -100,5 +100,5 @@ subprojects {
 }
 
 task deploy(type: Exec) {
-    commandLine "./templates/install/deploy-openshift.sh", "-p", openShiftProject, "-u", openShiftUser, "-p", openShiftPasswd, "-c", openShiftMaster
+    commandLine "./templates/install/deploy-openshift.sh", "-p", openShiftProject, "-u", openShiftUser, "-p", openShiftPasswd, "-m", openShiftMaster
 }
