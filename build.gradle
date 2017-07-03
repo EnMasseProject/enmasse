@@ -61,9 +61,11 @@ subprojects {
 
     if (new File(projectDir, "Dockerfile").exists()) {
         task buildImage(type: com.bmuschko.gradle.docker.tasks.image.DockerBuildImage) {
-            println "Executing buildimage for $projectDir commit ${commit}"
             inputDir = projectDir
             tag = "${dockerOrg}/${project.name}:${commit}"
+            doLast {
+                println "Executing buildimage for $projectDir commit ${commit}"
+            }
         }
 
         task tagImage(type: com.bmuschko.gradle.docker.tasks.image.DockerTagImage) {
@@ -80,18 +82,18 @@ subprojects {
             imageName = "${dockerRegistry}/${dockerOrg}/${project.name}"
         }
 
-        task pushVersion(type: com.bmuschko.gradle.docker.tasks.image.DockerPushImage) {
-            dependsOn tagVersion
-            tag = dockerImageVersion
-            imageName = "${dockerRegistry}/${dockerOrg}/${project.name}"
-        }
-
         task tagVersion(type: com.bmuschko.gradle.docker.tasks.image.DockerTagImage) {
             dependsOn buildImage
             force = true
             imageId = buildImage.getTag()
             repository = "${dockerRegistry}/${dockerOrg}/${project.name}"
             tag = dockerImageVersion
+        }
+
+        task pushVersion(type: com.bmuschko.gradle.docker.tasks.image.DockerPushImage) {
+            dependsOn tagVersion
+            tag = dockerImageVersion
+            imageName = "${dockerRegistry}/${dockerOrg}/${project.name}"
         }
     }
 }
