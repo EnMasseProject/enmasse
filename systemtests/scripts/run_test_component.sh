@@ -1,6 +1,7 @@
 #!/bin/bash
 ENMASSE_DIR=$1
 OC_PATH=$2
+SYSTEMTESTS=$3
 DIR=`dirname $0`
 source $DIR/common.sh
 failure=0
@@ -14,7 +15,11 @@ export PATH="$OC_PATH:$PATH"
 oc login -u ${OPENSHIFT_USER} -p ${OPENSHIFT_PASSWD} --insecure-skip-tls-verify=true ${OPENSHIFT_URL}
 
 setup_test $OPENSHIFT_PROJECT $ENMASSE_DIR $MULTITENANT $OPENSHIFT_URL $OPENSHIFT_USER
+
+pushd $SYSTEMTESTS
 run_test $OPENSHIFT_PROJECT true $MULTITENANT $OPENSHIFT_URL $OPENSHIFT_USER || failure=$(($failure + 1))
+popd
+
 oc get pods
 #teardown_test $OPENSHIFT_PROJECT
 

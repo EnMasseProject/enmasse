@@ -1,6 +1,8 @@
 #!/bin/bash
 DIR=$1
 
+export PATH="$DIR:$PATH"
+
 function runcmd {
     echo ''
     echo "$1 : "

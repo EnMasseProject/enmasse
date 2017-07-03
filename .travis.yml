@@ -27,9 +27,9 @@ script:
 - ./gradlew buildImage -i
 - ./gradlew tagImage -i
 - ./gradlew pushImage -i
-- cd systemtests && ./scripts/run_test_component.sh ../templates/install /tmp/openshift
+- ./systemtests/scripts/run_test_component.sh ../templates/install /tmp/openshift systemtests
 after_failure:
-- cd systemtests && bash ./scripts/print_logs.sh /tmp/openshift
+- ./systemtests/scripts/print_logs.sh /tmp/openshift
 after_success:
 - if [ "$TRAVIS_BRANCH" == "master" ] && [ "$TRAVIS_PULL_REQUEST" == "false" ]; then ./gradlew tagVersion pushVersion; fi
 env:
