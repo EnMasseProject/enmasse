@@ -1,4 +1,4 @@
-# *DRAFT* Address model for EnMasse
+# Address model for EnMasse
 
 This document defines the EnMasse address model. This involves the types of address spaces, the
 types of addresses within each address space, and the available plans.
