@@ -19,8 +19,16 @@ Replace `localhost` `myproject` and `developer` with the desired values for your
 
 ## Running all tests
 
-    mvn test
+    gradle test
 
 ##  Running a single test class
 
-    mvn test -Dtest=QueueTest
+    gradle test -Dtest.single=QueueTest
+
+## Running tests with console output
+
+    gradle test -i
+
+## Rerun test without changes to code
+
+    gradle test -i --rerun-tasks
