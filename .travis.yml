@@ -27,7 +27,7 @@ script:
 after_failure:
 - cd systemtests && bash ./scripts/print_logs.sh /tmp/openshift
 after_success:
-- ./gradlew tagVersion pushVersion
+- if [ "$TRAVIS_BRANCH" == "master" ] && [ "$TRAVIS_PULL_REQUEST" == "false" ]; then ./gradlew tagVersion pushVersion; fi
 env:
   global:
   - COMMIT=${TRAVIS_COMMIT::8}
