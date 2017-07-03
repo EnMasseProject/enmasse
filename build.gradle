@@ -89,7 +89,7 @@ subprojects {
 }
 
 task systemtests(type: Exec) {
-    commandLine "./systemtests/scripts/run_test_component.sh $projectDir/templates/install"
+    commandLine "./systemtests/scripts/run_test_component.sh", "templates/install"
     ignoreExitValue true
     doLast {
         if (execResult == 0) {
