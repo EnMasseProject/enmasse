@@ -10,7 +10,7 @@ task buildTemplates(type: Exec) {
     // TODO: Move Makefile stuff into this
     dependsOn buildJsonnet
     workingDir projectDir
-    environment DOCKER_ORG: dockerOrg, DOCKER_REGISTRY: dockerRegistry
+    environment DOCKER_ORG: dockerOrg, DOCKER_REGISTRY: dockerRegistry, VERSION: commit
     commandLine 'make'
 }
 
