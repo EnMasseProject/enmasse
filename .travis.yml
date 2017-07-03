@@ -27,7 +27,7 @@ script:
 - ./gradlew buildImage -i
 - ./gradlew tagImage -i
 - ./gradlew pushImage -i
-- ./systemtests/scripts/run_test_component.sh ../templates/install /tmp/openshift systemtests
+- ./systemtests/scripts/run_test_component.sh templates/install /tmp/openshift systemtests
 after_failure:
 - ./systemtests/scripts/print_logs.sh /tmp/openshift
 after_success:
