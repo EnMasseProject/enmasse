@@ -75,11 +75,13 @@ subprojects {
         }
 
         task pushImage(type: com.bmuschko.gradle.docker.tasks.image.DockerPushImage) {
+            dependsOn tagImage
             tag = commit
             imageName = "${dockerRegistry}/${dockerOrg}/${project.name}"
         }
 
         task pushVersion(type: com.bmuschko.gradle.docker.tasks.image.DockerPushImage) {
+            dependsOn tagVersion
             tag = dockerImageVersion
             imageName = "${dockerRegistry}/${dockerOrg}/${project.name}"
         }
