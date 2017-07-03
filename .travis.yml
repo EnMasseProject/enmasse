@@ -22,11 +22,11 @@ before_script:
 script:
 - export TAG=${TRAVIS_TAG:-latest}
 - export VERSION=${TRAVIS_TAG:-latest}
-- ./gradlew build -i
-- ./gradlew pack -i
-- ./gradlew buildImage -i
-- ./gradlew tagImage -i
-- ./gradlew pushImage -i
+- ./gradlew build
+- ./gradlew pack
+- ./gradlew buildImage
+- ./gradlew tagImage
+- ./gradlew pushImage
 - ./systemtests/scripts/run_test_component.sh templates/install /tmp/openshift systemtests
 after_failure:
 - ./systemtests/scripts/print_logs.sh /tmp/openshift
