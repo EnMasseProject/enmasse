@@ -1,15 +1,21 @@
-# Changing EnMasse components
+# Building
 
-See the README file in the corresponding repo of the component you want to build.
+For building and running EnMasse unit tests:
 
-# Changing the OpenShift templates
+    ./gradlew build
 
-The OpenShift templates for EnMasse are generated from [jsonnet](jsonnet.org) files.
+If you want to rerun a task even if nothing has changed, append the `--rerun-tasks` flag to gradle.
+To get more verbose information, append `-i`.
 
-To make changes to the templates, edit the jsonnet files in the include/ folder. To generate the templates,
-run:
+To build a docker image and push them to docker hub:
 
-    git submodule update --init
-    make
+    DOCKER_ORG=myorg DOCKER_USER=myuser DOCKER_PASS=mypassword ./gradlew pack buildImage tagImage pushImage
 
-This will generate updated templates in the generated/ folder.
+To deploy a built EnMasse to an OpenShift instance:
+
+    OPENSHIFT_MASTER=https://localhost:8443 OPENSHIFT_PROJECT=myproject OPENSHIFT_USER=developer OPENSHIFT_PASSWD=developer ./gradlew deploy
+
+To run systemtests:
+
+    cd systemtests
+    OPENSHIFT_MASTER=https://localhost:8443 OPENSHIFT_PROJECT=myproject OPENSHIFT_TOKEN=`oc whoami -t` gradle check -i --rerun-tasks
