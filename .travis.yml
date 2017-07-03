@@ -17,11 +17,17 @@ cache:
 jdk:
 - oraclejdk8
 before_script:
-- curl -s ${SCRIPTS}/setup-tests.sh | bash /dev/stdin
+- ./systemtests/scripts/install_openshift.sh /tmp/openshift
+- ./systemtests/scripts/start_openshift.sh /tmp/openshift
 script:
 - export TAG=${TRAVIS_TAG:-latest}
-- ./gradlew clean build pack buildImage tagImage pushImage tagVersion pushVersion -i
-- curl -s ${SCRIPTS}/run-tests.sh | bash /dev/stdin "" templates/install
+- export VERSION=${TRAVIS_TAG:-latest}
+- ./gradlew clean build pack buildImage tagImage pushImage -i
+- cd systemtests && ./scripts/run_test_component.sh ../templates/install
+after_failure:
+- cd systemtests && bash ./scripts/print_logs.sh /tmp/openshift
+after_success:
+- ./gradlew tagVersion pushVersion
 env:
   global:
   - COMMIT=${TRAVIS_COMMIT::8}

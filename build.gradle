@@ -97,8 +97,3 @@ subprojects {
 task deploy(type: Exec) {
     commandLine "./templates/install/deploy-openshift.sh", "-p", openShiftProject, "-u", openShiftUser, "-p", openShiftPasswd
 }
-
-task systemtests(type: Exec) {
-    commandLine "./gradlew", "-p", "systemtests", "check", "-i"
-    environment OPENSHIFT_PROJECT: openShiftProject, OPENSHIFT_USER: openShiftUser, OPENSHIFT_PASSWD: openShiftPasswd, OPENSHIFT_MASTER_URL: openShiftMaster, OPENSHIFT_NAMESPACE: openShiftProject, OPENSHIFT_TOKEN: openShiftPasswd
-}
