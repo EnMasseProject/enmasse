@@ -1,5 +1,6 @@
 #!/bin/bash
 ENMASSE_DIR=$1
+OC_PATH=$2
 DIR=`dirname $0`
 source $DIR/common.sh
 failure=0
@@ -9,6 +10,7 @@ OPENSHIFT_PASSWD=${OPENSHIFT_PASSWD:-test}
 OPENSHIFT_PROJECT=${OPENSHIFT_PROJECT:-enmasseci}
 MULTITENANT=${MULTITENANT:-false}
 
+export PATH="$OC_PATH:$PATH"
 oc login -u ${OPENSHIFT_USER} -p ${OPENSHIFT_PASSWD} --insecure-skip-tls-verify=true ${OPENSHIFT_URL}
 
 setup_test $OPENSHIFT_PROJECT $ENMASSE_DIR $MULTITENANT $OPENSHIFT_URL $OPENSHIFT_USER
