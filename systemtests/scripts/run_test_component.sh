@@ -2,7 +2,7 @@
 ENMASSE_DIR=$1
 OC_PATH=$2
 SYSTEMTESTS=$3
-DIR=`dirname $0`
+DIR=`readlink -f \`dirname $0\``
 source $DIR/common.sh
 failure=0
 OPENSHIFT_URL=${OPENSHIFT_URL:-https://localhost:8443}

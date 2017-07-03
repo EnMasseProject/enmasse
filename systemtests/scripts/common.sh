@@ -1,5 +1,5 @@
 #!/bin/bash
-DIR=`dirname $0`
+DIR=`readlink -f \`dirname $0\``
 set -x
 
 OADM="oadm --config openshift.local.config/master/admin.kubeconfig"
