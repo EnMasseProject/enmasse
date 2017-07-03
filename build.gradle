@@ -13,10 +13,16 @@ buildscript {
 
 
 ext {
-    dockerorg = System.getenv("DOCKER_ORG") ?: "lulf"
-    commit = System.getenv("COMMIT") ?: "latest"
-    dockerImageVersion = System.getenv("VERSION") ?: "latest"
-    dockerRegistry = System.getenv("DOCKER_REGISTRY") ?: "docker.io"
+    dockerOrg           = System.getenv("DOCKER_ORG") ?: "enmasseproject"
+    dockerUser          = System.getenv("DOCKER_USER") ?: "UNSET"
+    dockerPasswd        = System.getenv("DOCKER_PASS") ?: "UNSET"
+    commit              = System.getenv("COMMIT") ?: "latest"
+    dockerImageVersion  = System.getenv("VERSION") ?: "latest"
+    dockerRegistry      = System.getenv("DOCKER_REGISTRY") ?: "docker.io"
+    openShiftProject    = System.getenv("OPENSHIFT_PROJECT") ?: "myproject"
+    openShiftUser       = System.getenv("OPENSHIFT_USER") ?: "developer"
+    openShiftPasswd     = System.getenv("OPENSHIFT_PASSWD") ?: "developer"
+    openShiftMaster     = System.getenv("OPENSHIFT_MASTER") ?: "https://localhost:8443"
 
     slf4jVersion = '1.7.21'
     jacksonVersion = '2.7.4'
@@ -48,8 +54,8 @@ subprojects {
 
     docker {
         registryCredentials {
-            username = System.getenv("DOCKER_USER")
-            password = System.getenv("DOCKER_PASS")
+            username = dockerUser
+            password = dockerPasswd
         }
     }
 
@@ -57,45 +63,42 @@ subprojects {
         task buildImage(type: com.bmuschko.gradle.docker.tasks.image.DockerBuildImage) {
             println "Executing buildimage for $projectDir commit ${commit}"
             inputDir = projectDir
-            tag = "${dockerorg}/${project.name}:${commit}"
+            tag = "${dockerOrg}/${project.name}:${commit}"
         }
 
         task tagImage(type: com.bmuschko.gradle.docker.tasks.image.DockerTagImage) {
             dependsOn buildImage
             force = true
             imageId = buildImage.getTag()
-            repository = "${dockerRegistry}/${dockerorg}/${project.name}"
+            repository = "${dockerRegistry}/${dockerOrg}/${project.name}"
             tag = commit
         }
 
         task pushImage(type: com.bmuschko.gradle.docker.tasks.image.DockerPushImage) {
             tag = commit
-            imageName = "${dockerRegistry}/${dockerorg}/${project.name}"
+            imageName = "${dockerRegistry}/${dockerOrg}/${project.name}"
         }
 
         task pushVersion(type: com.bmuschko.gradle.docker.tasks.image.DockerPushImage) {
             tag = dockerImageVersion
-            imageName = "${dockerRegistry}/${dockerorg}/${project.name}"
+            imageName = "${dockerRegistry}/${dockerOrg}/${project.name}"
         }
 
         task tagVersion(type: com.bmuschko.gradle.docker.tasks.image.DockerTagImage) {
             dependsOn buildImage
             force = true
             imageId = buildImage.getTag()
-            repository = "${dockerRegistry}/${dockerorg}/${project.name}"
+            repository = "${dockerRegistry}/${dockerOrg}/${project.name}"
             tag = dockerImageVersion
         }
     }
 }
 
+task deploy(type: Exec) {
+    commandLine "./templates/install/deploy-openshift.sh", "-p", openShiftProject, "-u", openShiftUser, "-p", openShiftPasswd
+}
+
 task systemtests(type: Exec) {
-    commandLine "./systemtests/scripts/run_test_component.sh", "templates/install"
-    ignoreExitValue true
-    doLast {
-        if (execResult == 0) {
-            println("Test success");
-        } else {
-            println("Test fail");
-        }
-    }
+    commandLine "./gradlew", "-p", "systemtests", "check", "-i"
+    environment OPENSHIFT_PROJECT: openShiftProject, OPENSHIFT_USER: openShiftUser, OPENSHIFT_PASSWD: openShiftPasswd, OPENSHIFT_MASTER_URL: openShiftMaster, OPENSHIFT_NAMESPACE: openShiftProject, OPENSHIFT_TOKEN: openShiftPasswd
 }
