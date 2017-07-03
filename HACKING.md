@@ -17,5 +17,4 @@ To deploy a built EnMasse to an OpenShift instance:
 
 To run systemtests:
 
-    cd systemtests
-    OPENSHIFT_MASTER=https://localhost:8443 OPENSHIFT_PROJECT=myproject OPENSHIFT_TOKEN=`oc whoami -t` gradle check -i --rerun-tasks
+    OPENSHIFT_MASTER_URL=https://localhost:8443 OPENSHIFT_NAMESPACE=myproject OPENSHIFT_TOKEN=`oc whoami -t` ./gradlew :systemtests:check -Psystemtests -i --rerun-tasks

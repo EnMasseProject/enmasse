@@ -21,5 +21,5 @@ dependencies {
 }
 
 task systemtest(type: Test) {
-    environment OPENSHIFT_PROJECT: openShiftProject, OPENSHIFT_USER: openShiftUser, OPENSHIFT_PASSWD: openShiftPasswd, OPENSHIFT_MASTER_URL: openShiftMaster, OPENSHIFT_NAMESPACE: openShiftProject, OPENSHIFT_TOKEN: openShiftPasswd
+    environment OPENSHIFT_PROJECT: openShiftProject, OPENSHIFT_USER: openShiftUser, OPENSHIFT_PASSWD: openShiftPasswd, OPENSHIFT_MASTER_URL: openShiftMaster, OPENSHIFT_NAMESPACE: openShiftProject, OPENSHIFT_TOKEN: openShiftToken
 }
