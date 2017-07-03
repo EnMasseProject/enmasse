@@ -99,6 +99,14 @@ subprojects {
     }
 }
 
+project('systemtests') {
+    test {
+        onlyIf {
+            project.hasProperty("systemtests")
+        }
+    }
+}
+
 task deploy(type: Exec) {
     commandLine "./templates/install/deploy-openshift.sh", "-n", openShiftProject, "-u", openShiftUser, "-m", openShiftMaster
 }
