@@ -29,6 +29,6 @@ do
     runcmd "cat $log"
 done
 
-#echo "OPENSHIFT LOGS"
-#cat $DIR/logs/os.err
-#cat $DIR/logs/os.log
+echo "OPENSHIFT LOGS"
+cat $DIR/logs/os.err
+cat $DIR/logs/os.log
