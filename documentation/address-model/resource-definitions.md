@@ -1,0 +1,151 @@
+# EnMasse resource definition
+
+This document defines the resources consumed and produced by APIs and can be considered a base for writing the schema for the data formats. The [address model](model.md) defines address spaces and addresses which translates to these resources.
+
+The resources defined herein may be created, deleted and updated through different APIs. Either the
+Open Service Broker API, the custom HTTP API, or using AMQP management.
+
+The resources are defined in the JSON format. 
+
+## AddressSpace
+
+GET    /v1/addressspaces         - to retrieve list 
+GET    /v1/addressspaces/myspace - to retrieve single address space
+POST   /v1/addressspaces         - create and append single or multiple (AddressSpace, or AddressSpaceList) or fail if exists
+PUT    /v1/addressspaces         - replace a single or multiple (AddressSpace, or AddressSpaceList) 
+PUT    /v1/addressspaces/:name   - create or replace
+DELETE /v1/addressspace/:name    - delete
+
+
+The `AddressSpace` resource defines the type of address space and endpoint for connecting.
+
+```
+{
+    "apiVersion": "enmasse.io/v1",
+    "kind": "AddressSpace",
+    "metadata": {
+        "name": "myspace" // Required
+    },
+    "spec": {
+        "type": "standard", // Required. Default is 'standard', potentially configurable
+        "plan": "small", // Optional. This is the aggregate 'size' of the address space (i.e. controls how
+                         // many addresses and how many resources each address may consume
+
+        "endpoints": [ // Optional. If not provided, the default generated hostnames will be provided. 
+            {
+                "name": "endpoint1",             // Required.
+                "service": "messaging",          // Required. 
+                "host": "messaging.example.com", // Optional. The host name for this endpoint to use for routing by the load balancer
+                "cert": {                        // Optional. Self-signed certificates are generated if not specified
+                    "provider": "secret",        // Provider of certs may be through secrets or ACME. For 'secret', the secret name must be passed
+                    "secretName": "mysecret"
+                }
+            }
+            "mqtt": {
+                "host": "mqtt.example.com"
+            },
+            "console": {
+                "host": "console.example.com"
+            }
+        }
+    }
+}
+```
+
+### AddressSpaceList
+
+```
+{
+    "apiVersion": "enmasse.io/v1", // Required
+    "kind": "AddressSpaceList", // Required
+    "items": [
+        {
+            ...
+        }
+    ]
+}
+```
+
+## Address
+
+GET    /v1/addresses/myspace           - to retrieve list 
+GET    /v1/addresses/myspace/:name     - to retrieve single address
+POST   /v1/addresses/myspace           - create and append single or multiple (Address, or AddressList) or fail if exists
+PUT    /v1/addresses/myspace/:name     - replace a single address
+PUT    /v1/addresses/myspace           - replace multiple addresses 
+DELETE /v1/addresses/myspace/:name     - delete
+DELETE /v1/addresses/myspace           - delete all
+
+The `Address` resource defines an address and its semantics.
+
+TODO: Figure out where to put a user-specified description of the address
+
+```
+{
+    "apiVersion": "enmasse.io/v1", // Required
+    "kind": "Address", // Required
+    "metadata": {
+        "name": "myqueue", // Required
+        "address_space": "myspace" // Optional. Defaults to 'default' address space
+    },
+    "spec": {
+        "address": "my_queue",  // Optional. Default is .metadata.name
+        "type": "queue",        // Required. Valid types are defined by the AddressSpace
+        "plan": "medium"        // Optional
+    }
+}
+```
+
+### AddressList
+
+```
+{
+    "apiVersion": "enmasse.io/v1", // Required
+    "kind": "AddressList", // Required
+    "metadata": {
+        "address_space": "myspace" // Optional. Defaults to 'default' address space
+    },
+    "items": [
+        {
+            ...
+        }
+    ]
+}
+```
+
+
+GET /v1/schema
+```
+{
+    "apiVersion": "enmasse.io/v1"
+    "kind": "Schema",
+    "spec": {
+        "addressSpaceTypes": [
+            {
+                "name": "standard",
+                "addressTypes": [
+                    {
+                        "name": "queue",
+                        "description": "Queue is cool",
+                        "plans": [
+                            {
+                                "name": "myplan",
+                                "description": "Is great"
+                            }
+                        ]
+                    }
+                ],
+                "plans": [
+                    {
+                        "name": "myplan",
+                        "description": "Is great"
+                    }
+                ]
+            }
+        ]
+    }
+}
+```
+# Configserv
+
+AMQP subscribe "v1/addresses" - AddressList JSON object in message body. New message whenever addresses has changed
