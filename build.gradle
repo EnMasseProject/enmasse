@@ -23,6 +23,7 @@ ext {
     openShiftUser       = System.getenv("OPENSHIFT_USER") ?: "developer"
     openShiftPasswd     = System.getenv("OPENSHIFT_PASSWD") ?: "developer"
     openShiftMaster     = System.getenv("OPENSHIFT_MASTER") ?: "https://localhost:8443"
+    openShiftToken      = System.getenv("OPENSHIFT_TOKEN") ?: "unknown"
 
     slf4jVersion = '1.7.21'
     jacksonVersion = '2.7.4'
@@ -99,5 +100,5 @@ subprojects {
 }
 
 task deploy(type: Exec) {
-    commandLine "./templates/install/deploy-openshift.sh", "-p", openShiftProject, "-u", openShiftUser, "-p", openShiftPasswd
+    commandLine "./templates/install/deploy-openshift.sh", "-p", openShiftProject, "-u", openShiftUser, "-p", openShiftPasswd, "-c", openShiftMaster
 }
