@@ -17,10 +17,10 @@ task buildTemplates(type: Exec) {
 task pack(type: Tar) {
     dependsOn buildTemplates
     from ('install') {
-        into "enmasse-${version}"
+        into "enmasse-${dockerImageVersion}"
     }
     compression = Compression.GZIP
-    archiveName "enmasse-${version}.tgz"
+    archiveName "enmasse-${dockerImageVersion}.tgz"
     destinationDir file('build')
 }
 
