@@ -51,7 +51,7 @@ combination with attachable 'storage units'. The implementation of a storage uni
 the client and the routers with a well defined API. This address space type is appropriate when you
 have many connections and addresses, but requires message ordering to be enforced by clients. 
 
-Clients connect and send/receive messages in this address space using the [AMQP](www.amqp.org) or [MQTT](www.mqtt.org) protocols. See [MQTT over AMQP](documentation/mqtt-over-amqp) for how MQTT and AMQP addresses co-exists in this address space.
+Clients connect and send/receive messages in this address space using the [AMQP](http://www.amqp.org) or [MQTT](http://www.mqtt.org) protocols. See [MQTT over AMQP](../mqtt-over-amqp) for how MQTT and AMQP addresses co-exists in this address space.
 
 TODO: This reflects the status quo, but how should multiple protocols actually be surfaced?
 
