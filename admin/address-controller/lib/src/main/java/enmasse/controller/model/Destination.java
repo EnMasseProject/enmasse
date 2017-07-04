@@ -24,6 +24,8 @@ import java.util.Optional;
 /**
  * Represents a single destination in the addressing config. It is identified by an address and
  * additional properties that determine the semantics.
+ *
+ * TODO: Replace with Address type for new address model
  */
 public final class Destination {
     private final String address;
