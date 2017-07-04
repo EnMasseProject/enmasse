@@ -5,8 +5,8 @@ import enmasse.config.LabelKeys;
 import enmasse.controller.common.Kubernetes;
 import enmasse.controller.common.KubernetesHelper;
 import enmasse.controller.common.TemplateParameter;
+import enmasse.controller.model.AddressSpaceId;
 import enmasse.controller.model.Instance;
-import enmasse.controller.model.InstanceId;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.Namespace;
 import io.fabric8.kubernetes.client.KubernetesClientException;
@@ -83,17 +83,17 @@ public class InstanceManagerImpl implements InstanceManager {
     }
 
     @Override
-    public void retainInstances(Set<InstanceId> desiredInstances) {
+    public void retainInstances(Set<AddressSpaceId> desiredInstances) {
         if (isMultitenant) {
             Map<String, String> labels = new LinkedHashMap<>();
             labels.put(LabelKeys.APP, "enmasse");
             labels.put(LabelKeys.TYPE, "instance");
             for (Namespace namespace : kubernetes.listNamespaces(labels)) {
                 String id = namespace.getMetadata().getAnnotations().get(AnnotationKeys.INSTANCE);
-                InstanceId instanceId = InstanceId.withIdAndNamespace(id, namespace.getMetadata().getName());
-                if (!desiredInstances.contains(instanceId)) {
+                AddressSpaceId addressSpaceId = AddressSpaceId.withIdAndNamespace(id, namespace.getMetadata().getName());
+                if (!desiredInstances.contains(addressSpaceId)) {
                     try {
-                        delete(instanceId);
+                        delete(addressSpaceId);
                     } catch(KubernetesClientException e){
                         log.info("Exception when deleting namespace (may already be in progress): " + e.getMessage());
                     }
@@ -102,11 +102,11 @@ public class InstanceManagerImpl implements InstanceManager {
         }
     }
 
-    private void delete(InstanceId instanceId) {
-        if (kubernetes.withInstance(instanceId).listClusters().isEmpty()) {
-            kubernetes.deleteNamespace(instanceId.getNamespace());
+    private void delete(AddressSpaceId addressSpaceId) {
+        if (kubernetes.withInstance(addressSpaceId).listClusters().isEmpty()) {
+            kubernetes.deleteNamespace(addressSpaceId.getNamespace());
         } else {
-            log.warn("Instance {} still has active destinations, not deleting", instanceId);
+            log.warn("Instance {} still has active destinations, not deleting", addressSpaceId);
         }
     }
 }

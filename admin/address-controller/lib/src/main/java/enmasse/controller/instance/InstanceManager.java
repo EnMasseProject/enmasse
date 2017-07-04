@@ -1,7 +1,7 @@
 package enmasse.controller.instance;
 
 import enmasse.controller.model.Instance;
-import enmasse.controller.model.InstanceId;
+import enmasse.controller.model.AddressSpaceId;
 
 import java.util.Set;
 
@@ -11,5 +11,5 @@ import java.util.Set;
 public interface InstanceManager {
     void create(Instance instance);
     boolean isReady(Instance instance);
-    void retainInstances(Set<InstanceId> desiredInstances);
+    void retainInstances(Set<AddressSpaceId> desiredInstances);
 }

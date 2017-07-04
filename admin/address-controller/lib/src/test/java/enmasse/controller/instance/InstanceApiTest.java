@@ -1,28 +1,11 @@
 package enmasse.controller.instance;
 
-import enmasse.controller.address.DestinationCluster;
-import enmasse.controller.common.Kubernetes;
-import enmasse.controller.instance.api.InstanceApi;
-import enmasse.controller.model.Instance;
-import enmasse.controller.model.InstanceId;
-import io.fabric8.kubernetes.api.model.KubernetesList;
-import io.fabric8.openshift.client.ParameterValue;
-import org.junit.Test;
-import org.mockito.ArgumentCaptor;
-
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.matches;
-import static org.mockito.Mockito.*;
 
 public class InstanceApiTest {
         /*
@@ -35,13 +18,13 @@ public class InstanceApiTest {
 
         InstanceApi controller = new InstanceManagerImpl(mockClient, "test", true);
 
-        Instance i1 = new Instance.Builder(InstanceId.withIdAndNamespace("myid", "mynamespace")).messagingHost(Optional.of("messaging.example.com")).build();
-        Instance i2 = new Instance.Builder(InstanceId.withIdAndNamespace("myid2", "other")).mqttHost(Optional.of("mqtt.example.com")).build();
+        Instance i1 = new Instance.Builder(AddressSpaceId.withIdAndNamespace("myid", "mynamespace")).messagingHost(Optional.of("messaging.example.com")).build();
+        Instance i2 = new Instance.Builder(AddressSpaceId.withIdAndNamespace("myid2", "other")).mqttHost(Optional.of("mqtt.example.com")).build();
 
         controller.create(i1);
         controller.create(i2);
 
-        ArgumentCaptor<InstanceId> idCaptor = ArgumentCaptor.forClass(InstanceId.class);
+        ArgumentCaptor<AddressSpaceId> idCaptor = ArgumentCaptor.forClass(AddressSpaceId.class);
         verify(mockClient, times(2)).createNamespace(idCaptor.capture());
 
         assertThat(idCaptor.getAllValues(), hasItem(i1.id()));
@@ -55,7 +38,7 @@ public class InstanceApiTest {
         assertParameter(values, "MQTT_GATEWAY_HOSTNAME", "mqtt.example.com");
 
         // Try to delete instance that has addresses
-        when(mockClient.listClusters()).thenReturn(Arrays.asList(new DestinationCluster(mockClient, Collections.emptySet(), new KubernetesList())))
+        when(mockClient.listClusters()).thenReturn(Arrays.asList(new AddressCluster(mockClient, Collections.emptySet(), new KubernetesList())))
                 .thenReturn(Collections.emptyList());
 
         try {

@@ -3,7 +3,7 @@ local common = import "common.jsonnet";
   container(image_repo, addressEnv)::
     {
       "name": "forwarder",
-      "env": [ addressEnv, {"name": "GROUP_ID", "value": "${NAME}"} ],
+      "env": [ addressEnv, {"name": "CLUSTER_ID", "value": "${NAME}"} ],
       "image": image_repo,
       "resources": {
           "requests": {

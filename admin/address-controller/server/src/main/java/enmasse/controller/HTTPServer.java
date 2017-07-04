@@ -20,15 +20,12 @@ import enmasse.controller.api.osb.v2.bind.OSBBindingService;
 import enmasse.controller.api.osb.v2.catalog.OSBCatalogService;
 import enmasse.controller.api.osb.v2.lastoperation.OSBLastOperationService;
 import enmasse.controller.api.osb.v2.provision.OSBProvisioningService;
-import enmasse.controller.api.v3.AddressApiHelper;
-import enmasse.controller.api.v3.http.AddressingService;
-import enmasse.controller.api.v3.http.FlavorsService;
+import enmasse.controller.api.v1.http.AddressService;
+import enmasse.controller.api.v1.http.SchemaService;
 import enmasse.controller.api.v3.http.InstanceService;
-import enmasse.controller.api.v3.http.MultiInstanceAddressingService;
 import enmasse.controller.common.exceptionmapping.DefaultExceptionMapper;
-import enmasse.controller.flavor.FlavorRepository;
 import enmasse.controller.instance.api.InstanceApi;
-import enmasse.controller.model.InstanceId;
+import enmasse.controller.model.AddressSpaceId;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.http.HttpServerOptions;
@@ -49,17 +46,13 @@ public class HTTPServer extends AbstractVerticle {
     public static final int SECURE_PORT = 8081;
     private static final Logger log = LoggerFactory.getLogger(HTTPServer.class.getName());
     private final InstanceApi instanceApi;
-    private final FlavorRepository flavorRepository;
-    private final InstanceId globalInstance;
     private final String certDir;
 
     private HttpServer httpServer;
     private HttpServer httpsServer;
 
-    public HTTPServer(InstanceId globalInstance, InstanceApi instanceApi, FlavorRepository flavorRepository, String certDir) {
-        this.globalInstance = globalInstance;
+    public HTTPServer(InstanceApi instanceApi, String certDir) {
         this.instanceApi = instanceApi;
-        this.flavorRepository = flavorRepository;
         this.certDir = certDir;
     }
 
@@ -70,16 +63,14 @@ public class HTTPServer extends AbstractVerticle {
 
         deployment.getProviderFactory().registerProvider(DefaultExceptionMapper.class);
 
-        AddressApiHelper addressApi = new AddressApiHelper(instanceApi);
-        deployment.getRegistry().addSingletonResource(new AddressingService(globalInstance, addressApi));
+        deployment.getRegistry().addSingletonResource(new AddressService(instanceApi));
+        deployment.getRegistry().addSingletonResource(new SchemaService());
         deployment.getRegistry().addSingletonResource(new InstanceService(instanceApi));
-        deployment.getRegistry().addSingletonResource(new MultiInstanceAddressingService(addressApi, instanceApi));
-        deployment.getRegistry().addSingletonResource(new FlavorsService(flavorRepository));
 
-        deployment.getRegistry().addSingletonResource(new OSBCatalogService(instanceApi, flavorRepository));
-        deployment.getRegistry().addSingletonResource(new OSBProvisioningService(instanceApi, flavorRepository));
-        deployment.getRegistry().addSingletonResource(new OSBBindingService(instanceApi, flavorRepository));
-        deployment.getRegistry().addSingletonResource(new OSBLastOperationService(instanceApi, flavorRepository));
+        deployment.getRegistry().addSingletonResource(new OSBCatalogService(instanceApi));
+        deployment.getRegistry().addSingletonResource(new OSBProvisioningService(instanceApi));
+        deployment.getRegistry().addSingletonResource(new OSBBindingService(instanceApi));
+        deployment.getRegistry().addSingletonResource(new OSBLastOperationService(instanceApi));
 
 
         VertxRequestHandler requestHandler = new VertxRequestHandler(vertx, deployment);

@@ -1,15 +1,7 @@
 package enmasse.controller.api.v3.http;
 
 import enmasse.controller.api.TestInstanceApi;
-import enmasse.controller.instance.v3.InstanceList;
 import enmasse.controller.model.Instance;
-import enmasse.controller.model.InstanceId;
-import org.junit.Before;
-import org.junit.Test;
-
-import javax.ws.rs.core.Response;
-import java.util.Optional;
-import java.util.Set;
 
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
@@ -26,11 +18,11 @@ public class HttpInstanceApiTest {
     public void setup() {
         instanceManager = new TestInstanceApi();
         instanceService = new InstanceService(instanceManager);
-        instance1 = new Instance.Builder(InstanceId.withId("instance1"))
+        instance1 = new Instance.Builder(AddressSpaceId.withId("instance1"))
                 .messagingHost(Optional.of("messaging.example.com"))
                 .mqttHost(Optional.of("mqtt.example.com"))
                 .build();
-        instance2 = new Instance.Builder(InstanceId.withIdAndNamespace("instance2", "othernamespace"))
+        instance2 = new Instance.Builder(AddressSpaceId.withIdAndNamespace("instance2", "othernamespace"))
                 .messagingHost(Optional.of("messaging2.example.com"))
                 .build();
     }

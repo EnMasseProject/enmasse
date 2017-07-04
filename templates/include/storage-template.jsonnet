@@ -31,7 +31,7 @@ local forwarder = import "forwarder.jsonnet";
             "app": "enmasse"
           },
           "annotations": {
-            "group_id": "${GROUP_ID}",
+            "cluster_id": "${CLUSTER_ID}",
             "instance": "${INSTANCE}"
           }
         },
@@ -45,7 +45,7 @@ local forwarder = import "forwarder.jsonnet";
                 "name": "${NAME}"
               },
               "annotations": {
-                "group_id": "${GROUP_ID}",
+                "cluster_id": "${CLUSTER_ID}",
                 "instance": "${INSTANCE}"
               }
             },
@@ -74,7 +74,7 @@ local forwarder = import "forwarder.jsonnet";
             "app": "enmasse"
           },
           "annotations": {
-            "group_id": "${GROUP_ID}",
+            "cluster_id": "${CLUSTER_ID}",
             "instance": "${INSTANCE}",
           }
         },
@@ -129,7 +129,7 @@ local forwarder = import "forwarder.jsonnet";
           "required": true
         },
         {
-          "name": "GROUP_ID",
+          "name": "CLUSTER_ID",
           "description": "A valid group id for the instance",
           "required": true
         },

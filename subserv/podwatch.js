@@ -32,7 +32,7 @@ Subscription.prototype.subscribe = function (selector, handler) {
     var self = this;
     var amqp = rhea.create_container();
     amqp.on('message', handler);
-    var conn = config_service.connect(amqp, "podsense-" + selector.group_id);
+    var conn = config_service.connect(amqp, "podsense-" + selector.cluster_id);
     if (conn) {
         conn.open_receiver({source:{address:"podsense", filter:{"labels": {"role": "broker"}, "annotations": selector}}});
         this.conn = conn;

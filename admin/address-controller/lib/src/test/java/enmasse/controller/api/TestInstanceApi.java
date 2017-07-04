@@ -1,30 +1,28 @@
 package enmasse.controller.api;
 
-import enmasse.controller.address.api.DestinationApi;
+import enmasse.controller.address.api.AddressApi;
 import enmasse.controller.common.Watch;
 import enmasse.controller.common.Watcher;
 import enmasse.controller.instance.api.InstanceApi;
-import enmasse.controller.model.Destination;
+import enmasse.controller.model.AddressSpaceId;
 import enmasse.controller.model.Instance;
-import enmasse.controller.model.InstanceId;
+import io.enmasse.address.model.Address;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 
 import java.util.*;
-import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class TestInstanceApi implements InstanceApi {
-    Map<InstanceId, Instance> instances = new HashMap<>();
-    Map<InstanceId, TestDestinationApi> destinationApiMap = new LinkedHashMap<>();
+    Map<AddressSpaceId, Instance> instances = new HashMap<>();
+    Map<AddressSpaceId, TestAddressApi> destinationApiMap = new LinkedHashMap<>();
     public boolean throwException = false;
 
     @Override
-    public Optional<Instance> getInstanceWithId(InstanceId instanceId) {
+    public Optional<Instance> getInstanceWithId(AddressSpaceId addressSpaceId) {
         if (throwException) {
             throw new RuntimeException("foo");
         }
-        return Optional.ofNullable(instances.get(instanceId));
+        return Optional.ofNullable(instances.get(addressSpaceId));
     }
 
     @Override
@@ -67,28 +65,28 @@ public class TestInstanceApi implements InstanceApi {
     }
 
     @Override
-    public DestinationApi withInstance(InstanceId id) {
+    public AddressApi withInstance(AddressSpaceId id) {
         if (!destinationApiMap.containsKey(id)) {
-            destinationApiMap.put(id, new TestDestinationApi());
+            destinationApiMap.put(id, new TestAddressApi());
         }
-        return getDestinationApi(id);
+        return getAddressApi(id);
     }
 
-    public TestDestinationApi getDestinationApi(InstanceId id) {
+    public TestAddressApi getAddressApi(AddressSpaceId id) {
         return destinationApiMap.get(id);
     }
 
-    public Set<Destination> getDestinations() {
-        return getDestinationApis().stream()
-                .flatMap(d -> d.listDestinations().stream())
+    public Set<Address> getAddresses() {
+        return getAddressApis().stream()
+                .flatMap(d -> d.listAddresses().stream())
                 .collect(Collectors.toSet());
     }
 
-    public Set<String> getDestinationUuids() {
-        return getDestinations().stream().map(d -> d.uuid().get()).collect(Collectors.toSet());
+    public Set<String> getAddressUuids() {
+        return getAddresses().stream().map(d -> d.getUuid()).collect(Collectors.toSet());
     }
 
-    public Collection<TestDestinationApi> getDestinationApis() {
+    public Collection<TestAddressApi> getAddressApis() {
         return destinationApiMap.values();
     }
 

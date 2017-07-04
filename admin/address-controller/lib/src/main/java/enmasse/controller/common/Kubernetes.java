@@ -1,7 +1,7 @@
 package enmasse.controller.common;
 
-import enmasse.controller.address.DestinationCluster;
-import enmasse.controller.model.InstanceId;
+import enmasse.controller.address.AddressCluster;
+import enmasse.controller.model.AddressSpaceId;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.Namespace;
@@ -49,24 +49,24 @@ public interface Kubernetes {
         }
     }
 
-    InstanceId getInstanceId();
-    Kubernetes withInstance(InstanceId instance);
+    AddressSpaceId getInstanceId();
+    Kubernetes withInstance(AddressSpaceId instance);
 
-    List<DestinationCluster> listClusters();
+    List<AddressCluster> listClusters();
     void create(HasMetadata ... resources);
     void create(KubernetesList resources);
     void delete(KubernetesList resources);
     void delete(HasMetadata ... resources);
     KubernetesList processTemplate(String templateName, ParameterValue ... parameterValues);
 
-    Namespace createNamespace(InstanceId instance);
+    Namespace createNamespace(AddressSpaceId instance);
 
     void deleteNamespace(String namespace);
 
-    void addDefaultViewPolicy(InstanceId instance);
+    void addDefaultViewPolicy(AddressSpaceId instance);
 
     boolean hasService(String service);
-    void createInstanceSecret(String secretName, InstanceId instanceId);
+    void createInstanceSecret(String secretName, AddressSpaceId addressSpaceId);
 
     Set<Deployment> getReadyDeployments();
 

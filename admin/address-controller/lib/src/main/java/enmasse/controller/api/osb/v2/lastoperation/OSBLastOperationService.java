@@ -2,10 +2,9 @@ package enmasse.controller.api.osb.v2.lastoperation;
 
 import enmasse.controller.api.osb.v2.OSBExceptions;
 import enmasse.controller.api.osb.v2.OSBServiceBase;
-import enmasse.controller.flavor.FlavorRepository;
 import enmasse.controller.instance.api.InstanceApi;
-import enmasse.controller.model.Destination;
 import enmasse.controller.model.Instance;
+import io.enmasse.address.model.Address;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
@@ -16,8 +15,8 @@ import javax.ws.rs.core.Response;
 @Produces({MediaType.APPLICATION_JSON})
 public class OSBLastOperationService extends OSBServiceBase {
 
-    public OSBLastOperationService(InstanceApi instanceApi, FlavorRepository flavorRepository) {
-        super(instanceApi, flavorRepository);
+    public OSBLastOperationService(InstanceApi instanceApi) {
+        super(instanceApi);
     }
 
     @GET
@@ -29,15 +28,15 @@ public class OSBLastOperationService extends OSBServiceBase {
         log.info("Received last_operation request for instance {}, operation {}, service id {}, plan id {}",
                 instanceId, operation, serviceId, planId);
 
-        Instance instance = findInstanceByDestinationUuid(instanceId)
+        Instance instance = findInstanceByAddressUuid(instanceId)
                 .orElseThrow(() -> OSBExceptions.notFoundException("Service instance " + instanceId + " does not exist"));
 
-        Destination destination = findDestination(instance, instanceId)  // TODO: replace this and findInstanceByDestinationUuid so it returns both objects
+        Address address = findAddress(instance, instanceId)  // TODO: replace this and findInstanceByDestinationUuid so it returns both objects
                 .orElseThrow(() -> OSBExceptions.notFoundException("Service instance " + instanceId + " does not exist"));
 
 
         LastOperationResponse response;
-        if (isAddressReady(instance, destination)) {
+        if (isAddressReady(instance, address)) {
             response = new LastOperationResponse(LastOperationState.SUCCEEDED, "All required pods are ready.");
         } else {
             response = new LastOperationResponse(LastOperationState.IN_PROGRESS, "Waiting for pods to be ready");
