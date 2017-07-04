@@ -1,4 +1,4 @@
-description = 'Library for handling EnMasse configuration'
+description = 'Common library for EnMasse configuration and address model'
 dependencies {
     compile "com.fasterxml.jackson.core:jackson-core:${jacksonVersion}"
     compile "com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}"
