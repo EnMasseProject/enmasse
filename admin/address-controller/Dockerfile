@@ -1,7 +1,6 @@
-FROM centos:7
+FROM enmasseproject/java-base:8
 
-RUN yum -y install java-1.8.0-openjdk-devel openssl && yum clean all
-ENV JAVA_HOME /usr/lib/jvm/java
+RUN yum -y install openssl && yum -y clean all
 
 ARG version=latest
 ENV VERSION ${version}
