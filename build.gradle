@@ -95,7 +95,6 @@ subprojects {
         }
 
         task tagVersion(type: com.bmuschko.gradle.docker.tasks.image.DockerTagImage) {
-            dependsOn buildImage
             force = true
             imageId = buildImage.getTag()
             repository = "${dockerRegistry}/${dockerOrg}/${project.name}"
