@@ -31,16 +31,23 @@ public interface AddressSpace {
     /**
      * The {@link AddressSpaceType} of this address space.
      *
-     * @return The type.
+     * @return The type
      */
     AddressSpaceType getType();
 
     /**
      * Retrieve a list of addresses configured in this address space.
      *
-     * @return A list of addresses.
+     * @return A list of addresses
      */
     List<Address> getAddresses();
+
+    /**
+     * Retrieve a list of endpoints configured with this address space.
+     *
+     * @return A list of endpoints
+     */
+    List<Endpoint> getEndpoints();
 
     /**
      * Return the plan used for this address space.
