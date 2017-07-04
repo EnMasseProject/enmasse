@@ -68,7 +68,6 @@ subprojects {
                 println "Executing buildimage for $projectDir commit ${commit}"
             }
         }
-        buildImage.dependsOn(build)
         buildImage.dependsOn {
             tasks.findAll { task -> task.name.startsWith('pack') }
         }
