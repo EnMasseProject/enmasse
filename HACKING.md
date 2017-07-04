@@ -45,7 +45,7 @@ To get more verbose information, append `-i`.
 
 This assumes that the above deploy step has been run
 
-    OPENSHIFT_MASTER_URL=https://localhost:8443 OPENSHIFT_NAMESPACE=myproject OPENSHIFT_TOKEN=`oc whoami -t` ./gradlew :systemtests:check -Psystemtests -i --rerun-tasks
+    OPENSHIFT_MASTER_URL=https://localhost:8443 OPENSHIFT_NAMESPACE=myproject OPENSHIFT_USE_TLS=true OPENSHIFT_TOKEN=`oc whoami -t` ./gradlew :systemtests:check -Psystemtests -i --rerun-tasks
 
 ## Reference
 
