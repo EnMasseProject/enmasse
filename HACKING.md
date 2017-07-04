@@ -70,14 +70,14 @@ Some of these tasks can be configured using environment variables as listed belo
 There are several environment variables that control the behavior of the build. Some of them are
 only consumed by some tasks:
 
-    * OPENSHIFT\_MASTER  - URL to OpenShift master. Consumed by `deploy` and `:systemtest:check -Psystemtests` tasks
-    * OPENSHIFT\_USER    - OpenShift user. Consumed by `deploy` task
-    * OPENSHIFT\_PASSWD  - OpenShift password. Consumed by `deploy` task
-    * OPENSHIFT\_TOKEN   - OpenShift token. Consumed by `systemtest` task
-    * OPENSHIFT\_PROJECT - OpenShift project for EnMasse. Consumed by `deploy` and `systemtests` tasks
-    * DOCKER\_ORG        - Docker organization for EnMasse images. Consumed by `build`, `pack`, `*Image` and `*Version` tasks. Defaults to `enmasseproject`
-    * DOCKER\_USER       - Docker user for registry login. Consumed by `push*` tasks
-    * DOCKER\_PASS       - Docker password for registry login. Consumed by `push*` tasks
-    * DOCKER\_REGISTRY   - Docker registry for EnMasse images. Consumed by `build`, `pack`, `tag*` and `push*`. Defaults to `docker.io`
+    * OPENSHIFT_MASTER  - URL to OpenShift master. Consumed by `deploy` and `:systemtest:check -Psystemtests` tasks
+    * OPENSHIFT_USER    - OpenShift user. Consumed by `deploy` task
+    * OPENSHIFT_PASSWD  - OpenShift password. Consumed by `deploy` task
+    * OPENSHIFT_TOKEN   - OpenShift token. Consumed by `systemtest` task
+    * OPENSHIFT_PROJECT - OpenShift project for EnMasse. Consumed by `deploy` and `systemtests` tasks
+    * DOCKER_ORG        - Docker organization for EnMasse images. Consumed by `build`, `pack`, `*Image` and `*Version` tasks. Defaults to `enmasseproject`
+    * DOCKER_USER       - Docker user for registry login. Consumed by `push*` tasks
+    * DOCKER_PASS       - Docker password for registry login. Consumed by `push*` tasks
+    * DOCKER_REGISTRY   - Docker registry for EnMasse images. Consumed by `build`, `pack`, `tag*` and `push*`. Defaults to `docker.io`
     * COMMIT             - Commit hash used as docker image tag in snapshots and in test. Consumed by all tasks except `deploy`. Defaults to `latest`
     * VERSION            - Version used when building releases. Consumed by all tasks except `deploy`. Defaults to `latest`
