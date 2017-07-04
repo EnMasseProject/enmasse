@@ -27,7 +27,8 @@ before_script:
 script:
 - export TAG=${TRAVIS_TAG:-latest}
 - export VERSION=${TRAVIS_TAG:-latest}
-- "./gradlew build pack buildImage tagImage pushImage"
+- "./gradlew build -i"
+- "./gradlew pack buildImage tagImage pushImage"
 - "./systemtests/scripts/run_test_component.sh templates/install /tmp/openshift systemtests"
 - "curl -s ${SCRIPTS}/generate-bintray-descriptor.sh | bash /dev/stdin enmasse templates/build/enmasse-${TAG}.tgz > .bintray.json"
 after_failure:
