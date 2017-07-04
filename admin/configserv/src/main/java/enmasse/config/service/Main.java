@@ -51,7 +51,7 @@ public class Main {
             KubernetesClient client = new DefaultKubernetesClient(config);
 
             Map<String, ResourceDatabase> databaseMap = new LinkedHashMap<>();
-            databaseMap.put("maas", new KubernetesResourceDatabase<>(client, new ConfigSubscriptionConfig()));
+            databaseMap.put("v1/addresses", new KubernetesResourceDatabase<>(client, new ConfigSubscriptionConfig()));
             databaseMap.put("podsense", new KubernetesResourceDatabase<>(client, new PodSenseSubscriptionConfig()));
 
             AMQPServer server = new AMQPServer(listenAddress, listenPort, databaseMap);

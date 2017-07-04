@@ -1,6 +1,6 @@
 package enmasse.controller.common;
 
-import io.fabric8.kubernetes.client.*;
+import io.enmasse.address.model.Address;
 
 import java.util.Set;
 

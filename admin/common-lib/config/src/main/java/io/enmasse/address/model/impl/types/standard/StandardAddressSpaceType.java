@@ -19,21 +19,16 @@ import io.enmasse.address.model.AddressSpaceType;
 import io.enmasse.address.model.AddressType;
 import io.enmasse.address.model.Plan;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
+
+import static io.enmasse.address.model.impl.types.standard.StandardType.*;
 
 /**
  * Represents the Standard address space type.
  */
 public class StandardAddressSpaceType implements AddressSpaceType {
-    private final List<AddressType> types = Arrays.asList(
-            new QueueType(),
-            new TopicType(),
-            new AnycastType(),
-            new BroadcastType());
-
-    private final List<Plan> plans = Arrays.asList(new DefaultPlan());
+    static final List<AddressType> types = Arrays.asList(QUEUE, TOPIC, ANYCAST, BROADCAST);
+    static final List<Plan> plans = Collections.emptyList();
 
     @Override
     public String getName() {

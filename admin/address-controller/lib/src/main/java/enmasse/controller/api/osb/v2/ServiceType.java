@@ -1,34 +1,26 @@
 package enmasse.controller.api.osb.v2;
 
+import io.enmasse.address.model.AddressType;
+import io.enmasse.address.model.impl.types.standard.StandardType;
+
 import java.util.Optional;
 import java.util.UUID;
 
 public enum ServiceType {
-    ANYCAST("ac6348d6-eeea-43e5-9b97-5ed18da5dcaf", "enmasse-anycast", false, false, null, "914e9acc-242e-42e3-8995-4ec90d928c2b"),
-    MULTICAST("7739ea7d-8de4-4fe8-8297-90f703904587", "enmasse-multicast", false, true, null, "6373d6b9-b701-4636-a5ff-dc5b835c9223"),
-    QUEUE("7739ea7d-8de4-4fe8-8297-90f703904589", "enmasse-queue", true, false, "queue"),
-    TOPIC("7739ea7d-8de4-4fe8-8297-90f703904590", "enmasse-topic", true, true, "topic");
+    // TODO: These are tied to the 'standard' address space
+    ANYCAST("ac6348d6-eeea-43e5-9b97-5ed18da5dcaf", "enmasse-anycast", StandardType.ANYCAST),
+    MULTICAST("7739ea7d-8de4-4fe8-8297-90f703904587", "enmasse-multicast", StandardType.BROADCAST),
+    QUEUE("7739ea7d-8de4-4fe8-8297-90f703904589", "enmasse-queue", StandardType.QUEUE),
+    TOPIC("7739ea7d-8de4-4fe8-8297-90f703904590", "enmasse-topic", StandardType.TOPIC);
 
     private UUID uuid;
     private String serviceName;
-    private boolean storeAndForward;
-    private boolean multicast;
-    private String flavorType;
-    private UUID defaultPlanUuid;
+    private AddressType addressType;
 
-    ServiceType(String uuid, String serviceName, boolean storeAndForward, boolean multicast, String flavorType) {
-        this(uuid, serviceName, storeAndForward, multicast, flavorType, null);
-    }
-
-    ServiceType(String uuid, String serviceName, boolean storeAndForward, boolean multicast, String flavorType, String defaultPlanUuid) {
+    ServiceType(String uuid, String serviceName, AddressType addressType) {
         this.uuid = UUID.fromString(uuid);
         this.serviceName = serviceName;
-        this.storeAndForward = storeAndForward;
-        this.multicast = multicast;
-        this.flavorType = flavorType;
-        if (defaultPlanUuid != null) {
-            this.defaultPlanUuid = UUID.fromString(defaultPlanUuid);
-        }
+        this.addressType = addressType;
     }
 
     public static Optional<ServiceType> valueOf(UUID uuid) {
@@ -48,23 +40,7 @@ public enum ServiceType {
         return serviceName;
     }
 
-    public boolean storeAndForward() {
-        return storeAndForward;
-    }
-
-    public boolean multicast() {
-        return multicast;
-    }
-
-    public Optional<String> flavorType() {
-        return Optional.ofNullable(flavorType);
-    }
-
-    public UUID defaultPlanUuid() {
-        return defaultPlanUuid;
-    }
-
-    public boolean supportsOnlyDefaultPlan() {
-        return defaultPlanUuid() != null;
+    public AddressType addressType() {
+        return addressType;
     }
 }

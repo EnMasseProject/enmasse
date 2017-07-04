@@ -57,7 +57,7 @@ public class Main {
     }
 
     private static String getBrokerName(Map<String, String> env) {
-        return getEnvOrThrow(env, "GROUP_ID");
+        return getEnvOrThrow(env, "CLUSTER_ID");
     }
 
     private static Host getLocalHost() throws UnknownHostException {
@@ -72,7 +72,7 @@ public class Main {
 
     private static Map<String,String> getAnnotationFilter(Map<String, String> env) {
         Map<String, String> labelMap = new LinkedHashMap<>();
-        labelMap.put("group_id", getBrokerName(env));
+        labelMap.put("cluster_id", getBrokerName(env));
         return labelMap;
     }
 

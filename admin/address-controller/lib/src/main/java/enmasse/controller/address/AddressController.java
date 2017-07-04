@@ -1,7 +1,6 @@
 package enmasse.controller.address;
 
 import enmasse.controller.common.*;
-import enmasse.controller.flavor.FlavorRepository;
 import enmasse.controller.instance.api.InstanceApi;
 import enmasse.controller.model.Instance;
 import io.fabric8.openshift.client.OpenShiftClient;
@@ -20,15 +19,13 @@ public class AddressController extends AbstractVerticle implements Watcher<Insta
     private final Kubernetes kubernetes;
     private final InstanceApi instanceApi;
     private final OpenShiftClient client;
-    private final FlavorRepository flavorRepository;
     private final Map<Instance, String> addressSpaceMap = new HashMap<>();
     private Watch watch;
 
-    public AddressController(InstanceApi instanceApi, Kubernetes kubernetes, OpenShiftClient client, FlavorRepository flavorRepository) {
+    public AddressController(InstanceApi instanceApi, Kubernetes kubernetes, OpenShiftClient client) {
         this.instanceApi = instanceApi;
         this.kubernetes = kubernetes;
         this.client = client;
-        this.flavorRepository = flavorRepository;
     }
 
     @Override
@@ -74,7 +71,7 @@ public class AddressController extends AbstractVerticle implements Watcher<Insta
         log.debug("Check instances in address controller: " + instances);
         for (Instance instance : instances) {
             if (!addressSpaceMap.containsKey(instance)) {
-                DestinationClusterGenerator clusterGenerator = new TemplateDestinationClusterGenerator(instance, kubernetes, flavorRepository);
+                AddressClusterGenerator clusterGenerator = new TemplateAddressClusterGenerator(instance, kubernetes);
                 AddressSpaceController addressSpaceController = new AddressSpaceController(
                         instanceApi.withInstance(instance.id()),
                         kubernetes.withInstance(instance.id()),

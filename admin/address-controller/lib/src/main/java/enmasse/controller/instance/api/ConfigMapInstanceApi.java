@@ -1,13 +1,13 @@
 package enmasse.controller.instance.api;
 
 import enmasse.config.LabelKeys;
-import enmasse.controller.address.api.DestinationApi;
-import enmasse.controller.address.api.ConfigMapDestinationApi;
+import enmasse.controller.address.api.AddressApi;
+import enmasse.controller.address.api.ConfigMapAddressApi;
 import enmasse.controller.common.*;
 import enmasse.controller.common.Watch;
 import enmasse.controller.common.Watcher;
+import enmasse.controller.model.AddressSpaceId;
 import enmasse.controller.model.Instance;
-import enmasse.controller.model.InstanceId;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.ConfigMapList;
 import io.fabric8.openshift.client.OpenShiftClient;
@@ -30,8 +30,8 @@ public class ConfigMapInstanceApi implements InstanceApi {
     }
 
     @Override
-    public Optional<Instance> getInstanceWithId(InstanceId instanceId) {
-        ConfigMap map = client.configMaps().withName(Kubernetes.sanitizeName("instance-config-" + instanceId.getId())).get();
+    public Optional<Instance> getInstanceWithId(AddressSpaceId addressSpaceId) {
+        ConfigMap map = client.configMaps().withName(Kubernetes.sanitizeName("instance-config-" + addressSpaceId.getId())).get();
         if (map == null) {
             return Optional.empty();
         } else {
@@ -116,7 +116,7 @@ public class ConfigMapInstanceApi implements InstanceApi {
     }
 
     @Override
-    public DestinationApi withInstance(InstanceId id) {
-        return new ConfigMapDestinationApi(vertx, client, id);
+    public AddressApi withInstance(AddressSpaceId id) {
+        return new ConfigMapAddressApi(vertx, client, id);
     }
 }

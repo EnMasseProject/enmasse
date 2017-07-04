@@ -26,7 +26,9 @@ import enmasse.controller.api.osb.v2.lastoperation.LastOperationResponse;
 import enmasse.controller.api.osb.v2.lastoperation.LastOperationState;
 import enmasse.controller.api.osb.v2.provision.ProvisionRequest;
 import enmasse.controller.api.osb.v2.provision.ProvisionResponse;
-import enmasse.controller.model.Destination;
+import io.enmasse.address.model.impl.Address;
+import io.enmasse.address.model.impl.AddressStatus;
+import io.enmasse.address.model.impl.types.standard.StandardType;
 import org.jboss.resteasy.util.HttpResponseCodes;
 import org.junit.Test;
 
@@ -76,9 +78,16 @@ public class ProvisionServiceTest extends OSBTestBase {
 //        assertThat(provisionResponse.getDashboardUrl(), notNullValue());
         assertThat(provisionResponse.getOperation(), notNullValue());
 
-        Destination destination = new Destination(ADDRESS, TRANSACTIONAL, true, false,
-                QUEUE_FLAVOR_NAME, SERVICE_INSTANCE_ID, new Destination.Status(false));
-        assertThat(instanceApi.getDestinations(), is(new HashSet<>(Collections.singletonList(destination))));
+        Address destination = new Address.Builder()
+                .setName(ADDRESS)
+                .setAddress(ADDRESS)
+                .setAddressSpace("unknown")
+                .setUuid(SERVICE_INSTANCE_ID)
+                .setStatus(new AddressStatus(false))
+                .setType(StandardType.QUEUE)
+                .setPlan(StandardType.QUEUE.getPlans().get(0))
+                .build();
+        assertThat(instanceApi.getAddresses(), is(new HashSet<>(Collections.singletonList(destination))));
 
         LastOperationResponse lastOperationResponse = getLastOperationResponse(SERVICE_INSTANCE_ID, QUEUE_SERVICE_ID_STRING, QUEUE_PLAN_ID_STRING, provisionResponse.getOperation());
         assertThat(lastOperationResponse.getState(), is(LastOperationState.IN_PROGRESS));
@@ -88,14 +97,22 @@ public class ProvisionServiceTest extends OSBTestBase {
         lastOperationResponse = getLastOperationResponse(SERVICE_INSTANCE_ID, QUEUE_SERVICE_ID_STRING, QUEUE_PLAN_ID_STRING, provisionResponse.getOperation());
         assertThat(lastOperationResponse.getState(), is(LastOperationState.IN_PROGRESS));
 
-        instanceApi.getDestinationApis().iterator().next().setAllDestinationsReady(true);
+        instanceApi.getAddressApis().iterator().next().setAllAddressesReady(true);
 
         lastOperationResponse = getLastOperationResponse(SERVICE_INSTANCE_ID, QUEUE_SERVICE_ID_STRING, QUEUE_PLAN_ID_STRING, provisionResponse.getOperation());
         assertThat(lastOperationResponse.getState(), is(LastOperationState.SUCCEEDED));
 
-        destination = new Destination(ADDRESS, TRANSACTIONAL, true, false,
-                QUEUE_FLAVOR_NAME, SERVICE_INSTANCE_ID, new Destination.Status(true));
-        assertThat(instanceApi.getDestinations(), is(new HashSet<>(Collections.singletonList(destination))));
+        destination = new Address.Builder()
+                .setName(ADDRESS)
+                .setAddress(ADDRESS)
+                .setAddressSpace("unknown")
+                .setUuid(SERVICE_INSTANCE_ID)
+                .setStatus(new AddressStatus(true))
+                .setType(StandardType.QUEUE)
+                .setPlan(StandardType.QUEUE.getPlans().get(0))
+                .build();
+
+        assertThat(instanceApi.getAddresses(), is(new HashSet<>(Collections.singletonList(destination))));
     }
 
     private LastOperationResponse getLastOperationResponse(String serviceInstanceId, String serviceId, String planId, String operation) throws Exception {
@@ -139,7 +156,7 @@ public class ProvisionServiceTest extends OSBTestBase {
         provisionService(SERVICE_INSTANCE_ID);
         Response response = provisioningService.deprovisionService(SERVICE_INSTANCE_ID, QUEUE_SERVICE_ID_STRING, QUEUE_PLAN_ID_STRING);
         assertThat(response.getStatus(), is(HttpResponseCodes.SC_OK));
-        assertThat(instanceApi.getDestinations(), is(Collections.EMPTY_SET));
+        assertThat(instanceApi.getAddresses(), is(Collections.EMPTY_SET));
     }
 
     @Test
@@ -163,11 +180,11 @@ public class ProvisionServiceTest extends OSBTestBase {
 
         Response response = provisioningService.deprovisionService(serviceId21, QUEUE_SERVICE_ID_STRING, QUEUE_PLAN_ID_STRING);
         assertThat(response.getStatus(), is(HttpResponseCodes.SC_OK));
-        assertThat(instanceApi.getDestinationUuids(), not(hasItem(serviceId21)));
+        assertThat(instanceApi.getAddressUuids(), not(hasItem(serviceId21)));
 
         response = provisioningService.deprovisionService(serviceId11, QUEUE_SERVICE_ID_STRING, QUEUE_PLAN_ID_STRING);
         assertThat(response.getStatus(), is(HttpResponseCodes.SC_OK));
-        assertThat(instanceApi.getDestinationUuids(), not(hasItem(serviceId11)));
+        assertThat(instanceApi.getAddressUuids(), not(hasItem(serviceId11)));
     }
 
     private String randomUUID() {

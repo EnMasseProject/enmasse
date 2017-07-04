@@ -1,10 +1,10 @@
 package enmasse.controller.instance.api;
 
-import enmasse.controller.address.api.DestinationApi;
+import enmasse.controller.address.api.AddressApi;
 import enmasse.controller.common.Watcher;
 import enmasse.controller.common.Watch;
+import enmasse.controller.model.AddressSpaceId;
 import enmasse.controller.model.Instance;
-import enmasse.controller.model.InstanceId;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 
 import java.util.Optional;
@@ -17,7 +17,7 @@ public interface InstanceApi {
     /**
      * Operations for instances.
      */
-    Optional<Instance> getInstanceWithId(InstanceId instanceId);
+    Optional<Instance> getInstanceWithId(AddressSpaceId addressSpaceId);
     void createInstance(Instance instance);
     void replaceInstance(Instance instance);
     void deleteInstance(Instance instance);
@@ -26,5 +26,5 @@ public interface InstanceApi {
 
     Watch watchInstances(Watcher<Instance> watcher) throws Exception;
 
-    DestinationApi withInstance(InstanceId id);
+    AddressApi withInstance(AddressSpaceId id);
 }

@@ -15,6 +15,8 @@
  */
 package io.enmasse.address.model;
 
+import java.util.Optional;
+
 /**
  * Represents an EnMasse Plan
  */
@@ -32,4 +34,18 @@ public interface Plan {
      * @return A textual description
      */
     String getDescription();
+
+    /**
+     * Get the UUID of this plan.
+     *
+     * @return the uuid
+     */
+    String getUuid();
+
+    /**
+     * Get template config for this plan if it has one.
+     *
+     * @return the template config wrapped in an Optional
+     */
+    Optional<TemplateConfig> getTemplateConfig();
 }

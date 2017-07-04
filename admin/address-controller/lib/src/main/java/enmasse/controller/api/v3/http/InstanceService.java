@@ -3,7 +3,7 @@ package enmasse.controller.api.v3.http;
 import enmasse.controller.instance.api.InstanceApi;
 import enmasse.controller.instance.v3.Instance;
 import enmasse.controller.instance.v3.InstanceList;
-import enmasse.controller.model.InstanceId;
+import enmasse.controller.model.AddressSpaceId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -65,7 +65,7 @@ public class InstanceService {
     @Produces({MediaType.APPLICATION_JSON})
     public Response getInstance(@PathParam("instance") String instanceId) {
         try {
-            Optional<Instance> instance = instanceApi.getInstanceWithId(InstanceId.withId(instanceId)).map(Instance::new);
+            Optional<Instance> instance = instanceApi.getInstanceWithId(AddressSpaceId.withId(instanceId)).map(Instance::new);
 
             if (instance.isPresent()) {
                 return Response.ok(instance.get()).build();

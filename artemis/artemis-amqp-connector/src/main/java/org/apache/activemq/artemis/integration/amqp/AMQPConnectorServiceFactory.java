@@ -29,13 +29,13 @@ import java.util.Set;
 import java.util.concurrent.ScheduledExecutorService;
 
 /**
- * TODO: Description
+ * Connector service factory for AMQP Connector Services that can be used to establish outgoing AMQP connections.
  */
 public class AMQPConnectorServiceFactory implements ConnectorServiceFactory {
    private static final String HOST = "host";
    private static final String PORT = "port";
    private static final String CONTAINER = "containerId";
-   private static final String GROUP = "groupId";
+   private static final String CLUSTER = "clusterId";
    private static final String SOURCE_ADDRESS = "sourceAddress";
    private static final String CLIENT_ADDRESS = "clientAddress";
 
@@ -54,7 +54,7 @@ public class AMQPConnectorServiceFactory implements ConnectorServiceFactory {
       Set<String> properties = new LinkedHashSet<>();
       properties.add(HOST);
       properties.add(PORT);
-      properties.add(GROUP);
+      properties.add(CLUSTER);
       return properties;
    }
 
@@ -62,7 +62,7 @@ public class AMQPConnectorServiceFactory implements ConnectorServiceFactory {
    public ConnectorService createConnectorService(String connectorName, Map<String, Object> configuration, StorageManager storageManager, PostOffice postOffice, ScheduledExecutorService scheduledExecutorService) {
       String host = (String) configuration.get(HOST);
       int port = Integer.parseInt((String) configuration.get(PORT));
-      String group = (String)configuration.get(GROUP);
+      String clusterId = (String)configuration.get(CLUSTER);
 
       Optional<String> sourceAddress = Optional.ofNullable((String)configuration.get(SOURCE_ADDRESS));
       Optional<String> clientAddress = Optional.ofNullable((String)configuration.get(CLIENT_ADDRESS));
@@ -73,11 +73,11 @@ public class AMQPConnectorServiceFactory implements ConnectorServiceFactory {
                       container.map(o -> new SubscriberInfo(o, s, c))));
 
       ActiveMQAMQPLogger.LOGGER.infof("Creating connector host %s port %d", host, port);
-      String containerId = group;
+      String containerId = clusterId;
       if (container.isPresent()) {
          containerId = container.get();
       }
-      return new AMQPConnectorService(connectorName, host, port, containerId, group, info, ((PostOfficeImpl)postOffice).getServer(), scheduledExecutorService);
+      return new AMQPConnectorService(connectorName, host, port, containerId, info, ((PostOfficeImpl)postOffice).getServer(), scheduledExecutorService);
    }
 
    @Override

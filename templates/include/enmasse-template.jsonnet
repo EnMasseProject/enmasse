@@ -2,7 +2,6 @@ local storage = import "storage-template.jsonnet";
 local enmasseInfra = import "enmasse-instance-infra.jsonnet";
 local addressController = import "address-controller.jsonnet";
 local restapiRoute = import "restapi-route.jsonnet";
-local flavorConfig = import "flavor.jsonnet";
 local images = import "images.jsonnet";
 {
   generate(use_sasl, with_kafka)::
@@ -22,8 +21,7 @@ local images = import "images.jsonnet";
                  enmasseInfra.generate(use_sasl, with_kafka, true),
                  addressController.deployment("${ADDRESS_CONTROLLER_REPO}", "${MULTIINSTANCE}", "", "${INSTANCE_IDLE_TIMEOUT_SECONDS}"),
                  addressController.internal_service,
-                 restapiRoute.route("${RESTAPI_HOSTNAME}"),
-                 flavorConfig.generate() ],
+                 restapiRoute.route("${RESTAPI_HOSTNAME}") ],
     "parameters": [
       {
         "name": "RESTAPI_HOSTNAME",

@@ -16,36 +16,9 @@
 
 package enmasse.controller.common;
 
-import enmasse.config.AddressConfigKeys;
-import enmasse.config.LabelKeys;
-import enmasse.controller.address.DestinationCluster;
-import enmasse.controller.flavor.FlavorManager;
-import enmasse.controller.model.Destination;
-import enmasse.controller.model.Flavor;
-import enmasse.controller.model.InstanceId;
-import io.fabric8.kubernetes.api.model.*;
-import io.fabric8.kubernetes.api.model.extensions.Deployment;
-import io.fabric8.kubernetes.api.model.extensions.DeploymentBuilder;
-import io.fabric8.kubernetes.api.model.extensions.DeploymentListBuilder;
-import io.fabric8.kubernetes.client.dsl.ExtensionsAPIGroupDSL;
-import io.fabric8.kubernetes.client.dsl.MixedOperation;
-import io.fabric8.openshift.client.DefaultOpenShiftClient;
-import io.fabric8.openshift.client.OpenShiftClient;
-import io.fabric8.openshift.client.ParameterValue;
-import org.junit.Test;
-
-import java.io.File;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.*;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 public class KubernetesHelperTest {
 
@@ -61,7 +34,7 @@ public class KubernetesHelperTest {
         ExtensionsAPIGroupDSL extensions = mock(ExtensionsAPIGroupDSL.class);
 
         OpenShiftClient mockClient = mock(OpenShiftClient.class);
-        KubernetesHelper helper = new KubernetesHelper(InstanceId.withId("myinstance"), mockClient, new File("src/test/resources/templates"));
+        KubernetesHelper helper = new KubernetesHelper(AddressSpaceId.withId("myinstance"), mockClient, new File("src/test/resources/templates"));
 
         when(mockClient.extensions()).thenReturn(extensions);
         when(extensions.deployments()).thenReturn(dOp);
@@ -82,7 +55,7 @@ public class KubernetesHelperTest {
                 new DeploymentBuilder()
                         .withMetadata(new ObjectMetaBuilder()
                             .withName("testdc")
-                            .addToLabels(LabelKeys.GROUP_ID, "mygroup")
+                            .addToLabels(LabelKeys.CLUSTER_ID, "mygroup")
                             .addToLabels(LabelKeys.ADDRESS_CONFIG, "address-config-mygroup")
                             .build())
                         .build();
@@ -98,12 +71,12 @@ public class KubernetesHelperTest {
         when(mapOp.list()).thenReturn(new ConfigMapListBuilder().addToItems(map1, map2).build());
         when(rcOp.list()).thenReturn(new ReplicationControllerListBuilder().build());
 
-        FlavorManager flavorManager = new FlavorManager();
+        PlanManager flavorManager = new PlanManager();
         flavorManager.flavorsUpdated(Collections.singletonMap("vanilla", new Flavor.Builder("vanilla", "test").build()));
-        List<DestinationCluster> clusters = helper.listClusters();
+        List<AddressCluster> clusters = helper.listClusters();
         assertThat(clusters.size(), is(1));
 
-        DestinationCluster cluster = clusters.get(0);
+        AddressCluster cluster = clusters.get(0);
         Set<Destination> group = cluster.getDestinations();
         assertThat(group.size(), is(2));
         assertDestination(group, "myqueue", true, false, Optional.of("vanilla"));
@@ -112,7 +85,7 @@ public class KubernetesHelperTest {
 
     @Test
     public void testProcessTemplate() {
-        KubernetesHelper helper = new KubernetesHelper(InstanceId.withId("myinstance"), new DefaultOpenShiftClient(), new File("src/test/resources/templates"));
+        KubernetesHelper helper = new KubernetesHelper(AddressSpaceId.withId("myinstance"), new DefaultOpenShiftClient(), new File("src/test/resources/templates"));
         KubernetesList list = helper.processTemplate("test", new ParameterValue("MYPARAM", "value"), new ParameterValue("SECONDPARAM", ""));
         assertThat(list.getItems().size(), is(1));
     }
@@ -120,13 +93,13 @@ public class KubernetesHelperTest {
     @Test
     public void testCreateAddressConfig() {
         OpenShiftClient mockClient = mock(OpenShiftClient.class);
-        KubernetesHelper helper = new KubernetesHelper(InstanceId.withId("myinstance"), mockClient, new File("src/test/resources/templates"));
+        KubernetesHelper helper = new KubernetesHelper(AddressSpaceId.withId("myinstance"), mockClient, new File("src/test/resources/templates"));
         Destination destination = new Destination("queue1", "group1", true, false, Optional.of("vanilla"), Optional.empty(), status);
 
         ConfigMap addressConfig = helper.createAddressConfig(destination);
 
-        assertTrue(addressConfig.getMetadata().getLabels().containsKey(LabelKeys.GROUP_ID));
-        assertThat(addressConfig.getMetadata().getLabels().get(LabelKeys.GROUP_ID), is("group1"));
+        assertTrue(addressConfig.getMetadata().getLabels().containsKey(LabelKeys.CLUSTER_ID));
+        assertThat(addressConfig.getMetadata().getLabels().get(LabelKeys.CLUSTER_ID), is("group1"));
         assertThat(addressConfig.getData().size(), is(5));
         assertThat(addressConfig.getData().get(AddressConfigKeys.ADDRESS), is("queue1"));
     }

@@ -41,13 +41,13 @@ public class Main {
         Vertx vertx = Vertx.vertx();
 
         if (System.getenv("TOPIC_NAME") != null) {
-            String groupId = System.getenv("GROUP_ID");
+            String clusterId = System.getenv("CLUSTER_ID");
             Endpoint messagingEndpoint = new Endpoint(System.getenv("MESSAGING_SERVICE_HOST"), Integer.parseInt(System.getenv("MESSAGING_SERVICE_PORT_INTERNAL")));
 
             Map<String, String> labelFilter = new LinkedHashMap<>();
             labelFilter.put("role", "broker");
             Map<String, String> annotationFilter = new LinkedHashMap<>();
-            annotationFilter.put("group_id", groupId);
+            annotationFilter.put("cluster_id", clusterId);
 
             DiscoveryClient discoveryClient = new DiscoveryClient("podsense", labelFilter, annotationFilter, Optional.of("broker"));
             TopicMigrator migrator = new TopicMigrator(vertx, localHost, messagingEndpoint);

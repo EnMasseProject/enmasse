@@ -17,7 +17,7 @@ objects:
     kind: Deployment
     metadata:
       annotations:
-        group_id: "${GROUP_ID}"
+        cluster_id: "${CLUSTER_ID}"
         instance: "${INSTANCE}"
       labels:
         app: enmasse
@@ -27,7 +27,7 @@ objects:
       template:
         metadata:
           annotations:
-            group_id: "${GROUP_ID}"
+            cluster_id: "${CLUSTER_ID}"
             instance: "${INSTANCE}"
           labels:
             app: enmasse
@@ -38,8 +38,8 @@ objects:
           - env:
             - name: QUEUE_NAME
               value: "${ADDRESS}"
-            - name: GROUP_ID
-              value: "${GROUP_ID}"
+            - name: CLUSTER_ID
+              value: "${CLUSTER_ID}"
             image: "${BROKER_REPO}"
             lifecycle:
               preStop:
@@ -95,7 +95,7 @@ objects:
     name: NAME
     required: true
   - description: A valid group id for the instance
-    name: GROUP_ID
+    name: CLUSTER_ID
     required: true
   - description: The address to use for the queue
     name: ADDRESS
@@ -114,7 +114,7 @@ objects:
     kind: PersistentVolumeClaim
     metadata:
       annotations:
-        group_id: "${GROUP_ID}"
+        cluster_id: "${CLUSTER_ID}"
         instance: "${INSTANCE}"
       labels:
         app: enmasse
@@ -129,7 +129,7 @@ objects:
     kind: Deployment
     metadata:
       annotations:
-        group_id: "${GROUP_ID}"
+        cluster_id: "${CLUSTER_ID}"
         instance: "${INSTANCE}"
       labels:
         app: enmasse
@@ -139,7 +139,7 @@ objects:
       template:
         metadata:
           annotations:
-            group_id: "${GROUP_ID}"
+            cluster_id: "${CLUSTER_ID}"
             instance: "${INSTANCE}"
           labels:
             app: enmasse
@@ -150,8 +150,8 @@ objects:
           - env:
             - name: QUEUE_NAME
               value: "${ADDRESS}"
-            - name: GROUP_ID
-              value: "${GROUP_ID}"
+            - name: CLUSTER_ID
+              value: "${CLUSTER_ID}"
             image: "${BROKER_REPO}"
             lifecycle:
               preStop:
@@ -208,7 +208,7 @@ objects:
     name: NAME
     required: true
   - description: A valid group id for the instance
-    name: GROUP_ID
+    name: CLUSTER_ID
     required: true
   - description: The address to use for the queue
     name: ADDRESS
@@ -227,7 +227,7 @@ objects:
     kind: Deployment
     metadata:
       annotations:
-        group_id: "${GROUP_ID}"
+        cluster_id: "${CLUSTER_ID}"
         instance: "${INSTANCE}"
       labels:
         app: enmasse
@@ -237,7 +237,7 @@ objects:
       template:
         metadata:
           annotations:
-            group_id: "${GROUP_ID}"
+            cluster_id: "${CLUSTER_ID}"
             instance: "${INSTANCE}"
           labels:
             app: enmasse
@@ -248,8 +248,8 @@ objects:
           - env:
             - name: TOPIC_NAME
               value: "${ADDRESS}"
-            - name: GROUP_ID
-              value: "${GROUP_ID}"
+            - name: CLUSTER_ID
+              value: "${CLUSTER_ID}"
             image: "${BROKER_REPO}"
             lifecycle:
               preStop:
@@ -305,7 +305,7 @@ objects:
           - env:
             - name: TOPIC_NAME
               value: "${ADDRESS}"
-            - name: GROUP_ID
+            - name: CLUSTER_ID
               value: "${NAME}"
             image: "${TOPIC_FORWARDER_REPO}"
             livenessProbe:
@@ -353,7 +353,7 @@ objects:
     name: NAME
     required: true
   - description: A valid group id for the instance
-    name: GROUP_ID
+    name: CLUSTER_ID
     required: true
   - description: The address to use for the topic
     name: ADDRESS
@@ -372,7 +372,7 @@ objects:
     kind: PersistentVolumeClaim
     metadata:
       annotations:
-        group_id: "${GROUP_ID}"
+        cluster_id: "${CLUSTER_ID}"
         instance: "${INSTANCE}"
       labels:
         app: enmasse
@@ -387,7 +387,7 @@ objects:
     kind: Deployment
     metadata:
       annotations:
-        group_id: "${GROUP_ID}"
+        cluster_id: "${CLUSTER_ID}"
         instance: "${INSTANCE}"
       labels:
         app: enmasse
@@ -397,7 +397,7 @@ objects:
       template:
         metadata:
           annotations:
-            group_id: "${GROUP_ID}"
+            cluster_id: "${CLUSTER_ID}"
             instance: "${INSTANCE}"
           labels:
             app: enmasse
@@ -408,8 +408,8 @@ objects:
           - env:
             - name: TOPIC_NAME
               value: "${ADDRESS}"
-            - name: GROUP_ID
-              value: "${GROUP_ID}"
+            - name: CLUSTER_ID
+              value: "${CLUSTER_ID}"
             image: "${BROKER_REPO}"
             lifecycle:
               preStop:
@@ -465,7 +465,7 @@ objects:
           - env:
             - name: TOPIC_NAME
               value: "${ADDRESS}"
-            - name: GROUP_ID
+            - name: CLUSTER_ID
               value: "${NAME}"
             image: "${TOPIC_FORWARDER_REPO}"
             livenessProbe:
@@ -514,7 +514,7 @@ objects:
     name: NAME
     required: true
   - description: A valid group id for the instance
-    name: GROUP_ID
+    name: CLUSTER_ID
     required: true
   - description: The address to use for the topic
     name: ADDRESS
@@ -1187,29 +1187,6 @@ objects:
     to:
       kind: Service
       name: address-controller
-- apiVersion: v1
-  data:
-    json: '[{"description": "Simple in memory queue", "name": "vanilla-queue", "templateName":
-      "queue-inmemory", "type": "queue", "uuid": "83fc2eaf-d968-4f7d-bbcd-da697ca9232c"},
-      {"description": "Small queue with persistence", "name": "small-persisted-queue",
-      "templateName": "queue-persisted", "templateParameters": {"STORAGE_CAPACITY":
-      "1Gi"}, "type": "queue", "uuid": "0d2a6a02-0ca2-4e8d-ad9b-a1f3319aba61"}, {"description":
-      "Large queue with persistence", "name": "large-persisted-queue", "templateName":
-      "queue-persisted", "templateParameters": {"STORAGE_CAPACITY": "10Gi"}, "type":
-      "queue", "uuid": "ea4e1bf9-2501-43c0-bc47-0f0858fdbf89"}, {"description": "Simple
-      in memory topic", "name": "vanilla-topic", "templateName": "topic-inmemory",
-      "type": "topic", "uuid": "2aa7214e-41b7-444a-a5f6-a73be3da9667"}, {"description":
-      "Small topic with persistence", "name": "small-persisted-topic", "templateName":
-      "topic-persisted", "templateParameters": {"STORAGE_CAPACITY": "1Gi"}, "type":
-      "topic", "uuid": "c59e84f5-8f1b-4d17-a0d1-1b68085c96fc"}, {"description": "Large
-      topic with persistence", "name": "large-persisted-topic", "templateName": "topic-persisted",
-      "templateParameters": {"STORAGE_CAPACITY": "10Gi"}, "type": "topic", "uuid":
-      "cbde8a2e-6690-46fa-9282-6876c38a469d"}]'
-  kind: ConfigMap
-  metadata:
-    labels:
-      app: enmasse
-    name: flavor
 parameters:
 - description: The hostname to use for the exposed route for the REST API
   name: RESTAPI_HOSTNAME

@@ -3,10 +3,9 @@ package enmasse.controller.api.osb.v2.bind;
 import enmasse.controller.api.osb.v2.EmptyResponse;
 import enmasse.controller.api.osb.v2.OSBExceptions;
 import enmasse.controller.api.osb.v2.OSBServiceBase;
-import enmasse.controller.flavor.FlavorRepository;
 import enmasse.controller.instance.api.InstanceApi;
-import enmasse.controller.model.Destination;
 import enmasse.controller.model.Instance;
+import io.enmasse.address.model.Address;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -24,18 +23,18 @@ import javax.ws.rs.core.Response;
 @Produces({MediaType.APPLICATION_JSON})
 public class OSBBindingService extends OSBServiceBase {
 
-    public OSBBindingService(InstanceApi instanceApi, FlavorRepository flavorRepository) {
-        super(instanceApi, flavorRepository);
+    public OSBBindingService(InstanceApi instanceApi) {
+        super(instanceApi);
     }
 
     @PUT
     public Response bindServiceInstance(@PathParam("instanceId") String instanceId, @PathParam("bindingId") String bindingId, BindRequest bindRequest) {
         log.info("Received bind request for instance {}, binding {} (service id {}, plan id {})",
                 instanceId, bindingId, bindRequest.getServiceId(), bindRequest.getPlanId());
-        Instance instance = findInstanceByDestinationUuid(instanceId)
+        Instance instance = findInstanceByAddressUuid(instanceId)
                 .orElseThrow(() -> OSBExceptions.notFoundException("Service instance " + instanceId + " does not exist"));
 
-        Destination destination = findDestination(instance, instanceId)  // TODO: replace this and findInstanceByDestinationUuid so it returns both objects
+        Address address = findAddress(instance, instanceId)  // TODO: replace this and findInstanceByAddressUuid so it returns both objects
                 .orElseThrow(() -> OSBExceptions.notFoundException("Service instance " + instanceId + " does not exist"));
 
         if (bindRequest.getServiceId() == null) {
@@ -50,7 +49,7 @@ public class OSBBindingService extends OSBServiceBase {
         instance.messagingHost().ifPresent(s -> credentials.put("messagingHost", s));
         instance.mqttHost().ifPresent(s -> credentials.put("mqttHost", s));
         instance.consoleHost().ifPresent(s -> credentials.put("consoleHost", s));
-        credentials.put("destination-address", destination.address());
+        credentials.put("destination-address", address.getAddress());
         credentials.put("internal-messaging-host", "messaging." + instance.id().getNamespace() + ".svc.cluster.local");
         credentials.put("internal-mqtt-host", "mqtt." + instance.id().getNamespace() + ".svc.cluster.local");
 
@@ -61,7 +60,7 @@ public class OSBBindingService extends OSBServiceBase {
     @DELETE
     public Response unbindServiceInstance(@PathParam("instanceId") String instanceId, @PathParam("bindingId") String bindingId) {
         log.info("Received unbind request for instance {}, binding {}", instanceId, bindingId);
-        Instance instance = findInstanceByDestinationUuid(instanceId)
+        Instance instance = findInstanceByAddressUuid(instanceId)
                 .orElseThrow(() -> OSBExceptions.notFoundException("Service instance " + instanceId + " does not exist"));
 
         return Response.ok(new EmptyResponse()).build();

@@ -19,4 +19,5 @@ package io.enmasse.address.model;
  * Represents a certificate configuration
  */
 public interface CertProvider {
+    String getName();
 }

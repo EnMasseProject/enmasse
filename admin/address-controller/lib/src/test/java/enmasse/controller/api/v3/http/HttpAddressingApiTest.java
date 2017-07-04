@@ -16,44 +16,29 @@
 
 package enmasse.controller.api.v3.http;
 
-import enmasse.controller.api.TestDestinationApi;
+import enmasse.controller.api.TestAddressApi;
 import enmasse.controller.api.TestInstanceApi;
-import enmasse.controller.address.v3.Address;
-import enmasse.controller.address.v3.AddressList;
-import enmasse.controller.api.v3.AddressApiHelper;
-import enmasse.controller.model.Destination;
-import enmasse.controller.model.Instance;
-import enmasse.controller.model.InstanceId;
-import org.junit.Before;
-import org.junit.Test;
-import org.mockito.internal.util.collections.Sets;
-
-import javax.ws.rs.core.Response;
-import java.util.Collections;
-import java.util.Optional;
-import java.util.Set;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.*;
 
 public class HttpAddressingApiTest {
-    private AddressingService addressingService;
+    //private AddressingService addressingService;
     private TestInstanceApi instanceManager;
-    private TestDestinationApi addressSpace;
+    private TestAddressApi addressSpace;
 
     /*
     @Before
     public void setup() {
         instanceManager = new TestInstanceApi();
-        instanceManager.create(new Instance.Builder(InstanceId.withId("myinstance")).build());
-        addressSpace = new TestDestinationApi();
+        instanceManager.create(new Instance.Builder(AddressSpaceId.withId("myinstance")).build());
+        addressSpace = new TestAddressApi();
         addressSpace.setDestinations(Sets.newSet(
                 new Destination("addr1", "addr1", false, false, Optional.empty(), Optional.empty(), status),
                 new Destination("queue1", "queue1", true, false, Optional.of("vanilla"), Optional.empty(), status)));
         TestAddressManager addressManager = new TestAddressManager();
-        addressManager.addManager(InstanceId.withId("myinstance"), addressSpace);
+        addressManager.addManager(AddressSpaceId.withId("myinstance"), addressSpace);
 
-        addressingService = new AddressingService(InstanceId.withId("myinstance"), new AddressApiHelper(instanceManager, addressManager));
+        addressingService = new AddressingService(AddressSpaceId.withId("myinstance"), new AddressApiHelper(instanceManager, addressManager));
     }
 
     @Test
@@ -69,7 +54,7 @@ public class HttpAddressingApiTest {
 
     @Test
     public void testGet() {
-        Response response = addressingService.getAddress("queue1");
+        Response response = addressingService.getAddressWithName("queue1");
         assertThat(response.getStatus(), is(200));
         Destination data = ((Address)response.getEntity()).getDestination();
 
@@ -88,7 +73,7 @@ public class HttpAddressingApiTest {
 
     @Test
     public void testGetUnknown() {
-        Response response = addressingService.getAddress("unknown");
+        Response response = addressingService.getAddressWithName("unknown");
         assertThat(response.getStatus(), is(404));
     }
 

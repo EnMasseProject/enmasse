@@ -7,7 +7,7 @@ import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import enmasse.controller.model.InstanceId;
+import enmasse.controller.model.AddressSpaceId;
 
 import java.io.IOException;
 import java.util.Optional;
@@ -57,7 +57,7 @@ public class Instance {
             ObjectNode metadata = (ObjectNode) node.get(ResourceKeys.METADATA);
             String name = metadata.get(ResourceKeys.NAME).asText();
 
-            InstanceId id = spec.has(ResourceKeys.NAMESPACE) ? InstanceId.withIdAndNamespace(name, spec.get(ResourceKeys.NAMESPACE).asText()) : InstanceId.withId(name);
+            AddressSpaceId id = spec.has(ResourceKeys.NAMESPACE) ? AddressSpaceId.withIdAndNamespace(name, spec.get(ResourceKeys.NAMESPACE).asText()) : AddressSpaceId.withId(name);
             enmasse.controller.model.Instance.Builder instance = new enmasse.controller.model.Instance.Builder(id);
 
             instance.messagingHost(Optional.ofNullable(spec.get(ResourceKeys.MESSAGING_HOST)).map(JsonNode::asText));

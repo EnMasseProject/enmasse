@@ -16,13 +16,14 @@
 
 package enmasse.controller.address;
 
-import enmasse.controller.address.api.DestinationApi;
-import enmasse.controller.common.DestinationClusterGenerator;
+import enmasse.controller.address.api.AddressApi;
+import enmasse.controller.common.AddressClusterGenerator;
 import enmasse.controller.common.Kubernetes;
-import enmasse.controller.model.Destination;
-import enmasse.controller.model.Flavor;
-import enmasse.controller.flavor.FlavorManager;
-import enmasse.controller.model.InstanceId;
+import enmasse.controller.model.AddressSpaceId;
+import io.enmasse.address.model.AddressType;
+import io.enmasse.address.model.Plan;
+import io.enmasse.address.model.impl.Address;
+import io.enmasse.address.model.impl.types.standard.StandardType;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.openshift.client.OpenShiftClient;
@@ -42,44 +43,60 @@ import static org.mockito.Mockito.*;
 
 public class AddressSpaceControllerTest {
     private Kubernetes mockHelper;
-    private DestinationApi mockApi;
+    private AddressApi mockApi;
     private AddressSpaceController controller;
     private OpenShiftClient mockClient;
-    private FlavorManager flavorManager = new FlavorManager();
-    private DestinationClusterGenerator mockGenerator;
+    private AddressClusterGenerator mockGenerator;
 
     @Before
     public void setUp() {
         mockHelper = mock(Kubernetes.class);
-        mockGenerator = mock(DestinationClusterGenerator.class);
-        mockApi = mock(DestinationApi.class);
+        mockGenerator = mock(AddressClusterGenerator.class);
+        mockApi = mock(AddressApi.class);
         mockClient = mock(OpenShiftClient.class);
 
-        when(mockHelper.getInstanceId()).thenReturn(InstanceId.withId("myinstance"));
+        when(mockHelper.getInstanceId()).thenReturn(AddressSpaceId.withId("myinstance"));
         controller = new AddressSpaceController(mockApi, mockHelper, mockGenerator);
-        Map<String, Flavor> flavorMap = new LinkedHashMap<>();
-        flavorMap.put("vanilla", new Flavor.Builder("vanilla", "test").build());
-        flavorMap.put("shared", new Flavor.Builder("shared", "test").build());
-        flavorManager.flavorsUpdated(flavorMap);
+    }
+
+    private Address createAddress(String address, AddressType type) {
+        return createAddress(address, type, type.getPlans().get(0));
+    }
+
+    private Address createAddress(String address, StandardType type, String planName) {
+        for (Plan p : type.getPlans()) {
+            if (p.getName().equals(planName)) {
+                return createAddress(address, type, p);
+            }
+        }
+        return null;
+    }
+
+    private Address createAddress(String address, AddressType type, Plan plan) {
+        return new Address.Builder()
+                .setName(address)
+                .setAddress(address)
+                .setAddressSpace("unknown")
+                .setType(type)
+                .setPlan(plan)
+                .setUuid(UUID.randomUUID().toString())
+                .build();
+
     }
 
     @Test
     public void testClusterIsCreated() throws Exception {
-        Destination queue = new Destination.Builder("myqueue", "gr0")
-                .storeAndForward(true)
-                .multicast(false)
-                .flavor(Optional.of("vanilla"))
-                .build();
+        Address queue = createAddress("myqueue", StandardType.QUEUE);
         KubernetesList resources = new KubernetesList();
         resources.setItems(Arrays.asList(new ConfigMap()));
-        DestinationCluster cluster = new DestinationCluster("gr0", resources);
+        AddressCluster cluster = new AddressCluster("myqueue", resources);
 
         when(mockHelper.listClusters()).thenReturn(Collections.emptyList());
-        when(mockGenerator.generateCluster(Collections.singleton(queue))).thenReturn(cluster);
-        ArgumentCaptor<Set<Destination>> arg = ArgumentCaptor.forClass(Set.class);
+        when(mockGenerator.generateCluster("myqueue", Collections.singleton(queue))).thenReturn(cluster);
+        ArgumentCaptor<Set<io.enmasse.address.model.Address>> arg = ArgumentCaptor.forClass(Set.class);
 
         controller.resourcesUpdated(Collections.singleton(queue));
-        verify(mockGenerator).generateCluster(arg.capture());
+        verify(mockGenerator).generateCluster(eq("myqueue"), arg.capture());
         assertThat(arg.getValue(), hasItem(queue));
         verify(mockHelper).create(resources);
     }
@@ -87,49 +104,37 @@ public class AddressSpaceControllerTest {
 
     @Test
     public void testNodesAreRetained() throws Exception {
-        Destination queue = new Destination.Builder("myqueue", "gr0")
-                .storeAndForward(true)
-                .flavor(Optional.of("vanilla"))
-                .build();
+        Address queue = createAddress("myqueue", StandardType.QUEUE);
 
         KubernetesList resources = new KubernetesList();
         resources.setItems(Arrays.asList(new ConfigMap()));
-        DestinationCluster existing = new DestinationCluster("gr0", resources);
+        AddressCluster existing = new AddressCluster(queue.getAddress(), resources);
         when(mockHelper.listClusters()).thenReturn(Collections.singletonList(existing));
 
-        Destination newQueue = new Destination.Builder("newqueue", "gr1")
-                .storeAndForward(true)
-                .flavor(Optional.of("vanilla"))
-                .build();
-        DestinationCluster newCluster = new DestinationCluster("gr1", resources);
+        Address newQueue = createAddress("newqueue", StandardType.QUEUE);
+        AddressCluster newCluster = new AddressCluster(newQueue.getAddress(), resources);
 
-        when(mockGenerator.generateCluster(Collections.singleton(newQueue))).thenReturn(newCluster);
-        ArgumentCaptor<Set<Destination>> arg = ArgumentCaptor.forClass(Set.class);
+        when(mockGenerator.generateCluster("newqueue", Collections.singleton(newQueue))).thenReturn(newCluster);
+        ArgumentCaptor<Set<io.enmasse.address.model.Address>> arg = ArgumentCaptor.forClass(Set.class);
 
         controller.resourcesUpdated(Sets.newSet(queue, newQueue));
 
-        verify(mockGenerator).generateCluster(arg.capture());
+        verify(mockGenerator).generateCluster(anyString(), arg.capture());
         assertThat(arg.getValue(), is(Sets.newSet(newQueue)));
         verify(mockHelper).create(resources);
     }
 
     @Test
-    public void testClusterIsRemoved () throws Exception {
-        Destination queue = new Destination.Builder("myqueue", "gr0")
-                .storeAndForward(true)
-                .flavor(Optional.of("vanilla"))
-                .build();
+    public void testClusterIsRemoved() throws Exception {
+        Address queue = createAddress("myqueue", StandardType.QUEUE);
 
         KubernetesList resources = new KubernetesList();
         resources.setItems(Arrays.asList(new ConfigMap()));
-        DestinationCluster existing = new DestinationCluster("gr0", resources);
+        AddressCluster existing = new AddressCluster("myqueue", resources);
 
-        Destination newQueue = new Destination.Builder("newqueue", "gr1")
-                .storeAndForward(true)
-                .flavor(Optional.of("vanilla"))
-                .build();
+        Address newQueue = createAddress("newqueue", StandardType.QUEUE);
 
-        DestinationCluster newCluster = new DestinationCluster("gr1", resources);
+        AddressCluster newCluster = new AddressCluster("newqueue", resources);
 
         when(mockHelper.listClusters()).thenReturn(Arrays.asList(existing, newCluster));
 
@@ -139,32 +144,23 @@ public class AddressSpaceControllerTest {
     }
 
     @Test
-    public void testDestinationsAreGrouped() throws Exception {
-        Destination addr0 = new Destination("myqueue0", "group0", true, false, Optional.of("vanilla"), Optional.empty(), new Destination.Status(false));
-        Destination addr1 = new Destination("myqueue1", "group1", true, false, Optional.of("vanilla"), Optional.empty(), new Destination.Status(false));
-        Destination addr2 = new Destination("myqueue2", "group1", true, false, Optional.of("vanilla"), Optional.empty(), new Destination.Status(false));
-        Destination addr3 = new Destination("myqueue3", "group2", true, false, Optional.of("vanilla"), Optional.empty(), new Destination.Status(false));
+    public void testAddressesAreGrouped() throws Exception {
+        Address addr0 = createAddress("myqueue0", StandardType.QUEUE);
+        Address addr1 = createAddress("myqueue1", StandardType.QUEUE, "pooled-inmemory");
+        Address addr2 = createAddress("myqueue2", StandardType.QUEUE, "pooled-inmemory");
+        Address addr3 = createAddress("myqueue3", StandardType.QUEUE);
 
         KubernetesList resources = new KubernetesList();
         resources.setItems(Arrays.asList(new ConfigMap()));
-        DestinationCluster existing = new DestinationCluster("group0", resources);
+        AddressCluster existing = new AddressCluster("myqueue0", resources);
 
         when(mockHelper.listClusters()).thenReturn(Collections.singletonList(existing));
-        ArgumentCaptor<Set<Destination>> arg = ArgumentCaptor.forClass(Set.class);
-        when(mockGenerator.generateCluster(arg.capture())).thenReturn(new DestinationCluster("foo", resources));
+        ArgumentCaptor<Set<io.enmasse.address.model.Address>> arg = ArgumentCaptor.forClass(Set.class);
+        when(mockGenerator.generateCluster(anyString(), arg.capture())).thenReturn(new AddressCluster("foo", resources));
 
         controller.resourcesUpdated(Sets.newSet(addr0, addr1, addr2, addr3));
 
-        Set<Destination> generated = arg.getAllValues().stream().flatMap(Collection::stream).collect(Collectors.toSet());
+        Set<io.enmasse.address.model.Address> generated = arg.getAllValues().stream().flatMap(Collection::stream).collect(Collectors.toSet());
         assertThat(generated.size(), is(3));
-        Set<Destination> shared = filterDestinationsByGroup(generated, "group1");
-        assertThat(shared.size(), is(2));
-        assertNotNull(shared);
-        assertThat(shared, hasItem(addr1));
-        assertThat(shared, hasItem(addr2));
-    }
-
-    private Set<Destination> filterDestinationsByGroup(Set<Destination> destinations, String groupId) {
-        return destinations.stream().filter(d -> d.group().equals(groupId)).collect(Collectors.toSet());
     }
 }

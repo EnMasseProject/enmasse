@@ -16,8 +16,10 @@
 
 package enmasse.controller;
 
-import enmasse.controller.flavor.FlavorManager;
 import enmasse.controller.model.*;
+import io.enmasse.address.model.impl.Address;
+import io.enmasse.address.model.impl.AddressStatus;
+import io.enmasse.address.model.impl.types.standard.StandardType;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.json.JsonArray;
@@ -28,6 +30,7 @@ import org.junit.Test;
 
 import java.util.Collections;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -39,17 +42,15 @@ public class HTTPServerTest {
 
     private Vertx vertx;
     private TestInstanceApi instanceApi;
-    private FlavorManager testRepository;
 
     @Before
     public void setup() throws InterruptedException {
         vertx = Vertx.vertx();
         instanceApi = new TestInstanceApi();
-        InstanceId instanceId = InstanceId.withId("myinstance");
-        testRepository = new FlavorManager();
-        instanceApi.createInstance(new Instance.Builder(instanceId).build());
+        AddressSpaceId addressSpaceId = AddressSpaceId.withId("myinstance");
+        instanceApi.createInstance(new Instance.Builder(addressSpaceId).build());
         CountDownLatch latch = new CountDownLatch(1);
-        vertx.deployVerticle(new HTTPServer(instanceId, instanceApi, testRepository, "/doesnotexist"), c -> {
+        vertx.deployVerticle(new HTTPServer(instanceApi, "/doesnotexist"), c -> {
             latch.countDown();
         });
         latch.await(1, TimeUnit.MINUTES);
@@ -62,12 +63,20 @@ public class HTTPServerTest {
 
     @Test
     public void testAddressingApi() throws InterruptedException {
-        instanceApi.withInstance(InstanceId.withId("myinstance")).createDestination(
-                new Destination("addr1", "group0", false, false, Optional.empty(), Optional.empty(), new Destination.Status(false)));
+        instanceApi.withInstance(AddressSpaceId.withId("myinstance")).createAddress(
+            new Address.Builder()
+                    .setAddressSpace("myinstance")
+                .setName("addr1")
+                .setAddress("addr1")
+                .setType(StandardType.QUEUE)
+                .setPlan(StandardType.QUEUE.getPlans().get(0))
+                .setUuid(UUID.randomUUID().toString())
+                .build());
+
         HttpClient client = vertx.createHttpClient();
         try {
             CountDownLatch latch = new CountDownLatch(2);
-            client.getNow(8080, "localhost", "/v3/address", response -> {
+            client.getNow(8080, "localhost", "/v1/addresses/myinstance", response -> {
                 response.bodyHandler(buffer -> {
                     JsonObject data = buffer.toJsonObject();
                     assertTrue(data.containsKey("items"));
@@ -76,7 +85,7 @@ public class HTTPServerTest {
                 });
             });
 
-            client.getNow(8080, "localhost", "/v3/address/addr1", response -> {
+            client.getNow(8080, "localhost", "/v1/addresses/myinstance/addr1", response -> {
                 response.bodyHandler(buffer -> {
                     JsonObject data = buffer.toJsonObject();
                     assertTrue(data.containsKey("metadata"));
@@ -91,34 +100,17 @@ public class HTTPServerTest {
     }
 
     @Test
-    public void testFlavorsApi() throws InterruptedException {
-        Flavor flavor = new Flavor.Builder("vanilla", "inmemory-queue")
-                .type("queue")
-                .description("Simple queue")
-                .build();
-        testRepository.flavorsUpdated(Collections.singletonMap("vanilla", flavor));
+    public void testSchemaApi() throws InterruptedException {
         HttpClient client = vertx.createHttpClient();
         try {
             {
                 CountDownLatch latch = new CountDownLatch(1);
-                client.getNow(8080, "localhost", "/v3/flavor", response -> {
+                client.getNow(8080, "localhost", "/v1/schema", response -> {
+                    assertThat(response.statusCode(), is(200));
                     response.bodyHandler(buffer -> {
                         JsonObject data = buffer.toJsonObject();
-                        assertTrue(data.containsKey("items"));
-                        assertThat(data.getJsonArray("items").getJsonObject(0).getJsonObject("metadata").getString("name"), is("vanilla"));
-                        latch.countDown();
-                    });
-                });
-                assertTrue(latch.await(1, TimeUnit.MINUTES));
-            }
-
-            {
-                CountDownLatch latch = new CountDownLatch(1);
-                client.getNow(8080, "localhost", "/v3/flavor/vanilla", response -> {
-                    response.bodyHandler(buffer -> {
-                        JsonObject data = buffer.toJsonObject();
-                        assertTrue(data.containsKey("metadata"));
-                        assertThat(data.getJsonObject("metadata").getString("name"), is("vanilla"));
+                        assertTrue(data.containsKey("spec"));
+                        assertThat(data.getJsonObject("spec").getJsonArray("addressSpaceTypes").getJsonObject(0).getString("name"), is("standard"));
                         latch.countDown();
                     });
                 });
@@ -131,7 +123,7 @@ public class HTTPServerTest {
 
     @Test
     public void testInstanceApi() throws InterruptedException {
-        Instance instance = new Instance.Builder(InstanceId.withId("myinstance"))
+        Instance instance = new Instance.Builder(AddressSpaceId.withId("myinstance"))
                 .messagingHost(Optional.of("messaging.example.com"))
                 .build();
         instanceApi.createInstance(instance);
