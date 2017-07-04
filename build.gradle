@@ -1,3 +1,7 @@
+import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
+import com.bmuschko.gradle.docker.tasks.image.DockerPushImage
+import com.bmuschko.gradle.docker.tasks.image.DockerTagImage
+
 allprojects  {
     group = 'io.enmasse'
 }
@@ -61,7 +65,7 @@ subprojects {
     }
 
     if (new File(projectDir, "Dockerfile").exists()) {
-        task buildImage(type: com.bmuschko.gradle.docker.tasks.image.DockerBuildImage) {
+        task buildImage(type: DockerBuildImage) {
             inputDir = projectDir
             tag = "${dockerOrg}/${project.name}:${commit}"
             doLast {
@@ -73,7 +77,7 @@ subprojects {
         }
 
 
-        task tagImage(type: com.bmuschko.gradle.docker.tasks.image.DockerTagImage) {
+        task tagImage(type: DockerTagImage) {
             dependsOn buildImage
             force = true
             imageId = buildImage.getTag()
@@ -84,7 +88,7 @@ subprojects {
             }
         }
 
-        task pushImage(type: com.bmuschko.gradle.docker.tasks.image.DockerPushImage) {
+        task pushImage(type: DockerPushImage) {
             dependsOn tagImage
             tag = commit
             imageName = "${dockerRegistry}/${dockerOrg}/${project.name}"
@@ -93,14 +97,14 @@ subprojects {
             }
         }
 
-        task tagVersion(type: com.bmuschko.gradle.docker.tasks.image.DockerTagImage) {
+        task tagVersion(type: DockerTagImage) {
             force = true
             imageId = buildImage.getTag()
             repository = "${dockerRegistry}/${dockerOrg}/${project.name}"
             tag = dockerImageVersion
         }
 
-        task pushVersion(type: com.bmuschko.gradle.docker.tasks.image.DockerPushImage) {
+        task pushVersion(type: DockerPushImage) {
             dependsOn tagVersion
             tag = dockerImageVersion
             imageName = "${dockerRegistry}/${dockerOrg}/${project.name}"
