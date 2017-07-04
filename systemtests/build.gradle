@@ -13,7 +13,8 @@ repositories {
 
 dependencies {
     compile project(':admin:common-lib:amqp')
-    compile 'org.slf4j:slf4j-api:1.7.13'
+    compile "org.slf4j:slf4j-api:${slf4jVersion}"
+    compile "org.slf4j:slf4j-simple:${slf4jVersion}"
     compile "io.fabric8:openshift-client:${openshiftClientVersion}"
     compile "io.vertx:vertx-proton:${vertxVersion}"
     compile "org.eclipse.paho:org.eclipse.paho.client.mqttv3:${pahoVersion}"
