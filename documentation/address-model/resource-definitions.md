@@ -24,7 +24,8 @@ The `AddressSpace` resource defines the type of address space and endpoint for c
     "apiVersion": "enmasse.io/v1",
     "kind": "AddressSpace",
     "metadata": {
-        "name": "myspace" // Required
+        "name": "myspace", // Required
+        "uuid": "4bfe49c2-60b5-11e7-a5d0-507b9def37d9", // Optional
     },
     "spec": {
         "type": "standard", // Required. Default is 'standard', potentially configurable
@@ -86,7 +87,8 @@ TODO: Figure out where to put a user-specified description of the address
     "kind": "Address", // Required
     "metadata": {
         "name": "myqueue", // Required
-        "address_space": "myspace" // Optional. Defaults to 'default' address space
+        "uuid": "4bfe49c2-60b5-11e7-a5d0-507b9def37d9", // Optional
+        "addressSpace": "myspace" // Optional. Defaults to 'default' address space
     },
     "spec": {
         "address": "my_queue",  // Optional. Default is .metadata.name
@@ -103,7 +105,7 @@ TODO: Figure out where to put a user-specified description of the address
     "apiVersion": "enmasse.io/v1", // Required
     "kind": "AddressList", // Required
     "metadata": {
-        "address_space": "myspace" // Optional. Defaults to 'default' address space
+        "addressSpace": "myspace" // Optional. Defaults to 'default' address space
     },
     "items": [
         {
