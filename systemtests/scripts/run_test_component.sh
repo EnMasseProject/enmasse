@@ -23,7 +23,7 @@ popd
 oc get pods
 #teardown_test $OPENSHIFT_PROJECT
 
-cat build/test-results/test/*.xml
+cat $SYSTEMTESTS/build/test-results/test/*.xml
 
 if [ $failure -gt 0 ]
 then
