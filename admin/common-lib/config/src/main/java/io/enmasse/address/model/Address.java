@@ -20,11 +20,25 @@ package io.enmasse.address.model;
  */
 public interface Address {
     /**
-     * Return the name of this address. This should not be assumed to be the same as the address.
+     * Return the address name. This is a human readable identifier of addresses with some restrictions:
+     * * < 64 characters long
+     * * Only contain '-', a-z, 0-9
      *
      * @return The name
      */
     String getName();
+
+    /**
+     * Return the UUID of this address.
+     */
+    String getUuid();
+
+    /**
+     * The address space of this address.
+     *
+     * @return The address space
+     */
+    String getAddressSpace();
 
     /**
      * Return the address string.
@@ -32,13 +46,6 @@ public interface Address {
      * @return The address
      */
     String getAddress();
-
-    /**
-     * The address space of this address.
-     *
-     * @return The address space
-     */
-    AddressSpace getAddressSpace();
 
     /**
      * The address type of this address
@@ -53,4 +60,11 @@ public interface Address {
      * @return The plan
      */
     Plan getPlan();
+
+    /**
+     * The status for this address.
+     *
+     * @return The status
+     */
+    AddressStatus getStatus();
 }

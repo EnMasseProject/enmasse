@@ -16,8 +16,12 @@
 
 package enmasse.config.service.config;
 
-import enmasse.config.AddressConfigKeys;
-import enmasse.config.LabelKeys;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import io.enmasse.address.model.AddressType;
+import io.enmasse.address.model.impl.Address;
+import io.enmasse.address.model.impl.AddressStatus;
+import io.enmasse.address.model.impl.k8s.v1.address.AddressCodec;
+import io.enmasse.address.model.impl.types.standard.StandardType;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
@@ -26,6 +30,7 @@ import org.apache.qpid.proton.message.Message;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.*;
 
 import static org.hamcrest.CoreMatchers.is;
@@ -37,21 +42,27 @@ public class ConfigMessageEncoderTest {
         ConfigMessageEncoder encoder = new ConfigMessageEncoder();
 
         Set<ConfigResource> configSet = new LinkedHashSet<>(Arrays.asList(
-                new ConfigResource(createConfigMap("c1", "myqueue", "c1", true, false)),
-                new ConfigResource(createConfigMap("c2", "myqueue2", "c1", true, false)),
-                new ConfigResource(createConfigMap("c3", "mytopic", "c2", true, true))));
+                new ConfigResource(createConfigMap("c1", "myqueue", StandardType.QUEUE)),
+                new ConfigResource(createConfigMap("c2", "myqueue2", StandardType.QUEUE)),
+                new ConfigResource(createConfigMap("c3", "mytopic", StandardType.TOPIC))));
 
         Message message = encoder.encode(configSet);
-        String json = (String) ((AmqpValue) message.getBody()).getValue();
-        assertThat(json, is("{\"myqueue\":{\"store_and_forward\":true,\"multicast\":false,\"group_id\":\"c1\"},\"myqueue2\":{\"store_and_forward\":true,\"multicast\":false,\"group_id\":\"c1\"},\"mytopic\":{\"store_and_forward\":true,\"multicast\":true,\"group_id\":\"c2\"}}"));
+        String json = new String((byte[]) ((AmqpValue) message.getBody()).getValue(), "UTF-8");
+        assertThat(json, is("{\"kind\":\"AddressList\",\"apiVersion\":\"enmasse.io/v1\",\"items\":[{\"kind\":\"Address\",\"apiVersion\":\"enmasse.io/v1\",\"kind\":\"Address\",\"metadata\":{\"name\":\"c1\",\"addressSpace\":\"unknown\",\"uuid\":\"1234\"},\"spec\":{\"address\":\"myqueue\",\"plan\":\"inmemory\",\"type\":\"queue\"}},{\"kind\":\"Address\",\"apiVersion\":\"enmasse.io/v1\",\"kind\":\"Address\",\"metadata\":{\"name\":\"c2\",\"addressSpace\":\"unknown\",\"uuid\":\"1234\"},\"spec\":{\"address\":\"myqueue2\",\"plan\":\"inmemory\",\"type\":\"queue\"}},{\"kind\":\"Address\",\"apiVersion\":\"enmasse.io/v1\",\"kind\":\"Address\",\"metadata\":{\"name\":\"c3\",\"addressSpace\":\"unknown\",\"uuid\":\"1234\"},\"spec\":{\"address\":\"mytopic\",\"plan\":\"inmemory\",\"type\":\"topic\"}}]}"));
     }
 
-    private ConfigMap createConfigMap(String name, String address, String group, boolean storeAndForward, boolean multicast) {
+    private ConfigMap createConfigMap(String name, String address, AddressType addressType) throws JsonProcessingException, UnsupportedEncodingException {
         Map<String, String> data = new LinkedHashMap<>();
-        data.put(AddressConfigKeys.ADDRESS, address);
-        data.put(AddressConfigKeys.GROUP_ID, group);
-        data.put(AddressConfigKeys.STORE_AND_FORWARD, String.valueOf(storeAndForward));
-        data.put(AddressConfigKeys.MULTICAST, String.valueOf(multicast));
+        byte[] json = new AddressCodec().encodeAddress(new Address.Builder()
+                .setName(name)
+                .setAddress(address)
+                .setAddressSpace("unknown")
+                .setType(addressType)
+                .setPlan(addressType.getPlans().get(0))
+                .setUuid("1234")
+                .setStatus(new AddressStatus(false))
+                .build());
+        data.put("json", new String(json, "UTF-8"));
         return new ConfigMapBuilder()
                 .withMetadata(new ObjectMetaBuilder()
                         .withName(name)

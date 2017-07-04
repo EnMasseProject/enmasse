@@ -20,8 +20,6 @@ import enmasse.controller.address.AddressController;
 import enmasse.controller.auth.AuthController;
 import enmasse.controller.common.Kubernetes;
 import enmasse.controller.common.KubernetesHelper;
-import enmasse.controller.flavor.FlavorController;
-import enmasse.controller.flavor.FlavorManager;
 import enmasse.controller.instance.InstanceController;
 import enmasse.controller.instance.InstanceManager;
 import enmasse.controller.instance.InstanceManagerImpl;
@@ -30,7 +28,7 @@ import enmasse.controller.instance.api.ConfigMapInstanceApi;
 import enmasse.controller.auth.CertManager;
 import enmasse.controller.auth.SelfSignedCertManager;
 import enmasse.controller.model.Instance;
-import enmasse.controller.model.InstanceId;
+import enmasse.controller.model.AddressSpaceId;
 import io.fabric8.kubernetes.client.ConfigBuilder;
 import io.fabric8.openshift.client.DefaultOpenShiftClient;
 import io.fabric8.openshift.client.OpenShiftClient;
@@ -51,7 +49,7 @@ public class Controller extends AbstractVerticle {
                 .withNamespace(options.namespace())
                 .build());
         this.options = options;
-        this.kubernetes = new KubernetesHelper(InstanceId.withIdAndNamespace(options.namespace(), options.namespace()), controllerClient, options.templateDir());
+        this.kubernetes = new KubernetesHelper(AddressSpaceId.withIdAndNamespace(options.namespace(), options.namespace()), controllerClient, options.templateDir());
     }
 
     @Override
@@ -67,18 +65,16 @@ public class Controller extends AbstractVerticle {
             instanceApi.createInstance(builder.build());
         }
 
-        FlavorManager flavorManager = new FlavorManager();
         CertManager certManager = SelfSignedCertManager.create(controllerClient);
 
         String templateName = "enmasse-instance-infra";
         InstanceManager instanceManager = new InstanceManagerImpl(kubernetes, templateName, options.isMultiinstance(), options.namespace());
 
-        deployVerticles(startPromise, new Deployment(new AddressController(instanceApi, kubernetes, controllerClient, flavorManager)),
+        deployVerticles(startPromise, new Deployment(new AddressController(instanceApi, kubernetes, controllerClient)),
                 new Deployment(new AuthController(certManager, instanceApi)),
                 new Deployment(new InstanceController(instanceManager, controllerClient, instanceApi)),
-                new Deployment(new FlavorController(controllerClient, flavorManager)),
-                new Deployment(new AMQPServer(kubernetes.getInstanceId(), instanceApi, flavorManager, options.port())),
-                new Deployment(new HTTPServer(kubernetes.getInstanceId(), instanceApi, flavorManager, options.certDir()), new DeploymentOptions().setWorker(true)));
+//                new Deployment(new AMQPServer(kubernetes.getInstanceId(), instanceApi, options.port())),
+                new Deployment(new HTTPServer(instanceApi, options.certDir()), new DeploymentOptions().setWorker(true)));
     }
 
     private void deployVerticles(Future<Void> startPromise, Deployment ... deployments) {

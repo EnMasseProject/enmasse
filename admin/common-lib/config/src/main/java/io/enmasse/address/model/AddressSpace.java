@@ -36,13 +36,6 @@ public interface AddressSpace {
     AddressSpaceType getType();
 
     /**
-     * Retrieve a list of addresses configured in this address space.
-     *
-     * @return A list of addresses
-     */
-    List<Address> getAddresses();
-
-    /**
      * Retrieve a list of endpoints configured with this address space.
      *
      * @return A list of endpoints

@@ -18,8 +18,8 @@ package enmasse.controller.common;
 
 import enmasse.config.AnnotationKeys;
 import enmasse.config.LabelKeys;
-import enmasse.controller.address.DestinationCluster;
-import enmasse.controller.model.InstanceId;
+import enmasse.controller.address.AddressCluster;
+import enmasse.controller.model.AddressSpaceId;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.extensions.Deployment;
 import io.fabric8.kubernetes.client.dsl.Resource;
@@ -42,17 +42,17 @@ public class KubernetesHelper implements Kubernetes {
     private static final String TEMPLATE_SUFFIX = ".json";
 
     private final OpenShiftClient client;
-    private final InstanceId instance;
+    private final AddressSpaceId instance;
     private final Optional<File> templateDir;
 
-    public KubernetesHelper(InstanceId instance, OpenShiftClient client, Optional<File> templateDir) {
+    public KubernetesHelper(AddressSpaceId instance, OpenShiftClient client, Optional<File> templateDir) {
         this.client = client;
         this.instance = instance;
         this.templateDir = templateDir;
     }
 
     @Override
-    public List<DestinationCluster> listClusters() {
+    public List<AddressCluster> listClusters() {
         Map<String, List<HasMetadata>> resourceMap = new HashMap<>();
 
         // Add other resources part of a destination cluster
@@ -65,8 +65,8 @@ public class KubernetesHelper implements Kubernetes {
         for (HasMetadata config : objects) {
             Map<String, String> annotations = config.getMetadata().getAnnotations();
 
-            if (annotations != null && annotations.containsKey(AnnotationKeys.GROUP_ID)) {
-                String groupId = annotations.get(AnnotationKeys.GROUP_ID);
+            if (annotations != null && annotations.containsKey(AnnotationKeys.CLUSTER_ID)) {
+                String groupId = annotations.get(AnnotationKeys.CLUSTER_ID);
 
                 Map<String, String> labels = config.getMetadata().getLabels();
 
@@ -83,7 +83,7 @@ public class KubernetesHelper implements Kubernetes {
                 .map(entry -> {
                     KubernetesList list = new KubernetesList();
                     list.setItems(entry.getValue());
-                    return new DestinationCluster(entry.getKey(), list);
+                    return new AddressCluster(entry.getKey(), list);
                 }).collect(Collectors.toList());
     }
 
@@ -100,7 +100,7 @@ public class KubernetesHelper implements Kubernetes {
     }
 
     @Override
-    public InstanceId getInstanceId() {
+    public AddressSpaceId getInstanceId() {
         return instance;
     }
 
@@ -117,7 +117,7 @@ public class KubernetesHelper implements Kubernetes {
     }
 
     @Override
-    public Namespace createNamespace(InstanceId instance) {
+    public Namespace createNamespace(AddressSpaceId instance) {
         return client.namespaces().createNew()
                 .editOrNewMetadata()
                     .withName(instance.getNamespace())
@@ -129,7 +129,7 @@ public class KubernetesHelper implements Kubernetes {
     }
 
     @Override
-    public Kubernetes withInstance(InstanceId newInstance) {
+    public Kubernetes withInstance(AddressSpaceId newInstance) {
         return new KubernetesHelper(newInstance, client, templateDir);
     }
 
@@ -144,7 +144,7 @@ public class KubernetesHelper implements Kubernetes {
     }
 
     @Override
-    public void addDefaultViewPolicy(InstanceId instance) {
+    public void addDefaultViewPolicy(AddressSpaceId instance) {
         if (client.isAdaptable(OpenShiftClient.class)) {
             Resource<PolicyBinding, DoneablePolicyBinding> bindingResource = client.policyBindings()
                     .inNamespace(instance.getNamespace())
@@ -198,13 +198,13 @@ public class KubernetesHelper implements Kubernetes {
     }
 
     @Override
-    public void createInstanceSecret(String secretName, InstanceId instanceId) {
-        Secret secret = client.secrets().inNamespace(instanceId.getNamespace()).createNew()
+    public void createInstanceSecret(String secretName, AddressSpaceId addressSpaceId) {
+        Secret secret = client.secrets().inNamespace(addressSpaceId.getNamespace()).createNew()
                 .editOrNewMetadata()
                 .withName(secretName)
                 .endMetadata()
                 .done();
-        client.serviceAccounts().inNamespace(instanceId.getNamespace()).withName("default").edit()
+        client.serviceAccounts().inNamespace(addressSpaceId.getNamespace()).withName("default").edit()
                 .addToSecrets(new ObjectReferenceBuilder()
                         .withKind(secret.getKind())
                         .withName(secret.getMetadata().getName())
@@ -240,7 +240,7 @@ public class KubernetesHelper implements Kubernetes {
         return res.getKind().equals("Deployment");  // TODO: is there an existing constant for this somewhere?
     }
 
-    private static boolean areAllDeploymentsReady(DestinationCluster dc) {
+    private static boolean areAllDeploymentsReady(AddressCluster dc) {
         return dc.getResources().getItems().stream().filter(KubernetesHelper::isDeployment).allMatch(d -> isReady((Deployment) d));
     }
 

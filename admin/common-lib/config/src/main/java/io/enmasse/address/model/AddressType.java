@@ -15,6 +15,8 @@
  */
 package io.enmasse.address.model;
 
+import java.util.List;
+
 /**
  * Respresents an Address Type (i.e. Queue, Topic etc.)
  */
@@ -32,4 +34,9 @@ public interface AddressType {
      * @return A textual description
      */
     String getDescription();
+
+    /**
+     * Get plans available for this address type.
+     */
+    List<Plan> getPlans();
 }

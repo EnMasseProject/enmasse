@@ -1,26 +1,22 @@
 package enmasse.controller.api.osb.v2;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import com.fasterxml.jackson.module.jsonSchema.types.BooleanSchema;
 import com.fasterxml.jackson.module.jsonSchema.types.ObjectSchema;
 import com.fasterxml.jackson.module.jsonSchema.types.StringSchema;
-import enmasse.controller.address.api.DestinationApi;
+import enmasse.controller.address.api.AddressApi;
 import enmasse.controller.api.osb.v2.catalog.InputParameters;
 import enmasse.controller.api.osb.v2.catalog.Plan;
 import enmasse.controller.api.osb.v2.catalog.Schemas;
 import enmasse.controller.api.osb.v2.catalog.ServiceInstanceSchema;
-import enmasse.controller.flavor.FlavorRepository;
 import enmasse.controller.instance.api.InstanceApi;
-import enmasse.controller.model.Destination;
-import enmasse.controller.model.Flavor;
+import enmasse.controller.model.AddressSpaceId;
 import enmasse.controller.model.Instance;
-import enmasse.controller.model.InstanceId;
+import io.enmasse.address.model.Address;
+import io.enmasse.address.model.AddressType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,35 +25,33 @@ public abstract class OSBServiceBase {
     protected final Logger log = LoggerFactory.getLogger(getClass().getName());
 
     private final InstanceApi instanceApi;
-    private final FlavorRepository flavorRepository;
 
-    public OSBServiceBase(InstanceApi instanceApi, FlavorRepository repository) {
+    public OSBServiceBase(InstanceApi instanceApi) {
         this.instanceApi = instanceApi;
-        this.flavorRepository = repository;
     }
 
-    protected Optional<Instance> findInstanceByDestinationUuid(String destinationUuid) {
+    protected Optional<Instance> findInstanceByAddressUuid(String addressUuid) {
         return instanceApi.listInstances().stream()
-                .filter(instance -> findDestination(instance, destinationUuid).isPresent())
+                .filter(instance -> findAddress(instance, addressUuid).isPresent())
                 .findAny();
     }
 
-    protected Optional<Destination> findDestination(Instance maasInstance, String destinationUuid) {
-        return instanceApi.withInstance(maasInstance.id()).listDestinations().stream()
-                .filter(dest -> destinationUuid.equals(dest.uuid().orElse(null)))
+    protected Optional<Address> findAddress(Instance maasInstance, String addressUuid) {
+        return instanceApi.withInstance(maasInstance.id()).listAddresses().stream()
+                .filter(dest -> addressUuid.equals(dest.getUuid()))
                 .findAny();
     }
 
-    protected void provisionDestination(Instance instance, Destination destination) {
-        log.info("Creating destination {} in group {} of MaaS instance {} (namespace {})",
-                destination.address(), destination.group(), instance.id().getId(), instance.id().getNamespace());
-        instanceApi.withInstance(instance.id()).createDestination(destination);
+    protected void provisionAddress(Instance instance, Address address) {
+        log.info("Creating address {} with plan {} of MaaS instance {} (namespace {})",
+                address.getAddress(), address.getPlan().getName(), instance.id().getId(), instance.id().getNamespace());
+        instanceApi.withInstance(instance.id()).createAddress(address);
     }
 
-    protected Instance getOrCreateInstance(InstanceId instanceId) throws Exception {
-        Optional<Instance> instance = instanceApi.getInstanceWithId(instanceId);
+    protected Instance getOrCreateInstance(AddressSpaceId addressSpaceId) throws Exception {
+        Optional<Instance> instance = instanceApi.getInstanceWithId(addressSpaceId);
         if (!instance.isPresent()) {
-            Instance i = new Instance.Builder(instanceId).build();
+            Instance i = new Instance.Builder(addressSpaceId).build();
             instanceApi.createInstance(i);
             log.info("Created MaaS instance {}", i.id());
             return i;
@@ -66,57 +60,47 @@ public abstract class OSBServiceBase {
         }
     }
 
-    protected boolean deleteDestinationByUuid(String destinationUuid) {
-        log.info("Deleting destination with UUID {}", destinationUuid);
+    protected boolean deleteAddressByUuid(String addressUuid) {
+        log.info("Deleting address with UUID {}", addressUuid);
         for (Instance i : instanceApi.listInstances()) {
-            DestinationApi destinationApi = instanceApi.withInstance(i.id());
-            Optional<Destination> d = destinationApi.getDestinationWithUuid(destinationUuid);
+            AddressApi addressApi = instanceApi.withInstance(i.id());
+            Optional<Address> d = addressApi.getAddressWithUuid(addressUuid);
             if (d.isPresent()) {
-                log.info("Destination found in instance {} (namespace {}). Deleting it now.",
+                log.info("Address found in instance {} (namespace {}). Deleting it now.",
                         i.id().getId(), i.id().getNamespace());
-                destinationApi.deleteDestination(d.get());
+                addressApi.deleteAddress(d.get());
                 return true;
             }
         }
-        log.info("Destination with UUID {} not found in any instance", destinationUuid);
+        log.info("Address with UUID {} not found in any instance", addressUuid);
         return false;
     }
 
-    protected boolean isAddressReady(Instance maasInstance, Destination destination) throws Exception {
-        return maasInstance.status().isReady() && destination.status().isReady();
+    protected static io.enmasse.address.model.Plan getPlan(AddressType addressType, UUID planId) {
+        String uuid = planId.toString();
+        for (io.enmasse.address.model.Plan plan : addressType.getPlans()) {
+            if (plan.getUuid().equals(uuid)) {
+                return plan;
+            }
+        }
+        return null;
+    }
+
+    protected boolean isAddressReady(Instance maasInstance, Address address) throws Exception {
+        return maasInstance.status().isReady() && address.getStatus().isReady();
     }
 
     protected List<Plan> getPlans(ServiceType serviceType) {
-        if (serviceType.flavorType().isPresent()) {
-            String flavorType = serviceType.flavorType().get();
-            return getFlavors().stream()
-                    .filter(flavor -> flavor.uuid().isPresent() && flavor.type().equals(flavorType))
-                    .map(f -> convertFlavorToPlan(f, serviceType))
-                    .collect(Collectors.toList());
-        } else {
-            Plan defaultPlan = new Plan(serviceType.defaultPlanUuid(), "default", "Default plan", true, true);
-            defaultPlan.setSchemas(createSchemas(serviceType));
-            return Collections.singletonList(defaultPlan);
-        }
+        return serviceType.addressType().getPlans().stream()
+                .map(p -> convertPlanToOSBPlan(p, serviceType))
+                .collect(Collectors.toList());
     }
 
-    protected Optional<String> getFlavorName(UUID planId) {
-        String flavorUuid = planId.toString();
-        return getFlavors().stream()
-                .filter(flavor -> flavorUuid.equals(flavor.uuid().orElse(null)))
-                .findAny()
-                .flatMap(flavor -> Optional.of(flavor.name()));
-    }
-
-    private Set<Flavor> getFlavors() {
-        return flavorRepository.getFlavors();
-    }
-
-    private Plan convertFlavorToPlan(Flavor flavor, ServiceType serviceType) {
+    private Plan convertPlanToOSBPlan(io.enmasse.address.model.Plan p, ServiceType serviceType) {
         Plan plan = new Plan(
-                UUID.fromString(flavor.uuid().get()),
-                sanitizePlanName(flavor.name()),
-                flavor.description(),
+                UUID.fromString(p.getUuid()),
+                sanitizePlanName(p.getName()),
+                p.getDescription(),
                 true, true);
         plan.setSchemas(createSchemas(serviceType));
         return plan;
@@ -129,20 +113,6 @@ public abstract class OSBServiceBase {
         namePropertySchema.setDescription("Enter the name of this address");
         namePropertySchema.setMinLength(2);
         serviceInstanceSchema.putProperty("name", namePropertySchema);
-
-        if (serviceType.storeAndForward()) {
-            BooleanSchema transactionalSchema = new BooleanSchema();
-            transactionalSchema.setTitle("Transactional");
-            transactionalSchema.setDescription("Is this a transactional queue/topic or not");
-            serviceInstanceSchema.putOptionalProperty("transactional", transactionalSchema);
-
-            if (!serviceType.multicast()) {
-                BooleanSchema pooledSchema = new BooleanSchema();
-                pooledSchema.setTitle("Pooled");
-                pooledSchema.setDescription("Is this a pooled queue or not");
-                serviceInstanceSchema.putOptionalProperty("pooled", pooledSchema);
-            }
-        }
 
         return new Schemas(new ServiceInstanceSchema(new InputParameters(serviceInstanceSchema), null), null);
     }

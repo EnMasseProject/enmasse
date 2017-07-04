@@ -17,44 +17,28 @@
 package enmasse.controller.api.v3.amqp;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import enmasse.controller.api.TestDestinationApi;
+import enmasse.controller.api.TestAddressApi;
 import enmasse.controller.api.TestInstanceApi;
-import enmasse.controller.address.v3.Address;
-import enmasse.controller.address.v3.AddressList;
-import enmasse.controller.api.v3.AddressApiHelper;
-import enmasse.controller.model.Destination;
-import enmasse.controller.model.Instance;
-import enmasse.controller.model.InstanceId;
-import org.apache.qpid.proton.amqp.messaging.AmqpValue;
-import org.apache.qpid.proton.amqp.messaging.ApplicationProperties;
-import org.apache.qpid.proton.message.Message;
-import org.junit.Before;
-import org.junit.Test;
-import org.mockito.internal.util.collections.Sets;
-
-import java.io.IOException;
-import java.util.*;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.*;
 
 public class AmqpAddressingApiTest {
+    /*
     private static ObjectMapper mapper = new ObjectMapper();
     private AddressingService addressingService;
     private TestInstanceApi instanceManager;
-    private TestDestinationApi addressSpace;
+    private TestAddressApi addressSpace;
 
-    /*
     @Before
     public void setup() {
         instanceManager = new TestInstanceApi();
-        instanceManager.create(new Instance.Builder(InstanceId.withId("myinstance")).build());
-        addressSpace = new TestDestinationApi();
+        instanceManager.create(new Instance.Builder(AddressSpaceId.withId("myinstance")).build());
+        addressSpace = new TestAddressApi();
         addressSpace.addDestination(new Destination("addr1", "addr1", false, false, Optional.empty(), Optional.empty(), status));
         addressSpace.addDestination(new Destination("queue1", "queue1", true, false, Optional.of("vanilla"), Optional.empty(), status));
         TestAddressManager addressManager = new TestAddressManager();
-        addressManager.addManager(InstanceId.withId("myinstance"), addressSpace);
-        addressingService = new AddressingService(InstanceId.withId("myinstance"), new AddressApiHelper(instanceManager, addressManager));
+        addressManager.addManager(AddressSpaceId.withId("myinstance"), addressSpace);
+        addressingService = new AddressingService(AddressSpaceId.withId("myinstance"), new AddressApiHelper(instanceManager, addressManager));
 
     }
 

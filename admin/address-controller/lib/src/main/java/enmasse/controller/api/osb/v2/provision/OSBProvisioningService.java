@@ -17,19 +17,20 @@ import enmasse.controller.api.osb.v2.EmptyResponse;
 import enmasse.controller.api.osb.v2.OSBExceptions;
 import enmasse.controller.api.osb.v2.OSBServiceBase;
 import enmasse.controller.api.osb.v2.ServiceType;
-import enmasse.controller.flavor.FlavorRepository;
 import enmasse.controller.instance.api.InstanceApi;
-import enmasse.controller.model.Destination;
 import enmasse.controller.model.Instance;
-import enmasse.controller.model.InstanceId;
+import enmasse.controller.model.AddressSpaceId;
+import io.enmasse.address.model.Address;
+import io.enmasse.address.model.AddressType;
+import io.enmasse.address.model.Plan;
 
 @Path("/v2/service_instances/{instanceId}")
 @Consumes({MediaType.APPLICATION_JSON})
 @Produces({MediaType.APPLICATION_JSON})
 public class OSBProvisioningService extends OSBServiceBase {
 
-    public OSBProvisioningService(InstanceApi instanceApi, FlavorRepository flavorRepository) {
-        super(instanceApi, flavorRepository);
+    public OSBProvisioningService(InstanceApi instanceApi) {
+        super(instanceApi);
     }
 
     @PUT
@@ -43,7 +44,7 @@ public class OSBProvisioningService extends OSBServiceBase {
 
         // We must shorten the organizationId so the resulting address configmap name isn't too long
         String shortOrganizationId = shortenUuid(request.getOrganizationId()); // TODO: remove the need for doing this
-        InstanceId maasInstanceId = InstanceId.withId(shortOrganizationId);
+        AddressSpaceId maasAddressSpaceId = AddressSpaceId.withId(shortOrganizationId);
 
         log.info("Received provision request for instance {} (service id {}, plan id {}, org id {}, name {})",
                 instanceId, request.getServiceId(), request.getPlanId(),
@@ -57,30 +58,32 @@ public class OSBProvisioningService extends OSBServiceBase {
         }
 
         String name = request.getParameter("name").orElse(serviceType.serviceName() + "-" + shortenUuid(instanceId));
-        boolean transactional = Boolean.valueOf(request.getParameter("transactional").orElse("false"));
-        boolean pooled = Boolean.valueOf(request.getParameter("pooled").orElse("false"));
-        String group = transactional ? "transactional" : (pooled ? "pooled" : name);
 
-        Optional<String> flavorName = serviceType.supportsOnlyDefaultPlan() ? Optional.empty() : getFlavorName(request.getPlanId());
-        Destination destination = new Destination.Builder(name, group)
-                .storeAndForward(serviceType.storeAndForward())
-                .multicast(serviceType.multicast())
-                .flavor(flavorName)
-                .uuid(Optional.of(instanceId))
+        AddressType addressType = serviceType.addressType();
+        Plan plan = getPlan(addressType, request.getPlanId());
+        Instance maasInstance = getOrCreateInstance(maasAddressSpaceId);
+
+        // TODO: Allow address to be separate
+        Address address = new io.enmasse.address.model.impl.Address.Builder()
+                .setName(name)
+                .setAddress(name)
+                .setType(addressType)
+                .setPlan(plan)
+                .setAddressSpace(maasAddressSpaceId.getId())
+                .setUuid(instanceId)
                 .build();
 
-        Instance maasInstance = getOrCreateInstance(maasInstanceId);
-        Optional<Destination> existingDestination = findDestination(maasInstance, instanceId);
+        Optional<Address> existingAddress = findAddress(maasInstance, instanceId);
         String dashboardUrl = getConsoleURL(maasInstance).orElse(null);
-        if (existingDestination.isPresent()) {
-            if (existingDestination.get().equals(destination)) {
+        if (existingAddress.isPresent()) {
+            if (existingAddress.get().equals(address)) {
                 return Response.ok(new ProvisionResponse(dashboardUrl, "provision")).build();
             } else {
                 throw OSBExceptions.conflictException("Service instance " + instanceId + " already exists");
             }
         }
 
-        provisionDestination(maasInstance, destination);
+        provisionAddress(maasInstance, address);
 
         log.info("Returning ProvisionResponse with dashboardUrl {}", dashboardUrl);
         return Response.status(Response.Status.ACCEPTED)
@@ -110,7 +113,7 @@ public class OSBProvisioningService extends OSBServiceBase {
             throw OSBExceptions.badRequestException("Missing plan_id parameter");
         }
 
-        boolean deleted = deleteDestinationByUuid(instanceId);
+        boolean deleted = deleteAddressByUuid(instanceId);
         if (deleted) {
             return Response.ok(new EmptyResponse()).build();
         } else {

@@ -1,9 +1,9 @@
 package enmasse.controller.address;
 
 import enmasse.amqp.SyncRequestClient;
-import enmasse.controller.address.api.DestinationApi;
+import enmasse.controller.address.api.AddressApi;
 import enmasse.controller.common.*;
-import enmasse.controller.model.Destination;
+import io.enmasse.address.model.Address;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
@@ -18,18 +18,21 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import static io.enmasse.address.model.impl.types.standard.StandardType.QUEUE;
+import static io.enmasse.address.model.impl.types.standard.StandardType.TOPIC;
+
 /**
  * Controller for a single address space
  */
-public class AddressSpaceController extends AbstractVerticle implements Watcher<Destination> {
+public class AddressSpaceController extends AbstractVerticle implements Watcher<Address> {
     private static final Logger log = LoggerFactory.getLogger(AddressSpaceController.class);
-    private final DestinationApi destinationApi;
+    private final AddressApi addressApi;
     private final Kubernetes kubernetes;
-    private final DestinationClusterGenerator clusterGenerator;
+    private final AddressClusterGenerator clusterGenerator;
     private Watch watch;
 
-    public AddressSpaceController(DestinationApi destinationApi, Kubernetes kubernetes, DestinationClusterGenerator clusterGenerator) {
-        this.destinationApi = destinationApi;
+    public AddressSpaceController(AddressApi addressApi, Kubernetes kubernetes, AddressClusterGenerator clusterGenerator) {
+        this.addressApi = addressApi;
         this.kubernetes = kubernetes;
         this.clusterGenerator = clusterGenerator;
     }
@@ -38,7 +41,7 @@ public class AddressSpaceController extends AbstractVerticle implements Watcher<
     public void start(Future<Void> startPromise) throws Exception {
         vertx.executeBlocking((Future<Watch> promise) -> {
             try {
-                promise.complete(destinationApi.watchDestinations(this));
+                promise.complete(addressApi.watchAddresses(this));
             } catch (Exception e) {
                 promise.fail(e);
             }
@@ -73,47 +76,62 @@ public class AddressSpaceController extends AbstractVerticle implements Watcher<
     }
 
     @Override
-    public synchronized void resourcesUpdated(Set<Destination> newDestinations) throws Exception {
-        log.info("Check destinations in address space controller: " + newDestinations);
+    public synchronized void resourcesUpdated(Set<Address> newAddressSet) throws Exception {
+        log.info("Check addresss in address space controller: " + newAddressSet);
 
-        Map<String, Set<Destination>> destinationByGroup = newDestinations.stream().collect(Collectors.groupingBy(Destination::group, Collectors.toSet()));
-        validateDestinationGroups(destinationByGroup);
+        Map<String, Set<Address>> addressByGroup = new LinkedHashMap<>();
 
-        List<DestinationCluster> clusterList = kubernetes.listClusters();
+        for (Address address : newAddressSet) {
+            String key;
+            // TODO: Put this constant somewhere appropriate
+            if (address.getPlan().getName().equals("pooled")) {
+                key = address.getPlan().getName();
+            } else {
+                key = address.getName();
+            }
+
+            if (!addressByGroup.containsKey(key)) {
+                addressByGroup.put(key, new LinkedHashSet<>());
+            }
+            addressByGroup.get(key).add(address);
+        }
+
+        validateAddressGroups(addressByGroup);
+
+        List<AddressCluster> clusterList = kubernetes.listClusters();
         log.info("Current set of clusters: " + clusterList);
-        deleteBrokers(clusterList, destinationByGroup);
-        createBrokers(clusterList, destinationByGroup);
+        deleteBrokers(clusterList, addressByGroup);
+        createBrokers(clusterList, addressByGroup);
 
-
-        checkStatuses(newDestinations);
-        newDestinations.forEach(destinationApi::replaceDestination);
+        // Perform status check
+        checkStatuses(newAddressSet);
+        newAddressSet.forEach(addressApi::replaceAddress);
     }
 
     /*
-     * Ensure that a destination groups meet the criteria of all destinations sharing the same properties, until we can
+     * Ensure that a address groups meet the criteria of all addresss sharing the same properties, until we can
      * support a mix.
      */
-    private static void validateDestinationGroups(Map<String, Set<Destination>> destinationByGroup) {
-        for (Map.Entry<String, Set<Destination>> entry : destinationByGroup.entrySet()) {
-            Iterator<Destination> it = entry.getValue().iterator();
-            Destination first = it.next();
+    private static void validateAddressGroups(Map<String, Set<Address>> addressByGroup) {
+        for (Map.Entry<String, Set<Address>> entry : addressByGroup.entrySet()) {
+            Iterator<Address> it = entry.getValue().iterator();
+            Address first = it.next();
             while (it.hasNext()) {
-                Destination current = it.next();
-                if (current.storeAndForward() != first.storeAndForward() ||
-                    current.multicast() != first.multicast() ||
-                    !current.flavor().equals(first.flavor()) ||
-                    !current.group().equals(first.group())) {
+                Address current = it.next();
+                if (!first.getAddressSpace().equals(current.getAddressSpace()) ||
+                        !first.getType().getName().equals(current.getType().getName()) ||
+                        !first.getPlan().getName().equals(current.getPlan().getName())) {
 
-                    throw new IllegalArgumentException("All destinations in a destination group must share the same properties. Found: " + current + " and " + first);
+                    throw new IllegalArgumentException("All addresss in a shared group must share the same properties. Found: " + current + " and " + first);
                 }
             }
         }
     }
 
-    private void createBrokers(List<DestinationCluster> clusterList, Map<String, Set<Destination>> newDestinationGroups) {
-        newDestinationGroups.entrySet().stream()
+    private void createBrokers(List<AddressCluster> clusterList, Map<String, Set<Address>> newAddressGroups) {
+        newAddressGroups.entrySet().stream()
                 .filter(group -> !brokerExists(clusterList, group.getKey()))
-                .map(group -> clusterGenerator.generateCluster(group.getValue()))
+                .map(group -> clusterGenerator.generateCluster(group.getKey(), group.getValue()))
                 .forEach(cluster -> {
                     if (!cluster.getResources().getItems().isEmpty()) {
                         log.info("Creating cluster {}", cluster.getClusterId());
@@ -122,8 +140,8 @@ public class AddressSpaceController extends AbstractVerticle implements Watcher<
                 });
     }
 
-    private boolean brokerExists(List<DestinationCluster> clusterList, String clusterId) {
-        for (DestinationCluster existing : clusterList) {
+    private boolean brokerExists(List<AddressCluster> clusterList, String clusterId) {
+        for (AddressCluster existing : clusterList) {
             if (existing.getClusterId().equals(clusterId)) {
                 return true;
             }
@@ -131,10 +149,10 @@ public class AddressSpaceController extends AbstractVerticle implements Watcher<
         return false;
     }
 
-    private void deleteBrokers(Collection<DestinationCluster> clusterList, Map<String, Set<Destination>> newDestinationGroups) {
+    private void deleteBrokers(Collection<AddressCluster> clusterList, Map<String, Set<Address>> newAddressGroups) {
         clusterList.stream()
-                .filter(cluster -> newDestinationGroups.entrySet().stream()
-                        .noneMatch(destinationGroup -> cluster.getClusterId().equals(destinationGroup.getKey())))
+                .filter(cluster -> newAddressGroups.entrySet().stream()
+                        .noneMatch(addressGroup -> cluster.getClusterId().equals(addressGroup.getKey())))
                 .forEach(cluster -> {
 
                     log.info("Deleting cluster {}", cluster.getClusterId());
@@ -142,52 +160,54 @@ public class AddressSpaceController extends AbstractVerticle implements Watcher<
                 });
     }
 
-    private void checkStatuses(Set<Destination> destinations) throws Exception {
-        for (Destination destination : destinations) {
-            destination.status().setReady(true).clearMessages();
+    private void checkStatuses(Set<Address> addresss) throws Exception {
+        for (Address address : addresss) {
+            address.getStatus().setReady(true).clearMessages();
         }
         // TODO: Instead of going to the routers directly, list routers, and perform a request against the
         // router agent to do the check
         for (Pod router : kubernetes.listRouters()) {
             if (router.getStatus().getPodIP() != null && !"".equals(router.getStatus().getPodIP())) {
-                checkRouterStatus(router, destinations);
+                checkRouterStatus(router, addresss);
             }
         }
 
-        for (Destination destination : destinations) {
-            checkClusterStatus(destination);
+        for (Address address : addresss) {
+            checkClusterStatus(address);
         }
     }
 
-    private void checkClusterStatus(Destination destination) {
-        if (destination.storeAndForward() && !kubernetes.isDestinationClusterReady(destination.group())) {
-            destination.status().setReady(false).appendMessage("Cluster is unavailable");
+    private void checkClusterStatus(Address address) {
+        // TODO: Move check somewhere
+        String clusterName = address.getPlan().getName().equals("pooled") ? address.getPlan().getName() : address.getName();
+        if (address.getType().equals(QUEUE) && !kubernetes.isDestinationClusterReady(clusterName)) {
+            address.getStatus().setReady(false).appendMessage("Cluster is unavailable");
         }
     }
 
 
-    private void checkRouterStatus(Pod router, Set<Destination> destinations) throws Exception {
+    private void checkRouterStatus(Pod router, Set<Address> addressList) throws Exception {
 
         List<String> addresses = checkRouter(router.getStatus().getPodIP(), "org.apache.qpid.dispatch.router.config.address", "prefix");
         List<String> autoLinks = checkRouter(router.getStatus().getPodIP(), "org.apache.qpid.dispatch.router.config.autoLink", "addr");
         List<String> linkRoutes = checkRouter(router.getStatus().getPodIP(), "org.apache.qpid.dispatch.router.config.linkRoute", "prefix");
 
-        for (Destination destination : destinations) {
-            if (!(destination.storeAndForward() && destination.multicast())) {
-                boolean found = addresses.contains(destination.address());
+        for (Address address : addressList) {
+            if (!address.getType().equals(TOPIC)) {
+                boolean found = addresses.contains(address.getAddress());
                 if (!found) {
-                    destination.status().setReady(false).appendMessage("Address " + destination.address() + " not found on " + router.getMetadata().getName());
+                    address.getStatus().setReady(false).appendMessage("Address " + address.getAddress() + " not found on " + router.getMetadata().getName());
                 }
-                if (destination.storeAndForward()) {
-                    found = autoLinks.contains(destination.address());
+                if (address.getType().equals(QUEUE)) {
+                    found = autoLinks.contains(address.getAddress());
                     if (!found) {
-                        destination.status().setReady(false).appendMessage("Address " + destination.address() + " is missing autoLinks on " + router.getMetadata().getName());
+                        address.getStatus().setReady(false).appendMessage("Address " + address.getAddress() + " is missing autoLinks on " + router.getMetadata().getName());
                     }
                 }
             } else {
-                boolean found = linkRoutes.contains(destination.address());
+                boolean found = linkRoutes.contains(address.getAddress());
                 if (!found) {
-                    destination.status().setReady(false).appendMessage("Address " + destination.address() + " is missing linkRoutes on " + router.getMetadata().getName());
+                    address.getStatus().setReady(false).appendMessage("Address " + address.getAddress() + " is missing linkRoutes on " + router.getMetadata().getName());
                 }
             }
         }

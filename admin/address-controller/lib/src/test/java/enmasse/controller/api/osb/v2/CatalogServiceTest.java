@@ -25,8 +25,6 @@ import enmasse.controller.api.osb.v2.catalog.CatalogResponse;
 import enmasse.controller.api.osb.v2.catalog.OSBCatalogService;
 import enmasse.controller.api.osb.v2.catalog.Plan;
 import enmasse.controller.api.osb.v2.catalog.Service;
-import enmasse.controller.flavor.FlavorManager;
-import enmasse.controller.model.Flavor;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -40,24 +38,17 @@ public class CatalogServiceTest {
 
     @Test
     public void testCatalog() throws IOException {
-        FlavorManager flavorManager = new FlavorManager();
-        Map<String, Flavor> flavorMap = new LinkedHashMap<>();
-        flavorMap.put("flavor1", new Flavor.Builder("flavor1", "template1").type("queue").description("Simple queue").uuid(UUID.randomUUID().toString()).build());
-        flavorMap.put("flavor2", new Flavor.Builder("flavor2", "template2").type("topic").description("Simple topic").uuid(UUID.randomUUID().toString()).build());
-        flavorMap.put("flavor3", new Flavor.Builder("flavor3", "template3").type("topic").description("Another topic").uuid(UUID.randomUUID().toString()).build());
-        flavorManager.flavorsUpdated(flavorMap);
-
-        OSBCatalogService catalogService = new OSBCatalogService(new TestInstanceApi(), flavorManager);
+        OSBCatalogService catalogService = new OSBCatalogService(new TestInstanceApi());
 
         Response response = catalogService.getCatalog();
         CatalogResponse catalogResponse = (CatalogResponse) response.getEntity();
         List<Service> services = catalogResponse.getServices();
 
         assertThat(services.size(), is(4));
-        assertService(services.get(0), "enmasse-anycast", "default");
-        assertService(services.get(1), "enmasse-multicast", "default");
-        assertService(services.get(2), "enmasse-queue", "flavor1");
-        assertService(services.get(3), "enmasse-topic", "flavor2", "flavor3");
+        assertService(services.get(0), "enmasse-anycast", "standard");
+        assertService(services.get(1), "enmasse-multicast", "standard");
+        assertService(services.get(2), "enmasse-queue", "inmemory", "persisted", "pooled-inmemory", "pooled-persisted");
+        assertService(services.get(3), "enmasse-topic", "inmemory", "persisted");
     }
 
     private void assertService(Service service, String name, String... planNames) {
@@ -69,23 +60,4 @@ public class CatalogServiceTest {
             assertThat(plan.getName(), is(planName));
         }
     }
-
-    @Test
-    public void testServiceWithoutFlavorsIsOmitted() throws IOException {
-        FlavorManager flavorManager = new FlavorManager();
-        Map<String, Flavor> flavorMap = new LinkedHashMap<>();
-        // NOTE: no flavors for queues
-        flavorMap.put("flavor2", new Flavor.Builder("flavor2", "template2").type("topic").description("Simple topic").uuid(UUID.randomUUID().toString()).build());
-        flavorManager.flavorsUpdated(flavorMap);
-
-        OSBCatalogService catalogService = new OSBCatalogService(new TestInstanceApi(), flavorManager);
-
-        Response response = catalogService.getCatalog();
-        CatalogResponse catalogResponse = (CatalogResponse) response.getEntity();
-        List<Service> services = catalogResponse.getServices();
-
-        // TODO: is there a hamcrest matcher that does the same (and doesn't use reflection)?
-        services.stream().forEach(s -> assertThat(s.getName(), not(is("enmasse-queue"))));
-    }
-
 }

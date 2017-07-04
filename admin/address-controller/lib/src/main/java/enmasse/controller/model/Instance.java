@@ -6,7 +6,7 @@ import java.util.Optional;
  * Represents an instance of the EnMasse infrastructure
  */
 public class Instance {
-    private final InstanceId instanceId;
+    private final AddressSpaceId addressSpaceId;
     private final Optional<String> messagingHost;
     private final Optional<String> mqttHost;
     private final Optional<String> consoleHost;
@@ -14,8 +14,8 @@ public class Instance {
     private final String certSecret;
     private final Status status;
 
-    public Instance(InstanceId instanceId, Optional<String> messagingHost, Optional<String> mqttHost, Optional<String> consoleHost, Optional<String> uuid, String certSecret, Status status) {
-        this.instanceId = instanceId;
+    public Instance(AddressSpaceId addressSpaceId, Optional<String> messagingHost, Optional<String> mqttHost, Optional<String> consoleHost, Optional<String> uuid, String certSecret, Status status) {
+        this.addressSpaceId = addressSpaceId;
         this.messagingHost = messagingHost;
         this.mqttHost = mqttHost;
         this.consoleHost = consoleHost;
@@ -44,8 +44,8 @@ public class Instance {
         return certSecret;
     }
 
-    public InstanceId id() {
-        return instanceId;
+    public AddressSpaceId id() {
+        return addressSpaceId;
     }
 
     public Status status() {
@@ -59,21 +59,21 @@ public class Instance {
 
         Instance instance = (Instance) o;
 
-        return instanceId.equals(instance.instanceId);
+        return addressSpaceId.equals(instance.addressSpaceId);
     }
 
     @Override
     public int hashCode() {
-        return instanceId.hashCode();
+        return addressSpaceId.hashCode();
     }
 
     @Override
     public String toString() {
-        return instanceId.toString();
+        return addressSpaceId.toString();
     }
 
     public static class Builder {
-        private InstanceId instanceId;
+        private AddressSpaceId addressSpaceId;
         private Optional<String> messagingHost = Optional.empty();
         private Optional<String> mqttHost = Optional.empty();
         private Optional<String> consoleHost = Optional.empty();
@@ -82,7 +82,7 @@ public class Instance {
         private Status status = new Status(false);
 
         public Builder(Instance instance) {
-            this.instanceId = instance.id();
+            this.addressSpaceId = instance.id();
             this.messagingHost = instance.messagingHost;
             this.mqttHost = instance.mqttHost;
             this.consoleHost = instance.consoleHost;
@@ -91,13 +91,13 @@ public class Instance {
             this.status = instance.status;
         }
 
-        public Builder(InstanceId instanceId) {
-            this.instanceId = instanceId;
+        public Builder(AddressSpaceId addressSpaceId) {
+            this.addressSpaceId = addressSpaceId;
             this.certSecret = "certs";
         }
 
-        public Builder instanceId(InstanceId instanceId) {
-            this.instanceId = instanceId;
+        public Builder instanceId(AddressSpaceId addressSpaceId) {
+            this.addressSpaceId = addressSpaceId;
             this.certSecret = "certs";
             return this;
         }
@@ -133,11 +133,11 @@ public class Instance {
         }
 
         public Instance build() {
-            return new Instance(instanceId, messagingHost, mqttHost, consoleHost, uuid, certSecret, status);
+            return new Instance(addressSpaceId, messagingHost, mqttHost, consoleHost, uuid, certSecret, status);
         }
 
-        public InstanceId id() {
-            return instanceId;
+        public AddressSpaceId id() {
+            return addressSpaceId;
         }
     }
 

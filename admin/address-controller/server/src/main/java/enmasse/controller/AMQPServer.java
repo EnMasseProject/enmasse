@@ -16,12 +16,8 @@
 
 package enmasse.controller;
 
-import enmasse.controller.api.v3.AddressApiHelper;
-import enmasse.controller.api.v3.amqp.AddressingService;
-import enmasse.controller.api.v3.amqp.FlavorsService;
-import enmasse.controller.flavor.FlavorRepository;
 import enmasse.controller.instance.api.InstanceApi;
-import enmasse.controller.model.InstanceId;
+import enmasse.controller.model.AddressSpaceId;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.proton.*;
 import org.apache.qpid.proton.amqp.messaging.Accepted;
@@ -40,15 +36,15 @@ import java.util.concurrent.ConcurrentHashMap;
 public class AMQPServer extends AbstractVerticle {
     private static final Logger log = LoggerFactory.getLogger(AMQPServer.class.getName());
     private final int port;
-    private final AddressingService addressingService;
-    private final FlavorsService flavorsService;
     private final Map<String, HandlerContext> replyHandlers = new ConcurrentHashMap<>();
     private ProtonServer server;
 
-    public AMQPServer(InstanceId instanceId, InstanceApi instanceApi, FlavorRepository repository, int port) {
+    public AMQPServer(AddressSpaceId addressSpaceId, InstanceApi instanceApi, int port) {
         this.port = port;
-        this.addressingService = new AddressingService(instanceId, new AddressApiHelper(instanceApi));
+        /*
+        this.addressingService = new AddressingService(addressSpaceId, new AddressApiHelper(instanceApi));
         this.flavorsService = new FlavorsService(repository);
+        */
     }
 
     public void start() {
@@ -99,9 +95,9 @@ public class AMQPServer extends AbstractVerticle {
     private void createReceiver(ProtonReceiver receiver) {
         String targetAddress = receiver.getRemoteTarget().getAddress();
         if (targetAddress.equals("$address")) {
-            openReceiverWithHandler(receiver, addressingService::handleMessage);
+         //   openReceiverWithHandler(receiver, addressingService::handleMessage);
         } else if (targetAddress.equals("$flavor")) {
-            openReceiverWithHandler(receiver, flavorsService::handleMessage);
+          //  openReceiverWithHandler(receiver, flavorsService::handleMessage);
         } else {
             receiver.close();
         }

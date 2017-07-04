@@ -15,7 +15,6 @@
  */
 package io.enmasse.address.model.impl;
 
-import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressSpaceType;
 import io.enmasse.address.model.Endpoint;
 import io.enmasse.address.model.Plan;
@@ -28,14 +27,12 @@ import java.util.*;
 public class AddressSpace implements io.enmasse.address.model.AddressSpace {
     private final String name;
     private final AddressSpaceType type;
-    private final List<Address> addressList;
     private final List<Endpoint> endpointList;
     private final Plan plan;
 
-    private AddressSpace(String name, AddressSpaceType type, List<Address> addressList, List<Endpoint> endpointList, Plan plan) {
+    private AddressSpace(String name, AddressSpaceType type, List<Endpoint> endpointList, Plan plan) {
         this.name = name;
         this.type = type;
-        this.addressList = addressList;
         this.endpointList = endpointList;
         this.plan = plan;
     }
@@ -51,11 +48,6 @@ public class AddressSpace implements io.enmasse.address.model.AddressSpace {
     }
 
     @Override
-    public List<Address> getAddresses() {
-        return Collections.unmodifiableList(addressList);
-    }
-
-    @Override
     public List<Endpoint> getEndpoints() {
         return Collections.unmodifiableList(endpointList);
     }
@@ -68,7 +60,6 @@ public class AddressSpace implements io.enmasse.address.model.AddressSpace {
     public static class Builder {
         private String name;
         private AddressSpaceType type;
-        private List<Address> addressList = new ArrayList<>();
         private List<Endpoint> endpointList = new ArrayList<>();
         private Plan plan;
 
@@ -79,16 +70,6 @@ public class AddressSpace implements io.enmasse.address.model.AddressSpace {
 
         public Builder setType(AddressSpaceType type) {
             this.type = type;
-            return this;
-        }
-
-        public Builder setAddressList(List<Address> addressList) {
-            this.addressList = new ArrayList<>(addressList);
-            return this;
-        }
-
-        public Builder appendAddress(Address address) {
-            this.addressList.add(address);
             return this;
         }
 
@@ -110,10 +91,9 @@ public class AddressSpace implements io.enmasse.address.model.AddressSpace {
         public AddressSpace build() {
             Objects.requireNonNull(name, "name not set");
             Objects.requireNonNull(type, "type not set");
-            Objects.requireNonNull(addressList);
             Objects.requireNonNull(endpointList);
             Objects.requireNonNull(plan, "plan not set");
-            return new AddressSpace(name, type, addressList, endpointList, plan);
+            return new AddressSpace(name, type, endpointList, plan);
         }
     }
 }
