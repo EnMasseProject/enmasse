@@ -148,4 +148,9 @@ GET /v1/schema
 ```
 # Configserv
 
-AMQP subscribe "v1/addresses" - AddressList JSON object in message body. New message whenever addresses has changed
+Allow components to subscribe over AMQP with "v1/addresses" as
+source. A messages will be sent out whenever the addresses have
+changed. The body of these messages will contain an AddressList JSON
+object as defined above. The subject will contain the string
+'enmasse.io/v1/AddressList' (i.e. the value of the apiVersion
+concatenated with the value of kind).

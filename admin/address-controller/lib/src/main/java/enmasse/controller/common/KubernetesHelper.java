@@ -199,7 +199,12 @@ public class KubernetesHelper implements Kubernetes {
 
     @Override
     public void createInstanceSecret(String secretName, InstanceId instanceId) {
-        Secret secret = client.secrets().inNamespace(instanceId.getNamespace()).createNew()
+        Secret secret = client.secrets().inNamespace(instanceId.getNamespace()).withName(secretName).get();
+        if (secret != null) {
+            // Skip if it is already created
+            return;
+        }
+        secret = client.secrets().inNamespace(instanceId.getNamespace()).createNew()
                 .editOrNewMetadata()
                 .withName(secretName)
                 .endMetadata()
