@@ -101,7 +101,6 @@ public abstract class MqttTestBase extends TestBase {
         } else {
             mqttEndpoint = this.openShift.getEndpoint("mqtt", "mqtt");
         }
-        System.err.println("Host: " + mqttEndpoint.getHost() + " \tPort: " + mqttEndpoint.getPort());
         MqttClient client = new MqttClient(mqttEndpoint, options);
         this.clients.add(client);
         return client;
