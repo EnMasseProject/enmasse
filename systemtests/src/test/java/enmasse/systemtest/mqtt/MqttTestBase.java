@@ -18,11 +18,30 @@ package enmasse.systemtest.mqtt;
 
 import enmasse.systemtest.Endpoint;
 import enmasse.systemtest.TestBase;
+import enmasse.systemtest.TestUtils;
+import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.junit.After;
 import org.junit.Before;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.InetAddress;
+import java.net.Socket;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import javax.net.ssl.SNIHostName;
+import javax.net.ssl.SNIServerName;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLParameters;
+import javax.net.ssl.SSLSocket;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.X509TrustManager;
 
 /**
  * Base class for all MQTT related tests
@@ -45,12 +64,127 @@ public abstract class MqttTestBase extends TestBase {
         this.clients.clear();
     }
 
-    protected MqttClient createClient() {
+    protected MqttClient createClient() throws Exception {
 
-        Endpoint mqttEndpoint = this.openShift.getEndpoint("mqtt", "mqtt");
+        MqttConnectOptions options = new MqttConnectOptions();
+        Endpoint mqttEndpoint;
 
-        MqttClient client = new MqttClient(mqttEndpoint);
+        if (environment.useTLS()) {
+
+            mqttEndpoint = openShift.getRouteEndpoint("mqtt");
+
+            SSLContext sslContext = tryGetSSLContext("TLSv1.2", "TLSv1.1", "TLS", "TLSv1");
+            sslContext.init(null, new X509TrustManager[]{new X509TrustManager() {
+                @Override
+                public void checkClientTrusted(X509Certificate[] chain,
+                                               String authType) throws CertificateException {
+                }
+
+                @Override
+                public void checkServerTrusted(X509Certificate[] chain,
+                                               String authType) throws CertificateException {
+                }
+
+                @Override
+                public X509Certificate[] getAcceptedIssuers() {
+                    return new X509Certificate[0];
+                }
+            }}, new SecureRandom());
+            SSLSocketFactory sslSocketFactory = new SNISettingSSLSocketFactory(sslContext.getSocketFactory(), mqttEndpoint.getHost());
+
+            options.setSocketFactory(sslSocketFactory);
+
+            if (!TestUtils.resolvable(mqttEndpoint)) {
+                mqttEndpoint = new Endpoint("localhost", 443);
+            }
+
+        } else {
+            mqttEndpoint = this.openShift.getEndpoint("mqtt", "mqtt");
+        }
+        System.err.println("Host: " + mqttEndpoint.getHost() + " \tPort: " + mqttEndpoint.getPort());
+        MqttClient client = new MqttClient(mqttEndpoint, options);
         this.clients.add(client);
         return client;
+    }
+
+
+    public static SSLContext tryGetSSLContext(final String... protocols) throws NoSuchAlgorithmException {
+        for (String protocol : protocols) {
+            try {
+                return SSLContext.getInstance(protocol);
+            } catch (NoSuchAlgorithmException e) {
+                // pass and try the next protocol in the list
+            }
+        }
+        throw new NoSuchAlgorithmException(String.format("Could not create SSLContext with one of the requested protocols: %s",
+                                                         Arrays.toString(protocols)));
+    }
+
+    private static class SNISettingSSLSocketFactory extends SSLSocketFactory {
+        private final SSLSocketFactory socketFactory;
+        private final List<SNIServerName> sniHostNames;
+
+        SNISettingSSLSocketFactory(final SSLSocketFactory socketFactory,
+                                   final String host) {
+            this.socketFactory = socketFactory;
+            this.sniHostNames = Collections.singletonList(new SNIHostName(host));
+        }
+
+        @Override
+        public String[] getDefaultCipherSuites() {
+            return socketFactory.getDefaultCipherSuites();
+        }
+
+        @Override
+        public String[] getSupportedCipherSuites() {
+            return socketFactory.getSupportedCipherSuites();
+        }
+
+        @Override
+        public Socket createSocket(final Socket socket, final String host, final int port, final boolean autoClose) throws IOException {
+            return setHostnameParameter(socketFactory.createSocket(socket, host, port, autoClose));
+        }
+
+        private Socket setHostnameParameter(final Socket newSocket) {
+            SSLParameters sslParameters = new SSLParameters();
+            sslParameters.setServerNames(this.sniHostNames);
+            ((SSLSocket)newSocket).setSSLParameters(sslParameters);
+            return newSocket;
+        }
+
+        @Override
+        public Socket createSocket(final Socket socket, final InputStream inputStream, final boolean b)
+                throws IOException {
+            return setHostnameParameter(socketFactory.createSocket(socket, inputStream, b));
+        }
+
+        @Override
+        public Socket createSocket() throws IOException {
+            return setHostnameParameter(socketFactory.createSocket());
+        }
+
+        @Override
+        public Socket createSocket(final String s, final int i) throws IOException {
+            return setHostnameParameter(socketFactory.createSocket(s, i));
+        }
+
+        @Override
+        public Socket createSocket(final String s, final int i, final InetAddress inetAddress, final int i1)
+                throws IOException {
+            return setHostnameParameter(socketFactory.createSocket(s, i, inetAddress, i1));
+        }
+
+        @Override
+        public Socket createSocket(final InetAddress inetAddress, final int i) throws IOException {
+            return setHostnameParameter(socketFactory.createSocket(inetAddress, i));
+        }
+
+        @Override
+        public Socket createSocket(final InetAddress inetAddress,
+                                   final int i,
+                                   final InetAddress inetAddress1,
+                                   final int i1) throws IOException {
+            return setHostnameParameter(socketFactory.createSocket(inetAddress, i, inetAddress1, i1));
+        }
     }
 }

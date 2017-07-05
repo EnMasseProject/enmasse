@@ -20,6 +20,7 @@ import enmasse.systemtest.Endpoint;
 import enmasse.systemtest.Logging;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
+import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 
@@ -34,8 +35,13 @@ public class Publisher extends ClientHandlerBase<Integer> {
     private final Queue<MqttMessage> messageQueue;
     private final CountDownLatch connectLatch;
 
-    public Publisher(Endpoint endpoint, String topic, Queue<MqttMessage> messages, CompletableFuture<Integer> promise, CountDownLatch connectLatch) {
-        super(endpoint, topic, promise);
+    public Publisher(Endpoint endpoint,
+                     final MqttConnectOptions options,
+                     String topic,
+                     Queue<MqttMessage> messages,
+                     CompletableFuture<Integer> promise,
+                     CountDownLatch connectLatch) {
+        super(endpoint, options, topic, promise);
         this.messageQueue = messages;
         this.connectLatch = connectLatch;
     }
@@ -43,7 +49,7 @@ public class Publisher extends ClientHandlerBase<Integer> {
     @Override
     protected void connectionOpened() {
 
-        Logging.log.info("Publisher on '{}' connected, publishing messages", this.topic);
+        Logging.log.info("Publisher on '{}' connected, publishing messages", this.getTopic());
 
         this.client.setCallback(new MqttCallback() {
 
@@ -70,6 +76,13 @@ public class Publisher extends ClientHandlerBase<Integer> {
         this.sendNext();
     }
 
+    @Override
+    protected void connectionOpenFailed(Throwable throwable) {
+        Logging.log.info("Connection to " + getEndpoint().getHost() + ":" + getEndpoint().getPort() + " failed: " + throwable.getMessage());
+        getPromise().completeExceptionally(throwable);
+        this.connectLatch.countDown();
+    }
+
     private void sendNext() {
 
         MqttMessage message = this.messageQueue.poll();
@@ -81,13 +94,13 @@ public class Publisher extends ClientHandlerBase<Integer> {
             /* if (this.client.isConnected()) {
                 this.client.disconnect();
             } */
-            this.promise.complete(this.numSent.get());
+            this.getPromise().complete(this.numSent.get());
 
         } else {
 
             try {
 
-                this.client.publish(this.topic, message);
+                this.client.publish(this.getTopic(), message);
 
             } catch (MqttException e) {
                 e.printStackTrace();
