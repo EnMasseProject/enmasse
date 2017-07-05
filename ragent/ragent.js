@@ -194,12 +194,24 @@ function watch_pods(connection) {
     });
 }
 
-var connection_properties = {product:'qdconfigd', container_id:process.env.HOSTNAME};
+var connection_properties = {product:'ragent', container_id:process.env.HOSTNAME};
 
 function on_message(context) {
     if (context.message.subject === 'routers') {
         known_routers[context.connection.container_id] = unwrap_known_routers (context.message.body);
         check_connectivity();
+    } else if (context.message.subject === 'enmasse.io/v1/AddressList') {
+        var semantics = {};
+        var body = JSON.parse(context.message.body);
+        for (var i = 0; i < body.length; i++) {
+            var addr = body[i];
+            semantics[addr.spec.address] = {
+                name: addr.spec.address,
+                multicast: (addr.spec.type === 'multicast' || addr.spec.type === 'topic'),
+                store_and_forward: (addr.spec.type === 'queue' || addr.spec.type === 'topic')
+            }
+        }
+        sync_addresses(semantics);
     } else if (context.message.subject === 'addresses' || !context.message.subject) {
         var body_type = typeof context.message.body;
         if (body_type  === 'string') {
@@ -301,7 +313,9 @@ log.info("Router agent starting");
 
 var port = 55672;
 amqp.sasl_server_mechanisms.enable_anonymous();
-amqp.listen({port:port, properties:connection_properties});
+amqp.listen({port:port, properties:connection_properties}).on('listening', function() {
+    log.info("Router agent listening on " + port);
+});
 
 var config_host = process.env.ADMIN_SERVICE_HOST
 var config_port = process.env.ADMIN_SERVICE_PORT_CONFIGURATION
@@ -314,6 +328,6 @@ if (process.env.CONFIGURATION_SERVICE_HOST) {
 if (config_host) {
     amqp.options.username = 'ragent';
     var conn = amqp.connect({host:config_host, port:config_port, properties:connection_properties});
-    conn.open_receiver('maas');
+    conn.open_receiver('v1/addresses');
     watch_pods(conn);
 }
