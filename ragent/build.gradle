@@ -1,9 +1,18 @@
 description = 'Router agent'
 apply plugin: 'distribution'
 
-task build(type: Exec) {
-    commandLine 'mocha'
+task runMocha(type: Exec) {
+    onlyIf {
+        def result = exec {
+            executable = "which"
+            args "mocha"
+            ignoreExitValue = true
+        }
+        result.exitValue == 0
+    }
+    executable = "mocha"
 }
+test.dependsOn(runMocha)
 
 task pack(type: Tar) {
     from (projectDir) {
