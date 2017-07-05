@@ -239,11 +239,92 @@ function verify_full_mesh(routers) {
     }
 }
 
+function get_address_list_message(address_list) {
+    var content = JSON.stringify(address_list.map(function (a) { return {spec:a}; }));
+    return {subject:'enmasse.io/v1/AddressList', body:content};
+}
+
+function RouterList() {
+    this.counter = 1;
+    this.routers = [];
+}
+
+RouterList.prototype.new_router = function (name) {
+    var r = new MockRouter(name || this.new_name());
+    this.routers.push(r);
+    return r;
+};
+
+RouterList.prototype.new_name = function () {
+    return 'router-' + this.counter++;
+};
+
+RouterList.prototype.close = function () {
+    this.routers.forEach(function (r) { r.close(); });
+}
+
+function get_source_address_filter(address) {
+    return function (link) {
+        return link && link.local && link.local.attach && link.local.attach.source
+            && link.local.attach.source.address === address;
+    }
+}
+
+function MockAddressSource(address_list) {
+    this.address_list = address_list;
+    this.connections = {};
+    this.source_address = 'v1/addresses';
+    this.container = rhea.create_container();
+    this.container.on('sender_open', this.subscribe.bind(this));
+    var self = this;
+    this.cleanup = function (context) {
+        delete self.connections[context.connection];
+    };
+    this.notify = function (connection) {
+        connection.each_sender(self.send_address_list.bind(self), get_source_address_filter(self.source_address));
+    };
+}
+
+MockAddressSource.prototype.listen = function (port) {
+    this.listener = this.container.listen({'port':port});
+    return this.listener;
+};
+
+MockAddressSource.prototype.close = function () {
+    if (this.listener) this.listener.close();
+}
+
+MockAddressSource.prototype.send_address_list = function (sender) {
+    sender.send(get_address_list_message(this.address_list));
+}
+
+MockAddressSource.prototype.update = function (address_list) {
+    this.address_list = address_list;
+    this.connections.forEach(this.notify);
+};
+
+MockAddressSource.prototype.register = function (connection) {
+    this.connections[connection] = connection;
+    connection.on('connection_close', this.cleanup);
+    connection.on('disconnected', this.cleanup);
+};
+
+MockAddressSource.prototype.subscribe = function (context) {
+    if (context.sender.remote.attach.source && context.sender.remote.attach.source.address === this.source_address) {
+        context.sender.set_target({address:this.source_address});
+        this.register(context.connection);
+        this.send_address_list(context.sender);
+    } else {
+        //TODO: need to handle pod-sense better
+        //context.sender.close({condition:'amqp:not-found', description:'Unrecognised source'});
+    }
+};
+
 describe('basic router configuration', function() {
-    this.timeout(20000);
+    this.timeout(5000);
     var counter = 1;
     var ragent;
-    var routers = [];
+    var routers = new RouterList();
 
     beforeEach(function(done) {
         ragent = child_process.fork(path.resolve(__dirname, '../ragent.js'), [], {silent:true, env:{}});
@@ -255,24 +336,16 @@ describe('basic router configuration', function() {
     });
 
     afterEach(function(done) {
-        //TODO: return promise from MockRouter.close()
-        for (var i = 0; i < routers.length; i++) {
-            routers[i].close();
-        }
+        //TODO: return promise from RouterList.close()
+        routers.close();
         setTimeout(function () {
             ragent.kill();
             done();
         }, 500);
     });
 
-    function new_name() {
-        return 'router-' + counter++;
-    }
-
     function new_router(name) {
-        var r = new MockRouter(name || new_name());
-        routers.push(r);
-        return r;
+        return routers.new_router(name);
     }
 
     function multi_router_address_test(count, address_list, verification, initial_config) {
@@ -283,8 +356,7 @@ describe('basic router configuration', function() {
             }
             if (initial_config) initial_config(routers);
             var client = rhea.connect({port:55672});
-            var content = JSON.stringify(address_list.map(function (a) { return {spec:a}; }));
-            client.open_sender().send({subject:'enmasse.io/v1/AddressList', body:content});
+            client.open_sender().send(get_address_list_message(address_list));
             client.on('sender_open', function () {
                 setTimeout(function () {
                     verification ? verification(routers, address_list) : verify_addresses(address_list, routers);
@@ -329,4 +401,80 @@ describe('basic router configuration', function() {
     it('configures multiple routers into a full mesh', multi_router_address_test(6, [], function (routers) {
         verify_full_mesh(routers);
     }));
+    it('configures routers correctly whenever they connect', function(done) {
+        var client = rhea.connect({port:55672});
+        var sender = client.open_sender();
+        sender.send(get_address_list_message([{address:'a',type:'topic'}, {address:'b',type:'queue'}]));
+        client.on('sender_open', function () {
+            var routers = [];
+            for (var i = 0; i < 2; i++) {
+                routers.push(new_router());
+            }
+            setTimeout(function () {
+                verify_addresses([{address:'a',type:'topic'}, {address:'b',type:'queue'}], routers);
+                verify_full_mesh(routers);
+                //update addresses
+                sender.send(get_address_list_message([{address:'a',type:'queue'}, {address:'b',type:'queue'}, {address:'c',type:'topic'}, {address:'d',type:'multicast'}]));
+                //add another couple of routers
+                for (var i = 0; i < 2; i++) {
+                    routers.push(new_router());
+                }
+                setTimeout(function () {
+                    verify_addresses([{address:'a',type:'queue'}, {address:'b',type:'queue'}, {address:'c',type:'topic'}, {address:'d',type:'multicast'}], routers);
+                    verify_full_mesh(routers);
+                    client.close();
+                    client.on('connection_close', function () { done(); } );
+                }, 1000/*1 second wait for propagation*/);//TODO: add ability to be notified of propagation in some way
+            }, 500);
+        });
+    });
+});
+
+describe('address source subscription', function() {
+    this.timeout(5000);
+    var ragent;
+    var address_source = new MockAddressSource([{address:'a',type:'topic'}, {address:'b',type:'queue'}]);
+    var routers = new RouterList();
+
+    beforeEach(function(done) {
+        address_source.listen(8888).on('listening', function () {
+            done();
+        });
+    });
+
+    function with_ragent(env, done) {
+        ragent = child_process.fork(path.resolve(__dirname, '../ragent.js'), [], {silent:true, env:env || {}});
+        ragent.stderr.on('data', function (data) {
+            if (data.toString().match('Router agent listening on')) {
+                done();
+            }
+        });
+    }
+
+    afterEach(function(done) {
+        //TODO: return promise from RouterList.close()
+        routers.close();
+        setTimeout(function () {
+            ragent.kill();
+            address_source.close();
+            done();
+        }, 500);
+    });
+
+    function simple_subscribe_env_test(env) {
+        return function (done) {
+            with_ragent(env, function () {
+                var router = routers.new_router();
+                setTimeout(function () {
+                    verify_addresses(address_source.address_list, router);
+                    done();
+                }, 1000/*1 second wait for propagation*/);//TODO: add ability to be notified of propagation in some way
+            });
+        }
+    }
+
+    it('subscribes to configuration service', simple_subscribe_env_test({'CONFIGURATION_SERVICE_HOST': 'localhost', 'CONFIGURATION_SERVICE_PORT':8888}));
+    it('subscribes to admin service on configuration port', simple_subscribe_env_test({'ADMIN_SERVICE_HOST': 'localhost', 'ADMIN_SERVICE_PORT_CONFIGURATION':8888}));
+    it('prefers configuration service over admin service', simple_subscribe_env_test({'ADMIN_SERVICE_HOST': 'localhost', 'ADMIN_SERVICE_PORT_CONFIGURATION':7777,
+                                                                                      'CONFIGURATION_SERVICE_HOST': 'localhost', 'CONFIGURATION_SERVICE_PORT':8888}));
 });
