@@ -202,11 +202,12 @@ public class KubernetesHelper implements Kubernetes {
             // Skip if it is already created
             return;
         }
-        secret = new SecretBuilder()
+        // TODO: Add labels
+        secret = client.secrets().createNew()
                 .editOrNewMetadata()
                 .withName(secretName)
                 .endMetadata()
-                .build();
+                .done();
         client.serviceAccounts().inNamespace(namespace).withName("default").edit()
                 .addToSecrets(new ObjectReferenceBuilder()
                         .withKind(secret.getKind())
