@@ -115,7 +115,7 @@ public class StandardHelper {
             missingServices.removeAll(discoveredServices);
 
             for (String service : missingServices) {
-                String secretName = "certs-" + service;
+                String secretName = "external-certs-" + service;
                 if (!serviceCertProviders.containsKey(service)) {
                     serviceCertProviders.put(service, new SecretCertProvider(secretName));
                     secretsToGenerate.add(secretName);
