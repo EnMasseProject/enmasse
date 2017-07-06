@@ -1,5 +1,5 @@
 {
-  generate(instance, hostname)::
+  generate(addressSpace, hostname)::
   {
     "kind": "Route",
     "apiVersion": "v1",
@@ -8,7 +8,7 @@
           "app": "enmasse"
         },
         "annotations": {
-          "instance": instance
+          "addressSpace": addressSpace
         },
         "name": "messaging"
     },

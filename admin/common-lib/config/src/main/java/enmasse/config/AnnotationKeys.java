@@ -17,5 +17,5 @@ package enmasse.config;
 
 public interface AnnotationKeys {
     String CLUSTER_ID = "cluster_id";
-    String ADDRESS_SPACE = "address-space";
+    String ADDRESS_SPACE = "addressSpace";
 }

@@ -17,8 +17,8 @@ objects:
     kind: Deployment
     metadata:
       annotations:
+        addressSpace: "${ADDRESS_SPACE}"
         cluster_id: "${CLUSTER_ID}"
-        instance: "${INSTANCE}"
       labels:
         app: enmasse
       name: "${NAME}"
@@ -27,8 +27,8 @@ objects:
       template:
         metadata:
           annotations:
+            addressSpace: "${ADDRESS_SPACE}"
             cluster_id: "${CLUSTER_ID}"
-            instance: "${INSTANCE}"
           labels:
             app: enmasse
             name: "${NAME}"
@@ -88,13 +88,13 @@ objects:
   - description: The link capacity setting for router
     name: ROUTER_LINK_CAPACITY
     value: '50'
-  - description: A valid instance name for the instance
-    name: INSTANCE
+  - description: A valid addressSpace name for the address Space
+    name: ADDRESS_SPACE
     required: true
-  - description: A valid name for the instance
+  - description: A valid name for the deployment
     name: NAME
     required: true
-  - description: A valid group id for the instance
+  - description: A valid group id for the deployment
     name: CLUSTER_ID
     required: true
   - description: The address to use for the queue
@@ -114,8 +114,8 @@ objects:
     kind: PersistentVolumeClaim
     metadata:
       annotations:
+        addressSpace: "${ADDRESS_SPACE}"
         cluster_id: "${CLUSTER_ID}"
-        instance: "${INSTANCE}"
       labels:
         app: enmasse
       name: pvc-${NAME}
@@ -129,8 +129,8 @@ objects:
     kind: Deployment
     metadata:
       annotations:
+        addressSpace: "${ADDRESS_SPACE}"
         cluster_id: "${CLUSTER_ID}"
-        instance: "${INSTANCE}"
       labels:
         app: enmasse
       name: "${NAME}"
@@ -139,8 +139,8 @@ objects:
       template:
         metadata:
           annotations:
+            addressSpace: "${ADDRESS_SPACE}"
             cluster_id: "${CLUSTER_ID}"
-            instance: "${INSTANCE}"
           labels:
             app: enmasse
             name: "${NAME}"
@@ -201,13 +201,13 @@ objects:
   - description: The link capacity setting for router
     name: ROUTER_LINK_CAPACITY
     value: '50'
-  - description: A valid instance name for the instance
-    name: INSTANCE
+  - description: A valid addressSpace name for the address Space
+    name: ADDRESS_SPACE
     required: true
-  - description: A valid name for the instance
+  - description: A valid name for the deployment
     name: NAME
     required: true
-  - description: A valid group id for the instance
+  - description: A valid group id for the deployment
     name: CLUSTER_ID
     required: true
   - description: The address to use for the queue
@@ -227,8 +227,8 @@ objects:
     kind: Deployment
     metadata:
       annotations:
+        addressSpace: "${ADDRESS_SPACE}"
         cluster_id: "${CLUSTER_ID}"
-        instance: "${INSTANCE}"
       labels:
         app: enmasse
       name: "${NAME}"
@@ -237,8 +237,8 @@ objects:
       template:
         metadata:
           annotations:
+            addressSpace: "${ADDRESS_SPACE}"
             cluster_id: "${CLUSTER_ID}"
-            instance: "${INSTANCE}"
           labels:
             app: enmasse
             name: "${NAME}"
@@ -346,13 +346,13 @@ objects:
   - description: The link capacity setting for router
     name: ROUTER_LINK_CAPACITY
     value: '50'
-  - description: A valid instance name for the instance
-    name: INSTANCE
+  - description: A valid addressSpace name for the address Space
+    name: ADDRESS_SPACE
     required: true
-  - description: A valid name for the instance
+  - description: A valid name for the deployment
     name: NAME
     required: true
-  - description: A valid group id for the instance
+  - description: A valid group id for the deployment
     name: CLUSTER_ID
     required: true
   - description: The address to use for the topic
@@ -372,8 +372,8 @@ objects:
     kind: PersistentVolumeClaim
     metadata:
       annotations:
+        addressSpace: "${ADDRESS_SPACE}"
         cluster_id: "${CLUSTER_ID}"
-        instance: "${INSTANCE}"
       labels:
         app: enmasse
       name: pvc-${NAME}
@@ -387,8 +387,8 @@ objects:
     kind: Deployment
     metadata:
       annotations:
+        addressSpace: "${ADDRESS_SPACE}"
         cluster_id: "${CLUSTER_ID}"
-        instance: "${INSTANCE}"
       labels:
         app: enmasse
       name: "${NAME}"
@@ -397,8 +397,8 @@ objects:
       template:
         metadata:
           annotations:
+            addressSpace: "${ADDRESS_SPACE}"
             cluster_id: "${CLUSTER_ID}"
-            instance: "${INSTANCE}"
           labels:
             app: enmasse
             name: "${NAME}"
@@ -507,13 +507,13 @@ objects:
   - description: The link capacity setting for router
     name: ROUTER_LINK_CAPACITY
     value: '50'
-  - description: A valid instance name for the instance
-    name: INSTANCE
+  - description: A valid addressSpace name for the address Space
+    name: ADDRESS_SPACE
     required: true
-  - description: A valid name for the instance
+  - description: A valid name for the deployment
     name: NAME
     required: true
-  - description: A valid group id for the instance
+  - description: A valid group id for the deployment
     name: CLUSTER_ID
     required: true
   - description: The address to use for the topic
@@ -533,7 +533,7 @@ objects:
     kind: Deployment
     metadata:
       annotations:
-        instance: "${INSTANCE}"
+        addressSpace: "${ADDRESS_SPACE}"
       labels:
         app: enmasse
         name: qdrouterd
@@ -543,7 +543,7 @@ objects:
       template:
         metadata:
           annotations:
-            instance: "${INSTANCE}"
+            addressSpace: "${ADDRESS_SPACE}"
           labels:
             app: enmasse
             capability: router
@@ -597,7 +597,7 @@ objects:
     kind: Service
     metadata:
       annotations:
-        instance: "${INSTANCE}"
+        addressSpace: "${ADDRESS_SPACE}"
         service.alpha.openshift.io/dependencies: '[{"kind": "Service", "name": "queue-scheduler",
           "namespace": ""}, {"kind": "Service", "name": "configuration", "namespace":
           ""}, {"kind": "Service", "name": "ragent", "namespace": ""}, {"kind": "Service",
@@ -631,7 +631,7 @@ objects:
     kind: Deployment
     metadata:
       annotations:
-        instance: "${INSTANCE}"
+        addressSpace: "${ADDRESS_SPACE}"
       labels:
         app: enmasse
         name: subserv
@@ -641,7 +641,7 @@ objects:
       template:
         metadata:
           annotations:
-            instance: "${INSTANCE}"
+            addressSpace: "${ADDRESS_SPACE}"
           labels:
             app: enmasse
             name: subserv
@@ -666,7 +666,7 @@ objects:
     kind: Service
     metadata:
       annotations:
-        instance: "${INSTANCE}"
+        addressSpace: "${ADDRESS_SPACE}"
       labels:
         app: enmasse
       name: subscription
@@ -682,7 +682,7 @@ objects:
     kind: Deployment
     metadata:
       annotations:
-        instance: "${INSTANCE}"
+        addressSpace: "${ADDRESS_SPACE}"
       labels:
         app: enmasse
         name: mqtt-gateway
@@ -692,7 +692,7 @@ objects:
       template:
         metadata:
           annotations:
-            instance: "${INSTANCE}"
+            addressSpace: "${ADDRESS_SPACE}"
           labels:
             app: enmasse
             name: mqtt-gateway
@@ -730,7 +730,7 @@ objects:
     kind: Service
     metadata:
       annotations:
-        instance: "${INSTANCE}"
+        addressSpace: "${ADDRESS_SPACE}"
       labels:
         app: enmasse
       name: mqtt
@@ -751,7 +751,7 @@ objects:
     kind: Deployment
     metadata:
       annotations:
-        instance: "${INSTANCE}"
+        addressSpace: "${ADDRESS_SPACE}"
       labels:
         app: enmasse
         name: mqtt-lwt
@@ -761,7 +761,7 @@ objects:
       template:
         metadata:
           annotations:
-            instance: "${INSTANCE}"
+            addressSpace: "${ADDRESS_SPACE}"
           labels:
             app: enmasse
             name: mqtt-lwt
@@ -807,7 +807,7 @@ objects:
     kind: Deployment
     metadata:
       annotations:
-        instance: "${INSTANCE}"
+        addressSpace: "${ADDRESS_SPACE}"
       labels:
         app: enmasse
         name: admin
@@ -817,7 +817,7 @@ objects:
       template:
         metadata:
           annotations:
-            instance: "${INSTANCE}"
+            addressSpace: "${ADDRESS_SPACE}"
           labels:
             app: enmasse
             name: admin
@@ -868,8 +868,8 @@ objects:
               value: '5672'
             - name: ADDRESS_SPACE_SERVICE_HOST
               value: "${ADDRESS_SPACE_SERVICE_HOST}"
-            - name: INSTANCE
-              value: "${INSTANCE}"
+            - name: ADDRESS_SPACE
+              value: "${ADDRESS_SPACE}"
             image: "${CONSOLE_REPO}"
             livenessProbe:
               httpGet:
@@ -907,7 +907,7 @@ objects:
     kind: Service
     metadata:
       annotations:
-        instance: "${INSTANCE}"
+        addressSpace: "${ADDRESS_SPACE}"
         service.alpha.openshift.io/serving-cert-secret-name: ragent-certs
       labels:
         app: enmasse
@@ -923,7 +923,7 @@ objects:
     kind: Service
     metadata:
       annotations:
-        instance: "${INSTANCE}"
+        addressSpace: "${ADDRESS_SPACE}"
         service.alpha.openshift.io/serving-cert-secret-name: configuration-certs
       labels:
         app: enmasse
@@ -938,7 +938,7 @@ objects:
     kind: Service
     metadata:
       annotations:
-        instance: "${INSTANCE}"
+        addressSpace: "${ADDRESS_SPACE}"
         service.alpha.openshift.io/serving-cert-secret-name: queue-scheduler-certs
       labels:
         app: enmasse
@@ -954,7 +954,7 @@ objects:
     kind: Service
     metadata:
       annotations:
-        instance: "${INSTANCE}"
+        addressSpace: "${ADDRESS_SPACE}"
         service.alpha.openshift.io/serving-cert-secret-name: console-certs
       labels:
         app: enmasse
@@ -1014,8 +1014,8 @@ objects:
   - description: The image to use for the MQTT LWT
     name: MQTT_LWT_REPO
     value: docker.io/enmasseproject/mqtt-lwt:latest
-  - description: The instance this infrastructure is deployed for
-    name: INSTANCE
+  - description: The address space this infrastructure is deployed for
+    name: ADDRESS_SPACE
     required: true
   - description: The image to use for the AMQP Kafka Bridge
     name: AMQP_KAFKA_BRIDGE_REPO
@@ -1042,8 +1042,6 @@ objects:
         - env:
           - name: MULTIINSTANCE
             value: "${MULTIINSTANCE}"
-          - name: INSTANCE_IDLE_TIMEOUT_SECONDS
-            value: "${INSTANCE_IDLE_TIMEOUT_SECONDS}"
           image: "${ADDRESS_CONTROLLER_REPO}"
           livenessProbe:
             tcpSocket:

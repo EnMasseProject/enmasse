@@ -1,8 +1,8 @@
 local common = import "common.jsonnet";
 {
-  service(instance)::
-    common.service(instance, "ragent", "ragent", "amqp", 55672, 55672),
-  deployment(instance, image_repo)::
+  service(addressSpace)::
+    common.service(addressSpace, "ragent", "ragent", "amqp", 55672, 55672),
+  deployment(addressSpace, image_repo)::
     {
       "apiVersion": "extensions/v1beta1",
       "kind": "Deployment",
@@ -12,7 +12,7 @@ local common = import "common.jsonnet";
           "app": "enmasse"
         },
         "annotations": {
-          "instance": instance
+          "addressSpace": addressSpace
         },
         "name": "ragent"
       },
@@ -25,7 +25,7 @@ local common = import "common.jsonnet";
               "app": "enmasse"
             },
             "annotations": {
-              "instance": instance
+              "addressSpace": addressSpace
             }
           },
           "spec": {

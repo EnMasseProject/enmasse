@@ -1,7 +1,7 @@
 local router = import "router.jsonnet";
 local common = import "common.jsonnet";
 {
-  deployment(use_sasldb, instance, image_repo, metrics_image_repo, router_secret)::
+  deployment(use_sasldb, addressSpace, image_repo, metrics_image_repo, router_secret)::
     {
       "apiVersion": "extensions/v1beta1",
       "kind": "Deployment",
@@ -11,7 +11,7 @@ local common = import "common.jsonnet";
           "app": "enmasse"
         },
         "annotations": {
-          "instance": instance
+          "addressSpace": addressSpace
         },
         "name": "qdrouterd"
       },
@@ -25,7 +25,7 @@ local common = import "common.jsonnet";
               "app": "enmasse"
             },
             "annotations": {
-              "instance": instance
+              "addressSpace": addressSpace
             }
           },
           "spec": {

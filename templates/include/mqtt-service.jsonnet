@@ -31,8 +31,8 @@
       }
     },
 
-  internal(instance)::
-    self.common("mqtt", "ClusterIP", {"instance": instance}),
+  internal(addressSpace)::
+    self.common("mqtt", "ClusterIP", {"addressSpace": addressSpace}),
 
   external::
     self.common("mqtt-external", "LoadBalancer", {})
