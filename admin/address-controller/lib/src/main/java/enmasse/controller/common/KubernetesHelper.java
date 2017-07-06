@@ -197,11 +197,12 @@ public class KubernetesHelper implements Kubernetes {
 
     @Override
     public void createSecretWithDefaultPermissions(String secretName, String namespace) {
-        Secret secret = new SecretBuilder()
+        // TODO: Add labels
+        Secret secret = client.secrets().createNew()
                 .editOrNewMetadata()
                 .withName(secretName)
                 .endMetadata()
-                .build();
+                .done();
         client.serviceAccounts().inNamespace(namespace).withName("default").edit()
                 .addToSecrets(new ObjectReferenceBuilder()
                         .withKind(secret.getKind())
