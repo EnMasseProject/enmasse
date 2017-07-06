@@ -7,6 +7,8 @@ import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.Endpoint;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Set;
 
@@ -14,6 +16,7 @@ import java.util.Set;
  * Manages certificates issuing, revoking etc. for EnMasse services
  */
 public class AuthController extends AbstractVerticle implements Watcher<AddressSpace> {
+    private static final Logger log = LoggerFactory.getLogger(AuthController.class.getName());
 
     private final CertManager certManager;
     private final AddressSpaceApi addressSpaceApi;
@@ -36,6 +39,7 @@ public class AuthController extends AbstractVerticle implements Watcher<AddressS
 
         }, result -> {
             if (result.succeeded()) {
+                log.info("Started auth controller");
                 startFuture.complete();
             } else {
                 startFuture.fail(result.cause());
