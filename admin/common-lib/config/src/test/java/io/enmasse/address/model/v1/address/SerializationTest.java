@@ -16,12 +16,16 @@
 package io.enmasse.address.model.v1.address;
 
 import io.enmasse.address.model.Address;
+import io.enmasse.address.model.AddressList;
 import io.enmasse.address.model.types.standard.StandardType;
+import io.enmasse.address.model.v1.CodecV1;
 import org.junit.Test;
 import org.mockito.internal.util.collections.Sets;
+import org.omg.IOP.Codec;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -29,8 +33,6 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
 public class SerializationTest {
-    private AddressV1 codec = new AddressV1(address);
-    private StandardAddressDecodeContext decodeContext = new StandardAddressDecodeContext();
 
     @Test
     public void testSerializeAddress() throws IOException {
@@ -43,9 +45,9 @@ public class SerializationTest {
                 .setUuid(uuid)
                 .build();
 
-        byte [] serialized = codec.encodeAddress(address);
+        byte [] serialized = CodecV1.getMapper().writeValueAsBytes(address);
 
-        io.enmasse.address.model.Address deserialized = codec.decodeAddress(decodeContext, serialized);
+        Address deserialized = CodecV1.getMapper().readValue(serialized, Address.class);
 
         assertThat(deserialized, is(address));
         assertThat(deserialized.getName(), is(address.getAddress()));
@@ -75,44 +77,12 @@ public class SerializationTest {
                 .build();
 
 
-        Set<io.enmasse.address.model.Address> destinations = Sets.newSet(addr1, addr2);
+        AddressList list = new AddressList(Sets.newSet(addr1, addr2));
 
-        byte[] serialized = codec.encodeAddressList(destinations);
-        Set<Address> deserialized = (Set<Address>) codec.decode(decodeContext, serialized);
+        byte[] serialized = CodecV1.getMapper().writeValueAsBytes(list);
+        List<Address> deserialized = CodecV1.getMapper().readValue(serialized, AddressList.class);
 
-        assertThat(deserialized, is(destinations));
-    }
-
-    @Test
-    public void testSerializeAddressListNoCopy() throws IOException {
-        Address addr1 = new Address.Builder()
-                .setName("addr1")
-                .setAddress("addr1")
-                .setType(StandardType.QUEUE)
-                .setPlan(StandardType.QUEUE.getPlans().get(0))
-                .setUuid(UUID.randomUUID().toString())
-                .build();
-
-        Address addr2 = new Address.Builder()
-                .setName("addr2")
-                .setAddress("addr2")
-                .setType(StandardType.ANYCAST)
-                .setPlan(StandardType.ANYCAST.getPlans().get(0))
-                .setUuid(UUID.randomUUID().toString())
-                .build();
-
-        Set<Address> addressSet = Sets.newSet(addr1, addr2);
-
-        byte [] addr1Serialized = codec.encodeAddress(addr1);
-        byte [] addr2Serialized = codec.encodeAddress(addr2);
-
-        byte[] serialized = codec.encodeAddressList(Arrays.asList(addr1Serialized, addr2Serialized));
-
-        System.out.println("Serialized: " + new String(serialized, "UTF-8"));
-
-        Set<Address> deserialized = (Set<Address>) codec.decode(decodeContext, serialized);
-
-        assertThat(deserialized, is(addressSet));
+        assertThat(deserialized, is(list));
     }
 
     /*
