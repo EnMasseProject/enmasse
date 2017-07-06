@@ -2,8 +2,9 @@ package enmasse.controller.auth;
 
 import enmasse.controller.common.Watch;
 import enmasse.controller.common.Watcher;
-import enmasse.controller.instance.api.InstanceApi;
-import enmasse.controller.model.Instance;
+import enmasse.controller.k8s.api.AddressSpaceApi;
+import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.Endpoint;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 
@@ -12,22 +13,22 @@ import java.util.Set;
 /**
  * Manages certificates issuing, revoking etc. for EnMasse services
  */
-public class AuthController extends AbstractVerticle implements Watcher<Instance> {
+public class AuthController extends AbstractVerticle implements Watcher<AddressSpace> {
 
     private final CertManager certManager;
-    private final InstanceApi instanceApi;
+    private final AddressSpaceApi addressSpaceApi;
     private Watch watch;
 
-    public AuthController(CertManager certManager, InstanceApi instanceApi) {
+    public AuthController(CertManager certManager, AddressSpaceApi addressSpaceApi) {
         this.certManager = certManager;
-        this.instanceApi = instanceApi;
+        this.addressSpaceApi = addressSpaceApi;
     }
 
     @Override
     public void start(Future<Void> startFuture) {
         vertx.executeBlocking(promise -> {
             try {
-                watch = instanceApi.watchInstances(this);
+                watch = addressSpaceApi.watchAddressSpaces(this);
                 promise.complete();
             } catch (Exception e) {
                 promise.fail(e);
@@ -63,9 +64,13 @@ public class AuthController extends AbstractVerticle implements Watcher<Instance
     }
 
     @Override
-    public void resourcesUpdated(Set<Instance> instances) throws Exception {
-        for (Instance instance : instances) {
-            certManager.issueCert(instance.certSecret(), instance.id().getNamespace());
+    public void resourcesUpdated(Set<AddressSpace> addressSpaces) throws Exception {
+        for (AddressSpace addressSpace : addressSpaces) {
+            for (Endpoint endpoint : addressSpace.getEndpoints()) {
+                if (endpoint.getCertProvider().isPresent()) {
+                    certManager.issueCert(endpoint.getCertProvider().get().getSecretName(), addressSpace.getNamespace());
+                }
+            }
         }
     }
 }

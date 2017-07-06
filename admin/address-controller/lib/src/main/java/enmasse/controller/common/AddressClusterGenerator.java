@@ -15,7 +15,6 @@
  */
 package enmasse.controller.common;
 
-import enmasse.controller.address.AddressCluster;
 import io.enmasse.address.model.Address;
 
 import java.util.Set;

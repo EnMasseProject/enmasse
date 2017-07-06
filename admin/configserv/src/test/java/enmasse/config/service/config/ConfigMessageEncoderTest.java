@@ -17,11 +17,12 @@
 package enmasse.config.service.config;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import io.enmasse.address.model.AddressType;
-import io.enmasse.address.model.impl.Address;
-import io.enmasse.address.model.impl.AddressStatus;
-import io.enmasse.address.model.impl.k8s.v1.address.AddressCodec;
-import io.enmasse.address.model.impl.types.standard.StandardType;
+import io.enmasse.address.model.types.AddressType;
+import io.enmasse.address.model.Address;
+import io.enmasse.address.model.Status;
+import io.enmasse.address.model.v1.CodecV1;
+import io.enmasse.address.model.v1.address.AddressV1;
+import io.enmasse.address.model.types.standard.StandardType;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
@@ -47,22 +48,23 @@ public class ConfigMessageEncoderTest {
                 new ConfigResource(createConfigMap("c3", "mytopic", StandardType.TOPIC))));
 
         Message message = encoder.encode(configSet);
-        String json = new String((byte[]) ((AmqpValue) message.getBody()).getValue(), "UTF-8");
-        assertThat(json, is("{\"kind\":\"AddressList\",\"apiVersion\":\"enmasse.io/v1\",\"items\":[{\"kind\":\"Address\",\"apiVersion\":\"enmasse.io/v1\",\"kind\":\"Address\",\"metadata\":{\"name\":\"c1\",\"addressSpace\":\"unknown\",\"uuid\":\"1234\"},\"spec\":{\"address\":\"myqueue\",\"plan\":\"inmemory\",\"type\":\"queue\"}},{\"kind\":\"Address\",\"apiVersion\":\"enmasse.io/v1\",\"kind\":\"Address\",\"metadata\":{\"name\":\"c2\",\"addressSpace\":\"unknown\",\"uuid\":\"1234\"},\"spec\":{\"address\":\"myqueue2\",\"plan\":\"inmemory\",\"type\":\"queue\"}},{\"kind\":\"Address\",\"apiVersion\":\"enmasse.io/v1\",\"kind\":\"Address\",\"metadata\":{\"name\":\"c3\",\"addressSpace\":\"unknown\",\"uuid\":\"1234\"},\"spec\":{\"address\":\"mytopic\",\"plan\":\"inmemory\",\"type\":\"topic\"}}]}"));
+        String json = (String) ((AmqpValue) message.getBody()).getValue();
+        assertThat(json, is("{\"apiVersion\":\"enmasse.io/v1\",\"kind\":\"AddressList\",\"items\":[{\"apiVersion\":\"enmasse.io/v1\",\"kind\":\"Address\",\"metadata\":{\"name\":\"c1\",\"addressSpace\":\"unknown\",\"uuid\":\"1234\"},\"spec\":{\"address\":\"c1\",\"plan\":\"inmemory\",\"type\":\"queue\"},\"status\":{\"isReady\":false,\"messages\":[]}},{\"apiVersion\":\"enmasse.io/v1\",\"kind\":\"Address\",\"metadata\":{\"name\":\"c2\",\"addressSpace\":\"unknown\",\"uuid\":\"1234\"},\"spec\":{\"address\":\"c2\",\"plan\":\"inmemory\",\"type\":\"queue\"},\"status\":{\"isReady\":false,\"messages\":[]}},{\"apiVersion\":\"enmasse.io/v1\",\"kind\":\"Address\",\"metadata\":{\"name\":\"c3\",\"addressSpace\":\"unknown\",\"uuid\":\"1234\"},\"spec\":{\"address\":\"c3\",\"plan\":\"inmemory\",\"type\":\"topic\"},\"status\":{\"isReady\":false,\"messages\":[]}}]}"));
+
     }
 
     private ConfigMap createConfigMap(String name, String address, AddressType addressType) throws JsonProcessingException, UnsupportedEncodingException {
         Map<String, String> data = new LinkedHashMap<>();
-        byte[] json = new AddressCodec().encodeAddress(new Address.Builder()
+        Address addr = new Address.Builder()
                 .setName(name)
                 .setAddress(address)
                 .setAddressSpace("unknown")
                 .setType(addressType)
                 .setPlan(addressType.getPlans().get(0))
                 .setUuid("1234")
-                .setStatus(new AddressStatus(false))
-                .build());
-        data.put("json", new String(json, "UTF-8"));
+                .setStatus(new Status(false))
+                .build();
+        data.put("config.json", CodecV1.getMapper().writeValueAsString(addr));
         return new ConfigMapBuilder()
                 .withMetadata(new ObjectMetaBuilder()
                         .withName(name)

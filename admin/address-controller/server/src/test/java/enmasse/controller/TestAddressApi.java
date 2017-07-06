@@ -16,11 +16,11 @@
 
 package enmasse.controller;
 
-import enmasse.controller.address.api.AddressApi;
 import enmasse.controller.common.Watch;
 import enmasse.controller.common.Watcher;
+import enmasse.controller.k8s.api.AddressApi;
 import io.enmasse.address.model.Address;
-import io.enmasse.address.model.impl.AddressStatus;
+import io.enmasse.address.model.Status;
 
 import java.util.LinkedHashSet;
 import java.util.Optional;
@@ -83,6 +83,6 @@ public class TestAddressApi implements AddressApi {
     }
 
     public void setAllAddressesReady(boolean ready) {
-        addresses.stream().forEach(d -> replaceAddress(new io.enmasse.address.model.impl.Address.Builder(d).setStatus(new AddressStatus(ready)).build()));
+        addresses.stream().forEach(d -> replaceAddress(new Address.Builder(d).setStatus(new Status(ready)).build()));
     }
 }

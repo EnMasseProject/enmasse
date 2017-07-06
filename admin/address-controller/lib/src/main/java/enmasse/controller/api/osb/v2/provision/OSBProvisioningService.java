@@ -17,20 +17,20 @@ import enmasse.controller.api.osb.v2.EmptyResponse;
 import enmasse.controller.api.osb.v2.OSBExceptions;
 import enmasse.controller.api.osb.v2.OSBServiceBase;
 import enmasse.controller.api.osb.v2.ServiceType;
-import enmasse.controller.instance.api.InstanceApi;
-import enmasse.controller.model.Instance;
-import enmasse.controller.model.AddressSpaceId;
+import enmasse.controller.k8s.api.AddressSpaceApi;
 import io.enmasse.address.model.Address;
-import io.enmasse.address.model.AddressType;
-import io.enmasse.address.model.Plan;
+import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.Endpoint;
+import io.enmasse.address.model.types.AddressType;
+import io.enmasse.address.model.types.Plan;
 
 @Path("/v2/service_instances/{instanceId}")
 @Consumes({MediaType.APPLICATION_JSON})
 @Produces({MediaType.APPLICATION_JSON})
 public class OSBProvisioningService extends OSBServiceBase {
 
-    public OSBProvisioningService(InstanceApi instanceApi) {
-        super(instanceApi);
+    public OSBProvisioningService(AddressSpaceApi addressSpaceApi) {
+        super(addressSpaceApi);
     }
 
     @PUT
@@ -44,9 +44,8 @@ public class OSBProvisioningService extends OSBServiceBase {
 
         // We must shorten the organizationId so the resulting address configmap name isn't too long
         String shortOrganizationId = shortenUuid(request.getOrganizationId()); // TODO: remove the need for doing this
-        AddressSpaceId maasAddressSpaceId = AddressSpaceId.withId(shortOrganizationId);
 
-        log.info("Received provision request for instance {} (service id {}, plan id {}, org id {}, name {})",
+        log.info("Received provision request for addressspace {} (service id {}, plan id {}, org id {}, name {})",
                 instanceId, request.getServiceId(), request.getPlanId(),
                 shortOrganizationId, request.getParameter("name").orElse(null));
 
@@ -61,29 +60,29 @@ public class OSBProvisioningService extends OSBServiceBase {
 
         AddressType addressType = serviceType.addressType();
         Plan plan = getPlan(addressType, request.getPlanId());
-        Instance maasInstance = getOrCreateInstance(maasAddressSpaceId);
+        AddressSpace addressSpace = getOrCreateAddressSpace(shortOrganizationId);
 
         // TODO: Allow address to be separate
-        Address address = new io.enmasse.address.model.impl.Address.Builder()
+        Address address = new Address.Builder()
                 .setName(name)
                 .setAddress(name)
                 .setType(addressType)
                 .setPlan(plan)
-                .setAddressSpace(maasAddressSpaceId.getId())
+                .setAddressSpace(shortOrganizationId)
                 .setUuid(instanceId)
                 .build();
 
-        Optional<Address> existingAddress = findAddress(maasInstance, instanceId);
-        String dashboardUrl = getConsoleURL(maasInstance).orElse(null);
+        Optional<Address> existingAddress = findAddress(addressSpace, instanceId);
+        String dashboardUrl = getConsoleURL(addressSpace).orElse(null);
         if (existingAddress.isPresent()) {
             if (existingAddress.get().equals(address)) {
                 return Response.ok(new ProvisionResponse(dashboardUrl, "provision")).build();
             } else {
-                throw OSBExceptions.conflictException("Service instance " + instanceId + " already exists");
+                throw OSBExceptions.conflictException("Service addressspace " + instanceId + " already exists");
             }
         }
 
-        provisionAddress(maasInstance, address);
+        provisionAddress(addressSpace, address);
 
         log.info("Returning ProvisionResponse with dashboardUrl {}", dashboardUrl);
         return Response.status(Response.Status.ACCEPTED)
@@ -91,8 +90,10 @@ public class OSBProvisioningService extends OSBServiceBase {
                 .build();
     }
 
-    private Optional<String> getConsoleURL(Instance maasInstance) {
-        return maasInstance.consoleHost().map(s -> "http://" + s);
+    private Optional<String> getConsoleURL(AddressSpace maasInstance) {
+        return maasInstance.getEndpoints().stream()
+                .filter(endpoint -> endpoint.getName().equals("console"))
+                .findAny().flatMap(e -> e.getHost()).map(s -> "http://" + s);
     }
 
     private boolean isValidPlan(ServiceType serviceType, UUID planId) {
@@ -103,7 +104,7 @@ public class OSBProvisioningService extends OSBServiceBase {
 
     @DELETE
     public Response deprovisionService(@PathParam("instanceId") String instanceId, @QueryParam("service_id") String serviceId, @QueryParam("plan_id") String planId) {
-        log.info("Received deprovision request for instance {} (service id {}, plan id {})",
+        log.info("Received deprovision request for addressspace {} (service id {}, plan id {})",
                 instanceId, serviceId, planId);
 
         if (serviceId == null) {
@@ -117,7 +118,7 @@ public class OSBProvisioningService extends OSBServiceBase {
         if (deleted) {
             return Response.ok(new EmptyResponse()).build();
         } else {
-            throw OSBExceptions.goneException("Service instance " + instanceId + " is gone");
+            throw OSBExceptions.goneException("Service addressspace " + instanceId + " is gone");
         }
     }
 

@@ -114,7 +114,7 @@ public class KubernetesResourceObserver<T extends Resource> implements AutoClose
     @Override
     public synchronized void eventReceived(Action action, Object obj) {
         if (!(obj instanceof HasMetadata)) {
-            throw new IllegalArgumentException("Invalid resource instance: " + obj.getClass().getName());
+            throw new IllegalArgumentException("Invalid resource addressspace: " + obj.getClass().getName());
         }
 
         if (!annotationFilter((HasMetadata) obj)) {

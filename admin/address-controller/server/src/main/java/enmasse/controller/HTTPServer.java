@@ -16,16 +16,16 @@
 
 package enmasse.controller;
 
+import enmasse.controller.api.JacksonConfig;
 import enmasse.controller.api.osb.v2.bind.OSBBindingService;
 import enmasse.controller.api.osb.v2.catalog.OSBCatalogService;
 import enmasse.controller.api.osb.v2.lastoperation.OSBLastOperationService;
 import enmasse.controller.api.osb.v2.provision.OSBProvisioningService;
-import enmasse.controller.api.v1.http.AddressService;
-import enmasse.controller.api.v1.http.SchemaService;
-import enmasse.controller.api.v3.http.InstanceService;
+import enmasse.controller.api.v1.http.HttpAddressService;
+import enmasse.controller.api.v1.http.HttpAddressSpaceService;
+import enmasse.controller.api.v1.http.HttpSchemaService;
 import enmasse.controller.common.exceptionmapping.DefaultExceptionMapper;
-import enmasse.controller.instance.api.InstanceApi;
-import enmasse.controller.model.AddressSpaceId;
+import enmasse.controller.k8s.api.AddressSpaceApi;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.http.HttpServerOptions;
@@ -45,14 +45,14 @@ public class HTTPServer extends AbstractVerticle {
     public static final int PORT = 8080;
     public static final int SECURE_PORT = 8081;
     private static final Logger log = LoggerFactory.getLogger(HTTPServer.class.getName());
-    private final InstanceApi instanceApi;
+    private final AddressSpaceApi addressSpaceApi;
     private final String certDir;
 
     private HttpServer httpServer;
     private HttpServer httpsServer;
 
-    public HTTPServer(InstanceApi instanceApi, String certDir) {
-        this.instanceApi = instanceApi;
+    public HTTPServer(AddressSpaceApi addressSpaceApi, String certDir) {
+        this.addressSpaceApi = addressSpaceApi;
         this.certDir = certDir;
     }
 
@@ -62,15 +62,16 @@ public class HTTPServer extends AbstractVerticle {
         deployment.start();
 
         deployment.getProviderFactory().registerProvider(DefaultExceptionMapper.class);
+        deployment.getProviderFactory().registerProvider(JacksonConfig.class);
 
-        deployment.getRegistry().addSingletonResource(new AddressService(instanceApi));
-        deployment.getRegistry().addSingletonResource(new SchemaService());
-        deployment.getRegistry().addSingletonResource(new InstanceService(instanceApi));
+        deployment.getRegistry().addSingletonResource(new HttpAddressService(addressSpaceApi));
+        deployment.getRegistry().addSingletonResource(new HttpSchemaService());
+        //deployment.getRegistry().addSingletonResource(new HttpAddressSpaceService(addressSpaceApi));
 
-        deployment.getRegistry().addSingletonResource(new OSBCatalogService(instanceApi));
-        deployment.getRegistry().addSingletonResource(new OSBProvisioningService(instanceApi));
-        deployment.getRegistry().addSingletonResource(new OSBBindingService(instanceApi));
-        deployment.getRegistry().addSingletonResource(new OSBLastOperationService(instanceApi));
+        deployment.getRegistry().addSingletonResource(new OSBCatalogService(addressSpaceApi));
+        deployment.getRegistry().addSingletonResource(new OSBProvisioningService(addressSpaceApi));
+        deployment.getRegistry().addSingletonResource(new OSBBindingService(addressSpaceApi));
+        deployment.getRegistry().addSingletonResource(new OSBLastOperationService(addressSpaceApi));
 
 
         VertxRequestHandler requestHandler = new VertxRequestHandler(vertx, deployment);

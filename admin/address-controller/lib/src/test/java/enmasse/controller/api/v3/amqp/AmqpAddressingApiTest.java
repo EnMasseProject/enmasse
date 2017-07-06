@@ -16,22 +16,18 @@
 
 package enmasse.controller.api.v3.amqp;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import enmasse.controller.api.TestAddressApi;
-import enmasse.controller.api.TestInstanceApi;
-
 import static org.hamcrest.CoreMatchers.is;
 
 public class AmqpAddressingApiTest {
     /*
     private static ObjectMapper mapper = new ObjectMapper();
     private AddressingService addressingService;
-    private TestInstanceApi instanceManager;
+    private TestAddressSpaceApi instanceManager;
     private TestAddressApi addressSpace;
 
     @Before
     public void setup() {
-        instanceManager = new TestInstanceApi();
+        instanceManager = new TestAddressSpaceApi();
         instanceManager.create(new Instance.Builder(AddressSpaceId.withId("myinstance")).build());
         addressSpace = new TestAddressApi();
         addressSpace.addDestination(new Destination("addr1", "addr1", false, false, Optional.empty(), Optional.empty(), status));

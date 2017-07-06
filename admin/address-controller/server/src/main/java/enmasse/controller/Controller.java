@@ -16,19 +16,21 @@
 
 package enmasse.controller;
 
-import enmasse.controller.address.AddressController;
+import enmasse.controller.standard.StandardHelper;
 import enmasse.controller.auth.AuthController;
 import enmasse.controller.common.Kubernetes;
 import enmasse.controller.common.KubernetesHelper;
-import enmasse.controller.instance.InstanceController;
-import enmasse.controller.instance.InstanceManager;
-import enmasse.controller.instance.InstanceManagerImpl;
-import enmasse.controller.instance.api.InstanceApi;
-import enmasse.controller.instance.api.ConfigMapInstanceApi;
+import enmasse.controller.standard.StandardController;
+import enmasse.controller.k8s.api.AddressSpaceApi;
+import enmasse.controller.k8s.api.ConfigMapAddressSpaceApi;
 import enmasse.controller.auth.CertManager;
 import enmasse.controller.auth.SelfSignedCertManager;
-import enmasse.controller.model.Instance;
-import enmasse.controller.model.AddressSpaceId;
+import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.CertProvider;
+import io.enmasse.address.model.Endpoint;
+import io.enmasse.address.model.SecretCertProvider;
+import io.enmasse.address.model.types.AddressSpaceType;
+import io.enmasse.address.model.types.standard.StandardAddressSpaceType;
 import io.fabric8.kubernetes.client.ConfigBuilder;
 import io.fabric8.openshift.client.DefaultOpenShiftClient;
 import io.fabric8.openshift.client.OpenShiftClient;
@@ -36,6 +38,7 @@ import io.vertx.core.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class Controller extends AbstractVerticle {
     private final OpenShiftClient controllerClient;
@@ -49,32 +52,49 @@ public class Controller extends AbstractVerticle {
                 .withNamespace(options.namespace())
                 .build());
         this.options = options;
-        this.kubernetes = new KubernetesHelper(AddressSpaceId.withIdAndNamespace(options.namespace(), options.namespace()), controllerClient, options.templateDir());
+        this.kubernetes = new KubernetesHelper(options.namespace(), controllerClient, options.templateDir());
     }
 
     @Override
     public void start(Future<Void> startPromise) {
-        InstanceApi instanceApi = new ConfigMapInstanceApi(vertx, controllerClient);
+        AddressSpaceApi addressSpaceApi = new ConfigMapAddressSpaceApi(vertx, controllerClient);
 
         if (!options.isMultiinstance() && !kubernetes.hasService("messaging")) {
-            Instance.Builder builder = new Instance.Builder(kubernetes.getInstanceId());
-            builder.messagingHost(options.messagingHost());
-            builder.mqttHost(options.mqttHost());
-            builder.consoleHost(options.consoleHost());
-            options.certSecret().ifPresent(builder::certSecret);
-            instanceApi.createInstance(builder.build());
+            AddressSpaceType type = new StandardAddressSpaceType();
+            AddressSpace.Builder builder = new AddressSpace.Builder()
+                    .setName(kubernetes.getNamespace())
+                    .setNamespace(kubernetes.getNamespace())
+                    .setType(type)
+                    .setPlan(type.getDefaultPlan());
+
+            Optional<CertProvider> certProvider = options.certSecret().map(SecretCertProvider::new);
+
+            options.messagingHost().ifPresent(host ->
+                    appendEndpoint(certProvider, "messaging", "messaging", host));
+            options.mqttHost().ifPresent(host ->
+                    appendEndpoint(certProvider, "mqtt", "mqtt", host));
+            options.consoleHost().ifPresent(host ->
+                    appendEndpoint(certProvider, "console", "console", host));
+            addressSpaceApi.createAddressSpace(builder.build());
         }
 
         CertManager certManager = SelfSignedCertManager.create(controllerClient);
+        StandardHelper helper = new StandardHelper(kubernetes, options.isMultiinstance(), options.namespace());
 
-        String templateName = "enmasse-instance-infra";
-        InstanceManager instanceManager = new InstanceManagerImpl(kubernetes, templateName, options.isMultiinstance(), options.namespace());
+        deployVerticles(startPromise,
+                new Deployment(new AuthController(certManager, addressSpaceApi)),
+                new Deployment(new StandardController(helper, controllerClient, addressSpaceApi, kubernetes)),
+//                new Deployment(new AMQPServer(kubernetes.getNamespace(), addressSpaceApi, options.port())),
+                new Deployment(new HTTPServer(addressSpaceApi, options.certDir()), new DeploymentOptions().setWorker(true)));
+    }
 
-        deployVerticles(startPromise, new Deployment(new AddressController(instanceApi, kubernetes, controllerClient)),
-                new Deployment(new AuthController(certManager, instanceApi)),
-                new Deployment(new InstanceController(instanceManager, controllerClient, instanceApi)),
-//                new Deployment(new AMQPServer(kubernetes.getInstanceId(), instanceApi, options.port())),
-                new Deployment(new HTTPServer(instanceApi, options.certDir()), new DeploymentOptions().setWorker(true)));
+    private Endpoint appendEndpoint(Optional<CertProvider> certProvider, String name, String service, String host) {
+        return new Endpoint.Builder()
+                .setCertProvider(certProvider.orElse(null))
+                .setName(name)
+                .setService(service)
+                .setHost(host)
+                .build();
     }
 
     private void deployVerticles(Future<Void> startPromise, Deployment ... deployments) {
