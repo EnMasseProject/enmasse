@@ -217,18 +217,31 @@ public class KubernetesHelper implements Kubernetes {
     }
 
     @Override
-    public void createRoute(String name, String service, String host, String namespace) {
+    public void createRoute(String name, String service, String servicePort, String host, String namespace) {
+        // TODO: Add labels
         if (client.isAdaptable(OpenShiftClient.class)) {
-            client.routes().createNew()
+            client.routes().inNamespace(namespace).createNew()
                     .editOrNewMetadata()
                     .withName(name)
                     .endMetadata()
                     .editOrNewSpec()
                     .withHost(host)
                     .withNewTls()
-                    .withTermination("passthrough");
+                    .withTermination("passthrough")
+                    .endTls()
+                    .withNewTo()
+                    .withName(service)
+                    .withKind("Service")
+                    .endTo()
+                    .withNewPort()
+                    .editOrNewTargetPort()
+                    .withStrVal(servicePort)
+                    .endTargetPort()
+                    .endPort()
+                    .endSpec()
+                    .done();
         } else {
-            client.extensions().ingresses().createNew()
+            client.extensions().ingresses().inNamespace(namespace).createNew()
                     .editOrNewMetadata()
                     .withName(name)
                     .endMetadata()

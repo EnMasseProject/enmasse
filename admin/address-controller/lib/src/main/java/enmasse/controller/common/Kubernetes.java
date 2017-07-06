@@ -65,7 +65,7 @@ public interface Kubernetes {
 
     boolean hasService(String service);
     void createSecretWithDefaultPermissions(String secretName, String namespace);
-    void createRoute(String name, String service, String host, String namespace);
+    void createRoute(String name, String service, String servicePort, String host, String namespace);
 
     Set<Deployment> getReadyDeployments();
 
