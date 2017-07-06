@@ -132,7 +132,11 @@ public class StandardController extends AbstractVerticle implements Watcher<Addr
 
     private void createAddressSpaces(Set<AddressSpace> instances) {
         for (AddressSpace instance : instances) {
-            helper.create(instance);
+            // TODO: Ugh, find a way to do this as part of the main controller loop
+            AddressSpace modified = helper.create(instance);
+            if (modified != null) {
+                addressSpaceApi.replaceAddressSpace(modified);
+            }
         }
     }
 

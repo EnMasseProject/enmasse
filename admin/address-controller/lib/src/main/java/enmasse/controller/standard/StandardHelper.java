@@ -36,10 +36,10 @@ public class StandardHelper {
         this.namespace = namespace;
     }
 
-    public void create(AddressSpace addressSpace) {
+    public AddressSpace create(AddressSpace addressSpace) {
         Kubernetes instanceClient = kubernetes.withNamespace(addressSpace.getNamespace());
         if (instanceClient.hasService("messaging")) {
-            return;
+            return null;
         }
         log.info("Creating address space {}", addressSpace);
         if (isMultitenant) {
@@ -66,6 +66,7 @@ public class StandardHelper {
         }
 
         kubernetes.create(resourceList.resourceList);
+        return resourceList.addressSpace;
     }
 
     private static class StandardResources {
@@ -107,7 +108,6 @@ public class StandardHelper {
                     endpoint.getCertProvider().ifPresent(certProvider -> serviceCertProviders.put(endpoint.getService(), certProvider));
                 }
             }
-            returnVal.routeEndpoints.addAll(endpoints);
 
             // Step 2: Create endpoint objects for those not found
             Set<String> secretsToGenerate = new HashSet<>();
@@ -140,6 +140,8 @@ public class StandardHelper {
                         }
                     }).collect(Collectors.toList());
 
+            // TODO: Only expose those provided by user?
+            returnVal.routeEndpoints.addAll(allEndpoints);
             returnVal.addressSpace = new AddressSpace.Builder(addressSpace)
                     .setEndpointList(allEndpoints)
                     .build();
