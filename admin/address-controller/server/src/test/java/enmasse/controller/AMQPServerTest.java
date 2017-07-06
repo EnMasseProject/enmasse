@@ -1,28 +1,15 @@
 package enmasse.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import enmasse.controller.model.*;
-import enmasse.amqp.SyncRequestClient;
-import io.enmasse.address.model.impl.Address;
-import io.enmasse.address.model.impl.AddressStatus;
+import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.Endpoint;
+import io.enmasse.address.model.SecretCertProvider;
+import io.enmasse.address.model.types.standard.StandardAddressSpaceType;
 import io.vertx.core.Vertx;
-import org.apache.qpid.proton.amqp.messaging.AmqpValue;
-import org.apache.qpid.proton.amqp.messaging.ApplicationProperties;
-import org.apache.qpid.proton.message.Message;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Test;
 
-import java.io.IOException;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
@@ -31,22 +18,37 @@ import static org.junit.Assert.assertTrue;
 
 public class AMQPServerTest {
     private Vertx vertx;
-    private TestInstanceApi instanceApi;
+    private TestAddressSpaceApi instanceApi;
     private int port;
 
     @Before
     public void setup() throws InterruptedException {
         vertx = Vertx.vertx();
-        instanceApi = new TestInstanceApi();
-        AddressSpaceId addressSpaceId = AddressSpaceId.withId("myinstance");
-        instanceApi.createInstance(new Instance.Builder(addressSpaceId).build());
+        instanceApi = new TestAddressSpaceApi();
+        String addressSpaceName = "myinstance";
+        instanceApi.createAddressSpace(createAddressSpace(addressSpaceName));
         CountDownLatch latch = new CountDownLatch(1);
-        AMQPServer server = new AMQPServer(addressSpaceId, instanceApi, 0);
+        AMQPServer server = new AMQPServer(addressSpaceName, instanceApi, 0);
         vertx.deployVerticle(server, c -> {
             latch.countDown();
         });
         latch.await(1, TimeUnit.MINUTES);
         port = waitForPort(server, 1, TimeUnit.MINUTES);
+    }
+
+    private AddressSpace createAddressSpace(String name) {
+        return new AddressSpace.Builder()
+                .setName(name)
+                .setNamespace(name)
+                .setType(new StandardAddressSpaceType())
+                .setPlan(new StandardAddressSpaceType().getPlans().get(0))
+                .setStatus(new io.enmasse.address.model.Status(false))
+                .appendEndpoint(new Endpoint.Builder()
+                        .setName("foo")
+                        .setService("messaging")
+                        .setCertProvider(new SecretCertProvider("mysecret"))
+                        .build())
+                .build();
     }
 
     private int waitForPort(AMQPServer server, long timeout, TimeUnit timeUnit) throws InterruptedException {
@@ -69,8 +71,8 @@ public class AMQPServerTest {
     @Test
     public void testAddressingService() throws InterruptedException, ExecutionException, TimeoutException, IOException {
         Address destination =
-                new Address("addr1", "group0", false, false, Optional.empty(), Optional.empty(), new AddressStatus(false));
-        instanceApi.withInstance(AddressSpaceId.withId("myinstance")).createAddress(destination);
+                new Address("addr1", "group0", false, false, Optional.empty(), Optional.empty(), new Status(false));
+        instanceApi.withAddressSpace(AddressSpaceId.withId("myinstance")).createAddress(destination);
 
         SyncRequestClient client = new SyncRequestClient("localhost", port, vertx);
         Message request = Message.Factory.create();

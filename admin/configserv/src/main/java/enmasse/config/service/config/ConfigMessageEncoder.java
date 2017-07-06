@@ -1,7 +1,10 @@
 package enmasse.config.service.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import enmasse.config.service.kubernetes.MessageEncoder;
-import io.enmasse.address.model.impl.k8s.v1.address.AddressCodec;
+import io.enmasse.address.model.Address;
+import io.enmasse.address.model.AddressList;
+import io.enmasse.address.model.v1.CodecV1;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.amqp.messaging.Section;
 import org.apache.qpid.proton.message.Message;
@@ -19,24 +22,23 @@ import java.util.Set;
  */
 public class ConfigMessageEncoder implements MessageEncoder<ConfigResource> {
     private static final Logger log = LoggerFactory.getLogger(ConfigMessageEncoder.class.getName());
-    private final AddressCodec addressCodec = new AddressCodec();
+    private static final ObjectMapper mapper = CodecV1.getMapper();
 
     @Override
     public Message encode(Set<ConfigResource> resources) throws IOException {
         Message message = Message.Factory.create();
-        List<byte[]> addressList = new ArrayList<>();
+        // TODO: Avoid so much decode/encode
+        AddressList addressList = new AddressList();
         for (ConfigResource config : resources) {
             Map<String, String> data = config.getData();
-
-            // Don't decode data, but pack it into a list instead
-            addressList.add(data.get("json").getBytes("UTF-8"));
+            addressList.add(mapper.readValue(data.get("config.json"), Address.class));
         }
         message.setBody(createBody(addressList));
         message.setContentType("application/json");
         return message;
     }
 
-    private Section createBody(List<byte[]> addressList) throws IOException {
-        return new AmqpValue(addressCodec.encodeAddressList(addressList));
+    private Section createBody(List<Address> addressList) throws IOException {
+        return new AmqpValue(mapper.writeValueAsString(addressList));
     }
 }

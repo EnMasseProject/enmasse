@@ -132,11 +132,11 @@ public class WatcherVerticle<T> extends AbstractVerticle implements io.fabric8.k
     @Override
     public void onClose(KubernetesClientException cause) {
         if (cause != null) {
-            log.info("Received onClose for instance config resource", cause);
+            log.info("Received onClose for addressspace config resource", cause);
             stop();
             start();
         } else {
-            log.info("Watch for instance configs force closed, stopping");
+            log.info("Watch for addressspace configs force closed, stopping");
             watch = null;
             stop();
         }

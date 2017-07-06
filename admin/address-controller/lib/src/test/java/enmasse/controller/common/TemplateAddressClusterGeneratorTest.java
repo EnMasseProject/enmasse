@@ -17,12 +17,10 @@
 package enmasse.controller.common;
 
 import enmasse.config.AnnotationKeys;
-import enmasse.controller.address.AddressCluster;
-import enmasse.controller.model.*;
-import io.enmasse.address.model.AddressType;
-import io.enmasse.address.model.impl.Address;
-import io.enmasse.address.model.impl.AddressStatus;
-import io.enmasse.address.model.impl.types.standard.StandardType;
+import io.enmasse.address.model.*;
+import io.enmasse.address.model.types.AddressType;
+import io.enmasse.address.model.types.standard.StandardAddressSpaceType;
+import io.enmasse.address.model.types.standard.StandardType;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.openshift.client.OpenShiftClient;
 import io.fabric8.openshift.client.ParameterValue;
@@ -47,7 +45,8 @@ public class TemplateAddressClusterGeneratorTest {
     @Before
     public void setUp() {
         mockClient = mock(OpenShiftClient.class);
-        generator = new TemplateAddressClusterGenerator(new Instance.Builder(AddressSpaceId.withId("myinstance")).build(), new KubernetesHelper(AddressSpaceId.withId("myinstance"), mockClient, Optional.of(new File("src/test/resources/templates"))));
+        generator = new TemplateAddressClusterGenerator(createAddressSpace("myinstance"),
+                new KubernetesHelper("myinstance", mockClient, Optional.of(new File("src/test/resources/templates"))));
     }
 
     @Test
@@ -85,7 +84,22 @@ public class TemplateAddressClusterGeneratorTest {
                 .setPlan(type.getPlans().get(0))
                 .setType(type)
                 .setUuid(UUID.randomUUID().toString())
-                .setStatus(new AddressStatus(false))
+                .setStatus(new io.enmasse.address.model.Status(false))
+                .build();
+    }
+
+    private AddressSpace createAddressSpace(String name) {
+        return new AddressSpace.Builder()
+                .setName(name)
+                .setNamespace(name)
+                .setType(new StandardAddressSpaceType())
+                .setPlan(new StandardAddressSpaceType().getPlans().get(0))
+                .setStatus(new io.enmasse.address.model.Status(false))
+                .appendEndpoint(new Endpoint.Builder()
+                        .setName("foo")
+                        .setService("messaging")
+                        .setCertProvider(new SecretCertProvider("mysecret"))
+                        .build())
                 .build();
     }
 

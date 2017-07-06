@@ -16,8 +16,7 @@
 
 package enmasse.controller;
 
-import enmasse.controller.instance.api.InstanceApi;
-import enmasse.controller.model.AddressSpaceId;
+import enmasse.controller.k8s.api.AddressSpaceApi;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.proton.*;
 import org.apache.qpid.proton.amqp.messaging.Accepted;
@@ -39,10 +38,10 @@ public class AMQPServer extends AbstractVerticle {
     private final Map<String, HandlerContext> replyHandlers = new ConcurrentHashMap<>();
     private ProtonServer server;
 
-    public AMQPServer(AddressSpaceId addressSpaceId, InstanceApi instanceApi, int port) {
+    public AMQPServer(String addressSpaceName, AddressSpaceApi addressSpaceApi, int port) {
         this.port = port;
         /*
-        this.addressingService = new AddressingService(addressSpaceId, new AddressApiHelper(instanceApi));
+        this.addressingService = new AddressingService(addressSpaceId, new AddressApiHelper(addressSpaceApi));
         this.flavorsService = new FlavorsService(repository);
         */
     }

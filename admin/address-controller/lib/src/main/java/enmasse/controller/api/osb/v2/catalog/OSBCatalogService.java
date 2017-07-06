@@ -10,14 +10,14 @@ import javax.ws.rs.core.Response;
 
 import enmasse.controller.api.osb.v2.OSBServiceBase;
 import enmasse.controller.api.osb.v2.ServiceType;
-import enmasse.controller.instance.api.InstanceApi;
+import enmasse.controller.k8s.api.AddressSpaceApi;
 
 @Path("/v2/catalog")
 @Produces({MediaType.APPLICATION_JSON})
 public class OSBCatalogService extends OSBServiceBase {
 
-    public OSBCatalogService(InstanceApi instanceApi) {
-        super(instanceApi);
+    public OSBCatalogService(AddressSpaceApi addressSpaceApi) {
+        super(addressSpaceApi);
     }
 
     @GET
