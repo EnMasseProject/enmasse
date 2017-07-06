@@ -117,7 +117,7 @@ public class ConfigMapAddressSpaceApi implements AddressSpaceApi {
     @Override
     public Watch watchAddressSpaces(Watcher<AddressSpace> watcher) throws Exception {
         Map<String, String> labels = new LinkedHashMap<>();
-        labels.put(LabelKeys.TYPE, "addressspace-config");
+        labels.put(LabelKeys.TYPE, "address-space");
         WatcherVerticle<AddressSpace> verticle = new WatcherVerticle<>(new Resource<AddressSpace>() {
             @Override
             public io.fabric8.kubernetes.client.Watch watchResources(io.fabric8.kubernetes.client.Watcher w) {
