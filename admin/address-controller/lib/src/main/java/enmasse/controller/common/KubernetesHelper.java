@@ -18,8 +18,6 @@ package enmasse.controller.common;
 
 import enmasse.config.AnnotationKeys;
 import enmasse.config.LabelKeys;
-import enmasse.controller.address.AddressCluster;
-import enmasse.controller.model.AddressSpaceId;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.extensions.Deployment;
 import io.fabric8.kubernetes.client.dsl.Resource;
@@ -42,12 +40,12 @@ public class KubernetesHelper implements Kubernetes {
     private static final String TEMPLATE_SUFFIX = ".json";
 
     private final OpenShiftClient client;
-    private final AddressSpaceId instance;
+    private final String namespace;
     private final Optional<File> templateDir;
 
-    public KubernetesHelper(AddressSpaceId instance, OpenShiftClient client, Optional<File> templateDir) {
+    public KubernetesHelper(String namespace, OpenShiftClient client, Optional<File> templateDir) {
         this.client = client;
-        this.instance = instance;
+        this.namespace = namespace;
         this.templateDir = templateDir;
     }
 
@@ -57,10 +55,10 @@ public class KubernetesHelper implements Kubernetes {
 
         // Add other resources part of a destination cluster
         List<HasMetadata> objects = new ArrayList<>();
-        objects.addAll(client.extensions().deployments().inNamespace(instance.getNamespace()).list().getItems());
-        objects.addAll(client.persistentVolumeClaims().inNamespace(instance.getNamespace()).list().getItems());
-        objects.addAll(client.configMaps().inNamespace(instance.getNamespace()).list().getItems());
-        objects.addAll(client.replicationControllers().inNamespace(instance.getNamespace()).list().getItems());
+        objects.addAll(client.extensions().deployments().inNamespace(namespace).list().getItems());
+        objects.addAll(client.persistentVolumeClaims().inNamespace(namespace).list().getItems());
+        objects.addAll(client.configMaps().inNamespace(namespace).list().getItems());
+        objects.addAll(client.replicationControllers().inNamespace(namespace).list().getItems());
 
         for (HasMetadata config : objects) {
             Map<String, String> annotations = config.getMetadata().getAnnotations();
@@ -96,17 +94,17 @@ public class KubernetesHelper implements Kubernetes {
 
     @Override
     public void create(KubernetesList resources) {
-        client.lists().inNamespace(instance.getNamespace()).create(resources);
+        client.lists().inNamespace(namespace).create(resources);
     }
 
     @Override
-    public AddressSpaceId getInstanceId() {
-        return instance;
+    public String getNamespace() {
+        return namespace;
     }
 
     @Override
     public void delete(KubernetesList resources) {
-        client.lists().inNamespace(instance.getNamespace()).delete(resources);
+        client.lists().inNamespace(namespace).delete(resources);
     }
 
     @Override
@@ -117,20 +115,20 @@ public class KubernetesHelper implements Kubernetes {
     }
 
     @Override
-    public Namespace createNamespace(AddressSpaceId instance) {
+    public Namespace createNamespace(String name, String namespace) {
         return client.namespaces().createNew()
                 .editOrNewMetadata()
-                    .withName(instance.getNamespace())
+                    .withName(namespace)
                     .addToLabels("app", "enmasse")
-                    .addToLabels(LabelKeys.TYPE, "instance")
-                    .addToAnnotations(AnnotationKeys.INSTANCE, instance.getId())
+                    .addToLabels(LabelKeys.TYPE, "address-space")
+                    .addToAnnotations(AnnotationKeys.ADDRESS_SPACE, name)
                 .endMetadata()
                 .done();
     }
 
     @Override
-    public Kubernetes withInstance(AddressSpaceId newInstance) {
-        return new KubernetesHelper(newInstance, client, templateDir);
+    public Kubernetes withNamespace(String namespace) {
+        return new KubernetesHelper(namespace, client, templateDir);
     }
 
     @Override
@@ -144,10 +142,10 @@ public class KubernetesHelper implements Kubernetes {
     }
 
     @Override
-    public void addDefaultViewPolicy(AddressSpaceId instance) {
+    public void addDefaultViewPolicy(String namespace) {
         if (client.isAdaptable(OpenShiftClient.class)) {
             Resource<PolicyBinding, DoneablePolicyBinding> bindingResource = client.policyBindings()
-                    .inNamespace(instance.getNamespace())
+                    .inNamespace(namespace)
                     .withName(":default");
 
             DoneablePolicyBinding binding;
@@ -167,12 +165,12 @@ public class KubernetesHelper implements Kubernetes {
                     .editOrNewRoleBinding()
                     .editOrNewMetadata()
                     .withName("view")
-                    .withNamespace(instance.getNamespace())
+                    .withNamespace(namespace)
                     .endMetadata()
-                    .addToUserNames("system:serviceaccount:" + instance.getNamespace() + ":default")
+                    .addToUserNames("system:serviceaccount:" + namespace + ":default")
                     .addNewSubject()
                     .withName("default")
-                    .withNamespace(instance.getNamespace())
+                    .withNamespace(namespace)
                     .withKind("ServiceAccount")
                     .endSubject()
                     .withNewRoleRef()
@@ -194,22 +192,22 @@ public class KubernetesHelper implements Kubernetes {
 
     @Override
     public boolean hasService(String service) {
-        return client.services().inNamespace(instance.getNamespace()).withName(service).get() != null;
+        return client.services().inNamespace(namespace).withName(service).get() != null;
     }
 
     @Override
-    public void createInstanceSecret(String secretName, AddressSpaceId instanceId) {
-        Secret secret = client.secrets().inNamespace(instanceId.getNamespace()).withName(secretName).get();
+    public void createSecretWithDefaultPermissions(String secretName, String namespace) {
+        Secret secret = client.secrets().inNamespace(namespace).withName(secretName).get();
         if (secret != null) {
             // Skip if it is already created
             return;
         }
-        secret = client.secrets().inNamespace(instanceId.getNamespace()).createNew()
+        secret = new SecretBuilder()
                 .editOrNewMetadata()
                 .withName(secretName)
                 .endMetadata()
-                .done();
-        client.serviceAccounts().inNamespace(instanceId.getNamespace()).withName("default").edit()
+                .build();
+        client.serviceAccounts().inNamespace(namespace).withName("default").edit()
                 .addToSecrets(new ObjectReferenceBuilder()
                         .withKind(secret.getKind())
                         .withName(secret.getMetadata().getName())
@@ -218,8 +216,37 @@ public class KubernetesHelper implements Kubernetes {
                 .done();
     }
 
+    @Override
+    public void createRoute(String name, String service, String host, String namespace) {
+        if (client.isAdaptable(OpenShiftClient.class)) {
+            client.routes().createNew()
+                    .editOrNewMetadata()
+                    .withName(name)
+                    .endMetadata()
+                    .editOrNewSpec()
+                    .withHost(host)
+                    .withNewTls()
+                    .withTermination("passthrough");
+        } else {
+            client.extensions().ingresses().createNew()
+                    .editOrNewMetadata()
+                    .withName(name)
+                    .endMetadata()
+                    .editOrNewSpec()
+                    .addNewTl()
+                    .addToHosts(host)
+                    .withSecretName("")
+                    .endTl()
+                    .editOrNewBackend()
+                    .withServiceName(service)
+                    .endBackend()
+                    .endSpec()
+                    .done();
+        }
+    }
+
     public Set<Deployment> getReadyDeployments() {
-        return client.extensions().deployments().inNamespace(instance.getNamespace()).list().getItems().stream()
+        return client.extensions().deployments().inNamespace(namespace).list().getItems().stream()
                 .filter(KubernetesHelper::isReady)
                 .collect(Collectors.toSet());
     }

@@ -15,9 +15,20 @@
  */
 package io.enmasse.address.model;
 
-/**
- * Represents a certificate configuration
- */
-public interface CertProvider {
-    String getName();
+public class CertProvider {
+    private final String name;
+    private final String secretName;
+
+    public CertProvider(String name, String secretName) {
+        this.name = name;
+        this.secretName = secretName;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getSecretName() {
+        return secretName;
+    }
 }

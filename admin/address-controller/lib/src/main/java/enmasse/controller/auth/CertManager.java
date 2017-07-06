@@ -1,9 +1,5 @@
 package enmasse.controller.auth;
 
-import enmasse.controller.model.Instance;
-
-import java.io.IOException;
-
 /**
  * Interface for certificate managers
  */

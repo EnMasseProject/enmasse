@@ -1,6 +1,5 @@
 package enmasse.controller.auth;
 
-import enmasse.controller.model.Instance;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.openshift.client.OpenShiftClient;
 import org.apache.commons.io.FileUtils;
@@ -27,7 +26,7 @@ public class SelfSignedCertManager implements CertManager {
     @Override
     public void issueCert(String secretName, String namespace, String ... hostnames) throws Exception {
         Secret secret = client.secrets().inNamespace(namespace).withName(secretName).get();
-        if (secret != null) { // && instance.messagingHost().isPresent() && instance.mqttHost().isPresent() && instance.consoleHost().isPresent()) {
+        if (secret != null) { // && addressspace.messagingHost().isPresent() && addressspace.mqttHost().isPresent() && addressspace.consoleHost().isPresent()) {
             // TODO: Have this sign certificates with OpenShift CA
 
             String keyKey = "server-key.pem";
@@ -40,7 +39,7 @@ public class SelfSignedCertManager implements CertManager {
             File keyFile = new File("/tmp/server-key.pem");
             File certFile = new File("/tmp/server-cert.pem");
             ProcessBuilder keyGenBuilder = new ProcessBuilder("openssl", "req", "-new", "-x509", "-batch", "-nodes",
-                    "-out", certFile.getAbsolutePath(), "-keyout", keyFile.getAbsolutePath()); //, "-subj", "/CN=" + instance.messagingHost().get() + "," + instance.mqttHost().get() + "," + instance.consoleHost().get());
+                    "-out", certFile.getAbsolutePath(), "-keyout", keyFile.getAbsolutePath()); //, "-subj", "/CN=" + addressspace.messagingHost().get() + "," + addressspace.mqttHost().get() + "," + addressspace.consoleHost().get());
             log.info("Generating keys using " + keyGenBuilder.command());
             Process keyGen = keyGenBuilder.start();
             if (!keyGen.waitFor(1, TimeUnit.MINUTES)) {

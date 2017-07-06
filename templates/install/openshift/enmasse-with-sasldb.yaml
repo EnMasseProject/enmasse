@@ -818,57 +818,6 @@ objects:
     kind: ConfigMap
     metadata:
       name: hawkular-router-config
-  - apiVersion: v1
-    kind: Route
-    metadata:
-      annotations:
-        instance: "${INSTANCE}"
-      labels:
-        app: enmasse
-      name: console
-    spec:
-      host: "${CONSOLE_HOSTNAME}"
-      port:
-        targetPort: http
-      to:
-        kind: Service
-        name: console
-  - apiVersion: v1
-    kind: Route
-    metadata:
-      annotations:
-        instance: "${INSTANCE}"
-      labels:
-        app: enmasse
-      name: messaging
-    spec:
-      host: "${MESSAGING_HOSTNAME}"
-      port:
-        targetPort: amqps
-      tls:
-        termination: passthrough
-      to:
-        kind: Service
-        name: messaging
-        weight: 100
-  - apiVersion: v1
-    kind: Route
-    metadata:
-      annotations:
-        instance: "${INSTANCE}"
-      labels:
-        app: enmasse
-      name: mqtt
-    spec:
-      host: "${MQTT_GATEWAY_HOSTNAME}"
-      port:
-        targetPort: secure-mqtt
-      tls:
-        termination: passthrough
-      to:
-        kind: Service
-        name: mqtt
-        weight: 100
   - apiVersion: extensions/v1beta1
     kind: Deployment
     metadata:

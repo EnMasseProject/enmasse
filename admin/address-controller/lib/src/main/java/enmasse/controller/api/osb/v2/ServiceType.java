@@ -1,7 +1,7 @@
 package enmasse.controller.api.osb.v2;
 
-import io.enmasse.address.model.AddressType;
-import io.enmasse.address.model.impl.types.standard.StandardType;
+import io.enmasse.address.model.types.AddressType;
+import io.enmasse.address.model.types.standard.StandardType;
 
 import java.util.Optional;
 import java.util.UUID;

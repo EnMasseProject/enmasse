@@ -7,16 +7,16 @@ import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.module.jsonSchema.types.ObjectSchema;
 import com.fasterxml.jackson.module.jsonSchema.types.StringSchema;
-import enmasse.controller.address.api.AddressApi;
+import enmasse.controller.k8s.api.AddressApi;
 import enmasse.controller.api.osb.v2.catalog.InputParameters;
 import enmasse.controller.api.osb.v2.catalog.Plan;
 import enmasse.controller.api.osb.v2.catalog.Schemas;
 import enmasse.controller.api.osb.v2.catalog.ServiceInstanceSchema;
-import enmasse.controller.instance.api.InstanceApi;
-import enmasse.controller.model.AddressSpaceId;
-import enmasse.controller.model.Instance;
+import enmasse.controller.k8s.api.AddressSpaceApi;
 import io.enmasse.address.model.Address;
-import io.enmasse.address.model.AddressType;
+import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.types.AddressType;
+import io.enmasse.address.model.types.standard.StandardAddressSpaceType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,36 +24,40 @@ public abstract class OSBServiceBase {
 
     protected final Logger log = LoggerFactory.getLogger(getClass().getName());
 
-    private final InstanceApi instanceApi;
+    private final AddressSpaceApi addressSpaceApi;
 
-    public OSBServiceBase(InstanceApi instanceApi) {
-        this.instanceApi = instanceApi;
+    public OSBServiceBase(AddressSpaceApi addressSpaceApi) {
+        this.addressSpaceApi = addressSpaceApi;
     }
 
-    protected Optional<Instance> findInstanceByAddressUuid(String addressUuid) {
-        return instanceApi.listInstances().stream()
+    protected Optional<AddressSpace> findAddressSpaceByAddressUuid(String addressUuid) {
+        return addressSpaceApi.listAddressSpaces().stream()
                 .filter(instance -> findAddress(instance, addressUuid).isPresent())
                 .findAny();
     }
 
-    protected Optional<Address> findAddress(Instance maasInstance, String addressUuid) {
-        return instanceApi.withInstance(maasInstance.id()).listAddresses().stream()
+    protected Optional<Address> findAddress(AddressSpace maasAddressSpace, String addressUuid) {
+        return addressSpaceApi.withAddressSpace(maasAddressSpace).listAddresses().stream()
                 .filter(dest -> addressUuid.equals(dest.getUuid()))
                 .findAny();
     }
 
-    protected void provisionAddress(Instance instance, Address address) {
-        log.info("Creating address {} with plan {} of MaaS instance {} (namespace {})",
-                address.getAddress(), address.getPlan().getName(), instance.id().getId(), instance.id().getNamespace());
-        instanceApi.withInstance(instance.id()).createAddress(address);
+    protected void provisionAddress(AddressSpace addressSpace, Address address) {
+        log.info("Creating address {} with plan {} of MaaS addressspace {} (namespace {})",
+                address.getAddress(), address.getPlan().getName(), addressSpace.getName(), addressSpace.getNamespace());
+        addressSpaceApi.withAddressSpace(addressSpace).createAddress(address);
     }
 
-    protected Instance getOrCreateInstance(AddressSpaceId addressSpaceId) throws Exception {
-        Optional<Instance> instance = instanceApi.getInstanceWithId(addressSpaceId);
+    protected AddressSpace getOrCreateAddressSpace(String addressSpaceId) throws Exception {
+        Optional<AddressSpace> instance = addressSpaceApi.getAddressSpaceWithName(addressSpaceId);
         if (!instance.isPresent()) {
-            Instance i = new Instance.Builder(addressSpaceId).build();
-            instanceApi.createInstance(i);
-            log.info("Created MaaS instance {}", i.id());
+            AddressSpace i = new AddressSpace.Builder()
+                    .setName(addressSpaceId)
+                    .setType(new StandardAddressSpaceType()) // TODO: Generify?
+                    .setPlan(new StandardAddressSpaceType().getDefaultPlan())
+                    .build();
+            addressSpaceApi.createAddressSpace(i);
+            log.info("Created MaaS addressspace {}", i.getName());
             return i;
         } else {
             return instance.get();
@@ -62,23 +66,23 @@ public abstract class OSBServiceBase {
 
     protected boolean deleteAddressByUuid(String addressUuid) {
         log.info("Deleting address with UUID {}", addressUuid);
-        for (Instance i : instanceApi.listInstances()) {
-            AddressApi addressApi = instanceApi.withInstance(i.id());
+        for (AddressSpace i : addressSpaceApi.listAddressSpaces()) {
+            AddressApi addressApi = addressSpaceApi.withAddressSpace(i);
             Optional<Address> d = addressApi.getAddressWithUuid(addressUuid);
             if (d.isPresent()) {
-                log.info("Address found in instance {} (namespace {}). Deleting it now.",
-                        i.id().getId(), i.id().getNamespace());
+                log.info("Address found in addressspace {} (namespace {}). Deleting it now.",
+                        i.getName(), i.getNamespace());
                 addressApi.deleteAddress(d.get());
                 return true;
             }
         }
-        log.info("Address with UUID {} not found in any instance", addressUuid);
+        log.info("Address with UUID {} not found in any addressspace", addressUuid);
         return false;
     }
 
-    protected static io.enmasse.address.model.Plan getPlan(AddressType addressType, UUID planId) {
+    protected static io.enmasse.address.model.types.Plan getPlan(AddressType addressType, UUID planId) {
         String uuid = planId.toString();
-        for (io.enmasse.address.model.Plan plan : addressType.getPlans()) {
+        for (io.enmasse.address.model.types.Plan plan : addressType.getPlans()) {
             if (plan.getUuid().equals(uuid)) {
                 return plan;
             }
@@ -86,8 +90,8 @@ public abstract class OSBServiceBase {
         return null;
     }
 
-    protected boolean isAddressReady(Instance maasInstance, Address address) throws Exception {
-        return maasInstance.status().isReady() && address.getStatus().isReady();
+    protected boolean isAddressReady(AddressSpace maasAddressSpace, Address address) throws Exception {
+        return maasAddressSpace.getStatus().isReady() && address.getStatus().isReady();
     }
 
     protected List<Plan> getPlans(ServiceType serviceType) {
@@ -96,7 +100,7 @@ public abstract class OSBServiceBase {
                 .collect(Collectors.toList());
     }
 
-    private Plan convertPlanToOSBPlan(io.enmasse.address.model.Plan p, ServiceType serviceType) {
+    private Plan convertPlanToOSBPlan(io.enmasse.address.model.types.Plan p, ServiceType serviceType) {
         Plan plan = new Plan(
                 UUID.fromString(p.getUuid()),
                 sanitizePlanName(p.getName()),

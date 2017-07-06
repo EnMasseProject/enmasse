@@ -17,19 +17,19 @@
 package enmasse.controller.api.v3.http;
 
 import enmasse.controller.api.TestAddressApi;
-import enmasse.controller.api.TestInstanceApi;
+import enmasse.controller.api.TestAddressSpaceApi;
 
 import static org.hamcrest.CoreMatchers.is;
 
 public class HttpAddressingApiTest {
     //private AddressingService addressingService;
-    private TestInstanceApi instanceManager;
+    private TestAddressSpaceApi instanceManager;
     private TestAddressApi addressSpace;
 
     /*
     @Before
     public void setup() {
-        instanceManager = new TestInstanceApi();
+        instanceManager = new TestAddressSpaceApi();
         instanceManager.create(new Instance.Builder(AddressSpaceId.withId("myinstance")).build());
         addressSpace = new TestAddressApi();
         addressSpace.setDestinations(Sets.newSet(

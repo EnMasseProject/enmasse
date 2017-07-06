@@ -62,11 +62,11 @@ local images = import "images.jsonnet";
       amqpKafkaBridge.deployment("${INSTANCE}", "${AMQP_KAFKA_BRIDGE_REPO}")
     ],
 
-    local routes = if use_routes then routeConfig else ingressConfig,
+   // local routes = if use_routes then routeConfig else ingressConfig,
 
     "objects": (if use_sasldb then [router.sasldb_pvc()] else []) + 
       common +
-      routes +
+      //routes +
       adminObj +
       (if with_kafka then kafka else []),
 
