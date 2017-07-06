@@ -1,8 +1,8 @@
 local common = import "common.jsonnet";
 {
-  service(instance)::
-    common.service(instance, "subscription", "subserv", "amqp", 5672, 5672),
-  deployment(instance, container_image)::
+  service(addressSpace)::
+    common.service(addressSpace, "subscription", "subserv", "amqp", 5672, 5672),
+  deployment(addressSpace, container_image)::
   {
     "apiVersion": "extensions/v1beta1",
     "kind": "Deployment",
@@ -12,7 +12,7 @@ local common = import "common.jsonnet";
         "app": "enmasse"
       },
       "annotations": {
-        "instance": instance
+        "addressSpace": addressSpace
       },
       "name": "subserv"
     },
@@ -25,7 +25,7 @@ local common = import "common.jsonnet";
             "app": "enmasse"
           },
           "annotations": {
-            "instance": instance
+            "addressSpace": addressSpace
           }
         },
         "spec": {

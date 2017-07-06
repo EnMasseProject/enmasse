@@ -45,7 +45,7 @@ local common = import "common.jsonnet";
   external_service::
     self.common_service("address-controller-external", "LoadBalancer", {}),
 
-  deployment(image_repo, multiinstance, template_config, instance_idle_timeout)::
+  deployment(image_repo, multiinstance, template_config)::
     {
       "apiVersion": "extensions/v1beta1",
       "kind": "Deployment",
@@ -107,9 +107,6 @@ local common = import "common.jsonnet";
                 "env": [{
                   "name": "MULTIINSTANCE",
                   "value": multiinstance
-                }, {
-                  "name": "INSTANCE_IDLE_TIMEOUT_SECONDS",
-                  "value": std.toString(instance_idle_timeout)
                 }],
                 "volumeMounts": mounts,
                 "resources": {

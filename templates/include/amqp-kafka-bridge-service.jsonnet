@@ -5,7 +5,7 @@
     "protocol": "TCP",
     "targetPort": 5672
   },
-  generate(instance)::
+  generate(addressSpace)::
     {
       "apiVersion": "v1",
       "kind": "Service",
@@ -14,7 +14,7 @@
           "app": "enmasse",
         },
         "annotations": {
-          "instance": instance
+          "addressSpace": addressSpace
         },
         "name": "amqp-kafka-bridge"
       },
