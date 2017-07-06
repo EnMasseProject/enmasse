@@ -20,7 +20,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.junit.Assert.assertThat;
 
-import enmasse.controller.api.TestInstanceApi;
+import enmasse.controller.api.TestAddressSpaceApi;
 import enmasse.controller.api.osb.v2.catalog.CatalogResponse;
 import enmasse.controller.api.osb.v2.catalog.OSBCatalogService;
 import enmasse.controller.api.osb.v2.catalog.Plan;
@@ -28,17 +28,14 @@ import enmasse.controller.api.osb.v2.catalog.Service;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.UUID;
 import javax.ws.rs.core.Response;
 
 public class CatalogServiceTest {
 
     @Test
     public void testCatalog() throws IOException {
-        OSBCatalogService catalogService = new OSBCatalogService(new TestInstanceApi());
+        OSBCatalogService catalogService = new OSBCatalogService(new TestAddressSpaceApi());
 
         Response response = catalogService.getCatalog();
         CatalogResponse catalogResponse = (CatalogResponse) response.getEntity();

@@ -1,26 +1,79 @@
-/*
- * Copyright 2017 Red Hat Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package io.enmasse.address.model;
 
+import java.util.Objects;
+import java.util.Optional;
+
 /**
- * Represents an endpoint that can be connected to.
+ * An endpoint
  */
-public interface Endpoint {
-    String getName();
-    String getService();
-    String getHost();
-    CertProvider getCertProvider();
+public class Endpoint {
+    private final String name;
+    private final String service;
+    private final String host;
+    private final CertProvider certProvider;
+
+    public Endpoint(String name, String service, String host, CertProvider certProvider) {
+        this.name = name;
+        this.service = service;
+        this.host = host;
+        this.certProvider = certProvider;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getService() {
+        return service;
+    }
+
+    public Optional<String> getHost() {
+        return Optional.ofNullable(host);
+    }
+
+    public Optional<CertProvider> getCertProvider() {
+        return Optional.ofNullable(certProvider);
+    }
+
+    public static class Builder {
+        private String name;
+        private String service;
+        private String host;
+        private CertProvider certProvider;
+
+        public Builder() {}
+
+        public Builder(io.enmasse.address.model.Endpoint endpoint) {
+            this.name = endpoint.getName();
+            this.service = endpoint.getService();
+            this.host = endpoint.getHost().orElse(null);
+            this.certProvider = endpoint.getCertProvider().orElse(null);
+        }
+
+        public Builder setName(String name) {
+            this.name = name;
+            return this;
+        }
+
+        public Builder setService(String service) {
+            this.service = service;
+            return this;
+        }
+
+        public Builder setHost(String host) {
+            this.host = host;
+            return this;
+        }
+
+        public Builder setCertProvider(CertProvider certProvider) {
+            this.certProvider = certProvider;
+            return this;
+        }
+
+        public Endpoint build() {
+            Objects.requireNonNull(name, "name not set");
+            Objects.requireNonNull(service, "service not set");
+            return new Endpoint(name, service, host, certProvider);
+        }
+    }
 }

@@ -1,11 +1,11 @@
 package enmasse.controller.api.osb.v2;
 
-import enmasse.controller.api.TestInstanceApi;
+import enmasse.controller.api.TestAddressSpaceApi;
 import enmasse.controller.api.osb.v2.bind.OSBBindingService;
 import enmasse.controller.api.osb.v2.lastoperation.OSBLastOperationService;
 import enmasse.controller.api.osb.v2.provision.OSBProvisioningService;
 import enmasse.controller.api.osb.v2.provision.ProvisionRequest;
-import io.enmasse.address.model.impl.types.standard.StandardType;
+import io.enmasse.address.model.types.standard.StandardType;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.rules.ExpectedException;
@@ -28,13 +28,13 @@ public class OSBTestBase {
     public ExpectedException exceptionGrabber = ExpectedException.none();
 
     protected OSBProvisioningService provisioningService;
-    protected TestInstanceApi instanceApi;
+    protected TestAddressSpaceApi instanceApi;
     protected OSBBindingService bindingService;
     protected OSBLastOperationService lastOperationService;
 
     @Before
     public void setup() throws Exception {
-        instanceApi = new TestInstanceApi();
+        instanceApi = new TestAddressSpaceApi();
         provisioningService = new OSBProvisioningService(instanceApi);
         bindingService = new OSBBindingService(instanceApi);
         lastOperationService = new OSBLastOperationService(instanceApi);

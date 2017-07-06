@@ -2,9 +2,9 @@ package enmasse.controller.api.osb.v2.lastoperation;
 
 import enmasse.controller.api.osb.v2.OSBExceptions;
 import enmasse.controller.api.osb.v2.OSBServiceBase;
-import enmasse.controller.instance.api.InstanceApi;
-import enmasse.controller.model.Instance;
+import enmasse.controller.k8s.api.AddressSpaceApi;
 import io.enmasse.address.model.Address;
+import io.enmasse.address.model.AddressSpace;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
@@ -15,8 +15,8 @@ import javax.ws.rs.core.Response;
 @Produces({MediaType.APPLICATION_JSON})
 public class OSBLastOperationService extends OSBServiceBase {
 
-    public OSBLastOperationService(InstanceApi instanceApi) {
-        super(instanceApi);
+    public OSBLastOperationService(AddressSpaceApi addressSpaceApi) {
+        super(addressSpaceApi);
     }
 
     @GET
@@ -28,11 +28,11 @@ public class OSBLastOperationService extends OSBServiceBase {
         log.info("Received last_operation request for instance {}, operation {}, service id {}, plan id {}",
                 instanceId, operation, serviceId, planId);
 
-        Instance instance = findInstanceByAddressUuid(instanceId)
+        AddressSpace instance = findAddressSpaceByAddressUuid(instanceId)
                 .orElseThrow(() -> OSBExceptions.notFoundException("Service instance " + instanceId + " does not exist"));
 
         Address address = findAddress(instance, instanceId)  // TODO: replace this and findInstanceByDestinationUuid so it returns both objects
-                .orElseThrow(() -> OSBExceptions.notFoundException("Service instance " + instanceId + " does not exist"));
+                .orElseThrow(() -> OSBExceptions.notFoundException("Service addressspace " + instanceId + " does not exist"));
 
 
         LastOperationResponse response;

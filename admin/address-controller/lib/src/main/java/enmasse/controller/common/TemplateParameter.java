@@ -22,7 +22,7 @@ package enmasse.controller.common;
 public interface TemplateParameter {
     String NAME = "NAME";
     String ADDRESS = "ADDRESS";
-    String INSTANCE = "INSTANCE";
+    String ADDRESS_SPACE = "ADDRESS_SPACE";
     String CLUSTER_ID = "CLUSTER_ID";
     String MESSAGING_HOSTNAME = "MESSAGING_HOSTNAME";
     String MQTT_HOSTNAME = "MQTT_GATEWAY_HOSTNAME";

@@ -26,9 +26,9 @@ import enmasse.controller.api.osb.v2.lastoperation.LastOperationResponse;
 import enmasse.controller.api.osb.v2.lastoperation.LastOperationState;
 import enmasse.controller.api.osb.v2.provision.ProvisionRequest;
 import enmasse.controller.api.osb.v2.provision.ProvisionResponse;
-import io.enmasse.address.model.impl.Address;
-import io.enmasse.address.model.impl.AddressStatus;
-import io.enmasse.address.model.impl.types.standard.StandardType;
+import io.enmasse.address.model.Address;
+import io.enmasse.address.model.Status;
+import io.enmasse.address.model.types.standard.StandardType;
 import org.jboss.resteasy.util.HttpResponseCodes;
 import org.junit.Test;
 
@@ -83,7 +83,7 @@ public class ProvisionServiceTest extends OSBTestBase {
                 .setAddress(ADDRESS)
                 .setAddressSpace("unknown")
                 .setUuid(SERVICE_INSTANCE_ID)
-                .setStatus(new AddressStatus(false))
+                .setStatus(new Status(false))
                 .setType(StandardType.QUEUE)
                 .setPlan(StandardType.QUEUE.getPlans().get(0))
                 .build();
@@ -107,7 +107,7 @@ public class ProvisionServiceTest extends OSBTestBase {
                 .setAddress(ADDRESS)
                 .setAddressSpace("unknown")
                 .setUuid(SERVICE_INSTANCE_ID)
-                .setStatus(new AddressStatus(true))
+                .setStatus(new Status(true))
                 .setType(StandardType.QUEUE)
                 .setPlan(StandardType.QUEUE.getPlans().get(0))
                 .build();

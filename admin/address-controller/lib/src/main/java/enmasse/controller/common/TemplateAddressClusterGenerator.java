@@ -18,11 +18,11 @@ package enmasse.controller.common;
 
 import enmasse.config.AnnotationKeys;
 import enmasse.config.LabelKeys;
-import enmasse.controller.address.AddressCluster;
-import enmasse.controller.model.Instance;
 import io.enmasse.address.model.Address;
-import io.enmasse.address.model.Plan;
-import io.enmasse.address.model.TemplateConfig;
+import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.Endpoint;
+import io.enmasse.address.model.types.Plan;
+import io.enmasse.address.model.types.TemplateConfig;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.openshift.client.ParameterValue;
 
@@ -36,10 +36,10 @@ import java.util.stream.Collectors;
  */
 public class TemplateAddressClusterGenerator implements AddressClusterGenerator {
     private final Kubernetes kubernetes;
-    private final Instance instance;
+    private final AddressSpace addressSpace;
 
-    public TemplateAddressClusterGenerator(Instance instance, Kubernetes kubernetes) {
-        this.instance = instance;
+    public TemplateAddressClusterGenerator(AddressSpace addressSpace, Kubernetes kubernetes) {
+        this.addressSpace = addressSpace;
         this.kubernetes = kubernetes;
     }
 
@@ -63,8 +63,15 @@ public class TemplateAddressClusterGenerator implements AddressClusterGenerator 
 
         paramMap.put(TemplateParameter.NAME, Kubernetes.sanitizeName(clusterId));
         paramMap.put(TemplateParameter.CLUSTER_ID, clusterId);
-        paramMap.put(TemplateParameter.INSTANCE, instance.id().getId());
-        paramMap.put(TemplateParameter.COLOCATED_ROUTER_SECRET, instance.certSecret());
+        paramMap.put(TemplateParameter.ADDRESS_SPACE, addressSpace.getName());
+
+        // TODO: This is standard 'space' centric
+        for (Endpoint endpoint : addressSpace.getEndpoints()) {
+            if (endpoint.getService().equals("messaging")) {
+                paramMap.put(TemplateParameter.COLOCATED_ROUTER_SECRET, endpoint.getCertProvider().get().getSecretName());
+                break;
+            }
+        }
 
         // If the name of the group matches that of the address, assume a scalable queue
         if (clusterId.equals(first.getName()) && addressSet.size() == 1) {
@@ -83,7 +90,7 @@ public class TemplateAddressClusterGenerator implements AddressClusterGenerator 
 
         // These are attributes that we need to identify components belonging to this address
         Kubernetes.addObjectAnnotation(items, AnnotationKeys.CLUSTER_ID, clusterId);
-        Kubernetes.addObjectAnnotation(items, AnnotationKeys.INSTANCE, instance.id().getId());
+        Kubernetes.addObjectAnnotation(items, AnnotationKeys.ADDRESS_SPACE, addressSpace.getName());
         Kubernetes.addObjectLabel(items, LabelKeys.UUID, first.getUuid());
         return items;
     }
