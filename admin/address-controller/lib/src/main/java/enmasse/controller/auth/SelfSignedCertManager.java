@@ -26,7 +26,7 @@ public class SelfSignedCertManager implements CertManager {
     @Override
     public void issueCert(String secretName, String namespace, String ... hostnames) throws Exception {
         Secret secret = client.secrets().inNamespace(namespace).withName(secretName).get();
-        if (secret != null) { // && addressspace.messagingHost().isPresent() && addressspace.mqttHost().isPresent() && addressspace.consoleHost().isPresent()) {
+        if (secret != null) {
             // TODO: Have this sign certificates with OpenShift CA
 
             String keyKey = "server-key.pem";
