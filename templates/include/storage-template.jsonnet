@@ -32,7 +32,7 @@ local forwarder = import "forwarder.jsonnet";
           },
           "annotations": {
             "cluster_id": "${CLUSTER_ID}",
-            "instance": "${INSTANCE}"
+            "addressSpace": "${ADDRESS_SPACE}"
           }
         },
         "spec": {
@@ -46,7 +46,7 @@ local forwarder = import "forwarder.jsonnet";
               },
               "annotations": {
                 "cluster_id": "${CLUSTER_ID}",
-                "instance": "${INSTANCE}"
+                "addressSpace": "${ADDRESS_SPACE}"
               }
             },
             "spec": {
@@ -75,7 +75,7 @@ local forwarder = import "forwarder.jsonnet";
           },
           "annotations": {
             "cluster_id": "${CLUSTER_ID}",
-            "instance": "${INSTANCE}",
+            "addressSpace": "${ADDRESS_SPACE}",
           }
         },
         "spec": {
@@ -119,18 +119,18 @@ local forwarder = import "forwarder.jsonnet";
           "value": "50"
         },
         {
-          "name": "INSTANCE",
-          "description": "A valid instance name for the instance",
+          "name": "ADDRESS_SPACE",
+          "description": "A valid addressSpace name for the address Space",
           "required": true
         },
         {
           "name": "NAME",
-          "description": "A valid name for the instance",
+          "description": "A valid name for the deployment",
           "required": true
         },
         {
           "name": "CLUSTER_ID",
-          "description": "A valid group id for the instance",
+          "description": "A valid group id for the deployment",
           "required": true
         },
         {

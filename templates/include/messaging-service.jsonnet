@@ -24,7 +24,7 @@
     "targetPort": 55672
   },
 
-  internal(instance)::
+  internal(addressSpace)::
     {
       local admin_deps = [
         {
@@ -66,7 +66,7 @@
         },
         "name": "messaging",
         "annotations": {
-          "instance": instance,
+          "addressSpace": addressSpace,
           "service.alpha.openshift.io/infrastructure": "true",
           "service.alpha.openshift.io/dependencies": std.toString(admin_deps)
         }

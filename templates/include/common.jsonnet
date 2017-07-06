@@ -55,7 +55,7 @@
     [if http_health then "livenessProbe"]: health_probe
   },
 
-  service(instance, name, selector_name, port_name, port, target_port)::
+  service(addressSpace, name, selector_name, port_name, port, target_port)::
   {
     "apiVersion": "v1",
     "kind": "Service",
@@ -65,7 +65,7 @@
         "app": "enmasse"
       },
       "annotations": {
-        "instance": instance
+        "addressSpace": addressSpace
       }
     },
     "spec": {

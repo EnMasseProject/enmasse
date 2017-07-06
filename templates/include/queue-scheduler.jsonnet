@@ -1,8 +1,8 @@
 local common = import "common.jsonnet";
 {
-  service(instance)::
-    common.service(instance, "queue-scheduler", "queue-scheduler", "amqp", 55667, 55667),
-  deployment(instance, image_repo)::
+  service(addressSpace)::
+    common.service(addressSpace, "queue-scheduler", "queue-scheduler", "amqp", 55667, 55667),
+  deployment(addressSpace, image_repo)::
     {
       "apiVersion": "extensions/v1beta1",
       "kind": "Deployment",
@@ -12,7 +12,7 @@ local common = import "common.jsonnet";
           "app": "enmasse"
         },
         "annotations": {
-          "instance": instance
+          "addressSpace": addressSpace
         },
         "name": "queue-scheduler"
       },
@@ -25,7 +25,7 @@ local common = import "common.jsonnet";
               "app": "enmasse"
             },
             "annotations": {
-              "instance": instance
+              "addressSpace": addressSpace
             }
           },
           "spec": {
