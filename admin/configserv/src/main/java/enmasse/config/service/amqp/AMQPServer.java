@@ -91,6 +91,7 @@ public class AMQPServer extends AbstractVerticle {
                 log.info("Added subscriber {} for config {}", connection.getRemoteContainer(), sender.getRemoteSource().getAddress());
             } else {
                 sender.close();
+                connection.close();
                 log.info("Failed creating subscriber {} for config {}", connection.getRemoteContainer(), sender.getRemoteSource().getAddress(), result.cause());
             }
         });

@@ -41,14 +41,14 @@ public class ConfigServiceClient extends AbstractVerticle {
                 log.info("Connected to the configuration service");
                 configConnection = connResult.result();
                 configConnection.closeHandler(result -> {
-                    vertx.setTimer(5000, id -> connectToConfigService(client));
+                    vertx.setTimer(10000, id -> connectToConfigService(client));
                 });
                 configConnection.open();
 
                 ProtonReceiver receiver = configConnection.createReceiver("maas");
                 receiver.closeHandler(result -> {
                     configConnection.close();
-                    vertx.setTimer(5000, id -> connectToConfigService(client));
+                    vertx.setTimer(10000, id -> connectToConfigService(client));
                 });
                 receiver.handler((protonDelivery, message) -> {
                     String payload = (String)((AmqpValue)message.getBody()).getValue();
@@ -58,7 +58,7 @@ public class ConfigServiceClient extends AbstractVerticle {
                 receiver.open();
             } else {
                 log.error("Error connecting to configuration service", connResult.cause());
-                vertx.setTimer(5000, id -> connectToConfigService(client));
+                vertx.setTimer(10000, id -> connectToConfigService(client));
             }
         });
     }
