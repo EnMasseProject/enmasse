@@ -47,12 +47,17 @@ public class StandardHelper {
             kubernetes.addDefaultViewPolicy(addressSpace.getNamespace());
         }
 
-
         StandardResources resourceList = createResourceList(addressSpace);
+
+        // TODO: Fix console exposure
+        Map<String, String> serviceMapping = new HashMap<>();
+        serviceMapping.put("messaging", "amqps");
+        serviceMapping.put("mqtt", "secure-mqtt");
+        serviceMapping.put("console", "console-http");
 
         // Step 5: Create routes
         for (Endpoint endpoint : resourceList.routeEndpoints) {
-            kubernetes.createRoute(endpoint.getName(), endpoint.getService(), endpoint.getHost().orElse(null), addressSpace.getNamespace());
+            kubernetes.createRoute(endpoint.getName(), endpoint.getService(), serviceMapping.get(endpoint.getService()), endpoint.getHost().orElse(null), addressSpace.getNamespace());
         }
 
         // Step 4: Create secrets for endpoints if they don't already exist
