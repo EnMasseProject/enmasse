@@ -40,7 +40,6 @@ public class AddressV1Serializer extends JsonSerializer<Address> {
     static SerializeableAddress convert(Address address) {
         SerializeableAddress serialized = new SerializeableAddress();
 
-        serialized.kind = "Address";
         serialized.metadata = new AddressMeta();
         serialized.metadata.name = address.getName();
         serialized.metadata.uuid = address.getUuid();

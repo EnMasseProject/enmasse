@@ -42,6 +42,7 @@ public class AddressSpaceV1Serializer extends JsonSerializer<AddressSpace> {
         SerializeableAddressSpace serialized = new SerializeableAddressSpace();
         serialized.metadata = new AddressSpaceMeta();
         serialized.metadata.name = addressSpace.getName();
+        serialized.metadata.namespace = addressSpace.getNamespace();
 
         serialized.spec = new AddressSpaceSpec();
         serialized.spec.type = addressSpace.getType().getName();
@@ -59,6 +60,10 @@ public class AddressSpaceV1Serializer extends JsonSerializer<AddressSpace> {
                     });
                     return e;
                 }).collect(Collectors.toList());
+
+        serialized.status = new AddressStatus();
+        serialized.status.isReady = addressSpace.getStatus().isReady();
+        serialized.status.messages = addressSpace.getStatus().getMessages();
         return serialized;
     }
 

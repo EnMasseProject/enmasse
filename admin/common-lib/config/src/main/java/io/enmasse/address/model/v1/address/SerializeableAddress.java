@@ -20,7 +20,7 @@ package io.enmasse.address.model.v1.address;
  */
 class SerializeableAddress {
     public String apiVersion = "enmasse.io/v1";
-    public String kind = "AddressSpace";
+    public String kind = "Address";
     public AddressMeta metadata;
     public AddressSpec spec;
     public AddressStatus status;
