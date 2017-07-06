@@ -117,6 +117,7 @@ public class ConfigMapAddressApi implements AddressApi {
 
         try {
             builder.addToData("config.json", mapper.writeValueAsString(address));
+            builder.done();
         } catch (Exception e) {
             log.info("Error serializing address for {}", address.getAddress(), e);
         }
