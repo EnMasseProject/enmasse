@@ -34,32 +34,32 @@ local images = import "images.jsonnet";
       "name": "enmasse-instance-infra"
     },
     local common = [
-      qdrouterd.deployment(use_sasldb, "${INSTANCE}", "${ROUTER_REPO}", "${ROUTER_METRICS_REPO}", "${ROUTER_SECRET}"),
-      messagingService.internal("${INSTANCE}"),
-      subserv.deployment("${INSTANCE}", "${SUBSERV_REPO}"),
-      subserv.service("${INSTANCE}"),
-      mqttGateway.deployment("${INSTANCE}", "${MQTT_GATEWAY_REPO}", "${MQTT_SECRET}"),
-      mqttService.internal("${INSTANCE}"),
-      mqttLwt.deployment("${INSTANCE}", "${MQTT_LWT_REPO}"),
+      qdrouterd.deployment(use_sasldb, "${ADDRESS_SPACE}", "${ROUTER_REPO}", "${ROUTER_METRICS_REPO}", "${ROUTER_SECRET}"),
+      messagingService.internal("${ADDRESS_SPACE}"),
+      subserv.deployment("${ADDRESS_SPACE}", "${SUBSERV_REPO}"),
+      subserv.service("${ADDRESS_SPACE}"),
+      mqttGateway.deployment("${ADDRESS_SPACE}", "${MQTT_GATEWAY_REPO}", "${MQTT_SECRET}"),
+      mqttService.internal("${ADDRESS_SPACE}"),
+      mqttLwt.deployment("${ADDRESS_SPACE}", "${MQTT_LWT_REPO}"),
       hawkularBrokerConfig,
       hawkularRouterConfig
     ],
 
-    local routeConfig = [ console.route("${INSTANCE}", "${CONSOLE_HOSTNAME}"),
-      messagingRoute.generate("${INSTANCE}", "${MESSAGING_HOSTNAME}"),
-      mqttRoute.generate("${INSTANCE}", "${MQTT_GATEWAY_HOSTNAME}") ],
+    local routeConfig = [ console.route("${ADDRESS_SPACE}", "${CONSOLE_HOSTNAME}"),
+      messagingRoute.generate("${ADDRESS_SPACE}", "${MESSAGING_HOSTNAME}"),
+      mqttRoute.generate("${ADDRESS_SPACE}", "${MQTT_GATEWAY_HOSTNAME}") ],
 
     local ingressConfig = [
-      console.ingress("${INSTANCE}", "${CONSOLE_HOSTNAME}")
+      console.ingress("${ADDRESS_SPACE}", "${CONSOLE_HOSTNAME}")
     ],
 
     local adminObj = [
-      admin.deployment(use_sasldb, "${INSTANCE}", "${CONFIGSERV_REPO}", "${RAGENT_REPO}", "${QUEUE_SCHEDULER_REPO}", "${CONSOLE_REPO}")
-    ] + admin.services("${INSTANCE}"),
+      admin.deployment(use_sasldb, "${ADDRESS_SPACE}", "${CONFIGSERV_REPO}", "${RAGENT_REPO}", "${QUEUE_SCHEDULER_REPO}", "${CONSOLE_REPO}")
+    ] + admin.services("${ADDRESS_SPACE}"),
 
     local kafka = [
-      amqpKafkaBridgeService.generate("${INSTANCE}"),
-      amqpKafkaBridge.deployment("${INSTANCE}", "${AMQP_KAFKA_BRIDGE_REPO}")
+      amqpKafkaBridgeService.generate("${ADDRESS_SPACE}"),
+      amqpKafkaBridge.deployment("${ADDRESS_SPACE}", "${AMQP_KAFKA_BRIDGE_REPO}")
     ],
 
    // local routes = if use_routes then routeConfig else ingressConfig,
@@ -149,8 +149,8 @@ local images = import "images.jsonnet";
         "value": images.mqtt_lwt
       },
       {
-        "name": "INSTANCE",
-        "description": "The instance this infrastructure is deployed for",
+        "name": "ADDRESS_SPACE",
+        "description": "The address space this infrastructure is deployed for",
         "required": true
       },
       {

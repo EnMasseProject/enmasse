@@ -1,6 +1,6 @@
 local common = import "common.jsonnet";
 {
-  deployment(instance, image_repo)::
+  deployment(addressSpace, image_repo)::
     {
       "apiVersion": "extensions/v1beta1",
       "kind": "Deployment",
@@ -10,7 +10,7 @@ local common = import "common.jsonnet";
           "app": "enmasse"
         },
         "annotations": {
-          "instance": instance
+          "addressSpace": addressSpace
         },
         "name": "mqtt-lwt"
       },
@@ -23,7 +23,7 @@ local common = import "common.jsonnet";
               "app": "enmasse"
             },
             "annotations": {
-              "instance": instance
+              "addressSpace": addressSpace
             }
           },
           "spec": {

@@ -2,7 +2,7 @@ local router = import "router.jsonnet";
 local console = import "console.jsonnet";
 local common = import "common.jsonnet";
 {
-  service(name, instance, ports)::
+  service(name, addressSpace, ports)::
     {
       "apiVersion": "v1",
       "kind": "Service",
@@ -12,7 +12,7 @@ local common = import "common.jsonnet";
           "app": "enmasse"
         },
         "annotations": {
-          "instance": instance,
+          "addressSpace": addressSpace,
           "service.alpha.openshift.io/serving-cert-secret-name": name + "-certs"
         }
       },
@@ -24,15 +24,15 @@ local common = import "common.jsonnet";
       }
     },
 
-  services(instance)::
+  services(addressSpace)::
   [
-    self.service("ragent", instance, [{"name": "amqp", "port": 5672, "targetPort": 55672}]),
-    self.service("configuration", instance, [{"name": "amqp", "port": 5672}]),
-    self.service("queue-scheduler", instance, [{"name": "amqp", "port": 5672, "targetPort": 55667}]),
-    self.service("console", instance, [{"name": "amqp-ws", "port": 5672, "targetPort": 56720}, {"name": "http", "port": 8080}])
+    self.service("ragent", addressSpace, [{"name": "amqp", "port": 5672, "targetPort": 55672}]),
+    self.service("configuration", addressSpace, [{"name": "amqp", "port": 5672}]),
+    self.service("queue-scheduler", addressSpace, [{"name": "amqp", "port": 5672, "targetPort": 55667}]),
+    self.service("console", addressSpace, [{"name": "amqp-ws", "port": 5672, "targetPort": 56720}, {"name": "http", "port": 8080}])
   ],
 
-  deployment(use_sasldb, instance, configserv_image, ragent_image, scheduler_image, console_image)::
+  deployment(use_sasldb, addressSpace, configserv_image, ragent_image, scheduler_image, console_image)::
   {
     "apiVersion": "extensions/v1beta1",
     "kind": "Deployment",
@@ -42,7 +42,7 @@ local common = import "common.jsonnet";
         "name": "admin",
       },
       "annotations": {
-        "instance": instance
+        "addressSpace": addressSpace
       },
       "name": "admin"
     },
@@ -55,7 +55,7 @@ local common = import "common.jsonnet";
             "app": "enmasse",
           },
           "annotations": {
-            "instance": instance
+            "addressSpace": addressSpace
           }
         },
         "spec": {
@@ -92,8 +92,8 @@ local common = import "common.jsonnet";
                         "value": "${ADDRESS_SPACE_SERVICE_HOST}"
                       },
                       {
-                        "name": "INSTANCE",
-                        "value": instance
+                        "name": "ADDRESS_SPACE",
+                        "value": addressSpace
                       }
                       ]),
             common.container("configserv", configserv_image, "amqp", 5672, "256Mi", []),

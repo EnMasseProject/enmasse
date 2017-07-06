@@ -1,8 +1,8 @@
 local router = import "router.jsonnet";
 local common = import "common.jsonnet";
 {
-  service(instance)::
-    common.service(instance, "console", "console", "http", 8080, 8080),
+  service(addressSpace)::
+    common.service(addressSpace, "console", "console", "http", 8080, 8080),
 
   container(use_sasldb, image_repo, env)::
     {
@@ -43,7 +43,7 @@ local common = import "common.jsonnet";
       [if use_sasldb then "volumeMounts"]: [{"name": "sasldb-vol","mountPath": mount_path}]
    },
 
-  deployment(use_sasldb, instance, image_repo)::
+  deployment(use_sasldb, addressSpace, image_repo)::
     {
       "apiVersion": "extensions/v1beta1",
       "kind": "Deployment",
@@ -53,7 +53,7 @@ local common = import "common.jsonnet";
           "app": "enmasse"
         },
         "annotations": {
-          "instance": instance
+          "addressSpace": addressSpace
         },
         "name": "console"
       },
@@ -66,7 +66,7 @@ local common = import "common.jsonnet";
               "app": "enmasse"
             },
             "annotations": {
-              "instance": instance
+              "addressSpace": addressSpace
             }
           },
           "spec": {
@@ -79,7 +79,7 @@ local common = import "common.jsonnet";
       }
     },
 
-  route(instance, hostname)::
+  route(addressSpace, hostname)::
     {
       "kind": "Route",
       "apiVersion": "v1",
@@ -88,7 +88,7 @@ local common = import "common.jsonnet";
           "app": "enmasse"
         },
         "annotations": {
-          "instance": instance
+          "addressSpace": addressSpace
         },
         "name": "console"
       },
@@ -104,7 +104,7 @@ local common = import "common.jsonnet";
       }
     },
 
-  ingress(instance, hostname)::
+  ingress(addressSpace, hostname)::
     {
       "kind": "Ingress",
       "apiVersion": "extensions/v1beta1",
@@ -113,7 +113,7 @@ local common = import "common.jsonnet";
             "app": "enmasse",
           },
           "annotations": {
-            "instance": instance,
+            "addressSpace": addressSpace,
             "ingress.kubernetes.io/ssl-redirect": "false"
           },
           "name": "console"

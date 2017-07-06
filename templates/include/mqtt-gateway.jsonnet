@@ -1,7 +1,7 @@
 local mqtt = import "mqtt.jsonnet";
 local common = import "common.jsonnet";
 {
-  deployment(instance, image_repo, mqtt_secret)::
+  deployment(addressSpace, image_repo, mqtt_secret)::
     {
       "apiVersion": "extensions/v1beta1",
       "kind": "Deployment",
@@ -11,7 +11,7 @@ local common = import "common.jsonnet";
           "app": "enmasse"
         },
         "annotations": {
-          "instance": instance
+          "addressSpace": addressSpace
         },
         "name": "mqtt-gateway"
       },
@@ -24,7 +24,7 @@ local common = import "common.jsonnet";
               "app": "enmasse"
             },
             "annotations": {
-              "instance": instance
+              "addressSpace": addressSpace
             }
           },
           "spec": {

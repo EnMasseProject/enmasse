@@ -1,8 +1,8 @@
 local common = import "common.jsonnet";
 {
-  service(instance)::
-    common.service(instance, "configuration", "configserv", "amqp", 5672, 5672),
-  deployment(instance, image_repo)::
+  service(addressSpace)::
+    common.service(addressSpace, "configuration", "configserv", "amqp", 5672, 5672),
+  deployment(addressSpace, image_repo)::
     {
       "apiVersion": "extensions/v1beta1",
       "kind": "Deployment",
@@ -12,7 +12,7 @@ local common = import "common.jsonnet";
           "name": "configserv"
         },
         "annotations": {
-          "instance": instance
+          "addressSpace": addressSpace
         },
         "name": "configserv"
       },
@@ -25,7 +25,7 @@ local common = import "common.jsonnet";
               "name": "configserv"
             },
             "annotations": {
-              "instance": instance
+              "addressSpace": addressSpace
             }
           },
           "spec": {
