@@ -93,26 +93,26 @@ public enum StandardType implements AddressType {
         }
     },
 
-    BROADCAST {
+    MULTICAST {
         @Override
         public String getName() {
-            return "broadcast";
+            return "multicast";
         }
 
         @Override
         public String getDescription() {
-            return "A direct messaging address type. Messages sent to a broadcast address are not " +
+            return "A direct messaging address type. Messages sent to a multicast address are not " +
                     "stored but forwarded directly to multiple consumers.";
         }
 
         @Override
         public List<Plan> getPlans() {
-            return StaticPlanConfig.broadcastPlans;
+            return StaticPlanConfig.multicastPlans;
         }
 
         @Override
         public Plan getDefaultPlan() {
-            return StaticPlanConfig.broadcastPlans.get(0);
+            return StaticPlanConfig.multicastPlans.get(0);
         }
     }
 }

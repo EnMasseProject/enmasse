@@ -71,11 +71,11 @@ class StaticPlanConfig {
                             "ce7d6a6e-6163-11e7-9ac9-507b9def37d9",
                             null)));
 
-    static List<Plan> broadcastPlans =
+    static List<Plan> multicastPlans =
             Collections.unmodifiableList(Arrays.asList(
                     new StandardPlan(
                             "standard",
-                            "Configures router network with broadcast address.",
+                            "Configures router network with multicast address.",
                             "e840275c-6163-11e7-9fe6-507b9def37d9",
                             null)));
 }
