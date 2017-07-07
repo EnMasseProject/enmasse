@@ -45,7 +45,7 @@ public class ConfigServiceClient extends AbstractVerticle {
                 });
                 configConnection.open();
 
-                ProtonReceiver receiver = configConnection.createReceiver("maas");
+                ProtonReceiver receiver = configConnection.createReceiver("v1/addresses");
                 receiver.closeHandler(result -> {
                     configConnection.close();
                     vertx.setTimer(10000, id -> connectToConfigService(client));
@@ -68,7 +68,7 @@ public class ConfigServiceClient extends AbstractVerticle {
         for (String address : payload.fieldNames()) {
             JsonObject addressObject = payload.getJsonObject(address);
             if (isQueue(addressObject)) {
-                String groupId = addressObject.getString("group_id");
+                String groupId = addressObject.getString("cluster_id");
                 Set<String> addresses = addressMap.get(groupId);
                 if (addresses == null) {
                     addresses = new HashSet<>();
