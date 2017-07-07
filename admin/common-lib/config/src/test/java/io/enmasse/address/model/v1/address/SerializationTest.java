@@ -113,6 +113,7 @@ public class SerializationTest {
                 .setEndpointList(Arrays.asList(new Endpoint.Builder()
                         .setName("myendpoint")
                         .setService("messaging")
+                        .setCertProvider(new CertProvider("secret", "mysecret"))
                         .build()))
                 .build();
 
@@ -125,6 +126,11 @@ public class SerializationTest {
         assertThat(deserialized.getPlan().getName(), is(addressSpace.getPlan().getName()));
         assertThat(deserialized.getStatus().isReady(), is(addressSpace.getStatus().isReady()));
         assertThat(deserialized.getStatus().getMessages(), is(addressSpace.getStatus().getMessages()));
+        assertThat(deserialized.getEndpoints().size(), is(addressSpace.getEndpoints().size()));
+        assertThat(deserialized.getEndpoints().get(0).getName(), is(addressSpace.getEndpoints().get(0).getName()));
+        assertThat(deserialized.getEndpoints().get(0).getService(), is(addressSpace.getEndpoints().get(0).getService()));
+        assertThat(deserialized.getEndpoints().get(0).getCertProvider().get().getName(), is(addressSpace.getEndpoints().get(0).getCertProvider().get().getName()));
+        assertThat(deserialized.getEndpoints().get(0).getCertProvider().get().getSecretName(), is(addressSpace.getEndpoints().get(0).getCertProvider().get().getSecretName()));
         assertThat(addressSpace, is(deserialized));
     }
 
