@@ -79,6 +79,16 @@ public class AddressSpace {
         return name.hashCode();
     }
 
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("{name=").append(name).append(",")
+                .append("namespace=").append(namespace).append(",")
+                .append("type=").append(type.getName()).append(",")
+                .append("plan=").append(plan.getName()).append("}");
+        return sb.toString();
+    }
+
     public static class Builder {
         private String name;
         private String namespace;
