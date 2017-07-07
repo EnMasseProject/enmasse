@@ -16,15 +16,14 @@
 
 package enmasse.controller;
 
-import enmasse.controller.standard.StandardHelper;
 import enmasse.controller.auth.AuthController;
-import enmasse.controller.common.Kubernetes;
-import enmasse.controller.common.KubernetesHelper;
-import enmasse.controller.standard.StandardController;
-import enmasse.controller.k8s.api.AddressSpaceApi;
-import enmasse.controller.k8s.api.ConfigMapAddressSpaceApi;
 import enmasse.controller.auth.CertManager;
 import enmasse.controller.auth.SelfSignedCertManager;
+import enmasse.controller.common.Kubernetes;
+import enmasse.controller.common.KubernetesHelper;
+import enmasse.controller.k8s.api.AddressSpaceApi;
+import enmasse.controller.k8s.api.ConfigMapAddressSpaceApi;
+import enmasse.controller.standard.StandardController;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.CertProvider;
 import io.enmasse.address.model.Endpoint;
@@ -79,11 +78,10 @@ public class Controller extends AbstractVerticle {
         }
 
         CertManager certManager = SelfSignedCertManager.create(controllerClient);
-        StandardHelper helper = new StandardHelper(kubernetes, options.isMultiinstance(), options.namespace());
 
         deployVerticles(startPromise,
                 new Deployment(new AuthController(certManager, addressSpaceApi)),
-                new Deployment(new StandardController(helper, controllerClient, addressSpaceApi, kubernetes)),
+                new Deployment(new StandardController(controllerClient, addressSpaceApi, kubernetes, options.isMultiinstance())),
 //                new Deployment(new AMQPServer(kubernetes.getNamespace(), addressSpaceApi, options.port())),
                 new Deployment(new HTTPServer(addressSpaceApi, options.certDir()), new DeploymentOptions().setWorker(true)));
     }

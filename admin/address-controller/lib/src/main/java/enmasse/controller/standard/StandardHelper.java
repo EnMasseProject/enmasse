@@ -30,10 +30,10 @@ public class StandardHelper {
     private final boolean isMultitenant;
     private final String namespace;
 
-    public StandardHelper(Kubernetes kubernetes, boolean isMultitenant, String namespace) {
+    public StandardHelper(Kubernetes kubernetes, boolean isMultitenant) {
         this.kubernetes = kubernetes;
         this.isMultitenant = isMultitenant;
-        this.namespace = namespace;
+        this.namespace = kubernetes.getNamespace();
     }
 
     public void create(AddressSpace addressSpace) {
