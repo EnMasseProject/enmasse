@@ -66,7 +66,7 @@ public interface Kubernetes {
 
     boolean hasService(String service);
     void createSecretWithDefaultPermissions(String secretName, String namespace);
-    void createEndpoint(Endpoint endpoint, Map<String, String> servicePortMap, String namespace, String addressSpaceName);
+    void createEndpoint(Endpoint endpoint, Map<String, String> servicePortMap, String addressSpaceName, String namespace);
 
     Set<Deployment> getReadyDeployments();
 
