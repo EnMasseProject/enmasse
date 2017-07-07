@@ -203,8 +203,8 @@ function on_message(context) {
     } else if (context.message.subject === 'enmasse.io/v1/AddressList') {
         var semantics = {};
         var body = JSON.parse(context.message.body);
-        for (var i = 0; i < body.length; i++) {
-            var addr = body[i];
+        for (var i = 0; i < body.items.length; i++) {
+            var addr = body.items[i];
             semantics[addr.spec.address] = {
                 name: addr.spec.address,
                 multicast: (addr.spec.type === 'multicast' || addr.spec.type === 'topic'),
