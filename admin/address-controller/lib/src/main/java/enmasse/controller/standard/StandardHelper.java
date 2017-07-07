@@ -36,10 +36,10 @@ public class StandardHelper {
         this.namespace = namespace;
     }
 
-    public AddressSpace create(AddressSpace addressSpace) {
+    public void create(AddressSpace addressSpace) {
         Kubernetes instanceClient = kubernetes.withNamespace(addressSpace.getNamespace());
         if (instanceClient.hasService("messaging")) {
-            return null;
+            return;
         }
         log.info("Creating address space {}", addressSpace);
         if (isMultitenant) {
@@ -49,7 +49,7 @@ public class StandardHelper {
 
         StandardResources resourceList = createResourceList(addressSpace);
 
-        // TODO: Fix console exposure
+        // TODO: put this lsit somewhere...
         Map<String, String> serviceMapping = new HashMap<>();
         serviceMapping.put("messaging", "amqps");
         serviceMapping.put("mqtt", "secure-mqtt");
@@ -57,31 +57,29 @@ public class StandardHelper {
 
         // Step 5: Create routes
         for (Endpoint endpoint : resourceList.routeEndpoints) {
-            kubernetes.createRoute(endpoint.getName(), endpoint.getService(), serviceMapping.get(endpoint.getService()), endpoint.getHost().orElse(null), addressSpace.getNamespace());
+            kubernetes.createEndpoint(endpoint, serviceMapping, addressSpace.getName(), addressSpace.getNamespace());
         }
 
         // Step 4: Create secrets for endpoints if they don't already exist
-        for (CertProvider certProvider : resourceList.serviceCerts.values()) {
-            kubernetes.createSecretWithDefaultPermissions(certProvider.getSecretName(), addressSpace.getNamespace());
+        for (String secretName : resourceList.routeEndpoints.stream()
+                .filter(endpoint -> endpoint.getCertProvider().isPresent())
+                .map(endpoint -> endpoint.getCertProvider().get().getSecretName())
+                .collect(Collectors.toSet())) {
+            kubernetes.createSecretWithDefaultPermissions(secretName, addressSpace.getNamespace());
         }
 
         kubernetes.create(resourceList.resourceList);
-        return resourceList.addressSpace;
     }
 
     private static class StandardResources {
-        public AddressSpace addressSpace;
         public KubernetesList resourceList;
         public List<Endpoint> routeEndpoints;
-        public Map<String, CertProvider> serviceCerts;
     }
 
     private StandardResources createResourceList(AddressSpace addressSpace) {
         Plan plan = addressSpace.getPlan();
         StandardResources returnVal = new StandardResources();
-        returnVal.addressSpace = addressSpace;
         returnVal.resourceList = new KubernetesList();
-        returnVal.serviceCerts = new HashMap<>();
         returnVal.routeEndpoints = new ArrayList<>();
 
 
@@ -92,15 +90,15 @@ public class StandardHelper {
             parameterValues.add(new ParameterValue(TemplateParameter.ADDRESS_SPACE_SERVICE_HOST, getApiServer()));
 
             // Step 1: Validate endpoints and remove unknown
-            Set<String> requiredServices = new HashSet<>(Arrays.asList("messaging", "mqtt", "console"));
+            Set<String> availableServices = new HashSet<>(Arrays.asList("messaging", "mqtt", "console"));
             Set<String> discoveredServices = new HashSet<>();
-            List<Endpoint> endpoints = new ArrayList<>(addressSpace.getEndpoints());
-            Iterator<Endpoint> it = endpoints.iterator();
             Map<String, CertProvider> serviceCertProviders = new HashMap<>();
 
+            List<Endpoint> endpoints = new ArrayList<>(addressSpace.getEndpoints());
+            Iterator<Endpoint> it = endpoints.iterator();
             while (it.hasNext()) {
                 Endpoint endpoint = it.next();
-                if (!requiredServices.contains(endpoint.getService())) {
+                if (!availableServices.contains(endpoint.getService())) {
                     log.info("Unknown service {} for endpoint {}, removing", endpoint.getService(), endpoint.getName());
                     it.remove();
                 } else {
@@ -109,44 +107,38 @@ public class StandardHelper {
                 }
             }
 
-            // Step 2: Create endpoint objects for those not found
-            Set<String> secretsToGenerate = new HashSet<>();
-            Set<String> missingServices = new HashSet<>(requiredServices);
-            missingServices.removeAll(discoveredServices);
+            // Step 2: Create endpoints if the user didnt supply any
+            if (endpoints.isEmpty()) {
+                endpoints = availableServices.stream()
+                        .map(service -> new Endpoint.Builder().setName(service).setService(service).build())
+                        .collect(Collectors.toList());
+            }
 
-            for (String service : missingServices) {
-                String secretName = "external-certs-" + service;
-                if (!serviceCertProviders.containsKey(service)) {
-                    serviceCertProviders.put(service, new SecretCertProvider(secretName));
+            // Step 3: Create missing secrets if not specified
+            Set<String> secretsToGenerate = new HashSet<>();
+            for (String service : availableServices) {
+                String secretName = getSecretName(service);
+
+                    // TODO: Remove console clause when it supports https
+                if (!serviceCertProviders.containsKey(service) && !service.equals("console")) {
+                    CertProvider certProvider = new SecretCertProvider(secretName);
                     secretsToGenerate.add(secretName);
+                    serviceCertProviders.put(service, certProvider);
                 }
-                endpoints.add(new Endpoint.Builder()
-                        .setCertProvider(serviceCertProviders.get(secretName))
-                        .setName(service)
-                        .setService(service)
-                        .build());
             }
 
             // Step 3: Ensure all endpoints have their certProviders set
-            List<Endpoint> allEndpoints = endpoints.stream()
+            returnVal.routeEndpoints = endpoints.stream()
                     .map(endpoint -> {
-                        if (!endpoint.getCertProvider().isPresent()) {
-                            Endpoint newEndpoint = new Endpoint.Builder(endpoint)
+                        // TODO: Remove console clause when it supports https
+                        if (!endpoint.getCertProvider().isPresent() && !endpoint.getService().equals("console")) {
+                            return new Endpoint.Builder(endpoint)
                                     .setCertProvider(serviceCertProviders.get(endpoint.getService()))
                                     .build();
-                            return newEndpoint;
                         } else {
                             return endpoint;
                         }
                     }).collect(Collectors.toList());
-
-            // TODO: Only expose those provided by user?
-            returnVal.routeEndpoints.addAll(allEndpoints);
-            returnVal.addressSpace = new AddressSpace.Builder(addressSpace)
-                    .setEndpointList(allEndpoints)
-                    .build();
-
-            returnVal.serviceCerts = serviceCertProviders;
 
             parameterValues.add(new ParameterValue(TemplateParameter.ROUTER_SECRET, serviceCertProviders.get("messaging").getSecretName()));
             parameterValues.add(new ParameterValue(TemplateParameter.MQTT_SECRET, serviceCertProviders.get("mqtt").getSecretName()));
@@ -156,6 +148,10 @@ public class StandardHelper {
             returnVal.resourceList = kubernetes.processTemplate(templateConfig.getName(), parameterValues.toArray(new ParameterValue[0]));
         }
         return returnVal;
+    }
+
+    private static String getSecretName(String serviceName) {
+        return "external-certs-" + serviceName;
     }
 
     private String getApiServer() {

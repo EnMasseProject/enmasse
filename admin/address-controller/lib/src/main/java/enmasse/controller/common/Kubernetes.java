@@ -1,5 +1,6 @@
 package enmasse.controller.common;
 
+import io.enmasse.address.model.Endpoint;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.Namespace;
@@ -65,7 +66,7 @@ public interface Kubernetes {
 
     boolean hasService(String service);
     void createSecretWithDefaultPermissions(String secretName, String namespace);
-    void createRoute(String name, String service, String servicePort, String host, String namespace);
+    void createEndpoint(Endpoint endpoint, Map<String, String> servicePortMap, String namespace, String addressSpaceName);
 
     Set<Deployment> getReadyDeployments();
 
