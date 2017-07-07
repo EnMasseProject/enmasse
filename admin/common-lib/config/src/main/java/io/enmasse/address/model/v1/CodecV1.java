@@ -21,31 +21,51 @@ import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressList;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceList;
+import io.enmasse.address.model.types.AddressSpaceType;
 import io.enmasse.address.model.types.Schema;
+import io.enmasse.address.model.types.standard.StandardAddressSpaceType;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Codec that provides the object mapper for V1 format
  */
 public class CodecV1 {
-    private static final ObjectMapper mapper = new ObjectMapper();
+    private static final Map<String, ObjectMapper> serializerMap = new HashMap<>();
+    private static final Map<String, AddressSpaceType> typeMap = new HashMap<>();
 
     static {
+        StandardAddressSpaceType type = new StandardAddressSpaceType();
+        serializerMap.put(type.getName(), createMapper(type));
+        typeMap.put(type.getName(), type);
+    }
+
+    private static ObjectMapper createMapper(AddressSpaceType addressSpaceType) {
+        ObjectMapper mapper = new ObjectMapper();
         SimpleModule module = new SimpleModule();
-        module.addDeserializer(Address.class, new AddressV1Deserializer());
+        DecodeContext context = typeMap::get;
+
+        AddressV1Deserializer addressDeserializer = new AddressV1Deserializer(addressSpaceType);
+        AddressSpaceV1Deserializer addressSpaceDeserializer = new AddressSpaceV1Deserializer(context);
+
+        module.addDeserializer(Address.class, addressDeserializer);
         module.addSerializer(Address.class, new AddressV1Serializer());
-        module.addDeserializer(AddressSpace.class, new AddressSpaceV1Deserializer());
+        module.addDeserializer(AddressSpace.class, addressSpaceDeserializer);
         module.addSerializer(AddressSpace.class, new AddressSpaceV1Serializer());
 
-        module.addDeserializer(AddressList.class, new AddressListV1Deserializer());
+        module.addDeserializer(AddressList.class, new AddressListV1Deserializer(addressDeserializer));
         module.addSerializer(AddressList.class, new AddressListV1Serializer());
-        module.addDeserializer(AddressSpaceList.class, new AddressSpaceListV1Deserializer());
+        module.addDeserializer(AddressSpaceList.class, new AddressSpaceListV1Deserializer(addressSpaceDeserializer));
         module.addSerializer(AddressSpaceList.class, new AddressSpaceListV1Serializer());
 
         module.addSerializer(Schema.class, new SchemaV1Serializer());
         mapper.registerModule(module);
+        return mapper;
     }
 
+    // TODO: Parameterize this by type
     public static ObjectMapper getMapper() {
-        return mapper;
+        return serializerMap.get(new StandardAddressSpaceType().getName());
     }
 }

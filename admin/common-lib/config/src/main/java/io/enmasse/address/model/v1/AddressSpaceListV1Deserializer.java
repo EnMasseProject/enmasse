@@ -34,6 +34,12 @@ class AddressSpaceListV1Deserializer extends JsonDeserializer<AddressSpaceList> 
 
     private static final ObjectMapper mapper = new ObjectMapper();
 
+    private final AddressSpaceV1Deserializer addressSpaceDeserializer;
+
+    AddressSpaceListV1Deserializer(AddressSpaceV1Deserializer addressSpaceDeserializer) {
+        this.addressSpaceDeserializer = addressSpaceDeserializer;
+    }
+
     @Override
     public AddressSpaceList deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException, JsonProcessingException {
         ObjectNode root = mapper.readValue(jsonParser, ObjectNode.class);
@@ -41,7 +47,7 @@ class AddressSpaceListV1Deserializer extends JsonDeserializer<AddressSpaceList> 
         if (root.hasNonNull(Fields.ITEMS)) {
             ArrayNode items = (ArrayNode) root.get(Fields.ITEMS);
             for (int i = 0; i < items.size(); i++) {
-                retval.add(AddressSpaceV1Deserializer.deserialize((ObjectNode) items.get(i)));
+                retval.add(addressSpaceDeserializer.deserialize((ObjectNode) items.get(i)));
             }
         }
         return retval;
