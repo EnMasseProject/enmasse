@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.enmasse.address.model.v1.schema;
+package io.enmasse.address.model.v1;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -31,18 +31,7 @@ import java.io.IOException;
 /**
  * Serializer for schema
  */
-public class SchemaV1Serializer extends JsonSerializer<io.enmasse.address.model.types.Schema> {
-
-    private interface Fields {
-        String API_VERSION = "apiVersion";
-        String KIND = "kind";
-        String NAME = "name";
-        String SPEC = "spec";
-        String ADDRESS_SPACE_TYPES = "addressSpaceTypes";
-        String ADDRESS_TYPES = "addressTypes";
-        String DESCRIPTION = "description";
-        String PLANS = "plans";
-    }
+class SchemaV1Serializer extends JsonSerializer<io.enmasse.address.model.types.Schema> {
 
     @Override
     public void serialize(Schema schema, JsonGenerator jsonGenerator, SerializerProvider serializerProvider) throws IOException, JsonProcessingException {

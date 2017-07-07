@@ -13,57 +13,78 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.enmasse.address.model.v1.address;
+package io.enmasse.address.model.v1;
 
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.Status;
 import io.enmasse.address.model.types.AddressSpaceType;
 import io.enmasse.address.model.types.AddressType;
 import io.enmasse.address.model.types.Plan;
 import io.enmasse.address.model.types.standard.StandardAddressSpaceType;
+import io.enmasse.address.model.v1.Fields;
 
 import java.io.IOException;
 
 /**
  * Deserializer for Address V1 format
- *
- * TODO: Don't use reflection based decoding
  */
-public class AddressV1Deserializer extends JsonDeserializer<Address> {
+class AddressV1Deserializer extends JsonDeserializer<Address> {
     private static final ObjectMapper mapper = new ObjectMapper();
 
     // TODO: Make this generic
     private static final AddressSpaceType addressSpaceType = new StandardAddressSpaceType();
 
     @Override
-    public Address deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException, JsonProcessingException {
-        SerializeableAddress address = mapper.readValue(jsonParser, SerializeableAddress.class);
-        return convert(address);
+    public Address deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException {
+        ObjectNode root = mapper.readValue(jsonParser, ObjectNode.class);
+        return deserialize(root);
     }
 
-    static Address convert(SerializeableAddress address) {
-        AddressType type = findAddressType(addressSpaceType, address.spec.type);
-        Plan plan = type.getDefaultPlan();
-        if (address.spec.plan != null) {
-            plan = findPlan(type, address.spec.plan);
-        }
+    static Address deserialize(ObjectNode root) {
+        ObjectNode metadata = (ObjectNode) root.get(Fields.METADATA);
+        ObjectNode spec = (ObjectNode) root.get(Fields.SPEC);
+        ObjectNode status = (ObjectNode) root.get(Fields.STATUS);
+
+        AddressType type = findAddressType(addressSpaceType, spec.get(Fields.TYPE).asText());
+
+
+        Plan plan = spec.hasNonNull(Fields.PLAN) ?
+                findPlan(type, spec.get(Fields.PLAN).asText()) :
+                type.getDefaultPlan();
 
         Address.Builder builder = new Address.Builder()
-                .setName(address.metadata.name)
-                .setAddressSpace(address.metadata.addressSpace)
-                .setUuid(address.metadata.uuid)
-                .setPlan(plan)
-                .setType(type);
+                .setName(metadata.get(Fields.NAME).asText())
+                .setType(type)
+                .setPlan(plan);
 
-        if (address.status != null) {
-            Status status = new Status(address.status.isReady);
-            status.setMessages(address.status.messages);
-            builder.setStatus(status);
+        if (metadata.hasNonNull(Fields.ADDRESS_SPACE)) {
+            builder.setAddressSpace(metadata.get(Fields.ADDRESS_SPACE).asText());
+        }
+
+        if (metadata.hasNonNull(Fields.UUID)) {
+            builder.setUuid(metadata.get(Fields.UUID).asText());
+        }
+
+        if (spec.hasNonNull(Fields.ADDRESS)) {
+            builder.setAddress(spec.get(Fields.ADDRESS).asText());
+        }
+
+        if (status != null) {
+            boolean isReady = status.get(Fields.IS_READY).asBoolean();
+            Status s = new Status(isReady);
+            if (status.hasNonNull(Fields.MESSAGES)) {
+                ArrayNode messages = (ArrayNode) status.get(Fields.MESSAGES);
+                for (int i = 0; i < messages.size(); i++) {
+                    s.appendMessage(messages.get(i).asText());
+                }
+            }
+            builder.setStatus(s);
         }
 
         return builder.build();
