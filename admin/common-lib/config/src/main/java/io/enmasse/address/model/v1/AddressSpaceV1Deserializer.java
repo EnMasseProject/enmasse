@@ -70,7 +70,7 @@ class AddressSpaceV1Deserializer extends JsonDeserializer<AddressSpace> {
                 ObjectNode endpoint = (ObjectNode) endpoints.get(i);
                 io.enmasse.address.model.Endpoint.Builder b = new io.enmasse.address.model.Endpoint.Builder()
                         .setName(endpoint.get(Fields.NAME).asText())
-                        .setService(endpoint.get(Fields.NAME).asText());
+                        .setService(endpoint.get(Fields.SERVICE).asText());
 
                 if (endpoint.hasNonNull(Fields.HOST)) {
                     b.setHost(endpoint.get(Fields.HOST).asText());

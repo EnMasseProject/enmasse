@@ -22,7 +22,6 @@ import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.enmasse.address.model.AddressSpace;
-import io.enmasse.address.model.v1.Fields;
 
 import java.io.IOException;
 
