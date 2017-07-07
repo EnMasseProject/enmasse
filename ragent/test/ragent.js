@@ -240,7 +240,7 @@ function verify_full_mesh(routers) {
 }
 
 function get_address_list_message(address_list) {
-    var content = JSON.stringify(address_list.map(function (a) { return {spec:a}; }));
+    var content = JSON.stringify({items:address_list.map(function (a) { return {spec:a}; })});
     return {subject:'enmasse.io/v1/AddressList', body:content};
 }
 
