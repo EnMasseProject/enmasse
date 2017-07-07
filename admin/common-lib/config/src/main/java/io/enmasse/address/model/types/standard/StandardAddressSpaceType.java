@@ -27,7 +27,7 @@ import static io.enmasse.address.model.types.standard.StandardType.*;
  * Represents the Standard address space type.
  */
 public class StandardAddressSpaceType implements AddressSpaceType {
-    static final List<AddressType> types = Arrays.asList(QUEUE, TOPIC, ANYCAST, BROADCAST);
+    static final List<AddressType> types = Arrays.asList(QUEUE, TOPIC, ANYCAST, MULTICAST);
     static final List<Plan> plans = Arrays.asList(
             new StandardPlan("unlimited", "No restrictions on resource usage", "09671470-61a7-11e7-8a6e-507b9def37d9",
                     new TemplateConfig("enmasse-instance-infra", Collections.emptyMap())));
