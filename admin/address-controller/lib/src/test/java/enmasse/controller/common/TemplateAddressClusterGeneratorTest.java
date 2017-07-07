@@ -17,6 +17,7 @@
 package enmasse.controller.common;
 
 import enmasse.config.AnnotationKeys;
+import enmasse.controller.api.TestAddressSpaceApi;
 import io.enmasse.address.model.*;
 import io.enmasse.address.model.types.AddressType;
 import io.enmasse.address.model.types.standard.StandardAddressSpaceType;
@@ -41,11 +42,13 @@ import static org.mockito.Mockito.*;
 public class TemplateAddressClusterGeneratorTest {
     private OpenShiftClient mockClient;
     private AddressClusterGenerator generator;
+    private TestAddressSpaceApi testAddressSpaceApi = new TestAddressSpaceApi();
 
     @Before
     public void setUp() {
         mockClient = mock(OpenShiftClient.class);
-        generator = new TemplateAddressClusterGenerator(createAddressSpace("myinstance"),
+        testAddressSpaceApi.createAddressSpace(createAddressSpace("myinstance"));
+        generator = new TemplateAddressClusterGenerator(testAddressSpaceApi,
                 new KubernetesHelper("myinstance", mockClient, Optional.of(new File("src/test/resources/templates"))));
     }
 
@@ -79,12 +82,8 @@ public class TemplateAddressClusterGeneratorTest {
     private Address createAddress(String address, AddressType type) {
         return new Address.Builder()
                 .setName(address)
-                .setAddress(address)
-                .setAddressSpace("unknown")
-                .setPlan(type.getPlans().get(0))
+                .setAddressSpace("myinstance")
                 .setType(type)
-                .setUuid(UUID.randomUUID().toString())
-                .setStatus(new io.enmasse.address.model.Status(false))
                 .build();
     }
 
@@ -93,8 +92,6 @@ public class TemplateAddressClusterGeneratorTest {
                 .setName(name)
                 .setNamespace(name)
                 .setType(new StandardAddressSpaceType())
-                .setPlan(new StandardAddressSpaceType().getPlans().get(0))
-                .setStatus(new io.enmasse.address.model.Status(false))
                 .appendEndpoint(new Endpoint.Builder()
                         .setName("foo")
                         .setService("messaging")

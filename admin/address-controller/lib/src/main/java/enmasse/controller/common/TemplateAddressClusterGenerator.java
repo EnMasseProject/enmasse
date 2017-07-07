@@ -18,8 +18,8 @@ package enmasse.controller.common;
 
 import enmasse.config.AnnotationKeys;
 import enmasse.config.LabelKeys;
+import enmasse.controller.k8s.api.AddressSpaceApi;
 import io.enmasse.address.model.Address;
-import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.Endpoint;
 import io.enmasse.address.model.types.Plan;
 import io.enmasse.address.model.types.TemplateConfig;
@@ -33,13 +33,15 @@ import java.util.stream.Collectors;
 
 /**
  * Generates destination clusters using Openshift templates.
+ *
+ // TODO: Find a way to make this not dependent on the address space
  */
 public class TemplateAddressClusterGenerator implements AddressClusterGenerator {
     private final Kubernetes kubernetes;
-    private final AddressSpace addressSpace;
+    private final AddressSpaceApi addressSpaceApi;
 
-    public TemplateAddressClusterGenerator(AddressSpace addressSpace, Kubernetes kubernetes) {
-        this.addressSpace = addressSpace;
+    public TemplateAddressClusterGenerator(AddressSpaceApi addressSpaceApi, Kubernetes kubernetes) {
+        this.addressSpaceApi = addressSpaceApi;
         this.kubernetes = kubernetes;
     }
 
@@ -63,15 +65,17 @@ public class TemplateAddressClusterGenerator implements AddressClusterGenerator 
 
         paramMap.put(TemplateParameter.NAME, Kubernetes.sanitizeName(clusterId));
         paramMap.put(TemplateParameter.CLUSTER_ID, clusterId);
-        paramMap.put(TemplateParameter.ADDRESS_SPACE, addressSpace.getName());
+        paramMap.put(TemplateParameter.ADDRESS_SPACE, first.getAddressSpace());
 
-        // TODO: This is standard 'space' centric
-        for (Endpoint endpoint : addressSpace.getEndpoints()) {
-            if (endpoint.getService().equals("messaging")) {
-                paramMap.put(TemplateParameter.COLOCATED_ROUTER_SECRET, endpoint.getCertProvider().get().getSecretName());
-                break;
+        // TODO: Find a way to make this not assume standard address space
+        addressSpaceApi.getAddressSpaceWithName(first.getAddressSpace()).ifPresent(addressSpace -> {
+            for (Endpoint endpoint : addressSpace.getEndpoints()) {
+                if (endpoint.getService().equals("messaging")) {
+                    paramMap.put(TemplateParameter.COLOCATED_ROUTER_SECRET, endpoint.getCertProvider().get().getSecretName());
+                    break;
+                }
             }
-        }
+        });
 
         // If the name of the group matches that of the address, assume a scalable queue
         if (clusterId.equals(first.getName()) && addressSet.size() == 1) {
@@ -90,7 +94,7 @@ public class TemplateAddressClusterGenerator implements AddressClusterGenerator 
 
         // These are attributes that we need to identify components belonging to this address
         Kubernetes.addObjectAnnotation(items, AnnotationKeys.CLUSTER_ID, clusterId);
-        Kubernetes.addObjectAnnotation(items, AnnotationKeys.ADDRESS_SPACE, addressSpace.getName());
+        Kubernetes.addObjectAnnotation(items, AnnotationKeys.ADDRESS_SPACE, first.getAddressSpace());
         Kubernetes.addObjectLabel(items, LabelKeys.UUID, first.getUuid());
         return items;
     }
