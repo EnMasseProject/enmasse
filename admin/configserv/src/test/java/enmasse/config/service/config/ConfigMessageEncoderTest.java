@@ -21,7 +21,6 @@ import io.enmasse.address.model.types.AddressType;
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.Status;
 import io.enmasse.address.model.v1.CodecV1;
-import io.enmasse.address.model.v1.address.AddressV1;
 import io.enmasse.address.model.types.standard.StandardType;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
@@ -50,7 +49,7 @@ public class ConfigMessageEncoderTest {
         Message message = encoder.encode(configSet);
         String json = (String) ((AmqpValue) message.getBody()).getValue();
         assertThat(message.getSubject(), is("enmasse.io/v1/AddressList"));
-        assertThat(json, is("{\"apiVersion\":\"enmasse.io/v1\",\"kind\":\"AddressList\",\"items\":[{\"apiVersion\":\"enmasse.io/v1\",\"kind\":\"Address\",\"metadata\":{\"name\":\"c1\",\"addressSpace\":\"unknown\",\"uuid\":\"1234\"},\"spec\":{\"address\":\"c1\",\"plan\":\"inmemory\",\"type\":\"queue\"},\"status\":{\"isReady\":false,\"messages\":[]}},{\"apiVersion\":\"enmasse.io/v1\",\"kind\":\"Address\",\"metadata\":{\"name\":\"c2\",\"addressSpace\":\"unknown\",\"uuid\":\"1234\"},\"spec\":{\"address\":\"c2\",\"plan\":\"inmemory\",\"type\":\"queue\"},\"status\":{\"isReady\":false,\"messages\":[]}},{\"apiVersion\":\"enmasse.io/v1\",\"kind\":\"Address\",\"metadata\":{\"name\":\"c3\",\"addressSpace\":\"unknown\",\"uuid\":\"1234\"},\"spec\":{\"address\":\"c3\",\"plan\":\"inmemory\",\"type\":\"topic\"},\"status\":{\"isReady\":false,\"messages\":[]}}]}"));
+        assertThat(json, is("{\"apiVersion\":\"enmasse.io/v1\",\"kind\":\"AddressList\",\"items\":[{\"metadata\":{\"name\":\"c1\",\"addressSpace\":\"unknown\",\"uuid\":\"1234\"},\"spec\":{\"type\":\"queue\",\"plan\":\"inmemory\",\"address\":\"myqueue\"},\"status\":{\"isReady\":false}},{\"metadata\":{\"name\":\"c2\",\"addressSpace\":\"unknown\",\"uuid\":\"1234\"},\"spec\":{\"type\":\"queue\",\"plan\":\"inmemory\",\"address\":\"myqueue2\"},\"status\":{\"isReady\":false}},{\"metadata\":{\"name\":\"c3\",\"addressSpace\":\"unknown\",\"uuid\":\"1234\"},\"spec\":{\"type\":\"topic\",\"plan\":\"inmemory\",\"address\":\"mytopic\"},\"status\":{\"isReady\":false}}]}"));
 
     }
 

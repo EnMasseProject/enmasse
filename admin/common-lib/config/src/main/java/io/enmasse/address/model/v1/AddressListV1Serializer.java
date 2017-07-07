@@ -13,34 +13,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.enmasse.address.model.v1.address;
+package io.enmasse.address.model.v1;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonSerializer;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressList;
 
 import java.io.IOException;
-import java.util.ArrayList;
 
 /**
  * Serializer for AddressList V1 format
  *
- * TODO: Don't use reflection based encoding
  */
-public class AddressListV1Serializer extends JsonSerializer<AddressList> {
-    private static final ObjectMapper mapper = new ObjectMapper();
-
+class AddressListV1Serializer extends JsonSerializer<AddressList> {
     @Override
     public void serialize(AddressList addressList, JsonGenerator jsonGenerator, SerializerProvider serializerProvider) throws IOException, JsonProcessingException {
-        SerializeableAddressList serialized = new SerializeableAddressList();
-        serialized.items = new ArrayList<>();
-        for (Address address : addressList) {
-            serialized.items.add(AddressV1Serializer.convert(address));
+        ObjectNode root = (ObjectNode) jsonGenerator.getCodec().createObjectNode();
+        root.put(Fields.API_VERSION, "enmasse.io/v1");
+        root.put(Fields.KIND, "AddressList");
+        if (!addressList.isEmpty()) {
+            ArrayNode items = root.putArray(Fields.ITEMS);
+            for (Address address : addressList) {
+                ObjectNode entry = items.addObject();
+                AddressV1Serializer.serialize(address, entry);
+            }
         }
-        mapper.writeValue(jsonGenerator, serialized);
+        root.serialize(jsonGenerator, serializerProvider);
     }
 }

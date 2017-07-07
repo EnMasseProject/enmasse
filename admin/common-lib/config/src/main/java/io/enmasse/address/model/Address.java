@@ -109,7 +109,7 @@ public class Address {
         private String address;
         private String addressSpace = "default";
         private AddressType type;
-        private Plan plan; // TODO: Set default plan
+        private Plan plan;
         private Status status = new Status(false);
 
         public Builder() {
@@ -150,6 +150,9 @@ public class Address {
 
         public Builder setType(AddressType addressType) {
             this.type = addressType;
+            if (this.plan == null) {
+                this.plan = type.getDefaultPlan();
+            }
             return this;
         }
 
