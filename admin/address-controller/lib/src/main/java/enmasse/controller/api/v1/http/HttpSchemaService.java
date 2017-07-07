@@ -16,7 +16,6 @@
 package enmasse.controller.api.v1.http;
 
 import io.enmasse.address.model.types.Schema;
-import io.enmasse.address.model.v1.schema.SchemaCodec;
 import io.enmasse.address.model.types.standard.StandardAddressSpaceType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,14 +36,13 @@ public class HttpSchemaService {
     private static final Logger log = LoggerFactory.getLogger(HttpSchemaService.class.getName());
 
     private final Schema schema = () -> Collections.singletonList(new StandardAddressSpaceType());
-    private final SchemaCodec codec = new SchemaCodec();
 
     @GET
     @Produces({MediaType.APPLICATION_JSON})
     @Consumes({MediaType.APPLICATION_JSON})
     public Response getSchema() {
         try {
-            return Response.ok(codec.encode(schema)).build();
+            return Response.ok(schema).build();
         } catch (Exception e) {
             log.warn("Exception handling GET schema", e);
             return Response.serverError().build();

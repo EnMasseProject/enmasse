@@ -29,7 +29,7 @@ import javax.ws.rs.core.Response;
 import java.util.Optional;
 
 /**
- * Represents an address service to get addresses.
+ * HTTP API for operating on addresses within an address space
  */
 @Path("/v1/addresses/{addressSpace}")
 public class HttpAddressService {

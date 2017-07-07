@@ -21,7 +21,9 @@ import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressList;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceList;
+import io.enmasse.address.model.types.Schema;
 import io.enmasse.address.model.v1.address.*;
+import io.enmasse.address.model.v1.schema.SchemaV1Serializer;
 
 /**
  * Codec that provides the object mapper for V1 format
@@ -40,6 +42,8 @@ public class CodecV1 {
         module.addSerializer(AddressList.class, new AddressListV1Serializer());
         module.addDeserializer(AddressSpaceList.class, new AddressSpaceListV1Deserializer());
         module.addSerializer(AddressSpaceList.class, new AddressSpaceListV1Serializer());
+
+        module.addSerializer(Schema.class, new SchemaV1Serializer());
         mapper.registerModule(module);
     }
 
