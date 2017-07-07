@@ -101,7 +101,7 @@ public class StandardController extends AbstractVerticle implements Watcher<Addr
     private void createAddressControllers(Set<AddressSpace> addressSpaces) {
         for (AddressSpace addressSpace : addressSpaces) {
             if (!addressControllerMap.containsKey(addressSpace)) {
-                AddressClusterGenerator clusterGenerator = new TemplateAddressClusterGenerator(addressSpace, kubernetes);
+                AddressClusterGenerator clusterGenerator = new TemplateAddressClusterGenerator(addressSpaceApi, kubernetes);
                 AddressController addressController = new AddressController(
                         addressSpaceApi.withAddressSpace(addressSpace),
                         kubernetes.withNamespace(addressSpace.getNamespace()),
