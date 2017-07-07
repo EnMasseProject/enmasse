@@ -145,6 +145,6 @@ public class ConfigMapAddressSpaceApi implements AddressSpaceApi {
 
     @Override
     public AddressApi withAddressSpace(AddressSpace addressSpace) {
-        return new ConfigMapAddressApi(vertx, client, addressSpace.getNamespace(), addressSpace.getType());
+        return new ConfigMapAddressApi(vertx, client, addressSpace.getNamespace());
     }
 }
