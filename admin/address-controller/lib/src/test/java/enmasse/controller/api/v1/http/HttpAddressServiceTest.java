@@ -97,7 +97,9 @@ public class HttpAddressServiceTest {
                 .setName("a2")
                 .setType(StandardType.ANYCAST)
                 .build();
-        Response response = addressService.appendAddress("myspace", a2);
+        AddressList list = new AddressList();
+        list.add(a2);
+        Response response = addressService.appendAddresses("myspace", list);
         assertThat(response.getStatus(), is(200));
 
         assertThat(addressApi.listAddresses(), hasItem(a2));
@@ -110,7 +112,9 @@ public class HttpAddressServiceTest {
                 .setName("a2")
                 .setType(StandardType.ANYCAST)
                 .build();
-        Response response = addressService.appendAddress("myspace", a2);
+        AddressList list = new AddressList();
+        list.add(a2);
+        Response response = addressService.appendAddresses("myspace", list);
         assertThat(response.getStatus(), is(500));
     }
 
