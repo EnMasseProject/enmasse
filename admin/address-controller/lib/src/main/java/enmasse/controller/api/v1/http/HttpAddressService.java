@@ -71,18 +71,18 @@ public class HttpAddressService {
         }
     }
 
-    @POST
-    @Produces({MediaType.APPLICATION_JSON})
-    @Consumes({MediaType.APPLICATION_JSON})
-    public Response appendAddress(@PathParam("addressSpace") String addressSpaceName, Address address) {
-        try {
-            AddressList addresses = apiHelper.appendAddress(addressSpaceName, address);
-            return Response.ok(addresses).build();
-        } catch (Exception e) {
-            log.error("Exception getting address", e);
-            return Response.serverError().build();
-        }
-    }
+    //@POST
+    //@Produces({MediaType.APPLICATION_JSON})
+    //@Consumes({MediaType.APPLICATION_JSON})
+    //public Response appendAddress(@PathParam("addressSpace") String addressSpaceName, Address address) {
+    //    try {
+    //        AddressList addresses = apiHelper.appendAddress(addressSpaceName, address);
+    //        return Response.ok(addresses).build();
+    //    } catch (Exception e) {
+    //        log.error("Exception getting address", e);
+    //        return Response.serverError().build();
+    //    }
+    //}
 
 
     @POST
@@ -111,13 +111,13 @@ public class HttpAddressService {
         }
     }
 
-    @PUT
-    @Produces({MediaType.APPLICATION_JSON})
-    @Consumes({MediaType.APPLICATION_JSON})
-    @Path("{address}")
-    public Response putAddress(@PathParam("addressSpace") String addressSpaceName, @PathParam("address") String address, Address body) {
-        throw new NotImplementedYetException();
-    }
+    //@PUT
+    //@Produces({MediaType.APPLICATION_JSON})
+    //@Consumes({MediaType.APPLICATION_JSON})
+    //@Path("{address}")
+    //public Response putAddress(@PathParam("addressSpace") String addressSpaceName, @PathParam("address") String address, Address body) {
+    //    throw new NotImplementedYetException();
+    //}
 
     @DELETE
     @Produces({MediaType.APPLICATION_JSON})
