@@ -114,6 +114,9 @@ public class AddressSpace {
 
         public Builder setType(AddressSpaceType type) {
             this.type = type;
+            if (this.plan == null) {
+                this.plan = type.getDefaultPlan();
+            }
             return this;
         }
 

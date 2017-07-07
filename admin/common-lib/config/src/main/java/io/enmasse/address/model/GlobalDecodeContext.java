@@ -16,7 +16,7 @@
 package io.enmasse.address.model;
 
 import io.enmasse.address.model.types.AddressSpaceType;
-import io.enmasse.address.model.v1.address.DecodeContext;
+import io.enmasse.address.model.v1.DecodeContext;
 import io.enmasse.address.model.types.standard.StandardAddressSpaceType;
 
 import java.util.Collections;

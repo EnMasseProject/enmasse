@@ -22,8 +22,6 @@ import io.enmasse.address.model.AddressList;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceList;
 import io.enmasse.address.model.types.Schema;
-import io.enmasse.address.model.v1.address.*;
-import io.enmasse.address.model.v1.schema.SchemaV1Serializer;
 
 /**
  * Codec that provides the object mapper for V1 format

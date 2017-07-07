@@ -13,16 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.enmasse.address.model.v1.address;
+package io.enmasse.address.model.v1;
 
-import java.util.ArrayList;
-import java.util.List;
+import io.enmasse.address.model.types.AddressSpaceType;
 
 /**
- * Serialized Address Specification
+ * An interface for decoding address space types names
  */
-class AddressSpaceSpec {
-    public String plan;
-    public String type;
-    public List<Endpoint> endpoints = new ArrayList<>();
+public interface DecodeContext {
+    /**
+     * Get the address space type corresponding to the provided type name
+     *
+     * @param typeName The type name to lookup
+     * @return The address space type
+     */
+    AddressSpaceType getAddressSpaceType(String typeName);
 }

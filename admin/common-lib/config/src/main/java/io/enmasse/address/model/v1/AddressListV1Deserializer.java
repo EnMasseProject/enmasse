@@ -13,34 +13,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.enmasse.address.model.v1.address;
+package io.enmasse.address.model.v1;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.enmasse.address.model.AddressSpaceList;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import io.enmasse.address.model.AddressList;
 
 import java.io.IOException;
 
 /**
- * Deserializer for AddressSpaceList V1 format
+ * Deserializer for AddressList V1 format
  *
- * TODO: Don't use reflection based encoding
  */
-public class AddressSpaceListV1Deserializer extends JsonDeserializer<AddressSpaceList> {
+class AddressListV1Deserializer extends JsonDeserializer<AddressList> {
 
     private static final ObjectMapper mapper = new ObjectMapper();
 
     @Override
-    public AddressSpaceList deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException, JsonProcessingException {
-        SerializeableAddressSpaceList list = mapper.readValue(jsonParser, SerializeableAddressSpaceList.class);
-        AddressSpaceList retval = new AddressSpaceList();
-        if (list.items != null) {
-            list.items.stream()
-                    .map(AddressSpaceV1Deserializer::convert)
-                    .forEach(retval::add);
+    public AddressList deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException, JsonProcessingException {
+        ObjectNode root = mapper.readValue(jsonParser, ObjectNode.class);
+        AddressList retval = new AddressList();
+        if (root.hasNonNull(Fields.ITEMS)) {
+            ArrayNode items = (ArrayNode) root.get(Fields.ITEMS);
+            for (int i = 0; i < items.size(); i++) {
+                retval.add(AddressV1Deserializer.deserialize((ObjectNode) items.get(i)));
+            }
         }
         return retval;
 
