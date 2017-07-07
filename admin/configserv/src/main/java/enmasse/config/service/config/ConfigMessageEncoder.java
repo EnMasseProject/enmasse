@@ -33,6 +33,7 @@ public class ConfigMessageEncoder implements MessageEncoder<ConfigResource> {
             Map<String, String> data = config.getData();
             addressList.add(mapper.readValue(data.get("config.json"), Address.class));
         }
+        message.setSubject("enmasse.io/v1/AddressList");
         message.setBody(createBody(addressList));
         message.setContentType("application/json");
         return message;
