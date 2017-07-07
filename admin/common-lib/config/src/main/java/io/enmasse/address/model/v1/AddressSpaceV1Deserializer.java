@@ -24,7 +24,6 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.CertProvider;
-import io.enmasse.address.model.GlobalDecodeContext;
 import io.enmasse.address.model.Status;
 import io.enmasse.address.model.types.AddressSpaceType;
 import io.enmasse.address.model.types.Plan;
@@ -37,7 +36,11 @@ import java.io.IOException;
 class AddressSpaceV1Deserializer extends JsonDeserializer<AddressSpace> {
 
     private static final ObjectMapper mapper = new ObjectMapper();
-    private static final DecodeContext context = new GlobalDecodeContext();
+    private final DecodeContext context;
+
+    AddressSpaceV1Deserializer(DecodeContext context) {
+        this.context = context;
+    }
 
     @Override
     public AddressSpace deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException, JsonProcessingException {
@@ -45,7 +48,7 @@ class AddressSpaceV1Deserializer extends JsonDeserializer<AddressSpace> {
         return deserialize(root);
     }
 
-    static AddressSpace deserialize(ObjectNode root) {
+    AddressSpace deserialize(ObjectNode root) {
 
         ObjectNode metadata = (ObjectNode) root.get(Fields.METADATA);
         ObjectNode spec = (ObjectNode) root.get(Fields.SPEC);

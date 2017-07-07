@@ -26,8 +26,6 @@ import io.enmasse.address.model.Status;
 import io.enmasse.address.model.types.AddressSpaceType;
 import io.enmasse.address.model.types.AddressType;
 import io.enmasse.address.model.types.Plan;
-import io.enmasse.address.model.types.standard.StandardAddressSpaceType;
-import io.enmasse.address.model.v1.Fields;
 
 import java.io.IOException;
 
@@ -37,8 +35,11 @@ import java.io.IOException;
 class AddressV1Deserializer extends JsonDeserializer<Address> {
     private static final ObjectMapper mapper = new ObjectMapper();
 
-    // TODO: Make this generic
-    private static final AddressSpaceType addressSpaceType = new StandardAddressSpaceType();
+    private final AddressSpaceType addressSpaceType;
+
+    AddressV1Deserializer(AddressSpaceType addressSpaceType) {
+        this.addressSpaceType = addressSpaceType;
+    }
 
     @Override
     public Address deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException {
@@ -46,7 +47,7 @@ class AddressV1Deserializer extends JsonDeserializer<Address> {
         return deserialize(root);
     }
 
-    static Address deserialize(ObjectNode root) {
+    Address deserialize(ObjectNode root) {
         ObjectNode metadata = (ObjectNode) root.get(Fields.METADATA);
         ObjectNode spec = (ObjectNode) root.get(Fields.SPEC);
         ObjectNode status = (ObjectNode) root.get(Fields.STATUS);
