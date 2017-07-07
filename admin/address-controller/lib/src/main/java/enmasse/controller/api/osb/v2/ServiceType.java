@@ -9,7 +9,7 @@ import java.util.UUID;
 public enum ServiceType {
     // TODO: These are tied to the 'standard' address space
     ANYCAST("ac6348d6-eeea-43e5-9b97-5ed18da5dcaf", "enmasse-anycast", StandardType.ANYCAST),
-    MULTICAST("7739ea7d-8de4-4fe8-8297-90f703904587", "enmasse-multicast", StandardType.BROADCAST),
+    MULTICAST("7739ea7d-8de4-4fe8-8297-90f703904587", "enmasse-multicast", StandardType.MULTICAST),
     QUEUE("7739ea7d-8de4-4fe8-8297-90f703904589", "enmasse-queue", StandardType.QUEUE),
     TOPIC("7739ea7d-8de4-4fe8-8297-90f703904590", "enmasse-topic", StandardType.TOPIC);
 
