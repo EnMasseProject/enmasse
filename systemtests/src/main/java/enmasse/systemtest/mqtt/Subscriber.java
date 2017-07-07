@@ -21,6 +21,7 @@ import enmasse.systemtest.Logging;
 import org.eclipse.paho.client.mqttv3.IMqttActionListener;
 import org.eclipse.paho.client.mqttv3.IMqttMessageListener;
 import org.eclipse.paho.client.mqttv3.IMqttToken;
+import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 
@@ -37,8 +38,14 @@ public class Subscriber extends ClientHandlerBase<List<String>> {
     private final Predicate<MqttMessage> done;
     private final CountDownLatch connectLatch;
 
-    public Subscriber(Endpoint endpoint, String topic, int qos, Predicate<MqttMessage> done, CompletableFuture<List<String>> promise, CountDownLatch connectLatch) {
-        super(endpoint, topic, promise);
+    public Subscriber(Endpoint endpoint,
+                      final MqttConnectOptions options,
+                      String topic,
+                      int qos,
+                      Predicate<MqttMessage> done,
+                      CompletableFuture<List<String>> promise,
+                      CountDownLatch connectLatch) {
+        super(endpoint, options, topic, promise);
         this.qos = qos;
         this.done = done;
         this.connectLatch = connectLatch;
@@ -49,7 +56,7 @@ public class Subscriber extends ClientHandlerBase<List<String>> {
 
         try {
 
-            this.client.subscribe(this.topic, this.qos, null, new IMqttActionListener() {
+            this.client.subscribe(this.getTopic(), this.qos, null, new IMqttActionListener() {
 
                 @Override
                 public void onSuccess(IMqttToken iMqttToken) {
@@ -57,7 +64,7 @@ public class Subscriber extends ClientHandlerBase<List<String>> {
                     Logging.log.info("Subscription response code {}", iMqttToken.getGrantedQos()[0]);
 
                     if (iMqttToken.getGrantedQos()[0] == 0x80) {
-                        promise.completeExceptionally(new RuntimeException("Subscription refused"));
+                        getPromise().completeExceptionally(new RuntimeException("Subscription refused"));
                     }
 
                     connectLatch.countDown();
@@ -67,7 +74,8 @@ public class Subscriber extends ClientHandlerBase<List<String>> {
                 public void onFailure(IMqttToken iMqttToken, Throwable throwable) {
 
                     Logging.log.info("Subscribe to '{}' failed: {}", iMqttToken.getTopics()[0], throwable.getMessage());
-                    promise.completeExceptionally(throwable);
+                    getPromise().completeExceptionally(throwable);
+                    connectLatch.countDown();
                 }
             }, new IMqttMessageListener() {
 
@@ -83,7 +91,7 @@ public class Subscriber extends ClientHandlerBase<List<String>> {
                         /* if (this.client.isConnected()) {
                             this.client.disconnect();
                         } */
-                        promise.complete(messages);
+                        getPromise().complete(messages);
                     }
                 }
             });
@@ -91,5 +99,12 @@ public class Subscriber extends ClientHandlerBase<List<String>> {
         } catch (MqttException e) {
             e.printStackTrace();
         }
+    }
+
+    @Override
+    protected void connectionOpenFailed(Throwable throwable) {
+        Logging.log.info("Connection to " + getEndpoint().getHost() + ":" + getEndpoint().getPort() + " failed: " + throwable.getMessage());
+        getPromise().completeExceptionally(throwable);
+        connectLatch.countDown();
     }
 }

@@ -17,6 +17,7 @@
 package enmasse.systemtest.mqtt;
 
 import enmasse.systemtest.Endpoint;
+import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 
 import java.util.ArrayList;
@@ -36,9 +37,11 @@ public class MqttClient implements AutoCloseable {
 
     private final Endpoint endpoint;
     private final List<ClientHandlerBase> clients = new ArrayList<>();
+    private final MqttConnectOptions options;
 
-    public MqttClient(Endpoint endpoint) {
+    public MqttClient(Endpoint endpoint, final MqttConnectOptions options) {
         this.endpoint = endpoint;
+        this.options = options;
     }
 
     public Future<List<String>> recvMessages(String topic, int numMessages) throws ExecutionException, InterruptedException {
@@ -62,7 +65,7 @@ public class MqttClient implements AutoCloseable {
         CompletableFuture<List<String>> promise = new CompletableFuture<>();
         CountDownLatch connectLatch = new CountDownLatch(1);
 
-        Subscriber subscriber = new Subscriber(this.endpoint, topic, qos, new Count(numMessages), promise, connectLatch);
+        Subscriber subscriber = new Subscriber(this.endpoint, this.options, topic, qos, new Count(numMessages), promise, connectLatch);
         subscriber.start();
 
         this.clients.add(subscriber);
@@ -97,7 +100,7 @@ public class MqttClient implements AutoCloseable {
         CompletableFuture<Integer> promise = new CompletableFuture<>();
         CountDownLatch connectLatch = new CountDownLatch(1);
 
-        Publisher publisher = new Publisher(this.endpoint, topic, messageQueue, promise, connectLatch);
+        Publisher publisher = new Publisher(this.endpoint, this.options, topic, messageQueue, promise, connectLatch);
         publisher.start();
 
         this.clients.add(publisher);

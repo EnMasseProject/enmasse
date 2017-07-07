@@ -17,28 +17,36 @@
 package enmasse.systemtest.mqtt;
 
 import enmasse.systemtest.Endpoint;
-import enmasse.systemtest.Logging;
 import org.eclipse.paho.client.mqttv3.IMqttActionListener;
 import org.eclipse.paho.client.mqttv3.IMqttAsyncClient;
 import org.eclipse.paho.client.mqttv3.IMqttToken;
 import org.eclipse.paho.client.mqttv3.MqttAsyncClient;
+import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import javax.net.ssl.SSLSocketFactory;
 
 public abstract class ClientHandlerBase<T> {
 
     private final String SERVER_URI_TEMPLATE = "tcp://%s:%s";
+    private final String TLS_SERVER_URI_TEMPLATE = "ssl://%s:%s";
+
 
     private final Endpoint endpoint;
-    protected final String topic;
-    protected final CompletableFuture<T> promise;
+    private final String topic;
+    private final CompletableFuture<T> promise;
+    private final MqttConnectOptions options;
 
     protected IMqttAsyncClient client;
 
-    public ClientHandlerBase(Endpoint endpoint, String topic, CompletableFuture<T> promise) {
+    public ClientHandlerBase(Endpoint endpoint,
+                             final MqttConnectOptions options,
+                             String topic,
+                             CompletableFuture<T> promise) {
         this.endpoint = endpoint;
+        this.options = options;
         this.topic = topic;
         this.promise = promise;
     }
@@ -47,11 +55,14 @@ public abstract class ClientHandlerBase<T> {
 
         try {
 
+            final String uri_format = this.options.getSocketFactory() instanceof SSLSocketFactory
+                    ? TLS_SERVER_URI_TEMPLATE
+                    : SERVER_URI_TEMPLATE;
             this.client =
-                    new MqttAsyncClient(String.format(SERVER_URI_TEMPLATE, this.endpoint.getHost(), this.endpoint.getPort()),
+                    new MqttAsyncClient(String.format(uri_format, this.endpoint.getHost(), this.endpoint.getPort()),
                             UUID.randomUUID().toString());
 
-            this.client.connect(null, new IMqttActionListener() {
+            this.client.connect(options, null, new IMqttActionListener() {
 
                 @Override
                 public void onSuccess(IMqttToken iMqttToken) {
@@ -60,8 +71,7 @@ public abstract class ClientHandlerBase<T> {
 
                 @Override
                 public void onFailure(IMqttToken iMqttToken, Throwable throwable) {
-                    Logging.log.info("Connection to " + endpoint.getHost() + ":" + endpoint.getPort() + " failed: " + throwable.getMessage());
-                    promise.completeExceptionally(throwable);
+                    connectionOpenFailed(throwable);
                 }
             });
 
@@ -85,5 +95,19 @@ public abstract class ClientHandlerBase<T> {
         }
     }
 
+    public final Endpoint getEndpoint() {
+        return endpoint;
+    }
+
     protected abstract void connectionOpened();
+
+    protected abstract void connectionOpenFailed(Throwable throwable);
+
+    public String getTopic() {
+        return topic;
+    }
+
+    public CompletableFuture<T> getPromise() {
+        return promise;
+    }
 }
