@@ -75,6 +75,11 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
         });
     }
 
+    // TODO: Put this constant somewhere appropriate
+    private static boolean isPooled(Address address) {
+        return address.getPlan().getName().startsWith("pooled");
+    }
+
     @Override
     public synchronized void resourcesUpdated(Set<Address> newAddressSet) throws Exception {
         log.info("Check addresss in address space controller: " + newAddressSet);
@@ -83,8 +88,7 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
 
         for (Address address : newAddressSet) {
             String key;
-            // TODO: Put this constant somewhere appropriate
-            if (address.getPlan().getName().equals("pooled")) {
+            if (isPooled(address)) {
                 key = address.getPlan().getName();
             } else {
                 key = address.getName();
@@ -178,8 +182,7 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
     }
 
     private void checkClusterStatus(Address address) {
-        // TODO: Move check somewhere
-        String clusterName = address.getPlan().getName().equals("pooled") ? address.getPlan().getName() : address.getName();
+        String clusterName = isPooled(address) ? address.getPlan().getName() : address.getName();
         if (address.getType().equals(QUEUE) && !kubernetes.isDestinationClusterReady(clusterName)) {
             address.getStatus().setReady(false).appendMessage("Cluster is unavailable");
         }
