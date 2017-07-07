@@ -6,8 +6,8 @@ import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressList;
 import io.enmasse.address.model.AddressSpace;
 
+import javax.ws.rs.NotFoundException;
 import java.io.IOException;
-import java.util.Collections;
 import java.util.Optional;
 import java.util.Set;
 
@@ -24,12 +24,12 @@ public class AddressApiHelper {
     public AddressList getAddresses(String addressSpaceId) throws IOException {
         Optional<AddressSpace> addressSpace = addressSpaceApi.getAddressSpaceWithName(addressSpaceId);
         if (!addressSpace.isPresent()) {
-            throw new RuntimeException("Address space with id " + addressSpaceId + " not found");
+            throw new NotFoundException("Address space with id " + addressSpaceId + " not found");
         }
         return new AddressList(addressSpaceApi.withAddressSpace(addressSpace.get()).listAddresses());
     }
 
-    public Set<Address> putAddresses(String addressSpaceId, Set<Address> addressList) throws Exception {
+    public AddressList putAddresses(String addressSpaceId, AddressList addressList) throws Exception {
         AddressSpace addressSpace = getOrCreateAddressSpace(addressSpaceId);
         AddressApi addressApi = addressSpaceApi.withAddressSpace(addressSpace);
 
@@ -70,22 +70,22 @@ public class AddressApiHelper {
         return address;
     }
 
-    public Set<Address> deleteAddress(String addressSpaceId, String address) throws IOException {
+    public AddressList deleteAddress(String addressSpaceId, String address) throws IOException {
         return addressSpaceApi.getAddressSpaceWithName(addressSpaceId)
                 .map(addressSpace -> {
                     AddressApi addressApi = addressSpaceApi.withAddressSpace(addressSpace);
                     addressApi.getAddressWithName(address).ifPresent(addressApi::deleteAddress);
-                    return addressApi.listAddresses();
-                }).orElse(Collections.emptySet());
+                    return new AddressList(addressApi.listAddresses());
+                }).orElse(new AddressList());
     }
 
-    public Set<Address> appendAddresses(String addressSpaceId, Set<Address> addressSet) throws Exception {
+    public AddressList appendAddresses(String addressSpaceId, AddressList addressList) throws Exception {
         AddressSpace addressSpace = getOrCreateAddressSpace(addressSpaceId);
         AddressApi addressApi = addressSpaceApi.withAddressSpace(addressSpace);
-        for (Address address : addressSet) {
+        for (Address address : addressList) {
             addressApi.createAddress(address);
         }
-        return addressApi.listAddresses();
+        return new AddressList(addressApi.listAddresses());
     }
 
 }

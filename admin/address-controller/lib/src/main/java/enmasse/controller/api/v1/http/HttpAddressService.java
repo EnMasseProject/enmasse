@@ -19,8 +19,7 @@ import enmasse.controller.api.v1.AddressApiHelper;
 import enmasse.controller.k8s.api.AddressSpaceApi;
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressList;
-import io.enmasse.address.model.AddressSpace;
-import io.enmasse.address.model.v1.CodecV1;
+import org.jboss.resteasy.spi.NotImplementedYetException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,7 +27,6 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.Optional;
-import java.util.Set;
 
 /**
  * Represents an address service to get addresses.
@@ -37,11 +35,9 @@ import java.util.Set;
 public class HttpAddressService {
     private static final Logger log = LoggerFactory.getLogger(HttpAddressService.class.getName());
     private final AddressApiHelper apiHelper;
-    private final AddressSpaceApi addressSpaceApi;
 
     public HttpAddressService(AddressSpaceApi addressSpaceApi) {
         this.apiHelper = new AddressApiHelper(addressSpaceApi);
-        this.addressSpaceApi = addressSpaceApi;
     }
 
     @GET
@@ -61,9 +57,9 @@ public class HttpAddressService {
     @Produces({MediaType.APPLICATION_JSON})
     @Consumes({MediaType.APPLICATION_JSON})
     @Path("{address}")
-    public Response getAddress(@PathParam("addressSpace") String addressSpace, @PathParam("address") String address) {
+    public Response getAddress(@PathParam("addressSpace") String addressSpaceName, @PathParam("address") String address) {
         try {
-            Optional<Address> found = apiHelper.getAddress(addressSpace, address);
+            Optional<Address> found = apiHelper.getAddress(addressSpaceName, address);
             if (!found.isPresent()) {
                 return Response.status(404).build();
             } else {
@@ -80,12 +76,56 @@ public class HttpAddressService {
     @Consumes({MediaType.APPLICATION_JSON})
     public Response appendAddress(@PathParam("addressSpace") String addressSpaceName, Address address) {
         try {
-            // TODO: Debug jackson config
-            Optional<AddressSpace> addressSpace = addressSpaceApi.getAddressSpaceWithName(addressSpaceName);
-            if (!addressSpace.isPresent()) {
-                throw new NotFoundException("Address space " + addressSpaceName + " not found");
-            }
-            AddressList addresses = apiHelper.appendAddress(addressSpace.get().getName(), address);
+            AddressList addresses = apiHelper.appendAddress(addressSpaceName, address);
+            return Response.ok(addresses).build();
+        } catch (Exception e) {
+            log.error("Exception getting address", e);
+            return Response.serverError().build();
+        }
+    }
+
+
+    @POST
+    @Produces({MediaType.APPLICATION_JSON})
+    @Consumes({MediaType.APPLICATION_JSON})
+    public Response appendAddresses(@PathParam("addressSpace") String addressSpaceName, AddressList addressList) {
+        try {
+            AddressList addresses = apiHelper.appendAddresses(addressSpaceName, addressList);
+            return Response.ok(addresses).build();
+        } catch (Exception e) {
+            log.error("Exception getting address", e);
+            return Response.serverError().build();
+        }
+    }
+
+    @PUT
+    @Produces({MediaType.APPLICATION_JSON})
+    @Consumes({MediaType.APPLICATION_JSON})
+    public Response replaceAddresses(@PathParam("addressSpace") String addressSpaceName, AddressList addressList) {
+        try {
+            AddressList addresses = apiHelper.putAddresses(addressSpaceName, addressList);
+            return Response.ok(addresses).build();
+        } catch (Exception e) {
+            log.error("Exception getting address", e);
+            return Response.serverError().build();
+        }
+    }
+
+    @PUT
+    @Produces({MediaType.APPLICATION_JSON})
+    @Consumes({MediaType.APPLICATION_JSON})
+    @Path("{address}")
+    public Response putAddress(@PathParam("addressSpace") String addressSpaceName, @PathParam("address") String address, Address body) {
+        throw new NotImplementedYetException();
+    }
+
+    @DELETE
+    @Produces({MediaType.APPLICATION_JSON})
+    @Consumes({MediaType.APPLICATION_JSON})
+    @Path("{address}")
+    public Response deleteAddress(@PathParam("addressSpace") String addressSpaceName, @PathParam("address") String address) {
+        try {
+            AddressList addresses = apiHelper.deleteAddress(addressSpaceName, address);
             return Response.ok(addresses).build();
         } catch (Exception e) {
             log.error("Exception getting address", e);
