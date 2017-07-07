@@ -5,7 +5,10 @@ import enmasse.controller.common.*;
 import enmasse.controller.k8s.api.AddressSpaceApi;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.Endpoint;
+import io.enmasse.address.model.SecretCertProvider;
 import io.fabric8.kubernetes.api.model.HasMetadata;
+import io.fabric8.kubernetes.api.model.extensions.Ingress;
+import io.fabric8.openshift.api.model.Route;
 import io.fabric8.openshift.client.OpenShiftClient;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
@@ -132,11 +135,7 @@ public class StandardController extends AbstractVerticle implements Watcher<Addr
 
     private void createAddressSpaces(Set<AddressSpace> instances) {
         for (AddressSpace instance : instances) {
-            // TODO: Ugh, find a way to do this as part of the main controller loop
-            AddressSpace modified = helper.create(instance);
-            if (modified != null) {
-                addressSpaceApi.replaceAddressSpace(modified);
-            }
+            helper.create(instance);
         }
     }
 
@@ -145,34 +144,54 @@ public class StandardController extends AbstractVerticle implements Watcher<Addr
         Map<String, String> annotations = new HashMap<>();
         annotations.put(AnnotationKeys.ADDRESS_SPACE, builder.getName());
 
+        List<Endpoint> endpoints;
         /* Watch for routes and ingress */
         if (client.isAdaptable(OpenShiftClient.class)) {
-            client.routes().inNamespace(builder.getNamespace()).list().getItems().stream()
+            endpoints = client.routes().inNamespace(builder.getNamespace()).list().getItems().stream()
                     .filter(route -> isPartOfAddressSpace(builder.getName(), route))
-                    .forEach(route -> updateRoute(builder, route.getMetadata().getName(), route.getSpec().getHost()));
+                    .map(this::routeToEndpoint)
+                    .collect(Collectors.toList());
         } else {
-            client.extensions().ingresses().inNamespace(builder.getNamespace()).list().getItems().stream()
+            endpoints = client.extensions().ingresses().inNamespace(builder.getNamespace()).list().getItems().stream()
                     .filter(ingress -> isPartOfAddressSpace(builder.getName(), ingress))
-                    .forEach(ingress -> updateRoute(builder, ingress.getMetadata().getName(), ingress.getSpec().getRules().get(0).getHost()));
+                    .map(this::ingressToEndpoint)
+                    .collect(Collectors.toList());
         }
+
+        log.debug("Updating endpoints for " + builder.getName() + " to " + endpoints);
+        builder.setEndpointList(endpoints);
     }
 
     private static boolean isPartOfAddressSpace(String id, HasMetadata resource) {
         return resource.getMetadata().getAnnotations() != null && id.equals(resource.getMetadata().getAnnotations().get(AnnotationKeys.ADDRESS_SPACE));
     }
 
-    private void updateRoute(AddressSpace.Builder builder, String name, String host) {
-        log.debug("Updating routes for " + name + " to " + host);
-        List<Endpoint> updated = new ArrayList<>();
-        for (Endpoint endpoint : builder.getEndpoints()) {
-            if (endpoint.getName().equals(name)) {
-                updated.add(new Endpoint.Builder(endpoint)
-                        .setHost(host)
-                        .build());
-            } else {
-                updated.add(endpoint);
-            }
+    private Endpoint routeToEndpoint(Route route) {
+        String secretName = route.getMetadata().getAnnotations().get(AnnotationKeys.CERT_SECRET_NAME);
+        Endpoint.Builder builder = new Endpoint.Builder()
+                .setName(route.getMetadata().getName())
+                .setHost(route.getSpec().getHost())
+                .setService(route.getSpec().getTo().getName());
+
+        if (secretName != null) {
+            builder.setCertProvider(new SecretCertProvider(secretName));
         }
+
+        return builder.build();
+    }
+
+    private Endpoint ingressToEndpoint(Ingress ingress) {
+        String secretName = ingress.getMetadata().getAnnotations().get(AnnotationKeys.CERT_SECRET_NAME);
+        Endpoint.Builder builder = new Endpoint.Builder()
+                .setName(ingress.getMetadata().getName())
+                .setService(ingress.getSpec().getBackend().getServiceName());
+
+        if (secretName != null) {
+            builder.setCertProvider(new SecretCertProvider(secretName));
+            builder.setHost(ingress.getSpec().getTls().get(0).getHosts().get(0));
+        }
+
+        return builder.build();
     }
 
     private void updateReadiness(AddressSpace.Builder mutableAddressSpace) {
