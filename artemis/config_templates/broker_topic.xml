@@ -29,6 +29,6 @@
           <param key="host" value="$MESSAGING_SERVICE_HOST" />
           <param key="port" value="$MESSAGING_SERVICE_PORT_INTERNAL" />
           <param key="containerId" value="$CONTAINER_ID" />
-          <param key="groupId" value="$CONTAINER_ID" />
+          <param key="clusterId" value="$CONTAINER_ID" />
         </connector-service>
       </connector-services>
