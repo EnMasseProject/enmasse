@@ -11,7 +11,7 @@
     },
     "spec": {
         "host": hostname,
-        "path": "/v3",
+        "path": "/v1",
         "to": {
             "kind": "Service",
             "name": "address-controller"
@@ -39,7 +39,7 @@
           "http": {
             "paths": [
               {
-                "path": "/v3",
+                "path": "/v1",
                 "backend": {
                   "serviceName": "address-controller",
                   "servicePort": 8080
