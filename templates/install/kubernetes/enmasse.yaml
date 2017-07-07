@@ -389,7 +389,7 @@ items:
         - backend:
             serviceName: address-controller
             servicePort: 8080
-          path: "/v3"
+          path: "/v1"
 - apiVersion: v1
   kind: Service
   metadata:
