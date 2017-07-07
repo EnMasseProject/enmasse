@@ -109,7 +109,7 @@ public class ConfigMapAddressSpaceApi implements AddressSpaceApi {
         try {
             return mapper.readValue(map.getData().get("config.json"), AddressSpace.class);
         } catch (Exception e) {
-            log.error("ERror decoding address space", e);
+            log.error("Error decoding address space", e);
             throw new RuntimeException(e);
         }
     }
