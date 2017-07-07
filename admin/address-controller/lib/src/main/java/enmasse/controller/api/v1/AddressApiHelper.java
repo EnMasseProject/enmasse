@@ -70,11 +70,11 @@ public class AddressApiHelper {
         return address;
     }
 
-    public AddressList deleteAddress(String addressSpaceId, String address) throws IOException {
+    public AddressList deleteAddress(String addressSpaceId, String name) throws IOException {
         return addressSpaceApi.getAddressSpaceWithName(addressSpaceId)
                 .map(addressSpace -> {
                     AddressApi addressApi = addressSpaceApi.withAddressSpace(addressSpace);
-                    addressApi.getAddressWithName(address).ifPresent(addressApi::deleteAddress);
+                    addressApi.getAddressWithName(name).ifPresent(addressApi::deleteAddress);
                     return new AddressList(addressApi.listAddresses());
                 }).orElse(new AddressList());
     }

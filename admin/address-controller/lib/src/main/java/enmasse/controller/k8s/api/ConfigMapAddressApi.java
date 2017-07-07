@@ -41,8 +41,8 @@ public class ConfigMapAddressApi implements AddressApi {
     }
 
     @Override
-    public Optional<Address> getAddressWithName(String address) {
-        ConfigMap map = client.configMaps().inNamespace(namespace).withName(Kubernetes.sanitizeName("address-config-" + address)).get();
+    public Optional<Address> getAddressWithName(String name) {
+        ConfigMap map = client.configMaps().inNamespace(namespace).withName(Kubernetes.sanitizeName("address-config-" + name)).get();
         if (map == null) {
             return Optional.empty();
         } else {
@@ -96,7 +96,7 @@ public class ConfigMapAddressApi implements AddressApi {
 
     @Override
     public void replaceAddress(Address address) {
-        String name = Kubernetes.sanitizeName("address-config-" + address.getAddress());
+        String name = Kubernetes.sanitizeName("address-config-" + address.getName());
         ConfigMap previous = client.configMaps().inNamespace(namespace).withName(name).get();
         if (previous == null) {
             return;
@@ -105,7 +105,7 @@ public class ConfigMapAddressApi implements AddressApi {
     }
 
     private void createOrReplace(Address address) {
-        String name = Kubernetes.sanitizeName("address-config-" + address.getAddress());
+        String name = Kubernetes.sanitizeName("address-config-" + address.getName());
         DoneableConfigMap builder = client.configMaps().inNamespace(namespace).withName(name).createOrReplaceWithNew()
                 .withNewMetadata()
                 .withName(name)
@@ -119,13 +119,13 @@ public class ConfigMapAddressApi implements AddressApi {
             builder.addToData("config.json", mapper.writeValueAsString(address));
             builder.done();
         } catch (Exception e) {
-            log.info("Error serializing address for {}", address.getAddress(), e);
+            log.info("Error serializing address for {}", address, e);
         }
     }
 
     @Override
     public void deleteAddress(Address address) {
-        String name = Kubernetes.sanitizeName("address-config-" + address.getAddress());
+        String name = Kubernetes.sanitizeName("address-config-" + address.getName());
         client.configMaps().inNamespace(namespace).withName(name).delete();
     }
 
