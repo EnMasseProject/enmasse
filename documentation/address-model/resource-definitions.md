@@ -25,7 +25,7 @@ The `AddressSpace` resource defines the type of address space and endpoint for c
     "kind": "AddressSpace",
     "metadata": {
         "name": "myspace", // Required
-        "uuid": "4bfe49c2-60b5-11e7-a5d0-507b9def37d9", // Optional
+        "namespace": "mynamespace" // Optional
     },
     "spec": {
         "type": "standard", // Required. Default is 'standard', potentially configurable
@@ -41,12 +41,6 @@ The `AddressSpace` resource defines the type of address space and endpoint for c
                     "provider": "secret",        // Provider of certs may be through secrets or ACME. For 'secret', the secret name must be passed
                     "secretName": "mysecret"
                 }
-            }
-            "mqtt": {
-                "host": "mqtt.example.com"
-            },
-            "console": {
-                "host": "console.example.com"
             }
         }
     }
