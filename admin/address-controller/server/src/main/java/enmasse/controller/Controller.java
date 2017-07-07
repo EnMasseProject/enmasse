@@ -62,7 +62,7 @@ public class Controller extends AbstractVerticle {
         if (!options.isMultiinstance() && !kubernetes.hasService("messaging")) {
             AddressSpaceType type = new StandardAddressSpaceType();
             AddressSpace.Builder builder = new AddressSpace.Builder()
-                    .setName(kubernetes.getNamespace())
+                    .setName("default")
                     .setNamespace(kubernetes.getNamespace())
                     .setType(type)
                     .setPlan(type.getDefaultPlan());
