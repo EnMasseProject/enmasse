@@ -28,16 +28,14 @@ public class ConfigMapAddressApi implements AddressApi {
     private final Vertx vertx;
     private final OpenShiftClient client;
     private final String namespace;
-    private final AddressSpaceType addressSpaceType;
 
     // TODO: Parameterize
     private static final ObjectMapper mapper = CodecV1.getMapper();
 
-    public ConfigMapAddressApi(Vertx vertx, OpenShiftClient client, String namespace, AddressSpaceType addressSpaceType) {
+    public ConfigMapAddressApi(Vertx vertx, OpenShiftClient client, String namespace) {
         this.vertx = vertx;
         this.client = client;
         this.namespace = namespace;
-        this.addressSpaceType = addressSpaceType;
     }
 
     @Override
