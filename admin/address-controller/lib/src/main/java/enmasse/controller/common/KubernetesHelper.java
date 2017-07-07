@@ -18,10 +18,13 @@ package enmasse.controller.common;
 
 import enmasse.config.AnnotationKeys;
 import enmasse.config.LabelKeys;
+import io.enmasse.address.model.Endpoint;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.extensions.Deployment;
+import io.fabric8.kubernetes.api.model.extensions.DoneableIngress;
 import io.fabric8.kubernetes.client.dsl.Resource;
 import io.fabric8.openshift.api.model.DoneablePolicyBinding;
+import io.fabric8.openshift.api.model.DoneableRoute;
 import io.fabric8.openshift.api.model.PolicyBinding;
 import io.fabric8.openshift.client.OpenShiftClient;
 import io.fabric8.openshift.client.ParameterValue;
@@ -203,7 +206,7 @@ public class KubernetesHelper implements Kubernetes {
             return;
         }
         // TODO: Add labels
-        secret = client.secrets().createNew()
+        secret = client.secrets().inNamespace(namespace).createNew()
                 .editOrNewMetadata()
                 .withName(secretName)
                 .endMetadata()
@@ -218,44 +221,62 @@ public class KubernetesHelper implements Kubernetes {
     }
 
     @Override
-    public void createRoute(String name, String service, String servicePort, String host, String namespace) {
+    public void createEndpoint(Endpoint endpoint, Map<String, String> servicePortMap, String namespace, String addressSpaceName) {
         // TODO: Add labels
         if (client.isAdaptable(OpenShiftClient.class)) {
-            client.routes().inNamespace(namespace).createNew()
+            DoneableRoute route = client.routes().inNamespace(namespace).createNew()
                     .editOrNewMetadata()
-                    .withName(name)
+                    .withName(endpoint.getName())
+                    .addToAnnotations(AnnotationKeys.ADDRESS_SPACE, addressSpaceName)
                     .endMetadata()
                     .editOrNewSpec()
-                    .withHost(host)
-                    .withNewTls()
-                    .withTermination("passthrough")
-                    .endTls()
+                    .withHost(endpoint.getHost().orElse(""))
                     .withNewTo()
-                    .withName(service)
+                    .withName(endpoint.getService())
                     .withKind("Service")
                     .endTo()
                     .withNewPort()
                     .editOrNewTargetPort()
-                    .withStrVal(servicePort)
+                    .withStrVal(servicePortMap.get(endpoint.getService()))
                     .endTargetPort()
                     .endPort()
-                    .endSpec()
-                    .done();
+                    .endSpec();
+
+            if (endpoint.getCertProvider().isPresent()) {
+                route.editOrNewMetadata()
+                        .addToAnnotations(AnnotationKeys.CERT_SECRET_NAME, endpoint.getCertProvider().get().getSecretName())
+                        .endMetadata()
+                        .editOrNewSpec()
+                        .withNewTls()
+                        .withTermination("passthrough")
+                        .endTls()
+                        .endSpec();
+            }
+            route.done();
         } else {
-            client.extensions().ingresses().inNamespace(namespace).createNew()
+            DoneableIngress ingress = client.extensions().ingresses().inNamespace(namespace).createNew()
                     .editOrNewMetadata()
-                    .withName(name)
+                    .withName(endpoint.getName())
+                    .addToAnnotations(AnnotationKeys.ADDRESS_SPACE, addressSpaceName)
                     .endMetadata()
                     .editOrNewSpec()
-                    .addNewTl()
-                    .addToHosts(host)
-                    .withSecretName("")
-                    .endTl()
                     .editOrNewBackend()
-                    .withServiceName(service)
+                    .withServiceName(endpoint.getService())
+                    .withServicePort(new IntOrString(servicePortMap.get(endpoint.getService())))
                     .endBackend()
-                    .endSpec()
-                    .done();
+                    .endSpec();
+
+            if (endpoint.getCertProvider().isPresent()) {
+                ingress.editOrNewMetadata()
+                        .addToAnnotations(AnnotationKeys.CERT_SECRET_NAME, endpoint.getCertProvider().get().getSecretName())
+                        .endMetadata()
+                        .editOrNewSpec()
+                        .addNewTl()
+                        .addToHosts(endpoint.getHost().orElse(""))
+                        .withSecretName("")
+                        .endTl();
+            }
+            ingress.done();
         }
     }
 
