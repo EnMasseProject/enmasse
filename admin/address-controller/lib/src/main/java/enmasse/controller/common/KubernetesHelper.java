@@ -220,7 +220,7 @@ public class KubernetesHelper implements Kubernetes {
     }
 
     @Override
-    public void createEndpoint(Endpoint endpoint, Map<String, String> servicePortMap, String namespace, String addressSpaceName) {
+    public void createEndpoint(Endpoint endpoint, Map<String, String> servicePortMap, String addressSpaceName, String namespace) {
         // TODO: Add labels
         if (client.isAdaptable(OpenShiftClient.class)) {
             DoneableRoute route = client.routes().inNamespace(namespace).createNew()
