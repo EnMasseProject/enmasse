@@ -1,7 +1,10 @@
 package enmasse.queue.scheduler;
 
+import io.enmasse.address.model.Address;
+import io.enmasse.address.model.AddressList;
+import io.enmasse.address.model.types.standard.StandardType;
+import io.enmasse.address.model.v1.CodecV1;
 import io.vertx.core.AbstractVerticle;
-import io.vertx.core.json.JsonObject;
 import io.vertx.proton.ProtonClient;
 import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.ProtonReceiver;
@@ -9,6 +12,7 @@ import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -52,7 +56,8 @@ public class ConfigServiceClient extends AbstractVerticle {
                 });
                 receiver.handler((protonDelivery, message) -> {
                     String payload = (String)((AmqpValue)message.getBody()).getValue();
-                    Map<String, Set<String>> addressConfig = decodeAddressConfig(new JsonObject(payload));
+                    Map<String, Set<Address>> addressConfig = decodeAddressConfig(payload);
+
                     configListener.addressesChanged(addressConfig);
                 });
                 receiver.open();
@@ -63,25 +68,42 @@ public class ConfigServiceClient extends AbstractVerticle {
         });
     }
 
-    private Map<String, Set<String>> decodeAddressConfig(JsonObject payload) {
-        Map<String, Set<String>> addressMap = new LinkedHashMap<>();
-        for (String address : payload.fieldNames()) {
-            JsonObject addressObject = payload.getJsonObject(address);
-            if (isQueue(addressObject)) {
-                String groupId = addressObject.getString("cluster_id");
-                Set<String> addresses = addressMap.get(groupId);
-                if (addresses == null) {
-                    addresses = new HashSet<>();
-                    addressMap.put(groupId, addresses);
+    private Map<String, Set<Address>> decodeAddressConfig(String payload) {
+        try {
+
+            AddressList addressList = CodecV1.getMapper().readValue(payload, AddressList.class);
+
+            Map<String, Set<Address>> addressMap = new LinkedHashMap<>();
+            for (Address address : addressList) {
+                if (isQueue(address)) {
+                    String clusterId = getClusterIdForQueue(address);
+                    Set<Address> addresses = addressMap.computeIfAbsent(clusterId, k -> new HashSet<>());
+                    addresses.add(address);
                 }
-                addresses.add(address);
             }
+            return addressMap;
+        } catch (IOException e) {
+            throw new RuntimeException("Error decoding JSON payload '"+payload+"'", e);
         }
-        return addressMap;
     }
 
-    private boolean isQueue(JsonObject addressObject) {
-        return addressObject.getBoolean("store_and_forward") && !addressObject.getBoolean("multicast");
+    private boolean isQueue(Address address) {
+        return StandardType.QUEUE.equals(address.getType());
+    }
+
+
+    // TODO: Put this constant somewhere appropriate
+    private boolean isPooled(Address address) {
+        return address.getPlan().getName().startsWith("pooled");
+    }
+
+    //TODO: This logic is replicated from AddressController (and is also horrid and broken)
+    private String getClusterIdForQueue(Address address) {
+        if (isPooled(address)) {
+            return address.getPlan().getName();
+        } else {
+            return address.getName();
+        }
     }
 
     @Override
