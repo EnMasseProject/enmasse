@@ -16,6 +16,7 @@
 
 package enmasse.queue.scheduler;
 
+import io.enmasse.address.model.Address;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.ProtonServer;
@@ -113,7 +114,7 @@ public class QueueScheduler extends AbstractVerticle implements ConfigListener {
     }
 
     @Override
-    public void addressesChanged(Map<String, Set<String>> addressMap) {
+    public void addressesChanged(Map<String, Set<Address>> addressMap) {
         executeBlocking(() -> schedulerState.addressesChanged(addressMap), "Error handling address change");
     }
 
