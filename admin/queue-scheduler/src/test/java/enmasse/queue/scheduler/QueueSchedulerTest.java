@@ -16,6 +16,8 @@
 
 package enmasse.queue.scheduler;
 
+import io.enmasse.address.model.Address;
+import io.enmasse.address.model.types.standard.StandardType;
 import io.vertx.core.Vertx;
 import org.junit.After;
 import org.junit.Before;
@@ -26,7 +28,9 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import static enmasse.queue.scheduler.TestUtils.waitForPort;
 import static org.hamcrest.CoreMatchers.hasItem;
@@ -35,6 +39,10 @@ import static org.junit.Assert.assertThat;
 
 public class QueueSchedulerTest {
 
+    private static final String POOLED_INMEMORY = "pooled-inmemory";
+    private static final String POOLED_PERSISTED = "pooled-persisted";
+
+    private static final String INMEMORY = "inmemory";
     private Vertx vertx;
     private TestBrokerFactory brokerFactory;
     private QueueScheduler scheduler;
@@ -57,9 +65,9 @@ public class QueueSchedulerTest {
 
     @Test
     public void testAddressAddedBeforeBroker() throws InterruptedException, ExecutionException, TimeoutException {
-        scheduler.addressesChanged(Collections.singletonMap("br1", Sets.newSet("queue1", "queue2")));
+        scheduler.addressesChanged(Collections.singletonMap(POOLED_INMEMORY, Sets.newSet(createQueue("queue1", true, false), createQueue("queue2", true, false))));
 
-        TestBroker br1 = deployBroker("br1");
+        TestBroker br1 = deployBroker(POOLED_INMEMORY);
 
         waitForAddresses(br1, 2);
         assertThat(br1.getQueueNames(), hasItem("queue1"));
@@ -68,14 +76,14 @@ public class QueueSchedulerTest {
 
     @Test
     public void testAddressAdded() throws InterruptedException {
-        TestBroker br1 = deployBroker("br1");
-        scheduler.addressesChanged(Collections.singletonMap("br1", Sets.newSet("queue1", "queue2")));
+        TestBroker br1 = deployBroker(POOLED_INMEMORY);
+        scheduler.addressesChanged(Collections.singletonMap(POOLED_INMEMORY, Sets.newSet(createQueue("queue1", true, false), createQueue("queue2", true, false))));
 
         waitForAddresses(br1, 2);
         assertThat(br1.getQueueNames(), hasItem("queue1"));
         assertThat(br1.getQueueNames(), hasItem("queue2"));
 
-        scheduler.addressesChanged(Collections.singletonMap("br1", Sets.newSet("queue1", "queue2", "queue3")));
+        scheduler.addressesChanged(Collections.singletonMap(POOLED_INMEMORY, Sets.newSet(createQueue("queue1", true, false), createQueue("queue2", true, false), createQueue("queue3", true, false))));
 
         waitForAddresses(br1, 3);
         assertThat(br1.getQueueNames(), hasItem("queue1"));
@@ -85,23 +93,23 @@ public class QueueSchedulerTest {
 
     @Test
     public void testAddressRemoved() throws InterruptedException {
-        TestBroker br1 = deployBroker("br1");
-        scheduler.addressesChanged(Collections.singletonMap("br1", Sets.newSet("queue1", "queue2")));
+        TestBroker br1 = deployBroker(POOLED_INMEMORY);
+        scheduler.addressesChanged(Collections.singletonMap(POOLED_INMEMORY, Sets.newSet(createQueue("queue1", true, false), createQueue("queue2", true, false))));
         waitForAddresses(br1, 2);
         assertThat(br1.getQueueNames(), hasItem("queue1"));
         assertThat(br1.getQueueNames(), hasItem("queue2"));
 
-        scheduler.addressesChanged(Collections.singletonMap("br1", Sets.newSet("queue1")));
+        scheduler.addressesChanged(Collections.singletonMap(POOLED_INMEMORY, Sets.newSet(createQueue("queue1", true, false))));
         waitForAddresses(br1, 1);
         assertThat(br1.getQueueNames(), hasItem("queue1"));
     }
 
     @Test
     public void testGroupDeleted() throws InterruptedException {
-        TestBroker br1 = deployBroker("br1");
-        TestBroker br2 = deployBroker("br2");
+        TestBroker br1 = deployBroker(POOLED_INMEMORY);
+        TestBroker br2 = deployBroker(POOLED_PERSISTED);
 
-        scheduler.addressesChanged(createMap("br1", "br2", "queue1", "queue2"));
+        scheduler.addressesChanged(createMap(POOLED_INMEMORY, POOLED_PERSISTED, createQueue("queue1", true, false), createQueue("queue2", true, true)));
 
         waitForAddresses(br1, 1);
         waitForAddresses(br2, 1);
@@ -109,15 +117,15 @@ public class QueueSchedulerTest {
         assertThat(br1.getQueueNames(), hasItem("queue1"));
         assertThat(br2.getQueueNames(), hasItem("queue2"));
 
-        scheduler.addressesChanged(Collections.singletonMap("br2", Sets.newSet("queue2")));
+        scheduler.addressesChanged(Collections.singletonMap(POOLED_PERSISTED, Sets.newSet(createQueue("queue2", true, true))));
         waitForAddresses(br1, 1);
         waitForAddresses(br2, 1);
         assertThat(br1.getQueueNames(), hasItem("queue1"));
         assertThat(br2.getQueueNames(), hasItem("queue2"));
     }
 
-    private Map<String, Set<String>> createMap(String key1, String key2, String value1, String value2) {
-        Map<String, Set<String>> map = new HashMap<>();
+    private Map<String, Set<Address>> createMap(String key1, String key2, Address value1, Address value2) {
+        Map<String, Set<Address>> map = new HashMap<>();
         map.put(key1, Sets.newSet(value1));
         map.put(key2, Sets.newSet(value2));
         return map;
@@ -125,45 +133,45 @@ public class QueueSchedulerTest {
 
     @Test
     public void testBrokerAdded() throws InterruptedException {
-        scheduler.addressesChanged(createMap("br1", "br2", "queue1", "queue2"));
+        scheduler.addressesChanged(createMap(POOLED_INMEMORY, POOLED_PERSISTED, createQueue("queue1", true, false), createQueue("queue2", true, true)));
 
-        TestBroker br1 = deployBroker("br1");
+        TestBroker br1 = deployBroker(POOLED_INMEMORY);
         waitForAddresses(br1, 1);
         assertThat(br1.getQueueNames(), hasItem("queue1"));
 
-        TestBroker br2 = deployBroker("br2");
+        TestBroker br2 = deployBroker(POOLED_PERSISTED);
         waitForAddresses(br2, 1);
         assertThat(br2.getQueueNames(), hasItem("queue2"));
     }
 
     @Test
     public void testBrokerRemoved() throws InterruptedException, TimeoutException, ExecutionException {
-        scheduler.addressesChanged(createMap("br1", "br2", "queue1", "queue2"));
+        scheduler.addressesChanged(createMap(POOLED_INMEMORY, POOLED_PERSISTED, createQueue("queue1", true, false), createQueue("queue2", true, true)));
 
-        TestBroker br1 = deployBroker("br1");
-        TestBroker br2 = deployBroker("br2");
+        TestBroker br1 = deployBroker(POOLED_INMEMORY);
+        TestBroker br2 = deployBroker(POOLED_PERSISTED);
 
         waitForAddresses(br1, 1);
         waitForAddresses(br2, 1);
 
         br2.close();
 
-        br2 = deployBroker("br2");
+        br2 = deployBroker(POOLED_PERSISTED);
         waitForAddresses(br2, 1);
         assertThat(br2.getQueueNames(), hasItem("queue2"));
     }
 
     @Test
     public void testBrokerReconnected() throws InterruptedException, TimeoutException, ExecutionException {
-        TestBroker br1 = deployBroker("br1");
-        scheduler.addressesChanged(Collections.singletonMap("br1", Sets.newSet("queue1")));
+        TestBroker br1 = deployBroker(POOLED_INMEMORY);
+        scheduler.addressesChanged(Collections.singletonMap(POOLED_INMEMORY, Sets.newSet(createQueue("queue1", true, false))));
 
         waitForAddresses(br1, 1);
         assertThat(br1.getQueueNames(), hasItem("queue1"));
 
         br1.close();
 
-        br1 = deployBroker("br1");
+        br1 = deployBroker(POOLED_INMEMORY);
         waitForAddresses(br1, 1);
         assertThat(br1.getQueueNames(), hasItem("queue1"));
     }
@@ -184,5 +192,13 @@ public class QueueSchedulerTest {
 
     private TestBroker deployBroker(String id) throws InterruptedException {
         return brokerFactory.deployBroker(id);
+    }
+
+    private Address createQueue(String name, boolean pooled, boolean persisted) {
+        Address.Builder builder = new Address.Builder();
+        builder.setName(name);
+        builder.setType(StandardType.QUEUE);
+        builder.setPlan(StandardType.QUEUE.getPlans().stream().filter(p -> p.getName().equals(pooled ? persisted ? POOLED_PERSISTED : POOLED_INMEMORY : INMEMORY) ).findFirst().get());
+        return builder.build();
     }
 }

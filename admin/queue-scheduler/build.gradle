@@ -1,5 +1,6 @@
 description = 'Queue Scheduler'
 dependencies {
+    compile project(':admin:common-lib:config')
     compile "io.vertx:vertx-proton:${vertxVersion}"
     compile "org.slf4j:slf4j-api:${slf4jVersion}"
     compile "org.slf4j:slf4j-log4j12:${slf4jVersion}"
