@@ -1,3 +1,6 @@
+ifdef::env-github[]
+:imagesdir: https://github.com/EnMasseProject/enmasse/raw/master/documentation/userdoc/
+endif::[]
 = Desired User Documentation
 
 This is an initial attempt to begin listing the different things that
@@ -17,9 +20,9 @@ there is the facility to provide descriptions of the services and
 links to further information. Below are two screenshots, encountered
 when creating a queue:
 
-image::screenshot_service_catalog_queue_1.png
+image::screenshot_service_catalog_queue_1.png[]
 
-image::screenshot_service_catalog_queue_2.png
+image::screenshot_service_catalog_queue_2.png[]
 
 For each service type - queue, topic, direct-anycast and
 direct-multicast - we should provide:
