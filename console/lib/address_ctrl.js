@@ -24,17 +24,18 @@ function hostport(defaults) {
         result.host = process.env.ADDRESS_SPACE_SERVICE_HOST;
     } else if (process.env.ADDRESS_CONTROLLER_SERVICE_HOST) {
         result.host = process.env.ADDRESS_CONTROLLER_SERVICE_HOST;
-        result.port = process.env.ADDRESS_CONTROLLER_SERVICE_PORT_HTTP;
+        if (process.env.ADDRESS_CONTROLLER_SERVICE_PORT_HTTP) {
+            result.port = process.env.ADDRESS_CONTROLLER_SERVICE_PORT_HTTP;
+        }
     }
     return result;
 }
 
 function address_path() {
-    var path = "/v3";
-    if (process.env.INSTANCE) {
-        path += "/instance/" + process.env.INSTANCE;
+    var path = "/v1/addresses/";
+    if (process.env.ADDRESS_SPACE) {
+        path += process.env.ADDRESS_SPACE + "/";
     }
-    path += "/address";
     return path;
 }
 
@@ -95,53 +96,64 @@ function request(path, method, headers, body, handler) {
     });
 }
 
+function get_type(address) {
+    if (address.store_and_forward) {
+        if (address.multicast) {
+            return 'topic';
+        } else {
+            return 'queue';
+        }
+    } else {
+        if (address.multicast) {
+            return 'multicast';
+        } else {
+            return 'anycast';
+        }
+    }
+}
+
 function create_address(address) {
     var data = {
-        "apiVersion": "v3",
-        "kind": "Address",
-        "metadata": {
-            "name": address.address
-        },
-        "spec": {
-            "store_and_forward": address.store_and_forward,
-            "multicast": address.multicast,
-        }
+        "apiVersion": "enmasse.io/v1",
+        "kind": "AddressList",
+        "items" : [
+            {
+                "metadata": {
+                    "name": address.address
+                },
+                "spec": {
+                    "address": address.address,
+                    "type": address.type,
+                    "plan": address.plan
+                }
+            }
+        ]
     };
-    if (address.flavor) {
-        data.spec.flavor = address.flavor;
-    }
-    if (address.group_id) {
-        data.spec.group = address.group_id;
-    }
     return request(addr_path, 'POST', {'content-type': 'application/json'}, JSON.stringify(data));
 }
 
 function delete_address(address) {
-    return request(addr_path + '/' + address.address, 'DELETE');
+    return request(addr_path + address.address, 'DELETE');
 }
 
-function flavor_list(text) {
+function index(list) {
+    return list.reduce(function (map, item) { map[item.name] = item; return map; }, {});
+}
+
+function address_types(text) {
     var object = JSON.parse(text);
-    if (object.kind === 'FlavorList') {
-        var flavors = {};
-        object.items.forEach(function(item) {
-            flavors[item.metadata.name] = {
-                'name':item.metadata.name,
-                'type':item.spec.type,
-                'description':item.spec.description
-            }
-        });
-        return flavors;
+    if (object.kind === 'Schema') {
+        //TODO: retrieve type for current address-space (assume 'standard' for now)
+        return index(object.spec.addressSpaceTypes)['standard'].addressTypes;
     } else {
         throw new Error('Unexpected object kind: ' + object.kind);
     }
 }
 
-function get_flavors() {
-    console.log('retrieving flavors from ' + JSON.stringify(ctrlr));
-    return request('/v3/flavor/', 'GET', undefined, undefined, flavor_list);
+function get_address_types() {
+    return request('/v1/schema/', 'GET', undefined, undefined, address_types);
 }
 
 module.exports.create_address = create_address;
 module.exports.delete_address = delete_address;
-module.exports.get_flavors = get_flavors;
+module.exports.get_address_types = get_address_types;

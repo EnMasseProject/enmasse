@@ -1,12 +1,8 @@
 <div ng-controller="DetailsReviewController">
-  <form class="form" ng-if="data.pattern === 'queue' || data.pattern === 'topic'">
+  <form class="form">
     <div class="wizard-pf-review-item">
       <span class="wizard-pf-review-item-label">Plan:</span>
-      <span class="wizard-pf-review-item-value">{{data.flavor}}</span>
-    </div>
-    <div class="wizard-pf-review-item" ng-if="data.pattern === 'queue'">
-      <span class="wizard-pf-review-item-label">Pooled:</span>
-      <span class="wizard-pf-review-item-value">{{data.pooled}}</span>
+      <span class="wizard-pf-review-item-value">{{data.plan}}</span>
     </div>
   </form>
 </div>

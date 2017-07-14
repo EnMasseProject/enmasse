@@ -12,35 +12,30 @@
        review-template="components/addresses/pattern-review.html" next-enabled="semantics_complete" on-show="onShow">
     <div ng-controller="SemanticsController">
       <form class="form-horizontal">
-        <div pf-form-group pf-label="Name" required>
+        <div pf-form-group pf-label="Name" pf-label-class="col-sm-3" pf-input-class="col-sm-9" required>
           <input id="new-name"  class="form-control" name="address" ng-model="data.address" type="text" ng-change="updateName()" pf-validation="unique_address_name(input)" required/>
           <span class="help-block">The name you typed is not unique.</span>
         </div>
-        <div pf-form-group pf-label="Pattern">
-          <input id="new-queue" name="pattern" value="queue" ng-model="data.pattern" type="radio" /> Queue &nbsp
-          <input id="new-topic" name="pattern" value="topic" ng-model="data.pattern" type="radio" /> Topic &nbsp
-          <input id="new-anycast" name="pattern" value="anycast" ng-model="data.pattern" type="radio" /> Anycast &nbsp
-          <input id="new-multicast" name="pattern" value="multicast" ng-model="data.pattern" type="radio" /> Multicast
-        </div>
-        <div pf-form-group pf-label="Transactional">
-          <input id="new-transactional" name="transactional" ng-model="data.transactional" type="checkbox" ng-disabled="data.pattern !== 'queue' && data.pattern !== 'topic'"/>
+        <div pf-form-group pf-label="Type" pf-label-class="col-sm-3" pf-input-class="col-sm-9">
+          <div ng-repeat="type in valid_address_types()">
+            <div pf-form-group pf-label-class="col-sm-3" pf-input-class="col-sm-9" pf-label="{{type.name}}">
+              <input id="{{type.name}}" name="type" value="{{type.name}}" ng-model="data.type" type="radio"/>
+              <div style=".col-sm-9">{{type.description}}</div>
+            </div>
+          </div>
         </div>
       </form>
     </div>
   </div>
   <div pf-wizard-step step-title="Plan" substeps="false" step-id="plan" step-priority="1" show-review="true" show-review-details="true" review-template="components/addresses/plan-review.html">
-    <form class="form-horizontal" ng-if="!no_plan">
-      <div ng-repeat="f in valid_flavors()">
-        <div pf-form-group pf-label-class="col-sm-3" pf-input-class="col-sm-8" pf-label="{{f.name}}">
-          <input id="{{f.name}}" name="plan" value="{{f.name}}" ng-model="data.flavor" type="radio"/>
-          <div>{{f.description}}</div>
+    <form class="form-horizontal">
+      <div ng-repeat="plan in valid_plans()">
+        <div pf-form-group pf-label-class="col-sm-3" pf-input-class="col-sm-9" pf-label="{{plan.name}}">
+          <input id="{{plan.name}}" name="plan" value="{{plan.name}}" ng-model="data.plan" type="radio"/>
+          <div>{{plan.description}}</div>
         </div>
       </div>
-      <div pf-form-group pf-label="Pooled" ng-if="data.pattern === 'queue'">
-        <input id="new-pooled" name="pooled" ng-model="data.pooled" type="checkbox" ng-disabled="data.pattern !== 'queue'"/>
-      </div>
     </form>
-    <div ng-if="no_plan">There is no choice of plans for {{data.pattern}}.</div>
   </div>
   <div ng-controller="SummaryController">
     <div pf-wizard-step step-title="Summary" substeps="false" step-id="review" step-priority="2" on-show="onShow">

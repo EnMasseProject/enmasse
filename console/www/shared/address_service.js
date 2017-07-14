@@ -88,23 +88,10 @@ AddressDefinition.prototype.update = function (a) {
     for (var k in a) {
         this[k] = a[k];
     }
-    if (this.store_and_forward) {
-        if (this.multicast) {
-            this.pattern = "topic";
-        } else {
-            this.pattern = "queue";
-        }
-    } else {
-        if (this.multicast) {
-            this.pattern = "multicast";
-        } else {
-            this.pattern = "anycast";
-        }
-    }
 }
 
 AddressDefinition.prototype.update_depth_series = function () {
-    if (this.store_and_forward && this.depth !== undefined) {
+    if ((this.type === 'queue' || this.type === 'topic') && this.depth !== undefined) {
         this.depth_series.push(this.depth);
         return true;
     } else {
@@ -121,7 +108,7 @@ AddressDefinition.prototype.update_periodic_deltas = function () {
 
 function AddressService() {
     this.addresses = [];
-    this.flavors = [];
+    this.address_types = [];
     this.connections = [];
     this.users = [];
     var ws = rhea.websocket_connect(WebSocket);
@@ -132,6 +119,15 @@ function AddressService() {
     setInterval(this.update_periodic_deltas.bind(this), 30000);
     setInterval(this.update_depth_series.bind(this), 30000);
 }
+
+AddressService.prototype.get_valid_plans = function (type) {
+    var l = this.address_types.filter(function (f) { return f.name === type; })
+    return l.length ? l[0].plans : [];
+};
+
+AddressService.prototype.get_valid_address_types = function () {
+    return this.address_types;
+};
 
 AddressService.prototype.update_depth_series = function () {
     var changed = false;
@@ -163,24 +159,7 @@ AddressService.prototype.update = function (a) {
 }
 
 AddressService.prototype.create_address = function (obj) {
-    var added = { address: obj.address };
-    if (obj.pattern === 'queue') {
-        added.multicast = false;
-        added.store_and_forward = true;
-    } else if (obj.pattern === 'topic') {
-        added.multicast = true;
-        added.store_and_forward = true;
-    } else if (obj.pattern === 'anycast') {
-        added.multicast = false;
-        added.store_and_forward = false;
-    } else if (obj.pattern === 'multicast') {
-        added.multicast = true;
-        added.store_and_forward = false;
-    }
-    if (obj.flavor) added.flavor = obj.flavor;
-    if (obj.transactional) added.group_id = 'transactional';
-    else if (obj.pooled) added.group_id = 'pooled';
-    this.sender.send({subject: 'create_address', body: added});
+    this.sender.send({subject: 'create_address', body: obj});
 }
 
 AddressService.prototype.delete_selected = function () {
@@ -249,9 +228,9 @@ AddressService.prototype.on_message = function (context) {
             }
         }
         if (changed && this.callback) this.callback('address:deleted');
-    } else if (context.message.subject === 'flavors') {
-        this.flavors = context.message.body;
-        if (this.callback) this.callback('flavors');
+    } else if (context.message.subject === 'address_types') {
+        this.address_types = context.message.body;
+        if (this.callback) this.callback('address_types');
     } else if (context.message.subject === 'connection') {
         this.update_connection(context.message.body);
         if (this.callback) this.callback('connection');
