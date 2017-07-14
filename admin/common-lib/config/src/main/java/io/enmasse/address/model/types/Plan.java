@@ -22,11 +22,18 @@ import java.util.Optional;
  */
 public interface Plan {
     /**
-     * Get the name of the plan.
+     * Get the CLI-friendly name of the plan.
      *
      * @return The name
      */
     String getName();
+
+    /**
+     * Get the human-friendly name of the plan (used in the GUI).
+     *
+     * @return The display name
+     */
+    String getDisplayName();
 
     /**
      * Get a longer description of the plan.

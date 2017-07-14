@@ -17,7 +17,6 @@
 package enmasse.controller.api.osb.v2;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.not;
 import static org.junit.Assert.assertThat;
 
 import enmasse.controller.api.TestAddressSpaceApi;
@@ -46,6 +45,11 @@ public class CatalogServiceTest {
         assertService(services.get(1), "enmasse-multicast", "standard");
         assertService(services.get(2), "enmasse-queue", "inmemory", "persisted", "pooled-inmemory", "pooled-persisted");
         assertService(services.get(3), "enmasse-topic", "inmemory", "persisted");
+
+        Service service = services.get(2);
+        Plan plan = service.getPlans().get(0);
+        assertThat(plan.getMetadata().get("displayName"), is("In-memory"));
+        assertThat(plan.getDescription(), is("Creates a standalone broker cluster for queues. Messages are not persisted on stable storage."));
     }
 
     private void assertService(Service service, String name, String... planNames) {
