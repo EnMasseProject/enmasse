@@ -36,17 +36,13 @@ Addresses.prototype.update_stats = function (name, stats) {
 var addresses = new Addresses();
 
 var configserv = require('./admin_service.js').connect(rhea, 'CONFIGURATION');
-configserv.open_receiver('maas').on('message', function (context) {
+configserv.open_receiver('v1/addresses').on('message', function (context) {
     try {
         var content = JSON.parse(context.message.body);
-        for (var v in content) {
-            if (content[v].address === undefined) {
-                content[v].address = v;
-            }
-        }
-        addresses.known_addresses(content);
+        var defs = content.items.map(function (address) { return address.spec; });
+        addresses.known_addresses(defs.reduce(function (map, a) { map[a.address] = a; return map; }, {}));
     } catch (e) {
-        console.log('ERROR: failed to parse addresses as JSON: ' + e + '; ' + context.message.body);
+        console.log('ERROR: failed to parse addresses: ' + e + '; ' + context.message.body);
     }
 });
 

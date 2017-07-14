@@ -105,7 +105,7 @@ function get_stats_for_address(stats, address) {
     return s;
 }
 
-function count_by_address(links, stats, router) {
+function collect_by_address(links, stats, router) {
     for (var l in links) {
         var link = links[l];
         if (link.linkType === 'endpoint' && link.owningAddr) {
@@ -253,7 +253,7 @@ RouterStats.prototype.retrieve = function (addresses, connection_registry) {
             Promise.all(routers.map(function (router) { return router.get_links(); })).then(function (results) {
                 var address_stats = {};
                 results.forEach(function (links, i) {
-                    count_by_address(links, address_stats, routers[i]);
+                    collect_by_address(links, address_stats, routers[i]);
                     collect_by_connection(links, connections, routers[i]);
                 });
                 connection_registry.set(connections);

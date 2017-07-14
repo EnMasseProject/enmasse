@@ -376,14 +376,15 @@ angular.module('patternfly.wizard').controller('WizardController', ['$scope', '$
         var initializeWizard = function () {
             $scope.data = {
                 address: '',
-                pattern: 'queue',
-                flavor: address_service.flavors.filter(function (f) { return f.type === $scope.data.pattern; }),
-                transactional: false,
-                pooled: false
+                type: '',
+                plan: ''
             };
             $scope.semantics_complete = false;
-            $scope.valid_flavors = function () {
-                return address_service.flavors.filter(function (f) { return f.type === $scope.data.pattern; });
+            $scope.valid_plans = function () {
+                return address_service.get_valid_plans($scope.data.type);
+            };
+            $scope.valid_address_types = function () {
+                return address_service.get_valid_address_types();
             };
 
             $scope.updateName = function() {
@@ -402,13 +403,9 @@ angular.module('patternfly.wizard').controller('WizardController', ['$scope', '$
             if (step.stepId === 'review') {
                 address_service.create_address($scope.data);
             } else if (step.stepId === 'semantics') {
-                var f = $scope.valid_flavors();
-                if (f.length) {
-                    $scope.data.flavor = $scope.valid_flavors()[0].name;
-                    $scope.no_plan = false;
-                } else {
-                    $scope.data.flavor = undefined;
-                    $scope.no_plan = true;
+                var f = $scope.valid_plans();
+                if (f && f.length) {
+                    $scope.data.plan = $scope.valid_plans()[0].name;
                 }
             }
             return true;
