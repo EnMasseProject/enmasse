@@ -31,11 +31,13 @@ class StaticPlanConfig {
                 Arrays.asList(
                     new StandardPlan(
                         "inmemory",
+                        "In-memory",
                         "Creates a standalone broker cluster for topics. Messages are not persisted on stable storage.",
                         "824e119c-615a-11e7-a25e-507b9def37d9",
                         new TemplateConfig("topic-inmemory", Collections.emptyMap())),
                     new StandardPlan(
                         "persisted",
+                        "Persisted",
                         "Creates a standalone broker cluster for topics. Messages are persisted on stable storage.",
                         "45645150-6160-11e7-98db-507b9def37d9",
                         new TemplateConfig("topic-persisted", Collections.emptyMap()))));
@@ -44,21 +46,25 @@ class StaticPlanConfig {
             Collections.unmodifiableList(Arrays.asList(
                     new StandardPlan(
                         "inmemory",
+                        "In-memory",
                         "Creates a standalone broker cluster for queues. Messages are not persisted on stable storage.",
                         "c5f2a60a-6160-11e7-9edd-507b9def37d9",
                         new TemplateConfig("queue-inmemory", Collections.emptyMap())),
                     new StandardPlan(
                         "persisted",
+                        "Persisted",
                         "Creates a standalone broker cluster for queues. Messages are persisted on stable storage.",
                         "c5f2a60a-6160-11e7-9edd-507b9def37d9",
                         new TemplateConfig("queue-persisted", Collections.emptyMap())),
                     new StandardPlan(
                         "pooled-inmemory",
+                        "Pooled In-memory",
                         "Schedules queues to run on a shared broker cluster, reducing overhead. Messages are not persisted on stable storage.",
                         "ef79c9dc-615a-11e7-b01c-507b9def37d9",
                         new TemplateConfig("queue-inmemory", Collections.emptyMap())),
                     new StandardPlan(
                         "pooled-persisted",
+                        "Pooled Persisted",
                         "Schedules queues to run on a shared broker cluster, reducing overhead. Messages are persisted on stable storage.",
                         "49dbd366-615b-11e7-a59e-507b9def37d9",
                         new TemplateConfig("queue-persisted", Collections.emptyMap()))));
@@ -67,6 +73,7 @@ class StaticPlanConfig {
             Collections.unmodifiableList(Arrays.asList(
                     new StandardPlan(
                             "standard",
+                            "Standard",
                             "Configures router network with anycast address.",
                             "ce7d6a6e-6163-11e7-9ac9-507b9def37d9",
                             null)));
@@ -75,6 +82,7 @@ class StaticPlanConfig {
             Collections.unmodifiableList(Arrays.asList(
                     new StandardPlan(
                             "standard",
+                            "Standard",
                             "Configures router network with multicast address.",
                             "e840275c-6163-11e7-9fe6-507b9def37d9",
                             null)));

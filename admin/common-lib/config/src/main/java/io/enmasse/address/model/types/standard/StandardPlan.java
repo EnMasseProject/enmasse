@@ -25,12 +25,14 @@ import java.util.Optional;
 public class StandardPlan implements Plan {
 
     private final String name;
+    private final String displayName;
     private final String description;
     private final String uuid;
     private final TemplateConfig templateConfig;
 
-    public StandardPlan(String name, String description, String uuid, TemplateConfig templateConfig) {
+    public StandardPlan(String name, String displayName, String description, String uuid, TemplateConfig templateConfig) {
         this.name = name;
+        this.displayName = displayName;
         this.description = description;
         this.uuid = uuid;
         this.templateConfig = templateConfig;
@@ -39,6 +41,11 @@ public class StandardPlan implements Plan {
     @Override
     public String getName() {
         return name;
+    }
+
+    @Override
+    public String getDisplayName() {
+        return displayName;
     }
 
     @Override

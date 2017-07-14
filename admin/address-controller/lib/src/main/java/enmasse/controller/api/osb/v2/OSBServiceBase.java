@@ -106,6 +106,7 @@ public abstract class OSBServiceBase {
                 sanitizePlanName(p.getName()),
                 p.getDescription(),
                 true, true);
+        plan.getMetadata().put("displayName", p.getDisplayName());
         plan.setSchemas(createSchemas(serviceType));
         return plan;
     }
