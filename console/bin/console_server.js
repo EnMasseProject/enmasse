@@ -92,15 +92,9 @@ function subscribe(name, sender) {
     users.for_each(function (user) {
         sender.send({subject:'user', body:user});
     });
-    //TODO: poll for changes in flavors
-    address_ctrl.get_flavors().then(function (flavors) {
-        var flavor_list = [];
-        for (var name in flavors) {
-            var flavor = flavors[name];
-            flavor.name = name;
-            flavor_list.push(flavor);
-        }
-        sender.send({subject:'flavors', body:flavor_list});
+    //TODO: poll for changes in address_types
+    address_ctrl.get_address_types().then(function (address_types) {
+        sender.send({subject:'address_types', body:address_types});
     });
 }
 
