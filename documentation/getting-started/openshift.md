@@ -91,9 +91,9 @@ will be used for the persistent volume. E.g.
     mkdir /tmp/sasldb && chmod a+x /tmp/sasldb
 
 Then create the peristent volume, e.g. using the example yaml
-https://github.com/EnMasseProject/enmasse/tree/master/include/sasldb-persistent-volume.yaml:
+https://github.com/EnMasseProject/enmasse/tree/master/templates/include/sasldb-persistent-volume.yaml:
 
-    oc create -f https://raw.githubusercontent.com/EnMasseProject/enmasse/master/include/sasldb-persistent-volume.yaml
+    oc create -f https://raw.githubusercontent.com/EnMasseProject/enmasse/master/templates/include/sasldb-persistent-volume.yaml
 
 Then log in again as developer:
 
