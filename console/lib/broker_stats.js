@@ -67,8 +67,16 @@ function BrokerStats () {
 }
 
 BrokerStats.prototype.retrieve = function(addresses) {
+    return this._retrieve().then(function (stats) {
+        for (var s in stats) {
+            addresses.update_stats(s, stats[s]);
+        }
+    });
+};
+
+BrokerStats.prototype._retrieve = function() {
     var brokers = this.brokers.broker_list();
-    Promise.all(brokers.map(list_addresses)).then(function (results) {
+    return Promise.all(brokers.map(list_addresses)).then(function (results) {
         var stats = {};
         for (var i = 0; i < results.length; i++) {
             for (var name in results[i]) {
@@ -78,10 +86,8 @@ BrokerStats.prototype.retrieve = function(addresses) {
                 s.shards.push(shard);
             }
         }
-        for (var s in stats) {
-            addresses.update_stats(s, stats[s]);
-        }
+        return stats;
     });
-}
+};
 
-module.exports = new BrokerStats();
+module.exports = BrokerStats;

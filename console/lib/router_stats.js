@@ -18,9 +18,9 @@
 var rhea = require('rhea');
 var Router = require('./qdr.js').Router;
 
-function RouterStats() {
+function RouterStats(connection) {
     //TODO: fix admin_service to be more sensibly generic
-    var conn = require('./admin_service.js').connect(rhea, 'MESSAGING');
+    var conn = connection || require('./admin_service.js').connect(rhea, 'MESSAGING');
     this.router = new Router(conn);
     var self = this;
     this.router.get_all_routers().then(function (routers) {
@@ -246,18 +246,30 @@ function get_normal_connections (results) {
     return connections;
 }
 
+RouterStats.prototype.close = function () {
+    this.router.close();
+}
+
 RouterStats.prototype.retrieve = function (addresses, connection_registry) {
-    this.update_routers().then(function (routers) {
-        Promise.all(routers.map(function (router) { return router.get_connections(); })).then(function (connection_results) {
+    return this._retrieve().then(function (results) {
+        connection_registry.set(results.connections);
+        for (var a in results.addresses) {
+            addresses.update_stats(a, results.addresses[a]);
+        }
+    });
+};
+
+RouterStats.prototype._retrieve = function () {
+    return this.update_routers().then(function (routers) {
+        return Promise.all(routers.map(function (router) { return router.get_connections(); })).then(function (connection_results) {
             var connections = get_normal_connections(connection_results);
-            Promise.all(routers.map(function (router) { return router.get_links(); })).then(function (results) {
+            return Promise.all(routers.map(function (router) { return router.get_links(); })).then(function (results) {
                 var address_stats = {};
                 results.forEach(function (links, i) {
                     collect_by_address(links, address_stats, routers[i]);
                     collect_by_connection(links, connections, routers[i]);
                 });
-                connection_registry.set(connections);
-                Promise.all(routers.map(function (router) { return router.get_addresses(); })).then(function (results) {
+                return Promise.all(routers.map(function (router) { return router.get_addresses(); })).then(function (results) {
                     results.forEach(function (configured) {
                         configured.forEach(function (address) {
                             var s = get_stats_for_address(address_stats, address.name);
@@ -266,7 +278,7 @@ RouterStats.prototype.retrieve = function (addresses, connection_registry) {
                         });
                     });
 
-                    Promise.all(routers.map(function (router) { return router.get_link_routes(); } )).then(function (results) {
+                    return Promise.all(routers.map(function (router) { return router.get_link_routes(); } )).then(function (results) {
                         results.forEach(function (lrs) {
                             check_link_routes(lrs).forEach(function (a) {
                                 get_stats_for_address(address_stats, a).propagated++;
@@ -277,7 +289,7 @@ RouterStats.prototype.retrieve = function (addresses, connection_registry) {
                             address_stats[a].propagated = (address_stats[a].propagated / routers.length) * 100;
                         }
 
-                        Promise.all(routers.map(function (router) {
+                        return Promise.all(routers.map(function (router) {
                             return router.get_address_stats();
                         })).then(function (results) {
                             results.forEach(function (configured) {
@@ -293,9 +305,7 @@ RouterStats.prototype.retrieve = function (addresses, connection_registry) {
                                     }
                                 });
                             });
-                            for (var a in address_stats) {
-                                addresses.update_stats(a, address_stats[a]);
-                            }
+                            return {addresses: address_stats, connections: connections};
                         }).catch(log_error);
                     }).catch(log_error);
                 }).catch(log_error);
@@ -304,4 +314,4 @@ RouterStats.prototype.retrieve = function (addresses, connection_registry) {
     });
 };
 
-module.exports = new RouterStats();
+module.exports = RouterStats;

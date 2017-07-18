@@ -32,6 +32,10 @@ Registry.prototype.deleted = function (key) {
     this.emit('deleted', a);
 };
 
+Registry.prototype.get = function (key) {
+    return this.objects[key];
+};
+
 Registry.prototype.set = function (known) {
     for (var key in known) {
         if (this.objects[key] === undefined) {
