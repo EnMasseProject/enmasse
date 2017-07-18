@@ -182,7 +182,7 @@ Router.prototype.get_all_routers = function (current) {
 };
 
 Router.prototype.incoming = function (context) {
-    if (this.debug) console.log('Got message: ' + JSON.stringify(context.message));
+    if (this.debug) console.log('recv: ' + JSON.stringify(context.message));
     var message = context.message;
     var handler = this.handlers[message.correlation_id];
     if (handler) {
