@@ -19,56 +19,70 @@ package enmasse.systemtest;
 import java.util.Optional;
 
 public class Destination {
-    private final String group;
+    private static final String QUEUE = "queue";
+    private static final String TOPIC = "topic";
+    private static final String ANYCAST = "anycast";
+    private static final String MULTICAST = "multicast";
     private final String address;
-    private final boolean storeAndForward;
-    private final boolean multicast;
-    private final Optional<String> flavor;
+    private final String type;
+    private final Optional<String> plan;
 
-    public Destination(String group, String address, boolean storeAndForward, boolean multicast, Optional<String> flavor) {
-        this.group = group;
+    public Destination(String address, String type, Optional<String> plan) {
         this.address = address;
-        this.storeAndForward = storeAndForward;
-        this.multicast = multicast;
-        this.flavor = flavor;
+        this.type = type;
+        this.plan = plan;
     }
 
     public static Destination queue(String address) {
-        return queue(address, address);
+        return queue(address, Optional.empty());
     }
 
-    public static Destination queue(String group, String address) {
-        return new Destination(group, address, true, false, Optional.of("vanilla-queue"));
+    public static Destination queue(String address, Optional<String> plan) {
+        return new Destination(address, QUEUE, plan);
     }
 
     public static Destination topic(String address) {
-        return new Destination(address, address, true, true, Optional.of("vanilla-topic"));
+        return new Destination(address, TOPIC, Optional.empty());
     }
 
     public static Destination anycast(String address) {
-        return new Destination(address, address, false, false, Optional.empty());
+        return new Destination(address, ANYCAST, Optional.empty());
     }
 
-    public static Destination broadcast(String address) {
-        return new Destination(address, address, false, true, Optional.empty());
+    public static Destination multicast(String address) {
+        return new Destination(address, MULTICAST, Optional.empty());
     }
 
-    public String getGroup() { return group; }
+    public static boolean isQueue(Destination d) {
+        return QUEUE.equals(d.type);
+    }
+
+    public static boolean isTopic(Destination d) {
+        return TOPIC.equals(d.type);
+    }
+
+    public String getType() { return type; }
 
     public String getAddress() {
         return address;
     }
 
-    public boolean isStoreAndForward() {
-        return storeAndForward;
+    public Optional<String> getPlan() {
+        return plan;
     }
 
-    public boolean isMulticast() {
-        return multicast;
-    }
-
-    public Optional<String> getFlavor() {
-        return flavor;
+    /**
+     * The concept of a group id is still used to wait for the
+     * necessary broker to be available. This is usually the address
+     * except for pooled queues in which case it is the name of the
+     * plan.
+     */
+    public String getGroup() {
+        if (isQueue(this) && plan.isPresent() && plan.get().startsWith("pooled")) {
+            return plan.get();
+        } else {
+            return address;
+        }
     }
 
     @Override
@@ -78,21 +92,17 @@ public class Destination {
 
         Destination that = (Destination) o;
 
-        if (storeAndForward != that.storeAndForward) return false;
-        if (multicast != that.multicast) return false;
+        if (!type.equals(that.type)) return false;
         if (!address.equals(that.address)) return false;
-        if (!group.equals(that.group)) return false;
-        return flavor.equals(that.flavor);
+        return plan.equals(that.plan);
 
     }
 
     @Override
     public int hashCode() {
         int result = address.hashCode();
-        result = 31 * result + group.hashCode();
-        result = 31 * result + (storeAndForward ? 1 : 0);
-        result = 31 * result + (multicast ? 1 : 0);
-        result = 31 * result + flavor.hashCode();
+        result = 31 * result + type.hashCode();
+        result = 31 * result + plan.hashCode();
         return result;
     }
 }
