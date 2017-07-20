@@ -30,6 +30,7 @@ import org.apache.activemq.artemis.protocol.amqp.broker.ProtonProtocolManagerFac
 import org.apache.activemq.artemis.spi.core.protocol.RemotingConnection;
 import org.apache.activemq.artemis.spi.core.remoting.BaseConnectionLifeCycleListener;
 import org.apache.activemq.artemis.spi.core.remoting.Connection;
+import org.apache.qpid.proton.amqp.Symbol;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -45,6 +46,7 @@ import java.util.concurrent.TimeUnit;
  * Connector service for outgoing AMQP connections.
  */
 public class AMQPConnectorService implements ConnectorService, BaseConnectionLifeCycleListener<ProtonProtocolManager> {
+   private static final Symbol groupSymbol = Symbol.getSymbol("qd.route-container-group");
    private final String name;
    private final String host;
    private final int port;
@@ -56,13 +58,13 @@ public class AMQPConnectorService implements ConnectorService, BaseConnectionLif
    private final ProtonClientConnectionManager lifecycleHandler;
    private volatile boolean started = false;
 
-   public AMQPConnectorService(String connectorName, String host, int port, String containerId, Optional<SubscriberInfo> subscriberInfo, ActiveMQServer server, ScheduledExecutorService scheduledExecutorService) {
+   public AMQPConnectorService(String connectorName, String host, int port, String containerId, String groupId, Optional<SubscriberInfo> subscriberInfo, ActiveMQServer server, ScheduledExecutorService scheduledExecutorService) {
       this.name = connectorName;
       this.host = host;
       this.port = port;
       this.server = server;
       this.scheduledExecutorService = scheduledExecutorService;
-      AMQPClientConnectionFactory factory = new AMQPClientConnectionFactory(server, containerId, Collections.emptyMap(), 5000);
+      AMQPClientConnectionFactory factory = new AMQPClientConnectionFactory(server, containerId, Collections.singletonMap(groupSymbol, groupId), 5000);
       this.lifecycleHandler = new ProtonClientConnectionManager(factory, subscriberInfo.map(LinkInitiator::new));
    }
 
