@@ -85,19 +85,19 @@ Artemis.prototype.abort_requests = function (error) {
 }
 
 Artemis.prototype.on_sender_error = function (context) {
-    var error = this.connection.container_id + ' sender error ' + context.sender.error;
+    var error = this.connection.container_id + ' sender error ' + JSON.stringify(context.sender.error);
     log.warn('[' + this.connection.container_id + '] ' + error);
     this.abort_requests(error);
 };
 
 Artemis.prototype.on_receiver_error = function (context) {
-    var error = this.connection.container_id + ' receiver error ' + context.receiver.error;
+    var error = this.connection.container_id + ' receiver error ' + JSON.stringify(context.receiver.error);
     log.warn('[' + this.connection.container_id + '] ' + error);
     this.abort_requests(error);
 };
 
 Artemis.prototype.on_connection_error = function (context) {
-    var error = this.connection.container_id + ' connection error ' + context.connection.error;
+    var error = this.connection.container_id + ' connection error ' + JSON.stringify(context.connection.error);
     log.warn('[' + this.connection.container_id + '] ' + error);
     this.abort_requests(error);
 };
@@ -293,7 +293,9 @@ Artemis.prototype.findConnectorService = function (name) {
 };
 
 Artemis.prototype.close = function () {
-    this.connection.close();
+    if (this.connection) {
+        this.connection.close();
+    }
 }
 
 var amqp = require('rhea').create_container();

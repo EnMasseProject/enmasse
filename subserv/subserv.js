@@ -33,28 +33,22 @@ function get_or_create_topic(name) {
     return topic;
 }
 
-function is_topic (address) {
-    return address.multicast && address.store_and_forward;
-}
-
-function addresses_updated(addresses) {
-    for (var name in addresses) {
-        var address = addresses[name];
-        if (is_topic(address)) {
-            var topic = topics[name];
-            if (topic === undefined) {
-                log.debug('starting to watch pods for topic ' + name);
-                topic = create_topic(name);
-                topic.watch_pods();
-                topics[name] = topic;
-            } else {
-                log.debug('already watching pods for topic ' + name);
-            }
+function update_topics(current) {
+    log.debug('updating topics: ' + JSON.stringify(current));
+    current.forEach(function (name) {
+        var topic = topics[name];
+        if (topic === undefined) {
+            log.debug('starting to watch pods for topic ' + name);
+            topic = create_topic(name);
+            topic.watch_pods();
+            topics[name] = topic;
+        } else {
+            log.debug('already watching pods for topic ' + name);
         }
-    }
+    });
+
     for (var name in topics) {
-        var address = addresses[name];
-        if (address === undefined || !is_topic(address)) {
+        if (!current.some(function (topic_name) { return topic_name === name; })) {
             topics[name].close();
             delete topics[name];
         }
@@ -159,6 +153,13 @@ function subreqs(input) {
     );
 }
 
+function is_topic(addr) {
+    return addr.spec.type === 'topic';
+}
+function get_address(addr) {
+    return addr.spec.address;
+}
+
 function handle_control_message(context) {
     log.debug('received message: ' + context.message);
     if (context.message.to === SUBCTRL || (context.receiver.target && context.receiver.target.address === SUBCTRL)) {
@@ -205,34 +206,18 @@ function handle_control_message(context) {
         } else {
             log.warn('Must specify topic as target address for messages with pods as subject');
         }
-    } else if (context.message.subject === 'addresses' || !context.message.subject) {
-        var body_type = typeof context.message.body;
-        if (body_type  === 'string') {
-            var content;
-            try {
-                content = JSON.parse(context.message.body);
-            } catch (e) {
-                log.warn('ERROR: failed to parse addresses as JSON: ' + e + '; ' + context.message.body);
+    } else if (context.message.subject === 'enmasse.io/v1/AddressList') {
+        try {
+            var body = JSON.parse(context.message.body);
+            if (body.items === undefined) {
+                update_topics([]);
+            } else if (util.isArray(body.items)) {
+                update_topics(body.items.filter(is_topic).map(get_address));
+            } else {
+                log.error('items field unrecognised in address list: ' + context.message.body);
             }
-            if (content) {
-                if (content.json !== undefined) {
-                    content = content.json;
-                }
-                for (var v in content) {
-                    if (content[v].name === undefined) {
-                        content[v].name = v;
-                    }
-                    if (content[v]['store-and-forward'] !== undefined) {
-                        content[v].store_and_forward = content[v]['store-and-forward'];
-                        delete content[v]['store-and-forward'];
-                    }
-                }
-                addresses_updated(content);
-            }
-        } else if (body_type  === 'object') {
-            addresses_updated(context.message.body);
-        } else {
-            log.warn('ERROR: unrecognised type for addresses: ' + body_type + ' ' + context.message.body);
+        } catch (e) {
+            log.error('failed to parse addresses: ' + e + '; ' + context.message.body);
         }
     }
 }
@@ -292,5 +277,5 @@ if (process.env.MESSAGING_SERVICE_HOST) {
 var conn = config_service.connect(amqp, 'configuration-service');
 if (conn) {
     log.debug('opening link to configuration service...');
-    conn.open_receiver('maas');
+    conn.open_receiver('v1/addresses');
 }
