@@ -15,6 +15,7 @@
  */
 'use strict';
 
+var util = require('util');
 var log = require("./log.js").logger();
 var amqp = require('rhea');
 var rtr = require('./router.js');
@@ -202,16 +203,24 @@ function on_message(context) {
         check_connectivity();
     } else if (context.message.subject === 'enmasse.io/v1/AddressList') {
         var semantics = {};
-        var body = JSON.parse(context.message.body);
-        for (var i = 0; i < body.items.length; i++) {
-            var addr = body.items[i];
-            semantics[addr.spec.address] = {
-                name: addr.spec.address,
-                multicast: (addr.spec.type === 'multicast' || addr.spec.type === 'topic'),
-                store_and_forward: (addr.spec.type === 'queue' || addr.spec.type === 'topic')
+        try{
+            var body = JSON.parse(context.message.body || '{}');
+            if (util.isArray(body.items)) {
+                for (var i = 0; i < body.items.length; i++) {
+                    var addr = body.items[i];
+                    semantics[addr.spec.address] = {
+                        name: addr.spec.address,
+                        multicast: (addr.spec.type === 'multicast' || addr.spec.type === 'topic'),
+                        store_and_forward: (addr.spec.type === 'queue' || addr.spec.type === 'topic')
+                    }
+                }
+            } else if (body.items !== undefined) {
+                throw Error('invalid type for body.items: ' + (typeof body.items));
             }
+            sync_addresses(semantics);
+        } catch (e) {
+            log.error('failed to parse addresses: ' + e + '; ' + context.message.body);
         }
-        sync_addresses(semantics);
     } else if (context.message.subject === 'addresses' || !context.message.subject) {
         var body_type = typeof context.message.body;
         if (body_type  === 'string') {
