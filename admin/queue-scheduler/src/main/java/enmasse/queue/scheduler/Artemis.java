@@ -103,7 +103,7 @@ public class Artemis implements Broker {
         connectorParams.put("host", messagingHost);
         connectorParams.put("port", messagingPort);
         connectorParams.put("containerId", address);
-        connectorParams.put("groupId", address);
+        connectorParams.put("clusterId", address);
 
         message.setBody(new AmqpValue(encodeJson(parameters)));
         doRequest(message);
