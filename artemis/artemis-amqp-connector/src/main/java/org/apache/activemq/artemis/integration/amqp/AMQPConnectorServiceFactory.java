@@ -77,7 +77,7 @@ public class AMQPConnectorServiceFactory implements ConnectorServiceFactory {
       if (container.isPresent()) {
          containerId = container.get();
       }
-      return new AMQPConnectorService(connectorName, host, port, containerId, info, ((PostOfficeImpl)postOffice).getServer(), scheduledExecutorService);
+      return new AMQPConnectorService(connectorName, host, port, containerId, clusterId, info, ((PostOfficeImpl)postOffice).getServer(), scheduledExecutorService);
    }
 
    @Override
