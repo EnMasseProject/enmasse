@@ -22,6 +22,7 @@ import org.junit.Test;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -43,9 +44,9 @@ public class QueueTest extends AmqpTestBase {
 
     @Test
     public void testColocatedQueues() throws Exception {
-        Destination q1 = Destination.queue("group1", "queue1");
-        Destination q2 = Destination.queue("group1", "queue2");
-        Destination q3 = Destination.queue("group2", "queue3");
+        Destination q1 = Destination.queue("queue1", Optional.of("pooled-inmemory"));
+        Destination q2 = Destination.queue("queue2", Optional.of("pooled-inmemory"));
+        Destination q3 = Destination.queue("queue3", Optional.of("pooled-inmemory"));
         deploy(q1, q2, q3);
 
         AmqpClient client = createQueueClient();

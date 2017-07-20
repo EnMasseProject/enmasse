@@ -43,7 +43,7 @@ public class TestUtils {
         boolean done = false;
         int actualReplicas = 0;
         do {
-            List<Pod> pods = openShift.listPods(Collections.singletonMap("role", "broker"), Collections.singletonMap("group_id", group));
+            List<Pod> pods = openShift.listPods(Collections.singletonMap("role", "broker"), Collections.singletonMap("cluster_id", group));
             actualReplicas = numReady(pods);
             Logging.log.info("Have " + actualReplicas + " out of " + pods.size() + " replicas. Expecting " + expectedReplicas);
             if (actualReplicas != pods.size() || actualReplicas != expectedReplicas) {
@@ -98,7 +98,7 @@ public class TestUtils {
         labels.put("role", "broker");
 
         Map<String, String> annotations = new LinkedHashMap<>();
-        annotations.put("group_id", group);
+        annotations.put("cluster_id", group);
 
 
         int numReady = 0;
@@ -119,9 +119,9 @@ public class TestUtils {
         apiClient.deploy(instanceName, destinations);
         Set<String> groups = new HashSet<>();
         for (Destination destination : destinations) {
-            if (destination.isStoreAndForward()) {
+            if (Destination.isQueue(destination) || Destination.isTopic(destination)) {
                 waitForBrokerPod(openShift, destination.getGroup(), budget);
-                if (!destination.isMulticast()) {
+                if (!Destination.isTopic(destination)) {
                     waitForAddress(openShift, destination.getAddress(), budget);
                 }
                 groups.add(destination.getGroup());

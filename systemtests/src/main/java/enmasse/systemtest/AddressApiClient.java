@@ -57,7 +57,7 @@ public class AddressApiClient {
 
     public void deploy(String instanceName, Destination ... destinations) throws Exception {
         ObjectNode config = mapper.createObjectNode();
-        config.put("apiVersion", "v3");
+        config.put("apiVersion", "v1");
         config.put("kind", "AddressList");
         ArrayNode items = config.putArray("items");
         for (Destination destination : destinations) {
@@ -65,18 +65,17 @@ public class AddressApiClient {
             ObjectNode metadata = entry.putObject("metadata");
             metadata.put("name", destination.getAddress());
             ObjectNode spec = entry.putObject("spec");
-            spec.put("store_and_forward", destination.isStoreAndForward());
-            spec.put("multicast", destination.isMulticast());
-            spec.put("group", destination.getGroup());
-            destination.getFlavor().ifPresent(e -> spec.put("flavor", e));
+            spec.put("address", destination.getAddress());
+            spec.put("type", destination.getType());
+            destination.getPlan().ifPresent(e -> spec.put("plan", e));
         }
 
         CountDownLatch latch = new CountDownLatch(1);
         HttpClientRequest request;
         if (isMultitenant) {
-            request = httpClient.put(endpoint.getPort(), endpoint.getHost(), "/v3/instance/" + instanceName + "/address");
+            request = httpClient.put(endpoint.getPort(), endpoint.getHost(), "/v1/addresses/" + instanceName + "/");
         } else {
-            request = httpClient.put(endpoint.getPort(), endpoint.getHost(), "/v3/address");
+            request = httpClient.put(endpoint.getPort(), endpoint.getHost(), "/v1/addresses/default/");
         }
         request.setTimeout(30_000);
         request.putHeader("content-type", "application/json");

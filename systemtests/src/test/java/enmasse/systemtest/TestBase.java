@@ -60,7 +60,7 @@ public abstract class TestBase {
     protected void scale(Destination destination, int numReplicas) throws Exception {
         TimeoutBudget budget = new TimeoutBudget(5, TimeUnit.MINUTES);
         TestUtils.setReplicas(openShift, destination, numReplicas, budget);
-        if (destination.isStoreAndForward() && !destination.isMulticast()) {
+        if (Destination.isQueue(destination)) {
             TestUtils.waitForAddress(openShift, destination.getAddress(), budget);
         }
     }
