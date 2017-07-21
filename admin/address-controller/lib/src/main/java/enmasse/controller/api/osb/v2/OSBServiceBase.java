@@ -22,6 +22,8 @@ import org.slf4j.LoggerFactory;
 
 public abstract class OSBServiceBase {
 
+    public static final String BASE_URI = "/v2";
+
     protected final Logger log = LoggerFactory.getLogger(getClass().getName());
 
     private final AddressSpaceApi addressSpaceApi;

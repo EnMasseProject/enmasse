@@ -24,12 +24,16 @@ import io.enmasse.address.model.types.standard.StandardAddressSpaceType;
 import io.enmasse.address.model.types.standard.StandardType;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpClient;
-import io.vertx.core.json.JsonArray;
+import io.vertx.core.http.HttpClientOptions;
+import io.vertx.core.http.HttpClientRequest;
+import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.json.JsonObject;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.net.PasswordAuthentication;
+import java.util.Base64;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
@@ -53,7 +57,7 @@ public class HTTPServerTest {
         addressSpace = createAddressSpace(addressSpaceName);
         instanceApi.createAddressSpace(addressSpace);
         CountDownLatch latch = new CountDownLatch(1);
-        vertx.deployVerticle(new HTTPServer(instanceApi, "/doesnotexist"), c -> {
+        vertx.deployVerticle(new HTTPServer(instanceApi, "/doesnotexist", Optional.of(new PasswordAuthentication("user", "pass".toCharArray()))), c -> {
             latch.countDown();
         });
         latch.await(1, TimeUnit.MINUTES);
@@ -186,4 +190,25 @@ public class HTTPServerTest {
         }
     }
     */
+
+    @Test
+    public void testOpenServiceBrokerAPI() throws InterruptedException {
+        HttpClientOptions options = new HttpClientOptions();
+        HttpClient client = vertx.createHttpClient(options);
+        try {
+            final CountDownLatch latch = new CountDownLatch(1);
+            HttpClientRequest request = client.get(8080, "localhost", "/v2/catalog", response -> {
+                response.bodyHandler(buffer -> {
+                    JsonObject data = buffer.toJsonObject();
+                    assertTrue(data.containsKey("services"));
+                    latch.countDown();
+                });
+            });
+            request.headers().add(HttpHeaders.AUTHORIZATION, "Basic " + Base64.getEncoder().encodeToString("user:pass".getBytes()));
+            request.end();
+            assertTrue(latch.await(1, TimeUnit.MINUTES));
+        } finally {
+            client.close();
+        }
+    }
 }

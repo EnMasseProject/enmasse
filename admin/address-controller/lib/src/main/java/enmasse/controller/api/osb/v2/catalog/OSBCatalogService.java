@@ -12,7 +12,7 @@ import enmasse.controller.api.osb.v2.OSBServiceBase;
 import enmasse.controller.api.osb.v2.ServiceType;
 import enmasse.controller.k8s.api.AddressSpaceApi;
 
-@Path("/v2/catalog")
+@Path(OSBServiceBase.BASE_URI + "/catalog")
 @Produces({MediaType.APPLICATION_JSON})
 public class OSBCatalogService extends OSBServiceBase {
 

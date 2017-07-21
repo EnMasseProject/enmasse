@@ -10,7 +10,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-@Path("/v2/service_instances/{instanceId}/last_operation")
+@Path(OSBServiceBase.BASE_URI + "/service_instances/{instanceId}/last_operation")
 @Consumes({MediaType.APPLICATION_JSON})
 @Produces({MediaType.APPLICATION_JSON})
 public class OSBLastOperationService extends OSBServiceBase {

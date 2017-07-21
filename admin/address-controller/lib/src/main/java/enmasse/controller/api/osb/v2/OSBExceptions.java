@@ -3,6 +3,7 @@ package enmasse.controller.api.osb.v2;
 import enmasse.controller.common.exceptionmapping.ErrorResponse;
 
 import javax.ws.rs.BadRequestException;
+import javax.ws.rs.NotAuthorizedException;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.core.Response;
 
@@ -36,6 +37,12 @@ public class OSBExceptions {
         return new UnprocessableEntityException(
                 message,
                 buildResponse(UnprocessableEntityException.STATUS, error, message));
+    }
+
+    public static NotAuthorizedException notAuthorizedException() {
+        return new NotAuthorizedException(
+                "Not authorized",
+                buildResponse(Response.Status.UNAUTHORIZED, "NotAuthorized", "Not authorized"));
     }
 
 
