@@ -68,7 +68,7 @@ public class StandardHelper {
             kubernetes.createSecretWithDefaultPermissions(secretName, addressSpace.getNamespace());
         }
 
-        kubernetes.create(resourceList.resourceList);
+        kubernetes.create(resourceList.resourceList, addressSpace.getNamespace());
     }
 
     private static class StandardResources {

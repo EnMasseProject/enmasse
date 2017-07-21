@@ -54,6 +54,7 @@ public interface Kubernetes {
     List<AddressCluster> listClusters();
     void create(HasMetadata ... resources);
     void create(KubernetesList resources);
+    void create(KubernetesList resources, String namespace);
     void delete(KubernetesList resources);
     void delete(HasMetadata ... resources);
     KubernetesList processTemplate(String templateName, ParameterValue ... parameterValues);
