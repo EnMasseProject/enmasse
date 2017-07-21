@@ -18,6 +18,7 @@ package enmasse.controller;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.PasswordAuthentication;
 import java.nio.file.Files;
 import java.util.Map;
 import java.util.Optional;
@@ -34,8 +35,12 @@ public final class ControllerOptions {
     private final Optional<String> mqttHost;
     private final Optional<String> consoleHost;
     private final Optional<String> certSecret;
+    private final Optional<PasswordAuthentication> osbAuth;
 
-    private ControllerOptions(String masterUrl, boolean isMultiinstance, String namespace, String token, Optional<File> templateDir, Optional<String> messagingHost, Optional<String> mqttHost, Optional<String> consoleHost, Optional<String> certSecret, String certDir) {
+    private ControllerOptions(String masterUrl, boolean isMultiinstance, String namespace, String token,
+                              Optional<File> templateDir, Optional<String> messagingHost, Optional<String> mqttHost,
+                              Optional<String> consoleHost, Optional<String> certSecret, String certDir,
+                              Optional<PasswordAuthentication> osbAuth) {
         this.masterUrl = masterUrl;
         this.isMultiinstance = isMultiinstance;
         this.namespace = namespace;
@@ -46,6 +51,7 @@ public final class ControllerOptions {
         this.consoleHost = consoleHost;
         this.certSecret = certSecret;
         this.certDir = certDir;
+        this.osbAuth = osbAuth;
     }
 
     public String masterUrl() {
@@ -91,8 +97,14 @@ public final class ControllerOptions {
         Optional<String> certSecret = getEnv(env, "INSTANCE_CERT_SECRET");
         Optional<File> maybeDir = Optional.ofNullable(templateDir.exists() ? templateDir : null);
 
+        Optional<String> osbAuthUser = getEnv(env, "OSB_AUTH_USERNAME");
+        Optional<PasswordAuthentication> osbAuth = osbAuthUser.isPresent()
+                ? Optional.of(new PasswordAuthentication(osbAuthUser.get(), getEnvOrThrow(env, "OSB_AUTH_PASSWORD").toCharArray()))
+                : Optional.empty();
+
         String certDir = getEnv(env, "CERT_PATH").orElse("/ssl-certs");
-        return new ControllerOptions(String.format("https://%s:%s", masterHost, masterPort), isMultiinstance, namespace, token, maybeDir, messagingHost, mqttHost, consoleHost, certSecret, certDir);
+        return new ControllerOptions(String.format("https://%s:%s", masterHost, masterPort), isMultiinstance, namespace,
+                token, maybeDir, messagingHost, mqttHost, consoleHost, certSecret, certDir, osbAuth);
     }
 
     private static Optional<String> getEnv(Map<String, String> env, String envVar) {
@@ -152,5 +164,9 @@ public final class ControllerOptions {
 
     public String certDir() {
         return certDir;
+    }
+
+    public Optional<PasswordAuthentication> osbAuth() {
+        return osbAuth;
     }
 }

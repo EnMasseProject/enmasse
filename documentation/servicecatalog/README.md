@@ -68,9 +68,17 @@ when using other methods of running OpenShift.
     name: maas-broker
   spec:
     url: http://address-controller.enmasse.svc.cluster.local:8080
+    authInfo: 
+      basicAuthSecret:
+        namespace: service-catalog
+        name: maas-broker-auth
   EOF
   ```
 (Make sure there's no whitespace after EOF!)
+- Create a Secret holding the basic auth credentials the Service Catalog will use to authenticate with the EnMasse broker:
+  ```
+  oc create secret generic maas-broker-auth --from-literal=username=foo --from-literal=password=bar
+  ```
 
 At this point, the Service Catalog will contact the broker and retrieve the list of services the broker is providing. 
 

@@ -24,7 +24,7 @@ import io.enmasse.address.model.Endpoint;
 import io.enmasse.address.model.types.AddressType;
 import io.enmasse.address.model.types.Plan;
 
-@Path("/v2/service_instances/{instanceId}")
+@Path(OSBServiceBase.BASE_URI + "/service_instances/{instanceId}")
 @Consumes({MediaType.APPLICATION_JSON})
 @Produces({MediaType.APPLICATION_JSON})
 public class OSBProvisioningService extends OSBServiceBase {

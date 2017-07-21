@@ -17,12 +17,13 @@
 package enmasse.controller;
 
 import enmasse.controller.api.JacksonConfig;
+import enmasse.controller.api.osb.v2.BasicAuthInterceptor;
+import enmasse.controller.api.osb.v2.OSBServiceBase;
 import enmasse.controller.api.osb.v2.bind.OSBBindingService;
 import enmasse.controller.api.osb.v2.catalog.OSBCatalogService;
 import enmasse.controller.api.osb.v2.lastoperation.OSBLastOperationService;
 import enmasse.controller.api.osb.v2.provision.OSBProvisioningService;
 import enmasse.controller.api.v1.http.HttpAddressService;
-import enmasse.controller.api.v1.http.HttpAddressSpaceService;
 import enmasse.controller.api.v1.http.HttpSchemaService;
 import enmasse.controller.common.exceptionmapping.DefaultExceptionMapper;
 import enmasse.controller.k8s.api.AddressSpaceApi;
@@ -36,6 +37,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.net.PasswordAuthentication;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -47,13 +50,15 @@ public class HTTPServer extends AbstractVerticle {
     private static final Logger log = LoggerFactory.getLogger(HTTPServer.class.getName());
     private final AddressSpaceApi addressSpaceApi;
     private final String certDir;
+    private final Optional<PasswordAuthentication> osbAuth;
 
     private HttpServer httpServer;
     private HttpServer httpsServer;
 
-    public HTTPServer(AddressSpaceApi addressSpaceApi, String certDir) {
+    public HTTPServer(AddressSpaceApi addressSpaceApi, String certDir, Optional<PasswordAuthentication> osbAuth) {
         this.addressSpaceApi = addressSpaceApi;
         this.certDir = certDir;
+        this.osbAuth = osbAuth;
     }
 
     @Override
@@ -63,6 +68,7 @@ public class HTTPServer extends AbstractVerticle {
 
         deployment.getProviderFactory().registerProvider(DefaultExceptionMapper.class);
         deployment.getProviderFactory().registerProvider(JacksonConfig.class);
+        osbAuth.ifPresent(auth -> deployment.getProviderFactory().registerProviderInstance(new BasicAuthInterceptor(auth, OSBServiceBase.BASE_URI)));
 
         deployment.getRegistry().addSingletonResource(new HttpAddressService(addressSpaceApi));
         deployment.getRegistry().addSingletonResource(new HttpSchemaService());

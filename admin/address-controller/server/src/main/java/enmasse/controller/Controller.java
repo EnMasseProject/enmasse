@@ -83,7 +83,7 @@ public class Controller extends AbstractVerticle {
                 new Deployment(new AuthController(certManager, addressSpaceApi)),
                 new Deployment(new StandardController(controllerClient, addressSpaceApi, kubernetes, options.isMultiinstance())),
 //                new Deployment(new AMQPServer(kubernetes.getNamespace(), addressSpaceApi, options.port())),
-                new Deployment(new HTTPServer(addressSpaceApi, options.certDir()), new DeploymentOptions().setWorker(true)));
+                new Deployment(new HTTPServer(addressSpaceApi, options.certDir(), options.osbAuth()), new DeploymentOptions().setWorker(true)));
     }
 
     private Endpoint appendEndpoint(Optional<CertProvider> certProvider, String name, String service, String host) {
