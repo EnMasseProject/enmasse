@@ -101,6 +101,11 @@ public class KubernetesHelper implements Kubernetes {
     }
 
     @Override
+    public void create(KubernetesList resources, String namespace) {
+        client.lists().inNamespace(namespace).create(resources);
+    }
+
+    @Override
     public String getNamespace() {
         return namespace;
     }
