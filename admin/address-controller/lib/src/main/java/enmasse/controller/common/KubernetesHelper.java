@@ -207,6 +207,7 @@ public class KubernetesHelper implements Kubernetes {
     public void createSecretWithDefaultPermissions(String secretName, String namespace) {
         Secret secret = client.secrets().inNamespace(namespace).withName(secretName).get();
         if (secret != null) {
+            // Skip if it is already created
             return;
         }
         // TODO: Add labels
