@@ -53,7 +53,7 @@ public class StandardHelper {
         Map<String, String> serviceMapping = new HashMap<>();
         serviceMapping.put("messaging", "amqps");
         serviceMapping.put("mqtt", "secure-mqtt");
-        serviceMapping.put("console", "console-http");
+        serviceMapping.put("console", "http");
 
         // Step 5: Create routes
         for (Endpoint endpoint : resourceList.routeEndpoints) {
