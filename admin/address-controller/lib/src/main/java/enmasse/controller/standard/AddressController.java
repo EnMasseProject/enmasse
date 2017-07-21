@@ -82,7 +82,7 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
 
     @Override
     public synchronized void resourcesUpdated(Set<Address> newAddressSet) throws Exception {
-        log.info("Check addresss in address space controller: " + newAddressSet);
+        log.info("Check address in address space controller: " + newAddressSet);
 
         Map<String, Set<Address>> addressByGroup = new LinkedHashMap<>();
 
@@ -113,7 +113,7 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
     }
 
     /*
-     * Ensure that a address groups meet the criteria of all addresss sharing the same properties, until we can
+     * Ensure that a address groups meet the criteria of all address sharing the same properties, until we can
      * support a mix.
      */
     private static void validateAddressGroups(Map<String, Set<Address>> addressByGroup) {
@@ -126,7 +126,7 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
                         !first.getType().getName().equals(current.getType().getName()) ||
                         !first.getPlan().getName().equals(current.getPlan().getName())) {
 
-                    throw new IllegalArgumentException("All addresss in a shared group must share the same properties. Found: " + current + " and " + first);
+                    throw new IllegalArgumentException("All address in a shared group must share the same properties. Found: " + current + " and " + first);
                 }
             }
         }
@@ -164,19 +164,19 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
                 });
     }
 
-    private void checkStatuses(Set<Address> addresss) throws Exception {
-        for (Address address : addresss) {
+    private void checkStatuses(Set<Address> addresses) throws Exception {
+        for (Address address : addresses) {
             address.getStatus().setReady(true).clearMessages();
         }
         // TODO: Instead of going to the routers directly, list routers, and perform a request against the
         // router agent to do the check
         for (Pod router : kubernetes.listRouters()) {
             if (router.getStatus().getPodIP() != null && !"".equals(router.getStatus().getPodIP())) {
-                checkRouterStatus(router, addresss);
+                checkRouterStatus(router, addresses);
             }
         }
 
-        for (Address address : addresss) {
+        for (Address address : addresses) {
             checkClusterStatus(address);
         }
     }
