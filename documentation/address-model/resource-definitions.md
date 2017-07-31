@@ -9,7 +9,7 @@ The resources are defined in the JSON format.
 
 ## AddressSpace
 
-| Verb | Resource | Description |
+| Method | Path | Description |
 | ---- | -------- | ----------- |
 | GET | /v1/addressspaces | to retrieve list |
 | GET | /v1/addressspaces/myspace | to retrieve single address space |
@@ -64,7 +64,7 @@ The `AddressSpace` resource defines the type of address space and endpoint for c
 
 ## Address
 
-| Verb | Resource | Description |
+| Method | Path | Description |
 | ---- | -------- | ----------- |
 | GET | /v1/addresses/myspace | to retrieve list |
 | GET | /v1/addresses/myspace/:name | to retrieve single address |
