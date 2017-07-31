@@ -2,20 +2,21 @@
 
 This document defines the resources consumed and produced by APIs and can be considered a base for writing the schema for the data formats. The [address model](model.md) defines address spaces and addresses which translates to these resources.
 
-The resources defined herein may be created, deleted and updated through different APIs. Either the
+The resources defined here may be created, deleted and updated through different APIs. Either the
 Open Service Broker API, the custom HTTP API, or using AMQP management.
 
 The resources are defined in the JSON format. 
 
 ## AddressSpace
 
-GET    /v1/addressspaces         - to retrieve list 
-GET    /v1/addressspaces/myspace - to retrieve single address space
-POST   /v1/addressspaces         - create and append single or multiple (AddressSpace, or AddressSpaceList) or fail if exists
-PUT    /v1/addressspaces         - replace a single or multiple (AddressSpace, or AddressSpaceList) 
-PUT    /v1/addressspaces/:name   - create or replace
-DELETE /v1/addressspace/:name    - delete
-
+| Verb | Resource | Description |
+| ---- | -------- | ----------- |
+| GET | /v1/addressspaces | to retrieve list |
+| GET | /v1/addressspaces/myspace | to retrieve single address space |
+| POST | /v1/addressspaces | create and append single or multiple (AddressSpace, or AddressSpaceList) or fail if exists |
+| PUT | /v1/addressspaces | replace a single or multiple (AddressSpace, or AddressSpaceList) |
+| PUT | /v1/addressspaces/:name | create or replace |
+| DELETE | /v1/addressspace/:name | delete |
 
 The `AddressSpace` resource defines the type of address space and endpoint for connecting.
 
@@ -63,13 +64,15 @@ The `AddressSpace` resource defines the type of address space and endpoint for c
 
 ## Address
 
-GET    /v1/addresses/myspace           - to retrieve list 
-GET    /v1/addresses/myspace/:name     - to retrieve single address
-POST   /v1/addresses/myspace           - create and append single or multiple (Address, or AddressList) or fail if exists
-PUT    /v1/addresses/myspace/:name     - replace a single address
-PUT    /v1/addresses/myspace           - replace multiple addresses 
-DELETE /v1/addresses/myspace/:name     - delete
-DELETE /v1/addresses/myspace           - delete all
+| Verb | Resource | Description |
+| ---- | -------- | ----------- |
+| GET | /v1/addresses/myspace | to retrieve list |
+| GET | /v1/addresses/myspace/:name | to retrieve single address |
+| POST | /v1/addresses/myspace | create and append single or multiple (Address, or AddressList) or fail if exists |
+| PUT | /v1/addresses/myspace/:name | replace a single address |
+| PUT | /v1/addresses/myspace | replace multiple addresses |
+| DELETE | /v1/addresses/myspace/:name | delete |
+| DELETE | /v1/addresses/myspace | delete all |
 
 The `Address` resource defines an address and its semantics.
 
