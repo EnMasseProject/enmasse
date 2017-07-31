@@ -37,8 +37,11 @@ task teardownImage(type: Exec) {
     commandLine 'docker', 'rm', 'qdrouterd'
 }
 
-test.dependsOn setupRouter
-test.finalizedBy teardownImage
+test {
+    dependsOn setupRouter
+    finalizedBy teardownImage
+    testLogging.showStandardStreams true
+}
 
 task pack(type: Tar) {
     from ('build/libs') {

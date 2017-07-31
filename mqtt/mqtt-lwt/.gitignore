@@ -1,5 +1,6 @@
-# Maven stuff
-**/target/*
+# Gradle stuff
+.gradle
+/build/
 
 # Eclipse stuff
 **/.project
