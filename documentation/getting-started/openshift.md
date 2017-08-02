@@ -120,64 +120,57 @@ EnMasse is configured with a set of addresses that you can use for messages. Cur
    * Direct anycast addresses
    * Direct broadcast addresses
 
-EnMasse comes with a console that you can use for managing addresses. You can get the console URL by
-running
+See the [address model](../address-model/model.md) for details. EnMasse also comes with a console that you can use for managing addresses. You can get the console URL by running
     
     echo "http://$(oc get route -o jsonpath='{.spec.host}' console)"
 
-You can also deploy the addressing config using the address controller API.  Here is an example config with all 4 variants that you can save to `addresses.json`:
+You can also deploy the addressing config using the address controller API. See [resource definitions](../address-model/resource-definitions.md) for details on the resources consumed by the API.  Here is an example config with all 4 variants that you can save to `addresses.json`:
 
 ```
 {
-    "apiVersion": "v3",
-    "kind": "AddressList",
-    "items": [
-        {
-            "metadata": {
-                "name": "anycast"
-            },
-            "spec": {
-                "store_and_forward": false,
-                "multicast": false
-            }
-        },
-        {
-            "metadata": {
-                "name": "broadcast"
-            },
-            "spec": {
-                "store_and_forward": false,
-                "multicast": true
-            }
-        },
-        {
-            "metadata": {
-                "name": "myqueue"
-            },
-            "spec": {
-                "store_and_forward": true,
-                "multicast": false,
-                "flavor": "vanilla-queue"
-            }
-        },
-        {
-            "metadata": {
-                "name": "mytopic"
-            },
-            "spec": {
-                "store_and_forward": true,
-                "multicast": true,
-                "flavor": "vanilla-topic"
-            }
-        }
-    ]
+  "apiVersion": "enmasse.io/v1",
+  "kind": "AddressList",
+  "items": [
+    {
+      "metadata": {
+        "name": "myqueue"
+      },
+      "spec": {
+        "type": "queue"
+      }
+    },
+    {
+      "metadata": {
+        "name": "mytopic"
+      },
+      "spec": {
+        "type": "topic"
+      }
+    },
+    {
+      "metadata": {
+        "name": "myanycast"
+      },
+      "spec": {
+        "type": "anycast"
+      }
+    },
+    {
+      "metadata": {
+        "name": "mymulticast"
+      },
+      "spec": {
+        "type": "multicast"
+      }
+    }
+  ]
 }
 ```
 
 Each address that set store-and-forward=true must also refer to a flavor. See below on how to create
 your own flavors. To deploy this configuration, you must currently use a http client like curl:
 
-    curl -X PUT -H "content-type: application/json" --data-binary @addresses.json http://$(oc get service -o jsonpath='{.spec.clusterIP}' address-controller):8080/v3/address
+    curl -X POST -H "content-type: application/json" --data-binary @addresses.json http://$(oc get route -o jsonpath='{.spec.host}' restapi)/v1/addresses/default
 
 This will connect to the address controller REST API to deploy the address config.
 
