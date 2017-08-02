@@ -54,9 +54,9 @@ At _link level_, we could have :
 
 The `qos-policy` could be something like :
 
-* _exact_ : the receiver wants to receive messages published only with the same QoS as the original message
-* _enforce minimum_ : the receiver wants to receive message published with QoS = min(published QoS, requested QoS)
-* _enforce maximum_ : the receiver wants to receive message published with QoS = max(published QoS, requested QoS)
+* _exact_ : the receiver wants messages to be transferred to it using the same QoS as used in the original transfer from publisher to intermediary
+* _enforce minimum_ : the receiver wants messages to be transferred to it using `QoS = min(published QoS, requested QoS)`
+* _enforce maximum_ : the receiver wants messages to be transferred to it using `QoS = max(published QoS, requested QoS)`
 
 > In this scenario, the MQTT over AMQP should work using the _enforce minimum_ 
 
