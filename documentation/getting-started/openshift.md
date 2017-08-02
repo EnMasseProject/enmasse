@@ -167,8 +167,7 @@ You can also deploy the addressing config using the address controller API. See 
 }
 ```
 
-Each address that set store-and-forward=true must also refer to a flavor. See below on how to create
-your own flavors. To deploy this configuration, you must currently use a http client like curl:
+To deploy this configuration, you must currently use a http client like curl:
 
     curl -X POST -H "content-type: application/json" --data-binary @addresses.json http://$(oc get route -o jsonpath='{.spec.host}' restapi)/v1/addresses/default
 
@@ -224,19 +223,6 @@ Then the subscriber is waiting for messages published on that topic. To start th
     ./tls_mqtt_send.py -c "$(oc get route -o jsonpath='{.spec.host}' mqtt)" -p 443 -t mytopic -q 1 -s ./server-cert.pem -m "Hello EnMasse"
 
 The the publisher publishes the message and disconnects from EnMasse. The message is received by the previous connected subscriber.
-
-### Flavor config
-
-To support different configurations of brokers, EnMasse comes with different templates that allows
-for different broker configurations and broker types.  A flavor is a specific set of parameters for a template. This
-allows a cluster administrator to control which configuration settings that are available to the
-developer. The flavor configuration is stored in a ConfigMap in OpenShift.
-
-The flavor map can be changed using the `oc` tool:
-
-    oc get configmap flavor -o yaml > flavor.yaml
-    # ADD/REMOVE/CHANGE flavors
-    oc replace -f flavor.yaml
 
 ## Conclusion
 
