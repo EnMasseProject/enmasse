@@ -1,10 +1,4 @@
-FROM centos:7
-
-RUN yum -y update  \
-    && yum -y install epel-release \
-    && yum -y install nodejs \
-    npm \
-    && yum clean all
+FROM enmasseproject/nodejs-base:6
 
 RUN mkdir -p /opt/app-root/src/
 RUN cd /opt/app-root/src/
