@@ -1,5 +1,15 @@
 == scope
 
+There are various different interfaces for externally facing
+components that need to protected via authentication. There are also
+two types of userbase:
+
+1. there is the userbase for the openshift/kubernetes cluster that is
+controlled by the cluster administrators
+
+2. each address-space will have its own userbase that the owner of
+that address space can control
+
 === address controller api
 
 This is the HTTP based API allowing address spaces to be created and
@@ -8,7 +18,7 @@ address-controller component will authenticate requests against the
 openshift/kubernetes userbase, presumably using OAuth tokens supplied
 in the HTTP headers.
 
-=== service broker/service catalogue
+=== service broker api
 
 The service broker implementation is part of the address
 controller. This really just represents a slightly different API into
@@ -21,10 +31,13 @@ openshift console user is logged in).
 === enmasse console
 
 The console is a per address-space service and will authenticate
-against the address-spaces userbase. For users with appropriate
-permission it will allow creation or deletion of addresses via the
-address-controller API for which it will use a service account it has
-been configured with.
+against the address-space's own userbase. The console server will have
+a service account that it uses for interaction with the address
+controller api when creating and deleting addresses.
+
+It will maintain authorisation information as to which users in the
+address space's userbase are allowed to (a) view the address space and
+(b) add/delete addresses within the address space.
 
 === router & gateways
 
@@ -44,6 +57,18 @@ TODO: Rob
 
 == console authorisation
 
+Permissions for enmasse will be assigned to groups (or roles). The
+groups are defined in the authorisation service.
+
+There will be two permissions defined for access to the console:
+
+1. read access
+
+2. write access (allowing creation and deletion of addresses)
+
+The console should use OAuth to verify whether a given user has been
+granted these permissions.
+
 == configuring authentication for an address-space
 
 Three options presented to user:
@@ -58,13 +83,13 @@ Deploy two authentication services along with address controller:
   * used for no authentication option above
 2. keycloak instance with plugins
   * used for enmasse authentication option above
-  * need to setup keycloak realm per address space with admin user
+  * need to setup keycloak realm per address space with admin user that can view and edit that realm
 
-TODO: Need to update the address model to include the necessary
+[NOTE]
+Need to update the address model to include the necessary
 configuration details for the authentication service to use in the
-address space resource schema. This includes host and port, but may
-also be a CA cert for verifying the authentication services
-certificate.
+address space resource schema. This includes host, port and a CA cert
+for verifying the authentication services certificate.
 
 ....
 diff --git a/documentation/address-model/resource-definitions.md b/documentation/address-model/resource-definitions.md
@@ -89,10 +114,19 @@ index 8c5aab3..1cdfacf 100644
  }
 ....
 
+Routers will need to specify the the realm for their address-space in
+the AMQP open frames hostname field in connections made to the
+authentication service via sasl-delegation.
+
+If the host is used to identify the realm, we would need a unique
+hostname per address-space, i.e. a route per address-space.
+
+Alternatively, the realm could be specified as a separate option.
+
 The address controller will allow the authentication service to be
 specified, and will set environment variables in the router deployment
 describing the host and port and path to the CA cert to use. The CA
-cert will be injected as a secret.
+cert will be mounted as a secret.
 
 == testing
 
