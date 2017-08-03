@@ -18,8 +18,8 @@ buildscript {
 
 ext {
     dockerOrg           = System.getenv("DOCKER_ORG") ?: "enmasseproject"
-    dockerUser          = System.getenv("DOCKER_USER") ?: "UNSET"
-    dockerPasswd        = System.getenv("DOCKER_PASS") ?: "UNSET"
+    dockerUser          = System.getenv("DOCKER_USER") ?: null
+    dockerPasswd        = System.getenv("DOCKER_PASS") ?: null
     commit              = System.getenv("COMMIT") ?: "latest"
     dockerImageVersion  = System.getenv("VERSION") ?: "latest"
     dockerRegistry      = System.getenv("DOCKER_REGISTRY") ?: "docker.io"
