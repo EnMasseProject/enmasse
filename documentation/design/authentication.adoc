@@ -1,6 +1,6 @@
-## scope
+== scope
 
-### address controller api
+=== address controller api
 
 This is the HTTP based API allowing address spaces to be created and
 deleted and the addresses within those to be defined.  The
@@ -8,7 +8,7 @@ address-controller component will authenticate requests against the
 openshift/kubernetes userbase, presumably using OAuth tokens supplied
 in the HTTP headers.
 
-### service broker/service catalogue
+=== service broker/service catalogue
 
 The service broker implementation is part of the address
 controller. This really just represents a slightly different API into
@@ -18,7 +18,7 @@ openshift/kubernetes userbase (as when using the service catalog in
 openshift, the requests would be made as the principal with which the
 openshift console user is logged in).
 
-### enmasse console
+=== enmasse console
 
 The console is a per address-space service and will authenticate
 against the address-spaces userbase. For users with appropriate
@@ -26,25 +26,25 @@ permission it will allow creation or deletion of addresses via the
 address-controller API for which it will use a service account it has
 been configured with.
 
-### router & gateways
+=== router & gateways
 
 These are responsible for authenticating AMQP and MQTT connections. At
 present all enforcement is actually done at the router level. The MQTT
 gateway merely passes on the credentials it receives for each
 connection.
 
-### internal components
+=== internal components
 
 Internal components authenticated using client certificates signed by
 an internal CA. Verify: this is a per address-space CA?
 
-## sasl delegating mechanism
+== sasl delegating mechanism
 
 TODO: Rob
 
-## console authorisation
+== console authorisation
 
-## configuring authentication for an address-space
+== configuring authentication for an address-space
 
 Three options presented to user:
 
@@ -60,6 +60,6 @@ Deploy two authentication services along with address controller:
   * used for enmasse authentication option above
   * need to setup keycloak realm per address space with admin user
 
-## testing
+== testing
 
 TODO: Rob
