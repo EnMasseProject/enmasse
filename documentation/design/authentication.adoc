@@ -60,6 +60,40 @@ Deploy two authentication services along with address controller:
   * used for enmasse authentication option above
   * need to setup keycloak realm per address space with admin user
 
+TODO: Need to update the address model to include the necessary
+configuration details for the authentication service to use in the
+address space resource schema. This includes host and port, but may
+also be a CA cert for verifying the authentication services
+certificate.
+
+....
+diff --git a/documentation/address-model/resource-definitions.md b/documentation/address-model/resource-definitions.md
+index 8c5aab3..1cdfacf 100644
+--- a/documentation/address-model/resource-definitions.md
++++ b/documentation/address-model/resource-definitions.md
+@@ -43,6 +43,15 @@ The `AddressSpace` resource defines the type of address space and endpoint for c
+                     "secretName": "mysecret"
+                 }
+             }
++        },
++
++        "authenticationService": { //Optional,
++                                   //if no authenticationService is provided it will be assumed no authentication is required,
++                                   //if an empty object is specified the dfeault enmasse authentication service is assumed
++                                   //TODO: verify that distinguishing between null and empty object is not a problem for address controller
++            "host": "myhost",
++            "port": 5672,
++            "caCertSecretName": "mysecret"
+         }
+     }
+ }
+....
+
+The address controller will allow the authentication service to be
+specified, and will set environment variables in the router deployment
+describing the host and port and path to the CA cert to use. The CA
+cert will be injected as a secret.
+
 == testing
 
 Automated system tests to cover authentication functionality.  test will cover EnMasse Authentication Service and No
