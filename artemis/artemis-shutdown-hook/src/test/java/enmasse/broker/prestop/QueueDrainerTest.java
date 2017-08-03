@@ -35,8 +35,8 @@ import static org.junit.Assert.assertThat;
 
 public class QueueDrainerTest {
     private QueueDrainer client;
-    private Host from = TestUtil.createHost("127.0.0.1", 12345);
-    private Host to = TestUtil.createHost("127.0.0.1", 12346);
+    private Host from = TestUtil.createHost("127.0.0.1", 11111);
+    private Host to = TestUtil.createHost("127.0.0.1", 22222);
     private TestBroker fromServer;
     private TestBroker toServer;
 

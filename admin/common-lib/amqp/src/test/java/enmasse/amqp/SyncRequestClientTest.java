@@ -76,7 +76,7 @@ public class SyncRequestClientTest {
                 sender.open();
                 futureSender.complete(sender);
             });
-        }).listen(12345, res -> {
+        }).listen(12347, res -> {
             latch.countDown();
         });
         latch.await();
@@ -90,7 +90,7 @@ public class SyncRequestClientTest {
 
     @Test
     public void testRequest() throws Exception {
-        try (SyncRequestClient client = new SyncRequestClient("127.0.0.1", 12345)) {
+        try (SyncRequestClient client = new SyncRequestClient("127.0.0.1", 12347)) {
             Message request = Message.Factory.create();
             request.setAddress("health-check");
             request.setBody(new AmqpValue("[{\"name\":\"myqueue\",\"store_and_forward\":true,\"multicast\":false}]"));

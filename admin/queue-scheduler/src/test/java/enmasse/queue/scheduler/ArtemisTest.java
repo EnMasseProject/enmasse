@@ -36,7 +36,7 @@ public class ArtemisTest {
     @Before
     public void setup() throws Exception {
         vertx = Vertx.vertx();
-        server = new TestArtemis("localhost", 12345);
+        server = new TestArtemis("localhost", 12346);
         server.start();
     }
 
@@ -49,7 +49,7 @@ public class ArtemisTest {
     public void testManagement() throws InterruptedException, ExecutionException, TimeoutException {
         ProtonClient client = ProtonClient.create(vertx);
         CompletableFuture<Future<Broker>> promise = new CompletableFuture<>();
-        client.connect("localhost", 12345, h -> {
+        client.connect("localhost", 12346, h -> {
             assertTrue(h.succeeded());
             promise.complete(Artemis.create(vertx, h.result().open()));
         });

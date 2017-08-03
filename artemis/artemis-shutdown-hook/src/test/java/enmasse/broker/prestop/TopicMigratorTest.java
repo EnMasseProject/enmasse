@@ -33,8 +33,8 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
 public class TopicMigratorTest {
-    private Host from = TestUtil.createHost("127.0.0.1", 12345);
-    private Host to = TestUtil.createHost("127.0.0.1", 12346);
+    private Host from = TestUtil.createHost("127.0.0.1", 33333);
+    private Host to = TestUtil.createHost("127.0.0.1", 44444);
     private TestBroker fromServer;
     private TestBroker toServer;
     private TestSubscriber subscriber;
