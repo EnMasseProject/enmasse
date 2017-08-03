@@ -87,20 +87,20 @@ public class SchedulerState {
 
     public synchronized void brokerRemoved(String groupId, String brokerId) {
         Map<String, Broker> brokerMap = brokerGroupMap.get(groupId);
-        if (!brokerMap.containsKey(brokerId)) {
+        if (brokerMap != null && brokerMap.containsKey(brokerId)) {
+            brokerMap.remove(brokerId);
+            if (brokerMap.isEmpty()) {
+                brokerGroupMap.remove(groupId);
+            }
+            Set<Address> addresses = addressMap.getOrDefault(groupId, Collections.emptySet());
+            // If colocated queues, ensure missing queues are recreated on other brokers.
+            if (addresses.size() > 1) {
+                distributeAddressesByNumQueues(groupId, addresses);
+            }
+            log.info("Broker " + brokerId + " in group " + groupId + " was removed");
+        } else {
             log.info("Broker was already removed, ignoring");
-            return;
         }
-        brokerMap.remove(brokerId);
-        if (brokerMap.isEmpty()) {
-            brokerGroupMap.remove(groupId);
-        }
-        Set<Address> addresses = addressMap.getOrDefault(groupId, Collections.emptySet());
-        // If colocated queues, ensure missing queues are recreated on other brokers.
-        if (addresses.size() > 1) {
-            distributeAddressesByNumQueues(groupId, addresses);
-        }
-        log.info("Broker " +  brokerId + " in group " + groupId + " was removed");
     }
 
     private void addAddresses(String groupId, Set<Address> addresses, Set<Address> added) {
