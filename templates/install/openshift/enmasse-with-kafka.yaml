@@ -1017,6 +1017,12 @@ objects:
             ports:
             - containerPort: 8080
               name: health
+            - containerPort: 8080
+              name: ready
+            readinessProbe:
+              httpGet:
+                path: "/ready"
+                port: ready
             resources:
               limits:
                 memory: 512Mi

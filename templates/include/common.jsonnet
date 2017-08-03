@@ -26,7 +26,7 @@
     }
   },
 
-  clientContainer(name, image, mem_request, env, http_health)::
+  clientContainer(name, image, mem_request, env, http_health, http_ready)::
   {
     local health_port =
     {
@@ -40,6 +40,18 @@
         "port": "health"
       }
     },
+    local ready_port =
+    {
+      "name": "ready",
+      "containerPort": 8080
+    },
+    local ready_probe =
+    {
+      "httpGet": {
+        "path": "/ready",
+        "port": "ready"
+      }
+    },
     "image": image,
     "name": name,
     "env": env,
@@ -51,8 +63,11 @@
             "memory": mem_request,
         }
     },
-    [if http_health then "ports"]: [ health_port ],
-    [if http_health then "livenessProbe"]: health_probe
+    [if http_health && !http_ready then "ports"]: [ health_port ],
+    [if !http_health && http_ready then "ports"]: [ ready_port ],
+    [if http_health && http_ready then "ports"]: [ health_port, ready_port ],
+    [if http_health then "livenessProbe"]: health_probe,
+    [if http_ready then "readinessProbe"]: ready_probe
   },
 
   service(addressSpace, name, selector_name, port_name, port, target_port)::

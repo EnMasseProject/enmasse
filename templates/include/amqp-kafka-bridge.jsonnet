@@ -33,7 +33,7 @@ local common = import "common.jsonnet";
                         {
                           "name": "KAFKA_BOOTSTRAP_SERVERS",
                           "value": "${KAFKA_BOOTSTRAP_SERVERS}"
-                        }], true),
+                        }], true, true),
             ]
           }
         }
