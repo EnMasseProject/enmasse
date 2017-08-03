@@ -2,11 +2,21 @@
 
 ### address controller api
 
-Authenticates against openshift/kubernetes userbase.
+This is the HTTP based API allowing address spaces to be created and
+deleted and the addresses within those to be defined.  The
+address-controller component will authenticate requests against the
+openshift/kubernetes userbase, presumably using OAuth tokens supplied
+in the HTTP headers.
 
 ### service broker/service catalogue
 
-As above.
+The service broker implementation is part of the address
+controller. This really just represents a slightly different API into
+the same functionality for managing addresses and
+address-spaces. Again requests would be authenticated against the
+openshift/kubernetes userbase (as when using the service catalog in
+openshift, the requests would be made as the principal with which the
+openshift console user is logged in).
 
 ### enmasse console
 
