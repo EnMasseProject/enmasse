@@ -29,7 +29,7 @@ public interface Plan {
     String getName();
 
     /**
-     * Get the human-friendly name of the plan (used in the GUI).
+     * Get the human-friendly name of the plan.
      *
      * @return The display name
      */
