@@ -40,7 +40,7 @@ node('enmasse') {
         result = 'success'
     }
     stage('notify mailing list') {
-        if (result.equals("failure") || !"SUCCESS".equals(currentBuild.rawBuild.getPreviousBuild()?.getResult().toString())) {
+        if (result.equals("failure")) {
             mail to: "$MAILING_LIST", subject: "EnMasse build has finished with ${result}", body: "See ${env.BUILD_URL}"
         }
     }
