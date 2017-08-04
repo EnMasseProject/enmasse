@@ -3,7 +3,6 @@ node('enmasse') {
     catchError {
         stage ('checkout') {
             git 'https://github.com/EnMasseProject/enmasse.git'
-            sh 'git checkout add-jenkins-file'
             sh 'git submodule update --init --recursive'
             sh 'rm -rf artifacts && mkdir -p artifacts'
         }
