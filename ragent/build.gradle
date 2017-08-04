@@ -11,6 +11,7 @@ task runMocha(type: Exec) {
         result.exitValue == 0
     }
     executable = "mocha"
+    args "--reporter=mocha-junit-reporter"
 }
 test.dependsOn(runMocha)
 
