@@ -21,7 +21,6 @@ run_test $OPENSHIFT_PROJECT true $MULTITENANT $OPENSHIFT_URL $OPENSHIFT_USER || 
 popd
 
 oc get pods
-#teardown_test $OPENSHIFT_PROJECT
 
 echo "Test results:"
 cat $SYSTEMTESTS/build/test-results/test/*.xml
@@ -30,4 +29,6 @@ if [ $failure -gt 0 ]
 then
     echo "Systemtests failed"
     exit 1
+else
+    teardown_test $OPENSHIFT_PROJECT
 fi
