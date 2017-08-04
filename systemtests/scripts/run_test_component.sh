@@ -9,6 +9,7 @@ OPENSHIFT_URL=${OPENSHIFT_URL:-https://localhost:8443}
 OPENSHIFT_USER=${OPENSHIFT_USER:-test}
 OPENSHIFT_PASSWD=${OPENSHIFT_PASSWD:-test}
 OPENSHIFT_PROJECT=${OPENSHIFT_PROJECT:-enmasseci}
+ARTIFACTS_DIR=${ARTIFACTS_DIR:-artifacts}
 MULTITENANT=${MULTITENANT:-false}
 
 export PATH="$OC_PATH:$PATH"
@@ -20,10 +21,7 @@ pushd $SYSTEMTESTS
 run_test $OPENSHIFT_PROJECT true $MULTITENANT $OPENSHIFT_URL $OPENSHIFT_USER || failure=$(($failure + 1))
 popd
 
-oc get pods
-
-echo "Test results:"
-cat $SYSTEMTESTS/build/test-results/test/*.xml
+$SYSTEMTESTS/scripts/collect_logs.sh $OC_PATH $ARTIFACTS_DIR
 
 if [ $failure -gt 0 ]
 then
