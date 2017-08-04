@@ -35,7 +35,7 @@ node('enmasse') {
         }
         stage('archive artifacts') {
             sh 'ls artifacts'
-            archive 'artifacts/*'
+            archive 'artifacts/**'
         }
         result = 'success'
     }
