@@ -22,18 +22,22 @@ in the HTTP headers.
 
 The service broker implementation is part of the address
 controller. This really just represents a slightly different API into
-the same functionality for managing addresses and
-address-spaces. Again requests would be authenticated against the
-openshift/kubernetes userbase (as when using the service catalog in
-openshift, the requests would be made as the principal with which the
-openshift console user is logged in).
+the same functionality for managing addresses and address-spaces.
+
+The service broker api will only be called by the service catalog. The
+credentials the catalog will use are defined in environment
+variables. If these are set, the service broker implementation will
+enforce that credentials supplied with any request match those in the
+environment variables.
 
 === enmasse console
 
 The console is a per address-space service and will authenticate
-against the address-space's own userbase. The console server will have
-a service account that it uses for interaction with the address
-controller api when creating and deleting addresses.
+against the address-space's own userbase. The owner of the address
+space can then grant access to the console to the users they have
+defined. The console server will have a service account that it uses
+for interaction with the address controller api when creating and
+deleting addresses.
 
 It will maintain authorisation information as to which users in the
 address space's userbase are allowed to (a) view the address space and
@@ -66,8 +70,8 @@ There will be two permissions defined for access to the console:
 
 2. write access (allowing creation and deletion of addresses)
 
-The console should use OAuth to verify whether a given user has been
-granted these permissions.
+The console should use OAuth against Keycloak to verify whether a
+given user has been granted these permissions.
 
 == configuring authentication for an address-space
 
@@ -81,9 +85,8 @@ Deploy two authentication services along with address controller:
 
 1. simple null service that always allows access
   * used for no authentication option above
-2. keycloak instance with plugins
+2. keycloak instance with sasl-delegation plugins
   * used for enmasse authentication option above
-  * need to setup keycloak realm per address space with admin user that can view and edit that realm
 
 [NOTE]
 Need to update the address model to include the necessary
@@ -93,22 +96,26 @@ for verifying the authentication services certificate.
 
 ....
 diff --git a/documentation/address-model/resource-definitions.md b/documentation/address-model/resource-definitions.md
-index 8c5aab3..1cdfacf 100644
+index 8c5aab3..ee46c55 100644
 --- a/documentation/address-model/resource-definitions.md
 +++ b/documentation/address-model/resource-definitions.md
-@@ -43,6 +43,15 @@ The `AddressSpace` resource defines the type of address space and endpoint for c
+@@ -43,6 +43,19 @@ The `AddressSpace` resource defines the type of address space and endpoint for c
                      "secretName": "mysecret"
                  }
              }
 +        },
 +
-+        "authenticationService": { //Optional,
-+                                   //if no authenticationService is provided it will be assumed no authentication is required,
-+                                   //if an empty object is specified the dfeault enmasse authentication service is assumed
-+                                   //TODO: verify that distinguishing between null and empty object is not a problem for address controller
-+            "host": "myhost",
-+            "port": 5672,
-+            "caCertSecretName": "mysecret"
++        "authenticationService": { //Optional, if no authenticationService is provided type 'none' is assumed,
++            "type": "external", // Required, one of:
++                                // 'none' (meaning no authentication is performed),
++                                // 'default' (meaning the internal keycloak based service is used)
++                                // or 'external' (to authenticate against some externally managed authentication service)
++            "details" : { // Optional, ignored unless type is 'external'
++                "host": "myhost",
++                "port": 5672,
++                "caCertSecretName": "mysecret"
++                //TODO: add in oauth uris
++            }
          }
      }
  }
@@ -119,14 +126,25 @@ the AMQP open frames hostname field in connections made to the
 authentication service via sasl-delegation.
 
 If the host is used to identify the realm, we would need a unique
-hostname per address-space, i.e. a route per address-space.
+hostname per address-space, i.e. a route per address-space. That may
+be desirable anyway in order to allow a realm specific url for the
+keycloak instance.
 
-Alternatively, the realm could be specified as a separate option.
+Alternatively, the realm be taken from the address space name which is
+supplied as an environmanet variable.
 
 The address controller will allow the authentication service to be
 specified, and will set environment variables in the router deployment
 describing the host and port and path to the CA cert to use. The CA
 cert will be mounted as a secret.
+
+The address controller will provide the console with credentials to
+use when it connects back to the address-controller in order to
+create/delete addresses.
+
+When the default option is chosen for the authenticationService, the
+address controller will setup a keycloak realm for the address space
+with an initial admin user that can view and edit that realm.
 
 == testing
 
