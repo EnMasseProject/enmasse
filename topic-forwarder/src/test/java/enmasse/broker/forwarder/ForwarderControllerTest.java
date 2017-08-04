@@ -43,9 +43,9 @@ public class ForwarderControllerTest {
     private String localHost = "127.0.0.1";
     private final String address = "mytopic";
     ProtonClient client = ProtonClient.create(vertx);
-    private TestBroker serverA = new TestBroker(client, localHost, 5672, address);
-    private TestBroker serverB = new TestBroker(client, localHost, 5673, address);
-    private TestBroker serverC = new TestBroker(client, localHost, 5674, address);
+    private TestBroker serverA = new TestBroker(client, localHost, 33333, address);
+    private TestBroker serverB = new TestBroker(client, localHost, 33334, address);
+    private TestBroker serverC = new TestBroker(client, localHost, 33335, address);
 
     @Before
     public void setup() throws Exception {
@@ -64,9 +64,9 @@ public class ForwarderControllerTest {
 
     @Test
     public void testBrokerReplicator() throws InterruptedException, TimeoutException, ExecutionException {
-        Host hostA = new Host(localHost, Collections.singletonMap("amqp", 5672));
-        Host hostB = new Host(localHost, Collections.singletonMap("amqp", 5673));
-        Host hostC = new Host(localHost, Collections.singletonMap("amqp", 5674));
+        Host hostA = new Host(localHost, Collections.singletonMap("amqp", 33333));
+        Host hostB = new Host(localHost, Collections.singletonMap("amqp", 33334));
+        Host hostC = new Host(localHost, Collections.singletonMap("amqp", 33335));
 
         ForwarderController replicator = new ForwarderController(hostA, address);
         CountDownLatch latch = new CountDownLatch(1);
