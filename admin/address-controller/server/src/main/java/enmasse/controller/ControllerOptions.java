@@ -62,7 +62,10 @@ public final class ControllerOptions {
         if (namespaceFile.exists()) {
             namespace = readFile(namespaceFile);
         } else {
-            namespace = getEnvOrThrow(env, "NAMESPACE");
+            namespace = getEnv(env, "NAMESPACE").orElse(null);
+            if (namespace == null) {
+                throw new IllegalStateException("Unable to find namespace from " + namespaceFile.getAbsolutePath() + " or NAMSPACE environment variable");
+            }
         }
 
         String token;
