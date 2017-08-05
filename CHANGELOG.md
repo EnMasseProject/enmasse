@@ -1,7 +1,19 @@
-## 0.11.2 (June 2, 2027)
+## 0.12.0 (August 4, 2017)
+* Introduction of the [new address model](documentation/address-model/model.md), which changes how
+  addresses are configured in EnMasse. This change comes from design work that has been done by
+  the developer team in the past months, which made it apparent that we need to make the model more
+  flexible in order to support other topologies than the pure router-based we have today.
+* Integration with the OpenShift Service Catalog as an easy way to provision messaging on OpenShift.
+* Improved status reporting for addresses. When querying the address controller for an Address,
+  the status will now report ready: false if the routers are not yet configured with that address.
+* Add support for external load balancers when running on Kubernetes (see templates/install/kubernetes/addons/external-lb.yaml)
+* Use Apache Artemis 2.1.0 release as base for the broker
+* Bugfixes to address-controller, configserv, console, queue-scheduler and router agent.
+
+## 0.11.2 (June 2, 2017)
 * Minor bugfixes to console and templates
 
-## 0.11.0 (May 29, 2027)
+## 0.11.0 (May 29, 2017)
 * Remove restrictions on address names. These were earlier restructed by k8s labels
 * Add simple logging library to router agent and subscription service
 * Update Artemis broker flavor to 2.1.0
