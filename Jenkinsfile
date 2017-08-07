@@ -34,6 +34,7 @@ node('enmasse') {
             }
         }
         stage('archive artifacts') {
+            archive '**/TEST-*.xml'
             archive 'artifacts/**'
             archive 'templates/install/**'
         }
