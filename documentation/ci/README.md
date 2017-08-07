@@ -1,8 +1,9 @@
 # EnMasse CI
 
-EnMasse uses [Travis CI](http://travis-ci.org/) for continuous integration (CI). All components
-in EnMasse is built, unit tested and dockerized in each individual repository. Before the docker
-image is tagged with 'latest' version, a full systemtest run with the built image is performed. If
-the test is successfull (and it is not a PR), the new image is marked as latest on [Docker Hub](https://hub.docker.com/r/enmasseproject/).
+EnMasse uses [Travis CI](http://travis-ci.org/) for continuous integration (CI). EnMasse is
+contained in a [single repository](https://github.com/EnMasseProject/enmasse) which is build using
+gradle.
+
+Docker images are tagged with the commit hash of the build and pushed to [docker hub](https://hub.docker.com/r/enmasseproject/), and the latest successful snapshot of the EnMasse configuration is published on [bintray](https://dl.bintray.com/enmasse/snapshots/latest/enmasse-latest.tgz).
 
 ![Overview](ci.png)
