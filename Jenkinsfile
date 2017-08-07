@@ -34,8 +34,8 @@ node('enmasse') {
             }
         }
         stage('archive artifacts') {
-            sh 'ls artifacts'
             archive 'artifacts/**'
+            archive 'templates/install/**'
         }
         result = 'success'
     }
