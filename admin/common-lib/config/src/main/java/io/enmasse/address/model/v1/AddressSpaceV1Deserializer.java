@@ -19,16 +19,18 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import io.enmasse.address.model.AddressSpace;
-import io.enmasse.address.model.CertProvider;
-import io.enmasse.address.model.Status;
+import com.fasterxml.jackson.databind.node.*;
+import io.enmasse.address.model.*;
 import io.enmasse.address.model.types.AddressSpaceType;
 import io.enmasse.address.model.types.Plan;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.function.Function;
 
 /**
  * Deserializer for AddressSpace V1 format
@@ -89,6 +91,27 @@ class AddressSpaceV1Deserializer extends JsonDeserializer<AddressSpace> {
             }
         }
 
+        if (spec.hasNonNull(Fields.AUTHENTICATION_SERVICE)) {
+            AuthenticationService.Builder authService = new AuthenticationService.Builder();
+            ObjectNode authenticationService = (ObjectNode) spec.get(Fields.AUTHENTICATION_SERVICE);
+            AuthenticationServiceType authType = AuthenticationServiceType.create(authenticationService.get(Fields.TYPE).asText());
+            authService.setType(authType);
+
+            Map<String, Object> detailsMap = new HashMap<>();
+            ObjectNode details = (ObjectNode) authenticationService.get(Fields.DETAILS);
+            Iterator<Map.Entry<String, JsonNode>> it = details.fields();
+            while (it.hasNext()) {
+                Map.Entry<String, JsonNode> entry = it.next();
+                JsonNode node = entry.getValue();
+                if (!authType.getDetailsFields().containsKey(entry.getKey())) {
+                    throw new RuntimeException("Unknown details field " + entry.getKey() + " encountered");
+                }
+                detailsMap.put(entry.getKey(), TypeConverter.getValue(authType.getDetailsFields().get(entry.getKey()), node));
+            }
+            authService.setDetails(detailsMap);
+            builder.setAuthenticationService(authService.build());
+        }
+
         ObjectNode status = (ObjectNode) root.get(Fields.STATUS);
         if (status != null) {
             boolean isReady = status.get(Fields.IS_READY).asBoolean();
@@ -114,4 +137,22 @@ class AddressSpaceV1Deserializer extends JsonDeserializer<AddressSpace> {
         throw new RuntimeException("Unknown plan " + planName + " for type " + type.getName());
     }
 
+    static class TypeConverter {
+        private static final Map<Class, Function<JsonNode, Object>> converterMap = new HashMap<>();
+
+        static {
+            converterMap.put(TextNode.class, JsonNode::textValue);
+            converterMap.put(IntNode.class, JsonNode::intValue);
+            converterMap.put(LongNode.class, JsonNode::longValue);
+            converterMap.put(BooleanNode.class, JsonNode::booleanValue);
+        }
+
+        public static Object getValue(Class type, JsonNode node) {
+            Object value = converterMap.get(node.getClass()).apply(node);
+            if (!type.equals(value.getClass())) {
+                throw new RuntimeException("Expected value of type " + type + ", but was " + value.getClass());
+            }
+            return value;
+        }
+    }
 }

@@ -29,14 +29,16 @@ public class AddressSpace {
     private final AddressSpaceType type;
     private final List<io.enmasse.address.model.Endpoint> endpointList;
     private final Plan plan;
+    private final AuthenticationService authenticationService;
     private final Status status;
 
-    private AddressSpace(String name, String namespace, AddressSpaceType type, List<io.enmasse.address.model.Endpoint> endpointList, Plan plan, Status status) {
+    private AddressSpace(String name, String namespace, AddressSpaceType type, List<Endpoint> endpointList, Plan plan, AuthenticationService authenticationService, Status status) {
         this.name = name;
         this.namespace = namespace;
         this.type = type;
         this.endpointList = endpointList;
         this.plan = plan;
+        this.authenticationService = authenticationService;
         this.status = status;
     }
 
@@ -89,12 +91,17 @@ public class AddressSpace {
         return sb.toString();
     }
 
+    public AuthenticationService getAuthenticationService() {
+        return authenticationService;
+    }
+
     public static class Builder {
         private String name;
         private String namespace;
         private AddressSpaceType type;
         private List<io.enmasse.address.model.Endpoint> endpointList = new ArrayList<>();
         private Plan plan;
+        private AuthenticationService authenticationService = new AuthenticationService.Builder().build();
         private Status status = new Status(false);
 
         public Builder() {
@@ -107,6 +114,7 @@ public class AddressSpace {
             this.endpointList = new ArrayList<>(addressSpace.getEndpoints());
             this.plan = addressSpace.getPlan();
             this.status = new Status(addressSpace.getStatus());
+            this.authenticationService = addressSpace.getAuthenticationService();
         }
 
         public Builder setName(String name) {
@@ -145,6 +153,11 @@ public class AddressSpace {
             return this;
         }
 
+        public Builder setAuthenticationService(AuthenticationService authenticationService) {
+            this.authenticationService = authenticationService;
+            return this;
+        }
+
         public Builder setStatus(Status status) {
             this.status = status;
             return this;
@@ -155,9 +168,10 @@ public class AddressSpace {
             Objects.requireNonNull(namespace, "namespace not set");
             Objects.requireNonNull(type, "type not set");
             Objects.requireNonNull(endpointList);
+            Objects.requireNonNull(authenticationService, "authentication service not set");
             Objects.requireNonNull(plan, "plan not set");
             Objects.requireNonNull(status, "status not set");
-            return new AddressSpace(name, namespace, type, endpointList, plan, status);
+            return new AddressSpace(name, namespace, type, endpointList, plan, authenticationService, status);
         }
 
         public String getNamespace() {
