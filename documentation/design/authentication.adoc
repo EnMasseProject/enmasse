@@ -57,7 +57,45 @@ an internal CA. Verify: this is a per address-space CA?
 
 == sasl delegating mechanism
 
-TODO: Rob
+An authentication service for EnMasse supports provides an AMQP endpoint
+against which SASL authentication can take place.  A given EnMasse
+instance will be provided with the host/port and, optionally, (AMQP)
+hostname to use in the sasl-init and a client certificate to authenticate
+with the authentication service.
+
+The authorisation service will respond to a sasl-init with a sasl-mechanisms
+containing all the supported mechanisms the authentication service supports. An
+authentication service MUST provide the PLAIN mechanism, SHOULD provide the
+XOAUTH2 and SCRAM-SHA-1 mechanisms, and MAY support the ANONYMOUS and EXTERNAL
+mechanisms.
+
+[NOTE]
+Where EXTERNAL auth is offered, the EnMasse component *MUST* use a TLS client
+certificate to authenticate itself to the authentication service.  Moreover the
+EnMasse component must supply the Authorization Identity String (as defined in
+https://tools.ietf.org/html/rfc4422#section-3.4.1[RFC4422]) containing the
+identity of the certificate with which the messaging client authenticated with
+the EnMasse component.
+
+[NOTE]
+SASL Encryption is *NOT* supported.  GSSAPI (Kerberos) MAY be offered, but only
+for authentication, not for encryption.
+
+Upon a successful SASL authentication the EnMasse component and the authentication
+service MUST exchange ``open`` frames. The ``open`` sent by the authentication
+service MUST contain and entry in the ``properties`` field with key ``authenticated-identity``
+where the value is a ``string``-keyed map.  Standard keys are defined as per
+the http://openid.net/specs/openid-connect-core-1_0.html#StandardClaims[OpenID Connect Standard Claims].
+The ``sub`` field is mandatory, ``preferred_username`` SHOULD be provided, other fields (including
+non-standard claims) MAY be provided.
+
+After the ``open`` frame has been sent either side may close the connection.
+
+[NOTE]
+define how group memberships are going to be sent back from authentication service to EnMasse component.
+Also define how the Authentication Service should respond if the EnMasse component advertises that it
+supports claims-based security (i.e. that the authentication service should construct a JWT token and
+send to the EnMasse component).
 
 == console authorisation
 
