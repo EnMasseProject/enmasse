@@ -91,6 +91,11 @@ non-standard claims) MAY be provided.
 
 After the ``open`` frame has been sent either side may close the connection.
 
+Upon an unsuccessful SASL authentication (including an EXTERNAL exchange where the provided
+Authorized Identity String is not recognized), the delegating authentication service will
+complete the SASL exchange with an ``auth`` outcome signifying failure.  Using an incorrect secret
+with a known identity MUST be indistinguishable in failure mode from using an unknown identity.
+
 [NOTE]
 define how group memberships are going to be sent back from authentication service to EnMasse component.
 Also define how the Authentication Service should respond if the EnMasse component advertises that it
