@@ -102,6 +102,14 @@ Also define how the Authentication Service should respond if the EnMasse compone
 supports claims-based security (i.e. that the authentication service should construct a JWT token and
 send to the EnMasse component).
 
+[NOTE]
+Discuss posibility of providing OAUTH2 as well as SASL delegation so console can use OAUTH2 authentication/redirection
+
+=== Keycloak as the sasl delegating authentication service
+
+[TODO]
+RG to add details
+
 == console authorisation
 
 Permissions for enmasse will be assigned to groups (or roles). The
