@@ -15,3 +15,8 @@ Documents relating to EnMasse project. For setting up EnMasse, see [Getting Star
 ## MQTT over AMQP
 
 For the "MQTT over AMQP" feature and specification see the related [documentation](mqtt-over-amqp/README.md).
+
+## Issues & Troubleshooting
+
+Sometimes, during the deployment and due to different platform configurations, you may encounter some issues.
+Known issues and related workaround and/or fixes are described at this [page](issues/issues.md).

@@ -46,6 +46,9 @@ Submit bugs and feature requests using the [issue tracker](https://github.com/En
 
 For questions or feedback, reach us on IRC on #enmasse on Freenode or post to our [mailing list](https://www.redhat.com/mailman/listinfo/enmasse).
 
+If you encounter some issues during deployment, please check the following [page](documentation/issues/issues.md) with
+well known issues and related fixes/workaround.
+
 # Contributing
 
 See [HACKING](HACKING.md) for details on how to build the different components of EnMasse. Submit patches using pull requests, or post patches to the mailing lists. See the [trello board](https://trello.com/enmasseproject) to get an idea of future plans and areas where you can contribute.
