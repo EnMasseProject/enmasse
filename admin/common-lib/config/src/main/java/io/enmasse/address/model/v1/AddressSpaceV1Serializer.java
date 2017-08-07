@@ -17,13 +17,16 @@ package io.enmasse.address.model.v1;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.*;
 import io.enmasse.address.model.AddressSpace;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Function;
 
 /**
  * Serializer for AddressSpace V1 format
@@ -65,6 +68,17 @@ class AddressSpaceV1Serializer extends JsonSerializer<AddressSpace> {
             }
         }
 
+        ObjectNode authenticationService = spec.putObject(Fields.AUTHENTICATION_SERVICE);
+        authenticationService.put(Fields.TYPE, addressSpace.getAuthenticationService().getType().getName());
+        ObjectNode authDetails = authenticationService.putObject(Fields.DETAILS);
+        Map<String, Object> details = addressSpace.getAuthenticationService().getDetails();
+
+        for (Map.Entry<String, Class> detailsFields : addressSpace.getAuthenticationService().getType().getDetailsFields().entrySet()) {
+            if (details.containsKey(detailsFields.getKey())) {
+                authDetails.set(detailsFields.getKey(), TypeConverter.getJsonNode(detailsFields.getValue(), details.get(detailsFields.getKey())));
+            }
+        }
+
         status.put(Fields.IS_READY, addressSpace.getStatus().isReady());
         if (!addressSpace.getStatus().getMessages().isEmpty()) {
             ArrayNode messages = status.putArray(Fields.MESSAGES);
@@ -74,4 +88,18 @@ class AddressSpaceV1Serializer extends JsonSerializer<AddressSpace> {
         }
     }
 
+    static class TypeConverter {
+        private static final Map<Class, Function<Object, JsonNode>> converterMap = new HashMap<>();
+
+        static {
+            converterMap.put(String.class, o -> new TextNode((String) o));
+            converterMap.put(Integer.class, o -> new IntNode((Integer) o));
+            converterMap.put(Long.class, o -> new LongNode((Long) o));
+            converterMap.put(Boolean.class, o -> BooleanNode.valueOf((Boolean) o));
+        }
+
+        public static JsonNode getJsonNode(Class type, Object value) {
+            return converterMap.get(type).apply(value);
+        }
+    }
 }

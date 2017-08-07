@@ -24,15 +24,14 @@ import org.junit.Test;
 import org.mockito.internal.util.collections.Sets;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 
+// TODO: Add more tests of invalid input to deserialization
 public class SerializationTest {
 
     @Test
@@ -115,9 +114,19 @@ public class SerializationTest {
                         .setService("messaging")
                         .setCertProvider(new CertProvider("secret", "mysecret"))
                         .build()))
+                .setAuthenticationService(new AuthenticationService.Builder()
+                        .setType(AuthenticationServiceType.STANDARD)
+                        .setDetails(new HashMap<String, Object>() {{
+                            put("host", "my.example.com");
+                            put("port", 5671);
+                            put("caCertSecretName", "authservicesecret");
+                            put("clientCertSecretName", "clientcertsecret");
+                        }})
+                        .build())
                 .build();
 
         String serialized = CodecV1.getMapper().writeValueAsString(addressSpace);
+        System.out.println("Serialized: " + serialized);
         AddressSpace deserialized = CodecV1.getMapper().readValue(serialized, AddressSpace.class);
 
         assertThat(deserialized.getName(), is(addressSpace.getName()));
@@ -131,6 +140,8 @@ public class SerializationTest {
         assertThat(deserialized.getEndpoints().get(0).getService(), is(addressSpace.getEndpoints().get(0).getService()));
         assertThat(deserialized.getEndpoints().get(0).getCertProvider().get().getName(), is(addressSpace.getEndpoints().get(0).getCertProvider().get().getName()));
         assertThat(deserialized.getEndpoints().get(0).getCertProvider().get().getSecretName(), is(addressSpace.getEndpoints().get(0).getCertProvider().get().getSecretName()));
+        assertThat(deserialized.getAuthenticationService().getType(), is(addressSpace.getAuthenticationService().getType()));
+        assertThat(deserialized.getAuthenticationService().getDetails(), is(addressSpace.getAuthenticationService().getDetails()));
         assertThat(addressSpace, is(deserialized));
     }
 

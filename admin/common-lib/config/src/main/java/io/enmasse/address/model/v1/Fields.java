@@ -42,6 +42,8 @@ interface Fields {
     String UUID = "uuid";
     String ADDRESS_SPACE_TYPES = "addressSpaceTypes";
     String ADDRESS_TYPES = "addressTypes";
+    String AUTHENTICATION_SERVICE = "authenticationService";
     String DESCRIPTION = "description";
     String PLANS = "plans";
+    String DETAILS = "details";
 }
