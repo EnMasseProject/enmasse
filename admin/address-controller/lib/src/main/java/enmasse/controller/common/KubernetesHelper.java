@@ -271,14 +271,14 @@ public class KubernetesHelper implements Kubernetes {
                     .endBackend()
                     .endSpec();
 
-            if (endpoint.getCertProvider().isPresent()) {
+            if (endpoint.getCertProvider().isPresent() && endpoint.getHost().isPresent()) {
                 ingress.editOrNewMetadata()
                         .addToAnnotations(AnnotationKeys.CERT_SECRET_NAME, endpoint.getCertProvider().get().getSecretName())
                         .endMetadata()
                         .editOrNewSpec()
                         .addNewTl()
-                        .addToHosts(endpoint.getHost().orElse(""))
-                        .withSecretName("")
+                        .addToHosts(endpoint.getHost().get())
+                        .withSecretName(endpoint.getCertProvider().get().getSecretName())
                         .endTl();
             }
             ingress.done();
