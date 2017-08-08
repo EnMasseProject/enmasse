@@ -318,8 +318,12 @@ public class KubernetesHelper implements Kubernetes {
     public AuthenticationServiceResolver getResolver(AuthenticationServiceType type) {
         // TODO: Create resolvers once
         switch (type) {
+            case STANDARD:
+                // TODO - for now drop through to none
             case NONE:
                 return new NoneAuthenticationServiceResolver(client);
+            case EXTERNAL:
+                return new ExternalAuthenticationServiceResolver();
             default:
                 throw new IllegalArgumentException("Unsupported resolver of type " + type);
         }
