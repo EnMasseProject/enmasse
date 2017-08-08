@@ -24,13 +24,14 @@ import java.util.Map;
  */
 public enum AuthenticationServiceType {
     NONE(Collections.emptyMap()),
-    STANDARD(new HashMap<String, Class>(){{
+    STANDARD(Collections.emptyMap()),
+    EXTERNAL(new HashMap<String, Class>(){{
         put("host", String.class);
         put("port", Integer.class);
         put("caCertSecretName", String.class);
         put("clientCertSecretName", String.class);
-    }}),
-    EXTERNAL(Collections.emptyMap());
+        put("saslInitHost", String.class);
+    }});
 
     private final Map<String, Class> detailsFields;
 
