@@ -1,3 +1,18 @@
+/*
+ * Copyright 2017 Red Hat Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package enmasse.controller.standard;
 
 import enmasse.config.AnnotationKeys;
@@ -5,15 +20,13 @@ import enmasse.config.LabelKeys;
 import enmasse.controller.common.Kubernetes;
 import enmasse.controller.common.KubernetesHelper;
 import enmasse.controller.common.TemplateParameter;
-import io.enmasse.address.model.AddressSpace;
-import io.enmasse.address.model.CertProvider;
-import io.enmasse.address.model.Endpoint;
-import io.enmasse.address.model.SecretCertProvider;
+import io.enmasse.address.model.*;
 import io.enmasse.address.model.types.Plan;
 import io.enmasse.address.model.types.TemplateConfig;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.Namespace;
 import io.fabric8.kubernetes.client.KubernetesClientException;
+import io.fabric8.openshift.api.model.Template;
 import io.fabric8.openshift.client.ParameterValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -85,9 +98,16 @@ public class StandardHelper {
 
         if (plan.getTemplateConfig().isPresent()) {
             List<ParameterValue> parameterValues = new ArrayList<>();
+            AuthenticationService authService = addressSpace.getAuthenticationService();
+            AuthenticationServiceResolver authResolver = kubernetes.getResolver(authService.getType());
 
             parameterValues.add(new ParameterValue(TemplateParameter.ADDRESS_SPACE, addressSpace.getName()));
             parameterValues.add(new ParameterValue(TemplateParameter.ADDRESS_SPACE_SERVICE_HOST, getApiServer()));
+            parameterValues.add(new ParameterValue(TemplateParameter.AUTHENTICATION_SERVICE_HOST, authResolver.getHost(authService)));
+            parameterValues.add(new ParameterValue(TemplateParameter.AUTHENTICATION_SERVICE_PORT, String.valueOf(authResolver.getPort(authService))));
+            authResolver.getCaSecretName(authService).ifPresent(secret -> parameterValues.add(new ParameterValue(TemplateParameter.AUTHENTICATION_SERVICE_CA_SECRET, secret)));
+            authResolver.getClientSecretName(authService).ifPresent(secret -> parameterValues.add(new ParameterValue(TemplateParameter.AUTHENTICATION_SERVICE_CLIENT_SECRET, secret)));
+            authResolver.getSaslInitHost(authService).ifPresent(saslInitHost -> parameterValues.add(new ParameterValue(TemplateParameter.AUTHENTICATION_SERVICE_SASL_INIT_HOST, saslInitHost)));
 
             // Step 1: Validate endpoints and remove unknown
             Set<String> availableServices = new HashSet<>(Arrays.asList("messaging", "mqtt", "console"));

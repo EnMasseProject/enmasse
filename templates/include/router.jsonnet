@@ -1,4 +1,5 @@
 local common = import "common.jsonnet";
+local authService = import "auth-service.jsonnet";
 {
   metrics(image_repo, mem_request)::
     {
@@ -27,7 +28,7 @@ local common = import "common.jsonnet";
 
     },
 
-  container(use_sasldb, image_repo, addressEnv, mem_request)::
+  container(use_sasldb, image_repo, env, mem_request)::
     local routerPort = {
         "name": "amqp",
         "containerPort": 5672,
@@ -54,13 +55,13 @@ local common = import "common.jsonnet";
     {
       "image": image_repo,
       "name": "router",
-      local linkEnv = {
+      local linkEnv = [
+        {
           "name": "LINK_CAPACITY",
           "value": "${ROUTER_LINK_CAPACITY}"
-        },
-      "env": if addressEnv == ""
-        then [linkEnv]
-        else [linkEnv, addressEnv],
+        }],
+      "env": env + linkEnv + authService.envVars,
+
       "ports": [routerPort, internalPort, secureRouterPort],
       "livenessProbe": {
         "tcpSocket": {

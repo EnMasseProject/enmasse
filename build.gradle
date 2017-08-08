@@ -35,7 +35,7 @@ ext {
     junitVersion = '4.12'
     mockitoVersion = '2.0.52-beta'
     vertxVersion = '3.4.1'
-    openshiftClientVersion = '2.3.1'
+    openshiftClientVersion = '2.5.7'
     resteasyVersion = '3.1.0.Final'
     artemisVersion = '2.0.0'
 }
@@ -57,13 +57,6 @@ subprojects {
 
     apply plugin: 'com.bmuschko.docker-remote-api'
 
-    docker {
-        registryCredentials {
-            username = dockerUser
-            password = dockerPasswd
-        }
-    }
-
     if (new File(projectDir, "Dockerfile").exists()) {
         task buildImage(type: DockerBuildImage) {
             inputDir = projectDir
@@ -78,7 +71,14 @@ subprojects {
 
 
         task tagImage(type: DockerTagImage) {
-            dependsOn buildImage
+
+
+//    docker {
+ //       registryCredentials {
+ //           username = dockerUser
+ //           password = dockerPasswd
+ //       }
+ //   }
             force = true
             imageId = buildImage.getTag()
             repository = "${dockerRegistry}/${dockerOrg}/${project.name}"

@@ -1,4 +1,5 @@
 local router = import "router.jsonnet";
+local authService = import "auth-service.jsonnet";
 local common = import "common.jsonnet";
 {
   service(addressSpace)::
@@ -13,7 +14,7 @@ local common = import "common.jsonnet";
         }],
       "image": image_repo,
       "name": "console",
-      "env": env + (if use_sasldb then sasldb_env else []),
+      "env": env + (if use_sasldb then sasldb_env else []) + authService.envVars,
       "resources": {
         "requests": {
           "memory": "64Mi",

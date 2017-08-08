@@ -1,6 +1,9 @@
 package enmasse.controller.common;
 
+import io.enmasse.address.model.AuthenticationServiceResolver;
+import io.enmasse.address.model.AuthenticationServiceType;
 import io.enmasse.address.model.Endpoint;
+import io.enmasse.address.model.types.AddressSpaceType;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.Namespace;
@@ -76,4 +79,6 @@ public interface Kubernetes {
     List<Namespace> listNamespaces(Map<String, String> labels);
 
     List<Pod> listRouters();
+
+    AuthenticationServiceResolver getResolver(AuthenticationServiceType type);
 }

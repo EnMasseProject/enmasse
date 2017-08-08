@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Red Hat Inc.
+ * Copyright 2017 Red Hat Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,4 +33,10 @@ public interface TemplateParameter {
     String ROUTER_SECRET = "ROUTER_SECRET";
     String MQTT_SECRET = "MQTT_SECRET";
     String COLOCATED_ROUTER_SECRET = "COLOCATED_ROUTER_SECRET";
+
+    String AUTHENTICATION_SERVICE_HOST = "AUTHENTICATION_SERVICE_HOST";
+    String AUTHENTICATION_SERVICE_PORT = "AUTHENTICATION_SERVICE_PORT";
+    String AUTHENTICATION_SERVICE_CA_SECRET = "AUTHENTICATION_SERVICE_CA_SECRET";
+    String AUTHENTICATION_SERVICE_CLIENT_SECRET = "AUTHENTICATION_SERVICE_CLIENT_SECRET";
+    String AUTHENTICATION_SERVICE_SASL_INIT_HOST = "AUTHENTICATION_SERVICE_SASL_INIT_HOST";
 }

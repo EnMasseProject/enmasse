@@ -18,6 +18,8 @@ package enmasse.controller.common;
 
 import enmasse.config.AnnotationKeys;
 import enmasse.config.LabelKeys;
+import io.enmasse.address.model.AuthenticationServiceResolver;
+import io.enmasse.address.model.AuthenticationServiceType;
 import io.enmasse.address.model.Endpoint;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.extensions.Deployment;
@@ -310,6 +312,17 @@ public class KubernetesHelper implements Kubernetes {
     @Override
     public List<Pod> listRouters() {
         return client.pods().withLabel(LabelKeys.CAPABILITY, "router").list().getItems();
+    }
+
+    @Override
+    public AuthenticationServiceResolver getResolver(AuthenticationServiceType type) {
+        // TODO: Create resolvers once
+        switch (type) {
+            case NONE:
+                return new NoneAuthenticationServiceResolver(client);
+            default:
+                throw new IllegalArgumentException("Unsupported resolver of type " + type);
+        }
     }
 
     public static boolean isDeployment(HasMetadata res) {
