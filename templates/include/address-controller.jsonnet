@@ -45,7 +45,7 @@ local common = import "common.jsonnet";
   external_service::
     self.common_service("address-controller-external", "LoadBalancer", {}),
 
-  deployment(image_repo, multiinstance, template_config)::
+  deployment(image_repo, authservice_image_repo, multiinstance, template_config)::
     {
       "apiVersion": "extensions/v1beta1",
       "kind": "Deployment",
@@ -121,6 +121,27 @@ local common = import "common.jsonnet";
                 "livenessProbe": {
                   "tcpSocket": {
                     "port": "http"
+                  }
+                }
+              }, {
+                "image": authservice_image_repo,
+                "name": "none-authservice",
+                "env": [{
+                  "name": "LISTENPORT",
+                  "value": 56672
+                }],
+                "resources": {
+                    "requests": {
+                        "memory": "16Mi",
+                    },
+                    "limits": {
+                        "memory": "16Mi",
+                    }
+                },
+                "ports": [ { "name": "amqp", "containerPort": 56672 } ],
+                "livenessProbe": {
+                  "tcpSocket": {
+                    "port": "amqp"
                   }
                 }
               }
