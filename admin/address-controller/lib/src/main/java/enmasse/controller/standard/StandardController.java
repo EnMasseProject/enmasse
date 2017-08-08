@@ -188,7 +188,9 @@ public class StandardController extends AbstractVerticle implements Watcher<Addr
 
         if (secretName != null) {
             builder.setCertProvider(new SecretCertProvider(secretName));
-            builder.setHost(ingress.getSpec().getTls().get(0).getHosts().get(0));
+            if (ingress.getSpec().getTls() != null) {
+                builder.setHost(ingress.getSpec().getTls().get(0).getHosts().get(0));
+            }
         }
 
         return builder.build();
