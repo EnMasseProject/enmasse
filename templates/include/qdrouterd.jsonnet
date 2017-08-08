@@ -29,7 +29,7 @@ local common = import "common.jsonnet";
             }
           },
           "spec": {
-            "containers": [ router.container(use_sasldb, image_repo, "", ""),
+            "containers": [ router.container(use_sasldb, image_repo, [], ""),
               router.metrics(metrics_image_repo, "32Mi") ],
             "volumes": [router.hawkular_volume(), router.secret_volume(router_secret)] +
               (if use_sasldb then [router.sasldb_volume()] else [])

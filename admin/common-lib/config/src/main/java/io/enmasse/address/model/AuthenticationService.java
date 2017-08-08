@@ -41,7 +41,7 @@ public class AuthenticationService {
     }
 
     public static class Builder {
-        private AuthenticationServiceType type = AuthenticationServiceType.STANDARD;
+        private AuthenticationServiceType type = AuthenticationServiceType.NONE;
         private Map<String, Object> details = new HashMap<>();
 
         public Builder setType(AuthenticationServiceType type) {
