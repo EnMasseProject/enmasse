@@ -22,27 +22,27 @@ import io.enmasse.address.model.Endpoint;
 import io.enmasse.address.model.SecretCertProvider;
 import io.enmasse.address.model.types.standard.StandardAddressSpaceType;
 import io.enmasse.address.model.types.standard.StandardType;
+import io.vertx.core.AsyncResult;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientOptions;
 import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.unit.Async;
+import io.vertx.ext.unit.TestContext;
+import io.vertx.ext.unit.junit.VertxUnitRunner;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
 import java.net.PasswordAuthentication;
 import java.util.Base64;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
-
+@RunWith(VertxUnitRunner.class)
 public class HTTPServerTest {
 
     private Vertx vertx;
@@ -50,22 +50,18 @@ public class HTTPServerTest {
     private AddressSpace addressSpace;
 
     @Before
-    public void setup() throws InterruptedException {
+    public void setup(TestContext context) throws InterruptedException {
         vertx = Vertx.vertx();
         instanceApi = new TestAddressSpaceApi();
         String addressSpaceName = "myinstance";
         addressSpace = createAddressSpace(addressSpaceName);
         instanceApi.createAddressSpace(addressSpace);
-        CountDownLatch latch = new CountDownLatch(1);
-        vertx.deployVerticle(new HTTPServer(instanceApi, "/doesnotexist", Optional.of(new PasswordAuthentication("user", "pass".toCharArray()))), c -> {
-            latch.countDown();
-        });
-        latch.await(1, TimeUnit.MINUTES);
+        vertx.deployVerticle(new HTTPServer(instanceApi, "/doesnotexist", Optional.of(new PasswordAuthentication("user", "pass".toCharArray()))), context.asyncAssertSuccess());
     }
 
     @After
-    public void teardown() {
-        vertx.close();
+    public void teardown(TestContext context) {
+        vertx.close(context.asyncAssertSuccess());
     }
 
     private AddressSpace createAddressSpace(String name) {
@@ -84,7 +80,7 @@ public class HTTPServerTest {
     }
 
     @Test
-    public void testAddressingApi() throws InterruptedException {
+    public void testAddressingApi(TestContext context) throws InterruptedException {
         instanceApi.withAddressSpace(addressSpace).createAddress(
             new Address.Builder()
                     .setAddressSpace("myinstance")
@@ -96,48 +92,46 @@ public class HTTPServerTest {
                 .build());
 
         HttpClient client = vertx.createHttpClient();
+        Async async = context.async(2);
         try {
-            CountDownLatch latch = new CountDownLatch(2);
             client.getNow(8080, "localhost", "/v1/addresses/myinstance", response -> {
-                assertThat(response.statusCode(), is(200));
+                context.assertEquals(200, response.statusCode());
                 response.bodyHandler(buffer -> {
                     JsonObject data = buffer.toJsonObject();
-                    assertTrue(data.containsKey("items"));
-                    assertThat(data.getJsonArray("items").getJsonObject(0).getJsonObject("metadata").getString("name"), is("addr1"));
-                    latch.countDown();
+                    context.assertTrue(data.containsKey("items"));
+                    context.assertEquals("addr1", data.getJsonArray("items").getJsonObject(0).getJsonObject("metadata").getString("name"));
+                    async.complete();
                 });
             });
 
             client.getNow(8080, "localhost", "/v1/addresses/myinstance/addr1", response -> {
                 response.bodyHandler(buffer -> {
                     JsonObject data = buffer.toJsonObject();
-                    assertTrue(data.containsKey("metadata"));
-                    assertThat(data.getJsonObject("metadata").getString("name"), is("addr1"));
-                    latch.countDown();
+                    context.assertTrue(data.containsKey("metadata"));
+                    context.assertEquals("addr1", data.getJsonObject("metadata").getString("name"));
+                    async.complete();
                 });
             });
-            assertTrue(latch.await(1, TimeUnit.MINUTES));
         } finally {
             client.close();
         }
     }
 
     @Test
-    public void testSchemaApi() throws InterruptedException {
+    public void testSchemaApi(TestContext context) throws InterruptedException {
         HttpClient client = vertx.createHttpClient();
         try {
             {
-                CountDownLatch latch = new CountDownLatch(1);
+                Async async = context.async();
                 client.getNow(8080, "localhost", "/v1/schema", response -> {
-                    assertThat(response.statusCode(), is(200));
+                    context.assertEquals(200, response.statusCode());
                     response.bodyHandler(buffer -> {
                         JsonObject data = buffer.toJsonObject();
-                        assertTrue(data.containsKey("spec"));
-                        assertThat(data.getJsonObject("spec").getJsonArray("addressSpaceTypes").getJsonObject(0).getString("name"), is("standard"));
-                        latch.countDown();
+                        context.assertTrue(data.containsKey("spec"));
+                        context.assertEquals("standard", data.getJsonObject("spec").getJsonArray("addressSpaceTypes").getJsonObject(0).getString("name"));
+                        async.complete();
                     });
                 });
-                assertTrue(latch.await(1, TimeUnit.MINUTES));
             }
         } finally {
             client.close();
@@ -192,21 +186,20 @@ public class HTTPServerTest {
     */
 
     @Test
-    public void testOpenServiceBrokerAPI() throws InterruptedException {
+    public void testOpenServiceBrokerAPI(TestContext context) throws InterruptedException {
         HttpClientOptions options = new HttpClientOptions();
         HttpClient client = vertx.createHttpClient(options);
         try {
-            final CountDownLatch latch = new CountDownLatch(1);
+            Async async = context.async();
             HttpClientRequest request = client.get(8080, "localhost", "/v2/catalog", response -> {
                 response.bodyHandler(buffer -> {
                     JsonObject data = buffer.toJsonObject();
-                    assertTrue(data.containsKey("services"));
-                    latch.countDown();
+                    context.assertTrue(data.containsKey("services"));
+                    async.complete();
                 });
             });
             request.headers().add(HttpHeaders.AUTHORIZATION, "Basic " + Base64.getEncoder().encodeToString("user:pass".getBytes()));
             request.end();
-            assertTrue(latch.await(1, TimeUnit.MINUTES));
         } finally {
             client.close();
         }
