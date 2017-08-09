@@ -24,10 +24,7 @@ import enmasse.controller.common.KubernetesHelper;
 import enmasse.controller.k8s.api.AddressSpaceApi;
 import enmasse.controller.k8s.api.ConfigMapAddressSpaceApi;
 import enmasse.controller.standard.StandardController;
-import io.enmasse.address.model.AddressSpace;
-import io.enmasse.address.model.CertProvider;
-import io.enmasse.address.model.Endpoint;
-import io.enmasse.address.model.SecretCertProvider;
+import io.enmasse.address.model.*;
 import io.enmasse.address.model.types.AddressSpaceType;
 import io.enmasse.address.model.types.standard.StandardAddressSpaceType;
 import io.fabric8.kubernetes.client.ConfigBuilder;
@@ -64,6 +61,9 @@ public class Controller extends AbstractVerticle {
                     .setName("default")
                     .setNamespace(kubernetes.getNamespace())
                     .setType(type)
+                    .setAuthenticationService(new AuthenticationService.Builder()
+                            .setType(AuthenticationServiceType.NONE)
+                            .build())
                     .setPlan(type.getDefaultPlan());
 
             Optional<CertProvider> certProvider = options.certSecret().map(SecretCertProvider::new);
