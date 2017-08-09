@@ -86,7 +86,7 @@ project. To do that, you must first give your user permission sufficient privile
 since it's not a production setup, I grant cluster-admin privileges for simplicity (requires logging
 into the ec2 instance):
 
-    oadm --config /etc/origin/master/admin.kubeconfig policy add-cluster-role-to-user cluster-admin developer
+    oc adm --config /etc/origin/master/admin.kubeconfig policy add-cluster-role-to-user cluster-admin developer
 
 With this in place, you can setup the [hawkular-openshift-agent](https://github.com/hawkular/hawkular-openshift-agent) which pulls metrics from routers and brokers:
 

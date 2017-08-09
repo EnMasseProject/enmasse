@@ -31,6 +31,6 @@ popd
 sleep 30
 
 # Deploy HAProxy router
-$DIR/oadm --config $CDIR/master/admin.kubeconfig policy add-scc-to-user hostnetwork system:serviceaccount:default:router
-$DIR/oadm --config $CDIR/master/admin.kubeconfig policy add-cluster-role-to-user cluster-reader system:serviceaccount:default:router
-$DIR/oadm --config $CDIR/master/admin.kubeconfig router
+$DIR/oc adm --config $CDIR/master/admin.kubeconfig policy add-scc-to-user hostnetwork system:serviceaccount:default:router
+$DIR/oc adm --config $CDIR/master/admin.kubeconfig policy add-cluster-role-to-user cluster-reader system:serviceaccount:default:router
+$DIR/oc adm --config $CDIR/master/admin.kubeconfig router
