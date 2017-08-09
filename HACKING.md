@@ -45,7 +45,7 @@ To get more verbose information, append `-i`.
 
 #### Fast building of EnMasse and pushing images to docker registry in local OpenShift instance (avoids pushing to docker hub)
 
-    ./gradlew build pack buildImage -x test --parallel && DOCKER_REGISTRY=172.30.1.1:5000 DOCKER_ORG=myproject DOCKER_USER=developer DOCKER_PASS=`oc whoami -t` ./gradlew tagImage pushImage --parallel
+    DOCKER_ORG=myproject ./gradlew build pack buildImage -x test --parallel && DOCKER_REGISTRY=172.30.1.1:5000 DOCKER_ORG=myproject DOCKER_USER=developer DOCKER_PASS=`oc whoami -t` ./gradlew tagImage pushImage --parallel
 
 #### Deploying to an OpenShift instance
 
