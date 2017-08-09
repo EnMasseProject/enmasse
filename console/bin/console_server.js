@@ -22,6 +22,7 @@ var rhea = require('rhea');
 var WebSocketServer = require('ws').Server;
 var address_ctrl = require('../lib/address_ctrl.js');
 var address_list = require('../lib/address_list.js');
+var auth_service = require('../lib/auth_service.js');
 var RouterStats = require('../lib/router_stats.js');
 var router_stats = new RouterStats();
 var BrokerStats = require('../lib/broker_stats.js');
@@ -33,24 +34,24 @@ var http = require('http');
 var app = express();
 app.get('/probe', function (req, res) { res.send('OK'); });
 
-if (process.env.ADMIN_PASSWORD !== undefined) {
-    var auth = function (req, res, next) {
-        //don't require auth for localhost to simplify use of probes
-        if (req.hostname === 'localhost') {
-            return next();
-        }
+var auth = function (req, res, next) {
+    
 
-        var user = basic_auth(req);
-        if (user && user.name === 'admin' && user.pass === process.env.ADMIN_PASSWORD) {
-            return next();
-        } else {
-            res.set('WWW-Authenticate', 'Basic realm=Authorization Required');
-            return res.sendStatus(401);
-        };
+    var authrequired = function() {
+        res.set('WWW-Authenticate', 'Basic realm=Authorization Required');
+        return res.sendStatus(401);
     };
+    var user = basic_auth(req);
 
-    app.use(auth);
-}
+    if(!user || !user.name) {
+        return authrequired();
+    } else {
+        auth_service.authenticate(user).then( next ).catch( authrequired );
+    }
+
+};
+
+app.use(auth);
 
 app.use('/', express.static(path.join(__dirname, '../www/')))
 
