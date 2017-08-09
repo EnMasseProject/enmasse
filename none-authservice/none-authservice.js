@@ -20,10 +20,11 @@ function authenticate(username, password) {
     return true;
 }
 container.sasl_server_mechanisms.enable_plain(authenticate);
+container.sasl_server_mechanisms.enable_anonymous();
 var server = container.listen({'port':process.env.LISTENPORT, 'require_sasl': true});
 console.log('Listening on port ' + process.env.LISTENPORT);
 container.on('connection_open', function (context) {
-    var authenticatedIdentity = { 'sub' : context.connection.sasl_transport.username };
+    var authenticatedIdentity = { 'sub' : context.connection.sasl_transport.username || 'anonymous' };
     var properties = context.connection.local.open.properties || {};
     properties["authenticated-identity"] = authenticatedIdentity;
     context.connection.local.open.properties = properties;
