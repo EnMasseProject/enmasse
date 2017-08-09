@@ -1,4 +1,4 @@
-FROM enmasseproject/qdrouterd-base:0.8.0-1
+FROM enmasseproject/qdrouterd-base:0.9.0-1
 ARG version=latest
 
 COPY ./run_qdr.sh ./qdrouterd.conf.template colocated-topic.snippet ssl.snippet subscriptions.snippet amqp-kafka-bridge.snippet /etc/qpid-dispatch/
