@@ -1,3 +1,18 @@
+/*
+ * Copyright 2017 Red Hat Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package enmasse.controller.auth;
 
 import io.fabric8.kubernetes.api.model.Secret;
@@ -7,6 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -35,7 +51,7 @@ public class SelfSignedCertManager implements CertManager {
                 return;
             }
 
-            log.info("Creating self-signed certificates for " + hostnames);
+            log.info("Creating self-signed certificates for " + Arrays.toString(hostnames));
             File keyFile = new File("/tmp/server-key.pem");
             File certFile = new File("/tmp/server-cert.pem");
             ProcessBuilder keyGenBuilder = new ProcessBuilder("openssl", "req", "-new", "-x509", "-batch", "-nodes",
