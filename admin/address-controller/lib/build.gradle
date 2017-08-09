@@ -11,5 +11,6 @@ dependencies {
     compile "org.jboss.resteasy:resteasy-jackson2-provider:${resteasyVersion}"
     compile "org.jboss.resteasy:resteasy-vertx:${resteasyVersion}"
     testCompile "junit:junit:${junitVersion}"
+    testCompile "io.vertx:vertx-unit:${vertxVersion}"
     testCompile "org.mockito:mockito-core:${mockitoVersion}"
 }

@@ -28,6 +28,8 @@ import enmasse.controller.api.v1.http.HttpSchemaService;
 import enmasse.controller.common.exceptionmapping.DefaultExceptionMapper;
 import enmasse.controller.k8s.api.AddressSpaceApi;
 import io.vertx.core.AbstractVerticle;
+import io.vertx.core.CompositeFuture;
+import io.vertx.core.Future;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.net.PemKeyCertOptions;
@@ -62,7 +64,7 @@ public class HTTPServer extends AbstractVerticle {
     }
 
     @Override
-    public void start() {
+    public void start(Future<Void> startPromise) {
         VertxResteasyDeployment deployment = new VertxResteasyDeployment();
         deployment.start();
 
@@ -79,10 +81,21 @@ public class HTTPServer extends AbstractVerticle {
         deployment.getRegistry().addSingletonResource(new OSBBindingService(addressSpaceApi));
         deployment.getRegistry().addSingletonResource(new OSBLastOperationService(addressSpaceApi));
 
-
         VertxRequestHandler requestHandler = new VertxRequestHandler(vertx, deployment);
-        createSecureServer(requestHandler);
-        createOpenServer(requestHandler);
+
+        Future<Void> secureReady = Future.future();
+        Future<Void> openReady = Future.future();
+        CompositeFuture readyFuture = CompositeFuture.all(secureReady, openReady);
+        readyFuture.setHandler(result -> {
+            if (result.succeeded()) {
+                startPromise.complete();
+            } else {
+                startPromise.fail(result.cause());
+            }
+        });
+
+        createSecureServer(requestHandler, secureReady);
+        createOpenServer(requestHandler, openReady);
     }
 
     @Override
@@ -95,7 +108,7 @@ public class HTTPServer extends AbstractVerticle {
         }
     }
 
-    private void createSecureServer(VertxRequestHandler requestHandler) {
+    private void createSecureServer(VertxRequestHandler requestHandler, Future<Void> startPromise) {
         if (new File(certDir).exists()) {
             HttpServerOptions options = new HttpServerOptions();
             File keyFile = new File(certDir, "tls.key");
@@ -113,7 +126,17 @@ public class HTTPServer extends AbstractVerticle {
 
             httpsServer = vertx.createHttpServer(options)
                     .requestHandler(requestHandler)
-                    .listen(SECURE_PORT, ar -> log.info("Started HTTPS server. Listening on port " + SECURE_PORT));
+                    .listen(SECURE_PORT, ar -> {
+                        if (ar.succeeded()) {
+                            log.info("Started HTTPS server. Listening on port " + SECURE_PORT);
+                            startPromise.complete();
+                        } else {
+                            log.info("Error starting HTTPS server");
+                            startPromise.fail(ar.cause());
+                        }
+                    });
+        } else {
+            startPromise.complete();
         }
     }
 
@@ -129,9 +152,17 @@ public class HTTPServer extends AbstractVerticle {
     }
 
 
-    private void createOpenServer(VertxRequestHandler requestHandler) {
+    private void createOpenServer(VertxRequestHandler requestHandler, Future<Void> startPromise) {
         httpServer = vertx.createHttpServer()
                 .requestHandler(requestHandler)
-                .listen(PORT, ar -> log.info("Started HTTP server. Listening on port " + PORT));
+                .listen(PORT, ar -> {
+                    if (ar.succeeded()) {
+                        log.info("Started HTTP server. Listening on port " + PORT);
+                        startPromise.complete();
+                    } else {
+                        log.info("Error starting HTTP server");
+                        startPromise.fail(ar.cause());
+                    }
+                });
     }
 }
