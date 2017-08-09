@@ -27,9 +27,7 @@ import io.enmasse.address.model.types.AddressSpaceType;
 import io.enmasse.address.model.types.Plan;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 
 /**
@@ -98,17 +96,30 @@ class AddressSpaceV1Deserializer extends JsonDeserializer<AddressSpace> {
             authService.setType(authType);
 
             Map<String, Object> detailsMap = new HashMap<>();
-            ObjectNode details = (ObjectNode) authenticationService.get(Fields.DETAILS);
-            Iterator<Map.Entry<String, JsonNode>> it = details.fields();
-            while (it.hasNext()) {
-                Map.Entry<String, JsonNode> entry = it.next();
-                JsonNode node = entry.getValue();
-                if (!authType.getDetailsFields().containsKey(entry.getKey())) {
-                    throw new RuntimeException("Unknown details field " + entry.getKey() + " encountered");
+            if (authenticationService.hasNonNull(Fields.DETAILS)) {
+                ObjectNode details = (ObjectNode) authenticationService.get(Fields.DETAILS);
+                Iterator<Map.Entry<String, JsonNode>> it = details.fields();
+                while (it.hasNext()) {
+                    Map.Entry<String, JsonNode> entry = it.next();
+                    JsonNode node = entry.getValue();
+                    if (!authType.getDetailsFields().containsKey(entry.getKey())) {
+                        throw new RuntimeException("Unknown details field " + entry.getKey() + " encountered");
+                    }
+                    detailsMap.put(entry.getKey(), TypeConverter.getValue(authType.getDetailsFields().get(entry.getKey()), node));
                 }
-                detailsMap.put(entry.getKey(), TypeConverter.getValue(authType.getDetailsFields().get(entry.getKey()), node));
             }
             authService.setDetails(detailsMap);
+            if (!detailsMap.keySet().containsAll(authType.getMandatoryFields())) {
+                Set<String> missingDetails = new HashSet<>(authType.getMandatoryFields());
+                missingDetails.removeAll(detailsMap.keySet());
+                throw new RuntimeException("Missing details " + missingDetails + " for type " + authType.getName());
+            }
+
+            if (!authType.getDetailsFields().keySet().containsAll(detailsMap.keySet())) {
+                Set<String> extraDetails = new HashSet<>(detailsMap.keySet());
+                extraDetails.removeAll(authType.getDetailsFields().keySet());
+                throw new RuntimeException("Unknown details " + extraDetails + " specified for type " + authType.getName());
+            }
             builder.setAuthenticationService(authService.build());
         }
 

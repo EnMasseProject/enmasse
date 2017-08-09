@@ -145,6 +145,47 @@ public class SerializationTest {
         assertThat(addressSpace, is(deserialized));
     }
 
+    @Test(expected = RuntimeException.class)
+    public void testDeserializeAddressSpaceWithMissingAuthServiceValues() throws IOException {
+        String json = "{" +
+                "\"apiVersion\":\"v1\"," +
+                "\"kind\":\"AddressSpace\"," +
+                "\"metadata\":{" +
+                "  \"name\":\"myspace\"" +
+                "}," +
+                "\"spec\": {" +
+                "  \"type\":\"standard\"," +
+                "  \"authenticationService\": {" +
+                "     \"type\": \"external\"" +
+                "  }" +
+                "}" +
+                "}";
+
+        CodecV1.getMapper().readValue(json, AddressSpace.class);
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void testDeserializeAddressSpaceWithExtraAuthServiceValues() throws IOException {
+        String json = "{" +
+                "\"apiVersion\":\"v1\"," +
+                "\"kind\":\"AddressSpace\"," +
+                "\"metadata\":{" +
+                "  \"name\":\"myspace\"" +
+                "}," +
+                "\"spec\": {" +
+                "  \"type\":\"standard\"," +
+                "  \"authenticationService\": {" +
+                "     \"type\": \"standard\"," +
+                "     \"details\": {" +
+                "       \"host\": \"my.example.com\"" +
+                "     }" +
+                "  }" +
+                "}" +
+                "}";
+
+        CodecV1.getMapper().readValue(json, AddressSpace.class);
+    }
+
     @Test
     public void testDeserializeAddressSpaceWithDefaults() throws IOException {
         String json = "{" +

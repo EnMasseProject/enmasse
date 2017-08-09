@@ -15,33 +15,41 @@
  */
 package io.enmasse.address.model;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * The type of authentication services supported in EnMasse.
  */
 public enum AuthenticationServiceType {
-    NONE(Collections.emptyMap()),
-    STANDARD(Collections.emptyMap()),
-    EXTERNAL(new HashMap<String, Class>(){{
-        put("host", String.class);
-        put("port", Integer.class);
-        put("caCertSecretName", String.class);
-        put("clientCertSecretName", String.class);
-        put("saslInitHost", String.class);
-    }});
+    NONE,
+    STANDARD,
+    EXTERNAL(new AuthenticationServiceDetail("host", String.class, true),
+        new AuthenticationServiceDetail("port", Integer.class, true),
+            new AuthenticationServiceDetail("caCertSecretName", String.class, true),
+            new AuthenticationServiceDetail("clientCertSecretName", String.class, true),
+            new AuthenticationServiceDetail("saslInitHost", String.class, true));
 
-    private final Map<String, Class> detailsFields;
+    private final Map<String, Class> detailsFields = new HashMap<>();
+    private final Set<String> mandatoryFields = new HashSet<>();
 
-    AuthenticationServiceType(Map<String, Class> detailsFields) {
-        this.detailsFields = Collections.unmodifiableMap(detailsFields);
+    AuthenticationServiceType(AuthenticationServiceDetail ... details) {
+        for (AuthenticationServiceDetail detail : details) {
+            detailsFields.put(detail.getName(), detail.getType());
+
+            if (detail.isMandatory()) {
+                mandatoryFields.add(detail.getName());
+            }
+        }
     }
 
     public Map<String, Class> getDetailsFields() {
-        return detailsFields;
+        return Collections.unmodifiableMap(detailsFields);
     }
+
+    public Set<String> getMandatoryFields() {
+        return Collections.unmodifiableSet(mandatoryFields);
+    }
+
 
     public String getName() {
         return name().toLowerCase();
