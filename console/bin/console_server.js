@@ -43,11 +43,8 @@ var auth = function (req, res, next) {
     };
     var user = basic_auth(req);
 
-    if(!user || !user.name) {
-        return authrequired();
-    } else {
-        auth_service.authenticate(user).then( next ).catch( authrequired );
-    }
+    auth_service.authenticate(user).then( next ).catch( authrequired );
+
 
 };
 

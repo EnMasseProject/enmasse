@@ -20,8 +20,12 @@ function authenticate(user, result) {
     var authServer = require('rhea');
     var Promise = require('bluebird');
     return new Promise(function(resolve, reject) {
-        authServer.options.username = user.name;
-        authServer.options.password = user.pass;
+        if( user && user.name ) {
+            authServer.options.username = user.name;
+            authServer.options.password = user.pass;
+        } else {
+            authServer.options.username = "anonymous";
+        }
 
         var options = {
             "host": process.env.AUTHENTICATION_SERVICE_HOST,
