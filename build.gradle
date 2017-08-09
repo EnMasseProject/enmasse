@@ -57,6 +57,13 @@ subprojects {
 
     apply plugin: 'com.bmuschko.docker-remote-api'
 
+    docker {
+        registryCredentials {
+            username = dockerUser
+            password = dockerPasswd
+        }
+    }
+
     if (new File(projectDir, "Dockerfile").exists()) {
         task buildImage(type: DockerBuildImage) {
             inputDir = projectDir
@@ -71,14 +78,7 @@ subprojects {
 
 
         task tagImage(type: DockerTagImage) {
-
-
-//    docker {
- //       registryCredentials {
- //           username = dockerUser
- //           password = dockerPasswd
- //       }
- //   }
+            dependsOn buildImage
             force = true
             imageId = buildImage.getTag()
             repository = "${dockerRegistry}/${dockerOrg}/${project.name}"
