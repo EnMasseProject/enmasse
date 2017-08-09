@@ -139,7 +139,7 @@ runcmd "oc policy add-role-to-user view system:serviceaccount:${NAMESPACE}:defau
 runcmd "oc policy add-role-to-user edit system:serviceaccount:${NAMESPACE}:enmasse-service-account" "Add permissions for editing OpenShift resources to EnMasse service account"
 
 if [[ $TEMPLATE_PARAMS == *"MULTIINSTANCE=true"* ]]; then
-    echo "Please grant cluster-admin rights to system:serviceaccount:${NAMESPACE}:enmasse-service-account before creating instances: 'oadm policy add-cluster-role-to-user cluster-admin system:serviceaccount:${NAMESPACE}:enmasse-service-account'"
+    echo "Please grant cluster-admin rights to system:serviceaccount:${NAMESPACE}:enmasse-service-account before creating instances: 'oc adm policy add-cluster-role-to-user cluster-admin system:serviceaccount:${NAMESPACE}:enmasse-service-account'"
 fi
 
 if [ -n "$ALT_TEMPLATE" ]
