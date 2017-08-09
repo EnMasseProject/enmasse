@@ -29,4 +29,5 @@ container.on('connection_open', function (context) {
     context.connection.local.open.properties = properties;
     context.connection.close();
 });
-
+container.on('disconnected', function (context) {
+});
