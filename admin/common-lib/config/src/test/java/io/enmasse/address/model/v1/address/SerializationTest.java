@@ -115,18 +115,18 @@ public class SerializationTest {
                         .setCertProvider(new CertProvider("secret", "mysecret"))
                         .build()))
                 .setAuthenticationService(new AuthenticationService.Builder()
-                        .setType(AuthenticationServiceType.STANDARD)
+                        .setType(AuthenticationServiceType.EXTERNAL)
                         .setDetails(new HashMap<String, Object>() {{
                             put("host", "my.example.com");
                             put("port", 5671);
                             put("caCertSecretName", "authservicesecret");
                             put("clientCertSecretName", "clientcertsecret");
+                            put("saslInitHost", "my.example.com");
                         }})
                         .build())
                 .build();
 
         String serialized = CodecV1.getMapper().writeValueAsString(addressSpace);
-        System.out.println("Serialized: " + serialized);
         AddressSpace deserialized = CodecV1.getMapper().readValue(serialized, AddressSpace.class);
 
         assertThat(deserialized.getName(), is(addressSpace.getName()));
