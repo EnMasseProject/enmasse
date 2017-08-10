@@ -20,6 +20,9 @@ import enmasse.config.service.model.ObserverKey;
 import enmasse.config.service.model.ResourceDatabase;
 import enmasse.config.service.model.Subscriber;
 import io.vertx.core.Vertx;
+import io.vertx.ext.unit.Async;
+import io.vertx.ext.unit.TestContext;
+import io.vertx.ext.unit.junit.VertxUnitRunner;
 import io.vertx.proton.ProtonMessageHandler;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.message.Message;
@@ -41,7 +44,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.*;
 
-@RunWith(MockitoJUnitRunner.class)
+@RunWith(VertxUnitRunner.class)
 public class AMQPServerTest {
     private Vertx vertx;
     private AMQPServer server;
@@ -49,11 +52,11 @@ public class AMQPServerTest {
     private TestClient client;
 
     @Before
-    public void setup() throws InterruptedException {
+    public void setup(TestContext context) throws InterruptedException {
         vertx = Vertx.vertx();
         database = mock(ResourceDatabase.class);
         server = new AMQPServer("localhost", 0, Collections.singletonMap("foo", database));
-        vertx.deployVerticle(server);
+        vertx.deployVerticle(server, context.asyncAssertSuccess());
         int port = waitForPort(server);
         System.out.println("Server running on port " + server.port());
         client = new TestClient(vertx, "localhost", port);
@@ -76,9 +79,9 @@ public class AMQPServerTest {
     }
 
     @Test
-    public void testSubscribe() throws Exception {
+    public void testSubscribe(TestContext context) throws Exception {
         ProtonMessageHandler msgHandler = mock(ProtonMessageHandler.class);
-        client.subscribe("foo", result -> {}, msgHandler);
+        client.subscribe("foo", null, msgHandler);
 
         ArgumentCaptor<ObserverKey> keyCapture = ArgumentCaptor.forClass(ObserverKey.class);
         ArgumentCaptor<Subscriber> subCapture = ArgumentCaptor.forClass(Subscriber.class);
@@ -107,11 +110,10 @@ public class AMQPServerTest {
     }
 
     @Test
-    public void testSubscribeWithBadKey() throws InterruptedException {
+    public void testSubscribeWithBadKey(TestContext context) throws InterruptedException {
         ProtonMessageHandler msgHandler = mock(ProtonMessageHandler.class);
-        CountDownLatch latch = new CountDownLatch(1);
-        client.subscribe("nosuchaddress", result -> latch.countDown(), msgHandler);
-        assertTrue(latch.await(1, TimeUnit.MINUTES));
-    }
+        Async closed = context.async();
+        client.subscribe("nosuchaddress", closed, msgHandler);
+   }
 }
 
