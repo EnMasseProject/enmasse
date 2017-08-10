@@ -89,7 +89,7 @@ public class TestSubscriber implements AutoCloseable {
     }
 
     public void unsubscribe() {
-        connection.close();
+        vertx.runOnContext(v -> connection.close());
     }
 
     @Override
