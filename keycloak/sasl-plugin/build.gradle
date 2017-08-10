@@ -1,0 +1,48 @@
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath 'com.github.jengelman.gradle.plugins:shadow:2.0.1'
+    }
+}
+
+apply plugin: 'com.github.johnrengelman.shadow'
+apply plugin: 'java'
+
+description = "SASL Plugin for Keycloak"
+
+
+repositories {
+        
+     maven { url "http://repo.maven.apache.org/maven2" }
+}
+dependencies {
+
+    compile group: 'io.vertx', name: 'vertx-proton', version:'3.4.1' 
+    
+    compileOnly group: 'org.keycloak', name: 'keycloak-core', version:'3.2.1.Final'
+    compileOnly group: 'org.keycloak', name: 'keycloak-common', version:'3.2.1.Final'
+    compileOnly group: 'org.keycloak', name: 'keycloak-server-spi', version:'3.2.1.Final'
+    compileOnly group: 'org.keycloak', name: 'keycloak-services', version:'3.2.1.Final'
+    compileOnly group: 'org.keycloak', name: 'keycloak-server-spi-private', version:'3.2.1.Final'
+}
+
+shadowJar {
+    dependencies {
+        exclude(dependency('io.netty:netty-codec'))
+        exclude(dependency('io.netty:netty-handler-proxy'))
+        exclude(dependency('io.netty:netty-codec-socks'))
+        exclude(dependency('io.netty:netty-codec-http'))
+        exclude(dependency('io.netty:netty-codec-http2'))
+        exclude(dependency('io.netty:netty-resolver-dns'))
+        exclude(dependency('io.netty:netty-codec-dns'))
+        exclude(dependency('com.fasterxml.jackson.core:jackson-core'))
+        exclude(dependency('com.fasterxml.jackson.core:jackson-databind'))
+        exclude(dependency('com.fasterxml.jackson.core:jackson-annotations'))
+    }
+}
+
+task pack {
+    dependsOn shadowJar
+}
