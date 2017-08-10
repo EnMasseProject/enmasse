@@ -33,7 +33,7 @@ DEFAULT_NAMESPACE=myproject
 OC_ARGS=""
 GUIDE=false
 
-while getopts dgk:m:n:p:s:t:u:yvh opt; do
+while getopts dgk:m:n:p:st:u:yvh opt; do
     case $opt in
         d)
             OS_ALLINONE=true
@@ -49,6 +49,10 @@ while getopts dgk:m:n:p:s:t:u:yvh opt; do
             ;;
         p)
             TEMPLATE_PARAMS="$OPTARG $TEMPLATE_PARAMS"
+            ;;
+        s)
+            SERVICE_CATALOG=true
+            OC_SERVICE_CATALOG_FLAG="--service-catalog"
             ;;
         t)
             ALT_TEMPLATE=$OPTARG
@@ -74,6 +78,7 @@ while getopts dgk:m:n:p:s:t:u:yvh opt; do
             echo "  -n NAMESPACE   OpenShift project name to install EnMasse into (default: $DEFAULT_NAMESPACE)"
             echo "  -m MASTER      OpenShift master URI to login against (default: https://localhost:8443)"
             echo "  -p PARAMS      Custom template parameters to pass to EnMasse template ('cat $SCRIPTDIR/openshift/enmasse.yaml' to get a list of available parameters)"
+            echo "  -s             Experimental: Only applicable when also using -d option. Starts OpenShift with Service Catalog enabled and registers EnMasse Service Broker"
             echo "  -t TEMPLATE    An alternative OpenShift template file to deploy EnMasse"
             echo "  -u USER        OpenShift user to run commands as (default: $DEFAULT_USER)"
             echo
@@ -113,7 +118,7 @@ then
         echo "Please choose either all-in-one or a cluster deployment if you need to use a specific user."
         exit 1
     fi
-    runcmd "oc cluster up" "Start local OpenShift cluster"
+    runcmd "oc cluster up $OC_SERVICE_CATALOG_FLAG" "Start local OpenShift cluster"
 fi
 
 
@@ -148,3 +153,24 @@ then
 fi
 
 runcmd "oc process -f $ENMASSE_TEMPLATE $TEMPLATE_PARAMS | oc create -n $NAMESPACE -f -" "Instantiate EnMasse template"
+
+if [ -n "$OS_ALLINONE" ] && [ -n "$SERVICE_CATALOG" ]
+then
+    runcmd "oc login -u system:admin" "Logging in as system:admin"
+    runcmd "oc adm policy add-cluster-role-to-user cluster-admin system:serviceaccount:${NAMESPACE}:enmasse-service-account" "Granting cluster-admin rights to enmasse-service-account"
+    runcmd "oc create secret generic enmasse-broker-auth --from-literal=username=foo --from-literal=password=bar -n service-catalog" "Creating Secret with EnMasse Service Broker auth credentials"
+    runcmd "cat <<EOF | oc create -f -
+apiVersion: servicecatalog.k8s.io/v1alpha1
+kind: Broker
+metadata:
+  name: enmasse
+spec:
+  url: http://address-controller.${NAMESPACE}.svc.cluster.local:8080
+  authInfo:
+    basicAuthSecret:
+      namespace: service-catalog
+      name: enmasse-broker-auth
+EOF" "Registering EnMasse Service Broker in Service Catalog"
+
+#    runcmd "oc login -u $OS_USER $OC_ARGS $MASTER_URI" "Login as $OS_USER"
+fi
