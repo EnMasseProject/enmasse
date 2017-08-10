@@ -33,8 +33,8 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
 public class TopicMigratorTest {
-    private Host from = TestUtil.createHost("127.0.0.1", 33333);
-    private Host to = TestUtil.createHost("127.0.0.1", 44444);
+    private Host from = TestUtil.createHost("127.0.0.1", 43210);
+    private Host to = TestUtil.createHost("127.0.0.1", 43211);
     private TestBroker fromServer;
     private TestBroker toServer;
     private TestSubscriber subscriber;
@@ -48,13 +48,13 @@ public class TopicMigratorTest {
         toServer = new TestBroker(to.amqpEndpoint(), Arrays.asList("mytopic"), true);
         fromServer.start();
         toServer.start();
-        Thread.sleep(2000);
+        Thread.sleep(10000);
     }
 
     @After
     public void teardown() throws Exception {
-        publisher.close();
         subscriber.close();
+        publisher.close();
         fromServer.stop();
         toServer.stop();
     }
