@@ -1,26 +1,43 @@
-# EnMasse resource definition
+[[enmasse-resource-definition]]
+= EnMasse resource definition
 
-This document defines the resources consumed and produced by APIs and can be considered a base for writing the schema for the data formats. The [address model](model.md) defines address spaces and addresses which translates to these resources.
+This document defines the resources consumed and produced by APIs and
+can be considered a base for writing the schema for the data formats.
+The link:model.adoc[address model] defines address spaces and addresses
+which translates to these resources.
 
-The resources defined here may be created, deleted and updated through different APIs. Either the
-Open Service Broker API, the custom HTTP API, or using AMQP management.
+The resources defined here may be created, deleted and updated through
+different APIs. Either the Open Service Broker API, the custom HTTP API,
+or using AMQP management.
 
-The resources are defined in the JSON format. 
+The resources are defined in the JSON format.
 
-## AddressSpace
+[[addressspace]]
+== AddressSpace
 
-| Method | Path | Description |
-| ---- | -------- | ----------- |
-| GET | /v1/addressspaces | to retrieve list |
-| GET | /v1/addressspaces/myspace | to retrieve single address space |
-| POST | /v1/addressspaces | create and append single or multiple (AddressSpace, or AddressSpaceList) or fail if exists |
-| PUT | /v1/addressspaces | replace a single or multiple (AddressSpace, or AddressSpaceList) |
-| PUT | /v1/addressspaces/:name | create or replace |
-| DELETE | /v1/addressspace/:name | delete |
+[options="header"]
+|=======================================================================
+|Method |Path |Description
+|GET |/v1/addressspaces |to retrieve list
 
-The `AddressSpace` resource defines the type of address space and endpoint for connecting.
+|GET |/v1/addressspaces/myspace |to retrieve single address space
 
-```
+|POST |/v1/addressspaces |create and append single or multiple
+(AddressSpace, or AddressSpaceList) or fail if exists
+
+|PUT |/v1/addressspaces |replace a single or multiple (AddressSpace, or
+AddressSpaceList)
+
+|PUT |/v1/addressspaces/:name |create or replace
+
+|DELETE |/v1/addressspace/:name |delete
+|=======================================================================
+
+The `AddressSpace` resource defines the type of address space and
+endpoint for connecting.
+
+[source,javascript]
+....
 {
     "apiVersion": "enmasse.io/v1",
     "kind": "AddressSpace",
@@ -46,11 +63,13 @@ The `AddressSpace` resource defines the type of address space and endpoint for c
         }
     }
 }
-```
+....
 
-### AddressSpaceList
+[[addressspacelist]]
+=== AddressSpaceList
 
-```
+[source,javascript]
+....
 {
     "apiVersion": "enmasse.io/v1", // Required
     "kind": "AddressSpaceList", // Required
@@ -60,25 +79,37 @@ The `AddressSpace` resource defines the type of address space and endpoint for c
         }
     ]
 }
-```
+....
 
-## Address
+[[address]]
+== Address
 
-| Method | Path | Description |
-| ---- | -------- | ----------- |
-| GET | /v1/addresses/myspace | to retrieve list |
-| GET | /v1/addresses/myspace/:name | to retrieve single address |
-| POST | /v1/addresses/myspace | create and append single or multiple (Address, or AddressList) or fail if exists |
-| PUT | /v1/addresses/myspace/:name | replace a single address |
-| PUT | /v1/addresses/myspace | replace multiple addresses |
-| DELETE | /v1/addresses/myspace/:name | delete |
-| DELETE | /v1/addresses/myspace | delete all |
+[options="header"]
+|=======================================================================
+|Method |Path |Description
+|GET |/v1/addresses/myspace |to retrieve list
+
+|GET |/v1/addresses/myspace/:name |to retrieve single address
+
+|POST |/v1/addresses/myspace |create and append single or multiple
+(Address, or AddressList) or fail if exists
+
+|PUT |/v1/addresses/myspace/:name |replace a single address
+
+|PUT |/v1/addresses/myspace |replace multiple addresses
+
+|DELETE |/v1/addresses/myspace/:name |delete
+
+|DELETE |/v1/addresses/myspace |delete all
+|=======================================================================
 
 The `Address` resource defines an address and its semantics.
 
-TODO: Figure out where to put a user-specified description of the address
+TODO: Figure out where to put a user-specified description of the
+address
 
-```
+[source,javascript]
+....
 {
     "apiVersion": "enmasse.io/v1", // Required
     "kind": "Address", // Required
@@ -93,11 +124,13 @@ TODO: Figure out where to put a user-specified description of the address
         "plan": "medium"        // Optional
     }
 }
-```
+....
 
-### AddressList
+[[addresslist]]
+=== AddressList
 
-```
+[source,javascript]
+....
 {
     "apiVersion": "enmasse.io/v1", // Required
     "kind": "AddressList", // Required
@@ -110,11 +143,12 @@ TODO: Figure out where to put a user-specified description of the address
         }
     ]
 }
-```
-
+....
 
 GET /v1/schema
-```
+
+[source,json]
+....
 {
     "apiVersion": "enmasse.io/v1"
     "kind": "Schema",
@@ -144,12 +178,13 @@ GET /v1/schema
         ]
     }
 }
-```
-# Configserv
+....
 
-Allow components to subscribe over AMQP with "v1/addresses" as
-source. A messages will be sent out whenever the addresses have
-changed. The body of these messages will contain an AddressList JSON
-object as defined above. The subject will contain the string
-'enmasse.io/v1/AddressList' (i.e. the value of the apiVersion
-concatenated with the value of kind).
+[[configserv]]
+== Configserv
+
+Allow components to subscribe over AMQP with "v1/addresses" as source. A
+messages will be sent out whenever the addresses have changed. The body
+of these messages will contain an AddressList JSON object as defined
+above. The subject will contain the string 'enmasse.io/v1/AddressList'
+(i.e. the value of the apiVersion concatenated with the value of kind).

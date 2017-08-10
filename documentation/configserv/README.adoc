@@ -1,5 +1,5 @@
-Configserv is a generic openshift watch to AMQP bridge that manages cluster configuration and pod
-discovery. It performs multiple functions:
+Configserv is a generic openshift watch to AMQP bridge that manages
+cluster configuration and pod discovery. It performs multiple functions:
 
-   * [Configuration Service](config-service.md)
-   * [PodSense](podsense.md)
+* link:config-service.adoc[Configuration Service]
+* link:podsense.adoc[PodSense]
