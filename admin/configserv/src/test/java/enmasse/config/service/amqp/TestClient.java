@@ -19,6 +19,7 @@ package enmasse.config.service.amqp;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
+import io.vertx.ext.unit.Async;
 import io.vertx.proton.*;
 import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.messaging.Source;
@@ -33,17 +34,19 @@ public class TestClient {
 
     private String serverHost;
     private int serverPort;
+    private final Vertx vertx;
     private ProtonClient client;
     private ProtonConnection connection;
     private CountDownLatch closeLatch = new CountDownLatch(1);
 
     public TestClient(Vertx vertx, String serverHost, int serverPort) {
+        this.vertx = vertx;
         this.serverHost = serverHost;
         this.serverPort = serverPort;
         this.client = ProtonClient.create(vertx);
     }
 
-    public void subscribe(String address, Handler<AsyncResult<ProtonReceiver>> closeHandler, ProtonMessageHandler handler) {
+    public void subscribe(String address, Async subClosed, ProtonMessageHandler handler) {
         client.connect(new ProtonClientOptions().setConnectTimeout(10000), serverHost, serverPort, connectResult -> {
             if (connectResult.succeeded()) {
                 System.out.println("Connected'");
@@ -57,7 +60,7 @@ public class TestClient {
                 filter.put(Symbol.getSymbol("labels"), Collections.singletonMap("my", "label"));
                 filter.put(Symbol.getSymbol("annotations"), Collections.singletonMap("my", "annotation"));
                 source.setFilter(filter);
-                connection.createReceiver(address).setSource(source).closeHandler(closeHandler).handler(handler).open();
+                connection.createReceiver(address).setSource(source).closeHandler(c -> {if (subClosed != null) { subClosed.complete(); }}).handler(handler).open();
             } else {
                 System.out.println("Connection failed: " + connectResult.cause().getMessage());
             }
@@ -65,9 +68,11 @@ public class TestClient {
     }
 
     public void close() throws InterruptedException {
-        if (connection != null) {
-            connection.close();
-            closeLatch.await(1, TimeUnit.MINUTES);
-        }
+        vertx.runOnContext(v -> {
+            if (connection != null) {
+                connection.close();
+            }
+        });
+        closeLatch.await(1, TimeUnit.MINUTES);
     }
 }

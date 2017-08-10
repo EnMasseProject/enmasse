@@ -19,6 +19,7 @@ package enmasse.config.service.amqp;
 import enmasse.config.service.model.ObserverKey;
 import enmasse.config.service.model.ResourceDatabase;
 import io.vertx.core.AbstractVerticle;
+import io.vertx.core.Future;
 import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.ProtonSender;
 import io.vertx.proton.ProtonServer;
@@ -132,14 +133,16 @@ public class AMQPServer extends AbstractVerticle {
     }
 
     @Override
-    public void start() {
+    public void start(Future<Void> startPromise) {
         server = ProtonServer.create(vertx);
         server.connectHandler(this::connectHandler);
         server.listen(port, hostname, result -> {
             if (result.succeeded()) {
                 log.info("Starting server on {}:{}", hostname, port);
+                startPromise.complete();
             } else {
                 log.error("Error starting server", result.cause());
+                startPromise.fail(result.cause());
             }
         });
     }
