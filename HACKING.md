@@ -8,6 +8,9 @@ To build EnMasse, you need
     * GNU GCC C++
     * Ruby
     * Git
+    * Node.js
+    * npm
+    * docker
 
 ## Check out submodules
 
@@ -15,8 +18,15 @@ To build EnMasse, you need
 can be initialized:
     
     git submodule update --init
-
+    
 ## Building
+
+### Pre-installation
+
+   * `npm install -g mocha-junit-reporter`
+   * `npm install -g rhea`
+
+*Note*: Make sure docker daemon is in running state.
 
 #### For building and running EnMasse unit tests:
 
