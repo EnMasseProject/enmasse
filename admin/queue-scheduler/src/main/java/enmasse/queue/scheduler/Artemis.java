@@ -21,6 +21,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.vertx.core.Vertx;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 import io.vertx.proton.*;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.amqp.messaging.ApplicationProperties;
@@ -93,7 +95,11 @@ public class Artemis implements Broker {
         parameters.add(false);
 
         message.setBody(new AmqpValue(encodeJson(parameters)));
-        doRequest(message);
+        Message response = doRequest(message);
+        if (response == null) {
+            log.warn("Timed out getting response from broker");
+            return;
+        }
 
         message = createMessage("createConnectorService");
         parameters = mapper.createArrayNode();
@@ -106,14 +112,19 @@ public class Artemis implements Broker {
         connectorParams.put("clusterId", address);
 
         message.setBody(new AmqpValue(encodeJson(parameters)));
-        doRequest(message);
+        response = doRequest(message);
+        if (response == null) {
+            log.warn("Timed out getting response from broker");
+            return;
+        }
         log.info("Deployed queue " + address);
     }
 
     private Message doRequest(Message message) {
         vertx.runOnContext(h -> sender.send(message));
         try {
-            return replies.poll(60, TimeUnit.SECONDS);
+            Message m = replies.poll(60, TimeUnit.SECONDS);
+            return m;
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
@@ -135,13 +146,21 @@ public class Artemis implements Broker {
         parameters.add(true);
         message.setBody(new AmqpValue(encodeJson(parameters)));
 
-        doRequest(message);
+        Message response = doRequest(message);
+        if (response == null) {
+            log.warn("Timed out getting response from broker");
+            return;
+        }
 
         message = createMessage("destroyConnectorService");
         parameters = mapper.createArrayNode();
         parameters.add(address);
         message.setBody(new AmqpValue(encodeJson(parameters)));
-        doRequest(message);
+        response = doRequest(message);
+        if (response == null) {
+            log.warn("Timed out getting response from broker");
+            return;
+        }
         log.info("Destroyed queue " + address);
     }
 
@@ -173,18 +192,20 @@ public class Artemis implements Broker {
             log.warn("Timed out getting response from broker");
             return queues;
         }
+
         AmqpValue value = (AmqpValue) response.getBody();
+        ArrayNode root;
         try {
-            ArrayNode root = (ArrayNode) mapper.readTree((String) value.getValue());
-            ArrayNode elements = (ArrayNode) root.get(0);
-            for (int i = 0; i < elements.size(); i++) {
-                String queueName = elements.get(i).asText();
-                if (!queueName.equals(replyTo)) {
-                    queues.add(queueName);
-                }
-            }
+            root = (ArrayNode) mapper.readTree((String) value.getValue());
         } catch (IOException e) {
-            log.error("Error decoding queue names", e);
+            throw new RuntimeException(e);
+        }
+        ArrayNode elements = (ArrayNode) root.get(0);
+        for (int i = 0; i < elements.size(); i++) {
+            String queueName = elements.get(i).asText();
+            if (!queueName.equals(replyTo)) {
+                queues.add(queueName);
+            }
         }
         return queues;
     }
