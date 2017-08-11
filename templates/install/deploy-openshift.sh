@@ -144,7 +144,14 @@ runcmd "oc policy add-role-to-user view system:serviceaccount:${NAMESPACE}:defau
 runcmd "oc policy add-role-to-user edit system:serviceaccount:${NAMESPACE}:enmasse-service-account" "Add permissions for editing OpenShift resources to EnMasse service account"
 
 if [[ $TEMPLATE_PARAMS == *"MULTIINSTANCE=true"* ]]; then
-    echo "Please grant cluster-admin rights to system:serviceaccount:${NAMESPACE}:enmasse-service-account before creating instances: 'oc adm policy add-cluster-role-to-user cluster-admin system:serviceaccount:${NAMESPACE}:enmasse-service-account'"
+    if [ -n "$OS_ALLINONE" ]
+    then
+        runcmd "oc login -u system:admin" "Logging in as system:admin"
+        runcmd "oc adm policy add-cluster-role-to-user cluster-admin system:serviceaccount:${NAMESPACE}:enmasse-service-account" "Granting cluster-admin rights to enmasse-service-account"
+        runcmd "oc login -u $OS_USER $OC_ARGS $MASTER_URI" "Login as $OS_USER"
+    else
+        echo "Please grant cluster-admin rights to system:serviceaccount:${NAMESPACE}:enmasse-service-account before creating instances: 'oc adm policy add-cluster-role-to-user cluster-admin system:serviceaccount:${NAMESPACE}:enmasse-service-account'"
+    fi
 fi
 
 if [ -n "$ALT_TEMPLATE" ]
@@ -157,7 +164,6 @@ runcmd "oc process -f $ENMASSE_TEMPLATE $TEMPLATE_PARAMS | oc create -n $NAMESPA
 if [ -n "$OS_ALLINONE" ] && [ -n "$SERVICE_CATALOG" ]
 then
     runcmd "oc login -u system:admin" "Logging in as system:admin"
-    runcmd "oc adm policy add-cluster-role-to-user cluster-admin system:serviceaccount:${NAMESPACE}:enmasse-service-account" "Granting cluster-admin rights to enmasse-service-account"
     runcmd "oc create secret generic enmasse-broker-auth --from-literal=username=foo --from-literal=password=bar -n service-catalog" "Creating Secret with EnMasse Service Broker auth credentials"
     runcmd "cat <<EOF | oc create -f -
 apiVersion: servicecatalog.k8s.io/v1alpha1
