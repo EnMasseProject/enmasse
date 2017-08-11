@@ -37,8 +37,8 @@ EnMasse is made of different components needed for the deployment and for handli
 
 # Getting started
 
-See the [Getting Started](documentation/getting-started/README.md) for how to install EnMasse. For
-more details on architecture and implementation, see [documentation](documentation/README.md).
+See the [Getting Started](documentation/getting-started/README.adoc) for how to install EnMasse. For
+more details on architecture and implementation, see [documentation](documentation/README.adoc).
 
 # Getting help
 
