@@ -1,15 +1,4 @@
-buildscript {
-   ext.artemisVersion = '2.1.0'
-   ext.jbossLoggingVersion = '3.3.0.Final'
-   ext.jbossLoggingProcessorVersion = '2.0.0.Alpha2'
-}
-
-apply plugin: 'java'
-
-repositories {
-    mavenLocal()
-    mavenCentral()
-}
+description = "AMQP outgoing connector for Artemis"
 
 dependencies {
     compile "org.apache.activemq:artemis-server:${artemisVersion}"

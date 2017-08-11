@@ -1,17 +1,6 @@
-buildscript {
-   ext.vertxProtonVersion = '3.4.1'
-   ext.artemisVersion = '2.1.0'
-}
-
-apply plugin: 'java'
-
+description = "Shutdown hook executed when Artemis node is stopped"
 tasks.withType(Tar){
     compression = Compression.NONE
-}
-
-repositories {
-    mavenLocal()
-    mavenCentral()
 }
 
 dependencies {
