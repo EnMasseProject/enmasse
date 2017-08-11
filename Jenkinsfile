@@ -2,7 +2,7 @@ node('enmasse') {
     result = 'failure'
     catchError {
         stage ('checkout') {
-            git 'https://github.com/EnMasseProject/enmasse.git'
+            checkout scm
             sh 'git submodule update --init --recursive'
             sh 'rm -rf artifacts && mkdir -p artifacts'
         }
