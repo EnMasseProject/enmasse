@@ -54,7 +54,7 @@ public class ArtemisTest {
             promise.complete(Artemis.create(vertx, h.result().open()));
         });
 
-        Artemis artemis = (Artemis)promise.get().get(10, TimeUnit.SECONDS);
+        Artemis artemis = (Artemis)promise.get().get(30, TimeUnit.SECONDS);
 
         artemis.deployQueue("queue1");
         artemis.deployQueue("queue2");
