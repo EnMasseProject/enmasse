@@ -15,13 +15,13 @@ node('enmasse') {
         }
         stage ('build docker image') {
             withCredentials([string(credentialsId: 'docker-registry-host', variable: 'DOCKER_REGISTRY')]) {
-                sh './gradlew pack buildImage -q --rerun-tasks'
+                sh 'COMMIT=$BUILD_TAG ./gradlew pack buildImage -q --rerun-tasks'
             }
             sh 'cat templates/install/openshift/enmasse.yaml'
         }
         stage ('push docker image') {
             withCredentials([string(credentialsId: 'docker-registry-host', variable: 'DOCKER_REGISTRY'), usernamePassword(credentialsId: 'docker-registry-credentials', passwordVariable: 'DOCKER_PASS', usernameVariable: 'DOCKER_USER')]) {
-                sh './gradlew tagImage pushImage -q'
+                sh 'COMMIT=$BUILD_TAG ./gradlew tagImage pushImage -q'
             }
         }
         stage('system tests') {
