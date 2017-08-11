@@ -4,7 +4,7 @@
 This guide will walk through the process of setting up EnMasse on a
 Kubernetes cluster together with clients for sending and receiving
 messages. Some of the concepts like addresses and flavors are described
-in more detail link:openshift.md[here]. Currently, TLS is not supported
+in more detail link:openshift.adoc[here]. Currently, TLS is not supported
 on Kubernetes.
 
 [[preqrequisites]]

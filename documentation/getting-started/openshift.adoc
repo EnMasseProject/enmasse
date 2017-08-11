@@ -13,7 +13,7 @@ for this guide. EnMasse will work with the latest stable release.
 
 If you have an OpenShift instance running already, you can start setting
 up EnMasse. If not, follow
-https://github.com/openshift/origin/blob/master/docs/cluster_up_down.md[this
+https://github.com/openshift/origin/blob/master/docs/cluster_up_down.adoc[this
 guide] for setting up a local developer instance of OpenShift.
 
 [[setting-up-enmasse]]
@@ -170,7 +170,7 @@ messages. Currently, EnMasse supports 4 different address types:
 * Direct anycast addresses
 * Direct broadcast addresses
 
-See the link:../address-model/model.md[address model] for details.
+See the link:../address-model/model.adoc[address model] for details.
 EnMasse also comes with a console that you can use for managing
 addresses. You can get the console URL by running
 
@@ -179,7 +179,7 @@ echo "http://$(oc get route -o jsonpath='{.spec.host}' console)"
 ....
 
 You can also deploy the addressing config using the address controller
-API. See link:../address-model/resource-definitions.md[resource
+API. See link:../address-model/resource-definitions.adoc[resource
 definitions] for details on the resources consumed by the API. Here is
 an example config with all 4 variants that you can save to
 `addresses.json`:

@@ -19,7 +19,7 @@ API server
 The API server provides both an HTTP and AMQP API for creating/deleting
 address spaces and addresses within those instances. The REST API
 documentation can be found
-link:../address-model/resource-definitions.md[here].
+link:../address-model/resource-definitions.adoc[here].
 
 [[open-service-broker-api]]
 Open Service Broker API

@@ -9,7 +9,7 @@ and other changes are all very welcome!
 
 == Installation Guide
 
-Similar to the link:../getting-started/README.md[getting started
+Similar to the link:../getting-started/README.adoc[getting started
 guide], a description of how to install enmasse for different
 scenarios.
 
