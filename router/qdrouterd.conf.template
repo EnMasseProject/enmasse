@@ -34,28 +34,28 @@ authServicePlugin {
 }
 
 listener {
-    addr: 0.0.0.0
+    host: 0.0.0.0
     port: 5672
     saslPlugin: auth_service
     linkCapacity: ${LINK_CAPACITY}
 }
 
 listener {
-    addr: 0.0.0.0
+    host: 0.0.0.0
     port: 55673
     authenticatePeer: no
     role: route-container
 }
 
 listener {
-    addr: ${MY_IP_ADDR}
+    host: ${MY_IP_ADDR}
     port: 55672
     role: inter-router
     authenticatePeer: no
 }
 
 connector {
-    addr: ${RAGENT_SERVICE_HOST}
+    host: ${RAGENT_SERVICE_HOST}
     port: ${RAGENT_SERVICE_PORT}
 }
 
