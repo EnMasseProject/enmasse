@@ -1,0 +1,81 @@
+This document describes the intention of the flavor feature and how it
+is implemented. In order to allow application developers to select
+different environment for their applications, we need a way for them to
+specify this as parameters. The cluster administrator of the messaging
+service also need a way to control what parameters the developer can
+set, and be able to provide a controllable environment with resource
+limits.
+
+There are two extreme approaches to this:
+
+1.  Expose all configuration variables to developers, such as disk size,
+broker image type, policies etc. This will expose a lot of details to
+the developer, and make it very flexible. It also makes it hard to
+maintain for the cluster administrator, and forces us to break the
+format once we need to modify or add changes to the addressing config.
+2.  Expose only a single variable, flavor, that can be changed by the
+application developer, and allow the cluster administrator to define the
+meaning of that variable. This allows the cluster administrator to have
+full control over the environment. The downside is that the developer is
+restricted by what the cluster administrator allows.
+
+The ideal design lies somewhere in between these two extremes. The plan
+is to start out from the second approach, and gradually add
+'standardized' configuration settings as requirements for them arise.
+
+To achieve this, application configuration is kept along with the
+addressing configuration, while we define a new 'flavor' configuration
+that defines the set of flavors that are supported by the service. The
+term flavor may be replaced by something more descriptive, and once we
+identify the standardized configuration types, we can expose more
+concrete names.
+
+[[addressing-config]]
+Addressing config
+^^^^^^^^^^^^^^^^^
+
+....
+{
+    "myqueue": {
+        "store_and_forward": true,
+        "multicast": false,
+        "flavor": "vanilla"
+    },
+    "secondqueue": {
+        "store_and_forward": true,
+        "multicast": false,
+        "flavor": "chili"
+    }
+}
+....
+
+[[flavor-config]]
+Flavor config
+^^^^^^^^^^^^^
+
+The flavor configuration would allow the cluster administrator to create
+configuration flavors that is supported on the openshift instance. The
+cluster administrator is responsible for creating the supported
+templates (though EnMasse will provide some default templates to use),
+and the supported flavor. A flavor is a specific set of configuration
+parameters for a given template. The flavor config format is shown
+below. The templateParameters can vary depending on the templateName.
+The supported parameters can be found by looking at the template
+definition.
+
+....
+{
+    "vanilla": {
+        "templateName": "queue-inmemory",
+        "templateParameters": {
+            "BROKER_IMAGE": "mybroker:latest"
+        }
+    },
+    "chili": {
+        "templateName": "queue-persisted",
+        "tempalteParameters": {
+            "STORAGE_CAPACITY": "8Gi"
+        }
+    }
+}
+....

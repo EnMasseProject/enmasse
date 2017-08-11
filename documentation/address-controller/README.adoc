@@ -1,0 +1,40 @@
+[[address-controller]]
+Address controller
+------------------
+
+The address controller is about more than controller addresses. The main
+tasks performed by the address controller are:
+
+* API server for managing address spaces and addresses (HTTP and AMQP)
+* Implementation of Open Service Broker API for EnMasse
+* Controller for taking action based on address spaces (create/destroy
+enmasse infrastructure and managing routing + certs) etc.)
+* Controller for taking action based on addresses (create/destroy
+deployments for addresses pointing to flavors for brokers for instance)
+
+[[api-server]]
+API server
+~~~~~~~~~~
+
+The API server provides both an HTTP and AMQP API for creating/deleting
+address spaces and addresses within those instances. The REST API
+documentation can be found
+link:../address-model/resource-definitions.adoc[here].
+
+[[open-service-broker-api]]
+Open Service Broker API
+~~~~~~~~~~~~~~~~~~~~~~~
+
+TODO
+
+[[address-space-controller]]
+Address Space controller
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+TODO
+
+[[address-controller-1]]
+Address controller
+~~~~~~~~~~~~~~~~~~
+
+TODO
