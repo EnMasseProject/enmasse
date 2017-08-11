@@ -160,10 +160,10 @@ local common = import "common.jsonnet";
                 }],
                 "resources": {
                     "requests": {
-                        "memory": "16Mi",
+                        "memory": "64Mi",
                     },
                     "limits": {
-                        "memory": "16Mi",
+                        "memory": "64Mi",
                     }
                 },
                 "ports": [ { "name": "amqp-auth", "containerPort": 56672 } ],
