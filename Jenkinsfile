@@ -33,12 +33,12 @@ node('enmasse') {
                 }
             }
         }
-        stage('archive artifacts') {
-            archive '**/TEST-*.xml'
-            archive 'artifacts/**'
-            archive 'templates/install/**'
-        }
         result = 'success'
+    }
+    stage('archive artifacts') {
+        archive '**/TEST-*.xml'
+        archive 'artifacts/**'
+        archive 'templates/install/**'
     }
     stage('notify mailing list') {
         if (result.equals("failure")) {
