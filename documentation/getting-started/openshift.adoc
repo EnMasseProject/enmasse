@@ -13,7 +13,7 @@ for this guide. EnMasse will work with the latest stable release.
 
 If you have an OpenShift instance running already, you can start setting
 up EnMasse. If not, follow
-https://github.com/openshift/origin/blob/master/docs/cluster_up_down.adoc[this
+https://github.com/openshift/origin/blob/master/docs/cluster_up_down.md[this
 guide] for setting up a local developer instance of OpenShift.
 
 [[setting-up-enmasse]]
