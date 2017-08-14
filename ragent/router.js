@@ -238,7 +238,7 @@ ConnectedRouter.prototype.create_connector = function (host_port, connector_name
     var future = futurejs.future(created);
     var parts = host_port.split(':');
     log.info('creating connector ' + connector_name + ' to ' + host_port + ' on router ' + this.container_id);
-    this.create_entity('connector', connector_name, {role:'inter-router', addr:parts[0], port:parts[1]}, future.as_callback());
+    this.create_entity('connector', connector_name, {role:'inter-router', host:parts[0], port:parts[1]}, future.as_callback());
     return future;
 };
 
@@ -331,11 +331,11 @@ ConnectedRouter.prototype.delete_link_route = function (route) {
 };
 
 ConnectedRouter.prototype.retrieve_listeners = function () {
-    this.query('listener', {attributeNames:['identity', 'name', 'addr', 'port', 'role']});
+    this.query('listener', {attributeNames:['identity', 'name', 'host', 'port', 'role']});
 };
 
 ConnectedRouter.prototype.retrieve_connectors = function () {
-    this.query('connector', {attributeNames:['identity', 'name', 'addr', 'port', 'role']});
+    this.query('connector', {attributeNames:['identity', 'name', 'host', 'port', 'role']});
 };
 
 ConnectedRouter.prototype.retrieve_addresses = function () {
@@ -405,7 +405,7 @@ function has_inter_router_role (record) {
 }
 
 function to_host_port (record) {
-    return record.addr + ':' + record.port;
+    return record.host + ':' + record.port;
 }
 
 ConnectedRouter.prototype.on_query_connector_response = function (message) {

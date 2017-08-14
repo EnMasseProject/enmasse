@@ -31,7 +31,7 @@ function MockRouter (name) {
     var self = this;
     this.connection.on('connection_open', function () { self.emit('connected', self); });
     this.objects = {};
-    this.create_object('listener', 'default', {name:'default', addr:name, port:55672, role:'inter-router'});
+    this.create_object('listener', 'default', {name:'default', host:name, port:55672, role:'inter-router'});
 }
 
 util.inherits(MockRouter, events.EventEmitter);
@@ -223,8 +223,8 @@ function get_neighbours(name, connectivity) {
 }
 
 function are_connected(router_a, router_b) {
-    var from_a = router_a.list_objects('connector').filter(function (c) { return c.addr === router_b.name; });
-    var from_b = router_b.list_objects('connector').filter(function (c) { return c.addr === router_a.name; });
+    var from_a = router_a.list_objects('connector').filter(function (c) { return c.host === router_b.name; });
+    var from_b = router_b.list_objects('connector').filter(function (c) { return c.host === router_a.name; });
     if (from_a.length + from_b.length > 1) {
         console.warn('unexpected connectivity between ' + router_a.name + ' and ' + router_b.name + ': ' + JSON.stringify(from_a.concat(from_b)));
     }
