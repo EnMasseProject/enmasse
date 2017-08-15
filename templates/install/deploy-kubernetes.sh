@@ -24,6 +24,8 @@ fi
 SCRIPTDIR=`dirname $0`
 TEMPLATE_PARAMS=""
 ENMASSE_TEMPLATE=$SCRIPTDIR/kubernetes/enmasse.yaml
+KEYCLOAK_TEMPLATE=$SCRIPTDIR/kubernetes/addons/keycloak.yaml
+KEYCLOAK_TEMPLATE_PARAMS=""
 KEYCLOAK_PASSWORD=`head /dev/urandom | tr -dc A-Za-z0-9 | head -c 128`
 DEFAULT_NAMESPACE=enmasse
 GUIDE=false
@@ -131,6 +133,7 @@ then
 fi
 
 runcmd "kubectl apply -f $ENMASSE_TEMPLATE -n $NAMESPACE" "Deploy EnMasse to $NAMESPACE"
+runcmd "kubectl apply -f $KEYCLOAK_TEMPLATE -n $NAMESPACE" "Deploy Keycloak to $NAMESPACE"
 
 if [ "$EXTERNAL_LB" == "true" ]
 then

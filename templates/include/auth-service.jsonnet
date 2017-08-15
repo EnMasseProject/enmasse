@@ -1,3 +1,4 @@
+local images = import "images.jsonnet";
 {
   envVars::
     [
@@ -169,5 +170,46 @@
           }
         }
       }
-    }
+    },
+
+  local me = self,
+  kubernetes::
+  {
+    "apiVersion": "v1",
+    "kind": "List",
+    "items": [
+      me.deployment(images.keycloak_authservice, images.none_authservice, "keycloak-credentials"),
+      me.none_authservice,
+      me.keycloak_authservice
+    ],
+  },
+
+  openshift::
+  {
+    "apiVersion": "v1",
+    "kind": "Template",
+    "objects": [
+      me.deployment("${KEYCLOAK_AUTHSERVICE_REPO}", "${NONE_AUTHSERVICE_REPO}", "${KEYCLOAK_SECRET_NAME}"),
+      me.none_authservice,
+      me.keycloak_authservice
+    ],
+    "parameters": [
+      {
+        "name": "NONE_AUTHSERVICE_REPO",
+        "description": "The docker image to use for the 'none' auth service",
+        "value": images.none_authservice
+      },
+      {
+        "name": "KEYCLOAK_AUTHSERVICE_REPO",
+        "description": "The docker image to use for the 'standard' auth service",
+        "value": images.keycloak_authservice
+      },
+      {
+        "name": "KEYCLOAK_SECRET_NAME",
+        "description": "The secret where keycloak credentials are stored",
+        "value": "keycloak-credentials"
+      }
+    ]
+  },
+
 }
