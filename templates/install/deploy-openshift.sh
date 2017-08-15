@@ -25,6 +25,8 @@ fi
 
 SCRIPTDIR=`dirname $0`
 ENMASSE_TEMPLATE=$SCRIPTDIR/openshift/enmasse.yaml
+KEYCLOAK_TEMPLATE=$SCRIPTDIR/openshift/addons/keycloak.yaml
+KEYCLOAK_TEMPLATE_PARAMS=""
 TEMPLATE_NAME=enmasse
 TEMPLATE_PARAMS=""
 KEYCLOAK_PASSWORD=`head /dev/urandom | tr -dc A-Za-z0-9 | head -c 128`
@@ -166,6 +168,7 @@ then
 fi
 
 runcmd "oc process -f $ENMASSE_TEMPLATE $TEMPLATE_PARAMS | oc create -n $NAMESPACE -f -" "Instantiate EnMasse template"
+runcmd "oc process -f $KEYCLOAK_TEMPLATE $KEYCLOAK_TEMPLATE_PARAMS | oc create -n $NAMESPACE -f -" "Instantiate keycloak template"
 
 if [ -n "$OS_ALLINONE" ] && [ -n "$SERVICE_CATALOG" ]
 then
