@@ -122,6 +122,19 @@ public class HttpAddressService {
     @DELETE
     @Produces({MediaType.APPLICATION_JSON})
     @Consumes({MediaType.APPLICATION_JSON})
+    public Response deleteAddress(@PathParam("addressSpace") String addressSpaceName) {
+        try {
+            AddressList addresses = apiHelper.putAddresses(addressSpaceName, new AddressList());
+            return Response.ok(addresses).build();
+        } catch (Exception e) {
+            log.error("Exception deleting addresses", e);
+            return Response.serverError().build();
+        }
+    }
+
+    @DELETE
+    @Produces({MediaType.APPLICATION_JSON})
+    @Consumes({MediaType.APPLICATION_JSON})
     @Path("{address}")
     public Response deleteAddress(@PathParam("addressSpace") String addressSpaceName, @PathParam("address") String address) {
         try {
