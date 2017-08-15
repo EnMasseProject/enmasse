@@ -7,5 +7,7 @@ if [ -f "${PASSWORD_SECRET}" ]; then
     ${KEYCLOAK_DIR}/bin/add-user-keycloak.sh -u admin -p `cat ${PASSWORD_SECRET}`
 fi
 
+export JAVA_OPTS="-Dvertx.cacheDirBase=/tmp -Djboss.bind.address=0.0.0.0"
+
 exec /opt/jboss/keycloak/bin/standalone.sh $@
 exit $?
