@@ -117,7 +117,7 @@ public class OpenShift {
         if (environment.isMultitenant()) {
             return 5; // admin, qdrouterd, subscription, mqtt gateway, mqtt lwt
         } else {
-            return 6; // address-controller, admin, qdrouterd, subscription, mqtt gateway, mqtt lwt
+            return 7; // address-controller, admin, qdrouterd, subscription, mqtt gateway, mqtt lwt
         }
     }
 
