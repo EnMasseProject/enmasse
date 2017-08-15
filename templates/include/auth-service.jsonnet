@@ -80,7 +80,7 @@
     }
   },
 
-  deployment(keycloak_image_repo, none_authservice_image_repo)::
+  deployment(keycloak_image_repo, none_authservice_image_repo, keycloak_credentials_secret)::
     {
       "apiVersion": "extensions/v1beta1",
       "kind": "Deployment",
@@ -158,7 +158,7 @@
               {
                 "name": "keycloak-secret",
                 "secret": {
-                  "secretName": "keycloak-credentials"
+                  "secretName": keycloak_credentials_secret
                 }
               },
               {

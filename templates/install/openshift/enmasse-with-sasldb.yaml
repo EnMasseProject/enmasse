@@ -1222,7 +1222,7 @@ objects:
         volumes:
         - name: keycloak-secret
           secret:
-            secretName: keycloak-credentials
+            secretName: "${KEYCLOAK_SECRET_NAME}"
         - emptyDir: {}
           name: keycloak-persistence
 - apiVersion: v1
@@ -1287,3 +1287,6 @@ parameters:
 - description: The docker image to use for the 'standard' auth service'
   name: KEYCLOAK_AUTHSERVICE_REPO
   value: docker.io/enmasseproject/keycloak-authservice:latest
+- description: The secret where keycloak credentials are stored
+  name: KEYCLOAK_SECRET_NAME
+  value: keycloak-credentials

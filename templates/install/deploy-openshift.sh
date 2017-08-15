@@ -27,6 +27,7 @@ SCRIPTDIR=`dirname $0`
 ENMASSE_TEMPLATE=$SCRIPTDIR/openshift/enmasse.yaml
 TEMPLATE_NAME=enmasse
 TEMPLATE_PARAMS=""
+KEYCLOAK_PASSWORD=`head /dev/urandom | tr -dc A-Za-z0-9 | head -c 128`
 
 DEFAULT_USER=developer
 DEFAULT_NAMESPACE=myproject
@@ -40,6 +41,9 @@ while getopts dgk:m:n:p:st:u:yvh opt; do
             ;;
         g)
             GUIDE=true
+            ;;
+        k)
+            KEYCLOAK_PASSWORD=$OPTARG
             ;;
         m)
             MASTER_URI=$OPTARG
@@ -73,14 +77,15 @@ while getopts dgk:m:n:p:st:u:yvh opt; do
             echo "deploy the EnMasse suite into a running OpenShift cluster"
             echo
             echo "optional arguments:"
-            echo "  -h             show this help message"
-            echo "  -d             create an all-in-one docker OpenShift on localhost"
-            echo "  -n NAMESPACE   OpenShift project name to install EnMasse into (default: $DEFAULT_NAMESPACE)"
-            echo "  -m MASTER      OpenShift master URI to login against (default: https://localhost:8443)"
-            echo "  -p PARAMS      Custom template parameters to pass to EnMasse template ('cat $SCRIPTDIR/openshift/enmasse.yaml' to get a list of available parameters)"
-            echo "  -s             Experimental: Only applicable when also using -d option. Starts OpenShift with Service Catalog enabled and registers EnMasse Service Broker"
-            echo "  -t TEMPLATE    An alternative OpenShift template file to deploy EnMasse"
-            echo "  -u USER        OpenShift user to run commands as (default: $DEFAULT_USER)"
+            echo "  -h                   show this help message"
+            echo "  -d                   create an all-in-one docker OpenShift on localhost"
+            echo "  -k KEYCLOAK_PASSWORD The password to use as the keycloak admin user"
+            echo "  -n NAMESPACE         OpenShift project name to install EnMasse into (default: $DEFAULT_NAMESPACE)"
+            echo "  -m MASTER            OpenShift master URI to login against (default: https://localhost:8443)"
+            echo "  -p PARAMS            Custom template parameters to pass to EnMasse template ('cat $SCRIPTDIR/openshift/enmasse.yaml' to get a list of available parameters)"
+            echo "  -s                   Experimental: Only applicable when also using -d option. Starts OpenShift with Service Catalog enabled and registers EnMasse Service Broker"
+            echo "  -t TEMPLATE          An alternative OpenShift template file to deploy EnMasse"
+            echo "  -u USER              OpenShift user to run commands as (default: $DEFAULT_USER)"
             echo
             exit
             ;;
@@ -142,6 +147,7 @@ fi
 runcmd "oc create sa enmasse-service-account -n $NAMESPACE" "Create service account for address controller"
 runcmd "oc policy add-role-to-user view system:serviceaccount:${NAMESPACE}:default" "Add permissions for viewing OpenShift resources to default user"
 runcmd "oc policy add-role-to-user edit system:serviceaccount:${NAMESPACE}:enmasse-service-account" "Add permissions for editing OpenShift resources to EnMasse service account"
+runcmd "oc create secret generic keycloak-credentials --from-literal=admin.key=$KEYCLOAK_PASSWORD" "Create secret with keycloak admin password"
 
 if [[ $TEMPLATE_PARAMS == *"MULTIINSTANCE=true"* ]]; then
     if [ -n "$OS_ALLINONE" ]

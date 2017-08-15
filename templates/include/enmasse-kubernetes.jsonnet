@@ -14,7 +14,7 @@ local images = import "images.jsonnet";
     "items": [ templateConfig.generate(use_sasl, with_kafka, false),
                addressController.deployment(images.address_controller, "false", "enmasse-template-config"),
                restapiRoute.ingress(""),
-               authService.deployment(images.keycloak_authservice, images.none_authservice),
+               authService.deployment(images.keycloak_authservice, images.none_authservice, "keycloak-credentials"),
                authService.none_authservice,
                authService.keycloak_authservice,
                addressController.internal_service ]
