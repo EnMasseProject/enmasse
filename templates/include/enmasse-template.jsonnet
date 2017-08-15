@@ -1,6 +1,7 @@
 local storage = import "storage-template.jsonnet";
 local enmasseInfra = import "enmasse-instance-infra.jsonnet";
 local addressController = import "address-controller.jsonnet";
+local authService = import "auth-service.jsonnet";
 local restapiRoute = import "restapi-route.jsonnet";
 local images = import "images.jsonnet";
 {
@@ -19,9 +20,11 @@ local images = import "images.jsonnet";
                  storage.template(true, false),
                  storage.template(true, true),
                  enmasseInfra.generate(use_sasl, with_kafka, true),
-                 addressController.deployment("${ADDRESS_CONTROLLER_REPO}", "${NONE_AUTHSERVICE_REPO}", "${MULTIINSTANCE}", ""),
+                 addressController.deployment("${ADDRESS_CONTROLLER_REPO}", "${MULTIINSTANCE}", ""),
                  addressController.internal_service,
-                 addressController.none_authservice,
+                 authService.deployment("${KEYCLOAK_AUTHSERVICE_REPO}", "${NONE_AUTHSERVICE_REPO}"),
+                 authService.none_authservice,
+                 authService.keycloak_authservice,
                  restapiRoute.route("${RESTAPI_HOSTNAME}") ],
     "parameters": [
       {
@@ -42,6 +45,11 @@ local images = import "images.jsonnet";
         "name": "NONE_AUTHSERVICE_REPO",
         "description": "The docker image to use for the 'none' auth service'",
         "value": images.none_authservice
+      },
+      {
+        "name": "KEYCLOAK_AUTHSERVICE_REPO",
+        "description": "The docker image to use for the 'standard' auth service'",
+        "value": images.keycloak_authservice
       }
     ]
   }

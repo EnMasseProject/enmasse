@@ -45,35 +45,7 @@ local common = import "common.jsonnet";
   external_service::
     self.common_service("address-controller-external", "LoadBalancer", {}),
 
-  authservice(name)::
-  {
-    "apiVersion": "v1",
-    "kind": "Service",
-    "metadata": {
-      "name": name,
-      "labels": {
-        "app": "enmasse"
-      }
-    },
-    "spec": {
-      "ports": [
-        {
-          "name": "amqp-auth",
-          "port": 5672,
-          "protocol": "TCP",
-          "targetPort": "amqp-auth"
-        }
-      ],
-      "selector": {
-        "name": "address-controller"
-      }
-    }
-  },
-
-  none_authservice::
-    self.authservice("none-authservice"),
-
-  deployment(image_repo, authservice_image_repo, multiinstance, template_config)::
+  deployment(image_repo, multiinstance, template_config)::
     {
       "apiVersion": "extensions/v1beta1",
       "kind": "Deployment",
@@ -149,27 +121,6 @@ local common = import "common.jsonnet";
                 "livenessProbe": {
                   "tcpSocket": {
                     "port": "http"
-                  }
-                }
-              }, {
-                "image": authservice_image_repo,
-                "name": "none-authservice",
-                "env": [{
-                  "name": "LISTENPORT",
-                  "value": "56672"
-                }],
-                "resources": {
-                    "requests": {
-                        "memory": "64Mi",
-                    },
-                    "limits": {
-                        "memory": "64Mi",
-                    }
-                },
-                "ports": [ { "name": "amqp-auth", "containerPort": 56672 } ],
-                "livenessProbe": {
-                  "tcpSocket": {
-                    "port": "amqp-auth"
                   }
                 }
               }

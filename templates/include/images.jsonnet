@@ -45,5 +45,8 @@ local registry = std.extVar("REGISTRY");
     self.image("amqp-kafka-bridge"),
 
   none_authservice::
-    self.image("none-authservice")
+    self.image("none-authservice"),
+
+  keycloak_authservice::
+    self.image("keycloak-authservice")
 }
