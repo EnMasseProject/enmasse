@@ -1178,22 +1178,6 @@ objects:
           - mountPath: "/ssl-certs"
             name: ssl-certs
             readOnly: true
-        - env:
-          - name: LISTENPORT
-            value: '56672'
-          image: "${NONE_AUTHSERVICE_REPO}"
-          livenessProbe:
-            tcpSocket:
-              port: amqp-auth
-          name: none-authservice
-          ports:
-          - containerPort: 56672
-            name: amqp-auth
-          resources:
-            limits:
-              memory: 16Mi
-            requests:
-              memory: 16Mi
         serviceAccount: enmasse-service-account
         volumes:
         - name: ssl-certs
@@ -1224,6 +1208,59 @@ objects:
     selector:
       name: address-controller
     type: ClusterIP
+- apiVersion: extensions/v1beta1
+  kind: Deployment
+  metadata:
+    labels:
+      app: enmasse
+    name: authservice
+  spec:
+    replicas: 1
+    template:
+      metadata:
+        labels:
+          app: enmasse
+          name: authservice
+      spec:
+        containers:
+        - env:
+          - name: LISTENPORT
+            value: '56672'
+          image: "${NONE_AUTHSERVICE_REPO}"
+          livenessProbe:
+            tcpSocket:
+              port: amqp-auth
+          name: none-authservice
+          ports:
+          - containerPort: 56672
+            name: amqp-auth
+          resources:
+            limits:
+              memory: 64Mi
+            requests:
+              memory: 64Mi
+        - image: "${KEYCLOAK_AUTHSERVICE_REPO}"
+          livenessProbe:
+            tcpSocket:
+              port: amqp-keycloak
+          name: keycloak
+          ports:
+          - containerPort: 5677
+            name: amqp-keycloak
+          - containerPort: 8080
+            name: http-keycloak
+          volumeMounts:
+          - mountPath: "/var/run/keycloak"
+            name: keycloak-secret
+            readOnly: true
+          - mountPath: "/opt/jboss/keycloak/standalone/data"
+            name: keycloak-persistence
+        volumes:
+        - name: keycloak-secret
+          secret:
+            secretName: keycloak-credentials
+        - emptyDir: {}
+          name: keycloak-persistence
 - apiVersion: v1
   kind: Service
   metadata:
@@ -1237,7 +1274,25 @@ objects:
       protocol: TCP
       targetPort: amqp-auth
     selector:
-      name: address-controller
+      name: authservice
+- apiVersion: v1
+  kind: Service
+  metadata:
+    labels:
+      app: enmasse
+    name: standard-authservice
+  spec:
+    ports:
+    - name: amqp-auth
+      port: 5672
+      protocol: TCP
+      targetPort: amqp-keycloak
+    - name: http-keycloak
+      port: 8080
+      protocol: TCP
+      targetPort: http-keycloak
+    selector:
+      name: authservice
 - apiVersion: v1
   kind: Route
   metadata:
@@ -1265,3 +1320,6 @@ parameters:
 - description: The docker image to use for the 'none' auth service'
   name: NONE_AUTHSERVICE_REPO
   value: docker.io/enmasseproject/none-authservice:latest
+- description: The docker image to use for the 'standard' auth service'
+  name: KEYCLOAK_AUTHSERVICE_REPO
+  value: docker.io/enmasseproject/keycloak-authservice:latest

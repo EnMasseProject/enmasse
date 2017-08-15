@@ -1,5 +1,6 @@
 local templateConfig = import "template-config.jsonnet";
 local addressController = import "address-controller.jsonnet";
+local authService = import "auth-service.jsonnet";
 local restapiRoute = import "restapi-route.jsonnet";
 local messagingService = import "messaging-service.jsonnet";
 local mqttService = import "mqtt-service.jsonnet";
@@ -11,9 +12,11 @@ local images = import "images.jsonnet";
     "apiVersion": "v1",
     "kind": "List",
     "items": [ templateConfig.generate(use_sasl, with_kafka, false),
-               addressController.deployment(images.address_controller, images.none_authservice, "false", "enmasse-template-config"),
+               addressController.deployment(images.address_controller, "false", "enmasse-template-config"),
                restapiRoute.ingress(""),
-               addressController.none_authservice,
+               authService.deployment(images.keycloak_authservice, images.none_authservice),
+               authService.none_authservice,
+               authService.keycloak_authservice,
                addressController.internal_service ]
   },
 
