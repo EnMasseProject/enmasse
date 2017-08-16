@@ -24,13 +24,10 @@ import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.ConfigMapList;
 import io.fabric8.kubernetes.api.model.DoneableConfigMap;
 import io.fabric8.openshift.client.OpenShiftClient;
-import io.vertx.core.Vertx;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Implements the AddressApi using config maps.
@@ -38,15 +35,13 @@ import java.util.concurrent.TimeUnit;
 public class ConfigMapAddressApi implements AddressApi {
 
     private static final Logger log = LoggerFactory.getLogger(ConfigMapAddressApi.class);
-    private final Vertx vertx;
     private final OpenShiftClient client;
     private final String namespace;
 
     // TODO: Parameterize
     private static final ObjectMapper mapper = CodecV1.getMapper();
 
-    public ConfigMapAddressApi(Vertx vertx, OpenShiftClient client, String namespace) {
-        this.vertx = vertx;
+    public ConfigMapAddressApi(OpenShiftClient client, String namespace) {
         this.client = client;
         this.namespace = namespace;
     }
@@ -144,7 +139,7 @@ public class ConfigMapAddressApi implements AddressApi {
     public Watch watchAddresses(Watcher<Address> watcher) throws Exception {
         Map<String, String> labels = new LinkedHashMap<>();
         labels.put(LabelKeys.TYPE, "address-config");
-        WatcherVerticle<Address> verticle = new WatcherVerticle<>(new Resource<Address>() {
+        ResourceController<Address> controller = new ResourceController<>(new Resource<Address>() {
             @Override
             public io.fabric8.kubernetes.client.Watch watchResources(io.fabric8.kubernetes.client.Watcher w) {
                 return client.configMaps().inNamespace(namespace).withLabels(labels).watch(w);
@@ -156,17 +151,7 @@ public class ConfigMapAddressApi implements AddressApi {
             }
         }, watcher);
 
-        CompletableFuture<String> promise = new CompletableFuture<>();
-        vertx.deployVerticle(verticle, result -> {
-            if (result.succeeded()) {
-                promise.complete(result.result());
-            } else {
-                log.error("Error deploying verticle: {}", result.cause());
-                promise.completeExceptionally(result.cause());
-            }
-        });
-
-        String id = promise.get(1, TimeUnit.MINUTES);
-        return () -> vertx.undeploy(id);
+        controller.start();
+        return controller::stop;
     }
 }
