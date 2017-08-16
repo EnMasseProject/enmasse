@@ -96,10 +96,8 @@ public class Controller extends AbstractVerticle {
         }
 
         CertManager certManager = SelfSignedCertManager.create(controllerClient);
-        String username = null;
-        String password = null;
         Optional<AuthServiceInfo> standardAuthService = options.getStandardAuthService();
-        AuthServiceManager authSvcMgr = standardAuthService.map(svc -> KeycloakAuthServiceManager.create(svc.getHost(), svc.getPort(), username, password)).orElse(x -> {});
+        AuthServiceManager authSvcMgr = standardAuthService.map(svc -> KeycloakAuthServiceManager.create(svc.getHost(), svc.getHttpPort(), svc.getUsername(), svc.getPassword())).orElse(x -> {});
         deployVerticles(startPromise,
                 new Deployment(new AuthController(certManager, authSvcMgr, addressSpaceApi)),
                 new Deployment(new StandardController(controllerClient, addressSpaceApi, kubernetes, createResolverFactory(options), options.isMultiinstance())),
@@ -110,11 +108,11 @@ public class Controller extends AbstractVerticle {
     private AuthenticationServiceResolverFactory createResolverFactory(ControllerOptions options) {
         Map<AuthenticationServiceType, AuthenticationServiceResolver> resolverMap = new HashMap<>();
         options.getNoneAuthService().ifPresent(authService -> {
-            resolverMap.put(AuthenticationServiceType.NONE, new NoneAuthenticationServiceResolver(authService.getHost(), authService.getPort()));
+            resolverMap.put(AuthenticationServiceType.NONE, new NoneAuthenticationServiceResolver(authService.getHost(), authService.getAmqpPort()));
         });
 
         options.getStandardAuthService().ifPresent(authService -> {
-            resolverMap.put(AuthenticationServiceType.STANDARD, new NoneAuthenticationServiceResolver(authService.getHost(), authService.getPort()));
+            resolverMap.put(AuthenticationServiceType.STANDARD, new NoneAuthenticationServiceResolver(authService.getHost(), authService.getAmqpPort()));
         });
 
         resolverMap.put(AuthenticationServiceType.EXTERNAL, new ExternalAuthenticationServiceResolver());

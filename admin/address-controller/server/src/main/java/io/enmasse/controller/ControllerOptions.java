@@ -106,19 +106,31 @@ public final class ControllerOptions {
                 ? Optional.of(new PasswordAuthentication(osbAuthUser.get(), getEnvOrThrow(env, "OSB_AUTH_PASSWORD").toCharArray()))
                 : Optional.empty();
 
-        Optional<AuthServiceInfo> noneAuthService = getAuthService(env, "NONE_AUTHSERVICE_SERVICE_HOST", "NONE_AUTHSERVICE_SERVICE_PORT");
-        Optional<AuthServiceInfo> standardAuthService = getAuthService(env, "STANDARD_AUTHSERVICE_SERVICE_HOST", "STANDARD_AUTHSERVICE_SERVICE_PORT");
-
+        Optional<AuthServiceInfo> noneAuthService = getNoneAuthService(env);
+        Optional<AuthServiceInfo> standardAuthService = getStandardAuthService(env);
         String certDir = getEnv(env, "CERT_PATH").orElse("/ssl-certs");
         return new ControllerOptions(String.format("https://%s:%s", masterHost, masterPort), isMultiinstance, namespace,
                 token, maybeDir, messagingHost, mqttHost, consoleHost, certSecret, certDir, osbAuth, noneAuthService, standardAuthService);
     }
 
-    private static Optional<AuthServiceInfo> getAuthService(Map<String, String> env, String hostEnv, String portEnv) {
-        Optional<String> host = getEnv(env, hostEnv);
-        Optional<String> port = getEnv(env, portEnv);
+    private static Optional<AuthServiceInfo> getStandardAuthService(Map<String, String> env) {
+        Optional<String> host = getEnv(env, "STANDARD_AUTHSERVICE_SERVICE_HOST");
+        Optional<String> amqpPort = getEnv(env, "STANDARD_AUTHSERVICE_SERVICE_PORT_AMQP");
+        Optional<String> httpPort = getEnv(env, "STANDARD_AUTHSERVICE_SERVICE_PORT_HTTP");
+        Optional<String> adminUser = getEnv(env, "STANDARD_AUTHSERVICE_ADMIN_USER");
+        Optional<String> adminPassword = getEnv(env, "STANDARD_AUTHSERVICE_ADMIN_PASSWORD");
+
+        if (host.isPresent() && amqpPort.isPresent() && httpPort.isPresent() && adminUser.isPresent() && adminPassword.isPresent()) {
+            return Optional.of(new AuthServiceInfo(host.get(), Integer.parseInt(amqpPort.get()), Integer.parseInt(httpPort.get()), adminUser.get(), adminPassword.get()));
+        }
+        return Optional.empty();
+    }
+
+    private static Optional<AuthServiceInfo> getNoneAuthService(Map<String, String> env) {
+        Optional<String> host = getEnv(env, "NONE_AUTHSERVICE_SERVICE_HOST");
+        Optional<String> port = getEnv(env, "NONE_AUTHSERVICE_SERVICE_PORT");
         if (host.isPresent() && port.isPresent()) {
-            return Optional.of(new AuthServiceInfo(host.get(), Integer.parseInt(port.get())));
+            return Optional.of(new AuthServiceInfo(host.get(), Integer.parseInt(port.get()), 0, null, null));
         }
         return Optional.empty();
     }
