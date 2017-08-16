@@ -37,14 +37,14 @@ local images = import "images.jsonnet";
     "spec": {
       "ports": [
         {
-          "name": "amqp-auth",
+          "name": "amqp",
           "port": 5672,
           "protocol": "TCP",
-          "targetPort": "amqp-auth"
+          "targetPort": "amqp"
         }
       ],
       "selector": {
-        "name": "authservice"
+        "name": "none-authservice"
       }
     }
   },

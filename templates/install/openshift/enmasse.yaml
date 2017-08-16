@@ -1187,12 +1187,12 @@ objects:
     name: none-authservice
   spec:
     ports:
-    - name: amqp-auth
+    - name: amqp
       port: 5672
       protocol: TCP
-      targetPort: amqp-auth
+      targetPort: amqp
     selector:
-      name: authservice
+      name: none-authservice
 - apiVersion: v1
   kind: Route
   metadata:
