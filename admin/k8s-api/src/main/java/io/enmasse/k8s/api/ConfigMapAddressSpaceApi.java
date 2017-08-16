@@ -22,13 +22,10 @@ import io.enmasse.address.model.v1.CodecV1;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.ConfigMapList;
 import io.fabric8.openshift.client.OpenShiftClient;
-import io.vertx.core.Vertx;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Implementation of the AddressSpace API towards Kubernetes
@@ -36,13 +33,11 @@ import java.util.concurrent.TimeUnit;
 public class ConfigMapAddressSpaceApi implements AddressSpaceApi {
     protected final Logger log = LoggerFactory.getLogger(getClass().getName());
     private final OpenShiftClient client;
-    private final Vertx vertx;
     // TODO: Parameterize
     private static final ObjectMapper mapper = CodecV1.getMapper();
 
-    public ConfigMapAddressSpaceApi(Vertx vertx, OpenShiftClient client) {
+    public ConfigMapAddressSpaceApi(OpenShiftClient client) {
         this.client = client;
-        this.vertx = vertx;
     }
 
     @Override
@@ -115,7 +110,7 @@ public class ConfigMapAddressSpaceApi implements AddressSpaceApi {
     public Watch watchAddressSpaces(Watcher<AddressSpace> watcher) throws Exception {
         Map<String, String> labels = new LinkedHashMap<>();
         labels.put(LabelKeys.TYPE, "address-space");
-        WatcherVerticle<AddressSpace> verticle = new WatcherVerticle<>(new Resource<AddressSpace>() {
+        ResourceController<AddressSpace> controller = new ResourceController<>(new Resource<AddressSpace>() {
             @Override
             public io.fabric8.kubernetes.client.Watch watchResources(io.fabric8.kubernetes.client.Watcher w) {
                 return client.configMaps().withLabels(labels).watch(w);
@@ -127,21 +122,12 @@ public class ConfigMapAddressSpaceApi implements AddressSpaceApi {
             }
         }, watcher);
 
-        CompletableFuture<String> promise = new CompletableFuture<>();
-        vertx.deployVerticle(verticle, result -> {
-            if (result.succeeded()) {
-                promise.complete(result.result());
-            } else {
-                promise.completeExceptionally(result.cause());
-            }
-        });
-
-        String id = promise.get(1, TimeUnit.MINUTES);
-        return () -> vertx.undeploy(id);
+        controller.start();
+        return controller::stop;
     }
 
     @Override
     public AddressApi withAddressSpace(AddressSpace addressSpace) {
-        return new ConfigMapAddressApi(vertx, client, addressSpace.getNamespace());
+        return new ConfigMapAddressApi(client, addressSpace.getNamespace());
     }
 }

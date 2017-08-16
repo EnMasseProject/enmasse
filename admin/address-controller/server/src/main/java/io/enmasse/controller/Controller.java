@@ -71,7 +71,7 @@ public class Controller extends AbstractVerticle {
 
     @Override
     public void start(Future<Void> startPromise) {
-        AddressSpaceApi addressSpaceApi = new ConfigMapAddressSpaceApi(vertx, controllerClient);
+        AddressSpaceApi addressSpaceApi = new ConfigMapAddressSpaceApi(controllerClient);
 
         if (!options.isMultiinstance() && !kubernetes.hasService("messaging")) {
             AddressSpaceType type = new StandardAddressSpaceType();
