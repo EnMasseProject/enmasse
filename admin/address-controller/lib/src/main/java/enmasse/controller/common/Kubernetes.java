@@ -79,6 +79,4 @@ public interface Kubernetes {
     List<Namespace> listNamespaces(Map<String, String> labels);
 
     List<Pod> listRouters();
-
-    AuthenticationServiceResolver getResolver(AuthenticationServiceType type);
 }

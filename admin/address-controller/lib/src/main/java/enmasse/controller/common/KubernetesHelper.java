@@ -314,21 +314,6 @@ public class KubernetesHelper implements Kubernetes {
         return client.pods().withLabel(LabelKeys.CAPABILITY, "router").list().getItems();
     }
 
-    @Override
-    public AuthenticationServiceResolver getResolver(AuthenticationServiceType type) {
-        // TODO: Create resolvers once
-        switch (type) {
-            case STANDARD:
-                // TODO - for now drop through to none
-            case NONE:
-                return new NoneAuthenticationServiceResolver(client);
-            case EXTERNAL:
-                return new ExternalAuthenticationServiceResolver();
-            default:
-                throw new IllegalArgumentException("Unsupported resolver of type " + type);
-        }
-    }
-
     public static boolean isDeployment(HasMetadata res) {
         return res.getKind().equals("Deployment");  // TODO: is there an existing constant for this somewhere?
     }

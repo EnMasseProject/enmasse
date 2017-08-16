@@ -36,11 +36,13 @@ public final class ControllerOptions {
     private final Optional<String> consoleHost;
     private final Optional<String> certSecret;
     private final Optional<PasswordAuthentication> osbAuth;
+    private final Optional<AuthServiceInfo> noneAuthService;
+    private final Optional<AuthServiceInfo> standardAuthService;
 
     private ControllerOptions(String masterUrl, boolean isMultiinstance, String namespace, String token,
                               Optional<File> templateDir, Optional<String> messagingHost, Optional<String> mqttHost,
                               Optional<String> consoleHost, Optional<String> certSecret, String certDir,
-                              Optional<PasswordAuthentication> osbAuth) {
+                              Optional<PasswordAuthentication> osbAuth, Optional<AuthServiceInfo> noneAuthService, Optional<AuthServiceInfo> standardAuthService) {
         this.masterUrl = masterUrl;
         this.isMultiinstance = isMultiinstance;
         this.namespace = namespace;
@@ -52,6 +54,8 @@ public final class ControllerOptions {
         this.certSecret = certSecret;
         this.certDir = certDir;
         this.osbAuth = osbAuth;
+        this.noneAuthService = noneAuthService;
+        this.standardAuthService = standardAuthService;
     }
 
     public String masterUrl() {
@@ -102,9 +106,21 @@ public final class ControllerOptions {
                 ? Optional.of(new PasswordAuthentication(osbAuthUser.get(), getEnvOrThrow(env, "OSB_AUTH_PASSWORD").toCharArray()))
                 : Optional.empty();
 
+        Optional<AuthServiceInfo> noneAuthService = getAuthService(env, "NONE_AUTHSERVICE_SERVICE_HOST", "NONE_AUTHSERVICE_SERVICE_PORT");
+        Optional<AuthServiceInfo> standardAuthService = getAuthService(env, "STANDARD_AUTHSERVICE_SERVICE_HOST", "STANDARD_AUTHSERVICE_SERVICE_PORT");
+
         String certDir = getEnv(env, "CERT_PATH").orElse("/ssl-certs");
         return new ControllerOptions(String.format("https://%s:%s", masterHost, masterPort), isMultiinstance, namespace,
-                token, maybeDir, messagingHost, mqttHost, consoleHost, certSecret, certDir, osbAuth);
+                token, maybeDir, messagingHost, mqttHost, consoleHost, certSecret, certDir, osbAuth, noneAuthService, standardAuthService);
+    }
+
+    private static Optional<AuthServiceInfo> getAuthService(Map<String, String> env, String hostEnv, String portEnv) {
+        Optional<String> host = getEnv(env, hostEnv);
+        Optional<String> port = getEnv(env, portEnv);
+        if (host.isPresent() && port.isPresent()) {
+            return Optional.of(new AuthServiceInfo(host.get(), Integer.parseInt(port.get())));
+        }
+        return Optional.empty();
     }
 
     private static Optional<String> getEnv(Map<String, String> env, String envVar) {
@@ -168,5 +184,13 @@ public final class ControllerOptions {
 
     public Optional<PasswordAuthentication> osbAuth() {
         return osbAuth;
+    }
+
+    public Optional<AuthServiceInfo> getNoneAuthService() {
+        return noneAuthService;
+    }
+
+    public Optional<AuthServiceInfo> getStandardAuthService() {
+        return standardAuthService;
     }
 }
