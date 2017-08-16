@@ -28,13 +28,11 @@ public class ScramSha1PasswordHashProviderFactory implements PasswordHashProvide
 
     public static final String ID = "scramsha1";
 
-    public static final String ALGORITHM = "SCRAMSHA1";
-
     public static final int DEFAULT_ITERATIONS = 20000;
 
     @Override
     public PasswordHashProvider create(KeycloakSession session) {
-        return new ScramPasswordHashProvider(ID, ALGORITHM, DEFAULT_ITERATIONS, "HmacSHA1", "SHA-1");
+        return new ScramPasswordHashProvider(ID, DEFAULT_ITERATIONS, "HmacSHA1", "SHA-1");
     }
 
     @Override

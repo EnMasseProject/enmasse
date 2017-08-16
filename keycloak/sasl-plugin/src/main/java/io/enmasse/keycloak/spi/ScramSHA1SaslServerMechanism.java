@@ -36,6 +36,7 @@ import org.keycloak.credential.CredentialInputValidator;
 import org.keycloak.credential.CredentialModel;
 import org.keycloak.credential.PasswordCredentialProvider;
 import org.keycloak.credential.UserCredentialStoreManager;
+import org.keycloak.credential.hash.Pbkdf2PasswordHashProviderFactory;
 import org.keycloak.models.KeycloakSession;
 import org.keycloak.models.RealmModel;
 import org.keycloak.models.UserModel;
@@ -226,44 +227,52 @@ public class ScramSHA1SaslServerMechanism implements SaslServerMechanism {
             {
                 String clientFinalMessage = new String(response, StandardCharsets.US_ASCII);
                 String[] parts = clientFinalMessage.split(",");
-                if(!parts[0].startsWith("c="))
-                {
+                if (!parts[0].startsWith("c=")) {
                     throw new IllegalArgumentException("Cannot parse client final message");
                 }
-                if(!Arrays.equals(gs2Header, decodeBase64(parts[0].substring(2))))
-                {
+                if (!Arrays.equals(gs2Header, decodeBase64(parts[0].substring(2)))) {
                     throw new IllegalArgumentException("Client final message channel bind data invalid");
                 }
-                if(!parts[1].startsWith("r="))
-                {
+                if (!parts[1].startsWith("r=")) {
                     throw new IllegalArgumentException("Cannot parse client final message");
                 }
-                if(!parts[1].substring(2).equals(nonce))
-                {
+                if (!parts[1].substring(2).equals(nonce)) {
                     throw new IllegalArgumentException("Client final message has incorrect nonce value");
                 }
-                if(!parts[parts.length-1].startsWith("p="))
-                {
+                if (!parts[parts.length - 1].startsWith("p=")) {
                     throw new IllegalArgumentException("Client final message does not have proof");
                 }
 
-                String clientFinalMessageWithoutProof = clientFinalMessage.substring(0,clientFinalMessage.length()-(1+parts[parts.length-1].length()));
-                byte[] proofBytes = decodeBase64(parts[parts.length-1].substring(2));
+                String clientFinalMessageWithoutProof =
+                        clientFinalMessage.substring(0, clientFinalMessage.length() - (1 + parts[parts.length- 1].length()));
+                byte[] proofBytes = decodeBase64(parts[parts.length - 1].substring(2));
 
-                String authMessage = clientFirstMessageBare + "," + serverFirstMessage + "," + clientFinalMessageWithoutProof;
+                String authMessage =
+                        clientFirstMessageBare + "," + serverFirstMessage + "," + clientFinalMessageWithoutProof;
 
-                byte[] saltedPassword = getSaltedPassword();
+                byte[] storedKey;
+                byte[] serverKey;
 
-                byte[] clientKey = computeHmac(saltedPassword, "Client Key");
+                if (getCredentialModel() == null
+                    || getCredentialModel().getAlgorithm().equals(Pbkdf2PasswordHashProviderFactory.ID)) {
+                    byte[] saltedPassword = getSaltedPassword();
 
-                byte[] storedKey = MessageDigest.getInstance(DIGEST_NAME).digest(clientKey);
-                byte[] serverKey = computeHmac(saltedPassword, "Server Key");
+                    byte[] clientKey = computeHmac(saltedPassword, "Client Key");
 
+                    storedKey = MessageDigest.getInstance(DIGEST_NAME).digest(clientKey);
+                    serverKey = computeHmac(saltedPassword, "Server Key");
+                } else if (getCredentialModel().getAlgorithm().equals(ScramSha1PasswordHashProviderFactory.ID)) {
+                    final CredentialModel credentialModel = getCredentialModel();
+                    String[] storedAndServerKeys = credentialModel.getValue().split("|",2);
+                    storedKey = Base64.decode(storedAndServerKeys[0]);
+                    serverKey = Base64.decode(storedAndServerKeys[1]);
+                } else {
+                    throw new IllegalArgumentException("Unsupported algorithm: " + getCredentialModel().getAlgorithm());
+                }
 
                 byte[] clientSignature = computeHmac(storedKey, authMessage);
 
-                for(int i = 0 ; i < proofBytes.length; i++)
-                {
+                for(int i = 0 ; i < proofBytes.length; i++) {
                     proofBytes[i] ^= clientSignature[i];
                 }
 
@@ -281,22 +290,18 @@ public class ScramSHA1SaslServerMechanism implements SaslServerMechanism {
                 String finalResponse = "v=" + Base64.encodeBytes(computeHmac(serverKey, authMessage));
 
                 return finalResponse.getBytes(StandardCharsets.US_ASCII);
-            }
-            catch (NoSuchAlgorithmException e)
-            {
+            } catch (NoSuchAlgorithmException | IOException e) {
                 throw new IllegalArgumentException(e.getMessage(), e);
             }
         }
 
-        private byte[] getSaltedPassword()
-        {
+        private byte[] getSaltedPassword() {
             final CredentialModel credentialModel = getCredentialModel();
             if(credentialModel == null) {
                 byte[] password = new byte[20];
                 (new SecureRandom()).nextBytes(password);
                 return password;
             } else {
-
                 byte[] storedValue = decodeBase64(credentialModel.getValue());
                 byte[] saltedPassword = new byte[20];
                 System.arraycopy(storedValue, 0, saltedPassword, 0, 20);
@@ -305,10 +310,8 @@ public class ScramSHA1SaslServerMechanism implements SaslServerMechanism {
 
         }
 
-        private CredentialModel getCredentialModel()
-        {
-            if(realm != null && user != null)
-            {
+        private CredentialModel getCredentialModel() {
+            if(realm != null && user != null) {
                 PasswordCredentialProvider passwordCredentialProvider = getPasswordCredentialProvider(realm, user);
 
                 return passwordCredentialProvider.getPassword(realm, user);
@@ -317,8 +320,7 @@ public class ScramSHA1SaslServerMechanism implements SaslServerMechanism {
             }
         }
 
-        private PasswordCredentialProvider getPasswordCredentialProvider(final RealmModel realm, final UserModel user)
-        {
+        private PasswordCredentialProvider getPasswordCredentialProvider(final RealmModel realm, final UserModel user) {
             PasswordCredentialProvider passwordCredentialProvider = null;
 
             if (!StorageId.isLocalStorage(user)) {
@@ -335,8 +337,7 @@ public class ScramSHA1SaslServerMechanism implements SaslServerMechanism {
                     }
                 }
             }
-            if(passwordCredentialProvider == null)
-            {
+            if(passwordCredentialProvider == null) {
                 List<CredentialInputValidator>
                         credentialProviders = UserCredentialStoreManager.getCredentialProviders(keycloakSession, realm, CredentialInputValidator.class);
                 for (CredentialInputValidator validator : credentialProviders) {
@@ -351,23 +352,20 @@ public class ScramSHA1SaslServerMechanism implements SaslServerMechanism {
 
 
         @Override
-        public boolean isComplete()
-        {
+        public boolean isComplete() {
             return state == State.COMPLETE;
         }
 
 
         @Override
-        public byte[] processResponse(byte[] response) throws IllegalArgumentException
-        {
+        public byte[] processResponse(byte[] response) throws IllegalArgumentException {
             if(error != null) {
                 throw error;
             }
 
 
             byte[] challenge;
-            switch (state)
-            {
+            switch (state) {
                 case INITIAL:
                     challenge = generateServerFirstMessage(response);
                     state = State.SERVER_FIRST_MESSAGE_SENT;
@@ -389,49 +387,28 @@ public class ScramSHA1SaslServerMechanism implements SaslServerMechanism {
         }
 
         @Override
-        public boolean isAuthenticated()
-        {
+        public boolean isAuthenticated() {
             return authenticated;
         }
 
 
-        private byte[] computeHmac(final byte[] key, final String string)
-        {
+        private byte[] computeHmac(final byte[] key, final String string) {
             Mac mac = createShaHmac(key);
             mac.update(string.getBytes(StandardCharsets.US_ASCII));
             return mac.doFinal();
         }
 
 
-        private Mac createShaHmac(final byte[] keyBytes)
-        {
-            try
-            {
+        private Mac createShaHmac(final byte[] keyBytes) {
+            try {
                 SecretKeySpec key = new SecretKeySpec(keyBytes, HMAC_NAME);
                 Mac mac = Mac.getInstance(HMAC_NAME);
                 mac.init(key);
                 return mac;
-            }
-            catch (NoSuchAlgorithmException | InvalidKeyException e)
-            {
+            } catch (NoSuchAlgorithmException | InvalidKeyException e) {
                 throw new IllegalArgumentException(e.getMessage(), e);
             }
         }
-    }
-
-
-
-
-    /***** DELETE BELOW HERE ****/
-    final protected static char[] hexArray = "0123456789ABCDEF".toCharArray();
-    public static String bytesToHex(byte[] bytes) {
-        char[] hexChars = new char[bytes.length * 2];
-        for ( int j = 0; j < bytes.length; j++ ) {
-            int v = bytes[j] & 0xFF;
-            hexChars[j * 2] = hexArray[v >>> 4];
-            hexChars[j * 2 + 1] = hexArray[v & 0x0F];
-        }
-        return new String(hexChars);
     }
 
 }

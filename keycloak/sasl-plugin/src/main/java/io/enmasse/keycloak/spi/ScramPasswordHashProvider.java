@@ -38,8 +38,6 @@ public class ScramPasswordHashProvider implements PasswordHashProvider
 {
 
     private final String providerId;
-
-    private final String algorithm;
     private final String hmacName;
     private final String digestName;
     private final int defaultIterations;
@@ -47,11 +45,10 @@ public class ScramPasswordHashProvider implements PasswordHashProvider
     private static final byte[] INT_1 = new byte[]{0, 0, 0, 1};
 
     public ScramPasswordHashProvider(String providerId,
-                                     String algorithm,
                                      int defaultIterations,
-                                     final String hmacName, final String digestName) {
+                                     final String hmacName,
+                                     final String digestName) {
         this.providerId = providerId;
-        this.algorithm = algorithm;
         this.defaultIterations = defaultIterations;
         this.hmacName = hmacName;
         this.digestName = digestName;
