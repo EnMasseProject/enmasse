@@ -14,7 +14,7 @@
                     <properties>
                         <property name="enableTls" value="false"/>
                         <property name="host" value="0.0.0.0"/>
-                        <property name="port" value="5677"/>
+                        <property name="port" value="5672"/>
                         <property name="defaultDomain" value="enmasse"/>
                     </properties>
                 </provider>

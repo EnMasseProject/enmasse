@@ -108,7 +108,7 @@ local images = import "images.jsonnet";
                 "ports": [
                   {
                     "name": "amqp",
-                    "containerPort": 5677
+                    "containerPort": 5672
                   },
                   {
                     "name": "http",

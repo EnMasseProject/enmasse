@@ -23,7 +23,7 @@ objects:
               port: amqp
           name: keycloak
           ports:
-          - containerPort: 5677
+          - containerPort: 5672
             name: amqp
           - containerPort: 8080
             name: http
