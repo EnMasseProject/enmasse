@@ -19,19 +19,38 @@ package io.enmasse.controller;
  * Information about an Authentication Service
  */
 public class AuthServiceInfo {
+    private final String host;
+    private final int amqpPort;
+    private final int httpPort;
+    private final String username;
+    private final String password;
+
+    public AuthServiceInfo(String host, int amqpPort, int httpPort, String username, String password) {
+        this.host = host;
+        this.amqpPort = amqpPort;
+        this.httpPort = httpPort;
+        this.username = username;
+        this.password = password;
+    }
+
     public String getHost() {
         return host;
     }
 
-    public int getPort() {
-        return port;
+    public int getAmqpPort() {
+        return amqpPort;
     }
 
-    private final String host;
-    private final int port;
+    public int getHttpPort() {
+        return httpPort;
+    }
 
-    public AuthServiceInfo(String host, int port) {
-        this.host = host;
-        this.port = port;
+
+    public String getUsername() {
+        return username;
+    }
+
+    public String getPassword() {
+        return password;
     }
 }
