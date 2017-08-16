@@ -16,9 +16,9 @@
 package io.enmasse.controller.api.v1.http;
 
 import io.enmasse.controller.api.v1.AddressApiHelper;
-import io.enmasse.controller.k8s.api.AddressSpaceApi;
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressList;
+import io.enmasse.k8s.api.AddressSpaceApi;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

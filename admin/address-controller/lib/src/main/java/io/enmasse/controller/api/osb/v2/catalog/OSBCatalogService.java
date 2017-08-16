@@ -10,7 +10,7 @@ import javax.ws.rs.core.Response;
 
 import io.enmasse.controller.api.osb.v2.OSBServiceBase;
 import io.enmasse.controller.api.osb.v2.ServiceType;
-import io.enmasse.controller.k8s.api.AddressSpaceApi;
+import io.enmasse.k8s.api.AddressSpaceApi;
 
 @Path(OSBServiceBase.BASE_URI + "/catalog")
 @Produces({MediaType.APPLICATION_JSON})

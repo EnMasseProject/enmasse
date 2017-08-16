@@ -4,6 +4,7 @@ import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.Endpoint;
 import io.enmasse.address.model.SecretCertProvider;
 import io.enmasse.address.model.types.standard.StandardAddressSpaceType;
+import io.enmasse.controller.api.TestAddressSpaceApi;
 import io.vertx.core.Vertx;
 import org.junit.After;
 import org.junit.Before;

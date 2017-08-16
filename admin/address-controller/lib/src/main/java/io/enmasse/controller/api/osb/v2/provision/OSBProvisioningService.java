@@ -17,11 +17,11 @@ import io.enmasse.controller.api.osb.v2.EmptyResponse;
 import io.enmasse.controller.api.osb.v2.OSBExceptions;
 import io.enmasse.controller.api.osb.v2.OSBServiceBase;
 import io.enmasse.controller.api.osb.v2.ServiceType;
-import io.enmasse.controller.k8s.api.AddressSpaceApi;
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.types.AddressType;
 import io.enmasse.address.model.types.Plan;
+import io.enmasse.k8s.api.AddressSpaceApi;
 
 @Path(OSBServiceBase.BASE_URI + "/service_instances/{instanceId}")
 @Consumes({MediaType.APPLICATION_JSON})

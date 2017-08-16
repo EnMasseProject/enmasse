@@ -3,10 +3,10 @@ package io.enmasse.controller.api.osb.v2.bind;
 import io.enmasse.controller.api.osb.v2.EmptyResponse;
 import io.enmasse.controller.api.osb.v2.OSBExceptions;
 import io.enmasse.controller.api.osb.v2.OSBServiceBase;
-import io.enmasse.controller.k8s.api.AddressSpaceApi;
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.Endpoint;
+import io.enmasse.k8s.api.AddressSpaceApi;
 
 import java.util.HashMap;
 import java.util.Map;

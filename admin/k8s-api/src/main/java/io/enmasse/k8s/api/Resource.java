@@ -13,26 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.enmasse.controller.k8s.api;
+package io.enmasse.k8s.api;
 
-import io.enmasse.controller.common.Watch;
-import io.enmasse.controller.common.Watcher;
-import io.enmasse.address.model.Address;
-
-import java.util.Optional;
 import java.util.Set;
 
 /**
- * API for managing addresses in kubernetes.
+ * Interface for components supporting listing and watching a resource.
  */
-public interface AddressApi {
-    Optional<Address> getAddressWithName(String name);
-    Optional<Address> getAddressWithUuid(String uuid);
-    Set<Address> listAddresses();
-
-    void createAddress(Address address);
-    void replaceAddress(Address address);
-    void deleteAddress(Address address);
-
-    Watch watchAddresses(Watcher<Address> watcher) throws Exception;
+public interface Resource<T> {
+    io.fabric8.kubernetes.client.Watch watchResources(io.fabric8.kubernetes.client.Watcher watcher);
+    Set<T> listResources();
 }

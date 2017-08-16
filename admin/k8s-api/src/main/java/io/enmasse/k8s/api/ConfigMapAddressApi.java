@@ -1,11 +1,25 @@
-package io.enmasse.controller.k8s.api;
+/*
+ * Copyright 2017 Red Hat Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package io.enmasse.k8s.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.enmasse.config.LabelKeys;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.v1.CodecV1;
-import io.enmasse.controller.common.*;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.ConfigMapList;
 import io.fabric8.kubernetes.api.model.DoneableConfigMap;
@@ -39,7 +53,7 @@ public class ConfigMapAddressApi implements AddressApi {
 
     @Override
     public Optional<Address> getAddressWithName(String name) {
-        ConfigMap map = client.configMaps().inNamespace(namespace).withName(Kubernetes.sanitizeName("address-config-" + name)).get();
+        ConfigMap map = client.configMaps().inNamespace(namespace).withName(KubeUtil.sanitizeName("address-config-" + name)).get();
         if (map == null) {
             return Optional.empty();
         } else {
@@ -93,7 +107,7 @@ public class ConfigMapAddressApi implements AddressApi {
 
     @Override
     public void replaceAddress(Address address) {
-        String name = Kubernetes.sanitizeName("address-config-" + address.getName());
+        String name = KubeUtil.sanitizeName("address-config-" + address.getName());
         ConfigMap previous = client.configMaps().inNamespace(namespace).withName(name).get();
         if (previous == null) {
             return;
@@ -102,7 +116,7 @@ public class ConfigMapAddressApi implements AddressApi {
     }
 
     private void createOrReplace(Address address) {
-        String name = Kubernetes.sanitizeName("address-config-" + address.getName());
+        String name = KubeUtil.sanitizeName("address-config-" + address.getName());
         DoneableConfigMap builder = client.configMaps().inNamespace(namespace).withName(name).createOrReplaceWithNew()
                 .withNewMetadata()
                 .withName(name)
@@ -122,7 +136,7 @@ public class ConfigMapAddressApi implements AddressApi {
 
     @Override
     public void deleteAddress(Address address) {
-        String name = Kubernetes.sanitizeName("address-config-" + address.getName());
+        String name = KubeUtil.sanitizeName("address-config-" + address.getName());
         client.configMaps().inNamespace(namespace).withName(name).delete();
     }
 

@@ -17,10 +17,12 @@ package io.enmasse.controller.standard;
 
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.controller.common.*;
-import io.enmasse.controller.k8s.api.AddressSpaceApi;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.Endpoint;
 import io.enmasse.address.model.SecretCertProvider;
+import io.enmasse.k8s.api.AddressSpaceApi;
+import io.enmasse.k8s.api.Watch;
+import io.enmasse.k8s.api.Watcher;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.extensions.Ingress;
 import io.fabric8.openshift.api.model.Route;

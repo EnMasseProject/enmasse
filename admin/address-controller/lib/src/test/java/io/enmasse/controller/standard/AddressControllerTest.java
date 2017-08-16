@@ -14,17 +14,14 @@
  * limitations under the License.
  */
 
-package io.enmasse.controller.address;
+package io.enmasse.controller.standard;
 
-import io.enmasse.controller.k8s.api.AddressApi;
-import io.enmasse.controller.common.AddressClusterGenerator;
-import io.enmasse.controller.common.Kubernetes;
-import io.enmasse.controller.common.AddressCluster;
-import io.enmasse.controller.standard.AddressController;
 import io.enmasse.address.model.types.AddressType;
 import io.enmasse.address.model.types.Plan;
 import io.enmasse.address.model.Address;
+import io.enmasse.controller.common.*;
 import io.enmasse.address.model.types.standard.StandardType;
+import io.enmasse.k8s.api.AddressApi;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.openshift.client.OpenShiftClient;

@@ -1,4 +1,6 @@
 include ':admin:configserv'
+include ':admin:k8s-api'
+include ':admin:k8s-api-testutil'
 include ':admin:queue-scheduler'
 include ':admin:address-controller'
 include ':admin:address-controller:lib'

@@ -1,8 +1,8 @@
 package io.enmasse.controller.auth;
 
-import io.enmasse.controller.common.Watch;
-import io.enmasse.controller.common.Watcher;
-import io.enmasse.controller.k8s.api.AddressSpaceApi;
+import io.enmasse.k8s.api.AddressSpaceApi;
+import io.enmasse.k8s.api.Watch;
+import io.enmasse.k8s.api.Watcher;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.Endpoint;
 import io.vertx.core.AbstractVerticle;
