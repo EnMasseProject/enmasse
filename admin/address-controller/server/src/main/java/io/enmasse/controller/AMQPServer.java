@@ -16,7 +16,7 @@
 
 package io.enmasse.controller;
 
-import io.enmasse.controller.k8s.api.AddressSpaceApi;
+import io.enmasse.k8s.api.AddressSpaceApi;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.proton.*;
 import org.apache.qpid.proton.amqp.messaging.Accepted;

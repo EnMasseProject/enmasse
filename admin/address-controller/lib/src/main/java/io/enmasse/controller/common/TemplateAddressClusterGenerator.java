@@ -18,11 +18,12 @@ package io.enmasse.controller.common;
 
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.config.LabelKeys;
-import io.enmasse.controller.k8s.api.AddressSpaceApi;
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.Endpoint;
 import io.enmasse.address.model.types.Plan;
 import io.enmasse.address.model.types.TemplateConfig;
+import io.enmasse.k8s.api.AddressSpaceApi;
+import io.enmasse.k8s.api.KubeUtil;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.openshift.client.ParameterValue;
 
@@ -63,7 +64,7 @@ public class TemplateAddressClusterGenerator implements AddressClusterGenerator 
     private KubernetesList processTemplate(String clusterId, Address first, Set<Address> addressSet, TemplateConfig templateConfig) {
         Map<String, String> paramMap = new LinkedHashMap<>(templateConfig.getParameters());
 
-        paramMap.put(TemplateParameter.NAME, Kubernetes.sanitizeName(clusterId));
+        paramMap.put(TemplateParameter.NAME, KubeUtil.sanitizeName(clusterId));
         paramMap.put(TemplateParameter.CLUSTER_ID, clusterId);
         paramMap.put(TemplateParameter.ADDRESS_SPACE, first.getAddressSpace());
 

@@ -2,6 +2,7 @@ description = 'Address Controller Library'
 dependencies {
     compile project(':admin:common-lib:config')
     compile project(':admin:common-lib:amqp')
+    compile project(':admin:k8s-api')
     compile "org.slf4j:slf4j-api:${slf4jVersion}"
     compile "io.vertx:vertx-proton:${vertxVersion}"
     compile "io.fabric8:openshift-client:${openshiftClientVersion}"
@@ -13,4 +14,5 @@ dependencies {
     testCompile "junit:junit:${junitVersion}"
     testCompile "io.vertx:vertx-unit:${vertxVersion}"
     testCompile "org.mockito:mockito-core:${mockitoVersion}"
+    testCompile project(':admin:k8s-api-testutil')
 }

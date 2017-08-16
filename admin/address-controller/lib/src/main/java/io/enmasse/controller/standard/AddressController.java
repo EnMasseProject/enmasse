@@ -2,8 +2,10 @@ package io.enmasse.controller.standard;
 
 import enmasse.amqp.SyncRequestClient;
 import io.enmasse.controller.common.*;
-import io.enmasse.controller.k8s.api.AddressApi;
 import io.enmasse.address.model.Address;
+import io.enmasse.k8s.api.AddressApi;
+import io.enmasse.k8s.api.Watch;
+import io.enmasse.k8s.api.Watcher;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;

@@ -2,9 +2,9 @@ package io.enmasse.controller.api.osb.v2.lastoperation;
 
 import io.enmasse.controller.api.osb.v2.OSBExceptions;
 import io.enmasse.controller.api.osb.v2.OSBServiceBase;
-import io.enmasse.controller.k8s.api.AddressSpaceApi;
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressSpace;
+import io.enmasse.k8s.api.AddressSpaceApi;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;

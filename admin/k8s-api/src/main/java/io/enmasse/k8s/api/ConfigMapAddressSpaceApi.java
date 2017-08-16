@@ -13,17 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.enmasse.controller.k8s.api;
+package io.enmasse.k8s.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.enmasse.config.LabelKeys;
-import io.enmasse.controller.common.Watch;
-import io.enmasse.controller.common.Watcher;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.v1.CodecV1;
-import io.enmasse.controller.common.Kubernetes;
-import io.enmasse.controller.common.Resource;
-import io.enmasse.controller.common.WatcherVerticle;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.ConfigMapList;
 import io.fabric8.openshift.client.OpenShiftClient;
@@ -52,7 +47,7 @@ public class ConfigMapAddressSpaceApi implements AddressSpaceApi {
 
     @Override
     public Optional<AddressSpace> getAddressSpaceWithName(String name) {
-        ConfigMap map = client.configMaps().withName(Kubernetes.sanitizeName("address-space-" + name)).get();
+        ConfigMap map = client.configMaps().withName(KubeUtil.sanitizeName("address-space-" + name)).get();
         if (map == null) {
             return Optional.empty();
         } else {
@@ -67,7 +62,7 @@ public class ConfigMapAddressSpaceApi implements AddressSpaceApi {
 
     @Override
     public void replaceAddressSpace(AddressSpace addressSpace) {
-        String name = Kubernetes.sanitizeName("address-space-" + addressSpace.getName());
+        String name = KubeUtil.sanitizeName("address-space-" + addressSpace.getName());
         ConfigMap previous = client.configMaps().withName(name).get();
         if (previous == null) {
             return;
@@ -76,7 +71,7 @@ public class ConfigMapAddressSpaceApi implements AddressSpaceApi {
     }
 
     public void createOrReplace(AddressSpace addressSpace) {
-        String name = Kubernetes.sanitizeName("address-space-" + addressSpace.getName());
+        String name = KubeUtil.sanitizeName("address-space-" + addressSpace.getName());
         try {
             client.configMaps().createOrReplaceWithNew()
                 .withNewMetadata()
@@ -92,7 +87,7 @@ public class ConfigMapAddressSpaceApi implements AddressSpaceApi {
 
     @Override
     public void deleteAddressSpace(AddressSpace addressSpace) {
-        String name = Kubernetes.sanitizeName("address-space-" + addressSpace.getName());
+        String name = KubeUtil.sanitizeName("address-space-" + addressSpace.getName());
         client.configMaps().withName(name).delete();
     }
 

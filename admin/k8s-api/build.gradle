@@ -1,0 +1,8 @@
+description = 'API for Kubernetes resources'
+dependencies {
+    compile project(':admin:common-lib:config')
+    compile "io.fabric8:openshift-client:${openshiftClientVersion}"
+    compile "io.vertx:vertx-core:${vertxVersion}"
+    compile "org.slf4j:slf4j-api:${slf4jVersion}"
+    testCompile "junit:junit:${junitVersion}"
+}

@@ -7,16 +7,16 @@ import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.module.jsonSchema.types.ObjectSchema;
 import com.fasterxml.jackson.module.jsonSchema.types.StringSchema;
-import io.enmasse.controller.k8s.api.AddressApi;
 import io.enmasse.controller.api.osb.v2.catalog.InputParameters;
 import io.enmasse.controller.api.osb.v2.catalog.Plan;
 import io.enmasse.controller.api.osb.v2.catalog.Schemas;
 import io.enmasse.controller.api.osb.v2.catalog.ServiceInstanceSchema;
-import io.enmasse.controller.k8s.api.AddressSpaceApi;
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.types.AddressType;
 import io.enmasse.address.model.types.standard.StandardAddressSpaceType;
+import io.enmasse.k8s.api.AddressApi;
+import io.enmasse.k8s.api.AddressSpaceApi;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

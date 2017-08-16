@@ -13,6 +13,7 @@ dependencies {
     testCompile "junit:junit:${junitVersion}"
     testCompile "io.vertx:vertx-unit:${vertxVersion}"
     testCompile "org.mockito:mockito-core:${mockitoVersion}"
+    testCompile project(':admin:k8s-api-testutil')
 }
 
 apply plugin: 'application'

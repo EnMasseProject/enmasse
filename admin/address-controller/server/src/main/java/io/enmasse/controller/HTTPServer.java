@@ -26,7 +26,7 @@ import io.enmasse.controller.api.osb.v2.provision.OSBProvisioningService;
 import io.enmasse.controller.api.v1.http.HttpAddressService;
 import io.enmasse.controller.api.v1.http.HttpSchemaService;
 import io.enmasse.controller.common.exceptionmapping.DefaultExceptionMapper;
-import io.enmasse.controller.k8s.api.AddressSpaceApi;
+import io.enmasse.k8s.api.AddressSpaceApi;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
