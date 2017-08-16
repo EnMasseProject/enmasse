@@ -45,7 +45,7 @@ local common = import "common.jsonnet";
   external_service::
     self.common_service("address-controller-external", "LoadBalancer", {}),
 
-  deployment(image_repo, multiinstance, template_config)::
+  deployment(image_repo, multiinstance, template_config, standard_authservice_secret_name)::
     {
       "apiVersion": "extensions/v1beta1",
       "kind": "Deployment",
@@ -107,7 +107,21 @@ local common = import "common.jsonnet";
                 "env": [{
                   "name": "MULTIINSTANCE",
                   "value": multiinstance
-                }],
+                },
+                {
+                  "name": "STANDARD_AUTHSERVICE_ADMIN_USER",
+                  "value": "admin"
+                },
+                {
+                  "name": "STANDARD_AUTHSERVICE_ADMIN_PASSWORD",
+                  "valueFrom": {
+                    "secretKeyRef": {
+                      "name": standard_authservice_secret_name,
+                      "key": "admin.key"
+                    }
+                  }
+                }
+                ],
                 "volumeMounts": mounts,
                 "resources": {
                     "requests": {
