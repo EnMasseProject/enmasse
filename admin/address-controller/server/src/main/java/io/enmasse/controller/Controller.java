@@ -16,22 +16,43 @@
 
 package io.enmasse.controller;
 
-import io.enmasse.controller.auth.AuthController;
-import io.enmasse.controller.auth.CertManager;
-import io.enmasse.controller.auth.SelfSignedCertManager;
-import io.enmasse.controller.common.*;
-import io.enmasse.controller.standard.StandardController;
-import io.enmasse.address.model.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.AuthenticationService;
+import io.enmasse.address.model.AuthenticationServiceResolver;
+import io.enmasse.address.model.AuthenticationServiceType;
+import io.enmasse.address.model.CertProvider;
+import io.enmasse.address.model.Endpoint;
+import io.enmasse.address.model.SecretCertProvider;
 import io.enmasse.address.model.types.AddressSpaceType;
 import io.enmasse.address.model.types.standard.StandardAddressSpaceType;
+import io.enmasse.controller.auth.AuthController;
+import io.enmasse.controller.auth.AuthServiceManager;
+import io.enmasse.controller.auth.CertManager;
+import io.enmasse.controller.auth.KeycloakAuthServiceManager;
+import io.enmasse.controller.auth.SelfSignedCertManager;
+import io.enmasse.controller.common.AuthenticationServiceResolverFactory;
+import io.enmasse.controller.common.ExternalAuthenticationServiceResolver;
+import io.enmasse.controller.common.Kubernetes;
+import io.enmasse.controller.common.KubernetesHelper;
+import io.enmasse.controller.common.NoneAuthenticationServiceResolver;
+import io.enmasse.controller.standard.StandardController;
 import io.enmasse.k8s.api.AddressSpaceApi;
 import io.enmasse.k8s.api.ConfigMapAddressSpaceApi;
 import io.fabric8.kubernetes.client.ConfigBuilder;
 import io.fabric8.openshift.client.DefaultOpenShiftClient;
 import io.fabric8.openshift.client.OpenShiftClient;
-import io.vertx.core.*;
-
-import java.util.*;
+import io.vertx.core.AbstractVerticle;
+import io.vertx.core.CompositeFuture;
+import io.vertx.core.DeploymentOptions;
+import io.vertx.core.Future;
+import io.vertx.core.Verticle;
+import io.vertx.core.Vertx;
 
 public class Controller extends AbstractVerticle {
     private final OpenShiftClient controllerClient;
@@ -75,9 +96,12 @@ public class Controller extends AbstractVerticle {
         }
 
         CertManager certManager = SelfSignedCertManager.create(controllerClient);
-
+        String username = null;
+        String password = null;
+        Optional<AuthServiceInfo> standardAuthService = options.getStandardAuthService();
+        AuthServiceManager authSvcMgr = standardAuthService.map(svc -> KeycloakAuthServiceManager.create(svc.getHost(), svc.getPort(), username, password)).orElse(x -> {});
         deployVerticles(startPromise,
-                new Deployment(new AuthController(certManager, addressSpaceApi)),
+                new Deployment(new AuthController(certManager, authSvcMgr, addressSpaceApi)),
                 new Deployment(new StandardController(controllerClient, addressSpaceApi, kubernetes, createResolverFactory(options), options.isMultiinstance())),
 //                new Deployment(new AMQPServer(kubernetes.getNamespace(), addressSpaceApi, options.port())),
                 new Deployment(new HTTPServer(addressSpaceApi, options.certDir(), options.osbAuth()), new DeploymentOptions().setWorker(true)));
