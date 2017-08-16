@@ -47,6 +47,6 @@ local registry = std.extVar("REGISTRY");
   none_authservice::
     self.image("none-authservice"),
 
-  keycloak_authservice::
-    self.image("keycloak-authservice")
+  keycloak::
+    self.image("keycloak")
 }

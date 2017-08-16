@@ -6,42 +6,26 @@ items:
   metadata:
     labels:
       app: enmasse
-    name: authservice
+    name: keycloak
   spec:
     replicas: 1
     template:
       metadata:
         labels:
           app: enmasse
-          name: authservice
+          name: keycloak
       spec:
         containers:
-        - env:
-          - name: LISTENPORT
-            value: '56672'
-          image: docker.io/enmasseproject/none-authservice:latest
+        - image: docker.io/enmasseproject/keycloak:latest
           livenessProbe:
             tcpSocket:
-              port: amqp-auth
-          name: none-authservice
-          ports:
-          - containerPort: 56672
-            name: amqp-auth
-          resources:
-            limits:
-              memory: 64Mi
-            requests:
-              memory: 64Mi
-        - image: docker.io/enmasseproject/keycloak-authservice:latest
-          livenessProbe:
-            tcpSocket:
-              port: amqp-keycloak
+              port: amqp
           name: keycloak
           ports:
           - containerPort: 5677
-            name: amqp-keycloak
+            name: amqp
           - containerPort: 8080
-            name: http-keycloak
+            name: http
           volumeMounts:
           - mountPath: "/var/run/keycloak"
             name: keycloak-secret
@@ -59,31 +43,17 @@ items:
   metadata:
     labels:
       app: enmasse
-    name: none-authservice
-  spec:
-    ports:
-    - name: amqp-auth
-      port: 5672
-      protocol: TCP
-      targetPort: amqp-auth
-    selector:
-      name: authservice
-- apiVersion: v1
-  kind: Service
-  metadata:
-    labels:
-      app: enmasse
     name: standard-authservice
   spec:
     ports:
-    - name: amqp-auth
+    - name: amqp
       port: 5672
       protocol: TCP
-      targetPort: amqp-keycloak
-    - name: http-keycloak
+      targetPort: amqp
+    - name: http
       port: 8080
       protocol: TCP
-      targetPort: http-keycloak
+      targetPort: http
     selector:
-      name: authservice
+      name: keycloak
 kind: List
