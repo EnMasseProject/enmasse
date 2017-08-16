@@ -19,6 +19,7 @@ package io.enmasse.keycloak.spi;
 
 import java.nio.charset.StandardCharsets;
 
+import org.jboss.logging.Logger;
 import org.keycloak.Config;
 import org.keycloak.models.KeycloakSession;
 import org.keycloak.models.RealmModel;
@@ -26,6 +27,9 @@ import org.keycloak.models.UserCredentialModel;
 import org.keycloak.models.UserModel;
 
 public class PlainSaslServerMechanism implements SaslServerMechanism {
+
+    private static final Logger LOG = Logger.getLogger(PlainSaslServerMechanism.class);
+
     @Override
     public String getName() {
         return "PLAIN";
@@ -65,9 +69,19 @@ public class PlainSaslServerMechanism implements SaslServerMechanism {
                 int passwordLen = response.length - authcidNullPosition - 1;
                 String password = new String(response, authcidNullPosition + 1, passwordLen, StandardCharsets.UTF_8);
 
+                LOG.info("SASL hostname: " + hostname);
+                keycloakSession.getTransactionManager().begin();
                 final RealmModel realm = keycloakSession.realms().getRealmByName(hostname);
+                keycloakSession.getTransactionManager().commit();
+                if (realm == null) {
+                    LOG.info("Realm " + hostname + " not found");
+                    authenticated = false;
+                    complete = true;
+                    return null;
+                }
+
                 final UserModel user = keycloakSession.userStorageManager().getUserByUsername(username, realm);
-                if(keycloakSession.userCredentialManager().isValid(realm,
+                if (user != null && keycloakSession.userCredentialManager().isValid(realm,
                                                                    user,
                                                                    UserCredentialModel.password(password))) {
 
@@ -75,6 +89,7 @@ public class PlainSaslServerMechanism implements SaslServerMechanism {
                     complete = true;
                     return null;
                 } else {
+                    LOG.info("Invalid password for " + username + " in realm " + hostname);
                     authenticated = false;
                     complete = true;
                     return null;
