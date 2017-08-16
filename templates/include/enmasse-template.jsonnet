@@ -1,6 +1,7 @@
 local storage = import "storage-template.jsonnet";
 local enmasseInfra = import "enmasse-instance-infra.jsonnet";
 local addressController = import "address-controller.jsonnet";
+local authService = import "auth-service.jsonnet";
 local restapiRoute = import "restapi-route.jsonnet";
 local images = import "images.jsonnet";
 {
@@ -21,6 +22,8 @@ local images = import "images.jsonnet";
                  enmasseInfra.generate(use_sasl, with_kafka, true),
                  addressController.deployment("${ADDRESS_CONTROLLER_REPO}", "${MULTIINSTANCE}", ""),
                  addressController.internal_service,
+                 authService.none_deployment("${NONE_AUTHSERVICE_IMAGE}"),
+                 authService.none_authservice,
                  restapiRoute.route("${RESTAPI_HOSTNAME}") ],
     "parameters": [
       {
@@ -36,6 +39,11 @@ local images = import "images.jsonnet";
         "name": "ADDRESS_CONTROLLER_REPO",
         "description": "The docker image to use for the address controller",
         "value": images.address_controller
+      },
+      {
+        "name": "NONE_AUTHSERVICE_IMAGE",
+        "description": "The docker image to use for the 'none' auth service",
+        "value": images.none_authservice
       }
     ]
   }

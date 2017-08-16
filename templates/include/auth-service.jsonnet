@@ -50,7 +50,7 @@ local images = import "images.jsonnet";
   },
 
 
-  keycloak_authservice::
+  standard_authservice::
   {
     "apiVersion": "v1",
     "kind": "Service",
@@ -63,25 +63,25 @@ local images = import "images.jsonnet";
     "spec": {
       "ports": [
         {
-          "name": "amqp-auth",
+          "name": "amqp",
           "port": 5672,
           "protocol": "TCP",
-          "targetPort": "amqp-keycloak"
+          "targetPort": "amqp"
         },
         {
-          "name": "http-keycloak",
+          "name": "http",
           "port": 8080,
           "protocol": "TCP",
-          "targetPort": "http-keycloak"
+          "targetPort": "http"
         }
       ],
       "selector": {
-        "name": "authservice"
+        "name": "keycloak"
       }
     }
   },
 
-  deployment(keycloak_image_repo, none_authservice_image_repo, keycloak_credentials_secret)::
+  keycloak_deployment(keycloak_image, keycloak_credentials_secret)::
     {
       "apiVersion": "extensions/v1beta1",
       "kind": "Deployment",
@@ -89,51 +89,29 @@ local images = import "images.jsonnet";
         "labels": {
           "app": "enmasse"
         },
-        "name": "authservice"
+        "name": "keycloak"
       },
       "spec": {
         "replicas": 1,
         "template": {
           "metadata": {
             "labels": {
-              "name": "authservice",
+              "name": "keycloak",
               "app": "enmasse"
             }
           },
           "spec": {
             "containers": [
               {
-                "image": none_authservice_image_repo,
-                "name": "none-authservice",
-                "env": [{
-                  "name": "LISTENPORT",
-                  "value": "56672"
-                }],
-                "resources": {
-                    "requests": {
-                        "memory": "64Mi",
-                    },
-                    "limits": {
-                        "memory": "64Mi",
-                    }
-                },
-                "ports": [ { "name": "amqp-auth", "containerPort": 56672 } ],
-                "livenessProbe": {
-                  "tcpSocket": {
-                    "port": "amqp-auth"
-                  }
-                }
-              },
-              {
-                "image": keycloak_image_repo,
+                "image": keycloak_image,
                 "name": "keycloak",
                 "ports": [
                   {
-                    "name": "amqp-keycloak",
+                    "name": "amqp",
                     "containerPort": 5677
                   },
                   {
-                    "name": "http-keycloak",
+                    "name": "http",
                     "containerPort": 8080
                   }
                 ],
@@ -150,7 +128,7 @@ local images = import "images.jsonnet";
                 ],
                 "livenessProbe": {
                   "tcpSocket": {
-                    "port": "amqp-keycloak"
+                    "port": "amqp"
                   }
                 }
               }
@@ -172,15 +150,63 @@ local images = import "images.jsonnet";
       }
     },
 
+  none_deployment(none_authservice_image)::
+    {
+      "apiVersion": "extensions/v1beta1",
+      "kind": "Deployment",
+      "metadata": {
+        "labels": {
+          "app": "enmasse"
+        },
+        "name": "none-authservice"
+      },
+      "spec": {
+        "replicas": 1,
+        "template": {
+          "metadata": {
+            "labels": {
+              "name": "none-authservice",
+              "app": "enmasse"
+            }
+          },
+          "spec": {
+            "containers": [
+              {
+                "image": none_authservice_image,
+                "name": "none-authservice",
+                "env": [{
+                  "name": "LISTENPORT",
+                  "value": "5672"
+                }],
+                "resources": {
+                    "requests": {
+                        "memory": "48Mi",
+                    },
+                    "limits": {
+                        "memory": "48Mi",
+                    }
+                },
+                "ports": [ { "name": "amqp", "containerPort": 5672 } ],
+                "livenessProbe": {
+                  "tcpSocket": {
+                    "port": "amqp"
+                  }
+                }
+              },
+            ]
+          }
+        }
+      }
+    },
+
   local me = self,
   kubernetes::
   {
     "apiVersion": "v1",
     "kind": "List",
     "items": [
-      me.deployment(images.keycloak_authservice, images.none_authservice, "keycloak-credentials"),
-      me.none_authservice,
-      me.keycloak_authservice
+      me.keycloak_deployment(images.keycloak, "keycloak-credentials"),
+      me.standard_authservice
     ],
   },
 
@@ -189,20 +215,14 @@ local images = import "images.jsonnet";
     "apiVersion": "v1",
     "kind": "Template",
     "objects": [
-      me.deployment("${KEYCLOAK_AUTHSERVICE_REPO}", "${NONE_AUTHSERVICE_REPO}", "${KEYCLOAK_SECRET_NAME}"),
-      me.none_authservice,
-      me.keycloak_authservice
+      me.keycloak_deployment("${standard_authservice_IMAGE}", "${KEYCLOAK_SECRET_NAME}"),
+      me.standard_authservice
     ],
     "parameters": [
       {
-        "name": "NONE_AUTHSERVICE_REPO",
-        "description": "The docker image to use for the 'none' auth service",
-        "value": images.none_authservice
-      },
-      {
-        "name": "KEYCLOAK_AUTHSERVICE_REPO",
+        "name": "standard_authservice_IMAGE",
         "description": "The docker image to use for the 'standard' auth service",
-        "value": images.keycloak_authservice
+        "value": images.keycloak
       },
       {
         "name": "KEYCLOAK_SECRET_NAME",
@@ -211,5 +231,4 @@ local images = import "images.jsonnet";
       }
     ]
   },
-
 }
