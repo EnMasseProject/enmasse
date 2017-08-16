@@ -20,10 +20,10 @@ local images = import "images.jsonnet";
                  storage.template(true, false),
                  storage.template(true, true),
                  enmasseInfra.generate(use_sasl, with_kafka, true),
-                 addressController.deployment("${ADDRESS_CONTROLLER_REPO}", "${MULTIINSTANCE}", ""),
-                 addressController.internal_service,
                  authService.none_deployment("${NONE_AUTHSERVICE_IMAGE}"),
                  authService.none_authservice,
+                 addressController.deployment("${ADDRESS_CONTROLLER_REPO}", "${MULTIINSTANCE}", ""),
+                 addressController.internal_service,
                  restapiRoute.route("${RESTAPI_HOSTNAME}") ],
     "parameters": [
       {

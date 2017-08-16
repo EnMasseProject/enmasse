@@ -1080,6 +1080,51 @@ objects:
   metadata:
     labels:
       app: enmasse
+    name: none-authservice
+  spec:
+    replicas: 1
+    template:
+      metadata:
+        labels:
+          app: enmasse
+          name: none-authservice
+      spec:
+        containers:
+        - env:
+          - name: LISTENPORT
+            value: '5672'
+          image: "${NONE_AUTHSERVICE_IMAGE}"
+          livenessProbe:
+            tcpSocket:
+              port: amqp
+          name: none-authservice
+          ports:
+          - containerPort: 5672
+            name: amqp
+          resources:
+            limits:
+              memory: 48Mi
+            requests:
+              memory: 48Mi
+- apiVersion: v1
+  kind: Service
+  metadata:
+    labels:
+      app: enmasse
+    name: none-authservice
+  spec:
+    ports:
+    - name: amqp
+      port: 5672
+      protocol: TCP
+      targetPort: amqp
+    selector:
+      name: none-authservice
+- apiVersion: extensions/v1beta1
+  kind: Deployment
+  metadata:
+    labels:
+      app: enmasse
       name: address-controller
     name: address-controller
   spec:
@@ -1148,51 +1193,6 @@ objects:
     selector:
       name: address-controller
     type: ClusterIP
-- apiVersion: extensions/v1beta1
-  kind: Deployment
-  metadata:
-    labels:
-      app: enmasse
-    name: none-authservice
-  spec:
-    replicas: 1
-    template:
-      metadata:
-        labels:
-          app: enmasse
-          name: none-authservice
-      spec:
-        containers:
-        - env:
-          - name: LISTENPORT
-            value: '5672'
-          image: "${NONE_AUTHSERVICE_IMAGE}"
-          livenessProbe:
-            tcpSocket:
-              port: amqp
-          name: none-authservice
-          ports:
-          - containerPort: 5672
-            name: amqp
-          resources:
-            limits:
-              memory: 48Mi
-            requests:
-              memory: 48Mi
-- apiVersion: v1
-  kind: Service
-  metadata:
-    labels:
-      app: enmasse
-    name: none-authservice
-  spec:
-    ports:
-    - name: amqp
-      port: 5672
-      protocol: TCP
-      targetPort: amqp
-    selector:
-      name: none-authservice
 - apiVersion: v1
   kind: Route
   metadata:
