@@ -1,16 +1,16 @@
 package io.enmasse.controller.auth;
 
+import java.util.Set;
+
+import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.Endpoint;
 import io.enmasse.k8s.api.AddressSpaceApi;
 import io.enmasse.k8s.api.Watch;
 import io.enmasse.k8s.api.Watcher;
-import io.enmasse.address.model.AddressSpace;
-import io.enmasse.address.model.Endpoint;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.Set;
 
 /**
  * Manages certificates issuing, revoking etc. for EnMasse services
@@ -19,11 +19,15 @@ public class AuthController extends AbstractVerticle implements Watcher<AddressS
     private static final Logger log = LoggerFactory.getLogger(AuthController.class.getName());
 
     private final CertManager certManager;
+    private final AuthServiceManager authServiceManager;
     private final AddressSpaceApi addressSpaceApi;
     private Watch watch;
 
-    public AuthController(CertManager certManager, AddressSpaceApi addressSpaceApi) {
+    public AuthController(CertManager certManager,
+                          AuthServiceManager authServiceManager,
+                          AddressSpaceApi addressSpaceApi) {
         this.certManager = certManager;
+        this.authServiceManager = authServiceManager;
         this.addressSpaceApi = addressSpaceApi;
     }
 
@@ -76,5 +80,6 @@ public class AuthController extends AbstractVerticle implements Watcher<AddressS
                 }
             }
         }
+        authServiceManager.updateAuthServices(addressSpaces);
     }
 }

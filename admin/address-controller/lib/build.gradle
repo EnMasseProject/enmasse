@@ -11,6 +11,7 @@ dependencies {
     compile "com.fasterxml.jackson.module:jackson-module-jsonSchema:${jacksonVersion}"
     compile "org.jboss.resteasy:resteasy-jackson2-provider:${resteasyVersion}"
     compile "org.jboss.resteasy:resteasy-vertx:${resteasyVersion}"
+    compile group: 'org.keycloak', name: 'keycloak-admin-client', version: '3.2.1.Final'
     testCompile "junit:junit:${junitVersion}"
     testCompile "io.vertx:vertx-unit:${vertxVersion}"
     testCompile "org.mockito:mockito-core:${mockitoVersion}"

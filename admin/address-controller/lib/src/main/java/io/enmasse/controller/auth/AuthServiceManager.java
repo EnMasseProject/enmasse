@@ -15,9 +15,10 @@
  */
 package io.enmasse.controller.auth;
 
-/**
- * Interface for certificate managers
- */
-public interface CertManager {
-    void issueCert(String secretName, String namespace, String... hostnames) throws Exception;
+import java.util.Set;
+
+import io.enmasse.address.model.AddressSpace;
+
+public interface AuthServiceManager {
+    void updateAuthServices(Set<AddressSpace> addressSpaces);
 }
