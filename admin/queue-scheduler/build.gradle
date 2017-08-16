@@ -22,5 +22,5 @@ dependencies {
 
 
 apply plugin: 'application'
-mainClassName = 'enmasse.queue.scheduler.Main'
+mainClassName = 'io.enmasse.queue.scheduler.Main'
 applicationDefaultJvmArgs = ["-Dvertx.cacheDirBase=/tmp", "-Xmx128m", "-Xms128m"]

@@ -16,5 +16,5 @@ dependencies {
 }
 
 apply plugin: 'application'
-mainClassName = 'enmasse.controller.Controller'
+mainClassName = 'io.enmasse.controller.Controller'
 applicationDefaultJvmArgs = ["-Dvertx.cacheDirBase=/tmp", "-Xmx128m", "-Xms128m"]
