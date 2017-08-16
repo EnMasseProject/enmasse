@@ -167,8 +167,8 @@ then
     ENMASSE_TEMPLATE=$ALT_TEMPLATE
 fi
 
-runcmd "oc process -f $ENMASSE_TEMPLATE $TEMPLATE_PARAMS | oc create -n $NAMESPACE -f -" "Instantiate EnMasse template"
 runcmd "oc process -f $KEYCLOAK_TEMPLATE $KEYCLOAK_TEMPLATE_PARAMS | oc create -n $NAMESPACE -f -" "Instantiate keycloak template"
+runcmd "oc process -f $ENMASSE_TEMPLATE $TEMPLATE_PARAMS | oc create -n $NAMESPACE -f -" "Instantiate EnMasse template"
 
 if [ -n "$OS_ALLINONE" ] && [ -n "$SERVICE_CATALOG" ]
 then

@@ -132,8 +132,8 @@ then
     ENMASSE_TEMPLATE=$ALT_TEMPLATE
 fi
 
-runcmd "kubectl apply -f $ENMASSE_TEMPLATE -n $NAMESPACE" "Deploy EnMasse to $NAMESPACE"
 runcmd "kubectl apply -f $KEYCLOAK_TEMPLATE -n $NAMESPACE" "Deploy Keycloak to $NAMESPACE"
+runcmd "kubectl apply -f $ENMASSE_TEMPLATE -n $NAMESPACE" "Deploy EnMasse to $NAMESPACE"
 
 if [ "$EXTERNAL_LB" == "true" ]
 then
