@@ -1,7 +1,7 @@
 package enmasse.discovery;
 
-import enmasse.config.service.amqp.AMQPServer;
-import enmasse.config.service.model.Subscriber;
+import io.enmasse.config.service.amqp.AMQPServer;
+import io.enmasse.config.service.model.Subscriber;
 import io.vertx.core.Vertx;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
