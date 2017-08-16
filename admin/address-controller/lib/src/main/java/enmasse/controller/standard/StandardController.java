@@ -51,8 +51,8 @@ public class StandardController extends AbstractVerticle implements Watcher<Addr
     private final Map<AddressSpace, String> addressControllerMap = new HashMap<>();
     private final Kubernetes kubernetes;
 
-    public StandardController(OpenShiftClient client, AddressSpaceApi addressSpaceApi, Kubernetes kubernetes, boolean isMultitenant) {
-        this.helper = new StandardHelper(kubernetes, isMultitenant);
+    public StandardController(OpenShiftClient client, AddressSpaceApi addressSpaceApi, Kubernetes kubernetes, AuthenticationServiceResolverFactory authResolverFactory, boolean isMultitenant) {
+        this.helper = new StandardHelper(kubernetes, isMultitenant, authResolverFactory);
         this.client = client;
         this.addressSpaceApi = addressSpaceApi;
         this.kubernetes = kubernetes;

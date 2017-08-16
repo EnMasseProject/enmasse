@@ -23,9 +23,6 @@ import java.util.Optional;
 
 public class ExternalAuthenticationServiceResolver implements AuthenticationServiceResolver {
 
-    ExternalAuthenticationServiceResolver() {
-    }
-
     @Override
     public String getHost(AuthenticationService authService) {
         return (String) authService.getDetails().get("host");

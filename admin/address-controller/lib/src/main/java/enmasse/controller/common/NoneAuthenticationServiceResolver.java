@@ -26,22 +26,22 @@ import java.util.Optional;
  * Resolves the none authentication service host name.
  */
 public class NoneAuthenticationServiceResolver implements AuthenticationServiceResolver {
-    private final OpenShiftClient openShiftClient;
-    private final Service service;
+    private final String host;
+    private final int port;
 
-    public NoneAuthenticationServiceResolver(OpenShiftClient openShiftClient) {
-        this.openShiftClient = openShiftClient;
-        this.service = openShiftClient.services().withName("none-authservice").get();
+    public NoneAuthenticationServiceResolver(String host, int port) {
+        this.host = host;
+        this.port = port;
     }
 
     @Override
     public String getHost(AuthenticationService authService) {
-        return service.getSpec().getClusterIP();
+        return host;
     }
 
     @Override
     public int getPort(AuthenticationService authService) {
-        return service.getSpec().getPorts().get(0).getPort();
+        return port;
     }
 
     @Override

@@ -17,6 +17,7 @@ package enmasse.controller.standard;
 
 import enmasse.config.AnnotationKeys;
 import enmasse.config.LabelKeys;
+import enmasse.controller.common.AuthenticationServiceResolverFactory;
 import enmasse.controller.common.Kubernetes;
 import enmasse.controller.common.KubernetesHelper;
 import enmasse.controller.common.TemplateParameter;
@@ -26,7 +27,6 @@ import io.enmasse.address.model.types.TemplateConfig;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.Namespace;
 import io.fabric8.kubernetes.client.KubernetesClientException;
-import io.fabric8.openshift.api.model.Template;
 import io.fabric8.openshift.client.ParameterValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,11 +42,13 @@ public class StandardHelper {
     private final Kubernetes kubernetes;
     private final boolean isMultitenant;
     private final String namespace;
+    private final AuthenticationServiceResolverFactory authResolverFactory;
 
-    public StandardHelper(Kubernetes kubernetes, boolean isMultitenant) {
+    public StandardHelper(Kubernetes kubernetes, boolean isMultitenant, AuthenticationServiceResolverFactory authResolverFactory) {
         this.kubernetes = kubernetes;
         this.isMultitenant = isMultitenant;
         this.namespace = kubernetes.getNamespace();
+        this.authResolverFactory = authResolverFactory;
     }
 
     public void create(AddressSpace addressSpace) {
@@ -99,7 +101,7 @@ public class StandardHelper {
         if (plan.getTemplateConfig().isPresent()) {
             List<ParameterValue> parameterValues = new ArrayList<>();
             AuthenticationService authService = addressSpace.getAuthenticationService();
-            AuthenticationServiceResolver authResolver = kubernetes.getResolver(authService.getType());
+            AuthenticationServiceResolver authResolver = authResolverFactory.getResolver(authService.getType());
 
             parameterValues.add(new ParameterValue(TemplateParameter.ADDRESS_SPACE, addressSpace.getName()));
             parameterValues.add(new ParameterValue(TemplateParameter.ADDRESS_SPACE_SERVICE_HOST, getApiServer()));

@@ -19,8 +19,7 @@ package enmasse.controller;
 import enmasse.controller.auth.AuthController;
 import enmasse.controller.auth.CertManager;
 import enmasse.controller.auth.SelfSignedCertManager;
-import enmasse.controller.common.Kubernetes;
-import enmasse.controller.common.KubernetesHelper;
+import enmasse.controller.common.*;
 import enmasse.controller.k8s.api.AddressSpaceApi;
 import enmasse.controller.k8s.api.ConfigMapAddressSpaceApi;
 import enmasse.controller.standard.StandardController;
@@ -32,9 +31,7 @@ import io.fabric8.openshift.client.DefaultOpenShiftClient;
 import io.fabric8.openshift.client.OpenShiftClient;
 import io.vertx.core.*;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 public class Controller extends AbstractVerticle {
     private final OpenShiftClient controllerClient;
@@ -81,9 +78,31 @@ public class Controller extends AbstractVerticle {
 
         deployVerticles(startPromise,
                 new Deployment(new AuthController(certManager, addressSpaceApi)),
-                new Deployment(new StandardController(controllerClient, addressSpaceApi, kubernetes, options.isMultiinstance())),
+                new Deployment(new StandardController(controllerClient, addressSpaceApi, kubernetes, createResolverFactory(options), options.isMultiinstance())),
 //                new Deployment(new AMQPServer(kubernetes.getNamespace(), addressSpaceApi, options.port())),
                 new Deployment(new HTTPServer(addressSpaceApi, options.certDir(), options.osbAuth()), new DeploymentOptions().setWorker(true)));
+    }
+
+    private AuthenticationServiceResolverFactory createResolverFactory(ControllerOptions options) {
+        Map<AuthenticationServiceType, AuthenticationServiceResolver> resolverMap = new HashMap<>();
+        options.getNoneAuthService().ifPresent(authService -> {
+            resolverMap.put(AuthenticationServiceType.NONE, new NoneAuthenticationServiceResolver(authService.getHost(), authService.getPort()));
+        });
+
+        options.getStandardAuthService().ifPresent(authService -> {
+            resolverMap.put(AuthenticationServiceType.STANDARD, new NoneAuthenticationServiceResolver(authService.getHost(), authService.getPort()));
+        });
+
+        resolverMap.put(AuthenticationServiceType.EXTERNAL, new ExternalAuthenticationServiceResolver());
+
+
+        return type -> {
+            AuthenticationServiceResolver resolver = resolverMap.get(type);
+            if (resolver == null) {
+                throw new IllegalArgumentException("Unsupported resolver of type " + type);
+            }
+            return resolver;
+        };
     }
 
     private Endpoint appendEndpoint(Optional<CertProvider> certProvider, String name, String service, String host) {
