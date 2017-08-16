@@ -1139,6 +1139,13 @@ objects:
         - env:
           - name: MULTIINSTANCE
             value: "${MULTIINSTANCE}"
+          - name: STANDARD_AUTHSERVICE_ADMIN_USER
+            value: admin
+          - name: STANDARD_AUTHSERVICE_ADMIN_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                key: admin.key
+                name: "${STANDARD_AUTHSERVICE_SECRET_NAME}"
           image: "${ADDRESS_CONTROLLER_REPO}"
           livenessProbe:
             tcpSocket:
@@ -1220,3 +1227,6 @@ parameters:
 - description: The docker image to use for the 'none' auth service
   name: NONE_AUTHSERVICE_IMAGE
   value: docker.io/enmasseproject/none-authservice:latest
+- description: The secret containing the standard authservice admin password
+  name: STANDARD_AUTHSERVICE_SECRET_NAME
+  value: keycloak-credentials
