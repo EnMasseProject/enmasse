@@ -14,5 +14,5 @@ dependencies {
 
 
 apply plugin: 'application'
-mainClassName = 'enmasse.config.service.Main'
+mainClassName = 'io.enmasse.config.service.Main'
 applicationDefaultJvmArgs = ["-Dvertx.cacheDirBase=/tmp", "-Xmx128m", "-Xms128m"]
