@@ -19,13 +19,22 @@ repositories {
 }
 dependencies {
 
-    compile group: 'io.vertx', name: 'vertx-proton', version:'3.4.1' 
-    
+    compile group: 'io.vertx', name: 'vertx-proton', version:'3.4.1'
+
     compileOnly group: 'org.keycloak', name: 'keycloak-core', version:'3.2.1.Final'
     compileOnly group: 'org.keycloak', name: 'keycloak-common', version:'3.2.1.Final'
     compileOnly group: 'org.keycloak', name: 'keycloak-server-spi', version:'3.2.1.Final'
     compileOnly group: 'org.keycloak', name: 'keycloak-services', version:'3.2.1.Final'
     compileOnly group: 'org.keycloak', name: 'keycloak-server-spi-private', version:'3.2.1.Final'
+
+    testCompile "junit:junit:${junitVersion}"
+    testCompile "org.mockito:mockito-core:${mockitoVersion}"
+    testCompile group: 'org.keycloak', name: 'keycloak-core', version:'3.2.1.Final'
+    testCompile group: 'org.keycloak', name: 'keycloak-common', version:'3.2.1.Final'
+    testCompile group: 'org.keycloak', name: 'keycloak-server-spi', version:'3.2.1.Final'
+    testCompile group: 'org.keycloak', name: 'keycloak-services', version:'3.2.1.Final'
+    testCompile group: 'org.keycloak', name: 'keycloak-server-spi-private', version:'3.2.1.Final'
+
 }
 
 shadowJar {
