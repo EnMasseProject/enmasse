@@ -150,7 +150,7 @@ GET /v1/schema
 [source,json]
 ....
 {
-    "apiVersion": "enmasse.io/v1"
+    "apiVersion": "enmasse.io/v1",
     "kind": "Schema",
     "spec": {
         "addressSpaceTypes": [
