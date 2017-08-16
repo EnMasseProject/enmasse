@@ -263,7 +263,7 @@ public class ScramSHA1SaslServerMechanism implements SaslServerMechanism {
                     serverKey = computeHmac(saltedPassword, "Server Key");
                 } else if (getCredentialModel().getAlgorithm().equals(ScramSha1PasswordHashProviderFactory.ID)) {
                     final CredentialModel credentialModel = getCredentialModel();
-                    String[] storedAndServerKeys = credentialModel.getValue().split("|",2);
+                    String[] storedAndServerKeys = credentialModel.getValue().split("\\|",2);
                     storedKey = Base64.decode(storedAndServerKeys[0]);
                     serverKey = Base64.decode(storedAndServerKeys[1]);
                 } else {

@@ -17,13 +17,11 @@
 
 package io.enmasse.keycloak.spi;
 
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
-import java.util.Arrays;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -78,25 +76,10 @@ public class ScramPasswordHashProvider implements PasswordHashProvider
     @Override
     public boolean verify(String rawPassword, CredentialModel credential) {
 
+        String encodedPassword = encode(rawPassword, credential.getHashIterations(), credential.getSalt());
+
         String storedCredential = credential.getValue();
-        String[] storedAndServerKeys = storedCredential.split("|", 2);
-
-        try
-        {
-            byte[] saltedPassword = createSaltedPassword(credential.getSalt(), rawPassword, credential.getHashIterations());
-            byte[] clientKey = computeHmac(saltedPassword, "Client Key");
-
-            byte[] storedKey = MessageDigest.getInstance(getDigestName()).digest(clientKey);
-
-            byte[] serverKey = computeHmac(saltedPassword, "Server Key");
-
-            return (Arrays.equals(Base64.decode(storedAndServerKeys[0]), storedKey)
-               && Arrays.equals(Base64.decode(storedAndServerKeys[1]), serverKey));
-        }
-        catch (IllegalArgumentException | IOException | NoSuchAlgorithmException e)
-        {
-            throw new RuntimeException(e);
-        }
+        return encodedPassword.equals(storedCredential);
     }
 
     @Override
