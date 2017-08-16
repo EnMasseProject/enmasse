@@ -34,7 +34,7 @@ public class ScramSha256PasswordHashProviderFactory implements PasswordHashProvi
 
     @Override
     public PasswordHashProvider create(KeycloakSession session) {
-        return new ScramPasswordHashProvider(ID, ALGORITHM, DEFAULT_ITERATIONS, "HmacSHA256", "SHA-256");
+        return new ScramPasswordHashProvider(ID, DEFAULT_ITERATIONS, "HmacSHA256", "SHA-256");
     }
 
     @Override
