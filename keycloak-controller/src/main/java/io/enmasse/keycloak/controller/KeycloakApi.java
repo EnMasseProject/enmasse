@@ -15,18 +15,10 @@
  */
 package io.enmasse.keycloak.controller;
 
-import io.enmasse.k8s.api.AddressSpaceApi;
-import io.enmasse.k8s.api.ConfigMapAddressSpaceApi;
-import io.fabric8.openshift.client.DefaultOpenShiftClient;
-import io.fabric8.openshift.client.OpenShiftClient;
+import java.util.Set;
 
-public class Main {
-    public static void main(String [] args) throws Exception {
-
-        OpenShiftClient openShiftClient = new DefaultOpenShiftClient();
-        AddressSpaceApi addressSpaceApi = new ConfigMapAddressSpaceApi(openShiftClient);
-        KeycloakManager keycloakManager = new KeycloakManager(new Keycloak(KeycloakParams.fromEnv(System.getenv())));
-
-        addressSpaceApi.watchAddressSpaces(keycloakManager);
-    }
+public interface KeycloakApi {
+    Set<String> getRealmNames();
+    void createRealm(String realmName);
+    void deleteRealm(String realmName);
 }

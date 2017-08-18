@@ -6,7 +6,7 @@ dependencies {
     compile "org.jboss.resteasy:resteasy-client:3.1.0.Final"
     compile "org.jboss.resteasy:resteasy-jackson2-provider:3.1.0.Final"
     testCompile "junit:junit:${junitVersion}"
-    testCompile project(':admin:k8s-api-testutil')
+    testCompile "org.mockito:mockito-core:${mockitoVersion}"
 }
 
 apply plugin: 'application'
