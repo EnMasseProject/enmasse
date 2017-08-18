@@ -19,15 +19,12 @@ public class AuthController extends AbstractVerticle implements Watcher<AddressS
     private static final Logger log = LoggerFactory.getLogger(AuthController.class.getName());
 
     private final CertManager certManager;
-    private final AuthServiceManager authServiceManager;
     private final AddressSpaceApi addressSpaceApi;
     private Watch watch;
 
     public AuthController(CertManager certManager,
-                          AuthServiceManager authServiceManager,
                           AddressSpaceApi addressSpaceApi) {
         this.certManager = certManager;
-        this.authServiceManager = authServiceManager;
         this.addressSpaceApi = addressSpaceApi;
     }
 
@@ -80,6 +77,5 @@ public class AuthController extends AbstractVerticle implements Watcher<AddressS
                 }
             }
         }
-        authServiceManager.updateAuthServices(addressSpaces);
     }
 }

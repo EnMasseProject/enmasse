@@ -32,9 +32,7 @@ import io.enmasse.address.model.SecretCertProvider;
 import io.enmasse.address.model.types.AddressSpaceType;
 import io.enmasse.address.model.types.standard.StandardAddressSpaceType;
 import io.enmasse.controller.auth.AuthController;
-import io.enmasse.controller.auth.AuthServiceManager;
 import io.enmasse.controller.auth.CertManager;
-import io.enmasse.controller.auth.KeycloakAuthServiceManager;
 import io.enmasse.controller.auth.SelfSignedCertManager;
 import io.enmasse.controller.common.AuthenticationServiceResolverFactory;
 import io.enmasse.controller.common.ExternalAuthenticationServiceResolver;
@@ -96,10 +94,8 @@ public class Controller extends AbstractVerticle {
         }
 
         CertManager certManager = SelfSignedCertManager.create(controllerClient);
-        Optional<AuthServiceInfo> standardAuthService = options.getStandardAuthService();
-        AuthServiceManager authSvcMgr = standardAuthService.map(svc -> KeycloakAuthServiceManager.create(svc.getHost(), svc.getHttpPort(), svc.getUsername(), svc.getPassword())).orElse(x -> {});
         deployVerticles(startPromise,
-                new Deployment(new AuthController(certManager, authSvcMgr, addressSpaceApi)),
+                new Deployment(new AuthController(certManager, addressSpaceApi)),
                 new Deployment(new StandardController(controllerClient, addressSpaceApi, kubernetes, createResolverFactory(options), options.isMultiinstance())),
 //                new Deployment(new AMQPServer(kubernetes.getNamespace(), addressSpaceApi, options.port())),
                 new Deployment(new HTTPServer(addressSpaceApi, options.certDir(), options.osbAuth()), new DeploymentOptions().setWorker(true)));
@@ -111,6 +107,7 @@ public class Controller extends AbstractVerticle {
             resolverMap.put(AuthenticationServiceType.NONE, new NoneAuthenticationServiceResolver(authService.getHost(), authService.getAmqpPort()));
         });
 
+        // TODO: Change name of NoneAuthenticationServiceResolver
         options.getStandardAuthService().ifPresent(authService -> {
             resolverMap.put(AuthenticationServiceType.STANDARD, new NoneAuthenticationServiceResolver(authService.getHost(), authService.getAmqpPort()));
         });
