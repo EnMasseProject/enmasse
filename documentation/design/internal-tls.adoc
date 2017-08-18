@@ -1,24 +1,41 @@
+== scope
+
 There are three aspects of securing communications:
 
-1. For internal clients to verify internal services
-2. For internal services to verify internal clients
+1. For internal clients to verify identity internal services
+2. For internal services to verify identity of internal clients
 3. For keycloak to verify clients and vice versa
 
 
-For 1. and 2., there are a couple of alternatives:
+=== Internal TLS mechanism 
 
-* Use certs for services, and SASL external for authenticating clients
-    * Services (i.e. router) have a list of valid client ids
-    * Client verifies service identity using openshift generated certificates
-    * Pros:
-        * ca signing handled automatically
-    * Cons:
-        * client validation requires internal sasl db for internal users in router
+For 1. and 2., there are a couple of alternatives for the mechanism.
 
-* Create per-address space CA that is used for generating per-service certificates
-    * Clients trusts the address space CA.
-    * Address controller trusts all generated CAs
-    * Pros:
-        * generic mechanism that works for all things that support TLS
-    * Cons:
-        * needs to maintain a mapping from services to certs
+=== Use certs for verifying service identities, and a sasl db for verifying client identities
+
+Client verifies service identity using openshift generated certificates (uses an annotation on the
+service). Services (i.e. the router) have a list of valid client credentials that they check against.
+
+* Pros:
+   * CA signing handled automatically
+
+* Cons:
+   * Client validation requires internal sasl db for internal users in router
+
+=== Create per-address space CA that is used for generating per-service certificates
+
+Client verifies service identity using address space CA. CN=internal service host name.  Services
+(i.e. the router) validate clients via trusting the address space CA.
+
+Address controller generates per-address space CA based on its own CA. Internal clients are verified
+by the address controller implicitly (per-address space CAs are derived from 'global' address
+controller CA). Address controller identity is verified by internal clients as its cert is signed by
+the address space CA.
+
+* Pros:
+    * Generic mechanism that works for all things that support TLS
+    * No requirement on using SASL
+
+* Cons:
+    * Address controller needs to know services that needs to have certs generated (an attempt at
+        discovering through annotations is possible).
