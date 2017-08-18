@@ -39,9 +39,9 @@ function run_test() {
     local OPENSHIFT_USER=${5:-"test"}
 
     if [ "$MULTITENANT" == false ]; then
-        $DIR/wait_until_up.sh 8 || return 1
+        $DIR/wait_until_up.sh 9 || return 1
     else
-        $DIR/wait_until_up.sh 3 || return 1
+        $DIR/wait_until_up.sh 4 || return 1
     fi
 
     sleep 120
