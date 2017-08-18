@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.enmass.keycloak.spi;
+package io.enmasse.keycloak.spi;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -26,7 +26,6 @@ import static org.mockito.Mockito.when;
 import java.util.HashSet;
 import java.util.Set;
 
-import io.enmasse.keycloak.spi.ScramPasswordHashProvider;
 import org.junit.Before;
 import org.junit.Test;
 import org.keycloak.credential.CredentialModel;
