@@ -17,10 +17,10 @@ Client verifies service identity using openshift generated certificates (uses an
 service). Services (i.e. the router) have a list of valid client credentials that they check against.
 
 * Pros:
-   * CA signing handled automatically
+** CA signing handled automatically
 
 * Cons:
-   * Client validation requires internal sasl db for internal users in router
+** Client validation requires internal sasl db for internal users in router
 
 === Create per-address space CA that is used for generating per-service certificates
 
@@ -33,9 +33,8 @@ controller CA). Address controller identity is verified by internal clients as i
 the address space CA.
 
 * Pros:
-    * Generic mechanism that works for all things that support TLS
-    * No requirement on using SASL
+** Generic mechanism that works for all things that support TLS
+** No requirement on using SASL
 
 * Cons:
-    * Address controller needs to know services that needs to have certs generated (an attempt at
-        discovering through annotations is possible).
+** Address controller needs to know services that needs to have certs generated (an attempt at discovering through annotations is possible).
