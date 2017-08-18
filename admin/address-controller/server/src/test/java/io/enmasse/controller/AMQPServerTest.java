@@ -4,7 +4,7 @@ import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.Endpoint;
 import io.enmasse.address.model.SecretCertProvider;
 import io.enmasse.address.model.types.standard.StandardAddressSpaceType;
-import io.enmasse.controller.api.TestAddressSpaceApi;
+import io.enmasse.k8s.api.TestAddressSpaceApi;
 import io.vertx.core.Vertx;
 import org.junit.After;
 import org.junit.Before;
@@ -12,9 +12,6 @@ import org.junit.Before;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import static org.hamcrest.CoreMatchers.hasItem;
-import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 public class AMQPServerTest {

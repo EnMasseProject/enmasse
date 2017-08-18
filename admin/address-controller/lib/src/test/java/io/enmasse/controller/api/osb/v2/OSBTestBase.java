@@ -1,11 +1,11 @@
 package io.enmasse.controller.api.osb.v2;
 
-import io.enmasse.controller.api.TestAddressSpaceApi;
 import io.enmasse.controller.api.osb.v2.bind.OSBBindingService;
 import io.enmasse.controller.api.osb.v2.lastoperation.OSBLastOperationService;
 import io.enmasse.controller.api.osb.v2.provision.OSBProvisioningService;
 import io.enmasse.controller.api.osb.v2.provision.ProvisionRequest;
 import io.enmasse.address.model.types.standard.StandardType;
+import io.enmasse.k8s.api.TestAddressSpaceApi;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.rules.ExpectedException;

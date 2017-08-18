@@ -19,11 +19,11 @@ package io.enmasse.controller.api.osb.v2;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
-import io.enmasse.controller.api.TestAddressSpaceApi;
 import io.enmasse.controller.api.osb.v2.catalog.CatalogResponse;
 import io.enmasse.controller.api.osb.v2.catalog.OSBCatalogService;
 import io.enmasse.controller.api.osb.v2.catalog.Plan;
 import io.enmasse.controller.api.osb.v2.catalog.Service;
+import io.enmasse.k8s.api.TestAddressSpaceApi;
 import org.junit.Test;
 
 import java.io.IOException;
