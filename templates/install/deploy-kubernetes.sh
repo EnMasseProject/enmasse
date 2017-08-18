@@ -125,7 +125,7 @@ runcmd "cat <<EOF | kubectl create -n ${NAMESPACE} -f -
 }
 EOF" "Create secret for controller certificate"
 
-runcmd "kubectl create secret generic keycloak-credentials --fromliteral=admin.username=admin --from-literal=admin.password=$KEYCLOAK_PASSWORD" "Create secret with keycloak admin credentials"
+runcmd "kubectl create secret generic keycloak-credentials --from-literal=admin.username=admin --from-literal=admin.password=$KEYCLOAK_PASSWORD" "Create secret with keycloak admin credentials"
 
 if [ -n "$ALT_TEMPLATE" ]
 then
