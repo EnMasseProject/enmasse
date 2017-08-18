@@ -17,7 +17,18 @@ objects:
           name: keycloak
       spec:
         containers:
-        - image: "${standard_authservice_IMAGE}"
+        - env:
+          - name: ADMIN_USER
+            valueFrom:
+              secretKeyRef:
+                key: admin.username
+                name: "${KEYCLOAK_SECRET_NAME}"
+          - name: ADMIN_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                key: admin.password
+                name: "${KEYCLOAK_SECRET_NAME}"
+          image: "${STANDARD_AUTHSERVICE_IMAGE}"
           livenessProbe:
             tcpSocket:
               port: amqp
@@ -28,17 +39,44 @@ objects:
           - containerPort: 8080
             name: http
           volumeMounts:
-          - mountPath: "/var/run/keycloak"
-            name: keycloak-secret
-            readOnly: true
           - mountPath: "/opt/jboss/keycloak/standalone/data"
             name: keycloak-persistence
         volumes:
-        - name: keycloak-secret
-          secret:
-            secretName: "${KEYCLOAK_SECRET_NAME}"
         - emptyDir: {}
           name: keycloak-persistence
+- apiVersion: extensions/v1beta1
+  kind: Deployment
+  metadata:
+    labels:
+      app: enmasse
+    name: keycloak-controller
+  spec:
+    replicas: 1
+    template:
+      metadata:
+        labels:
+          app: enmasse
+          name: keycloak-controller
+      spec:
+        containers:
+        - env:
+          - name: STANDARD_AUTHSERVICE_ADMIN_USER
+            valueFrom:
+              secretKeyRef:
+                key: admin.username
+                name: "${KEYCLOAK_SECRET_NAME}"
+          - name: STANDARD_AUTHSERVICE_ADMIN_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                key: admin.password
+                name: "${KEYCLOAK_SECRET_NAME}"
+          image: "${KEYCLOAK_CONTROLLER_IMAGE}"
+          name: keycloak-controller
+          resources:
+            limits:
+              memory: 128Mi
+            requests:
+              memory: 128Mi
 - apiVersion: v1
   kind: Service
   metadata:
@@ -59,8 +97,11 @@ objects:
       name: keycloak
 parameters:
 - description: The docker image to use for the 'standard' auth service
-  name: standard_authservice_IMAGE
+  name: STANDARD_AUTHSERVICE_IMAGE
   value: docker.io/enmasseproject/keycloak:latest
 - description: The secret where keycloak credentials are stored
   name: KEYCLOAK_SECRET_NAME
   value: keycloak-credentials
+- description: The docker image to use for the keycloak controller
+  name: KEYCLOAK_CONTROLLER_IMAGE
+  value: docker.io/enmasseproject/keycloak-controller:latest

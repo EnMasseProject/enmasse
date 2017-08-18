@@ -414,13 +414,6 @@ items:
         - env:
           - name: MULTIINSTANCE
             value: 'false'
-          - name: STANDARD_AUTHSERVICE_ADMIN_USER
-            value: admin
-          - name: STANDARD_AUTHSERVICE_ADMIN_PASSWORD
-            valueFrom:
-              secretKeyRef:
-                key: admin.key
-                name: keycloak-credentials
           image: docker.io/enmasseproject/address-controller:latest
           livenessProbe:
             tcpSocket:

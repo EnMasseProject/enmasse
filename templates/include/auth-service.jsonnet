@@ -81,6 +81,66 @@ local images = import "images.jsonnet";
     }
   },
 
+  keycloak_controller_deployment(keycloak_controller_image, keycloak_credentials_secret)::
+    {
+      "apiVersion": "extensions/v1beta1",
+      "kind": "Deployment",
+      "metadata": {
+        "labels": {
+          "app": "enmasse"
+        },
+        "name": "keycloak-controller"
+      },
+      "spec": {
+        "replicas": 1,
+        "template": {
+          "metadata": {
+            "labels": {
+              "name": "keycloak-controller",
+              "app": "enmasse"
+            }
+          },
+          "spec": {
+            "containers": [
+              {
+                "image": keycloak_controller_image,
+                "name": "keycloak-controller",
+                "resources": {
+                    "requests": {
+                        "memory": "128Mi",
+                    },
+                    "limits": {
+                        "memory": "128Mi",
+                    }
+                },
+                "env": [
+                  {
+                    "name": "STANDARD_AUTHSERVICE_ADMIN_USER",
+                    "valueFrom": {
+                      "secretKeyRef": {
+                        "name": keycloak_credentials_secret,
+                        "key": "admin.username"
+                      }
+                    }
+                  },
+                  {
+                    "name": "STANDARD_AUTHSERVICE_ADMIN_PASSWORD",
+                    "valueFrom": {
+                      "secretKeyRef": {
+                        "name": keycloak_credentials_secret,
+                        "key": "admin.password"
+                      }
+                    }
+                  }
+                ]
+              }
+            ],
+          }
+        }
+      }
+    },
+
+
   keycloak_deployment(keycloak_image, keycloak_credentials_secret)::
     {
       "apiVersion": "extensions/v1beta1",
@@ -115,12 +175,27 @@ local images = import "images.jsonnet";
                     "containerPort": 8080
                   }
                 ],
-                "volumeMounts": [
+                "env": [
                   {
-                    "name": "keycloak-secret",
-                    "mountPath": "/var/run/keycloak",
-                    "readOnly": true
+                    "name": "ADMIN_USER",
+                    "valueFrom": {
+                      "secretKeyRef": {
+                        "name": keycloak_credentials_secret,
+                        "key": "admin.username"
+                      }
+                    }
                   },
+                  {
+                    "name": "ADMIN_PASSWORD",
+                    "valueFrom": {
+                      "secretKeyRef": {
+                        "name": keycloak_credentials_secret,
+                        "key": "admin.password"
+                      }
+                    }
+                  }
+                ],
+                "volumeMounts": [
                   {
                     "name": "keycloak-persistence",
                     "mountPath": "/opt/jboss/keycloak/standalone/data",
@@ -134,12 +209,6 @@ local images = import "images.jsonnet";
               }
             ],
             "volumes": [
-              {
-                "name": "keycloak-secret",
-                "secret": {
-                  "secretName": keycloak_credentials_secret
-                }
-              },
               {
                 "name": "keycloak-persistence",
                 "emptyDir": {}
@@ -206,6 +275,7 @@ local images = import "images.jsonnet";
     "kind": "List",
     "items": [
       me.keycloak_deployment(images.keycloak, "keycloak-credentials"),
+      me.keycloak_controller_deployment(images.keycloak_controller, "keycloak-credentials"),
       me.standard_authservice
     ],
   },
@@ -215,12 +285,13 @@ local images = import "images.jsonnet";
     "apiVersion": "v1",
     "kind": "Template",
     "objects": [
-      me.keycloak_deployment("${standard_authservice_IMAGE}", "${KEYCLOAK_SECRET_NAME}"),
+      me.keycloak_deployment("${STANDARD_AUTHSERVICE_IMAGE}", "${KEYCLOAK_SECRET_NAME}"),
+      me.keycloak_controller_deployment("${KEYCLOAK_CONTROLLER_IMAGE}", "${KEYCLOAK_SECRET_NAME}"),
       me.standard_authservice
     ],
     "parameters": [
       {
-        "name": "standard_authservice_IMAGE",
+        "name": "STANDARD_AUTHSERVICE_IMAGE",
         "description": "The docker image to use for the 'standard' auth service",
         "value": images.keycloak
       },
@@ -228,7 +299,12 @@ local images = import "images.jsonnet";
         "name": "KEYCLOAK_SECRET_NAME",
         "description": "The secret where keycloak credentials are stored",
         "value": "keycloak-credentials"
-      }
+      },
+      {
+        "name": "KEYCLOAK_CONTROLLER_IMAGE",
+        "description": "The docker image to use for the keycloak controller",
+        "value": images.keycloak_controller
+      },
     ]
   },
 }
