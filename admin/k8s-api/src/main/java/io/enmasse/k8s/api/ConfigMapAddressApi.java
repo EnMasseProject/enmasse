@@ -139,7 +139,7 @@ public class ConfigMapAddressApi implements AddressApi {
     public Watch watchAddresses(Watcher<Address> watcher) throws Exception {
         Map<String, String> labels = new LinkedHashMap<>();
         labels.put(LabelKeys.TYPE, "address-config");
-        ResourceController<Address> controller = new ResourceController<>(new Resource<Address>() {
+        ResourceController<Address> controller = ResourceController.create(new Resource<Address>() {
             @Override
             public io.fabric8.kubernetes.client.Watch watchResources(io.fabric8.kubernetes.client.Watcher w) {
                 return client.configMaps().inNamespace(namespace).withLabels(labels).watch(w);

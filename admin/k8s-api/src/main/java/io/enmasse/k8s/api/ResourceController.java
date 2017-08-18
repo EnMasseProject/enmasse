@@ -24,6 +24,7 @@ import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
 /**
  * A verticle that handles watching a resource with the appropriate reconnect and retry logic,
@@ -31,23 +32,24 @@ import java.util.concurrent.TimeUnit;
  */
 public class ResourceController<T> implements io.fabric8.kubernetes.client.Watcher, Runnable {
     private static final Logger log = LoggerFactory.getLogger(ResourceController.class.getName());
-    private final Random random;
     private Watch watch;
     private final Resource<T> resource;
     private final Watcher<T> changeHandler;
     private final Thread watcherThread;
     private final BlockingQueue<Action> events = new LinkedBlockingDeque<>();
     private volatile boolean running;
+    private final Supplier<Long> resyncSupplier;
 
-    public ResourceController(Resource<T> resource, Watcher<T> changeHandler) {
-        this.random = new Random(System.currentTimeMillis());
+    ResourceController(Resource<T> resource, Watcher<T> changeHandler, Supplier<Long> resyncSupplier) {
         this.resource = resource;
         this.changeHandler = changeHandler;
         this.watcherThread = new Thread(this);
+        this.resyncSupplier = resyncSupplier;
     }
 
-    private long resyncInterval() {
-        return 30000 + Math.abs(random.nextLong()) % 30000;
+    public static <T> ResourceController<T> create(Resource<T> resource, Watcher<T> changeHandler) {
+        Random random = new Random(System.currentTimeMillis());
+        return new ResourceController<>(resource, changeHandler, () -> 30000 + Math.abs(random.nextLong()) % 30000);
     }
 
     public void start() {
@@ -63,7 +65,7 @@ public class ResourceController<T> implements io.fabric8.kubernetes.client.Watch
                 if (watch == null) {
                     watch = resource.watchResources(this);
                 }
-                Action action = events.poll(resyncInterval(), TimeUnit.MILLISECONDS);
+                Action action = events.poll(resyncSupplier.get(), TimeUnit.MILLISECONDS);
 
                 if (running) {
                     // TODO: Use action and resource instead of relisting
@@ -82,7 +84,7 @@ public class ResourceController<T> implements io.fabric8.kubernetes.client.Watch
         }
         try {
             log.debug("Putting poison pill event");
-            events.put(null);
+            events.put(Action.ERROR);
             watcherThread.join();
             watch = null;
         } catch (InterruptedException ignored) {
