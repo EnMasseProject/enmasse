@@ -21,16 +21,10 @@ package io.enmasse.controller;
 public class AuthServiceInfo {
     private final String host;
     private final int amqpPort;
-    private final int httpPort;
-    private final String username;
-    private final String password;
 
-    public AuthServiceInfo(String host, int amqpPort, int httpPort, String username, String password) {
+    public AuthServiceInfo(String host, int amqpPort) {
         this.host = host;
         this.amqpPort = amqpPort;
-        this.httpPort = httpPort;
-        this.username = username;
-        this.password = password;
     }
 
     public String getHost() {
@@ -39,18 +33,5 @@ public class AuthServiceInfo {
 
     public int getAmqpPort() {
         return amqpPort;
-    }
-
-    public int getHttpPort() {
-        return httpPort;
-    }
-
-
-    public String getUsername() {
-        return username;
-    }
-
-    public String getPassword() {
-        return password;
     }
 }

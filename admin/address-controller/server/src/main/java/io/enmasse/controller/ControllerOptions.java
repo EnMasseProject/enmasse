@@ -116,12 +116,9 @@ public final class ControllerOptions {
     private static Optional<AuthServiceInfo> getStandardAuthService(Map<String, String> env) {
         Optional<String> host = getEnv(env, "STANDARD_AUTHSERVICE_SERVICE_HOST");
         Optional<String> amqpPort = getEnv(env, "STANDARD_AUTHSERVICE_SERVICE_PORT_AMQP");
-        Optional<String> httpPort = getEnv(env, "STANDARD_AUTHSERVICE_SERVICE_PORT_HTTP");
-        Optional<String> adminUser = getEnv(env, "STANDARD_AUTHSERVICE_ADMIN_USER");
-        Optional<String> adminPassword = getEnv(env, "STANDARD_AUTHSERVICE_ADMIN_PASSWORD");
 
-        if (host.isPresent() && amqpPort.isPresent() && httpPort.isPresent() && adminUser.isPresent() && adminPassword.isPresent()) {
-            return Optional.of(new AuthServiceInfo(host.get(), Integer.parseInt(amqpPort.get()), Integer.parseInt(httpPort.get()), adminUser.get(), adminPassword.get()));
+        if (host.isPresent() && amqpPort.isPresent()) {
+            return Optional.of(new AuthServiceInfo(host.get(), Integer.parseInt(amqpPort.get())));
         }
         return Optional.empty();
     }
@@ -130,7 +127,7 @@ public final class ControllerOptions {
         Optional<String> host = getEnv(env, "NONE_AUTHSERVICE_SERVICE_HOST");
         Optional<String> port = getEnv(env, "NONE_AUTHSERVICE_SERVICE_PORT");
         if (host.isPresent() && port.isPresent()) {
-            return Optional.of(new AuthServiceInfo(host.get(), Integer.parseInt(port.get()), 0, null, null));
+            return Optional.of(new AuthServiceInfo(host.get(), Integer.parseInt(port.get())));
         }
         return Optional.empty();
     }
