@@ -1,0 +1,24 @@
+There are three aspects of securing communications:
+
+1. For internal clients to verify internal services
+2. For internal services to verify internal clients
+3. For keycloak to verify clients and vice versa
+
+
+For 1. and 2., there are a couple of alternatives:
+
+* Use certs for services, and SASL external for authenticating clients
+    * Services (i.e. router) have a list of valid client ids
+    * Client verifies service identity using openshift generated certificates
+    * Pros:
+        * ca signing handled automatically
+    * Cons:
+        * client validation requires internal sasl db for internal users in router
+
+* Create per-address space CA that is used for generating per-service certificates
+    * Clients trusts the address space CA.
+    * Address controller trusts all generated CAs
+    * Pros:
+        * generic mechanism that works for all things that support TLS
+    * Cons:
+        * needs to maintain a mapping from services to certs
