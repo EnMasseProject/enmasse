@@ -17,11 +17,11 @@
 package io.enmasse.controller.common;
 
 import io.enmasse.config.AnnotationKeys;
-import io.enmasse.controller.api.TestAddressSpaceApi;
 import io.enmasse.address.model.*;
 import io.enmasse.address.model.types.AddressType;
 import io.enmasse.address.model.types.standard.StandardAddressSpaceType;
 import io.enmasse.address.model.types.standard.StandardType;
+import io.enmasse.k8s.api.TestAddressSpaceApi;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.openshift.client.OpenShiftClient;
 import io.fabric8.openshift.client.ParameterValue;

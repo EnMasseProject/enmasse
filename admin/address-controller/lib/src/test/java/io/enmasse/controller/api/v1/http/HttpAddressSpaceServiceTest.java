@@ -1,7 +1,7 @@
 package io.enmasse.controller.api.v1.http;
 
-import io.enmasse.controller.api.TestAddressSpaceApi;
 import io.enmasse.address.model.AddressSpace;
+import io.enmasse.k8s.api.TestAddressSpaceApi;
 
 public class HttpAddressSpaceServiceTest {
     private HttpAddressSpaceService addressSpaceService;

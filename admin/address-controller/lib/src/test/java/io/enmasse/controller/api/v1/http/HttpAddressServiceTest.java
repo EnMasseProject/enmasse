@@ -1,12 +1,12 @@
 package io.enmasse.controller.api.v1.http;
 
-import io.enmasse.controller.api.TestAddressApi;
-import io.enmasse.controller.api.TestAddressSpaceApi;
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressList;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.types.standard.StandardAddressSpaceType;
 import io.enmasse.address.model.types.standard.StandardType;
+import io.enmasse.k8s.api.TestAddressApi;
+import io.enmasse.k8s.api.TestAddressSpaceApi;
 import org.junit.Before;
 import org.junit.Test;
 

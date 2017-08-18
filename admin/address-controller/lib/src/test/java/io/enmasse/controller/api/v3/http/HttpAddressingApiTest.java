@@ -16,8 +16,9 @@
 
 package io.enmasse.controller.api.v3.http;
 
-import io.enmasse.controller.api.TestAddressApi;
-import io.enmasse.controller.api.TestAddressSpaceApi;
+
+import io.enmasse.k8s.api.TestAddressApi;
+import io.enmasse.k8s.api.TestAddressSpaceApi;
 
 import static org.hamcrest.CoreMatchers.is;
 
