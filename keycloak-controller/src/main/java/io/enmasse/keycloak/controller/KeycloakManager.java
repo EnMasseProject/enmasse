@@ -24,52 +24,30 @@ import java.util.stream.Collectors;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AuthenticationServiceType;
 import io.enmasse.k8s.api.Watcher;
-import org.keycloak.admin.client.Keycloak;
-import org.keycloak.admin.client.resource.RealmsResource;
-import org.keycloak.representations.idm.RealmRepresentation;
 
 
 public class KeycloakManager implements Watcher<AddressSpace>
 {
-    private final String host;
-    private final int port;
-    private final String username;
-    private final String password;
+    private final KeycloakApi keycloak;
 
-    public KeycloakManager(final String host,
-                           final int port,
-                           final String username,
-                           final String password) {
-        this.host = host;
-        this.port = port;
-        this.username = username;
-        this.password = password;
+    public KeycloakManager(KeycloakApi keycloak) {
+        this.keycloak = keycloak;
     }
 
     @Override
     public void resourcesUpdated(final Set<AddressSpace> addressSpaces) {
-        Keycloak keycloak = Keycloak.getInstance(
-                "http://" + host + ":" + port + "/auth",
-                "master",
-                username,
-                password,
-                "admin-cli");
-        RealmsResource realms = keycloak.realms();
         Map<String, AddressSpace> standardAuthSvcSpaces =
                 addressSpaces.stream()
                              .filter(x -> x.getAuthenticationService().getType() == AuthenticationServiceType.STANDARD)
                              .collect(Collectors.toMap(AddressSpace::getName, Function.identity()));
-        for(RealmRepresentation realm : realms.findAll()) {
-            String realmName = realm.getRealm();
+
+        for(String realmName : keycloak.getRealmNames()) {
             if(standardAuthSvcSpaces.remove(realmName) == null && !"master".equals(realmName)) {
-                keycloak.realm(realmName).remove();
+                keycloak.deleteRealm(realmName);
             }
         }
         for(String name : standardAuthSvcSpaces.keySet()) {
-            final RealmRepresentation newrealm = new RealmRepresentation();
-            newrealm.setRealm(name);
-            newrealm.setPasswordPolicy("hashAlgorithm(scramsha1)");
-            keycloak.realms().create(newrealm);
+            keycloak.createRealm(name);
         }
     }
 }
