@@ -17,12 +17,12 @@ items:
       spec:
         containers:
         - env:
-          - name: ADMIN_USER
+          - name: KEYCLOAK_USER
             valueFrom:
               secretKeyRef:
                 key: admin.username
                 name: keycloak-credentials
-          - name: ADMIN_PASSWORD
+          - name: KEYCLOAK_PASSWORD
             valueFrom:
               secretKeyRef:
                 key: admin.password

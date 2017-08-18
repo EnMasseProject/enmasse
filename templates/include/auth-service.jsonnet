@@ -177,7 +177,7 @@ local images = import "images.jsonnet";
                 ],
                 "env": [
                   {
-                    "name": "ADMIN_USER",
+                    "name": "KEYCLOAK_USER",
                     "valueFrom": {
                       "secretKeyRef": {
                         "name": keycloak_credentials_secret,
@@ -186,7 +186,7 @@ local images = import "images.jsonnet";
                     }
                   },
                   {
-                    "name": "ADMIN_PASSWORD",
+                    "name": "KEYCLOAK_PASSWORD",
                     "valueFrom": {
                       "secretKeyRef": {
                         "name": keycloak_credentials_secret,
