@@ -14,11 +14,8 @@
  * limitations under the License.
  */
 
-package io.enmasse.controller.api;
+package io.enmasse.k8s.api;
 
-import io.enmasse.k8s.api.AddressApi;
-import io.enmasse.k8s.api.Watch;
-import io.enmasse.k8s.api.Watcher;
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.Status;
 
