@@ -16,7 +16,18 @@ items:
           name: keycloak
       spec:
         containers:
-        - image: docker.io/enmasseproject/keycloak:latest
+        - env:
+          - name: ADMIN_USER
+            valueFrom:
+              secretKeyRef:
+                key: admin.username
+                name: keycloak-credentials
+          - name: ADMIN_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                key: admin.password
+                name: keycloak-credentials
+          image: docker.io/enmasseproject/keycloak:latest
           livenessProbe:
             tcpSocket:
               port: amqp
@@ -27,17 +38,44 @@ items:
           - containerPort: 8080
             name: http
           volumeMounts:
-          - mountPath: "/var/run/keycloak"
-            name: keycloak-secret
-            readOnly: true
           - mountPath: "/opt/jboss/keycloak/standalone/data"
             name: keycloak-persistence
         volumes:
-        - name: keycloak-secret
-          secret:
-            secretName: keycloak-credentials
         - emptyDir: {}
           name: keycloak-persistence
+- apiVersion: extensions/v1beta1
+  kind: Deployment
+  metadata:
+    labels:
+      app: enmasse
+    name: keycloak-controller
+  spec:
+    replicas: 1
+    template:
+      metadata:
+        labels:
+          app: enmasse
+          name: keycloak-controller
+      spec:
+        containers:
+        - env:
+          - name: STANDARD_AUTHSERVICE_ADMIN_USER
+            valueFrom:
+              secretKeyRef:
+                key: admin.username
+                name: keycloak-credentials
+          - name: STANDARD_AUTHSERVICE_ADMIN_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                key: admin.password
+                name: keycloak-credentials
+          image: docker.io/enmasseproject/keycloak-controller:latest
+          name: keycloak-controller
+          resources:
+            limits:
+              memory: 128Mi
+            requests:
+              memory: 128Mi
 - apiVersion: v1
   kind: Service
   metadata:

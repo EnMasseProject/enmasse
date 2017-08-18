@@ -22,7 +22,7 @@ local images = import "images.jsonnet";
                  enmasseInfra.generate(use_sasl, with_kafka, true),
                  authService.none_deployment("${NONE_AUTHSERVICE_IMAGE}"),
                  authService.none_authservice,
-                 addressController.deployment("${ADDRESS_CONTROLLER_REPO}", "${MULTIINSTANCE}", "", "${STANDARD_AUTHSERVICE_SECRET_NAME}"),
+                 addressController.deployment("${ADDRESS_CONTROLLER_REPO}", "${MULTIINSTANCE}", ""),
                  addressController.internal_service,
                  restapiRoute.route("${RESTAPI_HOSTNAME}") ],
     "parameters": [
@@ -44,12 +44,7 @@ local images = import "images.jsonnet";
         "name": "NONE_AUTHSERVICE_IMAGE",
         "description": "The docker image to use for the 'none' auth service",
         "value": images.none_authservice
-      },
-      {
-        "name": "STANDARD_AUTHSERVICE_SECRET_NAME",
-        "description": "The secret containing the standard authservice admin password",
-        "value": "keycloak-credentials"
-      },
+      }
     ]
   }
 }
