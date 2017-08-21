@@ -142,6 +142,28 @@ local forwarder = import "forwarder.jsonnet";
           "name": "COLOCATED_ROUTER_SECRET",
           "description": "Name of secret containing router key and certificate",
           "required": true
+        },
+        {
+          "name": "AUTHENTICATION_SERVICE_HOST",
+          "description": "The hostname of the authentication service used by this address space",
+          "required": true
+        },
+        {
+          "name": "AUTHENTICATION_SERVICE_PORT",
+          "description": "The port of the authentication service used by this address space",
+          "required": true
+        },
+        {
+          "name": "AUTHENTICATION_SERVICE_CA_SECRET",
+          "description": "The CA to use for validating authentication service cert",
+        },
+        {
+          "name": "AUTHENTICATION_SERVICE_CLIENT_SECRET",
+          "description": "The client cert to use as identity against authentication service",
+        },
+        {
+          "name": "AUTHENTICATION_SERVICE_SASL_INIT_HOST",
+          "description": "The hostname to use in sasl init",
         }
       ]
     }
