@@ -103,7 +103,7 @@ The internal port should be secured and changed to 5671
 ==== Console
 
 * External ports: 5672 (service) -> 56720 (pod), 8080
-* Connects to: router agent, address-controller
+* Connects to: router, broker, configserv, address-controller, auth-service
 
 Both ports should be secured with TLS.
 
@@ -111,7 +111,7 @@ Both ports should be secured with TLS.
 
 * Internal ports: 55673 (broker), 5672 (shutdown hooks, mqtt-gateway, mqtt-lwt, subserv), 5671, 55672 (inter-router)
 * External ports: 5671
-* Connects to: router agent, broker (if colocated), subserv
+* Connects to: router agent, broker (if colocated), subserv, auth-service
 
 Future ports:
 
