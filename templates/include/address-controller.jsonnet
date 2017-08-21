@@ -40,12 +40,12 @@ local common = import "common.jsonnet";
   },
   
   internal_service::
-    self.common_service("address-controller", "ClusterIP", {"service.alpha.openshift.io/serving-cert-secret-name": "address-controller-certs"}),
+    self.common_service("address-controller", "ClusterIP", {}),
 
   external_service::
     self.common_service("address-controller-external", "LoadBalancer", {}),
 
-  deployment(image_repo, multiinstance, template_config)::
+  deployment(image_repo, multiinstance, template_config, ca_secret)::
     {
       "apiVersion": "extensions/v1beta1",
       "kind": "Deployment",
@@ -71,15 +71,15 @@ local common = import "common.jsonnet";
               "mountPath": "/enmasse-templates"
           }],
 
-          local ssl_certs = [{
-            "name": "ssl-certs",
-            "mountPath": "/ssl-certs",
+          local ca_certs = [{
+            "name": "ca-certs",
+            "mountPath": "/ca-certs",
             "readOnly": true
           }],
 
           local mounts = if template_config != ""
-            then template_mount + ssl_certs
-            else ssl_certs,
+            then template_mount + ca_certs
+            else ca_certs,
 
           local ports = [
             {
@@ -133,9 +133,9 @@ local common = import "common.jsonnet";
             }],
 
             local secret_volume = [{
-                "name": "ssl-certs",
+                "name": "ca-cert",
                 "secret": {
-                  "secretName": "address-controller-certs"
+                  "secretName": ca_secret
                 }
             }],
 

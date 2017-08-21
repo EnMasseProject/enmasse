@@ -106,8 +106,8 @@ fi
 
 runcmd "kubectl create sa enmasse-service-account -n $NAMESPACE" "Create service account for address controller"
 
-SERVER_KEY=${TEMPDIR}/enmasse-controller.key
-SERVER_CERT=${TEMPDIR}/enmasse-controller.crt
+SERVER_KEY=${TEMPDIR}/ca-key.pem
+SERVER_CERT=${TEMPDIR}/ca-cert.pem
 runcmd "openssl req -new -x509 -batch -nodes -out ${SERVER_CERT} -keyout ${SERVER_KEY}" "Create self-signed certificate"
 
 runcmd "cat <<EOF | kubectl create -n ${NAMESPACE} -f -
@@ -115,7 +115,7 @@ runcmd "cat <<EOF | kubectl create -n ${NAMESPACE} -f -
     \"apiVersion\": \"v1\",
     \"kind\": \"Secret\",
     \"metadata\": {
-        \"name\": \"address-controller-certs\"
+        \"name\": \"enmasse-ca\"
     },
     \"type\": \"kubernetes.io/tls\",
     \"data\": {

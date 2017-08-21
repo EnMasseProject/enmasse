@@ -465,17 +465,17 @@ items:
           volumeMounts:
           - mountPath: "/enmasse-templates"
             name: templates
-          - mountPath: "/ssl-certs"
-            name: ssl-certs
+          - mountPath: "/ca-certs"
+            name: ca-certs
             readOnly: true
         serviceAccount: enmasse-service-account
         volumes:
         - configMap:
             name: enmasse-template-config
           name: templates
-        - name: ssl-certs
+        - name: ca-cert
           secret:
-            secretName: address-controller-certs
+            secretName: enmasse-ca
 - apiVersion: extensions/v1beta1
   kind: Ingress
   metadata:
@@ -494,8 +494,7 @@ items:
 - apiVersion: v1
   kind: Service
   metadata:
-    annotations:
-      service.alpha.openshift.io/serving-cert-secret-name: address-controller-certs
+    annotations: {}
     labels:
       app: enmasse
     name: address-controller

@@ -1208,19 +1208,18 @@ objects:
             requests:
               memory: 256Mi
           volumeMounts:
-          - mountPath: "/ssl-certs"
-            name: ssl-certs
+          - mountPath: "/ca-certs"
+            name: ca-certs
             readOnly: true
         serviceAccount: enmasse-service-account
         volumes:
-        - name: ssl-certs
+        - name: ca-cert
           secret:
-            secretName: address-controller-certs
+            secretName: "${ENMASSE_CA_SECRET}"
 - apiVersion: v1
   kind: Service
   metadata:
-    annotations:
-      service.alpha.openshift.io/serving-cert-secret-name: address-controller-certs
+    annotations: {}
     labels:
       app: enmasse
     name: address-controller
@@ -1268,3 +1267,6 @@ parameters:
 - description: The docker image to use for the 'none' auth service
   name: NONE_AUTHSERVICE_IMAGE
   value: docker.io/enmasseproject/none-authservice:latest
+- description: Name of the secret containing the EnMasse CA
+  name: ENMASSE_CA_SECRET
+  value: enmasse-ca
