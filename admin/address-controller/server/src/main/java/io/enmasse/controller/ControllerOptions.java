@@ -108,7 +108,7 @@ public final class ControllerOptions {
 
         Optional<AuthServiceInfo> noneAuthService = getNoneAuthService(env);
         Optional<AuthServiceInfo> standardAuthService = getStandardAuthService(env);
-        String certDir = getEnv(env, "CERT_PATH").orElse("/ssl-certs");
+        String certDir = getEnv(env, "CERT_PATH").orElse("/address-controller-cert");
         return new ControllerOptions(String.format("https://%s:%s", masterHost, masterPort), isMultiinstance, namespace,
                 token, maybeDir, messagingHost, mqttHost, consoleHost, certSecret, certDir, osbAuth, noneAuthService, standardAuthService);
     }
