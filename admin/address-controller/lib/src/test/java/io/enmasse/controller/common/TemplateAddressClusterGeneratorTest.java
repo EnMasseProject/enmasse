@@ -49,7 +49,9 @@ public class TemplateAddressClusterGeneratorTest {
         mockClient = mock(OpenShiftClient.class);
         testAddressSpaceApi.createAddressSpace(createAddressSpace("myinstance"));
         generator = new TemplateAddressClusterGenerator(testAddressSpaceApi,
-                new KubernetesHelper("myinstance", mockClient, Optional.of(new File("src/test/resources/templates"))));
+                new KubernetesHelper("myinstance", mockClient, Optional.of(new File("src/test/resources/templates"))),
+                authenticationServiceType -> new NoneAuthenticationServiceResolver("localhost", 5672)
+        );
     }
 
     @Test
@@ -76,7 +78,7 @@ public class TemplateAddressClusterGeneratorTest {
             assertThat(annotations.get(AnnotationKeys.CLUSTER_ID), is("cluster1"));
         }
         List<ParameterValue> parameters = captor.getAllValues();
-        assertThat(parameters.size(), is(5));
+        assertThat(parameters.size(), is(7));
     }
 
     private Address createAddress(String address, AddressType type) {

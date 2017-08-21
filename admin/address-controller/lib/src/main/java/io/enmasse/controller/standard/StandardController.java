@@ -52,12 +52,14 @@ public class StandardController extends AbstractVerticle implements Watcher<Addr
 
     private final Map<AddressSpace, String> addressControllerMap = new HashMap<>();
     private final Kubernetes kubernetes;
+    private final AuthenticationServiceResolverFactory authResolverFactory;
 
     public StandardController(OpenShiftClient client, AddressSpaceApi addressSpaceApi, Kubernetes kubernetes, AuthenticationServiceResolverFactory authResolverFactory, boolean isMultitenant) {
         this.helper = new StandardHelper(kubernetes, isMultitenant, authResolverFactory);
         this.client = client;
         this.addressSpaceApi = addressSpaceApi;
         this.kubernetes = kubernetes;
+        this.authResolverFactory = authResolverFactory;
     }
 
     @Override
@@ -118,7 +120,7 @@ public class StandardController extends AbstractVerticle implements Watcher<Addr
     private void createAddressControllers(Set<AddressSpace> addressSpaces) {
         for (AddressSpace addressSpace : addressSpaces) {
             if (!addressControllerMap.containsKey(addressSpace)) {
-                AddressClusterGenerator clusterGenerator = new TemplateAddressClusterGenerator(addressSpaceApi, kubernetes);
+                AddressClusterGenerator clusterGenerator = new TemplateAddressClusterGenerator(addressSpaceApi, kubernetes, authResolverFactory);
                 AddressController addressController = new AddressController(
                         addressSpaceApi.withAddressSpace(addressSpace),
                         kubernetes.withNamespace(addressSpace.getNamespace()),
