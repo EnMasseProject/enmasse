@@ -36,8 +36,11 @@ DEFAULT_NAMESPACE=myproject
 OC_ARGS=""
 GUIDE=false
 
-while getopts dgk:m:n:p:st:u:yvh opt; do
+while getopts c:dgk:m:n:p:st:u:yvh opt; do
     case $opt in
+        c)
+            CA_SECRET=$OPTARG
+            ;;
         d)
             OS_ALLINONE=true
             ;;
@@ -80,6 +83,7 @@ while getopts dgk:m:n:p:st:u:yvh opt; do
             echo
             echo "optional arguments:"
             echo "  -h                   show this help message"
+            echo "  -c                   CA certificate to use in address controller"
             echo "  -d                   create an all-in-one docker OpenShift on localhost"
             echo "  -k KEYCLOAK_PASSWORD The password to use as the keycloak admin user"
             echo "  -n NAMESPACE         OpenShift project name to install EnMasse into (default: $DEFAULT_NAMESPACE)"
@@ -150,6 +154,14 @@ runcmd "oc create sa enmasse-service-account -n $NAMESPACE" "Create service acco
 runcmd "oc policy add-role-to-user view system:serviceaccount:${NAMESPACE}:default" "Add permissions for viewing OpenShift resources to default user"
 runcmd "oc policy add-role-to-user edit system:serviceaccount:${NAMESPACE}:enmasse-service-account" "Add permissions for editing OpenShift resources to EnMasse service account"
 runcmd "oc create secret generic keycloak-credentials --from-literal=admin.username=admin --from-literal=admin.password=$KEYCLOAK_PASSWORD" "Create secret with keycloak admin credentials"
+
+if [ -z $CA_SECRET ]; then
+    CA_SECRET=enmasse-ca
+    runcmd "openssl req -new -x509 -batch -nodes -out ca-cert.pem -keyout ca-key.pem" "Generate self-signed CA key and certificate"
+    runcmd "oc create secret tls $CA_SECRET --key=ca-key.pem --cert=ca-cert.pem" "Create secret for EnMasse CA"
+else
+    TEMPLATE_PARAMS="$TEMPLATE_PARAMS ENMASSE_CA_SECRET=$CA_SECRET"
+fi
 
 if [[ $TEMPLATE_PARAMS == *"MULTIINSTANCE=true"* ]]; then
     if [ -n "$OS_ALLINONE" ]
