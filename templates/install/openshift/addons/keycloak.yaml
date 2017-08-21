@@ -30,6 +30,7 @@ objects:
                 name: "${KEYCLOAK_SECRET_NAME}"
           image: "${STANDARD_AUTHSERVICE_IMAGE}"
           livenessProbe:
+            initialDelaySeconds: 120
             tcpSocket:
               port: amqp
           name: keycloak

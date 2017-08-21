@@ -29,6 +29,7 @@ items:
                 name: keycloak-credentials
           image: docker.io/enmasseproject/keycloak:latest
           livenessProbe:
+            initialDelaySeconds: 120
             tcpSocket:
               port: amqp
           name: keycloak
