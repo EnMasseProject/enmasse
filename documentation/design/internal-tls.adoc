@@ -91,7 +91,7 @@ Both ports should be secured with TLS.
 ==== Router
 
 * Internal ports: 55673, 5672, 5671
-* External ports: 5672, 5671
+* External ports: 5671
 * Connects to: router agent, broker (if colocated), subserv
 
 The router exposes 5672 and 5671 through routes. We can remove 5672 if we want to be strict (and
@@ -139,7 +139,8 @@ TLS-enabled. Port 8080 is used by the metrics collector, and also needs to be TL
 
 ==== Mqtt-gateway
 
-* External ports: 1883, 8883
+* External ports: 8883
+* Internal ports: 1883
 * Connects to: router, mqtt-lwt
 
 ==== Mqtt-lwt
