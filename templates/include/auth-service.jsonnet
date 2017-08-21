@@ -204,7 +204,8 @@ local images = import "images.jsonnet";
                 "livenessProbe": {
                   "tcpSocket": {
                     "port": "amqp"
-                  }
+                  },
+                  "initialDelaySeconds": 120
                 }
               }
             ],
