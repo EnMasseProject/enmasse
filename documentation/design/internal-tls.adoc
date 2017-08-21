@@ -38,3 +38,111 @@ the address space CA.
 
 * Cons:
 ** Address controller needs to know services that needs to have certs generated (an attempt at discovering through annotations is possible).
+
+=== Components and need for auth
+
+Below is a list of components that either act as a client or server (or both). All of them needs to
+have a certificate generated, but some of them have a bit different requirements.
+
+==== Address Controller
+
+Internal ports: 8080
+External ports: 5672, 8080, 8081
+
+The address controller has no internal ports, only external. The external port might be used by
+internal components as well, in which case its cert should have both CN=address-controller.svc...
+and CN=route host for its certificate. It might be easier if we just used 2 certs for it.
+
+The AMQP port 5672 is not used by any component and should be considered for removal for time being.
+
+==== Configserv
+
+Internal ports: 5672 (service) -> 5672 (pod)
+Connects to: None
+
+The internal port should be secured and changed to 5671
+
+==== Queue-scheduler
+
+Internal ports: 5672 (service) -> 55667 (pod)
+Connects to: configserv
+
+The internal port should be secured and changed to 5671.
+
+==== Router agent
+
+Internal ports: 5672 (service) -> 55672 (pod)
+Connects to: configserv
+
+The internal port should be secured and changed to 5671
+
+==== Console
+
+Internal ports: 5672 (service) -> 56720 (pod), 8080
+Connects to: router agent, address-controller
+
+Both ports should be secured with TLS.
+
+==== Router
+
+Internal ports: 55673, 5672, 5671
+External ports: 5672, 5671
+Connects to: router agent, broker (if colocated), subserv
+
+The router exposes 5672 and 5671 through routes. We can remove 5672 if we want to be strict (and
+, it is useless as long as routes and ingress don't support non-TLS non-HTTP ports).
+
+5671 needs to use both internal and external certs. 55673 needs to enable TLS. 
+
+We should consider having subserv opening the connection to the router and not vice versa.
+
+==== Router metrics
+
+Internal ports: 8080
+Connects to: router
+
+Needs to enable TLS on metric collection and have cert trusted by hawkular-openshift-agent
+
+==== Broker
+
+Internal ports: 5673, 61616, 8080
+Connects to: router, queue-scheduler (if not colocated)
+
+The broker needs to support TLS for the outgoing connector. The incoming ports needs to be
+TLS-enabled. Port 8080 is used by the metrics collector, and also needs to be TLS-enabled.
+
+==== Topic-forwarder
+
+Internal ports: None
+Connects to: broker
+
+==== Keycloak
+
+Internal ports: 8080
+Connects to: None
+
+==== None-authservice
+
+Internal ports: 8080
+Connects to: None
+
+==== Keycloak-controller
+
+Internal ports: None
+Connects to: keycloak
+
+==== Subserv
+
+Internal ports: 5672
+Connects to: router, broker, configserv
+
+==== Mqtt-gateway
+
+Internal ports: None
+External ports: 1883, 8883
+Connects to: router, mqtt-lwt
+
+==== Mqtt-lwt
+
+Internal ports: None
+Connects to: router
