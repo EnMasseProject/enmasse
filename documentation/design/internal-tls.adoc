@@ -6,12 +6,11 @@ There are three aspects of securing communications:
 2. For internal services to verify identity of internal clients
 3. For keycloak to verify clients and vice versa
 
-
 === Internal TLS mechanism 
 
 For 1. and 2., there are a couple of alternatives for the mechanism.
 
-=== Use certs for verifying service identities, and a sasl db for verifying client identities
+==== Use certs for verifying service identities, and a sasl db for verifying client identities
 
 Client verifies service identity using openshift generated certificates (uses an annotation on the
 service). Services (i.e. the router) have a list of valid client credentials that they check against.
@@ -21,8 +20,9 @@ service). Services (i.e. the router) have a list of valid client credentials tha
 
 * Cons:
 ** Client validation requires internal sasl db for internal users in router
+** Might not be easy to use SASL by all components
 
-=== Create per-address space CA that is used for generating per-service certificates
+==== Create per-address space CA that is used for generating per-service certificates
 
 Client verifies service identity using address space CA. CN=internal service host name.  Services
 (i.e. the router) validate clients via trusting the address space CA.
@@ -35,9 +35,14 @@ the address space CA.
 * Pros:
 ** Generic mechanism that works for all things that support TLS
 ** No requirement on using SASL
+** We already have certificate generation being done in the address controller
 
 * Cons:
 ** Address controller needs to know services that needs to have certs generated (an attempt at discovering through annotations is possible).
+
+=== Verifying keycloak clients
+
+TODO
 
 === Components and need for auth
 
@@ -140,3 +145,4 @@ TLS-enabled. Port 8080 is used by the metrics collector, and also needs to be TL
 ==== Mqtt-lwt
 
 * Connects to: router
+
