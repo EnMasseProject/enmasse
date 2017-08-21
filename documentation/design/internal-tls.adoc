@@ -51,8 +51,8 @@ have a certificate generated, but some of them have a bit different requirements
 
 ==== Address Controller
 
-* Internal ports: 8080
-* External ports: 5672, 8080, 8081
+* Internal ports: 5672, 8080, 8081
+* External ports: 8080
 
 The address controller has no internal ports, only external. The external port might be used by
 internal components as well, in which case its cert should have both CN=address-controller.svc...
