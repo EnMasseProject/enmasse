@@ -45,7 +45,7 @@ local common = import "common.jsonnet";
   external_service::
     self.common_service("address-controller-external", "LoadBalancer", {}),
 
-  deployment(image_repo, multiinstance, template_config, ca_secret)::
+  deployment(image_repo, multiinstance, template_config, ca_secret, cert_secret)::
     {
       "apiVersion": "extensions/v1beta1",
       "kind": "Deployment",
@@ -71,15 +71,20 @@ local common = import "common.jsonnet";
               "mountPath": "/enmasse-templates"
           }],
 
-          local ca_certs = [{
-            "name": "ca-certs",
-            "mountPath": "/ca-certs",
+          local certs = [{
+            "name": "ca-cert",
+            "mountPath": "/ca-cert",
+            "readOnly": true
+          },
+          {
+            "name": "address-controller-cert",
+            "mountPath": "/address-controller-cert",
             "readOnly": true
           }],
 
           local mounts = if template_config != ""
-            then template_mount + ca_certs
-            else ca_certs,
+            then template_mount + certs
+            else certs,
 
           local ports = [
             {
@@ -137,6 +142,12 @@ local common = import "common.jsonnet";
                 "secret": {
                   "secretName": ca_secret
                 }
+            },
+            {
+              "name": "address-controller-cert",
+              "secret": {
+                "secretName": cert_secret
+              }
             }],
 
             "volumes": if template_config != ""
