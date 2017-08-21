@@ -26,8 +26,6 @@ sslProfile {
 listener {
     addr: 0.0.0.0
     port: 5671
-    authenticatePeer: no
-    #authService: ${AUTHENTICATION_SERVICE_HOST}:${AUTHENTICATION_SERVICE_PORT}
-    # TODO: Add authSslProfile
+    saslPlugin: auth_service
     sslProfile: ssl_details
 }
