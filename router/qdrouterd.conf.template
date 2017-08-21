@@ -26,12 +26,17 @@ router {
     workerThreads: ${WORKER_THREADS}
 }
 
+authServicePlugin {
+    name: auth_service
+    authService: ${AUTHENTICATION_SERVICE_HOST}:${AUTHENTICATION_SERVICE_PORT}
+    saslInitHostname: ${AUTHENTICATION_SERVICE_SASL_INIT_HOST}
+    # TODO: Add authSslProfile
+}
+
 listener {
     addr: 0.0.0.0
     port: 5672
-    authenticatePeer: no
-    #authService: ${AUTHENTICATION_SERVICE_HOST}:${AUTHENTICATION_SERVICE_PORT}
-    # TODO: Add authSslProfile
+    saslPlugin: auth_service
     linkCapacity: ${LINK_CAPACITY}
 }
 
