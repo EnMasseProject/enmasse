@@ -22,7 +22,7 @@ local images = import "images.jsonnet";
                  enmasseInfra.generate(use_sasl, with_kafka, true),
                  authService.none_deployment("${NONE_AUTHSERVICE_IMAGE}"),
                  authService.none_authservice,
-                 addressController.deployment("${ADDRESS_CONTROLLER_REPO}", "${MULTIINSTANCE}", "", "${ENMASSE_CA_SECRET}"),
+                 addressController.deployment("${ADDRESS_CONTROLLER_REPO}", "${MULTIINSTANCE}", "", "${ENMASSE_CA_SECRET}", "${ADDRESS_CONTROLLER_CERT_SECRET}"),
                  addressController.internal_service,
                  restapiRoute.route("${RESTAPI_HOSTNAME}") ],
     "parameters": [
@@ -49,7 +49,12 @@ local images = import "images.jsonnet";
         "name": "ENMASSE_CA_SECRET",
         "description": "Name of the secret containing the EnMasse CA",
         "value": "enmasse-ca"
-      }
+      },
+      {
+        "name": "ADDRESS_CONTROLLER_CERT_SECRET",
+        "description": "Name of the secret containing the address controller certificate",
+        "value": "address-controller-cert"
+      },
     ]
   }
 }

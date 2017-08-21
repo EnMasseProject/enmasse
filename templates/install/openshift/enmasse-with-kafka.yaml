@@ -1268,14 +1268,20 @@ objects:
             requests:
               memory: 256Mi
           volumeMounts:
-          - mountPath: "/ca-certs"
-            name: ca-certs
+          - mountPath: "/ca-cert"
+            name: ca-cert
+            readOnly: true
+          - mountPath: "/address-controller-cert"
+            name: address-controller-cert
             readOnly: true
         serviceAccount: enmasse-service-account
         volumes:
         - name: ca-cert
           secret:
             secretName: "${ENMASSE_CA_SECRET}"
+        - name: address-controller-cert
+          secret:
+            secretName: "${ADDRESS_CONTROLLER_CERT_SECRET}"
 - apiVersion: v1
   kind: Service
   metadata:
@@ -1330,3 +1336,6 @@ parameters:
 - description: Name of the secret containing the EnMasse CA
   name: ENMASSE_CA_SECRET
   value: enmasse-ca
+- description: Name of the secret containing the address controller certificate
+  name: ADDRESS_CONTROLLER_CERT_SECRET
+  value: address-controller-cert

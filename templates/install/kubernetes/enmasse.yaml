@@ -465,8 +465,11 @@ items:
           volumeMounts:
           - mountPath: "/enmasse-templates"
             name: templates
-          - mountPath: "/ca-certs"
-            name: ca-certs
+          - mountPath: "/ca-cert"
+            name: ca-cert
+            readOnly: true
+          - mountPath: "/address-controller-cert"
+            name: address-controller-cert
             readOnly: true
         serviceAccount: enmasse-service-account
         volumes:
@@ -476,6 +479,9 @@ items:
         - name: ca-cert
           secret:
             secretName: enmasse-ca
+        - name: address-controller-cert
+          secret:
+            secretName: address-controller-cert
 - apiVersion: extensions/v1beta1
   kind: Ingress
   metadata:
