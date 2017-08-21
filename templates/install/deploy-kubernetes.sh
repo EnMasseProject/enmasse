@@ -106,24 +106,13 @@ fi
 
 runcmd "kubectl create sa enmasse-service-account -n $NAMESPACE" "Create service account for address controller"
 
-SERVER_KEY=${TEMPDIR}/ca-key.pem
-SERVER_CERT=${TEMPDIR}/ca-cert.pem
-runcmd "openssl req -new -x509 -batch -nodes -out ${SERVER_CERT} -keyout ${SERVER_KEY}" "Create self-signed certificate"
+CA_KEY=${TEMPDIR}/ca.key
+CA_CERT=${TEMPDIR}/ca.crt
+runcmd "openssl req -new -x509 -batch -nodes -days 11000 -subj \"/O=io.enmasse/CN=enmasse\" -out ${CA_CERT} -keyout ${CA_KEY}" "Create self-signed certificate"
 
-runcmd "cat <<EOF | kubectl create -n ${NAMESPACE} -f -
-{
-    \"apiVersion\": \"v1\",
-    \"kind\": \"Secret\",
-    \"metadata\": {
-        \"name\": \"enmasse-ca\"
-    },
-    \"type\": \"kubernetes.io/tls\",
-    \"data\": {
-        \"tls.key\": \"\$(base64 -w 0 ${SERVER_KEY})\",
-        \"tls.crt\": \"\$(base64 -w 0 ${SERVER_CERT})\"
-    }
-}
-EOF" "Create secret for controller certificate"
+create_tls_secret "kubectl" "enmasse-ca" $CA_KEY $CA_CERT
+
+create_and_sign_cert "kubectl " $CA_KEY $CA_CERT "address-controller.${NAMESPACE}.svc.cluster.local" "address-controller-certs"
 
 runcmd "kubectl create secret generic keycloak-credentials --from-literal=admin.username=admin --from-literal=admin.password=$KEYCLOAK_PASSWORD" "Create secret with keycloak admin credentials"
 

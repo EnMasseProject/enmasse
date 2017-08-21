@@ -155,13 +155,19 @@ runcmd "oc policy add-role-to-user view system:serviceaccount:${NAMESPACE}:defau
 runcmd "oc policy add-role-to-user edit system:serviceaccount:${NAMESPACE}:enmasse-service-account" "Add permissions for editing OpenShift resources to EnMasse service account"
 runcmd "oc create secret generic keycloak-credentials --from-literal=admin.username=admin --from-literal=admin.password=$KEYCLOAK_PASSWORD" "Create secret with keycloak admin credentials"
 
+CA_KEY=${TEMPDIR}/ca.key
+CA_CERT=${TEMPDIR}/ca.crt
 if [ -z $CA_SECRET ]; then
     CA_SECRET=enmasse-ca
-    runcmd "openssl req -new -x509 -batch -nodes -out ca-cert.pem -keyout ca-key.pem" "Generate self-signed CA key and certificate"
-    runcmd "oc create secret tls $CA_SECRET --key=ca-key.pem --cert=ca-cert.pem" "Create secret for EnMasse CA"
+    runcmd "openssl req -new -x509 -batch -nodes -days 11000 -subj \"/O=io.enmasse/CN=enmasse\" -out ${CA_CERT} -keyout ${CA_KEY}" "Create self-signed certificate"
+    create_tls_secret "oc" "enmasse-ca" $CA_KEY $CA_CERT
 else
+    runcmd "oc get secret -o jsonpath='{.data.tls\.key}' ${CA_SECRET} > ${CA_KEY}" "Retrieve CA key"
+    runcmd "oc get secret -o jsonpath='{.data.tls\.crt}' ${CA_SECRET} > ${CA_CERT}" "Retrieve CA certificate"
     TEMPLATE_PARAMS="$TEMPLATE_PARAMS ENMASSE_CA_SECRET=$CA_SECRET"
 fi
+
+create_and_sign_cert "oc" $CA_KEY $CA_CERT "address-controller.${NAMESPACE}.svc.cluster.local" "address-controller-certs"
 
 if [[ $TEMPLATE_PARAMS == *"MULTIINSTANCE=true"* ]]; then
     if [ -n "$OS_ALLINONE" ]
