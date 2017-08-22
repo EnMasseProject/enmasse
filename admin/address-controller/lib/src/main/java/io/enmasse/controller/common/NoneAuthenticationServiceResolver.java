@@ -17,8 +17,6 @@ package io.enmasse.controller.common;
 
 import io.enmasse.address.model.AuthenticationService;
 import io.enmasse.address.model.AuthenticationServiceResolver;
-import io.fabric8.kubernetes.api.model.Service;
-import io.fabric8.openshift.client.OpenShiftClient;
 
 import java.util.Optional;
 
@@ -55,7 +53,7 @@ public class NoneAuthenticationServiceResolver implements AuthenticationServiceR
     }
 
     @Override
-    public Optional<String> getSaslInitHost(AuthenticationService authService) {
+    public Optional<String> getSaslInitHost(String addressSpaceName, AuthenticationService authService) {
         return Optional.empty();
     }
 }

@@ -34,11 +34,7 @@ import io.enmasse.address.model.types.standard.StandardAddressSpaceType;
 import io.enmasse.controller.auth.AuthController;
 import io.enmasse.controller.auth.CertManager;
 import io.enmasse.controller.auth.OpenSSLCertManager;
-import io.enmasse.controller.common.AuthenticationServiceResolverFactory;
-import io.enmasse.controller.common.ExternalAuthenticationServiceResolver;
-import io.enmasse.controller.common.Kubernetes;
-import io.enmasse.controller.common.KubernetesHelper;
-import io.enmasse.controller.common.NoneAuthenticationServiceResolver;
+import io.enmasse.controller.common.*;
 import io.enmasse.controller.standard.StandardController;
 import io.enmasse.k8s.api.AddressSpaceApi;
 import io.enmasse.k8s.api.ConfigMapAddressSpaceApi;
@@ -108,9 +104,8 @@ public class Controller extends AbstractVerticle {
             resolverMap.put(AuthenticationServiceType.NONE, new NoneAuthenticationServiceResolver(authService.getHost(), authService.getAmqpPort()));
         });
 
-        // TODO: Change name of NoneAuthenticationServiceResolver
         options.getStandardAuthService().ifPresent(authService -> {
-            resolverMap.put(AuthenticationServiceType.STANDARD, new NoneAuthenticationServiceResolver(authService.getHost(), authService.getAmqpPort()));
+            resolverMap.put(AuthenticationServiceType.STANDARD, new StandardAuthenticationServiceResolver(authService.getHost(), authService.getAmqpPort()));
         });
 
         resolverMap.put(AuthenticationServiceType.EXTERNAL, new ExternalAuthenticationServiceResolver());
