@@ -18,6 +18,7 @@ package io.enmasse.controller;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.net.PasswordAuthentication;
 import java.nio.file.Files;
 import java.util.Map;
@@ -25,24 +26,26 @@ import java.util.Optional;
 
 public final class ControllerOptions {
 
+    private static final String SERVICEACCOUNT_PATH = "/var/run/secrets/kubernetes.io/serviceaccount";
+
     private final String masterUrl;
     private final boolean isMultiinstance;
     private final String namespace;
     private final String token;
     private final String certDir;
-    private final Optional<File> templateDir;
-    private final Optional<String> messagingHost;
-    private final Optional<String> mqttHost;
-    private final Optional<String> consoleHost;
-    private final Optional<String> certSecret;
-    private final Optional<PasswordAuthentication> osbAuth;
-    private final Optional<AuthServiceInfo> noneAuthService;
-    private final Optional<AuthServiceInfo> standardAuthService;
+    private final File templateDir;
+    private final String messagingHost;
+    private final String mqttHost;
+    private final String consoleHost;
+    private final String certSecret;
+    private final PasswordAuthentication osbAuth;
+    private final AuthServiceInfo noneAuthService;
+    private final AuthServiceInfo standardAuthService;
 
     private ControllerOptions(String masterUrl, boolean isMultiinstance, String namespace, String token,
-                              Optional<File> templateDir, Optional<String> messagingHost, Optional<String> mqttHost,
-                              Optional<String> consoleHost, Optional<String> certSecret, String certDir,
-                              Optional<PasswordAuthentication> osbAuth, Optional<AuthServiceInfo> noneAuthService, Optional<AuthServiceInfo> standardAuthService) {
+                              File templateDir, String messagingHost, String mqttHost,
+                              String consoleHost, String certSecret, String certDir,
+                              PasswordAuthentication osbAuth, AuthServiceInfo noneAuthService, AuthServiceInfo standardAuthService) {
         this.masterUrl = masterUrl;
         this.isMultiinstance = isMultiinstance;
         this.namespace = namespace;
@@ -62,74 +65,109 @@ public final class ControllerOptions {
         return masterUrl;
     }
 
+    public String namespace() {
+        return namespace;
+    }
+
+    public String token() {
+        return token;
+    }
+
+    public boolean isMultiinstance() {
+        return isMultiinstance;
+    }
+
+    public Optional<File> templateDir() {
+        return Optional.ofNullable(templateDir);
+    }
+
+    public Optional<String> messagingHost() {
+        return Optional.ofNullable(messagingHost);
+    }
+
+    public Optional<String> mqttHost() {
+        return Optional.ofNullable(mqttHost);
+
+    }
+
+    public Optional<String> consoleHost() {
+        return Optional.ofNullable(consoleHost);
+    }
+
+    public Optional<String> certSecret() {
+        return Optional.ofNullable(certSecret);
+    }
+
+    public String certDir() {
+        return certDir;
+    }
+
+    public Optional<PasswordAuthentication> osbAuth() {
+        return Optional.ofNullable(osbAuth);
+    }
+
+    public Optional<AuthServiceInfo> getNoneAuthService() {
+        return Optional.ofNullable(noneAuthService);
+    }
+
+    public Optional<AuthServiceInfo> getStandardAuthService() {
+        return Optional.ofNullable(standardAuthService);
+    }
+
     public static ControllerOptions fromEnv(Map<String, String> env) throws IOException {
+
         String masterHost = getEnvOrThrow(env, "KUBERNETES_SERVICE_HOST");
         String masterPort = getEnvOrThrow(env, "KUBERNETES_SERVICE_PORT");
         boolean isMultiinstance = Boolean.parseBoolean(env.get("MULTIINSTANCE"));
 
-        File namespaceFile = new File(SERVICEACCOUNT_PATH, "namespace");
-        String namespace;
-        if (namespaceFile.exists()) {
-            namespace = readFile(namespaceFile);
-        } else {
-            namespace = getEnv(env, "NAMESPACE").orElse(null);
-            if (namespace == null) {
-                throw new IllegalStateException("Unable to find namespace from " + namespaceFile.getAbsolutePath() + " or NAMSPACE environment variable");
-            }
-        }
+        String namespace = getEnv(env, "NAMESPACE")
+                .orElseGet(() -> readFile(new File(SERVICEACCOUNT_PATH, "namespace")));
 
-        String token;
-        File tokenFile = new File(SERVICEACCOUNT_PATH, "token");
-        if (tokenFile.exists()) {
-            token = readFile(tokenFile);
-        } else {
-            token = getEnvOrThrow(env, "TOKEN");
-        }
+        String token = getEnv(env, "TOKEN")
+                .orElseGet(() -> readFile(new File(SERVICEACCOUNT_PATH, "token")));
 
-        File templateDir = new File("/enmasse-templates");
-        // Fall back to path used in 0.11.0
+        File templateDir = getEnv(env, "TEMPLATE_DIR")
+                .map(File::new)
+                .orElse(new File("/enmasse-templates"));
+
         if (!templateDir.exists()) {
-            templateDir = new File("/templates");
-        }
-        if (env.containsKey("TEMPLATE_DIR")) {
-            templateDir = new File(env.get("TEMPLATE_DIR"));
+            templateDir = null;
         }
 
-        Optional<String> messagingHost = getEnv(env, "INSTANCE_MESSAGING_HOST");
-        Optional<String> mqttHost = getEnv(env, "INSTANCE_MQTT_HOST");
-        Optional<String> consoleHost = getEnv(env, "INSTANCE_CONSOLE_HOST");
-        Optional<String> certSecret = getEnv(env, "INSTANCE_CERT_SECRET");
-        Optional<File> maybeDir = Optional.ofNullable(templateDir.exists() ? templateDir : null);
+        PasswordAuthentication osbAuth = getEnv(env, "OSB_AUTH_USERNAME")
+                .map(user -> new PasswordAuthentication(user, getEnvOrThrow(env, "OSB_AUTH_PASSWORD").toCharArray()))
+                .orElse(null);
 
-        Optional<String> osbAuthUser = getEnv(env, "OSB_AUTH_USERNAME");
-        Optional<PasswordAuthentication> osbAuth = osbAuthUser.isPresent()
-                ? Optional.of(new PasswordAuthentication(osbAuthUser.get(), getEnvOrThrow(env, "OSB_AUTH_PASSWORD").toCharArray()))
-                : Optional.empty();
+        AuthServiceInfo noneAuthService = getAuthService(env, "NONE_AUTHSERVICE_SERVICE_HOST", "NONE_AUTHSERVICE_SERVICE_PORT").orElse(null);
+        AuthServiceInfo standardAuthService = getAuthService(env, "STANDARD_AUTHSERVICE_SERVICE_HOST", "STANDARD_AUTHSERVICE_SERVICE_PORT_AMQP").orElse(null);
 
-        Optional<AuthServiceInfo> noneAuthService = getNoneAuthService(env);
-        Optional<AuthServiceInfo> standardAuthService = getStandardAuthService(env);
         String certDir = getEnv(env, "CERT_PATH").orElse("/address-controller-cert");
-        return new ControllerOptions(String.format("https://%s:%s", masterHost, masterPort), isMultiinstance, namespace,
-                token, maybeDir, messagingHost, mqttHost, consoleHost, certSecret, certDir, osbAuth, noneAuthService, standardAuthService);
+
+        String messagingHost = getEnv(env, "MESSAGING_ENDPOINT_HOST").orElse(null);
+        String mqttHost = getEnv(env, "MQTT_ENDPOINT_HOST").orElse(null);
+        String consoleHost = getEnv(env, "CONSOLE_ENDPOINT_HOST").orElse(null);
+        String certSecret = getEnv(env, "MESSAGING_CERT_SECRET").orElse(null);
+
+        return new ControllerOptions(String.format("https://%s:%s", masterHost, masterPort),
+                isMultiinstance,
+                namespace,
+                token,
+                templateDir,
+                messagingHost,
+                mqttHost,
+                consoleHost,
+                certSecret,
+                certDir,
+                osbAuth,
+                noneAuthService,
+                standardAuthService);
     }
 
-    private static Optional<AuthServiceInfo> getStandardAuthService(Map<String, String> env) {
-        Optional<String> host = getEnv(env, "STANDARD_AUTHSERVICE_SERVICE_HOST");
-        Optional<String> amqpPort = getEnv(env, "STANDARD_AUTHSERVICE_SERVICE_PORT_AMQP");
 
-        if (host.isPresent() && amqpPort.isPresent()) {
-            return Optional.of(new AuthServiceInfo(host.get(), Integer.parseInt(amqpPort.get())));
-        }
-        return Optional.empty();
-    }
+    private static Optional<AuthServiceInfo> getAuthService(Map<String, String> env, String hostEnv, String portEnv) {
 
-    private static Optional<AuthServiceInfo> getNoneAuthService(Map<String, String> env) {
-        Optional<String> host = getEnv(env, "NONE_AUTHSERVICE_SERVICE_HOST");
-        Optional<String> port = getEnv(env, "NONE_AUTHSERVICE_SERVICE_PORT");
-        if (host.isPresent() && port.isPresent()) {
-            return Optional.of(new AuthServiceInfo(host.get(), Integer.parseInt(port.get())));
-        }
-        return Optional.empty();
+        return getEnv(env, hostEnv)
+                .map(host -> new AuthServiceInfo(host, Integer.parseInt(getEnvOrThrow(env, portEnv))));
     }
 
     private static Optional<String> getEnv(Map<String, String> env, String envVar) {
@@ -144,62 +182,11 @@ public final class ControllerOptions {
         return var;
     }
 
-    private static final String SERVICEACCOUNT_PATH = "/var/run/secrets/kubernetes.io/serviceaccount";
-
-    public String namespace() {
-        return namespace;
-    }
-
-    public String token() {
-        return token;
-    }
-
-    public boolean isMultiinstance() {
-        return isMultiinstance;
-    }
-
-    private static String readFile(File file) throws IOException {
-        return new String(Files.readAllBytes(file.toPath()));
-    }
-
-    public int port() {
-        return 5672;
-    }
-
-    public Optional<File> templateDir() {
-        return templateDir;
-    }
-
-    public Optional<String> messagingHost() {
-        return messagingHost;
-    }
-
-    public Optional<String> mqttHost() {
-        return mqttHost;
-
-    }
-
-    public Optional<String> consoleHost() {
-        return consoleHost;
-    }
-
-    public Optional<String> certSecret() {
-        return certSecret;
-    }
-
-    public String certDir() {
-        return certDir;
-    }
-
-    public Optional<PasswordAuthentication> osbAuth() {
-        return osbAuth;
-    }
-
-    public Optional<AuthServiceInfo> getNoneAuthService() {
-        return noneAuthService;
-    }
-
-    public Optional<AuthServiceInfo> getStandardAuthService() {
-        return standardAuthService;
+    private static String readFile(File file) {
+        try {
+            return new String(Files.readAllBytes(file.toPath()));
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
     }
 }
