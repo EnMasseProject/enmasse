@@ -112,8 +112,6 @@ objects:
   - description: The port of the authentication service used by this address space
     name: AUTHENTICATION_SERVICE_PORT
     required: true
-  - description: The CA to use for validating authentication service cert
-    name: AUTHENTICATION_SERVICE_CA_SECRET
   - description: The client cert to use as identity against authentication service
     name: AUTHENTICATION_SERVICE_CLIENT_SECRET
   - description: The hostname to use in sasl init
@@ -240,8 +238,6 @@ objects:
   - description: The port of the authentication service used by this address space
     name: AUTHENTICATION_SERVICE_PORT
     required: true
-  - description: The CA to use for validating authentication service cert
-    name: AUTHENTICATION_SERVICE_CA_SECRET
   - description: The client cert to use as identity against authentication service
     name: AUTHENTICATION_SERVICE_CLIENT_SECRET
   - description: The hostname to use in sasl init
@@ -312,8 +308,6 @@ objects:
               value: "${AUTHENTICATION_SERVICE_HOST}"
             - name: AUTHENTICATION_SERVICE_PORT
               value: "${AUTHENTICATION_SERVICE_PORT}"
-            - name: AUTHENTICATION_SERVICE_CA_SECRET
-              value: "${AUTHENTICATION_SERVICE_CA_SECRET}"
             - name: AUTHENTICATION_SERVICE_CLIENT_SECRET
               value: "${AUTHENTICATION_SERVICE_CLIENT_SECRET}"
             - name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
@@ -413,8 +407,6 @@ objects:
   - description: The port of the authentication service used by this address space
     name: AUTHENTICATION_SERVICE_PORT
     required: true
-  - description: The CA to use for validating authentication service cert
-    name: AUTHENTICATION_SERVICE_CA_SECRET
   - description: The client cert to use as identity against authentication service
     name: AUTHENTICATION_SERVICE_CLIENT_SECRET
   - description: The hostname to use in sasl init
@@ -500,8 +492,6 @@ objects:
               value: "${AUTHENTICATION_SERVICE_HOST}"
             - name: AUTHENTICATION_SERVICE_PORT
               value: "${AUTHENTICATION_SERVICE_PORT}"
-            - name: AUTHENTICATION_SERVICE_CA_SECRET
-              value: "${AUTHENTICATION_SERVICE_CA_SECRET}"
             - name: AUTHENTICATION_SERVICE_CLIENT_SECRET
               value: "${AUTHENTICATION_SERVICE_CLIENT_SECRET}"
             - name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
@@ -602,8 +592,6 @@ objects:
   - description: The port of the authentication service used by this address space
     name: AUTHENTICATION_SERVICE_PORT
     required: true
-  - description: The CA to use for validating authentication service cert
-    name: AUTHENTICATION_SERVICE_CA_SECRET
   - description: The client cert to use as identity against authentication service
     name: AUTHENTICATION_SERVICE_CLIENT_SECRET
   - description: The hostname to use in sasl init
@@ -653,8 +641,6 @@ objects:
               value: "${AUTHENTICATION_SERVICE_HOST}"
             - name: AUTHENTICATION_SERVICE_PORT
               value: "${AUTHENTICATION_SERVICE_PORT}"
-            - name: AUTHENTICATION_SERVICE_CA_SECRET
-              value: "${AUTHENTICATION_SERVICE_CA_SECRET}"
             - name: AUTHENTICATION_SERVICE_CLIENT_SECRET
               value: "${AUTHENTICATION_SERVICE_CLIENT_SECRET}"
             - name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
@@ -999,8 +985,6 @@ objects:
               value: "${AUTHENTICATION_SERVICE_HOST}"
             - name: AUTHENTICATION_SERVICE_PORT
               value: "${AUTHENTICATION_SERVICE_PORT}"
-            - name: AUTHENTICATION_SERVICE_CA_SECRET
-              value: "${AUTHENTICATION_SERVICE_CA_SECRET}"
             - name: AUTHENTICATION_SERVICE_CLIENT_SECRET
               value: "${AUTHENTICATION_SERVICE_CLIENT_SECRET}"
             - name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
