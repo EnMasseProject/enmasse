@@ -43,6 +43,9 @@ function MockBroker (name) {
     this.container.on('connection_open', function (context) {
         self.emit('connected', context);
     });
+    this.container.on('connection_close', function (context) {
+        self.emit('disconnected', context);
+    });
     this.container.on('sender_open', function(context) {
         if (context.sender.source.dynamic) {
             var id = self.container.generate_uuid();
@@ -177,8 +180,12 @@ MockBroker.prototype.get_pod_descriptor = function () {
 
 function MockPodSense () {
     this.brokers = [];
+    this.connections = {};
     this.container = rhea.create_container({id:'mock-pod-sense'});
     this.container.on('sender_open', this.on_subscribe.bind(this));
+    this.container.on('connection_open', this.register.bind(this));
+    this.container.on('connection_close', this.unregister.bind(this));
+    this.container.on('disconnected', this.unregister.bind(this));
 }
 
 MockPodSense.prototype.listen = function (port) {
@@ -210,6 +217,35 @@ MockPodSense.prototype.add_broker = function (name, port) {
     broker.listen(port);
     this.brokers.push(broker);
     return broker;
+};
+
+function is_subscriber(link) {
+    return link.is_sender();
+}
+
+MockPodSense.prototype.notify_all = function () {
+    var self = this;
+    for (var c in this.connections) {
+        this.connections[c].each_link(function (link) {
+            self.notify(link);
+        }, is_subscriber);
+    }
+}
+
+MockPodSense.prototype.register = function (context) {
+    this.connections[context.connection.container_id] = context.connection;
+};
+
+MockPodSense.prototype.unregister = function (context) {
+    delete this.connections[context.connection.container_id];
+};
+
+MockPodSense.prototype.remove_broker = function (broker) {
+    var i = this.brokers.indexOf(broker);
+    if (i >= 0) {
+        this.brokers.splice(i, 1);
+        this.notify_all();
+    }
 };
 
 describe('broker stats', function() {
@@ -422,4 +458,46 @@ describe('broker stats', function() {
             });
         });
     });
+
+    it('handles removal of broker from list', function(done) {
+        broker.add_queue_address('myqueue',
+                                 {
+                                     durable:true,
+                                     messageCount:10,
+                                     consumerCount:3,
+                                     messagesAdded:44,
+                                     deliveringCount:5,
+                                     messagesAcknowledged:8,
+                                     messagesExpired:4,
+                                     messagesKilled: 2
+                                 });
+        var broker2 = discovery.add_broker();
+        broker2.add_queue_address('myqueue',
+                                 {
+                                     durable:true,
+                                     messageCount:22,
+                                     consumerCount:1,
+                                     messagesAdded:88,
+                                     deliveringCount:9,
+                                     messagesAcknowledged:58,
+                                     messagesExpired:7,
+                                     messagesKilled: 3
+                                 });
+        var stats = new BrokerStats();
+        broker2.on('connected', function () {
+            stats._retrieve().then(function (results) {
+                assert.equal(results.myqueue.depth, 32);
+                assert.equal(results.myqueue.shards.length, 2);
+                discovery.remove_broker(broker2);
+                broker2.on('disconnected', function () {
+                    stats._retrieve().then(function (new_results) {
+                        assert.equal(new_results.myqueue.depth, 10);
+                        assert.equal(new_results.myqueue.shards.length, 1);
+                        done();
+                    });
+                });
+            });
+        });
+    });
+
 });
