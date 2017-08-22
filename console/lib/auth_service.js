@@ -15,22 +15,23 @@
  */
 'use strict';
 
+var rhea = require('rhea');
+var Promise = require('bluebird');
 
-function authenticate(user, result) {
-    var authServer = require('rhea');
-    var Promise = require('bluebird');
+function authenticate(user) {
     return new Promise(function(resolve, reject) {
-        if( user && user.name ) {
-            authServer.options.username = user.name;
-            authServer.options.password = user.pass;
-        } else {
-            authServer.options.username = "anonymous";
-        }
-
         var options = {
             "host": process.env.AUTHENTICATION_SERVICE_HOST,
             "port": process.env.AUTHENTICATION_SERVICE_PORT
         };
+        if( user && user.name ) {
+            options.username = user.name;
+            options.password = user.pass;
+        } else {
+            options.username = "anonymous";
+        }
+
+        var authServer = rhea.connect(options);
         var handled = false;
         authServer.on("connection_open", function (context) {
             handled = true;
@@ -40,7 +41,6 @@ function authenticate(user, result) {
         var handleFailure = function (context) {
             if (!handled) {
                 handled = true;
-                context.connection.close();
                 reject();
             }
         };
@@ -48,7 +48,6 @@ function authenticate(user, result) {
         authServer.on("connection_close", handleFailure);
         authServer.on("disconnected", handleFailure);
 
-        authServer.connect(options);
     });
 
 }
