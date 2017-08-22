@@ -39,7 +39,6 @@ dependencies {
 
 shadowJar {
     dependencies {
-        exclude(dependency('io.netty:netty-codec'))
         exclude(dependency('io.netty:netty-handler-proxy'))
         exclude(dependency('io.netty:netty-codec-socks'))
         exclude(dependency('io.netty:netty-codec-http'))

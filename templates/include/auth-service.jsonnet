@@ -63,10 +63,10 @@ local images = import "images.jsonnet";
     "spec": {
       "ports": [
         {
-          "name": "amqp",
-          "port": 5672,
+          "name": "amqps",
+          "port": 5671,
           "protocol": "TCP",
-          "targetPort": "amqp"
+          "targetPort": "amqps"
         },
         {
           "name": "http",
@@ -167,8 +167,8 @@ local images = import "images.jsonnet";
                 "name": "keycloak",
                 "ports": [
                   {
-                    "name": "amqp",
-                    "containerPort": 5672
+                    "name": "amqps",
+                    "containerPort": 5671
                   },
                   {
                     "name": "http",
@@ -207,7 +207,7 @@ local images = import "images.jsonnet";
                 ],
                 "livenessProbe": {
                   "tcpSocket": {
-                    "port": "amqp"
+                    "port": "amqps"
                   },
                   "initialDelaySeconds": 120
                 }

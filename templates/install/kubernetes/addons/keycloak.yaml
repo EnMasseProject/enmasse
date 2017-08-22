@@ -31,11 +31,11 @@ items:
           livenessProbe:
             initialDelaySeconds: 120
             tcpSocket:
-              port: amqp
+              port: amqps
           name: keycloak
           ports:
-          - containerPort: 5672
-            name: amqp
+          - containerPort: 5671
+            name: amqps
           - containerPort: 8080
             name: http
           volumeMounts:
@@ -90,10 +90,10 @@ items:
     name: standard-authservice
   spec:
     ports:
-    - name: amqp
-      port: 5672
+    - name: amqps
+      port: 5671
       protocol: TCP
-      targetPort: amqp
+      targetPort: amqps
     - name: http
       port: 8080
       protocol: TCP
