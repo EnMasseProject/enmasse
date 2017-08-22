@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 var container = require('rhea');
+var fs = require('fs');
+var path = require('path');
+var cert_dir = "/opt/none-authservice/cert";
 
 function authenticate(username, password) {
     console.log('Authenticating as ' + username);
@@ -21,7 +24,14 @@ function authenticate(username, password) {
 }
 container.sasl_server_mechanisms.enable_plain(authenticate);
 container.sasl_server_mechanisms.enable_anonymous();
-var server = container.listen({'port':process.env.LISTENPORT, 'require_sasl': true});
+var server = container.listen({
+    port: process.env.LISTENPORT,
+    require_sasl: true,
+    transport: 'tls',
+    key: fs.readFileSync(path.resolve(cert_dir, 'tls.key')),
+    cert: fs.readFileSync(path.resolve(cert_dir, 'tls.crt'))
+});
+
 console.log('Listening on port ' + process.env.LISTENPORT);
 container.on('connection_open', function (context) {
     var authenticatedIdentity = { 'sub' : context.connection.sasl_transport.username || 'anonymous' };

@@ -6,6 +6,6 @@ RUN ["/bin/bash", "-c", "npm install debug && npm install rhea"]
 ARG version=latest
 
 ADD build/none-authservice.tgz /opt/app-root/src/
-EXPOSE 56672
+EXPOSE 5671
 
 CMD ["node", "/opt/app-root/src/none-authservice.js"]
