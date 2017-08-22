@@ -1,7 +1,7 @@
 local router = import "router.jsonnet";
 local common = import "common.jsonnet";
 {
-  deployment(use_sasldb, addressSpace, image_repo, metrics_image_repo, router_secret)::
+  deployment(use_sasldb, addressSpace, image_repo, metrics_image_repo, router_secret, auth_service_ca_secret)::
     {
       "apiVersion": "extensions/v1beta1",
       "kind": "Deployment",
@@ -31,8 +31,11 @@ local common = import "common.jsonnet";
           "spec": {
             "containers": [ router.container(use_sasldb, image_repo, [], ""),
               router.metrics(metrics_image_repo, "32Mi") ],
-            "volumes": [router.hawkular_volume(), router.secret_volume(router_secret)] +
-              (if use_sasldb then [router.sasldb_volume()] else [])
+            "volumes": [
+              router.hawkular_volume(),
+              router.secret_volume("ssl-certs", router_secret),
+              router.secret_volume("authservice-ca", auth_service_ca_secret),
+              ] + (if use_sasldb then [router.sasldb_volume()] else [])
           }
         }
       }

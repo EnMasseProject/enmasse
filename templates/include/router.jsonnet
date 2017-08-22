@@ -73,19 +73,26 @@ local authService = import "auth-service.jsonnet";
           "mountPath": "/etc/qpid-dispatch/ssl",
           "readOnly": true
         }],
+
+      local authservice_ca = [{
+        "name": "authservice-ca",
+        "mountPath": "/etc/qpid-dispatch/authservice-ca",
+        "readOnly": true
+      }],
+
       local sasldb_vol = [{
           "name": "sasldb-vol",
           "mountPath": "/var/lib/qdrouterd"
         }],
       [if mem_request != "" then "resources"]: resources,
-      "volumeMounts": ssl_certs + (if use_sasldb then sasldb_vol else [])
+      "volumeMounts": ssl_certs + authservice_ca + (if use_sasldb then sasldb_vol else [])
     },
 
-  secret_volume(router_secret)::
+  secret_volume(name, secret)::
     {
-      "name": "ssl-certs",
+      "name": name,
       "secret": {
-        "secretName": router_secret
+        "secretName": secret
       }
     },
 

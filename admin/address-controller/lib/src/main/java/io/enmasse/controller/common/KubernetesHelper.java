@@ -312,6 +312,11 @@ public class KubernetesHelper implements Kubernetes {
         return client.pods().withLabel(LabelKeys.CAPABILITY, "router").list().getItems();
     }
 
+    @Override
+    public Optional<Secret> getSecret(String secretName) {
+        return Optional.ofNullable(client.secrets().inNamespace(namespace).withName(secretName).get());
+    }
+
     public static boolean isDeployment(HasMetadata res) {
         return res.getKind().equals("Deployment");  // TODO: is there an existing constant for this somewhere?
     }

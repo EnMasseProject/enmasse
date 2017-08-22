@@ -1,10 +1,7 @@
 package io.enmasse.controller.common;
 
 import io.enmasse.address.model.Endpoint;
-import io.fabric8.kubernetes.api.model.HasMetadata;
-import io.fabric8.kubernetes.api.model.KubernetesList;
-import io.fabric8.kubernetes.api.model.Namespace;
-import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.extensions.Deployment;
 import io.fabric8.openshift.client.ParameterValue;
 
@@ -65,4 +62,6 @@ public interface Kubernetes {
     List<Namespace> listNamespaces(Map<String, String> labels);
 
     List<Pod> listRouters();
+
+    Optional<Secret> getSecret(String secretName);
 }

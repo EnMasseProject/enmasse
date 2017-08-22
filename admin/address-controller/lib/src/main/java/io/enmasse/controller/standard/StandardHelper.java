@@ -26,6 +26,7 @@ import io.enmasse.address.model.types.Plan;
 import io.enmasse.address.model.types.TemplateConfig;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.Namespace;
+import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.openshift.client.ParameterValue;
 import org.slf4j.Logger;
@@ -70,12 +71,10 @@ public class StandardHelper {
         serviceMapping.put("mqtt", "secure-mqtt");
         serviceMapping.put("console", "http");
 
-        // Step 5: Create routes
         for (Endpoint endpoint : resourceList.routeEndpoints) {
             kubernetes.createEndpoint(endpoint, serviceMapping, addressSpace.getName(), addressSpace.getNamespace());
         }
 
-        // Step 4: Create secrets for endpoints if they don't already exist
         for (String secretName : resourceList.routeEndpoints.stream()
                 .filter(endpoint -> endpoint.getCertProvider().isPresent())
                 .map(endpoint -> endpoint.getCertProvider().get().getSecretName())
@@ -107,7 +106,7 @@ public class StandardHelper {
             parameterValues.add(new ParameterValue(TemplateParameter.ADDRESS_SPACE_SERVICE_HOST, getApiServer()));
             parameterValues.add(new ParameterValue(TemplateParameter.AUTHENTICATION_SERVICE_HOST, authResolver.getHost(authService)));
             parameterValues.add(new ParameterValue(TemplateParameter.AUTHENTICATION_SERVICE_PORT, String.valueOf(authResolver.getPort(authService))));
-            authResolver.getCaSecretName(authService).ifPresent(secret -> parameterValues.add(new ParameterValue(TemplateParameter.AUTHENTICATION_SERVICE_CA_SECRET, secret)));
+            authResolver.getCaSecretName(authService).ifPresent(secretName -> kubernetes.getSecret(secretName).ifPresent(secret -> parameterValues.add(new ParameterValue(TemplateParameter.AUTHENTICATION_SERVICE_CA_CERT, secret.getData().get("tls.crt")))));
             authResolver.getClientSecretName(authService).ifPresent(secret -> parameterValues.add(new ParameterValue(TemplateParameter.AUTHENTICATION_SERVICE_CLIENT_SECRET, secret)));
             authResolver.getSaslInitHost(authService).ifPresent(saslInitHost -> parameterValues.add(new ParameterValue(TemplateParameter.AUTHENTICATION_SERVICE_SASL_INIT_HOST, saslInitHost)));
 
