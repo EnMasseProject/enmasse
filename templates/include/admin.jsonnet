@@ -12,8 +12,7 @@ local common = import "common.jsonnet";
           "app": "enmasse"
         },
         "annotations": {
-          "addressSpace": addressSpace,
-          "service.alpha.openshift.io/serving-cert-secret-name": name + "-certs"
+          "addressSpace": addressSpace
         }
       },
       "spec": {
