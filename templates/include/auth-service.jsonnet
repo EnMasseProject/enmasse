@@ -141,7 +141,7 @@ local images = import "images.jsonnet";
     },
 
 
-  keycloak_deployment(keycloak_image, keycloak_credentials_secret)::
+  keycloak_deployment(keycloak_image, keycloak_credentials_secret, cert_secret_name)::
     {
       "apiVersion": "extensions/v1beta1",
       "kind": "Deployment",
@@ -199,6 +199,10 @@ local images = import "images.jsonnet";
                   {
                     "name": "keycloak-persistence",
                     "mountPath": "/opt/jboss/keycloak/standalone/data",
+                  },
+                  {
+                    "name": cert_secret_name,
+                    "mountPath": "/opt/jboss/keycloak/standalone/cert",
                   }
                 ],
                 "livenessProbe": {
@@ -213,6 +217,11 @@ local images = import "images.jsonnet";
               {
                 "name": "keycloak-persistence",
                 "emptyDir": {}
+              },
+              { "name": cert_secret_name,
+                "secret": {
+                  "secretName": cert_secret_name
+                          }
               }
             ]
           }
@@ -220,7 +229,7 @@ local images = import "images.jsonnet";
       }
     },
 
-  none_deployment(none_authservice_image)::
+  none_deployment(none_authservice_image, cert_secret_name)::
     {
       "apiVersion": "extensions/v1beta1",
       "kind": "Deployment",
@@ -260,10 +269,21 @@ local images = import "images.jsonnet";
                 "livenessProbe": {
                   "tcpSocket": {
                     "port": "amqp"
-                  }
+                  },
+                  "volumeMounts": [
+                    {
+                      "name": cert_secret_name,
+                      "mountPath": "/opt/none-authservice/cert",
+                    }
+                  ]
                 }
               },
-            ]
+            ],
+            "volumes": [ { "name": cert_secret_name,
+                           "secret": {
+                             "secretName": cert_secret_name
+                                     }
+                         } ]
           }
         }
       }
@@ -275,7 +295,7 @@ local images = import "images.jsonnet";
     "apiVersion": "v1",
     "kind": "List",
     "items": [
-      me.keycloak_deployment(images.keycloak, "keycloak-credentials"),
+      me.keycloak_deployment(images.keycloak, "keycloak-credentials", "standard-authservice-cert"),
       me.keycloak_controller_deployment(images.keycloak_controller, "keycloak-credentials"),
       me.standard_authservice
     ],
@@ -286,7 +306,7 @@ local images = import "images.jsonnet";
     "apiVersion": "v1",
     "kind": "Template",
     "objects": [
-      me.keycloak_deployment("${STANDARD_AUTHSERVICE_IMAGE}", "${KEYCLOAK_SECRET_NAME}"),
+      me.keycloak_deployment("${STANDARD_AUTHSERVICE_IMAGE}", "${KEYCLOAK_SECRET_NAME}", "${STANDARD_AUTHSERVICE_SECRET_NAME}"),
       me.keycloak_controller_deployment("${KEYCLOAK_CONTROLLER_IMAGE}", "${KEYCLOAK_SECRET_NAME}"),
       me.standard_authservice
     ],
@@ -305,6 +325,11 @@ local images = import "images.jsonnet";
         "name": "KEYCLOAK_CONTROLLER_IMAGE",
         "description": "The docker image to use for the keycloak controller",
         "value": images.keycloak_controller
+      },
+      {
+        "name": "STANDARD_AUTHSERVICE_SECRET_NAME",
+        "description": "The secret containing the tls certificate and key",
+        "value": "standard-authservice-cert"
       },
     ]
   },

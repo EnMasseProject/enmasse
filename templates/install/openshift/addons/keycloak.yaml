@@ -42,9 +42,14 @@ objects:
           volumeMounts:
           - mountPath: "/opt/jboss/keycloak/standalone/data"
             name: keycloak-persistence
+          - mountPath: "/opt/jboss/keycloak/standalone/cert"
+            name: "${STANDARD_AUTHSERVICE_SECRET_NAME}"
         volumes:
         - emptyDir: {}
           name: keycloak-persistence
+        - name: "${STANDARD_AUTHSERVICE_SECRET_NAME}"
+          secret:
+            secretName: "${STANDARD_AUTHSERVICE_SECRET_NAME}"
 - apiVersion: extensions/v1beta1
   kind: Deployment
   metadata:
@@ -106,3 +111,6 @@ parameters:
 - description: The docker image to use for the keycloak controller
   name: KEYCLOAK_CONTROLLER_IMAGE
   value: docker.io/enmasseproject/keycloak-controller:latest
+- description: The secret containing the tls certificate and key
+  name: STANDARD_AUTHSERVICE_SECRET_NAME
+  value: standard-authservice-cert

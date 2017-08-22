@@ -167,7 +167,10 @@ else
     TEMPLATE_PARAMS="$TEMPLATE_PARAMS ENMASSE_CA_SECRET=$CA_SECRET"
 fi
 
-create_and_sign_cert "oc" $CA_KEY $CA_CERT "address-controller.${NAMESPACE}.svc.cluster.local" "address-controller-certs"
+create_and_sign_cert "oc" $CA_KEY $CA_CERT "address-controller.${NAMESPACE}.svc.cluster.local" "address-controller-cert"
+create_and_sign_cert "oc" $CA_KEY $CA_CERT "standard-authservice.${NAMESPACE}.svc.cluster.local" "standard-authservice-cert"
+create_and_sign_cert "oc" $CA_KEY $CA_CERT "none-authservice.${NAMESPACE}.svc.cluster.local" "none-authservice-cert"
+
 
 if [[ $TEMPLATE_PARAMS == *"MULTIINSTANCE=true"* ]]; then
     if [ -n "$OS_ALLINONE" ]
