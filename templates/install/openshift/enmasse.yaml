@@ -1010,7 +1010,6 @@ objects:
     metadata:
       annotations:
         addressSpace: "${ADDRESS_SPACE}"
-        service.alpha.openshift.io/serving-cert-secret-name: ragent-certs
       labels:
         app: enmasse
       name: ragent
@@ -1026,7 +1025,6 @@ objects:
     metadata:
       annotations:
         addressSpace: "${ADDRESS_SPACE}"
-        service.alpha.openshift.io/serving-cert-secret-name: configuration-certs
       labels:
         app: enmasse
       name: configuration
@@ -1041,7 +1039,6 @@ objects:
     metadata:
       annotations:
         addressSpace: "${ADDRESS_SPACE}"
-        service.alpha.openshift.io/serving-cert-secret-name: queue-scheduler-certs
       labels:
         app: enmasse
       name: queue-scheduler
@@ -1057,7 +1054,6 @@ objects:
     metadata:
       annotations:
         addressSpace: "${ADDRESS_SPACE}"
-        service.alpha.openshift.io/serving-cert-secret-name: console-certs
       labels:
         app: enmasse
       name: console
