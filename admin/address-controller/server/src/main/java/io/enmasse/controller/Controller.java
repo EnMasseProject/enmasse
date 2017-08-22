@@ -33,7 +33,7 @@ import io.enmasse.address.model.types.AddressSpaceType;
 import io.enmasse.address.model.types.standard.StandardAddressSpaceType;
 import io.enmasse.controller.auth.AuthController;
 import io.enmasse.controller.auth.CertManager;
-import io.enmasse.controller.auth.SelfSignedCertManager;
+import io.enmasse.controller.auth.OpenSSLCertManager;
 import io.enmasse.controller.common.AuthenticationServiceResolverFactory;
 import io.enmasse.controller.common.ExternalAuthenticationServiceResolver;
 import io.enmasse.controller.common.Kubernetes;
@@ -93,7 +93,8 @@ public class Controller extends AbstractVerticle {
             addressSpaceApi.createAddressSpace(builder.build());
         }
 
-        CertManager certManager = SelfSignedCertManager.create(controllerClient);
+        CertManager certManager = OpenSSLCertManager.create(controllerClient, options.caDir());
+
         deployVerticles(startPromise,
                 new Deployment(new AuthController(certManager, addressSpaceApi)),
                 new Deployment(new StandardController(controllerClient, addressSpaceApi, kubernetes, createResolverFactory(options), options.isMultiinstance())),

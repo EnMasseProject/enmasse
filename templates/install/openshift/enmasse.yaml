@@ -1187,6 +1187,8 @@ objects:
         - env:
           - name: MULTIINSTANCE
             value: "${MULTIINSTANCE}"
+          - name: CA_DIR
+            value: "/ca-cert"
           image: "${ADDRESS_CONTROLLER_REPO}"
           livenessProbe:
             tcpSocket:

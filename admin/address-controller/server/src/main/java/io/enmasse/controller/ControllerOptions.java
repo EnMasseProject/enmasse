@@ -32,6 +32,8 @@ public final class ControllerOptions {
     private final boolean isMultiinstance;
     private final String namespace;
     private final String token;
+    private final File caDir;
+
     private final String certDir;
     private final File templateDir;
     private final String messagingHost;
@@ -43,13 +45,14 @@ public final class ControllerOptions {
     private final AuthServiceInfo standardAuthService;
 
     private ControllerOptions(String masterUrl, boolean isMultiinstance, String namespace, String token,
-                              File templateDir, String messagingHost, String mqttHost,
+                              File caDir, File templateDir, String messagingHost, String mqttHost,
                               String consoleHost, String certSecret, String certDir,
                               PasswordAuthentication osbAuth, AuthServiceInfo noneAuthService, AuthServiceInfo standardAuthService) {
         this.masterUrl = masterUrl;
         this.isMultiinstance = isMultiinstance;
         this.namespace = namespace;
         this.token = token;
+        this.caDir = caDir;
         this.templateDir = templateDir;
         this.messagingHost = messagingHost;
         this.mqttHost = mqttHost;
@@ -75,6 +78,10 @@ public final class ControllerOptions {
 
     public boolean isMultiinstance() {
         return isMultiinstance;
+    }
+
+    public File caDir() {
+        return caDir;
     }
 
     public Optional<File> templateDir() {
@@ -126,6 +133,8 @@ public final class ControllerOptions {
         String token = getEnv(env, "TOKEN")
                 .orElseGet(() -> readFile(new File(SERVICEACCOUNT_PATH, "token")));
 
+        File caDir = new File(getEnvOrThrow(env, "CA_DIR"));
+
         File templateDir = getEnv(env, "TEMPLATE_DIR")
                 .map(File::new)
                 .orElse(new File("/enmasse-templates"));
@@ -152,6 +161,7 @@ public final class ControllerOptions {
                 isMultiinstance,
                 namespace,
                 token,
+                caDir,
                 templateDir,
                 messagingHost,
                 mqttHost,

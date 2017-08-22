@@ -442,6 +442,8 @@ items:
         - env:
           - name: MULTIINSTANCE
             value: 'false'
+          - name: CA_DIR
+            value: "/ca-cert"
           image: docker.io/enmasseproject/address-controller:latest
           livenessProbe:
             tcpSocket:
