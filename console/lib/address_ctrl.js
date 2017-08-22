@@ -96,22 +96,6 @@ function request(path, method, headers, body, handler) {
     });
 }
 
-function get_type(address) {
-    if (address.store_and_forward) {
-        if (address.multicast) {
-            return 'topic';
-        } else {
-            return 'queue';
-        }
-    } else {
-        if (address.multicast) {
-            return 'multicast';
-        } else {
-            return 'anycast';
-        }
-    }
-}
-
 function create_address(address) {
     var data = {
         "apiVersion": "enmasse.io/v1",
