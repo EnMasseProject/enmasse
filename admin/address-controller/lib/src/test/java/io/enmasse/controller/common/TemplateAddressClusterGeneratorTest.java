@@ -40,18 +40,17 @@ import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.*;
 
 public class TemplateAddressClusterGeneratorTest {
-    private OpenShiftClient mockClient;
+    private Kubernetes kubernetes;
     private AddressClusterGenerator generator;
     private TestAddressSpaceApi testAddressSpaceApi = new TestAddressSpaceApi();
 
     @Before
     public void setUp() {
-        mockClient = mock(OpenShiftClient.class);
         testAddressSpaceApi.createAddressSpace(createAddressSpace("myinstance"));
+        kubernetes = mock(Kubernetes.class);
         generator = new TemplateAddressClusterGenerator(testAddressSpaceApi,
-                new KubernetesHelper("myinstance", mockClient, Optional.of(new File("src/test/resources/templates"))),
-                authenticationServiceType -> new NoneAuthenticationServiceResolver("localhost", 5672)
-        );
+                kubernetes,
+                authenticationServiceType -> new NoneAuthenticationServiceResolver("localhost", 5672));
     }
 
     @Test
@@ -103,11 +102,8 @@ public class TemplateAddressClusterGeneratorTest {
     }
 
     private AddressCluster generateCluster(Address address, ArgumentCaptor<ParameterValue> captor) {
-        TemplateOperation templateOp = mock(TemplateOperation.class);
-        TemplateResource templateResource = mock(TemplateResource.class);
-        when(templateOp.load(any(File.class))).thenReturn(templateResource);
-        when(templateResource.processLocally(captor.capture())).thenReturn(new KubernetesListBuilder().addNewConfigMapItem().withNewMetadata().withName("testmap").endMetadata().endConfigMapItem().build());
-        when(mockClient.templates()).thenReturn(templateOp);
+        when(kubernetes.processTemplate(anyString(), captor.capture())).thenReturn(new KubernetesListBuilder().addNewConfigMapItem().withNewMetadata().withName("testmap").endMetadata().endConfigMapItem().build());
+        when(kubernetes.getSecret(anyString())).thenReturn(Optional.empty());
 
         return generator.generateCluster("cluster1", Collections.singleton(address));
     }

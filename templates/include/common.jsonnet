@@ -96,5 +96,17 @@
         "name": selector_name
       }
     }
+  },
+
+  ca_secret(name, cert_value)::
+  {
+    "apiVersion": "v1",
+    "kind": "Secret",
+    "metadata": {
+      "name": name
+    },
+    "data": {
+      "tls.crt": cert_value
+    }
   }
 }

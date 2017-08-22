@@ -33,14 +33,15 @@ local images = import "images.jsonnet";
       },
       "name": "enmasse-instance-infra"
     },
-    local common = [
-      qdrouterd.deployment(use_sasldb, "${ADDRESS_SPACE}", "${ROUTER_REPO}", "${ROUTER_METRICS_REPO}", "${ROUTER_SECRET}"),
+    local common_items = [
+      qdrouterd.deployment(use_sasldb, "${ADDRESS_SPACE}", "${ROUTER_REPO}", "${ROUTER_METRICS_REPO}", "${ROUTER_SECRET}", "authservice-ca"),
       messagingService.internal("${ADDRESS_SPACE}"),
       subserv.deployment("${ADDRESS_SPACE}", "${SUBSERV_REPO}"),
       subserv.service("${ADDRESS_SPACE}"),
       mqttGateway.deployment("${ADDRESS_SPACE}", "${MQTT_GATEWAY_REPO}", "${MQTT_SECRET}"),
       mqttService.internal("${ADDRESS_SPACE}"),
       mqttLwt.deployment("${ADDRESS_SPACE}", "${MQTT_LWT_REPO}"),
+      common.ca_secret("authservice-ca", "${AUTHENTICATION_SERVICE_CA_CERT}"),
       hawkularBrokerConfig,
       hawkularRouterConfig
     ],
@@ -65,7 +66,7 @@ local images = import "images.jsonnet";
    // local routes = if use_routes then routeConfig else ingressConfig,
 
     "objects": (if use_sasldb then [router.sasldb_pvc()] else []) + 
-      common +
+      common_items +
       //routes +
       adminObj +
       (if with_kafka then kafka else []),
@@ -164,8 +165,8 @@ local images = import "images.jsonnet";
         "required": true
       },
       {
-        "name": "AUTHENTICATION_SERVICE_CA_SECRET",
-        "description": "The CA to use for validating authentication service cert",
+        "name": "AUTHENTICATION_SERVICE_CA_CERT",
+        "description": "The CA cert to use for validating authentication service cert",
       },
       {
         "name": "AUTHENTICATION_SERVICE_CLIENT_SECRET",

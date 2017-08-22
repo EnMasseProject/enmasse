@@ -17,19 +17,17 @@ package io.enmasse.controller.common;
 
 import io.enmasse.address.model.AuthenticationService;
 import io.enmasse.address.model.AuthenticationServiceResolver;
-import io.fabric8.kubernetes.api.model.Service;
-import io.fabric8.openshift.client.OpenShiftClient;
 
 import java.util.Optional;
 
 /**
  * Resolves the none authentication service host name.
  */
-public class NoneAuthenticationServiceResolver implements AuthenticationServiceResolver {
+public class StandardAuthenticationServiceResolver implements AuthenticationServiceResolver {
     private final String host;
     private final int port;
 
-    public NoneAuthenticationServiceResolver(String host, int port) {
+    public StandardAuthenticationServiceResolver(String host, int port) {
         this.host = host;
         this.port = port;
     }
@@ -46,7 +44,7 @@ public class NoneAuthenticationServiceResolver implements AuthenticationServiceR
 
     @Override
     public Optional<String> getCaSecretName(AuthenticationService authService) {
-        return Optional.of("none-authservice-cert");
+        return Optional.of("standard-authservice-cert");
     }
 
     @Override

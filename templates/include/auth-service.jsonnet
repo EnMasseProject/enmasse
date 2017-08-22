@@ -269,14 +269,14 @@ local images = import "images.jsonnet";
                 "livenessProbe": {
                   "tcpSocket": {
                     "port": "amqps"
-                  },
-                  "volumeMounts": [
-                    {
-                      "name": cert_secret_name,
-                      "mountPath": "/opt/none-authservice/cert",
-                    }
-                  ]
-                }
+                  }
+                },
+                "volumeMounts": [
+                  {
+                    "name": cert_secret_name,
+                    "mountPath": "/opt/none-authservice/cert",
+                  }
+                ]
               },
             ],
             "volumes": [ { "name": cert_secret_name,

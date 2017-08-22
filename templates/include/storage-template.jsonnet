@@ -53,7 +53,12 @@ local forwarder = import "forwarder.jsonnet";
               local brokerVolume = if persistence
                 then broker.persistedVolume(volumeName, claimName)
                 else broker.volume(volumeName),
-              "volumes": [brokerVolume, router.secret_volume("${COLOCATED_ROUTER_SECRET}"), broker.hawkularVolume()],
+              "volumes": [
+                brokerVolume,
+                router.secret_volume("ssl-certs", "${COLOCATED_ROUTER_SECRET}"),
+                router.secret_volume("authservice-ca", "authservice-ca"),
+                broker.hawkularVolume()
+              ],
 
               "containers": if multicast
                 then [ broker.container(volumeName, broker_repo, addressEnv),
