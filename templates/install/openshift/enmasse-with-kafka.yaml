@@ -1200,18 +1200,18 @@ objects:
         containers:
         - env:
           - name: LISTENPORT
-            value: '5672'
+            value: '5671'
           image: "${NONE_AUTHSERVICE_IMAGE}"
           livenessProbe:
             tcpSocket:
-              port: amqp
+              port: amqps
             volumeMounts:
             - mountPath: "/opt/none-authservice/cert"
               name: "${NONE_AUTHSERVICE_CERT_SECRET_NAME}"
           name: none-authservice
           ports:
-          - containerPort: 5672
-            name: amqp
+          - containerPort: 5671
+            name: amqps
           resources:
             limits:
               memory: 48Mi
@@ -1229,10 +1229,10 @@ objects:
     name: none-authservice
   spec:
     ports:
-    - name: amqp
-      port: 5672
+    - name: amqps
+      port: 5671
       protocol: TCP
-      targetPort: amqp
+      targetPort: amqps
     selector:
       name: none-authservice
 - apiVersion: extensions/v1beta1

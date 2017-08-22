@@ -37,10 +37,10 @@ local images = import "images.jsonnet";
     "spec": {
       "ports": [
         {
-          "name": "amqp",
-          "port": 5672,
+          "name": "amqps",
+          "port": 5671,
           "protocol": "TCP",
-          "targetPort": "amqp"
+          "targetPort": "amqps"
         }
       ],
       "selector": {
@@ -255,7 +255,7 @@ local images = import "images.jsonnet";
                 "name": "none-authservice",
                 "env": [{
                   "name": "LISTENPORT",
-                  "value": "5672"
+                  "value": "5671"
                 }],
                 "resources": {
                     "requests": {
@@ -265,10 +265,10 @@ local images = import "images.jsonnet";
                         "memory": "48Mi",
                     }
                 },
-                "ports": [ { "name": "amqp", "containerPort": 5672 } ],
+                "ports": [ { "name": "amqps", "containerPort": 5671 } ],
                 "livenessProbe": {
                   "tcpSocket": {
-                    "port": "amqp"
+                    "port": "amqps"
                   },
                   "volumeMounts": [
                     {
