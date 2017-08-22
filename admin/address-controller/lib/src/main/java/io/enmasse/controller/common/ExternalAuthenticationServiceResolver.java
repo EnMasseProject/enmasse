@@ -44,7 +44,7 @@ public class ExternalAuthenticationServiceResolver implements AuthenticationServ
     }
 
     @Override
-    public Optional<String> getSaslInitHost(AuthenticationService authService) {
+    public Optional<String> getSaslInitHost(String addressSpaceName, AuthenticationService authService) {
         return Optional.ofNullable((String) authService.getDetails().get("saslInitHost"));
     }
 }

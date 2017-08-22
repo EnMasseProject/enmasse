@@ -28,5 +28,5 @@ public interface AuthenticationServiceResolver {
 
     Optional<String> getClientSecretName(AuthenticationService authService);
 
-    Optional<String> getSaslInitHost(AuthenticationService authService);
+    Optional<String> getSaslInitHost(String addressSpaceName, AuthenticationService authService);
 }

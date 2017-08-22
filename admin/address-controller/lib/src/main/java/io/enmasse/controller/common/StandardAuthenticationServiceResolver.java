@@ -53,7 +53,7 @@ public class StandardAuthenticationServiceResolver implements AuthenticationServ
     }
 
     @Override
-    public Optional<String> getSaslInitHost(AuthenticationService authService) {
-        return Optional.empty();
+    public Optional<String> getSaslInitHost(String addressSpaceName, AuthenticationService authService) {
+        return Optional.of(addressSpaceName);
     }
 }
