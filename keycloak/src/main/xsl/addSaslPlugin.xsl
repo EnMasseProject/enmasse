@@ -12,9 +12,12 @@
             <spi name="amqp">
                 <provider name="amqp-server" enabled="true">
                     <properties>
-                        <property name="enableTls" value="false"/>
-                        <property name="host" value="0.0.0.0"/>
-                        <property name="port" value="5672"/>
+                        <property name="enableTls" value="true"/>
+                        <property name="enableNonTls" value="false"/>
+                        <property name="pemKeyPath" value="/opt/jboss/keycloak/standalone/cert/tls.key" />
+                        <property name="pemCertificatePath" value="/opt/jboss/keycloak/standalone/cert/tls.crt" />
+                        <property name="tlsHost" value="0.0.0.0"/>
+                        <property name="tlsPort" value="5671"/>
                         <property name="defaultDomain" value="enmasse"/>
                     </properties>
                 </provider>
