@@ -15,17 +15,28 @@
  */
 package io.enmasse.controller.auth;
 
-import java.util.Collection;
+import java.io.File;
 
-/**
- * Interface for certificate managers
- */
-public interface CertManager {
-    void issueRouteCert(String secretName, String namespace, String... hostnames) throws Exception;
+public class CertSigningRequest {
+    private final CertComponent certComponent;
+    private final File csrFile;
+    private final File keyFile;
 
-    Collection<CertComponent> listComponents(String namespace);
-    boolean certExists(CertComponent component);
-    CertSigningRequest createCsr(CertComponent component);
-    Cert signCsr(CertSigningRequest request);
-    void createSecret(Cert cert);
+    CertSigningRequest(CertComponent certComponent, File csrFile, File keyFile) {
+        this.certComponent = certComponent;
+        this.csrFile = csrFile;
+        this.keyFile = keyFile;
+    }
+
+    public CertComponent getCertComponent() {
+        return certComponent;
+    }
+
+    public File getCsrFile() {
+        return csrFile;
+    }
+
+    public File getKeyFile() {
+        return keyFile;
+    }
 }

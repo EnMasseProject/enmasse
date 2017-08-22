@@ -1,12 +1,31 @@
+/*
+ * Copyright 2017 Red Hat Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package io.enmasse.controller.auth;
 
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.Endpoint;
+import io.enmasse.config.LabelKeys;
 import io.enmasse.k8s.api.AddressSpaceApi;
 import io.enmasse.k8s.api.Watch;
 import io.enmasse.k8s.api.Watcher;
+import io.fabric8.kubernetes.api.model.extensions.DeploymentList;
+import io.fabric8.openshift.client.OpenShiftClient;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import org.slf4j.Logger;
@@ -71,11 +90,35 @@ public class AuthController extends AbstractVerticle implements Watcher<AddressS
     @Override
     public void resourcesUpdated(Set<AddressSpace> addressSpaces) throws Exception {
         for (AddressSpace addressSpace : addressSpaces) {
+            issueComponentCertificates(addressSpace);
             for (Endpoint endpoint : addressSpace.getEndpoints()) {
                 if (endpoint.getCertProvider().isPresent()) {
-                    certManager.issueCert(endpoint.getCertProvider().get().getSecretName(), addressSpace.getNamespace());
+                    certManager.issueRouteCert(endpoint.getCertProvider().get().getSecretName(), addressSpace.getNamespace());
                 }
             }
         }
+    }
+
+    private void issueComponentCertificates(AddressSpace addressSpace) {
+        vertx.executeBlocking(promise -> {
+            try {
+                promise.complete(certManager.listComponents(addressSpace.getNamespace()).stream()
+                        .filter(component -> !certManager.certExists(component))
+                        .map(certManager::createCsr)
+                        .map(certManager::signCsr)
+                        .map(cert -> {
+                            certManager.createSecret(cert);
+                            return cert; })
+                        .collect(Collectors.toList()));
+            } catch (Exception e) {
+                promise.fail(e);
+            }
+        }, result -> {
+            if (result.succeeded()) {
+                log.info("Issued component certificates: {}", result.result());
+            } else {
+                log.warn("Error issuing component certificates", result.cause());
+            }
+        });
     }
 }

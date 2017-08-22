@@ -112,6 +112,9 @@ local common = import "common.jsonnet";
                 "env": [{
                   "name": "MULTIINSTANCE",
                   "value": multiinstance
+                }, {
+                  "name": "CA_DIR",
+                  "value": "/ca-cert"
                 }],
                 "volumeMounts": mounts,
                 "resources": {
