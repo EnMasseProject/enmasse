@@ -41,9 +41,14 @@ items:
           volumeMounts:
           - mountPath: "/opt/jboss/keycloak/standalone/data"
             name: keycloak-persistence
+          - mountPath: "/opt/jboss/keycloak/standalone/cert"
+            name: standard-authservice-cert
         volumes:
         - emptyDir: {}
           name: keycloak-persistence
+        - name: standard-authservice-cert
+          secret:
+            secretName: standard-authservice-cert
 - apiVersion: extensions/v1beta1
   kind: Deployment
   metadata:

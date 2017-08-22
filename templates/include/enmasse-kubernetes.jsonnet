@@ -12,7 +12,7 @@ local images = import "images.jsonnet";
     "apiVersion": "v1",
     "kind": "List",
     "items": [ templateConfig.generate(use_sasl, with_kafka, false),
-               authService.none_deployment(images.none_authservice),
+               authService.none_deployment(images.none_authservice, "none-authservice-cert"),
                authService.none_authservice,
                addressController.deployment(images.address_controller, "false", "enmasse-template-config", "enmasse-ca", "address-controller-cert"),
                restapiRoute.ingress(""),

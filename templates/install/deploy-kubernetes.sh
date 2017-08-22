@@ -112,7 +112,10 @@ runcmd "openssl req -new -x509 -batch -nodes -days 11000 -subj \"/O=io.enmasse/C
 
 create_tls_secret "kubectl" "enmasse-ca" $CA_KEY $CA_CERT
 
-create_and_sign_cert "kubectl " $CA_KEY $CA_CERT "address-controller.${NAMESPACE}.svc.cluster.local" "address-controller-certs"
+create_and_sign_cert "kubectl " $CA_KEY $CA_CERT "address-controller.${NAMESPACE}.svc.cluster.local" "address-controller-cert"
+create_and_sign_cert "kubectl " $CA_KEY $CA_CERT "standard-authservice.${NAMESPACE}.svc.cluster.local" "standard-authservice-cert"
+create_and_sign_cert "kubectl " $CA_KEY $CA_CERT "none-authservice.${NAMESPACE}.svc.cluster.local" "none-authservice-cert"
+
 
 runcmd "kubectl create secret generic keycloak-credentials --from-literal=admin.username=admin --from-literal=admin.password=$KEYCLOAK_PASSWORD" "Create secret with keycloak admin credentials"
 

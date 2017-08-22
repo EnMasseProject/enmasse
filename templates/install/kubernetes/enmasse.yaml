@@ -400,6 +400,9 @@ items:
           livenessProbe:
             tcpSocket:
               port: amqp
+            volumeMounts:
+            - mountPath: "/opt/none-authservice/cert"
+              name: none-authservice-cert
           name: none-authservice
           ports:
           - containerPort: 5672
@@ -409,6 +412,10 @@ items:
               memory: 48Mi
             requests:
               memory: 48Mi
+        volumes:
+        - name: none-authservice-cert
+          secret:
+            secretName: none-authservice-cert
 - apiVersion: v1
   kind: Service
   metadata:

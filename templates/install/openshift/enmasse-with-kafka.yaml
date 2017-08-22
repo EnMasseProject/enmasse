@@ -1205,6 +1205,9 @@ objects:
           livenessProbe:
             tcpSocket:
               port: amqp
+            volumeMounts:
+            - mountPath: "/opt/none-authservice/cert"
+              name: "${NONE_AUTHSERVICE_CERT_SECRET_NAME}"
           name: none-authservice
           ports:
           - containerPort: 5672
@@ -1214,6 +1217,10 @@ objects:
               memory: 48Mi
             requests:
               memory: 48Mi
+        volumes:
+        - name: "${NONE_AUTHSERVICE_CERT_SECRET_NAME}"
+          secret:
+            secretName: "${NONE_AUTHSERVICE_CERT_SECRET_NAME}"
 - apiVersion: v1
   kind: Service
   metadata:
@@ -1341,3 +1348,6 @@ parameters:
 - description: Name of the secret containing the address controller certificate
   name: ADDRESS_CONTROLLER_CERT_SECRET
   value: address-controller-cert
+- description: The secret to use for the none-authservice certificate
+  name: NONE_AUTHSERVICE_CERT_SECRET_NAME
+  value: none-authservice-cert
