@@ -18,7 +18,7 @@ if [ -z "$WORKER_THREADS" ]; then
     export WORKER_THREADS=4
 fi
 if [ -z "$AUTHENTICATION_SERVICE_SASL_INIT_HOST" ]; then
-    export AUTHENTICATION_SERVICE_SASL_INIT_HOST=AUTHENTICATION_SERVICE_HOST
+    export AUTHENTICATION_SERVICE_SASL_INIT_HOST=$AUTHENTICATION_SERVICE_HOST
     echo "WARNING: sasl-init hostname not configured, using $AUTHENTICATION_SERVICE_SASL_INIT_HOST"
 fi
 DOLLAR='$' envsubst < /etc/qpid-dispatch/qdrouterd.conf.template > /tmp/qdrouterd.conf
