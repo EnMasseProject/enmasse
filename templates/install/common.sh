@@ -78,3 +78,15 @@ function create_and_sign_cert() {
     sign_csr $CA_KEY $CA_CERT $SERVER_CSR $SERVER_CERT
     create_tls_secret $CMD $SECRET_NAME $SERVER_KEY $SERVER_CERT
 }
+
+function create_self_signed_cert() {
+    local CMD=$1
+    local CN=$2
+    local SECRET_NAME=$3
+
+    KEY=${TEMPDIR}/${CN}.key
+    CERT=${TEMPDIR}/${CN}.crt
+
+    runcmd "openssl req -new -x509 -batch -nodes -days 11000 -out ${CERT} -keyout ${KEY} -subj \"/O=io.enmasse/CN=${CN}\"" "Create self-signed certificate for ${CN}"
+    create_tls_secret $CMD $SECRET_NAME $KEY $CERT
+}
