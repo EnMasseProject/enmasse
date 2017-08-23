@@ -89,7 +89,7 @@ public class Controller extends AbstractVerticle {
             addressSpaceApi.createAddressSpace(builder.build());
         }
 
-        CertManager certManager = OpenSSLCertManager.create(controllerClient, options.caDir());
+        CertManager certManager = OpenSSLCertManager.create(controllerClient, options.caDir(), options.namespace());
 
         deployVerticles(startPromise,
                 new Deployment(new AuthController(certManager, addressSpaceApi)),
