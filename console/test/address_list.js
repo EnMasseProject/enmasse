@@ -63,12 +63,16 @@ function is_subscriber(link) {
     return link.is_sender() && link.source.address === 'v1/addresses';
 }
 
-MockConfigServ.prototype.notify_all = function () {
+MockConfigServ.prototype.notify_all = function (message) {
     var self = this;
+    var f;
+    if (message === undefined) {
+        f = function (link) { self.notify(link) };
+    } else {
+        f = function (link) { link.send(message); };
+    }
     for (var c in this.connections) {
-        this.connections[c].each_link(function (link) {
-            self.notify(link);
-        }, is_subscriber);
+        this.connections[c].each_link(f, is_subscriber);
     }
 }
 
@@ -130,6 +134,22 @@ describe('address registry', function() {
             assert.equal(addresses.get('foo').type, 'anycast');
             address_source.delete_all();
             address_source.notify_all();
+        });
+        addresses.on('deleted', function (addr) {
+            assert.equal(addr.address, 'foo');
+            assert.equal(addr.type, 'anycast');
+            assert.equal(addresses.get('foo'), undefined);
+            done();
+        });
+    });
+    it('handles body with no items', function(done) {
+        var addresses = new AddressList(connect());
+        address_source.add('foo', 'anycast');
+        addresses.on('updated', function (addr) {
+            assert.equal(addr.address, 'foo');
+            assert.equal(addr.type, 'anycast');
+            assert.equal(addresses.get('foo').type, 'anycast');
+            address_source.notify_all({subject: 'enmasse.io/v1/AddressList', body:'{}'});
         });
         addresses.on('deleted', function (addr) {
             assert.equal(addr.address, 'foo');
