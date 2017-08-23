@@ -19,17 +19,9 @@ var path = require('path');
 var fs = require('fs');
 var rhea = require('rhea');
 var Promise = require('bluebird');
-var ca_dir = "/opt/console/authservice-ca";
 
-function authenticate(user) {
+function authenticate(user, options) {
     return new Promise(function(resolve, reject) {
-        var options = {
-            host: process.env.AUTHENTICATION_SERVICE_HOST,
-            port: process.env.AUTHENTICATION_SERVICE_PORT,
-            transport: 'tls',
-            ca: [ fs.readFileSync(path.resolve(ca_dir, 'tls.crt')) ],
-            rejectUnauthorized: false
-        };
         if( user && user.name ) {
             options.username = user.name;
             options.password = user.pass;
@@ -55,8 +47,23 @@ function authenticate(user) {
         authServer.on("disconnected", handleFailure);
 
     });
+}
 
+function default_options(ca_path) {
+    var options = {
+        host: process.env.AUTHENTICATION_SERVICE_HOST,
+        port: process.env.AUTHENTICATION_SERVICE_PORT,
+    };
+    try {
+        options.ca = [fs.readFileSync(ca_path)];
+        options.transport = 'tls';
+        options.rejectUnauthorized = false;
+    } catch (error) {
+        console.warn('CA cannot be loaded from ' + ca_path + ': ' + error);
+    }
+    return options;
 }
 
 module.exports.authenticate = authenticate;
+module.exports.default_options = default_options;
 
