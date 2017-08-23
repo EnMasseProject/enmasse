@@ -168,8 +168,8 @@ else
 fi
 
 create_and_sign_cert "oc" $CA_KEY $CA_CERT "address-controller.${NAMESPACE}.svc.cluster.local" "address-controller-cert"
-create_and_sign_cert "oc" $CA_KEY $CA_CERT "standard-authservice.${NAMESPACE}.svc.cluster.local" "standard-authservice-cert"
-create_and_sign_cert "oc" $CA_KEY $CA_CERT "none-authservice.${NAMESPACE}.svc.cluster.local" "none-authservice-cert"
+create_self_signed_cert "oc" "standard-authservice.${NAMESPACE}.svc.cluster.local" "standard-authservice-cert"
+create_self_signed_cert "oc" "none-authservice.${NAMESPACE}.svc.cluster.local" "none-authservice-cert"
 
 
 if [[ $TEMPLATE_PARAMS == *"MULTIINSTANCE=true"* ]]; then
