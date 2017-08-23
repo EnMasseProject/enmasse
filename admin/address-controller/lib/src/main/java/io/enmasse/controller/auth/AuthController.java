@@ -20,12 +20,10 @@ import java.util.stream.Collectors;
 
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.Endpoint;
-import io.enmasse.config.LabelKeys;
 import io.enmasse.k8s.api.AddressSpaceApi;
+import io.enmasse.k8s.api.KubeUtil;
 import io.enmasse.k8s.api.Watch;
 import io.enmasse.k8s.api.Watcher;
-import io.fabric8.kubernetes.api.model.extensions.DeploymentList;
-import io.fabric8.openshift.client.OpenShiftClient;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import org.slf4j.Logger;
@@ -90,6 +88,7 @@ public class AuthController extends AbstractVerticle implements Watcher<AddressS
     @Override
     public void resourcesUpdated(Set<AddressSpace> addressSpaces) throws Exception {
         for (AddressSpace addressSpace : addressSpaces) {
+            issueAddressSpaceCert(addressSpace);
             issueComponentCertificates(addressSpace);
             for (Endpoint endpoint : addressSpace.getEndpoints()) {
                 if (endpoint.getCertProvider().isPresent()) {
@@ -99,15 +98,39 @@ public class AuthController extends AbstractVerticle implements Watcher<AddressS
         }
     }
 
+    private void issueAddressSpaceCert(final AddressSpace addressSpace)
+    {
+        vertx.executeBlocking(promise -> {
+            try {
+                final String addressSpaceCaSecretName = getAddressSpaceCaSecretName(addressSpace);
+                if(!certManager.certExists(addressSpaceCaSecretName)) {
+                    certManager.createSelfSignedCertSecret(addressSpaceCaSecretName);
+                    //put crt into address space
+
+                }
+            } catch (Exception e) {
+                promise.fail(e);
+            }
+        }, result -> {
+            if (result.succeeded()) {
+                log.info("Issued addressspace ca certificates: {}", result.result());
+            } else {
+                log.warn("Error issuing addressspace ca certificate", result.cause());
+            }
+        });
+    }
+
     private void issueComponentCertificates(AddressSpace addressSpace) {
         vertx.executeBlocking(promise -> {
             try {
+                final String caSecretName = getAddressSpaceCaSecretName(addressSpace);
                 promise.complete(certManager.listComponents(addressSpace.getNamespace()).stream()
                         .filter(component -> !certManager.certExists(component))
                         .map(certManager::createCsr)
-                        .map(certManager::signCsr)
+                        .map(request -> certManager.signCsr(request,
+                                                            caSecretName))
                         .map(cert -> {
-                            certManager.createSecret(cert);
+                            certManager.createSecret(cert, caSecretName);
                             return cert; })
                         .collect(Collectors.toList()));
             } catch (Exception e) {
@@ -120,5 +143,10 @@ public class AuthController extends AbstractVerticle implements Watcher<AddressS
                 log.warn("Error issuing component certificates", result.cause());
             }
         });
+    }
+
+    private static String getAddressSpaceCaSecretName(final AddressSpace addressSpace)
+    {
+        return KubeUtil.sanitizeName("addressspace-" + addressSpace.getNamespace() + "-ca");
     }
 }

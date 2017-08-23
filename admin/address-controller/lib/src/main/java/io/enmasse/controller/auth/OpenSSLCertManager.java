@@ -15,19 +15,24 @@
  */
 package io.enmasse.controller.auth;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.util.Arrays;
+import java.util.Base64;
+import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+
 import io.enmasse.config.LabelKeys;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.openshift.client.OpenShiftClient;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.File;
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.util.*;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 /**
  * Controller that creates self-signed certificates for instances.
@@ -38,12 +43,18 @@ public class OpenSSLCertManager implements CertManager {
     private final File caKey;
     private final File caCert;
     private final File certDir;
+    private final String globalNamespace;
 
-    public OpenSSLCertManager(OpenShiftClient controllerClient, File caKey, File caCert, File certDir) {
+    public OpenSSLCertManager(OpenShiftClient controllerClient,
+                              File caKey,
+                              File caCert,
+                              File certDir,
+                              final String globalNamespace) {
         this.client = controllerClient;
         this.caKey = caKey;
         this.caCert = caCert;
         this.certDir = certDir;
+        this.globalNamespace = globalNamespace;
     }
 
     @Override
@@ -62,16 +73,40 @@ public class OpenSSLCertManager implements CertManager {
             File keyFile = new File("/tmp/server-key.pem");
             File certFile = new File("/tmp/server-cert.pem");
 
-            runCommand("openssl", "req", "-new", "-x509", "-batch", "-nodes",
-                    "-out", certFile.getAbsolutePath(), "-keyout", keyFile.getAbsolutePath());
-            Map<String, String> data = new LinkedHashMap<>();
-            Base64.Encoder encoder = Base64.getEncoder();
-            data.put(keyKey, encoder.encodeToString(FileUtils.readFileToByteArray(keyFile)));
-            data.put(certKey, encoder.encodeToString(FileUtils.readFileToByteArray(certFile)));
-            client.secrets().inNamespace(namespace).withName(secretName).edit()
-                    .addToData(data)
-                    .done();
+            createSelfSignedCert(keyFile, certFile);
+            createSecretFromCertAndKeyFiles(secretName, namespace, keyKey, certKey, keyFile, certFile, client);
         }
+    }
+
+    private static void createSelfSignedCert(final File keyFile, final File certFile) {
+        runCommand("openssl", "req", "-new", "-days", "11000", "-x509", "-batch", "-nodes",
+                "-out", certFile.getAbsolutePath(), "-keyout", keyFile.getAbsolutePath());
+    }
+
+    private static void createSecretFromCertAndKeyFiles(final String secretName,
+                                                        final String namespace,
+                                                        final File keyFile,
+                                                        final File certFile,
+                                                        final OpenShiftClient client)
+            throws IOException {
+        createSecretFromCertAndKeyFiles(secretName, namespace, "tls.key", "tls.crt", keyFile, certFile, client);
+    }
+
+    private static void createSecretFromCertAndKeyFiles(final String secretName,
+                                                        final String namespace,
+                                                        final String keyKey,
+                                                        final String certKey,
+                                                        final File keyFile,
+                                                        final File certFile,
+                                                        final OpenShiftClient client)
+            throws IOException {
+        Map<String, String> data = new LinkedHashMap<>();
+        Base64.Encoder encoder = Base64.getEncoder();
+        data.put(keyKey, encoder.encodeToString(FileUtils.readFileToByteArray(keyFile)));
+        data.put(certKey, encoder.encodeToString(FileUtils.readFileToByteArray(certFile)));
+        client.secrets().inNamespace(namespace).withName(secretName).edit()
+                .addToData(data)
+                .done();
     }
 
     private static void runCommand(String ... cmd) {
@@ -99,8 +134,14 @@ public class OpenSSLCertManager implements CertManager {
 
     @Override
     public boolean certExists(CertComponent component) {
-        return client.secrets().inNamespace(component.getNamespace()).withName(component.getName()).get() != null;
+        return client.secrets().inNamespace(component.getNamespace()).withName(component.getSecretName()).get() != null;
     }
+
+    @Override
+    public boolean certExists(String name) {
+        return client.secrets().withName(name).get() != null;
+    }
+
 
     @Override
     public CertSigningRequest createCsr(CertComponent component) {
@@ -111,19 +152,59 @@ public class OpenSSLCertManager implements CertManager {
     }
 
     @Override
-    public Cert signCsr(CertSigningRequest request) {
+    public Cert signCsr(CertSigningRequest request, String secretName) {
         File crtFile = new File(certDir, request.getCertComponent().getNamespace() + "." + request.getCertComponent().getName() + ".crt");
-        runCommand("openssl", "x509", "-req", "-days", "11000", "-in", request.getCsrFile().getAbsolutePath(), "-CA", caCert.getAbsolutePath(), "-CAkey", caKey.getAbsolutePath(), "-CAcreateserial", "-out", crtFile.getAbsolutePath());
-        return new Cert(request.getCertComponent(), request.getKeyFile(), crtFile);
+        final Secret secret = client.secrets().withName(secretName).get();
+
+        File caKey = createTempFileFromSecret(secret, "tls.key");
+        File caCert = createTempFileFromSecret(secret, "tls.crt");
+
+        try {
+            runCommand("openssl",
+                       "x509",
+                       "-req",
+                       "-days",
+                       "11000",
+                       "-in",
+                       request.getCsrFile().getAbsolutePath(),
+                       "-CA",
+                       caCert.getAbsolutePath(),
+                       "-CAkey",
+                       caKey.getAbsolutePath(),
+                       "-CAcreateserial",
+                       "-out",
+                       crtFile.getAbsolutePath());
+            return new Cert(request.getCertComponent(), request.getKeyFile(), crtFile);
+        } finally {
+            caKey.delete();
+            caCert.delete();
+        }
+
+    }
+
+    private File createTempFileFromSecret(Secret secret, String entry) {
+        try {
+            File file = File.createTempFile("secret", "pem");
+            String data = secret.getData().get(entry);
+            final Base64.Decoder decoder = Base64.getDecoder();
+            FileOutputStream outputStream = new FileOutputStream(file);
+            outputStream.write(decoder.decode(data));
+            outputStream.close();
+            return file;
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
     }
 
     @Override
-    public void createSecret(Cert cert) {
+    public void createSecret(Cert cert, final String caSecretName) {
         try {
             Map<String, String> data = new LinkedHashMap<>();
             Base64.Encoder encoder = Base64.getEncoder();
             data.put("tls.key", encoder.encodeToString(FileUtils.readFileToByteArray(cert.getKeyFile())));
             data.put("tls.crt", encoder.encodeToString(FileUtils.readFileToByteArray(cert.getCertFile())));
+            Secret caSecret = client.secrets().inNamespace(this.globalNamespace).withName(caSecretName).get();
+            data.put("ca.crt", caSecret.getData().get("tls.crt"));
 
             client.secrets().inNamespace(cert.getComponent().getNamespace()).createNew()
                     .editOrNewMetadata()
@@ -137,10 +218,29 @@ public class OpenSSLCertManager implements CertManager {
         }
     }
 
-    public static OpenSSLCertManager create(OpenShiftClient controllerClient, File caDir) {
+    @Override
+    public void createSelfSignedCertSecret(final String secretName) {
+        try {
+            File key = File.createTempFile("tls", "key");
+            File cert = File.createTempFile("tls", "crt");
+            try {
+                createSelfSignedCert(key, cert);
+                createSecretFromCertAndKeyFiles(secretName, this.globalNamespace, key, cert, this.client);
+            } finally {
+                key.delete();
+                cert.delete();
+            }
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
+
+    public static OpenSSLCertManager create(OpenShiftClient controllerClient,
+                                            File caDir,
+                                            final String globalNamespace) {
         File caKey = new File(caDir, "tls.key");
         File caCrt = new File(caDir, "tls.crt");
-        return new OpenSSLCertManager(controllerClient, caKey, caCrt, new File("/tmp"));
+        return new OpenSSLCertManager(controllerClient, caKey, caCrt, new File("/tmp"), globalNamespace);
     }
 
 }
