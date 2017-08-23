@@ -104,7 +104,7 @@ public class OpenSSLCertManager implements CertManager {
         Base64.Encoder encoder = Base64.getEncoder();
         data.put(keyKey, encoder.encodeToString(FileUtils.readFileToByteArray(keyFile)));
         data.put(certKey, encoder.encodeToString(FileUtils.readFileToByteArray(certFile)));
-        client.secrets().inNamespace(namespace).withName(secretName).edit()
+        client.secrets().inNamespace(namespace).withName(secretName).createOrReplaceWithNew()
                 .addToData(data)
                 .done();
     }
