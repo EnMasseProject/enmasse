@@ -5,16 +5,12 @@ local common = import "common.jsonnet";
   service(addressSpace)::
     common.service(addressSpace, "console", "console", "http", 8080, 8080),
 
-  container(use_sasldb, image_repo, env)::
+  container(image_repo, env)::
     {
       local mount_path = "/var/lib/qdrouterd",
-      local sasldb_env = [{
-          "name": "SASLDB",
-          "value": mount_path + "/qdrouterd.sasldb"
-        }],
       "image": image_repo,
       "name": "console",
-      "env": env + (if use_sasldb then sasldb_env else []) + authService.envVars,
+      "env": env + authService.envVars,
       "resources": {
         "requests": {
           "memory": "64Mi",
@@ -40,11 +36,10 @@ local common = import "common.jsonnet";
           "port": "http",
           "path": "/"
         }
-      },
-      [if use_sasldb then "volumeMounts"]: [{"name": "sasldb-vol","mountPath": mount_path}]
+      }
    },
 
-  deployment(use_sasldb, addressSpace, image_repo)::
+  deployment(addressSpace, image_repo)::
     {
       "apiVersion": "extensions/v1beta1",
       "kind": "Deployment",
@@ -72,9 +67,8 @@ local common = import "common.jsonnet";
           },
           "spec": {
             "containers": [
-              self.container(use_sasldb, image_repo, [{"name":"ADDRESS_SPACE_SERVICE_HOST","value":"${ADDRESS_SPACE_SERVICE_HOST}"}])
-            ],
-            [if use_sasldb then "volumes" ]: [router.sasldb_volume()]
+              self.container(image_repo, [{"name":"ADDRESS_SPACE_SERVICE_HOST","value":"${ADDRESS_SPACE_SERVICE_HOST}"}])
+            ]
           }
         }
       }

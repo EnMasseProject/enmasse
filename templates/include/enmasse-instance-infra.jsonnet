@@ -23,7 +23,7 @@ local hawkularRouterConfig = import "hawkular-router-config.jsonnet";
 local images = import "images.jsonnet";
 
 {
-  generate(use_sasldb, with_kafka, use_routes)::
+  generate(with_kafka, use_routes)::
   {
     "apiVersion": "v1",
     "kind": "Template",
@@ -34,7 +34,7 @@ local images = import "images.jsonnet";
       "name": "enmasse-instance-infra"
     },
     local common_items = [
-      qdrouterd.deployment(use_sasldb, "${ADDRESS_SPACE}", "${ROUTER_REPO}", "${ROUTER_METRICS_REPO}", "${ROUTER_SECRET}", "authservice-ca"),
+      qdrouterd.deployment("${ADDRESS_SPACE}", "${ROUTER_REPO}", "${ROUTER_METRICS_REPO}", "${ROUTER_SECRET}", "authservice-ca"),
       messagingService.internal("${ADDRESS_SPACE}"),
       subserv.deployment("${ADDRESS_SPACE}", "${SUBSERV_REPO}"),
       subserv.service("${ADDRESS_SPACE}"),
@@ -55,7 +55,7 @@ local images = import "images.jsonnet";
     ],
 
     local adminObj = [
-      admin.deployment(use_sasldb, "${ADDRESS_SPACE}", "${CONFIGSERV_REPO}", "${RAGENT_REPO}", "${QUEUE_SCHEDULER_REPO}", "${CONSOLE_REPO}", "authservice-ca")
+      admin.deployment("${ADDRESS_SPACE}", "${CONFIGSERV_REPO}", "${RAGENT_REPO}", "${QUEUE_SCHEDULER_REPO}", "${CONSOLE_REPO}", "authservice-ca")
     ] + admin.services("${ADDRESS_SPACE}"),
 
     local kafka = [
@@ -65,9 +65,8 @@ local images = import "images.jsonnet";
 
    // local routes = if use_routes then routeConfig else ingressConfig,
 
-    "objects": (if use_sasldb then [router.sasldb_pvc()] else []) + 
+    "objects":
       common_items +
-      //routes +
       adminObj +
       (if with_kafka then kafka else []),
 
