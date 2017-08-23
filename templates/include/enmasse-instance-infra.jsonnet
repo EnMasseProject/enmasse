@@ -55,7 +55,7 @@ local images = import "images.jsonnet";
     ],
 
     local adminObj = [
-      admin.deployment(use_sasldb, "${ADDRESS_SPACE}", "${CONFIGSERV_REPO}", "${RAGENT_REPO}", "${QUEUE_SCHEDULER_REPO}", "${CONSOLE_REPO}")
+      admin.deployment(use_sasldb, "${ADDRESS_SPACE}", "${CONFIGSERV_REPO}", "${RAGENT_REPO}", "${QUEUE_SCHEDULER_REPO}", "${CONSOLE_REPO}", "authservice-ca")
     ] + admin.services("${ADDRESS_SPACE}"),
 
     local kafka = [
