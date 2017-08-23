@@ -15,14 +15,19 @@
  */
 'use strict';
 
+var path = require('path');
+var fs = require('fs');
 var rhea = require('rhea');
 var Promise = require('bluebird');
+var ca_dir = "/opt/console/authservice-ca";
 
 function authenticate(user) {
     return new Promise(function(resolve, reject) {
         var options = {
-            "host": process.env.AUTHENTICATION_SERVICE_HOST,
-            "port": process.env.AUTHENTICATION_SERVICE_PORT
+            host: process.env.AUTHENTICATION_SERVICE_HOST,
+            port: process.env.AUTHENTICATION_SERVICE_PORT,
+            transport: 'tls',
+            ca: [ fs.readFileSync(path.resolve(ca_dir, 'tls.crt')) ]
         };
         if( user && user.name ) {
             options.username = user.name;

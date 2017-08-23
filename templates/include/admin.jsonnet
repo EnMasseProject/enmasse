@@ -31,7 +31,7 @@ local common = import "common.jsonnet";
     self.service("console", addressSpace, [{"name": "amqp-ws", "port": 5672, "targetPort": 56720}, {"name": "http", "port": 8080}])
   ],
 
-  deployment(use_sasldb, addressSpace, configserv_image, ragent_image, scheduler_image, console_image)::
+  deployment(use_sasldb, addressSpace, configserv_image, ragent_image, scheduler_image, console_image, auth_service_ca_secret)::
   {
     "apiVersion": "extensions/v1beta1",
     "kind": "Deployment",
@@ -67,7 +67,15 @@ local common = import "common.jsonnet";
                       {
                         "name": "CONFIGURATION_SERVICE_PORT",
                         "value": "5672"
-                      }]),
+                      }]) + {
+                        "volumeMounts": [
+                          {
+                            "name": "authservice-ca",
+                            "mountPath": "/opt/console/authservice-ca",
+                            "readOnly": true
+                          }
+                        ]
+                      },
             common.container("queue-scheduler", scheduler_image, "amqp", 55667, "128Mi", [
                       {
                         "name": "CONFIGURATION_SERVICE_HOST",
@@ -97,7 +105,14 @@ local common = import "common.jsonnet";
                       ]),
             common.container("configserv", configserv_image, "amqp", 5672, "256Mi", []),
           ],
-          [if use_sasldb then "volumes" ]: [router.sasldb_volume()]
+          "volumes": [
+            {
+              "name": "authservice-ca",
+              "secret": {
+                "secretName": auth_service_ca_secret
+              }
+            }
+          ] + (if use_sasldb then [router.sasldb_volume()] else [])
         }
       }
     }
