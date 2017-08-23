@@ -936,10 +936,6 @@ objects:
                 memory: 64Mi
               requests:
                 memory: 64Mi
-            volumeMounts:
-            - mountPath: "/opt/console/authservice-ca"
-              name: authservice-ca
-              readOnly: true
           - env:
             - name: CONFIGURATION_SERVICE_HOST
               value: localhost
@@ -994,6 +990,10 @@ objects:
                 memory: 64Mi
               requests:
                 memory: 64Mi
+            volumeMounts:
+            - mountPath: "/opt/console/authservice-ca"
+              name: authservice-ca
+              readOnly: true
           - env: []
             image: "${CONFIGSERV_REPO}"
             livenessProbe:

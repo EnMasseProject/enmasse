@@ -67,15 +67,7 @@ local common = import "common.jsonnet";
                       {
                         "name": "CONFIGURATION_SERVICE_PORT",
                         "value": "5672"
-                      }]) + {
-                        "volumeMounts": [
-                          {
-                            "name": "authservice-ca",
-                            "mountPath": "/opt/console/authservice-ca",
-                            "readOnly": true
-                          }
-                        ]
-                      },
+                      }]),
             common.container("queue-scheduler", scheduler_image, "amqp", 55667, "128Mi", [
                       {
                         "name": "CONFIGURATION_SERVICE_HOST",
@@ -102,7 +94,15 @@ local common = import "common.jsonnet";
                         "name": "ADDRESS_SPACE",
                         "value": addressSpace
                       }
-                      ]),
+                      ]) + {
+                        "volumeMounts": [
+                          {
+                            "name": "authservice-ca",
+                            "mountPath": "/opt/console/authservice-ca",
+                            "readOnly": true
+                          }
+                        ]
+                      },
             common.container("configserv", configserv_image, "amqp", 5672, "256Mi", []),
           ],
           "volumes": [
