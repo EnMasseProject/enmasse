@@ -28,7 +28,7 @@ function Addresses(connection) {
             if (context.message.body && context.message.body.length) {
                 try {
                     var content = JSON.parse(context.message.body);
-                    var defs = content.items.map(function (address) { return address.spec; });
+                    var defs = content.items ? content.items.map(function (address) { return address.spec; }) : [];
                     addresses.known_addresses(defs.reduce(function (map, a) { map[a.address] = a; return map; }, {}));
                 } catch (e) {
                     console.log('ERROR: failed to parse addresses: ' + e + '; ' + context.message.body);
