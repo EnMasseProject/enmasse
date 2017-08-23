@@ -121,7 +121,9 @@ public class MqttLwt extends AbstractVerticle {
 
             Future<ProtonConnection> publishConnFuture = Future.future();
 
-            this.client.connect(options, this.messagingServiceHost, this.messagingServicePort, done -> {
+            ProtonClientOptions extraOptions = this.createClientOptions()
+                    .addEnabledSaslMechanism("ANONYMOUS");
+            this.client.connect(extraOptions, this.messagingServiceHost, this.messagingServicePort, done -> {
 
                 if (done.succeeded()) {
 
@@ -181,7 +183,7 @@ public class MqttLwt extends AbstractVerticle {
     private ProtonClientOptions createClientOptions() {
 
         ProtonClientOptions options = new ProtonClientOptions();
-        options.setConnectTimeout(1000);
+        options.setConnectTimeout(5000);
         options.setReconnectAttempts(-1).setReconnectInterval(1000); // reconnect forever, every 1000 millisecs
         return options;
     }
