@@ -30,7 +30,7 @@ script:
 - "./gradlew build -i"
 - "./gradlew pack buildImage tagImage pushImage"
 - ./systemtests/scripts/run_test_component.sh templates/install /tmp/openshift systemtests
-- "curl -s ${SCRIPTS}/generate-bintray-descriptor.sh | bash /dev/stdin enmasse templates/build/enmasse-${TAG}.tgz > .bintray.json"
+- bash .travis/generate-bintray-descriptor.sh enmasse templates/build/enmasse-${TAG}.tgz > .bintray.json
 after_failure:
 - "./systemtests/scripts/print_logs.sh /tmp/openshift"
 after_success:
@@ -39,7 +39,6 @@ after_success:
 env:
   global:
   - COMMIT=${TRAVIS_COMMIT::8}
-  - SCRIPTS=https://raw.githubusercontent.com/EnMasseProject/travis-scripts/master
   - secure: x+tvxuIjSuZKLO4iO+/kqMb6RUqU7phvjV1RRQNXmAWqIBTq0cxtA4TyadUhlPazUDZLNKGEXW4EHTr7f2YwKefWKQHyZ6FhQcdb8lv8M9GAxDzRtalDh+/tip2yyZgBDakQwDytH0Dsiuh+kFuvIGCBagLesDNaMWxM7jc0E/qFNfrmJDu+jYw5SkwMzAqGeXIcWHE5Ry0iDqMz3k9A/L4vfJaKYK8axV/TJhVqCQu+L5ZLb091nj8VKigSZ89kukn14y4WhKdcf0rc1eS8fbrXrw6Vq9TXszSUVDv6lrT5ehHPVRCh2LQLpuT66hbQM/2mvysMcbWM1QH8shbUZbaCXKCB7GAfwlEkbzVQ0nBNvX7GJ32yzxRKNxr5X9O7UG9uKEC/nO3xjXp6yaFlBwC6ymAa5uwvGL6GjC5Kt5WRvrMFUncRwfEFGs3yTWSu7O5plY3KEYt0vV0quaqEZ+m7s++j6v1FxFv3izzC9IlrsJWPGxe+9ZFUkgaYkDqs6bMqXnLIQ7GF6KvWMETiXnCBdCZH68Up76oIybqmPH9kzUINi2fy1amI28oOlEi3neFncYAojzW4l7eRk7p0xGwTAucsEfUl+MsK+xiw03wquAWCuvMp8exga2ophaTZLYC2Pv+LEt4TP/clzmbTxV8qi2jQ9LBwA3R2CAdfz+s=
   - secure: lnT2MgoFqYw2ewqspLwSzFQ0HqbbBa5nGGctlg8YaaYYY/J1aS5QO3054mjCdCMKygIgFndbiFGhbUIjEpjcFBUjEQraZ70VRnx6kKSU5RehNVhgRu+fXpZ3HCZttxsXJ8a8APN9l7hvsdLNYdkRrOmqojMPGRA36kpSn46Zb6i0jUJt+sRUAeXrCeIznGgSOhpkPUE9xgBIvbQM2adQmrKDmaCwImagyGN1sC8TmOCBTJHJ3imaS3EhZ9koVFvrbBws/oAj/3jYsl3JV1GyuxVHJQD0KLDekMXp5rvOsaclPLUR1SJzqL5Lf+e4YJM+/XCRHK+FUTq60+YX+6FlyQDU5E2671r5DgZwwLYypOBN8YffUBHY7K0n71rrkAghlvdpob30H3Lxh7r40hzwY4Jvu2gFn9JJUgvPOvw5R85y4Jeb3OqmhQu+k96hNB8JvoC0ow6RCSPCOlhovh2S1mEljL8i/etJNmdFqsumoVK/0BUB1iKgR93WOFUyjMjMW1Jdg7KQ4JvDLW01zmzQZ53Y4V720BeYFLITtuL+VTdRWEuR+NlrqDSnb6QGWU6xTiaDwzacn+7RdNwCMlf9FzKryn2uttVWescPgDZlIYQ/vbimZSIboBA+2fjbqJeCiP0Unkvq45Jibw4bbdZ5uqOqMRCddc4B/0Xp04VpKF8=
   - secure: kXUbI3I1Y5+gRS3kDQDtzv/gzIPnGaGy/4WrMR0isCFAoojiXiXjvgo7jwluApvrwVexN4sEGXseRN0eCV/Iha3di/JnDmSC76QM/KnZKcoOCf6MXjaMd+Hpe7hESRsHGrcjmpzELvpXKKiicz5GfLGA8kPCvuK42/6McZGhPKQOA6Q62KH5tw4sqM6XYA8hiqGQc8Av99mUjGwWJyI5XX0VNpcmQTz4JHYkIDZFAYArXUZ+uwo6l7JvyYxp1mup/ooAX14NEt5nhaJY/1CzIHsQdlNxvCsvqp+qgctfjAOyAMh6I5klInEKu+GZVHA8cIu630MNP7O/qHTQMZ78i28EiFhkG2POTATz3gAmpoVTyk7l77NSGDpCYOVB5WbkCq3yUNO6c6xblyhkOsJOwJCdtE8BfzCbL/sacqM6LU8qTRxadUvdMYRA9M+Ag+yBfYMivkJNp6NlSXH6S6K/XnCUIH80T/4dZQ3Zm7LlmL7Iia2FH6AOic8U7s+WdVMzvK3AOcpqfKDoR+usl3UQKqdNy4LVNGhhuyJWgEJ12NgXEGdPubntssSfN3cdGWLeEUrV48hPoLY+bf89lcacmlttq867c5XWuUUABuhM+cwmuJ8+mu83QhWzS/vdc0H1xT1pKpLpO3Gs7/vo/PZSP3t/hRC6+WNARX/6NbCpbsE=
