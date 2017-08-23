@@ -35,18 +35,16 @@ var http = require('http');
 var app = express();
 app.get('/probe', function (req, res) { res.send('OK'); });
 
-var auth = function (req, res, next) {
-    
+var auth_ca_path = path.resolve('/opt/console/authservice-ca', 'tls.crt');//TODO: allow setting via env var
 
+var auth = function (req, res, next) {
     var authrequired = function() {
         res.set('WWW-Authenticate', 'Basic realm=Authorization Required');
         return res.sendStatus(401);
     };
     var user = basic_auth(req);
 
-    auth_service.authenticate(user).then( next ).catch( authrequired );
-
-
+    auth_service.authenticate(user, auth_service.default_options(auth_ca_path)).then( next ).catch( authrequired );
 };
 
 app.use(auth);

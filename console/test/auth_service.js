@@ -16,6 +16,8 @@
 'use strict';
 
 var assert = require('assert');
+var fs = require('fs');
+var path = require('path');
 
 var rhea = require('rhea');
 var as = require('../lib/auth_service.js');
@@ -34,8 +36,8 @@ function MockAuthService(f) {
     this.container.on('disconnected', function (context) {});
 }
 
-MockAuthService.prototype.listen = function (port) {
-    this.server = this.container.listen({port:port || 0});
+MockAuthService.prototype.listen = function (options) {
+    this.server = this.container.listen(options || {port:0});
     var self = this;
     this.server.on('listening', function () {
         self.port = self.server.address().port;
@@ -49,11 +51,12 @@ MockAuthService.prototype.close = function (callback) {
 
 describe('auth service', function() {
     var auth_service;
+    var auth_service_options;
 
     beforeEach(function(done) {
         auth_service = new MockAuthService();
         auth_service.listen().on('listening', function () {
-            process.env.AUTHENTICATION_SERVICE_PORT = auth_service.port;
+            auth_service_options = {port: auth_service.port};
             done();
         });
     });
@@ -63,17 +66,77 @@ describe('auth service', function() {
     });
 
     it('accepts valid credentials', function(done) {
-        as.authenticate({name:'bob', pass:'bob'}).then(function () {
+        as.authenticate({name:'bob', pass:'bob'}, auth_service_options).then(function () {
             done();
         });
     });
     it('rejects invalid credentials', function(done) {
-        as.authenticate({name:'foo', pass:'bar'}).catch(function () {
+        as.authenticate({name:'foo', pass:'bar'}, auth_service_options).catch(function () {
             done();
         });
     });
     it('anonymous', function(done) {
-        as.authenticate().then(function () {
+        as.authenticate(undefined, auth_service_options).then(function () {
+            done();
+        });
+    });
+    it('provides default options', function(done) {
+        process.env.AUTHENTICATION_SERVICE_HOST = 'foo';
+        process.env.AUTHENTICATION_SERVICE_PORT = 1010;
+        var opts = as.default_options(path.resolve(__dirname,'ca-cert.pem'));
+        assert.equal('foo', opts.host);
+        assert.equal(1010, opts.port);
+        assert.equal('tls', opts.transport);
+        assert.equal(1, opts.ca.length);
+        done();
+    });
+});
+describe('auth service with tls', function() {
+    var auth_service;
+    var auth_service_options;
+
+    beforeEach(function(done) {
+        auth_service = new MockAuthService();
+        var server_opts = {
+            port: 0,
+            transport:'tls',
+            key: fs.readFileSync(path.resolve(__dirname, 'server-key.pem')),
+            cert: fs.readFileSync(path.resolve(__dirname,'server-cert.pem'))
+        };
+        auth_service.listen(server_opts).on('listening', function () {
+            auth_service_options = {
+                port: auth_service.port,
+                transport:'tls',
+                ca: [ fs.readFileSync(path.resolve(__dirname,'ca-cert.pem')) ]
+            };
+            done();
+        });
+    });
+
+    afterEach(function(done) {
+        auth_service.close(done);
+    });
+
+    it('accepts valid credentials', function(done) {
+        as.authenticate({name:'bob', pass:'bob'}, auth_service_options).then(function () {
+            done();
+        });
+    });
+    it('rejects invalid credentials', function(done) {
+        as.authenticate({name:'foo', pass:'bar'}, auth_service_options).catch(function () {
+            done();
+        });
+    });
+    it('anonymous', function(done) {
+        as.authenticate(undefined, auth_service_options).then(function () {
+            done();
+        });
+    });
+    it('works with default options', function(done) {
+        process.env.AUTHENTICATION_SERVICE_HOST = 'localhost';
+        process.env.AUTHENTICATION_SERVICE_PORT = auth_service_options.port;
+        var default_options = as.default_options(path.resolve(__dirname,'ca-cert.pem'));
+        as.authenticate({name:'bob', pass:'bob'}, default_options).then(function () {
             done();
         });
     });
