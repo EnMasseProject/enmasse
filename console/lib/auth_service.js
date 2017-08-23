@@ -27,7 +27,8 @@ function authenticate(user) {
             host: process.env.AUTHENTICATION_SERVICE_HOST,
             port: process.env.AUTHENTICATION_SERVICE_PORT,
             transport: 'tls',
-            ca: [ fs.readFileSync(path.resolve(ca_dir, 'tls.crt')) ]
+            ca: [ fs.readFileSync(path.resolve(ca_dir, 'tls.crt')) ],
+            rejectUnauthorized: false
         };
         if( user && user.name ) {
             options.username = user.name;
