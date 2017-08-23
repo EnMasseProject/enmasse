@@ -19,7 +19,7 @@ repositories {
 }
 dependencies {
 
-    compile group: 'io.vertx', name: 'vertx-proton', version:'3.4.1'
+    compile group: 'io.vertx', name: 'vertx-proton', version:vertxVersion
 
     compileOnly group: 'org.keycloak', name: 'keycloak-core', version:'3.2.1.Final'
     compileOnly group: 'org.keycloak', name: 'keycloak-common', version:'3.2.1.Final'
