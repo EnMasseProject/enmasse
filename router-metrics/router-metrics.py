@@ -31,6 +31,7 @@ import sys
 from prometheus_client import start_http_server, Gauge
 import random
 import time
+import os
 from prometheus_client.core import GaugeMetricFamily, CounterMetricFamily, REGISTRY
 
 class MetricCollector(object):
@@ -116,6 +117,11 @@ def get_container_from_connections(connection_id, connections):
     return None
 
 class RouterCollector(object):
+
+    def __init__(self, router_host, router_port):
+        self.router_host = router_host
+        self.router_port = router_port
+
     def create_collector_map(self):
         metrics = [ MetricCollector('connectionCount', 'Number of connections to router', ['container']),
                     MetricCollector('connectionCount', 'Total number of connections to router', ['routerId'], id="totalConnectionCount"),
@@ -200,7 +206,7 @@ class RouterCollector(object):
 
     def collect_metric(self, entityType):
         try:
-            client = SyncRequestResponse(BlockingConnection("127.0.0.1:5672", 30), "$management")
+            client = SyncRequestResponse(BlockingConnection(self.router_host + ":" + str(self.router_port), 30, allowed_mechs=str("ANONYMOUS"), sasl_enabled=True), "$management")
             try:
                 properties = {}
                 properties["entityType"] = entityType
@@ -214,14 +220,13 @@ class RouterCollector(object):
                     return RouterResponse(response)
             finally:
                 client.connection.close()
-        except:
-            e = sys.exc_info()[0]
+        except NameError as e:
             print("Error querying router for metrics: %s" % e)
             return None
 
 if __name__ == '__main__':
     # Start up the server to expose the metrics.
-    REGISTRY.register(RouterCollector())
+    REGISTRY.register(RouterCollector(os.environ['ROUTER_HOST'], int(os.environ['ROUTER_PORT'])))
     start_http_server(8080)
     while True:
         time.sleep(5)

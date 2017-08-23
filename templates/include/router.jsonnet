@@ -18,6 +18,16 @@ local authService = import "auth-service.jsonnet";
           "port": "metrics"
         }
       },
+      "env": [
+        {
+          "name": "ROUTER_HOST",
+          "value": "127.0.0.1"
+        },
+        {
+          "name": "ROUTER_PORT",
+          "value": "5672"
+        }
+      ],
       "ports": [
         {
           "name": "metrics",

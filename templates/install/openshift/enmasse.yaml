@@ -657,7 +657,12 @@ objects:
             - mountPath: "/etc/qpid-dispatch/authservice-ca"
               name: authservice-ca
               readOnly: true
-          - image: "${ROUTER_METRICS_REPO}"
+          - env:
+            - name: ROUTER_HOST
+              value: 127.0.0.1
+            - name: ROUTER_PORT
+              value: '5672'
+            image: "${ROUTER_METRICS_REPO}"
             livenessProbe:
               tcpSocket:
                 port: metrics
