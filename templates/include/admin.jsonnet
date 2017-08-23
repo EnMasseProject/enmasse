@@ -31,7 +31,7 @@ local common = import "common.jsonnet";
     self.service("console", addressSpace, [{"name": "amqp-ws", "port": 5672, "targetPort": 56720}, {"name": "http", "port": 8080}])
   ],
 
-  deployment(use_sasldb, addressSpace, configserv_image, ragent_image, scheduler_image, console_image, auth_service_ca_secret)::
+  deployment(addressSpace, configserv_image, ragent_image, scheduler_image, console_image, auth_service_ca_secret)::
   {
     "apiVersion": "extensions/v1beta1",
     "kind": "Deployment",
@@ -85,7 +85,7 @@ local common = import "common.jsonnet";
                         "name": "CONFIGURATION_SERVICE_PORT",
                         "value": "5672"
                       }]),
-            console.container(use_sasldb, console_image, [
+            console.container(console_image, [
                       {
                         "name": "CONFIGURATION_SERVICE_HOST",
                         "value": "localhost"
@@ -112,7 +112,7 @@ local common = import "common.jsonnet";
                 "secretName": auth_service_ca_secret
               }
             }
-          ] + (if use_sasldb then [router.sasldb_volume()] else [])
+          ]
         }
       }
     }

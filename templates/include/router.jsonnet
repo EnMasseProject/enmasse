@@ -28,7 +28,7 @@ local authService = import "auth-service.jsonnet";
 
     },
 
-  container(use_sasldb, image_repo, env, mem_request)::
+  container(image_repo, env, mem_request)::
     local routerPort = {
         "name": "amqp",
         "containerPort": 5672,
@@ -80,12 +80,8 @@ local authService = import "auth-service.jsonnet";
         "readOnly": true
       }],
 
-      local sasldb_vol = [{
-          "name": "sasldb-vol",
-          "mountPath": "/var/lib/qdrouterd"
-        }],
       [if mem_request != "" then "resources"]: resources,
-      "volumeMounts": ssl_certs + authservice_ca + (if use_sasldb then sasldb_vol else [])
+      "volumeMounts": ssl_certs + authservice_ca
     },
 
   secret_volume(name, secret)::
@@ -103,31 +99,4 @@ local authService = import "auth-service.jsonnet";
           "name": "hawkular-router-config"
       }
     },
-
-  sasldb_volume()::
-    {
-      "name": "sasldb-vol",
-       "persistentVolumeClaim": {
-          "claimName": "pvc-sasldb"
-        }
-    },
-
-  sasldb_pvc()::
-    {
-        "apiVersion": "v1",
-        "kind": "PersistentVolumeClaim",
-        "metadata": {
-          "name": "pvc-sasldb",
-        },
-        "spec": {
-          "accessModes": [
-            "ReadWriteMany"
-          ],
-          "resources": {
-            "requests": {
-              "storage": "1Gi"
-            }
-          }
-        }
-    }
 }

@@ -7,11 +7,11 @@ local authService = import "auth-service.jsonnet";
 local consoleService = import "console-service.jsonnet";
 local images = import "images.jsonnet";
 {
-  common(use_sasl, with_kafka)::
+  common(with_kafka)::
   {
     "apiVersion": "v1",
     "kind": "List",
-    "items": [ templateConfig.generate(use_sasl, with_kafka, false),
+    "items": [ templateConfig.generate(with_kafka, false),
                authService.none_deployment(images.none_authservice, "none-authservice-cert"),
                authService.none_authservice,
                addressController.deployment(images.address_controller, "false", "enmasse-template-config", "enmasse-ca", "address-controller-cert"),
