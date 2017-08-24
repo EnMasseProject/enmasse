@@ -17,36 +17,36 @@ objects:
     kind: Deployment
     metadata:
       annotations:
-        addressSpace: ${ADDRESS_SPACE}
-        cluster_id: ${CLUSTER_ID}
+        addressSpace: "${ADDRESS_SPACE}"
+        cluster_id: "${CLUSTER_ID}"
         io.enmasse.certSecretName: broker-internal-cert
       labels:
         app: enmasse
-      name: ${NAME}
+      name: "${NAME}"
     spec:
       replicas: 1
       template:
         metadata:
           annotations:
-            addressSpace: ${ADDRESS_SPACE}
-            cluster_id: ${CLUSTER_ID}
+            addressSpace: "${ADDRESS_SPACE}"
+            cluster_id: "${CLUSTER_ID}"
           labels:
             app: enmasse
-            name: ${NAME}
+            name: "${NAME}"
             role: broker
         spec:
           containers:
           - env:
             - name: QUEUE_NAME
-              value: ${ADDRESS}
+              value: "${ADDRESS}"
             - name: CLUSTER_ID
-              value: ${CLUSTER_ID}
-            image: ${BROKER_REPO}
+              value: "${CLUSTER_ID}"
+            image: "${BROKER_REPO}"
             lifecycle:
               preStop:
                 exec:
                   command:
-                  - /opt/artemis-shutdown-hook/bin/artemis-shutdown-hook
+                  - "/opt/artemis-shutdown-hook/bin/artemis-shutdown-hook"
             livenessProbe:
               tcpSocket:
                 port: amqp
@@ -62,14 +62,14 @@ objects:
               tcpSocket:
                 port: amqp
             volumeMounts:
-            - mountPath: /var/run/artemis
+            - mountPath: "/var/run/artemis"
               name: vol-${NAME}
           volumes:
           - emptyDir: {}
             name: vol-${NAME}
           - name: ssl-certs
             secret:
-              secretName: ${COLOCATED_ROUTER_SECRET}
+              secretName: "${COLOCATED_ROUTER_SECRET}"
           - name: authservice-ca
             secret:
               secretName: authservice-ca
@@ -131,8 +131,8 @@ objects:
     kind: PersistentVolumeClaim
     metadata:
       annotations:
-        addressSpace: ${ADDRESS_SPACE}
-        cluster_id: ${CLUSTER_ID}
+        addressSpace: "${ADDRESS_SPACE}"
+        cluster_id: "${CLUSTER_ID}"
       labels:
         app: enmasse
       name: pvc-${NAME}
@@ -141,41 +141,41 @@ objects:
       - ReadWriteMany
       resources:
         requests:
-          storage: ${STORAGE_CAPACITY}
+          storage: "${STORAGE_CAPACITY}"
   - apiVersion: extensions/v1beta1
     kind: Deployment
     metadata:
       annotations:
-        addressSpace: ${ADDRESS_SPACE}
-        cluster_id: ${CLUSTER_ID}
+        addressSpace: "${ADDRESS_SPACE}"
+        cluster_id: "${CLUSTER_ID}"
         io.enmasse.certSecretName: broker-internal-cert
       labels:
         app: enmasse
-      name: ${NAME}
+      name: "${NAME}"
     spec:
       replicas: 1
       template:
         metadata:
           annotations:
-            addressSpace: ${ADDRESS_SPACE}
-            cluster_id: ${CLUSTER_ID}
+            addressSpace: "${ADDRESS_SPACE}"
+            cluster_id: "${CLUSTER_ID}"
           labels:
             app: enmasse
-            name: ${NAME}
+            name: "${NAME}"
             role: broker
         spec:
           containers:
           - env:
             - name: QUEUE_NAME
-              value: ${ADDRESS}
+              value: "${ADDRESS}"
             - name: CLUSTER_ID
-              value: ${CLUSTER_ID}
-            image: ${BROKER_REPO}
+              value: "${CLUSTER_ID}"
+            image: "${BROKER_REPO}"
             lifecycle:
               preStop:
                 exec:
                   command:
-                  - /opt/artemis-shutdown-hook/bin/artemis-shutdown-hook
+                  - "/opt/artemis-shutdown-hook/bin/artemis-shutdown-hook"
             livenessProbe:
               tcpSocket:
                 port: amqp
@@ -191,7 +191,7 @@ objects:
               tcpSocket:
                 port: amqp
             volumeMounts:
-            - mountPath: /var/run/artemis
+            - mountPath: "/var/run/artemis"
               name: vol-${NAME}
           volumes:
           - name: vol-${NAME}
@@ -199,7 +199,7 @@ objects:
               claimName: pvc-${NAME}
           - name: ssl-certs
             secret:
-              secretName: ${COLOCATED_ROUTER_SECRET}
+              secretName: "${COLOCATED_ROUTER_SECRET}"
           - name: authservice-ca
             secret:
               secretName: authservice-ca
@@ -261,36 +261,36 @@ objects:
     kind: Deployment
     metadata:
       annotations:
-        addressSpace: ${ADDRESS_SPACE}
-        cluster_id: ${CLUSTER_ID}
+        addressSpace: "${ADDRESS_SPACE}"
+        cluster_id: "${CLUSTER_ID}"
         io.enmasse.certSecretName: broker-internal-cert
       labels:
         app: enmasse
-      name: ${NAME}
+      name: "${NAME}"
     spec:
       replicas: 1
       template:
         metadata:
           annotations:
-            addressSpace: ${ADDRESS_SPACE}
-            cluster_id: ${CLUSTER_ID}
+            addressSpace: "${ADDRESS_SPACE}"
+            cluster_id: "${CLUSTER_ID}"
           labels:
             app: enmasse
-            name: ${NAME}
+            name: "${NAME}"
             role: broker
         spec:
           containers:
           - env:
             - name: TOPIC_NAME
-              value: ${ADDRESS}
+              value: "${ADDRESS}"
             - name: CLUSTER_ID
-              value: ${CLUSTER_ID}
-            image: ${BROKER_REPO}
+              value: "${CLUSTER_ID}"
+            image: "${BROKER_REPO}"
             lifecycle:
               preStop:
                 exec:
                   command:
-                  - /opt/artemis-shutdown-hook/bin/artemis-shutdown-hook
+                  - "/opt/artemis-shutdown-hook/bin/artemis-shutdown-hook"
             livenessProbe:
               tcpSocket:
                 port: amqp
@@ -306,22 +306,22 @@ objects:
               tcpSocket:
                 port: amqp
             volumeMounts:
-            - mountPath: /var/run/artemis
+            - mountPath: "/var/run/artemis"
               name: vol-${NAME}
           - env:
             - name: TOPIC_NAME
-              value: ${ADDRESS}
+              value: "${ADDRESS}"
             - name: LINK_CAPACITY
-              value: ${ROUTER_LINK_CAPACITY}
+              value: "${ROUTER_LINK_CAPACITY}"
             - name: AUTHENTICATION_SERVICE_HOST
-              value: ${AUTHENTICATION_SERVICE_HOST}
+              value: "${AUTHENTICATION_SERVICE_HOST}"
             - name: AUTHENTICATION_SERVICE_PORT
-              value: ${AUTHENTICATION_SERVICE_PORT}
+              value: "${AUTHENTICATION_SERVICE_PORT}"
             - name: AUTHENTICATION_SERVICE_CLIENT_SECRET
-              value: ${AUTHENTICATION_SERVICE_CLIENT_SECRET}
+              value: "${AUTHENTICATION_SERVICE_CLIENT_SECRET}"
             - name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
-              value: ${AUTHENTICATION_SERVICE_SASL_INIT_HOST}
-            image: ${ROUTER_REPO}
+              value: "${AUTHENTICATION_SERVICE_SASL_INIT_HOST}"
+            image: "${ROUTER_REPO}"
             livenessProbe:
               tcpSocket:
                 port: amqp
@@ -337,7 +337,7 @@ objects:
               name: amqps
               protocol: TCP
             - containerPort: 55671
-              name: secureInternal
+              name: secure-internal
               protocol: TCP
             resources:
               limits:
@@ -345,24 +345,24 @@ objects:
               requests:
                 memory: 256Mi
             volumeMounts:
-            - mountPath: /etc/qpid-dispatch/ssl
+            - mountPath: "/etc/qpid-dispatch/ssl"
               name: ssl-certs
               readOnly: true
-            - mountPath: /etc/qpid-dispatch/authservice-ca
+            - mountPath: "/etc/qpid-dispatch/authservice-ca"
               name: authservice-ca
               readOnly: true
-            - mountPath: /etc/enmasse-certs
+            - mountPath: "/etc/enmasse-certs"
               name: broker-internal-cert
               readOnly: true
           - env:
             - name: TOPIC_NAME
-              value: ${ADDRESS}
+              value: "${ADDRESS}"
             - name: CLUSTER_ID
-              value: ${NAME}
-            image: ${TOPIC_FORWARDER_REPO}
+              value: "${NAME}"
+            image: "${TOPIC_FORWARDER_REPO}"
             livenessProbe:
               httpGet:
-                path: /health
+                path: "/health"
                 port: health
             name: forwarder
             ports:
@@ -378,7 +378,7 @@ objects:
             name: vol-${NAME}
           - name: ssl-certs
             secret:
-              secretName: ${COLOCATED_ROUTER_SECRET}
+              secretName: "${COLOCATED_ROUTER_SECRET}"
           - name: authservice-ca
             secret:
               secretName: authservice-ca
@@ -440,8 +440,8 @@ objects:
     kind: PersistentVolumeClaim
     metadata:
       annotations:
-        addressSpace: ${ADDRESS_SPACE}
-        cluster_id: ${CLUSTER_ID}
+        addressSpace: "${ADDRESS_SPACE}"
+        cluster_id: "${CLUSTER_ID}"
       labels:
         app: enmasse
       name: pvc-${NAME}
@@ -450,41 +450,41 @@ objects:
       - ReadWriteMany
       resources:
         requests:
-          storage: ${STORAGE_CAPACITY}
+          storage: "${STORAGE_CAPACITY}"
   - apiVersion: extensions/v1beta1
     kind: Deployment
     metadata:
       annotations:
-        addressSpace: ${ADDRESS_SPACE}
-        cluster_id: ${CLUSTER_ID}
+        addressSpace: "${ADDRESS_SPACE}"
+        cluster_id: "${CLUSTER_ID}"
         io.enmasse.certSecretName: broker-internal-cert
       labels:
         app: enmasse
-      name: ${NAME}
+      name: "${NAME}"
     spec:
       replicas: 1
       template:
         metadata:
           annotations:
-            addressSpace: ${ADDRESS_SPACE}
-            cluster_id: ${CLUSTER_ID}
+            addressSpace: "${ADDRESS_SPACE}"
+            cluster_id: "${CLUSTER_ID}"
           labels:
             app: enmasse
-            name: ${NAME}
+            name: "${NAME}"
             role: broker
         spec:
           containers:
           - env:
             - name: TOPIC_NAME
-              value: ${ADDRESS}
+              value: "${ADDRESS}"
             - name: CLUSTER_ID
-              value: ${CLUSTER_ID}
-            image: ${BROKER_REPO}
+              value: "${CLUSTER_ID}"
+            image: "${BROKER_REPO}"
             lifecycle:
               preStop:
                 exec:
                   command:
-                  - /opt/artemis-shutdown-hook/bin/artemis-shutdown-hook
+                  - "/opt/artemis-shutdown-hook/bin/artemis-shutdown-hook"
             livenessProbe:
               tcpSocket:
                 port: amqp
@@ -500,22 +500,22 @@ objects:
               tcpSocket:
                 port: amqp
             volumeMounts:
-            - mountPath: /var/run/artemis
+            - mountPath: "/var/run/artemis"
               name: vol-${NAME}
           - env:
             - name: TOPIC_NAME
-              value: ${ADDRESS}
+              value: "${ADDRESS}"
             - name: LINK_CAPACITY
-              value: ${ROUTER_LINK_CAPACITY}
+              value: "${ROUTER_LINK_CAPACITY}"
             - name: AUTHENTICATION_SERVICE_HOST
-              value: ${AUTHENTICATION_SERVICE_HOST}
+              value: "${AUTHENTICATION_SERVICE_HOST}"
             - name: AUTHENTICATION_SERVICE_PORT
-              value: ${AUTHENTICATION_SERVICE_PORT}
+              value: "${AUTHENTICATION_SERVICE_PORT}"
             - name: AUTHENTICATION_SERVICE_CLIENT_SECRET
-              value: ${AUTHENTICATION_SERVICE_CLIENT_SECRET}
+              value: "${AUTHENTICATION_SERVICE_CLIENT_SECRET}"
             - name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
-              value: ${AUTHENTICATION_SERVICE_SASL_INIT_HOST}
-            image: ${ROUTER_REPO}
+              value: "${AUTHENTICATION_SERVICE_SASL_INIT_HOST}"
+            image: "${ROUTER_REPO}"
             livenessProbe:
               tcpSocket:
                 port: amqp
@@ -531,7 +531,7 @@ objects:
               name: amqps
               protocol: TCP
             - containerPort: 55671
-              name: secureInternal
+              name: secure-internal
               protocol: TCP
             resources:
               limits:
@@ -539,24 +539,24 @@ objects:
               requests:
                 memory: 256Mi
             volumeMounts:
-            - mountPath: /etc/qpid-dispatch/ssl
+            - mountPath: "/etc/qpid-dispatch/ssl"
               name: ssl-certs
               readOnly: true
-            - mountPath: /etc/qpid-dispatch/authservice-ca
+            - mountPath: "/etc/qpid-dispatch/authservice-ca"
               name: authservice-ca
               readOnly: true
-            - mountPath: /etc/enmasse-certs
+            - mountPath: "/etc/enmasse-certs"
               name: broker-internal-cert
               readOnly: true
           - env:
             - name: TOPIC_NAME
-              value: ${ADDRESS}
+              value: "${ADDRESS}"
             - name: CLUSTER_ID
-              value: ${NAME}
-            image: ${TOPIC_FORWARDER_REPO}
+              value: "${NAME}"
+            image: "${TOPIC_FORWARDER_REPO}"
             livenessProbe:
               httpGet:
-                path: /health
+                path: "/health"
                 port: health
             name: forwarder
             ports:
@@ -573,7 +573,7 @@ objects:
               claimName: pvc-${NAME}
           - name: ssl-certs
             secret:
-              secretName: ${COLOCATED_ROUTER_SECRET}
+              secretName: "${COLOCATED_ROUTER_SECRET}"
           - name: authservice-ca
             secret:
               secretName: authservice-ca
@@ -635,7 +635,7 @@ objects:
     kind: Deployment
     metadata:
       annotations:
-        addressSpace: ${ADDRESS_SPACE}
+        addressSpace: "${ADDRESS_SPACE}"
         io.enmasse.certSecretName: router-internal-cert
       labels:
         app: enmasse
@@ -646,7 +646,7 @@ objects:
       template:
         metadata:
           annotations:
-            addressSpace: ${ADDRESS_SPACE}
+            addressSpace: "${ADDRESS_SPACE}"
           labels:
             app: enmasse
             capability: router
@@ -655,16 +655,16 @@ objects:
           containers:
           - env:
             - name: LINK_CAPACITY
-              value: ${ROUTER_LINK_CAPACITY}
+              value: "${ROUTER_LINK_CAPACITY}"
             - name: AUTHENTICATION_SERVICE_HOST
-              value: ${AUTHENTICATION_SERVICE_HOST}
+              value: "${AUTHENTICATION_SERVICE_HOST}"
             - name: AUTHENTICATION_SERVICE_PORT
-              value: ${AUTHENTICATION_SERVICE_PORT}
+              value: "${AUTHENTICATION_SERVICE_PORT}"
             - name: AUTHENTICATION_SERVICE_CLIENT_SECRET
-              value: ${AUTHENTICATION_SERVICE_CLIENT_SECRET}
+              value: "${AUTHENTICATION_SERVICE_CLIENT_SECRET}"
             - name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
-              value: ${AUTHENTICATION_SERVICE_SASL_INIT_HOST}
-            image: ${ROUTER_REPO}
+              value: "${AUTHENTICATION_SERVICE_SASL_INIT_HOST}"
+            image: "${ROUTER_REPO}"
             livenessProbe:
               tcpSocket:
                 port: amqp
@@ -680,16 +680,16 @@ objects:
               name: amqps
               protocol: TCP
             - containerPort: 55671
-              name: secureInternal
+              name: secure-internal
               protocol: TCP
             volumeMounts:
-            - mountPath: /etc/qpid-dispatch/ssl
+            - mountPath: "/etc/qpid-dispatch/ssl"
               name: ssl-certs
               readOnly: true
-            - mountPath: /etc/qpid-dispatch/authservice-ca
+            - mountPath: "/etc/qpid-dispatch/authservice-ca"
               name: authservice-ca
               readOnly: true
-            - mountPath: /etc/enmasse-certs
+            - mountPath: "/etc/enmasse-certs"
               name: router-internal-cert
               readOnly: true
           - env:
@@ -697,7 +697,7 @@ objects:
               value: 127.0.0.1
             - name: ROUTER_PORT
               value: '5672'
-            image: ${ROUTER_METRICS_REPO}
+            image: "${ROUTER_METRICS_REPO}"
             livenessProbe:
               tcpSocket:
                 port: metrics
@@ -717,7 +717,7 @@ objects:
             name: hawkular-openshift-agent
           - name: ssl-certs
             secret:
-              secretName: ${ROUTER_SECRET}
+              secretName: "${ROUTER_SECRET}"
           - name: authservice-ca
             secret:
               secretName: authservice-ca
@@ -728,7 +728,7 @@ objects:
     kind: Service
     metadata:
       annotations:
-        addressSpace: ${ADDRESS_SPACE}
+        addressSpace: "${ADDRESS_SPACE}"
         service.alpha.openshift.io/dependencies: '[{"kind": "Service", "name": "queue-scheduler",
           "namespace": ""}, {"kind": "Service", "name": "configuration", "namespace":
           ""}, {"kind": "Service", "name": "ragent", "namespace": ""}, {"kind": "Service",
@@ -752,10 +752,10 @@ objects:
         port: 55673
         protocol: TCP
         targetPort: 55673
-      - name: secureInternal
+      - name: secure-internal
         port: 55671
         protocol: TCP
-        targetPort: secureInternal
+        targetPort: secure-internal
       - name: inter-router
         port: 55672
         protocol: TCP
@@ -766,7 +766,7 @@ objects:
     kind: Deployment
     metadata:
       annotations:
-        addressSpace: ${ADDRESS_SPACE}
+        addressSpace: "${ADDRESS_SPACE}"
       labels:
         app: enmasse
         name: subserv
@@ -776,14 +776,14 @@ objects:
       template:
         metadata:
           annotations:
-            addressSpace: ${ADDRESS_SPACE}
+            addressSpace: "${ADDRESS_SPACE}"
           labels:
             app: enmasse
             name: subserv
         spec:
           containers:
           - env: []
-            image: ${SUBSERV_REPO}
+            image: "${SUBSERV_REPO}"
             livenessProbe:
               tcpSocket:
                 port: amqp
@@ -801,7 +801,7 @@ objects:
     kind: Service
     metadata:
       annotations:
-        addressSpace: ${ADDRESS_SPACE}
+        addressSpace: "${ADDRESS_SPACE}"
       labels:
         app: enmasse
       name: subscription
@@ -817,7 +817,7 @@ objects:
     kind: Deployment
     metadata:
       annotations:
-        addressSpace: ${ADDRESS_SPACE}
+        addressSpace: "${ADDRESS_SPACE}"
       labels:
         app: enmasse
         name: mqtt-gateway
@@ -827,13 +827,13 @@ objects:
       template:
         metadata:
           annotations:
-            addressSpace: ${ADDRESS_SPACE}
+            addressSpace: "${ADDRESS_SPACE}"
           labels:
             app: enmasse
             name: mqtt-gateway
         spec:
           containers:
-          - image: ${MQTT_GATEWAY_REPO}
+          - image: "${MQTT_GATEWAY_REPO}"
             livenessProbe:
               initialDelaySeconds: 60
               tcpSocket:
@@ -844,10 +844,10 @@ objects:
               name: secure-mqtt
               protocol: TCP
             volumeMounts:
-            - mountPath: /etc/mqtt-gateway/ssl
+            - mountPath: "/etc/mqtt-gateway/ssl"
               name: ssl-certs
               readOnly: true
-          - image: ${MQTT_GATEWAY_REPO}
+          - image: "${MQTT_GATEWAY_REPO}"
             livenessProbe:
               initialDelaySeconds: 60
               tcpSocket:
@@ -860,12 +860,12 @@ objects:
           volumes:
           - name: ssl-certs
             secret:
-              secretName: ${MQTT_SECRET}
+              secretName: "${MQTT_SECRET}"
   - apiVersion: v1
     kind: Service
     metadata:
       annotations:
-        addressSpace: ${ADDRESS_SPACE}
+        addressSpace: "${ADDRESS_SPACE}"
       labels:
         app: enmasse
       name: mqtt
@@ -886,7 +886,7 @@ objects:
     kind: Deployment
     metadata:
       annotations:
-        addressSpace: ${ADDRESS_SPACE}
+        addressSpace: "${ADDRESS_SPACE}"
       labels:
         app: enmasse
         name: mqtt-lwt
@@ -896,17 +896,17 @@ objects:
       template:
         metadata:
           annotations:
-            addressSpace: ${ADDRESS_SPACE}
+            addressSpace: "${ADDRESS_SPACE}"
           labels:
             app: enmasse
             name: mqtt-lwt
         spec:
           containers:
-          - image: ${MQTT_LWT_REPO}
+          - image: "${MQTT_LWT_REPO}"
             name: mqtt-lwt
   - apiVersion: v1
     data:
-      tls.crt: ${AUTHENTICATION_SERVICE_CA_CERT}
+      tls.crt: "${AUTHENTICATION_SERVICE_CA_CERT}"
     kind: Secret
     metadata:
       name: authservice-ca
@@ -948,7 +948,7 @@ objects:
     kind: Deployment
     metadata:
       annotations:
-        addressSpace: ${ADDRESS_SPACE}
+        addressSpace: "${ADDRESS_SPACE}"
         io.enmasse.certSecretName: admin-internal-cert
       labels:
         app: enmasse
@@ -959,7 +959,7 @@ objects:
       template:
         metadata:
           annotations:
-            addressSpace: ${ADDRESS_SPACE}
+            addressSpace: "${ADDRESS_SPACE}"
           labels:
             app: enmasse
             name: admin
@@ -970,7 +970,7 @@ objects:
               value: localhost
             - name: CONFIGURATION_SERVICE_PORT
               value: '5672'
-            image: ${RAGENT_REPO}
+            image: "${RAGENT_REPO}"
             livenessProbe:
               tcpSocket:
                 port: amqp
@@ -985,7 +985,7 @@ objects:
               requests:
                 memory: 64Mi
             volumeMounts:
-            - mountPath: /etc/enmasse-certs
+            - mountPath: "/etc/enmasse-certs"
               name: admin-internal-cert
               readOnly: true
           - env:
@@ -993,7 +993,7 @@ objects:
               value: localhost
             - name: CONFIGURATION_SERVICE_PORT
               value: '5672'
-            image: ${QUEUE_SCHEDULER_REPO}
+            image: "${QUEUE_SCHEDULER_REPO}"
             livenessProbe:
               tcpSocket:
                 port: amqp
@@ -1013,21 +1013,21 @@ objects:
             - name: CONFIGURATION_SERVICE_PORT
               value: '5672'
             - name: ADDRESS_SPACE_SERVICE_HOST
-              value: ${ADDRESS_SPACE_SERVICE_HOST}
+              value: "${ADDRESS_SPACE_SERVICE_HOST}"
             - name: ADDRESS_SPACE
-              value: ${ADDRESS_SPACE}
+              value: "${ADDRESS_SPACE}"
             - name: AUTHENTICATION_SERVICE_HOST
-              value: ${AUTHENTICATION_SERVICE_HOST}
+              value: "${AUTHENTICATION_SERVICE_HOST}"
             - name: AUTHENTICATION_SERVICE_PORT
-              value: ${AUTHENTICATION_SERVICE_PORT}
+              value: "${AUTHENTICATION_SERVICE_PORT}"
             - name: AUTHENTICATION_SERVICE_CLIENT_SECRET
-              value: ${AUTHENTICATION_SERVICE_CLIENT_SECRET}
+              value: "${AUTHENTICATION_SERVICE_CLIENT_SECRET}"
             - name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
-              value: ${AUTHENTICATION_SERVICE_SASL_INIT_HOST}
-            image: ${CONSOLE_REPO}
+              value: "${AUTHENTICATION_SERVICE_SASL_INIT_HOST}"
+            image: "${CONSOLE_REPO}"
             livenessProbe:
               httpGet:
-                path: /
+                path: "/"
                 port: http
             name: console
             ports:
@@ -1043,14 +1043,14 @@ objects:
               requests:
                 memory: 64Mi
             volumeMounts:
-            - mountPath: /opt/console/authservice-ca
+            - mountPath: "/opt/console/authservice-ca"
               name: authservice-ca
               readOnly: true
-            - mountPath: /etc/enmasse-certs
+            - mountPath: "/etc/enmasse-certs"
               name: admin-internal-cert
               readOnly: true
           - env: []
-            image: ${CONFIGSERV_REPO}
+            image: "${CONFIGSERV_REPO}"
             livenessProbe:
               tcpSocket:
                 port: amqp
@@ -1075,7 +1075,7 @@ objects:
     kind: Service
     metadata:
       annotations:
-        addressSpace: ${ADDRESS_SPACE}
+        addressSpace: "${ADDRESS_SPACE}"
       labels:
         app: enmasse
       name: ragent
@@ -1090,7 +1090,7 @@ objects:
     kind: Service
     metadata:
       annotations:
-        addressSpace: ${ADDRESS_SPACE}
+        addressSpace: "${ADDRESS_SPACE}"
       labels:
         app: enmasse
       name: configuration
@@ -1104,7 +1104,7 @@ objects:
     kind: Service
     metadata:
       annotations:
-        addressSpace: ${ADDRESS_SPACE}
+        addressSpace: "${ADDRESS_SPACE}"
       labels:
         app: enmasse
       name: queue-scheduler
@@ -1119,7 +1119,7 @@ objects:
     kind: Service
     metadata:
       annotations:
-        addressSpace: ${ADDRESS_SPACE}
+        addressSpace: "${ADDRESS_SPACE}"
       labels:
         app: enmasse
       name: console
@@ -1136,7 +1136,7 @@ objects:
     kind: Service
     metadata:
       annotations:
-        addressSpace: ${ADDRESS_SPACE}
+        addressSpace: "${ADDRESS_SPACE}"
       labels:
         app: enmasse
       name: amqp-kafka-bridge
@@ -1152,7 +1152,7 @@ objects:
     kind: Deployment
     metadata:
       annotations:
-        addressSpace: ${ADDRESS_SPACE}
+        addressSpace: "${ADDRESS_SPACE}"
       labels:
         app: enmasse
         name: amqp-kafka-bridge
@@ -1162,7 +1162,7 @@ objects:
       template:
         metadata:
           annotations:
-            addressSpace: ${ADDRESS_SPACE}
+            addressSpace: "${ADDRESS_SPACE}"
           labels:
             app: enmasse
             capability: bridge
@@ -1171,11 +1171,11 @@ objects:
           containers:
           - env:
             - name: KAFKA_BOOTSTRAP_SERVERS
-              value: ${KAFKA_BOOTSTRAP_SERVERS}
-            image: ${AMQP_KAFKA_BRIDGE_REPO}
+              value: "${KAFKA_BOOTSTRAP_SERVERS}"
+            image: "${AMQP_KAFKA_BRIDGE_REPO}"
             livenessProbe:
               httpGet:
-                path: /health
+                path: "/health"
                 port: health
             name: amqp-kafka-bridge
             ports:
@@ -1185,7 +1185,7 @@ objects:
               name: ready
             readinessProbe:
               httpGet:
-                path: /ready
+                path: "/ready"
                 port: ready
             resources:
               limits:
@@ -1277,7 +1277,7 @@ objects:
         - env:
           - name: LISTENPORT
             value: '5671'
-          image: ${NONE_AUTHSERVICE_IMAGE}
+          image: "${NONE_AUTHSERVICE_IMAGE}"
           livenessProbe:
             tcpSocket:
               port: amqps
@@ -1291,12 +1291,12 @@ objects:
             requests:
               memory: 48Mi
           volumeMounts:
-          - mountPath: /opt/none-authservice/cert
-            name: ${NONE_AUTHSERVICE_CERT_SECRET_NAME}
+          - mountPath: "/opt/none-authservice/cert"
+            name: "${NONE_AUTHSERVICE_CERT_SECRET_NAME}"
         volumes:
-        - name: ${NONE_AUTHSERVICE_CERT_SECRET_NAME}
+        - name: "${NONE_AUTHSERVICE_CERT_SECRET_NAME}"
           secret:
-            secretName: ${NONE_AUTHSERVICE_CERT_SECRET_NAME}
+            secretName: "${NONE_AUTHSERVICE_CERT_SECRET_NAME}"
 - apiVersion: v1
   kind: Service
   metadata:
@@ -1329,10 +1329,10 @@ objects:
         containers:
         - env:
           - name: MULTIINSTANCE
-            value: ${MULTIINSTANCE}
+            value: "${MULTIINSTANCE}"
           - name: CA_DIR
-            value: /ca-cert
-          image: ${ADDRESS_CONTROLLER_REPO}
+            value: "/ca-cert"
+          image: "${ADDRESS_CONTROLLER_REPO}"
           livenessProbe:
             tcpSocket:
               port: http
@@ -1353,20 +1353,20 @@ objects:
             requests:
               memory: 256Mi
           volumeMounts:
-          - mountPath: /ca-cert
+          - mountPath: "/ca-cert"
             name: ca-cert
             readOnly: true
-          - mountPath: /address-controller-cert
+          - mountPath: "/address-controller-cert"
             name: address-controller-cert
             readOnly: true
         serviceAccount: enmasse-service-account
         volumes:
         - name: ca-cert
           secret:
-            secretName: ${ENMASSE_CA_SECRET}
+            secretName: "${ENMASSE_CA_SECRET}"
         - name: address-controller-cert
           secret:
-            secretName: ${ADDRESS_CONTROLLER_CERT_SECRET}
+            secretName: "${ADDRESS_CONTROLLER_CERT_SECRET}"
 - apiVersion: v1
   kind: Service
   metadata:
@@ -1398,8 +1398,8 @@ objects:
       app: enmasse
     name: restapi
   spec:
-    host: ${RESTAPI_HOSTNAME}
-    path: /v1
+    host: "${RESTAPI_HOSTNAME}"
+    path: "/v1"
     port:
       targetPort: http
     to:

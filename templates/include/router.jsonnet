@@ -50,7 +50,7 @@ local authService = import "auth-service.jsonnet";
         "protocol": "TCP"
     };
     local secureInternalPort = {
-        "name": "secureInternal",
+        "name": "secure-internal",
         "containerPort": 55671,
         "protocol": "TCP"
     };
