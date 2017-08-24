@@ -28,7 +28,8 @@ local forwarder = import "forwarder.jsonnet";
         "metadata": {
           "name": "${NAME}",
           "labels": {
-            "app": "enmasse"
+            "app": "enmasse",
+            "io.enmasse.cert-secret-name" : "broker-internal-cert"
           },
           "annotations": {
             "cluster_id": "${CLUSTER_ID}",
@@ -57,12 +58,13 @@ local forwarder = import "forwarder.jsonnet";
                 brokerVolume,
                 router.secret_volume("ssl-certs", "${COLOCATED_ROUTER_SECRET}"),
                 router.secret_volume("authservice-ca", "authservice-ca"),
+                router.secret_volume("broker-internal-cert", "broker-internal-cert"),
                 broker.hawkularVolume()
               ],
 
               "containers": if multicast
                 then [ broker.container(volumeName, broker_repo, addressEnv),
-                       router.container(router_repo, [addressEnv], "256Mi"),
+                       router.container(router_repo, [addressEnv], "256Mi", "broker-internal-cert"),
                        forwarder.container(forwarder_repo, addressEnv) ]
                 else [ broker.container(volumeName, broker_repo, addressEnv) ]
             }
