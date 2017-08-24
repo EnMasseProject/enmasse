@@ -24,6 +24,9 @@ jdk:
 before_script:
 - "./systemtests/scripts/install_openshift.sh /tmp/openshift"
 - "./systemtests/scripts/start_openshift.sh /tmp/openshift"
+before_install:
+- npm install -g mocha mocha-junit-reporter
+- npm install rhea debug
 script:
 - export TAG=${TRAVIS_TAG:-latest}
 - export VERSION=${TRAVIS_TAG:-latest}
