@@ -21,6 +21,7 @@ objects:
         cluster_id: "${CLUSTER_ID}"
       labels:
         app: enmasse
+        io.enmasse.cert-secret-name: broker-internal-cert
       name: "${NAME}"
     spec:
       replicas: 1
@@ -72,6 +73,9 @@ objects:
           - name: authservice-ca
             secret:
               secretName: authservice-ca
+          - name: broker-internal-cert
+            secret:
+              secretName: broker-internal-cert
           - configMap:
               name: hawkular-broker-config
             name: hawkular-openshift-agent
@@ -146,6 +150,7 @@ objects:
         cluster_id: "${CLUSTER_ID}"
       labels:
         app: enmasse
+        io.enmasse.cert-secret-name: broker-internal-cert
       name: "${NAME}"
     spec:
       replicas: 1
@@ -198,6 +203,9 @@ objects:
           - name: authservice-ca
             secret:
               secretName: authservice-ca
+          - name: broker-internal-cert
+            secret:
+              secretName: broker-internal-cert
           - configMap:
               name: hawkular-broker-config
             name: hawkular-openshift-agent
@@ -257,6 +265,7 @@ objects:
         cluster_id: "${CLUSTER_ID}"
       labels:
         app: enmasse
+        io.enmasse.cert-secret-name: broker-internal-cert
       name: "${NAME}"
     spec:
       replicas: 1
@@ -339,6 +348,9 @@ objects:
             - mountPath: "/etc/qpid-dispatch/authservice-ca"
               name: authservice-ca
               readOnly: true
+            - mountPath: "/etc/enmasse-certs"
+              name: broker-internal-cert
+              readOnly: true
           - env:
             - name: TOPIC_NAME
               value: "${ADDRESS}"
@@ -367,6 +379,9 @@ objects:
           - name: authservice-ca
             secret:
               secretName: authservice-ca
+          - name: broker-internal-cert
+            secret:
+              secretName: broker-internal-cert
           - configMap:
               name: hawkular-broker-config
             name: hawkular-openshift-agent
@@ -441,6 +456,7 @@ objects:
         cluster_id: "${CLUSTER_ID}"
       labels:
         app: enmasse
+        io.enmasse.cert-secret-name: broker-internal-cert
       name: "${NAME}"
     spec:
       replicas: 1
@@ -523,6 +539,9 @@ objects:
             - mountPath: "/etc/qpid-dispatch/authservice-ca"
               name: authservice-ca
               readOnly: true
+            - mountPath: "/etc/enmasse-certs"
+              name: broker-internal-cert
+              readOnly: true
           - env:
             - name: TOPIC_NAME
               value: "${ADDRESS}"
@@ -552,6 +571,9 @@ objects:
           - name: authservice-ca
             secret:
               secretName: authservice-ca
+          - name: broker-internal-cert
+            secret:
+              secretName: broker-internal-cert
           - configMap:
               name: hawkular-broker-config
             name: hawkular-openshift-agent
@@ -610,6 +632,7 @@ objects:
         addressSpace: "${ADDRESS_SPACE}"
       labels:
         app: enmasse
+        io.enmasse.cert-secret-name: router-internal-cert
         name: qdrouterd
       name: qdrouterd
     spec:
@@ -657,6 +680,9 @@ objects:
             - mountPath: "/etc/qpid-dispatch/authservice-ca"
               name: authservice-ca
               readOnly: true
+            - mountPath: "/etc/enmasse-certs"
+              name: router-internal-cert
+              readOnly: true
           - env:
             - name: ROUTER_HOST
               value: 127.0.0.1
@@ -686,6 +712,9 @@ objects:
           - name: authservice-ca
             secret:
               secretName: authservice-ca
+          - name: router-internal-cert
+            secret:
+              secretName: router-internal-cert
   - apiVersion: v1
     kind: Service
     metadata:
