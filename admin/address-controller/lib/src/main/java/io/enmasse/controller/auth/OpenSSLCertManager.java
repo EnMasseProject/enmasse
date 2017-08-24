@@ -15,10 +15,7 @@
  */
 package io.enmasse.controller.auth;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.UncheckedIOException;
+import java.io.*;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collection;
@@ -119,6 +116,13 @@ public class OpenSSLCertManager implements CertManager {
         Process keyGen = null;
         try {
             keyGen = keyGenBuilder.start();
+            InputStream stdout = keyGen.getInputStream();
+            BufferedReader reader = new BufferedReader(new InputStreamReader(stdout));
+            String line = null;
+            while ((line = reader.readLine()) != null) {
+                log.info(line);
+            }
+            reader.close();
             if (!keyGen.waitFor(1, TimeUnit.MINUTES)) {
                 throw new RuntimeException("Command timed out");
             }
@@ -150,7 +154,7 @@ public class OpenSSLCertManager implements CertManager {
     public CertSigningRequest createCsr(CertComponent component) {
         File keyFile = new File(certDir, component.getNamespace() + "." + component.getName() + ".key");
         File csrFile = new File(certDir, component.getNamespace() + "." + component.getName() + ".csr");
-        runCommand("openssl", "req", "-new", "-batch", "-nodes", "-keyout", keyFile.getAbsolutePath(), "-subj", "\"/O=io.enmasse/CN=" + component.getName() + "\"", "-out", csrFile.getAbsolutePath());
+        runCommand("openssl", "req", "-new", "-batch", "-nodes", "-keyout", keyFile.getAbsolutePath(), "-subj", "/O=io.enmasse/CN=" + component.getName(), "-out", csrFile.getAbsolutePath());
         return new CertSigningRequest(component, csrFile, keyFile);
     }
 
