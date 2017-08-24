@@ -6,8 +6,8 @@ items:
     enmasse-instance-infra.json: '{"apiVersion": "v1", "kind": "Template", "metadata":
       {"labels": {"app": "enmasse"}, "name": "enmasse-instance-infra"}, "objects":
       [{"apiVersion": "extensions/v1beta1", "kind": "Deployment", "metadata": {"annotations":
-      {"addressSpace": "${ADDRESS_SPACE}"}, "labels": {"app": "enmasse", "io.enmasse.cert-secret-name":
-      "router-internal-cert", "name": "qdrouterd"}, "name": "qdrouterd"}, "spec":
+      {"addressSpace": "${ADDRESS_SPACE}", "io.enmasse.certSecretName": "router-internal-cert"},
+      "labels": {"app": "enmasse", "name": "qdrouterd"}, "name": "qdrouterd"}, "spec":
       {"replicas": 1, "template": {"metadata": {"annotations": {"addressSpace": "${ADDRESS_SPACE}"},
       "labels": {"app": "enmasse", "capability": "router", "name": "qdrouterd"}},
       "spec": {"containers": [{"env": [{"name": "LINK_CAPACITY", "value": "${ROUTER_LINK_CAPACITY}"},
@@ -188,8 +188,8 @@ items:
     queue-inmemory.json: '{"apiVersion": "v1", "kind": "Template", "metadata": {"labels":
       {"app": "enmasse"}, "name": "queue-inmemory"}, "objects": [{"apiVersion": "extensions/v1beta1",
       "kind": "Deployment", "metadata": {"annotations": {"addressSpace": "${ADDRESS_SPACE}",
-      "cluster_id": "${CLUSTER_ID}"}, "labels": {"app": "enmasse", "io.enmasse.cert-secret-name":
-      "broker-internal-cert"}, "name": "${NAME}"}, "spec": {"replicas": 1, "template":
+      "cluster_id": "${CLUSTER_ID}", "io.enmasse.certSecretName": "broker-internal-cert"},
+      "labels": {"app": "enmasse"}, "name": "${NAME}"}, "spec": {"replicas": 1, "template":
       {"metadata": {"annotations": {"addressSpace": "${ADDRESS_SPACE}", "cluster_id":
       "${CLUSTER_ID}"}, "labels": {"app": "enmasse", "name": "${NAME}", "role": "broker"}},
       "spec": {"containers": [{"env": [{"name": "QUEUE_NAME", "value": "${ADDRESS}"},
@@ -231,8 +231,8 @@ items:
       "name": "pvc-${NAME}"}, "spec": {"accessModes": ["ReadWriteMany"], "resources":
       {"requests": {"storage": "${STORAGE_CAPACITY}"}}}}, {"apiVersion": "extensions/v1beta1",
       "kind": "Deployment", "metadata": {"annotations": {"addressSpace": "${ADDRESS_SPACE}",
-      "cluster_id": "${CLUSTER_ID}"}, "labels": {"app": "enmasse", "io.enmasse.cert-secret-name":
-      "broker-internal-cert"}, "name": "${NAME}"}, "spec": {"replicas": 1, "template":
+      "cluster_id": "${CLUSTER_ID}", "io.enmasse.certSecretName": "broker-internal-cert"},
+      "labels": {"app": "enmasse"}, "name": "${NAME}"}, "spec": {"replicas": 1, "template":
       {"metadata": {"annotations": {"addressSpace": "${ADDRESS_SPACE}", "cluster_id":
       "${CLUSTER_ID}"}, "labels": {"app": "enmasse", "name": "${NAME}", "role": "broker"}},
       "spec": {"containers": [{"env": [{"name": "QUEUE_NAME", "value": "${ADDRESS}"},
@@ -271,8 +271,8 @@ items:
     topic-inmemory.json: '{"apiVersion": "v1", "kind": "Template", "metadata": {"labels":
       {"app": "enmasse"}, "name": "topic-inmemory"}, "objects": [{"apiVersion": "extensions/v1beta1",
       "kind": "Deployment", "metadata": {"annotations": {"addressSpace": "${ADDRESS_SPACE}",
-      "cluster_id": "${CLUSTER_ID}"}, "labels": {"app": "enmasse", "io.enmasse.cert-secret-name":
-      "broker-internal-cert"}, "name": "${NAME}"}, "spec": {"replicas": 1, "template":
+      "cluster_id": "${CLUSTER_ID}", "io.enmasse.certSecretName": "broker-internal-cert"},
+      "labels": {"app": "enmasse"}, "name": "${NAME}"}, "spec": {"replicas": 1, "template":
       {"metadata": {"annotations": {"addressSpace": "${ADDRESS_SPACE}", "cluster_id":
       "${CLUSTER_ID}"}, "labels": {"app": "enmasse", "name": "${NAME}", "role": "broker"}},
       "spec": {"containers": [{"env": [{"name": "TOPIC_NAME", "value": "${ADDRESS}"},
@@ -332,8 +332,8 @@ items:
       "name": "pvc-${NAME}"}, "spec": {"accessModes": ["ReadWriteMany"], "resources":
       {"requests": {"storage": "${STORAGE_CAPACITY}"}}}}, {"apiVersion": "extensions/v1beta1",
       "kind": "Deployment", "metadata": {"annotations": {"addressSpace": "${ADDRESS_SPACE}",
-      "cluster_id": "${CLUSTER_ID}"}, "labels": {"app": "enmasse", "io.enmasse.cert-secret-name":
-      "broker-internal-cert"}, "name": "${NAME}"}, "spec": {"replicas": 1, "template":
+      "cluster_id": "${CLUSTER_ID}", "io.enmasse.certSecretName": "broker-internal-cert"},
+      "labels": {"app": "enmasse"}, "name": "${NAME}"}, "spec": {"replicas": 1, "template":
       {"metadata": {"annotations": {"addressSpace": "${ADDRESS_SPACE}", "cluster_id":
       "${CLUSTER_ID}"}, "labels": {"app": "enmasse", "name": "${NAME}", "role": "broker"}},
       "spec": {"containers": [{"env": [{"name": "TOPIC_NAME", "value": "${ADDRESS}"},

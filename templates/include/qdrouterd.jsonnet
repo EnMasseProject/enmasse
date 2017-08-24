@@ -8,11 +8,11 @@ local common = import "common.jsonnet";
       "metadata": {
         "labels": {
           "name": "qdrouterd",
-          "app": "enmasse",
-          "io.enmasse.cert-secret-name" : "router-internal-cert"
+          "app": "enmasse"
         },
         "annotations": {
-          "addressSpace": addressSpace
+          "addressSpace": addressSpace,
+          "io.enmasse.certSecretName" : "router-internal-cert"
         },
         "name": "qdrouterd"
       },

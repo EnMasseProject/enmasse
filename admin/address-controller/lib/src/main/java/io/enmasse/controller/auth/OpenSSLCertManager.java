@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import io.enmasse.config.AnnotationKeys;
 import io.enmasse.config.LabelKeys;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.openshift.client.OpenShiftClient;
@@ -134,8 +135,9 @@ public class OpenSSLCertManager implements CertManager {
 
     @Override
     public Collection<CertComponent> listComponents(String namespace) {
-        return client.extensions().deployments().inNamespace(namespace).withLabel(LabelKeys.CERT_SECRET_NAME).list().getItems().stream()
-                .map(deployment -> new CertComponent(deployment.getMetadata().getName(), namespace, deployment.getMetadata().getLabels().get(LabelKeys.CERT_SECRET_NAME)))
+        return client.extensions().deployments().inNamespace(namespace).list().getItems().stream()
+                .filter(deployment -> deployment.getMetadata().getAnnotations() != null && deployment.getMetadata().getAnnotations().containsKey(AnnotationKeys.CERT_SECRET_NAME))
+                .map(deployment -> new CertComponent(deployment.getMetadata().getName(), namespace, deployment.getMetadata().getAnnotations().get(AnnotationKeys.CERT_SECRET_NAME)))
                 .collect(Collectors.toList());
     }
 
