@@ -22,9 +22,6 @@ if [ -z "$AUTHENTICATION_SERVICE_SASL_INIT_HOST" ]; then
     echo "WARNING: sasl-init hostname not configured, using $AUTHENTICATION_SERVICE_SASL_INIT_HOST"
 fi
 DOLLAR='$' envsubst < /etc/qpid-dispatch/qdrouterd.conf.template > /tmp/qdrouterd.conf
-if [ -d /etc/qpid-dispatch/ssl ]; then
-    envsubst < /etc/qpid-dispatch/ssl.snippet >> /tmp/qdrouterd.conf
-fi
 if [ -n "$TOPIC_NAME" ]; then
     export ADDRESS_NAME=$TOPIC_NAME;
     envsubst < /etc/qpid-dispatch/colocated-topic.snippet >> /tmp/qdrouterd.conf

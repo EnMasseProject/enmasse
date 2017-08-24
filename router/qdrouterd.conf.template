@@ -59,6 +59,34 @@ listener {
     authenticatePeer: no
 }
 
+sslProfile {
+   name: ssl_details
+   certFile: /etc/qpid-dispatch/ssl/server-cert.pem
+   keyFile: /etc/qpid-dispatch/ssl/server-key.pem
+}
+
+listener {
+    host: 0.0.0.0
+    port: 5671
+    saslPlugin: auth_service
+    sslProfile: ssl_details
+}
+
+sslProfile {
+   name: ssl_internal_details
+   certFile: /etc/enmasse-certs/tls.crt
+   keyFile: /etc/enmasse-certs/tls.key
+   certDb: /etc/enmasse-certs/ca.crt
+}
+
+listener {
+    host: 0.0.0.0
+    port: 55671
+    sslProfile: ssl_internal_details
+    saslMechanisms: EXTERNAL
+}
+
+
 connector {
     host: ${RAGENT_SERVICE_HOST}
     port: ${RAGENT_SERVICE_PORT}
