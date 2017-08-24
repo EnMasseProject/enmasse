@@ -69,9 +69,6 @@ objects:
           - name: ssl-certs
             secret:
               secretName: "${COLOCATED_ROUTER_SECRET}"
-          - name: authservice-ca
-            secret:
-              secretName: authservice-ca
           - configMap:
               name: hawkular-broker-config
             name: hawkular-openshift-agent
@@ -81,13 +78,13 @@ objects:
     value: 2Gi
   - description: The docker image to use for the message broker
     name: BROKER_REPO
-    value: docker.io/enmasseproject/artemis:d559991e
+    value: docker.io/enmasseproject/artemis:latest
   - description: The default image to use as topic forwarder
     name: TOPIC_FORWARDER_REPO
-    value: docker.io/enmasseproject/topic-forwarder:d559991e
+    value: docker.io/enmasseproject/topic-forwarder:latest
   - description: The image to use for the router
     name: ROUTER_REPO
-    value: docker.io/enmasseproject/router:d559991e
+    value: docker.io/enmasseproject/router:latest
   - description: The link capacity setting for router
     name: ROUTER_LINK_CAPACITY
     value: '50'
@@ -112,6 +109,8 @@ objects:
   - description: The port of the authentication service used by this address space
     name: AUTHENTICATION_SERVICE_PORT
     required: true
+  - description: The CA to use for validating authentication service cert
+    name: AUTHENTICATION_SERVICE_CA_SECRET
   - description: The client cert to use as identity against authentication service
     name: AUTHENTICATION_SERVICE_CLIENT_SECRET
   - description: The hostname to use in sasl init
@@ -195,9 +194,6 @@ objects:
           - name: ssl-certs
             secret:
               secretName: "${COLOCATED_ROUTER_SECRET}"
-          - name: authservice-ca
-            secret:
-              secretName: authservice-ca
           - configMap:
               name: hawkular-broker-config
             name: hawkular-openshift-agent
@@ -207,13 +203,13 @@ objects:
     value: 2Gi
   - description: The docker image to use for the message broker
     name: BROKER_REPO
-    value: docker.io/enmasseproject/artemis:d559991e
+    value: docker.io/enmasseproject/artemis:latest
   - description: The default image to use as topic forwarder
     name: TOPIC_FORWARDER_REPO
-    value: docker.io/enmasseproject/topic-forwarder:d559991e
+    value: docker.io/enmasseproject/topic-forwarder:latest
   - description: The image to use for the router
     name: ROUTER_REPO
-    value: docker.io/enmasseproject/router:d559991e
+    value: docker.io/enmasseproject/router:latest
   - description: The link capacity setting for router
     name: ROUTER_LINK_CAPACITY
     value: '50'
@@ -238,6 +234,8 @@ objects:
   - description: The port of the authentication service used by this address space
     name: AUTHENTICATION_SERVICE_PORT
     required: true
+  - description: The CA to use for validating authentication service cert
+    name: AUTHENTICATION_SERVICE_CA_SECRET
   - description: The client cert to use as identity against authentication service
     name: AUTHENTICATION_SERVICE_CLIENT_SECRET
   - description: The hostname to use in sasl init
@@ -308,6 +306,8 @@ objects:
               value: "${AUTHENTICATION_SERVICE_HOST}"
             - name: AUTHENTICATION_SERVICE_PORT
               value: "${AUTHENTICATION_SERVICE_PORT}"
+            - name: AUTHENTICATION_SERVICE_CA_SECRET
+              value: "${AUTHENTICATION_SERVICE_CA_SECRET}"
             - name: AUTHENTICATION_SERVICE_CLIENT_SECRET
               value: "${AUTHENTICATION_SERVICE_CLIENT_SECRET}"
             - name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
@@ -336,9 +336,6 @@ objects:
             - mountPath: "/etc/qpid-dispatch/ssl"
               name: ssl-certs
               readOnly: true
-            - mountPath: "/etc/qpid-dispatch/authservice-ca"
-              name: authservice-ca
-              readOnly: true
           - env:
             - name: TOPIC_NAME
               value: "${ADDRESS}"
@@ -364,9 +361,6 @@ objects:
           - name: ssl-certs
             secret:
               secretName: "${COLOCATED_ROUTER_SECRET}"
-          - name: authservice-ca
-            secret:
-              secretName: authservice-ca
           - configMap:
               name: hawkular-broker-config
             name: hawkular-openshift-agent
@@ -376,13 +370,13 @@ objects:
     value: 2Gi
   - description: The docker image to use for the message broker
     name: BROKER_REPO
-    value: docker.io/enmasseproject/artemis:d559991e
+    value: docker.io/enmasseproject/artemis:latest
   - description: The default image to use as topic forwarder
     name: TOPIC_FORWARDER_REPO
-    value: docker.io/enmasseproject/topic-forwarder:d559991e
+    value: docker.io/enmasseproject/topic-forwarder:latest
   - description: The image to use for the router
     name: ROUTER_REPO
-    value: docker.io/enmasseproject/router:d559991e
+    value: docker.io/enmasseproject/router:latest
   - description: The link capacity setting for router
     name: ROUTER_LINK_CAPACITY
     value: '50'
@@ -407,6 +401,8 @@ objects:
   - description: The port of the authentication service used by this address space
     name: AUTHENTICATION_SERVICE_PORT
     required: true
+  - description: The CA to use for validating authentication service cert
+    name: AUTHENTICATION_SERVICE_CA_SECRET
   - description: The client cert to use as identity against authentication service
     name: AUTHENTICATION_SERVICE_CLIENT_SECRET
   - description: The hostname to use in sasl init
@@ -492,6 +488,8 @@ objects:
               value: "${AUTHENTICATION_SERVICE_HOST}"
             - name: AUTHENTICATION_SERVICE_PORT
               value: "${AUTHENTICATION_SERVICE_PORT}"
+            - name: AUTHENTICATION_SERVICE_CA_SECRET
+              value: "${AUTHENTICATION_SERVICE_CA_SECRET}"
             - name: AUTHENTICATION_SERVICE_CLIENT_SECRET
               value: "${AUTHENTICATION_SERVICE_CLIENT_SECRET}"
             - name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
@@ -520,9 +518,6 @@ objects:
             - mountPath: "/etc/qpid-dispatch/ssl"
               name: ssl-certs
               readOnly: true
-            - mountPath: "/etc/qpid-dispatch/authservice-ca"
-              name: authservice-ca
-              readOnly: true
           - env:
             - name: TOPIC_NAME
               value: "${ADDRESS}"
@@ -549,9 +544,6 @@ objects:
           - name: ssl-certs
             secret:
               secretName: "${COLOCATED_ROUTER_SECRET}"
-          - name: authservice-ca
-            secret:
-              secretName: authservice-ca
           - configMap:
               name: hawkular-broker-config
             name: hawkular-openshift-agent
@@ -561,13 +553,13 @@ objects:
     value: 2Gi
   - description: The docker image to use for the message broker
     name: BROKER_REPO
-    value: docker.io/enmasseproject/artemis:d559991e
+    value: docker.io/enmasseproject/artemis:latest
   - description: The default image to use as topic forwarder
     name: TOPIC_FORWARDER_REPO
-    value: docker.io/enmasseproject/topic-forwarder:d559991e
+    value: docker.io/enmasseproject/topic-forwarder:latest
   - description: The image to use for the router
     name: ROUTER_REPO
-    value: docker.io/enmasseproject/router:d559991e
+    value: docker.io/enmasseproject/router:latest
   - description: The link capacity setting for router
     name: ROUTER_LINK_CAPACITY
     value: '50'
@@ -592,6 +584,8 @@ objects:
   - description: The port of the authentication service used by this address space
     name: AUTHENTICATION_SERVICE_PORT
     required: true
+  - description: The CA to use for validating authentication service cert
+    name: AUTHENTICATION_SERVICE_CA_SECRET
   - description: The client cert to use as identity against authentication service
     name: AUTHENTICATION_SERVICE_CLIENT_SECRET
   - description: The hostname to use in sasl init
@@ -641,6 +635,8 @@ objects:
               value: "${AUTHENTICATION_SERVICE_HOST}"
             - name: AUTHENTICATION_SERVICE_PORT
               value: "${AUTHENTICATION_SERVICE_PORT}"
+            - name: AUTHENTICATION_SERVICE_CA_SECRET
+              value: "${AUTHENTICATION_SERVICE_CA_SECRET}"
             - name: AUTHENTICATION_SERVICE_CLIENT_SECRET
               value: "${AUTHENTICATION_SERVICE_CLIENT_SECRET}"
             - name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
@@ -663,9 +659,6 @@ objects:
             volumeMounts:
             - mountPath: "/etc/qpid-dispatch/ssl"
               name: ssl-certs
-              readOnly: true
-            - mountPath: "/etc/qpid-dispatch/authservice-ca"
-              name: authservice-ca
               readOnly: true
             - mountPath: "/var/lib/qdrouterd"
               name: sasldb-vol
@@ -690,9 +683,6 @@ objects:
           - name: ssl-certs
             secret:
               secretName: "${ROUTER_SECRET}"
-          - name: authservice-ca
-            secret:
-              secretName: authservice-ca
           - name: sasldb-vol
             persistentVolumeClaim:
               claimName: pvc-sasldb
@@ -874,12 +864,6 @@ objects:
             name: mqtt-lwt
   - apiVersion: v1
     data:
-      tls.crt: "${AUTHENTICATION_SERVICE_CA_CERT}"
-    kind: Secret
-    metadata:
-      name: authservice-ca
-  - apiVersion: v1
-    data:
       hawkular-openshift-agent: '{"endpoints": [{"collection_interval": "60s", "metrics":
         [{"id": "broker.threadCount", "name": "java.lang:type=Threading#ThreadCount",
         "tags": {"messagingComponent": "broker", "messagingMetricType": "threadCount"},
@@ -951,10 +935,6 @@ objects:
                 memory: 64Mi
               requests:
                 memory: 64Mi
-            volumeMounts:
-            - mountPath: "/opt/console/authservice-ca"
-              name: authservice-ca
-              readOnly: true
           - env:
             - name: CONFIGURATION_SERVICE_HOST
               value: localhost
@@ -989,6 +969,8 @@ objects:
               value: "${AUTHENTICATION_SERVICE_HOST}"
             - name: AUTHENTICATION_SERVICE_PORT
               value: "${AUTHENTICATION_SERVICE_PORT}"
+            - name: AUTHENTICATION_SERVICE_CA_SECRET
+              value: "${AUTHENTICATION_SERVICE_CA_SECRET}"
             - name: AUTHENTICATION_SERVICE_CLIENT_SECRET
               value: "${AUTHENTICATION_SERVICE_CLIENT_SECRET}"
             - name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
@@ -1030,9 +1012,6 @@ objects:
               requests:
                 memory: 256Mi
           volumes:
-          - name: authservice-ca
-            secret:
-              secretName: authservice-ca
           - name: sasldb-vol
             persistentVolumeClaim:
               claimName: pvc-sasldb
@@ -1041,6 +1020,7 @@ objects:
     metadata:
       annotations:
         addressSpace: "${ADDRESS_SPACE}"
+        service.alpha.openshift.io/serving-cert-secret-name: ragent-certs
       labels:
         app: enmasse
       name: ragent
@@ -1056,6 +1036,7 @@ objects:
     metadata:
       annotations:
         addressSpace: "${ADDRESS_SPACE}"
+        service.alpha.openshift.io/serving-cert-secret-name: configuration-certs
       labels:
         app: enmasse
       name: configuration
@@ -1070,6 +1051,7 @@ objects:
     metadata:
       annotations:
         addressSpace: "${ADDRESS_SPACE}"
+        service.alpha.openshift.io/serving-cert-secret-name: queue-scheduler-certs
       labels:
         app: enmasse
       name: queue-scheduler
@@ -1085,6 +1067,7 @@ objects:
     metadata:
       annotations:
         addressSpace: "${ADDRESS_SPACE}"
+        service.alpha.openshift.io/serving-cert-secret-name: console-certs
       labels:
         app: enmasse
       name: console
@@ -1103,33 +1086,33 @@ objects:
     value: ''
   - description: The image to use for the router
     name: ROUTER_REPO
-    value: docker.io/enmasseproject/router:d559991e
+    value: docker.io/enmasseproject/router:latest
   - description: The image to use for the router metrics collector
     name: ROUTER_METRICS_REPO
-    value: docker.io/enmasseproject/router-metrics:d559991e
+    value: docker.io/enmasseproject/router-metrics:latest
   - description: The link capacity setting for router
     name: ROUTER_LINK_CAPACITY
     value: '50'
   - description: The image to use for the configuration service
     name: CONFIGSERV_REPO
-    value: docker.io/enmasseproject/configserv:d559991e
+    value: docker.io/enmasseproject/configserv:latest
   - description: The docker image to use for the queue scheduler
     name: QUEUE_SCHEDULER_REPO
-    value: docker.io/enmasseproject/queue-scheduler:d559991e
+    value: docker.io/enmasseproject/queue-scheduler:latest
   - description: The image to use for the router agent
     name: RAGENT_REPO
-    value: docker.io/enmasseproject/ragent:d559991e
+    value: docker.io/enmasseproject/ragent:latest
   - description: The image to use for the subscription services
     name: SUBSERV_REPO
-    value: docker.io/enmasseproject/subserv:d559991e
+    value: docker.io/enmasseproject/subserv:latest
   - description: The image to use for the console
     name: CONSOLE_REPO
-    value: docker.io/enmasseproject/console:d559991e
+    value: docker.io/enmasseproject/console:latest
   - description: The hostname to use for the exposed route for messaging
     name: MESSAGING_HOSTNAME
   - description: The image to use for the MQTT gateway
     name: MQTT_GATEWAY_REPO
-    value: docker.io/enmasseproject/mqtt-gateway:d559991e
+    value: docker.io/enmasseproject/mqtt-gateway:latest
   - description: The hostname to use for the exposed route for MQTT
     name: MQTT_GATEWAY_HOSTNAME
   - description: The hostname to use for the exposed route for the messaging console
@@ -1142,7 +1125,7 @@ objects:
     required: true
   - description: The image to use for the MQTT LWT
     name: MQTT_LWT_REPO
-    value: docker.io/enmasseproject/mqtt-lwt:d559991e
+    value: docker.io/enmasseproject/mqtt-lwt:latest
   - description: The address space this infrastructure is deployed for
     name: ADDRESS_SPACE
     required: true
@@ -1152,15 +1135,15 @@ objects:
   - description: The port of the authentication service used by this address space
     name: AUTHENTICATION_SERVICE_PORT
     required: true
-  - description: The CA cert to use for validating authentication service cert
-    name: AUTHENTICATION_SERVICE_CA_CERT
+  - description: The CA to use for validating authentication service cert
+    name: AUTHENTICATION_SERVICE_CA_SECRET
   - description: The client cert to use as identity against authentication service
     name: AUTHENTICATION_SERVICE_CLIENT_SECRET
   - description: The hostname to use in sasl init
     name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
   - description: The image to use for the AMQP Kafka Bridge
     name: AMQP_KAFKA_BRIDGE_REPO
-    value: docker.io/enmasseproject/amqp-kafka-bridge:d559991e
+    value: docker.io/enmasseproject/amqp-kafka-bridge:latest
   - description: A list of host/port pairs to use for establishing the initial connection
       to the Kafka cluster
     name: KAFKA_BOOTSTRAP_SERVERS
@@ -1181,27 +1164,20 @@ objects:
         containers:
         - env:
           - name: LISTENPORT
-            value: '5671'
+            value: '5672'
           image: "${NONE_AUTHSERVICE_IMAGE}"
           livenessProbe:
             tcpSocket:
-              port: amqps
+              port: amqp
           name: none-authservice
           ports:
-          - containerPort: 5671
-            name: amqps
+          - containerPort: 5672
+            name: amqp
           resources:
             limits:
               memory: 48Mi
             requests:
               memory: 48Mi
-          volumeMounts:
-          - mountPath: "/opt/none-authservice/cert"
-            name: "${NONE_AUTHSERVICE_CERT_SECRET_NAME}"
-        volumes:
-        - name: "${NONE_AUTHSERVICE_CERT_SECRET_NAME}"
-          secret:
-            secretName: "${NONE_AUTHSERVICE_CERT_SECRET_NAME}"
 - apiVersion: v1
   kind: Service
   metadata:
@@ -1210,10 +1186,10 @@ objects:
     name: none-authservice
   spec:
     ports:
-    - name: amqps
-      port: 5671
+    - name: amqp
+      port: 5672
       protocol: TCP
-      targetPort: amqps
+      targetPort: amqp
     selector:
       name: none-authservice
 - apiVersion: extensions/v1beta1
@@ -1235,8 +1211,6 @@ objects:
         - env:
           - name: MULTIINSTANCE
             value: "${MULTIINSTANCE}"
-          - name: CA_DIR
-            value: "/ca-cert"
           image: "${ADDRESS_CONTROLLER_REPO}"
           livenessProbe:
             tcpSocket:
@@ -1258,24 +1232,19 @@ objects:
             requests:
               memory: 256Mi
           volumeMounts:
-          - mountPath: "/ca-cert"
-            name: ca-cert
-            readOnly: true
-          - mountPath: "/address-controller-cert"
-            name: address-controller-cert
+          - mountPath: "/ssl-certs"
+            name: ssl-certs
             readOnly: true
         serviceAccount: enmasse-service-account
         volumes:
-        - name: ca-cert
+        - name: ssl-certs
           secret:
-            secretName: "${ENMASSE_CA_SECRET}"
-        - name: address-controller-cert
-          secret:
-            secretName: "${ADDRESS_CONTROLLER_CERT_SECRET}"
+            secretName: address-controller-certs
 - apiVersion: v1
   kind: Service
   metadata:
-    annotations: {}
+    annotations:
+      service.alpha.openshift.io/serving-cert-secret-name: address-controller-certs
     labels:
       app: enmasse
     name: address-controller
@@ -1319,16 +1288,7 @@ parameters:
   value: 'false'
 - description: The docker image to use for the address controller
   name: ADDRESS_CONTROLLER_REPO
-  value: docker.io/enmasseproject/address-controller:d559991e
+  value: docker.io/enmasseproject/address-controller:latest
 - description: The docker image to use for the 'none' auth service
   name: NONE_AUTHSERVICE_IMAGE
-  value: docker.io/enmasseproject/none-authservice:d559991e
-- description: Name of the secret containing the EnMasse CA
-  name: ENMASSE_CA_SECRET
-  value: enmasse-ca
-- description: Name of the secret containing the address controller certificate
-  name: ADDRESS_CONTROLLER_CERT_SECRET
-  value: address-controller-cert
-- description: The secret to use for the none-authservice certificate
-  name: NONE_AUTHSERVICE_CERT_SECRET_NAME
-  value: none-authservice-cert
+  value: docker.io/enmasseproject/none-authservice:latest
