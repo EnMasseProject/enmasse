@@ -16,11 +16,30 @@
 'use strict';
 
 var rhea = require('rhea');
+var path = require('path');
+var fs = require('fs');
 var Router = require('./qdr.js').Router;
 
+var cert_dir = '/etc/enmasse-certs';
+var ca_path = path.resolve(cert_dir, 'ca.crt');//TODO: allow setting via env var
+var client_crt_path = path.resolve(cert_dir, 'tls.crt');//TODO: allow setting via env var
+var client_key_path = path.resolve(cert_dir, 'tls.key');//TODO: allow setting via env var
+
+
 function RouterStats(connection) {
+    var options = { host: process.env.MESSAGING_SERVICE_HOST, port: process.env.MESSAGING_SERVICE_PORT_SECURE_INTERNAL};
+    try {
+        options.ca = [fs.readFileSync(ca_path)];
+        options.key = fs.readFileSync(client_key_path);
+        options.cert = fs.readFileSync(client_crt_path);
+        options.transport = 'tls';
+        options.rejectUnauthorized = false;
+    } catch (error) {
+        console.warn('Error setting connection options ' + error);
+    }
+
     //TODO: fix admin_service to be more sensibly generic
-    var conn = connection || require('./admin_service.js').connect(rhea, 'MESSAGING');
+    var conn = connection || require('./admin_service.js').connect(rhea, options, 'MESSAGING');
     this.router = new Router(conn);
     var self = this;
     this.router.get_all_routers().then(function (routers) {

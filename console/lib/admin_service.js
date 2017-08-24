@@ -32,8 +32,12 @@ function hostport(service_name, defaults) {
 
 var counter = 1;
 
-function connect(container, service_name, defaults) {
+function connect_service(container, service_name, defaults) {
     var options = hostport(service_name, defaults);
+    return connect(container, options, service_name);
+};
+
+function connect(container, options, service_name) {
     if (options.host) {
         var self = path.basename(process.argv[1], '.js');
         if (options.properties === undefined) options.properties = {};
@@ -41,7 +45,7 @@ function connect(container, service_name, defaults) {
         if (options.container_id === undefined) options.container_id = process.env.HOSTNAME;
         if (options.username === undefined) options.username = self;
         if (options.id === undefined) options.id = self + '-' + counter++;
-        console.log('Connecting to ' + service_name.toLowerCase() + ' service with ' + JSON.stringify(options));
+        console.log('Connecting to ' + service_name + ' service with host: ' + options.host + ', port: ' + options.port + ', container: ' + options.container_id + ', id: ' + options.id);
         return container.connect(options);
     } else {
         return undefined;
@@ -49,5 +53,6 @@ function connect(container, service_name, defaults) {
 };
 
 module.exports.hostport = hostport;
+module.exports.connect_service = connect_service;
 module.exports.connect = connect;
 

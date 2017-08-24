@@ -21,7 +21,7 @@ var Registry =require('./registry.js');
 
 function Addresses(connection) {
     Registry.call(this);
-    var configserv = connection || require('./admin_service.js').connect(rhea, 'CONFIGURATION');
+    var configserv = connection || require('./admin_service.js').connect_service(rhea, 'CONFIGURATION');
     var addresses = this;
     configserv.open_receiver('v1/addresses').on('message', function (context) {
         if (context.message.subject === 'enmasse.io/v1/AddressList') {
