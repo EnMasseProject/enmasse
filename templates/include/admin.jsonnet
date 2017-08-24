@@ -41,7 +41,8 @@ local common = import "common.jsonnet";
         "name": "admin",
       },
       "annotations": {
-        "addressSpace": addressSpace
+        "addressSpace": addressSpace,
+        "io.enmasse.certSecretName": "admin-internal-cert"
       },
       "name": "admin"
     },
@@ -67,7 +68,15 @@ local common = import "common.jsonnet";
                       {
                         "name": "CONFIGURATION_SERVICE_PORT",
                         "value": "5672"
-                      }]),
+                      }])+ {
+                             "volumeMounts": [
+                               {
+                                 "name": "admin-internal-cert",
+                                 "mountPath": "/etc/enmasse-certs",
+                                 "readOnly": true
+                               }
+                             ]
+                           },
             common.container("queue-scheduler", scheduler_image, "amqp", 55667, "128Mi", [
                       {
                         "name": "CONFIGURATION_SERVICE_HOST",
@@ -100,6 +109,11 @@ local common = import "common.jsonnet";
                             "name": "authservice-ca",
                             "mountPath": "/opt/console/authservice-ca",
                             "readOnly": true
+                          },
+                          {
+                            "name": "admin-internal-cert",
+                            "mountPath": "/etc/enmasse-certs",
+                            "readOnly": true
                           }
                         ]
                       },
@@ -111,6 +125,12 @@ local common = import "common.jsonnet";
               "secret": {
                 "secretName": auth_service_ca_secret
               }
+            },
+            {
+                "name": "admin-internal-cert",
+                "secret": {
+                    "secretName": "admin-internal-cert"
+                }
             }
           ]
         }

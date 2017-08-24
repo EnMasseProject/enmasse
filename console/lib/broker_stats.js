@@ -55,7 +55,7 @@ function merge() {
 function BrokerStats () {
     this.queues = {};
     this.brokers = create_podgroup();
-    var configserv = require('./admin_service.js').connect(rhea, 'CONFIGURATION');
+    var configserv = require('./admin_service.js').connect_service(rhea, 'CONFIGURATION');
     var self = this;
     configserv.open_receiver({source:{address:"podsense", filter:{'role':'broker'}}}).on('message', function (context) {
         if (util.isArray(context.message.body)) {
