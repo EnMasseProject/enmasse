@@ -19,7 +19,7 @@ items:
       "name": "router", "ports": [{"containerPort": 5672, "name": "amqp", "protocol":
       "TCP"}, {"containerPort": 55673, "name": "internal", "protocol": "TCP"}, {"containerPort":
       5671, "name": "amqps", "protocol": "TCP"}, {"containerPort": 55671, "name":
-      "secureInternal", "protocol": "TCP"}], "volumeMounts": [{"mountPath": "/etc/qpid-dispatch/ssl",
+      "secure-internal", "protocol": "TCP"}], "volumeMounts": [{"mountPath": "/etc/qpid-dispatch/ssl",
       "name": "ssl-certs", "readOnly": true}, {"mountPath": "/etc/qpid-dispatch/authservice-ca",
       "name": "authservice-ca", "readOnly": true}, {"mountPath": "/etc/enmasse-certs",
       "name": "router-internal-cert", "readOnly": true}]}, {"env": [{"name": "ROUTER_HOST",
@@ -41,8 +41,8 @@ items:
       "true"}, "labels": {"app": "enmasse"}, "name": "messaging"}, "spec": {"ports":
       [{"name": "amqp", "port": 5672, "protocol": "TCP", "targetPort": 5672}, {"name":
       "amqps", "port": 5671, "protocol": "TCP", "targetPort": 5671}, {"name": "internal",
-      "port": 55673, "protocol": "TCP", "targetPort": 55673}, {"name": "secureInternal",
-      "port": 55671, "protocol": "TCP", "targetPort": "secureInternal"}, {"name":
+      "port": 55673, "protocol": "TCP", "targetPort": 55673}, {"name": "secure-internal",
+      "port": 55671, "protocol": "TCP", "targetPort": "secure-internal"}, {"name":
       "inter-router", "port": 55672, "protocol": "TCP", "targetPort": 55672}], "selector":
       {"capability": "router"}}}, {"apiVersion": "extensions/v1beta1", "kind": "Deployment",
       "metadata": {"annotations": {"addressSpace": "${ADDRESS_SPACE}"}, "labels":
@@ -297,7 +297,7 @@ items:
       "livenessProbe": {"tcpSocket": {"port": "amqp"}}, "name": "router", "ports":
       [{"containerPort": 5672, "name": "amqp", "protocol": "TCP"}, {"containerPort":
       55673, "name": "internal", "protocol": "TCP"}, {"containerPort": 5671, "name":
-      "amqps", "protocol": "TCP"}, {"containerPort": 55671, "name": "secureInternal",
+      "amqps", "protocol": "TCP"}, {"containerPort": 55671, "name": "secure-internal",
       "protocol": "TCP"}], "resources": {"limits": {"memory": "256Mi"}, "requests":
       {"memory": "256Mi"}}, "volumeMounts": [{"mountPath": "/etc/qpid-dispatch/ssl",
       "name": "ssl-certs", "readOnly": true}, {"mountPath": "/etc/qpid-dispatch/authservice-ca",
@@ -359,7 +359,7 @@ items:
       "livenessProbe": {"tcpSocket": {"port": "amqp"}}, "name": "router", "ports":
       [{"containerPort": 5672, "name": "amqp", "protocol": "TCP"}, {"containerPort":
       55673, "name": "internal", "protocol": "TCP"}, {"containerPort": 5671, "name":
-      "amqps", "protocol": "TCP"}, {"containerPort": 55671, "name": "secureInternal",
+      "amqps", "protocol": "TCP"}, {"containerPort": 55671, "name": "secure-internal",
       "protocol": "TCP"}], "resources": {"limits": {"memory": "256Mi"}, "requests":
       {"memory": "256Mi"}}, "volumeMounts": [{"mountPath": "/etc/qpid-dispatch/ssl",
       "name": "ssl-certs", "readOnly": true}, {"mountPath": "/etc/qpid-dispatch/authservice-ca",
@@ -431,7 +431,7 @@ items:
             requests:
               memory: 48Mi
           volumeMounts:
-          - mountPath: /opt/none-authservice/cert
+          - mountPath: "/opt/none-authservice/cert"
             name: none-authservice-cert
         volumes:
         - name: none-authservice-cert
@@ -471,7 +471,7 @@ items:
           - name: MULTIINSTANCE
             value: 'false'
           - name: CA_DIR
-            value: /ca-cert
+            value: "/ca-cert"
           image: docker.io/enmasseproject/address-controller:latest
           livenessProbe:
             tcpSocket:
@@ -493,12 +493,12 @@ items:
             requests:
               memory: 256Mi
           volumeMounts:
-          - mountPath: /enmasse-templates
+          - mountPath: "/enmasse-templates"
             name: templates
-          - mountPath: /ca-cert
+          - mountPath: "/ca-cert"
             name: ca-cert
             readOnly: true
-          - mountPath: /address-controller-cert
+          - mountPath: "/address-controller-cert"
             name: address-controller-cert
             readOnly: true
         serviceAccount: enmasse-service-account
@@ -526,7 +526,7 @@ items:
         - backend:
             serviceName: address-controller
             servicePort: 8080
-          path: /v1
+          path: "/v1"
 - apiVersion: v1
   kind: Service
   metadata:

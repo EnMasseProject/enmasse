@@ -18,10 +18,10 @@
     "targetPort": 55673
   },
   local secureInternalPort = {
-    "name": "secureInternal",
+    "name": "secure-internal",
     "port": 55671,
     "protocol": "TCP",
-    "targetPort": "secureInternal"
+    "targetPort": "secure-internal"
   },
   local interRouterPort = {
     "name": "inter-router",

@@ -22,13 +22,13 @@ objects:
             valueFrom:
               secretKeyRef:
                 key: admin.username
-                name: ${KEYCLOAK_SECRET_NAME}
+                name: "${KEYCLOAK_SECRET_NAME}"
           - name: KEYCLOAK_PASSWORD
             valueFrom:
               secretKeyRef:
                 key: admin.password
-                name: ${KEYCLOAK_SECRET_NAME}
-          image: ${STANDARD_AUTHSERVICE_IMAGE}
+                name: "${KEYCLOAK_SECRET_NAME}"
+          image: "${STANDARD_AUTHSERVICE_IMAGE}"
           livenessProbe:
             initialDelaySeconds: 120
             tcpSocket:
@@ -40,16 +40,16 @@ objects:
           - containerPort: 8080
             name: http
           volumeMounts:
-          - mountPath: /opt/jboss/keycloak/standalone/data
+          - mountPath: "/opt/jboss/keycloak/standalone/data"
             name: keycloak-persistence
-          - mountPath: /opt/jboss/keycloak/standalone/cert
-            name: ${STANDARD_AUTHSERVICE_SECRET_NAME}
+          - mountPath: "/opt/jboss/keycloak/standalone/cert"
+            name: "${STANDARD_AUTHSERVICE_SECRET_NAME}"
         volumes:
         - emptyDir: {}
           name: keycloak-persistence
-        - name: ${STANDARD_AUTHSERVICE_SECRET_NAME}
+        - name: "${STANDARD_AUTHSERVICE_SECRET_NAME}"
           secret:
-            secretName: ${STANDARD_AUTHSERVICE_SECRET_NAME}
+            secretName: "${STANDARD_AUTHSERVICE_SECRET_NAME}"
 - apiVersion: extensions/v1beta1
   kind: Deployment
   metadata:
@@ -70,13 +70,13 @@ objects:
             valueFrom:
               secretKeyRef:
                 key: admin.username
-                name: ${KEYCLOAK_SECRET_NAME}
+                name: "${KEYCLOAK_SECRET_NAME}"
           - name: STANDARD_AUTHSERVICE_ADMIN_PASSWORD
             valueFrom:
               secretKeyRef:
                 key: admin.password
-                name: ${KEYCLOAK_SECRET_NAME}
-          image: ${KEYCLOAK_CONTROLLER_IMAGE}
+                name: "${KEYCLOAK_SECRET_NAME}"
+          image: "${KEYCLOAK_CONTROLLER_IMAGE}"
           name: keycloak-controller
           resources:
             limits:
