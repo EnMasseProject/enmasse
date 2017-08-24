@@ -38,7 +38,7 @@ local authService = import "auth-service.jsonnet";
 
     },
 
-  container(image_repo, env, mem_request)::
+  container(image_repo, env, mem_request, internal_cert_volume)::
     local routerPort = {
         "name": "amqp",
         "containerPort": 5672,
@@ -90,8 +90,14 @@ local authService = import "auth-service.jsonnet";
         "readOnly": true
       }],
 
+      local router_internal_cert = [{
+        "name": internal_cert_volume,
+        "mountPath": "/etc/enmasse-certs",
+        "readOnly": true
+      }],
+
       [if mem_request != "" then "resources"]: resources,
-      "volumeMounts": ssl_certs + authservice_ca
+      "volumeMounts": ssl_certs + authservice_ca + router_internal_cert
     },
 
   secret_volume(name, secret)::

@@ -8,7 +8,8 @@ local common = import "common.jsonnet";
       "metadata": {
         "labels": {
           "name": "qdrouterd",
-          "app": "enmasse"
+          "app": "enmasse",
+          "io.enmasse.cert-secret-name" : "router-internal-cert"
         },
         "annotations": {
           "addressSpace": addressSpace
@@ -29,12 +30,13 @@ local common = import "common.jsonnet";
             }
           },
           "spec": {
-            "containers": [ router.container(image_repo, [], ""),
+            "containers": [ router.container(image_repo, [], "", "router-internal-cert"),
               router.metrics(metrics_image_repo, "32Mi") ],
             "volumes": [
               router.hawkular_volume(),
               router.secret_volume("ssl-certs", router_secret),
               router.secret_volume("authservice-ca", auth_service_ca_secret),
+              router.secret_volume("router-internal-cert", "router-internal-cert"),
             ]
           }
         }
