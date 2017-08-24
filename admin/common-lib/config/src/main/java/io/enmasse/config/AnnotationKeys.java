@@ -18,5 +18,5 @@ package io.enmasse.config;
 public interface AnnotationKeys {
     String CLUSTER_ID = "cluster_id";
     String ADDRESS_SPACE = "addressSpace";
-    String CERT_SECRET_NAME = "io.enmasse.certSecret";
+    String CERT_SECRET_NAME = "io.enmasse.certSecretName";
 }

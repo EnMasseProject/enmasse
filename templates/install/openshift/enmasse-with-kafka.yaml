@@ -19,9 +19,9 @@ objects:
       annotations:
         addressSpace: "${ADDRESS_SPACE}"
         cluster_id: "${CLUSTER_ID}"
+        io.enmasse.certSecretName: broker-internal-cert
       labels:
         app: enmasse
-        io.enmasse.cert-secret-name: broker-internal-cert
       name: "${NAME}"
     spec:
       replicas: 1
@@ -148,9 +148,9 @@ objects:
       annotations:
         addressSpace: "${ADDRESS_SPACE}"
         cluster_id: "${CLUSTER_ID}"
+        io.enmasse.certSecretName: broker-internal-cert
       labels:
         app: enmasse
-        io.enmasse.cert-secret-name: broker-internal-cert
       name: "${NAME}"
     spec:
       replicas: 1
@@ -263,9 +263,9 @@ objects:
       annotations:
         addressSpace: "${ADDRESS_SPACE}"
         cluster_id: "${CLUSTER_ID}"
+        io.enmasse.certSecretName: broker-internal-cert
       labels:
         app: enmasse
-        io.enmasse.cert-secret-name: broker-internal-cert
       name: "${NAME}"
     spec:
       replicas: 1
@@ -454,9 +454,9 @@ objects:
       annotations:
         addressSpace: "${ADDRESS_SPACE}"
         cluster_id: "${CLUSTER_ID}"
+        io.enmasse.certSecretName: broker-internal-cert
       labels:
         app: enmasse
-        io.enmasse.cert-secret-name: broker-internal-cert
       name: "${NAME}"
     spec:
       replicas: 1
@@ -630,9 +630,9 @@ objects:
     metadata:
       annotations:
         addressSpace: "${ADDRESS_SPACE}"
+        io.enmasse.certSecretName: router-internal-cert
       labels:
         app: enmasse
-        io.enmasse.cert-secret-name: router-internal-cert
         name: qdrouterd
       name: qdrouterd
     spec:

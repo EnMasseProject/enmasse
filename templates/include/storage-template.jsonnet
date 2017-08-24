@@ -28,12 +28,12 @@ local forwarder = import "forwarder.jsonnet";
         "metadata": {
           "name": "${NAME}",
           "labels": {
-            "app": "enmasse",
-            "io.enmasse.cert-secret-name" : "broker-internal-cert"
+            "app": "enmasse"
           },
           "annotations": {
             "cluster_id": "${CLUSTER_ID}",
-            "addressSpace": "${ADDRESS_SPACE}"
+            "addressSpace": "${ADDRESS_SPACE}",
+            "io.enmasse.certSecretName" : "broker-internal-cert"
           }
         },
         "spec": {

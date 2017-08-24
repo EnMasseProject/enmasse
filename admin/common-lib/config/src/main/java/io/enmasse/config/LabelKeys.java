@@ -26,5 +26,4 @@ public interface LabelKeys {
     String ADDRESS = "address";
     String APP = "app";
     String CAPABILITY = "capability";
-    java.lang.String CERT_SECRET_NAME = "io.enmasse.cert-secret-name";
 }
