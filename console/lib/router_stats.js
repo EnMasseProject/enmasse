@@ -32,6 +32,7 @@ function RouterStats(connection) {
         options.ca = [fs.readFileSync(ca_path)];
         options.key = fs.readFileSync(client_key_path);
         options.cert = fs.readFileSync(client_crt_path);
+        options.enable_sasl_external = true;
         options.transport = 'tls';
     //    options.enable_sasl_external = true;
         options.rejectUnauthorized = false;
