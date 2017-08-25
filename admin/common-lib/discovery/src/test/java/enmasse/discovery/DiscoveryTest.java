@@ -17,9 +17,7 @@ import java.util.*;
 import java.util.concurrent.*;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 @RunWith(VertxUnitRunner.class)
 public class DiscoveryTest {
@@ -46,15 +44,21 @@ public class DiscoveryTest {
         AMQPServer testServer = new AMQPServer("0.0.0.0", 0, Collections.singletonMap("podsense", (observerKey, subscriber) -> {
             assertThat(observerKey.getLabelFilter(), is(expectedLabelFilter));
             assertThat(observerKey.getAnnotationFilter(), is(expectedAnnotationFilter));
+            System.out.println("Creating subscription");
             subscriptionQueue.put(subscriber);
         }));
 
+        System.out.println("Deploying server verticle");
         vertx.deployVerticle(testServer, context.asyncAssertSuccess());
         DiscoveryClient client = new DiscoveryClient(new Endpoint("127.0.0.1", waitForPort(testServer)), "podsense", expectedLabelFilter, expectedAnnotationFilter, Optional.empty());
         client.addListener(changedHosts::complete);
+        System.out.println("Deploying discovery verticle");
         vertx.deployVerticle(client, context.asyncAssertSuccess());
 
+        System.out.println("Waiting for subscriber to be created");
         Subscriber subscriber = subscriptionQueue.poll(1, TimeUnit.MINUTES);
+        assertNotNull(subscriber);
+        System.out.println("Sending initial response");
         subscriber.resourcesUpdated(createResponse("False", "Pending"));
         try {
             changedHosts.get(10, TimeUnit.SECONDS);
@@ -62,6 +66,7 @@ public class DiscoveryTest {
         } catch (TimeoutException ignored) {
         }
 
+        System.out.println("Sending second response");
         subscriber.resourcesUpdated(createResponse("False", "Running"));
         try {
             changedHosts.get(10, TimeUnit.SECONDS);
@@ -69,6 +74,7 @@ public class DiscoveryTest {
         } catch (TimeoutException ignored) {
         }
 
+        System.out.println("Sending third response");
         subscriber.resourcesUpdated(createResponse("True", "Running"));
         try {
             Set<Host> actual = changedHosts.get(2, TimeUnit.MINUTES);
