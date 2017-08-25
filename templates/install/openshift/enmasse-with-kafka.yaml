@@ -903,7 +903,10 @@ objects:
             name: mqtt-lwt
         spec:
           containers:
-          - image: "${MQTT_LWT_REPO}"
+          - env:
+            - name: CERT_DIR
+              value: "/etc/enmasse-certs"
+            image: "${MQTT_LWT_REPO}"
             name: mqtt-lwt
             volumeMounts:
             - mountPath: "/etc/enmasse-certs"

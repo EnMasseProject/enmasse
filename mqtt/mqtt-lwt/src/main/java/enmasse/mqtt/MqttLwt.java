@@ -23,6 +23,8 @@ import enmasse.mqtt.messages.AmqpWillMessage;
 import enmasse.mqtt.storage.LwtStorage;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
+import io.vertx.core.net.PemKeyCertOptions;
+import io.vertx.core.net.PemTrustOptions;
 import io.vertx.proton.ProtonClient;
 import io.vertx.proton.ProtonClientOptions;
 import io.vertx.proton.ProtonConnection;
@@ -31,6 +33,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+
+import java.io.File;
 
 /**
  * Vert.x based MQTT Last Will and Testament service for EnMasse
@@ -44,9 +48,11 @@ public class MqttLwt extends AbstractVerticle {
 
     private static final int MAX_MESSAGE_ID = 65535;
 
+    private String certDir;
+
     // connection info to the messaging service
     private String messagingServiceHost;
-    private int messagingServicePort;
+    private int messagingServiceSecureInternalPort;
     private int messagingServiceInternalPort;
 
     private ProtonClient client;
@@ -122,9 +128,17 @@ public class MqttLwt extends AbstractVerticle {
 
             Future<ProtonConnection> publishConnFuture = Future.future();
 
-            ProtonClientOptions extraOptions = this.createClientOptions()
-                    .addEnabledSaslMechanism("ANONYMOUS");
-            this.client.connect(extraOptions, this.messagingServiceHost, this.messagingServicePort, done -> {
+            ProtonClientOptions secureOptions = this.createClientOptions()
+                    .setSsl(true)
+                    .addEnabledSaslMechanism("EXTERNAL")
+                    .setHostnameVerificationAlgorithm("")
+                    .setPemTrustOptions(new PemTrustOptions()
+                            .addCertPath(new File(certDir, "ca.crt").getAbsolutePath()))
+                    .setPemKeyCertOptions(new PemKeyCertOptions()
+                            .addCertPath(new File(certDir, "tls.crt").getAbsolutePath())
+                            .addKeyPath(new File(certDir, "tls.key").getAbsolutePath()));
+
+            this.client.connect(secureOptions, this.messagingServiceHost, this.messagingServiceSecureInternalPort, done -> {
 
                 if (done.succeeded()) {
 
@@ -265,6 +279,18 @@ public class MqttLwt extends AbstractVerticle {
     }
 
     /**
+     * Set the certificate directory where LWT certificates can be found.
+     *
+     * @param certDir path to certificate directory
+     * @return current MQTT LWT instance
+     */
+    @Value(value = "${cert.dir}")
+    public MqttLwt setCertDir(String certDir) {
+        this.certDir = certDir;
+        return this;
+    }
+
+    /**
      * Set the address for connecting to the AMQP internal network
      *
      * @param messagingServiceHost   address for AMQP connection
@@ -279,12 +305,12 @@ public class MqttLwt extends AbstractVerticle {
     /**
      * Set the port for connecting to the AMQP services
      *
-     * @param messagingServicePort   port for AMQP connections
+     * @param messagingServiceSecureInternalPort   port for AMQP connections
      * @return  current MQTT LWT instance
      */
-    @Value(value = "${messaging.service.port:5672}")
-    public MqttLwt setMessagingServicePort(int messagingServicePort) {
-        this.messagingServicePort = messagingServicePort;
+    @Value(value = "${messaging.service.secure.internal.port:55671}")
+    public MqttLwt setMessagingServiceSecureInternalPort(int messagingServiceSecureInternalPort) {
+        this.messagingServiceSecureInternalPort = messagingServiceSecureInternalPort;
         return this;
     }
 
