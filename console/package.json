@@ -10,7 +10,7 @@
     },
     "dependencies": {
         "debug": ">=0.8.0",
-        "rhea": ">=0.2.0",
+        "rhea": ">=0.2.3",
         "ws": "*",
         "bluebird": "*",
         "express": "*",
