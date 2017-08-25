@@ -93,8 +93,6 @@ public class MqttLwt extends AbstractVerticle {
 
             if (done.succeeded()) {
 
-                LOG.info("MQTT LWT service connected to the messaging service internal ...");
-
                 ProtonConnection connection = done.result();
                 connection.setContainer(CONTAINER_ID);
 
@@ -105,7 +103,10 @@ public class MqttLwt extends AbstractVerticle {
                         .disconnectionHandler(this::handleDisconnection);
                 this.lwtEndpoint.open();
 
-                lwtConnFuture.complete();
+                connection.openHandler(o -> {
+                    LOG.info("MQTT LWT service connected to the messaging service internal ...");
+                    lwtConnFuture.complete();
+                });
 
             } else {
 
@@ -127,7 +128,6 @@ public class MqttLwt extends AbstractVerticle {
 
                 if (done.succeeded()) {
 
-                    LOG.info("MQTT LWT service connected to the messaging service ...");
 
                     ProtonConnection connection = done.result();
                     connection.setContainer(CONTAINER_ID);
@@ -136,7 +136,10 @@ public class MqttLwt extends AbstractVerticle {
                     this.publishEndpoint = new AmqpPublishEndpoint(connection);
                     this.publishEndpoint.open();
 
-                    publishConnFuture.complete();
+                    connection.openHandler(o -> {
+                        LOG.info("MQTT LWT service connected to the messaging service ...");
+                        publishConnFuture.complete();
+                    });
 
                 } else {
 
