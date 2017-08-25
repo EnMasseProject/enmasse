@@ -33,6 +33,12 @@ local common = import "common.jsonnet";
               {
                 "image": image_repo,
                 "name": "mqtt-lwt",
+                "env": [
+                  {
+                    "name": "CERT_DIR",
+                    "value": "/etc/enmasse-certs"
+                  }
+                ],
                 "volumeMounts": [
                   {
                     "name": certSecretName,

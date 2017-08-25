@@ -77,12 +77,13 @@ items:
       "io.enmasse.certSecretName": "mqtt-lwt-internal-cert"}, "labels": {"app": "enmasse",
       "name": "mqtt-lwt"}, "name": "mqtt-lwt"}, "spec": {"replicas": 1, "template":
       {"metadata": {"annotations": {"addressSpace": "${ADDRESS_SPACE}"}, "labels":
-      {"app": "enmasse", "name": "mqtt-lwt"}}, "spec": {"containers": [{"image": "${MQTT_LWT_REPO}",
-      "name": "mqtt-lwt", "volumeMounts": [{"mountPath": "/etc/enmasse-certs", "name":
-      "mqtt-lwt-internal-cert", "readOnly": true}]}], "volumes": [{"name": "mqtt-lwt-internal-cert",
-      "secret": {"secretName": "mqtt-lwt-internal-cert"}}]}}}}, {"apiVersion": "v1",
-      "data": {"tls.crt": "${AUTHENTICATION_SERVICE_CA_CERT}"}, "kind": "Secret",
-      "metadata": {"name": "authservice-ca"}}, {"apiVersion": "v1", "data": {"hawkular-openshift-agent":
+      {"app": "enmasse", "name": "mqtt-lwt"}}, "spec": {"containers": [{"env": [{"name":
+      "CERT_DIR", "value": "/etc/enmasse-certs"}], "image": "${MQTT_LWT_REPO}", "name":
+      "mqtt-lwt", "volumeMounts": [{"mountPath": "/etc/enmasse-certs", "name": "mqtt-lwt-internal-cert",
+      "readOnly": true}]}], "volumes": [{"name": "mqtt-lwt-internal-cert", "secret":
+      {"secretName": "mqtt-lwt-internal-cert"}}]}}}}, {"apiVersion": "v1", "data":
+      {"tls.crt": "${AUTHENTICATION_SERVICE_CA_CERT}"}, "kind": "Secret", "metadata":
+      {"name": "authservice-ca"}}, {"apiVersion": "v1", "data": {"hawkular-openshift-agent":
       "{\"endpoints\": [{\"collection_interval\": \"60s\", \"metrics\": [{\"id\":
       \"broker.threadCount\", \"name\": \"java.lang:type=Threading#ThreadCount\",
       \"tags\": {\"messagingComponent\": \"broker\", \"messagingMetricType\": \"threadCount\"},
