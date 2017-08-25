@@ -887,6 +887,7 @@ objects:
     metadata:
       annotations:
         addressSpace: "${ADDRESS_SPACE}"
+        io.enmasse.certSecretName: mqtt-lwt-internal-cert
       labels:
         app: enmasse
         name: mqtt-lwt
@@ -904,6 +905,14 @@ objects:
           containers:
           - image: "${MQTT_LWT_REPO}"
             name: mqtt-lwt
+            volumeMounts:
+            - mountPath: "/etc/enmasse-certs"
+              name: mqtt-lwt-internal-cert
+              readOnly: true
+          volumes:
+          - name: mqtt-lwt-internal-cert
+            secret:
+              secretName: mqtt-lwt-internal-cert
   - apiVersion: v1
     data:
       tls.crt: "${AUTHENTICATION_SERVICE_CA_CERT}"

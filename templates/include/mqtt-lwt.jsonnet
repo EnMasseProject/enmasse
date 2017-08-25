@@ -2,6 +2,7 @@ local common = import "common.jsonnet";
 {
   deployment(addressSpace, image_repo)::
     {
+      local certSecretName = "mqtt-lwt-internal-cert",
       "apiVersion": "extensions/v1beta1",
       "kind": "Deployment",
       "metadata": {
@@ -10,7 +11,8 @@ local common = import "common.jsonnet";
           "app": "enmasse"
         },
         "annotations": {
-          "addressSpace": addressSpace
+          "addressSpace": addressSpace,
+          "io.enmasse.certSecretName": certSecretName
         },
         "name": "mqtt-lwt"
       },
@@ -30,7 +32,22 @@ local common = import "common.jsonnet";
             "containers": [
               {
                 "image": image_repo,
-                "name": "mqtt-lwt"
+                "name": "mqtt-lwt",
+                "volumeMounts": [
+                  {
+                    "name": certSecretName,
+                    "mountPath": "/etc/enmasse-certs",
+                    "readOnly": true
+                  }
+                ]
+              }
+            ],
+            "volumes": [
+              {
+                "name": certSecretName,
+                "secret": {
+                  "secretName": certSecretName
+                }
               }
             ]
           }
