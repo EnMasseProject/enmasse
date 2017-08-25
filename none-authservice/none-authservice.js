@@ -16,7 +16,7 @@
 var container = require('rhea');
 var fs = require('fs');
 var path = require('path');
-var cert_dir = "/opt/none-authservice/cert";
+var cert_dir = (process.env.CERT_DIR !== undefined) ? process.env.CERT_DIR : "/opt/none-authservice/cert";
 
 function authenticate(username, password) {
     console.log('Authenticating as ' + username);
