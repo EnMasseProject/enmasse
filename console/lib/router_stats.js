@@ -20,7 +20,7 @@ var path = require('path');
 var fs = require('fs');
 var Router = require('./qdr.js').Router;
 
-var cert_dir = '/etc/enmasse-certs';
+var cert_dir = (process.env.CERT_DIR !== undefined) ? process.env.CERT_DIR : '/etc/enmasse-certs';
 var ca_path = path.resolve(cert_dir, 'ca.crt');//TODO: allow setting via env var
 var client_crt_path = path.resolve(cert_dir, 'tls.crt');//TODO: allow setting via env var
 var client_key_path = path.resolve(cert_dir, 'tls.key');//TODO: allow setting via env var
@@ -33,6 +33,7 @@ function RouterStats(connection) {
         options.key = fs.readFileSync(client_key_path);
         options.cert = fs.readFileSync(client_crt_path);
         options.transport = 'tls';
+    //    options.enable_sasl_external = true;
         options.rejectUnauthorized = false;
     } catch (error) {
         console.warn('Error setting connection options ' + error);
