@@ -34,7 +34,6 @@ function RouterStats(connection) {
         options.cert = fs.readFileSync(client_crt_path);
         options.enable_sasl_external = true;
         options.transport = 'tls';
-    //    options.enable_sasl_external = true;
         options.rejectUnauthorized = false;
     } catch (error) {
         console.warn('Error setting connection options ' + error);
