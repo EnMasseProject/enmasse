@@ -252,7 +252,7 @@ Artemis.prototype.findDivert = function (name) {
 Artemis.prototype.createConnectorService = function (name, source, target) {
     var parameters = {
         "host": process.env.MESSAGING_SERVICE_HOST,
-        "port": process.env.MESSAGING_SERVICE_PORT_INTERNAL,
+        "port": process.env.MESSAGING_SERVICE_PORT_AMQPS_BROKER,
         "containerId": name,
         "clusterId": name,
         "clientAddress": target,

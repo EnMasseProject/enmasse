@@ -42,7 +42,7 @@ public class Main {
 
         if (System.getenv("TOPIC_NAME") != null) {
             String clusterId = System.getenv("CLUSTER_ID");
-            Endpoint messagingEndpoint = new Endpoint(System.getenv("MESSAGING_SERVICE_HOST"), Integer.parseInt(System.getenv("MESSAGING_SERVICE_PORT_INTERNAL")));
+            Endpoint messagingEndpoint = new Endpoint(System.getenv("MESSAGING_SERVICE_HOST"), Integer.parseInt(System.getenv("MESSAGING_SERVICE_PORT_AMQPS_BROKER")));
 
             Map<String, String> labelFilter = new LinkedHashMap<>();
             labelFilter.put("role", "broker");

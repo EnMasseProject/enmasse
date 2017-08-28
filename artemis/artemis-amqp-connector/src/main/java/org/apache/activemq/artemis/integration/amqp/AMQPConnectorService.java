@@ -48,8 +48,6 @@ import java.util.concurrent.TimeUnit;
 public class AMQPConnectorService implements ConnectorService, BaseConnectionLifeCycleListener<ProtonProtocolManager> {
    private static final Symbol groupSymbol = Symbol.getSymbol("qd.route-container-group");
    private final String name;
-   private final String host;
-   private final int port;
    private final ActiveMQServer server;
    private volatile RemotingConnection connection;
    private final Executor closeExecutor = Executors.newSingleThreadExecutor();
@@ -57,11 +55,11 @@ public class AMQPConnectorService implements ConnectorService, BaseConnectionLif
    private final ScheduledExecutorService scheduledExecutorService;
    private final ProtonClientConnectionManager lifecycleHandler;
    private volatile boolean started = false;
+   private final Map<String, Object> connectorConfig;
 
-   public AMQPConnectorService(String connectorName, String host, int port, String containerId, String groupId, Optional<SubscriberInfo> subscriberInfo, ActiveMQServer server, ScheduledExecutorService scheduledExecutorService) {
+   public AMQPConnectorService(String connectorName, Map<String, Object> connectorConfig, String containerId, String groupId, Optional<SubscriberInfo> subscriberInfo, ActiveMQServer server, ScheduledExecutorService scheduledExecutorService) {
       this.name = connectorName;
-      this.host = host;
-      this.port = port;
+      this.connectorConfig = connectorConfig;
       this.server = server;
       this.scheduledExecutorService = scheduledExecutorService;
       AMQPClientConnectionFactory factory = new AMQPClientConnectionFactory(server, containerId, Collections.singletonMap(groupSymbol, groupId), 5000);
@@ -71,12 +69,9 @@ public class AMQPConnectorService implements ConnectorService, BaseConnectionLif
    @Override
    public void start() throws Exception {
       ActiveMQAMQPLogger.LOGGER.info("Starting connector");
-      final Map<String, Object> config = new LinkedHashMap<>();
-      config.put(TransportConstants.HOST_PROP_NAME, host);
-      config.put(TransportConstants.PORT_PROP_NAME, port);
 
       ProtonClientProtocolManager protocolManager = new ProtonClientProtocolManager(new ProtonProtocolManagerFactory(), server);
-      NettyConnector connector = new NettyConnector(config, lifecycleHandler, this, closeExecutor, threadPool, server.getScheduledPool(), protocolManager);
+      NettyConnector connector = new NettyConnector(connectorConfig, lifecycleHandler, this, closeExecutor, threadPool, server.getScheduledPool(), protocolManager);
       connector.start();
       connector.createConnection();
       started = true;

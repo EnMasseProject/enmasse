@@ -19,21 +19,17 @@ package org.apache.activemq.artemis.integration.amqp;
 import org.apache.activemq.artemis.core.persistence.StorageManager;
 import org.apache.activemq.artemis.core.postoffice.PostOffice;
 import org.apache.activemq.artemis.core.postoffice.impl.PostOfficeImpl;
+import org.apache.activemq.artemis.core.remoting.impl.netty.TransportConstants;
 import org.apache.activemq.artemis.core.server.ConnectorService;
 import org.apache.activemq.artemis.core.server.ConnectorServiceFactory;
 
-import java.util.LinkedHashSet;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ScheduledExecutorService;
 
 /**
  * Connector service factory for AMQP Connector Services that can be used to establish outgoing AMQP connections.
  */
 public class AMQPConnectorServiceFactory implements ConnectorServiceFactory {
-   private static final String HOST = "host";
-   private static final String PORT = "port";
    private static final String CONTAINER = "containerId";
    private static final String CLUSTER = "clusterId";
    private static final String SOURCE_ADDRESS = "sourceAddress";
@@ -47,22 +43,43 @@ public class AMQPConnectorServiceFactory implements ConnectorServiceFactory {
       properties.add(CLIENT_ADDRESS);
       properties.add(SOURCE_ADDRESS);
       properties.add(CONTAINER);
+      properties.add(TransportConstants.SSL_ENABLED_PROP_NAME);
+      properties.add(TransportConstants.VERIFY_HOST_PROP_NAME);
+      properties.add(TransportConstants.NEED_CLIENT_AUTH_PROP_NAME);
+      properties.add(TransportConstants.KEYSTORE_PATH_PROP_NAME);
+      properties.add(TransportConstants.KEYSTORE_PASSWORD_PROP_NAME);
+      properties.add(TransportConstants.TRUSTSTORE_PATH_PROP_NAME);
+      properties.add(TransportConstants.TRUSTSTORE_PASSWORD_PROP_NAME);
       return properties;
    }
 
    private static Set<String> initializeRequiredProperties() {
       Set<String> properties = new LinkedHashSet<>();
-      properties.add(HOST);
-      properties.add(PORT);
+      properties.add(TransportConstants.HOST_PROP_NAME);
+      properties.add(TransportConstants.PORT_PROP_NAME);
       properties.add(CLUSTER);
       return properties;
    }
 
+   private static void setOrDefault(Map<String, Object> srcMap, Map<String, Object> dstMap, String key, Object defaultValue) {
+      dstMap.put(key, srcMap.getOrDefault(key, defaultValue));
+   }
+
    @Override
    public ConnectorService createConnectorService(String connectorName, Map<String, Object> configuration, StorageManager storageManager, PostOffice postOffice, ScheduledExecutorService scheduledExecutorService) {
-      String host = (String) configuration.get(HOST);
-      int port = Integer.parseInt((String) configuration.get(PORT));
       String clusterId = (String)configuration.get(CLUSTER);
+
+      Map<String, Object> connectorConfig = new HashMap<>();
+      connectorConfig.put(TransportConstants.HOST_PROP_NAME, configuration.get(TransportConstants.HOST_PROP_NAME));
+      connectorConfig.put(TransportConstants.PORT_PROP_NAME, configuration.get(TransportConstants.PORT_PROP_NAME));
+
+      setOrDefault(configuration, connectorConfig, TransportConstants.SSL_ENABLED_PROP_NAME, true);
+      setOrDefault(configuration, connectorConfig, TransportConstants.VERIFY_HOST_PROP_NAME, false);
+      setOrDefault(configuration, connectorConfig, TransportConstants.NEED_CLIENT_AUTH_PROP_NAME, true);
+      setOrDefault(configuration, connectorConfig, TransportConstants.KEYSTORE_PATH_PROP_NAME, System.getenv("KEYSTORE_PATH"));
+      setOrDefault(configuration, connectorConfig, TransportConstants.KEYSTORE_PASSWORD_PROP_NAME, "enmasse");
+      setOrDefault(configuration, connectorConfig, TransportConstants.TRUSTSTORE_PATH_PROP_NAME, System.getenv("TRUSTSTORE_PATH"));
+      setOrDefault(configuration, connectorConfig, TransportConstants.TRUSTSTORE_PASSWORD_PROP_NAME, "enmasse");
 
       Optional<String> sourceAddress = Optional.ofNullable((String)configuration.get(SOURCE_ADDRESS));
       Optional<String> clientAddress = Optional.ofNullable((String)configuration.get(CLIENT_ADDRESS));
@@ -72,12 +89,12 @@ public class AMQPConnectorServiceFactory implements ConnectorServiceFactory {
               clientAddress.flatMap(c ->
                       container.map(o -> new SubscriberInfo(o, s, c))));
 
-      ActiveMQAMQPLogger.LOGGER.infof("Creating connector host %s port %d", host, port);
+      ActiveMQAMQPLogger.LOGGER.infof("Creating connector host %s port %s", configuration.get(TransportConstants.HOST_PROP_NAME), configuration.get(TransportConstants.PORT_PROP_NAME));
       String containerId = clusterId;
       if (container.isPresent()) {
          containerId = container.get();
       }
-      return new AMQPConnectorService(connectorName, host, port, containerId, clusterId, info, ((PostOfficeImpl)postOffice).getServer(), scheduledExecutorService);
+      return new AMQPConnectorService(connectorName, connectorConfig, containerId, clusterId, info, ((PostOfficeImpl)postOffice).getServer(), scheduledExecutorService);
    }
 
    @Override
