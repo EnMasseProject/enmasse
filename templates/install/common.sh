@@ -6,7 +6,9 @@ function runcmd() {
     if [ "$GUIDE" == "true" ]; then
         echo "$description:"
         echo ""
-        echo "    $cmd"
+        echo "...."
+        echo "$cmd"
+        echo "...."
         echo ""
     else
         bash -c "$cmd"
