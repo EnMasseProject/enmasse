@@ -19,7 +19,8 @@ items:
       "name": "router", "ports": [{"containerPort": 5672, "name": "amqp", "protocol":
       "TCP"}, {"containerPort": 55673, "name": "internal", "protocol": "TCP"}, {"containerPort":
       5671, "name": "amqps", "protocol": "TCP"}, {"containerPort": 55671, "name":
-      "secure-internal", "protocol": "TCP"}], "volumeMounts": [{"mountPath": "/etc/qpid-dispatch/ssl",
+      "secure-internal", "protocol": "TCP"}, {"containerPort": 56671, "name": "secure-internal-route-container",
+      "protocol": "TCP"}], "volumeMounts": [{"mountPath": "/etc/qpid-dispatch/ssl",
       "name": "ssl-certs", "readOnly": true}, {"mountPath": "/etc/qpid-dispatch/authservice-ca",
       "name": "authservice-ca", "readOnly": true}, {"mountPath": "/etc/enmasse-certs",
       "name": "router-internal-cert", "readOnly": true}]}, {"env": [{"name": "ROUTER_HOST",
@@ -43,49 +44,50 @@ items:
       "amqps", "port": 5671, "protocol": "TCP", "targetPort": 5671}, {"name": "internal",
       "port": 55673, "protocol": "TCP", "targetPort": 55673}, {"name": "secure-internal",
       "port": 55671, "protocol": "TCP", "targetPort": "secure-internal"}, {"name":
-      "inter-router", "port": 55672, "protocol": "TCP", "targetPort": 55672}], "selector":
-      {"capability": "router"}}}, {"apiVersion": "extensions/v1beta1", "kind": "Deployment",
-      "metadata": {"annotations": {"addressSpace": "${ADDRESS_SPACE}"}, "labels":
-      {"app": "enmasse", "name": "subserv"}, "name": "subserv"}, "spec": {"replicas":
-      1, "template": {"metadata": {"annotations": {"addressSpace": "${ADDRESS_SPACE}"},
-      "labels": {"app": "enmasse", "name": "subserv"}}, "spec": {"containers": [{"env":
-      [ ], "image": "${SUBSERV_REPO}", "livenessProbe": {"tcpSocket": {"port": "amqp"}},
-      "name": "subserv", "ports": [{"containerPort": 5672, "name": "amqp", "protocol":
-      "TCP"}], "resources": {"limits": {"memory": "64Mi"}, "requests": {"memory":
-      "64Mi"}}}]}}}}, {"apiVersion": "v1", "kind": "Service", "metadata": {"annotations":
-      {"addressSpace": "${ADDRESS_SPACE}"}, "labels": {"app": "enmasse"}, "name":
-      "subscription"}, "spec": {"ports": [{"name": "amqp", "port": 5672, "protocol":
-      "TCP", "targetPort": 5672}], "selector": {"name": "subserv"}}}, {"apiVersion":
-      "extensions/v1beta1", "kind": "Deployment", "metadata": {"annotations": {"addressSpace":
-      "${ADDRESS_SPACE}"}, "labels": {"app": "enmasse", "name": "mqtt-gateway"}, "name":
-      "mqtt-gateway"}, "spec": {"replicas": 1, "template": {"metadata": {"annotations":
-      {"addressSpace": "${ADDRESS_SPACE}"}, "labels": {"app": "enmasse", "name": "mqtt-gateway"}},
-      "spec": {"containers": [{"image": "${MQTT_GATEWAY_REPO}", "livenessProbe": {"initialDelaySeconds":
-      60, "tcpSocket": {"port": "secure-mqtt"}}, "name": "mqtt-gateway-tls", "ports":
-      [{"containerPort": 8883, "name": "secure-mqtt", "protocol": "TCP"}], "volumeMounts":
-      [{"mountPath": "/etc/mqtt-gateway/ssl", "name": "ssl-certs", "readOnly": true}]},
-      {"image": "${MQTT_GATEWAY_REPO}", "livenessProbe": {"initialDelaySeconds": 60,
-      "tcpSocket": {"port": "mqtt"}}, "name": "mqtt-gateway", "ports": [{"containerPort":
-      1883, "name": "mqtt", "protocol": "TCP"}]}], "volumes": [{"name": "ssl-certs",
-      "secret": {"secretName": "${MQTT_SECRET}"}}]}}}}, {"apiVersion": "v1", "kind":
+      "secure-internal-route-container", "port": 56671, "protocol": "TCP", "targetPort":
+      "secure-internal-route-container"}, {"name": "inter-router", "port": 55672,
+      "protocol": "TCP", "targetPort": 55672}], "selector": {"capability": "router"}}},
+      {"apiVersion": "extensions/v1beta1", "kind": "Deployment", "metadata": {"annotations":
+      {"addressSpace": "${ADDRESS_SPACE}"}, "labels": {"app": "enmasse", "name": "subserv"},
+      "name": "subserv"}, "spec": {"replicas": 1, "template": {"metadata": {"annotations":
+      {"addressSpace": "${ADDRESS_SPACE}"}, "labels": {"app": "enmasse", "name": "subserv"}},
+      "spec": {"containers": [{"env": [ ], "image": "${SUBSERV_REPO}", "livenessProbe":
+      {"tcpSocket": {"port": "amqp"}}, "name": "subserv", "ports": [{"containerPort":
+      5672, "name": "amqp", "protocol": "TCP"}], "resources": {"limits": {"memory":
+      "64Mi"}, "requests": {"memory": "64Mi"}}}]}}}}, {"apiVersion": "v1", "kind":
       "Service", "metadata": {"annotations": {"addressSpace": "${ADDRESS_SPACE}"},
-      "labels": {"app": "enmasse"}, "name": "mqtt"}, "spec": {"ports": [{"name": "mqtt",
-      "port": 1883, "protocol": "TCP", "targetPort": 1883}, {"name": "secure-mqtt",
-      "port": 8883, "protocol": "TCP", "targetPort": 8883}], "selector": {"name":
-      "mqtt-gateway"}, "type": "ClusterIP"}}, {"apiVersion": "extensions/v1beta1",
-      "kind": "Deployment", "metadata": {"annotations": {"addressSpace": "${ADDRESS_SPACE}",
-      "io.enmasse.certSecretName": "mqtt-lwt-internal-cert"}, "labels": {"app": "enmasse",
-      "name": "mqtt-lwt"}, "name": "mqtt-lwt"}, "spec": {"replicas": 1, "template":
+      "labels": {"app": "enmasse"}, "name": "subscription"}, "spec": {"ports": [{"name":
+      "amqp", "port": 5672, "protocol": "TCP", "targetPort": 5672}], "selector": {"name":
+      "subserv"}}}, {"apiVersion": "extensions/v1beta1", "kind": "Deployment", "metadata":
+      {"annotations": {"addressSpace": "${ADDRESS_SPACE}"}, "labels": {"app": "enmasse",
+      "name": "mqtt-gateway"}, "name": "mqtt-gateway"}, "spec": {"replicas": 1, "template":
       {"metadata": {"annotations": {"addressSpace": "${ADDRESS_SPACE}"}, "labels":
-      {"app": "enmasse", "name": "mqtt-lwt"}}, "spec": {"containers": [{"env": [{"name":
-      "CERT_DIR", "value": "/etc/enmasse-certs"}], "image": "${MQTT_LWT_REPO}", "name":
-      "mqtt-lwt", "volumeMounts": [{"mountPath": "/etc/enmasse-certs", "name": "mqtt-lwt-internal-cert",
-      "readOnly": true}]}], "volumes": [{"name": "mqtt-lwt-internal-cert", "secret":
-      {"secretName": "mqtt-lwt-internal-cert"}}]}}}}, {"apiVersion": "v1", "data":
-      {"tls.crt": "${AUTHENTICATION_SERVICE_CA_CERT}"}, "kind": "Secret", "metadata":
-      {"name": "authservice-ca"}}, {"apiVersion": "v1", "data": {"hawkular-openshift-agent":
-      "{\"endpoints\": [{\"collection_interval\": \"60s\", \"metrics\": [{\"id\":
-      \"broker.threadCount\", \"name\": \"java.lang:type=Threading#ThreadCount\",
+      {"app": "enmasse", "name": "mqtt-gateway"}}, "spec": {"containers": [{"image":
+      "${MQTT_GATEWAY_REPO}", "livenessProbe": {"initialDelaySeconds": 60, "tcpSocket":
+      {"port": "secure-mqtt"}}, "name": "mqtt-gateway-tls", "ports": [{"containerPort":
+      8883, "name": "secure-mqtt", "protocol": "TCP"}], "volumeMounts": [{"mountPath":
+      "/etc/mqtt-gateway/ssl", "name": "ssl-certs", "readOnly": true}]}, {"image":
+      "${MQTT_GATEWAY_REPO}", "livenessProbe": {"initialDelaySeconds": 60, "tcpSocket":
+      {"port": "mqtt"}}, "name": "mqtt-gateway", "ports": [{"containerPort": 1883,
+      "name": "mqtt", "protocol": "TCP"}]}], "volumes": [{"name": "ssl-certs", "secret":
+      {"secretName": "${MQTT_SECRET}"}}]}}}}, {"apiVersion": "v1", "kind": "Service",
+      "metadata": {"annotations": {"addressSpace": "${ADDRESS_SPACE}"}, "labels":
+      {"app": "enmasse"}, "name": "mqtt"}, "spec": {"ports": [{"name": "mqtt", "port":
+      1883, "protocol": "TCP", "targetPort": 1883}, {"name": "secure-mqtt", "port":
+      8883, "protocol": "TCP", "targetPort": 8883}], "selector": {"name": "mqtt-gateway"},
+      "type": "ClusterIP"}}, {"apiVersion": "extensions/v1beta1", "kind": "Deployment",
+      "metadata": {"annotations": {"addressSpace": "${ADDRESS_SPACE}", "io.enmasse.certSecretName":
+      "mqtt-lwt-internal-cert"}, "labels": {"app": "enmasse", "name": "mqtt-lwt"},
+      "name": "mqtt-lwt"}, "spec": {"replicas": 1, "template": {"metadata": {"annotations":
+      {"addressSpace": "${ADDRESS_SPACE}"}, "labels": {"app": "enmasse", "name": "mqtt-lwt"}},
+      "spec": {"containers": [{"env": [{"name": "CERT_DIR", "value": "/etc/enmasse-certs"}],
+      "image": "${MQTT_LWT_REPO}", "name": "mqtt-lwt", "volumeMounts": [{"mountPath":
+      "/etc/enmasse-certs", "name": "mqtt-lwt-internal-cert", "readOnly": true}]}],
+      "volumes": [{"name": "mqtt-lwt-internal-cert", "secret": {"secretName": "mqtt-lwt-internal-cert"}}]}}}},
+      {"apiVersion": "v1", "data": {"tls.crt": "${AUTHENTICATION_SERVICE_CA_CERT}"},
+      "kind": "Secret", "metadata": {"name": "authservice-ca"}}, {"apiVersion": "v1",
+      "data": {"hawkular-openshift-agent": "{\"endpoints\": [{\"collection_interval\":
+      \"60s\", \"metrics\": [{\"id\": \"broker.threadCount\", \"name\": \"java.lang:type=Threading#ThreadCount\",
       \"tags\": {\"messagingComponent\": \"broker\", \"messagingMetricType\": \"threadCount\"},
       \"type\": \"counter\"}, {\"id\": \"broker.memoryHeapUsage\", \"name\": \"java.lang:type=Memory#HeapMemoryUsage#used\",
       \"tags\": {\"messagingComponent\": \"broker\", \"messagingMetricType\": \"heapUsage\"},
@@ -306,6 +308,7 @@ items:
       [{"containerPort": 5672, "name": "amqp", "protocol": "TCP"}, {"containerPort":
       55673, "name": "internal", "protocol": "TCP"}, {"containerPort": 5671, "name":
       "amqps", "protocol": "TCP"}, {"containerPort": 55671, "name": "secure-internal",
+      "protocol": "TCP"}, {"containerPort": 56671, "name": "secure-internal-route-container",
       "protocol": "TCP"}], "resources": {"limits": {"memory": "256Mi"}, "requests":
       {"memory": "256Mi"}}, "volumeMounts": [{"mountPath": "/etc/qpid-dispatch/ssl",
       "name": "ssl-certs", "readOnly": true}, {"mountPath": "/etc/qpid-dispatch/authservice-ca",
@@ -369,6 +372,7 @@ items:
       [{"containerPort": 5672, "name": "amqp", "protocol": "TCP"}, {"containerPort":
       55673, "name": "internal", "protocol": "TCP"}, {"containerPort": 5671, "name":
       "amqps", "protocol": "TCP"}, {"containerPort": 55671, "name": "secure-internal",
+      "protocol": "TCP"}, {"containerPort": 56671, "name": "secure-internal-route-container",
       "protocol": "TCP"}], "resources": {"limits": {"memory": "256Mi"}, "requests":
       {"memory": "256Mi"}}, "volumeMounts": [{"mountPath": "/etc/qpid-dispatch/ssl",
       "name": "ssl-certs", "readOnly": true}, {"mountPath": "/etc/qpid-dispatch/authservice-ca",
