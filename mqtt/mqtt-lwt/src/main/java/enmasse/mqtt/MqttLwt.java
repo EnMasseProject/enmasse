@@ -52,8 +52,9 @@ public class MqttLwt extends AbstractVerticle {
 
     // connection info to the messaging service
     private String messagingServiceHost;
-    private int messagingServiceSecureInternalPort;
+    private int messagingServicePort;
     private int messagingServiceInternalPort;
+    private int messagingServiceSecureInternalPort;
 
     private ProtonClient client;
 
@@ -128,17 +129,22 @@ public class MqttLwt extends AbstractVerticle {
 
             Future<ProtonConnection> publishConnFuture = Future.future();
 
-            ProtonClientOptions secureOptions = this.createClientOptions()
-                    .setSsl(true)
-                    .addEnabledSaslMechanism("EXTERNAL")
-                    .setHostnameVerificationAlgorithm("")
-                    .setPemTrustOptions(new PemTrustOptions()
-                            .addCertPath(new File(certDir, "ca.crt").getAbsolutePath()))
-                    .setPemKeyCertOptions(new PemKeyCertOptions()
-                            .addCertPath(new File(certDir, "tls.crt").getAbsolutePath())
-                            .addKeyPath(new File(certDir, "tls.key").getAbsolutePath()));
+            int port = messagingServicePort;
+            ProtonClientOptions internalConnOptions = this.createClientOptions();
+            if (certDir != null) {
+                port = messagingServiceSecureInternalPort;
+                internalConnOptions
+                        .setSsl(true)
+                        .addEnabledSaslMechanism("EXTERNAL")
+                        .setHostnameVerificationAlgorithm("")
+                        .setPemTrustOptions(new PemTrustOptions()
+                                .addCertPath(new File(certDir, "ca.crt").getAbsolutePath()))
+                        .setPemKeyCertOptions(new PemKeyCertOptions()
+                                .addCertPath(new File(certDir, "tls.crt").getAbsolutePath())
+                                .addKeyPath(new File(certDir, "tls.key").getAbsolutePath()));
+            };
 
-            this.client.connect(secureOptions, this.messagingServiceHost, this.messagingServiceSecureInternalPort, done -> {
+            this.client.connect(internalConnOptions, this.messagingServiceHost, port, done -> {
 
                 if (done.succeeded()) {
 
@@ -303,7 +309,19 @@ public class MqttLwt extends AbstractVerticle {
     }
 
     /**
-     * Set the port for connecting to the AMQP services
+     * Set the port for connecting to the internal AMQP network
+     *
+     * @param messagingServicePort port for AMQP connections
+     * @return  current MQTT LWT instance
+     */
+    @Value(value = "${messaging.service.port:5672}")
+    public MqttLwt setMessagingServicePort(int messagingServicePort) {
+        this.messagingServicePort = messagingServicePort;
+        return this;
+    }
+
+    /**
+     * Set the port for connecting to the secured internal AMQP network
      *
      * @param messagingServiceSecureInternalPort   port for AMQP connections
      * @return  current MQTT LWT instance
