@@ -982,14 +982,19 @@ objects:
               value: localhost
             - name: CONFIGURATION_SERVICE_PORT
               value: '5672'
+            - name: PROBE_PORT
+              value: '8888'
             image: "${RAGENT_REPO}"
             livenessProbe:
-              tcpSocket:
-                port: amqp
+              httpGet:
+                port: http
             name: ragent
             ports:
-            - containerPort: 55672
+            - containerPort: 55671
               name: amqp
+              protocol: TCP
+            - containerPort: 8888
+              name: http
               protocol: TCP
             resources:
               limits:
@@ -1094,8 +1099,8 @@ objects:
     spec:
       ports:
       - name: amqp
-        port: 5672
-        targetPort: 55672
+        port: 5671
+        targetPort: 55671
       selector:
         name: admin
   - apiVersion: v1

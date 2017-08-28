@@ -1,7 +1,7 @@
 local common = import "common.jsonnet";
 {
   service(addressSpace)::
-    common.service(addressSpace, "ragent", "ragent", "amqp", 55672, 55672),
+    common.service(addressSpace, "ragent", "ragent", "amqp", 55671, 55671),
   deployment(addressSpace, image_repo)::
     {
       "apiVersion": "extensions/v1beta1",
@@ -30,7 +30,7 @@ local common = import "common.jsonnet";
           },
           "spec": {
             "containers": [
-              common.container("ragent", image_repo, "amqp", 55672, "64Mi", [])
+              common.container("ragent", image_repo, "amqp", 55671, "64Mi", [])
             ]
           }
         }

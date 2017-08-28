@@ -25,7 +25,7 @@ local common = import "common.jsonnet";
 
   services(addressSpace)::
   [
-    self.service("ragent", addressSpace, [{"name": "amqp", "port": 5672, "targetPort": 55672}]),
+    self.service("ragent", addressSpace, [{"name": "amqp", "port": 5671, "targetPort": 55671}]),
     self.service("configuration", addressSpace, [{"name": "amqp", "port": 5672}]),
     self.service("queue-scheduler", addressSpace, [{"name": "amqp", "port": 5672, "targetPort": 55667}]),
     self.service("console", addressSpace, [{"name": "amqp-ws", "port": 5672, "targetPort": 56720}, {"name": "http", "port": 8080}])
@@ -60,23 +60,56 @@ local common = import "common.jsonnet";
         },
         "spec": {
           "containers": [
-            common.container("ragent", ragent_image, "amqp", 55672, "64Mi", [
-                      {
-                        "name": "CONFIGURATION_SERVICE_HOST",
-                        "value": "localhost"
-                      },
-                      {
-                        "name": "CONFIGURATION_SERVICE_PORT",
-                        "value": "5672"
-                      }])+ {
-                             "volumeMounts": [
+            {
+              "image": ragent_image,
+              "name": "ragent",
+              "env": [
+                 {
+                   "name": "CONFIGURATION_SERVICE_HOST",
+                   "value": "localhost"
+                 },
+                 {
+                   "name": "CONFIGURATION_SERVICE_PORT",
+                   "value": "5672"
+                 },
+                 {
+                   "name": "PROBE_PORT",
+                   "value": "8888"
+                 }
+              ],
+              "resources": {
+                "requests": {
+                  "memory": "64Mi",
+                },
+                "limits": {
+                  "memory": "64Mi",
+                }
+              },
+              "ports": [
+                {
+                  "name": "amqp",
+                  "containerPort": 55671,
+                  "protocol": "TCP"
+                },
+                {
+                  "name": "http",
+                  "containerPort": 8888,
+                  "protocol": "TCP"
+                }
+              ],
+              "livenessProbe": {
+                "httpGet": {
+                  "port": "http"
+                }
+              },
+              "volumeMounts": [
                                {
                                  "name": "admin-internal-cert",
                                  "mountPath": "/etc/enmasse-certs",
                                  "readOnly": true
                                }
                              ]
-                           },
+            },
             common.container("queue-scheduler", scheduler_image, "amqp", 55667, "128Mi", [
                       {
                         "name": "CONFIGURATION_SERVICE_HOST",

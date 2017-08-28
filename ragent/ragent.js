@@ -15,11 +15,13 @@
  */
 'use strict';
 
+var http = require('http');
 var util = require('util');
 var log = require("./log.js").logger();
 var amqp = require('rhea');
 var rtr = require('./router.js');
 var podwatch = require('./podwatch.js');
+var tls_options = require('./tls_options.js');
 
 var known_routers = {};
 var connected_routers = {};
@@ -319,11 +321,16 @@ amqp.on('receiver_open', function(context) {
 });
 
 log.info("Router agent starting");
-
-var port = 55672;
+var options;
+try {
+    options = tls_options.get_server_options({port:55671, properties:connection_properties});
+} catch (error) {
+    options = {port:55672, properties:connection_properties};
+    console.warn('Error setting TLS options ' + error + ' using ' + options);
+}
 amqp.sasl_server_mechanisms.enable_anonymous();
-amqp.listen({port:port, properties:connection_properties}).on('listening', function() {
-    log.info("Router agent listening on " + port);
+amqp.listen(options).on('listening', function(server) {
+    log.info("Router agent listening on " + options.port);
 });
 
 var config_host = process.env.ADMIN_SERVICE_HOST
@@ -339,4 +346,12 @@ if (config_host) {
     var conn = amqp.connect({host:config_host, port:config_port, properties:connection_properties});
     conn.open_receiver('v1/addresses');
     watch_pods(conn);
+}
+
+if (process.env.PROBE_PORT) {
+    var probe = http.createServer(function (req, res) {
+        res.writeHead(200, {'Content-Type': 'text/plain'});
+        res.end('OK');
+    });
+    probe.listen(process.env.PROBE_PORT);
 }
