@@ -90,6 +90,8 @@ listener {
 connector {
     host: ${RAGENT_SERVICE_HOST}
     port: ${RAGENT_SERVICE_PORT}
+    sslProfile: ssl_internal_details
+    verifyHostName: no
 }
 
 linkRoute {
