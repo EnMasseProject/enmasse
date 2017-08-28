@@ -79,7 +79,7 @@ oc policy add-role-to-user edit system:serviceaccount:enmasse:enmasse-service-ac
 Create secret with keycloak admin credentials:
 
 ....
-oc create secret generic keycloak-credentials --from-literal=admin.username=admin --from-literal=admin.password=8Z4vgGUWT25ulHclpwVzocVeetBHyAVY03hB5FqruXsda3Jw55ET3878IBggA74DZoJmYckQUFmex4WSXWszs5wOIGDPENBnQhsB4UdwNjoBuq0kP5gd5DEj770mDXNb
+oc create secret generic keycloak-credentials --from-literal=admin.username=admin --from-literal=admin.password=admin
 ....
 
 Create self-signed certificate:
