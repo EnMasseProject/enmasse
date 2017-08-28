@@ -1,19 +1,6 @@
 description = 'Router agent'
 apply plugin: 'distribution'
 
-task runMocha(type: Exec) {
-    onlyIf {
-        def result = exec {
-            executable = "which"
-            args "mocha"
-            ignoreExitValue = true
-        }
-        result.exitValue == 0
-    }
-    executable = "mocha"
-    environment("MOCHA_FILE", "build/test-results/test/TEST-ragent.xml")
-    args "--reporter=mocha-junit-reporter"
-}
 test.dependsOn(runMocha)
 
 task pack(type: Tar) {
