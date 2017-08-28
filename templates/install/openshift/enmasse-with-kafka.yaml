@@ -348,6 +348,9 @@ objects:
             - containerPort: 55671
               name: secure-internal
               protocol: TCP
+            - containerPort: 56671
+              name: secure-internal-route-container
+              protocol: TCP
             resources:
               limits:
                 memory: 256Mi
@@ -545,6 +548,9 @@ objects:
             - containerPort: 55671
               name: secure-internal
               protocol: TCP
+            - containerPort: 56671
+              name: secure-internal-route-container
+              protocol: TCP
             resources:
               limits:
                 memory: 256Mi
@@ -694,6 +700,9 @@ objects:
             - containerPort: 55671
               name: secure-internal
               protocol: TCP
+            - containerPort: 56671
+              name: secure-internal-route-container
+              protocol: TCP
             volumeMounts:
             - mountPath: "/etc/qpid-dispatch/ssl"
               name: ssl-certs
@@ -768,6 +777,10 @@ objects:
         port: 55671
         protocol: TCP
         targetPort: secure-internal
+      - name: secure-internal-route-container
+        port: 56671
+        protocol: TCP
+        targetPort: secure-internal-route-container
       - name: inter-router
         port: 55672
         protocol: TCP

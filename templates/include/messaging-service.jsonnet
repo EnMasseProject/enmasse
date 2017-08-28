@@ -23,6 +23,12 @@
     "protocol": "TCP",
     "targetPort": "secure-internal"
   },
+  local secureInternalRouteContainerPort = {
+    "name": "secure-internal-route-container",
+    "port": 56671,
+    "protocol": "TCP",
+    "targetPort": "secure-internal-route-container"
+  },
   local interRouterPort = {
     "name": "inter-router",
     "port": 55672,
@@ -78,7 +84,7 @@
         }
       },
       "spec": {
-        "ports": [port, securePort, internalPort, secureInternalPort, interRouterPort],
+        "ports": [port, securePort, internalPort, secureInternalPort, secureInternalRouteContainerPort, interRouterPort],
         "selector": {
           "capability": "router"
         }

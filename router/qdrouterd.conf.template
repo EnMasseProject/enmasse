@@ -86,6 +86,13 @@ listener {
     saslMechanisms: EXTERNAL
 }
 
+listener {
+    host: 0.0.0.0
+    port: 56671
+    sslProfile: ssl_internal_details
+    saslMechanisms: EXTERNAL
+    role: route-container
+}
 
 connector {
     host: ${RAGENT_SERVICE_HOST}
