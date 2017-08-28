@@ -39,10 +39,21 @@ function configure() {
             cat $CONFIG_TEMPLATES/broker_queue_colocated.xml >> /tmp/broker.xml
         fi
         cat $CONFIG_TEMPLATES/broker_footer.xml >> /tmp/broker.xml
+
+        export KEYSTORE_PATH=$instanceDir/etc/enmasse-keystore.jks
+        export TRUSTSTORE_PATH=$instanceDir/etc/enmasse-truststore.jks
     
         envsubst < /tmp/broker.xml > $instanceDir/etc/broker.xml
         cp $CONFIG_TEMPLATES/bootstrap.xml $instanceDir/etc/bootstrap.xml
+
+        # Convert certs
+        openssl pkcs12 -export -passout pass:enmasse -in /etc/enmasse-certs/tls.crt -inkey /etc/enmasse-certs/tls.key -chain -CAfile /etc/enmasse-certs/ca.crt -name "io.enmasse" -out /tmp/enmasse-keystore.p12
+
+        keytool -importkeystore -srcstorepass enmasse -deststorepass enmasse -destkeystore $KEYSTORE_PATH -srckeystore /tmp/enmasse-keystore.p12 -srcstoretype PKCS12
+        keytool -import -noprompt -file /etc/enmasse-certs/ca.crt -alias firstCA -deststorepass enmasse -keystore $TRUSTSTORE_PATH
+
     fi
+
 }
 
 # Parameters are

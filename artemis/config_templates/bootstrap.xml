@@ -27,7 +27,6 @@
    <!-- The web server is only bound to loalhost by default -->
    <web bind="http://0.0.0.0:8161" path="web">
        <app url="jolokia" war="jolokia.war"/>
-
    </web>
 
 

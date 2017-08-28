@@ -1,6 +1,6 @@
 FROM fedora:25
 
-RUN dnf -y install which java-1.8.0-openjdk libaio python gettext hostname iputils && dnf clean all -y && mkdir -p /var/run/artemis/
+RUN dnf -y install which java-1.8.0-openjdk libaio python gettext hostname iputils openssl && dnf clean all -y && mkdir -p /var/run/artemis/
 
 ARG version=latest
 ENV ARTEMIS_HOME=/opt/apache-artemis-2.1.0 PATH=$ARTEMIS_HOME/bin:$PATH VERSION=${version}
