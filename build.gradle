@@ -28,6 +28,7 @@ ext {
     openShiftPasswd     = System.getenv("OPENSHIFT_PASSWD") ?: "developer"
     openShiftMaster     = System.getenv("OPENSHIFT_MASTER") ?: "https://localhost:8443"
     openShiftToken      = System.getenv("OPENSHIFT_TOKEN") ?: "unknown"
+    mochaArgs           = System.getenv("MOCHA_ARGS") ?: null
 
     slf4jVersion = '1.7.21'
     jacksonVersion = '2.7.4'
@@ -110,6 +111,22 @@ subprojects {
             dependsOn tagVersion
             tag = dockerImageVersion
             imageName = "${dockerRegistry}/${dockerOrg}/${project.name}"
+        }
+    }
+
+    task runMocha(type: Exec) {
+        onlyIf {
+            def result = exec {
+                executable = "which"
+                args "mocha"
+                ignoreExitValue = true
+            }
+            result.exitValue == 0
+        }
+        executable = "mocha"
+        environment("MOCHA_FILE", "build/test-results/test/TEST-${project.name}.xml")
+        if (mochaArgs != null) {
+            args mochaArgs
         }
     }
 }

@@ -13,19 +13,7 @@ task runNpmInstall(type: Exec) {
     executable = "npm"
     args "install"
 }
-task runMocha(type: Exec) {
-    onlyIf {
-        def result = exec {
-            executable = "which"
-            args "mocha"
-            ignoreExitValue = true
-        }
-        result.exitValue == 0
-    }
-    executable = "mocha"
-    environment("MOCHA_FILE", "build/test-results/test/TEST-console.xml")
-    args "--reporter=mocha-junit-reporter"
-}
+
 runMocha.dependsOn(runNpmInstall)
 test.dependsOn(runMocha)
 

@@ -8,7 +8,7 @@ node('enmasse') {
         }
         stage ('build') {
             try {
-                sh './gradlew build -q --rerun-tasks'
+                sh 'MOCHA_ARGS="--reporter=mocha-junit-reporter" ./gradlew build -q --rerun-tasks'
             } finally {
                 junit '**/TEST-*.xml'
             }
