@@ -54,8 +54,8 @@ local authService = import "auth-service.jsonnet";
         "containerPort": 55671,
         "protocol": "TCP"
     };
-    local secureInternalRouteContainerPort = {
-        "name": "secure-internal-route-container",
+    local amqpsBrokerPort = {
+        "name": "amqps-broker",
         "containerPort": 56671,
         "protocol": "TCP"
     };
@@ -82,7 +82,7 @@ local authService = import "auth-service.jsonnet";
         }],
       "env": env + linkEnv + authService.envVars,
 
-      "ports": [routerPort, internalPort, secureRouterPort, secureInternalPort, secureInternalRouteContainerPort],
+      "ports": [routerPort, internalPort, secureRouterPort, secureInternalPort, amqpsBrokerPort],
       "livenessProbe": {
         "tcpSocket": {
           "port": "amqp"
