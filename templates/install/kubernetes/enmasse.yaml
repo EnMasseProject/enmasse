@@ -209,24 +209,25 @@ items:
       [{"containerPort": 5673, "name": "amqp"}, {"containerPort": 61616, "name": "core"},
       {"containerPort": 8161, "name": "jolokia"}], "readinessProbe": {"tcpSocket":
       {"port": "amqp"}}, "volumeMounts": [{"mountPath": "/var/run/artemis", "name":
-      "vol-${NAME}"}]}], "volumes": [{"emptyDir": { }, "name": "vol-${NAME}"}, {"name":
-      "ssl-certs", "secret": {"secretName": "${COLOCATED_ROUTER_SECRET}"}}, {"name":
-      "authservice-ca", "secret": {"secretName": "authservice-ca"}}, {"name": "broker-internal-cert",
-      "secret": {"secretName": "broker-internal-cert"}}, {"configMap": {"name": "hawkular-broker-config"},
-      "name": "hawkular-openshift-agent"}]}}}}], "parameters": [{"description": "Storage
-      capacity required for volume claims", "name": "STORAGE_CAPACITY", "value": "2Gi"},
-      {"description": "The docker image to use for the message broker", "name": "BROKER_REPO",
-      "value": "docker.io/enmasseproject/artemis:latest"}, {"description": "The default
-      image to use as topic forwarder", "name": "TOPIC_FORWARDER_REPO", "value": "docker.io/enmasseproject/topic-forwarder:latest"},
-      {"description": "The image to use for the router", "name": "ROUTER_REPO", "value":
-      "docker.io/enmasseproject/router:latest"}, {"description": "The link capacity
-      setting for router", "name": "ROUTER_LINK_CAPACITY", "value": "50"}, {"description":
-      "A valid addressSpace name for the address Space", "name": "ADDRESS_SPACE",
-      "required": true}, {"description": "A valid name for the deployment", "name":
-      "NAME", "required": true}, {"description": "A valid group id for the deployment",
-      "name": "CLUSTER_ID", "required": true}, {"description": "The address to use
-      for the queue", "name": "ADDRESS", "required": true}, {"description": "Name
-      of secret containing router key and certificate", "name": "COLOCATED_ROUTER_SECRET",
+      "vol-${NAME}"}, {"mountPath": "/etc/enmasse-certs", "name": "broker-internal-cert",
+      "readOnly": true}]}], "volumes": [{"emptyDir": { }, "name": "vol-${NAME}"},
+      {"name": "ssl-certs", "secret": {"secretName": "${COLOCATED_ROUTER_SECRET}"}},
+      {"name": "authservice-ca", "secret": {"secretName": "authservice-ca"}}, {"name":
+      "broker-internal-cert", "secret": {"secretName": "broker-internal-cert"}}, {"configMap":
+      {"name": "hawkular-broker-config"}, "name": "hawkular-openshift-agent"}]}}}}],
+      "parameters": [{"description": "Storage capacity required for volume claims",
+      "name": "STORAGE_CAPACITY", "value": "2Gi"}, {"description": "The docker image
+      to use for the message broker", "name": "BROKER_REPO", "value": "docker.io/enmasseproject/artemis:latest"},
+      {"description": "The default image to use as topic forwarder", "name": "TOPIC_FORWARDER_REPO",
+      "value": "docker.io/enmasseproject/topic-forwarder:latest"}, {"description":
+      "The image to use for the router", "name": "ROUTER_REPO", "value": "docker.io/enmasseproject/router:latest"},
+      {"description": "The link capacity setting for router", "name": "ROUTER_LINK_CAPACITY",
+      "value": "50"}, {"description": "A valid addressSpace name for the address Space",
+      "name": "ADDRESS_SPACE", "required": true}, {"description": "A valid name for
+      the deployment", "name": "NAME", "required": true}, {"description": "A valid
+      group id for the deployment", "name": "CLUSTER_ID", "required": true}, {"description":
+      "The address to use for the queue", "name": "ADDRESS", "required": true}, {"description":
+      "Name of secret containing router key and certificate", "name": "COLOCATED_ROUTER_SECRET",
       "required": true}, {"description": "The hostname of the authentication service
       used by this address space", "name": "AUTHENTICATION_SERVICE_HOST", "required":
       true}, {"description": "The port of the authentication service used by this
@@ -252,7 +253,8 @@ items:
       [{"containerPort": 5673, "name": "amqp"}, {"containerPort": 61616, "name": "core"},
       {"containerPort": 8161, "name": "jolokia"}], "readinessProbe": {"tcpSocket":
       {"port": "amqp"}}, "volumeMounts": [{"mountPath": "/var/run/artemis", "name":
-      "vol-${NAME}"}]}], "volumes": [{"name": "vol-${NAME}", "persistentVolumeClaim":
+      "vol-${NAME}"}, {"mountPath": "/etc/enmasse-certs", "name": "broker-internal-cert",
+      "readOnly": true}]}], "volumes": [{"name": "vol-${NAME}", "persistentVolumeClaim":
       {"claimName": "pvc-${NAME}"}}, {"name": "ssl-certs", "secret": {"secretName":
       "${COLOCATED_ROUTER_SECRET}"}}, {"name": "authservice-ca", "secret": {"secretName":
       "authservice-ca"}}, {"name": "broker-internal-cert", "secret": {"secretName":
@@ -292,8 +294,9 @@ items:
       [{"containerPort": 5673, "name": "amqp"}, {"containerPort": 61616, "name": "core"},
       {"containerPort": 8161, "name": "jolokia"}], "readinessProbe": {"tcpSocket":
       {"port": "amqp"}}, "volumeMounts": [{"mountPath": "/var/run/artemis", "name":
-      "vol-${NAME}"}]}, {"env": [{"name": "TOPIC_NAME", "value": "${ADDRESS}"}, {"name":
-      "LINK_CAPACITY", "value": "${ROUTER_LINK_CAPACITY}"}, {"name": "AUTHENTICATION_SERVICE_HOST",
+      "vol-${NAME}"}, {"mountPath": "/etc/enmasse-certs", "name": "broker-internal-cert",
+      "readOnly": true}]}, {"env": [{"name": "TOPIC_NAME", "value": "${ADDRESS}"},
+      {"name": "LINK_CAPACITY", "value": "${ROUTER_LINK_CAPACITY}"}, {"name": "AUTHENTICATION_SERVICE_HOST",
       "value": "${AUTHENTICATION_SERVICE_HOST}"}, {"name": "AUTHENTICATION_SERVICE_PORT",
       "value": "${AUTHENTICATION_SERVICE_PORT}"}, {"name": "AUTHENTICATION_SERVICE_CLIENT_SECRET",
       "value": "${AUTHENTICATION_SERVICE_CLIENT_SECRET}"}, {"name": "AUTHENTICATION_SERVICE_SASL_INIT_HOST",
@@ -354,8 +357,9 @@ items:
       [{"containerPort": 5673, "name": "amqp"}, {"containerPort": 61616, "name": "core"},
       {"containerPort": 8161, "name": "jolokia"}], "readinessProbe": {"tcpSocket":
       {"port": "amqp"}}, "volumeMounts": [{"mountPath": "/var/run/artemis", "name":
-      "vol-${NAME}"}]}, {"env": [{"name": "TOPIC_NAME", "value": "${ADDRESS}"}, {"name":
-      "LINK_CAPACITY", "value": "${ROUTER_LINK_CAPACITY}"}, {"name": "AUTHENTICATION_SERVICE_HOST",
+      "vol-${NAME}"}, {"mountPath": "/etc/enmasse-certs", "name": "broker-internal-cert",
+      "readOnly": true}]}, {"env": [{"name": "TOPIC_NAME", "value": "${ADDRESS}"},
+      {"name": "LINK_CAPACITY", "value": "${ROUTER_LINK_CAPACITY}"}, {"name": "AUTHENTICATION_SERVICE_HOST",
       "value": "${AUTHENTICATION_SERVICE_HOST}"}, {"name": "AUTHENTICATION_SERVICE_PORT",
       "value": "${AUTHENTICATION_SERVICE_PORT}"}, {"name": "AUTHENTICATION_SERVICE_CLIENT_SECRET",
       "value": "${AUTHENTICATION_SERVICE_CLIENT_SECRET}"}, {"name": "AUTHENTICATION_SERVICE_SASL_INIT_HOST",

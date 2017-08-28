@@ -64,6 +64,9 @@ objects:
             volumeMounts:
             - mountPath: "/var/run/artemis"
               name: vol-${NAME}
+            - mountPath: "/etc/enmasse-certs"
+              name: broker-internal-cert
+              readOnly: true
           volumes:
           - emptyDir: {}
             name: vol-${NAME}
@@ -193,6 +196,9 @@ objects:
             volumeMounts:
             - mountPath: "/var/run/artemis"
               name: vol-${NAME}
+            - mountPath: "/etc/enmasse-certs"
+              name: broker-internal-cert
+              readOnly: true
           volumes:
           - name: vol-${NAME}
             persistentVolumeClaim:
@@ -308,6 +314,9 @@ objects:
             volumeMounts:
             - mountPath: "/var/run/artemis"
               name: vol-${NAME}
+            - mountPath: "/etc/enmasse-certs"
+              name: broker-internal-cert
+              readOnly: true
           - env:
             - name: TOPIC_NAME
               value: "${ADDRESS}"
@@ -502,6 +511,9 @@ objects:
             volumeMounts:
             - mountPath: "/var/run/artemis"
               name: vol-${NAME}
+            - mountPath: "/etc/enmasse-certs"
+              name: broker-internal-cert
+              readOnly: true
           - env:
             - name: TOPIC_NAME
               value: "${ADDRESS}"

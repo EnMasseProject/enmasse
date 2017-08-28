@@ -23,15 +23,13 @@ local common = import "common.jsonnet";
         {
           "name": volumeName,
           "mountPath": "/var/run/artemis"
+        },
+        {
+          "name": "broker-internal-cert",
+          "mountPath": "/etc/enmasse-certs",
+          "readOnly": true
         }
       ],
-      //+ if secure then [
-      //  {
-      //    "name": "ssl-certs",
-      //    "mountPath": "/etc/artemis/certs",
-      //    "readOnly": true
-      //  }
-      //] else [],
       "livenessProbe": { "tcpSocket": {
           "port": "amqp"
         }
@@ -71,14 +69,6 @@ local common = import "common.jsonnet";
       "name": "hawkular-openshift-agent",
       "configMap": {
           "name": "hawkular-broker-config"
-      }
-    },
-
-  secretVolume()::
-    {
-      "name": "ssl-certs",
-      "secret": {
-        "secretName": "broker-certs"
       }
     }
 }
