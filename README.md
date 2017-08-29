@@ -51,7 +51,7 @@ well known issues and related fixes/workaround.
 
 # Contributing
 
-See [HACKING](HACKING.md) for details on how to build the different components of EnMasse. Submit patches using pull requests, or post patches to the mailing lists. See the [trello board](https://trello.com/enmasseproject) to get an idea of future plans and areas where you can contribute.
+See [HACKING](HACKING.md) for details on how to build the different components of EnMasse. Submit patches using pull requests, or post patches to the mailing lists. See the [issues list](https://github.com/EnMasseProject/enmasse/issues) to get an idea of future plans and areas where you can contribute.
 
 # License
 
