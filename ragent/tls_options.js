@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Red Hat Inc.
+ * Copyright 2017 Red Hat Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,15 +18,21 @@
 var path = require('path');
 var fs = require('fs');
 
+function get_paths() {
+    var cert_dir = process.env.CERT_DIR || '/etc/enmasse-certs';
+    var paths = {};
+    paths.ca = process.env.CA_PATH || path.resolve(cert_dir, 'ca.crt');
+    paths.cert = process.env.CERT_PATH || path.resolve(cert_dir, 'tls.crt');
+    paths.key = process.env.KEY_PATH || path.resolve(cert_dir, 'tls.key');
+    return paths;
+}
+
 function get_client_options(config) {
     var options = config || {};
-    var cert_dir = (process.env.CERT_DIR !== undefined) ? process.env.CERT_DIR : '/etc/enmasse-certs';
-    var ca_path = path.resolve(cert_dir, 'ca.crt');//TODO: allow setting via env var
-    var crt_path = path.resolve(cert_dir, 'tls.crt');//TODO: allow setting via env var
-    var key_path = path.resolve(cert_dir, 'tls.key');//TODO: allow setting via env var
-    options.ca = [fs.readFileSync(ca_path)];
-    options.key = fs.readFileSync(key_path);
-    options.cert = fs.readFileSync(crt_path);
+    var paths = get_paths();
+    options.ca = [fs.readFileSync(paths.ca)];
+    options.key = fs.readFileSync(paths.key);
+    options.cert = fs.readFileSync(paths.cert);
     options.enable_sasl_external = true;
     options.transport = 'tls';
     options.rejectUnauthorized = false;
@@ -43,3 +49,4 @@ function get_server_options(config) {
 
 module.exports.get_client_options = get_client_options;
 module.exports.get_server_options = get_server_options;
+module.exports.get_paths = get_paths;
