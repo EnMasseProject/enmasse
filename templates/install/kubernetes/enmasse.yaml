@@ -317,13 +317,15 @@ items:
       "ssl-certs", "readOnly": true}, {"mountPath": "/etc/qpid-dispatch/authservice-ca",
       "name": "authservice-ca", "readOnly": true}, {"mountPath": "/etc/enmasse-certs",
       "name": "broker-internal-cert", "readOnly": true}]}, {"env": [{"name": "TOPIC_NAME",
-      "value": "${ADDRESS}"}, {"name": "CLUSTER_ID", "value": "${NAME}"}], "image":
-      "${TOPIC_FORWARDER_REPO}", "livenessProbe": {"httpGet": {"path": "/health",
-      "port": "health"}}, "name": "forwarder", "ports": [{"containerPort": 8080, "name":
-      "health"}], "resources": {"limits": {"memory": "128Mi"}, "requests": {"memory":
-      "128Mi"}}}], "volumes": [{"emptyDir": { }, "name": "vol-${NAME}"}, {"name":
-      "ssl-certs", "secret": {"secretName": "${COLOCATED_ROUTER_SECRET}"}}, {"name":
-      "authservice-ca", "secret": {"secretName": "authservice-ca"}}, {"name": "broker-internal-cert",
+      "value": "${ADDRESS}"}, {"name": "CLUSTER_ID", "value": "${NAME}"}, {"name":
+      "CERT_DIR", "value": "/etc/enmasse-certs"}], "image": "${TOPIC_FORWARDER_REPO}",
+      "livenessProbe": {"httpGet": {"path": "/health", "port": "health"}}, "name":
+      "forwarder", "ports": [{"containerPort": 8080, "name": "health"}], "resources":
+      {"limits": {"memory": "128Mi"}, "requests": {"memory": "128Mi"}}, "volumeMounts":
+      [{"mountPath": "/etc/enmasse-certs", "name": "broker-internal-cert", "readOnly":
+      true}]}], "volumes": [{"emptyDir": { }, "name": "vol-${NAME}"}, {"name": "ssl-certs",
+      "secret": {"secretName": "${COLOCATED_ROUTER_SECRET}"}}, {"name": "authservice-ca",
+      "secret": {"secretName": "authservice-ca"}}, {"name": "broker-internal-cert",
       "secret": {"secretName": "broker-internal-cert"}}, {"configMap": {"name": "hawkular-broker-config"},
       "name": "hawkular-openshift-agent"}]}}}}], "parameters": [{"description": "Storage
       capacity required for volume claims", "name": "STORAGE_CAPACITY", "value": "2Gi"},
@@ -381,11 +383,13 @@ items:
       "ssl-certs", "readOnly": true}, {"mountPath": "/etc/qpid-dispatch/authservice-ca",
       "name": "authservice-ca", "readOnly": true}, {"mountPath": "/etc/enmasse-certs",
       "name": "broker-internal-cert", "readOnly": true}]}, {"env": [{"name": "TOPIC_NAME",
-      "value": "${ADDRESS}"}, {"name": "CLUSTER_ID", "value": "${NAME}"}], "image":
-      "${TOPIC_FORWARDER_REPO}", "livenessProbe": {"httpGet": {"path": "/health",
-      "port": "health"}}, "name": "forwarder", "ports": [{"containerPort": 8080, "name":
-      "health"}], "resources": {"limits": {"memory": "128Mi"}, "requests": {"memory":
-      "128Mi"}}}], "volumes": [{"name": "vol-${NAME}", "persistentVolumeClaim": {"claimName":
+      "value": "${ADDRESS}"}, {"name": "CLUSTER_ID", "value": "${NAME}"}, {"name":
+      "CERT_DIR", "value": "/etc/enmasse-certs"}], "image": "${TOPIC_FORWARDER_REPO}",
+      "livenessProbe": {"httpGet": {"path": "/health", "port": "health"}}, "name":
+      "forwarder", "ports": [{"containerPort": 8080, "name": "health"}], "resources":
+      {"limits": {"memory": "128Mi"}, "requests": {"memory": "128Mi"}}, "volumeMounts":
+      [{"mountPath": "/etc/enmasse-certs", "name": "broker-internal-cert", "readOnly":
+      true}]}], "volumes": [{"name": "vol-${NAME}", "persistentVolumeClaim": {"claimName":
       "pvc-${NAME}"}}, {"name": "ssl-certs", "secret": {"secretName": "${COLOCATED_ROUTER_SECRET}"}},
       {"name": "authservice-ca", "secret": {"secretName": "authservice-ca"}}, {"name":
       "broker-internal-cert", "secret": {"secretName": "broker-internal-cert"}}, {"configMap":

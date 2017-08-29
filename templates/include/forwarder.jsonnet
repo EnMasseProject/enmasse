@@ -3,7 +3,17 @@ local common = import "common.jsonnet";
   container(image_repo, addressEnv)::
     {
       "name": "forwarder",
-      "env": [ addressEnv, {"name": "CLUSTER_ID", "value": "${NAME}"} ],
+      "env": [
+        addressEnv,
+        {
+          "name": "CLUSTER_ID",
+          "value": "${NAME}"
+        },
+        {
+          "name": "CERT_DIR",
+          "value": "/etc/enmasse-certs"
+        }
+      ],
       "image": image_repo,
       "resources": {
           "requests": {
@@ -17,6 +27,13 @@ local common = import "common.jsonnet";
         {
           "name": "health",
           "containerPort": 8080
+        }
+      ],
+      "volumeMounts": [
+        {
+          "name": "broker-internal-cert",
+          "mountPath": "/etc/enmasse-certs",
+          "readOnly": true
         }
       ],
       "livenessProbe": {

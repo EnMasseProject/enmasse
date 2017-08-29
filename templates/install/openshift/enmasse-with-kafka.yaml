@@ -371,6 +371,8 @@ objects:
               value: "${ADDRESS}"
             - name: CLUSTER_ID
               value: "${NAME}"
+            - name: CERT_DIR
+              value: "/etc/enmasse-certs"
             image: "${TOPIC_FORWARDER_REPO}"
             livenessProbe:
               httpGet:
@@ -385,6 +387,10 @@ objects:
                 memory: 128Mi
               requests:
                 memory: 128Mi
+            volumeMounts:
+            - mountPath: "/etc/enmasse-certs"
+              name: broker-internal-cert
+              readOnly: true
           volumes:
           - emptyDir: {}
             name: vol-${NAME}
@@ -571,6 +577,8 @@ objects:
               value: "${ADDRESS}"
             - name: CLUSTER_ID
               value: "${NAME}"
+            - name: CERT_DIR
+              value: "/etc/enmasse-certs"
             image: "${TOPIC_FORWARDER_REPO}"
             livenessProbe:
               httpGet:
@@ -585,6 +593,10 @@ objects:
                 memory: 128Mi
               requests:
                 memory: 128Mi
+            volumeMounts:
+            - mountPath: "/etc/enmasse-certs"
+              name: broker-internal-cert
+              readOnly: true
           volumes:
           - name: vol-${NAME}
             persistentVolumeClaim:
