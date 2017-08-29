@@ -346,7 +346,7 @@ objects:
               name: amqps
               protocol: TCP
             - containerPort: 55671
-              name: secure-internal
+              name: amqps-normal
               protocol: TCP
             - containerPort: 56671
               name: amqps-broker
@@ -552,7 +552,7 @@ objects:
               name: amqps
               protocol: TCP
             - containerPort: 55671
-              name: secure-internal
+              name: amqps-normal
               protocol: TCP
             - containerPort: 56671
               name: amqps-broker
@@ -710,7 +710,7 @@ objects:
               name: amqps
               protocol: TCP
             - containerPort: 55671
-              name: secure-internal
+              name: amqps-normal
               protocol: TCP
             - containerPort: 56671
               name: amqps-broker
@@ -785,10 +785,10 @@ objects:
         port: 55673
         protocol: TCP
         targetPort: 55673
-      - name: secure-internal
+      - name: amqps-normal
         port: 55671
         protocol: TCP
-        targetPort: secure-internal
+        targetPort: amqps-normal
       - name: amqps-broker
         port: 56671
         protocol: TCP
