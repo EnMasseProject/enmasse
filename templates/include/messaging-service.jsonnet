@@ -17,11 +17,11 @@
     "protocol": "TCP",
     "targetPort": 55673
   },
-  local secureInternalPort = {
-    "name": "secure-internal",
+  local amqpsNormalPort = {
+    "name": "amqps-normal",
     "port": 55671,
     "protocol": "TCP",
-    "targetPort": "secure-internal"
+    "targetPort": "amqps-normal"
   },
   local amqpsBrokerPort = {
     "name": "amqps-broker",
@@ -84,7 +84,7 @@
         }
       },
       "spec": {
-        "ports": [port, securePort, internalPort, secureInternalPort, amqpsBrokerPort, interRouterPort],
+        "ports": [port, securePort, internalPort, amqpsNormalPort, amqpsBrokerPort, interRouterPort],
         "selector": {
           "capability": "router"
         }

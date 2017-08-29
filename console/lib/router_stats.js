@@ -27,7 +27,7 @@ var client_key_path = path.resolve(cert_dir, 'tls.key');//TODO: allow setting vi
 
 
 function RouterStats(connection) {
-    var options = { host: process.env.MESSAGING_SERVICE_HOST, port: process.env.MESSAGING_SERVICE_PORT_SECURE_INTERNAL};
+    var options = { host: process.env.MESSAGING_SERVICE_HOST, port: process.env.MESSAGING_SERVICE_PORT_AMQPS_NORMAL};
     try {
         options.ca = [fs.readFileSync(ca_path)];
         options.key = fs.readFileSync(client_key_path);
