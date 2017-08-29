@@ -238,7 +238,8 @@ ConnectedRouter.prototype.create_connector = function (host_port, connector_name
     var future = futurejs.future(created);
     var parts = host_port.split(':');
     log.info('creating connector ' + connector_name + ' to ' + host_port + ' on router ' + this.container_id);
-    this.create_entity('connector', connector_name, {role:'inter-router', host:parts[0], port:parts[1]}, future.as_callback());
+    this.create_entity('connector', connector_name, {role:'inter-router', host:parts[0], port:parts[1],
+                                                     sslProfile:'ssl_internal_details', verifyHostName:'no'}, future.as_callback());
     return future;
 };
 
