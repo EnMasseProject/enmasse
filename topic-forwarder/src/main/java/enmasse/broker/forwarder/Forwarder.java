@@ -18,12 +18,9 @@ package enmasse.broker.forwarder;
 
 import enmasse.discovery.Endpoint;
 import io.vertx.core.AbstractVerticle;
-import io.vertx.proton.ProtonClient;
-import io.vertx.proton.ProtonConnection;
-import io.vertx.proton.ProtonDelivery;
-import io.vertx.proton.ProtonLinkOptions;
-import io.vertx.proton.ProtonReceiver;
-import io.vertx.proton.ProtonSender;
+import io.vertx.core.net.PemKeyCertOptions;
+import io.vertx.core.net.PemTrustOptions;
+import io.vertx.proton.*;
 import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.messaging.MessageAnnotations;
 import org.apache.qpid.proton.amqp.messaging.Source;
@@ -33,6 +30,7 @@ import org.apache.qpid.proton.message.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.util.Collections;
 import java.util.Optional;
 
@@ -52,12 +50,14 @@ public class Forwarder extends AbstractVerticle {
 
     private static Symbol replicated = Symbol.getSymbol("replicated");
     private static Symbol topic = Symbol.getSymbol("topic");
+    private final String certDir;
 
-    public Forwarder(Endpoint from, Endpoint to, String address, long connectionRetryInterval) {
+    public Forwarder(Endpoint from, Endpoint to, String address, long connectionRetryInterval, String certDir) {
         this.from = from;
         this.to = to;
         this.address = address;
         this.connectionRetryInterval = connectionRetryInterval;
+        this.certDir = certDir;
     }
 
     @Override
@@ -68,7 +68,7 @@ public class Forwarder extends AbstractVerticle {
     private void startReceiver(ProtonSender sender, String containerId) {
         log.info("Starting receiver");
         ProtonClient client = ProtonClient.create(vertx);
-        client.connect(from.hostname(), from.port(), event -> {
+        client.connect(getOptions(), from.hostname(), from.port(), event -> {
             if (event.succeeded()) {
                 ProtonConnection connection = event.result();
                 connection.setContainer("topic-forwarder-" + containerId);
@@ -117,10 +117,26 @@ public class Forwarder extends AbstractVerticle {
         return builder.toString();
     }
 
+    private ProtonClientOptions getOptions() {
+        ProtonClientOptions options = new ProtonClientOptions();
+        if (certDir != null) {
+            options.setHostnameVerificationAlgorithm("")
+                    .setSsl(true)
+                    .addEnabledSaslMechanism("EXTERNAL")
+                    .setHostnameVerificationAlgorithm("")
+                    .setPemTrustOptions(new PemTrustOptions()
+                            .addCertPath(new File(certDir, "ca.crt").getAbsolutePath()))
+                    .setPemKeyCertOptions(new PemKeyCertOptions()
+                            .setCertPath(new File(certDir, "tls.crt").getAbsolutePath())
+                            .setKeyPath(new File(certDir, "tls.key").getAbsolutePath()));
+        }
+        return options;
+    }
+
     private void startSender() {
         ProtonClient client = ProtonClient.create(vertx);
         log.info(this + ": starting sender");
-        client.connect(to.hostname(), to.port(), event -> {
+        client.connect(getOptions(), to.hostname(), to.port(), event -> {
             if (event.succeeded()) {
                 ProtonConnection connection = event.result();
                 connection.open();

@@ -20,7 +20,6 @@ import enmasse.discovery.DiscoveryListener;
 import enmasse.discovery.Host;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.AbstractVerticle;
-import io.vertx.core.Vertx;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,10 +39,12 @@ public class ForwarderController extends AbstractVerticle implements DiscoveryLi
     private final Host localHost;
     private final String address;
     private final long connectionRetryInterval = 5000;
+    private final String certDir;
 
-    public ForwarderController(Host localHost, String address) {
+    public ForwarderController(Host localHost, String address, String certDir) {
         this.localHost = localHost;
         this.address = address;
+        this.certDir = certDir;
     }
 
     @Override
@@ -83,7 +84,7 @@ public class ForwarderController extends AbstractVerticle implements DiscoveryLi
     }
 
     private void createForwarder(Host host) {
-        Forwarder forwarder = new Forwarder(localHost.amqpEndpoint(), host.amqpEndpoint(), address, connectionRetryInterval);
+        Forwarder forwarder = new Forwarder(localHost.amqpEndpoint(), host.amqpEndpoint(), address, connectionRetryInterval, certDir);
         log.info("Creating forwarder " + forwarder);
         vertx.deployVerticle(forwarder, result -> {
             if (result.succeeded()) {
