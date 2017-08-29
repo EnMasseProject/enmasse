@@ -79,6 +79,7 @@ listener {
     port: 55671
     sslProfile: ssl_internal_details
     saslMechanisms: EXTERNAL
+    authenticatePeer: yes
 }
 
 listener {
@@ -87,6 +88,7 @@ listener {
     sslProfile: ssl_internal_details
     saslMechanisms: EXTERNAL
     role: route-container
+    authenticatePeer: yes
 }
 
 connector {
