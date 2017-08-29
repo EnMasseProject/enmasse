@@ -36,8 +36,8 @@ public class MqttLwtTestBase {
     protected LwtStorage lwtStorage;
 
     public static final String MESSAGING_SERVICE_HOST = "localhost";
-    public static final int MESSAGING_SERVICE_SECURE_INTERNAL_PORT = 55671;
-    public static final int MESSAGING_SERVICE_INTERNAL_PORT = 55674;
+    public static final int MESSAGING_SERVICE_AMQPS_NORMAL_PORT = 55671;
+    public static final int MESSAGING_SERVICE_AMQPS_BROKER_PORT = 56671;
     public static final int MESSAGING_SERVICE_PORT = 5673;
     public static final String CERT_DIR = "src/test/resources/client-certs";
 
@@ -62,8 +62,8 @@ public class MqttLwtTestBase {
         this.lwtService = new MqttLwt();
         this.lwtService
                 .setMessagingServiceHost(MESSAGING_SERVICE_HOST)
-                .setMessagingServiceSecureInternalPort(MESSAGING_SERVICE_SECURE_INTERNAL_PORT)
-                .setMessagingServiceInternalPort(MESSAGING_SERVICE_INTERNAL_PORT)
+                .setMessagingSerciceAmqpsNormalPort(MESSAGING_SERVICE_AMQPS_NORMAL_PORT)
+                .setMessagingServiceAmqpsBrokerPort(MESSAGING_SERVICE_AMQPS_BROKER_PORT)
                 .setCertDir(CERT_DIR)
                 .setLwtStorage(this.lwtStorage);
 
