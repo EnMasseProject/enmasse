@@ -56,7 +56,9 @@ listener {
     host: ${MY_IP_ADDR}
     port: 55672
     role: inter-router
-    authenticatePeer: no
+    authenticatePeer: yes
+    sslProfile: ssl_internal_details
+    saslMechanisms: EXTERNAL
 }
 
 sslProfile {
