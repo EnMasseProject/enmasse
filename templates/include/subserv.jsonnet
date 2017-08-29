@@ -12,7 +12,8 @@ local common = import "common.jsonnet";
         "app": "enmasse"
       },
       "annotations": {
-        "addressSpace": addressSpace
+        "addressSpace": addressSpace,
+        "io.enmasse.certSecretName": "subserv-internal-cert"
       },
       "name": "subserv"
     },
@@ -30,7 +31,45 @@ local common = import "common.jsonnet";
         },
         "spec": {
           "containers": [
-            common.container("subserv", container_image, "amqp", 5672, "64Mi", [])
+            {
+              "image": container_image,
+              "name": "subserv",
+              "resources": {
+                  "requests": {
+                      "memory": "64Mi"
+                  },
+                  "limits": {
+                      "memory": "64Mi"
+                  }
+              },
+              "ports": [
+                {
+                  "name": "amqp",
+                  "containerPort": 5672,
+                  "protocol": "TCP"
+                }
+              ],
+              "livenessProbe": {
+                "tcpSocket": {
+                  "port": "amqp"
+                }
+              },
+              "volumeMounts": [
+                {
+                  "name": "subserv-internal-cert",
+                  "mountPath": "/etc/enmasse-certs",
+                  "readOnly": true
+                }
+              ]
+            },
+          ],
+          "volumes": [
+            {
+                "name": "subserv-internal-cert",
+                "secret": {
+                    "secretName": "subserv-internal-cert"
+                }
+            }
           ]
         }
       }
