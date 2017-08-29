@@ -26,7 +26,7 @@ TEMPLATE_PARAMS=""
 ENMASSE_TEMPLATE=$SCRIPTDIR/kubernetes/enmasse.yaml
 KEYCLOAK_TEMPLATE=$SCRIPTDIR/kubernetes/addons/keycloak.yaml
 KEYCLOAK_TEMPLATE_PARAMS=""
-KEYCLOAK_PASSWORD=`head /dev/urandom | tr -dc A-Za-z0-9 | head -c 128`
+KEYCLOAK_PASSWORD=`head /dev/urandom | LC_CTYPE=C tr -dc A-Za-z0-9 | head -c 128`
 DEFAULT_NAMESPACE=enmasse
 GUIDE=false
 
@@ -109,7 +109,7 @@ runcmd "kubectl create sa enmasse-service-account -n $NAMESPACE" "Create service
 CA_KEY=${TEMPDIR}/ca.key
 CA_CERT=${TEMPDIR}/ca.crt
 runcmd "openssl req -new -x509 -batch -nodes -days 11000 -subj \"/O=io.enmasse/CN=enmasse\" -out ${CA_CERT} -keyout ${CA_KEY}" "Create self-signed certificate"
-
+fix_key_file_format ${CA_KEY}
 create_tls_secret "kubectl" "enmasse-ca" $CA_KEY $CA_CERT
 
 create_and_sign_cert "kubectl " $CA_KEY $CA_CERT "address-controller.${NAMESPACE}.svc.cluster.local" "address-controller-cert"

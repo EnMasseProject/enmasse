@@ -29,7 +29,7 @@ KEYCLOAK_TEMPLATE=$SCRIPTDIR/openshift/addons/keycloak.yaml
 KEYCLOAK_TEMPLATE_PARAMS=""
 TEMPLATE_NAME=enmasse
 TEMPLATE_PARAMS=""
-KEYCLOAK_PASSWORD=`head /dev/urandom | tr -dc A-Za-z0-9 | head -c 128`
+KEYCLOAK_PASSWORD=`head /dev/urandom | LC_CTYPE=C tr -dc A-Za-z0-9 | head -c 128`
 
 DEFAULT_USER=developer
 DEFAULT_NAMESPACE=myproject
@@ -160,6 +160,7 @@ CA_CERT=${TEMPDIR}/ca.crt
 if [ -z $CA_SECRET ]; then
     CA_SECRET=enmasse-ca
     runcmd "openssl req -new -x509 -batch -nodes -days 11000 -subj \"/O=io.enmasse/CN=enmasse\" -out ${CA_CERT} -keyout ${CA_KEY}" "Create self-signed certificate"
+    fix_key_file_format ${CA_KEY}
     create_tls_secret "oc" "enmasse-ca" $CA_KEY $CA_CERT
 else
     runcmd "oc get secret -o jsonpath='{.data.tls\.key}' ${CA_SECRET} > ${CA_KEY}" "Retrieve CA key"
