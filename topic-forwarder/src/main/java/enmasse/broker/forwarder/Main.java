@@ -41,7 +41,7 @@ public class Main {
         String address = getAddress(env);
 
         DiscoveryClient discoveryClient = new DiscoveryClient("podsense", labelFilter, annotationFilter, Optional.of("broker"));
-        ForwarderController replicator = new ForwarderController(localHost, address);
+        ForwarderController replicator = new ForwarderController(localHost, address, System.getenv("CERT_DIR"));
         discoveryClient.addListener(replicator);
 
         Vertx vertx = Vertx.vertx();

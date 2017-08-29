@@ -68,7 +68,7 @@ public class ForwarderControllerTest {
         Host hostB = new Host(localHost, Collections.singletonMap("amqp", 33334));
         Host hostC = new Host(localHost, Collections.singletonMap("amqp", 33335));
 
-        ForwarderController replicator = new ForwarderController(hostA, address);
+        ForwarderController replicator = new ForwarderController(hostA, address, null);
         CountDownLatch latch = new CountDownLatch(1);
         vertx.deployVerticle(replicator, id -> latch.countDown());
         latch.await(1, TimeUnit.MINUTES);
