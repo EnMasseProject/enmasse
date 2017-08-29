@@ -88,13 +88,13 @@ objects:
     value: 2Gi
   - description: The docker image to use for the message broker
     name: BROKER_REPO
-    value: docker.io/enmasseproject/artemis:93160daf
+    value: docker.io/enmasseproject/artemis:latest
   - description: The default image to use as topic forwarder
     name: TOPIC_FORWARDER_REPO
-    value: docker.io/enmasseproject/topic-forwarder:93160daf
+    value: docker.io/enmasseproject/topic-forwarder:latest
   - description: The image to use for the router
     name: ROUTER_REPO
-    value: docker.io/enmasseproject/router:93160daf
+    value: docker.io/enmasseproject/router:latest
   - description: The link capacity setting for router
     name: ROUTER_LINK_CAPACITY
     value: '50'
@@ -221,13 +221,13 @@ objects:
     value: 2Gi
   - description: The docker image to use for the message broker
     name: BROKER_REPO
-    value: docker.io/enmasseproject/artemis:93160daf
+    value: docker.io/enmasseproject/artemis:latest
   - description: The default image to use as topic forwarder
     name: TOPIC_FORWARDER_REPO
-    value: docker.io/enmasseproject/topic-forwarder:93160daf
+    value: docker.io/enmasseproject/topic-forwarder:latest
   - description: The image to use for the router
     name: ROUTER_REPO
-    value: docker.io/enmasseproject/router:93160daf
+    value: docker.io/enmasseproject/router:latest
   - description: The link capacity setting for router
     name: ROUTER_LINK_CAPACITY
     value: '50'
@@ -406,13 +406,13 @@ objects:
     value: 2Gi
   - description: The docker image to use for the message broker
     name: BROKER_REPO
-    value: docker.io/enmasseproject/artemis:93160daf
+    value: docker.io/enmasseproject/artemis:latest
   - description: The default image to use as topic forwarder
     name: TOPIC_FORWARDER_REPO
-    value: docker.io/enmasseproject/topic-forwarder:93160daf
+    value: docker.io/enmasseproject/topic-forwarder:latest
   - description: The image to use for the router
     name: ROUTER_REPO
-    value: docker.io/enmasseproject/router:93160daf
+    value: docker.io/enmasseproject/router:latest
   - description: The link capacity setting for router
     name: ROUTER_LINK_CAPACITY
     value: '50'
@@ -607,13 +607,13 @@ objects:
     value: 2Gi
   - description: The docker image to use for the message broker
     name: BROKER_REPO
-    value: docker.io/enmasseproject/artemis:93160daf
+    value: docker.io/enmasseproject/artemis:latest
   - description: The default image to use as topic forwarder
     name: TOPIC_FORWARDER_REPO
-    value: docker.io/enmasseproject/topic-forwarder:93160daf
+    value: docker.io/enmasseproject/topic-forwarder:latest
   - description: The image to use for the router
     name: ROUTER_REPO
-    value: docker.io/enmasseproject/router:93160daf
+    value: docker.io/enmasseproject/router:latest
   - description: The link capacity setting for router
     name: ROUTER_LINK_CAPACITY
     value: '50'
@@ -792,6 +792,7 @@ objects:
     metadata:
       annotations:
         addressSpace: "${ADDRESS_SPACE}"
+        io.enmasse.certSecretName: subserv-internal-cert
       labels:
         app: enmasse
         name: subserv
@@ -807,8 +808,7 @@ objects:
             name: subserv
         spec:
           containers:
-          - env: []
-            image: "${SUBSERV_REPO}"
+          - image: "${SUBSERV_REPO}"
             livenessProbe:
               tcpSocket:
                 port: amqp
@@ -822,6 +822,14 @@ objects:
                 memory: 64Mi
               requests:
                 memory: 64Mi
+            volumeMounts:
+            - mountPath: "/etc/enmasse-certs"
+              name: subserv-internal-cert
+              readOnly: true
+          volumes:
+          - name: subserv-internal-cert
+            secret:
+              secretName: subserv-internal-cert
   - apiVersion: v1
     kind: Service
     metadata:
@@ -1240,33 +1248,33 @@ objects:
     value: ''
   - description: The image to use for the router
     name: ROUTER_REPO
-    value: docker.io/enmasseproject/router:93160daf
+    value: docker.io/enmasseproject/router:latest
   - description: The image to use for the router metrics collector
     name: ROUTER_METRICS_REPO
-    value: docker.io/enmasseproject/router-metrics:93160daf
+    value: docker.io/enmasseproject/router-metrics:latest
   - description: The link capacity setting for router
     name: ROUTER_LINK_CAPACITY
     value: '50'
   - description: The image to use for the configuration service
     name: CONFIGSERV_REPO
-    value: docker.io/enmasseproject/configserv:93160daf
+    value: docker.io/enmasseproject/configserv:latest
   - description: The docker image to use for the queue scheduler
     name: QUEUE_SCHEDULER_REPO
-    value: docker.io/enmasseproject/queue-scheduler:93160daf
+    value: docker.io/enmasseproject/queue-scheduler:latest
   - description: The image to use for the router agent
     name: RAGENT_REPO
-    value: docker.io/enmasseproject/ragent:93160daf
+    value: docker.io/enmasseproject/ragent:latest
   - description: The image to use for the subscription services
     name: SUBSERV_REPO
-    value: docker.io/enmasseproject/subserv:93160daf
+    value: docker.io/enmasseproject/subserv:latest
   - description: The image to use for the console
     name: CONSOLE_REPO
-    value: docker.io/enmasseproject/console:93160daf
+    value: docker.io/enmasseproject/console:latest
   - description: The hostname to use for the exposed route for messaging
     name: MESSAGING_HOSTNAME
   - description: The image to use for the MQTT gateway
     name: MQTT_GATEWAY_REPO
-    value: docker.io/enmasseproject/mqtt-gateway:93160daf
+    value: docker.io/enmasseproject/mqtt-gateway:latest
   - description: The hostname to use for the exposed route for MQTT
     name: MQTT_GATEWAY_HOSTNAME
   - description: The hostname to use for the exposed route for the messaging console
@@ -1279,7 +1287,7 @@ objects:
     required: true
   - description: The image to use for the MQTT LWT
     name: MQTT_LWT_REPO
-    value: docker.io/enmasseproject/mqtt-lwt:93160daf
+    value: docker.io/enmasseproject/mqtt-lwt:latest
   - description: The address space this infrastructure is deployed for
     name: ADDRESS_SPACE
     required: true
@@ -1297,7 +1305,7 @@ objects:
     name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
   - description: The image to use for the AMQP Kafka Bridge
     name: AMQP_KAFKA_BRIDGE_REPO
-    value: docker.io/enmasseproject/amqp-kafka-bridge:93160daf
+    value: docker.io/enmasseproject/amqp-kafka-bridge:latest
   - description: A list of host/port pairs to use for establishing the initial connection
       to the Kafka cluster
     name: KAFKA_BOOTSTRAP_SERVERS
@@ -1456,10 +1464,10 @@ parameters:
   value: 'false'
 - description: The docker image to use for the address controller
   name: ADDRESS_CONTROLLER_REPO
-  value: docker.io/enmasseproject/address-controller:93160daf
+  value: docker.io/enmasseproject/address-controller:latest
 - description: The docker image to use for the 'none' auth service
   name: NONE_AUTHSERVICE_IMAGE
-  value: docker.io/enmasseproject/none-authservice:93160daf
+  value: docker.io/enmasseproject/none-authservice:latest
 - description: Name of the secret containing the EnMasse CA
   name: ENMASSE_CA_SECRET
   value: enmasse-ca
