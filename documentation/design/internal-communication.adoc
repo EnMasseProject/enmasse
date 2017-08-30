@@ -1,0 +1,251 @@
+.Internal communications
+|===
+|Server Component |Service Port |Pod Port | Protocol | Client Component | Comments
+
+|address-controller
+|8080
+|8080
+|HTTP
+|console
+|Used for creating and deleting addresses
+
+|configserv
+|5672
+|5672
+|AMQP
+|console
+|Used for retrieving list of addresses for which stats are compile & a list of brokers from which stats are retrieved
+
+|configserv
+|5672
+|5672
+|AMQP
+|ragent
+|Used for retrieving addresses semantics with which router are to be configured
+
+|configserv
+|5672
+|5672
+|AMQP
+|queue-scheduler
+|Used for retrieving addreses from which the pooled queues are scheduled onto appropriate brokers
+
+|configserv
+|5672
+|5672
+|AMQP
+|subserv
+|Used to determine what topics are available and what brokers are serving them
+
+|queue-scheduler
+|5672
+|55667
+|AMQP
+|broker (serving colocated queues)
+|Used for brokers to make themselves available for the scheduling of pooled queues
+
+|ragent
+|5671
+|55671
+|AMQPS
+|router
+|Used for routers to connect to in order for the mesh to be formed and the routers configured to match address semantics
+
+|router
+|55671
+|55671
+|AMQPS
+|console
+|(normal) Used to retrieve stats for addresses and connections
+
+|router
+|55671
+|55671
+|AMQPS
+|router-metrics
+|(normal) Used to retrieve metrics
+
+|router
+|55671
+|55671
+|AMQPS
+|subserv
+|(normal) Used to receive subscription control messages (used for controlling mqtt subscriptions)
+
+|router
+|55671
+|55671
+|AMQPS
+|broker
+|(normal) Connections established for each subserv subscriber over which messages for that subscirber are delivered
+
+|router
+|55671
+|55671
+|AMQPS
+|mqtt-lwt
+|(normal) Used for publishing lwt messages
+
+|router
+|5672
+|5672
+|AMQP
+|mqtt-gateway
+|(normal) Used for publishing and receiving MQTT messages (note this is an externally accessible port and the mqtt-gateway relays the clients credentials)
+
+|router
+|56671
+|56671
+|AMQPS
+|mqtt-lwt
+|(route-container) Used for link routing lwt service requests
+
+|router
+|56671
+|56671
+|AMQPS
+|broker
+|(route-container) Used for autolinks and link routign for queues and topics
+
+|router
+|55672
+|55672
+|AMQPS
+|router
+|(inter-router) Inter-router connections
+
+|broker
+|N/A
+|5673
+|AMQPS
+|router
+|For topics only, used to route links for topic publishers and subscribers
+
+|broker
+|N/A
+|5673
+|AMQPS
+|console
+|Used to retrieve broker stats for addresses
+
+|broker
+|N/A
+|5673
+|AMQPS
+|subserv
+|Used to manage subscription queues for MQTT style subscriptions and to locate subscription queues for AMQP style subscriptions
+
+|broker
+|N/A
+|5673(?)
+|AMQPS
+|topic-forwarder
+|Used to ensure every message published to topic is reliably transfered to every broker serving that topic
+
+|broker
+|N/A
+|8080?
+|jolokia
+|hawkular
+|Used to retreive broker metrics
+
+|broker
+|N/A
+|61616
+|Artemis Core
+|????
+|????
+
+|broker
+|N/A
+|8080
+|HTTP/Jolokia
+|brokers management console
+|Not used at present, may be useful for debugging?
+
+|keycloak
+|5671
+|5671
+|AMQPS
+|router
+|Used to authenticate external clients
+
+|keycloak
+|5671
+|5671
+|AMQPS
+|console
+|Used to authenticate external clients
+
+|none-authservice
+|5671
+|5671
+|AMQPS
+|router
+|Used to authenticate external clients
+
+|none-authservice
+|5671
+|5671
+|AMQPS
+|console
+|Used to authenticate external clients
+
+|subserv
+|5672
+|5672
+|AMQPS
+|router
+|Used for link routing when locating correct broker for AMQP style subscriptions
+
+|mqtt-gateway
+|1883
+|1883
+|MQTT?
+|????
+|????
+
+|===
+
+
+.External Interfaces
+|===
+|Server Component |Service Port |Pod Port | Protocol | Comments
+
+|console
+|8080
+|8080
+|HTTP
+|Used to retrieve stats and request creation/deletion of addresses
+
+|router
+|5672
+|5672
+|AMQP
+|Messaging interface
+
+|router
+|5671
+|5671
+|AMQPS
+|Messaging interface
+
+|mqtt-gateway
+|8883
+|8883
+|MQTT
+|Messaging interface
+
+|keycloak
+|8080
+|8080
+|HTTPS
+|User management
+
+|address-controller
+|8080
+|8080
+|HTTP
+|Not sure if this counts as external outside of dev use?
+
+|===
