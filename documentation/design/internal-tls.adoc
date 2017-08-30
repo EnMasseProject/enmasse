@@ -116,11 +116,11 @@ Both ports should be secured with TLS.
 Future ports:
 
 * Internal ports:
-- 55673 (broker),
+- 56671 (broker, mqtt-lwt),
 - 5672 (connections with end-user credentials - e.g. mqtt-gateway),
 - 5671 (secure connections with end-user credentials),
 - 55672 (inter-router)
-- XXXX (secure internal connections from enmasse components)
+- 55671 (secure internal connections from enmasse components)
 
 
 The router exposes 5672 and 5671 through routes. We can remove 5672 if we want to be strict (and
