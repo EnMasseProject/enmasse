@@ -21,6 +21,7 @@ var config_service = require('./config_service.js');
 var Promise = require('bluebird');
 var amqp = require('rhea').create_container();
 var create_topic = require('./topic.js');
+var tls_options = require('./tls_options.js');
 
 var topics = {};
 
@@ -261,12 +262,27 @@ var connection_properties = {product:'subserv', container_id:process.env.HOSTNAM
 
 log.info("Starting subserv");
 
+var options;
+try {
+    options = tls_options.get_server_options({port:5672, properties:connection_properties});
+} catch (error) {
+    options = {port:5672, properties:connection_properties};
+    log.warn('Error setting TLS options ' + error + ' using ' + options);
+}
 amqp.sasl_server_mechanisms.enable_anonymous();
-amqp.listen({port:5672, properties:connection_properties});
+amqp.listen(options).on('listening', function(server) {
+    log.info("Subserv listening on " + options.port);
+});
 
 var sender;
 if (process.env.MESSAGING_SERVICE_HOST) {
-    var conn = amqp.connect({host:process.env.MESSAGING_SERVICE_HOST, port:process.env.MESSAGING_SERVICE_PORT, properties:connection_properties, id:'messaging-service'});
+    var client_options = {host:process.env.MESSAGING_SERVICE_HOST, port:process.env.MESSAGING_SERVICE_PORT_AMQPS_NORMAL, properties:connection_properties, id:'messaging-service'};
+    try {
+        client_options = tls_options.get_client_options(client_options);
+    } catch (error) {
+        log.warn('Error setting TLS options for client ' + error + ' using ' + options);
+    }
+    var conn = amqp.connect(client_options);
     conn.open_receiver({autoaccept: false, source:SUBCTRL, target:SUBCTRL});
     sender = conn.open_sender({target:{}});
     conn.on('sender_open', function (context) {
