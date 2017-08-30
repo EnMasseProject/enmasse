@@ -22,6 +22,8 @@ connector {
     port: ${SUBSCRIPTION_SERVICE_PORT}
     name: subscription-service
     role: route-container
+    sslProfile: ssl_internal_details
+    verifyHostName: no
 }
 
 linkRoute {
