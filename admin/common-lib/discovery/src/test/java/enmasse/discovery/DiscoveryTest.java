@@ -35,17 +35,17 @@ public class DiscoveryTest {
     }
 
     @Test
-    public void testDiscovery(TestContext context) throws InterruptedException, IOException, ExecutionException {
+    public void testDiscovery(TestContext context) throws InterruptedException, IOException, ExecutionException, TimeoutException {
         Map<String, String> expectedLabelFilter = Collections.singletonMap("my", "key");
         Map<String, String> expectedAnnotationFilter = Collections.singletonMap("my", "annotation");
         CompletableFuture<Set<Host>> changedHosts = new CompletableFuture<>();
+        CompletableFuture<Subscriber> subscriberFuture = new CompletableFuture<>();
 
-        BlockingQueue<Subscriber> subscriptionQueue = new LinkedBlockingDeque<>();
         AMQPServer testServer = new AMQPServer("0.0.0.0", 0, Collections.singletonMap("podsense", (observerKey, subscriber) -> {
             assertThat(observerKey.getLabelFilter(), is(expectedLabelFilter));
             assertThat(observerKey.getAnnotationFilter(), is(expectedAnnotationFilter));
             System.out.println("Creating subscription");
-            subscriptionQueue.put(subscriber);
+            subscriberFuture.complete(subscriber);
         }));
 
         System.out.println("Deploying server verticle");
@@ -56,7 +56,7 @@ public class DiscoveryTest {
         vertx.deployVerticle(client, context.asyncAssertSuccess());
 
         System.out.println("Waiting for subscriber to be created");
-        Subscriber subscriber = subscriptionQueue.poll(1, TimeUnit.MINUTES);
+        Subscriber subscriber = subscriberFuture.get(1, TimeUnit.MINUTES);
         assertNotNull(subscriber);
         System.out.println("Sending initial response");
         subscriber.resourcesUpdated(createResponse("False", "Pending"));
