@@ -339,9 +339,6 @@ objects:
             - containerPort: 5672
               name: amqp
               protocol: TCP
-            - containerPort: 55673
-              name: internal
-              protocol: TCP
             - containerPort: 5671
               name: amqps
               protocol: TCP
@@ -545,9 +542,6 @@ objects:
             - containerPort: 5672
               name: amqp
               protocol: TCP
-            - containerPort: 55673
-              name: internal
-              protocol: TCP
             - containerPort: 5671
               name: amqps
               protocol: TCP
@@ -703,9 +697,6 @@ objects:
             - containerPort: 5672
               name: amqp
               protocol: TCP
-            - containerPort: 55673
-              name: internal
-              protocol: TCP
             - containerPort: 5671
               name: amqps
               protocol: TCP
@@ -781,10 +772,6 @@ objects:
         port: 5671
         protocol: TCP
         targetPort: 5671
-      - name: internal
-        port: 55673
-        protocol: TCP
-        targetPort: 55673
       - name: amqps-normal
         port: 55671
         protocol: TCP

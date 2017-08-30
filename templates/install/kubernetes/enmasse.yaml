@@ -17,34 +17,33 @@ items:
       {"name": "AUTHENTICATION_SERVICE_SASL_INIT_HOST", "value": "${AUTHENTICATION_SERVICE_SASL_INIT_HOST}"}],
       "image": "${ROUTER_REPO}", "livenessProbe": {"tcpSocket": {"port": "amqp"}},
       "name": "router", "ports": [{"containerPort": 5672, "name": "amqp", "protocol":
-      "TCP"}, {"containerPort": 55673, "name": "internal", "protocol": "TCP"}, {"containerPort":
-      5671, "name": "amqps", "protocol": "TCP"}, {"containerPort": 55671, "name":
-      "amqps-normal", "protocol": "TCP"}, {"containerPort": 56671, "name": "amqps-broker",
-      "protocol": "TCP"}], "volumeMounts": [{"mountPath": "/etc/qpid-dispatch/ssl",
-      "name": "ssl-certs", "readOnly": true}, {"mountPath": "/etc/qpid-dispatch/authservice-ca",
-      "name": "authservice-ca", "readOnly": true}, {"mountPath": "/etc/enmasse-certs",
-      "name": "router-internal-cert", "readOnly": true}]}, {"env": [{"name": "ROUTER_HOST",
-      "value": "127.0.0.1"}, {"name": "ROUTER_PORT", "value": "5672"}], "image": "${ROUTER_METRICS_REPO}",
-      "livenessProbe": {"tcpSocket": {"port": "metrics"}}, "name": "metrics", "ports":
-      [{"containerPort": 8080, "name": "metrics", "protocol": "TCP"}], "resources":
-      {"limits": {"memory": "32Mi"}, "requests": {"memory": "32Mi"}}}], "volumes":
-      [{"configMap": {"name": "hawkular-router-config"}, "name": "hawkular-openshift-agent"},
-      {"name": "ssl-certs", "secret": {"secretName": "${ROUTER_SECRET}"}}, {"name":
-      "authservice-ca", "secret": {"secretName": "authservice-ca"}}, {"name": "router-internal-cert",
-      "secret": {"secretName": "router-internal-cert"}}]}}}}, {"apiVersion": "v1",
-      "kind": "Service", "metadata": {"annotations": {"addressSpace": "${ADDRESS_SPACE}",
-      "service.alpha.openshift.io/dependencies": "[{\"kind\": \"Service\", \"name\":
-      \"queue-scheduler\", \"namespace\": \"\"}, {\"kind\": \"Service\", \"name\":
-      \"configuration\", \"namespace\": \"\"}, {\"kind\": \"Service\", \"name\": \"ragent\",
-      \"namespace\": \"\"}, {\"kind\": \"Service\", \"name\": \"console\", \"namespace\":
-      \"\"}, {\"kind\": \"Service\", \"name\": \"subscription\", \"namespace\": \"\"},
-      {\"kind\": \"Service\", \"name\": \"mqtt\", \"namespace\": \"\"}]", "service.alpha.openshift.io/infrastructure":
-      "true"}, "labels": {"app": "enmasse"}, "name": "messaging"}, "spec": {"ports":
-      [{"name": "amqp", "port": 5672, "protocol": "TCP", "targetPort": 5672}, {"name":
-      "amqps", "port": 5671, "protocol": "TCP", "targetPort": 5671}, {"name": "internal",
-      "port": 55673, "protocol": "TCP", "targetPort": 55673}, {"name": "amqps-normal",
-      "port": 55671, "protocol": "TCP", "targetPort": "amqps-normal"}, {"name": "amqps-broker",
-      "port": 56671, "protocol": "TCP", "targetPort": "amqps-broker"}, {"name": "inter-router",
+      "TCP"}, {"containerPort": 5671, "name": "amqps", "protocol": "TCP"}, {"containerPort":
+      55671, "name": "amqps-normal", "protocol": "TCP"}, {"containerPort": 56671,
+      "name": "amqps-broker", "protocol": "TCP"}], "volumeMounts": [{"mountPath":
+      "/etc/qpid-dispatch/ssl", "name": "ssl-certs", "readOnly": true}, {"mountPath":
+      "/etc/qpid-dispatch/authservice-ca", "name": "authservice-ca", "readOnly": true},
+      {"mountPath": "/etc/enmasse-certs", "name": "router-internal-cert", "readOnly":
+      true}]}, {"env": [{"name": "ROUTER_HOST", "value": "127.0.0.1"}, {"name": "ROUTER_PORT",
+      "value": "5672"}], "image": "${ROUTER_METRICS_REPO}", "livenessProbe": {"tcpSocket":
+      {"port": "metrics"}}, "name": "metrics", "ports": [{"containerPort": 8080, "name":
+      "metrics", "protocol": "TCP"}], "resources": {"limits": {"memory": "32Mi"},
+      "requests": {"memory": "32Mi"}}}], "volumes": [{"configMap": {"name": "hawkular-router-config"},
+      "name": "hawkular-openshift-agent"}, {"name": "ssl-certs", "secret": {"secretName":
+      "${ROUTER_SECRET}"}}, {"name": "authservice-ca", "secret": {"secretName": "authservice-ca"}},
+      {"name": "router-internal-cert", "secret": {"secretName": "router-internal-cert"}}]}}}},
+      {"apiVersion": "v1", "kind": "Service", "metadata": {"annotations": {"addressSpace":
+      "${ADDRESS_SPACE}", "service.alpha.openshift.io/dependencies": "[{\"kind\":
+      \"Service\", \"name\": \"queue-scheduler\", \"namespace\": \"\"}, {\"kind\":
+      \"Service\", \"name\": \"configuration\", \"namespace\": \"\"}, {\"kind\": \"Service\",
+      \"name\": \"ragent\", \"namespace\": \"\"}, {\"kind\": \"Service\", \"name\":
+      \"console\", \"namespace\": \"\"}, {\"kind\": \"Service\", \"name\": \"subscription\",
+      \"namespace\": \"\"}, {\"kind\": \"Service\", \"name\": \"mqtt\", \"namespace\":
+      \"\"}]", "service.alpha.openshift.io/infrastructure": "true"}, "labels": {"app":
+      "enmasse"}, "name": "messaging"}, "spec": {"ports": [{"name": "amqp", "port":
+      5672, "protocol": "TCP", "targetPort": 5672}, {"name": "amqps", "port": 5671,
+      "protocol": "TCP", "targetPort": 5671}, {"name": "amqps-normal", "port": 55671,
+      "protocol": "TCP", "targetPort": "amqps-normal"}, {"name": "amqps-broker", "port":
+      56671, "protocol": "TCP", "targetPort": "amqps-broker"}, {"name": "inter-router",
       "port": 55672, "protocol": "TCP", "targetPort": 55672}], "selector": {"capability":
       "router"}}}, {"apiVersion": "extensions/v1beta1", "kind": "Deployment", "metadata":
       {"annotations": {"addressSpace": "${ADDRESS_SPACE}", "io.enmasse.certSecretName":
@@ -310,12 +309,11 @@ items:
       "value": "${AUTHENTICATION_SERVICE_SASL_INIT_HOST}"}], "image": "${ROUTER_REPO}",
       "livenessProbe": {"tcpSocket": {"port": "amqp"}}, "name": "router", "ports":
       [{"containerPort": 5672, "name": "amqp", "protocol": "TCP"}, {"containerPort":
-      55673, "name": "internal", "protocol": "TCP"}, {"containerPort": 5671, "name":
-      "amqps", "protocol": "TCP"}, {"containerPort": 55671, "name": "amqps-normal",
-      "protocol": "TCP"}, {"containerPort": 56671, "name": "amqps-broker", "protocol":
-      "TCP"}], "resources": {"limits": {"memory": "256Mi"}, "requests": {"memory":
-      "256Mi"}}, "volumeMounts": [{"mountPath": "/etc/qpid-dispatch/ssl", "name":
-      "ssl-certs", "readOnly": true}, {"mountPath": "/etc/qpid-dispatch/authservice-ca",
+      5671, "name": "amqps", "protocol": "TCP"}, {"containerPort": 55671, "name":
+      "amqps-normal", "protocol": "TCP"}, {"containerPort": 56671, "name": "amqps-broker",
+      "protocol": "TCP"}], "resources": {"limits": {"memory": "256Mi"}, "requests":
+      {"memory": "256Mi"}}, "volumeMounts": [{"mountPath": "/etc/qpid-dispatch/ssl",
+      "name": "ssl-certs", "readOnly": true}, {"mountPath": "/etc/qpid-dispatch/authservice-ca",
       "name": "authservice-ca", "readOnly": true}, {"mountPath": "/etc/enmasse-certs",
       "name": "broker-internal-cert", "readOnly": true}]}, {"env": [{"name": "TOPIC_NAME",
       "value": "${ADDRESS}"}, {"name": "CLUSTER_ID", "value": "${NAME}"}, {"name":
@@ -376,12 +374,11 @@ items:
       "value": "${AUTHENTICATION_SERVICE_SASL_INIT_HOST}"}], "image": "${ROUTER_REPO}",
       "livenessProbe": {"tcpSocket": {"port": "amqp"}}, "name": "router", "ports":
       [{"containerPort": 5672, "name": "amqp", "protocol": "TCP"}, {"containerPort":
-      55673, "name": "internal", "protocol": "TCP"}, {"containerPort": 5671, "name":
-      "amqps", "protocol": "TCP"}, {"containerPort": 55671, "name": "amqps-normal",
-      "protocol": "TCP"}, {"containerPort": 56671, "name": "amqps-broker", "protocol":
-      "TCP"}], "resources": {"limits": {"memory": "256Mi"}, "requests": {"memory":
-      "256Mi"}}, "volumeMounts": [{"mountPath": "/etc/qpid-dispatch/ssl", "name":
-      "ssl-certs", "readOnly": true}, {"mountPath": "/etc/qpid-dispatch/authservice-ca",
+      5671, "name": "amqps", "protocol": "TCP"}, {"containerPort": 55671, "name":
+      "amqps-normal", "protocol": "TCP"}, {"containerPort": 56671, "name": "amqps-broker",
+      "protocol": "TCP"}], "resources": {"limits": {"memory": "256Mi"}, "requests":
+      {"memory": "256Mi"}}, "volumeMounts": [{"mountPath": "/etc/qpid-dispatch/ssl",
+      "name": "ssl-certs", "readOnly": true}, {"mountPath": "/etc/qpid-dispatch/authservice-ca",
       "name": "authservice-ca", "readOnly": true}, {"mountPath": "/etc/enmasse-certs",
       "name": "broker-internal-cert", "readOnly": true}]}, {"env": [{"name": "TOPIC_NAME",
       "value": "${ADDRESS}"}, {"name": "CLUSTER_ID", "value": "${NAME}"}, {"name":
