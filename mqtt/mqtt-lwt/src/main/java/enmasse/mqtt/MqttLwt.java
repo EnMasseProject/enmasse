@@ -51,11 +51,9 @@ public class MqttLwt extends AbstractVerticle {
     private String certDir;
 
     // connection info to the messaging service
-    private String messagingServiceHost;
-    private int messagingServicePort;
-    private int messagingServiceInternalPort;
-    private int messagingServiceAmqpsBrokerPort;
-    private int messagingServiceAmqpsNormalPort;
+    private String host;
+    private int normalPort;
+    private int routeContainerPort;
 
     private ProtonClient client;
 
@@ -98,7 +96,7 @@ public class MqttLwt extends AbstractVerticle {
         Future<ProtonConnection> lwtConnFuture = Future.future();
 
         // connecting to the messaging service internal (router network)
-        this.client.connect(options, this.messagingServiceHost, options.isSsl() ? messagingServiceAmqpsBrokerPort : messagingServiceInternalPort, done -> {
+        this.client.connect(options, this.host, this.routeContainerPort, done -> {
 
             if (done.succeeded()) {
 
@@ -131,7 +129,7 @@ public class MqttLwt extends AbstractVerticle {
 
             Future<ProtonConnection> publishConnFuture = Future.future();
 
-            this.client.connect(options, this.messagingServiceHost, options.isSsl() ? messagingServiceAmqpsNormalPort : messagingServicePort, done -> {
+            this.client.connect(options, this.host, this.normalPort, done -> {
 
                 if (done.succeeded()) {
 
@@ -297,60 +295,37 @@ public class MqttLwt extends AbstractVerticle {
     /**
      * Set the address for connecting to the AMQP internal network
      *
-     * @param messagingServiceHost   address for AMQP connection
+     * @param host hostname for AMQP connection
      * @return  current MQTT LWT instance
      */
     @Value(value = "${messaging.service.host:localhost}")
-    public MqttLwt setMessagingServiceHost(String messagingServiceHost) {
-        this.messagingServiceHost = messagingServiceHost;
+    public MqttLwt setHost(String host) {
+        this.host = host;
         return this;
     }
 
     /**
      * Set the port for connecting to the internal AMQP network
      *
-     * @param messagingServicePort port for AMQP connections
+     * @param normalPort port for AMQP connections
      * @return  current MQTT LWT instance
      */
-    @Value(value = "${messaging.service.port:5672}")
-    public MqttLwt setMessagingServicePort(int messagingServicePort) {
-        this.messagingServicePort = messagingServicePort;
+    @Value(value = "${messaging.service.normal.port:5672}")
+    public MqttLwt setNormalPort(int normalPort) {
+        this.normalPort = normalPort;
         return this;
     }
 
     /**
-     * Set the port for connecting to the secured internal AMQP network
+     * Set the port for connecting to the internal AMQP network where the port
+     * has the route-container role.
      *
-     * @param messagingServiceAmqpsNormalPort   port for AMQP connections
+     * @param routeContainerPort port (with role route-container) for AMQP connections
      * @return  current MQTT LWT instance
      */
-    @Value(value = "${messaging.service.amqps.normal.port:55671}")
-    public MqttLwt setMessagingSerciceAmqpsNormalPort(int messagingServiceAmqpsNormalPort) {
-        this.messagingServiceAmqpsNormalPort = messagingServiceAmqpsNormalPort;
-        return this;
-    }
-
-    /**
-     * Set the port for connecting to the secured internal AMQP network
-     *
-     * @param messagingServiceAmqpsBrokerPort   port for AMQP connections
-     * @return  current MQTT LWT instance
-     */
-    @Value(value = "${messaging.service.amqps.broker.port:56671}")
-    public MqttLwt setMessagingServiceAmqpsBrokerPort(int messagingServiceAmqpsBrokerPort) {
-        this.messagingServiceAmqpsBrokerPort = messagingServiceAmqpsBrokerPort;
-        return this;
-    }
-
-    /**
-     * Set the internal port for connecting to the AMQP internal network
-     *
-     * @param messagingServiceInternalPort   internal port for AMQP connection
-     * @return  current MQTT LWT instance
-     */
-    @Value(value = "${messaging.service.internal.port:55673}")
-    public MqttLwt setMessagingServiceInternalPort(int messagingServiceInternalPort) {
-        this.messagingServiceInternalPort = messagingServiceInternalPort;
+    @Value(value = "${messaging.service.route.container.port:55671}")
+    public MqttLwt setRouteContainerPort(int routeContainerPort) {
+        this.routeContainerPort = routeContainerPort;
         return this;
     }
 

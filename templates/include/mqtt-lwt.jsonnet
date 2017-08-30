@@ -37,6 +37,14 @@ local common = import "common.jsonnet";
                   {
                     "name": "CERT_DIR",
                     "value": "/etc/enmasse-certs"
+                  },
+                  {
+                    "name": "MESSAGING_SERVICE_NORMAL_PORT",
+                    "value": "$(MESSAGING_SERVICE_PORT_AMQPS_NORMAL)"
+                  },
+                  {
+                    "name": "MESSAGING_SERVICE_ROUTE_CONTAINER_PORT",
+                    "value": "$(MESSAGING_SERVICE_PORT_AMQPS_BROKER)"
                   }
                 ],
                 "volumeMounts": [

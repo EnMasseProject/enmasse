@@ -82,7 +82,9 @@ items:
       "mqtt-lwt-internal-cert"}, "labels": {"app": "enmasse", "name": "mqtt-lwt"},
       "name": "mqtt-lwt"}, "spec": {"replicas": 1, "template": {"metadata": {"annotations":
       {"addressSpace": "${ADDRESS_SPACE}"}, "labels": {"app": "enmasse", "name": "mqtt-lwt"}},
-      "spec": {"containers": [{"env": [{"name": "CERT_DIR", "value": "/etc/enmasse-certs"}],
+      "spec": {"containers": [{"env": [{"name": "CERT_DIR", "value": "/etc/enmasse-certs"},
+      {"name": "MESSAGING_SERVICE_NORMAL_PORT", "value": "$(MESSAGING_SERVICE_PORT_AMQPS_NORMAL)"},
+      {"name": "MESSAGING_SERVICE_ROUTE_CONTAINER_PORT", "value": "$(MESSAGING_SERVICE_PORT_AMQPS_BROKER)"}],
       "image": "${MQTT_LWT_REPO}", "name": "mqtt-lwt", "volumeMounts": [{"mountPath":
       "/etc/enmasse-certs", "name": "mqtt-lwt-internal-cert", "readOnly": true}]}],
       "volumes": [{"name": "mqtt-lwt-internal-cert", "secret": {"secretName": "mqtt-lwt-internal-cert"}}]}}}},
