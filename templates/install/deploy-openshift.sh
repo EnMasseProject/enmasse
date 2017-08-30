@@ -29,7 +29,6 @@ KEYCLOAK_TEMPLATE=$SCRIPTDIR/openshift/addons/keycloak.yaml
 KEYCLOAK_TEMPLATE_PARAMS=""
 TEMPLATE_NAME=enmasse
 TEMPLATE_PARAMS=""
-KEYCLOAK_PASSWORD=`head /dev/urandom | LC_CTYPE=C tr -dc A-Za-z0-9 | head -c 128`
 
 DEFAULT_USER=developer
 DEFAULT_NAMESPACE=myproject
@@ -85,7 +84,7 @@ while getopts c:dgk:m:n:p:st:u:yvh opt; do
             echo "  -h                   show this help message"
             echo "  -c                   CA certificate to use in address controller"
             echo "  -d                   create an all-in-one docker OpenShift on localhost"
-            echo "  -k KEYCLOAK_PASSWORD The password to use as the keycloak admin user"
+            echo "  -k KEYCLOAK_PASSWORD Deploy standard authentication service (keycloak) and use given password as admin password"
             echo "  -n NAMESPACE         OpenShift project name to install EnMasse into (default: $DEFAULT_NAMESPACE)"
             echo "  -m MASTER            OpenShift master URI to login against (default: https://localhost:8443)"
             echo "  -p PARAMS            Custom template parameters to pass to EnMasse template ('cat $SCRIPTDIR/openshift/enmasse.yaml' to get a list of available parameters)"
@@ -153,7 +152,6 @@ fi
 runcmd "oc create sa enmasse-service-account -n $NAMESPACE" "Create service account for address controller"
 runcmd "oc policy add-role-to-user view system:serviceaccount:${NAMESPACE}:default" "Add permissions for viewing OpenShift resources to default user"
 runcmd "oc policy add-role-to-user edit system:serviceaccount:${NAMESPACE}:enmasse-service-account" "Add permissions for editing OpenShift resources to EnMasse service account"
-runcmd "oc create secret generic keycloak-credentials --from-literal=admin.username=admin --from-literal=admin.password=$KEYCLOAK_PASSWORD" "Create secret with keycloak admin credentials"
 
 CA_KEY=${TEMPDIR}/ca.key
 CA_CERT=${TEMPDIR}/ca.crt
@@ -169,9 +167,13 @@ else
 fi
 
 create_and_sign_cert "oc" $CA_KEY $CA_CERT "address-controller.${NAMESPACE}.svc.cluster.local" "address-controller-cert"
-create_self_signed_cert "oc" "standard-authservice.${NAMESPACE}.svc.cluster.local" "standard-authservice-cert"
 create_self_signed_cert "oc" "none-authservice.${NAMESPACE}.svc.cluster.local" "none-authservice-cert"
 
+if [ -n "$KEYCLOAK_PASSWORD" ]; then
+    create_self_signed_cert "oc" "standard-authservice.${NAMESPACE}.svc.cluster.local" "standard-authservice-cert"
+    runcmd "oc create secret generic keycloak-credentials --from-literal=admin.username=admin --from-literal=admin.password=$KEYCLOAK_PASSWORD" "Create secret with keycloak admin credentials"
+    runcmd "oc process -f $KEYCLOAK_TEMPLATE $KEYCLOAK_TEMPLATE_PARAMS | oc create -n $NAMESPACE -f -" "Instantiate keycloak template"
+fi
 
 if [[ $TEMPLATE_PARAMS == *"MULTIINSTANCE=true"* ]]; then
     if [ -n "$OS_ALLINONE" ]
@@ -189,7 +191,6 @@ then
     ENMASSE_TEMPLATE=$ALT_TEMPLATE
 fi
 
-runcmd "oc process -f $KEYCLOAK_TEMPLATE $KEYCLOAK_TEMPLATE_PARAMS | oc create -n $NAMESPACE -f -" "Instantiate keycloak template"
 runcmd "oc process -f $ENMASSE_TEMPLATE $TEMPLATE_PARAMS | oc create -n $NAMESPACE -f -" "Instantiate EnMasse template"
 
 if [ -n "$OS_ALLINONE" ] && [ -n "$SERVICE_CATALOG" ]
