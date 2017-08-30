@@ -121,6 +121,10 @@ class AddressSpaceV1Deserializer extends JsonDeserializer<AddressSpace> {
                 throw new RuntimeException("Unknown details " + extraDetails + " specified for type " + authType.getName());
             }
             builder.setAuthenticationService(authService.build());
+        } else {
+            builder.setAuthenticationService(new AuthenticationService.Builder()
+                    .setType(context.getDefaultAuthenticationServiceType())
+                    .build());
         }
 
         ObjectNode status = (ObjectNode) root.get(Fields.STATUS);

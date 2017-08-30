@@ -20,7 +20,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AuthenticationService;
@@ -31,6 +30,7 @@ import io.enmasse.address.model.Endpoint;
 import io.enmasse.address.model.SecretCertProvider;
 import io.enmasse.address.model.types.AddressSpaceType;
 import io.enmasse.address.model.types.standard.StandardAddressSpaceType;
+import io.enmasse.address.model.v1.CodecV1;
 import io.enmasse.controller.auth.AuthController;
 import io.enmasse.controller.auth.CertManager;
 import io.enmasse.controller.auth.OpenSSLCertManager;
@@ -74,11 +74,11 @@ public class Controller extends AbstractVerticle {
                     .setNamespace(kubernetes.getNamespace())
                     .setType(type)
                     .setAuthenticationService(new AuthenticationService.Builder()
-                            .setType(AuthenticationServiceType.NONE)
+                            .setType(CodecV1.resolveAuthServiceType(System.getenv()))
                             .build())
                     .setPlan(type.getDefaultPlan());
 
-            Optional<CertProvider> certProvider = options.certSecret().map(SecretCertProvider::new);
+            CertProvider certProvider = options.certSecret().map(SecretCertProvider::new).orElse(null);
 
             options.messagingHost().ifPresent(host ->
                     appendEndpoint(certProvider, "messaging", "messaging", host));
@@ -120,9 +120,9 @@ public class Controller extends AbstractVerticle {
         };
     }
 
-    private Endpoint appendEndpoint(Optional<CertProvider> certProvider, String name, String service, String host) {
+    private Endpoint appendEndpoint(CertProvider certProvider, String name, String service, String host) {
         return new Endpoint.Builder()
-                .setCertProvider(certProvider.orElse(null))
+                .setCertProvider(certProvider)
                 .setName(name)
                 .setService(service)
                 .setHost(host)

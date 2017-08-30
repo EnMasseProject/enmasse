@@ -15,6 +15,7 @@
  */
 package io.enmasse.address.model.v1;
 
+import io.enmasse.address.model.AuthenticationServiceType;
 import io.enmasse.address.model.types.AddressSpaceType;
 
 /**
@@ -28,4 +29,11 @@ public interface DecodeContext {
      * @return The address space type
      */
     AddressSpaceType getAddressSpaceType(String typeName);
+
+    /**
+     * Get the defeault authentication service type.
+     *
+     * @return The default {@link AuthenticationServiceType}.
+     */
+    AuthenticationServiceType getDefaultAuthenticationServiceType();
 }

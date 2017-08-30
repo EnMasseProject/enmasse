@@ -17,14 +17,13 @@ package io.enmasse.address.model.v1;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
-import io.enmasse.address.model.Address;
-import io.enmasse.address.model.AddressList;
-import io.enmasse.address.model.AddressSpace;
-import io.enmasse.address.model.AddressSpaceList;
+import io.enmasse.address.model.*;
 import io.enmasse.address.model.types.AddressSpaceType;
 import io.enmasse.address.model.types.Schema;
 import io.enmasse.address.model.types.standard.StandardAddressSpaceType;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -32,19 +31,55 @@ import java.util.Map;
  * Codec that provides the object mapper for V1 format
  */
 public class CodecV1 {
-    private static final Map<String, ObjectMapper> serializerMap = new HashMap<>();
-    private static final Map<String, AddressSpaceType> typeMap = new HashMap<>();
+    private final Map<String, ObjectMapper> serializerMap = new HashMap<>();
+    private final Map<String, AddressSpaceType> typeMap = new HashMap<>();
+
+
+    /**
+     * Note: The singleton instance is mostly for convenience, so that we don't have to create the codec
+     * everywhere. There might come a time where it needs to be injected from the top level.
+     */
+    private static final CodecV1 instance;
 
     static {
-        StandardAddressSpaceType type = new StandardAddressSpaceType();
-        serializerMap.put(type.getName(), createMapper(type));
-        typeMap.put(type.getName(), type);
+        instance = new CodecV1(Collections.singleton(new StandardAddressSpaceType()), resolveAuthServiceType(System.getenv()));
     }
 
-    private static ObjectMapper createMapper(AddressSpaceType addressSpaceType) {
+    public static AuthenticationServiceType resolveAuthServiceType(Map<String, String> env) {
+        if (env.containsKey("STANDARD_AUTHSERVICE_SERVICE_HOST")) {
+            return AuthenticationServiceType.STANDARD;
+        } else {
+            return AuthenticationServiceType.NONE;
+        }
+    }
+
+    private static final String standardTypeName = new StandardAddressSpaceType().getName();
+
+    public static ObjectMapper getMapper() {
+        return instance.getMapperForType(standardTypeName);
+    }
+
+    private CodecV1(Collection<AddressSpaceType> addressSpaceTypes, AuthenticationServiceType defaultAuthServiceType) {
+        for (AddressSpaceType type : addressSpaceTypes) {
+            typeMap.put(type.getName(), type);
+            serializerMap.put(type.getName(), createMapper(type, defaultAuthServiceType));
+        }
+    }
+
+    private ObjectMapper createMapper(AddressSpaceType addressSpaceType, AuthenticationServiceType defaultAuthServiceType) {
         ObjectMapper mapper = new ObjectMapper();
         SimpleModule module = new SimpleModule();
-        DecodeContext context = typeMap::get;
+        DecodeContext context = new DecodeContext() {
+            @Override
+            public AddressSpaceType getAddressSpaceType(String typeName) {
+                return typeMap.get(typeName);
+            }
+
+            @Override
+            public AuthenticationServiceType getDefaultAuthenticationServiceType() {
+                return defaultAuthServiceType;
+            }
+        };
 
         AddressV1Deserializer addressDeserializer = new AddressV1Deserializer(addressSpaceType);
         AddressSpaceV1Deserializer addressSpaceDeserializer = new AddressSpaceV1Deserializer(context);
@@ -64,8 +99,7 @@ public class CodecV1 {
         return mapper;
     }
 
-    // TODO: Parameterize this by type
-    public static ObjectMapper getMapper() {
-        return serializerMap.get(new StandardAddressSpaceType().getName());
+    private ObjectMapper getMapperForType(String typeName) {
+        return serializerMap.get(typeName);
     }
 }
