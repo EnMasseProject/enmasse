@@ -23,7 +23,7 @@ var Router = require('./qdr.js').Router;
 
 
 function RouterStats(connection) {
-    var options = { host: process.env.MESSAGING_SERVICE_HOST, port: process.env.MESSAGING_SERVICE_PORT_SECURE_INTERNAL};
+    var options = { host: process.env.MESSAGING_SERVICE_HOST, port: process.env.MESSAGING_SERVICE_PORT_AMQPS_NORMAL};
 
     //TODO: fix admin_service to be more sensibly generic
     var conn = connection || require('./admin_service.js').connect(rhea, options, 'MESSAGING');
