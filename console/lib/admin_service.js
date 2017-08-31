@@ -39,7 +39,11 @@ function connect_service(container, service_name, defaults) {
 };
 
 function connect(container, options, service_name) {
-    options = tls_options.get_client_options(options);
+    try {
+        options = tls_options.get_client_options(options);
+    } catch(error) {
+        // likely certs not present, will attempt to use non-TLS connection instead
+    }
     if (options.host) {
         var self = path.basename(process.argv[1], '.js');
         if (options.properties === undefined) options.properties = {};
