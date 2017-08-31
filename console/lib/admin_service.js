@@ -16,6 +16,7 @@
 'use strict';
 
 var path = require('path');
+var tls_options = require('./tls_options.js');
 
 function hostport(service_name, defaults) {
     var result = defaults || {host: 'localhost'};
@@ -38,6 +39,7 @@ function connect_service(container, service_name, defaults) {
 };
 
 function connect(container, options, service_name) {
+    options = tls_options.get_client_options(options);
     if (options.host) {
         var self = path.basename(process.argv[1], '.js');
         if (options.properties === undefined) options.properties = {};

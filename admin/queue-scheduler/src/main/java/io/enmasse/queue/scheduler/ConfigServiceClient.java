@@ -1,22 +1,27 @@
 package io.enmasse.queue.scheduler;
 
-import io.enmasse.address.model.Address;
-import io.enmasse.address.model.AddressList;
-import io.enmasse.address.model.types.standard.StandardType;
-import io.enmasse.address.model.v1.CodecV1;
-import io.vertx.core.AbstractVerticle;
-import io.vertx.proton.ProtonClient;
-import io.vertx.proton.ProtonConnection;
-import io.vertx.proton.ProtonReceiver;
-import org.apache.qpid.proton.amqp.messaging.AmqpValue;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import java.io.File;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
+
+import io.enmasse.address.model.Address;
+import io.enmasse.address.model.AddressList;
+import io.enmasse.address.model.types.standard.StandardType;
+import io.enmasse.address.model.v1.CodecV1;
+import io.vertx.core.AbstractVerticle;
+import io.vertx.core.net.PemKeyCertOptions;
+import io.vertx.core.net.PemTrustOptions;
+import io.vertx.proton.ProtonClient;
+import io.vertx.proton.ProtonClientOptions;
+import io.vertx.proton.ProtonConnection;
+import io.vertx.proton.ProtonReceiver;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 
 /**
  * Client connecting to the configuration service.
@@ -26,12 +31,34 @@ public class ConfigServiceClient extends AbstractVerticle {
     private final String configHost;
     private final int configPort;
     private final ConfigListener configListener;
+    private final ProtonClientOptions clientOptions;
     private volatile ProtonConnection configConnection;
 
-    public ConfigServiceClient(String configHost, int configPort, ConfigListener configListener) {
+    public ConfigServiceClient(String configHost,
+                               int configPort,
+                               ConfigListener configListener,
+                               final String certDir) {
         this.configHost = configHost;
         this.configPort = configPort;
         this.configListener = configListener;
+        this.clientOptions = createClientOptions(certDir);
+    }
+
+    private ProtonClientOptions createClientOptions(final String certDir)
+    {
+        ProtonClientOptions options = new ProtonClientOptions();
+
+        if (certDir != null) {
+            options.setSsl(true)
+                .addEnabledSaslMechanism("EXTERNAL")
+                .setHostnameVerificationAlgorithm("")
+                .setPemTrustOptions(new PemTrustOptions()
+                    .addCertPath(new File(certDir, "ca.crt").getAbsolutePath()))
+                    .setPemKeyCertOptions(new PemKeyCertOptions()
+                                                  .setCertPath(new File(certDir, "tls.crt").getAbsolutePath())
+                                                  .setKeyPath(new File(certDir, "tls.key").getAbsolutePath()));
+            }
+        return options;
     }
 
     @Override
@@ -40,7 +67,7 @@ public class ConfigServiceClient extends AbstractVerticle {
     }
 
     private void connectToConfigService(ProtonClient client) {
-        client.connect(configHost, configPort, connResult -> {
+        client.connect(clientOptions, configHost, configPort, connResult -> {
             if (connResult.succeeded()) {
                 log.info("Connected to the configuration service");
                 configConnection = connResult.result();

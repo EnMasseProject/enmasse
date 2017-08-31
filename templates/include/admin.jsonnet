@@ -26,7 +26,7 @@ local common = import "common.jsonnet";
   services(addressSpace)::
   [
     self.service("ragent", addressSpace, [{"name": "amqp", "port": 5671, "targetPort": 55671}]),
-    self.service("configuration", addressSpace, [{"name": "amqp", "port": 5672}]),
+    self.service("configuration", addressSpace, [{"name": "amqps", "port": 5671}]),
     self.service("queue-scheduler", addressSpace, [{"name": "amqp", "port": 5672, "targetPort": 55667}]),
     self.service("console", addressSpace, [{"name": "amqp-ws", "port": 5672, "targetPort": 56720}, {"name": "http", "port": 8080}])
   ],
@@ -70,7 +70,11 @@ local common = import "common.jsonnet";
                  },
                  {
                    "name": "CONFIGURATION_SERVICE_PORT",
-                   "value": "5672"
+                   "value": "5671"
+                 },
+                 {
+                   "name": "CERT_DIR",
+                   "value": "/etc/enmasse-certs"
                  },
                  {
                    "name": "PROBE_PORT",
@@ -103,12 +107,12 @@ local common = import "common.jsonnet";
                 }
               },
               "volumeMounts": [
-                               {
-                                 "name": "admin-internal-cert",
-                                 "mountPath": "/etc/enmasse-certs",
-                                 "readOnly": true
-                               }
-                             ]
+                {
+                  "name": "admin-internal-cert",
+                  "mountPath": "/etc/enmasse-certs",
+                  "readOnly": true
+                }
+              ]
             },
             common.container("queue-scheduler", scheduler_image, "amqp", 55667, "128Mi", [
                       {
@@ -117,8 +121,20 @@ local common = import "common.jsonnet";
                       },
                       {
                         "name": "CONFIGURATION_SERVICE_PORT",
-                        "value": "5672"
-                      }]),
+                        "value": "5671"
+                      },
+                      {
+                        "name": "CERT_DIR",
+                        "value": "/etc/enmasse-certs"
+                      }])  + {
+                          "volumeMounts": [
+                            {
+                              "name": "admin-internal-cert",
+                              "mountPath": "/etc/enmasse-certs",
+                              "readOnly": true
+                            }
+                          ]
+                        },
             console.container(console_image, [
                       {
                         "name": "CONFIGURATION_SERVICE_HOST",
@@ -126,7 +142,7 @@ local common = import "common.jsonnet";
                       },
                       {
                         "name": "CONFIGURATION_SERVICE_PORT",
-                        "value": "5672"
+                        "value": "5671"
                       },
                       {
                         "name": "ADDRESS_SPACE_SERVICE_HOST",
@@ -150,7 +166,20 @@ local common = import "common.jsonnet";
                           }
                         ]
                       },
-            common.container("configserv", configserv_image, "amqp", 5672, "256Mi", []),
+            common.container("configserv", configserv_image, "amqps", 5671, "256Mi", [
+                      {
+                        "name": "CERT_DIR",
+                        "value": "/etc/enmasse-certs"
+                      }
+                      ]) + {
+                        "volumeMounts": [
+                          {
+                            "name": "admin-internal-cert",
+                            "mountPath": "/etc/enmasse-certs",
+                            "readOnly": true
+                          }
+                        ]
+                      },
           ],
           "volumes": [
             {

@@ -4,6 +4,7 @@ local common = import "common.jsonnet";
     common.service(addressSpace, "queue-scheduler", "queue-scheduler", "amqp", 55667, 55667),
   deployment(addressSpace, image_repo)::
     {
+      local certSecretName = "queue-scheduler-internal-cert",
       "apiVersion": "extensions/v1beta1",
       "kind": "Deployment",
       "metadata": {
@@ -12,7 +13,8 @@ local common = import "common.jsonnet";
           "app": "enmasse"
         },
         "annotations": {
-          "addressSpace": addressSpace
+          "addressSpace": addressSpace,
+          "io.enmasse.certSecretName": certSecretName
         },
         "name": "queue-scheduler"
       },
@@ -30,7 +32,29 @@ local common = import "common.jsonnet";
           },
           "spec": {
             "containers": [
-              common.container("queue-scheduler", image_repo, "amqp", 55667, "128Mi", [])
+              common.container("queue-scheduler", image_repo, "amqp", 55667, "128Mi", [
+                      {
+                        "name": "CERT_DIR",
+                        "value": "/etc/enmasse-certs"
+                      }
+                 ]) +
+                 {
+                    "volumeMounts": [
+                      {
+                        "name": certSecretName,
+                        "mountPath": "/etc/enmasse-certs",
+                        "readOnly": true
+                      }
+                    ]
+                 }
+            ],
+            "volumes": [
+              {
+                "name": certSecretName,
+                "secret": {
+                  "secretName": certSecretName
+                }
+              }
             ]
           }
         }

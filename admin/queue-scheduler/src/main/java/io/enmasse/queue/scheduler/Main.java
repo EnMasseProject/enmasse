@@ -22,6 +22,7 @@ public class Main {
     public static void main(String [] args) {
         Vertx vertx = Vertx.vertx();
         String configHost = getEnvOrThrow("CONFIGURATION_SERVICE_HOST");
+        String certDir = System.getenv("CERT_DIR");
         int configPort = Integer.parseInt(getEnvOrThrow("CONFIGURATION_SERVICE_PORT"));
         int listenPort = 55667;
 
@@ -30,7 +31,7 @@ public class Main {
                 listenPort);
 
         scheduler.setProtonSaslAuthenticatorFactory(new DummySaslAuthenticatorFactory());
-        ConfigServiceClient configServiceClient = new ConfigServiceClient(configHost, configPort, scheduler);
+        ConfigServiceClient configServiceClient = new ConfigServiceClient(configHost, configPort, scheduler, certDir);
 
         vertx.deployVerticle(configServiceClient);
         vertx.deployVerticle(scheduler);

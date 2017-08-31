@@ -15,6 +15,7 @@
  */
 
 var log = require('./log.js').logger();
+var tls_options = require('./tls_options.js');
 
 module.exports.connect = function(container, id) {
     var config_host = process.env.ADMIN_SERVICE_HOST;
@@ -27,8 +28,8 @@ module.exports.connect = function(container, id) {
     if (config_host && config_port) {
         log.info("Connecting to config service " + config_host + ":" + config_port + " with id=" + id);
         var connection_properties = {product:'subserv', container_id:process.env.HOSTNAME};
-        container.options.username = 'subserv';
-        return container.connect({host:config_host, port:config_port, properties:connection_properties, id:id});
+        
+        return container.connect(tls_options.get_client_options({host:config_host, port:config_port, properties:connection_properties, id:id}));
     }
     return null;
 }
