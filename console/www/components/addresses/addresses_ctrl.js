@@ -391,6 +391,38 @@ angular.module('patternfly.wizard').controller('WizardController', ['$scope', '$
                 $scope.semantics_complete = angular.isDefined($scope.data.address) && $scope.data.address.length > 0 && address_service.is_unique_name($scope.data.address);
             };
             $scope.nextButtonTitle = "Next >";
+
+            $scope.tooltip = address_service.tooltip
+            $scope.getTooltip = function (addr) {
+              return $scope.tooltip.address[addr].tooltip
+            }
+            $scope.getLabel = function (addr) {
+              return $scope.tooltip.address[addr].label
+            }
+            $scope.hasExternal = function (addr) {
+              return angular.isDefined($scope.tooltip.address[addr].external)
+            }
+            $scope.hasTooltip = function (addr) {
+              return angular.isDefined($scope.tooltip.address[addr].tooltip)
+            }
+            $scope.getExternal = function (addr) {
+              return $scope.tooltip.address[addr].external
+            }
+            $scope.getPlantip = function (addr, plan) {
+              return $scope.tooltip.address[addr].plan[plan].tooltip
+            }
+            $scope.getPlanLabel = function (addr, plan) {
+              return $scope.tooltip.address[addr].plan[plan].label
+            }
+            $scope.hasExternalPlan = function (addr, plan) {
+              return angular.isDefined($scope.tooltip.address[addr].plan[plan].external)
+            }
+            $scope.hasPlantip = function (addr, plan) {
+              return angular.isDefined($scope.tooltip.address[addr].plan[plan].tooltip)
+            }
+            $scope.getExternalPlan = function (addr, plan) {
+              return $scope.tooltip.address[addr].plan[plan].external
+            }
         };
 
         var startDeploy = function () {
