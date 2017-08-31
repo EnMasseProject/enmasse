@@ -1115,6 +1115,8 @@ objects:
               value: localhost
             - name: CONFIGURATION_SERVICE_PORT
               value: '5671'
+            - name: LISTEN_PORT
+              value: '55667'
             - name: CERT_DIR
               value: "/etc/enmasse-certs"
             image: "${QUEUE_SCHEDULER_REPO}"

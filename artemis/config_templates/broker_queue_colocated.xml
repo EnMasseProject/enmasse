@@ -11,7 +11,5 @@
           <param key="port" value="$QUEUE_SCHEDULER_SERVICE_PORT" />
           <param key="containerId" value="$CONTAINER_ID" />
           <param key="clusterId" value="$CLUSTER_ID" />
-          <param key="sslEnabled" value="false" />
-          <param key="needClientAuth" value="false" />
         </connector-service>
       </connector-services>

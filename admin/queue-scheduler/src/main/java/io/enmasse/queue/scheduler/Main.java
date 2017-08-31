@@ -16,6 +16,7 @@
 
 package io.enmasse.queue.scheduler;
 
+import io.enmasse.amqp.ExternalSaslAuthenticator;
 import io.vertx.core.Vertx;
 
 public class Main {
@@ -24,13 +25,19 @@ public class Main {
         String configHost = getEnvOrThrow("CONFIGURATION_SERVICE_HOST");
         String certDir = System.getenv("CERT_DIR");
         int configPort = Integer.parseInt(getEnvOrThrow("CONFIGURATION_SERVICE_PORT"));
-        int listenPort = 55667;
+        int listenPort = Integer.parseInt(getEnvOrThrow("LISTEN_PORT"));
 
         QueueScheduler scheduler = new QueueScheduler(
                 connection -> Artemis.create(vertx, connection),
-                listenPort);
+                listenPort,
+                certDir);
 
-        scheduler.setProtonSaslAuthenticatorFactory(new DummySaslAuthenticatorFactory());
+
+        if (certDir != null) {
+            scheduler.setProtonSaslAuthenticatorFactory(ExternalSaslAuthenticator::new);
+        } else {
+            scheduler.setProtonSaslAuthenticatorFactory(new DummySaslAuthenticatorFactory());
+        }
         ConfigServiceClient configServiceClient = new ConfigServiceClient(configHost, configPort, scheduler, certDir);
 
         vertx.deployVerticle(configServiceClient);
