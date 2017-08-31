@@ -106,7 +106,8 @@ AddressDefinition.prototype.update_periodic_deltas = function () {
     return true;
 }
 
-function AddressService() {
+function AddressService($http) {
+    var self = this;  // 'this' is not available in the success funtion of $http.get
     this.addresses = [];
     this.address_types = [];
     this.connections = [];
@@ -118,6 +119,12 @@ function AddressService() {
     this.connection.open_receiver();
     setInterval(this.update_periodic_deltas.bind(this), 30000);
     setInterval(this.update_depth_series.bind(this), 30000);
+
+    this.tooltip = {}
+    $http.get('tooltips.json')
+      .then(function (d) {
+        self.tooltip = d.data;
+      })
 }
 
 AddressService.prototype.get_valid_plans = function (type) {
@@ -267,7 +274,7 @@ AddressService.prototype.on_update = function (callback) {
     this.callback = callback;
 }
 
-angular.module('address_service', []).factory('address_service', function() {
-    return new AddressService();
+angular.module('address_service', []).factory('address_service', function($http) {
+    return new AddressService($http);
 });
 
