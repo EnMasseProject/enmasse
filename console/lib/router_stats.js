@@ -258,9 +258,11 @@ RouterStats.prototype.close = function () {
 
 RouterStats.prototype.retrieve = function (addresses, connection_registry) {
     return this._retrieve().then(function (results) {
-        connection_registry.set(results.connections);
-        for (var a in results.addresses) {
-            addresses.update_stats(a, results.addresses[a]);
+        if (results) {
+            connection_registry.set(results.connections);
+            for (var a in results.addresses) {
+                addresses.update_stats(a, results.addresses[a]);
+            }
         }
     });
 };

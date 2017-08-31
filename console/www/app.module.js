@@ -18,11 +18,6 @@ angular.module('enmasse', ['patternfly.navigation', 'ui.router', 'patternfly.vie
                                templateUrl: 'components/connections/connections.html'
                              }
                             );
-        $stateProvider.state('users',
-                             { url: '/users',
-                               templateUrl: 'components/users/users.html'
-                             }
-                            );
     }).controller('NavCtrl', ['$scope',
     function ($scope) {
         $scope.navigationItems = [
@@ -40,11 +35,6 @@ angular.module('enmasse', ['patternfly.navigation', 'ui.router', 'patternfly.vie
                 title: "Connections",
                 iconClass : "fa pficon-route",
                 uiSref: "connections",
-            },
-            {
-                title: "Users",
-                iconClass: "fa pficon-users",
-                uiSref: "users"
             }
         ];
     }
