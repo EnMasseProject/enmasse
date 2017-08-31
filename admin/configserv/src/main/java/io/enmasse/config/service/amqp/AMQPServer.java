@@ -16,6 +16,9 @@
 
 package io.enmasse.config.service.amqp;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 import io.enmasse.config.service.model.ObserverKey;
 import io.enmasse.config.service.model.ResourceDatabase;
 import io.vertx.core.AbstractVerticle;
@@ -23,14 +26,14 @@ import io.vertx.core.Future;
 import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.ProtonSender;
 import io.vertx.proton.ProtonServer;
+import io.vertx.proton.ProtonServerOptions;
 import io.vertx.proton.ProtonSession;
-import org.apache.qpid.proton.amqp.Symbol;
-import org.apache.qpid.proton.amqp.messaging.Source;
+import io.vertx.proton.sasl.ProtonSaslAuthenticatorFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
+import org.apache.qpid.proton.amqp.Symbol;
+import org.apache.qpid.proton.amqp.messaging.Source;
 
 /**
  * AMQP server endpoint that handles connections to the service and propagates config for a config map specified
@@ -47,12 +50,22 @@ public class AMQPServer extends AbstractVerticle {
     private volatile ProtonServer server;
     private static final Symbol LABELS = Symbol.getSymbol("labels");
     private static final Symbol ANNOTATIONS = Symbol.getSymbol("annotations");
+    private ProtonServerOptions options;
+    private ProtonSaslAuthenticatorFactory authenticatorFactory;
 
-    public AMQPServer(String hostname, int port, Map<String, ResourceDatabase> databaseMap)
-    {
+    public AMQPServer(String hostname, int port, Map<String, ResourceDatabase> databaseMap) {
+        this(hostname, port, databaseMap, new ProtonServerOptions());
+    }
+
+    public AMQPServer(String hostname, int port, Map<String, ResourceDatabase> databaseMap, ProtonServerOptions options) {
         this.hostname = hostname;
         this.port = port;
         this.databaseMap = databaseMap;
+        this.options = options;
+    }
+
+    public void setAuthenticatorFactory(final ProtonSaslAuthenticatorFactory authenticatorFactory) {
+        this.authenticatorFactory = authenticatorFactory;
     }
 
     private void connectHandler(ProtonConnection connection) {
@@ -134,8 +147,11 @@ public class AMQPServer extends AbstractVerticle {
 
     @Override
     public void start(Future<Void> startPromise) {
-        server = ProtonServer.create(vertx);
+        server = ProtonServer.create(vertx, options);
         server.connectHandler(this::connectHandler);
+        if(authenticatorFactory != null) {
+            server.saslAuthenticatorFactory(authenticatorFactory);
+        }
         server.listen(port, hostname, result -> {
             if (result.succeeded()) {
                 log.info("Starting server on {}:{}", hostname, port);

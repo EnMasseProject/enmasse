@@ -1,21 +1,21 @@
 package io.enmasse.queue.scheduler;
 
-import io.enmasse.address.model.Address;
-import io.vertx.core.Vertx;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import static org.hamcrest.CoreMatchers.hasItem;
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThat;
 
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import static org.hamcrest.CoreMatchers.hasItem;
-import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThat;
+import io.enmasse.address.model.Address;
+import io.vertx.core.Vertx;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 public class ConfigServiceClientTest {
     private Vertx vertx;
@@ -31,7 +31,7 @@ public class ConfigServiceClientTest {
         TestUtils.deployVerticle(vertx, testConfigServ);
         int configPort = TestUtils.waitForPort(() -> testConfigServ.getPort(), 1, TimeUnit.MINUTES);
 
-        client = new ConfigServiceClient("localhost", configPort, listener);
+        client = new ConfigServiceClient("localhost", configPort, listener, null);
         TestUtils.deployVerticle(vertx, client);
 
     }

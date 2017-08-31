@@ -20,24 +20,10 @@ var path = require('path');
 var fs = require('fs');
 var Router = require('./qdr.js').Router;
 
-var cert_dir = (process.env.CERT_DIR !== undefined) ? process.env.CERT_DIR : '/etc/enmasse-certs';
-var ca_path = path.resolve(cert_dir, 'ca.crt');//TODO: allow setting via env var
-var client_crt_path = path.resolve(cert_dir, 'tls.crt');//TODO: allow setting via env var
-var client_key_path = path.resolve(cert_dir, 'tls.key');//TODO: allow setting via env var
 
 
 function RouterStats(connection) {
-    var options = { host: process.env.MESSAGING_SERVICE_HOST, port: process.env.MESSAGING_SERVICE_PORT_AMQPS_NORMAL};
-    try {
-        options.ca = [fs.readFileSync(ca_path)];
-        options.key = fs.readFileSync(client_key_path);
-        options.cert = fs.readFileSync(client_crt_path);
-        options.enable_sasl_external = true;
-        options.transport = 'tls';
-        options.rejectUnauthorized = false;
-    } catch (error) {
-        console.warn('Error setting connection options ' + error);
-    }
+    var options = { host: process.env.MESSAGING_SERVICE_HOST, port: process.env.MESSAGING_SERVICE_PORT_SECURE_INTERNAL};
 
     //TODO: fix admin_service to be more sensibly generic
     var conn = connection || require('./admin_service.js').connect(rhea, options, 'MESSAGING');
