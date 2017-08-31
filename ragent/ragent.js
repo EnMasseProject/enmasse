@@ -349,7 +349,8 @@ if (config_host) {
     } catch (error) {
         options = { host: config_host, port: config_port, properties: connection_properties };
     }
-    var conn = amqp.connect(clientOptions);
+    
+    var conn = amqp.connect(options);
     conn.open_receiver('v1/addresses');
     watch_pods(conn);
 }
