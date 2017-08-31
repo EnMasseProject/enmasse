@@ -39,9 +39,9 @@ items:
           - containerPort: 8080
             name: http
           volumeMounts:
-          - mountPath: /opt/jboss/keycloak/standalone/data
+          - mountPath: "/opt/jboss/keycloak/standalone/data"
             name: keycloak-persistence
-          - mountPath: /opt/jboss/keycloak/standalone/cert
+          - mountPath: "/opt/jboss/keycloak/standalone/cert"
             name: standard-authservice-cert
         volumes:
         - emptyDir: {}
