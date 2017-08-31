@@ -28,12 +28,7 @@ before_install:
 - npm install -g mocha
 - npm install rhea debug
 script:
-- export TAG=${TRAVIS_TAG:-latest}
-- export VERSION=${TRAVIS_TAG:-latest}
-- "./gradlew build -i"
-- "./gradlew pack buildImage tagImage pushImage"
-- ./systemtests/scripts/run_test_component.sh templates/install /tmp/openshift systemtests
-- bash .travis/generate-bintray-descriptor.sh enmasse templates/build/enmasse-${TAG}.tgz > .bintray.json
+- ./.travis/build.sh
 after_failure:
 - "./systemtests/scripts/print_logs.sh /tmp/openshift"
 after_success:
