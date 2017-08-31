@@ -343,7 +343,13 @@ if (process.env.CONFIGURATION_SERVICE_HOST) {
 
 if (config_host) {
     amqp.options.username = 'ragent';
-    var conn = amqp.connect(tls_options.get_client_options({host:config_host, port:config_port, properties:connection_properties}));
+    var options;
+    try {
+        options = tls_options.get_client_options({ host: config_host, port: config_port, properties: connection_properties });
+    } catch (error) {
+        options = { host: config_host, port: config_port, properties: connection_properties };
+    }
+    var conn = amqp.connect(clientOptions);
     conn.open_receiver('v1/addresses');
     watch_pods(conn);
 }
