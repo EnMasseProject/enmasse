@@ -138,6 +138,10 @@ local common = import "common.jsonnet";
                         "value": "5671"
                       },
                       {
+                        "name": "LISTEN_PORT",
+                        "value": "55667"
+                      },
+                      {
                         "name": "CERT_DIR",
                         "value": "/etc/enmasse-certs"
                       }])  + {

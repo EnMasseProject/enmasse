@@ -18,13 +18,18 @@ package io.enmasse.queue.scheduler;
 
 import io.enmasse.address.model.Address;
 import io.vertx.core.AbstractVerticle;
+import io.vertx.core.http.ClientAuth;
+import io.vertx.core.net.PemKeyCertOptions;
+import io.vertx.core.net.PemTrustOptions;
 import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.ProtonServer;
+import io.vertx.proton.ProtonServerOptions;
 import io.vertx.proton.sasl.ProtonSaslAuthenticatorFactory;
 import org.apache.qpid.proton.amqp.Symbol;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Future;
@@ -43,10 +48,12 @@ public class QueueScheduler extends AbstractVerticle implements ConfigListener {
     private volatile ProtonServer server;
 
     private final int port;
+    private final String certDir;
 
-    public QueueScheduler(BrokerFactory brokerFactory, int listenPort) {
+    public QueueScheduler(BrokerFactory brokerFactory, int listenPort, String certDir) {
         this.brokerFactory = brokerFactory;
         this.port = listenPort;
+        this.certDir = certDir;
     }
 
     // This is a temporary hack until Artemis can support sasl anonymous
@@ -65,7 +72,18 @@ public class QueueScheduler extends AbstractVerticle implements ConfigListener {
 
     @Override
     public void start() {
-        server = ProtonServer.create(vertx);
+        ProtonServerOptions options = new ProtonServerOptions();
+        if (certDir != null) {
+            options.setSsl(true)
+                .setClientAuth(ClientAuth.REQUIRED)
+                .setPemKeyCertOptions(new PemKeyCertOptions()
+                        .setKeyPath(new File(certDir, "tls.key").getAbsolutePath())
+                        .setCertPath(new File(certDir, "tls.crt").getAbsolutePath()))
+                .setPemTrustOptions(new PemTrustOptions()
+                        .addCertPath(new File(certDir, "ca.crt").getAbsolutePath()));
+        }
+
+        server = ProtonServer.create(vertx, options);
         server.saslAuthenticatorFactory(saslAuthenticatorFactory);
         server.connectHandler(connection -> {
             connection.setContainer("queue-scheduler");
@@ -90,6 +108,7 @@ public class QueueScheduler extends AbstractVerticle implements ConfigListener {
 
             connection.open();
         });
+
         server.listen(port, event -> {
             if (event.succeeded()) {
                 log.info("QueueScheduler is up and running");

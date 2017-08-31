@@ -1,6 +1,7 @@
 description = 'Configuration Server'
 dependencies {
     compile project(':admin:common-lib:config')
+    compile project(':admin:common-lib:amqp')
     compile "io.fabric8:kubernetes-client:${openshiftClientVersion}"
     compile "io.vertx:vertx-proton:${vertxVersion}"
     compile "org.slf4j:slf4j-api:${slf4jVersion}"

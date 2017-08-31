@@ -51,7 +51,7 @@ public class QueueSchedulerTest {
     public void setup() throws Exception {
         vertx = Vertx.vertx();
         brokerFactory = new TestBrokerFactory(vertx, "localhost");
-        scheduler = new QueueScheduler(brokerFactory, 0);
+        scheduler = new QueueScheduler(brokerFactory, 0, null);
         TestUtils.deployVerticle(vertx, scheduler);
         int schedulerPort = waitForPort(() -> scheduler.getPort(), 1, TimeUnit.MINUTES);
         System.out.println("Scheduler port is " + schedulerPort);
