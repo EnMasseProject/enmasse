@@ -35,7 +35,7 @@ var http = require('http');
 var app = express();
 app.get('/probe', function (req, res) { res.send('OK'); });
 
-var auth_ca_path = path.resolve('/opt/console/authservice-ca', 'tls.crt');//TODO: allow setting via env var
+var auth_ca_path = process.env.AUTH_SERVICE_CA || path.resolve('/opt/console/authservice-ca', 'tls.crt');
 
 var auth = function (req, res, next) {
     var authrequired = function() {
