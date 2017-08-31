@@ -28,7 +28,6 @@ var RouterStats = require('../lib/router_stats.js');
 var router_stats = new RouterStats();
 var BrokerStats = require('../lib/broker_stats.js');
 var broker_stats = new BrokerStats();
-var UserCtrl = require('../lib/user_ctrl.js');
 var Registry = require('../lib/registry.js');
 var http = require('http');
 
@@ -64,20 +63,6 @@ ws_server.on('connection', function (ws) {
 var connections = new Registry();
 //connections.debug = true;
 
-var users = new Registry();
-users.debug = true;
-var user_ctrl;
-if (process.env.SASLDB) {
-    user_ctrl = new UserCtrl(process.env.SASLDB, process.env.SASLDOMAIN || 'enmasse');
-    function update_users() {
-        user_ctrl.list_users().then(function (results) {
-            results.forEach(function (u) { users.update(u.name, u); });
-        });
-    }
-    setInterval(update_users, 5000);//check user db every 5 secs
-}
-
-
 var listeners = {};
 
 function subscribe(name, sender) {
@@ -87,9 +72,6 @@ function subscribe(name, sender) {
     });
     connections.for_each(function (conn) {
         sender.send({subject:'connection', body:conn});
-    });
-    users.for_each(function (user) {
-        sender.send({subject:'user', body:user});
     });
     //TODO: poll for changes in address_types
     address_ctrl.get_address_types().then(function (address_types) {
@@ -132,18 +114,6 @@ connections.on('deleted', function (conn) {
     }
 });
 
-users.on('updated', function (user) {
-    console.log('user changed: ' + JSON.stringify(user));
-    for (var name in listeners) {
-        listeners[name].send({subject:'user',body:user});
-    }
-});
-users.on('deleted', function (user) {
-    for (var name in listeners) {
-        listeners[name].send({subject:'user_deleted',body:user.name});
-    }
-});
-
 amqp_container.on('sender_open', function (context) {
     subscribe(context.connection.remote.open.container_id, context.sender);
 });
@@ -163,10 +133,6 @@ amqp_container.on('message', function (context) {
         console.log(context.message.subject + ' succeeded');
         context.delivery.accept();
     };
-    var accept_and_update_users = function () {
-        accept();
-        update_users();
-    };
     var reject = function (e, code) {
         console.log(context.message.subject + ' failed: ' + e);
         context.delivery.reject({condition: code || 'amqp:internal-error', description: '' + e});
@@ -178,12 +144,6 @@ amqp_container.on('message', function (context) {
     } else if (context.message.subject === 'delete_address') {
         console.log('deleting address ' + JSON.stringify(context.message.body));
         address_ctrl.delete_address(context.message.body).then(accept).catch(reject);
-    } else if (context.message.subject === 'create_user' && user_ctrl) {
-        console.log('creating user ' + JSON.stringify(context.message.body));
-        user_ctrl.create_user(context.message.body.name, context.message.body.password).then(accept_and_update_users).catch(reject);
-    } else if (context.message.subject === 'delete_user' && user_ctrl) {
-        console.log('deleting user ' + JSON.stringify(context.message.body));
-        user_ctrl.delete_user(context.message.body).then(accept_and_update_users).catch(reject);
     } else {
         console.log('ignoring message: ' + context.message);
     }

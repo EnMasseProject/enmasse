@@ -45,7 +45,7 @@ Artemis.prototype.ready = function (context) {
 function as_handler(resolve, reject) {
     return function (context) {
         var message = context.message || context;
-        if (message.application_properties._AMQ_OperationSucceeded) {
+        if (message.application_properties && message.application_properties._AMQ_OperationSucceeded) {
             try {
                 if (message.body) resolve(JSON.parse(message.body)[0]);
                 else resolve(true);
