@@ -741,7 +741,7 @@ objects:
             name: hawkular-openshift-agent
           - name: ssl-certs
             secret:
-              secretName: "${ROUTER_SECRET}"
+              secretName: "${MESSAGING_SECRET}"
           - name: authservice-ca
             secret:
               secretName: authservice-ca
@@ -1296,8 +1296,8 @@ objects:
     name: MQTT_GATEWAY_HOSTNAME
   - description: The hostname to use for the exposed route for the messaging console
     name: CONSOLE_HOSTNAME
-  - description: The secret to mount for router private key and certificate
-    name: ROUTER_SECRET
+  - description: The secret to mount for messaging private key and certificate
+    name: MESSAGING_SECRET
     required: true
   - description: The secret to mount for MQTT private key and certificate
     name: MQTT_SECRET
@@ -1326,6 +1326,73 @@ objects:
   - description: A list of host/port pairs to use for establishing the initial connection
       to the Kafka cluster
     name: KAFKA_BOOTSTRAP_SERVERS
+- apiVersion: v1
+  kind: Template
+  metadata:
+    labels:
+      app: enmasse
+    name: brokered-instance-infra
+  objects:
+  - apiVersion: v1
+    kind: Deployment
+    metadata:
+      annotations:
+        addressSpace: "${ADDRESS_SPACE}"
+      labels:
+        app: enmasse
+      name: broker
+    spec:
+      replicas: 1
+      template:
+        metadata:
+          annotations:
+            addressSpace: "${ADDRESS_SPACE}"
+          labels:
+            app: enmasse
+            role: broker
+        spec:
+          containers:
+          - image: "${BROKER_IMAGE}"
+            livenessProbe:
+              tcpSocket:
+                port: amqp
+            name: broker
+            ports:
+            - containerPort: 5672
+              name: amqp
+            readinessProbe:
+              tcpSocket:
+                port: amqp
+            volumeMounts:
+            - mountPath: "/etc/enmasse-certs"
+              name: "${MESSAGING_SECRET}"
+              readOnly: true
+          volumes:
+          - name: "${MESSAGING_SECRET}"
+            secret:
+              secretName: "${MESSAGING_SECRET}"
+  parameters:
+  - description: The secret to mount for router private key and certificate
+    name: MESSAGING_SECRET
+    required: true
+  - description: The address space this infrastructure is deployed for
+    name: ADDRESS_SPACE
+    required: true
+  - description: The hostname of the authentication service used by this address space
+    name: AUTHENTICATION_SERVICE_HOST
+    required: true
+  - description: The port of the authentication service used by this address space
+    name: AUTHENTICATION_SERVICE_PORT
+    required: true
+  - description: The CA cert to use for validating authentication service cert
+    name: AUTHENTICATION_SERVICE_CA_CERT
+  - description: The client cert to use as identity against authentication service
+    name: AUTHENTICATION_SERVICE_CLIENT_SECRET
+  - description: The hostname to use in sasl init
+    name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
+  - default: docker.io/enmasseproject/artemis:latest
+    description: Docker image to use for broker
+    name: BROKER_IMAGE
 - apiVersion: extensions/v1beta1
   kind: Deployment
   metadata:

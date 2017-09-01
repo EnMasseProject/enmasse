@@ -156,7 +156,7 @@ public class ControllerHelper {
 
 
             if (serviceCertProviders.containsKey("messaging")) {
-                parameterValues.add(new ParameterValue(TemplateParameter.ROUTER_SECRET, serviceCertProviders.get("messaging").getSecretName()));
+                parameterValues.add(new ParameterValue(TemplateParameter.MESSAGING_SECRET, serviceCertProviders.get("messaging").getSecretName()));
             }
 
             if (serviceCertProviders.containsKey("mqtt")) {

@@ -34,7 +34,7 @@ local images = import "images.jsonnet";
       "name": "enmasse-instance-infra"
     },
     local common_items = [
-      qdrouterd.deployment("${ADDRESS_SPACE}", "${ROUTER_REPO}", "${ROUTER_METRICS_REPO}", "${ROUTER_SECRET}", "authservice-ca"),
+      qdrouterd.deployment("${ADDRESS_SPACE}", "${ROUTER_REPO}", "${ROUTER_METRICS_REPO}", "${MESSAGING_SECRET}", "authservice-ca"),
       messagingService.internal("${ADDRESS_SPACE}"),
       subserv.deployment("${ADDRESS_SPACE}", "${SUBSERV_REPO}"),
       subserv.service("${ADDRESS_SPACE}"),
@@ -134,8 +134,8 @@ local images = import "images.jsonnet";
         "description": "The hostname to use for the exposed route for the messaging console"
       },
       {
-        "name": "ROUTER_SECRET",
-        "description": "The secret to mount for router private key and certificate",
+        "name": "MESSAGING_SECRET",
+        "description": "The secret to mount for messaging private key and certificate",
         "required": true
       },
       {
