@@ -1,6 +1,7 @@
 package io.enmasse.controller.common;
 
 import io.enmasse.address.model.Endpoint;
+import io.enmasse.address.model.types.AddressSpaceType;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.extensions.Deployment;
 import io.fabric8.openshift.client.ParameterValue;
@@ -45,7 +46,7 @@ public interface Kubernetes {
     void delete(HasMetadata ... resources);
     KubernetesList processTemplate(String templateName, ParameterValue ... parameterValues);
 
-    Namespace createNamespace(String name, String namespace);
+    Namespace createNamespace(String name, String namespace, AddressSpaceType addressSpaceType);
 
     void deleteNamespace(String namespace);
 

@@ -17,89 +17,48 @@ package io.enmasse.controller.brokered;
 
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.types.AddressSpaceType;
+import io.enmasse.address.model.types.brokered.BrokeredAddressSpaceType;
 import io.enmasse.controller.common.AuthenticationServiceResolverFactory;
+import io.enmasse.controller.common.ControllerBase;
+import io.enmasse.controller.common.ControllerHelper;
 import io.enmasse.controller.common.Kubernetes;
 import io.enmasse.k8s.api.AddressSpaceApi;
-import io.enmasse.k8s.api.Watch;
-import io.enmasse.k8s.api.Watcher;
 import io.fabric8.openshift.client.OpenShiftClient;
-import io.vertx.core.AbstractVerticle;
-import io.vertx.core.Future;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
-public class BrokeredController extends AbstractVerticle implements Watcher<AddressSpace> {
+public class BrokeredController extends ControllerBase {
     private static final Logger log = LoggerFactory.getLogger(BrokeredController.class.getName());
-
-    private final OpenShiftClient client;
-
-    private final AddressSpaceApi addressSpaceApi;
-    private Watch watch;
 
     private final Map<AddressSpace, String> addressControllerMap = new HashMap<>();
     private final Kubernetes kubernetes;
-    private final AuthenticationServiceResolverFactory authResolverFactory;
     private final AddressSpaceType type = new BrokeredAddressSpaceType();
+    private final ControllerHelper helper;
+
     public BrokeredController(OpenShiftClient controllerClient, AddressSpaceApi addressSpaceApi, Kubernetes kubernetes, AuthenticationServiceResolverFactory resolverFactory, boolean multiinstance) {
-
-    }
-
-    @Override
-    public void start(Future<Void> startPromise) throws Exception {
-        vertx.executeBlocking((Future<Watch> promise) -> {
-            try {
-                promise.complete(addressSpaceApi.watchAddressSpaces(this));
-            } catch (Exception e) {
-                promise.fail(e);
-            }
-        }, result -> {
-            if (result.succeeded()) {
-                this.watch = result.result();
-                startPromise.complete();
-            } else {
-                startPromise.fail(result.cause());
-            }
-        });
-    }
-
-    @Override
-    public void stop(Future<Void> stopFuture) throws Exception {
-        vertx.executeBlocking(promise -> {
-            try {
-                if (watch != null) {
-                    watch.close();
-                }
-                promise.complete();
-            } catch (Exception e) {
-                promise.fail(e);
-            }
-        }, result -> {
-            if (result.succeeded()) {
-                stopFuture.complete();
-            } else {
-                stopFuture.fail(result.cause());
-            }
-        });
+        super(addressSpaceApi, controllerClient);
+        Map<String, String> serviceMapping = new HashMap<>();
+        serviceMapping.put("messaging", "amqps");
+        this.helper = new ControllerHelper(kubernetes, multiinstance, resolverFactory, serviceMapping);
+        this.kubernetes = kubernetes;
     }
 
     @Override
     public synchronized void resourcesUpdated(Set<AddressSpace> instances) throws Exception {
         instances = instances.stream()
-                .filter(addressSpace -> addressSpace.getType().getName().equals(brokeredType.getName()))
+                .filter(addressSpace -> addressSpace.getType().getName().equals(type.getName()))
                 .collect(Collectors.toSet());
 
-        log.debug("Check standard address spaces: " + instances);
-        createAddressSpaces(instances);
-        retainAddressSpaces(instances);
+        log.debug("Check brokered address spaces: " + instances);
+        helper.createAddressSpaces(instances);
+        helper.retainAddressSpaces(instances);
 
         for (AddressSpace instance : addressSpaceApi.listAddressSpaces()) {
             AddressSpace.Builder mutableAddressSpace = new AddressSpace.Builder(instance);
-            updateReadiness(mutableAddressSpace);
+            updateReadiness(helper, mutableAddressSpace);
             updateEndpoints(mutableAddressSpace);
             addressSpaceApi.replaceAddressSpace(mutableAddressSpace.build());
         }
@@ -111,11 +70,9 @@ public class BrokeredController extends AbstractVerticle implements Watcher<Addr
     private void createAddressControllers(Set<AddressSpace> addressSpaces) {
         for (AddressSpace addressSpace : addressSpaces) {
             if (!addressControllerMap.containsKey(addressSpace)) {
-                AddressClusterGenerator clusterGenerator = new TemplateAddressClusterGenerator(addressSpaceApi, kubernetes, authResolverFactory);
                 AddressController addressController = new AddressController(
                         addressSpaceApi.withAddressSpace(addressSpace),
-                        kubernetes.withNamespace(addressSpace.getNamespace()),
-                        clusterGenerator);
+                        kubernetes.withNamespace(addressSpace.getNamespace()));
                 log.info("Deploying address space controller for " + addressSpace.getName());
                 vertx.deployVerticle(addressController, result -> {
                     if (result.succeeded()) {
@@ -136,16 +93,6 @@ public class BrokeredController extends AbstractVerticle implements Watcher<Addr
                 vertx.undeploy(entry.getValue());
                 it.remove();
             }
-        }
-    }
-
-    private void retainAddressSpaces(Set<AddressSpace> desiredAddressSpaces) {
-        helper.retainAddressSpaces(desiredAddressSpaces.stream().map(AddressSpace::getName).collect(Collectors.toSet()));
-    }
-
-    private void createAddressSpaces(Set<AddressSpace> instances) {
-        for (AddressSpace instance : instances) {
-            helper.create(instance);
         }
     }
 }

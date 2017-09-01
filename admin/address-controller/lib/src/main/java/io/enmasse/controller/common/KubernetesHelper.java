@@ -16,6 +16,7 @@
 
 package io.enmasse.controller.common;
 
+import io.enmasse.address.model.types.AddressSpaceType;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.config.LabelKeys;
 import io.enmasse.address.model.Endpoint;
@@ -123,12 +124,13 @@ public class KubernetesHelper implements Kubernetes {
     }
 
     @Override
-    public Namespace createNamespace(String name, String namespace) {
+    public Namespace createNamespace(String name, String namespace, AddressSpaceType addressSpaceType) {
         return client.namespaces().createNew()
                 .editOrNewMetadata()
                     .withName(namespace)
                     .addToLabels("app", "enmasse")
                     .addToLabels(LabelKeys.TYPE, "address-space")
+                    .addToLabels(LabelKeys.ADDRESS_SPACE_TYPE, addressSpaceType.getName())
                     .addToAnnotations(AnnotationKeys.ADDRESS_SPACE, name)
                 .endMetadata()
                 .done();

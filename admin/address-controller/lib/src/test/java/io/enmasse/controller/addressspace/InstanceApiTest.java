@@ -16,7 +16,7 @@ public class InstanceApiTest {
         ArgumentCaptor<ParameterValue> captor = ArgumentCaptor.forClass(ParameterValue.class);
         when(mockClient.processTemplate(matches("test"), captor.capture())).thenReturn(new KubernetesList());
 
-        AddressSpaceApi controller = new StandardHelper(mockClient, "test", true);
+        AddressSpaceApi controller = new ControllerHelper(mockClient, "test", true);
 
         Instance i1 = new Instance.Builder(AddressSpaceId.withIdAndNamespace("myid", "mynamespace")).messagingHost(Optional.of("messaging.example.com")).build();
         Instance i2 = new Instance.Builder(AddressSpaceId.withIdAndNamespace("myid2", "other")).mqttHost(Optional.of("mqtt.example.com")).build();

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.enmasse.address.model.types.standard;
+package io.enmasse.address.model.types.common;
 
 import io.enmasse.address.model.types.Plan;
 
@@ -22,7 +22,7 @@ import java.util.Optional;
 /**
  * A default plan for the standard address type.
  */
-public class StandardPlan implements Plan {
+public class TemplatePlan implements Plan {
 
     private final String name;
     private final String displayName;
@@ -30,7 +30,7 @@ public class StandardPlan implements Plan {
     private final String uuid;
     private final TemplateConfig templateConfig;
 
-    public StandardPlan(String name, String displayName, String description, String uuid, TemplateConfig templateConfig) {
+    public TemplatePlan(String name, String displayName, String description, String uuid, TemplateConfig templateConfig) {
         this.name = name;
         this.displayName = displayName;
         this.description = description;

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.enmasse.address.model.types.standard;
+package io.enmasse.address.model.types.common;
 
 import java.util.Collections;
 import java.util.Map;

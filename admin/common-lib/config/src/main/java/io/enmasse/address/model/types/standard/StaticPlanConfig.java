@@ -17,6 +17,8 @@ package io.enmasse.address.model.types.standard;
 
 
 import io.enmasse.address.model.types.Plan;
+import io.enmasse.address.model.types.common.TemplateConfig;
+import io.enmasse.address.model.types.common.TemplatePlan;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -29,13 +31,13 @@ class StaticPlanConfig {
     static List<Plan> topicPlans =
             Collections.unmodifiableList(
                 Arrays.asList(
-                    new StandardPlan(
+                    new TemplatePlan(
                         "inmemory",
                         "In-memory",
                         "Creates a standalone broker cluster for topics. Messages are not persisted on stable storage.",
                         "824e119c-615a-11e7-a25e-507b9def37d9",
                         new TemplateConfig("topic-inmemory", Collections.emptyMap())),
-                    new StandardPlan(
+                    new TemplatePlan(
                         "persisted",
                         "Persisted",
                         "Creates a standalone broker cluster for topics. Messages are persisted on stable storage.",
@@ -44,25 +46,25 @@ class StaticPlanConfig {
 
     static List<Plan> queuePlans =
             Collections.unmodifiableList(Arrays.asList(
-                    new StandardPlan(
+                    new TemplatePlan(
                         "inmemory",
                         "In-memory",
                         "Creates a standalone broker cluster for queues. Messages are not persisted on stable storage.",
                         "c5f2a60a-6160-11e7-9edd-507b9def37d9",
                         new TemplateConfig("queue-inmemory", Collections.emptyMap())),
-                    new StandardPlan(
+                    new TemplatePlan(
                         "persisted",
                         "Persisted",
                         "Creates a standalone broker cluster for queues. Messages are persisted on stable storage.",
                         "c5f2a60a-6160-11e7-9edd-507b9def37d9",
                         new TemplateConfig("queue-persisted", Collections.emptyMap())),
-                    new StandardPlan(
+                    new TemplatePlan(
                         "pooled-inmemory",
                         "Pooled In-memory",
                         "Schedules queues to run on a shared broker cluster, reducing overhead. Messages are not persisted on stable storage.",
                         "ef79c9dc-615a-11e7-b01c-507b9def37d9",
                         new TemplateConfig("queue-inmemory", Collections.emptyMap())),
-                    new StandardPlan(
+                    new TemplatePlan(
                         "pooled-persisted",
                         "Pooled Persisted",
                         "Schedules queues to run on a shared broker cluster, reducing overhead. Messages are persisted on stable storage.",
@@ -71,7 +73,7 @@ class StaticPlanConfig {
 
     static List<Plan> anycastPlans =
             Collections.unmodifiableList(Arrays.asList(
-                    new StandardPlan(
+                    new TemplatePlan(
                             "standard",
                             "Standard",
                             "Configures router network with anycast address.",
@@ -80,7 +82,7 @@ class StaticPlanConfig {
 
     static List<Plan> multicastPlans =
             Collections.unmodifiableList(Arrays.asList(
-                    new StandardPlan(
+                    new TemplatePlan(
                             "standard",
                             "Standard",
                             "Configures router network with multicast address.",

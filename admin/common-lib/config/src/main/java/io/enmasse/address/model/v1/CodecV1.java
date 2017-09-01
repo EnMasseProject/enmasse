@@ -20,12 +20,10 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
 import io.enmasse.address.model.*;
 import io.enmasse.address.model.types.AddressSpaceType;
 import io.enmasse.address.model.types.Schema;
+import io.enmasse.address.model.types.brokered.BrokeredAddressSpaceType;
 import io.enmasse.address.model.types.standard.StandardAddressSpaceType;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Codec that provides the object mapper for V1 format
@@ -42,7 +40,7 @@ public class CodecV1 {
     private static final CodecV1 instance;
 
     static {
-        instance = new CodecV1(Collections.singleton(new StandardAddressSpaceType()), resolveAuthServiceType(System.getenv()));
+        instance = new CodecV1(Arrays.asList(new StandardAddressSpaceType(), new BrokeredAddressSpaceType()), resolveAuthServiceType(System.getenv()));
     }
 
     public static AuthenticationServiceType resolveAuthServiceType(Map<String, String> env) {
