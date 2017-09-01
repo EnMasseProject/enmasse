@@ -16,6 +16,7 @@
 
 package io.enmasse.queue.scheduler;
 
+import enmasse.amqp.artemis.Broker;
 import io.enmasse.address.model.Address;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -79,7 +80,9 @@ public class SchedulerState {
         Set<Address> addresses = addressMap.getOrDefault(groupId, Collections.emptySet());
         log.info("Broker " + brokerId + " in group " + groupId + " was added, distributing addresses: " + addresses);
         if (addresses.size() == 1) {
-            broker.deployQueue(addresses.iterator().next().getAddress());
+            String address = addresses.iterator().next().getAddress();
+            broker.deployQueue(address);
+            broker.deployConnectorService(address);
         } else {
             distributeAddressesByNumQueues(groupId, addresses);
         }
@@ -142,6 +145,7 @@ public class SchedulerState {
         for (Address address : addressesToDeploy.values()) {
             Broker broker = brokerByNumQueues.poll();
             broker.deployQueue(address.getAddress());
+            broker.deployConnectorService(address.getAddress());
             brokerByNumQueues.offer(broker);
         }
     }
@@ -150,6 +154,7 @@ public class SchedulerState {
         for (Address address : addresses) {
             for (Broker  broker : brokerGroupMap.getOrDefault(groupId, Collections.emptyMap()).values()) {
                 broker.deployQueue(address.getAddress());
+                broker.deployConnectorService(address.getAddress());
             }
         }
     }
@@ -157,6 +162,7 @@ public class SchedulerState {
     private void deleteAddresses(String groupId, Set<Address> removed) {
         for (Broker broker : brokerGroupMap.getOrDefault(groupId, Collections.emptyMap()).values()) {
             for (Address address : removed) {
+                broker.deleteConnectorService(address.getAddress());
                 broker.deleteQueue(address.getAddress());
             }
         }

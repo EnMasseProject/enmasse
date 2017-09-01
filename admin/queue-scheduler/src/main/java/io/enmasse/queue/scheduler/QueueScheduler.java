@@ -16,6 +16,7 @@
 
 package io.enmasse.queue.scheduler;
 
+import enmasse.amqp.artemis.Broker;
 import io.enmasse.address.model.Address;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.proton.ProtonConnection;

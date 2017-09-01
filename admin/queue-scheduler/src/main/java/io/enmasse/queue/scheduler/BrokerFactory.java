@@ -16,6 +16,7 @@
 
 package io.enmasse.queue.scheduler;
 
+import enmasse.amqp.artemis.Broker;
 import io.vertx.proton.ProtonConnection;
 
 import java.util.concurrent.Future;

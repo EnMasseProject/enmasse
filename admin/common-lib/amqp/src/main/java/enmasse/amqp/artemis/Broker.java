@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.enmasse.queue.scheduler;
+package enmasse.amqp.artemis;
 
 import java.util.Set;
 
@@ -23,6 +23,8 @@ import java.util.Set;
  */
 public interface Broker {
     void deployQueue(String address);
+    void deployConnectorService(String address);
+    void deleteConnectorService(String address);
     void deleteQueue(String address);
     Set<String> getQueueNames();
     long getNumQueues();

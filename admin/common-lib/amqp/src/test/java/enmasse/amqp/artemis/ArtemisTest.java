@@ -14,15 +14,18 @@
  * limitations under the License.
  */
 
-package io.enmasse.queue.scheduler;
+package enmasse.amqp.artemis;
 
+import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.proton.ProtonClient;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.concurrent.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
@@ -48,19 +51,23 @@ public class ArtemisTest {
     @Test
     public void testManagement() throws InterruptedException, ExecutionException, TimeoutException {
         ProtonClient client = ProtonClient.create(vertx);
-        CompletableFuture<Future<Broker>> promise = new CompletableFuture<>();
+        Future<Future<Broker>> promise = Future.future();
         client.connect("localhost", 12346, h -> {
             assertTrue(h.succeeded());
             promise.complete(Artemis.create(vertx, h.result().open()));
         });
 
-        Artemis artemis = (Artemis)promise.get().get(30, TimeUnit.SECONDS);
+        long endTime = System.currentTimeMillis() + 30_000;
+        while (!promise.isComplete() && System.currentTimeMillis() < endTime) {
+            Thread.sleep(1000);
+        }
+        Artemis artemis = (Artemis)promise.result().result();
 
         artemis.deployQueue("queue1");
         artemis.deployQueue("queue2");
 
         long numQueues = artemis.getNumQueues();
-        long endTime = System.currentTimeMillis() + 60_000;
+        endTime = System.currentTimeMillis() + 60_000;
         while (numQueues != 2L && System.currentTimeMillis() < endTime) {
             Thread.sleep(2000);
             numQueues = artemis.getNumQueues();

@@ -34,7 +34,6 @@ public class BrokeredController extends ControllerBase {
     private static final Logger log = LoggerFactory.getLogger(BrokeredController.class.getName());
 
     private final Map<AddressSpace, String> addressControllerMap = new HashMap<>();
-    private final Kubernetes kubernetes;
     private final AddressSpaceType type = new BrokeredAddressSpaceType();
     private final ControllerHelper helper;
 
@@ -43,7 +42,6 @@ public class BrokeredController extends ControllerBase {
         Map<String, String> serviceMapping = new HashMap<>();
         serviceMapping.put("messaging", "amqps");
         this.helper = new ControllerHelper(kubernetes, multiinstance, resolverFactory, serviceMapping);
-        this.kubernetes = kubernetes;
     }
 
     @Override
@@ -70,9 +68,7 @@ public class BrokeredController extends ControllerBase {
     private void createAddressControllers(Set<AddressSpace> addressSpaces) {
         for (AddressSpace addressSpace : addressSpaces) {
             if (!addressControllerMap.containsKey(addressSpace)) {
-                AddressController addressController = new AddressController(
-                        addressSpaceApi.withAddressSpace(addressSpace),
-                        kubernetes.withNamespace(addressSpace.getNamespace()));
+                AddressController addressController = new AddressController();
                 log.info("Deploying address space controller for " + addressSpace.getName());
                 vertx.deployVerticle(addressController, result -> {
                     if (result.succeeded()) {
