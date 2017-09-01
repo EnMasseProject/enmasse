@@ -1,9 +1,10 @@
-package io.enmasse.controller.common.exceptionmapping;
+package io.enmasse.controller.api;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 
+import io.enmasse.controller.common.exceptionmapping.ErrorResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

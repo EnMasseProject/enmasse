@@ -45,7 +45,7 @@ local common = import "common.jsonnet";
   external_service::
     self.common_service("address-controller-external", "LoadBalancer", {}),
 
-  deployment(image_repo, multiinstance, template_config, ca_secret, cert_secret)::
+  deployment(image_repo, multiinstance, template_config, ca_secret, cert_secret, user_db_secret)::
     {
       "apiVersion": "extensions/v1beta1",
       "kind": "Deployment",
@@ -111,10 +111,14 @@ local common = import "common.jsonnet";
                 "name": "address-controller",
                 "env": [{
                   "name": "MULTIINSTANCE",
-                  "value": multiinstance
+                  "value": multiinstance,
+
                 }, {
                   "name": "CA_DIR",
                   "value": "/ca-cert"
+                }, {
+                  "name": "ADDRESS_SPACE_USER_DB_SECRET_NAME",
+                  "value": user_db_secret
                 }],
                 "volumeMounts": mounts,
                 "resources": {

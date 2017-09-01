@@ -1,4 +1,5 @@
 local storage = import "storage-template.jsonnet";
+local common = import "common.jsonnet";
 local enmasseInfra = import "enmasse-instance-infra.jsonnet";
 local addressController = import "address-controller.jsonnet";
 local authService = import "auth-service.jsonnet";
@@ -19,10 +20,11 @@ local images = import "images.jsonnet";
                  storage.template(false, true),
                  storage.template(true, false),
                  storage.template(true, true),
-                 enmasseInfra.generate(with_kafka, true),
+                 enmasseInfra.generate(with_kafka),
                  authService.none_deployment("${NONE_AUTHSERVICE_IMAGE}", "${NONE_AUTHSERVICE_CERT_SECRET_NAME}"),
                  authService.none_authservice,
-                 addressController.deployment("${ADDRESS_CONTROLLER_REPO}", "${MULTIINSTANCE}", "", "${ENMASSE_CA_SECRET}", "${ADDRESS_CONTROLLER_CERT_SECRET}"),
+                 addressController.deployment("${ADDRESS_CONTROLLER_REPO}", "${MULTIINSTANCE}", "", "${ENMASSE_CA_SECRET}", "${ADDRESS_CONTROLLER_CERT_SECRET}", "${ADDRESS_CONTROLLER_USER_DB_SECRET}"),
+                 common.empty_secret("${ADDRESS_CONTROLLER_USER_DB_SECRET}"),
                  addressController.internal_service,
                  restapiRoute.route("${RESTAPI_HOSTNAME}") ],
     "parameters": [
@@ -59,6 +61,11 @@ local images = import "images.jsonnet";
         "name": "NONE_AUTHSERVICE_CERT_SECRET_NAME",
         "description": "The secret to use for the none-authservice certificate",
         "value": "none-authservice-cert"
+      },
+      {
+        "name": "ADDRESS_CONTROLLER_USER_DB_SECRET",
+        "description": "Secret containing the user database",
+        "value": ""
       },
     ]
   }

@@ -17,6 +17,7 @@ package io.enmasse.controller.standard;
 
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.config.LabelKeys;
+import io.enmasse.controller.auth.UserDatabase;
 import io.enmasse.controller.common.AuthenticationServiceResolverFactory;
 import io.enmasse.controller.common.Kubernetes;
 import io.enmasse.controller.common.KubernetesHelper;
@@ -31,6 +32,8 @@ import io.fabric8.openshift.client.ParameterValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.charset.StandardCharsets;
+import java.security.SecureRandom;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -43,12 +46,14 @@ public class StandardHelper {
     private final boolean isMultitenant;
     private final String namespace;
     private final AuthenticationServiceResolverFactory authResolverFactory;
+    private final UserDatabase userDatabase;
 
-    public StandardHelper(Kubernetes kubernetes, boolean isMultitenant, AuthenticationServiceResolverFactory authResolverFactory) {
+    public StandardHelper(Kubernetes kubernetes, boolean isMultitenant, AuthenticationServiceResolverFactory authResolverFactory, UserDatabase userDatabase) {
         this.kubernetes = kubernetes;
         this.isMultitenant = isMultitenant;
         this.namespace = kubernetes.getNamespace();
         this.authResolverFactory = authResolverFactory;
+        this.userDatabase = userDatabase;
     }
 
     public void create(AddressSpace addressSpace) {
@@ -84,6 +89,30 @@ public class StandardHelper {
         kubernetes.create(resourceList.resourceList, addressSpace.getNamespace());
     }
 
+    private static String generateString(Random rng, String characters, int length)
+    {
+        char[] text = new char[length];
+        for (int i = 0; i < length; i++)
+        {
+            text[i] = characters.charAt(rng.nextInt(characters.length()));
+        }
+        return new String(text);
+    }
+
+
+    private Optional<String> createAddressSpacePassword(AddressSpace addressSpace) {
+        return Optional.ofNullable(userDatabase)
+                .filter(database -> !database.hasUser(addressSpace.getName()))
+                .map(database -> {
+                    SecureRandom random = new SecureRandom();
+                    random.setSeed(System.currentTimeMillis());
+                    String password = generateString(random, "abcdefghijklmnopqrstuvwxyz0123456789", 49);
+                    String encoded = Base64.getEncoder().encodeToString(password.getBytes(StandardCharsets.UTF_8));
+                    userDatabase.addUser(addressSpace.getName(), encoded);
+                    return encoded;
+                });
+    }
+
     private static class StandardResources {
         public KubernetesList resourceList;
         public List<Endpoint> routeEndpoints;
@@ -106,10 +135,12 @@ public class StandardHelper {
             parameterValues.add(new ParameterValue(TemplateParameter.AUTHENTICATION_SERVICE_HOST, authResolver.getHost(authService)));
             parameterValues.add(new ParameterValue(TemplateParameter.AUTHENTICATION_SERVICE_PORT, String.valueOf(authResolver.getPort(authService))));
             authResolver.getCaSecretName(authService).ifPresent(secretName -> kubernetes.getSecret(secretName).ifPresent(secret -> parameterValues.add(new ParameterValue(TemplateParameter.AUTHENTICATION_SERVICE_CA_CERT, secret.getData().get("tls.crt")))));
+            kubernetes.getSecret("address-controller-cert").ifPresent(secret -> parameterValues.add(new ParameterValue(TemplateParameter.ADDRESS_CONTROLLER_CA_CERT, secret.getData().get("tls.crt"))));
             authResolver.getClientSecretName(authService).ifPresent(secret -> parameterValues.add(new ParameterValue(TemplateParameter.AUTHENTICATION_SERVICE_CLIENT_SECRET, secret)));
             authResolver.getSaslInitHost(addressSpace.getName(), authService).ifPresent(saslInitHost -> parameterValues.add(new ParameterValue(TemplateParameter.AUTHENTICATION_SERVICE_SASL_INIT_HOST, saslInitHost)));
+            createAddressSpacePassword(addressSpace).ifPresent(password -> parameterValues.add(new ParameterValue(TemplateParameter.ADDRESS_SPACE_PASSWORD, password)));
 
-            // Step 1: Validate endpoints and remove unknown
+                // Step 1: Validate endpoints and remove unknown
             Set<String> availableServices = new HashSet<>(Arrays.asList("messaging", "mqtt", "console"));
             Set<String> discoveredServices = new HashSet<>();
             Map<String, CertProvider> serviceCertProviders = new HashMap<>();

@@ -17,7 +17,7 @@
 package io.enmasse.controller;
 
 import io.enmasse.controller.api.JacksonConfig;
-import io.enmasse.controller.api.osb.v2.BasicAuthInterceptor;
+import io.enmasse.controller.api.BasicAuthInterceptor;
 import io.enmasse.controller.api.osb.v2.OSBServiceBase;
 import io.enmasse.controller.api.osb.v2.bind.OSBBindingService;
 import io.enmasse.controller.api.osb.v2.catalog.OSBCatalogService;
@@ -25,7 +25,8 @@ import io.enmasse.controller.api.osb.v2.lastoperation.OSBLastOperationService;
 import io.enmasse.controller.api.osb.v2.provision.OSBProvisioningService;
 import io.enmasse.controller.api.v1.http.HttpAddressService;
 import io.enmasse.controller.api.v1.http.HttpSchemaService;
-import io.enmasse.controller.common.exceptionmapping.DefaultExceptionMapper;
+import io.enmasse.controller.auth.UserAuthenticator;
+import io.enmasse.controller.api.DefaultExceptionMapper;
 import io.enmasse.k8s.api.AddressSpaceApi;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.CompositeFuture;
@@ -40,7 +41,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.net.PasswordAuthentication;
-import java.util.Optional;
+import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -52,15 +53,18 @@ public class HTTPServer extends AbstractVerticle {
     private static final Logger log = LoggerFactory.getLogger(HTTPServer.class.getName());
     private final AddressSpaceApi addressSpaceApi;
     private final String certDir;
-    private final Optional<PasswordAuthentication> osbAuth;
+    private final PasswordAuthentication osbAuth;
+    private final UserAuthenticator userAuthenticator;
 
     private HttpServer httpServer;
     private HttpServer httpsServer;
 
-    public HTTPServer(AddressSpaceApi addressSpaceApi, String certDir, Optional<PasswordAuthentication> osbAuth) {
+    public HTTPServer(AddressSpaceApi addressSpaceApi, String certDir, PasswordAuthentication osbAuth, UserAuthenticator userAuthenticator) {
         this.addressSpaceApi = addressSpaceApi;
         this.certDir = certDir;
         this.osbAuth = osbAuth;
+        this.userAuthenticator = userAuthenticator;
+
     }
 
     @Override
@@ -70,7 +74,16 @@ public class HTTPServer extends AbstractVerticle {
 
         deployment.getProviderFactory().registerProvider(DefaultExceptionMapper.class);
         deployment.getProviderFactory().registerProvider(JacksonConfig.class);
-        osbAuth.ifPresent(auth -> deployment.getProviderFactory().registerProviderInstance(new BasicAuthInterceptor(auth, OSBServiceBase.BASE_URI)));
+
+        if (osbAuth != null) {
+            deployment.getProviderFactory().registerProviderInstance(new BasicAuthInterceptor((username, password) ->
+                    osbAuth.getUserName().equals(username) && Arrays.equals(osbAuth.getPassword(), password.toCharArray()),
+                    OSBServiceBase.BASE_URI));
+        }
+
+        if (userAuthenticator != null) {
+            deployment.getProviderFactory().registerProviderInstance(new BasicAuthInterceptor(userAuthenticator, HttpAddressService.BASE_URI));
+        }
 
         deployment.getRegistry().addSingletonResource(new HttpAddressService(addressSpaceApi));
         deployment.getRegistry().addSingletonResource(new HttpSchemaService());

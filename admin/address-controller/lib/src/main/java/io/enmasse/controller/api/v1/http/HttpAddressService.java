@@ -23,7 +23,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.*;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import java.util.Optional;
 
@@ -33,6 +35,7 @@ import java.util.Optional;
 @Path("/v1/addresses/{addressSpace}")
 public class HttpAddressService {
     private static final Logger log = LoggerFactory.getLogger(HttpAddressService.class.getName());
+    public static final String BASE_URI = "/v1/addresses";
     private final AddressApiHelper apiHelper;
 
     public HttpAddressService(AddressSpaceApi addressSpaceApi) {
@@ -44,7 +47,6 @@ public class HttpAddressService {
     @Consumes({MediaType.APPLICATION_JSON})
     public Response getAddressList(@PathParam("addressSpace") String addressSpace) {
         try {
-
             return Response.ok(apiHelper.getAddresses(addressSpace)).build();
         } catch (Exception e) {
             log.error("Exception getting address list", e);

@@ -16,6 +16,7 @@
 package io.enmasse.controller.standard;
 
 import io.enmasse.config.AnnotationKeys;
+import io.enmasse.controller.auth.UserDatabase;
 import io.enmasse.controller.common.*;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.Endpoint;
@@ -54,8 +55,8 @@ public class StandardController extends AbstractVerticle implements Watcher<Addr
     private final Kubernetes kubernetes;
     private final AuthenticationServiceResolverFactory authResolverFactory;
 
-    public StandardController(OpenShiftClient client, AddressSpaceApi addressSpaceApi, Kubernetes kubernetes, AuthenticationServiceResolverFactory authResolverFactory, boolean isMultitenant) {
-        this.helper = new StandardHelper(kubernetes, isMultitenant, authResolverFactory);
+    public StandardController(OpenShiftClient client, AddressSpaceApi addressSpaceApi, Kubernetes kubernetes, AuthenticationServiceResolverFactory authResolverFactory, boolean isMultitenant, UserDatabase userDatabase) {
+        this.helper = new StandardHelper(kubernetes, isMultitenant, authResolverFactory, userDatabase);
         this.client = client;
         this.addressSpaceApi = addressSpaceApi;
         this.kubernetes = kubernetes;

@@ -655,6 +655,142 @@ objects:
       app: enmasse
     name: enmasse-instance-infra
   objects:
+  - apiVersion: v1
+    kind: Service
+    metadata:
+      annotations:
+        addressSpace: "${ADDRESS_SPACE}"
+      labels:
+        app: enmasse
+      name: ragent
+    spec:
+      ports:
+      - name: amqp
+        port: 5671
+        targetPort: 55671
+      selector:
+        name: admin
+  - apiVersion: v1
+    kind: Service
+    metadata:
+      annotations:
+        addressSpace: "${ADDRESS_SPACE}"
+      labels:
+        app: enmasse
+      name: configuration
+    spec:
+      ports:
+      - name: amqps
+        port: 5671
+      selector:
+        name: admin
+  - apiVersion: v1
+    kind: Service
+    metadata:
+      annotations:
+        addressSpace: "${ADDRESS_SPACE}"
+      labels:
+        app: enmasse
+      name: queue-scheduler
+    spec:
+      ports:
+      - name: amqp
+        port: 5672
+        targetPort: 55667
+      selector:
+        name: admin
+  - apiVersion: v1
+    kind: Service
+    metadata:
+      annotations:
+        addressSpace: "${ADDRESS_SPACE}"
+      labels:
+        app: enmasse
+      name: console
+    spec:
+      ports:
+      - name: amqp-ws
+        port: 5672
+        targetPort: 56720
+      - name: http
+        port: 8080
+      selector:
+        name: admin
+  - apiVersion: v1
+    kind: Service
+    metadata:
+      annotations:
+        addressSpace: "${ADDRESS_SPACE}"
+        service.alpha.openshift.io/dependencies: '[{"kind": "Service", "name": "queue-scheduler",
+          "namespace": ""}, {"kind": "Service", "name": "configuration", "namespace":
+          ""}, {"kind": "Service", "name": "ragent", "namespace": ""}, {"kind": "Service",
+          "name": "console", "namespace": ""}, {"kind": "Service", "name": "subscription",
+          "namespace": ""}, {"kind": "Service", "name": "mqtt", "namespace": ""}]'
+        service.alpha.openshift.io/infrastructure: 'true'
+      labels:
+        app: enmasse
+      name: messaging
+    spec:
+      ports:
+      - name: amqp
+        port: 5672
+        protocol: TCP
+        targetPort: 5672
+      - name: amqps
+        port: 5671
+        protocol: TCP
+        targetPort: 5671
+      - name: amqps-normal
+        port: 55671
+        protocol: TCP
+        targetPort: amqps-normal
+      - name: amqps-broker
+        port: 56671
+        protocol: TCP
+        targetPort: amqps-broker
+      - name: inter-router
+        port: 55672
+        protocol: TCP
+        targetPort: 55672
+      selector:
+        capability: router
+  - apiVersion: v1
+    kind: Service
+    metadata:
+      annotations:
+        addressSpace: "${ADDRESS_SPACE}"
+      labels:
+        app: enmasse
+      name: subscription
+    spec:
+      ports:
+      - name: amqp
+        port: 5672
+        protocol: TCP
+        targetPort: 5672
+      selector:
+        name: subserv
+  - apiVersion: v1
+    kind: Service
+    metadata:
+      annotations:
+        addressSpace: "${ADDRESS_SPACE}"
+      labels:
+        app: enmasse
+      name: mqtt
+    spec:
+      ports:
+      - name: mqtt
+        port: 1883
+        protocol: TCP
+        targetPort: 1883
+      - name: secure-mqtt
+        port: 8883
+        protocol: TCP
+        targetPort: 8883
+      selector:
+        name: mqtt-gateway
+      type: ClusterIP
   - apiVersion: extensions/v1beta1
     kind: Deployment
     metadata:
@@ -748,44 +884,6 @@ objects:
           - name: router-internal-cert
             secret:
               secretName: router-internal-cert
-  - apiVersion: v1
-    kind: Service
-    metadata:
-      annotations:
-        addressSpace: "${ADDRESS_SPACE}"
-        service.alpha.openshift.io/dependencies: '[{"kind": "Service", "name": "queue-scheduler",
-          "namespace": ""}, {"kind": "Service", "name": "configuration", "namespace":
-          ""}, {"kind": "Service", "name": "ragent", "namespace": ""}, {"kind": "Service",
-          "name": "console", "namespace": ""}, {"kind": "Service", "name": "subscription",
-          "namespace": ""}, {"kind": "Service", "name": "mqtt", "namespace": ""}]'
-        service.alpha.openshift.io/infrastructure: 'true'
-      labels:
-        app: enmasse
-      name: messaging
-    spec:
-      ports:
-      - name: amqp
-        port: 5672
-        protocol: TCP
-        targetPort: 5672
-      - name: amqps
-        port: 5671
-        protocol: TCP
-        targetPort: 5671
-      - name: amqps-normal
-        port: 55671
-        protocol: TCP
-        targetPort: amqps-normal
-      - name: amqps-broker
-        port: 56671
-        protocol: TCP
-        targetPort: amqps-broker
-      - name: inter-router
-        port: 55672
-        protocol: TCP
-        targetPort: 55672
-      selector:
-        capability: router
   - apiVersion: extensions/v1beta1
     kind: Deployment
     metadata:
@@ -829,22 +927,6 @@ objects:
           - name: subserv-internal-cert
             secret:
               secretName: subserv-internal-cert
-  - apiVersion: v1
-    kind: Service
-    metadata:
-      annotations:
-        addressSpace: "${ADDRESS_SPACE}"
-      labels:
-        app: enmasse
-      name: subscription
-    spec:
-      ports:
-      - name: amqp
-        port: 5672
-        protocol: TCP
-        targetPort: 5672
-      selector:
-        name: subserv
   - apiVersion: extensions/v1beta1
     kind: Deployment
     metadata:
@@ -893,27 +975,6 @@ objects:
           - name: ssl-certs
             secret:
               secretName: "${MQTT_SECRET}"
-  - apiVersion: v1
-    kind: Service
-    metadata:
-      annotations:
-        addressSpace: "${ADDRESS_SPACE}"
-      labels:
-        app: enmasse
-      name: mqtt
-    spec:
-      ports:
-      - name: mqtt
-        port: 1883
-        protocol: TCP
-        targetPort: 1883
-      - name: secure-mqtt
-        port: 8883
-        protocol: TCP
-        targetPort: 8883
-      selector:
-        name: mqtt-gateway
-      type: ClusterIP
   - apiVersion: extensions/v1beta1
     kind: Deployment
     metadata:
@@ -958,6 +1019,12 @@ objects:
     kind: Secret
     metadata:
       name: authservice-ca
+  - apiVersion: v1
+    data:
+      tls.crt: "${ADDRESS_CONTROLLER_CA_CERT}"
+    kind: Secret
+    metadata:
+      name: address-controller-ca
   - apiVersion: v1
     data:
       hawkular-openshift-agent: '{"endpoints": [{"collection_interval": "60s", "metrics":
@@ -1077,6 +1144,10 @@ objects:
               value: "${ADDRESS_SPACE_SERVICE_HOST}"
             - name: ADDRESS_SPACE
               value: "${ADDRESS_SPACE}"
+            - name: ADDRESS_CONTROLLER_CA
+              value: "/opt/console/address-controller-ca/tls.crt"
+            - name: ADDRESS_SPACE_PASSWORD_FILE
+              value: "/opt/console/address-space-credentials/api.passwd"
             - name: AUTHENTICATION_SERVICE_HOST
               value: "${AUTHENTICATION_SERVICE_HOST}"
             - name: AUTHENTICATION_SERVICE_PORT
@@ -1110,6 +1181,12 @@ objects:
             - mountPath: "/etc/enmasse-certs"
               name: admin-internal-cert
               readOnly: true
+            - mountPath: "/opt/console/address-controller-ca"
+              name: address-controller-ca
+              readOnly: true
+            - mountPath: "/opt/console/address-space-credentials"
+              name: address-space-credentials
+              readOnly: true
           - env:
             - name: CERT_DIR
               value: "/etc/enmasse-certs"
@@ -1135,70 +1212,21 @@ objects:
           - name: authservice-ca
             secret:
               secretName: authservice-ca
+          - name: address-controller-ca
+            secret:
+              secretName: address-controller-ca
           - name: admin-internal-cert
             secret:
               secretName: admin-internal-cert
+          - name: address-space-credentials
+            secret:
+              secretName: address-space-credentials
   - apiVersion: v1
-    kind: Service
+    data:
+      api.passwd: "${ADDRESS_SPACE_PASSWORD}"
+    kind: Secret
     metadata:
-      annotations:
-        addressSpace: "${ADDRESS_SPACE}"
-      labels:
-        app: enmasse
-      name: ragent
-    spec:
-      ports:
-      - name: amqp
-        port: 5671
-        targetPort: 55671
-      selector:
-        name: admin
-  - apiVersion: v1
-    kind: Service
-    metadata:
-      annotations:
-        addressSpace: "${ADDRESS_SPACE}"
-      labels:
-        app: enmasse
-      name: configuration
-    spec:
-      ports:
-      - name: amqps
-        port: 5671
-      selector:
-        name: admin
-  - apiVersion: v1
-    kind: Service
-    metadata:
-      annotations:
-        addressSpace: "${ADDRESS_SPACE}"
-      labels:
-        app: enmasse
-      name: queue-scheduler
-    spec:
-      ports:
-      - name: amqp
-        port: 5672
-        targetPort: 55667
-      selector:
-        name: admin
-  - apiVersion: v1
-    kind: Service
-    metadata:
-      annotations:
-        addressSpace: "${ADDRESS_SPACE}"
-      labels:
-        app: enmasse
-      name: console
-    spec:
-      ports:
-      - name: amqp-ws
-        port: 5672
-        targetPort: 56720
-      - name: http
-        port: 8080
-      selector:
-        name: admin
+      name: address-space-credentials
   - apiVersion: v1
     kind: Service
     metadata:
@@ -1320,6 +1348,10 @@ objects:
     name: AUTHENTICATION_SERVICE_CLIENT_SECRET
   - description: The hostname to use in sasl init
     name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
+  - description: The CA cert to use for validating address controller identity
+    name: ADDRESS_CONTROLLER_CA_CERT
+  - description: Password for authenticating against address controller
+    name: ADDRESS_SPACE_PASSWORD
   - description: The image to use for the AMQP Kafka Bridge
     name: AMQP_KAFKA_BRIDGE_REPO
     value: docker.io/enmasseproject/amqp-kafka-bridge:latest
@@ -1399,6 +1431,8 @@ objects:
             value: "${MULTIINSTANCE}"
           - name: CA_DIR
             value: "/ca-cert"
+          - name: ADDRESS_SPACE_USER_DB_SECRET_NAME
+            value: "${ADDRESS_CONTROLLER_USER_DB_SECRET}"
           image: "${ADDRESS_CONTROLLER_REPO}"
           livenessProbe:
             tcpSocket:
@@ -1434,6 +1468,11 @@ objects:
         - name: address-controller-cert
           secret:
             secretName: "${ADDRESS_CONTROLLER_CERT_SECRET}"
+- apiVersion: v1
+  data: {}
+  kind: Secret
+  metadata:
+    name: "${ADDRESS_CONTROLLER_USER_DB_SECRET}"
 - apiVersion: v1
   kind: Service
   metadata:
@@ -1494,3 +1533,6 @@ parameters:
 - description: The secret to use for the none-authservice certificate
   name: NONE_AUTHSERVICE_CERT_SECRET_NAME
   value: none-authservice-cert
+- description: Secret containing the user database
+  name: ADDRESS_CONTROLLER_USER_DB_SECRET
+  value: ''

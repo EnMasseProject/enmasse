@@ -5,15 +5,51 @@ items:
   data:
     enmasse-instance-infra.json: '{"apiVersion": "v1", "kind": "Template", "metadata":
       {"labels": {"app": "enmasse"}, "name": "enmasse-instance-infra"}, "objects":
-      [{"apiVersion": "extensions/v1beta1", "kind": "Deployment", "metadata": {"annotations":
-      {"addressSpace": "${ADDRESS_SPACE}", "io.enmasse.certSecretName": "router-internal-cert"},
-      "labels": {"app": "enmasse", "name": "qdrouterd"}, "name": "qdrouterd"}, "spec":
-      {"replicas": 1, "template": {"metadata": {"annotations": {"addressSpace": "${ADDRESS_SPACE}"},
-      "labels": {"app": "enmasse", "capability": "router", "name": "qdrouterd"}},
-      "spec": {"containers": [{"env": [{"name": "LINK_CAPACITY", "value": "${ROUTER_LINK_CAPACITY}"},
-      {"name": "AUTHENTICATION_SERVICE_HOST", "value": "${AUTHENTICATION_SERVICE_HOST}"},
-      {"name": "AUTHENTICATION_SERVICE_PORT", "value": "${AUTHENTICATION_SERVICE_PORT}"},
-      {"name": "AUTHENTICATION_SERVICE_CLIENT_SECRET", "value": "${AUTHENTICATION_SERVICE_CLIENT_SECRET}"},
+      [{"apiVersion": "v1", "kind": "Service", "metadata": {"annotations": {"addressSpace":
+      "${ADDRESS_SPACE}"}, "labels": {"app": "enmasse"}, "name": "ragent"}, "spec":
+      {"ports": [{"name": "amqp", "port": 5671, "targetPort": 55671}], "selector":
+      {"name": "admin"}}}, {"apiVersion": "v1", "kind": "Service", "metadata": {"annotations":
+      {"addressSpace": "${ADDRESS_SPACE}"}, "labels": {"app": "enmasse"}, "name":
+      "configuration"}, "spec": {"ports": [{"name": "amqps", "port": 5671}], "selector":
+      {"name": "admin"}}}, {"apiVersion": "v1", "kind": "Service", "metadata": {"annotations":
+      {"addressSpace": "${ADDRESS_SPACE}"}, "labels": {"app": "enmasse"}, "name":
+      "queue-scheduler"}, "spec": {"ports": [{"name": "amqp", "port": 5672, "targetPort":
+      55667}], "selector": {"name": "admin"}}}, {"apiVersion": "v1", "kind": "Service",
+      "metadata": {"annotations": {"addressSpace": "${ADDRESS_SPACE}"}, "labels":
+      {"app": "enmasse"}, "name": "console"}, "spec": {"ports": [{"name": "amqp-ws",
+      "port": 5672, "targetPort": 56720}, {"name": "http", "port": 8080}], "selector":
+      {"name": "admin"}}}, {"apiVersion": "v1", "kind": "Service", "metadata": {"annotations":
+      {"addressSpace": "${ADDRESS_SPACE}", "service.alpha.openshift.io/dependencies":
+      "[{\"kind\": \"Service\", \"name\": \"queue-scheduler\", \"namespace\": \"\"},
+      {\"kind\": \"Service\", \"name\": \"configuration\", \"namespace\": \"\"}, {\"kind\":
+      \"Service\", \"name\": \"ragent\", \"namespace\": \"\"}, {\"kind\": \"Service\",
+      \"name\": \"console\", \"namespace\": \"\"}, {\"kind\": \"Service\", \"name\":
+      \"subscription\", \"namespace\": \"\"}, {\"kind\": \"Service\", \"name\": \"mqtt\",
+      \"namespace\": \"\"}]", "service.alpha.openshift.io/infrastructure": "true"},
+      "labels": {"app": "enmasse"}, "name": "messaging"}, "spec": {"ports": [{"name":
+      "amqp", "port": 5672, "protocol": "TCP", "targetPort": 5672}, {"name": "amqps",
+      "port": 5671, "protocol": "TCP", "targetPort": 5671}, {"name": "amqps-normal",
+      "port": 55671, "protocol": "TCP", "targetPort": "amqps-normal"}, {"name": "amqps-broker",
+      "port": 56671, "protocol": "TCP", "targetPort": "amqps-broker"}, {"name": "inter-router",
+      "port": 55672, "protocol": "TCP", "targetPort": 55672}], "selector": {"capability":
+      "router"}}}, {"apiVersion": "v1", "kind": "Service", "metadata": {"annotations":
+      {"addressSpace": "${ADDRESS_SPACE}"}, "labels": {"app": "enmasse"}, "name":
+      "subscription"}, "spec": {"ports": [{"name": "amqp", "port": 5672, "protocol":
+      "TCP", "targetPort": 5672}], "selector": {"name": "subserv"}}}, {"apiVersion":
+      "v1", "kind": "Service", "metadata": {"annotations": {"addressSpace": "${ADDRESS_SPACE}"},
+      "labels": {"app": "enmasse"}, "name": "mqtt"}, "spec": {"ports": [{"name": "mqtt",
+      "port": 1883, "protocol": "TCP", "targetPort": 1883}, {"name": "secure-mqtt",
+      "port": 8883, "protocol": "TCP", "targetPort": 8883}], "selector": {"name":
+      "mqtt-gateway"}, "type": "ClusterIP"}}, {"apiVersion": "extensions/v1beta1",
+      "kind": "Deployment", "metadata": {"annotations": {"addressSpace": "${ADDRESS_SPACE}",
+      "io.enmasse.certSecretName": "router-internal-cert"}, "labels": {"app": "enmasse",
+      "name": "qdrouterd"}, "name": "qdrouterd"}, "spec": {"replicas": 1, "template":
+      {"metadata": {"annotations": {"addressSpace": "${ADDRESS_SPACE}"}, "labels":
+      {"app": "enmasse", "capability": "router", "name": "qdrouterd"}}, "spec": {"containers":
+      [{"env": [{"name": "LINK_CAPACITY", "value": "${ROUTER_LINK_CAPACITY}"}, {"name":
+      "AUTHENTICATION_SERVICE_HOST", "value": "${AUTHENTICATION_SERVICE_HOST}"}, {"name":
+      "AUTHENTICATION_SERVICE_PORT", "value": "${AUTHENTICATION_SERVICE_PORT}"}, {"name":
+      "AUTHENTICATION_SERVICE_CLIENT_SECRET", "value": "${AUTHENTICATION_SERVICE_CLIENT_SECRET}"},
       {"name": "AUTHENTICATION_SERVICE_SASL_INIT_HOST", "value": "${AUTHENTICATION_SERVICE_SASL_INIT_HOST}"}],
       "image": "${ROUTER_REPO}", "livenessProbe": {"tcpSocket": {"port": "amqp"}},
       "name": "router", "ports": [{"containerPort": 5672, "name": "amqp", "protocol":
@@ -31,65 +67,44 @@ items:
       "name": "hawkular-openshift-agent"}, {"name": "ssl-certs", "secret": {"secretName":
       "${ROUTER_SECRET}"}}, {"name": "authservice-ca", "secret": {"secretName": "authservice-ca"}},
       {"name": "router-internal-cert", "secret": {"secretName": "router-internal-cert"}}]}}}},
-      {"apiVersion": "v1", "kind": "Service", "metadata": {"annotations": {"addressSpace":
-      "${ADDRESS_SPACE}", "service.alpha.openshift.io/dependencies": "[{\"kind\":
-      \"Service\", \"name\": \"queue-scheduler\", \"namespace\": \"\"}, {\"kind\":
-      \"Service\", \"name\": \"configuration\", \"namespace\": \"\"}, {\"kind\": \"Service\",
-      \"name\": \"ragent\", \"namespace\": \"\"}, {\"kind\": \"Service\", \"name\":
-      \"console\", \"namespace\": \"\"}, {\"kind\": \"Service\", \"name\": \"subscription\",
-      \"namespace\": \"\"}, {\"kind\": \"Service\", \"name\": \"mqtt\", \"namespace\":
-      \"\"}]", "service.alpha.openshift.io/infrastructure": "true"}, "labels": {"app":
-      "enmasse"}, "name": "messaging"}, "spec": {"ports": [{"name": "amqp", "port":
-      5672, "protocol": "TCP", "targetPort": 5672}, {"name": "amqps", "port": 5671,
-      "protocol": "TCP", "targetPort": 5671}, {"name": "amqps-normal", "port": 55671,
-      "protocol": "TCP", "targetPort": "amqps-normal"}, {"name": "amqps-broker", "port":
-      56671, "protocol": "TCP", "targetPort": "amqps-broker"}, {"name": "inter-router",
-      "port": 55672, "protocol": "TCP", "targetPort": 55672}], "selector": {"capability":
-      "router"}}}, {"apiVersion": "extensions/v1beta1", "kind": "Deployment", "metadata":
-      {"annotations": {"addressSpace": "${ADDRESS_SPACE}", "io.enmasse.certSecretName":
-      "subserv-internal-cert"}, "labels": {"app": "enmasse", "name": "subserv"}, "name":
-      "subserv"}, "spec": {"replicas": 1, "template": {"metadata": {"annotations":
-      {"addressSpace": "${ADDRESS_SPACE}"}, "labels": {"app": "enmasse", "name": "subserv"}},
-      "spec": {"containers": [{"image": "${SUBSERV_REPO}", "livenessProbe": {"tcpSocket":
-      {"port": "amqp"}}, "name": "subserv", "ports": [{"containerPort": 5672, "name":
-      "amqp", "protocol": "TCP"}], "resources": {"limits": {"memory": "64Mi"}, "requests":
-      {"memory": "64Mi"}}, "volumeMounts": [{"mountPath": "/etc/enmasse-certs", "name":
-      "subserv-internal-cert", "readOnly": true}]}], "volumes": [{"name": "subserv-internal-cert",
-      "secret": {"secretName": "subserv-internal-cert"}}]}}}}, {"apiVersion": "v1",
-      "kind": "Service", "metadata": {"annotations": {"addressSpace": "${ADDRESS_SPACE}"},
-      "labels": {"app": "enmasse"}, "name": "subscription"}, "spec": {"ports": [{"name":
-      "amqp", "port": 5672, "protocol": "TCP", "targetPort": 5672}], "selector": {"name":
-      "subserv"}}}, {"apiVersion": "extensions/v1beta1", "kind": "Deployment", "metadata":
-      {"annotations": {"addressSpace": "${ADDRESS_SPACE}"}, "labels": {"app": "enmasse",
-      "name": "mqtt-gateway"}, "name": "mqtt-gateway"}, "spec": {"replicas": 1, "template":
+      {"apiVersion": "extensions/v1beta1", "kind": "Deployment", "metadata": {"annotations":
+      {"addressSpace": "${ADDRESS_SPACE}", "io.enmasse.certSecretName": "subserv-internal-cert"},
+      "labels": {"app": "enmasse", "name": "subserv"}, "name": "subserv"}, "spec":
+      {"replicas": 1, "template": {"metadata": {"annotations": {"addressSpace": "${ADDRESS_SPACE}"},
+      "labels": {"app": "enmasse", "name": "subserv"}}, "spec": {"containers": [{"image":
+      "${SUBSERV_REPO}", "livenessProbe": {"tcpSocket": {"port": "amqp"}}, "name":
+      "subserv", "ports": [{"containerPort": 5672, "name": "amqp", "protocol": "TCP"}],
+      "resources": {"limits": {"memory": "64Mi"}, "requests": {"memory": "64Mi"}},
+      "volumeMounts": [{"mountPath": "/etc/enmasse-certs", "name": "subserv-internal-cert",
+      "readOnly": true}]}], "volumes": [{"name": "subserv-internal-cert", "secret":
+      {"secretName": "subserv-internal-cert"}}]}}}}, {"apiVersion": "extensions/v1beta1",
+      "kind": "Deployment", "metadata": {"annotations": {"addressSpace": "${ADDRESS_SPACE}"},
+      "labels": {"app": "enmasse", "name": "mqtt-gateway"}, "name": "mqtt-gateway"},
+      "spec": {"replicas": 1, "template": {"metadata": {"annotations": {"addressSpace":
+      "${ADDRESS_SPACE}"}, "labels": {"app": "enmasse", "name": "mqtt-gateway"}},
+      "spec": {"containers": [{"image": "${MQTT_GATEWAY_REPO}", "livenessProbe": {"initialDelaySeconds":
+      60, "tcpSocket": {"port": "secure-mqtt"}}, "name": "mqtt-gateway-tls", "ports":
+      [{"containerPort": 8883, "name": "secure-mqtt", "protocol": "TCP"}], "volumeMounts":
+      [{"mountPath": "/etc/mqtt-gateway/ssl", "name": "ssl-certs", "readOnly": true}]},
+      {"image": "${MQTT_GATEWAY_REPO}", "livenessProbe": {"initialDelaySeconds": 60,
+      "tcpSocket": {"port": "mqtt"}}, "name": "mqtt-gateway", "ports": [{"containerPort":
+      1883, "name": "mqtt", "protocol": "TCP"}]}], "volumes": [{"name": "ssl-certs",
+      "secret": {"secretName": "${MQTT_SECRET}"}}]}}}}, {"apiVersion": "extensions/v1beta1",
+      "kind": "Deployment", "metadata": {"annotations": {"addressSpace": "${ADDRESS_SPACE}",
+      "io.enmasse.certSecretName": "mqtt-lwt-internal-cert"}, "labels": {"app": "enmasse",
+      "name": "mqtt-lwt"}, "name": "mqtt-lwt"}, "spec": {"replicas": 1, "template":
       {"metadata": {"annotations": {"addressSpace": "${ADDRESS_SPACE}"}, "labels":
-      {"app": "enmasse", "name": "mqtt-gateway"}}, "spec": {"containers": [{"image":
-      "${MQTT_GATEWAY_REPO}", "livenessProbe": {"initialDelaySeconds": 60, "tcpSocket":
-      {"port": "secure-mqtt"}}, "name": "mqtt-gateway-tls", "ports": [{"containerPort":
-      8883, "name": "secure-mqtt", "protocol": "TCP"}], "volumeMounts": [{"mountPath":
-      "/etc/mqtt-gateway/ssl", "name": "ssl-certs", "readOnly": true}]}, {"image":
-      "${MQTT_GATEWAY_REPO}", "livenessProbe": {"initialDelaySeconds": 60, "tcpSocket":
-      {"port": "mqtt"}}, "name": "mqtt-gateway", "ports": [{"containerPort": 1883,
-      "name": "mqtt", "protocol": "TCP"}]}], "volumes": [{"name": "ssl-certs", "secret":
-      {"secretName": "${MQTT_SECRET}"}}]}}}}, {"apiVersion": "v1", "kind": "Service",
-      "metadata": {"annotations": {"addressSpace": "${ADDRESS_SPACE}"}, "labels":
-      {"app": "enmasse"}, "name": "mqtt"}, "spec": {"ports": [{"name": "mqtt", "port":
-      1883, "protocol": "TCP", "targetPort": 1883}, {"name": "secure-mqtt", "port":
-      8883, "protocol": "TCP", "targetPort": 8883}], "selector": {"name": "mqtt-gateway"},
-      "type": "ClusterIP"}}, {"apiVersion": "extensions/v1beta1", "kind": "Deployment",
-      "metadata": {"annotations": {"addressSpace": "${ADDRESS_SPACE}", "io.enmasse.certSecretName":
-      "mqtt-lwt-internal-cert"}, "labels": {"app": "enmasse", "name": "mqtt-lwt"},
-      "name": "mqtt-lwt"}, "spec": {"replicas": 1, "template": {"metadata": {"annotations":
-      {"addressSpace": "${ADDRESS_SPACE}"}, "labels": {"app": "enmasse", "name": "mqtt-lwt"}},
-      "spec": {"containers": [{"env": [{"name": "CERT_DIR", "value": "/etc/enmasse-certs"},
-      {"name": "MESSAGING_SERVICE_NORMAL_PORT", "value": "$(MESSAGING_SERVICE_PORT_AMQPS_NORMAL)"},
-      {"name": "MESSAGING_SERVICE_ROUTE_CONTAINER_PORT", "value": "$(MESSAGING_SERVICE_PORT_AMQPS_BROKER)"}],
-      "image": "${MQTT_LWT_REPO}", "name": "mqtt-lwt", "volumeMounts": [{"mountPath":
-      "/etc/enmasse-certs", "name": "mqtt-lwt-internal-cert", "readOnly": true}]}],
-      "volumes": [{"name": "mqtt-lwt-internal-cert", "secret": {"secretName": "mqtt-lwt-internal-cert"}}]}}}},
-      {"apiVersion": "v1", "data": {"tls.crt": "${AUTHENTICATION_SERVICE_CA_CERT}"},
-      "kind": "Secret", "metadata": {"name": "authservice-ca"}}, {"apiVersion": "v1",
-      "data": {"hawkular-openshift-agent": "{\"endpoints\": [{\"collection_interval\":
+      {"app": "enmasse", "name": "mqtt-lwt"}}, "spec": {"containers": [{"env": [{"name":
+      "CERT_DIR", "value": "/etc/enmasse-certs"}, {"name": "MESSAGING_SERVICE_NORMAL_PORT",
+      "value": "$(MESSAGING_SERVICE_PORT_AMQPS_NORMAL)"}, {"name": "MESSAGING_SERVICE_ROUTE_CONTAINER_PORT",
+      "value": "$(MESSAGING_SERVICE_PORT_AMQPS_BROKER)"}], "image": "${MQTT_LWT_REPO}",
+      "name": "mqtt-lwt", "volumeMounts": [{"mountPath": "/etc/enmasse-certs", "name":
+      "mqtt-lwt-internal-cert", "readOnly": true}]}], "volumes": [{"name": "mqtt-lwt-internal-cert",
+      "secret": {"secretName": "mqtt-lwt-internal-cert"}}]}}}}, {"apiVersion": "v1",
+      "data": {"tls.crt": "${AUTHENTICATION_SERVICE_CA_CERT}"}, "kind": "Secret",
+      "metadata": {"name": "authservice-ca"}}, {"apiVersion": "v1", "data": {"tls.crt":
+      "${ADDRESS_CONTROLLER_CA_CERT}"}, "kind": "Secret", "metadata": {"name": "address-controller-ca"}},
+      {"apiVersion": "v1", "data": {"hawkular-openshift-agent": "{\"endpoints\": [{\"collection_interval\":
       \"60s\", \"metrics\": [{\"id\": \"broker.threadCount\", \"name\": \"java.lang:type=Threading#ThreadCount\",
       \"tags\": {\"messagingComponent\": \"broker\", \"messagingMetricType\": \"threadCount\"},
       \"type\": \"counter\"}, {\"id\": \"broker.memoryHeapUsage\", \"name\": \"java.lang:type=Memory#HeapMemoryUsage#used\",
@@ -138,7 +153,9 @@ items:
       true}]}, {"env": [{"name": "CONFIGURATION_SERVICE_HOST", "value": "localhost"},
       {"name": "CONFIGURATION_SERVICE_PORT", "value": "5671"}, {"name": "ADDRESS_SPACE_SERVICE_HOST",
       "value": "${ADDRESS_SPACE_SERVICE_HOST}"}, {"name": "ADDRESS_SPACE", "value":
-      "${ADDRESS_SPACE}"}, {"name": "AUTHENTICATION_SERVICE_HOST", "value": "${AUTHENTICATION_SERVICE_HOST}"},
+      "${ADDRESS_SPACE}"}, {"name": "ADDRESS_CONTROLLER_CA", "value": "/opt/console/address-controller-ca/tls.crt"},
+      {"name": "ADDRESS_SPACE_PASSWORD_FILE", "value": "/opt/console/address-space-credentials/api.passwd"},
+      {"name": "AUTHENTICATION_SERVICE_HOST", "value": "${AUTHENTICATION_SERVICE_HOST}"},
       {"name": "AUTHENTICATION_SERVICE_PORT", "value": "${AUTHENTICATION_SERVICE_PORT}"},
       {"name": "AUTHENTICATION_SERVICE_CLIENT_SECRET", "value": "${AUTHENTICATION_SERVICE_CLIENT_SECRET}"},
       {"name": "AUTHENTICATION_SERVICE_SASL_INIT_HOST", "value": "${AUTHENTICATION_SERVICE_SASL_INIT_HOST}"}],
@@ -148,27 +165,20 @@ items:
       "TCP"}], "resources": {"limits": {"memory": "64Mi"}, "requests": {"memory":
       "64Mi"}}, "volumeMounts": [{"mountPath": "/opt/console/authservice-ca", "name":
       "authservice-ca", "readOnly": true}, {"mountPath": "/etc/enmasse-certs", "name":
-      "admin-internal-cert", "readOnly": true}]}, {"env": [{"name": "CERT_DIR", "value":
-      "/etc/enmasse-certs"}], "image": "${CONFIGSERV_REPO}", "livenessProbe": {"tcpSocket":
-      {"port": "amqps"}}, "name": "configserv", "ports": [{"containerPort": 5671,
-      "name": "amqps", "protocol": "TCP"}], "resources": {"limits": {"memory": "256Mi"},
-      "requests": {"memory": "256Mi"}}, "volumeMounts": [{"mountPath": "/etc/enmasse-certs",
-      "name": "admin-internal-cert", "readOnly": true}]}], "volumes": [{"name": "authservice-ca",
-      "secret": {"secretName": "authservice-ca"}}, {"name": "admin-internal-cert",
-      "secret": {"secretName": "admin-internal-cert"}}]}}}}, {"apiVersion": "v1",
-      "kind": "Service", "metadata": {"annotations": {"addressSpace": "${ADDRESS_SPACE}"},
-      "labels": {"app": "enmasse"}, "name": "ragent"}, "spec": {"ports": [{"name":
-      "amqp", "port": 5671, "targetPort": 55671}], "selector": {"name": "admin"}}},
-      {"apiVersion": "v1", "kind": "Service", "metadata": {"annotations": {"addressSpace":
-      "${ADDRESS_SPACE}"}, "labels": {"app": "enmasse"}, "name": "configuration"},
-      "spec": {"ports": [{"name": "amqps", "port": 5671}], "selector": {"name": "admin"}}},
-      {"apiVersion": "v1", "kind": "Service", "metadata": {"annotations": {"addressSpace":
-      "${ADDRESS_SPACE}"}, "labels": {"app": "enmasse"}, "name": "queue-scheduler"},
-      "spec": {"ports": [{"name": "amqp", "port": 5672, "targetPort": 55667}], "selector":
-      {"name": "admin"}}}, {"apiVersion": "v1", "kind": "Service", "metadata": {"annotations":
-      {"addressSpace": "${ADDRESS_SPACE}"}, "labels": {"app": "enmasse"}, "name":
-      "console"}, "spec": {"ports": [{"name": "amqp-ws", "port": 5672, "targetPort":
-      56720}, {"name": "http", "port": 8080}], "selector": {"name": "admin"}}}], "parameters":
+      "admin-internal-cert", "readOnly": true}, {"mountPath": "/opt/console/address-controller-ca",
+      "name": "address-controller-ca", "readOnly": true}, {"mountPath": "/opt/console/address-space-credentials",
+      "name": "address-space-credentials", "readOnly": true}]}, {"env": [{"name":
+      "CERT_DIR", "value": "/etc/enmasse-certs"}], "image": "${CONFIGSERV_REPO}",
+      "livenessProbe": {"tcpSocket": {"port": "amqps"}}, "name": "configserv", "ports":
+      [{"containerPort": 5671, "name": "amqps", "protocol": "TCP"}], "resources":
+      {"limits": {"memory": "256Mi"}, "requests": {"memory": "256Mi"}}, "volumeMounts":
+      [{"mountPath": "/etc/enmasse-certs", "name": "admin-internal-cert", "readOnly":
+      true}]}], "volumes": [{"name": "authservice-ca", "secret": {"secretName": "authservice-ca"}},
+      {"name": "address-controller-ca", "secret": {"secretName": "address-controller-ca"}},
+      {"name": "admin-internal-cert", "secret": {"secretName": "admin-internal-cert"}},
+      {"name": "address-space-credentials", "secret": {"secretName": "address-space-credentials"}}]}}}},
+      {"apiVersion": "v1", "data": {"api.passwd": "${ADDRESS_SPACE_PASSWORD}"}, "kind":
+      "Secret", "metadata": {"name": "address-space-credentials"}}], "parameters":
       [{"description": "Hostname where API server can be reached", "name": "ADDRESS_SPACE_SERVICE_HOST",
       "value": ""}, {"description": "The image to use for the router", "name": "ROUTER_REPO",
       "value": "docker.io/enmasseproject/router:latest"}, {"description": "The image
@@ -202,7 +212,10 @@ items:
       "name": "AUTHENTICATION_SERVICE_CA_CERT"}, {"description": "The client cert
       to use as identity against authentication service", "name": "AUTHENTICATION_SERVICE_CLIENT_SECRET"},
       {"description": "The hostname to use in sasl init", "name": "AUTHENTICATION_SERVICE_SASL_INIT_HOST"},
-      {"description": "The image to use for the AMQP Kafka Bridge", "name": "AMQP_KAFKA_BRIDGE_REPO",
+      {"description": "The CA cert to use for validating address controller identity",
+      "name": "ADDRESS_CONTROLLER_CA_CERT"}, {"description": "Password for authenticating
+      against address controller", "name": "ADDRESS_SPACE_PASSWORD"}, {"description":
+      "The image to use for the AMQP Kafka Bridge", "name": "AMQP_KAFKA_BRIDGE_REPO",
       "value": "docker.io/enmasseproject/amqp-kafka-bridge:latest"}, {"description":
       "A list of host/port pairs to use for establishing the initial connection to
       the Kafka cluster", "name": "KAFKA_BOOTSTRAP_SERVERS"}]}'
@@ -495,6 +508,8 @@ items:
             value: 'false'
           - name: CA_DIR
             value: "/ca-cert"
+          - name: ADDRESS_SPACE_USER_DB_SECRET_NAME
+            value: ''
           image: docker.io/enmasseproject/address-controller:latest
           livenessProbe:
             tcpSocket:

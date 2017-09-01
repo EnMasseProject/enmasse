@@ -98,6 +98,16 @@
     }
   },
 
+  empty_secret(name)::
+  {
+    "apiVersion": "v1",
+    "kind": "Secret",
+    "metadata": {
+      "name": name
+    },
+    "data": {}
+  },
+
   ca_secret(name, cert_value)::
   {
     "apiVersion": "v1",
