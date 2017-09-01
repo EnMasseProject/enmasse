@@ -37,6 +37,12 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
 
     @Override
     public void resourcesUpdated(Set<Address> resources) throws Exception {
-
+        /**
+         * TODO:
+         *
+         * For each broker in the deployment:
+         * * Delete queues and topics that should no longer exist
+         * * Create queues and topics that should exist
+         */
     }
 }
