@@ -31,7 +31,21 @@ local common = import "common.jsonnet";
     self.service("console", addressSpace, [{"name": "amqp-ws", "port": 5672, "targetPort": 56720}, {"name": "http", "port": 8080}])
   ],
 
-  deployment(addressSpace, configserv_image, ragent_image, scheduler_image, console_image, auth_service_ca_secret)::
+
+  password_secret(name, value)::
+  {
+    "apiVersion": "v1",
+    "kind": "Secret",
+    "metadata": {
+      "name": name
+    },
+    "data": {
+      "api.passwd": value
+    }
+  },
+
+
+  deployment(addressSpace, configserv_image, ragent_image, scheduler_image, console_image, auth_service_ca_secret, address_controller_ca_secret)::
   {
     "apiVersion": "extensions/v1beta1",
     "kind": "Deployment",
@@ -151,8 +165,15 @@ local common = import "common.jsonnet";
                       {
                         "name": "ADDRESS_SPACE",
                         "value": addressSpace
-                      }
-                      ]) + {
+                      },
+                      {
+                        "name": "ADDRESS_CONTROLLER_CA",
+                        "value": "/opt/console/address-controller-ca/tls.crt"
+                      },
+                      {
+                        "name": "ADDRESS_SPACE_PASSWORD_FILE",
+                        "value": "/opt/console/address-space-credentials/api.passwd"
+                      }]) + {
                         "volumeMounts": [
                           {
                             "name": "authservice-ca",
@@ -162,6 +183,16 @@ local common = import "common.jsonnet";
                           {
                             "name": "admin-internal-cert",
                             "mountPath": "/etc/enmasse-certs",
+                            "readOnly": true
+                          },
+                          {
+                            "name": address_controller_ca_secret,
+                            "mountPath": "/opt/console/address-controller-ca",
+                            "readOnly": true
+                          },
+                          {
+                            "name": "address-space-credentials",
+                            "mountPath": "/opt/console/address-space-credentials",
                             "readOnly": true
                           }
                         ]
@@ -189,10 +220,22 @@ local common = import "common.jsonnet";
               }
             },
             {
+              "name": address_controller_ca_secret,
+              "secret": {
+                "secretName": address_controller_ca_secret
+              }
+            },
+            {
                 "name": "admin-internal-cert",
                 "secret": {
                     "secretName": "admin-internal-cert"
                 }
+            },
+            {
+              "name": "address-space-credentials",
+              "secret": {
+                "secretName": "address-space-credentials"
+              }
             }
           ]
         }

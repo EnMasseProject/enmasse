@@ -43,11 +43,12 @@ public final class ControllerOptions {
     private final PasswordAuthentication osbAuth;
     private final AuthServiceInfo noneAuthService;
     private final AuthServiceInfo standardAuthService;
+    private final String userDbSecretName;
 
     private ControllerOptions(String masterUrl, boolean isMultiinstance, String namespace, String token,
                               File caDir, File templateDir, String messagingHost, String mqttHost,
                               String consoleHost, String certSecret, String certDir,
-                              PasswordAuthentication osbAuth, AuthServiceInfo noneAuthService, AuthServiceInfo standardAuthService) {
+                              PasswordAuthentication osbAuth, AuthServiceInfo noneAuthService, AuthServiceInfo standardAuthService, String userDbSecretName) {
         this.masterUrl = masterUrl;
         this.isMultiinstance = isMultiinstance;
         this.namespace = namespace;
@@ -62,6 +63,7 @@ public final class ControllerOptions {
         this.osbAuth = osbAuth;
         this.noneAuthService = noneAuthService;
         this.standardAuthService = standardAuthService;
+        this.userDbSecretName = userDbSecretName;
     }
 
     public String masterUrl() {
@@ -113,6 +115,11 @@ public final class ControllerOptions {
         return Optional.ofNullable(osbAuth);
     }
 
+
+    public Optional<String> userDbSecretName() {
+        return Optional.ofNullable(userDbSecretName);
+    }
+
     public Optional<AuthServiceInfo> getNoneAuthService() {
         return Optional.ofNullable(noneAuthService);
     }
@@ -150,12 +157,13 @@ public final class ControllerOptions {
         AuthServiceInfo noneAuthService = getAuthService(env, "NONE_AUTHSERVICE_SERVICE_HOST", "NONE_AUTHSERVICE_SERVICE_PORT").orElse(null);
         AuthServiceInfo standardAuthService = getAuthService(env, "STANDARD_AUTHSERVICE_SERVICE_HOST", "STANDARD_AUTHSERVICE_SERVICE_PORT_AMQPS").orElse(null);
 
-        String certDir = getEnv(env, "CERT_PATH").orElse("/address-controller-cert");
+        String certDir = getEnv(env, "CERT_DIR").orElse("/address-controller-cert");
 
         String messagingHost = getEnv(env, "MESSAGING_ENDPOINT_HOST").orElse(null);
         String mqttHost = getEnv(env, "MQTT_ENDPOINT_HOST").orElse(null);
         String consoleHost = getEnv(env, "CONSOLE_ENDPOINT_HOST").orElse(null);
         String certSecret = getEnv(env, "MESSAGING_CERT_SECRET").orElse(null);
+        String userDbSecretName = getEnv(env, "ADDRESS_SPACE_USER_DB_SECRET_NAME").filter(str -> !str.isEmpty()).orElse(null);
 
         return new ControllerOptions(String.format("https://%s:%s", masterHost, masterPort),
                 isMultiinstance,
@@ -170,7 +178,8 @@ public final class ControllerOptions {
                 certDir,
                 osbAuth,
                 noneAuthService,
-                standardAuthService);
+                standardAuthService,
+                userDbSecretName);
     }
 
 

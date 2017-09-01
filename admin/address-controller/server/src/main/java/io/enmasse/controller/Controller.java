@@ -31,9 +31,7 @@ import io.enmasse.address.model.SecretCertProvider;
 import io.enmasse.address.model.types.AddressSpaceType;
 import io.enmasse.address.model.types.standard.StandardAddressSpaceType;
 import io.enmasse.address.model.v1.CodecV1;
-import io.enmasse.controller.auth.AuthController;
-import io.enmasse.controller.auth.CertManager;
-import io.enmasse.controller.auth.OpenSSLCertManager;
+import io.enmasse.controller.auth.*;
 import io.enmasse.controller.common.*;
 import io.enmasse.controller.standard.StandardController;
 import io.enmasse.k8s.api.AddressSpaceApi;
@@ -89,13 +87,14 @@ public class Controller extends AbstractVerticle {
             addressSpaceApi.createAddressSpace(builder.build());
         }
 
+        UserDatabase userDb = options.userDbSecretName().map(secretName -> SecretUserDatabase.create(controllerClient, options.namespace(), secretName)).orElse(null);
         CertManager certManager = OpenSSLCertManager.create(controllerClient, options.caDir(), options.namespace());
 
         deployVerticles(startPromise,
                 new Deployment(new AuthController(certManager, addressSpaceApi)),
-                new Deployment(new StandardController(controllerClient, addressSpaceApi, kubernetes, createResolverFactory(options), options.isMultiinstance())),
+                new Deployment(new StandardController(controllerClient, addressSpaceApi, kubernetes, createResolverFactory(options), options.isMultiinstance(), userDb)),
 //                new Deployment(new AMQPServer(kubernetes.getNamespace(), addressSpaceApi, options.port())),
-                new Deployment(new HTTPServer(addressSpaceApi, options.certDir(), options.osbAuth()), new DeploymentOptions().setWorker(true)));
+                new Deployment(new HTTPServer(addressSpaceApi, options.certDir(), options.osbAuth().orElse(null), userDb), new DeploymentOptions().setWorker(true)));
     }
 
     private AuthenticationServiceResolverFactory createResolverFactory(ControllerOptions options) {

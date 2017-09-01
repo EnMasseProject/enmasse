@@ -23,7 +23,7 @@ local hawkularRouterConfig = import "hawkular-router-config.jsonnet";
 local images = import "images.jsonnet";
 
 {
-  generate(with_kafka, use_routes)::
+  generate(with_kafka)::
   {
     "apiVersion": "v1",
     "kind": "Template",
@@ -33,41 +33,29 @@ local images = import "images.jsonnet";
       },
       "name": "enmasse-instance-infra"
     },
-    local common_items = [
-      qdrouterd.deployment("${ADDRESS_SPACE}", "${ROUTER_REPO}", "${ROUTER_METRICS_REPO}", "${ROUTER_SECRET}", "authservice-ca"),
+    local common_items = admin.services("${ADDRESS_SPACE}") + [
       messagingService.internal("${ADDRESS_SPACE}"),
-      subserv.deployment("${ADDRESS_SPACE}", "${SUBSERV_REPO}"),
       subserv.service("${ADDRESS_SPACE}"),
-      mqttGateway.deployment("${ADDRESS_SPACE}", "${MQTT_GATEWAY_REPO}", "${MQTT_SECRET}"),
       mqttService.internal("${ADDRESS_SPACE}"),
+      qdrouterd.deployment("${ADDRESS_SPACE}", "${ROUTER_REPO}", "${ROUTER_METRICS_REPO}", "${ROUTER_SECRET}", "authservice-ca"),
+      subserv.deployment("${ADDRESS_SPACE}", "${SUBSERV_REPO}"),
+      mqttGateway.deployment("${ADDRESS_SPACE}", "${MQTT_GATEWAY_REPO}", "${MQTT_SECRET}"),
       mqttLwt.deployment("${ADDRESS_SPACE}", "${MQTT_LWT_REPO}"),
       common.ca_secret("authservice-ca", "${AUTHENTICATION_SERVICE_CA_CERT}"),
+      common.ca_secret("address-controller-ca", "${ADDRESS_CONTROLLER_CA_CERT}"),
       hawkularBrokerConfig,
-      hawkularRouterConfig
+      hawkularRouterConfig,
+      admin.deployment("${ADDRESS_SPACE}", "${CONFIGSERV_REPO}", "${RAGENT_REPO}", "${QUEUE_SCHEDULER_REPO}", "${CONSOLE_REPO}", "authservice-ca", "address-controller-ca"),
+      admin.password_secret("address-space-credentials", "${ADDRESS_SPACE_PASSWORD}"),
     ],
-
-    local routeConfig = [ console.route("${ADDRESS_SPACE}", "${CONSOLE_HOSTNAME}"),
-      messagingRoute.generate("${ADDRESS_SPACE}", "${MESSAGING_HOSTNAME}"),
-      mqttRoute.generate("${ADDRESS_SPACE}", "${MQTT_GATEWAY_HOSTNAME}") ],
-
-    local ingressConfig = [
-      console.ingress("${ADDRESS_SPACE}", "${CONSOLE_HOSTNAME}")
-    ],
-
-    local adminObj = [
-      admin.deployment("${ADDRESS_SPACE}", "${CONFIGSERV_REPO}", "${RAGENT_REPO}", "${QUEUE_SCHEDULER_REPO}", "${CONSOLE_REPO}", "authservice-ca")
-    ] + admin.services("${ADDRESS_SPACE}"),
 
     local kafka = [
       amqpKafkaBridgeService.generate("${ADDRESS_SPACE}"),
       amqpKafkaBridge.deployment("${ADDRESS_SPACE}", "${AMQP_KAFKA_BRIDGE_REPO}")
     ],
 
-   // local routes = if use_routes then routeConfig else ingressConfig,
-
     "objects":
       common_items +
-      adminObj +
       (if with_kafka then kafka else []),
 
     local commonParameters = [
@@ -174,6 +162,14 @@ local images = import "images.jsonnet";
       {
         "name": "AUTHENTICATION_SERVICE_SASL_INIT_HOST",
         "description": "The hostname to use in sasl init",
+      },
+      {
+        "name": "ADDRESS_CONTROLLER_CA_CERT",
+        "description": "The CA cert to use for validating address controller identity"
+      },
+      {
+        "name": "ADDRESS_SPACE_PASSWORD",
+        "description": "Password for authenticating against address controller"
       },
       {
         "name" : "AMQP_KAFKA_BRIDGE_REPO",

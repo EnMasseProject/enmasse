@@ -1,5 +1,7 @@
-package io.enmasse.controller.api.osb.v2;
+package io.enmasse.controller.api;
 
+import io.enmasse.controller.api.osb.v2.OSBExceptions;
+import io.enmasse.controller.auth.UserAuthenticator;
 import org.jboss.resteasy.util.BasicAuthHelper;
 
 import java.io.IOException;
@@ -10,11 +12,11 @@ import javax.ws.rs.container.ContainerRequestFilter;
 
 public class BasicAuthInterceptor implements ContainerRequestFilter {
 
-    private final PasswordAuthentication passwordAuthentication;
+    private final UserAuthenticator userAuthenticator;
     private final String baseUri;
 
-    public BasicAuthInterceptor(PasswordAuthentication passwordAuthentication, String baseUri) {
-        this.passwordAuthentication = passwordAuthentication;
+    public BasicAuthInterceptor(UserAuthenticator userAuthenticator, String baseUri) {
+        this.userAuthenticator = userAuthenticator;
         this.baseUri = baseUri;
     }
 
@@ -41,7 +43,6 @@ public class BasicAuthInterceptor implements ContainerRequestFilter {
     }
 
     private boolean isAuthenticated(String user, String pass) {
-        return passwordAuthentication.getUserName().equals(user)
-                && Arrays.equals(passwordAuthentication.getPassword(), pass.toCharArray());
+        return userAuthenticator.authenticate(user, pass);
     }
 }

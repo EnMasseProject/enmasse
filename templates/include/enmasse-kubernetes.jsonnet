@@ -11,10 +11,10 @@ local images = import "images.jsonnet";
   {
     "apiVersion": "v1",
     "kind": "List",
-    "items": [ templateConfig.generate(with_kafka, false),
+    "items": [ templateConfig.generate(with_kafka),
                authService.none_deployment(images.none_authservice, "none-authservice-cert"),
                authService.none_authservice,
-               addressController.deployment(images.address_controller, "false", "enmasse-template-config", "enmasse-ca", "address-controller-cert"),
+               addressController.deployment(images.address_controller, "false", "enmasse-template-config", "enmasse-ca", "address-controller-cert", ""),
                restapiRoute.ingress(""),
                addressController.internal_service ]
   },

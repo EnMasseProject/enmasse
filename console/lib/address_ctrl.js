@@ -15,46 +15,50 @@
  */
 'use strict';
 
-var http = require('http');
+var fs = require("fs");
 var Promise = require('bluebird');
 
-function hostport(defaults) {
-    var result = defaults;
-    if (process.env.ADDRESS_SPACE_SERVICE_HOST) {
-        result.host = process.env.ADDRESS_SPACE_SERVICE_HOST;
-    } else if (process.env.ADDRESS_CONTROLLER_SERVICE_HOST) {
-        result.host = process.env.ADDRESS_CONTROLLER_SERVICE_HOST;
-        if (process.env.ADDRESS_CONTROLLER_SERVICE_PORT_HTTP) {
-            result.port = process.env.ADDRESS_CONTROLLER_SERVICE_PORT_HTTP;
-        }
+var AddressCtrl = function (host, port, ca_file) {
+    this.host = host;
+    this.port = port;
+    this.ca_file = ca_file;
+    this.address_space = process.env.ADDRESS_SPACE
+    this.http = ca_file !== undefined ? require('https') : require('http');
+    this.auth_string = undefined;
+    if (process.env.ADDRESS_SPACE_PASSWORD_FILE) {
+        this.auth_string = 'Basic ' + new Buffer(process.env.ADDRESS_SPACE + ":" + fs.readFileSync(process.env.ADDRESS_SPACE_PASSWORD_FILE)).toString('base64');
     }
-    return result;
+
+    this.addr_path = "/v1/addresses/";
+    if (this.address_space) {
+        this.addr_path += this.address_space + "/";
+    }
 }
 
-function address_path() {
-    var path = "/v1/addresses/";
-    if (process.env.ADDRESS_SPACE) {
-        path += process.env.ADDRESS_SPACE + "/";
-    }
-    return path;
-}
-
-var ctrlr = hostport({host:'localhost', port:8080});
-var addr_path = address_path();
-
-function request(path, method, headers, body, handler) {
+AddressCtrl.prototype.request = function (path, method, headers, body, handler) {
+    var self = this;
     return new Promise(function (resolve, reject) {
         var options = {
-            hostname: ctrlr.host,
-            port: ctrlr.port
+            hostname: self.host,
+            port: self.port
         };
         options.path = path;
         options.method = method || 'GET';
+        options.headers = {};
+
         if (headers) {
             options.headers = headers;
         }
 
-        var req = http.request(options, function(res) {
+        if (self.auth_string) {
+            options.headers['Authorization'] = self.auth_string
+        }
+
+        if (self.ca_file) {
+            options.ca = fs.readFileSync(self.ca_file);
+        }
+
+        var req = self.http.request(options, function(res) {
             if (res.statusCode === 200) {
                 if (handler) {
                     var text = '';
@@ -96,7 +100,7 @@ function request(path, method, headers, body, handler) {
     });
 }
 
-function create_address(address) {
+AddressCtrl.prototype.create_address = function (address) {
     var data = {
         "apiVersion": "enmasse.io/v1",
         "kind": "AddressList",
@@ -113,11 +117,11 @@ function create_address(address) {
             }
         ]
     };
-    return request(addr_path, 'POST', {'content-type': 'application/json'}, JSON.stringify(data));
+    return this.request(this.addr_path, 'POST', {'content-type': 'application/json'}, JSON.stringify(data));
 }
 
-function delete_address(address) {
-    return request(addr_path + address.address, 'DELETE');
+AddressCtrl.prototype.delete_address = function(address) {
+    return this.request(this.addr_path + address.address, 'DELETE');
 }
 
 function index(list) {
@@ -134,10 +138,23 @@ function address_types(text) {
     }
 }
 
-function get_address_types() {
-    return request('/v1/schema/', 'GET', undefined, undefined, address_types);
+AddressCtrl.prototype.get_address_types = function () {
+    return this.request('/v1/schema/', 'GET', undefined, undefined, address_types);
 }
 
-module.exports.create_address = create_address;
-module.exports.delete_address = delete_address;
-module.exports.get_address_types = get_address_types;
+module.exports.create = function () {
+    var host = 'localhost';
+    var port = 8080;
+    if (process.env.ADDRESS_SPACE_SERVICE_HOST) {
+        host = process.env.ADDRESS_SPACE_SERVICE_HOST;
+    } else if (process.env.ADDRESS_CONTROLLER_SERVICE_HOST) {
+        host = process.env.ADDRESS_CONTROLLER_SERVICE_HOST;
+        if (process.env.ADDRESS_CONTROLLER_SERVICE_PORT_HTTPS) {
+            port = process.env.ADDRESS_CONTROLLER_SERVICE_PORT_HTTPS;
+        }
+    }
+
+    var ca_file = undefined; //process.env.ADDRESS_CONTROLLER_CA;
+    
+    return new AddressCtrl(host, port, ca_file)
+};

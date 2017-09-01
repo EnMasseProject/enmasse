@@ -22,6 +22,7 @@ import io.enmasse.address.model.Endpoint;
 import io.enmasse.address.model.SecretCertProvider;
 import io.enmasse.address.model.types.standard.StandardAddressSpaceType;
 import io.enmasse.address.model.types.standard.StandardType;
+import io.enmasse.controller.auth.UserAuthenticator;
 import io.enmasse.k8s.api.TestAddressSpaceApi;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpClient;
@@ -56,7 +57,12 @@ public class HTTPServerTest {
         String addressSpaceName = "myinstance";
         addressSpace = createAddressSpace(addressSpaceName);
         instanceApi.createAddressSpace(addressSpace);
-        vertx.deployVerticle(new HTTPServer(instanceApi, "/doesnotexist", Optional.of(new PasswordAuthentication("user", "pass".toCharArray()))), context.asyncAssertSuccess());
+        vertx.deployVerticle(new HTTPServer(instanceApi, "/doesnotexist", new PasswordAuthentication("user", "pass".toCharArray()), new UserAuthenticator() {
+            @Override
+            public boolean authenticate(String username, String password) {
+                return "test".equals(username) && "testp".equals(password);
+            }
+        }), context.asyncAssertSuccess());
     }
 
     @After
@@ -94,7 +100,7 @@ public class HTTPServerTest {
         HttpClient client = vertx.createHttpClient();
         Async async = context.async(2);
         try {
-            client.getNow(8080, "localhost", "/v1/addresses/myinstance", response -> {
+            HttpClientRequest r1 = client.get(8080, "localhost", "/v1/addresses/myinstance", response -> {
                 context.assertEquals(200, response.statusCode());
                 response.bodyHandler(buffer -> {
                     JsonObject data = buffer.toJsonObject();
@@ -103,8 +109,10 @@ public class HTTPServerTest {
                     async.complete();
                 });
             });
+            r1.headers().add(HttpHeaders.AUTHORIZATION, "Basic " + Base64.getEncoder().encodeToString("test:testp".getBytes()));
+            r1.end();
 
-            client.getNow(8080, "localhost", "/v1/addresses/myinstance/addr1", response -> {
+            HttpClientRequest r2 = client.get(8080, "localhost", "/v1/addresses/myinstance/addr1", response -> {
                 response.bodyHandler(buffer -> {
                     JsonObject data = buffer.toJsonObject();
                     context.assertTrue(data.containsKey("metadata"));
@@ -112,6 +120,8 @@ public class HTTPServerTest {
                     async.complete();
                 });
             });
+            r2.headers().add(HttpHeaders.AUTHORIZATION, "Basic " + Base64.getEncoder().encodeToString("test:testp".getBytes()));
+            r2.end();
         } finally {
             client.close();
         }

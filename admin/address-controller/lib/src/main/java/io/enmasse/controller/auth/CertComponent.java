@@ -37,4 +37,11 @@ public class CertComponent {
     public String getNamespace() {
         return namespace;
     }
+
+    @Override
+    public String toString() {
+        return "{name=" + name + "," +
+                "secretName=" + secretName + "," +
+                "namespace=" + namespace + "}";
+    }
 }

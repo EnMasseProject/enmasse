@@ -15,33 +15,7 @@
  */
 package io.enmasse.controller.auth;
 
-import java.io.File;
-
-public class Cert {
-    private final CertComponent component;
-    private final File keyFile;
-    private final File certFile;
-
-    Cert(CertComponent component, File keyFile, File certFile) {
-        this.component = component;
-        this.keyFile = keyFile;
-        this.certFile = certFile;
-    }
-
-    public CertComponent getComponent() {
-        return component;
-    }
-
-    public File getKeyFile() {
-        return keyFile;
-    }
-
-    public File getCertFile() {
-        return certFile;
-    }
-
-    @Override
-    public String toString() {
-        return component.toString();
-    }
+public interface UserDatabase extends UserAuthenticator {
+    boolean hasUser(String username);
+    void addUser(String username, String password);
 }
