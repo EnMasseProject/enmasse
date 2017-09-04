@@ -16,6 +16,7 @@
 
 package io.enmasse.queue.scheduler;
 
+import enmasse.amqp.artemis.Artemis;
 import io.vertx.core.Vertx;
 
 public class Main {

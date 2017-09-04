@@ -17,9 +17,8 @@
 package io.enmasse.queue.scheduler;
 
 import enmasse.amqp.artemis.Broker;
+import io.vertx.core.Future;
 import io.vertx.proton.ProtonConnection;
-
-import java.util.concurrent.Future;
 
 /**
  * Factory for creating broker instances.

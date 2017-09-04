@@ -16,6 +16,7 @@
 
 package io.enmasse.queue.scheduler;
 
+import enmasse.amqp.artemis.Broker;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.proton.ProtonClient;
@@ -24,6 +25,7 @@ import io.vertx.proton.ProtonConnection;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
+
 
 
 public class TestBroker extends AbstractVerticle implements Broker {
@@ -61,6 +63,16 @@ public class TestBroker extends AbstractVerticle implements Broker {
     @Override
     public synchronized void deployQueue(String address) {
         addressSet.add(address);
+    }
+
+    @Override
+    public void deployConnectorService(String address) {
+
+    }
+
+    @Override
+    public void deleteConnectorService(String address) {
+
     }
 
     @Override

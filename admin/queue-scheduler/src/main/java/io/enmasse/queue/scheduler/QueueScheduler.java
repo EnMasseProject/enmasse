@@ -19,6 +19,7 @@ package io.enmasse.queue.scheduler;
 import enmasse.amqp.artemis.Broker;
 import io.enmasse.address.model.Address;
 import io.vertx.core.AbstractVerticle;
+import io.vertx.core.Future;
 import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.ProtonServer;
 import io.vertx.proton.sasl.ProtonSaslAuthenticatorFactory;
@@ -28,7 +29,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -102,8 +102,14 @@ public class QueueScheduler extends AbstractVerticle implements ConfigListener {
 
     private void connectionOpened(ProtonConnection connection) {
         log.info("Connection opened from " + connection.getRemoteContainer());
-        Future<Broker> broker = brokerFactory.createBroker(connection);
-        executeBlocking(() -> schedulerState.brokerAdded(getGroupId(connection), connection.getRemoteContainer(), broker.get(30, TimeUnit.SECONDS)),"Error adding broker");
+        Future<Broker> brokerFuture = brokerFactory.createBroker(connection);
+        brokerFuture.setHandler(broker -> {
+            if (broker.succeeded()) {
+                executeBlocking(() -> schedulerState.brokerAdded(getGroupId(connection), connection.getRemoteContainer(), broker.result()), "Error adding broker");
+            } else {
+                log.warn("Unable to create broker", broker.cause());
+            }
+        });
     }
 
     @Override

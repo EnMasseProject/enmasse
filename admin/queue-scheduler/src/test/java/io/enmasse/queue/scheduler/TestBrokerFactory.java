@@ -16,11 +16,15 @@
 
 package io.enmasse.queue.scheduler;
 
+import enmasse.amqp.artemis.Broker;
+import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.proton.ProtonConnection;
 
 import java.util.Map;
-import java.util.concurrent.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 
 public class TestBrokerFactory implements BrokerFactory {
@@ -37,9 +41,7 @@ public class TestBrokerFactory implements BrokerFactory {
 
     @Override
     public Future<Broker> createBroker(ProtonConnection connection) {
-        CompletableFuture<Broker> broker = new CompletableFuture<>();
-        broker.complete(brokerMap.get(connection.getRemoteContainer()));
-        return broker;
+        return Future.succeededFuture(brokerMap.get(connection.getRemoteContainer()));
     }
 
     public TestBroker deployBroker(String id) throws InterruptedException {
