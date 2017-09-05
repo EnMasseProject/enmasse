@@ -21,6 +21,15 @@ task fetchDependencies(type: Download) {
     dest new File(buildDir, 'apache-artemis-bin.tar.gz')
 }
 
+task buildArtemisAmqpModule {
+  doLast {
+    exec {
+      workingDir 'activemq-artemis/artemis-protocols/artemis-amqp-protocol'
+      commandLine 'mvn', 'install', '-DskipTests'
+    }
+  }
+}
+
 task buildArtemisBaseImage {
     doLast {
         exec {
@@ -31,6 +40,9 @@ task buildArtemisBaseImage {
 }
 
 task buildTar(type: Tar) {
+    from('activemq-artemis/artemis-protocols/artemis-amqp-protocol/target/artemis-amqp-protocol-2.2.0.jar') {
+        into("${home}/lib")
+    }
     from('artemis-amqp-connector/build/libs/artemis-amqp-connector.jar') {
         into("${home}/lib")
     }
