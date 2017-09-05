@@ -87,7 +87,12 @@ public class Controller extends AbstractVerticle {
             addressSpaceApi.createAddressSpace(builder.build());
         }
 
-        UserDatabase userDb = options.userDbSecretName().map(secretName -> SecretUserDatabase.create(controllerClient, options.namespace(), secretName)).orElse(null);
+
+        UserDatabase userDb = null;
+        if (options.isEnableApiAuth()) {
+            userDb = SecretUserDatabase.create(controllerClient, options.namespace(), options.userDbSecretName());
+        }
+
         CertManager certManager = OpenSSLCertManager.create(controllerClient, options.caDir(), options.namespace());
 
         deployVerticles(startPromise,

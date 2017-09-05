@@ -44,11 +44,13 @@ public final class ControllerOptions {
     private final AuthServiceInfo noneAuthService;
     private final AuthServiceInfo standardAuthService;
     private final String userDbSecretName;
+    private final boolean enableApiAuth;
 
     private ControllerOptions(String masterUrl, boolean isMultiinstance, String namespace, String token,
                               File caDir, File templateDir, String messagingHost, String mqttHost,
                               String consoleHost, String certSecret, String certDir,
-                              PasswordAuthentication osbAuth, AuthServiceInfo noneAuthService, AuthServiceInfo standardAuthService, String userDbSecretName) {
+                              PasswordAuthentication osbAuth, AuthServiceInfo noneAuthService, AuthServiceInfo standardAuthService, String userDbSecretName,
+                              boolean enableApiAuth) {
         this.masterUrl = masterUrl;
         this.isMultiinstance = isMultiinstance;
         this.namespace = namespace;
@@ -64,6 +66,7 @@ public final class ControllerOptions {
         this.noneAuthService = noneAuthService;
         this.standardAuthService = standardAuthService;
         this.userDbSecretName = userDbSecretName;
+        this.enableApiAuth = enableApiAuth;
     }
 
     public String masterUrl() {
@@ -115,9 +118,12 @@ public final class ControllerOptions {
         return Optional.ofNullable(osbAuth);
     }
 
+    public boolean isEnableApiAuth() {
+        return enableApiAuth;
+    }
 
-    public Optional<String> userDbSecretName() {
-        return Optional.ofNullable(userDbSecretName);
+    public String userDbSecretName() {
+        return userDbSecretName;
     }
 
     public Optional<AuthServiceInfo> getNoneAuthService() {
@@ -164,6 +170,7 @@ public final class ControllerOptions {
         String consoleHost = getEnv(env, "CONSOLE_ENDPOINT_HOST").orElse(null);
         String certSecret = getEnv(env, "MESSAGING_CERT_SECRET").orElse(null);
         String userDbSecretName = getEnv(env, "ADDRESS_SPACE_USER_DB_SECRET_NAME").filter(str -> !str.isEmpty()).orElse(null);
+        boolean enableApiAuth = Boolean.parseBoolean(getEnv(env, "ADDRESS_CONTROLLER_ENABLE_API_AUTH").orElse("false"));
 
         return new ControllerOptions(String.format("https://%s:%s", masterHost, masterPort),
                 isMultiinstance,
@@ -179,7 +186,8 @@ public final class ControllerOptions {
                 osbAuth,
                 noneAuthService,
                 standardAuthService,
-                userDbSecretName);
+                userDbSecretName,
+                enableApiAuth);
     }
 
 

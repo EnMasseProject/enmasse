@@ -181,28 +181,28 @@ items:
       "Secret", "metadata": {"name": "address-space-credentials"}}], "parameters":
       [{"description": "Hostname where API server can be reached", "name": "ADDRESS_SPACE_SERVICE_HOST",
       "value": ""}, {"description": "The image to use for the router", "name": "ROUTER_REPO",
-      "value": "docker.io/enmasseproject/router:latest"}, {"description": "The image
+      "value": "172.30.1.1:5000/myproject/router:latest"}, {"description": "The image
       to use for the router metrics collector", "name": "ROUTER_METRICS_REPO", "value":
-      "docker.io/enmasseproject/router-metrics:latest"}, {"description": "The link
+      "172.30.1.1:5000/myproject/router-metrics:latest"}, {"description": "The link
       capacity setting for router", "name": "ROUTER_LINK_CAPACITY", "value": "50"},
       {"description": "The image to use for the configuration service", "name": "CONFIGSERV_REPO",
-      "value": "docker.io/enmasseproject/configserv:latest"}, {"description": "The
+      "value": "172.30.1.1:5000/myproject/configserv:latest"}, {"description": "The
       docker image to use for the queue scheduler", "name": "QUEUE_SCHEDULER_REPO",
-      "value": "docker.io/enmasseproject/queue-scheduler:latest"}, {"description":
-      "The image to use for the router agent", "name": "RAGENT_REPO", "value": "docker.io/enmasseproject/ragent:latest"},
+      "value": "172.30.1.1:5000/myproject/queue-scheduler:latest"}, {"description":
+      "The image to use for the router agent", "name": "RAGENT_REPO", "value": "172.30.1.1:5000/myproject/ragent:latest"},
       {"description": "The image to use for the subscription services", "name": "SUBSERV_REPO",
-      "value": "docker.io/enmasseproject/subserv:latest"}, {"description": "The image
-      to use for the console", "name": "CONSOLE_REPO", "value": "docker.io/enmasseproject/console:latest"},
+      "value": "172.30.1.1:5000/myproject/subserv:latest"}, {"description": "The image
+      to use for the console", "name": "CONSOLE_REPO", "value": "172.30.1.1:5000/myproject/console:latest"},
       {"description": "The hostname to use for the exposed route for messaging", "name":
       "MESSAGING_HOSTNAME"}, {"description": "The image to use for the MQTT gateway",
-      "name": "MQTT_GATEWAY_REPO", "value": "docker.io/enmasseproject/mqtt-gateway:latest"},
+      "name": "MQTT_GATEWAY_REPO", "value": "172.30.1.1:5000/myproject/mqtt-gateway:latest"},
       {"description": "The hostname to use for the exposed route for MQTT", "name":
       "MQTT_GATEWAY_HOSTNAME"}, {"description": "The hostname to use for the exposed
       route for the messaging console", "name": "CONSOLE_HOSTNAME"}, {"description":
       "The secret to mount for router private key and certificate", "name": "ROUTER_SECRET",
       "required": true}, {"description": "The secret to mount for MQTT private key
       and certificate", "name": "MQTT_SECRET", "required": true}, {"description":
-      "The image to use for the MQTT LWT", "name": "MQTT_LWT_REPO", "value": "docker.io/enmasseproject/mqtt-lwt:latest"},
+      "The image to use for the MQTT LWT", "name": "MQTT_LWT_REPO", "value": "172.30.1.1:5000/myproject/mqtt-lwt:latest"},
       {"description": "The address space this infrastructure is deployed for", "name":
       "ADDRESS_SPACE", "required": true}, {"description": "The hostname of the authentication
       service used by this address space", "name": "AUTHENTICATION_SERVICE_HOST",
@@ -216,7 +216,7 @@ items:
       "name": "ADDRESS_CONTROLLER_CA_CERT"}, {"description": "Password for authenticating
       against address controller", "name": "ADDRESS_SPACE_PASSWORD"}, {"description":
       "The image to use for the AMQP Kafka Bridge", "name": "AMQP_KAFKA_BRIDGE_REPO",
-      "value": "docker.io/enmasseproject/amqp-kafka-bridge:latest"}, {"description":
+      "value": "172.30.1.1:5000/myproject/amqp-kafka-bridge:latest"}, {"description":
       "A list of host/port pairs to use for establishing the initial connection to
       the Kafka cluster", "name": "KAFKA_BOOTSTRAP_SERVERS"}]}'
     queue-inmemory.json: '{"apiVersion": "v1", "kind": "Template", "metadata": {"labels":
@@ -241,10 +241,10 @@ items:
       {"name": "hawkular-broker-config"}, "name": "hawkular-openshift-agent"}]}}}}],
       "parameters": [{"description": "Storage capacity required for volume claims",
       "name": "STORAGE_CAPACITY", "value": "2Gi"}, {"description": "The docker image
-      to use for the message broker", "name": "BROKER_REPO", "value": "docker.io/enmasseproject/artemis:latest"},
+      to use for the message broker", "name": "BROKER_REPO", "value": "172.30.1.1:5000/myproject/artemis:latest"},
       {"description": "The default image to use as topic forwarder", "name": "TOPIC_FORWARDER_REPO",
-      "value": "docker.io/enmasseproject/topic-forwarder:latest"}, {"description":
-      "The image to use for the router", "name": "ROUTER_REPO", "value": "docker.io/enmasseproject/router:latest"},
+      "value": "172.30.1.1:5000/myproject/topic-forwarder:latest"}, {"description":
+      "The image to use for the router", "name": "ROUTER_REPO", "value": "172.30.1.1:5000/myproject/router:latest"},
       {"description": "The link capacity setting for router", "name": "ROUTER_LINK_CAPACITY",
       "value": "50"}, {"description": "A valid addressSpace name for the address Space",
       "name": "ADDRESS_SPACE", "required": true}, {"description": "A valid name for
@@ -286,10 +286,10 @@ items:
       "name": "hawkular-openshift-agent"}]}}}}], "parameters": [{"description": "Storage
       capacity required for volume claims", "name": "STORAGE_CAPACITY", "value": "2Gi"},
       {"description": "The docker image to use for the message broker", "name": "BROKER_REPO",
-      "value": "docker.io/enmasseproject/artemis:latest"}, {"description": "The default
-      image to use as topic forwarder", "name": "TOPIC_FORWARDER_REPO", "value": "docker.io/enmasseproject/topic-forwarder:latest"},
+      "value": "172.30.1.1:5000/myproject/artemis:latest"}, {"description": "The default
+      image to use as topic forwarder", "name": "TOPIC_FORWARDER_REPO", "value": "172.30.1.1:5000/myproject/topic-forwarder:latest"},
       {"description": "The image to use for the router", "name": "ROUTER_REPO", "value":
-      "docker.io/enmasseproject/router:latest"}, {"description": "The link capacity
+      "172.30.1.1:5000/myproject/router:latest"}, {"description": "The link capacity
       setting for router", "name": "ROUTER_LINK_CAPACITY", "value": "50"}, {"description":
       "A valid addressSpace name for the address Space", "name": "ADDRESS_SPACE",
       "required": true}, {"description": "A valid name for the deployment", "name":
@@ -347,10 +347,10 @@ items:
       "name": "hawkular-openshift-agent"}]}}}}], "parameters": [{"description": "Storage
       capacity required for volume claims", "name": "STORAGE_CAPACITY", "value": "2Gi"},
       {"description": "The docker image to use for the message broker", "name": "BROKER_REPO",
-      "value": "docker.io/enmasseproject/artemis:latest"}, {"description": "The default
-      image to use as topic forwarder", "name": "TOPIC_FORWARDER_REPO", "value": "docker.io/enmasseproject/topic-forwarder:latest"},
+      "value": "172.30.1.1:5000/myproject/artemis:latest"}, {"description": "The default
+      image to use as topic forwarder", "name": "TOPIC_FORWARDER_REPO", "value": "172.30.1.1:5000/myproject/topic-forwarder:latest"},
       {"description": "The image to use for the router", "name": "ROUTER_REPO", "value":
-      "docker.io/enmasseproject/router:latest"}, {"description": "The link capacity
+      "172.30.1.1:5000/myproject/router:latest"}, {"description": "The link capacity
       setting for router", "name": "ROUTER_LINK_CAPACITY", "value": "50"}, {"description":
       "A valid addressSpace name for the address Space", "name": "ADDRESS_SPACE",
       "required": true}, {"description": "A valid name for the deployment", "name":
@@ -412,10 +412,10 @@ items:
       {"name": "hawkular-broker-config"}, "name": "hawkular-openshift-agent"}]}}}}],
       "parameters": [{"description": "Storage capacity required for volume claims",
       "name": "STORAGE_CAPACITY", "value": "2Gi"}, {"description": "The docker image
-      to use for the message broker", "name": "BROKER_REPO", "value": "docker.io/enmasseproject/artemis:latest"},
+      to use for the message broker", "name": "BROKER_REPO", "value": "172.30.1.1:5000/myproject/artemis:latest"},
       {"description": "The default image to use as topic forwarder", "name": "TOPIC_FORWARDER_REPO",
-      "value": "docker.io/enmasseproject/topic-forwarder:latest"}, {"description":
-      "The image to use for the router", "name": "ROUTER_REPO", "value": "docker.io/enmasseproject/router:latest"},
+      "value": "172.30.1.1:5000/myproject/topic-forwarder:latest"}, {"description":
+      "The image to use for the router", "name": "ROUTER_REPO", "value": "172.30.1.1:5000/myproject/router:latest"},
       {"description": "The link capacity setting for router", "name": "ROUTER_LINK_CAPACITY",
       "value": "50"}, {"description": "A valid addressSpace name for the address Space",
       "name": "ADDRESS_SPACE", "required": true}, {"description": "A valid name for
@@ -453,7 +453,7 @@ items:
         - env:
           - name: LISTENPORT
             value: '5671'
-          image: docker.io/enmasseproject/none-authservice:latest
+          image: 172.30.1.1:5000/myproject/none-authservice:latest
           livenessProbe:
             tcpSocket:
               port: amqps
@@ -509,8 +509,10 @@ items:
           - name: CA_DIR
             value: "/ca-cert"
           - name: ADDRESS_SPACE_USER_DB_SECRET_NAME
-            value: ''
-          image: docker.io/enmasseproject/address-controller:latest
+            value: address-controller-userdb
+          - name: ADDRESS_CONTROLLER_ENABLE_API_AUTH
+            value: "${ADDRESS_CONTROLLER_ENABLE_API_AUTH}"
+          image: 172.30.1.1:5000/myproject/address-controller:latest
           livenessProbe:
             tcpSocket:
               port: http
@@ -550,6 +552,11 @@ items:
         - name: address-controller-cert
           secret:
             secretName: address-controller-cert
+- apiVersion: v1
+  data: {}
+  kind: Secret
+  metadata:
+    name: address-controller-userdb
 - apiVersion: extensions/v1beta1
   kind: Ingress
   metadata:
