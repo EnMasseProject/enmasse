@@ -16,24 +16,8 @@
  */
 package org.apache.activemq.artemis.integration.amqp;
 
-import org.apache.activemq.artemis.api.core.ActiveMQException;
-import org.apache.activemq.artemis.core.remoting.impl.netty.NettyConnector;
-import org.apache.activemq.artemis.core.remoting.impl.netty.TransportConstants;
-import org.apache.activemq.artemis.core.server.ActiveMQComponent;
-import org.apache.activemq.artemis.core.server.ActiveMQServer;
-import org.apache.activemq.artemis.core.server.ConnectorService;
-import org.apache.activemq.artemis.protocol.amqp.client.AMQPClientConnectionFactory;
-import org.apache.activemq.artemis.protocol.amqp.client.ProtonClientConnectionManager;
-import org.apache.activemq.artemis.protocol.amqp.client.ProtonClientProtocolManager;
-import org.apache.activemq.artemis.protocol.amqp.broker.ProtonProtocolManager;
-import org.apache.activemq.artemis.protocol.amqp.broker.ProtonProtocolManagerFactory;
-import org.apache.activemq.artemis.spi.core.protocol.RemotingConnection;
-import org.apache.activemq.artemis.spi.core.remoting.BaseConnectionLifeCycleListener;
-import org.apache.activemq.artemis.spi.core.remoting.Connection;
-import org.apache.qpid.proton.amqp.Symbol;
-
+import java.util.Arrays;
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.Callable;
@@ -41,6 +25,24 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+
+import org.apache.activemq.artemis.api.core.ActiveMQException;
+import org.apache.activemq.artemis.core.remoting.impl.netty.NettyConnector;
+import org.apache.activemq.artemis.core.server.ActiveMQComponent;
+import org.apache.activemq.artemis.core.server.ActiveMQServer;
+import org.apache.activemq.artemis.core.server.ConnectorService;
+import org.apache.activemq.artemis.protocol.amqp.broker.ProtonProtocolManager;
+import org.apache.activemq.artemis.protocol.amqp.broker.ProtonProtocolManagerFactory;
+import org.apache.activemq.artemis.protocol.amqp.client.AMQPClientConnectionFactory;
+import org.apache.activemq.artemis.protocol.amqp.client.ProtonClientConnectionManager;
+import org.apache.activemq.artemis.protocol.amqp.client.ProtonClientProtocolManager;
+import org.apache.activemq.artemis.protocol.amqp.sasl.ClientSASL;
+import org.apache.activemq.artemis.protocol.amqp.sasl.ClientSASLFactory;
+import org.apache.activemq.artemis.spi.core.protocol.RemotingConnection;
+import org.apache.activemq.artemis.spi.core.remoting.BaseConnectionLifeCycleListener;
+import org.apache.activemq.artemis.spi.core.remoting.Connection;
+
+import org.apache.qpid.proton.amqp.Symbol;
 
 /**
  * Connector service for outgoing AMQP connections.
@@ -63,7 +65,29 @@ public class AMQPConnectorService implements ConnectorService, BaseConnectionLif
       this.server = server;
       this.scheduledExecutorService = scheduledExecutorService;
       AMQPClientConnectionFactory factory = new AMQPClientConnectionFactory(server, containerId, Collections.singletonMap(groupSymbol, groupId), 5000);
-      this.lifecycleHandler = new ProtonClientConnectionManager(factory, subscriberInfo.map(LinkInitiator::new));
+      final ClientSASLFactory saslClientFactory = availableMechanims -> {
+         if(Arrays.asList(availableMechanims).contains("EXTERNAL")) {
+            return new ClientSASL() {
+               @Override
+               public String getName() {
+                  return "EXTERNAL";
+               }
+
+               @Override
+               public byte[] getInitialResponse() {
+                  return new byte[0];
+               }
+
+               @Override
+               public byte[] getResponse(final byte[] challenge) {
+                  return new byte[0];
+               }
+            };
+         } else {
+            return null;
+         }
+      };
+      this.lifecycleHandler = new ProtonClientConnectionManager(factory, subscriberInfo.map(LinkInitiator::new), saslClientFactory);
    }
 
    @Override
