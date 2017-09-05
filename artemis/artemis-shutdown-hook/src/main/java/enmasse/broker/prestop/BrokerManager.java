@@ -17,8 +17,10 @@
 package enmasse.broker.prestop;
 
 import enmasse.discovery.Endpoint;
+import org.apache.activemq.artemis.api.core.ActiveMQConnectionTimedOutException;
 import org.apache.activemq.artemis.api.core.ActiveMQNotConnectedException;
 import org.apache.activemq.artemis.api.core.ActiveMQObjectClosedException;
+import org.apache.activemq.artemis.api.core.ActiveMQUnBlockedException;
 import org.apache.activemq.artemis.api.core.client.ActiveMQClient;
 import org.apache.activemq.artemis.api.core.client.ClientMessage;
 import org.apache.activemq.artemis.api.core.client.ClientRequestor;
@@ -101,7 +103,7 @@ public class BrokerManager implements AutoCloseable {
     public void shutdownBroker() throws Exception {
         try {
             invokeOperation("broker", "forceFailover");
-        } catch (ActiveMQObjectClosedException | ActiveMQNotConnectedException e) {
+        } catch (ActiveMQObjectClosedException | ActiveMQConnectionTimedOutException | ActiveMQNotConnectedException |ActiveMQUnBlockedException ignored) {
             System.out.println("Disconnected on shutdown");
         }
     }
