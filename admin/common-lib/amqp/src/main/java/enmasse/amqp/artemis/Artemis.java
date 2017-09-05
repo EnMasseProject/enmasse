@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-package io.enmasse.queue.scheduler;
+package enmasse.amqp.artemis;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.proton.*;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
@@ -34,7 +35,9 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.*;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Represents an Artemis broker that may be managed
@@ -49,7 +52,7 @@ public class Artemis implements Broker {
     private final String messagingHost = System.getenv("MESSAGING_SERVICE_HOST");
     private final String messagingPort = System.getenv("MESSAGING_SERVICE_PORT_AMQPS_BROKER");
 
-    public Artemis(Vertx vertx, ProtonSender sender, String replyTo, BlockingQueue<Message> replies) {
+    private Artemis(Vertx vertx, ProtonSender sender, String replyTo, BlockingQueue<Message> replies) {
         this.vertx = vertx;
         this.sender = sender;
         this.replyTo = replyTo;
@@ -57,7 +60,7 @@ public class Artemis implements Broker {
     }
 
     public static Future<Broker> create(Vertx vertx, ProtonConnection connection) {
-        CompletableFuture<Broker> promise = new CompletableFuture<>();
+        Future<Broker> promise = Future.future();
         connection.sessionOpenHandler(ProtonSession::open);
         BlockingQueue<Message> replies = new LinkedBlockingDeque<>();
         ProtonSender sender = connection.createSender("activemq.management");
@@ -98,9 +101,13 @@ public class Artemis implements Broker {
             log.warn("Timed out getting response from broker");
             return;
         }
+        log.info("Deployed queue " + address);
+    }
 
-        message = createMessage("createConnectorService");
-        parameters = mapper.createArrayNode();
+    @Override
+    public void deployConnectorService(String address) {
+        Message message = createMessage("createConnectorService");
+        ArrayNode parameters = mapper.createArrayNode();
         parameters.add(address);
         parameters.add("org.apache.activemq.artemis.integration.amqp.AMQPConnectorServiceFactory");
         ObjectNode connectorParams = parameters.addObject();
@@ -110,12 +117,12 @@ public class Artemis implements Broker {
         connectorParams.put("clusterId", address);
 
         message.setBody(new AmqpValue(encodeJson(parameters)));
-        response = doRequest(message);
+        Message response = doRequest(message);
         if (response == null) {
             log.warn("Timed out getting response from broker");
             return;
         }
-        log.info("Deployed queue " + address);
+        log.info("Deployed connector service " + address);
     }
 
     private Message doRequest(Message message) {
@@ -149,17 +156,21 @@ public class Artemis implements Broker {
             log.warn("Timed out getting response from broker");
             return;
         }
+        log.info("Deleted queue " + address);
+    }
 
-        message = createMessage("destroyConnectorService");
-        parameters = mapper.createArrayNode();
+    @Override
+    public void deleteConnectorService(String address) {
+        Message message = createMessage("destroyConnectorService");
+        ArrayNode parameters = mapper.createArrayNode();
         parameters.add(address);
         message.setBody(new AmqpValue(encodeJson(parameters)));
-        response = doRequest(message);
+        Message response = doRequest(message);
         if (response == null) {
             log.warn("Timed out getting response from broker");
             return;
         }
-        log.info("Destroyed queue " + address);
+        log.info("Deleted connector service " + address);
     }
 
     private Message createMessage(String operation) {

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.enmasse.address.model.types.standard;
+package io.enmasse.address.model.types.brokered;
 
 import io.enmasse.address.model.types.AddressSpaceType;
 import io.enmasse.address.model.types.AddressType;
@@ -21,29 +21,31 @@ import io.enmasse.address.model.types.Plan;
 import io.enmasse.address.model.types.common.TemplateConfig;
 import io.enmasse.address.model.types.common.TemplatePlan;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 import static io.enmasse.address.model.types.standard.StandardType.*;
 
 /**
  * Represents the Standard address space type.
  */
-public class StandardAddressSpaceType implements AddressSpaceType {
-    static final List<AddressType> types = Arrays.asList(QUEUE, TOPIC, ANYCAST, MULTICAST);
+public class BrokeredAddressSpaceType implements AddressSpaceType {
+    static final List<AddressType> types = Arrays.asList(QUEUE, TOPIC);
     static final List<Plan> plans = Arrays.asList(
-            new TemplatePlan("unlimited", "Unlimited", "No restrictions on resource usage", "09671470-61a7-11e7-8a6e-507b9def37d9",
-                    new TemplateConfig("enmasse-instance-infra", Collections.emptyMap())));
+            new TemplatePlan("unlimited", "Unlimited", "No restrictions on resource usage", "8ac1daf8-8ef9-11e7-aa7d-507b9def37d9",
+                    new TemplateConfig("brokered-instance-infra", Collections.emptyMap())));
 
     @Override
     public String getName() {
-        return "standard";
+        return "brokered";
     }
 
     @Override
     public String getDescription() {
-        return "A standard address space consists of an AMQP router network in combination with " +
-            "attachable 'storage units'. The implementation of a storage unit is hidden from the client " +
-            "and the routers with a well defined API.";
+        return "A brokered address space consists of an ActiveMQ Artemis broker containing all queues and topics" +
+                " in the address space. The brokered address space provide a compact and feature rich address space with " +
+                "store-and-forward semantics for all addresses.";
     }
 
     @Override

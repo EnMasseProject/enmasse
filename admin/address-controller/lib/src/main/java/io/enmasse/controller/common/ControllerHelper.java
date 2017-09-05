@@ -13,14 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.enmasse.controller.standard;
+package io.enmasse.controller.common;
 
+import io.enmasse.address.model.types.AddressSpaceType;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.config.LabelKeys;
-import io.enmasse.controller.common.AuthenticationServiceResolverFactory;
-import io.enmasse.controller.common.Kubernetes;
-import io.enmasse.controller.common.KubernetesHelper;
-import io.enmasse.controller.common.TemplateParameter;
 import io.enmasse.address.model.*;
 import io.enmasse.address.model.types.Plan;
 import io.enmasse.address.model.types.TemplateConfig;
@@ -37,18 +34,20 @@ import java.util.stream.Collectors;
 /**
  * Helper class for managing a standard address space.
  */
-public class StandardHelper {
-    private static final Logger log = LoggerFactory.getLogger(StandardHelper.class.getName());
+public class ControllerHelper {
+    private static final Logger log = LoggerFactory.getLogger(ControllerHelper.class.getName());
     private final Kubernetes kubernetes;
     private final boolean isMultitenant;
     private final String namespace;
     private final AuthenticationServiceResolverFactory authResolverFactory;
+    private final Map<String, String> serviceMapping;
 
-    public StandardHelper(Kubernetes kubernetes, boolean isMultitenant, AuthenticationServiceResolverFactory authResolverFactory) {
+    public ControllerHelper(Kubernetes kubernetes, boolean isMultitenant, AuthenticationServiceResolverFactory authResolverFactory, Map<String, String> serviceMapping) {
         this.kubernetes = kubernetes;
         this.isMultitenant = isMultitenant;
         this.namespace = kubernetes.getNamespace();
         this.authResolverFactory = authResolverFactory;
+        this.serviceMapping = serviceMapping;
     }
 
     public void create(AddressSpace addressSpace) {
@@ -58,17 +57,12 @@ public class StandardHelper {
         }
         log.info("Creating address space {}", addressSpace);
         if (isMultitenant) {
-            kubernetes.createNamespace(addressSpace.getName(), addressSpace.getNamespace());
+            kubernetes.createNamespace(addressSpace.getName(), addressSpace.getNamespace(), addressSpace.getType());
             kubernetes.addDefaultViewPolicy(addressSpace.getNamespace());
         }
 
         StandardResources resourceList = createResourceList(addressSpace);
 
-        // TODO: put this lsit somewhere...
-        Map<String, String> serviceMapping = new HashMap<>();
-        serviceMapping.put("messaging", "amqps");
-        serviceMapping.put("mqtt", "secure-mqtt");
-        serviceMapping.put("console", "http");
 
         for (Endpoint endpoint : resourceList.routeEndpoints) {
             kubernetes.createEndpoint(endpoint, serviceMapping, addressSpace.getName(), addressSpace.getNamespace());
@@ -97,9 +91,9 @@ public class StandardHelper {
 
 
         if (plan.getTemplateConfig().isPresent()) {
-            List<ParameterValue> parameterValues = new ArrayList<>();
             AuthenticationService authService = addressSpace.getAuthenticationService();
             AuthenticationServiceResolver authResolver = authResolverFactory.getResolver(authService.getType());
+            List<ParameterValue> parameterValues = new ArrayList<>();
 
             parameterValues.add(new ParameterValue(TemplateParameter.ADDRESS_SPACE, addressSpace.getName()));
             parameterValues.add(new ParameterValue(TemplateParameter.ADDRESS_SPACE_SERVICE_HOST, getApiServer()));
@@ -110,7 +104,7 @@ public class StandardHelper {
             authResolver.getSaslInitHost(addressSpace.getName(), authService).ifPresent(saslInitHost -> parameterValues.add(new ParameterValue(TemplateParameter.AUTHENTICATION_SERVICE_SASL_INIT_HOST, saslInitHost)));
 
             // Step 1: Validate endpoints and remove unknown
-            Set<String> availableServices = new HashSet<>(Arrays.asList("messaging", "mqtt", "console"));
+            Set<String> availableServices = new HashSet<>(serviceMapping.keySet());
             Set<String> discoveredServices = new HashSet<>();
             Map<String, CertProvider> serviceCertProviders = new HashMap<>();
 
@@ -160,11 +154,18 @@ public class StandardHelper {
                         }
                     }).collect(Collectors.toList());
 
-            parameterValues.add(new ParameterValue(TemplateParameter.ROUTER_SECRET, serviceCertProviders.get("messaging").getSecretName()));
-            parameterValues.add(new ParameterValue(TemplateParameter.MQTT_SECRET, serviceCertProviders.get("mqtt").getSecretName()));
+
+            if (serviceCertProviders.containsKey("messaging")) {
+                parameterValues.add(new ParameterValue(TemplateParameter.MESSAGING_SECRET, serviceCertProviders.get("messaging").getSecretName()));
+            }
+
+            if (serviceCertProviders.containsKey("mqtt")) {
+                parameterValues.add(new ParameterValue(TemplateParameter.MQTT_SECRET, serviceCertProviders.get("mqtt").getSecretName()));
+            }
 
             // Step 5: Create infrastructure
             TemplateConfig templateConfig = plan.getTemplateConfig().get();
+
             returnVal.resourceList = kubernetes.processTemplate(templateConfig.getName(), parameterValues.toArray(new ParameterValue[0]));
         }
         return returnVal;
@@ -191,14 +192,23 @@ public class StandardHelper {
         return readyDeployments.containsAll(requiredDeployments);
     }
 
-    public void retainAddressSpaces(Set<String> desiredAddressSpaces) {
+    public void createAddressSpaces(Set<AddressSpace> addressSpaces) {
+        for (AddressSpace addressSpace : addressSpaces) {
+            create(addressSpace);
+        }
+    }
+
+    public void retainAddressSpaces(Set<AddressSpace> desiredAddressSpaces) {
         if (isMultitenant) {
+            AddressSpaceType addressSpaceType = desiredAddressSpaces.iterator().next().getType();
+            Set<String> addressSpaceNames = desiredAddressSpaces.stream().map(AddressSpace::getName).collect(Collectors.toSet());
             Map<String, String> labels = new LinkedHashMap<>();
             labels.put(LabelKeys.APP, "enmasse");
             labels.put(LabelKeys.TYPE, "address-space");
+            labels.put(LabelKeys.ADDRESS_SPACE_TYPE, addressSpaceType.getName());
             for (Namespace namespace : kubernetes.listNamespaces(labels)) {
                 String id = namespace.getMetadata().getAnnotations().get(AnnotationKeys.ADDRESS_SPACE);
-                if (!desiredAddressSpaces.contains(id)) {
+                if (!addressSpaceNames.contains(id)) {
                     try {
                         kubernetes.deleteNamespace(namespace.getMetadata().getName());
                     } catch(KubernetesClientException e){
