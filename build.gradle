@@ -38,7 +38,7 @@ ext {
     vertxVersion = '3.4.1'
     openshiftClientVersion = '2.5.7'
     resteasyVersion = '3.1.0.Final'
-    artemisVersion = '2.1.0'
+    artemisVersion = '2.2.0'
     jbossLoggingVersion = '3.3.0.Final'
     jbossLoggingProcessorVersion = '2.0.0.Alpha2'
 }
