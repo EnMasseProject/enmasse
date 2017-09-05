@@ -27,7 +27,7 @@ items:
               secretKeyRef:
                 key: admin.password
                 name: keycloak-credentials
-          image: 172.30.1.1:5000/myproject/keycloak:latest
+          image: docker.io/enmasseproject/keycloak:latest
           livenessProbe:
             initialDelaySeconds: 120
             tcpSocket:
@@ -75,7 +75,7 @@ items:
               secretKeyRef:
                 key: admin.password
                 name: keycloak-credentials
-          image: 172.30.1.1:5000/myproject/keycloak-controller:latest
+          image: docker.io/enmasseproject/keycloak-controller:latest
           name: keycloak-controller
           resources:
             limits:
