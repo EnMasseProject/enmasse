@@ -104,13 +104,13 @@ objects:
 parameters:
 - description: The docker image to use for the 'standard' auth service
   name: STANDARD_AUTHSERVICE_IMAGE
-  value: docker.io/enmasseproject/keycloak:latest
+  value: 172.30.1.1:5000/myproject/keycloak:latest
 - description: The secret where keycloak credentials are stored
   name: KEYCLOAK_SECRET_NAME
   value: keycloak-credentials
 - description: The docker image to use for the keycloak controller
   name: KEYCLOAK_CONTROLLER_IMAGE
-  value: docker.io/enmasseproject/keycloak-controller:latest
+  value: 172.30.1.1:5000/myproject/keycloak-controller:latest
 - description: The secret containing the tls certificate and key
   name: STANDARD_AUTHSERVICE_SECRET_NAME
   value: standard-authservice-cert

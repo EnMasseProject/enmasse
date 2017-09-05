@@ -23,8 +23,8 @@ local images = import "images.jsonnet";
                  enmasseInfra.generate(with_kafka),
                  authService.none_deployment("${NONE_AUTHSERVICE_IMAGE}", "${NONE_AUTHSERVICE_CERT_SECRET_NAME}"),
                  authService.none_authservice,
-                 addressController.deployment("${ADDRESS_CONTROLLER_REPO}", "${MULTIINSTANCE}", "", "${ENMASSE_CA_SECRET}", "${ADDRESS_CONTROLLER_CERT_SECRET}", "${ADDRESS_CONTROLLER_USER_DB_SECRET}"),
-                 common.empty_secret("${ADDRESS_CONTROLLER_USER_DB_SECRET}"),
+                 addressController.deployment("${ADDRESS_CONTROLLER_REPO}", "${MULTIINSTANCE}", "", "${ENMASSE_CA_SECRET}", "${ADDRESS_CONTROLLER_CERT_SECRET}", "${ADDRESS_CONTROLLER_ENABLE_API_AUTH}"),
+                 common.empty_secret("address-controller-userdb"),
                  addressController.internal_service,
                  restapiRoute.route("${RESTAPI_HOSTNAME}") ],
     "parameters": [
@@ -63,9 +63,9 @@ local images = import "images.jsonnet";
         "value": "none-authservice-cert"
       },
       {
-        "name": "ADDRESS_CONTROLLER_USER_DB_SECRET",
-        "description": "Secret containing the user database",
-        "value": ""
+        "name": "ADDRESS_CONTROLLER_ENABLE_API_AUTH",
+        "description": "Enable/disable user authentication for API",
+        "value": "false"
       },
     ]
   }
