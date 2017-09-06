@@ -149,6 +149,7 @@ module.exports.create = function () {
     var ca = undefined;
     if (process.env.ADDRESS_CONTROLLER_CA) {
         ca = fs.readFileSync(process.env.ADDRESS_CONTROLLER_CA);
+        port = 8081;
     }
 
     var auth_string = undefined;
