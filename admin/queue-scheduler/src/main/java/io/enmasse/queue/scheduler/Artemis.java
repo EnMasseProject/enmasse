@@ -67,7 +67,11 @@ public class Artemis implements Broker {
             source.setDynamic(true);
             receiver.setSource(source);
             receiver.openHandler(h -> {
-                promise.complete(new Artemis(vertx, sender, h.result().getRemoteSource().getAddress(), replies));
+                if (h.succeeded()) {
+                    promise.complete(new Artemis(vertx, sender, h.result().getRemoteSource().getAddress(), replies));
+                } else {
+                    promise.completeExceptionally(h.cause());
+                }
             });
             receiver.handler(((protonDelivery, message) -> {
                 try {
