@@ -18,16 +18,13 @@
 var fs = require("fs");
 var Promise = require('bluebird');
 
-var AddressCtrl = function (host, port, ca_file) {
+var AddressCtrl = function (host, port, ca, auth_string) {
     this.host = host;
     this.port = port;
-    this.ca_file = ca_file;
     this.address_space = process.env.ADDRESS_SPACE
-    this.http = ca_file !== undefined ? require('https') : require('http');
-    this.auth_string = undefined;
-    if (process.env.ADDRESS_SPACE_PASSWORD_FILE) {
-        this.auth_string = 'Basic ' + new Buffer(process.env.ADDRESS_SPACE + ":" + fs.readFileSync(process.env.ADDRESS_SPACE_PASSWORD_FILE)).toString('base64');
-    }
+    this.http = ca ? require('https') : require('http');
+    this.ca = ca;
+    this.auth_string = auth_string;
 
     this.addr_path = "/v1/addresses/";
     if (this.address_space) {
@@ -35,27 +32,23 @@ var AddressCtrl = function (host, port, ca_file) {
     }
 }
 
-AddressCtrl.prototype.request = function (path, method, headers, body, handler) {
+AddressCtrl.prototype.request = function (addr_path, method, headers, body, handler) {
     var self = this;
     return new Promise(function (resolve, reject) {
         var options = {
             hostname: self.host,
             port: self.port
         };
-        options.path = path;
+        options.path = addr_path;
         options.method = method || 'GET';
-        options.headers = {};
-
-        if (headers) {
-            options.headers = headers;
-        }
+        options.headers = headers || {};
 
         if (self.auth_string) {
             options.headers['Authorization'] = self.auth_string
         }
 
-        if (self.ca_file) {
-            options.ca = fs.readFileSync(self.ca_file);
+        if (self.ca) {
+            options.ca = self.ca;
         }
 
         var req = self.http.request(options, function(res) {
@@ -153,8 +146,15 @@ module.exports.create = function () {
             port = process.env.ADDRESS_CONTROLLER_SERVICE_PORT_HTTPS;
         }
     }
+    var ca = undefined;
+    if (process.env.ADDRESS_CONTROLLER_CA) {
+        ca = fs.readFileSync(process.env.ADDRESS_CONTROLLER_CA);
+    }
 
-    var ca_file = undefined; //process.env.ADDRESS_CONTROLLER_CA;
-    
-    return new AddressCtrl(host, port, ca_file)
+    var auth_string = undefined;
+    if (process.env.ADDRESS_SPACE_PASSWORD_FILE) {
+        auth_string = 'Basic ' + new Buffer(process.env.ADDRESS_SPACE + ":" + fs.readFileSync(process.env.ADDRESS_SPACE_PASSWORD_FILE)).toString('base64');
+    }
+
+    return new AddressCtrl(host, port, ca, auth_string);
 };
