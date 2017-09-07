@@ -17,13 +17,14 @@
 package io.enmasse.queue.scheduler;
 
 import java.util.Set;
+import java.util.concurrent.TimeoutException;
 
 /**
  * Represents a broker that may be assigned multiple addresses
  */
 public interface Broker {
-    void deployQueue(String address);
-    void deleteQueue(String address);
-    Set<String> getQueueNames();
-    long getNumQueues();
+    void deployQueue(String address) throws TimeoutException;
+    void deleteQueue(String address) throws TimeoutException;
+    Set<String> getQueueNames() throws TimeoutException;
+    long getNumQueues() throws TimeoutException;
 }
