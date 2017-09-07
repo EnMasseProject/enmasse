@@ -1,15 +1,17 @@
 package io.enmasse.controller.api.v1;
 
+import java.io.IOException;
+import java.util.HashSet;
+import java.util.Optional;
+import java.util.Set;
+
+import javax.ws.rs.NotFoundException;
+
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressList;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.k8s.api.AddressApi;
 import io.enmasse.k8s.api.AddressSpaceApi;
-
-import javax.ws.rs.NotFoundException;
-import java.io.IOException;
-import java.util.Optional;
-import java.util.Set;
 
 /**
  * This is a handler for doing operations on the addressing manager that works independent of AMQP and HTTP.
@@ -33,7 +35,7 @@ public class AddressApiHelper {
         AddressSpace addressSpace = getOrCreateAddressSpace(addressSpaceId);
         AddressApi addressApi = addressSpaceApi.withAddressSpace(addressSpace);
 
-        Set<Address> toRemove = addressApi.listAddresses();
+        Set<Address> toRemove = new HashSet<>(addressApi.listAddresses());
         toRemove.removeAll(addressList);
         toRemove.forEach(addressApi::deleteAddress);
         addressList.forEach(addressApi::createAddress);

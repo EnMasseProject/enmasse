@@ -15,11 +15,12 @@
  */
 package io.enmasse.address.model;
 
-import io.enmasse.address.model.types.AddressType;
-import io.enmasse.address.model.types.Plan;
-
+import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 import java.util.UUID;
+
+import io.enmasse.address.model.types.AddressType;
+import io.enmasse.address.model.types.Plan;
 
 /**
  * An EnMasse Address addressspace.
@@ -95,8 +96,8 @@ public class Address {
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append("{address=").append(address).append(",");
-        sb.append("name=").append(address).append(",");
-        sb.append("uuid=").append(address).append(",");
+        sb.append("name=").append(name).append(",");
+        sb.append("uuid=").append(uuid).append(",");
         sb.append("type=").append(type).append(",");
         sb.append("plan=").append(plan).append(",");
         sb.append("status=").append(status).append("}");
@@ -105,7 +106,7 @@ public class Address {
 
     public static class Builder {
         private String name;
-        private String uuid = UUID.randomUUID().toString();
+        private String uuid;
         private String address;
         private String addressSpace = "default";
         private AddressType type;
@@ -173,7 +174,9 @@ public class Address {
             Objects.requireNonNull(type, "type not set");
             Objects.requireNonNull(plan, "plan not set");
             Objects.requireNonNull(status, "status not set");
-
+            if(uuid == null) {
+                uuid = UUID.nameUUIDFromBytes(address.getBytes(StandardCharsets.UTF_8)).toString();
+            }
             return new Address(name, uuid, address, addressSpace, type, plan, status);
         }
     }
