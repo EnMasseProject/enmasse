@@ -88,6 +88,7 @@ public class QueueScheduler extends AbstractVerticle implements ConfigListener {
         server.connectHandler(connection -> {
             connection.setContainer("queue-scheduler");
             connection.openHandler(result -> {
+                connection.open();
                 connectionOpened(connection);
             }).closeHandler(conn -> {
                 log.info("Broker connection " + connection.getRemoteContainer() + " closed");
@@ -101,12 +102,6 @@ public class QueueScheduler extends AbstractVerticle implements ConfigListener {
                         "Error removing broker");
                 connection.disconnect();
             });
-
-            if (connection.getRemoteContainer() != null) {
-                connectionOpened(connection);
-            }
-
-            connection.open();
         });
 
         server.listen(port, event -> {
