@@ -88,7 +88,7 @@ public class Artemis implements Broker {
     }
 
     @Override
-    public void deployQueue(String address) {
+    public void deployQueue(String address) throws TimeoutException {
         Message message = createMessage("deployQueue");
         ArrayNode parameters = mapper.createArrayNode();
         parameters.add(address);
@@ -99,9 +99,9 @@ public class Artemis implements Broker {
         message.setBody(new AmqpValue(encodeJson(parameters)));
         Message response = doRequest(message);
         if (response == null) {
-            log.warn("Timed out getting response from broker");
-            return;
+            throw new TimeoutException("Timed out getting response from broker on deployQueue");
         }
+        log.info("Deployed queue " + address);
 
         message = createMessage("createConnectorService");
         parameters = mapper.createArrayNode();
@@ -116,16 +116,15 @@ public class Artemis implements Broker {
         message.setBody(new AmqpValue(encodeJson(parameters)));
         response = doRequest(message);
         if (response == null) {
-            log.warn("Timed out getting response from broker");
-            return;
+            throw new TimeoutException("Timed out getting response from broker on createConnectorService");
         }
-        log.info("Deployed queue " + address);
+        log.info("Deployed connector service " + address);
     }
 
     private Message doRequest(Message message) {
         vertx.runOnContext(h -> sender.send(message));
         try {
-            Message m = replies.poll(60, TimeUnit.SECONDS);
+            Message m = replies.poll(30, TimeUnit.SECONDS);
             return m;
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
@@ -141,7 +140,7 @@ public class Artemis implements Broker {
     }
 
     @Override
-    public void deleteQueue(String address) {
+    public void deleteQueue(String address) throws TimeoutException {
         Message message = createMessage("destroyQueue");
         ArrayNode parameters = mapper.createArrayNode();
         parameters.add(address);
@@ -150,9 +149,9 @@ public class Artemis implements Broker {
 
         Message response = doRequest(message);
         if (response == null) {
-            log.warn("Timed out getting response from broker");
-            return;
+            throw new TimeoutException("Timed out getting response from broker on destroyQueue");
         }
+        log.info("Destroyed queue " + address);
 
         message = createMessage("destroyConnectorService");
         parameters = mapper.createArrayNode();
@@ -160,10 +159,9 @@ public class Artemis implements Broker {
         message.setBody(new AmqpValue(encodeJson(parameters)));
         response = doRequest(message);
         if (response == null) {
-            log.warn("Timed out getting response from broker");
-            return;
+            throw new TimeoutException("Timed out getting response from broker on destroyConnectorService");
         }
-        log.info("Destroyed queue " + address);
+        log.info("Destroyed connector service " + address);
     }
 
     private Message createMessage(String operation) {
@@ -178,12 +176,12 @@ public class Artemis implements Broker {
     }
 
     @Override
-    public long getNumQueues() {
+    public long getNumQueues() throws TimeoutException {
         return getQueueNames().size();
     }
 
     @Override
-    public Set<String> getQueueNames() {
+    public Set<String> getQueueNames() throws TimeoutException {
         Set<String> queues = new LinkedHashSet<>();
         Message message = createMessage("getQueueNames");
         message.setBody(new AmqpValue("[]"));
@@ -191,8 +189,7 @@ public class Artemis implements Broker {
         // TODO: Make this method less ugly
         Message response = doRequest(message);
         if (response == null) {
-            log.warn("Timed out getting response from broker");
-            return queues;
+            throw new TimeoutException("Timed out getting response from broker");
         }
 
         AmqpValue value = (AmqpValue) response.getBody();

@@ -20,12 +20,8 @@ import io.enmasse.address.model.Address;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.PriorityQueue;
-import java.util.Set;
+import java.util.*;
+import java.util.concurrent.TimeoutException;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -38,15 +34,17 @@ public class SchedulerState {
     private final Map<String, Set<Address>> addressMap = new LinkedHashMap<>();
 
 
-    public synchronized void addressesChanged(Map<String, Set<Address>> updatedMap) {
+    public synchronized void addressesChanged(Map<String, Set<Address>> updatedMap) throws TimeoutException {
         Set<String> removedGroups = new HashSet<>(addressMap.keySet());
         removedGroups.removeAll(updatedMap.keySet());
         removedGroups.forEach(addressMap::remove);
 
-        updatedMap.forEach(this::groupUpdated);
+        for (Map.Entry<String, Set<Address>> entry : updatedMap.entrySet()) {
+            groupUpdated(entry.getKey(), entry.getValue());
+        }
     }
 
-    private synchronized void groupUpdated(String groupId, Set<Address> addresses) {
+    private synchronized void groupUpdated(String groupId, Set<Address> addresses) throws TimeoutException {
         Set<Address> existing = addressMap.getOrDefault(groupId, Collections.emptySet());
 
         Set<Address> removed = new HashSet<>(existing);
@@ -66,7 +64,7 @@ public class SchedulerState {
     }
 
 
-    public synchronized void brokerAdded(String groupId, String brokerId, Broker broker) {
+    public synchronized void brokerAdded(String groupId, String brokerId, Broker broker) throws TimeoutException {
         if (!brokerGroupMap.containsKey(groupId)) {
             brokerGroupMap.put(groupId, new LinkedHashMap<>());
         }
@@ -85,7 +83,7 @@ public class SchedulerState {
         }
     }
 
-    public synchronized void brokerRemoved(String groupId, String brokerId) {
+    public synchronized void brokerRemoved(String groupId, String brokerId) throws TimeoutException {
         Map<String, Broker> brokerMap = brokerGroupMap.get(groupId);
         if (brokerMap != null && brokerMap.containsKey(brokerId)) {
             brokerMap.remove(brokerId);
@@ -103,7 +101,7 @@ public class SchedulerState {
         }
     }
 
-    private void addAddresses(String groupId, Set<Address> addresses, Set<Address> added) {
+    private void addAddresses(String groupId, Set<Address> addresses, Set<Address> added) throws TimeoutException {
 
         // TODO: Fetch this information from somewhere, but assume > 1 address means shared flavor
         if (addresses.size() > 1) {
@@ -113,7 +111,7 @@ public class SchedulerState {
         }
     }
 
-    private void distributeAddressesByNumQueues(String groupId, Set<Address> addresses) {
+    private void distributeAddressesByNumQueues(String groupId, Set<Address> addresses) throws TimeoutException {
         Map<String, Broker> brokerMap = brokerGroupMap.get(groupId);
         if (brokerMap == null) {
             return;
@@ -123,30 +121,48 @@ public class SchedulerState {
         Map<String, Address> addressesToDeploy = addresses.stream().collect(Collectors.toMap(Address::getAddress, Function.identity()));
 
         // Remove addresses that are already distributed. This is to avoid changes in broker list to affect where queues are scheduler
-        for (Broker broker : brokerMap.values()) {
-            addressesToDeploy.keySet().removeAll(broker.getQueueNames());
+
+        List<BrokerInfo> brokerInfos = new ArrayList<>();
+        for (Map.Entry<String, Broker> entry : brokerMap.entrySet()) {
+            BrokerInfo brokerInfo = new BrokerInfo(entry.getKey(), entry.getValue(), entry.getValue().getQueueNames());
+            addressesToDeploy.keySet().removeAll(brokerInfo.queueNames);
+            brokerInfos.add(brokerInfo);
         }
 
-        PriorityQueue<Broker> brokerByNumQueues = new PriorityQueue<>(brokerMap.size(), (a, b) -> {
-            if (a.getNumQueues() < b.getNumQueues()) {
+        PriorityQueue<BrokerInfo> brokerByNumQueues = new PriorityQueue<>(brokerInfos.size(), (a, b) -> {
+            if (a.queueNames.size() < b.queueNames.size()) {
                 return -1;
-            } else if (a.getNumQueues() > b.getNumQueues()) {
+            } else if (a.queueNames.size() > b.queueNames.size()) {
                 return 1;
             } else {
                 return 0;
             }
         });
 
-        brokerByNumQueues.addAll(brokerMap.values());
+        brokerByNumQueues.addAll(brokerInfos);
 
         for (Address address : addressesToDeploy.values()) {
-            Broker broker = brokerByNumQueues.poll();
+            BrokerInfo brokerInfo = brokerByNumQueues.poll();
+            Broker broker = brokerInfo.broker;
             broker.deployQueue(address.getAddress());
-            brokerByNumQueues.offer(broker);
+            brokerInfo.queueNames.add(address.getAddress());
+            brokerByNumQueues.offer(brokerInfo);
         }
     }
 
-    private void distributeAddressesAll(String groupId, Set<Address> addresses) {
+    private static class BrokerInfo {
+        final String brokerId;
+        final Broker broker;
+        final Set<String> queueNames;
+
+        private BrokerInfo(String brokerId, Broker broker, Set<String> queueNames) {
+            this.brokerId = brokerId;
+            this.broker = broker;
+            this.queueNames = new HashSet<>(queueNames);
+        }
+    }
+
+    private void distributeAddressesAll(String groupId, Set<Address> addresses) throws TimeoutException {
         for (Address address : addresses) {
             for (Broker  broker : brokerGroupMap.getOrDefault(groupId, Collections.emptyMap()).values()) {
                 broker.deployQueue(address.getAddress());
@@ -154,7 +170,7 @@ public class SchedulerState {
         }
     }
 
-    private void deleteAddresses(String groupId, Set<Address> removed) {
+    private void deleteAddresses(String groupId, Set<Address> removed) throws TimeoutException {
         for (Broker broker : brokerGroupMap.getOrDefault(groupId, Collections.emptyMap()).values()) {
             for (Address address : removed) {
                 broker.deleteQueue(address.getAddress());

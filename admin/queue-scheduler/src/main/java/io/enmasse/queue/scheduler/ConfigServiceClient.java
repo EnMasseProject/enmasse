@@ -100,6 +100,7 @@ public class ConfigServiceClient extends AbstractVerticle {
 
             AddressList addressList = CodecV1.getMapper().readValue(payload, AddressList.class);
 
+            log.info("Decoded address list: " + addressList);
             Map<String, Set<Address>> addressMap = new LinkedHashMap<>();
             for (Address address : addressList) {
                 if (isQueue(address)) {
