@@ -1,10 +1,25 @@
 #!/bin/sh
 set -e
-export TAG=${TRAVIS_TAG:-latest}
 export VERSION=${TRAVIS_TAG:-latest}
 
-./gradlew build -i
+if [ "$VERSION" != "latest" ]; then
+    export TAG=$VERSION
+fi
 
-./gradlew pack buildImage tagImage pushImage
+echo "Building EnMasse"
+make
+
+echo "Tagging Docker Images"
+make docker_tag
+
+echo "Logging in to Docker Hub"
+docker login -u $DOCKER_USER -p $DOCKER_PASS
+
+echo "Pushing images to Docker Hub"
+make docker_push
+
+echo "Running systemtests"
 ./systemtests/scripts/run_test_component.sh templates/install /tmp/openshift systemtests
-./.travis/generate-bintray-descriptor.sh enmasse templates/build/enmasse-${TAG}.tgz > .bintray.json
+
+echo "Generating bintray artifact descriptor"
+./.travis/generate-bintray-descriptor.sh enmasse templates/build/enmasse-${VERSION}.tgz > .bintray.json

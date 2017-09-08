@@ -20,7 +20,3 @@ dependencies {
     compile "org.eclipse.paho:org.eclipse.paho.client.mqttv3:${pahoVersion}"
     testCompile "junit:junit:${junitVersion}"
 }
-
-task systemtest(type: Test) {
-    environment OPENSHIFT_PROJECT: openShiftProject, OPENSHIFT_USER: openShiftUser, OPENSHIFT_PASSWD: openShiftPasswd, OPENSHIFT_MASTER_URL: openShiftMaster, OPENSHIFT_NAMESPACE: openShiftProject, OPENSHIFT_TOKEN: openShiftToken
-}

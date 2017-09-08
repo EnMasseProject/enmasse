@@ -8,20 +8,19 @@ node('enmasse') {
         }
         stage ('build') {
             try {
-                sh 'MOCHA_ARGS="--reporter=mocha-junit-reporter" ./gradlew build --rerun-tasks'
+                withCredentials([string(credentialsId: 'docker-registry-host', variable: 'DOCKER_REGISTRY')]) {
+                    sh 'MOCHA_ARGS="--reporter=mocha-junit-reporter" TAG=$BUILD_TAG make'
+                    sh 'cat templates/install/openshift/enmasse.yaml'
+                }
             } finally {
                 junit '**/TEST-*.xml'
             }
         }
-        stage ('build docker image') {
-            withCredentials([string(credentialsId: 'docker-registry-host', variable: 'DOCKER_REGISTRY')]) {
-                sh 'COMMIT=$BUILD_TAG ./gradlew pack buildImage --rerun-tasks'
-            }
-            sh 'cat templates/install/openshift/enmasse.yaml'
-        }
         stage ('push docker image') {
             withCredentials([string(credentialsId: 'docker-registry-host', variable: 'DOCKER_REGISTRY'), usernamePassword(credentialsId: 'docker-registry-credentials', passwordVariable: 'DOCKER_PASS', usernameVariable: 'DOCKER_USER')]) {
-                sh 'COMMIT=$BUILD_TAG ./gradlew tagImage pushImage'
+                sh 'TAG=$BUILD_TAG make docker_tag'
+                sh 'docker login -u $DOCKER_USER -p $DOCKER_PASS $DOCKER_REGISTRY'
+                sh 'TAG=$BUILD_TAG make docker_push'
             }
         }
         stage('system tests') {
