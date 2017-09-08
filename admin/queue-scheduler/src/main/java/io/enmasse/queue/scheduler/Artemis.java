@@ -42,6 +42,7 @@ import java.util.concurrent.*;
 public class Artemis implements Broker {
     private static final Logger log = LoggerFactory.getLogger(Artemis.class.getName());
     private static final ObjectMapper mapper = new ObjectMapper();
+    private static final int maxRetries = 10;
     private final Vertx vertx;
     private final ProtonSender sender;
     private final String replyTo;
@@ -59,32 +60,52 @@ public class Artemis implements Broker {
     public static Future<Broker> create(Vertx vertx, ProtonConnection connection) {
         CompletableFuture<Broker> promise = new CompletableFuture<>();
         connection.sessionOpenHandler(ProtonSession::open);
-        BlockingQueue<Message> replies = new LinkedBlockingDeque<>();
+        createSender(vertx, connection, promise, 0);
+        return promise;
+    }
+
+    private static void createSender(Vertx vertx, ProtonConnection connection, CompletableFuture<Broker> promise, int retries) {
         ProtonSender sender = connection.createSender("activemq.management");
         sender.openHandler(result -> {
-            ProtonReceiver receiver = connection.createReceiver("activemq.management");
-            Source source = new Source();
-            source.setDynamic(true);
-            receiver.setSource(source);
-            receiver.openHandler(h -> {
-                if (h.succeeded()) {
-                    promise.complete(new Artemis(vertx, sender, h.result().getRemoteSource().getAddress(), replies));
+            if (result.succeeded()) {
+                createReceiver(vertx, connection, sender, promise, 0);
+            } else {
+                if (retries > maxRetries) {
+                    promise.completeExceptionally(result.cause());
                 } else {
-                    promise.completeExceptionally(h.cause());
+                    vertx.setTimer(1000, id -> createSender(vertx, connection, promise, retries + 1));
                 }
-            });
-            receiver.handler(((protonDelivery, message) -> {
-                try {
-                    replies.put(message);
-                    ProtonHelper.accepted(protonDelivery, true);
-                } catch (Exception e) {
-                    ProtonHelper.rejected(protonDelivery, true);
-                }
-            }));
-            receiver.open();
+            }
         });
         sender.open();
-        return promise;
+    }
+
+    private static void createReceiver(Vertx vertx, ProtonConnection connection, ProtonSender sender, CompletableFuture<Broker> promise, int retries) {
+        BlockingQueue<Message> replies = new LinkedBlockingDeque<>();
+        ProtonReceiver receiver = connection.createReceiver("activemq.management");
+        Source source = new Source();
+        source.setDynamic(true);
+        receiver.setSource(source);
+        receiver.openHandler(h -> {
+            if (h.succeeded()) {
+                promise.complete(new Artemis(vertx, sender, h.result().getRemoteSource().getAddress(), replies));
+            } else {
+                if (retries > maxRetries) {
+                    promise.completeExceptionally(h.cause());
+                } else {
+                    vertx.setTimer(1000, id -> createReceiver(vertx, connection, sender, promise, retries + 1));
+                }
+            }
+        });
+        receiver.handler(((protonDelivery, message) -> {
+            try {
+                replies.put(message);
+                ProtonHelper.accepted(protonDelivery, true);
+            } catch (Exception e) {
+                ProtonHelper.rejected(protonDelivery, true);
+            }
+        }));
+        receiver.open();
     }
 
     @Override
