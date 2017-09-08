@@ -12,6 +12,9 @@ To build EnMasse, you need
     * npm
     * docker
 
+The EnMasse java modules are built using gradle. Node modules are built using make. Docker images
+are built using make.
+
 ## Check out submodules
 
 [jsonnet](http://jsonnet.org) is required to build templates. It is configured as a submodule that
@@ -28,52 +31,52 @@ can be initialized:
 
 *Note*: Make sure docker daemon is in running state.
 
-#### For building and running EnMasse unit tests:
+#### For building and running EnMasse unit tests and building docker image:
 
-    ./gradlew build
+    make
 
-If you want to rerun a task even if nothing has changed, append the `--rerun-tasks` flag to gradle.
-To get more verbose information, append `-i`.
+This can be run at the top level or within each module. You can also run the 'build', 'test', and 'package' targets individually.
+This builds all modules including java. Within a single java project, however, you must use gradle
+to build that module:
+
+    gradle build -i
 
 #### Build a docker image and push them to docker hub:
 
-    DOCKER_ORG=myorg DOCKER_USER=myuser DOCKER_PASS=mypassword ./gradlew pack buildImage tagImage pushImage
-
-#### Building a single module
-
-    ./gradlew :topic-forwarder:build
+    docker login -u myuser -p mypassword docker.io
+    DOCKER_ORG=myorg make docker_build docker_tag docker_push
 
 #### Fast building of EnMasse and pushing images to docker registry in local OpenShift instance (avoids pushing to docker hub)
 
     export DOCKER_ORG=myproject
     export DOCKER_REGISTRY=172.30.1.1:5000
-    ./gradlew build pack buildImage -x test --parallel && DOCKER_USER=developer DOCKER_PASS=`oc whoami -t` ./gradlew tagImage pushImage --parallel
+    docker login -u myuser -p mypassword $DOCKER_REGISTRY
+    make build package docker_build docker_tag docker_push
 
 #### Deploying to an OpenShift instance
 
-    OPENSHIFT_MASTER=https://localhost:8443 OPENSHIFT_PROJECT=myproject OPENSHIFT_USER=developer OPENSHIFT_PASSWD=developer ./gradlew deploy
+    OPENSHIFT_MASTER=https://localhost:8443 OPENSHIFT_PROJECT=myproject OPENSHIFT_USER=developer OPENSHIFT_PASSWD=developer make deploy
 
 #### Running the systemtests
 
 This assumes that the above deploy step has been run
 
-    OPENSHIFT_MASTER_URL=https://localhost:8443 OPENSHIFT_NAMESPACE=myproject OPENSHIFT_USE_TLS=true OPENSHIFT_TOKEN=`oc whoami -t` ./gradlew :systemtests:check -Psystemtests -i --rerun-tasks
+    OPENSHIFT_MASTER_URL=https://localhost:8443 OPENSHIFT_NAMESPACE=myproject OPENSHIFT_USE_TLS=true OPENSHIFT_TOKEN=`oc whoami -t` make systemtests
 
 ## Reference
 
 This is a reference of the different gradle tasks and options that can be set.
 
-#### Gradle tasks
+#### Make targets
 
-    * build       - build and unit test component
-    * pack        - bundle component tarball artifact, ready to be added to docker image
-    * buildImage  - builds docker image
-    * tagImage    - tag docker image with registry and version (passed in environment)
-    * pushImage   - push tagged image
-    * tagVersion  - same as tagImage but uses the git tag (for releases) or latest
-    * pushVersion - same as pushimage but uses git tag (for releases) or latest
-    * deploy      - deploys the built templates to OpenShift. The images referenced by the template
-                    must be available in a docker registry
+    * `build`        - build
+    * `test`         - run tests
+    * `package`      - create artifact bundle
+    * `docker_build` - build docker image
+    * `docker_tag`   - tag docker image
+    * `docker_push`  - push docker image
+    * `deploy`       - deploys the built templates to OpenShift. The images referenced by the template must be available in a docker registry
+    * `systemtests`  - run systemtests
 
 Some of these tasks can be configured using environment variables as listed below.
 
@@ -82,14 +85,11 @@ Some of these tasks can be configured using environment variables as listed belo
 There are several environment variables that control the behavior of the build. Some of them are
 only consumed by some tasks:
 
-    * OPENSHIFT_MASTER  - URL to OpenShift master. Consumed by `deploy` and `:systemtest:check -Psystemtests` tasks
-    * OPENSHIFT_USER    - OpenShift user. Consumed by `deploy` task
-    * OPENSHIFT_PASSWD  - OpenShift password. Consumed by `deploy` task
-    * OPENSHIFT_TOKEN   - OpenShift token. Consumed by `systemtest` task
-    * OPENSHIFT_PROJECT - OpenShift project for EnMasse. Consumed by `deploy` and `systemtests` tasks
-    * DOCKER_ORG        - Docker organization for EnMasse images. Consumed by `build`, `pack`, `*Image` and `*Version` tasks. Defaults to `enmasseproject`
-    * DOCKER_USER       - Docker user for registry login. Consumed by `push*` tasks
-    * DOCKER_PASS       - Docker password for registry login. Consumed by `push*` tasks
-    * DOCKER_REGISTRY   - Docker registry for EnMasse images. Consumed by `build`, `pack`, `tag*` and `push*`. Defaults to `docker.io`
-    * COMMIT             - Commit hash used as docker image tag in snapshots and in test. Consumed by all tasks except `deploy`. Defaults to `latest`
-    * VERSION            - Version used when building releases. Consumed by all tasks except `deploy`. Defaults to `latest`
+    * OPENSHIFT_MASTER  - URL to OpenShift master. Consumed by `deploy` and `systemtests` targets
+    * OPENSHIFT_USER    - OpenShift user. Consumed by `deploy` target
+    * OPENSHIFT_PASSWD  - OpenShift password. Consumed by `deploy` target
+    * OPENSHIFT_TOKEN   - OpenShift token. Consumed by `systemtests` target
+    * OPENSHIFT_PROJECT - OpenShift project for EnMasse. Consumed by `deploy` and `systemtests` targets
+    * DOCKER_ORG        - Docker organization for EnMasse images. Consumed by `build`, `package`, `docker*` targets. tasks. Defaults to `enmasseproject`
+    * DOCKER_REGISTRY   - Docker registry for EnMasse images. Consumed by `build`, `package`, `docker_tag` and `docker_push` targets. Defaults to `docker.io`
+    * TAG               - Tag used as docker image tag in snapshots and in the generated templates. Consumed by `build`, `package`, `docker_tag` and `docker_push` targets.

@@ -9,6 +9,14 @@ ext {
 import de.undercouch.gradle.tasks.download.Download
 
 task fetchDependencies(type: Download) {
+    onlyIf {
+        def result = exec {
+            executable "ls"
+            args "${buildDir}/apache-artemis-bin.tar.gz"
+            ignoreExitValue = true
+        }
+        result.exitValue != 0
+    }
     src 'http://www-eu.apache.org/dist/activemq/activemq-artemis/2.2.0/apache-artemis-2.2.0-bin.tar.gz'
     dest new File(buildDir, 'apache-artemis-bin.tar.gz')
 }

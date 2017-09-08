@@ -5,8 +5,10 @@ require 'json'
 
 def main
   file = ARGV[0]
-  outputFile = ARGV[1]
-  output = File.open(outputFile, "w")
+  outputDir = ARGV[1]
+  base = File.basename(file, ".json")
+  ext = File.extname(file)
+  output = File.open("#{outputDir}/#{base}.yaml", "w")
 
   content = JSON::load( File.open(file) ).to_yaml
   output << content
