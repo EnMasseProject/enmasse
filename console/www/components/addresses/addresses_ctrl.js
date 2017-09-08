@@ -394,31 +394,31 @@ angular.module('patternfly.wizard').controller('WizardController', ['$scope', '$
 
             $scope.tooltip = address_service.tooltip
             $scope.getTooltip = function (addr) {
-              return $scope.tooltip.address[addr].tooltip
+              return $scope.tooltip.address[addr].longDescription
             }
             $scope.getLabel = function (addr) {
-              return $scope.tooltip.address[addr].label
+              return $scope.tooltip.address[addr].shortDescription
             }
             $scope.hasExternal = function (addr) {
               return angular.isDefined($scope.tooltip.address[addr].external)
             }
             $scope.hasTooltip = function (addr) {
-              return angular.isDefined($scope.tooltip.address[addr].tooltip)
+              return angular.isDefined($scope.tooltip.address[addr].longDescription)
             }
             $scope.getExternal = function (addr) {
               return $scope.tooltip.address[addr].external
             }
             $scope.getPlantip = function (addr, plan) {
-              return $scope.tooltip.address[addr].plan[plan].tooltip
+              return $scope.tooltip.address[addr].plan[plan].longDescription
             }
             $scope.getPlanLabel = function (addr, plan) {
-              return $scope.tooltip.address[addr].plan[plan].label
+              return $scope.tooltip.address[addr].plan[plan].shortDescription
             }
             $scope.hasExternalPlan = function (addr, plan) {
               return angular.isDefined($scope.tooltip.address[addr].plan[plan].external)
             }
             $scope.hasPlantip = function (addr, plan) {
-              return angular.isDefined($scope.tooltip.address[addr].plan[plan].tooltip)
+              return angular.isDefined($scope.tooltip.address[addr].plan[plan].longDescription)
             }
             $scope.getExternalPlan = function (addr, plan) {
               return $scope.tooltip.address[addr].plan[plan].external
