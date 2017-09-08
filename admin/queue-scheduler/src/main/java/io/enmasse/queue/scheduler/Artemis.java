@@ -73,6 +73,7 @@ public class Artemis implements Broker {
                 if (retries > maxRetries) {
                     promise.completeExceptionally(result.cause());
                 } else {
+                    log.info("Error creating sender, retries = {}", retries);
                     vertx.setTimer(1000, id -> createSender(vertx, connection, promise, retries + 1));
                 }
             }
@@ -93,6 +94,7 @@ public class Artemis implements Broker {
                 if (retries > maxRetries) {
                     promise.completeExceptionally(h.cause());
                 } else {
+                    log.info("Error creating receiver, retries = {}", retries);
                     vertx.setTimer(1000, id -> createReceiver(vertx, connection, sender, promise, retries + 1));
                 }
             }
