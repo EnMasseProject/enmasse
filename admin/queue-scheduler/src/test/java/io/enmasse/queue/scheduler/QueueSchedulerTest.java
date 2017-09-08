@@ -24,10 +24,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.internal.util.collections.Sets;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -36,6 +33,7 @@ import static io.enmasse.queue.scheduler.TestUtils.waitForPort;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 public class QueueSchedulerTest {
 
@@ -46,12 +44,14 @@ public class QueueSchedulerTest {
     private Vertx vertx;
     private TestBrokerFactory brokerFactory;
     private QueueScheduler scheduler;
+    private TestStateListener testStateListener = new TestStateListener();
 
     @Before
     public void setup() throws Exception {
         vertx = Vertx.vertx();
         brokerFactory = new TestBrokerFactory(vertx, "localhost");
-        scheduler = new QueueScheduler(brokerFactory, 0, null);
+
+        scheduler = new QueueScheduler(brokerFactory, new SchedulerState(testStateListener), 0, null);
         TestUtils.deployVerticle(vertx, scheduler);
         int schedulerPort = waitForPort(() -> scheduler.getPort(), 1, TimeUnit.MINUTES);
         System.out.println("Scheduler port is " + schedulerPort);
@@ -154,11 +154,21 @@ public class QueueSchedulerTest {
         waitForAddresses(br1, 1);
         waitForAddresses(br2, 1);
 
-        br2.close();
+        br2.undeploy(vertx);
+        waitBrokers(POOLED_INMEMORY);
 
         br2 = deployBroker(POOLED_PERSISTED);
         waitForAddresses(br2, 1);
         assertThat(br2.getQueueNames(), hasItem("queue2"));
+    }
+
+    private void waitBrokers(String ... brokerIds) throws InterruptedException {
+        long endTime = System.currentTimeMillis() + 60_000;
+        while (System.currentTimeMillis() < endTime && !testStateListener.hasBrokers(brokerIds)) {
+            Thread.sleep(1000);
+        }
+        assertTrue(testStateListener.hasBrokers(brokerIds));
+
     }
 
     @Test
@@ -169,7 +179,8 @@ public class QueueSchedulerTest {
         waitForAddresses(br1, 1);
         assertThat(br1.getQueueNames(), hasItem("queue1"));
 
-        br1.close();
+        br1.undeploy(vertx);
+        waitBrokers();
 
         br1 = deployBroker(POOLED_INMEMORY);
         waitForAddresses(br1, 1);
@@ -177,7 +188,7 @@ public class QueueSchedulerTest {
     }
 
     private static void waitForAddresses(TestBroker broker, long numAddresses) throws InterruptedException {
-        waitForAddresses(broker, numAddresses, 1, TimeUnit.MINUTES);
+        waitForAddresses(broker, numAddresses, 2, TimeUnit.MINUTES);
     }
 
     private static void waitForAddresses(TestBroker broker, long numAddresses, long timeout, TimeUnit timeUnit) throws InterruptedException {
@@ -200,5 +211,32 @@ public class QueueSchedulerTest {
         builder.setType(StandardType.QUEUE);
         builder.setPlan(StandardType.QUEUE.getPlans().stream().filter(p -> p.getName().equals(pooled ? persisted ? POOLED_PERSISTED : POOLED_INMEMORY : INMEMORY) ).findFirst().get());
         return builder.build();
+    }
+
+    private static class TestStateListener implements StateListener {
+        private final Set<String> brokerIdSet = new HashSet<>();
+        public synchronized  boolean hasBrokers(String ... brokerIds) {
+            if (brokerIds.length != brokerIdSet.size()) {
+                return false;
+            }
+
+            return brokerIdSet.containsAll(Arrays.asList(brokerIds));
+        }
+
+        @Override
+        public void addressesChanged(Map<String, Set<Address>> updatedMap) throws TimeoutException {
+
+        }
+
+        @Override
+        public synchronized void brokerAdded(String groupId, String brokerId, Broker broker) throws TimeoutException {
+            brokerIdSet.add(brokerId);
+
+        }
+
+        @Override
+        public synchronized void brokerRemoved(String groupId, String brokerId) throws TimeoutException {
+            brokerIdSet.remove(brokerId);
+        }
     }
 }

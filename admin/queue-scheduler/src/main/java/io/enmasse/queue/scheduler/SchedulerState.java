@@ -28,11 +28,19 @@ import java.util.stream.Collectors;
 /**
  * Contains the mapping from queue to broker and ensures there is only one modifying the state at a time.
  */
-public class SchedulerState {
+public class SchedulerState implements StateListener {
     private static final Logger log = LoggerFactory.getLogger(SchedulerState.class.getName());
     private final Map<String, Map<String, Broker>> brokerGroupMap = new LinkedHashMap<>();
     private final Map<String, Set<Address>> addressMap = new LinkedHashMap<>();
+    private final StateListener chainedListener;
 
+    public SchedulerState(StateListener chainedListener) {
+        this.chainedListener = chainedListener;
+    }
+
+    public SchedulerState() {
+        this(null);
+    }
 
     public synchronized void addressesChanged(Map<String, Set<Address>> updatedMap) throws TimeoutException {
         Set<String> removedGroups = new HashSet<>(addressMap.keySet());
@@ -41,6 +49,9 @@ public class SchedulerState {
 
         for (Map.Entry<String, Set<Address>> entry : updatedMap.entrySet()) {
             groupUpdated(entry.getKey(), entry.getValue());
+        }
+        if (chainedListener != null) {
+            chainedListener.addressesChanged(updatedMap);
         }
     }
 
@@ -81,6 +92,9 @@ public class SchedulerState {
         } else {
             distributeAddressesByNumQueues(groupId, addresses);
         }
+        if (chainedListener != null) {
+            chainedListener.brokerAdded(groupId, brokerId, broker);
+        }
     }
 
     public synchronized void brokerRemoved(String groupId, String brokerId) throws TimeoutException {
@@ -98,6 +112,9 @@ public class SchedulerState {
             log.info("Broker " + brokerId + " in group " + groupId + " was removed");
         } else {
             log.info("Broker was already removed, ignoring");
+        }
+        if (chainedListener != null) {
+            chainedListener.brokerRemoved(groupId, brokerId);
         }
     }
 
@@ -176,5 +193,9 @@ public class SchedulerState {
                 broker.deleteQueue(address.getAddress());
             }
         }
+    }
+
+    public interface Listener {
+
     }
 }

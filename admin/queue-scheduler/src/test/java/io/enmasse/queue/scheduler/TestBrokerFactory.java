@@ -47,7 +47,10 @@ public class TestBrokerFactory implements BrokerFactory {
         brokerMap.put(id, broker);
         CountDownLatch latch = new CountDownLatch(1);
         vertx.deployVerticle(broker, result -> {
-            latch.countDown();
+            if (result.succeeded()) {
+                broker.setDeploymentId(result.result());
+                latch.countDown();
+            }
         });
         latch.await(1, TimeUnit.MINUTES);
         return broker;
