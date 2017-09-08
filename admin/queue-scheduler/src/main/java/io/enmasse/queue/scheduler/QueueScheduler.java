@@ -42,7 +42,7 @@ public class QueueScheduler extends AbstractVerticle implements ConfigListener {
     private static final Logger log = LoggerFactory.getLogger(QueueScheduler.class.getName());
     private static final Symbol groupSymbol = Symbol.getSymbol("qd.route-container-group");
 
-    private final SchedulerState schedulerState = new SchedulerState();
+    private final SchedulerState schedulerState;
     private final BrokerFactory brokerFactory;
     private ProtonSaslAuthenticatorFactory saslAuthenticatorFactory;
     private volatile ProtonServer server;
@@ -50,8 +50,9 @@ public class QueueScheduler extends AbstractVerticle implements ConfigListener {
     private final int port;
     private final String certDir;
 
-    public QueueScheduler(BrokerFactory brokerFactory, int listenPort, String certDir) {
+    public QueueScheduler(BrokerFactory brokerFactory, SchedulerState schedulerState, int listenPort, String certDir) {
         this.brokerFactory = brokerFactory;
+        this.schedulerState = schedulerState;
         this.port = listenPort;
         this.certDir = certDir;
     }

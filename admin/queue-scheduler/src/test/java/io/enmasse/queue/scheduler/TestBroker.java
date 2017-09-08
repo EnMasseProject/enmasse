@@ -18,6 +18,7 @@ package io.enmasse.queue.scheduler;
 
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
+import io.vertx.core.Vertx;
 import io.vertx.proton.ProtonClient;
 import io.vertx.proton.ProtonConnection;
 
@@ -32,6 +33,7 @@ public class TestBroker extends AbstractVerticle implements Broker {
     private final int schedulerPort;
     private final Set<String> addressSet = new LinkedHashSet<>();
     private volatile ProtonConnection connection;
+    private volatile String deploymentId;
 
     public TestBroker(String id, String schedulerHost, int schedulerPort) {
         this.id = id;
@@ -39,10 +41,28 @@ public class TestBroker extends AbstractVerticle implements Broker {
         this.schedulerPort = schedulerPort;
     }
 
+    public void setDeploymentId(String deploymentId) {
+        this.deploymentId = deploymentId;
+    }
+
+    public String getDeploymentId() {
+        return deploymentId;
+    }
+
     @Override
     public void start(Future<Void> promise) throws Exception {
         ProtonClient client = ProtonClient.create(vertx);
         connectToScheduler(client, promise);
+    }
+
+    @Override
+    public void stop(Future<Void> promise) {
+        vertx.runOnContext(id -> {
+            if (connection != null) {
+                connection.close();
+            }
+            promise.complete();
+        });
     }
 
     private void connectToScheduler(ProtonClient client, Future<Void> promise) {
@@ -79,9 +99,7 @@ public class TestBroker extends AbstractVerticle implements Broker {
         return Collections.unmodifiableSet(addressSet);
     }
 
-    public void close() {
-        if (connection != null) {
-            connection.close();
-        }
+    public void undeploy(Vertx vertx) {
+        vertx.undeploy(deploymentId);
     }
 }

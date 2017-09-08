@@ -29,6 +29,7 @@ public class Main {
 
         QueueScheduler scheduler = new QueueScheduler(
                 connection -> Artemis.create(vertx, connection),
+                new SchedulerState(),
                 listenPort,
                 certDir);
 
