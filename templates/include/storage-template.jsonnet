@@ -143,7 +143,7 @@ local forwarder = import "forwarder.jsonnet";
         {
           "name": "ADDRESS",
           "description": "The address to use for the %s" % [addrtype],
-          "required": true
+          "value": ""
         },
         {
           "name": "COLOCATED_ROUTER_SECRET",

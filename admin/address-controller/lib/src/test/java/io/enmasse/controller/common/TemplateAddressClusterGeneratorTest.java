@@ -74,7 +74,7 @@ public class TemplateAddressClusterGeneratorTest {
         for (HasMetadata resource : resources) {
             Map<String, String> annotations = resource.getMetadata().getAnnotations();
             assertNotNull(annotations.get(AnnotationKeys.CLUSTER_ID));
-            assertThat(annotations.get(AnnotationKeys.CLUSTER_ID), is("cluster1"));
+            assertThat(annotations.get(AnnotationKeys.CLUSTER_ID), is(dest.getName()));
         }
         List<ParameterValue> parameters = captor.getAllValues();
         assertThat(parameters.size(), is(7));
@@ -105,7 +105,7 @@ public class TemplateAddressClusterGeneratorTest {
         when(kubernetes.processTemplate(anyString(), captor.capture())).thenReturn(new KubernetesListBuilder().addNewConfigMapItem().withNewMetadata().withName("testmap").endMetadata().endConfigMapItem().build());
         when(kubernetes.getSecret(anyString())).thenReturn(Optional.empty());
 
-        return generator.generateCluster("cluster1", Collections.singleton(address));
+        return generator.generateCluster(address.getName(), Collections.singleton(address));
     }
 
 }

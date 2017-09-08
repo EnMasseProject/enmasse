@@ -109,7 +109,7 @@ objects:
     required: true
   - description: The address to use for the queue
     name: ADDRESS
-    required: true
+    value: ''
   - description: Name of secret containing router key and certificate
     name: COLOCATED_ROUTER_SECRET
     required: true
@@ -242,7 +242,7 @@ objects:
     required: true
   - description: The address to use for the queue
     name: ADDRESS
-    required: true
+    value: ''
   - description: Name of secret containing router key and certificate
     name: COLOCATED_ROUTER_SECRET
     required: true
@@ -430,7 +430,7 @@ objects:
     required: true
   - description: The address to use for the topic
     name: ADDRESS
-    required: true
+    value: ''
   - description: Name of secret containing router key and certificate
     name: COLOCATED_ROUTER_SECRET
     required: true
@@ -634,7 +634,7 @@ objects:
     required: true
   - description: The address to use for the topic
     name: ADDRESS
-    required: true
+    value: ''
   - description: Name of secret containing router key and certificate
     name: COLOCATED_ROUTER_SECRET
     required: true

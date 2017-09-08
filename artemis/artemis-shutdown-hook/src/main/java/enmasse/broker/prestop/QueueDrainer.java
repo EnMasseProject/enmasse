@@ -54,14 +54,14 @@ public class QueueDrainer {
         return addresses;
     }
 
-    public void drainMessages(Endpoint to, Optional<String> queueName) throws Exception {
+    public void drainMessages(Endpoint to, String queueName) throws Exception {
         BrokerManager brokerManager = new BrokerManager(fromHost.coreEndpoint());
 
-        if (queueName.isPresent()) {
+        if (queueName != null && !queueName.isEmpty()) {
             brokerManager.destroyConnectorService("amqp-connector");
-            startDrain(to, queueName.get());
+            startDrain(to, queueName);
             System.out.println("Waiting.....");
-            brokerManager.waitUntilEmpty(Collections.singleton(queueName.get()));
+            brokerManager.waitUntilEmpty(Collections.singleton(queueName));
         } else {
             Set<String> addresses = getQueues(brokerManager);
 
