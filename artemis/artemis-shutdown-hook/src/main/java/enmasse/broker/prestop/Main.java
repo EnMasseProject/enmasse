@@ -55,11 +55,11 @@ public class Main {
             vertx.deployVerticle(discoveryClient);
             migrator.migrate();
         } else {
+            String queueName = System.getenv("QUEUE_NAME");
             String messagingHost = System.getenv("MESSAGING_SERVICE_HOST");
             int messagingPort = Integer.parseInt(System.getenv("MESSAGING_SERVICE_PORT"));
             Endpoint to = new Endpoint(messagingHost, messagingPort);
 
-            Optional<String> queueName = Optional.ofNullable(System.getenv("QUEUE_NAME"));
             QueueDrainer client = new QueueDrainer(vertx, localHost, debugFn);
 
             client.drainMessages(to, queueName);

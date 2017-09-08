@@ -33,7 +33,7 @@ function configure() {
         cp $CONFIG_TEMPLATES/broker_header.xml /tmp/broker.xml
         if [ -n "$TOPIC_NAME" ]; then
             cat $CONFIG_TEMPLATES/broker_topic.xml >> /tmp/broker.xml
-        elif [ "$QUEUE_NAME" != "ENMASSE_INTERNAL_RESERVED" ]; then
+        elif [ -n $QUEUE_NAME ] && [ "$QUEUE_NAME" != "" ]; then
             cat $CONFIG_TEMPLATES/broker_queue.xml >> /tmp/broker.xml
         else
             cat $CONFIG_TEMPLATES/broker_queue_colocated.xml >> /tmp/broker.xml

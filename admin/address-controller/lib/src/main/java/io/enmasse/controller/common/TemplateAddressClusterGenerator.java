@@ -93,8 +93,6 @@ public class TemplateAddressClusterGenerator implements AddressClusterGenerator 
         // If the name of the group matches that of the address, assume a scalable queue
         if (clusterId.equals(first.getName()) && addressSet.size() == 1) {
             paramMap.put(TemplateParameter.ADDRESS, first.getAddress());
-        } else {
-            paramMap.put(TemplateParameter.ADDRESS, "ENMASSE_INTERNAL_RESERVED");
         }
 
         ParameterValue parameters[] = paramMap.entrySet().stream()
