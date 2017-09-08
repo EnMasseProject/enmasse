@@ -92,13 +92,13 @@ def parse(names, verbose):
         if verbose:
             print "    ", fname
 
-        tooltip = None
+        longDescription = None
 
         for line in modeldoc:
             s = p.search(line)
             if s:
                 obj = base
-                keystr = s.group(1)     # // address.queue.label
+                keystr = s.group(1)     # // address.queue.shortDescription
                 value = s.group(2)      # :the text after the first :
 
                 keys = keystr.split('.')
@@ -112,19 +112,19 @@ def parse(names, verbose):
                     else:
                         # :start and :stop lines surround block values
                         if value == 'start':
-                            tooltip = []                    # start accumulating tooltip lines
+                            longDescription = []                    # start accumulating description lines
                             continue
                         elif value == 'stop':
-                            obj[key] = ' '.join(tooltip)    # join the tooltip lines in to one line
-                            tooltip = None
+                            obj[key] = ' '.join(longDescription)    # join the description lines in to one line
+                            longDescription = None
                             continue
 
                         # assign the value to the last key
                         obj[key] = value
 
-            # are we accumulating tooltip lines
-            elif tooltip is not None:
-                tooltip.append(line.rstrip())
+            # are we accumulating longDescription lines
+            elif longDescription is not None:
+                longDescription.append(line.rstrip())
 
         modeldoc.close()
 
