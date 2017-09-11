@@ -26,7 +26,7 @@
     }
   },
 
-  clientContainer(name, image, mem_request, env, http_health, http_ready)::
+  clientContainer(name, image, mem_request, env, volumeMounts, http_health, http_ready)::
   {
     local health_port =
     {
@@ -55,6 +55,7 @@
     "image": image,
     "name": name,
     "env": env,
+    "volumeMounts": volumeMounts,
     "resources": {
         "requests": {
             "memory": mem_request,
