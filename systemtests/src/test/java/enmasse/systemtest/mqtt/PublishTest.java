@@ -18,6 +18,7 @@ package enmasse.systemtest.mqtt;
 
 import enmasse.systemtest.Destination;
 import org.junit.Test;
+import org.junit.Ignore;
 
 import java.util.Arrays;
 import java.util.List;
@@ -47,6 +48,7 @@ public class PublishTest extends MqttTestBase {
     }
 
     @Test
+    @Ignore
     public void testPublishQoS1() throws Exception {
 
         List<String> messages = Arrays.asList("foo", "bar", "baz");
