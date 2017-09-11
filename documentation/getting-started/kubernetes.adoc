@@ -90,6 +90,21 @@ Deploy EnMasse to enmasse:
 kubectl apply -f kubernetes/enmasse.yaml -n enmasse
 ....
 
+[[role-based-access-control]]
+==== Role Based Access Control (RBAC)
+
+The Kubernetes deployment script and YAML files currently do not support Role
+Based Access Control (RBAC). In Kubernetes clusters which have RBAC enabled, it is
+required to additionally create a role binding for the `default` service account
+to the `view` role and for the `enmasse-service-account` to the `cluster-admin` role:
+
+....
+kubectl create clusterrolebinding enmasse-service-account-binding --clusterrole=cluster-admin --serviceaccount=enmasse:enmasse-service-account
+kubectl create rolebinding default-view-binding --clusterrole=view --serviceaccount=enmasse:default -n enmasse
+....
+
+_Note: The `cluster-admin` role gives the `enmasse-service-account` service account unlimited access to the Kubernetes cluster._
+
 [[deploying-external-load-balancers]]
 === Deploying external load balancers
 
