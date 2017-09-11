@@ -25,7 +25,7 @@ task buildArtemisAmqpModule {
   doLast {
     exec {
       workingDir 'activemq-artemis/artemis-protocols/artemis-amqp-protocol'
-      commandLine 'mvn', 'install', '-DskipTests'
+      commandLine 'mvn', '-q', 'install', '-DskipTests'
     }
   }
 }
