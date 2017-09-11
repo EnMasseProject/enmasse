@@ -40,15 +40,18 @@ This builds all modules including java.
 
 #### Build a docker image and push them to docker hub:
 
+    export DOCKER_ORG=myorg
     docker login -u myuser -p mypassword docker.io
-    DOCKER_ORG=myorg make docker_build docker_tag docker_push
+    make docker_build
+    make docker_tag docker_push
 
 #### Fast building of EnMasse and pushing images to docker registry in local OpenShift instance (avoids pushing to docker hub)
 
     export DOCKER_ORG=myproject
     export DOCKER_REGISTRY=172.30.1.1:5000
     docker login -u myproject -p `oc whoami -t` 172.30.1.1:5000
-    make all docker_tag docker_push
+    make GRADLE_ARGS="-x test" -j4
+    make -j4 docker_tag docker_push
 
 #### Deploying to an OpenShift instance
 
