@@ -13,7 +13,8 @@ BUILD_TARGETS  = init build test package clean $(DOCKER_TARGETS)
 all: init build test package docker_build
 
 build_java:
-	./gradlew build pack -i
+	./gradlew build -i
+	./gradlew pack --rerun-tasks
 
 docker_build: build_java
 
