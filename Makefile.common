@@ -19,6 +19,7 @@ mocha:
 
 docker_build: package
 	if [ -f Dockerfile ]; then docker build --build-arg version=$(TAG) -t $(PROJECT_PREFIX)-$(PROJECT_NAME):$(TAG) . ; fi
+	docker images | grep $(PROJECT_PREFIX)
 
 docker_tag:
 	if [ -f Dockerfile ]; then docker tag $(PROJECT_PREFIX)-$(PROJECT_NAME):$(TAG) $(DOCKER_REGISTRY)/$(DOCKER_ORG)/$(PROJECT_NAME):$(TAG) ; fi
