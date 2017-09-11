@@ -2,6 +2,7 @@ local common = import "common.jsonnet";
 {
   deployment(addressSpace, image_repo)::
     {
+      local certSecretName = "amqp-kafka-bridge-internal-cert",
       "apiVersion": "extensions/v1beta1",
       "kind": "Deployment",
       "metadata": {
@@ -10,7 +11,8 @@ local common = import "common.jsonnet";
           "app": "enmasse"
         },
         "annotations": {
-          "addressSpace": addressSpace
+          "addressSpace": addressSpace,
+          "io.enmasse.certSecretName": certSecretName
         },
         "name": "amqp-kafka-bridge"
       },
@@ -29,12 +31,66 @@ local common = import "common.jsonnet";
           },
           "spec": {
             "containers": [
-              common.clientContainer("amqp-kafka-bridge", image_repo, "512Mi", [
-                        {
-                          "name": "KAFKA_BOOTSTRAP_SERVERS",
-                          "value": "${KAFKA_BOOTSTRAP_SERVERS}"
-                        }], true, true),
-            ]
+              {
+                "image": image_repo,
+                "name": "amqp-kafka-bridge",
+                "env": [
+                  {
+                    "name": "AMQP_CERT_DIR",
+                    "value": "/etc/enmasse-certs"
+                  },
+                  {
+                    "name": "KAFKA_BOOTSTRAP_SERVERS",
+                    "value": "${KAFKA_BOOTSTRAP_SERVERS}"
+                  }
+                ],
+                "resources": {
+                    "requests": {
+                        "memory": "512Mi"
+                    },
+                    "limits": {
+                        "memory": "512Mi"
+                    }
+                },
+                "volumeMounts": [
+                  {
+                    "name": certSecretName,
+                    "mountPath": "/etc/enmasse-certs",
+                    "readOnly": true
+                  }
+                ],
+                "ports": [
+                  {
+                    "name": "health",
+                    "containerPort": "8080"
+                  },
+                  {
+                    "name": "ready",
+                    "containerPort": "8080"
+                  }
+                ],
+                "livenessProbe": {
+                  "httpGet": {
+                    "path": "/health",
+                    "port": "health"
+                  }
+                },
+                "readinessProbe": {
+                  "httpGet": {
+                    "path": "/ready",
+                    "port": "ready"
+                  }
+                },
+              }
+            ],
+            "volumes": [
+              {
+                "name": certSecretName,
+                "secret": {
+                  "secretName": certSecretName
+                }
+              }
+             ]
           }
         }
       }
