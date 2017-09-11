@@ -34,3 +34,6 @@ sleep 30
 $DIR/oc adm --config $CDIR/master/admin.kubeconfig policy add-scc-to-user hostnetwork system:serviceaccount:default:router
 $DIR/oc adm --config $CDIR/master/admin.kubeconfig policy add-cluster-role-to-user cluster-reader system:serviceaccount:default:router
 $DIR/oc adm --config $CDIR/master/admin.kubeconfig router
+
+# Deploy docker registry
+$DIR/oc adm --config $CDIR/master/admin.kubeconfig registry
