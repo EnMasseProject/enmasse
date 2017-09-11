@@ -52,13 +52,13 @@ This builds all modules including java.
 
 #### Deploying to an OpenShift instance
 
-    OPENSHIFT_MASTER=https://localhost:8443 OPENSHIFT_PROJECT=myproject OPENSHIFT_USER=developer OPENSHIFT_PASSWD=developer make deploy
+    make deploy
 
 #### Running the systemtests
 
 This assumes that the above deploy step has been run
 
-    OPENSHIFT_MASTER_URL=https://localhost:8443 OPENSHIFT_NAMESPACE=myproject OPENSHIFT_USE_TLS=true OPENSHIFT_TOKEN=`oc whoami -t` make systemtests
+    make systemtests
 
 ## Reference
 
