@@ -36,10 +36,7 @@ can be initialized:
     make
 
 This can be run at the top level or within each module. You can also run the 'build', 'test', and 'package' targets individually.
-This builds all modules including java. Within a single java project, however, you must use gradle
-to build that module:
-
-    gradle build -i
+This builds all modules including java.
 
 #### Build a docker image and push them to docker hub:
 
