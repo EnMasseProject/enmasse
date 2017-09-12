@@ -1250,6 +1250,7 @@ objects:
     metadata:
       annotations:
         addressSpace: "${ADDRESS_SPACE}"
+        io.enmasse.certSecretName: amqp-kafka-bridge-internal-cert
       labels:
         app: enmasse
         name: amqp-kafka-bridge
@@ -1267,6 +1268,8 @@ objects:
         spec:
           containers:
           - env:
+            - name: AMQP_CERT_DIR
+              value: /etc/enmasse-certs
             - name: KAFKA_BOOTSTRAP_SERVERS
               value: "${KAFKA_BOOTSTRAP_SERVERS}"
             image: "${AMQP_KAFKA_BRIDGE_REPO}"
@@ -1289,6 +1292,14 @@ objects:
                 memory: 512Mi
               requests:
                 memory: 512Mi
+            volumeMounts:
+            - mountPath: /etc/enmasse-certs
+              name: amqp-kafka-bridge-internal-cert
+              readOnly: true
+          volumes:
+          - name: amqp-kafka-bridge-internal-cert
+            secret:
+              secretName: amqp-kafka-bridge-internal-cert
   parameters:
   - description: Hostname where API server can be reached
     name: ADDRESS_SPACE_SERVICE_HOST

@@ -2,6 +2,7 @@ local common = import "common.jsonnet";
 {
   deployment(addressSpace, image_repo)::
     {
+      local certSecretName = "amqp-kafka-bridge-internal-cert",
       "apiVersion": "extensions/v1beta1",
       "kind": "Deployment",
       "metadata": {
@@ -10,7 +11,8 @@ local common = import "common.jsonnet";
           "app": "enmasse"
         },
         "annotations": {
-          "addressSpace": addressSpace
+          "addressSpace": addressSpace,
+          "io.enmasse.certSecretName": certSecretName
         },
         "name": "amqp-kafka-bridge"
       },
@@ -29,12 +31,27 @@ local common = import "common.jsonnet";
           },
           "spec": {
             "containers": [
-              common.clientContainer("amqp-kafka-bridge", image_repo, "512Mi", [
-                        {
+              common.clientContainer("amqp-kafka-bridge", image_repo, "512Mi", [{
+                          "name": "AMQP_CERT_DIR",
+                          "value": "/etc/enmasse-certs"
+                        }, {
                           "name": "KAFKA_BOOTSTRAP_SERVERS",
                           "value": "${KAFKA_BOOTSTRAP_SERVERS}"
-                        }], true, true),
-            ]
+                        }], [{
+                          "name": certSecretName,
+                          "mountPath": "/etc/enmasse-certs",
+                          "readOnly": true
+                        }],
+                        true, true),
+            ],
+            "volumes": [
+              {
+                "name": certSecretName,
+                "secret": {
+                  "secretName": certSecretName
+                }
+              }
+             ]
           }
         }
       }
