@@ -68,7 +68,7 @@ public class TopicMigratorTest {
         System.out.println("Publishing message");
         publisher.publish(from.amqpEndpoint(), "mytopic", "hello, world");
 
-        TopicMigrator migrator = new TopicMigrator(Vertx.vertx(), from, new Endpoint("messaging.example.com", 5672));
+        TopicMigrator migrator = new TopicMigrator(Vertx.vertx(), from, new Endpoint("messaging.example.com", 5672), new ArtemisBrokerFactory(20_000));
         migrator.hostsChanged(Collections.singleton(to));
 
         System.out.println("Starting migrator");

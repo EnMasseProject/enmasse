@@ -16,7 +16,9 @@
 
 package io.enmasse.queue.scheduler;
 
+import io.enmasse.amqp.Artemis;
 import io.enmasse.amqp.ExternalSaslAuthenticator;
+import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 
 public class Main {
@@ -28,7 +30,18 @@ public class Main {
         int listenPort = Integer.parseInt(getEnvOrThrow("LISTEN_PORT"));
 
         QueueScheduler scheduler = new QueueScheduler(
-                connection -> Artemis.create(vertx, connection),
+                connection -> {
+                    Future<Broker> broker = Future.future();
+                    Future<Artemis> artemis = Artemis.createFromConnection(vertx, connection);
+                    artemis.setHandler(result -> {
+                        if (result.succeeded()) {
+                            broker.complete(new ArtemisAdapter(result.result()));
+                        } else {
+                            broker.fail(result.cause());
+                        }
+                    });
+                    return broker;
+                },
                 new SchedulerState(),
                 listenPort,
                 certDir);

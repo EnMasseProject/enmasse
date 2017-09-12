@@ -19,6 +19,7 @@ package enmasse.broker.prestop;
 import com.google.common.collect.Sets;
 import enmasse.discovery.Endpoint;
 import enmasse.discovery.Host;
+import io.enmasse.amqp.Artemis;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
@@ -40,41 +41,44 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class QueueDrainer {
     private final Vertx vertx;
     private final Host fromHost;
+    private final BrokerFactory brokerFactory;
     private final Optional<Runnable> debugFn;
 
-    public QueueDrainer(Vertx vertx, Host from, Optional<Runnable> debugFn) throws Exception {
+    public QueueDrainer(Vertx vertx, Host from, BrokerFactory brokerFactory, Optional<Runnable> debugFn) throws Exception {
         this.vertx = vertx;
         this.fromHost = from;
+        this.brokerFactory = brokerFactory;
         this.debugFn = debugFn;
     }
 
-    private Set<String> getQueues(BrokerManager brokerManager) throws Exception {
-        Set<String> addresses = Sets.newHashSet(brokerManager.listQueues());
+    private Set<String> getQueues(Artemis broker) throws Exception {
+        Set<String> addresses = Sets.newHashSet(broker.getQueueNames());
         addresses.removeIf(a -> a.startsWith("activemq.management"));
         return addresses;
     }
 
     public void drainMessages(Endpoint to, String queueName) throws Exception {
-        BrokerManager brokerManager = new BrokerManager(fromHost.coreEndpoint());
+        Artemis broker = brokerFactory.createClient(vertx, fromHost.amqpEndpoint());
 
         if (queueName != null && !queueName.isEmpty()) {
-            brokerManager.destroyConnectorService("amqp-connector");
+            broker.destroyConnectorService("amqp-connector");
             startDrain(to, queueName);
             System.out.println("Waiting.....");
-            brokerManager.waitUntilEmpty(Collections.singleton(queueName));
+            waitUntilEmpty(broker, Collections.singleton(queueName));
         } else {
-            Set<String> addresses = getQueues(brokerManager);
+            Set<String> addresses = getQueues(broker);
 
             for (String address : addresses) {
-                brokerManager.destroyConnectorService(address);
+                broker.destroyConnectorService(address);
                 startDrain(to, address);
             }
             System.out.println("Waiting.....");
-            brokerManager.waitUntilEmpty(addresses);
+            waitUntilEmpty(broker, addresses);
         }
         System.out.println("Done waiting!");
+        broker.forceShutdown();;
+        Thread.sleep(10_000);
         vertx.close();
-        brokerManager.shutdownBroker();
     }
 
     private void startDrain(Endpoint to, String address) {
@@ -161,4 +165,24 @@ public class QueueDrainer {
             System.out.println("Error deleting instance: " + e.getMessage());
         }
     }
+
+    private static void waitUntilEmpty(Artemis broker, Collection<String> queues) throws InterruptedException {
+        while (true) {
+            try {
+                long count = 0;
+                for (String queue : queues) {
+                    count += broker.getQueueMessageCount(queue);
+                    System.out.println("Found " + count + " messages in queue " + queue);
+                }
+                if (count == 0) {
+                    break;
+                }
+            } catch (Exception e) {
+                // Retry
+                System.out.println("Queue check failed: " + e.getMessage());
+            }
+            Thread.sleep(2000);
+        }
+    }
+
 }

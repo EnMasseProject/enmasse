@@ -10,15 +10,6 @@ dependencies {
     testCompile "junit:junit:${junitVersion}"
     testCompile "org.mockito:mockito-core:${mockitoVersion}"
 
-    testCompile("org.apache.activemq:artemis-core-client:${artemisVersion}") {
-        exclude group: "io.netty", module: "netty-all"
-    }
-    testCompile("org.apache.activemq:artemis-server:${artemisVersion}") {
-        exclude group: "io.netty", module: "netty-all"
-    }
-    testCompile("org.apache.activemq:artemis-amqp-protocol:${artemisVersion}") {
-        exclude group: "io.netty", module: "netty-all"
-    }
 }
 
 

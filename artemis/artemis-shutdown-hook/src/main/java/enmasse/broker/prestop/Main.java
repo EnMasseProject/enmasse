@@ -20,6 +20,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import enmasse.discovery.DiscoveryClient;
 import enmasse.discovery.Endpoint;
 import enmasse.discovery.Host;
+import io.enmasse.amqp.Artemis;
+import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 
 import java.io.File;
@@ -39,6 +41,8 @@ public class Main {
         Optional<Runnable> debugFn = Optional.empty();
         Host localHost = localHost();
         Vertx vertx = Vertx.vertx();
+        BrokerFactory brokerFactory = new ArtemisBrokerFactory(60_000L);
+
 
         if (System.getenv("TOPIC_NAME") != null) {
             String clusterId = System.getenv("CLUSTER_ID");
@@ -50,7 +54,7 @@ public class Main {
             annotationFilter.put("cluster_id", clusterId);
 
             DiscoveryClient discoveryClient = new DiscoveryClient("podsense", labelFilter, annotationFilter, Optional.of("broker"));
-            TopicMigrator migrator = new TopicMigrator(vertx, localHost, messagingEndpoint);
+            TopicMigrator migrator = new TopicMigrator(vertx, localHost, messagingEndpoint, brokerFactory);
             discoveryClient.addListener(migrator);
             vertx.deployVerticle(discoveryClient);
             migrator.migrate();
@@ -60,7 +64,7 @@ public class Main {
             int messagingPort = Integer.parseInt(System.getenv("MESSAGING_SERVICE_PORT"));
             Endpoint to = new Endpoint(messagingHost, messagingPort);
 
-            QueueDrainer client = new QueueDrainer(vertx, localHost, debugFn);
+            QueueDrainer client = new QueueDrainer(vertx, localHost, brokerFactory, debugFn);
 
             client.drainMessages(to, queueName);
         }

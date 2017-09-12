@@ -18,6 +18,7 @@ package enmasse.broker.prestop;
 
 import enmasse.discovery.Endpoint;
 import enmasse.discovery.Host;
+import io.enmasse.amqp.Artemis;
 import io.vertx.core.Vertx;
 import io.vertx.proton.*;
 import org.apache.qpid.proton.amqp.messaging.Source;
@@ -33,15 +34,15 @@ public class QueueMigrator implements Callable<QueueMigrator> {
     private final Vertx vertx;
     private final Host from;
     private final Host to;
-    private final BrokerManager localBroker;
+    private final Artemis broker;
     private final QueueInfo queueInfo;
 
-    public QueueMigrator(Vertx vertx, QueueInfo queueInfo, Host from, Host to, BrokerManager localBroker) {
+    public QueueMigrator(Vertx vertx, QueueInfo queueInfo, Host from, Host to, Artemis broker) {
         this.vertx = vertx;
         this.queueInfo = queueInfo;
         this.from = from;
         this.to = to;
-        this.localBroker = localBroker;
+        this.broker = broker;
     }
 
     private ProtonMessageHandler messageHandler(CountDownLatch latch, ProtonReceiver protonReceiver, ProtonSender protonSender) {
@@ -125,7 +126,7 @@ public class QueueMigrator implements Callable<QueueMigrator> {
     @Override
     public QueueMigrator call() throws Exception {
         System.out.println("Calling migrator...");
-        long numMessages = localBroker.getQueueMessageCount(queueInfo.getQueueName());
+        long numMessages = broker.getQueueMessageCount(queueInfo.getQueueName());
         CountDownLatch latch = new CountDownLatch(Math.toIntExact(numMessages));
         System.out.println("Migrating " + numMessages + " messages from " + queueInfo);
         createSender(latch);
