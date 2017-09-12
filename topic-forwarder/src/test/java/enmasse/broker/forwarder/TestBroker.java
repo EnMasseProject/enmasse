@@ -16,73 +16,98 @@
 
 package enmasse.broker.forwarder;
 
-import io.vertx.proton.ProtonClient;
-import io.vertx.proton.ProtonConnection;
-import io.vertx.proton.ProtonSender;
-import org.apache.activemq.artemis.api.core.RoutingType;
-import org.apache.activemq.artemis.api.core.TransportConfiguration;
-import org.apache.activemq.artemis.core.config.Configuration;
-import org.apache.activemq.artemis.core.config.CoreAddressConfiguration;
-import org.apache.activemq.artemis.core.config.impl.ConfigurationImpl;
-import org.apache.activemq.artemis.core.remoting.impl.netty.NettyAcceptorFactory;
-import org.apache.activemq.artemis.core.server.embedded.EmbeddedActiveMQ;
+import io.vertx.core.AbstractVerticle;
+import io.vertx.core.Future;
+import io.vertx.proton.*;
 import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.amqp.messaging.Source;
 import org.apache.qpid.proton.amqp.messaging.Target;
 import org.apache.qpid.proton.message.Message;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 
-public class TestBroker {
-    private final String host;
-    private final int port;
+public class TestBroker extends AbstractVerticle {
     private final String address;
-    private final EmbeddedActiveMQ server = new EmbeddedActiveMQ();
-    private final ProtonClient protonClient;
+    private ProtonClient protonClient;
+    private ProtonServer protonServer;
+    private final int id;
+    private final AsyncQueue queue = new AsyncQueue();
+    private final AtomicInteger numConsumers = new AtomicInteger(0);
+    private final AtomicInteger numProducers = new AtomicInteger(0);
 
-    public TestBroker(ProtonClient client, String host, int port, String address) {
-        this.protonClient = client;
-        this.host = host;
-        this.port = port;
+    public TestBroker(int id, String address) {
+        this.id = id;
         this.address = address;
     }
 
-    public void start() throws Exception {
-        Configuration config = new ConfigurationImpl();
-        config.setPersistenceEnabled(false);
+    @Override
+    public void start(Future<Void> promise) throws Exception {
+        protonClient = ProtonClient.create(vertx);
+        protonServer = ProtonServer.create(vertx)
+                .connectHandler(connnection -> {
+                    connnection.setContainer("broker-" + id);
+                    connnection.openHandler(conn -> {
+                        if (conn.succeeded()) {
+                            conn.result().open();
+                        } else {
+                            System.err.println("Error on open: " + conn.cause().getMessage());
+                        }
+                    });
+                    connnection.sessionOpenHandler(ProtonSession::open);
+                    connnection.receiverOpenHandler(receiver -> {
+                        receiver.handler((delivery, message) -> queue.add(message));
+                        receiver.closeHandler(r -> numProducers.decrementAndGet());
+                        receiver.open();
+                        numProducers.incrementAndGet();
+                    });
 
-        Map<String, Object> params = new LinkedHashMap<>();
-        params.put("protocols", "AMQP");
-        params.put("host", host);
-        params.put("port", port);
-        TransportConfiguration transport = new TransportConfiguration(NettyAcceptorFactory.class.getName(), params, "amqp");
-
-        config.setAcceptorConfigurations(Collections.singleton(transport));
-        config.setSecurityEnabled(false);
-        config.setName("broker-" + port);
-
-
-        CoreAddressConfiguration addressConfig = new CoreAddressConfiguration();
-        addressConfig.setName(address);
-        addressConfig.addRoutingType(RoutingType.MULTICAST);
-        config.addAddressConfiguration(addressConfig);
-        server.setConfiguration(config);
-
-        server.start();
+                    connnection.senderOpenHandler(sender -> {
+                        queue.registerListener(sender::send);
+                        sender.closeHandler(s -> numConsumers.decrementAndGet());
+                        sender.open();
+                        numConsumers.incrementAndGet();
+                    });
+                }).listen(0,"127.0.0.1", result -> {
+                    if (result.succeeded()) {
+                        promise.complete();
+                    } else {
+                        promise.fail(result.cause());
+                    }
+                });
     }
+
+    public int getId() {
+        return id;
+    }
+
+    private static class AsyncQueue {
+        private final List<AsyncQueueListener> listeners = new ArrayList<>();
+
+        public synchronized void add(Message message){
+            for (AsyncQueueListener listener : listeners) {
+                listener.messageAdded(message);
+            }
+        }
+
+        public synchronized void registerListener(AsyncQueueListener listener) {
+            this.listeners.add(listener);
+        }
+    }
+
+    private interface AsyncQueueListener {
+        void messageAdded(Message message);
+    }
+
 
     public void sendMessage(String messageBody, long timeout, TimeUnit timeUnit) throws InterruptedException {
         CountDownLatch latch = new CountDownLatch(1);
-        protonClient.connect(host, port, event -> {
+        protonClient.connect("127.0.0.1", protonServer.actualPort(), event -> {
             ProtonConnection connection = event.result().open();
             Target target = new Target();
             target.setAddress(address);
@@ -102,7 +127,7 @@ public class TestBroker {
         CountDownLatch latch = new CountDownLatch(1);
         CompletableFuture<List<String>> future = new CompletableFuture<>();
         List<String> messages = new ArrayList<>();
-        protonClient.connect(host, port, event -> {
+        protonClient.connect("localhost", protonServer.actualPort(), event -> {
             ProtonConnection connection = event.result().open();
             Source source = new Source();
             source.setAddress(address);
@@ -123,10 +148,22 @@ public class TestBroker {
     }
 
     public int numConnected() {
-        return server.getActiveMQServer().getConnectionCount();
+        return numConsumers.get() + numProducers.get();
     }
 
-    public void stop() throws Exception {
-        server.stop();
+    @Override
+    public void stop(Future<Void> promise) throws Exception {
+        if (protonServer != null) {
+            vertx.runOnContext(id -> {
+                protonServer.close();
+            });
+        }
+    }
+
+    public int getPort() {
+        if (protonServer != null) {
+            return protonServer.actualPort();
+        }
+        return -1;
     }
 }
