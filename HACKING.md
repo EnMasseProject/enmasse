@@ -6,7 +6,7 @@ To build EnMasse, you need
 
     * Java JDK >= 1.8
     * GNU GCC C++
-    * Ruby
+    * Python
     * Git
     * Node.js
     * npm
