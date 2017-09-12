@@ -7,4 +7,4 @@ dependencies {
     compileOnly "org.jboss.logging:jboss-logging-processor:${jbossLoggingProcessorVersion}"
 }
 
-build.dependsOn ':artemis:buildArtemisAmqpModule'
+compileJava.dependsOn ':artemis:buildArtemisAmqpModule'
