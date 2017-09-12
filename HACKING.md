@@ -51,7 +51,7 @@ This builds all modules including java.
     export DOCKER_REGISTRY=172.30.1.1:5000
     docker login -u myproject -p `oc whoami -t` 172.30.1.1:5000
     make GRADLE_ARGS="-x test" -j4
-    make -j4 docker_tag docker_push
+    make docker_tag docker_push
 
 #### Deploying to an OpenShift instance
 
