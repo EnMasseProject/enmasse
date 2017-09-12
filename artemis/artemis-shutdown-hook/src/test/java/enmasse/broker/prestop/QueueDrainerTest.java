@@ -46,7 +46,7 @@ public class QueueDrainerTest {
         toServer = new TestBroker(to.amqpEndpoint(), Arrays.asList("myqueue", "queue2"), false);
         fromServer.start();
         toServer.start();
-        client = new QueueDrainer(Vertx.vertx(), from, Optional.empty());
+        client = new QueueDrainer(Vertx.vertx(), from, new ArtemisBrokerFactory(20_000), Optional.empty());
     }
 
     @After

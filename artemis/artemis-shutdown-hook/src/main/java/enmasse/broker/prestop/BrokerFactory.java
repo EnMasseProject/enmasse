@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Red Hat Inc.
+ * Copyright 2017 Red Hat Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,17 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package enmasse.broker.prestop;
 
-package io.enmasse.queue.scheduler;
+import enmasse.discovery.Endpoint;
+import io.enmasse.amqp.Artemis;
+import io.vertx.core.Vertx;
 
-import java.util.Set;
-import java.util.concurrent.TimeoutException;
-
-/**
- * Generic interface towards brokers as expected by the queue-scheduler
- */
-public interface Broker {
-    Set<String> getQueueNames() throws TimeoutException;
-    void createQueue(String address) throws TimeoutException;
-    void deleteQueue(String address) throws TimeoutException;
+public interface BrokerFactory {
+    Artemis createClient(Vertx vertx, Endpoint endpoint) throws InterruptedException;
 }

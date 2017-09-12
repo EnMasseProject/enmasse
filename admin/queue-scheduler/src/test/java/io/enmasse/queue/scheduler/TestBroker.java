@@ -26,7 +26,6 @@ import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-
 public class TestBroker extends AbstractVerticle implements Broker {
     private final String id;
     private final String schedulerHost;
@@ -79,19 +78,13 @@ public class TestBroker extends AbstractVerticle implements Broker {
     }
 
     @Override
-    public synchronized void deployQueue(String address) {
+    public synchronized void createQueue(String address) {
         addressSet.add(address);
     }
 
     @Override
     public synchronized void deleteQueue(String address) {
         addressSet.remove(address);
-
-    }
-
-    @Override
-    public synchronized long getNumQueues() {
-        return addressSet.size();
     }
 
     @Override

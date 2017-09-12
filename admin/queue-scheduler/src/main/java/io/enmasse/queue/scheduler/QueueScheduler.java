@@ -18,6 +18,7 @@ package io.enmasse.queue.scheduler;
 
 import io.enmasse.address.model.Address;
 import io.vertx.core.AbstractVerticle;
+import io.vertx.core.Future;
 import io.vertx.core.http.ClientAuth;
 import io.vertx.core.net.PemKeyCertOptions;
 import io.vertx.core.net.PemTrustOptions;
@@ -32,7 +33,6 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -117,7 +117,13 @@ public class QueueScheduler extends AbstractVerticle implements ConfigListener {
     private void connectionOpened(ProtonConnection connection) {
         log.info("Connection opened from " + connection.getRemoteContainer());
         Future<Broker> broker = brokerFactory.createBroker(connection);
-        executeBlocking(() -> schedulerState.brokerAdded(getGroupId(connection), connection.getRemoteContainer(), broker.get(30, TimeUnit.SECONDS)),"Error adding broker");
+        broker.setHandler(result -> {
+            if (result.succeeded()) {
+                executeBlocking(() -> schedulerState.brokerAdded(getGroupId(connection), connection.getRemoteContainer(), result.result()), "Error adding broker");
+            } else {
+                log.info("Error getting broker instance", result.cause());
+            }
+        });
     }
 
     @Override

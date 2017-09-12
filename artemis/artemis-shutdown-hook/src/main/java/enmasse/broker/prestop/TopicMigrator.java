@@ -19,26 +19,30 @@ package enmasse.broker.prestop;
 import enmasse.discovery.DiscoveryListener;
 import enmasse.discovery.Endpoint;
 import enmasse.discovery.Host;
+import io.enmasse.amqp.Artemis;
 import io.vertx.core.Vertx;
 
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 public class TopicMigrator implements DiscoveryListener {
     private final Vertx vertx;
     private volatile Set<Host> destinationBrokers = Collections.emptySet();
     private final Host localHost;
-    private final BrokerManager localBroker;
+    private final Artemis localBroker;
     private final Endpoint messagingEndpoint;
+    private final BrokerFactory brokerFactory;
     private final ExecutorService service = Executors.newSingleThreadExecutor();
 
-    public TopicMigrator(Vertx vertx, Host localHost, Endpoint messagingEndpoint) throws Exception {
+    public TopicMigrator(Vertx vertx, Host localHost, Endpoint messagingEndpoint, BrokerFactory brokerFactory) throws Exception {
         this.vertx = vertx;
         this.localHost = localHost;
-        this.localBroker = new BrokerManager(localHost.coreEndpoint());
+        this.brokerFactory = brokerFactory;
+        this.localBroker = brokerFactory.createClient(vertx, localHost.amqpEndpoint());
         this.messagingEndpoint = messagingEndpoint;
     }
 
@@ -60,19 +64,19 @@ public class TopicMigrator implements DiscoveryListener {
 
         // Step 4: Destroy local queues
         System.out.println("Destroying local queues");
-        localBroker.destroySubscriptions(subscriptions);
+        destroySubscriptions(localBroker, subscriptions);
 
         // Step 5: Activate queues
         activateQueues(queueMap);
 
         // Step 6: Shutdown
         vertx.close();
-        localBroker.shutdownBroker();
+        localBroker.forceShutdown();
     }
 
     private void activateQueues(Map<QueueInfo, Host> queueMap) throws Exception {
         for (Map.Entry<QueueInfo, Host> entry : queueMap.entrySet()) {
-            try (BrokerManager mgr = new BrokerManager(entry.getValue().coreEndpoint())) {
+            try (Artemis mgr = brokerFactory.createClient(vertx, entry.getValue().amqpEndpoint())) {
                 mgr.resumeQueue(entry.getKey().getQueueName());
             }
         }
@@ -91,18 +95,30 @@ public class TopicMigrator implements DiscoveryListener {
             }
             Host dest = destinations.next();
             QueueInfo queue = subscriptionInfo.getQueueInfo();
-            try (BrokerManager manager = new BrokerManager(dest.coreEndpoint())) {
-                manager.createQueue(queue.getAddress(), queue.getQueueName());
+            try (Artemis manager = brokerFactory.createClient(vertx, dest.amqpEndpoint())) {
+                manager.deployQueue(queue.getQueueName(), queue.getAddress());
                 manager.pauseQueue(queue.getQueueName());
                 if (subscriptionInfo.getDivertInfo().isPresent()) {
                     DivertInfo divert = subscriptionInfo.getDivertInfo().get();
                     manager.createDivert(divert.getName(), divert.getRoutingName(), divert.getAddress(), divert.getForwardingAddress());
-                    manager.createConnectorService(messagingEndpoint, divert.getForwardingAddress());
+                    createConnectorService(messagingEndpoint, divert.getForwardingAddress());
                 }
             }
             queueMap.put(queue, dest);
         }
         return queueMap;
+    }
+
+    private void createConnectorService(Endpoint messagingEndpoint, String address) throws TimeoutException {
+        Map<String, String> parameters = new LinkedHashMap<>();
+        parameters.put("host", messagingEndpoint.hostname());
+        parameters.put("port", String.valueOf(messagingEndpoint.port()));
+        parameters.put("containerId", address);
+        parameters.put("groupId", address);
+        parameters.put("clientAddress", address);
+        parameters.put("sourceAddress", address);
+
+        localBroker.createConnectorService(address, parameters);
     }
 
     private Set<Host> otherHosts() {
@@ -126,9 +142,9 @@ public class TopicMigrator implements DiscoveryListener {
         }
     }
 
-    private Set<SubscriptionInfo> listSubscriptions(BrokerManager brokerManager) throws Exception {
-        Set<QueueInfo> queues = listQueuesForMigration(brokerManager);
-        Set<DivertInfo> diverts = listDivertsForMigration(brokerManager);
+    private Set<SubscriptionInfo> listSubscriptions(Artemis broker) throws Exception {
+        Set<QueueInfo> queues = listQueuesForMigration(broker);
+        Set<DivertInfo> diverts = listDivertsForMigration(broker);
 
         Set<SubscriptionInfo> subscriptions = new LinkedHashSet<>();
         Iterator<QueueInfo> it = queues.iterator();
@@ -146,9 +162,9 @@ public class TopicMigrator implements DiscoveryListener {
         return subscriptions;
     }
 
-    private Set<QueueInfo> listQueuesForMigration(BrokerManager mgr) throws Exception {
+    private Set<QueueInfo> listQueuesForMigration(Artemis mgr) throws Exception {
         Set<QueueInfo> queues = new LinkedHashSet<>();
-        for (String queueName : mgr.listQueues()) {
+        for (String queueName : mgr.getQueueNames()) {
             if (!queueName.startsWith("activemq.management") && !queueName.startsWith("topic-forwarder")) {
                 String address = mgr.getQueueAddress(queueName);
                 try {
@@ -161,9 +177,9 @@ public class TopicMigrator implements DiscoveryListener {
         return queues;
     }
 
-    private Set<DivertInfo> listDivertsForMigration(BrokerManager mgr) throws Exception {
+    private Set<DivertInfo> listDivertsForMigration(Artemis mgr) throws Exception {
         Set<DivertInfo> diverts = new LinkedHashSet<>();
-        for (String divertName : mgr.listDiverts()) {
+        for (String divertName : mgr.getDivertNames()) {
             if (!divertName.equals("qualified-topic-divert")) {
                 try {
                     String routingName = mgr.getDivertRoutingName(divertName);
@@ -178,6 +194,18 @@ public class TopicMigrator implements DiscoveryListener {
         return diverts;
     }
 
+    private void destroySubscriptions(Artemis broker, Set<SubscriptionInfo> subscriptions) throws Exception {
+        for (SubscriptionInfo subscription : subscriptions) {
+            QueueInfo queueInfo = subscription.getQueueInfo();
+            broker.destroyQueue(queueInfo.getQueueName());
+            if (subscription.getDivertInfo().isPresent()) {
+                broker.destroyDivert(subscription.getDivertInfo().get().getName());
+            }
+            if (subscription.getConnectorInfo().isPresent()) {
+                broker.destroyConnectorService(subscription.getConnectorInfo().get().getName());
+            }
+        }
+    }
 
     @Override
     public void hostsChanged(Set<Host> set) {

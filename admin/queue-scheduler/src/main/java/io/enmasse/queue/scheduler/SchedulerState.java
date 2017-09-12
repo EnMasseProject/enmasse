@@ -88,13 +88,21 @@ public class SchedulerState implements StateListener {
         Set<Address> addresses = addressMap.getOrDefault(groupId, Collections.emptySet());
         log.info("Broker " + brokerId + " in group " + groupId + " was added, distributing addresses: " + addresses);
         if (addresses.size() == 1) {
-            broker.deployQueue(addresses.iterator().next().getAddress());
+            deployQueue(broker, addresses.iterator().next().getAddress());
         } else {
             distributeAddressesByNumQueues(groupId, addresses);
         }
         if (chainedListener != null) {
             chainedListener.brokerAdded(groupId, brokerId, broker);
         }
+    }
+
+    private static void deployQueue(Broker broker, String address) throws TimeoutException {
+        broker.createQueue(address);
+    }
+
+    private static void deleteQueue(Broker broker, String address) throws TimeoutException {
+        broker.deleteQueue(address);
     }
 
     public synchronized void brokerRemoved(String groupId, String brokerId) throws TimeoutException {
@@ -161,7 +169,7 @@ public class SchedulerState implements StateListener {
         for (Address address : addressesToDeploy.values()) {
             BrokerInfo brokerInfo = brokerByNumQueues.poll();
             Broker broker = brokerInfo.broker;
-            broker.deployQueue(address.getAddress());
+            deployQueue(broker, address.getAddress());
             brokerInfo.queueNames.add(address.getAddress());
             brokerByNumQueues.offer(brokerInfo);
         }
@@ -182,7 +190,7 @@ public class SchedulerState implements StateListener {
     private void distributeAddressesAll(String groupId, Set<Address> addresses) throws TimeoutException {
         for (Address address : addresses) {
             for (Broker  broker : brokerGroupMap.getOrDefault(groupId, Collections.emptyMap()).values()) {
-                broker.deployQueue(address.getAddress());
+                deployQueue(broker, address.getAddress());
             }
         }
     }
@@ -190,7 +198,7 @@ public class SchedulerState implements StateListener {
     private void deleteAddresses(String groupId, Set<Address> removed) throws TimeoutException {
         for (Broker broker : brokerGroupMap.getOrDefault(groupId, Collections.emptyMap()).values()) {
             for (Address address : removed) {
-                broker.deleteQueue(address.getAddress());
+                deleteQueue(broker, address.getAddress());
             }
         }
     }

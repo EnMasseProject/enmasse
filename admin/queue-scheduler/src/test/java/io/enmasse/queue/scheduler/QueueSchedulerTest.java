@@ -193,9 +193,9 @@ public class QueueSchedulerTest {
 
     private static void waitForAddresses(TestBroker broker, long numAddresses, long timeout, TimeUnit timeUnit) throws InterruptedException {
         long endTime = System.currentTimeMillis() + timeUnit.toMillis(timeout);
-        long actualSize = broker.getNumQueues();
+        long actualSize = broker.getQueueNames().size();
         while (System.currentTimeMillis() < endTime && actualSize != numAddresses) {
-            actualSize = broker.getNumQueues();
+            actualSize = broker.getQueueNames().size();
             Thread.sleep(1000);
         }
         assertThat(actualSize, is(numAddresses));

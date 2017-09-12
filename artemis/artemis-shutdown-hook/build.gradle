@@ -5,7 +5,7 @@ tasks.withType(Tar){
 
 dependencies {
     compile project(':admin:common-lib:discovery')
-    testCompile project(':admin:common-lib:amqp')
+    compile project(':admin:common-lib:amqp')
     compile "io.vertx:vertx-proton:${vertxVersion}"
     compile("org.apache.activemq:artemis-core-client:${artemisVersion}") {
         exclude group: "io.netty", module: "netty-all"
