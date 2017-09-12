@@ -8,7 +8,7 @@ INSTALLDIR=build/enmasse-$(VERSION)
 	VERSION=$(TAG) REGISTRY=$(DOCKER_REGISTRY) PROJECT=$(DOCKER_ORG) jsonnet/jsonnet --ext-str VERSION --ext-str REGISTRY --ext-str PROJECT -m build $<
 
 yaml:
-	for d in kubernetes openshift; do for i in `find build/$$d -name "*.json"`; do b=`dirname $$i`; o="install/$${b#build/}"; mkdir -p $$o; ./scripts/convertyaml.rb $$i $$o; done; done
+	for d in kubernetes openshift; do for i in `find build/$$d -name "*.json"`; do b=`dirname $$i`; o="install/$${b#build/}"; mkdir -p $$o; ./scripts/convertyaml.py $$i $$o; done; done
 
 prepare:
 	if [ ! -f jsonnet ]; then $(MAKE) -C jsonnet; fi

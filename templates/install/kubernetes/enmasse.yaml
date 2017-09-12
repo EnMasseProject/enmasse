@@ -1,4 +1,3 @@
----
 apiVersion: v1
 items:
 - apiVersion: v1
@@ -465,7 +464,7 @@ items:
             requests:
               memory: 48Mi
           volumeMounts:
-          - mountPath: "/opt/none-authservice/cert"
+          - mountPath: /opt/none-authservice/cert
             name: none-authservice-cert
         volumes:
         - name: none-authservice-cert
@@ -505,11 +504,11 @@ items:
           - name: MULTIINSTANCE
             value: 'false'
           - name: CA_DIR
-            value: "/ca-cert"
+            value: /ca-cert
           - name: ADDRESS_SPACE_USER_DB_SECRET_NAME
             value: address-controller-userdb
           - name: ADDRESS_CONTROLLER_ENABLE_API_AUTH
-            value: "${ADDRESS_CONTROLLER_ENABLE_API_AUTH}"
+            value: ${ADDRESS_CONTROLLER_ENABLE_API_AUTH}
           image: docker.io/enmasseproject/address-controller:latest
           livenessProbe:
             tcpSocket:
@@ -531,12 +530,12 @@ items:
             requests:
               memory: 256Mi
           volumeMounts:
-          - mountPath: "/enmasse-templates"
+          - mountPath: /enmasse-templates
             name: templates
-          - mountPath: "/ca-cert"
+          - mountPath: /ca-cert
             name: ca-cert
             readOnly: true
-          - mountPath: "/address-controller-cert"
+          - mountPath: /address-controller-cert
             name: address-controller-cert
             readOnly: true
         serviceAccount: enmasse-service-account
@@ -569,7 +568,7 @@ items:
         - backend:
             serviceName: address-controller
             servicePort: 8080
-          path: "/v1"
+          path: /v1
 - apiVersion: v1
   kind: Service
   metadata:
