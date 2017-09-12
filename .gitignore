@@ -5,3 +5,4 @@
 # IntelliJ IDEA specific
 .idea/
 *.iml
+**/out/
