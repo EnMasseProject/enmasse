@@ -19,10 +19,12 @@ package enmasse.broker.forwarder;
 import enmasse.discovery.Host;
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
-import io.vertx.proton.ProtonClient;
+import io.vertx.ext.unit.TestContext;
+import io.vertx.ext.unit.junit.VertxUnitRunner;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,36 +39,36 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+@RunWith(VertxUnitRunner.class)
 public class ForwarderControllerTest {
     private static final Logger log = LoggerFactory.getLogger(ForwarderControllerTest.class.getName());
     private Vertx vertx = Vertx.vertx(new VertxOptions().setWorkerPoolSize(10));
     private String localHost = "127.0.0.1";
     private final String address = "mytopic";
-    ProtonClient client = ProtonClient.create(vertx);
-    private TestBroker serverA = new TestBroker(client, localHost, 33333, address);
-    private TestBroker serverB = new TestBroker(client, localHost, 33334, address);
-    private TestBroker serverC = new TestBroker(client, localHost, 33335, address);
+    private TestBroker serverA;
+    private TestBroker serverB;
+    private TestBroker serverC;
 
     @Before
-    public void setup() throws Exception {
-        serverA.start();
-        serverB.start();
-        serverC.start();
+    public void setup(TestContext testContext) throws Exception {
+        serverA = new TestBroker(1, address);
+        serverB = new TestBroker(2, address);
+        serverC = new TestBroker(3, address);
+        vertx.deployVerticle(serverA, testContext.asyncAssertSuccess());
+        vertx.deployVerticle(serverB, testContext.asyncAssertSuccess());
+        vertx.deployVerticle(serverC, testContext.asyncAssertSuccess());
     }
 
     @After
     public void teardown() throws Exception {
         vertx.close();
-        serverA.stop();
-        serverB.stop();
-        serverC.stop();
     }
 
     @Test
     public void testBrokerReplicator() throws InterruptedException, TimeoutException, ExecutionException {
-        Host hostA = new Host(localHost, Collections.singletonMap("amqp", 33333));
-        Host hostB = new Host(localHost, Collections.singletonMap("amqp", 33334));
-        Host hostC = new Host(localHost, Collections.singletonMap("amqp", 33335));
+        Host hostA = new Host(localHost, Collections.singletonMap("amqp", serverA.getPort()));
+        Host hostB = new Host(localHost, Collections.singletonMap("amqp", serverB.getPort()));
+        Host hostC = new Host(localHost, Collections.singletonMap("amqp", serverC.getPort()));
 
         ForwarderController replicator = new ForwarderController(hostA, address, null);
         CountDownLatch latch = new CountDownLatch(1);
@@ -117,7 +119,7 @@ public class ForwarderControllerTest {
     private static void waitForConnections(TestBroker server, int num, long timeout) throws InterruptedException {
         long endTime = System.currentTimeMillis() + timeout;
         while (System.currentTimeMillis() < endTime) {
-            log.info("Num connected is : " + server.numConnected());
+            log.info("Num connected on " + server.getId() + " is : " + server.numConnected());
             if (server.numConnected() >= num) {
                 break;
             }
