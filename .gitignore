@@ -1,6 +1,6 @@
 # Gradle stuff
 .gradle
-/build/
+**/build/
 
 # IntelliJ IDEA specific
 .idea/
