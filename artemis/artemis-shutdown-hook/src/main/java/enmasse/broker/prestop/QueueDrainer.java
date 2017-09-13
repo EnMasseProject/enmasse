@@ -23,10 +23,9 @@ import io.enmasse.amqp.Artemis;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
-import io.vertx.proton.ProtonClient;
-import io.vertx.proton.ProtonConnection;
-import io.vertx.proton.ProtonReceiver;
-import io.vertx.proton.ProtonSender;
+import io.vertx.proton.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -39,15 +38,18 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * Client for draining messages from an endpoint and forward to a target endpoint, until empty.
  */
 public class QueueDrainer {
+    private final Logger log = LoggerFactory.getLogger(QueueDrainer.class);
     private final Vertx vertx;
     private final Host fromHost;
     private final BrokerFactory brokerFactory;
     private final Optional<Runnable> debugFn;
+    private final ProtonClientOptions protonClientOptions;
 
-    public QueueDrainer(Vertx vertx, Host from, BrokerFactory brokerFactory, Optional<Runnable> debugFn) throws Exception {
+    public QueueDrainer(Vertx vertx, Host from, BrokerFactory brokerFactory, ProtonClientOptions clientOptions, Optional<Runnable> debugFn) throws Exception {
         this.vertx = vertx;
         this.fromHost = from;
         this.brokerFactory = brokerFactory;
+        this.protonClientOptions = clientOptions;
         this.debugFn = debugFn;
     }
 
@@ -58,12 +60,12 @@ public class QueueDrainer {
     }
 
     public void drainMessages(Endpoint to, String queueName) throws Exception {
-        Artemis broker = brokerFactory.createClient(vertx, fromHost.amqpEndpoint());
+        Artemis broker = brokerFactory.createClient(vertx, protonClientOptions, fromHost.amqpEndpoint());
 
         if (queueName != null && !queueName.isEmpty()) {
             broker.destroyConnectorService("amqp-connector");
             startDrain(to, queueName);
-            System.out.println("Waiting.....");
+            log.info("Waiting.....");
             waitUntilEmpty(broker, Collections.singleton(queueName));
         } else {
             Set<String> addresses = getQueues(broker);
@@ -72,12 +74,11 @@ public class QueueDrainer {
                 broker.destroyConnectorService(address);
                 startDrain(to, address);
             }
-            System.out.println("Waiting.....");
+            log.info("Waiting.....");
             waitUntilEmpty(broker, addresses);
         }
-        System.out.println("Done waiting!");
+        log.info("Done waiting!");
         broker.forceShutdown();;
-        Thread.sleep(10_000);
         vertx.close();
     }
 
@@ -85,44 +86,44 @@ public class QueueDrainer {
         AtomicBoolean first = new AtomicBoolean(false);
         Endpoint from = fromHost.amqpEndpoint();
         ProtonClient client = ProtonClient.create(vertx);
-        client.connect(to.hostname(), to.port(), sendHandle -> {
+        client.connect(protonClientOptions, to.hostname(), to.port(), sendHandle -> {
             if (sendHandle.succeeded()) {
                 ProtonConnection sendConn = sendHandle.result();
                 sendConn.setContainer("shutdown-hook-sender");
                 sendConn.openHandler(ev -> {
-                    System.out.println("Connected to sender: " +  sendConn.getRemoteContainer());
+                    log.info("Connected to sender: " +  sendConn.getRemoteContainer());
                 });
                 sendConn.open();
                 ProtonSender sender = sendConn.createSender(address);
                 sender.openHandler(handle -> {
                     if (handle.succeeded()) {
-                        client.connect(from.hostname(), from.port(), recvHandle -> {
+                        client.connect(protonClientOptions, from.hostname(), from.port(), recvHandle -> {
                             if (recvHandle.succeeded()) {
                                 ProtonConnection recvConn = recvHandle.result();
                                 recvConn.setContainer("shutdown-hook-recv");
                                 recvConn.closeHandler(h -> {
-                                    System.out.println("Receiver closed: " + h.succeeded());
+                                    log.info("Receiver closed: " + h.succeeded());
                                 });
-                                System.out.println("Connected to receiver: " + recvConn.getRemoteContainer());
+                                log.info("Connected to receiver: " + recvConn.getRemoteContainer());
                                 recvConn.openHandler(h -> {
-                                    System.out.println("Receiver other end opened: " + h.result().getRemoteContainer());
+                                    log.info("Receiver other end opened: " + h.result().getRemoteContainer());
                                     markInstanceDeleted(recvConn.getRemoteContainer());
                                     ProtonReceiver receiver = recvConn.createReceiver(address);
                                     receiver.setPrefetch(0);
                                     receiver.openHandler(handler -> {
-                                        System.out.println("Receiver open: " + handle.succeeded());
+                                        log.info("Receiver open: " + handle.succeeded());
                                         receiver.flow(1);
                                     });
                                     receiver.handler((protonDelivery, message) -> {
                                         //System.out.println("Got Message to forwarder: " + ((AmqpValue)message.getBody()).getValue());
                                         sender.send(message, targetDelivery -> {
-                                                System.out.println("Got delivery confirmation, id = " + message.getMessageId() + ", remoteState = " + targetDelivery.getRemoteState() + ", remoteSettle = " + targetDelivery.remotelySettled());
+                                                log.info("Got delivery confirmation, id = " + message.getMessageId() + ", remoteState = " + targetDelivery.getRemoteState() + ", remoteSettle = " + targetDelivery.remotelySettled());
                                                 receiver.flow(1);
                                                 protonDelivery.disposition(targetDelivery.getRemoteState(), targetDelivery.remotelySettled()); });
 
                                         // This is for debugging only
                                         if (!first.getAndSet(true)) {
-                                            System.out.println("Forwarded first message");
+                                            log.info("Forwarded first message");
                                             if (debugFn.isPresent()) {
                                                 vertx.executeBlocking((Future<Integer> future) -> {
                                                     debugFn.get().run();
@@ -136,19 +137,19 @@ public class QueueDrainer {
                                 });
                                 recvConn.open();
                             } else {
-                                System.out.println("Error connecting to receiver " + from.hostname() + ":" + from.port() + ": " + recvHandle.cause().getMessage());
+                                log.warn("Error connecting to receiver " + from.hostname() + ":" + from.port() + ": " + recvHandle.cause().getMessage());
                                 sendConn.close();
                                 vertx.setTimer(5000, id -> startDrain(to, address));
                             }
                         });
                     } else {
-                        System.out.println("Failed to open sender: " + handle.cause().getMessage());
+                        log.warn("Failed to open sender: " + handle.cause().getMessage());
                         vertx.setTimer(5000, id -> startDrain(to, address));
                     }
                 });
                 sender.open();
             } else {
-                System.out.println("Error connecting to sender " + to.hostname() + ":" + to.port() + ": " + sendHandle.cause().getMessage()) ;
+                log.warn("Error connecting to sender " + to.hostname() + ":" + to.port() + ": " + sendHandle.cause().getMessage()); ;
                 vertx.setTimer(5000, id -> startDrain(to, address));
             }
         });
@@ -159,27 +160,27 @@ public class QueueDrainer {
             File instancePath = new File("/var/run/artemis", instanceName);
             if (instancePath.exists()) {
                 Files.write(new File(instanceName, "terminating").toPath(), "yes".getBytes(), StandardOpenOption.WRITE);
-                System.out.println("Instance " + instanceName + " marked as terminating");
+                log.info("Instance " + instanceName + " marked as terminating");
             }
         } catch (IOException e) {
-            System.out.println("Error deleting instance: " + e.getMessage());
+            log.warn("Error deleting instance: " + e.getMessage());
         }
     }
 
-    private static void waitUntilEmpty(Artemis broker, Collection<String> queues) throws InterruptedException {
+    private void waitUntilEmpty(Artemis broker, Collection<String> queues) throws InterruptedException {
         while (true) {
             try {
                 long count = 0;
                 for (String queue : queues) {
                     count += broker.getQueueMessageCount(queue);
-                    System.out.println("Found " + count + " messages in queue " + queue);
+                    log.info("Found " + count + " messages in queue " + queue);
                 }
                 if (count == 0) {
                     break;
                 }
             } catch (Exception e) {
                 // Retry
-                System.out.println("Queue check failed: " + e.getMessage());
+                log.warn("Queue check failed: " + e.getMessage());
             }
             Thread.sleep(2000);
         }

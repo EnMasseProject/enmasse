@@ -54,8 +54,6 @@ objects:
             ports:
             - containerPort: 5673
               name: amqp
-            - containerPort: 61616
-              name: core
             - containerPort: 8161
               name: jolokia
             readinessProbe:
@@ -186,8 +184,6 @@ objects:
             ports:
             - containerPort: 5673
               name: amqp
-            - containerPort: 61616
-              name: core
             - containerPort: 8161
               name: jolokia
             readinessProbe:
@@ -304,8 +300,6 @@ objects:
             ports:
             - containerPort: 5673
               name: amqp
-            - containerPort: 61616
-              name: core
             - containerPort: 8161
               name: jolokia
             readinessProbe:
@@ -507,8 +501,6 @@ objects:
             ports:
             - containerPort: 5673
               name: amqp
-            - containerPort: 61616
-              name: core
             - containerPort: 8161
               name: jolokia
             readinessProbe:

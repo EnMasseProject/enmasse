@@ -16,7 +16,7 @@ ADD ./build/artemis-image.tar /
 
 VOLUME /var/run/artemis
 
-EXPOSE 5673 61616 8161
+EXPOSE 5673 8161
 
 # Needed for bridge clustering
 # EXPOSE 7800 7801 7802

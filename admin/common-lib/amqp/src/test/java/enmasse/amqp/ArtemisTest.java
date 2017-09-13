@@ -22,6 +22,7 @@ import io.vertx.core.Vertx;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
+import io.vertx.proton.ProtonClientOptions;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -50,7 +51,7 @@ public class ArtemisTest {
 
     @Test
     public void testManagement(TestContext testContext) throws InterruptedException, ExecutionException, TimeoutException {
-        Future<Artemis> promise = Artemis.create(vertx, "localhost", 12346);
+        Future<Artemis> promise = Artemis.create(vertx, new ProtonClientOptions(), "localhost", 12346);
         Async async = testContext.async();
         promise.setHandler(result -> {
             testContext.assertTrue(result.succeeded());

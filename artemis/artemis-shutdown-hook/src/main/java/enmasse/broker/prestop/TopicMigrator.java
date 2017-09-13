@@ -21,6 +21,9 @@ import enmasse.discovery.Endpoint;
 import enmasse.discovery.Host;
 import io.enmasse.amqp.Artemis;
 import io.vertx.core.Vertx;
+import io.vertx.proton.ProtonClientOptions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.concurrent.ExecutorService;
@@ -31,19 +34,22 @@ import java.util.stream.Collectors;
 
 public class TopicMigrator implements DiscoveryListener {
     private final Vertx vertx;
+    private final Logger log = LoggerFactory.getLogger(TopicMigrator.class);
     private volatile Set<Host> destinationBrokers = Collections.emptySet();
     private final Host localHost;
     private final Artemis localBroker;
     private final Endpoint messagingEndpoint;
     private final BrokerFactory brokerFactory;
     private final ExecutorService service = Executors.newSingleThreadExecutor();
+    private final ProtonClientOptions protonClientOptions;
 
-    public TopicMigrator(Vertx vertx, Host localHost, Endpoint messagingEndpoint, BrokerFactory brokerFactory) throws Exception {
+    public TopicMigrator(Vertx vertx, Host localHost, Endpoint messagingEndpoint, BrokerFactory brokerFactory, ProtonClientOptions clientOptions) throws Exception {
         this.vertx = vertx;
         this.localHost = localHost;
         this.brokerFactory = brokerFactory;
-        this.localBroker = brokerFactory.createClient(vertx, localHost.amqpEndpoint());
+        this.localBroker = brokerFactory.createClient(vertx, clientOptions, localHost.amqpEndpoint());
         this.messagingEndpoint = messagingEndpoint;
+        this.protonClientOptions = clientOptions;
     }
 
     public void migrate() throws Exception {
@@ -53,17 +59,17 @@ public class TopicMigrator implements DiscoveryListener {
         // Step 1: Retrieve subscriptions and diverts
         Set<SubscriptionInfo> subscriptions = listSubscriptions(localBroker);
 
-        System.out.println("Listed subscriptions: " + subscriptions);
+        log.info("Listed subscriptions: " + subscriptions);
 
         // Step 2: Create and pause queues on other brokers
         Map<QueueInfo, Host> queueMap = createSubscriptions(subscriptions);
 
         // Step 3: Migrate messages from local subscriptions to destinations
-        System.out.println("Migrating messages for " + queueMap.keySet());
+        log.info("Migrating messages for " + queueMap.keySet());
         migrateMessages(queueMap);
 
         // Step 4: Destroy local queues
-        System.out.println("Destroying local queues");
+        log.info("Destroying local queues");
         destroySubscriptions(localBroker, subscriptions);
 
         // Step 5: Activate queues
@@ -76,7 +82,7 @@ public class TopicMigrator implements DiscoveryListener {
 
     private void activateQueues(Map<QueueInfo, Host> queueMap) throws Exception {
         for (Map.Entry<QueueInfo, Host> entry : queueMap.entrySet()) {
-            try (Artemis mgr = brokerFactory.createClient(vertx, entry.getValue().amqpEndpoint())) {
+            try (Artemis mgr = brokerFactory.createClient(vertx, protonClientOptions, entry.getValue().amqpEndpoint())) {
                 mgr.resumeQueue(entry.getKey().getQueueName());
             }
         }
@@ -95,7 +101,7 @@ public class TopicMigrator implements DiscoveryListener {
             }
             Host dest = destinations.next();
             QueueInfo queue = subscriptionInfo.getQueueInfo();
-            try (Artemis manager = brokerFactory.createClient(vertx, dest.amqpEndpoint())) {
+            try (Artemis manager = brokerFactory.createClient(vertx, protonClientOptions, dest.amqpEndpoint())) {
                 manager.deployQueue(queue.getQueueName(), queue.getAddress());
                 manager.pauseQueue(queue.getQueueName());
                 if (subscriptionInfo.getDivertInfo().isPresent()) {
@@ -129,7 +135,7 @@ public class TopicMigrator implements DiscoveryListener {
 
     private void migrateMessages(Map<QueueInfo, Host> queueMap) throws Exception {
         List<Future<QueueMigrator>> results = queueMap.entrySet().stream()
-                .map(e -> new QueueMigrator(vertx, e.getKey(), localHost, e.getValue(), localBroker))
+                .map(e -> new QueueMigrator(vertx, e.getKey(), localHost, e.getValue(), localBroker, protonClientOptions))
                 .map(sub -> service.submit(sub))
                 .collect(Collectors.toList());
 
@@ -137,7 +143,7 @@ public class TopicMigrator implements DiscoveryListener {
             try {
                 result.get();
             } catch (Exception e) {
-                System.out.println("Unable to migrate messages (ignoring): " + e.getMessage());
+                log.info("Unable to migrate messages (ignoring): " + e.getMessage());
             }
         }
     }
@@ -170,7 +176,7 @@ public class TopicMigrator implements DiscoveryListener {
                 try {
                     queues.add(new QueueInfo(address, queueName));
                 } catch (Exception e) {
-                    System.out.println("Unable to get address of queue: " + e.getMessage());
+                    log.info("Unable to get address of queue: " + e.getMessage());
                 }
             }
         }
@@ -187,7 +193,7 @@ public class TopicMigrator implements DiscoveryListener {
                     String forwardingAddress = mgr.getDivertForwardingAddress(divertName);
                     diverts.add(new DivertInfo(divertName, routingName, address, forwardingAddress));
                 } catch (Exception e) {
-                    System.out.println("Unable to retrieve attributes for divert " + divertName + ", skipping." + e.getMessage());
+                    log.info("Unable to retrieve attributes for divert " + divertName + ", skipping." + e.getMessage());
                 }
             }
         }

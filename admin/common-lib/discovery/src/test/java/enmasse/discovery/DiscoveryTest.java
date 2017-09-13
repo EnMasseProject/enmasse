@@ -50,7 +50,7 @@ public class DiscoveryTest {
 
         System.out.println("Deploying server verticle");
         vertx.deployVerticle(testServer, context.asyncAssertSuccess());
-        DiscoveryClient client = new DiscoveryClient(new Endpoint("127.0.0.1", waitForPort(testServer)), "podsense", expectedLabelFilter, expectedAnnotationFilter, Optional.empty());
+        DiscoveryClient client = new DiscoveryClient(new Endpoint("127.0.0.1", waitForPort(testServer)), "podsense", expectedLabelFilter, expectedAnnotationFilter, null, null);
         client.addListener(changedHosts::complete);
         System.out.println("Deploying discovery verticle");
         vertx.deployVerticle(client, context.asyncAssertSuccess());

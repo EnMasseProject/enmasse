@@ -23,6 +23,9 @@ import enmasse.discovery.Host;
 import io.enmasse.amqp.Artemis;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
+import io.vertx.core.net.PemKeyCertOptions;
+import io.vertx.core.net.PemTrustOptions;
+import io.vertx.proton.ProtonClientOptions;
 
 import java.io.File;
 import java.io.IOException;
@@ -43,6 +46,8 @@ public class Main {
         Vertx vertx = Vertx.vertx();
         BrokerFactory brokerFactory = new ArtemisBrokerFactory(60_000L);
 
+        String certDir = System.getenv("CERT_DIR");
+        ProtonClientOptions clientOptions = createClientOptions(certDir);
 
         if (System.getenv("TOPIC_NAME") != null) {
             String clusterId = System.getenv("CLUSTER_ID");
@@ -53,8 +58,8 @@ public class Main {
             Map<String, String> annotationFilter = new LinkedHashMap<>();
             annotationFilter.put("cluster_id", clusterId);
 
-            DiscoveryClient discoveryClient = new DiscoveryClient("podsense", labelFilter, annotationFilter, Optional.of("broker"));
-            TopicMigrator migrator = new TopicMigrator(vertx, localHost, messagingEndpoint, brokerFactory);
+            DiscoveryClient discoveryClient = new DiscoveryClient("podsense", labelFilter, annotationFilter, "broker", certDir);
+            TopicMigrator migrator = new TopicMigrator(vertx, localHost, messagingEndpoint, brokerFactory, clientOptions);
             discoveryClient.addListener(migrator);
             vertx.deployVerticle(discoveryClient);
             migrator.migrate();
@@ -64,7 +69,7 @@ public class Main {
             int messagingPort = Integer.parseInt(System.getenv("MESSAGING_SERVICE_PORT"));
             Endpoint to = new Endpoint(messagingHost, messagingPort);
 
-            QueueDrainer client = new QueueDrainer(vertx, localHost, brokerFactory, debugFn);
+            QueueDrainer client = new QueueDrainer(vertx, localHost, brokerFactory, clientOptions, debugFn);
 
             client.drainMessages(to, queueName);
         }
@@ -76,6 +81,23 @@ public class Main {
         portMap.put("core", 61616);
 
         return new Host(Inet4Address.getLocalHost().getHostAddress(), portMap);
+    }
+
+    private static ProtonClientOptions createClientOptions(String certDir)
+    {
+        ProtonClientOptions options = new ProtonClientOptions();
+
+        if (certDir != null) {
+            options.setSsl(true)
+                    .addEnabledSaslMechanism("EXTERNAL")
+                    .setHostnameVerificationAlgorithm("")
+                    .setPemTrustOptions(new PemTrustOptions()
+                            .addCertPath(new File(certDir, "ca.crt").getAbsolutePath()))
+                    .setPemKeyCertOptions(new PemKeyCertOptions()
+                            .setCertPath(new File(certDir, "tls.crt").getAbsolutePath())
+                            .setKeyPath(new File(certDir, "tls.key").getAbsolutePath()));
+        }
+        return options;
     }
 
     private static final String serviceAccountPath = "/var/run/secrets/kubernetes.io/serviceaccount";

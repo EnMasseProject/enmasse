@@ -18,7 +18,8 @@ package enmasse.broker.prestop;
 import enmasse.discovery.Endpoint;
 import io.enmasse.amqp.Artemis;
 import io.vertx.core.Vertx;
+import io.vertx.proton.ProtonClientOptions;
 
 public interface BrokerFactory {
-    Artemis createClient(Vertx vertx, Endpoint endpoint) throws InterruptedException;
+    Artemis createClient(Vertx vertx, ProtonClientOptions clientOptions, Endpoint endpoint) throws InterruptedException;
 }

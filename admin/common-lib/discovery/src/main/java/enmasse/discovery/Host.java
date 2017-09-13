@@ -38,14 +38,6 @@ public class Host {
         return getEndpoint("amqp");
     }
 
-    public Endpoint coreEndpoint() {
-        return getEndpoint("core");
-    }
-
-    public Endpoint httpEndpoint() {
-        return getEndpoint("http");
-    }
-
     public Endpoint getEndpoint(String portName) {
         return new Endpoint(hostname, portMap.get(portName));
     }

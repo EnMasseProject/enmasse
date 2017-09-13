@@ -18,7 +18,10 @@ package enmasse.discovery;
 
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
+import io.vertx.core.net.PemKeyCertOptions;
+import io.vertx.core.net.PemTrustOptions;
 import io.vertx.proton.ProtonClient;
+import io.vertx.proton.ProtonClientOptions;
 import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.ProtonReceiver;
 import org.apache.qpid.proton.amqp.Symbol;
@@ -28,6 +31,7 @@ import org.apache.qpid.proton.message.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.util.*;
 
 public class DiscoveryClient extends AbstractVerticle {
@@ -35,29 +39,27 @@ public class DiscoveryClient extends AbstractVerticle {
     private final List<DiscoveryListener> listeners = new ArrayList<>();
     private final Logger log = LoggerFactory.getLogger(DiscoveryClient.class.getName());
     private final Endpoint endpoint;
-    private final Optional<String> containerName;
+    private final String containerName;
     private final String address;
+    private final String certDir;
     private Set<Host> currentHosts = new LinkedHashSet<>();
     private volatile ProtonConnection connection;
 
-    public DiscoveryClient(Endpoint endpoint, String address, Map<String, String> labelFilter, Map<String, String> annotationFilter, Optional<String> containerName) {
+    public DiscoveryClient(Endpoint endpoint, String address, Map<String, String> labelFilter, Map<String, String> annotationFilter, String containerName, String certDir) {
         this.endpoint = endpoint;
         this.address = address;
         this.sourceFilter = toSymbolMap(labelFilter, annotationFilter);
         this.containerName = containerName;
+        this.certDir = certDir;
     }
 
-    public DiscoveryClient(String address, Map<String, String> labelFilter, Map<String, String> annotationFilter, Optional<String> containerName) {
-        this(getEndpoint(), address, labelFilter, annotationFilter, containerName);
+    public DiscoveryClient(String address, Map<String, String> labelFilter, Map<String, String> annotationFilter, String containerName, String certDir) {
+        this(getEndpoint(), address, labelFilter, annotationFilter, containerName, certDir);
     }
 
     private static Endpoint getEndpoint() {
-        String host = System.getenv("ADMIN_SERVICE_HOST");
-        String port = System.getenv("ADMIN_SERVICE_PORT_CONFIGURATION");
-        if (host == null) {
-            host = System.getenv("CONFIGURATION_SERVICE_HOST");
-            port = System.getenv("CONFIGURATION_SERVICE_PORT");
-        }
+        String host = System.getenv("CONFIGURATION_SERVICE_HOST");
+        String port = System.getenv("CONFIGURATION_SERVICE_PORT");
         return new Endpoint(host, Integer.parseInt(port));
     }
 
@@ -83,10 +85,27 @@ public class DiscoveryClient extends AbstractVerticle {
         }
     }
 
+    private ProtonClientOptions createClientOptions()
+    {
+        ProtonClientOptions options = new ProtonClientOptions();
+
+        if (certDir != null) {
+            options.setSsl(true)
+                    .addEnabledSaslMechanism("EXTERNAL")
+                    .setHostnameVerificationAlgorithm("")
+                    .setPemTrustOptions(new PemTrustOptions()
+                            .addCertPath(new File(certDir, "ca.crt").getAbsolutePath()))
+                    .setPemKeyCertOptions(new PemKeyCertOptions()
+                            .setCertPath(new File(certDir, "tls.crt").getAbsolutePath())
+                            .setKeyPath(new File(certDir, "tls.key").getAbsolutePath()));
+        }
+        return options;
+    }
+
     @Override
     public void start(Future<Void> startFuture) {
         ProtonClient client = ProtonClient.create(vertx);
-        client.connect(endpoint.hostname(), endpoint.port(), event -> {
+        client.connect(createClientOptions(), endpoint.hostname(), endpoint.port(), event -> {
             if (event.succeeded()) {
                 connection = event.result();
                 connection.open();
@@ -115,8 +134,8 @@ public class DiscoveryClient extends AbstractVerticle {
             String phase = (String) podInfo.get("phase");
             if ("True".equals(ready) && "Running".equals(phase)) {
                 Map<String, Map<String, Integer>> portMap = (Map<String, Map<String, Integer>>) podInfo.get("ports");
-                if (containerName.isPresent()) {
-                    hosts.add(new Host(host, portMap.get(containerName.get())));
+                if (containerName != null) {
+                    hosts.add(new Host(host, portMap.get(containerName)));
                 } else {
                     hosts.add(new Host(host, portMap.values().iterator().next()));
                 }
