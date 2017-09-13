@@ -23,6 +23,8 @@ popd
 
 $SYSTEMTESTS/scripts/collect_logs.sh $OC_PATH $ARTIFACTS_DIR
 
+oc get pods
+
 if [ $failure -gt 0 ]
 then
     echo "Systemtests failed"
