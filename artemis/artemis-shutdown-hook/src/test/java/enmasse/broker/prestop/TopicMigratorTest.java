@@ -24,6 +24,7 @@ import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.message.Message;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -61,6 +62,7 @@ public class TopicMigratorTest {
     }
 
     @Test
+    @Ignore
     public void testMigrator() throws Exception {
         System.out.println("Attempting to subscribe");
         subscriber.subscribe(from.amqpEndpoint(), "mytopic");
