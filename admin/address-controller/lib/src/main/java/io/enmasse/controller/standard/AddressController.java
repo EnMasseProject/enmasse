@@ -1,6 +1,6 @@
 package io.enmasse.controller.standard;
 
-import enmasse.amqp.SyncRequestClient;
+import io.enmasse.amqp.SyncRequestClient;
 import io.enmasse.controller.common.*;
 import io.enmasse.address.model.Address;
 import io.enmasse.k8s.api.AddressApi;

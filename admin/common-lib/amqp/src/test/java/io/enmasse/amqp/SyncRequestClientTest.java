@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-package enmasse.amqp;
+package io.enmasse.amqp;
 
+import io.enmasse.amqp.SyncRequestClient;
 import io.vertx.core.Vertx;
 import io.vertx.proton.ProtonSender;
 import io.vertx.proton.ProtonServer;
