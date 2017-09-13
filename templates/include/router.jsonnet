@@ -1,7 +1,7 @@
 local common = import "common.jsonnet";
 local authService = import "auth-service.jsonnet";
 {
-  metrics(image_repo, mem_request)::
+  metrics(image_repo, mem_request, internal_cert_volume)::
     {
       "image": image_repo,
       "name": "metrics",
@@ -25,7 +25,11 @@ local authService = import "auth-service.jsonnet";
         },
         {
           "name": "ROUTER_PORT",
-          "value": "5672"
+          "value": "55671"
+        },
+        {
+          "name": "CERT_DIR",
+          "value": "/etc/enmasse-certs"
         }
       ],
       "ports": [
@@ -34,8 +38,13 @@ local authService = import "auth-service.jsonnet";
           "containerPort": 8080,
           "protocol": "TCP"
         }
-      ]
-
+      ],
+      local router_internal_cert = [{
+        "name": internal_cert_volume,
+        "mountPath": "/etc/enmasse-certs",
+        "readOnly": true
+      }],
+      "volumeMounts": router_internal_cert
     },
 
   container(image_repo, env, mem_request, internal_cert_volume)::

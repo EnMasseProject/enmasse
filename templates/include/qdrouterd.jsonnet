@@ -31,7 +31,7 @@ local common = import "common.jsonnet";
           },
           "spec": {
             "containers": [ router.container(image_repo, [], "", "router-internal-cert"),
-              router.metrics(metrics_image_repo, "32Mi") ],
+              router.metrics(metrics_image_repo, "32Mi", "router-internal-cert") ],
             "volumes": [
               router.hawkular_volume(),
               router.secret_volume("ssl-certs", router_secret),
