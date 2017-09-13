@@ -158,8 +158,7 @@ public class Artemis implements AutoCloseable {
         }
 
         message.setBody(new AmqpValue(Json.encode(params)));
-        Message response = sendMessage(message, timeout, timeUnit);
-        return response;
+        return sendMessage(message, timeout, timeUnit);
     }
 
     private Message createOperationMessage(String resource, String operation) {
@@ -220,6 +219,7 @@ public class Artemis implements AutoCloseable {
     }
 
     public long getQueueMessageCount(String queueName) throws TimeoutException {
+        log.info("Checking message count for queue {}", queueName);
         Message response = doAttribute("queue." + queueName, "messageCount");
         String payload = (String) ((AmqpValue)response.getBody()).getValue();
         JsonArray json = new JsonArray(payload);
@@ -228,6 +228,7 @@ public class Artemis implements AutoCloseable {
 
 
     public String getQueueAddress(String queueName) throws TimeoutException {
+        log.info("Checking queue address for queue {}", queueName);
         Message response = doOperation("queue." + queueName, "getAddress");
         String payload = (String) ((AmqpValue)response.getBody()).getValue();
         JsonArray json = new JsonArray(payload);
@@ -235,11 +236,13 @@ public class Artemis implements AutoCloseable {
     }
 
     public void forceShutdown() throws TimeoutException {
+        log.info("Sending forceShutdown");
         Message request = createOperationMessage("broker", "forceFailover");
         doRequestResponse(10, TimeUnit.SECONDS, request);
     }
 
     public Set<String> getQueueNames() throws TimeoutException {
+        log.info("Retrieving queue names");
         Message response = doOperation("broker", "getQueueNames");
 
         Set<String> queues = new LinkedHashSet<>();
@@ -261,14 +264,17 @@ public class Artemis implements AutoCloseable {
     }
 
     public void pauseQueue(String queueName) throws TimeoutException {
+        log.info("Pausing queue {}", queueName);
         doOperation("queue." + queueName, "pause");
     }
 
     public void resumeQueue(String queueName) throws TimeoutException {
+        log.info("Resuming queue {}", queueName);
         doOperation("queue." + queueName, "resume");
     }
 
     public Set<String> getDivertNames() throws TimeoutException {
+        log.info("Retrieving divert names");
         Message response = doOperation("broker", "getDivertNames");
 
         Set<String> diverts = new LinkedHashSet<>();
@@ -291,24 +297,28 @@ public class Artemis implements AutoCloseable {
     }
 
     public String getDivertRoutingName(String divertName) throws TimeoutException {
+        log.info("Get routing name for divert {}", divertName);
         return doOperationWithStringResult("divert." + divertName, "getRoutingName");
     }
 
     public String getDivertAddress(String divertName) throws TimeoutException {
+        log.info("Get address for divert {}", divertName);
         return doOperationWithStringResult("divert." + divertName, "getAddress");
     }
 
     public String getDivertForwardingAddress(String divertName) throws TimeoutException {
+        log.info("Get forwarding address for divert {}", divertName);
         return doOperationWithStringResult("divert." + divertName, "getForwardingAddress");
     }
 
     public void createDivert(String divertName, String routingName, String address, String forwardingAddress) throws TimeoutException {
+        log.info("Creating divert {}", divertName);
         doOperation("broker", "createDivert", divertName, routingName, address, forwardingAddress, false, null, null);
     }
 
     public void destroyDivert(String divertName) throws TimeoutException {
+        log.info("Destroying divert {}", divertName);
         doOperation("broker", "destroyDivert", divertName);
-        log.info("Divert {} destroyed", divertName);
     }
 
 }
