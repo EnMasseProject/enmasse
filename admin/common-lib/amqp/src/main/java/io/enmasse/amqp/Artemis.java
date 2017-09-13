@@ -48,10 +48,12 @@ public class Artemis implements AutoCloseable {
     private final ProtonSender sender;
     private final String replyTo;
     private final BlockingQueue<Message> replies;
+    private final String brokerContainerId;
 
     private Artemis(Vertx vertx, ProtonConnection connection, ProtonSender sender, String replyTo, BlockingQueue<Message> replies) {
         this.vertx = vertx;
         this.connection = connection;
+        this.brokerContainerId = connection.getRemoteContainer();
         this.sender = sender;
         this.replyTo = replyTo;
         this.replies = replies;
@@ -129,7 +131,7 @@ public class Artemis implements AutoCloseable {
         Message message = createOperationMessage(resource, operation);
         Message response = doRequestResponse(message, parameters);
         if (response == null) {
-            throw new TimeoutException("Timed out getting response from broker on " + resource + "." + operation + " with parameters: " + parameters);
+            throw new TimeoutException("Timed out getting response from broker " + brokerContainerId + " on " + resource + "." + operation + " with parameters: " + parameters);
         }
         return response;
     }
@@ -138,7 +140,7 @@ public class Artemis implements AutoCloseable {
         Message message = createAttributeMessage(resource, attribute);
         Message response = doRequestResponse(message, parameters);
         if (response == null) {
-            throw new TimeoutException("Timed out getting response from broker on " + resource + "." + attribute + " with parameters: " + parameters);
+            throw new TimeoutException("Timed out getting response from broker " + brokerContainerId + " on " + resource + "." + attribute + " with parameters: " + parameters);
         }
         return response;
     }

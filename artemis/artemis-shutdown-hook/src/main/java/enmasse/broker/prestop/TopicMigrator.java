@@ -57,11 +57,11 @@ public class TopicMigrator implements DiscoveryListener {
         localBroker.destroyConnectorService("amqp-connector");
 
         // Step 1: Retrieve subscriptions and diverts
+        log.info("Listing subscriptions on local broker");
         Set<SubscriptionInfo> subscriptions = listSubscriptions(localBroker);
 
-        log.info("Listed subscriptions: " + subscriptions);
-
         // Step 2: Create and pause queues on other brokers
+        log.info("Creating and pausing queues for {}", subscriptions);
         Map<QueueInfo, Host> queueMap = createSubscriptions(subscriptions);
 
         // Step 3: Migrate messages from local subscriptions to destinations
@@ -73,11 +73,15 @@ public class TopicMigrator implements DiscoveryListener {
         destroySubscriptions(localBroker, subscriptions);
 
         // Step 5: Activate queues
+        log.info("Activating remote queues");
         activateQueues(queueMap);
 
         // Step 6: Shutdown
-        vertx.close();
+        log.info("Shutting down local broker");
         localBroker.forceShutdown();
+
+        log.info("Closing vertx instance");
+        vertx.close();
     }
 
     private void activateQueues(Map<QueueInfo, Host> queueMap) throws Exception {

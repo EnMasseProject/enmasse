@@ -66,7 +66,7 @@ public class QueueMigrator implements Callable<QueueMigrator> {
             if (connection.succeeded()) {
                 ProtonConnection conn = connection.result();
                 conn.closeHandler(result -> {
-                    log.info("Migrator sub connection closed");
+                    log.info("Migrator connection for {} closed", queueInfo);
                 });
                 conn.openHandler(result -> {
                     Source source = new Source();
@@ -75,13 +75,13 @@ public class QueueMigrator implements Callable<QueueMigrator> {
                     localReceiver.setSource(source);
                     localReceiver.setPrefetch(0);
                     localReceiver.setAutoAccept(false);
-                    localReceiver.closeHandler(res -> log.info("Migrator sub receiver closed"));
+                    localReceiver.closeHandler(res -> log.info("Migrator receiver for {} closed", queueInfo));
                     localReceiver.openHandler(res -> {
                         if (res.succeeded()) {
-                            log.info("Opened localReceiver for " + queueInfo);
+                            log.info("Opened localReceiver for {}", queueInfo);
                             localReceiver.flow(1);
                         } else {
-                            log.info("Failed opening received: " + res.cause().getMessage());
+                            log.info("Failed opening receiver for {}: {}", queueInfo, res.cause().getMessage());
                         }
                     });
                     localReceiver.handler(messageHandler(latch, localReceiver, sender));
@@ -89,7 +89,7 @@ public class QueueMigrator implements Callable<QueueMigrator> {
                 });
                 conn.open();
             } else {
-                log.info("Connection failed: " + connection.cause().getMessage());
+                log.info("Connection failed for {}: {}", queueInfo, connection.cause().getMessage());
             }
         });
     }
@@ -99,31 +99,31 @@ public class QueueMigrator implements Callable<QueueMigrator> {
         Endpoint endpoint = to.amqpEndpoint();
         protonClient.connect(protonClientOptions, endpoint.hostname(), endpoint.port(), toConnection -> {
             if (toConnection.succeeded()) {
-                log.info("Opened connection to destination");
+                log.info("Opened connection to destination broker for {}", queueInfo);
                 ProtonConnection toConn = toConnection.result();
                 toConn.setContainer("topic-migrator");
                 toConn.closeHandler(result -> {
-                    log.info("Migrator connection closed");
+                    log.info("Migrator connection for {} closed", queueInfo);
                 });
                 toConn.openHandler(toResult -> {
                     Target target = new Target();
                     target.setAddress(queueInfo.getAddress());
                     ProtonSender sender = toConn.createSender(queueInfo.getAddress());
                     sender.setTarget(target);
-                    sender.closeHandler(res -> log.info("Sender connection closed"));
+                    sender.closeHandler(res -> log.info("Sender connection for {} closed", queueInfo));
                     sender.openHandler(toRes -> {
                         if (toRes.succeeded()) {
-                            log.info("Opened sender, marking ready!");
+                            log.info("Opened sender for {}, marking ready!", queueInfo);
                             createReceiver(latch, sender);
                         } else {
-                            log.info("Error opening sender: " + toRes.cause().getMessage());
+                            log.info("Error opening sender for {}: {}", queueInfo, toRes.cause().getMessage());
                         }
                     });
                     sender.open();
                 });
                 toConn.open();
             } else {
-                log.info("Failed opening connection: " + toConnection.cause().getMessage());
+                log.info("Failed opening sender connection for {}: {}", queueInfo, toConnection.cause().getMessage());
             }
         });
     }
@@ -133,7 +133,7 @@ public class QueueMigrator implements Callable<QueueMigrator> {
         log.info("Calling migrator...");
         long numMessages = broker.getQueueMessageCount(queueInfo.getQueueName());
         CountDownLatch latch = new CountDownLatch(Math.toIntExact(numMessages));
-        log.info("Migrating " + numMessages + " messages from " + queueInfo);
+        log.info("Migrating " + numMessages + " messages for queue " + queueInfo);
         createSender(latch);
         log.info("Waiting ....");
         latch.await();
