@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package enmasse.amqp;
+package io.enmasse.amqp;
 
 import com.google.common.io.Files;
 import org.apache.activemq.artemis.api.core.SimpleString;

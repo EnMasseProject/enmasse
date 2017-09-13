@@ -19,7 +19,7 @@ package enmasse.systemtest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import enmasse.amqp.SyncRequestClient;
+import io.enmasse.amqp.SyncRequestClient;
 import io.fabric8.kubernetes.api.model.Pod;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.message.Message;

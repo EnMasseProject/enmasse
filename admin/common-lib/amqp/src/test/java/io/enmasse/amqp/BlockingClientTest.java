@@ -1,7 +1,7 @@
-package enmasse.amqp;
+package io.enmasse.amqp;
 
+import io.enmasse.amqp.BlockingClient;
 import io.vertx.core.Vertx;
-import io.vertx.proton.ProtonSender;
 import io.vertx.proton.ProtonServer;
 import io.vertx.proton.ProtonSession;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;

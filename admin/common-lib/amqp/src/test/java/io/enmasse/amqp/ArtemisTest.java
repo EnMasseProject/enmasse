@@ -14,9 +14,8 @@
  * limitations under the License.
  */
 
-package enmasse.amqp;
+package io.enmasse.amqp;
 
-import io.enmasse.amqp.Artemis;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.ext.unit.Async;
