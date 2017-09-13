@@ -59,10 +59,12 @@ items:
       "/etc/qpid-dispatch/authservice-ca", "name": "authservice-ca", "readOnly": true},
       {"mountPath": "/etc/enmasse-certs", "name": "router-internal-cert", "readOnly":
       true}]}, {"env": [{"name": "ROUTER_HOST", "value": "127.0.0.1"}, {"name": "ROUTER_PORT",
-      "value": "5672"}], "image": "${ROUTER_METRICS_REPO}", "livenessProbe": {"tcpSocket":
-      {"port": "metrics"}}, "name": "metrics", "ports": [{"containerPort": 8080, "name":
-      "metrics", "protocol": "TCP"}], "resources": {"limits": {"memory": "32Mi"},
-      "requests": {"memory": "32Mi"}}}], "volumes": [{"configMap": {"name": "hawkular-router-config"},
+      "value": "55671"}, {"name": "CERT_DIR", "value": "/etc/enmasse-certs"}], "image":
+      "${ROUTER_METRICS_REPO}", "livenessProbe": {"tcpSocket": {"port": "metrics"}},
+      "name": "metrics", "ports": [{"containerPort": 8080, "name": "metrics", "protocol":
+      "TCP"}], "resources": {"limits": {"memory": "32Mi"}, "requests": {"memory":
+      "32Mi"}}, "volumeMounts": [{"mountPath": "/etc/enmasse-certs", "name": "router-internal-cert",
+      "readOnly": true}]}], "volumes": [{"configMap": {"name": "hawkular-router-config"},
       "name": "hawkular-openshift-agent"}, {"name": "ssl-certs", "secret": {"secretName":
       "${ROUTER_SECRET}"}}, {"name": "authservice-ca", "secret": {"secretName": "authservice-ca"}},
       {"name": "router-internal-cert", "secret": {"secretName": "router-internal-cert"}}]}}}},

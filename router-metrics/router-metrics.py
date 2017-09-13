@@ -24,7 +24,7 @@ A simple client for retrieving router metrics and exposing them
 from __future__ import print_function, unicode_literals
 
 import optparse
-from proton import Message, Url, ConnectionException, Timeout
+from proton import Message, Url, ConnectionException, Timeout, SSLDomain
 from proton.utils import SyncRequestResponse, BlockingConnection
 from proton.handlers import IncomingMessageHandler
 import sys
@@ -118,9 +118,23 @@ def get_container_from_connections(connection_id, connections):
 
 class RouterCollector(object):
 
-    def __init__(self, router_host, router_port):
+    def __init__(self, router_host, router_port, cert_dir):
         self.router_host = router_host
         self.router_port = router_port
+        self.cert_dir = cert_dir
+        ssl_domain = None
+        allowed_mechs = []
+        sasl_enabled = False
+
+        if self.cert_dir != None:
+            ssl_domain = SSLDomain(SSLDomain.MODE_CLIENT)
+            ssl_domain.set_trusted_ca_db(str(os.path.join(self.cert_dir, 'ca.crt')))
+            ssl_domain.set_credentials(str(os.path.join(self.cert_dir, "tls.crt")), str(os.path.join(self.cert_dir, "tls.key")), None)
+            ssl_domain.set_peer_authentication(SSLDomain.VERIFY_PEER)
+            allowed_mechs = str("EXTERNAL")
+            sasl_enabled = True
+
+        self.client = SyncRequestResponse(BlockingConnection("amqps://" + self.router_host + ":" + str(self.router_port), 30, None, ssl_domain, allowed_mechs=allowed_mechs, sasl_enabled=sasl_enabled), "$management")
 
     def create_collector_map(self):
         metrics = [ MetricCollector('connectionCount', 'Number of connections to router', ['container']),
@@ -206,27 +220,23 @@ class RouterCollector(object):
 
     def collect_metric(self, entityType):
         try:
-            client = SyncRequestResponse(BlockingConnection(self.router_host + ":" + str(self.router_port), 30, allowed_mechs=str("ANONYMOUS"), sasl_enabled=True), "$management")
-            try:
-                properties = {}
-                properties["entityType"] = entityType
-                properties["operation"] = "QUERY"
-                properties["name"] = "self"
-                message = Message(body=None, properties=properties)
-                response = client.call(message)
-                if response == None:
-                    return response
-                else:
-                    return RouterResponse(response)
-            finally:
-                client.connection.close()
+            properties = {}
+            properties["entityType"] = entityType
+            properties["operation"] = "QUERY"
+            properties["name"] = "self"
+            message = Message(body=None, properties=properties)
+            response = self.client.call(message)
+            if response == None:
+                return response
+            else:
+                return RouterResponse(response)
         except NameError as e:
             print("Error querying router for metrics: %s" % e)
             return None
 
 if __name__ == '__main__':
     # Start up the server to expose the metrics.
-    REGISTRY.register(RouterCollector(os.environ['ROUTER_HOST'], int(os.environ['ROUTER_PORT'])))
+    REGISTRY.register(RouterCollector(os.environ['ROUTER_HOST'], int(os.environ['ROUTER_PORT']), os.environ['CERT_DIR']))
     start_http_server(8080)
     while True:
         time.sleep(5)
