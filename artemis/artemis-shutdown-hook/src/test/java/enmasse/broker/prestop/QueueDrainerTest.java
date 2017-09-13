@@ -18,6 +18,7 @@ package enmasse.broker.prestop;
 
 import enmasse.discovery.Host;
 import io.vertx.core.Vertx;
+import io.vertx.proton.ProtonClientOptions;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -46,7 +47,7 @@ public class QueueDrainerTest {
         toServer = new TestBroker(to.amqpEndpoint(), Arrays.asList("myqueue", "queue2"), false);
         fromServer.start();
         toServer.start();
-        client = new QueueDrainer(Vertx.vertx(), from, new ArtemisBrokerFactory(20_000), Optional.empty());
+        client = new QueueDrainer(Vertx.vertx(), from, new ArtemisBrokerFactory(20_000), new ProtonClientOptions(), Optional.empty());
     }
 
     @After

@@ -19,6 +19,7 @@ import enmasse.discovery.Endpoint;
 import io.enmasse.amqp.Artemis;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
+import io.vertx.proton.ProtonClientOptions;
 
 public class ArtemisBrokerFactory implements BrokerFactory {
     private final long timeoutInMillis;
@@ -27,8 +28,8 @@ public class ArtemisBrokerFactory implements BrokerFactory {
     }
 
     @Override
-    public Artemis createClient(Vertx vertx, Endpoint endpoint) throws InterruptedException {
-        Future<Artemis> artemisFuture = Artemis.create(vertx, endpoint.hostname(), endpoint.port());
+    public Artemis createClient(Vertx vertx, ProtonClientOptions protonClientOptions, Endpoint endpoint) throws InterruptedException {
+        Future<Artemis> artemisFuture = Artemis.create(vertx, protonClientOptions, endpoint.hostname(), endpoint.port());
         long endTime = System.currentTimeMillis() + timeoutInMillis;
         while (System.currentTimeMillis() < endTime && !artemisFuture.isComplete()) {
             Thread.sleep(1000);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Red Hat Inc.
+ * Copyright 2017 Red Hat Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -64,10 +64,10 @@ public class Artemis implements AutoCloseable {
         return promise;
     }
 
-    public static Future<Artemis> create(Vertx vertx, String host, int port) throws InterruptedException {
+    public static Future<Artemis> create(Vertx vertx, ProtonClientOptions protonClientOptions, String host, int port) throws InterruptedException {
         Future<Artemis> promise = Future.future();
         ProtonClient client = ProtonClient.create(vertx);
-        client.connect(host, port, result -> {
+        client.connect(protonClientOptions, host, port, result -> {
             if (result.succeeded()) {
                 ProtonConnection connection = result.result();
                 createSender(vertx, connection, promise, 0);
@@ -129,7 +129,7 @@ public class Artemis implements AutoCloseable {
         Message message = createOperationMessage(resource, operation);
         Message response = doRequestResponse(message, parameters);
         if (response == null) {
-            throw new TimeoutException("Timed out getting response from broker on " + resource + "." + operation);
+            throw new TimeoutException("Timed out getting response from broker on " + resource + "." + operation + " with parameters: " + parameters);
         }
         return response;
     }
@@ -138,7 +138,7 @@ public class Artemis implements AutoCloseable {
         Message message = createAttributeMessage(resource, attribute);
         Message response = doRequestResponse(message, parameters);
         if (response == null) {
-            throw new TimeoutException("Timed out getting response from broker on " + resource + "." + attribute);
+            throw new TimeoutException("Timed out getting response from broker on " + resource + "." + attribute + " with parameters: " + parameters);
         }
         return response;
     }
@@ -195,19 +195,19 @@ public class Artemis implements AutoCloseable {
     }
 
     public void deployQueue(String name, String address) throws TimeoutException {
+        log.info("Deploying queue {} with address {}", name, address);
         doOperation("broker", "deployQueue", address, name, null, false);
-        log.info("Deployed queue " + address);
     }
 
     public void createConnectorService(String name, Map<String, String> connParams) throws TimeoutException {
+        log.info("Creating connector service {}", name);
         String factoryName = "org.apache.activemq.artemis.integration.amqp.AMQPConnectorServiceFactory";
         doOperation("broker", "createConnectorService", name, factoryName, connParams);
-        log.info("Deployed connector service " + name);
     }
 
-    public void destroyQueue(String address) throws TimeoutException {
-        doOperation("broker", "destroyQueue", address, true);
-        log.info("Destroyed queue " + address);
+    public void destroyQueue(String name) throws TimeoutException {
+        log.info("Destroying queue {}", name);
+        doOperation("broker", "destroyQueue", name, true);
     }
 
     public void destroyConnectorService(String address) throws TimeoutException {
@@ -236,7 +236,7 @@ public class Artemis implements AutoCloseable {
 
     public void forceShutdown() throws TimeoutException {
         Message request = createOperationMessage("broker", "forceFailover");
-        doRequestResponse(1, TimeUnit.SECONDS, request);
+        doRequestResponse(10, TimeUnit.SECONDS, request);
     }
 
     public Set<String> getQueueNames() throws TimeoutException {
@@ -308,6 +308,7 @@ public class Artemis implements AutoCloseable {
 
     public void destroyDivert(String divertName) throws TimeoutException {
         doOperation("broker", "destroyDivert", divertName);
+        log.info("Divert {} destroyed", divertName);
     }
 
 }

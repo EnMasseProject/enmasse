@@ -53,8 +53,6 @@ objects:
             ports:
             - containerPort: 5673
               name: amqp
-            - containerPort: 61616
-              name: core
             - containerPort: 8161
               name: jolokia
             readinessProbe:
@@ -185,8 +183,6 @@ objects:
             ports:
             - containerPort: 5673
               name: amqp
-            - containerPort: 61616
-              name: core
             - containerPort: 8161
               name: jolokia
             readinessProbe:
@@ -303,8 +299,6 @@ objects:
             ports:
             - containerPort: 5673
               name: amqp
-            - containerPort: 61616
-              name: core
             - containerPort: 8161
               name: jolokia
             readinessProbe:
@@ -506,8 +500,6 @@ objects:
             ports:
             - containerPort: 5673
               name: amqp
-            - containerPort: 61616
-              name: core
             - containerPort: 8161
               name: jolokia
             readinessProbe:
@@ -1268,7 +1260,7 @@ objects:
           containers:
           - env:
             - name: AMQP_CERT_DIR
-              value: /etc/enmasse-certs
+              value: "/etc/enmasse-certs"
             - name: KAFKA_BOOTSTRAP_SERVERS
               value: ${KAFKA_BOOTSTRAP_SERVERS}
             image: ${AMQP_KAFKA_BRIDGE_REPO}
@@ -1292,7 +1284,7 @@ objects:
               requests:
                 memory: 512Mi
             volumeMounts:
-            - mountPath: /etc/enmasse-certs
+            - mountPath: "/etc/enmasse-certs"
               name: amqp-kafka-bridge-internal-cert
               readOnly: true
           volumes:

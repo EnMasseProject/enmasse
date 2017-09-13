@@ -26,7 +26,6 @@ import java.net.UnknownHostException;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Optional;
 
 /**
  * Main entry point for topic forwarder.
@@ -40,8 +39,10 @@ public class Main {
         Host localHost = getLocalHost();
         String address = getAddress(env);
 
-        DiscoveryClient discoveryClient = new DiscoveryClient("podsense", labelFilter, annotationFilter, Optional.of("broker"));
-        ForwarderController replicator = new ForwarderController(localHost, address, System.getenv("CERT_DIR"));
+        String certDir = System.getenv("CERT_DIR");
+
+        DiscoveryClient discoveryClient = new DiscoveryClient("podsense", labelFilter, annotationFilter, "broker", certDir);
+        ForwarderController replicator = new ForwarderController(localHost, address, certDir);
         discoveryClient.addListener(replicator);
 
         Vertx vertx = Vertx.vertx();
