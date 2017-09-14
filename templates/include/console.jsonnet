@@ -32,9 +32,8 @@ local common = import "common.jsonnet";
         }
       ],
       "livenessProbe": {
-        "httpGet": {
-          "port": "http",
-          "path": "/"
+        "tcpSocket": {
+          "port": "http"
         }
       }
    },

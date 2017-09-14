@@ -161,8 +161,8 @@ items:
       "value": "${AUTHENTICATION_SERVICE_PORT}"}, {"name": "AUTHENTICATION_SERVICE_CLIENT_SECRET",
       "value": "${AUTHENTICATION_SERVICE_CLIENT_SECRET}"}, {"name": "AUTHENTICATION_SERVICE_SASL_INIT_HOST",
       "value": "${AUTHENTICATION_SERVICE_SASL_INIT_HOST}"}], "image": "${CONSOLE_REPO}",
-      "livenessProbe": {"httpGet": {"path": "/", "port": "http"}}, "name": "console",
-      "ports": [{"containerPort": 8080, "name": "http", "protocol": "TCP"}, {"containerPort":
+      "livenessProbe": {"tcpSocket": {"port": "http"}}, "name": "console", "ports":
+      [{"containerPort": 8080, "name": "http", "protocol": "TCP"}, {"containerPort":
       56720, "name": "amqp-ws", "protocol": "TCP"}], "resources": {"limits": {"memory":
       "64Mi"}, "requests": {"memory": "64Mi"}}, "volumeMounts": [{"mountPath": "/opt/console/authservice-ca",
       "name": "authservice-ca", "readOnly": true}, {"mountPath": "/etc/enmasse-certs",

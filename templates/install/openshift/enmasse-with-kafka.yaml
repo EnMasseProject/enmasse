@@ -1157,8 +1157,7 @@ objects:
               value: ${AUTHENTICATION_SERVICE_SASL_INIT_HOST}
             image: ${CONSOLE_REPO}
             livenessProbe:
-              httpGet:
-                path: /
+              tcpSocket:
                 port: http
             name: console
             ports:
