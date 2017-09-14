@@ -11,7 +11,7 @@ To build EnMasse, you need
     * Node.js
     * npm
     * docker
-    * maven
+    * maven >=3.1
 
 The EnMasse java modules are built using gradle. Node modules are built using make. Docker images
 are built using make.
