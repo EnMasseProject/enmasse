@@ -217,7 +217,7 @@ local images = import "images.jsonnet";
               { "name": cert_secret_name,
                 "secret": {
                   "secretName": cert_secret_name
-                          }
+                }
               }
             ]
           }
