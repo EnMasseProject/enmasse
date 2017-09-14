@@ -1,7 +1,6 @@
 #!/bin/bash
 ENMASSE_DIR=$1
-OC_PATH=$2
-SYSTEMTESTS=$3
+SYSTEMTESTS=$2
 DIR=`readlink -f \`dirname $0\``
 source $DIR/common.sh
 failure=0
@@ -12,7 +11,6 @@ OPENSHIFT_PROJECT=${OPENSHIFT_PROJECT:-enmasseci}
 ARTIFACTS_DIR=${ARTIFACTS_DIR:-artifacts}
 MULTITENANT=${MULTITENANT:-false}
 
-export PATH="$OC_PATH:$PATH"
 oc login -u ${OPENSHIFT_USER} -p ${OPENSHIFT_PASSWD} --insecure-skip-tls-verify=true ${OPENSHIFT_URL}
 
 setup_test $OPENSHIFT_PROJECT $ENMASSE_DIR $MULTITENANT $OPENSHIFT_URL $OPENSHIFT_USER
@@ -21,7 +19,7 @@ pushd $SYSTEMTESTS
 run_test $OPENSHIFT_PROJECT true $MULTITENANT $OPENSHIFT_URL $OPENSHIFT_USER || failure=$(($failure + 1))
 popd
 
-$SYSTEMTESTS/scripts/collect_logs.sh $OC_PATH $ARTIFACTS_DIR
+$SYSTEMTESTS/scripts/collect_logs.sh $ARTIFACTS_DIR
 
 oc get pods
 
