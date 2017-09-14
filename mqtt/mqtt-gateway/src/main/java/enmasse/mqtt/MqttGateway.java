@@ -172,6 +172,7 @@ public class MqttGateway extends AbstractVerticle {
                         this.bridges = new HashMap<>();
 
                         LOG.info("MQTT gateway running on {}:{}", this.bindAddress, this.server.actualPort());
+                        LOG.info("AMQP messaging service on {}:{}", this.messagingServiceHost, this.messagingServicePort);
                         startFuture.complete();
                     } else {
                         LOG.error("Error while starting up MQTT gateway", done.cause());
