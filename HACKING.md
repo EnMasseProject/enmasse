@@ -11,6 +11,7 @@ To build EnMasse, you need
     * Node.js
     * npm
     * docker
+    * maven
 
 The EnMasse java modules are built using gradle. Node modules are built using make. Docker images
 are built using make.
@@ -28,6 +29,7 @@ can be initialized:
 
    * `npm install -g mocha-junit-reporter`
    * `npm install -g rhea`
+   * `npm install -g debug`
 
 *Note*: Make sure docker daemon is in running state.
 
