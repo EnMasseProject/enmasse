@@ -313,23 +313,15 @@ To use the external routes for sending and receiving messages:
 [[mqtt]]
 ==== MQTT
 
-For sending and receiving messages, the
-`quitto_sub -h $(oc get service -o jsonpath='{.spec.clusterIP}' mqtt) -t mytopic -q 1osquitto`
-clients are the simpler way to go. These clients can be used either
-against the local service IP or the external route. To connect using the
-local service IP:
+For sending and receiving messages, the `mosquitto` clients are the simpler way to go. These clients can be used either against the local service IP or the external route. To connect using the local service IP:
 
-In order to subscribe to a topic (i.e. `mytopic` from the previous
-addresses configuration), the `mosquitto_sub` can be used in the
-following way :
+In order to subscribe to a topic (i.e. `mytopic` from the previous addresses configuration), the `mosquitto_sub` can be used in the following way :
 
 ....
 mosquitto_sub -h $(oc get service -o jsonpath='{.spec.clusterIP}' mqtt) -t mytopic -q 1
 ....
 
-Then the subscriber is waiting for messages published on that topic. To
-start the publisher, the `mosquitto_pub` can be used in the following
-way :
+Then the subscriber is waiting for messages published on that topic. To start the publisher, the `mosquitto_pub` can be used in the following way :
 
 ....
 mosquitto_pub -h $(oc get service -o jsonpath='{.spec.clusterIP}' mqtt) -t mytopic -q 1 -m "Hello EnMasse"
@@ -338,21 +330,15 @@ mosquitto_pub -h $(oc get service -o jsonpath='{.spec.clusterIP}' mqtt) -t mytop
 The the publisher publishes the message and disconnects from EnMasse.
 The message is received by the previous connected subscriber.
 
-For sending and receiving messages using the external route, have a look
-at an example python link:tls_mqtt_send.py[sender] and
-link:tls_mqtt_recv.py[receiver].
+For sending and receiving messages using the external route, have a look at an example python link:tls_mqtt_send.py[sender] and link:tls_mqtt_recv.py[receiver].
 
-In order to subscribe to a topic (i.e. `mytopic` from the previous
-addresses configuration), the receiver client can be used in the
-following way :
+In order to subscribe to a topic (i.e. `mytopic` from the previous addresses configuration), the receiver client can be used in the following way :
 
 ....
 ./tls_mqtt_recv.py -c "$(oc get route -o jsonpath='{.spec.host}' mqtt)" -p 443 -t mytopic -q 1 -s ./server-cert.pem
 ....
 
-Then the subscriber is waiting for messages published on that topic. To
-start the publisher, the sender client can be used in the following way
-:
+Then the subscriber is waiting for messages published on that topic. To start the publisher, the sender client can be used in the following way :
 
 ....
 ./tls_mqtt_send.py -c "$(oc get route -o jsonpath='{.spec.host}' mqtt)" -p 443 -t mytopic -q 1 -s ./server-cert.pem -m "Hello EnMasse"
