@@ -7,7 +7,7 @@ if [ "$VERSION" != "latest" ]; then
 fi
 
 if [ "$TRAVIS_BRANCH" == "master" ] && [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
-    make TAG=latest docker_push
+    make UPLOAD_TAG=latest docker_push
 else
     echo "Skipping docker tag on PR"
 fi
