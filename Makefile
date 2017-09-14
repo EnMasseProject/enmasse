@@ -16,6 +16,11 @@ build_java:
 	./gradlew build -i $(GRADLE_ARGS)
 	./gradlew pack --rerun-tasks $(GRADLE_ARGS)
 
+clean_java:
+	./gradlew clean
+
+clean: clean_java
+
 docker_build: build_java
 
 $(BUILD_TARGETS): $(BUILD_DIRS)
@@ -33,4 +38,4 @@ systemtests:
 	OPENSHIFT_NAMESPACE=$(OPENSHIFT_PROJECT) OPENSHIFT_TOKEN=$(OPENSHIFT_TOKEN) OPENSHIFT_USER=$(OPENSHIFT_USER) OPENSHIFT_MASTER_URL=$(OPENSHIFT_MASTER) OPENSHIFT_USE_TLS=true ./gradlew :systemtests:test -Psystemtests -i --rerun-tasks
 
 
-.PHONY: $(BUILD_TARGETS) $(DOCKER_TARGETS) $(BUILD_DIRS) $(DOCKER_DIRS) build_java deploy systemtests
+.PHONY: $(BUILD_TARGETS) $(DOCKER_TARGETS) $(BUILD_DIRS) $(DOCKER_DIRS) build_java deploy systemtests clean_java
