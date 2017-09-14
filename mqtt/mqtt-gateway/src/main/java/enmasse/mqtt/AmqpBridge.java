@@ -120,7 +120,11 @@ public class AmqpBridge {
         ProtonClientOptions clientOptions = new ProtonClientOptions();
         clientOptions.setHeartbeat(this.mqttEndpoint.keepAliveTimeSeconds() * 1000);
 
-        this.client.connect(clientOptions, address, port, done -> {
+        String userName = (this.mqttEndpoint.auth() != null) ? this.mqttEndpoint.auth().userName() : null;
+        String password = (this.mqttEndpoint.auth() != null) ? this.mqttEndpoint.auth().password() : null;
+        // NOTE : if username/password are null then Vert.x Proton just provides SASL ANONYMOUS as supported mechanism
+        //        otherwise it provides PLAIN with username/password provided here
+        this.client.connect(clientOptions, address, port, userName, password, done -> {
 
             if (done.succeeded()) {
 
