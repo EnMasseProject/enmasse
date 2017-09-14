@@ -26,6 +26,9 @@ then
 
     docker login -u enmasseci -p `oc whoami -t` 172.30.1.1:5000
 else
+    echo "Creating latest tag"
+    make TAG=latest docker_tag
+
     echo "Logging in to Docker Hub"
     docker login -u $DOCKER_USER -p $DOCKER_PASS
 fi
