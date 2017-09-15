@@ -64,7 +64,12 @@ This builds all modules including java.
 This assumes that the above deploy step has been run
 
     make systemtests
+    
+#### Run single system test
 
+    export GRADLE_ARGS='-Dtest.single=QueueTest'
+    make systemtests
+    
 ## Reference
 
 This is a reference of the different gradle tasks and options that can be set.
