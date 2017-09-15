@@ -9,4 +9,4 @@ ADD ./src/main/sh/init-keycloak.sh /opt/jboss/keycloak/bin/
 USER root
 RUN /opt/jboss/keycloak/bin/init-keycloak.sh
 USER jboss
-ENV JAVA_OPTS "-Dvertx.cacheDirBase=/tmp -Djboss.bind.address=0.0.0.0"
+ENV JAVA_OPTS "-Dvertx.cacheDirBase=/tmp -Djboss.bind.address=0.0.0.0 -Djava.net.preferIPv4Stack=true"
