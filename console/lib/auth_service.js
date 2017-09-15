@@ -53,6 +53,7 @@ function default_options(ca_path) {
     var options = {
         host: process.env.AUTHENTICATION_SERVICE_HOST,
         port: process.env.AUTHENTICATION_SERVICE_PORT,
+        sasl_init_hostname: process.env.AUTHENTICATION_SERVICE_SASL_INIT_HOST
     };
     try {
         options.ca = [fs.readFileSync(ca_path)];
