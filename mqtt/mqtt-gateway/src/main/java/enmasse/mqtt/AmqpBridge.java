@@ -264,8 +264,13 @@ public class AmqpBridge {
             } else {
 
                 LOG.error("Error connecting to AMQP services ...", done.cause());
-                // no connection with the AMQP side
-                this.mqttEndpoint.reject(MqttConnectReturnCode.CONNECTION_REFUSED_SERVER_UNAVAILABLE);
+                if (done.cause() instanceof SecurityException) {
+                    // error on the SASL mechanism side
+                    this.mqttEndpoint.reject(MqttConnectReturnCode.CONNECTION_REFUSED_NOT_AUTHORIZED);
+                } else {
+                    // no connection with the AMQP side
+                    this.mqttEndpoint.reject(MqttConnectReturnCode.CONNECTION_REFUSED_SERVER_UNAVAILABLE);
+                }
 
                 openHandler.handle(Future.failedFuture(done.cause()));
 
