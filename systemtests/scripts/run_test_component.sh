@@ -22,6 +22,7 @@ popd
 $SYSTEMTESTS/scripts/collect_logs.sh $ARTIFACTS_DIR
 
 oc get pods
+oc get deployments
 
 if [ $failure -gt 0 ]
 then
