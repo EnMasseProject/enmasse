@@ -42,7 +42,6 @@ public class QueueTest extends AmqpTestBase {
         runQueueTest(client, dest);
     }
 
-    @Test
     public void testColocatedQueues() throws Exception {
         Destination q1 = Destination.queue("queue1", Optional.of("pooled-inmemory"));
         Destination q2 = Destination.queue("queue2", Optional.of("pooled-inmemory"));
