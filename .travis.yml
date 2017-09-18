@@ -30,7 +30,7 @@ before_install:
 script:
 - "./.travis/build.sh"
 after_failure:
-- sudo docker logs origin 2>&1 > artifacts/openshift.log
+- sudo sh -c 'docker logs origin > artifacts/openshift.log 2> artifacts/openshift.err'
 - "./.travis/upload-artifacts.sh false"
 after_success:
 - "./.travis/push.sh"
