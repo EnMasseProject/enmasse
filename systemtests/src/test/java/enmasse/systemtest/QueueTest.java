@@ -17,6 +17,7 @@
 package enmasse.systemtest;
 
 import enmasse.systemtest.amqp.AmqpClient;
+import org.apache.qpid.proton.message.Message;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -31,6 +32,7 @@ import java.util.concurrent.TimeoutException;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
 
 public class QueueTest extends AmqpTestBase {
     @Test
@@ -83,24 +85,28 @@ public class QueueTest extends AmqpTestBase {
 
     private static void runQueueTest(AmqpClient client, Destination dest) throws InterruptedException, TimeoutException, ExecutionException, IOException {
         List<String> msgs = TestUtils.generateMessages(1024);
+        Count<Message> predicate = new Count<>(msgs.size());
+        Future<Integer> numSent = client.sendMessages(dest.getAddress(), msgs, predicate);
 
-        Future<Integer> numSent = null;
-        TimeoutBudget timeoutBudget = new TimeoutBudget(1, TimeUnit.MINUTES);
-        while (timeoutBudget.timeLeft() >= 0) {
-            numSent = client.sendMessages(dest.getAddress(), msgs);
-            try {
-                if (numSent.get(timeoutBudget.timeLeft(), TimeUnit.MILLISECONDS) == msgs.size()) {
-                    break;
-                }
-            } catch (Exception e) {
-                Thread.sleep(2000);
-            }
-        }
         assertNotNull(numSent);
-        assertThat(numSent.get(1, TimeUnit.SECONDS), is(msgs.size()));
+        int actual = 0;
+        try {
+            actual = numSent.get(1, TimeUnit.MINUTES);
+        } catch (TimeoutException t) {
+            fail("Sending messages timed out after sending " + predicate.actual());
+        }
+        assertThat(actual, is(msgs.size()));
 
-        Future<List<String>> received = client.recvMessages(dest.getAddress(), msgs.size());
-        assertThat(received.get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
+        predicate = new Count<>(msgs.size());
+        Future<List<String>> received = client.recvMessages(dest.getAddress(), predicate);
+        actual = 0;
+        try {
+            actual = received.get(1, TimeUnit.MINUTES).size();
+        } catch (TimeoutException t) {
+            fail("Receiving messages timed out after " + predicate.actual() + " msgs received");
+        }
+
+        assertThat(actual, is(msgs.size()));
 
     }
 
@@ -108,5 +114,6 @@ public class QueueTest extends AmqpTestBase {
     protected String getInstanceName() {
         return this.getClass().getSimpleName();
     }
+
 }
 

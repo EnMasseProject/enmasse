@@ -16,6 +16,7 @@
 
 package enmasse.systemtest.amqp;
 
+import enmasse.systemtest.Count;
 import enmasse.systemtest.VertxFactory;
 import io.vertx.core.Vertx;
 import io.vertx.proton.ProtonClientOptions;
@@ -26,7 +27,10 @@ import org.apache.qpid.proton.amqp.messaging.Target;
 import org.apache.qpid.proton.message.Message;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Future;
@@ -64,6 +68,10 @@ public class AmqpClient implements AutoCloseable {
         return recvMessages(source, numMessages, Optional.of(linkName), 1, TimeUnit.MINUTES);
     }
 
+    public Future<List<String>> recvMessages(String address, Predicate<Message> done) throws InterruptedException, IOException {
+        return recvMessages(terminusFactory.getSource(address), done, Optional.empty(), 1, TimeUnit.MINUTES);
+    }
+
     public Future<List<String>> recvMessages(Source source,String linkName, Predicate<Message> done) throws InterruptedException, IOException {
         return recvMessages(source, done, Optional.of(linkName), 1, TimeUnit.MINUTES);
     }
@@ -89,46 +97,36 @@ public class AmqpClient implements AutoCloseable {
     }
 
 
-    private static class Count implements Predicate<Message> {
-        private final int expected;
-        private int actual;
-
-        Count(int expected) {
-            this.expected = expected;
-        }
-
-        public boolean test(Message message) {
-            return ++actual == expected;
-        }
-    }
-
     public Future<List<String>> recvMessages(Source source, int numMessages, Optional<String> linkName, long connectTimeout, TimeUnit timeUnit) throws InterruptedException, IOException {
-        return recvMessages(source, new Count(numMessages), linkName, connectTimeout, timeUnit);
+        return recvMessages(source, new Count<>(numMessages), linkName, connectTimeout, timeUnit);
     }
 
     public Future<Integer> sendMessages(String address, List<String> messages) throws IOException, InterruptedException {
-        Message [] messageList = messages.stream()
+        return sendMessages(address, messages, new Count<>(messages.size()));
+    }
+
+    public Future<Integer> sendMessages(String address, List<String> messages, Predicate<Message> predicate) throws IOException, InterruptedException {
+        List<Message> messageList = messages.stream()
                 .map(body -> {
                     Message message = Message.Factory.create();
                     message.setBody(new AmqpValue(body));
                     message.setAddress(address);
                     return message;
                 })
-                .collect(Collectors.toList()).toArray(new Message[0]);
-        return sendMessages(address, messageList);
+                .collect(Collectors.toList());
+        return sendMessages(address, 1, TimeUnit.MINUTES, messageList, predicate);
     }
 
     public Future<Integer> sendMessages(String address, Message ... messages) throws IOException, InterruptedException {
-        return sendMessages(address, 1, TimeUnit.MINUTES, messages);
+        return sendMessages(address, 1, TimeUnit.MINUTES, Arrays.asList(messages), new Count<>(messages.length));
     }
 
-    public Future<Integer> sendMessages(String address, long connectTimeout, TimeUnit timeUnit, Message ... messages) throws IOException, InterruptedException {
+    public Future<Integer> sendMessages(String address, long connectTimeout, TimeUnit timeUnit, Iterable<Message> messages, Predicate<Message> predicate) throws IOException, InterruptedException {
 
         CompletableFuture<Integer> promise = new CompletableFuture<>();
         CountDownLatch connectLatch = new CountDownLatch(1);
-        Queue<Message> messageQueue = new LinkedList<>(Arrays.asList(messages));
         Vertx vertx = VertxFactory.create();
-        vertx.deployVerticle(new Sender(endpoint, new ClientOptions(terminusFactory.getSource(address), terminusFactory.getTarget(address), protonClientOptions, Optional.empty()), connectLatch, promise, messageQueue, qos));
+        vertx.deployVerticle(new Sender(endpoint, new ClientOptions(terminusFactory.getSource(address), terminusFactory.getTarget(address), protonClientOptions, Optional.empty()), connectLatch, promise, messages, qos, predicate));
         clients.add(vertx);
         if (!connectLatch.await(connectTimeout, timeUnit)) {
             throw new RuntimeException("Timeout waiting for client to connect");

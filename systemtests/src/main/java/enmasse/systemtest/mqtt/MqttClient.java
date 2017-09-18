@@ -16,6 +16,7 @@
 
 package enmasse.systemtest.mqtt;
 
+import enmasse.systemtest.Count;
 import enmasse.systemtest.Endpoint;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
@@ -31,7 +32,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Predicate;
 
 public class MqttClient implements AutoCloseable {
 
@@ -65,7 +65,7 @@ public class MqttClient implements AutoCloseable {
         CompletableFuture<List<String>> promise = new CompletableFuture<>();
         CountDownLatch connectLatch = new CountDownLatch(1);
 
-        Subscriber subscriber = new Subscriber(this.endpoint, this.options, topic, qos, new Count(numMessages), promise, connectLatch);
+        Subscriber subscriber = new Subscriber(this.endpoint, this.options, topic, qos, new Count<>(numMessages), promise, connectLatch);
         subscriber.start();
 
         this.clients.add(subscriber);
@@ -118,18 +118,4 @@ public class MqttClient implements AutoCloseable {
         }
     }
 
-    private static class Count implements Predicate<MqttMessage> {
-
-        private final int expected;
-        private int actual;
-
-        Count(int expected) {
-            this.expected = expected;
-        }
-
-        @Override
-        public boolean test(MqttMessage mqttMessage) {
-            return ++actual == expected;
-        }
-    }
 }

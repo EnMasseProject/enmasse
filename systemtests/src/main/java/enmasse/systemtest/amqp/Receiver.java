@@ -4,11 +4,9 @@ import enmasse.systemtest.Logging;
 import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.ProtonLinkOptions;
 import io.vertx.proton.ProtonReceiver;
-import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.messaging.Accepted;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.amqp.messaging.Source;
-import org.apache.qpid.proton.amqp.transport.DeliveryState;
 import org.apache.qpid.proton.amqp.transport.LinkError;
 import org.apache.qpid.proton.message.Message;
 
@@ -43,8 +41,8 @@ public class Receiver extends ClientHandlerBase<List<String>> {
             messages.add((String) ((AmqpValue) message.getBody()).getValue());
             protonDelivery.disposition(Accepted.getInstance(), true);
             if (done.test(message)) {
-                conn.close();
                 promise.complete(messages);
+                conn.close();
             } else {
                 receiver.flow(1);
             }
@@ -75,12 +73,16 @@ public class Receiver extends ClientHandlerBase<List<String>> {
     @Override
     protected void connectionClosed(ProtonConnection conn) {
         conn.close();
-        promise.complete(messages);
+        if(!promise.isDone()) {
+            promise.completeExceptionally(new RuntimeException("Connection closed (" + messages.size() + " messages received"));
+        }
     }
 
     @Override
     protected void connectionDisconnected(ProtonConnection conn) {
         conn.close();
-        promise.complete(messages);
+        if(!promise.isDone()) {
+            promise.completeExceptionally(new RuntimeException("Connection disconnected (" + messages.size() + " messages received"));
+        }
     }
 }
