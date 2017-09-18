@@ -1,106 +1,147 @@
 package io.enmasse.controller.api.v1.http;
 
 import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.AddressSpaceList;
+import io.enmasse.address.model.Endpoint;
+import io.enmasse.address.model.types.standard.StandardAddressSpaceType;
+import io.enmasse.controller.api.DefaultExceptionMapper;
 import io.enmasse.k8s.api.TestAddressSpaceApi;
+import org.junit.Before;
+import org.junit.Test;
+
+import javax.ws.rs.core.Response;
+import java.util.Arrays;
+import java.util.concurrent.Callable;
+
+import static org.hamcrest.CoreMatchers.hasItem;
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
 
 public class HttpAddressSpaceServiceTest {
     private HttpAddressSpaceService addressSpaceService;
     private TestAddressSpaceApi addressSpaceApi;
-    private AddressSpace instance1;
-    private AddressSpace instance2;
+    private AddressSpace a1;
+    private AddressSpace a2;
+    private DefaultExceptionMapper exceptionMapper = new DefaultExceptionMapper();
 
-    /*
     @Before
     public void setup() {
-        instanceManager = new TestAddressSpaceApi();
-        instanceService = new InstanceService(instanceManager);
-        instance1 = new Instance.Builder(AddressSpaceId.withId("instance1"))
-                .messagingHost(Optional.of("messaging.example.com"))
-                .mqttHost(Optional.of("mqtt.example.com"))
+        addressSpaceApi = new TestAddressSpaceApi();
+        addressSpaceService = new HttpAddressSpaceService(addressSpaceApi);
+        a1 = new AddressSpace.Builder()
+                .setName("a1")
+                .setType(new StandardAddressSpaceType())
+                .setEndpointList(Arrays.asList(
+                        new Endpoint.Builder()
+                            .setName("messaging")
+                            .setService("messaging")
+                            .setHost("messaging.example.com")
+                        .build(),
+                        new Endpoint.Builder()
+                            .setName("mqtt")
+                            .setService("mqtt")
+                            .setHost("mqtt.example.com")
+                        .build()))
                 .build();
-        instance2 = new Instance.Builder(AddressSpaceId.withIdAndNamespace("instance2", "othernamespace"))
-                .messagingHost(Optional.of("messaging2.example.com"))
+
+        a2 = new AddressSpace.Builder()
+                .setName("a2")
+                .setType(new StandardAddressSpaceType())
+                .setNamespace("othernamespace")
                 .build();
+    }
+
+    private Response invoke(Callable<Response> fn) {
+        try {
+            return fn.call();
+        } catch (Exception e) {
+            return exceptionMapper.toResponse(e);
+        }
     }
 
     @Test
     public void testList() {
-        instanceManager.create(instance1);
-        instanceManager.create(instance2);
-        Response response = instanceService.listAddressSpaces();
+        addressSpaceApi.createAddressSpace(a1);
+        addressSpaceApi.createAddressSpace(a2);
+        Response response = invoke(() -> addressSpaceService.getAddressSpaceList());
         assertThat(response.getStatus(), is(200));
-        Set<Instance> data = ((InstanceList)response.getEntity()).getInstances();
+        AddressSpaceList data = (AddressSpaceList) response.getEntity();
 
         assertThat(data.size(), is(2));
-        assertThat(data, hasItem(instance1));
-        assertThat(data, hasItem(instance2));
+        assertThat(data, hasItem(a1));
+        assertThat(data, hasItem(a2));
     }
 
     @Test
     public void testListException() {
-        instanceManager.throwException = true;
-        Response response = instanceService.listAddressSpaces();
+        addressSpaceApi.throwException = true;
+        Response response = invoke(() -> addressSpaceService.getAddressSpaceList());
         assertThat(response.getStatus(), is(500));
     }
 
     @Test
     public void testGet() {
-        instanceManager.create(instance1);
-        Response response = instanceService.getInstance("instance1");
+        addressSpaceApi.createAddressSpace(a1);
+        Response response = invoke(() -> addressSpaceService.getAddressSpace("a1"));
         assertThat(response.getStatus(), is(200));
-        Instance data = ((enmasse.controller.addressspace.v3.Instance)response.getEntity()).getInstance();
+        AddressSpace data = ((AddressSpace)response.getEntity());
 
-        assertThat(data, is(instance1));
-        assertThat(data.messagingHost(), is(instance1.messagingHost()));
+        assertThat(data, is(a1));
+        assertThat(data.getEndpoints().size(), is(a1.getEndpoints().size()));
     }
 
     @Test
     public void testGetException() {
-        instanceManager.throwException = true;
-        Response response = instanceService.getInstance("instance1");
+        addressSpaceApi.throwException = true;
+        Response response = invoke(() -> addressSpaceService.getAddressSpace("a1"));
         assertThat(response.getStatus(), is(500));
     }
 
     @Test
     public void testGetUnknown() {
-        Response response = instanceService.getInstance("doesnotexist");
+        Response response = invoke(() -> addressSpaceService.getAddressSpace("doesnotexist"));
         assertThat(response.getStatus(), is(404));
     }
 
-
     @Test
     public void testCreate() {
-        Response response = instanceService.createAddressSpace(new enmasse.controller.addressspace.v3.Instance(instance1));
+        Response response = invoke(() -> addressSpaceService.createAddressSpaces(a1));
         assertThat(response.getStatus(), is(200));
 
-        assertThat(instanceManager.list(), hasItem(instance1));
+        assertThat(addressSpaceApi.listAddressSpaces(), hasItem(a1));
     }
 
     @Test
     public void testCreateException() {
-        instanceManager.throwException = true;
-        Response response = instanceService.createAddressSpace(new enmasse.controller.addressspace.v3.Instance(instance1));
+        addressSpaceApi.throwException = true;
+        Response response = invoke(() -> addressSpaceService.createAddressSpaces(a1));
         assertThat(response.getStatus(), is(500));
     }
 
     @Test
     public void testDelete() {
-        instanceManager.create(instance1);
-        instanceManager.create(instance2);
+        addressSpaceApi.createAddressSpace(a1);
+        addressSpaceApi.createAddressSpace(a2);
 
-        Response response = instanceService.deleteAddressSpace("instance1", new enmasse.controller.addressspace.v3.Instance(instance1));
+        Response response = invoke(() -> addressSpaceService.deleteAddressSpace("a1"));
         assertThat(response.getStatus(), is(200));
 
-        assertThat(instanceManager.list(), hasItem(instance2));
-        assertThat(instanceManager.list().size(), is(1));
+        assertThat(addressSpaceApi.listAddressSpaces(), hasItem(a2));
+        assertThat(addressSpaceApi.listAddressSpaces().size(), is(1));
     }
 
     @Test
     public void testDeleteException() {
-        instanceManager.create(instance1);
-        instanceManager.throwException = true;
-        Response response = instanceService.deleteAddressSpace("instance1", new enmasse.controller.addressspace.v3.Instance(instance1));
+        addressSpaceApi.createAddressSpace(a1);
+        addressSpaceApi.throwException = true;
+        Response response = invoke(() -> addressSpaceService.deleteAddressSpace("a1"));
         assertThat(response.getStatus(), is(500));
     }
-    */
+
+    @Test
+    public void testDeleteNotFound() {
+        addressSpaceApi.createAddressSpace(a1);
+        Response response = invoke(() -> addressSpaceService.deleteAddressSpace("doesnotexist"));
+        assertThat(response.getStatus(), is(404));
+    }
 }

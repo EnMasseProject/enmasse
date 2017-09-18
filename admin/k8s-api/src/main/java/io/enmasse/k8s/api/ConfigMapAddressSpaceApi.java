@@ -21,6 +21,7 @@ import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.v1.CodecV1;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.ConfigMapList;
+import io.fabric8.kubernetes.api.model.DoneableConfigMap;
 import io.fabric8.openshift.client.OpenShiftClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,7 +53,7 @@ public class ConfigMapAddressSpaceApi implements AddressSpaceApi {
 
     @Override
     public void createAddressSpace(AddressSpace addressSpace) {
-        createOrReplace(addressSpace);
+        create(client.configMaps().createNew(), addressSpace);
     }
 
     @Override
@@ -65,11 +66,10 @@ public class ConfigMapAddressSpaceApi implements AddressSpaceApi {
         createOrReplace(addressSpace);
     }
 
-    public void createOrReplace(AddressSpace addressSpace) {
+    private void create(DoneableConfigMap config, AddressSpace addressSpace) {
         String name = KubeUtil.sanitizeName("address-space-" + addressSpace.getName());
         try {
-            client.configMaps().createOrReplaceWithNew()
-                .withNewMetadata()
+            config.withNewMetadata()
                 .withName(name)
                 .addToLabels(LabelKeys.TYPE, "address-space")
                 .endMetadata()
@@ -78,6 +78,10 @@ public class ConfigMapAddressSpaceApi implements AddressSpaceApi {
         } catch (Exception e) {
             log.error("Error createReplace on " + addressSpace);
         }
+    }
+
+    public void createOrReplace(AddressSpace addressSpace) {
+        create(client.configMaps().createOrReplaceWithNew(), addressSpace);
     }
 
     @Override
