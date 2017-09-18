@@ -48,7 +48,6 @@ public class PublishTest extends MqttTestBase {
     }
 
     @Test
-    @Ignore
     public void testPublishQoS1() throws Exception {
 
         List<String> messages = Arrays.asList("foo", "bar", "baz");
