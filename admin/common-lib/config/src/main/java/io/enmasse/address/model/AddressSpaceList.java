@@ -16,9 +16,19 @@
 package io.enmasse.address.model;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Set;
 
 /**
  * Type for address space list
  */
 public class AddressSpaceList extends ArrayList<AddressSpace> {
+
+    public AddressSpaceList() {
+        super();
+    }
+
+    public AddressSpaceList(Collection<AddressSpace> addressSpaces) {
+        super(addressSpaces);
+    }
 }
