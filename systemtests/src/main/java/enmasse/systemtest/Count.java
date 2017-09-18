@@ -21,7 +21,7 @@ import java.util.function.Predicate;
 public class Count<T> implements Predicate<T>
 {
     private final int expected;
-    private int actual;
+    private volatile int actual;
 
     public Count(int expected) {
         this.expected = expected;
@@ -29,7 +29,10 @@ public class Count<T> implements Predicate<T>
 
     @Override
     public boolean test(T message) {
-        return ++actual == expected;
+        if(message != null) {
+            ++actual;
+        }
+        return actual == expected;
     }
 
     public int actual() {
