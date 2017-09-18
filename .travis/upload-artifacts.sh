@@ -27,9 +27,10 @@ function upload_file() {
 function upload_folder() {
     local folder=$1
     local target=$2
-    for i in `find $folder -type f | cut -f 2- -d '/'`
+    for i in `find $folder -type f`
     do
-        upload_file $i "$target/$i"
+        dest=`echo $i | cut -f 2- -d '/'`
+        upload_file $i "$target/$dest"
     done
 }
 
