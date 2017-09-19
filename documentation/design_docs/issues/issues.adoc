@@ -1,0 +1,22 @@
+[[issues-troubleshooting]]
+= Issues & Troubleshooting
+
+This page is intended for giving some information and related workaround
+(or fixes) about known issues that you could encounter during the
+EnMasse deployment on Kubernetes and/or OpenShift.
+
+[[address-controller-pod-error-unable-to-parse-arguments-unable-to-find-value-for-required-environment-var-namespace]]
+===== Address-controller pod error : "Unable to parse arguments: Unable to find value for required environment var 'NAMESPACE'"
+
+If deploying EnMasse on Kubernetes or OpenShift the "address-controller"
+pod is unable to start due to the following error showed in the log :
+
+_"Unable to parse arguments: Unable to find value for required
+environment var 'NAMESPACE'"_
+
+In general, it's an issue related to the Kubernetes and/or OpenShift
+version with the related Docker version. It doesn't happen with Docker
+1.13 and OpenShift 1.5.0 (so Kubernetes 1.5) but can happen updating
+Docker to the latest versions i.e. 17.05-ce and leaving OpenShift as it
+is (1.5.0 version). In this case an updated to the latest OpenShift
+version 3.6.0 (so Kubernetes 1.6) should fix the issue.

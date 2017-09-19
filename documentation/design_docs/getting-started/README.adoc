@@ -1,0 +1,6 @@
+[[getting-started-guides]]
+= Getting started guides
+
+* link:openshift.adoc[EnMasse on OpenShift]
+* link:kubernetes.adoc[EnMasse on Kubernetes]
+* link:enmasse-on-aws.adoc[EnMasse on AWS with OpenShift]
