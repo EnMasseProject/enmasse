@@ -35,12 +35,10 @@ class AddressSpaceListV1Serializer extends JsonSerializer<AddressSpaceList> {
         ObjectNode root = (ObjectNode) jsonGenerator.getCodec().createObjectNode();
         root.put(Fields.API_VERSION, "enmasse.io/v1");
         root.put(Fields.KIND, "AddressSpaceList");
-        if (!addressSpaceList.isEmpty()) {
-            ArrayNode items = root.putArray(Fields.ITEMS);
-            for (AddressSpace addressSpace : addressSpaceList) {
-                ObjectNode entry = items.addObject();
-                AddressSpaceV1Serializer.serialize(addressSpace, entry);
-            }
+        ArrayNode items = root.putArray(Fields.ITEMS);
+        for (AddressSpace addressSpace : addressSpaceList) {
+            ObjectNode entry = items.addObject();
+            AddressSpaceV1Serializer.serialize(addressSpace, entry);
         }
         root.serialize(jsonGenerator, serializerProvider);
     }

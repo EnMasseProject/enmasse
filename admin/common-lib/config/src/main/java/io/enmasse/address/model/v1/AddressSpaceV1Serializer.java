@@ -53,19 +53,17 @@ class AddressSpaceV1Serializer extends JsonSerializer<AddressSpace> {
         spec.put(Fields.TYPE, addressSpace.getType().getName());
         spec.put(Fields.PLAN, addressSpace.getPlan().getName());
 
-        if (!addressSpace.getEndpoints().isEmpty()) {
-            ArrayNode endpoints = spec.putArray(Fields.ENDPOINTS);
-            for (io.enmasse.address.model.Endpoint endpoint : addressSpace.getEndpoints()) {
-                ObjectNode e = endpoints.addObject();
-                e.put(Fields.NAME, endpoint.getName());
-                e.put(Fields.SERVICE, endpoint.getService());
-                endpoint.getHost().ifPresent(h -> e.put(Fields.HOST, h));
-                endpoint.getCertProvider().ifPresent(provider -> {
-                    ObjectNode p = e.putObject(Fields.CERT_PROVIDER);
-                    p.put(Fields.NAME, provider.getName());
-                    p.put(Fields.SECRET_NAME, provider.getSecretName());
-                });
-            }
+        ArrayNode endpoints = spec.putArray(Fields.ENDPOINTS);
+        for (io.enmasse.address.model.Endpoint endpoint : addressSpace.getEndpoints()) {
+            ObjectNode e = endpoints.addObject();
+            e.put(Fields.NAME, endpoint.getName());
+            e.put(Fields.SERVICE, endpoint.getService());
+            endpoint.getHost().ifPresent(h -> e.put(Fields.HOST, h));
+            endpoint.getCertProvider().ifPresent(provider -> {
+                ObjectNode p = e.putObject(Fields.CERT_PROVIDER);
+                p.put(Fields.NAME, provider.getName());
+                p.put(Fields.SECRET_NAME, provider.getSecretName());
+            });
         }
 
         ObjectNode authenticationService = spec.putObject(Fields.AUTHENTICATION_SERVICE);

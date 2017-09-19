@@ -30,6 +30,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 // TODO: Add more tests of invalid input to deserialization
 public class SerializationTest {
@@ -100,6 +101,21 @@ public class SerializationTest {
 
         assertThat(deserialized, is(list));
     }
+
+
+    @Test
+    public void testSerializeEmptyAddressList() throws IOException {
+
+        AddressList list = new AddressList(Collections.emptySet());
+
+        String serialized = CodecV1.getMapper().writeValueAsString(list);
+        assertTrue("Serialized form '"+serialized+"' does not include empty items list",
+                   serialized.matches(".*\"items\"\\s*:\\s*\\[\\s*\\].*"));
+        List<Address> deserialized = CodecV1.getMapper().readValue(serialized, AddressList.class);
+
+        assertThat(deserialized, is(list));
+    }
+
 
     @Test
     public void testSerializeAddressSpace() throws IOException {
