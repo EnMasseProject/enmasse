@@ -1,0 +1,113 @@
+[[subscriptionunsubscription]]
+= Subscription/Unsubscription
+
+[[subscribe]]
+== Subscribe
+
+The FE needs an attached link with sender role to the Subscription
+Service control address. The MQTT _SUBSCRIBE_ and _UNSUBSCRIBE_
+messages, that will be handled, have QoS level 1 (AT_LEAST_ONCE) by
+nature so the attached link should have :
+
+* rcv-settle-mode : first (0)
+* snd-settle-mode : unsettled (0)
+
+The MQTT client sends a _SUBSCRIBE_ message to FE which maps the
+_SUBSCRIBE_ message to the following AMQP message.
+
+*AMQP_SUBSCRIBE* : sent to the SS in order to ask establishing a route
+between the topics and unique client publish address
+$mqtt.to.[client-id].publish.
+
+[options="header"]
+|=======================================================================
+|DATA |TYPE |VALUE |FROM
+|subject |system property |"subscribe" |-
+
+|message-id |system property |MessageId |MQTT SUBSCRIBE
+
+|correlation-id |system property |$mqtt.to.[client-id].publish |-
+
+|payload |AMQP value |Map with topics (as key) and qos (as value) |MQTT
+SUSBCRIBE
+|=======================================================================
+
+[NOTE]
+the payload is a map with topics used as key and the related qos as
+corresponding value
+
+The _AMQP_SUBSCRIBE_ is sent as "unsettled", in order to know that the
+Subscription Service has received it (with related disposition). The
+related disposition could be :
+
+* ACCEPTED : then the FE builds a _SUBACK_ message for MQTT client using
+the same requested QoS as granted QoS
+* REJECTED : then the FE builds a _SUBACK_ message for MQTT client using
+0x80 (failure) as granted QoS
+
+The FE builds the _SUBACK_ message as response for the MQTT client.
+
+*SUBACK*
+
+[cols=",,",options="header",]
+|==============================================================
+|DATA |VALUE |FROM
+|MessagId |message-id |AMQP_SUBSCRIBE
+|Return codes |List of granted QoS (or failure) |AMQP_SUBSCRIBE
+|==============================================================
+
+The FE could also receive the following _AMQP_PUBLISH_ message (as a
+retained message) on the unique client address and builds the _PUBLISH_
+for the MQTT client.
+
+*AMQP_PUBLISH* : the retained message to deliver to the client (see
+“Publishing”)
+
+[NOTE]
+the retained message is sent to the unique client address and it's not
+published on the topic because only that client should receive the
+message (not all the other subscribers for the topic itself).
+
+Starting from now, when subscribed/attached, the FE receives published
+messages on the unique client address :
+
+* $mqtt.to.[client-id].publish
+
+The AMQP message is used by FE for building the _PUBLISH_ message to
+send to the MQTT client (see “Publishing”).
+
+image:../images/08_subscribe.png[Subscribe]
+
+[[unsubscribe]]
+== Unsubscribe
+
+The MQTT client sends an _UNSUBSCRIBE_ message to FE which maps to the
+following AMQP message.
+
+*AMQP_UNSUBSCRIBE* : sent to the SS in order to ask removing the
+established route between the topic and unique client publish address
+$mqtt.to.[client-id].publish.
+
+[options="header"]
+|================================================================
+|DATA |TYPE |VALUE |FROM
+|subject |system property |"unsubscribe" |-
+|message-id |system property |MessageId |MQTT UNSUBSCRIBE
+|correlation-id |system property |$mqtt.to.[client-id].publish |-
+|payload |AMQP value |List of topics |MQTT UNSUBSCRIBE
+|================================================================
+
+The _AMQP_UNSUBSCRIBE_ is sent as "unsettled", in order to know that the
+Subscription Service has received it (with related disposition). When FE
+receives tha related disposition (with "settled") it builds the
+_UNSUBACK_ message for MQTT client.
+
+*UNSUBACK*
+
+[options="header"]
+|======================================
+|DATA |VALUE |FROM
+|MessagId |message-id |AMQP_UNSUBSCRIBE
+|======================================
+
+image:../images/09_unsubscribe.png[Unsubscribe]

@@ -1,0 +1,58 @@
+This page documents the scale down of brokers.
+
+[[overview]]
+== Overview
+
+Openshift supports scaling the number of replicas in a broker cluster.
+Scaling up will simply create more brokers for an address. Scaling down
+requires messages (and for topics, subscriptions) stored on a broker to
+be migrated to a different broker.
+
+The general design to migrate resources from a broker to another is
+
+1.  Block initial SIGTERM sent by openshift to the broker container so
+that it has time to migrate resources
+2.  Provide a preStop hook that migrates the appropriate resources to
+another broker. This hook will be different for queues and topics
+
+[[blocking-sigterm]]
+=== Blocking SIGTERM
+
+Blocking SIGTERM is achieved by launching the broker using a specialized
+program that masks SIGTERM. Once terminationGracePeriodSeconds seconds
+has passed (specified at pod creating time), SIGKILL is sent. The grace
+period may be set by default to a high value that covers most use cases.
+We can also make this configurable.
+
+[[prestop-hook---queues]]
+=== preStop hook - queues
+
+For queues, the preStop hook connects to the messaging service as a
+sender, and to the local broker as a receiver. The hook then forwards
+all messages from the receiver to the sender. In addition, the hook
+connects to the local broker management port to check if the queue is
+empty. Once the queue is empty, it signals the broker to shut down.
+
+[[prestop-hook---topics]]
+=== preStop hook - topics
+
+TODO
+
+[[alternatives]]
+== Alternatives
+
+One alternative to the preStop hook is to create an agent that monitors
+the sets of brokers. Once one is marked for deletion, it immediately
+connects to it, receives all messages, and pushes them to a different
+broker in the cluster. This design has not been explored further as the
+preStop hook seems to be designed for our use case.
+
+Another alternative is that on scale down, a backup broker will drain
+the messages stored on the persisted volume and forward them to another
+broker. This will only take care of stored messages, so it would have to
+be used in combination with a preStop hook.
+
+[[references]]
+== References
+
+http://kubernetes.io/docs/user-guide/pods/index#termination-of-pods

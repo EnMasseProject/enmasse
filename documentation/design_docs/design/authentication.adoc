@@ -1,0 +1,262 @@
+== scope
+
+There are various different interfaces for externally facing
+components that need to protected via authentication. There are also
+two types of userbase:
+
+1. there is the userbase for the openshift/kubernetes cluster that is
+controlled by the cluster administrators
+
+2. each address-space will have its own userbase that the owner of
+that address space can control
+
+=== address controller api
+
+This is the HTTP based API allowing address spaces to be created and
+deleted and the addresses within those to be defined.  The
+address-controller component will authenticate requests against the
+openshift/kubernetes userbase, presumably using OAuth tokens supplied
+in the HTTP headers.
+
+=== service broker api
+
+The service broker implementation is part of the address
+controller. This really just represents a slightly different API into
+the same functionality for managing addresses and address-spaces.
+
+The service broker api will only be called by the service catalog. The
+credentials the catalog will use are defined in environment
+variables. If these are set, the service broker implementation will
+enforce that credentials supplied with any request match those in the
+environment variables.
+
+=== enmasse console
+
+The console is a per address-space service and will authenticate
+against the address-space's own userbase. The owner of the address
+space can then grant access to the console to the users they have
+defined. The console server will have a service account that it uses
+for interaction with the address controller api when creating and
+deleting addresses.
+
+It will maintain authorisation information as to which users in the
+address space's userbase are allowed to (a) view the address space and
+(b) add/delete addresses within the address space.
+
+=== router & gateways
+
+These are responsible for authenticating AMQP and MQTT connections. At
+present all enforcement is actually done at the router level. The MQTT
+gateway merely passes on the credentials it receives for each
+connection.
+
+=== internal components
+
+Internal components authenticated using client certificates signed by
+an internal CA. Verify: this is a per address-space CA?
+
+== sasl delegating mechanism
+
+An authentication service for EnMasse supports provides an AMQP endpoint
+against which SASL authentication can take place.  A given EnMasse
+instance will be provided with the host/port and, optionally, (AMQP)
+hostname to use in the sasl-init and a client certificate to authenticate
+with the authentication service.
+
+The authorisation service will respond to a sasl-init with a sasl-mechanisms
+containing all the supported mechanisms the authentication service supports. An
+authentication service MUST provide the PLAIN mechanism, SHOULD provide the
+XOAUTH2 and SCRAM-SHA-1 mechanisms, and MAY support the ANONYMOUS and EXTERNAL
+mechanisms.
+
+[NOTE]
+Where EXTERNAL auth is offered, the EnMasse component *MUST* use a TLS client
+certificate to authenticate itself to the authentication service.  Moreover the
+EnMasse component must supply the Authorization Identity String (as defined in
+https://tools.ietf.org/html/rfc4422#section-3.4.1[RFC4422]) containing the
+identity of the certificate with which the messaging client authenticated with
+the EnMasse component.
+
+[NOTE]
+SASL Encryption is *NOT* supported.  GSSAPI (Kerberos) MAY be offered, but only
+for authentication, not for encryption.
+
+Upon a successful SASL authentication the EnMasse component and the authentication
+service MUST exchange ``open`` frames. The ``open`` sent by the authentication
+service MUST contain and entry in the ``properties`` field with key ``authenticated-identity``
+where the value is a ``string``-keyed map.  Standard keys are defined as per
+the http://openid.net/specs/openid-connect-core-1_0.html#StandardClaims[OpenID Connect Standard Claims].
+The ``sub`` field is mandatory, ``preferred_username`` SHOULD be provided, other fields (including
+non-standard claims) MAY be provided.
+
+After the ``open`` frame has been sent either side may close the connection.
+
+Upon an unsuccessful SASL authentication (including an EXTERNAL exchange where the provided
+Authorized Identity String is not recognized), the delegating authentication service will
+complete the SASL exchange with an ``auth`` outcome signifying failure.  Using an incorrect secret
+with a known identity MUST be indistinguishable in failure mode from using an unknown identity.
+
+[NOTE]
+define how group memberships are going to be sent back from authentication service to EnMasse component.
+Also define how the Authentication Service should respond if the EnMasse component advertises that it
+supports claims-based security (i.e. that the authentication service should construct a JWT token and
+send to the EnMasse component).
+
+[NOTE]
+Discuss posibility of providing OAUTH2 as well as SASL delegation so console can use OAUTH2 authentication/redirection
+
+=== Keycloak as the sasl delegating authentication service
+
+[TODO]
+RG to add details
+
+== console authorisation
+
+Permissions for enmasse will be assigned to groups (or roles). The
+groups are defined in the authorisation service.
+
+There will be two permissions defined for access to the console:
+
+1. read access
+
+2. write access (allowing creation and deletion of addresses)
+
+The console should use OAuth against Keycloak to verify whether a
+given user has been granted these permissions.
+
+== configuring authentication for an address-space
+
+Three options presented to user:
+
+1. No authentication
+2. Use enmasse authentication service
+3. Use external authentication service
+
+Deploy two authentication services along with address controller:
+
+1. simple null service that always allows access
+  * used for no authentication option above
+2. keycloak instance with sasl-delegation plugins
+  * used for enmasse authentication option above
+
+[NOTE]
+Need to update the address model to include the necessary
+configuration details for the authentication service to use in the
+address space resource schema. This includes host, port and a CA cert
+for verifying the authentication services certificate.
+
+....
+diff --git a/documentation/address-model/resource-definitions.md b/documentation/address-model/resource-definitions.md
+index 8c5aab3..ee46c55 100644
+--- a/documentation/address-model/resource-definitions.md
++++ b/documentation/address-model/resource-definitions.md
+@@ -43,6 +43,19 @@ The `AddressSpace` resource defines the type of address space and endpoint for c
+                     "secretName": "mysecret"
+                 }
+             }
++        },
++
++        "authenticationService": { //Optional, if no authenticationService is provided type 'none' is assumed,
++            "type": "external", // Required, one of:
++                                // 'none' (meaning no authentication is performed),
++                                // 'default' (meaning the internal keycloak based service is used)
++                                // or 'external' (to authenticate against some externally managed authentication service)
++            "details" : { // Optional, ignored unless type is 'external'
++                "host": "myhost",
++                "port": 5672,
++                "caCertSecretName": "mysecret"
++                //TODO: add in oauth uris
++            }
+         }
+     }
+ }
+....
+
+Routers will need to specify the the realm for their address-space in
+the AMQP open frames hostname field in connections made to the
+authentication service via sasl-delegation.
+
+If the host is used to identify the realm, we would need a unique
+hostname per address-space, i.e. a route per address-space. That may
+be desirable anyway in order to allow a realm specific url for the
+keycloak instance.
+
+Alternatively, the realm be taken from the address space name which is
+supplied as an environmanet variable.
+
+The address controller will allow the authentication service to be
+specified, and will set environment variables in the router deployment
+describing the host and port and path to the CA cert to use. The CA
+cert will be mounted as a secret.
+
+The address controller will provide the console with credentials to
+use when it connects back to the address-controller in order to
+create/delete addresses.
+
+When the default option is chosen for the authenticationService, the
+address controller will setup a keycloak realm for the address space
+with an initial admin user that can view and edit that realm.
+
+== testing
+
+Automated system tests to cover authentication functionality.  test will cover EnMasse Authentication Service and No
+Authentication.  External Authentication Service need not be covered through automated system tests as it is identical
+from the point of view of an individual address space, and (by definition) an external authentication service is not
+part of EnMasse.
+
+[NOTE]
+System tests will need to be able to support creation / deletion of address spaces on a per test (method) basis
+
+
+=== Testing Messaging Client Authentication
+
+==== EnMasse Authentication Service
+
+* Validate successful authentication with enmasse authentication service and valid credentials
+ . create an address space `A` which uses the enmasse authentication service
+ . add a user `U` with password `P` to the Keycloak domain for `A` (using Keycloak API)
+ . verify that AMQP & MQTT messaging clients can establish a connection to `A` using username `U` and password `P`
+ . create an address space `B` which uses the enmasse authentication service
+ . add a user `U` with password `X` to the Keycloak domain for `B`
+ . verify that AMQP & MQTT messaging clients can still establish a connection to `A` using username `U` and password `P`
+
+* Validate unsuccessful authentication with enmasse authentication service with no credentials
+ . create an address space `A` which uses the enmasse authentication service
+ . verify that AMQP & MQTT messaging clients cannot establish a connection without credentials
+ . add a user `U` with password `P` to the Keycloak domain for `A`
+ . verify that AMQP & MQTT messaging clients still cannot establish a connection without credentials
+
+* Validate unsuccessful authentication with enmasse authentication service with incorrect credentials
+ . create an address space `A` which uses the enmasse authentication service
+ . verify that AMQP & MQTT messaging clients cannot establish a connection to `A` using username `U` and password `P`
+ . add a user `U` with password `P` to the Keycloak domain for `A`
+ . verify that AMQP & MQTT messaging clients cannot establish a connection to `A` using username `U` and password `X`
+ . verify that AMQP & MQTT messaging clients cannot establish a connection to `A` using username `V` and password `P`
+ . create an address space `B` which uses the enmasse authentication service
+ . add a user `U` with password `X` to the Keycloak domain for `B`
+ . verify that AMQP & MQTT messaging clients cannot establish a connection to `A` using username `U` and password `X`
+ . verify that AMQP & MQTT messaging clients cannot establish a connection to `B` using username `U` and password `P`
+
+==== No Authentication
+
+* Validate successful authentication with no authentication
+ . create an address space `A` which uses the enmasse authentication service
+ . verify that AMQP & MQTT messaging clients can establish a connection to address space `A` without credentials
+ . verify that AMQP & MQTT messaging clients can establish a connection to address space `A` using username `U` and password `P`
+ . create an address space `B` which uses the enmasse authentication service
+ . verify that AMQP & MQTT messaging clients can still establish a connection to address space `A` without credentials
+ . verify that AMQP & MQTT messaging clients can still establish a connection to address space `A` using username `U` and password `P`
+
+=== Testing Console Access
+
+[NOTE]
+Do we need to add some basic authz first, or do we just initially allow all users in the domain to have full access to the console?
+
+=== Testing Address Controller / Service Broker
+
+[NOTE]
+Here we'll need to potentially have multiple sets of openshift credentials passed in to the tests / these users to be set up prior to the system test execution
+
+
+
+
