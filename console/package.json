@@ -20,12 +20,13 @@
     "devDependencies": {
         "eslint":"",
         "mocha":"",
+        "mocha-junit-reporter":"",
         "browserify":"",
         "istanbul": ""
     },
     "scripts": {
         "lint": "eslint lib/*.js",
-        "test": "mocha",
+        "test": "mocha ${MOCHA_ARGS}",
         "coverage": "istanbul cover _mocha"
     }
 }

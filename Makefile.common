@@ -26,7 +26,7 @@ npm_install:
 		npm install
 
 npm_test: npm_install
-	MOCHA_FILE=$(MOCHA_FILE) npm run test
+	MOCHA_FILE=$(MOCHA_FILE) MOCHA_ARGS="$(MOCHA_ARGS)" npm run test
 
 
 docker_build: package
