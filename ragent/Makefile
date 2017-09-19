@@ -6,4 +6,4 @@ build:
 package:
 	tar -czf build/ragent.tgz *.js
 
-test: mocha
+test: npm_test
