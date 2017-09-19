@@ -1,0 +1,12 @@
+[[keep-alive]]
+= Keep alive
+
+The keep alive mechanism at MQTT side is handled by the FE, exchanging
+_PINGREQ_ and _PINGRESP_ with the MQTT client.
+
+The life of the corresponding AMQP client is handled by AMQP “empty”
+message at connection level (as usual).
+
+The FE uses the "keep alive timeout" parameter from the MQTT _CONNECT_
+message for specifying the "idle-time-out" parameter om the AMQP open
+connection operation.

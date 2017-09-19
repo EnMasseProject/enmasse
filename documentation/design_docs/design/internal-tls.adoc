@@ -1,0 +1,191 @@
+== scope
+
+There are three aspects of securing communications:
+
+1. For internal clients to verify identity internal services
+2. For internal services to verify identity of internal clients
+3. For keycloak to verify clients and vice versa
+
+=== Internal TLS mechanism 
+
+For 1. and 2., there are a couple of alternatives for the mechanism.
+
+==== Use certs for verifying service identities, and a sasl db for verifying client identities
+
+Client verifies service identity using openshift generated certificates (uses an annotation on the
+service). Services (i.e. the router) have a list of valid client credentials that they check against.
+
+* Pros:
+** CA signing handled automatically
+
+* Cons:
+** Client validation requires internal sasl db for internal users in router
+** Might not be easy to use SASL by all components
+
+==== Create per-address space CA that is used for generating per-service certificates
+
+Create a root CA for global enmasse deployment.  For each address space create an intermediate certificate to act
+as the CA for that address space.
+
+Client verifies service identity using address space CA. CN=internal service host name.  Services
+(i.e. the router) validate clients via trusting the address space CA.
+
+Internal clients are verified by the address controller implicitly (per-address space CAs are derived from 'global'
+address controller CA). Address controller identity is verified by internal clients as its cert is signed by
+the address space CA.
+
+* Pros:
+** Generic mechanism that works for all things that support TLS
+** No requirement on using SASL
+** We already have certificate generation being done in the address controller
+
+* Cons:
+** Address controller needs to know services that needs to have certs generated (an attempt at discovering through annotations is possible).
+
+=== Verifying keycloak clients
+
+TODO
+
+=== Components and need for auth
+
+Below is a list of components that either act as a client or server (or both). All of them needs to
+have a certificate generated, but some of them have a bit different requirements.
+
+==== Address Controller
+
+* Internal ports: 5672, 8080, 8081
+* External ports: 8080
+
+Future ports:
+
+* Internal: 5671 (AMQPS), 8081 (HTTPS)
+* External: 443 (HTTPS) ??
+
+
+The address controller has no internal ports, only external. The external port might be used by
+internal components as well, in which case its cert should have both CN=address-controller.svc...
+and CN=route host for its certificate. It might be easier if we just used 2 certs for it.
+
+The AMQP port 5672 is not used by any component and should be considered for removal for time being.
+
+
+The root CA is provided at deployment either by the user or administrative magic.
+
+For each new address space we will need to create a new intermediate CA certificate, and then for each component of an
+enmasse instance requiring a cert, it needs to create a cert signed by the intermediate CA.  The generated certs/keys
+need to be provided to the relevant components, as well as the intermediate CA public cert.
+
+When an address space is deleted, the address contgroller must remove any record of the relevant intermediate CA.
+
+NOTE | Do we use a long expiry time on the generated certs, or provide a mechanism for renewing them periodically
+
+
+==== Configserv
+
+* Internal ports: 5672 (service) -> 5672 (pod)
+
+The internal port should be secured and changed to 5671
+
+==== Queue-scheduler
+
+* Internal ports: 5672 (service) -> 55667 (pod)
+* Connects to: configserv
+
+The internal port should be secured and changed to 5671.
+
+==== Router agent
+
+* Internal ports: 5672 (service) -> 55672 (pod)
+* Connects to: configserv
+
+The internal port should be secured and changed to 5671
+
+==== Console
+
+* External ports: 5672 (service) -> 56720 (pod), 8080
+* Connects to: router, broker, configserv, address-controller, auth-service
+
+Both ports should be secured with TLS.
+
+==== Router
+
+* Internal ports: 55673 (broker), 5672 (shutdown hooks, mqtt-gateway, mqtt-lwt, subserv), 5671, 55672 (inter-router)
+* External ports: 5671
+* Connects to: router agent, broker (if colocated), subserv, auth-service
+
+Future ports:
+
+* Internal ports:
+- 56671 (broker, mqtt-lwt),
+- 5672 (connections with end-user credentials - e.g. mqtt-gateway),
+- 5671 (secure connections with end-user credentials),
+- 55672 (inter-router)
+- 55671 (secure internal connections from enmasse components)
+
+
+The router exposes 5672 and 5671 through routes. We can remove 5672 if we want to be strict (and
+, it is useless as long as routes and ingress don't support non-TLS non-HTTP ports).
+
+5671 needs to use both internal and external certs. 55673 needs to enable TLS. 
+
+We should consider having subserv opening the connection to the router and not vice versa.
+
+==== Router metrics
+
+* Internal ports: 8080
+* Connects to: router
+
+Needs to enable TLS on metric collection and have cert trusted by hawkular-openshift-agent
+
+==== Broker
+
+* Internal ports: 5673, 61616, 8080
+* Connects to: router, queue-scheduler (if not colocated)
+
+
+Convert uses of core protocol to use AMQP and thus can remove use of core port (61616)
+
+The broker needs to support TLS for the outgoing connector. The incoming ports needs to be
+TLS-enabled. Port 8080 is used by the metrics collector, and also needs to be TLS-enabled.
+
+Configure bootstrap.xml with keystore etc.
+
+==== Topic-forwarder
+
+* Connects to: broker
+
+==== Keycloak
+
+* Internal ports: 8080, 567x
+* External ports: 443???
+
+
+We need to generate a certificate signed by the provided root CA for the internal ports.
+
+==== None-authservice
+
+* Internal ports: 8080
+
+
+We need to generate a certificate signed by the provided root CA for the internal ports, and for the "standard" and
+"none" authentication services.
+
+==== Keycloak-controller
+
+* Connects to: keycloak
+
+==== Subserv
+
+* Internal ports: 5672
+* Connects to: router, broker, configserv
+
+==== Mqtt-gateway
+
+* External ports: 8883
+* Internal ports: 1883
+* Connects to: router, mqtt-lwt
+
+==== Mqtt-lwt
+
+* Connects to: router
+
