@@ -22,12 +22,16 @@ clean: clean_node
 npm_install:
         ifndef NPM
 		$(warning "npm not found, node tests will be skipped")
-        endif
+        else
 		npm install
+        endif
 
 npm_test: npm_install
-	MOCHA_FILE=$(MOCHA_FILE) MOCHA_ARGS="$(MOCHA_ARGS)" npm run test
-
+        ifndef NPM
+		$(warning "npm not found, node tests will be skipped")
+        else
+	       MOCHA_FILE=$(MOCHA_FILE) MOCHA_ARGS="$(MOCHA_ARGS)" npm run test
+        endif
 
 docker_build: package
 	if [ -f Dockerfile ]; then docker build --build-arg version=$(TAG) -t $(PROJECT_PREFIX)-$(PROJECT_NAME):$(TAG) . ; fi
