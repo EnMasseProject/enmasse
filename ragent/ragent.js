@@ -257,7 +257,7 @@ Ragent.prototype.configure_handlers = function () {
             var r = rtr.connected(context.connection);
             log.info('Router connected from ' + r.container_id);
             self.connected_routers[r.container_id] = r;
-            context.connection.on('disconnected', self.router_disconnected);//todo: wait for a bit?
+            context.connection.on('disconnected', self.router_disconnected.bind(self));//todo: wait for a bit?
             r.on('ready', function (router) {
                 router.retrieve_listeners();
                 router.retrieve_addresses();
