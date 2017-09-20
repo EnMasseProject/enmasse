@@ -83,6 +83,10 @@ the http://www.amqp.org[AMQP] or http://www.mqtt.org[MQTT] protocols.
 See link:../mqtt-over-amqp[MQTT over AMQP] for how MQTT and AMQP
 addresses co-exists in this address space.
 
+// address.name.shortDescription:Enter the address name
+// address.name.longDescription:The <b>address name</b> is a unique string to which messages can be sent and received.
+// address.name.external:https://github.com/EnMasseProject/enmasse/pull/44
+
 TODO: This reflects the status quo, but how should multiple protocols
 actually be surfaced?
 
@@ -101,11 +105,15 @@ TODO: Document plan restrictions
 [[queue]]
 ===== Queue
 
+// address.queue.shortDescription:A store and forward queue
+// address.queue.longDescription:start
 The `queue` address type is a store-and-forward queue. This address type
 is appropriate for implementing a distributed work queue, handling
 traffic bursts and other usecases where you want to decouple the
 producer and consumer. A queue may be sharded across multiple storage
 units, in which case message order is no longer guaranted.
+// address.queue.longDescription:stop
+
 
 TODO: Document plan restrictions
 
@@ -114,11 +122,14 @@ TODO: Document properties
 [[topic]]
 ===== Topic
 
+// address.topic.shortDescription:A publish-subscriber topic
+// address.topic.longDescription:start
 The `topic` address type supports the publish-subscribe messaging
 pattern where you have 1..N producers and 1..M consumers. Each message
 published to a topic address is forwarded to all subscribers for that
 address. A subscriber may also be durable, in which case messages are
 kept until the subscriber has acknowledged them.
+// address.topic.longDescription:stop
 
 TODO: Document plan restrictions
 
@@ -127,11 +138,14 @@ TODO: Document properties
 [[anycast]]
 ===== Anycast
 
+// address.anycast.shortDescription:A scalable 'direct' address for sending messages to one consumer
+// address.anycast.longDescription:start
 The `anycast` address type is a scalable 'direct' address for sending
 messages to one consumer. Messages sent to an `anycast` address is not
 stored but forwarded directly to the consumer. This makes this address
 type ideal for request-reply (RPC) uses or even work distribution. This
 is the cheapest address type as it doesn't require any persistence.
+// address.anycast.longDescription:stop
 
 TODO: Document plan restrictions
 
@@ -140,12 +154,15 @@ TODO: Document properties
 [[broadcast]]
 ===== Broadcast
 
+// address.broadcast.shortDescription:A scalable 'direct' address for sending messages to multiple consumers
+// address.broadcast.longDescription:start
 The `broadcast` address type is a scalable 'direct' address for sending
 messages to multiple consumers. Messages sent to a `broadcast` address
 are forwarded to all consumers receiving on that address. It is
 important to note that only pre-settled messages can be sent to
 broadcast addresses, as message acknowledgements from consumers are not
 propagated to producers.
+// address.broadcast.longDescription:stop
 
 TODO: Document plan restrictions
 

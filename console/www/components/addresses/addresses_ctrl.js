@@ -408,6 +408,7 @@ angular.module('patternfly.wizard').controller('WizardController', ['$scope', '$
             $scope.getExternal = function (addr) {
               return $scope.tooltip.address[addr].external
             }
+/*
             $scope.getPlantip = function (addr, plan) {
               return $scope.tooltip.address[addr].plan[plan].longDescription
             }
@@ -423,6 +424,7 @@ angular.module('patternfly.wizard').controller('WizardController', ['$scope', '$
             $scope.getExternalPlan = function (addr, plan) {
               return $scope.tooltip.address[addr].plan[plan].external
             }
+*/
         };
 
         var startDeploy = function () {
