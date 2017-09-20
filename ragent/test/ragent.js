@@ -22,16 +22,17 @@ var path = require('path');
 var util = require('util');
 
 var rhea = require('rhea');
+var Ragent = require('../ragent.js');
 
-function MockRouter (name) {
+function MockRouter (name, port) {
     this.name = name;
     events.EventEmitter.call(this);
-    this.connection = rhea.connect({port:55672, container_id:name, properties:{product:'qpid-dispatch-router'}});
+    this.connection = rhea.connect({'port':port, container_id:name, properties:{product:'qpid-dispatch-router'}});
     this.connection.on('message', this.on_message.bind(this));
     var self = this;
     this.connection.on('connection_open', function () { self.emit('connected', self); });
     this.objects = {};
-    this.create_object('listener', 'default', {name:'default', host:name, port:55672, role:'inter-router'});
+    this.create_object('listener', 'default', {name:'default', host:name, 'port':port, role:'inter-router'});
 }
 
 util.inherits(MockRouter, events.EventEmitter);
@@ -244,13 +245,14 @@ function get_address_list_message(address_list) {
     return {subject:'enmasse.io/v1/AddressList', body:content};
 }
 
-function RouterList() {
+function RouterList(port) {
     this.counter = 1;
     this.routers = [];
+    this.port = port;
 }
 
 RouterList.prototype.new_router = function (name) {
-    var r = new MockRouter(name || this.new_name());
+    var r = new MockRouter(name || this.new_name(), this.port || 55672);
     this.routers.push(r);
     return r;
 };
@@ -294,6 +296,10 @@ MockAddressSource.prototype.close = function () {
     if (this.listener) this.listener.close();
 }
 
+MockAddressSource.prototype.get_port = function () {
+    return this.listener ? this.listener.address().port : 0;
+}
+
 MockAddressSource.prototype.send_address_list = function (sender) {
     sender.send(get_address_list_message(this.address_list));
 }
@@ -327,11 +333,10 @@ describe('basic router configuration', function() {
     var routers = new RouterList();
 
     beforeEach(function(done) {
-        ragent = child_process.fork(path.resolve(__dirname, '../ragent.js'), [], {silent:true, env:{}});
-        ragent.stderr.on('data', function (data) {
-            if (data.toString().match('Router agent listening on')) {
-                done();
-            }
+        ragent = new Ragent();
+        ragent.listen({port:0}).on('listening', function (){
+            routers = new RouterList(ragent.server.address().port);
+            done();
         });
     });
 
@@ -339,7 +344,7 @@ describe('basic router configuration', function() {
         //TODO: return promise from RouterList.close()
         routers.close();
         setTimeout(function () {
-            ragent.kill();
+            ragent.server.close();
             done();
         }, 500);
     });
@@ -355,7 +360,7 @@ describe('basic router configuration', function() {
                 routers.push(new_router());
             }
             if (initial_config) initial_config(routers);
-            var client = rhea.connect({port:55672});
+            var client = rhea.connect({port:ragent.server.address().port});
             client.open_sender().send(get_address_list_message(address_list));
             client.on('sender_open', function () {
                 setTimeout(function () {
@@ -402,7 +407,7 @@ describe('basic router configuration', function() {
         verify_full_mesh(routers);
     }));
     it('configures routers correctly whenever they connect', function(done) {
-        var client = rhea.connect({port:55672});
+        var client = rhea.connect({port:ragent.server.address().port});
         var sender = client.open_sender();
         sender.send(get_address_list_message([{address:'a',type:'topic'}, {address:'b',type:'queue'}]));
         client.on('sender_open', function () {
@@ -434,36 +439,44 @@ describe('address source subscription', function() {
     this.timeout(5000);
     var ragent;
     var address_source = new MockAddressSource([{address:'a',type:'topic'}, {address:'b',type:'queue'}]);
-    var routers = new RouterList();
+    var routers;
 
     beforeEach(function(done) {
-        address_source.listen(8888).on('listening', function () {
+        address_source.listen(0).on('listening', function () {
             done();
         });
     });
 
     function with_ragent(env, done) {
+        ragent = new Ragent();
+        ragent.listen({port:0}).on('listening', function (){
+            routers = new RouterList(ragent.server.address().port);
+            done();
+        });
+        ragent.subscribe_to_addresses(env);
+        /*
         ragent = child_process.fork(path.resolve(__dirname, '../ragent.js'), [], {silent:true, env:env || {}});
         ragent.stderr.on('data', function (data) {
             if (data.toString().match('Router agent listening on')) {
                 done();
             }
         });
+        */
     }
 
     afterEach(function(done) {
         //TODO: return promise from RouterList.close()
         routers.close();
         setTimeout(function () {
-            ragent.kill();
+            ragent.server.close();
             address_source.close();
             done();
         }, 500);
     });
 
-    function simple_subscribe_env_test(env) {
+    function simple_subscribe_env_test(get_env) {
         return function (done) {
-            with_ragent(env, function () {
+            with_ragent(get_env(), function () {
                 var router = routers.new_router();
                 setTimeout(function () {
                     verify_addresses(address_source.address_list, router);
@@ -473,8 +486,8 @@ describe('address source subscription', function() {
         }
     }
 
-    it('subscribes to configuration service', simple_subscribe_env_test({'CONFIGURATION_SERVICE_HOST': 'localhost', 'CONFIGURATION_SERVICE_PORT':8888}));
-    it('subscribes to admin service on configuration port', simple_subscribe_env_test({'ADMIN_SERVICE_HOST': 'localhost', 'ADMIN_SERVICE_PORT_CONFIGURATION':8888}));
-    it('prefers configuration service over admin service', simple_subscribe_env_test({'ADMIN_SERVICE_HOST': 'localhost', 'ADMIN_SERVICE_PORT_CONFIGURATION':7777,
-                                                                                      'CONFIGURATION_SERVICE_HOST': 'localhost', 'CONFIGURATION_SERVICE_PORT':8888}));
+    it('subscribes to configuration service', simple_subscribe_env_test(function () { return {'CONFIGURATION_SERVICE_HOST': 'localhost', 'CONFIGURATION_SERVICE_PORT':address_source.get_port()} }));
+    it('subscribes to admin service on configuration port', simple_subscribe_env_test(function () { return {'ADMIN_SERVICE_HOST': 'localhost', 'ADMIN_SERVICE_PORT_CONFIGURATION':address_source.get_port()} }));
+    it('prefers configuration service over admin service', simple_subscribe_env_test(function () { return {'ADMIN_SERVICE_HOST': 'foo', 'ADMIN_SERVICE_PORT_CONFIGURATION':7777,
+                                                                                                           'CONFIGURATION_SERVICE_HOST': 'localhost', 'CONFIGURATION_SERVICE_PORT':address_source.get_port()} }));
 });

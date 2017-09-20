@@ -1,0 +1,22 @@
+{
+    "name" : "ragent",
+    "version": "0.0.1",
+    "description": "router agent for enmasse",
+    "homepage": "http://github.com/enmasseproject",
+    "license": "Apache-2.0",
+    "repository": {
+        "type": "git",
+        "url": "http://github.com/enmasseproject/enmasse"
+    },
+    "dependencies": {
+        "debug": ">=0.8.0",
+        "rhea": ">=0.2.5"
+    },
+    "devDependencies": {
+        "mocha-junit-reporter":"",
+        "mocha":""
+    },
+    "scripts": {
+        "test": "mocha ${MOCHA_ARGS}"
+    }
+}

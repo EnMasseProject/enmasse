@@ -6,17 +6,28 @@ TAG             ?= latest
 UPLOAD_TAG      ?= $(TAG)
 VERSION         ?= latest
 MOCHA_FILE      ?= build/test-results/test/TEST-$(PROJECT_NAME).xml
+NPM             ?= $(shell command -v npm 2> /dev/null)
 
 all: init build test package docker_build
 
 init:
 	mkdir -p build
 
-clean:
+clean_node:
+	rm -rf node_modules coverage
+
+clean: clean_node
 	rm -rf build
 
-mocha:
-	MOCHA_FILE=$(MOCHA_FILE) mocha $(MOCHA_ARGS)
+npm_install:
+        ifndef NPM
+		$(warning "npm not found, node tests will be skipped")
+        endif
+		npm install
+
+npm_test: npm_install
+	MOCHA_FILE=$(MOCHA_FILE) MOCHA_ARGS="$(MOCHA_ARGS)" npm run test
+
 
 docker_build: package
 	if [ -f Dockerfile ]; then docker build --build-arg version=$(TAG) -t $(PROJECT_PREFIX)-$(PROJECT_NAME):$(TAG) . ; fi
