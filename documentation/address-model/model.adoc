@@ -114,6 +114,47 @@ producer and consumer. A queue may be sharded across multiple storage
 units, in which case message order is no longer guaranted.
 // address.queue.longDescription:stop
 
+[[queue-plans]]
+===== Queue Plans
+
+* inmemory
+* persisted
+* pooled-inmemory
+* pooled-persisted
+
+[[in-memory]]
+===== In memory
+// address.queue.plan.inmemory.shortDescription:In memory only
+// address.queue.plan.inmemory.longDescription:start
+Creates a standalone broker cluster for queues. Messages are not persisted on
+stable storage.
+// address.queue.plan.inmemory.longDescription:stop
+
+[[persisted]]
+===== Persisted
+
+// address.queue.plan.persisted.shortDescription:Saved to storage
+// address.queue.plan.persisted.longDescription:start
+Creates a standalone broker cluster for queues. Messages are persisted on stable
+storage.
+// address.queue.plan.persisted.longDescription:stop
+
+[[pooled-in-memory]]
+===== Pooled in memory
+// address.queue.plan.pooled-inmemory.shortDescription:Shared broker cluster - not persisted
+// address.queue.plan.pooled-inmemory.longDescription:start
+Schedules queues to run on a shared broker cluster, reducing overhead. Messages
+are not persisted on stable storage.
+// address.queue.plan.pooled-inmemory.longDescription:stop
+
+[[pooled-persisted]]
+===== Pooled persisted
+
+// address.queue.plan.pooled-persisted.shortDescription:Shared broker cluster - saved to storage
+// address.queue.plan.pooled-persisted.longDescription:start
+Schedules queues to run on a shared broker cluster, reducing overhead. Messages
+are persisted on stable storage.
+// address.queue.plan.pooled-persisted.longDescription:stop
 
 TODO: Document plan restrictions
 
@@ -131,6 +172,30 @@ address. A subscriber may also be durable, in which case messages are
 kept until the subscriber has acknowledged them.
 // address.topic.longDescription:stop
 
+[[topic-plans]]
+===== Topic Plans
+
+* inmemory
+* persisted
+
+[[in-memory-1]]
+===== In memory
+
+// address.topic.plan.inmemory.shortDescription:In memory only
+// address.topic.plan.inmemory.longDescription:start
+Creates a standalone broker cluster for topics. Messages are not persisted on
+stable storage.
+// address.topic.plan.inmemory.longDescription:stop
+
+[[persisted-1]]
+===== Persisted
+
+// address.topic.plan.persisted.shortDescription:Saved to storage
+// address.topic.plan.persisted.longDescription:start
+Creates a standalone broker cluster for topics. Messages are persisted on stable
+storage.
+// address.topic.plan.persisted.longDescription:stop
+
 TODO: Document plan restrictions
 
 TODO: Document properties
@@ -147,6 +212,16 @@ type ideal for request-reply (RPC) uses or even work distribution. This
 is the cheapest address type as it doesn't require any persistence.
 // address.anycast.longDescription:stop
 
+[[anycast-plans]]
+===== Anycast Plans
+
+* standard
+
+[[standard]]
+===== Standard
+
+// address.anycast.plan.inmemory.shortDescription:Configures router network with anycast address
+
 TODO: Document plan restrictions
 
 TODO: Document properties
@@ -154,15 +229,25 @@ TODO: Document properties
 [[broadcast]]
 ===== Broadcast
 
-// address.broadcast.shortDescription:A scalable 'direct' address for sending messages to multiple consumers
-// address.broadcast.longDescription:start
+// address.multicast.shortDescription:A scalable 'direct' address for sending messages to multiple consumers
+// address.multicast.longDescription:start
 The `broadcast` address type is a scalable 'direct' address for sending
 messages to multiple consumers. Messages sent to a `broadcast` address
 are forwarded to all consumers receiving on that address. It is
 important to note that only pre-settled messages can be sent to
 broadcast addresses, as message acknowledgements from consumers are not
 propagated to producers.
-// address.broadcast.longDescription:stop
+// address.multicast.longDescription:stop
+
+[[broadcast-plans]]
+===== Broadcast Plans
+
+* standard
+
+[[standard-1]]
+===== Standard
+
+// address.multicast.plan.inmemory.shortDescription:Configures router network with multicast address
 
 TODO: Document plan restrictions
 
