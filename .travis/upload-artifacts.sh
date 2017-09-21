@@ -35,10 +35,11 @@ function upload_folder() {
 }
 
 if [ "$SUCCESS" == "true" ]; then
-    if [ "$TRAVIS_BRANCH" != "master" ] || [ "$TRAVIS_PULL_REQUEST" != "false" ]; then
+    if [ "$TRAVIS_BRANCH" != "master" ] && [ "$TRAVIS_BRANCH" != "$TRAVIS_TAG" ] || [ "$TRAVIS_PULL_REQUEST" != "false" ]
+    then
         echo "Skipping upload for successful PR"
     else
-        echo "Uploading snapshot for master build"
+        echo "Uploading snapshot for $TRAVIS_BRANCH build"
         upload_file templates/build/enmasse-${VERSION}.tgz enmasse-${VERSION}.tgz
     fi
 else
