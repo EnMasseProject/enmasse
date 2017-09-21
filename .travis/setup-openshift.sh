@@ -10,20 +10,14 @@ mkdir -p $SETUP
 mkdir -p $LOGDIR
 mkdir -p $CONFIG
 
-sudo apt-get remove docker-ci
-sudo apt-get install docker.io
-sudo apt-cache policy docker.io
-#sudo apt-get install 'docker-engine=1.12.1-*'
-#sudo apt-get install docker-engine=1.12.1-0~trusty
-
 sudo service docker stop
 sudo sh -c 'echo DOCKER_OPTS=\"-H tcp://127.0.0.1:2375 -H unix:///var/run/docker.sock --insecure-registry 172.30.0.0/16\" > /etc/default/docker'
 sudo cat /etc/default/docker
 sudo mount --make-shared /
 sudo service docker start
 
-#wget -q https://github.com/openshift/origin/releases/download/v3.6.0/openshift-origin-client-tools-v3.6.0-c4dd4cf-linux-64bit.tar.gz -O openshift.tar.gz
-wget -q https://github.com/openshift/origin/releases/download/v1.5.1/openshift-origin-client-tools-v1.5.1-7b451fc-linux-64bit.tar.gz -O openshift.tar.gz
+wget -q https://github.com/openshift/origin/releases/download/v3.6.0/openshift-origin-client-tools-v3.6.0-c4dd4cf-linux-64bit.tar.gz -O openshift.tar.gz
+#wget -q https://github.com/openshift/origin/releases/download/v1.5.1/openshift-origin-client-tools-v1.5.1-7b451fc-linux-64bit.tar.gz -O openshift.tar.gz
 
 tar xzf openshift.tar.gz -C $SETUP --strip-components 1
 
@@ -37,7 +31,3 @@ do
     sleep 5
     oc cluster status
 done
-
-oc get services -n default 
-oc get pods -n default
-oc logs -n default docker-registry-1-deploy
