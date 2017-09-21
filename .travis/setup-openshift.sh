@@ -10,9 +10,10 @@ mkdir -p $SETUP
 mkdir -p $LOGDIR
 mkdir -p $CONFIG
 
+sudo apt-get remove docker-ci
+sudo apt-get install docker.io
 sudo apt-cache policy docker.io
-sudo apt-cache policy docker-ce
-sudo apt-get install 'docker-engine=1.12.1-*'
+#sudo apt-get install 'docker-engine=1.12.1-*'
 #sudo apt-get install docker-engine=1.12.1-0~trusty
 
 sudo service docker stop
