@@ -34,3 +34,4 @@ done
 
 oc get services -n default 
 oc get pods -n default
+oc logs -n default docker-registry-1-deploy
