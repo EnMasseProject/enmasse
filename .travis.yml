@@ -28,7 +28,9 @@ before_install:
 - npm install rhea debug
 - "./gradlew :artemis:buildArtemisAmqpModule"
 script:
-- "./.travis/build.sh"
+- exit 1
+- mkdir -p artifacts
+  #- "./.travis/build.sh"
 after_failure:
 - sudo sh -c 'docker logs origin > artifacts/openshift.log 2> artifacts/openshift.err'
 - "./.travis/upload-artifacts.sh false"
