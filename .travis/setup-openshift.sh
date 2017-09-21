@@ -31,3 +31,7 @@ do
     sleep 5
     oc cluster status
 done
+
+oc get services -n default 
+oc get pods -n default
+oc get pods -n default -o yaml
