@@ -2,7 +2,7 @@ include ../Makefile.common
 
 SRCS=$(wildcard *.jsonnet)
 OBJS=$(patsubst %.jsonnet,%.json,$(SRCS))
-INSTALLDIR=build/enmasse-$(VERSION)
+INSTALLDIR=enmasse-$(VERSION)
 
 %.json: %.jsonnet
 	VERSION=$(TAG) REGISTRY=$(DOCKER_REGISTRY) PROJECT=$(DOCKER_ORG) jsonnet/jsonnet --ext-str VERSION --ext-str REGISTRY --ext-str PROJECT -m build $<
@@ -17,8 +17,8 @@ prepare:
 	cp include/*.json build 
 
 package: prepare $(OBJS) yaml
-	mkdir -p $(INSTALLDIR)                                                                                                                                               
-	cp -r install/* $(INSTALLDIR)                                                                                                                                        
-	tar -czf $(INSTALLDIR).tgz $(INSTALLDIR)
+	mkdir -p build/$(INSTALLDIR)                                                                                                                                               
+	cp -r install/* build/$(INSTALLDIR)                                                                                                                                        
+	tar -czf build/$(INSTALLDIR).tgz build/$(INSTALLDIR)
 
 .PHONY: yaml prepare package clean
