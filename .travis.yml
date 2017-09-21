@@ -28,6 +28,7 @@ before_install:
 - npm install rhea debug
 - "./gradlew :artemis:buildArtemisAmqpModule"
 script:
+- docker version
 - "./.travis/build.sh"
 - mkdir -p artifacts
 after_failure:
