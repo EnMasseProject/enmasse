@@ -10,6 +10,9 @@ mkdir -p $SETUP
 mkdir -p $LOGDIR
 mkdir -p $CONFIG
 
+sudo apt-get install 'docker-engine=1.12.1-*'
+#sudo apt-get install docker-engine=1.12.1-0~trusty
+
 sudo service docker stop
 sudo sh -c 'echo DOCKER_OPTS=\"-H tcp://127.0.0.1:2375 -H unix:///var/run/docker.sock --insecure-registry 172.30.0.0/16\" > /etc/default/docker'
 sudo cat /etc/default/docker
