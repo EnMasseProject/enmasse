@@ -12,7 +12,7 @@ then
     export DOCKER_ORG=enmasseci
 fi
 
-echo "Building EnMasse"
+echo "Building EnMasse with tag $TAG, version $VERSION from $TRAVIS_BRANCH. PR: $TRAVIS_PULL_REQUEST"
 MOCHA_ARGS="--reporter=mocha-junit-reporter" make
 
 echo "Tagging Docker Images"
@@ -26,7 +26,7 @@ then
 
     docker login -u enmasseci -p `oc whoami -t` 172.30.1.1:5000
 else
-    make UPLOAD_TAG=latest docker_tag
+    make UPLOAD_TAG=$VERSION docker_tag
     echo "Logging in to Docker Hub"
     docker login -u $DOCKER_USER -p $DOCKER_PASS
 fi
