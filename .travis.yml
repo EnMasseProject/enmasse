@@ -46,7 +46,7 @@ deploy:
   skip_cleanup: true
   api_key:
     secure: HepZcALZznJ9XL1gumw4EqtG2doiWX+dEdUy0Qug+DcFM6mTb7m61YIrYmiw0h2FCqzozsSjlDjKfBLUgnUalj6f6LZCQKqThh04VKQoBmDJbUoOX7nSiaGeV9SJ18zeG8MrIkoHriJVGnfKUTL870RSQGzRvCXOUyQdx9gy/kfFFM4R9eUN8XOH/nMdmMhtoqwlhfjcY8T0qeKlCISqFCXlan+uIV7KERVSiiBdK4L4fsA5VB8Dd3SUHKe2zpcntowsBXfGI9wemWe++FysZ4Wsg+bBohiZ11A2xeHWCpswosvUHl8OcRyQDK5RqLsphdhTcFxaKvuyXl8v0eecg4ktdHkVQ0EbEauTtd/19lDa4oNpv/Thm3ElKpM77xq4gf0CLW/QNCO6OSQ9zPKughyaH3b/lseLWvVxYEKsPanRdYCZO0PjVOUGtbUpPRxP5CkNDEkW7mpfbK0IgxAemGy0mcTnSWFKQOgdB9iyiZA+lrHdrF9pc1rj5QPbDE8e7mn7FoosPsZuwGjZAb/7lBdZ4aerUXHHsBoyRrVEMvj1qABv9UJtokgo3rBoY/JGdHX9Rq9gsVVQeLLFir5EIFlsTXoaj4z+NvwC5ODklNdBoQvkXYzZ6z9OYsCGDjl09rFi7AbMXCM7nLeKzUv3XQbuEr9iHHpkWhKO8gc8hNw=
-  file: templates/build/enmasse-${TAG}.tgz
+  file: templates/build/enmasse-${TRAVIS_TAG}.tgz
   on:
     tags: true
     repo: EnMasseProject/enmasse
