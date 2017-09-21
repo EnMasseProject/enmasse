@@ -1,6 +1,7 @@
 #!/bin/sh
 set -e
 export VERSION=${TRAVIS_TAG:-latest}
+exit 1
 
 if [ "$VERSION" != "latest" ]; then
     export TAG=$VERSION
