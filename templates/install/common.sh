@@ -26,6 +26,10 @@ function tempdir() {
     echo `mktemp -d /tmp/enmasse-deploy.XXXXXX`
 }
 
+function random_string() {
+    head /dev/urandom | tr -dc A-Za-z0-9 | head -c 32
+}
+
 function create_csr() {
   local KEYFILE=$1
   local CSRFILE=$2
