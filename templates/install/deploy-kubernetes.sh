@@ -29,7 +29,7 @@ NONE_TEMPLATE=$SCRIPTDIR/kubernetes/addons/none-authservice.yaml
 DEFAULT_NAMESPACE=enmasse
 GUIDE=false
 
-while getopts a:dgk:lm:n:t:vh opt; do
+while getopts a:dglm:n:t:vh opt; do
     case $opt in
         a)
             AUTH_SERVICES=$OPTARG
