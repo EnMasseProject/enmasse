@@ -36,7 +36,7 @@ DEFAULT_NAMESPACE=myproject
 OC_ARGS=""
 GUIDE=false
 
-while getopts a:c:dgk:m:n:p:st:u:yvh opt; do
+while getopts a:c:dgm:n:p:st:u:yvh opt; do
     case $opt in
         a)
             AUTH_SERVICES=$OPTARG
