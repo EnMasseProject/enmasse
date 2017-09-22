@@ -250,16 +250,8 @@ ConnectedRouter.prototype.delete_connector = function (host_port, connector_name
     return future;
 };
 
-function desired_distribution(address) {
-    return address.multicast ? "multicast" : "balanced";
-}
-
 function actual_distribution(address) {
     return address.distribution === "multicast";
-}
-
-function to_router_address(address) {
-    return {prefix:address.name, distribution:desired_distribution(address), waypoint:address.store_and_forward};
 }
 
 function from_router_address(address) {

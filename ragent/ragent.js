@@ -48,15 +48,6 @@ function get_product (connection) {
     }
 }
 
-function print_routers(routers) {
-    for (var r in routers) {
-        var router = routers[r];
-        if (router) {
-            log.info('   ' + r + ' => ' + router.listeners);
-        }
-    }
-}
-
 function Ragent() {
     this.known_routers = {};
     this.connected_routers = {};
@@ -71,7 +62,7 @@ function Ragent() {
 Ragent.prototype.subscribe = function (context) {
     this.subscribers[context.connection.container_id] = context.sender;
     //send initial routers:
-    var payload = wrap_known_routers(connected_routers);
+    var payload = wrap_known_routers(this.connected_routers);
     context.sender.send({subject:'routers', body:payload});
 };
 
@@ -139,11 +130,7 @@ Ragent.prototype.router_disconnected = function (context) {
 
 Ragent.prototype.addresses_updated = function () {
     for (var r in this.connected_routers) {
-        try {
-            this.sync_router_addresses(this.connected_routers[r]);
-        } catch (e) {
-            log.error('ERROR: failed to check addresses on router ' + r + ': ' + e + '; ' + JSON.stringify(this.addresses));
-        }
+        this.sync_router_addresses(this.connected_routers[r]);
     }
 }
 
@@ -159,7 +146,7 @@ Ragent.prototype.sync_router_addresses = function (router) {
 }
 
 Ragent.prototype.verify_addresses = function (expected) {
-    log.info('verifying addresses to match: ' + JSON.stringify(expected));
+    log.debug('verifying addresses to match: ' + JSON.stringify(expected));
     for (var r in this.connected_routers) {
         if (!this.connected_routers[r].verify_addresses(expected)) {
             return false;
@@ -172,9 +159,12 @@ Ragent.prototype.on_router_agent_disconnect = function (context) {
     delete context.connection.connection_id;
 }
 
-function watch_pods(connection) {
+var connection_properties = {product:'ragent', container_id:process.env.HOSTNAME};
+
+Ragent.prototype.watch_pods = function (connection, env) {
+    var self = this;
     var watcher = undefined;
-    if (process.env.ADMIN_SERVICE_HOST) {
+    if (env.ADMIN_SERVICE_HOST) {
         watcher = podwatch.watch_pods(connection, {"name": "admin"});
     } else {
         watcher = podwatch.watch_pods(connection, {"name": "ragent"});
@@ -185,8 +175,8 @@ function watch_pods(connection) {
             var pod = pods[pod_name];
 
             //pod name will be containerid, use that as the id for debug logging
-            var agent_conn_info = {host:pod.host, port:port, id:pod_name, properties:connection_properties};
-            var agent_conn = amqp.connect(agent_conn_info);
+            var agent_conn_info = {host:pod.host, port:pod.port, id:pod_name, properties:connection_properties};
+            var agent_conn = self.container.connect(agent_conn_info);
             agent_conn.open_receiver('routers');
             agent_connections[pod_name] = agent_conn;
             log.info('connecting to new agent ' + JSON.stringify(agent_conn_info));
@@ -202,8 +192,6 @@ function watch_pods(connection) {
         }
     });
 }
-
-var connection_properties = {product:'ragent', container_id:process.env.HOSTNAME};
 
 Ragent.prototype.on_message = function (context) {
     if (context.message.subject === 'routers') {
@@ -228,7 +216,7 @@ Ragent.prototype.on_message = function (context) {
                 }
             }
         } else if (body.items !== undefined) {
-            throw Error('invalid type for body.items: ' + (typeof body.items));
+            log.error('invalid type for body.items: ' + (typeof body.items));
         }
         this.sync_addresses(semantics);
     } else if (context.message.subject === 'health-check') {
@@ -236,9 +224,7 @@ Ragent.prototype.on_message = function (context) {
         var content = JSON.parse(request.body);
         var reply_to = request.reply_to;
         var response = {to: reply_to};
-        if (request.correlation_id) {
-            response.correlation_id = request.correlation_id;
-        }
+        response.correlation_id = request.correlation_id;
         response.body = this.verify_addresses(content);
         var sender = this.clients[context.connection.container_id];
         if (sender) {
@@ -258,6 +244,7 @@ Ragent.prototype.configure_handlers = function () {
             log.info('Router connected from ' + r.container_id);
             self.connected_routers[r.container_id] = r;
             context.connection.on('disconnected', self.router_disconnected.bind(self));//todo: wait for a bit?
+            context.connection.on('connection_close', self.router_disconnected.bind(self));//todo: wait for a bit?
             r.on('ready', function (router) {
                 router.retrieve_listeners();
                 router.retrieve_addresses();
@@ -268,7 +255,7 @@ Ragent.prototype.configure_handlers = function () {
                 router.on('provisioned', self.check_router_connectors.bind(self));
             });
         } else {
-            if (product === 'qdconfigd') {
+            if (product === 'ragent') {
                 context.connection.on('disconnected', self.on_router_agent_disconnect.bind(self));
                 context.connection.on('connection_close', self.on_router_agent_disconnect.bind(self));
             }
@@ -279,10 +266,10 @@ Ragent.prototype.configure_handlers = function () {
     this.container.on('sender_open', function(context) {
         if (context.sender.source.address === 'routers') {
             self.subscribe(context);
-            context.session.on('session_closed', unsubscribe);
-            context.sender.on('sender_closed', unsubscribe);
-            context.connection.on('connection_close', unsubscribe);
-            context.connection.on('disconnected', unsubscribe);
+            context.session.on('session_closed', self.unsubscribe.bind(self));
+            context.sender.on('sender_closed', self.unsubscribe.bind(self));
+            context.connection.on('connection_close', self.unsubscribe.bind(self));
+            context.connection.on('disconnected', self.unsubscribe.bind(self));
         } else {
             if (context.sender.source.dynamic) {
                 self.add_client(context);
@@ -327,38 +314,40 @@ Ragent.prototype.subscribe_to_addresses = function (env) {
 
         var conn = this.container.connect(options);
         conn.open_receiver('v1/addresses');
-        watch_pods(conn);
+        this.watch_pods(conn, env);
     }
 };
 
-Ragent.prototype.listen_probe = function () {
-    if (process.env.PROBE_PORT) {
+Ragent.prototype.listen_probe = function (env) {
+    if (env.PROBE_PORT !== undefined) {
         var probe = http.createServer(function (req, res) {
             res.writeHead(200, {'Content-Type': 'text/plain'});
             res.end('OK');
         });
-        probe.listen(process.env.PROBE_PORT);
+        return probe.listen(env.PROBE_PORT);
     }
 };
 
-Ragent.prototype.run = function () {
-    var options;
+Ragent.prototype.run = function (env, callback) {
+    var options = {properties:connection_properties};
     try {
         options = tls_options.get_server_options({port:55671, properties:connection_properties});
+        options.port = env.AMQP_PORT === undefined ? 55671 : env.AMQP_PORT;
     } catch (error) {
-        options = {port:55672, properties:connection_properties};
-        console.warn('Error setting TLS options ' + error + ' using ' + options);
+        options.port = env.AMQP_PORT === undefined ? 55672 : env.AMQP_PORT;
+        log.warn('Error setting TLS options ' + error + ' using ' + JSON.stringify(options));
     }
     var server = this.listen(options);
     server.on('listening', function() {
         log.info("Router agent listening on " + server.address().port);
+        if (callback) callback(server.address().port);
     });
-    this.subscribe_to_addresses(process.env);
-    this.listen_probe();
+    this.subscribe_to_addresses(env);
+    this.listen_probe(env);
 };
 
 if (require.main === module) {
-    new Ragent().run();
+    new Ragent().run(process.env);
 } else {
     module.exports = Ragent;
 }

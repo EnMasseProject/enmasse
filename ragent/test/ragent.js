@@ -20,8 +20,12 @@ var child_process = require('child_process');
 var events = require('events');
 var path = require('path');
 var util = require('util');
+var http = require('http');
 
+var Promise = require('bluebird');
 var rhea = require('rhea');
+
+process.env.LOGLEVEL = 'info';
 var Ragent = require('../ragent.js');
 
 function MockRouter (name, port) {
@@ -68,7 +72,23 @@ MockRouter.prototype.list_objects = function (type)
 
 MockRouter.prototype.close = function ()
 {
-    this.connection.close();
+    if (this.connection && !this.connection.is_closed()) {
+        this.connection.close();
+        var conn = this.connection;
+        return new Promise(function(resolve, reject) {
+            conn.on('connection_close', resolve);
+        });
+    } else {
+        return Promise.resolve();
+    }
+};
+
+MockRouter.prototype.close_with_error = function (error)
+{
+    if (this.connection && !this.connection.is_closed()) {
+        this.connection.local.close.error = error;
+    }
+    return this.close();
 };
 
 function get_attribute_names(objects) {
@@ -245,10 +265,11 @@ function get_address_list_message(address_list) {
     return {subject:'enmasse.io/v1/AddressList', body:content};
 }
 
-function RouterList(port) {
+function RouterList(port, basename) {
     this.counter = 1;
     this.routers = [];
     this.port = port;
+    this.basename = basename || 'router';
 }
 
 RouterList.prototype.new_router = function (name) {
@@ -258,33 +279,36 @@ RouterList.prototype.new_router = function (name) {
 };
 
 RouterList.prototype.new_name = function () {
-    return 'router-' + this.counter++;
+    return this.basename + '-' + this.counter++;
 };
 
 RouterList.prototype.close = function () {
-    this.routers.forEach(function (r) { r.close(); });
+    return Promise.all(this.routers.map(function (r) { return r.close(); }));
 }
 
 function get_source_address_filter(address) {
     return function (link) {
-        return link && link.local && link.local.attach && link.local.attach.source
-            && link.local.attach.source.address === address;
+        return link && link.remote && link.remote.attach && link.remote.attach.source
+            && link.remote.attach.source.address === address;
     }
 }
 
-function MockAddressSource(address_list) {
-    this.address_list = address_list;
+function MockAddressSource(address_list, pod_list) {
+    this.address_list = address_list || [];
+    this.pod_list = pod_list || [];
     this.connections = {};
     this.source_address = 'v1/addresses';
+    this.pod_watch_address = 'podsense';
     this.container = rhea.create_container();
     this.container.on('sender_open', this.subscribe.bind(this));
     var self = this;
     this.cleanup = function (context) {
-        delete self.connections[context.connection];
+        delete self.connections[context.connection.container_id];
     };
-    this.notify = function (connection) {
-        connection.each_sender(self.send_address_list.bind(self), get_source_address_filter(self.source_address));
-    };
+    this.notify_addresses = this.send_address_list.bind(this);
+    this.address_subscription_filter = get_source_address_filter(this.source_address);
+    this.notify_pods = this.send_pod_list.bind(this);
+    this.podwatch_subscription_filter = get_source_address_filter(this.pod_watch_address);
 }
 
 MockAddressSource.prototype.listen = function (port) {
@@ -302,35 +326,138 @@ MockAddressSource.prototype.get_port = function () {
 
 MockAddressSource.prototype.send_address_list = function (sender) {
     sender.send(get_address_list_message(this.address_list));
-}
-
-MockAddressSource.prototype.update = function (address_list) {
-    this.address_list = address_list;
-    this.connections.forEach(this.notify);
 };
 
+MockAddressSource.prototype.update_address_list = function (address_list) {
+    this.address_list = address_list;
+    for (var c in this.connections) {
+        this.connections[c].each_link(this.notify_addresses, this.address_subscription_filter);
+    }
+};
+
+MockAddressSource.prototype.send_pod_list = function (sender) {
+    sender.send({body:this.pod_list});
+};
+
+MockAddressSource.prototype.update_pod_list = function (pod_list) {
+    this.pod_list = pod_list;
+    this.foreach_podwatch_subscription(this.notify_pods);
+};
+
+MockAddressSource.prototype.foreach_podwatch_subscription = function (f) {
+    for (var c in this.connections) {
+        this.connections[c].each_link(f, this.podwatch_subscription_filter);
+    }
+}
+
 MockAddressSource.prototype.register = function (connection) {
-    this.connections[connection] = connection;
+    this.connections[connection.container_id] = connection;
     connection.on('connection_close', this.cleanup);
     connection.on('disconnected', this.cleanup);
 };
 
 MockAddressSource.prototype.subscribe = function (context) {
     if (context.sender.remote.attach.source && context.sender.remote.attach.source.address === this.source_address) {
-        context.sender.set_target({address:this.source_address});
+        context.sender.set_source({address:this.source_address});
         this.register(context.connection);
         this.send_address_list(context.sender);
+    } else if (context.sender.remote.attach.source && context.sender.remote.attach.source.address === this.pod_watch_address) {
+        context.sender.set_source({address:this.pod_watch_address});
+        this.register(context.connection);
+        this.send_pod_list(context.sender);
     } else {
-        //TODO: need to handle pod-sense better
-        //context.sender.close({condition:'amqp:not-found', description:'Unrecognised source'});
+        context.sender.close({condition:'amqp:not-found', description:'Unrecognised source'});
+    }
+};
+
+function HealthChecker(conn) {
+    this.connection = conn;
+    this.address = undefined;
+    this.receiver = conn.open_receiver({source:{dynamic:true}});
+    this.sender = conn.open_sender('health-check');
+    this.counter = 0;
+    this.handlers = {};
+    this.requests = [];
+    this.receiver.on('message', this.incoming.bind(this));
+    this.receiver.on('receiver_open', this.ready.bind(this));
+    this.connection.on('connection_close', this.closed.bind(this));
+    this.connection.on('disconnected', this.disconnected.bind(this));
+}
+
+HealthChecker.prototype.check = function (input) {
+    var id = this.counter.toString();
+    this.counter++;
+    var request = {correlation_id:id, subject:'health-check', body:JSON.stringify(input)};
+    if (this.address) {
+        this._send_pending_requests();
+        this._send_request(request);
+    } else {
+        this.requests.push(request);
+    }
+    var handlers = this.handlers;
+    return new Promise(function (resolve, reject) {
+        handlers[id] = function (response) {
+            if (response.body !== undefined) {
+                resolve(response.body);
+            } else {
+                reject('failed: ' + response);
+            }
+        };
+    });
+}
+
+HealthChecker.prototype.incoming = function (context) {
+    var message = context.message;
+    var handler = this.handlers[message.correlation_id];
+    if (handler) {
+        handler(message);
+        delete this.handlers[message.correlation_id];
+    }
+};
+
+HealthChecker.prototype._abort_requests = function (error) {
+    for (var h in this.handlers) {
+        this.handlers[h](error);
+        delete this.handlers[h];
+    }
+    while (this.requests.length > 0) { this.requests.shift(); };
+};
+
+HealthChecker.prototype.disconnected = function (context) {
+    this.address = undefined;
+    this._abort_requests('disconnected');
+};
+
+HealthChecker.prototype.closed = function (context) {
+    this.connection = undefined;
+    this.sender = undefined;
+    this.address = undefined;
+    this._abort_requests('closed '+ context.connection.error);
+};
+
+HealthChecker.prototype.ready = function (context) {
+    this.address = context.receiver.source.address;
+    this._send_pending_requests();
+};
+
+HealthChecker.prototype._send_pending_requests = function () {
+    for (var i = 0; i < this.requests.length; i++) {
+        this._send_request(this.requests[i]);
+    }
+    this.requests = [];
+};
+
+HealthChecker.prototype._send_request = function (request) {
+    if (this.sender) {
+        request.reply_to = this.address;
+        this.sender.send(request);
     }
 };
 
 describe('basic router configuration', function() {
     this.timeout(5000);
-    var counter = 1;
     var ragent;
-    var routers = new RouterList();
+    var routers;
 
     beforeEach(function(done) {
         ragent = new Ragent();
@@ -341,12 +468,10 @@ describe('basic router configuration', function() {
     });
 
     afterEach(function(done) {
-        //TODO: return promise from RouterList.close()
-        routers.close();
-        setTimeout(function () {
+        routers.close().then(function () {
             ragent.server.close();
             done();
-        }, 500);
+        });
     });
 
     function new_router(name) {
@@ -419,19 +544,93 @@ describe('basic router configuration', function() {
                 verify_addresses([{address:'a',type:'topic'}, {address:'b',type:'queue'}], routers);
                 verify_full_mesh(routers);
                 //update addresses
-                sender.send(get_address_list_message([{address:'a',type:'queue'}, {address:'b',type:'queue'}, {address:'c',type:'topic'}, {address:'d',type:'multicast'}]));
+                sender.send(get_address_list_message([{address:'a',type:'queue'}, {address:'c',type:'topic'}, {address:'d',type:'multicast'}]));
                 //add another couple of routers
                 for (var i = 0; i < 2; i++) {
                     routers.push(new_router());
                 }
                 setTimeout(function () {
-                    verify_addresses([{address:'a',type:'queue'}, {address:'b',type:'queue'}, {address:'c',type:'topic'}, {address:'d',type:'multicast'}], routers);
+                    verify_addresses([{address:'a',type:'queue'}, {address:'c',type:'topic'}, {address:'d',type:'multicast'}], routers);
                     verify_full_mesh(routers);
                     client.close();
                     client.on('connection_close', function () { done(); } );
                 }, 1000/*1 second wait for propagation*/);//TODO: add ability to be notified of propagation in some way
             }, 500);
         });
+    });
+    it('handles health-check requests', function(done) {
+        var routers = [];
+        for (var i = 0; i < 2; i++) {
+            routers.push(new_router());
+        }
+        routers[1].on('connected', function () {
+            var client = rhea.connect({port:ragent.server.address().port});
+            var checker = new HealthChecker(client);
+            var sender = client.open_sender();
+            checker.check([{name:'x'}, {name:'b', store_and_forward:true, multicast:false}]).then(function (result) {
+                assert.equal(result, false);
+                sender.send(get_address_list_message([{address:'a',type:'topic'}]));
+                setTimeout(function () {
+                    checker.check([{name:'x'}, {name:'b', store_and_forward:true, multicast:false}]).then(function (result) {
+                        assert.equal(result, false);
+                        sender.send(get_address_list_message([{address:'a',type:'topic'}, {address:'b',type:'queue'}]));
+                        setTimeout(function () {
+                            verify_addresses([{address:'a',type:'topic'}, {address:'b',type:'queue'}], routers);
+                            verify_full_mesh(routers);
+                            checker.check([{name:'b', store_and_forward:true, multicast:false}]).then(function (result) {
+                                assert.equal(result, true);
+                                client.close();
+                                client.on('connection_close', function () { done(); } );
+                            });
+                        }, 1000/*1 second wait for propagation*/);//TODO: add ability to be notified of propagation in some way
+                    });
+                }, 200);
+            });
+        });
+    });
+    it('handles disconnection of router', function(done) {
+        var routers = [];
+        for (var i = 0; i < 6; i++) {
+            routers.push(new_router());
+        }
+        var client = rhea.connect({port:ragent.server.address().port});
+        var sender = client.open_sender();
+        sender.send(get_address_list_message([{address:'a',type:'topic'}, {address:'b',type:'queue'}]));
+        setTimeout(function () {
+            verify_addresses([{address:'a',type:'topic'}, {address:'b',type:'queue'}], routers);
+            verify_full_mesh(routers);
+            routers.pop().close();
+            routers.pop().close_with_error({name:'amqp:internal-error', description:'just a test'}).then(function () {
+                for (var i = 0; i < 2; i++) {
+                    routers.push(new_router());
+                }
+                setTimeout(function () {
+                    verify_addresses([{address:'a',type:'topic'}, {address:'b',type:'queue'}], routers);
+                    verify_full_mesh(routers);
+                    done();
+                }, 1000);
+            });
+        }, 1000/*1 second wait for propagation*/);//TODO: add ability to be notified of propagation in some way
+    });
+    it('handles invalid messages', function(done) {
+        var routers = [];
+        for (var i = 0; i < 2; i++) {
+            routers.push(new_router());
+        }
+        var client = rhea.connect({port:ragent.server.address().port});
+        var sender = client.open_sender();
+        sender.send({subject:'enmasse.io/v1/AddressList'});
+        sender.send({subject:'enmasse.io/v1/AddressList', body:'foo'});
+        sender.send({subject:'enmasse.io/v1/AddressList', body:'{{{'});
+        sender.send({subject:'enmasse.io/v1/AddressList', body:'{"items":101}'});
+        sender.send({subject:'health-check'});
+        sender.send({subject:'random-nonsense'});
+        sender.send(get_address_list_message([{address:'a',type:'topic'}, {address:'b',type:'queue'}]));
+        setTimeout(function () {
+            verify_addresses([{address:'a',type:'topic'}, {address:'b',type:'queue'}], routers);
+            verify_full_mesh(routers);
+            done();
+        }, 1000/*1 second wait for propagation*/);//TODO: add ability to be notified of propagation in some way
     });
 });
 
@@ -454,24 +653,14 @@ describe('address source subscription', function() {
             done();
         });
         ragent.subscribe_to_addresses(env);
-        /*
-        ragent = child_process.fork(path.resolve(__dirname, '../ragent.js'), [], {silent:true, env:env || {}});
-        ragent.stderr.on('data', function (data) {
-            if (data.toString().match('Router agent listening on')) {
-                done();
-            }
-        });
-        */
     }
 
     afterEach(function(done) {
-        //TODO: return promise from RouterList.close()
-        routers.close();
-        setTimeout(function () {
+        routers.close().then(function () {
             ragent.server.close();
             address_source.close();
             done();
-        }, 500);
+        });
     });
 
     function simple_subscribe_env_test(get_env) {
@@ -490,4 +679,270 @@ describe('address source subscription', function() {
     it('subscribes to admin service on configuration port', simple_subscribe_env_test(function () { return {'ADMIN_SERVICE_HOST': 'localhost', 'ADMIN_SERVICE_PORT_CONFIGURATION':address_source.get_port()} }));
     it('prefers configuration service over admin service', simple_subscribe_env_test(function () { return {'ADMIN_SERVICE_HOST': 'foo', 'ADMIN_SERVICE_PORT_CONFIGURATION':7777,
                                                                                                            'CONFIGURATION_SERVICE_HOST': 'localhost', 'CONFIGURATION_SERVICE_PORT':address_source.get_port()} }));
+});
+
+function RouterGroup (name) {
+    this.name = name;
+    this.ragent = new Ragent();
+    this.routers = undefined;
+    this.port = undefined;
+}
+
+RouterGroup.prototype.listen = function () {
+    var self = this;
+    return new Promise(function(resolve, reject) {
+        self.ragent.listen({port:0}).on('listening', resolve);
+    }).then(function () {
+        self.port = self.ragent.server.address().port;
+        self.routers = new RouterList(self.port, self.name);
+    });
+};
+
+RouterGroup.prototype.close = function () {
+    var self = this;
+    return this.routers.close().then(function () {
+        self.ragent.server.close();
+    });
+};
+
+RouterGroup.prototype.pod = function () {
+    return {
+        ready : (this.port === undefined ? 'False' : 'True'),
+        phase : 'Running',
+        name : this.name,
+        host : 'localhost',
+        port : this.port
+    };
+};
+
+function fill(n, f) {
+    return Array.apply(null, Array(n)).map(function (v, i) { return f(i); });
+}
+
+describe('cooperating ragent group', function() {
+    this.timeout(5000);
+    var counter = 0;
+    var groups = fill(4, function (i) { return new RouterGroup('ragent-' + (i+1)); });
+    var configserv = new MockAddressSource();
+
+    beforeEach(function(done) {
+        Promise.all(groups.map(function (g) { return g.listen(); })).then(function (){
+            configserv.listen(0).on('listening', function () {
+                done();
+            });
+        });
+    });
+
+    afterEach(function(done) {
+        Promise.all(groups.map(function (g) {return g.close()})).then(function () {
+            configserv.close();
+            done();
+        });
+    });
+
+    function new_router() {
+        return groups[counter++ % groups.length].routers.new_router();
+    }
+
+    it('establishes full mesh', function (done) {
+        //connect some routers
+        var routers = [];
+        routers = routers.concat(fill(3, new_router));
+        //inform ragent instances of each other
+        configserv.update_pod_list(groups.map(function (g) { return g.pod(); }));
+        groups.forEach(function(g) {
+            g.ragent.subscribe_to_addresses({'CONFIGURATION_SERVICE_HOST': 'localhost', 'CONFIGURATION_SERVICE_PORT':configserv.get_port()});
+        });
+        //connect some more routers
+        routers = routers.concat(fill(3, new_router));
+        //wait for some time for things to settle, then verify we have a full mesh
+        setTimeout(function () {
+            verify_full_mesh(routers);
+            done();
+        }, 1000/*1 second wait for propagation*/);//TODO: add ability to be notified of propagation in some way
+    });
+    it('handles removal of other ragents', function (done) {
+        //connect some routers
+        var routers = groups.map(function (g) {
+            return new Array(g.routers.new_router(), g.routers.new_router());
+        });
+        //inform ragent instances of each other
+        configserv.update_pod_list(groups.map(function (g) { return g.pod(); }));
+        groups.forEach(function(g) {
+            g.ragent.subscribe_to_addresses({'CONFIGURATION_SERVICE_HOST': 'localhost', 'CONFIGURATION_SERVICE_PORT':configserv.get_port()});
+        });
+        //wait for some time for things to settle, then verify we have a full mesh
+        setTimeout(function () {
+            verify_full_mesh([].concat.apply([], routers));
+            var leaving = groups.pop();
+            configserv.update_pod_list(groups.map(function (g) { return g.pod(); }));
+            //shutdown one of the ragents
+            routers.pop();
+            leaving.close().then(function() {
+                setTimeout(function () {
+                    verify_full_mesh([].concat.apply([], routers));
+                    done();
+                }, 1000/*1 second wait for propagation*/);//TODO: add ability to be notified of propagation in some way
+            });
+        }, 1000/*1 second wait for propagation*/);//TODO: add ability to be notified of propagation in some way
+    });
+});
+
+describe('probe support', function() {
+    var ragent, server, port;
+
+    beforeEach(function(done) {
+        ragent = new Ragent();
+        server = ragent.listen_probe({PROBE_PORT:0});
+        server.on('listening', function () {
+            port = server.address().port;
+            done();
+        });
+    });
+
+    afterEach(function(done) {
+        server.close();
+        done();
+    });
+
+    it('responds to probe request', function (done) {
+        http.get('http://localhost:' + port, function (response) {
+            assert.equal(response.statusCode, 200);
+            done();
+        });
+    });
+});
+
+describe('forked process', function() {
+    this.timeout(5000);
+    var ragent;
+    var address_source = new MockAddressSource([{address:'a',type:'topic'}, {address:'b',type:'queue'}]);
+    var routers;
+
+    beforeEach(function(done) {
+        address_source.listen(0).on('listening', function () {
+            var env =  {'LOGLEVEL':'info', 'AMQP_PORT':0, 'CONFIGURATION_SERVICE_HOST': 'localhost', 'CONFIGURATION_SERVICE_PORT':address_source.get_port()};
+            ragent = child_process.fork(path.resolve(__dirname, '../ragent.js'), [], {silent:true, 'env':env});
+            ragent.stderr.on('data', function (data) {
+                if (data.toString().match('Router agent listening on')) {
+                    var matches = data.toString().match(/on (\d+)/);
+                    var port = matches[1];
+                    routers = new RouterList(port);
+                    done();
+                }
+            });
+        });
+    });
+
+    afterEach(function(done) {
+        ragent.kill();
+        address_source.close();
+        done();
+    });
+
+    it('subscribes to configuration service', function (done) {
+        var router = routers.new_router();
+        setTimeout(function () {
+            verify_addresses(address_source.address_list, router);
+            router.close().then(function () {
+                done();
+            });
+        }, 1000/*1 second wait for propagation*/);//TODO: add ability to be notified of propagation in some way
+    });
+});
+
+describe('run method', function() {
+    this.timeout(5000);
+    var ragent;
+    var address_source = new MockAddressSource([{address:'a',type:'topic'}, {address:'b',type:'queue'}]);
+    var routers;
+
+    beforeEach(function(done) {
+        address_source.listen(0).on('listening', function () {
+            var env =  {'AMQP_PORT':0, 'CONFIGURATION_SERVICE_HOST': 'localhost', 'CONFIGURATION_SERVICE_PORT':address_source.get_port()};
+            ragent = new Ragent();
+            ragent.run(env, function (port) {
+                routers = new RouterList(port);
+                done();
+            });
+        });
+    });
+
+    afterEach(function(done) {
+        ragent.server.close();
+        address_source.close();
+        done();
+    });
+
+    it('subscribes to configuration service', function (done) {
+        var router = routers.new_router();
+        setTimeout(function () {
+            verify_addresses(address_source.address_list, router);
+            router.close().then(function () {
+                done();
+            });
+        }, 1000/*1 second wait for propagation*/);//TODO: add ability to be notified of propagation in some way
+    });
+});
+
+var podwatch = require('../podwatch.js');
+//testing pod watch here for convenience since the necessary mocks are
+//here, can move it out into separate file if move mocks into a test
+//module:
+describe('pod watch', function() {
+    this.timeout(5000);
+    var configserv;
+
+    beforeEach(function(done) {
+        configserv = new MockAddressSource([], []);
+        configserv.listen(0).on('listening', function () {
+            done();
+        });
+    });
+
+    afterEach(function(done) {
+        configserv.close();
+        done();
+    });
+
+    it('does its thing', function (done) {
+        configserv.update_pod_list([{
+            ready : 'True',
+            phase : 'Running',
+            name : 'foo',
+            host : 'localhost',
+            port : 1234
+        }]);
+        var conn = rhea.connect({port:configserv.get_port()});
+        var sub = podwatch.watch_pods(conn);
+        sub.on('added', function (added) {
+            assert.equal(added.foo.ready, 'True');
+            assert.equal(added.foo.port, 1234);
+            assert.equal(added.foo.host, 'localhost');
+            sub.close();
+            done();
+        });
+    });
+    it('handles empty bodied message', function (done) {
+        var conn = rhea.connect({port:configserv.get_port()}).on('receiver_open', function () {
+            configserv.foreach_podwatch_subscription(function (s) {
+                s.send({'subject':'ignore-me'});
+            });
+            configserv.update_pod_list([{
+                ready : 'True',
+                phase : 'Running',
+                name : 'foo',
+                host : 'localhost',
+                port : 1234
+            }]);
+        });
+        var sub = podwatch.watch_pods(conn);
+        sub.on('added', function (added) {
+            assert.equal(added.foo.ready, 'True');
+            assert.equal(added.foo.port, 1234);
+            assert.equal(added.foo.host, 'localhost');
+            done();
+            sub.close();
+        });
+    });
 });

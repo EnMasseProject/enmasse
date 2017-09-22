@@ -59,7 +59,7 @@ Subscription.prototype.subscribe = function (selector, handler) {
 function create_pod_handler() {
     return function (context) {
         var content = context.message.body;
-        if (content === undefined) {
+        if (!content) {
             return;
         }
         var myhost = this.localhost;
