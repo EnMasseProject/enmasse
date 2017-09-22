@@ -16,6 +16,7 @@
 'use strict';
 
 var assert = require('assert');
+var path = require('path');
 var tls_options = require('../tls_options.js');
 
 describe('tls options', function() {
@@ -59,6 +60,25 @@ describe('tls options', function() {
     it('uses KEY_PATH as path for key', function (done) {
         process.env.KEY_PATH = '/blah/blah/key.pem';
         assert.equal(tls_options.get_paths().key, '/blah/blah/key.pem');
+        done();
+    });
+    it('retrieves client options', function (done) {
+        process.env.CA_PATH = path.resolve(__dirname,'ca-cert.pem');
+        process.env.CERT_PATH = path.resolve(__dirname, 'server-cert.pem');
+        process.env.KEY_PATH = path.resolve(__dirname, 'server-key.pem');
+        var options = tls_options.get_client_options();
+        assert.equal(options.transport, 'tls');
+        assert.equal(options.rejectUnauthorized, false);
+        done();
+    });
+    it('retrieves server options', function (done) {
+        process.env.CA_PATH = path.resolve(__dirname,'ca-cert.pem');
+        process.env.CERT_PATH = path.resolve(__dirname, 'server-cert.pem');
+        process.env.KEY_PATH = path.resolve(__dirname, 'server-key.pem');
+        var options = tls_options.get_server_options();
+        assert.equal(options.transport, 'tls');
+        assert.equal(options.rejectUnauthorized, true);
+        assert.equal(options.requestCert, true);
         done();
     });
 });

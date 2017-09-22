@@ -19,11 +19,6 @@ function self(o) {
     return o;
 }
 
-function default_equality(a, b) {
-    return a == b;
-}
-
-
 module.exports.index = function (a, key, value) {
     var fk = key || self;
     var fv = value || self;
@@ -51,8 +46,7 @@ module.exports.separate = function (map, predicate, a, b) {
     }
 }
 
-module.exports.difference = function (a, b, equivalence) {
-    var equivalent = equivalence || default_equality;
+module.exports.difference = function (a, b, equivalent) {
     var diff = {};
     for (var k in a) {
 	if (!equivalent(b[k], a[k])) {

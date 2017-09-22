@@ -88,7 +88,9 @@ FutureSet.prototype.is_complete = function () {
 
 FutureSet.prototype.complete = function () {
     if (this.is_complete()) {
-        this.callback(this.get_error());
+        if (this.callback) {
+            this.callback(this.get_error());
+        }
     }
 }
 
