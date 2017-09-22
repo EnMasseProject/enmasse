@@ -1,3 +1,21 @@
+## 0.13.0 (September 22, 2017)
+* Added support for authentication. Users can now choose from 'none', 'standard' and 'external' as
+  authentication services. See [authentication design doc](https://github.com/EnMasseProject/enmasse/blob/master/documentation/design/authentication.adoc)
+  for details. The authentication services are used by both AMQP, MQTT and console endpoints.
+* Secure *all* internal communication using TLS with server + client authentication. This ensures
+  that no other component than those trusted by the EnMasse infrastructure can access services
+  inside EnMasse.
+* REST API for creating/deleting/listing address spaces, see [resource
+  definitions](https://github.com/EnMasseProject/enmasse/blob/master/documentation/address-model/resource-definitions.adoc)
+  for details.
+* Remove creation of ingress rules for kubernetes. The rules generated won't work properly until
+  Ingress has proper support for TLS/SNI routing which we rely on. We found it is better to remove
+  it than keep a half-working feature available.
+* Use Apache ActiveMQ Artemis 2.2.0 as broker
+
+35 [issues](https://github.com/EnMasseProject/enmasse/milestone/3?closed=1&page=1) has been resolved
+for this release.
+
 ## 0.12.0 (August 4, 2017)
 * Introduction of the [new address model](documentation/address-model/model.md), which changes how
   addresses are configured in EnMasse. This change comes from design work that has been done by
