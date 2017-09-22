@@ -176,7 +176,7 @@ do
         runcmd "oc process -f $NONE_TEMPLATE | oc create -n $NAMESPACE -f -" "Create none authservice"
     fi
     if [ "$auth_service" == "standard" ]; then
-        local KEYCLOAK_PASSWORD=`random_string`
+        KEYCLOAK_PASSWORD=`random_string`
         create_self_signed_cert "oc" "standard-authservice.${NAMESPACE}.svc.cluster.local" "standard-authservice-cert"
         runcmd "oc create secret generic keycloak-credentials --from-literal=admin.username=admin --from-literal=admin.password=$KEYCLOAK_PASSWORD" "Create secret with keycloak admin credentials"
         runcmd "oc process -f $KEYCLOAK_TEMPLATE | oc create -n $NAMESPACE -f -" "Create standard authservice"
