@@ -27,6 +27,7 @@ ENMASSE_TEMPLATE=$SCRIPTDIR/kubernetes/enmasse.yaml
 KEYCLOAK_TEMPLATE=$SCRIPTDIR/kubernetes/addons/standard-authservice.yaml
 NONE_TEMPLATE=$SCRIPTDIR/kubernetes/addons/none-authservice.yaml
 DEFAULT_NAMESPACE=enmasse
+AUTH_SERVICES="none"
 GUIDE=false
 
 while getopts a:dglm:n:t:vh opt; do
