@@ -121,7 +121,7 @@ do
         runcmd "kubectl apply -f $NONE_TEMPLATE -n $NAMESPACE" "Create none authservice"
     fi
     if [ "$auth_service" == "standard" ]; then
-        local KEYCLOAK_PASSWORD=`random_string`
+        KEYCLOAK_PASSWORD=`random_string`
         create_self_signed_cert "kubectl" "standard-authservice.${NAMESPACE}.svc.cluster.local" "standard-authservice-cert"
         runcmd "kubectl create secret generic keycloak-credentials --from-literal=admin.username=admin --from-literal=admin.password=$KEYCLOAK_PASSWORD -n $NAMESPACE" "Create secret with keycloak admin credentials"
         runcmd "kubectl apply -f $KEYCLOAK_TEMPLATE -n $NAMESPACE" "Create standard authservice"
