@@ -86,11 +86,6 @@ then
     NAMESPACE=$DEFAULT_NAMESPACE
 fi
 
-e=`kubectl get namespace ${NAMESPACE} 2> /dev/null`
-if [ $? -gt 0 ]; then
-    runcmd "kubectl create namespace $NAMESPACE" "Create namespace $NAMESPACE"
-fi
-
 if [ -n "$ALLINONE" ]
 then
     if [ -n "$MASTER_URI" ]
@@ -101,6 +96,12 @@ then
     fi
     runcmd "minikube start" "Start local minikube cluster"
     runcmd "minikube addons enable ingress" "Enabling ingress controller"
+fi
+
+
+e=`kubectl get namespace ${NAMESPACE} 2> /dev/null`
+if [ $? -gt 0 ]; then
+    runcmd "kubectl create namespace $NAMESPACE" "Create namespace $NAMESPACE"
 fi
 
 runcmd "kubectl create sa enmasse-service-account -n $NAMESPACE" "Create service account for address controller"
