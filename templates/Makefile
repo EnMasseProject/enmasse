@@ -19,6 +19,6 @@ prepare:
 package: prepare $(OBJS) yaml
 	mkdir -p build/$(INSTALLDIR)                                                                                                                                               
 	cp -r install/* build/$(INSTALLDIR)                                                                                                                                        
-	tar -czf build/$(INSTALLDIR).tgz build/$(INSTALLDIR)
+	tar -czf build/$(INSTALLDIR).tgz -C build $(INSTALLDIR)
 
 .PHONY: yaml prepare package clean
