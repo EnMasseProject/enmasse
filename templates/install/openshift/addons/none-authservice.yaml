@@ -1,4 +1,3 @@
----
 apiVersion: v1
 kind: Template
 objects:
@@ -20,7 +19,7 @@ objects:
         - env:
           - name: LISTENPORT
             value: '5671'
-          image: "${NONE_AUTHSERVICE_IMAGE}"
+          image: ${NONE_AUTHSERVICE_IMAGE}
           livenessProbe:
             tcpSocket:
               port: amqps
@@ -34,12 +33,12 @@ objects:
             requests:
               memory: 48Mi
           volumeMounts:
-          - mountPath: "/opt/none-authservice/cert"
-            name: "${NONE_AUTHSERVICE_CERT_SECRET_NAME}"
+          - mountPath: /opt/none-authservice/cert
+            name: ${NONE_AUTHSERVICE_CERT_SECRET_NAME}
         volumes:
-        - name: "${NONE_AUTHSERVICE_CERT_SECRET_NAME}"
+        - name: ${NONE_AUTHSERVICE_CERT_SECRET_NAME}
           secret:
-            secretName: "${NONE_AUTHSERVICE_CERT_SECRET_NAME}"
+            secretName: ${NONE_AUTHSERVICE_CERT_SECRET_NAME}
 - apiVersion: v1
   kind: Service
   metadata:

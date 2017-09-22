@@ -25,7 +25,7 @@ fi
 
 SCRIPTDIR=`dirname $0`
 ENMASSE_TEMPLATE=$SCRIPTDIR/openshift/enmasse.yaml
-KEYCLOAK_TEMPLATE=$SCRIPTDIR/openshift/addons/keycloak.yaml
+KEYCLOAK_TEMPLATE=$SCRIPTDIR/openshift/addons/standard-authservice.yaml
 KEYCLOAK_TEMPLATE_PARAMS=""
 TEMPLATE_NAME=enmasse
 TEMPLATE_PARAMS=""

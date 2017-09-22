@@ -24,7 +24,7 @@ fi
 SCRIPTDIR=`dirname $0`
 TEMPLATE_PARAMS=""
 ENMASSE_TEMPLATE=$SCRIPTDIR/kubernetes/enmasse.yaml
-KEYCLOAK_TEMPLATE=$SCRIPTDIR/kubernetes/addons/keycloak.yaml
+KEYCLOAK_TEMPLATE=$SCRIPTDIR/kubernetes/addons/standard-authservice.yaml
 KEYCLOAK_TEMPLATE_PARAMS=""
 DEFAULT_NAMESPACE=enmasse
 GUIDE=false
