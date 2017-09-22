@@ -37,7 +37,7 @@ local images = import "images.jsonnet";
       messagingService.internal("${ADDRESS_SPACE}"),
       subserv.service("${ADDRESS_SPACE}"),
       mqttService.internal("${ADDRESS_SPACE}"),
-      qdrouterd.deployment("${ADDRESS_SPACE}", "${ROUTER_REPO}", "${ROUTER_METRICS_REPO}", "${ROUTER_SECRET}", "authservice-ca"),
+      qdrouterd.deployment("${ADDRESS_SPACE}", "${ROUTER_REPO}", "${ROUTER_METRICS_REPO}", "${ROUTER_SECRET}", "authservice-ca", "address-controller-ca"),
       subserv.deployment("${ADDRESS_SPACE}", "${SUBSERV_REPO}"),
       mqttGateway.deployment("${ADDRESS_SPACE}", "${MQTT_GATEWAY_REPO}", "${MQTT_SECRET}"),
       mqttLwt.deployment("${ADDRESS_SPACE}", "${MQTT_LWT_REPO}"),
