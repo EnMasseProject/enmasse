@@ -1,0 +1,12 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: console
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /
+        backend:
+          serviceName: console
+          servicePort: 8080

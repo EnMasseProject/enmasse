@@ -123,6 +123,15 @@ kubectl apply -f kubernetes/addons/external-lb.yaml -n enmasse
 The EnMasse console should be available at `http://$(minikube ip)/`. You
 can create and monitor queues and topics using the UI.
 
+[[exposing-console]]
+=== Exposing console througn Ingress
+
+To expose the EnMasse console, you can deploy this ingress resource:
+
+....
+kubectl apply -f kubernetes/addons/console-ingress.yaml -n enmasse
+....
+
 [[exposing-messaging-through-ingress-resource]]
 === Exposing messaging through Ingress resource
 
