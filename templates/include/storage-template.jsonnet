@@ -58,6 +58,7 @@ local forwarder = import "forwarder.jsonnet";
                 brokerVolume,
                 router.secret_volume("ssl-certs", "${COLOCATED_ROUTER_SECRET}"),
                 router.secret_volume("authservice-ca", "authservice-ca"),
+                router.secret_volume("address-controller-ca", "address-controller-ca"),
                 router.secret_volume("broker-internal-cert", "broker-internal-cert"),
                 broker.hawkularVolume()
               ],

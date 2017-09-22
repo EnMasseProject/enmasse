@@ -73,6 +73,9 @@ objects:
           - name: authservice-ca
             secret:
               secretName: authservice-ca
+          - name: address-controller-ca
+            secret:
+              secretName: address-controller-ca
           - name: broker-internal-cert
             secret:
               secretName: broker-internal-cert
@@ -204,6 +207,9 @@ objects:
           - name: authservice-ca
             secret:
               secretName: authservice-ca
+          - name: address-controller-ca
+            secret:
+              secretName: address-controller-ca
           - name: broker-internal-cert
             secret:
               secretName: broker-internal-cert
@@ -356,6 +362,9 @@ objects:
             - mountPath: /etc/enmasse-certs
               name: broker-internal-cert
               readOnly: true
+            - mountPath: /etc/qpid-dispatch/address-controller-ca
+              name: address-controller-ca
+              readOnly: true
           - env:
             - name: TOPIC_NAME
               value: ${ADDRESS}
@@ -390,6 +399,9 @@ objects:
           - name: authservice-ca
             secret:
               secretName: authservice-ca
+          - name: address-controller-ca
+            secret:
+              secretName: address-controller-ca
           - name: broker-internal-cert
             secret:
               secretName: broker-internal-cert
@@ -557,6 +569,9 @@ objects:
             - mountPath: /etc/enmasse-certs
               name: broker-internal-cert
               readOnly: true
+            - mountPath: /etc/qpid-dispatch/address-controller-ca
+              name: address-controller-ca
+              readOnly: true
           - env:
             - name: TOPIC_NAME
               value: ${ADDRESS}
@@ -592,6 +607,9 @@ objects:
           - name: authservice-ca
             secret:
               secretName: authservice-ca
+          - name: address-controller-ca
+            secret:
+              secretName: address-controller-ca
           - name: broker-internal-cert
             secret:
               secretName: broker-internal-cert
@@ -843,6 +861,9 @@ objects:
             - mountPath: /etc/enmasse-certs
               name: router-internal-cert
               readOnly: true
+            - mountPath: /etc/qpid-dispatch/address-controller-ca
+              name: address-controller-ca
+              readOnly: true
           - env:
             - name: ROUTER_HOST
               value: 127.0.0.1
@@ -878,6 +899,9 @@ objects:
           - name: authservice-ca
             secret:
               secretName: authservice-ca
+          - name: address-controller-ca
+            secret:
+              secretName: address-controller-ca
           - name: router-internal-cert
             secret:
               secretName: router-internal-cert

@@ -58,15 +58,17 @@ items:
       "/etc/qpid-dispatch/ssl", "name": "ssl-certs", "readOnly": true}, {"mountPath":
       "/etc/qpid-dispatch/authservice-ca", "name": "authservice-ca", "readOnly": true},
       {"mountPath": "/etc/enmasse-certs", "name": "router-internal-cert", "readOnly":
-      true}]}, {"env": [{"name": "ROUTER_HOST", "value": "127.0.0.1"}, {"name": "ROUTER_PORT",
-      "value": "55671"}, {"name": "CERT_DIR", "value": "/etc/enmasse-certs"}], "image":
-      "${ROUTER_METRICS_REPO}", "livenessProbe": {"tcpSocket": {"port": "metrics"}},
+      true}, {"mountPath": "/etc/qpid-dispatch/address-controller-ca", "name": "address-controller-ca",
+      "readOnly": true}]}, {"env": [{"name": "ROUTER_HOST", "value": "127.0.0.1"},
+      {"name": "ROUTER_PORT", "value": "55671"}, {"name": "CERT_DIR", "value": "/etc/enmasse-certs"}],
+      "image": "${ROUTER_METRICS_REPO}", "livenessProbe": {"tcpSocket": {"port": "metrics"}},
       "name": "metrics", "ports": [{"containerPort": 8080, "name": "metrics", "protocol":
       "TCP"}], "resources": {"limits": {"memory": "32Mi"}, "requests": {"memory":
       "32Mi"}}, "volumeMounts": [{"mountPath": "/etc/enmasse-certs", "name": "router-internal-cert",
       "readOnly": true}]}], "volumes": [{"configMap": {"name": "hawkular-router-config"},
       "name": "hawkular-openshift-agent"}, {"name": "ssl-certs", "secret": {"secretName":
       "${ROUTER_SECRET}"}}, {"name": "authservice-ca", "secret": {"secretName": "authservice-ca"}},
+      {"name": "address-controller-ca", "secret": {"secretName": "address-controller-ca"}},
       {"name": "router-internal-cert", "secret": {"secretName": "router-internal-cert"}}]}}}},
       {"apiVersion": "extensions/v1beta1", "kind": "Deployment", "metadata": {"annotations":
       {"addressSpace": "${ADDRESS_SPACE}", "io.enmasse.certSecretName": "subserv-internal-cert"},
@@ -237,7 +239,8 @@ items:
       "name": "broker-internal-cert", "readOnly": true}]}], "volumes": [{"emptyDir":
       { }, "name": "vol-${NAME}"}, {"name": "ssl-certs", "secret": {"secretName":
       "${COLOCATED_ROUTER_SECRET}"}}, {"name": "authservice-ca", "secret": {"secretName":
-      "authservice-ca"}}, {"name": "broker-internal-cert", "secret": {"secretName":
+      "authservice-ca"}}, {"name": "address-controller-ca", "secret": {"secretName":
+      "address-controller-ca"}}, {"name": "broker-internal-cert", "secret": {"secretName":
       "broker-internal-cert"}}, {"configMap": {"name": "hawkular-broker-config"},
       "name": "hawkular-openshift-agent"}]}}}}], "parameters": [{"description": "Storage
       capacity required for volume claims", "name": "STORAGE_CAPACITY", "value": "2Gi"},
@@ -280,7 +283,8 @@ items:
       "name": "broker-internal-cert", "readOnly": true}]}], "volumes": [{"name": "vol-${NAME}",
       "persistentVolumeClaim": {"claimName": "pvc-${NAME}"}}, {"name": "ssl-certs",
       "secret": {"secretName": "${COLOCATED_ROUTER_SECRET}"}}, {"name": "authservice-ca",
-      "secret": {"secretName": "authservice-ca"}}, {"name": "broker-internal-cert",
+      "secret": {"secretName": "authservice-ca"}}, {"name": "address-controller-ca",
+      "secret": {"secretName": "address-controller-ca"}}, {"name": "broker-internal-cert",
       "secret": {"secretName": "broker-internal-cert"}}, {"configMap": {"name": "hawkular-broker-config"},
       "name": "hawkular-openshift-agent"}]}}}}], "parameters": [{"description": "Storage
       capacity required for volume claims", "name": "STORAGE_CAPACITY", "value": "2Gi"},
@@ -330,7 +334,8 @@ items:
       "256Mi"}, "requests": {"memory": "256Mi"}}, "volumeMounts": [{"mountPath": "/etc/qpid-dispatch/ssl",
       "name": "ssl-certs", "readOnly": true}, {"mountPath": "/etc/qpid-dispatch/authservice-ca",
       "name": "authservice-ca", "readOnly": true}, {"mountPath": "/etc/enmasse-certs",
-      "name": "broker-internal-cert", "readOnly": true}]}, {"env": [{"name": "TOPIC_NAME",
+      "name": "broker-internal-cert", "readOnly": true}, {"mountPath": "/etc/qpid-dispatch/address-controller-ca",
+      "name": "address-controller-ca", "readOnly": true}]}, {"env": [{"name": "TOPIC_NAME",
       "value": "${ADDRESS}"}, {"name": "CLUSTER_ID", "value": "${NAME}"}, {"name":
       "CERT_DIR", "value": "/etc/enmasse-certs"}], "image": "${TOPIC_FORWARDER_REPO}",
       "livenessProbe": {"httpGet": {"path": "/health", "port": "health"}}, "name":
@@ -339,7 +344,8 @@ items:
       [{"mountPath": "/etc/enmasse-certs", "name": "broker-internal-cert", "readOnly":
       true}]}], "volumes": [{"emptyDir": { }, "name": "vol-${NAME}"}, {"name": "ssl-certs",
       "secret": {"secretName": "${COLOCATED_ROUTER_SECRET}"}}, {"name": "authservice-ca",
-      "secret": {"secretName": "authservice-ca"}}, {"name": "broker-internal-cert",
+      "secret": {"secretName": "authservice-ca"}}, {"name": "address-controller-ca",
+      "secret": {"secretName": "address-controller-ca"}}, {"name": "broker-internal-cert",
       "secret": {"secretName": "broker-internal-cert"}}, {"configMap": {"name": "hawkular-broker-config"},
       "name": "hawkular-openshift-agent"}]}}}}], "parameters": [{"description": "Storage
       capacity required for volume claims", "name": "STORAGE_CAPACITY", "value": "2Gi"},
@@ -393,7 +399,8 @@ items:
       "256Mi"}, "requests": {"memory": "256Mi"}}, "volumeMounts": [{"mountPath": "/etc/qpid-dispatch/ssl",
       "name": "ssl-certs", "readOnly": true}, {"mountPath": "/etc/qpid-dispatch/authservice-ca",
       "name": "authservice-ca", "readOnly": true}, {"mountPath": "/etc/enmasse-certs",
-      "name": "broker-internal-cert", "readOnly": true}]}, {"env": [{"name": "TOPIC_NAME",
+      "name": "broker-internal-cert", "readOnly": true}, {"mountPath": "/etc/qpid-dispatch/address-controller-ca",
+      "name": "address-controller-ca", "readOnly": true}]}, {"env": [{"name": "TOPIC_NAME",
       "value": "${ADDRESS}"}, {"name": "CLUSTER_ID", "value": "${NAME}"}, {"name":
       "CERT_DIR", "value": "/etc/enmasse-certs"}], "image": "${TOPIC_FORWARDER_REPO}",
       "livenessProbe": {"httpGet": {"path": "/health", "port": "health"}}, "name":
@@ -403,8 +410,9 @@ items:
       true}]}], "volumes": [{"name": "vol-${NAME}", "persistentVolumeClaim": {"claimName":
       "pvc-${NAME}"}}, {"name": "ssl-certs", "secret": {"secretName": "${COLOCATED_ROUTER_SECRET}"}},
       {"name": "authservice-ca", "secret": {"secretName": "authservice-ca"}}, {"name":
-      "broker-internal-cert", "secret": {"secretName": "broker-internal-cert"}}, {"configMap":
-      {"name": "hawkular-broker-config"}, "name": "hawkular-openshift-agent"}]}}}}],
+      "address-controller-ca", "secret": {"secretName": "address-controller-ca"}},
+      {"name": "broker-internal-cert", "secret": {"secretName": "broker-internal-cert"}},
+      {"configMap": {"name": "hawkular-broker-config"}, "name": "hawkular-openshift-agent"}]}}}}],
       "parameters": [{"description": "Storage capacity required for volume claims",
       "name": "STORAGE_CAPACITY", "value": "2Gi"}, {"description": "The docker image
       to use for the message broker", "name": "BROKER_REPO", "value": "docker.io/enmasseproject/artemis:latest"},

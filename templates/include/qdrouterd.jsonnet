@@ -1,7 +1,7 @@
 local router = import "router.jsonnet";
 local common = import "common.jsonnet";
 {
-  deployment(addressSpace, image_repo, metrics_image_repo, router_secret, auth_service_ca_secret)::
+  deployment(addressSpace, image_repo, metrics_image_repo, router_secret, auth_service_ca_secret, address_controller_ca_secret)::
     {
       "apiVersion": "extensions/v1beta1",
       "kind": "Deployment",
@@ -36,6 +36,7 @@ local common = import "common.jsonnet";
               router.hawkular_volume(),
               router.secret_volume("ssl-certs", router_secret),
               router.secret_volume("authservice-ca", auth_service_ca_secret),
+              router.secret_volume("address-controller-ca", address_controller_ca_secret),
               router.secret_volume("router-internal-cert", "router-internal-cert"),
             ]
           }
