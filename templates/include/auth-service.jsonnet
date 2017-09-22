@@ -286,7 +286,7 @@ local images = import "images.jsonnet";
     },
 
   local me = self,
-  kubernetes::
+  keycloak_kubernetes::
   {
     "apiVersion": "v1",
     "kind": "List",
@@ -297,7 +297,7 @@ local images = import "images.jsonnet";
     ],
   },
 
-  openshift::
+  keycloak_openshift::
   {
     "apiVersion": "v1",
     "kind": "Template",
@@ -326,6 +326,38 @@ local images = import "images.jsonnet";
         "name": "STANDARD_AUTHSERVICE_SECRET_NAME",
         "description": "The secret containing the tls certificate and key",
         "value": "standard-authservice-cert"
+      },
+    ]
+  },
+
+  none_kubernetes::
+  {
+    "apiVersion": "v1",
+    "kind": "List",
+    "items": [
+      me.none_deployment(images.none_authservice, "none-authservice-cert"),
+      me.none_authservice,
+    ],
+  },
+
+  none_openshift::
+  {
+    "apiVersion": "v1",
+    "kind": "Template",
+    "objects": [
+      me.none_deployment("${NONE_AUTHSERVICE_IMAGE}", "${NONE_AUTHSERVICE_CERT_SECRET_NAME}"),
+      me.none_authservice,
+    ],
+    "parameters": [
+      {
+        "name": "NONE_AUTHSERVICE_IMAGE",
+        "description": "The docker image to use for the 'none' auth service",
+        "value": images.none_authservice
+      },
+      {
+        "name": "NONE_AUTHSERVICE_CERT_SECRET_NAME",
+        "description": "The secret to use for the none-authservice certificate",
+        "value": "none-authservice-cert"
       },
     ]
   },

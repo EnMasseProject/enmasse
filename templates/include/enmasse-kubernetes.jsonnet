@@ -4,7 +4,6 @@ local common = import "common.jsonnet";
 local restapiRoute = import "restapi-route.jsonnet";
 local messagingService = import "messaging-service.jsonnet";
 local mqttService = import "mqtt-service.jsonnet";
-local authService = import "auth-service.jsonnet";
 local consoleService = import "console-service.jsonnet";
 local images = import "images.jsonnet";
 {
@@ -13,8 +12,6 @@ local images = import "images.jsonnet";
     "apiVersion": "v1",
     "kind": "List",
     "items": [ templateConfig.generate(with_kafka),
-               authService.none_deployment(images.none_authservice, "none-authservice-cert"),
-               authService.none_authservice,
                addressController.deployment(images.address_controller, "false", "enmasse-template-config", "enmasse-ca", "address-controller-cert", "false"),
                common.empty_secret("address-controller-userdb"),
                restapiRoute.ingress(""),
