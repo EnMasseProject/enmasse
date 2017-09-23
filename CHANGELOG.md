@@ -8,9 +8,6 @@
 * REST API for creating/deleting/listing address spaces, see [resource
   definitions](https://github.com/EnMasseProject/enmasse/blob/master/documentation/address-model/resource-definitions.adoc)
   for details.
-* Remove creation of ingress rules for kubernetes. The rules generated won't work properly until
-  Ingress has proper support for TLS/SNI routing which we rely on. We found it is better to remove
-  it than keep a half-working feature available.
 * Use Apache ActiveMQ Artemis 2.2.0 as broker
 
 35 [issues](https://github.com/EnMasseProject/enmasse/milestone/3?closed=1&page=1) has been resolved
