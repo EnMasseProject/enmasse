@@ -259,6 +259,10 @@ public class KubernetesHelper implements Kubernetes {
             }
             route.done();
         } else {
+            // TODO: Skip the console ingress for now since it doesn't work with rewriteURL yet
+            if (endpoint.getService().equals("console")) {
+                return;
+            }
             DoneableIngress ingress = client.extensions().ingresses().inNamespace(namespace).createNew()
                     .editOrNewMetadata()
                     .withName(endpoint.getName())
