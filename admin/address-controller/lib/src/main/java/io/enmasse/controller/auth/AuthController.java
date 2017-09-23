@@ -102,7 +102,7 @@ public class AuthController extends AbstractVerticle implements Watcher<AddressS
     {
         vertx.executeBlocking(promise -> {
             try {
-                final String addressSpaceCaSecretName = getAddressSpaceCaSecretName(addressSpace);
+                final String addressSpaceCaSecretName = KubeUtil.getAddressSpaceCaSecretName(addressSpace.getNamespace());
                 if(!certManager.certExists(addressSpaceCaSecretName)) {
                     certManager.createSelfSignedCertSecret(addressSpaceCaSecretName);
                     //put crt into address space
@@ -123,7 +123,7 @@ public class AuthController extends AbstractVerticle implements Watcher<AddressS
     private void issueComponentCertificates(AddressSpace addressSpace) {
         vertx.executeBlocking(promise -> {
             try {
-                final String caSecretName = getAddressSpaceCaSecretName(addressSpace);
+                final String caSecretName = KubeUtil.getAddressSpaceCaSecretName(addressSpace.getNamespace());
                 promise.complete(certManager.listComponents(addressSpace.getNamespace()).stream()
                         .filter(component -> !certManager.certExists(component))
                         .map(certManager::createCsr)
@@ -143,10 +143,5 @@ public class AuthController extends AbstractVerticle implements Watcher<AddressS
                 log.warn("Error issuing component certificates", result.cause());
             }
         });
-    }
-
-    private static String getAddressSpaceCaSecretName(final AddressSpace addressSpace)
-    {
-        return KubeUtil.sanitizeName("addressspace-" + addressSpace.getNamespace() + "-ca");
     }
 }
