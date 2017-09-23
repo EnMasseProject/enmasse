@@ -29,4 +29,8 @@ public class KubeUtil {
         }
         return replaced;
     }
+
+    public static String getAddressSpaceCaSecretName(String namespace) {
+        return sanitizeName("addressspace-" + namespace + "-ca");
+    }
 }
