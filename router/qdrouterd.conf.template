@@ -71,7 +71,7 @@ sslProfile {
    name: ssl_internal_details
    certFile: /etc/enmasse-certs/tls.crt
    keyFile: /etc/enmasse-certs/tls.key
-   certDb: /etc/enmasse-certs/ca.crt
+   certDb: /tmp/ca.crt
 }
 
 listener {
