@@ -258,6 +258,34 @@ public class KubernetesHelper implements Kubernetes {
                         .endSpec();
             }
             route.done();
+        } else {
+            DoneableIngress ingress = client.extensions().ingresses().inNamespace(namespace).createNew()
+                    .editOrNewMetadata()
+                    .withName(endpoint.getName())
+                    .addToAnnotations(AnnotationKeys.ADDRESS_SPACE, addressSpaceName)
+                    .endMetadata()
+                    .editOrNewSpec()
+                    .editOrNewBackend()
+                    .withServiceName(endpoint.getService())
+                    .withServicePort(new IntOrString(servicePortMap.get(endpoint.getService())))
+                    .endBackend()
+                    .endSpec();
+
+            if (endpoint.getCertProvider().isPresent()) {
+                ingress.editOrNewMetadata()
+                        .addToAnnotations(AnnotationKeys.CERT_SECRET_NAME, endpoint.getCertProvider().get().getSecretName())
+                        .endMetadata()
+                        .editOrNewSpec();
+
+                if (endpoint.getHost().isPresent()) {
+                    ingress.editOrNewSpec()
+                            .addNewTl()
+                            .addToHosts(endpoint.getHost().get())
+                            .withSecretName(endpoint.getCertProvider().get().getSecretName())
+                            .endTl();
+                }
+            }
+            ingress.done();
         }
     }
 
