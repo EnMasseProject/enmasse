@@ -4,11 +4,19 @@ import io.enmasse.amqp.SyncRequestClient;
 import io.enmasse.controller.common.*;
 import io.enmasse.address.model.Address;
 import io.enmasse.k8s.api.AddressApi;
+import io.enmasse.k8s.api.KubeUtil;
 import io.enmasse.k8s.api.Watch;
 import io.enmasse.k8s.api.Watcher;
+import io.fabric8.kubernetes.api.model.Container;
+import io.fabric8.kubernetes.api.model.ContainerPort;
 import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.api.model.Secret;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
+import io.vertx.core.buffer.Buffer;
+import io.vertx.core.net.PemKeyCertOptions;
+import io.vertx.core.net.PemTrustOptions;
+import io.vertx.proton.ProtonClientOptions;
 import org.apache.qpid.proton.Proton;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.amqp.messaging.ApplicationProperties;
@@ -16,6 +24,7 @@ import org.apache.qpid.proton.message.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -25,6 +34,7 @@ import static io.enmasse.address.model.types.standard.StandardType.TOPIC;
 
 /**
  * Controller for a single address space
+ * TODO: This component should live within the address space
  */
 public class AddressController extends AbstractVerticle implements Watcher<Address> {
     private static final Logger log = LoggerFactory.getLogger(AddressController.class);
@@ -32,11 +42,13 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
     private final Kubernetes kubernetes;
     private final AddressClusterGenerator clusterGenerator;
     private Watch watch;
+    private final String certDir;
 
-    public AddressController(AddressApi addressApi, Kubernetes kubernetes, AddressClusterGenerator clusterGenerator) {
+    public AddressController(AddressApi addressApi, Kubernetes kubernetes, AddressClusterGenerator clusterGenerator, String certDir) {
         this.addressApi = addressApi;
         this.kubernetes = kubernetes;
         this.clusterGenerator = clusterGenerator;
+        this.certDir = certDir;
     }
 
     @Override
@@ -193,33 +205,62 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
 
     private void checkRouterStatus(Pod router, Set<Address> addressList) throws Exception {
 
-        List<String> addresses = checkRouter(router.getStatus().getPodIP(), "org.apache.qpid.dispatch.router.config.address", "prefix");
-        List<String> autoLinks = checkRouter(router.getStatus().getPodIP(), "org.apache.qpid.dispatch.router.config.autoLink", "addr");
-        List<String> linkRoutes = checkRouter(router.getStatus().getPodIP(), "org.apache.qpid.dispatch.router.config.linkRoute", "prefix");
-
-        for (Address address : addressList) {
-            if (!address.getType().equals(TOPIC)) {
-                boolean found = addresses.contains(address.getAddress());
-                if (!found) {
-                    address.getStatus().setReady(false).appendMessage("Address " + address.getAddress() + " not found on " + router.getMetadata().getName());
-                }
-                if (address.getType().equals(QUEUE)) {
-                    found = autoLinks.contains(address.getAddress());
-                    if (!found) {
-                        address.getStatus().setReady(false).appendMessage("Address " + address.getAddress() + " is missing autoLinks on " + router.getMetadata().getName());
+        int port = 0;
+        for (Container container : router.getSpec().getContainers()) {
+            if (container.getName().equals("router")) {
+                for (ContainerPort containerPort : container.getPorts()) {
+                    if (containerPort.getName().equals("amqps-normal")) {
+                        port = containerPort.getContainerPort();
                     }
-                }
-            } else {
-                boolean found = linkRoutes.contains(address.getAddress());
-                if (!found) {
-                    address.getStatus().setReady(false).appendMessage("Address " + address.getAddress() + " is missing linkRoutes on " + router.getMetadata().getName());
                 }
             }
         }
+
+        // TODO: This is a workaround to trust the router we are connecting to. This is by no means ideal, and this whole component should be
+        // running inside the address space instead.
+        Optional<Secret> addressSpaceCaSecret = kubernetes.getSecret(KubeUtil.getAddressSpaceCaSecretName(kubernetes.getNamespace()));
+        if (port != 0 && addressSpaceCaSecret.isPresent() && addressSpaceCaSecret.get().getData() != null) {
+            log.info("Checkieng router status of router " + router.getStatus().getPodIP());
+            Buffer ca = Buffer.buffer(Base64.getDecoder().decode(addressSpaceCaSecret.get().getData().get("tls.crt")));
+            ProtonClientOptions clientOptions = new ProtonClientOptions()
+                    .setSsl(true)
+                    .addEnabledSaslMechanism("EXTERNAL")
+                    .setHostnameVerificationAlgorithm("")
+                    .setPemTrustOptions(new PemTrustOptions()
+                            .addCertValue(ca))
+                    .setPemKeyCertOptions(new PemKeyCertOptions()
+                            .setCertPath(new File(certDir, "tls.crt").getAbsolutePath())
+                            .setKeyPath(new File(certDir, "tls.key").getAbsolutePath()));
+            SyncRequestClient client = new SyncRequestClient(router.getStatus().getPodIP(), port, vertx, clientOptions);
+            List<String> addresses = checkRouter(client,"org.apache.qpid.dispatch.router.config.address", "prefix");
+            List<String> autoLinks = checkRouter(client, "org.apache.qpid.dispatch.router.config.autoLink", "addr");
+            List<String> linkRoutes = checkRouter(client, "org.apache.qpid.dispatch.router.config.linkRoute", "prefix");
+
+            for (Address address : addressList) {
+                if (!address.getType().equals(TOPIC)) {
+                    boolean found = addresses.contains(address.getAddress());
+                    if (!found) {
+                        address.getStatus().setReady(false).appendMessage("Address " + address.getAddress() + " not found on " + router.getMetadata().getName());
+                    }
+                    if (address.getType().equals(QUEUE)) {
+                        found = autoLinks.contains(address.getAddress());
+                        if (!found) {
+                            address.getStatus().setReady(false).appendMessage("Address " + address.getAddress() + " is missing autoLinks on " + router.getMetadata().getName());
+                        }
+                    }
+                } else {
+                    boolean found = linkRoutes.contains(address.getAddress());
+                    if (!found) {
+                        address.getStatus().setReady(false).appendMessage("Address " + address.getAddress() + " is missing linkRoutes on " + router.getMetadata().getName());
+                    }
+                }
+            }
+        } else {
+            log.info("Unable to find appropriate router port, skipping address check");
+        }
     }
 
-    private List<String> checkRouter(String hostname, String entityType, String attributeName) {
-        SyncRequestClient client = new SyncRequestClient(hostname, 5672, vertx);
+    private List<String> checkRouter(SyncRequestClient client, String entityType, String attributeName) {
         Map<String, String> properties = new LinkedHashMap<>();
         properties.put("operation", "QUERY");
         properties.put("entityType", entityType);

@@ -54,7 +54,7 @@ public class AddressControllerTest {
         mockClient = mock(OpenShiftClient.class);
 
         when(mockHelper.getNamespace()).thenReturn("myinstance");
-        controller = new AddressController(mockApi, mockHelper, mockGenerator);
+        controller = new AddressController(mockApi, mockHelper, mockGenerator, null);
     }
 
     private Address createAddress(String address, AddressType type) {

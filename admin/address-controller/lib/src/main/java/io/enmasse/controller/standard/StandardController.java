@@ -33,6 +33,7 @@ import io.vertx.core.Future;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -54,13 +55,15 @@ public class StandardController extends AbstractVerticle implements Watcher<Addr
     private final Map<AddressSpace, String> addressControllerMap = new HashMap<>();
     private final Kubernetes kubernetes;
     private final AuthenticationServiceResolverFactory authResolverFactory;
+    private final String certDir;
 
-    public StandardController(OpenShiftClient client, AddressSpaceApi addressSpaceApi, Kubernetes kubernetes, AuthenticationServiceResolverFactory authResolverFactory, boolean isMultitenant, UserDatabase userDatabase) {
+    public StandardController(OpenShiftClient client, AddressSpaceApi addressSpaceApi, Kubernetes kubernetes, AuthenticationServiceResolverFactory authResolverFactory, boolean isMultitenant, UserDatabase userDatabase, String certDir) {
         this.helper = new StandardHelper(kubernetes, isMultitenant, authResolverFactory, userDatabase);
         this.client = client;
         this.addressSpaceApi = addressSpaceApi;
         this.kubernetes = kubernetes;
         this.authResolverFactory = authResolverFactory;
+        this.certDir = certDir;
     }
 
     @Override
@@ -125,7 +128,8 @@ public class StandardController extends AbstractVerticle implements Watcher<Addr
                 AddressController addressController = new AddressController(
                         addressSpaceApi.withAddressSpace(addressSpace),
                         kubernetes.withNamespace(addressSpace.getNamespace()),
-                        clusterGenerator);
+                        clusterGenerator,
+                        certDir);
                 log.info("Deploying address space controller for " + addressSpace.getName());
                 vertx.deployVerticle(addressController, result -> {
                     if (result.succeeded()) {
