@@ -34,6 +34,12 @@ public class ArtemisBrokerFactory implements BrokerFactory {
         while (System.currentTimeMillis() < endTime && !artemisFuture.isComplete()) {
             Thread.sleep(1000);
         }
-        return artemisFuture.result();
+        if (!artemisFuture.isComplete()) {
+            throw new RuntimeException("Timed out connecting to Artemis");
+        } else if (artemisFuture.failed()) {
+            throw new RuntimeException("Failed connecting to Artemis", artemisFuture.cause());
+        } else {
+            return artemisFuture.result();
+        }
     }
 }
