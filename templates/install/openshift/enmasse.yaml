@@ -40,6 +40,8 @@ objects:
               value: ${ADDRESS}
             - name: CLUSTER_ID
               value: ${CLUSTER_ID}
+            - name: CERT_DIR
+              value: /etc/enmasse-certs
             image: ${BROKER_REPO}
             lifecycle:
               preStop:
@@ -173,6 +175,8 @@ objects:
               value: ${ADDRESS}
             - name: CLUSTER_ID
               value: ${CLUSTER_ID}
+            - name: CERT_DIR
+              value: /etc/enmasse-certs
             image: ${BROKER_REPO}
             lifecycle:
               preStop:
@@ -292,6 +296,8 @@ objects:
               value: ${ADDRESS}
             - name: CLUSTER_ID
               value: ${CLUSTER_ID}
+            - name: CERT_DIR
+              value: /etc/enmasse-certs
             image: ${BROKER_REPO}
             lifecycle:
               preStop:
@@ -499,6 +505,8 @@ objects:
               value: ${ADDRESS}
             - name: CLUSTER_ID
               value: ${CLUSTER_ID}
+            - name: CERT_DIR
+              value: /etc/enmasse-certs
             image: ${BROKER_REPO}
             lifecycle:
               preStop:
