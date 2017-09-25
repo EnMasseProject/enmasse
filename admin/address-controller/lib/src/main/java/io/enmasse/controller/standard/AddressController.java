@@ -220,7 +220,7 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
         // running inside the address space instead.
         Optional<Secret> addressSpaceCaSecret = kubernetes.getSecret(KubeUtil.getAddressSpaceCaSecretName(kubernetes.getNamespace()));
         if (port != 0 && addressSpaceCaSecret.isPresent() && addressSpaceCaSecret.get().getData() != null) {
-            log.info("Checkieng router status of router " + router.getStatus().getPodIP());
+            log.debug("Checking router status of router " + router.getStatus().getPodIP());
             Buffer ca = Buffer.buffer(Base64.getDecoder().decode(addressSpaceCaSecret.get().getData().get("tls.crt")));
             ProtonClientOptions clientOptions = new ProtonClientOptions()
                     .setSsl(true)

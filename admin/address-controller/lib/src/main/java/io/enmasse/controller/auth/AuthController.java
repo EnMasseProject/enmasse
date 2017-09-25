@@ -15,6 +15,7 @@
  */
 package io.enmasse.controller.auth;
 
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -121,7 +122,7 @@ public class AuthController extends AbstractVerticle implements Watcher<AddressS
     }
 
     private void issueComponentCertificates(AddressSpace addressSpace) {
-        vertx.executeBlocking(promise -> {
+        vertx.executeBlocking((Future<List<Cert>> promise) -> {
             try {
                 final String caSecretName = KubeUtil.getAddressSpaceCaSecretName(addressSpace.getNamespace());
                 promise.complete(certManager.listComponents(addressSpace.getNamespace()).stream()
@@ -138,7 +139,10 @@ public class AuthController extends AbstractVerticle implements Watcher<AddressS
             }
         }, result -> {
             if (result.succeeded()) {
-                log.info("Issued component certificates: {}", result.result());
+                List<Cert> components = result.result();
+                if (!components.isEmpty()) {
+                    log.info("Issued component certificates: {}", result.result());
+                }
             } else {
                 log.warn("Error issuing component certificates", result.cause());
             }
