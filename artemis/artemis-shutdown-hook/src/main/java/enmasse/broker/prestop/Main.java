@@ -51,27 +51,24 @@ public class Main {
 
         if (System.getenv("TOPIC_NAME") != null) {
             String clusterId = System.getenv("CLUSTER_ID");
-            Endpoint messagingEndpoint = new Endpoint(System.getenv("MESSAGING_SERVICE_HOST"), Integer.parseInt(System.getenv("MESSAGING_SERVICE_PORT_AMQPS_BROKER")));
 
             Map<String, String> labelFilter = new LinkedHashMap<>();
             labelFilter.put("role", "broker");
             Map<String, String> annotationFilter = new LinkedHashMap<>();
             annotationFilter.put("cluster_id", clusterId);
 
+            Endpoint messagingEndpoint = new Endpoint(System.getenv("MESSAGING_SERVICE_HOST"), Integer.parseInt(System.getenv("MESSAGING_SERVICE_PORT_AMQPS_BROKER")));
             DiscoveryClient discoveryClient = new DiscoveryClient("podsense", labelFilter, annotationFilter, "broker", certDir);
             TopicMigrator migrator = new TopicMigrator(vertx, localHost, messagingEndpoint, brokerFactory, clientOptions);
             discoveryClient.addListener(migrator);
             vertx.deployVerticle(discoveryClient);
             migrator.migrate();
         } else {
+            Endpoint messagingEndpoint = new Endpoint(System.getenv("MESSAGING_SERVICE_HOST"), Integer.parseInt(System.getenv("MESSAGING_SERVICE_PORT_AMQPS_NORMAL")));
             String queueName = System.getenv("QUEUE_NAME");
-            String messagingHost = System.getenv("MESSAGING_SERVICE_HOST");
-            int messagingPort = Integer.parseInt(System.getenv("MESSAGING_SERVICE_PORT"));
-            Endpoint to = new Endpoint(messagingHost, messagingPort);
-
             QueueDrainer client = new QueueDrainer(vertx, localHost, brokerFactory, clientOptions, debugFn);
 
-            client.drainMessages(to, queueName);
+            client.drainMessages(messagingEndpoint, queueName);
         }
     }
 
@@ -80,7 +77,12 @@ public class Main {
         portMap.put("amqp", 5673);
         portMap.put("core", 61616);
 
-        return new Host(Inet4Address.getLocalHost().getHostAddress(), portMap);
+        String hostOverride = System.getenv("LOCAL_BROKER_HOSTNAME");
+        if (hostOverride != null) {
+            return new Host(hostOverride, portMap);
+        } else {
+            return new Host(Inet4Address.getLocalHost().getHostAddress(), portMap);
+        }
     }
 
     private static ProtonClientOptions createClientOptions(String certDir)
@@ -89,7 +91,6 @@ public class Main {
 
         if (certDir != null) {
             options.setSsl(true)
-                    .addEnabledSaslMechanism("EXTERNAL")
                     .setHostnameVerificationAlgorithm("")
                     .setPemTrustOptions(new PemTrustOptions()
                             .addCertPath(new File(certDir, "ca.crt").getAbsolutePath()))
