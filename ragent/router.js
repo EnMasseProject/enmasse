@@ -61,7 +61,7 @@ var ConnectedRouter = function (connection) {
     connection.open_receiver({source:{dynamic:true}});
     connection.on('receiver_open', this.init.bind(this));
     connection.on('message', this.incoming.bind(this));
-    connection.on('disconnected', this.disconnected.bind(this));
+    connection.on('disconnected', this.closed.bind(this));
     connection.on('connection_close', this.closed.bind(this));
 
     this.update_types = {
@@ -83,14 +83,10 @@ function has_listener(host_port) {
 }
 
 ConnectedRouter.prototype.closed = function (context) {
-    if (context.connection.error) {
-        log.info('ERROR: router closed connection with ' + context.connection.error.description);
+    var e = context.connection.get_error();
+    if (e) {
+        log.info('ERROR: connection with router lost due to: ' + e);
     }
-    this.connection = undefined;
-    this.sender = undefined;
-};
-
-ConnectedRouter.prototype.disconnected = function (context) {
     this.connection = undefined;
     this.sender = undefined;
 };
@@ -111,10 +107,6 @@ ConnectedRouter.prototype.is_ready_for_connectivity_check = function () {
     return this.initial_provisioning_completed && this.connectors !== undefined;
 }
 
-ConnectedRouter.prototype.is_ready_for_address_update = function () {
-    return this.addresses !== undefined;
-}
-
 ConnectedRouter.prototype.check_connectors = function (routers) {
     var missing = [];
     var stale = myutils.index(this.connectors);
@@ -128,7 +120,6 @@ ConnectedRouter.prototype.check_connectors = function (routers) {
     }
     stale = Object.keys(stale);
     log.info('checking connectors on router ' + this.container_id + ', missing=' + missing + ', stale=' + stale);
-
 
     var num_connectors = 1;
     if (process.env.ROUTER_NUM_CONNECTORS) {
@@ -221,9 +212,9 @@ ConnectedRouter.prototype.init = function (context) {
     this.emit('ready', this);
 };
 
-function created(message) { if (message.statusCode !== 201) return message.statusDescription; };
+function created(message) { if (message.application_properties.statusCode !== 201) return message.application_properties.statusDescription; };
 
-function deleted(message) { if (message.statusCode !== 204) return message.statusDescription; };
+function deleted(message) { if (message.application_properties.statusCode !== 204) return message.application_properties.statusDescription; };
 
 ConnectedRouter.prototype.forall_connectors = function (num_connectors, connector_operation, host_port) {
     var futures = [];
@@ -336,7 +327,7 @@ ConnectedRouter.prototype.retrieve_addresses = function () {
 };
 
 ConnectedRouter.prototype.retrieve_link_routes = function () {
-    this.query('org.apache.qpid.dispatch.router.config.linkRoute', {attributeNames:[]}, this.on_query_link_route_response.bind(this));
+    this.query('org.apache.qpid.dispatch.router.config.linkRoute', undefined, this.on_query_link_route_response.bind(this));
 };
 
 ConnectedRouter.prototype.on_connectors_updated = function (error) {
@@ -358,15 +349,13 @@ ConnectedRouter.prototype.request = function (operation, properties, body, callb
         req.application_properties = properties || {};
         req.application_properties.operation = operation;
         req.body = body;
-        this.requests[id] = callback || function (response) { log.info('got response: ' + JSON.stringify(req) + ' => ' + JSON.stringify(response)); };
+        this.requests[id] = callback;
         this.sender.send(req);
     }
 };
 
 ConnectedRouter.prototype._get_callback = function (operation, type) {
-    var method = this['on_' + operation + '_' + type + '_response'];
-    if (method) return method.bind(this);
-    else return undefined;
+    return this['on_' + operation + '_' + type + '_response'].bind(this);
 };
 
 ConnectedRouter.prototype.query = function (type, options, callback) {
@@ -374,11 +363,11 @@ ConnectedRouter.prototype.query = function (type, options, callback) {
 };
 
 ConnectedRouter.prototype.create_entity = function (type, name, attributes, callback) {
-    this.request('CREATE', {'type':type, 'name':name}, attributes || {}, callback || this._get_callback('create', type));
+    this.request('CREATE', {'type':type, 'name':name}, attributes, callback);
 };
 
 ConnectedRouter.prototype.delete_entity = function (type, name, callback) {
-    this.request('DELETE', {'type':type, 'name':name}, {}, callback || this._get_callback('delete', type));
+    this.request('DELETE', {'type':type, 'name':name}, {}, callback);
 };
 
 function create_record(names, values) {
@@ -390,7 +379,7 @@ function create_record(names, values) {
 }
 
 function extract_records(body) {
-    return body.results ? body.results.map(create_record.bind(null, body.attributeNames)) : [];
+    return (body && body.results) ? body.results.map(create_record.bind(null, body.attributeNames)) : [];
 }
 
 function has_inter_router_role (record) {
@@ -429,7 +418,6 @@ function by_name (o) {
 
 ConnectedRouter.prototype.on_query_address_response = function (message) {
     if (message.application_properties.statusCode == 200) {
-        log.info('EXTRACT, results: ' + message.body.results.toString() + ', attributes: ' + message.body.attributeNames.toString());
         var address_records = extract_records(message.body)
         this.addresses = myutils.index(address_records, by_name, from_router_address);
         log.info('retrieved addresses for ' + this.container_id + ': ' + JSON.stringify(this.addresses));
@@ -444,6 +432,7 @@ function not_overridden (linkroute) {
     if (linkroute.name === null) {
         /*name entered in config file currently doesn't make it through*/
         log.info('Ignoring unnamed linkroute: ' + JSON.stringify(linkroute));
+        return false;
     } else {
         return linkroute.name.indexOf('override') !== 0;
     }
@@ -468,12 +457,8 @@ ConnectedRouter.prototype.incoming = function (context) {
     var message = context.message;
     var handler = this.requests[message.correlation_id];
     if (handler) {
-        if (typeof handler === 'function') {
-            delete this.requests[message.correlation_id];
-            handler(message);
-        } else {
-            log.info('ERROR: handler not a function: ' + handler + ' [' + JSON.stringify(message) + ']');
-        }
+        delete this.requests[message.correlation_id];
+        handler(message);
     } else {
         log.info('WARNING: unexpected response: ' + message.correlation_id + ' [' + JSON.stringify(message) + ']');
     }

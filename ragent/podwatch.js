@@ -42,18 +42,13 @@ var Subscription = function (connection) {
 util.inherits(Subscription, events.EventEmitter);
 
 Subscription.prototype.close = function () {
-    if (this.receiver) {
-        this.receiver.close();
-    }
+    this.receiver.close();
 }
 
 Subscription.prototype.subscribe = function (selector, handler) {
     log.info('Subscribing with selector: ' + JSON.stringify(selector));
-    var receiver = this.podsense.open_receiver({source:{address:"podsense", filter:selector}});
-    if (receiver) {
-        receiver.on('message', handler);
-        this.receiver = receiver;
-    }
+    this.receiver = this.podsense.open_receiver({source:{address:"podsense", filter:selector}});
+    this.receiver.on('message', handler);
 }
 
 function create_pod_handler() {

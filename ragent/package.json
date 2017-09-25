@@ -15,9 +15,11 @@
     },
     "devDependencies": {
         "mocha-junit-reporter":"",
-        "mocha":""
+        "mocha":"",
+        "istanbul": ""
     },
     "scripts": {
-        "test": "mocha ${MOCHA_ARGS}"
+        "test": "mocha ${MOCHA_ARGS}",
+        "coverage": "istanbul cover _mocha"
     }
 }

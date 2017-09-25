@@ -8,7 +8,7 @@ OPENSHIFT_TOKEN   ?= $(shell oc whoami -t)
 OPENSHIFT_MASTER  ?= $(shell oc whoami --show-server=true)
 
 DOCKER_TARGETS = docker_build docker_tag docker_push
-BUILD_TARGETS  = init build test package clean $(DOCKER_TARGETS)
+BUILD_TARGETS  = init build test package clean $(DOCKER_TARGETS) coverage
 
 all: init build test package docker_build
 
@@ -20,6 +20,8 @@ clean_java:
 	./gradlew clean
 
 clean: clean_java
+
+coverage:
 
 docker_build: build_java
 

@@ -7,3 +7,5 @@ package:
 	tar -czf build/subserv.tgz *.js
 
 test:
+
+coverage:
