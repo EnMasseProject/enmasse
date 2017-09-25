@@ -307,7 +307,7 @@ Ragent.prototype.subscribe_to_addresses = function (env) {
         this.container.options.username = 'ragent';
         var options;
         try {
-            options = tls_options.get_client_options({ host: config_host, port: config_port, properties: connection_properties });
+            options = tls_options.get_client_options({ host: config_host, port: config_port, properties: connection_properties }, env);
         } catch (error) {
             options = { host: config_host, port: config_port, properties: connection_properties };
         }
@@ -331,7 +331,7 @@ Ragent.prototype.listen_probe = function (env) {
 Ragent.prototype.run = function (env, callback) {
     var options = {properties:connection_properties};
     try {
-        options = tls_options.get_server_options({port:55671, properties:connection_properties});
+        options = tls_options.get_server_options(options, env);
         options.port = env.AMQP_PORT === undefined ? 55671 : env.AMQP_PORT;
     } catch (error) {
         options.port = env.AMQP_PORT === undefined ? 55672 : env.AMQP_PORT;

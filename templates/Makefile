@@ -21,4 +21,6 @@ package: prepare $(OBJS) yaml
 	cp -r install/* $(INSTALLDIR)                                                                                                                                        
 	tar -czf $(INSTALLDIR).tgz $(INSTALLDIR)
 
+coverage:
+
 .PHONY: yaml prepare package clean

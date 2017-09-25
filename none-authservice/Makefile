@@ -7,3 +7,5 @@ package:
 	tar -czf build/none-authservice.tgz *.js
 
 test:
+
+coverage:

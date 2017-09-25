@@ -25,13 +25,17 @@ var http = require('http');
 var Promise = require('bluebird');
 var rhea = require('rhea');
 
-process.env.LOGLEVEL = 'info';
 var Ragent = require('../ragent.js');
+var tls_options = require('../tls_options.js');
 
-function MockRouter (name, port) {
+function MockRouter (name, port, opts) {
     this.name = name;
     events.EventEmitter.call(this);
-    this.connection = rhea.connect({'port':port, container_id:name, properties:{product:'qpid-dispatch-router'}});
+    var options = {'port':port, container_id:name, properties:{product:'qpid-dispatch-router'}};
+    for (var o in opts) {
+        options[o] = opts[o];
+    }
+    this.connection = rhea.connect(options);
     this.connection.on('message', this.on_message.bind(this));
     var self = this;
     this.connection.on('connection_open', function () { self.emit('connected', self); });
@@ -91,6 +95,15 @@ MockRouter.prototype.close_with_error = function (error)
     return this.close();
 };
 
+MockRouter.prototype.has_connector_to = function (other) {
+    return this.list_objects('connector').some(function (c) { return c.host === other.name; });
+};
+
+MockRouter.prototype.check_connector_from = function (others) {
+    var self = this;
+    return others.some(function (router) { return router !== self && router.has_connector_to(self); });
+};
+
 function get_attribute_names(objects) {
     var names = {};
     for (var i in objects) {
@@ -118,23 +131,27 @@ MockRouter.prototype.on_message = function (context)
     var request = context.message;
     var reply_to = request.reply_to;
     var response = {to: reply_to};
-    if (request.correlation_id) {
-        response.correlation_id = request.correlation_id;
-    }
-    response.application_properties = {};
-    response.application_properties.statusCode = 200;
-
-    if (request.application_properties.operation === 'CREATE') {
-        this.create_object(request.application_properties.type, request.application_properties.name, request.body);
-    } else if (request.application_properties.operation === 'DELETE') {
-        this.delete_object(request.application_properties.type, request.application_properties.name);
-    } else if (request.application_properties.operation === 'QUERY') {
-        var results = this.list_objects(request.application_properties.entityType);
-        var attributes = request.body.attributeNames;
-        if (!attributes || attributes.length === 0) {
-            attributes = get_attribute_names(results);
+    if (!(this.special && this.special(request, response, context))) {// the 'special' method when defined lets errors be injected
+        if (request.correlation_id) {
+            response.correlation_id = request.correlation_id;
         }
-        response.body = query_result(attributes, results);
+        response.application_properties = {};
+
+        if (request.application_properties.operation === 'CREATE') {
+            response.application_properties.statusCode = 201;
+            this.create_object(request.application_properties.type, request.application_properties.name, request.body);
+        } else if (request.application_properties.operation === 'DELETE') {
+            response.application_properties.statusCode = 204;
+            this.delete_object(request.application_properties.type, request.application_properties.name);
+        } else if (request.application_properties.operation === 'QUERY') {
+            response.application_properties.statusCode = 200;
+            var results = this.list_objects(request.application_properties.entityType);
+            var attributes = request.body.attributeNames;
+            if (!attributes || attributes.length === 0) {
+                attributes = get_attribute_names(results);
+            }
+            response.body = query_result(attributes, results);
+        }
     }
 
     var reply_link = context.connection.find_sender(function (s) { return match_source_address(s, reply_to); });
@@ -143,6 +160,23 @@ MockRouter.prototype.on_message = function (context)
     }
 };
 
+MockRouter.prototype.set_onetime_error_response = function (operation, type, name) {
+    var f = function (request, response) {
+        if ((operation === undefined || request.application_properties.operation === operation)
+            && (type === undefined || (operation === 'QUERY' && request.application_properties.entityType === type) || request.application_properties.type === type)
+            && (name === undefined || request.application_properties.name === name)) {
+            response.application_properties = {};
+            response.application_properties.statusCode = 500;
+            response.application_properties.statusDescription = 'error simulation';
+            response.correlation_id = request.correlation_id;
+            delete this.special;
+            return true;
+        } else {
+            return false;
+        }
+    };
+    this.special = f.bind(this);
+};
 
 function remove(list, predicate) {
     var removed = [];
@@ -204,9 +238,9 @@ function verify_multicast(name, all_addresses) {
     assert.equal(addresses[0].waypoint, false);
 }
 
-function verify_addresses(inputs, router) {
+function verify_addresses(inputs, router, verify_extra) {
     if (util.isArray(router)) {
-        router.forEach(verify_addresses.bind(null, inputs));
+        router.forEach(function (r) { verify_addresses(inputs, r, verify_extra); });
     } else {
         var addresses = router.list_objects('org.apache.qpid.dispatch.router.config.address');
         var linkroutes = router.list_objects('org.apache.qpid.dispatch.router.config.linkRoute');
@@ -225,6 +259,7 @@ function verify_addresses(inputs, router) {
                 console.warn('Cannot verify address of type: ' + a.type);
             }
         }
+        if (verify_extra) verify_extra({'addresses':addresses, 'linkroutes':linkroutes,'autolinks':autolinks});
         if (addresses.length) console.warn('Unexpected addresses found: ' + JSON.stringify(addresses));
         if (autolinks.length) console.warn('Unexpected auto links found: ' + JSON.stringify(autolinks));
         if (linkroutes.length) console.warn('Unexpected link routes found: ' + JSON.stringify(linkroutes));
@@ -243,11 +278,19 @@ function get_neighbours(name, connectivity) {
     return neighbours;
 }
 
-function are_connected(router_a, router_b) {
+function are_connected(router_a, router_b, n) {
     var from_a = router_a.list_objects('connector').filter(function (c) { return c.host === router_b.name; });
     var from_b = router_b.list_objects('connector').filter(function (c) { return c.host === router_a.name; });
-    if (from_a.length + from_b.length > 1) {
-        console.warn('unexpected connectivity between ' + router_a.name + ' and ' + router_b.name + ': ' + JSON.stringify(from_a.concat(from_b)));
+    if (n) {
+        if (from_a.length + from_b.length < n) {
+            console.warn('insufficient connectivity between ' + router_a.name + ' and ' + router_b.name + ' expected ' + n + ' got ' +
+                         (from_a.length + from_b.length) + ': ' + JSON.stringify(from_a.concat(from_b)));
+        }
+        return from_a.length + from_b.length === n;
+    } else {
+        if (from_a.length + from_b.length > 1) {
+            console.warn('unexpected connectivity between ' + router_a.name + ' and ' + router_b.name + ': ' + JSON.stringify(from_a.concat(from_b)));
+        }
     }
     return from_a.length || from_b.length;
 }
@@ -256,6 +299,14 @@ function verify_full_mesh(routers) {
     for (var i = 0; i < routers.length; i++) {
         for (var j = i+1; j < routers.length; j++) {
             assert.ok(are_connected(routers[i], routers[j]), 'routers not connected: ' + routers[i].name + ' and ' + routers[j].name);
+        }
+    }
+}
+
+function verify_full_mesh_n(routers, n) {
+    for (var i = 0; i < routers.length; i++) {
+        for (var j = i+1; j < routers.length; j++) {
+            assert.ok(are_connected(routers[i], routers[j], n), 'routers not connected: ' + routers[i].name + ' and ' + routers[j].name);
         }
     }
 }
@@ -272,8 +323,8 @@ function RouterList(port, basename) {
     this.basename = basename || 'router';
 }
 
-RouterList.prototype.new_router = function (name) {
-    var r = new MockRouter(name || this.new_name(), this.port || 55672);
+RouterList.prototype.new_router = function (name, opts) {
+    var r = new MockRouter(name || this.new_name(), this.port || 55672, opts);
     this.routers.push(r);
     return r;
 };
@@ -313,6 +364,11 @@ function MockAddressSource(address_list, pod_list) {
 
 MockAddressSource.prototype.listen = function (port) {
     this.listener = this.container.listen({'port':port});
+    return this.listener;
+};
+
+MockAddressSource.prototype.listen_tls = function (options) {
+    this.listener = this.container.listen(options);
     return this.listener;
 };
 
@@ -599,16 +655,22 @@ describe('basic router configuration', function() {
         setTimeout(function () {
             verify_addresses([{address:'a',type:'topic'}, {address:'b',type:'queue'}], routers);
             verify_full_mesh(routers);
-            routers.pop().close();
-            routers.pop().close_with_error({name:'amqp:internal-error', description:'just a test'}).then(function () {
-                for (var i = 0; i < 2; i++) {
-                    routers.push(new_router());
+            //make sure we close a router which some remaining router still has a connector to
+            var r;
+            for (var i = 0; i < routers.length; i++) {
+                if (routers[i].check_connector_from(routers)) {
+                    r = routers[i];
+                    routers.splice(i, 1);
+                    break;
                 }
+            }
+            r.close_with_error({name:'amqp:internal-error', description:'just a test'}).then(function () {
+                routers.push(new_router());
                 setTimeout(function () {
                     verify_addresses([{address:'a',type:'topic'}, {address:'b',type:'queue'}], routers);
                     verify_full_mesh(routers);
                     done();
-                }, 1000);
+                }, 500);
             });
         }, 1000/*1 second wait for propagation*/);//TODO: add ability to be notified of propagation in some way
     });
@@ -632,7 +694,115 @@ describe('basic router configuration', function() {
             done();
         }, 1000/*1 second wait for propagation*/);//TODO: add ability to be notified of propagation in some way
     });
+    it('handles address query error', simple_address_test([{address:'a',type:'topic'}, {address:'b',type:'queue'}, {address:'c',type:'anycast'}, {address:'d',type:'multicast'}], undefined,
+       function (router) {
+           router.set_onetime_error_response('QUERY','org.apache.qpid.dispatch.router.config.address');
+       }));
+    it('handles address auto-link error', simple_address_test([{address:'a',type:'topic'}, {address:'b',type:'queue'}, {address:'c',type:'anycast'}, {address:'d',type:'multicast'}], undefined,
+       function (router) {
+           router.set_onetime_error_response('QUERY','org.apache.qpid.dispatch.router.config.autoLink');
+       }));
+    it('handles address link-route error', simple_address_test([{address:'a',type:'topic'}, {address:'b',type:'queue'}, {address:'c',type:'anycast'}, {address:'d',type:'multicast'}], undefined,
+       function (router) {
+           router.set_onetime_error_response('QUERY','org.apache.qpid.dispatch.router.config.linkRoute');
+       }));
+    it('handles connector query error', simple_address_test([{address:'a',type:'topic'}, {address:'b',type:'queue'}, {address:'c',type:'anycast'}, {address:'d',type:'multicast'}], undefined,
+       function (router) {
+           router.set_onetime_error_response('QUERY','connector');
+       }));
+    it('handles listener query error', simple_address_test([{address:'a',type:'topic'}, {address:'b',type:'queue'}, {address:'c',type:'anycast'}, {address:'d',type:'multicast'}], undefined,
+       function (router) {
+           router.set_onetime_error_response('QUERY','listener');
+       }));
+    it('handles address create error', simple_address_test([{address:'a',type:'topic'}, {address:'b',type:'queue'}, {address:'c',type:'anycast'}, {address:'d',type:'multicast'}], undefined,
+       function (router) {
+           router.set_onetime_error_response('CREATE','org.apache.qpid.dispatch.router.config.address');
+       }));
+    it('handles address delete error', simple_address_test([{address:'a',type:'topic'}, {address:'b',type:'queue'}, {address:'c',type:'anycast'}, {address:'d',type:'multicast'}], undefined,
+       function (router) {
+           router.create_object('org.apache.qpid.dispatch.router.config.address', 'foo', {prefix:'foo', distribution:'closest', 'waypoint':false});
+           router.set_onetime_error_response('DELETE','org.apache.qpid.dispatch.router.config.address');
+       }));
+    it('handles connector create error', multi_router_address_test(2, [{address:'a',type:'topic'}, {address:'b',type:'queue'}, {address:'c',type:'anycast'}, {address:'d',type:'multicast'}], undefined,
+       function (routers) {
+           routers[0].set_onetime_error_response('CREATE','connector');
+           routers[1].set_onetime_error_response('CREATE','connector');
+       }));
+    it('establishes multiple connectors between routers', function(done) {
+        process.env.ROUTER_NUM_CONNECTORS=2;
+        var routers = [];
+        for (var i = 0; i < 3; i++) {
+            routers.push(new_router());
+        }
+        var address_list = [{address:'a',type:'topic'}, {address:'b',type:'queue'}];
+        var client = rhea.connect({port:ragent.server.address().port});
+        client.open_sender().send(get_address_list_message(address_list));
+        client.on('sender_open', function () {
+            setTimeout(function () {
+                verify_full_mesh_n(routers, 2);
+                client.close();
+                client.on('connection_close', function () {
+                    delete process.env.ROUTER_NUM_CONNECTORS;
+                    done();
+                });
+            }, 1000/*1 second wait for propagation*/);//TODO: add ability to be notified of propagation in some way
+        });
+    });
+    it('ignores link route with no name', simple_address_test([{address:'a',type:'topic'}, {address:'b',type:'queue'}],
+       function (routers, address_list) {
+           verify_addresses(address_list, routers, function (objects) {
+               var extra_linkroutes = remove(objects.linkroutes, function (o) { return o.prefix === 'foo' && o.dir === 'in'; });
+               assert.equal(extra_linkroutes.length, 1);
+           });
+       },
+       function (router) {
+           router.create_object('org.apache.qpid.dispatch.router.config.linkRoute', undefined, {prefix:'foo', dir:'in'});
+       }));
+    it('ignores link route override', simple_address_test([{address:'a',type:'topic'}, {address:'b',type:'queue'}],
+       function (routers, address_list) {
+           verify_addresses(address_list, routers, function (objects) {
+               var extra_linkroutes = remove(objects.linkroutes, function (o) { return o.prefix === 'foo' && o.dir === 'in'; });
+               assert.equal(extra_linkroutes.length, 1);
+               assert.equal(extra_linkroutes[0].name, 'override-foo');
+           });
+       },
+       function (router) {
+           router.create_object('org.apache.qpid.dispatch.router.config.linkRoute', 'override-foo', {prefix:'foo', dir:'in'});
+       }));
+
+    it('handles message with no correlation', simple_address_test([{address:'a',type:'topic'}, {address:'b',type:'queue'}], undefined,
+        function (router) {
+            var f = function (request, response, context) {
+                var reply_link = context.connection.find_sender(function (s) { return match_source_address(s, request.reply_to); });
+                if (reply_link) {
+                    reply_link.send({to:request.reply_to, subject:'fake message with no correlation'});
+                }
+                delete this.special;
+                return false;
+            };
+            router.special = f.bind(router);
+        }));
+    it('handles query response with no body', simple_address_test([{address:'a',type:'topic'}, {address:'b',type:'queue'}], undefined, function (router) {
+        var f = function (request, response) {
+            if (request.application_properties.operation === 'QUERY'
+                && request.application_properties.entityType === 'org.apache.qpid.dispatch.router.config.address') {
+
+                response.application_properties = {};
+                response.application_properties.statusCode = 200;
+                response.correlation_id = request.correlation_id;
+                delete this.special;
+                return true;
+            } else {
+                return false;
+            }
+        };
+        router.special = f.bind(router);
+    }));
 });
+
+function localpath(name) {
+    return path.resolve(__dirname, name);
+}
 
 describe('address source subscription', function() {
     this.timeout(5000);
@@ -678,7 +848,17 @@ describe('address source subscription', function() {
     it('subscribes to configuration service', simple_subscribe_env_test(function () { return {'CONFIGURATION_SERVICE_HOST': 'localhost', 'CONFIGURATION_SERVICE_PORT':address_source.get_port()} }));
     it('subscribes to admin service on configuration port', simple_subscribe_env_test(function () { return {'ADMIN_SERVICE_HOST': 'localhost', 'ADMIN_SERVICE_PORT_CONFIGURATION':address_source.get_port()} }));
     it('prefers configuration service over admin service', simple_subscribe_env_test(function () { return {'ADMIN_SERVICE_HOST': 'foo', 'ADMIN_SERVICE_PORT_CONFIGURATION':7777,
-                                                                                                           'CONFIGURATION_SERVICE_HOST': 'localhost', 'CONFIGURATION_SERVICE_PORT':address_source.get_port()} }));
+                                                                                                           'CONFIGURATION_SERVICE_HOST': 'localhost',
+                                                                                                           'CONFIGURATION_SERVICE_PORT':address_source.get_port()} }));
+    it('will not subscribe if no host and port provided', function (done) {
+        with_ragent({}, function () {
+            var router = routers.new_router();
+            setTimeout(function () {
+                verify_addresses([], router);
+                done();
+            }, 1000/*1 second wait for propagation*/);//TODO: add ability to be notified of propagation in some way
+        });
+    });
 });
 
 function RouterGroup (name) {
@@ -851,6 +1031,7 @@ describe('forked process', function() {
     });
 });
 
+
 describe('run method', function() {
     this.timeout(5000);
     var ragent;
@@ -858,7 +1039,7 @@ describe('run method', function() {
     var routers;
 
     beforeEach(function(done) {
-        address_source.listen(0).on('listening', function () {
+        address_source.listen(0).on('listening', function() {
             var env =  {'AMQP_PORT':0, 'CONFIGURATION_SERVICE_HOST': 'localhost', 'CONFIGURATION_SERVICE_PORT':address_source.get_port()};
             ragent = new Ragent();
             ragent.run(env, function (port) {
@@ -876,6 +1057,43 @@ describe('run method', function() {
 
     it('subscribes to configuration service', function (done) {
         var router = routers.new_router();
+        setTimeout(function () {
+            verify_addresses(address_source.address_list, router);
+            router.close().then(function () {
+                done();
+            });
+        }, 1000/*1 second wait for propagation*/);//TODO: add ability to be notified of propagation in some way
+    });
+});
+
+describe('run method also', function() {
+    this.timeout(5000);
+    var ragent;
+    var address_source = new MockAddressSource([{address:'a',type:'topic'}, {address:'b',type:'queue'}]);
+    var routers;
+    var tls_env =  {'CA_PATH': localpath('ca-cert.pem'), 'CERT_PATH': localpath('server-cert.pem'),'KEY_PATH': localpath('server-key.pem')};
+
+    beforeEach(function(done) {
+        address_source.listen_tls(tls_options.get_server_options({port:0}, tls_env)).on('listening', function() {
+            var env =  {'AMQP_PORT':0, 'CONFIGURATION_SERVICE_HOST': 'localhost', 'CONFIGURATION_SERVICE_PORT':address_source.get_port(),
+                        'CA_PATH': localpath('ca-cert.pem'), 'CERT_PATH': localpath('server-cert.pem'),
+                        'KEY_PATH': localpath('server-key.pem')};
+            ragent = new Ragent();
+            ragent.run(env, function (port) {
+                routers = new RouterList(port);
+                done();
+            });
+        });
+    });
+
+    afterEach(function(done) {
+        ragent.server.close();
+        address_source.close();
+        done();
+    });
+
+    it('uses TLS', function (done) {
+        var router = routers.new_router(undefined, tls_options.get_client_options({}, tls_env));
         setTimeout(function () {
             verify_addresses(address_source.address_list, router);
             router.close().then(function () {

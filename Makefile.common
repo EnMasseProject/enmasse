@@ -19,14 +19,16 @@ clean_node:
 clean: clean_node
 	rm -rf build
 
-npm_install:
+node_modules: package.json
         ifndef NPM
 		$(warning "npm not found, node tests will be skipped")
         else
 		npm install
         endif
 
-npm_test: npm_install
+npm_install: node_modules
+
+npm_test: node_modules
         ifndef NPM
 		$(warning "npm not found, node tests will be skipped")
         else
