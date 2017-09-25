@@ -201,7 +201,7 @@ public class HTTPServerTest {
         HttpClient client = vertx.createHttpClient(options);
         try {
             Async async = context.async();
-            HttpClientRequest request = client.get(8080, "localhost", "/v2/catalog", response -> {
+            HttpClientRequest request = client.get(8080, "localhost", "/osbapi/v2/catalog", response -> {
                 response.bodyHandler(buffer -> {
                     JsonObject data = buffer.toJsonObject();
                     context.assertTrue(data.containsKey("services"));
