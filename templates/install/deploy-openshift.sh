@@ -212,7 +212,7 @@ kind: Broker
 metadata:
   name: enmasse
 spec:
-  url: http://address-controller.${NAMESPACE}.svc.cluster.local:8080
+  url: http://address-controller.${NAMESPACE}.svc.cluster.local:8080/osbapi
   authInfo:
     basicAuthSecret:
       namespace: service-catalog
