@@ -17,6 +17,7 @@
 package enmasse.systemtest.mqtt;
 
 import enmasse.systemtest.Destination;
+import io.vertx.core.http.HttpMethod;
 import org.junit.Test;
 import org.junit.Ignore;
 
@@ -32,11 +33,6 @@ import static org.junit.Assert.assertThat;
  * Tests related to publish messages via MQTT
  */
 public class PublishTest extends MqttTestBase {
-
-    @Override
-    protected String getInstanceName() {
-        return this.getClass().getSimpleName();
-    }
 
     @Test
     public void testPublishQoS0() throws Exception {
@@ -67,7 +63,7 @@ public class PublishTest extends MqttTestBase {
     private void publish(List<String> messages, List<Integer> publisherQos, int subscriberQos) throws Exception {
 
         Destination dest = Destination.topic("mytopic");
-        deploy(dest);
+        setAddresses(dest);
         Thread.sleep(60_000);
 
         MqttClient client = this.createClient();

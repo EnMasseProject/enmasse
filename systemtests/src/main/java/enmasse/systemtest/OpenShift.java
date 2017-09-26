@@ -126,15 +126,15 @@ public class OpenShift {
         return new Endpoint(route.getSpec().getHost(), 443);
     }
 
-    public Watch watchPods(Watcher<Pod> podWatcher) {
-        return client.pods().watch(podWatcher);
+    public Watch watchPods(String namespace, Watcher<Pod> podWatcher) {
+        return client.pods().inNamespace(namespace).watch(podWatcher);
     }
 
-    public LogWatch watchPodLog(String name, String container, OutputStream outputStream) {
-        return client.pods().withName(name).inContainer(container).watchLog(outputStream);
+    public LogWatch watchPodLog(String namespace, String name, String container, OutputStream outputStream) {
+        return client.pods().inNamespace(namespace).withName(name).inContainer(container).watchLog(outputStream);
     }
 
-    public Pod getPod(String name) {
-        return client.pods().withName(name).get();
+    public Pod getPod(String namespace, String name) {
+        return client.pods().inNamespace(namespace).withName(name).get();
     }
 }

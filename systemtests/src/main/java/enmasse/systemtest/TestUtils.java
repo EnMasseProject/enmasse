@@ -21,13 +21,16 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.enmasse.amqp.SyncRequestClient;
 import io.fabric8.kubernetes.api.model.Pod;
+import io.vertx.core.http.HttpMethod;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.message.Message;
 
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -115,8 +118,13 @@ public class TestUtils {
         }
     }
 
-    public static void deploy(AddressApiClient apiClient, OpenShift openShift, TimeoutBudget budget, String instanceName, Destination ... destinations) throws Exception {
-        apiClient.deploy(instanceName, destinations);
+
+    public static void delete(AddressApiClient apiClient, String instanceName, Destination... destinations) throws Exception {
+        apiClient.deleteAddresses(instanceName, destinations);
+    }
+
+    public static void deploy(AddressApiClient apiClient, OpenShift openShift, TimeoutBudget budget, String addressSpace, HttpMethod httpMethod, Destination... destinations) throws Exception {
+        apiClient.deploy(addressSpace, httpMethod, destinations);
         Set<String> groups = new HashSet<>();
         for (Destination destination : destinations) {
             if (Destination.isQueue(destination) || Destination.isTopic(destination)) {
@@ -130,6 +138,118 @@ public class TestUtils {
         int expectedPods = openShift.getExpectedPods() + groups.size();
         Logging.log.info("Waiting for " + expectedPods + " pods");
         waitForExpectedPods(openShift, expectedPods, budget);
+        waitForDestinationsReady(apiClient, addressSpace, destinations);
+    }
+
+    public static boolean existAddressSpace(AddressApiClient apiClient, String addressSpaceName) throws InterruptedException, TimeoutException, ExecutionException {
+        return apiClient.listAddressSpaces().contains(addressSpaceName);
+    }
+
+    public static boolean isAddressSpaceReady(JsonObject address) {
+        boolean isReady = false;
+        if (address != null) {
+            isReady = address.getJsonObject("status").getBoolean("isReady");
+        }
+        return isReady;
+    }
+
+    /**
+     * wait until isReady parameter of Address Space is set to true within timeout
+     *
+     * @param apiClient    instance of AddressApiClient
+     * @param addressSpace name of addressSpace
+     * @throws Exception IlegalStateException if destionation is not ready within timeout
+     */
+    public static void waitForAddressSpaceReady(AddressApiClient apiClient, String addressSpace) throws Exception {
+        JsonObject addressObject = null;
+        TimeoutBudget budget = null;
+
+        boolean isReady = false;
+        budget = new TimeoutBudget(3, TimeUnit.MINUTES);
+        while (budget.timeLeft() >= 0 && !isReady) {
+            addressObject = apiClient.getAddressSpace(addressSpace);
+            isReady = isAddressSpaceReady(addressObject);
+            if (!isReady) {
+                Thread.sleep(5000);
+            }
+            Logging.log.info("Waiting until Address space: " + addressSpace + " will be in ready state");
+        }
+        if (!isReady) {
+            throw new IllegalStateException("Address Space " + addressSpace + " is not in Ready state within timeout.");
+        }
+        // TODO: This is needed as some component connections might hang for 2 minutes (i.e. subserv connecting to router before it is ready)
+        Thread.sleep(120_000);
+    }
+
+    public static Future<List<String>> getAddresses(AddressApiClient apiClient, String instanceName, Optional<String> addressName) throws Exception {
+        JsonObject response = apiClient.getAddresses(instanceName, addressName);
+        CompletableFuture<List<String>> listOfAddresses = new CompletableFuture<>();
+        listOfAddresses.complete(convertToList(response));
+        return listOfAddresses;
+    }
+
+    public static boolean isAddressReady(JsonObject address) {
+        boolean isReady = false;
+        if (address != null) {
+            isReady = address.getJsonObject("status").getBoolean("isReady");
+        }
+        return isReady;
+    }
+
+    /**
+     * Pulling out names of queues from json object
+     *
+     * @param htmlResponse JsonObject with specified structure returned from rest api
+     * @return list of address names
+     */
+    private static List<String> convertToList(JsonObject htmlResponse) {
+        String kind = htmlResponse.getString("kind");
+        List<String> addresses = new ArrayList<>();
+        switch (kind) {
+            case "Address":
+                addresses.add(htmlResponse.getJsonObject("metadata").getString("name"));
+                break;
+            case "AddressList":
+                JsonArray items = htmlResponse.getJsonArray("items");
+                if (items != null) {
+                    items.forEach(address -> {
+                        addresses.add(((JsonObject) address).getJsonObject("metadata").getString("name"));
+                    });
+                }
+                break;
+            default:
+                Logging.log.warn("Unspecified kind: " + kind);
+        }
+        return addresses;
+    }
+
+    /**
+     * wait until destinations isReady parameter is set to true with 1 MINUTE timeout for each destination
+     *
+     * @param apiClient    instance of AddressApiClient
+     * @param instanceName name of instance
+     * @param destinations variable count of destinations
+     * @throws Exception IlegalStateException if destionation is not ready within timeout
+     */
+    public static void waitForDestinationsReady(AddressApiClient apiClient, String instanceName, Destination... destinations) throws Exception {
+        JsonObject addressObject = null;
+        TimeoutBudget budget = null;
+
+        for (Destination destination : destinations) {
+            boolean isReady = false;
+            budget = new TimeoutBudget(3, TimeUnit.MINUTES);
+            while (budget.timeLeft() >= 0 && !isReady) {
+                addressObject = apiClient.getAddresses(instanceName, Optional.of(destination.getAddress()));
+                isReady = isAddressReady(addressObject);
+                if (!isReady) {
+                    Thread.sleep(5000);
+                }
+                Logging.log.info("Waiting until destination: " + destination.getAddress() + " will be in ready state");
+            }
+            if (!isReady) {
+                throw new IllegalStateException("Address " + destination.getAddress() + " is not in Ready state within timeout.");
+            }
+        }
     }
 
     public static void waitForAddress(OpenShift openShift, String address, TimeoutBudget budget) throws Exception {

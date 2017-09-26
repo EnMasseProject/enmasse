@@ -57,7 +57,7 @@ public class AmqpClient implements AutoCloseable {
     }
 
     public Future<List<String>> recvMessages(String address, int numMessages) throws InterruptedException, IOException {
-        return recvMessages(address, numMessages, 1, TimeUnit.MINUTES);
+        return recvMessages(address, numMessages, 2, TimeUnit.MINUTES);
     }
 
     public Future<List<String>> recvMessages(String address, int numMessages, long connectTimeout, TimeUnit timeUnit) throws InterruptedException, IOException {
@@ -65,15 +65,15 @@ public class AmqpClient implements AutoCloseable {
     }
 
     public Future<List<String>> recvMessages(Source source, String linkName, int numMessages) throws InterruptedException, IOException {
-        return recvMessages(source, numMessages, Optional.of(linkName), 1, TimeUnit.MINUTES);
+        return recvMessages(source, numMessages, Optional.of(linkName), 2, TimeUnit.MINUTES);
     }
 
     public Future<List<String>> recvMessages(String address, Predicate<Message> done) throws InterruptedException, IOException {
-        return recvMessages(terminusFactory.getSource(address), done, Optional.empty(), 1, TimeUnit.MINUTES);
+        return recvMessages(terminusFactory.getSource(address), done, Optional.empty(), 2, TimeUnit.MINUTES);
     }
 
-    public Future<List<String>> recvMessages(Source source,String linkName, Predicate<Message> done) throws InterruptedException, IOException {
-        return recvMessages(source, done, Optional.of(linkName), 1, TimeUnit.MINUTES);
+    public Future<List<String>> recvMessages(Source source, String linkName, Predicate<Message> done) throws InterruptedException, IOException {
+        return recvMessages(source, done, Optional.of(linkName), 2, TimeUnit.MINUTES);
     }
 
     public Future<List<String>> recvMessages(Source source, Predicate<Message> done, Optional<String> linkName, long connectTimeout, TimeUnit timeUnit) throws InterruptedException, IOException {
