@@ -59,7 +59,7 @@ public class DiscoveryTest {
         Subscriber subscriber = subscriberFuture.get(1, TimeUnit.MINUTES);
         assertNotNull(subscriber);
         System.out.println("Sending initial response");
-        subscriber.resourcesUpdated(createResponse("False", "Pending"));
+        vertx.runOnContext(a -> subscriber.resourcesUpdated(createResponse("False", "Pending")));
         try {
             changedHosts.get(10, TimeUnit.SECONDS);
             fail("Pending hosts should not update host set");
@@ -67,7 +67,7 @@ public class DiscoveryTest {
         }
 
         System.out.println("Sending second response");
-        subscriber.resourcesUpdated(createResponse("False", "Running"));
+        vertx.runOnContext(a -> subscriber.resourcesUpdated(createResponse("False", "Running")));
         try {
             changedHosts.get(10, TimeUnit.SECONDS);
             fail("Ready must be true before returning host");
@@ -75,7 +75,7 @@ public class DiscoveryTest {
         }
 
         System.out.println("Sending third response");
-        subscriber.resourcesUpdated(createResponse("True", "Running"));
+        vertx.runOnContext(a -> subscriber.resourcesUpdated(createResponse("True", "Running")));
         try {
             Set<Host> actual = changedHosts.get(2, TimeUnit.MINUTES);
             assertThat(actual.size(), is(1));
