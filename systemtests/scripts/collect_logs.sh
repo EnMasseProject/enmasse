@@ -26,4 +26,5 @@ do
     done
 done
 
+cp $OC_DIR/logs/* $ARTIFACTS_DIR/logs/
 cp -r /tmp/testlogs/* $ARTIFACTS_DIR/logs/
