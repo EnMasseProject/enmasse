@@ -14,12 +14,17 @@ public class ClientOptions {
     private final Target target;
     private final ProtonClientOptions protonClientOptions;
     private final Optional<String> linkName;
+    private final String username;
+    private final String password;
 
-    public ClientOptions(Source source, Target target, ProtonClientOptions protonClientOptions, Optional<String> linkName) {
+    public ClientOptions(Source source, Target target, ProtonClientOptions protonClientOptions,
+            Optional<String> linkName, String username, String password) {
         this.source = source;
         this.target = target;
         this.protonClientOptions = protonClientOptions;
         this.linkName = linkName;
+        this.username = username;
+        this.password = password;
     }
 
     public Source getSource() {
@@ -36,5 +41,13 @@ public class ClientOptions {
 
     public Optional<String> getLinkName() {
         return linkName;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public String getPassword() {
+        return password;
     }
 }

@@ -90,7 +90,7 @@ public abstract class AmqpTestBase extends TestBase {
     }
 
     protected AmqpClient createClient(TerminusFactory terminusFactory, Endpoint endpoint, ProtonClientOptions protonOptions, ProtonQoS qos) {
-        AmqpClient client = new AmqpClient(endpoint, terminusFactory, protonOptions, qos);
+        AmqpClient client = new AmqpClient(endpoint, terminusFactory, protonOptions, qos, username, password);
         clients.add(client);
         return client;
     }
