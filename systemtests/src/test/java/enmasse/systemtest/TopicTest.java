@@ -24,16 +24,65 @@ import org.apache.qpid.proton.amqp.messaging.TerminusDurability;
 import org.apache.qpid.proton.message.Message;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 public class TopicTest extends TestBase {
+
+    public void testInmemoryTopics() throws Exception {
+        Destination t1 = Destination.topic("inMemoryTopic", Optional.of("inmemory"));
+        setAddresses(t1);
+
+        AmqpClient topicClient = amqpClientFactory.createTopicClient();
+        runTopicTest(topicClient, t1, 2048);
+    }
+
+    public void testPersistedTopics() throws Exception {
+        Destination t1 = Destination.topic("inMemoryTopic", Optional.of("persisted"));
+        setAddresses(t1);
+
+        AmqpClient topicClient = amqpClientFactory.createTopicClient();
+        runTopicTest(topicClient, t1, 2048);
+    }
+
+    public void runTopicTest(AmqpClient client, Destination dest, int msgCount) throws InterruptedException, IOException, TimeoutException, ExecutionException {
+        List<String> msgs = TestUtils.generateMessages(msgCount);
+        Future<List<String>> recvMessages = client.recvMessages(dest.getAddress(), msgCount);
+
+        assertThat(client.sendMessages(dest.getAddress(), msgs).get(1, TimeUnit.MINUTES), is(msgs.size()));
+        assertThat(recvMessages.get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
+    }
+
+    public void testTopicWildcards() throws Exception {
+        Destination t1 = Destination.topic("topic/No1");
+        Destination t2 = Destination.topic("topic/No2");
+
+        setAddresses(t1, t2);
+        AmqpClient amqpClient = amqpClientFactory.createTopicClient();
+
+        List<String> msgs = Arrays.asList("foo", "bar", "baz", "qux");
+        Thread.sleep(60_000);
+
+        Future<List<String>> recvResults = amqpClient.recvMessages("topic/#", msgs.size() * 2);
+
+        List<Future<Integer>> sendResult = Arrays.asList(
+                amqpClient.sendMessages(t1.getAddress(), msgs),
+                amqpClient.sendMessages(t2.getAddress(), msgs));
+
+        assertThat(sendResult.get(0).get(1, TimeUnit.MINUTES), is(msgs.size()));
+        assertThat(sendResult.get(1).get(1, TimeUnit.MINUTES), is(msgs.size()));
+        assertThat(recvResults.get(1, TimeUnit.MINUTES).size(), is(msgs.size() * 2));
+    }
 
     public void testDurableLinkRoutedSubscription() throws Exception {
         Destination dest = Destination.topic("lrtopic");
@@ -78,6 +127,7 @@ public class TopicTest extends TestBase {
         assertTrue(recvResults.get(1, TimeUnit.MINUTES).containsAll(batch2));
     }
 
+    @Test
     public void testDurableMessageRoutedSubscription() throws Exception {
         Destination dest = Destination.topic("mrtopic");
         String address = "myaddress";
