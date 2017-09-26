@@ -35,6 +35,13 @@ npm_test: node_modules
 	       MOCHA_FILE=$(MOCHA_FILE) MOCHA_ARGS="$(MOCHA_ARGS)" npm run test
         endif
 
+npm_coverage: npm_install
+        ifndef NPM
+		$(warning "npm not found, coverage cannot be generated")
+        else
+	       npm run coverage
+        endif
+
 docker_build: package
 	if [ -f Dockerfile ]; then docker build --build-arg version=$(TAG) -t $(PROJECT_PREFIX)-$(PROJECT_NAME):$(TAG) . ; fi
 	docker images | grep $(PROJECT_PREFIX)
