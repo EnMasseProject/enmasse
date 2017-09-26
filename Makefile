@@ -21,8 +21,6 @@ clean_java:
 
 clean: clean_java
 
-coverage:
-
 docker_build: build_java
 
 $(BUILD_TARGETS): $(BUILD_DIRS)
