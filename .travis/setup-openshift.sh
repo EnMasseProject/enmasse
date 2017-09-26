@@ -51,3 +51,5 @@ oc adm --config $KUBECONFIG registry -o json | sed -e 's/"sessionAffinity"/"clus
 oc create --config $KUBECONFIG -f $CONFIG/registry.json
 
 sleep 30
+oc --config $KUBECONFIG get services -n default
+oc --config $KUBECONFIG get pods -n default
