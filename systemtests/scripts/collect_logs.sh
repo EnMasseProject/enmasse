@@ -26,7 +26,4 @@ do
     done
 done
 
-for log in `find /tmp/testlogs`
-do
-    cp -f $log $ARTIFACTS_DIR/logs/
-done
+cp -r /tmp/testlogs/* $ARTIFACTS_DIR/logs/

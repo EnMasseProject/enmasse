@@ -17,6 +17,7 @@
 package enmasse.systemtest;
 
 import enmasse.systemtest.amqp.AmqpClient;
+import io.vertx.core.http.HttpMethod;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -33,7 +34,7 @@ public class BroadcastTest extends AmqpTestBase {
     @Test
     public void testMultipleRecievers() throws Exception {
         Destination dest = Destination.multicast("broadcast");
-        deploy(dest);
+        setAddresses(dest);
         Thread.sleep(20_000);
         AmqpClient client = createBroadcastClient();
         List<String> msgs = Arrays.asList("foo");
@@ -47,13 +48,8 @@ public class BroadcastTest extends AmqpTestBase {
 
         assertThat(client.sendMessages(dest.getAddress(), msgs).get(1, TimeUnit.MINUTES), is(msgs.size()));
 
-        assertTrue(recvResults.get(0).get(10, TimeUnit.SECONDS).size() >= msgs.size());
-        assertTrue(recvResults.get(1).get(10, TimeUnit.SECONDS).size() >= msgs.size());
-        assertTrue(recvResults.get(2).get(10, TimeUnit.SECONDS).size() >= msgs.size());
-    }
-
-    @Override
-    protected String getInstanceName() {
-        return this.getClass().getSimpleName();
+        assertTrue(recvResults.get(0).get(30, TimeUnit.SECONDS).size() >= msgs.size());
+        assertTrue(recvResults.get(1).get(30, TimeUnit.SECONDS).size() >= msgs.size());
+        assertTrue(recvResults.get(2).get(30, TimeUnit.SECONDS).size() >= msgs.size());
     }
 }

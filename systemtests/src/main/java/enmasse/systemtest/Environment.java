@@ -24,6 +24,7 @@ public class Environment {
     private final String useTls = System.getenv("OPENSHIFT_USE_TLS");
     private final String messagingCert = System.getenv("OPENSHIFT_SERVER_CERT");
     private final boolean multitenant = Boolean.parseBoolean(System.getenv("OPENSHIFT_MULTITENANT"));
+    private final String testLogDir = System.getenv().getOrDefault("OPENSHIFT_TEST_LOGDIR", "/tmp/testlogs");
 
     public String openShiftUrl() {
         return url;
@@ -51,5 +52,9 @@ public class Environment {
 
     public boolean isMultitenant() {
         return multitenant;
+    }
+
+    public String testLogDir() {
+        return testLogDir;
     }
 }

@@ -24,10 +24,8 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.util.concurrent.*;
+import java.util.stream.Collectors;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertNotNull;
@@ -38,7 +36,7 @@ public class QueueTest extends AmqpTestBase {
     @Test
     public void testQueue() throws Exception {
         Destination dest = Destination.queue("myqueue");
-        deploy(dest);
+        setAddresses(dest);
         AmqpClient client = createQueueClient();
 
         runQueueTest(client, dest);
@@ -49,7 +47,7 @@ public class QueueTest extends AmqpTestBase {
         Destination q1 = Destination.queue("queue1", Optional.of("pooled-inmemory"));
         Destination q2 = Destination.queue("queue2", Optional.of("pooled-inmemory"));
         Destination q3 = Destination.queue("queue3", Optional.of("pooled-inmemory"));
-        deploy(q1, q2, q3);
+        setAddresses(q1, q2, q3);
 
         AmqpClient client = createQueueClient();
         runQueueTest(client, q1);
@@ -107,13 +105,6 @@ public class QueueTest extends AmqpTestBase {
         }
 
         assertThat(actual, is(msgs.size()));
-
     }
-
-    @Override
-    protected String getInstanceName() {
-        return this.getClass().getSimpleName();
-    }
-
 }
 

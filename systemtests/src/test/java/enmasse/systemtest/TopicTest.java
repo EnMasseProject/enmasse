@@ -18,6 +18,7 @@ package enmasse.systemtest;
 
 import enmasse.systemtest.amqp.AmqpClient;
 import enmasse.systemtest.amqp.TopicTerminusFactory;
+import io.vertx.core.http.HttpMethod;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.amqp.messaging.Source;
 import org.apache.qpid.proton.amqp.messaging.TerminusDurability;
@@ -38,7 +39,7 @@ public class TopicTest extends AmqpTestBase {
     @Test
     public void testMultipleSubscribers() throws Exception {
         Destination dest = Destination.topic("subtopic");
-        deploy(dest);
+        setAddresses(dest);
         scale(dest, 1);
         Thread.sleep(60_000);
         AmqpClient client = createTopicClient();
@@ -67,7 +68,7 @@ public class TopicTest extends AmqpTestBase {
     public void testDurableLinkRoutedSubscription() throws Exception {
         Destination dest = Destination.topic("lrtopic");
         String linkName = "systest-durable";
-        deploy(dest);
+        setAddresses(dest);
         scale(dest, 4);
 
         Thread.sleep(60_000);
@@ -111,7 +112,7 @@ public class TopicTest extends AmqpTestBase {
         Destination dest = Destination.topic("mrtopic");
         String address = "myaddress";
         Logging.log.info("Deploying");
-        deploy(dest);
+        setAddresses(dest);
         Logging.log.info("Scaling");
         scale(dest, 1);
 
@@ -133,7 +134,7 @@ public class TopicTest extends AmqpTestBase {
         Logging.log.info("Sending 12 messages");
 
         List<String> msgs = TestUtils.generateMessages(12);
-        assertThat(topicClient.sendMessages(dest.getAddress(),msgs).get(1, TimeUnit.MINUTES), is(msgs.size()));
+        assertThat(topicClient.sendMessages(dest.getAddress(), msgs).get(1, TimeUnit.MINUTES), is(msgs.size()));
 
         Logging.log.info("Receiving 6 messages");
         Future<List<String>> recvResult = queueClient.recvMessages(address, 6);
@@ -162,10 +163,5 @@ public class TopicTest extends AmqpTestBase {
         unsub.setSubject("unsubscribe");
         Logging.log.info("Sending unsubscribe");
         subClient.sendMessages("$subctrl", unsub).get(1, TimeUnit.MINUTES);
-    }
-
-    @Override
-    protected String getInstanceName() {
-        return this.getClass().getSimpleName();
     }
 }

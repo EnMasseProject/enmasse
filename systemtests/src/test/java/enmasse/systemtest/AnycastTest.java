@@ -17,6 +17,7 @@
 package enmasse.systemtest;
 
 import enmasse.systemtest.amqp.AmqpClient;
+import io.vertx.core.http.HttpMethod;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -31,7 +32,7 @@ public class AnycastTest extends AmqpTestBase {
     @Test
     public void testMessagesDeliveredToReceiver() throws Exception {
         Destination dest = Destination.anycast("anycast");
-        deploy(dest);
+        setAddresses(dest);
         AmqpClient client = createQueueClient();
 
         List<String> msgs = Arrays.asList("foo", "bar", "baz");
@@ -41,10 +42,5 @@ public class AnycastTest extends AmqpTestBase {
 
         assertThat(sendResult.get(1, TimeUnit.MINUTES), is(msgs.size()));
         assertThat(recvResult.get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
-    }
-
-    @Override
-    protected String getInstanceName() {
-        return this.getClass().getSimpleName();
     }
 }
