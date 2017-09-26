@@ -23,11 +23,12 @@ function SubscriptionLocator(pods) {
 }
 
 SubscriptionLocator.prototype.locate = function (subscription_id, topic) {
-    var pod_list = this.pods.pod_list();
-    if (pod_list === undefined || pod_list.length === 0) {
-        reject("no connected brokers for " + topic);
-    } else {
-        return new Promise(function (resolve, reject) {
+    var self = this;
+    return new Promise(function (resolve, reject) {
+        var pod_list = self.pods.pod_list();
+        if (pod_list === undefined || pod_list.length === 0) {
+            reject("no connected brokers for " + topic);
+        } else {
             Promise.all(pod_list.map(function (p) { return p.broker.getBoundQueues(topic + '/' + p.name); } )).then(
                 function (results) {
                     var found = false;
@@ -55,8 +56,8 @@ SubscriptionLocator.prototype.locate = function (subscription_id, topic) {
                     reject(e);
                 }
             );
-        });
-    }
+        }
+    });
 }
 
 module.exports = function (pods) {

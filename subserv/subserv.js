@@ -257,6 +257,9 @@ amqp.on('connection_open', function (context) {
 amqp.on('disconnected', function (context) {
     log.debug('disconnected ' + context.connection.container_id + ' [' + context.connection.options.id + ']');
 });
+amqp.on('error', function (e) {
+    log.error(JSON.stringify(e));
+});
 
 var connection_properties = {product:'subserv', container_id:process.env.HOSTNAME};
 
