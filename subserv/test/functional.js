@@ -89,7 +89,7 @@ describe('subscription services', function() {
             }
         });
         container.on('receiver_error', function (context) {
-            assert.equal(context.receiver.error.condition, 'amqp:link:redirect');
+            assert.equal(context.receiver.error.condition, 'amqp:link:redirect', 'did not get redirect, got: ' + JSON.stringify(context.receiver.error));
             if (context.receiver.error.info) {
                 redirect = context.receiver.error.info.address;
             } else {
