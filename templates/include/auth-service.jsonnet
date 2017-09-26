@@ -225,6 +225,30 @@ local images = import "images.jsonnet";
       }
     },
 
+  keycloak_route(hostname)::
+    {
+      "kind": "Route",
+      "apiVersion": "v1",
+      "metadata": {
+          "labels": {
+            "app": "enmasse"
+          },
+          "name": "keycloak"
+      },
+      "spec": {
+          "host": hostname,
+          "path": "/auth",
+          "to": {
+              "kind": "Service",
+              "name": "standard-authservice"
+          },
+          "port": {
+              "targetPort": "http"
+          }
+      }
+    },
+
+
   none_deployment(none_authservice_image, cert_secret_name)::
     {
       "apiVersion": "extensions/v1beta1",
@@ -305,7 +329,8 @@ local images = import "images.jsonnet";
     "objects": [
       me.keycloak_deployment("${STANDARD_AUTHSERVICE_IMAGE}", "${KEYCLOAK_SECRET_NAME}", "${STANDARD_AUTHSERVICE_SECRET_NAME}"),
       me.keycloak_controller_deployment("${KEYCLOAK_CONTROLLER_IMAGE}", "${KEYCLOAK_SECRET_NAME}"),
-      me.standard_authservice
+      me.standard_authservice,
+      me.keycloak_route("${KEYCLOAK_ROUTE_HOSTNAME}")
     ],
     "parameters": [
       {
@@ -327,6 +352,11 @@ local images = import "images.jsonnet";
         "name": "STANDARD_AUTHSERVICE_SECRET_NAME",
         "description": "The secret containing the tls certificate and key",
         "value": "standard-authservice-cert"
+      },
+      {
+        "name": "KEYCLOAK_ROUTE_HOSTNAME",
+        "description": "The hostname to use for the public keycloak route",
+        "value": ""
       },
     ]
   },

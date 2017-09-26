@@ -100,6 +100,20 @@ objects:
       targetPort: http
     selector:
       name: keycloak
+- apiVersion: v1
+  kind: Route
+  metadata:
+    labels:
+      app: enmasse
+    name: keycloak
+  spec:
+    host: ${KEYCLOAK_ROUTE_HOSTNAME}
+    path: /auth
+    port:
+      targetPort: http
+    to:
+      kind: Service
+      name: standard-authservice
 parameters:
 - description: The docker image to use for the 'standard' auth service
   name: STANDARD_AUTHSERVICE_IMAGE
@@ -113,3 +127,6 @@ parameters:
 - description: The secret containing the tls certificate and key
   name: STANDARD_AUTHSERVICE_SECRET_NAME
   value: standard-authservice-cert
+- description: The hostname to use for the public keycloak route
+  name: KEYCLOAK_ROUTE_HOSTNAME
+  value: ''
