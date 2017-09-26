@@ -12,11 +12,14 @@ import io.enmasse.address.model.AddressList;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.k8s.api.AddressApi;
 import io.enmasse.k8s.api.AddressSpaceApi;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This is a handler for doing operations on the addressing manager that works independent of AMQP and HTTP.
  */
 public class AddressApiHelper {
+    private static final Logger log = LoggerFactory.getLogger(AddressApiHelper.class.getName());
     private final AddressSpaceApi addressSpaceApi;
 
     public AddressApiHelper(AddressSpaceApi addressSpaceApi) {
@@ -32,7 +35,7 @@ public class AddressApiHelper {
     }
 
     public AddressList putAddresses(String addressSpaceId, AddressList addressList) throws Exception {
-        AddressSpace addressSpace = getOrCreateAddressSpace(addressSpaceId);
+        AddressSpace addressSpace = getAddressSpace(addressSpaceId);
         AddressApi addressApi = addressSpaceApi.withAddressSpace(addressSpace);
 
         Set<Address> toRemove = new HashSet<>(addressApi.listAddresses());
@@ -42,21 +45,14 @@ public class AddressApiHelper {
         return addressList;
     }
 
-    private AddressSpace getOrCreateAddressSpace(String addressSpaceId) throws Exception {
-        Optional<AddressSpace> instance = addressSpaceApi.getAddressSpaceWithName(addressSpaceId);
-        if (!instance.isPresent()) {
-            AddressSpace i = new AddressSpace.Builder()
-                    .setName(addressSpaceId)
-                    .build();
-            addressSpaceApi.createAddressSpace(i);
-            return i;
-        } else {
-            return instance.get();
-        }
+    private AddressSpace getAddressSpace(String addressSpaceId) throws Exception {
+        // TODO: Make our own exception for this API
+        return addressSpaceApi.getAddressSpaceWithName(addressSpaceId)
+                .orElseThrow(() -> new NotFoundException("Address space " + addressSpaceId + " not found"));
     }
 
     public AddressList appendAddress(String addressSpaceId, Address address) throws Exception {
-        AddressSpace addressSpace = getOrCreateAddressSpace(addressSpaceId);
+        AddressSpace addressSpace = getAddressSpace(addressSpaceId);
         AddressApi addressApi = addressSpaceApi.withAddressSpace(addressSpace);
         addressApi.createAddress(address);
         return new AddressList(addressApi.listAddresses());
@@ -82,7 +78,7 @@ public class AddressApiHelper {
     }
 
     public AddressList appendAddresses(String addressSpaceId, AddressList addressList) throws Exception {
-        AddressSpace addressSpace = getOrCreateAddressSpace(addressSpaceId);
+        AddressSpace addressSpace = getAddressSpace(addressSpaceId);
         AddressApi addressApi = addressSpaceApi.withAddressSpace(addressSpace);
         for (Address address : addressList) {
             addressApi.createAddress(address);

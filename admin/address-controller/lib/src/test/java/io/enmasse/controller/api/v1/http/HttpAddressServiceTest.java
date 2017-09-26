@@ -96,6 +96,7 @@ public class HttpAddressServiceTest {
         Address a2 = new Address.Builder()
                 .setName("a2")
                 .setType(StandardType.ANYCAST)
+                .setAddressSpace("myspace")
                 .build();
         AddressList list = new AddressList();
         list.add(a2);

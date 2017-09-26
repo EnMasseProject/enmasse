@@ -41,6 +41,7 @@ public class SerializationTest {
         Address address = new Address.Builder()
                 .setName("a1")
                 .setAddress("addr1")
+                .setAddressSpace("as1")
                 .setType(StandardType.QUEUE)
                 .setPlan(StandardType.QUEUE.getPlans().get(1))
                 .setUuid(uuid)
@@ -65,7 +66,8 @@ public class SerializationTest {
                 "\"apiVersion\":\"v1\"," +
                 "\"kind\":\"Address\"," +
                 "\"metadata\":{" +
-                "  \"name\":\"myqueue\"" +
+                "  \"name\":\"myqueue\"," +
+                "  \"addressSpace\":\"default\"" +
                 "}," +
                 "\"spec\": {" +
                 "  \"type\":\"queue\"" +
@@ -84,11 +86,13 @@ public class SerializationTest {
     public void testSerializeAddressList() throws IOException {
         Address addr1 = new Address.Builder()
                 .setName("addr1")
+                .setAddressSpace("a1")
                 .setType(StandardType.QUEUE)
                 .build();
 
         Address addr2 = new Address.Builder()
                 .setName("a2")
+                .setAddressSpace("a1")
                 .setAddress("addr2")
                 .setType(StandardType.ANYCAST)
                 .build();

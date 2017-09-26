@@ -104,11 +104,20 @@ public class Address {
         return sb.toString();
     }
 
+    public void validate() {
+        Objects.requireNonNull(name, "name not set");
+        Objects.requireNonNull(address, "address not set");
+        Objects.requireNonNull(addressSpace, "addressSpace not set");
+        Objects.requireNonNull(type, "type not set");
+        Objects.requireNonNull(plan, "plan not set");
+        Objects.requireNonNull(status, "status not set");
+    }
+
     public static class Builder {
         private String name;
         private String uuid;
         private String address;
-        private String addressSpace = "default";
+        private String addressSpace;
         private AddressType type;
         private Plan plan;
         private Status status = new Status(false);
@@ -170,7 +179,6 @@ public class Address {
         public Address build() {
             Objects.requireNonNull(name, "name not set");
             Objects.requireNonNull(address, "address not set");
-            Objects.requireNonNull(addressSpace, "addressSpace not set");
             Objects.requireNonNull(type, "type not set");
             Objects.requireNonNull(plan, "plan not set");
             Objects.requireNonNull(status, "status not set");

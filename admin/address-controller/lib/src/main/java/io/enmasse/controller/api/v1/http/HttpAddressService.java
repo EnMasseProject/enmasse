@@ -23,9 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.*;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import java.util.Optional;
 
@@ -91,12 +89,36 @@ public class HttpAddressService {
     @Consumes({MediaType.APPLICATION_JSON})
     public Response appendAddresses(@PathParam("addressSpace") String addressSpaceName, AddressList addressList) {
         try {
-            AddressList addresses = apiHelper.appendAddresses(addressSpaceName, addressList);
-            return Response.ok(addresses).build();
+            addressList = setAddressSpace(addressSpaceName, addressList);
+            verifyAddressSpace(addressSpaceName, addressList);
+            addressList = apiHelper.appendAddresses(addressSpaceName, addressList);
+            return Response.ok(addressList).build();
         } catch (Exception e) {
             log.error("Exception getting address", e);
             return Response.serverError().build();
         }
+    }
+
+    private void verifyAddressSpace(String addressSpaceName, AddressList addressList) {
+        for (Address address : addressList) {
+            if (!address.getAddressSpace().equals(addressSpaceName)) {
+                throw new IllegalArgumentException("Address space of " + address + " does not match address space in url: " + addressSpaceName);
+            }
+        }
+    }
+
+    private AddressList setAddressSpace(String addressSpaceName, AddressList addressList) {
+        AddressList list = new AddressList();
+        for (Address address : addressList) {
+            if (address.getAddressSpace() == null) {
+                Address.Builder ab = new Address.Builder(address);
+                ab.setAddressSpace(addressSpaceName);
+                list.add(ab.build());
+            } else {
+                list.add(address);
+            }
+        }
+        return list;
     }
 
     @PUT
@@ -104,6 +126,8 @@ public class HttpAddressService {
     @Consumes({MediaType.APPLICATION_JSON})
     public Response replaceAddresses(@PathParam("addressSpace") String addressSpaceName, AddressList addressList) {
         try {
+            addressList = setAddressSpace(addressSpaceName, addressList);
+            verifyAddressSpace(addressSpaceName, addressList);
             AddressList addresses = apiHelper.putAddresses(addressSpaceName, addressList);
             return Response.ok(addresses).build();
         } catch (Exception e) {

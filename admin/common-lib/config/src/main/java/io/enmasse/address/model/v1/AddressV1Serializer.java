@@ -42,6 +42,7 @@ class AddressV1Serializer extends JsonSerializer<Address> {
     }
 
     static void serialize(Address address, ObjectNode root) {
+        address.validate();
         ObjectNode metadata = root.putObject(Fields.METADATA);
         ObjectNode spec = root.putObject(Fields.SPEC);
         ObjectNode status = root.putObject(Fields.STATUS);
