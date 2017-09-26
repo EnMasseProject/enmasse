@@ -39,22 +39,6 @@ subprojects {
     }
 }
 
-project('mqtt:mqtt-lwt') {
-    test {
-        onlyIf {
-            project.hasProperty("mqtt")
-        }
-    }
-}
-
-project('mqtt:mqtt-gateway') {
-    test {
-        onlyIf {
-            project.hasProperty("mqtt")
-        }
-    }
-}
-
 project('systemtests') {
     test {
         onlyIf {
@@ -62,5 +46,3 @@ project('systemtests') {
         }
     }
 }
-
-
