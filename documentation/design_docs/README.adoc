@@ -3,29 +3,29 @@ EnMasse
 -------
 
 Documents relating to EnMasse project. For setting up EnMasse, see
-link:getting-started/README.adoc[Getting Started]. To setup EnMasse with
+link:design_docs/getting-started/README.adoc[Getting Started]. To setup EnMasse with
 the OpenShift Service Catalog, see
-https://github.com/EnMasseProject/enmasse/tree/master/documentation/servicecatalog/README.adoc[Service
+https://github.com/EnMasseProject/enmasse/tree/master/documentation/design_docs/servicecatalog/README.adoc[Service
 Catalog]
 
 [[design-documents]]
 Design documents
 ~~~~~~~~~~~~~~~~
 
-* link:overview/architecture.adoc[Architecture]
-* link:ci/README.adoc[Continuous Integration]
-* link:topics/design.adoc[Topics]
-* link:scaledown/design.adoc[Scaledown]
-* link:flavors/design.adoc[Flavors]
-* link:configserv/README.adoc[Configuration Service]
-* link:address-controller/README.adoc[Address Controller]
+* link:design_docs/overview/architecture.adoc[Architecture]
+* link:design_docs/ci/README.adoc[Continuous Integration]
+* link:design_docs/topics/design.adoc[Topics]
+* link:design_docs/scaledown/design.adoc[Scaledown]
+* link:design_docs/flavors/design.adoc[Flavors]
+* link:design_docs/configserv/README.adoc[Configuration Service]
+* link:design_docs/address-controller/README.adoc[Address Controller]
 
 [[mqtt-over-amqp]]
 MQTT over AMQP
 ~~~~~~~~~~~~~~
 
 For the "MQTT over AMQP" feature and specification see the related
-link:mqtt-over-amqp/README.adoc[documentation].
+link:design_docs/mqtt-over-amqp/README.adoc[documentation].
 
 [[issues-troubleshooting]]
 Issues & Troubleshooting
@@ -34,4 +34,4 @@ Issues & Troubleshooting
 Sometimes, during the deployment and due to different platform
 configurations, you may encounter some issues. Known issues and related
 workaround and/or fixes are described at this
-link:issues/issues.adoc[page].
+link:design_docs/issues/issues.adoc[page].
