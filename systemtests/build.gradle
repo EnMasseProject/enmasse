@@ -13,6 +13,7 @@ repositories {
 
 dependencies {
     compile project(':admin:common-lib:amqp')
+    compile "org.keycloak:keycloak-admin-client:3.2.1.Final"
     compile "org.slf4j:slf4j-api:${slf4jVersion}"
     compile "org.slf4j:slf4j-simple:${slf4jVersion}"
     compile "io.fabric8:openshift-client:${openshiftClientVersion}"
