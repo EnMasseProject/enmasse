@@ -17,7 +17,7 @@ task fetchDependencies(type: Download) {
         }
         result.exitValue != 0
     }
-    src 'http://www-eu.apache.org/dist/activemq/activemq-artemis/2.2.0/apache-artemis-2.2.0-bin.tar.gz'
+    src 'http://archive.apache.org/dist/activemq/activemq-artemis/2.2.0/apache-artemis-2.2.0-bin.tar.gz'
     dest new File(buildDir, 'apache-artemis-bin.tar.gz')
 }
 
