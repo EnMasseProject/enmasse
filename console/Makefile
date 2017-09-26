@@ -8,9 +8,4 @@ package:
 
 test: npm_test
 
-coverage: npm_install
-        ifndef NPM
-		$(warning "npm not found, coverage cannot be generated")
-        else
-	       npm run coverage
-        endif
+coverage: npm_coverage
