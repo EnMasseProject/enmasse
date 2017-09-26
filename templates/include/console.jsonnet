@@ -34,7 +34,8 @@ local common = import "common.jsonnet";
       "livenessProbe": {
         "tcpSocket": {
           "port": "http"
-        }
+        },
+        "initialDelaySeconds": 60
       }
    },
 

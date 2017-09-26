@@ -52,7 +52,8 @@ local common = import "common.jsonnet";
               "livenessProbe": {
                 "tcpSocket": {
                   "port": "amqp"
-                }
+                },
+                "initialDelaySeconds": 60
               },
               "volumeMounts": [
                 {

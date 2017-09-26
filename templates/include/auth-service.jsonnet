@@ -265,7 +265,8 @@ local images = import "images.jsonnet";
                 "livenessProbe": {
                   "tcpSocket": {
                     "port": "amqps"
-                  }
+                  },
+                  "initialDelaySeconds": 60
                 },
                 "volumeMounts": [
                   {
