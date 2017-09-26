@@ -101,6 +101,12 @@ public abstract class MqttTestBase extends TestBase {
         } else {
             mqttEndpoint = this.openShift.getEndpoint("mqtt", "mqtt");
         }
+
+        if (username != null && password != null) {
+            options.setUserName(username);
+            options.setPassword(password.toCharArray());
+        }
+
         MqttClient client = new MqttClient(mqttEndpoint, options);
         this.clients.add(client);
         return client;

@@ -33,10 +33,14 @@ public abstract class TestBase {
 
     private static final String ADDRESS_SPACE = "testspace";
     protected static final Environment environment = new Environment();
-    protected static final OpenShift openShift = new OpenShift(environment, environment.isMultitenant() ? ADDRESS_SPACE : environment.namespace());
-    private static final GlobalLogCollector logCollector = new GlobalLogCollector(openShift, new File(environment.testLogDir()));
-
+    protected static final OpenShift openShift = new OpenShift(environment, environment.namespace(),
+            environment.isMultitenant() ? ADDRESS_SPACE : environment.namespace());
+    private static final GlobalLogCollector logCollector = new GlobalLogCollector(openShift,
+            new File(environment.testLogDir()));
+    private KeycloakClient keycloakApiClient;
     protected AddressApiClient addressApiClient;
+    protected String username;
+    protected String password;
 
     @Before
     public void setup() throws Exception {
@@ -45,10 +49,21 @@ public abstract class TestBase {
             Logging.log.info("Test is running in multitenant mode");
             if (!TestUtils.existAddressSpace(addressApiClient, ADDRESS_SPACE)) {
                 Logging.log.info("Address space " + ADDRESS_SPACE + "doesn't exist and will be created.");
-                addressApiClient.createAddressSpace(ADDRESS_SPACE);
+                addressApiClient.createAddressSpace(ADDRESS_SPACE, environment.defaultAuthService());
                 logCollector.collectLogs(ADDRESS_SPACE);
                 TestUtils.waitForAddressSpaceReady(addressApiClient, ADDRESS_SPACE);
             }
+        }
+
+        if ("standard".equals(environment.defaultAuthService())) {
+            this.username = "systemtest";
+            this.password = "systemtest";
+            KeycloakCredentials creds = environment.keycloakCredentials();
+            if (creds == null) {
+                creds = openShift.getKeycloakCredentials();
+            }
+            keycloakApiClient = new KeycloakClient(openShift.getKeycloakEndpoint(), creds);
+            keycloakApiClient.createUser(ADDRESS_SPACE, username, password, 1, TimeUnit.MINUTES);
         }
     }
 
@@ -57,7 +72,6 @@ public abstract class TestBase {
         setAddresses();
         addressApiClient.close();
     }
-
 
     /**
      * use DELETE html method for delete specific addresses

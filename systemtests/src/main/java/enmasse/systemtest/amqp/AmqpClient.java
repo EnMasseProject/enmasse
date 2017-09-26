@@ -44,16 +44,16 @@ public class AmqpClient implements AutoCloseable {
     private final List<Vertx> clients = new ArrayList<>();
     private final ProtonClientOptions protonClientOptions;
     private final ProtonQoS qos;
+    private final String username;
+    private final String password;
 
-    public AmqpClient(enmasse.systemtest.Endpoint endpoint, TerminusFactory terminusFactory, ProtonClientOptions protonClientOptions) {
-        this(endpoint, terminusFactory, protonClientOptions, ProtonQoS.AT_LEAST_ONCE);
-    }
-
-    public AmqpClient(enmasse.systemtest.Endpoint endpoint, TerminusFactory terminusFactory, ProtonClientOptions protonClientOptions, ProtonQoS qos) {
+    public AmqpClient(enmasse.systemtest.Endpoint endpoint, TerminusFactory terminusFactory, ProtonClientOptions protonClientOptions, ProtonQoS qos, String username, String password) {
         this.endpoint = endpoint;
         this.terminusFactory = terminusFactory;
         this.protonClientOptions = protonClientOptions;
         this.qos = qos;
+        this.username = username;
+        this.password = password;
     }
 
     public Future<List<String>> recvMessages(String address, int numMessages) throws InterruptedException, IOException {
@@ -81,7 +81,7 @@ public class AmqpClient implements AutoCloseable {
         CountDownLatch connectLatch = new CountDownLatch(1);
 
         Vertx vertx = VertxFactory.create();
-        vertx.deployVerticle(new Receiver(endpoint, done, promise, new ClientOptions(source, new Target(), protonClientOptions, linkName), connectLatch));
+        vertx.deployVerticle(new Receiver(endpoint, done, promise, new ClientOptions(source, new Target(), protonClientOptions, linkName, username, password), connectLatch));
         clients.add(vertx);
         if (!connectLatch.await(connectTimeout, timeUnit)) {
             throw new RuntimeException("Timeout waiting for client to connect");
@@ -126,7 +126,7 @@ public class AmqpClient implements AutoCloseable {
         CompletableFuture<Integer> promise = new CompletableFuture<>();
         CountDownLatch connectLatch = new CountDownLatch(1);
         Vertx vertx = VertxFactory.create();
-        vertx.deployVerticle(new Sender(endpoint, new ClientOptions(terminusFactory.getSource(address), terminusFactory.getTarget(address), protonClientOptions, Optional.empty()), connectLatch, promise, messages, qos, predicate));
+        vertx.deployVerticle(new Sender(endpoint, new ClientOptions(terminusFactory.getSource(address), terminusFactory.getTarget(address), protonClientOptions, Optional.empty(), username, password), connectLatch, promise, messages, qos, predicate));
         clients.add(vertx);
         if (!connectLatch.await(connectTimeout, timeUnit)) {
             throw new RuntimeException("Timeout waiting for client to connect");

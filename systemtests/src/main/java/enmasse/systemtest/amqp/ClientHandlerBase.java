@@ -23,7 +23,7 @@ public abstract class ClientHandlerBase<T> extends AbstractVerticle {
     @Override
     public void start() {
         ProtonClient client = ProtonClient.create(vertx);
-        client.connect(clientOptions.getProtonClientOptions(), endpoint.getHost(), endpoint.getPort(), connection -> {
+        client.connect(clientOptions.getProtonClientOptions(), endpoint.getHost(), endpoint.getPort(), clientOptions.getUsername(), clientOptions.getPassword(), connection -> {
             if (connection.succeeded()) {
                 ProtonConnection conn = connection.result();
                 conn.setContainer("enmasse-systemtest-client");
