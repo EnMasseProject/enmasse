@@ -55,9 +55,74 @@ public class QueueTest extends AmqpTestBase {
         runQueueTest(client, q3);
     }
 
+
+    public void testInmemoryQueues() throws Exception {
+        Destination q1 = Destination.queue("inMemoryQueue1", Optional.of("inmemory"));
+        Destination q2 = Destination.queue("inMemoryQueue2", Optional.of("inmemory"));
+
+        setAddresses(q1, q2);
+
+        AmqpClient client = createQueueClient();
+        runQueueTest(client, q1);
+        runQueueTest(client, q2);
+    }
+
+
+    public void testPersistedQueues() throws Exception {
+        Destination q1 = Destination.queue("persistedQueue1", Optional.of("persisted"));
+        Destination q2 = Destination.queue("persistedQueue2", Optional.of("persisted"));
+
+        setAddresses(q1, q2);
+
+        AmqpClient client = createQueueClient();
+        runQueueTest(client, q1);
+        runQueueTest(client, q2);
+    }
+
+
+    public void testPooledPersistedQueues() throws Exception {
+        Destination q1 = Destination.queue("pooledPersistedQueue1", Optional.of("pooled-persisted"));
+        Destination q2 = Destination.queue("pooledPersistedQueue2", Optional.of("pooled-persisted"));
+
+        setAddresses(q1, q2);
+
+        AmqpClient client = createQueueClient();
+        runQueueTest(client, q1);
+        runQueueTest(client, q2);
+    }
+
+    @Test
+    public void testRestApiForQueue() throws Exception {
+        List<String> queues = Arrays.asList("queue1", "queue2");
+        Destination q1 = Destination.queue(queues.get(0), Optional.of("pooled-inmemory"));
+        Destination q2 = Destination.queue(queues.get(1), Optional.of("pooled-inmemory"));
+
+        setAddresses(q1);
+        appendAddresses(q2);
+
+        //queue1, queue2
+        Future<List<String>> response = getAddresses(Optional.empty());
+        assertThat(response.get(1, TimeUnit.MINUTES), is(queues));
+        Logging.log.info("queues (" + queues.stream().collect(Collectors.joining(",")) + ") successfully created");
+
+        deleteAddresses(q1);
+
+        //queue1
+        response = getAddresses(Optional.empty());
+        assertThat(response.get(1, TimeUnit.MINUTES), is(queues.subList(1, 2)));
+        Logging.log.info("queue (" + q1.getAddress() + ") successfully deleted");
+
+        deleteAddresses(q2);
+
+        //empty
+        response = getAddresses(Optional.empty());
+        assertThat(response.get(1, TimeUnit.MINUTES), is(java.util.Collections.emptyList()));
+        Logging.log.info("queue (" + q2.getAddress() + ") successfully deleted");
+    }
+
     public void testScaledown() throws Exception {
         Destination dest = Destination.queue("scalequeue");
-        deploy(dest);
+        setAddresses(dest);
         scale(dest, 4);
         AmqpClient client = createQueueClient();
         List<Future<Integer>> sent = Arrays.asList(
