@@ -20,6 +20,7 @@ items:
             value: '5671'
           image: docker.io/enmasseproject/none-authservice:latest
           livenessProbe:
+            initialDelaySeconds: 60
             tcpSocket:
               port: amqps
           name: none-authservice

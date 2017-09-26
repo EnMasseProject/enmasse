@@ -340,6 +340,7 @@ objects:
               value: ${AUTHENTICATION_SERVICE_SASL_INIT_HOST}
             image: ${ROUTER_REPO}
             livenessProbe:
+              initialDelaySeconds: 60
               tcpSocket:
                 port: amqp
             name: router
@@ -386,6 +387,7 @@ objects:
               httpGet:
                 path: /health
                 port: health
+              initialDelaySeconds: 60
             name: forwarder
             ports:
             - containerPort: 8080
@@ -550,6 +552,7 @@ objects:
               value: ${AUTHENTICATION_SERVICE_SASL_INIT_HOST}
             image: ${ROUTER_REPO}
             livenessProbe:
+              initialDelaySeconds: 60
               tcpSocket:
                 port: amqp
             name: router
@@ -596,6 +599,7 @@ objects:
               httpGet:
                 path: /health
                 port: health
+              initialDelaySeconds: 60
             name: forwarder
             ports:
             - containerPort: 8080
@@ -847,6 +851,7 @@ objects:
               value: ${AUTHENTICATION_SERVICE_SASL_INIT_HOST}
             image: ${ROUTER_REPO}
             livenessProbe:
+              initialDelaySeconds: 60
               tcpSocket:
                 port: amqp
             name: router
@@ -885,6 +890,7 @@ objects:
               value: /etc/enmasse-certs
             image: ${ROUTER_METRICS_REPO}
             livenessProbe:
+              initialDelaySeconds: 60
               tcpSocket:
                 port: metrics
             name: metrics
@@ -940,6 +946,7 @@ objects:
           containers:
           - image: ${SUBSERV_REPO}
             livenessProbe:
+              initialDelaySeconds: 60
               tcpSocket:
                 port: amqp
             name: subserv
@@ -1126,6 +1133,7 @@ objects:
             livenessProbe:
               httpGet:
                 port: http
+              initialDelaySeconds: 60
             name: ragent
             ports:
             - containerPort: 55671
@@ -1154,6 +1162,7 @@ objects:
               value: /etc/enmasse-certs
             image: ${QUEUE_SCHEDULER_REPO}
             livenessProbe:
+              initialDelaySeconds: 60
               tcpSocket:
                 port: amqp
             name: queue-scheduler
@@ -1193,6 +1202,7 @@ objects:
               value: ${AUTHENTICATION_SERVICE_SASL_INIT_HOST}
             image: ${CONSOLE_REPO}
             livenessProbe:
+              initialDelaySeconds: 60
               tcpSocket:
                 port: http
             name: console
@@ -1226,6 +1236,7 @@ objects:
               value: /etc/enmasse-certs
             image: ${CONFIGSERV_REPO}
             livenessProbe:
+              initialDelaySeconds: 60
               tcpSocket:
                 port: amqps
             name: configserv
@@ -1359,6 +1370,7 @@ objects:
             value: ${ADDRESS_CONTROLLER_ENABLE_API_AUTH}
           image: ${ADDRESS_CONTROLLER_REPO}
           livenessProbe:
+            initialDelaySeconds: 60
             tcpSocket:
               port: http
           name: address-controller

@@ -22,7 +22,8 @@
     "livenessProbe": {
       "tcpSocket": {
         "port": port_name
-      }
+      },
+      "initialDelaySeconds": 60
     }
   },
 
@@ -38,7 +39,8 @@
       "httpGet": {
         "path": "/health",
         "port": "health"
-      }
+      },
+      "initialDelaySeconds": 60
     },
     local ready_port =
     {

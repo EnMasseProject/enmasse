@@ -16,7 +16,8 @@ local authService = import "auth-service.jsonnet";
       "livenessProbe": {
         "tcpSocket": {
           "port": "metrics"
-        }
+        },
+        "initialDelaySeconds": 60
       },
       "env": [
         {
@@ -90,7 +91,8 @@ local authService = import "auth-service.jsonnet";
       "livenessProbe": {
         "tcpSocket": {
           "port": "amqp"
-        }
+        },
+        "initialDelaySeconds": 60
       },
       local ssl_certs = [{
           "name": "ssl-certs",

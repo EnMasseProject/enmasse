@@ -40,7 +40,8 @@ local common = import "common.jsonnet";
         "httpGet": {
           "path": "/health",
           "port": "health"
-        }
+        },
+        "initialDelaySeconds": 60
       }
     }
 }

@@ -118,7 +118,8 @@ local common = import "common.jsonnet";
               "livenessProbe": {
                 "httpGet": {
                   "port": "http"
-                }
+                },
+                "initialDelaySeconds": 60
               },
               "volumeMounts": [
                 {

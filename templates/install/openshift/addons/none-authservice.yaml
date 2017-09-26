@@ -21,6 +21,7 @@ objects:
             value: '5671'
           image: ${NONE_AUTHSERVICE_IMAGE}
           livenessProbe:
+            initialDelaySeconds: 60
             tcpSocket:
               port: amqps
           name: none-authservice
