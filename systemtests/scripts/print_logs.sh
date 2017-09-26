@@ -1,8 +1,4 @@
 #!/bin/bash
-DIR=$1
-
-export PATH="$DIR:$PATH"
-
 function runcmd {
     echo ''
     echo "$1 : "
@@ -28,7 +24,3 @@ for log in `find /tmp/testlogs`
 do
     runcmd "cat $log"
 done
-
-#echo "OPENSHIFT LOGS"
-#cat $DIR/logs/os.err
-#cat $DIR/logs/os.log
