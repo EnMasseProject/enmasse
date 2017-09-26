@@ -49,6 +49,7 @@ objects:
                   command:
                   - /opt/artemis-shutdown-hook/bin/artemis-shutdown-hook
             livenessProbe:
+              initialDelaySeconds: 120
               tcpSocket:
                 port: amqp
             name: broker
@@ -184,6 +185,7 @@ objects:
                   command:
                   - /opt/artemis-shutdown-hook/bin/artemis-shutdown-hook
             livenessProbe:
+              initialDelaySeconds: 120
               tcpSocket:
                 port: amqp
             name: broker
@@ -305,6 +307,7 @@ objects:
                   command:
                   - /opt/artemis-shutdown-hook/bin/artemis-shutdown-hook
             livenessProbe:
+              initialDelaySeconds: 120
               tcpSocket:
                 port: amqp
             name: broker
@@ -514,6 +517,7 @@ objects:
                   command:
                   - /opt/artemis-shutdown-hook/bin/artemis-shutdown-hook
             livenessProbe:
+              initialDelaySeconds: 120
               tcpSocket:
                 port: amqp
             name: broker

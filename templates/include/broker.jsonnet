@@ -26,9 +26,11 @@ local common = import "common.jsonnet";
           "readOnly": true
         }
       ],
-      "livenessProbe": { "tcpSocket": {
+      "livenessProbe": {
+        "tcpSocket": {
           "port": "amqp"
-        }
+        },
+        "initialDelaySeconds": 120
       },
       "readinessProbe": {
         "tcpSocket": {
