@@ -35,13 +35,23 @@ import java.util.concurrent.TimeUnit;
 
 public class MqttClient implements AutoCloseable {
 
-    private final Endpoint endpoint;
     private final List<ClientHandlerBase> clients = new ArrayList<>();
-    private final MqttConnectOptions options;
+    private Endpoint endpoint;
+    private MqttConnectOptions options;
 
     public MqttClient(Endpoint endpoint, final MqttConnectOptions options) {
         this.endpoint = endpoint;
         this.options = options;
+    }
+
+    public MqttClient setEndpoint(Endpoint endpoint) {
+        this.endpoint = endpoint;
+        return this;
+    }
+
+    public MqttClient setMqttConnectOptions(MqttConnectOptions options) {
+        this.options = options;
+        return this;
     }
 
     public Future<List<String>> recvMessages(String topic, int numMessages) throws ExecutionException, InterruptedException {

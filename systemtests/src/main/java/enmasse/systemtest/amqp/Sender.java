@@ -17,29 +17,26 @@ import java.util.function.Predicate;
 class Sender extends ClientHandlerBase<Integer> {
     private final AtomicInteger numSent = new AtomicInteger(0);
     private final Iterator<Message> messageQueue;
-    private final ProtonQoS qos;
     private final CountDownLatch connectLatch;
     private final Predicate<Message> predicate;
 
-    public Sender(Endpoint endpoint,
-                  ClientOptions clientOptions,
+    public Sender(AmqpConnectOptions clientOptions,
+                  LinkOptions linkOptions,
                   CountDownLatch connectLatch,
                   CompletableFuture<Integer> promise,
                   Iterable<Message> messages,
-                  ProtonQoS qos,
                   final Predicate<Message> predicate) {
-        super(endpoint, clientOptions, promise);
+        super(clientOptions, linkOptions, promise);
         this.messageQueue = messages.iterator();
-        this.qos = qos;
         this.connectLatch = connectLatch;
         this.predicate = predicate;
     }
 
     @Override
     public void connectionOpened(ProtonConnection connection) {
-        ProtonSender sender = connection.createSender(clientOptions.getTarget().getAddress());
-        sender.setTarget(clientOptions.getTarget());
-        sender.setQoS(qos);
+        ProtonSender sender = connection.createSender(linkOptions.getTarget().getAddress());
+        sender.setTarget(linkOptions.getTarget());
+        sender.setQoS(clientOptions.getQos());
         sender.openHandler(result -> {
             Logging.log.info("Sender link " + sender.getTarget().getAddress() + " opened, sending messages");
             connectLatch.countDown();

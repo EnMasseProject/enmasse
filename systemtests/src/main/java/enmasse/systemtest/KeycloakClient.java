@@ -25,7 +25,7 @@ import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-public class KeycloakClient {
+public class KeycloakClient implements AutoCloseable {
     private final Keycloak keycloak;
 
     public KeycloakClient(Endpoint endpoint, KeycloakCredentials credentials) {
@@ -71,5 +71,10 @@ public class KeycloakClient {
 
     public void deleteUser(String realm, String userName) {
         keycloak.realm(realm).users().delete(userName);
+    }
+
+    @Override
+    public void close() throws Exception {
+        keycloak.close();
     }
 }

@@ -16,6 +16,7 @@
 package enmasse.systemtest;
 
 import enmasse.systemtest.amqp.AmqpClient;
+import enmasse.systemtest.amqp.AmqpConnectOptions;
 import enmasse.systemtest.amqp.DurableTopicTerminusFactory;
 import enmasse.systemtest.amqp.QueueTerminusFactory;
 import enmasse.systemtest.amqp.TerminusFactory;
@@ -90,7 +91,18 @@ public abstract class AmqpTestBase extends TestBase {
     }
 
     protected AmqpClient createClient(TerminusFactory terminusFactory, Endpoint endpoint, ProtonClientOptions protonOptions, ProtonQoS qos) {
-        AmqpClient client = new AmqpClient(endpoint, terminusFactory, protonOptions, qos, username, password);
+        AmqpConnectOptions connectOptions = new AmqpConnectOptions()
+                .setTerminusFactory(terminusFactory)
+                .setEndpoint(endpoint)
+                .setProtonClientOptions(protonOptions)
+                .setQoS(qos)
+                .setUsername(username)
+                .setPassword(password);
+        return createClient(connectOptions);
+    }
+
+    protected AmqpClient createClient(AmqpConnectOptions connectOptions) {
+        AmqpClient client = new AmqpClient(connectOptions);
         clients.add(client);
         return client;
     }

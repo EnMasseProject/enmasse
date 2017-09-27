@@ -22,15 +22,15 @@ public class Receiver extends ClientHandlerBase<List<String>> {
     private final Predicate<Message> done;
     private final CountDownLatch connectLatch;
 
-    public Receiver(enmasse.systemtest.Endpoint endpoint, Predicate<Message> done, CompletableFuture<List<String>> promise, ClientOptions clientOptions, CountDownLatch connectLatch) {
-        super(endpoint, clientOptions, promise);
+    public Receiver(AmqpConnectOptions clientOptions, Predicate<Message> done, CompletableFuture<List<String>> promise, LinkOptions linkOptions, CountDownLatch connectLatch) {
+        super(clientOptions, linkOptions, promise);
         this.done = done;
         this.connectLatch = connectLatch;
     }
 
     @Override
     protected void connectionOpened(ProtonConnection conn) {
-        connectionOpened(conn, clientOptions.getLinkName().orElse(clientOptions.getSource().getAddress()), clientOptions.getSource());
+        connectionOpened(conn, linkOptions.getLinkName().orElse(linkOptions.getSource().getAddress()), linkOptions.getSource());
     }
 
     private void connectionOpened(ProtonConnection conn, String linkName, Source source) {
@@ -57,9 +57,9 @@ public class Receiver extends ClientHandlerBase<List<String>> {
             if (receiver.getRemoteCondition() != null && LinkError.REDIRECT.equals(receiver.getRemoteCondition().getCondition())) {
                 String relocated = (String) receiver.getRemoteCondition().getInfo().get("address");
                 Logging.log.info("Receiver link redirected to " + relocated);
-                Source newSource = clientOptions.getSource();
+                Source newSource = linkOptions.getSource();
                 newSource.setAddress(relocated);
-                String newLinkName = clientOptions.getLinkName().orElse(newSource.getAddress());
+                String newLinkName = linkOptions.getLinkName().orElse(newSource.getAddress());
 
                 vertx.runOnContext(id -> connectionOpened(conn, newLinkName, newSource));
             } else {
