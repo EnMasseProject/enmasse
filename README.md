@@ -37,8 +37,8 @@ EnMasse is made of different components needed for the deployment and for handli
 
 # Getting started
 
-See the [Getting Started](documentation/getting-started/README.adoc) for how to install EnMasse. For
-more details on architecture and implementation, see [documentation](documentation/README.adoc).
+See the [Getting Started](documentation/design_docs/getting-started/README.adoc) for how to install EnMasse. For
+more details on architecture and implementation, see [documentation](documentation/design_docs/README.adoc).
 
 # Getting help
 
@@ -46,7 +46,7 @@ Submit bugs and feature requests using the [issue tracker](https://github.com/En
 
 For questions or feedback, reach us on IRC on #enmasse on Freenode or post to our [mailing list](https://www.redhat.com/mailman/listinfo/enmasse).
 
-If you encounter some issues during deployment, please check the following [page](documentation/issues/issues.md) with
+If you encounter some issues during deployment, please check the following [page](documentation/design_docs/issues/issues.md) with
 well known issues and related fixes/workaround.
 
 # Contributing

@@ -44,6 +44,7 @@ to download the docker images for the various components. In the
 meantime, you can start to create your address configuration.
 
 [[deploying-enmasse-manually]]
+
 ==== Deploying EnMasse manually
 
 Login as developer:
@@ -76,16 +77,10 @@ Add permissions for editing OpenShift resources to EnMasse service account:
 oc policy add-role-to-user edit system:serviceaccount:enmasse:enmasse-service-account
 ....
 
-Create secret with keycloak admin credentials:
-
-....
-oc create secret generic keycloak-credentials --from-literal=admin.username=admin --from-literal=admin.password=admin
-....
-
 Create self-signed certificate:
 
 ....
-openssl req -new -x509 -batch -nodes -days 11000 -subj "/O=io.enmasse/CN=enmasse" -out /tmp/enmasse-deploy.P5O3Lb/ca.crt -keyout /tmp/enmasse-deploy.P5O3Lb/ca.key
+openssl req -new -x509 -batch -nodes -days 11000 -subj "/O=io.enmasse/CN=enmasse" -out /tmp/enmasse-deploy.CAQZri/ca.crt -keyout /tmp/enmasse-deploy.CAQZri/ca.key
 ....
 
 Create enmasse-ca TLS secret:
@@ -100,8 +95,8 @@ cat <<EOF | oc create -n enmasse -f -
     },
     "type": "kubernetes.io/tls",
     "data": {
-        "tls.key": "$(base64 -w 0 /tmp/enmasse-deploy.P5O3Lb/ca.key)",
-        "tls.crt": "$(base64 -w 0 /tmp/enmasse-deploy.P5O3Lb/ca.crt)"
+        "tls.key": "$(base64 -w 0 /tmp/enmasse-deploy.CAQZri/ca.key)",
+        "tls.crt": "$(base64 -w 0 /tmp/enmasse-deploy.CAQZri/ca.crt)"
     }
 }
 EOF
@@ -110,13 +105,13 @@ EOF
 Create certificate signing request for address-controller.enmasse.svc.cluster.local:
 
 ....
-openssl req -new -batch -nodes -keyout /tmp/enmasse-deploy.P5O3Lb/address-controller.enmasse.svc.cluster.local.key -subj "/O=io.enmasse/CN=address-controller.enmasse.svc.cluster.local" -out /tmp/enmasse-deploy.P5O3Lb/address-controller.enmasse.svc.cluster.local.csr
+openssl req -new -batch -nodes -keyout /tmp/enmasse-deploy.CAQZri/address-controller.enmasse.svc.cluster.local.key -subj "/O=io.enmasse/CN=address-controller.enmasse.svc.cluster.local" -out /tmp/enmasse-deploy.CAQZri/address-controller.enmasse.svc.cluster.local.csr
 ....
 
 Sign address-controller certificate with CA key:
 
 ....
-openssl x509 -req -days 11000 -in /tmp/enmasse-deploy.P5O3Lb/address-controller.enmasse.svc.cluster.local.csr -CA /tmp/enmasse-deploy.P5O3Lb/ca.crt -CAkey /tmp/enmasse-deploy.P5O3Lb/ca.key -CAcreateserial -out /tmp/enmasse-deploy.P5O3Lb/address-controller.enmasse.svc.cluster.local.crt
+openssl x509 -req -days 11000 -in /tmp/enmasse-deploy.CAQZri/address-controller.enmasse.svc.cluster.local.csr -CA /tmp/enmasse-deploy.CAQZri/ca.crt -CAkey /tmp/enmasse-deploy.CAQZri/ca.key -CAcreateserial -out /tmp/enmasse-deploy.CAQZri/address-controller.enmasse.svc.cluster.local.crt
 ....
 
 Create address-controller-cert TLS secret:
@@ -131,33 +126,8 @@ cat <<EOF | oc create -n enmasse -f -
     },
     "type": "kubernetes.io/tls",
     "data": {
-        "tls.key": "$(base64 -w 0 /tmp/enmasse-deploy.P5O3Lb/address-controller.enmasse.svc.cluster.local.key)",
-        "tls.crt": "$(base64 -w 0 /tmp/enmasse-deploy.P5O3Lb/address-controller.enmasse.svc.cluster.local.crt)"
-    }
-}
-EOF
-....
-
-Create self-signed certificate for standard-authservice.enmasse.svc.cluster.local:
-
-....
-openssl req -new -x509 -batch -nodes -days 11000 -out /tmp/enmasse-deploy.P5O3Lb/standard-authservice.enmasse.svc.cluster.local.crt -keyout /tmp/enmasse-deploy.P5O3Lb/standard-authservice.enmasse.svc.cluster.local.key -subj "/O=io.enmasse/CN=standard-authservice.enmasse.svc.cluster.local"
-....
-
-Create standard-authservice-cert TLS secret:
-
-....
-cat <<EOF | oc create -n enmasse -f -
-{
-    "apiVersion": "v1",
-    "kind": "Secret",
-    "metadata": {
-        "name": "standard-authservice-cert"
-    },
-    "type": "kubernetes.io/tls",
-    "data": {
-        "tls.key": "$(base64 -w 0 /tmp/enmasse-deploy.P5O3Lb/standard-authservice.enmasse.svc.cluster.local.key)",
-        "tls.crt": "$(base64 -w 0 /tmp/enmasse-deploy.P5O3Lb/standard-authservice.enmasse.svc.cluster.local.crt)"
+        "tls.key": "$(base64 -w 0 /tmp/enmasse-deploy.CAQZri/address-controller.enmasse.svc.cluster.local.key)",
+        "tls.crt": "$(base64 -w 0 /tmp/enmasse-deploy.CAQZri/address-controller.enmasse.svc.cluster.local.crt)"
     }
 }
 EOF
@@ -166,7 +136,7 @@ EOF
 Create self-signed certificate for none-authservice.enmasse.svc.cluster.local:
 
 ....
-openssl req -new -x509 -batch -nodes -days 11000 -out /tmp/enmasse-deploy.P5O3Lb/none-authservice.enmasse.svc.cluster.local.crt -keyout /tmp/enmasse-deploy.P5O3Lb/none-authservice.enmasse.svc.cluster.local.key -subj "/O=io.enmasse/CN=none-authservice.enmasse.svc.cluster.local"
+openssl req -new -x509 -batch -nodes -days 11000 -out /tmp/enmasse-deploy.CAQZri/none-authservice.enmasse.svc.cluster.local.crt -keyout /tmp/enmasse-deploy.CAQZri/none-authservice.enmasse.svc.cluster.local.key -subj "/O=io.enmasse/CN=none-authservice.enmasse.svc.cluster.local"
 ....
 
 Create none-authservice-cert TLS secret:
@@ -181,24 +151,26 @@ cat <<EOF | oc create -n enmasse -f -
     },
     "type": "kubernetes.io/tls",
     "data": {
-        "tls.key": "$(base64 -w 0 /tmp/enmasse-deploy.P5O3Lb/none-authservice.enmasse.svc.cluster.local.key)",
-        "tls.crt": "$(base64 -w 0 /tmp/enmasse-deploy.P5O3Lb/none-authservice.enmasse.svc.cluster.local.crt)"
+        "tls.key": "$(base64 -w 0 /tmp/enmasse-deploy.CAQZri/none-authservice.enmasse.svc.cluster.local.key)",
+        "tls.crt": "$(base64 -w 0 /tmp/enmasse-deploy.CAQZri/none-authservice.enmasse.svc.cluster.local.crt)"
     }
 }
 EOF
 ....
 
-Instantiate keycloak template:
+Create none authservice:
 
 ....
-oc process -f ./templates/install/./openshift/addons/keycloak.yaml  | oc create -n enmasse -f -
+oc process -f ./openshift/addons/none-authservice.yaml | oc create -n enmasse -f -
 ....
 
 Instantiate EnMasse template:
 
 ....
-oc process -f ./templates/install/./openshift/enmasse.yaml  | oc create -n enmasse -f -
+oc process -f ./openshift/enmasse.yaml  | oc create -n enmasse -f -
 ....
+
+
 
 [[configuring-addresses]]
 === Configuring addresses
