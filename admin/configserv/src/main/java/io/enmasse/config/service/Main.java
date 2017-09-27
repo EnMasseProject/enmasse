@@ -76,7 +76,7 @@ public class Main {
             System.out.println("Error parsing environment: " + e.getMessage());
             System.exit(1);
         } catch (IOException e) {
-            System.out.println("Error running config service");
+            System.out.println("Error running config service: " + e.getMessage());
             System.exit(1);
         }
     }
@@ -106,11 +106,21 @@ public class Main {
     private static final String SERVICEACCOUNT_PATH = "/var/run/secrets/kubernetes.io/serviceaccount";
 
     private static String getNamespace() throws IOException {
-        return readFile(new File(SERVICEACCOUNT_PATH, "namespace"));
+        String namespace = System.getenv("KUBERNETES_NAMESPACE");
+        if (namespace == null) {
+            return readFile(new File(SERVICEACCOUNT_PATH, "namespace"));
+        } else {
+            return namespace;
+        }
     }
 
     private static String getAuthenticationToken() throws IOException {
-        return readFile(new File(SERVICEACCOUNT_PATH, "token"));
+        String token = System.getenv("KUBERNETES_TOKEN");
+        if (token == null) {
+            return readFile(new File(SERVICEACCOUNT_PATH, "token"));
+        } else {
+            return token;
+        }
     }
 
     private static String readFile(File file) throws IOException {
