@@ -45,6 +45,10 @@ public class Destination {
         return new Destination(address, TOPIC, Optional.empty());
     }
 
+    public static Destination topic(String address, Optional<String> plan) {
+        return new Destination(address, TOPIC, plan);
+    }
+
     public static Destination anycast(String address) {
         return new Destination(address, ANYCAST, Optional.empty());
     }
@@ -61,7 +65,9 @@ public class Destination {
         return TOPIC.equals(d.type);
     }
 
-    public String getType() { return type; }
+    public String getType() {
+        return type;
+    }
 
     public String getAddress() {
         return address;
