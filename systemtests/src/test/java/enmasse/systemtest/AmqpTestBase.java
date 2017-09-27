@@ -95,7 +95,7 @@ public abstract class AmqpTestBase extends TestBase {
                 .setTerminusFactory(terminusFactory)
                 .setEndpoint(endpoint)
                 .setProtonClientOptions(protonOptions)
-                .setQoS(qos)
+                .setQos(qos)
                 .setUsername(username)
                 .setPassword(password);
         return createClient(connectOptions);
