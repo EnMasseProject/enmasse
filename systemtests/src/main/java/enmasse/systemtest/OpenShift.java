@@ -13,12 +13,8 @@ import io.fabric8.openshift.api.model.Route;
 import io.fabric8.openshift.client.DefaultOpenShiftClient;
 import io.fabric8.openshift.client.OpenShiftClient;
 
-import java.io.IOException;
 import java.io.OutputStream;
-import java.util.Base64;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -33,7 +29,8 @@ public class OpenShift {
     public OpenShift(Environment environment, String globalNamespace, String tenantNamespace) {
         this.environment = environment;
         Config config = new ConfigBuilder().withMasterUrl(environment.openShiftUrl())
-                .withOauthToken(environment.openShiftToken()).withUsername(environment.openShiftUser()).build();
+                .withOauthToken(environment.openShiftToken())
+                .withUsername(environment.openShiftUser()).build();
         client = new DefaultOpenShiftClient(config);
         this.globalNamespace = globalNamespace;
         this.tenantNamespace = tenantNamespace;
@@ -50,14 +47,6 @@ public class OpenShift {
     public Endpoint getEndpoint(String namespace, String serviceName, String port) {
         Service service = client.services().inNamespace(namespace).withName(serviceName).get();
         return new Endpoint(service.getSpec().getClusterIP(), getPort(service, port));
-    }
-
-    public Endpoint getSecureEndpoint() {
-        return getEndpoint("messaging", "amqps");
-    }
-
-    public Endpoint getInsecureEndpoint() {
-        return getEndpoint("messaging", "amqp");
     }
 
     private static int getPort(Service service, String portName) {
@@ -110,16 +99,12 @@ public class OpenShift {
         client.extensions().deployments().inNamespace(tenantNamespace).withName(name).scale(numReplicas, true);
     }
 
-    public List<Pod> listPods() {
-        return client.pods().inNamespace(tenantNamespace).list().getItems().stream().collect(Collectors.toList());
+    public List<Pod> listPods(String addressSpace) {
+        return new ArrayList<>(client.pods().inNamespace(addressSpace).list().getItems());
     }
 
-    public List<Pod> listPods(Map<String, String> labelSelector) {
-        return listPods(labelSelector, Collections.emptyMap());
-    }
-
-    public List<Pod> listPods(Map<String, String> labelSelector, Map<String, String> annotationSelector) {
-        return client.pods().inNamespace(tenantNamespace).withLabels(labelSelector).list().getItems().stream().filter(pod -> {
+    public List<Pod> listPods(String addressSpace, Map<String, String> labelSelector, Map<String, String> annotationSelector) {
+        return client.pods().inNamespace(addressSpace).withLabels(labelSelector).list().getItems().stream().filter(pod -> {
             for (Map.Entry<String, String> entry : annotationSelector.entrySet()) {
                 if (pod.getMetadata().getAnnotations() == null
                         || pod.getMetadata().getAnnotations().get(entry.getKey()) == null
@@ -141,8 +126,8 @@ public class OpenShift {
         }
     }
 
-    public Endpoint getRouteEndpoint(String routeName) {
-        Route route = client.routes().inNamespace(tenantNamespace).withName(routeName).get();
+    public Endpoint getRouteEndpoint(String addressSpace, String routeName) {
+        Route route = client.routes().inNamespace(addressSpace).withName(routeName).get();
         return new Endpoint(route.getSpec().getHost(), 443);
     }
 
@@ -156,5 +141,11 @@ public class OpenShift {
 
     public Pod getPod(String namespace, String name) {
         return client.pods().inNamespace(namespace).withName(name).get();
+    }
+
+    public Set<String> listNamespaces() {
+        return client.namespaces().list().getItems().stream()
+                .map(ns -> ns.getMetadata().getName())
+                .collect(Collectors.toSet());
     }
 }
