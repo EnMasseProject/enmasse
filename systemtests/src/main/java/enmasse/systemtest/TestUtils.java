@@ -119,8 +119,8 @@ public class TestUtils {
     }
 
 
-    public static void delete(AddressApiClient apiClient, String instanceName, Destination... destinations) throws Exception {
-        apiClient.deleteAddresses(instanceName, destinations);
+    public static void delete(AddressApiClient apiClient, String addressSpace, Destination... destinations) throws Exception {
+        apiClient.deleteAddresses(addressSpace, destinations);
     }
 
     public static void deploy(AddressApiClient apiClient, OpenShift openShift, TimeoutBudget budget, String addressSpace, HttpMethod httpMethod, Destination... destinations) throws Exception {
@@ -158,7 +158,7 @@ public class TestUtils {
      *
      * @param apiClient    instance of AddressApiClient
      * @param addressSpace name of addressSpace
-     * @throws Exception IlegalStateException if destionation is not ready within timeout
+     * @throws Exception IllegalStateException if address space is not ready within timeout
      */
     public static void waitForAddressSpaceReady(AddressApiClient apiClient, String addressSpace) throws Exception {
         JsonObject addressObject = null;
@@ -181,8 +181,8 @@ public class TestUtils {
         Thread.sleep(120_000);
     }
 
-    public static Future<List<String>> getAddresses(AddressApiClient apiClient, String instanceName, Optional<String> addressName) throws Exception {
-        JsonObject response = apiClient.getAddresses(instanceName, addressName);
+    public static Future<List<String>> getAddresses(AddressApiClient apiClient, String addressSpace, Optional<String> addressName) throws Exception {
+        JsonObject response = apiClient.getAddresses(addressSpace, addressName);
         CompletableFuture<List<String>> listOfAddresses = new CompletableFuture<>();
         listOfAddresses.complete(convertToList(response));
         return listOfAddresses;
@@ -227,41 +227,48 @@ public class TestUtils {
      * wait until destinations isReady parameter is set to true with 1 MINUTE timeout for each destination
      *
      * @param apiClient    instance of AddressApiClient
-     * @param instanceName name of instance
+     * @param addressSpace name of addressSpace
      * @param budget       the timeout budget for this operation
      * @param destinations variable count of destinations
-     * @throws Exception IlegalStateException if destinations is not ready within timeout
+     * @throws Exception IllegalStateException if destinations are not ready within timeout
      */
-    public static void waitForDestinationsReady(AddressApiClient apiClient, String instanceName, TimeoutBudget budget, Destination... destinations) throws Exception {
+    public static void waitForDestinationsReady(AddressApiClient apiClient, String addressSpace, TimeoutBudget budget, Destination... destinations) throws Exception {
         Map<String, JsonObject> notReadyAddresses = new HashMap<>();
 
-        boolean isReady = false;
-        while (budget.timeLeft() >= 0 && !isReady) {
-            JsonObject addressList = apiClient.getAddresses(instanceName, Optional.empty());
+        while (budget.timeLeft() >= 0) {
+            JsonObject addressList = apiClient.getAddresses(addressSpace, Optional.empty());
 
-            int numReady = 0;
-            notReadyAddresses = new HashMap<>();
+            notReadyAddresses = checkAddressesReady(addressList, destinations);
 
-            Logging.log.info("Checking " + destinations + " for ready state");
-            for (Destination destination : destinations) {
-                JsonObject addressObject = lookupAddress(addressList, destination.getAddress());
-                if (addressObject == null) {
-                    notReadyAddresses.put(destination.getAddress(),  null);
-                } else if (!isAddressReady(addressObject)) {
-                    notReadyAddresses.put(destination.getAddress(), addressObject);
-                } else {
-                    numReady++;
-                }
+            if (notReadyAddresses.isEmpty()) {
+                break;
             }
-            isReady = (numReady == destinations.length);
-            if (!isReady) {
-                Thread.sleep(5000);
-            }
+            Thread.sleep(5000);
         }
 
-        if (!isReady) {
-            throw new IllegalStateException(notReadyAddresses.size() + " out of " + destinations.length + " addresses not ready: " + notReadyAddresses.values());
+        if (!notReadyAddresses.isEmpty()) {
+            JsonObject addressList = apiClient.getAddresses(addressSpace, Optional.empty());
+            notReadyAddresses = checkAddressesReady(addressList, destinations);
         }
+
+        if (!notReadyAddresses.isEmpty()) {
+            throw new IllegalStateException(notReadyAddresses.size() + " out of " + destinations.length
+                    + " addresses are not ready: " + notReadyAddresses.values());
+        }
+    }
+
+    private static Map<String, JsonObject> checkAddressesReady(JsonObject addressList, Destination ...destinations) {
+        Logging.log.info("Checking " + destinations + " for ready state");
+        Map<String, JsonObject> notReadyAddresses = new HashMap<>();
+        for (Destination destination : destinations) {
+            JsonObject addressObject = lookupAddress(addressList, destination.getAddress());
+            if (addressObject == null) {
+                notReadyAddresses.put(destination.getAddress(),  null);
+            } else if (!isAddressReady(addressObject)) {
+                notReadyAddresses.put(destination.getAddress(), addressObject);
+            }
+        }
+        return notReadyAddresses;
     }
 
     private static JsonObject lookupAddress(JsonObject addressList, String address) {
