@@ -16,16 +16,10 @@
 
 package enmasse.systemtest;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import io.enmasse.amqp.SyncRequestClient;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import org.apache.qpid.proton.amqp.messaging.AmqpValue;
-import org.apache.qpid.proton.message.Message;
 
 import java.net.Inet4Address;
 import java.net.InetAddress;
@@ -35,18 +29,16 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class TestUtils {
-    private static final ObjectMapper mapper = new ObjectMapper();
-
-    public static void setReplicas(OpenShift openShift, Destination destination, int numReplicas, TimeoutBudget budget) throws InterruptedException {
+    public static void setReplicas(OpenShift openShift, String addressSpace, Destination destination, int numReplicas, TimeoutBudget budget) throws InterruptedException {
         openShift.setDeploymentReplicas(destination.getGroup(), numReplicas);
-        waitForNReplicas(openShift, destination.getGroup(), numReplicas, budget);
+        waitForNReplicas(openShift, addressSpace, destination.getGroup(), numReplicas, budget);
     }
 
-    public static void waitForNReplicas(OpenShift openShift, String group, int expectedReplicas, TimeoutBudget budget) throws InterruptedException {
+    public static void waitForNReplicas(OpenShift openShift, String addressSpace, String group, int expectedReplicas, TimeoutBudget budget) throws InterruptedException {
         boolean done = false;
         int actualReplicas = 0;
         do {
-            List<Pod> pods = openShift.listPods(Collections.singletonMap("role", "broker"), Collections.singletonMap("cluster_id", group));
+            List<Pod> pods = openShift.listPods(addressSpace, Collections.singletonMap("role", "broker"), Collections.singletonMap("cluster_id", group));
             actualReplicas = numReady(pods);
             Logging.log.info("Have " + actualReplicas + " out of " + pods.size() + " replicas. Expecting " + expectedReplicas);
             if (actualReplicas != pods.size() || actualReplicas != expectedReplicas) {
@@ -73,11 +65,11 @@ public class TestUtils {
         return numReady;
     }
 
-    public static void waitForExpectedPods(OpenShift client, int numExpected, TimeoutBudget budget) throws InterruptedException {
-        List<Pod> pods = listRunningPods(client);
+    public static void waitForExpectedPods(OpenShift client, String addressSpace, int numExpected, TimeoutBudget budget) throws InterruptedException {
+        List<Pod> pods = listRunningPods(client, addressSpace);
         while (budget.timeLeft() >= 0 && pods.size() != numExpected) {
             Thread.sleep(2000);
-            pods = listRunningPods(client);
+            pods = listRunningPods(client, addressSpace);
         }
         if (pods.size() != numExpected) {
             throw new IllegalStateException("Unable to find " + numExpected + " pods. Found : " + printPods(pods));
@@ -90,13 +82,13 @@ public class TestUtils {
                 .collect(Collectors.joining(","));
     }
 
-    public static List<Pod> listRunningPods(OpenShift openShift) {
-        return openShift.listPods().stream()
+    public static List<Pod> listRunningPods(OpenShift openShift, String addressSpace) {
+        return openShift.listPods(addressSpace).stream()
                 .filter(pod -> pod.getStatus().getPhase().equals("Running"))
                 .collect(Collectors.toList());
     }
 
-    public static void waitForBrokerPod(OpenShift openShift, String group, TimeoutBudget budget) throws InterruptedException {
+    public static void waitForBrokerPod(OpenShift openShift, String addressSpace, String group, TimeoutBudget budget) throws InterruptedException {
         Map<String, String> labels = new LinkedHashMap<>();
         labels.put("role", "broker");
 
@@ -107,7 +99,7 @@ public class TestUtils {
         int numReady = 0;
         List<Pod> pods = null;
         while (budget.timeLeft() >= 0 && numReady != 1) {
-            pods = openShift.listPods(labels, annotations);
+            pods = openShift.listPods(addressSpace, labels, annotations);
             numReady = numReady(pods);
             if (numReady != 1) {
                 Thread.sleep(5000);
@@ -128,16 +120,13 @@ public class TestUtils {
         Set<String> groups = new HashSet<>();
         for (Destination destination : destinations) {
             if (Destination.isQueue(destination) || Destination.isTopic(destination)) {
-                waitForBrokerPod(openShift, destination.getGroup(), budget);
-                if (!Destination.isTopic(destination)) {
-                    waitForAddress(openShift, destination.getAddress(), budget);
-                }
+                waitForBrokerPod(openShift, addressSpace, destination.getGroup(), budget);
                 groups.add(destination.getGroup());
             }
         }
         int expectedPods = openShift.getExpectedPods() + groups.size();
         Logging.log.info("Waiting for " + expectedPods + " pods");
-        waitForExpectedPods(openShift, expectedPods, budget);
+        waitForExpectedPods(openShift, addressSpace, expectedPods, budget);
         waitForDestinationsReady(apiClient, addressSpace, budget, destinations);
     }
 
@@ -177,8 +166,6 @@ public class TestUtils {
         if (!isReady) {
             throw new IllegalStateException("Address Space " + addressSpace + " is not in Ready state within timeout.");
         }
-        // TODO: This is needed as some component connections might hang for 2 minutes (i.e. subserv connecting to router before it is ready)
-        Thread.sleep(120_000);
     }
 
     public static Future<List<String>> getAddresses(AddressApiClient apiClient, String addressSpace, Optional<String> addressName) throws Exception {
@@ -282,38 +269,6 @@ public class TestUtils {
         return null;
     }
 
-    public static void waitForAddress(OpenShift openShift, String address, TimeoutBudget budget) throws Exception {
-        ArrayNode root = mapper.createArrayNode();
-        ObjectNode data = root.addObject();
-        data.put("name", address);
-        data.put("store_and_forward", true);
-        data.put("multicast", false);
-        String json = mapper.writeValueAsString(root);
-        Message message = Message.Factory.create();
-        message.setAddress("health-check");
-        message.setSubject("health-check");
-        message.setBody(new AmqpValue(json));
-
-        int numConfigured = 0;
-        List<Pod> agents = openShift.listPods(Collections.singletonMap("name", "ragent"));
-
-        while (budget.timeLeft() >= 0 && numConfigured < agents.size()) {
-            numConfigured = 0;
-            for (Pod pod : agents) {
-                SyncRequestClient client = new SyncRequestClient(pod.getStatus().getPodIP(), pod.getSpec().getContainers().get(0).getPorts().get(0).getContainerPort());
-                Message response = client.request(message, budget.timeLeft(), TimeUnit.MILLISECONDS);
-                AmqpValue value = (AmqpValue) response.getBody();
-                if ((Boolean) value.getValue() == true) {
-                    numConfigured++;
-                }
-            }
-            Thread.sleep(1000);
-        }
-        if (numConfigured != agents.size()) {
-            throw new IllegalStateException("Timed out while waiting for routers to be configured");
-        }
-    }
-
     public static List<String> generateMessages(String prefix, int numMessages) {
         return IntStream.range(0, numMessages).mapToObj(i -> prefix + i).collect(Collectors.toList());
     }
@@ -332,5 +287,15 @@ public class TestUtils {
             Thread.sleep(1000);
         }
         return false;
+    }
+
+    public static void waitForAddressSpaceDeleted(OpenShift openShift, String addressSpace) throws Exception {
+        TimeoutBudget budget = new TimeoutBudget(2, TimeUnit.MINUTES);
+        while (budget.timeLeft() >= 0 && openShift.listNamespaces().contains(addressSpace)) {
+            Thread.sleep(1000);
+        }
+        if (openShift.listNamespaces().contains(addressSpace)) {
+            throw new TimeoutException("Timed out waiting for namespace " + addressSpace + " to disappear");
+        }
     }
 }

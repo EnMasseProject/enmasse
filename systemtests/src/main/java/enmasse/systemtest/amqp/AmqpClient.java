@@ -16,6 +16,7 @@
 
 package enmasse.systemtest.amqp;
 
+import enmasse.systemtest.ConnectTimeoutException;
 import enmasse.systemtest.Count;
 import enmasse.systemtest.VertxFactory;
 import io.vertx.core.Vertx;
@@ -31,10 +32,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -55,27 +53,27 @@ public class AmqpClient implements AutoCloseable {
         return options;
     }
 
-    public Future<List<String>> recvMessages(String address, int numMessages) throws InterruptedException, IOException {
+    public Future<List<String>> recvMessages(String address, int numMessages) throws InterruptedException, IOException, TimeoutException {
         return recvMessages(address, numMessages, 2, TimeUnit.MINUTES);
     }
 
-    public Future<List<String>> recvMessages(String address, int numMessages, long connectTimeout, TimeUnit timeUnit) throws InterruptedException, IOException {
+    public Future<List<String>> recvMessages(String address, int numMessages, long connectTimeout, TimeUnit timeUnit) throws InterruptedException, IOException, TimeoutException {
         return recvMessages(options.getTerminusFactory().getSource(address), numMessages, Optional.empty(), connectTimeout, timeUnit);
     }
 
-    public Future<List<String>> recvMessages(Source source, String linkName, int numMessages) throws InterruptedException, IOException {
+    public Future<List<String>> recvMessages(Source source, String linkName, int numMessages) throws InterruptedException, IOException, TimeoutException {
         return recvMessages(source, numMessages, Optional.of(linkName), 2, TimeUnit.MINUTES);
     }
 
-    public Future<List<String>> recvMessages(String address, Predicate<Message> done) throws InterruptedException, IOException {
+    public Future<List<String>> recvMessages(String address, Predicate<Message> done) throws InterruptedException, IOException, ConnectTimeoutException {
         return recvMessages(options.getTerminusFactory().getSource(address), done, Optional.empty(), 2, TimeUnit.MINUTES);
     }
 
-    public Future<List<String>> recvMessages(Source source, String linkName, Predicate<Message> done) throws InterruptedException, IOException {
+    public Future<List<String>> recvMessages(Source source, String linkName, Predicate<Message> done) throws InterruptedException, IOException, ConnectTimeoutException {
         return recvMessages(source, done, Optional.of(linkName), 2, TimeUnit.MINUTES);
     }
 
-    public Future<List<String>> recvMessages(Source source, Predicate<Message> done, Optional<String> linkName, long connectTimeout, TimeUnit timeUnit) throws InterruptedException, IOException {
+    public Future<List<String>> recvMessages(Source source, Predicate<Message> done, Optional<String> linkName, long connectTimeout, TimeUnit timeUnit) throws InterruptedException, IOException, ConnectTimeoutException {
         CompletableFuture<List<String>> promise = new CompletableFuture<>();
         CountDownLatch connectLatch = new CountDownLatch(1);
 
@@ -83,7 +81,7 @@ public class AmqpClient implements AutoCloseable {
         vertx.deployVerticle(new Receiver(options, done, promise, new LinkOptions(source, new Target(), linkName), connectLatch));
         clients.add(vertx);
         if (!connectLatch.await(connectTimeout, timeUnit)) {
-            throw new RuntimeException("Timeout waiting for client to connect");
+            throw new ConnectTimeoutException("Timeout waiting for client to connect");
         }
         return promise;
     }
@@ -96,15 +94,19 @@ public class AmqpClient implements AutoCloseable {
     }
 
 
-    public Future<List<String>> recvMessages(Source source, int numMessages, Optional<String> linkName, long connectTimeout, TimeUnit timeUnit) throws InterruptedException, IOException {
+    public Future<List<String>> recvMessages(Source source, int numMessages, Optional<String> linkName, long connectTimeout, TimeUnit timeUnit) throws InterruptedException, IOException, TimeoutException {
         return recvMessages(source, new Count<>(numMessages), linkName, connectTimeout, timeUnit);
     }
 
-    public Future<Integer> sendMessages(String address, List<String> messages) throws IOException, InterruptedException {
+    public Future<Integer> sendMessages(String address, List<String> messages) throws IOException, InterruptedException, ConnectTimeoutException {
         return sendMessages(address, messages, new Count<>(messages.size()));
     }
 
-    public Future<Integer> sendMessages(String address, List<String> messages, Predicate<Message> predicate) throws IOException, InterruptedException {
+    public Future<Integer> sendMessages(String address, List<String> messages, long connectTimeout, TimeUnit timeUnit) throws IOException, InterruptedException, ConnectTimeoutException {
+        return sendMessages(address, messages, new Count<>(messages.size()), connectTimeout, timeUnit);
+    }
+
+    public Future<Integer> sendMessages(String address, List<String> messages, Predicate<Message> predicate, long connectTimeout, TimeUnit timeUnit) throws IOException, InterruptedException, ConnectTimeoutException {
         List<Message> messageList = messages.stream()
                 .map(body -> {
                     Message message = Message.Factory.create();
@@ -113,14 +115,18 @@ public class AmqpClient implements AutoCloseable {
                     return message;
                 })
                 .collect(Collectors.toList());
-        return sendMessages(address, 1, TimeUnit.MINUTES, messageList, predicate);
+        return sendMessages(address, connectTimeout, timeUnit, messageList, predicate);
     }
 
-    public Future<Integer> sendMessages(String address, Message ... messages) throws IOException, InterruptedException {
+    public Future<Integer> sendMessages(String address, List<String> messages, Predicate<Message> predicate) throws IOException, InterruptedException, ConnectTimeoutException {
+        return sendMessages(address, messages, predicate, 1, TimeUnit.MINUTES);
+    }
+
+    public Future<Integer> sendMessages(String address, Message ... messages) throws IOException, InterruptedException, ConnectTimeoutException {
         return sendMessages(address, 1, TimeUnit.MINUTES, Arrays.asList(messages), new Count<>(messages.length));
     }
 
-    public Future<Integer> sendMessages(String address, long connectTimeout, TimeUnit timeUnit, Iterable<Message> messages, Predicate<Message> predicate) throws IOException, InterruptedException {
+    public Future<Integer> sendMessages(String address, long connectTimeout, TimeUnit timeUnit, Iterable<Message> messages, Predicate<Message> predicate) throws IOException, InterruptedException, ConnectTimeoutException {
 
         CompletableFuture<Integer> promise = new CompletableFuture<>();
         CountDownLatch connectLatch = new CountDownLatch(1);
@@ -129,7 +135,7 @@ public class AmqpClient implements AutoCloseable {
                 options.getTerminusFactory().getTarget(address), Optional.empty()), connectLatch, promise, messages, predicate));
         clients.add(vertx);
         if (!connectLatch.await(connectTimeout, timeUnit)) {
-            throw new RuntimeException("Timeout waiting for client to connect");
+            throw new ConnectTimeoutException("Timeout waiting for client to connect");
         }
         return promise;
     }

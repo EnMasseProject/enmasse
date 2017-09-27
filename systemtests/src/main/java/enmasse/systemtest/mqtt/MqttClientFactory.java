@@ -43,13 +43,15 @@ public class MqttClientFactory {
 
     private final OpenShift openShift;
     private final Environment environment;
+    private final String defaultAddressSpace;
     private final String username;
     private final String password;
     private final List<MqttClient> clients = new ArrayList<>();
 
-    public MqttClientFactory(OpenShift openShift, Environment environment, String username, String password) {
+    public MqttClientFactory(OpenShift openShift, Environment environment, String defaultAddressSpace, String username, String password) {
         this.openShift = openShift;
         this.environment = environment;
+        this.defaultAddressSpace = defaultAddressSpace;
         this.username = username;
         this.password = password;
     }
@@ -62,14 +64,18 @@ public class MqttClientFactory {
         this.clients.clear();
     }
 
-    protected MqttClient createClient() throws Exception {
+    public MqttClient createClient() throws Exception {
+        return createClient(defaultAddressSpace);
+    }
+
+    public MqttClient createClient(String addressSpace) throws Exception {
 
         MqttConnectOptions options = new MqttConnectOptions();
         Endpoint mqttEndpoint;
 
         if (environment.useTLS()) {
 
-            mqttEndpoint = openShift.getRouteEndpoint("mqtt");
+            mqttEndpoint = openShift.getRouteEndpoint(addressSpace, "mqtt");
 
             SSLContext sslContext = tryGetSSLContext("TLSv1.2", "TLSv1.1", "TLS", "TLSv1");
             sslContext.init(null, new X509TrustManager[]{new X509TrustManager() {

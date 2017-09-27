@@ -30,8 +30,17 @@ public class GlobalLogCollector {
     }
 
 
-    public synchronized void collectLogs(String namespace) {
-        Logging.log.info("Collecting logs for pods in namespace {}", namespace);
+    public synchronized void startCollecting(String namespace) {
+        Logging.log.info("Start collecting logs for pods in namespace {}", namespace);
         collectorMap.put(namespace, new LogCollector(openShift, new File(logDir, namespace), namespace));
+    }
+
+    public synchronized void stopCollecting(String namespace) throws Exception {
+        Logging.log.info("Stop collecting logs for pods in namespace {}", namespace);
+        LogCollector collector = collectorMap.get(namespace);
+        if (collector != null) {
+            collector.close();
+        }
+        collectorMap.remove(namespace);
     }
 }

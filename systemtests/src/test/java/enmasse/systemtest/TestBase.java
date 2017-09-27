@@ -33,7 +33,7 @@ import java.util.concurrent.TimeUnit;
  */
 public abstract class TestBase {
 
-    private static final String ADDRESS_SPACE = "testspace";
+    protected static final String ADDRESS_SPACE = "testspace";
     protected static final Environment environment = new Environment();
     protected static final OpenShift openShift = new OpenShift(environment, environment.namespace(),
             environment.isMultitenant() ? ADDRESS_SPACE : environment.namespace());
@@ -46,30 +46,47 @@ public abstract class TestBase {
     protected AmqpClientFactory amqpClientFactory;
     protected MqttClientFactory mqttClientFactory;
 
+    protected boolean createDefaultAddressSpace() {
+        return true;
+    }
+
     @Before
     public void setup() throws Exception {
         addressApiClient = new AddressApiClient(openShift.getRestEndpoint(), environment.isMultitenant());
-        if (environment.isMultitenant()) {
-            Logging.log.info("Test is running in multitenant mode");
-            createAddressSpace(ADDRESS_SPACE, environment.defaultAuthService());
-        }
+        if (createDefaultAddressSpace()) {
+            if (environment.isMultitenant()) {
+                Logging.log.info("Test is running in multitenant mode");
+                createAddressSpace(ADDRESS_SPACE, environment.defaultAuthService());
+                // TODO: Wait another minute so that all services are connected
+                Logging.log.info("Waiting for 2 minutes before starting tests");
+            }
 
-        if ("standard".equals(environment.defaultAuthService())) {
-            this.username = "systemtest";
-            this.password = "systemtest";
-            getKeycloakClient().createUser(ADDRESS_SPACE, username, password, 1, TimeUnit.MINUTES);
+            if ("standard".equals(environment.defaultAuthService())) {
+                this.username = "systemtest";
+                this.password = "systemtest";
+                getKeycloakClient().createUser(ADDRESS_SPACE, username, password, 1, TimeUnit.MINUTES);
+            }
         }
-        amqpClientFactory = new AmqpClientFactory(openShift, environment, username, password);
-        mqttClientFactory = new MqttClientFactory(openShift, environment, username, password);
+        amqpClientFactory = new AmqpClientFactory(openShift, environment, ADDRESS_SPACE, username, password);
+        mqttClientFactory = new MqttClientFactory(openShift, environment, ADDRESS_SPACE, username, password);
     }
 
     protected void createAddressSpace(String addressSpace, String authService) throws Exception {
         if (!TestUtils.existAddressSpace(addressApiClient, addressSpace)) {
             Logging.log.info("Address space " + addressSpace + "doesn't exist and will be created.");
             addressApiClient.createAddressSpace(addressSpace, authService);
-            logCollector.collectLogs(addressSpace);
+            logCollector.startCollecting(addressSpace);
             TestUtils.waitForAddressSpaceReady(addressApiClient, addressSpace);
+            if (addressSpace.equals(ADDRESS_SPACE)) {
+                Thread.sleep(120_000);
+            }
         }
+    }
+
+    protected void deleteAddressSpace(String addressSpace) throws Exception {
+        addressApiClient.deleteAddressSpace(addressSpace);
+        TestUtils.waitForAddressSpaceDeleted(openShift, addressSpace);
+        logCollector.stopCollecting(addressSpace);
     }
 
     protected KeycloakClient getKeycloakClient() throws InterruptedException {
@@ -92,7 +109,9 @@ public abstract class TestBase {
             amqpClientFactory.close();
         }
         if (addressApiClient != null) {
-            setAddresses();
+            if (createDefaultAddressSpace()) {
+                setAddresses();
+            }
             addressApiClient.close();
         }
     }
@@ -146,9 +165,6 @@ public abstract class TestBase {
 
     protected void scale(Destination destination, int numReplicas) throws Exception {
         TimeoutBudget budget = new TimeoutBudget(5, TimeUnit.MINUTES);
-        TestUtils.setReplicas(openShift, destination, numReplicas, budget);
-        if (Destination.isQueue(destination)) {
-            TestUtils.waitForAddress(openShift, destination.getAddress(), budget);
-        }
+        TestUtils.setReplicas(openShift, ADDRESS_SPACE, destination, numReplicas, budget);
     }
 }

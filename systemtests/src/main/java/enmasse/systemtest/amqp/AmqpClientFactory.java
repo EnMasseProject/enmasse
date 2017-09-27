@@ -26,13 +26,15 @@ import java.util.List;
 public class AmqpClientFactory {
     private final OpenShift openShift;
     private final Environment environment;
+    private final String defaultAddressSpace;
     private final String defaultUsername;
     private final String defaultPassword;
     private final List<AmqpClient> clients = new ArrayList<>();
 
-    public AmqpClientFactory(OpenShift openShift, Environment environment, String defaultUsername, String defaultPassword) {
+    public AmqpClientFactory(OpenShift openShift, Environment environment, String defaultAddressSpace, String defaultUsername, String defaultPassword) {
         this.openShift = openShift;
         this.environment = environment;
+        this.defaultAddressSpace = defaultAddressSpace;
         this.defaultUsername = defaultUsername;
         this.defaultPassword = defaultPassword;
     }
@@ -44,25 +46,29 @@ public class AmqpClientFactory {
         clients.clear();
     }
 
+    public AmqpClient createQueueClient(String addressSpace) throws UnknownHostException, InterruptedException {
+        return createClient(new QueueTerminusFactory(), ProtonQoS.AT_LEAST_ONCE, addressSpace);
+    }
+
     public AmqpClient createQueueClient() throws UnknownHostException, InterruptedException {
-        return createClient(new QueueTerminusFactory(), ProtonQoS.AT_LEAST_ONCE);
+        return createClient(new QueueTerminusFactory(), ProtonQoS.AT_LEAST_ONCE, defaultAddressSpace);
     }
 
     public AmqpClient createTopicClient() throws UnknownHostException, InterruptedException {
-        return createClient(new TopicTerminusFactory(), ProtonQoS.AT_LEAST_ONCE);
+        return createClient(new TopicTerminusFactory(), ProtonQoS.AT_LEAST_ONCE, defaultAddressSpace);
     }
 
-    protected AmqpClient createDurableTopicClient() throws UnknownHostException, InterruptedException {
-        return createClient(new DurableTopicTerminusFactory(), ProtonQoS.AT_LEAST_ONCE);
+    public AmqpClient createDurableTopicClient() throws UnknownHostException, InterruptedException {
+        return createClient(new DurableTopicTerminusFactory(), ProtonQoS.AT_LEAST_ONCE, defaultAddressSpace);
     }
 
     public AmqpClient createBroadcastClient() throws UnknownHostException, InterruptedException {
-        return createClient(new QueueTerminusFactory(), ProtonQoS.AT_MOST_ONCE);
+        return createClient(new QueueTerminusFactory(), ProtonQoS.AT_MOST_ONCE, defaultAddressSpace);
     }
 
-    protected AmqpClient createClient(TerminusFactory terminusFactory, ProtonQoS qos) throws UnknownHostException, InterruptedException {
+    public AmqpClient createClient(TerminusFactory terminusFactory, ProtonQoS qos, String addressSpace) throws UnknownHostException, InterruptedException {
         if (environment.useTLS()) {
-            Endpoint messagingEndpoint = openShift.getRouteEndpoint("messaging");
+            Endpoint messagingEndpoint = openShift.getRouteEndpoint(addressSpace, "messaging");
             Endpoint clientEndpoint;
             ProtonClientOptions clientOptions = new ProtonClientOptions();
             clientOptions.setSsl(true);
@@ -79,7 +85,7 @@ public class AmqpClientFactory {
 
             return createClient(terminusFactory, clientEndpoint, clientOptions, qos);
         } else {
-            return createClient(terminusFactory, openShift.getInsecureEndpoint(), qos);
+            return createClient(terminusFactory, openShift.getEndpoint(addressSpace, "messaging"), qos);
         }
     }
 

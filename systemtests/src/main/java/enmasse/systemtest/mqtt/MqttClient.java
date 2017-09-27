@@ -54,6 +54,10 @@ public class MqttClient implements AutoCloseable {
         return this;
     }
 
+    public MqttConnectOptions getMqttConnectOptions() {
+        return options;
+    }
+
     public Future<List<String>> recvMessages(String topic, int numMessages) throws ExecutionException, InterruptedException {
         return this.recvMessages(topic, numMessages, 0,  1, TimeUnit.MINUTES);
     }
