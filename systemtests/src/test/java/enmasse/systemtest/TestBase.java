@@ -68,8 +68,8 @@ public abstract class TestBase {
             Logging.log.info("Address space " + addressSpace + "doesn't exist and will be created.");
             addressApiClient.createAddressSpace(addressSpace, authService);
             logCollector.collectLogs(addressSpace);
+            TestUtils.waitForAddressSpaceReady(addressApiClient, addressSpace);
         }
-        TestUtils.waitForAddressSpaceReady(addressApiClient, addressSpace);
     }
 
     protected KeycloakClient getKeycloakClient() throws InterruptedException {
