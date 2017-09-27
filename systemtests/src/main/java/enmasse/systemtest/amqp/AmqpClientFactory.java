@@ -13,45 +13,42 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package enmasse.systemtest;
+package enmasse.systemtest.amqp;
 
-import enmasse.systemtest.amqp.AmqpClient;
-import enmasse.systemtest.amqp.AmqpConnectOptions;
-import enmasse.systemtest.amqp.DurableTopicTerminusFactory;
-import enmasse.systemtest.amqp.QueueTerminusFactory;
-import enmasse.systemtest.amqp.TerminusFactory;
-import enmasse.systemtest.amqp.TopicTerminusFactory;
+import enmasse.systemtest.*;
 import io.vertx.proton.ProtonClientOptions;
 import io.vertx.proton.ProtonQoS;
-import org.junit.After;
-import org.junit.Before;
 
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class AmqpTestBase extends TestBase {
-
+public class AmqpClientFactory {
+    private final OpenShift openShift;
+    private final Environment environment;
+    private final String defaultUsername;
+    private final String defaultPassword;
     private final List<AmqpClient> clients = new ArrayList<>();
 
-    @Before
-    public void setupAmqpTest() throws Exception {
-        clients.clear();
+    public AmqpClientFactory(OpenShift openShift, Environment environment, String defaultUsername, String defaultPassword) {
+        this.openShift = openShift;
+        this.environment = environment;
+        this.defaultUsername = defaultUsername;
+        this.defaultPassword = defaultPassword;
     }
 
-    @After
-    public void teardownAmqpTest() throws Exception {
+    public void close() throws Exception {
         for (AmqpClient client : clients) {
             client.close();
         }
         clients.clear();
     }
 
-    protected AmqpClient createQueueClient() throws UnknownHostException, InterruptedException {
+    public AmqpClient createQueueClient() throws UnknownHostException, InterruptedException {
         return createClient(new QueueTerminusFactory(), ProtonQoS.AT_LEAST_ONCE);
     }
 
-    protected AmqpClient createTopicClient() throws UnknownHostException, InterruptedException {
+    public AmqpClient createTopicClient() throws UnknownHostException, InterruptedException {
         return createClient(new TopicTerminusFactory(), ProtonQoS.AT_LEAST_ONCE);
     }
 
@@ -59,7 +56,7 @@ public abstract class AmqpTestBase extends TestBase {
         return createClient(new DurableTopicTerminusFactory(), ProtonQoS.AT_LEAST_ONCE);
     }
 
-    protected AmqpClient createBroadcastClient() throws UnknownHostException, InterruptedException {
+    public AmqpClient createBroadcastClient() throws UnknownHostException, InterruptedException {
         return createClient(new QueueTerminusFactory(), ProtonQoS.AT_MOST_ONCE);
     }
 
@@ -96,8 +93,8 @@ public abstract class AmqpTestBase extends TestBase {
                 .setEndpoint(endpoint)
                 .setProtonClientOptions(protonOptions)
                 .setQos(qos)
-                .setUsername(username)
-                .setPassword(password);
+                .setUsername(defaultUsername)
+                .setPassword(defaultPassword);
         return createClient(connectOptions);
     }
 

@@ -16,12 +16,8 @@
 
 package enmasse.systemtest.mqtt;
 
-import enmasse.systemtest.Endpoint;
-import enmasse.systemtest.TestBase;
-import enmasse.systemtest.TestUtils;
+import enmasse.systemtest.*;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
-import org.junit.After;
-import org.junit.Before;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -43,20 +39,22 @@ import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.X509TrustManager;
 
-/**
- * Base class for all MQTT related tests
- */
-public abstract class MqttTestBase extends TestBase {
+public class MqttClientFactory {
 
+    private final OpenShift openShift;
+    private final Environment environment;
+    private final String username;
+    private final String password;
     private final List<MqttClient> clients = new ArrayList<>();
 
-    @Before
-    public void setupMqttTest() throws Exception {
-        this.clients.clear();
+    public MqttClientFactory(OpenShift openShift, Environment environment, String username, String password) {
+        this.openShift = openShift;
+        this.environment = environment;
+        this.username = username;
+        this.password = password;
     }
 
-    @After
-    public void teardownMqttTest() throws Exception {
+    public void close() throws Exception {
 
         for (MqttClient client : this.clients) {
             client.close();

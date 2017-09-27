@@ -16,6 +16,8 @@
 
 package enmasse.systemtest;
 
+import enmasse.systemtest.amqp.AmqpClientFactory;
+import enmasse.systemtest.mqtt.MqttClientFactory;
 import io.vertx.core.http.HttpMethod;
 import org.junit.After;
 import org.junit.Before;
@@ -41,18 +43,15 @@ public abstract class TestBase {
     protected AddressApiClient addressApiClient;
     protected String username;
     protected String password;
+    protected AmqpClientFactory amqpClientFactory;
+    protected MqttClientFactory mqttClientFactory;
 
     @Before
     public void setup() throws Exception {
         addressApiClient = new AddressApiClient(openShift.getRestEndpoint(), environment.isMultitenant());
         if (environment.isMultitenant()) {
             Logging.log.info("Test is running in multitenant mode");
-            if (!TestUtils.existAddressSpace(addressApiClient, ADDRESS_SPACE)) {
-                Logging.log.info("Address space " + ADDRESS_SPACE + "doesn't exist and will be created.");
-                addressApiClient.createAddressSpace(ADDRESS_SPACE, environment.defaultAuthService());
-                logCollector.collectLogs(ADDRESS_SPACE);
-                TestUtils.waitForAddressSpaceReady(addressApiClient, ADDRESS_SPACE);
-            }
+            createAddressSpace(ADDRESS_SPACE, environment.defaultAuthService());
         }
 
         if ("standard".equals(environment.defaultAuthService())) {
@@ -60,6 +59,17 @@ public abstract class TestBase {
             this.password = "systemtest";
             getKeycloakClient().createUser(ADDRESS_SPACE, username, password, 1, TimeUnit.MINUTES);
         }
+        amqpClientFactory = new AmqpClientFactory(openShift, environment, username, password);
+        mqttClientFactory = new MqttClientFactory(openShift, environment, username, password);
+    }
+
+    protected void createAddressSpace(String addressSpace, String authService) throws Exception {
+        if (!TestUtils.existAddressSpace(addressApiClient, addressSpace)) {
+            Logging.log.info("Address space " + addressSpace + "doesn't exist and will be created.");
+            addressApiClient.createAddressSpace(addressSpace, authService);
+            logCollector.collectLogs(addressSpace);
+        }
+        TestUtils.waitForAddressSpaceReady(addressApiClient, addressSpace);
     }
 
     protected KeycloakClient getKeycloakClient() throws InterruptedException {
@@ -75,6 +85,8 @@ public abstract class TestBase {
 
     @After
     public void teardown() throws Exception {
+        mqttClientFactory.close();
+        amqpClientFactory.close();
         setAddresses();
         addressApiClient.close();
     }
@@ -107,8 +119,12 @@ public abstract class TestBase {
      * @throws Exception
      */
     protected void setAddresses(Destination... destinations) throws Exception {
+        setAddresses(ADDRESS_SPACE, destinations);
+    }
+
+    protected void setAddresses(String addressSpace, Destination... destinations) throws Exception {
         TimeoutBudget budget = new TimeoutBudget(5, TimeUnit.MINUTES);
-        TestUtils.deploy(addressApiClient, openShift, budget, ADDRESS_SPACE, HttpMethod.PUT, destinations);
+        TestUtils.deploy(addressApiClient, openShift, budget, addressSpace, HttpMethod.PUT, destinations);
     }
 
     /**
