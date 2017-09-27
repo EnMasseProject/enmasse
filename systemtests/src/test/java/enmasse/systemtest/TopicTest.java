@@ -48,7 +48,7 @@ public class TopicTest extends TestBase {
     }
 
     public void testPersistedTopics() throws Exception {
-        Destination t1 = Destination.topic("inMemoryTopic", Optional.of("persisted"));
+        Destination t1 = Destination.topic("persistedTopic", Optional.of("persisted"));
         setAddresses(t1);
 
         AmqpClient topicClient = amqpClientFactory.createTopicClient();
