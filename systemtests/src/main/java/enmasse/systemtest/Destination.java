@@ -105,4 +105,9 @@ public class Destination {
         result = 31 * result + plan.hashCode();
         return result;
     }
+
+    @Override
+    public String toString() {
+        return address;
+    }
 }
