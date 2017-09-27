@@ -17,6 +17,7 @@
 package enmasse.systemtest;
 
 import enmasse.systemtest.amqp.AmqpClient;
+import enmasse.systemtest.amqp.AmqpClientFactory;
 import org.apache.qpid.proton.message.Message;
 import org.junit.Test;
 
@@ -32,12 +33,13 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
-public class QueueTest extends AmqpTestBase {
+public class QueueTest extends TestBase {
+
     @Test
     public void testQueue() throws Exception {
         Destination dest = Destination.queue("myqueue");
         setAddresses(dest);
-        AmqpClient client = createQueueClient();
+        AmqpClient client = amqpClientFactory.createQueueClient();
 
         runQueueTest(client, dest);
     }
@@ -49,7 +51,7 @@ public class QueueTest extends AmqpTestBase {
         Destination q3 = Destination.queue("queue3", Optional.of("pooled-inmemory"));
         setAddresses(q1, q2, q3);
 
-        AmqpClient client = createQueueClient();
+        AmqpClient client = amqpClientFactory.createQueueClient();
         runQueueTest(client, q1);
         runQueueTest(client, q2);
         runQueueTest(client, q3);
@@ -62,7 +64,7 @@ public class QueueTest extends AmqpTestBase {
 
         setAddresses(q1, q2);
 
-        AmqpClient client = createQueueClient();
+        AmqpClient client = amqpClientFactory.createQueueClient();
         runQueueTest(client, q1);
         runQueueTest(client, q2);
     }
@@ -74,7 +76,7 @@ public class QueueTest extends AmqpTestBase {
 
         setAddresses(q1, q2);
 
-        AmqpClient client = createQueueClient();
+        AmqpClient client = amqpClientFactory.createQueueClient();
         runQueueTest(client, q1);
         runQueueTest(client, q2);
     }
@@ -86,7 +88,7 @@ public class QueueTest extends AmqpTestBase {
 
         setAddresses(q1, q2);
 
-        AmqpClient client = createQueueClient();
+        AmqpClient client = amqpClientFactory.createQueueClient();
         runQueueTest(client, q1);
         runQueueTest(client, q2);
     }
@@ -124,7 +126,7 @@ public class QueueTest extends AmqpTestBase {
         Destination dest = Destination.queue("scalequeue");
         setAddresses(dest);
         scale(dest, 4);
-        AmqpClient client = createQueueClient();
+        AmqpClient client = amqpClientFactory.createQueueClient();
         List<Future<Integer>> sent = Arrays.asList(
                 client.sendMessages(dest.getAddress(), TestUtils.generateMessages("foo", 1000)),
                 client.sendMessages(dest.getAddress(), TestUtils.generateMessages("bar", 1000)),
