@@ -2,97 +2,227 @@
 
 == Connecting to {ProductName}
 
-=== Supported Clients
-The following clients are supported: 
+To connect to the messaging service from outside the openshift or
+kubernetes cluster, TLS must be used with SNI set to specify the fully
+qualified hostname for the address-space. The port used is 443.
 
-* Python (proton)
-* JMS (AMQP)
-* .NET
-* Javascript
-* C++
+The messaging protocols supported depends on the type of the
+address-space. At present AMQP and MQTT are supported.
 
-==== Python (proton protocol)
-TODO: Add “I want to write my first bit of code” perspective
-Have them go to the Console first; inline updated code snippets and valid link to a certificate
+TODO: Add information about retrieving the CA certificate and using
+that in the client examples.
 
-The python client is the simplest to use using the following simple_send and simple_recv examples (and the API itself), which takes a URL and a scheme of amqps turns on TLS without any verification.
+TODO: Add information about authentication.
 
-Receive command syntax: `simple_recv.py -a amqps//:__HOST_NAME__:__PORT_NUMBER__/__QUEUE_NAME__`
-Example: simple_recv.py -a amqps://messaging-enmasse-1504862365.10.19.44.61.nip.io:443/foo
+=== Client Examples
+Simple examples are shown here for the following clients:
 
-Send command syntax: `simple_send.py -a amqps//:__HOST_NAME__:__PORT_NUMBER__/__QUEUE_NAME__`
-Example: simple_send.py -a amqps://messaging-enmasse-1504862365.10.19.44.61.nip.io:443/foo
+* {ClientAmqpPythonName}
+* {ClientAmqpJmsName}
+* {ClientAmqpJavaScriptName}
+* {ClientAmqpCppName}
+* {ClientAmqpDotNetName}
 
-==== JMS (AMQP)
-JMS has a sender and receiver example that are compatible with those for python and C++ but it needs to be configured using the jndi.properties file.
+These all assume you have created an address of type 'queue' named
+'myqueue'.
 
-For example:
-connectionfactory.myFactoryLookup = amqps://messaging-enmasse-1504862365.10.19.44.61.nip.io:443?transport.trustAll=true&transport.verifyHost=false
+TODO: add links for all these clients
 
-queue.myQueueLookup = foo
-
-==== .NET
-Need Chuck’s help with this
-
-==== Javascript
-The javascript client also has simple_recv.js and simple_send.js; however, it does not have quite the same options and at present does not allow the host or the use of TLS to be specified. It also needs to turn off verification (unless a CA certificate is provided).
-
-With the following patch:
+==== {ClientAmqpPythonName}
 
 [source,options="nowrap"]
 ----
-diff --git a/examples/simple_send.js b/examples/simple_send.js
-index 69b728f..e3f65b7 100644
---- a/examples/simple_send.js
-+++ b/examples/simple_send.js
-@@ -17,6 +17,8 @@ var container = require('rhea');
+from __future__ import print_function, unicode_literals
+from proton import Message
+from proton.handlers import MessagingHandler
+from proton.reactor import Container
 
-  var args = require('./options.js').options({
-        'm': { alias: 'messages', default: 100, describe: 'number of messages to send'},
-+      'host': { default: 'localhost', describe: 'hostname to connect to'},
-+      'transport': { default: 'tcp', describe: 'tcp or tls'},
-        'n': { alias: 'node', default: 'examples', describe: 'name of node (e.g. queue) to which messages are sent'},
-        'p': { alias: 'port', default: 5672, describe: 'port to connect to'}
-      }).help('help').argv;
-@@ -41,4 +43,5 @@ container.on('disconnected', function (context) {
-      sent = confirmed;
-  });
+class HelloWorld(MessagingHandler):
+    def __init__(self, server, address):
+        super(HelloWorld, self).__init__()
+        self.server = server
+        self.address = address
 
--container.connect({'port':args.port}).open_sender(args.node);
-+container.connect({'port':args.port, 'host':args.host, 
-'transport':args.transport, 'servername':args.host,
-+                   rejectUnauthorized: false}).open_sender(args.node);
+    def on_start(self, event):
+        conn = event.container.connect(self.server)
+        event.container.create_receiver(conn, self.address)
+        event.container.create_sender(conn, self.address)
+
+    def on_sendable(self, event):
+        event.sender.send(Message(body="Hello World!"))
+        event.sender.close()
+
+    def on_message(self, event):
+        print(event.message.body)
+        event.connection.close()
+
+Container(HelloWorld("amqps://messaging-enmasse-1504862365.10.19.44.61.nip.io:443", "myqueue")).run()
 ----
 
-you can connect like this:
+==== {ClientAmqpJmsName}
 
-node ./examples/simple_send.js -p 443 --host 
-messaging-enmasse-1504862365.10.19.44.61.nip.io --transport tls -n foo
+[source,options="nowrap"]
+----
+package org.apache.qpid.jms.example;
 
-==== C++
+import javax.jms.Connection;
+import javax.jms.ConnectionFactory;
+import javax.jms.DeliveryMode;
+import javax.jms.Destination;
+import javax.jms.ExceptionListener;
+import javax.jms.JMSException;
+import javax.jms.Message;
+import javax.jms.MessageConsumer;
+import javax.jms.MessageProducer;
+import javax.jms.Session;
+import javax.jms.TextMessage;
+import javax.naming.Context;
+import javax.naming.InitialContext;
+
+public class HelloWorld {
+    public static void main(String[] args) throws Exception {
+        try {
+            // The configuration for the Qpid InitialContextFactory has been supplied in
+            // a jndi.properties file in the classpath, which results in it being picked
+            // up automatically by the InitialContext constructor.
+            Context context = new InitialContext();
+
+            ConnectionFactory factory = (ConnectionFactory) context.lookup("myFactoryLookup");
+            Destination queue = (Destination) context.lookup("myQueueLookup");
+
+            Connection connection = factory.createConnection(System.getProperty("USER"), System.getProperty("PASSWORD"));
+            connection.setExceptionListener(new MyExceptionListener());
+            connection.start();
+
+            Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+
+            MessageProducer messageProducer = session.createProducer(queue);
+            MessageConsumer messageConsumer = session.createConsumer(queue);
+
+            TextMessage message = session.createTextMessage("Hello world!");
+            messageProducer.send(message, DeliveryMode.NON_PERSISTENT, Message.DEFAULT_PRIORITY, Message.DEFAULT_TIME_TO_LIVE);
+            TextMessage receivedMessage = (TextMessage) messageConsumer.receive(2000L);
+
+            if (receivedMessage != null) {
+                System.out.println(receivedMessage.getText());
+            } else {
+                System.out.println("No message received within the given timeout!");
+            }
+
+            connection.close();
+        } catch (Exception exp) {
+            System.out.println("Caught exception, exiting.");
+            exp.printStackTrace(System.out);
+            System.exit(1);
+        }
+    }
+
+    private static class MyExceptionListener implements ExceptionListener {
+        @Override
+        public void onException(JMSException exception) {
+            System.out.println("Connection ExceptionListener fired, exiting.");
+            exception.printStackTrace(System.out);
+            System.exit(1);
+        }
+    }
+}
+----
+
+with jndi.properties:
+[source,options="nowrap"]
+----
+connectionfactory.myFactoryLookup = amqps://messaging-enmasse-1504862365.10.19.44.61.nip.io:443?transport.trustAll=true&transport.verifyHost=false
+queue.myQueueLookup = myqueue
+----
+
+==== {ClientAmqpJavaScriptName}
+
+[source,options="nowrap"]
+----
+var container = require('rhea');
+container.on('connection_open', function (context) {
+    context.connection.open_receiver('myqueue');
+    context.connection.open_sender('myqueue');
+});
+container.on('message', function (context) {
+    console.log(context.message.body);
+    context.connection.close();
+});
+container.on('sendable', function (context) {
+    context.sender.send({body:'Hello World!'});
+    context.sender.detach();
+});
+container.connect({port:443, host:messaging-enmasse-1504862365.10.19.44.61.nip.io, transport:tls, rejectUnauthorized:false});
+----
+
+==== {ClientAmqpCppName}
 The C++ client has equivalent simple_recv and simple_send examples with the same options as python. However, the C++ library does not perform the same level of processing on the URL; in particular it won't take amqps:// to imply using TLS, so the example needs to be modified as follows:
 
 [source,options="nowrap"]
 ----
---- a/examples/cpp/simple_send.cpp
-+++ b/examples/cpp/simple_send.cpp
-@@ -31,6 +31,7 @@
-  #include <proton/thread_safe.hpp>
-  #include <proton/tracker.hpp>
-  #include <proton/types.hpp>
-+#include <proton/ssl.hpp>
+#include <proton/connection.hpp>
+#include <proton/container.hpp>
+#include <proton/default_container.hpp>
+#include <proton/delivery.hpp>
+#include <proton/message.hpp>
+#include <proton/messaging_handler.hpp>
+#include <proton/ssl.hpp>
+#include <proton/thread_safe.hpp>
+#include <proton/tracker.hpp>
+#include <proton/url.hpp>
 
-  #include <iostream>
-  #include <map>
-@@ -55,6 +56,8 @@ class simple_send : public proton::messaging_handler {
-          proton::connection_options co;
-          if (!user.empty()) co.user(user);
-          if (!password.empty()) co.password(password);
-+        co.ssl_client_options(proton::ssl_client_options());
-+        c.client_connection_options(co);
-          sender = c.open_sender(url, co);
-      }
+#include <iostream>
+
+#include "fake_cpp11.hpp"
+
+class hello_world : public proton::messaging_handler {
+  private:
+    proton::url url;
+
+  public:
+    hello_world(const std::string& u) : url(u) {}
+
+    void on_container_start(proton::container& c) OVERRIDE {
+        proton::connection_options co;
+        co.ssl_client_options(proton::ssl_client_options());
+        c.client_connection_options(co);
+        c.connect(url);
+    }
+
+    void on_connection_open(proton::connection& c) OVERRIDE {
+        c.open_receiver(url.path());
+        c.open_sender(url.path());
+    }
+
+    void on_sendable(proton::sender &s) OVERRIDE {
+        proton::message m("Hello World!");
+        s.send(m);
+        s.close();
+    }
+
+    void on_message(proton::delivery &d, proton::message &m) OVERRIDE {
+        std::cout << m.body() << std::endl;
+        d.connection().close();
+    }
+};
+
+int main(int argc, char **argv) {
+    try {
+        std::string url = argc > 1 ? argv[1] : "messaging-enmasse-1504862365.10.19.44.61.nip.io:443/myqueue";
+
+        hello_world hw(url);
+        proton::default_container(hw).run();
+
+        return 0;
+    } catch (const std::exception& e) {
+        std::cerr << e.what() << std::endl;
+    }
+
+    return 1;
+}
 ----
 
-Note: It doesn't seem to work when passing the connection options as a second parameter to the open_sender() call.
+==== {ClientAmqpDotNetName}
+Need Chuck’s help with this
+
 
