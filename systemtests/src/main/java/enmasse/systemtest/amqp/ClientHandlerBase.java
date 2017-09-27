@@ -1,5 +1,6 @@
 package enmasse.systemtest.amqp;
 
+import enmasse.systemtest.Endpoint;
 import enmasse.systemtest.Logging;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.proton.ProtonClient;
@@ -10,19 +11,20 @@ import java.util.concurrent.CompletableFuture;
 
 public abstract class ClientHandlerBase<T> extends AbstractVerticle {
 
-    private final enmasse.systemtest.Endpoint endpoint;
-    protected final ClientOptions clientOptions;
+    protected final AmqpConnectOptions clientOptions;
+    protected final LinkOptions linkOptions;
     protected final CompletableFuture<T> promise;
 
-    public ClientHandlerBase(enmasse.systemtest.Endpoint endpoint, ClientOptions clientOptions, CompletableFuture<T> promise) {
-        this.endpoint = endpoint;
+    public ClientHandlerBase(AmqpConnectOptions clientOptions, LinkOptions linkOptions, CompletableFuture<T> promise) {
         this.clientOptions = clientOptions;
+        this.linkOptions = linkOptions;
         this.promise = promise;
     }
 
     @Override
     public void start() {
         ProtonClient client = ProtonClient.create(vertx);
+        Endpoint endpoint = clientOptions.getEndpoint();
         client.connect(clientOptions.getProtonClientOptions(), endpoint.getHost(), endpoint.getPort(), clientOptions.getUsername(), clientOptions.getPassword(), connection -> {
             if (connection.succeeded()) {
                 ProtonConnection conn = connection.result();

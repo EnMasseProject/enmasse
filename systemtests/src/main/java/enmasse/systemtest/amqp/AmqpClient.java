@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Red Hat Inc.
+ * Copyright 2017 Red Hat Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,21 +39,20 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public class AmqpClient implements AutoCloseable {
-    private final enmasse.systemtest.Endpoint endpoint;
-    private final TerminusFactory terminusFactory;
     private final List<Vertx> clients = new ArrayList<>();
-    private final ProtonClientOptions protonClientOptions;
-    private final ProtonQoS qos;
-    private final String username;
-    private final String password;
+    private AmqpConnectOptions options;
 
-    public AmqpClient(enmasse.systemtest.Endpoint endpoint, TerminusFactory terminusFactory, ProtonClientOptions protonClientOptions, ProtonQoS qos, String username, String password) {
-        this.endpoint = endpoint;
-        this.terminusFactory = terminusFactory;
-        this.protonClientOptions = protonClientOptions;
-        this.qos = qos;
-        this.username = username;
-        this.password = password;
+    public AmqpClient(AmqpConnectOptions options) {
+        this.options = options;
+    }
+
+    public AmqpClient setConnectOptions(AmqpConnectOptions options) {
+        this.options = options;
+        return this;
+    }
+
+    public AmqpConnectOptions getConnectOptions() {
+        return options;
     }
 
     public Future<List<String>> recvMessages(String address, int numMessages) throws InterruptedException, IOException {
@@ -61,7 +60,7 @@ public class AmqpClient implements AutoCloseable {
     }
 
     public Future<List<String>> recvMessages(String address, int numMessages, long connectTimeout, TimeUnit timeUnit) throws InterruptedException, IOException {
-        return recvMessages(terminusFactory.getSource(address), numMessages, Optional.empty(), connectTimeout, timeUnit);
+        return recvMessages(options.getTerminusFactory().getSource(address), numMessages, Optional.empty(), connectTimeout, timeUnit);
     }
 
     public Future<List<String>> recvMessages(Source source, String linkName, int numMessages) throws InterruptedException, IOException {
@@ -69,7 +68,7 @@ public class AmqpClient implements AutoCloseable {
     }
 
     public Future<List<String>> recvMessages(String address, Predicate<Message> done) throws InterruptedException, IOException {
-        return recvMessages(terminusFactory.getSource(address), done, Optional.empty(), 2, TimeUnit.MINUTES);
+        return recvMessages(options.getTerminusFactory().getSource(address), done, Optional.empty(), 2, TimeUnit.MINUTES);
     }
 
     public Future<List<String>> recvMessages(Source source, String linkName, Predicate<Message> done) throws InterruptedException, IOException {
@@ -81,7 +80,7 @@ public class AmqpClient implements AutoCloseable {
         CountDownLatch connectLatch = new CountDownLatch(1);
 
         Vertx vertx = VertxFactory.create();
-        vertx.deployVerticle(new Receiver(endpoint, done, promise, new ClientOptions(source, new Target(), protonClientOptions, linkName, username, password), connectLatch));
+        vertx.deployVerticle(new Receiver(options, done, promise, new LinkOptions(source, new Target(), linkName), connectLatch));
         clients.add(vertx);
         if (!connectLatch.await(connectTimeout, timeUnit)) {
             throw new RuntimeException("Timeout waiting for client to connect");
@@ -126,7 +125,8 @@ public class AmqpClient implements AutoCloseable {
         CompletableFuture<Integer> promise = new CompletableFuture<>();
         CountDownLatch connectLatch = new CountDownLatch(1);
         Vertx vertx = VertxFactory.create();
-        vertx.deployVerticle(new Sender(endpoint, new ClientOptions(terminusFactory.getSource(address), terminusFactory.getTarget(address), protonClientOptions, Optional.empty(), username, password), connectLatch, promise, messages, qos, predicate));
+        vertx.deployVerticle(new Sender(options, new LinkOptions(options.getTerminusFactory().getSource(address),
+                options.getTerminusFactory().getTarget(address), Optional.empty()), connectLatch, promise, messages, predicate));
         clients.add(vertx);
         if (!connectLatch.await(connectTimeout, timeUnit)) {
             throw new RuntimeException("Timeout waiting for client to connect");

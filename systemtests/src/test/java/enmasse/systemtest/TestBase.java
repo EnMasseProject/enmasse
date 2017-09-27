@@ -58,13 +58,19 @@ public abstract class TestBase {
         if ("standard".equals(environment.defaultAuthService())) {
             this.username = "systemtest";
             this.password = "systemtest";
+            getKeycloakClient().createUser(ADDRESS_SPACE, username, password, 1, TimeUnit.MINUTES);
+        }
+    }
+
+    protected KeycloakClient getKeycloakClient() throws InterruptedException {
+        if (keycloakApiClient == null) {
             KeycloakCredentials creds = environment.keycloakCredentials();
             if (creds == null) {
                 creds = openShift.getKeycloakCredentials();
             }
             keycloakApiClient = new KeycloakClient(openShift.getKeycloakEndpoint(), creds);
-            keycloakApiClient.createUser(ADDRESS_SPACE, username, password, 1, TimeUnit.MINUTES);
         }
+        return keycloakApiClient;
     }
 
     @After
