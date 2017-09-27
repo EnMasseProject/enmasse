@@ -1,0 +1,98 @@
+[[connecting]]
+
+== Connecting to {ProductName}
+
+=== Supported Clients
+The following clients are supported: 
+
+* Python (proton)
+* JMS (AMQP)
+* .NET
+* Javascript
+* C++
+
+==== Python (proton protocol)
+TODO: Add “I want to write my first bit of code” perspective
+Have them go to the Console first; inline updated code snippets and valid link to a certificate
+
+The python client is the simplest to use using the following simple_send and simple_recv examples (and the API itself), which takes a URL and a scheme of amqps turns on TLS without any verification.
+
+Receive command syntax: `simple_recv.py -a amqps//:__HOST_NAME__:__PORT_NUMBER__/__QUEUE_NAME__`
+Example: simple_recv.py -a amqps://messaging-enmasse-1504862365.10.19.44.61.nip.io:443/foo
+
+Send command syntax: `simple_send.py -a amqps//:__HOST_NAME__:__PORT_NUMBER__/__QUEUE_NAME__`
+Example: simple_send.py -a amqps://messaging-enmasse-1504862365.10.19.44.61.nip.io:443/foo
+
+==== JMS (AMQP)
+JMS has a sender and receiver example that are compatible with those for python and C++ but it needs to be configured using the jndi.properties file.
+
+For example:
+connectionfactory.myFactoryLookup = amqps://messaging-enmasse-1504862365.10.19.44.61.nip.io:443?transport.trustAll=true&transport.verifyHost=false
+
+queue.myQueueLookup = foo
+
+==== .NET
+Need Chuck’s help with this
+
+==== Javascript
+The javascript client also has simple_recv.js and simple_send.js; however, it does not have quite the same options and at present does not allow the host or the use of TLS to be specified. It also needs to turn off verification (unless a CA certificate is provided).
+
+With the following patch:
+
+[source,options="nowrap"]
+----
+diff --git a/examples/simple_send.js b/examples/simple_send.js
+index 69b728f..e3f65b7 100644
+--- a/examples/simple_send.js
++++ b/examples/simple_send.js
+@@ -17,6 +17,8 @@ var container = require('rhea');
+
+  var args = require('./options.js').options({
+        'm': { alias: 'messages', default: 100, describe: 'number of messages to send'},
++      'host': { default: 'localhost', describe: 'hostname to connect to'},
++      'transport': { default: 'tcp', describe: 'tcp or tls'},
+        'n': { alias: 'node', default: 'examples', describe: 'name of node (e.g. queue) to which messages are sent'},
+        'p': { alias: 'port', default: 5672, describe: 'port to connect to'}
+      }).help('help').argv;
+@@ -41,4 +43,5 @@ container.on('disconnected', function (context) {
+      sent = confirmed;
+  });
+
+-container.connect({'port':args.port}).open_sender(args.node);
++container.connect({'port':args.port, 'host':args.host, 
+'transport':args.transport, 'servername':args.host,
++                   rejectUnauthorized: false}).open_sender(args.node);
+----
+
+you can connect like this:
+
+node ./examples/simple_send.js -p 443 --host 
+messaging-enmasse-1504862365.10.19.44.61.nip.io --transport tls -n foo
+
+==== C++
+The C++ client has equivalent simple_recv and simple_send examples with the same options as python. However, the C++ library does not perform the same level of processing on the URL; in particular it won't take amqps:// to imply using TLS, so the example needs to be modified as follows:
+
+[source,options="nowrap"]
+----
+--- a/examples/cpp/simple_send.cpp
++++ b/examples/cpp/simple_send.cpp
+@@ -31,6 +31,7 @@
+  #include <proton/thread_safe.hpp>
+  #include <proton/tracker.hpp>
+  #include <proton/types.hpp>
++#include <proton/ssl.hpp>
+
+  #include <iostream>
+  #include <map>
+@@ -55,6 +56,8 @@ class simple_send : public proton::messaging_handler {
+          proton::connection_options co;
+          if (!user.empty()) co.user(user);
+          if (!password.empty()) co.password(password);
++        co.ssl_client_options(proton::ssl_client_options());
++        c.client_connection_options(co);
+          sender = c.open_sender(url, co);
+      }
+----
+
+Note: It doesn't seem to work when passing the connection options as a second parameter to the open_sender() call.
+

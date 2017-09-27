@@ -1,0 +1,34 @@
+[[address_space]]
+
+== Address Space
+The only currently supported address space is standard.
+
+=== Standard Address Space
+The default address space in EnMasse is the standard address space and it consists of an AMQP router network in combination with attachable storage units. The implementation of a storage unit is hidden from the client and the routers with a well-defined API. This address space type is appropriate when you have many connections and addresses. However, it has the following limitations: no transaction support, no message ordering, no selectors on queues, and no message groups.
+
+Clients connect and send and receive messages in this address space using the AMQP or MQTT protocols. Note that MQTT does not support qos2 or retained messages.
+
+TODO: This reflects the status quo, but how should multiple protocols actually be surfaced?
+
+==== Address Types
+The standard address space supports four address types:
+
+* queue
+* topic
+* anycast
+* multicast
+
+TODO: Document plan restrictions and document properties for all 4 types
+
+===== Queue
+The queue address type is a store-and-forward queue. This address type is appropriate for implementing a distributed work queue, handling traffic bursts, and other use cases where you want to decouple the producer and consumer. A queue can be sharded across multiple storage units, in which case message order is no longer guaranteed.
+
+===== Topic
+The topic address type supports the publish-subscribe messaging pattern where you have 1..N producers and 1..M consumers. Each message published to a topic address is forwarded to all subscribers for that address. A subscriber can also be durable, in which case messages are kept until the subscriber has acknowledged them.
+
+===== Anycast
+The anycast address type is a scalable direct address for sending messages to one consumer. Messages sent to an anycast address are not stored, but forwarded directly to the consumer. This method makes this address type ideal for request-reply (RPC) uses or even work distribution. This is the cheapest address type as it does not require any persistence.
+
+===== Multicast
+The multicast address type is a scalable direct address for sending messages to multiple consumers. Messages sent to a multicast address are forwarded to all consumers receiving messages on that address. It is important to note that only pre-settled messages can be sent to multicast addresses, as message acknowledgements from consumers are not propagated to producers.
+
