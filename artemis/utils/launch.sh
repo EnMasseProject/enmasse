@@ -52,6 +52,8 @@ function configure() {
         keytool -importkeystore -srcstorepass enmasse -deststorepass enmasse -destkeystore $KEYSTORE_PATH -srckeystore /tmp/enmasse-keystore.p12 -srcstoretype PKCS12
         keytool -import -noprompt -file /etc/enmasse-certs/ca.crt -alias firstCA -deststorepass enmasse -keystore $TRUSTSTORE_PATH
 
+        cp $CONFIG_TEMPLATES/logging.properties $instanceDir/etc/logging.properties
+
     fi
 
 }
