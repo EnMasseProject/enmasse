@@ -23,6 +23,8 @@ import org.apache.qpid.proton.amqp.messaging.Source;
 import org.apache.qpid.proton.amqp.messaging.TerminusDurability;
 import org.apache.qpid.proton.message.Message;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -41,7 +43,7 @@ public class TopicTest extends TestBase {
 
     @Test
     public void testMultipleSubscribers() throws Exception {
-        Destination dest = Destination.topic("subtopic");
+        Destination dest = Destination.topic("multiple-subtopic");
         setAddresses(dest);
         scale(dest, 1);
         Thread.sleep(60_000);
@@ -78,7 +80,7 @@ public class TopicTest extends TestBase {
     }
 
     public void testPersistedTopics() throws Exception {
-        Destination t1 = Destination.topic("inMemoryTopic", Optional.of("persisted"));
+        Destination t1 = Destination.topic("persistedTopic", Optional.of("persisted"));
         setAddresses(t1);
 
         AmqpClient topicClient = createTopicClient();
