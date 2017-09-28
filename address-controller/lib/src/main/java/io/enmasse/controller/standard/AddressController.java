@@ -96,7 +96,7 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
 
     @Override
     public synchronized void resourcesUpdated(Set<Address> newAddressSet) throws Exception {
-        log.info("Check address in address space controller: " + newAddressSet);
+        log.debug("Check address in address space controller: " + newAddressSet);
 
         Map<String, Set<Address>> addressByGroup = new LinkedHashMap<>();
 
@@ -117,7 +117,7 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
         validateAddressGroups(addressByGroup);
 
         List<AddressCluster> clusterList = kubernetes.listClusters();
-        log.info("Current set of clusters: " + clusterList);
+        log.debug("Current set of clusters: " + clusterList);
         deleteBrokers(clusterList, addressByGroup);
         createBrokers(clusterList, addressByGroup);
 
@@ -152,7 +152,7 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
                 .map(group -> clusterGenerator.generateCluster(group.getKey(), group.getValue()))
                 .forEach(cluster -> {
                     if (!cluster.getResources().getItems().isEmpty()) {
-                        log.info("Creating cluster {}", cluster.getClusterId());
+                        log.info("Creating broker cluster with id {}", cluster.getClusterId());
                         kubernetes.create(cluster.getResources());
                     }
                 });
@@ -173,7 +173,7 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
                         .noneMatch(addressGroup -> cluster.getClusterId().equals(addressGroup.getKey())))
                 .forEach(cluster -> {
 
-                    log.info("Deleting cluster {}", cluster.getClusterId());
+                    log.info("Deleting broker cluster with id {}", cluster.getClusterId());
                     kubernetes.delete(cluster.getResources());
                 });
     }
