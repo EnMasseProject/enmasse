@@ -85,10 +85,16 @@ public abstract class TestBase {
 
     @After
     public void teardown() throws Exception {
-        mqttClientFactory.close();
-        amqpClientFactory.close();
-        setAddresses();
-        addressApiClient.close();
+        if (mqttClientFactory != null) {
+            mqttClientFactory.close();
+        }
+        if (amqpClientFactory != null) {
+            amqpClientFactory.close();
+        }
+        if (addressApiClient != null) {
+            setAddresses();
+            addressApiClient.close();
+        }
     }
 
     /**
