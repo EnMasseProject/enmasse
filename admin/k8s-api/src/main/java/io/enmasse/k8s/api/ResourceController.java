@@ -49,7 +49,7 @@ public class ResourceController<T> implements io.fabric8.kubernetes.client.Watch
 
     public static <T> ResourceController<T> create(Resource<T> resource, Watcher<T> changeHandler) {
         Random random = new Random(System.currentTimeMillis());
-        return new ResourceController<>(resource, changeHandler, () -> 30000 + Math.abs(random.nextLong()) % 30000);
+        return new ResourceController<>(resource, changeHandler, () -> 10000 + Math.abs(random.nextLong()) % 5000);
     }
 
     public void start() {
