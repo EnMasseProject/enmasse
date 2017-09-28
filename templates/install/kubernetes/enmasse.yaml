@@ -465,7 +465,7 @@ items:
       spec:
         containers:
         - env:
-          - name: MULTIINSTANCE
+          - name: MULTITENANT
             value: 'false'
           - name: CA_DIR
             value: /ca-cert

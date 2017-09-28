@@ -65,7 +65,7 @@ public class Controller extends AbstractVerticle {
     public void start(Future<Void> startPromise) {
         AddressSpaceApi addressSpaceApi = new ConfigMapAddressSpaceApi(controllerClient);
 
-        if (!options.isMultiinstance() && !kubernetes.hasService("messaging")) {
+        if (!options.isMultitenant() && !kubernetes.hasService("messaging")) {
             AddressSpaceType type = new StandardAddressSpaceType();
             AddressSpace.Builder builder = new AddressSpace.Builder()
                     .setName("default")
@@ -97,7 +97,7 @@ public class Controller extends AbstractVerticle {
 
         deployVerticles(startPromise,
                 new Deployment(new AuthController(certManager, addressSpaceApi)),
-                new Deployment(new StandardController(controllerClient, addressSpaceApi, kubernetes, createResolverFactory(options), options.isMultiinstance(), userDb, options.certDir())),
+                new Deployment(new StandardController(controllerClient, addressSpaceApi, kubernetes, createResolverFactory(options), options.isMultitenant(), userDb, options.certDir())),
 //                new Deployment(new AMQPServer(kubernetes.getNamespace(), addressSpaceApi, options.port())),
                 new Deployment(new HTTPServer(addressSpaceApi, options.certDir(), options.osbAuth().orElse(null), userDb), new DeploymentOptions().setWorker(true)));
     }
