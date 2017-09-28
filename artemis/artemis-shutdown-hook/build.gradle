@@ -4,8 +4,8 @@ tasks.withType(Tar){
 }
 
 dependencies {
-    compile project(':admin:common-lib:discovery')
-    compile project(':admin:common-lib:amqp')
+    compile project(':discovery-lib')
+    compile project(':amqp-utils')
     compile "org.slf4j:slf4j-api:${slf4jVersion}"
     compile "org.slf4j:slf4j-log4j12:${slf4jVersion}"
     compile "io.vertx:vertx-proton:${vertxVersion}"

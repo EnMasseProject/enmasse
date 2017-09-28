@@ -1,18 +1,21 @@
-description = 'Queue Scheduler'
+description = 'Address Controller Server'
 dependencies {
-    compile project(':admin:common-lib:config')
-    compile project(':admin:common-lib:amqp')
+    compile project(':address-controller:lib')
+    compile project(':amqp-utils')
+    compile "io.fabric8:openshift-client:${openshiftClientVersion}"
+    compile "io.vertx:vertx-core:${vertxVersion}"
     compile "io.vertx:vertx-proton:${vertxVersion}"
     compile "org.slf4j:slf4j-api:${slf4jVersion}"
     compile "org.slf4j:slf4j-log4j12:${slf4jVersion}"
     compile "com.fasterxml.jackson.core:jackson-core:${jacksonVersion}"
     compile "com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}"
-    testCompile "junit:junit:${junitVersion}"
-    testCompile "org.mockito:mockito-core:${mockitoVersion}"
 
+    testCompile "junit:junit:${junitVersion}"
+    testCompile "io.vertx:vertx-unit:${vertxVersion}"
+    testCompile "org.mockito:mockito-core:${mockitoVersion}"
+    testCompile project(':k8s-api-testutil')
 }
 
-
 apply plugin: 'application'
-mainClassName = 'io.enmasse.queue.scheduler.Main'
+mainClassName = 'io.enmasse.controller.Controller'
 applicationDefaultJvmArgs = ["-Dvertx.cacheDirBase=/tmp", "-Xmx128m", "-Xms128m"]
