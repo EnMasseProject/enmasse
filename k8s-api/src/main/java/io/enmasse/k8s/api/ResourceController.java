@@ -102,7 +102,7 @@ public class ResourceController<T> implements io.fabric8.kubernetes.client.Watch
             case ADDED:
             case DELETED:
                 try {
-                    log.info("Putting action {} on queue", action);
+                    log.debug("Putting action {} on queue", action);
                     events.put(action);
                 } catch (InterruptedException e) {
                     log.warn("Interrupted while posting event", e);

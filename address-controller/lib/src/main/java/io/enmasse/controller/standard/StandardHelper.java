@@ -231,6 +231,7 @@ public class StandardHelper {
                 String id = namespace.getMetadata().getAnnotations().get(AnnotationKeys.ADDRESS_SPACE);
                 if (!desiredAddressSpaces.contains(id)) {
                     try {
+                        log.info("Deleting address space {}", id);
                         kubernetes.deleteNamespace(namespace.getMetadata().getName());
                     } catch(KubernetesClientException e){
                         log.info("Exception when deleting namespace (may already be in progress): " + e.getMessage());
