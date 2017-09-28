@@ -760,7 +760,7 @@ class HelloWorld(MessagingHandler):
         print(event.message.body)
         event.connection.close()
 
-Container(HelloWorld("amqps://messaging-enmasse-1504862365.10.19.44.61.nip.io:443", "{ExampleQueue}")).run()</code></pre>
+Container(HelloWorld("amqps://messaging-enmasse-1504862365.10.19.44.61.nip.io:443", "myqueue")).run()</code></pre>
 </div>
 </div>
 </div>
@@ -839,7 +839,7 @@ public class HelloWorld {
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight nowrap"><code>connectionfactory.myFactoryLookup = amqps://messaging-enmasse-1504862365.10.19.44.61.nip.io:443?transport.trustAll=true&amp;transport.verifyHost=false
-queue.myQueueLookup = {ExampleQueue}</code></pre>
+queue.myQueueLookup = myqueue</code></pre>
 </div>
 </div>
 </div>
@@ -849,8 +849,8 @@ queue.myQueueLookup = {ExampleQueue}</code></pre>
 <div class="content">
 <pre class="highlightjs highlight nowrap"><code>var container = require('rhea');
 container.on('connection_open', function (context) {
-    context.connection.open_receiver('{ExampleQueue}');
-    context.connection.open_sender('{ExampleQueue}');
+    context.connection.open_receiver('myqueue');
+    context.connection.open_sender('myqueue');
 });
 container.on('message', function (context) {
     console.log(context.message.body);
@@ -919,7 +919,7 @@ class hello_world : public proton::messaging_handler {
 
 int main(int argc, char **argv) {
     try {
-        std::string url = argc &gt; 1 ? argv[1] : "messaging-enmasse-1504862365.10.19.44.61.nip.io:443/{ExampleQueue}";
+        std::string url = argc &gt; 1 ? argv[1] : "messaging-enmasse-1504862365.10.19.44.61.nip.io:443/myqueue";
 
         hello_world hw(url);
         proton::default_container(hw).run();
@@ -945,7 +945,7 @@ int main(int argc, char **argv) {
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2017-09-27 20:21:19 BST
+Last updated 2017-09-28 09:54:04 BST
 </div>
 </div>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css">
