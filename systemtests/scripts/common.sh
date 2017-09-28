@@ -11,9 +11,10 @@ function download_enmasse() {
 function setup_test() {
     local PROJECT_NAME=$1
     local ENMASSE_DIR=$2
-    local MULTITENANT=${3:-true}
-    local OPENSHIFT_URL=${4:-"https://localhost:8443"}
-    local OPENSHIFT_USER=${5:-"test"}
+    local KUBEADM=$3
+    local MULTITENANT=${4:-true}
+    local OPENSHIFT_URL=${5:-"https://localhost:8443"}
+    local OPENSHIFT_USER=${6:-"test"}
 
     DEPLOY_ARGS=( "-y" "-n" "$PROJECT_NAME" "-u" "$OPENSHIFT_USER" "-m" "$OPENSHIFT_URL" "-a" "none standard" )
 
@@ -24,8 +25,8 @@ function setup_test() {
     $ENMASSE_DIR/deploy-openshift.sh "${DEPLOY_ARGS[@]}"
 
     if [ "$MULTITENANT" == "true" ]; then
-        oadm --config $KUBEADM policy add-cluster-role-to-user cluster-admin system:serviceaccount:$(oc project -q):enmasse-service-account
-        oadm --config $KUBEADM policy add-cluster-role-to-user cluster-admin $OPENSHIFT_USER
+        oc adm --config $KUBEADM policy add-cluster-role-to-user cluster-admin system:serviceaccount:$(oc project -q):enmasse-service-account
+        oc adm --config $KUBEADM policy add-cluster-role-to-user cluster-admin $OPENSHIFT_USER
     fi
 }
 
