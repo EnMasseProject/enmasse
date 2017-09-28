@@ -233,6 +233,9 @@ public class AddressApiClient {
      * @throws Exception
      */
     public void deploy(String addressSpace, HttpMethod httpMethod, Destination... destinations) throws Exception {
+
+        addressSpace = isMultitenant ? addressSpace : "default";
+
         ObjectNode config = mapper.createObjectNode();
         config.put("apiVersion", "v1");
         config.put("kind", "AddressList");
@@ -249,8 +252,6 @@ public class AddressApiClient {
         }
 
         CountDownLatch latch = new CountDownLatch(1);
-
-        addressSpace = isMultitenant ? addressSpace : "default";
 
         Logging.log.info("Following HTTP request will be used for deploy: /v1/addresses/" + addressSpace + "/");
         Logging.log.info("Following payload will be used in request: " + config.toString());
