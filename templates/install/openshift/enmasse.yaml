@@ -1360,8 +1360,8 @@ objects:
       spec:
         containers:
         - env:
-          - name: MULTIINSTANCE
-            value: ${MULTIINSTANCE}
+          - name: MULTITENANT
+            value: ${MULTITENANT}
           - name: CA_DIR
             value: /ca-cert
           - name: ADDRESS_SPACE_USER_DB_SECRET_NAME
@@ -1452,7 +1452,7 @@ parameters:
   name: RESTAPI_HOSTNAME
 - description: If set to true, the address controller will deploy infrastructure to
     separate namespaces
-  name: MULTIINSTANCE
+  name: MULTITENANT
   value: 'false'
 - description: The docker image to use for the address controller
   name: ADDRESS_CONTROLLER_REPO
