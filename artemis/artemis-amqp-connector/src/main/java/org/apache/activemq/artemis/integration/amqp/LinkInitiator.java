@@ -46,6 +46,11 @@ public class LinkInitiator implements EventHandler {
    }
 
    @Override
+   public void onSaslRemoteMechanismChosen(ProtonHandler handler, String mech) {
+      
+   }
+
+   @Override
    public void onAuthFailed(final ProtonHandler protonHandler, final Connection connection) {
       
    }

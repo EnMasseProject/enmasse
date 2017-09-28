@@ -3,7 +3,7 @@ plugins {
 }
 
 ext {
-    home = 'opt/apache-artemis-2.2.0'
+    home = 'opt/apache-artemis-2.3.0'
 }
 
 import de.undercouch.gradle.tasks.download.Download
@@ -17,7 +17,7 @@ task fetchDependencies(type: Download) {
         }
         result.exitValue != 0
     }
-    src 'http://archive.apache.org/dist/activemq/activemq-artemis/2.2.0/apache-artemis-2.2.0-bin.tar.gz'
+    src 'http://archive.apache.org/dist/activemq/activemq-artemis/2.3.0/apache-artemis-2.3.0-bin.tar.gz'
     dest new File(buildDir, 'apache-artemis-bin.tar.gz')
 }
 
@@ -40,7 +40,7 @@ task buildArtemisBaseImage {
 }
 
 task buildTar(type: Tar) {
-    from('activemq-artemis/artemis-protocols/artemis-amqp-protocol/target/artemis-amqp-protocol-2.2.0.jar') {
+    from('activemq-artemis/artemis-protocols/artemis-amqp-protocol/target/artemis-amqp-protocol-2.3.0.jar') {
         into("${home}/lib")
     }
     from('artemis-amqp-connector/build/libs/artemis-amqp-connector.jar') {
