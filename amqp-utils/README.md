@@ -1,0 +1,1 @@
+AMQP utility classes

@@ -1,6 +1,6 @@
 description = 'Keycloak Controller for keycloak realms'
 dependencies {
-    compile project(':admin:k8s-api')
+    compile project(':k8s-api')
     compile "org.keycloak:keycloak-admin-client:3.2.1.Final"
     compile "org.slf4j:slf4j-log4j12:${slf4jVersion}"
     compile "org.jboss.resteasy:resteasy-client:3.1.0.Final"

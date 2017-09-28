@@ -1,5 +1,5 @@
 BUILD_DIRS     = ragent subserv console none-authservice templates
-DOCKER_DIRS	   = topic-forwarder artemis admin/address-controller admin/queue-scheduler admin/configserv keycloak keycloak-controller router router-metrics mqtt/mqtt-gateway mqtt/mqtt-lwt
+DOCKER_DIRS	   = topic-forwarder artemis address-controller queue-scheduler configserv keycloak keycloak-controller router router-metrics mqtt-gateway mqtt-lwt
 FULL_BUILD 	   = true
 DOCKER_REGISTRY ?= docker.io
 OPENSHIFT_PROJECT ?= $(shell oc project -q)
