@@ -1,0 +1,70 @@
+[[configuring-addresses]]
+
+== Configuring addresses
+
+Addresses in {ProductName} can be configured either using the REST API or the {ProductName} console.
+
+=== Configuring addresses using the REST API
+
+To create addresses of different types available in the standard address space, save the following to a file
+
+[source,options="nowrap"]
+----
+{
+  "apiVersion": "enmasse.io/v1",
+  "kind": "AddressList",
+  "items": [
+    {
+      "metadata": {
+        "name": "myqueue"
+      },
+      "spec": {
+        "type": "queue"
+      }
+    },
+    {
+      "metadata": {
+        "name": "mytopic"
+      },
+      "spec": {
+        "type": "topic"
+      }
+    },
+    {
+      "metadata": {
+        "name": "myanycast"
+      },
+      "spec": {
+        "type": "anycast"
+      }
+    },
+    {
+      "metadata": {
+        "name": "mymulticast"
+      },
+      "spec": {
+        "type": "multicast"
+      }
+    }
+  ]
+}
+----
+
+You can then create that queue using the REST API
+[source,options="nowrap"]
+----
+curl -X PUT -T addresses.json -H "content-type: application/json" http://$(oc get route restapi -o jsonpath='{.spec.host}')/v1/addresses/default
+----
+
+To check what addresses are configured
+[source,options="nowrap"]
+----
+curl http://$(oc get route restapi -o jsonpath='{.spec.host}')/v1/addresses/default
+----
+
+The addresses are ready to be used by messaging clients once the 'status.isReady' field of each
+address is set to 'true'. 
+
+=== Configuring addresses using the {ProductName} console
+
+TODO: Explanation with some screenshots?
