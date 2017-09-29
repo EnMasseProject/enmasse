@@ -6,7 +6,12 @@ include::modules/address-model.adoc[leveloffset=+1]
 
 include::modules/address-space.adoc[leveloffset=+1]
 
+include::modules/installing-openshift.adoc[leveloffset=+1]
+
+include::modules/configuring-addresses.adoc[leveloffset=+1]
+
 include::modules/connecting.adoc[leveloffset=+1]
+
 
 // include::ch2-fuse.adoc[leveloffset=+1]
 
