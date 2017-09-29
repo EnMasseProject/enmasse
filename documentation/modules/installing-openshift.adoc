@@ -1,0 +1,71 @@
+[[installing-openshift]]
+
+== Installing {ProductName} on OpenShift
+
+[[prerequisites]]
+=== Prerequisites
+
+To install {ProductName}, you need to have the OpenShift client tools. You can download OpenShift
+Origin client from https://github.com/openshift/origin/releases[OpenShift Origin]. {ProductName} is
+tested to work with the latest stable release.
+
+If you do not have an OpenShift cluster available, have a look at
+https://github.com/minishift/minishift[minishift] as a way of running a local instance of OpenShift
+on your machine.
+
+=== Installing
+
+Download one of the releases from
+https://github.com/EnMasseProject/enmasse/releases and unpack it. Once
+unpacked, you can deploy {ProductName} using the deployment script provided in the release.
+
+You can invoke the deployment script with `-h` to get a list of options.
+
+{ProductName} can be deployed in either a single-tenant mode or a multi-tenant mode. Choose
+single-tenant mode if you don't expect to be creating multiple isolated address spaces or if you do
+not have cluster-admin privileges. Choose multi-tenant mode otherwise.
+
+==== Installing in single-tenant mode
+
+[source,options="nowrap"]
+----
+./deploy-openshift.sh -m "https://localhost:8443" -n enmasse
+----
+
+This will create the deployments required for running {ProductName} in single-tenant mode. Starting
+up {ProductName} will take a while, usually depending on how fast it is able to download the docker
+images for the various components.
+
+You can use the REST API to check the status of the deployment.
+
+[source,options="nowrap"]
+----
+curl http://$(oc get route restapi -o jsonpath='{.spec.host}')/v1/addressspaces/default
+----
+
+You can consider the deployment to be finished when 'status.isReady' is 'true' in the returned JSON
+object.
+
+==== Installing in multi-tenant mode
+
+[source,options="nowrap"]
+----
+./deploy-openshift.sh -m "https://localhost:8443" -n enmasse -p MULTITENANT=true
+----
+
+In addition, cluster-admin privileges must be granted
+
+[source,options="nowrap"]
+----
+oc login -u system:admin
+oc adm policy add-cluster-role-to-user cluster-admin system:serviceaccount:$(oc project -q):enmasse-service-account
+oc adm policy add-cluster-role-to-user cluster-admin developer
+----
+
+This will create the deployments required for running {ProductName} in multi-tenant mode.
+{ProductName} will be up and running once all pods in the 'enmasse' namespace is Running:
+
+[source,options="nowrap"]
+----
+oc get pods -n enmasse
+----
