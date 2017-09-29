@@ -18,6 +18,9 @@ package enmasse.systemtest;
 
 import enmasse.systemtest.amqp.AmqpClient;
 import enmasse.systemtest.amqp.TopicTerminusFactory;
+
+import org.apache.qpid.proton.amqp.DescribedType;
+import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.amqp.messaging.Source;
 import org.apache.qpid.proton.amqp.messaging.TerminusDurability;
@@ -26,14 +29,100 @@ import org.junit.Test;
 
 import java.util.Arrays;
 import java.util.List;
+import java.io.IOException;
+import java.util.*;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 public class TopicTest extends TestBase {
+
+    public void testInmemoryTopics() throws Exception {
+        Destination t1 = Destination.topic("inMemoryTopic", Optional.of("inmemory"));
+        setAddresses(t1);
+
+        AmqpClient topicClient = amqpClientFactory.createTopicClient();
+        runTopicTest(topicClient, t1, 2048);
+    }
+
+    public void testPersistedTopics() throws Exception {
+        Destination t1 = Destination.topic("persistedTopic", Optional.of("persisted"));
+        setAddresses(t1);
+
+        AmqpClient topicClient = amqpClientFactory.createTopicClient();
+        runTopicTest(topicClient, t1, 2048);
+    }
+
+    public void runTopicTest(AmqpClient client, Destination dest, int msgCount) throws InterruptedException, IOException, TimeoutException, ExecutionException, IOException, TimeoutException, ExecutionException {
+        List<String> msgs = TestUtils.generateMessages(msgCount);
+        Future<List<String>> recvMessages = client.recvMessages(dest.getAddress(), msgCount);
+
+        assertThat(client.sendMessages(dest.getAddress(), msgs).get(1, TimeUnit.MINUTES), is(msgs.size()));
+        assertThat(recvMessages.get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
+    }
+
+    @Test
+    public void testMessageSelectors() throws Exception {
+        Destination selTopic = Destination.topic("selectorTopic");
+        String linkName = "linkSelectorTopic";
+        setAddresses(selTopic);
+
+        Thread.sleep(30_000);
+
+        int msgsCount = 20;
+        List<Message> listOfMessages = new ArrayList<>();
+        for (int i = msgsCount; i > 0; i--) {
+            Message msg = Message.Factory.create();
+            msg.setAddress(selTopic.getAddress());
+            msg.setBody(new AmqpValue(selTopic.getAddress()));
+            msg.setCorrelationId(i);
+            msg.setSubject("subject");
+            listOfMessages.add(msg);
+        }
+
+        Source source = new TopicTerminusFactory().getSource(selTopic.getAddress());
+        Map<Symbol, DescribedType> map = new HashMap<>();
+        map.put(Symbol.valueOf("jms-selector"), new AmqpJmsSelectorFilter("correlation-id > 10"));
+        source.setFilter(map);
+
+        AmqpClient subClient = amqpClientFactory.createTopicClient();
+        Future<List<String>> received = subClient.recvMessages(source, linkName, msgsCount);
+
+        Thread.sleep(30_000);
+
+        AmqpClient pubClient = amqpClientFactory.createTopicClient();
+        Future<Integer> sent = pubClient.sendMessages(selTopic.getAddress(), listOfMessages.toArray(new Message[listOfMessages.size()]));
+
+        assertThat(sent.get(1, TimeUnit.MINUTES), is(msgsCount));
+        assertThat(received.get(1, TimeUnit.MINUTES), is(10));
+
+    }
+
+    public void testTopicWildcards() throws Exception {
+        Destination t1 = Destination.topic("topic/No1");
+        Destination t2 = Destination.topic("topic/No2");
+
+        setAddresses(t1, t2);
+        AmqpClient amqpClient = amqpClientFactory.createTopicClient();
+
+        List<String> msgs = Arrays.asList("foo", "bar", "baz", "qux");
+        Thread.sleep(60_000);
+
+        Future<List<String>> recvResults = amqpClient.recvMessages("topic/#", msgs.size() * 2);
+
+        List<Future<Integer>> sendResult = Arrays.asList(
+                amqpClient.sendMessages(t1.getAddress(), msgs),
+                amqpClient.sendMessages(t2.getAddress(), msgs));
+
+        assertThat(sendResult.get(0).get(1, TimeUnit.MINUTES), is(msgs.size()));
+        assertThat(sendResult.get(1).get(1, TimeUnit.MINUTES), is(msgs.size()));
+        assertThat(recvResults.get(1, TimeUnit.MINUTES).size(), is(msgs.size() * 2));
+    }
 
     public void testDurableLinkRoutedSubscription() throws Exception {
         Destination dest = Destination.topic("lrtopic");
@@ -71,13 +160,14 @@ public class TopicTest extends TestBase {
         //redelivered due to DISPATCH-595, so use more lenient checks
         Logging.log.info("Receiving second batch again");
         recvResults = client.recvMessages(source, linkName, message -> {
-                String body = (String) ((AmqpValue) message.getBody()).getValue();
-                Logging.log.info("received " + body);
-                return "twelve".equals(body);
-            });
+            String body = (String) ((AmqpValue) message.getBody()).getValue();
+            Logging.log.info("received " + body);
+            return "twelve".equals(body);
+        });
         assertTrue(recvResults.get(1, TimeUnit.MINUTES).containsAll(batch2));
     }
 
+    @Test
     public void testDurableMessageRoutedSubscription() throws Exception {
         Destination dest = Destination.topic("mrtopic");
         String address = "myaddress";
@@ -133,5 +223,29 @@ public class TopicTest extends TestBase {
         unsub.setSubject("unsubscribe");
         Logging.log.info("Sending unsubscribe");
         subClient.sendMessages("$subctrl", unsub).get(1, TimeUnit.MINUTES);
+    }
+
+    public class AmqpJmsSelectorFilter implements DescribedType {
+
+        private final String selector;
+
+        public AmqpJmsSelectorFilter(String selector) {
+            this.selector = selector;
+        }
+
+        @Override
+        public Object getDescriptor() {
+            return Symbol.valueOf("apache.org:selector-filter:string");
+        }
+
+        @Override
+        public Object getDescribed() {
+            return this.selector;
+        }
+
+        @Override
+        public String toString() {
+            return "AmqpJmsSelectorType{" + selector + "}";
+        }
     }
 }
