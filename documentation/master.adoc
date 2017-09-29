@@ -8,9 +8,8 @@ include::modules/address-space.adoc[leveloffset=+1]
 
 include::modules/installing-openshift.adoc[leveloffset=+1]
 
-include::modules/configuring-addresses.adoc[leveloffset=+1]
-
 include::modules/connecting.adoc[leveloffset=+1]
+
 
 
 // include::ch2-fuse.adoc[leveloffset=+1]
@@ -30,6 +29,9 @@ include::modules/connecting.adoc[leveloffset=+1]
 // include::ch9-topic-svc.adoc[leveloffset=+1]
 
 [appendix]
+
+include::modules/configuring-using-restapi.adoc[leveloffset=+1]
+
 //include::common/using-your-subscription.adoc[leveloffset=+1]
 
 // Revision information
