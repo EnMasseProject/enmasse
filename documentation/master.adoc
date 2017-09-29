@@ -6,6 +6,8 @@ include::modules/address-model.adoc[leveloffset=+1]
 
 include::modules/address-space.adoc[leveloffset=+1]
 
+include::modules/connecting.adoc[leveloffset=+1]
+
 // include::ch2-fuse.adoc[leveloffset=+1]
 
 // include::ch3-activemq.adoc[leveloffset=+1]
@@ -23,7 +25,7 @@ include::modules/address-space.adoc[leveloffset=+1]
 // include::ch9-topic-svc.adoc[leveloffset=+1]
 
 [appendix]
-include::common/using-your-subscription.adoc[leveloffset=+1]
+//include::common/using-your-subscription.adoc[leveloffset=+1]
 
 // Revision information
-include::common/revision-info.adoc[]
+//include::common/revision-info.adoc[]

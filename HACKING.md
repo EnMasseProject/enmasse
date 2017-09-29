@@ -12,9 +12,14 @@ To build EnMasse, you need
     * npm
     * docker
     * maven >=3.1
+    * asciidoctor
 
 The EnMasse java modules are built using gradle. Node modules are built using make. Docker images
 are built using make.
+
+Note: asciidoctor, node.js and npm are optional. asciidoctor is only
+required to build the help pages for the console. node.js and npm are
+only required to run the unit tests for ragent, console and subserv.
 
 ## Check out submodules
 

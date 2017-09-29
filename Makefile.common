@@ -20,7 +20,7 @@ clean: clean_node
 	rm -rf build
 
 node_modules: package.json
-        ifndef NPM
+        ifeq ($(NPM),)
 		$(warning "npm not found, node tests will be skipped")
         else
 		npm install
@@ -29,14 +29,14 @@ node_modules: package.json
 npm_install: node_modules
 
 npm_test: node_modules
-        ifndef NPM
+        ifeq ($(NPM),)
 		$(warning "npm not found, node tests will be skipped")
         else
 	       MOCHA_FILE=$(MOCHA_FILE) MOCHA_ARGS="$(MOCHA_ARGS)" npm run test
         endif
 
 npm_coverage: npm_install
-        ifndef NPM
+        ifeq ($(NPM),)
 		$(warning "npm not found, coverage cannot be generated")
         else
 	       npm run coverage

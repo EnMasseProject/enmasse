@@ -11,7 +11,8 @@
 :source-highlighter: highlightjs
 :toc:
 :linkattrs:
-:toclevels: 3
+:toclevels: 4
+:Title: Using Enmasse
 
 // Product attributes
 
@@ -21,7 +22,7 @@
 :ProductMajorVersion: 
 :QpidJmsVersion: 0.20.0
 :ProtonVersion: 0.16.0
-:ExampleQueue: examples
+:ExampleQueue: myqueue
 :ExampleAuthInstruction: Enable anonymous access.
 
 // Component attributes
@@ -36,16 +37,11 @@
 :ClientsLongName: {ProductLongName} Clients
 :ClientsName: {ProductName} Clients
 :ClientsVersion: 1.1
-:ClientAmqpJmsName: {ProductName} JMS
-:ClientAmqpCppName: {ProductName} C++
-:ClientAmqpPythonName: {ProductName} Python
-:ClientAmqpJavaScriptName: {ProductName} JavaScript
-:ClientAmqpDotNetName: {ProductName} .NET
-:ClientCoreJmsName: {ProductName} Core Protocol JMS
-:ClientOpenWireJmsName: {ProductName} OpenWire JMS
-:ConsoleLongName: {ProductLongName} Console
-:ConsoleName: {ProductName} Console
-:ConsoleVersion: 1.0
+:ClientAmqpJmsName: Apache Qpid JMS
+:ClientAmqpCppName: Apache Qpid Proton C++
+:ClientAmqpPythonName: Apache Qpid Proton Python
+:ClientAmqpJavaScriptName: Rhea JavaScript Client
+:ClientAmqpDotNetName: AMQP.Net Lite
 
 // Book names
 
