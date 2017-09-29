@@ -7,7 +7,7 @@ TODO: Authentication of clients
 {ProductName} provides a REST API that can be used for configuring address spaces and addresses
 within those address spaces.
 
-== Creating address spaces
+=== Creating address spaces
 
 Creating address spaces is only applicable for multi-tenant deployments of {ProductName}. To create
 a 'standard' address space, save the following JSON data to a file
@@ -41,7 +41,7 @@ curl http://$(oc get route restapi -o jsonpath='{.spec.host}')/v1/addressspaces/
 You can consider the address space to be ready to use when 'status.isReady' is 'true' in the returned JSON
 object.
 
-== Creating addresses
+=== Creating addresses
 
 To create addresses in the standard address space, save the following to a file
 
