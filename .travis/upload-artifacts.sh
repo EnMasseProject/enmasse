@@ -52,6 +52,10 @@ else
     done
 
     cp templates/build/enmasse-${VERSION}.tgz artifacts/
-    tar -czf artifacts.tgz artifacts
-    upload_file artifacts.tgz $TRAVIS_BUILD_NUMBER/artifacts.tgz
+
+    ARTIFACTS=artifacts-$TRAVIS_BUILD_NUMBER
+    mkdir -p $ARTIFACTS
+    mv artifacts/* ${ARTIFACTS}/
+    tar -czf $ARTIFACTS.tgz $ARTIFACTS
+    upload_file $ARTIFACTS.tgz $TRAVIS_BUILD_NUMBER/$ARTIFACTS.tgz
 fi

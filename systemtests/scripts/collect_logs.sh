@@ -1,8 +1,5 @@
 #!/bin/bash
-OC_DIR=$1
-ARTIFACTS_DIR=$2
-
-export PATH="$OC_DIR:$PATH"
+ARTIFACTS_DIR=$1
 
 function runcmd {
     local cmd=$1
@@ -26,5 +23,4 @@ do
     done
 done
 
-cp $OC_DIR/logs/* $ARTIFACTS_DIR/logs/
 cp -r /tmp/testlogs/* $ARTIFACTS_DIR/logs/

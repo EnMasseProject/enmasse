@@ -1,0 +1,18 @@
+description = 'Queue Scheduler'
+dependencies {
+    compile project(':address-model-lib')
+    compile project(':amqp-utils')
+    compile "io.vertx:vertx-proton:${vertxVersion}"
+    compile "org.slf4j:slf4j-api:${slf4jVersion}"
+    compile "org.slf4j:slf4j-log4j12:${slf4jVersion}"
+    compile "com.fasterxml.jackson.core:jackson-core:${jacksonVersion}"
+    compile "com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}"
+    testCompile "junit:junit:${junitVersion}"
+    testCompile "org.mockito:mockito-core:${mockitoVersion}"
+
+}
+
+
+apply plugin: 'application'
+mainClassName = 'io.enmasse.queue.scheduler.Main'
+applicationDefaultJvmArgs = ["-Dvertx.cacheDirBase=/tmp", "-Xmx128m", "-Xms128m"]

@@ -1,4 +1,0 @@
-description = 'Mock API for Kubernetes resources'
-dependencies {
-    compile project(':admin:k8s-api')
-}

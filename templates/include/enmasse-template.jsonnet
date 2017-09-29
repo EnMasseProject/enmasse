@@ -20,7 +20,7 @@ local images = import "images.jsonnet";
                  storage.template(true, false),
                  storage.template(true, true),
                  enmasseInfra.generate(with_kafka),
-                 addressController.deployment("${ADDRESS_CONTROLLER_REPO}", "${MULTIINSTANCE}", "", "${ENMASSE_CA_SECRET}", "${ADDRESS_CONTROLLER_CERT_SECRET}", "${ADDRESS_CONTROLLER_ENABLE_API_AUTH}"),
+                 addressController.deployment("${ADDRESS_CONTROLLER_REPO}", "${MULTITENANT}", "", "${ENMASSE_CA_SECRET}", "${ADDRESS_CONTROLLER_CERT_SECRET}", "${ADDRESS_CONTROLLER_ENABLE_API_AUTH}"),
                  common.empty_secret("address-controller-userdb"),
                  addressController.internal_service,
                  restapiRoute.route("${RESTAPI_HOSTNAME}") ],
@@ -30,7 +30,7 @@ local images = import "images.jsonnet";
         "description": "The hostname to use for the exposed route for the REST API"
       },
       {
-        "name": "MULTIINSTANCE",
+        "name": "MULTITENANT",
         "description": "If set to true, the address controller will deploy infrastructure to separate namespaces",
         "value": "false"
       },

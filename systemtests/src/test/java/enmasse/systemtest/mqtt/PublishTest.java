@@ -17,9 +17,8 @@
 package enmasse.systemtest.mqtt;
 
 import enmasse.systemtest.Destination;
-import io.vertx.core.http.HttpMethod;
+import enmasse.systemtest.TestBase;
 import org.junit.Test;
-import org.junit.Ignore;
 
 import java.util.Arrays;
 import java.util.List;
@@ -32,7 +31,7 @@ import static org.junit.Assert.assertThat;
 /**
  * Tests related to publish messages via MQTT
  */
-public class PublishTest extends MqttTestBase {
+public class PublishTest extends TestBase {
 
     @Test
     public void testPublishQoS0() throws Exception {
@@ -66,7 +65,7 @@ public class PublishTest extends MqttTestBase {
         setAddresses(dest);
         Thread.sleep(60_000);
 
-        MqttClient client = this.createClient();
+        MqttClient client = mqttClientFactory.createClient();
 
         Future<List<String>> recvResult = client.recvMessages(dest.getAddress(), messages.size(), subscriberQos);
         Future<Integer> sendResult = client.sendMessages(dest.getAddress(), messages, publisherQos);

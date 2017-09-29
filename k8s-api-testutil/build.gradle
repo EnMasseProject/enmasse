@@ -1,0 +1,4 @@
+description = 'Mock API for Kubernetes resources'
+dependencies {
+    compile project(':k8s-api')
+}

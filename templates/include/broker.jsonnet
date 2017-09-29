@@ -14,7 +14,7 @@ local common = import "common.jsonnet";
           "containerPort": 8161 
         }
       ],
-      "env": [ addressEnv, {"name": "CLUSTER_ID", "value": "${CLUSTER_ID}"}, {"name": "CERT_DIR", "value": "/etc/enmasse-certs"} ],
+      "env": [ addressEnv, {"name": "PN_TRACE_FRM", "value": "1"}, {"name": "CLUSTER_ID", "value": "${CLUSTER_ID}"}, {"name": "CERT_DIR", "value": "/etc/enmasse-certs"} ],
       "volumeMounts": [
         {
           "name": volumeName,

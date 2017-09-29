@@ -34,6 +34,11 @@ public class KeycloakClient implements AutoCloseable {
                 "master", credentials.getUsername(), credentials.getPassword(), "admin-cli");
     }
 
+    public void createUser(String realm, String userName, String password) throws TimeoutException, InterruptedException {
+        createUser(realm, userName, password, 1, TimeUnit.MINUTES);
+    }
+
+
     public void createUser(String realm, String userName, String password, long timeout, TimeUnit timeUnit)
             throws InterruptedException, TimeoutException {
         RealmResource realmResource = waitForRealm(realm, timeout, timeUnit);

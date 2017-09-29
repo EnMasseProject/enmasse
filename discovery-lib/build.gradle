@@ -1,0 +1,9 @@
+description = 'Podsense client library for service discovery in openshift'
+dependencies {
+    compile "io.vertx:vertx-proton:${vertxVersion}"
+    compile "org.slf4j:slf4j-api:${slf4jVersion}"
+    testCompile "junit:junit:${junitVersion}"
+    testCompile "org.mockito:mockito-core:${mockitoVersion}"
+    testCompile "io.vertx:vertx-unit:${vertxVersion}"
+    testCompile project (':configserv')
+}
