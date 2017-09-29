@@ -232,9 +232,9 @@ items:
       {"metadata": {"annotations": {"addressSpace": "${ADDRESS_SPACE}", "cluster_id":
       "${CLUSTER_ID}"}, "labels": {"app": "enmasse", "name": "${NAME}", "role": "broker"}},
       "spec": {"containers": [{"env": [{"name": "QUEUE_NAME", "value": "${ADDRESS}"},
-      {"name": "CLUSTER_ID", "value": "${CLUSTER_ID}"}, {"name": "CERT_DIR", "value":
-      "/etc/enmasse-certs"}], "image": "${BROKER_REPO}", "lifecycle": {"preStop":
-      {"exec": {"command": ["/opt/artemis-shutdown-hook/bin/artemis-shutdown-hook"]}}},
+      {"name": "PN_TRACE_FRM", "value": "1"}, {"name": "CLUSTER_ID", "value": "${CLUSTER_ID}"},
+      {"name": "CERT_DIR", "value": "/etc/enmasse-certs"}], "image": "${BROKER_REPO}",
+      "lifecycle": {"preStop": {"exec": {"command": ["/opt/artemis-shutdown-hook/bin/artemis-shutdown-hook"]}}},
       "livenessProbe": {"initialDelaySeconds": 120, "tcpSocket": {"port": "amqp"}},
       "name": "broker", "ports": [{"containerPort": 5673, "name": "amqp"}, {"containerPort":
       8161, "name": "jolokia"}], "readinessProbe": {"tcpSocket": {"port": "amqp"}},
@@ -277,9 +277,9 @@ items:
       {"metadata": {"annotations": {"addressSpace": "${ADDRESS_SPACE}", "cluster_id":
       "${CLUSTER_ID}"}, "labels": {"app": "enmasse", "name": "${NAME}", "role": "broker"}},
       "spec": {"containers": [{"env": [{"name": "QUEUE_NAME", "value": "${ADDRESS}"},
-      {"name": "CLUSTER_ID", "value": "${CLUSTER_ID}"}, {"name": "CERT_DIR", "value":
-      "/etc/enmasse-certs"}], "image": "${BROKER_REPO}", "lifecycle": {"preStop":
-      {"exec": {"command": ["/opt/artemis-shutdown-hook/bin/artemis-shutdown-hook"]}}},
+      {"name": "PN_TRACE_FRM", "value": "1"}, {"name": "CLUSTER_ID", "value": "${CLUSTER_ID}"},
+      {"name": "CERT_DIR", "value": "/etc/enmasse-certs"}], "image": "${BROKER_REPO}",
+      "lifecycle": {"preStop": {"exec": {"command": ["/opt/artemis-shutdown-hook/bin/artemis-shutdown-hook"]}}},
       "livenessProbe": {"initialDelaySeconds": 120, "tcpSocket": {"port": "amqp"}},
       "name": "broker", "ports": [{"containerPort": 5673, "name": "amqp"}, {"containerPort":
       8161, "name": "jolokia"}], "readinessProbe": {"tcpSocket": {"port": "amqp"}},
@@ -319,9 +319,9 @@ items:
       {"metadata": {"annotations": {"addressSpace": "${ADDRESS_SPACE}", "cluster_id":
       "${CLUSTER_ID}"}, "labels": {"app": "enmasse", "name": "${NAME}", "role": "broker"}},
       "spec": {"containers": [{"env": [{"name": "TOPIC_NAME", "value": "${ADDRESS}"},
-      {"name": "CLUSTER_ID", "value": "${CLUSTER_ID}"}, {"name": "CERT_DIR", "value":
-      "/etc/enmasse-certs"}], "image": "${BROKER_REPO}", "lifecycle": {"preStop":
-      {"exec": {"command": ["/opt/artemis-shutdown-hook/bin/artemis-shutdown-hook"]}}},
+      {"name": "PN_TRACE_FRM", "value": "1"}, {"name": "CLUSTER_ID", "value": "${CLUSTER_ID}"},
+      {"name": "CERT_DIR", "value": "/etc/enmasse-certs"}], "image": "${BROKER_REPO}",
+      "lifecycle": {"preStop": {"exec": {"command": ["/opt/artemis-shutdown-hook/bin/artemis-shutdown-hook"]}}},
       "livenessProbe": {"initialDelaySeconds": 120, "tcpSocket": {"port": "amqp"}},
       "name": "broker", "ports": [{"containerPort": 5673, "name": "amqp"}, {"containerPort":
       8161, "name": "jolokia"}], "readinessProbe": {"tcpSocket": {"port": "amqp"}},
@@ -387,9 +387,9 @@ items:
       {"metadata": {"annotations": {"addressSpace": "${ADDRESS_SPACE}", "cluster_id":
       "${CLUSTER_ID}"}, "labels": {"app": "enmasse", "name": "${NAME}", "role": "broker"}},
       "spec": {"containers": [{"env": [{"name": "TOPIC_NAME", "value": "${ADDRESS}"},
-      {"name": "CLUSTER_ID", "value": "${CLUSTER_ID}"}, {"name": "CERT_DIR", "value":
-      "/etc/enmasse-certs"}], "image": "${BROKER_REPO}", "lifecycle": {"preStop":
-      {"exec": {"command": ["/opt/artemis-shutdown-hook/bin/artemis-shutdown-hook"]}}},
+      {"name": "PN_TRACE_FRM", "value": "1"}, {"name": "CLUSTER_ID", "value": "${CLUSTER_ID}"},
+      {"name": "CERT_DIR", "value": "/etc/enmasse-certs"}], "image": "${BROKER_REPO}",
+      "lifecycle": {"preStop": {"exec": {"command": ["/opt/artemis-shutdown-hook/bin/artemis-shutdown-hook"]}}},
       "livenessProbe": {"initialDelaySeconds": 120, "tcpSocket": {"port": "amqp"}},
       "name": "broker", "ports": [{"containerPort": 5673, "name": "amqp"}, {"containerPort":
       8161, "name": "jolokia"}], "readinessProbe": {"tcpSocket": {"port": "amqp"}},
