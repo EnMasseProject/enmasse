@@ -20,6 +20,7 @@ import enmasse.systemtest.Destination;
 import enmasse.systemtest.TestBase;
 import enmasse.systemtest.amqp.AmqpClient;
 import enmasse.systemtest.mqtt.MqttClient;
+import org.apache.qpid.proton.message.Message;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.junit.After;
 import org.junit.Before;
@@ -130,7 +131,7 @@ public class AuthenticationTest extends TestBase {
     private boolean canConnectWithAmqp(String addressSpace, String username, String password) throws InterruptedException, IOException, TimeoutException, ExecutionException {
         AmqpClient client = amqpClientFactory.createQueueClient(addressSpace);
         client.getConnectOptions().setUsername(username).setPassword(password);
-        Future<List<String>> received = client.recvMessages(amqpAddress, 1, 10, TimeUnit.SECONDS);
+        Future<List<Message>> received = client.recvMessages(amqpAddress, 1, 10, TimeUnit.SECONDS);
         Future<Integer> sent = client.sendMessages(amqpAddress, Arrays.asList("msg1"), 10, TimeUnit.SECONDS);
 
         return (sent.get(1, TimeUnit.MINUTES) == received.get(1, TimeUnit.MINUTES).size());
