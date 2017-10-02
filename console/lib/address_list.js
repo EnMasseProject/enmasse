@@ -16,40 +16,20 @@
 'use strict';
 
 var util = require('util');
-var rhea = require('rhea');
 var Registry =require('./registry.js');
 
-function Addresses(connection) {
+function Addresses() {
     Registry.call(this);
-    var configserv = connection || require('./admin_service.js').connect_service(rhea, 'CONFIGURATION');
-    var addresses = this;
-    configserv.open_receiver('v1/addresses').on('message', function (context) {
-        if (context.message.subject === 'enmasse.io/v1/AddressList') {
-            if (context.message.body && context.message.body.length) {
-                try {
-                    var content = JSON.parse(context.message.body);
-                    var defs = content.items ? content.items.map(function (address) { return address.spec; }) : [];
-                    addresses.known_addresses(defs.reduce(function (map, a) { map[a.address] = a; return map; }, {}));
-                } catch (e) {
-                    console.log('ERROR: failed to parse addresses: ' + e + '; ' + context.message.body);
-                }
-            } else {
-                addresses.known_addresses({});
-            }
-        } else {
-            console.log('WARN: unexpected subject: ' + context.message.subject);
-        }
-    });
 }
 
 util.inherits(Addresses, Registry);
 
-Addresses.prototype.known_addresses = function (known) {
-    this.set(known);
-};
-
 Addresses.prototype.update_stats = function (name, stats) {
     this.update_if_exists(name, stats);
+};
+
+Addresses.prototype.addresses_defined = function (addresses) {
+    this.set(addresses.reduce(function (map, a) { map[a.address] = a; return map; }, {}));
 };
 
 module.exports = Addresses;
