@@ -284,6 +284,17 @@ Artemis.prototype.listAddresses = function () {
     });
 };
 
+Artemis.prototype.createAddress = function (name, type) {
+    var routing_types = [];
+    if (type.anycast || type.queue) routing_types.push('anycast');
+    if (type.multicast || type.topic) routing_types.push('multicast');
+    return this._request('broker', 'createAddress', [name, routing_types.join(',')]);
+};
+
+Artemis.prototype.deleteAddress = function (name) {
+    return this._request('broker', 'deleteAddress', [name]);
+};
+
 Artemis.prototype.getAllQueuesAndTopics = function () {
     return this.listAddresses().then(function (addresses) {
         for (var name in addresses) {

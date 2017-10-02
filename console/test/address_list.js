@@ -20,6 +20,7 @@ var Promise = require('bluebird');
 var rhea = require('rhea');
 
 var AddressList = require('../lib/address_list.js');
+var AddressSource = require('../lib/address_source.js');
 
 function MockConfigServ () {
     this.address_list = [];
@@ -110,13 +111,16 @@ describe('address registry', function() {
         address_source.close(done);
     });
 
-    function connect() {
+    function create_address_list() {
         connection = rhea.connect({port:address_source.port});
-        return connection;
+        var src = new AddressSource(connection);
+        var address_list = new AddressList();
+        src.on('addresses_defined', address_list.addresses_defined.bind(address_list));
+        return address_list;
     }
 
     it('subscribes to configserv', function(done) {
-        var addresses = new AddressList(connect());
+        var addresses = create_address_list();
         address_source.add('foo', 'anycast');
         addresses.on('updated', function (addr) {
             assert.equal(addr.address, 'foo');
@@ -126,7 +130,7 @@ describe('address registry', function() {
         });
     });
     it('handles empty body', function(done) {
-        var addresses = new AddressList(connect());
+        var addresses = create_address_list();
         address_source.add('foo', 'anycast');
         addresses.on('updated', function (addr) {
             assert.equal(addr.address, 'foo');
@@ -143,7 +147,7 @@ describe('address registry', function() {
         });
     });
     it('handles body with no items', function(done) {
-        var addresses = new AddressList(connect());
+        var addresses = create_address_list();
         address_source.add('foo', 'anycast');
         addresses.on('updated', function (addr) {
             assert.equal(addr.address, 'foo');
@@ -159,7 +163,7 @@ describe('address registry', function() {
         });
     });
     it('handles updates', function(done) {
-        var addresses = new AddressList(connect());
+        var addresses = create_address_list();
         address_source.add('foo', 'anycast');
         var count = 0;
         addresses.on('updated', function (addr) {
