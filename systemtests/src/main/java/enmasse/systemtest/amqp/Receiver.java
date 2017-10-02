@@ -16,13 +16,13 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.function.Predicate;
 
-public class Receiver extends ClientHandlerBase<List<String>> {
+public class Receiver extends ClientHandlerBase<List<Message>> {
 
-    private final List<String> messages = new ArrayList<>();
+    private final List<Message> messages = new ArrayList<>();
     private final Predicate<Message> done;
     private final CountDownLatch connectLatch;
 
-    public Receiver(AmqpConnectOptions clientOptions, Predicate<Message> done, CompletableFuture<List<String>> promise, LinkOptions linkOptions, CountDownLatch connectLatch) {
+    public Receiver(AmqpConnectOptions clientOptions, Predicate<Message> done, CompletableFuture<List<Message>> promise, LinkOptions linkOptions, CountDownLatch connectLatch) {
         super(clientOptions, linkOptions, promise);
         this.done = done;
         this.connectLatch = connectLatch;
@@ -38,7 +38,7 @@ public class Receiver extends ClientHandlerBase<List<String>> {
         receiver.setSource(source);
         receiver.setPrefetch(0);
         receiver.handler((protonDelivery, message) -> {
-            messages.add((String) ((AmqpValue) message.getBody()).getValue());
+            messages.add(message);
             protonDelivery.disposition(Accepted.getInstance(), true);
             if (done.test(message)) {
                 promise.complete(messages);
@@ -73,7 +73,7 @@ public class Receiver extends ClientHandlerBase<List<String>> {
     @Override
     protected void connectionClosed(ProtonConnection conn) {
         conn.close();
-        if(!promise.isDone()) {
+        if (!promise.isDone()) {
             promise.completeExceptionally(new RuntimeException("Connection closed (" + messages.size() + " messages received"));
         }
     }
@@ -81,7 +81,7 @@ public class Receiver extends ClientHandlerBase<List<String>> {
     @Override
     protected void connectionDisconnected(ProtonConnection conn) {
         conn.close();
-        if(!promise.isDone()) {
+        if (!promise.isDone()) {
             promise.completeExceptionally(new RuntimeException("Connection disconnected (" + messages.size() + " messages received"));
         }
     }

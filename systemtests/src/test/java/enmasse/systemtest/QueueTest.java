@@ -138,7 +138,7 @@ public class QueueTest extends TestBase {
         assertThat(sent.get(2).get(1, TimeUnit.MINUTES), is(1000));
         assertThat(sent.get(3).get(1, TimeUnit.MINUTES), is(1000));
 
-        Future<List<String>> received = client.recvMessages(dest.getAddress(), 500);
+        Future<List<Message>> received = client.recvMessages(dest.getAddress(), 500);
         assertThat(received.get(1, TimeUnit.MINUTES).size(), is(500));
 
         scale(dest, 1);
@@ -163,7 +163,7 @@ public class QueueTest extends TestBase {
         assertThat(actual, is(msgs.size()));
 
         predicate = new Count<>(msgs.size());
-        Future<List<String>> received = client.recvMessages(dest.getAddress(), predicate);
+        Future<List<Message>> received = client.recvMessages(dest.getAddress(), predicate);
         actual = 0;
         try {
             actual = received.get(1, TimeUnit.MINUTES).size();

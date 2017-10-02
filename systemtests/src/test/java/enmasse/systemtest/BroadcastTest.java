@@ -17,7 +17,7 @@
 package enmasse.systemtest;
 
 import enmasse.systemtest.amqp.AmqpClient;
-import enmasse.systemtest.amqp.AmqpClientFactory;
+import org.apache.qpid.proton.message.Message;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -39,7 +39,7 @@ public class BroadcastTest extends TestBase {
         AmqpClient client = amqpClientFactory.createBroadcastClient();
         List<String> msgs = Arrays.asList("foo");
 
-        List<Future<List<String>>> recvResults = Arrays.asList(
+        List<Future<List<Message>>> recvResults = Arrays.asList(
             client.recvMessages(dest.getAddress(), msgs.size()),
             client.recvMessages(dest.getAddress(), msgs.size()),
             client.recvMessages(dest.getAddress(), msgs.size()));

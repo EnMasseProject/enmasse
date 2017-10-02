@@ -17,7 +17,7 @@
 package enmasse.systemtest;
 
 import enmasse.systemtest.amqp.AmqpClient;
-import enmasse.systemtest.amqp.AmqpClientFactory;
+import org.apache.qpid.proton.message.Message;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -38,7 +38,7 @@ public class AnycastTest extends TestBase {
 
         List<String> msgs = Arrays.asList("foo", "bar", "baz");
 
-        Future<List<String>> recvResult = client.recvMessages(dest.getAddress(), msgs.size());
+        Future<List<Message>> recvResult = client.recvMessages(dest.getAddress(), msgs.size());
         Future<Integer> sendResult = client.sendMessages(dest.getAddress(), msgs);
 
         assertThat(sendResult.get(1, TimeUnit.MINUTES), is(msgs.size()));

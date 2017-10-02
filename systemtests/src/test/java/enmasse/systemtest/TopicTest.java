@@ -21,9 +21,8 @@ import enmasse.systemtest.amqp.TopicTerminusFactory;
 
 import org.apache.qpid.proton.amqp.DescribedType;
 import org.apache.qpid.proton.amqp.Symbol;
-import org.apache.qpid.proton.amqp.messaging.AmqpValue;
-import org.apache.qpid.proton.amqp.messaging.Source;
-import org.apache.qpid.proton.amqp.messaging.TerminusDurability;
+import org.apache.qpid.proton.amqp.messaging.*;
+import org.apache.qpid.proton.amqp.messaging.Properties;
 import org.apache.qpid.proton.message.Message;
 import org.junit.Test;
 
@@ -49,7 +48,7 @@ public class TopicTest extends TestBase {
         AmqpClient client = amqpClientFactory.createTopicClient();
         List<String> msgs = TestUtils.generateMessages(1000);
 
-        List<Future<List<String>>> recvResults = Arrays.asList(
+        List<Future<List<Message>>> recvResults = Arrays.asList(
                 client.recvMessages(dest.getAddress(), msgs.size()),
                 client.recvMessages(dest.getAddress(), msgs.size()),
                 client.recvMessages(dest.getAddress(), msgs.size()),
@@ -88,47 +87,153 @@ public class TopicTest extends TestBase {
 
     public void runTopicTest(AmqpClient client, Destination dest, int msgCount) throws InterruptedException, IOException, TimeoutException, ExecutionException, IOException, TimeoutException, ExecutionException {
         List<String> msgs = TestUtils.generateMessages(msgCount);
-        Future<List<String>> recvMessages = client.recvMessages(dest.getAddress(), msgCount);
+        Future<List<Message>> recvMessages = client.recvMessages(dest.getAddress(), msgCount);
 
         assertThat(client.sendMessages(dest.getAddress(), msgs).get(1, TimeUnit.MINUTES), is(msgs.size()));
         assertThat(recvMessages.get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
     }
 
     @Test
-    public void testMessageSelectors() throws Exception {
-        Destination selTopic = Destination.topic("selectorTopic");
-        String linkName = "linkSelectorTopic";
+    public void testMessageSelectorsAppProperty() throws Exception {
+        Destination selTopic = Destination.topic("selectorTopicAppProp");
+        String linkName = "linkSelectorTopicAppProp";
         setAddresses(selTopic);
 
         Thread.sleep(30_000);
 
-        int msgsCount = 20;
+        AmqpClient topicClient = createTopicClient();
+
+        Map<String, Object> appProperties = new HashMap<>();
+        appProperties.put("appPar1", 1);
+        assertAppProperty(topicClient, linkName, appProperties, "appPar1 = 1", selTopic);
+
+        appProperties.clear();
+        appProperties.put("appPar2", 10);
+        assertAppProperty(topicClient, linkName, appProperties, "appPar2 > 9", selTopic);
+
+        appProperties.clear();
+        appProperties.put("appPar3", 10);
+        assertAppProperty(topicClient, linkName, appProperties, "appPar3 < 11", selTopic);
+
+        appProperties.clear();
+        appProperties.put("appPar4", 10);
+        assertAppProperty(topicClient, linkName, appProperties, "appPar4 * 2 > 10", selTopic);
+
+        appProperties.clear();
+        appProperties.put("year", 2000);
+        assertAppProperty(topicClient, linkName, appProperties, "(year > 1000) AND (year < 3000)", selTopic);
+
+        appProperties.clear();
+        appProperties.put("year2", 2000);
+        assertAppProperty(topicClient, linkName, appProperties, "year2 BETWEEN 1999 AND 2018", selTopic);
+
+        appProperties.clear();
+        appProperties.put("appPar5", "1");
+        assertAppProperty(topicClient, linkName, appProperties, "appPar5 = '1'", selTopic);
+
+        appProperties.clear();
+        appProperties.put("appPar6", true);
+        assertAppProperty(topicClient, linkName, appProperties, "appPar6 = TRUE", selTopic);
+
+        appProperties.clear();
+        appProperties.put("appPar7", "SOMETHING");
+        assertAppProperty(topicClient, linkName, appProperties, "appPar7 IS NOT NULL", selTopic);
+
+        appProperties.clear();
+        appProperties.put("appPar8", "SOMETHING");
+        assertAppProperty(topicClient, linkName, appProperties, "appPar8 LIKE '%THING' ", selTopic);
+
+        appProperties.clear();
+        appProperties.put("appPar9", "bar");
+        assertAppProperty(topicClient, linkName, appProperties, "appPar9 IN ('foo', 'bar', 'baz')", selTopic);
+
+    }
+
+    public void assertAppProperty(AmqpClient client, String linkName, Map<String, Object> appProperties, String selector, Destination dest) throws IOException, InterruptedException, TimeoutException, ExecutionException {
+        Logging.log.info("Application property selector: " + selector);
+        int msgsCount = 10;
         List<Message> listOfMessages = new ArrayList<>();
-        for (int i = msgsCount; i > 0; i--) {
+        for (int i = 0; i < msgsCount; i++) {
             Message msg = Message.Factory.create();
-            msg.setAddress(selTopic.getAddress());
-            msg.setBody(new AmqpValue(selTopic.getAddress()));
-            msg.setCorrelationId(i);
+            msg.setAddress(dest.getAddress());
+            msg.setBody(new AmqpValue(dest.getAddress()));
             msg.setSubject("subject");
             listOfMessages.add(msg);
         }
 
-        Source source = new TopicTerminusFactory().getSource(selTopic.getAddress());
+        //set appProperty for last message
+        if (listOfMessages.size() > 0) {
+            listOfMessages.get(msgsCount - 1).setApplicationProperties(new ApplicationProperties(appProperties));
+        }
+
+        Source source = new Source();
+        source.setAddress(dest.getAddress());
+        source.setCapabilities(Symbol.getSymbol("topic"));
         Map<Symbol, DescribedType> map = new HashMap<>();
-        map.put(Symbol.valueOf("jms-selector"), new AmqpJmsSelectorFilter("correlation-id > 10"));
+        map.put(Symbol.valueOf("jms-selector"), new AmqpJmsSelectorFilter(selector));
         source.setFilter(map);
 
-        AmqpClient subClient = createTopicClient();
-        Future<List<String>> received = subClient.recvMessages(source, linkName, msgsCount);
+        Future<List<Message>> received = client.recvMessages(source, linkName, 1);
+        AmqpClient client2 = createTopicClient();
+        Future<List<Message>> receivedWithoutSel = client2.recvMessages(dest.getAddress(), msgsCount - 1);
+        Thread.sleep(10_000);
+
+        Future<Integer> sent = client.sendMessages(dest.getAddress(), listOfMessages.toArray(new Message[listOfMessages.size()]));
+
+        assertThat(sent.get(1, TimeUnit.MINUTES), is(msgsCount));
+        assertThat(received.get(1, TimeUnit.MINUTES).size(), is(1));
+
+        Map.Entry<String, Object> entry = appProperties.entrySet().iterator().next();
+        assertThat(received.get(1, TimeUnit.MINUTES).get(0).getApplicationProperties().getValue().get(entry.getKey()), is(entry.getValue()));
+
+        //receive rest of messages
+        assertThat(receivedWithoutSel.get(1, TimeUnit.MINUTES).size(), is(msgsCount - 1));
+    }
+
+    @Test
+    public void testMessageSelectorsProperty() throws Exception {
+        Destination selTopic = Destination.topic("selectorTopicProp");
+        String linkName = "linkSelectorTopicAppProp";
+        setAddresses(selTopic);
 
         Thread.sleep(30_000);
 
-        AmqpClient pubClient = createTopicClient();
-        Future<Integer> sent = pubClient.sendMessages(selTopic.getAddress(), listOfMessages.toArray(new Message[listOfMessages.size()]));
+        int msgsCount = 10;
+        List<Message> listOfMessages = new ArrayList<>();
+        for (int i = 0; i < msgsCount; i++) {
+            Message msg = Message.Factory.create();
+            msg.setAddress(selTopic.getAddress());
+            msg.setBody(new AmqpValue(selTopic.getAddress()));
+            msg.setSubject("subject");
+            listOfMessages.add(msg);
+        }
+
+//        set appProperty for last message
+        short correlationID = 1;
+        if (msgsCount > 0) {
+            Properties prop = new Properties();
+            prop.setCorrelationId(correlationID);
+            listOfMessages.get(msgsCount - 1).setCorrelationId(correlationID);
+        }
+
+        Source source = new Source();
+        source.setAddress(selTopic.getAddress());
+        source.setCapabilities(Symbol.getSymbol("topic"));
+        Map<Symbol, DescribedType> map = new HashMap<>();
+        map.put(Symbol.valueOf("jms-selector"), new AmqpJmsSelectorFilter("JMSCorrelationID IS NOT NULL"));
+        source.setFilter(map);
+
+        AmqpClient client = createTopicClient();
+        Future<List<Message>> received = client.recvMessages(source, linkName, 1);
+
+        Thread.sleep(10_000);
+
+        Future<Integer> sent = client.sendMessages(selTopic.getAddress(), listOfMessages.toArray(new Message[listOfMessages.size()]));
 
         assertThat(sent.get(1, TimeUnit.MINUTES), is(msgsCount));
-        assertThat(received.get(1, TimeUnit.MINUTES), is(10));
 
+        assertThat(received.get(1, TimeUnit.MINUTES).size(), is(1));
+        assertThat(received.get(1, TimeUnit.MINUTES).get(0).getCorrelationId(), is(correlationID));
     }
 
     public void testTopicWildcards() throws Exception {
@@ -141,7 +246,7 @@ public class TopicTest extends TestBase {
         List<String> msgs = Arrays.asList("foo", "bar", "baz", "qux");
         Thread.sleep(60_000);
 
-        Future<List<String>> recvResults = amqpClient.recvMessages("topic/#", msgs.size() * 2);
+        Future<List<Message>> recvResults = amqpClient.recvMessages("topic/#", msgs.size() * 2);
 
         List<Future<Integer>> sendResult = Arrays.asList(
                 amqpClient.sendMessages(t1.getAddress(), msgs),
@@ -169,7 +274,7 @@ public class TopicTest extends TestBase {
         List<String> batch1 = Arrays.asList("one", "two", "three");
 
         Logging.log.info("Receiving first batch");
-        Future<List<String>> recvResults = client.recvMessages(source, linkName, batch1.size());
+        Future<List<Message>> recvResults = client.recvMessages(source, linkName, batch1.size());
 
         // Wait for the redirect to kick in
         Thread.sleep(30_000);
@@ -227,7 +332,7 @@ public class TopicTest extends TestBase {
         assertThat(topicClient.sendMessages(dest.getAddress(), msgs).get(1, TimeUnit.MINUTES), is(msgs.size()));
 
         Logging.log.info("Receiving 6 messages");
-        Future<List<String>> recvResult = queueClient.recvMessages(address, 6);
+        Future<List<Message>> recvResult = queueClient.recvMessages(address, 6);
         assertThat(recvResult.get(1, TimeUnit.MINUTES).size(), is(6));
 
         // Do scaledown and 'reconnect' receiver and verify that we got everything
