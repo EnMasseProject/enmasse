@@ -27,6 +27,7 @@ import io.enmasse.controller.api.v1.http.HttpAddressService;
 import io.enmasse.controller.api.v1.http.HttpAddressSpaceService;
 import io.enmasse.controller.api.v1.http.HttpSchemaService;
 import io.enmasse.controller.auth.BasicAuthHandler;
+import io.enmasse.controller.auth.SingleUserAuthenticator;
 import io.enmasse.controller.auth.UserAuthenticator;
 import io.enmasse.controller.api.DefaultExceptionMapper;
 import io.enmasse.k8s.api.AddressSpaceApi;
@@ -43,8 +44,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.net.PasswordAuthentication;
-import java.util.Arrays;
-import java.util.concurrent.TimeUnit;
 
 /**
  * HTTP server for deploying address config
@@ -78,9 +77,8 @@ public class HTTPServer extends AbstractVerticle {
         deployment.getProviderFactory().registerProvider(JacksonConfig.class);
 
         if (osbAuth != null) {
-            deployment.getProviderFactory().registerProviderInstance(new AuthInterceptor(new BasicAuthHandler((username, password) ->
-                    osbAuth.getUserName().equals(username) && Arrays.equals(osbAuth.getPassword(), password.toCharArray())),
-                    OSBServiceBase.BASE_URI));
+            deployment.getProviderFactory().registerProviderInstance(new AuthInterceptor(
+                    new BasicAuthHandler(new SingleUserAuthenticator(osbAuth)), OSBServiceBase.BASE_URI));
         }
 
         if (userAuthenticator != null) {
