@@ -73,7 +73,7 @@ public class TopicTest extends TestBase {
         Destination t1 = Destination.topic("inMemoryTopic", Optional.of("inmemory"));
         setAddresses(t1);
 
-        AmqpClient topicClient = createTopicClient();
+        AmqpClient topicClient = amqpClientFactory.createTopicClient();
         runTopicTest(topicClient, t1, 2048);
     }
 
@@ -81,7 +81,7 @@ public class TopicTest extends TestBase {
         Destination t1 = Destination.topic("persistedTopic", Optional.of("persisted"));
         setAddresses(t1);
 
-        AmqpClient topicClient = createTopicClient();
+        AmqpClient topicClient = amqpClientFactory.createTopicClient();
         runTopicTest(topicClient, t1, 2048);
     }
 
@@ -101,7 +101,7 @@ public class TopicTest extends TestBase {
 
         Thread.sleep(30_000);
 
-        AmqpClient topicClient = createTopicClient();
+        AmqpClient topicClient = amqpClientFactory.createTopicClient();
 
         Map<String, Object> appProperties = new HashMap<>();
         appProperties.put("appPar1", 1);
@@ -174,7 +174,7 @@ public class TopicTest extends TestBase {
         source.setFilter(map);
 
         Future<List<Message>> received = client.recvMessages(source, linkName, 1);
-        AmqpClient client2 = createTopicClient();
+        AmqpClient client2 = amqpClientFactory.createTopicClient();
         Future<List<Message>> receivedWithoutSel = client2.recvMessages(dest.getAddress(), msgsCount - 1);
         Thread.sleep(10_000);
 
@@ -223,7 +223,7 @@ public class TopicTest extends TestBase {
         map.put(Symbol.valueOf("jms-selector"), new AmqpJmsSelectorFilter("JMSCorrelationID IS NOT NULL"));
         source.setFilter(map);
 
-        AmqpClient client = createTopicClient();
+        AmqpClient client = amqpClientFactory.createTopicClient();
         Future<List<Message>> received = client.recvMessages(source, linkName, 1);
 
         Thread.sleep(10_000);
@@ -241,7 +241,7 @@ public class TopicTest extends TestBase {
         Destination t2 = Destination.topic("topic/No2");
 
         setAddresses(t1, t2);
-        AmqpClient amqpClient = this.createTopicClient();
+        AmqpClient amqpClient = amqpClientFactory.createTopicClient();
 
         List<String> msgs = Arrays.asList("foo", "bar", "baz", "qux");
         Thread.sleep(60_000);
