@@ -89,18 +89,8 @@ local hawkularBrokerConfig = import "hawkular-broker-config.jsonnet";
         },
         "spec": {
           "volumes": [
-            {
-              "name": "data",
-              "persistentVolumeClaim": {
-                "claimName": "broker-data"
-              }
-            },
-            {
-              "name": "hawkular-openshift-agent",
-              "configMap": {
-                "name": "hawkular-broker-config"
-              }
-            },
+            common.persistent_volume("data", "broker-data"),
+            common.configmap_volume("hawkular-openshift-agent", "hawkular-broker-config"),
             common.secret_volume("broker-internal-cert", "broker-internal-cert"),
           ],
           "containers": [
@@ -108,51 +98,20 @@ local hawkularBrokerConfig = import "hawkular-broker-config.jsonnet";
               "name": "broker",
               "image": "${BROKER_IMAGE}",
               "env": [
-                {
-                  "name": "ADDRESS_SPACE_TYPE",
-                  "value": "brokered"
-                },
-                {
-                  "name": "CERT_DIR",
-                  "value": "/etc/enmasse-certs"
-                }
+                common.env("ADDRESS_SPACE_TYPE", "brokered"),
+                common.env("CERT_DIR", "/etc/enmasse-certs"),
               ],
               "volumeMounts": [
-                {
-                  "name": "data",
-                  "mountPath": "/var/run/artemis"
-                },
-                {
-                  "name": "broker-internal-cert",
-                  "mountPath": "/etc/enmasse-certs",
-                  "readOnly": true
-                }
+                common.volume_mount("data", "/var/run/artemis"),
+                common.volume_mount("broker-internal-cert", "/etc/enmasse-certs", true)
               ],
               "ports": [
-                {
-                  "name": "amqp",
-                  "containerPort": 5672
-                },
-                {
-                  "name": "amqps",
-                  "containerPort": 5671
-                },
-                {
-                  "name": "jolokia",
-                  "containerPort": 8161
-                }
+                common.container_port("amqp", 5672),
+                common.container_port("amqps", 5671),
+                common.container_port("jolokia", 8161)
               ],
-              "livenessProbe": {
-                "tcpSocket": {
-                  "port": "amqp"
-                },
-                "initialDelaySeconds": 120
-              },
-              "readinessProbe": {
-                "tcpSocket": {
-                  "port": "amqp"
-                }
-              },
+              "livenessProbe": common.tcp_probe("amqp", 120),
+              "readinessProbe": common.tcp_probe("amqp", 0),
             }
           ]
         }
