@@ -15,9 +15,12 @@ space will consist of a 'broker' and an 'agent' process.
 
 === address model
 
-The address model will be extendended with the 'brokered' address space and the address types. To begin
+The address model will be extended with the 'brokered' address space and the address types. To begin
 with, the supported address types will be 'queue' and 'topic'. Address-type specific features will
 be added as properties.
+
+Initially, there will be 2 supported plans for the address space, 'inmemory' and 'persisted'. This
+will create either a inmemory or persisted broker cluster.
 
 === service broker
 
@@ -95,6 +98,20 @@ console and brokered-controller plugin.
 * create 1 producer for B and publish 400 messages and close
 
 === test durable subscribers
+
+* create brokered address space A
+* create topic C
+* create durable subscriber S
+* send 10 messages to C
+* receive 5 messages in subscriber
+* reconnect subscriber
+* receive 5 messages in subscriber
+
+=== test JMS client
+
+* create brokered address space A
+* create topic C
+* use JMS client(s) to send/receive messages from topic
 
 TODO: More tests
 
