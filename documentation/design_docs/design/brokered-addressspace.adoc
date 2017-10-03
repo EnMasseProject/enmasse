@@ -110,10 +110,20 @@ console and brokered-controller plugin.
 * message grouping
 * transactions
 * duplicate message detection
+* fully Qualified Queue Names
+* test shared durable subscription with max count of concurrent consumers 
+* non-shared durable subscription - max count of consumers is set to 1
+* large messages
+* queue/topic filters
 * ...
 
 === authentication tests
 * authentication tests should be extended to cover brokered address space
+
+=== webconsole tests
+* create/delete brokered address space
+* create/delete queue/topic in brokered address space
+* sorting/filtering
 
 == documentation
 
