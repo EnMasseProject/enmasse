@@ -111,6 +111,14 @@
     "data": {}
   },
 
+  secret_volume(name, secret)::
+    {
+      "name": name,
+      "secret": {
+        "secretName": secret
+      }
+    },
+
   ca_secret(name, cert_value)::
   {
     "apiVersion": "v1",

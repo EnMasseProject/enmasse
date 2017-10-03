@@ -34,10 +34,10 @@ local common = import "common.jsonnet";
               router.metrics(metrics_image_repo, "32Mi", "router-internal-cert") ],
             "volumes": [
               router.hawkular_volume(),
-              router.secret_volume("ssl-certs", router_secret),
-              router.secret_volume("authservice-ca", auth_service_ca_secret),
-              router.secret_volume("address-controller-ca", address_controller_ca_secret),
-              router.secret_volume("router-internal-cert", "router-internal-cert"),
+              common.secret_volume("ssl-certs", router_secret),
+              common.secret_volume("authservice-ca", auth_service_ca_secret),
+              common.secret_volume("address-controller-ca", address_controller_ca_secret),
+              common.secret_volume("router-internal-cert", "router-internal-cert"),
             ]
           }
         }
