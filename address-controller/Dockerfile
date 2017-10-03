@@ -4,9 +4,9 @@ RUN yum -y install openssl && yum -y clean all
 
 ARG version=latest
 ENV VERSION ${version}
-ADD server/build/distributions/server.tgz /
+ADD build/distributions/address-controller.tgz /
 
 EXPOSE 5672
 EXPOSE 8080
 
-CMD /server/bin/server
+CMD /address-controller/bin/address-controller
