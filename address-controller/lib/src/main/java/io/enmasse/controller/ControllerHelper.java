@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.enmasse.controller.standard;
+package io.enmasse.controller;
 
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.config.LabelKeys;
@@ -40,15 +40,15 @@ import java.util.stream.Collectors;
 /**
  * Helper class for managing a standard address space.
  */
-public class StandardHelper {
-    private static final Logger log = LoggerFactory.getLogger(StandardHelper.class.getName());
+public class ControllerHelper {
+    private static final Logger log = LoggerFactory.getLogger(ControllerHelper.class.getName());
     private final Kubernetes kubernetes;
     private final boolean isMultitenant;
     private final String namespace;
     private final AuthenticationServiceResolverFactory authResolverFactory;
     private final UserDatabase userDatabase;
 
-    public StandardHelper(Kubernetes kubernetes, boolean isMultitenant, AuthenticationServiceResolverFactory authResolverFactory, UserDatabase userDatabase) {
+    public ControllerHelper(Kubernetes kubernetes, boolean isMultitenant, AuthenticationServiceResolverFactory authResolverFactory, UserDatabase userDatabase) {
         this.kubernetes = kubernetes;
         this.isMultitenant = isMultitenant;
         this.namespace = kubernetes.getNamespace();
@@ -191,7 +191,7 @@ public class StandardHelper {
                         }
                     }).collect(Collectors.toList());
 
-            parameterValues.add(new ParameterValue(TemplateParameter.ROUTER_SECRET, serviceCertProviders.get("messaging").getSecretName()));
+            parameterValues.add(new ParameterValue(TemplateParameter.MESSAGING_SECRET, serviceCertProviders.get("messaging").getSecretName()));
             parameterValues.add(new ParameterValue(TemplateParameter.MQTT_SECRET, serviceCertProviders.get("mqtt").getSecretName()));
 
             // Step 5: Create infrastructure

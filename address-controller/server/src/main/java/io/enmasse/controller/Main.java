@@ -16,10 +16,7 @@
 
 package io.enmasse.controller;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AuthenticationService;
@@ -32,6 +29,7 @@ import io.enmasse.address.model.types.AddressSpaceType;
 import io.enmasse.address.model.types.standard.StandardAddressSpaceType;
 import io.enmasse.address.model.v1.CodecV1;
 import io.enmasse.controller.auth.*;
+import io.enmasse.controller.brokered.BrokeredController;
 import io.enmasse.controller.common.*;
 import io.enmasse.controller.standard.StandardController;
 import io.enmasse.k8s.api.AddressSpaceApi;
@@ -46,12 +44,12 @@ import io.vertx.core.Future;
 import io.vertx.core.Verticle;
 import io.vertx.core.Vertx;
 
-public class Controller extends AbstractVerticle {
+public class Main extends AbstractVerticle {
     private final OpenShiftClient controllerClient;
     private final ControllerOptions options;
     private final Kubernetes kubernetes;
 
-    public Controller(ControllerOptions options) throws Exception {
+    private Main(ControllerOptions options) throws Exception {
         this.controllerClient = new DefaultOpenShiftClient(new ConfigBuilder()
                 .withMasterUrl(options.masterUrl())
                 .withOauthToken(options.token())
@@ -94,10 +92,13 @@ public class Controller extends AbstractVerticle {
         }
 
         CertManager certManager = OpenSSLCertManager.create(controllerClient, options.caDir(), options.namespace());
+        AuthenticationServiceResolverFactory resolverFactory = createResolverFactory(options);
+        StandardController standardController = new StandardController(vertx, addressSpaceApi, kubernetes, resolverFactory, options.certDir());
+        BrokeredController brokeredController = new BrokeredController();
 
         deployVerticles(startPromise,
                 new Deployment(new AuthController(certManager, addressSpaceApi)),
-                new Deployment(new StandardController(controllerClient, addressSpaceApi, kubernetes, createResolverFactory(options), options.isMultitenant(), userDb, options.certDir())),
+                new Deployment(new Controller(controllerClient, addressSpaceApi, kubernetes, resolverFactory, options.isMultitenant(), userDb, Arrays.asList(standardController, brokeredController))),
 //                new Deployment(new AMQPServer(kubernetes.getNamespace(), addressSpaceApi, options.port())),
                 new Deployment(new HTTPServer(addressSpaceApi, options.certDir(), options.osbAuth().orElse(null), userDb), new DeploymentOptions().setWorker(true)));
     }
@@ -173,7 +174,7 @@ public class Controller extends AbstractVerticle {
     public static void main(String args[]) {
         try {
             Vertx vertx = Vertx.vertx();
-            vertx.deployVerticle(new Controller(ControllerOptions.fromEnv(System.getenv())));
+            vertx.deployVerticle(new Main(ControllerOptions.fromEnv(System.getenv())));
         } catch (IllegalArgumentException e) {
             System.out.println(String.format("Unable to parse arguments: %s", e.getMessage()));
             System.exit(1);
