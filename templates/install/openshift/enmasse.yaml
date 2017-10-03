@@ -927,7 +927,7 @@ objects:
             name: hawkular-openshift-agent
           - name: ssl-certs
             secret:
-              secretName: ${ROUTER_SECRET}
+              secretName: ${MESSAGING_SECRET}
           - name: authservice-ca
             secret:
               secretName: authservice-ca
@@ -1323,8 +1323,8 @@ objects:
     name: MQTT_GATEWAY_HOSTNAME
   - description: The hostname to use for the exposed route for the messaging console
     name: CONSOLE_HOSTNAME
-  - description: The secret to mount for router private key and certificate
-    name: ROUTER_SECRET
+  - description: The secret with cert for the messaging service
+    name: MESSAGING_SECRET
     required: true
   - description: The secret to mount for MQTT private key and certificate
     name: MQTT_SECRET

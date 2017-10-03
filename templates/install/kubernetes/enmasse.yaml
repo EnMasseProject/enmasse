@@ -155,7 +155,7 @@ items:
       "32Mi"}, "requests": {"memory": "32Mi"}}, "volumeMounts": [{"mountPath": "/etc/enmasse-certs",
       "name": "router-internal-cert", "readOnly": true}]}], "volumes": [{"configMap":
       {"name": "hawkular-router-config"}, "name": "hawkular-openshift-agent"}, {"name":
-      "ssl-certs", "secret": {"secretName": "${ROUTER_SECRET}"}}, {"name": "authservice-ca",
+      "ssl-certs", "secret": {"secretName": "${MESSAGING_SECRET}"}}, {"name": "authservice-ca",
       "secret": {"secretName": "authservice-ca"}}, {"name": "address-controller-ca",
       "secret": {"secretName": "address-controller-ca"}}, {"name": "router-internal-cert",
       "secret": {"secretName": "router-internal-cert"}}]}}}}, {"apiVersion": "extensions/v1beta1",
@@ -292,7 +292,7 @@ items:
       {"description": "The hostname to use for the exposed route for MQTT", "name":
       "MQTT_GATEWAY_HOSTNAME"}, {"description": "The hostname to use for the exposed
       route for the messaging console", "name": "CONSOLE_HOSTNAME"}, {"description":
-      "The secret to mount for router private key and certificate", "name": "ROUTER_SECRET",
+      "The secret with cert for the messaging service", "name": "MESSAGING_SECRET",
       "required": true}, {"description": "The secret to mount for MQTT private key
       and certificate", "name": "MQTT_SECRET", "required": true}, {"description":
       "The image to use for the MQTT LWT", "name": "MQTT_LWT_REPO", "value": "docker.io/enmasseproject/mqtt-lwt:latest"},

@@ -83,6 +83,7 @@ public class TestAddressSpaceApi implements AddressSpaceApi {
     @Override
     public AddressApi withAddressSpace(AddressSpace addressSpace) {
         if (!addressApiMap.containsKey(addressSpace.getName())) {
+            addressSpaces.put(addressSpace.getName(), addressSpace);
             addressApiMap.put(addressSpace.getName(), new TestAddressApi());
         }
         return getAddressApi(addressSpace.getName());
