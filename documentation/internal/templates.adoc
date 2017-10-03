@@ -1,0 +1,12 @@
+[[templates]]
+= Templates
+
+The following templates should be used to produce consistent modular documentation for EnMasse.
+
+include::templates/template-procedure.adoc[leveloffset=+1]
+
+include::templates/template-procedure-brief.adoc[leveloffset=+1]
+
+include::templates/template-concept.adoc[leveloffset=+1]
+
+include::templates/template-reference.adoc[leveloffset=+1]

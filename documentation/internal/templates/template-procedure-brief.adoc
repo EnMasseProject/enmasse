@@ -1,0 +1,19 @@
+[[brief_procedure_template]]
+= Brief Procedure Template and Guidelines
+
+This paragraph explains why the user performs the procedure, sets the context of the procedure, and may explain or list special considerations specific to this procedure. Keep the information brief and focused on what is needed for this specific procedure. Suggested length is 1 to 3 sentences, can be longer if needed.
+
+
+.Prerequisites _(if needed)_
+
+* List
+
+
+.Procedure
+
+. List
+
+
+.Related Information _(if needed)_
+
+* List
