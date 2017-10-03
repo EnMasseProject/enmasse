@@ -1,0 +1,121 @@
+== why
+
+The standard address space is designed for scalable messaging using the dispatch router to allow
+high throughput and many connections. This comes at the expense of some broker features such as
+message grouping, transactions and other broker-specific features.
+
+The brokered address space is designed to support broker-specific features, at the cost of limited
+scale in terms of the number of connections and addresses.
+
+== what/how
+
+The brokered address space will not change any APIs in the standard address space, but will involve
+changes to some components in order to share code and reduce runtime overhead. The brokered address
+space will consist of a 'broker' and an 'agent' process.
+
+=== address model
+
+The address model will be extended with the 'brokered' address space and the address types. To begin
+with, the supported address types will be 'queue' and 'topic'. Address-type specific features will
+be added as properties.
+
+=== service broker
+
+The service broker cannot expose address types 'queue' multiple times, so it needs to have a mapping
+for address types in each address space type.
+
+=== address controller
+
+The address controller needs to generalize the logic needed to watch standard address space configs to
+handle brokered address space configs. It will not contain any address-space specific logic for the
+brokered address space. The parts that are standard address space-specific, will eventually  (not
+part of the first iteration) be moved into a controller process specific to the 'standard' address s
+pace.
+
+=== console/generic container
+
+The console will be refactored to support the brokered address space and generalized into a generic
+container runtime called 'enmasse agent' that can run multiple plugins. The initial set of plugins will be 'console',
+and 'brokered-controller'. The address configuration will be retrieved using an API that hides the
+kubernetes interaction.
+
+=== console plugin
+
+The console plugin will implement the console as we have today in the standard address space, but
+modified to support the brokered address space.
+
+=== brokered-controller plugin
+
+This plugin will be responsible for creating/deleting queues and topics on the broker. It monitors the
+address configured within its namespace, and ensures that the broker state matches that of the
+namespace. The plugin will also be responsible for updating the address resource status based on the
+state of that address within the broker.
+
+The broker-controller plugin will connect to the broker using a broker service. The broker service
+will be internal to the address space, while another 'messaging' service will be available
+externally.
+
+=== broker
+
+The current artemis image will be reused, but modified to load a different configuration specific to
+the brokered address space. The broker startup script will be modified to look for an
+'ADDRESS_SPACE_TYPE' environment variable, which will determine if the current 'standard'
+configuration or the new 'brokered' configuration will be applied.
+
+=== k8s/openshift
+
+A new template containing 2 deployments are needed for the brokered address space. The template will
+be instantiated by the address controller upon the creation of a brokered address space. One
+deployment is for the broker itself, and another deployment is for the 'enmasse agent' running the
+console and brokered-controller plugin. 
+
+== testing
+
+=== test create/delete of brokered address space
+
+* create brokered address space A with address B of type 'queue' and verify that messages can be sent and received
+* create brokered address space C with address B of type 'queue' and verify that messages can be sent and received
+* delete brokered address space A
+* ensure that messages can be sent/received from address B in address space C.
+
+=== test address types
+
+* create brokered address space A
+* create queue A
+* create topic A and expect 'already exists' error
+* verify that can send/recv from A
+* create topic B
+* create 2 subscribers for B and receive 1000 messages each
+* create 1 producer for B and publish 600 messages and close
+* create 1 producer for B and publish 400 messages and close
+
+=== test durable subscribers
+
+* create brokered address space A
+* create topic C
+* create durable subscriber S
+* send 10 messages to C
+* receive 5 messages in subscriber
+* reconnect subscriber
+* receive 5 messages in subscriber
+
+=== test JMS client
+
+* create brokered address space A
+* create topic C
+* use JMS client(s) to send/receive messages from topic
+
+=== tests for particular supported features
+
+* message grouping
+* transactions
+* duplicate message detection
+* ...
+
+=== authentication tests
+* authentication tests should be extended to cover brokered address space
+
+== documentation
+
+The 'brokered' address space type and its address types will be documented in the book and in the
+console.
