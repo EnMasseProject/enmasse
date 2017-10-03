@@ -3,7 +3,7 @@ local common = import "common.jsonnet";
   service(addressSpace)::
     common.service(addressSpace, "configuration", "configserv", "amqps", 5671, 5671),
 
-  deployment(addressSpace, image_repo)::
+  deployment(addressSpace, image)::
     {
       "apiVersion": "extensions/v1beta1",
       "kind": "Deployment",
@@ -32,7 +32,7 @@ local common = import "common.jsonnet";
           },
           "spec": {
             "containers": [
-              common.container("configserv", image_repo, "amqps", 5671, "128Mi", [
+              common.container("configserv", image, "amqps", 5671, "128Mi", [
                       {
                         "name": "CERT_DIR",
                         "value": "/etc/enmasse-certs"
@@ -48,9 +48,11 @@ local common = import "common.jsonnet";
                       },
             ],
             "volumes": [
-              "name": "configserv-internal-cert",
-              "secret": {
-                "secretName": "configserv-internal-cert"
+              {
+                "name": "configserv-internal-cert",
+                "secret": {
+                  "secretName": "configserv-internal-cert"
+                }
               }
             ]
           }
