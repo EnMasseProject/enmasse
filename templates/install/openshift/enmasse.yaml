@@ -1516,6 +1516,8 @@ objects:
               name: amqp
             - containerPort: 5671
               name: amqps
+            - containerPort: 5673
+              name: amqps-internal
             - containerPort: 8161
               name: jolokia
             readinessProbe:
@@ -1546,10 +1548,25 @@ objects:
       name: broker
     spec:
       ports:
-      - name: amqp
-        port: 5672
       - name: amqps
         port: 5671
+        targetPort: amqps-internal
+      selector:
+        role: broker
+  - apiVersion: v1
+    kind: Service
+    metadata:
+      labels:
+        app: enmasse
+      name: messaging
+    spec:
+      ports:
+      - name: amqp
+        port: 5672
+        targetPort: amqp
+      - name: amqps
+        port: 5671
+        targetPort: amqps
       selector:
         role: broker
   parameters:
