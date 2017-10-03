@@ -31,7 +31,7 @@ local images = import "images.jsonnet";
       "labels": {
         "app": "enmasse"
       },
-      "name": "enmasse-instance-infra"
+      "name": "standard-space-infra"
     },
     local common_items = admin.services("${ADDRESS_SPACE}") + [
       messagingService.internal("${ADDRESS_SPACE}"),

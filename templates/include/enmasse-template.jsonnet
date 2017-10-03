@@ -1,6 +1,6 @@
 local storage = import "storage-template.jsonnet";
 local common = import "common.jsonnet";
-local enmasseInfra = import "enmasse-instance-infra.jsonnet";
+local standardInfra = import "standard-space-infra.jsonnet";
 local addressController = import "address-controller.jsonnet";
 local restapiRoute = import "restapi-route.jsonnet";
 local images = import "images.jsonnet";
@@ -19,7 +19,7 @@ local images = import "images.jsonnet";
                  storage.template(false, true),
                  storage.template(true, false),
                  storage.template(true, true),
-                 enmasseInfra.generate(with_kafka),
+                 standardInfra.generate(with_kafka),
                  addressController.deployment("${ADDRESS_CONTROLLER_REPO}", "${MULTITENANT}", "", "${ENMASSE_CA_SECRET}", "${ADDRESS_CONTROLLER_CERT_SECRET}", "${ADDRESS_CONTROLLER_ENABLE_API_AUTH}"),
                  common.empty_secret("address-controller-userdb"),
                  addressController.internal_service,
