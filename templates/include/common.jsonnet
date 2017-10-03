@@ -119,6 +119,28 @@
       }
     },
 
+  persistent_volume(name, claimName)::
+  {
+    "name": name,
+    "persistentVolumeClaim": {
+        "claimName": claimName
+    }
+  },
+
+  empty_volume(name)::
+  {
+    "name": name,
+    "emptyDir": {}
+  },
+
+  configmap_volume(name, mapName)::
+  {
+    "name": name,
+    "configMap": {
+      "name": mapName,
+    }
+  },
+
   ca_secret(name, cert_value)::
   {
     "apiVersion": "v1",
@@ -129,5 +151,33 @@
     "data": {
       "tls.crt": cert_value
     }
-  }
+  },
+
+  tcp_probe(port, initialDelay)::
+  {
+    "tcpSocket": {
+      "port": port
+    },
+    [if initialDelay != 0 then "initialDelaySeconds"]: initialDelay
+  },
+
+  container_port(name, port)::
+  {
+    "name": name,
+    "containerPort": port
+  },
+
+  volume_mount(name, mountPath, readOnly=false)::
+  {
+    "name": name,
+    "mountPath": mountPath,
+    "readOnly": readOnly
+  },
+
+  env(name, value)::
+  {
+    "name": name,
+    "value": value
+  },
+
 }

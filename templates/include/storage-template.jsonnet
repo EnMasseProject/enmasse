@@ -53,15 +53,15 @@ local forwarder = import "forwarder.jsonnet";
             },
             "spec": {
               local brokerVolume = if persistence
-                then broker.persistedVolume(volumeName, claimName)
-                else broker.volume(volumeName),
+                then common.persistent_volume(volumeName, claimName)
+                else common.empty_volume(volumeName),
               "volumes": [
                 brokerVolume,
                 common.secret_volume("ssl-certs", "${COLOCATED_ROUTER_SECRET}"),
                 common.secret_volume("authservice-ca", "authservice-ca"),
                 common.secret_volume("address-controller-ca", "address-controller-ca"),
                 common.secret_volume("broker-internal-cert", "broker-internal-cert"),
-                broker.hawkularVolume()
+                common.configmap_volume("hawkular-openshift-agent", "hawkular-broker-config")
               ],
 
               "containers": if multicast

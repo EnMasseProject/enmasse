@@ -5,38 +5,21 @@ local common = import "common.jsonnet";
       "name": "broker",
       "image": image_repo,
       "ports": [
-        {
-          "name": "amqp",
-          "containerPort": 5673
-        },
-        {
-          "name": "jolokia",
-          "containerPort": 8161 
-        }
+        common.container_port("amqp", 5673),
+        common.container_port("jolokia", 8161)
       ],
-      "env": [ addressEnv, {"name": "PN_TRACE_FRM", "value": "1"}, {"name": "CLUSTER_ID", "value": "${CLUSTER_ID}"}, {"name": "CERT_DIR", "value": "/etc/enmasse-certs"} ],
+      "env": [
+        addressEnv,
+        common.env("PN_TRACE_FRM", "1"),
+        common.env("CLUSTER_ID", "${CLUSTER_ID}"),
+        common.env("CERT_DIR", "/etc/enmasse-certs")
+      ],
       "volumeMounts": [
-        {
-          "name": volumeName,
-          "mountPath": "/var/run/artemis"
-        },
-        {
-          "name": "broker-internal-cert",
-          "mountPath": "/etc/enmasse-certs",
-          "readOnly": true
-        }
+        common.volume_mount(volumeName, "/var/run/artemis"),
+        common.volume_mount("broker-internal-cert", "/etc/enmasse-certs", true)
       ],
-      "livenessProbe": {
-        "tcpSocket": {
-          "port": "amqp"
-        },
-        "initialDelaySeconds": 120
-      },
-      "readinessProbe": {
-        "tcpSocket": {
-          "port": "amqp"
-        }
-      },
+      "livenessProbe": common.tcp_probe("amqp", 120),
+      "readinessProbe": common.tcp_probe("amqp", 0),
       "lifecycle": {
         "preStop": {
           "exec": {
@@ -47,26 +30,4 @@ local common = import "common.jsonnet";
         }
       }
     },
-
-  volume(name)::
-    {
-      "name": name,
-      "emptyDir": {}
-    },
-
-  persistedVolume(name, claimName)::
-    {
-      "name": name,
-      "persistentVolumeClaim": {
-          "claimName": claimName
-      }
-    },
-
-  hawkularVolume()::
-    {
-      "name": "hawkular-openshift-agent",
-      "configMap": {
-          "name": "hawkular-broker-config"
-      }
-    }
 }
