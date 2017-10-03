@@ -190,10 +190,10 @@ public class TopicTest extends TestBase {
         assertThat(receivedWithoutSel.get(1, TimeUnit.MINUTES).size(), is(msgsCount - 1));
     }
 
-    @Test
+
     public void testMessageSelectorsProperty() throws Exception {
         Destination selTopic = Destination.topic("selectorTopicProp");
-        String linkName = "linkSelectorTopicAppProp";
+        String linkName = "linkSelectorTopicProp";
         setAddresses(selTopic);
 
         Thread.sleep(30_000);
@@ -208,19 +208,17 @@ public class TopicTest extends TestBase {
             listOfMessages.add(msg);
         }
 
-//        set appProperty for last message
-        short correlationID = 1;
+        //set property for last message
+        String groupID = "testGroupID";
         if (msgsCount > 0) {
-            Properties prop = new Properties();
-            prop.setCorrelationId(correlationID);
-            listOfMessages.get(msgsCount - 1).setCorrelationId(correlationID);
+            listOfMessages.get(msgsCount - 1).setGroupId(groupID);
         }
 
         Source source = new Source();
         source.setAddress(selTopic.getAddress());
         source.setCapabilities(Symbol.getSymbol("topic"));
         Map<Symbol, DescribedType> map = new HashMap<>();
-        map.put(Symbol.valueOf("jms-selector"), new AmqpJmsSelectorFilter("JMSCorrelationID IS NOT NULL"));
+        map.put(Symbol.valueOf("jms-selector"), new AmqpJmsSelectorFilter("JMSXGroupID IS NOT NULL"));
         source.setFilter(map);
 
         AmqpClient client = amqpClientFactory.createTopicClient();
@@ -233,7 +231,7 @@ public class TopicTest extends TestBase {
         assertThat(sent.get(1, TimeUnit.MINUTES), is(msgsCount));
 
         assertThat(received.get(1, TimeUnit.MINUTES).size(), is(1));
-        assertThat(received.get(1, TimeUnit.MINUTES).get(0).getCorrelationId(), is(correlationID));
+        assertThat(received.get(1, TimeUnit.MINUTES).get(0).getGroupId(), is(groupID));
     }
 
     public void testTopicWildcards() throws Exception {
