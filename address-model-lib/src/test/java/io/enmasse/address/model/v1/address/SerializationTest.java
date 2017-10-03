@@ -17,6 +17,7 @@ package io.enmasse.address.model.v1.address;
 
 import io.enmasse.address.model.*;
 import io.enmasse.address.model.Endpoint;
+import io.enmasse.address.model.types.brokered.BrokeredAddressSpaceType;
 import io.enmasse.address.model.types.standard.StandardAddressSpaceType;
 import io.enmasse.address.model.types.standard.StandardType;
 import io.enmasse.address.model.v1.CodecV1;
@@ -242,12 +243,13 @@ public class SerializationTest {
         AddressSpace a2 = new AddressSpace.Builder()
                 .setName("mysecondspace")
                 .setNamespace("myothernamespace")
-                .setPlan(new StandardAddressSpaceType().getDefaultPlan())
-                .setType(new StandardAddressSpaceType())
+                .setPlan(new BrokeredAddressSpaceType().getDefaultPlan())
+                .setType(new BrokeredAddressSpaceType())
                 .setStatus(new Status(false))
                 .setEndpointList(Arrays.asList(new Endpoint.Builder()
                         .setName("bestendpoint")
                         .setService("mqtt")
+                        .setCertProvider(new SecretCertProvider("mysecret"))
                         .build()))
                 .build();
 

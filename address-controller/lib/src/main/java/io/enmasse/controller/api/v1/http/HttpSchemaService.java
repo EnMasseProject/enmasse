@@ -35,7 +35,7 @@ import java.util.Collections;
 public class HttpSchemaService {
     private static final Logger log = LoggerFactory.getLogger(HttpSchemaService.class.getName());
 
-    private final Schema schema = () -> Collections.singletonList(new StandardAddressSpaceType());
+    private final Schema schema = new io.enmasse.address.model.Schema();
 
     @GET
     @Produces({MediaType.APPLICATION_JSON})

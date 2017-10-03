@@ -15,8 +15,6 @@
  */
 package io.enmasse.address.model;
 
-import io.enmasse.address.model.CertProvider;
-
 public class SecretCertProvider extends CertProvider {
     public SecretCertProvider(String secretName) {
         super("secret", secretName);
