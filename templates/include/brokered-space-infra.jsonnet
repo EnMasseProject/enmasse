@@ -33,6 +33,35 @@ local hawkularBrokerConfig = import "hawkular-broker-config.jsonnet";
     }
   },
 
+  messaging_service::
+  {
+    "apiVersion": "v1",
+    "kind": "Service",
+    "metadata": {
+      "labels": {
+        "app": "enmasse"
+      },
+      "name": "messaging"
+    },
+    "spec": {
+      "ports": [
+        {
+          "name": "amqp",
+          "port": 5672,
+          "targetPort": "amqp"
+        },
+        {
+          "name": "amqps",
+          "port": 5671,
+          "targetPort": "amqps"
+        },
+      ],
+      "selector": {
+        "role": "broker"
+      }
+    }
+  },
+
   broker_service::
   {
     "apiVersion": "v1",
@@ -46,13 +75,10 @@ local hawkularBrokerConfig = import "hawkular-broker-config.jsonnet";
     "spec": {
       "ports": [
         {
-          "name": "amqp",
-          "port": 5672
-        },
-        {
           "name": "amqps",
-          "port": 5671
-        },
+          "port": 5671,
+          "targetPort": "amqps-internal"
+        }
       ],
       "selector": {
         "role": "broker"
@@ -108,6 +134,7 @@ local hawkularBrokerConfig = import "hawkular-broker-config.jsonnet";
               "ports": [
                 common.container_port("amqp", 5672),
                 common.container_port("amqps", 5671),
+                common.container_port("amqps-internal", 5673),
                 common.container_port("jolokia", 8161)
               ],
               "livenessProbe": common.tcp_probe("amqp", 120),
@@ -139,6 +166,7 @@ local hawkularBrokerConfig = import "hawkular-broker-config.jsonnet";
       me.pvc("broker-data"),
       me.broker_deployment("broker"),
       me.broker_service,
+      me.messaging_service,
     ],
     "parameters": [
       {
