@@ -35,9 +35,8 @@ not part of the first iteration) moved.
 
 The console will be refactored to support the brokered address space and generalized into a generic
 container runtime called 'enmasse agent' that can run multiple plugins. The initial set of plugins will be 'console',
-and 'brokered-controller', with the addition of a 'address source' plugin that will initially use
-configserv, but eventually during this work be transformed to use the k8s APIs directly.
-
+and 'brokered-controller'. The address configuration will be retrieved using an API that hides the
+kubernetes interaction.
 
 === console plugin
 
