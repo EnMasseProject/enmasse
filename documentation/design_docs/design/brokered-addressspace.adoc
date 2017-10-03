@@ -1,20 +1,23 @@
 == why
 
-The brokered address space is created to allow a broker-centric address view where all broker
-features such as message grouping, transactions etc. would be exposed. On the downside, the brokered
-address space would support a smaller number of connections and addresses compared to the standard
-address space.
+The standard address space is designed for scalable messaging using the dispatch router to allow
+high throughput and many connections. This comes at the expense of some broker features such as
+message grouping, transactions and other broker-specific features.
+
+The brokered address space is designed to support broker-specific features, at the cost of limited
+scale in terms of the number of connections and addresses.
 
 == what/how
 
 The brokered address space will not change any APIs in the standard address space, but will involve
-changes to some components in order to share code and reduce runtime overhead.
+changes to some components in order to share code and reduce runtime overhead. The brokered address
+space will consist of a 'broker' and an 'agent' process.
 
 === address model
 
-The address model will be extendended with the 'brokered' address space and the types. To begin
-with, the supported types will be 'queue' and 'topic', and properties for these addresses (related
-to features such as message grouping) will be added later.
+The address model will be extendended with the 'brokered' address space and the address types. To begin
+with, the supported address types will be 'queue' and 'topic'. Address-type specific features will
+be added as properties.
 
 === service broker
 
@@ -25,7 +28,8 @@ for address types in each address space type.
 
 The address controller needs to generalize the logic needed to watch standard address space configs to
 handle brokered address space configs. It will not contain any address-space specific logic for the
-brokered address space.
+brokered address space, and the parts that are standard address space-specific, will (eventually,
+not part of the first iteration) moved.
 
 === console/generic container
 
@@ -57,6 +61,20 @@ clients connecting to the service anyway, it does not cost any extra. Alternativ
 broker-controller to listen for connections in addition to creating a connector config in the
 broker.
 
+=== broker
+
+The current artemis image will be reused, but modified to load a different configuration specific to
+the brokered address space. The broker startup script will be modified to look for an
+'ADDRESS_SPACE_TYPE' environment variable, which will determine if the current 'standard'
+configuration or the new 'brokered' configuration will be applied.
+
+=== k8s/openshift
+
+A new template containing 2 deployments are needed for the brokered address space. The template will
+be instantiated by the address controller upon the creation of a brokered address space. One
+deployment is for the broker itself, and another deployment is for the 'enmasse agent' running the
+console and brokered-controller plugin. 
+
 == testing
 
 === test create/delete of brokered address space
@@ -78,8 +96,6 @@ broker.
 * create 1 producer for B and publish 400 messages and close
 
 === test durable subscribers
-
-=== test queue selectors
 
 TODO: More tests
 
