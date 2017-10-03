@@ -1,0 +1,91 @@
+== why
+
+The brokered address space is created to allow a broker-centric address view where all broker
+features such as message grouping, transactions etc. would be exposed. On the downside, the brokered
+address space would support a smaller number of connections and addresses compared to the standard
+address space.
+
+== what/how
+
+The brokered address space will not change any APIs in the standard address space, but will involve
+changes to some components in order to share code and reduce runtime overhead.
+
+=== address model
+
+The address model will be extendended with the 'brokered' address space and the types. To begin
+with, the supported types will be 'queue' and 'topic', and properties for these addresses (related
+to features such as message grouping) will be added later.
+
+=== service broker
+
+The service broker cannot expose address types 'queue' multiple times, so it needs to have a mapping
+for address types in each address space type.
+
+=== address controller
+
+The address controller needs to generalize the logic needed to watch standard address space configs to
+handle brokered address space configs. It will not contain any address-space specific logic for the
+brokered address space.
+
+=== console/generic container
+
+The console will be refactored to support the brokered address space and generalized into a generic
+container runtime called 'enmasse agent' that can run multiple plugins. The initial set of plugins will be 'console',
+and 'brokered-controller', with the addition of a 'address source' plugin that will initially use
+configserv, but eventually during this work be transformed to use the k8s APIs directly.
+
+
+=== console plugin
+
+The console plugin will implement the console as we have today in the standard address space, but
+modified to support the brokered address space.
+
+=== brokered-controller plugin
+
+This plugin will be responsible for creating/deleting queues and topics on brokers. It monitors the
+address configured within its namespace, and ensures that the brokers state matches that of the
+namespace. The plugin will also be responsible for updating the address resource status based on the
+state of that address within the broker.
+
+There are two alternatives for connecting the controller to the broker. Either
+
+1. through a broker service that maps to the broker cluster
+2. through a connector in the broker that connects to the controller
+
+Alternative 1. gives us load balancing over a broker cluster for free, and since we will need it for
+clients connecting to the service anyway, it does not cost any extra. Alternative 2. requires the
+broker-controller to listen for connections in addition to creating a connector config in the
+broker.
+
+== testing
+
+=== test create/delete of brokered address space
+
+* create brokered address space A with address B of type 'queue' and verify that messages can be sent and received
+* create brokered address space C with address B of type 'queue' and verify that messages can be sent and received
+* delete brokered address space A
+* ensure that messages can be sent/received from address B in address space C.
+
+=== test address types
+
+* create brokered address space A
+* create queue A
+* create topic A and expect 'already exists' error
+* verify that can send/recv from A
+* create topic B
+* create 2 subscribers for B and receive 1000 messages each
+* create 1 producer for B and publish 600 messages and close
+* create 1 producer for B and publish 400 messages and close
+
+=== test durable subscribers
+
+=== test queue selectors
+
+TODO: More tests
+
+== documentation
+
+The 'brokered' address space type and its address types will be documented in the book and in the
+console.
+
+TODO: More docs?
