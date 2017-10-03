@@ -113,6 +113,15 @@ console and brokered-controller plugin.
 * create topic C
 * use JMS client(s) to send/receive messages from topic
 
+=== tests for particular supported features
+
+* message grouping
+* transactions
+* duplicate message detection
+* ...
+
+=== authentication tests
+
 TODO: More tests
 
 == documentation
