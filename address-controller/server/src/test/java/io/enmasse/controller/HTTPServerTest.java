@@ -138,7 +138,7 @@ public class HTTPServerTest {
                     response.bodyHandler(buffer -> {
                         JsonObject data = buffer.toJsonObject();
                         context.assertTrue(data.containsKey("spec"));
-                        context.assertEquals("standard", data.getJsonObject("spec").getJsonArray("addressSpaceTypes").getJsonObject(0).getString("name"));
+                        context.assertEquals("standard", data.getJsonObject("spec").getJsonArray("addressSpaceTypes").getJsonObject(1).getString("name"));
                         async.complete();
                     });
                 });
