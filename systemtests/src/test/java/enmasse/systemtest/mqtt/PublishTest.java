@@ -39,7 +39,7 @@ public class PublishTest extends TestBase {
         List<String> messages = Arrays.asList("foo", "bar", "baz");
         List<Integer> publisherQos = Arrays.asList(0, 0, 0);
 
-        this.publish("mytopicQoS0", messages, publisherQos, 0);
+        this.publish(messages, publisherQos, 0);
     }
 
     @Test
@@ -48,7 +48,7 @@ public class PublishTest extends TestBase {
         List<String> messages = Arrays.asList("foo", "bar", "baz");
         List<Integer> publisherQos = Arrays.asList(1, 1, 1);
 
-        this.publish("mytopicQoS1", messages, publisherQos, 1);
+        this.publish(messages, publisherQos, 1);
     }
 
     public void testPublishQoS2() throws Exception {
@@ -56,12 +56,12 @@ public class PublishTest extends TestBase {
         List<String> messages = Arrays.asList("foo", "bar", "baz");
         List<Integer> publisherQos = Arrays.asList(2, 2, 2);
 
-        this.publish("mytopicQoS2", messages, publisherQos, 2);
+        this.publish(messages, publisherQos, 2);
     }
 
-    private void publish(String destName, List<String> messages, List<Integer> publisherQos, int subscriberQos) throws Exception {
+    private void publish(List<String> messages, List<Integer> publisherQos, int subscriberQos) throws Exception {
 
-        Destination dest = Destination.topic(destName);
+        Destination dest = Destination.topic("mytopic");
         setAddresses(dest);
         Thread.sleep(60_000);
 
