@@ -37,7 +37,7 @@ sed -i -e "s/router.default.svc.cluster.local/${MYIP}.nip.io/g" $MASTER_CONFIG
 # Start OpenShift with config
 sudo openshift start --master-config=$MASTER_CONFIG --node-config=$NODE_CONFIG 2> $LOGDIR/os.err > $LOGDIR/os.log &
 echo "Waiting for OpenShift to start"
-sleep 30
+sleep 60
 
 KUBECONFIG=$CONFIG/master/admin.kubeconfig
 
