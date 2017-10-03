@@ -1,5 +1,6 @@
 local images = import "images.jsonnet";
 local broker = import "broker.jsonnet";
+local common = import "common.jsonnet";
 local router = import "router.jsonnet";
 local broker_repo = "${BROKER_REPO}";
 local router_repo = "${ROUTER_REPO}";
@@ -56,10 +57,10 @@ local forwarder = import "forwarder.jsonnet";
                 else broker.volume(volumeName),
               "volumes": [
                 brokerVolume,
-                router.secret_volume("ssl-certs", "${COLOCATED_ROUTER_SECRET}"),
-                router.secret_volume("authservice-ca", "authservice-ca"),
-                router.secret_volume("address-controller-ca", "address-controller-ca"),
-                router.secret_volume("broker-internal-cert", "broker-internal-cert"),
+                common.secret_volume("ssl-certs", "${COLOCATED_ROUTER_SECRET}"),
+                common.secret_volume("authservice-ca", "authservice-ca"),
+                common.secret_volume("address-controller-ca", "address-controller-ca"),
+                common.secret_volume("broker-internal-cert", "broker-internal-cert"),
                 broker.hawkularVolume()
               ],
 

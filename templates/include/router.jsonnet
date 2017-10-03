@@ -122,14 +122,6 @@ local authService = import "auth-service.jsonnet";
       "volumeMounts": ssl_certs + authservice_ca + router_internal_cert + address_controller_ca
     },
 
-  secret_volume(name, secret)::
-    {
-      "name": name,
-      "secret": {
-        "secretName": secret
-      }
-    },
-
   hawkular_volume()::
     {
       "name": "hawkular-openshift-agent",
