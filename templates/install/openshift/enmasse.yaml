@@ -686,7 +686,7 @@ objects:
   metadata:
     labels:
       app: enmasse
-    name: enmasse-instance-infra
+    name: standard-space-infra
   objects:
   - apiVersion: v1
     kind: Service
