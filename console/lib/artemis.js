@@ -138,13 +138,18 @@ Artemis.prototype._request = function (resource, operation, parameters) {
     });
 }
 
+Artemis.prototype.createQueue = function (name) {
+    return this._request('broker', 'createQueue', [name/*address*/, 'ANYCAST', name/*queue name*/, null/*filter*/, true/*durable*/,
+                                                   -1/*max consumers*/, false/*purgeOnNoConsumers*/, true/*autoCreateAddress*/]);
+}
+
 Artemis.prototype.deployQueue = function (name, durable) {
     var is_durable = durable === undefined ? true : durable;
     return this._request('broker', 'deployQueue', [name, name, null, is_durable]);
 }
 
 Artemis.prototype.destroyQueue = function (name) {
-    return this._request('broker', 'destroyQueue', [name]);
+    return this._request('broker', 'destroyQueue', [name, true, true]);
 }
 
 Artemis.prototype.getQueueNames = function () {
@@ -235,7 +240,8 @@ Artemis.prototype.getAddressNames = function () {
 
 var address_attributes = {delivery_modes: 'getRoutingTypesAsJSON',
                           messages: 'getNumberOfMessages',
-                          queues: 'getQueueNames'};
+                          queues: 'getQueueNames',
+                          enqueued: 'getMessageCount'};
 
 Artemis.prototype.listAddresses = function () {
     var attributes = Object.keys(address_attributes);
@@ -286,8 +292,8 @@ Artemis.prototype.listAddresses = function () {
 
 Artemis.prototype.createAddress = function (name, type) {
     var routing_types = [];
-    if (type.anycast || type.queue) routing_types.push('anycast');
-    if (type.multicast || type.topic) routing_types.push('multicast');
+    if (type.anycast || type.queue) routing_types.push('ANYCAST');
+    if (type.multicast || type.topic) routing_types.push('MULTICAST');
     return this._request('broker', 'createAddress', [name, routing_types.join(',')]);
 };
 
@@ -373,6 +379,24 @@ Artemis.prototype.destroyConnectorService = function (name) {
 
 Artemis.prototype.getConnectorServices = function () {
     return this._request('broker', 'getConnectorServices', []);
+}
+
+Artemis.prototype.listConnections = function () {
+    return this._request('broker', 'listConnectionsAsJSON', []).then(function (result) {
+        return JSON.parse(result);
+    });
+}
+
+Artemis.prototype.listConsumers = function () {
+    return this._request('broker', 'listAllConsumersAsJSON', []).then(function (result) {
+        return JSON.parse(result);
+    });
+}
+
+Artemis.prototype.listProducers = function () {
+    return this._request('broker', 'listProducersInfoAsJSON', []).then(function (result) {
+        return JSON.parse(result);
+    });
 }
 
 /**

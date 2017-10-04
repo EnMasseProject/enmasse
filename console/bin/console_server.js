@@ -27,11 +27,10 @@ address_source.on('addresses_defined', address_list.addresses_defined.bind(addre
 var console_server = new ConsoleServer(address_list, address_ctrl.create());
 console_server.listen();
 
-if (process.env.ADDRESS_SPACE_TYPE === 'broker') {
+if (process.env.ADDRESS_SPACE_TYPE === 'brokered') {
     var BrokerController = require('../lib/broker_controller.js');
-    var bc = new BrokerController(console_server);
-    //TODO: have broker connect to controller? or have controller connect to broker?
-    //bc.listen();
+    var bc = new BrokerController(console_server.address_list.update_stats.bind(console_server.address_list),
+                                  console_server.connections.set.bind(console_server.connections));
     bc.connect({host:process.env.BROKER_SERVICE_HOST, port:process.env.BROKER_SERVICE_PORT});
     address_source.on('addresses_defined', bc.addresses_defined.bind(bc));
 } else {
