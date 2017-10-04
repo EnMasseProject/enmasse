@@ -18,10 +18,12 @@ package enmasse.systemtest;
 
 import enmasse.systemtest.amqp.AmqpClient;
 import enmasse.systemtest.amqp.AmqpClientFactory;
+import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.message.Message;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -29,9 +31,7 @@ import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 public class QueueTest extends TestBase {
 
@@ -120,6 +120,41 @@ public class QueueTest extends TestBase {
         response = getAddresses(Optional.empty());
         assertThat(response.get(1, TimeUnit.MINUTES), is(java.util.Collections.emptyList()));
         Logging.log.info("queue (" + q2.getAddress() + ") successfully deleted");
+    }
+
+    @Test
+    public void testMessagePriorities() throws Exception {
+        Destination dest = Destination.queue("messagePrioritiesQueue");
+        setAddresses(dest);
+
+        AmqpClient client = amqpClientFactory.createQueueClient();
+        Thread.sleep(30_000);
+
+        int msgsCount = 1024;
+        List<Message> listOfMessages = new ArrayList<>();
+        for (int i = 0; i < msgsCount; i++) {
+            Message msg = Message.Factory.create();
+            msg.setAddress(dest.getAddress());
+            msg.setBody(new AmqpValue(dest.getAddress()));
+            msg.setSubject("subject");
+            msg.setPriority((short) (i % 10));
+            listOfMessages.add(msg);
+        }
+
+        Future<Integer> sent = client.sendMessages(dest.getAddress(),
+                listOfMessages.toArray(new Message[listOfMessages.size()]));
+        assertThat(sent.get(1, TimeUnit.MINUTES), is(msgsCount));
+
+        Future<List<Message>> received = client.recvMessages(dest.getAddress(), msgsCount);
+        assertThat(received.get(1, TimeUnit.MINUTES).size(), is(msgsCount));
+
+        int sub = 1;
+        for (Message m : received.get()) {
+            for (Message mSub : received.get().subList(sub, received.get().size())) {
+                assertTrue(m.getPriority() >= mSub.getPriority());
+            }
+            sub++;
+        }
     }
 
     public void testScaledown() throws Exception {
