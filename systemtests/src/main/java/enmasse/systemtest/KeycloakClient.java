@@ -18,10 +18,12 @@ package enmasse.systemtest;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.resource.RealmResource;
 import org.keycloak.representations.idm.CredentialRepresentation;
+import org.keycloak.representations.idm.RealmRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 
 import javax.ws.rs.core.Response;
 import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -74,14 +76,23 @@ public class KeycloakClient implements AutoCloseable {
     private RealmResource waitForRealm(String realmName, long timeout, TimeUnit timeUnit)
             throws InterruptedException, TimeoutException {
         long endTime = System.currentTimeMillis() + timeUnit.toMillis(timeout);
-        RealmResource realm = keycloak.realm(realmName);
-        while (realm == null && System.currentTimeMillis() < endTime) {
+        while (System.currentTimeMillis() < endTime) {
+            List<RealmRepresentation> realms = keycloak.realms().findAll();
+            for (RealmRepresentation realm : realms) {
+                if (realm.getRealm().equals(realmName)) {
+                    break;
+                }
+            }
             Thread.sleep(5000);
         }
-        if (realm == null) {
-            throw new TimeoutException("Timed out waiting for realm " + realmName + " to exist");
+
+        List<RealmRepresentation> realms = keycloak.realms().findAll();
+        for (RealmRepresentation realm : realms) {
+            if (realm.getRealm().equals(realmName)) {
+                return keycloak.realm(realmName);
+            }
         }
-        return realm;
+        throw new TimeoutException("Timed out waiting for realm " + realmName + " to exist");
     }
 
     public void deleteUser(String realm, String userName) {
