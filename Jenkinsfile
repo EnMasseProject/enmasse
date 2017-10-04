@@ -37,15 +37,15 @@ node('enmasse') {
                 }
             }
         }
-        stage('teardown openshift') {
-            sh 'oc cluster down'
-        }
         result = 'success'
     }
     stage('archive artifacts') {
         archive '**/TEST-*.xml'
         archive 'artifacts/**'
         archive 'templates/install/**'
+    }
+    stage('teardown openshift') {
+        sh 'oc cluster down'
     }
     stage('notify mailing list') {
         if (result.equals("failure")) {
