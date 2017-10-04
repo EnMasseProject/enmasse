@@ -21,6 +21,22 @@ fi
 # Make sure that we use /dev/urandom
 JAVA_OPTS="${JAVA_OPTS} -Djava.security.egd=file:/dev/./urandom"
 
+function configure_brokered() {
+    cp $CONFIG_TEMPLATES/brokered/broker.xml /tmp/broker.xml
+}
+
+function configure_standard() {
+    cp $CONFIG_TEMPLATES/standard/broker_header.xml /tmp/broker.xml
+    if [ -n "$TOPIC_NAME" ]; then
+        cat $CONFIG_TEMPLATES/standard/broker_topic.xml >> /tmp/broker.xml
+    elif [ -n $QUEUE_NAME ] && [ "$QUEUE_NAME" != "" ]; then
+        cat $CONFIG_TEMPLATES/standard/broker_queue.xml >> /tmp/broker.xml
+    else
+        cat $CONFIG_TEMPLATES/standard/broker_queue_colocated.xml >> /tmp/broker.xml
+    fi
+    cat $CONFIG_TEMPLATES/standard/broker_footer.xml >> /tmp/broker.xml
+}
+
 # Parameters are
 # - instance directory
 # - instance id
@@ -30,15 +46,12 @@ function configure() {
     export CONTAINER_ID=$HOSTNAME
     if [ ! -d "$INSTANCE" ]; then
         $ARTEMIS_HOME/bin/artemis create $instanceDir --user admin --password admin --role admin --allow-anonymous --java-options "$JAVA_OPTS"
-        cp $CONFIG_TEMPLATES/broker_header.xml /tmp/broker.xml
-        if [ -n "$TOPIC_NAME" ]; then
-            cat $CONFIG_TEMPLATES/broker_topic.xml >> /tmp/broker.xml
-        elif [ -n $QUEUE_NAME ] && [ "$QUEUE_NAME" != "" ]; then
-            cat $CONFIG_TEMPLATES/broker_queue.xml >> /tmp/broker.xml
+
+        if [ "$ADDRESS_SPACE_TYPE" == "brokered" ]; then
+            configure_brokered
         else
-            cat $CONFIG_TEMPLATES/broker_queue_colocated.xml >> /tmp/broker.xml
+            configure_standard
         fi
-        cat $CONFIG_TEMPLATES/broker_footer.xml >> /tmp/broker.xml
 
         export KEYSTORE_PATH=$instanceDir/etc/enmasse-keystore.jks
         export TRUSTSTORE_PATH=$instanceDir/etc/enmasse-truststore.jks
