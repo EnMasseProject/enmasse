@@ -19,4 +19,4 @@ VOLUME /var/run/artemis
 # Needed for bridge clustering
 # EXPOSE 7800 7801 7802
 
-CMD ["/opt/apache-artemis-2.3.0/bin/safe_launch.sh", "/opt/apache-artemis-2.3.0/bin/launch.sh"]
+CMD ["/opt/apache-artemis-2.3.0/bin/launch.sh"]
