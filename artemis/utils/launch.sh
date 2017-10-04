@@ -1,5 +1,4 @@
 #!/bin/sh
-
 . $ARTEMIS_HOME/bin/partitionPV.sh
 . $ARTEMIS_HOME/bin/dynamic_resources.sh
 
@@ -82,6 +81,12 @@ function runServer() {
   echo "Running instance $instanceId"
   exec $instanceDir/bin/artemis run
 }
+
+# This needs to be at the toplevel outside any functions
+# For the standard address space, the shutdown hooks need time to run before broker is shut down
+if [ "$ADDRESS_SPACE_TYPE" != "brokered" ]; then
+    trap "" TERM INT
+fi
 
 DATA_DIR="/var/run/artemis/"
 partitionPV "${DATA_DIR}" "${ARTEMIS_LOCK_TIMEOUT:-30}"
