@@ -2,7 +2,7 @@ node('enmasse') {
     result = 'failure'
     catchError {
         stage('start openshift') {
-            sh 'oc cluster up'
+            sh 'oc cluster up --routing-suffix=nip.io'
             sh 'sudo chmod -R 777 /var/lib/origin/openshift.local.config'
         }
         stage ('checkout') {
