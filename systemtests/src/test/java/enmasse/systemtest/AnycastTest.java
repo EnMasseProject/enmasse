@@ -44,4 +44,26 @@ public class AnycastTest extends TestBase {
         assertThat(sendResult.get(1, TimeUnit.MINUTES), is(msgs.size()));
         assertThat(recvResult.get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
     }
+
+    @Test
+    public void testMultipleReceivers() throws Exception {
+        Destination dest = Destination.anycast("anycastMultipleReceivers");
+        setAddresses(dest);
+        AmqpClient client1 = amqpClientFactory.createQueueClient();
+        AmqpClient client2 = amqpClientFactory.createQueueClient();
+        AmqpClient client3 = amqpClientFactory.createQueueClient();
+
+        List<String> msgs = Arrays.asList("foo", "bar", "baz");
+
+        Future<List<Message>> recvResult1 = client1.recvMessages(dest.getAddress(), 1);
+        Future<List<Message>> recvResult2 = client2.recvMessages(dest.getAddress(), 1);
+        Future<List<Message>> recvResult3 = client3.recvMessages(dest.getAddress(), 1);
+        Future<Integer> sendResult = client1.sendMessages(dest.getAddress(), msgs);
+
+        assertThat(sendResult.get(1, TimeUnit.MINUTES), is(msgs.size()));
+
+        assertThat(recvResult1.get(1, TimeUnit.MINUTES).size(), is(1));
+        assertThat(recvResult2.get(1, TimeUnit.MINUTES).size(), is(1));
+        assertThat(recvResult3.get(1, TimeUnit.MINUTES).size(), is(1));
+    }
 }
