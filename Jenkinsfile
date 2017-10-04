@@ -1,6 +1,10 @@
 node('enmasse') {
     result = 'failure'
     catchError {
+        stage('start openshift') {
+            sh 'oc cluster up'
+            sh 'sudo chmod -R 777 /var/lib/origin/openshift.local.config'
+        }
         stage ('checkout') {
             checkout scm
             sh 'git submodule update --init --recursive'
@@ -32,6 +36,9 @@ node('enmasse') {
                     junit '**/TEST-*.xml'
                 }
             }
+        }
+        stage('teardown openshift') {
+            sh 'oc cluster down'
         }
         result = 'success'
     }
