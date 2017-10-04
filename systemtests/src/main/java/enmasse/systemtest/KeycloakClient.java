@@ -43,23 +43,33 @@ public class KeycloakClient implements AutoCloseable {
             throws InterruptedException, TimeoutException {
         RealmResource realmResource = waitForRealm(realm, timeout, timeUnit);
 
-        if (realmResource.users().search(userName).isEmpty()) {
-            UserRepresentation userRep = new UserRepresentation();
-            userRep.setUsername(userName);
-            CredentialRepresentation cred = new CredentialRepresentation();
-            cred.setType(CredentialRepresentation.PASSWORD);
-            cred.setValue(password);
-            cred.setTemporary(false);
-            userRep.setCredentials(Arrays.asList(cred));
-            userRep.setEnabled(true);
-            Response response = keycloak.realm(realm).users().create(userRep);
-            if (response.getStatus() != 201) {
-                throw new RuntimeException("Unable to create user: " + response.getStatus());
+        int maxRetries = 10;
+        for (int retries = 0; retries < maxRetries; retries++) {
+            try {
+                if (realmResource.users().search(userName).isEmpty()) {
+                    UserRepresentation userRep = new UserRepresentation();
+                    userRep.setUsername(userName);
+                    CredentialRepresentation cred = new CredentialRepresentation();
+                    cred.setType(CredentialRepresentation.PASSWORD);
+                    cred.setValue(password);
+                    cred.setTemporary(false);
+                    userRep.setCredentials(Arrays.asList(cred));
+                    userRep.setEnabled(true);
+                    Response response = keycloak.realm(realm).users().create(userRep);
+                    if (response.getStatus() != 201) {
+                        throw new RuntimeException("Unable to create user: " + response.getStatus());
+                    }
+                } else {
+                    Logging.log.info("User " + userName + " already created, skipping");
+                }
+                break;
+            } catch (Exception e) {
+                Logging.log.info("Exception querying keycloak ({}), retrying", e.getMessage());
+                Thread.sleep(2000);
             }
-        } else {
-            Logging.log.info("User " + userName + " already created, skipping");
         }
     }
+
 
     private RealmResource waitForRealm(String realmName, long timeout, TimeUnit timeUnit)
             throws InterruptedException, TimeoutException {
