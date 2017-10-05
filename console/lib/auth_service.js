@@ -49,12 +49,13 @@ function authenticate(user, options) {
     });
 }
 
-function default_options(ca_path) {
+function default_options(env) {
     var options = {
-        host: process.env.AUTHENTICATION_SERVICE_HOST,
-        port: process.env.AUTHENTICATION_SERVICE_PORT,
-        sasl_init_hostname: process.env.AUTHENTICATION_SERVICE_SASL_INIT_HOST
+        host: env.AUTHENTICATION_SERVICE_HOST,
+        port: env.AUTHENTICATION_SERVICE_PORT,
+        sasl_init_hostname: env.AUTHENTICATION_SERVICE_SASL_INIT_HOST
     };
+    var ca_path = env.AUTH_SERVICE_CA || path.resolve('/opt/console/authservice-ca', 'tls.crt');
     try {
         options.ca = [fs.readFileSync(ca_path)];
         options.transport = 'tls';

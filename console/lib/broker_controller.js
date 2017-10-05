@@ -21,9 +21,8 @@ var rhea = require('rhea');
 var Promise = require('bluebird');
 var artemis = require('./artemis.js');
 
-function BrokerController(update_address_stats, update_connection_stats) {
-    this.update_address_stats= update_address_stats;
-    this.update_connection_stats= update_connection_stats;
+function BrokerController() {
+    events.EventEmitter.call(this);
     this.container = rhea.create_container();
     this.container.on('connection_open', this.on_connection_open.bind(this));
     setInterval(this.retrieve_stats.bind(this), 5000);//poll broker stats every 5 secs
@@ -31,8 +30,14 @@ function BrokerController(update_address_stats, update_connection_stats) {
     this.closed = function () { self.broker = undefined; };
 };
 
+util.inherits(BrokerController, events.EventEmitter);
+
 BrokerController.prototype.connect = function (options) {
-    this.container.connect(options);
+    return this.container.connect(options);
+};
+
+BrokerController.prototype.close = function () {
+    return this.broker.close();
 };
 
 BrokerController.prototype.on_connection_open = function (context) {
@@ -42,11 +47,12 @@ BrokerController.prototype.on_connection_open = function (context) {
     this.check_broker_addresses();
     context.connection.on('connection_close', this.closed);
     context.connection.on('disconnected', this.closed);
+    this.emit('ready');
 };
 
 BrokerController.prototype.addresses_defined = function (addresses) {
     this.addresses = addresses.reduce(function (map, a) { map[a.address] = a; return map; }, {});
-    this.check_broker_addresses();
+    return this.check_broker_addresses();
 };
 
 function transform_queue_stats(queue) {
@@ -83,7 +89,7 @@ function transform_topic_stats(topic) {
         //messages_in: topic.enqueued,//doesn't seem to work as expected
         /*this isn't really correct; what we want is the total number of messages sent to the topic (independent of the number of subscribers)*/
         messages_in: sum('enqueued', topic.subscriptions),
-        messages_out: util.isArray(topic.subscriptions) ? topic.subscriptions.map(function (queue) { return queue.acknowledged + queue.expired + queue.killed; }).reduce(function (a, b) { return a + b; }, 0) : 0,
+        messages_out: sum('acknowledged', topic.subscriptions),
         propagated: 100,
         outcomes: {
             egress: {
@@ -143,22 +149,26 @@ function collect_as(conns, links, name) {
     });
 }
 
-
 BrokerController.prototype.retrieve_stats = function () {
     var self = this;
     if (this.broker !== undefined) {
-        this.broker.getAllQueuesAndTopics().then(function (results) {
-            for (var name in results) {
-                var stats = transform_address_stats(results[name]);
-                self.update_address_stats(name, stats);
-            }
-        });
-        Promise.all([this.broker.listConnections(), this.broker.listProducers(), this.broker.listConsumers()]).then(function (results) {
-            var conn_stats = index_by(results[0].map(transform_connection_stats), 'id');
-            collect_as(conn_stats, results[1].map(transform_producer_stats), 'senders');
-            collect_as(conn_stats, results[2].map(transform_consumer_stats), 'receivers');
-            self.update_connection_stats(conn_stats);
-        });
+        return Promise.all([
+            this.broker.getAllQueuesAndTopics().then(function (results) {
+                var stats = {};
+                for (var name in results) {
+                    stats[name] = transform_address_stats(results[name]);
+                }
+                self.emit('address_stats_retrieved', stats);
+            }),
+            Promise.all([this.broker.listConnections(), this.broker.listProducers(), this.broker.listConsumers()]).then(function (results) {
+                var stats = index_by(results[0].map(transform_connection_stats), 'id');
+                collect_as(stats, results[1].map(transform_producer_stats), 'senders');
+                collect_as(stats, results[2].map(transform_consumer_stats), 'receivers');
+                self.emit('connection_stats_retrieved', stats);
+            })
+        ]);
+    } else {
+        return Promise.resolve();
     }
 };
 
@@ -223,17 +233,23 @@ BrokerController.prototype.create_addresses = function (addresses) {
 BrokerController.prototype.check_broker_addresses = function () {
     var self = this;
     if (this.broker !== undefined && this.addresses !== undefined) {
-        this.broker.listAddresses().then(function (results) {
+        return this.broker.listAddresses().then(function (results) {
             var actual = translate(results, excluded_addresses);
             var stale = values(difference(actual, self.addresses, same_address));
             var missing = values(difference(self.addresses, actual, same_address));
             console.log('checking addresses, desired=%j, actual=%j => delete %j and create %j', values(self.addresses), values(actual), stale, missing);
-            self.delete_addresses(stale).then(
+            return self.delete_addresses(stale).then(
                 function () {
-                    return self.create_addresses(missing);
+                    return self.create_addresses(missing).then(function () {
+                        if (missing.length > 0) {
+                            return self.retrieve_stats();
+                        }
+                    });
                 }
             );
         });
+    } else {
+        return Promise.resolve();
     }
 };
 

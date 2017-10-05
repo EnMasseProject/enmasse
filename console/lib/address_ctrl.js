@@ -135,26 +135,26 @@ AddressCtrl.prototype.get_address_types = function () {
     return this.request('/v1/schema/', 'GET', undefined, undefined, address_types);
 }
 
-module.exports.create = function () {
+module.exports.create = function (env) {
     var host = 'localhost';
     var port = 8080;
-    if (process.env.ADDRESS_SPACE_SERVICE_HOST) {
-        host = process.env.ADDRESS_SPACE_SERVICE_HOST;
-    } else if (process.env.ADDRESS_CONTROLLER_SERVICE_HOST) {
-        host = process.env.ADDRESS_CONTROLLER_SERVICE_HOST;
-        if (process.env.ADDRESS_CONTROLLER_SERVICE_PORT_HTTPS) {
-            port = process.env.ADDRESS_CONTROLLER_SERVICE_PORT_HTTPS;
+    if (env.ADDRESS_SPACE_SERVICE_HOST) {
+        host = env.ADDRESS_SPACE_SERVICE_HOST;
+    } else if (env.ADDRESS_CONTROLLER_SERVICE_HOST) {
+        host = env.ADDRESS_CONTROLLER_SERVICE_HOST;
+        if (env.ADDRESS_CONTROLLER_SERVICE_PORT_HTTPS) {
+            port = env.ADDRESS_CONTROLLER_SERVICE_PORT_HTTPS;
         }
     }
     var ca = undefined;
-    if (process.env.ADDRESS_CONTROLLER_CA) {
-        ca = fs.readFileSync(process.env.ADDRESS_CONTROLLER_CA);
+    if (env.ADDRESS_CONTROLLER_CA) {
+        ca = fs.readFileSync(env.ADDRESS_CONTROLLER_CA);
         port = 8081;
     }
 
     var auth_string = undefined;
-    if (process.env.ADDRESS_SPACE_PASSWORD_FILE) {
-        auth_string = 'Basic ' + new Buffer(process.env.ADDRESS_SPACE + ":" + fs.readFileSync(process.env.ADDRESS_SPACE_PASSWORD_FILE)).toString('base64');
+    if (env.ADDRESS_SPACE_PASSWORD_FILE) {
+        auth_string = 'Basic ' + new Buffer(env.ADDRESS_SPACE + ":" + fs.readFileSync(env.ADDRESS_SPACE_PASSWORD_FILE)).toString('base64');
     }
 
     return new AddressCtrl(host, port, ca, auth_string);

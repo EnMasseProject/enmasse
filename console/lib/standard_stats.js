@@ -26,11 +26,11 @@ function StandardStats () {
 StandardStats.prototype.init = function (console_server) {
     var self = this;
     setInterval(function () {
-        self.router_stats.retrieve(console_server.address_list, console_server.connections);
+        self.router_stats.retrieve(console_server.addresses, console_server.connections);
     }, 5000);//poll router stats every 5 secs
 
     setInterval(function () {
-        self.broker_stats.retrieve(console_server.address_list);
+        self.broker_stats.retrieve(console_server.addresses);
     }, 5000);//poll broker stats every 5 secs
 };
 

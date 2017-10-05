@@ -97,6 +97,12 @@ Registry.prototype.update_if_exists = function (id, latest) {
     }
 };
 
+Registry.prototype.update_existing = function (updates) {
+    for (var k in updates) {
+        this.update_if_exists(k, updates[k]);
+    }
+};
+
 Registry.prototype.for_each = function (f) {
     for (var key in this.objects) {
         f(this.objects[key]);

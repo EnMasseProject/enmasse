@@ -81,9 +81,11 @@ describe('auth service', function() {
         });
     });
     it('provides default options', function(done) {
-        process.env.AUTHENTICATION_SERVICE_HOST = 'foo';
-        process.env.AUTHENTICATION_SERVICE_PORT = 1010;
-        var opts = as.default_options(path.resolve(__dirname,'ca-cert.pem'));
+        var env = {};
+        env.AUTHENTICATION_SERVICE_HOST = 'foo';
+        env.AUTHENTICATION_SERVICE_PORT = 1010;
+        env.AUTH_SERVICE_CA = path.resolve(__dirname,'ca-cert.pem');
+        var opts = as.default_options(env);
         assert.equal('foo', opts.host);
         assert.equal(1010, opts.port);
         assert.equal('tls', opts.transport);
@@ -133,9 +135,11 @@ describe('auth service with tls', function() {
         });
     });
     it('works with default options', function(done) {
-        process.env.AUTHENTICATION_SERVICE_HOST = 'localhost';
-        process.env.AUTHENTICATION_SERVICE_PORT = auth_service_options.port;
-        var default_options = as.default_options(path.resolve(__dirname,'ca-cert.pem'));
+        var env = {};
+        env.AUTHENTICATION_SERVICE_HOST = 'localhost';
+        env.AUTHENTICATION_SERVICE_PORT = auth_service_options.port;
+        env.AUTH_SERVICE_CA = path.resolve(__dirname,'ca-cert.pem');
+        var default_options = as.default_options(env);
         as.authenticate({name:'bob', pass:'bob'}, default_options).then(function () {
             done();
         });
