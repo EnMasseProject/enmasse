@@ -31,21 +31,6 @@ import static org.junit.Assert.assertThat;
 public class AnycastTest extends TestBase {
 
     @Test
-    public void testMessagesDeliveredToReceiver() throws Exception {
-        Destination dest = Destination.anycast("anycast");
-        setAddresses(dest);
-        AmqpClient client = amqpClientFactory.createQueueClient();
-
-        List<String> msgs = Arrays.asList("foo", "bar", "baz");
-
-        Future<List<Message>> recvResult = client.recvMessages(dest.getAddress(), msgs.size());
-        Future<Integer> sendResult = client.sendMessages(dest.getAddress(), msgs);
-
-        assertThat(sendResult.get(1, TimeUnit.MINUTES), is(msgs.size()));
-        assertThat(recvResult.get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
-    }
-
-    @Test
     public void testMultipleReceivers() throws Exception {
         Destination dest = Destination.anycast("anycastMultipleReceivers");
         setAddresses(dest);

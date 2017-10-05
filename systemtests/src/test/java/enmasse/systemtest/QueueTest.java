@@ -35,29 +35,6 @@ import static org.junit.Assert.*;
 
 public class QueueTest extends TestBase {
 
-    @Test
-    public void testQueue() throws Exception {
-        Destination dest = Destination.queue("myqueue");
-        setAddresses(dest);
-        AmqpClient client = amqpClientFactory.createQueueClient();
-
-        runQueueTest(client, dest);
-    }
-
-    @Test
-    public void testColocatedQueues() throws Exception {
-        Destination q1 = Destination.queue("queue1", Optional.of("pooled-inmemory"));
-        Destination q2 = Destination.queue("queue2", Optional.of("pooled-inmemory"));
-        Destination q3 = Destination.queue("queue3", Optional.of("pooled-inmemory"));
-        setAddresses(q1, q2, q3);
-
-        AmqpClient client = amqpClientFactory.createQueueClient();
-        runQueueTest(client, q1);
-        runQueueTest(client, q2);
-        runQueueTest(client, q3);
-    }
-
-
     public void testInmemoryQueues() throws Exception {
         Destination q1 = Destination.queue("inMemoryQueue1", Optional.of("inmemory"));
         Destination q2 = Destination.queue("inMemoryQueue2", Optional.of("inmemory"));
@@ -183,7 +160,7 @@ public class QueueTest extends TestBase {
         assertThat(received.get(1, TimeUnit.MINUTES).size(), is(3500));
     }
 
-    private static void runQueueTest(AmqpClient client, Destination dest) throws InterruptedException, TimeoutException, ExecutionException, IOException {
+    public static void runQueueTest(AmqpClient client, Destination dest) throws InterruptedException, TimeoutException, ExecutionException, IOException {
         List<String> msgs = TestUtils.generateMessages(1024);
         Count<Message> predicate = new Count<>(msgs.size());
         Future<Integer> numSent = client.sendMessages(dest.getAddress(), msgs, predicate);
