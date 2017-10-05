@@ -20,5 +20,5 @@ dependencies {
     compile "io.fabric8:openshift-client:${openshiftClientVersion}"
     compile "io.vertx:vertx-proton:${vertxVersion}"
     compile "org.eclipse.paho:org.eclipse.paho.client.mqttv3:${pahoVersion}"
-    testCompile "junit:junit:${junitVersion}"
+    compile "junit:junit:${junitVersion}"
 }
