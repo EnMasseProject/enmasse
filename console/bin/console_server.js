@@ -16,27 +16,38 @@
 'use strict';
 
 var address_ctrl = require('../lib/address_ctrl.js');
-var AddressList = require('../lib/address_list.js');
 var AddressSource = require('../lib/address_source.js');
 var ConsoleServer = require('../lib/console_server.js');
 var tls_options = require('../lib/tls_options.js');
 
-var address_list = new AddressList();
-var address_source = new AddressSource();
-address_source.on('addresses_defined', address_list.addresses_defined.bind(address_list));
+function bind_event(source, event, target, method) {
+    source.on(event, target[method || event].bind(target));
+}
 
-var console_server = new ConsoleServer(address_list, address_ctrl.create());
-console_server.listen();
+function start(env) {
+    var address_source = new AddressSource();
+    var console_server = new ConsoleServer(address_ctrl.create(env));
+    bind_event(address_source, 'addresses_defined', console_server.addresses);
 
-if (process.env.ADDRESS_SPACE_TYPE === 'brokered') {
-    var BrokerController = require('../lib/broker_controller.js');
-    var bc = new BrokerController(console_server.address_list.update_stats.bind(console_server.address_list),
-                                  console_server.connections.set.bind(console_server.connections));
-    bc.connect(tls_options.get_client_options({host:process.env.BROKER_SERVICE_HOST, port:process.env.BROKER_SERVICE_PORT,username:'console'}));
-    address_source.on('addresses_defined', bc.addresses_defined.bind(bc));
+    console_server.listen(env);
+
+    if (env.ADDRESS_SPACE_TYPE === 'brokered') {
+        var BrokerController = require('../lib/broker_controller.js');
+        var bc = new BrokerController();
+        bind_event(bc, 'address_stats_retrieved', console_server.addresses, 'update_existing');
+        bind_event(bc, 'connection_stats_retrieved', console_server.connections, 'set');
+        bind_event(address_source, 'addresses_defined', bc);
+        bc.connect(tls_options.get_client_options({host:env.BROKER_SERVICE_HOST, port:env.BROKER_SERVICE_PORT,username:'console'}));
+    } else {
+        //assume standard address space for now
+        var StandardStats = require('../lib/standard_stats.js');
+        var stats = new StandardStats();
+        stats.init(console_server);
+    }
+}
+
+if (require.main === module) {
+    start(process.env);
 } else {
-    //assume standard address space for now
-    var StandardStats = require('../lib/standard_stats.js');
-    var stats = new StandardStats();
-    stats.init(console_server);
+    module.exports.start = start;
 }

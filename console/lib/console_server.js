@@ -21,19 +21,20 @@ var http = require('http');
 var path = require('path');
 var rhea = require('rhea');
 var WebSocketServer = require('ws').Server;
+var AddressList = require('../lib/address_list.js');
 var auth_service = require('../lib/auth_service.js');
 var Registry = require('../lib/registry.js');
 
-function ConsoleServer (address_list, address_ctrl) {
+function ConsoleServer (address_ctrl) {
     this.address_ctrl = address_ctrl;
-    this.address_list = address_list;
+    this.addresses = new AddressList();
     this.connections = new Registry();
     this.listeners = {};
     var self = this;
-    this.address_list.on('updated', function (address) {
+    this.addresses.on('updated', function (address) {
         self.publish({subject:'address',body:address});
     });
-    this.address_list.on('deleted', function (address) {
+    this.addresses.on('deleted', function (address) {
         console.log('address ' + address.address + ' has been deleted, notifying clients...');
         self.publish({subject:'address_deleted',body:address.address});
     });
@@ -91,12 +92,10 @@ ConsoleServer.prototype.ws_bind = function (server) {
     });
 };
 
-ConsoleServer.prototype.listen = function (port) {
+ConsoleServer.prototype.listen = function (env) {
     var self = this;
     var app = express();
     app.get('/probe', function (req, res) { res.send('OK'); });
-
-    var auth_ca_path = process.env.AUTH_SERVICE_CA || path.resolve('/opt/console/authservice-ca', 'tls.crt');
 
     var auth = function (req, res, next) {
         var authrequired = function() {
@@ -105,7 +104,7 @@ ConsoleServer.prototype.listen = function (port) {
         };
         var user = basic_auth(req);
 
-        auth_service.authenticate(user, auth_service.default_options(auth_ca_path)).then( next ).catch( authrequired );
+        auth_service.authenticate(user, auth_service.default_options(env)).then( next ).catch( authrequired );
     };
 
     app.use(auth);
@@ -113,13 +112,13 @@ ConsoleServer.prototype.listen = function (port) {
     app.use('/', express.static(path.join(__dirname, '../www/')))
 
     this.server = http.createServer(app);
-    this.server.listen(port || 8080);
+    this.server.listen(8080);
     this.ws_bind(this.server);
 };
 
 ConsoleServer.prototype.subscribe = function (name, sender) {
     this.listeners[name] = sender;
-    this.address_list.for_each(function (address) {
+    this.addresses.for_each(function (address) {
         sender.send({subject:'address', body:address});
     });
     this.connections.for_each(function (conn) {
