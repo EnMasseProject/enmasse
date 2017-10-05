@@ -12,7 +12,6 @@ repositories {
 }
 
 dependencies {
-    compile project(':amqp-utils')
     compile "org.keycloak:keycloak-admin-client:3.2.1.Final"
     compile "org.jboss.resteasy:resteasy-client:3.1.4.Final"
     compile "org.jboss.resteasy:resteasy-jackson2-provider:3.1.4.Final"
