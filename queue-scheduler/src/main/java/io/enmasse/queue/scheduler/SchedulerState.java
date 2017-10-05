@@ -202,8 +202,4 @@ public class SchedulerState implements StateListener {
             }
         }
     }
-
-    public interface Listener {
-
-    }
 }
