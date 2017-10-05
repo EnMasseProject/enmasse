@@ -124,8 +124,8 @@ function index(list) {
 function address_types(text) {
     var object = JSON.parse(text);
     if (object.kind === 'Schema') {
-        //TODO: retrieve type for current address-space (assume 'standard' for now)
-        return index(object.spec.addressSpaceTypes)['standard'].addressTypes;
+        var address_space_type = process.env.ADDRESS_SPACE_TYPE || 'standard';
+        return index(object.spec.addressSpaceTypes)[address_space_type].addressTypes;
     } else {
         throw new Error('Unexpected object kind: ' + object.kind);
     }

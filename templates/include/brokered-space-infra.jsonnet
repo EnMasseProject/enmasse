@@ -2,6 +2,7 @@ local configserv = import "configserv.jsonnet";
 local common = import "common.jsonnet";
 local images = import "images.jsonnet";
 local admin = import "admin.jsonnet";
+local auth_service = import "auth-service.jsonnet";
 local hawkularBrokerConfig = import "hawkular-broker-config.jsonnet";
 
 {
@@ -18,7 +19,7 @@ local hawkularBrokerConfig = import "hawkular-broker-config.jsonnet";
         "app": "enmasse"
       },
       "annotations": {
-        "addressSpace": "${ADDRESS_SPACE}" 
+        "addressSpace": "${ADDRESS_SPACE}"
       }
     },
     "spec": {
@@ -146,6 +147,98 @@ local hawkularBrokerConfig = import "hawkular-broker-config.jsonnet";
     }
   },
 
+  console_deployment(name)::
+  {
+    "apiVersion": "extensions/v1beta1",
+    "kind": "Deployment",
+    "metadata": {
+      "name": name,
+      "labels": {
+        "app": "enmasse"
+      },
+      "annotations": {
+        "addressSpace": "${ADDRESS_SPACE}",
+        "io.enmasse.certSecretName" : "console-internal-cert"
+      }
+    },
+    "spec": {
+      "replicas": 1,
+      "template": {
+        "metadata": {
+          "labels": {
+            "app": "enmasse",
+            "role": "console",
+            "name": name
+          },
+          "annotations": {
+            "addressSpace": "${ADDRESS_SPACE}"
+          }
+        },
+        "spec": {
+          "volumes": [
+            common.secret_volume("authservice-ca", "authservice-ca"),
+            common.secret_volume("console-internal-cert", "console-internal-cert")
+          ],
+          "containers": [
+            {
+              "name": "console",
+              "image": "${CONSOLE_IMAGE}",
+              "env": [
+                common.env("ADDRESS_SPACE", "${ADDRESS_SPACE}"),
+                common.env("ADDRESS_SPACE_TYPE", "brokered"),
+                common.env("ADDRESS_SPACE_SERVICE_HOST", "${ADDRESS_SPACE_SERVICE_HOST}"),
+                common.env("CERT_DIR", "/etc/enmasse-certs"),
+              ] + auth_service.envVars,
+              "volumeMounts": [
+                common.volume_mount("authservice-ca", "/opt/console/authservice-ca", true),
+                common.volume_mount("console-internal-cert", "/etc/enmasse-certs", true)
+              ],
+              "ports": [
+                common.container_port("http", 8080)
+              ],
+              "livenessProbe": {
+                "httpGet": {
+                  "path": "/probe",
+                  "port": "http"
+                }
+              },
+              "readinessProbe": {
+                "httpGet": {
+                  "path": "/probe",
+                  "port": "http"
+                }
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+
+  console_service::
+  {
+    "apiVersion": "v1",
+    "kind": "Service",
+    "metadata": {
+      "labels": {
+        "app": "enmasse"
+      },
+      "name": "console"
+    },
+    "spec": {
+      "ports": [
+        {
+          "name": "http",
+          "port": 8080,
+          "targetPort": "http"
+        }
+      ],
+      "selector": {
+        "role": "console"
+      }
+    }
+  },
+
   template::
   {
     "apiVersion": "v1",
@@ -167,6 +260,8 @@ local hawkularBrokerConfig = import "hawkular-broker-config.jsonnet";
       me.broker_deployment("broker"),
       me.broker_service,
       me.messaging_service,
+      me.console_deployment("console"),
+      me.console_service
     ],
     "parameters": [
       {
@@ -183,6 +278,11 @@ local hawkularBrokerConfig = import "hawkular-broker-config.jsonnet";
         "name": "BROKER_IMAGE",
         "description": "The docker image to use for the message broker",
         "value": images.artemis
+      },
+      {
+        "name": "CONSOLE_IMAGE",
+        "description": "The docker image to use for the console server",
+        "value": images.console
       },
       {
         "name": "STORAGE_CAPACITY",

@@ -19,6 +19,7 @@ var address_ctrl = require('../lib/address_ctrl.js');
 var AddressList = require('../lib/address_list.js');
 var AddressSource = require('../lib/address_source.js');
 var ConsoleServer = require('../lib/console_server.js');
+var tls_options = require('../lib/tls_options.js');
 
 var address_list = new AddressList();
 var address_source = new AddressSource();
@@ -31,7 +32,7 @@ if (process.env.ADDRESS_SPACE_TYPE === 'brokered') {
     var BrokerController = require('../lib/broker_controller.js');
     var bc = new BrokerController(console_server.address_list.update_stats.bind(console_server.address_list),
                                   console_server.connections.set.bind(console_server.connections));
-    bc.connect({host:process.env.BROKER_SERVICE_HOST, port:process.env.BROKER_SERVICE_PORT});
+    bc.connect(tls_options.get_client_options({host:process.env.BROKER_SERVICE_HOST, port:process.env.BROKER_SERVICE_PORT,username:'console'}));
     address_source.on('addresses_defined', bc.addresses_defined.bind(bc));
 } else {
     //assume standard address space for now
