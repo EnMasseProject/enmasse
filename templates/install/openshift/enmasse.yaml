@@ -1649,7 +1649,7 @@ objects:
     value: docker.io/enmasseproject/artemis:latest
   - description: The docker image to use for the console server
     name: CONSOLE_IMAGE
-    value: docker.io/gordons/console:latest
+    value: docker.io/enmasseproject/console:latest
   - description: Storage capacity required for volume claims
     name: STORAGE_CAPACITY
     value: 2Gi

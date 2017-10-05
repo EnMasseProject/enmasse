@@ -133,7 +133,7 @@ function Resource (name, type, accessors, properties) {
 
 var queue_accessors = ['isTemporary', 'isDurable', 'getMessageCount', 'getConsumerCount', 'getMessagesAdded',
                        'getDeliveringCount', 'getMessagesAcknowledged', 'getMessagesExpired', 'getMessagesKilled'];
-var address_accessors = ['getRoutingTypesAsJSON','getNumberOfMessages','getQueueNames'];
+var address_accessors = ['getRoutingTypesAsJSON','getNumberOfMessages','getQueueNames', 'getMessageCount'];
 
 MockBroker.prototype.add_queue = function (name, properties) {
     var queue = new Resource(name, 'queue', queue_accessors, properties);
@@ -145,7 +145,8 @@ MockBroker.prototype.add_address = function (name, is_multicast, messages, queue
     var address = new Resource(name, 'address', address_accessors, {
         queueNames: queue_names || [],
         numberOfMessages: messages || 0,
-        routingTypesAsJSON: [is_multicast ? 'MULTICAST' : 'ANYCAST']
+        routingTypesAsJSON: [is_multicast ? 'MULTICAST' : 'ANYCAST'],
+        messageCount: messages || 0
     });
     this.objects.push(address);
     return address;
