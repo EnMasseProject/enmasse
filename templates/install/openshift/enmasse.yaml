@@ -1559,6 +1559,84 @@ objects:
         targetPort: amqps
       selector:
         role: broker
+  - apiVersion: extensions/v1beta1
+    kind: Deployment
+    metadata:
+      annotations:
+        addressSpace: ${ADDRESS_SPACE}
+        io.enmasse.certSecretName: console-internal-cert
+      labels:
+        app: enmasse
+      name: console
+    spec:
+      replicas: 1
+      template:
+        metadata:
+          annotations:
+            addressSpace: ${ADDRESS_SPACE}
+          labels:
+            app: enmasse
+            name: console
+            role: console
+        spec:
+          containers:
+          - env:
+            - name: ADDRESS_SPACE
+              value: ${ADDRESS_SPACE}
+            - name: ADDRESS_SPACE_TYPE
+              value: brokered
+            - name: ADDRESS_SPACE_SERVICE_HOST
+              value: ${ADDRESS_SPACE_SERVICE_HOST}
+            - name: CERT_DIR
+              value: /etc/enmasse-certs
+            - name: AUTHENTICATION_SERVICE_HOST
+              value: ${AUTHENTICATION_SERVICE_HOST}
+            - name: AUTHENTICATION_SERVICE_PORT
+              value: ${AUTHENTICATION_SERVICE_PORT}
+            - name: AUTHENTICATION_SERVICE_CLIENT_SECRET
+              value: ${AUTHENTICATION_SERVICE_CLIENT_SECRET}
+            - name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
+              value: ${AUTHENTICATION_SERVICE_SASL_INIT_HOST}
+            image: ${CONSOLE_IMAGE}
+            livenessProbe:
+              httpGet:
+                path: /probe
+                port: http
+            name: console
+            ports:
+            - containerPort: 8080
+              name: http
+            readinessProbe:
+              httpGet:
+                path: /probe
+                port: http
+            volumeMounts:
+            - mountPath: /opt/console/authservice-ca
+              name: authservice-ca
+              readOnly: true
+            - mountPath: /etc/enmasse-certs
+              name: console-internal-cert
+              readOnly: true
+          volumes:
+          - name: authservice-ca
+            secret:
+              secretName: authservice-ca
+          - name: console-internal-cert
+            secret:
+              secretName: console-internal-cert
+  - apiVersion: v1
+    kind: Service
+    metadata:
+      labels:
+        app: enmasse
+      name: console
+    spec:
+      ports:
+      - name: http
+        port: 8080
+        targetPort: http
+      selector:
+        role: console
   parameters:
   - description: Hostname where API server can be reached
     name: ADDRESS_SPACE_SERVICE_HOST
@@ -1569,6 +1647,9 @@ objects:
   - description: The docker image to use for the message broker
     name: BROKER_IMAGE
     value: docker.io/enmasseproject/artemis:latest
+  - description: The docker image to use for the console server
+    name: CONSOLE_IMAGE
+    value: docker.io/gordons/console:latest
   - description: Storage capacity required for volume claims
     name: STORAGE_CAPACITY
     value: 2Gi
