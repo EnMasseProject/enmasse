@@ -40,7 +40,7 @@ public class SmokeTest extends TestBase {
     private Destination topic = Destination.topic("smoketopic");
     private Destination mqttTopic = Destination.topic("smokemqtt");
     private Destination anycast = Destination.anycast("smokeanycast");
-    private Destination multicast = Destination.anycast("smokemulticast");
+    private Destination multicast = Destination.multicast("smokemulticast");
 
     @Before
     public void createAddresses() throws Exception {
