@@ -17,7 +17,7 @@
 package io.enmasse.controller;
 
 import io.enmasse.controller.api.JacksonConfig;
-import io.enmasse.controller.api.BasicAuthInterceptor;
+import io.enmasse.controller.api.AuthInterceptor;
 import io.enmasse.controller.api.osb.v2.OSBServiceBase;
 import io.enmasse.controller.api.osb.v2.bind.OSBBindingService;
 import io.enmasse.controller.api.osb.v2.catalog.OSBCatalogService;
@@ -26,6 +26,7 @@ import io.enmasse.controller.api.osb.v2.provision.OSBProvisioningService;
 import io.enmasse.controller.api.v1.http.HttpAddressService;
 import io.enmasse.controller.api.v1.http.HttpAddressSpaceService;
 import io.enmasse.controller.api.v1.http.HttpSchemaService;
+import io.enmasse.controller.auth.BasicAuthHandler;
 import io.enmasse.controller.auth.UserAuthenticator;
 import io.enmasse.controller.api.DefaultExceptionMapper;
 import io.enmasse.k8s.api.AddressSpaceApi;
@@ -77,13 +78,13 @@ public class HTTPServer extends AbstractVerticle {
         deployment.getProviderFactory().registerProvider(JacksonConfig.class);
 
         if (osbAuth != null) {
-            deployment.getProviderFactory().registerProviderInstance(new BasicAuthInterceptor((username, password) ->
-                    osbAuth.getUserName().equals(username) && Arrays.equals(osbAuth.getPassword(), password.toCharArray()),
+            deployment.getProviderFactory().registerProviderInstance(new AuthInterceptor(new BasicAuthHandler((username, password) ->
+                    osbAuth.getUserName().equals(username) && Arrays.equals(osbAuth.getPassword(), password.toCharArray())),
                     OSBServiceBase.BASE_URI));
         }
 
         if (userAuthenticator != null) {
-            deployment.getProviderFactory().registerProviderInstance(new BasicAuthInterceptor(userAuthenticator, HttpAddressService.BASE_URI));
+            deployment.getProviderFactory().registerProviderInstance(new AuthInterceptor(new BasicAuthHandler(userAuthenticator), HttpAddressService.BASE_URI));
         }
 
         deployment.getRegistry().addSingletonResource(new HttpAddressService(addressSpaceApi));
