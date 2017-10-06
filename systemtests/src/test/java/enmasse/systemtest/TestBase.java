@@ -33,10 +33,10 @@ import java.util.concurrent.TimeUnit;
  */
 public abstract class TestBase {
 
-    protected static final String ADDRESS_SPACE = "testspace";
     protected static final Environment environment = new Environment();
-    protected static final OpenShift openShift = new OpenShift(environment, environment.namespace(),
-            environment.isMultitenant() ? ADDRESS_SPACE : environment.namespace());
+    protected static final String defaultAddressSpace = environment.isMultitenant() ? "testspace" : environment.namespace();
+
+    protected static final OpenShift openShift = new OpenShift(environment, environment.namespace(), defaultAddressSpace);
     private static final GlobalLogCollector logCollector = new GlobalLogCollector(openShift,
             new File(environment.testLogDir()));
     private KeycloakClient keycloakApiClient;
@@ -56,7 +56,7 @@ public abstract class TestBase {
         if (createDefaultAddressSpace()) {
             if (environment.isMultitenant()) {
                 Logging.log.info("Test is running in multitenant mode");
-                createAddressSpace(ADDRESS_SPACE, environment.defaultAuthService());
+                createAddressSpace(defaultAddressSpace, environment.defaultAuthService());
                 // TODO: Wait another minute so that all services are connected
                 Logging.log.info("Waiting for 2 minutes before starting tests");
             }
@@ -64,11 +64,11 @@ public abstract class TestBase {
             if ("standard".equals(environment.defaultAuthService())) {
                 this.username = "systemtest";
                 this.password = "systemtest";
-                getKeycloakClient().createUser(ADDRESS_SPACE, username, password, 1, TimeUnit.MINUTES);
+                getKeycloakClient().createUser(defaultAddressSpace, username, password, 1, TimeUnit.MINUTES);
             }
         }
-        amqpClientFactory = new AmqpClientFactory(openShift, environment, ADDRESS_SPACE, username, password);
-        mqttClientFactory = new MqttClientFactory(openShift, environment, ADDRESS_SPACE, username, password);
+        amqpClientFactory = new AmqpClientFactory(openShift, environment, defaultAddressSpace, username, password);
+        mqttClientFactory = new MqttClientFactory(openShift, environment, defaultAddressSpace, username, password);
     }
 
     protected void createAddressSpace(String addressSpace, String authService) throws Exception {
@@ -77,7 +77,7 @@ public abstract class TestBase {
             addressApiClient.createAddressSpace(addressSpace, authService);
             logCollector.startCollecting(addressSpace);
             TestUtils.waitForAddressSpaceReady(addressApiClient, addressSpace);
-            if (addressSpace.equals(ADDRESS_SPACE)) {
+            if (addressSpace.equals(defaultAddressSpace)) {
                 Thread.sleep(120_000);
             }
         }
@@ -123,7 +123,7 @@ public abstract class TestBase {
      * @throws Exception
      */
     protected void deleteAddresses(Destination... destinations) throws Exception {
-        TestUtils.delete(addressApiClient, ADDRESS_SPACE, destinations);
+        TestUtils.delete(addressApiClient, defaultAddressSpace, destinations);
     }
 
     /**
@@ -134,7 +134,7 @@ public abstract class TestBase {
      */
     protected void appendAddresses(Destination... destinations) throws Exception {
         TimeoutBudget budget = new TimeoutBudget(5, TimeUnit.MINUTES);
-        TestUtils.deploy(addressApiClient, openShift, budget, ADDRESS_SPACE, HttpMethod.POST, destinations);
+        TestUtils.deploy(addressApiClient, openShift, budget, defaultAddressSpace, HttpMethod.POST, destinations);
     }
 
     /**
@@ -144,7 +144,7 @@ public abstract class TestBase {
      * @throws Exception
      */
     protected void setAddresses(Destination... destinations) throws Exception {
-        setAddresses(ADDRESS_SPACE, destinations);
+        setAddresses(defaultAddressSpace, destinations);
     }
 
     protected void setAddresses(String addressSpace, Destination... destinations) throws Exception {
@@ -160,11 +160,11 @@ public abstract class TestBase {
      * @throws Exception
      */
     protected Future<List<String>> getAddresses(Optional<String> addressName) throws Exception {
-        return TestUtils.getAddresses(addressApiClient, ADDRESS_SPACE, addressName);
+        return TestUtils.getAddresses(addressApiClient, defaultAddressSpace, addressName);
     }
 
     protected void scale(Destination destination, int numReplicas) throws Exception {
         TimeoutBudget budget = new TimeoutBudget(5, TimeUnit.MINUTES);
-        TestUtils.setReplicas(openShift, ADDRESS_SPACE, destination, numReplicas, budget);
+        TestUtils.setReplicas(openShift, defaultAddressSpace, destination, numReplicas, budget);
     }
 }
