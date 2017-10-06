@@ -184,7 +184,7 @@ do
 done
 
 
-if [[ $TEMPLATE_PARAMS == *"MULTIINSTANCE=true"* ]]; then
+if [[ $TEMPLATE_PARAMS == *"MULTITENANT=true"* ]]; then
     if [ -n "$OS_ALLINONE" ]
     then
         runcmd "oc login -u system:admin" "Logging in as system:admin"
