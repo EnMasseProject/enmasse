@@ -71,7 +71,7 @@ public class Main extends AbstractVerticle {
                 new Deployment(new AuthController(certManager, addressSpaceApi)),
                 new Deployment(new Controller(controllerClient, addressSpaceApi, kubernetes, resolverFactory, userDb, Arrays.asList(standardController, brokeredController))),
 //                new Deployment(new AMQPServer(kubernetes.getNamespace(), addressSpaceApi, options.port())),
-                new Deployment(new HTTPServer(addressSpaceApi, options.certDir(), options.osbAuth().orElse(null), userDb), new DeploymentOptions().setWorker(true)));
+                new Deployment(new HTTPServer(addressSpaceApi, options.certDir(), options.osbAuth().orElse(null), userDb, kubernetes), new DeploymentOptions().setWorker(true)));
     }
 
     private AuthenticationServiceResolverFactory createResolverFactory(ControllerOptions options) {

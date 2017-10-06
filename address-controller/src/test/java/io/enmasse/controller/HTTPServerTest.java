@@ -42,7 +42,6 @@ import org.junit.runner.RunWith;
 import java.net.PasswordAuthentication;
 import java.net.URI;
 import java.util.Base64;
-import java.util.Optional;
 import java.util.UUID;
 
 @RunWith(VertxUnitRunner.class)
@@ -64,7 +63,7 @@ public class HTTPServerTest {
             public boolean authenticate(String username, String password) {
                 return "test".equals(username) && "testp".equals(password);
             }
-        }), context.asyncAssertSuccess());
+        }, null), context.asyncAssertSuccess());
     }
 
     @After
