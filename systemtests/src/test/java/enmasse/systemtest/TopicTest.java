@@ -237,6 +237,8 @@ public class TopicTest extends TestBase {
 
         Source source = new TopicTerminusFactory().getSource("locate/" + dest.getAddress());
         source.setDurable(TerminusDurability.UNSETTLED_STATE);
+//        source.setExpiryPolicy(TerminusExpiryPolicy.NEVER);
+//        source.setCapabilities(Symbol.getSymbol("topic"));
 
         AmqpClient client = amqpClientFactory.createTopicClient();
         List<String> batch1 = Arrays.asList("one", "two", "three");
