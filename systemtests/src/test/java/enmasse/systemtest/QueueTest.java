@@ -17,7 +17,6 @@
 package enmasse.systemtest;
 
 import enmasse.systemtest.amqp.AmqpClient;
-import enmasse.systemtest.amqp.AmqpClientFactory;
 import org.apache.qpid.proton.message.Message;
 import org.junit.Test;
 
@@ -34,15 +33,6 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
 public class QueueTest extends TestBase {
-
-    @Test
-    public void testQueue() throws Exception {
-        Destination dest = Destination.queue("myqueue");
-        setAddresses(dest);
-        AmqpClient client = amqpClientFactory.createQueueClient();
-
-        runQueueTest(client, dest);
-    }
 
     @Test
     public void testColocatedQueues() throws Exception {
@@ -148,7 +138,7 @@ public class QueueTest extends TestBase {
         assertThat(received.get(1, TimeUnit.MINUTES).size(), is(3500));
     }
 
-    private static void runQueueTest(AmqpClient client, Destination dest) throws InterruptedException, TimeoutException, ExecutionException, IOException {
+    public static void runQueueTest(AmqpClient client, Destination dest) throws InterruptedException, TimeoutException, ExecutionException, IOException {
         List<String> msgs = TestUtils.generateMessages(1024);
         Count<Message> predicate = new Count<>(msgs.size());
         Future<Integer> numSent = client.sendMessages(dest.getAddress(), msgs, predicate);

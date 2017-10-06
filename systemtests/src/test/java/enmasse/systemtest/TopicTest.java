@@ -35,35 +35,6 @@ import static org.junit.Assert.assertTrue;
 
 public class TopicTest extends TestBase {
 
-    @Test
-    public void testMultipleSubscribers() throws Exception {
-        Destination dest = Destination.topic("subtopic");
-        setAddresses(dest);
-        scale(dest, 1);
-        Thread.sleep(60_000);
-        AmqpClient client = amqpClientFactory.createTopicClient();
-        List<String> msgs = TestUtils.generateMessages(1000);
-
-        List<Future<List<String>>> recvResults = Arrays.asList(
-                client.recvMessages(dest.getAddress(), msgs.size()),
-                client.recvMessages(dest.getAddress(), msgs.size()),
-                client.recvMessages(dest.getAddress(), msgs.size()),
-                client.recvMessages(dest.getAddress(), msgs.size()),
-                client.recvMessages(dest.getAddress(), msgs.size()),
-                client.recvMessages(dest.getAddress(), msgs.size()));
-
-        Thread.sleep(60_000);
-
-        assertThat(client.sendMessages(dest.getAddress(), msgs).get(1, TimeUnit.MINUTES), is(msgs.size()));
-
-        assertThat(recvResults.get(0).get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
-        assertThat(recvResults.get(1).get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
-        assertThat(recvResults.get(2).get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
-        assertThat(recvResults.get(3).get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
-        assertThat(recvResults.get(4).get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
-        assertThat(recvResults.get(5).get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
-    }
-
     public void testDurableLinkRoutedSubscription() throws Exception {
         Destination dest = Destination.topic("lrtopic");
         String linkName = "systest-durable";

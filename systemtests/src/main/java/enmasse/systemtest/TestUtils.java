@@ -245,7 +245,7 @@ public class TestUtils {
     }
 
     private static Map<String, JsonObject> checkAddressesReady(JsonObject addressList, Destination ...destinations) {
-        Logging.log.info("Checking " + destinations + " for ready state");
+        Logging.log.info("Checking {} for ready state", destinations);
         Map<String, JsonObject> notReadyAddresses = new HashMap<>();
         for (Destination destination : destinations) {
             JsonObject addressObject = lookupAddress(addressList, destination.getAddress());

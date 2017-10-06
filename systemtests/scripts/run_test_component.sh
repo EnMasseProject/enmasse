@@ -2,6 +2,7 @@
 ENMASSE_DIR=$1
 KUBEADM=$2
 SYSTEMTESTS=$3
+TESTCASE=$4
 
 function download_enmasse() {
     curl -0 https://dl.bintray.com/enmasse/snapshots/latest/enmasse-latest.tar.gz | tar -zx
@@ -46,7 +47,11 @@ function run_test() {
     else
         $CURDIR/wait_until_up.sh 4 || return 1
     fi
-    ../gradlew :systemtests:test -Psystemtests -i --rerun-tasks -Djava.net.preferIPv4Stack=true
+    # Run a single test case
+    if [ -n "$TESTCASE" ]; then
+        EXTRA_TEST_ARGS="-Dtest.single=$TESTCASE"
+    fi
+    ../gradlew :systemtests:test -Psystemtests -i --rerun-tasks -Djava.net.preferIPv4Stack=true $EXTRA_TEST_ARGS
 }
 
 function teardown_test() {
