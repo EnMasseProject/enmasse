@@ -24,6 +24,7 @@ public class Environment {
     private final String useTls = System.getenv("OPENSHIFT_USE_TLS");
     private final String messagingCert = System.getenv("OPENSHIFT_SERVER_CERT");
     private final boolean multitenant = Boolean.parseBoolean(System.getenv("OPENSHIFT_MULTITENANT"));
+    private final boolean brokered = Boolean.parseBoolean(System.getenv("BROKERED_ADDR_SPACE"));
     private final String defaultAuthService = System.getenv().getOrDefault("DEFAULT_AUTHSERVICE", "none");
     private final String testLogDir = System.getenv().getOrDefault("OPENSHIFT_TEST_LOGDIR", "/tmp/testlogs");
     private final String keycloakAdminUser = System.getenv().getOrDefault("KEYCLOAK_ADMIN_USER", "admin");
@@ -55,6 +56,10 @@ public class Environment {
 
     public boolean isMultitenant() {
         return multitenant;
+    }
+
+    public boolean isBrokered() {
+        return brokered;
     }
 
     public String testLogDir() {

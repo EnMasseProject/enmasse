@@ -36,7 +36,7 @@ public class AddressApiClient {
         vertx.close();
     }
 
-    public void createAddressSpace(String name, String authServiceType) throws JsonProcessingException, InterruptedException {
+    public void createAddressSpace(String name, String authServiceType, String addrSpaceType) throws JsonProcessingException, InterruptedException {
         ObjectNode config = mapper.createObjectNode();
         config.put("apiVersion", "v1");
         config.put("kind", "AddressSpace");
@@ -46,7 +46,7 @@ public class AddressApiClient {
         metadata.put("namespace", name);
 
         ObjectNode spec = config.putObject("spec");
-        spec.put("type", "standard");
+        spec.put("type", addrSpaceType);
 
         ObjectNode authService = spec.putObject("authenticationService");
         authService.put("type", authServiceType);
