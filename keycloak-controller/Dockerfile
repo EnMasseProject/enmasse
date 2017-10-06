@@ -1,7 +1,7 @@
-FROM enmasseproject/java-base:8
+FROM enmasseproject/java-base:8-1
 
 ARG version=latest
 ENV VERSION ${version}
-ADD build/distributions/keycloak-controller.tgz /
+ADD target/keycloak-controller.jar /
 
-CMD /keycloak-controller/bin/keycloak-controller
+CMD ["/bin/launch_java.sh", "/keycloak-controller.jar"]

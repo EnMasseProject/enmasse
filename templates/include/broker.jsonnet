@@ -23,7 +23,7 @@ local common = import "common.jsonnet";
         "preStop": {
           "exec": {
             "command": [
-              "/opt/artemis-shutdown-hook/bin/artemis-shutdown-hook"
+              "/shutdown-hook/shutdown-hook.sh"
            ]
           }
         }

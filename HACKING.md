@@ -14,7 +14,7 @@ To build EnMasse, you need
     * maven >=3.1
     * asciidoctor
 
-The EnMasse java modules are built using gradle. Node modules are built using make. Docker images
+The EnMasse java modules are built using maven. Node modules are built using make. Docker images
 are built using make.
 
 Note: asciidoctor, node.js and npm are optional. asciidoctor is only
@@ -58,7 +58,7 @@ This builds all modules including java.
     export DOCKER_ORG=myproject
     export DOCKER_REGISTRY=172.30.1.1:5000
     docker login -u myproject -p `oc whoami -t` 172.30.1.1:5000
-    make GRADLE_ARGS="-x test" -j4
+    make MAVEN_ARGS="-DskipTests" -j4
     make docker_tag
     make docker_push
 
@@ -74,12 +74,11 @@ This assumes that the above deploy step has been run
     
 #### Run single system test
 
-    export GRADLE_ARGS='-Dtest.single=QueueTest'
-    make systemtests
+    make SYSTEMTEST_ARGS=SmokeTest systemtests
     
 ## Reference
 
-This is a reference of the different gradle tasks and options that can be set.
+This is a reference of the different make targets and options that can be set.
 
 #### Make targets
 

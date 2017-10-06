@@ -3,11 +3,27 @@ include $(TOPDIR)/Makefile.common
 
 ifneq ($(FULL_BUILD),true)
 build:
-	gradle compileJava
+	mvn compile
 
+ifeq ($(INTEGRATION_TEST), true)
+test: setup_router
+	mvn test
+	$(MAKE) teardown_router
+else
 test:
-	gradle compileTestJava
+	mvn test
+endif
 
 package:
-	gradle build
+	mvn package -DskipTests
 endif
+
+ifeq ($(INTEGRATION_TEST), true)
+clean_java: teardown_router
+	rm -rf build target
+else
+clean_java: 
+	rm -rf build target
+endif
+
+clean: clean_java

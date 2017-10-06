@@ -1,7 +1,6 @@
 include ../Makefile.java.mk
-ifneq ($(FULL_BUILD),true)
-pack:
-	gradle pack
 
-package: pack
-endif
+clean_plugin:
+	rm -rf sasl-plugin/target
+
+clean: clean_plugin

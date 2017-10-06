@@ -47,7 +47,7 @@ objects:
               preStop:
                 exec:
                   command:
-                  - /opt/artemis-shutdown-hook/bin/artemis-shutdown-hook
+                  - /shutdown-hook/shutdown-hook.sh
             livenessProbe:
               initialDelaySeconds: 120
               tcpSocket:
@@ -184,7 +184,7 @@ objects:
               preStop:
                 exec:
                   command:
-                  - /opt/artemis-shutdown-hook/bin/artemis-shutdown-hook
+                  - /shutdown-hook/shutdown-hook.sh
             livenessProbe:
               initialDelaySeconds: 120
               tcpSocket:
@@ -307,7 +307,7 @@ objects:
               preStop:
                 exec:
                   command:
-                  - /opt/artemis-shutdown-hook/bin/artemis-shutdown-hook
+                  - /shutdown-hook/shutdown-hook.sh
             livenessProbe:
               initialDelaySeconds: 120
               tcpSocket:
@@ -520,7 +520,7 @@ objects:
               preStop:
                 exec:
                   command:
-                  - /opt/artemis-shutdown-hook/bin/artemis-shutdown-hook
+                  - /shutdown-hook/shutdown-hook.sh
             livenessProbe:
               initialDelaySeconds: 120
               tcpSocket:
@@ -991,7 +991,16 @@ objects:
             name: mqtt-gateway
         spec:
           containers:
-          - image: ${MQTT_GATEWAY_REPO}
+          - env:
+            - name: ENMASSE_MQTT_SSL
+              value: 'true'
+            - name: ENMASSE_MQTT_KEYFILE
+              value: /etc/mqtt-gateway/ssl/server-key.pem
+            - name: ENMASSE_MQTT_CERTFILE
+              value: /etc/mqtt-gateway/ssl/server-cert.pem
+            - name: ENMASSE_MQTT_LISTENPORT
+              value: '8883'
+            image: ${MQTT_GATEWAY_REPO}
             livenessProbe:
               initialDelaySeconds: 60
               tcpSocket:

@@ -1,9 +1,7 @@
-FROM enmasseproject/java-base:8
+FROM enmasseproject/java-base:8-1
 
 ARG version=latest
 ENV VERSION ${version}
-ADD build/distributions/configserv.tgz /
+ADD target/configserv.jar /
 
-EXPOSE 5672
-
-CMD /configserv/bin/configserv
+CMD ["/bin/launch_java.sh", "/configserv.jar"]
