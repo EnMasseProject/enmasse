@@ -17,6 +17,7 @@ package enmasse.systemtest;
 
 import enmasse.systemtest.amqp.AmqpClient;
 import enmasse.systemtest.mqtt.MqttClient;
+import org.apache.qpid.proton.message.Message;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -66,7 +67,7 @@ public class SmokeTest extends TestBase {
         AmqpClient client = amqpClientFactory.createTopicClient();
         List<String> msgs = TestUtils.generateMessages(1000);
 
-        List<Future<List<String>>> recvResults = Arrays.asList(
+        List<Future<List<Message>>> recvResults = Arrays.asList(
                 client.recvMessages(topic.getAddress(), msgs.size()),
                 client.recvMessages(topic.getAddress(), msgs.size()),
                 client.recvMessages(topic.getAddress(), msgs.size()),
@@ -104,7 +105,7 @@ public class SmokeTest extends TestBase {
 
         List<String> msgs = Arrays.asList("foo", "bar", "baz");
 
-        Future<List<String>> recvResult = client.recvMessages(anycast.getAddress(), msgs.size());
+        Future<List<Message>> recvResult = client.recvMessages(anycast.getAddress(), msgs.size());
         Future<Integer> sendResult = client.sendMessages(anycast.getAddress(), msgs);
 
         assertThat(sendResult.get(1, TimeUnit.MINUTES), is(msgs.size()));
@@ -115,7 +116,7 @@ public class SmokeTest extends TestBase {
         AmqpClient client = amqpClientFactory.createBroadcastClient();
         List<String> msgs = Arrays.asList("foo");
 
-        List<Future<List<String>>> recvResults = Arrays.asList(
+        List<Future<List<Message>>> recvResults = Arrays.asList(
                 client.recvMessages(multicast.getAddress(), msgs.size()),
                 client.recvMessages(multicast.getAddress(), msgs.size()),
                 client.recvMessages(multicast.getAddress(), msgs.size()));
