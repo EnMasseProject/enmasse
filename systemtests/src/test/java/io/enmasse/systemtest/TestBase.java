@@ -64,7 +64,7 @@ public abstract class TestBase {
             if ("standard".equals(environment.defaultAuthService())) {
                 this.username = "systemtest";
                 this.password = "systemtest";
-                getKeycloakClient().createUser(defaultAddressSpace, username, password, 1, TimeUnit.MINUTES);
+                getKeycloakClient().createUser(defaultAddressSpace, username, password, 3, TimeUnit.MINUTES);
             }
         }
         amqpClientFactory = new AmqpClientFactory(openShift, environment, defaultAddressSpace, username, password);

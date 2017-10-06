@@ -1,8 +1,9 @@
 FROM jboss/keycloak:3.2.1.Final
 
 ARG version=latest
+ENV VERSION ${version}
 
-ADD ./sasl-plugin/build/libs/sasl-plugin-all.jar /opt/jboss/keycloak/providers/
+ADD ./sasl-plugin/target/sasl-plugin.jar /opt/jboss/keycloak/providers/
 ADD ./src/main/xsl/*.xsl /opt/jboss/keycloak/
 ADD ./src/main/sh/init-keycloak.sh /opt/jboss/keycloak/bin/
 

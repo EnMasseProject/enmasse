@@ -1,8 +1,7 @@
-FROM enmasseproject/java-base:8
+FROM enmasseproject/java-base:8-1
 
-ARG version=1.0-SNAPSHOT
-ADD build/mqtt-gateway.tgz /
+ARG version=latest
+ENV VERSION ${version}
+ADD target/mqtt-gateway.jar /
 
-EXPOSE 1883 8883
-
-CMD ["/run_mqtt.sh"]
+CMD ["/bin/launch_java.sh", "/mqtt-gateway.jar"]

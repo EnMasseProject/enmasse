@@ -11,14 +11,9 @@ notifications:
 sudo: required
 services:
 - docker
-before_cache:
-- rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
-- rm -fr $HOME/.gradle/caches/*/plugin-resolution/
 cache:
   directories:
   - "$HOME/.m2"
-  - "$HOME/.gradle/caches/"
-  - "$HOME/.gradle/wrapper/"
 jdk:
 - oraclejdk8
 before_script:
@@ -26,7 +21,7 @@ before_script:
 before_install:
 - npm install -g mocha mocha-junit-reporter
 - npm install rhea debug
-- "./gradlew :artemis:buildArtemisAmqpModule"
+- make build_amqp_module
 script:
 - "./.travis/build.sh"
 after_failure:

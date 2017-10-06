@@ -24,10 +24,13 @@ import java.util.stream.Collectors;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AuthenticationServiceType;
 import io.enmasse.k8s.api.Watcher;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 public class KeycloakManager implements Watcher<AddressSpace>
 {
+    private static final Logger log = LoggerFactory.getLogger(KeycloakManager.class);
     private final KeycloakApi keycloak;
 
     public KeycloakManager(KeycloakApi keycloak) {
@@ -43,10 +46,12 @@ public class KeycloakManager implements Watcher<AddressSpace>
 
         for(String realmName : keycloak.getRealmNames()) {
             if(standardAuthSvcSpaces.remove(realmName) == null && !"master".equals(realmName)) {
+                log.info("Deleting realm {}", realmName);
                 keycloak.deleteRealm(realmName);
             }
         }
         for(String name : standardAuthSvcSpaces.keySet()) {
+            log.info("Creating realm {}", name);
             keycloak.createRealm(name);
         }
     }

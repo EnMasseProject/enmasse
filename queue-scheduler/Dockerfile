@@ -1,9 +1,7 @@
-FROM enmasseproject/java-base:8
+FROM enmasseproject/java-base:8-1
 
 ARG version=latest
 ENV VERSION ${version}
-ADD build/distributions/queue-scheduler.tgz /
+ADD target/queue-scheduler.jar /
 
-EXPOSE 55667
-
-CMD /queue-scheduler/bin/queue-scheduler
+CMD ["/bin/launch_java.sh", "/queue-scheduler.jar"]

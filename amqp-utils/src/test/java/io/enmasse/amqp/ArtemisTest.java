@@ -25,6 +25,7 @@ import io.vertx.proton.ProtonClientOptions;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.Ignore;
 import org.junit.runner.RunWith;
 
 import java.util.concurrent.ExecutionException;
@@ -47,6 +48,7 @@ public class ArtemisTest {
     public void teardown() {
         vertx.close();
     }
+
 
     @Test
     public void testManagement(TestContext testContext) throws InterruptedException, ExecutionException, TimeoutException {

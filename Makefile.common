@@ -1,3 +1,4 @@
+TOPDIR=$(dir $(lastword $(MAKEFILE_LIST)))
 DOCKER_REGISTRY ?= docker.io
 DOCKER_ORG      ?= enmasseproject
 DOCKER          ?= docker
@@ -19,6 +20,9 @@ clean_node:
 
 clean: clean_node
 	rm -rf build
+
+build_amqp_module:
+	cd $(TOPDIR)artemis/activemq-artemis/artemis-protocols/artemis-amqp-protocol && mvn -q install -DskipTests
 
 node_modules: package.json
         ifeq ($(NPM),)

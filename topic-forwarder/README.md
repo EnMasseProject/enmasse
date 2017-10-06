@@ -9,4 +9,4 @@ in the cluster and forwards all messages to them.
 
 # Build instructions
 
-    gradle build
+    make

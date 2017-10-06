@@ -13,12 +13,5 @@
           <include>mqtt-lwt.jar</include>
       </includes>
     </fileSet>
-    <fileSet>
-      <directory>src/main/sh</directory>
-      <outputDirectory>/</outputDirectory>
-      <includes>
-          <include>run_mqtt.sh</include>
-      </includes>
-    </fileSet>
   </fileSets>
 </assembly>

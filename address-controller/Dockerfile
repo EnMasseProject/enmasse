@@ -1,12 +1,9 @@
-FROM enmasseproject/java-base:8
+FROM enmasseproject/java-base:8-1
 
 RUN yum -y install openssl && yum -y clean all
 
 ARG version=latest
 ENV VERSION ${version}
-ADD build/distributions/address-controller.tgz /
+ADD target/address-controller.jar /
 
-EXPOSE 5672
-EXPOSE 8080
-
-CMD /address-controller/bin/address-controller
+CMD ["/bin/launch_java.sh", "/address-controller.jar"]

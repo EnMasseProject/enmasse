@@ -1,9 +1,7 @@
-FROM enmasseproject/java-base:8
+FROM enmasseproject/java-base:8-1
 
 ARG version=latest
 ENV VERSION ${version}
-ADD build/distributions/topic-forwarder.tgz /
+ADD target/topic-forwarder.jar /
 
-EXPOSE 8080
-
-CMD /topic-forwarder/bin/topic-forwarder
+CMD ["/bin/launch_java.sh", "/topic-forwarder.jar"]

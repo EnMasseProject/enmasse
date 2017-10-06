@@ -20,12 +20,24 @@ BUILD_TARGETS  = init build test package clean $(DOCKER_TARGETS) coverage
 
 all: init build test package docker_build
 
-build_java:
-	./gradlew build $(GRADLE_ARGS)
-	./gradlew pack --rerun-tasks $(GRADLE_ARGS)
+# TODO: get rid of the below target
+build_amqp_module:
+	$(MAKE) -C artemis build_amqp_module
+
+setup_integration_tests:
+	$(MAKE) -C mqtt-gateway setup_router
+	$(MAKE) -C mqtt-lwt setup_router
+
+teardown_integration_tests:
+	$(MAKE) -C mqtt-gateway teardown_router
+	$(MAKE) -C mqtt-lwt teardown_router
+
+build_java: build_amqp_module setup_integration_tests
+	mvn test package -B $(MAVEN_ARGS)
+	$(MAKE) teardown_integration_tests
 
 clean_java:
-	./gradlew clean
+	mvn clean
 
 clean: clean_java
 

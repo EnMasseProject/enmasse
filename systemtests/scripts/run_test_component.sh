@@ -50,9 +50,9 @@ function run_test() {
     fi
     # Run a single test case
     if [ -n "$TESTCASE" ]; then
-        EXTRA_TEST_ARGS="-Dtest.single=$TESTCASE"
+        EXTRA_TEST_ARGS="-Dtest=$TESTCASE"
     fi
-    ../gradlew :systemtests:test -Psystemtests -i --rerun-tasks -Djava.net.preferIPv4Stack=true $EXTRA_TEST_ARGS
+    mvn test -pl systemtests -Psystemtests -Djava.net.preferIPv4Stack=true $EXTRA_TEST_ARGS
 }
 
 function teardown_test() {
@@ -65,9 +65,7 @@ failure=0
 
 setup_test
 
-pushd $SYSTEMTESTS
 run_test || failure=$(($failure + 1))
-popd
 
 $CURDIR/collect_logs.sh $ARTIFACTS_DIR
 
