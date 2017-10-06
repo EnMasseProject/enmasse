@@ -20,6 +20,8 @@ import io.enmasse.config.AnnotationKeys;
 import io.enmasse.config.LabelKeys;
 import io.enmasse.address.model.Endpoint;
 import io.fabric8.kubernetes.api.model.*;
+import io.fabric8.kubernetes.api.model.authentication.TokenReview;
+import io.fabric8.kubernetes.api.model.authorization.SubjectAccessReview;
 import io.fabric8.kubernetes.api.model.extensions.Deployment;
 import io.fabric8.kubernetes.api.model.extensions.DoneableIngress;
 import io.fabric8.kubernetes.client.dsl.Resource;
@@ -320,6 +322,20 @@ public class KubernetesHelper implements Kubernetes {
     @Override
     public Optional<Secret> getSecret(String secretName) {
         return Optional.ofNullable(client.secrets().inNamespace(namespace).withName(secretName).get());
+    }
+
+    @Override
+    public TokenReview performTokenReview(String token) {
+        return client.authentication().tokenReviews().createNew().withNewSpec().withToken(token).endSpec().done();
+    }
+
+    @Override
+    public SubjectAccessReview performSubjectAccessReview(String user, String path, String verb) {
+        return client.authorization().subjectAccessReviews().createNew()
+                .withNewSpec().withUser(user)
+                .withNewNonResourceAttributes().withPath(path).withVerb(verb).endNonResourceAttributes()
+                .endSpec()
+                .done();
     }
 
     public static boolean isDeployment(HasMetadata res) {
