@@ -466,8 +466,6 @@ items:
       spec:
         containers:
         - env:
-          - name: MULTITENANT
-            value: 'false'
           - name: CA_DIR
             value: /ca-cert
           - name: ADDRESS_SPACE_USER_DB_SECRET_NAME

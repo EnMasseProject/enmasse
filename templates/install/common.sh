@@ -30,6 +30,30 @@ function random_string() {
     LC_CTYPE=C head /dev/urandom | tr -dc A-Za-z0-9 | head -c 32
 }
 
+function create_address_space() {
+  local CMD=$1
+  local name=$2
+  local namespace=$3
+
+  payload="{ \\\"kind\\\":\\\"AddressSpace\\\", \\\"apiVersion\\\": \\\"enmasse.io/v1\\\", \\\"metadata\\\": { \\\"name\\\": \\\"$name\\\", \\\"namespace\\\": \\\"$namespace\\\" }, \\\"spec\\\": { \\\"type\\\": \\\"standard\\\" } }"
+
+  runcmd "cat <<EOF | $CMD create -n ${NAMESPACE} -f -
+{
+    \"apiVersion\": \"v1\",
+    \"kind\": \"ConfigMap\",
+    \"metadata\": {
+        \"name\": \"address-space-${name}\",
+        \"labels\": {
+            \"type\": \"address-space\"
+        }
+    },
+    \"data\": {
+      \"config.json\": \"$payload\"
+    }
+}
+EOF" "Create address space $name"
+}
+
 function create_csr() {
   local KEYFILE=$1
   local CSRFILE=$2

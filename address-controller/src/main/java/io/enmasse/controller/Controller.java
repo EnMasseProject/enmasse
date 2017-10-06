@@ -56,10 +56,9 @@ public class Controller extends AbstractVerticle implements Watcher<AddressSpace
                       AddressSpaceApi addressSpaceApi,
                       Kubernetes kubernetes,
                       AuthenticationServiceResolverFactory authResolverFactory,
-                      boolean isMultitenant,
                       UserDatabase userDatabase,
                       List<AddressSpaceController> addressSpaceControllers) {
-        this.helper = new ControllerHelper(kubernetes, isMultitenant, authResolverFactory, userDatabase);
+        this.helper = new ControllerHelper(kubernetes, authResolverFactory, userDatabase);
         this.client = client;
         this.addressSpaceApi = addressSpaceApi;
         this.addressSpaceControllers = addressSpaceControllers;
@@ -125,7 +124,7 @@ public class Controller extends AbstractVerticle implements Watcher<AddressSpace
     }
 
     private void retainAddressSpaces(Set<AddressSpace> desiredAddressSpaces) {
-        helper.retainAddressSpaces(desiredAddressSpaces.stream().map(AddressSpace::getName).collect(Collectors.toSet()));
+        helper.retainAddressSpaces(desiredAddressSpaces);
     }
 
     private void createAddressSpaces(Set<AddressSpace> instances) {
