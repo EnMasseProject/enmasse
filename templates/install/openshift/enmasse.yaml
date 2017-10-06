@@ -38,8 +38,6 @@ objects:
           - env:
             - name: QUEUE_NAME
               value: ${ADDRESS}
-            - name: PN_TRACE_FRM
-              value: '1'
             - name: CLUSTER_ID
               value: ${CLUSTER_ID}
             - name: CERT_DIR
@@ -177,8 +175,6 @@ objects:
           - env:
             - name: QUEUE_NAME
               value: ${ADDRESS}
-            - name: PN_TRACE_FRM
-              value: '1'
             - name: CLUSTER_ID
               value: ${CLUSTER_ID}
             - name: CERT_DIR
@@ -302,8 +298,6 @@ objects:
           - env:
             - name: TOPIC_NAME
               value: ${ADDRESS}
-            - name: PN_TRACE_FRM
-              value: '1'
             - name: CLUSTER_ID
               value: ${CLUSTER_ID}
             - name: CERT_DIR
@@ -517,8 +511,6 @@ objects:
           - env:
             - name: TOPIC_NAME
               value: ${ADDRESS}
-            - name: PN_TRACE_FRM
-              value: '1'
             - name: CLUSTER_ID
               value: ${CLUSTER_ID}
             - name: CERT_DIR
@@ -851,8 +843,6 @@ objects:
         spec:
           containers:
           - env:
-            - name: PN_TRACE_FRM
-              value: '1'
             - name: LINK_CAPACITY
               value: ${ROUTER_LINK_CAPACITY}
             - name: AUTHENTICATION_SERVICE_HOST
