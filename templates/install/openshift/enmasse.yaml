@@ -1703,8 +1703,6 @@ objects:
       spec:
         containers:
         - env:
-          - name: MULTITENANT
-            value: ${MULTITENANT}
           - name: CA_DIR
             value: /ca-cert
           - name: ADDRESS_SPACE_USER_DB_SECRET_NAME
@@ -1793,10 +1791,6 @@ objects:
 parameters:
 - description: The hostname to use for the exposed route for the REST API
   name: RESTAPI_HOSTNAME
-- description: If set to true, the address controller will deploy infrastructure to
-    separate namespaces
-  name: MULTITENANT
-  value: 'false'
 - description: The docker image to use for the address controller
   name: ADDRESS_CONTROLLER_REPO
   value: docker.io/enmasseproject/address-controller:latest

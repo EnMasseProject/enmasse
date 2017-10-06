@@ -29,7 +29,6 @@ public final class ControllerOptions {
     private static final String SERVICEACCOUNT_PATH = "/var/run/secrets/kubernetes.io/serviceaccount";
 
     private final String masterUrl;
-    private final boolean isMultitenant;
     private final String namespace;
     private final String token;
     private final File caDir;
@@ -46,13 +45,12 @@ public final class ControllerOptions {
     private final String userDbSecretName;
     private final boolean enableApiAuth;
 
-    private ControllerOptions(String masterUrl, boolean isMultitenant, String namespace, String token,
+    private ControllerOptions(String masterUrl, String namespace, String token,
                               File caDir, File templateDir, String messagingHost, String mqttHost,
                               String consoleHost, String certSecret, String certDir,
                               PasswordAuthentication osbAuth, AuthServiceInfo noneAuthService, AuthServiceInfo standardAuthService, String userDbSecretName,
                               boolean enableApiAuth) {
         this.masterUrl = masterUrl;
-        this.isMultitenant = isMultitenant;
         this.namespace = namespace;
         this.token = token;
         this.caDir = caDir;
@@ -79,10 +77,6 @@ public final class ControllerOptions {
 
     public String token() {
         return token;
-    }
-
-    public boolean isMultitenant() {
-        return isMultitenant;
     }
 
     public File caDir() {
@@ -138,7 +132,6 @@ public final class ControllerOptions {
 
         String masterHost = getEnvOrThrow(env, "KUBERNETES_SERVICE_HOST");
         String masterPort = getEnvOrThrow(env, "KUBERNETES_SERVICE_PORT");
-        boolean isMultitenant= Boolean.parseBoolean(env.get("MULTITENANT"));
 
         String namespace = getEnv(env, "NAMESPACE")
                 .orElseGet(() -> readFile(new File(SERVICEACCOUNT_PATH, "namespace")));
@@ -173,7 +166,6 @@ public final class ControllerOptions {
         boolean enableApiAuth = Boolean.parseBoolean(getEnv(env, "ADDRESS_CONTROLLER_ENABLE_API_AUTH").orElse("false"));
 
         return new ControllerOptions(String.format("https://%s:%s", masterHost, masterPort),
-                isMultitenant,
                 namespace,
                 token,
                 caDir,
