@@ -10,7 +10,6 @@ local common = import "common.jsonnet";
       ],
       "env": [
         addressEnv,
-        common.env("PN_TRACE_FRM", "1"),
         common.env("CLUSTER_ID", "${CLUSTER_ID}"),
         common.env("CERT_DIR", "/etc/enmasse-certs")
       ],
