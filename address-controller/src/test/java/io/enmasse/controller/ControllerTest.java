@@ -19,7 +19,6 @@ import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.types.brokered.BrokeredAddressSpaceType;
 import io.enmasse.address.model.types.standard.StandardAddressSpaceType;
 import io.enmasse.controller.auth.UserDatabase;
-import io.enmasse.controller.brokered.BrokeredController;
 import io.enmasse.controller.common.AddressSpaceController;
 import io.enmasse.controller.common.Kubernetes;
 import io.enmasse.controller.common.NoneAuthenticationServiceResolver;
@@ -70,7 +69,7 @@ public class ControllerTest {
 
     @Test
     public void testController(TestContext context) throws Exception {
-        Controller controller = new Controller(client, testApi, kubernetes, (a) -> new NoneAuthenticationServiceResolver("localhost", 1234), true, new DummyUserDb(), Arrays.asList(spaceController));
+        Controller controller = new Controller(client, testApi, kubernetes, (a) -> new NoneAuthenticationServiceResolver("localhost", 1234), new DummyUserDb(), Arrays.asList(spaceController));
 
         vertx.deployVerticle(controller, context.asyncAssertSuccess());
 

@@ -18,16 +18,10 @@ package io.enmasse.controller;
 
 import java.util.*;
 
-import io.enmasse.address.model.AddressSpace;
-import io.enmasse.address.model.AuthenticationService;
 import io.enmasse.address.model.AuthenticationServiceResolver;
 import io.enmasse.address.model.AuthenticationServiceType;
 import io.enmasse.address.model.CertProvider;
 import io.enmasse.address.model.Endpoint;
-import io.enmasse.address.model.SecretCertProvider;
-import io.enmasse.address.model.types.AddressSpaceType;
-import io.enmasse.address.model.types.standard.StandardAddressSpaceType;
-import io.enmasse.address.model.v1.CodecV1;
 import io.enmasse.controller.auth.*;
 import io.enmasse.controller.brokered.BrokeredController;
 import io.enmasse.controller.common.*;
@@ -63,29 +57,6 @@ public class Main extends AbstractVerticle {
     public void start(Future<Void> startPromise) {
         AddressSpaceApi addressSpaceApi = new ConfigMapAddressSpaceApi(controllerClient);
 
-        if (!options.isMultitenant() && !kubernetes.hasService("messaging")) {
-            AddressSpaceType type = new StandardAddressSpaceType();
-            AddressSpace.Builder builder = new AddressSpace.Builder()
-                    .setName("default")
-                    .setNamespace(kubernetes.getNamespace())
-                    .setType(type)
-                    .setAuthenticationService(new AuthenticationService.Builder()
-                            .setType(CodecV1.resolveAuthServiceType(System.getenv()))
-                            .build())
-                    .setPlan(type.getDefaultPlan());
-
-            CertProvider certProvider = options.certSecret().map(SecretCertProvider::new).orElse(null);
-
-            options.messagingHost().ifPresent(host ->
-                    appendEndpoint(certProvider, "messaging", "messaging", host));
-            options.mqttHost().ifPresent(host ->
-                    appendEndpoint(certProvider, "mqtt", "mqtt", host));
-            options.consoleHost().ifPresent(host ->
-                    appendEndpoint(certProvider, "console", "console", host));
-            addressSpaceApi.createAddressSpace(builder.build());
-        }
-
-
         UserDatabase userDb = null;
         if (options.isEnableApiAuth()) {
             userDb = SecretUserDatabase.create(controllerClient, options.namespace(), options.userDbSecretName());
@@ -98,7 +69,7 @@ public class Main extends AbstractVerticle {
 
         deployVerticles(startPromise,
                 new Deployment(new AuthController(certManager, addressSpaceApi)),
-                new Deployment(new Controller(controllerClient, addressSpaceApi, kubernetes, resolverFactory, options.isMultitenant(), userDb, Arrays.asList(standardController, brokeredController))),
+                new Deployment(new Controller(controllerClient, addressSpaceApi, kubernetes, resolverFactory, userDb, Arrays.asList(standardController, brokeredController))),
 //                new Deployment(new AMQPServer(kubernetes.getNamespace(), addressSpaceApi, options.port())),
                 new Deployment(new HTTPServer(addressSpaceApi, options.certDir(), options.osbAuth().orElse(null), userDb), new DeploymentOptions().setWorker(true)));
     }

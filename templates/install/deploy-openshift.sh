@@ -35,8 +35,9 @@ DEFAULT_USER=developer
 DEFAULT_NAMESPACE=myproject
 OC_ARGS=""
 GUIDE=false
+MODE="singletenant"
 
-while getopts a:c:dgm:n:p:st:u:yvh opt; do
+while getopts a:c:dgm:n:o:p:st:u:yvh opt; do
     case $opt in
         a)
             AUTH_SERVICES=$OPTARG
@@ -55,6 +56,9 @@ while getopts a:c:dgm:n:p:st:u:yvh opt; do
             ;;
         n)
             NAMESPACE=$OPTARG
+            ;;
+        o)
+            MODE=$OPTARG
             ;;
         p)
             TEMPLATE_PARAMS="$OPTARG $TEMPLATE_PARAMS"
@@ -88,6 +92,7 @@ while getopts a:c:dgm:n:p:st:u:yvh opt; do
             echo "  -d                   create an all-in-one docker OpenShift on localhost"
             echo "  -n NAMESPACE         OpenShift project name to install EnMasse into (default: $DEFAULT_NAMESPACE)"
             echo "  -m MASTER            OpenShift master URI to login against (default: https://localhost:8443)"
+            echo "  -o mode              Deploy in given mode, 'singletenant' or 'multitenant'.  (default: \"singletenant\")"
             echo "  -p PARAMS            Custom template parameters to pass to EnMasse template ('cat $SCRIPTDIR/openshift/enmasse.yaml' to get a list of available parameters)"
             echo "  -s                   Experimental: Only applicable when also using -d option. Starts OpenShift with Service Catalog enabled and registers EnMasse Service Broker"
             echo "  -t TEMPLATE          An alternative OpenShift template file to deploy EnMasse"
@@ -184,7 +189,7 @@ do
 done
 
 
-if [[ $TEMPLATE_PARAMS == *"MULTITENANT=true"* ]]; then
+if [ $MODE == "multitenant" ]; then
     if [ -n "$OS_ALLINONE" ]
     then
         runcmd "oc login -u system:admin" "Logging in as system:admin"
@@ -198,6 +203,10 @@ fi
 if [ -n "$ALT_TEMPLATE" ]
 then
     ENMASSE_TEMPLATE=$ALT_TEMPLATE
+fi
+
+if [ "$MODE" == "singletenant" ]; then
+    create_address_space "oc" "default" $NAMESPACE
 fi
 
 runcmd "oc process -f $ENMASSE_TEMPLATE $TEMPLATE_PARAMS | oc create -n $NAMESPACE -f -" "Instantiate EnMasse template"

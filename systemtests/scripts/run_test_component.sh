@@ -31,7 +31,7 @@ function setup_test() {
 
     DEPLOY_ARGS=( "-y" "-n" "$OPENSHIFT_PROJECT" "-u" "$OPENSHIFT_USER" "-m" "$OPENSHIFT_URL" "-a" "none standard" )
     if [ "$OPENSHIFT_MULTITENANT" == true ]; then
-        DEPLOY_ARGS+=( "-p" "MULTITENANT=true" )
+        DEPLOY_ARGS+=( "-o" "multi" )
     fi
 
     $ENMASSE_DIR/deploy-openshift.sh "${DEPLOY_ARGS[@]}"
