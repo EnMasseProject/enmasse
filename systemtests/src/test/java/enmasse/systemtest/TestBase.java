@@ -74,7 +74,7 @@ public abstract class TestBase {
     protected void createAddressSpace(String addressSpace, String authService) throws Exception {
         if (!TestUtils.existAddressSpace(addressApiClient, addressSpace)) {
             Logging.log.info("Address space " + addressSpace + "doesn't exist and will be created.");
-            addressApiClient.createAddressSpace(addressSpace, authService);
+            addressApiClient.createAddressSpace(addressSpace, authService, environment.isBrokered() ? "brokered" : "standard");
             logCollector.startCollecting(addressSpace);
             TestUtils.waitForAddressSpaceReady(addressApiClient, addressSpace);
             if (addressSpace.equals(defaultAddressSpace)) {
