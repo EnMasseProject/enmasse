@@ -30,7 +30,7 @@ local common = import "common.jsonnet";
             }
           },
           "spec": {
-            "containers": [ router.container(image_repo, [{"name":"PN_TRACE_FRM","value":"1"}], "", "router-internal-cert"),
+            "containers": [ router.container(image_repo, [], "", "router-internal-cert"),
               router.metrics(metrics_image_repo, "32Mi", "router-internal-cert") ],
             "volumes": [
               router.hawkular_volume(),
