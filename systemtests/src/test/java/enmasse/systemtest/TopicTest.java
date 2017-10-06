@@ -65,7 +65,7 @@ public class TopicTest extends TestBase {
         assertThat(recvMessages.get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
     }
 
-    @Test
+    //disabled due to issue: #258
     public void testMessageSelectorsAppProperty() throws Exception {
         Destination selTopic = Destination.topic("selectorTopicAppProp");
         String linkName = "linkSelectorTopicAppProp";
