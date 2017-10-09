@@ -22,6 +22,7 @@ var cert_dir = (process.env.CERT_DIR !== undefined) ? process.env.CERT_DIR : '/e
 var ca_path = path.resolve(cert_dir, 'ca.crt');
 var client_crt_path = path.resolve(cert_dir, 'tls.crt');
 var client_key_path = path.resolve(cert_dir, 'tls.key');
+var log = require('./log.js').logger();
 
 function get(object, fields, default_value) {
     var o = object;
@@ -52,6 +53,7 @@ function Pod(pod) {
         console.warn('Unable to load certificates: ' + error);
     }
     this.broker = artemis.connect(options);
+    log.debug("this.broker has been set to artemis.connect()");
 };
 
 Pod.prototype.close = function () {

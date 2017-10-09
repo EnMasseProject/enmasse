@@ -107,6 +107,7 @@ SubscriptionControl.prototype.subscribe = function (subscription_id, topics) {
     log.debug('subscribing to ' + JSON.stringify(topics));
     return ensure_queue(subscription_id, this.pods.pod_list()).then(
         function (pod) {
+            log.debug('looking at pod ' + JSON.stringify(pod));
             return pod.broker.ensureConnectorService(subscription_id, subscription_id, subscription_id).then(
                 function () {
                     return Promise.all(Object.keys(topics).map(
