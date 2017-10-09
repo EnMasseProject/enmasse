@@ -19,14 +19,14 @@
     },
     "devDependencies": {
         "eslint":"",
-        "mocha":"^3.0.0",
+        "mocha":"",
         "mocha-junit-reporter":"",
         "browserify":"",
         "istanbul": ""
     },
     "scripts": {
         "lint": "eslint lib/*.js",
-        "test": "mocha ${MOCHA_ARGS}",
+        "test": "mocha ${MOCHA_ARGS} --exit",
         "coverage": "istanbul cover _mocha"
     }
 }
