@@ -56,6 +56,7 @@ function find_queue (name, pods) {
  * queue exists.
  */
 function ensure_queue (name, pods) {
+    log.debug('ensuring queue ' + name + ' in ' + JSON.stringify(pods));
     return find_queue(name, pods).then(
         function (result) {
             if (result.found) {
