@@ -16,7 +16,6 @@ function setup_test() {
     export OPENSHIFT_PASSWD=${OPENSHIFT_PASSWD:-test}
     export OPENSHIFT_PROJECT=${OPENSHIFT_PROJECT:-enmasseci}
     export OPENSHIFT_MULTITENANT=${OPENSHIFT_MULTITENANT:-true}
-    export BROKERED_ADDR_SPACE=${BROKERED_ADDR_SPACE:-false}
     export OPENSHIFT_TEST_LOGDIR=${OPENSHIFT_TEST_LOGDIR:-/tmp/testlogs}
     export OPENSHIFT_USE_TLS=${OPENSHIFT_USE_TLS:-true}
     export ARTIFACTS_DIR=${ARTIFACTS_DIR:-artifacts}
