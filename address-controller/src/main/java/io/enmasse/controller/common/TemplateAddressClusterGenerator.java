@@ -16,12 +16,10 @@
 
 package io.enmasse.controller.common;
 
+import io.enmasse.address.model.*;
+import io.enmasse.address.model.types.standard.StandardAddressSpaceType;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.config.LabelKeys;
-import io.enmasse.address.model.Address;
-import io.enmasse.address.model.AuthenticationService;
-import io.enmasse.address.model.AuthenticationServiceResolver;
-import io.enmasse.address.model.Endpoint;
 import io.enmasse.address.model.types.Plan;
 import io.enmasse.address.model.types.TemplateConfig;
 import io.enmasse.k8s.api.AddressSpaceApi;
@@ -43,6 +41,7 @@ public class TemplateAddressClusterGenerator implements AddressClusterGenerator 
     private final Kubernetes kubernetes;
     private final AddressSpaceApi addressSpaceApi;
     private final AuthenticationServiceResolverFactory authResolverFactory;
+    private static final AddressResolver addressResolver = new AddressResolver(new StandardAddressSpaceType());
 
     public TemplateAddressClusterGenerator(AddressSpaceApi addressSpaceApi, Kubernetes kubernetes, AuthenticationServiceResolverFactory authResolverFactory) {
         this.addressSpaceApi = addressSpaceApi;
@@ -60,7 +59,7 @@ public class TemplateAddressClusterGenerator implements AddressClusterGenerator 
     public AddressCluster generateCluster(String clusterId, Set<Address> addressSet) {
         Address first = addressSet.iterator().next();
 
-        Plan plan = first.getPlan();
+        Plan plan = addressResolver.getPlan(first);
         KubernetesList resources = plan.getTemplateConfig().map(t -> processTemplate(clusterId, first, addressSet, t)).orElse(new KubernetesList());
         return new AddressCluster(clusterId, resources);
     }

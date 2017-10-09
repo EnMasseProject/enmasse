@@ -94,7 +94,7 @@ public class HttpAddressService {
             addressList = apiHelper.appendAddresses(addressSpaceName, addressList);
             return Response.ok(addressList).build();
         } catch (Exception e) {
-            log.error("Exception getting address", e);
+            log.error("Exception appending addresses", e);
             return Response.serverError().build();
         }
     }
@@ -131,7 +131,7 @@ public class HttpAddressService {
             AddressList addresses = apiHelper.putAddresses(addressSpaceName, addressList);
             return Response.ok(addresses).build();
         } catch (Exception e) {
-            log.error("Exception getting address", e);
+            log.error("Exception replacing addresses", e);
             return Response.serverError().build();
         }
     }
@@ -166,7 +166,7 @@ public class HttpAddressService {
             AddressList addresses = apiHelper.deleteAddress(addressSpaceName, address);
             return Response.ok(addresses).build();
         } catch (Exception e) {
-            log.error("Exception getting address", e);
+            log.error("Exception deleting address", e);
             return Response.serverError().build();
         }
     }

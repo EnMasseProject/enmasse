@@ -29,8 +29,8 @@ import java.util.*;
  * Codec that provides the object mapper for V1 format
  */
 public class CodecV1 {
-    private final Map<String, ObjectMapper> serializerMap = new HashMap<>();
     private final Map<String, AddressSpaceType> typeMap = new HashMap<>();
+    private final ObjectMapper mapper;
 
 
     /**
@@ -51,20 +51,22 @@ public class CodecV1 {
         }
     }
 
-    private static final String standardTypeName = new StandardAddressSpaceType().getName();
-
     public static ObjectMapper getMapper() {
-        return instance.getMapperForType(standardTypeName);
+        return instance.getMapperInstance();
+    }
+
+    public ObjectMapper getMapperInstance() {
+        return this.mapper;
     }
 
     private CodecV1(Collection<AddressSpaceType> addressSpaceTypes, AuthenticationServiceType defaultAuthServiceType) {
         for (AddressSpaceType type : addressSpaceTypes) {
             typeMap.put(type.getName(), type);
-            serializerMap.put(type.getName(), createMapper(type, defaultAuthServiceType));
         }
+        this.mapper = createMapper(defaultAuthServiceType);
     }
 
-    private ObjectMapper createMapper(AddressSpaceType addressSpaceType, AuthenticationServiceType defaultAuthServiceType) {
+    private ObjectMapper createMapper(AuthenticationServiceType defaultAuthServiceType) {
         ObjectMapper mapper = new ObjectMapper();
         SimpleModule module = new SimpleModule();
         DecodeContext context = new DecodeContext() {
@@ -79,7 +81,7 @@ public class CodecV1 {
             }
         };
 
-        AddressV1Deserializer addressDeserializer = new AddressV1Deserializer(addressSpaceType);
+        AddressV1Deserializer addressDeserializer = new AddressV1Deserializer();
         AddressSpaceV1Deserializer addressSpaceDeserializer = new AddressSpaceV1Deserializer(context);
 
         module.addDeserializer(Address.class, addressDeserializer);
@@ -95,9 +97,5 @@ public class CodecV1 {
         module.addSerializer(Schema.class, new SchemaV1Serializer());
         mapper.registerModule(module);
         return mapper;
-    }
-
-    private ObjectMapper getMapperForType(String typeName) {
-        return serializerMap.get(typeName);
     }
 }

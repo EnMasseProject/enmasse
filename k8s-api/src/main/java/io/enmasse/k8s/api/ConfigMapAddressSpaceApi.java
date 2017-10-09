@@ -16,6 +16,7 @@
 package io.enmasse.k8s.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.enmasse.address.model.AddressResolver;
 import io.enmasse.config.LabelKeys;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.v1.CodecV1;
@@ -132,6 +133,6 @@ public class ConfigMapAddressSpaceApi implements AddressSpaceApi {
 
     @Override
     public AddressApi withAddressSpace(AddressSpace addressSpace) {
-        return new ConfigMapAddressApi(client, addressSpace.getNamespace());
+        return new ConfigMapAddressApi(client, new AddressResolver(addressSpace.getType()), addressSpace.getNamespace());
     }
 }

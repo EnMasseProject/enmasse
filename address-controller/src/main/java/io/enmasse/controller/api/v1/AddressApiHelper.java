@@ -42,7 +42,7 @@ public class AddressApiHelper {
         toRemove.removeAll(addressList);
         toRemove.forEach(addressApi::deleteAddress);
         addressList.forEach(addressApi::createAddress);
-        return addressList;
+        return new AddressList(addressApi.listAddresses());
     }
 
     private AddressSpace getAddressSpace(String addressSpaceId) throws Exception {

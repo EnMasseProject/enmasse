@@ -29,9 +29,7 @@ import java.util.*;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 // TODO: Add more tests of invalid input to deserialization
 public class SerializationTest {
@@ -43,8 +41,8 @@ public class SerializationTest {
                 .setName("a1")
                 .setAddress("addr1")
                 .setAddressSpace("as1")
-                .setType(StandardType.QUEUE)
-                .setPlan(StandardType.QUEUE.getPlans().get(1))
+                .setType(new AddressType("queue"))
+                .setPlan(new Plan("inmemory"))
                 .setUuid(uuid)
                 .build();
 
@@ -67,8 +65,7 @@ public class SerializationTest {
                 "\"apiVersion\":\"v1\"," +
                 "\"kind\":\"Address\"," +
                 "\"metadata\":{" +
-                "  \"name\":\"myqueue\"," +
-                "  \"addressSpace\":\"default\"" +
+                "  \"name\":\"myqueue\"" +
                 "}," +
                 "\"spec\": {" +
                 "  \"type\":\"queue\"" +
@@ -78,9 +75,28 @@ public class SerializationTest {
         Address address = CodecV1.getMapper().readValue(json, Address.class);
         assertThat(address.getName(), is("myqueue"));
         assertThat(address.getAddress(), is("myqueue"));
-        assertThat(address.getAddressSpace(), is("default"));
         assertThat(address.getUuid(), is(not("")));
-        assertThat(address.getPlan().getName(), is(StandardType.QUEUE.getDefaultPlan().getName()));
+
+        AddressResolver resolver = new AddressResolver(new StandardAddressSpaceType());
+        assertThat(resolver.getPlan(address).getName(), is("inmemory"));
+    }
+
+    @Test
+    public void testSerializeAddressWithDefaults() throws Exception {
+        Address address = new Address.Builder()
+                .setName("myaddr")
+                .setAddressSpace("myspace")
+                .setType(new AddressType(StandardType.QUEUE.getName()))
+                .setPlan(new Plan("myplan"))
+                .build();
+
+        byte [] serialized = CodecV1.getMapper().writeValueAsBytes(address);
+
+        Address deserialized = CodecV1.getMapper().readValue(serialized, Address.class);
+        assertNotNull(deserialized.getPlan());
+        assertThat(address.getName(), is("myaddr"));
+        assertThat(address.getAddress(), is("myaddr"));
+        assertThat(address.getType().getName(), is("queue"));
     }
 
     @Test
@@ -88,14 +104,16 @@ public class SerializationTest {
         Address addr1 = new Address.Builder()
                 .setName("addr1")
                 .setAddressSpace("a1")
-                .setType(StandardType.QUEUE)
+                .setType(new AddressType("queue"))
+                .setPlan(new Plan("myplan"))
                 .build();
 
         Address addr2 = new Address.Builder()
                 .setName("a2")
                 .setAddressSpace("a1")
                 .setAddress("addr2")
-                .setType(StandardType.ANYCAST)
+                .setType(new AddressType("anycast"))
+                .setPlan(new Plan("myplan"))
                 .build();
 
 

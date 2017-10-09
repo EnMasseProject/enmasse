@@ -22,10 +22,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.enmasse.address.model.Address;
+import io.enmasse.address.model.AddressType;
+import io.enmasse.address.model.Plan;
 import io.enmasse.address.model.Status;
-import io.enmasse.address.model.types.AddressSpaceType;
-import io.enmasse.address.model.types.AddressType;
-import io.enmasse.address.model.types.Plan;
 
 import java.io.IOException;
 
@@ -34,12 +33,6 @@ import java.io.IOException;
  */
 class AddressV1Deserializer extends JsonDeserializer<Address> {
     private static final ObjectMapper mapper = new ObjectMapper();
-
-    private final AddressSpaceType addressSpaceType;
-
-    AddressV1Deserializer(AddressSpaceType addressSpaceType) {
-        this.addressSpaceType = addressSpaceType;
-    }
 
     @Override
     public Address deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException {
@@ -52,17 +45,16 @@ class AddressV1Deserializer extends JsonDeserializer<Address> {
         ObjectNode spec = (ObjectNode) root.get(Fields.SPEC);
         ObjectNode status = (ObjectNode) root.get(Fields.STATUS);
 
-        AddressType type = findAddressType(addressSpaceType, spec.get(Fields.TYPE).asText());
+        AddressType type = new AddressType(spec.get(Fields.TYPE).asText());
 
-
-        Plan plan = spec.hasNonNull(Fields.PLAN) ?
-                findPlan(type, spec.get(Fields.PLAN).asText()) :
-                type.getDefaultPlan();
 
         Address.Builder builder = new Address.Builder()
                 .setName(metadata.get(Fields.NAME).asText())
-                .setType(type)
-                .setPlan(plan);
+                .setType(type);
+
+        if (spec.hasNonNull(Fields.PLAN)) {
+            builder.setPlan(new Plan(spec.get(Fields.PLAN).asText()));
+        }
 
         if (metadata.hasNonNull(Fields.ADDRESS_SPACE)) {
             builder.setAddressSpace(metadata.get(Fields.ADDRESS_SPACE).asText());
@@ -90,25 +82,6 @@ class AddressV1Deserializer extends JsonDeserializer<Address> {
 
         return builder.build();
     }
-
-    private static Plan findPlan(AddressType type, String planName) {
-        for (Plan plan : type.getPlans()) {
-            if (plan.getName().equals(planName)) {
-                return plan;
-            }
-        }
-        throw new RuntimeException("Unknown plan " + planName + " for type " + type.getName());
-    }
-
-    private static AddressType findAddressType(AddressSpaceType type, String addressTypeName) {
-        for (AddressType atype : type.getAddressTypes()) {
-            if (atype.getName().equals(addressTypeName)) {
-                return atype;
-            }
-        }
-        throw new RuntimeException("Unknown address type " + addressTypeName + " for address space type " + type.getName());
-    }
-
 
     // TODO: This is a more low-level generator to avoid re-encoding address payload into a list
     /* Find a better way to fix this in the future

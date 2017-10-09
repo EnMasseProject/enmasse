@@ -16,6 +16,7 @@
 package io.enmasse.k8s.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.enmasse.address.model.AddressResolver;
 import io.enmasse.config.LabelKeys;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.address.model.Address;
@@ -37,12 +38,13 @@ public class ConfigMapAddressApi implements AddressApi {
     private static final Logger log = LoggerFactory.getLogger(ConfigMapAddressApi.class);
     private final OpenShiftClient client;
     private final String namespace;
+    private final AddressResolver addressResolver;
 
-    // TODO: Parameterize
     private static final ObjectMapper mapper = CodecV1.getMapper();
 
-    public ConfigMapAddressApi(OpenShiftClient client, String namespace) {
+    public ConfigMapAddressApi(OpenShiftClient client, AddressResolver addressResolver, String namespace) {
         this.client = client;
+        this.addressResolver = addressResolver;
         this.namespace = namespace;
     }
 
@@ -75,7 +77,7 @@ public class ConfigMapAddressApi implements AddressApi {
         Map<String, String> data = configMap.getData();
 
         try {
-            return mapper.readValue(data.get("config.json"), Address.class);
+            return addressResolver.resolveDefaults(mapper.readValue(data.get("config.json"), Address.class));
         } catch (Exception e) {
             log.warn("Unable to decode address", e);
             throw new RuntimeException(e);
@@ -111,21 +113,22 @@ public class ConfigMapAddressApi implements AddressApi {
     }
 
     private void createOrReplace(Address address) {
-        String name = KubeUtil.sanitizeName("address-config-" + address.getName());
+        Address withDefaults = addressResolver.resolveDefaults(address);
+        String name = KubeUtil.sanitizeName("address-config-" + withDefaults.getName());
         DoneableConfigMap builder = client.configMaps().inNamespace(namespace).withName(name).createOrReplaceWithNew()
                 .withNewMetadata()
                 .withName(name)
                 .addToLabels(LabelKeys.TYPE, "address-config")
                 // TODO: Support other ways of doing this
                 .addToAnnotations(AnnotationKeys.CLUSTER_ID, name)
-                .addToAnnotations(AnnotationKeys.ADDRESS_SPACE, address.getAddressSpace())
+                .addToAnnotations(AnnotationKeys.ADDRESS_SPACE, withDefaults.getAddressSpace())
                 .endMetadata();
 
         try {
-            builder.addToData("config.json", mapper.writeValueAsString(address));
+            builder.addToData("config.json", mapper.writeValueAsString(withDefaults));
             builder.done();
         } catch (Exception e) {
-            log.info("Error serializing address for {}", address, e);
+            log.info("Error serializing address for {}", withDefaults, e);
         }
     }
 
