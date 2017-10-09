@@ -116,7 +116,7 @@ public class ConfigServiceClient extends AbstractVerticle {
     }
 
     private boolean isQueue(Address address) {
-        return StandardType.QUEUE.equals(address.getType());
+        return StandardType.QUEUE.getName().equals(address.getType().getName());
     }
 
 

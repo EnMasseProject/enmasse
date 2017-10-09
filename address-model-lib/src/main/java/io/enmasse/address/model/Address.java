@@ -19,9 +19,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 import java.util.UUID;
 
-import io.enmasse.address.model.types.AddressType;
-import io.enmasse.address.model.types.Plan;
-
 /**
  * An EnMasse Address addressspace.
  */
@@ -108,9 +105,15 @@ public class Address {
         Objects.requireNonNull(name, "name not set");
         Objects.requireNonNull(address, "address not set");
         Objects.requireNonNull(addressSpace, "addressSpace not set");
-        Objects.requireNonNull(type, "type not set");
         Objects.requireNonNull(plan, "plan not set");
+        Objects.requireNonNull(type, "type not set");
         Objects.requireNonNull(status, "status not set");
+    }
+
+    public void validate(AddressResolver addressResolver) {
+        this.validate();
+        Objects.requireNonNull(addressResolver.getAddressType(this));
+        Objects.requireNonNull(addressResolver.getPlan(this));
     }
 
     public static class Builder {
@@ -160,14 +163,24 @@ public class Address {
 
         public Builder setType(AddressType addressType) {
             this.type = addressType;
-            if (this.plan == null) {
-                this.plan = type.getDefaultPlan();
+            return this;
+        }
+
+        public Builder setType(io.enmasse.address.model.types.AddressType type) {
+            this.type = new AddressType(type.getName());
+            if (plan == null) {
+                this.plan = new Plan(type.getDefaultPlan().getName());
             }
             return this;
         }
 
         public Builder setPlan(Plan plan) {
             this.plan = plan;
+            return this;
+        }
+
+        public Builder setPlan(io.enmasse.address.model.types.Plan plan) {
+            this.plan = new Plan(plan.getName());
             return this;
         }
 
@@ -180,9 +193,8 @@ public class Address {
             Objects.requireNonNull(name, "name not set");
             Objects.requireNonNull(address, "address not set");
             Objects.requireNonNull(type, "type not set");
-            Objects.requireNonNull(plan, "plan not set");
             Objects.requireNonNull(status, "status not set");
-            if(uuid == null) {
+            if (uuid == null) {
                 uuid = UUID.nameUUIDFromBytes(address.getBytes(StandardCharsets.UTF_8)).toString();
             }
             return new Address(name, uuid, address, addressSpace, type, plan, status);

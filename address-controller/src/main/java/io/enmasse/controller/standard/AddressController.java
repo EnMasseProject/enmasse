@@ -1,5 +1,6 @@
 package io.enmasse.controller.standard;
 
+import io.enmasse.address.model.AddressType;
 import io.enmasse.amqp.SyncRequestClient;
 import io.enmasse.controller.common.*;
 import io.enmasse.address.model.Address;
@@ -197,7 +198,8 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
 
     private void checkClusterStatus(Address address) {
         String clusterName = isPooled(address) ? address.getPlan().getName() : address.getName();
-        if (address.getType().equals(QUEUE) && !kubernetes.isDestinationClusterReady(clusterName)) {
+        AddressType addressType = address.getType();
+        if ((addressType.getName().equals(QUEUE.getName()) || addressType.getName().equals(TOPIC.getName())) && !kubernetes.isDestinationClusterReady(clusterName)) {
             address.getStatus().setReady(false).appendMessage("Cluster is unavailable");
         }
     }

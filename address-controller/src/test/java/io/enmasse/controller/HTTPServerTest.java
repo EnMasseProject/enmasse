@@ -98,7 +98,7 @@ public class HTTPServerTest {
                 .build());
 
         HttpClient client = vertx.createHttpClient();
-        Async async = context.async(2);
+        Async async = context.async(3);
         try {
             HttpClientRequest r1 = client.get(8080, "localhost", "/v1/addresses/myinstance", response -> {
                 context.assertEquals(200, response.statusCode());
@@ -122,6 +122,19 @@ public class HTTPServerTest {
             });
             r2.headers().add(HttpHeaders.AUTHORIZATION, "Basic " + Base64.getEncoder().encodeToString("test:testp".getBytes()));
             r2.end();
+
+            HttpClientRequest r3 = client.post(8080, "localhost", "/v1/addresses/myinstance", response -> {
+                response.bodyHandler(buffer -> {
+                    JsonObject data = buffer.toJsonObject();
+                    context.assertTrue(data.containsKey("items"));
+                    context.assertEquals(2, data.getJsonArray("items").size());
+                    System.out.println(data.toString());
+                    async.complete();
+                });
+            });
+            r3.headers().add(HttpHeaders.AUTHORIZATION, "Basic " + Base64.getEncoder().encodeToString("test:testp".getBytes()));
+            r3.end("{\"apiVersion\":\"enmasse.io/v1\",\"kind\":\"AddressList\",\"items\":[{\"metadata\":{\"name\":\"a4\"},\"spec\":{\"type\":\"queue\"}}]}");
+            async.awaitSuccess(60_000);
         } finally {
             client.close();
         }
@@ -142,6 +155,7 @@ public class HTTPServerTest {
                         async.complete();
                     });
                 });
+                async.awaitSuccess(60_000);
             }
         } finally {
             client.close();
@@ -210,6 +224,7 @@ public class HTTPServerTest {
             });
             request.headers().add(HttpHeaders.AUTHORIZATION, "Basic " + Base64.getEncoder().encodeToString("user:pass".getBytes()));
             request.end();
+            async.awaitSuccess(60_000);
         } finally {
             client.close();
         }

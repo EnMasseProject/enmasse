@@ -15,13 +15,13 @@
  */
 package io.enmasse.address.model.v1.address;
 
-import io.enmasse.address.model.Address;
-import io.enmasse.address.model.Status;
+import io.enmasse.address.model.*;
+import io.enmasse.address.model.types.brokered.BrokeredAddressSpaceType;
 import org.junit.Test;
 
-import static io.enmasse.address.model.types.standard.StandardType.QUEUE;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
 
 public class AddressTest {
     @Test
@@ -30,8 +30,8 @@ public class AddressTest {
                 .setAddress("addr1")
                 .setAddressSpace("space1")
                 .setName("myname")
-                .setType(QUEUE)
-                .setPlan(QUEUE.getDefaultPlan())
+                .setType(new AddressType("queue"))
+                .setPlan(new Plan("myplan"))
                 .setStatus(new Status(true))
                 .setUuid("myuuid");
 
@@ -48,5 +48,33 @@ public class AddressTest {
         assertThat(a1.getStatus(), is(a2.getStatus()));
         assertThat(a1.getType(), is(a2.getType()));
         assertThat(a1.getUuid(), is(a2.getUuid()));
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void testValidateUnknownType() {
+        Address address = new Address.Builder()
+                .setName("addr1")
+                .setType(new AddressType("unknowntype"))
+                .build();
+
+        AddressResolver resolver = new AddressResolver(new BrokeredAddressSpaceType());
+        resolver.getAddressType(address);
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void testValidateUnknownPlan() {
+        Address address = new Address.Builder()
+                .setName("addr1")
+                .setType(new AddressType("queue"))
+                .setPlan(new Plan("unknownplan"))
+                .build();
+
+        AddressResolver resolver = new AddressResolver(new BrokeredAddressSpaceType());
+        try {
+            resolver.getAddressType(address);
+        } catch (Exception e) {
+            fail();
+        }
+        resolver.getPlan(address);
     }
 }
