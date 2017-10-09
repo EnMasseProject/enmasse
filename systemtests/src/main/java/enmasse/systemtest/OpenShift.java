@@ -68,7 +68,7 @@ public class OpenShift {
             return endpoint;
         } else {
             Logging.log.info("Endpoint didn't resolve, falling back to service endpoint");
-            return getEndpoint("address-controller", "http");
+            return getEndpoint(globalNamespace,"address-controller", "http");
         }
     }
 
@@ -80,7 +80,7 @@ public class OpenShift {
             return endpoint;
         } else {
             Logging.log.info("Endpoint didn't resolve, falling back to service endpoint");
-            return getEndpoint("standard-authservice", "http");
+            return getEndpoint(globalNamespace, "standard-authservice", "http");
         }
     }
 
