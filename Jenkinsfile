@@ -7,7 +7,7 @@ node('enmasse') {
         }
         stage('setup persistent storage') {
             sh 'oc login -u system:admin'
-            sh 'MY_DIR="/tmp/mydir"'
+            sh 'MY_DIR=/tmp/mydir'
             sh 'mkdir ${MY_DIR}'
             sh 'chmod -R 777 ${MY_DIR}'
             sh 'oc process -f templates/build/persistent-volume.json HOST_DIR=${MY_DIR} NAME=pv01 | oc create -f -'
