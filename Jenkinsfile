@@ -5,6 +5,11 @@ node('enmasse') {
             sh 'oc cluster up'
             sh 'sudo chmod -R 777 /var/lib/origin/openshift.local.config'
         }
+        stage('setup persistent storage') {
+            sh 'oc login -u system:admin'
+            sh '.travis/provision-storage.sh /tmp/mydir pv01'
+            sh 'oc logout'
+        }
         stage ('checkout') {
             checkout scm
             sh 'git submodule update --init --recursive'
