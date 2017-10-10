@@ -46,6 +46,9 @@ task buildTar(type: Tar) {
     from('artemis-amqp-connector/build/libs/artemis-amqp-connector.jar') {
         into("${home}/lib")
     }
+    from('artemis-sasl-delegation/build/libs/artemis-sasl-delegation.jar') {
+        into("${home}/lib")
+    }
     from('config_templates') {
         into('config_templates')
     }
