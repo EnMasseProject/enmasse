@@ -1,23 +1,46 @@
 {
-  "kind": "PersistentVolume",
   "apiVersion": "v1",
-  "metadata": {
-    "name": "pv0001",
-    "labels": {
-      "app": "enmasse",
-      "type": "local"
+  "kind": "Template",
+  "objects": [
+    {
+      "kind": "PersistentVolume",
+      "apiVersion": "v1",
+      "metadata": {
+        "name": "${NAME}",
+        "labels": {
+          "app": "enmasse",
+          "type": "local"
+        }
+      },
+      "spec": {
+        "capacity": {
+          "storage": "${STORAGE_CAPACITY}"
+        },
+        "accessModes": [
+          "ReadWriteMany"
+        ],
+        "persistentVolumeReclaimPolicy": "Recycle",
+        "hostPath": {
+          "path": "${HOST_DIR}"
+        }
+      }
     }
-  },
-  "spec": {
-    "capacity": {
-      "storage": "20Gi"
+  ],
+  "parameters": [
+    {
+      "name": "STORAGE_CAPACITY",
+      "description": "Storage",
+      "value": "10Gi"
     },
-    "accessModes": [
-      "ReadWriteMany"
-    ],
-    "persistentVolumeReclaimPolicy": "Recycle",
-    "hostPath": {
-      "path": "/tmp/pvc"
+    {
+      "name": "HOST_DIR",
+      "description": "Directory",
+      "required": true
+    },
+    {
+      "name": "NAME",
+      "description": "Resource name",
+      "required": true
     }
-  }
+  ]
 }
