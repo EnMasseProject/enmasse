@@ -58,9 +58,6 @@ function find_queue (name, pods) {
  */
 function ensure_queue (name, pods) {
     log.info('ensuring queue ' + name + ' in ' + pods.length + " pods");
-    for (var pod in pods) {
-        log.info('pod ' + pods[pod].name + " with broker undefined: " + (pods[pod].broker === undefined));
-    }
     pods.map(function (pod) {
         log.info('podmap ' + pod.name + " with broker undefined: " + (pod.broker === undefined));
     });
@@ -114,7 +111,11 @@ function get_divert_name(subscription_id, topic, tag) {
 
 SubscriptionControl.prototype.subscribe = function (subscription_id, topics) {
     log.debug('subscribing to ' + JSON.stringify(topics));
-    return ensure_queue(subscription_id, this.pods.pod_list()).then(
+    var pods = this.pods.pod_list();
+    if (pods.length == 0) {
+        return Promise.reject('No brokers available for subscribing to topics ' + JSON.stringify(Object.keys(topics)));
+    }
+    return ensure_queue(subscription_id, pods).then(
         function (pod) {
             log.info('after ensure looking at pod ' + JSON.stringify(pod.name) + " with broker undefined " + (pod.broker === undefined));
             return pod.broker.ensureConnectorService(subscription_id, subscription_id, subscription_id).then(
