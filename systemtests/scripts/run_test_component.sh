@@ -26,6 +26,7 @@ function setup_test() {
     oc project ${OPENSHIFT_PROJECT}
 
     export OPENSHIFT_TOKEN=`oc whoami -t`
+    rm -rf $OPENSHIFT_TEST_LOGDIR
     mkdir -p $OPENSHIFT_TEST_LOGDIR
 
     DEPLOY_ARGS=( "-y" "-n" "$OPENSHIFT_PROJECT" "-u" "$OPENSHIFT_USER" "-m" "$OPENSHIFT_URL" "-a" "none standard" )
