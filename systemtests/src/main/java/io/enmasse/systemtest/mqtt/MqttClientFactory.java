@@ -16,7 +16,6 @@
 
 package io.enmasse.systemtest.mqtt;
 
-import enmasse.systemtest.*;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.OpenShift;
