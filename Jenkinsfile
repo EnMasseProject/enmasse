@@ -7,7 +7,7 @@ node('enmasse') {
         }
         stage('setup persistent storage') {
             sh 'oc login -u system:admin'
-            sh 'systemtests/scripts/provision-storage.sh /tmp/mydir pv01'
+            sh './systemtests/scripts/provision-storage.sh /tmp/mydir pv01'
             sh 'oc logout'
         }
         stage ('checkout') {
