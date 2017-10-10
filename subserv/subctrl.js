@@ -32,6 +32,7 @@ function SubscriptionControl(pods) {
  * fewest queues.
  */
 function find_queue (name, pods) {
+    log.info('looking for ' + name + ' in ' + pods.length + ' pods');
     return Promise.all(pods.map(function (pod) { return pod.broker.getQueueNames(); } )).then(
         function (results) {
             var found = false;
@@ -56,10 +57,14 @@ function find_queue (name, pods) {
  * queue exists.
  */
 function ensure_queue (name, pods) {
-    console.log('ensuring queue ' + name + ' in ' + pods.length + " pods");
+    log.info('ensuring queue ' + name + ' in ' + pods.length + " pods");
     for (var pod in pods) {
-        console.log('pod ' + pod.name + " with broker undefined: " + (pod.broker === undefined));
+        log.info('pod ' + pods[pod].name + " with broker undefined: " + (pods[pod].broker === undefined));
     }
+    pods.map(function (pod) {
+        log.info('podmap ' + pod.name + " with broker undefined: " + (pod.broker === undefined));
+    });
+
     return find_queue(name, pods).then(
         function (result) {
             if (result.found) {
@@ -111,7 +116,7 @@ SubscriptionControl.prototype.subscribe = function (subscription_id, topics) {
     log.debug('subscribing to ' + JSON.stringify(topics));
     return ensure_queue(subscription_id, this.pods.pod_list()).then(
         function (pod) {
-            console.log('looking at pod ' + JSON.stringify(pod.name) + " with broker undefined " + (pod.broker === undefined));
+            log.info('after ensure looking at pod ' + JSON.stringify(pod.name) + " with broker undefined " + (pod.broker === undefined));
             return pod.broker.ensureConnectorService(subscription_id, subscription_id, subscription_id).then(
                 function () {
                     return Promise.all(Object.keys(topics).map(

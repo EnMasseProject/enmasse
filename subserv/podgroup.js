@@ -53,7 +53,7 @@ function Pod(pod) {
         console.warn('Unable to load certificates: ' + error);
     }
     this.broker = artemis.connect(options);
-    log.debug("this.broker has been set to artemis.connect()");
+    log.debug("this.broker has been set to artemis.connect() to " + pod.host + " for " + this.name);
 };
 
 Pod.prototype.close = function () {
@@ -77,6 +77,7 @@ PodGroup.prototype.removed = function (pod) {
 PodGroup.prototype.pod_list = function () {
     var list = [];
     for (var i in this.pods) {
+        log.info("pod_list, found pod with name " + i);
         list.push(this.pods[i]);
     }
     return list;

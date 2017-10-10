@@ -17,6 +17,7 @@ var util = require("util");
 var events = require("events");
 var rhea = require('rhea');
 var config_service = require('./config_service.js');
+var log = require('./log.js').logger();
 
 var Subscription = function () {
     events.EventEmitter.call(this);
@@ -30,6 +31,7 @@ Subscription.prototype.close = function () {
 
 Subscription.prototype.subscribe = function (selector, handler) {
     var self = this;
+    this.selector = selector;
     var amqp = rhea.create_container();
     amqp.on('message', handler);
     var conn = config_service.connect(amqp, "podsense-" + selector.cluster_id);
@@ -50,6 +52,7 @@ function get_pod_handler() {
         filtered = content.filter(function (pod) {
             return pod.ready === 'True' && pod.phase === 'Running';
         });
+        log.debug('discovered running and ready pods for ' + JSON.stringify(this.selector) + ': ' + JSON.stringify(filtered))
         this.emit('changed', filtered);
     }
 }
