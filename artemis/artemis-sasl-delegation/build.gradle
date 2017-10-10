@@ -1,0 +1,10 @@
+description = "Login module using SASL delegation for authinticating users/roles"
+
+dependencies {
+    compile "org.apache.activemq:artemis-server:${artemisVersion}"
+    compile "org.apache.activemq:artemis-amqp-protocol:${artemisVersion}"
+    compile "org.apache.qpid:proton-j"
+    compile "org.jboss.logging:jboss-logging:${jbossLoggingVersion}"
+    compileOnly "org.jboss.logging:jboss-logging-processor:${jbossLoggingProcessorVersion}"
+}
+
