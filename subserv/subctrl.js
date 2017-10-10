@@ -56,7 +56,10 @@ function find_queue (name, pods) {
  * queue exists.
  */
 function ensure_queue (name, pods) {
-    console.log('ensuring queue ' + name + ' in ' + JSON.stringify(pods));
+    console.log('ensuring queue ' + name + ' in ' + pods.length + " pods");
+    for (var pod in pods) {
+        console.log('pod ' + pod.name + " with broker: " + JSON.stringify(pod.broker));
+    }
     return find_queue(name, pods).then(
         function (result) {
             if (result.found) {
@@ -108,7 +111,7 @@ SubscriptionControl.prototype.subscribe = function (subscription_id, topics) {
     log.debug('subscribing to ' + JSON.stringify(topics));
     return ensure_queue(subscription_id, this.pods.pod_list()).then(
         function (pod) {
-            log.debug('looking at pod ' + JSON.stringify(pod));
+            console.log('looking at pod ' + JSON.stringify(pod.name) + " with broker " + JSON.stringify(pod.broker));
             return pod.broker.ensureConnectorService(subscription_id, subscription_id, subscription_id).then(
                 function () {
                     return Promise.all(Object.keys(topics).map(
