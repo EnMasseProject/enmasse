@@ -239,12 +239,12 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
             List<String> linkRoutes = checkRouter(client, "org.apache.qpid.dispatch.router.config.linkRoute", "prefix");
 
             for (Address address : addressList) {
-                if (!address.getType().equals(TOPIC)) {
+                if (!address.getType().getName().equals(TOPIC.getName())) {
                     boolean found = addresses.contains(address.getAddress());
                     if (!found) {
                         address.getStatus().setReady(false).appendMessage("Address " + address.getAddress() + " not found on " + router.getMetadata().getName());
                     }
-                    if (address.getType().equals(QUEUE)) {
+                    if (address.getType().getName().equals(QUEUE.getName())) {
                         found = autoLinks.contains(address.getAddress());
                         if (!found) {
                             address.getStatus().setReady(false).appendMessage("Address " + address.getAddress() + " is missing autoLinks on " + router.getMetadata().getName());
