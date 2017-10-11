@@ -22,6 +22,7 @@ JAVA_OPTS="${JAVA_OPTS} -Djava.security.egd=file:/dev/./urandom"
 
 function configure_brokered() {
     cp $CONFIG_TEMPLATES/brokered/broker.xml /tmp/broker.xml
+    cp $CONFIG_TEMPLATES/brokered/login.config /tmp/login.config
 }
 
 function configure_standard() {
@@ -54,8 +55,13 @@ function configure() {
 
         export KEYSTORE_PATH=$instanceDir/etc/enmasse-keystore.jks
         export TRUSTSTORE_PATH=$instanceDir/etc/enmasse-truststore.jks
+        export AUTH_TRUSTSTORE_PATH=$instanceDir/etc/enmasse-authtruststore.jks
+
     
         envsubst < /tmp/broker.xml > $instanceDir/etc/broker.xml
+        if [ -f /tmp/login.config ]; then
+                envsubst < /tmp/login.config > $instanceDir/etc/login.config
+        fi
         cp $CONFIG_TEMPLATES/bootstrap.xml $instanceDir/etc/bootstrap.xml
 
         # Convert certs
@@ -63,6 +69,8 @@ function configure() {
 
         keytool -importkeystore -srcstorepass enmasse -deststorepass enmasse -destkeystore $KEYSTORE_PATH -srckeystore /tmp/enmasse-keystore.p12 -srcstoretype PKCS12
         keytool -import -noprompt -file /etc/enmasse-certs/ca.crt -alias firstCA -deststorepass enmasse -keystore $TRUSTSTORE_PATH
+
+        keytool -import -noprompt -file /etc/authservice-ca/tls.crt -alias firstCA -deststorepass enmasse -keystore $AUTH_TRUSTSTORE_PATH
 
         #cp $CONFIG_TEMPLATES/logging.properties $instanceDir/etc/logging.properties
 
