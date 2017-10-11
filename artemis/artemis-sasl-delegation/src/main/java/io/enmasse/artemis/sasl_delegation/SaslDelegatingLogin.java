@@ -93,6 +93,7 @@ public class SaslDelegatingLogin implements LoginModule {
     private boolean useTls;
     private String trustStorePath;
     private SSLContext sslContext;
+    private char[] trustStorePassword;
 
     @Override
     public void initialize(Subject subject,
@@ -124,6 +125,9 @@ public class SaslDelegatingLogin implements LoginModule {
         }
         if(options.containsKey("truststore_path")) {
             this.trustStorePath = String.valueOf(options.get("truststore_path")).trim();
+        }
+        if(options.containsKey("truststore_password")) {
+            this.trustStorePassword = String.valueOf(options.get("truststore_password")).trim().toCharArray();
         }
 
         if(useTls) {
@@ -340,7 +344,7 @@ public class SaslDelegatingLogin implements LoginModule {
             KeyStore ts = KeyStore.getInstance("JKS");
             try(InputStream in = new FileInputStream(trustStorePath))
             {
-                ts.load(in, null);
+                ts.load(in, trustStorePassword);
             }
             TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
             tmf.init(ts);
