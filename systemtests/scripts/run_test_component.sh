@@ -44,7 +44,7 @@ function setup_test() {
 
 function run_test() {
     if [ "$OPENSHIFT_MULTITENANT" == false ]; then
-        $CURDIR/wait_until_up.sh 7 || return 1
+        $CURDIR/wait_until_up.sh 9 || return 1
     else
         $CURDIR/wait_until_up.sh 4 || return 1
     fi

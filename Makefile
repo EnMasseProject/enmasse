@@ -7,7 +7,7 @@ OPENSHIFT_USER    ?= $(shell oc whoami)
 OPENSHIFT_TOKEN   ?= $(shell oc whoami -t)
 OPENSHIFT_MASTER  ?= $(shell oc whoami --show-server=true)
 OPENSHIFT_KUBECFG ?= /var/lib/origin/openshift.local.config/master/admin.kubeconfig
-MULTITENANT       ?= true
+MULTITENANT       ?= false
 SYSTEMTEST_ARGS   =
 
 DOCKER_TARGETS = docker_build docker_tag docker_push
