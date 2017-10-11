@@ -41,4 +41,4 @@ echo "Pushing images to Docker Registry"
 make docker_push
 
 echo "Running systemtests"
-make systemtests
+./systemtests/scripts/run_test_component.sh templates/install ${OPENSHIFT_KUBECONFIG} systemtests ${SYSTEMTEST_ARGS}
