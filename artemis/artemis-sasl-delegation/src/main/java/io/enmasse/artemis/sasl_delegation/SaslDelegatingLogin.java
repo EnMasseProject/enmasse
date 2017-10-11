@@ -410,32 +410,4 @@ public class SaslDelegatingLogin implements LoginModule {
                                                          Arrays.toString(protocols)));
     }
 
-
-
-    // TODO - remove
-    public static void main(String[] args) throws LoginException {
-        SaslDelegatingLogin login = new SaslDelegatingLogin();
-        Subject subject = new Subject();
-        CallbackHandler callbackHandler = new CallbackHandler() {
-            @Override
-            public void handle(Callback[] callbacks) throws IOException, UnsupportedCallbackException {
-                for(Callback callback : callbacks) {
-                    if(callback instanceof NameCallback) {
-                        ((NameCallback)callback).setName("guest");
-                    } else if(callback instanceof PasswordCallback) {
-                        ((PasswordCallback)callback).setPassword("guest".toCharArray());
-                    }
-                }
-            }
-        };
-        Map<String, Object> sharedState = new HashMap<>();
-        Map<String, Object> options = new HashMap<>();
-        options.put("use_tls", "true");
-        options.put("truststore_path", "/Users/rob/testTrustStore.jks");
-        options.put("port", "5671");
-        login.initialize(subject, callbackHandler, sharedState, options);
-        login.login();
-        login.commit();
-    }
-
 }
