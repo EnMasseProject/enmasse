@@ -14,8 +14,10 @@
  * limitations under the License.
  */
 
-package io.enmasse.systemtest;
+package io.enmasse.systemtest.standard;
 
+import io.enmasse.systemtest.Destination;
+import io.enmasse.systemtest.TestBase;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import org.apache.qpid.proton.message.Message;
 import org.junit.Test;

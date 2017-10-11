@@ -17,6 +17,7 @@ package io.enmasse.systemtest;
 
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.mqtt.MqttClient;
+import io.enmasse.systemtest.standard.QueueTest;
 import org.apache.qpid.proton.message.Message;
 import org.junit.Before;
 import org.junit.Test;
