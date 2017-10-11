@@ -1,4 +1,4 @@
-description = "Login module using SASL delegation for authinticating users/roles"
+description = "Login module using SASL delegation for authenticating users/roles"
 
 dependencies {
     compile "org.apache.activemq:artemis-server:${artemisVersion}"
