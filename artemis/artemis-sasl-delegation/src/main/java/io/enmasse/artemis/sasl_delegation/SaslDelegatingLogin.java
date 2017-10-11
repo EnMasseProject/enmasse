@@ -256,6 +256,8 @@ public class SaslDelegatingLogin implements LoginModule {
                         if (remoteProperties.get(Symbol.valueOf("groups")) instanceof List) {
                             roles.addAll((List<String>) remoteProperties.get(Symbol.valueOf("groups")));
                         }
+                        roles.add("all");
+
                     }
                     success = true;
                 } else {
