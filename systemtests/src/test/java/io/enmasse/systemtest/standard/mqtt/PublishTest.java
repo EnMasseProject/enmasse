@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
-package io.enmasse.systemtest.mqtt;
+package io.enmasse.systemtest.standard.mqtt;
 
 import io.enmasse.systemtest.Destination;
 import io.enmasse.systemtest.TestBase;
+import io.enmasse.systemtest.mqtt.MqttClient;
 import org.junit.Test;
 
 import java.util.Arrays;
