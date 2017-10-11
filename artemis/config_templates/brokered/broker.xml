@@ -111,9 +111,9 @@ under the License.
             <permission type="deleteDurableQueue" roles="admin"/>
             <permission type="createAddress" roles="admin"/>
             <permission type="deleteAddress" roles="admin"/>
-            <permission type="consume" roles="admin"/>
-            <permission type="browse" roles="admin"/>
-            <permission type="send" roles="admin"/>
+            <permission type="consume" roles="all, admin"/>
+            <permission type="browse" roles="all, admin"/>
+            <permission type="send" roles="all, admin"/>
             <!-- we need this otherwise ./artemis data imp wouldn't work -->
             <permission type="manage" roles="admin"/>
          </security-setting>
