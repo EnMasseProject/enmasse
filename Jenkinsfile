@@ -1,22 +1,18 @@
 node('enmasse') {
     result = 'failure'
     catchError {
-        stage('start openshift') {
-            sh 'oc cluster up'
-            sh 'sudo chmod -R 777 /var/lib/origin/openshift.local.config'
-        }
-        stage('setup persistent storage') {
-            sh 'oc login -u system:admin'
-            sh 'MY_DIR=/tmp/mydir'
-            sh 'mkdir ${MY_DIR}'
-            sh 'chmod -R 777 ${MY_DIR}'
-            sh 'oc process -f templates/build/persistent-volume.json HOST_DIR=${MY_DIR} NAME=pv01 | oc create -f -'
-            sh 'oc logout'
-        }
         stage ('checkout') {
             checkout scm
             sh 'git submodule update --init --recursive'
             sh 'rm -rf artifacts && mkdir -p artifacts'
+        }
+        stage('start openshift') {
+            sh 'oc cluster up'
+            sh 'sudo chmod -R 777 /var/lib/origin/openshift.local.config'
+        }
+        stage('setup openshift') {
+            sh 'oc login -u system:admin'
+            sh './systemtests/scripts/provision-storage.sh /tmp/mydir pv01'
         }
         stage ('build') {
             try {
