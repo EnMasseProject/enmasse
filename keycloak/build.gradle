@@ -1,0 +1,20 @@
+description = 'keycloak'
+apply plugin: 'distribution'
+
+task pack(type: Tar) {
+    from ('src/main/xsl/') {
+        include '*.xsl'
+        into 'keycloak'
+    }
+    from ('sasl-plugin/build/libs/') {
+        include 'sasl-plugin-all.jar'
+        into 'keycloak/providers'
+    }
+    from ('src/main/sh') {
+        include 'init-keycloak.sh'
+        into 'keycloak/bin'
+    }    
+    compression = Compression.GZIP
+    archiveName "keycloak.tgz"
+    destinationDir file('build/distributions')
+}

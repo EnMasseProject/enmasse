@@ -1,0 +1,12 @@
+description = 'Router configured'
+apply plugin: 'distribution'
+
+
+task pack(type: Tar) {
+    from (projectDir) {
+        include ('*.snippet', '*.sh', '*.template')
+    }
+    compression = Compression.GZIP
+    archiveName "router.tgz"
+    destinationDir file('build')
+}
