@@ -76,9 +76,9 @@ local hawkularBrokerConfig = import "hawkular-broker-config.jsonnet";
     "spec": {
       "ports": [
         {
-          "name": "amqps",
-          "port": 5671,
-          "targetPort": "amqps-internal"
+          "name": "amqps-normal",
+          "port": 55671,
+          "targetPort": "amqps-normal"
         }
       ],
       "selector": {
@@ -119,6 +119,7 @@ local hawkularBrokerConfig = import "hawkular-broker-config.jsonnet";
             common.persistent_volume("data", "broker-data"),
             common.configmap_volume("hawkular-openshift-agent", "hawkular-broker-config"),
             common.secret_volume("broker-internal-cert", "broker-internal-cert"),
+            common.secret_volume("authservice-ca", "authservice-ca"),
           ],
           "containers": [
             {
@@ -127,15 +128,16 @@ local hawkularBrokerConfig = import "hawkular-broker-config.jsonnet";
               "env": [
                 common.env("ADDRESS_SPACE_TYPE", "brokered"),
                 common.env("CERT_DIR", "/etc/enmasse-certs"),
-              ],
+              ] + auth_service.envVars,
               "volumeMounts": [
                 common.volume_mount("data", "/var/run/artemis"),
-                common.volume_mount("broker-internal-cert", "/etc/enmasse-certs", true)
+                common.volume_mount("broker-internal-cert", "/etc/enmasse-certs", true),
+                common.volume_mount("authservice-ca", "/etc/authservice-ca", true)
               ],
               "ports": [
                 common.container_port("amqp", 5672),
                 common.container_port("amqps", 5671),
-                common.container_port("amqps-internal", 5673),
+                common.container_port("amqps-normal", 55671),
                 common.container_port("jolokia", 8161)
               ],
               "livenessProbe": common.tcp_probe("amqp", 120),
