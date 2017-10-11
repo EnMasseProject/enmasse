@@ -1,12 +1,16 @@
 #!/bin/sh
 set -e
-export VERSION=${TRAVIS_TAG:-latest}
+VERSION=${VERSION:-latest}
+PULL_REQUEST=${PULL_REQUEST:-true}
+BRANCH=${BRANCH:-master}
+TAG=${TAG:-latest}
+DOCKER_ORG=${DOCKER_ORG:-$USER}
 
 if [ "$VERSION" != "latest" ]; then
-    export TAG=$VERSION
+    TAG=$VERSION
 fi
 
-if [ "$TRAVIS_BRANCH" != "master" ] && [ "$TRAVIS_BRANCH" != "$TRAVIS_TAG" ] || [ "$TRAVIS_PULL_REQUEST" != "false" ]
+if [ "$BRANCH" != "master" ] && [ "$BRANCH" != "$VERSION" ] || [ "$PULL_REQUEST" != "false" ]
 then
     echo "Skipping docker tag on PR"
 else

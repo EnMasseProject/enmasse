@@ -1,6 +1,8 @@
 #!/bin/bash
 SUCCESS=$1
 VERSION=${TRAVIS_TAG:-latest}
+TAG=${TAG:-latest}
+
 if [ "$VERSION" != "latest" ]; then
     TAG=$VERSION
 fi

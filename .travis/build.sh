@@ -1,24 +1,28 @@
 #!/bin/sh
 set -e
-export VERSION=${TRAVIS_TAG:-latest}
+VERSION=${VERSION:-latest}
+PULL_REQUEST=${PULL_REQUEST:-true}
+BRANCH=${BRANCH:-master}
+TAG=${TAG:-latest}
+DOCKER_ORG=${DOCKER_ORG:-$USER}
 
 if [ "$VERSION" != "latest" ]; then
-    export TAG=$VERSION
+    TAG=$VERSION
 fi
 
-if [ "$TRAVIS_BRANCH" != "master" ] && [ "$TRAVIS_BRANCH" != "$TRAVIS_TAG" ] || [ "$TRAVIS_PULL_REQUEST" != "false" ]
+if [ "$BRANCH" != "master" ] && [ "$BRANCH" != "$VERSION" ] || [ "$PULL_REQUEST" != "false" ]
 then
     export DOCKER_REGISTRY="172.30.1.1:5000"
     export DOCKER_ORG=enmasseci
 fi
 
-echo "Building EnMasse with tag $TAG, version $VERSION from $TRAVIS_BRANCH. PR: $TRAVIS_PULL_REQUEST"
+echo "Building EnMasse with tag $TAG, version $VERSION from $BRANCH. PR: $PULL_REQUEST"
 MOCHA_ARGS="--reporter=mocha-junit-reporter" make
 
 echo "Tagging Docker Images"
 make docker_tag
 #
-if [ "$TRAVIS_BRANCH" != "master" ] && [ "$TRAVIS_BRANCH" != "$TRAVIS_TAG" ] || [ "$TRAVIS_PULL_REQUEST" != "false" ]
+if [ "$BRANCH" != "master" ] && [ "$BRANCH" != "$VERSION" ] || [ "$PULL_REQUEST" != "false" ]
 then
     echo "Logging into to local docker registry"
     oc login -u test -p test --insecure-skip-tls-verify=true https://localhost:8443
