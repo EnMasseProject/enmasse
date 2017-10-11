@@ -1,59 +1,61 @@
 node('enmasse') {
     result = 'failure'
-    catchError {
-        stage ('checkout') {
-            checkout scm
-            sh 'git submodule update --init --recursive'
-            sh 'rm -rf artifacts && mkdir -p artifacts'
-        }
-        stage('start openshift') {
-            sh 'oc cluster up'
-            sh 'sudo chmod -R 777 /var/lib/origin/openshift.local.config'
-        }
-        stage('setup openshift') {
-            sh 'oc login -u system:admin'
-            sh './systemtests/scripts/provision-storage.sh /tmp/mydir pv01'
-        }
-        stage ('build') {
-            try {
-                withCredentials([string(credentialsId: 'docker-registry-host', variable: 'DOCKER_REGISTRY')]) {
-                    sh './gradlew :artemis:buildArtemisAmqpModule'
-                    sh 'MOCHA_ARGS="--reporter=mocha-junit-reporter" TAG=$BUILD_TAG make'
-                    sh 'cat templates/install/openshift/enmasse.yaml'
-                }
-            } finally {
-                junit '**/TEST-*.xml'
+    timeout(120) {
+        catchError {
+            stage ('checkout') {
+                checkout scm
+                sh 'git submodule update --init --recursive'
+                sh 'rm -rf artifacts && mkdir -p artifacts'
             }
-        }
-        stage ('push docker image') {
-            withCredentials([string(credentialsId: 'docker-registry-host', variable: 'DOCKER_REGISTRY'), usernamePassword(credentialsId: 'docker-registry-credentials', passwordVariable: 'DOCKER_PASS', usernameVariable: 'DOCKER_USER')]) {
-                sh 'TAG=$BUILD_TAG make docker_tag'
-                sh 'docker login -u $DOCKER_USER -p $DOCKER_PASS $DOCKER_REGISTRY'
-                sh 'TAG=$BUILD_TAG make docker_push'
+            stage('start openshift') {
+                sh 'oc cluster up'
+                sh 'sudo chmod -R 777 /var/lib/origin/openshift.local.config'
             }
-        }
-        stage('system tests') {
-            withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
+            stage('setup openshift') {
+                sh 'oc login -u system:admin'
+                sh './systemtests/scripts/provision-storage.sh /tmp/mydir pv01'
+            }
+            stage ('build') {
                 try {
-                    sh 'ARTIFACTS_DIR=artifacts OPENSHIFT_PROJECT=$BUILD_TAG ./systemtests/scripts/run_test_component.sh templates/install /var/lib/origin/openshift.local.config/master/admin.kubeconfig systemtests'
+                    withCredentials([string(credentialsId: 'docker-registry-host', variable: 'DOCKER_REGISTRY')]) {
+                        sh './gradlew :artemis:buildArtemisAmqpModule'
+                        sh 'MOCHA_ARGS="--reporter=mocha-junit-reporter" TAG=$BUILD_TAG make'
+                        sh 'cat templates/install/openshift/enmasse.yaml'
+                    }
                 } finally {
                     junit '**/TEST-*.xml'
                 }
             }
+            stage ('push docker image') {
+                withCredentials([string(credentialsId: 'docker-registry-host', variable: 'DOCKER_REGISTRY'), usernamePassword(credentialsId: 'docker-registry-credentials', passwordVariable: 'DOCKER_PASS', usernameVariable: 'DOCKER_USER')]) {
+                    sh 'TAG=$BUILD_TAG make docker_tag'
+                    sh 'docker login -u $DOCKER_USER -p $DOCKER_PASS $DOCKER_REGISTRY'
+                    sh 'TAG=$BUILD_TAG make docker_push'
+                }
+            }
+            stage('system tests') {
+                withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
+                    try {
+                        sh 'ARTIFACTS_DIR=artifacts OPENSHIFT_PROJECT=$BUILD_TAG ./systemtests/scripts/run_test_component.sh templates/install /var/lib/origin/openshift.local.config/master/admin.kubeconfig systemtests'
+                    } finally {
+                        junit '**/TEST-*.xml'
+                    }
+                }
+            }
+            result = 'success'
         }
-        result = 'success'
-    }
-    stage('archive artifacts') {
-        archive '**/TEST-*.xml'
-        archive 'artifacts/**'
-        archive 'templates/install/**'
-    }
-    stage('teardown openshift') {
-        sh 'oc cluster down'
-    }
-    stage('notify mailing list') {
-        if (result.equals("failure")) {
-            mail to: "$MAILING_LIST", subject: "EnMasse build has finished with ${result}", body: "See ${env.BUILD_URL}"
+        stage('archive artifacts') {
+            archive '**/TEST-*.xml'
+            archive 'artifacts/**'
+            archive 'templates/install/**'
+        }
+        stage('teardown openshift') {
+            sh 'oc cluster down'
+        }
+        stage('notify mailing list') {
+            if (result.equals("failure")) {
+                mail to: "$MAILING_LIST", subject: "EnMasse build has finished with ${result}", body: "See ${env.BUILD_URL}"
+            }
         }
     }
 }
