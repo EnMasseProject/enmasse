@@ -1495,6 +1495,14 @@ objects:
               value: brokered
             - name: CERT_DIR
               value: /etc/enmasse-certs
+            - name: AUTHENTICATION_SERVICE_HOST
+              value: ${AUTHENTICATION_SERVICE_HOST}
+            - name: AUTHENTICATION_SERVICE_PORT
+              value: ${AUTHENTICATION_SERVICE_PORT}
+            - name: AUTHENTICATION_SERVICE_CLIENT_SECRET
+              value: ${AUTHENTICATION_SERVICE_CLIENT_SECRET}
+            - name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
+              value: ${AUTHENTICATION_SERVICE_SASL_INIT_HOST}
             image: ${BROKER_IMAGE}
             livenessProbe:
               initialDelaySeconds: 120
@@ -1506,8 +1514,8 @@ objects:
               name: amqp
             - containerPort: 5671
               name: amqps
-            - containerPort: 5673
-              name: amqps-internal
+            - containerPort: 55671
+              name: amqps-normal
             - containerPort: 8161
               name: jolokia
             readinessProbe:
@@ -1520,6 +1528,9 @@ objects:
             - mountPath: /etc/enmasse-certs
               name: broker-internal-cert
               readOnly: true
+            - mountPath: /etc/authservice-ca
+              name: authservice-ca
+              readOnly: true
           volumes:
           - name: data
             persistentVolumeClaim:
@@ -1530,6 +1541,9 @@ objects:
           - name: broker-internal-cert
             secret:
               secretName: broker-internal-cert
+          - name: authservice-ca
+            secret:
+              secretName: authservice-ca
   - apiVersion: v1
     kind: Service
     metadata:
@@ -1538,9 +1552,9 @@ objects:
       name: broker
     spec:
       ports:
-      - name: amqps
-        port: 5671
-        targetPort: amqps-internal
+      - name: amqps-normal
+        port: 55671
+        targetPort: amqps-normal
       selector:
         role: broker
   - apiVersion: v1

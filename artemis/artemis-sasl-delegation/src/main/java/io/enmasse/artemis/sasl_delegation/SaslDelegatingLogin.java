@@ -17,6 +17,7 @@
 package io.enmasse.artemis.sasl_delegation;
 
 import com.sun.security.auth.UserPrincipal;
+import org.apache.activemq.artemis.spi.core.security.jaas.CertificateCallback;
 import org.apache.activemq.artemis.spi.core.security.jaas.RolePrincipal;
 import org.apache.qpid.proton.Proton;
 import org.apache.qpid.proton.amqp.Symbol;
@@ -40,14 +41,18 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.Principal;
 import java.security.cert.CertificateException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.BooleanSupplier;
+import javax.naming.InvalidNameException;
+import javax.naming.ldap.LdapName;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
@@ -59,6 +64,7 @@ import javax.security.auth.callback.PasswordCallback;
 import javax.security.auth.callback.UnsupportedCallbackException;
 import javax.security.auth.login.LoginException;
 import javax.security.auth.spi.LoginModule;
+import javax.security.cert.X509Certificate;
 
 import static org.apache.qpid.proton.engine.Sasl.SaslState.PN_SASL_FAIL;
 import static org.apache.qpid.proton.engine.Sasl.SaslState.PN_SASL_IDLE;
@@ -94,6 +100,7 @@ public class SaslDelegatingLogin implements LoginModule {
     private String trustStorePath;
     private SSLContext sslContext;
     private char[] trustStorePassword;
+    private Map<String, List<String>> validCertUsers = new HashMap<>();
 
     @Override
     public void initialize(Subject subject,
@@ -129,6 +136,20 @@ public class SaslDelegatingLogin implements LoginModule {
         if(options.containsKey("truststore_password")) {
             this.trustStorePassword = String.valueOf(options.get("truststore_password")).trim().toCharArray();
         }
+        if(options.containsKey("valid_cert_users")) {
+            validCertUsers.clear();
+            String[] userDetails = String.valueOf(options.get("valid_cert_users")).trim().split(";");
+            for(String userDetail : userDetails) {
+                List<String> roles = new ArrayList<>();
+                String[] userRoles = userDetail.split(":", 2);
+                if(userRoles.length == 2) {
+                    for(String role : userRoles[1].split(",")) {
+                        roles.add(role.trim());
+                    }
+                }
+                validCertUsers.put(userRoles[0], roles);
+            }
+        }
 
         if(useTls) {
             try {
@@ -153,88 +174,104 @@ public class SaslDelegatingLogin implements LoginModule {
     public boolean login() throws LoginException {
         boolean success = false;
         try {
-            Socket socket = createSocket();
+            NameCallback nameHandler = new NameCallback("user:");
+            CertificateCallback certificateCallback = new CertificateCallback();
+            callbackHandler.handle(new Callback[] { nameHandler, certificateCallback });
+            final X509Certificate[] certificates = certificateCallback.getCertificates();
+            if(nameHandler.getName() == null && certificates != null && certificates.length > 0) {
+                LdapName ldapName = new LdapName(certificates[0].getSubjectDN().getName());
 
-            InputStream in = socket.getInputStream();
-            OutputStream out = socket.getOutputStream();
+                Optional<String> firstCN = ldapName.getRdns().stream()
+                    .filter(rdn -> rdn.getType().equalsIgnoreCase("CN"))
+                    .map(rdn -> String.valueOf(rdn.getValue()))
+                    .filter(n -> validCertUsers.containsKey(n)).findFirst();
 
-            transport.open();
-
-            writeToNetwork(out);
-
-            readFromNetwork(in, () -> sasl.getState() == PN_SASL_IDLE && sasl.getRemoteMechanisms().length == 0);
-
-            sasl.setRemoteHostname(saslHostname);
-
-            SaslMechanism mechanism = null;
-
-            for(SaslMechanismFactory factory : saslFactories) {
-                if(Arrays.asList(sasl.getRemoteMechanisms()).contains(factory.getName())) {
-                    mechanism = factory.newInstance(callbackHandler, sharedState, options);
-                    if(mechanism != null) {
-                        sasl.setMechanisms(factory.getName());
-                        byte[] initialResponse = mechanism.getResponse(null);
-                        if(initialResponse != null && initialResponse.length != 0) {
-                            sasl.send(initialResponse, 0, initialResponse.length);
-                        }
-                        break;
-                    }
-                }
-            }
-
-            if(mechanism == null) {
-                throw new LoginException("Unable to authenticate using SASL delegation, no supported mechanisms");
-            }
-
-            writeToNetwork(out);
-
-            do {
-                readFromNetwork(in, () -> !(EnumSet.of(PN_SASL_PASS, PN_SASL_FAIL).contains(sasl.getState())
-                    || (sasl.getState() == PN_SASL_STEP  && sasl.pending() > 0)));
-                if(sasl.pending() > 0) {
-                    byte[] challenge = new byte[sasl.pending()];
-                    byte[] response = mechanism.getResponse(challenge);
-                    if(sasl.getState() == PN_SASL_STEP) {
-                        sasl.send(response, 0, response.length);
-                        writeToNetwork(out);
-                    }
-                }
-
-            } while (sasl.getState() == PN_SASL_STEP);
-
-            if(sasl.getState() == PN_SASL_PASS && mechanism.completedSuccessfully()) {
-                connection.setHostname(saslHostname);
-                connection.setContainer(container);
-                connection.open();
-                writeToNetwork(out);
-                readFromNetwork(in, () -> connection.getRemoteState() == EndpointState.UNINITIALIZED);
-
-                final Map<Symbol, Object> remoteProperties = connection.getRemoteProperties();
-                if(remoteProperties != null
-                    && remoteProperties.get(AUTHENTICATED_IDENTITY) instanceof Map) {
-                    Map identity = (Map) remoteProperties.get(AUTHENTICATED_IDENTITY);
-                    if(identity.containsKey("preferred_username")) {
-                        user = String.valueOf(identity.get("preferred_username")).trim();
-                    } else {
-                        user = String.valueOf(identity.get("sub")).trim();
-                    }
-                    if(remoteProperties.get(Symbol.valueOf("groups")) instanceof List) {
-                        roles.addAll((List<String>)remoteProperties.get(Symbol.valueOf("groups")));
-                    }
-                }
-                success = true;
+                firstCN.ifPresent(name -> { user = name; roles.addAll(validCertUsers.get(name)); });
+                success = user != null;
             } else {
-                // login failure
-                LOG.debug("Login failed");
+
+                Socket socket = createSocket();
+
+                InputStream in = socket.getInputStream();
+                OutputStream out = socket.getOutputStream();
+
+                transport.open();
+
+                writeToNetwork(out);
+
+                readFromNetwork(in, () -> sasl.getState() == PN_SASL_IDLE && sasl.getRemoteMechanisms().length == 0);
+
+                sasl.setRemoteHostname(saslHostname);
+
+                SaslMechanism mechanism = null;
+
+                for (SaslMechanismFactory factory : saslFactories) {
+                    if (Arrays.asList(sasl.getRemoteMechanisms()).contains(factory.getName())) {
+                        mechanism = factory.newInstance(callbackHandler, sharedState, options);
+                        if (mechanism != null) {
+                            sasl.setMechanisms(factory.getName());
+                            byte[] initialResponse = mechanism.getResponse(null);
+                            if (initialResponse != null && initialResponse.length != 0) {
+                                sasl.send(initialResponse, 0, initialResponse.length);
+                            }
+                            break;
+                        }
+                    }
+                }
+
+                if (mechanism == null) {
+                    throw new LoginException("Unable to authenticate using SASL delegation, no supported mechanisms");
+                }
+
+                writeToNetwork(out);
+
+                do {
+                    readFromNetwork(in, () -> !(EnumSet.of(PN_SASL_PASS, PN_SASL_FAIL).contains(sasl.getState()) || (sasl.getState() == PN_SASL_STEP && sasl.pending() > 0)));
+                    if (sasl.pending() > 0) {
+                        byte[] challenge = new byte[sasl.pending()];
+                        byte[] response = mechanism.getResponse(challenge);
+                        if (sasl.getState() == PN_SASL_STEP) {
+                            sasl.send(response, 0, response.length);
+                            writeToNetwork(out);
+                        }
+                    }
+
+                } while (sasl.getState() == PN_SASL_STEP);
+
+                if (sasl.getState() == PN_SASL_PASS && mechanism.completedSuccessfully()) {
+                    connection.setHostname(saslHostname);
+                    connection.setContainer(container);
+                    connection.open();
+                    writeToNetwork(out);
+                    readFromNetwork(in, () -> connection.getRemoteState() == EndpointState.UNINITIALIZED);
+
+                    final Map<Symbol, Object> remoteProperties = connection.getRemoteProperties();
+                    if (remoteProperties != null && remoteProperties.get(AUTHENTICATED_IDENTITY) instanceof Map) {
+                        Map identity = (Map) remoteProperties.get(AUTHENTICATED_IDENTITY);
+                        if (identity.containsKey("preferred_username")) {
+                            user = String.valueOf(identity.get("preferred_username")).trim();
+                        } else {
+                            user = String.valueOf(identity.get("sub")).trim();
+                        }
+                        if (remoteProperties.get(Symbol.valueOf("groups")) instanceof List) {
+                            roles.addAll((List<String>) remoteProperties.get(Symbol.valueOf("groups")));
+                        }
+                    }
+                    success = true;
+                } else {
+                    // login failure
+                    LOG.debug("Login failed");
+                }
+
+                connection.close();
+                transport.close();
+                socket.close();
             }
 
-            connection.close();
-            transport.close();
-            socket.close();
-
-        } catch (IOException e) {
+        } catch (IOException | UnsupportedCallbackException | InvalidNameException e) {
             final LoginException loginException = new LoginException("Exception attempting to authenticate using SASL delegation");
             loginException.initCause(e);
+            LOG.warn(e);
             throw loginException;
         }
         loginSucceeded = success;
