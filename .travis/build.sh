@@ -5,6 +5,8 @@ PULL_REQUEST=${PULL_REQUEST:-true}
 BRANCH=${BRANCH:-master}
 TAG=${TAG:-latest}
 DOCKER_ORG=${DOCKER_ORG:-$USER}
+OPENSHIFT_KUBECONFIG=${OPENSHIFT_KUBECONFIG:-/tmp/openshift/config/master/admin.kubeconfig}
+SYSTEMTEST_ARGS=${SYSTEMTEST_ARGS:-SmokeTest}
 
 if [ "$VERSION" != "latest" ]; then
     TAG=$VERSION
@@ -39,4 +41,4 @@ echo "Pushing images to Docker Registry"
 make docker_push
 
 echo "Running systemtests"
-./systemtests/scripts/run_test_component.sh templates/install /tmp/openshift/config/master/admin.kubeconfig systemtests SmokeTest
+make systemtests
