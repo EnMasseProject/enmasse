@@ -44,7 +44,7 @@ public class ElementaryAddressSpaceTest extends MultiTenantTestBase {
         Destination queueA = Destination.queue("brokeredQueueA");
         setAddresses(brokeredA, queueA);
 
-        Destination topicA = Destination.queue("brokeredTopicA");
+        Destination topicA = Destination.topic("brokeredTopicA");
         try {
             setAddresses(brokeredA, topicA); //address already exist exception
         } catch (Exception ex) {
@@ -54,7 +54,7 @@ public class ElementaryAddressSpaceTest extends MultiTenantTestBase {
         AmqpClient amqpQueueCli = amqpClientFactory.createQueueClient(brokeredA);
         QueueTest.runQueueTest(amqpQueueCli, queueA);
 
-        Destination topicB = Destination.queue("brokeredTopicB");
+        Destination topicB = Destination.topic("brokeredTopicB");
         setAddresses(brokeredA, topicB);
 
         AmqpClient amqpTopicCli = amqpClientFactory.createTopicClient(brokeredA);
