@@ -46,6 +46,7 @@ public class SmokeTest extends TestBase {
     @Before
     public void createAddresses() throws Exception {
         setAddresses(queue, topic, mqttTopic, anycast, multicast);
+        Thread.sleep(60_000);
     }
 
     @Test
