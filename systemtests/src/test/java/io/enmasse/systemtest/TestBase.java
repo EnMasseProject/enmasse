@@ -36,6 +36,7 @@ public abstract class TestBase {
     protected static final Environment environment = new Environment();
     protected static final AddressSpace defaultAddressSpace = environment.isMultitenant() ? new AddressSpace("testspace", "testspace")
             : new AddressSpace("default", environment.namespace());
+    protected static final String defaultAddressSpaceType = "standard";
 
     protected static final OpenShift openShift = new OpenShift(environment, environment.namespace(), defaultAddressSpace.getNamespace());
     private static final GlobalLogCollector logCollector = new GlobalLogCollector(openShift,
@@ -86,7 +87,7 @@ public abstract class TestBase {
     }
 
     protected AddressSpace createAddressSpace(AddressSpace addressSpace, String authService) throws Exception {
-        createAddressSpace(addressSpace, authService, "standard");
+        createAddressSpace(addressSpace, authService, defaultAddressSpaceType);
         return addressSpace;
     }
 
@@ -130,7 +131,11 @@ public abstract class TestBase {
      * @throws Exception
      */
     protected void deleteAddresses(Destination... destinations) throws Exception {
-        TestUtils.delete(addressApiClient, defaultAddressSpace, destinations);
+        deleteAddresses(defaultAddressSpace, destinations);
+    }
+
+    protected void deleteAddresses(AddressSpace addressSpace, Destination... destinations) throws Exception {
+        TestUtils.delete(addressApiClient, addressSpace, destinations);
     }
 
     /**
@@ -140,8 +145,12 @@ public abstract class TestBase {
      * @throws Exception
      */
     protected void appendAddresses(Destination... destinations) throws Exception {
+        appendAddresses(defaultAddressSpace, destinations);
+    }
+
+    protected void appendAddresses(AddressSpace addressSpace, Destination... destinations) throws Exception {
         TimeoutBudget budget = new TimeoutBudget(5, TimeUnit.MINUTES);
-        TestUtils.deploy(addressApiClient, openShift, budget, defaultAddressSpace, HttpMethod.POST, destinations);
+        TestUtils.deploy(addressApiClient, openShift, budget, addressSpace, HttpMethod.POST, destinations);
     }
 
     /**
@@ -167,11 +176,19 @@ public abstract class TestBase {
      * @throws Exception
      */
     protected Future<List<String>> getAddresses(Optional<String> addressName) throws Exception {
-        return TestUtils.getAddresses(addressApiClient, defaultAddressSpace, addressName);
+        return getAddresses(defaultAddressSpace, addressName);
+    }
+
+    protected Future<List<String>> getAddresses(AddressSpace addressSpace, Optional<String> addressName) throws Exception {
+        return TestUtils.getAddresses(addressApiClient, addressSpace, addressName);
     }
 
     protected void scale(Destination destination, int numReplicas) throws Exception {
+        scale(defaultAddressSpace, destination, numReplicas);
+    }
+
+    protected void scale(AddressSpace addressSpace, Destination destination, int numReplicas) throws Exception {
         TimeoutBudget budget = new TimeoutBudget(5, TimeUnit.MINUTES);
-        TestUtils.setReplicas(openShift, defaultAddressSpace, destination, numReplicas, budget);
+        TestUtils.setReplicas(openShift, addressSpace, destination, numReplicas, budget);
     }
 }
