@@ -117,17 +117,24 @@ public class TestUtils {
 
     public static void deploy(AddressApiClient apiClient, OpenShift openShift, TimeoutBudget budget, AddressSpace addressSpace, HttpMethod httpMethod, Destination... destinations) throws Exception {
         apiClient.deploy(addressSpace, httpMethod, destinations);
-        Set<String> groups = new HashSet<>();
-        for (Destination destination : destinations) {
-            if (Destination.isQueue(destination) || Destination.isTopic(destination)) {
-                waitForBrokerPod(openShift, addressSpace, destination.getGroup(), budget);
-                groups.add(destination.getGroup());
+        JsonObject addrSpaceObj = apiClient.getAddressSpace(addressSpace);
+        if (getAddressSpaceType(addrSpaceObj).equals("brokered")) {
+            Thread.sleep(60_000);
+            //!TODO: isReady state doesn't work at this moment, Once #280 issue will be closed then waitForDestionationsReady can be used
+            //waitForDestinationsReady(apiClient, addressSpace, budget, destinations);
+        } else {
+            Set<String> groups = new HashSet<>();
+            for (Destination destination : destinations) {
+                if (Destination.isQueue(destination) || Destination.isTopic(destination)) {
+                    waitForBrokerPod(openShift, addressSpace, destination.getGroup(), budget);
+                    groups.add(destination.getGroup());
+                }
             }
+            int expectedPods = openShift.getExpectedPods() + groups.size();
+            Logging.log.info("Waiting for " + expectedPods + " pods");
+            waitForExpectedPods(openShift, addressSpace, expectedPods, budget);
+            waitForDestinationsReady(apiClient, addressSpace, budget, destinations);
         }
-        int expectedPods = openShift.getExpectedPods() + groups.size();
-        Logging.log.info("Waiting for " + expectedPods + " pods");
-        waitForExpectedPods(openShift, addressSpace, expectedPods, budget);
-        waitForDestinationsReady(apiClient, addressSpace, budget, destinations);
     }
 
     public static boolean existAddressSpace(AddressApiClient apiClient, String addressSpaceName) throws InterruptedException, TimeoutException, ExecutionException {
@@ -140,6 +147,14 @@ public class TestUtils {
             isReady = address.getJsonObject("status").getBoolean("isReady");
         }
         return isReady;
+    }
+
+    public static String getAddressSpaceType(JsonObject address) {
+        String addrSpaceType = "";
+        if (address != null) {
+            addrSpaceType = address.getJsonObject("spec").getString("type");
+        }
+        return addrSpaceType;
     }
 
     /**
@@ -244,13 +259,13 @@ public class TestUtils {
         }
     }
 
-    private static Map<String, JsonObject> checkAddressesReady(JsonObject addressList, Destination ...destinations) {
+    private static Map<String, JsonObject> checkAddressesReady(JsonObject addressList, Destination... destinations) {
         Logging.log.info("Checking {} for ready state", destinations);
         Map<String, JsonObject> notReadyAddresses = new HashMap<>();
         for (Destination destination : destinations) {
             JsonObject addressObject = lookupAddress(addressList, destination.getAddress());
             if (addressObject == null) {
-                notReadyAddresses.put(destination.getAddress(),  null);
+                notReadyAddresses.put(destination.getAddress(), null);
             } else if (!isAddressReady(addressObject)) {
                 notReadyAddresses.put(destination.getAddress(), addressObject);
             }
