@@ -7,14 +7,6 @@ node('enmasse') {
                 sh 'git submodule update --init --recursive'
                 sh 'rm -rf artifacts && mkdir -p artifacts'
             }
-            stage('start openshift') {
-                sh 'oc cluster up'
-                sh 'sudo chmod -R 777 /var/lib/origin/openshift.local.config'
-            }
-            stage('setup openshift') {
-                sh 'oc login -u system:admin'
-                sh './systemtests/scripts/provision-storage.sh /tmp/mydir pv01'
-            }
             stage ('build') {
                 try {
                     withCredentials([string(credentialsId: 'docker-registry-host', variable: 'DOCKER_REGISTRY')]) {
@@ -32,6 +24,14 @@ node('enmasse') {
                     sh 'docker login -u $DOCKER_USER -p $DOCKER_PASS $DOCKER_REGISTRY'
                     sh 'TAG=$BUILD_TAG make docker_push'
                 }
+            }
+            stage('start openshift') {
+                sh 'oc cluster up'
+                sh 'sudo chmod -R 777 /var/lib/origin/openshift.local.config'
+            }
+            stage('setup openshift') {
+                sh 'oc login -u system:admin'
+                sh './systemtests/scripts/provision-storage.sh /tmp/mydir pv01'
             }
             stage('system tests') {
                 withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
