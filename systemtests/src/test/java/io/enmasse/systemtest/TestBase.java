@@ -72,16 +72,22 @@ public abstract class TestBase {
         mqttClientFactory = new MqttClientFactory(openShift, environment, defaultAddressSpace, username, password);
     }
 
-    protected void createAddressSpace(AddressSpace addressSpace, String authService) throws Exception {
+    protected AddressSpace createAddressSpace(AddressSpace addressSpace, String authService, String addressSpaceType) throws Exception {
         if (!TestUtils.existAddressSpace(addressApiClient, addressSpace.getName())) {
             Logging.log.info("Address space " + addressSpace + "doesn't exist and will be created.");
-            addressApiClient.createAddressSpace(addressSpace, authService);
+            addressApiClient.createAddressSpace(addressSpace, authService, addressSpaceType);
             logCollector.startCollecting(addressSpace.getNamespace());
             TestUtils.waitForAddressSpaceReady(addressApiClient, addressSpace.getName());
             if (addressSpace.equals(defaultAddressSpace)) {
                 Thread.sleep(120_000);
             }
         }
+        return addressSpace;
+    }
+
+    protected AddressSpace createAddressSpace(AddressSpace addressSpace, String authService) throws Exception {
+        createAddressSpace(addressSpace, authService, "standard");
+        return addressSpace;
     }
 
     protected void deleteAddressSpace(AddressSpace addressSpace) throws Exception {

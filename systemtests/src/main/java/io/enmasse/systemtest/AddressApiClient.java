@@ -34,10 +34,6 @@ public class AddressApiClient {
         vertx.close();
     }
 
-    public void createAddressSpace(AddressSpace addressSpace, String authServiceType) throws JsonProcessingException, InterruptedException {
-        this.createAddressSpace(addressSpace, authServiceType, "standard");
-    }
-
     public void createAddressSpace(AddressSpace addressSpace, String authServiceType, String addrSpaceType) throws JsonProcessingException, InterruptedException {
         ObjectNode config = mapper.createObjectNode();
         config.put("apiVersion", "v1");
@@ -247,7 +243,7 @@ public class AddressApiClient {
             destination.getPlan().ifPresent(e -> spec.put("plan", e));
         }
 
-        CountDownLatch latch = new CountDownLatch(1);
+        CountDownLatch latch = new CountDownLatch(2);
 
         Logging.log.info("Following HTTP request will be used for deploy: /v1/addresses/" + addressSpace.getName() + "/");
         Logging.log.info("Following payload will be used in request: " + config.toString());
@@ -258,16 +254,35 @@ public class AddressApiClient {
         request.exceptionHandler(event -> {
             Logging.log.warn("Exception while performing request", event.getCause());
         });
+
+        final JsonObject[] responseArray = new JsonObject[1];
         request.handler(event -> {
+            event.bodyHandler(responseData -> {
+                responseArray[0] = responseData.toJsonObject();
+                latch.countDown();
+            });
             if (event.statusCode() >= 200 && event.statusCode() < 300) {
                 latch.countDown();
             } else {
                 Logging.log.warn("Error when deploying addresses: " + event.statusCode() + ": " + event.statusMessage());
             }
         });
+
+//        responseHandler(responseArray[0]); //TODO! structure of error messages is not known at this moment
         request.end(Buffer.buffer(mapper.writeValueAsBytes(config)));
         if (!latch.await(30, TimeUnit.SECONDS)) {
             throw new RuntimeException("Timeout deploying address config");
         }
+    }
+
+    public JsonObject responseHandler(JsonObject responseData) throws AddressAlreadyExistsException {
+        if (responseData != null) {
+            String errMsg = responseData.getString("error");
+            switch (errMsg) {
+                case "Address already exists":
+                    throw new AddressAlreadyExistsException(errMsg);
+            }
+        }
+        return responseData;
     }
 }
