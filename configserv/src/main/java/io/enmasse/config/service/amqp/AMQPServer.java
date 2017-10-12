@@ -22,6 +22,7 @@ import java.util.Map;
 import io.enmasse.config.service.model.ObserverKey;
 import io.enmasse.config.service.model.ResourceDatabase;
 import io.vertx.core.AbstractVerticle;
+import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.ProtonSender;
@@ -89,12 +90,15 @@ public class AMQPServer extends AbstractVerticle {
         sender.setSource(sender.getRemoteSource());
         Source source = (Source) sender.getRemoteSource();
 
+        Context protonContext = vertx.getOrCreateContext();
+
         vertx.executeBlocking(promise -> {
             try {
                 ResourceDatabase database = lookupDatabase(source.getAddress());
                 Map<String, String> labelFilter = createLabelFilter(source.getFilter());
                 Map<String, String> annotationFilter = createAnnotationFilter(source.getFilter());
-                database.subscribe(new ObserverKey(labelFilter, annotationFilter), sender::send);
+                database.subscribe(new ObserverKey(labelFilter, annotationFilter),
+                        message -> protonContext.runOnContext(h -> sender.send(message)));
                 promise.complete(database);
             } catch (Exception e) {
                 promise.fail(e);
