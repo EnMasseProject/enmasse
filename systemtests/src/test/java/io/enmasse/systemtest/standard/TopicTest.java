@@ -58,7 +58,7 @@ public class TopicTest extends TestBase {
         runTopicTest(topicClient, t1, 2048);
     }
 
-    public void runTopicTest(AmqpClient client, Destination dest, int msgCount) throws InterruptedException, IOException, TimeoutException, ExecutionException, IOException, TimeoutException, ExecutionException {
+    public static void runTopicTest(AmqpClient client, Destination dest, int msgCount) throws InterruptedException, IOException, TimeoutException, ExecutionException, IOException, TimeoutException, ExecutionException {
         List<String> msgs = TestUtils.generateMessages(msgCount);
         Future<List<Message>> recvMessages = client.recvMessages(dest.getAddress(), msgCount);
 

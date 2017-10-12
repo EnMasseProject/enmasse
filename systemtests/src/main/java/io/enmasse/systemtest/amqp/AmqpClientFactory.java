@@ -54,6 +54,10 @@ public class AmqpClientFactory {
         return createClient(new QueueTerminusFactory(), ProtonQoS.AT_LEAST_ONCE, defaultAddressSpace);
     }
 
+    public AmqpClient createTopicClient(String addressSpace) throws UnknownHostException, InterruptedException {
+        return createClient(new TopicTerminusFactory(), ProtonQoS.AT_LEAST_ONCE, addressSpace);
+    }
+
     public AmqpClient createTopicClient() throws UnknownHostException, InterruptedException {
         return createClient(new TopicTerminusFactory(), ProtonQoS.AT_LEAST_ONCE, defaultAddressSpace);
     }
