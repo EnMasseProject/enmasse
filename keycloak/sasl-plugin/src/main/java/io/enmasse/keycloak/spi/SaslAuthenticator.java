@@ -17,23 +17,24 @@
 
 package io.enmasse.keycloak.spi;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-
 import io.vertx.core.Handler;
 import io.vertx.core.net.NetSocket;
 import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.sasl.ProtonSaslAuthenticator;
+import org.apache.qpid.proton.engine.Sasl;
+import org.apache.qpid.proton.engine.Transport;
 import org.keycloak.Config;
 import org.keycloak.models.KeycloakSession;
 import org.keycloak.models.KeycloakSessionFactory;
+import org.keycloak.models.UserModel;
 
-import org.apache.qpid.proton.engine.Sasl;
-import org.apache.qpid.proton.engine.Transport;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 class SaslAuthenticator implements ProtonSaslAuthenticator
 {
 
+    static final Object USER_ATTACHMENT = new Object();
     private static Map<String, SaslServerMechanism> MECHANISMS = new LinkedHashMap<>();
 
     // TODO - load these dynamically
@@ -54,6 +55,7 @@ class SaslAuthenticator implements ProtonSaslAuthenticator
     private boolean succeeded;
     private KeycloakSession keycloakSession;
     private SaslServerMechanism.Instance saslMechanism;
+    private ProtonConnection connection;
 
     SaslAuthenticator(final KeycloakSessionFactory sessionFactory, final Config.Scope config, final boolean secure) {
         this.keycloakSessionFactory = sessionFactory;
@@ -69,6 +71,7 @@ class SaslAuthenticator implements ProtonSaslAuthenticator
         sasl.allowSkip(false);
         sasl.setMechanisms(MECHANISMS.keySet().toArray(new String[MECHANISMS.size()]));
         keycloakSession = keycloakSessionFactory.create();
+        connection = protonConnection;
     }
 
 
@@ -115,6 +118,7 @@ class SaslAuthenticator implements ProtonSaslAuthenticator
                     done = true;
                     if (succeeded)
                     {
+                        connection.attachments().set(USER_ATTACHMENT, UserModel.class, saslMechanism.getAuthenticatedUser());
                         sasl.done(Sasl.SaslOutcome.PN_SASL_OK);
                     }
                     else

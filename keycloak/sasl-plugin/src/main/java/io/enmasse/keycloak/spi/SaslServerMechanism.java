@@ -19,6 +19,7 @@ package io.enmasse.keycloak.spi;
 
 import org.keycloak.Config;
 import org.keycloak.models.KeycloakSession;
+import org.keycloak.models.UserModel;
 
 public interface SaslServerMechanism {
     String getName();
@@ -27,5 +28,6 @@ public interface SaslServerMechanism {
         byte[] processResponse(byte[] response) throws IllegalArgumentException;
         boolean isComplete();
         boolean isAuthenticated();
+        UserModel getAuthenticatedUser();
     }
 }

@@ -17,19 +17,6 @@
 
 package io.enmasse.keycloak.spi;
 
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.security.InvalidKeyException;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
-import java.util.Arrays;
-import java.util.List;
-import java.util.UUID;
-
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
-
 import org.keycloak.Config;
 import org.keycloak.common.util.Base64;
 import org.keycloak.credential.CredentialInputValidator;
@@ -43,6 +30,18 @@ import org.keycloak.models.UserModel;
 import org.keycloak.storage.StorageId;
 import org.keycloak.storage.UserStorageManager;
 import org.keycloak.storage.UserStorageProvider;
+
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.security.InvalidKeyException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.util.Arrays;
+import java.util.List;
+import java.util.UUID;
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
 
 public class ScramSHA1SaslServerMechanism implements SaslServerMechanism {
 
@@ -391,6 +390,10 @@ public class ScramSHA1SaslServerMechanism implements SaslServerMechanism {
             return authenticated;
         }
 
+        @Override
+        public UserModel getAuthenticatedUser() {
+            return user;
+        }
 
         private byte[] computeHmac(final byte[] key, final String string) {
             Mac mac = createShaHmac(key);
