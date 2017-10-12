@@ -37,7 +37,7 @@ after_success:
 env:
   global:
   - BRANCH=${TRAVIS_BRANCH}
-  - LOCAL_BUILD=${TRAVIS_PULL_REQUEST}
+  - PULL_REQUEST=${TRAVIS_PULL_REQUEST}
   - TAG=${TRAVIS_COMMIT::8}
   - VERSION=${TRAVIS_TAG:-latest}
   - DOCKER_ORG=enmasseproject
