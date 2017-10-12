@@ -98,7 +98,10 @@ public class AMQPServer extends AbstractVerticle {
                 Map<String, String> labelFilter = createLabelFilter(source.getFilter());
                 Map<String, String> annotationFilter = createAnnotationFilter(source.getFilter());
                 database.subscribe(new ObserverKey(labelFilter, annotationFilter),
-                        message -> protonContext.runOnContext(h -> sender.send(message)));
+                        message -> {
+                            log.info("Replying to {}/{} with payload {}", connection.getRemoteContainer(), connection.getRemoteHostname(), message);
+                            protonContext.runOnContext(h -> sender.send(message));
+                        });
                 promise.complete(database);
             } catch (Exception e) {
                 promise.fail(e);
