@@ -41,7 +41,7 @@ Running this script creates the deployments required for running {ProductName} i
 up {ProductName} will take a while, usually depending on how fast it is able to download the Docker
 images for the various components.
 
-. You can use the REST API to check the status of the deployment.
+. You can use the REST API to check the status of the deployment:
 +
 [source,options="nowrap"]
 ----
@@ -72,8 +72,8 @@ oc adm policy add-cluster-role-to-user cluster-admin developer
 ----
 +
 The deployments required for running {ProductName} in multi-tenant mode are created.
-{ProductName} will be up and running once all pods in the 'enmasse' namespace is Running:
-
+{ProductName} will be up and running once all pods in the 'enmasse' namespace is in the `Running` state:
++
 [source,options="nowrap"]
 ----
 oc get pods -n enmasse

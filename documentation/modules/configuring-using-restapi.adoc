@@ -9,11 +9,11 @@ within those address spaces.
 
 === Creating an Address Space
 
-Creating address spaces is only applicable for multi-tenant deployments of {ProductName}. To create
-a 'standard' address space, save the following JSON data to a file
-
 .Procedure
 
+. Creating address spaces is only applicable for multi-tenant deployments of {ProductName}. To create
+a 'standard' address space, save the following JSON data to a file:
++
 [source,options="nowrap"]
 ----
 {
@@ -27,7 +27,7 @@ a 'standard' address space, save the following JSON data to a file
     }
 }
 ----
-
++
 This will create the infrastructure required for that address space. Starting up the address space
 will take a while, usually depending on how fast it is able to download the Docker images for the
 various components.
@@ -36,13 +36,13 @@ various components.
 
 .Procedure
 
-You can use the REST API to check the status of the address space.
-
+. You can use the REST API to check the status of the address space:
++
 [source,options="nowrap"]
 ----
 curl http://$(oc get route restapi -o jsonpath='{.spec.host}')/v1/addressspaces/myspace
 ----
-
++
 You can consider the address space to be ready to use when `status.isReady` is `true` in the returned JSON
 object.
 
@@ -51,7 +51,7 @@ object.
 .Procedure
 
 . To create addresses in the standard address space, save the following to a file:
-
++
 [source,options="nowrap"]
 ----
 {
@@ -95,7 +95,7 @@ object.
 ----
 
 . You can then create those addresses using the REST API:
-
++
 [source,options="nowrap"]
 ----
 curl -X PUT -T addresses.json -H "content-type: application/json" http://$(oc get route restapi -o jsonpath='{.spec.host}')/v1/addresses/default
@@ -106,11 +106,11 @@ curl -X PUT -T addresses.json -H "content-type: application/json" http://$(oc ge
 .Procedure 
 
 . To check what addresses are configured:
-
++
 [source,options="nowrap"]
 ----
 curl http://$(oc get route restapi -o jsonpath='{.spec.host}')/v1/addresses/default
 ----
-
++
 The addresses are ready to be used by messaging clients once the `status.isReady` field of each
 address is set to `true`. 
