@@ -17,6 +17,7 @@ package io.enmasse.systemtest.brokered;
 
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.amqp.AmqpClient;
+import io.enmasse.systemtest.amqp.AmqpClientFactory;
 import io.enmasse.systemtest.standard.QueueTest;
 import org.apache.qpid.proton.message.Message;
 import org.junit.Test;
@@ -31,11 +32,8 @@ import static org.junit.Assert.assertThat;
 
 public class ElementaryAddressSpaceTest extends MultiTenantTestBase {
 
-
     /**
      * related github issue: #335
-     *
-     * @throws Exception
      */
     @Test
     public void testCreateDeleteAddressSpace() throws Exception {
@@ -51,13 +49,14 @@ public class ElementaryAddressSpaceTest extends MultiTenantTestBase {
             assert ex instanceof AddressAlreadyExistsException;
         }
 
-        AmqpClient amqpQueueCli = amqpClientFactory.createQueueClient(brokeredA);
+        AmqpClientFactory amqpFactoryA = createAmqpClientFactory(brokeredA);
+        AmqpClient amqpQueueCli = amqpFactoryA.createQueueClient(brokeredA);
         QueueTest.runQueueTest(amqpQueueCli, queueA);
 
         Destination topicB = Destination.topic("brokeredTopicB");
         setAddresses(brokeredA, topicB);
 
-        AmqpClient amqpTopicCli = amqpClientFactory.createTopicClient(brokeredA);
+        AmqpClient amqpTopicCli = amqpFactoryA.createTopicClient(brokeredA);
         List<Future<List<Message>>> recvResults = Arrays.asList(
                 amqpTopicCli.recvMessages(topicB.getAddress(), 1000),
                 amqpTopicCli.recvMessages(topicB.getAddress(), 1000));
@@ -70,13 +69,10 @@ public class ElementaryAddressSpaceTest extends MultiTenantTestBase {
 
         assertThat(recvResults.get(0).get(1, TimeUnit.MINUTES).size(), is(msgsBatch.size()));
         assertThat(recvResults.get(1).get(1, TimeUnit.MINUTES).size(), is(msgsBatch.size()));
-
     }
 
     /**
      * related github issue: #334
-     *
-     * @throws Exception
      */
     @Test
     public void testAddressTypes() throws Exception {
@@ -84,13 +80,16 @@ public class ElementaryAddressSpaceTest extends MultiTenantTestBase {
         addressSpaces.add(brokeredA);
         Destination queueB = Destination.queue("brokeredQueueB");
         setAddresses(brokeredA, queueB);
-        AmqpClient amqpQueueCliA = amqpClientFactory.createQueueClient(brokeredA);
+
+        AmqpClientFactory amqpFactoryA = createAmqpClientFactory(brokeredA);
+        AmqpClient amqpQueueCliA = amqpFactoryA.createQueueClient(brokeredA);
         QueueTest.runQueueTest(amqpQueueCliA, queueB);
 
         String brokeredC = createAddressSpace("brokered-c", "none", "brokered");
         addressSpaces.add(brokeredC);
         setAddresses(brokeredC, queueB);
-        AmqpClient amqpQueueCliC = amqpClientFactory.createQueueClient(brokeredC);
+        AmqpClientFactory amqpFactoryC = createAmqpClientFactory(brokeredC);
+        AmqpClient amqpQueueCliC = amqpFactoryC.createQueueClient(brokeredC);
         QueueTest.runQueueTest(amqpQueueCliC, queueB);
 
         deleteAddressSpace(brokeredA);
