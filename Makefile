@@ -7,6 +7,7 @@ OPENSHIFT_USER    ?= $(shell oc whoami)
 OPENSHIFT_TOKEN   ?= $(shell oc whoami -t)
 OPENSHIFT_MASTER  ?= $(shell oc whoami --show-server=true)
 MULTITENANT       ?= false
+SYSTEMTEST_ARGS   =
 
 DOCKER_TARGETS = docker_build docker_tag docker_push
 BUILD_TARGETS  = init build test package clean $(DOCKER_TARGETS) coverage
@@ -36,7 +37,7 @@ deploy:
 	./templates/install/deploy-openshift.sh -n $(OPENSHIFT_PROJECT) -u $(OPENSHIFT_USER) -m $(OPENSHIFT_MASTER) -p MULTITENANT=$(MULTITENANT) -a "standard none"
 
 systemtests:
-	OPENSHIFT_PROJECT=$(OPENSHIFT_PROJECT) OPENSHIFT_MULTITENANT=$(MULTITENANT) OPENSHIFT_TOKEN=$(OPENSHIFT_TOKEN) OPENSHIFT_USER=$(OPENSHIFT_USER) OPENSHIFT_URL=$(OPENSHIFT_MASTER) OPENSHIFT_USE_TLS=true ./gradlew :systemtests:test -Psystemtests -i --rerun-tasks $(GRADLE_ARGS)
+	OPENSHIFT_PROJECT=$(OPENSHIFT_PROJECT) OPENSHIFT_MULTITENANT=$(MULTITENANT) OPENSHIFT_TOKEN=$(OPENSHIFT_TOKEN) OPENSHIFT_USER=$(OPENSHIFT_USER) OPENSHIFT_URL=$(OPENSHIFT_MASTER) OPENSHIFT_USE_TLS=true ./systemtests/scripts/run_tests.sh $(SYSTEMTEST_ARGS)
 
 
 .PHONY: $(BUILD_TARGETS) $(DOCKER_TARGETS) $(BUILD_DIRS) $(DOCKER_DIRS) build_java deploy systemtests clean_java
