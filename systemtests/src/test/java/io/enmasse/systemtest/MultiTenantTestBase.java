@@ -16,6 +16,8 @@
 
 package io.enmasse.systemtest;
 
+import io.enmasse.systemtest.amqp.AmqpClientFactory;
+import io.enmasse.systemtest.mqtt.MqttClientFactory;
 import org.junit.After;
 import org.junit.Before;
 
@@ -43,4 +45,13 @@ public class MultiTenantTestBase extends TestBase {
         return false;
     }
 
+    protected AmqpClientFactory createAmqpClientFactory(String addressSpace) {
+        return new AmqpClientFactory(new OpenShift(environment, environment.namespace(), addressSpace),
+                environment, addressSpace, username, password);
+    }
+
+    protected MqttClientFactory createMqttClientFactory(String addressSpace) {
+        return new MqttClientFactory(new OpenShift(environment, environment.namespace(), addressSpace),
+                environment, addressSpace, username, password);
+    }
 }
