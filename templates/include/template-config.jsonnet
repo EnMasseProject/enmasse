@@ -7,7 +7,7 @@ local brokeredInfra = import "brokered-space-infra.jsonnet";
     "apiVersion": "v1",
     "kind": "ConfigMap",
     "metadata": {
-      "name": "standard-template-config",
+      "name": "enmasse-template-config",
       "labels": {
         "app": "enmasse"
       }
@@ -18,7 +18,7 @@ local brokeredInfra = import "brokered-space-infra.jsonnet";
       "topic-inmemory.json": std.toString(storage.template(true, false)),
       "topic-persisted.json": std.toString(storage.template(true, true)),
       "standard-space-infra.json": std.toString(standardInfra.generate(with_kafka)),
-      //"brokered-space-infra.json": std.toString(brokeredInfra.template),
+      "brokered-space-infra.json": std.toString(brokeredInfra.template),
     }
   }
 }
