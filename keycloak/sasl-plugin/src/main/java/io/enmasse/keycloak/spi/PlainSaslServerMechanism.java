@@ -17,14 +17,14 @@
 
 package io.enmasse.keycloak.spi;
 
-import java.nio.charset.StandardCharsets;
-
 import org.jboss.logging.Logger;
 import org.keycloak.Config;
 import org.keycloak.models.KeycloakSession;
 import org.keycloak.models.RealmModel;
 import org.keycloak.models.UserCredentialModel;
 import org.keycloak.models.UserModel;
+
+import java.nio.charset.StandardCharsets;
 
 public class PlainSaslServerMechanism implements SaslServerMechanism {
 
@@ -42,6 +42,7 @@ public class PlainSaslServerMechanism implements SaslServerMechanism {
     {
         return new Instance()
         {
+            public UserModel authenticatedUser;
             private boolean complete;
             private boolean authenticated;
             private RuntimeException error;
@@ -85,6 +86,7 @@ public class PlainSaslServerMechanism implements SaslServerMechanism {
                                                                    user,
                                                                    UserCredentialModel.password(password))) {
 
+                    authenticatedUser = user;
                     authenticated = true;
                     complete = true;
                     return null;
@@ -106,6 +108,11 @@ public class PlainSaslServerMechanism implements SaslServerMechanism {
             public boolean isAuthenticated()
             {
                 return authenticated;
+            }
+
+            @Override
+            public UserModel getAuthenticatedUser() {
+                return authenticatedUser;
             }
 
             private int findNullPosition(byte[] response, int startPosition) {

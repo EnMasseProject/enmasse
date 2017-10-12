@@ -24,10 +24,14 @@ import io.vertx.core.net.PfxOptions;
 import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.ProtonServer;
 import io.vertx.proton.ProtonServerOptions;
+import org.apache.qpid.proton.amqp.Symbol;
 import org.jboss.logging.Logger;
 import org.keycloak.Config;
 import org.keycloak.models.KeycloakSessionFactory;
+import org.keycloak.models.UserModel;
 
+import java.util.HashMap;
+import java.util.Map;
 
 public class AmqpServer extends AbstractVerticle {
 
@@ -51,6 +55,15 @@ public class AmqpServer extends AbstractVerticle {
         String containerId = config.get("containerId", "keycloak-amqp");
         connection.setContainer(containerId);
         connection.openHandler(conn -> {
+            UserModel userModel = connection.attachments().get(SaslAuthenticator.USER_ATTACHMENT, UserModel.class);
+            if(userModel != null) {
+                Map<Symbol, Object> props = new HashMap<>();
+                Map<String, Object> authUserMap = new HashMap<>();
+                authUserMap.put("sub", userModel.getId());
+                authUserMap.put("preferred_username", userModel.getUsername());
+                props.put(Symbol.valueOf("authenticated-identity"), authUserMap);
+                connection.setProperties(props);
+            }
             connection.open();
             connection.close();
         }).closeHandler(conn -> {
@@ -58,7 +71,7 @@ public class AmqpServer extends AbstractVerticle {
             connection.disconnect();
         }).disconnectHandler(protonConnection -> {
             connection.disconnect();
-        }).open();
+        });
 
     }
 
