@@ -6,5 +6,12 @@ dependencies {
     compile "org.apache.qpid:proton-j"
     compile "org.jboss.logging:jboss-logging:${jbossLoggingVersion}"
     compileOnly "org.jboss.logging:jboss-logging-processor:${jbossLoggingProcessorVersion}"
+
+    testCompile "junit:junit:${junitVersion}"
+    testCompile "io.vertx:vertx-unit:${vertxVersion}"
+    testCompile "org.mockito:mockito-core:${mockitoVersion}"
+    testCompile "io.vertx:vertx-core:${vertxVersion}"
+    testCompile "io.vertx:vertx-proton:${vertxVersion}"
+
 }
 
