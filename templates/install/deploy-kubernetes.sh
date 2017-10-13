@@ -67,7 +67,7 @@ while getopts a:dglm:n:o:t:vh opt; do
             echo
             echo "optional arguments:"
             echo "  -h                   show this help message"
-            echo "  -a \"none standard\" Deploy given authentication services (default: \"none\")"
+            echo "  -a \"none|standard\" Deploy given authentication services (default: \"none\")"
             echo "  -d                   create an all-in-one minikube VM on localhost"
             echo "  -m MASTER            Kubernetes master URI to login against (default: https://localhost:8443)"
             echo "  -n NAMESPACE         Namespace to deploy EnMasse into (default: $DEFAULT_NAMESPACE)"

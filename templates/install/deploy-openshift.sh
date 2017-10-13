@@ -87,7 +87,7 @@ while getopts a:c:dgm:n:o:p:st:u:yvh opt; do
             echo
             echo "optional arguments:"
             echo "  -h                   show this help message"
-            echo "  -a \"none standard\" Deploy given authentication services (default: \"none\")"
+            echo "  -a \"none|standard\" Deploy given authentication services (default: \"none\")"
             echo "  -c                   CA certificate to use in address controller"
             echo "  -d                   create an all-in-one docker OpenShift on localhost"
             echo "  -n NAMESPACE         OpenShift project name to install EnMasse into (default: $DEFAULT_NAMESPACE)"
