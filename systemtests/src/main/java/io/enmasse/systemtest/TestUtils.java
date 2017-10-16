@@ -119,7 +119,7 @@ public class TestUtils {
         apiClient.deploy(addressSpace, httpMethod, destinations);
         JsonObject addrSpaceObj = apiClient.getAddressSpace(addressSpace);
         if (getAddressSpaceType(addrSpaceObj).equals("brokered")) {
-            Thread.sleep(60_000);
+            Thread.sleep(90_000);
             //!TODO: isReady state doesn't work at this moment, Once #280 issue will be closed then waitForDestionationsReady can be used
             //waitForDestinationsReady(apiClient, addressSpace, budget, destinations);
         } else {
