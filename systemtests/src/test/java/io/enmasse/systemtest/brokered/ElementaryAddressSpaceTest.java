@@ -44,12 +44,14 @@ public class ElementaryAddressSpaceTest extends MultiTenantTestBase {
 
         AmqpClientFactory amqpFactoryA = createAmqpClientFactory(brokeredA);
         AmqpClient amqpQueueCli = amqpFactoryA.createQueueClient(brokeredA);
+        amqpQueueCli.getConnectOptions().setUsername("test").setPassword("test");
         QueueTest.runQueueTest(amqpQueueCli, queueA);
 
         Destination topicB = Destination.topic("brokeredTopicB");
         setAddresses(brokeredA, topicB);
 
         AmqpClient amqpTopicCli = amqpFactoryA.createTopicClient(brokeredA);
+        amqpTopicCli.getConnectOptions().setUsername("test").setPassword("test");
         List<Future<List<Message>>> recvResults = Arrays.asList(
                 amqpTopicCli.recvMessages(topicB.getAddress(), 1000),
                 amqpTopicCli.recvMessages(topicB.getAddress(), 1000));
@@ -76,6 +78,7 @@ public class ElementaryAddressSpaceTest extends MultiTenantTestBase {
 
         AmqpClientFactory amqpFactoryA = createAmqpClientFactory(brokeredA);
         AmqpClient amqpQueueCliA = amqpFactoryA.createQueueClient(brokeredA);
+        amqpQueueCliA.getConnectOptions().setUsername("test").setPassword("test");
         QueueTest.runQueueTest(amqpQueueCliA, queueB);
 
         String brokeredC = createAddressSpace("brokered-c", "none", "brokered");
@@ -83,6 +86,7 @@ public class ElementaryAddressSpaceTest extends MultiTenantTestBase {
         setAddresses(brokeredC, queueB);
         AmqpClientFactory amqpFactoryC = createAmqpClientFactory(brokeredC);
         AmqpClient amqpQueueCliC = amqpFactoryC.createQueueClient(brokeredC);
+        amqpQueueCliC.getConnectOptions().setUsername("test").setPassword("test");
         QueueTest.runQueueTest(amqpQueueCliC, queueB);
 
         deleteAddressSpace(brokeredA);
@@ -90,7 +94,7 @@ public class ElementaryAddressSpaceTest extends MultiTenantTestBase {
         QueueTest.runQueueTest(amqpQueueCliC, queueB);
     }
 
-//    @Test(expected = AddressAlreadyExistsException.class) //!TODO disabled until #346 will be fixed
+    //@Test(expected = AddressAlreadyExistsException.class) //!TODO disabled until #346 will be fixed
     public void testCreateAlreadyExistingAddress() throws Exception {
         String brokeredA = createAddressSpace("brokered-a", "none", "brokered");
         addressSpaces.add(brokeredA);
@@ -98,10 +102,6 @@ public class ElementaryAddressSpaceTest extends MultiTenantTestBase {
         setAddresses(brokeredA, queueA);
 
         Destination topicA = Destination.topic("brokeredTopicA");
-        try {
-            setAddresses(brokeredA, topicA); //address already exist exception
-        } catch (AddressAlreadyExistsException ex) {
-            assert ex instanceof AddressAlreadyExistsException;
-        }
+        setAddresses(brokeredA, topicA); //address already exist exception
     }
 }
