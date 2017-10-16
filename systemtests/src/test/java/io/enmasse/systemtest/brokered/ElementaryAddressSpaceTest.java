@@ -62,8 +62,8 @@ public class ElementaryAddressSpaceTest extends MultiTenantTestBase {
         assertThat(amqpTopicCli.sendMessages(topicB.getAddress(), msgsBatch).get(1, TimeUnit.MINUTES), is(msgsBatch.size()));
         assertThat(amqpTopicCli.sendMessages(topicB.getAddress(), msgsBatch2).get(1, TimeUnit.MINUTES), is(msgsBatch2.size()));
 
-        assertThat(recvResults.get(0).get(1, TimeUnit.MINUTES).size(), is(msgsBatch.size()));
-        assertThat(recvResults.get(1).get(1, TimeUnit.MINUTES).size(), is(msgsBatch.size()));
+        assertThat(recvResults.get(0).get(1, TimeUnit.MINUTES).size(), is(msgsBatch.size() + msgsBatch2.size()));
+        assertThat(recvResults.get(1).get(1, TimeUnit.MINUTES).size(), is(msgsBatch.size() + msgsBatch2.size()));
     }
 
     /**
