@@ -105,8 +105,8 @@ under the License.
 
       <security-settings>
          <security-setting match="#">
-            <permission type="createNonDurableQueue" roles="admin"/>
-            <permission type="deleteNonDurableQueue" roles="admin"/>
+            <permission type="createNonDurableQueue" roles="all, admin"/>
+            <permission type="deleteNonDurableQueue" roles="all, admin"/>
             <permission type="createDurableQueue" roles="admin"/>
             <permission type="deleteDurableQueue" roles="admin"/>
             <permission type="createAddress" roles="admin"/>
