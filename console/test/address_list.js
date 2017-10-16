@@ -20,7 +20,7 @@ var Promise = require('bluebird');
 var rhea = require('rhea');
 
 var AddressList = require('../lib/address_list.js');
-var AddressSource = require('../lib/address_source.js');
+var AddressSource = require('../lib/external_address_source.js');
 
 function MockConfigServ () {
     this.address_list = [];

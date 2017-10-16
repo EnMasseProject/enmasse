@@ -16,7 +16,7 @@
 'use strict';
 
 var address_ctrl = require('../lib/address_ctrl.js');
-var AddressSource = require('../lib/address_source.js');
+var AddressSource = require('../lib/internal_address_source.js');
 var ConsoleServer = require('../lib/console_server.js');
 var tls_options = require('../lib/tls_options.js');
 

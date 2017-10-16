@@ -24,22 +24,7 @@ items:
       \"messagingMetricType\": \"numConsumers\", \"messagingQueue\": \"${queue}\"},
       \"type\": \"gauge\"}], \"path\": \"/jolokia/\", \"port\": 8161, \"protocol\":
       \"http\", \"type\": \"jolokia\"}]}"}, "kind": "ConfigMap", "metadata": {"name":
-      "hawkular-broker-config"}}, {"apiVersion": "extensions/v1beta1", "kind": "Deployment",
-      "metadata": {"annotations": {"addressSpace": "${ADDRESS_SPACE}", "io.enmasse.certSecretName":
-      "configserv-internal-cert"}, "labels": {"app": "enmasse", "name": "configserv"},
-      "name": "configserv"}, "spec": {"replicas": 1, "template": {"metadata": {"annotations":
-      {"addressSpace": "${ADDRESS_SPACE}"}, "labels": {"app": "enmasse", "name": "configserv"}},
-      "spec": {"containers": [{"env": [{"name": "CERT_DIR", "value": "/etc/enmasse-certs"}],
-      "image": "${CONFIGSERV_IMAGE}", "livenessProbe": {"initialDelaySeconds": 60,
-      "tcpSocket": {"port": "amqps"}}, "name": "configserv", "ports": [{"containerPort":
-      5671, "name": "amqps", "protocol": "TCP"}], "resources": {"limits": {"memory":
-      "128Mi"}, "requests": {"memory": "128Mi"}}, "volumeMounts": [{"mountPath": "/etc/enmasse-certs",
-      "name": "configserv-internal-cert", "readOnly": true}]}], "volumes": [{"name":
-      "configserv-internal-cert", "secret": {"secretName": "configserv-internal-cert"}}]}}}},
-      {"apiVersion": "v1", "kind": "Service", "metadata": {"annotations": {"addressSpace":
-      "${ADDRESS_SPACE}"}, "labels": {"app": "enmasse"}, "name": "configuration"},
-      "spec": {"ports": [{"name": "amqps", "port": 5671, "protocol": "TCP", "targetPort":
-      5671}], "selector": {"name": "configserv"}}}, {"apiVersion": "v1", "kind": "PersistentVolumeClaim",
+      "hawkular-broker-config"}}, {"apiVersion": "v1", "kind": "PersistentVolumeClaim",
       "metadata": {"annotations": {"addressSpace": "${ADDRESS_SPACE}"}, "labels":
       {"app": "enmasse"}, "name": "broker-data"}, "spec": {"accessModes": ["ReadWriteOnce"],
       "resources": {"requests": {"storage": "${STORAGE_CAPACITY}"}}}}, {"apiVersion":
@@ -94,9 +79,7 @@ items:
       "spec": {"ports": [{"name": "http", "port": 8080, "targetPort": "http"}], "selector":
       {"role": "console"}}}], "parameters": [{"description": "Hostname where API server
       can be reached", "name": "ADDRESS_SPACE_SERVICE_HOST", "value": ""}, {"description":
-      "The image to use for the configuration service", "name": "CONFIGSERV_IMAGE",
-      "value": "docker.io/enmasseproject/configserv:latest"}, {"description": "The
-      docker image to use for the message broker", "name": "BROKER_IMAGE", "value":
+      "The docker image to use for the message broker", "name": "BROKER_IMAGE", "value":
       "docker.io/enmasseproject/artemis:latest"}, {"description": "The docker image
       to use for the console server", "name": "CONSOLE_IMAGE", "value": "docker.io/enmasseproject/console:latest"},
       {"description": "Storage capacity required for volume claims", "name": "STORAGE_CAPACITY",

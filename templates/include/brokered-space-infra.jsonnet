@@ -1,4 +1,3 @@
-local configserv = import "configserv.jsonnet";
 local common = import "common.jsonnet";
 local images = import "images.jsonnet";
 local admin = import "admin.jsonnet";
@@ -256,8 +255,6 @@ local hawkularBrokerConfig = import "hawkular-broker-config.jsonnet";
       common.ca_secret("address-controller-ca", "${ADDRESS_CONTROLLER_CA_CERT}"),
       admin.password_secret("address-space-credentials", "${ADDRESS_SPACE_PASSWORD}"),
       hawkularBrokerConfig,
-      configserv.deployment("${ADDRESS_SPACE}", "${CONFIGSERV_IMAGE}"),
-      configserv.service("${ADDRESS_SPACE}"),
       me.pvc("broker-data"),
       me.broker_deployment("broker"),
       me.broker_service,
@@ -270,11 +267,6 @@ local hawkularBrokerConfig = import "hawkular-broker-config.jsonnet";
         "name": "ADDRESS_SPACE_SERVICE_HOST",
         "description": "Hostname where API server can be reached",
         "value": ""
-      },
-      {
-        "name": "CONFIGSERV_IMAGE",
-        "description": "The image to use for the configuration service",
-        "value": images.configserv
       },
       {
         "name": "BROKER_IMAGE",
