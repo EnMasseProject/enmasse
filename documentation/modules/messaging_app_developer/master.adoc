@@ -1,0 +1,16 @@
+include::common/attributes.adoc[]
+
+= {Title}
+
+include::modules/address-model.adoc[leveloffset=+1]
+
+include::modules/address-space.adoc[leveloffset=+1]
+
+include::modules/connecting.adoc[leveloffset=+1]
+
+
+[appendix]
+//include::common/using-your-subscription.adoc[leveloffset=+1]
+
+// Revision information
+//include::common/revision-info.adoc[]
