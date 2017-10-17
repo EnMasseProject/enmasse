@@ -27,7 +27,7 @@ function tempdir() {
 }
 
 function random_string() {
-    LC_CTYPE=C head /dev/urandom | tr -dc A-Za-z0-9 | head -c 32
+    head /dev/urandom | LC_CTYPE=C tr -dc A-Za-z0-9 | head -c 32
 }
 
 function create_address_space() {
