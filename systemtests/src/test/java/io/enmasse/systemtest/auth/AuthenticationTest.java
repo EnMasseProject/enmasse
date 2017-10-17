@@ -50,6 +50,8 @@ public class AuthenticationTest extends TestBase {
             Destination.anycast("auth-anycast"),
             Destination.multicast("auth-multicast"));
     private static final String mqttAddress = "t1";
+    private static final String anonymousUser = "anonymous";
+    private static final String anonymousPswd = "anonymous";
 
     @Before
     public void setupSpaceList() throws Exception {
@@ -117,13 +119,13 @@ public class AuthenticationTest extends TestBase {
     @Test
     public void testNoneAuthenticationServiceBrokered() throws Exception {
         String s3brokered = createAddressSpace("brokered-s3", "none", "brokered");
-        assertCanConnect(s3brokered, "", "");
+        assertCanConnect(s3brokered, anonymousUser, anonymousPswd);
         assertCanConnect(s3brokered, "bob", "pass");
 
         String s4brokered = createAddressSpace("brokered-s4", "standard", "brokered");
-        assertCanConnect(s3brokered, "", "");
+        assertCanConnect(s3brokered, anonymousUser, anonymousPswd);
         assertCanConnect(s3brokered, "bob", "pass");
-        assertCannotConnect(s4brokered, "", "");
+        assertCannotConnect(s4brokered, anonymousUser, anonymousPswd);
         assertCannotConnect(s4brokered, "bob", "pass");
     }
 
