@@ -37,7 +37,7 @@ class Sender extends ClientHandlerBase<Integer> {
         sender.setTarget(linkOptions.getTarget());
         sender.setQoS(clientOptions.getQos());
         sender.openHandler(result -> {
-            Logging.log.info("Sender link " + sender.getTarget().getAddress() + " opened, sending messages");
+            Logging.log.info("Sender link '" + sender.getTarget().getAddress() + "' opened, sending messages");
             connectLatch.countDown();
             sendNext(connection, sender);
         });

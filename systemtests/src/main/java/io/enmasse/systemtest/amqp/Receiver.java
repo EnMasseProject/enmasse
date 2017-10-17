@@ -47,7 +47,7 @@ public class Receiver extends ClientHandlerBase<List<Message>> {
             }
         });
         receiver.openHandler(result -> {
-            Logging.log.info("Receiver link " + source.getAddress() + " opened, granting credits");
+            Logging.log.info("Receiver link '" + source.getAddress() + "' opened, granting credits");
             receiver.flow(1);
             connectLatch.countDown();
         });
@@ -55,7 +55,7 @@ public class Receiver extends ClientHandlerBase<List<Message>> {
         receiver.closeHandler(closed -> {
             if (receiver.getRemoteCondition() != null && LinkError.REDIRECT.equals(receiver.getRemoteCondition().getCondition())) {
                 String relocated = (String) receiver.getRemoteCondition().getInfo().get("address");
-                Logging.log.info("Receiver link redirected to " + relocated);
+                Logging.log.info("Receiver link redirected to '" + relocated + "'");
                 Source newSource = linkOptions.getSource();
                 newSource.setAddress(relocated);
                 String newLinkName = linkOptions.getLinkName().orElse(newSource.getAddress());
