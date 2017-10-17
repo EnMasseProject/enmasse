@@ -15,11 +15,7 @@
  */
 package io.enmasse.systemtest.auth;
 
-import io.enmasse.systemtest.AddressSpace;
-import io.enmasse.systemtest.ConnectTimeoutException;
-import io.enmasse.systemtest.Destination;
-import io.enmasse.systemtest.TestBase;
-import io.enmasse.systemtest.TestUtils;
+import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.mqtt.MqttClient;
 import org.apache.qpid.proton.message.Message;
@@ -72,12 +68,13 @@ public class AuthenticationTest extends TestBase {
         return false;
     }
 
-    public void createAddressSpace(String name, String authService) throws Exception {
+    public String createAddressSpace(String name, String authService) throws Exception {
         AddressSpace addressSpace = new AddressSpace(name);
         addressSpaces.add(addressSpace);
         super.createAddressSpace(addressSpace, authService);
         setAddresses(addressSpace, amqpAddressList.toArray(new Destination[amqpAddressList.size()]));
-//        setAddresses(name, Destination.queue(amqpAddress)); //, Destination.topic(mqttAddress));
+        //        setAddresses(name, Destination.queue(amqpAddress)); //, Destination.topic(mqttAddress));
+        return name;
     }
 
     public String createAddressSpace(String name, String authService, String type) throws Exception {
@@ -91,82 +88,75 @@ public class AuthenticationTest extends TestBase {
 
     @Test
     public void testStandardAuthenticationServiceBrokered() throws Exception {
-        String s1brokered = createAddressSpace("brokered-s1", "standard", "brokered");
+        testStandardAuthenticationServiceGeneral("brokered");
+    }
+
+    @Test
+    public void testNoneAuthenticationServiceBrokered() throws Exception {
+        testNoneAuthenticationServiceGeneral("brokered", null, null);
+    }
+
+    @Test
+    public void testStandardAuthenticationService() throws Exception {
+        testStandardAuthenticationServiceGeneral("standard");
+    }
+
+    @Test
+    public void testNoneAuthenticationService() throws Exception {
+        testNoneAuthenticationServiceGeneral("standard", null, null);
+    }
+
+    public void testNoneAuthenticationServiceGeneral(String addressSpaceType, String emptyUser, String emptyPassword) throws Exception {
+        String s3standard = createAddressSpace(addressSpaceType + "-s3", "none", addressSpaceType);
+        assertCanConnect(s3standard, null, null);
+        assertCanConnect(s3standard, "bob", "pass");
+
+        String s4standard = createAddressSpace(addressSpaceType + " -s4", "standard", addressSpaceType);
+        assertCanConnect(s3standard, null, null);
+        assertCanConnect(s3standard, "bob", "pass");
+        assertCannotConnect(s4standard, null, null);
+        assertCannotConnect(s4standard, "bob", "pass");
+    }
+
+    public void testStandardAuthenticationServiceGeneral(String addressSpaceType) throws Exception {
+        String s1brokered = createAddressSpace(addressSpaceType + "-s1", "standard", addressSpaceType);
 
         // Validate unsuccessful authentication with enmasse authentication service with no credentials
         assertCannotConnect(s1brokered, null, null);
         assertCannotConnect(s1brokered, "bob", "s1pass");
 
-        getKeycloakClient().createUser(s1brokered, "bob", "s1pass");
+        KeycloakCredentials s1Bob = new KeycloakCredentials("bob", "s1pass");
+        getKeycloakClient().createUser(s1brokered, s1Bob.getUsername(), s1Bob.getPassword());
+
+        KeycloakCredentials s1Carol = new KeycloakCredentials("carol", "s2pass");
+        getKeycloakClient().createUser(s1brokered, s1Carol.getUsername(), s1Carol.getPassword());
+
         assertCannotConnect(s1brokered, null, null);
 
         // Validate successful authentication with enmasse authentication service and valid credentials
-        assertCanConnect(s1brokered, "bob", "s1pass");
+        assertCanConnect(s1brokered, s1Bob.getUsername(), s1Bob.getPassword());
+        assertCanConnect(s1brokered, s1Carol.getUsername(), s1Carol.getPassword());
 
         // Validate unsuccessful authentication with enmasse authentication service with incorrect credentials
-        assertCannotConnect(s1brokered, "bob", "s2pass");
+        assertCannotConnect(s1brokered, s1Bob.getUsername(), "s2pass");
         assertCannotConnect(s1brokered, "alice", "s1pass");
 
-        String s2brokered = createAddressSpace("brokered-s2", "standard", "brokered");
+        String s2brokered = createAddressSpace(addressSpaceType + "-s2", "standard", addressSpaceType);
 
-        getKeycloakClient().createUser(s2brokered, "bob", "s2pass");
-        assertCanConnect(s1brokered, "bob", "s1pass");
-        assertCanConnect(s2brokered, "bob", "s2pass");
-        assertCannotConnect(s2brokered, "bob", "s1pass");
-        assertCannotConnect(s1brokered, "bob", "s2pass");
-    }
+        KeycloakCredentials s2Bob = new KeycloakCredentials("bob", "s2pass");
+        getKeycloakClient().createUser(s2brokered, s2Bob.getUsername(), s2Bob.getPassword());
 
-    @Test
-    public void testNoneAuthenticationServiceBrokered() throws Exception {
-        String s3brokered = createAddressSpace("brokered-s3", "none", "brokered");
-        assertCanConnect(s3brokered, anonymousUser, anonymousPswd);
-        assertCanConnect(s3brokered, "bob", "pass");
+        //create user with the same credentials in different address spaces
+        KeycloakCredentials s2Carol = new KeycloakCredentials("carol", "s2pass");
+        getKeycloakClient().createUser(s2brokered, s1Carol.getUsername(), s1Carol.getPassword());
 
-        String s4brokered = createAddressSpace("brokered-s4", "standard", "brokered");
-        assertCanConnect(s3brokered, anonymousUser, anonymousPswd);
-        assertCanConnect(s3brokered, "bob", "pass");
-        assertCannotConnect(s4brokered, anonymousUser, anonymousPswd);
-        assertCannotConnect(s4brokered, "bob", "pass");
-    }
+        assertCanConnect(s1brokered, s1Bob.getUsername(), s1Bob.getPassword());
+        assertCanConnect(s1brokered, s2Carol.getUsername(), s2Carol.getPassword());
+        assertCanConnect(s2brokered, s2Bob.getUsername(), s2Bob.getPassword());
+        assertCanConnect(s2brokered, s2Carol.getUsername(), s2Carol.getPassword());
 
-    @Test
-    public void testStandardAuthenticationService() throws Exception {
-        createAddressSpace("s1", "standard");
-
-        // Validate unsuccessful authentication with enmasse authentication service with no credentials
-        assertCannotConnect("s1", null, null);
-        assertCannotConnect("s1", "bob", "s1pass");
-
-        getKeycloakClient().createUser("s1", "bob", "s1pass");
-        assertCannotConnect("s1", null, null);
-
-        // Validate successful authentication with enmasse authentication service and valid credentials
-        assertCanConnect("s1", "bob", "s1pass");
-
-        // Validate unsuccessful authentication with enmasse authentication service with incorrect credentials
-        assertCannotConnect("s1", "bob", "s2pass");
-        assertCannotConnect("s1", "alice", "s1pass");
-
-        createAddressSpace("s2", "standard");
-
-        getKeycloakClient().createUser("s2", "bob", "s2pass");
-        assertCanConnect("s1", "bob", "s1pass");
-        assertCanConnect("s2", "bob", "s2pass");
-        assertCannotConnect("s2", "bob", "s1pass");
-        assertCannotConnect("s1", "bob", "s2pass");
-    }
-
-    @Test
-    public void testNoneAuthenticationService() throws Exception {
-        createAddressSpace("s3", "none");
-        assertCanConnect("s3", null, null);
-        assertCanConnect("s3", "bob", "pass");
-
-        createAddressSpace("s4", "standard");
-        assertCanConnect("s3", null, null);
-        assertCanConnect("s3", "bob", "pass");
-        assertCannotConnect("s4", null, null);
-        assertCannotConnect("s4", "bob", "pass");
+        assertCannotConnect(s2brokered, s1Bob.getUsername(), s1Bob.getPassword());
+        assertCannotConnect(s1brokered, s2Bob.getUsername(), s2Bob.getPassword());
     }
 
     private void assertCanConnect(String addressSpace, String username, String password) throws Exception {
@@ -187,16 +177,16 @@ public class AuthenticationTest extends TestBase {
     }
 
 
-        private boolean canConnectWithAmqp (String addressSpace, String username, String password) throws
-        InterruptedException, IOException, TimeoutException, ExecutionException {
-            assertTrue(canConnectWithAmqpToQueue(addressSpace, username, password, amqpAddressList.get(0).getAddress()));
-            assertTrue(canConnectWithAmqpToTopic(addressSpace, username, password, amqpAddressList.get(1).getAddress()));
-            if (!TestUtils.getAddressSpaceType(getAddressSpace(addressSpace)).equals("brokered")) {
-                assertTrue(canConnectWithAmqpToAnycast(addressSpace, username, password, amqpAddressList.get(2).getAddress()));
-                assertTrue(canConnectWithAmqpToMulticast(addressSpace, username, password, amqpAddressList.get(3).getAddress()));
-            }
-            return true;
+    private boolean canConnectWithAmqp(String addressSpace, String username, String password) throws
+            InterruptedException, IOException, TimeoutException, ExecutionException {
+        assertTrue(canConnectWithAmqpToQueue(addressSpace, username, password, amqpAddressList.get(0).getAddress()));
+        assertTrue(canConnectWithAmqpToTopic(addressSpace, username, password, amqpAddressList.get(1).getAddress()));
+        if (!TestUtils.getAddressSpaceType(getAddressSpace(addressSpace)).equals("brokered")) {
+            assertTrue(canConnectWithAmqpToAnycast(addressSpace, username, password, amqpAddressList.get(2).getAddress()));
+            assertTrue(canConnectWithAmqpToMulticast(addressSpace, username, password, amqpAddressList.get(3).getAddress()));
         }
+        return true;
+    }
 
     private boolean canConnectWithAmqpToQueue(String addressSpace, String username, String password, String queueAddress) throws InterruptedException, IOException, TimeoutException, ExecutionException {
         AmqpClient client = amqpClientFactory.createQueueClient(addressSpace);
