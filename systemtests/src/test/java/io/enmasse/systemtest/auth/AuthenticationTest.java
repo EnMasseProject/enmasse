@@ -107,18 +107,18 @@ public class AuthenticationTest extends TestBase {
 
     @Test
     public void testNoneAuthenticationService() throws Exception {
-        testNoneAuthenticationServiceGeneral("standard", null, null);
+        testNoneAuthenticationServiceGeneral(STANDARD_ADDRESS_SPACE_TYPE, null, null);
     }
 
     public void testNoneAuthenticationServiceGeneral(String addressSpaceType, String emptyUser, String emptyPassword) throws Exception {
         String s3standard = createAddressSpace(addressSpaceType + "-s3", "none", addressSpaceType);
-        assertCanConnect(s3standard, null, null);
+        assertCanConnect(s3standard, emptyUser, emptyPassword);
         assertCanConnect(s3standard, "bob", "pass");
 
         String s4standard = createAddressSpace(addressSpaceType + "-s4", "standard", addressSpaceType);
-        assertCanConnect(s3standard, null, null);
+        assertCanConnect(s3standard, emptyUser, emptyPassword);
         assertCanConnect(s3standard, "bob", "pass");
-        assertCannotConnect(s4standard, null, null);
+        assertCannotConnect(s4standard, emptyUser, emptyPassword);
         assertCannotConnect(s4standard, "bob", "pass");
     }
 
