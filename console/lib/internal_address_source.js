@@ -20,19 +20,15 @@ var events = require('events');
 var kubernetes = require('./kubernetes.js');
 
 function AddressSource() {
-    this.addresses = {};
     events.EventEmitter.call(this);
     this.watcher = kubernetes.watch('configmaps', {selector:'type=address-config'});
-    this.watcher.on('added', this.added.bind(this));
-    this.watcher.on('modified', this.added.bind(this));
-    this.watcher.on('deleted', this.deleted.bind(this));
+    this.watcher.on('updated', this.updated.bind(this));
 }
 
 util.inherits(AddressSource, events.EventEmitter);
 
 AddressSource.prototype.notify = function () {
     var self = this;
-    this.emit('addresses_defined', Object.keys(this.addresses).map(function (key) { return self.addresses[key]; }));
 };
 
 function extract_address_spec(object) {
@@ -47,20 +43,8 @@ function extract_address_spec(object) {
     }
 }
 
-AddressSource.prototype.added = function (object) {
-    var spec = extract_address_spec(object);
-    if (spec) {
-        this.addresses[spec.address] = spec;
-        this.notify();
-    }
-};
-
-AddressSource.prototype.deleted = function (object) {
-    var spec = extract_address_spec(object);
-    if (spec) {
-        delete this.addresses[spec.address];
-        this.notify();
-    }
+AddressSource.prototype.updated = function (objects) {
+    this.emit('addresses_defined', objects.map(extract_address_spec));
 };
 
 module.exports = AddressSource;
