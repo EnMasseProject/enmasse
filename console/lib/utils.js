@@ -28,8 +28,8 @@ module.exports.remove = function (list, predicate) {
 };
 
 module.exports.replace = function (list, object, match) {
-    for (var i = 0; i < list.length; count++) {
-        if (match(object, list[i])) {
+    for (var i = 0; i < list.length; i++) {
+        if (match(list[i])) {
             list[i] = object;
             return true;
         }
