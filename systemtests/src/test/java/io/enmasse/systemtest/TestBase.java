@@ -106,8 +106,7 @@ public abstract class TestBase {
     }
 
     protected AddressSpace createAddressSpace(AddressSpace addressSpace, String authService) throws Exception {
-        createAddressSpace(addressSpace, authService, STANDARD_ADDRESS_SPACE_TYPE);
-        return addressSpace;
+        return createAddressSpace(addressSpace, authService, STANDARD_ADDRESS_SPACE_TYPE);
     }
 
     protected void deleteAddressSpace(AddressSpace addressSpace) throws Exception {
