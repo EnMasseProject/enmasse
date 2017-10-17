@@ -27,11 +27,15 @@ import io.vertx.proton.ProtonServerOptions;
 import org.apache.qpid.proton.amqp.Symbol;
 import org.jboss.logging.Logger;
 import org.keycloak.Config;
+import org.keycloak.models.GroupModel;
 import org.keycloak.models.KeycloakSessionFactory;
 import org.keycloak.models.UserModel;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class AmqpServer extends AbstractVerticle {
 
@@ -62,6 +66,8 @@ public class AmqpServer extends AbstractVerticle {
                 authUserMap.put("sub", userModel.getId());
                 authUserMap.put("preferred_username", userModel.getUsername());
                 props.put(Symbol.valueOf("authenticated-identity"), authUserMap);
+                Set<String> groups = userModel.getGroups().stream().map(GroupModel::getName).collect(Collectors.toSet());
+                props.put(Symbol.valueOf("groups"), new ArrayList<>(groups));
                 connection.setProperties(props);
             }
             connection.open();
