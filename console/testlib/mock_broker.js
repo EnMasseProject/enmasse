@@ -20,6 +20,7 @@ var events = require('events');
 var util = require('util');
 var Promise = require('bluebird');
 var rhea = require('rhea');
+var myutils = require('../lib/utils.js');
 
 function find(array, predicate) {
     var results = array.filter(predicate);
@@ -30,19 +31,6 @@ function find(array, predicate) {
 function match_source_address(link, address) {
     return link && link.local && link.local.attach && link.local.attach.source
         && link.local.attach.source.address === address;
-}
-
-function remove(list, predicate) {
-    var count = 0;
-    for (var i = 0; i < list.length;) {
-        if (predicate(list[i])) {
-            list.splice(i, 1);
-            count++;
-        } else {
-            i++;
-        }
-    }
-    return count;
 }
 
 function MockBroker (name) {
@@ -96,7 +84,7 @@ function MockBroker (name) {
             }
         },
         destroyQueue : function (name) {
-            if (remove(self.objects, function (o) { return o.type === 'queue' && o.name === name; }) !== 1) {
+            if (myutils.remove(self.objects, function (o) { return o.type === 'queue' && o.name === name; }) !== 1) {
                 throw new Error('error deleting queue ' + name);
             } else {
                 function is_queue_address(o) {
@@ -105,11 +93,11 @@ function MockBroker (name) {
                         && o.queueNames.length === 1
                         && o.queueNames[0] === name;
                 }
-                remove(self.objects, is_queue_address);
+                myutils.remove(self.objects, is_queue_address);
             }
         },
         deleteAddress : function (name) {
-            if (remove(self.objects, function (o) { return o.type === 'address' && o.name === name; }) !== 1) {
+            if (myutils.remove(self.objects, function (o) { return o.type === 'address' && o.name === name; }) !== 1) {
                 throw new Error('error deleting address ' + name);
             }
         },

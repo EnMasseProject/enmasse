@@ -18,8 +18,9 @@ var fs = require('fs');
 var util = require("util");
 var events = require("events");
 var querystring = require("querystring");
+var myutils = require("./utils.js");
 
-function get_handler(emitter) {
+function watch_handler(collection) {
     var partial = undefined;
     return function (msg) {
         var content = partial ? partial + msg : msg;
@@ -33,27 +34,71 @@ function get_handler(emitter) {
 	        console.log('Could not parse message as JSON (%s), assuming incomplete: %s', e, line);
                 break;
             }
-            emitter.emit(event.type.toLowerCase(), event.object);
+            collection[event.type.toLowerCase()](event.object);
         }
 	partial = content.substring(start);
     }
 }
 
-var Watcher = function (options) {
+function get_options(options, path) {
+    return {
+	hostname: options.host || process.env.KUBERNETES_SERVICE_HOST,
+	port: options.port || process.env.KUBERNETES_SERVICE_PORT,
+	rejectUnauthorized: false,
+        path: path,
+	headers: {
+	    'Authorization': 'Bearer ' + (options.token || process.env.KUBERNETES_TOKEN || fs.readFileSync('/var/run/secrets/kubernetes.io/serviceaccount/token'))
+	}
+    };
+}
+
+function get_path(base, resource, options) {
+    var namespace = options.namespace || process.env.KUBERNETES_NAMESPACE || fs.readFileSync('/var/run/secrets/kubernetes.io/serviceaccount/namespace');
+    return base + namespace + '/' + resource + '?' + querystring.stringify({'labelSelector':options.selector});
+}
+
+function list_path(resource, options) {
+    return get_path('/api/v1/namespaces/', resource, options);
+}
+
+function watch_path(resource, options) {
+    return get_path('/api/v1/watch/namespaces/', resource, options);
+}
+
+function list_options(resource, options) {
+    return get_options(options, get_path('/api/v1/namespaces/', resource, options));
+}
+
+function watch_options(resource, options) {
+    return get_options(options, get_path('/api/v1/watch/namespaces/', resource, options));
+}
+
+function Watcher (resource, options) {
     events.EventEmitter.call(this);
     this.closed = false;
+    this.resource = resource;
     this.options = options;
-    this.handler = get_handler(this);
-    console.log('watching path: ' + options.path);
+    this.objects = [];
+}
+
+util.inherits(Watcher, events.EventEmitter);
+
+Watcher.prototype.list = function () {
     var self = this;
-    var request = https.get(this.options, function(response) {
+    var request = https.get(list_options(this.resource, this.options), function(response) {
 	console.log('STATUS: ' + response.statusCode);
 	response.setEncoding('utf8');
-	response.on('data', self.handler);
+        var data = '';
+	response.on('data', function (chunk) { data += chunk; });
 	response.on('end', function () {
-            if (!this.closed) {
-	        console.log('response ended; reconnecting...');
+            try {
+                var list = JSON.parse(data);
+	        self.objects = list.items;
+                self.emit('updated', self.objects);
+	        console.log('list retrieved; watching...');
 	        self.watch();
+            } catch (e) {
+	        console.log('Could not parse message as JSON (%s): %s', e, data);
             }
 	});
     });
@@ -62,26 +107,51 @@ var Watcher = function (options) {
     });
 };
 
-util.inherits(Watcher, events.EventEmitter);
+Watcher.prototype.watch = function () {
+    var self = this;
+    var request = https.get(watch_options(this.resource, this.options), function(response) {
+	console.log('STATUS: ' + response.statusCode);
+	response.setEncoding('utf8');
+	response.on('data', watch_handler(self));
+	response.on('end', function () {
+            if (!this.closed) {
+	        console.log('response ended; reconnecting...');
+	        self.list();
+            }
+	});
+    });
+    request.on('error', function(e) {
+	self.emit('error', e);
+    });
+};
+
+function matcher(object) {
+    return function (o) { return o.metadata.name === object.metadata.name; };
+};
+
+Watcher.prototype.added = function (object) {
+    if (!this.objects.some(matcher(object))) {
+        this.objects.push(object);
+        this.emit('updated', this.objects);
+    }
+};
+
+Watcher.prototype.modified = function (object) {
+    myutils.replace(this.objects, object, matcher(object));
+    this.emit('updated', this.objects);
+};
+
+Watcher.prototype.deleted = function (object) {
+    myutils.remove(this.objects, matcher(object));
+    this.emit('updated', this.objects);
+};
 
 Watcher.prototype.close = function () {
     this.closed = true;
 };
 
-function get_path(resource, options) {
-    var namespace = options.namespace || fs.readFileSync('/var/run/secrets/kubernetes.io/serviceaccount/namespace');
-    return '/api/v1/watch/namespaces/' + namespace + '/' + resource + '?' + querystring.stringify({'labelSelector':options.selector});
-}
-
 module.exports.watch = function (resource, options) {
-    var opts = {
-	hostname: process.env.KUBERNETES_SERVICE_HOST,
-	port: process.env.KUBERNETES_SERVICE_PORT,
-	rejectUnauthorized: false,
-	path: get_path(resource, options),
-	headers: {
-	    'Authorization': 'Bearer ' + (options.token || fs.readFileSync('/var/run/secrets/kubernetes.io/serviceaccount/token'))
-	}
-    };
-    return new Watcher(opts);
+    var w = new Watcher(resource, options);
+    w.list();
+    return w;
 };
