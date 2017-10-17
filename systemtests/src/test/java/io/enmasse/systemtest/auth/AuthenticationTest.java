@@ -97,7 +97,7 @@ public class AuthenticationTest extends TestBase {
 
     @Test
     public void testNoneAuthenticationServiceBrokered() throws Exception {
-        testNoneAuthenticationServiceGeneral("brokered", null, null);
+        testNoneAuthenticationServiceGeneral("brokered", anonymousUser, anonymousPswd);
     }
 
     @Test
