@@ -115,7 +115,7 @@ public class AuthenticationTest extends TestBase {
         assertCanConnect(s3standard, null, null);
         assertCanConnect(s3standard, "bob", "pass");
 
-        String s4standard = createAddressSpace(addressSpaceType + " -s4", "standard", addressSpaceType);
+        String s4standard = createAddressSpace(addressSpaceType + "-s4", "standard", addressSpaceType);
         assertCanConnect(s3standard, null, null);
         assertCanConnect(s3standard, "bob", "pass");
         assertCannotConnect(s4standard, null, null);
