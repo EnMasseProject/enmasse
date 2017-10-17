@@ -36,7 +36,7 @@ public class ElementaryAddressSpaceTest extends MultiTenantTestBase {
      * related github issue: #335
      */
     @Test
-    public void testCreateDeleteAddressSpace() throws Exception {
+    public void testAddressTypes() throws Exception {
         String brokeredA = createAddressSpace("brokered-a", "none", "brokered");
         addressSpaces.add(brokeredA);
         Destination queueA = Destination.queue("brokeredQueueA");
@@ -70,7 +70,7 @@ public class ElementaryAddressSpaceTest extends MultiTenantTestBase {
      * related github issue: #334
      */
     @Test
-    public void testAddressTypes() throws Exception {
+    public void testCreateDeleteAddressSpace() throws Exception {
         String brokeredA = createAddressSpace("brokered-a", "none", "brokered");
         addressSpaces.add(brokeredA);
         Destination queueB = Destination.queue("brokeredQueueB");
