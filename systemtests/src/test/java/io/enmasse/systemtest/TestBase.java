@@ -19,6 +19,7 @@ package io.enmasse.systemtest;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
 import io.enmasse.systemtest.mqtt.MqttClientFactory;
 import io.vertx.core.http.HttpMethod;
+import io.vertx.core.json.JsonObject;
 import org.junit.After;
 import org.junit.Before;
 
@@ -113,6 +114,12 @@ public abstract class TestBase {
         addressApiClient.deleteAddressSpace(addressSpace);
         TestUtils.waitForAddressSpaceDeleted(openShift, addressSpace);
         logCollector.stopCollecting(addressSpace.getNamespace());
+    }
+
+    //!TODO: protected void appendAddressSpace(...)
+
+    protected JsonObject getAddressSpace(String name) throws InterruptedException {
+        return addressApiClient.getAddressSpace(name);
     }
 
     protected KeycloakClient getKeycloakClient() throws InterruptedException {
