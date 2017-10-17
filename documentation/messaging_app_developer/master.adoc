@@ -2,11 +2,11 @@ include::common/attributes.adoc[]
 
 = {Title}
 
-include::modules/address-model.adoc[leveloffset=+1]
+include::address-model.adoc[leveloffset=+1]
 
-include::modules/address-space.adoc[leveloffset=+1]
+include::address-space.adoc[leveloffset=+1]
 
-include::modules/connecting.adoc[leveloffset=+1]
+include::connecting.adoc[leveloffset=+1]
 
 
 [appendix]
