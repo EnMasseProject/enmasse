@@ -81,8 +81,12 @@ public class AuthenticationTest extends TestBase {
         AddressSpace addressSpace = new AddressSpace(name);
         addressSpaces.add(addressSpace);
         super.createAddressSpace(addressSpace, authService, type);
-        List<Destination> brokeredAddressList = amqpAddressList.subList(0, 2);
-        setAddresses(addressSpace, brokeredAddressList.toArray(new Destination[brokeredAddressList.size()]));
+        if (type.equals(STANDARD_ADDRESS_SPACE_TYPE)) {
+            setAddresses(addressSpace, amqpAddressList.toArray(new Destination[amqpAddressList.size()]));
+        } else {
+            List<Destination> brokeredAddressList = amqpAddressList.subList(0, 2);
+            setAddresses(addressSpace, brokeredAddressList.toArray(new Destination[brokeredAddressList.size()]));
+        }
         return addressSpace.getName();
     }
 
