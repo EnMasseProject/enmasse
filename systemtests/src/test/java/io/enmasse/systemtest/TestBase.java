@@ -36,7 +36,7 @@ public abstract class TestBase {
     protected static final Environment environment = new Environment();
     protected static final AddressSpace defaultAddressSpace = environment.isMultitenant() ? new AddressSpace("testspace", "testspace")
             : new AddressSpace("default", environment.namespace());
-    protected static final String defaultAddressSpaceType = "standard";
+    protected static final String STANDARD_ADDRESS_SPACE_TYPE = "standard";
 
     protected static final OpenShift openShift = new OpenShift(environment, environment.namespace(), defaultAddressSpace.getNamespace());
     private static final GlobalLogCollector logCollector = new GlobalLogCollector(openShift,
@@ -73,21 +73,39 @@ public abstract class TestBase {
         mqttClientFactory = new MqttClientFactory(openShift, environment, defaultAddressSpace, username, password);
     }
 
-    protected AddressSpace createAddressSpace(AddressSpace addressSpace, String authService, String addressSpaceType) throws Exception {
+    @After
+    public void teardown() throws Exception {
+        if (mqttClientFactory != null) {
+            mqttClientFactory.close();
+        }
+        if (amqpClientFactory != null) {
+            amqpClientFactory.close();
+        }
+        if (addressApiClient != null) {
+            if (createDefaultAddressSpace()) {
+                setAddresses();
+            }
+            addressApiClient.close();
+        }
+    }
+
+    protected AddressSpace createAddressSpace(AddressSpace addressSpace, String authService, String addrSpaceType) throws Exception {
         if (!TestUtils.existAddressSpace(addressApiClient, addressSpace.getName())) {
-            Logging.log.info("Address space " + addressSpace + "doesn't exist and will be created.");
-            addressApiClient.createAddressSpace(addressSpace, authService, addressSpaceType);
-            logCollector.startCollecting(addressSpace.getNamespace());
+            Logging.log.info("Address space '" + addressSpace + "' doesn't exist and will be created.");
+            addressApiClient.createAddressSpace(addressSpace, authService, addrSpaceType);
+            logCollector.startCollecting(addressSpace.getName());
             TestUtils.waitForAddressSpaceReady(addressApiClient, addressSpace.getName());
             if (addressSpace.equals(defaultAddressSpace)) {
                 Thread.sleep(120_000);
             }
+        } else {
+            Logging.log.info("Address space '" + addressSpace + "' already exists.");
         }
         return addressSpace;
     }
 
     protected AddressSpace createAddressSpace(AddressSpace addressSpace, String authService) throws Exception {
-        createAddressSpace(addressSpace, authService, defaultAddressSpaceType);
+        createAddressSpace(addressSpace, authService, STANDARD_ADDRESS_SPACE_TYPE);
         return addressSpace;
     }
 
@@ -106,22 +124,6 @@ public abstract class TestBase {
             keycloakApiClient = new KeycloakClient(openShift.getKeycloakEndpoint(), creds);
         }
         return keycloakApiClient;
-    }
-
-    @After
-    public void teardown() throws Exception {
-        if (mqttClientFactory != null) {
-            mqttClientFactory.close();
-        }
-        if (amqpClientFactory != null) {
-            amqpClientFactory.close();
-        }
-        if (addressApiClient != null) {
-            if (createDefaultAddressSpace()) {
-                setAddresses();
-            }
-            addressApiClient.close();
-        }
     }
 
     /**
