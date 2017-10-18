@@ -249,10 +249,10 @@ public class AddressApiClient {
 
         CountDownLatch latch = new CountDownLatch(1);
 
-        Logging.log.info("Following HTTP request will be used for deploy: /v1/addresses/" + addressSpace + "/");
+        Logging.log.info("Following HTTP request will be used for deploy: /v1/addresses/" + addressSpace.getName() + "/");
         Logging.log.info("Following payload will be used in request: " + config.toString());
 
-        HttpClientRequest request = httpClient.request(httpMethod, endpoint.getPort(), endpoint.getHost(), "/v1/addresses/" + addressSpace + "/");
+        HttpClientRequest request = httpClient.request(httpMethod, endpoint.getPort(), endpoint.getHost(), "/v1/addresses/" + addressSpace.getName() + "/");
         request.setTimeout(30_000);
         request.putHeader("content-type", "application/json");
         request.exceptionHandler(event -> {
