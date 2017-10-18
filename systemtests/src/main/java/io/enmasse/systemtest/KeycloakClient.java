@@ -75,6 +75,7 @@ public class KeycloakClient implements AutoCloseable {
 
     private RealmResource waitForRealm(String realmName, long timeout, TimeUnit timeUnit)
             throws InterruptedException, TimeoutException {
+        Logging.log.info("Waiting for realm {} to exist", realmName);
         long endTime = System.currentTimeMillis() + timeUnit.toMillis(timeout);
         while (System.currentTimeMillis() < endTime) {
             List<RealmRepresentation> realms = keycloak.realms().findAll();
