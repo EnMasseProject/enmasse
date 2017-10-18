@@ -105,7 +105,7 @@ public class HttpAddressSpaceServiceTest {
 
     @Test
     public void testCreate() {
-        Response response = invoke(() -> addressSpaceService.createAddressSpaces(a1));
+        Response response = invoke(() -> addressSpaceService.createAddressSpace(a1));
         assertThat(response.getStatus(), is(200));
 
         assertThat(addressSpaceApi.listAddressSpaces(), hasItem(a1));
@@ -114,7 +114,7 @@ public class HttpAddressSpaceServiceTest {
     @Test
     public void testCreateException() {
         addressSpaceApi.throwException = true;
-        Response response = invoke(() -> addressSpaceService.createAddressSpaces(a1));
+        Response response = invoke(() -> addressSpaceService.createAddressSpace(a1));
         assertThat(response.getStatus(), is(500));
     }
 

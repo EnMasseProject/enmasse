@@ -147,7 +147,7 @@ public class HttpAddressService {
     @DELETE
     @Produces({MediaType.APPLICATION_JSON})
     @Consumes({MediaType.APPLICATION_JSON})
-    public Response deleteAddress(@PathParam("addressSpace") String addressSpaceName) {
+    public Response deleteAllAddresses(@PathParam("addressSpace") String addressSpaceName) {
         try {
             AddressList addresses = apiHelper.putAddresses(addressSpaceName, new AddressList());
             return Response.ok(addresses).build();
