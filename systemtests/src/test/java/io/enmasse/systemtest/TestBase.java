@@ -34,7 +34,7 @@ import java.util.concurrent.TimeUnit;
 public abstract class TestBase {
 
     protected static final Environment environment = new Environment();
-    protected static final String defaultAddressSpace = environment.isMultitenant() ? "testspace" : environment.namespace();
+    protected static final String defaultAddressSpace = environment.isMultitenant() ? "testspace" : "default";
 
     protected static final OpenShift openShift = new OpenShift(environment, environment.namespace(), defaultAddressSpace);
     private static final GlobalLogCollector logCollector = new GlobalLogCollector(openShift,
