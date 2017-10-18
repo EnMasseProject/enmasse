@@ -9,10 +9,12 @@ within those address spaces.
 
 === Creating an Address Space
 
+
+* Creating address spaces is only applicable for multi-tenant deployments of {ProductName}.
+
 .Procedure
 
-. Creating address spaces is only applicable for multi-tenant deployments of {ProductName}. To create
-a 'standard' address space, save the following JSON data to a file:
+To create a 'standard' address space, save the following JSON data to a file:
 +
 [source,options="nowrap"]
 ----
@@ -36,7 +38,7 @@ various components.
 
 .Procedure
 
-. You can use the REST API to check the status of the address space:
+* You can use the REST API to check the status of the address space:
 +
 [source,options="nowrap"]
 ----
@@ -105,7 +107,7 @@ curl -X PUT -T addresses.json -H "content-type: application/json" http://$(oc ge
 
 .Procedure 
 
-. To check what addresses are configured:
+* To check which addresses are configured:
 +
 [source,options="nowrap"]
 ----
