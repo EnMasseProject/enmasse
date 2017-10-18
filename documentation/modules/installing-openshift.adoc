@@ -5,9 +5,9 @@
 [[prerequisites]]
 === Prerequisites
 
-To install {ProductName}, you need to have the OpenShift client tools. You can download OpenShift
-Origin client from https://github.com/openshift/origin/releases[OpenShift Origin]. {ProductName} is
-tested to work with the latest stable release.
+To install {ProductName}, you need to have the OpenShift client tools. You can download the OpenShift
+Origin client from https://github.com/openshift/origin/releases[OpenShift Origin]. {ProductName} has
+been tested to work with the latest stable release of the OpenShift Origin Client.
 
 If you do not have an OpenShift cluster available, see
 https://github.com/minishift/minishift[minishift] for an example of how to run a local instance of OpenShift
@@ -16,25 +16,24 @@ on your machine.
 .Procedure 
 
 . Download one of the releases from https://github.com/EnMasseProject/enmasse/releases and unpack it.
+. Deploy {ProductName} using the deployment script provided in the release.
 
-Once unpacked, you can deploy {ProductName} using the deployment script provided in the release.
+You can invoke the deployment script with `-h` to view a list of options.
 
-You can invoke the deployment script with `-h` to get a list of options.
+==== Installing {ProductName} in Single-Tenant Mode
 
 {ProductName} can be deployed in either a single-tenant mode or a multi-tenant mode. Choose
 single-tenant mode if you do not expect to be creating multiple isolated address spaces or if you do
-not have cluster-admin privileges. Choose multi-tenant mode otherwise.
-
-==== Installing in single-tenant mode
+not have cluster-admin privileges. Otherwise, choose multi-tenant mode.
 
 .Procedure 
 
-. To install in single-tenant mode run the following script:
+. To install {ProductName} in single-tenant mode run the following script:
 
 +
 [source,options="nowrap"]
 ----
-./deploy-openshift.sh -m "https://localhost:8443" -n enmasse
+./deploy-openshift.sh -m "https://localhost:8443" -n enmasse -o singletenant
 ----
 +
 Running this script creates the deployments required for running {ProductName} in single-tenant mode. Starting
@@ -48,18 +47,21 @@ images for the various components.
 curl http://$(oc get route restapi -o jsonpath='{.spec.host}')/v1/addressspaces/default
 ----
 +
-You can consider the deployment to be finished when `status.isReady` is `true` in the returned JSON
-object.
+The deployment is finished when `status.isReady` is `true` in the returned JSON object.
 
-==== Installing in multi-tenant mode
+==== Installing {ProductName} in Multi-Tenant Mode
+
+{ProductName} can be deployed in either a single-tenant mode or a multi-tenant mode. Choose
+single-tenant mode if you do not expect to be creating multiple isolated address spaces or if you do
+not have cluster-admin privileges. Otherwise, choose multi-tenant mode.
 
 .Procedure
 
-. To install in multi-tenant mode, run the following script:
+. To install {ProductName} in multi-tenant mode, run the following script:
 +
 [source,options="nowrap"]
 ----
-./deploy-openshift.sh -m "https://localhost:8443" -n enmasse -p MULTITENANT=true
+./deploy-openshift.sh -m "https://localhost:8443" -n enmasse -o multitenant
 ----
 
 . Grant cluster-admin privileges:
@@ -72,7 +74,7 @@ oc adm policy add-cluster-role-to-user cluster-admin developer
 ----
 +
 The deployments required for running {ProductName} in multi-tenant mode are created.
-{ProductName} will be up and running once all pods in the 'enmasse' namespace is in the `Running` state:
+{ProductName} will be up and running once all pods in the 'enmasse' namespace are in the `Running` state:
 +
 [source,options="nowrap"]
 ----
