@@ -37,7 +37,7 @@ build_java: build_amqp_module setup_integration_tests
 	$(MAKE) teardown_integration_tests
 
 clean_java:
-	mvn clean
+	mvn -B clean
 
 clean: clean_java
 

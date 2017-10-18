@@ -58,7 +58,7 @@ This builds all modules including java.
     export DOCKER_ORG=myproject
     export DOCKER_REGISTRY=172.30.1.1:5000
     docker login -u myproject -p `oc whoami -t` 172.30.1.1:5000
-    make MAVEN_ARGS="-DskipTests" -j4
+    make MAVEN_ARGS="-DskipTests"
     make docker_tag
     make docker_push
 
