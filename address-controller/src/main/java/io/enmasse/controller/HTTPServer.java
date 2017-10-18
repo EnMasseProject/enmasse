@@ -83,12 +83,13 @@ public class HTTPServer extends AbstractVerticle {
         deployment.getProviderFactory().registerProvider(DefaultExceptionMapper.class);
         deployment.getProviderFactory().registerProvider(JacksonConfig.class);
 
-        AuthHandler authHandler = osbAuth == null ? new TokenAuthHandler(kubernetes) : new BasicAuthHandler(new SingleUserAuthenticator(osbAuth));
+        AuthHandler authHandler = osbAuth == null ? new TokenAuthHandler(kubernetes, "/enmasse-broker") : new BasicAuthHandler(new SingleUserAuthenticator(osbAuth));
         deployment.getProviderFactory().registerProviderInstance(new AuthInterceptor(authHandler, OSBServiceBase.BASE_URI));
 
         if (userAuthenticator != null) {
             deployment.getProviderFactory().registerProviderInstance(new AuthInterceptor(new BasicAuthHandler(userAuthenticator), HttpAddressService.BASE_URI));
         }
+        deployment.getProviderFactory().registerProviderInstance(new AuthInterceptor(new TokenAuthHandler(kubernetes, "/enmasse-addressspaces"), HttpAddressSpaceService.BASE_URI));
 
         deployment.getRegistry().addSingletonResource(new SwaggerSpecEndpoint());
         deployment.getRegistry().addSingletonResource(new HttpAddressService(addressSpaceApi));

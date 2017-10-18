@@ -32,7 +32,7 @@ public class TokenAuthHandlerTest {
     public void setUp() throws IOException {
         tokenFile = File.createTempFile("token", "");
         mockKubernetes = mock(Kubernetes.class);
-        handler = new TokenAuthHandler(mockKubernetes);
+        handler = new TokenAuthHandler(mockKubernetes, "/enmasse-broker");
         mockRequestContext = mock(ContainerRequestContext.class);
     }
 
