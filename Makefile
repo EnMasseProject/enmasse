@@ -43,6 +43,14 @@ clean: clean_java
 
 docker_build: build_java
 
+coverage: java_coverage
+	$(MAKE) FULL_BUILD=$(FULL_BUILD) -C $@ coverage
+
+java_coverage: build_amqp_module setup_integration_tests
+	mvn test -Pcoverage package -B $(MAVEN_ARGS)
+	$(MAKE) teardown_integration_tests
+	mvn jacoco:report-aggregate
+
 $(BUILD_TARGETS): $(BUILD_DIRS)
 $(BUILD_DIRS):
 	$(MAKE) FULL_BUILD=$(FULL_BUILD) -C $@ $(MAKECMDGOALS)
