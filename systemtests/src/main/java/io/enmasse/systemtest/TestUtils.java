@@ -29,16 +29,16 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class TestUtils {
-    public static void setReplicas(OpenShift openShift, String addressSpace, Destination destination, int numReplicas, TimeoutBudget budget) throws InterruptedException {
+    public static void setReplicas(OpenShift openShift, AddressSpace addressSpace, Destination destination, int numReplicas, TimeoutBudget budget) throws InterruptedException {
         openShift.setDeploymentReplicas(destination.getGroup(), numReplicas);
         waitForNReplicas(openShift, addressSpace, destination.getGroup(), numReplicas, budget);
     }
 
-    public static void waitForNReplicas(OpenShift openShift, String addressSpace, String group, int expectedReplicas, TimeoutBudget budget) throws InterruptedException {
+    public static void waitForNReplicas(OpenShift openShift, AddressSpace addressSpace, String group, int expectedReplicas, TimeoutBudget budget) throws InterruptedException {
         boolean done = false;
         int actualReplicas = 0;
         do {
-            List<Pod> pods = openShift.listPods(addressSpace, Collections.singletonMap("role", "broker"), Collections.singletonMap("cluster_id", group));
+            List<Pod> pods = openShift.listPods(addressSpace.getNamespace(), Collections.singletonMap("role", "broker"), Collections.singletonMap("cluster_id", group));
             actualReplicas = numReady(pods);
             Logging.log.info("Have " + actualReplicas + " out of " + pods.size() + " replicas. Expecting " + expectedReplicas);
             if (actualReplicas != pods.size() || actualReplicas != expectedReplicas) {
@@ -65,7 +65,7 @@ public class TestUtils {
         return numReady;
     }
 
-    public static void waitForExpectedPods(OpenShift client, String addressSpace, int numExpected, TimeoutBudget budget) throws InterruptedException {
+    public static void waitForExpectedPods(OpenShift client, AddressSpace addressSpace, int numExpected, TimeoutBudget budget) throws InterruptedException {
         List<Pod> pods = listRunningPods(client, addressSpace);
         while (budget.timeLeft() >= 0 && pods.size() != numExpected) {
             Thread.sleep(2000);
@@ -82,13 +82,13 @@ public class TestUtils {
                 .collect(Collectors.joining(","));
     }
 
-    public static List<Pod> listRunningPods(OpenShift openShift, String addressSpace) {
-        return openShift.listPods(addressSpace).stream()
+    public static List<Pod> listRunningPods(OpenShift openShift, AddressSpace addressSpace) {
+        return openShift.listPods(addressSpace.getNamespace()).stream()
                 .filter(pod -> pod.getStatus().getPhase().equals("Running"))
                 .collect(Collectors.toList());
     }
 
-    public static void waitForBrokerPod(OpenShift openShift, String addressSpace, String group, TimeoutBudget budget) throws InterruptedException {
+    public static void waitForBrokerPod(OpenShift openShift, AddressSpace addressSpace, String group, TimeoutBudget budget) throws InterruptedException {
         Map<String, String> labels = new LinkedHashMap<>();
         labels.put("role", "broker");
 
@@ -99,7 +99,7 @@ public class TestUtils {
         int numReady = 0;
         List<Pod> pods = null;
         while (budget.timeLeft() >= 0 && numReady != 1) {
-            pods = openShift.listPods(addressSpace, labels, annotations);
+            pods = openShift.listPods(addressSpace.getNamespace(), labels, annotations);
             numReady = numReady(pods);
             if (numReady != 1) {
                 Thread.sleep(5000);
@@ -111,11 +111,11 @@ public class TestUtils {
     }
 
 
-    public static void delete(AddressApiClient apiClient, String addressSpace, Destination... destinations) throws Exception {
+    public static void delete(AddressApiClient apiClient, AddressSpace addressSpace, Destination... destinations) throws Exception {
         apiClient.deleteAddresses(addressSpace, destinations);
     }
 
-    public static void deploy(AddressApiClient apiClient, OpenShift openShift, TimeoutBudget budget, String addressSpace, HttpMethod httpMethod, Destination... destinations) throws Exception {
+    public static void deploy(AddressApiClient apiClient, OpenShift openShift, TimeoutBudget budget, AddressSpace addressSpace, HttpMethod httpMethod, Destination... destinations) throws Exception {
         apiClient.deploy(addressSpace, httpMethod, destinations);
         Set<String> groups = new HashSet<>();
         for (Destination destination : destinations) {
@@ -168,7 +168,7 @@ public class TestUtils {
         }
     }
 
-    public static Future<List<String>> getAddresses(AddressApiClient apiClient, String addressSpace, Optional<String> addressName) throws Exception {
+    public static Future<List<String>> getAddresses(AddressApiClient apiClient, AddressSpace addressSpace, Optional<String> addressName) throws Exception {
         JsonObject response = apiClient.getAddresses(addressSpace, addressName);
         CompletableFuture<List<String>> listOfAddresses = new CompletableFuture<>();
         listOfAddresses.complete(convertToList(response));
@@ -219,7 +219,7 @@ public class TestUtils {
      * @param destinations variable count of destinations
      * @throws Exception IllegalStateException if destinations are not ready within timeout
      */
-    public static void waitForDestinationsReady(AddressApiClient apiClient, String addressSpace, TimeoutBudget budget, Destination... destinations) throws Exception {
+    public static void waitForDestinationsReady(AddressApiClient apiClient, AddressSpace addressSpace, TimeoutBudget budget, Destination... destinations) throws Exception {
         Map<String, JsonObject> notReadyAddresses = new HashMap<>();
 
         while (budget.timeLeft() >= 0) {

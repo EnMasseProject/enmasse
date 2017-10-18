@@ -26,12 +26,12 @@ import java.util.List;
 public class AmqpClientFactory {
     private final OpenShift openShift;
     private final Environment environment;
-    private final String defaultAddressSpace;
+    private final AddressSpace defaultAddressSpace;
     private final String defaultUsername;
     private final String defaultPassword;
     private final List<AmqpClient> clients = new ArrayList<>();
 
-    public AmqpClientFactory(OpenShift openShift, Environment environment, String defaultAddressSpace, String defaultUsername, String defaultPassword) {
+    public AmqpClientFactory(OpenShift openShift, Environment environment, AddressSpace defaultAddressSpace, String defaultUsername, String defaultPassword) {
         this.openShift = openShift;
         this.environment = environment;
         this.defaultAddressSpace = defaultAddressSpace;
@@ -46,7 +46,7 @@ public class AmqpClientFactory {
         clients.clear();
     }
 
-    public AmqpClient createQueueClient(String addressSpace) throws UnknownHostException, InterruptedException {
+    public AmqpClient createQueueClient(AddressSpace addressSpace) throws UnknownHostException, InterruptedException {
         return createClient(new QueueTerminusFactory(), ProtonQoS.AT_LEAST_ONCE, addressSpace);
     }
 
@@ -66,9 +66,9 @@ public class AmqpClientFactory {
         return createClient(new QueueTerminusFactory(), ProtonQoS.AT_MOST_ONCE, defaultAddressSpace);
     }
 
-    public AmqpClient createClient(TerminusFactory terminusFactory, ProtonQoS qos, String addressSpace) throws UnknownHostException, InterruptedException {
+    public AmqpClient createClient(TerminusFactory terminusFactory, ProtonQoS qos, AddressSpace addressSpace) throws UnknownHostException, InterruptedException {
         if (environment.useTLS()) {
-            Endpoint messagingEndpoint = openShift.getRouteEndpoint(addressSpace, "messaging");
+            Endpoint messagingEndpoint = openShift.getRouteEndpoint(addressSpace.getNamespace(), "messaging");
             Endpoint clientEndpoint;
             ProtonClientOptions clientOptions = new ProtonClientOptions();
             clientOptions.setSsl(true);
@@ -85,7 +85,7 @@ public class AmqpClientFactory {
 
             return createClient(terminusFactory, clientEndpoint, clientOptions, qos);
         } else {
-            return createClient(terminusFactory, openShift.getEndpoint(addressSpace, "messaging"), qos);
+            return createClient(terminusFactory, openShift.getEndpoint(addressSpace.getNamespace(), "messaging"), qos);
         }
     }
 

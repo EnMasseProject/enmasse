@@ -34,9 +34,10 @@ import java.util.concurrent.TimeUnit;
 public abstract class TestBase {
 
     protected static final Environment environment = new Environment();
-    protected static final String defaultAddressSpace = environment.isMultitenant() ? "testspace" : "default";
+    protected static final AddressSpace defaultAddressSpace = environment.isMultitenant() ? new AddressSpace("testspace", "testspace")
+            : new AddressSpace("default", environment.namespace());
 
-    protected static final OpenShift openShift = new OpenShift(environment, environment.namespace(), defaultAddressSpace);
+    protected static final OpenShift openShift = new OpenShift(environment, environment.namespace(), defaultAddressSpace.getNamespace());
     private static final GlobalLogCollector logCollector = new GlobalLogCollector(openShift,
             new File(environment.testLogDir()));
     private KeycloakClient keycloakApiClient;
@@ -64,19 +65,19 @@ public abstract class TestBase {
             if ("standard".equals(environment.defaultAuthService())) {
                 this.username = "systemtest";
                 this.password = "systemtest";
-                getKeycloakClient().createUser(defaultAddressSpace, username, password, 3, TimeUnit.MINUTES);
+                getKeycloakClient().createUser(defaultAddressSpace.getName(), username, password, 10, TimeUnit.SECONDS);
             }
         }
         amqpClientFactory = new AmqpClientFactory(openShift, environment, defaultAddressSpace, username, password);
         mqttClientFactory = new MqttClientFactory(openShift, environment, defaultAddressSpace, username, password);
     }
 
-    protected void createAddressSpace(String addressSpace, String authService) throws Exception {
-        if (!TestUtils.existAddressSpace(addressApiClient, addressSpace)) {
+    protected void createAddressSpace(AddressSpace addressSpace, String authService) throws Exception {
+        if (!TestUtils.existAddressSpace(addressApiClient, addressSpace.getName())) {
             Logging.log.info("Address space " + addressSpace + "doesn't exist and will be created.");
             addressApiClient.createAddressSpace(addressSpace, authService);
-            logCollector.startCollecting(addressSpace);
-            TestUtils.waitForAddressSpaceReady(addressApiClient, addressSpace);
+            logCollector.startCollecting(addressSpace.getNamespace());
+            TestUtils.waitForAddressSpaceReady(addressApiClient, addressSpace.getName());
             if (addressSpace.equals(defaultAddressSpace)) {
                 Thread.sleep(120_000);
             }
@@ -147,7 +148,7 @@ public abstract class TestBase {
         setAddresses(defaultAddressSpace, destinations);
     }
 
-    protected void setAddresses(String addressSpace, Destination... destinations) throws Exception {
+    protected void setAddresses(AddressSpace addressSpace, Destination... destinations) throws Exception {
         TimeoutBudget budget = new TimeoutBudget(5, TimeUnit.MINUTES);
         TestUtils.deploy(addressApiClient, openShift, budget, addressSpace, HttpMethod.PUT, destinations);
     }
