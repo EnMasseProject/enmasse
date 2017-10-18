@@ -26,8 +26,11 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.Optional;
 
-@Path("/v1/addressspaces")
+@Path(HttpAddressSpaceService.BASE_URI)
 public class HttpAddressSpaceService {
+
+    public static final String BASE_URI = "/v1/addressspaces";
+
     private static final Logger log = LoggerFactory.getLogger(HttpAddressSpaceService.class.getName());
     private final AddressSpaceApi addressSpaceApi;
     public HttpAddressSpaceService(AddressSpaceApi addressSpaceApi) {

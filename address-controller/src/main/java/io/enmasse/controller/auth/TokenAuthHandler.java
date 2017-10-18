@@ -16,9 +16,16 @@ public class TokenAuthHandler implements AuthHandler {
 
     private final Kubernetes kubernetes;
 
+    /**
+     * The auth handler will check whether the user associated with the token has access to this nonResourceURL (one of
+     * the ClusterRoles bound to the user must grant access to this nonResourceURL)
+     */
+    private String authorizationNonResourceUrlPath;
 
-    public TokenAuthHandler(Kubernetes kubernetes) {
+
+    public TokenAuthHandler(Kubernetes kubernetes, String authorizationNonResourceUrlPath) {
         this.kubernetes = kubernetes;
+        this.authorizationNonResourceUrlPath = authorizationNonResourceUrlPath;
     }
 
     @Override
@@ -42,7 +49,7 @@ public class TokenAuthHandler implements AuthHandler {
 
         String username = tokenReview.getStatus().getUser().getUsername();
 
-        SubjectAccessReview subjectAccessReview = kubernetes.performSubjectAccessReview(username, "/enmasse-broker", requestContext.getMethod().toLowerCase());
+        SubjectAccessReview subjectAccessReview = kubernetes.performSubjectAccessReview(username, authorizationNonResourceUrlPath, requestContext.getMethod().toLowerCase());
         return subjectAccessReview.getStatus().getAllowed();
     }
 
