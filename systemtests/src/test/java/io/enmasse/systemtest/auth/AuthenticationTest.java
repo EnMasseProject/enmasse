@@ -15,6 +15,7 @@
  */
 package io.enmasse.systemtest.auth;
 
+import io.enmasse.systemtest.AddressSpace;
 import io.enmasse.systemtest.ConnectTimeoutException;
 import io.enmasse.systemtest.Destination;
 import io.enmasse.systemtest.TestBase;
@@ -41,7 +42,7 @@ import static org.junit.Assert.fail;
 
 public class AuthenticationTest extends TestBase {
 
-    private List<String> addressSpaces = new ArrayList<>();
+    private List<AddressSpace> addressSpaces = new ArrayList<>();
     private static final String amqpAddress = "a1";
     private static final String mqttAddress = "t1";
 
@@ -52,9 +53,9 @@ public class AuthenticationTest extends TestBase {
 
     @After
     public void teardownSpaces() throws Exception {
-        for (String addressSpace : addressSpaces) {
+        for (AddressSpace addressSpace : addressSpaces) {
             deleteAddressSpace(addressSpace);
-            getKeycloakClient().deleteUser(addressSpace, "bob");
+            getKeycloakClient().deleteUser(addressSpace.getName(), "bob");
         }
         addressSpaces.clear();
     }
@@ -65,9 +66,10 @@ public class AuthenticationTest extends TestBase {
     }
 
     public void createAddressSpace(String name, String authService) throws Exception {
-        addressSpaces.add(name);
-        super.createAddressSpace(name, authService);
-        setAddresses(name, Destination.anycast(amqpAddress)); //, Destination.topic(mqttAddress));
+        AddressSpace addressSpace = new AddressSpace(name);
+        addressSpaces.add(addressSpace);
+        super.createAddressSpace(addressSpace, authService);
+        setAddresses(addressSpace, Destination.anycast(amqpAddress)); //, Destination.topic(mqttAddress));
     }
 
     @Test
@@ -128,7 +130,8 @@ public class AuthenticationTest extends TestBase {
     }
 
 
-    private boolean canConnectWithAmqp(String addressSpace, String username, String password) throws InterruptedException, IOException, TimeoutException, ExecutionException {
+    private boolean canConnectWithAmqp(String name, String username, String password) throws InterruptedException, IOException, TimeoutException, ExecutionException {
+        AddressSpace addressSpace = new AddressSpace(name);
         AmqpClient client = amqpClientFactory.createQueueClient(addressSpace);
         client.getConnectOptions().setUsername(username).setPassword(password);
         Future<List<Message>> received = client.recvMessages(amqpAddress, 1, 10, TimeUnit.SECONDS);
@@ -137,7 +140,8 @@ public class AuthenticationTest extends TestBase {
         return (sent.get(1, TimeUnit.MINUTES) == received.get(1, TimeUnit.MINUTES).size());
     }
 
-    private boolean canConnectWithMqtt(String addressSpace, String username, String password) throws Exception {
+    private boolean canConnectWithMqtt(String name, String username, String password) throws Exception {
+        AddressSpace addressSpace = new AddressSpace(name);
         MqttClient client = mqttClientFactory.createClient(addressSpace);
         MqttConnectOptions options = client.getMqttConnectOptions();
         options.setUserName(username);

@@ -53,7 +53,7 @@ public abstract class TestBase {
 
     @Before
     public void setup() throws Exception {
-        addressApiClient = new AddressApiClient(openShift.getRestEndpoint(), environment.isMultitenant());
+        addressApiClient = new AddressApiClient(openShift.getRestEndpoint());
         if (createDefaultAddressSpace()) {
             if (environment.isMultitenant()) {
                 Logging.log.info("Test is running in multitenant mode");
@@ -84,10 +84,10 @@ public abstract class TestBase {
         }
     }
 
-    protected void deleteAddressSpace(String addressSpace) throws Exception {
+    protected void deleteAddressSpace(AddressSpace addressSpace) throws Exception {
         addressApiClient.deleteAddressSpace(addressSpace);
         TestUtils.waitForAddressSpaceDeleted(openShift, addressSpace);
-        logCollector.stopCollecting(addressSpace);
+        logCollector.stopCollecting(addressSpace.getNamespace());
     }
 
     protected KeycloakClient getKeycloakClient() throws InterruptedException {
