@@ -16,10 +16,7 @@
 
 package io.enmasse.systemtest.mqtt;
 
-import io.enmasse.systemtest.Endpoint;
-import io.enmasse.systemtest.Environment;
-import io.enmasse.systemtest.OpenShift;
-import io.enmasse.systemtest.TestUtils;
+import io.enmasse.systemtest.*;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 
 import java.io.IOException;
@@ -46,12 +43,12 @@ public class MqttClientFactory {
 
     private final OpenShift openShift;
     private final Environment environment;
-    private final String defaultAddressSpace;
+    private final AddressSpace defaultAddressSpace;
     private final String username;
     private final String password;
     private final List<MqttClient> clients = new ArrayList<>();
 
-    public MqttClientFactory(OpenShift openShift, Environment environment, String defaultAddressSpace, String username, String password) {
+    public MqttClientFactory(OpenShift openShift, Environment environment, AddressSpace defaultAddressSpace, String username, String password) {
         this.openShift = openShift;
         this.environment = environment;
         this.defaultAddressSpace = defaultAddressSpace;
@@ -71,14 +68,14 @@ public class MqttClientFactory {
         return createClient(defaultAddressSpace);
     }
 
-    public MqttClient createClient(String addressSpace) throws Exception {
+    public MqttClient createClient(AddressSpace addressSpace) throws Exception {
 
         MqttConnectOptions options = new MqttConnectOptions();
         Endpoint mqttEndpoint;
 
         if (environment.useTLS()) {
 
-            mqttEndpoint = openShift.getRouteEndpoint(addressSpace, "mqtt");
+            mqttEndpoint = openShift.getRouteEndpoint(addressSpace.getNamespace(), "mqtt");
 
             SSLContext sslContext = tryGetSSLContext("TLSv1.2", "TLSv1.1", "TLS", "TLSv1");
             sslContext.init(null, new X509TrustManager[]{new X509TrustManager() {

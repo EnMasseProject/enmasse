@@ -21,14 +21,12 @@ import static io.vertx.core.json.Json.mapper;
 public class AddressApiClient {
     private final HttpClient httpClient;
     private final Endpoint endpoint;
-    private final boolean isMultitenant;
     private final Vertx vertx;
 
-    public AddressApiClient(Endpoint endpoint, boolean isMultitenant) {
+    public AddressApiClient(Endpoint endpoint) {
         this.vertx = VertxFactory.create();
         this.httpClient = vertx.createHttpClient();
         this.endpoint = endpoint;
-        this.isMultitenant = isMultitenant;
     }
 
     public void close() {
@@ -36,18 +34,18 @@ public class AddressApiClient {
         vertx.close();
     }
 
-    public void createAddressSpace(String name, String authServiceType) throws JsonProcessingException, InterruptedException {
-        this.createAddressSpace(name, authServiceType, "standard");
+    public void createAddressSpace(AddressSpace addressSpace, String authServiceType) throws JsonProcessingException, InterruptedException {
+        this.createAddressSpace(addressSpace, authServiceType, "standard");
     }
 
-    public void createAddressSpace(String name, String authServiceType, String addrSpaceType) throws JsonProcessingException, InterruptedException {
+    public void createAddressSpace(AddressSpace addressSpace, String authServiceType, String addrSpaceType) throws JsonProcessingException, InterruptedException {
         ObjectNode config = mapper.createObjectNode();
         config.put("apiVersion", "v1");
         config.put("kind", "AddressSpace");
 
         ObjectNode metadata = config.putObject("metadata");
-        metadata.put("name", name);
-        metadata.put("namespace", name);
+        metadata.put("name", addressSpace.getName());
+        metadata.put("namespace", addressSpace.getNamespace());
 
         ObjectNode spec = config.putObject("spec");
         spec.put("type", addrSpaceType);
@@ -153,9 +151,9 @@ public class AddressApiClient {
      * @return
      * @throws Exception
      */
-    public JsonObject getAddresses(String addressSpace, Optional<String> addressName) throws Exception {
+    public JsonObject getAddresses(AddressSpace addressSpace, Optional<String> addressName) throws Exception {
         HttpClientRequest request;
-        String path = isMultitenant ? "/v1/addresses/" + addressSpace + "/" : "/v1/addresses/default/";
+        String path = "/v1/addresses/" + addressSpace.getName();
         path += addressName.isPresent() ? addressName.get() : "";
 
         CountDownLatch latch = new CountDownLatch(2);
@@ -190,17 +188,13 @@ public class AddressApiClient {
     /**
      * delete addresses via reset api
      *
-     * @param addressName  name of instance
+     * @param addressSpace address space
      * @param destinations variable count of destinations that you can delete
      * @throws Exception
      */
-    public void deleteAddresses(String addressName, Destination... destinations) throws Exception {
-        if (!isMultitenant) {
-            addressName = "default";
-        }
-
+    public void deleteAddresses(AddressSpace addressSpace, Destination... destinations) throws Exception {
         for (Destination destination : destinations) {
-            doDelete("/v1/addresses/" + addressName + "/" + destination.getAddress());
+            doDelete("/v1/addresses/" + addressSpace.getName() + "/" + destination.getAddress());
         }
 
     }
@@ -236,9 +230,7 @@ public class AddressApiClient {
      * @param destinations variable count of destinations that you can put, append or delete
      * @throws Exception
      */
-    public void deploy(String addressSpace, HttpMethod httpMethod, Destination... destinations) throws Exception {
-
-        addressSpace = isMultitenant ? addressSpace : "default";
+    public void deploy(AddressSpace addressSpace, HttpMethod httpMethod, Destination... destinations) throws Exception {
 
         ObjectNode config = mapper.createObjectNode();
         config.put("apiVersion", "v1");
@@ -248,7 +240,7 @@ public class AddressApiClient {
             ObjectNode entry = items.addObject();
             ObjectNode metadata = entry.putObject("metadata");
             metadata.put("name", destination.getAddress());
-            metadata.put("addressSpace", addressSpace);
+            metadata.put("addressSpace", addressSpace.getName());
             ObjectNode spec = entry.putObject("spec");
             spec.put("address", destination.getAddress());
             spec.put("type", destination.getType());
