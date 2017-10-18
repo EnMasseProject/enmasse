@@ -15,7 +15,7 @@
  */
 package io.enmasse.controller.auth;
 
-public interface UserDatabase extends UserAuthenticator {
+public interface UserDatabase extends AuthHandler {
     boolean hasUser(String username);
     void addUser(String username, String password);
 }
