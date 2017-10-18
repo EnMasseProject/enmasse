@@ -47,7 +47,7 @@ public class HttpAddressSpaceService {
     @POST
     @Consumes({MediaType.APPLICATION_JSON})
     @Produces({MediaType.APPLICATION_JSON})
-    public Response createAddressSpaces(AddressSpace addressSpace) {
+    public Response createAddressSpace(AddressSpace addressSpace) {
         try {
             addressSpaceApi.createAddressSpace(addressSpace);
             return Response.ok(new AddressSpaceList(addressSpaceApi.listAddressSpaces())).build();
