@@ -289,12 +289,12 @@ public class TestUtils {
         return false;
     }
 
-    public static void waitForAddressSpaceDeleted(OpenShift openShift, String addressSpace) throws Exception {
+    public static void waitForAddressSpaceDeleted(OpenShift openShift, AddressSpace addressSpace) throws Exception {
         TimeoutBudget budget = new TimeoutBudget(2, TimeUnit.MINUTES);
-        while (budget.timeLeft() >= 0 && openShift.listNamespaces().contains(addressSpace)) {
+        while (budget.timeLeft() >= 0 && openShift.listNamespaces().contains(addressSpace.getNamespace())) {
             Thread.sleep(1000);
         }
-        if (openShift.listNamespaces().contains(addressSpace)) {
+        if (openShift.listNamespaces().contains(addressSpace.getNamespace())) {
             throw new TimeoutException("Timed out waiting for namespace " + addressSpace + " to disappear");
         }
     }

@@ -68,10 +68,10 @@ public class AddressApiClient {
         latch.await(30, TimeUnit.SECONDS);
     }
 
-    public void deleteAddressSpace(String name) throws InterruptedException {
+    public void deleteAddressSpace(AddressSpace name) throws InterruptedException {
         CountDownLatch latch = new CountDownLatch(1);
         HttpClientRequest request;
-        request = httpClient.delete(endpoint.getPort(), endpoint.getHost(), "/v1/addressspaces/" + name);
+        request = httpClient.delete(endpoint.getPort(), endpoint.getHost(), "/v1/addressspaces/" + name.getName());
         request.putHeader("content-type", "application/json");
         request.handler(event -> {
             if (event.statusCode() >= 200 && event.statusCode() < 300) {

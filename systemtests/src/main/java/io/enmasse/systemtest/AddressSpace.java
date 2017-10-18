@@ -19,6 +19,11 @@ public class AddressSpace {
     private final String name;
     private final String namespace;
 
+    public AddressSpace(String name) {
+        this.name = name;
+        this.namespace = name;
+    }
+
     public AddressSpace(String name, String namespace) {
         this.name = name;
         this.namespace = namespace;
