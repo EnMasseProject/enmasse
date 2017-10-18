@@ -26,6 +26,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 public class KeycloakClient implements AutoCloseable {
     private final Keycloak keycloak;
@@ -81,7 +83,7 @@ public class KeycloakClient implements AutoCloseable {
             List<RealmRepresentation> realms = keycloak.realms().findAll();
             for (RealmRepresentation realm : realms) {
                 if (realm.getRealm().equals(realmName)) {
-                    break;
+                    return keycloak.realm(realmName);
                 }
             }
             Thread.sleep(5000);
