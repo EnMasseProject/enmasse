@@ -54,7 +54,7 @@ public class AmqpClientFactory {
         return createClient(new QueueTerminusFactory(), ProtonQoS.AT_LEAST_ONCE, defaultAddressSpace);
     }
 
-    public AmqpClient createTopicClient(String addressSpace) throws UnknownHostException, InterruptedException {
+    public AmqpClient createTopicClient(AddressSpace addressSpace) throws UnknownHostException, InterruptedException {
         return createClient(new TopicTerminusFactory(), ProtonQoS.AT_LEAST_ONCE, addressSpace);
     }
 
@@ -66,7 +66,7 @@ public class AmqpClientFactory {
         return createClient(new DurableTopicTerminusFactory(), ProtonQoS.AT_LEAST_ONCE, defaultAddressSpace);
     }
 
-    public AmqpClient createBroadcastClient(String addressSpace) throws UnknownHostException, InterruptedException {
+    public AmqpClient createBroadcastClient(AddressSpace addressSpace) throws UnknownHostException, InterruptedException {
         return createClient(new QueueTerminusFactory(), ProtonQoS.AT_MOST_ONCE, addressSpace);
     }
 

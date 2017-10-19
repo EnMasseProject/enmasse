@@ -68,16 +68,16 @@ public class AuthenticationTest extends TestBase {
         return false;
     }
 
-    public String createAddressSpace(String name, String authService) throws Exception {
+    public AddressSpace createAddressSpace(String name, String authService) throws Exception {
         AddressSpace addressSpace = new AddressSpace(name);
         addressSpaces.add(addressSpace);
         super.createAddressSpace(addressSpace, authService);
         setAddresses(addressSpace, amqpAddressList.toArray(new Destination[amqpAddressList.size()]));
         //        setAddresses(name, Destination.queue(amqpAddress)); //, Destination.topic(mqttAddress));
-        return name;
+        return addressSpace;
     }
 
-    public String createAddressSpace(String name, String authService, String type) throws Exception {
+    public AddressSpace createAddressSpace(String name, String authService, String type) throws Exception {
         AddressSpace addressSpace = new AddressSpace(name);
         addressSpaces.add(addressSpace);
         super.createAddressSpace(addressSpace, authService, type);
@@ -87,7 +87,7 @@ public class AuthenticationTest extends TestBase {
             List<Destination> brokeredAddressList = amqpAddressList.subList(0, 2);
             setAddresses(addressSpace, brokeredAddressList.toArray(new Destination[brokeredAddressList.size()]));
         }
-        return addressSpace.getName();
+        return addressSpace;
     }
 
     @Test
@@ -111,11 +111,11 @@ public class AuthenticationTest extends TestBase {
     }
 
     public void testNoneAuthenticationServiceGeneral(String addressSpaceType, String emptyUser, String emptyPassword) throws Exception {
-        String s3standard = createAddressSpace(addressSpaceType + "-s3", "none", addressSpaceType);
+        AddressSpace s3standard = createAddressSpace(addressSpaceType + "-s3", "none", addressSpaceType);
         assertCanConnect(s3standard, emptyUser, emptyPassword);
         assertCanConnect(s3standard, "bob", "pass");
 
-        String s4standard = createAddressSpace(addressSpaceType + "-s4", "standard", addressSpaceType);
+        AddressSpace s4standard = createAddressSpace(addressSpaceType + "-s4", "standard", addressSpaceType);
         assertCanConnect(s3standard, emptyUser, emptyPassword);
         assertCanConnect(s3standard, "bob", "pass");
         assertCannotConnect(s4standard, emptyUser, emptyPassword);
@@ -123,17 +123,17 @@ public class AuthenticationTest extends TestBase {
     }
 
     public void testStandardAuthenticationServiceGeneral(String addressSpaceType) throws Exception {
-        String s1brokered = createAddressSpace(addressSpaceType + "-s1", "standard", addressSpaceType);
+        AddressSpace s1brokered = createAddressSpace(addressSpaceType + "-s1", "standard", addressSpaceType);
 
         // Validate unsuccessful authentication with enmasse authentication service with no credentials
         assertCannotConnect(s1brokered, null, null);
         assertCannotConnect(s1brokered, "bob", "s1pass");
 
         KeycloakCredentials s1Bob = new KeycloakCredentials("bob", "s1pass");
-        getKeycloakClient().createUser(s1brokered, s1Bob.getUsername(), s1Bob.getPassword());
+        getKeycloakClient().createUser(s1brokered.getName(), s1Bob.getUsername(), s1Bob.getPassword());
 
         KeycloakCredentials s1Carol = new KeycloakCredentials("carol", "s2pass");
-        getKeycloakClient().createUser(s1brokered, s1Carol.getUsername(), s1Carol.getPassword());
+        getKeycloakClient().createUser(s1brokered.getName(), s1Carol.getUsername(), s1Carol.getPassword());
 
         assertCannotConnect(s1brokered, null, null);
 
@@ -145,14 +145,14 @@ public class AuthenticationTest extends TestBase {
         assertCannotConnect(s1brokered, s1Bob.getUsername(), "s2pass");
         assertCannotConnect(s1brokered, "alice", "s1pass");
 
-        String s2brokered = createAddressSpace(addressSpaceType + "-s2", "standard", addressSpaceType);
+        AddressSpace s2brokered = createAddressSpace(addressSpaceType + "-s2", "standard", addressSpaceType);
 
         KeycloakCredentials s2Bob = new KeycloakCredentials("bob", "s2pass");
-        getKeycloakClient().createUser(s2brokered, s2Bob.getUsername(), s2Bob.getPassword());
+        getKeycloakClient().createUser(s2brokered.getName(), s2Bob.getUsername(), s2Bob.getPassword());
 
         //create user with the same credentials in different address spaces
         KeycloakCredentials s2Carol = new KeycloakCredentials("carol", "s2pass");
-        getKeycloakClient().createUser(s2brokered, s1Carol.getUsername(), s1Carol.getPassword());
+        getKeycloakClient().createUser(s2brokered.getName(), s1Carol.getUsername(), s1Carol.getPassword());
 
         assertCanConnect(s1brokered, s1Bob.getUsername(), s1Bob.getPassword());
         assertCanConnect(s1brokered, s2Carol.getUsername(), s2Carol.getPassword());
@@ -163,13 +163,13 @@ public class AuthenticationTest extends TestBase {
         assertCannotConnect(s1brokered, s2Bob.getUsername(), s2Bob.getPassword());
     }
 
-    private void assertCanConnect(String addressSpace, String username, String password) throws Exception {
+    private void assertCanConnect(AddressSpace addressSpace, String username, String password) throws Exception {
         assertTrue(canConnectWithAmqp(addressSpace, username, password));
         // TODO: Enable this when mqtt is stable enough
         // assertTrue(canConnectWithMqtt(addressSpace, username, password));
     }
 
-    private void assertCannotConnect(String addressSpace, String username, String password) throws Exception {
+    private void assertCannotConnect(AddressSpace addressSpace, String username, String password) throws Exception {
         try {
             assertFalse(canConnectWithAmqp(addressSpace, username, password));
             fail("Expected connection to timeout");
@@ -181,18 +181,18 @@ public class AuthenticationTest extends TestBase {
     }
 
 
-    private boolean canConnectWithAmqp(String addressSpace, String username, String password) throws
+    private boolean canConnectWithAmqp(AddressSpace addressSpace, String username, String password) throws
             InterruptedException, IOException, TimeoutException, ExecutionException {
         assertTrue(canConnectWithAmqpToQueue(addressSpace, username, password, amqpAddressList.get(0).getAddress()));
         assertTrue(canConnectWithAmqpToTopic(addressSpace, username, password, amqpAddressList.get(1).getAddress()));
-        if (!TestUtils.getAddressSpaceType(getAddressSpace(addressSpace)).equals("brokered")) {
+        if (!TestUtils.getAddressSpaceType(getAddressSpace(addressSpace.getName())).equals("brokered")) {
             assertTrue(canConnectWithAmqpToAnycast(addressSpace, username, password, amqpAddressList.get(2).getAddress()));
             assertTrue(canConnectWithAmqpToMulticast(addressSpace, username, password, amqpAddressList.get(3).getAddress()));
         }
         return true;
     }
 
-    private boolean canConnectWithAmqpToQueue(String addressSpace, String username, String password, String queueAddress) throws InterruptedException, IOException, TimeoutException, ExecutionException {
+    private boolean canConnectWithAmqpToQueue(AddressSpace addressSpace, String username, String password, String queueAddress) throws InterruptedException, IOException, TimeoutException, ExecutionException {
         AmqpClient client = amqpClientFactory.createQueueClient(addressSpace);
         client.getConnectOptions().setUsername(username).setPassword(password);
 
@@ -202,7 +202,7 @@ public class AuthenticationTest extends TestBase {
         return (sent.get(1, TimeUnit.MINUTES) == received.get(1, TimeUnit.MINUTES).size());
     }
 
-    private boolean canConnectWithAmqpToAnycast(String addressSpace, String username, String password, String anycastAddress) throws InterruptedException, IOException, TimeoutException, ExecutionException {
+    private boolean canConnectWithAmqpToAnycast(AddressSpace addressSpace, String username, String password, String anycastAddress) throws InterruptedException, IOException, TimeoutException, ExecutionException {
         AmqpClient client = amqpClientFactory.createQueueClient(addressSpace);
         client.getConnectOptions().setUsername(username).setPassword(password);
 
@@ -212,7 +212,7 @@ public class AuthenticationTest extends TestBase {
         return (sent.get(1, TimeUnit.MINUTES) == received.get(1, TimeUnit.MINUTES).size());
     }
 
-    private boolean canConnectWithAmqpToMulticast(String addressSpace, String username, String password, String multicastAddress) throws InterruptedException, IOException, TimeoutException, ExecutionException {
+    private boolean canConnectWithAmqpToMulticast(AddressSpace addressSpace, String username, String password, String multicastAddress) throws InterruptedException, IOException, TimeoutException, ExecutionException {
         AmqpClient client = amqpClientFactory.createBroadcastClient(addressSpace);
         client.getConnectOptions().setUsername(username).setPassword(password);
 
@@ -222,7 +222,7 @@ public class AuthenticationTest extends TestBase {
         return (sent.get(1, TimeUnit.MINUTES) == received.get(1, TimeUnit.MINUTES).size());
     }
 
-    private boolean canConnectWithAmqpToTopic(String addressSpace, String username, String password, String topicAddress) throws InterruptedException, IOException, TimeoutException, ExecutionException {
+    private boolean canConnectWithAmqpToTopic(AddressSpace addressSpace, String username, String password, String topicAddress) throws InterruptedException, IOException, TimeoutException, ExecutionException {
         AmqpClient client = amqpClientFactory.createTopicClient(addressSpace);
         client.getConnectOptions().setUsername(username).setPassword(password);
 
