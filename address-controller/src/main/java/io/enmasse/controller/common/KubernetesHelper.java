@@ -23,9 +23,7 @@ import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.extensions.Deployment;
 import io.fabric8.kubernetes.api.model.extensions.DoneableIngress;
 import io.fabric8.kubernetes.client.dsl.Resource;
-import io.fabric8.openshift.api.model.DoneablePolicyBinding;
-import io.fabric8.openshift.api.model.DoneableRoute;
-import io.fabric8.openshift.api.model.PolicyBinding;
+import io.fabric8.openshift.api.model.*;
 import io.fabric8.openshift.client.OpenShiftClient;
 import io.fabric8.openshift.client.ParameterValue;
 import org.slf4j.Logger;
@@ -190,6 +188,28 @@ public class KubernetesHelper implements Kubernetes {
         } else {
             // TODO: Add support for Kubernetes RBAC policies
             log.info("No support for Kubernetes RBAC policies yet, won't add any default view policy");
+        }
+    }
+
+    @Override
+    public void addSystemImagePullerPolicy(String namespace, String tenantNamespace) {
+        if (client.isAdaptable(OpenShiftClient.class)) {
+            String groupName = "system:serviceaccounts:" + tenantNamespace;
+            log.info("Adding system:image-pullers policy for {}", groupName);
+
+            client.roleBindings()
+                    .inNamespace(namespace)
+                    .withName("system:image-pullers")
+                    .edit()
+                    .addToGroupNames(groupName)
+                    .addNewSubject()
+                    .withKind("SystemGroup")
+                    .withName(groupName)
+                    .endSubject()
+                    .done();
+        } else {
+            // TODO: Add support for Kubernetes RBAC policies
+            log.info("No support for Kubernetes RBAC policies yet, won't add to system:image-pullers");
         }
     }
 
