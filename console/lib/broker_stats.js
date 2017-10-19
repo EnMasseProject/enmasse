@@ -15,6 +15,7 @@
  */
 'use strict';
 
+var log = require("./log.js").logger();
 var util = require('util');
 var events = require('events');
 var rhea = require('rhea');
@@ -61,7 +62,7 @@ function BrokerStats () {
         if (util.isArray(context.message.body)) {
             self.brokers.update(context.message.body.filter(is_pod_ready));
         } else {
-            console.log('unexpected content from podsense (expected body to be array): ' + context.message);
+            log.info('unexpected content from podsense (expected body to be array): ' + context.message);
         }
     });
 }

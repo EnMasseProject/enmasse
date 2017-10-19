@@ -15,6 +15,7 @@
  */
 'use strict';
 
+var log = require("./log.js").logger();
 var express = require('express');
 var basic_auth = require('basic-auth');
 var http = require('http');
@@ -35,14 +36,14 @@ function ConsoleServer (address_ctrl) {
         self.publish({subject:'address',body:address});
     });
     this.addresses.on('deleted', function (address) {
-        console.log('address ' + address.address + ' has been deleted, notifying clients...');
+        log.info('address ' + address.address + ' has been deleted, notifying clients...');
         self.publish({subject:'address_deleted',body:address.address});
     });
     this.connections.on('updated', function (conn) {
         self.publish({subject:'connection',body:conn});
     });
     this.connections.on('deleted', function (conn) {
-        console.log('connection ' + conn.host + ' has been deleted, notifying clients...');
+        log.info('connection ' + conn.host + ' has been deleted, notifying clients...');
         self.publish({subject:'connection_deleted',body:conn.id});
     });
     this.amqp_container = rhea.create_container({autoaccept:false});
@@ -63,22 +64,22 @@ function ConsoleServer (address_ctrl) {
     });
     this.amqp_container.on('message', function (context) {
         var accept = function () {
-            console.log(context.message.subject + ' succeeded');
+            log.info(context.message.subject + ' succeeded');
             context.delivery.accept();
         };
         var reject = function (e, code) {
-            console.log(context.message.subject + ' failed: ' + e);
+            log.info(context.message.subject + ' failed: ' + e);
             context.delivery.reject({condition: code || 'amqp:internal-error', description: '' + e});
         };
 
         if (context.message.subject === 'create_address') {
-            console.log('creating address ' + JSON.stringify(context.message.body));
+            log.info('creating address ' + JSON.stringify(context.message.body));
             self.address_ctrl.create_address(context.message.body).then(accept).catch(reject);
         } else if (context.message.subject === 'delete_address') {
-            console.log('deleting address ' + JSON.stringify(context.message.body));
+            log.info('deleting address ' + JSON.stringify(context.message.body));
             self.address_ctrl.delete_address(context.message.body).then(accept).catch(reject);
         } else {
-            console.log('ignoring message: ' + context.message);
+            log.info('ignoring message: ' + context.message);
         }
     });
 }
@@ -87,7 +88,7 @@ ConsoleServer.prototype.ws_bind = function (server) {
     var self = this;
     var ws_server = new WebSocketServer({'server': server, 'path': '/websocket'});
     ws_server.on('connection', function (ws) {
-        console.log('Accepted incoming websocket connection');
+        log.info('Accepted incoming websocket connection');
         self.amqp_container.websocket_accept(ws);
     });
 };

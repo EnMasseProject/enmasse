@@ -15,6 +15,7 @@
  */
 'use strict';
 
+var log = require("./log.js").logger();
 var Promise = require('bluebird');
 
 var Router = function (connection, router, agent) {
@@ -39,14 +40,13 @@ var Router = function (connection, router, agent) {
     }
     this.connection.on('receiver_open', this.ready.bind(this));
     this.connection.on('disconnected', this.disconnected.bind(this));
-    this.debug = false;
 };
 
 Router.prototype.closed = function (context) {
     if (context.connection.error) {
-        console.error('ERROR: router closed connection with ' + context.connection.error.description);
+        log.error('ERROR: router closed connection with ' + context.connection.error.description);
     }
-    console.log('router closed ' + this.target);
+    log.info('router closed ' + this.target);
     this.connection = undefined;
     this.sender = undefined;
     this.address = undefined;
@@ -54,7 +54,7 @@ Router.prototype.closed = function (context) {
 };
 
 Router.prototype._abort_requests = function (error) {
-    console.log('aborting pending requests: ' + error);
+    log.info('aborting pending requests: ' + error);
     for (var h in this.handlers) {
         this.handlers[h](error);
         delete this.handlers[h];
@@ -68,7 +68,7 @@ Router.prototype.disconnected = function (context) {
 }
 
 Router.prototype.ready = function (context) {
-    console.log('router ready');
+    log.info('router ready');
     this.address = context.receiver.source.address;
     this._send_pending_requests();
 };
@@ -108,9 +108,9 @@ Router.prototype._send_request = function (request) {
     if (this.sender) {
         request.reply_to = this.address;
         this.sender.send(request);
-        if (this.debug) console.log('sent: ' + JSON.stringify(request));
+        log.debug('sent: ' + JSON.stringify(request));
     } else {
-        console.log('router agent has no sender!');
+        log.info('router agent has no sender!');
     }
 }
 
@@ -182,14 +182,14 @@ Router.prototype.get_all_routers = function (current) {
 };
 
 Router.prototype.incoming = function (context) {
-    if (this.debug) console.log('recv: ' + JSON.stringify(context.message));
+    log.debug('recv: ' + JSON.stringify(context.message));
     var message = context.message;
     var handler = this.handlers[message.correlation_id];
     if (handler) {
         handler(context);
         delete this.handlers[message.correlation_id];
     } else {
-	console.error('WARNING: unexpected response: ' + message.correlation_id + ' [' + JSON.stringify(message) + ']');
+        log.warn('WARNING: unexpected response: ' + message.correlation_id + ' [' + JSON.stringify(message) + ']');
     }
 };
 

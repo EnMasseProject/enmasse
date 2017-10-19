@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+var log = require("./log.js").logger();
 var https = require('https');
 var fs = require('fs');
 var util = require("util");
@@ -29,26 +30,26 @@ function watch_handler(collection) {
             var line = content.substring(start, end);
             var event;
             try {
-	        event = JSON.parse(line);
+                event = JSON.parse(line);
             } catch (e) {
-	        console.log('Could not parse message as JSON (%s), assuming incomplete: %s', e, line);
+                log.warn('Could not parse message as JSON (%s), assuming incomplete: %s', e, line);
                 break;
             }
             collection[event.type.toLowerCase()](event.object);
         }
-	partial = content.substring(start);
+        partial = content.substring(start);
     }
 }
 
 function get_options(options, path) {
     return {
-	hostname: options.host || process.env.KUBERNETES_SERVICE_HOST,
-	port: options.port || process.env.KUBERNETES_SERVICE_PORT,
-	rejectUnauthorized: false,
+        hostname: options.host || process.env.KUBERNETES_SERVICE_HOST,
+        port: options.port || process.env.KUBERNETES_SERVICE_PORT,
+        rejectUnauthorized: false,
         path: path,
-	headers: {
-	    'Authorization': 'Bearer ' + (options.token || process.env.KUBERNETES_TOKEN || fs.readFileSync('/var/run/secrets/kubernetes.io/serviceaccount/token'))
-	}
+        headers: {
+            'Authorization': 'Bearer ' + (options.token || process.env.KUBERNETES_TOKEN || fs.readFileSync('/var/run/secrets/kubernetes.io/serviceaccount/token'))
+        }
     };
 }
 
@@ -86,42 +87,42 @@ util.inherits(Watcher, events.EventEmitter);
 Watcher.prototype.list = function () {
     var self = this;
     var request = https.get(list_options(this.resource, this.options), function(response) {
-	console.log('STATUS: ' + response.statusCode);
-	response.setEncoding('utf8');
-        var data = '';
-	response.on('data', function (chunk) { data += chunk; });
-	response.on('end', function () {
+    log.info('STATUS: ' + response.statusCode);
+    response.setEncoding('utf8');
+    var data = '';
+    response.on('data', function (chunk) { data += chunk; });
+    response.on('end', function () {
             try {
                 var list = JSON.parse(data);
-	        self.objects = list.items;
+                self.objects = list.items;
                 self.emit('updated', self.objects);
-	        console.log('list retrieved; watching...');
-	        self.watch();
+                log.info('list retrieved; watching...');
+                self.watch();
             } catch (e) {
-	        console.log('Could not parse message as JSON (%s): %s', e, data);
+                log.warn('Could not parse message as JSON (%s): %s', e, data);
             }
-	});
+        });
     });
     request.on('error', function(e) {
-	self.emit('error', e);
+        self.emit('error', e);
     });
 };
 
 Watcher.prototype.watch = function () {
     var self = this;
     var request = https.get(watch_options(this.resource, this.options), function(response) {
-	console.log('STATUS: ' + response.statusCode);
-	response.setEncoding('utf8');
-	response.on('data', watch_handler(self));
-	response.on('end', function () {
+    log.info('STATUS: ' + response.statusCode);
+    response.setEncoding('utf8');
+    response.on('data', watch_handler(self));
+    response.on('end', function () {
             if (!this.closed) {
-	        console.log('response ended; reconnecting...');
-	        self.list();
+                log.info('response ended; reconnecting...');
+                self.list();
             }
-	});
+        });
     });
     request.on('error', function(e) {
-	self.emit('error', e);
+        self.emit('error', e);
     });
 };
 

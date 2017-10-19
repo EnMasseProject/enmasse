@@ -15,13 +15,13 @@
  */
 'use strict';
 
+var log = require("./log.js").logger();
 var util = require('util');
 var events = require('events');
 
 function Registry() {
     events.EventEmitter.call(this);
     this.objects = {};
-    this.debug = false;
 }
 
 util.inherits(Registry, events.EventEmitter);
@@ -60,13 +60,13 @@ Registry.prototype.update = function (id, latest) {
     var current = this.objects[id];
     if (current === undefined) {
         this.objects[id] = latest;
-        if (this.debug) console.log('setting ' + id + ' to ' + JSON.stringify(latest));
+        log.debug('setting ' + id + ' to ' + JSON.stringify(latest));
         this.emit('updated', latest);
     } else {
         var changed = false;
         for (var s in latest) {
             if (!equals(current[s], latest[s])) {
-                if (this.debug) console.log('changing ' + s + ' on ' + id + ' from ' + JSON.stringify(current[s]) + ' to ' + JSON.stringify(latest[s]));
+                log.debug('changing ' + s + ' on ' + id + ' from ' + JSON.stringify(current[s]) + ' to ' + JSON.stringify(latest[s]));
                 current[s] = latest[s];
                 changed = true;
             }
@@ -83,7 +83,7 @@ Registry.prototype.update_if_exists = function (id, latest) {
         var changed = false;
         for (var s in latest) {
             if (!equals(current[s], latest[s])) {
-                if (this.debug) console.log('changing ' + s + ' on ' + id + ' from ' + JSON.stringify(current[s]) + ' to ' + JSON.stringify(latest[s]));
+                log.debug('changing ' + s + ' on ' + id + ' from ' + JSON.stringify(current[s]) + ' to ' + JSON.stringify(latest[s]));
                 current[s] = latest[s];
                 changed = true;
             }
