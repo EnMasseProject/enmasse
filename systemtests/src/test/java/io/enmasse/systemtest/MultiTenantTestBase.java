@@ -25,7 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MultiTenantTestBase extends TestBase {
-    protected List<String> addressSpaces = new ArrayList<>();
+    protected List<AddressSpace> addressSpaces = new ArrayList<>();
 
     @Before
     public void setupSpaceList() throws Exception {
@@ -34,7 +34,7 @@ public class MultiTenantTestBase extends TestBase {
 
     @After
     public void teardownSpaces() throws Exception {
-        for (String addressSpace : addressSpaces) {
+        for (AddressSpace addressSpace : addressSpaces) {
             deleteAddressSpace(addressSpace);
         }
         addressSpaces.clear();
@@ -45,13 +45,13 @@ public class MultiTenantTestBase extends TestBase {
         return false;
     }
 
-    protected AmqpClientFactory createAmqpClientFactory(String addressSpace) {
-        return new AmqpClientFactory(new OpenShift(environment, environment.namespace(), addressSpace),
+    protected AmqpClientFactory createAmqpClientFactory(AddressSpace addressSpace) {
+        return new AmqpClientFactory(new OpenShift(environment, environment.namespace(), addressSpace.getNamespace()),
                 environment, addressSpace, username, password);
     }
 
-    protected MqttClientFactory createMqttClientFactory(String addressSpace) {
-        return new MqttClientFactory(new OpenShift(environment, environment.namespace(), addressSpace),
+    protected MqttClientFactory createMqttClientFactory(AddressSpace addressSpace) {
+        return new MqttClientFactory(new OpenShift(environment, environment.namespace(), addressSpace.getNamespace()),
                 environment, addressSpace, username, password);
     }
 }

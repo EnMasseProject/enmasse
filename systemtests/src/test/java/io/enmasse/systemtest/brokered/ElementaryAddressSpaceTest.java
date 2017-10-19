@@ -37,20 +37,21 @@ public class ElementaryAddressSpaceTest extends MultiTenantTestBase {
      */
     @Test
     public void testAddressTypes() throws Exception {
-        String brokeredA = createAddressSpace("brokered-a", "none", "brokered");
-        addressSpaces.add(brokeredA);
+        AddressSpace addressSpace = new AddressSpace("brokered-a", "brokered-a");
+        createAddressSpace(addressSpace, "none", "brokered");
+        addressSpaces.add(addressSpace);
         Destination queueA = Destination.queue("brokeredQueueA");
-        setAddresses(brokeredA, queueA);
+        setAddresses(addressSpace, queueA);
 
-        AmqpClientFactory amqpFactoryA = createAmqpClientFactory(brokeredA);
-        AmqpClient amqpQueueCli = amqpFactoryA.createQueueClient(brokeredA);
+        AmqpClientFactory amqpFactoryA = createAmqpClientFactory(addressSpace);
+        AmqpClient amqpQueueCli = amqpFactoryA.createQueueClient(addressSpace);
         amqpQueueCli.getConnectOptions().setUsername("test").setPassword("test");
         QueueTest.runQueueTest(amqpQueueCli, queueA);
 
         Destination topicB = Destination.topic("brokeredTopicB");
-        setAddresses(brokeredA, topicB);
+        setAddresses(addressSpace, topicB);
 
-        AmqpClient amqpTopicCli = amqpFactoryA.createTopicClient(brokeredA);
+        AmqpClient amqpTopicCli = amqpFactoryA.createTopicClient(addressSpace);
         amqpTopicCli.getConnectOptions().setUsername("test").setPassword("test");
         List<Future<List<Message>>> recvResults = Arrays.asList(
                 amqpTopicCli.recvMessages(topicB.getAddress(), 1000),
@@ -71,37 +72,40 @@ public class ElementaryAddressSpaceTest extends MultiTenantTestBase {
      */
     @Test
     public void testCreateDeleteAddressSpace() throws Exception {
-        String brokeredA = createAddressSpace("brokered-a", "none", "brokered");
-        addressSpaces.add(brokeredA);
+        AddressSpace addressSpaceA = new AddressSpace("brokered-a", "brokered-a");
+        createAddressSpace(addressSpaceA, "none", "brokered");
+        addressSpaces.add(addressSpaceA);
         Destination queueB = Destination.queue("brokeredQueueB");
-        setAddresses(brokeredA, queueB);
+        setAddresses(addressSpaceA, queueB);
 
-        AmqpClientFactory amqpFactoryA = createAmqpClientFactory(brokeredA);
-        AmqpClient amqpQueueCliA = amqpFactoryA.createQueueClient(brokeredA);
+        AmqpClientFactory amqpFactoryA = createAmqpClientFactory(addressSpaceA);
+        AmqpClient amqpQueueCliA = amqpFactoryA.createQueueClient(addressSpaceA);
         amqpQueueCliA.getConnectOptions().setUsername("test").setPassword("test");
         QueueTest.runQueueTest(amqpQueueCliA, queueB);
 
-        String brokeredC = createAddressSpace("brokered-c", "none", "brokered");
-        addressSpaces.add(brokeredC);
-        setAddresses(brokeredC, queueB);
-        AmqpClientFactory amqpFactoryC = createAmqpClientFactory(brokeredC);
-        AmqpClient amqpQueueCliC = amqpFactoryC.createQueueClient(brokeredC);
+        AddressSpace addressSpaceC = new AddressSpace("brokered-c", "brokered-c");
+        createAddressSpace(addressSpaceC, "none", "brokered");
+        addressSpaces.add(addressSpaceC);
+        setAddresses(addressSpaceC, queueB);
+        AmqpClientFactory amqpFactoryC = createAmqpClientFactory(addressSpaceC);
+        AmqpClient amqpQueueCliC = amqpFactoryC.createQueueClient(addressSpaceC);
         amqpQueueCliC.getConnectOptions().setUsername("test").setPassword("test");
         QueueTest.runQueueTest(amqpQueueCliC, queueB);
 
-        deleteAddressSpace(brokeredA);
+        deleteAddressSpace(addressSpaceA);
 
         QueueTest.runQueueTest(amqpQueueCliC, queueB);
     }
 
     //@Test(expected = AddressAlreadyExistsException.class) //!TODO disabled until #346 will be fixed
     public void testCreateAlreadyExistingAddress() throws Exception {
-        String brokeredA = createAddressSpace("brokered-a", "none", "brokered");
-        addressSpaces.add(brokeredA);
+        AddressSpace addressSpaceA = new AddressSpace("brokered-a", "brokered-a");
+        createAddressSpace(addressSpaceA, "none", "brokered");
+        addressSpaces.add(addressSpaceA);
         Destination queueA = Destination.queue("brokeredQueueA");
-        setAddresses(brokeredA, queueA);
+        setAddresses(addressSpaceA, queueA);
 
         Destination topicA = Destination.topic("brokeredTopicA");
-        setAddresses(brokeredA, topicA); //address already exist exception
+        setAddresses(addressSpaceA, topicA); //address already exist exception
     }
 }
