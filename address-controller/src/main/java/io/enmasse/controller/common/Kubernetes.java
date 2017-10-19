@@ -47,6 +47,8 @@ public interface Kubernetes {
 
     Namespace createNamespace(String name, String namespace);
 
+    void addSystemImagePullerPolicy(String namespace, String tenantNamespace);
+
     void deleteNamespace(String namespace);
 
     void addDefaultViewPolicy(String namespace);

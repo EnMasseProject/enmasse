@@ -63,6 +63,7 @@ public class ControllerHelper {
         if (!addressSpace.getNamespace().equals(namespace)) {
             kubernetes.createNamespace(addressSpace.getName(), addressSpace.getNamespace());
             kubernetes.addDefaultViewPolicy(addressSpace.getNamespace());
+            kubernetes.addSystemImagePullerPolicy(namespace, addressSpace.getNamespace());
         }
 
         StandardResources resourceList = createResourceList(addressSpace);
