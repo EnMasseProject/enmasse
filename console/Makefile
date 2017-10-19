@@ -4,14 +4,15 @@ ASCIIDOCTOR ?= $(shell command -v asciidoctor 2> /dev/null)
 
 build: npm_install www/tooltips.json www/help.html
 
-www/tooltips.json: ../doc-utils/parse.py ../doc-utils/expected.json ../documentation/modules/*
-	../doc-utils/parse.py -i ../doc-utils/expected.json -o www/tooltips.json -v ../documentation/modules/
+www/tooltips.json: ../doc-utils/parse.py ../doc-utils/expected.json ../documentation/common/*
+	../doc-utils/parse.py -i ../doc-utils/expected.json -o www/tooltips.json -v ../documentation/common/
 
-www/help.html:  ../documentation/master.adoc ../documentation/modules/*.adoc ../documentation/common/*.adoc
+www/help.html:  ../documentation/common/*.adoc
         ifeq ($(ASCIIDOCTOR),)
 		$(warning "asciidoctor not found, help pages cannot be generated")
         else
-	       	asciidoctor -d book -B ../documentation/ -o ../console/www/help.html ../documentation/master.adoc
+			# TODO: Reenable when we have help documentation
+	       	#asciidoctor -d book -B ../documentation/ -o ../console/www/help.html ../documentation/master.adoc
         endif
 
 package: build
