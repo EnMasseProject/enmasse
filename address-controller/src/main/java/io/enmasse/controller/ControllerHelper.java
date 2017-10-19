@@ -18,15 +18,11 @@ package io.enmasse.controller;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.config.LabelKeys;
 import io.enmasse.controller.auth.UserDatabase;
-import io.enmasse.controller.common.AuthenticationServiceResolverFactory;
-import io.enmasse.controller.common.Kubernetes;
-import io.enmasse.controller.common.KubernetesHelper;
-import io.enmasse.controller.common.TemplateParameter;
+import io.enmasse.controller.common.*;
 import io.enmasse.address.model.*;
 import io.enmasse.address.model.types.Plan;
 import io.enmasse.address.model.types.TemplateConfig;
 import io.fabric8.kubernetes.api.model.KubernetesList;
-import io.fabric8.kubernetes.api.model.Namespace;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.openshift.client.ParameterValue;
 import org.slf4j.Logger;
@@ -55,19 +51,18 @@ public class ControllerHelper {
     }
 
     public void create(AddressSpace addressSpace) {
-        Kubernetes instanceClient = kubernetes.withNamespace(addressSpace.getNamespace());
-        if (instanceClient.hasService("messaging")) {
+        if (kubernetes.existsNamespace(addressSpace.getNamespace())) {
             return;
         }
         log.info("Creating address space {}", addressSpace);
         if (!addressSpace.getNamespace().equals(namespace)) {
             kubernetes.createNamespace(addressSpace.getName(), addressSpace.getNamespace());
-            kubernetes.addDefaultViewPolicy(addressSpace.getNamespace());
+            kubernetes.addAddressSpacePolicy(namespace, addressSpace.getNamespace());
         }
 
         StandardResources resourceList = createResourceList(addressSpace);
 
-        // TODO: put this lsit somewhere...
+        // TODO: put this list somewhere...
         Map<String, String> serviceMapping = new HashMap<>();
         serviceMapping.put("messaging", "amqps");
         serviceMapping.put("mqtt", "secure-mqtt");
@@ -221,20 +216,17 @@ public class ControllerHelper {
     }
 
     public void retainAddressSpaces(Set<AddressSpace> desiredAddressSpaces) {
-        if (desiredAddressSpaces.size() == 1 && desiredAddressSpaces.iterator().next().getNamespace().equals(namespace)) {
-            return;
-        }
         Set<String> addressSpaceIds = desiredAddressSpaces.stream().map(AddressSpace::getName).collect(Collectors.toSet());
 
         Map<String, String> labels = new LinkedHashMap<>();
         labels.put(LabelKeys.APP, "enmasse");
         labels.put(LabelKeys.TYPE, "address-space");
         for (Namespace namespace : kubernetes.listNamespaces(labels)) {
-            String id = namespace.getMetadata().getAnnotations().get(AnnotationKeys.ADDRESS_SPACE);
+            String id = namespace.getAddressSpace();
             if (!addressSpaceIds.contains(id)) {
                 try {
                     log.info("Deleting address space {}", id);
-                    kubernetes.deleteNamespace(namespace.getMetadata().getName());
+                    kubernetes.deleteNamespace(namespace);
                 } catch(KubernetesClientException e){
                     log.info("Exception when deleting namespace (may already be in progress): " + e.getMessage());
                 }

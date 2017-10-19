@@ -22,6 +22,7 @@ import io.enmasse.address.model.Endpoint;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.extensions.Deployment;
 import io.fabric8.kubernetes.api.model.extensions.DoneableIngress;
+import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.dsl.Resource;
 import io.fabric8.openshift.api.model.DoneablePolicyBinding;
 import io.fabric8.openshift.api.model.DoneableRoute;
@@ -123,15 +124,28 @@ public class KubernetesHelper implements Kubernetes {
     }
 
     @Override
-    public Namespace createNamespace(String name, String namespace) {
-        return client.namespaces().createNew()
-                .editOrNewMetadata()
+    public void createNamespace(String addressSpace, String namespace) {
+        if (client.isAdaptable(OpenShiftClient.class)) {
+            client.projectrequests().createNew()
+                    .withNewMetadata()
                     .withName(namespace)
                     .addToLabels("app", "enmasse")
                     .addToLabels(LabelKeys.TYPE, "address-space")
-                    .addToAnnotations(AnnotationKeys.ADDRESS_SPACE, name)
-                .endMetadata()
-                .done();
+                    .addToAnnotations(AnnotationKeys.ADDRESS_SPACE, addressSpace)
+                    .endMetadata()
+                    .withDescription("EnMasse Namespace for Address Space " + addressSpace)
+                    .withDisplayName("EnMasse " + addressSpace)
+                    .done();
+        } else {
+            client.namespaces().createNew()
+                    .editOrNewMetadata()
+                    .withName(namespace)
+                    .addToLabels("app", "enmasse")
+                    .addToLabels(LabelKeys.TYPE, "address-space")
+                    .addToAnnotations(AnnotationKeys.ADDRESS_SPACE, addressSpace)
+                    .endMetadata()
+                    .done();
+        }
     }
 
     @Override
@@ -150,10 +164,10 @@ public class KubernetesHelper implements Kubernetes {
     }
 
     @Override
-    public void addDefaultViewPolicy(String namespace) {
+    public void addAddressSpacePolicy(String namespace, String tenantNamespace) {
         if (client.isAdaptable(OpenShiftClient.class)) {
             Resource<PolicyBinding, DoneablePolicyBinding> bindingResource = client.policyBindings()
-                    .inNamespace(namespace)
+                    .inNamespace(tenantNamespace)
                     .withName(":default");
 
             DoneablePolicyBinding binding;
@@ -173,12 +187,12 @@ public class KubernetesHelper implements Kubernetes {
                     .editOrNewRoleBinding()
                     .editOrNewMetadata()
                     .withName("view")
-                    .withNamespace(namespace)
+                    .withNamespace(tenantNamespace)
                     .endMetadata()
-                    .addToUserNames("system:serviceaccount:" + namespace + ":default")
+                    .addToUserNames("system:serviceaccount:" + tenantNamespace + ":default")
                     .addNewSubject()
                     .withName("default")
-                    .withNamespace(namespace)
+                    .withNamespace(tenantNamespace)
                     .withKind("ServiceAccount")
                     .endSubject()
                     .withNewRoleRef()
@@ -194,13 +208,12 @@ public class KubernetesHelper implements Kubernetes {
     }
 
     @Override
-    public void deleteNamespace(String namespace) {
-        client.namespaces().withName(namespace).delete();
-    }
-
-    @Override
-    public boolean hasService(String service) {
-        return client.services().inNamespace(namespace).withName(service).get() != null;
+    public void deleteNamespace(Namespace namespace) {
+        if (client.isAdaptable(OpenShiftClient.class)) {
+            client.projects().withName(namespace.getName()).delete();
+        } else {
+            client.namespaces().withName(namespace.getName()).delete();
+        }
     }
 
     @Override
@@ -303,8 +316,49 @@ public class KubernetesHelper implements Kubernetes {
     }
 
     @Override
+    public boolean existsNamespace(String namespace) {
+        try {
+            if (client.isAdaptable(OpenShiftClient.class)) {
+                return client.projects().withName(namespace).get() != null;
+            } else {
+                return client.namespaces().withName(namespace).get() != null;
+            }
+        } catch (KubernetesClientException e) {
+            log.info("Error looking up namespace {}, assuming it doesn't exist: {}", namespace, e.getMessage());
+            return false;
+        }
+    }
+
+    @Override
     public List<Namespace> listNamespaces(Map<String, String> labels) {
-        return client.namespaces().withLabels(labels).list().getItems();
+        if (client.isAdaptable(OpenShiftClient.class)) {
+            return client.projects().withLabels(labels).list().getItems().stream()
+                    .map(project -> new Namespace() {
+
+                        @Override
+                        public String getName() {
+                            return project.getMetadata().getName();
+                        }
+
+                        @Override
+                        public String getAddressSpace() {
+                            return project.getMetadata().getAnnotations().get(AnnotationKeys.ADDRESS_SPACE);
+                        }
+                    }).collect(Collectors.toList());
+        } else {
+            return client.namespaces().withLabels(labels).list().getItems().stream()
+                    .map(namespace -> new Namespace() {
+                        @Override
+                        public String getName() {
+                            return namespace.getMetadata().getName();
+                        }
+
+                        @Override
+                        public String getAddressSpace() {
+                            return namespace.getMetadata().getAnnotations().get(AnnotationKeys.ADDRESS_SPACE);
+                        }
+                    }).collect(Collectors.toList());
+        }
     }
 
     @Override

@@ -45,13 +45,13 @@ public interface Kubernetes {
     void delete(HasMetadata ... resources);
     KubernetesList processTemplate(String templateName, ParameterValue ... parameterValues);
 
-    Namespace createNamespace(String name, String namespace);
+    void createNamespace(String name, String namespace);
+    void deleteNamespace(Namespace namespace);
+    boolean existsNamespace(String namespace);
+    List<Namespace> listNamespaces(Map<String, String> labels);
 
-    void deleteNamespace(String namespace);
+    void addAddressSpacePolicy(String namespace, String tenantNamespace);
 
-    void addDefaultViewPolicy(String namespace);
-
-    boolean hasService(String service);
     void createSecretWithDefaultPermissions(String secretName, String namespace);
     void createEndpoint(Endpoint endpoint, Map<String, String> servicePortMap, String addressSpaceName, String namespace);
 
@@ -59,9 +59,8 @@ public interface Kubernetes {
 
     boolean isDestinationClusterReady(String clusterId);
 
-    List<Namespace> listNamespaces(Map<String, String> labels);
-
     List<Pod> listRouters();
 
     Optional<Secret> getSecret(String secretName);
+
 }
