@@ -21,7 +21,7 @@ node('enmasse') {
             stage ('push docker image') {
                 withCredentials([string(credentialsId: 'docker-registry-host', variable: 'DOCKER_REGISTRY'), usernamePassword(credentialsId: 'docker-registry-credentials', passwordVariable: 'DOCKER_PASS', usernameVariable: 'DOCKER_USER')]) {
                     sh 'TAG=$BUILD_TAG make docker_tag'
-                    sh 'docker login -u $DOCKER_USER -p $DOCKER_PASS $DOCKER_REGISTRY'
+                    sh '$DOCKER login -u $DOCKER_USER -p $DOCKER_PASS $DOCKER_REGISTRY'
                     sh 'TAG=$BUILD_TAG make docker_push'
                 }
             }
