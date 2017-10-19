@@ -20,14 +20,14 @@ var log = require('../log.js');
 
 describe('logger', function() {
     it('sets level from LOGLEVEL env var', function (done) {
-        process.env.LOGLEVEL = 'info';
-        assert.equal(log.logger().level, 2);
+        process.env.LOGLEVEL = 'warn';
+        assert.equal(log.logger().level, 1);
         delete process.env.LOGLEVEL;
         done();
     });
     it('ignores invalid level in env', function (done) {
         process.env.LOGLEVEL = 'foo';
-        assert.equal(log.logger().level, 3);
+        assert.equal(log.logger().level, 2);
         delete process.env.LOGLEVEL;
         done();
     });

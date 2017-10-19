@@ -15,6 +15,7 @@
  */
 'use strict';
 
+var log = require("./log.js").logger();
 var path = require('path');
 var fs = require('fs');
 var artemis = require('./artemis.js');
@@ -49,7 +50,7 @@ function Pod(pod) {
         options.key                = fs.readFileSync(client_key_path);
         options.cert               = fs.readFileSync(client_crt_path);
     } catch (error) {
-        console.warn('Unable to load certificates: ' + error);
+        log.warn('Unable to load certificates: ' + error);
     }
     this.broker = artemis.connect(options);
 };
@@ -71,14 +72,14 @@ PodGroup.prototype.update = function (latest) {
         if (this.pods[pod.name] === undefined) {
             this.added(pod);
             changed = true;
-            console.log('added pod ' + JSON.stringify(pod));
+            log.info('added pod ' + JSON.stringify(pod));
         }
     }
     for (var name in this.pods) {
         if (indexed[name] === undefined) {
             this.removed_by_name(name)
             changed = true;
-            console.log('removed pod named ' + name);
+            log.info('removed pod named ' + name);
         }
     }
     return changed;

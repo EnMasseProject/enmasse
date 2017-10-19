@@ -15,6 +15,7 @@
  */
 'use strict';
 
+var log = require("./log.js").logger();
 var util = require('util');
 var events = require('events');
 var rhea = require('rhea');
@@ -31,13 +32,13 @@ function AddressSource(connection) {
                     var defs = content.items ? content.items.map(function (address) { return address.spec; }) : [];
                     self.emit('addresses_defined', defs);
                 } catch (e) {
-                    console.log('ERROR: failed to parse addresses: ' + e + '; ' + context.message.body);
+                    log.info('ERROR: failed to parse addresses: ' + e + '; ' + context.message.body);
                 }
             } else {
                 self.emit('addresses_defined', []);
             }
         } else {
-            console.log('WARN: unexpected subject: ' + context.message.subject);
+            log.info('WARN: unexpected subject: ' + context.message.subject);
         }
     });
 }

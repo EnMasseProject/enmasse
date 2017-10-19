@@ -15,6 +15,7 @@
  */
 'use strict';
 
+var log = require("./log.js").logger();
 var path = require('path');
 var tls_options = require('./tls_options.js');
 
@@ -51,7 +52,7 @@ function connect(container, options, service_name) {
         if (options.container_id === undefined) options.container_id = process.env.HOSTNAME;
         if (options.username === undefined) options.username = self;
         if (options.id === undefined) options.id = self + '-' + counter++;
-        console.log('Connecting to ' + service_name + ' service with host: ' + options.host + ', port: ' + options.port + ', container: ' + options.container_id + ', id: ' + options.id);
+        log.info('Connecting to ' + service_name + ' service with host: ' + options.host + ', port: ' + options.port + ', container: ' + options.container_id + ', id: ' + options.id);
         return container.connect(options);
     } else {
         return undefined;

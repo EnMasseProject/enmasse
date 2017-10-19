@@ -15,6 +15,7 @@
  */
 'use strict';
 
+var log = require("./log.js").logger();
 var rhea = require('rhea');
 var path = require('path');
 var fs = require('fs');
@@ -31,7 +32,7 @@ function RouterStats(connection) {
     var self = this;
     this.router.get_all_routers().then(function (routers) {
         self.routers = routers;
-        console.log('routers: ' + self.routers.map(function (r) { return r.target; }));
+        log.info('routers: ' + self.routers.map(function (r) { return r.target; }));
     });
 }
 
@@ -150,8 +151,8 @@ function collect_by_connection(links, connections, router) {
 }
 
 function log_error(error) {
-    if (error.message) console.error('ERROR: ' + error.message);
-    else console.error('ERROR: ' + JSON.stringify(error));
+    if (error.message) log.error('ERROR: ' + error.message);
+    else log.error('ERROR: ' + JSON.stringify(error));
 
 }
 
@@ -175,11 +176,11 @@ RouterStats.prototype.update_routers = function () {
     var self = this;
     return this.router.get_all_routers(this.routers).then(function (routers) {
         if (routers === undefined) {
-            console.log('no routers found');
+            log.info('no routers found');
             return [];
         } else {
             if (!same_routers(routers, self.routers)) {
-                console.log('routers changed: ' + routers.map(function (r) { return r.target; }));
+                log.info('routers changed: ' + routers.map(function (r) { return r.target; }));
             }
             self.routers = routers;
             return self.routers;

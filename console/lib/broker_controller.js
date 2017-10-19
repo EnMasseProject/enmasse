@@ -15,6 +15,7 @@
  */
 'use strict';
 
+var log = require("./log.js").logger();
 var util = require('util');
 var events = require('events');
 var rhea = require('rhea');
@@ -42,7 +43,7 @@ BrokerController.prototype.close = function () {
 
 BrokerController.prototype.on_connection_open = function (context) {
     this.broker = new artemis.Artemis(context.connection);
-    console.log('connected to %s', context.connection.container_id);
+    log.info('connected to %s', context.connection.container_id);
     this.retrieve_stats();
     this.check_broker_addresses();
     context.connection.on('connection_close', this.closed);
@@ -237,7 +238,7 @@ BrokerController.prototype.check_broker_addresses = function () {
             var actual = translate(results, excluded_addresses);
             var stale = values(difference(actual, self.addresses, same_address));
             var missing = values(difference(self.addresses, actual, same_address));
-            console.log('checking addresses, desired=%j, actual=%j => delete %j and create %j', values(self.addresses), values(actual), stale, missing);
+            log.info('checking addresses, desired=%j, actual=%j => delete %j and create %j', values(self.addresses), values(actual), stale, missing);
             return self.delete_addresses(stale).then(
                 function () {
                     return self.create_addresses(missing).then(function () {

@@ -15,6 +15,7 @@
  */
 'use strict';
 
+var log = require("./log.js").logger();
 var Promise = require('bluebird');
 
 var Artemis = function (connection) {
@@ -33,11 +34,10 @@ var Artemis = function (connection) {
     this.outstanding_requests = []; //requests that have been sent bit
                                     //for which response has not yet
                                     //been received
-    this.debug = false;
 };
 
 Artemis.prototype.ready = function (context) {
-    if (this.debug) console.log('[' + this.connection.container_id + '] ready to send requests');
+    log.debug('[' + this.connection.container_id + '] ready to send requests');
     this.address = context.receiver.remote.attach.source.address;
     this._send_pending_requests();
 };
@@ -50,7 +50,7 @@ function as_handler(resolve, reject) {
                 if (message.body) resolve(JSON.parse(message.body)[0]);
                 else resolve(true);
             } catch (e) {
-                console.log('[' + this.connection.container_id + '] Error parsing message body: ' + message + ': ' + e);
+                log.info('[' + this.connection.container_id + '] Error parsing message body: ' + message + ': ' + e);
             }
         } else {
             reject('Request did not succeed, response: ' + message.toString());
@@ -60,7 +60,7 @@ function as_handler(resolve, reject) {
 
 Artemis.prototype.incoming = function (context) {
     var message = context.message;
-    if (this.debug) console.log('[' + this.connection.container_id + '] recv: ' + message);
+    log.debug('[' + this.connection.container_id + '] recv: ' + message);
     this.outstanding_requests.shift();
     var handler = this.handlers.shift();
     if (handler) {
@@ -69,7 +69,7 @@ Artemis.prototype.incoming = function (context) {
 };
 
 Artemis.prototype.disconnected = function (context) {
-    console.log('[' + this.connection.container_id + '] disconnected');
+    log.info('[' + this.connection.container_id + '] disconnected');
     this.address = undefined;
     //fail all outstanding requests? or keep them and retry on reconnection? currently do the latter...
     this.requests = this.outstanding_requests;
@@ -86,25 +86,25 @@ Artemis.prototype.abort_requests = function (error) {
 
 Artemis.prototype.on_sender_error = function (context) {
     var error = this.connection.container_id + ' sender error ' + context.sender.error;
-    console.log('[' + this.connection.container_id + '] ' + error);
+    log.info('[' + this.connection.container_id + '] ' + error);
     this.abort_requests(error);
 };
 
 Artemis.prototype.on_receiver_error = function (context) {
     var error = this.connection.container_id + ' receiver error ' + context.receiver.error;
-    console.log('[' + this.connection.container_id + '] ' + error);
+    log.info('[' + this.connection.container_id + '] ' + error);
     this.abort_requests(error);
 };
 
 Artemis.prototype.on_connection_error = function (context) {
     var error = this.connection.container_id + ' connection error ' + context.connection.error;
-    console.log('[' + this.connection.container_id + '] ' + error);
+    log.info('[' + this.connection.container_id + '] ' + error);
     this.abort_requests(error);
 };
 
 Artemis.prototype.on_connection_close = function (context) {
     var error = this.connection.container_id + ' connection closed';
-    console.log('[' + this.connection.container_id + '] ' + error);
+    log.info('[' + this.connection.container_id + '] ' + error);
     this.abort_requests(error);
 };
 
@@ -120,7 +120,7 @@ Artemis.prototype._send_request = function (request) {
     request.application_properties.JMSReplyTo = this.address;
     request.reply_to = this.address;
     this.sender.send(request);
-    if (this.debug) console.log('[' + this.connection.container_id + '] sent: ' + JSON.stringify(request));
+    log.debug('[' + this.connection.container_id + '] sent: ' + JSON.stringify(request));
 }
 
 Artemis.prototype._request = function (resource, operation, parameters) {
