@@ -1,0 +1,16 @@
+include::common/attributes.adoc[]
+
+= {Title}
+
+//include::<filename>.adoc[leveloffset=+1]
+
+//include::<filename>.adoc[leveloffset=+1]
+
+//include::<filename>.adoc[leveloffset=+1]
+
+
+[appendix]
+//include::common/using-your-subscription.adoc[leveloffset=+1]
+
+// Revision information
+//include::common/revision-info.adoc[]
