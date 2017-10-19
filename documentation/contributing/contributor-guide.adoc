@@ -46,16 +46,7 @@ $ git checkout -b _BRANCH_NAME_
 $ git status
 $ git add _FILE_NAME_
 ----
-////
- . Build your changes by using xref:build-configuration[ccutil] or xref:make-tooling[make-based tooling] to confirm your edits are correct
-.. If adding an entirely new section or making complex edits, be sure to share your build on your Red Hat fileshare so that you can provide a link to those reviewing your content
-+
-[source,options="nowrap",subs="+quotes"]
-----
-$ cd __GUIDE_NAME__
-$ ./buildGuide.sh
-----
-////
+
 . Commit your changes
 +
 [source,options="nowrap",subs="+quotes"]
@@ -77,7 +68,6 @@ $ git push -f origin HEAD
 ----
 . Visit your fork on GitHub
 . Click *Compare & pull request*
-////
 . If a SME review is needed:
 .. Add *SME Review Needed* label.
 .. When SME review is complete, remove *SME Review Completed* label and go to step 16.
@@ -87,7 +77,6 @@ $ git push -f origin HEAD
 .. If no changes are needed, remove *Peer Review Done* label and add *Ready for Merge* label.
 .. If changes are needed and the changes are minor, make changes to the files, commit, and push, and then remove *Peer Review Done* label and add *Ready for Merge* label.
 .. If you want an additional review on the updated content, add the *Peer Review Needed* label and ask for another review in a comment.
-////
 
 ////
 [[merging-contributions]]
