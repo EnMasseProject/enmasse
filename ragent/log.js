@@ -26,7 +26,7 @@ var levels = {
 
 function Logger (name) {
     this.logger = require('debug')(name);
-    this.level = 3;
+    this.level = 2;
 
     if (process.env.LOGLEVEL) {
         var desired_level = levels[process.env.LOGLEVEL];
@@ -37,32 +37,21 @@ function Logger (name) {
 }
 
 Logger.prototype.log = function (level, str, ...args) {
+    console.log("Level " + level + ", Arg length in log: " + args.length);
     if (levels[level] !== undefined && levels[level] <= this.level) {
-        this.logger("%s " + str, level, args);
+        this.logger.apply(this.logger, [level + " " + str].concat(args));
     }
 }
-
-Logger.prototype.debug = function (msg, ...args) {
-    this.log("debug", msg, args)
-}
-
-Logger.prototype.info = function (msg, ...args) {
-    this.log("info", msg, args)
-}
-
-Logger.prototype.warn = function (msg, ...args) {
-    this.log("warn", msg, args)
-}
-
-Logger.prototype.error = function (msg, ...args) {
-    this.log("error", msg, args)
-}
-
 
 module.exports.logger = function() {
     var name = path.basename(process.argv[1], ".js");
     if (!process.env.DEBUG) {
         process.env.DEBUG = name + "*";
     }
-    return new Logger(name);
+    var logger = new Logger(name);
+    logger.debug = logger.log.bind(logger, "debug");
+    logger.info  = logger.log.bind(logger, "info");
+    logger.warn  = logger.log.bind(logger, "warn");
+    logger.error = logger.log.bind(logger, "error");
+    return logger;
 }
