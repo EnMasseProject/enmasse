@@ -37,7 +37,6 @@ function Logger (name) {
 }
 
 Logger.prototype.log = function (level, str, ...args) {
-    console.log("Level " + level + ", Arg length in log: " + args.length);
     if (levels[level] !== undefined && levels[level] <= this.level) {
         this.logger.apply(this.logger, [level + " " + str].concat(args));
     }
