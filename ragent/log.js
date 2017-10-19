@@ -36,26 +36,26 @@ function Logger (name) {
     }
 }
 
-Logger.prototype.log = function (level, msg) {
+Logger.prototype.log = function (level, str, ...args) {
     if (levels[level] !== undefined && levels[level] <= this.level) {
-        this.logger(level + " " + msg);
+        this.logger("%s " + str, level, args);
     }
 }
 
-Logger.prototype.debug = function (msg) {
-    this.log("debug", msg)
+Logger.prototype.debug = function (msg, ...args) {
+    this.log("debug", msg, args)
 }
 
-Logger.prototype.info = function (msg) {
-    this.log("info", msg)
+Logger.prototype.info = function (msg, ...args) {
+    this.log("info", msg, args)
 }
 
-Logger.prototype.warn = function (msg) {
-    this.log("warn", msg)
+Logger.prototype.warn = function (msg, ...args) {
+    this.log("warn", msg, args)
 }
 
-Logger.prototype.error = function (msg) {
-    this.log("error", msg)
+Logger.prototype.error = function (msg, ...args) {
+    this.log("error", msg, args)
 }
 
 
