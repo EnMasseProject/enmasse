@@ -19,7 +19,7 @@ _Avoid using the word 'Configuring' over and over.  Other words might include:_
 * _Customizing_
 * _Or instead of using synonyms (which becomes obvious) 'verb-alize' a word and refactor the heading - limiting (instead of 'setting resource limits')_
 
-_The standard for all Red Hat documentation is title case for all headings and titles._
+_The standard for all headings and titles._
 
 _A procedure module explains and lists actions that complete a small useful unit of work -- what a user must do to accomplish a goal. The list of actions is presented as numbered steps in a sequence that yields a successful result._
 
