@@ -94,7 +94,7 @@ public abstract class TestBase {
         if (!TestUtils.existAddressSpace(addressApiClient, addressSpace.getName())) {
             Logging.log.info("Address space '" + addressSpace + "' doesn't exist and will be created.");
             addressApiClient.createAddressSpace(addressSpace, authService, addrSpaceType);
-            logCollector.startCollecting(addressSpace.getName());
+            logCollector.startCollecting(addressSpace.getNamespace());
             TestUtils.waitForAddressSpaceReady(addressApiClient, addressSpace.getName());
             if (addressSpace.equals(defaultAddressSpace)) {
                 Thread.sleep(120_000);
