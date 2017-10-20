@@ -26,15 +26,17 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
-@Path("/")
-public class HttpRootService {
+@Path("/v1")
+public class HttpV1RootService {
     @GET
     @Produces({MediaType.APPLICATION_JSON})
-    public Response getAll(@Context UriInfo uriInfo) {
+    public Response getV1(@Context UriInfo uriInfo) {
         List<URI> uriList = new ArrayList<>();
         URI baseUri = uriInfo.getBaseUri();
-        uriList.add(baseUri.resolve("/v1"));
-        uriList.add(baseUri.resolve("/osbapi"));
+        uriList.add(baseUri.resolve("/v1/addressspaces"));
+        uriList.add(baseUri.resolve("/v1/addresses"));
+        uriList.add(baseUri.resolve("/v1/health"));
+        uriList.add(baseUri.resolve("/v1/schema"));
         return Response.status(200).entity(uriList).build();
     }
 }
