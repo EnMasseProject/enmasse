@@ -58,6 +58,7 @@ public class QueueDrainerTest {
     }
 
     @Test
+    @Ignore
     public void testDrain() throws Exception {
         sendMessages(fromServer, "myqueue", "testfrom", 100);
         sendMessages(fromServer, "queue2", "q2from", 10);
