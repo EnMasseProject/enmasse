@@ -597,7 +597,7 @@ public class AmqpBridge {
                 .publishAcknowledgeHandler(this::pubackHandler)
                 .publishReleaseHandler(this::pubrelHandler)
                 .publishReceivedHandler(this::pubrecHandler)
-                .publishCompleteHandler(this::pubcompHandler)
+                .publishCompletionHandler(this::pubcompHandler)
                 .subscribeHandler(this::subscribeHandler)
                 .unsubscribeHandler(this::unsubscribeHandler)
                 .disconnectHandler(this::disconnectHandler)
