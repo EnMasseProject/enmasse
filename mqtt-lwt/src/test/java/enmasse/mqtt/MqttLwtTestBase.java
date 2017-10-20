@@ -18,6 +18,9 @@ package enmasse.mqtt;
 
 import enmasse.mqtt.storage.LwtStorage;
 import enmasse.mqtt.storage.impl.InMemoryLwtStorage;
+import io.enmasse.amqp.DispatchRouterJ;
+import io.vertx.core.AbstractVerticle;
+import io.vertx.core.Verticle;
 import io.vertx.core.Vertx;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
@@ -33,13 +36,11 @@ public class MqttLwtTestBase {
 
     protected Vertx vertx;
     protected MqttLwt lwtService;
+    protected DispatchRouterJ dispatchRouterJ;
     protected LwtStorage lwtStorage;
 
     public static final String MESSAGING_SERVICE_HOST = "localhost";
-    public static final int NORMAL_PORT = 55671;
-    public static final int ROUTE_CONTAINER_PORT = 56671;
 
-    public static final int MESSAGING_SERVICE_PORT = 5673;
     public static final String CERT_DIR = "src/test/resources/client-certs";
 
     public static final String LWT_SERVICE_ENDPOINT = "$lwt";
@@ -59,18 +60,33 @@ public class MqttLwtTestBase {
 
         this.vertx = Vertx.vertx();
 
+        this.dispatchRouterJ = new DispatchRouterJ("src/test/resources/router-certs");
+        this.dispatchRouterJ.addLinkRoute("$lwt", "lwt-service");
+        this.deployVerticle(this.dispatchRouterJ, context);
+
         // create and setup MQTT LWT instance
-        this.lwtService = new MqttLwt();
-        this.lwtService
+        this.lwtService = new MqttLwt()
                 .setHost(MESSAGING_SERVICE_HOST)
-                .setNormalPort(NORMAL_PORT)
-                .setRouteContainerPort(ROUTE_CONTAINER_PORT)
+                .setNormalPort(dispatchRouterJ.getNormalTlsPort())
+                .setRouteContainerPort(dispatchRouterJ.getRouteContainerPort())
                 .setCertDir(CERT_DIR)
                 .setLwtStorage(this.lwtStorage);
 
         if (deploy) {
             this.deploy(context);
         }
+    }
+
+    protected void deployVerticle(Verticle verticle, TestContext context) {
+
+
+        Async async = context.async();
+
+        // start and deploy components
+        this.vertx.deployVerticle(verticle,
+                context.asyncAssertSuccess(v -> async.complete()));
+
+        async.awaitSuccess();
     }
 
     /**
@@ -80,13 +96,8 @@ public class MqttLwtTestBase {
      */
     protected void deploy(TestContext context) {
 
-        Async async = context.async();
+        deployVerticle(this.lwtService, context);
 
-        // start and deploy components
-        this.vertx.deployVerticle(this.lwtService,
-                context.asyncAssertSuccess(v -> async.complete()));
-
-        async.awaitSuccess();
     }
 
     /**

@@ -85,7 +85,7 @@ public class AmqpLwtEndpoint {
 
     private void receiverHandler(ProtonReceiver receiver) {
 
-        LOG.debug("Attaching link request");
+        LOG.info("Attaching link request");
 
         // the LWT service supports only the control address
         if (!receiver.getRemoteTarget().getAddress().equals(LWT_SERVICE_ENDPOINT)) {

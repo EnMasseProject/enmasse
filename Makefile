@@ -23,17 +23,8 @@ all: init build test package docker_build
 build_amqp_module:
 	$(MAKE) -C artemis build_amqp_module
 
-setup_integration_tests:
-	$(MAKE) -C mqtt-gateway setup_router
-	$(MAKE) -C mqtt-lwt setup_router
-
-teardown_integration_tests:
-	$(MAKE) -C mqtt-gateway teardown_router
-	$(MAKE) -C mqtt-lwt teardown_router
-
-build_java: build_amqp_module setup_integration_tests
+build_java: build_amqp_module
 	mvn test package -B $(MAVEN_ARGS)
-	$(MAKE) teardown_integration_tests
 
 clean_java:
 	mvn -B clean
@@ -45,9 +36,8 @@ docker_build: build_java
 coverage: java_coverage
 	$(MAKE) FULL_BUILD=$(FULL_BUILD) -C $@ coverage
 
-java_coverage: build_amqp_module setup_integration_tests
+java_coverage: build_amqp_module
 	mvn test -Pcoverage package -B $(MAVEN_ARGS)
-	$(MAKE) teardown_integration_tests
 	mvn jacoco:report-aggregate
 
 $(BUILD_TARGETS): $(BUILD_DIRS)

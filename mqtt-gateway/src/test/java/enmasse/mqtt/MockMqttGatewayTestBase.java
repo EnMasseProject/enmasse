@@ -19,7 +19,10 @@ package enmasse.mqtt;
 import enmasse.mqtt.mocks.MockBroker;
 import enmasse.mqtt.mocks.MockSubscriptionService;
 import enmasse.mqtt.mocks.MockLwtService;
+import io.enmasse.amqp.DispatchRouterJ;
+import io.vertx.core.Verticle;
 import io.vertx.core.Vertx;
+import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import org.junit.runner.RunWith;
@@ -38,11 +41,9 @@ public abstract class MockMqttGatewayTestBase {
     public static final int MQTT_LISTEN_PORT = 1883;
     public static final int MQTT_TLS_LISTEN_PORT = 8883;
 
-    public static final String MESSAGING_SERVICE_HOST = "localhost";
-    public static final int MESSAGING_SERVICE_PORT = 5672;
 
+    public static final String MESSAGING_SERVICE_HOST = "localhost";
     public static final String INTERNAL_SERVICE_HOST = "localhost";
-    public static final int INTERNAL_SERVICE_PORT = 55673;
 
     private static final String SERVER_KEY = "./src/test/resources/tls/server-key.pem";
     private static final String SERVER_CERT = "./src/test/resources/tls/server-cert.pem";
@@ -50,6 +51,7 @@ public abstract class MockMqttGatewayTestBase {
     protected Vertx vertx;
     protected MockLwtService lwtService;
     protected MockSubscriptionService subscriptionService;
+    protected DispatchRouterJ router;
     protected MockBroker broker;
     protected MqttGateway mqttGateway;
 
@@ -64,13 +66,21 @@ public abstract class MockMqttGatewayTestBase {
         this.vertx = Vertx.vertx();
 
         int port = !ssl ? MQTT_LISTEN_PORT : MQTT_TLS_LISTEN_PORT;
+
+        this.router = new DispatchRouterJ(null);
+        this.router.addLinkRoute("$lwt", "lwt-service");
+        this.router.addLinkRoute("mytopic", "broker");
+        this.router.addLinkRoute("will", "broker");
+
+        deployVerticle(this.router, context);
+
         // create and setup MQTT gateway instance
         this.mqttGateway = new MqttGateway();
         this.mqttGateway
                 .setBindAddress(MQTT_BIND_ADDRESS)
                 .setListenPort(port)
                 .setMessagingServiceHost(MESSAGING_SERVICE_HOST)
-                .setMessagingServicePort(MESSAGING_SERVICE_PORT);
+                .setMessagingServicePort(router.getNormalPort());
 
         if (ssl) {
             this.mqttGateway
@@ -83,25 +93,36 @@ public abstract class MockMqttGatewayTestBase {
         this.broker = new MockBroker();
         this.broker
                 .setInternalServiceHost(INTERNAL_SERVICE_HOST)
-                .setInternalServicePort(INTERNAL_SERVICE_PORT);
+                .setInternalServicePort(router.getRouteContainerPort());
 
         // create and setup mock Last Will and Testament Service instance
         this.lwtService = new MockLwtService();
         this.lwtService
                 .setInternalServiceHost(INTERNAL_SERVICE_HOST)
-                .setInternalServicePort(INTERNAL_SERVICE_PORT);
+                .setInternalServicePort(router.getRouteContainerPort());
 
         // create and setup mock Subscription Service instance
         this.subscriptionService = new MockSubscriptionService();
         this.subscriptionService
                 .setInternalServiceHost(INTERNAL_SERVICE_HOST)
-                .setInternalServicePort(INTERNAL_SERVICE_PORT);
+                .setInternalServicePort(router.getRouteContainerPort());
 
         // start and deploy components
-        this.vertx.deployVerticle(this.broker, context.asyncAssertSuccess());
-        this.vertx.deployVerticle(this.lwtService, context.asyncAssertSuccess());
-        this.vertx.deployVerticle(this.subscriptionService, context.asyncAssertSuccess());
-        this.vertx.deployVerticle(this.mqttGateway, context.asyncAssertSuccess());
+        deployVerticle(this.broker, context);
+        deployVerticle(this.lwtService, context);
+        deployVerticle(this.subscriptionService, context);
+        deployVerticle(this.mqttGateway, context);
+    }
+
+    protected void deployVerticle(Verticle verticle, TestContext context) {
+
+        Async async = context.async();
+
+        // start and deploy components
+        this.vertx.deployVerticle(verticle,
+                context.asyncAssertSuccess(v -> async.complete()));
+
+        async.awaitSuccess();
     }
 
     /**

@@ -139,7 +139,7 @@ public class DisconnectionTest extends MockMqttGatewayTestBase {
         // AMQP client connects for receiving the published message
         ProtonClient client = ProtonClient.create(this.vertx);
 
-        client.connect(MESSAGING_SERVICE_HOST, MESSAGING_SERVICE_PORT, done -> {
+        client.connect(MESSAGING_SERVICE_HOST, router.getNormalPort(), done -> {
 
             if (done.succeeded()) {
 
