@@ -1654,9 +1654,10 @@ objects:
             value: ${ADDRESS_CONTROLLER_ENABLE_API_AUTH}
           image: ${ADDRESS_CONTROLLER_REPO}
           livenessProbe:
-            initialDelaySeconds: 60
-            tcpSocket:
+            httpGet:
+              path: /v1/health
               port: http
+            initialDelaySeconds: 60
           name: address-controller
           ports:
           - containerPort: 8080
@@ -1668,6 +1669,11 @@ objects:
           - containerPort: 5672
             name: amqp
             protocol: TCP
+          readinessProbe:
+            httpGet:
+              path: /v1/health
+              port: http
+            initialDelaySeconds: 60
           resources:
             limits:
               memory: 256Mi

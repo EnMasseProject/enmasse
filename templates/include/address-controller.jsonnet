@@ -129,12 +129,8 @@ local common = import "common.jsonnet";
                     }
                 },
                 "ports": ports,
-                "livenessProbe": {
-                  "tcpSocket": {
-                    "port": "http"
-                  },
-                  "initialDelaySeconds": 60
-                }
+                "livenessProbe": common.http_probe("http", "/v1/health", 60),
+                "readinessProbe": common.http_probe("http", "/v1/health", 60),
               }
             ],
             local template_volume = [{
