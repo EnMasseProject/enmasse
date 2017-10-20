@@ -130,7 +130,8 @@ public class AddressApiClient {
                         }
                         list.complete(spaces);
                     } else {
-                        list.completeExceptionally(new RuntimeException("Error when listing address spaces", ar.cause()));
+                        list.completeExceptionally(ar.cause());
+                        Logging.log.warn("Failed listing address spaces", ar.cause());
                     }
                 });
         return list.get(30, TimeUnit.SECONDS);
