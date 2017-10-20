@@ -6,7 +6,6 @@ OPENSHIFT_PROJECT ?= $(shell oc project -q)
 OPENSHIFT_USER    ?= $(shell oc whoami)
 OPENSHIFT_TOKEN   ?= $(shell oc whoami -t)
 OPENSHIFT_MASTER  ?= $(shell oc whoami --show-server=true)
-SYSTEMTEST_ARGS   =
 MODE              ?= singletenant
 
 ifeq ($(MODE),singletenant)
