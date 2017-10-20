@@ -265,4 +265,24 @@ public class HTTPServerTest {
             client.close();
         }
     }
+
+    @Test
+    public void testOpenApiSpec(TestContext context) throws InterruptedException {
+        HttpClientOptions options = new HttpClientOptions();
+        HttpClient client = vertx.createHttpClient(options);
+        try {
+            Async async = context.async();
+            HttpClientRequest request = client.get(8080, "localhost", "/swagger.json", response -> {
+                response.bodyHandler(buffer -> {
+                    JsonObject data = buffer.toJsonObject();
+                    context.assertTrue(data.containsKey("paths"));
+                    async.complete();
+                });
+            });
+            request.end();
+            async.awaitSuccess(60_000);
+        } finally {
+            client.close();
+        }
+    }
 }
