@@ -30,13 +30,14 @@ do
     fi
     num_running=`oc get pods | grep -v deploy | grep -c Running`
     if [ "$num_running" -eq "$EXPECTED_PODS" ]; then
-        if [ waitingContainersReady ]
+        waitingContainersReady
+        if [ $? -gt 0 ]
         then
+            echo "All pods are up but all containers are not ready yet"
+        else
             echo "ALL UP!"
-            sleep 10
             exit 0
         fi
-        echo "All pods are up but all containers are not ready yet"
     else
         echo "$num_running/$EXPECTED_PODS up"
     fi
