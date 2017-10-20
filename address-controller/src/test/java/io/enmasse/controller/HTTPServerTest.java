@@ -29,6 +29,7 @@ import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientOptions;
 import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpHeaders;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
@@ -39,6 +40,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import java.net.PasswordAuthentication;
+import java.net.URI;
 import java.util.Base64;
 import java.util.Optional;
 import java.util.UUID;
@@ -135,6 +137,40 @@ public class HTTPServerTest {
             r3.headers().add(HttpHeaders.AUTHORIZATION, "Basic " + Base64.getEncoder().encodeToString("test:testp".getBytes()));
             r3.end("{\"apiVersion\":\"enmasse.io/v1\",\"kind\":\"AddressList\",\"items\":[{\"metadata\":{\"name\":\"a4\"},\"spec\":{\"type\":\"queue\"}}]}");
             async.awaitSuccess(60_000);
+        } finally {
+            client.close();
+        }
+    }
+
+    @Test
+    public void testDiscoverability(TestContext context) throws InterruptedException {
+        HttpClient client = vertx.createHttpClient();
+        try {
+            {
+                Async async = context.async();
+                client.getNow(8080, "localhost", "/v1", response -> {
+                    context.assertEquals(200, response.statusCode());
+                    response.bodyHandler(buffer -> {
+                        JsonArray data = buffer.toJsonArray();
+                        String entry = data.getString(0);
+                        if (!entry.contains("addressspaces")) {
+                            entry = data.getString(1);
+                        }
+                        URI uri = URI.create(entry);
+                        client.getNow(uri.getPort(), uri.getHost(), uri.getPath(), nestedResponse -> {
+                            context.assertEquals(200, nestedResponse.statusCode());
+                            nestedResponse.bodyHandler(buffer2 -> {
+                                JsonObject space = buffer2.toJsonObject();
+                                System.out.println(space.toString());
+                                context.assertEquals("AddressSpaceList", space.getString("kind"));
+                                context.assertTrue(space.containsKey("items"));
+                                async.complete();
+                            });
+                        });
+                    });
+                });
+                async.awaitSuccess(60_000);
+            }
         } finally {
             client.close();
         }
