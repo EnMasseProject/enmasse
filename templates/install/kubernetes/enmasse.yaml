@@ -572,7 +572,7 @@ items:
             httpGet:
               path: /v1/health
               port: http
-            initialDelaySeconds: 60
+            initialDelaySeconds: 30
           name: address-controller
           ports:
           - containerPort: 8080
@@ -588,7 +588,7 @@ items:
             httpGet:
               path: /v1/health
               port: http
-            initialDelaySeconds: 60
+            initialDelaySeconds: 30
           resources:
             limits:
               memory: 256Mi

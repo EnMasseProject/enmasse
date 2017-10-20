@@ -129,8 +129,8 @@ local common = import "common.jsonnet";
                     }
                 },
                 "ports": ports,
-                "livenessProbe": common.http_probe("http", "/v1/health", 60),
-                "readinessProbe": common.http_probe("http", "/v1/health", 60),
+                "livenessProbe": common.http_probe("http", "/v1/health", 30),
+                "readinessProbe": common.http_probe("http", "/v1/health", 30),
               }
             ],
             local template_volume = [{
