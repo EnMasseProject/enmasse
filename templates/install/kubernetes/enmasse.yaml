@@ -57,31 +57,31 @@ items:
       "amqp", "port": 5672, "targetPort": "amqp"}, {"name": "amqps", "port": 5671,
       "targetPort": "amqps"}], "selector": {"role": "broker"}}}, {"apiVersion": "extensions/v1beta1",
       "kind": "Deployment", "metadata": {"annotations": {"addressSpace": "${ADDRESS_SPACE}",
-      "io.enmasse.certSecretName": "console-internal-cert"}, "labels": {"app": "enmasse"},
-      "name": "console"}, "spec": {"replicas": 1, "template": {"metadata": {"annotations":
-      {"addressSpace": "${ADDRESS_SPACE}"}, "labels": {"app": "enmasse", "name": "console",
-      "role": "console"}}, "spec": {"containers": [{"env": [{"name": "ADDRESS_SPACE",
+      "io.enmasse.certSecretName": "agent-internal-cert"}, "labels": {"app": "enmasse"},
+      "name": "agent"}, "spec": {"replicas": 1, "template": {"metadata": {"annotations":
+      {"addressSpace": "${ADDRESS_SPACE}"}, "labels": {"app": "enmasse", "name": "agent",
+      "role": "agent"}}, "spec": {"containers": [{"env": [{"name": "ADDRESS_SPACE",
       "value": "${ADDRESS_SPACE}"}, {"name": "ADDRESS_SPACE_TYPE", "value": "brokered"},
       {"name": "ADDRESS_SPACE_SERVICE_HOST", "value": "${ADDRESS_SPACE_SERVICE_HOST}"},
       {"name": "CERT_DIR", "value": "/etc/enmasse-certs"}, {"name": "AUTHENTICATION_SERVICE_HOST",
       "value": "${AUTHENTICATION_SERVICE_HOST}"}, {"name": "AUTHENTICATION_SERVICE_PORT",
       "value": "${AUTHENTICATION_SERVICE_PORT}"}, {"name": "AUTHENTICATION_SERVICE_CLIENT_SECRET",
       "value": "${AUTHENTICATION_SERVICE_CLIENT_SECRET}"}, {"name": "AUTHENTICATION_SERVICE_SASL_INIT_HOST",
-      "value": "${AUTHENTICATION_SERVICE_SASL_INIT_HOST}"}], "image": "${CONSOLE_IMAGE}",
-      "livenessProbe": {"httpGet": {"path": "/probe", "port": "http"}}, "name": "console",
+      "value": "${AUTHENTICATION_SERVICE_SASL_INIT_HOST}"}], "image": "${AGENT_IMAGE}",
+      "livenessProbe": {"httpGet": {"path": "/probe", "port": "http"}}, "name": "agent",
       "ports": [{"containerPort": 8080, "name": "http"}], "readinessProbe": {"httpGet":
-      {"path": "/probe", "port": "http"}}, "volumeMounts": [{"mountPath": "/opt/console/authservice-ca",
+      {"path": "/probe", "port": "http"}}, "volumeMounts": [{"mountPath": "/opt/agent/authservice-ca",
       "name": "authservice-ca", "readOnly": true}, {"mountPath": "/etc/enmasse-certs",
-      "name": "console-internal-cert", "readOnly": true}]}], "volumes": [{"name":
-      "authservice-ca", "secret": {"secretName": "authservice-ca"}}, {"name": "console-internal-cert",
-      "secret": {"secretName": "console-internal-cert"}}]}}}}, {"apiVersion": "v1",
+      "name": "agent-internal-cert", "readOnly": true}]}], "volumes": [{"name": "authservice-ca",
+      "secret": {"secretName": "authservice-ca"}}, {"name": "agent-internal-cert",
+      "secret": {"secretName": "agent-internal-cert"}}]}}}}, {"apiVersion": "v1",
       "kind": "Service", "metadata": {"labels": {"app": "enmasse"}, "name": "console"},
       "spec": {"ports": [{"name": "http", "port": 8080, "targetPort": "http"}], "selector":
-      {"role": "console"}}}], "parameters": [{"description": "Hostname where API server
+      {"role": "agent"}}}], "parameters": [{"description": "Hostname where API server
       can be reached", "name": "ADDRESS_SPACE_SERVICE_HOST", "value": ""}, {"description":
       "The docker image to use for the message broker", "name": "BROKER_IMAGE", "value":
       "docker.io/enmasseproject/artemis:latest"}, {"description": "The docker image
-      to use for the console server", "name": "CONSOLE_IMAGE", "value": "docker.io/enmasseproject/console:latest"},
+      to use for the enmasse agent", "name": "AGENT_IMAGE", "value": "docker.io/enmasseproject/agent:latest"},
       {"description": "Storage capacity required for volume claims", "name": "STORAGE_CAPACITY",
       "value": "2Gi"}, {"description": "The address space this infrastructure is deployed
       for", "name": "ADDRESS_SPACE", "required": true}, {"description": "The hostname
@@ -341,20 +341,20 @@ items:
       "value": "localhost"}, {"name": "CONFIGURATION_SERVICE_PORT", "value": "5671"},
       {"name": "ADDRESS_SPACE_SERVICE_HOST", "value": "${ADDRESS_SPACE_SERVICE_HOST}"},
       {"name": "ADDRESS_SPACE", "value": "${ADDRESS_SPACE}"}, {"name": "ADDRESS_CONTROLLER_CA",
-      "value": "/opt/console/address-controller-ca/tls.crt"}, {"name": "ADDRESS_SPACE_PASSWORD_FILE",
-      "value": "/opt/console/address-space-credentials/api.passwd"}, {"name": "AUTHENTICATION_SERVICE_HOST",
+      "value": "/opt/agent/address-controller-ca/tls.crt"}, {"name": "ADDRESS_SPACE_PASSWORD_FILE",
+      "value": "/opt/agent/address-space-credentials/api.passwd"}, {"name": "AUTHENTICATION_SERVICE_HOST",
       "value": "${AUTHENTICATION_SERVICE_HOST}"}, {"name": "AUTHENTICATION_SERVICE_PORT",
       "value": "${AUTHENTICATION_SERVICE_PORT}"}, {"name": "AUTHENTICATION_SERVICE_CLIENT_SECRET",
       "value": "${AUTHENTICATION_SERVICE_CLIENT_SECRET}"}, {"name": "AUTHENTICATION_SERVICE_SASL_INIT_HOST",
-      "value": "${AUTHENTICATION_SERVICE_SASL_INIT_HOST}"}], "image": "${CONSOLE_REPO}",
+      "value": "${AUTHENTICATION_SERVICE_SASL_INIT_HOST}"}], "image": "${AGENT_IMAGE}",
       "livenessProbe": {"initialDelaySeconds": 60, "tcpSocket": {"port": "http"}},
-      "name": "console", "ports": [{"containerPort": 8080, "name": "http", "protocol":
+      "name": "agent", "ports": [{"containerPort": 8080, "name": "http", "protocol":
       "TCP"}, {"containerPort": 56720, "name": "amqp-ws", "protocol": "TCP"}], "resources":
       {"limits": {"memory": "64Mi"}, "requests": {"memory": "64Mi"}}, "volumeMounts":
-      [{"mountPath": "/opt/console/authservice-ca", "name": "authservice-ca", "readOnly":
+      [{"mountPath": "/opt/agent/authservice-ca", "name": "authservice-ca", "readOnly":
       true}, {"mountPath": "/etc/enmasse-certs", "name": "admin-internal-cert", "readOnly":
-      true}, {"mountPath": "/opt/console/address-controller-ca", "name": "address-controller-ca",
-      "readOnly": true}, {"mountPath": "/opt/console/address-space-credentials", "name":
+      true}, {"mountPath": "/opt/agent/address-controller-ca", "name": "address-controller-ca",
+      "readOnly": true}, {"mountPath": "/opt/agent/address-space-credentials", "name":
       "address-space-credentials", "readOnly": true}]}, {"env": [{"name": "CERT_DIR",
       "value": "/etc/enmasse-certs"}], "image": "${CONFIGSERV_REPO}", "livenessProbe":
       {"initialDelaySeconds": 60, "tcpSocket": {"port": "amqps"}}, "name": "configserv",
@@ -380,7 +380,7 @@ items:
       "The image to use for the router agent", "name": "RAGENT_REPO", "value": "docker.io/enmasseproject/ragent:latest"},
       {"description": "The image to use for the subscription services", "name": "SUBSERV_REPO",
       "value": "docker.io/enmasseproject/subserv:latest"}, {"description": "The image
-      to use for the console", "name": "CONSOLE_REPO", "value": "docker.io/enmasseproject/console:latest"},
+      to use for the enmasse agent", "name": "AGENT_IMAGE", "value": "docker.io/enmasseproject/agent:latest"},
       {"description": "The hostname to use for the exposed route for messaging", "name":
       "MESSAGING_HOSTNAME"}, {"description": "The image to use for the MQTT gateway",
       "name": "MQTT_GATEWAY_REPO", "value": "docker.io/enmasseproject/mqtt-gateway:latest"},

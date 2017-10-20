@@ -1,6 +1,10 @@
-# routilities
+# EnMasse agent
 
-Various utilities for managing and monitoring a router network.
+Generic EnMasse agent running within each address space.
+
+## brokerd address space controller
+
+Controller for managing addresses in a brokered address space.
 
 ## console-server [WIP]
 
@@ -19,4 +23,4 @@ ADMIN_SERVICE_HOST appropriately (e.g. with $(oc get service | awk
 ## coming soon...
 
 ragent and subserv will be moved into this repo for simpler sharing of
-common code
+common code. The standard address space controller logic will also be moved here.

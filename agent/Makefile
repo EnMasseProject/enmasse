@@ -12,11 +12,11 @@ www/help.html:  ../documentation/common/*.adoc
 		$(warning "asciidoctor not found, help pages cannot be generated")
         else
 			# TODO: Reenable when we have help documentation
-	       	#asciidoctor -d book -B ../documentation/ -o ../console/www/help.html ../documentation/master.adoc
+	       	#asciidoctor -d book -B ../documentation/ -o ../agent/www/help.html ../documentation/master.adoc
         endif
 
 package: build
-	tar -czf build/console.tgz bin lib www package.json
+	tar -czf build/agent.tgz bin lib www package.json
 
 test: npm_test
 

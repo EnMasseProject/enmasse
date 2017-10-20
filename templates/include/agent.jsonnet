@@ -3,13 +3,13 @@ local authService = import "auth-service.jsonnet";
 local common = import "common.jsonnet";
 {
   service(addressSpace)::
-    common.service(addressSpace, "console", "console", "http", 8080, 8080),
+    common.service(addressSpace, "console", "agent", "http", 8080, 8080),
 
   container(image_repo, env)::
     {
       local mount_path = "/var/lib/qdrouterd",
       "image": image_repo,
-      "name": "console",
+      "name": "agent",
       "env": env + authService.envVars,
       "resources": {
         "requests": {
@@ -45,20 +45,20 @@ local common = import "common.jsonnet";
       "kind": "Deployment",
       "metadata": {
         "labels": {
-          "name": "console",
+          "name": "agent",
           "app": "enmasse"
         },
         "annotations": {
           "addressSpace": addressSpace
         },
-        "name": "console"
+        "name": "agent"
       },
       "spec": {
         "replicas": 1,
         "template": {
           "metadata": {
             "labels": {
-              "name": "console",
+              "name": "agent",
               "app": "enmasse"
             },
             "annotations": {
