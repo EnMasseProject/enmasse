@@ -1228,9 +1228,9 @@ objects:
               protocol: TCP
             resources:
               limits:
-                memory: 64Mi
+                memory: 128Mi
               requests:
-                memory: 64Mi
+                memory: 128Mi
             volumeMounts:
             - mountPath: /opt/agent/authservice-ca
               name: authservice-ca
