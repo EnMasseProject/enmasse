@@ -1,0 +1,640 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "This is the EnMasse API specification.",
+        "version": "1.0.0",
+        "title": "EnMasse API"
+    },
+    "basePath": "/v1",
+    "tags": [
+        {
+            "name": "addressspaces",
+            "description": "Operate on AddressSpaces",
+            "externalDocs": {
+                "description": "Find out more",
+                "url": "http://enmasse.io"
+            }
+        },
+        {
+            "name": "addresses",
+            "description": "Operating on Addresses within an AddressSpace.",
+            "externalDocs": {
+                "description": "Find out more",
+                "url": "http://enmasse.io"
+            }
+        }
+    ],
+    "schemes": [
+        "http"
+    ],
+    "paths": {
+        "/addressspaces": {
+            "get": {
+                "tags": [
+                    "addressspaces"
+                ],
+                "summary": "Get list of all AddressSpaces",
+                "description": "Returns a list of all AddressSpaces in the system",
+                "operationId": "getAddressSpaceList",
+                "produces": [
+                    "application/json"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/AddressSpaceList"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "addressspaces"
+                ],
+                "summary": "Create a new AddressSpace",
+                "description": "Creates a new AddressSpace in which you can then create Addresses.",
+                "operationId": "createAddressSpace",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "description": "AddressSpace object",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/AddressSpace"
+                        }
+                    }
+                ],
+                "responses": {
+                    "405": {
+                        "description": "Invalid input"
+                    }
+                }
+            }
+        },
+        "/addressspaces/{name}": {
+            "get": {
+                "tags": [
+                    "addressspaces"
+                ],
+                "summary": "Get AddressSpace by name",
+                "description": "Returns a single AddressSpace",
+                "operationId": "getAddressSpace",
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "name",
+                        "in": "path",
+                        "description": "Name of AddressSpace to return",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/AddressSpace"
+                        }
+                    },
+                    "404": {
+                        "description": "AddressSpace not found"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "addressspaces"
+                ],
+                "summary": "Delete an AddressSpace",
+                "description": "",
+                "operationId": "deleteAddressSpace",
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "name",
+                        "in": "path",
+                        "description": "Name of AddressSpace to delete",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Deletion successful; List of remaining AddressSpaces is returned.",
+                        "schema": {
+                            "$ref": "#/definitions/AddressSpaceList"
+                        }
+                    },
+                    "404": {
+                        "description": "AddressSpace not found"
+                    }
+                }
+            }
+        },
+        "/addresses/{addressSpace}": {
+            "get": {
+                "tags": [
+                    "addresses"
+                ],
+                "summary": "Get list of all Addresses in the AddressSpace",
+                "description": "Returns a list of all Addresses in the specified AddressSpace",
+                "operationId": "getAddressList",
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "addressSpace",
+                        "in": "path",
+                        "description": "Name of AddressSpace",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/AddressList"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "addresses"
+                ],
+                "summary": "Append Addresses to an AddressSpace",
+                "description": "Append one or more Addresses to the specified AddressSpace.",
+                "operationId": "appendAddresses",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "addressSpace",
+                        "in": "path",
+                        "description": "Name of AddressSpace",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "description": "AddressList object",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/AddressList"
+                        }
+                    }
+                ],
+                "responses": {
+                    "405": {
+                        "description": "Invalid input"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "addresses"
+                ],
+                "summary": "Replace Addresses in an AddressSpace",
+                "description": "Replace Addresses in the specified AddressSpace with those specified in the request body.",
+                "operationId": "replaceAddresses",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "addressSpace",
+                        "in": "path",
+                        "description": "Name of AddressSpace",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "description": "AddressList object",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/AddressList"
+                        }
+                    }
+                ],
+                "responses": {
+                    "405": {
+                        "description": "Invalid input"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "addresses"
+                ],
+                "summary": "Delete all Addresses in an AddressSpace",
+                "description": "",
+                "operationId": "deleteAllAddresses",
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "addressSpace",
+                        "in": "path",
+                        "description": "Name of AddressSpace",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Deletion successful; Empty AddressList is returned.",
+                        "schema": {
+                            "$ref": "#/definitions/AddressList"
+                        }
+                    },
+                    "404": {
+                        "description": "AddressSpace not found"
+                    }
+                }
+            }
+        },
+        "/addressses/{addressSpace}/{address}": {
+            "get": {
+                "tags": [
+                    "addresses"
+                ],
+                "summary": "Get Address by name",
+                "description": "Returns a single Address",
+                "operationId": "getAddress",
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "addressSpace",
+                        "in": "path",
+                        "description": "Name of AddressSpace",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "address",
+                        "in": "path",
+                        "description": "Name of Address to return",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/Address"
+                        }
+                    },
+                    "404": {
+                        "description": "Address or AddressSpace not found"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "addresses"
+                ],
+                "summary": "Delete an Address",
+                "description": "",
+                "operationId": "deleteAddress",
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "addressSpace",
+                        "in": "path",
+                        "description": "Name of AddressSpace",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "address",
+                        "in": "path",
+                        "description": "Name of Address to delete",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Deletion successful; List of remaining Addresses is returned.",
+                        "schema": {
+                            "$ref": "#/definitions/AddressList"
+                        }
+                    },
+                    "404": {
+                        "description": "Address or AddressSpace not found"
+                    }
+                }
+            }
+        }
+    },
+    "securityDefinitions": {
+        "petstore_auth": {
+            "type": "oauth2",
+            "authorizationUrl": "http://petstore.swagger.io/oauth/dialog",
+            "flow": "implicit",
+            "scopes": {
+                "write:pets": "modify pets in your account",
+                "read:pets": "read your pets"
+            }
+        },
+        "api_key": {
+            "type": "apiKey",
+            "name": "api_key",
+            "in": "header"
+        }
+    },
+    "definitions": {
+        "AddressSpace": {
+            "type": "object",
+            "required": [
+                "apiVersion",
+                "kind",
+                "metadata",
+                "spec"
+            ],
+            "properties": {
+                "apiVersion": {
+                    "type": "string",
+                    "enum": [
+                        "enmasse.io/v1"
+                    ]
+                },
+                "kind": {
+                    "type": "string",
+                    "enum": [
+                        "AddressSpace"
+                    ]
+                },
+                "metadata": {
+                    "$ref": "#/definitions/ObjectMeta"
+                },
+                "spec": {
+                    "$ref": "#/definitions/AddressSpaceSpec"
+                },
+                "status": {
+                    "$ref": "#/definitions/AddressSpaceStatus"
+                }
+            }
+        },
+        "AddressSpaceSpec": {
+            "type": "object",
+            "required": [
+                "type"
+            ],
+            "properties": {
+                "type": {
+                    "$ref": "#/definitions/AddressType"
+                },
+                "plan": {
+                    "type": "string"
+                },
+                "endpoints": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "name": {
+                                "type": "string"
+                            },
+                            "service": {
+                                "type": "string"
+                            },
+                            "host": {
+                                "type": "string"
+                            },
+                            "certProvider": {
+                                "type": "object",
+                                "properties": {
+                                    "name": {
+                                        "type": "string"
+                                    },
+                                    "secretName": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "authenticationService": {
+                    "type": "object",
+                    "properties": {
+                        "type": {
+                            "type": "string"
+                        },
+                        "details": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
+        "AddressSpaceStatus": {
+            "type": "object",
+            "properties": {
+                "isReady": {
+                    "type": "boolean"
+                },
+                "messages": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "AddressSpaceList": {
+            "type": "object",
+            "required": [
+                "apiVersion",
+                "kind",
+                "items"
+            ],
+            "properties": {
+                "apiVersion": {
+                    "type": "string",
+                    "default": "enmasse.io/v1",
+                    "enum": [
+                        "enmasse.io/v1"
+                    ]
+                },
+                "kind": {
+                    "type": "string",
+                    "enum": [
+                        "AddressSpaceList"
+                    ]
+                },
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/AddressSpace"
+                    }
+                }
+            }
+        },
+        "Address": {
+            "type": "object",
+            "required": [
+                "apiVersion",
+                "kind",
+                "metadata",
+                "spec"
+            ],
+            "properties": {
+                "apiVersion": {
+                    "type": "string",
+                    "enum": [
+                        "enmasse.io/v1"
+                    ]
+                },
+                "kind": {
+                    "type": "string",
+                    "enum": [
+                        "Address"
+                    ]
+                },
+                "metadata": {
+                    "$ref": "#/definitions/ObjectMeta"
+                },
+                "spec": {
+                    "$ref": "#/definitions/AddressSpec"
+                },
+                "status": {
+                    "$ref": "#/definitions/AddressStatus"
+                }
+            }
+        },
+        "AddressMeta": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "addressSpace": {
+                    "type": "string"
+                },
+                "uuid": {
+                    "type": "string"
+                }
+            }
+        },
+        "AddressSpec": {
+            "type": "object",
+            "required": [
+                "type"
+            ],
+            "properties": {
+                "type": {
+                    "$ref": "#/definitions/AddressType"
+                },
+                "plan": {
+                    "type": "string"
+                },
+                "address": {
+                    "type": "string"
+                }
+            }
+        },
+        "AddressStatus": {
+            "type": "object",
+            "properties": {
+                "isReady": {
+                    "type": "boolean"
+                },
+                "messages": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "AddressList": {
+            "type": "object",
+            "required": [
+                "apiVersion",
+                "kind",
+                "items"
+            ],
+            "properties": {
+                "apiVersion": {
+                    "type": "string",
+                    "default": "enmasse.io/v1",
+                    "enum": [
+                        "enmasse.io/v1"
+                    ]
+                },
+                "kind": {
+                    "type": "string",
+                    "enum": [
+                        "AddressList"
+                    ]
+                },
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Address"
+                    }
+                }
+            }
+        },
+        "ObjectMeta": {
+            "type": "object",
+            "required": [
+                "name"
+            ],
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "namespace": {
+                    "type": "string"
+                }
+            }
+        },
+        "AddressType": {
+            "type": "string",
+            "description": "Type of address (queue, topic, ...)",
+            "enum": [
+                "QUEUE",
+                "TOPIC",
+                "ANYCAST",
+                "MULTICAST"
+            ]
+        }
+    },
+    "externalDocs": {
+        "description": "Find out more about EnMasse",
+        "url": "http://enmasse.io"
+    }
+}
