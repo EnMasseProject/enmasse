@@ -27,6 +27,7 @@ import io.enmasse.controller.api.v1.http.HttpAddressService;
 import io.enmasse.controller.api.v1.http.HttpAddressSpaceService;
 import io.enmasse.controller.api.v1.http.HttpHealthService;
 import io.enmasse.controller.api.v1.http.HttpSchemaService;
+import io.enmasse.controller.api.v1.http.*;
 import io.enmasse.controller.auth.BasicAuthHandler;
 import io.enmasse.controller.auth.SingleUserAuthenticator;
 import io.enmasse.controller.auth.UserAuthenticator;
@@ -90,6 +91,8 @@ public class HTTPServer extends AbstractVerticle {
         deployment.getRegistry().addSingletonResource(new HttpSchemaService());
         deployment.getRegistry().addSingletonResource(new HttpAddressSpaceService(addressSpaceApi));
         deployment.getRegistry().addSingletonResource(new HttpHealthService());
+        deployment.getRegistry().addSingletonResource(new HttpRootService());
+        deployment.getRegistry().addSingletonResource(new HttpAddressRootService(addressSpaceApi));
 
         deployment.getRegistry().addSingletonResource(new OSBCatalogService(addressSpaceApi));
         deployment.getRegistry().addSingletonResource(new OSBProvisioningService(addressSpaceApi));
