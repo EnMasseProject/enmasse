@@ -33,6 +33,7 @@ do
         if [ waitingContainersReady ]
         then
             echo "ALL UP!"
+            sleep 10
             exit 0
         fi
         echo "All pods are up but all containers are not ready yet"
