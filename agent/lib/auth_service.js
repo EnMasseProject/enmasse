@@ -55,7 +55,7 @@ function default_options(env) {
         port: env.AUTHENTICATION_SERVICE_PORT,
         sasl_init_hostname: env.AUTHENTICATION_SERVICE_SASL_INIT_HOST
     };
-    var ca_path = env.AUTH_SERVICE_CA || path.resolve('/opt/console/authservice-ca', 'tls.crt');
+    var ca_path = env.AUTH_SERVICE_CA || path.resolve('/opt/agent/authservice-ca', 'tls.crt');
     try {
         options.ca = [fs.readFileSync(ca_path)];
         options.transport = 'tls';
