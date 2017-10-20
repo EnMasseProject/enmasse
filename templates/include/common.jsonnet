@@ -161,6 +161,15 @@
     [if initialDelay != 0 then "initialDelaySeconds"]: initialDelay
   },
 
+  http_probe(port, path, initialDelay)::
+  {
+    "httpGet": {
+      "port": port,
+      "path": path
+    },
+    [if initialDelay != 0 then "initialDelaySeconds"]: initialDelay
+  },
+
   container_port(name, port)::
   {
     "name": name,
