@@ -36,7 +36,8 @@ function Logger (name) {
     }
 }
 
-Logger.prototype.log = function (level, str, ...args) {
+Logger.prototype.log = function (level, str) {
+    var args = Array.prototype.slice.call(arguments, 2);
     if (levels[level] !== undefined && levels[level] <= this.level) {
         this.logger.apply(this.logger, [level + " " + str].concat(args));
     }
