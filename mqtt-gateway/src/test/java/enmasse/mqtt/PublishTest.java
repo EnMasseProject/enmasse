@@ -64,11 +64,15 @@ public class PublishTest extends MockMqttGatewayTestBase {
     }
 
     @Test
-    public void mqttPublishQoStoMqtt(TestContext context) {
+    public void mqttPublishQoStoMqtt(TestContext context) throws InterruptedException {
 
         for (int receiverQos = 0; receiverQos <= 2; receiverQos++) {
 
             for (int publisherQos = 0; publisherQos <= 2; publisherQos++) {
+
+                // This is to make sure we get a clean state for each iteration
+                super.tearDown(context);
+                super.setup(context, false);
 
                 // MQTT 3.1.1 spec :  The QoS of Payload Messages sent in response to a Subscription MUST be
                 // the minimum of the QoS of the originally published message and the maximum QoS granted by the Server
@@ -78,7 +82,7 @@ public class PublishTest extends MockMqttGatewayTestBase {
                 this.mqttPublish(context, MQTT_TOPIC, MQTT_MESSAGE, publisherQos);
 
                 context.assertTrue(qos == this.receivedQos);
-                LOG.info("receiverQos = {}, publisherQos = {}, qos = {}", receiverQos, publisherQos, qos);
+
             }
         }
     }
@@ -194,7 +198,7 @@ public class PublishTest extends MockMqttGatewayTestBase {
         // AMQP client connects for receiving the published message
         ProtonClient client = ProtonClient.create(this.vertx);
 
-        client.connect(MESSAGING_SERVICE_HOST, MESSAGING_SERVICE_PORT, done -> {
+        client.connect(MESSAGING_SERVICE_HOST, router.getNormalPort(), done -> {
 
             if (done.succeeded()) {
 
@@ -231,7 +235,7 @@ public class PublishTest extends MockMqttGatewayTestBase {
         // AMQP client connects for publishing message
         ProtonClient client = ProtonClient.create(this.vertx);
 
-        client.connect(MESSAGING_SERVICE_HOST, MESSAGING_SERVICE_PORT, done -> {
+        client.connect(MESSAGING_SERVICE_HOST, router.getNormalPort(), done -> {
 
             if (done.succeeded()) {
 

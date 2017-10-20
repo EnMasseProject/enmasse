@@ -83,7 +83,7 @@ public class WillTest extends MqttLwtTestBase {
         // AMQP client connects for receiving the published message
         ProtonClient client = ProtonClient.create(this.vertx);
 
-        client.connect(MESSAGING_SERVICE_HOST, MESSAGING_SERVICE_PORT, done -> {
+        client.connect(MESSAGING_SERVICE_HOST, dispatchRouterJ.getNormalPort(), done -> {
 
             if (done.succeeded()) {
 
@@ -143,7 +143,7 @@ public class WillTest extends MqttLwtTestBase {
         // AMQP client connects for publishing message
         ProtonClient client = ProtonClient.create(this.vertx);
 
-        client.connect(MESSAGING_SERVICE_HOST, MESSAGING_SERVICE_PORT, done -> {
+        client.connect(MESSAGING_SERVICE_HOST, dispatchRouterJ.getNormalPort(), done -> {
 
             if (done.succeeded()) {
 

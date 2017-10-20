@@ -57,7 +57,8 @@ public class ConnectionTest extends MqttLwtTestBase {
     }
 
     @Test
-    public void attachingAddressNotSupported(TestContext context) {
+    public void attachingAddressNotSupported(TestContext context) throws InterruptedException {
+
 
         // deploy the MQTT LWT service
         super.deploy(context);
@@ -88,7 +89,7 @@ public class ConnectionTest extends MqttLwtTestBase {
 
         ProtonClient client = ProtonClient.create(this.vertx);
 
-        client.connect(MESSAGING_SERVICE_HOST, MESSAGING_SERVICE_PORT, done -> {
+        client.connect(MESSAGING_SERVICE_HOST, dispatchRouterJ.getNormalPort(), done -> {
 
             if (done.succeeded()) {
 

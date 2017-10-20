@@ -73,7 +73,7 @@ public class DisconnectionTest extends MqttLwtTestBase {
 
         ProtonClient client = ProtonClient.create(this.vertx);
 
-        client.connect(MESSAGING_SERVICE_HOST, MESSAGING_SERVICE_PORT, done -> {
+        client.connect(MESSAGING_SERVICE_HOST, dispatchRouterJ.getNormalPort(), done -> {
 
             if (done.succeeded()) {
 
