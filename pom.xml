@@ -12,7 +12,7 @@
     <maven.compiler.target>1.8</maven.compiler.target>
     <maven.surefire.version>2.20.1</maven.surefire.version>
     <fabric8.kubernetes-client.version>2.5.7</fabric8.kubernetes-client.version>
-    <vertx.version>3.5.0-SNAPSHOT</vertx.version>
+    <vertx.version>3.5.0</vertx.version>
     <slf4j.version>1.7.21</slf4j.version>
     <jackson.version>2.9.2</jackson.version>
     <resteasy.version>3.1.0.Final</resteasy.version>
@@ -51,13 +51,6 @@
      <module>systemtests</module>
      <module>artemis</module>
   </modules>
-
-  <repositories>
-    <repository>
-      <id>oss.sonatype.org-snapshot</id>
-      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-    </repository>
-  </repositories>
 
   <build>
     <plugins>
