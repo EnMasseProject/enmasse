@@ -10,7 +10,7 @@ local messagingService = import "messaging-service.jsonnet";
 local messagingRoute = import "messaging-route.jsonnet";
 local common = import "common.jsonnet";
 local admin = import "admin.jsonnet";
-local console = import "console.jsonnet";
+local agent = import "agent.jsonnet";
 local mqttGateway = import "mqtt-gateway.jsonnet";
 local mqtt = import "mqtt.jsonnet";
 local mqttService = import "mqtt-service.jsonnet";
@@ -45,7 +45,7 @@ local images = import "images.jsonnet";
       common.ca_secret("address-controller-ca", "${ADDRESS_CONTROLLER_CA_CERT}"),
       hawkularBrokerConfig,
       hawkularRouterConfig,
-      admin.deployment("${ADDRESS_SPACE}", "${CONFIGSERV_REPO}", "${RAGENT_REPO}", "${QUEUE_SCHEDULER_REPO}", "${CONSOLE_REPO}", "authservice-ca", "address-controller-ca"),
+      admin.deployment("${ADDRESS_SPACE}", "${CONFIGSERV_REPO}", "${RAGENT_REPO}", "${QUEUE_SCHEDULER_REPO}", "${AGENT_IMAGE}", "authservice-ca", "address-controller-ca"),
       admin.password_secret("address-space-credentials", "${ADDRESS_SPACE_PASSWORD}"),
     ],
 
@@ -100,9 +100,9 @@ local images = import "images.jsonnet";
         "value": images.subserv
       },
       {
-        "name": "CONSOLE_REPO",
-        "description": "The image to use for the console",
-        "value": images.console
+        "name": "AGENT_IMAGE",
+        "description": "The image to use for the enmasse agent",
+        "value": images.agent
       },
       {
         "name": "MESSAGING_HOSTNAME",

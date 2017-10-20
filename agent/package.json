@@ -1,7 +1,7 @@
 {
-    "name" : "console",
+    "name" : "agent",
     "version": "0.0.1",
-    "description": "console for enmasse",
+    "description": "controller agent and console for enmasse",
     "homepage": "http://github.com/enmasseproject",
     "license": "Apache-2.0",
     "repository": {

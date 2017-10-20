@@ -1,5 +1,5 @@
 local router = import "router.jsonnet";
-local console = import "console.jsonnet";
+local agent = import "agent.jsonnet";
 local common = import "common.jsonnet";
 {
   service(name, addressSpace, ports)::
@@ -45,7 +45,7 @@ local common = import "common.jsonnet";
   },
 
 
-  deployment(addressSpace, configserv_image, ragent_image, scheduler_image, console_image, auth_service_ca_secret, address_controller_ca_secret)::
+  deployment(addressSpace, configserv_image, ragent_image, scheduler_image, agent_image, auth_service_ca_secret, address_controller_ca_secret)::
   {
     "apiVersion": "extensions/v1beta1",
     "kind": "Deployment",
@@ -154,7 +154,7 @@ local common = import "common.jsonnet";
                             }
                           ]
                         },
-            console.container(console_image, [
+            agent.container(agent_image, [
                       {
                         "name": "CONFIGURATION_SERVICE_HOST",
                         "value": "localhost"
@@ -173,16 +173,16 @@ local common = import "common.jsonnet";
                       },
                       {
                         "name": "ADDRESS_CONTROLLER_CA",
-                        "value": "/opt/console/address-controller-ca/tls.crt"
+                        "value": "/opt/agent/address-controller-ca/tls.crt"
                       },
                       {
                         "name": "ADDRESS_SPACE_PASSWORD_FILE",
-                        "value": "/opt/console/address-space-credentials/api.passwd"
+                        "value": "/opt/agent/address-space-credentials/api.passwd"
                       }]) + {
                         "volumeMounts": [
                           {
                             "name": "authservice-ca",
-                            "mountPath": "/opt/console/authservice-ca",
+                            "mountPath": "/opt/agent/authservice-ca",
                             "readOnly": true
                           },
                           {
@@ -192,12 +192,12 @@ local common = import "common.jsonnet";
                           },
                           {
                             "name": address_controller_ca_secret,
-                            "mountPath": "/opt/console/address-controller-ca",
+                            "mountPath": "/opt/agent/address-controller-ca",
                             "readOnly": true
                           },
                           {
                             "name": "address-space-credentials",
-                            "mountPath": "/opt/console/address-space-credentials",
+                            "mountPath": "/opt/agent/address-space-credentials",
                             "readOnly": true
                           }
                         ]

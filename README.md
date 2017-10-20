@@ -30,7 +30,7 @@ EnMasse is made of different components needed for the deployment and for handli
 * [configserv](https://github.com/EnMasseProject/enmasse/tree/master/configserv): A bridge for subscribing to Kubernetes resource updates through AMQP
 * [queue-scheduler](https://github.com/EnMasseProject/enmasse/tree/master/queue-scheduler): Controls the mapping of queues to brokers
 * [subserv](https://github.com/EnMasseProject/enmasse/tree/master/subserv): Subscription service for durable subscriptions
-* [console](https://github.com/EnMasseProject/enmasse/tree/master/console): Messaging-centric console for managing and monitoring addresses
+* [agent](https://github.com/EnMasseProject/enmasse/tree/master/agent): Messaging-centric console, address space controller for managing and monitoring addresses
 * [mqtt-gateway](https://github.com/EnMasseProject/enmasse/tree/master/mqtt-gateway): MQTT gateway for "MQTT over AMQP"
 * [mqtt-lwt](https://github.com/EnMasseProject/enmasse/tree/master/mqtt-lwt): MQTT Last Will and Testament Service for "MQTT over AMQP"
 * [amqp-kafa-bridge](https://github.com/EnMasseProject/amqp-kafka-bridge): A bridge between AMQP and Apache Kafka

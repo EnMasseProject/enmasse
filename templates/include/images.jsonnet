@@ -32,8 +32,8 @@ local registry = std.extVar("REGISTRY");
   subserv::
     self.image("subserv"),
 
-  console::
-    self.image("console"),
+  agent::
+    self.image("agent"),
 
   mqtt_gateway::
     self.image("mqtt-gateway"),
