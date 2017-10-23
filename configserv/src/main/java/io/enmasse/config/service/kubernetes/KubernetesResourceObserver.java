@@ -118,6 +118,7 @@ public class KubernetesResourceObserver<T extends Resource> implements AutoClose
         }
 
         if (!annotationFilter((HasMetadata) obj)) {
+            log.info("Received object caught in filter {}: {}", observerKey, obj);
             return;
         }
 
