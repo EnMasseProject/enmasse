@@ -121,11 +121,16 @@ public class QueueTest extends TestBase {
 
         List<Destination> addresses = new ArrayList<>();
         queues.forEach(queue -> addresses.add(Destination.queue(queue, Optional.of("pooled-inmemory"))));
+
+        AmqpClient client = amqpClientFactory.createQueueClient();
         for (Destination address : addresses) {
             setAddresses(address, destExtra);
+
+            runQueueTest(client, address, 1);
+
             deleteAddresses(address);
             Future<List<String>> response = getAddresses(Optional.empty());
-            assertThat(response.get(20, TimeUnit.SECONDS), is(Arrays.asList(destExtra.getAddress()));
+            assertThat(response.get(20, TimeUnit.SECONDS), is(Arrays.asList(destExtra.getAddress())));
             deleteAddresses(destExtra);
             assertThat(response.get(20, TimeUnit.SECONDS), is(java.util.Collections.emptyList()));
         }
@@ -192,8 +197,12 @@ public class QueueTest extends TestBase {
         assertThat(received.get(1, TimeUnit.MINUTES).size(), is(3500));
     }
 
-    public static void runQueueTest(AmqpClient client, Destination dest) throws InterruptedException, TimeoutException, ExecutionException, IOException {
-        List<String> msgs = TestUtils.generateMessages(1024);
+    public static void runQueueTest(AmqpClient client, Destination dest) throws InterruptedException, ExecutionException, TimeoutException, IOException {
+        runQueueTest(client, dest, 1024);
+    }
+
+    public static void runQueueTest(AmqpClient client, Destination dest, int countMessages) throws InterruptedException, TimeoutException, ExecutionException, IOException {
+        List<String> msgs = TestUtils.generateMessages(countMessages);
         Count<Message> predicate = new Count<>(msgs.size());
         Future<Integer> numSent = client.sendMessages(dest.getAddress(), msgs, predicate);
 
