@@ -89,6 +89,7 @@ public class AMQPServer extends AbstractVerticle {
     private void senderOpenHandler(ProtonConnection connection, ProtonSender sender) {
         sender.setSource(sender.getRemoteSource());
         Source source = (Source) sender.getRemoteSource();
+        log.info("Got subscription request from {} on {}", connection.getRemoteContainer(), source.getAddress());
 
         Context protonContext = vertx.getOrCreateContext();
 

@@ -52,8 +52,11 @@ public class SubscriptionManager<T extends Resource> {
         subscriberList.add(subscriber);
         // Notify only when we have values
         if (!resources.isEmpty()) {
+            log.info("Added new subscriber, notifying with new resources");
             Optional<Message> message = encodeAndLog();
             message.ifPresent(subscriber::resourcesUpdated);
+        } else {
+            log.info("Added new subscriber, no resources to updated with");
         }
     }
 
@@ -81,7 +84,9 @@ public class SubscriptionManager<T extends Resource> {
                 .filter(resourceFilter)
                 .collect(Collectors.toSet());
 
+        log.info("Resources was filtered from {} to {}", updated, filtered);
         if (!filtered.equals(resources)) {
+            log.info("Updated resources");
             resources.clear();
             resources.addAll(filtered);
             notifySubscribers();
