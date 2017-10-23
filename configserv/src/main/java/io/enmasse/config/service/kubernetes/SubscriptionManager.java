@@ -90,7 +90,7 @@ public class SubscriptionManager<T extends Resource> {
                 .filter(resourceFilter)
                 .collect(Collectors.toSet());
 
-        log.info("Resources was filtered from {} to {}", updated, filtered);
+        log.info("Resources was filtered on {} from {} to {}", subscriptionKey, updated, filtered);
         if (!filtered.equals(resources)) {
             log.info("Updated resources for {}", subscriptionKey);
             resources.clear();
