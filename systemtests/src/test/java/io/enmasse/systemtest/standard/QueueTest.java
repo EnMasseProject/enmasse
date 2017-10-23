@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.*;
@@ -111,6 +112,20 @@ public class QueueTest extends TestBase {
         response = getAddresses(Optional.empty());
         assertThat(response.get(1, TimeUnit.MINUTES), is(java.util.Collections.emptyList()));
         Logging.log.info("queue (" + q2.getAddress() + ") successfully deleted");
+    }
+
+    @Test
+    public void testCreateDeleteQueue() throws Exception {
+        List<String> queues = IntStream.range(0, 40).mapToObj(i -> "queue-create-delete-" + i).collect(Collectors.toList());
+
+        List<Destination> addresses = new ArrayList<>();
+        queues.forEach(queue -> addresses.add(Destination.queue(queue)));
+        for (Destination address : addresses) {
+            setAddresses(address);
+            deleteAddresses(address);
+            Future<List<String>> response = getAddresses(Optional.empty());
+            assertThat(response.get(20, TimeUnit.SECONDS), is(java.util.Collections.emptyList()));
+        }
     }
 
     @Test

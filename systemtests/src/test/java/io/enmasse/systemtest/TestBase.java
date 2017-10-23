@@ -145,9 +145,7 @@ public abstract class TestBase {
     }
 
     protected void deleteAddresses(AddressSpace addressSpace, Destination... destinations) throws Exception {
-        TimeoutBudget budget = new TimeoutBudget(1, TimeUnit.MINUTES);
         TestUtils.delete(addressApiClient, addressSpace, destinations);
-        TestUtils.waitForAddressesDeleted(addressApiClient, addressSpace, budget, destinations);
     }
 
     /**
