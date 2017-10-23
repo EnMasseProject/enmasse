@@ -153,6 +153,11 @@ public class KubernetesResourceDatabaseTest {
         public Message lastValue = null;
 
         @Override
+        public String getId() {
+            return "test";
+        }
+
+        @Override
         public void resourcesUpdated(Message message) {
             lastValue = message;
         }

@@ -17,6 +17,7 @@
 package io.enmasse.config.service.kubernetes;
 
 import io.enmasse.config.service.TestResource;
+import io.enmasse.config.service.model.ObserverKey;
 import io.enmasse.config.service.model.Subscriber;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.message.Message;
@@ -48,7 +49,8 @@ public class SubscriptionManagerTest {
             message.setBody(new AmqpValue("test"));
             return message;
         };
-        SubscriptionManager<TestResource> listener = new SubscriptionManager<>(encoder, resource -> !"filtered".equals(resource.getValue()));
+        ObserverKey subKey = new ObserverKey(Collections.emptyMap(), Collections.emptyMap());
+        SubscriptionManager<TestResource> listener = new SubscriptionManager<>(subKey, encoder, resource -> !"filtered".equals(resource.getValue()));
         Subscriber mockSub = mock(Subscriber.class);
         listener.subscribe(mockSub);
         listener.resourcesUpdated(Collections.singleton(new TestResource("t1", Collections.singletonMap("key1", "value1"), "v1")));

@@ -16,6 +16,7 @@
 
 package io.enmasse.config.service.kubernetes;
 
+import io.enmasse.config.service.model.ObserverKey;
 import io.enmasse.config.service.model.Resource;
 import io.enmasse.config.service.model.Subscriber;
 import org.apache.qpid.proton.message.Message;
@@ -33,12 +34,14 @@ import java.util.stream.Collectors;
 public class SubscriptionManager<T extends Resource> {
     private static final Logger log = LoggerFactory.getLogger(SubscriptionManager.class.getName());
 
+    private final ObserverKey subscriptionKey;
     private final List<Subscriber> subscriberList = new ArrayList<>();
     private final Set<T> resources = new LinkedHashSet<>();
     private final MessageEncoder<T> messageEncoder;
     private final Predicate<T> resourceFilter;
 
-    public SubscriptionManager(MessageEncoder<T> messageEncoder, Predicate<T> resourceFilter) {
+    public SubscriptionManager(ObserverKey subscriptionKey, MessageEncoder<T> messageEncoder, Predicate<T> resourceFilter) {
+        this.subscriptionKey = subscriptionKey;
         this.messageEncoder = messageEncoder;
         this.resourceFilter = resourceFilter;
     }
@@ -52,11 +55,11 @@ public class SubscriptionManager<T extends Resource> {
         subscriberList.add(subscriber);
         // Notify only when we have values
         if (!resources.isEmpty()) {
-            log.info("Added new subscriber, notifying with new resources");
+            log.info("Added new subscriber {} on key {}, notifying with new resources", subscriber.getId(), subscriptionKey);
             Optional<Message> message = encodeAndLog();
             message.ifPresent(subscriber::resourcesUpdated);
         } else {
-            log.info("Added new subscriber, no resources to updated with");
+            log.info("Added new subscriber {} on key {}, no resources to updated with", subscriber.getId(), subscriptionKey);
         }
     }
 
@@ -64,9 +67,12 @@ public class SubscriptionManager<T extends Resource> {
      * Notify subscribers that the set of configs has been updated.
      */
     private void notifySubscribers() {
-        log.info("Notifying subscribers with updated resources: " + resources);
+        log.info("Notifying subscribers on {} with updated resources: {}", subscriptionKey, resources);
         Optional<Message> message = encodeAndLog();
-        message.ifPresent(m -> subscriberList.forEach(s -> s.resourcesUpdated(m)));
+        message.ifPresent(m -> subscriberList.forEach(s -> {
+            log.info("Noticying {}", s.getId());
+            s.resourcesUpdated(m);
+        }));
     }
 
     private Optional<Message> encodeAndLog() {
@@ -86,7 +92,7 @@ public class SubscriptionManager<T extends Resource> {
 
         log.info("Resources was filtered from {} to {}", updated, filtered);
         if (!filtered.equals(resources)) {
-            log.info("Updated resources");
+            log.info("Updated resources for {}", subscriptionKey);
             resources.clear();
             resources.addAll(filtered);
             notifySubscribers();

@@ -53,7 +53,7 @@ public class KubernetesResourceDatabase<T extends Resource> implements AutoClose
         KubernetesResourceObserver<T> observer = observerMap.get(observerKey);
         if (observer == null) {
             log.info("Creating new observer with filter " + observerKey);
-            SubscriptionManager<T> subscriptionManager = new SubscriptionManager<>(subscriptionConfig.getMessageEncoder(), subscriptionConfig.getResourceFilter());
+            SubscriptionManager<T> subscriptionManager = new SubscriptionManager<>(observerKey, subscriptionConfig.getMessageEncoder(), subscriptionConfig.getResourceFilter());
             observer = new KubernetesResourceObserver<>(observerKey, subscriptionConfig.getResourceFactory(), subscriptionConfig.getObserverOptions(client), subscriptionManager);
             observerMap.put(observerKey, observer);
 
