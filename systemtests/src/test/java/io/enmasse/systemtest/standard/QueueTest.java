@@ -117,13 +117,16 @@ public class QueueTest extends TestBase {
     @Test
     public void testCreateDeleteQueue() throws Exception {
         List<String> queues = IntStream.range(0, 40).mapToObj(i -> "queue-create-delete-" + i).collect(Collectors.toList());
+        Destination destExtra = Destination.queue("ext-queue", Optional.of("pooled-inmemory"));
 
         List<Destination> addresses = new ArrayList<>();
-        queues.forEach(queue -> addresses.add(Destination.queue(queue)));
+        queues.forEach(queue -> addresses.add(Destination.queue(queue, Optional.of("pooled-inmemory"))));
         for (Destination address : addresses) {
-            setAddresses(address);
+            setAddresses(address, destExtra);
             deleteAddresses(address);
             Future<List<String>> response = getAddresses(Optional.empty());
+            assertThat(response.get(20, TimeUnit.SECONDS), is(Arrays.asList(destExtra.getAddress()));
+            deleteAddresses(destExtra);
             assertThat(response.get(20, TimeUnit.SECONDS), is(java.util.Collections.emptyList()));
         }
     }
