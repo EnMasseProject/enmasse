@@ -132,6 +132,7 @@ public class QueueTest extends TestBase {
             Future<List<String>> response = getAddresses(Optional.empty());
             assertThat(response.get(20, TimeUnit.SECONDS), is(Arrays.asList(destExtra.getAddress())));
             deleteAddresses(destExtra);
+            response = getAddresses(Optional.empty());
             assertThat(response.get(20, TimeUnit.SECONDS), is(java.util.Collections.emptyList()));
         }
     }
