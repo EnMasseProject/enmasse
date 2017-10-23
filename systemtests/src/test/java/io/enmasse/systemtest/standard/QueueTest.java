@@ -116,7 +116,7 @@ public class QueueTest extends TestBase {
 
     @Test
     public void testCreateDeleteQueue() throws Exception {
-        List<String> queues = IntStream.range(0, 40).mapToObj(i -> "queue-create-delete-" + i).collect(Collectors.toList());
+        List<String> queues = IntStream.range(0, 16).mapToObj(i -> "queue-create-delete-" + i).collect(Collectors.toList());
         Destination destExtra = Destination.queue("ext-queue", Optional.of("pooled-inmemory"));
 
         List<Destination> addresses = new ArrayList<>();
