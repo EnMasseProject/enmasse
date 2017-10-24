@@ -58,10 +58,12 @@ public class KubernetesResourceObserver<T extends Resource> implements AutoClose
         Map<Operation<? extends HasMetadata, ?, ?, ?>, KubernetesResourceList>  initialResources = new LinkedHashMap<>();
         Map<String, String> labelFilter = new LinkedHashMap<>(observerKey.getLabelFilter());
         labelFilter.putAll(observerOptions.getObserverFilter());
+        log.info("Opening observer for key {} with {} operations", observerKey, observerOptions.getOperations().length);
         for (Operation<? extends HasMetadata, ?, ?, ?> operation : observerOptions.getOperations()) {
             KubernetesResourceList list = (KubernetesResourceList) operation.withLabels(labelFilter).list();
             initialResources.put(operation, list);
         }
+        log.info("Opening observer for key {} found {} resources listings", observerKey, initialResources.values());
         initializeResources(initialResources.values());
         for (Map.Entry<Operation<? extends HasMetadata, ?, ?, ?>, KubernetesResourceList> entry : initialResources.entrySet()) {
             watches.add(entry.getKey().withLabels(labelFilter).withResourceVersion(entry.getValue().getMetadata().getResourceVersion()).watch(this));
