@@ -7,12 +7,11 @@ build: npm_install www/tooltips.json www/help.html
 www/tooltips.json: ../doc-utils/parse.py ../doc-utils/expected.json ../documentation/common/*
 	../doc-utils/parse.py -i ../doc-utils/expected.json -o www/tooltips.json -v ../documentation/common/
 
-www/help.html:  ../documentation/common/*.adoc
+www/help.html:  ../documentation/messaging_app_developer/*.adoc ../documentation/common/*.adoc
         ifeq ($(ASCIIDOCTOR),)
 		$(warning "asciidoctor not found, help pages cannot be generated")
         else
-			# TODO: Reenable when we have help documentation
-	       	#asciidoctor -d book -B ../documentation/ -o ../agent/www/help.html ../documentation/master.adoc
+		asciidoctor -d book -B ../documentation/messaging_app_developer/ -o ../../agent/www/help.html ../documentation/messaging_app_developer/master.adoc
         endif
 
 package: build

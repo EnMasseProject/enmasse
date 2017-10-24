@@ -2,6 +2,8 @@ include::common/attributes.adoc[]
 
 = {Title}
 
+include::../common/address-model.adoc[leveloffset=+1]
+include::../common/address-space.adoc[leveloffset=+1]
 include::connecting.adoc[leveloffset=+1]
 
 
