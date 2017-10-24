@@ -1012,7 +1012,7 @@ describe('forked process', function() {
 
     beforeEach(function(done) {
         address_source.listen(0).on('listening', function () {
-            var env =  merge(process.env, {'LOGLEVEL':'info', 'AMQP_PORT':0, 'CONFIGURATION_SERVICE_HOST': 'localhost', 'CONFIGURATION_SERVICE_PORT':address_source.get_port()});
+            var env =  merge(process.env, {'LOGLEVEL':'info', 'AMQP_PORT':0, 'CONFIGURATION_SERVICE_HOST': 'localhost', 'CONFIGURATION_SERVICE_PORT':address_source.get_port(), 'DEBUG':''});
             ragent = child_process.fork(path.resolve(__dirname, '../ragent.js'), [], {silent:true, 'env':env});
             ragent.stderr.on('data', function (data) {
                 if (data.toString().match('Router agent listening on')) {
