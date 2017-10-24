@@ -17,8 +17,8 @@
 package io.enmasse.config.service.kubernetes;
 
 import io.enmasse.config.service.model.ObserverKey;
-import io.enmasse.config.service.model.Resource;
 import io.enmasse.config.service.model.Subscriber;
+import io.enmasse.k8s.api.Watcher;
 import org.apache.qpid.proton.message.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,7 +31,7 @@ import java.util.stream.Collectors;
 /**
  * Manages subscribers for a given set of OpenShift resources.
  */
-public class SubscriptionManager<T extends Resource> {
+public class SubscriptionManager<T> implements Watcher<T> {
     private static final Logger log = LoggerFactory.getLogger(SubscriptionManager.class.getName());
 
     private final ObserverKey subscriptionKey;
@@ -70,7 +70,7 @@ public class SubscriptionManager<T extends Resource> {
         log.info("Notifying subscribers on {} with updated resources: {}", subscriptionKey, resources);
         Optional<Message> message = encodeAndLog();
         message.ifPresent(m -> subscriberList.forEach(s -> {
-            log.info("Noticying {}", s.getId());
+            log.info("Notifying {}", s.getId());
             s.resourcesUpdated(m);
         }));
     }

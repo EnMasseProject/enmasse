@@ -53,7 +53,7 @@ public class SubscriptionManagerTest {
         SubscriptionManager<TestResource> listener = new SubscriptionManager<>(subKey, encoder, resource -> !"filtered".equals(resource.getValue()));
         Subscriber mockSub = mock(Subscriber.class);
         listener.subscribe(mockSub);
-        listener.resourcesUpdated(Collections.singleton(new TestResource("t1", Collections.singletonMap("key1", "value1"), "v1")));
+        listener.resourcesUpdated(Collections.singleton(new TestResource("t1", "v1")));
 
         verify(mockSub).resourcesUpdated(messageCaptor.capture());
 
@@ -61,17 +61,17 @@ public class SubscriptionManagerTest {
         assertThat(((AmqpValue)message.getBody()).getValue(), is("test"));
 
         clearInvocations(mockSub);
-        listener.resourcesUpdated(Collections.singleton(new TestResource("t2", Collections.singletonMap("key1", "value1"), "v2")));
+        listener.resourcesUpdated(Collections.singleton(new TestResource("t2", "v2")));
         verify(mockSub).resourcesUpdated(messageCaptor.capture());
         message = messageCaptor.getValue();
         assertThat(((AmqpValue)message.getBody()).getValue(), is("test"));
 
         clearInvocations(mockSub);
-        listener.resourcesUpdated(Collections.singleton(new TestResource("t2", Collections.singletonMap("key1", "value1"), "v2")));
+        listener.resourcesUpdated(Collections.singleton(new TestResource("t2", "v2")));
         verifyZeroInteractions(mockSub);
 
         clearInvocations(mockSub);
-        listener.resourcesUpdated(new HashSet<>(Arrays.asList(new TestResource("t2", Collections.singletonMap("key1", "value1"), "v2"), new TestResource("t3", Collections.singletonMap("key1", "value1"), "filtered"))));
+        listener.resourcesUpdated(new HashSet<>(Arrays.asList(new TestResource("t2", "v2"), new TestResource("t3", "filtered"))));
         verifyZeroInteractions(mockSub);
     }
 }

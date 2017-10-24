@@ -10,10 +10,10 @@ import java.util.*;
 /**
  * Encodes podsense responses
  */
-public class PodSenseMessageEncoder implements MessageEncoder<PodResource> {
+public class PodSenseMessageEncoder implements MessageEncoder<Pod> {
 
     @Override
-    public Message encode(Set<PodResource> set) throws IOException {
+    public Message encode(Set<Pod> set) throws IOException {
         Message message = Message.Factory.create();
         List<Map<String, Object>> root = new ArrayList<>();
 
@@ -23,7 +23,7 @@ public class PodSenseMessageEncoder implements MessageEncoder<PodResource> {
         return message;
     }
 
-    private Map<String, Object> encodePod(PodResource pod) {
+    private Map<String, Object> encodePod(Pod pod) {
         Map<String, Object> map = new LinkedHashMap<>();
         map.put("name", pod.getName());
         map.put("host", pod.getHost());

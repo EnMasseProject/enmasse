@@ -19,19 +19,15 @@ import java.util.Set;
 /**
  * Encodes a set of address configs to an AMQP message
  */
-public class ConfigMessageEncoder implements MessageEncoder<ConfigResource> {
+public class ConfigMessageEncoder implements MessageEncoder<Address> {
     private static final Logger log = LoggerFactory.getLogger(ConfigMessageEncoder.class.getName());
     private static final ObjectMapper mapper = CodecV1.getMapper();
 
     @Override
-    public Message encode(Set<ConfigResource> resources) throws IOException {
+    public Message encode(Set<Address> resources) throws IOException {
         Message message = Message.Factory.create();
         // TODO: Avoid so much decode/encode
-        AddressList addressList = new AddressList();
-        for (ConfigResource config : resources) {
-            Map<String, String> data = config.getData();
-            addressList.add(mapper.readValue(data.get("config.json"), Address.class));
-        }
+        AddressList addressList = new AddressList(resources);
         message.setSubject("enmasse.io/v1/AddressList");
         message.setBody(createBody(addressList));
         message.setContentType("application/json");

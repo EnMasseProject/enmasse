@@ -18,7 +18,7 @@ import static org.junit.Assert.assertThat;
 public class PodSenseMessageEncoderTest {
     @Test
     public void testEncode() throws IOException {
-        MessageEncoder<PodResource> encoder = new PodSenseMessageEncoder();
+        MessageEncoder<Pod> encoder = new PodSenseMessageEncoder();
         Message message = encoder.encode(createPods());
 
         assertNotNull(message);
@@ -44,15 +44,15 @@ public class PodSenseMessageEncoderTest {
         assertThat(ports.get(expectedPortName), is(expectedPort));
     }
 
-    private static Set<PodResource> createPods() {
-        Set<PodResource> pods = new LinkedHashSet<>();
+    private static Set<Pod> createPods() {
+        Set<Pod> pods = new LinkedHashSet<>();
         pods.add(createPod("p1", "192.168.0.1", "Running", Collections.singletonMap("amqp", 5672)));
         pods.add(createPod("p2", "192.168.0.2", "Running", Collections.singletonMap("amqps", 5671)));
         return pods;
     }
 
-    static PodResource createPod(String name, String ip, String phase, Map<String, Integer> portMap) {
-        return new PodResource(new PodBuilder()
+    static Pod createPod(String name, String ip, String phase, Map<String, Integer> portMap) {
+        return new Pod(new PodBuilder()
                 .withMetadata(new ObjectMetaBuilder()
                         .withName(name)
                         .addToLabels("my", "label")
