@@ -1,9 +1,7 @@
 package io.enmasse.config.service.podsense;
 
-import io.enmasse.config.service.model.Resource;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerPort;
-import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodCondition;
 
 import java.util.LinkedHashMap;
@@ -13,7 +11,7 @@ import java.util.Map;
 /**
  * Represents a podsense resource.
  */
-public class PodResource extends Resource {
+public class Pod {
     private final String name;
     private final String kind;
     private final String host;
@@ -22,7 +20,7 @@ public class PodResource extends Resource {
     private final Map<String, Map<String, Integer>> portMap;
     private final Map<String, String> annotations = new LinkedHashMap<>();
 
-    public PodResource(Pod pod) {
+    public Pod(io.fabric8.kubernetes.api.model.Pod pod) {
         this.name = pod.getMetadata().getName();
         if (pod.getMetadata().getAnnotations() != null) {
             this.annotations.putAll(pod.getMetadata().getAnnotations());
@@ -60,7 +58,7 @@ public class PodResource extends Resource {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        PodResource that = (PodResource) o;
+        Pod that = (Pod) o;
 
         if (!name.equals(that.name)) return false;
         if (!kind.equals(that.kind)) return false;
@@ -70,12 +68,10 @@ public class PodResource extends Resource {
         return portMap != null ? portMap.equals(that.portMap) : that.portMap == null;
     }
 
-    @Override
     public String getName() {
         return name;
     }
 
-    @Override
     public String getKind() {
         return kind;
     }

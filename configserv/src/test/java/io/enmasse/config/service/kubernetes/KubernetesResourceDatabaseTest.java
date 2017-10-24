@@ -19,61 +19,43 @@ package io.enmasse.config.service.kubernetes;
 import io.enmasse.config.service.TestResource;
 import io.enmasse.config.service.model.ObserverKey;
 import io.enmasse.config.service.model.Subscriber;
-import io.fabric8.kubernetes.api.model.*;
+import io.fabric8.kubernetes.api.model.ConfigMap;
+import io.fabric8.kubernetes.api.model.ConfigMapList;
+import io.fabric8.kubernetes.api.model.DoneableConfigMap;
 import io.fabric8.kubernetes.client.KubernetesClient;
-import io.fabric8.kubernetes.client.Watch;
-import io.fabric8.kubernetes.client.Watcher;
 import io.fabric8.kubernetes.client.dsl.MixedOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
-import org.apache.qpid.proton.amqp.messaging.AmqpSequence;
+import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.message.Message;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.ArgumentCaptor;
 import org.mockito.MockitoAnnotations;
 
 import java.util.*;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.mockito.Mockito.mock;
 
 @SuppressWarnings("unchecked")
 public class KubernetesResourceDatabaseTest {
     private KubernetesResourceDatabase<TestResource> database;
-    private KubernetesClient client;
-    private ScheduledExecutorService executor;
     private MixedOperation<ConfigMap, ConfigMapList, DoneableConfigMap, Resource<ConfigMap, DoneableConfigMap>> mapOp = mock(MixedOperation.class);
     private Map<String, String> testLabels = Collections.singletonMap("l1", "v1");
     private Map<String, String> testAnnotations = Collections.singletonMap("a1", "v1");
+    private TestSubscriptionConfig.TestWatch watch;
+    private BlockingQueue<Set<TestResource>> resourceQueue;
 
     @Before
     public void setup() {
         MockitoAnnotations.initMocks(this);
 
-        client = mock(KubernetesClient.class);
-        Watch mockWatcher = mock(Watch.class);
-        executor = Executors.newSingleThreadScheduledExecutor();
-        database = new KubernetesResourceDatabase<>(client, new TestSubscriptionConfig());
-        when(client.configMaps()).thenReturn(mapOp);
-
-        when(mapOp.withLabels(any())).thenReturn(mapOp);
-        when(mapOp.withResourceVersion(anyString())).thenReturn(mapOp);
-        when(mapOp.watch(any())).thenReturn(() -> {});
-
-        when(mapOp.list()).thenReturn(new ConfigMapListBuilder().withNewMetadata()
-                .withResourceVersion("1234")
-                .endMetadata().addToItems(createResource("r1")).build());
-    }
-
-    public Watcher getListener() {
-        ArgumentCaptor<Watcher> captor = ArgumentCaptor.forClass(Watcher.class);
-        verify(mapOp).watch(captor.capture());
-        return captor.getValue();
+        this.watch = new TestSubscriptionConfig.TestWatch();
+        resourceQueue = new LinkedBlockingQueue<>();
+        database = new KubernetesResourceDatabase<>(null, new TestSubscriptionConfig(watch, resourceQueue));
     }
 
     @After
@@ -86,21 +68,28 @@ public class KubernetesResourceDatabaseTest {
 
         TestSubscriber sub = new TestSubscriber();
         ObserverKey key = new ObserverKey(Collections.emptyMap(), Collections.emptyMap());
+        resourceQueue.put(Collections.singleton(new TestResource("k1", "v1")));
 
         database.subscribe(key, sub);
-        waitForExecutor();
-        Watcher listener = getListener();
 
-        listener.eventReceived(Watcher.Action.ADDED, createResource("r1"));
-
-        assertNotNull(sub.lastValue);
-        assertValue(sub.lastValue, "val");
+        waitForMessage(sub, Arrays.asList("v1"));
     }
 
-    private void waitForExecutor() throws InterruptedException {
-        CountDownLatch latch = new CountDownLatch(1);
-        executor.execute(() -> latch.countDown());
-        latch.await(10, TimeUnit.SECONDS);
+    private void waitForMessage(TestSubscriber sub, List<String> expected) throws InterruptedException {
+        long endTime = System.currentTimeMillis() + 60_000;
+        List<String> values = null;
+        while (System.currentTimeMillis() < endTime) {
+
+            if (sub.lastValue != null) {
+                values = (List<String>) ((AmqpValue)sub.lastValue.getBody()).getValue();
+                if (expected.equals(values)) {
+                    break;
+                }
+            }
+            Thread.sleep(1000);
+        }
+        assertNotNull(values);
+        assertEquals(expected, values);
     }
 
     @Test
@@ -108,49 +97,20 @@ public class KubernetesResourceDatabaseTest {
         TestSubscriber sub = new TestSubscriber();
         ObserverKey key = new ObserverKey(testLabels, testAnnotations);
 
+
         database.subscribe(key, sub);
-        waitForExecutor();
 
-        Watcher listener = getListener();
-        listener.eventReceived(Watcher.Action.ADDED, createResource("r1", "v1"));
+        resourceQueue.put(Collections.singleton(new TestResource("r1", "v1")));
 
-        assertNotNull(sub.lastValue);
-        assertValue(sub.lastValue, "v1");
+        waitForMessage(sub, Arrays.asList("v1"));
 
-        listener.eventReceived(Watcher.Action.ADDED, createResource("r2", "v2"));
+        resourceQueue.put(Collections.singleton(new TestResource("r1", "v2")));
 
-        assertNotNull(sub.lastValue);
-        assertValue(sub.lastValue, "v1", "v2");
-
-        listener.eventReceived(Watcher.Action.DELETED, createResource("r1"));
-        assertNotNull(sub.lastValue);
-        assertValue(sub.lastValue, "v2");
-
-        listener.eventReceived(Watcher.Action.MODIFIED, createResource("r2", "v22"));
-        assertNotNull(sub.lastValue);
-        assertValue(sub.lastValue, "v22");
-    }
-
-    private static void assertValue(Message message, String ... values) {
-        AmqpSequence seq = (AmqpSequence) message.getBody();
-        Set<String> expected = new LinkedHashSet<>(Arrays.asList(values));
-        Set<String> actual = new LinkedHashSet<>();
-        for (Object o : seq.getValue()) {
-            actual.add((String) o);
-        }
-        assertEquals(expected, actual);
-    }
-
-    private TestResource.TestValue createResource(String name) {
-        return createResource(name, "val");
-    }
-
-    private TestResource.TestValue createResource(String name, String value) {
-        return new TestResource.TestValue(name, testLabels, testAnnotations, value);
+        waitForMessage(sub, Arrays.asList("v2"));
     }
 
     public static class TestSubscriber implements Subscriber {
-        public Message lastValue = null;
+        public volatile Message lastValue = null;
 
         @Override
         public String getId() {

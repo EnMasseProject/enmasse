@@ -1,46 +1,36 @@
 package io.enmasse.config.service.config;
 
-import io.enmasse.config.LabelKeys;
-import io.enmasse.config.service.model.ResourceFactory;
+import io.enmasse.address.model.Address;
+import io.enmasse.address.model.AddressResolver;
+import io.enmasse.address.model.types.standard.StandardAddressSpaceType;
 import io.enmasse.config.service.kubernetes.MessageEncoder;
-import io.enmasse.config.service.kubernetes.ObserverOptions;
 import io.enmasse.config.service.kubernetes.SubscriptionConfig;
-import io.fabric8.kubernetes.api.model.ConfigMap;
+import io.enmasse.config.service.model.ObserverKey;
+import io.enmasse.k8s.api.ConfigMapAddressApi;
+import io.enmasse.k8s.api.Resource;
 import io.fabric8.kubernetes.client.KubernetesClient;
-import io.fabric8.kubernetes.client.dsl.Operation;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.function.Predicate;
 
 /**
  * Subscription config for config subscriptions
  */
-public class ConfigSubscriptionConfig implements SubscriptionConfig<ConfigResource> {
+public class ConfigSubscriptionConfig implements SubscriptionConfig<Address> {
     private final ConfigMessageEncoder encoder = new ConfigMessageEncoder();
+    private final AddressResolver addressResolver = new AddressResolver(new StandardAddressSpaceType());
 
     @Override
-    public MessageEncoder<ConfigResource> getMessageEncoder() {
+    public MessageEncoder<Address> getMessageEncoder() {
         return encoder;
     }
 
-    @SuppressWarnings("unchecked")
     @Override
-    public ObserverOptions getObserverOptions(KubernetesClient client) {
-        Operation<ConfigMap, ?, ?, ?>[] ops = new Operation[1];
-        ops[0] = client.configMaps();
-        Map<String, String> labelMap = new LinkedHashMap<>();
-        labelMap.put(LabelKeys.TYPE, "address-config");
-        return new ObserverOptions(labelMap, ops);
+    public Resource<Address> getResource(ObserverKey observerKey, KubernetesClient client) {
+        return new ConfigMapAddressApi(client, addressResolver, client.getNamespace());
     }
 
     @Override
-    public ResourceFactory<ConfigResource> getResourceFactory() {
-        return in -> new ConfigResource((ConfigMap) in);
-    }
-
-    @Override
-    public Predicate<ConfigResource> getResourceFilter() {
-        return configResource -> true;
+    public Predicate<Address> getResourceFilter() {
+        return address -> true;
     }
 }

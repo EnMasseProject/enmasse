@@ -24,6 +24,7 @@ import io.enmasse.address.model.v1.CodecV1;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.ConfigMapList;
 import io.fabric8.kubernetes.api.model.DoneableConfigMap;
+import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.openshift.client.OpenShiftClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,16 +34,16 @@ import java.util.*;
 /**
  * Implements the AddressApi using config maps.
  */
-public class ConfigMapAddressApi implements AddressApi {
+public class ConfigMapAddressApi implements AddressApi, Resource<Address> {
 
     private static final Logger log = LoggerFactory.getLogger(ConfigMapAddressApi.class);
-    private final OpenShiftClient client;
+    private final KubernetesClient client;
     private final String namespace;
     private final AddressResolver addressResolver;
 
     private static final ObjectMapper mapper = CodecV1.getMapper();
 
-    public ConfigMapAddressApi(OpenShiftClient client, AddressResolver addressResolver, String namespace) {
+    public ConfigMapAddressApi(KubernetesClient client, AddressResolver addressResolver, String namespace) {
         this.client = client;
         this.addressResolver = addressResolver;
         this.namespace = namespace;
@@ -140,21 +141,20 @@ public class ConfigMapAddressApi implements AddressApi {
 
     @Override
     public Watch watchAddresses(Watcher<Address> watcher) throws Exception {
-        Map<String, String> labels = new LinkedHashMap<>();
-        labels.put(LabelKeys.TYPE, "address-config");
-        ResourceController<Address> controller = ResourceController.create(new Resource<Address>() {
-            @Override
-            public io.fabric8.kubernetes.client.Watch watchResources(io.fabric8.kubernetes.client.Watcher w) {
-                return client.configMaps().inNamespace(namespace).withLabels(labels).watch(w);
-            }
-
-            @Override
-            public Set<Address> listResources() {
-                return listAddresses();
-            }
-        }, watcher);
-
+        ResourceController<Address> controller = ResourceController.create(this, watcher);
         controller.start();
         return controller::stop;
+    }
+
+    @Override
+    public io.fabric8.kubernetes.client.Watch watchResources(io.fabric8.kubernetes.client.Watcher watcher) {
+        Map<String, String> labels = new LinkedHashMap<>();
+        labels.put(LabelKeys.TYPE, "address-config");
+        return client.configMaps().inNamespace(namespace).withLabels(labels).watch(watcher);
+    }
+
+    @Override
+    public Set<Address> listResources() {
+        return listAddresses();
     }
 }
