@@ -995,9 +995,9 @@ objects:
             - name: ENMASSE_MQTT_SSL
               value: 'true'
             - name: ENMASSE_MQTT_KEYFILE
-              value: /etc/mqtt-gateway/ssl/server-key.pem
+              value: /etc/mqtt-gateway/ssl/tls.key
             - name: ENMASSE_MQTT_CERTFILE
-              value: /etc/mqtt-gateway/ssl/server-cert.pem
+              value: /etc/mqtt-gateway/ssl/tls.crt
             - name: ENMASSE_MQTT_LISTENPORT
               value: '8883'
             image: ${MQTT_GATEWAY_REPO}

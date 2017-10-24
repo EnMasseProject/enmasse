@@ -74,7 +74,7 @@ function configure() {
 
         if [ -d /etc/external-certs ]
         then
-            openssl pkcs12 -export -passout pass:enmasse -in /etc/external-certs/server-cert.pem -inkey /etc/external-certs/server-key.pem -name "io.enmasse" -out /tmp/external-keystore.p12
+            openssl pkcs12 -export -passout pass:enmasse -in /etc/external-certs/tls.crt -inkey /etc/external-certs/tls.key -name "io.enmasse" -out /tmp/external-keystore.p12
             keytool -importkeystore -srcstorepass enmasse -deststorepass enmasse -destkeystore $EXTERNAL_KEYSTORE_PATH -srckeystore /tmp/external-keystore.p12 -srcstoretype PKCS12
 
         fi

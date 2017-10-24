@@ -271,8 +271,8 @@ items:
       "spec": {"replicas": 1, "template": {"metadata": {"annotations": {"addressSpace":
       "${ADDRESS_SPACE}"}, "labels": {"app": "enmasse", "name": "mqtt-gateway"}},
       "spec": {"containers": [{"env": [{"name": "ENMASSE_MQTT_SSL", "value": "true"},
-      {"name": "ENMASSE_MQTT_KEYFILE", "value": "/etc/mqtt-gateway/ssl/server-key.pem"},
-      {"name": "ENMASSE_MQTT_CERTFILE", "value": "/etc/mqtt-gateway/ssl/server-cert.pem"},
+      {"name": "ENMASSE_MQTT_KEYFILE", "value": "/etc/mqtt-gateway/ssl/tls.key"},
+      {"name": "ENMASSE_MQTT_CERTFILE", "value": "/etc/mqtt-gateway/ssl/tls.crt"},
       {"name": "ENMASSE_MQTT_LISTENPORT", "value": "8883"}], "image": "${MQTT_GATEWAY_REPO}",
       "livenessProbe": {"initialDelaySeconds": 60, "tcpSocket": {"port": "secure-mqtt"}},
       "name": "mqtt-gateway-tls", "ports": [{"containerPort": 8883, "name": "secure-mqtt",
