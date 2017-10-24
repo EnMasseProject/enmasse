@@ -56,7 +56,7 @@ function configure() {
         export KEYSTORE_PATH=$instanceDir/etc/enmasse-keystore.jks
         export TRUSTSTORE_PATH=$instanceDir/etc/enmasse-truststore.jks
         export AUTH_TRUSTSTORE_PATH=$instanceDir/etc/enmasse-authtruststore.jks
-
+        export EXTERNAL_KEYSTORE_PATH=$instanceDir/etc/external-keystore.jks
     
         envsubst < /tmp/broker.xml > $instanceDir/etc/broker.xml
         if [ -f /tmp/login.config ]; then
@@ -71,6 +71,14 @@ function configure() {
         keytool -import -noprompt -file /etc/enmasse-certs/ca.crt -alias firstCA -deststorepass enmasse -keystore $TRUSTSTORE_PATH
 
         keytool -import -noprompt -file /etc/authservice-ca/tls.crt -alias firstCA -deststorepass enmasse -keystore $AUTH_TRUSTSTORE_PATH
+
+        if [ -d /etc/external-certs ]
+        then
+            openssl pkcs12 -export -passout pass:enmasse -in /etc/external-certs/server-cert.pem -inkey /etc/external-certs/server-key.pem -name "io.enmasse" -out /tmp/external-keystore.p12
+            keytool -importkeystore -srcstorepass enmasse -deststorepass enmasse -destkeystore $EXTERNAL_KEYSTORE_PATH -srckeystore /tmp/external-keystore.p12 -srcstoretype PKCS12
+
+        fi
+
 
         #cp $CONFIG_TEMPLATES/logging.properties $instanceDir/etc/logging.properties
 
