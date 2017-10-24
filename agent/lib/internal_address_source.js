@@ -18,6 +18,7 @@
 var util = require('util');
 var events = require('events');
 var kubernetes = require('./kubernetes.js');
+var log = require('./log.js').logger();
 
 function AddressSource() {
     events.EventEmitter.call(this);
@@ -44,6 +45,7 @@ function extract_address_spec(object) {
 }
 
 AddressSource.prototype.updated = function (objects) {
+    log.info('addresses updated: %j', objects.map(extract_address_spec));
     this.emit('addresses_defined', objects.map(extract_address_spec));
 };
 

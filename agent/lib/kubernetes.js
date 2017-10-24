@@ -20,6 +20,7 @@ var util = require("util");
 var events = require("events");
 var querystring = require("querystring");
 var myutils = require("./utils.js");
+var Promise = require('bluebird');
 
 function watch_handler(collection) {
     var partial = undefined;
@@ -55,15 +56,11 @@ function get_options(options, path) {
 
 function get_path(base, resource, options) {
     var namespace = options.namespace || process.env.KUBERNETES_NAMESPACE || fs.readFileSync('/var/run/secrets/kubernetes.io/serviceaccount/namespace');
-    return base + namespace + '/' + resource + '?' + querystring.stringify({'labelSelector':options.selector});
-}
-
-function list_path(resource, options) {
-    return get_path('/api/v1/namespaces/', resource, options);
-}
-
-function watch_path(resource, options) {
-    return get_path('/api/v1/watch/namespaces/', resource, options);
+    var path = base + namespace + '/' + resource;
+    if (options.selector) {
+        path += '?' + querystring.stringify({'labelSelector':options.selector});
+    }
+    return path;
 }
 
 function list_options(resource, options) {
@@ -73,6 +70,46 @@ function list_options(resource, options) {
 function watch_options(resource, options) {
     return get_options(options, get_path('/api/v1/watch/namespaces/', resource, options));
 }
+
+function do_get(resource, options) {
+    return new Promise(function (resolve, reject) {
+        var opts = list_options(resource, options || {});
+        var request = https.get(opts, function(response) {
+	    log.info('GET %s => %s ', opts.path, response.statusCode);
+	    response.setEncoding('utf8');
+            var data = '';
+	    response.on('data', function (chunk) { data += chunk; });
+	    response.on('end', function () {
+                if (response.statusCode === 200) {
+                    try {
+                        resolve(JSON.parse(data));
+                    } catch (e) {
+                        reject(new Error(util.format('Could not parse message as JSON (%s): %s', e, data)));
+                    }
+                } else {
+                    reject(new Error(util.format('Failed to retrieve %s: %s %s', opts.path, response.statusCode, data)));
+                }
+	    });
+        });
+        request.on('error', function (error) {
+            log.info('error while doing GET on %s: %j', opts.path, error);
+        });
+    });
+};
+
+function do_put(resource, object, options) {
+    return new Promise(function (resolve, reject) {
+        var opts = list_options(resource, options || {});
+        opts.method = 'PUT';
+        var request = https.request(opts, function(response) {
+	    log.info('PUT %s => %s ', opts.path, response.statusCode);
+            resolve(response.statusCode);
+        });
+        request.on('error', reject);
+        request.write(JSON.stringify(object));
+        request.end();
+    });
+};
 
 function Watcher (resource, options) {
     events.EventEmitter.call(this);
@@ -85,36 +122,40 @@ function Watcher (resource, options) {
 util.inherits(Watcher, events.EventEmitter);
 
 Watcher.prototype.list = function () {
+    do_get(this.resource, this.options).then(this.handle_list_result.bind(this)).catch(this.handle_list_error.bind(this));
+};
+
+Watcher.prototype.handle_list_error = function (error) {
+    this.emit('error', error);
+};
+
+Watcher.prototype.handle_list_result = function (result) {
+    this.objects = result.items;
+    this.emit('updated', this.objects);
+    log.info('list retrieved; watching...');
+    this.watch();
+};
+
+Watcher.prototype.list = function () {
     var self = this;
-    var request = https.get(list_options(this.resource, this.options), function(response) {
-    log.info('STATUS: ' + response.statusCode);
-    response.setEncoding('utf8');
-    var data = '';
-    response.on('data', function (chunk) { data += chunk; });
-    response.on('end', function () {
-            try {
-                var list = JSON.parse(data);
-                self.objects = list.items;
-                self.emit('updated', self.objects);
-                log.info('list retrieved; watching...');
-                self.watch();
-            } catch (e) {
-                log.warn('Could not parse message as JSON (%s): %s', e, data);
-            }
-        });
-    });
-    request.on('error', function(e) {
-        self.emit('error', e);
+    do_get(this.resource, this.options).then(function (result) {
+        self.objects = result.items;
+        self.emit('updated', self.objects);
+        log.info('list retrieved; watching...');
+        self.watch();
+    }).catch(function (error) {
+        self.emit('error', error);
     });
 };
 
 Watcher.prototype.watch = function () {
     var self = this;
-    var request = https.get(watch_options(this.resource, this.options), function(response) {
-    log.info('STATUS: ' + response.statusCode);
-    response.setEncoding('utf8');
-    response.on('data', watch_handler(self));
-    response.on('end', function () {
+    var opts = watch_options(this.resource, this.options);
+    var request = https.get(opts, function(response) {
+        log.info('GET %s => %s ', opts.path, response.statusCode);
+        response.setEncoding('utf8');
+        response.on('data', watch_handler(self));
+        response.on('end', function () {
             if (!this.closed) {
                 log.info('response ended; reconnecting...');
                 self.list();
@@ -155,4 +196,10 @@ module.exports.watch = function (resource, options) {
     var w = new Watcher(resource, options);
     w.list();
     return w;
+};
+
+module.exports.update = function (resource, transform, options) {
+    return do_get(resource, options).then(function (original) {
+        return do_put(resource, transform(original), options);
+    });
 };
