@@ -70,6 +70,7 @@ public class ControllerHelper {
 
         // TODO: put this lsit somewhere...
         Map<String, String> serviceMapping = new HashMap<>();
+
         serviceMapping.put("messaging", "amqps");
         serviceMapping.put("mqtt", "secure-mqtt");
         serviceMapping.put("console", "http");

@@ -1474,6 +1474,9 @@ objects:
             - mountPath: /etc/enmasse-certs
               name: broker-internal-cert
               readOnly: true
+            - mountPath: /etc/external-certs
+              name: external-cert
+              readOnly: true
             - mountPath: /etc/authservice-ca
               name: authservice-ca
               readOnly: true
@@ -1490,6 +1493,9 @@ objects:
           - name: authservice-ca
             secret:
               secretName: authservice-ca
+          - name: external-cert
+            secret:
+              secretName: ${MESSAGING_SECRET}
   - apiVersion: v1
     kind: Service
     metadata:
@@ -1612,6 +1618,9 @@ objects:
     value: 2Gi
   - description: The address space this infrastructure is deployed for
     name: ADDRESS_SPACE
+    required: true
+  - description: Certificate to be used for public messaging service
+    name: MESSAGING_SECRET
     required: true
   - description: The hostname of the authentication service used by this address space
     name: AUTHENTICATION_SERVICE_HOST

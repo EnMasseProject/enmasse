@@ -44,18 +44,20 @@ items:
       "name": "amqps-normal"}, {"containerPort": 8161, "name": "jolokia"}], "readinessProbe":
       {"tcpSocket": {"port": "amqp"}}, "volumeMounts": [{"mountPath": "/var/run/artemis",
       "name": "data", "readOnly": false}, {"mountPath": "/etc/enmasse-certs", "name":
-      "broker-internal-cert", "readOnly": true}, {"mountPath": "/etc/authservice-ca",
+      "broker-internal-cert", "readOnly": true}, {"mountPath": "/etc/external-certs",
+      "name": "external-cert", "readOnly": true}, {"mountPath": "/etc/authservice-ca",
       "name": "authservice-ca", "readOnly": true}]}], "volumes": [{"name": "data",
       "persistentVolumeClaim": {"claimName": "broker-data"}}, {"configMap": {"name":
       "hawkular-broker-config"}, "name": "hawkular-openshift-agent"}, {"name": "broker-internal-cert",
       "secret": {"secretName": "broker-internal-cert"}}, {"name": "authservice-ca",
-      "secret": {"secretName": "authservice-ca"}}]}}}}, {"apiVersion": "v1", "kind":
-      "Service", "metadata": {"labels": {"app": "enmasse"}, "name": "broker"}, "spec":
-      {"ports": [{"name": "amqps-normal", "port": 55671, "targetPort": "amqps-normal"}],
-      "selector": {"role": "broker"}}}, {"apiVersion": "v1", "kind": "Service", "metadata":
-      {"labels": {"app": "enmasse"}, "name": "messaging"}, "spec": {"ports": [{"name":
-      "amqp", "port": 5672, "targetPort": "amqp"}, {"name": "amqps", "port": 5671,
-      "targetPort": "amqps"}], "selector": {"role": "broker"}}}, {"apiVersion": "extensions/v1beta1",
+      "secret": {"secretName": "authservice-ca"}}, {"name": "external-cert", "secret":
+      {"secretName": "${MESSAGING_SECRET}"}}]}}}}, {"apiVersion": "v1", "kind": "Service",
+      "metadata": {"labels": {"app": "enmasse"}, "name": "broker"}, "spec": {"ports":
+      [{"name": "amqps-normal", "port": 55671, "targetPort": "amqps-normal"}], "selector":
+      {"role": "broker"}}}, {"apiVersion": "v1", "kind": "Service", "metadata": {"labels":
+      {"app": "enmasse"}, "name": "messaging"}, "spec": {"ports": [{"name": "amqp",
+      "port": 5672, "targetPort": "amqp"}, {"name": "amqps", "port": 5671, "targetPort":
+      "amqps"}], "selector": {"role": "broker"}}}, {"apiVersion": "extensions/v1beta1",
       "kind": "Deployment", "metadata": {"annotations": {"addressSpace": "${ADDRESS_SPACE}",
       "io.enmasse.certSecretName": "agent-internal-cert"}, "labels": {"app": "enmasse"},
       "name": "agent"}, "spec": {"replicas": 1, "template": {"metadata": {"annotations":
@@ -84,17 +86,19 @@ items:
       to use for the enmasse agent", "name": "AGENT_IMAGE", "value": "docker.io/enmasseproject/agent:latest"},
       {"description": "Storage capacity required for volume claims", "name": "STORAGE_CAPACITY",
       "value": "2Gi"}, {"description": "The address space this infrastructure is deployed
-      for", "name": "ADDRESS_SPACE", "required": true}, {"description": "The hostname
-      of the authentication service used by this address space", "name": "AUTHENTICATION_SERVICE_HOST",
-      "required": true}, {"description": "The port of the authentication service used
-      by this address space", "name": "AUTHENTICATION_SERVICE_PORT", "required": true},
-      {"description": "The CA cert to use for validating authentication service cert",
-      "name": "AUTHENTICATION_SERVICE_CA_CERT"}, {"description": "The client cert
-      to use as identity against authentication service", "name": "AUTHENTICATION_SERVICE_CLIENT_SECRET"},
-      {"description": "The hostname to use in sasl init", "name": "AUTHENTICATION_SERVICE_SASL_INIT_HOST"},
-      {"description": "The CA cert to use for validating address controller identity",
-      "name": "ADDRESS_CONTROLLER_CA_CERT"}, {"description": "Password for authenticating
-      against address controller", "name": "ADDRESS_SPACE_PASSWORD"}]}'
+      for", "name": "ADDRESS_SPACE", "required": true}, {"description": "Certificate
+      to be used for public messaging service", "name": "MESSAGING_SECRET", "required":
+      true}, {"description": "The hostname of the authentication service used by this
+      address space", "name": "AUTHENTICATION_SERVICE_HOST", "required": true}, {"description":
+      "The port of the authentication service used by this address space", "name":
+      "AUTHENTICATION_SERVICE_PORT", "required": true}, {"description": "The CA cert
+      to use for validating authentication service cert", "name": "AUTHENTICATION_SERVICE_CA_CERT"},
+      {"description": "The client cert to use as identity against authentication service",
+      "name": "AUTHENTICATION_SERVICE_CLIENT_SECRET"}, {"description": "The hostname
+      to use in sasl init", "name": "AUTHENTICATION_SERVICE_SASL_INIT_HOST"}, {"description":
+      "The CA cert to use for validating address controller identity", "name": "ADDRESS_CONTROLLER_CA_CERT"},
+      {"description": "Password for authenticating against address controller", "name":
+      "ADDRESS_SPACE_PASSWORD"}]}'
     queue-inmemory.json: '{"apiVersion": "v1", "kind": "Template", "metadata": {"labels":
       {"app": "enmasse"}, "name": "queue-inmemory"}, "objects": [{"apiVersion": "extensions/v1beta1",
       "kind": "Deployment", "metadata": {"annotations": {"addressSpace": "${ADDRESS_SPACE}",

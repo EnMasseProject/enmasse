@@ -119,6 +119,7 @@ local hawkularBrokerConfig = import "hawkular-broker-config.jsonnet";
             common.configmap_volume("hawkular-openshift-agent", "hawkular-broker-config"),
             common.secret_volume("broker-internal-cert", "broker-internal-cert"),
             common.secret_volume("authservice-ca", "authservice-ca"),
+            common.secret_volume("external-cert", "${MESSAGING_SECRET}"),
           ],
           "containers": [
             {
@@ -131,6 +132,7 @@ local hawkularBrokerConfig = import "hawkular-broker-config.jsonnet";
               "volumeMounts": [
                 common.volume_mount("data", "/var/run/artemis"),
                 common.volume_mount("broker-internal-cert", "/etc/enmasse-certs", true),
+                common.volume_mount("external-cert", "/etc/external-certs", true),
                 common.volume_mount("authservice-ca", "/etc/authservice-ca", true)
               ],
               "ports": [
@@ -286,6 +288,11 @@ local hawkularBrokerConfig = import "hawkular-broker-config.jsonnet";
       {
         "name": "ADDRESS_SPACE",
         "description": "The address space this infrastructure is deployed for",
+        "required": true
+      },
+      {
+        "name": "MESSAGING_SECRET",
+        "description": "Certificate to be used for public messaging service",
         "required": true
       },
       {
