@@ -56,8 +56,8 @@ listener {
 
 sslProfile {
    name: ssl_details
-   certFile: /etc/qpid-dispatch/ssl/server-cert.pem
-   keyFile: /etc/qpid-dispatch/ssl/server-key.pem
+   certFile: /etc/qpid-dispatch/ssl/tls.crt
+   keyFile: /etc/qpid-dispatch/ssl/tls.key
 }
 
 listener {

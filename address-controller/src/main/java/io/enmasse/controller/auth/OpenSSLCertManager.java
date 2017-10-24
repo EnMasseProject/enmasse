@@ -59,20 +59,18 @@ public class OpenSSLCertManager implements CertManager {
     public void issueRouteCert(String secretName, String namespace, String ... hostnames) throws Exception {
         Secret secret = client.secrets().inNamespace(namespace).withName(secretName).get();
         if (secret != null) {
-            // TODO: Have this sign certificates with OpenShift CA
-
-            String keyKey = "server-key.pem";
-            String certKey = "server-cert.pem";
+            String keyKey = "tls.key";
+            String certKey = "tls.crt";
             if (secret.getData() != null && secret.getData().containsKey(keyKey) && secret.getData().containsKey(certKey)) {
                 return;
             }
 
-            log.info("Creating self-signed certificates for " + Arrays.toString(hostnames));
-            File keyFile = new File("/tmp/server-key.pem");
-            File certFile = new File("/tmp/server-cert.pem");
+            log.info("Creating self-signed certificates for {}", secret);
+            File key = File.createTempFile("tls", "key");
+            File cert = File.createTempFile("tls", "crt");
 
-            createSelfSignedCert(keyFile, certFile);
-            createSecretFromCertAndKeyFiles(secretName, namespace, keyKey, certKey, keyFile, certFile, client);
+            createSelfSignedCert(key, cert);
+            createSecretFromCertAndKeyFiles(secretName, namespace, keyKey, certKey, key, cert, client);
         }
     }
 

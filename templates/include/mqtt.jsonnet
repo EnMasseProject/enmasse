@@ -18,8 +18,8 @@ local common = import "common.jsonnet";
       "image": image_repo,
       [if secure then "env"]: [
         common.env("ENMASSE_MQTT_SSL", "true"),
-        common.env("ENMASSE_MQTT_KEYFILE", "/etc/mqtt-gateway/ssl/server-key.pem"),
-        common.env("ENMASSE_MQTT_CERTFILE", "/etc/mqtt-gateway/ssl/server-cert.pem"),
+        common.env("ENMASSE_MQTT_KEYFILE", "/etc/mqtt-gateway/ssl/tls.key"),
+        common.env("ENMASSE_MQTT_CERTFILE", "/etc/mqtt-gateway/ssl/tls.crt"),
         common.env("ENMASSE_MQTT_LISTENPORT", "8883")
       ],
       "name": if secure
