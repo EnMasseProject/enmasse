@@ -91,6 +91,7 @@ public class KubernetesResourceObserver<T extends Resource> implements AutoClose
     private synchronized void initializeResources(Collection<KubernetesResourceList> initialResources) {
         for (KubernetesResourceList list : initialResources) {
             for (Object item : list.getItems()) {
+                log.info("Got initial resources for key {}: {}", observerKey, list.getItems());
                 if (item instanceof HasMetadata && annotationFilter((HasMetadata) item)) {
                     resourceSet.add(resourceFactory.createResource((HasMetadata) item));
                 }
@@ -118,7 +119,6 @@ public class KubernetesResourceObserver<T extends Resource> implements AutoClose
         }
 
         if (!annotationFilter((HasMetadata) obj)) {
-            log.info("Received object caught in filter {}: {}", observerKey, obj);
             return;
         }
 
@@ -126,15 +126,12 @@ public class KubernetesResourceObserver<T extends Resource> implements AutoClose
         if (action.equals(Action.ADDED)) {
             deleteFromSet(resource);
             resourceSet.add(resource);
-            log.info("Resource {} added for key {}", resource.getName(), observerKey);
             log.debug("Resource " + resource + " added!");
         } else if (action.equals(Action.DELETED)) {
-            log.info("Resource {} deleted for key {}", resource.getName(), observerKey);
             deleteFromSet(resource);
             resourceSet.remove(resource);
             log.debug("Resource " + resource + " deleted!");
         } else if (action.equals(Action.MODIFIED)) {
-            log.info("Resource {} modified for key {}", resource.getName(), observerKey);
             deleteFromSet(resource);
             resourceSet.add(resource);
             log.debug("Resource " + resource + " updated!");
