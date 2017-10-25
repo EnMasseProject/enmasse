@@ -32,6 +32,7 @@ public class StandardAddressSpaceType implements AddressSpaceType {
     static final List<io.enmasse.address.model.types.Plan> plans = Arrays.asList(
             new Plan("unlimited", "Unlimited", "No restrictions on resource usage", "09671470-61a7-11e7-8a6e-507b9def37d9",
                     new TemplateConfig("standard-space-infra", Collections.emptyMap())));
+    static final List<String> serviceNames = Arrays.asList("messaging", "mqtt", "console");
 
     @Override
     public String getName() {
@@ -58,5 +59,10 @@ public class StandardAddressSpaceType implements AddressSpaceType {
     @Override
     public io.enmasse.address.model.types.Plan getDefaultPlan() {
         return plans.get(0);
+    }
+
+    @Override
+    public List<String> getServiceNames() {
+        return Collections.unmodifiableList(serviceNames);
     }
 }

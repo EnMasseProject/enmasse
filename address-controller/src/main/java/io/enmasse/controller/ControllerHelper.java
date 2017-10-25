@@ -140,9 +140,8 @@ public class ControllerHelper {
             authResolver.getSaslInitHost(addressSpace.getName(), authService).ifPresent(saslInitHost -> parameterValues.add(new ParameterValue(TemplateParameter.AUTHENTICATION_SERVICE_SASL_INIT_HOST, saslInitHost)));
             createAddressSpacePassword(addressSpace).ifPresent(password -> parameterValues.add(new ParameterValue(TemplateParameter.ADDRESS_SPACE_PASSWORD, password)));
 
-                // Step 1: Validate endpoints and remove unknown
-            Set<String> availableServices = new HashSet<>(Arrays.asList("messaging", "mqtt", "console"));
-            Set<String> discoveredServices = new HashSet<>();
+            // Step 1: Validate endpoints and remove unknown
+            List<String> availableServices = addressSpace.getType().getServiceNames();
             Map<String, CertProvider> serviceCertProviders = new HashMap<>();
 
             List<Endpoint> endpoints = new ArrayList<>(addressSpace.getEndpoints());
@@ -153,7 +152,6 @@ public class ControllerHelper {
                     log.info("Unknown service {} for endpoint {}, removing", endpoint.getService(), endpoint.getName());
                     it.remove();
                 } else {
-                    discoveredServices.add(endpoint.getService());
                     endpoint.getCertProvider().ifPresent(certProvider -> serviceCertProviders.put(endpoint.getService(), certProvider));
                 }
             }
@@ -166,14 +164,12 @@ public class ControllerHelper {
             }
 
             // Step 3: Create missing secrets if not specified
-            Set<String> secretsToGenerate = new HashSet<>();
             for (String service : availableServices) {
                 String secretName = getSecretName(service);
 
-                    // TODO: Remove console clause when it supports https
+                // TODO: Remove console clause when it supports https
                 if (!serviceCertProviders.containsKey(service) && !service.equals("console")) {
                     CertProvider certProvider = new SecretCertProvider(secretName);
-                    secretsToGenerate.add(secretName);
                     serviceCertProviders.put(service, certProvider);
                 }
             }
@@ -191,8 +187,12 @@ public class ControllerHelper {
                         }
                     }).collect(Collectors.toList());
 
-            parameterValues.add(new ParameterValue(TemplateParameter.MESSAGING_SECRET, serviceCertProviders.get("messaging").getSecretName()));
-            parameterValues.add(new ParameterValue(TemplateParameter.MQTT_SECRET, serviceCertProviders.get("mqtt").getSecretName()));
+            if (availableServices.contains("messaging")) {
+                parameterValues.add(new ParameterValue(TemplateParameter.MESSAGING_SECRET, serviceCertProviders.get("messaging").getSecretName()));
+            }
+            if (availableServices.contains("mqtt")) {
+                parameterValues.add(new ParameterValue(TemplateParameter.MQTT_SECRET, serviceCertProviders.get("mqtt").getSecretName()));
+            }
 
             // Step 5: Create infrastructure
             TemplateConfig templateConfig = plan.getTemplateConfig().get();

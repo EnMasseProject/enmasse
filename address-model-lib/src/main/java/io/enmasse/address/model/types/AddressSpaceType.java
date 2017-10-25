@@ -54,4 +54,9 @@ public interface AddressSpaceType {
      * Get default plan for this address space type.
      */
     Plan getDefaultPlan();
+
+    /**
+     * Get list of supported services in this address space type.
+     */
+    List<String> getServiceNames();
 }
