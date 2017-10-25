@@ -51,7 +51,7 @@ public interface Kubernetes {
 
     void deleteNamespace(String namespace);
 
-    void addDefaultViewPolicy(String namespace);
+    void addDefaultEditPolicy(String namespace);
 
     boolean hasService(String service);
     void createSecretWithDefaultPermissions(String secretName, String namespace);

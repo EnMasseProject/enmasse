@@ -148,7 +148,7 @@ public class KubernetesHelper implements Kubernetes {
     }
 
     @Override
-    public void addDefaultViewPolicy(String namespace) {
+    public void addDefaultEditPolicy(String namespace) {
         if (client.isAdaptable(OpenShiftClient.class)) {
             Resource<PolicyBinding, DoneablePolicyBinding> bindingResource = client.policyBindings()
                     .inNamespace(namespace)
@@ -167,10 +167,10 @@ public class KubernetesHelper implements Kubernetes {
                     .withName("default")
                     .endPolicyRef()
                     .addNewRoleBinding()
-                    .withName("view")
+                    .withName("edit")
                     .editOrNewRoleBinding()
                     .editOrNewMetadata()
-                    .withName("view")
+                    .withName("edit")
                     .withNamespace(namespace)
                     .endMetadata()
                     .addToUserNames("system:serviceaccount:" + namespace + ":default")
@@ -180,14 +180,14 @@ public class KubernetesHelper implements Kubernetes {
                     .withKind("ServiceAccount")
                     .endSubject()
                     .withNewRoleRef()
-                    .withName("view")
+                    .withName("edit")
                     .endRoleRef()
                     .endRoleBinding()
                     .endRoleBinding()
                     .done();
         } else {
             // TODO: Add support for Kubernetes RBAC policies
-            log.info("No support for Kubernetes RBAC policies yet, won't add any default view policy");
+            log.info("No support for Kubernetes RBAC policies yet, won't add any default edit policy");
         }
     }
 
