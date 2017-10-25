@@ -74,6 +74,7 @@ oc get pods
 if [ $failure -gt 0 ]
 then
     echo "Systemtests failed"
+    oc get events
     exit 1
 else
     teardown_test $OPENSHIFT_PROJECT
