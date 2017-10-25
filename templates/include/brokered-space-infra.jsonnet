@@ -41,6 +41,10 @@ local hawkularBrokerConfig = import "hawkular-broker-config.jsonnet";
       "labels": {
         "app": "enmasse"
       },
+      "annotations": {
+        "addressSpace": "${ADDRESS_SPACE}",
+        "io.enmasse.endpointPort": "amqps"
+      },
       "name": "messaging"
     },
     "spec": {

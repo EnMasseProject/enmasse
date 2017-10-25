@@ -73,6 +73,7 @@
         "name": "messaging",
         "annotations": {
           "addressSpace": addressSpace,
+          "io.enmasse.endpointPort": "amqps",
           "service.alpha.openshift.io/infrastructure": "true",
           "service.alpha.openshift.io/dependencies": std.toString(admin_deps)
         }
