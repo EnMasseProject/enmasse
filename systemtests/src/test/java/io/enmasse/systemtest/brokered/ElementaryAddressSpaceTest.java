@@ -39,7 +39,6 @@ public class ElementaryAddressSpaceTest extends MultiTenantTestBase {
     public void testAddressTypes() throws Exception {
         AddressSpace addressSpace = new AddressSpace("brokered-a", "brokered-a");
         createAddressSpace(addressSpace, "none", "brokered");
-        addressSpaces.add(addressSpace);
         Destination queueA = Destination.queue("brokeredQueueA");
         setAddresses(addressSpace, queueA);
 
@@ -74,7 +73,6 @@ public class ElementaryAddressSpaceTest extends MultiTenantTestBase {
     public void testCreateDeleteAddressSpace() throws Exception {
         AddressSpace addressSpaceA = new AddressSpace("brokered-a", "brokered-a");
         createAddressSpace(addressSpaceA, "none", "brokered");
-        addressSpaces.add(addressSpaceA);
         Destination queueB = Destination.queue("brokeredQueueB");
         setAddresses(addressSpaceA, queueB);
 
@@ -85,7 +83,6 @@ public class ElementaryAddressSpaceTest extends MultiTenantTestBase {
 
         AddressSpace addressSpaceC = new AddressSpace("brokered-c", "brokered-c");
         createAddressSpace(addressSpaceC, "none", "brokered");
-        addressSpaces.add(addressSpaceC);
         setAddresses(addressSpaceC, queueB);
         AmqpClientFactory amqpFactoryC = createAmqpClientFactory(addressSpaceC);
         AmqpClient amqpQueueCliC = amqpFactoryC.createQueueClient(addressSpaceC);
@@ -101,7 +98,6 @@ public class ElementaryAddressSpaceTest extends MultiTenantTestBase {
     public void testCreateAlreadyExistingAddress() throws Exception {
         AddressSpace addressSpaceA = new AddressSpace("brokered-a", "brokered-a");
         createAddressSpace(addressSpaceA, "none", "brokered");
-        addressSpaces.add(addressSpaceA);
         Destination queueA = Destination.queue("brokeredQueueA");
         setAddresses(addressSpaceA, queueA);
 

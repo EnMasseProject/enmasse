@@ -25,7 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MultiTenantTestBase extends TestBase {
-    protected List<AddressSpace> addressSpaces = new ArrayList<>();
+    private List<AddressSpace> addressSpaces = new ArrayList<>();
 
     @Before
     public void setupSpaceList() throws Exception {
@@ -43,6 +43,18 @@ public class MultiTenantTestBase extends TestBase {
     @Override
     protected boolean createDefaultAddressSpace() {
         return false;
+    }
+
+    @Override
+    protected AddressSpace createAddressSpace(AddressSpace addressSpace, String authService, String addrSpaceType) throws Exception {
+        super.createAddressSpace(addressSpace, authService, addrSpaceType);
+        addressSpaces.add(addressSpace);
+        return addressSpace;
+    }
+
+    @Override
+    protected AddressSpace createAddressSpace(AddressSpace addressSpace, String authService) throws Exception {
+        return createAddressSpace(addressSpace, authService, STANDARD_ADDRESS_SPACE_TYPE);
     }
 
     protected AmqpClientFactory createAmqpClientFactory(AddressSpace addressSpace) {
