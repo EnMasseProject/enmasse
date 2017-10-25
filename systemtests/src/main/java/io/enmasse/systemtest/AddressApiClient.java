@@ -1,6 +1,7 @@
 package io.enmasse.systemtest;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import io.vertx.core.AsyncResult;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonArray;
@@ -55,7 +56,7 @@ public class AddressApiClient {
                 .as(BodyCodec.jsonObject())
                 .sendJsonObject(config, ar -> {
                     if (ar.succeeded()) {
-                        responsePromise.complete(ar.result().body());
+                        responsePromise.complete(responseHandler(ar));
                     } else {
                         Logging.log.error("Error creating address space {}", addressSpace, ar.cause());
                         responsePromise.completeExceptionally(ar.cause());
@@ -72,7 +73,7 @@ public class AddressApiClient {
                 .timeout(20_000)
                 .send(ar -> {
                     if (ar.succeeded()) {
-                        responsePromise.complete(ar.result().body());
+                        responsePromise.complete(responseHandler(ar));
                     } else {
                         Logging.log.error("Error deleting address space {}", addressSpace, ar.cause());
                         responsePromise.completeExceptionally(ar.cause());
@@ -98,8 +99,7 @@ public class AddressApiClient {
                 .as(BodyCodec.jsonObject())
                 .send(ar -> {
                     if (ar.succeeded()) {
-                        HttpResponse<JsonObject> response = ar.result();
-                        responsePromise.complete(response.body());
+                        responsePromise.complete(responseHandler(ar));
                     } else {
                         Logging.log.warn("Error when getting address space {}", name, ar.cause());
                         responsePromise.completeExceptionally(ar.cause());
@@ -120,7 +120,7 @@ public class AddressApiClient {
                 .send(ar -> {
                     if (ar.succeeded()) {
                         Set<String> spaces = new HashSet<>();
-                        JsonObject object = ar.result().body();
+                        JsonObject object = responseHandler(ar);
                         JsonArray items = object.getJsonArray("items");
                         Logging.log.info("Following list of address spaces received" + object.toString());
                         if (items != null) {
@@ -157,7 +157,7 @@ public class AddressApiClient {
                 .timeout(20_000)
                 .send(ar -> {
                     if (ar.succeeded()) {
-                        responsePromise.complete(ar.result().body());
+                        responsePromise.complete(responseHandler(ar));
                     } else {
                         Logging.log.warn("Error when getting addresses", ar.cause());
                         responsePromise.completeExceptionally(ar.cause());
@@ -165,6 +165,7 @@ public class AddressApiClient {
                 });
         return responsePromise.get(30, TimeUnit.SECONDS);
     }
+
 
     /**
      * delete addresses via reset api
@@ -187,7 +188,7 @@ public class AddressApiClient {
                 .as(BodyCodec.jsonObject())
                 .send(ar -> {
                     if (ar.succeeded()) {
-                        responsePromise.complete(ar.result().body());
+                        responsePromise.complete(responseHandler(ar));
                     } else {
                         Logging.log.warn("Error during deleting addresses", ar.cause());
                         responsePromise.completeExceptionally(ar.cause());
@@ -237,7 +238,7 @@ public class AddressApiClient {
                 .as(BodyCodec.jsonObject())
                 .sendJsonObject(config, ar -> {
                     if (ar.succeeded()) {
-                        responsePromise.complete(ar.result().body());
+                        responsePromise.complete(responseHandler(ar));
                     } else {
                         Logging.log.warn("Error when deploying addresses", ar.cause());
                         responsePromise.completeExceptionally(ar.cause());
@@ -246,7 +247,7 @@ public class AddressApiClient {
         responsePromise.get(30, TimeUnit.SECONDS);
     }
 
-    public JsonObject responseHandler(JsonObject responseData) throws AddressAlreadyExistsException {
+    public JsonObject responseAddressHandler(JsonObject responseData) throws AddressAlreadyExistsException {
         if (responseData != null) {
             String errMsg = responseData.getString("error");
             switch (errMsg) {
@@ -255,5 +256,17 @@ public class AddressApiClient {
             }
         }
         return responseData;
+    }
+
+    private JsonObject responseHandler(AsyncResult<HttpResponse<JsonObject>> ar) {
+        try {
+            return ar.result().body();
+        } catch (io.vertx.core.json.DecodeException decEx) {
+            if (ar.result().bodyAsString().toLowerCase().contains("application is not available")) {
+                throw new IllegalStateException("Address-controller is not available.");
+            } else {
+                throw new IllegalStateException("JsonObject expected, but following object was received: " + ar.result().bodyAsString());
+            }
+        }
     }
 }
