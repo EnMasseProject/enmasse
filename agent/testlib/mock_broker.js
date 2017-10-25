@@ -18,7 +18,6 @@
 var assert = require('assert');
 var events = require('events');
 var util = require('util');
-var Promise = require('bluebird');
 var rhea = require('rhea');
 var myutils = require('../lib/utils.js');
 

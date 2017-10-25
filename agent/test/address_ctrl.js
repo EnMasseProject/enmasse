@@ -18,7 +18,6 @@
 var assert = require('assert');
 var express = require('express');
 var body_parser = require('body-parser');
-var Promise = require('bluebird');
 
 var address_ctrl = require('../lib/address_ctrl').create({});
 

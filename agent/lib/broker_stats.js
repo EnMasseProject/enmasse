@@ -19,7 +19,6 @@ var log = require("./log.js").logger();
 var util = require('util');
 var events = require('events');
 var rhea = require('rhea');
-var Promise = require('bluebird');
 var create_podgroup = require('./podgroup.js');
 
 function is_pod_ready(pod) {

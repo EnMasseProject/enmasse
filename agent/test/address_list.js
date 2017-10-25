@@ -16,7 +16,6 @@
 'use strict';
 
 var assert = require('assert');
-var Promise = require('bluebird');
 var rhea = require('rhea');
 
 var AddressList = require('../lib/address_list.js');

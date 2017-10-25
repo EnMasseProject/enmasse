@@ -16,7 +16,6 @@
 'use strict';
 
 var fs = require("fs");
-var Promise = require('bluebird');
 
 var AddressCtrl = function (host, port, ca, auth_string) {
     this.host = host;

@@ -16,7 +16,6 @@
 'use strict';
 
 var assert = require('assert');
-var Promise = require('bluebird');
 var events = require('events');
 var util = require('util');
 var rhea = require('rhea');

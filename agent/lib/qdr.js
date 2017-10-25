@@ -16,7 +16,6 @@
 'use strict';
 
 var log = require("./log.js").logger();
-var Promise = require('bluebird');
 
 var Router = function (connection, router, agent) {
     if (router) {
