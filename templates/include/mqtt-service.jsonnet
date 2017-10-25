@@ -32,7 +32,7 @@
     },
 
   internal(addressSpace)::
-    self.common("mqtt", "ClusterIP", {"addressSpace": addressSpace}),
+    self.common("mqtt", "ClusterIP", {"addressSpace": addressSpace, "io.enmasse.endpointPort": "secure-mqtt"}),
 
   external::
     self.common("mqtt-external", "LoadBalancer", {})

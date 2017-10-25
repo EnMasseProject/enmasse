@@ -2,7 +2,7 @@ local router = import "router.jsonnet";
 local agent = import "agent.jsonnet";
 local common = import "common.jsonnet";
 {
-  service(name, addressSpace, ports)::
+  service(name, addressSpace, ports, default_port="")::
     {
       "apiVersion": "v1",
       "kind": "Service",
@@ -12,7 +12,8 @@ local common = import "common.jsonnet";
           "app": "enmasse"
         },
         "annotations": {
-          "addressSpace": addressSpace
+          "addressSpace": addressSpace,
+          [if default_port != "" then "io.enmasse.endpointPort"]: default_port
         }
       },
       "spec": {
@@ -28,7 +29,7 @@ local common = import "common.jsonnet";
     self.service("ragent", addressSpace, [{"name": "amqp", "port": 5671, "targetPort": 55671}]),
     self.service("configuration", addressSpace, [{"name": "amqps", "port": 5671}]),
     self.service("queue-scheduler", addressSpace, [{"name": "amqp", "port": 5672, "targetPort": 55667}]),
-    self.service("console", addressSpace, [{"name": "amqp-ws", "port": 5672, "targetPort": 56720}, {"name": "http", "port": 8080}])
+    self.service("console", addressSpace, [{"name": "amqp-ws", "port": 5672, "targetPort": 56720}, {"name": "http", "port": 8080}], "http")
   ],
 
 

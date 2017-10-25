@@ -68,15 +68,8 @@ public class ControllerHelper {
 
         StandardResources resourceList = createResourceList(addressSpace);
 
-        // TODO: put this lsit somewhere...
-        Map<String, String> serviceMapping = new HashMap<>();
-
-        serviceMapping.put("messaging", "amqps");
-        serviceMapping.put("mqtt", "secure-mqtt");
-        serviceMapping.put("console", "http");
-
         for (Endpoint endpoint : resourceList.routeEndpoints) {
-            kubernetes.createEndpoint(endpoint, serviceMapping, addressSpace.getName(), addressSpace.getNamespace());
+            kubernetes.createEndpoint(endpoint, addressSpace.getName(), addressSpace.getNamespace());
         }
 
         for (String secretName : resourceList.routeEndpoints.stream()

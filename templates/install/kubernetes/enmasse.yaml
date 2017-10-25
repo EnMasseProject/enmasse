@@ -54,7 +54,8 @@ items:
       {"secretName": "${MESSAGING_SECRET}"}}]}}}}, {"apiVersion": "v1", "kind": "Service",
       "metadata": {"labels": {"app": "enmasse"}, "name": "broker"}, "spec": {"ports":
       [{"name": "amqps-normal", "port": 55671, "targetPort": "amqps-normal"}], "selector":
-      {"role": "broker"}}}, {"apiVersion": "v1", "kind": "Service", "metadata": {"labels":
+      {"role": "broker"}}}, {"apiVersion": "v1", "kind": "Service", "metadata": {"annotations":
+      {"addressSpace": "${ADDRESS_SPACE}", "io.enmasse.endpointPort": "amqps"}, "labels":
       {"app": "enmasse"}, "name": "messaging"}, "spec": {"ports": [{"name": "amqp",
       "port": 5672, "targetPort": "amqp"}, {"name": "amqps", "port": 5671, "targetPort":
       "amqps"}], "selector": {"role": "broker"}}}, {"apiVersion": "extensions/v1beta1",
@@ -198,19 +199,20 @@ items:
       "${ADDRESS_SPACE}"}, "labels": {"app": "enmasse"}, "name": "queue-scheduler"},
       "spec": {"ports": [{"name": "amqp", "port": 5672, "targetPort": 55667}], "selector":
       {"name": "admin"}}}, {"apiVersion": "v1", "kind": "Service", "metadata": {"annotations":
-      {"addressSpace": "${ADDRESS_SPACE}"}, "labels": {"app": "enmasse"}, "name":
-      "console"}, "spec": {"ports": [{"name": "amqp-ws", "port": 5672, "targetPort":
-      56720}, {"name": "http", "port": 8080}], "selector": {"name": "admin"}}}, {"apiVersion":
-      "v1", "kind": "Service", "metadata": {"annotations": {"addressSpace": "${ADDRESS_SPACE}",
-      "service.alpha.openshift.io/dependencies": "[{\"kind\": \"Service\", \"name\":
-      \"queue-scheduler\", \"namespace\": \"\"}, {\"kind\": \"Service\", \"name\":
-      \"configuration\", \"namespace\": \"\"}, {\"kind\": \"Service\", \"name\": \"ragent\",
-      \"namespace\": \"\"}, {\"kind\": \"Service\", \"name\": \"console\", \"namespace\":
-      \"\"}, {\"kind\": \"Service\", \"name\": \"subscription\", \"namespace\": \"\"},
-      {\"kind\": \"Service\", \"name\": \"mqtt\", \"namespace\": \"\"}]", "service.alpha.openshift.io/infrastructure":
-      "true"}, "labels": {"app": "enmasse"}, "name": "messaging"}, "spec": {"ports":
-      [{"name": "amqp", "port": 5672, "protocol": "TCP", "targetPort": 5672}, {"name":
-      "amqps", "port": 5671, "protocol": "TCP", "targetPort": 5671}, {"name": "amqps-normal",
+      {"addressSpace": "${ADDRESS_SPACE}", "io.enmasse.endpointPort": "http"}, "labels":
+      {"app": "enmasse"}, "name": "console"}, "spec": {"ports": [{"name": "amqp-ws",
+      "port": 5672, "targetPort": 56720}, {"name": "http", "port": 8080}], "selector":
+      {"name": "admin"}}}, {"apiVersion": "v1", "kind": "Service", "metadata": {"annotations":
+      {"addressSpace": "${ADDRESS_SPACE}", "io.enmasse.endpointPort": "amqps", "service.alpha.openshift.io/dependencies":
+      "[{\"kind\": \"Service\", \"name\": \"queue-scheduler\", \"namespace\": \"\"},
+      {\"kind\": \"Service\", \"name\": \"configuration\", \"namespace\": \"\"}, {\"kind\":
+      \"Service\", \"name\": \"ragent\", \"namespace\": \"\"}, {\"kind\": \"Service\",
+      \"name\": \"console\", \"namespace\": \"\"}, {\"kind\": \"Service\", \"name\":
+      \"subscription\", \"namespace\": \"\"}, {\"kind\": \"Service\", \"name\": \"mqtt\",
+      \"namespace\": \"\"}]", "service.alpha.openshift.io/infrastructure": "true"},
+      "labels": {"app": "enmasse"}, "name": "messaging"}, "spec": {"ports": [{"name":
+      "amqp", "port": 5672, "protocol": "TCP", "targetPort": 5672}, {"name": "amqps",
+      "port": 5671, "protocol": "TCP", "targetPort": 5671}, {"name": "amqps-normal",
       "port": 55671, "protocol": "TCP", "targetPort": "amqps-normal"}, {"name": "amqps-broker",
       "port": 56671, "protocol": "TCP", "targetPort": "amqps-broker"}, {"name": "inter-router",
       "port": 55672, "protocol": "TCP", "targetPort": 55672}], "selector": {"capability":
@@ -218,20 +220,20 @@ items:
       {"addressSpace": "${ADDRESS_SPACE}"}, "labels": {"app": "enmasse"}, "name":
       "subscription"}, "spec": {"ports": [{"name": "amqp", "port": 5672, "protocol":
       "TCP", "targetPort": 5672}], "selector": {"name": "subserv"}}}, {"apiVersion":
-      "v1", "kind": "Service", "metadata": {"annotations": {"addressSpace": "${ADDRESS_SPACE}"},
-      "labels": {"app": "enmasse"}, "name": "mqtt"}, "spec": {"ports": [{"name": "mqtt",
-      "port": 1883, "protocol": "TCP", "targetPort": 1883}, {"name": "secure-mqtt",
-      "port": 8883, "protocol": "TCP", "targetPort": 8883}], "selector": {"name":
-      "mqtt-gateway"}, "type": "ClusterIP"}}, {"apiVersion": "extensions/v1beta1",
-      "kind": "Deployment", "metadata": {"annotations": {"addressSpace": "${ADDRESS_SPACE}",
-      "io.enmasse.certSecretName": "router-internal-cert"}, "labels": {"app": "enmasse",
-      "name": "qdrouterd"}, "name": "qdrouterd"}, "spec": {"replicas": 1, "template":
-      {"metadata": {"annotations": {"addressSpace": "${ADDRESS_SPACE}"}, "labels":
-      {"app": "enmasse", "capability": "router", "name": "qdrouterd"}}, "spec": {"containers":
-      [{"env": [{"name": "LINK_CAPACITY", "value": "${ROUTER_LINK_CAPACITY}"}, {"name":
-      "AUTHENTICATION_SERVICE_HOST", "value": "${AUTHENTICATION_SERVICE_HOST}"}, {"name":
-      "AUTHENTICATION_SERVICE_PORT", "value": "${AUTHENTICATION_SERVICE_PORT}"}, {"name":
-      "AUTHENTICATION_SERVICE_CLIENT_SECRET", "value": "${AUTHENTICATION_SERVICE_CLIENT_SECRET}"},
+      "v1", "kind": "Service", "metadata": {"annotations": {"addressSpace": "${ADDRESS_SPACE}",
+      "io.enmasse.endpointPort": "secure-mqtt"}, "labels": {"app": "enmasse"}, "name":
+      "mqtt"}, "spec": {"ports": [{"name": "mqtt", "port": 1883, "protocol": "TCP",
+      "targetPort": 1883}, {"name": "secure-mqtt", "port": 8883, "protocol": "TCP",
+      "targetPort": 8883}], "selector": {"name": "mqtt-gateway"}, "type": "ClusterIP"}},
+      {"apiVersion": "extensions/v1beta1", "kind": "Deployment", "metadata": {"annotations":
+      {"addressSpace": "${ADDRESS_SPACE}", "io.enmasse.certSecretName": "router-internal-cert"},
+      "labels": {"app": "enmasse", "name": "qdrouterd"}, "name": "qdrouterd"}, "spec":
+      {"replicas": 1, "template": {"metadata": {"annotations": {"addressSpace": "${ADDRESS_SPACE}"},
+      "labels": {"app": "enmasse", "capability": "router", "name": "qdrouterd"}},
+      "spec": {"containers": [{"env": [{"name": "LINK_CAPACITY", "value": "${ROUTER_LINK_CAPACITY}"},
+      {"name": "AUTHENTICATION_SERVICE_HOST", "value": "${AUTHENTICATION_SERVICE_HOST}"},
+      {"name": "AUTHENTICATION_SERVICE_PORT", "value": "${AUTHENTICATION_SERVICE_PORT}"},
+      {"name": "AUTHENTICATION_SERVICE_CLIENT_SECRET", "value": "${AUTHENTICATION_SERVICE_CLIENT_SECRET}"},
       {"name": "AUTHENTICATION_SERVICE_SASL_INIT_HOST", "value": "${AUTHENTICATION_SERVICE_SASL_INIT_HOST}"}],
       "image": "${ROUTER_REPO}", "livenessProbe": {"initialDelaySeconds": 60, "tcpSocket":
       {"port": "amqp"}}, "name": "router", "ports": [{"containerPort": 5672, "name":

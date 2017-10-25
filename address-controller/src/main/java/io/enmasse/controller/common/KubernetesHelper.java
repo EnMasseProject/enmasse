@@ -246,7 +246,15 @@ public class KubernetesHelper implements Kubernetes {
     }
 
     @Override
-    public void createEndpoint(Endpoint endpoint, Map<String, String> servicePortMap, String addressSpaceName, String namespace) {
+    public void createEndpoint(Endpoint endpoint, String addressSpaceName, String namespace) {
+        Service service = client.services().inNamespace(namespace).withName(endpoint.getService()).get();
+        if (service == null) {
+            log.info("Skipping creating endpoint for unknown service {}", endpoint.getService());
+            return;
+        }
+
+        String defaultPort = service.getMetadata().getAnnotations().get(AnnotationKeys.ENDPOINT_PORT);
+
         // TODO: Add labels
         if (client.isAdaptable(OpenShiftClient.class)) {
             DoneableRoute route = client.routes().inNamespace(namespace).createNew()
@@ -262,7 +270,7 @@ public class KubernetesHelper implements Kubernetes {
                     .endTo()
                     .withNewPort()
                     .editOrNewTargetPort()
-                    .withStrVal(servicePortMap.get(endpoint.getService()))
+                    .withStrVal(defaultPort)
                     .endTargetPort()
                     .endPort()
                     .endSpec();
@@ -287,7 +295,7 @@ public class KubernetesHelper implements Kubernetes {
                     .editOrNewSpec()
                     .editOrNewBackend()
                     .withServiceName(endpoint.getService())
-                    .withServicePort(new IntOrString(servicePortMap.get(endpoint.getService())))
+                    .withServicePort(new IntOrString(defaultPort))
                     .endBackend()
                     .endSpec();
 

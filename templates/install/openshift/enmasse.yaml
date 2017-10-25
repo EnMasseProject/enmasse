@@ -733,6 +733,7 @@ objects:
     metadata:
       annotations:
         addressSpace: ${ADDRESS_SPACE}
+        io.enmasse.endpointPort: http
       labels:
         app: enmasse
       name: console
@@ -750,6 +751,7 @@ objects:
     metadata:
       annotations:
         addressSpace: ${ADDRESS_SPACE}
+        io.enmasse.endpointPort: amqps
         service.alpha.openshift.io/dependencies: '[{"kind": "Service", "name": "queue-scheduler",
           "namespace": ""}, {"kind": "Service", "name": "configuration", "namespace":
           ""}, {"kind": "Service", "name": "ragent", "namespace": ""}, {"kind": "Service",
@@ -804,6 +806,7 @@ objects:
     metadata:
       annotations:
         addressSpace: ${ADDRESS_SPACE}
+        io.enmasse.endpointPort: secure-mqtt
       labels:
         app: enmasse
       name: mqtt
@@ -1512,6 +1515,9 @@ objects:
   - apiVersion: v1
     kind: Service
     metadata:
+      annotations:
+        addressSpace: ${ADDRESS_SPACE}
+        io.enmasse.endpointPort: amqps
       labels:
         app: enmasse
       name: messaging
