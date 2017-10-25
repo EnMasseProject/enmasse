@@ -16,10 +16,10 @@
 'use strict';
 
 var log = require("./log.js").logger();
-var express = require('express');
-var basic_auth = require('basic-auth');
+var fs = require('fs');
 var http = require('http');
 var path = require('path');
+var url = require('url');
 var rhea = require('rhea');
 var WebSocketServer = require('ws').Server;
 var AddressList = require('../lib/address_list.js');
@@ -93,26 +93,78 @@ ConsoleServer.prototype.ws_bind = function (server) {
     });
 };
 
+function basic_auth(request) {
+    if (request.headers.authorization) {
+        var parts = request.headers.authorization.split(' ');
+        if (parts.length === 2 && parts[0].toLowerCase() === 'basic') {
+            parts = new Buffer(parts[1], 'base64').toString().split(':');
+            return { user: parts[0], pass: parts[1] };
+        } else {
+            log.error('Cannot handle authorization header %s', auth);
+        }
+    }
+}
+
+var content_types = {
+    'html': 'text/html',
+    'js': 'text/javascript',
+    'css': 'text/css',
+    'json': 'application/json',
+    'png': 'image/png',
+    'jpg': 'image/jpg',
+    'gif': 'image/gif',
+    'woff': 'application/font-woff',
+    'ttf': 'application/font-ttf',
+    'eot': 'application/vnd.ms-fontobject',
+    'otf': 'application/font-otf',
+    'svg': 'application/image/svg+xml'
+};
+
+function get_content_type(file) {
+    return content_types[path.extname(file).toLowerCase()];
+}
+
 ConsoleServer.prototype.listen = function (env) {
-    var self = this;
-    var app = express();
-    app.get('/probe', function (req, res) { res.send('OK'); });
-
-    var auth = function (req, res, next) {
-        var authrequired = function() {
-            res.set('WWW-Authenticate', 'Basic realm=Authorization Required');
-            return res.sendStatus(401);
-        };
-        var user = basic_auth(req);
-
-        auth_service.authenticate(user, auth_service.default_options(env)).then( next ).catch( authrequired );
-    };
-
-    app.use(auth);
-
-    app.use('/', express.static(path.join(__dirname, '../www/')))
-
-    this.server = http.createServer(app);
+    this.server = http.createServer(function (request, response) {
+        if (request.method === 'GET' && request.url === '/probe') {
+            response.end('OK');
+        } else if (request.method === 'GET') {
+            var user = basic_auth(request);
+            auth_service.authenticate(user, auth_service.default_options(env)).then(function () {
+                var file = path.join(__dirname, '../www/', url.parse(request.url).pathname);
+                if (file.charAt(file.length - 1) === '/') {
+                    file += 'index.html';
+                }
+                fs.readFile(file, function (error, data) {
+                    if (error) {
+                        if (error.code === 'ENONENT') {
+                            response.statusCode = 404;
+                            response.end('%s not found', request.url);
+                            log.info('GET %s => 404', request.url);
+                        } else {
+                            response.statusCode = 500;
+                            response.end(error.message);
+                            log.error('GET %s => 500 %j', request.url, error);
+                        }
+                    } else {
+                        var content_type = get_content_type(file);
+                        if (content_type) {
+                            response.setHeader('content-type', content_type);
+                        }
+                        log.debug('GET %s => %s', request.url, file);
+                        response.end(data);
+                    }
+                });
+            }).catch(function(error) {
+                response.setHeader('WWW-Authenticate', 'Basic realm=Authorization Required');
+                response.statusCode = 401;
+                response.end('Authorization Required');
+            });
+        } else {
+            response.statusCode = 405;
+            response.end('%s not allowed on %s', request.method, request.url);
+        }
+    });
     this.server.listen(8080);
     this.ws_bind(this.server);
 };

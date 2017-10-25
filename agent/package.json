@@ -11,16 +11,12 @@
     "dependencies": {
         "debug": ">=0.8.0",
         "rhea": ">=0.2.5",
-        "ws": "*",
-        "express": "*",
-        "body-parser": "*",
-        "basic-auth": "*"
+        "ws": "*"
     },
     "devDependencies": {
         "eslint":"",
         "mocha":"",
         "mocha-junit-reporter":"",
-        "browserify":"",
         "istanbul": ""
     },
     "scripts": {

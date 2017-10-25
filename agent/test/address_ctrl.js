@@ -16,8 +16,7 @@
 'use strict';
 
 var assert = require('assert');
-var express = require('express');
-var body_parser = require('body-parser');
+var http = require('http');
 
 var address_ctrl = require('../lib/address_ctrl').create({});
 
@@ -71,13 +70,6 @@ function MockAddressSource () {
             ]
         }
     };
-    this.app = express();
-    this.app.use(body_parser.urlencoded({ extended: true }));
-    this.app.use(body_parser.json());
-    this.app.get('/v1/schema', this.get_schema.bind(this));
-    this.app.get('/v1/addresses', this.get_addresses.bind(this));
-    this.app.post('/v1/addresses', this.post_addresses.bind(this));
-    this.app.delete('/v1/addresses/:address', this.delete_address.bind(this));
 }
 
 MockAddressSource.prototype.clear = function () {
@@ -86,12 +78,22 @@ MockAddressSource.prototype.clear = function () {
 
 MockAddressSource.prototype.listen = function (port, callback) {
     var self = this;
-    var server = this.app.listen(port || 0, function () {
-        self.port = server.address().port;
+    this.server = http.createServer(function (request, response) {
+        if (request.method === 'GET' && request.url === '/v1/schema/') {
+            self.get_schema(request, response);
+        } else if (request.method === 'GET' && request.url === '/v1/addresses/') {
+            self.get_addresses(request, response);
+        } else if (request.method === 'POST' && request.url === '/v1/addresses/') {
+            self.post_addresses(request, response);
+        } else if (request.method === 'DELETE' && request.url.indexOf('/v1/addresses/') === 0) {
+            self.delete_address(request, response);
+        }
+    });
+    this.server.listen(port || 0, function () {
+        self.port = self.server.address().port;
         if (callback) callback();
     });
-    this.server = server;
-    return server;
+    return this.server;
 };
 
 MockAddressSource.prototype.close = function (callback) {
@@ -99,35 +101,47 @@ MockAddressSource.prototype.close = function (callback) {
 }
 
 MockAddressSource.prototype.get_schema = function (request, response) {
-    response.send(JSON.stringify(this.schema));
+    response.end(JSON.stringify(this.schema));
 };
 
 MockAddressSource.prototype.get_addresses = function (request, response) {
-    response.send(JSON.stringify(this.addresses));
+    response.end(JSON.stringify(this.addresses));
 };
 
 MockAddressSource.prototype.post_addresses = function (request, response) {
-    if (request.body.kind === 'AddressList') {
-        var self = this;
-        request.body.items.forEach(function (a) { self.addresses.items.push(a); });
-        response.sendStatus(200);
-    } else if (request.body.kind === 'Address') {
-        this.addresses.items.push(o);
-        response.sendStatus(200);
-    } else {
-        response.sendStatus(500);
-    }
+    var self = this;
+    var bodytext = '';
+    request.on('data', function (data) { bodytext += data; });
+    request.on('end', function () {
+        var body = JSON.parse(bodytext);
+        if (body.kind === 'AddressList') {
+            body.items.forEach(function (a) { self.addresses.items.push(a); });
+            response.statusCode = 200;
+            response.end();
+        } else if (body.kind === 'Address') {
+            self.addresses.items.push(o);
+            response.statusCode = 200;
+            response.end();
+        } else {
+            response.statusCode = 500;
+            response.end('Unrecognised resource kind %s', body.kind);
+        }
+    });
 };
 
 MockAddressSource.prototype.delete_address = function (request, response) {
-    var address = request.params.address;
+    var parts = request.url.split('/');
+    var address = parts.pop();
     for (var i = 0; i < this.addresses.items.length; i++) {
         if (this.addresses.items[i].spec.address === address) {
             this.addresses.items.splice(i, 1);
-            return response.sendStatus(200);
+            response.statusCode = 200;
+            response.end();
+            return;
         }
     }
-    return response.sendStatus(404);
+    response.statusCode = 400;
+    response.end();
 };
 
 describe('address controller interaction', function() {
