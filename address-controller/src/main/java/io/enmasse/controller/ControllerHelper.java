@@ -160,7 +160,7 @@ public class ControllerHelper {
             for (String service : availableServices) {
                 String secretName = getSecretName(service);
 
-                // TODO: Remove console clause when it supports https
+                // Needed until https://github.com/EnMasseProject/enmasse/issues/402 is resolved
                 if (!serviceCertProviders.containsKey(service) && !service.equals("console")) {
                     CertProvider certProvider = new SecretCertProvider(secretName);
                     serviceCertProviders.put(service, certProvider);
@@ -170,7 +170,7 @@ public class ControllerHelper {
             // Step 3: Ensure all endpoints have their certProviders set
             returnVal.routeEndpoints = endpoints.stream()
                     .map(endpoint -> {
-                        // TODO: Remove console clause when it supports https
+                        // Needed until https://github.com/EnMasseProject/enmasse/issues/402 is resolved
                         if (!endpoint.getCertProvider().isPresent() && !endpoint.getService().equals("console")) {
                             return new Endpoint.Builder(endpoint)
                                     .setCertProvider(serviceCertProviders.get(endpoint.getService()))
