@@ -12,7 +12,6 @@
         "debug": ">=0.8.0",
         "rhea": ">=0.2.5",
         "ws": "*",
-        "bluebird": "*",
         "express": "*",
         "body-parser": "*",
         "basic-auth": "*"

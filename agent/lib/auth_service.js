@@ -18,7 +18,6 @@
 var path = require('path');
 var fs = require('fs');
 var rhea = require('rhea');
-var Promise = require('bluebird');
 
 function authenticate(user, options) {
     return new Promise(function(resolve, reject) {
