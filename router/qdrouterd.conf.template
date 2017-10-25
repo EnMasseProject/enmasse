@@ -65,6 +65,7 @@ listener {
     port: 5671
     saslPlugin: auth_service
     sslProfile: ssl_details
+    requireSsl: true
 }
 
 sslProfile {
