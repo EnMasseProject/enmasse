@@ -26,7 +26,7 @@ node('enmasse') {
                 }
             }
             stage('start openshift') {
-                sh 'oc cluster up'
+                sh 'oc cluster up $OC_CLUSTER_ARGS'
                 sh 'sudo chmod -R 777 /var/lib/origin/openshift.local.config'
             }
             stage('setup openshift') {
