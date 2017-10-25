@@ -200,10 +200,10 @@ items:
       "spec": {"ports": [{"name": "amqp", "port": 5672, "targetPort": 55667}], "selector":
       {"name": "admin"}}}, {"apiVersion": "v1", "kind": "Service", "metadata": {"annotations":
       {"addressSpace": "${ADDRESS_SPACE}", "io.enmasse.endpointPort": "http"}, "labels":
-      {"app": "enmasse"}, "name": "console"}, "spec": {"ports": [{"name": "amqp-ws",
-      "port": 5672, "targetPort": 56720}, {"name": "http", "port": 8080}], "selector":
-      {"name": "admin"}}}, {"apiVersion": "v1", "kind": "Service", "metadata": {"annotations":
-      {"addressSpace": "${ADDRESS_SPACE}", "io.enmasse.endpointPort": "amqps", "service.alpha.openshift.io/dependencies":
+      {"app": "enmasse"}, "name": "console"}, "spec": {"ports": [{"name": "http",
+      "port": 8080}], "selector": {"name": "admin"}}}, {"apiVersion": "v1", "kind":
+      "Service", "metadata": {"annotations": {"addressSpace": "${ADDRESS_SPACE}",
+      "io.enmasse.endpointPort": "amqps", "service.alpha.openshift.io/dependencies":
       "[{\"kind\": \"Service\", \"name\": \"queue-scheduler\", \"namespace\": \"\"},
       {\"kind\": \"Service\", \"name\": \"configuration\", \"namespace\": \"\"}, {\"kind\":
       \"Service\", \"name\": \"ragent\", \"namespace\": \"\"}, {\"kind\": \"Service\",
