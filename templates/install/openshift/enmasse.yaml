@@ -739,9 +739,6 @@ objects:
       name: console
     spec:
       ports:
-      - name: amqp-ws
-        port: 5672
-        targetPort: 56720
       - name: http
         port: 8080
       selector:
