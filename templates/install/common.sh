@@ -57,7 +57,7 @@ EOF" "Create address space $name"
 function create_csr() {
   local KEYFILE=$1
   local CSRFILE=$2
-  local CN=$3
+  local CN=${3::64}
 
   runcmd "openssl req -new -batch -nodes -keyout ${KEYFILE} -subj \"/O=io.enmasse/CN=${CN}\" -out ${CSRFILE}" "Create certificate signing request for ${CN}"
   fix_key_file_format ${KEYFILE}
@@ -113,7 +113,7 @@ function create_and_sign_cert() {
     local CMD=$1
     local CA_KEY=$2
     local CA_CERT=$3
-    local CN=$4
+    local CN=${4::64}
     local SECRET_NAME=$5
 
     SERVER_KEY=${TEMPDIR}/${CN}.key
@@ -127,7 +127,7 @@ function create_and_sign_cert() {
 
 function create_self_signed_cert() {
     local CMD=$1
-    local CN=$2
+    local CN=${2::64}
     local SECRET_NAME=$3
 
     KEY=${TEMPDIR}/${CN}.key
