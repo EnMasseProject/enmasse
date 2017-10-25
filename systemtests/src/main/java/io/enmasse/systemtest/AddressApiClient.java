@@ -263,8 +263,10 @@ public class AddressApiClient {
             return ar.result().body();
         } catch (io.vertx.core.json.DecodeException decEx) {
             if (ar.result().bodyAsString().toLowerCase().contains("application is not available")) {
+                Logging.log.warn("Address-controller is not available.", ar.cause());
                 throw new IllegalStateException("Address-controller is not available.");
             } else {
+                Logging.log.warn("Unexpected object received", ar.cause());
                 throw new IllegalStateException("JsonObject expected, but following object was received: " + ar.result().bodyAsString());
             }
         }
