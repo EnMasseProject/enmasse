@@ -25,8 +25,10 @@ import io.enmasse.controller.common.TemplateParameter;
 import io.enmasse.address.model.*;
 import io.enmasse.address.model.types.Plan;
 import io.enmasse.address.model.types.TemplateConfig;
+import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.Namespace;
+import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.openshift.client.ParameterValue;
 import org.slf4j.Logger;
@@ -69,7 +71,14 @@ public class ControllerHelper {
         StandardResources resourceList = createResourceList(addressSpace);
 
         for (Endpoint endpoint : resourceList.routeEndpoints) {
-            kubernetes.createEndpoint(endpoint, addressSpace.getName(), addressSpace.getNamespace());
+            HasMetadata kubeService = null;
+            for (HasMetadata resource : resourceList.resourceList.getItems()) {
+                if (resource.getKind().equals("Service") && resource.getMetadata().getName().equals(endpoint.getService())) {
+                    kubeService = resource;
+                    break;
+                }
+            }
+            kubernetes.createEndpoint(endpoint, kubeService, addressSpace.getName(), addressSpace.getNamespace());
         }
 
         for (String secretName : resourceList.routeEndpoints.stream()
