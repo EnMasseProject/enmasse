@@ -228,8 +228,10 @@ public class AuthenticationTest extends TestBase {
     private boolean canConnectWithMqtt(AddressSpace addressSpace, String username, String password) throws Exception {
         MqttClient client = mqttClientFactory.createClient(addressSpace);
         MqttConnectOptions options = client.getMqttConnectOptions();
-        options.setUserName(username);
-        options.setPassword(password.toCharArray());
+        if (username != null && password != null) {
+            options.setUserName(username);
+            options.setPassword(password.toCharArray());
+        }
 
         Future<List<String>> received = client.recvMessages(mqttAddress, 1);
         Future<Integer> sent = client.sendMessages(mqttAddress, Arrays.asList("msg1"));
