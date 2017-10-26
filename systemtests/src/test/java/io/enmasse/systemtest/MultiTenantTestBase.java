@@ -66,4 +66,8 @@ public class MultiTenantTestBase extends TestBase {
         return new MqttClientFactory(new OpenShift(environment, environment.namespace(), addressSpace.getNamespace()),
                 environment, addressSpace, username, password);
     }
+
+    protected Endpoint getRouteEndpoint(AddressSpace addressSpace){
+        return openShift.getRouteEndpoint(addressSpace.getName(), "messaging");
+    }
 }
