@@ -32,7 +32,6 @@ public class TopicTest extends MultiTenantTestBase {
     public void setUp() throws Exception {
         AddressSpace addressSpace = new AddressSpace("brokered-space-jms-topics", "brokered-space-jms-topics");
         createAddressSpace(addressSpace, "none", "brokered");
-        addressSpaces.add(addressSpace);
 
         addressTopic = Destination.topic(topic);
         setAddresses(addressSpace, addressTopic);
