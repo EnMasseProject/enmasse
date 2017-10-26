@@ -246,8 +246,7 @@ public class KubernetesHelper implements Kubernetes {
     }
 
     @Override
-    public void createEndpoint(Endpoint endpoint, String addressSpaceName, String namespace) {
-        Service service = client.services().inNamespace(namespace).withName(endpoint.getService()).get();
+    public void createEndpoint(Endpoint endpoint, HasMetadata service, String addressSpaceName, String namespace) {
         if (service == null) {
             log.info("Skipping creating endpoint for unknown service {}", endpoint.getService());
             return;
