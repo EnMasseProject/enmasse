@@ -11,8 +11,8 @@ import javax.naming.InitialContext;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 
 import static org.hamcrest.CoreMatchers.is;
@@ -28,6 +28,10 @@ public class TopicTest extends MultiTenantTestBase {
     private String topic = "jmsTopic";
     private Destination addressTopic;
 
+    private String jmsUsername = "test";
+    private String jmsPassword = "test";
+    private String jmsClientID = "testClient";
+
     @Before
     public void setUp() throws Exception {
         AddressSpace addressSpace = new AddressSpace("brokered-space-jms-topics", "brokered-space-jms-topics");
@@ -39,11 +43,11 @@ public class TopicTest extends MultiTenantTestBase {
         env = new Hashtable<Object, Object>();
         env.put(Context.INITIAL_CONTEXT_FACTORY, "org.apache.qpid.jms.jndi.JmsInitialContextFactory");
         env.put("connectionfactory.qpidConnectionFactory", "amqps://" + getRouteEndpoint(addressSpace).toString() +
-                "?jms.clientID=testClient&" +
-                "transport.trustAll=true&" +
-                "jms.password=test&" +
-                "jms.username=test&" +
-                "transport.verifyHost=false");
+                "?jms.clientID=" + jmsClientID +
+                "&transport.trustAll=true" +
+                "&jms.password=" + jmsUsername +
+                "&jms.username=" + jmsPassword +
+                "&transport.verifyHost=false");
         env.put("topic." + topic, topic);
 
         context = new InitialContext(env);
@@ -75,19 +79,25 @@ public class TopicTest extends MultiTenantTestBase {
         MessageConsumer subscriber1 = session.createConsumer(testTopic);
         MessageProducer messageProducer = session.createProducer(testTopic);
 
-        int count = 100;
+        int count = 1000;
         List<Message> listMsgs = generateMessages(session, count);
 
         CompletableFuture<List<Message>> received = new CompletableFuture<>();
-        Executors.newCachedThreadPool().submit(() -> {
-            received.complete(receiveMessages(subscriber1, count));
-        });
 
-        Thread.sleep(5000); //wait until subscribe
+        List<Message> recvd = new ArrayList<>();
+        AtomicInteger i = new AtomicInteger(0);
+        MessageListener myListener = message -> {
+            recvd.add(message);
+            if (i.incrementAndGet() == count) {
+                received.complete(recvd);
+            }
+        };
+        subscriber1.setMessageListener(myListener);
+
         sendMessages(messageProducer, listMsgs);
         Logging.log.info("messages sent");
 
-        assertThat(received.get(20, TimeUnit.SECONDS).size(), is(count));
+        assertThat(received.get(30, TimeUnit.SECONDS).size(), is(count));
         Logging.log.info("messages received");
 
         subscriber1.close();
