@@ -118,11 +118,7 @@ public class TestUtils {
     public static void deploy(AddressApiClient apiClient, OpenShift openShift, TimeoutBudget budget, AddressSpace addressSpace, HttpMethod httpMethod, Destination... destinations) throws Exception {
         apiClient.deploy(addressSpace, httpMethod, destinations);
         JsonObject addrSpaceObj = apiClient.getAddressSpace(addressSpace.getName());
-        if (getAddressSpaceType(addrSpaceObj).equals("brokered")) {
-            Thread.sleep(90_000);
-            //!TODO: isReady state doesn't work at this moment, Once #280 issue will be closed then waitForDestionationsReady can be used
-            //waitForDestinationsReady(apiClient, addressSpace, budget, destinations);
-        } else {
+        if (getAddressSpaceType(addrSpaceObj).equals("standard")) {
             Set<String> groups = new HashSet<>();
             for (Destination destination : destinations) {
                 if (Destination.isQueue(destination) || Destination.isTopic(destination)) {
@@ -133,8 +129,8 @@ public class TestUtils {
             int expectedPods = openShift.getExpectedPods() + groups.size();
             Logging.log.info("Waiting for " + expectedPods + " pods");
             waitForExpectedPods(openShift, addressSpace, expectedPods, budget);
-            waitForDestinationsReady(apiClient, addressSpace, budget, destinations);
         }
+        waitForDestinationsReady(apiClient, addressSpace, budget, destinations);
     }
 
     public static boolean existAddressSpace(AddressApiClient apiClient, String addressSpaceName) throws InterruptedException, TimeoutException, ExecutionException {
