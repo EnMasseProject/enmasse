@@ -20,7 +20,6 @@ var util = require("util");
 var events = require("events");
 var querystring = require("querystring");
 var myutils = require("./utils.js");
-var Promise = require('bluebird');
 
 function watch_handler(collection) {
     var partial = undefined;
