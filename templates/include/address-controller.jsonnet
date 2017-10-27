@@ -122,10 +122,10 @@ local common = import "common.jsonnet";
                 "volumeMounts": mounts,
                 "resources": {
                     "requests": {
-                        "memory": "256Mi",
+                        "memory": "512Mi",
                     },
                     "limits": {
-                        "memory": "256Mi",
+                        "memory": "512Mi",
                     }
                 },
                 "ports": ports,

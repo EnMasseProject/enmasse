@@ -1691,9 +1691,9 @@ objects:
             initialDelaySeconds: 30
           resources:
             limits:
-              memory: 256Mi
+              memory: 512Mi
             requests:
-              memory: 256Mi
+              memory: 512Mi
           volumeMounts:
           - mountPath: /ca-cert
             name: ca-cert
