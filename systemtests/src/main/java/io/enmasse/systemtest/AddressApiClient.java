@@ -10,6 +10,7 @@ import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.codec.BodyCodec;
 
+import java.net.UnknownHostException;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -66,20 +67,39 @@ public class AddressApiClient {
         responsePromise.get(30, TimeUnit.SECONDS);
     }
 
-    public void deleteAddressSpace(AddressSpace addressSpace) throws InterruptedException, TimeoutException, ExecutionException {
+    public void deleteAddressSpace(AddressSpace addressSpace, OpenShift openshift) throws InterruptedException, TimeoutException, ExecutionException, UnknownHostException {
+        deleteAddressSpace(addressSpace, openshift, 10);
+    }
+
+    public void deleteAddressSpace(AddressSpace addressSpace, OpenShift openshift, int retry) throws InterruptedException, TimeoutException, ExecutionException, UnknownHostException {
         CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
-        client.delete(endpoint.getPort(), endpoint.getHost(), "/v1/addressspaces/" + addressSpace.getName())
+        Endpoint locEndpoint = openshift.getRestEndpoint();
+        client.delete(locEndpoint.getPort(), locEndpoint.getHost(), "/v1/addressspaces/" + addressSpace.getName())
                 .as(BodyCodec.jsonObject())
                 .timeout(20_000)
                 .send(ar -> {
                     if (ar.succeeded()) {
                         responsePromise.complete(responseHandler(ar));
                     } else {
-                        Logging.log.error("Error deleting address space {}", addressSpace, ar.cause());
+                        Logging.log.warn("Error deleting address space {}", addressSpace);
                         responsePromise.completeExceptionally(ar.cause());
                     }
                 });
-        responsePromise.get(30, TimeUnit.SECONDS);
+        try {
+            responsePromise.get(30, TimeUnit.SECONDS);
+        } catch (Exception ex) {
+            if (ex.getCause() instanceof UnknownHostException && retry > 0) {
+                try {
+                    Logging.log.info("Trying to reload endpoint, remaining iterations: " + retry);
+                    deleteAddressSpace(addressSpace, openshift, retry - 1);
+                } catch (Exception ex2) {
+                    throw ex2;
+                }
+            } else {
+                ex.getCause().printStackTrace();
+                throw ex;
+            }
+        }
     }
 
     /**
