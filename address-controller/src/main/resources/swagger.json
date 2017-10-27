@@ -41,7 +41,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "successful operation",
+                        "description": "Successful operation. An AddressSpaceList containing all AddressSpaces is returned.",
                         "schema": {
                             "$ref": "#/definitions/AddressSpaceList"
                         }
@@ -73,6 +73,12 @@
                     }
                 ],
                 "responses": {
+                    "200": {
+                        "description": "AddressSpace created successfully. An AddressSpaceList containing all AddressSpaces is returned.",
+                        "schema": {
+                            "$ref": "#/definitions/AddressSpaceList"
+                        }
+                    },
                     "405": {
                         "description": "Invalid input"
                     }
@@ -101,7 +107,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "successful operation",
+                        "description": "Successful operation. An AddressSpace object is returned.",
                         "schema": {
                             "$ref": "#/definitions/AddressSpace"
                         }
@@ -165,10 +171,13 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "successful operation",
+                        "description": "Successful operation. An AddressList containing all Addresses in the AddressSpace is returned.",
                         "schema": {
                             "$ref": "#/definitions/AddressList"
                         }
+                    },
+                    "404": {
+                        "description": "AddressSpace not found"
                     }
                 }
             },
@@ -204,6 +213,15 @@
                     }
                 ],
                 "responses": {
+                    "200": {
+                        "description": "Addresses appended successfully. An AddressList containing all Addresses is returned.",
+                        "schema": {
+                            "$ref": "#/definitions/AddressList"
+                        }
+                    },
+                    "404": {
+                        "description": "AddressSpace not found"
+                    },
                     "405": {
                         "description": "Invalid input"
                     }
@@ -241,6 +259,15 @@
                     }
                 ],
                 "responses": {
+                    "200": {
+                        "description": "Addresses replaced successfully. An AddressList containing all Addresses is returned.",
+                        "schema": {
+                            "$ref": "#/definitions/AddressList"
+                        }
+                    },
+                    "404": {
+                        "description": "AddressSpace not found"
+                    },
                     "405": {
                         "description": "Invalid input"
                     }
@@ -307,7 +334,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "successful operation",
+                        "description": "Successful operation. The Address object is returned.",
                         "schema": {
                             "$ref": "#/definitions/Address"
                         }
@@ -355,22 +382,6 @@
                     }
                 }
             }
-        }
-    },
-    "securityDefinitions": {
-        "petstore_auth": {
-            "type": "oauth2",
-            "authorizationUrl": "http://petstore.swagger.io/oauth/dialog",
-            "flow": "implicit",
-            "scopes": {
-                "write:pets": "modify pets in your account",
-                "read:pets": "read your pets"
-            }
-        },
-        "api_key": {
-            "type": "apiKey",
-            "name": "api_key",
-            "in": "header"
         }
     },
     "definitions": {
