@@ -143,7 +143,7 @@ public class AddressApiClient {
                     if (ar.succeeded()) {
                         responsePromise.complete(responseHandler(ar));
                     } else {
-                        Logging.log.warn("Error when getting address space {}", name, ar.cause());
+                        Logging.log.warn("Error when getting address space {}", name);
                         responsePromise.completeExceptionally(ar.cause());
                     }
                 });
