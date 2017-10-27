@@ -71,14 +71,14 @@ public class ControllerHelper {
         StandardResources resourceList = createResourceList(addressSpace);
 
         for (Endpoint endpoint : resourceList.routeEndpoints) {
-            HasMetadata kubeService = null;
+            Service service = null;
             for (HasMetadata resource : resourceList.resourceList.getItems()) {
                 if (resource.getKind().equals("Service") && resource.getMetadata().getName().equals(endpoint.getService())) {
-                    kubeService = resource;
+                    service = (Service) resource;
                     break;
                 }
             }
-            kubernetes.createEndpoint(endpoint, kubeService, addressSpace.getName(), addressSpace.getNamespace());
+            kubernetes.createEndpoint(endpoint, service, addressSpace.getName(), addressSpace.getNamespace());
         }
 
         for (String secretName : resourceList.routeEndpoints.stream()

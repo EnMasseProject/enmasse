@@ -55,7 +55,7 @@ public interface Kubernetes {
 
     boolean hasService(String service);
     void createSecretWithDefaultPermissions(String secretName, String namespace);
-    void createEndpoint(Endpoint endpoint, HasMetadata kubeService, String addressSpaceName, String namespace);
+    void createEndpoint(Endpoint endpoint, Service service, String addressSpaceName, String namespace);
 
     Set<Deployment> getReadyDeployments();
 
