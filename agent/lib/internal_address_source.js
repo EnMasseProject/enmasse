@@ -24,13 +24,10 @@ function AddressSource() {
     events.EventEmitter.call(this);
     this.watcher = kubernetes.watch('configmaps', {selector:'type=address-config'});
     this.watcher.on('updated', this.updated.bind(this));
+    this.readiness = {};
 }
 
 util.inherits(AddressSource, events.EventEmitter);
-
-AddressSource.prototype.notify = function () {
-    var self = this;
-};
 
 function extract_address_spec(object) {
     try {
@@ -45,8 +42,45 @@ function extract_address_spec(object) {
 }
 
 AddressSource.prototype.updated = function (objects) {
-    log.info('addresses updated: %j', objects.map(extract_address_spec));
-    this.emit('addresses_defined', objects.map(extract_address_spec));
+    var addresses = objects.map(extract_address_spec);
+    log.info('addresses updated: %j', addresses);
+    this.emit('addresses_defined', addresses);
+    var self = this;
+    this.readiness = objects.reduce(function (map, configmap) {
+        var address = extract_address_spec(configmap).address;
+        map[address] = self.readiness[address] || {ready: false, address: address};
+        map[address].name = configmap.metadata.name;
+        return map;
+    }, {});
+};
+
+AddressSource.prototype.update_status = function (record, ready) {
+    function update(configmap) {
+        var def = JSON.parse(configmap.data['config.json'])
+        def.status.isReady = ready;
+        configmap.data['config.json'] = JSON.stringify(def);
+        return configmap;
+    }
+    kubernetes.update('configmaps/' + record.name, update).then(function (result) {
+        if (result === 200) {
+            record.ready = ready;
+            log.info('updated status for %j: %s', record, result);
+        } else {
+            log.error('failed to update status for %j: %s', record, result);
+        }
+    }).catch(function (error) {
+        log.error('failed to update status for %j: %j', record, error);
+    });
+};
+
+AddressSource.prototype.check_status = function (address_stats) {
+    for (var address in address_stats) {
+        var record = this.readiness[address];
+        var ready = address_stats[address].propagated === 100;
+        if (record !== undefined && ready !== record.ready) {
+            this.update_status(record, ready);
+        }
+    }
 };
 
 module.exports = AddressSource;
