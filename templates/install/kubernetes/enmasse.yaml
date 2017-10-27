@@ -78,7 +78,8 @@ items:
       "name": "agent-internal-cert", "readOnly": true}]}], "volumes": [{"name": "authservice-ca",
       "secret": {"secretName": "authservice-ca"}}, {"name": "agent-internal-cert",
       "secret": {"secretName": "agent-internal-cert"}}]}}}}, {"apiVersion": "v1",
-      "kind": "Service", "metadata": {"labels": {"app": "enmasse"}, "name": "console"},
+      "kind": "Service", "metadata": {"annotations": {"addressSpace": "${ADDRESS_SPACE}",
+      "io.enmasse.endpointPort": "http"}, "labels": {"app": "enmasse"}, "name": "console"},
       "spec": {"ports": [{"name": "http", "port": 8080, "targetPort": "http"}], "selector":
       {"role": "agent"}}}], "parameters": [{"description": "Hostname where API server
       can be reached", "name": "ADDRESS_SPACE_SERVICE_HOST", "value": ""}, {"description":
