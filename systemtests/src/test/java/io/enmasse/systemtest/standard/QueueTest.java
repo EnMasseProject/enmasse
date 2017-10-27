@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.*;
@@ -114,6 +115,29 @@ public class QueueTest extends TestBase {
     }
 
     @Test
+    public void testCreateDeleteQueue() throws Exception {
+        List<String> queues = IntStream.range(0, 16).mapToObj(i -> "queue-create-delete-" + i).collect(Collectors.toList());
+        Destination destExtra = Destination.queue("ext-queue", Optional.of("pooled-inmemory"));
+
+        List<Destination> addresses = new ArrayList<>();
+        queues.forEach(queue -> addresses.add(Destination.queue(queue, Optional.of("pooled-inmemory"))));
+
+        AmqpClient client = amqpClientFactory.createQueueClient();
+        for (Destination address : addresses) {
+            setAddresses(address, destExtra);
+
+            runQueueTest(client, address, 1);
+
+            deleteAddresses(address);
+            Future<List<String>> response = getAddresses(Optional.empty());
+            assertThat(response.get(20, TimeUnit.SECONDS), is(Arrays.asList(destExtra.getAddress())));
+            deleteAddresses(destExtra);
+            response = getAddresses(Optional.empty());
+            assertThat(response.get(20, TimeUnit.SECONDS), is(java.util.Collections.emptyList()));
+        }
+    }
+
+    @Test
     public void testMessagePriorities() throws Exception {
         Destination dest = Destination.queue("messagePrioritiesQueue");
         setAddresses(dest);
@@ -174,8 +198,12 @@ public class QueueTest extends TestBase {
         assertThat(received.get(1, TimeUnit.MINUTES).size(), is(3500));
     }
 
-    public static void runQueueTest(AmqpClient client, Destination dest) throws InterruptedException, TimeoutException, ExecutionException, IOException {
-        List<String> msgs = TestUtils.generateMessages(1024);
+    public static void runQueueTest(AmqpClient client, Destination dest) throws InterruptedException, ExecutionException, TimeoutException, IOException {
+        runQueueTest(client, dest, 1024);
+    }
+
+    public static void runQueueTest(AmqpClient client, Destination dest, int countMessages) throws InterruptedException, TimeoutException, ExecutionException, IOException {
+        List<String> msgs = TestUtils.generateMessages(countMessages);
         Count<Message> predicate = new Count<>(msgs.size());
         Future<Integer> numSent = client.sendMessages(dest.getAddress(), msgs, predicate);
 

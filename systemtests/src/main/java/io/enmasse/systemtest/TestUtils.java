@@ -235,9 +235,7 @@ public class TestUtils {
 
         while (budget.timeLeft() >= 0) {
             JsonObject addressList = apiClient.getAddresses(addressSpace, Optional.empty());
-
             notReadyAddresses = checkAddressesReady(addressList, destinations);
-
             if (notReadyAddresses.isEmpty()) {
                 break;
             }
@@ -247,9 +245,6 @@ public class TestUtils {
         if (!notReadyAddresses.isEmpty()) {
             JsonObject addressList = apiClient.getAddresses(addressSpace, Optional.empty());
             notReadyAddresses = checkAddressesReady(addressList, destinations);
-        }
-
-        if (!notReadyAddresses.isEmpty()) {
             throw new IllegalStateException(notReadyAddresses.size() + " out of " + destinations.length
                     + " addresses are not ready: " + notReadyAddresses.values());
         }
