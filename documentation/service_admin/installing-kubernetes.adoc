@@ -1,0 +1,90 @@
+[[installing-openshift]]
+
+== Installing {ProductName} on Kubernetes
+
+[[prerequisites]]
+=== Prerequisites
+
+To install {ProductName}, you need to have Kubernetes installed. You can use
+https://github.com/kubernetes/minikube[minikube] if you want to install {ProductName} on your
+laptop.
+
+Since minikube runs in a virtual machine, you need to enable the ingress controller:
+
+[source,options="nowrap"]
+....
+minikube addons enable ingress
+....
+
+.Procedure 
+
+. Download one of the releases from https://github.com/EnMasseProject/enmasse/releases and unpack it.
+. Deploy {ProductName} using the deployment script provided in the release.
+
+You can invoke the deployment script with `-h` to view a list of options.
+
+==== Installing {ProductName} in Single-Tenant Mode
+
+{ProductName} can be deployed in either a single-tenant mode or a multi-tenant mode. Choose
+single-tenant mode if you do not expect to be creating multiple isolated address spaces or if you do
+not have cluster-admin privileges. Otherwise, choose multi-tenant mode.
+
+.Procedure 
+
+. To install {ProductName} in single-tenant mode run the following script:
+
++
+[source,options="nowrap"]
+----
+./deploy-kubernetes.sh -m "https://localhost:8443" -n enmasse -o singletenant
+----
++
+Running this script creates the deployments required for running {ProductName} in single-tenant mode. Starting
+up {ProductName} will take a while, usually depending on how fast it is able to download the Docker
+images for the various components.
+
+. You can use the REST API to check the status of the deployment:
++
+[source,options="nowrap"]
+----
+curl https://$(minikube ip)/v1/addressspaces/default
+----
++
+The deployment is finished when `status.isReady` is `true` in the returned JSON object.
+
+==== Installing {ProductName} in Multi-Tenant Mode
+
+{ProductName} can be deployed in either a single-tenant mode or a multi-tenant mode. Choose
+single-tenant mode if you do not expect to be creating multiple isolated address spaces or if you do
+not have cluster-admin privileges. Otherwise, choose multi-tenant mode.
+
+.Procedure
+
+. To install {ProductName} in multi-tenant mode, run the following script:
++
+[source,options="nowrap"]
+----
+./deploy-kubernetes.sh -m "https://localhost:8443" -n enmasse -o multitenant
+----
+
+The Kubernetes deployment script and YAML files currently do not support Role
+Based Access Control (RBAC). In Kubernetes clusters which have RBAC enabled, it is
+required to additionally create a role binding for the `default` service account
+to the `view` role and for the `enmasse-service-account` to the `cluster-admin` role.
+
+. Grant cluster-admin privileges:
++
+[source,options="nowrap"]
+----
+kubectl create clusterrolebinding enmasse-service-account-binding --clusterrole=cluster-admin --serviceaccount=enmasse:enmasse-service-account
+kubectl create rolebinding default-view-binding --clusterrole=view --serviceaccount=enmasse:default -n enmasse
+----
++
+The deployments required for running {ProductName} in multi-tenant mode are created.
+{ProductName} will be up and running once all pods in the 'enmasse' namespace are in the `Running` state:
++
+[source,options="nowrap"]
+----
+kubectl get pods -n enmasse
+----
+
