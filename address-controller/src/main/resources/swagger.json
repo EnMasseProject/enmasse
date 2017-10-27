@@ -413,7 +413,7 @@
             ],
             "properties": {
                 "type": {
-                    "$ref": "#/definitions/AddressType"
+                    "$ref": "#/definitions/AddressSpaceType"
                 },
                 "plan": {
                     "type": "string"
@@ -621,6 +621,14 @@
                     "type": "string"
                 }
             }
+        },
+        "AddressSpaceType": {
+            "type": "string",
+            "description": "Type of address space (standard, brokered)",
+            "enum": [
+                "standard",
+                "brokered"
+            ]
         },
         "AddressType": {
             "type": "string",
