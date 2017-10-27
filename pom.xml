@@ -29,6 +29,7 @@
     <jboss.logging.version>3.3.0.Final</jboss.logging.version>
     <jboss.logging.annotations.version>2.1.0.Final</jboss.logging.annotations.version>
     <protonj.version>0.22.0</protonj.version>
+    <qpidjms.version>0.26.0</qpidjms.version>
     <jacoco.version>0.7.9</jacoco.version>
     <license.maven.version>2.11</license.maven.version>
   </properties>
