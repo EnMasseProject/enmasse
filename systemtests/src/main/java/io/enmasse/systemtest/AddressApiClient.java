@@ -1,6 +1,5 @@
 package io.enmasse.systemtest;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpMethod;
@@ -18,13 +17,14 @@ import java.util.concurrent.*;
 
 public class AddressApiClient {
     private final WebClient client;
-    private final Endpoint endpoint;
+    private final OpenShift openshift;
     private final Vertx vertx;
+    private final int initRetry = 10;
 
-    public AddressApiClient(Endpoint endpoint) {
+    public AddressApiClient(OpenShift openshift) throws InterruptedException {
         this.vertx = VertxFactory.create();
         this.client = WebClient.create(vertx);
-        this.endpoint = endpoint;
+        this.openshift = openshift;
     }
 
     public void close() {
@@ -32,7 +32,11 @@ public class AddressApiClient {
         vertx.close();
     }
 
-    public void createAddressSpace(AddressSpace addressSpace, String authServiceType, String addrSpaceType) throws JsonProcessingException, InterruptedException, TimeoutException, ExecutionException {
+    public void createAddressSpace(AddressSpace addressSpace, String authServiceType, String addrSpaceType) throws Exception {
+        createAddressSpace(addressSpace, authServiceType, addrSpaceType, initRetry);
+    }
+
+    private void createAddressSpace(AddressSpace addressSpace, String authServiceType, String addrSpaceType, int retry) throws Exception {
         JsonObject config = new JsonObject();
         config.put("apiVersion", "v1");
         config.put("kind", "AddressSpace");
@@ -52,26 +56,41 @@ public class AddressApiClient {
 
         Logging.log.info("Following payload will be used in POST request: " + config.toString());
         CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
-        client.post(endpoint.getPort(), endpoint.getHost(), "/v1/addressspaces")
+        Endpoint locEndpoint = openshift.getRestEndpoint();
+        client.post(locEndpoint.getPort(), locEndpoint.getHost(), "/v1/addressspaces")
                 .timeout(20_000)
                 .as(BodyCodec.jsonObject())
                 .sendJsonObject(config, ar -> {
                     if (ar.succeeded()) {
                         responsePromise.complete(responseHandler(ar));
                     } else {
-                        Logging.log.error("Error creating address space {}", addressSpace, ar.cause());
+                        Logging.log.warn("Error creating address space {}", addressSpace);
                         responsePromise.completeExceptionally(ar.cause());
                     }
                 });
 
-        responsePromise.get(30, TimeUnit.SECONDS);
+        try {
+            responsePromise.get(30, TimeUnit.SECONDS);
+        } catch (Exception ex) {
+            if (ex.getCause() instanceof UnknownHostException && retry > 0) {
+                try {
+                    Logging.log.info("Trying to reload endpoint, remaining iterations: " + retry);
+                    createAddressSpace(addressSpace, authServiceType, addrSpaceType, retry - 1);
+                } catch (Exception ex2) {
+                    throw ex2;
+                }
+            } else {
+                ex.getCause().printStackTrace();
+                throw ex;
+            }
+        }
     }
 
-    public void deleteAddressSpace(AddressSpace addressSpace, OpenShift openshift) throws InterruptedException, TimeoutException, ExecutionException, UnknownHostException {
-        deleteAddressSpace(addressSpace, openshift, 10);
+    public void deleteAddressSpace(AddressSpace addressSpace) throws InterruptedException, TimeoutException, ExecutionException, UnknownHostException {
+        deleteAddressSpace(addressSpace, initRetry);
     }
 
-    public void deleteAddressSpace(AddressSpace addressSpace, OpenShift openshift, int retry) throws InterruptedException, TimeoutException, ExecutionException, UnknownHostException {
+    private void deleteAddressSpace(AddressSpace addressSpace, int retry) throws InterruptedException, TimeoutException, ExecutionException, UnknownHostException {
         CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
         Endpoint locEndpoint = openshift.getRestEndpoint();
         client.delete(locEndpoint.getPort(), locEndpoint.getHost(), "/v1/addressspaces/" + addressSpace.getName())
@@ -91,7 +110,7 @@ public class AddressApiClient {
             if (ex.getCause() instanceof UnknownHostException && retry > 0) {
                 try {
                     Logging.log.info("Trying to reload endpoint, remaining iterations: " + retry);
-                    deleteAddressSpace(addressSpace, openshift, retry - 1);
+                    deleteAddressSpace(addressSpace, retry - 1);
                 } catch (Exception ex2) {
                     throw ex2;
                 }
@@ -102,6 +121,10 @@ public class AddressApiClient {
         }
     }
 
+    public JsonObject getAddressSpace(String name) throws InterruptedException, TimeoutException, ExecutionException {
+        return getAddressSpace(name, initRetry);
+    }
+
     /**
      * get address space by address space name vie rest api
      *
@@ -109,13 +132,13 @@ public class AddressApiClient {
      * @return
      * @throws InterruptedException
      */
-    public JsonObject getAddressSpace(String name) throws InterruptedException, TimeoutException, ExecutionException {
+    private JsonObject getAddressSpace(String name, int retry) throws InterruptedException, TimeoutException, ExecutionException {
+        CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
+        Endpoint locEndpoint = openshift.getRestEndpoint();
         Logging.log.info("Following HTTP request will be used for getting address space:" +
                 "/v1/addressspaces/" + name +
-                " with host: " + endpoint.getHost() + " with Port: " + endpoint.getPort());
-
-        CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
-        client.get(endpoint.getPort(), endpoint.getHost(), "/v1/addressspaces/" + name)
+                " with host: " + locEndpoint.getHost() + " with Port: " + locEndpoint.getPort());
+        client.get(locEndpoint.getPort(), locEndpoint.getHost(), "/v1/addressspaces/" + name)
                 .as(BodyCodec.jsonObject())
                 .send(ar -> {
                     if (ar.succeeded()) {
@@ -125,16 +148,34 @@ public class AddressApiClient {
                         responsePromise.completeExceptionally(ar.cause());
                     }
                 });
-        return responsePromise.get(30, TimeUnit.SECONDS);
+        try {
+            return responsePromise.get(30, TimeUnit.SECONDS);
+        } catch (Exception ex) {
+            if (ex.getCause() instanceof UnknownHostException && retry > 0) {
+                try {
+                    Logging.log.info("Trying to reload endpoint, remaining iterations: " + retry);
+                    return getAddressSpace(name, retry - 1);
+                } catch (Exception ex2) {
+                    throw ex2;
+                }
+            } else {
+                ex.getCause().printStackTrace();
+                throw ex;
+            }
+        }
     }
 
     public Set<String> listAddressSpaces() throws InterruptedException, TimeoutException, ExecutionException {
+        return listAddressSpaces(initRetry);
+    }
+
+    private Set<String> listAddressSpaces(int retry) throws InterruptedException, TimeoutException, ExecutionException {
+        CompletableFuture<Set<String>> list = new CompletableFuture<>();
+        Endpoint locEndpoint = openshift.getRestEndpoint();
         Logging.log.info("Following HTTP request will be used for getting address space:" +
                 "/v1/addressspaces/" +
-                " with host: " + endpoint.getHost() + " with Port: " + endpoint.getPort());
-
-        CompletableFuture<Set<String>> list = new CompletableFuture<>();
-        client.get(endpoint.getPort(), endpoint.getHost(), "/v1/addressspaces")
+                " with host: " + locEndpoint.getHost() + " with Port: " + locEndpoint.getPort());
+        client.get(locEndpoint.getPort(), locEndpoint.getHost(), "/v1/addressspaces")
                 .as(BodyCodec.jsonObject())
                 .timeout(20_000)
                 .send(ar -> {
@@ -150,11 +191,30 @@ public class AddressApiClient {
                         }
                         list.complete(spaces);
                     } else {
-                        list.completeExceptionally(ar.cause());
                         Logging.log.warn("Failed listing address spaces", ar.cause());
+                        list.completeExceptionally(ar.cause());
                     }
                 });
-        return list.get(30, TimeUnit.SECONDS);
+        try {
+            return list.get(30, TimeUnit.SECONDS);
+        } catch (Exception ex) {
+            if (ex.getCause() instanceof UnknownHostException && retry > 0) {
+                try {
+                    Logging.log.info("Trying to reload endpoint, remaining iterations: " + retry);
+                    return listAddressSpaces(retry - 1);
+                } catch (Exception ex2) {
+                    throw ex2;
+                }
+            } else {
+                ex.getCause().printStackTrace();
+                throw ex;
+            }
+        }
+    }
+
+
+    public JsonObject getAddresses(AddressSpace addressSpace, Optional<String> addressName) throws Exception {
+        return getAddresses(addressSpace, addressName, initRetry);
     }
 
     /**
@@ -165,27 +225,41 @@ public class AddressApiClient {
      * @return
      * @throws Exception
      */
-    public JsonObject getAddresses(AddressSpace addressSpace, Optional<String> addressName) throws Exception {
+    private JsonObject getAddresses(AddressSpace addressSpace, Optional<String> addressName, int retry) throws Exception {
         String path = "/v1/addresses/" + addressSpace.getName();
         path += addressName.isPresent() ? addressName.get() : "";
 
         Logging.log.info("Following HTTP request will be used for getting address: " + path);
 
         CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
-        client.get(endpoint.getPort(), endpoint.getHost(), path)
+        Endpoint locEndpoint = openshift.getRestEndpoint();
+        client.get(locEndpoint.getPort(), locEndpoint.getHost(), path)
                 .as(BodyCodec.jsonObject())
                 .timeout(20_000)
                 .send(ar -> {
                     if (ar.succeeded()) {
                         responsePromise.complete(responseHandler(ar));
                     } else {
-                        Logging.log.warn("Error when getting addresses", ar.cause());
+                        Logging.log.warn("Error when getting addresses");
                         responsePromise.completeExceptionally(ar.cause());
                     }
                 });
-        return responsePromise.get(30, TimeUnit.SECONDS);
+        try {
+            return responsePromise.get(30, TimeUnit.SECONDS);
+        } catch (Exception ex) {
+            if (ex.getCause() instanceof UnknownHostException && retry > 0) {
+                try {
+                    Logging.log.info("Trying to reload endpoint, remaining iterations: " + retry);
+                    return getAddresses(addressSpace, addressName, retry - 1);
+                } catch (Exception ex2) {
+                    throw ex2;
+                }
+            } else {
+                ex.getCause().printStackTrace();
+                throw ex;
+            }
+        }
     }
-
 
     /**
      * delete addresses via reset api
@@ -196,37 +270,42 @@ public class AddressApiClient {
      */
     public void deleteAddresses(AddressSpace addressSpace, Destination... destinations) throws Exception {
         for (Destination destination : destinations) {
-            doDelete("/v1/addresses/" + addressSpace.getName() + "/" + destination.getAddress());
+            doDelete("/v1/addresses/" + addressSpace.getName() + "/" + destination.getAddress(), initRetry);
         }
-
     }
 
-    private void doDelete(String path) throws Exception {
+    private void doDelete(String path, int retry) throws Exception {
         CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
-        client.delete(endpoint.getPort(), endpoint.getHost(), path)
+        Endpoint locEndpoint = openshift.getRestEndpoint();
+        client.delete(locEndpoint.getPort(), locEndpoint.getHost(), path)
                 .timeout(20_000)
                 .as(BodyCodec.jsonObject())
                 .send(ar -> {
                     if (ar.succeeded()) {
                         responsePromise.complete(responseHandler(ar));
                     } else {
-                        Logging.log.warn("Error during deleting addresses", ar.cause());
+                        Logging.log.warn("Error during deleting addresses");
                         responsePromise.completeExceptionally(ar.cause());
                     }
                 });
-        responsePromise.get(30, TimeUnit.SECONDS);
+        try {
+            responsePromise.get(30, TimeUnit.SECONDS);
+        } catch (Exception ex) {
+            if (ex.getCause() instanceof UnknownHostException && retry > 0) {
+                try {
+                    Logging.log.info("Trying to reload endpoint, remaining iterations: " + retry);
+                    doDelete(path, retry - 1);
+                } catch (Exception ex2) {
+                    throw ex2;
+                }
+            } else {
+                ex.getCause().printStackTrace();
+                throw ex;
+            }
+        }
     }
 
-    /**
-     * deploying addresses via rest api
-     *
-     * @param addressSpace name of instance
-     * @param httpMethod   PUT, POST and DELETE method are supported
-     * @param destinations variable count of destinations that you can put, append or delete
-     * @throws Exception
-     */
     public void deploy(AddressSpace addressSpace, HttpMethod httpMethod, Destination... destinations) throws Exception {
-
         JsonObject config = new JsonObject();
         config.put("apiVersion", "v1");
         config.put("kind", "AddressList");
@@ -247,24 +326,48 @@ public class AddressApiClient {
             items.add(entry);
         }
         config.put("items", items);
+        deploy(addressSpace, httpMethod, config, initRetry);
+    }
 
+    /**
+     * deploying addresses via rest api
+     *
+     * @param addressSpace name of instance
+     * @param httpMethod   PUT, POST and DELETE method are supported
+     * @throws Exception
+     */
+    private void deploy(AddressSpace addressSpace, HttpMethod httpMethod, JsonObject config, int retry) throws Exception {
         Logging.log.info("Following HTTP request will be used for deploy: /v1/addresses/" + addressSpace.getName() + "/");
         Logging.log.info("Following payload will be used in request: " + config.toString());
 
         CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
-
-        client.request(httpMethod, endpoint.getPort(), endpoint.getHost(), "/v1/addresses/" + addressSpace.getName() + "/")
+        Endpoint locEndpoint = openshift.getRestEndpoint();
+        client.request(httpMethod, locEndpoint.getPort(), locEndpoint.getHost(), "/v1/addresses/" + addressSpace.getName() + "/")
                 .timeout(20_000)
                 .as(BodyCodec.jsonObject())
                 .sendJsonObject(config, ar -> {
                     if (ar.succeeded()) {
                         responsePromise.complete(responseHandler(ar));
                     } else {
-                        Logging.log.warn("Error when deploying addresses", ar.cause());
+                        Logging.log.warn("Error when deploying addresses");
                         responsePromise.completeExceptionally(ar.cause());
                     }
                 });
-        responsePromise.get(30, TimeUnit.SECONDS);
+        try {
+            responsePromise.get(30, TimeUnit.SECONDS);
+        } catch (Exception ex) {
+            if (ex.getCause() instanceof UnknownHostException && retry > 0) {
+                try {
+                    Logging.log.info("Trying to reload endpoint, remaining iterations: " + retry);
+                    deploy(addressSpace, httpMethod, config, retry - 1);
+                } catch (Exception ex2) {
+                    throw ex2;
+                }
+            } else {
+                ex.getCause().printStackTrace();
+                throw ex;
+            }
+        }
     }
 
     public JsonObject responseAddressHandler(JsonObject responseData) throws AddressAlreadyExistsException {
