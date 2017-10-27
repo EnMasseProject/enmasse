@@ -18,6 +18,7 @@ import java.util.concurrent.*;
 public class AddressApiClient {
     private final WebClient client;
     private final OpenShift openshift;
+    private final Endpoint endpoint;
     private final Vertx vertx;
     private final int initRetry = 10;
 
@@ -25,6 +26,7 @@ public class AddressApiClient {
         this.vertx = VertxFactory.create();
         this.client = WebClient.create(vertx);
         this.openshift = openshift;
+        this.endpoint = openshift.getRestEndpoint();
     }
 
     public void close() {
@@ -33,10 +35,10 @@ public class AddressApiClient {
     }
 
     public void createAddressSpace(AddressSpace addressSpace, String authServiceType, String addrSpaceType) throws Exception {
-        createAddressSpace(addressSpace, authServiceType, addrSpaceType, initRetry);
+        createAddressSpace(addressSpace, authServiceType, addrSpaceType, endpoint, initRetry);
     }
 
-    private void createAddressSpace(AddressSpace addressSpace, String authServiceType, String addrSpaceType, int retry) throws Exception {
+    private void createAddressSpace(AddressSpace addressSpace, String authServiceType, String addrSpaceType, Endpoint locEndpoint, int retry) throws Exception {
         JsonObject config = new JsonObject();
         config.put("apiVersion", "v1");
         config.put("kind", "AddressSpace");
@@ -56,7 +58,6 @@ public class AddressApiClient {
 
         Logging.log.info("Following payload will be used in POST request: " + config.toString());
         CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
-        Endpoint locEndpoint = openshift.getRestEndpoint();
         client.post(locEndpoint.getPort(), locEndpoint.getHost(), "/v1/addressspaces")
                 .timeout(20_000)
                 .as(BodyCodec.jsonObject())
@@ -75,7 +76,7 @@ public class AddressApiClient {
             if (ex.getCause() instanceof UnknownHostException && retry > 0) {
                 try {
                     Logging.log.info("Trying to reload endpoint, remaining iterations: " + retry);
-                    createAddressSpace(addressSpace, authServiceType, addrSpaceType, retry - 1);
+                    createAddressSpace(addressSpace, authServiceType, addrSpaceType, openshift.getRestEndpoint(), retry - 1);
                 } catch (Exception ex2) {
                     throw ex2;
                 }
@@ -87,12 +88,11 @@ public class AddressApiClient {
     }
 
     public void deleteAddressSpace(AddressSpace addressSpace) throws InterruptedException, TimeoutException, ExecutionException, UnknownHostException {
-        deleteAddressSpace(addressSpace, initRetry);
+        deleteAddressSpace(addressSpace, endpoint, initRetry);
     }
 
-    private void deleteAddressSpace(AddressSpace addressSpace, int retry) throws InterruptedException, TimeoutException, ExecutionException, UnknownHostException {
+    private void deleteAddressSpace(AddressSpace addressSpace, Endpoint locEndpoint, int retry) throws InterruptedException, TimeoutException, ExecutionException, UnknownHostException {
         CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
-        Endpoint locEndpoint = openshift.getRestEndpoint();
         client.delete(locEndpoint.getPort(), locEndpoint.getHost(), "/v1/addressspaces/" + addressSpace.getName())
                 .as(BodyCodec.jsonObject())
                 .timeout(20_000)
@@ -110,7 +110,7 @@ public class AddressApiClient {
             if (ex.getCause() instanceof UnknownHostException && retry > 0) {
                 try {
                     Logging.log.info("Trying to reload endpoint, remaining iterations: " + retry);
-                    deleteAddressSpace(addressSpace, retry - 1);
+                    deleteAddressSpace(addressSpace, openshift.getRestEndpoint(), retry - 1);
                 } catch (Exception ex2) {
                     throw ex2;
                 }
@@ -122,7 +122,7 @@ public class AddressApiClient {
     }
 
     public JsonObject getAddressSpace(String name) throws InterruptedException, TimeoutException, ExecutionException {
-        return getAddressSpace(name, initRetry);
+        return getAddressSpace(name, endpoint, initRetry);
     }
 
     /**
@@ -132,9 +132,8 @@ public class AddressApiClient {
      * @return
      * @throws InterruptedException
      */
-    private JsonObject getAddressSpace(String name, int retry) throws InterruptedException, TimeoutException, ExecutionException {
+    private JsonObject getAddressSpace(String name, Endpoint locEndpoint, int retry) throws InterruptedException, TimeoutException, ExecutionException {
         CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
-        Endpoint locEndpoint = openshift.getRestEndpoint();
         Logging.log.info("Following HTTP request will be used for getting address space:" +
                 "/v1/addressspaces/" + name +
                 " with host: " + locEndpoint.getHost() + " with Port: " + locEndpoint.getPort());
@@ -154,7 +153,7 @@ public class AddressApiClient {
             if (ex.getCause() instanceof UnknownHostException && retry > 0) {
                 try {
                     Logging.log.info("Trying to reload endpoint, remaining iterations: " + retry);
-                    return getAddressSpace(name, retry - 1);
+                    return getAddressSpace(name, openshift.getRestEndpoint(), retry - 1);
                 } catch (Exception ex2) {
                     throw ex2;
                 }
@@ -166,12 +165,11 @@ public class AddressApiClient {
     }
 
     public Set<String> listAddressSpaces() throws InterruptedException, TimeoutException, ExecutionException {
-        return listAddressSpaces(initRetry);
+        return listAddressSpaces(endpoint, initRetry);
     }
 
-    private Set<String> listAddressSpaces(int retry) throws InterruptedException, TimeoutException, ExecutionException {
+    private Set<String> listAddressSpaces(Endpoint locEndpoint, int retry) throws InterruptedException, TimeoutException, ExecutionException {
         CompletableFuture<Set<String>> list = new CompletableFuture<>();
-        Endpoint locEndpoint = openshift.getRestEndpoint();
         Logging.log.info("Following HTTP request will be used for getting address space:" +
                 "/v1/addressspaces/" +
                 " with host: " + locEndpoint.getHost() + " with Port: " + locEndpoint.getPort());
@@ -201,7 +199,7 @@ public class AddressApiClient {
             if (ex.getCause() instanceof UnknownHostException && retry > 0) {
                 try {
                     Logging.log.info("Trying to reload endpoint, remaining iterations: " + retry);
-                    return listAddressSpaces(retry - 1);
+                    return listAddressSpaces(openshift.getRestEndpoint(), retry - 1);
                 } catch (Exception ex2) {
                     throw ex2;
                 }
@@ -214,7 +212,7 @@ public class AddressApiClient {
 
 
     public JsonObject getAddresses(AddressSpace addressSpace, Optional<String> addressName) throws Exception {
-        return getAddresses(addressSpace, addressName, initRetry);
+        return getAddresses(addressSpace, addressName, endpoint, initRetry);
     }
 
     /**
@@ -225,14 +223,13 @@ public class AddressApiClient {
      * @return
      * @throws Exception
      */
-    private JsonObject getAddresses(AddressSpace addressSpace, Optional<String> addressName, int retry) throws Exception {
+    private JsonObject getAddresses(AddressSpace addressSpace, Optional<String> addressName, Endpoint locEndpoint, int retry) throws Exception {
         String path = "/v1/addresses/" + addressSpace.getName();
         path += addressName.isPresent() ? addressName.get() : "";
 
         Logging.log.info("Following HTTP request will be used for getting address: " + path);
 
         CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
-        Endpoint locEndpoint = openshift.getRestEndpoint();
         client.get(locEndpoint.getPort(), locEndpoint.getHost(), path)
                 .as(BodyCodec.jsonObject())
                 .timeout(20_000)
@@ -250,7 +247,7 @@ public class AddressApiClient {
             if (ex.getCause() instanceof UnknownHostException && retry > 0) {
                 try {
                     Logging.log.info("Trying to reload endpoint, remaining iterations: " + retry);
-                    return getAddresses(addressSpace, addressName, retry - 1);
+                    return getAddresses(addressSpace, addressName, openshift.getRestEndpoint(), retry - 1);
                 } catch (Exception ex2) {
                     throw ex2;
                 }
@@ -270,13 +267,12 @@ public class AddressApiClient {
      */
     public void deleteAddresses(AddressSpace addressSpace, Destination... destinations) throws Exception {
         for (Destination destination : destinations) {
-            doDelete("/v1/addresses/" + addressSpace.getName() + "/" + destination.getAddress(), initRetry);
+            doDelete("/v1/addresses/" + addressSpace.getName() + "/" + destination.getAddress(), endpoint, initRetry);
         }
     }
 
-    private void doDelete(String path, int retry) throws Exception {
+    private void doDelete(String path, Endpoint locEndpoint, int retry) throws Exception {
         CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
-        Endpoint locEndpoint = openshift.getRestEndpoint();
         client.delete(locEndpoint.getPort(), locEndpoint.getHost(), path)
                 .timeout(20_000)
                 .as(BodyCodec.jsonObject())
@@ -294,7 +290,7 @@ public class AddressApiClient {
             if (ex.getCause() instanceof UnknownHostException && retry > 0) {
                 try {
                     Logging.log.info("Trying to reload endpoint, remaining iterations: " + retry);
-                    doDelete(path, retry - 1);
+                    doDelete(path, openshift.getRestEndpoint(), retry - 1);
                 } catch (Exception ex2) {
                     throw ex2;
                 }
@@ -326,7 +322,7 @@ public class AddressApiClient {
             items.add(entry);
         }
         config.put("items", items);
-        deploy(addressSpace, httpMethod, config, initRetry);
+        deploy(addressSpace, httpMethod, endpoint, config, initRetry);
     }
 
     /**
@@ -336,12 +332,11 @@ public class AddressApiClient {
      * @param httpMethod   PUT, POST and DELETE method are supported
      * @throws Exception
      */
-    private void deploy(AddressSpace addressSpace, HttpMethod httpMethod, JsonObject config, int retry) throws Exception {
+    private void deploy(AddressSpace addressSpace, HttpMethod httpMethod, Endpoint locEndpoint, JsonObject config, int retry) throws Exception {
         Logging.log.info("Following HTTP request will be used for deploy: /v1/addresses/" + addressSpace.getName() + "/");
         Logging.log.info("Following payload will be used in request: " + config.toString());
 
         CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
-        Endpoint locEndpoint = openshift.getRestEndpoint();
         client.request(httpMethod, locEndpoint.getPort(), locEndpoint.getHost(), "/v1/addresses/" + addressSpace.getName() + "/")
                 .timeout(20_000)
                 .as(BodyCodec.jsonObject())
@@ -359,7 +354,7 @@ public class AddressApiClient {
             if (ex.getCause() instanceof UnknownHostException && retry > 0) {
                 try {
                     Logging.log.info("Trying to reload endpoint, remaining iterations: " + retry);
-                    deploy(addressSpace, httpMethod, config, retry - 1);
+                    deploy(addressSpace, httpMethod, openshift.getRestEndpoint(), config, retry - 1);
                 } catch (Exception ex2) {
                     throw ex2;
                 }
