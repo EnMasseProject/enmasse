@@ -1,2 +1,2 @@
 #!/bin/sh
-java -jar /shutdown-hook/shutdown-hook.jar
+java -Dvertx.cacheDirBase=/tmp -jar /shutdown-hook/shutdown-hook.jar
