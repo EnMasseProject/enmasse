@@ -1596,6 +1596,9 @@ objects:
   - apiVersion: v1
     kind: Service
     metadata:
+      annotations:
+        addressSpace: ${ADDRESS_SPACE}
+        io.enmasse.endpointPort: http
       labels:
         app: enmasse
       name: console
