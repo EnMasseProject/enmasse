@@ -17,7 +17,6 @@
 
 var address_ctrl = require('../lib/address_ctrl.js');
 var AddressSource = require('../lib/internal_address_source.js');
-var AddressStatus = require('../lib/address_status.js');
 var ConsoleServer = require('../lib/console_server.js');
 var tls_options = require('../lib/tls_options.js');
 
@@ -38,9 +37,7 @@ function start(env) {
         bind_event(bc, 'address_stats_retrieved', console_server.addresses, 'update_existing');
         bind_event(bc, 'connection_stats_retrieved', console_server.connections, 'set');
         bind_event(address_source, 'addresses_defined', bc);
-        var status = new AddressStatus();
-        bind_event(bc, 'address_stats_retrieved', status, 'updated');
-        bind_event(address_source, 'addresses_defined', status);
+        bind_event(bc, 'address_stats_retrieved', address_source, 'check_status');
         bc.connect(tls_options.get_client_options({host:env.BROKER_SERVICE_HOST, port:env.BROKER_SERVICE_PORT,username:'console'}));
     } else {
         //assume standard address space for now
