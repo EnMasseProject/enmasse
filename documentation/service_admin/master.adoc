@@ -12,7 +12,6 @@ include::installing-openshift.adoc[leveloffset=+1]
 
 
 [appendix]
-//include::common/using-your-subscription.adoc[leveloffset=+1]
 
 // Revision information
 //include::common/revision-info.adoc[]

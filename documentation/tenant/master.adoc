@@ -6,9 +6,10 @@ include::common/address-model.adoc[leveloffset=+1]
 
 include::common/address-space.adoc[leveloffset=+1]
 
+include::common/configuring-using-restapi.adoc[leveloffset=+1]
+
 
 [appendix]
-//include::common/using-your-subscription.adoc[leveloffset=+1]
 
 // Revision information
 //include::common/revision-info.adoc[]
