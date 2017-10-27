@@ -103,14 +103,11 @@ EnMasse.
 You can find the latest version of EnMasse
 https://github.com/EnMasseProject/enmasse/releases/latest[here]. To
 deploy EnMasse, it is recommended to use the deploy script together with
-a template of the latest version. At the time of writing, the latest
-version is 0.10.0, which can be deployed as follows:
+a template of the latest version.
 
-....
-curl -L https://github.com/EnMasseProject/enmasse/releases/download/0.10.0/enmasse-deploy.sh | sh - -c "https://openshift.<yourdomain>:8443" -p enmasse -u <myuser>
-....
+See http://enmasse.io/documentation/master/service_admin[service admin documentation] on how to deploy enmasse.
 
-Now you have EnMasse deployed and ready to use. The endpoints will be:
+Once you've followed the above guide, you should have EnMasse deployed. The endpoints will be:
 
 ....
 * AMQP: `messaging-enmasse.<yourdomain>`

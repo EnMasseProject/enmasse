@@ -31,14 +31,14 @@ This will cause an nginx ingress controller to get launched.
 
 Download one of the releases from
 https://github.com/EnMasseProject/enmasse/releases and unpack it. Once
-unpacked, you can either deploy EnMasse using an automated script or
-follow the below steps.
+unpacked, you can either deploy EnMasse using an automated script.
 
 [[deploying-enmasse-automatically]]
 ==== Deploying EnMasse automatically
 
 The deployment script simplifies the process of deploying the enmasse
-cluster. You can invoke it with `-h` to get a list of options. To
+cluster. You can invoke it with `-h` to get a list of options (you can also use `-g` to generate the
+list of steps). To
 deploy:
 
 ....
@@ -50,107 +50,6 @@ up EnMasse will take a while, usually depending on how fast it is able
 to download the docker images for the various components. In the
 meantime, you can start to create your address configuration.
 
-[[deploying-enmasse-manually]]
-==== Deploying EnMasse manually
-
-Create service account for address controller:
-
-....
-kubectl create sa enmasse-service-account -n enmasse
-....
-
-Create self-signed certificate:
-
-....
-openssl req -new -x509 -batch -nodes -days 11000 -subj "/O=io.enmasse/CN=enmasse" -out /tmp/enmasse-deploy.3ILXW4/ca.crt -keyout /tmp/enmasse-deploy.3ILXW4/ca.key
-....
-
-Create enmasse-ca TLS secret:
-
-....
-cat <<EOF | kubectl create -n enmasse -f -
-{
-    "apiVersion": "v1",
-    "kind": "Secret",
-    "metadata": {
-        "name": "enmasse-ca"
-    },
-    "type": "kubernetes.io/tls",
-    "data": {
-        "tls.key": "$(base64 -w 0 /tmp/enmasse-deploy.3ILXW4/ca.key)",
-        "tls.crt": "$(base64 -w 0 /tmp/enmasse-deploy.3ILXW4/ca.crt)"
-    }
-}
-EOF
-....
-
-Create certificate signing request for address-controller.enmasse.svc.cluster.local:
-
-....
-openssl req -new -batch -nodes -keyout /tmp/enmasse-deploy.3ILXW4/address-controller.enmasse.svc.cluster.local.key -subj "/O=io.enmasse/CN=address-controller.enmasse.svc.cluster.local" -out /tmp/enmasse-deploy.3ILXW4/address-controller.enmasse.svc.cluster.local.csr
-....
-
-Sign address-controller certificate with CA key:
-
-....
-openssl x509 -req -days 11000 -in /tmp/enmasse-deploy.3ILXW4/address-controller.enmasse.svc.cluster.local.csr -CA /tmp/enmasse-deploy.3ILXW4/ca.crt -CAkey /tmp/enmasse-deploy.3ILXW4/ca.key -CAcreateserial -out /tmp/enmasse-deploy.3ILXW4/address-controller.enmasse.svc.cluster.local.crt
-....
-
-Create address-controller-cert TLS secret:
-
-....
-cat <<EOF | kubectl create -n enmasse -f -
-{
-    "apiVersion": "v1",
-    "kind": "Secret",
-    "metadata": {
-        "name": "address-controller-cert"
-    },
-    "type": "kubernetes.io/tls",
-    "data": {
-        "tls.key": "$(base64 -w 0 /tmp/enmasse-deploy.3ILXW4/address-controller.enmasse.svc.cluster.local.key)",
-        "tls.crt": "$(base64 -w 0 /tmp/enmasse-deploy.3ILXW4/address-controller.enmasse.svc.cluster.local.crt)"
-    }
-}
-EOF
-....
-
-Create self-signed certificate for none-authservice.enmasse.svc.cluster.local:
-
-....
-openssl req -new -x509 -batch -nodes -days 11000 -out /tmp/enmasse-deploy.3ILXW4/none-authservice.enmasse.svc.cluster.local.crt -keyout /tmp/enmasse-deploy.3ILXW4/none-authservice.enmasse.svc.cluster.local.key -subj "/O=io.enmasse/CN=none-authservice.enmasse.svc.cluster.local"
-....
-
-Create none-authservice-cert TLS secret:
-
-....
-cat <<EOF | kubectl create -n enmasse -f -
-{
-    "apiVersion": "v1",
-    "kind": "Secret",
-    "metadata": {
-        "name": "none-authservice-cert"
-    },
-    "type": "kubernetes.io/tls",
-    "data": {
-        "tls.key": "$(base64 -w 0 /tmp/enmasse-deploy.3ILXW4/none-authservice.enmasse.svc.cluster.local.key)",
-        "tls.crt": "$(base64 -w 0 /tmp/enmasse-deploy.3ILXW4/none-authservice.enmasse.svc.cluster.local.crt)"
-    }
-}
-EOF
-....
-
-Create none authservice:
-
-....
-kubectl apply -f ./kubernetes/addons/none-authservice.yaml -n enmasse
-....
-
-Deploy EnMasse to enmasse:
-
-....
-kubectl apply -f ./kubernetes/enmasse.yaml -n enmasse
-....
 
 [[role-based-access-control]]
 ==== Role Based Access Control (RBAC)

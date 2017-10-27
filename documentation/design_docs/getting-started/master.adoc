@@ -1,0 +1,7 @@
+include::common/attributes.adoc[]
+
+= {Title}
+
+include::openshift.adoc[leveloffset=+1]
+include::kubernetes.adoc[leveloffset=+1]
+include::aws.adoc[leveloffset=+1]
