@@ -53,6 +53,8 @@ else
         cp $i artifacts/test-reports
     done
 
+    docker logs origin > 2>&1 artifacts/openshift.log
+
     cp templates/build/enmasse-${VERSION}.tgz artifacts/
 
     ARTIFACTS=artifacts-$TRAVIS_BUILD_NUMBER
