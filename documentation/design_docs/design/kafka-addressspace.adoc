@@ -1,0 +1,35 @@
+== why
+
+EnMasse has grown to support multiple address space types. For a messaging operator, the ability to
+manage and monitor multiple messaging technologies with a uniform interface is an attractive
+feature. Kafka is a very popular message broker and its use is in many ways complementary to other
+technologies used in EnMasse.
+
+This proposal introduces a new address space type 'kafka'. This address space consists of an Apache Kafka cluster +
+controller logic to create topics based on enmasse addresses + a console for managing addresses and
+monitoring.
+
+This address space exposes the kafka protocol directly to the user, allowing the kafka clients to be
+used, but provides the same address management and console experience as the other address spaces.
+One addition is to also deploy the 'amqp-kafka-bridge' to provide an AMQP interface.
+
+With the potential of future 'bridge' address types, one can also expose the kafka cluster through
+AMQP via another address space like 'standard', or even map addresses from other address spaces into
+the kafka cluster.
+
+== what/how
+
+* Deploy the 'barnabas' kafka openshift template
+* Deploy a 'barnabas-agent'
+** Creates kafka topics in the kafka cluster based on the address configs created by the user
+** Updates address config state based on topic states in kafka cluster
+** Provides the enmasse console to provide the same management experience as in the other address spaces
+* Add 'kafka' address space and address types ('topic') to the global address controller
+
+== testing
+
+What is the test plan for the feature/change?
+
+== documentation
+
+What documentation will be created for this feature?
