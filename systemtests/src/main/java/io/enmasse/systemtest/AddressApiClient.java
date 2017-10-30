@@ -229,25 +229,33 @@ public class AddressApiClient {
 
         Logging.log.info("Following HTTP request will be used for getting address: " + path);
 
-        CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
-        client.get(locEndpoint.getPort(), locEndpoint.getHost(), path)
-                .as(BodyCodec.jsonObject())
-                .timeout(20_000)
-                .send(ar -> {
-                    if (ar.succeeded()) {
-                        responsePromise.complete(responseHandler(ar));
-                    } else {
-                        Logging.log.warn("Error when getting addresses");
-                        responsePromise.completeExceptionally(ar.cause());
-                    }
-                });
-        try {
+        String finalPath = path;
+
+        return doRequestNTimes(retry, () -> {
+            CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
+            client.get(locEndpoint.getPort(), locEndpoint.getHost(), finalPath)
+                    .as(BodyCodec.jsonObject())
+                    .timeout(20_000)
+                    .send(ar -> {
+                        if (ar.succeeded()) {
+                            responsePromise.complete(responseHandler(ar));
+                        } else {
+                            Logging.log.warn("Error when getting addresses");
+                            responsePromise.completeExceptionally(ar.cause());
+                        }
+                    });
             return responsePromise.get(30, TimeUnit.SECONDS);
+        });
+    }
+
+    JsonObject doRequestNTimes(int retry, Callable<JsonObject> fn) throws Exception {
+        try {
+            return fn.call();
         } catch (Exception ex) {
             if (ex.getCause() instanceof UnknownHostException && retry > 0) {
                 try {
                     Logging.log.info("Trying to reload endpoint, remaining iterations: " + retry);
-                    return getAddresses(addressSpace, addressName, openshift.getRestEndpoint(), retry - 1);
+                    return doRequestNTimes(retry - 1, fn);
                 } catch (Exception ex2) {
                     throw ex2;
                 }
