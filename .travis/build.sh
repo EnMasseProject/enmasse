@@ -5,7 +5,7 @@ PULL_REQUEST=${PULL_REQUEST:-true}
 BRANCH=${BRANCH:-master}
 TAG=${TAG:-latest}
 DOCKER_ORG=${DOCKER_ORG:-$USER}
-OPENSHIFT_KUBECONFIG=${OPENSHIFT_KUBECONFIG:-/tmp/openshift/config/master/admin.kubeconfig}
+OPENSHIFT_KUBECONFIG=${OPENSHIFT_KUBECONFIG:-/var/lib/origin/openshift.local.config/master/admin.kubeconfig}
 SYSTEMTEST_ARGS=${SYSTEMTEST_ARGS:-SmokeTest}
 
 if [ "$VERSION" != "latest" ]; then
