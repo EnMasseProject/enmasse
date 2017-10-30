@@ -119,7 +119,7 @@ public abstract class TestBase {
 
     //!TODO: protected void appendAddressSpace(...)
 
-    protected JsonObject getAddressSpace(String name) throws InterruptedException, TimeoutException, ExecutionException {
+    protected JsonObject getAddressSpace(String name) throws Exception {
         return addressApiClient.getAddressSpace(name);
     }
 
