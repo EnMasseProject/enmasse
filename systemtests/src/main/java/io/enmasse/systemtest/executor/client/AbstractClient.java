@@ -15,6 +15,7 @@ public abstract class AbstractClient {
     private ClientType clientType;
     private ArrayList<String> arguments;
     private JsonArray messages;
+    protected ArrayList<Argument> allowedArgs;
 
     /**
      * Constructor of abstract class
@@ -25,6 +26,7 @@ public abstract class AbstractClient {
         this.arguments = new ArrayList<>();
         this.arguments.add(ClientType.getCommand(clientType));
         this.messages = new JsonArray();
+        this.fillAllowedArgs();
     }
 
     /**
@@ -39,12 +41,34 @@ public abstract class AbstractClient {
      * Set arguments of client
      * @param args string array of arguments
      */
-    public void setArguments(Map<Argument, String> args){
-        for(Map.Entry<Argument, String> arg : args.entrySet()){
-            arguments.add(arg.getKey().command());
-            arguments.add(arg.getValue());
+    public void setArguments(ArgumentMap args){
+        for(Argument arg : args.getArguments()){
+            if(validateArgument(arg)) {
+                for(String value : args.getValues(arg)){
+                    arguments.add(arg.command());
+                    arguments.add(value);
+                }
+            }else{
+                Logging.log.warn(String.format("Argument '%s' is not allowed for '%s'",
+                        arg.command(),
+                        this.getClass().getSimpleName()));
+            }
         }
     }
+
+    /**
+     * Validates that client support this arg
+     * @param arg argument to validate
+     * @return true if argument is supported
+     */
+    public boolean validateArgument(Argument arg){
+        return this.allowedArgs.contains(arg);
+    }
+
+    /**
+     * Fill with clients supported args
+     */
+    public abstract void fillAllowedArgs();
 
     /**
      * Run clients

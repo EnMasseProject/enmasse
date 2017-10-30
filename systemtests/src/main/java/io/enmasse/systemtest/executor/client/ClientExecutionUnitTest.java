@@ -12,10 +12,14 @@ public class ClientExecutionUnitTest {
         RheaClientSender sender = new RheaClientSender();
         RheaClientReceiver receiver = new RheaClientReceiver();
 
-        HashMap<Argument, String> arguments = new HashMap<>();
+        ArgumentMap arguments = new ArgumentMap();
         arguments.put(Argument.LOG_MESSAGES, "json");
         arguments.put(Argument.COUNT, "10");
         arguments.put(Argument.ADDRESS, "example_queue");
+        arguments.put(Argument.MSG_CONTENT, "pepa");
+        arguments.put(Argument.MSG_PROPERTY, "jarda~30");
+        arguments.put(Argument.MSG_PROPERTY, "konina~20");
+        arguments.put(Argument.SELECTOR, "jarda = 30");
 
         sender.setArguments(arguments);
         receiver.setArguments(arguments);
