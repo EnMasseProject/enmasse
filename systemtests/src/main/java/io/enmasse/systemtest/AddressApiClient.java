@@ -176,18 +176,19 @@ public class AddressApiClient {
      */
     public void deleteAddresses(AddressSpace addressSpace, Destination... destinations) throws Exception {
         for (Destination destination : destinations) {
-            doDelete("/v1/addresses/" + addressSpace.getName() + "/" + destination.getAddress());
+            doDelete("/v1/addresses/" + addressSpace.getName() + "/" + destination.getAddress(), destination.getAddress());
         }
 
     }
 
-    private void doDelete(String path) throws Exception {
+    private void doDelete(String path, String addressName) throws Exception {
         CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
         client.delete(endpoint.getPort(), endpoint.getHost(), path)
                 .timeout(20_000)
                 .as(BodyCodec.jsonObject())
                 .send(ar -> {
                     if (ar.succeeded()) {
+                        Logging.log.info("Address {} successfully removed", addressName);
                         responsePromise.complete(responseHandler(ar));
                     } else {
                         Logging.log.warn("Error during deleting addresses", ar.cause());
