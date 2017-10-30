@@ -76,6 +76,7 @@ if [ $failure -gt 0 ]
 then
     echo "Systemtests failed"
     oc get events
+    oc get route messaging -n testspace -o yaml
     exit 1
 else
     teardown_test $OPENSHIFT_PROJECT
