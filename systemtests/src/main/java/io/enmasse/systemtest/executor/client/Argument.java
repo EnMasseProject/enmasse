@@ -34,6 +34,9 @@ public enum Argument {
 
     //common opts
     BROKER("--broker"),
+    BROKER_URL("--broker-url"),
+    USERNAME("--conn-username"),
+    PASSWORD("--conn-password"),
     ADDRESS("--address"),
     COUNT("--count"),
     CLOSE_SLEEP("--close-sleep"),

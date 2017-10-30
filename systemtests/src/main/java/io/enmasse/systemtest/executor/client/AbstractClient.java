@@ -61,14 +61,14 @@ public abstract class AbstractClient {
      * @param arg argument to validate
      * @return true if argument is supported
      */
-    public boolean validateArgument(Argument arg){
+    private boolean validateArgument(Argument arg){
         return this.allowedArgs.contains(arg);
     }
 
     /**
      * Fill with clients supported args
      */
-    public abstract void fillAllowedArgs();
+    protected abstract void fillAllowedArgs();
 
     /**
      * Run clients

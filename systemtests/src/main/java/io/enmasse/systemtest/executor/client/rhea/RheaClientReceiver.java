@@ -12,7 +12,7 @@ public class RheaClientReceiver extends AbstractClient {
     }
 
     @Override
-    public void fillAllowedArgs() {
+    protected void fillAllowedArgs() {
         allowedArgs = new ArrayList<>();
 
         allowedArgs.add(Argument.CONN_URLS);
