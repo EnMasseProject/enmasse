@@ -22,7 +22,9 @@ tar xzf openshift.tar.gz -C $SETUP --strip-components 1
 
 sudo cp $SETUP/* /usr/bin
 
-oc cluster up
+MYIP=`ip route get 8.8.8.8 | head -1 | cut -d' ' -f8`
+echo "Using IP: $MYIP"
+oc cluster up --routing-suffix=${MYIP}.nip.io
 sudo chown -R $USER /var/lib/origin/openshift.local.config
 
 #sudo openshift start --write-config=$CONFIG
@@ -34,8 +36,6 @@ sudo chown -R $USER /var/lib/origin/openshift.local.config
 #echo "Node config: $NODE_CONFIG"
 #
 ## Replace with build node ip to get proper subdomain routing
-#MYIP=`ip route get 8.8.8.8 | head -1 | cut -d' ' -f8`
-#echo "Using IP: $MYIP"
 #sed -i -e "s/router.default.svc.cluster.local/${MYIP}.nip.io/g" $MASTER_CONFIG
 #
 ## Start OpenShift with config
