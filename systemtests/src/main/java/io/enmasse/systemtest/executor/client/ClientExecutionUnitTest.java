@@ -3,12 +3,13 @@ package io.enmasse.systemtest.executor.client;
 import io.enmasse.systemtest.executor.client.rhea.RheaClientReceiver;
 import io.enmasse.systemtest.executor.client.rhea.RheaClientSender;
 
-import java.util.HashMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 
 //TODO: Remove this file after dev is completed
 public class ClientExecutionUnitTest {
 
-    public static void main(String[] args){
+    public static void main(String[] args) throws ExecutionException, InterruptedException {
         RheaClientSender sender = new RheaClientSender();
         RheaClientReceiver receiver = new RheaClientReceiver();
 
@@ -24,8 +25,14 @@ public class ClientExecutionUnitTest {
         sender.setArguments(arguments);
         receiver.setArguments(arguments);
 
-        sender.run();
-        receiver.run();
+        //async
+        Future<Boolean> rs = receiver.runAsync();
+        Future<Boolean> rr = sender.runAsync();
+
+        System.out.println(rs.get());
+        System.out.println(rr.get());
+
+        //non async
         sender.run();
         receiver.run();
 

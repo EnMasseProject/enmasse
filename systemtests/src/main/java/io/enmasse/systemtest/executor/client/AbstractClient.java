@@ -6,7 +6,7 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
 import java.util.ArrayList;
-import java.util.Map;
+import java.util.concurrent.*;
 
 /**
  * Class represent abstract client which keeps common features of client
@@ -74,7 +74,7 @@ public abstract class AbstractClient {
      * Run clients
      * @return true if command end with exit code 0
      */
-    public boolean run() {
+    private boolean runClient() {
         try {
             Executor executor = new Executor();
             boolean ret = executor.execute(arguments);
@@ -82,13 +82,29 @@ public abstract class AbstractClient {
                 Logging.log.info(executor.getStdOut());
                 parseToJson(executor.getStdOut());
             } else {
-                Logging.log.info(executor.getStdErr());
+                Logging.log.error(executor.getStdErr());
             }
             return ret;
         } catch (Exception ex) {
-            Logging.log.info(ex.toString());
+            Logging.log.error(ex.toString());
             return false;
         }
+    }
+
+    /**
+     * Run client async
+     * @return future of exit status of client
+     */
+    public Future<Boolean> runAsync(){
+        return Executors.newSingleThreadExecutor().submit(() -> runClient());
+    }
+
+    /**
+     * Run client in normal mode
+     * @return exit status of client
+     */
+    public boolean run(){
+        return runClient();
     }
 
     /**
