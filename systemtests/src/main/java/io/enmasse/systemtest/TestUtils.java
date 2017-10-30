@@ -137,7 +137,7 @@ public class TestUtils {
         }
     }
 
-    public static boolean existAddressSpace(AddressApiClient apiClient, String addressSpaceName) throws InterruptedException, TimeoutException, ExecutionException {
+    public static boolean existAddressSpace(AddressApiClient apiClient, String addressSpaceName) throws Exception {
         return apiClient.listAddressSpaces().contains(addressSpaceName);
     }
 
