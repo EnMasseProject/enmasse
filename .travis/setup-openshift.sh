@@ -23,8 +23,9 @@ tar xzf openshift.tar.gz -C $SETUP --strip-components 1
 sudo cp $SETUP/* /usr/bin
 
 oc cluster up
+sudo chown -R $USER /var/lib/origin/openshift.local.config
+
 #sudo openshift start --write-config=$CONFIG
-#sudo chown -R $USER $CONFIG
 #
 #MASTER_CONFIG=$CONFIG/master/master-config.yaml
 #NODE_CONFIG=`ls $CONFIG/node*/node-config.yaml`
