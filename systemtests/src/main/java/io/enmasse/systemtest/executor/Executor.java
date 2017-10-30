@@ -36,7 +36,7 @@ public class Executor {
      * @throws InterruptedException
      * @throws ExecutionException
      */
-    protected boolean execute(ArrayList<String> commands) throws IOException, InterruptedException, ExecutionException {
+    public boolean execute(ArrayList<String> commands) throws IOException, InterruptedException, ExecutionException {
         return execute(commands, 0);
     }
 
@@ -49,7 +49,7 @@ public class Executor {
      * @throws InterruptedException
      * @throws ExecutionException
      */
-    protected boolean execute(ArrayList<String> commands, int timeout) throws IOException, InterruptedException, ExecutionException{
+    public boolean execute(ArrayList<String> commands, int timeout) throws IOException, InterruptedException, ExecutionException{
         process = Runtime.getRuntime().exec((commands.toArray(new String[0])));
 
         Future<String> output = readStdOutput();
@@ -57,7 +57,7 @@ public class Executor {
 
         int retCode = 1;
         if(timeout > 0){
-            if (process.waitFor(5000, TimeUnit.MILLISECONDS)){
+            if (process.waitFor(timeout, TimeUnit.MILLISECONDS)){
                 retCode = process.exitValue();
             }
         }else{

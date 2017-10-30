@@ -1,19 +1,20 @@
 package io.enmasse.systemtest.executor.client;
 
+import io.enmasse.systemtest.Logging;
 import io.enmasse.systemtest.executor.Executor;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import netscape.javascript.JSObject;
 
 import java.util.ArrayList;
+import java.util.Map;
 
 /**
  * Class represent abstract client which keeps common features of client
  */
-public abstract class AbstractClient extends Executor {
+public abstract class AbstractClient {
     private ClientType clientType;
     private ArrayList<String> arguments;
-    private JsonArray messgaes;
+    private JsonArray messages;
 
     /**
      * Constructor of abstract class
@@ -23,24 +24,25 @@ public abstract class AbstractClient extends Executor {
         this.clientType = clientType;
         this.arguments = new ArrayList<>();
         this.arguments.add(ClientType.getCommand(clientType));
-        this.messgaes = new JsonArray();
+        this.messages = new JsonArray();
     }
 
     /**
      * Get of messages
      * @return Json array of messages;
      */
-    public JsonArray getMessgaes() {
-        return messgaes;
+    public JsonArray getMessages() {
+        return messages;
     }
 
     /**
      * Set arguments of client
      * @param args string array of arguments
      */
-    public void setArguments(String... args){
-        for(String arg : args){
-            arguments.add(arg);
+    public void setArguments(Map<Argument, String> args){
+        for(Map.Entry<Argument, String> arg : args.entrySet()){
+            arguments.add(arg.getKey().command());
+            arguments.add(arg.getValue());
         }
     }
 
@@ -50,16 +52,17 @@ public abstract class AbstractClient extends Executor {
      */
     public boolean run() {
         try {
-            boolean ret = super.execute(arguments);
+            Executor executor = new Executor();
+            boolean ret = executor.execute(arguments);
             if (ret) {
-                System.out.println(getStdOut());
-                parseToJson(getStdOut());
+                Logging.log.info(executor.getStdOut());
+                parseToJson(executor.getStdOut());
             } else {
-                System.out.println(getStdErr());
+                Logging.log.info(executor.getStdErr());
             }
             return ret;
         } catch (Exception ex) {
-            System.out.println(ex.toString());
+            Logging.log.info(ex.toString());
             return false;
         }
     }
@@ -70,7 +73,7 @@ public abstract class AbstractClient extends Executor {
      */
     private void parseToJson(String data){
         for(String line : data.split("\n")){
-            messgaes.add(new JsonObject(line));
+            messages.add(new JsonObject(line));
         }
     }
 }
