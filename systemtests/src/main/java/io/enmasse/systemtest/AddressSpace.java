@@ -60,7 +60,7 @@ public class AddressSpace {
     public String toString() {
         return new StringBuilder()
                 .append("{name=").append(name).append(",")
-                .append("namespace=").append(namespace).append("}")
+                .append("namespace=").append(namespace).append(",")
                 .append("type=").append(type.toString().toLowerCase()).append("}")
                 .toString();
     }
