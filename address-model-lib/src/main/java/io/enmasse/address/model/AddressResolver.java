@@ -15,8 +15,6 @@
  */
 package io.enmasse.address.model;
 
-import io.enmasse.address.model.Address;
-import io.enmasse.address.model.AddressResolver;
 import io.enmasse.address.model.types.AddressSpaceType;
 import io.enmasse.address.model.types.AddressType;
 import io.enmasse.address.model.types.Plan;
@@ -49,13 +47,11 @@ public class AddressResolver {
         throw new RuntimeException("Unknown address type " + address.getType().getName() + " for address space type " + addressSpaceType.getName());
     }
 
-    public Address resolveDefaults(Address address) {
+    public Address.Builder resolveDefaults(Address address) {
         Address.Builder builder = new Address.Builder(address);
         builder.setType(getAddressType(address));
         builder.setPlan(getPlan(address));
-        Address newAddress = builder.build();
-        newAddress.validate(this);
-        return newAddress;
+        return builder;
     }
 
     private static Plan findPlan(AddressType type, String planName) {

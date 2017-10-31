@@ -30,8 +30,9 @@ public class Address {
     private final AddressType type;
     private final Plan plan;
     private final Status status;
+    private final String version;
 
-    private Address(String name, String uuid, String address, String addressSpace, AddressType type, Plan plan, Status status) {
+    private Address(String name, String uuid, String address, String addressSpace, AddressType type, Plan plan, Status status, String version) {
         this.name = name;
         this.uuid = uuid;
         this.address = address;
@@ -39,6 +40,7 @@ public class Address {
         this.type = type;
         this.plan = plan;
         this.status = status;
+        this.version = version;
     }
 
     public String getAddress() {
@@ -69,24 +71,8 @@ public class Address {
         return status;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        Address address1 = (Address) o;
-
-        if (!name.equals(address1.name)) return false;
-        if (!uuid.equals(address1.uuid)) return false;
-        return address.equals(address1.address);
-    }
-
-    @Override
-    public int hashCode() {
-        int result = name.hashCode();
-        result = 31 * result + uuid.hashCode();
-        result = 31 * result + address.hashCode();
-        return result;
+    public String getVersion() {
+        return version;
     }
 
     @Override
@@ -97,7 +83,8 @@ public class Address {
         sb.append("uuid=").append(uuid).append(",");
         sb.append("type=").append(type).append(",");
         sb.append("plan=").append(plan).append(",");
-        sb.append("status=").append(status).append("}");
+        sb.append("status=").append(status).append(",");
+        sb.append("version=").append(version).append("}");
         return sb.toString();
     }
 
@@ -116,6 +103,28 @@ public class Address {
         Objects.requireNonNull(addressResolver.getPlan(this));
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Address address1 = (Address) o;
+
+        if (!name.equals(address1.name)) return false;
+        if (!uuid.equals(address1.uuid)) return false;
+        if (!address.equals(address1.address)) return false;
+        return version != null ? version.equals(address1.version) : address1.version == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = name.hashCode();
+        result = 31 * result + uuid.hashCode();
+        result = 31 * result + address.hashCode();
+        result = 31 * result + (version != null ? version.hashCode() : 0);
+        return result;
+    }
+
     public static class Builder {
         private String name;
         private String uuid;
@@ -124,6 +133,7 @@ public class Address {
         private AddressType type;
         private Plan plan;
         private Status status = new Status(false);
+        private String version;
 
         public Builder() {
         }
@@ -136,6 +146,7 @@ public class Address {
             this.type = address.getType();
             this.plan = address.getPlan();
             this.status = new Status(address.getStatus());
+            this.version = address.getVersion();
         }
 
         public Builder setUuid(String uuid) {
@@ -189,6 +200,11 @@ public class Address {
             return this;
         }
 
+        public Builder setVersion(String version) {
+            this.version = version;
+            return this;
+        }
+
         public Address build() {
             Objects.requireNonNull(name, "name not set");
             Objects.requireNonNull(address, "address not set");
@@ -197,8 +213,7 @@ public class Address {
             if (uuid == null) {
                 uuid = UUID.nameUUIDFromBytes(address.getBytes(StandardCharsets.UTF_8)).toString();
             }
-            return new Address(name, uuid, address, addressSpace, type, plan, status);
+            return new Address(name, uuid, address, addressSpace, type, plan, status, version);
         }
     }
-
 }

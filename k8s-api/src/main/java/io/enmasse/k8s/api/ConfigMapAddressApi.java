@@ -22,10 +22,9 @@ import io.enmasse.config.AnnotationKeys;
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.v1.CodecV1;
 import io.fabric8.kubernetes.api.model.ConfigMap;
+import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
 import io.fabric8.kubernetes.api.model.ConfigMapList;
-import io.fabric8.kubernetes.api.model.DoneableConfigMap;
 import io.fabric8.kubernetes.client.KubernetesClient;
-import io.fabric8.openshift.client.OpenShiftClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -78,7 +77,9 @@ public class ConfigMapAddressApi implements AddressApi, Resource<Address> {
         Map<String, String> data = configMap.getData();
 
         try {
-            return addressResolver.resolveDefaults(mapper.readValue(data.get("config.json"), Address.class));
+            Address.Builder builder = addressResolver.resolveDefaults(mapper.readValue(data.get("config.json"), Address.class));
+            builder.setVersion(configMap.getMetadata().getResourceVersion());
+            return builder.build();
         } catch (Exception e) {
             log.warn("Unable to decode address", e);
             throw new RuntimeException(e);
@@ -99,8 +100,12 @@ public class ConfigMapAddressApi implements AddressApi, Resource<Address> {
     }
 
     @Override
-    public void createAddress(Address destination) {
-        createOrReplace(destination);
+    public void createAddress(Address address) {
+        String name = KubeUtil.sanitizeName("address-config-" + address.getName());
+        ConfigMap map = create(address);
+        if (map != null) {
+            client.configMaps().inNamespace(namespace).withName(name).create(map);
+        }
     }
 
     @Override
@@ -110,14 +115,19 @@ public class ConfigMapAddressApi implements AddressApi, Resource<Address> {
         if (previous == null) {
             return;
         }
-        createOrReplace(address);
+        ConfigMap newMap = create(address);
+        if (newMap != null) {
+            client.configMaps().inNamespace(namespace).withName(name).replace(newMap);
+        }
     }
 
-    private void createOrReplace(Address address) {
-        Address withDefaults = addressResolver.resolveDefaults(address);
+    private ConfigMap create(Address address) {
+        Address withDefaults = addressResolver.resolveDefaults(address).build();
+        withDefaults.validate(addressResolver);
+
         String name = KubeUtil.sanitizeName("address-config-" + withDefaults.getName());
-        DoneableConfigMap builder = client.configMaps().inNamespace(namespace).withName(name).createOrReplaceWithNew()
-                .withNewMetadata()
+        ConfigMapBuilder builder = new ConfigMapBuilder()
+                .editOrNewMetadata()
                 .withName(name)
                 .addToLabels(LabelKeys.TYPE, "address-config")
                 // TODO: Support other ways of doing this
@@ -125,11 +135,17 @@ public class ConfigMapAddressApi implements AddressApi, Resource<Address> {
                 .addToAnnotations(AnnotationKeys.ADDRESS_SPACE, withDefaults.getAddressSpace())
                 .endMetadata();
 
+        if (withDefaults.getVersion() != null) {
+            builder.editOrNewMetadata()
+                    .withResourceVersion(withDefaults.getVersion());
+        }
+
         try {
             builder.addToData("config.json", mapper.writeValueAsString(withDefaults));
-            builder.done();
+            return builder.build();
         } catch (Exception e) {
             log.info("Error serializing address for {}", withDefaults, e);
+            return null;
         }
     }
 

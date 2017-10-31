@@ -12,6 +12,7 @@ import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerPort;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.Secret;
+import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.buffer.Buffer;
@@ -124,7 +125,13 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
 
         // Perform status check
         checkStatuses(newAddressSet);
-        newAddressSet.forEach(addressApi::replaceAddress);
+        for (Address address : newAddressSet) {
+            try {
+                addressApi.replaceAddress(address);
+            } catch (KubernetesClientException ex) {
+                log.warn("Error replacing address {}", address, ex);
+            }
+        }
     }
 
     /*
