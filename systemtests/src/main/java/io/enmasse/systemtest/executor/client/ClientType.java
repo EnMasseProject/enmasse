@@ -21,7 +21,7 @@ public enum ClientType {
             case CLI_RHEA_RECEIVER:
                 return isWindows() ? "cli-rhea-receiver.cmd" : "cli-rhea-receiver";
             default:
-                return new String();
+                return "";
             //TODO: complete for every client (cli-java, cli-proton-python)
         }
     }
@@ -32,6 +32,6 @@ public enum ClientType {
      */
     private static boolean isWindows(){
         String os = System.getProperty("os.name").toLowerCase();
-        return (os.indexOf("win") >= 0);
+        return (os.contains("win"));
     }
 }
