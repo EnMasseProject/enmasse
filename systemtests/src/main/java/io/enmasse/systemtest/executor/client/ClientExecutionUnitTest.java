@@ -21,6 +21,9 @@ public class ClientExecutionUnitTest {
         arguments.put(Argument.MSG_PROPERTY, "jarda~30");
         arguments.put(Argument.MSG_PROPERTY, "konina~20");
         arguments.put(Argument.SELECTOR, "jarda = 30");
+        //arguments.put(Argument.USERNAME, "admin");
+        //arguments.put(Argument.PASSWORD, "admin");
+        arguments.put(Argument.BROKER, "localhost:5672");
 
         sender.setArguments(arguments);
         receiver.setArguments(arguments);

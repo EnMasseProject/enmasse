@@ -12,19 +12,23 @@ import java.util.concurrent.*;
  * Class represent abstract client which keeps common features of client
  */
 public abstract class AbstractClient {
+    private final int DEFAULT_ASYNC_TIMEOUT = 120000;
+    private final int DEFAULT_SYNC_TIMEOUT = 60000;
+
     private ClientType clientType;
-    private ArrayList<String> arguments;
     private JsonArray messages;
+    protected ArrayList<String> arguments;
     protected ArrayList<Argument> allowedArgs;
 
     /**
-     * Constructor of abstract class
+     * Constructor of abstract client
      * @param clientType type of client
      */
     public AbstractClient(ClientType clientType){
         this.clientType = clientType;
         this.arguments = new ArrayList<>();
         this.arguments.add(ClientType.getCommand(clientType));
+        this.allowedArgs = new ArrayList<>();
         this.messages = new JsonArray();
         this.fillAllowedArgs();
     }
@@ -42,6 +46,7 @@ public abstract class AbstractClient {
      * @param args string array of arguments
      */
     public void setArguments(ArgumentMap args){
+        args = transformArguments(args);
         for(Argument arg : args.getArguments()){
             if(validateArgument(arg)) {
                 for(String value : args.getValues(arg)){
@@ -71,13 +76,22 @@ public abstract class AbstractClient {
     protected abstract void fillAllowedArgs();
 
     /**
+     * Method for modify argument, when client has special address type
+     * or connection options etc...
+     * @param args argument map of arguments
+     * @return modified map of arguments
+     */
+    protected abstract ArgumentMap transformArguments(ArgumentMap args);
+
+    /**
      * Run clients
+     * @param timeout kill timeout in ms
      * @return true if command end with exit code 0
      */
-    private boolean runClient() {
+    private boolean runClient(int timeout) {
         try {
             Executor executor = new Executor();
-            boolean ret = executor.execute(arguments);
+            boolean ret = executor.execute(arguments, timeout);
             if (ret) {
                 Logging.log.info(executor.getStdOut());
                 parseToJson(executor.getStdOut());
@@ -96,15 +110,24 @@ public abstract class AbstractClient {
      * @return future of exit status of client
      */
     public Future<Boolean> runAsync(){
-        return Executors.newSingleThreadExecutor().submit(() -> runClient());
+        return Executors.newSingleThreadExecutor().submit(() -> runClient(DEFAULT_ASYNC_TIMEOUT));
     }
 
     /**
-     * Run client in normal mode
+     * Run client in sync mode
      * @return exit status of client
      */
     public boolean run(){
-        return runClient();
+        return runClient(DEFAULT_SYNC_TIMEOUT);
+    }
+
+    /**
+     * Run client in sync mode with timeout
+     * @param timeout kill timeout in ms
+     * @return exit status of client
+     */
+    public boolean run(int timeout){
+        return runClient(timeout);
     }
 
     /**
@@ -116,4 +139,46 @@ public abstract class AbstractClient {
             messages.add(new JsonObject(line));
         }
     }
+
+    //=====================================================================================
+    //Default argument transformation
+    //=====================================================================================
+
+    /**
+     * Base broker transformation to user:password@[ip/hostname]:port
+     * @param args argument map
+     * @return
+     */
+    protected ArgumentMap basicBrokerTransformation(ArgumentMap args){
+        String username;
+        String password;
+        String broker;
+        if(args.getValues(Argument.BROKER) != null){
+            broker = args.getValues(Argument.BROKER).get(0);
+            args.remove(Argument.BROKER);
+
+            if(args.getValues(Argument.USERNAME) != null){
+                username = args.getValues(Argument.USERNAME).get(0);
+                args.remove(Argument.USERNAME);
+
+                if(args.getValues(Argument.PASSWORD) != null){
+                    password = args.getValues(Argument.PASSWORD).get(0);
+                    args.remove(Argument.PASSWORD);
+
+                    args.put(Argument.BROKER, String.format("%s:%s@%s", username, password, broker));
+                    return args;
+                }
+
+                args.put(Argument.BROKER, String.format("%s:@%s", username, broker));
+                return args;
+            }
+
+            args.put(Argument.BROKER, broker);
+            return args;
+        }
+        args.remove(Argument.USERNAME);
+        args.remove(Argument.PASSWORD);
+        return args;
+    }
+
 }

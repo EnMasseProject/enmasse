@@ -2,9 +2,8 @@ package io.enmasse.systemtest.executor.client.rhea;
 
 import io.enmasse.systemtest.executor.client.AbstractClient;
 import io.enmasse.systemtest.executor.client.Argument;
+import io.enmasse.systemtest.executor.client.ArgumentMap;
 import io.enmasse.systemtest.executor.client.ClientType;
-
-import java.util.ArrayList;
 
 
 public class RheaClientSender extends AbstractClient {
@@ -14,8 +13,6 @@ public class RheaClientSender extends AbstractClient {
 
     @Override
     protected void fillAllowedArgs() {
-        allowedArgs = new ArrayList<>();
-
         allowedArgs.add(Argument.CONN_URLS);
         allowedArgs.add(Argument.CONN_RECONNECT);
         allowedArgs.add(Argument.CONN_RECONNECT_INTERVAL);
@@ -67,5 +64,11 @@ public class RheaClientSender extends AbstractClient {
         allowedArgs.add(Argument.MSG_CONTENT_FROM_FILE);
         allowedArgs.add(Argument.MSG_ANNOTATION);
         allowedArgs.add(Argument.ANONYMOUS);
+    }
+
+    @Override
+    protected ArgumentMap transformArguments(ArgumentMap args) {
+        args = basicBrokerTransformation(args);
+        return args;
     }
 }

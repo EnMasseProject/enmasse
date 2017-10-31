@@ -20,6 +20,7 @@ public enum Argument {
     CONN_SSL_VERIFY_PEER_NAME("--conn-ssl-verify-peer-name"),
     CONN_MAX_FRAME_SIZE("--conn-max-frame-size"),
     CONN_WEB_SOCKET("--conn-web-socket"),
+    CONN_OPTIONS("--connection-options"),
 
     //common link opts
     LINK_DURABLE("--link-durable"),

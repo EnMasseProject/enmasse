@@ -1,22 +1,19 @@
 package io.enmasse.systemtest.executor.client;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Class represents Map of arguments (allow duplicate argument)
  */
 public class ArgumentMap {
-    private final Map<Argument,Set<String>> mappings = new HashMap<>();
+    private final Map<Argument,ArrayList<String>> mappings = new HashMap<>();
 
     /**
      * Returns set of values for argument
      * @param arg argument
      * @return Set of values
      */
-    public Set<String> getValues(Argument arg)
+    public ArrayList<String> getValues(Argument arg)
     {
         return mappings.get(arg);
     }
@@ -30,6 +27,14 @@ public class ArgumentMap {
     }
 
     /**
+     * Removes argument from map
+     * @param key name of argument
+     */
+    public void remove(Argument key){
+        mappings.remove(key);
+    }
+
+    /**
      * Add argument and his values
      * @param key arguments
      * @param value value
@@ -37,11 +42,11 @@ public class ArgumentMap {
      */
     public Boolean put(Argument key, String value)
     {
-        Set<String> target = mappings.get(key);
+        ArrayList<String> target = mappings.get(key);
 
         if(target == null)
         {
-            target = new HashSet<>();
+            target = new ArrayList<>();
             mappings.put(key,target);
         }
 
