@@ -96,7 +96,7 @@ describe('console server', function() {
     });
 
     it('retrieves a resource that exists', function(done) {
-        http.get({port:console_server.server.address().port, hostname:'localhost',path:'/help.html'}, function (response) {
+        http.get({port:console_server.server.address().port, hostname:'localhost',path:'/index.html'}, function (response) {
             assert.equal(response.statusCode, 200);
             done();
         });
@@ -128,21 +128,21 @@ describe('console server', function() {
     });
 
     it('gives a 500 for an unsupported authorization header', function(done) {
-        http.get({port:console_server.server.address().port, hostname:'localhost',path:'/help.html', headers:{'Authorization':'foo bar'}}, function (response) {
+        http.get({port:console_server.server.address().port, hostname:'localhost',path:'/index.html', headers:{'Authorization':'foo bar'}}, function (response) {
             assert.equal(response.statusCode, 500);
             done();
         });
     });
 
     it('accepts valid username and password', function(done) {
-        http.get({port:console_server.server.address().port, hostname:'localhost',path:'/help.html', auth:'bob:bob'}, function (response) {
+        http.get({port:console_server.server.address().port, hostname:'localhost',path:'/index.html', auth:'bob:bob'}, function (response) {
             assert.equal(response.statusCode, 200);
             done();
         });
     });
 
     it('rejects invalid username and password', function(done) {
-        http.get({port:console_server.server.address().port, hostname:'localhost',path:'/help.html', auth:'foo:bar'}, function (response) {
+        http.get({port:console_server.server.address().port, hostname:'localhost',path:'/index.html', auth:'foo:bar'}, function (response) {
             assert.equal(response.statusCode, 401);
             assert.equal(response.headers['www-authenticate'], 'Basic realm=Authorization Required');
             done();
