@@ -57,7 +57,7 @@ public abstract class TestBase {
 
     @Before
     public void setup() throws Exception {
-        addressApiClient = new AddressApiClient(openShift.getRestEndpoint());
+        addressApiClient = new AddressApiClient(openShift);
         if (createDefaultAddressSpace()) {
             if (environment.isMultitenant()) {
                 Logging.log.info("Test is running in multitenant mode");
@@ -119,7 +119,7 @@ public abstract class TestBase {
 
     //!TODO: protected void appendAddressSpace(...)
 
-    protected JsonObject getAddressSpace(String name) throws InterruptedException, TimeoutException, ExecutionException {
+    protected JsonObject getAddressSpace(String name) throws Exception {
         return addressApiClient.getAddressSpace(name);
     }
 

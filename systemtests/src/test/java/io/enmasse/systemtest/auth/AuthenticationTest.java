@@ -181,8 +181,7 @@ public class AuthenticationTest extends TestBase {
     }
 
 
-    private boolean canConnectWithAmqp(AddressSpace addressSpace, String username, String password) throws
-            InterruptedException, IOException, TimeoutException, ExecutionException {
+    private boolean canConnectWithAmqp(AddressSpace addressSpace, String username, String password) throws Exception {
         assertTrue(canConnectWithAmqpToQueue(addressSpace, username, password, amqpAddressList.get(0).getAddress()));
         assertTrue(canConnectWithAmqpToTopic(addressSpace, username, password, amqpAddressList.get(1).getAddress()));
         if (!TestUtils.getAddressSpaceType(getAddressSpace(addressSpace.getName())).equals("brokered")) {
