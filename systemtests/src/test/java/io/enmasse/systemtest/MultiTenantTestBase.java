@@ -46,15 +46,10 @@ public class MultiTenantTestBase extends TestBase {
     }
 
     @Override
-    protected AddressSpace createAddressSpace(AddressSpace addressSpace, String authService, String addrSpaceType) throws Exception {
-        super.createAddressSpace(addressSpace, authService, addrSpaceType);
+    protected AddressSpace createAddressSpace(AddressSpace addressSpace, String authService) throws Exception {
+        super.createAddressSpace(addressSpace, authService);
         addressSpaces.add(addressSpace);
         return addressSpace;
-    }
-
-    @Override
-    protected AddressSpace createAddressSpace(AddressSpace addressSpace, String authService) throws Exception {
-        return createAddressSpace(addressSpace, authService, STANDARD_ADDRESS_SPACE_TYPE);
     }
 
     protected AmqpClientFactory createAmqpClientFactory(AddressSpace addressSpace) {

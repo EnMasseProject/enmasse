@@ -37,7 +37,7 @@ public class AddressApiClient {
     }
 
 
-    public void createAddressSpace(AddressSpace addressSpace, String authServiceType, String addrSpaceType) throws Exception {
+    public void createAddressSpace(AddressSpace addressSpace, String authServiceType) throws Exception {
         JsonObject config = new JsonObject();
         config.put("apiVersion", "v1");
         config.put("kind", "AddressSpace");
@@ -48,7 +48,7 @@ public class AddressApiClient {
         config.put("metadata", metadata);
 
         JsonObject spec = new JsonObject();
-        spec.put("type", addrSpaceType);
+        spec.put("type", addressSpace.getType().toString().toLowerCase());
         config.put("spec", spec);
 
         JsonObject authService = new JsonObject();

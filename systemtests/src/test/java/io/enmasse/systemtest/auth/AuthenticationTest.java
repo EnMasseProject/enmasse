@@ -68,62 +68,55 @@ public class AuthenticationTest extends TestBase {
         return false;
     }
 
-    public AddressSpace createAddressSpace(String name, String authService) throws Exception {
-        AddressSpace addressSpace = new AddressSpace(name);
-        addressSpaces.add(addressSpace);
+    @Override
+    protected AddressSpace createAddressSpace(AddressSpace addressSpace, String authService) throws Exception {
         super.createAddressSpace(addressSpace, authService);
-        setAddresses(addressSpace, amqpAddressList.toArray(new Destination[amqpAddressList.size()]));
-        //        setAddresses(name, Destination.queue(amqpAddress)); //, Destination.topic(mqttAddress));
-        return addressSpace;
-    }
-
-    public AddressSpace createAddressSpace(String name, String authService, String type) throws Exception {
-        AddressSpace addressSpace = new AddressSpace(name);
-        addressSpaces.add(addressSpace);
-        super.createAddressSpace(addressSpace, authService, type);
-        if (type.equals(STANDARD_ADDRESS_SPACE_TYPE)) {
-            setAddresses(addressSpace, amqpAddressList.toArray(new Destination[amqpAddressList.size()]));
-        } else {
-            List<Destination> brokeredAddressList = amqpAddressList.subList(0, 2);
-            setAddresses(addressSpace, brokeredAddressList.toArray(new Destination[brokeredAddressList.size()]));
+        List<Destination> brokeredAddressList = amqpAddressList;
+        if (addressSpace.getType().equals(AddressSpaceType.BROKERED)) {
+            brokeredAddressList = amqpAddressList.subList(0, 2);
         }
+        setAddresses(addressSpace, brokeredAddressList.toArray(new Destination[brokeredAddressList.size()]));
+        //        setAddresses(name, Destination.queue(amqpAddress)); //, Destination.topic(mqttAddress)); #TODO! for MQTT
         return addressSpace;
     }
 
     @Test
     public void testStandardAuthenticationServiceBrokered() throws Exception {
-        testStandardAuthenticationServiceGeneral("brokered");
+        testStandardAuthenticationServiceGeneral(AddressSpaceType.BROKERED);
     }
 
     @Test
     public void testNoneAuthenticationServiceBrokered() throws Exception {
-        testNoneAuthenticationServiceGeneral("brokered", anonymousUser, anonymousPswd);
+        testNoneAuthenticationServiceGeneral(AddressSpaceType.BROKERED, anonymousUser, anonymousPswd);
     }
 
     @Test
     public void testStandardAuthenticationService() throws Exception {
-        testStandardAuthenticationServiceGeneral("standard");
+        testStandardAuthenticationServiceGeneral(AddressSpaceType.STANDARD);
     }
 
     @Test
     public void testNoneAuthenticationService() throws Exception {
-        testNoneAuthenticationServiceGeneral(STANDARD_ADDRESS_SPACE_TYPE, null, null);
+        testNoneAuthenticationServiceGeneral(AddressSpaceType.STANDARD, null, null);
     }
 
-    public void testNoneAuthenticationServiceGeneral(String addressSpaceType, String emptyUser, String emptyPassword) throws Exception {
-        AddressSpace s3standard = createAddressSpace(addressSpaceType + "-s3", "none", addressSpaceType);
+    public void testNoneAuthenticationServiceGeneral(AddressSpaceType type, String emptyUser, String emptyPassword) throws Exception {
+        AddressSpace s3standard = new AddressSpace(type.toString().toLowerCase() + "-s3", type);
+        createAddressSpace(s3standard, "none");
         assertCanConnect(s3standard, emptyUser, emptyPassword);
         assertCanConnect(s3standard, "bob", "pass");
 
-        AddressSpace s4standard = createAddressSpace(addressSpaceType + "-s4", "standard", addressSpaceType);
+        AddressSpace s4standard = new AddressSpace(type.toString().toLowerCase() + "-s4", type);
+        createAddressSpace(s4standard, "standard");
         assertCanConnect(s3standard, emptyUser, emptyPassword);
         assertCanConnect(s3standard, "bob", "pass");
         assertCannotConnect(s4standard, emptyUser, emptyPassword);
         assertCannotConnect(s4standard, "bob", "pass");
     }
 
-    public void testStandardAuthenticationServiceGeneral(String addressSpaceType) throws Exception {
-        AddressSpace s1brokered = createAddressSpace(addressSpaceType + "-s1", "standard", addressSpaceType);
+    public void testStandardAuthenticationServiceGeneral(AddressSpaceType type) throws Exception {
+        AddressSpace s1brokered = new AddressSpace(type.toString().toLowerCase() + "-s1", type);
+        createAddressSpace(s1brokered, "standard");
 
         // Validate unsuccessful authentication with enmasse authentication service with no credentials
         assertCannotConnect(s1brokered, null, null);
@@ -145,7 +138,8 @@ public class AuthenticationTest extends TestBase {
         assertCannotConnect(s1brokered, s1Bob.getUsername(), "s2pass");
         assertCannotConnect(s1brokered, "alice", "s1pass");
 
-        AddressSpace s2brokered = createAddressSpace(addressSpaceType + "-s2", "standard", addressSpaceType);
+        AddressSpace s2brokered = new AddressSpace(type.toString().toLowerCase() + "-s2", type);
+        createAddressSpace(s2brokered, "standard");
 
         KeycloakCredentials s2Bob = new KeycloakCredentials("bob", "s2pass");
         getKeycloakClient().createUser(s2brokered.getName(), s2Bob.getUsername(), s2Bob.getPassword());

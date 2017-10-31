@@ -1,6 +1,7 @@
 package io.enmasse.systemtest.brokered;
 
 import io.enmasse.systemtest.AddressSpace;
+import io.enmasse.systemtest.AddressSpaceType;
 import io.enmasse.systemtest.Destination;
 import io.enmasse.systemtest.MultiTenantTestBase;
 import io.enmasse.systemtest.amqp.AmqpClient;
@@ -23,9 +24,12 @@ public class QueueTest extends MultiTenantTestBase {
      * related github issue: #387
      */
     @Test
-    public void messageGroupTest() throws Exception{
-        AddressSpace addressSpace = new AddressSpace("brokered-message-group", "brokered-message-group");
-        createAddressSpace(addressSpace, "none", "brokered");
+    public void messageGroupTest() throws Exception {
+        AddressSpace addressSpace = new AddressSpace(
+                "brokered-message-group",
+                "brokered-message-group",
+                AddressSpaceType.BROKERED);
+        createAddressSpace(addressSpace, "none");
         Destination dest = Destination.queue("messageGroupQueue");
         setAddresses(addressSpace, dest);
 
