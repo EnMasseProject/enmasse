@@ -30,7 +30,7 @@ import java.util.concurrent.TimeUnit;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
-public class ElementaryAddressSpaceTest extends MultiTenantTestBase {
+public class SmokeTest extends MultiTenantTestBase {
 
     /**
      * related github issue: #335
