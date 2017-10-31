@@ -39,7 +39,6 @@ public abstract class TestBase {
     protected static final Environment environment = new Environment();
     protected static final AddressSpace defaultAddressSpace = environment.isMultitenant() ? new AddressSpace("testspace", "testspace")
             : new AddressSpace("default", environment.namespace());
-    protected static final String STANDARD_ADDRESS_SPACE_TYPE = "standard";
 
     protected static final OpenShift openShift = new OpenShift(environment, environment.namespace(), defaultAddressSpace.getNamespace());
     private static final GlobalLogCollector logCollector = new GlobalLogCollector(openShift,
@@ -92,10 +91,10 @@ public abstract class TestBase {
         }
     }
 
-    protected AddressSpace createAddressSpace(AddressSpace addressSpace, String authService, String addrSpaceType) throws Exception {
+    protected AddressSpace createAddressSpace(AddressSpace addressSpace, String authService) throws Exception {
         if (!TestUtils.existAddressSpace(addressApiClient, addressSpace.getName())) {
             Logging.log.info("Address space '" + addressSpace + "' doesn't exist and will be created.");
-            addressApiClient.createAddressSpace(addressSpace, authService, addrSpaceType);
+            addressApiClient.createAddressSpace(addressSpace, authService);
             logCollector.startCollecting(addressSpace.getNamespace());
             TestUtils.waitForAddressSpaceReady(addressApiClient, addressSpace.getName());
             if (addressSpace.equals(defaultAddressSpace)) {
@@ -105,10 +104,6 @@ public abstract class TestBase {
             Logging.log.info("Address space '" + addressSpace + "' already exists.");
         }
         return addressSpace;
-    }
-
-    protected AddressSpace createAddressSpace(AddressSpace addressSpace, String authService) throws Exception {
-        return createAddressSpace(addressSpace, authService, STANDARD_ADDRESS_SPACE_TYPE);
     }
 
     protected void deleteAddressSpace(AddressSpace addressSpace) throws Exception {

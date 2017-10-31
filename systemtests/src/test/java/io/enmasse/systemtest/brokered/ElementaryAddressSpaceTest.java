@@ -37,8 +37,11 @@ public class ElementaryAddressSpaceTest extends MultiTenantTestBase {
      */
     @Test
     public void testAddressTypes() throws Exception {
-        AddressSpace addressSpace = new AddressSpace("brokered-a", "brokered-a");
-        createAddressSpace(addressSpace, "none", "brokered");
+        AddressSpace addressSpace = new AddressSpace(
+                "brokered-a",
+                "brokered-a",
+                AddressSpaceType.BROKERED);
+        createAddressSpace(addressSpace, "none");
         Destination queueA = Destination.queue("brokeredQueueA");
         setAddresses(addressSpace, queueA);
 
@@ -71,8 +74,11 @@ public class ElementaryAddressSpaceTest extends MultiTenantTestBase {
      */
     @Test
     public void testCreateDeleteAddressSpace() throws Exception {
-        AddressSpace addressSpaceA = new AddressSpace("brokered-a", "brokered-a");
-        createAddressSpace(addressSpaceA, "none", "brokered");
+        AddressSpace addressSpaceA = new AddressSpace(
+                "brokered-a",
+                "brokered-a",
+                AddressSpaceType.BROKERED);
+        createAddressSpace(addressSpaceA, "none");
         Destination queueB = Destination.queue("brokeredQueueB");
         setAddresses(addressSpaceA, queueB);
 
@@ -81,8 +87,11 @@ public class ElementaryAddressSpaceTest extends MultiTenantTestBase {
         amqpQueueCliA.getConnectOptions().setUsername("test").setPassword("test");
         QueueTest.runQueueTest(amqpQueueCliA, queueB);
 
-        AddressSpace addressSpaceC = new AddressSpace("brokered-c", "brokered-c");
-        createAddressSpace(addressSpaceC, "none", "brokered");
+        AddressSpace addressSpaceC = new AddressSpace(
+                "brokered-c",
+                "brokered-c",
+                AddressSpaceType.BROKERED);
+        createAddressSpace(addressSpaceC, "none");
         setAddresses(addressSpaceC, queueB);
         AmqpClientFactory amqpFactoryC = createAmqpClientFactory(addressSpaceC);
         AmqpClient amqpQueueCliC = amqpFactoryC.createQueueClient(addressSpaceC);
@@ -96,8 +105,11 @@ public class ElementaryAddressSpaceTest extends MultiTenantTestBase {
 
     //@Test(expected = AddressAlreadyExistsException.class) //!TODO disabled until #346 will be fixed
     public void testCreateAlreadyExistingAddress() throws Exception {
-        AddressSpace addressSpaceA = new AddressSpace("brokered-a", "brokered-a");
-        createAddressSpace(addressSpaceA, "none", "brokered");
+        AddressSpace addressSpaceA = new AddressSpace(
+                "brokered-a",
+                "brokered-a",
+                AddressSpaceType.BROKERED);
+        createAddressSpace(addressSpaceA, "none");
         Destination queueA = Destination.queue("brokeredQueueA");
         setAddresses(addressSpaceA, queueA);
 
