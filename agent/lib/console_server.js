@@ -20,6 +20,7 @@ var fs = require('fs');
 var http = require('http');
 var path = require('path');
 var url = require('url');
+var util = require('util');
 var rhea = require('rhea');
 var WebSocketServer = require('ws').Server;
 var AddressList = require('../lib/address_list.js');
@@ -51,17 +52,12 @@ function ConsoleServer (address_ctrl) {
     this.amqp_container.on('sender_open', function (context) {
         self.subscribe(context.connection.remote.open.container_id, context.sender);
     });
-    this.amqp_container.on('sender_close', function (context) {
+    function unsubscribe (context) {
         self.unsubscribe(context.connection.remote.open.container_id);
-    });
-    this.amqp_container.on('connection_close', function (context) {
-        self.unsubscribe(context.connection.remote.open.container_id);
-    });
-    this.amqp_container.on('disconnected', function (context) {
-        if (context.connection.remote.open) {
-            self.unsubscribe(context.connection.remote.open.container_id);
-        }
-    });
+    }
+    this.amqp_container.on('sender_close', unsubscribe);
+    this.amqp_container.on('connection_close', unsubscribe);
+    this.amqp_container.on('disconnected', unsubscribe);
     this.amqp_container.on('message', function (context) {
         var accept = function () {
             log.info(context.message.subject + ' succeeded');
@@ -79,7 +75,7 @@ function ConsoleServer (address_ctrl) {
             log.info('deleting address ' + JSON.stringify(context.message.body));
             self.address_ctrl.delete_address(context.message.body).then(accept).catch(reject);
         } else {
-            log.info('ignoring message: ' + context.message);
+            reject('ignoring message: ' + context.message);
         }
     });
 }
@@ -98,75 +94,83 @@ function basic_auth(request) {
         var parts = request.headers.authorization.split(' ');
         if (parts.length === 2 && parts[0].toLowerCase() === 'basic') {
             parts = new Buffer(parts[1], 'base64').toString().split(':');
-            return { user: parts[0], pass: parts[1] };
+            return { name: parts[0], pass: parts[1] };
         } else {
-            log.error('Cannot handle authorization header %s', auth);
+            throw new Error('Cannot handle authorization header ' + auth);
         }
     }
 }
 
 var content_types = {
-    'html': 'text/html',
-    'js': 'text/javascript',
-    'css': 'text/css',
-    'json': 'application/json',
-    'png': 'image/png',
-    'jpg': 'image/jpg',
-    'gif': 'image/gif',
-    'woff': 'application/font-woff',
-    'ttf': 'application/font-ttf',
-    'eot': 'application/vnd.ms-fontobject',
-    'otf': 'application/font-otf',
-    'svg': 'application/image/svg+xml'
+    '.html': 'text/html',
+    '.js': 'text/javascript',
+    '.css': 'text/css',
+    '.json': 'application/json',
+    '.png': 'image/png',
+    '.jpg': 'image/jpg',
+    '.gif': 'image/gif',
+    '.woff': 'application/font-woff',
+    '.ttf': 'application/font-ttf',
+    '.eot': 'application/vnd.ms-fontobject',
+    '.otf': 'application/font-otf',
+    '.svg': 'application/image/svg+xml'
 };
 
 function get_content_type(file) {
     return content_types[path.extname(file).toLowerCase()];
 }
 
-ConsoleServer.prototype.listen = function (env) {
+function static_handler(request, response) {
+    return function () {
+        var file = path.join(__dirname, '../www/', url.parse(request.url).pathname);
+        if (file.charAt(file.length - 1) === '/') {
+            file += 'index.html';
+        }
+        fs.readFile(file, function (error, data) {
+            if (error) {
+                response.statusCode = error.code === 'ENOENT' ? 404 : 500;
+                response.end(http.STATUS_CODES[response.statusCode]);
+                log.warn('GET %s => %i %j', request.url, response.statusCode, error);
+            } else {
+                var content_type = get_content_type(file);
+                if (content_type) {
+                    response.setHeader('content-type', content_type);
+                }
+                log.debug('GET %s => %s', request.url, file);
+                response.end(data);
+            }
+        });
+    };
+}
+
+function auth_required(response) {
+    return function() {
+        response.setHeader('WWW-Authenticate', 'Basic realm=Authorization Required');
+        response.statusCode = 401;
+        response.end('Authorization Required');
+    };
+}
+
+ConsoleServer.prototype.listen = function (env, callback) {
     this.server = http.createServer(function (request, response) {
         if (request.method === 'GET' && request.url === '/probe') {
             response.end('OK');
         } else if (request.method === 'GET') {
-            var user = basic_auth(request);
-            auth_service.authenticate(user, auth_service.default_options(env)).then(function () {
-                var file = path.join(__dirname, '../www/', url.parse(request.url).pathname);
-                if (file.charAt(file.length - 1) === '/') {
-                    file += 'index.html';
-                }
-                fs.readFile(file, function (error, data) {
-                    if (error) {
-                        if (error.code === 'ENONENT') {
-                            response.statusCode = 404;
-                            response.end('%s not found', request.url);
-                            log.info('GET %s => 404', request.url);
-                        } else {
-                            response.statusCode = 500;
-                            response.end(error.message);
-                            log.error('GET %s => 500 %j', request.url, error);
-                        }
-                    } else {
-                        var content_type = get_content_type(file);
-                        if (content_type) {
-                            response.setHeader('content-type', content_type);
-                        }
-                        log.debug('GET %s => %s', request.url, file);
-                        response.end(data);
-                    }
-                });
-            }).catch(function(error) {
-                response.setHeader('WWW-Authenticate', 'Basic realm=Authorization Required');
-                response.statusCode = 401;
-                response.end('Authorization Required');
-            });
+            try {
+                var user = basic_auth(request);
+                auth_service.authenticate(user, auth_service.default_options(env)).then(static_handler(request, response)).catch(auth_required(response));
+            } catch (error) {
+                response.statusCode = 500;
+                response.end(error.message);
+            }
         } else {
             response.statusCode = 405;
-            response.end('%s not allowed on %s', request.method, request.url);
+            response.end(util.format('%s not allowed on %s', request.method, request.url));
         }
     });
-    this.server.listen(8080);
+    this.server.listen(env.port === undefined ? 8080 : env.port, callback);
     this.ws_bind(this.server);
+    return this.server;
 };
 
 ConsoleServer.prototype.subscribe = function (name, sender) {

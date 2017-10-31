@@ -92,10 +92,6 @@ function update_outcomes(outcomes, link_stats, router) {
     return outcomes;
 }
 
-function get_outcomes(link_stats) {
-    return update_outcomes(init_outcomes({}));
-}
-
 function get_stats_for_address(stats, address) {
     var s = stats[address];
     if (s === undefined) {

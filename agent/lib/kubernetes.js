@@ -90,9 +90,7 @@ function do_get(resource, options) {
                 }
 	    });
         });
-        request.on('error', function (error) {
-            log.info('error while doing GET on %s: %j', opts.path, error);
-        });
+        request.on('error', reject);
     });
 };
 
@@ -120,30 +118,22 @@ function Watcher (resource, options) {
 
 util.inherits(Watcher, events.EventEmitter);
 
-Watcher.prototype.list = function () {
-    do_get(this.resource, this.options).then(this.handle_list_result.bind(this)).catch(this.handle_list_error.bind(this));
-};
-
-Watcher.prototype.handle_list_error = function (error) {
-    this.emit('error', error);
-};
-
-Watcher.prototype.handle_list_result = function (result) {
-    this.objects = result.items;
-    this.emit('updated', this.objects);
-    log.info('list retrieved; watching...');
-    this.watch();
+Watcher.prototype.notify = function () {
+    var self = this;
+    setImmediate( function () {
+        self.emit('updated', self.objects);
+    });
 };
 
 Watcher.prototype.list = function () {
     var self = this;
     do_get(this.resource, this.options).then(function (result) {
         self.objects = result.items;
-        self.emit('updated', self.objects);
-        log.info('list retrieved; watching...');
-        self.watch();
-    }).catch(function (error) {
-        self.emit('error', error);
+        self.notify();
+        if (!self.closed) {
+            log.info('list retrieved; watching...');
+            self.watch();
+        }
     });
 };
 
@@ -155,14 +145,11 @@ Watcher.prototype.watch = function () {
         response.setEncoding('utf8');
         response.on('data', watch_handler(self));
         response.on('end', function () {
-            if (!this.closed) {
+            if (!self.closed) {
                 log.info('response ended; reconnecting...');
                 self.list();
             }
         });
-    });
-    request.on('error', function(e) {
-        self.emit('error', e);
     });
 };
 
@@ -173,18 +160,18 @@ function matcher(object) {
 Watcher.prototype.added = function (object) {
     if (!this.objects.some(matcher(object))) {
         this.objects.push(object);
-        this.emit('updated', this.objects);
+        this.notify();
     }
 };
 
 Watcher.prototype.modified = function (object) {
     myutils.replace(this.objects, object, matcher(object));
-    this.emit('updated', this.objects);
+    this.notify();
 };
 
 Watcher.prototype.deleted = function (object) {
     myutils.remove(this.objects, matcher(object));
-    this.emit('updated', this.objects);
+    this.notify();
 };
 
 Watcher.prototype.close = function () {

@@ -19,10 +19,7 @@ var log = require("./log.js").logger();
 var path = require('path');
 var fs = require('fs');
 var artemis = require('./artemis.js');
-var cert_dir = (process.env.CERT_DIR !== undefined) ? process.env.CERT_DIR : '/etc/enmasse-certs';
-var ca_path = path.resolve(cert_dir, 'ca.crt');
-var client_crt_path = path.resolve(cert_dir, 'tls.crt');
-var client_key_path = path.resolve(cert_dir, 'tls.key');
+var tls_options = require('./tls_options.js');
 
 function get(object, fields, default_value) {
     var o = object;
@@ -44,13 +41,9 @@ function Pod(pod) {
         port: get_broker_port(pod)
     };
     try {
-        options.ca                 = [fs.readFileSync(ca_path)];
-        options.transport          = 'tls';
-        options.rejectUnauthorized = false;
-        options.key                = fs.readFileSync(client_key_path);
-        options.cert               = fs.readFileSync(client_crt_path);
+        options = tls_options.get_client_options(options);
     } catch (error) {
-        log.warn('Unable to load certificates: ' + error);
+        log.error(error);
     }
     this.broker = artemis.connect(options);
 };

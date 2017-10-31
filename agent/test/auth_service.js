@@ -21,33 +21,7 @@ var path = require('path');
 
 var rhea = require('rhea');
 var as = require('../lib/auth_service.js');
-
-function is_valid_user(username, password) {
-    return username === password.split().reverse().join('');
-}
-
-function MockAuthService(f) {
-    this.container = rhea.create_container({id:'mock-auth-service'});
-    this.container.sasl_server_mechanisms.enable_plain(is_valid_user);
-    this.container.sasl_server_mechanisms.enable_anonymous();
-    this.container.on('connection_open', function (context) {
-        context.connection.close();
-    });
-    this.container.on('disconnected', function (context) {});
-}
-
-MockAuthService.prototype.listen = function (options) {
-    this.server = this.container.listen(options || {port:0});
-    var self = this;
-    this.server.on('listening', function () {
-        self.port = self.server.address().port;
-    });
-    return this.server;
-};
-
-MockAuthService.prototype.close = function (callback) {
-    if (this.server) this.server.close(callback);
-};
+var MockAuthService = require('../testlib/mock_authservice.js');
 
 describe('auth service', function() {
     var auth_service;
