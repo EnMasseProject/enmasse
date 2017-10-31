@@ -24,6 +24,7 @@ import io.enmasse.address.model.types.standard.StandardType;
 import io.enmasse.k8s.api.AddressApi;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.KubernetesList;
+import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.openshift.client.OpenShiftClient;
 import org.junit.Before;
 import org.junit.Test;
@@ -160,5 +161,28 @@ public class AddressControllerTest {
 
         Set<io.enmasse.address.model.Address> generated = arg.getAllValues().stream().flatMap(Collection::stream).collect(Collectors.toSet());
         assertThat(generated.size(), is(3));
+    }
+
+    @Test
+    public void testAddressesAreNotRecreated() throws Exception {
+        Address address = createAddress("addr1", StandardType.ANYCAST);
+        Address newAddress = createAddress("addr2", StandardType.ANYCAST);
+
+        KubernetesList resources = new KubernetesList();
+        when(mockGenerator.generateCluster(eq("addr1"), anySet())).thenReturn(new AddressCluster("addr1", resources));
+        when(mockGenerator.generateCluster(eq("addr2"), anySet())).thenReturn(new AddressCluster("addr2", resources));
+
+        doThrow(new KubernetesClientException("Unable to replace resource")).when(mockApi).replaceAddress(address);
+
+        try {
+            controller.resourcesUpdated(Sets.newSet(address, newAddress));
+
+            ArgumentCaptor<Address> addressArgumentCaptor = ArgumentCaptor.forClass(Address.class);
+            verify(mockApi, times(2)).replaceAddress(addressArgumentCaptor.capture());
+            List<Address> replaced = addressArgumentCaptor.getAllValues();
+            assertThat(replaced, hasItem(newAddress));
+        } catch (KubernetesClientException e) {
+            fail("Should not throw exception with multiple items");
+        }
     }
 }
