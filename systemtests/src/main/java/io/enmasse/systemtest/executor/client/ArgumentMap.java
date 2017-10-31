@@ -40,12 +40,10 @@ public class ArgumentMap {
      * @param value value
      * @return true if operation is completed
      */
-    public Boolean put(Argument key, String value)
-    {
+    public Boolean put(Argument key, String value) {
         ArrayList<String> target = mappings.get(key);
 
-        if(target == null)
-        {
+        if(target == null) {
             target = new ArrayList<>();
             mappings.put(key,target);
         }

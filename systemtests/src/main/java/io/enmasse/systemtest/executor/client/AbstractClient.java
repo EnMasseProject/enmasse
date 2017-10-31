@@ -15,21 +15,16 @@ public abstract class AbstractClient {
     private final int DEFAULT_ASYNC_TIMEOUT = 120000;
     private final int DEFAULT_SYNC_TIMEOUT = 60000;
 
-    private ClientType clientType;
-    private JsonArray messages;
-    protected ArrayList<String> arguments;
-    protected ArrayList<Argument> allowedArgs;
+    private JsonArray messages = new JsonArray();;
+    private ArrayList<String> arguments = new ArrayList<>();
+    protected ArrayList<Argument> allowedArgs = new ArrayList<>();
 
     /**
      * Constructor of abstract client
      * @param clientType type of client
      */
     public AbstractClient(ClientType clientType){
-        this.clientType = clientType;
-        this.arguments = new ArrayList<>();
         this.arguments.add(ClientType.getCommand(clientType));
-        this.allowedArgs = new ArrayList<>();
-        this.messages = new JsonArray();
         this.fillAllowedArgs();
     }
 
