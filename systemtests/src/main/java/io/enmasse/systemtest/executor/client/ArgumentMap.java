@@ -43,11 +43,15 @@ public class ArgumentMap {
     public Boolean put(Argument key, String value) {
         ArrayList<String> target = mappings.get(key);
 
-        if(target == null) {
-            target = new ArrayList<>();
-            mappings.put(key,target);
-        }
+        if(target == null ||
+                (key != Argument.MSG_PROPERTY &&
+                        key != Argument.MSG_CONTENT_LIST_ITEM &&
+                        key != Argument.MSG_CONTENT_MAP_ITEM &&
+                        key != Argument.MSG_ANNOTATION)) {
 
+            target = new ArrayList<>();
+            mappings.put(key, target);
+        }
         return target.add(value);
     }
 }
