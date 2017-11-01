@@ -53,7 +53,9 @@ function ConsoleServer (address_ctrl) {
         self.subscribe(context.connection.remote.open.container_id, context.sender);
     });
     function unsubscribe (context) {
-        self.unsubscribe(context.connection.remote.open.container_id);
+        if (context.connection.remote.open) {
+            self.unsubscribe(context.connection.remote.open.container_id);
+        }
     }
     this.amqp_container.on('sender_close', unsubscribe);
     this.amqp_container.on('connection_close', unsubscribe);
