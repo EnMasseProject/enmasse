@@ -39,7 +39,7 @@ sudo openshift start --master-config=$MASTER_CONFIG --node-config=$NODE_CONFIG 2
 echo "Waiting for OpenShift to start"
 sleep 60
 
-KUBECONFIG=$CONFIG/master/admin.kubeconfig
+export KUBECONFIG=$CONFIG/master/admin.kubeconfig
 
 # Deploy HAProxy router
 oc adm --config $KUBECONFIG policy add-scc-to-user hostnetwork system:serviceaccount:default:router
@@ -53,3 +53,7 @@ oc create --config $KUBECONFIG -f $CONFIG/registry.json
 sleep 30
 oc --config $KUBECONFIG get services -n default
 oc --config $KUBECONFIG get pods -n default
+
+# Setup persistent storage
+echo "Setup persistent storage"
+./systemtests/scripts/provision-storage.sh "/tmp/mydir" "pv01"
