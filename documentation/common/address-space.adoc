@@ -8,7 +8,7 @@ The default address space in EnMasse is the standard address space and it consis
 
 Clients connect and send and receive messages in this address space using the AMQP or MQTT protocols. Note that MQTT does not support qos2 or retained messages.
 
-// TODO: This reflects the status quo, but how should multiple protocols actually be surfaced?
+// TODO This reflects the status quo, but how should multiple protocols actually be surfaced?
 
 ==== Address Types
 The standard address space supports four address types:
@@ -18,7 +18,7 @@ The standard address space supports four address types:
 * anycast
 * multicast
 
-// TODO: Document plan restrictions and document properties for all 4 types
+// TODO Document plan restrictions and document properties for all 4 types
 
 [[standard-queue]]
 ==== Queue
