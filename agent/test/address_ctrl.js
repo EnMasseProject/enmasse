@@ -108,23 +108,36 @@ MockAddressSource.prototype.get_addresses = function (request, response) {
     response.end(JSON.stringify(this.addresses));
 };
 
+MockAddressSource.prototype.add_address = function (address) {
+    if (this.addresses.items.some(function (a) { return a.metadata.name === address.metadata.name; })) {
+        throw new Error('Already exists');
+    } else {
+        this.addresses.items.push(address);
+    }
+}
+
 MockAddressSource.prototype.post_addresses = function (request, response) {
     var self = this;
     var bodytext = '';
     request.on('data', function (data) { bodytext += data; });
     request.on('end', function () {
         var body = JSON.parse(bodytext);
-        if (body.kind === 'AddressList') {
-            body.items.forEach(function (a) { self.addresses.items.push(a); });
-            response.statusCode = 200;
-            response.end();
-        } else if (body.kind === 'Address') {
-            self.addresses.items.push(o);
-            response.statusCode = 200;
-            response.end();
-        } else {
+        try {
+            if (body.kind === 'AddressList') {
+                body.items.forEach(function (a) { self.add_address(a); });
+                response.statusCode = 200;
+                response.end();
+            } else if (body.kind === 'Address') {
+                self.add_address(o);
+                response.statusCode = 200;
+                response.end();
+            } else {
+                response.statusCode = 500;
+                response.end('Unrecognised resource kind %s', body.kind);
+            }
+        } catch (error) {
             response.statusCode = 500;
-            response.end('Unrecognised resource kind %s', body.kind);
+            response.end(error.message);
         }
     });
 };
@@ -190,6 +203,29 @@ describe('address controller interaction', function() {
             assert.equal(address_types[1].name, 'topic');
             assert.equal(address_types[1].plans.length, 1);
             assert.equal(address_types[1].plans[0].name, 'standard');
+            done();
+        });
+    });
+
+    it('handles error creating an address', function(done) {
+        address_ctrl.create_address({address:'myaddress', type:'queue', plan:'standard'}).then(function() {
+            assert.equal(address_source.addresses.items.length, 1);
+            assert.equal(address_source.addresses.items[0].spec.address, 'myaddress');
+            assert.equal(address_source.addresses.items[0].spec.type, 'queue');
+            assert.equal(address_source.addresses.items[0].spec.plan, 'standard');
+            address_ctrl.create_address({address:'myaddress', type:'foo', plan:'bar'}).then(function () {
+                assert.fail('second creation request should fail');
+            }).catch(function (error) {
+                done();
+            });
+        });
+    });
+
+    it('handles invalid kind for schema', function (done) {
+        address_source.schema.kind = 'foo';
+        address_ctrl.get_address_types().then(function () {
+            assert.fail('bad schema kind should fail');
+        }).catch(function (error) {
             done();
         });
     });

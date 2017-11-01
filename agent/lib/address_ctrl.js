@@ -81,10 +81,6 @@ AddressCtrl.prototype.request = function (addr_path, method, headers, body, hand
                 });
             }
         });
-        req.on('error', function(e) {
-            console.error('Error: ' + e.message + ' for ' + options.method + ' on ' + options.path);
-            reject(e);
-        });
         if (body) {
             req.write(body);
         }
