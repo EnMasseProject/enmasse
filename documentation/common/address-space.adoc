@@ -133,8 +133,7 @@ The multicast address type is a scalable direct address for sending messages to 
 
 The brokered address space is designed to support broker-specific features, at the cost of limited
 scale in terms of the number of connections and addresses. This address space supports JMS
-transactions, message groups etc. The brokered address space is backed by a broker, and stores
-persisted messages on disk if required.
+transactions, message groups, and so on.
 
 Clients connect and send and receive messages in this address space using the AMQP protocol.
 
@@ -150,7 +149,7 @@ The queue address type is a store-and-forward queue. This address type is approp
 implementing a distributed work queue, handling traffic bursts, and other use cases where you want
 to decouple the producer and consumer. A queue in the brokered address spaces supports selectors,
 message groups, transactions and other JMS features. If the queue is a high volume queue and these
-semantics are not needed, have a look at the `standard` address space `queue` type.
+semantics are not needed, see the xref:standard-queue[standard address space `queue`] type.
 
 [[brokered-queue-plans]]
 ===== Queue Plans
@@ -159,8 +158,7 @@ semantics are not needed, have a look at the `standard` address space `queue` ty
 
 [[standard-queue-plan]]
 ====== Standard
-The standard queue plan deploys a queue in a broked instance shared with other addresses in the
-address space.
+The standard queue plan deploys a queue in the broker for that address space.
 
 [[brokered-topic]]
 ==== Topic
@@ -174,5 +172,4 @@ The topic address type supports the publish-subscribe messaging pattern where yo
 [[standard-topic-plan]]
 ====== Standard
 
-The standard topic plan deploys a topic in a broked instance shared with other addresses in the
-address space.
+The standard topic plan deploys a topic in the broker for that address space.
