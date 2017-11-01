@@ -71,7 +71,8 @@ public class AuthenticationTest extends TestBase {
     @Override
     protected AddressSpace createAddressSpace(AddressSpace addressSpace, String authService) throws Exception {
         super.createAddressSpace(addressSpace, authService);
-        List<Destination> brokeredAddressList = amqpAddressList;
+        addressSpaces.add(addressSpace);
+        List<Destination> brokeredAddressList = new ArrayList<>(amqpAddressList);
         if (addressSpace.getType().equals(AddressSpaceType.BROKERED)) {
             brokeredAddressList = amqpAddressList.subList(0, 2);
         }
