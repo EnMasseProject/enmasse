@@ -72,7 +72,6 @@ AddressSource.prototype.update_status = function (record, ready) {
             log.error('failed to update status for %j: %s', record, result);
         }
     }).catch(function (error) {
-        console.log(error);
         log.error('failed to update status for %j: %j', record, error);
     });
 };
