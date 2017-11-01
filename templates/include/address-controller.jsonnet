@@ -113,6 +113,9 @@ local common = import "common.jsonnet";
                   "name": "CA_DIR",
                   "value": "/ca-cert"
                 }, {
+                  "name": "JAVA_OPTS",
+                  "value": "-Djava.compiler=NONE"
+                }, {
                   "name": "ADDRESS_SPACE_USER_DB_SECRET_NAME",
                   "value": "address-controller-userdb"
                 }, {
