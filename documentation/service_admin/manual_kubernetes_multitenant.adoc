@@ -1,0 +1,105 @@
+Create namespace enmasse:
+
+....
+kubectl create namespace enmasse
+....
+
+Create service account for address controller:
+
+....
+kubectl create sa enmasse-service-account -n enmasse
+....
+
+Create self-signed certificate:
+
+....
+openssl req -new -x509 -batch -nodes -days 11000 -subj "/O=io.enmasse/CN=enmasse" -out /tmp/enmasse-deploy.JM7SpI/ca.crt -keyout /tmp/enmasse-deploy.JM7SpI/ca.key
+....
+
+Create enmasse-ca TLS secret:
+
+....
+cat <<EOF | kubectl create -n enmasse -f -
+{
+    "apiVersion": "v1",
+    "kind": "Secret",
+    "metadata": {
+        "name": "enmasse-ca"
+    },
+    "type": "kubernetes.io/tls",
+    "data": {
+        "tls.key": "$(base64 -w 0 /tmp/enmasse-deploy.JM7SpI/ca.key)",
+        "tls.crt": "$(base64 -w 0 /tmp/enmasse-deploy.JM7SpI/ca.crt)"
+    }
+}
+EOF
+....
+
+Create certificate signing request for address-controller.enmasse.svc.cluster.local:
+
+....
+openssl req -new -batch -nodes -keyout /tmp/enmasse-deploy.JM7SpI/address-controller.enmasse.svc.cluster.local.key -subj "/O=io.enmasse/CN=address-controller.enmasse.svc.cluster.local" -out /tmp/enmasse-deploy.JM7SpI/address-controller.enmasse.svc.cluster.local.csr
+....
+
+Sign address-controller certificate with CA key:
+
+....
+openssl x509 -req -days 11000 -in /tmp/enmasse-deploy.JM7SpI/address-controller.enmasse.svc.cluster.local.csr -CA /tmp/enmasse-deploy.JM7SpI/ca.crt -CAkey /tmp/enmasse-deploy.JM7SpI/ca.key -CAcreateserial -out /tmp/enmasse-deploy.JM7SpI/address-controller.enmasse.svc.cluster.local.crt
+....
+
+Create address-controller-cert TLS secret:
+
+....
+cat <<EOF | kubectl create -n enmasse -f -
+{
+    "apiVersion": "v1",
+    "kind": "Secret",
+    "metadata": {
+        "name": "address-controller-cert"
+    },
+    "type": "kubernetes.io/tls",
+    "data": {
+        "tls.key": "$(base64 -w 0 /tmp/enmasse-deploy.JM7SpI/address-controller.enmasse.svc.cluster.local.key)",
+        "tls.crt": "$(base64 -w 0 /tmp/enmasse-deploy.JM7SpI/address-controller.enmasse.svc.cluster.local.crt)"
+    }
+}
+EOF
+....
+
+Create self-signed certificate for none-authservice.enmasse.svc.cluster.local:
+
+....
+openssl req -new -x509 -batch -nodes -days 11000 -out /tmp/enmasse-deploy.JM7SpI/none-authservice.enmasse.svc.cluster.local.crt -keyout /tmp/enmasse-deploy.JM7SpI/none-authservice.enmasse.svc.cluster.local.key -subj "/O=io.enmasse/CN=none-authservice.enmasse.svc.cluster.local"
+....
+
+Create none-authservice-cert TLS secret:
+
+....
+cat <<EOF | kubectl create -n enmasse -f -
+{
+    "apiVersion": "v1",
+    "kind": "Secret",
+    "metadata": {
+        "name": "none-authservice-cert"
+    },
+    "type": "kubernetes.io/tls",
+    "data": {
+        "tls.key": "$(base64 -w 0 /tmp/enmasse-deploy.JM7SpI/none-authservice.enmasse.svc.cluster.local.key)",
+        "tls.crt": "$(base64 -w 0 /tmp/enmasse-deploy.JM7SpI/none-authservice.enmasse.svc.cluster.local.crt)"
+    }
+}
+EOF
+....
+
+Create none authservice:
+
+....
+kubectl apply -f ./kubernetes/addons/none-authservice.yaml -n enmasse
+....
+
+Deploy EnMasse to enmasse:
+
+....
+kubectl apply -f ./kubernetes/enmasse.yaml -n enmasse
+....
+
