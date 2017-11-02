@@ -73,6 +73,7 @@ oc get pods
 
 oc get events -n brokered-address-type-a
 oc get events -n brokered-create-delete-a
+oc get pv
 
 if [ $failure -gt 0 ]
 then
