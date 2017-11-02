@@ -185,7 +185,7 @@ public class BasicClientTest extends ClientTestBase {
         arguments.put(Argument.COUNT, "0");
 
         //receiver with selector colour = red
-        arguments.put(Argument.SELECTOR, "colour = red");
+        arguments.put(Argument.SELECTOR, "colour = 'red'");
         receiver.setArguments(arguments);
         assertTrue(receiver.run());
         assertEquals(10, receiver.getMessages().size());

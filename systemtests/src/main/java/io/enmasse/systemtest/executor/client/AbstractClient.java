@@ -5,7 +5,9 @@ import io.enmasse.systemtest.executor.Executor;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
+
 import java.util.ArrayList;
+import java.util.Objects;
 import java.util.concurrent.*;
 
 /**
@@ -86,6 +88,7 @@ public abstract class AbstractClient {
      * @return true if command end with exit code 0
      */
     private boolean runClient(int timeout) {
+        messages.clear();
         try {
             Executor executor = new Executor();
             boolean ret = executor.execute(prepareCommand(), timeout);
@@ -142,8 +145,12 @@ public abstract class AbstractClient {
      * @param data string data output
      */
     private void parseToJson(String data){
-        for(String line : data.split("\n")){
-            messages.add(new JsonObject(line));
+        if (data != null) {
+            for (String line : data.split(System.getProperty("line.separator"))) {
+                if (!Objects.equals(line, "") && !line.trim().isEmpty()) {
+                    messages.add(new JsonObject(line));
+                }
+            }
         }
     }
 
