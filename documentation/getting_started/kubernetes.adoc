@@ -62,8 +62,8 @@ To open up for AMQP using minikube and the nginx ingress controller,
 follow
 https://github.com/kubernetes/contrib/tree/master/ingress/controllers/nginx/examples/tcp[this]
 and
-https://github.com/kubernetes/ingress/tree/master/controllers/nginx#exposing-tcp-services[this]
-guides, using the port `5672` and the service `default/messaging`.
+https://github.com/kubernetes/ingress/tree/master/[this]
+guide, using the port `5672` and the service `default/messaging`.
 
 [[sending-and-receiving-messages-kubernetes]]
 === Sending and receiving messages
