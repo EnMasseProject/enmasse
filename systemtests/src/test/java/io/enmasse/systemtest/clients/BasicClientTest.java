@@ -160,8 +160,8 @@ public class BasicClientTest extends ClientTestBase {
     }
 
     protected void doMessageSelectorQueueTest(AbstractClient sender, AbstractClient receiver) throws Exception{
-        AddressSpace addressSpace = new AddressSpace("brokered-selectors",
-                "brokered-selectors",
+        AddressSpace addressSpace = new AddressSpace("brokered-selectors-queue",
+                "brokered-selectors-queue",
                 AddressSpaceType.BROKERED);
         createAddressSpace(addressSpace, "none");
         Destination queue = Destination.queue("selector-queue");
@@ -179,8 +179,8 @@ public class BasicClientTest extends ClientTestBase {
     }
 
     protected void doMessageSelectorTopicTest(AbstractClient sender, AbstractClient receiver) throws Exception{
-        AddressSpace addressSpace = new AddressSpace("brokered-selectors",
-                "brokered-selectors",
+        AddressSpace addressSpace = new AddressSpace("brokered-selectors-topic",
+                "brokered-selectors-topic",
                 AddressSpaceType.BROKERED);
         createAddressSpace(addressSpace, "none");
         Destination topic = Destination.topic("selector-topic");
