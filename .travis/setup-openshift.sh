@@ -58,3 +58,5 @@ oc --config $KUBECONFIG get pods -n default
 export KUBECONFIG
 echo "Setup persistent storage"
 ./systemtests/scripts/provision-storage.sh "/tmp/mydir" "pv01"
+
+oc get pv

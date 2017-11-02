@@ -71,6 +71,9 @@ $CURDIR/collect_logs.sh $ARTIFACTS_DIR
 
 oc get pods
 
+oc get events -n brokered-address-type-a
+oc get events -n brokered-create-delete-a
+
 if [ $failure -gt 0 ]
 then
     echo "Systemtests failed"
