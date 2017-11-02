@@ -17,6 +17,8 @@
           "storage": "${STORAGE_CAPACITY}"
         },
         "accessModes": [
+          "ReadWriteOnce",
+          "ReadOnlyMany",
           "ReadWriteMany"
         ],
         "persistentVolumeReclaimPolicy": "Recycle",
