@@ -1,0 +1,143 @@
+Login as developer:
+
+....
+oc login -u developer  https://localhost:8443
+....
+
+Create new project enmasse:
+
+....
+oc new-project enmasse
+....
+
+Create service account for address controller:
+
+....
+oc create sa enmasse-service-account -n enmasse
+....
+
+Add permissions for viewing OpenShift resources to default user:
+
+....
+oc policy add-role-to-user view system:serviceaccount:enmasse:default
+....
+
+Add permissions for editing OpenShift resources to EnMasse service account:
+
+....
+oc policy add-role-to-user edit system:serviceaccount:enmasse:enmasse-service-account
+....
+
+Create self-signed certificate:
+
+....
+openssl req -new -x509 -batch -nodes -days 11000 -subj "/O=io.enmasse/CN=enmasse" -out /tmp/enmasse-deploy.FRawEN/ca.crt -keyout /tmp/enmasse-deploy.FRawEN/ca.key
+....
+
+Create enmasse-ca TLS secret:
+
+....
+cat <<EOF | oc create -n enmasse -f -
+{
+    "apiVersion": "v1",
+    "kind": "Secret",
+    "metadata": {
+        "name": "enmasse-ca"
+    },
+    "type": "kubernetes.io/tls",
+    "data": {
+        "tls.key": "$(base64 -w 0 /tmp/enmasse-deploy.FRawEN/ca.key)",
+        "tls.crt": "$(base64 -w 0 /tmp/enmasse-deploy.FRawEN/ca.crt)"
+    }
+}
+EOF
+....
+
+Create certificate signing request for address-controller.enmasse.svc.cluster.local:
+
+....
+openssl req -new -batch -nodes -keyout /tmp/enmasse-deploy.FRawEN/address-controller.enmasse.svc.cluster.local.key -subj "/O=io.enmasse/CN=address-controller.enmasse.svc.cluster.local" -out /tmp/enmasse-deploy.FRawEN/address-controller.enmasse.svc.cluster.local.csr
+....
+
+Sign address-controller certificate with CA key:
+
+....
+openssl x509 -req -days 11000 -in /tmp/enmasse-deploy.FRawEN/address-controller.enmasse.svc.cluster.local.csr -CA /tmp/enmasse-deploy.FRawEN/ca.crt -CAkey /tmp/enmasse-deploy.FRawEN/ca.key -CAcreateserial -out /tmp/enmasse-deploy.FRawEN/address-controller.enmasse.svc.cluster.local.crt
+....
+
+Create address-controller-cert TLS secret:
+
+....
+cat <<EOF | oc create -n enmasse -f -
+{
+    "apiVersion": "v1",
+    "kind": "Secret",
+    "metadata": {
+        "name": "address-controller-cert"
+    },
+    "type": "kubernetes.io/tls",
+    "data": {
+        "tls.key": "$(base64 -w 0 /tmp/enmasse-deploy.FRawEN/address-controller.enmasse.svc.cluster.local.key)",
+        "tls.crt": "$(base64 -w 0 /tmp/enmasse-deploy.FRawEN/address-controller.enmasse.svc.cluster.local.crt)"
+    }
+}
+EOF
+....
+
+Create self-signed certificate for none-authservice.enmasse.svc.cluster.local:
+
+....
+openssl req -new -x509 -batch -nodes -days 11000 -out /tmp/enmasse-deploy.FRawEN/none-authservice.enmasse.svc.cluster.local.crt -keyout /tmp/enmasse-deploy.FRawEN/none-authservice.enmasse.svc.cluster.local.key -subj "/O=io.enmasse/CN=none-authservice.enmasse.svc.cluster.local"
+....
+
+Create none-authservice-cert TLS secret:
+
+....
+cat <<EOF | oc create -n enmasse -f -
+{
+    "apiVersion": "v1",
+    "kind": "Secret",
+    "metadata": {
+        "name": "none-authservice-cert"
+    },
+    "type": "kubernetes.io/tls",
+    "data": {
+        "tls.key": "$(base64 -w 0 /tmp/enmasse-deploy.FRawEN/none-authservice.enmasse.svc.cluster.local.key)",
+        "tls.crt": "$(base64 -w 0 /tmp/enmasse-deploy.FRawEN/none-authservice.enmasse.svc.cluster.local.crt)"
+    }
+}
+EOF
+....
+
+Create none authservice:
+
+....
+oc process -f ./openshift/addons/none-authservice.yaml | oc create -n enmasse -f -
+....
+
+Create address space default:
+
+....
+cat <<EOF | oc create -n enmasse -f -
+{
+    "apiVersion": "v1",
+    "kind": "ConfigMap",
+    "metadata": {
+        "name": "address-space-default",
+        "labels": {
+            "type": "address-space"
+        }
+    },
+    "data": {
+      "config.json": "{ \"kind\":\"AddressSpace\", \"apiVersion\": \"enmasse.io/v1\", \"metadata\": { \"name\": \"default\", \"namespace\": \"enmasse\" }, \"spec\": { \"type\": \"standard\" } }"
+    }
+}
+EOF
+....
+
+Instantiate EnMasse template:
+
+....
+oc process -f ./openshift/enmasse.yaml  | oc create -n enmasse -f -
+....
+
