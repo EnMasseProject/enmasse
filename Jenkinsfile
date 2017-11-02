@@ -29,10 +29,6 @@ node('enmasse') {
                 sh 'oc cluster up $OC_CLUSTER_ARGS'
                 sh 'sudo chmod -R 777 /var/lib/origin/openshift.local.config'
             }
-            stage('setup openshift') {
-                sh 'oc login -u system:admin'
-                sh './systemtests/scripts/provision-storage.sh /tmp/mydir pv01'
-            }
             stage('install clients'){
                 sh 'sudo make client_install'
             }
