@@ -12,17 +12,14 @@ This guide will walk through the process of setting up {ProductName} on a
 Kubernetes cluster together with clients for sending and receiving
 messages.
 
-include::common/prerequisites-openshift.adoc[leveloffset=+1]
+include::common/prerequisites-kubernetes.adoc[leveloffset=+1]
 
-[[installing]]
+[[installing-kubernetes]]
 === Installing
 
 include::common/install-procedure.adoc[leveloffset+=1] 
 
 include::deploy-procedure.adoc[leveloffset+=1] 
-
-[[creating-project-and-importing-template]]
-=== Creating project and importing template
 
 [[role-based-access-control]]
 ==== Role Based Access Control (RBAC)
@@ -53,7 +50,7 @@ to expose {ProductName} ports:
 kubectl apply -f kubernetes/addons/external-lb.yaml -n enmasse
 ....
 
-[[configuring-addresses]]
+[[configuring-addresses-kubernetes]]
 === Configuring addresses
 
 include::configuring-addresses.adoc[leveloffset=+1]
@@ -68,14 +65,14 @@ and
 https://github.com/kubernetes/ingress/tree/master/controllers/nginx#exposing-tcp-services[this]
 guides, using the port `5672` and the service `default/messaging`.
 
-[[sending-and-receiving-messages]]
+[[sending-and-receiving-messages-kubernetes]]
 === Sending and receiving messages
 
 include::amqp-client-openshift.adoc[leveloffset=+1]
 
 include::mqtt-client-openshift.adoc[leveloffset=+1]
 
-[[conclusion]]
+[[conclusion-kubernetes]]
 == Conclusion
 
 We have seen how to setup a messaging service in Kubernetes, and how to

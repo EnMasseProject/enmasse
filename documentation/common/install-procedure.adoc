@@ -1,0 +1,6 @@
+.Procedure 
+
+. Download one of the releases from https://github.com/EnMasseProject/enmasse/releases and unpack it.
+. Deploy {ProductName} using the deployment script provided in the release.
+
+You can invoke the deployment script with `-h` to view a list of options.

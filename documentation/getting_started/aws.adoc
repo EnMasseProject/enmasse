@@ -18,7 +18,7 @@ production ready setup. For instance, no persistence is configured, so
 neither messages in brokers nor state in other components like hawkular
 are persisted.
 
-[[prerequisites]]
+[[prerequisites-aws]]
 == Prerequisites
 
 First, you must have created an https://aws.amazon.com/ec2/[EC2
@@ -38,13 +38,14 @@ modification to deal with that. On the host you will be running ansible
 from, edit /etc/ansible/ansible.cfg, and make sure that the `sudo_flags`
 parameter is set to `-H -S` (remove the `-n`).
 
-[[setting-up-openshift]]
+[[setting-up-openshift-aws]]
 == Setting up OpenShift
 
 Once Ansible is setup, installing OpenShift is easy. First, an inventory
 file with the configuration and the hosts must be created. Save the
 following configuration to a file, i.e. `ansible-inventory.txt`:
 
+[options="nowrap",subs=attributes+]
 ....
 [OSEv3:children]
 masters
@@ -78,12 +79,14 @@ domain.
 You can now download the ansible playbooks. The simplest way to do this
 is to just clone the git repository:
 
+[options="nowrap",subs=attributes+]
 ....
 git clone https://github.com/openshift/openshift-ansible.git
 ....
 
 To install OpenShift, run the playbook like this
 
+[options="nowrap",subs=attributes+]
 ....
 ansible-playbook -u ec2-user -b --private-key=<keyfile>.pem -i ansible-inventory.txt openshift-ansible/playbooks/byo/openshift-cluster/config.yml
 ....
@@ -96,6 +99,7 @@ This command will take a while to finish.
 To be able to deploy EnMasse in OpenShift, a user must be created. Log
 on to your EC2 instance, and create the user:
 
+[options="nowrap",subs=attributes+]
 ....
 htpasswd -c /etc/origin/master/htpasswd <myuser>
 ....
@@ -104,7 +108,6 @@ Where `<myuser>` is the username you want to use. The command will
 prompt you for a password that you will later use when deploying
 EnMasse.
 
-[[setting-up-enmasse]]
 == Installing {ProductName}
 
 include::common/install-procedure.adoc[leveloffset+=1] 
@@ -120,7 +123,7 @@ followed the above guide, you should have EnMasse deployed. The endpoints will b
 
 The console can be used for creating and deleting addresses. 
 
-[[sending-and-receiving-messages]]
+[[sending-and-receiving-messages-aws]]
 === Sending and receiving messages
 
 include::amqp-client-openshift.adoc[leveloffset=+1]
@@ -162,7 +165,6 @@ After some time, Grafana should become available at
 `oc get route -n openshift-infra -o jsonpath='{.spec.host}' hawkular-grafana`.
 The default username and password is `admin/admin`. E
 
-[[summary]]
 == Summary
 
 In this post, you've seen how to:

@@ -1,4 +1,4 @@
-[[prerequisites]]
+[[prerequisites-openshift]]
 === Prerequisites
 
 To install {ProductName}, you need to have the OpenShift client tools. You can download the OpenShift

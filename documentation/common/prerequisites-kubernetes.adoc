@@ -1,0 +1,13 @@
+[[prerequisites-kubernetes]]
+=== Prerequisites
+
+To install {ProductName}, you need to have Kubernetes installed. You can use
+https://github.com/kubernetes/minikube[minikube] if you want to install {ProductName} on your
+laptop.
+
+Since minikube runs in a virtual machine, you need to enable the ingress controller:
+
+[source,options="nowrap"]
+....
+minikube addons enable ingress
+....
