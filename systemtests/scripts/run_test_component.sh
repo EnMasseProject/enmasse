@@ -70,6 +70,7 @@ run_test || failure=$(($failure + 1))
 $CURDIR/collect_logs.sh $ARTIFACTS_DIR
 
 oc get pods
+oc get pv
 
 if [ $failure -gt 0 ]
 then

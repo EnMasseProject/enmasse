@@ -53,3 +53,12 @@ oc create --config $KUBECONFIG -f $CONFIG/registry.json
 sleep 30
 oc --config $KUBECONFIG get services -n default
 oc --config $KUBECONFIG get pods -n default
+
+# Setup persistent storage
+export KUBECONFIG
+for i in `seq 1 15`
+do
+    echo "Setup persistent storage ${i}"
+    ./systemtests/scripts/provision-storage.sh "/tmp/mydir${i}" "pv-${i}"
+done
+oc get pv

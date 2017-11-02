@@ -30,7 +30,7 @@ import java.util.concurrent.TimeUnit;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
-public class ElementaryAddressSpaceTest extends MultiTenantTestBase {
+public class SmokeTest extends MultiTenantTestBase {
 
     /**
      * related github issue: #335
@@ -38,8 +38,8 @@ public class ElementaryAddressSpaceTest extends MultiTenantTestBase {
     @Test
     public void testAddressTypes() throws Exception {
         AddressSpace addressSpace = new AddressSpace(
-                "brokered-a",
-                "brokered-a",
+                "brokered-address-type-a",
+                "brokered-address-type-a",
                 AddressSpaceType.BROKERED);
         createAddressSpace(addressSpace, "none");
         Destination queueA = Destination.queue("brokeredQueueA");
@@ -75,8 +75,8 @@ public class ElementaryAddressSpaceTest extends MultiTenantTestBase {
     @Test
     public void testCreateDeleteAddressSpace() throws Exception {
         AddressSpace addressSpaceA = new AddressSpace(
-                "brokered-a",
-                "brokered-a",
+                "brokered-create-delete-a",
+                "brokered-create-delete-a",
                 AddressSpaceType.BROKERED);
         createAddressSpace(addressSpaceA, "none");
         Destination queueB = Destination.queue("brokeredQueueB");
@@ -88,8 +88,8 @@ public class ElementaryAddressSpaceTest extends MultiTenantTestBase {
         QueueTest.runQueueTest(amqpQueueCliA, queueB);
 
         AddressSpace addressSpaceC = new AddressSpace(
-                "brokered-c",
-                "brokered-c",
+                "brokered-create-delete-c",
+                "brokered-create-delete-c",
                 AddressSpaceType.BROKERED);
         createAddressSpace(addressSpaceC, "none");
         setAddresses(addressSpaceC, queueB);
