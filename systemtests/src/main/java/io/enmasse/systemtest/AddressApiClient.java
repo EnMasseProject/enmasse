@@ -9,7 +9,6 @@ import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.codec.BodyCodec;
 
-import java.net.UnknownHostException;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -293,21 +292,10 @@ public class AddressApiClient {
     }
 
     JsonObject doRequestNTimes(int retry, Callable<JsonObject> fn) throws Exception {
-        try {
+        return TestUtils.doRequestNTimes(retry, () -> {
+            Logging.log.info("Trying to reload endpoint, remaining iterations: " + retry);
+            endpoint = openshift.getRestEndpoint();
             return fn.call();
-        } catch (Exception ex) {
-            if (ex.getCause() instanceof UnknownHostException && retry > 0) {
-                try {
-                    Logging.log.info("Trying to reload endpoint, remaining iterations: " + retry);
-                    endpoint = openshift.getRestEndpoint();
-                    return doRequestNTimes(retry - 1, fn);
-                } catch (Exception ex2) {
-                    throw ex2;
-                }
-            } else {
-                ex.getCause().printStackTrace();
-                throw ex;
-            }
-        }
+        });
     }
 }

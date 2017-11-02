@@ -23,6 +23,7 @@ import io.vertx.core.json.JsonObject;
 
 import java.net.Inet4Address;
 import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
@@ -302,6 +303,23 @@ public class TestUtils {
         }
         if (openShift.listNamespaces().contains(addressSpace.getNamespace())) {
             throw new TimeoutException("Timed out waiting for namespace " + addressSpace + " to disappear");
+        }
+    }
+
+    public static <T> T doRequestNTimes(int retry, Callable<T> fn) throws Exception {
+        try {
+            return fn.call();
+        } catch (Exception ex) {
+            if (ex.getCause() instanceof UnknownHostException && retry > 0) {
+                try {
+                    return doRequestNTimes(retry - 1, fn);
+                } catch (Exception ex2) {
+                    throw ex2;
+                }
+            } else {
+                ex.getCause().printStackTrace();
+                throw ex;
+            }
         }
     }
 }
