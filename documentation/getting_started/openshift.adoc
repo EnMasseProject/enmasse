@@ -1,0 +1,38 @@
+[[enmasse-on-openshift]]
+= {ProductName} on OpenShift
+
+:OcGetRoute: oc get route -o jsonpath='{.spec.host}'
+:OcRoutePort: 443
+:ClusterManager: openshift
+:occli: oc
+:DeployHost: localhost
+:DeployOptions: 
+
+This guide will walk through the process of setting up {ProductName} on
+OpenShift with clients for sending and receiving messages.
+
+include::common/prerequisites-openshift.adoc[leveloffset=+1]
+
+[[installing]]
+=== Installing {ProductName}
+
+include::common/install-procedure.adoc[leveloffset+=1] 
+
+include::deploy-procedure.adoc[leveloffset+=1] 
+
+[[configuring-addresses]]
+=== Configuring addresses
+
+include::configuring-addresses.adoc[leveloffset=+1]
+
+[[sending-and-receiving-messages]]
+=== Sending and receiving messages
+
+include::amqp-client-openshift.adoc[leveloffset=+1]
+
+include::mqtt-client-openshift.adoc[leveloffset=+1]
+
+[[conclusion]]
+== Conclusion
+
+We have seen how to setup {ProductName} on OpenShift, and how to communicate with it using AMQP and MQTT clients.

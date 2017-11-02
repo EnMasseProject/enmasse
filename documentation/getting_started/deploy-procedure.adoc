@@ -1,0 +1,13 @@
+==== Deploying {ProductName}
+
+Invoke the deployment script to deploy {ProductName}
+
+[options="nowrap",subs=attributes+]
+....
+./deploy-{ClusterManager}.sh -m "https://{DeployHost}:8443" -n enmasse {DeployOptions}
+....
+
+This will create the deployments required for running {ProductName}. Starting
+up {ProductName} will take a while, usually depending on how fast it is able
+to download the docker images for the various components. In the
+meantime, you can start to create your address configuration.
