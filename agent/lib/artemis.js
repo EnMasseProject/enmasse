@@ -25,6 +25,10 @@ var Artemis = function (connection) {
     connection.on('message', this.incoming.bind(this));
     connection.on('receiver_error', this.on_receiver_error.bind(this));
     connection.on('sender_error', this.on_sender_error.bind(this));
+    var self;
+    connection.on('connection_open', function (context) {
+        log.info('[' + context.connection.container_id + '] connection opened');
+    });
     connection.on('connection_error', this.on_connection_error.bind(this));
     connection.on('connection_close', this.on_connection_close.bind(this));
     connection.on('disconnected', this.disconnected.bind(this));
@@ -36,7 +40,7 @@ var Artemis = function (connection) {
 };
 
 Artemis.prototype.ready = function (context) {
-    log.debug('[' + this.connection.container_id + '] ready to send requests');
+    log.info('[' + this.connection.container_id + '] ready to send requests');
     this.address = context.receiver.remote.attach.source.address;
     this._send_pending_requests();
 };
@@ -97,13 +101,13 @@ Artemis.prototype.on_receiver_error = function (context) {
 
 Artemis.prototype.on_connection_error = function (context) {
     var error = this.connection.container_id + ' connection error ' + context.connection.error;
-    log.info('[' + this.connection.container_id + '] ' + error);
+    log.info('[' + this.connection.container_id + '] connection error: ' + context.connection.error);
     this.abort_requests(error);
 };
 
 Artemis.prototype.on_connection_close = function (context) {
     var error = this.connection.container_id + ' connection closed';
-    log.info('[' + this.connection.container_id + '] ' + error);
+    log.info('[' + this.connection.container_id + '] connection closed');
     this.abort_requests(error);
 };
 
