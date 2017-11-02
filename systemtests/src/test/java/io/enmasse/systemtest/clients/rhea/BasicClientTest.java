@@ -32,7 +32,12 @@ public class BasicClientTest extends io.enmasse.systemtest.clients.BasicClientTe
     }
 
     @Test
-    public void messageSelectorTest() throws Exception{
-        doMessageSelectorTest(new RheaClientSender(), new RheaClientReceiver());
+    public void messageSelectorQueueTest() throws Exception{
+        doMessageSelectorQueueTest(new RheaClientSender(), new RheaClientReceiver());
+    }
+
+    @Test
+    public void messageSelectorTopicTest() throws Exception{
+        doMessageSelectorTopicTest(new RheaClientSender(), new RheaClientReceiver());
     }
 }

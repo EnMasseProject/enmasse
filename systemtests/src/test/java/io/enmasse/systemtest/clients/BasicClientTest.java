@@ -159,7 +159,7 @@ public class BasicClientTest extends ClientTestBase {
         assertEquals(count, receiver.getMessages().size());
     }
 
-    protected void doMessageSelectorTest(AbstractClient sender, AbstractClient receiver) throws Exception {
+    protected void doMessageSelectorQueueTest(AbstractClient sender, AbstractClient receiver) throws Exception{
         AddressSpace addressSpace = new AddressSpace("brokered-selectors",
                 "brokered-selectors",
                 AddressSpaceType.BROKERED);
@@ -174,6 +174,30 @@ public class BasicClientTest extends ClientTestBase {
         arguments.put(Argument.MSG_PROPERTY, "number~12.65");
         arguments.put(Argument.MSG_PROPERTY, "a~true");
         arguments.put(Argument.MSG_PROPERTY, "b~false");
+
+        doMessageSelectorTest(sender, receiver);
+    }
+
+    protected void doMessageSelectorTopicTest(AbstractClient sender, AbstractClient receiver) throws Exception{
+        AddressSpace addressSpace = new AddressSpace("brokered-selectors",
+                "brokered-selectors",
+                AddressSpaceType.BROKERED);
+        createAddressSpace(addressSpace, "none");
+        Destination topic = Destination.topic("selector-topic");
+        setAddresses(addressSpace, topic);
+
+        arguments.put(Argument.BROKER, getRouteEndpoint(addressSpace).toString());
+        arguments.put(Argument.COUNT, "10");
+        arguments.put(Argument.ADDRESS, "topic://" + topic.getAddress());
+        arguments.put(Argument.MSG_PROPERTY, "colour~red");
+        arguments.put(Argument.MSG_PROPERTY, "number~12.65");
+        arguments.put(Argument.MSG_PROPERTY, "a~true");
+        arguments.put(Argument.MSG_PROPERTY, "b~false");
+
+        doMessageSelectorTest(sender, receiver);
+    }
+
+    private void doMessageSelectorTest(AbstractClient sender, AbstractClient receiver) throws Exception {
 
         //send messages
         sender.setArguments(arguments);
