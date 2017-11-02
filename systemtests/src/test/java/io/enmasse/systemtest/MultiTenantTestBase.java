@@ -35,7 +35,7 @@ public class MultiTenantTestBase extends TestBase {
     @After
     public void teardownSpaces() throws Exception {
         for (AddressSpace addressSpace : addressSpaces) {
-//            deleteAddressSpace(addressSpace);
+            deleteAddressSpace(addressSpace);
         }
         addressSpaces.clear();
     }
@@ -62,7 +62,7 @@ public class MultiTenantTestBase extends TestBase {
                 environment, addressSpace, username, password);
     }
 
-    protected Endpoint getRouteEndpoint(AddressSpace addressSpace){
+    protected Endpoint getRouteEndpoint(AddressSpace addressSpace) {
         return openShift.getRouteEndpoint(addressSpace.getName(), "messaging");
     }
 }
