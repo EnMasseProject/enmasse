@@ -30,4 +30,9 @@ public class BasicClientTest extends io.enmasse.systemtest.clients.BasicClientTe
     public void drainQueueTest() throws Exception {
         doDrainQueueTest(new RheaClientSender(), new RheaClientReceiver());
     }
+
+    @Test
+    public void messageSelectorTest() throws Exception{
+        doMessageSelectorTest(new RheaClientSender(), new RheaClientReceiver());
+    }
 }

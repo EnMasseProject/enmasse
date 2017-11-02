@@ -15,7 +15,8 @@ public abstract class AbstractClient {
     private final int DEFAULT_ASYNC_TIMEOUT = 120000;
     private final int DEFAULT_SYNC_TIMEOUT = 60000;
 
-    private JsonArray messages = new JsonArray();;
+    private ClientType clientType;
+    private JsonArray messages = new JsonArray();
     private ArrayList<String> arguments = new ArrayList<>();
     protected ArrayList<Argument> allowedArgs = new ArrayList<>();
 
@@ -24,7 +25,7 @@ public abstract class AbstractClient {
      * @param clientType type of client
      */
     public AbstractClient(ClientType clientType){
-        this.arguments.add(ClientType.getCommand(clientType));
+        this.clientType = clientType;
         this.fillAllowedArgs();
     }
 
@@ -41,6 +42,7 @@ public abstract class AbstractClient {
      * @param args string array of arguments
      */
     public void setArguments(ArgumentMap args){
+        arguments.clear();
         args = transformArguments(args);
         for(Argument arg : args.getArguments()){
             if(validateArgument(arg)) {
@@ -86,7 +88,7 @@ public abstract class AbstractClient {
     private boolean runClient(int timeout) {
         try {
             Executor executor = new Executor();
-            boolean ret = executor.execute(arguments, timeout);
+            boolean ret = executor.execute(prepareCommand(), timeout);
             if (ret) {
                 Logging.log.info(executor.getStdOut());
                 parseToJson(executor.getStdOut());
@@ -98,6 +100,16 @@ public abstract class AbstractClient {
             ex.printStackTrace();
             return false;
         }
+    }
+
+    /**
+     * Merge command and arguments
+     * @return merged array of command and args
+     */
+    private ArrayList<String> prepareCommand(){
+        ArrayList<String> command = new ArrayList<>(arguments);
+        command.add(0, ClientType.getCommand(clientType));
+        return command;
     }
 
     /**
