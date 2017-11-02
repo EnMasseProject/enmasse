@@ -26,8 +26,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.stream.Collector;
-import java.util.stream.Collectors;
 
 public class KeycloakClient implements AutoCloseable {
     private final Keycloak keycloak;
@@ -38,16 +36,15 @@ public class KeycloakClient implements AutoCloseable {
                 "master", credentials.getUsername(), credentials.getPassword(), "admin-cli");
     }
 
-    public void createUser(String realm, String userName, String password) throws TimeoutException, InterruptedException {
+    public void createUser(String realm, String userName, String password) throws Exception {
         createUser(realm, userName, password, 3, TimeUnit.MINUTES);
     }
 
 
-    public void createUser(String realm, String userName, String password, long timeout, TimeUnit timeUnit)
-            throws InterruptedException, TimeoutException {
+    public void createUser(String realm, String userName, String password, long timeout, TimeUnit timeUnit) throws Exception {
+        int maxRetries = 10;
         RealmResource realmResource = waitForRealm(realm, timeout, timeUnit);
 
-        int maxRetries = 10;
         for (int retries = 0; retries < maxRetries; retries++) {
             try {
                 if (realmResource.users().search(userName).isEmpty()) {
@@ -75,31 +72,44 @@ public class KeycloakClient implements AutoCloseable {
     }
 
 
-    private RealmResource waitForRealm(String realmName, long timeout, TimeUnit timeUnit)
-            throws InterruptedException, TimeoutException {
+    private RealmResource waitForRealm(String realmName, long timeout, TimeUnit timeUnit) throws Exception {
         Logging.log.info("Waiting for realm {} to exist", realmName);
         long endTime = System.currentTimeMillis() + timeUnit.toMillis(timeout);
+        RealmResource realmResource = null;
         while (System.currentTimeMillis() < endTime) {
+            List<RealmRepresentation> realms = keycloak.realms().findAll();
+            realmResource = getRealmResource(realmName);
+            if (realmResource != null) {
+                return realmResource;
+            }
+            Thread.sleep(5000);
+        }
+
+        if (realmResource == null) {
+            realmResource = getRealmResource(realmName);
+        }
+
+        if (realmResource != null) {
+            return realmResource;
+        }
+
+        throw new TimeoutException("Timed out waiting for realm " + realmName + " to exist");
+    }
+
+    private RealmResource getRealmResource(String realmName) throws Exception {
+        return TestUtils.doRequestNTimes(10, () -> {
             List<RealmRepresentation> realms = keycloak.realms().findAll();
             for (RealmRepresentation realm : realms) {
                 if (realm.getRealm().equals(realmName)) {
                     return keycloak.realm(realmName);
                 }
             }
-            Thread.sleep(5000);
-        }
-
-        List<RealmRepresentation> realms = keycloak.realms().findAll();
-        for (RealmRepresentation realm : realms) {
-            if (realm.getRealm().equals(realmName)) {
-                return keycloak.realm(realmName);
-            }
-        }
-        throw new TimeoutException("Timed out waiting for realm " + realmName + " to exist");
+            return null;
+        });
     }
 
-    public void deleteUser(String realm, String userName) {
-        keycloak.realm(realm).users().delete(userName);
+    public void deleteUser(String realm, String userName) throws Exception {
+        TestUtils.doRequestNTimes(10, () -> keycloak.realm(realm).users().delete(userName));
     }
 
     @Override
