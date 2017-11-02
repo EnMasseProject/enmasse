@@ -35,6 +35,13 @@ public class ArgumentMap {
     }
 
     /**
+     * Clear all arguments
+     */
+    public void clear(){
+        mappings.clear();
+    }
+
+    /**
      * Add argument and his values
      * @param key arguments
      * @param value value
