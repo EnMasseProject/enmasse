@@ -5,14 +5,14 @@ many of the traditional messaging use cases. For a messaging operator, the abili
 manage and monitor multiple messaging technologies with a uniform interface is an attractive
 feature.
 
-[Apache Kafka](https://kafka.apache.org/) is a popular distributed streaming platform and its use is in many ways
-complementary to other technologies used in EnMasse. The [barnabas](https://github.com/EnMasseProject/barnabas) project in the EnMasse github organization contains OpenShift templates for deploying Kafka on OpenShift.
+https://kafka.apache.org/[Apache Kafka] is a popular distributed streaming platform and its use is in many ways
+complementary to other technologies used in EnMasse. The https://github.com/EnMasseProject/barnabas[barnabas] project in the EnMasse github organization contains OpenShift templates for deploying Kafka on OpenShift.
 
 This design proposal introduces a new address space type `kafka`. This address space consists of an Apache Kafka cluster with a controller logic to create topics based on enmasse addresses and a console for managing addresses and monitoring.
 
 This address space may expose the Kafka protocol directly to the user, allowing the native Kafka clients to be
 used, but provides the same address management and console experience as the other address spaces.
-One addition is to also deploy the [amqp-kafka-bridge](https://github.com/EnMasseProject/amqp-kafka-bridge) to provide an AMQP interface.
+One addition is to also deploy the https://github.com/EnMasseProject/amqp-kafka-bridge[amqp-kafka-bridge] to provide an AMQP interface.
 
 With the potential of future `bridge` address types, one can also expose the Kafka addresses through AMQP via another address space like `standard`, or even map addresses from other address spaces into the Kafka space.
 
