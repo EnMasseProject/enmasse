@@ -33,6 +33,9 @@ node('enmasse') {
                 sh 'oc login -u system:admin'
                 sh './systemtests/scripts/provision-storage.sh /tmp/mydir pv01'
             }
+            stage('install clients'){
+                sh 'sudo make client_install'
+            }
             stage('system tests') {
                 withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
                     try {
