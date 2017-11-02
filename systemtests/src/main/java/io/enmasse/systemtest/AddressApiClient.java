@@ -293,7 +293,6 @@ public class AddressApiClient {
 
     JsonObject doRequestNTimes(int retry, Callable<JsonObject> fn) throws Exception {
         return TestUtils.doRequestNTimes(retry, () -> {
-            Logging.log.info("Trying to reload endpoint, remaining iterations: " + retry);
             endpoint = openshift.getRestEndpoint();
             return fn.call();
         });
