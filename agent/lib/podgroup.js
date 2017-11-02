@@ -42,6 +42,7 @@ function Pod(pod) {
     };
     try {
         options = tls_options.get_client_options(options);
+        options.username = 'anonymous';
     } catch (error) {
         log.error(error);
     }
