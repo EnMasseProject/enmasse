@@ -1,6 +1,13 @@
 [[setting-up-enmasse-on-aws]]
 = Setting up EnMasse on AWS
 
+:OcGetRoute: oc get route -o jsonpath='{.spec.host}'
+:OcRoutePort: 443
+:ClusterManager: openshift
+:occli: oc
+:DeployHost: openshift.yourdomain
+:DeployOptions: -u myuser
+
 This guide walks you through setting up EnMasse on an AWS EC2 instance.
 This is not even very specific to AWS, so you can probably modify the
 configuration to fit Microsoft Azure or even Google GCE.
@@ -98,16 +105,12 @@ prompt you for a password that you will later use when deploying
 EnMasse.
 
 [[setting-up-enmasse]]
-== Setting up EnMasse
+== Installing {ProductName}
 
-You can find the latest version of EnMasse
-https://github.com/EnMasseProject/enmasse/releases/latest[here]. To
-deploy EnMasse, it is recommended to use the deploy script together with
-a template of the latest version.
+include::common/install-procedure.adoc[leveloffset+=1] 
 
-See http://enmasse.io/documentation/master/service_admin[service admin documentation] on how to deploy enmasse.
-
-Once you've followed the above guide, you should have EnMasse deployed. The endpoints will be:
+include::deploy-procedure.adoc[leveloffset+=1] 
+followed the above guide, you should have EnMasse deployed. The endpoints will be:
 
 ....
 * AMQP: `messaging-enmasse.<yourdomain>`
@@ -115,10 +118,14 @@ Once you've followed the above guide, you should have EnMasse deployed. The endp
 * Console: `console-enmasse.<yourdomain>`
 ....
 
-The console can be used for creating and deleting addresses. You should
-be able to use any AMQP or MQTT client that supports TLS to send and
-receive messages. Have a look at http://qpid.apache.org/[Apache Qpid]
-for AMQP client libraries.
+The console can be used for creating and deleting addresses. 
+
+[[sending-and-receiving-messages]]
+=== Sending and receiving messages
+
+include::amqp-client-openshift.adoc[leveloffset=+1]
+
+include::mqtt-client-openshift.adoc[leveloffset=+1]
 
 [[optional-setting-up-metrics]]
 == (Optional) Setting up metrics

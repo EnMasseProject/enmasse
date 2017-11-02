@@ -1,0 +1,21 @@
+[[amqp]]
+==== Connecting with AMQP
+
+For sending and receiving messages, have a look at an example python
+http://qpid.apache.org/releases/qpid-proton-0.18.0/proton/python/examples/simple_send.py.html[sender]
+and
+http://qpid.apache.org/releases/qpid-proton-0.18.0/proton/python/examples/simple_recv.py.html[receiver].
+
+To send and receive messages, you should connect to the exposed route. To start a receiver, run:
+
+[options="nowrap",subs=attributes+]
+....
+./simple_recv.py -a "amqps://$({OcGetRoute} messaging):{OcRoutePort}/anycast" -m 10
+....
+
+This will block until it has received 10 messages. To start the sender, run:
+
+[options="nowrap",subs=attributes+]
+....
+./simple_send.py -a "amqps://$({OcGetRoute} messaging):{OcRoutePort}/anycast" -m 10
+....

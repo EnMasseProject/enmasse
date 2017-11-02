@@ -1,0 +1,73 @@
+==== Address types
+
+{ProductName} is configured with a set of addresses that you can use for
+messages. Currently, {ProductName} supports 4 different address types:
+
+* Brokered queues
+* Brokered topics (pub/sub)
+* Direct anycast addresses
+* Direct broadcast addresses
+
+See the link:common/address-model.adoc[address model] for details.
+{ProductName} also comes with a console that you can use for managing
+addresses. You can get the console URL by running the following command:
+
+[subs=attributes+,options="nowrap"]
+....
+echo "http://$({OcGetRoute} console)"
+....
+
+You can also deploy the addressing config using the address controller
+API. See the link:common/configuring-using-restapi.adoc[restapi documentation] for details on the
+resources consumed by the API. Here is an example config with all 4 variants that you can save to `addresses.json`:
+
+[subs=attributes+,options="nowrap"]
+....
+{
+  "apiVersion": "enmasse.io/v1",
+  "kind": "AddressList",
+  "items": [
+    {
+      "metadata": {
+        "name": "myqueue"
+      },
+      "spec": {
+        "type": "queue"
+      }
+    },
+    {
+      "metadata": {
+        "name": "mytopic"
+      },
+      "spec": {
+        "type": "topic"
+      }
+    },
+    {
+      "metadata": {
+        "name": "myanycast"
+      },
+      "spec": {
+        "type": "anycast"
+      }
+    },
+    {
+      "metadata": {
+        "name": "mymulticast"
+      },
+      "spec": {
+        "type": "multicast"
+      }
+    }
+  ]
+}
+....
+
+To deploy this configuration, you must currently use a http client like curl:
+
+[subs=attributes+,options="nowrap"]
+....
+curl -X POST -H "content-type: application/json" --data-binary @addresses.json http://$({OcGetRoute} restapi)/v1/addresses/default
+....
+
+This will connect to the address controller REST API and deploy the address config.

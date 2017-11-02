@@ -1,0 +1,182 @@
+[[mqtt]]
+==== Connecting using MQTT
+
+For sending and receiving messages route, you can use the paho-mqtt client library. To connect,
+fetch the server certificate:
+
+[options="nowrap",subs=attributes+]
+....
+mkdir -p certs
+{occli} get secret external-certs-mqtt  -o jsonpath='{.data.tls\.crt}' | base64 -d > certs/tls.crt
+....
+
+===== Subscriber client
+
+Save the following to `tls_mqtt_recv.py`:
+
+[source,options="nowrap"]
+----
+#!/usr/bin/env python
+
+import paho.mqtt.client as mqtt
+import ssl
+import optparse
+
+# The callback for when the client receives a CONNACK response from the server.
+def on_connect(client, userdata, flags, rc):
+    print("Connected with result code " + str(rc))
+
+    # Subscribing in on_connect() means that if we lose the connection and
+    # reconnect then subscriptions will be renewed.
+    client.subscribe(opts.topic, int(opts.qos))
+
+# The callback for when a PUBLISH message is received from the server.
+def on_message(client, userdata, msg):
+    print(msg.topic + " " + str(msg.payload))
+
+def on_log(client, userdata, level, string):
+    print(string)
+
+parser = optparse.OptionParser(usage="usage: %prog [options]",
+                               description="Receive messages from the supplied address.")
+
+parser.add_option("-c", "--connectHost", default="localhost",
+                  help="host to connect to (default %default)")
+
+parser.add_option("-p", "--portHost", default="8883",
+                  help="port to connect to (default %default)")
+
+parser.add_option("-t", "--topic", default="mytopic",
+                  help="topic to subscribe to (default %default)")
+
+parser.add_option("-q", "--qos", default="0",
+                  help="quality of service (default %default)")
+
+parser.add_option("-s", "--serverCert", default=None,
+                  help="server certificate file path (default %default)")
+
+opts, args = parser.parse_args()
+
+client = mqtt.Client("recv")
+client.on_connect = on_connect
+client.on_message = on_message
+client.on_log = on_log
+
+context = ssl.create_default_context()
+if opts.serverCert == None:
+    context.check_hostname = False
+    context.verify_mode = ssl.CERT_NONE
+else:
+    context.load_verify_locations(cafile=opts.serverCert)
+
+# just useful to activate for decrypting local TLS traffic with Wireshark
+#context.set_ciphers("RSA")
+
+client.tls_set_context(context)
+client.tls_insecure_set(True)
+client.connect(opts.connectHost, opts.portHost, 60)
+
+# Blocking call that processes network traffic, dispatches callbacks and
+# handles reconnecting.
+# Other loop*() functions are available that give a threaded interface and a
+# manual interface.
+client.loop_forever()
+----
+
+In order to subscribe to a topic (i.e. `mytopic` from the previous addresses configuration), the
+subscriber client can be used in the following way:
+
+....
+./tls_mqtt_recv.py -c "$(oc get route -o jsonpath='{.spec.host}' mqtt)" -p 443 -t mytopic -q 1 -s ./certs/tls.crt
+....
+
+===== Publisher client
+
+Save the following to `tls_mqtt_send.py`:
+
+[source,options="nowrap"]
+----
+#!/usr/bin/env python
+
+import paho.mqtt.client as mqtt
+import ssl
+import optparse
+
+# The callback for when the client receives a CONNACK response from the server.
+def on_connect(client, userdata, flags, rc):
+    print("Connected with result code " + str(rc))
+
+    # Subscribing in on_connect() means that if we lose the connection and
+    # reconnect then subscriptions will be renewed.
+    client.publish(opts.topic, opts.message, int(opts.qos))
+
+def on_publish(client, userdata, mid):
+    print("mid: " + str(mid))
+    client.disconnect()
+
+def on_log(client, userdata, level, string):
+    print(string)
+
+parser = optparse.OptionParser(usage="usage: %prog [options]",
+                               description="Sends messages to the supplied address.")
+
+parser.add_option("-c", "--connectHost", default="localhost",
+                  help="host to connect to (default %default)")
+
+parser.add_option("-p", "--portHost", default="8883",
+                  help="port to connect to (default %default)")
+
+parser.add_option("-t", "--topic", default="mytopic",
+                  help="topic to subscribe to (default %default)")
+
+parser.add_option("-q", "--qos", default="0",
+                  help="quality of service (default %default)")
+
+parser.add_option("-s", "--serverCert", default=None,
+                  help="server certificate file path (default %default)")
+
+parser.add_option("-m", "--message", default="Hello",
+                  help="message to publish (default %default)")
+
+opts, args = parser.parse_args()
+
+client = mqtt.Client("send")
+client.on_connect = on_connect
+client.on_publish = on_publish
+client.on_log = on_log
+
+context = ssl.create_default_context()
+if opts.serverCert == None:
+    context.check_hostname = False
+    context.verify_mode = ssl.CERT_NONE
+else:
+    context.load_verify_locations(cafile=opts.serverCert)
+
+# just useful to activate for decrypting local TLS traffic with Wireshark
+#context.set_ciphers("RSA")
+
+client.tls_set_context(context)
+client.tls_insecure_set(True)
+client.connect(opts.connectHost, opts.portHost, 60)
+
+# Blocking call that processes network traffic, dispatches callbacks and
+# handles reconnecting.
+# Other loop*() functions are available that give a threaded interface and a
+# manual interface.
+client.loop_forever()
+----
+
+
+[options="nowrap",subs=attributes+]
+....
+./tls_mqtt_recv.py -c "$({OcGetRoute} mqtt)" -p 443 -t mytopic -q 1 -s ./server-cert.pem
+....
+
+To start the publisher, the client can be used in the following way:
+
+[options="nowrap",subs=attributes+]
+....
+./tls_mqtt_send.py -c "$({OcGetRoute} mqtt)" -p 443 -t mytopic -q 1 -s ./certs/tls.crt -m "Hello EnMasse"
+....
+
+The the publisher publishes the message and disconnects from EnMasse. The message is received by the previous connected subscriber.
