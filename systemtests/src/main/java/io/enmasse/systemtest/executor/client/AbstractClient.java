@@ -95,7 +95,7 @@ public abstract class AbstractClient {
             }
             return ret;
         } catch (Exception ex) {
-            Logging.log.error(ex.toString());
+            ex.printStackTrace();
             return false;
         }
     }
