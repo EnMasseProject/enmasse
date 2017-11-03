@@ -49,7 +49,7 @@ node('enmasse') {
             archive 'templates/install/**'
         }
         stage('teardown openshift') {
-            sh 'oc cluster down'
+            sh './systemtests/scripts/teardown-openshift.sh'
         }
         stage('notify mailing list') {
             if (result.equals("failure")) {
