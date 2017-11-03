@@ -18,3 +18,16 @@ This will block until it has received 10 messages. To start the sender, run:
 ....
 ./simple_send.py -a "amqps://$({OcGetRoute} messaging):{OcRoutePort}/anycast" -m 10
 ....
+
+The server certificates is not verified in the above examples. To fetch the certificate, run:
+
+[options="nowrap",subs=attributes+]
+....
+mkdir -p certs
+{occli} get secret external-certs-messaging -o jsonpath='{.data.tls\.crt}' | base64 -d > certs/tls.crt
+....
+
+You can modify the client code to use this cert to verify the server connection.
+
+Have a look at http://enmasse.io/documentation/master/messaging_app_developer/#connecting[connecting
+to {ProductName}] for more client examples.
