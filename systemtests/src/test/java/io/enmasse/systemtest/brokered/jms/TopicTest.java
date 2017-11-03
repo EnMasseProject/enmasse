@@ -8,10 +8,13 @@ import org.junit.*;
 import javax.jms.*;
 import javax.naming.Context;
 import javax.naming.InitialContext;
+import javax.naming.NamingException;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 
@@ -19,9 +22,12 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
-public class TopicTest extends MultiTenantTestBase {
+public class TopicTest extends JMSTestBase {
+
+    private AddressSpace addressSpace;
 
     private Hashtable<Object, Object> env;
+    private ConnectionFactory connectionFactory;
     private Connection connection;
     private Session session;
     private Context context;
@@ -34,7 +40,7 @@ public class TopicTest extends MultiTenantTestBase {
 
     @Before
     public void setUp() throws Exception {
-        AddressSpace addressSpace = new AddressSpace(
+        addressSpace = new AddressSpace(
                 "brokered-space-jms-topics",
                 "brokered-space-jms-topics",
                 AddressSpaceType.BROKERED);
@@ -43,26 +49,21 @@ public class TopicTest extends MultiTenantTestBase {
         addressTopic = Destination.topic(topic);
         setAddresses(addressSpace, addressTopic);
 
-        env = new Hashtable<Object, Object>();
-        env.put(Context.INITIAL_CONTEXT_FACTORY, "org.apache.qpid.jms.jndi.JmsInitialContextFactory");
-        env.put("connectionfactory.qpidConnectionFactory", "amqps://" + getRouteEndpoint(addressSpace).toString() +
-                "?jms.clientID=" + jmsClientID +
-                "&transport.trustAll=true" +
-                "&jms.password=" + jmsUsername +
-                "&jms.username=" + jmsPassword +
-                "&transport.verifyHost=false");
-        env.put("topic." + topic, topic);
-
+        env = setUpEnv("amqps://" + getRouteEndpoint(addressSpace).toString(), jmsUsername, jmsPassword,
+                new HashMap<String, String>() {{
+                    put("topic." + topic, topic);
+                }});
         context = new InitialContext(env);
-        ConnectionFactory connectionFactory
-                = (ConnectionFactory) context.lookup("qpidConnectionFactory");
+        connectionFactory = (ConnectionFactory) context.lookup("qpidConnectionFactory");
         connection = connectionFactory.createConnection();
         connection.start();
     }
 
     @After
     public void tearDown() throws Exception {
-        deleteAddresses(addressTopic);
+        if (TestUtils.existAddressSpace(addressApiClient, addressSpace.getName())) {
+            deleteAddresses(addressTopic);
+        }
         if (connection != null) {
             connection.stop();
         }
@@ -200,54 +201,85 @@ public class TopicTest extends MultiTenantTestBase {
         session.unsubscribe(sub2ID);
     }
 
-    private List<Message> generateMessages(Session session, String prefix, int count) {
-        List<Message> messages = new ArrayList<>();
-        StringBuilder sb = new StringBuilder();
-        IntStream.range(0, count).forEach(i -> {
-            try {
-                messages.add(session.createTextMessage(sb.append(prefix).append("testMessage").append(i).toString()));
-                sb.setLength(0);
-            } catch (JMSException e) {
-                e.printStackTrace();
-            }
-        });
-        return messages;
+    @Test
+    public void testSharedDurableSubscription() throws JMSException, NamingException {
+        Logging.log.info("testSharedDurableSubscription");
+
+        Connection connection2 = connectionFactory.createConnection();
+        connection2.start();
+
+        session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        Session session2 = connection2.createSession(false, Session.AUTO_ACKNOWLEDGE);
+
+        Topic testTopic = (Topic) context.lookup(topic);
+
+        String subID = "sharedConsumer123";
+        MessageConsumer subscriber1 = session.createSharedDurableConsumer(testTopic, subID);
+        Logging.log.info("sub1 DONE");
+        MessageConsumer subscriber2 = session2.createSharedDurableConsumer(testTopic, subID);
+        Logging.log.info("sub1 DONE");
+        MessageProducer messageProducer = session.createProducer(testTopic);
+        Logging.log.info("producer DONE");
+        messageProducer.setDeliveryMode(DeliveryMode.PERSISTENT);
+
+        int count = 10;
+        List<Message> listMsgs = generateMessages(session, count);
+        sendMessages(messageProducer, listMsgs);
+        Logging.log.info("messages sent");
+
+        List<Message> recvd1 = receiveMessages(subscriber1, count, 1);
+        List<Message> recvd2 = receiveMessages(subscriber2, count, 1);
+
+        Logging.log.info(subID + " :messages received");
+        Logging.log.info(subID + " :messages received");
+
+
+        assertThat("Each message should be received only by one consumer",
+                recvd1.size() + recvd2.size(), is(2 * count));
+
+        subscriber1.close();
+        subscriber2.close();
+        session.unsubscribe(subID);
+        session2.unsubscribe(subID);
+        connection2.stop();
+        session2.close();
+        connection2.close();
     }
 
-    private List<Message> generateMessages(Session session, int count) {
-        return generateMessages(session, "", count);
-    }
+    @Test
+    public void testSharedNonDurableSubscription() throws JMSException, NamingException, InterruptedException, ExecutionException, TimeoutException {
+        Logging.log.info("testSharedNonDurableSubscription");
 
-    private void sendMessages(MessageProducer producer, List<Message> messages) {
-        messages.forEach(m -> {
-            try {
-                producer.send(m);
-            } catch (JMSException e) {
-                e.printStackTrace();
-            }
-        });
-    }
+        Connection connection2 = connectionFactory.createConnection();
+        connection2.start();
+        session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        Session session2 = connection2.createSession(false, Session.AUTO_ACKNOWLEDGE);
 
-    private List<Message> receiveMessages(MessageConsumer consumer, int count) {
-        List<Message> recvd = new ArrayList<>();
-        IntStream.range(0, count).forEach(i -> {
-            try {
-                recvd.add(consumer.receive());
-            } catch (JMSException e) {
-                e.printStackTrace();
-            }
-        });
-        return recvd;
-    }
+        Topic testTopic = (Topic) context.lookup(topic);
+        String subID = "sharedConsumer123";
+        MessageConsumer subscriber1 = session.createSharedConsumer(testTopic, subID);
+        MessageConsumer subscriber2 = session2.createSharedConsumer(testTopic, subID);
+        MessageConsumer subscriber3 = session2.createSharedConsumer(testTopic, subID);
+        MessageProducer messageProducer = session.createProducer(testTopic);
+        messageProducer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
 
-    private void assertMessageContent(List<Message> msgs, String content) {
-        msgs.forEach(m -> {
-            try {
-                assertTrue(((TextMessage) m).getText().contains(content));
-            } catch (JMSException e) {
-                e.printStackTrace();
-            }
-        });
-    }
+        int count = 10;
+        List<Message> listMsgs = generateMessages(session, count);
+        List<CompletableFuture<List<Message>>> results = receiveMessagesAsync(count, subscriber1, subscriber2, subscriber3);
+        sendMessages(messageProducer, listMsgs);
+        Logging.log.info("messages sent");
 
+        assertThat("Each message should be received only by one consumer",
+                results.get(0).get(20, TimeUnit.SECONDS).size() +
+                        results.get(1).get(20, TimeUnit.SECONDS).size() +
+                        results.get(2).get(20, TimeUnit.SECONDS).size(),
+                is(count));
+        Logging.log.info("messages received");
+
+        connection2.stop();
+        subscriber1.close();
+        subscriber2.close();
+        session2.close();
+        connection2.close();
+    }
 }
