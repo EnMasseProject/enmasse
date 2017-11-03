@@ -49,7 +49,7 @@ public class QueueTest extends TestBase {
         runQueueTest(client, q3);
     }
 
-
+    @Test
     public void testInmemoryQueues() throws Exception {
         Destination q1 = Destination.queue("inMemoryQueue1", Optional.of("inmemory"));
         Destination q2 = Destination.queue("inMemoryQueue2", Optional.of("inmemory"));
@@ -61,7 +61,7 @@ public class QueueTest extends TestBase {
         runQueueTest(client, q2);
     }
 
-
+    @Test
     public void testPersistedQueues() throws Exception {
         Destination q1 = Destination.queue("persistedQueue1", Optional.of("persisted"));
         Destination q2 = Destination.queue("persistedQueue2", Optional.of("persisted"));
@@ -73,7 +73,7 @@ public class QueueTest extends TestBase {
         runQueueTest(client, q2);
     }
 
-
+    @Test
     public void testPooledPersistedQueues() throws Exception {
         Destination q1 = Destination.queue("pooledPersistedQueue1", Optional.of("pooled-persisted"));
         Destination q2 = Destination.queue("pooledPersistedQueue2", Optional.of("pooled-persisted"));
