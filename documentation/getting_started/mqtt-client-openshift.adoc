@@ -7,7 +7,7 @@ fetch the server certificate:
 [options="nowrap",subs=attributes+]
 ....
 mkdir -p certs
-{occli} get secret external-certs-mqtt  -o jsonpath='{.data.tls\.crt}' | base64 -d > certs/tls.crt
+{occli} extract secret/external-certs-mqtt --to=certs -n enmasse
 ....
 
 ===== Subscriber client
@@ -87,7 +87,7 @@ In order to subscribe to a topic (i.e. `mytopic` from the previous addresses con
 subscriber client can be used in the following way:
 
 ....
-./tls_mqtt_recv.py -c "$(oc get route -o jsonpath='{.spec.host}' mqtt)" -p 443 -t mytopic -q 1 -s ./certs/tls.crt
+./tls_mqtt_recv.py -c "$(oc get route -o jsonpath='{.spec.host}' mqtt)" -p 443 -t mytopic -q 1 -s ./certs/server-cert.pem
 ....
 
 ===== Publisher client
@@ -166,17 +166,11 @@ client.connect(opts.connectHost, opts.portHost, 60)
 client.loop_forever()
 ----
 
-
-[options="nowrap",subs=attributes+]
-....
-./tls_mqtt_recv.py -c "$({OcGetRoute} mqtt)" -p 443 -t mytopic -q 1 -s ./server-cert.pem
-....
-
 To start the publisher, the client can be used in the following way:
 
 [options="nowrap",subs=attributes+]
 ....
-./tls_mqtt_send.py -c "$({OcGetRoute} mqtt)" -p 443 -t mytopic -q 1 -s ./certs/tls.crt -m "Hello EnMasse"
+./tls_mqtt_send.py -c "$({OcGetRoute} mqtt)" -p 443 -t mytopic -q 1 -s ./certs/server-cert.pem -m "Hello EnMasse"
 ....
 
 The the publisher publishes the message and disconnects from EnMasse. The message is received by the previous connected subscriber.
