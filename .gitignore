@@ -6,3 +6,12 @@
 .idea/
 *.iml
 **/out/
+**/target
+
+# Eclipse
+**/.settings
+**/.project
+**/.classpath
+
+# VS Code
+.vscode
