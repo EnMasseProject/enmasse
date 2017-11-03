@@ -1,7 +1,7 @@
 #!/bin/bash
 SCRIPTDIR=`dirname $0`
 
-sudo rm -rf /var/lib/origin/openshift.local.volumes
+sudo rm -rf /var/lib/origin/openshift.local.pv
 oc cluster up $OC_CLUSTER_ARGS
 oc login -u system:admin
 oc cluster status
