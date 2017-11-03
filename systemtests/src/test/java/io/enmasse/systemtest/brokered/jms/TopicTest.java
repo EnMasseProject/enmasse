@@ -49,7 +49,7 @@ public class TopicTest extends JMSTestBase {
         addressTopic = Destination.topic(topic);
         setAddresses(addressSpace, addressTopic);
 
-        env = setUpEnv("amqps://" + getRouteEndpoint(addressSpace).toString(), jmsUsername, jmsPassword,
+        env = setUpEnv("amqps://" + getRouteEndpoint(addressSpace).toString(), jmsUsername, jmsPassword, jmsClientID,
                 new HashMap<String, String>() {{
                     put("topic." + topic, topic);
                 }});
@@ -205,13 +205,19 @@ public class TopicTest extends JMSTestBase {
     public void testSharedDurableSubscription() throws JMSException, NamingException {
         Logging.log.info("testSharedDurableSubscription");
 
-        Connection connection2 = connectionFactory.createConnection();
+        Context context1 = createConnection();
+        ConnectionFactory connectionFactory1 = (ConnectionFactory) context1.lookup("qpidConnectionFactory");
+        Connection connection1 = connectionFactory1.createConnection();
+        Context context2 = createConnection();
+        ConnectionFactory connectionFactory2 = (ConnectionFactory) context2.lookup("qpidConnectionFactory");
+        Connection connection2 = connectionFactory2.createConnection();
+        connection1.start();
         connection2.start();
 
-        session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        Session session = connection1.createSession(false, Session.AUTO_ACKNOWLEDGE);
         Session session2 = connection2.createSession(false, Session.AUTO_ACKNOWLEDGE);
 
-        Topic testTopic = (Topic) context.lookup(topic);
+        Topic testTopic = (Topic) context1.lookup(topic);
 
         String subID = "sharedConsumer123";
         MessageConsumer subscriber1 = session.createSharedDurableConsumer(testTopic, subID);
@@ -234,28 +240,45 @@ public class TopicTest extends JMSTestBase {
         Logging.log.info(subID + " :messages received");
 
 
-        assertThat("Each message should be received only by one consumer",
-                recvd1.size() + recvd2.size(), is(2 * count));
+        assertThat(recvd1.size() + recvd2.size(), is(2 * count));
 
         subscriber1.close();
         subscriber2.close();
         session.unsubscribe(subID);
         session2.unsubscribe(subID);
+        connection1.stop();
         connection2.stop();
+        session.close();
         session2.close();
+        connection1.close();
         connection2.close();
+    }
+
+    protected Context createConnection() throws JMSException, NamingException {
+        Hashtable env2 = setUpEnv("amqps://" + getRouteEndpoint(addressSpace).toString(), jmsUsername, jmsPassword,
+                new HashMap<String, String>() {{
+                    put("topic." + topic, topic);
+                }});
+        return new InitialContext(env2);
     }
 
     @Test
     public void testSharedNonDurableSubscription() throws JMSException, NamingException, InterruptedException, ExecutionException, TimeoutException {
         Logging.log.info("testSharedNonDurableSubscription");
 
-        Connection connection2 = connectionFactory.createConnection();
+        Context context1 = createConnection();
+        ConnectionFactory connectionFactory1 = (ConnectionFactory) context1.lookup("qpidConnectionFactory");
+        Connection connection1 = connectionFactory1.createConnection();
+        Context context2 = createConnection();
+        ConnectionFactory connectionFactory2 = (ConnectionFactory) context2.lookup("qpidConnectionFactory");
+        Connection connection2 = connectionFactory2.createConnection();
+        connection1.start();
         connection2.start();
-        session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+
+        Session session = connection1.createSession(false, Session.AUTO_ACKNOWLEDGE);
         Session session2 = connection2.createSession(false, Session.AUTO_ACKNOWLEDGE);
 
-        Topic testTopic = (Topic) context.lookup(topic);
+        Topic testTopic = (Topic) context1.lookup(topic);
         String subID = "sharedConsumer123";
         MessageConsumer subscriber1 = session.createSharedConsumer(testTopic, subID);
         MessageConsumer subscriber2 = session2.createSharedConsumer(testTopic, subID);
@@ -276,10 +299,13 @@ public class TopicTest extends JMSTestBase {
                 is(count));
         Logging.log.info("messages received");
 
+        connection1.stop();
         connection2.stop();
         subscriber1.close();
         subscriber2.close();
+        session.close();
         session2.close();
+        connection1.close();
         connection2.close();
     }
 }

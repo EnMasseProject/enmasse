@@ -17,15 +17,21 @@ import static org.junit.Assert.assertTrue;
 
 public class JMSTestBase extends MultiTenantTestBase {
 
-
     protected Hashtable<Object, Object> setUpEnv(String url, String username, String password, Map<String, String> prop) {
+        return setUpEnv(url, username, password, "", prop);
+    }
+
+    protected Hashtable<Object, Object> setUpEnv(String url, String username, String password, String clientID, Map<String, String> prop) {
         Hashtable env = new Hashtable<Object, Object>();
         env.put(Context.INITIAL_CONTEXT_FACTORY, "org.apache.qpid.jms.jndi.JmsInitialContextFactory");
-        env.put("connectionfactory.qpidConnectionFactory", url +
-                "?transport.trustAll=true" +
-                "&jms.password=" + username +
-                "&jms.username=" + password +
-                "&transport.verifyHost=false");
+        StringBuilder urlParam = new StringBuilder();
+        urlParam.append("?transport.trustAll=true")
+                .append("&jms.password=").append(username)
+                .append("&jms.username=").append(password)
+                .append("&transport.verifyHost=false");
+        urlParam.append(clientID.isEmpty() ? clientID : "&jms.clientID=" + clientID);
+
+        env.put("connectionfactory.qpidConnectionFactory", url + urlParam);
         for (Map.Entry<String, String> entry : prop.entrySet()) {
             env.put(entry.getKey(), entry.getValue());
         }
