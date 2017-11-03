@@ -13,10 +13,4 @@ done
 
 sleep 30
 
-# Setup persistent storage
-for i in `seq 1 15`
-do
-    echo "Setup persistent storage ${i}"
-    $SCRIPTDIR/provision-storage.sh "/tmp/mydir${i}" "pv-${i}"
-done
 oc get pv
