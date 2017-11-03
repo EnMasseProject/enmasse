@@ -1,3 +1,19 @@
+## 0.14.0 (November 3, 2017)
+* New address space type: brokered
+    * A single ActiveMQ Artemis broker
+    * Supports JMS features such as transactions, message groups, queue selectors etc.
+    * Integrates with the authentication service
+    * A lightweight agent managing addresses + the EnMasse console
+* Add support for multitenant mode when running in Kubernetes
+* A ton of bug fixes to all EnMasse components found with an expanded test suite
+* Initial version of OpenAPI specification
+* Lots of new documentation at enmasse.io/documentation
+* Console renamed to agent in preparation for it to adopt multiple 'admin' functions
+* Support keycloak groups in the standard authentication service
+
+41 [issues](https://github.com/EnMasseProject/enmasse/milestone/4?closed=1) has been resolved for
+this release.
+
 ## 0.13.0 (September 22, 2017)
 * Added support for authentication. Users can now choose from 'none', 'standard' and 'external' as
   authentication services. See [authentication design doc](https://github.com/EnMasseProject/enmasse/blob/master/documentation/design/authentication.adoc)
