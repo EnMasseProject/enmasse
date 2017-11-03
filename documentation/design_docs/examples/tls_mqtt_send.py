@@ -40,9 +40,17 @@ parser.add_option("-s", "--serverCert", default=None,
 parser.add_option("-m", "--message", default="Hello",
                   help="message to publish (default %default)")
 
+parser.add_option("-u", "--username", default=None,
+                  help="username for authentication (default %default)")
+
+parser.add_option("-P", "--password", default=None,
+                  help="password for authentication (default %default)")
+
 opts, args = parser.parse_args()
 
 client = mqtt.Client("send")
+if opts.username != None:
+    client.username_pw_set(opts.username, opts.password)
 client.on_connect = on_connect
 client.on_publish = on_publish
 client.on_log = on_log

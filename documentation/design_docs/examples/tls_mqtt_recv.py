@@ -37,9 +37,18 @@ parser.add_option("-q", "--qos", default="0",
 parser.add_option("-s", "--serverCert", default=None,
                   help="server certificate file path (default %default)")
 
+parser.add_option("-u", "--username", default=None,
+                  help="username for authentication (default %default)")
+
+parser.add_option("-P", "--password", default=None,
+                  help="password for authentication (default %default)")
+
+
 opts, args = parser.parse_args()
 
 client = mqtt.Client("recv")
+if opts.username != None:
+    client.username_pw_set(opts.username, opts.password)
 client.on_connect = on_connect
 client.on_message = on_message
 client.on_log = on_log
