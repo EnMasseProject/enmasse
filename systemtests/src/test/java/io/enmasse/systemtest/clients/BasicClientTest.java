@@ -158,4 +158,80 @@ public class BasicClientTest extends ClientTestBase {
         assertEquals(count, sender.getMessages().size());
         assertEquals(count, receiver.getMessages().size());
     }
+
+    protected void doMessageSelectorQueueTest(AbstractClient sender, AbstractClient receiver) throws Exception{
+        AddressSpace addressSpace = new AddressSpace("brokered-selectors-queue",
+                "brokered-selectors-queue",
+                AddressSpaceType.BROKERED);
+        createAddressSpace(addressSpace, "none");
+        Destination queue = Destination.queue("selector-queue");
+        setAddresses(addressSpace, queue);
+
+        arguments.put(Argument.BROKER, getRouteEndpoint(addressSpace).toString());
+        arguments.put(Argument.COUNT, "10");
+        arguments.put(Argument.ADDRESS, queue.getAddress());
+        arguments.put(Argument.MSG_PROPERTY, "colour~red");
+        arguments.put(Argument.MSG_PROPERTY, "number~12.65");
+        arguments.put(Argument.MSG_PROPERTY, "a~true");
+        arguments.put(Argument.MSG_PROPERTY, "b~false");
+
+        doMessageSelectorTest(sender, receiver);
+    }
+
+    protected void doMessageSelectorTopicTest(AbstractClient sender, AbstractClient receiver) throws Exception{
+        AddressSpace addressSpace = new AddressSpace("brokered-selectors-topic",
+                "brokered-selectors-topic",
+                AddressSpaceType.BROKERED);
+        createAddressSpace(addressSpace, "none");
+        Destination topic = Destination.topic("selector-topic");
+        setAddresses(addressSpace, topic);
+
+        arguments.put(Argument.BROKER, getRouteEndpoint(addressSpace).toString());
+        arguments.put(Argument.COUNT, "10");
+        arguments.put(Argument.ADDRESS, "topic://" + topic.getAddress());
+        arguments.put(Argument.MSG_PROPERTY, "colour~red");
+        arguments.put(Argument.MSG_PROPERTY, "number~12.65");
+        arguments.put(Argument.MSG_PROPERTY, "a~true");
+        arguments.put(Argument.MSG_PROPERTY, "b~false");
+
+        doMessageSelectorTest(sender, receiver);
+    }
+
+    private void doMessageSelectorTest(AbstractClient sender, AbstractClient receiver) throws Exception {
+
+        //send messages
+        sender.setArguments(arguments);
+        assertTrue(sender.run());
+        assertEquals(10, sender.getMessages().size());
+
+        arguments.remove(Argument.MSG_PROPERTY);
+        arguments.put(Argument.RECV_BROWSE, "true");
+        arguments.put(Argument.COUNT, "0");
+
+        //receiver with selector colour = red
+        arguments.put(Argument.SELECTOR, "colour = 'red'");
+        receiver.setArguments(arguments);
+        assertTrue(receiver.run());
+        assertEquals(10, receiver.getMessages().size());
+
+        //receiver with selector number > 12.5
+        arguments.put(Argument.SELECTOR, "number > 12.5");
+        receiver.setArguments(arguments);
+        assertTrue(receiver.run());
+        assertEquals(10, receiver.getMessages().size());
+
+
+        //receiver with selector a AND b
+        arguments.put(Argument.SELECTOR, "a AND b");
+        receiver.setArguments(arguments);
+        assertTrue(receiver.run());
+        assertEquals(0, receiver.getMessages().size());
+
+        //receiver with selector a OR b
+        arguments.put(Argument.RECV_BROWSE, "false");
+        arguments.put(Argument.SELECTOR, "a OR b");
+        receiver.setArguments(arguments);
+        assertTrue(receiver.run());
+        assertEquals(10, receiver.getMessages().size());
+    }
 }

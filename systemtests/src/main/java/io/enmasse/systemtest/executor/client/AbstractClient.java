@@ -5,7 +5,9 @@ import io.enmasse.systemtest.executor.Executor;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
+
 import java.util.ArrayList;
+import java.util.Objects;
 import java.util.concurrent.*;
 
 /**
@@ -15,7 +17,8 @@ public abstract class AbstractClient {
     private final int DEFAULT_ASYNC_TIMEOUT = 120000;
     private final int DEFAULT_SYNC_TIMEOUT = 60000;
 
-    private JsonArray messages = new JsonArray();;
+    private ClientType clientType;
+    private JsonArray messages = new JsonArray();
     private ArrayList<String> arguments = new ArrayList<>();
     protected ArrayList<Argument> allowedArgs = new ArrayList<>();
 
@@ -24,7 +27,7 @@ public abstract class AbstractClient {
      * @param clientType type of client
      */
     public AbstractClient(ClientType clientType){
-        this.arguments.add(ClientType.getCommand(clientType));
+        this.clientType = clientType;
         this.fillAllowedArgs();
     }
 
@@ -41,6 +44,7 @@ public abstract class AbstractClient {
      * @param args string array of arguments
      */
     public void setArguments(ArgumentMap args){
+        arguments.clear();
         args = transformArguments(args);
         for(Argument arg : args.getArguments()){
             if(validateArgument(arg)) {
@@ -84,9 +88,10 @@ public abstract class AbstractClient {
      * @return true if command end with exit code 0
      */
     private boolean runClient(int timeout) {
+        messages.clear();
         try {
             Executor executor = new Executor();
-            boolean ret = executor.execute(arguments, timeout);
+            boolean ret = executor.execute(prepareCommand(), timeout);
             if (ret) {
                 Logging.log.info(executor.getStdOut());
                 parseToJson(executor.getStdOut());
@@ -98,6 +103,16 @@ public abstract class AbstractClient {
             ex.printStackTrace();
             return false;
         }
+    }
+
+    /**
+     * Merge command and arguments
+     * @return merged array of command and args
+     */
+    private ArrayList<String> prepareCommand(){
+        ArrayList<String> command = new ArrayList<>(arguments);
+        command.add(0, ClientType.getCommand(clientType));
+        return command;
     }
 
     /**
@@ -130,8 +145,12 @@ public abstract class AbstractClient {
      * @param data string data output
      */
     private void parseToJson(String data){
-        for(String line : data.split("\n")){
-            messages.add(new JsonObject(line));
+        if (data != null) {
+            for (String line : data.split(System.getProperty("line.separator"))) {
+                if (!Objects.equals(line, "") && !line.trim().isEmpty()) {
+                    messages.add(new JsonObject(line));
+                }
+            }
         }
     }
 

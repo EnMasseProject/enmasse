@@ -116,7 +116,7 @@ public class Executor {
                 String line;
                 StringBuilder builder = new StringBuilder();
                 while ( (line = br.readLine()) != null)
-                    builder.append(line).append('\n');
+                    builder.append(line).append(System.getProperty("line.separator"));
                 isr.close();
                 br.close();
                 return builder.toString();
