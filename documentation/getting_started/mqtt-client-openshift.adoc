@@ -12,7 +12,7 @@ mkdir -p certs
 
 ===== Subscriber client
 
-Save the following to `tls_mqtt_recv.py`:
+Save the following to `tls_mqtt_recv.py` or https://raw.githubusercontent.com/EnMasseProject/enmasse/master/documentation/design_docs/examples/tls_mqtt_recv.py[download]:
 
 [source,options="nowrap"]
 ----
@@ -92,7 +92,7 @@ subscriber client can be used in the following way:
 
 ===== Publisher client
 
-Save the following to `tls_mqtt_send.py`:
+Save the following to `tls_mqtt_send.py` or https://raw.githubusercontent.com/EnMasseProject/enmasse/master/documentation/design_docs/examples/tls_mqtt_send.py[download]:
 
 [source,options="nowrap"]
 ----
