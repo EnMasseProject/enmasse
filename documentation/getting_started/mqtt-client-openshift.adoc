@@ -166,12 +166,6 @@ client.connect(opts.connectHost, opts.portHost, 60)
 client.loop_forever()
 ----
 
-
-[options="nowrap",subs=attributes+]
-....
-./tls_mqtt_recv.py -c "$({OcGetRoute} mqtt)" -p 443 -t mytopic -q 1 -s ./server-cert.pem
-....
-
 To start the publisher, the client can be used in the following way:
 
 [options="nowrap",subs=attributes+]
