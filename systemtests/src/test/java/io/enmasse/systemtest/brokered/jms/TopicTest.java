@@ -16,11 +16,9 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.IntStream;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
 
 public class TopicTest extends JMSTestBase {
 
@@ -73,6 +71,14 @@ public class TopicTest extends JMSTestBase {
         if (connection != null) {
             connection.close();
         }
+    }
+
+    protected Context createContextForShared() throws JMSException, NamingException {
+        Hashtable env2 = setUpEnv("amqps://" + getRouteEndpoint(addressSpace).toString(), jmsUsername, jmsPassword,
+                new HashMap<String, String>() {{
+                    put("topic." + topic, topic);
+                }});
+        return new InitialContext(env2);
     }
 
     @Test
@@ -205,10 +211,10 @@ public class TopicTest extends JMSTestBase {
     public void testSharedDurableSubscription() throws JMSException, NamingException {
         Logging.log.info("testSharedDurableSubscription");
 
-        Context context1 = createConnection();
+        Context context1 = createContextForShared();
         ConnectionFactory connectionFactory1 = (ConnectionFactory) context1.lookup("qpidConnectionFactory");
         Connection connection1 = connectionFactory1.createConnection();
-        Context context2 = createConnection();
+        Context context2 = createContextForShared();
         ConnectionFactory connectionFactory2 = (ConnectionFactory) context2.lookup("qpidConnectionFactory");
         Connection connection2 = connectionFactory2.createConnection();
         connection1.start();
@@ -254,22 +260,14 @@ public class TopicTest extends JMSTestBase {
         connection2.close();
     }
 
-    protected Context createConnection() throws JMSException, NamingException {
-        Hashtable env2 = setUpEnv("amqps://" + getRouteEndpoint(addressSpace).toString(), jmsUsername, jmsPassword,
-                new HashMap<String, String>() {{
-                    put("topic." + topic, topic);
-                }});
-        return new InitialContext(env2);
-    }
-
     @Test
     public void testSharedNonDurableSubscription() throws JMSException, NamingException, InterruptedException, ExecutionException, TimeoutException {
         Logging.log.info("testSharedNonDurableSubscription");
 
-        Context context1 = createConnection();
+        Context context1 = createContextForShared();
         ConnectionFactory connectionFactory1 = (ConnectionFactory) context1.lookup("qpidConnectionFactory");
         Connection connection1 = connectionFactory1.createConnection();
-        Context context2 = createConnection();
+        Context context2 = createContextForShared();
         ConnectionFactory connectionFactory2 = (ConnectionFactory) context2.lookup("qpidConnectionFactory");
         Connection connection2 = connectionFactory2.createConnection();
         connection1.start();
