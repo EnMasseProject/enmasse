@@ -1,3 +1,4 @@
+#!/bin/bash
 oc cluster up $OC_CLUSTER_ARGS
 oc login -u system:admin
 oc cluster status
