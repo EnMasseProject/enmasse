@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 REPO=${1:-"enmasse.io"}
 
 if [ "$TRAVIS_BRANCH" == "master" ]
