@@ -33,7 +33,6 @@ import java.util.Optional;
 @Path("/v1/addresses/{addressSpace}")
 public class HttpAddressService {
     private static final Logger log = LoggerFactory.getLogger(HttpAddressService.class.getName());
-    public static final String BASE_URI = "/v1/addresses";
     private final AddressApiHelper apiHelper;
 
     public HttpAddressService(AddressSpaceApi addressSpaceApi) {

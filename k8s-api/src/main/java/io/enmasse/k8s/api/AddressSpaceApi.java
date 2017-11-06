@@ -30,7 +30,6 @@ public interface AddressSpaceApi {
     void replaceAddressSpace(AddressSpace addressSpace);
     void deleteAddressSpace(AddressSpace addressSpace);
     Set<AddressSpace> listAddressSpaces();
-    AddressSpace getAddressSpaceFromConfig(ConfigMap resource);
 
     Watch watchAddressSpaces(Watcher<AddressSpace> watcher) throws Exception;
 

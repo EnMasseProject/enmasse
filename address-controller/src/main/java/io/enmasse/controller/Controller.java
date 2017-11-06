@@ -19,7 +19,6 @@ import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.Endpoint;
 import io.enmasse.address.model.SecretCertProvider;
 import io.enmasse.config.AnnotationKeys;
-import io.enmasse.controller.auth.UserDatabase;
 import io.enmasse.controller.common.AddressSpaceController;
 import io.enmasse.controller.common.AuthenticationServiceResolverFactory;
 import io.enmasse.controller.common.Kubernetes;
@@ -56,9 +55,8 @@ public class Controller extends AbstractVerticle implements Watcher<AddressSpace
                       AddressSpaceApi addressSpaceApi,
                       Kubernetes kubernetes,
                       AuthenticationServiceResolverFactory authResolverFactory,
-                      UserDatabase userDatabase,
                       List<AddressSpaceController> addressSpaceControllers) {
-        this.helper = new ControllerHelper(kubernetes, authResolverFactory, userDatabase);
+        this.helper = new ControllerHelper(kubernetes, authResolverFactory);
         this.client = client;
         this.addressSpaceApi = addressSpaceApi;
         this.addressSpaceControllers = addressSpaceControllers;

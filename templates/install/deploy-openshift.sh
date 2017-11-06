@@ -196,7 +196,7 @@ if [ $MODE == "multitenant" ]; then
         runcmd "oc adm policy add-cluster-role-to-user cluster-admin system:serviceaccount:${NAMESPACE}:enmasse-service-account" "Granting cluster-admin rights to enmasse-service-account"
         runcmd "oc login -u $OS_USER $OC_ARGS $MASTER_URI" "Login as $OS_USER"
     else
-        echo "Please grant cluster-admin rights to system:serviceaccount:${NAMESPACE}:enmasse-service-account before creating instances: 'oc adm policy add-cluster-role-to-user cluster-admin system:serviceaccount:${NAMESPACE}:enmasse-service-account'"
+        echo "Please add cluster-admin role to system:serviceaccount:${NAMESPACE}:enmasse-service-account before creating instances: 'oc adm policy add-cluster-role-to-user cluster-admin system:serviceaccount:${NAMESPACE}:enmasse-service-account'"
     fi
 fi
 

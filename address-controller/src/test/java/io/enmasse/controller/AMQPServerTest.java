@@ -70,7 +70,7 @@ public class AMQPServerTest {
     public void testAddressingService() throws InterruptedException, ExecutionException, TimeoutException, IOException {
         Address destination =
                 new Address("addr1", "group0", false, false, Optional.empty(), Optional.empty(), new Status(false));
-        instanceApi.withAddressSpace(AddressSpaceId.withId("myinstance")).createAddress(destination);
+        addressSpaceApi.withAddressSpace(AddressSpaceId.withId("myinstance")).createAddress(destination);
 
         SyncRequestClient client = new SyncRequestClient("localhost", port, vertx);
         Message request = Message.Factory.create();

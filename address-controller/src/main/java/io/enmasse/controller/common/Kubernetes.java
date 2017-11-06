@@ -2,8 +2,6 @@ package io.enmasse.controller.common;
 
 import io.enmasse.address.model.Endpoint;
 import io.fabric8.kubernetes.api.model.*;
-import io.fabric8.kubernetes.api.model.authentication.TokenReview;
-import io.fabric8.kubernetes.api.model.authorization.SubjectAccessReview;
 import io.fabric8.kubernetes.api.model.extensions.Deployment;
 import io.fabric8.openshift.client.ParameterValue;
 
@@ -71,5 +69,5 @@ public interface Kubernetes {
 
     TokenReview performTokenReview(String token);
 
-    SubjectAccessReview performSubjectAccessReview(String user, String path, String verb);
+    SubjectAccessReview performSubjectAccessReview(String user, String namespace, String verb);
 }

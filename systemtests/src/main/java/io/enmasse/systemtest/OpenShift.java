@@ -36,6 +36,10 @@ public class OpenShift {
         this.tenantNamespace = tenantNamespace;
     }
 
+    public String getApiToken() {
+        return environment.openShiftToken();
+    }
+
     public OpenShiftClient getClient() {
         return client;
     }

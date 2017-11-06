@@ -6,6 +6,33 @@ local addressController = import "address-controller.jsonnet";
 local restapiRoute = import "restapi-route.jsonnet";
 local images = import "images.jsonnet";
 {
+  enmasse_admin_role::
+    {
+      "apiVersion": "v1",
+      "kind": "Role",
+      "metadata": {
+        "name": "enmasse-admin"
+      },
+      "rules": [
+        {
+          "resources": [
+            "configmaps"
+          ],
+          "verbs": [
+            "get",
+            "list",
+            "watch",
+            "create",
+            "update",
+            "patch",
+            "delete"
+          ]
+        }
+      ]
+    },
+
+  local me = self,
+
   generate(with_kafka)::
   {
     "apiVersion": "v1",
@@ -21,9 +48,9 @@ local images = import "images.jsonnet";
                  storage.template(true, false),
                  storage.template(true, true),
                  standardInfra.generate(with_kafka),
+                 me.enmasse_admin_role,
                  brokeredInfra.template,
-                 addressController.deployment("${ADDRESS_CONTROLLER_REPO}", "", "${ENMASSE_CA_SECRET}", "${ADDRESS_CONTROLLER_CERT_SECRET}", "${ADDRESS_CONTROLLER_ENABLE_API_AUTH}"),
-                 common.empty_secret("address-controller-userdb"),
+                 addressController.deployment("${ADDRESS_CONTROLLER_REPO}", "", "${ENMASSE_CA_SECRET}", "${ADDRESS_CONTROLLER_CERT_SECRET}"),
                  addressController.internal_service,
                  restapiRoute.route("${RESTAPI_HOSTNAME}") ],
     "parameters": [
@@ -45,12 +72,7 @@ local images = import "images.jsonnet";
         "name": "ADDRESS_CONTROLLER_CERT_SECRET",
         "description": "Name of the secret containing the address controller certificate",
         "value": "address-controller-cert"
-      },
-      {
-        "name": "ADDRESS_CONTROLLER_ENABLE_API_AUTH",
-        "description": "Enable/disable user authentication for API",
-        "value": "false"
-      },
+      }
     ]
   }
 }

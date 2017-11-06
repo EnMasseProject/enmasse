@@ -2,6 +2,7 @@ package io.enmasse.systemtest;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Vertx;
+import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -22,12 +23,14 @@ public class AddressApiClient {
     private final int initRetry = 10;
     private final String addressSpacesPath = "/v1/addressspaces";
     private final String addressPath = "/v1/addresses";
+    private final String authzString;
 
     public AddressApiClient(OpenShift openshift) throws InterruptedException {
         this.vertx = VertxFactory.create();
         this.client = WebClient.create(vertx);
         this.openshift = openshift;
         this.endpoint = openshift.getRestEndpoint();
+        this.authzString = "Bearer " + openshift.getApiToken();
     }
 
     public void close() {
@@ -60,6 +63,7 @@ public class AddressApiClient {
         doRequestNTimes(initRetry, () -> {
             client.post(endpoint.getPort(), endpoint.getHost(), addressSpacesPath)
                     .timeout(20_000)
+                    .putHeader(HttpHeaders.AUTHORIZATION.toString(), authzString)
                     .as(BodyCodec.jsonObject())
                     .sendJsonObject(config, ar -> {
                         if (ar.succeeded()) {
@@ -78,6 +82,7 @@ public class AddressApiClient {
         doRequestNTimes(initRetry, () -> {
             client.delete(endpoint.getPort(), endpoint.getHost(), addressSpacesPath + "/" + addressSpace.getName())
                     .as(BodyCodec.jsonObject())
+                    .putHeader(HttpHeaders.AUTHORIZATION.toString(), authzString)
                     .timeout(20_000)
                     .send(ar -> {
                         if (ar.succeeded()) {
@@ -103,6 +108,7 @@ public class AddressApiClient {
         return doRequestNTimes(initRetry, () -> {
             client.get(endpoint.getPort(), endpoint.getHost(), addressSpacesPath + "/" + name)
                     .as(BodyCodec.jsonObject())
+                    .putHeader(HttpHeaders.AUTHORIZATION.toString(), authzString)
                     .send(ar -> {
                         if (ar.succeeded()) {
                             responsePromise.complete(responseHandler(ar));
@@ -124,6 +130,7 @@ public class AddressApiClient {
         JsonArray items = doRequestNTimes(initRetry, () -> {
             client.get(endpoint.getPort(), endpoint.getHost(), addressSpacesPath)
                     .as(BodyCodec.jsonObject())
+                    .putHeader(HttpHeaders.AUTHORIZATION.toString(), authzString)
                     .timeout(20_000)
                     .send(ar -> {
                         if (ar.succeeded()) {
@@ -163,6 +170,7 @@ public class AddressApiClient {
         return doRequestNTimes(initRetry, () -> {
             CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
             client.get(endpoint.getPort(), endpoint.getHost(), path.toString())
+                    .putHeader(HttpHeaders.AUTHORIZATION.toString(), authzString)
                     .as(BodyCodec.jsonObject())
                     .timeout(20_000)
                     .send(ar -> {
@@ -198,6 +206,7 @@ public class AddressApiClient {
         doRequestNTimes(initRetry, () -> {
             client.delete(endpoint.getPort(), endpoint.getHost(), path)
                     .timeout(20_000)
+                    .putHeader(HttpHeaders.AUTHORIZATION.toString(), authzString)
                     .as(BodyCodec.jsonObject())
                     .send(ar -> {
                         if (ar.succeeded()) {
@@ -253,6 +262,7 @@ public class AddressApiClient {
         doRequestNTimes(initRetry, () -> {
             client.request(httpMethod, endpoint.getPort(), endpoint.getHost(), path.toString())
                     .timeout(20_000)
+                    .putHeader(HttpHeaders.AUTHORIZATION.toString(), authzString)
                     .as(BodyCodec.jsonObject())
                     .sendJsonObject(config, ar -> {
                         if (ar.succeeded()) {

@@ -30,13 +30,13 @@ import java.io.IOException;
 import java.util.List;
 import javax.ws.rs.core.Response;
 
-public class CatalogServiceTest {
+public class CatalogServiceTest extends OSBTestBase {
 
     @Test
     public void testCatalog() throws IOException {
-        OSBCatalogService catalogService = new OSBCatalogService(new TestAddressSpaceApi());
+        OSBCatalogService catalogService = new OSBCatalogService(new TestAddressSpaceApi(), "controller");
 
-        Response response = catalogService.getCatalog();
+        Response response = catalogService.getCatalog(getSecurityContext());
         CatalogResponse catalogResponse = (CatalogResponse) response.getEntity();
         List<Service> services = catalogResponse.getServices();
 

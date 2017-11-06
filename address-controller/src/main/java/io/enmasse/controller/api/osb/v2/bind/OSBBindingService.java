@@ -1,5 +1,6 @@
 package io.enmasse.controller.api.osb.v2.bind;
 
+import io.enmasse.controller.api.ResourceVerb;
 import io.enmasse.controller.api.osb.v2.EmptyResponse;
 import io.enmasse.controller.api.osb.v2.OSBExceptions;
 import io.enmasse.controller.api.osb.v2.OSBServiceBase;
@@ -16,22 +17,25 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
 
 @Path(OSBServiceBase.BASE_URI + "/service_instances/{instanceId}/service_bindings/{bindingId}")
 @Consumes({MediaType.APPLICATION_JSON})
 @Produces({MediaType.APPLICATION_JSON})
 public class OSBBindingService extends OSBServiceBase {
 
-    public OSBBindingService(AddressSpaceApi addressSpaceApi) {
-        super(addressSpaceApi);
+    public OSBBindingService(AddressSpaceApi addressSpaceApi, String namespace) {
+        super(addressSpaceApi, namespace);
     }
 
     @PUT
-    public Response bindServiceInstance(@PathParam("instanceId") String instanceId, @PathParam("bindingId") String bindingId, BindRequest bindRequest) {
+    public Response bindServiceInstance(@Context SecurityContext securityContext, @PathParam("instanceId") String instanceId, @PathParam("bindingId") String bindingId, BindRequest bindRequest) {
         log.info("Received bind request for instance {}, binding {} (service id {}, plan id {})",
                 instanceId, bindingId, bindRequest.getServiceId(), bindRequest.getPlanId());
+        verifyAuthorized(securityContext, ResourceVerb.get);
         AddressSpace addressSpace = findAddressSpaceByAddressUuid(instanceId)
                 .orElseThrow(() -> OSBExceptions.notFoundException("Service instance " + instanceId + " does not exist"));
 
@@ -58,8 +62,9 @@ public class OSBBindingService extends OSBServiceBase {
     }
 
     @DELETE
-    public Response unbindServiceInstance(@PathParam("instanceId") String instanceId, @PathParam("bindingId") String bindingId) {
+    public Response unbindServiceInstance(@Context SecurityContext securityContext, @PathParam("instanceId") String instanceId, @PathParam("bindingId") String bindingId) {
         log.info("Received unbind request for instance {}, binding {}", instanceId, bindingId);
+        verifyAuthorized(securityContext, ResourceVerb.get);
         AddressSpace addressSpace = findAddressSpaceByAddressUuid(instanceId)
                 .orElseThrow(() -> OSBExceptions.notFoundException("Service instance " + instanceId + " does not exist"));
 

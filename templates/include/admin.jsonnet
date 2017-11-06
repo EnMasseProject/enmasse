@@ -33,19 +33,6 @@ local common = import "common.jsonnet";
   ],
 
 
-  password_secret(name, value)::
-  {
-    "apiVersion": "v1",
-    "kind": "Secret",
-    "metadata": {
-      "name": name
-    },
-    "data": {
-      "api.passwd": value
-    }
-  },
-
-
   deployment(addressSpace, configserv_image, ragent_image, scheduler_image, agent_image, auth_service_ca_secret, address_controller_ca_secret, console_secret)::
   {
     "apiVersion": "extensions/v1beta1",
@@ -175,10 +162,6 @@ local common = import "common.jsonnet";
                       {
                         "name": "ADDRESS_CONTROLLER_CA",
                         "value": "/opt/agent/address-controller-ca/tls.crt"
-                      },
-                      {
-                        "name": "ADDRESS_SPACE_PASSWORD_FILE",
-                        "value": "/opt/agent/address-space-credentials/api.passwd"
                       }]) + {
                         "volumeMounts": [
                           {
@@ -199,11 +182,6 @@ local common = import "common.jsonnet";
                           {
                             "name": address_controller_ca_secret,
                             "mountPath": "/opt/agent/address-controller-ca",
-                            "readOnly": true
-                          },
-                          {
-                            "name": "address-space-credentials",
-                            "mountPath": "/opt/agent/address-space-credentials",
                             "readOnly": true
                           }
                         ]
@@ -247,12 +225,6 @@ local common = import "common.jsonnet";
                 "secret": {
                     "secretName": "admin-internal-cert"
                 }
-            },
-            {
-              "name": "address-space-credentials",
-              "secret": {
-                "secretName": "address-space-credentials"
-              }
             }
           ]
         }

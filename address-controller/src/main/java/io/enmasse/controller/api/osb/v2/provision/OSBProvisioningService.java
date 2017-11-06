@@ -10,9 +10,12 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
 
+import io.enmasse.controller.api.ResourceVerb;
 import io.enmasse.controller.api.osb.v2.EmptyResponse;
 import io.enmasse.controller.api.osb.v2.OSBExceptions;
 import io.enmasse.controller.api.osb.v2.OSBServiceBase;
@@ -28,14 +31,17 @@ import io.enmasse.k8s.api.AddressSpaceApi;
 @Produces({MediaType.APPLICATION_JSON})
 public class OSBProvisioningService extends OSBServiceBase {
 
-    public OSBProvisioningService(AddressSpaceApi addressSpaceApi) {
-        super(addressSpaceApi);
+    public OSBProvisioningService(AddressSpaceApi addressSpaceApi, String namespace) {
+        super(addressSpaceApi, namespace);
     }
 
     @PUT
-    public Response provisionService(@PathParam("instanceId") String instanceId,
+    public Response provisionService(@Context SecurityContext securityContext,
+                                     @PathParam("instanceId") String instanceId,
                                      @QueryParam("accepts_incomplete") @DefaultValue("false") boolean acceptsIncomplete,
                                      ProvisionRequest request) throws Exception {
+
+        verifyAuthorized(securityContext, ResourceVerb.create);
 
         if (!acceptsIncomplete) {
             throw OSBExceptions.unprocessableEntityException("AsyncRequired", "This service plan requires client support for asynchronous service operations.");
@@ -102,7 +108,8 @@ public class OSBProvisioningService extends OSBServiceBase {
     // TODO: @PATCH updateService
 
     @DELETE
-    public Response deprovisionService(@PathParam("instanceId") String instanceId, @QueryParam("service_id") String serviceId, @QueryParam("plan_id") String planId) {
+    public Response deprovisionService(@Context SecurityContext securityContext, @PathParam("instanceId") String instanceId, @QueryParam("service_id") String serviceId, @QueryParam("plan_id") String planId) {
+        verifyAuthorized(securityContext, ResourceVerb.delete);
         log.info("Received deprovision request for addressspace {} (service id {}, plan id {})",
                 instanceId, serviceId, planId);
 

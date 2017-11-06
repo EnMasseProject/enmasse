@@ -67,15 +67,6 @@ public class TestAddressSpaceApi implements AddressSpaceApi {
     }
 
     @Override
-    public AddressSpace getAddressSpaceFromConfig(ConfigMap resource) {
-        try {
-            return CodecV1.getMapper().readValue(resource.getData().get("config.json"), AddressSpace.class);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @Override
     public Watch watchAddressSpaces(Watcher<AddressSpace> watcher) throws Exception {
         return null;
     }
