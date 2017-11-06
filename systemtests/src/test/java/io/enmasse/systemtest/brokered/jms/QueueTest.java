@@ -80,58 +80,54 @@ public class QueueTest extends JMSTestBase {
 
         MessageProducer sender = session.createProducer(testQueue);
         MessageConsumer receiver = session.createConsumer(testQueue);
+        List<Message> recvd;
 
         int count = 50;
 
         List<Message> listMsgs = generateMessages(session, count);
 
         //send messages and commit
-        for(int i = 0; i < count; i++){
-            sender.send(listMsgs.get(i));
-        }
+        sendMessages(sender, listMsgs);
         session.commit();
         Logging.log.info("messages sent commit");
 
         //receive commit messages
-        Message received = null;
-        for(int i = 0; i < count; i++){
-            received = receiver.receive(1000);
-            assertNotNull(received);
+        recvd = receiveMessages(receiver, count, 1000);
+        for (Message message : recvd){
+            assertNotNull(message);
         }
         session.commit();
         Logging.log.info("messages received commit");
 
         //send messages rollback
-        for(int i = 0; i < count; i++){
-            sender.send(listMsgs.get(i));
-        }
+        sendMessages(sender, listMsgs);
         session.rollback();
         Logging.log.info("messages sent rollback");
 
         //check if queue is empty
-        received = receiver.receive(1000);
+        Message received = receiver.receive(1000);
         assertNull(received);
         Logging.log.info("queue is empty");
 
         //send messages
-        for(int i = 0; i < count; i++){
-            sender.send(listMsgs.get(i));
-        }
+        sendMessages(sender, listMsgs);
         session.commit();
         Logging.log.info("messages sent commit");
 
         //receive messages rollback
-        for(int i = 0; i < count; i++){
-            received = receiver.receive(1000);
-            assertNotNull(received);
+        recvd.clear();
+        recvd = receiveMessages(receiver, count, 1000);
+        for (Message message : recvd){
+            assertNotNull(message);
         }
         session.rollback();
         Logging.log.info("messages received rollback");
 
         //receive messages
-        for(int i = 0; i < count; i++){
-            received = receiver.receive(1000);
-            assertNotNull(received);
+        recvd.clear();
+        recvd = receiveMessages(receiver, count, 1000);
+        for (Message message : recvd){
+            assertNotNull(message);
         }
         session.commit();
         Logging.log.info("messages received commit");
