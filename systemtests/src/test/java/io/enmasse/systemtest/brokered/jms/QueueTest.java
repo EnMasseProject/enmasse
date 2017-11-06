@@ -28,7 +28,7 @@ public class QueueTest extends JMSTestBase {
     private Session session;
     private Context context;
     private String queue = "jmsQueue";
-    private Destination addressTopic;
+    private Destination addressQueue;
 
     private String jmsUsername = "test";
     private String jmsPassword = "test";
@@ -42,8 +42,8 @@ public class QueueTest extends JMSTestBase {
                 AddressSpaceType.BROKERED);
         createAddressSpace(addressSpace, "none");
 
-        addressTopic = Destination.topic(queue);
-        setAddresses(addressSpace, addressTopic);
+        addressQueue = Destination.queue(queue);
+        setAddresses(addressSpace, addressQueue);
 
         env = setUpEnv("amqps://" + getRouteEndpoint(addressSpace).toString(), jmsUsername, jmsPassword, jmsClientID,
                 new HashMap<String, String>() {{
@@ -58,7 +58,7 @@ public class QueueTest extends JMSTestBase {
     @After
     public void tearDown() throws Exception {
         if (TestUtils.existAddressSpace(addressApiClient, addressSpace.getName())) {
-            deleteAddresses(addressTopic);
+            deleteAddresses(addressQueue);
         }
         if (connection != null) {
             connection.stop();
