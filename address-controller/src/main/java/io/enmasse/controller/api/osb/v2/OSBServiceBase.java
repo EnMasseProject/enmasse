@@ -7,6 +7,8 @@ import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.module.jsonSchema.types.ObjectSchema;
 import com.fasterxml.jackson.module.jsonSchema.types.StringSchema;
+import io.enmasse.controller.api.RbacSecurityContext;
+import io.enmasse.controller.api.ResourceVerb;
 import io.enmasse.controller.api.osb.v2.catalog.InputParameters;
 import io.enmasse.controller.api.osb.v2.catalog.Plan;
 import io.enmasse.controller.api.osb.v2.catalog.Schemas;
@@ -20,6 +22,8 @@ import io.enmasse.k8s.api.AddressSpaceApi;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.ws.rs.core.SecurityContext;
+
 public abstract class OSBServiceBase {
 
     public static final String BASE_URI = "/osbapi/v2";
@@ -27,9 +31,17 @@ public abstract class OSBServiceBase {
     protected final Logger log = LoggerFactory.getLogger(getClass().getName());
 
     private final AddressSpaceApi addressSpaceApi;
+    private final String namespace;
 
-    public OSBServiceBase(AddressSpaceApi addressSpaceApi) {
+    public OSBServiceBase(AddressSpaceApi addressSpaceApi, String namespace) {
         this.addressSpaceApi = addressSpaceApi;
+        this.namespace = namespace;
+    }
+
+    protected void verifyAuthorized(SecurityContext securityContext, ResourceVerb verb) {
+        if (!securityContext.isUserInRole(RbacSecurityContext.rbacToRole(namespace, verb))) {
+            throw OSBExceptions.notAuthorizedException();
+        }
     }
 
     protected Optional<AddressSpace> findAddressSpaceByAddressUuid(String addressUuid) {

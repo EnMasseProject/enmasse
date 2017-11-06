@@ -22,7 +22,9 @@ import io.enmasse.address.model.Endpoint;
 import io.enmasse.address.model.SecretCertProvider;
 import io.enmasse.address.model.types.standard.StandardAddressSpaceType;
 import io.enmasse.address.model.types.standard.StandardType;
-import io.enmasse.controller.auth.UserAuthenticator;
+import io.enmasse.controller.common.Kubernetes;
+import io.enmasse.controller.common.SubjectAccessReview;
+import io.enmasse.controller.common.TokenReview;
 import io.enmasse.k8s.api.TestAddressSpaceApi;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpClient;
@@ -39,10 +41,14 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import java.net.PasswordAuthentication;
 import java.net.URI;
 import java.util.Base64;
 import java.util.UUID;
+
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 @RunWith(VertxUnitRunner.class)
 public class HTTPServerTest {
@@ -58,12 +64,12 @@ public class HTTPServerTest {
         String addressSpaceName = "myinstance";
         addressSpace = createAddressSpace(addressSpaceName);
         instanceApi.createAddressSpace(addressSpace);
-        vertx.deployVerticle(new HTTPServer(instanceApi, "/doesnotexist", new PasswordAuthentication("user", "pass".toCharArray()), new UserAuthenticator() {
-            @Override
-            public boolean authenticate(String username, String password) {
-                return "test".equals(username) && "testp".equals(password);
-            }
-        }, null), context.asyncAssertSuccess());
+        Kubernetes kubernetes = mock(Kubernetes.class);
+        when(kubernetes.getNamespace()).thenReturn("controller");
+        when(kubernetes.performTokenReview(eq("mytoken"))).thenReturn(new TokenReview("foo", true));
+        when(kubernetes.performSubjectAccessReview(eq("foo"), any(), any())).thenReturn(new SubjectAccessReview("foo", true));
+        when(kubernetes.performSubjectAccessReview(eq("foo"), any(), any())).thenReturn(new SubjectAccessReview("foo", true));
+        vertx.deployVerticle(new HTTPServer(instanceApi, "/doesnotexist", kubernetes), context.asyncAssertSuccess());
     }
 
     @After
@@ -110,7 +116,7 @@ public class HTTPServerTest {
                     async.complete();
                 });
             });
-            r1.headers().add(HttpHeaders.AUTHORIZATION, "Basic " + Base64.getEncoder().encodeToString("test:testp".getBytes()));
+            putAuthzToken(r1);
             r1.end();
 
             HttpClientRequest r2 = client.get(8080, "localhost", "/v1/addresses/myinstance/addr1", response -> {
@@ -121,7 +127,7 @@ public class HTTPServerTest {
                     async.complete();
                 });
             });
-            r2.headers().add(HttpHeaders.AUTHORIZATION, "Basic " + Base64.getEncoder().encodeToString("test:testp".getBytes()));
+            putAuthzToken(r2);
             r2.end();
 
             HttpClientRequest r3 = client.post(8080, "localhost", "/v1/addresses/myinstance", response -> {
@@ -133,12 +139,17 @@ public class HTTPServerTest {
                     async.complete();
                 });
             });
-            r3.headers().add(HttpHeaders.AUTHORIZATION, "Basic " + Base64.getEncoder().encodeToString("test:testp".getBytes()));
+            putAuthzToken(r3);
             r3.end("{\"apiVersion\":\"enmasse.io/v1\",\"kind\":\"AddressList\",\"items\":[{\"metadata\":{\"name\":\"a4\"},\"spec\":{\"type\":\"queue\"}}]}");
             async.awaitSuccess(60_000);
         } finally {
             client.close();
         }
+    }
+
+    private static HttpClientRequest putAuthzToken(HttpClientRequest request) {
+        request.putHeader("Authorization", "Bearer mytoken");
+        return request;
     }
 
     @Test
@@ -147,7 +158,7 @@ public class HTTPServerTest {
         try {
             {
                 Async async = context.async();
-                client.getNow(8080, "localhost", "/v1", response -> {
+                HttpClientRequest rootReq = client.get(8080, "localhost", "/v1", response -> {
                     context.assertEquals(200, response.statusCode());
                     response.bodyHandler(buffer -> {
                         JsonArray data = buffer.toJsonArray();
@@ -156,7 +167,7 @@ public class HTTPServerTest {
                             entry = data.getString(1);
                         }
                         URI uri = URI.create(entry);
-                        client.getNow(uri.getPort(), uri.getHost(), uri.getPath(), nestedResponse -> {
+                        HttpClientRequest request = client.get(uri.getPort(), uri.getHost(), uri.getPath(), nestedResponse -> {
                             context.assertEquals(200, nestedResponse.statusCode());
                             nestedResponse.bodyHandler(buffer2 -> {
                                 JsonObject space = buffer2.toJsonObject();
@@ -166,8 +177,11 @@ public class HTTPServerTest {
                                 async.complete();
                             });
                         });
+                        putAuthzToken(request).end();;
                     });
                 });
+                putAuthzToken(rootReq);
+                rootReq.end();
                 async.awaitSuccess(60_000);
             }
         } finally {
@@ -181,7 +195,7 @@ public class HTTPServerTest {
         try {
             {
                 Async async = context.async();
-                client.getNow(8080, "localhost", "/v1/schema", response -> {
+                HttpClientRequest request = client.get(8080, "localhost", "/v1/schema", response -> {
                     context.assertEquals(200, response.statusCode());
                     response.bodyHandler(buffer -> {
                         JsonObject data = buffer.toJsonObject();
@@ -190,6 +204,8 @@ public class HTTPServerTest {
                         async.complete();
                     });
                 });
+                putAuthzToken(request);
+                request.end();
                 async.awaitSuccess(60_000);
             }
         } finally {
@@ -203,7 +219,7 @@ public class HTTPServerTest {
         Instance instance = new Instance.Builder(AddressSpaceId.withId("myinstance"))
                 .messagingHost(Optional.of("messaging.example.com"))
                 .build();
-        instanceApi.createAddressSpace(instance);
+        addressSpaceApi.createAddressSpace(instance);
 
         HttpClient client = vertx.createHttpClient();
         try {
@@ -257,7 +273,7 @@ public class HTTPServerTest {
                     async.complete();
                 });
             });
-            request.headers().add(HttpHeaders.AUTHORIZATION, "Basic " + Base64.getEncoder().encodeToString("user:pass".getBytes()));
+            putAuthzToken(request);
             request.end();
             async.awaitSuccess(60_000);
         } finally {
@@ -278,6 +294,7 @@ public class HTTPServerTest {
                     async.complete();
                 });
             });
+            putAuthzToken(request);
             request.end();
             async.awaitSuccess(60_000);
         } finally {

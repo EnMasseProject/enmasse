@@ -21,8 +21,9 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-@Path("/v1/health")
+@Path(HttpHealthService.BASE_URI)
 public class HttpHealthService {
+    public static final String BASE_URI = "/v1/health";
     @GET
     @Produces({MediaType.APPLICATION_JSON})
     public Response getHealth() {

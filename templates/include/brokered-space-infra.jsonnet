@@ -268,7 +268,6 @@ local hawkularBrokerConfig = import "hawkular-broker-config.jsonnet";
     "objects": [
       common.ca_secret("authservice-ca", "${AUTHENTICATION_SERVICE_CA_CERT}"),
       common.ca_secret("address-controller-ca", "${ADDRESS_CONTROLLER_CA_CERT}"),
-      admin.password_secret("address-space-credentials", "${ADDRESS_SPACE_PASSWORD}"),
       hawkularBrokerConfig,
       me.pvc("broker-data"),
       me.broker_deployment("broker"),
@@ -338,11 +337,7 @@ local hawkularBrokerConfig = import "hawkular-broker-config.jsonnet";
       {
         "name": "ADDRESS_CONTROLLER_CA_CERT",
         "description": "The CA cert to use for validating address controller identity"
-      },
-      {
-        "name": "ADDRESS_SPACE_PASSWORD",
-        "description": "Password for authenticating against address controller"
-      },
+      }
     ],
   }
 }

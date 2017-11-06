@@ -18,7 +18,6 @@ package io.enmasse.controller;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.types.brokered.BrokeredAddressSpaceType;
 import io.enmasse.address.model.types.standard.StandardAddressSpaceType;
-import io.enmasse.controller.auth.UserDatabase;
 import io.enmasse.controller.common.AddressSpaceController;
 import io.enmasse.controller.common.Kubernetes;
 import io.enmasse.controller.common.NoneAuthenticationServiceResolver;
@@ -69,7 +68,7 @@ public class ControllerTest {
 
     @Test
     public void testController(TestContext context) throws Exception {
-        Controller controller = new Controller(client, testApi, kubernetes, (a) -> new NoneAuthenticationServiceResolver("localhost", 1234), new DummyUserDb(), Arrays.asList(spaceController));
+        Controller controller = new Controller(client, testApi, kubernetes, (a) -> new NoneAuthenticationServiceResolver("localhost", 1234), Arrays.asList(spaceController));
 
         vertx.deployVerticle(controller, context.asyncAssertSuccess());
 
@@ -88,21 +87,5 @@ public class ControllerTest {
         verify(spaceController).resourcesUpdated(anySet());
     }
 
-    private static class DummyUserDb implements UserDatabase {
-        @Override
-        public boolean hasUser(String username) {
-            return true;
-        }
-
-        @Override
-        public void addUser(String username, String password) {
-
-        }
-
-        @Override
-        public boolean authenticate(String username, String password) {
-            return true;
-        }
-    }
 }
 

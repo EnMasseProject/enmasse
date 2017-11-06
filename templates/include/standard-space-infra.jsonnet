@@ -46,7 +46,6 @@ local images = import "images.jsonnet";
       hawkularBrokerConfig,
       hawkularRouterConfig,
       admin.deployment("${ADDRESS_SPACE}", "${CONFIGSERV_REPO}", "${RAGENT_REPO}", "${QUEUE_SCHEDULER_REPO}", "${AGENT_IMAGE}", "authservice-ca", "address-controller-ca", "${CONSOLE_SECRET}"),
-      admin.password_secret("address-space-credentials", "${ADDRESS_SPACE_PASSWORD}"),
     ],
 
     local kafka = [
@@ -171,10 +170,6 @@ local images = import "images.jsonnet";
       {
         "name": "ADDRESS_CONTROLLER_CA_CERT",
         "description": "The CA cert to use for validating address controller identity"
-      },
-      {
-        "name": "ADDRESS_SPACE_PASSWORD",
-        "description": "Password for authenticating against address controller"
       },
       {
         "name" : "AMQP_KAFKA_BRIDGE_REPO",

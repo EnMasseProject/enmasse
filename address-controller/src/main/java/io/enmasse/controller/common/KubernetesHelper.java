@@ -20,18 +20,23 @@ import io.enmasse.config.AnnotationKeys;
 import io.enmasse.config.LabelKeys;
 import io.enmasse.address.model.Endpoint;
 import io.fabric8.kubernetes.api.model.*;
-import io.fabric8.kubernetes.api.model.authentication.TokenReview;
-import io.fabric8.kubernetes.api.model.authorization.SubjectAccessReview;
 import io.fabric8.kubernetes.api.model.extensions.Deployment;
 import io.fabric8.kubernetes.api.model.extensions.DoneableIngress;
+import io.fabric8.kubernetes.client.dsl.ExtensionsAPIGroupDSL;
 import io.fabric8.kubernetes.client.dsl.Resource;
-import io.fabric8.openshift.api.model.*;
+import io.fabric8.openshift.api.model.DoneablePolicyBinding;
+import io.fabric8.openshift.api.model.DoneableRoute;
+import io.fabric8.openshift.api.model.PolicyBinding;
 import io.fabric8.openshift.client.OpenShiftClient;
 import io.fabric8.openshift.client.ParameterValue;
+import io.vertx.core.json.JsonObject;
+import okhttp3.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -44,11 +49,13 @@ public class KubernetesHelper implements Kubernetes {
 
     private final OpenShiftClient client;
     private final String namespace;
+    private final String controllerToken;
     private final Optional<File> templateDir;
 
-    public KubernetesHelper(String namespace, OpenShiftClient client, Optional<File> templateDir) {
+    public KubernetesHelper(String namespace, OpenShiftClient client, String token, Optional<File> templateDir) {
         this.client = client;
         this.namespace = namespace;
+        this.controllerToken = token;
         this.templateDir = templateDir;
     }
 
@@ -136,7 +143,7 @@ public class KubernetesHelper implements Kubernetes {
 
     @Override
     public Kubernetes withNamespace(String namespace) {
-        return new KubernetesHelper(namespace, client, templateDir);
+        return new KubernetesHelper(namespace, client, controllerToken, templateDir);
     }
 
     @Override
@@ -324,18 +331,85 @@ public class KubernetesHelper implements Kubernetes {
         return Optional.ofNullable(client.secrets().inNamespace(namespace).withName(secretName).get());
     }
 
+    private JsonObject doRawHttpRequest(String path, String method, JsonObject body, boolean errorOk) {
+        OkHttpClient httpClient = client.adapt(OkHttpClient.class);
+
+        HttpUrl url = HttpUrl.get(client.getOpenshiftUrl()).resolve(path);
+        Request request = new Request.Builder()
+                .url(url)
+                .addHeader("Content-Type", "application/json")
+                .addHeader("Authorization", "Bearer " + controllerToken)
+                .method(method, body != null ? RequestBody.create(MediaType.parse("application/json"), body.encode()) : null)
+                .build();
+        try (Response response = httpClient.newCall(request).execute()) {
+            if (response.isSuccessful()) {
+                return new JsonObject(response.body().string());
+            } else {
+                if (errorOk) {
+                    response.close();
+                    return null;
+                } else {
+                    String errorMessage = String.format("Error performing %s on %s: %d, %s", method, path, response.code(), response.body());
+                    log.warn(errorMessage);
+                    throw new RuntimeException(errorMessage);
+                }
+            }
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
+
+
     @Override
     public TokenReview performTokenReview(String token) {
-        return client.authentication().tokenReviews().createNew().withNewSpec().withToken(token).endSpec().done();
+        if (client.isAdaptable(OkHttpClient.class)) {
+            JsonObject body = new JsonObject();
+
+            body.put("kind", "TokenReview");
+            body.put("apiVersion", "authentication.k8s.io/v1beta1");
+
+            JsonObject spec = new JsonObject();
+            spec.put("token", token);
+            body.put("spec", spec);
+
+            JsonObject responseBody= doRawHttpRequest("/apis/authentication.k8s.io/v1beta1/tokenreviews", "POST", body, false);
+            JsonObject status = responseBody.getJsonObject("status");
+            boolean authenticated = false;
+            String userName = null;
+            if (status != null) {
+                Boolean auth = status.getBoolean("authenticated");
+                authenticated = auth == null ? false : auth;
+                JsonObject user = status.getJsonObject("user");
+                if (user != null) {
+                    userName = user.getString("username");
+                }
+            }
+            return new TokenReview(userName, authenticated);
+        } else {
+            return new TokenReview(null, false);
+        }
     }
 
     @Override
-    public SubjectAccessReview performSubjectAccessReview(String user, String path, String verb) {
-        return client.authorization().subjectAccessReviews().createNew()
-                .withNewSpec().withUser(user)
-                .withNewNonResourceAttributes().withPath(path).withVerb(verb).endNonResourceAttributes()
-                .endSpec()
-                .done();
+    public SubjectAccessReview performSubjectAccessReview(String user, String namespace, String verb) {
+        if (client.isAdaptable(OkHttpClient.class)) {
+            JsonObject body = new JsonObject();
+
+            body.put("kind", "LocalSubjectAccessReview");
+            body.put("apiVersion", "v1");
+
+            body.put("namespace", namespace);
+            body.put("resource", "configmaps");
+            body.put("verb", verb);
+
+            body.put("user", user);
+
+            JsonObject responseBody = doRawHttpRequest("/oapi/v1/namespaces/" + this.namespace + "/localsubjectaccessreviews", "POST", body, false);
+            Boolean allowed = responseBody.getBoolean("allowed");
+            return new SubjectAccessReview(user, allowed == null ? false : allowed);
+        } else {
+            return new SubjectAccessReview(user, false);
+        }
     }
 
     public static boolean isDeployment(HasMetadata res) {

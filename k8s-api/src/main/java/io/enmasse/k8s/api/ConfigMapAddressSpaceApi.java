@@ -101,8 +101,7 @@ public class ConfigMapAddressSpaceApi implements AddressSpaceApi {
         return instances;
     }
 
-    @Override
-    public AddressSpace getAddressSpaceFromConfig(ConfigMap map) {
+    private AddressSpace getAddressSpaceFromConfig(ConfigMap map) {
         try {
             return mapper.readValue(map.getData().get("config.json"), AddressSpace.class);
         } catch (Exception e) {

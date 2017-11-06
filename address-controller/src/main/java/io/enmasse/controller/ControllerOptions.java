@@ -19,7 +19,6 @@ package io.enmasse.controller;
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.net.PasswordAuthentication;
 import java.nio.file.Files;
 import java.util.Map;
 import java.util.Optional;
@@ -39,17 +38,13 @@ public final class ControllerOptions {
     private final String mqttHost;
     private final String consoleHost;
     private final String certSecret;
-    private final PasswordAuthentication osbAuth;
     private final AuthServiceInfo noneAuthService;
     private final AuthServiceInfo standardAuthService;
-    private final String userDbSecretName;
-    private final boolean enableApiAuth;
 
     private ControllerOptions(String masterUrl, String namespace, String token,
                               File caDir, File templateDir, String messagingHost, String mqttHost,
                               String consoleHost, String certSecret, String certDir,
-                              PasswordAuthentication osbAuth, AuthServiceInfo noneAuthService, AuthServiceInfo standardAuthService, String userDbSecretName,
-                              boolean enableApiAuth) {
+                              AuthServiceInfo noneAuthService, AuthServiceInfo standardAuthService) {
         this.masterUrl = masterUrl;
         this.namespace = namespace;
         this.token = token;
@@ -60,11 +55,8 @@ public final class ControllerOptions {
         this.consoleHost = consoleHost;
         this.certSecret = certSecret;
         this.certDir = certDir;
-        this.osbAuth = osbAuth;
         this.noneAuthService = noneAuthService;
         this.standardAuthService = standardAuthService;
-        this.userDbSecretName = userDbSecretName;
-        this.enableApiAuth = enableApiAuth;
     }
 
     public String masterUrl() {
@@ -108,18 +100,6 @@ public final class ControllerOptions {
         return certDir;
     }
 
-    public Optional<PasswordAuthentication> osbAuth() {
-        return Optional.ofNullable(osbAuth);
-    }
-
-    public boolean isEnableApiAuth() {
-        return enableApiAuth;
-    }
-
-    public String userDbSecretName() {
-        return userDbSecretName;
-    }
-
     public Optional<AuthServiceInfo> getNoneAuthService() {
         return Optional.ofNullable(noneAuthService);
     }
@@ -149,10 +129,6 @@ public final class ControllerOptions {
             templateDir = null;
         }
 
-        PasswordAuthentication osbAuth = getEnv(env, "OSB_AUTH_USERNAME")
-                .map(user -> new PasswordAuthentication(user, getEnvOrThrow(env, "OSB_AUTH_PASSWORD").toCharArray()))
-                .orElse(null);
-
         AuthServiceInfo noneAuthService = getAuthService(env, "NONE_AUTHSERVICE_SERVICE_HOST", "NONE_AUTHSERVICE_SERVICE_PORT").orElse(null);
         AuthServiceInfo standardAuthService = getAuthService(env, "STANDARD_AUTHSERVICE_SERVICE_HOST", "STANDARD_AUTHSERVICE_SERVICE_PORT_AMQPS").orElse(null);
 
@@ -162,8 +138,6 @@ public final class ControllerOptions {
         String mqttHost = getEnv(env, "MQTT_ENDPOINT_HOST").orElse(null);
         String consoleHost = getEnv(env, "CONSOLE_ENDPOINT_HOST").orElse(null);
         String certSecret = getEnv(env, "MESSAGING_CERT_SECRET").orElse(null);
-        String userDbSecretName = getEnv(env, "ADDRESS_SPACE_USER_DB_SECRET_NAME").filter(str -> !str.isEmpty()).orElse(null);
-        boolean enableApiAuth = Boolean.parseBoolean(getEnv(env, "ADDRESS_CONTROLLER_ENABLE_API_AUTH").orElse("false"));
 
         return new ControllerOptions(String.format("https://%s:%s", masterHost, masterPort),
                 namespace,
@@ -175,11 +149,8 @@ public final class ControllerOptions {
                 consoleHost,
                 certSecret,
                 certDir,
-                osbAuth,
                 noneAuthService,
-                standardAuthService,
-                userDbSecretName,
-                enableApiAuth);
+                standardAuthService);
     }
 
 

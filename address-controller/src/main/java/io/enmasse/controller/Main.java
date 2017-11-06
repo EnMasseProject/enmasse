@@ -50,17 +50,12 @@ public class Main extends AbstractVerticle {
                 .withNamespace(options.namespace())
                 .build());
         this.options = options;
-        this.kubernetes = new KubernetesHelper(options.namespace(), controllerClient, options.templateDir());
+        this.kubernetes = new KubernetesHelper(options.namespace(), controllerClient, options.token(), options.templateDir());
     }
 
     @Override
     public void start(Future<Void> startPromise) {
         AddressSpaceApi addressSpaceApi = new ConfigMapAddressSpaceApi(controllerClient);
-
-        UserDatabase userDb = null;
-        if (options.isEnableApiAuth()) {
-            userDb = SecretUserDatabase.create(controllerClient, options.namespace(), options.userDbSecretName());
-        }
 
         CertManager certManager = OpenSSLCertManager.create(controllerClient, options.caDir(), options.namespace());
         AuthenticationServiceResolverFactory resolverFactory = createResolverFactory(options);
@@ -69,9 +64,9 @@ public class Main extends AbstractVerticle {
 
         deployVerticles(startPromise,
                 new Deployment(new AuthController(certManager, addressSpaceApi)),
-                new Deployment(new Controller(controllerClient, addressSpaceApi, kubernetes, resolverFactory, userDb, Arrays.asList(standardController, brokeredController))),
+                new Deployment(new Controller(controllerClient, addressSpaceApi, kubernetes, resolverFactory, Arrays.asList(standardController, brokeredController))),
 //                new Deployment(new AMQPServer(kubernetes.getNamespace(), addressSpaceApi, options.port())),
-                new Deployment(new HTTPServer(addressSpaceApi, options.certDir(), options.osbAuth().orElse(null), userDb, kubernetes), new DeploymentOptions().setWorker(true)));
+                new Deployment(new HTTPServer(addressSpaceApi, options.certDir(), kubernetes), new DeploymentOptions().setWorker(true)));
     }
 
     private AuthenticationServiceResolverFactory createResolverFactory(ControllerOptions options) {

@@ -13,9 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.enmasse.controller.auth;
+package io.enmasse.controller.api;
 
-public interface UserDatabase extends AuthHandler {
-    boolean hasUser(String username);
-    void addUser(String username, String password);
+public enum ResourceVerb {
+    create,
+    list,
+    get,
+    update,
+    delete
 }
