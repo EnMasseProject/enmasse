@@ -21,11 +21,7 @@ INSTALLDIR=$(CURDIR)/templates/install
 
 all: init build test package docker_build
 
-# TODO: get rid of the below target
-build_amqp_module:
-	$(MAKE) -C artemis build_amqp_module
-
-build_java: build_amqp_module
+build_java:
 	mvn test package -B $(MAVEN_ARGS)
 
 clean_java:
