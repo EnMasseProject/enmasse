@@ -18,7 +18,7 @@
     <resteasy.version>3.1.0.Final</resteasy.version>
     <mockito.version>2.0.52-beta</mockito.version>
     <junit.version>4.12</junit.version>
-    <artemis.version>2.3.0</artemis.version>
+    <artemis.version>2.4.0</artemis.version>
     <maven.assembly.version>3.1.0</maven.assembly.version>
     <maven.shade.version>3.1.0</maven.shade.version>
     <paho.version>1.1.0</paho.version>
