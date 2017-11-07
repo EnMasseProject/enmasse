@@ -1,4 +1,4 @@
-package io.enmasse.systemtest.clients;
+package io.enmasse.systemtest.brokered.clients;
 
 import io.enmasse.systemtest.AddressSpace;
 import io.enmasse.systemtest.AddressSpaceType;
@@ -14,7 +14,7 @@ import java.util.concurrent.Future;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-public class BasicClientTest extends ClientTestBase {
+public class MsgPatternsTest extends ClientTestBase {
 
     @Before
     public void setUpCommonArguments(){

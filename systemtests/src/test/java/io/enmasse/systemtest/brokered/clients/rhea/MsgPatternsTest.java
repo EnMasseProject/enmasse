@@ -1,10 +1,10 @@
-package io.enmasse.systemtest.clients.rhea;
+package io.enmasse.systemtest.brokered.clients.rhea;
 
 import io.enmasse.systemtest.executor.client.rhea.RheaClientReceiver;
 import io.enmasse.systemtest.executor.client.rhea.RheaClientSender;
 import org.junit.Test;
 
-public class BasicClientTest extends io.enmasse.systemtest.clients.BasicClientTest {
+public class MsgPatternsTest extends io.enmasse.systemtest.brokered.clients.MsgPatternsTest {
 
     @Test
     public void basicMessageTest() throws Exception {
