@@ -18,18 +18,19 @@
 var path = require('path');
 var fs = require('fs');
 
-function get_paths() {
-    var cert_dir = process.env.CERT_DIR || '/etc/enmasse-certs';
+function get_paths(env) {
+    var opts = env || process.env;
+    var cert_dir = opts.CERT_DIR || '/etc/enmasse-certs';
     var paths = {};
-    paths.ca = process.env.CA_PATH || path.resolve(cert_dir, 'ca.crt');
-    paths.cert = process.env.CERT_PATH || path.resolve(cert_dir, 'tls.crt');
-    paths.key = process.env.KEY_PATH || path.resolve(cert_dir, 'tls.key');
+    paths.ca = opts.CA_PATH || path.resolve(cert_dir, 'ca.crt');
+    paths.cert = opts.CERT_PATH || path.resolve(cert_dir, 'tls.crt');
+    paths.key = opts.KEY_PATH || path.resolve(cert_dir, 'tls.key');
     return paths;
 }
 
-function get_client_options(config) {
+function get_client_options(config, env) {
     var options = config || {};
-    var paths = get_paths();
+    var paths = get_paths(env);
     options.ca = [fs.readFileSync(paths.ca)];
     options.key = fs.readFileSync(paths.key);
     options.cert = fs.readFileSync(paths.cert);
@@ -39,14 +40,33 @@ function get_client_options(config) {
     return options;
 }
 
-function get_server_options(config) {
+function get_server_options(config, env) {
     var options = config || {};
-    get_client_options(options);
+    get_client_options(options, env);
     options.requestCert = true;
     options.rejectUnauthorized = true;
     return options;
 }
 
+function get_console_paths(env) {
+    var opts = env || process.env;
+    var cert_dir = opts.CONSOLE_CERT_DIR || '/etc/console-certs';
+    var paths = {};
+    paths.cert = opts.CONSOLE_CERT_PATH || path.resolve(cert_dir, 'tls.crt');
+    paths.key = opts.CONSOLE_KEY_PATH || path.resolve(cert_dir, 'tls.key');
+    return paths;
+}
+
+function get_console_server_options(config, env) {
+    var options = config || {};
+    var paths = get_console_paths(env);
+    options.key = fs.readFileSync(paths.key);
+    options.cert = fs.readFileSync(paths.cert);
+    options.transport = 'tls';
+    return options;
+}
+
 module.exports.get_client_options = get_client_options;
 module.exports.get_server_options = get_server_options;
+module.exports.get_console_server_options = get_console_server_options;
 module.exports.get_paths = get_paths;

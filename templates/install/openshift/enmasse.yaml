@@ -1215,9 +1215,10 @@ objects:
               value: ${AUTHENTICATION_SERVICE_SASL_INIT_HOST}
             image: ${AGENT_IMAGE}
             livenessProbe:
-              initialDelaySeconds: 60
-              tcpSocket:
+              httpGet:
+                path: /probe
                 port: http
+                scheme: HTTPS
             name: agent
             ports:
             - containerPort: 8080
@@ -1226,12 +1227,20 @@ objects:
             - containerPort: 56720
               name: amqp-ws
               protocol: TCP
+            readinessProbe:
+              httpGet:
+                path: /probe
+                port: http
+                scheme: HTTPS
             resources:
               limits:
                 memory: 128Mi
               requests:
                 memory: 128Mi
             volumeMounts:
+            - mountPath: /etc/console-certs
+              name: console-secret
+              readOnly: true
             - mountPath: /opt/agent/authservice-ca
               name: authservice-ca
               readOnly: true
@@ -1267,6 +1276,9 @@ objects:
               name: admin-internal-cert
               readOnly: true
           volumes:
+          - name: console-secret
+            secret:
+              secretName: ${CONSOLE_SECRET}
           - name: authservice-ca
             secret:
               secretName: authservice-ca
@@ -1322,6 +1334,9 @@ objects:
     name: MQTT_GATEWAY_HOSTNAME
   - description: The hostname to use for the exposed route for the messaging console
     name: CONSOLE_HOSTNAME
+  - description: The secret with cert for the console
+    name: CONSOLE_SECRET
+    required: true
   - description: The secret with cert for the messaging service
     name: MESSAGING_SECRET
     required: true
@@ -1558,6 +1573,8 @@ objects:
               value: ${ADDRESS_SPACE_SERVICE_HOST}
             - name: CERT_DIR
               value: /etc/enmasse-certs
+            - name: CONSOLE_CERT_DIR
+              value: /etc/console-certs
             - name: AUTHENTICATION_SERVICE_HOST
               value: ${AUTHENTICATION_SERVICE_HOST}
             - name: AUTHENTICATION_SERVICE_PORT
@@ -1571,6 +1588,7 @@ objects:
               httpGet:
                 path: /probe
                 port: http
+                scheme: HTTPS
             name: agent
             ports:
             - containerPort: 8080
@@ -1579,9 +1597,13 @@ objects:
               httpGet:
                 path: /probe
                 port: http
+                scheme: HTTPS
             volumeMounts:
             - mountPath: /opt/agent/authservice-ca
               name: authservice-ca
+              readOnly: true
+            - mountPath: /etc/console-certs
+              name: console-external-cert
               readOnly: true
             - mountPath: /etc/enmasse-certs
               name: agent-internal-cert
@@ -1590,6 +1612,9 @@ objects:
           - name: authservice-ca
             secret:
               secretName: authservice-ca
+          - name: console-external-cert
+            secret:
+              secretName: ${CONSOLE_SECRET}
           - name: agent-internal-cert
             secret:
               secretName: agent-internal-cert
@@ -1627,6 +1652,9 @@ objects:
     required: true
   - description: Certificate to be used for public messaging service
     name: MESSAGING_SECRET
+    required: true
+  - description: Certificate to be used for public console service
+    name: CONSOLE_SECRET
     required: true
   - description: The hostname of the authentication service used by this address space
     name: AUTHENTICATION_SERVICE_HOST

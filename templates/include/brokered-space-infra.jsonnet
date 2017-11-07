@@ -184,6 +184,7 @@ local hawkularBrokerConfig = import "hawkular-broker-config.jsonnet";
         "spec": {
           "volumes": [
             common.secret_volume("authservice-ca", "authservice-ca"),
+            common.secret_volume("console-external-cert", "${CONSOLE_SECRET}"),
             common.secret_volume("agent-internal-cert", "agent-internal-cert")
           ],
           "containers": [
@@ -195,9 +196,11 @@ local hawkularBrokerConfig = import "hawkular-broker-config.jsonnet";
                 common.env("ADDRESS_SPACE_TYPE", "brokered"),
                 common.env("ADDRESS_SPACE_SERVICE_HOST", "${ADDRESS_SPACE_SERVICE_HOST}"),
                 common.env("CERT_DIR", "/etc/enmasse-certs"),
+                common.env("CONSOLE_CERT_DIR", "/etc/console-certs"),
               ] + auth_service.envVars,
               "volumeMounts": [
                 common.volume_mount("authservice-ca", "/opt/agent/authservice-ca", true),
+                common.volume_mount("console-external-cert", "/etc/console-certs", true),
                 common.volume_mount("agent-internal-cert", "/etc/enmasse-certs", true)
               ],
               "ports": [
@@ -206,13 +209,15 @@ local hawkularBrokerConfig = import "hawkular-broker-config.jsonnet";
               "livenessProbe": {
                 "httpGet": {
                   "path": "/probe",
-                  "port": "http"
+                  "port": "http",
+                  "scheme": "HTTPS"
                 }
               },
               "readinessProbe": {
                 "httpGet": {
                   "path": "/probe",
-                  "port": "http"
+                  "port": "http",
+                  "scheme": "HTTPS"
                 }
               }
             }
@@ -301,6 +306,11 @@ local hawkularBrokerConfig = import "hawkular-broker-config.jsonnet";
       {
         "name": "MESSAGING_SECRET",
         "description": "Certificate to be used for public messaging service",
+        "required": true
+      },
+      {
+        "name": "CONSOLE_SECRET",
+        "description": "Certificate to be used for public console service",
         "required": true
       },
       {

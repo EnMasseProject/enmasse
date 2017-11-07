@@ -169,8 +169,7 @@ public class ControllerHelper {
             for (String service : availableServices) {
                 String secretName = getSecretName(service);
 
-                // Needed until https://github.com/EnMasseProject/enmasse/issues/402 is resolved
-                if (!serviceCertProviders.containsKey(service) && !service.equals("console")) {
+                if (!serviceCertProviders.containsKey(service)) {
                     CertProvider certProvider = new SecretCertProvider(secretName);
                     serviceCertProviders.put(service, certProvider);
                 }
@@ -179,8 +178,7 @@ public class ControllerHelper {
             // Step 3: Ensure all endpoints have their certProviders set
             returnVal.routeEndpoints = endpoints.stream()
                     .map(endpoint -> {
-                        // Needed until https://github.com/EnMasseProject/enmasse/issues/402 is resolved
-                        if (!endpoint.getCertProvider().isPresent() && !endpoint.getService().equals("console")) {
+                        if (!endpoint.getCertProvider().isPresent()) {
                             return new Endpoint.Builder(endpoint)
                                     .setCertProvider(serviceCertProviders.get(endpoint.getService()))
                                     .build();
@@ -191,6 +189,9 @@ public class ControllerHelper {
 
             if (availableServices.contains("messaging")) {
                 parameterValues.add(new ParameterValue(TemplateParameter.MESSAGING_SECRET, serviceCertProviders.get("messaging").getSecretName()));
+            }
+            if (availableServices.contains("console")) {
+                parameterValues.add(new ParameterValue(TemplateParameter.CONSOLE_SECRET, serviceCertProviders.get("console").getSecretName()));
             }
             if (availableServices.contains("mqtt")) {
                 parameterValues.add(new ParameterValue(TemplateParameter.MQTT_SECRET, serviceCertProviders.get("mqtt").getSecretName()));

@@ -32,3 +32,11 @@ describe('replace', function() {
         done();
     });
 });
+
+describe('merge', function() {
+    it('combines fields for multiple objects', function(done) {
+        var obj = myutils.merge({'foo':10}, {'bar':9});
+        assert.deepEqual(obj, {'foo':10, 'bar':9});
+        done();
+    });
+});
