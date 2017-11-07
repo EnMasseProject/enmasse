@@ -1,4 +1,4 @@
-FROM jboss/keycloak:3.2.1.Final
+FROM jboss/keycloak:3.3.0.Final
 
 ARG version=latest
 ENV VERSION ${version}
