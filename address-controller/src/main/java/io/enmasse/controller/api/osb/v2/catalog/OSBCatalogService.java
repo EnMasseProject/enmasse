@@ -44,7 +44,7 @@ public class OSBCatalogService extends OSBServiceBase {
             queueService.getMetadata().put("displayName", displayName);
             queueService.getMetadata().put("providerDisplayName", "EnMasse");
             queueService.getMetadata().put("longDescription", "Long description of " + description + " (TODO)");
-            queueService.getMetadata().put("imageUrl", "https://raw.githubusercontent.com/EnMasseProject/enmasse/master/documentation/logo/enmasse_icon.png");
+            queueService.getMetadata().put("imageUrl", "https://raw.githubusercontent.com/EnMasseProject/enmasse/master/documentation/images/logo/enmasse_icon.png");
 //            queueService.getMetadata().put("console.openshift.io/iconClass", "fa fa-exchange");
             queueService.getMetadata().put("documentationUrl", "https://github.com/EnMasseProject/enmasse");
             services.add(queueService);
