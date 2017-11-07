@@ -45,7 +45,7 @@ local images = import "images.jsonnet";
       common.ca_secret("address-controller-ca", "${ADDRESS_CONTROLLER_CA_CERT}"),
       hawkularBrokerConfig,
       hawkularRouterConfig,
-      admin.deployment("${ADDRESS_SPACE}", "${CONFIGSERV_REPO}", "${RAGENT_REPO}", "${QUEUE_SCHEDULER_REPO}", "${AGENT_IMAGE}", "authservice-ca", "address-controller-ca"),
+      admin.deployment("${ADDRESS_SPACE}", "${CONFIGSERV_REPO}", "${RAGENT_REPO}", "${QUEUE_SCHEDULER_REPO}", "${AGENT_IMAGE}", "authservice-ca", "address-controller-ca", "${CONSOLE_SECRET}"),
       admin.password_secret("address-space-credentials", "${ADDRESS_SPACE_PASSWORD}"),
     ],
 
@@ -120,6 +120,11 @@ local images = import "images.jsonnet";
       {
         "name": "CONSOLE_HOSTNAME",
         "description": "The hostname to use for the exposed route for the messaging console"
+      },
+      {
+        "name": "CONSOLE_SECRET",
+        "description": "The secret with cert for the console",
+        "required": true
       },
       {
         "name": "MESSAGING_SECRET",

@@ -7,7 +7,6 @@ local common = import "common.jsonnet";
 
   container(image_repo, env)::
     {
-      local mount_path = "/var/lib/qdrouterd",
       "image": image_repo,
       "name": "agent",
       "env": env + authService.envVars,
@@ -32,10 +31,18 @@ local common = import "common.jsonnet";
         }
       ],
       "livenessProbe": {
-        "tcpSocket": {
-          "port": "http"
-        },
-        "initialDelaySeconds": 60
+        "httpGet": {
+          "path": "/probe",
+          "port": "http",
+          "scheme": "HTTPS"
+        }
+      },
+      "readinessProbe": {
+        "httpGet": {
+          "path": "/probe",
+          "port": "http",
+          "scheme": "HTTPS"
+        }
       }
    },
 

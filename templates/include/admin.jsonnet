@@ -46,7 +46,7 @@ local common = import "common.jsonnet";
   },
 
 
-  deployment(addressSpace, configserv_image, ragent_image, scheduler_image, agent_image, auth_service_ca_secret, address_controller_ca_secret)::
+  deployment(addressSpace, configserv_image, ragent_image, scheduler_image, agent_image, auth_service_ca_secret, address_controller_ca_secret, console_secret)::
   {
     "apiVersion": "extensions/v1beta1",
     "kind": "Deployment",
@@ -182,6 +182,11 @@ local common = import "common.jsonnet";
                       }]) + {
                         "volumeMounts": [
                           {
+                            "name": "console-secret",
+                            "mountPath": "/etc/console-certs",
+                            "readOnly": true
+                          },
+                          {
                             "name": "authservice-ca",
                             "mountPath": "/opt/agent/authservice-ca",
                             "readOnly": true
@@ -219,6 +224,12 @@ local common = import "common.jsonnet";
                       },
           ],
           "volumes": [
+            {
+              "name": "console-secret",
+              "secret": {
+                "secretName": console_secret
+              }
+            },
             {
               "name": "authservice-ca",
               "secret": {

@@ -18,14 +18,16 @@
 var log = require("./log.js").logger();
 var fs = require('fs');
 var http = require('http');
+var https = require('https');
 var path = require('path');
 var url = require('url');
 var util = require('util');
 var rhea = require('rhea');
 var WebSocketServer = require('ws').Server;
-var AddressList = require('../lib/address_list.js');
-var auth_service = require('../lib/auth_service.js');
-var Registry = require('../lib/registry.js');
+var AddressList = require('./address_list.js');
+var auth_service = require('./auth_service.js');
+var Registry = require('./registry.js');
+var tls_options = require('./tls_options.js');
 
 function ConsoleServer (address_ctrl) {
     this.address_ctrl = address_ctrl;
@@ -153,8 +155,19 @@ function auth_required(response) {
     };
 }
 
+function get_create_server(env) {
+    if (env.ALLOW_HTTP) {
+        return http.createServer;
+    } else {
+        return function (callback) {
+            var opts = tls_options.get_console_server_options({}, env);
+            return https.createServer(opts, callback);
+        }
+    }
+}
+
 ConsoleServer.prototype.listen = function (env, callback) {
-    this.server = http.createServer(function (request, response) {
+    this.server = get_create_server(env)(function (request, response) {
         if (request.method === 'GET' && request.url === '/probe') {
             response.end('OK');
         } else if (request.method === 'GET') {

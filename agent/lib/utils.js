@@ -36,3 +36,12 @@ module.exports.replace = function (list, object, match) {
     }
     return false;
 };
+
+module.exports.merge = function () {
+    return Array.prototype.slice.call(arguments).reduce(function (a, b) {
+        for (var key in b) {
+            a[key] = b[key];
+        }
+        return a;
+    });
+}
