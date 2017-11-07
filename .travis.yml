@@ -21,7 +21,6 @@ before_script:
 before_install:
 - npm install -g mocha mocha-junit-reporter
 - npm install rhea debug
-- make build_amqp_module
 script:
 - "./.travis/build.sh"
 after_failure:

@@ -10,7 +10,6 @@ node('enmasse') {
             stage ('build') {
                 try {
                     withCredentials([string(credentialsId: 'docker-registry-host', variable: 'DOCKER_REGISTRY')]) {
-                        sh 'make build_amqp_module'
                         sh 'MOCHA_ARGS="--reporter=mocha-junit-reporter" TAG=$BUILD_TAG make'
                         sh 'cat templates/install/openshift/enmasse.yaml'
                     }
