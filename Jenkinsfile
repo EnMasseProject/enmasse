@@ -1,6 +1,6 @@
 node('enmasse') {
     result = 'failure'
-    timeout(160) {
+    timeout(200) {
         catchError {
             stage ('checkout') {
                 checkout scm
