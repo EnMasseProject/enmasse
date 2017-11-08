@@ -68,7 +68,8 @@ getting started] instructions to try out the queue
 * Create a new project/namespace:
 * `oc new-project my-messaging-project`
 * Create the service instance:
-`cat <<EOF | oc create -f -
+```
+cat <<EOF | oc create -f -
 apiVersion: servicecatalog.k8s.io/v1alpha1
 kind: Instance
 metadata:
@@ -78,7 +79,8 @@ spec:
   planName: inmemory
   parameters:
     name: my-inmemory-queue
-EOF`
+EOF
+```
 * Check the service instance's status:
 * `oc get instances -n my-messaging-project -o yaml`
 * The `status.conditions.message` should show "The instance was
@@ -100,7 +102,8 @@ provisioned successfully"
 === Binding the queue service instance
 
 * Create the binding:
-`cat <<EOF | oc create -f -
+```
+cat <<EOF | oc create -f -
 apiVersion: servicecatalog.k8s.io/v1alpha1
 kind: Binding
 metadata:
@@ -109,7 +112,8 @@ spec:
   instanceRef:
     name: my-inmemory-queue
   secretName: my-inmemory-queue-credentials
-EOF`
+EOF
+```
 * Verify the binding's status:
 * `oc get bindings.v1alpha1.servicecatalog.k8s.io -o yaml`
 * The `status.conditions.message` property should show "Injected bind
