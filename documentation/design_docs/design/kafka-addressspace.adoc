@@ -48,7 +48,7 @@ kind: Address
 metadata:
     name: t1
 spec:
-    type: kafka
+    type: topic
 ```
 
 
