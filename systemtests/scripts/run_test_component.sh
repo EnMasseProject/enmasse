@@ -7,9 +7,9 @@ TESTCASE=$4
 
 failure=0
 
-setup_test
+setup_test ${ENMASSE_DIR} ${KUBEADM}
 
-run_test || failure=$(($failure + 1))
+run_test ${TESTCASE} || failure=$(($failure + 1))
 
 $CURDIR/collect_logs.sh $ARTIFACTS_DIR
 

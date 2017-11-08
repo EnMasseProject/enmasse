@@ -7,6 +7,9 @@ function download_enmasse() {
 }
 
 function setup_test() {
+    ENMASSE_DIR=$1
+    KUBEADM=$2
+
     export OPENSHIFT_URL=${OPENSHIFT_URL:-https://localhost:8443}
     export OPENSHIFT_USER=${OPENSHIFT_USER:-test}
     export OPENSHIFT_PASSWD=${OPENSHIFT_PASSWD:-test}
@@ -30,25 +33,27 @@ function setup_test() {
         DEPLOY_ARGS+=( "-o" "multi" )
     fi
 
-    $ENMASSE_DIR/deploy-openshift.sh "${DEPLOY_ARGS[@]}"
+    ${ENMASSE_DIR}/deploy-openshift.sh "${DEPLOY_ARGS[@]}"
 
     if [ "$OPENSHIFT_MULTITENANT" == "true" ]; then
-        oc adm --config $KUBEADM policy add-cluster-role-to-user cluster-admin system:serviceaccount:$(oc project -q):enmasse-service-account
-        oc adm --config $KUBEADM policy add-cluster-role-to-user cluster-admin $OPENSHIFT_USER
+        oc adm --config ${KUBEADM} policy add-cluster-role-to-user cluster-admin system:serviceaccount:$(oc project -q):enmasse-service-account
+        oc adm --config ${KUBEADM} policy add-cluster-role-to-user cluster-admin $OPENSHIFT_USER
     fi
 }
 
 function run_test() {
+    TESTCASE=$1
+    
     if [ "$OPENSHIFT_MULTITENANT" == false ]; then
         $CURDIR/wait_until_up.sh 9 || return 1
     else
         $CURDIR/wait_until_up.sh 4 || return 1
     fi
     # Run a single test case
-    if [ -n "$TESTCASE" ]; then
-        EXTRA_TEST_ARGS="-Dtest=$TESTCASE"
+    if [ -n "${TESTCASE}" ]; then
+        EXTRA_TEST_ARGS="-Dtest=${TESTCASE}"
     fi
-    mvn test -pl systemtests -Psystemtests -Djava.net.preferIPv4Stack=true $EXTRA_TEST_ARGS
+    mvn test -pl systemtests -Psystemtests -Djava.net.preferIPv4Stack=true ${EXTRA_TEST_ARGS}
 }
 
 function teardown_test() {

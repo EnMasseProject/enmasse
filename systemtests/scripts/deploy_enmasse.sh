@@ -5,5 +5,5 @@ KUBEADM=$2
 
 download_enmasse
 
-setup_test
+setup_test ${ENMASSE_DIR} ${KUBEADM}
 
