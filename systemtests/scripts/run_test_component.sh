@@ -1,5 +1,7 @@
 #!/bin/bash
-source ./systemtests/scripts/test_func.sh
+CURDIR=`readlink -f \`dirname $0\``
+source ${CURDIR}/test_func.sh
+
 ENMASSE_DIR=$1
 KUBEADM=$2
 SYSTEMTESTS=$3

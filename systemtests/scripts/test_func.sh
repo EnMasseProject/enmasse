@@ -40,14 +40,18 @@ function setup_test() {
         oc adm --config ${KUBEADM} policy add-cluster-role-to-user cluster-admin $OPENSHIFT_USER
     fi
 }
+function wait_until_up(){
+    POD_COUNT=$1
+    ADDR_SPACE=$2
+    $CURDIR/wait_until_up.sh ${POD_COUNT} ${ADDR_SPACE} || return 1
+}
 
 function run_test() {
     TESTCASE=$1
-
     if [ "$OPENSHIFT_MULTITENANT" == false ]; then
-        $CURDIR/wait_until_up.sh 9 || return 1
+        wait_until_up 9 ${OPENSHIFT_PROJECT} || return 1
     else
-        $CURDIR/wait_until_up.sh 4 || return 1
+        wait_until_up 4 ${OPENSHIFT_PROJECT} || return 1
     fi
     # Run a single test case
     if [ -n "${TESTCASE}" ]; then

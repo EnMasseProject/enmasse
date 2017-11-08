@@ -1,14 +1,21 @@
 #!/usr/bin/env bash
+CURDIR=`readlink -f \`dirname $0\``
+source ${CURDIR}/test_func.sh
+
 TCK_PATH=$1
 CLI_ID=$2
 JMS_VERSION=$3
 JMS_CLIENT=$4
 JMS_BROKER=$5
 
+#install prerequisites
+yum -y install patch
+
 #setup environment
 curl -X POST -H "content-type: application/json" --data-binary @./systemtests/templates/tckAddressSpace.json http://$(oc get route -o jsonpath='{.spec.host}' restapi)/v1/addressspaces
-
+wait_until_up 2 'tck-brokered'
 curl -X PUT -H "content-type: application/json" --data-binary @./systemtests/templates/tckDestinations.json http://$(oc get route -o jsonpath='{.spec.host}' restapi)/v1/addresses/tck-brokered
+sleep 40
 
 #keycloak user
 oc extract secret/keycloak-credentials
