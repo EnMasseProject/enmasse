@@ -198,7 +198,7 @@ ConsoleServer.prototype.subscribe = function (name, sender) {
     });
     //TODO: poll for changes in address_types
     this.address_ctrl.get_address_types().then(function (address_types) {
-        sender.send({subject:'address_types', body:address_types});
+        sender.send({subject:'address_types', application_properties:{address_space_type: process.env.ADDRESS_SPACE_TYPE || 'standard'}, body:address_types});
     });
 };
 
