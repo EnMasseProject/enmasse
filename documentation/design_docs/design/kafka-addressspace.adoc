@@ -38,6 +38,7 @@ metadata:
     name: myspace
 spec:
     type: kafka
+    // TODO: Additional properties exposed for a Kafka cluster
 ```
 
 Example address definition accepted by kafka API:
@@ -49,6 +50,7 @@ metadata:
     name: t1
 spec:
     type: topic
+    // TODO: Additional properties needed for topic, i.e. partitions, replication factor etc.
 ```
 
 
