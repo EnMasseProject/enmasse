@@ -1,0 +1,118 @@
+{
+  "apiVersion": "enmasse.io/v1",
+  "kind": "AddressList",
+  "items": [
+    {
+      "metadata": {
+        "name": "MY_QUEUE"
+      },
+      "spec": {
+        "type": "queue"
+      }
+    },
+    {
+      "metadata": {
+        "name": "MY_QUEUE2"
+      },
+      "spec": {
+        "type": "queue"
+      }
+    },
+    {
+      "metadata": {
+        "name": "testQ0"
+      },
+      "spec": {
+        "type": "queue"
+      }
+    },
+    {
+      "metadata": {
+        "name": "testQ1"
+      },
+      "spec": {
+        "type": "queue"
+      }
+    },
+    {
+      "metadata": {
+        "name": "testQ2"
+      },
+      "spec": {
+        "type": "queue"
+      }
+    },
+    {
+      "metadata": {
+        "name": "testQueue2"
+      },
+      "spec": {
+        "type": "queue"
+      }
+    },
+    {
+      "metadata": {
+        "name": "Q2"
+      },
+      "spec": {
+        "type": "queue"
+      }
+    },
+    {
+      "metadata": {
+        "name": "myQueue"
+      },
+      "spec": {
+        "type": "queue"
+      }
+    },
+    {
+      "metadata": {
+        "name": "MY_TOPIC"
+      },
+      "spec": {
+        "type": "topic"
+      }
+    },
+    {
+      "metadata": {
+        "name": "MY_TOPIC2"
+      },
+      "spec": {
+        "type": "topic"
+      }
+    },
+    {
+      "metadata": {
+        "name": "testT0"
+      },
+      "spec": {
+        "type": "topic"
+      }
+    },
+    {
+      "metadata": {
+        "name": "testT1"
+      },
+      "spec": {
+        "type": "topic"
+      }
+    },
+    {
+      "metadata": {
+        "name": "testT2"
+      },
+      "spec": {
+        "type": "topic"
+      }
+    },
+    {
+      "metadata": {
+        "name": "myTopic"
+      },
+      "spec": {
+        "type": "topic"
+      }
+    }
+  ]
+}
