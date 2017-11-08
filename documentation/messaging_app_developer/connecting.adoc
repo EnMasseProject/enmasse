@@ -56,7 +56,7 @@ class HelloWorld(MessagingHandler):
         print(event.message.body)
         event.connection.close()
 
-Container(HelloWorld("amqps://messaging-enmasse-1504862365.10.19.44.61.nip.io:443", "myqueue")).run()
+Container(HelloWorld("amqps://<messaging-route-hostname>:443", "myqueue")).run()
 ----
 
 ==== {ClientAmqpJmsName}
@@ -131,7 +131,7 @@ public class HelloWorld {
 with jndi.properties:
 [source,options="nowrap"]
 ----
-connectionfactory.myFactoryLookup = amqps://messaging-enmasse-1504862365.10.19.44.61.nip.io:443?transport.trustAll=true&transport.verifyHost=false
+connectionfactory.myFactoryLookup = amqps://<messaging-route-hostname>:443?transport.trustAll=true&transport.verifyHost=false
 queue.myQueueLookup = myqueue
 ----
 
@@ -152,7 +152,7 @@ container.on('sendable', function (context) {
     context.sender.send({body:'Hello World!'});
     context.sender.detach();
 });
-container.connect({port:443, host:messaging-enmasse-1504862365.10.19.44.61.nip.io, transport:tls, rejectUnauthorized:false});
+container.connect({port:443, host:<messaging-route-hostname>, transport:tls, rejectUnauthorized:false});
 ----
 
 ==== {ClientAmqpCppName}
@@ -208,7 +208,7 @@ class hello_world : public proton::messaging_handler {
 
 int main(int argc, char **argv) {
     try {
-        std::string url = argc > 1 ? argv[1] : "messaging-enmasse-1504862365.10.19.44.61.nip.io:443/myqueue";
+        std::string url = argc > 1 ? argv[1] : "<messaging-route-hostname>:443/myqueue";
 
         hello_world hw(url);
         proton::default_container(hw).run();
@@ -222,7 +222,7 @@ int main(int argc, char **argv) {
 }
 ----
 
-==== {ClientAmqpDotNetName}
-Need Chuck’s help with this
+//==== {ClientAmqpDotNetName}
+//TODO
 
 

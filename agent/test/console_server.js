@@ -321,3 +321,44 @@ var configs = {'https':https, 'http':http};
 for (var v in configs) {
     define_tests(v, configs[v]);
 }
+
+describe('online help', function() {
+    var console_server;
+    var auth_service;
+
+    beforeEach(function(done) {
+        auth_service = new MockAuthService();
+        auth_service.listen().on('listening', function () {
+            var options = {port:0, AUTHENTICATION_SERVICE_PORT: auth_service.port, MESSAGING_ROUTE_HOSTNAME:'my-messaging-route-test', ALLOW_HTTP:1};
+            console_server = new ConsoleServer(new AddressCtrl());
+            console_server.listen(options, done);
+        });
+    });
+
+    afterEach(function(done) {
+        Promise.all([
+            new Promise(function (resolve, reject) {
+                auth_service.close(resolve);
+            }),
+            new Promise(function (resolve, reject) {
+                console_server.server.close(resolve);
+            })
+        ]).then(function () {
+            done();
+        });
+    });
+
+    it('has correct substitution', function(done) {
+        http.get({port:console_server.server.address().port, hostname:'localhost',path:'/help.html'}, function (response) {
+            assert.equal(response.statusCode, 200);
+            var data = '';
+	    response.on('data', function (chunk) { data += chunk; });
+	    response.on('end', function () {
+                var content = data.toString();
+                assert(content.indexOf('my-messaging-route-test') > 0);
+                assert(content.indexOf('messaging-route-host') < 0);
+                done();
+	    });
+        });
+    });
+});
