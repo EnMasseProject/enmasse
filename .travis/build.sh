@@ -6,7 +6,7 @@ BRANCH=${BRANCH:-master}
 TAG=${TAG:-latest}
 DOCKER_ORG=${DOCKER_ORG:-$USER}
 OPENSHIFT_KUBECONFIG=${OPENSHIFT_KUBECONFIG:-/var/lib/origin/openshift.local.config/master/admin.kubeconfig}
-SYSTEMTEST_ARGS=${SYSTEMTEST_ARGS:-SmokeTest}
+SYSTEMTEST_ARGS=${SYSTEMTEST_ARGS:-standard.SmokeTest}
 
 if [ "$VERSION" != "latest" ]; then
     TAG=$VERSION
