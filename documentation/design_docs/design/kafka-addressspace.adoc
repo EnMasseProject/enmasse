@@ -6,24 +6,51 @@ manage and monitor multiple messaging technologies with a uniform interface is a
 feature.
 
 https://kafka.apache.org/[Apache Kafka] is a popular distributed streaming platform and its use is in many ways
-complementary to other technologies used in EnMasse. The https://github.com/EnMasseProject/barnabas[barnabas] project in the EnMasse github organization contains OpenShift templates for deploying Kafka on OpenShift.
+complementary to other technologies used in EnMasse. The https://github.com/EnMasseProject/barnabas[barnabas] project in the EnMasse github organization contains OpenShift templates for deploying Kafka on OpenShift.  
 
-This design proposal introduces a new address space type `kafka`. This address space consists of an Apache Kafka cluster with a controller logic to create topics based on enmasse addresses and a console for managing addresses and monitoring.
+This design proposal introduces a new address space type `kafka`. This address space consists of a
+Apache Kafka cluster with a console + API to create topics based.
 
 This address space may expose the Kafka protocol directly to the user, allowing the native Kafka clients to be
 used, but provides the same address management and console experience as the other address spaces.
 One addition is to also deploy the https://github.com/EnMasseProject/amqp-kafka-bridge[amqp-kafka-bridge] to provide an AMQP interface.
 
-With the potential of future `bridge` address types, one can also expose the Kafka addresses through AMQP via another address space like `standard`, or even map addresses from other address spaces into the Kafka space.
+With the potential of future `bridge` address types, one can also expose the Kafka addresses through
+AMQP via another address space like `standard`, or even map addresses from other address spaces into
+the Kafka space.
 
 == What/How
 
 * Deploy the `barnabas` Kafka OpenShift template
 * Deploy a `barnabas-agent`
-** Creates Kafka topics in the Kafka cluster based on the address configs created by the user
-** Updates address config state based on topic states in Kafka cluster
+** Provides a HTTP API for managing v1.Address resources
+** Creates Kafka topics in the Kafka cluster based on v1.Address resources
+** Report v1.Address state based on topic states in Kafka cluster
 ** Provides the EnMasse console to provide the same management experience as in the other address spaces
 * Add `kafka` address space and address types (`topic`) to the global address controller
+
+Example address space definition:
+
+```
+apiVersion: enmasse.io/v1
+kind: AddressSpace
+metadata:
+    name: myspace
+spec:
+    type: kafka
+```
+
+Example address definition accepted by kafka API:
+
+```
+apiVersion: enmasse.io/v1
+kind: Address
+metadata:
+    name: t1
+spec:
+    type: kafka
+```
+
 
 == Testing
 
