@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+TCK_PATH=$1
+CLI_ID=$2
+JMS_VERSION=$3
+JMS_CLIENT=$4
+JMS_BROKER=$5
+
+#setup environment
+curl -X POST -H "content-type: application/json" --data-binary @./systemtests/templates/tckAddressSpace.json http://$(oc get route -n myproject -o jsonpath='{.spec.host}' restapi)/v1/addressspaces
+curl -X PUT -H "content-type: application/json" --data-binary @./systemtests/templates/tckDestinations.json http://$(oc get route -n myproject -o jsonpath='{.spec.host}' restapi)/v1/addresses/tck-brokered
+
+#keycloak user
+oc extract secret/keycloak-credentials
+USER=$(cat admin.username)
+PASSWORD=$(cat admin.password)
+
+# get token
+RESULT=$(curl --data "grant_type=password&client_id=${CLI_ID}&username=${USER}&password=${PASSWORD}" http://$(oc get routes -n myproject -o jsonpath='{.spec.host}' keycloak)/auth/realms/master/protocol/openid-connect/token)
+TOKEN=`echo ${RESULT} | sed 's/.*access_token":"//g' | sed 's/".*//g'`
+
+#create user (tckuser/tckuser)
+curl -X POST -H "content-type: application/json" --data-binary @./systemtests/templates/tckUser.json -H "Authorization: Bearer $TOKEN"  http://${USER}:${PASSWORD}@$(oc get routes -n myproject -o jsonpath='{.spec.host}' keycloak)/auth/admin/realms/tck-brokered/users
+
+#run tck
+host=$(oc get route -n tck-brokered -o jsonpath='{.spec.host}' messaging)
+port=443
+cd ${TCK_PATH}
+./gradlew -PjmsVersion=${JMS_VERSION} -PjmsClient=${JMS_CLIENT} -PjmsBroker=${JMS_BROKER} -Pupstream -Phost=${host} -Pport=${port} runTck
