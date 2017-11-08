@@ -53,6 +53,10 @@ else
         cp $i artifacts/test-reports
     done
 
+    oc login -u system:admin
+
+    oc adm diagnostics
+
     docker logs origin > artifacts/openshift.stdout.log 2> artifacts/openshift.stderr.log
 
     cp templates/build/enmasse-${VERSION}.tgz artifacts/
