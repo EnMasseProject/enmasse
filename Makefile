@@ -15,8 +15,8 @@ else
 	MULTITENANT=true
 endif
 
-DOCKER_TARGETS = docker_build docker_tag docker_push
-BUILD_TARGETS  = init build test package clean $(DOCKER_TARGETS) coverage
+DOCKER_TARGETS = docker_build docker_tag docker_push clean
+BUILD_TARGETS  = init build test package $(DOCKER_TARGETS) coverage
 INSTALLDIR=$(CURDIR)/templates/install
 
 all: init build test package docker_build
