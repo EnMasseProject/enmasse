@@ -22,8 +22,9 @@ tar xzf openshift.tar.gz -C $SETUP --strip-components 1
 
 sudo cp $SETUP/* /usr/bin
 
-oc cluster up --routing-suffix=127.0.0.1.nip.io
+oc cluster up
 sudo chown -R $USER /var/lib/origin/openshift.local.config
+sudo chmod -R 777 /var/lib/origin/openshift.local.pv
 
 #sudo openshift start --write-config=$CONFIG
 #
