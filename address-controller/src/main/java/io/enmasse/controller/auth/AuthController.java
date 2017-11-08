@@ -21,6 +21,7 @@ import java.util.stream.Collectors;
 
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.Endpoint;
+import io.enmasse.controller.common.Kubernetes;
 import io.enmasse.k8s.api.AddressSpaceApi;
 import io.enmasse.k8s.api.KubeUtil;
 import io.enmasse.k8s.api.Watch;
@@ -91,13 +92,19 @@ public class AuthController extends AbstractVerticle implements Watcher<AddressS
         for (AddressSpace addressSpace : addressSpaces) {
             issueAddressSpaceCert(addressSpace);
             issueComponentCertificates(addressSpace);
-            for (Endpoint endpoint : addressSpace.getEndpoints()) {
-                if (endpoint.getCertProvider().isPresent()) {
-                    certManager.issueRouteCert(endpoint.getCertProvider().get().getSecretName(), addressSpace.getNamespace());
-                }
+            issueExternalCertificates(addressSpace);
+        }
+    }
+
+    private void issueExternalCertificates(AddressSpace addressSpace) throws Exception {
+        for (Endpoint endpoint : addressSpace.getEndpoints()) {
+            if (endpoint.getCertProvider().isPresent()) {
+                String secretName = endpoint.getCertProvider().get().getSecretName();
+                certManager.issueRouteCert(secretName, addressSpace.getNamespace());
             }
         }
     }
+
 
     private void issueAddressSpaceCert(final AddressSpace addressSpace)
     {
