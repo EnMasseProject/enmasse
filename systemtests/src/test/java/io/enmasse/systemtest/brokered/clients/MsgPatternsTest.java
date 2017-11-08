@@ -8,6 +8,7 @@ import io.enmasse.systemtest.executor.client.AbstractClient;
 import io.enmasse.systemtest.executor.client.Argument;
 import org.junit.Before;
 
+import javax.validation.constraints.AssertTrue;
 import java.util.Random;
 import java.util.concurrent.Future;
 
@@ -79,7 +80,8 @@ public class MsgPatternsTest extends ClientTestBase {
         assertEquals(5, receiver.getMessages().size());
     }
 
-    protected void doTopicSubscribeTest(AbstractClient sender, AbstractClient receiver) throws Exception {
+    protected void doTopicSubscribeTest(AbstractClient sender, AbstractClient subscriber, AbstractClient subscriber2)
+            throws Exception {
         AddressSpace addressSpace = new AddressSpace("brokered-topic-subscribe",
                 "brokered-topic-subscribe",
                 AddressSpaceType.BROKERED);
@@ -88,19 +90,23 @@ public class MsgPatternsTest extends ClientTestBase {
         setAddresses(addressSpace, dest);
 
         arguments.put(Argument.BROKER, getRouteEndpoint(addressSpace).toString());
-        arguments.put(Argument.ADDRESS, "topic://" + dest.getAddress());
+        arguments.put(Argument.ADDRESS, dest.getAddress());
         arguments.put(Argument.COUNT, "10");
 
         sender.setArguments(arguments);
-        receiver.setArguments(arguments);
+        subscriber.setArguments(arguments);
+        subscriber2.setArguments(arguments);
 
-        Future<Boolean> recResult = receiver.runAsync();
+        Future<Boolean> recResult = subscriber.runAsync();
+        Future<Boolean> recResult2 = subscriber2.runAsync();
 
         assertTrue(sender.run());
         assertTrue(recResult.get());
+        assertTrue(recResult2.get());
 
         assertEquals(10, sender.getMessages().size());
-        assertEquals(10, receiver.getMessages().size());
+        assertEquals(10, subscriber.getMessages().size());
+        assertEquals(10, subscriber2.getMessages().size());
     }
 
     protected void doMessageBrowseTest(AbstractClient sender, AbstractClient receiver_browse, AbstractClient receiver_receive)
@@ -175,30 +181,6 @@ public class MsgPatternsTest extends ClientTestBase {
         arguments.put(Argument.MSG_PROPERTY, "a~true");
         arguments.put(Argument.MSG_PROPERTY, "b~false");
 
-        doMessageSelectorTest(sender, receiver);
-    }
-
-    protected void doMessageSelectorTopicTest(AbstractClient sender, AbstractClient receiver) throws Exception{
-        AddressSpace addressSpace = new AddressSpace("brokered-selectors-topic",
-                "brokered-selectors-topic",
-                AddressSpaceType.BROKERED);
-        createAddressSpace(addressSpace, "none");
-        Destination topic = Destination.topic("selector-topic");
-        setAddresses(addressSpace, topic);
-
-        arguments.put(Argument.BROKER, getRouteEndpoint(addressSpace).toString());
-        arguments.put(Argument.COUNT, "10");
-        arguments.put(Argument.ADDRESS, "topic://" + topic.getAddress());
-        arguments.put(Argument.MSG_PROPERTY, "colour~red");
-        arguments.put(Argument.MSG_PROPERTY, "number~12.65");
-        arguments.put(Argument.MSG_PROPERTY, "a~true");
-        arguments.put(Argument.MSG_PROPERTY, "b~false");
-
-        doMessageSelectorTest(sender, receiver);
-    }
-
-    private void doMessageSelectorTest(AbstractClient sender, AbstractClient receiver) throws Exception {
-
         //send messages
         sender.setArguments(arguments);
         assertTrue(sender.run());
@@ -233,5 +215,55 @@ public class MsgPatternsTest extends ClientTestBase {
         receiver.setArguments(arguments);
         assertTrue(receiver.run());
         assertEquals(10, receiver.getMessages().size());
+    }
+
+    protected void doMessageSelectorTopicTest(AbstractClient sender, AbstractClient subscriber,
+                                              AbstractClient subscriber2, AbstractClient subscriber3) throws Exception{
+        AddressSpace addressSpace = new AddressSpace("brokered-selectors-topic",
+                "brokered-selectors-topic",
+                AddressSpaceType.BROKERED);
+        createAddressSpace(addressSpace, "none");
+        Destination topic = Destination.topic("selector-topic");
+        setAddresses(addressSpace, topic);
+
+        arguments.put(Argument.BROKER, getRouteEndpoint(addressSpace).toString());
+        arguments.put(Argument.COUNT, "10");
+        arguments.put(Argument.ADDRESS, topic.getAddress());
+        arguments.put(Argument.MSG_PROPERTY, "colour~red");
+        arguments.put(Argument.MSG_PROPERTY, "number~12.65");
+        arguments.put(Argument.MSG_PROPERTY, "a~true");
+        arguments.put(Argument.MSG_PROPERTY, "b~false");
+
+        //set up sender
+        sender.setArguments(arguments);
+
+        arguments.remove(Argument.MSG_PROPERTY);
+        arguments.put(Argument.TIMEOUT, "1");
+
+        //set up subscriber1
+        arguments.put(Argument.SELECTOR, "colour = 'red'");
+        subscriber.setArguments(arguments);
+
+        //set up subscriber2
+        arguments.put(Argument.SELECTOR, "number > 12.5");
+        subscriber2.setArguments(arguments);
+
+        //set up subscriber3
+        arguments.put(Argument.SELECTOR, "a AND b");
+        subscriber3.setArguments(arguments);
+
+        Future<Boolean> result1 = subscriber.runAsync();
+        Future<Boolean> result2 = subscriber2.runAsync();
+        Future<Boolean> result3 = subscriber3.runAsync();
+
+        assertTrue(sender.run());
+        assertTrue(result1.get());
+        assertTrue(result2.get());
+        assertTrue(result3.get());
+
+        assertEquals(10, sender.getMessages().size());
+        assertEquals(10, subscriber.getMessages().size());
+        assertEquals(10, subscriber2.getMessages().size());
+        assertEquals(0, subscriber3.getMessages().size());
     }
 }
