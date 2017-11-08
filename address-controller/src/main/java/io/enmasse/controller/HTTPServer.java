@@ -29,10 +29,13 @@ import io.enmasse.controller.api.v1.http.HttpAddressSpaceService;
 import io.enmasse.controller.api.v1.http.HttpHealthService;
 import io.enmasse.controller.api.v1.http.HttpSchemaService;
 import io.enmasse.controller.api.v1.http.*;
+import io.enmasse.controller.auth.AuthHandler;
 import io.enmasse.controller.auth.BasicAuthHandler;
 import io.enmasse.controller.auth.SingleUserAuthenticator;
+import io.enmasse.controller.auth.TokenAuthHandler;
 import io.enmasse.controller.auth.UserAuthenticator;
 import io.enmasse.controller.api.DefaultExceptionMapper;
+import io.enmasse.controller.common.Kubernetes;
 import io.enmasse.k8s.api.AddressSpaceApi;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.CompositeFuture;
@@ -59,16 +62,17 @@ public class HTTPServer extends AbstractVerticle {
     private final String certDir;
     private final PasswordAuthentication osbAuth;
     private final UserAuthenticator userAuthenticator;
+    private final Kubernetes kubernetes;
 
     private HttpServer httpServer;
     private HttpServer httpsServer;
 
-    public HTTPServer(AddressSpaceApi addressSpaceApi, String certDir, PasswordAuthentication osbAuth, UserAuthenticator userAuthenticator) {
+    public HTTPServer(AddressSpaceApi addressSpaceApi, String certDir, PasswordAuthentication osbAuth, UserAuthenticator userAuthenticator, Kubernetes kubernetes) {
         this.addressSpaceApi = addressSpaceApi;
         this.certDir = certDir;
         this.osbAuth = osbAuth;
         this.userAuthenticator = userAuthenticator;
-
+        this.kubernetes = kubernetes;
     }
 
     @Override
@@ -79,14 +83,13 @@ public class HTTPServer extends AbstractVerticle {
         deployment.getProviderFactory().registerProvider(DefaultExceptionMapper.class);
         deployment.getProviderFactory().registerProvider(JacksonConfig.class);
 
-        if (osbAuth != null) {
-            deployment.getProviderFactory().registerProviderInstance(new AuthInterceptor(
-                    new BasicAuthHandler(new SingleUserAuthenticator(osbAuth)), OSBServiceBase.BASE_URI));
-        }
+        AuthHandler authHandler = osbAuth == null ? new TokenAuthHandler(kubernetes, "/enmasse-broker") : new BasicAuthHandler(new SingleUserAuthenticator(osbAuth));
+        deployment.getProviderFactory().registerProviderInstance(new AuthInterceptor(authHandler, OSBServiceBase.BASE_URI));
 
         if (userAuthenticator != null) {
             deployment.getProviderFactory().registerProviderInstance(new AuthInterceptor(new BasicAuthHandler(userAuthenticator), HttpAddressService.BASE_URI));
         }
+        deployment.getProviderFactory().registerProviderInstance(new AuthInterceptor(new TokenAuthHandler(kubernetes, "/enmasse-addressspaces"), HttpAddressSpaceService.BASE_URI));
 
         deployment.getRegistry().addSingletonResource(new SwaggerSpecEndpoint());
         deployment.getRegistry().addSingletonResource(new HttpAddressService(addressSpaceApi));
