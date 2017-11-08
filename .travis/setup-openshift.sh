@@ -22,7 +22,7 @@ tar xzf openshift.tar.gz -C $SETUP --strip-components 1
 
 sudo cp $SETUP/* /usr/bin
 
-oc cluster up
+oc cluster up --image=docker.io/openshift/origin --version=latest
 sudo chown -R $USER /var/lib/origin/openshift.local.config
 sudo chmod -R 777 /var/lib/origin/openshift.local.pv
 
