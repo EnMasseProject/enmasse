@@ -57,6 +57,8 @@ else
 
     oc adm diagnostics
 
+    oc get events --all-namespaces --sort-by='.metadata.creationTimestamp' > artifacts/events.log
+
     docker logs origin > artifacts/openshift.stdout.log 2> artifacts/openshift.stderr.log
 
     cp templates/build/enmasse-${VERSION}.tgz artifacts/
