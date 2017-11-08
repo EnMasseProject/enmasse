@@ -13,7 +13,7 @@ sudo yum -y install patch
 
 #setup environment
 curl -X POST -H "content-type: application/json" --data-binary @./systemtests/templates/tckAddressSpace.json http://$(oc get route -o jsonpath='{.spec.host}' restapi)/v1/addressspaces
-wait_until_up 2 'tck-brokered'
+wait_until_up 2 'tck-brokered' || return 1
 curl -X PUT -H "content-type: application/json" --data-binary @./systemtests/templates/tckAddresses.json http://$(oc get route -o jsonpath='{.spec.host}' restapi)/v1/addresses/tck-brokered
 sleep 40
 

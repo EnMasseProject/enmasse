@@ -26,7 +26,7 @@ do
     NOW=$(date +%s)
     if [ $NOW -gt $END ]; then
         echo "Timed out waiting for nodes to come up!"
-        pods=`oc get pods`
+        pods=`oc get pods -n ${ADDRESS_SPACE}`
         echo "PODS: $pods"
         exit 1
     fi
