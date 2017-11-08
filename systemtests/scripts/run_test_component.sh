@@ -1,5 +1,5 @@
 #!/bin/bash
-source test_func.sh
+source ./systemtests/scripts/test_func.sh
 ENMASSE_DIR=$1
 KUBEADM=$2
 SYSTEMTESTS=$3
