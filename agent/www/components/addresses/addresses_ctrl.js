@@ -393,6 +393,12 @@ angular.module('patternfly.wizard').controller('WizardController', ['$scope', '$
             $scope.nextButtonTitle = "Next >";
 
             $scope.tooltip = address_service.tooltip
+            var space = address_service.tooltip[address_service.address_space_type];
+            if (space) {
+                for (var key in space.address) {
+                    $scope.tooltip.address[key] = space.address[key];
+                }
+            }
             $scope.getTooltip = function (addr) {
               return $scope.tooltip.address[addr].longDescription
             }

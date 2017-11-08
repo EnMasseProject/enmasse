@@ -110,6 +110,7 @@ function AddressService($http) {
     var self = this;  // 'this' is not available in the success funtion of $http.get
     this.addresses = [];
     this.address_types = [];
+    this.address_space_type = '';
     this.connections = [];
     this.users = [];
     var ws = rhea.websocket_connect(WebSocket);
@@ -237,6 +238,7 @@ AddressService.prototype.on_message = function (context) {
         if (changed && this.callback) this.callback('address:deleted');
     } else if (context.message.subject === 'address_types') {
         this.address_types = context.message.body;
+        this.address_space_type = context.message.application_properties.address_space_type;
         if (this.callback) this.callback('address_types');
     } else if (context.message.subject === 'connection') {
         this.update_connection(context.message.body);
