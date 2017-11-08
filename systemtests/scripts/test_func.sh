@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 function download_enmasse() {
-
+    curl -0 https://dl.bintray.com/enmasse/snapshots/enmasse-latest.tgz | tar -zx
     D=`readlink -f enmasse-latest`
     echo $D
 }
@@ -43,7 +43,7 @@ function setup_test() {
 
 function run_test() {
     TESTCASE=$1
-    
+
     if [ "$OPENSHIFT_MULTITENANT" == false ]; then
         $CURDIR/wait_until_up.sh 9 || return 1
     else
