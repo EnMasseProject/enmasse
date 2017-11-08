@@ -34,3 +34,4 @@ host=$(oc get route -n tck-brokered -o jsonpath='{.spec.host}' messaging)
 port=443
 cd ${TCK_PATH}
 ./gradlew -PjmsVersion=${JMS_VERSION} -PjmsClient=${JMS_CLIENT} -PjmsBroker=${JMS_BROKER} -Pupstream -Phost=${host} -Pport=${port} runTck
+cat ${TCK_PATH}/build/runclient.log
