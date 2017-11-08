@@ -7,37 +7,38 @@ import org.junit.Test;
 public class MsgPatternsTest extends io.enmasse.systemtest.brokered.clients.MsgPatternsTest {
 
     @Test
-    public void basicMessageTest() throws Exception {
+    public void testBasicMessage() throws Exception {
         doBasicMessageTest(new RheaClientSender(), new RheaClientReceiver());
     }
 
     @Test
-    public void roundRobinReceiverTest() throws Exception {
+    public void testRoundRobinReceiver() throws Exception {
         doRoundRobinReceiverTest(new RheaClientSender(), new RheaClientReceiver(), new RheaClientReceiver());
     }
 
     @Test
-    public void topicSubscribeTest() throws Exception {
-        doTopicSubscribeTest(new RheaClientSender(), new RheaClientReceiver());
+    public void testTopicSubscribe() throws Exception {
+        doTopicSubscribeTest(new RheaClientSender(), new RheaClientReceiver(), new RheaClientReceiver());
     }
 
     @Test
-    public void messageBrowseTest() throws Exception {
+    public void testMessageBrowse() throws Exception {
         doMessageBrowseTest(new RheaClientSender(), new RheaClientReceiver(), new RheaClientReceiver());
     }
 
     @Test
-    public void drainQueueTest() throws Exception {
+    public void testDrainQueue() throws Exception {
         doDrainQueueTest(new RheaClientSender(), new RheaClientReceiver());
     }
 
     @Test
-    public void messageSelectorQueueTest() throws Exception{
+    public void testMessageSelectorQueue() throws Exception{
         doMessageSelectorQueueTest(new RheaClientSender(), new RheaClientReceiver());
     }
 
     @Test
-    public void messageSelectorTopicTest() throws Exception{
-        doMessageSelectorTopicTest(new RheaClientSender(), new RheaClientReceiver());
+    public void testMessageSelectorTopic() throws Exception{
+        doMessageSelectorTopicTest(new RheaClientSender(), new RheaClientReceiver(),
+                new RheaClientReceiver(), new RheaClientReceiver());
     }
 }
