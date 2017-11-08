@@ -6,8 +6,9 @@ JMS_CLIENT=$4
 JMS_BROKER=$5
 
 #setup environment
-curl -X POST -H "content-type: application/json" --data-binary @./systemtests/templates/tckAddressSpace.json http://$(oc get route -n myproject -o jsonpath='{.spec.host}' restapi)/v1/addressspaces
-curl -X PUT -H "content-type: application/json" --data-binary @./systemtests/templates/tckDestinations.json http://$(oc get route -n myproject -o jsonpath='{.spec.host}' restapi)/v1/addresses/tck-brokered
+curl -X POST -H "content-type: application/json" --data-binary @./systemtests/templates/tckAddressSpace.json http://$(oc get route -o jsonpath='{.spec.host}' restapi)/v1/addressspaces
+
+curl -X PUT -H "content-type: application/json" --data-binary @./systemtests/templates/tckDestinations.json http://$(oc get route -o jsonpath='{.spec.host}' restapi)/v1/addresses/tck-brokered
 
 #keycloak user
 oc extract secret/keycloak-credentials
@@ -15,11 +16,11 @@ USER=$(cat admin.username)
 PASSWORD=$(cat admin.password)
 
 # get token
-RESULT=$(curl --data "grant_type=password&client_id=${CLI_ID}&username=${USER}&password=${PASSWORD}" http://$(oc get routes -n myproject -o jsonpath='{.spec.host}' keycloak)/auth/realms/master/protocol/openid-connect/token)
+RESULT=$(curl --data "grant_type=password&client_id=${CLI_ID}&username=${USER}&password=${PASSWORD}" http://$(oc get routes -o jsonpath='{.spec.host}' keycloak)/auth/realms/master/protocol/openid-connect/token)
 TOKEN=`echo ${RESULT} | sed 's/.*access_token":"//g' | sed 's/".*//g'`
 
 #create user (tckuser/tckuser)
-curl -X POST -H "content-type: application/json" --data-binary @./systemtests/templates/tckUser.json -H "Authorization: Bearer $TOKEN"  http://${USER}:${PASSWORD}@$(oc get routes -n myproject -o jsonpath='{.spec.host}' keycloak)/auth/admin/realms/tck-brokered/users
+curl -X POST -H "content-type: application/json" --data-binary @./systemtests/templates/tckUser.json -H "Authorization: Bearer $TOKEN"  http://${USER}:${PASSWORD}@$(oc get routes -o jsonpath='{.spec.host}' keycloak)/auth/admin/realms/tck-brokered/users
 
 #run tck
 host=$(oc get route -n tck-brokered -o jsonpath='{.spec.host}' messaging)
