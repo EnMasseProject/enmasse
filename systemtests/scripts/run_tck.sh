@@ -9,12 +9,12 @@ JMS_CLIENT=$4
 JMS_BROKER=$5
 
 #install prerequisites
-yum -y install patch
+sudo yum -y install patch
 
 #setup environment
 curl -X POST -H "content-type: application/json" --data-binary @./systemtests/templates/tckAddressSpace.json http://$(oc get route -o jsonpath='{.spec.host}' restapi)/v1/addressspaces
 wait_until_up 2 'tck-brokered'
-curl -X PUT -H "content-type: application/json" --data-binary @./systemtests/templates/tckDestinations.json http://$(oc get route -o jsonpath='{.spec.host}' restapi)/v1/addresses/tck-brokered
+curl -X PUT -H "content-type: application/json" --data-binary @./systemtests/templates/tckAddresses.json http://$(oc get route -o jsonpath='{.spec.host}' restapi)/v1/addresses/tck-brokered
 sleep 40
 
 #keycloak user
