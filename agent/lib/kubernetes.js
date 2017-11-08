@@ -70,9 +70,8 @@ function watch_options(resource, options) {
     return get_options(options, get_path('/api/v1/watch/namespaces/', resource, options));
 }
 
-function do_get(resource, options) {
+function do_get_with_options(opts) {
     return new Promise(function (resolve, reject) {
-        var opts = list_options(resource, options || {});
         var request = https.get(opts, function(response) {
 	    log.info('GET %s => %s ', opts.path, response.statusCode);
 	    response.setEncoding('utf8');
@@ -92,6 +91,11 @@ function do_get(resource, options) {
         });
         request.on('error', reject);
     });
+};
+
+function do_get(resource, options) {
+    var opts = list_options(resource, options || {});
+    return do_get_with_options(opts);
 };
 
 function do_put(resource, object, options) {
@@ -189,3 +193,17 @@ module.exports.update = function (resource, transform, options) {
         return do_put(resource, transform(original), options);
     });
 };
+
+module.exports.get_messaging_route_hostname = function (options) {
+    if (options.MESSAGING_ROUTE_HOSTNAME === undefined && options.KUBERNETES_SERVICE_HOST !== undefined) {
+        var opts = get_options(options, get_path('/oapi/v1/namespaces/', 'routes/messaging', options));
+        return do_get_with_options(opts).then(function (definition) {
+            return definition.spec.host;
+        }).catch(function () {
+            log.info('could not retrieve messaging route hostname');
+            return undefined;
+        });
+    } else {
+        return Promise.resolve(options.MESSAGING_ROUTE_HOSTNAME);
+    }
+}

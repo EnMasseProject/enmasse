@@ -124,7 +124,7 @@ function get_content_type(file) {
     return content_types[path.extname(file).toLowerCase()];
 }
 
-function static_handler(request, response) {
+function static_handler(request, response, transform) {
     return function () {
         var file = path.join(__dirname, '../www/', url.parse(request.url).pathname);
         if (file.charAt(file.length - 1) === '/') {
@@ -136,12 +136,13 @@ function static_handler(request, response) {
                 response.end(http.STATUS_CODES[response.statusCode]);
                 log.warn('GET %s => %i %j', request.url, response.statusCode, error);
             } else {
+                var content = transform ? transform(data) : data;
                 var content_type = get_content_type(file);
                 if (content_type) {
                     response.setHeader('content-type', content_type);
                 }
                 log.debug('GET %s => %s', request.url, file);
-                response.end(data);
+                response.end(content);
             }
         });
     };
@@ -166,6 +167,12 @@ function get_create_server(env) {
     }
 }
 
+function replacer(original, replacement) {
+    return function (data) {
+        return data.toString().replace(new RegExp(original, 'g'), replacement);
+    }
+}
+
 ConsoleServer.prototype.listen = function (env, callback) {
     this.server = get_create_server(env)(function (request, response) {
         if (request.method === 'GET' && request.url === '/probe') {
@@ -173,7 +180,12 @@ ConsoleServer.prototype.listen = function (env, callback) {
         } else if (request.method === 'GET') {
             try {
                 var user = basic_auth(request);
-                auth_service.authenticate(user, auth_service.default_options(env)).then(static_handler(request, response)).catch(auth_required(response));
+                var transform;
+                if (url.parse(request.url).pathname === '/help.html' && env.MESSAGING_ROUTE_HOSTNAME !== undefined) {
+                    transform = replacer('\&lt\;messaging\-route\-hostname\&gt\;', env.MESSAGING_ROUTE_HOSTNAME);
+                }
+                var next = static_handler(request, response,  transform);
+                auth_service.authenticate(user, auth_service.default_options(env)).then(next).catch(auth_required(response));
             } catch (error) {
                 response.statusCode = 500;
                 response.end(error.message);
