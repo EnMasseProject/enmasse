@@ -23,14 +23,14 @@ periodically check/logging of resources (memory, CPU, disk space).
 - producer-N: with duration mode send 10messages per second to test-queue-sendreceive-N
 - consumer-M: consume from queue (2 consumers for each queue)
 
-* testCreateDeleteAddressSpace
+* testCreateDeleteAddressSpaceLong
 - repeat for 1 hour following steps
 - create brokered address space: test-create-delete-addrspace-brokered
 - do basic queue/topic tests
 - remove test-create-delete-addrspace-brokered
 - repeat
 
-* testCreateDeleteAddresses
+* testCreateDeleteAddressesLong
 - create brokered addr space: test-create-delete-addresses-brokered
 repeat for 30 minutes following steps
 - create 20 queues and 20 topics: test-queue-createdelete-brokered/test-topic-createdelete-brokered
@@ -38,7 +38,7 @@ repeat for 30 minutes following steps
 - remove test-queue-createdelete-brokered/test-topic-createdelete-brokered
 - repeat
 
-* testCreateDeleteAddressesWithAuth
+* testCreateDeleteAddressesWithAuthLong
 - create brokered addr space: test-create-delete-addresses-auth-brokered
 - repeat for 30 minutes following steps
 - create 20 queues and 20 topics: test-queue-createdelete-auth-brokered-N/test-topic-createdelete-auth-brokered-N
@@ -46,7 +46,7 @@ repeat for 30 minutes following steps
 - remove test-queue-createdelete-brokered/test-topic-createdelete-auth-brokered
 - repeat
 
-* testCreateDeleteUsers
+* testCreateDeleteUsersLong
 - create brokered addr space: test-create-delete-users-brokered
 - repeat for 30 minutes following steps
 - create 100 users: test-user-N
@@ -54,7 +54,7 @@ repeat for 30 minutes following steps
 - remove first 90 users
 - repeat with creating users{100..200}
 
-* testSendReceiveWithCreatingAlreadyCreatedAddresses (disabled, until #346 will be fixed)
+* testSendReceiveWithCreatingAlreadyCreatedAddressesLong (disabled, until #346 will be fixed)
 - create brokered addr space: test-create-delete-addresses-exist-brokered
 - create 20 queues and 20 topics: test-queue-createdelete-auth-brokered-N/test-topic-createdelete-auth-brokered-N
 - repeat for 30 minutes following steps
@@ -62,7 +62,7 @@ repeat for 30 minutes following steps
 - do basic Auth queue/topic tests
 - repeat
 
-* testCreateDeleteAddressesViaAgent (webconsole)
+* testCreateDeleteAddressesViaAgentLong (webconsole)
 - create brokered addr space: test-create-delete-addresses-agent-brokered
 repeat for 30 minutes following steps
 - create 20 queues and 20 topics: test-queue-createdelete-agent-brokered/test-topic-createdelete-agent-brokered
@@ -70,12 +70,11 @@ repeat for 30 minutes following steps
 - remove test-queue-createdelete-brokered/test-topic-createdelete-brokered
 - repeat
 
-* testCreateDeleteAddressSpaceViaAgent (webconsole - creating addresses via agent is not implemented yet)
+* testCreateDeleteAddressSpaceViaAgentLong (webconsole - creating addresses via agent is not implemented yet)
 - repeat for 1 hour following steps
 - create brokered address space: test-create-delete-addrspace-agent-brokered
-- create brokered address space: test-create-delete-agent-addrspace
 - do basic queue/topic tests
-- remove test-create-delete-agent-addrspace
+- remove test-create-delete-addrspace-agent-brokered
 - repeat
 
 == standard
