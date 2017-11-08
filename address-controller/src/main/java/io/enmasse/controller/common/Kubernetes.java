@@ -54,7 +54,7 @@ public interface Kubernetes {
     void addDefaultEditPolicy(String namespace);
 
     boolean hasService(String service);
-    void createSecretWithDefaultPermissions(String secretName, String namespace);
+
     void createEndpoint(Endpoint endpoint, Service service, String addressSpaceName, String namespace);
 
     Set<Deployment> getReadyDeployments();

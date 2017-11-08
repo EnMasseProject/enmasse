@@ -81,13 +81,6 @@ public class ControllerHelper {
             kubernetes.createEndpoint(endpoint, service, addressSpace.getName(), addressSpace.getNamespace());
         }
 
-        for (String secretName : resourceList.routeEndpoints.stream()
-                .filter(endpoint -> endpoint.getCertProvider().isPresent())
-                .map(endpoint -> endpoint.getCertProvider().get().getSecretName())
-                .collect(Collectors.toSet())) {
-            kubernetes.createSecretWithDefaultPermissions(secretName, addressSpace.getNamespace());
-        }
-
         kubernetes.create(resourceList.resourceList, addressSpace.getNamespace());
     }
 

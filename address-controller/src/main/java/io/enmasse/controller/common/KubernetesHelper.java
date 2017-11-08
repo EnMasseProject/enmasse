@@ -224,28 +224,6 @@ public class KubernetesHelper implements Kubernetes {
     }
 
     @Override
-    public void createSecretWithDefaultPermissions(String secretName, String namespace) {
-        Secret secret = client.secrets().inNamespace(namespace).withName(secretName).get();
-        if (secret != null) {
-            // Skip if it is already created
-            return;
-        }
-        // TODO: Add labels
-        secret = client.secrets().inNamespace(namespace).createNew()
-                .editOrNewMetadata()
-                .withName(secretName)
-                .endMetadata()
-                .done();
-        client.serviceAccounts().inNamespace(namespace).withName("default").edit()
-                .addToSecrets(new ObjectReferenceBuilder()
-                        .withKind(secret.getKind())
-                        .withName(secret.getMetadata().getName())
-                        .withApiVersion(secret.getApiVersion())
-                        .build())
-                .done();
-    }
-
-    @Override
     public void createEndpoint(Endpoint endpoint, Service service, String addressSpaceName, String namespace) {
         if (service == null || service.getMetadata().getAnnotations() == null) {
             log.info("Skipping creating endpoint for unknown service {}", endpoint.getService());

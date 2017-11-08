@@ -16,7 +16,6 @@
 package io.enmasse.controller.auth;
 
 import java.io.*;
-import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -25,8 +24,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import io.enmasse.config.AnnotationKeys;
-import io.enmasse.config.LabelKeys;
+import io.fabric8.kubernetes.api.model.ObjectReference;
+import io.fabric8.kubernetes.api.model.ObjectReferenceBuilder;
 import io.fabric8.kubernetes.api.model.Secret;
+import io.fabric8.kubernetes.api.model.ServiceAccount;
 import io.fabric8.openshift.client.OpenShiftClient;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
@@ -58,20 +59,32 @@ public class OpenSSLCertManager implements CertManager {
     @Override
     public void issueRouteCert(String secretName, String namespace, String ... hostnames) throws Exception {
         Secret secret = client.secrets().inNamespace(namespace).withName(secretName).get();
-        if (secret != null) {
+        if (secret == null) {
             String keyKey = "tls.key";
             String certKey = "tls.crt";
-            if (secret.getData() != null && secret.getData().containsKey(keyKey) && secret.getData().containsKey(certKey)) {
-                return;
-            }
 
             log.info("Creating self-signed certificates for {}", secret);
             File key = File.createTempFile("tls", "key");
             File cert = File.createTempFile("tls", "crt");
 
             createSelfSignedCert(key, cert);
-            createSecretFromCertAndKeyFiles(secretName, namespace, keyKey, certKey, key, cert, client);
+            secret = createSecretFromCertAndKeyFiles(secretName, namespace, keyKey, certKey, key, cert, client);
         }
+
+        ServiceAccount defaultAccount = client.serviceAccounts().inNamespace(namespace).withName("default").get();
+        for (ObjectReference reference : defaultAccount.getSecrets()) {
+            if (reference.getName().equals(secretName)) {
+                return;
+            }
+        }
+
+        client.serviceAccounts().inNamespace(namespace).withName("default").edit()
+                .addToSecrets(new ObjectReferenceBuilder()
+                        .withKind(secret.getKind())
+                        .withName(secret.getMetadata().getName())
+                        .withApiVersion(secret.getApiVersion())
+                        .build())
+                .done();
     }
 
     private static void createSelfSignedCert(final File keyFile, final File certFile) {
@@ -88,19 +101,19 @@ public class OpenSSLCertManager implements CertManager {
         createSecretFromCertAndKeyFiles(secretName, namespace, "tls.key", "tls.crt", keyFile, certFile, client);
     }
 
-    private static void createSecretFromCertAndKeyFiles(final String secretName,
-                                                        final String namespace,
-                                                        final String keyKey,
-                                                        final String certKey,
-                                                        final File keyFile,
-                                                        final File certFile,
-                                                        final OpenShiftClient client)
+    private static Secret createSecretFromCertAndKeyFiles(final String secretName,
+                                                          final String namespace,
+                                                          final String keyKey,
+                                                          final String certKey,
+                                                          final File keyFile,
+                                                          final File certFile,
+                                                          final OpenShiftClient client)
             throws IOException {
         Map<String, String> data = new LinkedHashMap<>();
         Base64.Encoder encoder = Base64.getEncoder();
         data.put(keyKey, encoder.encodeToString(FileUtils.readFileToByteArray(keyFile)));
         data.put(certKey, encoder.encodeToString(FileUtils.readFileToByteArray(certFile)));
-        client.secrets().inNamespace(namespace).withName(secretName).createOrReplaceWithNew()
+        return client.secrets().inNamespace(namespace).withName(secretName).createOrReplaceWithNew()
                 .editOrNewMetadata()
                 .withName(secretName)
                 .endMetadata()
