@@ -53,11 +53,10 @@ else
         cp $i artifacts/test-reports
     done
 
-    oc login -u system:admin
+    export OPENSHIFT_KUBECONFIG=/var/lib/origin/openshift.local.config/master/admin.kubeconfig
+    oc --config $OPENSHIFT_KUBECONFIG adm diagnostics
 
-    oc adm diagnostics
-
-    oc get events --all-namespaces --sort-by='.metadata.creationTimestamp' > artifacts/events.log
+    oc --config $OPENSHIFT_KUBECONFIG get events --all-namespaces --sort-by='.metadata.creationTimestamp' > artifacts/events.log
 
     docker logs origin > artifacts/openshift.stdout.log 2> artifacts/openshift.stderr.log
 
