@@ -63,7 +63,7 @@ public class OpenSSLCertManager implements CertManager {
             String keyKey = "tls.key";
             String certKey = "tls.crt";
 
-            log.info("Creating self-signed certificates for {}", secret);
+            log.info("Creating self-signed certificates for {}", secretName);
             File key = File.createTempFile("tls", "key");
             File cert = File.createTempFile("tls", "crt");
 
