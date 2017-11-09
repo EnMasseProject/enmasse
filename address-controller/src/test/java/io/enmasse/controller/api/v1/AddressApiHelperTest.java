@@ -34,19 +34,26 @@ import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.types.standard.StandardType;
 import io.enmasse.k8s.api.AddressApi;
 import io.enmasse.k8s.api.AddressSpaceApi;
+import org.apache.http.auth.BasicUserPrincipal;
 import org.junit.Before;
 import org.junit.Test;
+
+import javax.ws.rs.core.SecurityContext;
 
 public class AddressApiHelperTest {
 
     private AddressApiHelper helper;
     private AddressApi addressApi;
+    private SecurityContext securityContext;
 
     @Before
     public void setup() {
         AddressSpace addressSpace = mock(AddressSpace.class);
         AddressSpaceApi addressSpaceApi = mock(AddressSpaceApi.class);
         addressApi = mock(AddressApi.class);
+        securityContext = mock(SecurityContext.class);
+        when(securityContext.getUserPrincipal()).thenReturn(new BasicUserPrincipal("me"));
+        when(securityContext.isUserInRole(any())).thenReturn(true);
         when(addressSpaceApi.getAddressSpaceWithName(eq("test"))).thenReturn(Optional.of(addressSpace));
         when(addressSpaceApi.withAddressSpace(eq(addressSpace))).thenReturn(addressApi);
         helper = new AddressApiHelper(addressSpaceApi);
@@ -58,7 +65,7 @@ public class AddressApiHelperTest {
         when(addressApi.listAddresses()).thenReturn(Collections.singleton(createAddress("q1")));
         addresses.add(createAddress("q1"));
         addresses.add(createAddress("q2"));
-        helper.putAddresses("test", new AddressList(addresses));
+        helper.putAddresses(securityContext,"test", new AddressList(addresses));
         verify(addressApi, never()).deleteAddress(any());
         verify(addressApi).createAddress(eq(createAddress("q2")));
     }
