@@ -155,4 +155,22 @@ public class HttpAddressSpaceServiceTest {
         Response response = invoke(() -> addressSpaceService.deleteAddressSpace(securityContext,"doesnotexist"));
         assertThat(response.getStatus(), is(404));
     }
+
+    @Test
+    public void testUnauthorized() {
+        when(securityContext.isUserInRole(any())).thenReturn(false);
+
+        Response response = invoke(() -> addressSpaceService.deleteAddressSpace(securityContext,"doesnotexist"));
+        assertThat(response.getStatus(), is(401));
+
+        addressSpaceApi.createAddressSpace(a1);
+        response = invoke(() -> addressSpaceService.getAddressSpace(securityContext,"a1"));
+        assertThat(response.getStatus(), is(401));
+
+        response = invoke(() -> addressSpaceService.getAddressSpaceList(securityContext));
+        assertThat(response.getStatus(), is(401));
+
+        response = invoke(() -> addressSpaceService.createAddressSpace(securityContext, a1));
+        assertThat(response.getStatus(), is(401));
+    }
 }
