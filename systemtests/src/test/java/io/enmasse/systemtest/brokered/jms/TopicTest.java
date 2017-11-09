@@ -120,8 +120,8 @@ public class TopicTest extends JMSTestBase {
         session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         Topic testTopic = (Topic) context.lookup(topic);
 
-        String sub1ID = "sub1";
-        String sub2ID = "sub2";
+        String sub1ID = "sub1DurSub";
+        String sub2ID = "sub2DurSub";
         MessageConsumer subscriber1 = session.createDurableSubscriber(testTopic, sub1ID);
         MessageConsumer subscriber2 = session.createDurableSubscriber(testTopic, sub2ID);
         MessageProducer messageProducer = session.createProducer(testTopic);
@@ -177,8 +177,8 @@ public class TopicTest extends JMSTestBase {
         session = connection.createSession(true, Session.SESSION_TRANSACTED);
         Topic testTopic = (Topic) context.lookup(topic);
 
-        String sub1ID = "sub1";
-        String sub2ID = "sub2";
+        String sub1ID = "sub1DurSubTrans";
+        String sub2ID = "sub2DurSubTrans";
         MessageConsumer subscriber1 = session.createDurableSubscriber(testTopic, sub1ID);
         MessageConsumer subscriber2 = session.createDurableSubscriber(testTopic, sub2ID);
         MessageProducer messageProducer = session.createProducer(testTopic);

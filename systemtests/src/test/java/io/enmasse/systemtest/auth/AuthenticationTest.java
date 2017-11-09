@@ -57,8 +57,8 @@ public class AuthenticationTest extends TestBase {
     @After
     public void teardownSpaces() throws Exception {
         for (AddressSpace addressSpace : addressSpaces) {
-            deleteAddressSpace(addressSpace);
             getKeycloakClient().deleteUser(addressSpace.getName(), "bob");
+            deleteAddressSpace(addressSpace);
         }
         addressSpaces.clear();
     }
