@@ -157,4 +157,27 @@ public class HttpAddressServiceTest {
         Response response = invoke(() -> addressService.deleteAddress(securityContext,"myspace", "a1"));
         assertThat(response.getStatus(), is(500));
     }
+
+    @Test
+    public void testUnauthorized() {
+        when(securityContext.isUserInRole(any())).thenReturn(false);
+        Response response = invoke(() -> addressService.deleteAddress(securityContext,"myspace", "a1"));
+        assertThat(response.getStatus(), is(401));
+
+        response = invoke(() -> addressService.getAddressList(securityContext,"myspace"));
+        assertThat(response.getStatus(), is(401));
+
+        response = invoke(() -> addressService.getAddress(securityContext,"myspace", "q1"));
+        assertThat(response.getStatus(), is(401));
+
+        Address a2 = new Address.Builder()
+                .setName("a2")
+                .setType(StandardType.ANYCAST)
+                .setAddressSpace("myspace")
+                .build();
+        AddressList list = new AddressList();
+        list.add(a2);
+        response = invoke(() -> addressService.appendAddresses(securityContext,"myspace", list));
+        assertThat(response.getStatus(), is(401));
+    }
 }
