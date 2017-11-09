@@ -22,7 +22,11 @@ import io.enmasse.address.model.Endpoint;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.extensions.Deployment;
 import io.fabric8.kubernetes.api.model.extensions.DoneableIngress;
+import io.fabric8.kubernetes.client.dsl.Resource;
+import io.fabric8.openshift.api.model.DoneableRoleBinding;
 import io.fabric8.openshift.api.model.DoneableRoute;
+import io.fabric8.openshift.api.model.RoleBinding;
+import io.fabric8.openshift.api.model.RoleBindingBuilder;
 import io.fabric8.openshift.client.OpenShiftClient;
 import io.fabric8.openshift.client.ParameterValue;
 import io.vertx.core.json.JsonObject;
@@ -378,17 +382,23 @@ public class KubernetesHelper implements Kubernetes {
                     .done();
 
             String groupName = "system:serviceaccounts:" + namespace;
-            client.roleBindings().inNamespace(namespace).createNew()
-                    .withNewMetadata()
+            Resource<RoleBinding, DoneableRoleBinding> bindingResource = client.roleBindings().inNamespace(namespace).withName("address-admin");
+            RoleBinding roleBinding = new RoleBindingBuilder()
+                    .editOrNewMetadata()
                     .withName("address-admin")
                     .withNamespace(namespace)
                     .endMetadata()
-                    .withGroupNames(groupName)
+                    .addToGroupNames(groupName)
                     .addNewSubject()
                     .withKind("SystemGroup")
                     .withName(groupName)
                     .endSubject()
-                    .done();
+                    .withNewRoleRef()
+                    .withName("address-admin")
+                    .withNamespace(namespace)
+                    .endRoleRef()
+                    .build();
+            bindingResource.create(roleBinding);
         } else {
             // TODO: Add support for Kubernetes RBAC policies
             log.info("No support for Kubernetes RBAC policies yet, won't add to address-admin role");
