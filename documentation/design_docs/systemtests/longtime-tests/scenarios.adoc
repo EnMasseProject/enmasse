@@ -1,0 +1,86 @@
+This document contains testing scenarios for long time running system tests in EnMasse.
+
+[[overview]]
+== Overview
+Those tests should try to simulate real usage of enmasse, creating address spaces, addresses, users,
+sending/receiving messages. All those operation should run in big count of iterations. We should implement some
+periodically check/logging of resources (memory, CPU, disk space).
+
+Below defined scenarios shouldn't failed immediately when they hit some problem. List of errors should be stored during
+the test and printed out after test will be finished. Assert should follow up.
+On the other hand, test should marked as failed in case that broker/address-controller/agent/etc...  is longer time
+unavailable and some count of errors was reached.
+
+== brokered
+* testTopicPubSubLong
+- create brokered addr space: test-topic-pubsub-brokered
+- create 10 topics - test-topic-pubsub-N
+- create 10 producers, 20 consumers
+- repeat for 30 minutes following steps
+- producer-N: with duration mode send 10messages per second to test-topic-pubsub-N
+- consumer-NM: consume from topics by wildcards (each consumer is subscribed to 2 topics)
+
+* testQueueSendReceiveLong
+- create brokered addr space: test-queue-sendreceive-brokered
+- create 10 queues- test-queue-sendreceive-N
+- create 10 senders, 20 receivers
+- repeat for 30 minutes following steps
+- producer-N: with duration mode send 10messages per second to test-queue-sendreceive-N
+- consumer-M: consume from queue (2 consumers for each queue)
+
+* testCreateDeleteAddressSpaceLong
+- repeat for 1 hour following steps
+- create brokered address space: test-create-delete-addrspace-brokered
+- do basic queue/topic tests
+- remove test-create-delete-addrspace-brokered
+- repeat
+
+* testCreateDeleteAddressesLong
+- create brokered addr space: test-create-delete-addresses-brokered
+repeat for 30 minutes following steps
+- create 20 queues and 20 topics: test-queue-createdelete-brokered/test-topic-createdelete-brokered
+- do basic queue/topic tests
+- remove test-queue-createdelete-brokered/test-topic-createdelete-brokered
+- repeat
+
+* testCreateDeleteAddressesWithAuthLong
+- create brokered addr space: test-create-delete-addresses-auth-brokered
+- repeat for 30 minutes following steps
+- create 20 queues and 20 topics: test-queue-createdelete-auth-brokered-N/test-topic-createdelete-auth-brokered-N
+- do basic Auth queue/topic tests
+- remove test-queue-createdelete-brokered/test-topic-createdelete-auth-brokered
+- repeat
+
+* testCreateDeleteUsersLong
+- create brokered addr space: test-create-delete-users-brokered
+- repeat for 30 minutes following steps
+- create 100 users: test-user-N
+- do basic Auth queue/topic tests with every 10th user
+- remove first 90 users
+- repeat with creating users{100..200}
+
+* testSendReceiveWithCreatingAlreadyCreatedAddressesLong (disabled, until #346 will be fixed)
+- create brokered addr space: test-create-delete-addresses-exist-brokered
+- create 20 queues and 20 topics: test-queue-createdelete-auth-brokered-N/test-topic-createdelete-auth-brokered-N
+- repeat for 30 minutes following steps
+- each 10 iteration try to create already existing queues/topics
+- do basic Auth queue/topic tests
+- repeat
+
+* testCreateDeleteAddressesViaAgentLong (webconsole)
+- create brokered addr space: test-create-delete-addresses-agent-brokered
+repeat for 30 minutes following steps
+- create 20 queues and 20 topics: test-queue-createdelete-agent-brokered/test-topic-createdelete-agent-brokered
+- do basic Auth queue/topic tests
+- remove test-queue-createdelete-brokered/test-topic-createdelete-brokered
+- repeat
+
+* testCreateDeleteAddressSpaceViaAgentLong (webconsole - creating addresses via agent is not implemented yet)
+- repeat for 1 hour following steps
+- create brokered address space: test-create-delete-addrspace-agent-brokered
+- do basic queue/topic tests
+- remove test-create-delete-addrspace-agent-brokered
+- repeat
+
+== standard
+- todo...
