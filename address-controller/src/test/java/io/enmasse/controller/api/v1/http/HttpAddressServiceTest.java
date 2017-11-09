@@ -5,16 +5,24 @@ import io.enmasse.address.model.AddressList;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.types.standard.StandardAddressSpaceType;
 import io.enmasse.address.model.types.standard.StandardType;
+import io.enmasse.controller.api.DefaultExceptionMapper;
 import io.enmasse.k8s.api.TestAddressApi;
 import io.enmasse.k8s.api.TestAddressSpaceApi;
+import org.apache.http.auth.BasicUserPrincipal;
 import org.junit.Before;
 import org.junit.Test;
 
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
+
+import java.util.concurrent.Callable;
 
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class HttpAddressServiceTest {
     private HttpAddressService addressService;
@@ -22,6 +30,8 @@ public class HttpAddressServiceTest {
     private TestAddressApi addressApi;
     private Address q1;
     private Address a1;
+    private SecurityContext securityContext;
+    private DefaultExceptionMapper exceptionMapper = new DefaultExceptionMapper();
 
     @Before
     public void setup() {
@@ -32,6 +42,11 @@ public class HttpAddressServiceTest {
                 .setName("myspace")
                 .setType(new StandardAddressSpaceType())
                 .build();
+
+        securityContext = mock(SecurityContext.class);
+        when(securityContext.getUserPrincipal()).thenReturn(new BasicUserPrincipal("me"));
+        when(securityContext.isUserInRole(any())).thenReturn(true);
+
         addressSpaceApi.createAddressSpace(addressSpace);
         addressApi = (TestAddressApi) addressSpaceApi.withAddressSpace(addressSpace);
         q1 = new Address.Builder()
@@ -46,9 +61,17 @@ public class HttpAddressServiceTest {
         addressApi.createAddress(a1);
     }
 
+    private Response invoke(Callable<Response> fn) {
+        try {
+            return fn.call();
+        } catch (Exception e) {
+            return exceptionMapper.toResponse(e);
+        }
+    }
+
     @Test
     public void testList() {
-        Response response = addressService.getAddressList("myspace");
+        Response response = invoke(() -> addressService.getAddressList(securityContext,"myspace"));
 
         assertThat(response.getStatus(), is(200));
         AddressList list = (AddressList) response.getEntity();
@@ -61,13 +84,13 @@ public class HttpAddressServiceTest {
     @Test
     public void testListException() {
         addressApi.throwException = true;
-        Response response = addressService.getAddressList("myspace");
+        Response response = invoke(() -> addressService.getAddressList(securityContext,"myspace"));
         assertThat(response.getStatus(), is(500));
     }
 
     @Test
     public void testGet() {
-        Response response = addressService.getAddress("myspace", "q1");
+        Response response = invoke(() -> addressService.getAddress(securityContext,"myspace", "q1"));
         assertThat(response.getStatus(), is(200));
         Address address = (Address) response.getEntity();
 
@@ -77,16 +100,16 @@ public class HttpAddressServiceTest {
     @Test
     public void testGetException() {
         addressApi.throwException = true;
-        Response response = addressService.getAddress("myspace", "q1");
+        Response response = invoke(() -> addressService.getAddress(securityContext,"myspace", "q1"));
         assertThat(response.getStatus(), is(500));
     }
 
     @Test
     public void testGetUnknown() {
-        Response response = addressService.getAddress("unknownspace", "q1");
+        Response response = invoke(() -> addressService.getAddress(securityContext,"unknownspace", "q1"));
         assertThat(response.getStatus(), is(404));
 
-        response = addressService.getAddress("myspace", "doesnotexist");
+        response = invoke(() -> addressService.getAddress(securityContext,"myspace", "doesnotexist"));
         assertThat(response.getStatus(), is(404));
     }
 
@@ -100,7 +123,7 @@ public class HttpAddressServiceTest {
                 .build();
         AddressList list = new AddressList();
         list.add(a2);
-        Response response = addressService.appendAddresses("myspace", list);
+        Response response = invoke(() -> addressService.appendAddresses(securityContext,"myspace", list));
         assertThat(response.getStatus(), is(200));
 
         assertThat(addressApi.listAddresses(), hasItem(a2));
@@ -115,13 +138,13 @@ public class HttpAddressServiceTest {
                 .build();
         AddressList list = new AddressList();
         list.add(a2);
-        Response response = addressService.appendAddresses("myspace", list);
+        Response response = invoke(() -> addressService.appendAddresses(securityContext,"myspace", list));
         assertThat(response.getStatus(), is(500));
     }
 
     @Test
     public void testDelete() {
-        Response response = addressService.deleteAddress("myspace", "a1");
+        Response response = invoke(() -> addressService.deleteAddress(securityContext,"myspace", "a1"));
         assertThat(response.getStatus(), is(200));
 
         assertThat(addressApi.listAddresses(), hasItem(q1));
@@ -131,7 +154,7 @@ public class HttpAddressServiceTest {
     @Test
     public void testDeleteException() {
         addressApi.throwException = true;
-        Response response = addressService.deleteAddress("myspace", "a1");
+        Response response = invoke(() -> addressService.deleteAddress(securityContext,"myspace", "a1"));
         assertThat(response.getStatus(), is(500));
     }
 }
