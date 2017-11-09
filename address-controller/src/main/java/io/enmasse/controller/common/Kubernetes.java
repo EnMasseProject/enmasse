@@ -51,8 +51,6 @@ public interface Kubernetes {
 
     void deleteNamespace(String namespace);
 
-    void addDefaultEditPolicy(String namespace);
-
     boolean hasService(String service);
 
     void createEndpoint(Endpoint endpoint, Service service, String addressSpaceName, String namespace);
@@ -70,4 +68,6 @@ public interface Kubernetes {
     TokenReview performTokenReview(String token);
 
     SubjectAccessReview performSubjectAccessReview(String user, String namespace, String verb);
+
+    void addTenantAdminRole(String namespace);
 }

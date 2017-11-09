@@ -59,8 +59,8 @@ public class ControllerHelper {
         log.info("Creating address space {}", addressSpace);
         if (!addressSpace.getNamespace().equals(namespace)) {
             kubernetes.createNamespace(addressSpace.getName(), addressSpace.getNamespace());
-            kubernetes.addDefaultEditPolicy(addressSpace.getNamespace());
             kubernetes.addSystemImagePullerPolicy(namespace, addressSpace.getNamespace());
+            kubernetes.addTenantAdminRole(addressSpace.getNamespace());
         }
 
         StandardResources resourceList = createResourceList(addressSpace);
