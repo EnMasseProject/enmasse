@@ -163,6 +163,11 @@ local forwarder = import "forwarder.jsonnet";
           "required": true
         },
         {
+          "name": "AUTHENTICATION_SERVICE_CA_CERT",
+          "description": "The CA cert to use for validating authentication service cert",
+          "required": true
+        },
+        {
           "name": "AUTHENTICATION_SERVICE_CLIENT_SECRET",
           "description": "The client cert to use as identity against authentication service",
         },

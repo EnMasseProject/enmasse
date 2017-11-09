@@ -98,11 +98,11 @@ items:
       "required": true}, {"description": "The port of the authentication service used
       by this address space", "name": "AUTHENTICATION_SERVICE_PORT", "required": true},
       {"description": "The CA cert to use for validating authentication service cert",
-      "name": "AUTHENTICATION_SERVICE_CA_CERT"}, {"description": "The client cert
-      to use as identity against authentication service", "name": "AUTHENTICATION_SERVICE_CLIENT_SECRET"},
-      {"description": "The hostname to use in sasl init", "name": "AUTHENTICATION_SERVICE_SASL_INIT_HOST"},
-      {"description": "The CA cert to use for validating address controller identity",
-      "name": "ADDRESS_CONTROLLER_CA_CERT"}]}'
+      "name": "AUTHENTICATION_SERVICE_CA_CERT", "required": true}, {"description":
+      "The client cert to use as identity against authentication service", "name":
+      "AUTHENTICATION_SERVICE_CLIENT_SECRET"}, {"description": "The hostname to use
+      in sasl init", "name": "AUTHENTICATION_SERVICE_SASL_INIT_HOST"}, {"description":
+      "The CA cert to use for validating address controller identity", "name": "ADDRESS_CONTROLLER_CA_CERT"}]}'
     queue-inmemory.json: '{"apiVersion": "v1", "kind": "Template", "metadata": {"labels":
       {"app": "enmasse"}, "name": "queue-inmemory"}, "objects": [{"apiVersion": "extensions/v1beta1",
       "kind": "Deployment", "metadata": {"annotations": {"addressSpace": "${ADDRESS_SPACE}",
@@ -141,9 +141,11 @@ items:
       true}, {"description": "The hostname of the authentication service used by this
       address space", "name": "AUTHENTICATION_SERVICE_HOST", "required": true}, {"description":
       "The port of the authentication service used by this address space", "name":
-      "AUTHENTICATION_SERVICE_PORT", "required": true}, {"description": "The client
-      cert to use as identity against authentication service", "name": "AUTHENTICATION_SERVICE_CLIENT_SECRET"},
-      {"description": "The hostname to use in sasl init", "name": "AUTHENTICATION_SERVICE_SASL_INIT_HOST"}]}'
+      "AUTHENTICATION_SERVICE_PORT", "required": true}, {"description": "The CA cert
+      to use for validating authentication service cert", "name": "AUTHENTICATION_SERVICE_CA_CERT",
+      "required": true}, {"description": "The client cert to use as identity against
+      authentication service", "name": "AUTHENTICATION_SERVICE_CLIENT_SECRET"}, {"description":
+      "The hostname to use in sasl init", "name": "AUTHENTICATION_SERVICE_SASL_INIT_HOST"}]}'
     queue-persisted.json: '{"apiVersion": "v1", "kind": "Template", "metadata": {"labels":
       {"app": "enmasse"}, "name": "queue-persisted"}, "objects": [{"apiVersion": "v1",
       "kind": "PersistentVolumeClaim", "metadata": {"annotations": {"addressSpace":
@@ -187,9 +189,10 @@ items:
       used by this address space", "name": "AUTHENTICATION_SERVICE_HOST", "required":
       true}, {"description": "The port of the authentication service used by this
       address space", "name": "AUTHENTICATION_SERVICE_PORT", "required": true}, {"description":
-      "The client cert to use as identity against authentication service", "name":
-      "AUTHENTICATION_SERVICE_CLIENT_SECRET"}, {"description": "The hostname to use
-      in sasl init", "name": "AUTHENTICATION_SERVICE_SASL_INIT_HOST"}]}'
+      "The CA cert to use for validating authentication service cert", "name": "AUTHENTICATION_SERVICE_CA_CERT",
+      "required": true}, {"description": "The client cert to use as identity against
+      authentication service", "name": "AUTHENTICATION_SERVICE_CLIENT_SECRET"}, {"description":
+      "The hostname to use in sasl init", "name": "AUTHENTICATION_SERVICE_SASL_INIT_HOST"}]}'
     standard-space-infra.json: '{"apiVersion": "v1", "kind": "Template", "metadata":
       {"labels": {"app": "enmasse"}, "name": "standard-space-infra"}, "objects": [{"apiVersion":
       "v1", "kind": "Service", "metadata": {"annotations": {"addressSpace": "${ADDRESS_SPACE}"},
@@ -405,15 +408,15 @@ items:
       address space", "name": "AUTHENTICATION_SERVICE_HOST", "required": true}, {"description":
       "The port of the authentication service used by this address space", "name":
       "AUTHENTICATION_SERVICE_PORT", "required": true}, {"description": "The CA cert
-      to use for validating authentication service cert", "name": "AUTHENTICATION_SERVICE_CA_CERT"},
-      {"description": "The client cert to use as identity against authentication service",
-      "name": "AUTHENTICATION_SERVICE_CLIENT_SECRET"}, {"description": "The hostname
-      to use in sasl init", "name": "AUTHENTICATION_SERVICE_SASL_INIT_HOST"}, {"description":
-      "The CA cert to use for validating address controller identity", "name": "ADDRESS_CONTROLLER_CA_CERT"},
-      {"description": "The image to use for the AMQP Kafka Bridge", "name": "AMQP_KAFKA_BRIDGE_REPO",
-      "value": "docker.io/enmasseproject/amqp-kafka-bridge:latest"}, {"description":
-      "A list of host/port pairs to use for establishing the initial connection to
-      the Kafka cluster", "name": "KAFKA_BOOTSTRAP_SERVERS"}]}'
+      to use for validating authentication service cert", "name": "AUTHENTICATION_SERVICE_CA_CERT",
+      "required": true}, {"description": "The client cert to use as identity against
+      authentication service", "name": "AUTHENTICATION_SERVICE_CLIENT_SECRET"}, {"description":
+      "The hostname to use in sasl init", "name": "AUTHENTICATION_SERVICE_SASL_INIT_HOST"},
+      {"description": "The CA cert to use for validating address controller identity",
+      "name": "ADDRESS_CONTROLLER_CA_CERT"}, {"description": "The image to use for
+      the AMQP Kafka Bridge", "name": "AMQP_KAFKA_BRIDGE_REPO", "value": "docker.io/enmasseproject/amqp-kafka-bridge:latest"},
+      {"description": "A list of host/port pairs to use for establishing the initial
+      connection to the Kafka cluster", "name": "KAFKA_BOOTSTRAP_SERVERS"}]}'
     topic-inmemory.json: '{"apiVersion": "v1", "kind": "Template", "metadata": {"labels":
       {"app": "enmasse"}, "name": "topic-inmemory"}, "objects": [{"apiVersion": "extensions/v1beta1",
       "kind": "Deployment", "metadata": {"annotations": {"addressSpace": "${ADDRESS_SPACE}",
@@ -475,9 +478,10 @@ items:
       used by this address space", "name": "AUTHENTICATION_SERVICE_HOST", "required":
       true}, {"description": "The port of the authentication service used by this
       address space", "name": "AUTHENTICATION_SERVICE_PORT", "required": true}, {"description":
-      "The client cert to use as identity against authentication service", "name":
-      "AUTHENTICATION_SERVICE_CLIENT_SECRET"}, {"description": "The hostname to use
-      in sasl init", "name": "AUTHENTICATION_SERVICE_SASL_INIT_HOST"}]}'
+      "The CA cert to use for validating authentication service cert", "name": "AUTHENTICATION_SERVICE_CA_CERT",
+      "required": true}, {"description": "The client cert to use as identity against
+      authentication service", "name": "AUTHENTICATION_SERVICE_CLIENT_SECRET"}, {"description":
+      "The hostname to use in sasl init", "name": "AUTHENTICATION_SERVICE_SASL_INIT_HOST"}]}'
     topic-persisted.json: '{"apiVersion": "v1", "kind": "Template", "metadata": {"labels":
       {"app": "enmasse"}, "name": "topic-persisted"}, "objects": [{"apiVersion": "v1",
       "kind": "PersistentVolumeClaim", "metadata": {"annotations": {"addressSpace":
@@ -543,9 +547,11 @@ items:
       true}, {"description": "The hostname of the authentication service used by this
       address space", "name": "AUTHENTICATION_SERVICE_HOST", "required": true}, {"description":
       "The port of the authentication service used by this address space", "name":
-      "AUTHENTICATION_SERVICE_PORT", "required": true}, {"description": "The client
-      cert to use as identity against authentication service", "name": "AUTHENTICATION_SERVICE_CLIENT_SECRET"},
-      {"description": "The hostname to use in sasl init", "name": "AUTHENTICATION_SERVICE_SASL_INIT_HOST"}]}'
+      "AUTHENTICATION_SERVICE_PORT", "required": true}, {"description": "The CA cert
+      to use for validating authentication service cert", "name": "AUTHENTICATION_SERVICE_CA_CERT",
+      "required": true}, {"description": "The client cert to use as identity against
+      authentication service", "name": "AUTHENTICATION_SERVICE_CLIENT_SECRET"}, {"description":
+      "The hostname to use in sasl init", "name": "AUTHENTICATION_SERVICE_SASL_INIT_HOST"}]}'
   kind: ConfigMap
   metadata:
     labels:
