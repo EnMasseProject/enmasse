@@ -69,5 +69,6 @@ public interface Kubernetes {
 
     SubjectAccessReview performSubjectAccessReview(String user, String namespace, String verb);
 
-    void addTenantAdminRole(String namespace);
+    void addDefaultEditPolicy(String namespace);
+    void addAddressAdminRole(String namespace);
 }

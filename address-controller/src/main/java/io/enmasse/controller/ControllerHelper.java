@@ -60,7 +60,8 @@ public class ControllerHelper {
         if (!addressSpace.getNamespace().equals(namespace)) {
             kubernetes.createNamespace(addressSpace.getName(), addressSpace.getNamespace());
             kubernetes.addSystemImagePullerPolicy(namespace, addressSpace.getNamespace());
-            kubernetes.addTenantAdminRole(addressSpace.getNamespace());
+            kubernetes.addDefaultEditPolicy(addressSpace.getNamespace());
+            kubernetes.addAddressAdminRole(addressSpace.getNamespace());
         }
 
         StandardResources resourceList = createResourceList(addressSpace);
@@ -77,9 +78,6 @@ public class ControllerHelper {
         }
 
         kubernetes.create(resourceList.resourceList, addressSpace.getNamespace());
-    }
-
-    private void createAddressSpaceRoleForAddressSpace(AddressSpace addressSpace) {
     }
 
     private static class StandardResources {
