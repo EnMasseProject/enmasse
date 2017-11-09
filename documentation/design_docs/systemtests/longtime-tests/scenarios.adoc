@@ -6,6 +6,11 @@ Those tests should try to simulate real usage of enmasse, creating address space
 sending/receiving messages. All those operation should run in big count of iterations. We should implement some
 periodically check/logging of resources (memory, CPU, disk space).
 
+Below defined scenarios shouldn't failed immediately when they hit some problem. List of errors should be stored during
+the test and printed out after test will be finished. Assert should follow up.
+On the other hand, test should marked as failed in case that broker/address-controller/agent/etc...  is longer time
+unavailable and some count of errors was reached.
+
 == brokered
 * testTopicPubSubLong
 - create brokered addr space: test-topic-pubsub-brokered
