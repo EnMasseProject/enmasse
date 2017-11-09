@@ -68,14 +68,16 @@ function teardown_test() {
 function create_addres_space() {
     ADDRESS_SPACE_NAME=$1
     ADDRESS_SPACE_DEF=$2
-    curl -X POST -H "content-type: application/json" --data-binary @${ADDRESS_SPACE_DEF} http://$(oc get route -o jsonpath='{.spec.host}' restapi)/v1/addressspaces
+    TOKEN=$(oc whoami -t)
+    curl -X POST -H "content-type: application/json" --data-binary @${ADDRESS_SPACE_DEF} -H "Authorization: Bearer ${TOKEN}" http://$(oc get route -o jsonpath='{.spec.host}' restapi)/v1/addressspaces
     wait_until_up 2 ${ADDRESS_SPACE_NAME} || return 1
 }
 
 function create_addresses() {
     ADDRESS_SPACE_NAME=$1
     ADDRESSES_DEF=$2
-    curl -X PUT -H "content-type: application/json" --data-binary @${ADDRESSES_DEF} http://$(oc get route -o jsonpath='{.spec.host}' restapi)/v1/addresses/${ADDRESS_SPACE_NAME}
+    TOKEN=$(oc whoami -t)
+    curl -X PUT -H "content-type: application/json" --data-binary @${ADDRESSES_DEF} -H "Authorization: Bearer ${TOKEN}" http://$(oc get route -o jsonpath='{.spec.host}' restapi)/v1/addresses/${ADDRESS_SPACE_NAME}
     sleep 40 #waiting for addresses are ready
 }
 
