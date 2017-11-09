@@ -123,6 +123,9 @@ objects:
   - description: The port of the authentication service used by this address space
     name: AUTHENTICATION_SERVICE_PORT
     required: true
+  - description: The CA cert to use for validating authentication service cert
+    name: AUTHENTICATION_SERVICE_CA_CERT
+    required: true
   - description: The client cert to use as identity against authentication service
     name: AUTHENTICATION_SERVICE_CLIENT_SECRET
   - description: The hostname to use in sasl init
@@ -260,6 +263,9 @@ objects:
     required: true
   - description: The port of the authentication service used by this address space
     name: AUTHENTICATION_SERVICE_PORT
+    required: true
+  - description: The CA cert to use for validating authentication service cert
+    name: AUTHENTICATION_SERVICE_CA_CERT
     required: true
   - description: The client cert to use as identity against authentication service
     name: AUTHENTICATION_SERVICE_CLIENT_SECRET
@@ -458,6 +464,9 @@ objects:
     required: true
   - description: The port of the authentication service used by this address space
     name: AUTHENTICATION_SERVICE_PORT
+    required: true
+  - description: The CA cert to use for validating authentication service cert
+    name: AUTHENTICATION_SERVICE_CA_CERT
     required: true
   - description: The client cert to use as identity against authentication service
     name: AUTHENTICATION_SERVICE_CLIENT_SECRET
@@ -672,6 +681,9 @@ objects:
     required: true
   - description: The port of the authentication service used by this address space
     name: AUTHENTICATION_SERVICE_PORT
+    required: true
+  - description: The CA cert to use for validating authentication service cert
+    name: AUTHENTICATION_SERVICE_CA_CERT
     required: true
   - description: The client cert to use as identity against authentication service
     name: AUTHENTICATION_SERVICE_CLIENT_SECRET
@@ -1343,6 +1355,7 @@ objects:
     required: true
   - description: The CA cert to use for validating authentication service cert
     name: AUTHENTICATION_SERVICE_CA_CERT
+    required: true
   - description: The client cert to use as identity against authentication service
     name: AUTHENTICATION_SERVICE_CLIENT_SECRET
   - description: The hostname to use in sasl init
@@ -1657,6 +1670,7 @@ objects:
     required: true
   - description: The CA cert to use for validating authentication service cert
     name: AUTHENTICATION_SERVICE_CA_CERT
+    required: true
   - description: The client cert to use as identity against authentication service
     name: AUTHENTICATION_SERVICE_CLIENT_SECRET
   - description: The hostname to use in sasl init
