@@ -23,10 +23,7 @@ import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.extensions.Deployment;
 import io.fabric8.kubernetes.api.model.extensions.DoneableIngress;
 import io.fabric8.kubernetes.client.dsl.Resource;
-import io.fabric8.openshift.api.model.DoneableRoleBinding;
-import io.fabric8.openshift.api.model.DoneableRoute;
-import io.fabric8.openshift.api.model.RoleBinding;
-import io.fabric8.openshift.api.model.RoleBindingBuilder;
+import io.fabric8.openshift.api.model.*;
 import io.fabric8.openshift.client.OpenShiftClient;
 import io.fabric8.openshift.client.ParameterValue;
 import io.vertx.core.json.JsonObject;
@@ -360,7 +357,7 @@ public class KubernetesHelper implements Kubernetes {
 
             body.put("user", user);
 
-            JsonObject responseBody = doRawHttpRequest("/oapi/v1/namespaces/" + this.namespace + "/localsubjectaccessreviews", "POST", body, false);
+            JsonObject responseBody = doRawHttpRequest("/oapi/v1/namespaces/" + namespace + "/localsubjectaccessreviews", "POST", body, false);
             Boolean allowed = responseBody.getBoolean("allowed");
             return new SubjectAccessReview(user, allowed == null ? false : allowed);
         } else {
@@ -369,11 +366,57 @@ public class KubernetesHelper implements Kubernetes {
     }
 
     @Override
-    public void addTenantAdminRole(String namespace) {
+    public void addDefaultEditPolicy(String namespace) {
         if (client.isAdaptable(OpenShiftClient.class)) {
+            Resource<PolicyBinding, DoneablePolicyBinding> bindingResource = client.policyBindings()
+                    .inNamespace(namespace)
+                    .withName(":default");
+
+            DoneablePolicyBinding binding;
+            if (bindingResource.get() == null) {
+                binding = bindingResource.createNew();
+            } else {
+                binding = bindingResource.edit();
+            }
+            binding.editOrNewMetadata()
+                    .withName(":default")
+                    .endMetadata()
+                    .editOrNewPolicyRef()
+                    .withName("default")
+                    .endPolicyRef()
+                    .addNewRoleBinding()
+                    .withName("edit")
+                    .editOrNewRoleBinding()
+                    .editOrNewMetadata()
+                    .withName("edit")
+                    .withNamespace(namespace)
+                    .endMetadata()
+                    .addToUserNames("system:serviceaccount:" + namespace + ":default")
+                    .addNewSubject()
+                    .withName("default")
+                    .withNamespace(namespace)
+                    .withKind("ServiceAccount")
+                    .endSubject()
+                    .withNewRoleRef()
+                    .withName("edit")
+                    .endRoleRef()
+                    .endRoleBinding()
+                    .endRoleBinding()
+                    .done();
+        } else {
+            // TODO: Add support for Kubernetes RBAC policies
+            log.info("No support for Kubernetes RBAC policies yet, won't add any default edit policy");
+        }
+    }
+
+
+    @Override
+    public void addAddressAdminRole(String namespace) {
+        if (client.isAdaptable(OpenShiftClient.class)) {
+            String roleName = "address-admin";
             client.roles().inNamespace(namespace).createNew()
                     .withNewMetadata()
-                    .withName("address-admin")
+                    .withName(roleName)
                     .endMetadata()
                     .addNewRule()
                     .addToResources("configmaps")
@@ -382,10 +425,9 @@ public class KubernetesHelper implements Kubernetes {
                     .done();
 
             String groupName = "system:serviceaccounts:" + namespace;
-            Resource<RoleBinding, DoneableRoleBinding> bindingResource = client.roleBindings().inNamespace(namespace).withName("address-admin");
             RoleBinding roleBinding = new RoleBindingBuilder()
                     .editOrNewMetadata()
-                    .withName("address-admin")
+                    .withName(roleName)
                     .withNamespace(namespace)
                     .endMetadata()
                     .addToGroupNames(groupName)
@@ -394,11 +436,29 @@ public class KubernetesHelper implements Kubernetes {
                     .withName(groupName)
                     .endSubject()
                     .withNewRoleRef()
-                    .withName("address-admin")
+                    .withName(roleName)
                     .withNamespace(namespace)
                     .endRoleRef()
                     .build();
-            bindingResource.create(roleBinding);
+
+
+            String policyBindingName = ":default";
+
+            Resource<PolicyBinding, DoneablePolicyBinding> bindingResource = client.policyBindings()
+                    .inNamespace(namespace)
+                    .withName(policyBindingName);
+
+
+            PolicyBinding policyBinding = new PolicyBindingBuilder(bindingResource.get())
+                    .addNewRoleBinding()
+                    .withName(roleName)
+                    .withNewRoleBindingLike(roleBinding)
+                    .endRoleBinding()
+                    .endRoleBinding()
+                    .build();
+
+            bindingResource.replace(policyBinding);
+
         } else {
             // TODO: Add support for Kubernetes RBAC policies
             log.info("No support for Kubernetes RBAC policies yet, won't add to address-admin role");
