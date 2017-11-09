@@ -64,3 +64,35 @@ function teardown_test() {
     PROJECT_NAME=$1
     oc delete project $PROJECT_NAME
 }
+
+function create_addres_space() {
+    ADDRESS_SPACE_NAME=$1
+    ADDRESS_SPACE_DEF=$2
+    curl -X POST -H "content-type: application/json" --data-binary @${ADDRESS_SPACE_DEF} http://$(oc get route -o jsonpath='{.spec.host}' restapi)/v1/addressspaces
+    wait_until_up 2 ${ADDRESS_SPACE_NAME} || return 1
+}
+
+function create_addresses() {
+    ADDRESS_SPACE_NAME=$1
+    ADDRESSES_DEF=$2
+    curl -X PUT -H "content-type: application/json" --data-binary @${ADDRESSES_DEF} http://$(oc get route -o jsonpath='{.spec.host}' restapi)/v1/addresses/${ADDRESS_SPACE_NAME}
+    sleep 40 #waiting for addresses are ready
+}
+
+function create_user() {
+    CLI_ID=$1
+    NEW_USER_DEF=$2
+    ADDRESS_SPACE_NAME=$3
+
+    #get keycloak credentials
+    oc extract secret/keycloak-credentials
+    USER=$(cat admin.username)
+    PASSWORD=$(cat admin.password)
+
+    # get token
+    RESULT=$(curl --data "grant_type=password&client_id=${CLI_ID}&username=${USER}&password=${PASSWORD}" http://$(oc get routes -o jsonpath='{.spec.host}' keycloak)/auth/realms/master/protocol/openid-connect/token)
+    TOKEN=`echo ${RESULT} | sed 's/.*access_token":"//g' | sed 's/".*//g'`
+
+    #create user
+    curl -X POST -H "content-type: application/json" --data-binary @${NEW_USER_DEF} -H "Authorization: Bearer ${TOKEN}"  http://${USER}:${PASSWORD}@$(oc get routes -o jsonpath='{.spec.host}' keycloak)/auth/admin/realms/${ADDRESS_SPACE_NAME}/users
+}
