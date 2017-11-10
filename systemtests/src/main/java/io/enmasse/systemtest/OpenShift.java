@@ -66,12 +66,12 @@ public class OpenShift {
 
     public Endpoint getRestEndpoint() throws InterruptedException {
         Route route = client.routes().inNamespace(globalNamespace).withName("restapi").get();
-        Endpoint endpoint = new Endpoint(route.getSpec().getHost(), 80);
+        Endpoint endpoint = new Endpoint(route.getSpec().getHost(), 443);
         if (TestUtils.resolvable(endpoint)) {
             return endpoint;
         } else {
             Logging.log.info("Endpoint didn't resolve, falling back to service endpoint");
-            return getEndpoint(globalNamespace,"address-controller", "http");
+            return getEndpoint(globalNamespace,"address-controller", "https");
         }
     }
 
