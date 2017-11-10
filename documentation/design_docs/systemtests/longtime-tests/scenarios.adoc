@@ -14,18 +14,19 @@ unavailable and some count of errors was reached.
 == brokered
 * testTopicPubSubLong
 - create brokered addr space: test-topic-pubsub-brokered
-- create 10 topics - test-topic-pubsub-N
-- create 10 producers, 20 consumers
+- create 10 topics - test-topic-pubsub-N.M
 - repeat for 30 minutes following steps
-- producer-N: with duration mode send 10messages per second to test-topic-pubsub-N
-- consumer-NM: consume from topics by wildcards (each consumer is subscribed to 2 topics)
+- create 10 producers, 5 consumers
+- subscribe each subscriber to test-topic-pubsub-N.*
+- producer-N: with duration mode send 10messages per second to test-topic-pubsub-N.M
+- consumer-K: consume from topics by wildcards (each consumer is subscribed to 2 topics)
 
 * testQueueSendReceiveLong
 - create brokered addr space: test-queue-sendreceive-brokered
 - create 10 queues- test-queue-sendreceive-N
-- create 10 senders, 20 receivers
 - repeat for 30 minutes following steps
-- producer-N: with duration mode send 10messages per second to test-queue-sendreceive-N
+- create 10 senders, 20 receivers
+- producer-N: send 1000 messages to test-queue-sendreceive-N
 - consumer-M: consume from queue (2 consumers for each queue)
 
 * testCreateDeleteAddressSpaceLong
