@@ -190,6 +190,7 @@ done
 
 
 if [ $MODE == "multitenant" ]; then
+    TEMPLATE_PARAMS="$TEMPLATE_PARAMS ENABLE_RBAC=true"
     if [ -n "$OS_ALLINONE" ]
     then
         runcmd "oc login -u system:admin" "Logging in as system:admin"

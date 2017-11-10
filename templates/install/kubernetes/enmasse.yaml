@@ -576,6 +576,8 @@ items:
         - env:
           - name: CA_DIR
             value: /ca-cert
+          - name: ENABLE_RBAC
+            value: 'false'
           image: docker.io/enmasseproject/address-controller:latest
           livenessProbe:
             httpGet:

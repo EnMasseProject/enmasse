@@ -50,7 +50,7 @@ local images = import "images.jsonnet";
                  standardInfra.generate(with_kafka),
                  me.enmasse_admin_role,
                  brokeredInfra.template,
-                 addressController.deployment("${ADDRESS_CONTROLLER_REPO}", "", "${ENMASSE_CA_SECRET}", "${ADDRESS_CONTROLLER_CERT_SECRET}"),
+                 addressController.deployment("${ADDRESS_CONTROLLER_REPO}", "", "${ENMASSE_CA_SECRET}", "${ADDRESS_CONTROLLER_CERT_SECRET}", "${ENABLE_RBAC}"),
                  addressController.internal_service,
                  restapiRoute.route("${RESTAPI_HOSTNAME}") ],
     "parameters": [
@@ -72,6 +72,11 @@ local images = import "images.jsonnet";
         "name": "ADDRESS_CONTROLLER_CERT_SECRET",
         "description": "Name of the secret containing the address controller certificate",
         "value": "address-controller-cert"
+      },
+      {
+        "name": "ENABLE_RBAC",
+        "description": "Enable RBAC for REST API authentication and authorization",
+        "value": "false"
       }
     ]
   }

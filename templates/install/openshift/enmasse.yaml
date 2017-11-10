@@ -1697,6 +1697,8 @@ objects:
         - env:
           - name: CA_DIR
             value: /ca-cert
+          - name: ENABLE_RBAC
+            value: ${ENABLE_RBAC}
           image: ${ADDRESS_CONTROLLER_REPO}
           livenessProbe:
             httpGet:
@@ -1779,3 +1781,6 @@ parameters:
 - description: Name of the secret containing the address controller certificate
   name: ADDRESS_CONTROLLER_CERT_SECRET
   value: address-controller-cert
+- description: Enable RBAC for REST API authentication and authorization
+  name: ENABLE_RBAC
+  value: 'false'
