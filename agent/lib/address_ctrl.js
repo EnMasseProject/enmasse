@@ -147,10 +147,7 @@ module.exports.create = function (env) {
         port = 8081;
     }
 
-    var auth_string = undefined;
-    if (env.ADDRESS_SPACE_PASSWORD_FILE) {
-        auth_string = 'Basic ' + new Buffer(env.ADDRESS_SPACE + ":" + fs.readFileSync(env.ADDRESS_SPACE_PASSWORD_FILE)).toString('base64');
-    }
+    var auth_string = 'Bearer ' + (env.KUBERNETES_TOKEN || fs.readFileSync('/var/run/secrets/kubernetes.io/serviceaccount/token'));
 
     return new AddressCtrl(host, port, ca, auth_string);
 };

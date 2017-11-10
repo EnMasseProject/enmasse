@@ -18,7 +18,7 @@
 var assert = require('assert');
 var http = require('http');
 
-var address_ctrl = require('../lib/address_ctrl').create({});
+var address_ctrl = require('../lib/address_ctrl').create({"KUBERNETES_TOKEN": "mytoken"});
 
 
 function MockAddressSource () {
