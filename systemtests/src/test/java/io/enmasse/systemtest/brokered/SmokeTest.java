@@ -37,23 +37,17 @@ public class SmokeTest extends MultiTenantTestBase {
      */
     @Test
     public void testAddressTypes() throws Exception {
-        AddressSpace addressSpace = new AddressSpace(
-                "brokered-address-type-a",
-                "brokered-address-type-a",
-                AddressSpaceType.BROKERED);
-        createAddressSpace(addressSpace, "none");
         Destination queueA = Destination.queue("brokeredQueueA");
-        setAddresses(addressSpace, queueA);
+        setAddresses(defaultBrokeredAddressSpace, queueA);
 
-        AmqpClientFactory amqpFactoryA = createAmqpClientFactory(addressSpace);
-        AmqpClient amqpQueueCli = amqpFactoryA.createQueueClient(addressSpace);
+        AmqpClient amqpQueueCli = amqpClientFactory.createQueueClient(defaultBrokeredAddressSpace);
         amqpQueueCli.getConnectOptions().setUsername("test").setPassword("test");
         QueueTest.runQueueTest(amqpQueueCli, queueA);
 
         Destination topicB = Destination.topic("brokeredTopicB");
-        setAddresses(addressSpace, topicB);
+        setAddresses(defaultBrokeredAddressSpace, topicB);
 
-        AmqpClient amqpTopicCli = amqpFactoryA.createTopicClient(addressSpace);
+        AmqpClient amqpTopicCli = amqpClientFactory.createTopicClient(defaultBrokeredAddressSpace);
         amqpTopicCli.getConnectOptions().setUsername("test").setPassword("test");
         List<Future<List<Message>>> recvResults = Arrays.asList(
                 amqpTopicCli.recvMessages(topicB.getAddress(), 1000),

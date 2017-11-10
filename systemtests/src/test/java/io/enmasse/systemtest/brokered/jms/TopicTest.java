@@ -22,7 +22,6 @@ import static org.junit.Assert.assertThat;
 
 public class TopicTest extends JMSTestBase {
 
-    private AddressSpace addressSpace;
 
     private Hashtable<Object, Object> env;
     private ConnectionFactory connectionFactory;
@@ -38,16 +37,10 @@ public class TopicTest extends JMSTestBase {
 
     @Before
     public void setUp() throws Exception {
-        addressSpace = new AddressSpace(
-                "brokered-space-jms-topics",
-                "brokered-space-jms-topics",
-                AddressSpaceType.BROKERED);
-        createAddressSpace(addressSpace, "none");
-
         addressTopic = Destination.topic(topic);
-        setAddresses(addressSpace, addressTopic);
+        setAddresses(defaultBrokeredAddressSpace, addressTopic);
 
-        env = setUpEnv("amqps://" + getRouteEndpoint(addressSpace).toString(), jmsUsername, jmsPassword, jmsClientID,
+        env = setUpEnv("amqps://" + getRouteEndpoint(defaultBrokeredAddressSpace).toString(), jmsUsername, jmsPassword, jmsClientID,
                 new HashMap<String, String>() {{
                     put("topic." + topic, topic);
                 }});
@@ -59,9 +52,6 @@ public class TopicTest extends JMSTestBase {
 
     @After
     public void tearDown() throws Exception {
-        if (TestUtils.existAddressSpace(addressApiClient, addressSpace.getName())) {
-            deleteAddresses(addressTopic);
-        }
         if (connection != null) {
             connection.stop();
         }
@@ -74,7 +64,7 @@ public class TopicTest extends JMSTestBase {
     }
 
     protected Context createContextForShared() throws JMSException, NamingException {
-        Hashtable env2 = setUpEnv("amqps://" + getRouteEndpoint(addressSpace).toString(), jmsUsername, jmsPassword,
+        Hashtable env2 = setUpEnv("amqps://" + getRouteEndpoint(defaultBrokeredAddressSpace).toString(), jmsUsername, jmsPassword,
                 new HashMap<String, String>() {{
                     put("topic." + topic, topic);
                 }});
