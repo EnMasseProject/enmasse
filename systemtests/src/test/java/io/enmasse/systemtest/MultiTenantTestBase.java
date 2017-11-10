@@ -25,15 +25,28 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MultiTenantTestBase extends TestBase {
+
+    protected AddressSpace defaultBrokeredAddressSpace = new AddressSpace("brokered-default", AddressSpaceType.BROKERED);
     private List<AddressSpace> addressSpaces = new ArrayList<>();
 
     @Before
     public void setupSpaceList() throws Exception {
         addressSpaces = new ArrayList<>();
+        if (createDefaultBrokeredAddressSpace()) {
+            if (environment.isMultitenant()) {
+                Logging.log.info("Test is running in multitenant mode");
+                super.createAddressSpace(defaultBrokeredAddressSpace, "none");
+                // TODO: Wait another minute so that all services are connected
+                Logging.log.info("Waiting for 2 minutes before starting tests");
+            }
+        }
+        amqpClientFactory = new AmqpClientFactory(openShift, environment, defaultBrokeredAddressSpace, username, password);
+        mqttClientFactory = new MqttClientFactory(openShift, environment, defaultBrokeredAddressSpace, username, password);
     }
 
     @After
     public void teardownSpaces() throws Exception {
+        setAddresses(defaultBrokeredAddressSpace);
         for (AddressSpace addressSpace : addressSpaces) {
             deleteAddressSpace(addressSpace);
         }
@@ -43,6 +56,10 @@ public class MultiTenantTestBase extends TestBase {
     @Override
     protected boolean createDefaultAddressSpace() {
         return false;
+    }
+
+    protected boolean createDefaultBrokeredAddressSpace() {
+        return true;
     }
 
     @Override

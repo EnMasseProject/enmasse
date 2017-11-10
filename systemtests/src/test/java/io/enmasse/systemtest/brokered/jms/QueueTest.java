@@ -20,7 +20,6 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 
 public class QueueTest extends JMSTestBase {
-    private AddressSpace addressSpace;
 
     private Hashtable<Object, Object> env;
     private ConnectionFactory connectionFactory;
@@ -36,16 +35,10 @@ public class QueueTest extends JMSTestBase {
 
     @Before
     public void setUp() throws Exception {
-        addressSpace = new AddressSpace(
-                "brokered-space-jms-queues",
-                "brokered-space-jms-queues",
-                AddressSpaceType.BROKERED);
-        createAddressSpace(addressSpace, "none");
-
         addressQueue = Destination.queue(queue);
-        setAddresses(addressSpace, addressQueue);
+        setAddresses(defaultBrokeredAddressSpace, addressQueue);
 
-        env = setUpEnv("amqps://" + getRouteEndpoint(addressSpace).toString(), jmsUsername, jmsPassword, jmsClientID,
+        env = setUpEnv("amqps://" + getRouteEndpoint(defaultBrokeredAddressSpace).toString(), jmsUsername, jmsPassword, jmsClientID,
                 new HashMap<String, String>() {{
                     put("queue." + queue, queue);
                 }});
@@ -57,9 +50,6 @@ public class QueueTest extends JMSTestBase {
 
     @After
     public void tearDown() throws Exception {
-        if (TestUtils.existAddressSpace(addressApiClient, addressSpace.getName())) {
-            deleteAddresses(addressQueue);
-        }
         if (connection != null) {
             connection.stop();
         }
