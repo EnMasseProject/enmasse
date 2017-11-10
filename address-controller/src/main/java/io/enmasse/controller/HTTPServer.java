@@ -75,8 +75,10 @@ public class HTTPServer extends AbstractVerticle {
         deployment.getProviderFactory().registerProvider(JacksonConfig.class);
 
         if (enableRbac) {
+            log.info("Enabling RBAC for REST API");
             deployment.getProviderFactory().registerProviderInstance(new AuthInterceptor(kubernetes));
         } else {
+            log.info("Disabling authentication and authorization for REST API");
             deployment.getProviderFactory().registerProviderInstance(new AllowAllAuthInterceptor());
         }
 

@@ -33,7 +33,7 @@ local common = import "common.jsonnet";
   external_service::
     self.common_service("address-controller-external", "LoadBalancer", {}),
 
-  deployment(image, template_config, ca_secret, cert_secret)::
+  deployment(image, template_config, ca_secret, cert_secret, enable_rbac)::
     {
       "apiVersion": "extensions/v1beta1",
       "kind": "Deployment",
@@ -61,7 +61,8 @@ local common = import "common.jsonnet";
                 "image": image,
                 "name": "address-controller",
                 "env": [
-                  common.env("CA_DIR", "/ca-cert")
+                  common.env("CA_DIR", "/ca-cert"),
+                  common.env("ENABLE_RBAC", enable_rbac)
                 ],
                 "volumeMounts": [
                   common.volume_mount("ca-cert", "/ca-cert", true),
