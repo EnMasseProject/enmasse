@@ -30,6 +30,7 @@ public class AddressApiClient {
         this.vertx = VertxFactory.create();
         this.client = WebClient.create(vertx, new WebClientOptions()
                 .setSsl(true)
+                // TODO: Fetch CA and use
                 .setTrustAll(true)
                 .setVerifyHost(false));
         this.openshift = openshift;
