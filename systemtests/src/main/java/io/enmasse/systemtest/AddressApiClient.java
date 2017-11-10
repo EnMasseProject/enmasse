@@ -8,6 +8,7 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
+import io.vertx.ext.web.client.WebClientOptions;
 import io.vertx.ext.web.codec.BodyCodec;
 
 import java.util.HashSet;
@@ -27,7 +28,10 @@ public class AddressApiClient {
 
     public AddressApiClient(OpenShift openshift) throws InterruptedException {
         this.vertx = VertxFactory.create();
-        this.client = WebClient.create(vertx);
+        this.client = WebClient.create(vertx, new WebClientOptions()
+                .setSsl(true)
+                .setTrustAll(true)
+                .setVerifyHost(false));
         this.openshift = openshift;
         this.endpoint = openshift.getRestEndpoint();
         this.authzString = "Bearer " + openshift.getApiToken();
