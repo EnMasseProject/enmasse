@@ -47,11 +47,15 @@ public class MultiTenantTestBase extends TestBase {
 
     @After
     public void teardownSpaces() throws Exception {
-        setAddresses(defaultBrokeredAddressSpace);
-        for (AddressSpace addressSpace : addressSpaces) {
-            deleteAddressSpace(addressSpace);
+        if (addressApiClient != null) {
+            if (createDefaultBrokeredAddressSpace()) {
+                setAddresses(defaultBrokeredAddressSpace);
+            }
+            for (AddressSpace addressSpace : addressSpaces) {
+                deleteAddressSpace(addressSpace);
+            }
+            addressSpaces.clear();
         }
-        addressSpaces.clear();
     }
 
     @Override
@@ -68,16 +72,6 @@ public class MultiTenantTestBase extends TestBase {
         super.createAddressSpace(addressSpace, authService);
         addressSpaces.add(addressSpace);
         return addressSpace;
-    }
-
-    protected AmqpClientFactory createAmqpClientFactory(AddressSpace addressSpace) {
-        return new AmqpClientFactory(new OpenShift(environment, environment.namespace(), addressSpace.getNamespace()),
-                environment, addressSpace, username, password);
-    }
-
-    protected MqttClientFactory createMqttClientFactory(AddressSpace addressSpace) {
-        return new MqttClientFactory(new OpenShift(environment, environment.namespace(), addressSpace.getNamespace()),
-                environment, addressSpace, username, password);
     }
 
     protected Endpoint getRouteEndpoint(AddressSpace addressSpace) {

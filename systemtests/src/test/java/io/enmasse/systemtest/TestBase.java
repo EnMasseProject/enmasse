@@ -194,4 +194,14 @@ public abstract class TestBase {
         TimeoutBudget budget = new TimeoutBudget(5, TimeUnit.MINUTES);
         TestUtils.setReplicas(openShift, addressSpace, destination, numReplicas, budget);
     }
+
+    protected AmqpClientFactory createAmqpClientFactory(AddressSpace addressSpace) {
+        return new AmqpClientFactory(new OpenShift(environment, environment.namespace(), addressSpace.getNamespace()),
+                environment, addressSpace, username, password);
+    }
+
+    protected MqttClientFactory createMqttClientFactory(AddressSpace addressSpace) {
+        return new MqttClientFactory(new OpenShift(environment, environment.namespace(), addressSpace.getNamespace()),
+                environment, addressSpace, username, password);
+    }
 }
