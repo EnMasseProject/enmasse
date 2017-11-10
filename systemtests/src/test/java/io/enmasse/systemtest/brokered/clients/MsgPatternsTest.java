@@ -100,14 +100,10 @@ public class MsgPatternsTest extends ClientTestBase {
 
     protected void doMessageBrowseTest(AbstractClient sender, AbstractClient receiver_browse, AbstractClient receiver_receive)
             throws Exception {
-        AddressSpace addressSpace = new AddressSpace("brokered-message-browse",
-                "brokered-message-browse",
-                AddressSpaceType.BROKERED);
-        createAddressSpace(addressSpace, "none");
         Destination dest = Destination.queue("message-browse");
-        setAddresses(addressSpace, dest);
+        setAddresses(defaultBrokeredAddressSpace, dest);
 
-        arguments.put(Argument.BROKER, getRouteEndpoint(addressSpace).toString());
+        arguments.put(Argument.BROKER, getRouteEndpoint(defaultBrokeredAddressSpace).toString());
         arguments.put(Argument.ADDRESS, dest.getAddress());
         arguments.put(Argument.COUNT, "10");
 
@@ -200,14 +196,10 @@ public class MsgPatternsTest extends ClientTestBase {
 
     protected void doMessageSelectorTopicTest(AbstractClient sender, AbstractClient subscriber,
                                               AbstractClient subscriber2, AbstractClient subscriber3) throws Exception{
-        AddressSpace addressSpace = new AddressSpace("brokered-selectors-topic",
-                "brokered-selectors-topic",
-                AddressSpaceType.BROKERED);
-        createAddressSpace(addressSpace, "none");
         Destination topic = Destination.topic("selector-topic");
-        setAddresses(addressSpace, topic);
+        setAddresses(defaultBrokeredAddressSpace, topic);
 
-        arguments.put(Argument.BROKER, getRouteEndpoint(addressSpace).toString());
+        arguments.put(Argument.BROKER, getRouteEndpoint(defaultBrokeredAddressSpace).toString());
         arguments.put(Argument.COUNT, "10");
         arguments.put(Argument.ADDRESS, topic.getAddress());
         arguments.put(Argument.MSG_PROPERTY, "colour~red");
