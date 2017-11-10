@@ -22,7 +22,6 @@ public class QueueTest extends MultiTenantTestBase {
      */
     @Test
     public void messageGroupTest() throws Exception {
-        createAddressSpace(defaultBrokeredAddressSpace, "none");
         Destination dest = Destination.queue("messageGroupQueue");
         setAddresses(defaultBrokeredAddressSpace, dest);
 

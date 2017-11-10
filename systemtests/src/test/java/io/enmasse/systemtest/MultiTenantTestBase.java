@@ -39,9 +39,10 @@ public class MultiTenantTestBase extends TestBase {
                 // TODO: Wait another minute so that all services are connected
                 Logging.log.info("Waiting for 2 minutes before starting tests");
             }
+            amqpClientFactory = new AmqpClientFactory(openShift, environment, defaultBrokeredAddressSpace, username, password);
+            mqttClientFactory = new MqttClientFactory(openShift, environment, defaultBrokeredAddressSpace, username, password);
         }
-        amqpClientFactory = new AmqpClientFactory(openShift, environment, defaultBrokeredAddressSpace, username, password);
-        mqttClientFactory = new MqttClientFactory(openShift, environment, defaultBrokeredAddressSpace, username, password);
+
     }
 
     @After

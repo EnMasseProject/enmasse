@@ -68,9 +68,9 @@ public abstract class TestBase {
                 this.password = "systemtest";
                 getKeycloakClient().createUser(defaultAddressSpace.getName(), username, password, 1, TimeUnit.MINUTES);
             }
+            amqpClientFactory = new AmqpClientFactory(openShift, environment, defaultAddressSpace, username, password);
+            mqttClientFactory = new MqttClientFactory(openShift, environment, defaultAddressSpace, username, password);
         }
-        amqpClientFactory = new AmqpClientFactory(openShift, environment, defaultAddressSpace, username, password);
-        mqttClientFactory = new MqttClientFactory(openShift, environment, defaultAddressSpace, username, password);
     }
 
     @After
