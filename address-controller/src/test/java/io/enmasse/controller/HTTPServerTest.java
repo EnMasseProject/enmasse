@@ -30,7 +30,6 @@ import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientOptions;
 import io.vertx.core.http.HttpClientRequest;
-import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.Async;
@@ -42,7 +41,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import java.net.URI;
-import java.util.Base64;
 import java.util.UUID;
 
 import static org.mockito.Matchers.any;
@@ -69,7 +67,7 @@ public class HTTPServerTest {
         when(kubernetes.performTokenReview(eq("mytoken"))).thenReturn(new TokenReview("foo", true));
         when(kubernetes.performSubjectAccessReview(eq("foo"), any(), any())).thenReturn(new SubjectAccessReview("foo", true));
         when(kubernetes.performSubjectAccessReview(eq("foo"), any(), any())).thenReturn(new SubjectAccessReview("foo", true));
-        vertx.deployVerticle(new HTTPServer(instanceApi, "/doesnotexist", kubernetes), context.asyncAssertSuccess());
+        vertx.deployVerticle(new HTTPServer(instanceApi, "/doesnotexist", kubernetes, true), context.asyncAssertSuccess());
     }
 
     @After

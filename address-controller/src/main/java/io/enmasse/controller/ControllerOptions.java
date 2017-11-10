@@ -40,11 +40,12 @@ public final class ControllerOptions {
     private final String certSecret;
     private final AuthServiceInfo noneAuthService;
     private final AuthServiceInfo standardAuthService;
+    private final boolean enableRbac;
 
     private ControllerOptions(String masterUrl, String namespace, String token,
                               File caDir, File templateDir, String messagingHost, String mqttHost,
                               String consoleHost, String certSecret, String certDir,
-                              AuthServiceInfo noneAuthService, AuthServiceInfo standardAuthService) {
+                              AuthServiceInfo noneAuthService, AuthServiceInfo standardAuthService, boolean enableRbac) {
         this.masterUrl = masterUrl;
         this.namespace = namespace;
         this.token = token;
@@ -57,6 +58,7 @@ public final class ControllerOptions {
         this.certDir = certDir;
         this.noneAuthService = noneAuthService;
         this.standardAuthService = standardAuthService;
+        this.enableRbac = enableRbac;
     }
 
     public String masterUrl() {
@@ -108,6 +110,10 @@ public final class ControllerOptions {
         return Optional.ofNullable(standardAuthService);
     }
 
+    public boolean isEnableRbac() {
+        return enableRbac;
+    }
+
     public static ControllerOptions fromEnv(Map<String, String> env) throws IOException {
 
         String masterHost = getEnvOrThrow(env, "KUBERNETES_SERVICE_HOST");
@@ -139,6 +145,8 @@ public final class ControllerOptions {
         String consoleHost = getEnv(env, "CONSOLE_ENDPOINT_HOST").orElse(null);
         String certSecret = getEnv(env, "MESSAGING_CERT_SECRET").orElse(null);
 
+        boolean enableRbac = getEnv(env, "ENABLE_RBAC").map(Boolean::parseBoolean).orElse(false);
+
         return new ControllerOptions(String.format("https://%s:%s", masterHost, masterPort),
                 namespace,
                 token,
@@ -150,7 +158,8 @@ public final class ControllerOptions {
                 certSecret,
                 certDir,
                 noneAuthService,
-                standardAuthService);
+                standardAuthService,
+                enableRbac);
     }
 
 

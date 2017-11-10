@@ -54,14 +54,16 @@ public class HTTPServer extends AbstractVerticle {
     private final AddressSpaceApi addressSpaceApi;
     private final String certDir;
     private final Kubernetes kubernetes;
+    private final boolean enableRbac;
 
     private HttpServer httpServer;
     private HttpServer httpsServer;
 
-    public HTTPServer(AddressSpaceApi addressSpaceApi, String certDir, Kubernetes kubernetes) {
+    public HTTPServer(AddressSpaceApi addressSpaceApi, String certDir, Kubernetes kubernetes, boolean enableRbac) {
         this.addressSpaceApi = addressSpaceApi;
         this.certDir = certDir;
         this.kubernetes = kubernetes;
+        this.enableRbac = enableRbac;
     }
 
     @Override
@@ -72,7 +74,11 @@ public class HTTPServer extends AbstractVerticle {
         deployment.getProviderFactory().registerProvider(DefaultExceptionMapper.class);
         deployment.getProviderFactory().registerProvider(JacksonConfig.class);
 
-        deployment.getProviderFactory().registerProviderInstance(new AuthInterceptor(kubernetes));
+        if (enableRbac) {
+            deployment.getProviderFactory().registerProviderInstance(new AuthInterceptor(kubernetes));
+        } else {
+            deployment.getProviderFactory().registerProviderInstance(new AllowAllAuthInterceptor());
+        }
 
         deployment.getRegistry().addSingletonResource(new SwaggerSpecEndpoint());
         deployment.getRegistry().addSingletonResource(new HttpAddressService(addressSpaceApi));
