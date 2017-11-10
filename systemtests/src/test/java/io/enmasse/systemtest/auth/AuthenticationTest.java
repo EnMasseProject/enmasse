@@ -17,6 +17,7 @@ package io.enmasse.systemtest.auth;
 
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.amqp.AmqpClient;
+import io.enmasse.systemtest.amqp.AmqpClientFactory;
 import io.enmasse.systemtest.mqtt.MqttClient;
 import org.apache.qpid.proton.message.Message;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
@@ -194,7 +195,8 @@ public class AuthenticationTest extends TestBase {
     }
 
     private boolean canConnectWithAmqpToQueue(AddressSpace addressSpace, String username, String password, String queueAddress) throws InterruptedException, IOException, TimeoutException, ExecutionException {
-        AmqpClient client = amqpClientFactory.createQueueClient(addressSpace);
+        AmqpClientFactory clientFactory = createAmqpClientFactory(addressSpace);
+        AmqpClient client = clientFactory.createQueueClient(addressSpace);
         client.getConnectOptions().setUsername(username).setPassword(password);
 
         Future<Integer> sent = client.sendMessages(queueAddress, Arrays.asList("msg1"), 10, TimeUnit.SECONDS);
@@ -204,7 +206,8 @@ public class AuthenticationTest extends TestBase {
     }
 
     private boolean canConnectWithAmqpToAnycast(AddressSpace addressSpace, String username, String password, String anycastAddress) throws InterruptedException, IOException, TimeoutException, ExecutionException {
-        AmqpClient client = amqpClientFactory.createQueueClient(addressSpace);
+        AmqpClientFactory clientFactory = createAmqpClientFactory(addressSpace);
+        AmqpClient client = clientFactory.createQueueClient(addressSpace);
         client.getConnectOptions().setUsername(username).setPassword(password);
 
         Future<List<Message>> received = client.recvMessages(anycastAddress, 1, 10, TimeUnit.SECONDS);
@@ -214,7 +217,8 @@ public class AuthenticationTest extends TestBase {
     }
 
     private boolean canConnectWithAmqpToMulticast(AddressSpace addressSpace, String username, String password, String multicastAddress) throws InterruptedException, IOException, TimeoutException, ExecutionException {
-        AmqpClient client = amqpClientFactory.createBroadcastClient(addressSpace);
+        AmqpClientFactory clientFactory = createAmqpClientFactory(addressSpace);
+        AmqpClient client = clientFactory.createBroadcastClient(addressSpace);
         client.getConnectOptions().setUsername(username).setPassword(password);
 
         Future<List<Message>> received = client.recvMessages(multicastAddress, 1, 10, TimeUnit.SECONDS);
@@ -224,7 +228,8 @@ public class AuthenticationTest extends TestBase {
     }
 
     private boolean canConnectWithAmqpToTopic(AddressSpace addressSpace, String username, String password, String topicAddress) throws InterruptedException, IOException, TimeoutException, ExecutionException {
-        AmqpClient client = amqpClientFactory.createTopicClient(addressSpace);
+        AmqpClientFactory clientFactory = createAmqpClientFactory(addressSpace);
+        AmqpClient client = clientFactory.createTopicClient(addressSpace);
         client.getConnectOptions().setUsername(username).setPassword(password);
 
         Future<List<Message>> received = client.recvMessages(topicAddress, 1, 10, TimeUnit.SECONDS);
