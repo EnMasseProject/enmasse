@@ -204,22 +204,10 @@ local hawkularBrokerConfig = import "hawkular-broker-config.jsonnet";
                 common.volume_mount("agent-internal-cert", "/etc/enmasse-certs", true)
               ],
               "ports": [
-                common.container_port("http", 8080)
+                common.container_port("https", 8080)
               ],
-              "livenessProbe": {
-                "httpGet": {
-                  "path": "/probe",
-                  "port": "http",
-                  "scheme": "HTTPS"
-                }
-              },
-              "readinessProbe": {
-                "httpGet": {
-                  "path": "/probe",
-                  "port": "http",
-                  "scheme": "HTTPS"
-                }
-              }
+              "livenessProbe": common.http_probe("https", "/probe", "HTTPS"),
+              "readinessProbe": common.http_probe("https", "/probe", "HTTPS")
             }
           ]
         }
@@ -237,16 +225,16 @@ local hawkularBrokerConfig = import "hawkular-broker-config.jsonnet";
       },
       "annotations": {
         "addressSpace": "${ADDRESS_SPACE}",
-        "io.enmasse.endpointPort": "http"
+        "io.enmasse.endpointPort": "https"
       },
       "name": "console"
     },
     "spec": {
       "ports": [
         {
-          "name": "http",
-          "port": 8080,
-          "targetPort": "http"
+          "name": "https",
+          "port": 8081,
+          "targetPort": 8080
         }
       ],
       "selector": {

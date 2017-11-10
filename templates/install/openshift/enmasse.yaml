@@ -745,14 +745,15 @@ objects:
     metadata:
       annotations:
         addressSpace: ${ADDRESS_SPACE}
-        io.enmasse.endpointPort: http
+        io.enmasse.endpointPort: https
       labels:
         app: enmasse
       name: console
     spec:
       ports:
-      - name: http
-        port: 8080
+      - name: https
+        port: 8081
+        targetPort: 8080
       selector:
         name: admin
   - apiVersion: v1
@@ -1157,7 +1158,9 @@ objects:
             image: ${RAGENT_REPO}
             livenessProbe:
               httpGet:
+                path: /
                 port: http
+                scheme: HTTP
               initialDelaySeconds: 60
             name: ragent
             ports:
@@ -1227,20 +1230,18 @@ objects:
             livenessProbe:
               httpGet:
                 path: /probe
-                port: http
+                port: https
                 scheme: HTTPS
             name: agent
             ports:
             - containerPort: 8080
-              name: http
-              protocol: TCP
+              name: https
             - containerPort: 56720
               name: amqp-ws
-              protocol: TCP
             readinessProbe:
               httpGet:
                 path: /probe
-                port: http
+                port: https
                 scheme: HTTPS
             resources:
               limits:
@@ -1593,16 +1594,16 @@ objects:
             livenessProbe:
               httpGet:
                 path: /probe
-                port: http
+                port: https
                 scheme: HTTPS
             name: agent
             ports:
             - containerPort: 8080
-              name: http
+              name: https
             readinessProbe:
               httpGet:
                 path: /probe
-                port: http
+                port: https
                 scheme: HTTPS
             volumeMounts:
             - mountPath: /opt/agent/authservice-ca
@@ -1629,15 +1630,15 @@ objects:
     metadata:
       annotations:
         addressSpace: ${ADDRESS_SPACE}
-        io.enmasse.endpointPort: http
+        io.enmasse.endpointPort: https
       labels:
         app: enmasse
       name: console
     spec:
       ports:
-      - name: http
-        port: 8080
-        targetPort: http
+      - name: https
+        port: 8081
+        targetPort: 8080
       selector:
         role: agent
   parameters:
@@ -1700,23 +1701,20 @@ objects:
           livenessProbe:
             httpGet:
               path: /v1/health
-              port: http
+              port: https
+              scheme: HTTPS
             initialDelaySeconds: 30
           name: address-controller
           ports:
-          - containerPort: 8080
-            name: http
-            protocol: TCP
           - containerPort: 8081
             name: https
-            protocol: TCP
-          - containerPort: 5672
-            name: amqp
-            protocol: TCP
+          - containerPort: 8080
+            name: http
           readinessProbe:
             httpGet:
               path: /v1/health
-              port: http
+              port: https
+              scheme: HTTPS
             initialDelaySeconds: 30
           resources:
             limits:
@@ -1747,18 +1745,10 @@ objects:
     name: address-controller
   spec:
     ports:
-    - name: http
-      port: 8080
-      protocol: TCP
-      targetPort: http
     - name: https
       port: 8081
       protocol: TCP
       targetPort: https
-    - name: amqp
-      port: 5672
-      protocol: TCP
-      targetPort: amqp
     selector:
       name: address-controller
     type: ClusterIP
@@ -1770,9 +1760,10 @@ objects:
     name: restapi
   spec:
     host: ${RESTAPI_HOSTNAME}
-    path: /v1
     port:
-      targetPort: http
+      targetPort: https
+    tls:
+      termination: passthrough
     to:
       kind: Service
       name: address-controller
