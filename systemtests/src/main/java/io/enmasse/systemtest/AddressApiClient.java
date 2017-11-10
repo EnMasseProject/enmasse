@@ -83,9 +83,11 @@ public class AddressApiClient {
     }
 
     public void deleteAddressSpace(AddressSpace addressSpace) throws Exception {
+        String path = addressSpacesPath + "/" + addressSpace.getName();
+        Logging.log.info("Following HTTP request will be used for removing address space: '{}'", path);
         CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
         doRequestNTimes(initRetry, () -> {
-            client.delete(endpoint.getPort(), endpoint.getHost(), addressSpacesPath + "/" + addressSpace.getName())
+            client.delete(endpoint.getPort(), endpoint.getHost(), path)
                     .as(BodyCodec.jsonObject())
                     .putHeader(HttpHeaders.AUTHORIZATION.toString(), authzString)
                     .timeout(20_000)
