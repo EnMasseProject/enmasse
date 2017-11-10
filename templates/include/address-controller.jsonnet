@@ -14,22 +14,10 @@ local common = import "common.jsonnet";
     "spec": {
       "ports": [
         {
-          "name": "http",
-          "port": 8080,
-          "protocol": "TCP",
-          "targetPort": "http"
-        },
-        {
           "name": "https",
           "port": 8081,
           "protocol": "TCP",
           "targetPort": "https"
-        },
-        {
-          "name": "amqp",
-          "port": 5672,
-          "protocol": "TCP",
-          "targetPort": "amqp"
         }
       ],
       "selector": {
@@ -45,7 +33,7 @@ local common = import "common.jsonnet";
   external_service::
     self.common_service("address-controller-external", "LoadBalancer", {}),
 
-  deployment(image_repo, template_config, ca_secret, cert_secret)::
+  deployment(image, template_config, ca_secret, cert_secret)::
     {
       "apiVersion": "extensions/v1beta1",
       "kind": "Deployment",
@@ -66,54 +54,19 @@ local common = import "common.jsonnet";
             }
           },
 
-          local template_mount = [{
-              "name": "templates",
-              "mountPath": "/enmasse-templates"
-          }],
-
-          local certs = [{
-            "name": "ca-cert",
-            "mountPath": "/ca-cert",
-            "readOnly": true
-          },
-          {
-            "name": "address-controller-cert",
-            "mountPath": "/address-controller-cert",
-            "readOnly": true
-          }],
-
-          local mounts = if template_config != ""
-            then template_mount + certs
-            else certs,
-
-          local ports = [
-            {
-              "name": "http",
-              "containerPort": 8080,
-              "protocol": "TCP"
-            },
-            {
-              "name": "https",
-              "containerPort": 8081,
-              "protocol": "TCP"
-            },
-            {
-              "name": "amqp",
-              "containerPort": 5672,
-              "protocol": "TCP"
-            }
-          ],
           "spec": {
             "serviceAccount": "enmasse-service-account",
             "containers": [
               {
-                "image": image_repo,
+                "image": image,
                 "name": "address-controller",
-                "env": [{
-                  "name": "CA_DIR",
-                  "value": "/ca-cert"
-                }],
-                "volumeMounts": mounts,
+                "env": [
+                  common.env("CA_DIR", "/ca-cert")
+                ],
+                "volumeMounts": [
+                  common.volume_mount("ca-cert", "/ca-cert", true),
+                  common.volume_mount("address-controller-cert", "/address-controller-cert", true),
+                ] + if template_config != "" then [ common.volume_mount("templates", "/enmasse-templates") ] else [],
                 "resources": {
                     "requests": {
                         "memory": "512Mi",
@@ -122,34 +75,18 @@ local common = import "common.jsonnet";
                         "memory": "512Mi",
                     }
                 },
-                "ports": ports,
-                "livenessProbe": common.http_probe("http", "/v1/health", 30),
-                "readinessProbe": common.http_probe("http", "/v1/health", 30),
+                "ports": [
+                  common.container_port("https", 8081),
+                  common.container_port("http", 8080)
+                ],
+               "livenessProbe": common.http_probe("https", "/v1/health", "HTTPS", 30),
+                "readinessProbe": common.http_probe("https", "/v1/health", "HTTPS", 30),
               }
             ],
-            local template_volume = [{
-                "name": "templates",
-                "configMap": {
-                  "name": template_config
-                }
-            }],
-
-            local secret_volume = [{
-                "name": "ca-cert",
-                "secret": {
-                  "secretName": ca_secret
-                }
-            },
-            {
-              "name": "address-controller-cert",
-              "secret": {
-                "secretName": cert_secret
-              }
-            }],
-
-            "volumes": if template_config != ""
-              then template_volume + secret_volume
-              else secret_volume
+            "volumes": [
+              common.secret_volume("ca-cert", ca_secret),
+              common.secret_volume("address-controller-cert", cert_secret)
+            ] + if template_config != "" then [ common.configmap_volume("templates", template_config) ] else [],
           }
         }
       }

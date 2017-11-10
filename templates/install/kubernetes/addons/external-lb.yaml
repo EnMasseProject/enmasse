@@ -9,18 +9,10 @@ items:
     name: address-controller-external
   spec:
     ports:
-    - name: http
-      port: 8080
-      protocol: TCP
-      targetPort: http
     - name: https
       port: 8081
       protocol: TCP
       targetPort: https
-    - name: amqp
-      port: 5672
-      protocol: TCP
-      targetPort: amqp
     selector:
       name: address-controller
     type: LoadBalancer

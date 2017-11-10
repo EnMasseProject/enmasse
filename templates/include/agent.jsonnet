@@ -3,7 +3,7 @@ local authService = import "auth-service.jsonnet";
 local common = import "common.jsonnet";
 {
   service(addressSpace)::
-    common.service(addressSpace, "console", "agent", "http", 8080, 8080),
+    common.service(addressSpace, "console", "agent", "https", 8081, 8080),
 
   container(image_repo, env)::
     {
@@ -19,31 +19,11 @@ local common = import "common.jsonnet";
         }
       },
       "ports": [
-        {
-          "name": "http",
-          "containerPort": 8080,
-          "protocol": "TCP"
-        },
-        {
-          "name": "amqp-ws",
-          "containerPort": 56720,
-          "protocol": "TCP"
-        }
+        common.container_port("https", 8080),
+        common.container_port("amqp-ws", 56720),
       ],
-      "livenessProbe": {
-        "httpGet": {
-          "path": "/probe",
-          "port": "http",
-          "scheme": "HTTPS"
-        }
-      },
-      "readinessProbe": {
-        "httpGet": {
-          "path": "/probe",
-          "port": "http",
-          "scheme": "HTTPS"
-        }
-      }
+      "livenessProbe": common.http_probe("https", "/probe", "HTTPS"),
+      "readinessProbe": common.http_probe("https", "/probe", "HTTPS")
    },
 
   deployment(addressSpace, image_repo)::
@@ -101,7 +81,7 @@ local common = import "common.jsonnet";
           "name": "console"
         },
         "port": {
-          "targetPort": "http"
+          "targetPort": "https"
         }
       }
     },
@@ -124,13 +104,13 @@ local common = import "common.jsonnet";
         "rules": [
           {
             "host": hostname,
-            "http": {
+            "https": {
               "paths": [
                 {
                   "path": "/",
                   "backend": {
                     "serviceName": "console",
-                    "servicePort": 8080
+                    "servicePort": 8081
                   }
                 }
               ]

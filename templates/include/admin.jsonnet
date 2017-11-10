@@ -29,7 +29,7 @@ local common = import "common.jsonnet";
     self.service("ragent", addressSpace, [{"name": "amqp", "port": 5671, "targetPort": 55671}]),
     self.service("configuration", addressSpace, [{"name": "amqps", "port": 5671}]),
     self.service("queue-scheduler", addressSpace, [{"name": "amqp", "port": 5672, "targetPort": 55667}]),
-    self.service("console", addressSpace, [{"name": "http", "port": 8080}], "http")
+    self.service("console", addressSpace, [{"name": "https", "port": 8081, "targetPort": 8080}], "https")
   ],
 
 
@@ -103,12 +103,7 @@ local common = import "common.jsonnet";
                   "protocol": "TCP"
                 }
               ],
-              "livenessProbe": {
-                "httpGet": {
-                  "port": "http"
-                },
-                "initialDelaySeconds": 60
-              },
+              "livenessProbe": common.http_probe("http", "/", "HTTP", 60),
               "volumeMounts": [
                 {
                   "name": "admin-internal-cert",

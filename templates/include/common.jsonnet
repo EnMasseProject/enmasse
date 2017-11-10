@@ -153,7 +153,7 @@
     }
   },
 
-  tcp_probe(port, initialDelay)::
+  tcp_probe(port, initialDelay=0)::
   {
     "tcpSocket": {
       "port": port
@@ -161,11 +161,12 @@
     [if initialDelay != 0 then "initialDelaySeconds"]: initialDelay
   },
 
-  http_probe(port, path, initialDelay)::
+  http_probe(port, path, scheme, initialDelay=0)::
   {
     "httpGet": {
       "port": port,
-      "path": path
+      "path": path,
+      "scheme": scheme
     },
     [if initialDelay != 0 then "initialDelaySeconds"]: initialDelay
   },
