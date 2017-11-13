@@ -39,14 +39,14 @@ public class TopicTest extends MarathonTestBase {
         }
         setAddresses(addressSpace, topicList.toArray(new Destination[0]));
 
+        //create client
         AmqpClientFactory amqpFactory = createAmqpClientFactory(addressSpace);
+        AmqpClient client = amqpFactory.createTopicClient(addressSpace);
+        client.getConnectOptions().setUsername("test").setPassword("test");
 
         List<String> msgBatch = TestUtils.generateMessages(msgCount);
 
         runTestInLoop(30, () -> {
-            //create client
-            AmqpClient client = amqpFactory.createTopicClient(addressSpace);
-            client.getConnectOptions().setUsername("test").setPassword("test");
 
             //attach subscibers
             List<Future<List<Message>>> recvResults = new ArrayList<>();
@@ -65,8 +65,9 @@ public class TopicTest extends MarathonTestBase {
                 collector.checkThat(recvResults.get(i).get().size(), is(msgCount * 2));
             }
 
-            client.close();
-            Thread.sleep(5000);
+            Thread.sleep(2000);
         });
+
+        client.close();
     }
 }

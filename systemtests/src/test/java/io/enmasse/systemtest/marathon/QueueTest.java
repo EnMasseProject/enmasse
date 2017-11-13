@@ -35,15 +35,14 @@ public class QueueTest extends MarathonTestBase{
         }
         setAddresses(addressSpace, queueList.toArray(new Destination[0]));
 
+        //create client
         AmqpClientFactory amqpFactory = createAmqpClientFactory(addressSpace);
+        AmqpClient client = amqpFactory.createQueueClient(addressSpace);
+        client.getConnectOptions().setUsername("test").setPassword("test");
 
         List<String> msgBatch = TestUtils.generateMessages(msgCount);
 
         runTestInLoop(30, () -> {
-            //create client
-            AmqpClient client = amqpFactory.createQueueClient(addressSpace);
-            client.getConnectOptions().setUsername("test").setPassword("test");
-
             //attach receivers
             List<Future<List<Message>>> recvResults = new ArrayList<>();
             for (int i = 0; i < recvCount / 2; i++) {
@@ -62,8 +61,9 @@ public class QueueTest extends MarathonTestBase{
                 collector.checkThat(recvResults.get(i).get().size(), is(msgCount / 2));
             }
 
-            client.close();
-            Thread.sleep(5000);
+            Thread.sleep(2000);
         });
+
+        client.close();
     }
 }
