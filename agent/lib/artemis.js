@@ -159,15 +159,17 @@ Artemis.prototype.getQueueNames = function () {
     return this._request('broker', 'getQueueNames', []);
 }
 
-var queue_attributes = {temporary: 'isTemporary',
-                        durable: 'isDurable',
-                        messages: 'getMessageCount',
-                        consumers: 'getConsumerCount',
-                        enqueued: 'getMessagesAdded',
-                        delivering: 'getDeliveringCount',
-                        acknowledged: 'getMessagesAcknowledged',
-                        expired: 'getMessagesExpired',
-                        killed: 'getMessagesKilled'};
+var queue_attributes = {
+    temporary: 'isTemporary',
+    durable: 'isDurable',
+    messages: 'getMessageCount',
+    consumers: 'getConsumerCount',
+    enqueued: 'getMessagesAdded',
+    delivering: 'getDeliveringCount',
+    acknowledged: 'getMessagesAcknowledged',
+    expired: 'getMessagesExpired',
+    killed: 'getMessagesKilled'
+};
 
 function add_queue_method(name) {
     Artemis.prototype[name] = function (queue) {
@@ -177,6 +179,15 @@ function add_queue_method(name) {
 
 for (var key in queue_attributes) {
     add_queue_method(queue_attributes[key]);
+}
+
+var extra_queue_attributes = {
+    address: 'getAddress',
+    routing_type: 'getRoutingType'
+}
+
+for (var key in extra_queue_attributes) {
+    add_queue_method(extra_queue_attributes[key]);
 }
 
 Artemis.prototype.listQueues = function (attribute_list) {
@@ -190,7 +201,7 @@ Artemis.prototype.listQueues = function (attribute_list) {
                 names.map(function (name) {
                     return Promise.all(
                         attributes.map(function (attribute) {
-                            var method_name = queue_attributes[attribute];
+                            var method_name = queue_attributes[attribute] || extra_queue_attributes[attribute];
                             if (method_name) {
                                 return agent[method_name](name);
                             } else {
@@ -387,6 +398,24 @@ Artemis.prototype.getConnectorServices = function () {
 Artemis.prototype.listConnections = function () {
     return this._request('broker', 'listConnectionsAsJSON', []).then(function (result) {
         return JSON.parse(result);
+    });
+}
+
+Artemis.prototype.listSessionsForConnection = function (connection_id) {
+    return this._request('broker', 'listSessionsAsJSON', [connection_id]).then(function (result) {
+        return JSON.parse(result);
+    });
+}
+
+Artemis.prototype.listConnectionsWithSessions = function () {
+    var self = this;
+    return this.listConnections().then(function (conns) {
+        return Promise.all(conns.map(function (c) { return self.listSessionsForConnection(c.connectionID)})).then(function (sessions) {
+            for (var i in conns) {
+                conns[i].sessions = sessions[i];
+            }
+            return conns;
+        });
     });
 }
 

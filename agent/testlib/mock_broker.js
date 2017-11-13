@@ -21,6 +21,21 @@ var util = require('util');
 var rhea = require('rhea');
 var myutils = require('../lib/utils.js');
 
+var counters = {};
+
+function next(name) {
+    if (counters[name] === undefined) {
+        counters[name] = 1;
+    } else {
+        ++counters[name];
+    }
+    return counters[name];
+}
+
+function generate_id(base) {
+    return base + '-' + next(base);
+}
+
 function find(array, predicate) {
     var results = array.filter(predicate);
     if (results.length > 0) return results[0];
@@ -103,6 +118,9 @@ function MockBroker (name) {
         listConnectionsAsJSON : function () {
             return JSON.stringify(self.get('connection'));
         },
+        listSessionsAsJSON : function (connectionID) {
+            return JSON.stringify(self.get('session').filter(function (s) { return s.connectionID === connectionID; }));
+        },
         listProducersInfoAsJSON  : function () {
             return JSON.stringify(self.get('producer'));
         },
@@ -167,20 +185,58 @@ function Resource (name, type, accessors, properties) {
     this.type = type;
     this.resource_id = type + '.' + name;
     var initial_values = properties || {};
-    var self = this;
-    accessors.forEach(function (accessor) {
-        for (var prefix in prefixes) {
-            if (accessor.indexOf(prefix) === 0) {
-                var property = accessor.charAt(prefix.length).toLowerCase() + accessor.substr(prefix.length + 1);
-                self[property] = initial_values[property] || prefixes[prefix];
-                self[accessor] = function () { return self[property]; };
-            }
+    if (accessors === undefined) {
+        for (var key in properties) {
+            this[key] = properties[key];
         }
-    });
+    } else {
+        var self = this;
+        accessors.forEach(function (accessor) {
+            for (var prefix in prefixes) {
+                if (accessor.indexOf(prefix) === 0) {
+                    var property = accessor.charAt(prefix.length).toLowerCase() + accessor.substr(prefix.length + 1);
+                    self[property] = initial_values[property] || prefixes[prefix];
+                    self[accessor] = function () { return self[property]; };
+                }
+            }
+        });
+    }
 }
 
+function add_id(object, type, id_name) {
+    var field = id_name || type + 'ID';
+    if (object[field] === undefined) {
+        object[field] = generate_id(type);
+    }
+    return object[field];
+}
+
+MockBroker.prototype.add_resource_with_id = function (type, properties) {
+    var id = add_id(properties, type);
+    this.objects.push(new Resource(id, type, undefined, properties));
+    return id;
+};
+
+MockBroker.prototype.add_connection_child_resource = function (type, connectionID, objects) {
+    if (objects !== undefined) {
+        var self = this;
+        objects.forEach(function (o) {
+            o.connectionID = connectionID;
+            self.add_resource_with_id(type, o)
+        });
+    }
+};
+
+MockBroker.prototype.add_connection = function (properties, senders, receivers, sessions) {
+    var connectionID = this.add_resource_with_id('connection', properties);
+    this.add_connection_child_resource('producer', connectionID, senders);
+    this.add_connection_child_resource('consumer', connectionID, receivers);
+    this.add_connection_child_resource('session', connectionID, sessions);
+};
+
 var queue_accessors = ['isTemporary', 'isDurable', 'getMessageCount', 'getConsumerCount', 'getMessagesAdded',
-                       'getDeliveringCount', 'getMessagesAcknowledged', 'getMessagesExpired', 'getMessagesKilled'];
+                       'getDeliveringCount', 'getMessagesAcknowledged', 'getMessagesExpired', 'getMessagesKilled',
+                       'getAddress', 'getRoutingType'];
 var address_accessors = ['getRoutingTypesAsJSON','getNumberOfMessages','getQueueNames', 'getMessageCount'];
 
 MockBroker.prototype.add_queue = function (name, properties) {
