@@ -1,0 +1,10 @@
+{
+  "username": "tckuser",
+  "enabled": true,
+  "credentials": [
+    {
+      "type": "password",
+      "value": "tckuser"
+    }
+  ]
+}
