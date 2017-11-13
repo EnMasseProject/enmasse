@@ -35,6 +35,7 @@ items:
           volumeMounts:
           - mountPath: /opt/none-authservice/cert
             name: none-authservice-cert
+            readOnly: false
         volumes:
         - name: none-authservice-cert
           secret:
