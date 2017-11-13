@@ -13,6 +13,7 @@ node('enmasse') {
             }
             stage('deploy enmasse') {
                 withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
+                    sh 'sudo chmod 777 -R ./systemtests/scripts/'
                     sh 'OPENSHIFT_PROJECT=$BUILD_TAG ./systemtests/scripts/deploy_enmasse.sh enmasse-latest /var/lib/origin/openshift.local.config/master/admin.kubeconfig'
                     sh './systemtests/scripts/wait_until_up.sh 4 $BUILD_TAG'
                 }
