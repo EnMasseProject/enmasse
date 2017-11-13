@@ -1,6 +1,18 @@
 apiVersion: v1
 kind: Template
 objects:
+- apiVersion: v1
+  kind: PersistentVolumeClaim
+  metadata:
+    labels:
+      app: enmasse
+    name: keycloak-pvc
+  spec:
+    accessModes:
+    - ReadWriteOnce
+    resources:
+      requests:
+        storage: ${KEYCLOAK_STORAGE_CAPACITY}
 - apiVersion: extensions/v1beta1
   kind: Deployment
   metadata:
@@ -41,14 +53,17 @@ objects:
           volumeMounts:
           - mountPath: /opt/jboss/keycloak/standalone/data
             name: keycloak-persistence
+            readOnly: false
           - mountPath: /opt/jboss/keycloak/standalone/cert
             name: ${STANDARD_AUTHSERVICE_SECRET_NAME}
+            readOnly: false
         volumes:
-        - emptyDir: {}
-          name: keycloak-persistence
         - name: ${STANDARD_AUTHSERVICE_SECRET_NAME}
           secret:
             secretName: ${STANDARD_AUTHSERVICE_SECRET_NAME}
+        - name: keycloak-persistence
+          persistentVolumeClaim:
+            claimName: keycloak-pvc
 - apiVersion: extensions/v1beta1
   kind: Deployment
   metadata:
@@ -130,3 +145,6 @@ parameters:
 - description: The hostname to use for the public keycloak route
   name: KEYCLOAK_ROUTE_HOSTNAME
   value: ''
+- description: The amount of storage to request for Keycloak data
+  name: KEYCLOAK_STORAGE_CAPACITY
+  value: 2Gi
