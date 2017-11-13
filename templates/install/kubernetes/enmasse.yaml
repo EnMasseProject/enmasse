@@ -119,6 +119,7 @@ items:
       "jolokia"}], "readinessProbe": {"tcpSocket": {"port": "amqp"}}, "volumeMounts":
       [{"mountPath": "/var/run/artemis", "name": "vol-${NAME}", "readOnly": false},
       {"mountPath": "/etc/enmasse-certs", "name": "broker-internal-cert", "readOnly":
+      true}, {"mountPath": "/etc/authservice-ca", "name": "authservice-ca", "readOnly":
       true}]}], "volumes": [{"emptyDir": { }, "name": "vol-${NAME}"}, {"name": "ssl-certs",
       "secret": {"secretName": "${COLOCATED_ROUTER_SECRET}"}}, {"name": "authservice-ca",
       "secret": {"secretName": "authservice-ca"}}, {"name": "address-controller-ca",
@@ -166,6 +167,7 @@ items:
       "jolokia"}], "readinessProbe": {"tcpSocket": {"port": "amqp"}}, "volumeMounts":
       [{"mountPath": "/var/run/artemis", "name": "vol-${NAME}", "readOnly": false},
       {"mountPath": "/etc/enmasse-certs", "name": "broker-internal-cert", "readOnly":
+      true}, {"mountPath": "/etc/authservice-ca", "name": "authservice-ca", "readOnly":
       true}]}], "volumes": [{"name": "vol-${NAME}", "persistentVolumeClaim": {"claimName":
       "pvc-${NAME}"}}, {"name": "ssl-certs", "secret": {"secretName": "${COLOCATED_ROUTER_SECRET}"}},
       {"name": "authservice-ca", "secret": {"secretName": "authservice-ca"}}, {"name":
@@ -433,6 +435,7 @@ items:
       "jolokia"}], "readinessProbe": {"tcpSocket": {"port": "amqp"}}, "volumeMounts":
       [{"mountPath": "/var/run/artemis", "name": "vol-${NAME}", "readOnly": false},
       {"mountPath": "/etc/enmasse-certs", "name": "broker-internal-cert", "readOnly":
+      true}, {"mountPath": "/etc/authservice-ca", "name": "authservice-ca", "readOnly":
       true}]}, {"env": [{"name": "TOPIC_NAME", "value": "${ADDRESS}"}, {"name": "LINK_CAPACITY",
       "value": "${ROUTER_LINK_CAPACITY}"}, {"name": "AUTHENTICATION_SERVICE_HOST",
       "value": "${AUTHENTICATION_SERVICE_HOST}"}, {"name": "AUTHENTICATION_SERVICE_PORT",
@@ -502,6 +505,7 @@ items:
       "jolokia"}], "readinessProbe": {"tcpSocket": {"port": "amqp"}}, "volumeMounts":
       [{"mountPath": "/var/run/artemis", "name": "vol-${NAME}", "readOnly": false},
       {"mountPath": "/etc/enmasse-certs", "name": "broker-internal-cert", "readOnly":
+      true}, {"mountPath": "/etc/authservice-ca", "name": "authservice-ca", "readOnly":
       true}]}, {"env": [{"name": "TOPIC_NAME", "value": "${ADDRESS}"}, {"name": "LINK_CAPACITY",
       "value": "${ROUTER_LINK_CAPACITY}"}, {"name": "AUTHENTICATION_SERVICE_HOST",
       "value": "${AUTHENTICATION_SERVICE_HOST}"}, {"name": "AUTHENTICATION_SERVICE_PORT",

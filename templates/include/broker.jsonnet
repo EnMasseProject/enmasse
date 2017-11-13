@@ -15,7 +15,8 @@ local common = import "common.jsonnet";
       ],
       "volumeMounts": [
         common.volume_mount(volumeName, "/var/run/artemis"),
-        common.volume_mount("broker-internal-cert", "/etc/enmasse-certs", true)
+        common.volume_mount("broker-internal-cert", "/etc/enmasse-certs", true),
+        common.volume_mount("authservice-ca", "/etc/authservice-ca", true)
       ],
       "livenessProbe": common.tcp_probe("amqp", 120),
       "readinessProbe": common.tcp_probe("amqp", 0),

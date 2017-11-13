@@ -68,6 +68,9 @@ objects:
             - mountPath: /etc/enmasse-certs
               name: broker-internal-cert
               readOnly: true
+            - mountPath: /etc/authservice-ca
+              name: authservice-ca
+              readOnly: true
           volumes:
           - emptyDir: {}
             name: vol-${NAME}
@@ -208,6 +211,9 @@ objects:
             - mountPath: /etc/enmasse-certs
               name: broker-internal-cert
               readOnly: true
+            - mountPath: /etc/authservice-ca
+              name: authservice-ca
+              readOnly: true
           volumes:
           - name: vol-${NAME}
             persistentVolumeClaim:
@@ -333,6 +339,9 @@ objects:
               readOnly: false
             - mountPath: /etc/enmasse-certs
               name: broker-internal-cert
+              readOnly: true
+            - mountPath: /etc/authservice-ca
+              name: authservice-ca
               readOnly: true
           - env:
             - name: TOPIC_NAME
@@ -549,6 +558,9 @@ objects:
               readOnly: false
             - mountPath: /etc/enmasse-certs
               name: broker-internal-cert
+              readOnly: true
+            - mountPath: /etc/authservice-ca
+              name: authservice-ca
               readOnly: true
           - env:
             - name: TOPIC_NAME
