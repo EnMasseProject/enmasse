@@ -14,7 +14,7 @@ addresses. You can get the console URL by running the following command:
 
 [subs=attributes+,options="nowrap"]
 ....
-echo "http://$({OcGetRoute} console)"
+echo "https://$({OcGetRoute} console)"
 ....
 
 You can also deploy the addressing config using the address controller
@@ -67,7 +67,7 @@ To deploy this configuration, you must currently use a http client like curl:
 
 [subs=attributes+,options="nowrap"]
 ....
-curl -X POST -H "content-type: application/json" --data-binary @addresses.json http://$({OcGetRoute} restapi)/v1/addresses/default
+curl -X POST -H "content-type: application/json" --data-binary @addresses.json -k https://$({OcGetRoute} restapi)/v1/addresses/default
 ....
 
 This will connect to the address controller REST API and deploy the address config.
