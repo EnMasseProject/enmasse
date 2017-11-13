@@ -47,12 +47,14 @@ public class KubernetesHelper implements Kubernetes {
     private final OpenShiftClient client;
     private final String namespace;
     private final String controllerToken;
+    private final String environment;
     private final Optional<File> templateDir;
 
-    public KubernetesHelper(String namespace, OpenShiftClient client, String token, Optional<File> templateDir) {
+    public KubernetesHelper(String namespace, OpenShiftClient client, String token, String environment, Optional<File> templateDir) {
         this.client = client;
         this.namespace = namespace;
         this.controllerToken = token;
+        this.environment = environment;
         this.templateDir = templateDir;
     }
 
@@ -133,6 +135,7 @@ public class KubernetesHelper implements Kubernetes {
                     .withName(namespace)
                     .addToLabels("app", "enmasse")
                     .addToLabels(LabelKeys.TYPE, "address-space")
+                    .addToLabels(LabelKeys.ENVIRONMENT, environment)
                     .addToAnnotations(AnnotationKeys.ADDRESS_SPACE, name)
                 .endMetadata()
                 .done();
@@ -140,7 +143,7 @@ public class KubernetesHelper implements Kubernetes {
 
     @Override
     public Kubernetes withNamespace(String namespace) {
-        return new KubernetesHelper(namespace, client, controllerToken, templateDir);
+        return new KubernetesHelper(namespace, client, controllerToken, environment, templateDir);
     }
 
     @Override
@@ -270,7 +273,11 @@ public class KubernetesHelper implements Kubernetes {
     }
 
     @Override
-    public List<Namespace> listNamespaces(Map<String, String> labels) {
+    public List<Namespace> listNamespaces() {
+        Map<String, String> labels = new LinkedHashMap<>();
+        labels.put(LabelKeys.APP, "enmasse");
+        labels.put(LabelKeys.TYPE, "address-space");
+        labels.put(LabelKeys.ENVIRONMENT, environment);
         return client.namespaces().withLabels(labels).list().getItems();
     }
 

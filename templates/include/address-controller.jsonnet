@@ -33,14 +33,15 @@ local common = import "common.jsonnet";
   external_service::
     self.common_service("address-controller-external", "LoadBalancer", {}),
 
-  deployment(image, template_config, ca_secret, cert_secret, enable_rbac)::
+  deployment(image, template_config, ca_secret, cert_secret, environment, enable_rbac)::
     {
       "apiVersion": "extensions/v1beta1",
       "kind": "Deployment",
       "metadata": {
         "labels": {
           "name": "address-controller",
-          "app": "enmasse"
+          "app": "enmasse",
+          "environment": environment
         },
         "name": "address-controller"
       },
@@ -50,7 +51,8 @@ local common = import "common.jsonnet";
           "metadata": {
             "labels": {
               "name": "address-controller",
-              "app": "enmasse"
+              "app": "enmasse",
+              "environment": environment
             }
           },
 
@@ -62,7 +64,8 @@ local common = import "common.jsonnet";
                 "name": "address-controller",
                 "env": [
                   common.env("CA_DIR", "/ca-cert"),
-                  common.env("ENABLE_RBAC", enable_rbac)
+                  common.env("ENABLE_RBAC", enable_rbac),
+                  common.env("ENVIRONMENT", environment)
                 ],
                 "volumeMounts": [
                   common.volume_mount("ca-cert", "/ca-cert", true),

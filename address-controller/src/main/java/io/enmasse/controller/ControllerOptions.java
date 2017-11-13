@@ -34,71 +34,48 @@ public final class ControllerOptions {
 
     private final String certDir;
     private final File templateDir;
-    private final String messagingHost;
-    private final String mqttHost;
-    private final String consoleHost;
-    private final String certSecret;
     private final AuthServiceInfo noneAuthService;
     private final AuthServiceInfo standardAuthService;
     private final boolean enableRbac;
 
+    private final String environment;
+
     private ControllerOptions(String masterUrl, String namespace, String token,
-                              File caDir, File templateDir, String messagingHost, String mqttHost,
-                              String consoleHost, String certSecret, String certDir,
-                              AuthServiceInfo noneAuthService, AuthServiceInfo standardAuthService, boolean enableRbac) {
+                              File caDir, File templateDir, String certDir,
+                              AuthServiceInfo noneAuthService, AuthServiceInfo standardAuthService, boolean enableRbac, String environment) {
         this.masterUrl = masterUrl;
         this.namespace = namespace;
         this.token = token;
         this.caDir = caDir;
         this.templateDir = templateDir;
-        this.messagingHost = messagingHost;
-        this.mqttHost = mqttHost;
-        this.consoleHost = consoleHost;
-        this.certSecret = certSecret;
         this.certDir = certDir;
         this.noneAuthService = noneAuthService;
         this.standardAuthService = standardAuthService;
         this.enableRbac = enableRbac;
+        this.environment = environment;
     }
 
-    public String masterUrl() {
+    public String getMasterUrl() {
         return masterUrl;
     }
 
-    public String namespace() {
+    public String getNamespace() {
         return namespace;
     }
 
-    public String token() {
+    public String getToken() {
         return token;
     }
 
-    public File caDir() {
+    public File getCaDir() {
         return caDir;
     }
 
-    public Optional<File> templateDir() {
+    public Optional<File> getTemplateDir() {
         return Optional.ofNullable(templateDir);
     }
 
-    public Optional<String> messagingHost() {
-        return Optional.ofNullable(messagingHost);
-    }
-
-    public Optional<String> mqttHost() {
-        return Optional.ofNullable(mqttHost);
-
-    }
-
-    public Optional<String> consoleHost() {
-        return Optional.ofNullable(consoleHost);
-    }
-
-    public Optional<String> certSecret() {
-        return Optional.ofNullable(certSecret);
-    }
-
-    public String certDir() {
+    public String getCertDir() {
         return certDir;
     }
 
@@ -112,6 +89,10 @@ public final class ControllerOptions {
 
     public boolean isEnableRbac() {
         return enableRbac;
+    }
+
+    public String getEnvironment() {
+        return environment;
     }
 
     public static ControllerOptions fromEnv(Map<String, String> env) throws IOException {
@@ -140,26 +121,20 @@ public final class ControllerOptions {
 
         String certDir = getEnv(env, "CERT_DIR").orElse("/address-controller-cert");
 
-        String messagingHost = getEnv(env, "MESSAGING_ENDPOINT_HOST").orElse(null);
-        String mqttHost = getEnv(env, "MQTT_ENDPOINT_HOST").orElse(null);
-        String consoleHost = getEnv(env, "CONSOLE_ENDPOINT_HOST").orElse(null);
-        String certSecret = getEnv(env, "MESSAGING_CERT_SECRET").orElse(null);
-
         boolean enableRbac = getEnv(env, "ENABLE_RBAC").map(Boolean::parseBoolean).orElse(false);
+
+        String environment = getEnv(env, "ENVIRONMENT").orElse("development");
 
         return new ControllerOptions(String.format("https://%s:%s", masterHost, masterPort),
                 namespace,
                 token,
                 caDir,
                 templateDir,
-                messagingHost,
-                mqttHost,
-                consoleHost,
-                certSecret,
                 certDir,
                 noneAuthService,
                 standardAuthService,
-                enableRbac);
+                enableRbac,
+                environment);
     }
 
 

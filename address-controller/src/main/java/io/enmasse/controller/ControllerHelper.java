@@ -16,7 +16,6 @@
 package io.enmasse.controller;
 
 import io.enmasse.config.AnnotationKeys;
-import io.enmasse.config.LabelKeys;
 import io.enmasse.controller.common.AuthenticationServiceResolverFactory;
 import io.enmasse.controller.common.Kubernetes;
 import io.enmasse.controller.common.KubernetesHelper;
@@ -194,17 +193,13 @@ public class ControllerHelper {
             return;
         }
         Set<String> addressSpaceIds = desiredAddressSpaces.stream().map(AddressSpace::getName).collect(Collectors.toSet());
-
-        Map<String, String> labels = new LinkedHashMap<>();
-        labels.put(LabelKeys.APP, "enmasse");
-        labels.put(LabelKeys.TYPE, "address-space");
-        for (Namespace namespace : kubernetes.listNamespaces(labels)) {
+        for (Namespace namespace : kubernetes.listNamespaces()) {
             String id = namespace.getMetadata().getAnnotations().get(AnnotationKeys.ADDRESS_SPACE);
             if (!addressSpaceIds.contains(id)) {
                 try {
                     log.info("Deleting address space {}", id);
                     kubernetes.deleteNamespace(namespace.getMetadata().getName());
-                } catch(KubernetesClientException e){
+                } catch (KubernetesClientException e) {
                     log.info("Exception when deleting namespace (may already be in progress): " + e.getMessage());
                 }
             }

@@ -1683,6 +1683,7 @@ objects:
   metadata:
     labels:
       app: enmasse
+      environment: ${ENVIRONMENT}
       name: address-controller
     name: address-controller
   spec:
@@ -1691,6 +1692,7 @@ objects:
       metadata:
         labels:
           app: enmasse
+          environment: ${ENVIRONMENT}
           name: address-controller
       spec:
         containers:
@@ -1699,6 +1701,8 @@ objects:
             value: /ca-cert
           - name: ENABLE_RBAC
             value: ${ENABLE_RBAC}
+          - name: ENVIRONMENT
+            value: ${ENVIRONMENT}
           image: ${ADDRESS_CONTROLLER_REPO}
           livenessProbe:
             httpGet:
@@ -1784,3 +1788,7 @@ parameters:
 - description: Enable RBAC for REST API authentication and authorization
   name: ENABLE_RBAC
   value: 'false'
+- description: The environment for this EnMasse instance (for instance development,
+    testing or production).
+  name: ENVIRONMENT
+  value: development

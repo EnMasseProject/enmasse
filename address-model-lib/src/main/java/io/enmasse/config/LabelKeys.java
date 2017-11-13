@@ -26,4 +26,5 @@ public interface LabelKeys {
     String ADDRESS = "address";
     String APP = "app";
     String CAPABILITY = "capability";
+    String ENVIRONMENT = "environment";
 }
