@@ -37,7 +37,7 @@ OC_ARGS=""
 GUIDE=false
 MODE="singletenant"
 
-while getopts a:c:dgm:n:o:p:st:u:yvh opt; do
+while getopts a:c:de:gm:n:o:p:st:u:yvh opt; do
     case $opt in
         a)
             AUTH_SERVICES=$OPTARG
@@ -47,6 +47,9 @@ while getopts a:c:dgm:n:o:p:st:u:yvh opt; do
             ;;
         d)
             OS_ALLINONE=true
+            ;;
+        e)
+            ENVIRONMENT=$OPTARG
             ;;
         g)
             GUIDE=true
@@ -90,6 +93,7 @@ while getopts a:c:dgm:n:o:p:st:u:yvh opt; do
             echo "  -a \"none standard\" Deploy given authentication services (default: \"none\")"
             echo "  -c                   CA certificate to use in address controller"
             echo "  -d                   create an all-in-one docker OpenShift on localhost"
+            echo "  -e                   Environment label for this EnMasse deployment"
             echo "  -n NAMESPACE         OpenShift project name to install EnMasse into (default: $DEFAULT_NAMESPACE)"
             echo "  -m MASTER            OpenShift master URI to login against (default: https://localhost:8443)"
             echo "  -o mode              Deploy in given mode, 'singletenant' or 'multitenant'.  (default: \"singletenant\")"
@@ -188,6 +192,9 @@ do
     fi
 done
 
+if [ "$ENVIRONMENT" != "" ]; then
+    TEMPLATE_PARAMS="$TEMPLATE_PARAMS ENVIRONMENT=$ENVIRONMENT"
+fi
 
 if [ $MODE == "multitenant" ]; then
     TEMPLATE_PARAMS="$TEMPLATE_PARAMS ENABLE_RBAC=true"
