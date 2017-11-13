@@ -566,6 +566,7 @@ items:
   metadata:
     labels:
       app: enmasse
+      environment: development
       name: address-controller
     name: address-controller
   spec:
@@ -574,6 +575,7 @@ items:
       metadata:
         labels:
           app: enmasse
+          environment: development
           name: address-controller
       spec:
         containers:
@@ -582,6 +584,8 @@ items:
             value: /ca-cert
           - name: ENABLE_RBAC
             value: 'false'
+          - name: ENVIRONMENT
+            value: development
           image: docker.io/enmasseproject/address-controller:latest
           livenessProbe:
             httpGet:

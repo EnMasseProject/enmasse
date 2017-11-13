@@ -47,9 +47,11 @@ public interface Kubernetes {
 
     Namespace createNamespace(String name, String namespace);
 
-    void addSystemImagePullerPolicy(String namespace, String tenantNamespace);
+    List<Namespace> listNamespaces();
 
     void deleteNamespace(String namespace);
+
+    void addSystemImagePullerPolicy(String namespace, String tenantNamespace);
 
     boolean hasService(String service);
 
@@ -58,8 +60,6 @@ public interface Kubernetes {
     Set<Deployment> getReadyDeployments();
 
     boolean isDestinationClusterReady(String clusterId);
-
-    List<Namespace> listNamespaces(Map<String, String> labels);
 
     List<Pod> listRouters();
 

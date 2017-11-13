@@ -45,28 +45,28 @@ public class Main extends AbstractVerticle {
 
     private Main(ControllerOptions options) throws Exception {
         this.controllerClient = new DefaultOpenShiftClient(new ConfigBuilder()
-                .withMasterUrl(options.masterUrl())
-                .withOauthToken(options.token())
-                .withNamespace(options.namespace())
+                .withMasterUrl(options.getMasterUrl())
+                .withOauthToken(options.getToken())
+                .withNamespace(options.getNamespace())
                 .build());
         this.options = options;
-        this.kubernetes = new KubernetesHelper(options.namespace(), controllerClient, options.token(), options.templateDir());
+        this.kubernetes = new KubernetesHelper(options.getNamespace(), controllerClient, options.getToken(), options.getEnvironment(), options.getTemplateDir());
     }
 
     @Override
     public void start(Future<Void> startPromise) {
         AddressSpaceApi addressSpaceApi = new ConfigMapAddressSpaceApi(controllerClient);
 
-        CertManager certManager = OpenSSLCertManager.create(controllerClient, options.caDir(), options.namespace());
+        CertManager certManager = OpenSSLCertManager.create(controllerClient, options.getCaDir(), options.getNamespace());
         AuthenticationServiceResolverFactory resolverFactory = createResolverFactory(options);
-        StandardController standardController = new StandardController(vertx, addressSpaceApi, kubernetes, resolverFactory, options.certDir());
+        StandardController standardController = new StandardController(vertx, addressSpaceApi, kubernetes, resolverFactory, options.getCertDir());
         BrokeredController brokeredController = new BrokeredController();
 
         deployVerticles(startPromise,
                 new Deployment(new AuthController(certManager, addressSpaceApi)),
                 new Deployment(new Controller(controllerClient, addressSpaceApi, kubernetes, resolverFactory, Arrays.asList(standardController, brokeredController))),
 //                new Deployment(new AMQPServer(kubernetes.getNamespace(), addressSpaceApi, options.port())),
-                new Deployment(new HTTPServer(addressSpaceApi, options.certDir(), kubernetes, options.isEnableRbac()), new DeploymentOptions().setWorker(true)));
+                new Deployment(new HTTPServer(addressSpaceApi, options.getCertDir(), kubernetes, options.isEnableRbac()), new DeploymentOptions().setWorker(true)));
     }
 
     private AuthenticationServiceResolverFactory createResolverFactory(ControllerOptions options) {
