@@ -28,9 +28,9 @@ public class AddressSpaceTest extends MarathonTestBase {
             doAddressTest(addressSpace, "test-topic-createdelete-brokered-%d",
                     "test-queue-createdelete-brokered-%d");
 
-            Thread.sleep(2000);
             deleteAddressSpace(addressSpace);
             Logging.log.info("Address space removed");
+            Thread.sleep(10000);
         });
     }
 
@@ -44,6 +44,7 @@ public class AddressSpaceTest extends MarathonTestBase {
         runTestInLoop(30, () -> {
             doAddressTest(addressSpace, "test-topic-createdelete-brokered-%d",
                     "test-queue-createdelete-brokered-%d");
+            Thread.sleep(10000);
         });
     }
 
