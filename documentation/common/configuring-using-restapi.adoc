@@ -42,7 +42,7 @@ various components.
 +
 [source,options="nowrap"]
 ----
-curl http://$(oc get route restapi -o jsonpath='{.spec.host}')/v1/addressspaces/myspace
+curl -k https://$(oc get route restapi -o jsonpath='{.spec.host}')/v1/addressspaces/myspace
 ----
 +
 You can consider the address space to be ready to use when `status.isReady` is `true` in the returned JSON
@@ -100,7 +100,7 @@ object.
 +
 [source,options="nowrap"]
 ----
-curl -X PUT -T addresses.json -H "content-type: application/json" http://$(oc get route restapi -o jsonpath='{.spec.host}')/v1/addresses/default
+curl -X PUT -T addresses.json -H "content-type: application/json" -k https://$(oc get route restapi -o jsonpath='{.spec.host}')/v1/addresses/default
 ----
 
 === Viewing Configured Addresses
@@ -111,7 +111,7 @@ curl -X PUT -T addresses.json -H "content-type: application/json" http://$(oc ge
 +
 [source,options="nowrap"]
 ----
-curl http://$(oc get route restapi -o jsonpath='{.spec.host}')/v1/addresses/default
+curl -k https://$(oc get route restapi -o jsonpath='{.spec.host}')/v1/addresses/default
 ----
 +
 The addresses are ready to be used by messaging clients once the `status.isReady` field of each
