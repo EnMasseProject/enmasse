@@ -1,0 +1,29 @@
+node('enmasse') {
+    result = 'failure'
+    timeout(120) {
+        catchError {
+            stage ('checkout') {
+                checkout scm
+                sh 'git submodule update --init --recursive'
+                sh 'rm -rf artifacts && mkdir -p artifacts'
+            }
+            stage('start openshift') {
+                sh './systemtests/scripts/setup-openshift.sh'
+                sh 'sudo chmod -R 777 /var/lib/origin/openshift.local.config'
+            }
+            stage('deploy enmasse') {
+                withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
+                    sh 'OPENSHIFT_PROJECT=$BUILD_TAG ./systemtests/scripts/deploy_enmasse.sh enmasse-latest /var/lib/origin/openshift.local.config/master/admin.kubeconfig'
+                    sh './systemtests/scripts/wait_until_up.sh 4 $BUILD_TAG'
+                }
+            }
+            stage('run longtime test suite') {
+                sh 'make MULTITENANT=true SYSTEMTEST_ARGS="marathon.*Test" systemtests'
+            }
+            result = 'success'
+        }
+        stage('teardown openshift') {
+            sh './systemtests/scripts/teardown-openshift.sh'
+        }
+    }
+}
