@@ -19,12 +19,28 @@ node('enmasse') {
                 }
             }
             stage('run longtime test suite') {
-                sh 'make MULTITENANT=true SYSTEMTEST_ARGS="marathon.*Test" systemtests'
+                withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
+                    try {
+                        sh 'ARTIFACTS_DIR=artifacts OPENSHIFT_PROJECT=$BUILD_TAG ./systemtests/scripts/run_test_component.sh templates/install /var/lib/origin/openshift.local.config/master/admin.kubeconfig systemtests "marathon.*Test"'
+                    } finally {
+                        junit '**/TEST-*.xml'
+                    }
+                }
             }
             result = 'success'
         }
+        stage('archive artifacts') {
+            archive '**/TEST-*.xml'
+            archive 'artifacts/**'
+            archive 'templates/install/**'
+        }
         stage('teardown openshift') {
             sh './systemtests/scripts/teardown-openshift.sh'
+        }
+        stage('notify mailing list') {
+            if (result.equals("failure")) {
+                mail to: "$MAILING_LIST", subject: "EnMasse build has finished with ${result}", body: "See ${env.BUILD_URL}"
+            }
         }
     }
 }
