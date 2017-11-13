@@ -58,19 +58,20 @@ BrokerController.prototype.addresses_defined = function (addresses) {
 function transform_queue_stats(queue) {
     return {
         receivers: queue.consumers,
-        senders: undefined,/*can't get this info yet?*/
+        senders: 0,/*add this later*/
         depth: queue.messages,
         messages_in: queue.enqueued,
         messages_out: (queue.acknowledged + queue.expired + queue.killed),
         propagated: 100,
         outcomes: {
             egress: {
-                //links: listConsumersAsJSON()
+                links: [],
                 accepted: queue.acknowledged,
                 unsettled: queue.delivered,
                 rejected: queue.killed
             },
             ingress: {
+                links: [],
                 accepted: queue.enqueued
             }
         }
@@ -84,7 +85,7 @@ function sum(field, list) {
 function transform_topic_stats(topic) {
     return {
         receivers: topic.subscription_count,
-        senders: undefined,/*can't get this info yet?*/
+        senders: 0,/*add this later*/
         depth: topic.messages,
         //messages_in: topic.enqueued,//doesn't seem to work as expected
         /*this isn't really correct; what we want is the total number of messages sent to the topic (independent of the number of subscribers)*/
@@ -93,12 +94,13 @@ function transform_topic_stats(topic) {
         propagated: 100,
         outcomes: {
             egress: {
-                //links: listConsumersAsJSON() for each topic
+                links: [],
                 accepted: sum('acknowledged', topic.subscriptions),
                 unsettled: sum('delivered', topic.subscriptions),
                 rejected: sum('killed', topic.subscriptions)
             },
             ingress: {
+                links: [],
                 accepted: topic.enqueued
             }
         }
@@ -114,6 +116,7 @@ function transform_connection_stats(raw) {
         id: raw.connectionID,
         host: raw.clientAddress,
         container: 'not available',
+        user: raw.sessions.length ? raw.sessions[0].principal : '',
         senders: [],
         receivers: []
     };
@@ -121,6 +124,7 @@ function transform_connection_stats(raw) {
 
 function transform_producer_stats(raw) {
     return {
+        name: undefined,
         connection_id: raw.connectionID,
         address: raw.destination,
         deliveries: raw.msgSent
@@ -129,10 +133,10 @@ function transform_producer_stats(raw) {
 
 function transform_consumer_stats(raw) {
     return {
-        name: raw.queueName,
+        name: raw.consumerID,
         connection_id: raw.connectionID,
-        address: raw.queueName,//TODO: need to map this back to topic address
-        deliveries: 0//TODO: need to retrive this
+        address: raw.queueName,//mapped to address in later step
+        deliveries: 0//TODO: need to retrieve this
     };
 }
 
@@ -140,7 +144,7 @@ function index_by(list, field) {
     return list.reduce(function (map, item) { map[item[field]] = item; return map; }, {});
 }
 
-function collect_as(conns, links, name) {
+function collect_by_connection(conns, links, name) {
     links.forEach(function (link) {
         var conn = conns[link.connection_id];
         if (conn) {
@@ -149,24 +153,53 @@ function collect_as(conns, links, name) {
     });
 }
 
+function collect_by_address(addresses, links, name, count) {
+    links.forEach(function (link) {
+        var address = addresses[link.address];
+        if (address) {
+            address.outcomes[name].links.push(link);
+            if (count) address[count] = address.outcomes[name].links.length;
+        }
+    });
+}
+
 BrokerController.prototype.retrieve_stats = function () {
     var self = this;
     if (this.broker !== undefined) {
         return Promise.all([
-            this.broker.getAllQueuesAndTopics().then(function (results) {
-                var stats = {};
-                for (var name in results) {
-                    stats[name] = transform_address_stats(results[name]);
+            this.broker.getAllQueuesAndTopics(),
+            this.broker.listQueues(['address']),//for queue->address mapping
+            this.broker.listConnectionsWithSessions(),
+            this.broker.listProducers(),
+            this.broker.listConsumers()]).then(function (results) {
+                var address_stats = {};
+                for (var name in results[0]) {
+                    address_stats[name] = transform_address_stats(results[0][name]);
                 }
-                self.emit('address_stats_retrieved', stats);
-            }),
-            Promise.all([this.broker.listConnections(), this.broker.listProducers(), this.broker.listConsumers()]).then(function (results) {
-                var stats = index_by(results[0].map(transform_connection_stats), 'id');
-                collect_as(stats, results[1].map(transform_producer_stats), 'senders');
-                collect_as(stats, results[2].map(transform_consumer_stats), 'receivers');
-                self.emit('connection_stats_retrieved', stats);
-            })
-        ]);
+                var connection_stats = index_by(results[2].map(transform_connection_stats), 'id');
+                var senders = results[3].map(transform_producer_stats);
+                var receivers = results[4].map(transform_consumer_stats);
+                receivers.forEach(function (r) {
+                    if (results[1][r.address]) {
+                        r.address = results[1][r.address].address;
+                    }
+                });
+
+                collect_by_connection(connection_stats, senders, 'senders');
+                collect_by_connection(connection_stats, receivers, 'receivers');
+
+                collect_by_address(address_stats, senders, 'ingress', 'senders');
+                collect_by_address(address_stats, receivers, 'egress');
+
+                for(var c in connection_stats) {
+                    connection_stats[c].messages_in = connection_stats[c].senders.reduce(function (total, sender) { return total + sender.deliveries; }, 0);
+                }
+
+                self.emit('address_stats_retrieved', address_stats);
+                self.emit('connection_stats_retrieved', connection_stats);
+            }).catch(function (error) {
+                log.error('error retrieving stats: %s', error);
+            });
     } else {
         return Promise.resolve();
     }
