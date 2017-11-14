@@ -10,7 +10,7 @@ items:
   spec:
     ports:
     - name: https
-      port: 8081
+      port: 443
       protocol: TCP
       targetPort: https
     selector:

@@ -105,7 +105,7 @@ public class HTTPServerTest {
         HttpClient client = vertx.createHttpClient();
         Async async = context.async(3);
         try {
-            HttpClientRequest r1 = client.get(8080, "localhost", "/v1/addresses/myinstance", response -> {
+            HttpClientRequest r1 = client.get(8080, "localhost", "/apis/enmasse.io/v1/addresses/myinstance", response -> {
                 context.assertEquals(200, response.statusCode());
                 response.bodyHandler(buffer -> {
                     JsonObject data = buffer.toJsonObject();
@@ -117,7 +117,7 @@ public class HTTPServerTest {
             putAuthzToken(r1);
             r1.end();
 
-            HttpClientRequest r2 = client.get(8080, "localhost", "/v1/addresses/myinstance/addr1", response -> {
+            HttpClientRequest r2 = client.get(8080, "localhost", "/apis/enmasse.io/v1/addresses/myinstance/addr1", response -> {
                 response.bodyHandler(buffer -> {
                     JsonObject data = buffer.toJsonObject();
                     context.assertTrue(data.containsKey("metadata"));
@@ -128,7 +128,7 @@ public class HTTPServerTest {
             putAuthzToken(r2);
             r2.end();
 
-            HttpClientRequest r3 = client.post(8080, "localhost", "/v1/addresses/myinstance", response -> {
+            HttpClientRequest r3 = client.post(8080, "localhost", "/apis/enmasse.io/v1/addresses/myinstance", response -> {
                 response.bodyHandler(buffer -> {
                     JsonObject data = buffer.toJsonObject();
                     context.assertTrue(data.containsKey("items"));
@@ -156,7 +156,7 @@ public class HTTPServerTest {
         try {
             {
                 Async async = context.async();
-                HttpClientRequest rootReq = client.get(8080, "localhost", "/v1", response -> {
+                HttpClientRequest rootReq = client.get(8080, "localhost", "/apis/enmasse.io/v1", response -> {
                     context.assertEquals(200, response.statusCode());
                     response.bodyHandler(buffer -> {
                         JsonArray data = buffer.toJsonArray();
@@ -193,7 +193,7 @@ public class HTTPServerTest {
         try {
             {
                 Async async = context.async();
-                HttpClientRequest request = client.get(8080, "localhost", "/v1/schema", response -> {
+                HttpClientRequest request = client.get(8080, "localhost", "/apis/enmasse.io/v1/schema", response -> {
                     context.assertEquals(200, response.statusCode());
                     response.bodyHandler(buffer -> {
                         JsonObject data = buffer.toJsonObject();

@@ -22,8 +22,8 @@ public class AddressApiClient {
     private Endpoint endpoint;
     private final Vertx vertx;
     private final int initRetry = 10;
-    private final String addressSpacesPath = "/v1/addressspaces";
-    private final String addressPath = "/v1/addresses";
+    private final String addressSpacesPath = "/apis/enmasse.io/v1/addressspaces";
+    private final String addressPath = "/apis/enmasse.io/v1/addresses";
     private final String authzString;
 
     public AddressApiClient(OpenShift openshift) throws InterruptedException {

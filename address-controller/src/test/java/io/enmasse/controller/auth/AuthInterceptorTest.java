@@ -48,8 +48,8 @@ public class AuthInterceptorTest {
         mockRequestContext = mock(ContainerRequestContext.class);
 
         mockUriInfo = mock(UriInfo.class);
-        when(mockUriInfo.getAbsolutePath()).thenReturn(URI.create("https://localhost:443/v1/addressspaces"));
-        when(mockUriInfo.getPath()).thenReturn("/v1/addressspaces");
+        when(mockUriInfo.getAbsolutePath()).thenReturn(URI.create("https://localhost:443/apis/enmasse.io/v1/addressspaces"));
+        when(mockUriInfo.getPath()).thenReturn("/apis/enmasse.io/v1/addressspaces");
         when(mockRequestContext.getUriInfo()).thenReturn(mockUriInfo);
     }
 

@@ -79,13 +79,13 @@ MockAddressSource.prototype.clear = function () {
 MockAddressSource.prototype.listen = function (port, callback) {
     var self = this;
     this.server = http.createServer(function (request, response) {
-        if (request.method === 'GET' && request.url === '/v1/schema/') {
+        if (request.method === 'GET' && request.url === '/apis/enmasse.io/v1/schema/') {
             self.get_schema(request, response);
-        } else if (request.method === 'GET' && request.url === '/v1/addresses/') {
+        } else if (request.method === 'GET' && request.url === '/apis/enmasse.io/v1/addresses/') {
             self.get_addresses(request, response);
-        } else if (request.method === 'POST' && request.url === '/v1/addresses/') {
+        } else if (request.method === 'POST' && request.url === '/apis/enmasse.io/v1/addresses/') {
             self.post_addresses(request, response);
-        } else if (request.method === 'DELETE' && request.url.indexOf('/v1/addresses/') === 0) {
+        } else if (request.method === 'DELETE' && request.url.indexOf('/apis/enmasse.io/v1/addresses/') === 0) {
             self.delete_address(request, response);
         }
     });

@@ -31,7 +31,7 @@ import java.util.Collections;
 /**
  * API for serving address model schema.
  */
-@Path("/v1/schema")
+@Path("/apis/enmasse.io/v1/schema")
 public class HttpSchemaService {
     private static final Logger log = LoggerFactory.getLogger(HttpSchemaService.class.getName());
 

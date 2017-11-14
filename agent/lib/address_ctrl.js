@@ -25,7 +25,7 @@ var AddressCtrl = function (host, port, ca, auth_string) {
     this.ca = ca;
     this.auth_string = auth_string;
 
-    this.addr_path = "/v1/addresses/";
+    this.addr_path = "/apis/enmasse.io/v1/addresses/";
     if (this.address_space) {
         this.addr_path += this.address_space + "/";
     }
@@ -127,7 +127,7 @@ function address_types(text) {
 }
 
 AddressCtrl.prototype.get_address_types = function () {
-    return this.request('/v1/schema/', 'GET', undefined, undefined, address_types);
+    return this.request('/apis/enmasse.io/v1/schema/', 'GET', undefined, undefined, address_types);
 }
 
 module.exports.create = function (env) {
