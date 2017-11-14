@@ -41,12 +41,12 @@ public class TopicTest extends MarathonTestBase {
 
         //create client
         AmqpClientFactory amqpFactory = createAmqpClientFactory(addressSpace);
-        AmqpClient client = amqpFactory.createTopicClient(addressSpace);
-        client.getConnectOptions().setUsername("test").setPassword("test");
 
         List<String> msgBatch = TestUtils.generateMessages(msgCount);
 
         runTestInLoop(30, () -> {
+            AmqpClient client = amqpFactory.createTopicClient(addressSpace);
+            client.getConnectOptions().setUsername("test").setPassword("test");
 
             //attach subscibers
             List<Future<List<Message>>> recvResults = new ArrayList<>();
@@ -57,7 +57,7 @@ public class TopicTest extends MarathonTestBase {
             //attach producers
             for(int i = 0; i < senderCount; i++ ) {
                 collector.checkThat(client.sendMessages(topicList.get(i).getAddress(), msgBatch,
-                        10, TimeUnit.MINUTES).get(1, TimeUnit.MINUTES), is(msgBatch.size()));
+                        1, TimeUnit.MINUTES).get(1, TimeUnit.MINUTES), is(msgBatch.size()));
             }
 
             //check received messages
@@ -65,9 +65,8 @@ public class TopicTest extends MarathonTestBase {
                 collector.checkThat(recvResults.get(i).get().size(), is(msgCount * 2));
             }
 
-            Thread.sleep(2000);
+            client.close();
+            Thread.sleep(5000);
         });
-
-        client.close();
     }
 }
