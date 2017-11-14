@@ -10,15 +10,16 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class AuthenticationTest extends MarathonTestBase {
     @Test
     public void testCreateDeleteUsersLong() throws Exception {
+        Logging.log.info("testCreateDeleteUsersLong start");
         AddressSpace addressSpace = new AddressSpace("test-create-delete-users-brokered",
                 AddressSpaceType.BROKERED);
-        createAddressSpace(addressSpace, "none");
-        Logging.log.info("Address space created");
+        createAddressSpace(addressSpace, "standard");
+        Logging.log.info("Address space '{}'created", addressSpace);
 
         Destination queue = Destination.queue("test-create-delete-users-queue");
         Destination topic = Destination.topic("test-create-delete-users-topic");
         setAddresses(addressSpace, queue, topic);
-        Logging.log.info("Addresses created");
+        Logging.log.info("Addresses '{}', '{}' created", queue.getAddress(), topic.getAddress());
 
         final String prefixUser = "test-user";
         final String prefixPswd = "test-user";
@@ -39,6 +40,7 @@ public class AuthenticationTest extends MarathonTestBase {
             from.set(from.get() + iteration);
             to.set(to.get() + iteration);
         });
+        Logging.log.info("testCreateDeleteUsersLong finished");
     }
 
     private void createUsers(AddressSpace addressSpace, String prefixName, String prefixPswd, int from, int to)
