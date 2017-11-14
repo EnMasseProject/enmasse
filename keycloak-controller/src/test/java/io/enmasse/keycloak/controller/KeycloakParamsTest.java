@@ -17,6 +17,9 @@ package io.enmasse.keycloak.controller;
 
 import org.junit.Test;
 
+import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -32,13 +35,15 @@ public class KeycloakParamsTest {
         env.put("STANDARD_AUTHSERVICE_SERVICE_HOST", "localhost");
         assertThrows(env);
 
-        env.put("STANDARD_AUTHSERVICE_SERVICE_PORT_HTTP", "1234");
+        env.put("STANDARD_AUTHSERVICE_SERVICE_PORT_HTTPS", "1234");
         assertThrows(env);
 
         env.put("STANDARD_AUTHSERVICE_ADMIN_USER", "admin");
         assertThrows(env);
 
         env.put("STANDARD_AUTHSERVICE_ADMIN_PASSWORD", "password");
+
+        env.put("STANDARD_AUTHSERVICE_CA_CERT", new String(Files.readAllBytes(new File("src/test/resources/ca.crt").toPath()), "UTF-8"));
 
         KeycloakParams params = KeycloakParams.fromEnv(env);
         assertEquals("localhost", params.getHost());
@@ -47,7 +52,7 @@ public class KeycloakParamsTest {
         assertEquals("password", params.getAdminPassword());
     }
 
-    private static void assertThrows(Map<String, String> env) {
+    private static void assertThrows(Map<String, String> env) throws Exception {
        try {
             KeycloakParams.fromEnv(env);
             fail("Should fail without any environment variables set");

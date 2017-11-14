@@ -15,28 +15,28 @@
  */
 package io.enmasse.keycloak.controller;
 
+import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
+import org.keycloak.admin.client.KeycloakBuilder;
 import org.keycloak.representations.idm.RealmRepresentation;
 
 import java.util.Set;
 import java.util.stream.Collectors;
 
 public class Keycloak implements KeycloakApi {
-    private final org.keycloak.admin.client.Keycloak keycloak;
+
+    private final KeycloakParams params;
 
     public Keycloak(KeycloakParams params) {
-        this.keycloak = org.keycloak.admin.client.Keycloak.getInstance(
-            "http://" + params.getHost() + ":" + params.getHttpPort() + "/auth",
-                "master",
-                params.getAdminUser(),
-                params.getAdminPassword(),
-                "admin-cli");
+        this.params = params;
     }
 
     @Override
     public Set<String> getRealmNames() {
-        return keycloak.realms().findAll().stream()
-                .map(RealmRepresentation::getRealm)
-                .collect(Collectors.toSet());
+        try (CloseableKeycloak wrapper = new CloseableKeycloak(params)) {
+            return wrapper.get().realms().findAll().stream()
+                    .map(RealmRepresentation::getRealm)
+                    .collect(Collectors.toSet());
+        }
     }
 
     @Override
@@ -44,11 +44,43 @@ public class Keycloak implements KeycloakApi {
         final RealmRepresentation newrealm = new RealmRepresentation();
         newrealm.setRealm(realmName);
         newrealm.setPasswordPolicy("hashAlgorithm(scramsha1)");
-        keycloak.realms().create(newrealm);
+        try (CloseableKeycloak wrapper = new CloseableKeycloak(params)) {
+            wrapper.get().realms().create(newrealm);
+        }
     }
 
     @Override
     public void deleteRealm(String realmName) {
-        keycloak.realm(realmName).remove();
+        try (CloseableKeycloak wrapper = new CloseableKeycloak(params)) {
+            wrapper.get().realm(realmName).remove();
+        }
+    }
+
+    public static class CloseableKeycloak implements AutoCloseable {
+
+        private final org.keycloak.admin.client.Keycloak keycloak;
+
+        CloseableKeycloak(KeycloakParams params) {
+            this.keycloak = KeycloakBuilder.builder()
+                .serverUrl("https://" + params.getHost() + ":" + params.getHttpPort() + "/auth")
+                .realm("master")
+                .username(params.getAdminUser())
+                .password(params.getAdminPassword())
+                .clientId("admin-cli")
+                .resteasyClient(new ResteasyClientBuilder()
+                        .trustStore(params.getKeyStore())
+                        .hostnameVerification(ResteasyClientBuilder.HostnameVerificationPolicy.ANY)
+                        .build())
+                .build();
+        }
+
+        org.keycloak.admin.client.Keycloak get() {
+            return keycloak;
+        }
+
+        @Override
+        public void close() {
+            keycloak.close();
+        }
     }
 }
