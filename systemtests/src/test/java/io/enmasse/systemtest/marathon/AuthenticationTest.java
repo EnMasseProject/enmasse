@@ -8,7 +8,8 @@ import org.junit.Test;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class AuthenticationTest extends MarathonTestBase {
-    @Test
+
+//    @Test disabled due to issue: #520
     public void testCreateDeleteUsersLong() throws Exception {
         Logging.log.info("testCreateDeleteUsersLong start");
         AddressSpace addressSpace = new AddressSpace("test-create-delete-users-brokered",
@@ -65,11 +66,13 @@ public class AuthenticationTest extends MarathonTestBase {
         AmqpClient queueClient = amqpClientFactory.createQueueClient(addressSpace);
         queueClient.getConnectOptions().setUsername(uname).setPassword(password);
         io.enmasse.systemtest.standard.QueueTest.runQueueTest(queueClient, queue, messageCount);
-        Logging.log.info("Message count:'{}' to queue:'{}' - done", messageCount, queue.getAddress());
+        Logging.log.info("User: '{}'; Message count:'{}'; destination:'{}' - done",
+                uname, messageCount, queue.getAddress());
 
         AmqpClient topicClient = amqpClientFactory.createTopicClient(addressSpace);
         topicClient.getConnectOptions().setUsername(uname).setPassword(password);
         TopicTest.runTopicTest(topicClient, topic, messageCount);
-        Logging.log.info("Message count:'{}' to topic:'{}' - done", messageCount, topic.getAddress());
+        Logging.log.info("User: '{}'; Message count:'{}'; destination:'{}' - done",
+                uname, messageCount, topic.getAddress());
     }
 }
