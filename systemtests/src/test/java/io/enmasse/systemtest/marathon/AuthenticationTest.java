@@ -7,7 +7,7 @@ import org.junit.Test;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class AuthenticationTest extends AddressSpaceTest {
+public class AuthenticationTest extends MarathonTestBase {
 
 //    @Test disabled due to issue: #520
     public void testCreateDeleteUsersLong() throws Exception {
@@ -45,39 +45,24 @@ public class AuthenticationTest extends AddressSpaceTest {
         Logging.log.info("testCreateDeleteUsersLong finished");
     }
 
-    @Test
-    public void testCreateDeleteAddressesWithAuthLong() throws Exception {
-        Logging.log.info("test testCreateDeleteAddressesWithAuthLong");
-        AddressSpace addressSpace = new AddressSpace("test-create-delete-addresses-auth-brokered",
-                AddressSpaceType.BROKERED);
-        createAddressSpace(addressSpace, "standard");
-
-        String username = "test-user";
-        String password = "test-user";
-
-        createUser(addressSpace, username, password);
-
-        runTestInLoop(30, () -> {
-            doAddressTest(addressSpace, "test-topic-createdelete-auth-brokered-%d",
-                    "test-queue-createdelete-auth-brokered-%d", username, password);
-            Thread.sleep(10000);
-        });
-    }
-
-    private void createUser(AddressSpace addressSpace, String username, String password) throws Exception{
+    void createUser(AddressSpace addressSpace, String username, String password) throws Exception{
         getKeycloakClient().createUser(addressSpace.getName(), username, password);
     }
 
-    private void createUsers(AddressSpace addressSpace, String prefixName, String prefixPswd, int from, int to)
+    void removeUser(AddressSpace addressSpace, String username) throws Exception{
+        getKeycloakClient().deleteUser(addressSpace.getName(), username);
+    }
+
+    void createUsers(AddressSpace addressSpace, String prefixName, String prefixPswd, int from, int to)
             throws Exception {
         for (int i = from; i < to; i++) {
             createUser(addressSpace, prefixName + i, prefixPswd + i);
         }
     }
 
-    private void removeUsers(AddressSpace addressSpace, String prefixName, int from, int to) throws Exception {
+    void removeUsers(AddressSpace addressSpace, String prefixName, int from, int to) throws Exception {
         for (int i = from; i < to; i++) {
-            getKeycloakClient().deleteUser(addressSpace.getName(), prefixName + i);
+            removeUser(addressSpace, prefixName + i);
         }
     }
 

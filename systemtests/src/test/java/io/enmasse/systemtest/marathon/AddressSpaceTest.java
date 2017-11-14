@@ -13,7 +13,7 @@ import org.junit.Test;
 import java.util.ArrayList;
 import java.util.List;
 
-public class AddressSpaceTest extends MarathonTestBase {
+public class AddressSpaceTest extends AuthenticationTest {
 
     @Test
     public void testCreateDeleteAddressSpaceLong() throws Exception{
@@ -48,7 +48,26 @@ public class AddressSpaceTest extends MarathonTestBase {
         });
     }
 
-    void doAddressTest(AddressSpace addressSpace, String topicPattern,
+    @Test
+    public void testCreateDeleteAddressesWithAuthLong() throws Exception {
+        Logging.log.info("test testCreateDeleteAddressesWithAuthLong");
+        AddressSpace addressSpace = new AddressSpace("test-create-delete-addresses-auth-brokered",
+                AddressSpaceType.BROKERED);
+        createAddressSpace(addressSpace, "standard");
+
+        String username = "test-user";
+        String password = "test-user";
+
+        createUser(addressSpace, username, password);
+
+        runTestInLoop(30, () -> {
+            doAddressTest(addressSpace, "test-topic-createdelete-auth-brokered-%d",
+                    "test-queue-createdelete-auth-brokered-%d", username, password);
+            Thread.sleep(10000);
+        });
+    }
+
+    private void doAddressTest(AddressSpace addressSpace, String topicPattern,
                        String queuePattern, String username, String password) throws Exception{
         List<Destination> queueList = new ArrayList<>();
         List<Destination> topicList = new ArrayList<>();
@@ -85,7 +104,7 @@ public class AddressSpaceTest extends MarathonTestBase {
         deleteAddresses(addressSpace, topicList.toArray(new Destination[0]));
     }
 
-    void doAddressTest(AddressSpace addressSpace, String topicPattern, String queuePattern) throws Exception{
+    private void doAddressTest(AddressSpace addressSpace, String topicPattern, String queuePattern) throws Exception{
         doAddressTest(addressSpace, topicPattern, queuePattern, "test", "test");
     }
 }
