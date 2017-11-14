@@ -25,7 +25,7 @@ public class AuthenticationTest extends MarathonTestBase {
         final String prefixPswd = "test-user";
 
         AtomicInteger from = new AtomicInteger(0);
-        AtomicInteger to = new AtomicInteger(0);
+        AtomicInteger to = new AtomicInteger(100);
         int iteration = 100;
         int step = 10;
 
@@ -36,7 +36,7 @@ public class AuthenticationTest extends MarathonTestBase {
                 doBasicAuthQueueTopicTest(addressSpace, queue, topic, prefixUser + i, prefixPswd + i);
             }
             removeUsers(addressSpace, prefixUser, from.get(), to.get() - step);
-            Logging.log.info("Users <{};{}> successfully removed", from.get(), to.get());
+            Logging.log.info("Users <{};{}> successfully removed", from.get(), to.get() - step);
             from.set(from.get() + iteration);
             to.set(to.get() + iteration);
             Thread.sleep(5000);
