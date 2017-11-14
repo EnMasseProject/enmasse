@@ -36,34 +36,35 @@ items:
       {"name": "AUTHENTICATION_SERVICE_PORT", "value": "${AUTHENTICATION_SERVICE_PORT}"},
       {"name": "AUTHENTICATION_SERVICE_CLIENT_SECRET", "value": "${AUTHENTICATION_SERVICE_CLIENT_SECRET}"},
       {"name": "AUTHENTICATION_SERVICE_SASL_INIT_HOST", "value": "${AUTHENTICATION_SERVICE_SASL_INIT_HOST}"}],
-      "image": "${BROKER_IMAGE}", "livenessProbe": {"initialDelaySeconds": 120, "tcpSocket":
-      {"port": "amqp"}}, "name": "broker", "ports": [{"containerPort": 5672, "name":
-      "amqp"}, {"containerPort": 5671, "name": "amqps"}, {"containerPort": 55671,
-      "name": "amqps-normal"}, {"containerPort": 8161, "name": "jolokia"}], "readinessProbe":
-      {"tcpSocket": {"port": "amqp"}}, "volumeMounts": [{"mountPath": "/var/run/artemis",
-      "name": "data", "readOnly": false}, {"mountPath": "/etc/enmasse-certs", "name":
-      "broker-internal-cert", "readOnly": true}, {"mountPath": "/etc/external-certs",
-      "name": "external-cert", "readOnly": true}, {"mountPath": "/etc/authservice-ca",
-      "name": "authservice-ca", "readOnly": true}]}], "volumes": [{"name": "data",
-      "persistentVolumeClaim": {"claimName": "broker-data"}}, {"configMap": {"name":
-      "hawkular-broker-config"}, "name": "hawkular-openshift-agent"}, {"name": "broker-internal-cert",
-      "secret": {"secretName": "broker-internal-cert"}}, {"name": "authservice-ca",
-      "secret": {"secretName": "authservice-ca"}}, {"name": "external-cert", "secret":
-      {"secretName": "${MESSAGING_SECRET}"}}]}}}}, {"apiVersion": "v1", "kind": "Service",
-      "metadata": {"labels": {"app": "enmasse"}, "name": "broker"}, "spec": {"ports":
-      [{"name": "amqps-normal", "port": 55671, "targetPort": "amqps-normal"}], "selector":
-      {"role": "broker"}}}, {"apiVersion": "v1", "kind": "Service", "metadata": {"annotations":
-      {"addressSpace": "${ADDRESS_SPACE}", "io.enmasse.endpointPort": "amqps"}, "labels":
-      {"app": "enmasse"}, "name": "messaging"}, "spec": {"ports": [{"name": "amqp",
-      "port": 5672, "targetPort": "amqp"}, {"name": "amqps", "port": 5671, "targetPort":
-      "amqps"}], "selector": {"role": "broker"}}}, {"apiVersion": "extensions/v1beta1",
-      "kind": "Deployment", "metadata": {"annotations": {"addressSpace": "${ADDRESS_SPACE}",
-      "io.enmasse.certSecretName": "agent-internal-cert"}, "labels": {"app": "enmasse"},
-      "name": "agent"}, "spec": {"replicas": 1, "template": {"metadata": {"annotations":
-      {"addressSpace": "${ADDRESS_SPACE}"}, "labels": {"app": "enmasse", "name": "agent",
-      "role": "agent"}}, "spec": {"containers": [{"env": [{"name": "ADDRESS_SPACE",
-      "value": "${ADDRESS_SPACE}"}, {"name": "ADDRESS_SPACE_TYPE", "value": "brokered"},
-      {"name": "ADDRESS_SPACE_SERVICE_HOST", "value": "${ADDRESS_SPACE_SERVICE_HOST}"},
+      "image": "${BROKER_IMAGE}", "livenessProbe": {"exec": {"command": ["sh", "-c",
+      "$ARTEMIS_HOME/bin/probe.sh"]}, "initialDelaySeconds": 120}, "name": "broker",
+      "ports": [{"containerPort": 5672, "name": "amqp"}, {"containerPort": 5671, "name":
+      "amqps"}, {"containerPort": 55671, "name": "amqps-normal"}, {"containerPort":
+      8161, "name": "jolokia"}], "readinessProbe": {"exec": {"command": ["sh", "-c",
+      "$ARTEMIS_HOME/bin/probe.sh"]}, "initialDelaySeconds": 10}, "volumeMounts":
+      [{"mountPath": "/var/run/artemis", "name": "data", "readOnly": false}, {"mountPath":
+      "/etc/enmasse-certs", "name": "broker-internal-cert", "readOnly": true}, {"mountPath":
+      "/etc/external-certs", "name": "external-cert", "readOnly": true}, {"mountPath":
+      "/etc/authservice-ca", "name": "authservice-ca", "readOnly": true}]}], "volumes":
+      [{"name": "data", "persistentVolumeClaim": {"claimName": "broker-data"}}, {"configMap":
+      {"name": "hawkular-broker-config"}, "name": "hawkular-openshift-agent"}, {"name":
+      "broker-internal-cert", "secret": {"secretName": "broker-internal-cert"}}, {"name":
+      "authservice-ca", "secret": {"secretName": "authservice-ca"}}, {"name": "external-cert",
+      "secret": {"secretName": "${MESSAGING_SECRET}"}}]}}}}, {"apiVersion": "v1",
+      "kind": "Service", "metadata": {"labels": {"app": "enmasse"}, "name": "broker"},
+      "spec": {"ports": [{"name": "amqps-normal", "port": 55671, "targetPort": "amqps-normal"}],
+      "selector": {"role": "broker"}}}, {"apiVersion": "v1", "kind": "Service", "metadata":
+      {"annotations": {"addressSpace": "${ADDRESS_SPACE}", "io.enmasse.endpointPort":
+      "amqps"}, "labels": {"app": "enmasse"}, "name": "messaging"}, "spec": {"ports":
+      [{"name": "amqp", "port": 5672, "targetPort": "amqp"}, {"name": "amqps", "port":
+      5671, "targetPort": "amqps"}], "selector": {"role": "broker"}}}, {"apiVersion":
+      "extensions/v1beta1", "kind": "Deployment", "metadata": {"annotations": {"addressSpace":
+      "${ADDRESS_SPACE}", "io.enmasse.certSecretName": "agent-internal-cert"}, "labels":
+      {"app": "enmasse"}, "name": "agent"}, "spec": {"replicas": 1, "template": {"metadata":
+      {"annotations": {"addressSpace": "${ADDRESS_SPACE}"}, "labels": {"app": "enmasse",
+      "name": "agent", "role": "agent"}}, "spec": {"containers": [{"env": [{"name":
+      "ADDRESS_SPACE", "value": "${ADDRESS_SPACE}"}, {"name": "ADDRESS_SPACE_TYPE",
+      "value": "brokered"}, {"name": "ADDRESS_SPACE_SERVICE_HOST", "value": "${ADDRESS_SPACE_SERVICE_HOST}"},
       {"name": "CERT_DIR", "value": "/etc/enmasse-certs"}, {"name": "CONSOLE_CERT_DIR",
       "value": "/etc/console-certs"}, {"name": "AUTHENTICATION_SERVICE_HOST", "value":
       "${AUTHENTICATION_SERVICE_HOST}"}, {"name": "AUTHENTICATION_SERVICE_PORT", "value":
@@ -114,9 +115,10 @@ items:
       {"name": "CLUSTER_ID", "value": "${CLUSTER_ID}"}, {"name": "CERT_DIR", "value":
       "/etc/enmasse-certs"}], "image": "${BROKER_REPO}", "lifecycle": {"preStop":
       {"exec": {"command": ["/shutdown-hook/shutdown-hook.sh"]}}}, "livenessProbe":
-      {"initialDelaySeconds": 120, "tcpSocket": {"port": "amqp"}}, "name": "broker",
-      "ports": [{"containerPort": 5673, "name": "amqp"}, {"containerPort": 8161, "name":
-      "jolokia"}], "readinessProbe": {"tcpSocket": {"port": "amqp"}}, "volumeMounts":
+      {"exec": {"command": ["sh", "-c", "$ARTEMIS_HOME/bin/probe.sh"]}, "initialDelaySeconds":
+      120}, "name": "broker", "ports": [{"containerPort": 5673, "name": "amqp"}, {"containerPort":
+      8161, "name": "jolokia"}], "readinessProbe": {"exec": {"command": ["sh", "-c",
+      "$ARTEMIS_HOME/bin/probe.sh"]}, "initialDelaySeconds": 10}, "volumeMounts":
       [{"mountPath": "/var/run/artemis", "name": "vol-${NAME}", "readOnly": false},
       {"mountPath": "/etc/enmasse-certs", "name": "broker-internal-cert", "readOnly":
       true}, {"mountPath": "/etc/authservice-ca", "name": "authservice-ca", "readOnly":
@@ -162,9 +164,10 @@ items:
       {"name": "CLUSTER_ID", "value": "${CLUSTER_ID}"}, {"name": "CERT_DIR", "value":
       "/etc/enmasse-certs"}], "image": "${BROKER_REPO}", "lifecycle": {"preStop":
       {"exec": {"command": ["/shutdown-hook/shutdown-hook.sh"]}}}, "livenessProbe":
-      {"initialDelaySeconds": 120, "tcpSocket": {"port": "amqp"}}, "name": "broker",
-      "ports": [{"containerPort": 5673, "name": "amqp"}, {"containerPort": 8161, "name":
-      "jolokia"}], "readinessProbe": {"tcpSocket": {"port": "amqp"}}, "volumeMounts":
+      {"exec": {"command": ["sh", "-c", "$ARTEMIS_HOME/bin/probe.sh"]}, "initialDelaySeconds":
+      120}, "name": "broker", "ports": [{"containerPort": 5673, "name": "amqp"}, {"containerPort":
+      8161, "name": "jolokia"}], "readinessProbe": {"exec": {"command": ["sh", "-c",
+      "$ARTEMIS_HOME/bin/probe.sh"]}, "initialDelaySeconds": 10}, "volumeMounts":
       [{"mountPath": "/var/run/artemis", "name": "vol-${NAME}", "readOnly": false},
       {"mountPath": "/etc/enmasse-certs", "name": "broker-internal-cert", "readOnly":
       true}, {"mountPath": "/etc/authservice-ca", "name": "authservice-ca", "readOnly":
@@ -430,9 +433,10 @@ items:
       {"name": "CLUSTER_ID", "value": "${CLUSTER_ID}"}, {"name": "CERT_DIR", "value":
       "/etc/enmasse-certs"}], "image": "${BROKER_REPO}", "lifecycle": {"preStop":
       {"exec": {"command": ["/shutdown-hook/shutdown-hook.sh"]}}}, "livenessProbe":
-      {"initialDelaySeconds": 120, "tcpSocket": {"port": "amqp"}}, "name": "broker",
-      "ports": [{"containerPort": 5673, "name": "amqp"}, {"containerPort": 8161, "name":
-      "jolokia"}], "readinessProbe": {"tcpSocket": {"port": "amqp"}}, "volumeMounts":
+      {"exec": {"command": ["sh", "-c", "$ARTEMIS_HOME/bin/probe.sh"]}, "initialDelaySeconds":
+      120}, "name": "broker", "ports": [{"containerPort": 5673, "name": "amqp"}, {"containerPort":
+      8161, "name": "jolokia"}], "readinessProbe": {"exec": {"command": ["sh", "-c",
+      "$ARTEMIS_HOME/bin/probe.sh"]}, "initialDelaySeconds": 10}, "volumeMounts":
       [{"mountPath": "/var/run/artemis", "name": "vol-${NAME}", "readOnly": false},
       {"mountPath": "/etc/enmasse-certs", "name": "broker-internal-cert", "readOnly":
       true}, {"mountPath": "/etc/authservice-ca", "name": "authservice-ca", "readOnly":
@@ -500,9 +504,10 @@ items:
       {"name": "CLUSTER_ID", "value": "${CLUSTER_ID}"}, {"name": "CERT_DIR", "value":
       "/etc/enmasse-certs"}], "image": "${BROKER_REPO}", "lifecycle": {"preStop":
       {"exec": {"command": ["/shutdown-hook/shutdown-hook.sh"]}}}, "livenessProbe":
-      {"initialDelaySeconds": 120, "tcpSocket": {"port": "amqp"}}, "name": "broker",
-      "ports": [{"containerPort": 5673, "name": "amqp"}, {"containerPort": 8161, "name":
-      "jolokia"}], "readinessProbe": {"tcpSocket": {"port": "amqp"}}, "volumeMounts":
+      {"exec": {"command": ["sh", "-c", "$ARTEMIS_HOME/bin/probe.sh"]}, "initialDelaySeconds":
+      120}, "name": "broker", "ports": [{"containerPort": 5673, "name": "amqp"}, {"containerPort":
+      8161, "name": "jolokia"}], "readinessProbe": {"exec": {"command": ["sh", "-c",
+      "$ARTEMIS_HOME/bin/probe.sh"]}, "initialDelaySeconds": 10}, "volumeMounts":
       [{"mountPath": "/var/run/artemis", "name": "vol-${NAME}", "readOnly": false},
       {"mountPath": "/etc/enmasse-certs", "name": "broker-internal-cert", "readOnly":
       true}, {"mountPath": "/etc/authservice-ca", "name": "authservice-ca", "readOnly":

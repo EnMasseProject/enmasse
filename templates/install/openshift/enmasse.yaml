@@ -49,9 +49,12 @@ objects:
                   command:
                   - /shutdown-hook/shutdown-hook.sh
             livenessProbe:
+              exec:
+                command:
+                - sh
+                - -c
+                - $ARTEMIS_HOME/bin/probe.sh
               initialDelaySeconds: 120
-              tcpSocket:
-                port: amqp
             name: broker
             ports:
             - containerPort: 5673
@@ -59,8 +62,12 @@ objects:
             - containerPort: 8161
               name: jolokia
             readinessProbe:
-              tcpSocket:
-                port: amqp
+              exec:
+                command:
+                - sh
+                - -c
+                - $ARTEMIS_HOME/bin/probe.sh
+              initialDelaySeconds: 10
             volumeMounts:
             - mountPath: /var/run/artemis
               name: vol-${NAME}
@@ -192,9 +199,12 @@ objects:
                   command:
                   - /shutdown-hook/shutdown-hook.sh
             livenessProbe:
+              exec:
+                command:
+                - sh
+                - -c
+                - $ARTEMIS_HOME/bin/probe.sh
               initialDelaySeconds: 120
-              tcpSocket:
-                port: amqp
             name: broker
             ports:
             - containerPort: 5673
@@ -202,8 +212,12 @@ objects:
             - containerPort: 8161
               name: jolokia
             readinessProbe:
-              tcpSocket:
-                port: amqp
+              exec:
+                command:
+                - sh
+                - -c
+                - $ARTEMIS_HOME/bin/probe.sh
+              initialDelaySeconds: 10
             volumeMounts:
             - mountPath: /var/run/artemis
               name: vol-${NAME}
@@ -321,9 +335,12 @@ objects:
                   command:
                   - /shutdown-hook/shutdown-hook.sh
             livenessProbe:
+              exec:
+                command:
+                - sh
+                - -c
+                - $ARTEMIS_HOME/bin/probe.sh
               initialDelaySeconds: 120
-              tcpSocket:
-                port: amqp
             name: broker
             ports:
             - containerPort: 5673
@@ -331,8 +348,12 @@ objects:
             - containerPort: 8161
               name: jolokia
             readinessProbe:
-              tcpSocket:
-                port: amqp
+              exec:
+                command:
+                - sh
+                - -c
+                - $ARTEMIS_HOME/bin/probe.sh
+              initialDelaySeconds: 10
             volumeMounts:
             - mountPath: /var/run/artemis
               name: vol-${NAME}
@@ -540,9 +561,12 @@ objects:
                   command:
                   - /shutdown-hook/shutdown-hook.sh
             livenessProbe:
+              exec:
+                command:
+                - sh
+                - -c
+                - $ARTEMIS_HOME/bin/probe.sh
               initialDelaySeconds: 120
-              tcpSocket:
-                port: amqp
             name: broker
             ports:
             - containerPort: 5673
@@ -550,8 +574,12 @@ objects:
             - containerPort: 8161
               name: jolokia
             readinessProbe:
-              tcpSocket:
-                port: amqp
+              exec:
+                command:
+                - sh
+                - -c
+                - $ARTEMIS_HOME/bin/probe.sh
+              initialDelaySeconds: 10
             volumeMounts:
             - mountPath: /var/run/artemis
               name: vol-${NAME}
@@ -1485,9 +1513,12 @@ objects:
               value: ${AUTHENTICATION_SERVICE_SASL_INIT_HOST}
             image: ${BROKER_IMAGE}
             livenessProbe:
+              exec:
+                command:
+                - sh
+                - -c
+                - $ARTEMIS_HOME/bin/probe.sh
               initialDelaySeconds: 120
-              tcpSocket:
-                port: amqp
             name: broker
             ports:
             - containerPort: 5672
@@ -1499,8 +1530,12 @@ objects:
             - containerPort: 8161
               name: jolokia
             readinessProbe:
-              tcpSocket:
-                port: amqp
+              exec:
+                command:
+                - sh
+                - -c
+                - $ARTEMIS_HOME/bin/probe.sh
+              initialDelaySeconds: 10
             volumeMounts:
             - mountPath: /var/run/artemis
               name: data
