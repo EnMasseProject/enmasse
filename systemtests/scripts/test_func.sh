@@ -48,7 +48,6 @@ function wait_until_up(){
 
 function run_test() {
     TESTCASE=$1
-    TEST_PROFILE=${2:-'systemtests'}
     if [ "$OPENSHIFT_MULTITENANT" == false ]; then
         wait_until_up 9 ${OPENSHIFT_PROJECT} || return 1
     else
@@ -58,7 +57,7 @@ function run_test() {
     if [ -n "${TESTCASE}" ]; then
         EXTRA_TEST_ARGS="-Dtest=${TESTCASE}"
     fi
-    mvn test -pl systemtests -P${TEST_PROFILE} -Djava.net.preferIPv4Stack=true ${EXTRA_TEST_ARGS}
+    mvn test -pl systemtests -Psystemtests -Djava.net.preferIPv4Stack=true ${EXTRA_TEST_ARGS}
 }
 
 function teardown_test() {

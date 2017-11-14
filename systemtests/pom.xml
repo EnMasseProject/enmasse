@@ -111,23 +111,6 @@
         </plugins>
       </build>
     </profile>
-    <profile>
-      <id>longtests</id>
-      <properties>
-        <testcase.groups>io.enmasse.systemtest.marathon.*Test</testcase.groups>
-      </properties>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-surefire-plugin</artifactId>
-            <configuration>
-              <skipTests>false</skipTests>
-            </configuration>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
   </profiles>
   <build>
     <plugins>

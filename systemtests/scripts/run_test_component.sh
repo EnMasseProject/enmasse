@@ -6,13 +6,12 @@ ENMASSE_DIR=$1
 KUBEADM=$2
 SYSTEMTESTS=$3
 TESTCASE=$4
-TESTP_ROFILE=$5
 
 failure=0
 
 setup_test ${ENMASSE_DIR} ${KUBEADM}
 
-run_test ${TESTCASE} ${TEST_PROFILE} || failure=$(($failure + 1))
+run_test ${TESTCASE} || failure=$(($failure + 1))
 
 $CURDIR/collect_logs.sh $ARTIFACTS_DIR
 
