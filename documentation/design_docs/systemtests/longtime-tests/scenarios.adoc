@@ -54,6 +54,7 @@ repeat for 30 minutes following steps
 
 * testCreateDeleteUsersLong
 - create brokered addr space: test-create-delete-users-brokered
+- create addresses queue/topic: test-create-delete-queue/test-create-delete-topic
 - repeat for 30 minutes following steps
 - create 100 users: test-user-N
 - do basic Auth queue/topic tests with every 10th user
