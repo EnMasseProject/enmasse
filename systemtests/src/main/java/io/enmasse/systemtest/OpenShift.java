@@ -14,6 +14,7 @@ import io.fabric8.openshift.client.DefaultOpenShiftClient;
 import io.fabric8.openshift.client.OpenShiftClient;
 
 import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -77,7 +78,7 @@ public class OpenShift {
 
     public Endpoint getKeycloakEndpoint() throws InterruptedException {
         Route route = client.routes().inNamespace(globalNamespace).withName("keycloak").get();
-        Endpoint endpoint = new Endpoint(route.getSpec().getHost(), 80);
+        Endpoint endpoint = new Endpoint(route.getSpec().getHost(), 443);
         Logging.log.info("Testing endpoint : " + endpoint);
         if (TestUtils.resolvable(endpoint)) {
             return endpoint;
@@ -158,5 +159,13 @@ public class OpenShift {
         return client.namespaces().list().getItems().stream()
                 .map(ns -> ns.getMetadata().getName())
                 .collect(Collectors.toSet());
+    }
+
+    public String getKeycloakCA() throws UnsupportedEncodingException {
+        Secret secret = client.secrets().withName("standard-authservice-cert").get();
+        if (secret == null) {
+            throw new IllegalStateException("Unable to find CA cert for keycloak");
+        }
+        return new String(Base64.getDecoder().decode(secret.getData().get("tls.crt")), "UTF-8");
     }
 }

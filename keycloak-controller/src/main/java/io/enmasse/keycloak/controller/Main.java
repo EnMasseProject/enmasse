@@ -21,14 +21,17 @@ import io.fabric8.kubernetes.client.Config;
 import io.fabric8.kubernetes.client.ConfigBuilder;
 import io.fabric8.openshift.client.DefaultOpenShiftClient;
 import io.fabric8.openshift.client.OpenShiftClient;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.security.Security;
 import java.util.Map;
 
 public class Main {
     public static void main(String [] args) throws Exception {
+        Security.addProvider(new BouncyCastleProvider());
         Map<String, String> env = System.getenv();
 
         String openshiftUri = String.format("https://%s:%s", getEnvOrThrow(env, "KUBERNETES_SERVICE_HOST"), getEnvOrThrow(env, "KUBERNETES_SERVICE_PORT"));

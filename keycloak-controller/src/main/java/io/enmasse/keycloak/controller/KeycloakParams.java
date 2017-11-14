@@ -15,28 +15,57 @@
  */
 package io.enmasse.keycloak.controller;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.ByteArrayInputStream;
+import java.security.KeyStore;
+import java.security.cert.CertificateFactory;
 import java.util.Map;
 
 public class KeycloakParams {
+
+    private static final Logger log = LoggerFactory.getLogger(KeycloakParams.class);
 
     private final String host;
     private final int httpPort;
     private final String adminUser;
     private final String adminPassword;
+    private final KeyStore keyStore;
 
-    public KeycloakParams(String host, int httpPort, String adminUser, String adminPassword) {
+    public KeycloakParams(String host, int httpPort, String adminUser, String adminPassword, KeyStore keyStore) {
         this.host = host;
         this.httpPort = httpPort;
         this.adminUser = adminUser;
         this.adminPassword = adminPassword;
+        this.keyStore = keyStore;
     }
 
-    public static KeycloakParams fromEnv(Map<String, String> env) {
+    public static KeycloakParams fromEnv(Map<String, String> env) throws Exception {
         String host = getEnvOrThrow(env, "STANDARD_AUTHSERVICE_SERVICE_HOST");
-        int httpPort = Integer.parseInt(getEnvOrThrow(env, "STANDARD_AUTHSERVICE_SERVICE_PORT_HTTP"));
+        int httpPort = Integer.parseInt(getEnvOrThrow(env, "STANDARD_AUTHSERVICE_SERVICE_PORT_HTTPS"));
         String adminUser = getEnvOrThrow(env, "STANDARD_AUTHSERVICE_ADMIN_USER");
         String adminPassword = getEnvOrThrow(env, "STANDARD_AUTHSERVICE_ADMIN_PASSWORD");
-        return new KeycloakParams(host, httpPort, adminUser, adminPassword);
+        KeyStore keyStore = createKeyStore(env);
+
+        return new KeycloakParams(host, httpPort, adminUser, adminPassword, keyStore);
+    }
+
+    private static KeyStore createKeyStore(Map<String, String> env) throws Exception {
+        String authServiceCa = getEnvOrThrow(env, "STANDARD_AUTHSERVICE_CA_CERT");
+
+        try {
+            KeyStore keyStore = KeyStore.getInstance("JKS");
+            keyStore.load(null);
+            CertificateFactory cf = CertificateFactory.getInstance("X.509");
+            keyStore.setCertificateEntry("standard-authservice",
+                    cf.generateCertificate(new ByteArrayInputStream(authServiceCa.getBytes("UTF-8"))));
+
+            return keyStore;
+        } catch (Exception ignored) {
+            log.warn("Error creating keystore for authservice CA", ignored);
+            throw ignored;
+        }
     }
 
     private static String getEnvOrThrow(Map<String, String> envMap, String env) {
@@ -61,5 +90,9 @@ public class KeycloakParams {
 
     public String getAdminPassword() {
         return adminPassword;
+    }
+
+    public KeyStore getKeyStore() {
+        return keyStore;
     }
 }

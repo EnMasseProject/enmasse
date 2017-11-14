@@ -41,15 +41,17 @@ objects:
                 name: ${KEYCLOAK_SECRET_NAME}
           image: ${STANDARD_AUTHSERVICE_IMAGE}
           livenessProbe:
+            httpGet:
+              path: /
+              port: https
+              scheme: HTTPS
             initialDelaySeconds: 120
-            tcpSocket:
-              port: amqps
           name: keycloak
           ports:
           - containerPort: 5671
             name: amqps
-          - containerPort: 8080
-            name: http
+          - containerPort: 8443
+            name: https
           volumeMounts:
           - mountPath: /opt/jboss/keycloak/standalone/data
             name: keycloak-persistence
@@ -90,6 +92,11 @@ objects:
               secretKeyRef:
                 key: admin.password
                 name: ${KEYCLOAK_SECRET_NAME}
+          - name: STANDARD_AUTHSERVICE_CA_CERT
+            valueFrom:
+              secretKeyRef:
+                key: tls.crt
+                name: ${STANDARD_AUTHSERVICE_SECRET_NAME}
           image: ${KEYCLOAK_CONTROLLER_IMAGE}
           name: keycloak-controller
           resources:
@@ -109,10 +116,10 @@ objects:
       port: 5671
       protocol: TCP
       targetPort: amqps
-    - name: http
-      port: 8080
+    - name: https
+      port: 8443
       protocol: TCP
-      targetPort: http
+      targetPort: https
     selector:
       name: keycloak
 - apiVersion: v1
@@ -123,9 +130,10 @@ objects:
     name: keycloak
   spec:
     host: ${KEYCLOAK_ROUTE_HOSTNAME}
-    path: /auth
     port:
-      targetPort: http
+      targetPort: https
+    tls:
+      termination: passthrough
     to:
       kind: Service
       name: standard-authservice

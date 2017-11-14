@@ -54,10 +54,10 @@ local images = import "images.jsonnet";
           "targetPort": "amqps"
         },
         {
-          "name": "http",
-          "port": 8080,
+          "name": "https",
+          "port": 8443,
           "protocol": "TCP",
-          "targetPort": "http"
+          "targetPort": "https"
         }
       ],
       "selector": {
@@ -66,7 +66,7 @@ local images = import "images.jsonnet";
     }
   },
 
-  keycloak_controller_deployment(keycloak_controller_image, keycloak_credentials_secret)::
+  keycloak_controller_deployment(keycloak_controller_image, keycloak_credentials_secret, cert_secret)::
     {
       "apiVersion": "extensions/v1beta1",
       "kind": "Deployment",
@@ -116,6 +116,15 @@ local images = import "images.jsonnet";
                         "key": "admin.password"
                       }
                     }
+                  },
+                  {
+                    "name": "STANDARD_AUTHSERVICE_CA_CERT",
+                    "valueFrom": {
+                      "secretKeyRef": {
+                        "name": cert_secret,
+                        "key": "tls.crt"
+                      }
+                    }
                   }
                 ]
               }
@@ -152,7 +161,7 @@ local images = import "images.jsonnet";
                 "name": "keycloak",
                 "ports": [
                   common.container_port("amqps", 5671),
-                  common.container_port("http", 8080)
+                  common.container_port("https", 8443)
                 ],
                 "env": [
                   {
@@ -178,7 +187,7 @@ local images = import "images.jsonnet";
                   common.volume_mount("keycloak-persistence", "/opt/jboss/keycloak/standalone/data"),
                   common.volume_mount(cert_secret_name, "/opt/jboss/keycloak/standalone/cert")
                 ],
-                "livenessProbe": common.tcp_probe("amqps", 120)
+                "livenessProbe": common.http_probe("https", "/", "HTTPS", 120)
               }
             ],
             "volumes": [
@@ -223,15 +232,17 @@ local images = import "images.jsonnet";
           "name": "keycloak"
       },
       "spec": {
-          "host": hostname,
-          "path": "/auth",
-          "to": {
-              "kind": "Service",
-              "name": "standard-authservice"
-          },
-          "port": {
-              "targetPort": "http"
-          }
+        "host": hostname,
+        "to": {
+            "kind": "Service",
+            "name": "standard-authservice"
+        },
+        "port": {
+            "targetPort": "https"
+        },
+        "tls": {
+          "termination": "passthrough"
+        }
       }
     },
 
@@ -296,7 +307,7 @@ local images = import "images.jsonnet";
     "items": [
       me.keycloak_pvc("keycloak-pvc", "2Gi"),
       me.keycloak_deployment(images.keycloak, "keycloak-credentials", "standard-authservice-cert", "keycloak-pvc"),
-      me.keycloak_controller_deployment(images.keycloak_controller, "keycloak-credentials"),
+      me.keycloak_controller_deployment(images.keycloak_controller, "keycloak-credentials", "standard-authservice-cert"),
       me.standard_authservice
     ],
   },
@@ -308,7 +319,7 @@ local images = import "images.jsonnet";
     "objects": [
       me.keycloak_pvc("keycloak-pvc", "${KEYCLOAK_STORAGE_CAPACITY}"),
       me.keycloak_deployment("${STANDARD_AUTHSERVICE_IMAGE}", "${KEYCLOAK_SECRET_NAME}", "${STANDARD_AUTHSERVICE_SECRET_NAME}", "keycloak-pvc"),
-      me.keycloak_controller_deployment("${KEYCLOAK_CONTROLLER_IMAGE}", "${KEYCLOAK_SECRET_NAME}"),
+      me.keycloak_controller_deployment("${KEYCLOAK_CONTROLLER_IMAGE}", "${KEYCLOAK_SECRET_NAME}", "${STANDARD_AUTHSERVICE_SECRET_NAME}"),
       me.standard_authservice,
       me.keycloak_route("${KEYCLOAK_ROUTE_HOSTNAME}")
     ],

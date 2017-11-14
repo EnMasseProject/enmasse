@@ -24,6 +24,7 @@ import org.junit.After;
 import org.junit.Before;
 
 import java.io.File;
+import java.io.UnsupportedEncodingException;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Future;
@@ -116,13 +117,13 @@ public abstract class TestBase {
         return addressApiClient.getAddressSpace(name);
     }
 
-    protected KeycloakClient getKeycloakClient() throws InterruptedException {
+    protected KeycloakClient getKeycloakClient() throws Exception {
         if (keycloakApiClient == null) {
             KeycloakCredentials creds = environment.keycloakCredentials();
             if (creds == null) {
                 creds = openShift.getKeycloakCredentials();
             }
-            keycloakApiClient = new KeycloakClient(openShift.getKeycloakEndpoint(), creds);
+            keycloakApiClient = new KeycloakClient(openShift.getKeycloakEndpoint(), creds, openShift.getKeycloakCA());
         }
         return keycloakApiClient;
     }

@@ -32,6 +32,7 @@
     <qpidjms.version>0.26.0</qpidjms.version>
     <jacoco.version>0.7.9</jacoco.version>
     <license.maven.version>2.11</license.maven.version>
+    <bouncycastle.version>1.56</bouncycastle.version>
   </properties>
 
 
