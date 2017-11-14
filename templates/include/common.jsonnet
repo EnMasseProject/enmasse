@@ -153,6 +153,14 @@
     }
   },
 
+  exec_probe(command, initialDelay=0)::
+  {
+    "exec": {
+      "command": command,
+    },
+    [if initialDelay != 0 then "initialDelaySeconds"]: initialDelay
+  },
+
   tcp_probe(port, initialDelay=0)::
   {
     "tcpSocket": {

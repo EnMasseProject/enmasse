@@ -18,8 +18,8 @@ local common = import "common.jsonnet";
         common.volume_mount("broker-internal-cert", "/etc/enmasse-certs", true),
         common.volume_mount("authservice-ca", "/etc/authservice-ca", true)
       ],
-      "livenessProbe": common.tcp_probe("amqp", 120),
-      "readinessProbe": common.tcp_probe("amqp", 0),
+      "livenessProbe": common.exec_probe(["sh", "-c", "$ARTEMIS_HOME/bin/probe.sh"], 120),
+      "readinessProbe": common.exec_probe(["sh", "-c", "$ARTEMIS_HOME/bin/probe.sh"], 10),
       "lifecycle": {
         "preStop": {
           "exec": {

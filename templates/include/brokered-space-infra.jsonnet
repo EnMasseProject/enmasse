@@ -145,8 +145,8 @@ local hawkularBrokerConfig = import "hawkular-broker-config.jsonnet";
                 common.container_port("amqps-normal", 55671),
                 common.container_port("jolokia", 8161)
               ],
-              "livenessProbe": common.tcp_probe("amqp", 120),
-              "readinessProbe": common.tcp_probe("amqp", 0),
+              "livenessProbe": common.exec_probe(["sh", "-c", "$ARTEMIS_HOME/bin/probe.sh"], 120),
+              "readinessProbe": common.exec_probe(["sh", "-c", "$ARTEMIS_HOME/bin/probe.sh"], 10),
             }
           ]
         }
