@@ -471,6 +471,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#apache_qpid_jms">Apache Qpid JMS</a></li>
 <li><a href="#rhea_javascript_client">Rhea JavaScript Client</a></li>
 <li><a href="#apache_qpid_proton_c">Apache Qpid Proton C++</a></li>
+<li><a href="#amqp_net_lite">AMQP.Net Lite</a></li>
 </ul>
 </li>
 </ul>
@@ -714,21 +715,8 @@ to decouple the producer and consumer. A queue in the brokered address spaces su
 message groups, transactions and other JMS features. If the queue is a high volume queue and these
 semantics are not needed, see the <a href="#standard-queue">standard address space <code>queue</code></a> type.</p>
 </div>
-<div class="sect5">
-<h6 id="brokered-queue-plans">Queue Plans</h6>
-<div class="ulist">
-<ul>
-<li>
-<p>standard</p>
-</li>
-</ul>
-</div>
-<div class="sect6">
-<h7 id="standard-queue-plan">Standard</h7>
 <div class="paragraph">
-<p>The standard queue plan deploys a queue in the broker for that address space.</p>
-</div>
-</div>
+<p>Only a standard plan is available for queues.</p>
 </div>
 </div>
 <div class="sect4">
@@ -736,21 +724,8 @@ semantics are not needed, see the <a href="#standard-queue">standard address spa
 <div class="paragraph">
 <p>The topic address type supports the publish-subscribe messaging pattern where you have 1..N producers and 1..M consumers. Each message published to a topic address is forwarded to all subscribers for that address. A subscriber can also be durable, in which case messages are kept until the subscriber has acknowledged them.</p>
 </div>
-<div class="sect5">
-<h6 id="brokered-topic-plans">Topic Plans</h6>
-<div class="ulist">
-<ul>
-<li>
-<p>standard</p>
-</li>
-</ul>
-</div>
-<div class="sect6">
-<h7 id="standard-topic-plan">Standard</h7>
 <div class="paragraph">
-<p>The standard topic plan deploys a topic in the broker for that address space.</p>
-</div>
-</div>
+<p>Only a standard plan is available for topics.</p>
 </div>
 </div>
 </div>
@@ -1006,12 +981,51 @@ int main(int argc, char **argv) {
 </div>
 </div>
 </div>
+<div class="sect4">
+<h5 id="amqp_net_lite">AMQP.Net Lite</h5>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight nowrap"><code>using System;
+using Amqp;
+
+namespace Test
+{
+    public class Program
+    {
+        public static void Main(string[] args)
+        {
+            String url = (args.Length &gt; 0) ? args[0] : "amqps://&lt;messaging-route-hostname&gt;:443";
+            String address = (args.Length &gt; 1) ? args[0] : "myqueue";
+
+            Connection.DisableServerCertValidation = true;
+            Connection connection = new Connection(new Address(url));
+            Session session = new Session(connection);
+            SenderLink sender = new SenderLink(session, "test-sender", address);
+
+            Message messageSent = new Message("Test Message");
+            sender.Send(messageSent);
+
+            ReceiverLink receiver = new ReceiverLink(session, "test-receiver", address);
+            Message messageReceived = receiver.Receive(TimeSpan.FromSeconds(2));
+            Console.WriteLine(messageReceived.GetBody&lt;String&gt;());
+            receiver.Accept(messageReceived);
+
+            sender.Close();
+            receiver.Close();
+            session.Close();
+            connection.Close();
+        }
+    }
+}</code></pre>
+</div>
+</div>
+</div>
 </div>
 </div>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2017-10-30 20:11:38 GMT
+Last updated 2017-10-30 14:52:22 CET
 </div>
 </div>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css">

@@ -26,17 +26,17 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
-@Path("/v1")
+@Path("/apis/enmasse.io/v1")
 public class HttpV1RootService {
     @GET
     @Produces({MediaType.APPLICATION_JSON})
     public Response getV1(@Context UriInfo uriInfo) {
         List<URI> uriList = new ArrayList<>();
         URI baseUri = uriInfo.getBaseUri();
-        uriList.add(baseUri.resolve("/v1/addressspaces"));
-        uriList.add(baseUri.resolve("/v1/addresses"));
-        uriList.add(baseUri.resolve("/v1/health"));
-        uriList.add(baseUri.resolve("/v1/schema"));
+        uriList.add(baseUri.resolve("/apis/enmasse.io/v1/addressspaces"));
+        uriList.add(baseUri.resolve("/apis/enmasse.io/v1/addresses"));
+        uriList.add(baseUri.resolve("/apis/enmasse.io/v1/health"));
+        uriList.add(baseUri.resolve("/apis/enmasse.io/v1/schema"));
         return Response.status(200).entity(uriList).build();
     }
 }

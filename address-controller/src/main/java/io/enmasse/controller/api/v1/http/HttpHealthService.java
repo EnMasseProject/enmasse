@@ -23,7 +23,7 @@ import javax.ws.rs.core.Response;
 
 @Path(HttpHealthService.BASE_URI)
 public class HttpHealthService {
-    public static final String BASE_URI = "/v1/health";
+    public static final String BASE_URI = "/apis/enmasse.io/v1/health";
     @GET
     @Produces({MediaType.APPLICATION_JSON})
     public Response getHealth() {

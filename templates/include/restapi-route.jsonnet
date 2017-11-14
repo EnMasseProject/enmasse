@@ -15,9 +15,6 @@
         "kind": "Service",
         "name": "address-controller"
       },
-      "port": {
-        "targetPort": "https"
-      },
       "tls": {
         "termination": "passthrough"
       }
@@ -41,10 +38,10 @@
           "http": {
             "paths": [
               {
-                "path": "/v1",
+                "path": "/apis/enmasse.io/v1",
                 "backend": {
                   "serviceName": "address-controller",
-                  "servicePort": 8081
+                  "servicePort": 443
                 }
               }
             ]

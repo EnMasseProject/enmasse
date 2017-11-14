@@ -33,7 +33,7 @@ import java.util.concurrent.Callable;
 /**
  * HTTP API for operating on addresses within an address space
  */
-@Path("/v1/addresses/{addressSpace}")
+@Path("/apis/enmasse.io/v1/addresses/{addressSpace}")
 public class HttpAddressService {
     private static final Logger log = LoggerFactory.getLogger(HttpAddressService.class.getName());
     private final AddressApiHelper apiHelper;

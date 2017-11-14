@@ -30,7 +30,7 @@ images for the various components.
 +
 [source,options="nowrap"]
 ----
-curl https://$(minikube ip)/v1/addressspaces/default
+curl -k https://$(minikube ip)/apis/enmasse.io/v1/addressspaces/default
 ----
 +
 The deployment is finished when `status.isReady` is `true` in the returned JSON object.

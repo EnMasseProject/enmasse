@@ -32,7 +32,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-@Path("/v1/addresses")
+@Path("/apis/enmasse.io/v1/addresses")
 public class HttpAddressRootService {
     private static final Logger log = LoggerFactory.getLogger(HttpAddressRootService.class.getName());
     private final AddressSpaceApi addressSpaceApi;

@@ -34,7 +34,7 @@ import java.util.concurrent.Callable;
 @Path(HttpAddressSpaceService.BASE_URI)
 public class HttpAddressSpaceService {
 
-    static final String BASE_URI = "/v1/addressspaces";
+    static final String BASE_URI = "/apis/enmasse.io/v1/addressspaces";
 
     private static final Logger log = LoggerFactory.getLogger(HttpAddressSpaceService.class.getName());
     private final String namespace;

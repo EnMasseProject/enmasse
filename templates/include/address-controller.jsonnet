@@ -15,7 +15,7 @@ local common = import "common.jsonnet";
       "ports": [
         {
           "name": "https",
-          "port": 8081,
+          "port": 443,
           "protocol": "TCP",
           "targetPort": "https"
         }
@@ -83,8 +83,8 @@ local common = import "common.jsonnet";
                   common.container_port("https", 8081),
                   common.container_port("http", 8080)
                 ],
-               "livenessProbe": common.http_probe("https", "/v1/health", "HTTPS", 30),
-                "readinessProbe": common.http_probe("https", "/v1/health", "HTTPS", 30),
+               "livenessProbe": common.http_probe("https", "/apis/enmasse.io/v1/health", "HTTPS", 30),
+                "readinessProbe": common.http_probe("https", "/apis/enmasse.io/v1/health", "HTTPS", 30),
               }
             ],
             "volumes": [

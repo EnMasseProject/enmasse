@@ -1718,7 +1718,7 @@ objects:
           image: ${ADDRESS_CONTROLLER_REPO}
           livenessProbe:
             httpGet:
-              path: /v1/health
+              path: /apis/enmasse.io/v1/health
               port: https
               scheme: HTTPS
             initialDelaySeconds: 30
@@ -1730,7 +1730,7 @@ objects:
             name: http
           readinessProbe:
             httpGet:
-              path: /v1/health
+              path: /apis/enmasse.io/v1/health
               port: https
               scheme: HTTPS
             initialDelaySeconds: 30
@@ -1764,7 +1764,7 @@ objects:
   spec:
     ports:
     - name: https
-      port: 8081
+      port: 443
       protocol: TCP
       targetPort: https
     selector:
@@ -1778,8 +1778,6 @@ objects:
     name: restapi
   spec:
     host: ${RESTAPI_HOSTNAME}
-    port:
-      targetPort: https
     tls:
       termination: passthrough
     to:

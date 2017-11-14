@@ -5,7 +5,7 @@
         "version": "1.0.0",
         "title": "EnMasse API"
     },
-    "basePath": "/v1",
+    "basePath": "/apis/enmasse.io/v1",
     "tags": [
         {
             "name": "addressspaces",
