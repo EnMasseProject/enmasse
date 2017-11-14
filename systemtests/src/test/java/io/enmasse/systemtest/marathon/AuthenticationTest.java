@@ -39,6 +39,7 @@ public class AuthenticationTest extends MarathonTestBase {
             Logging.log.info("Users <{};{}> successfully removed", from.get(), to.get());
             from.set(from.get() + iteration);
             to.set(to.get() + iteration);
+            Thread.sleep(5000);
         });
         Logging.log.info("testCreateDeleteUsersLong finished");
     }
@@ -60,12 +61,15 @@ public class AuthenticationTest extends MarathonTestBase {
 
     private void doBasicAuthQueueTopicTest(AddressSpace addressSpace, Destination queue, Destination topic,
                                            String uname, String password) throws Exception {
+        int messageCount = 100;
         AmqpClient queueClient = amqpClientFactory.createQueueClient(addressSpace);
         queueClient.getConnectOptions().setUsername(uname).setPassword(password);
-        io.enmasse.systemtest.standard.QueueTest.runQueueTest(queueClient, queue, 100);
+        io.enmasse.systemtest.standard.QueueTest.runQueueTest(queueClient, queue, messageCount);
+        Logging.log.info("Message count:'{}' to queue:'{}' - done", messageCount, queue.getAddress());
 
         AmqpClient topicClient = amqpClientFactory.createTopicClient(addressSpace);
         topicClient.getConnectOptions().setUsername(uname).setPassword(password);
-        TopicTest.runTopicTest(topicClient, topic, 100);
+        TopicTest.runTopicTest(topicClient, topic, messageCount);
+        Logging.log.info("Message count:'{}' to topic:'{}' - done", messageCount, topic.getAddress());
     }
 }
