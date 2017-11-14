@@ -86,6 +86,9 @@
             <artifactId>maven-surefire-plugin</artifactId>
             <configuration>
               <skipTests>false</skipTests>
+              <excludes>
+                <exclude>**/marathon/*</exclude>
+              </excludes>
             </configuration>
           </plugin>
         </plugins>
