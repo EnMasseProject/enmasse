@@ -30,13 +30,17 @@ function setup_test() {
 
     DEPLOY_ARGS=( "-y" "-n" "$OPENSHIFT_PROJECT" "-u" "$OPENSHIFT_USER" "-m" "$OPENSHIFT_URL" "-a" "none standard" )
     if [ "$OPENSHIFT_MULTITENANT" == true ]; then
-        DEPLOY_ARGS+=( "-o" "multi" )
+        DEPLOY_ARGS+=( "-o" "multitenant" )
+    fi
+
+    if [ "$OPENSHIFT_MULTITENANT" == "true" ]; then
+        oc --config ${KUBEADM} create -f ${ENMASSE_DIR}/openshift/cluster-roles.yaml
     fi
 
     ${ENMASSE_DIR}/deploy-openshift.sh "${DEPLOY_ARGS[@]}"
 
     if [ "$OPENSHIFT_MULTITENANT" == "true" ]; then
-        oc adm --config ${KUBEADM} policy add-cluster-role-to-user cluster-admin system:serviceaccount:$(oc project -q):enmasse-service-account
+        oc adm --config ${KUBEADM} policy add-cluster-role-to-user enmasse-namespace-admin system:serviceaccount:$(oc project -q):enmasse-service-account
         oc adm --config ${KUBEADM} policy add-cluster-role-to-user cluster-admin $OPENSHIFT_USER
     fi
 }

@@ -58,7 +58,8 @@ public class ControllerTest {
 
         when(spaceController.getAddressSpaceType()).thenReturn(new BrokeredAddressSpaceType());
         when(kubernetes.withNamespace(anyString())).thenReturn(kubernetes);
-        when(kubernetes.hasService("messaging")).thenReturn(true);
+        when(kubernetes.getNamespace()).thenReturn("myspace");
+        when(kubernetes.existsNamespace(anyString())).thenReturn(true);
     }
 
     @After
