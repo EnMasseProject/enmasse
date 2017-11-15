@@ -13,7 +13,7 @@ import org.junit.Test;
 import java.util.ArrayList;
 import java.util.List;
 
-public class AddressSpaceTest extends MarathonTestBase {
+public class AddressSpaceTest extends AuthenticationTest {
 
     @Test
     public void testCreateDeleteAddressSpaceLong() throws Exception{
@@ -48,7 +48,27 @@ public class AddressSpaceTest extends MarathonTestBase {
         });
     }
 
-    private void doAddressTest(AddressSpace addressSpace, String topicPattern, String queuePattern) throws Exception{
+    @Test
+    public void testCreateDeleteAddressesWithAuthLong() throws Exception {
+        Logging.log.info("test testCreateDeleteAddressesWithAuthLong");
+        AddressSpace addressSpace = new AddressSpace("test-create-delete-addresses-auth-brokered",
+                AddressSpaceType.BROKERED);
+        createAddressSpace(addressSpace, "standard");
+
+        String username = "test-user";
+        String password = "test-user";
+
+        createUser(addressSpace, username, password);
+
+        runTestInLoop(30, () -> {
+            doAddressTest(addressSpace, "test-topic-createdelete-auth-brokered-%d",
+                    "test-queue-createdelete-auth-brokered-%d", username, password);
+            Thread.sleep(10000);
+        });
+    }
+
+    private void doAddressTest(AddressSpace addressSpace, String topicPattern,
+                       String queuePattern, String username, String password) throws Exception{
         List<Destination> queueList = new ArrayList<>();
         List<Destination> topicList = new ArrayList<>();
 
@@ -59,14 +79,13 @@ public class AddressSpaceTest extends MarathonTestBase {
             topicList.add(Destination.topic(String.format(topicPattern, i)));
         }
 
-        AmqpClientFactory amqpFactory = createAmqpClientFactory(addressSpace);
         AmqpClient queueClient;
         AmqpClient topicClient;
 
         setAddresses(addressSpace, queueList.toArray(new Destination[0]));
         for(Destination queue : queueList){
-            queueClient = amqpFactory.createQueueClient(addressSpace);
-            queueClient.getConnectOptions().setUsername("test").setPassword("test");
+            queueClient = amqpClientFactory.createQueueClient(addressSpace);
+            queueClient.getConnectOptions().setUsername(username).setPassword(password);
 
             QueueTest.runQueueTest(queueClient, queue, 1024);
         }
@@ -74,13 +93,17 @@ public class AddressSpaceTest extends MarathonTestBase {
         setAddresses(addressSpace, topicList.toArray(new Destination[0]));
 
         for(Destination topic : topicList){
-            topicClient = amqpFactory.createTopicClient(addressSpace);
-            topicClient.getConnectOptions().setUsername("test").setPassword("test");
+            topicClient = amqpClientFactory.createTopicClient(addressSpace);
+            topicClient.getConnectOptions().setUsername(username).setPassword(password);
 
             TopicTest.runTopicTest(topicClient, topic, 1024);
         }
 
         deleteAddresses(addressSpace, queueList.toArray(new Destination[0]));
         deleteAddresses(addressSpace, topicList.toArray(new Destination[0]));
+    }
+
+    private void doAddressTest(AddressSpace addressSpace, String topicPattern, String queuePattern) throws Exception{
+        doAddressTest(addressSpace, topicPattern, queuePattern, "test", "test");
     }
 }

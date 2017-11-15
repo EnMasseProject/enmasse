@@ -45,18 +45,24 @@ public class AuthenticationTest extends MarathonTestBase {
         Logging.log.info("testCreateDeleteUsersLong finished");
     }
 
-    private void createUsers(AddressSpace addressSpace, String prefixName, String prefixPswd, int from, int to)
+    protected void createUser(AddressSpace addressSpace, String username, String password) throws Exception{
+        getKeycloakClient().createUser(addressSpace.getName(), username, password);
+    }
+
+    protected void removeUser(AddressSpace addressSpace, String username) throws Exception{
+        getKeycloakClient().deleteUser(addressSpace.getName(), username);
+    }
+
+    protected void createUsers(AddressSpace addressSpace, String prefixName, String prefixPswd, int from, int to)
             throws Exception {
-        KeycloakCredentials user;
         for (int i = from; i < to; i++) {
-            user = new KeycloakCredentials(prefixName + i, prefixPswd + i);
-            getKeycloakClient().createUser(addressSpace.getName(), user.getUsername(), user.getPassword());
+            createUser(addressSpace, prefixName + i, prefixPswd + i);
         }
     }
 
-    private void removeUsers(AddressSpace addressSpace, String prefixName, int from, int to) throws Exception {
+    protected void removeUsers(AddressSpace addressSpace, String prefixName, int from, int to) throws Exception {
         for (int i = from; i < to; i++) {
-            getKeycloakClient().deleteUser(addressSpace.getName(), prefixName + i);
+            removeUser(addressSpace, prefixName + i);
         }
     }
 
