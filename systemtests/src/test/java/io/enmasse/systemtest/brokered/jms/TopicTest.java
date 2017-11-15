@@ -216,7 +216,7 @@ public class TopicTest extends JMSTestBase {
 
         Topic testTopic = (Topic) context1.lookup(topic);
 
-        String subID = "sharedConsumer123";
+        String subID = "sharedConsumerDurable123";
         MessageConsumer subscriber1 = session.createSharedDurableConsumer(testTopic, subID);
         Logging.log.info("sub1 DONE");
         MessageConsumer subscriber2 = session2.createSharedDurableConsumer(testTopic, subID);
@@ -268,7 +268,7 @@ public class TopicTest extends JMSTestBase {
         Session session2 = connection2.createSession(false, Session.AUTO_ACKNOWLEDGE);
 
         Topic testTopic = (Topic) context1.lookup(topic);
-        String subID = "sharedConsumer123";
+        String subID = "sharedConsumerNonDurable123";
         MessageConsumer subscriber1 = session.createSharedConsumer(testTopic, subID);
         MessageConsumer subscriber2 = session2.createSharedConsumer(testTopic, subID);
         MessageConsumer subscriber3 = session2.createSharedConsumer(testTopic, subID);
