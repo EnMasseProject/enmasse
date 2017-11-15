@@ -35,6 +35,30 @@ public class TestUtils {
         waitForNReplicas(openShift, addressSpace, destination.getGroup(), numReplicas, budget);
     }
 
+    public static void setReplicas(OpenShift openShift, String tenantNamespace, String deployment, int numReplicas, TimeoutBudget budget) throws InterruptedException {
+        openShift.setDeploymentReplicas(tenantNamespace, deployment, numReplicas);
+        waitForNReplicas(openShift, tenantNamespace, deployment, numReplicas, budget);
+    }
+
+    public static void waitForNReplicas(OpenShift openShift, String tenantNamespace, String deployment, int expectedReplicas, TimeoutBudget budget) throws InterruptedException {
+        boolean done = false;
+        int actualReplicas = 0;
+        do {
+            List<Pod> pods = openShift.listPods(tenantNamespace, Collections.singletonMap("name", deployment), Collections.singletonMap("", ""));
+            actualReplicas = numReady(pods);
+            Logging.log.info("Have " + actualReplicas + " out of " + pods.size() + " replicas. Expecting " + expectedReplicas);
+            if (actualReplicas != pods.size() || actualReplicas != expectedReplicas) {
+                Thread.sleep(5000);
+            } else {
+                done = true;
+            }
+        } while (budget.timeLeft() >= 0 && !done);
+
+        if (!done) {
+            throw new RuntimeException("Only " + actualReplicas + " out of " + expectedReplicas + " in state 'Running' before timeout");
+        }
+    }
+
     public static void waitForNReplicas(OpenShift openShift, AddressSpace addressSpace, String group, int expectedReplicas, TimeoutBudget budget) throws InterruptedException {
         boolean done = false;
         int actualReplicas = 0;

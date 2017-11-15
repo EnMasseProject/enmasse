@@ -32,6 +32,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.logging.Logger;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -79,6 +80,12 @@ public class AuthenticationTest extends TestBase {
         setAddresses(addressSpace, brokeredAddressList.toArray(new Destination[brokeredAddressList.size()]));
         //        setAddresses(name, Destination.queue(amqpAddress)); //, Destination.topic(mqttAddress)); #TODO! for MQTT
         return addressSpace;
+    }
+
+    @Test
+    public void testStandardAuthenticationServiceRestart() throws Exception{
+        Logging.log.info("testStandardAuthenticationServiceRestart");
+        scaleInGlobal("keycloak", 5);
     }
 
     @Test
