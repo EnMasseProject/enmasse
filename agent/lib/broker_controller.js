@@ -245,9 +245,13 @@ BrokerController.prototype.delete_addresses = function (addresses) {
     var self = this;
     return Promise.all(addresses.map(function (a) {
         if (a.type === 'queue') {
-            return self.broker.destroyQueue(a.address);
+            return self.broker.destroyQueue(a.address).catch(function (error) {
+                log.error('Failed to delete queue %s: %s', a.address, error);
+            });
         } else {
-            return self.broker.deleteAddress(a.address);
+            return self.broker.deleteAddress(a.address).catch(function (error) {
+                log.error('Failed to delete topic %s: %s', a.address, error);
+            });
         }
     }));
 };
@@ -256,9 +260,13 @@ BrokerController.prototype.create_addresses = function (addresses) {
     var self = this;
     return Promise.all(addresses.map(function (a) {
         if (a.type === 'queue') {
-            return self.broker.createQueue(a.address);
+            return self.broker.createQueue(a.address).catch(function (error) {
+                log.error('Failed to create queue %s: %s', a.address, error);
+            });
         } else {
-            return self.broker.createAddress(a.address, {multicast:true});
+            return self.broker.createAddress(a.address, {multicast:true}).catch(function (error) {
+                log.error('Failed to create topic %s: %s', a.address, error);
+            });
         }
     }));
 };
