@@ -1,7 +1,7 @@
 #!/bin/sh
-sudo do-release-upgrade -f DistUpgradeViewNonInteractive
-sudo apt-get -qq update
-sudo apt-get install -y python-apt autoconf pkg-config e2fslibs-dev libblkid-dev zlib1g-dev liblzo2-dev asciidoc
+#sudo do-release-upgrade -f DistUpgradeViewNonInteractive
+#sudo apt-get -qq update
+#sudo apt-get install -y python-apt autoconf pkg-config e2fslibs-dev libblkid-dev zlib1g-dev liblzo2-dev asciidoc
 
 # # dash? wtf is dash? UGH! use a real shell
 #  sudo rm /bin/sh

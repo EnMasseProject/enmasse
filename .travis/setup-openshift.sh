@@ -10,8 +10,8 @@ mkdir -p $SETUP
 mkdir -p $LOGDIR
 mkdir -p $CONFIG
 
-#sudo apt-get update -y
-#sudo apt-get install -y systemd-services
+sudo apt-get update -y
+sudo apt-get install -y systemd-services
 
 sudo service docker stop
 sudo sh -c 'echo DOCKER_OPTS=\"-H tcp://127.0.0.1:2375 -H unix:///var/run/docker.sock --insecure-registry 172.30.0.0/16\" > /etc/default/docker'
