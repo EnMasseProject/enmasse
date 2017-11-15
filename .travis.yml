@@ -16,12 +16,11 @@ cache:
   - "$HOME/.m2"
 jdk:
 - oraclejdk8
-before_script:
-- "./.travis/setup-openshift.sh /tmp/openshift"
 before_install:
 - npm install -g mocha mocha-junit-reporter
 - npm install rhea debug
 script:
+- "./.travis/setup-openshift.sh /tmp/openshift"
 - "./.travis/build.sh"
 after_failure:
 - "./.travis/upload-artifacts.sh false"
