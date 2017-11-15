@@ -67,7 +67,7 @@ do
         exit 1
     fi
     sleep 5
-    oc get nodes
+    oc get nodes -o yaml
     oc cluster status
 done
 
