@@ -134,7 +134,7 @@ public class TopicTest extends JMSTestBase {
         Logging.log.info(sub2ID + " :First batch messages received");
 
         subscriber1.close();
-        Thread.sleep(10000); //!TODO: this row can be removed when ENTMQBR-910 will be fixed
+        Thread.sleep(30000); //!TODO: this row can be removed when ENTMQBR-910 will be fixed
         Logging.log.info(sub1ID + " : closed");
 
         batchPrefix = "Second";
