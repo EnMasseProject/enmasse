@@ -1410,21 +1410,6 @@ objects:
       to the Kafka cluster
     name: KAFKA_BOOTSTRAP_SERVERS
 - apiVersion: v1
-  kind: Role
-  metadata:
-    name: enmasse-admin
-  rules:
-  - resources:
-    - configmaps
-    verbs:
-    - get
-    - list
-    - watch
-    - create
-    - update
-    - patch
-    - delete
-- apiVersion: v1
   kind: Template
   metadata:
     labels:
