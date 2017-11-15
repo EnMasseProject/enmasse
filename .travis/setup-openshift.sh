@@ -16,7 +16,7 @@ sudo cat /etc/default/docker
 sudo mount --make-shared /
 sudo service docker start
 
-wget -q https://github.com/openshift/origin/releases/download/v3.6.1/openshift-origin-client-tools-v3.6.1-008f2d5-linux-64bit.tar.gz -O openshift.tar.gz
+wget -q https://github.com/openshift/origin/releases/download/v3.7.0-rc.0/openshift-origin-client-tools-v3.7.0-rc.0-e92d5c5-linux-64bit.tar.gz -O openshift.tar.gz
 # wget https://github.com/openshift/origin/releases/download/v1.5.1/openshift-origin-server-v1.5.1-7b451fc-linux-64bit.tar.gz -O openshift.tar.gz
 tar xzf openshift.tar.gz -C $SETUP --strip-components 1
 
