@@ -54,6 +54,8 @@ sleep 30
 oc --config $KUBECONFIG get services -n default
 oc --config $KUBECONFIG get pods -n default
 
+oc --config $KUBECONFIG get nodes -o yaml
+
 # Setup persistent storage
 export KUBECONFIG
 for i in `seq 1 15`
