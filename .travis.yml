@@ -20,7 +20,7 @@ before_install:
 - npm install -g mocha mocha-junit-reporter
 - npm install rhea debug
 script:
-- ./.travis/setup-openshift.sh /tmp/openshift && ./.travis/build.sh
+- ./.travis/upgrade.sh && ./.travis/setup-openshift.sh /tmp/openshift && ./.travis/build.sh
 after_failure:
 - "./.travis/upload-artifacts.sh false"
 after_success:
