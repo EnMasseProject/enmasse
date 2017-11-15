@@ -15,6 +15,7 @@
  */
 'use strict';
 
+var util = require('util');
 var log = require("./log.js").logger();
 
 var Artemis = function (connection) {
@@ -195,7 +196,10 @@ Artemis.prototype.listQueues = function (attribute_list) {
     var agent = this;
     return new Promise(function (resolve, reject) {
         agent.getQueueNames().then(function (results) {
-            var allnames = results || [];
+            if (results && !util.isArray(results)) {
+                log.info('unexpected result for queue names: %j', results);
+            }
+            var allnames = util.isArray(results) ? results : [];
             var names = allnames.filter(function (n) { return n !== agent.address; } );
             Promise.all(
                 names.map(function (name) {
@@ -272,11 +276,15 @@ Artemis.prototype.listAddresses = function () {
                     var a = {'name': name};
                     for (var i = 0; i < results.length; i++) {
                         if (attributes[i] === 'delivery_modes') {
-                            if (results[i].indexOf('MULTICAST') >= 0) {
-                                a.multicast = true;
-                            }
-                            if (results[i].indexOf('ANYCAST') >= 0) {
-                                a.anycast = true;
+                            if (results[i]) {
+                                if (results[i].indexOf('MULTICAST') >= 0) {
+                                    a.multicast = true;
+                                }
+                                if (results[i].indexOf('ANYCAST') >= 0) {
+                                    a.anycast = true;
+                                }
+                            } else {
+                                log.info('unexpected result for delivery_modes: %j', results[i]);
                             }
                         } else {
                             a[attributes[i]] = results[i];
