@@ -89,20 +89,20 @@ Artemis.prototype.abort_requests = function (error) {
 }
 
 Artemis.prototype.on_sender_error = function (context) {
-    var error = this.connection.container_id + ' sender error ' + context.sender.error;
+    var error = this.connection.container_id + ' sender error ' + JSON.stringify(context.sender.error);
     log.info('[' + this.connection.container_id + '] ' + error);
     this.abort_requests(error);
 };
 
 Artemis.prototype.on_receiver_error = function (context) {
-    var error = this.connection.container_id + ' receiver error ' + context.receiver.error;
+    var error = this.connection.container_id + ' receiver error ' + JSON.stringify(context.receiver.error);
     log.info('[' + this.connection.container_id + '] ' + error);
     this.abort_requests(error);
 };
 
 Artemis.prototype.on_connection_error = function (context) {
-    var error = this.connection.container_id + ' connection error ' + context.connection.error;
-    log.info('[' + this.connection.container_id + '] connection error: ' + context.connection.error);
+    var error = this.connection.container_id + ' connection error ' + JSON.stringify(context.connection.error);
+    log.info('[' + this.connection.container_id + '] connection error: ' + JSON.stringify(context.connection.error));
     this.abort_requests(error);
 };
 
@@ -321,6 +321,20 @@ Artemis.prototype.createAddress = function (name, type) {
 
 Artemis.prototype.deleteAddress = function (name) {
     return this._request('broker', 'deleteAddress', [name]);
+};
+
+Artemis.prototype.deleteAddressAndBindings = function (address) {
+    var self = this;
+    return this.deleteBindingsFor(address).then(function () {
+        return self.deleteAddress(address);
+    });
+};
+
+Artemis.prototype.deleteBindingsFor = function (address) {
+    var self = this;
+    return this.getBoundQueues(address).then(function (results) {
+        return Promise.all(results.map(function (q) { return self.destroyQueue(q); }));
+    });
 };
 
 Artemis.prototype.getAllQueuesAndTopics = function () {

@@ -185,7 +185,8 @@ local hawkularBrokerConfig = import "hawkular-broker-config.jsonnet";
           "volumes": [
             common.secret_volume("authservice-ca", "authservice-ca"),
             common.secret_volume("console-external-cert", "${CONSOLE_SECRET}"),
-            common.secret_volume("agent-internal-cert", "agent-internal-cert")
+            common.secret_volume("agent-internal-cert", "agent-internal-cert"),
+            common.secret_volume("address-controller-ca", "address-controller-ca")
           ],
           "containers": [
             {
@@ -197,11 +198,13 @@ local hawkularBrokerConfig = import "hawkular-broker-config.jsonnet";
                 common.env("ADDRESS_SPACE_SERVICE_HOST", "${ADDRESS_SPACE_SERVICE_HOST}"),
                 common.env("CERT_DIR", "/etc/enmasse-certs"),
                 common.env("CONSOLE_CERT_DIR", "/etc/console-certs"),
+                common.env("ADDRESS_CONTROLLER_CA", "/opt/agent/address-controller-ca/tls.crt"),
               ] + auth_service.envVars,
               "volumeMounts": [
                 common.volume_mount("authservice-ca", "/opt/agent/authservice-ca", true),
                 common.volume_mount("console-external-cert", "/etc/console-certs", true),
-                common.volume_mount("agent-internal-cert", "/etc/enmasse-certs", true)
+                common.volume_mount("agent-internal-cert", "/etc/enmasse-certs", true),
+                common.volume_mount("address-controller-ca", "/opt/agent/address-controller-ca", true)
               ],
               "ports": [
                 common.container_port("https", 8080)

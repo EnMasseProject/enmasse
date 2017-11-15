@@ -227,6 +227,10 @@ function excluded_addresses(address) {
     return address === 'DLQ' || address === 'ExpiryQueue';
 }
 
+function is_temp_queue(a) {
+    return a.anycast && a.queues && a.queues.length === 1 && a.queues[0].temporary;
+}
+
 /**
  * Translate from the address details we get back from artemis to the
  * structure used for the definition, for easier comparison.
@@ -236,6 +240,10 @@ function translate(addresses_in, exclude) {
     for (var name in addresses_in) {
         if (exclude && exclude(name)) continue;
         var a = addresses_in[name];
+        if (is_temp_queue(a)) {
+            log.info('ignoring temp queue %s', a.name);
+            continue;
+        }
         addresses_out[name] = {address:a.name, type: a.multicast ? 'topic' : 'queue'};
     }
     return addresses_out;
@@ -245,11 +253,15 @@ BrokerController.prototype.delete_addresses = function (addresses) {
     var self = this;
     return Promise.all(addresses.map(function (a) {
         if (a.type === 'queue') {
-            return self.broker.destroyQueue(a.address).catch(function (error) {
+            return self.broker.destroyQueue(a.address).then(function () {
+                log.info('Deleted queue %s', a.address);
+            }).catch(function (error) {
                 log.error('Failed to delete queue %s: %s', a.address, error);
             });
         } else {
-            return self.broker.deleteAddress(a.address).catch(function (error) {
+            return self.broker.deleteAddressAndBindings(a.address).then(function () {
+                log.info('Deleted topic %s', a.address);
+            }).catch(function (error) {
                 log.error('Failed to delete topic %s: %s', a.address, error);
             });
         }
@@ -260,11 +272,15 @@ BrokerController.prototype.create_addresses = function (addresses) {
     var self = this;
     return Promise.all(addresses.map(function (a) {
         if (a.type === 'queue') {
-            return self.broker.createQueue(a.address).catch(function (error) {
+            return self.broker.createQueue(a.address).then(function () {
+                log.info('Created queue %s', a.address);
+            }).catch(function (error) {
                 log.error('Failed to create queue %s: %s', a.address, error);
             });
         } else {
-            return self.broker.createAddress(a.address, {multicast:true}).catch(function (error) {
+            return self.broker.createAddress(a.address, {multicast:true}).then(function () {
+                log.info('Created topic %s', a.address);
+            }).catch(function (error) {
                 log.error('Failed to create topic %s: %s', a.address, error);
             });
         }
