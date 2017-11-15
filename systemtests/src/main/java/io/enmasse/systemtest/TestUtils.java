@@ -44,7 +44,7 @@ public class TestUtils {
         boolean done = false;
         int actualReplicas = 0;
         do {
-            List<Pod> pods = openShift.listPods(tenantNamespace, Collections.singletonMap("name", deployment), Collections.singletonMap("", ""));
+            List<Pod> pods = openShift.listPods(tenantNamespace, Collections.singletonMap("name", deployment));
             actualReplicas = numReady(pods);
             Logging.log.info("Have " + actualReplicas + " out of " + pods.size() + " replicas. Expecting " + expectedReplicas);
             if (actualReplicas != pods.size() || actualReplicas != expectedReplicas) {

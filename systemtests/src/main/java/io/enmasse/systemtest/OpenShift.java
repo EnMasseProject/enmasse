@@ -110,6 +110,10 @@ public class OpenShift {
         return new ArrayList<>(client.pods().inNamespace(addressSpace).list().getItems());
     }
 
+    public List<Pod> listPods(String addressSpace, Map<String, String> labelSelector) {
+        return client.pods().inNamespace(addressSpace).withLabels(labelSelector).list().getItems();
+    }
+
     public List<Pod> listPods(String addressSpace, Map<String, String> labelSelector, Map<String, String> annotationSelector) {
         return client.pods().inNamespace(addressSpace).withLabels(labelSelector).list().getItems().stream().filter(pod -> {
             for (Map.Entry<String, String> entry : annotationSelector.entrySet()) {
