@@ -76,7 +76,7 @@ function ConsoleServer (address_ctrl) {
             log.info('creating address ' + JSON.stringify(context.message.body));
             self.address_ctrl.create_address(context.message.body).then(accept).catch(reject);
         } else if (context.message.subject === 'delete_address') {
-            log.info('deleting address ' + JSON.stringify(context.message.body));
+            log.info('deleting address ' + context.message.body.address);
             self.address_ctrl.delete_address(context.message.body).then(accept).catch(reject);
         } else {
             reject('ignoring message: ' + context.message);
@@ -211,6 +211,8 @@ ConsoleServer.prototype.subscribe = function (name, sender) {
     //TODO: poll for changes in address_types
     this.address_ctrl.get_address_types().then(function (address_types) {
         sender.send({subject:'address_types', application_properties:{address_space_type: process.env.ADDRESS_SPACE_TYPE || 'standard'}, body:address_types});
+    }).catch(function (error) {
+        log.error('failed to get address types from address controller: %s', error);
     });
 };
 

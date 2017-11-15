@@ -1629,6 +1629,8 @@ objects:
               value: /etc/enmasse-certs
             - name: CONSOLE_CERT_DIR
               value: /etc/console-certs
+            - name: ADDRESS_CONTROLLER_CA
+              value: /opt/agent/address-controller-ca/tls.crt
             - name: AUTHENTICATION_SERVICE_HOST
               value: ${AUTHENTICATION_SERVICE_HOST}
             - name: AUTHENTICATION_SERVICE_PORT
@@ -1662,6 +1664,9 @@ objects:
             - mountPath: /etc/enmasse-certs
               name: agent-internal-cert
               readOnly: true
+            - mountPath: /opt/agent/address-controller-ca
+              name: address-controller-ca
+              readOnly: true
           volumes:
           - name: authservice-ca
             secret:
@@ -1672,6 +1677,9 @@ objects:
           - name: agent-internal-cert
             secret:
               secretName: agent-internal-cert
+          - name: address-controller-ca
+            secret:
+              secretName: address-controller-ca
   - apiVersion: v1
     kind: Service
     metadata:

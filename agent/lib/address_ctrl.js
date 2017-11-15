@@ -17,7 +17,7 @@
 
 var fs = require("fs");
 
-var AddressCtrl = function (host, port, ca, auth_string) {
+var AddressCtrl = function (host, port, ca, auth_string, rejectUnauthorized) {
     this.host = host;
     this.port = port;
     this.address_space = process.env.ADDRESS_SPACE
@@ -29,6 +29,7 @@ var AddressCtrl = function (host, port, ca, auth_string) {
     if (this.address_space) {
         this.addr_path += this.address_space + "/";
     }
+    this.rejectUnauthorized = rejectUnauthorized;
 }
 
 AddressCtrl.prototype.request = function (addr_path, method, headers, body, handler) {
@@ -41,6 +42,7 @@ AddressCtrl.prototype.request = function (addr_path, method, headers, body, hand
         options.path = addr_path;
         options.method = method || 'GET';
         options.headers = headers || {};
+        if (self.rejectUnauthorized !== undefined) options.rejectUnauthorized = self.rejectUnauthorized;
 
         if (self.auth_string) {
             options.headers['Authorization'] = self.auth_string
@@ -132,22 +134,25 @@ AddressCtrl.prototype.get_address_types = function () {
 
 module.exports.create = function (env) {
     var host = 'localhost';
-    var port = 8080;
+    var port;
+    var rejectUnauthorized;
     if (env.ADDRESS_SPACE_SERVICE_HOST) {
         host = env.ADDRESS_SPACE_SERVICE_HOST;
     } else if (env.ADDRESS_CONTROLLER_SERVICE_HOST) {
         host = env.ADDRESS_CONTROLLER_SERVICE_HOST;
-        if (env.ADDRESS_CONTROLLER_SERVICE_PORT_HTTPS) {
-            port = env.ADDRESS_CONTROLLER_SERVICE_PORT_HTTPS;
-        }
+        rejectUnauthorized = false;
+    }
+    if (env.ADDRESS_CONTROLLER_SERVICE_HOST && env.ADDRESS_CONTROLLER_SERVICE_PORT_HTTPS) {
+        port = env.ADDRESS_CONTROLLER_SERVICE_PORT_HTTPS;
     }
     var ca = undefined;
     if (env.ADDRESS_CONTROLLER_CA) {
         ca = fs.readFileSync(env.ADDRESS_CONTROLLER_CA);
-        port = 8081;
+        if (port === undefined) port = 8081;
     }
+    if (port === undefined) port = 8080;
 
     var auth_string = 'Bearer ' + (env.KUBERNETES_TOKEN || fs.readFileSync('/var/run/secrets/kubernetes.io/serviceaccount/token'));
 
-    return new AddressCtrl(host, port, ca, auth_string);
+    return new AddressCtrl(host, port, ca, auth_string, rejectUnauthorized);
 };
