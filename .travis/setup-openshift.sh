@@ -54,14 +54,21 @@ sudo chmod -R 777 /var/lib/origin/openshift.local.pv
 #oc create --config $KUBECONFIG -f $CONFIG/registry.json
 
 oc login -u system:admin
+
+NOW=$(date +%s)
+TIMEOUT=300
+END=$(($NOW + $TIMEOUT))
 oc cluster status
 while [ $? -gt 0 ]
 do
+    NOW=$(date +%s)
+    if [ $NOW -gt $END ]; then
+        echo "Timed out waiting for OpenShift to start!"
+        exit 1
+    fi
     sleep 5
     oc cluster status
 done
-
-sleep 60
 
 oc get services -n default
 oc get pods -n default
