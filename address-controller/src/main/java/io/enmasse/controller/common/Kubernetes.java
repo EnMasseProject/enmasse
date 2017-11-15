@@ -1,5 +1,6 @@
 package io.enmasse.controller.common;
 
+import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.Endpoint;
 import io.enmasse.k8s.api.EventLogger;
 import io.fabric8.kubernetes.api.model.*;
@@ -47,9 +48,9 @@ public interface Kubernetes {
     void delete(HasMetadata ... resources);
     KubernetesList processTemplate(String templateName, ParameterValue ... parameterValues);
 
-    void createNamespace(String name, String namespace);
     List<Namespace> listNamespaces();
     void deleteNamespace(String namespace);
+    void createNamespace(AddressSpace addressSpace);
 
     boolean existsNamespace(String namespace);
 

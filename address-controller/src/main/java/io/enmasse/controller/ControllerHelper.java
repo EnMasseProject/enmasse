@@ -68,7 +68,7 @@ public class ControllerHelper {
                 return;
             }
             log.info("Creating address space {}", addressSpace);
-            kubernetes.createNamespace(addressSpace.getName(), addressSpace.getNamespace());
+            kubernetes.createNamespace(addressSpace);
             kubernetes.addInfraViewRole(namespace, addressSpace.getNamespace());
             kubernetes.addSystemImagePullerPolicy(namespace, addressSpace.getNamespace());
             kubernetes.addAddressAdminRole(addressSpace.getNamespace());
@@ -201,6 +201,11 @@ public class ControllerHelper {
     }
 
     public void retainAddressSpaces(Set<AddressSpace> desiredAddressSpaces) {
+        // Workaround while we still support 1.5
+        if (kubernetes.isRBACSupported()) {
+            return;
+        }
+
         if (desiredAddressSpaces.size() == 1 && desiredAddressSpaces.iterator().next().getNamespace().equals(namespace)) {
             return;
         }

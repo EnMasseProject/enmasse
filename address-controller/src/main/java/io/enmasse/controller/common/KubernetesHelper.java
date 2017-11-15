@@ -16,11 +16,13 @@
 
 package io.enmasse.controller.common;
 
+import io.enmasse.address.model.AddressSpace;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.config.LabelKeys;
 import io.enmasse.address.model.Endpoint;
 import io.enmasse.k8s.api.EventLogger;
 import io.enmasse.k8s.api.KubeEventLogger;
+import io.enmasse.k8s.api.ConfigMapAddressSpaceApi;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.extensions.Deployment;
 import io.fabric8.kubernetes.client.dsl.Resource;
@@ -131,14 +133,21 @@ public class KubernetesHelper implements Kubernetes {
     }
 
     @Override
-    public void createNamespace(String name, String namespace) {
+    public void createNamespace(AddressSpace addressSpace) {
         client.namespaces().createNew()
                 .editOrNewMetadata()
-                .withName(namespace)
+                .withName(addressSpace.getNamespace())
                 .addToLabels("app", "enmasse")
                 .addToLabels(LabelKeys.TYPE, "address-space")
                 .addToLabels(LabelKeys.ENVIRONMENT, environment)
-                .addToAnnotations(AnnotationKeys.ADDRESS_SPACE, name)
+                .addToAnnotations(AnnotationKeys.ADDRESS_SPACE, addressSpace.getName())
+                // We're leaking the underlying serialized form of the AddressSpace which is not ideal.
+                .addNewOwnerReference()
+                    .withKind("ConfigMap")
+                    .withApiVersion("v1")
+                    .withName(ConfigMapAddressSpaceApi.getConfigMapName(addressSpace.getName()))
+                    .withUid(addressSpace.getUid())
+                .endOwnerReference()
                 .endMetadata()
                 .done();
     }
