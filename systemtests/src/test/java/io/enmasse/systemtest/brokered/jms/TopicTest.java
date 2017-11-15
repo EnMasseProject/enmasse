@@ -301,6 +301,7 @@ public class TopicTest extends JMSTestBase {
         connection2.stop();
         subscriber1.close();
         subscriber2.close();
+        subscriber3.close();
         session.close();
         session2.close();
         connection1.close();
