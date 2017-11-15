@@ -67,6 +67,7 @@ do
         exit 1
     fi
     sleep 5
+    oc get nodes
     oc cluster status
 done
 
