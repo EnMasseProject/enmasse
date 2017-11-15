@@ -9,7 +9,7 @@ fi
 
 export PACKAGE=enmasse
 export REPOSITORY="snapshots"
-if [ -n "$TRAVIS_TAG" ]
+if [ "$VERSION" != "latest" ]
 then
     export REPOSITORY="releases"
     export TRAVIS_BUILD_NUMBER="."
