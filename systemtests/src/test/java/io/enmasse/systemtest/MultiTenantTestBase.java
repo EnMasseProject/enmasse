@@ -20,6 +20,9 @@ import io.enmasse.systemtest.amqp.AmqpClientFactory;
 import io.enmasse.systemtest.mqtt.MqttClientFactory;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
+import org.junit.rules.TestWatcher;
+import org.junit.runner.Description;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,6 +31,22 @@ public class MultiTenantTestBase extends TestBase {
 
     protected AddressSpace defaultBrokeredAddressSpace = new AddressSpace("brokered-default", AddressSpaceType.BROKERED);
     private List<AddressSpace> addressSpaces = new ArrayList<>();
+
+    @Rule
+    public TestWatcher watcher = new TestWatcher() {
+        @Override
+        protected void failed(Throwable e, Description description) {
+            Logging.log.info("test failed:" + description);
+            if (createDefaultBrokeredAddressSpace()) {
+                Logging.log.info("default brokered address space '{}' will be removed", defaultBrokeredAddressSpace);
+                try {
+                    deleteAddresses(defaultBrokeredAddressSpace);
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
+        }
+    };
 
     @Before
     public void setupSpaceList() throws Exception {
