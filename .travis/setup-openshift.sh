@@ -17,14 +17,14 @@ sudo mount --make-shared /
 sudo service docker start
 
 wget -q https://github.com/openshift/origin/releases/download/v3.6.1/openshift-origin-client-tools-v3.6.1-008f2d5-linux-64bit.tar.gz -O openshift.tar.gz
+wget -q https://github.com/minishift/minishift/releases/download/v1.8.0/minishift-1.8.0-linux-amd64.tgz -O minishift.tar.gz
 # wget https://github.com/openshift/origin/releases/download/v1.5.1/openshift-origin-server-v1.5.1-7b451fc-linux-64bit.tar.gz -O openshift.tar.gz
 tar xzf openshift.tar.gz -C $SETUP --strip-components 1
+tar xzf minishift.tar.gz -C $SETUP --strip-components 1
 
 sudo cp $SETUP/* /usr/bin
 
-oc cluster up
-sudo chown -R $USER /var/lib/origin/openshift.local.config
-sudo chmod -R 777 /var/lib/origin/openshift.local.pv
+
 
 #sudo openshift start --write-config=$CONFIG
 #
@@ -53,12 +53,10 @@ sudo chmod -R 777 /var/lib/origin/openshift.local.pv
 #oc adm --config $KUBECONFIG registry -o json | sed -e 's/"sessionAffinity"/"clusterIP": "172.30.1.1","sessionAffinity"/g' > $CONFIG/registry.json
 #oc create --config $KUBECONFIG -f $CONFIG/registry.json
 
-oc login -u system:admin
-
 NOW=$(date +%s)
 TIMEOUT=300
 END=$(($NOW + $TIMEOUT))
-oc cluster status
+minishift status
 while [ $? -gt 0 ]
 do
     NOW=$(date +%s)
@@ -67,8 +65,11 @@ do
         exit 1
     fi
     sleep 5
-    oc cluster status
+    minishift status
 done
+
+sleep 60
+oc login -u system:admin --insecure-skip-tls-verify=true https://$(minishift ip):8443
 
 oc get services -n default
 oc get pods -n default
