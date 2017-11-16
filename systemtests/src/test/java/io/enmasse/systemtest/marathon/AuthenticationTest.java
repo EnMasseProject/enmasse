@@ -93,8 +93,10 @@ public class AuthenticationTest extends MarathonTestBase {
         final String password = "test-user";
 
         runTestInLoop(30, () -> {
+            Logging.log.info("Start test iteration");
             createUser(addressSpace, username, password);
             doBasicAuthQueueTopicTest(addressSpace, queue, topic, username, password);
+            Logging.log.info("Restart keycloak");
             scaleInGlobal("keycloak", 0);
             scaleInGlobal("keycloak", 1);
             doBasicAuthQueueTopicTest(addressSpace, queue, topic, username, password);
