@@ -69,7 +69,7 @@ function create_addres_space() {
     ADDRESS_SPACE_NAME=$1
     ADDRESS_SPACE_DEF=$2
     TOKEN=$(oc whoami -t)
-    curl -X POST -H "content-type: application/json" --data-binary @${ADDRESS_SPACE_DEF} -H "Authorization: Bearer ${TOKEN}" http://$(oc get route -o jsonpath='{.spec.host}' restapi)/v1/addressspaces
+    curl -k -X POST -H "content-type: application/json" --data-binary @${ADDRESS_SPACE_DEF} -H "Authorization: Bearer ${TOKEN}" https://$(oc get route -o jsonpath='{.spec.host}' restapi)/apis/enmasse.io/v1/addressspaces
     wait_until_up 2 ${ADDRESS_SPACE_NAME} || return 1
 }
 
@@ -77,7 +77,7 @@ function create_addresses() {
     ADDRESS_SPACE_NAME=$1
     ADDRESSES_DEF=$2
     TOKEN=$(oc whoami -t)
-    curl -X PUT -H "content-type: application/json" --data-binary @${ADDRESSES_DEF} -H "Authorization: Bearer ${TOKEN}" http://$(oc get route -o jsonpath='{.spec.host}' restapi)/v1/addresses/${ADDRESS_SPACE_NAME}
+    curl -k -X PUT -H "content-type: application/json" --data-binary @${ADDRESSES_DEF} -H "Authorization: Bearer ${TOKEN}" https://$(oc get route -o jsonpath='{.spec.host}' restapi)/apis/enmasse.io/v1/addresses/${ADDRESS_SPACE_NAME}
     sleep 40 #waiting for addresses are ready
 }
 
