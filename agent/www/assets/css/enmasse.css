@@ -32,10 +32,24 @@ span.tip-block {
   margin-top: 5px;
   margin-bottom: 10px;
   color: #767676;
+  padding-left: 0.5em;  /* add padding to make up for removing mdash */
 }
 
 span.tip-block:before {
-  content: "\2014";
+  /* content: "\2014"; -- remove mdash from inline short description help text */
+}
+
+/* remove the semantics and plan heading on the wizard review page */
+.wizard-pf-review-page>.wizard-pf-review-steps>ul>li>a {
+  display: none;
+}
+
+/* fix the padding around the review list items since the heading was removed */
+.wizard-pf-review-steps .list-group-item {
+  padding: 0;
+}
+.wizard-pf-review-steps .wizard-pf-review-content {
+  padding-top: 0;
 }
 
 a.learn-more {
