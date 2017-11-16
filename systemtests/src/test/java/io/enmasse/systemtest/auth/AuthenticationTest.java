@@ -32,7 +32,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.logging.Logger;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -82,10 +81,11 @@ public class AuthenticationTest extends TestBase {
         return addressSpace;
     }
 
-    @Test
+
+    //TODO: issue: #523
     public void testStandardAuthenticationServiceRestart() throws Exception{
         Logging.log.info("testStandardAuthenticationServiceRestart");
-        scaleInGlobal("keycloak", 5);
+//        scaleInGlobal("keycloak", 0);
     }
 
     @Test
