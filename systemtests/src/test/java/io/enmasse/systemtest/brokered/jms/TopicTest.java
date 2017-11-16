@@ -104,7 +104,7 @@ public class TopicTest extends JMSTestBase {
         messageProducer.close();
     }
 
-    @Test
+    //TODO: this test can be enabled when ENTMQBR-910 will be fixed
     public void testMessageDurableSubscription() throws Exception {
         Logging.log.info("testMessageDurableSubscription");
         session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
