@@ -32,14 +32,39 @@ import java.util.stream.IntStream;
 public class TestUtils {
     public static void setReplicas(OpenShift openShift, AddressSpace addressSpace, Destination destination, int numReplicas, TimeoutBudget budget) throws InterruptedException {
         openShift.setDeploymentReplicas(destination.getGroup(), numReplicas);
-        waitForNReplicas(openShift, addressSpace, destination.getGroup(), numReplicas, budget);
+        waitForNReplicas(
+                openShift,
+                addressSpace.getNamespace(),
+                numReplicas,
+                Collections.singletonMap("role", "broker"),
+                Collections.singletonMap("cluster_id", destination.getGroup()),
+                budget);
     }
 
-    public static void waitForNReplicas(OpenShift openShift, AddressSpace addressSpace, String group, int expectedReplicas, TimeoutBudget budget) throws InterruptedException {
+    public static void setReplicas(OpenShift openShift, String tenantNamespace, String deployment, int numReplicas, TimeoutBudget budget) throws InterruptedException {
+        openShift.setDeploymentReplicas(tenantNamespace, deployment, numReplicas);
+        waitForNReplicas(
+                openShift,
+                tenantNamespace,
+                numReplicas,
+                Collections.singletonMap("name", deployment),
+                budget);
+    }
+
+    public static void waitForNReplicas(OpenShift openShift, String tenantNamespace, int expectedReplicas, Map<String, String> labelSelector, TimeoutBudget budget) throws InterruptedException {
+        waitForNReplicas(openShift, tenantNamespace, expectedReplicas, labelSelector, Collections.emptyMap(), budget);
+    }
+
+    public static void waitForNReplicas(OpenShift openShift, String tenantNamespace, int expectedReplicas, Map<String, String> labelSelector, Map<String, String> annotationSelector, TimeoutBudget budget) throws InterruptedException {
         boolean done = false;
         int actualReplicas = 0;
         do {
-            List<Pod> pods = openShift.listPods(addressSpace.getNamespace(), Collections.singletonMap("role", "broker"), Collections.singletonMap("cluster_id", group));
+            List<Pod> pods;
+            if (annotationSelector.isEmpty()) {
+                pods = openShift.listPods(tenantNamespace, labelSelector);
+            } else {
+                pods = openShift.listPods(tenantNamespace, labelSelector, annotationSelector);
+            }
             actualReplicas = numReady(pods);
             Logging.log.info("Have " + actualReplicas + " out of " + pods.size() + " replicas. Expecting " + expectedReplicas);
             if (actualReplicas != pods.size() || actualReplicas != expectedReplicas) {

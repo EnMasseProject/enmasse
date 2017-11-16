@@ -196,4 +196,9 @@ public abstract class TestBase {
         TimeoutBudget budget = new TimeoutBudget(5, TimeUnit.MINUTES);
         TestUtils.setReplicas(openShift, addressSpace, destination, numReplicas, budget);
     }
+
+    protected void scaleInGlobal(String deployment, int numReplicas) throws InterruptedException {
+        TimeoutBudget budget = new TimeoutBudget(5, TimeUnit.MINUTES);
+        TestUtils.setReplicas(openShift, environment.namespace(), deployment, numReplicas, budget);
+    }
 }

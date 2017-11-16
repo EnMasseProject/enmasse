@@ -71,7 +71,7 @@ public class OpenShift {
             return endpoint;
         } else {
             Logging.log.info("Endpoint didn't resolve, falling back to service endpoint");
-            return getEndpoint(globalNamespace,"address-controller", "https");
+            return getEndpoint(globalNamespace, "address-controller", "https");
         }
     }
 
@@ -99,11 +99,19 @@ public class OpenShift {
     }
 
     public void setDeploymentReplicas(String name, int numReplicas) {
+        setDeploymentReplicas(tenantNamespace, name, numReplicas);
+    }
+
+    public void setDeploymentReplicas(String tenantNamespace, String name, int numReplicas) {
         client.extensions().deployments().inNamespace(tenantNamespace).withName(name).scale(numReplicas, true);
     }
 
     public List<Pod> listPods(String addressSpace) {
         return new ArrayList<>(client.pods().inNamespace(addressSpace).list().getItems());
+    }
+
+    public List<Pod> listPods(String addressSpace, Map<String, String> labelSelector) {
+        return client.pods().inNamespace(addressSpace).withLabels(labelSelector).list().getItems();
     }
 
     public List<Pod> listPods(String addressSpace, Map<String, String> labelSelector, Map<String, String> annotationSelector) {
@@ -125,7 +133,7 @@ public class OpenShift {
             return 5; // admin, qdrouterd, subscription, mqtt gateway, mqtt lwt
         } else {
             return 9; // address-controller, keycloak, keycloak-controller, none-authservice, admin, qdrouterd,
-                      // subscription, mqtt gateway, mqtt lwt
+            // subscription, mqtt gateway, mqtt lwt
         }
     }
 

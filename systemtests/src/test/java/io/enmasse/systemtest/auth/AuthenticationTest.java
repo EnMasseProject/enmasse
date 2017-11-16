@@ -81,6 +81,13 @@ public class AuthenticationTest extends TestBase {
         return addressSpace;
     }
 
+
+    //TODO: issue: #523
+    public void testStandardAuthenticationServiceRestart() throws Exception{
+        Logging.log.info("testStandardAuthenticationServiceRestart");
+//        scaleInGlobal("keycloak", 0);
+    }
+
     @Test
     public void testStandardAuthenticationServiceBrokered() throws Exception {
         testStandardAuthenticationServiceGeneral(AddressSpaceType.BROKERED);
