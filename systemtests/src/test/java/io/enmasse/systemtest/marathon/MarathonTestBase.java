@@ -10,6 +10,11 @@ import java.util.concurrent.TimeUnit;
 
 public class MarathonTestBase extends MultiTenantTestBase {
 
+    @Override
+    protected boolean createDefaultBrokeredAddressSpace() {
+        return false;
+    }
+
     @Rule
     public ErrorCollector collector = new ErrorCollector();
 

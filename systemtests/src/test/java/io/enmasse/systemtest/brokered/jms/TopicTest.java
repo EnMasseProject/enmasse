@@ -22,7 +22,6 @@ import static org.junit.Assert.assertThat;
 
 public class TopicTest extends JMSTestBase {
 
-    private AddressSpace addressSpace;
 
     private Hashtable<Object, Object> env;
     private ConnectionFactory connectionFactory;
@@ -38,16 +37,10 @@ public class TopicTest extends JMSTestBase {
 
     @Before
     public void setUp() throws Exception {
-        addressSpace = new AddressSpace(
-                "brokered-space-jms-topics",
-                "brokered-space-jms-topics",
-                AddressSpaceType.BROKERED);
-        createAddressSpace(addressSpace, "none");
-
         addressTopic = Destination.topic(topic);
-        setAddresses(addressSpace, addressTopic);
+        setAddresses(defaultBrokeredAddressSpace, addressTopic);
 
-        env = setUpEnv("amqps://" + getRouteEndpoint(addressSpace).toString(), jmsUsername, jmsPassword, jmsClientID,
+        env = setUpEnv("amqps://" + getRouteEndpoint(defaultBrokeredAddressSpace).toString(), jmsUsername, jmsPassword, jmsClientID,
                 new HashMap<String, String>() {{
                     put("topic." + topic, topic);
                 }});
@@ -59,9 +52,6 @@ public class TopicTest extends JMSTestBase {
 
     @After
     public void tearDown() throws Exception {
-        if (TestUtils.existAddressSpace(addressApiClient, addressSpace.getName())) {
-            deleteAddresses(addressTopic);
-        }
         if (connection != null) {
             connection.stop();
         }
@@ -74,7 +64,7 @@ public class TopicTest extends JMSTestBase {
     }
 
     protected Context createContextForShared() throws JMSException, NamingException {
-        Hashtable env2 = setUpEnv("amqps://" + getRouteEndpoint(addressSpace).toString(), jmsUsername, jmsPassword,
+        Hashtable env2 = setUpEnv("amqps://" + getRouteEndpoint(defaultBrokeredAddressSpace).toString(), jmsUsername, jmsPassword,
                 new HashMap<String, String>() {{
                     put("topic." + topic, topic);
                 }});
@@ -114,7 +104,7 @@ public class TopicTest extends JMSTestBase {
         messageProducer.close();
     }
 
-    @Test
+    //TODO: this test can be enabled when ENTMQBR-910 will be fixed
     public void testMessageDurableSubscription() throws Exception {
         Logging.log.info("testMessageDurableSubscription");
         session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -144,6 +134,7 @@ public class TopicTest extends JMSTestBase {
         Logging.log.info(sub2ID + " :First batch messages received");
 
         subscriber1.close();
+        Thread.sleep(30000); //!TODO: this row can be removed when ENTMQBR-910 will be fixed
         Logging.log.info(sub1ID + " : closed");
 
         batchPrefix = "Second";
@@ -225,7 +216,7 @@ public class TopicTest extends JMSTestBase {
 
         Topic testTopic = (Topic) context1.lookup(topic);
 
-        String subID = "sharedConsumer123";
+        String subID = "sharedConsumerDurable123";
         MessageConsumer subscriber1 = session.createSharedDurableConsumer(testTopic, subID);
         Logging.log.info("sub1 DONE");
         MessageConsumer subscriber2 = session2.createSharedDurableConsumer(testTopic, subID);
@@ -277,7 +268,7 @@ public class TopicTest extends JMSTestBase {
         Session session2 = connection2.createSession(false, Session.AUTO_ACKNOWLEDGE);
 
         Topic testTopic = (Topic) context1.lookup(topic);
-        String subID = "sharedConsumer123";
+        String subID = "sharedConsumerNonDurable123";
         MessageConsumer subscriber1 = session.createSharedConsumer(testTopic, subID);
         MessageConsumer subscriber2 = session2.createSharedConsumer(testTopic, subID);
         MessageConsumer subscriber3 = session2.createSharedConsumer(testTopic, subID);

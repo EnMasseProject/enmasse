@@ -20,24 +20,61 @@ import io.enmasse.systemtest.amqp.AmqpClientFactory;
 import io.enmasse.systemtest.mqtt.MqttClientFactory;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
+import org.junit.rules.TestWatcher;
+import org.junit.runner.Description;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class MultiTenantTestBase extends TestBase {
+
+    protected AddressSpace defaultBrokeredAddressSpace = new AddressSpace("brokered-default", AddressSpaceType.BROKERED);
     private List<AddressSpace> addressSpaces = new ArrayList<>();
+
+    @Rule
+    public TestWatcher watcher = new TestWatcher() {
+        @Override
+        protected void failed(Throwable e, Description description) {
+            Logging.log.info("test failed:" + description);
+            if (createDefaultBrokeredAddressSpace()) {
+                Logging.log.info("default brokered address space '{}' will be removed", defaultBrokeredAddressSpace);
+                try {
+                    deleteAddresses(defaultBrokeredAddressSpace);
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
+        }
+    };
 
     @Before
     public void setupSpaceList() throws Exception {
         addressSpaces = new ArrayList<>();
+        if (createDefaultBrokeredAddressSpace()) {
+            if (environment.isMultitenant()) {
+                Logging.log.info("Test is running in multitenant mode");
+                super.createAddressSpace(defaultBrokeredAddressSpace, "none");
+                // TODO: Wait another minute so that all services are connected
+                Logging.log.info("Waiting for 2 minutes before starting tests");
+            }
+            amqpClientFactory = new AmqpClientFactory(openShift, environment, defaultBrokeredAddressSpace, username, password);
+            mqttClientFactory = new MqttClientFactory(openShift, environment, defaultBrokeredAddressSpace, username, password);
+        }
+
     }
 
     @After
     public void teardownSpaces() throws Exception {
-        for (AddressSpace addressSpace : addressSpaces) {
-            deleteAddressSpace(addressSpace);
+        if (addressApiClient != null) {
+            if (createDefaultBrokeredAddressSpace()) {
+                setAddresses(defaultBrokeredAddressSpace);
+            }
+            for (AddressSpace addressSpace : addressSpaces) {
+                deleteAddressSpace(addressSpace);
+            }
+            addressSpaces.clear();
         }
-        addressSpaces.clear();
     }
 
     @Override
@@ -45,21 +82,15 @@ public class MultiTenantTestBase extends TestBase {
         return false;
     }
 
+    protected boolean createDefaultBrokeredAddressSpace() {
+        return true;
+    }
+
     @Override
     protected AddressSpace createAddressSpace(AddressSpace addressSpace, String authService) throws Exception {
         super.createAddressSpace(addressSpace, authService);
         addressSpaces.add(addressSpace);
         return addressSpace;
-    }
-
-    protected AmqpClientFactory createAmqpClientFactory(AddressSpace addressSpace) {
-        return new AmqpClientFactory(new OpenShift(environment, environment.namespace(), addressSpace.getNamespace()),
-                environment, addressSpace, username, password);
-    }
-
-    protected MqttClientFactory createMqttClientFactory(AddressSpace addressSpace) {
-        return new MqttClientFactory(new OpenShift(environment, environment.namespace(), addressSpace.getNamespace()),
-                environment, addressSpace, username, password);
     }
 
     protected Endpoint getRouteEndpoint(AddressSpace addressSpace) {

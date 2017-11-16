@@ -26,10 +26,8 @@ import org.junit.Before;
 import java.io.File;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 /**
  * Base class for all tests
@@ -70,9 +68,9 @@ public abstract class TestBase {
                 this.password = "systemtest";
                 getKeycloakClient().createUser(defaultAddressSpace.getName(), username, password, 1, TimeUnit.MINUTES);
             }
+            amqpClientFactory = new AmqpClientFactory(openShift, environment, defaultAddressSpace, username, password);
+            mqttClientFactory = new MqttClientFactory(openShift, environment, defaultAddressSpace, username, password);
         }
-        amqpClientFactory = new AmqpClientFactory(openShift, environment, defaultAddressSpace, username, password);
-        mqttClientFactory = new MqttClientFactory(openShift, environment, defaultAddressSpace, username, password);
     }
 
     @After
@@ -200,5 +198,15 @@ public abstract class TestBase {
     protected void scaleInGlobal(String deployment, int numReplicas) throws InterruptedException {
         TimeoutBudget budget = new TimeoutBudget(5, TimeUnit.MINUTES);
         TestUtils.setReplicas(openShift, environment.namespace(), deployment, numReplicas, budget);
+    }
+
+    protected AmqpClientFactory createAmqpClientFactory(AddressSpace addressSpace) {
+        return new AmqpClientFactory(new OpenShift(environment, environment.namespace(), addressSpace.getNamespace()),
+                environment, addressSpace, username, password);
+    }
+
+    protected MqttClientFactory createMqttClientFactory(AddressSpace addressSpace) {
+        return new MqttClientFactory(new OpenShift(environment, environment.namespace(), addressSpace.getNamespace()),
+                environment, addressSpace, username, password);
     }
 }

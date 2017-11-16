@@ -1,11 +1,8 @@
 package io.enmasse.systemtest.brokered;
 
-import io.enmasse.systemtest.AddressSpace;
-import io.enmasse.systemtest.AddressSpaceType;
 import io.enmasse.systemtest.Destination;
 import io.enmasse.systemtest.MultiTenantTestBase;
 import io.enmasse.systemtest.amqp.AmqpClient;
-import io.enmasse.systemtest.amqp.AmqpClientFactory;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.message.Message;
 import org.junit.Test;
@@ -25,16 +22,10 @@ public class QueueTest extends MultiTenantTestBase {
      */
     @Test
     public void messageGroupTest() throws Exception {
-        AddressSpace addressSpace = new AddressSpace(
-                "brokered-message-group",
-                "brokered-message-group",
-                AddressSpaceType.BROKERED);
-        createAddressSpace(addressSpace, "none");
         Destination dest = Destination.queue("messageGroupQueue");
-        setAddresses(addressSpace, dest);
+        setAddresses(defaultBrokeredAddressSpace, dest);
 
-        AmqpClientFactory amqpFactory = createAmqpClientFactory(addressSpace);
-        AmqpClient client = amqpFactory.createQueueClient(addressSpace);
+        AmqpClient client = amqpClientFactory.createQueueClient(defaultBrokeredAddressSpace);
         client.getConnectOptions().setUsername("test").setPassword("test");
 
         int msgsCount = 20;
