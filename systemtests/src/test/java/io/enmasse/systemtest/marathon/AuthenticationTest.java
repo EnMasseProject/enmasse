@@ -45,6 +45,32 @@ public class AuthenticationTest extends MarathonTestBase {
         Logging.log.info("testCreateDeleteUsersLong finished");
     }
 
+    @Test
+    public void testAuthSendReceiveLong() throws Exception{
+        Logging.log.info("testAuthSendReceiveLong start");
+        AddressSpace addressSpace = new AddressSpace("test-auth-send-receive-brokered",
+                AddressSpaceType.BROKERED);
+        createAddressSpace(addressSpace, "standard");
+        Logging.log.info("Address space '{}'created", addressSpace);
+
+        Destination queue = Destination.queue("test-auth-send-receive-queue");
+        Destination topic = Destination.topic("test-auth-send-receive-topic");
+        setAddresses(addressSpace, queue, topic);
+        Logging.log.info("Addresses '{}', '{}' created", queue.getAddress(), topic.getAddress());
+
+        final String username = "test-user";
+        final String password = "test-user";
+
+        createUser(addressSpace, username, password);
+
+        runTestInLoop(30, () -> {
+            Logging.log.info("Start test iteration");
+            doBasicAuthQueueTopicTest(addressSpace, queue, topic, username, password);
+            doBasicAuthQueueTopicTest(addressSpace, queue, topic, "nobody", "nobody");
+        });
+        Logging.log.info("testAuthSendReceiveLong finished");
+    }
+
     protected void createUser(AddressSpace addressSpace, String username, String password) throws Exception{
         getKeycloakClient().createUser(addressSpace.getName(), username, password);
     }
