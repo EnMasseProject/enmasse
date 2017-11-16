@@ -61,6 +61,26 @@ repeat for 30 minutes following steps
 - remove first 90 users
 - repeat with creating users{100..200}
 
+* testCreateDeleteUsersRestartKeyCloakLong
+- create brokered addr space: test-create-delete-users-restart-brokered
+- create queue and topics: test-create-delete-users-restart-queue/test-create-delete-users-restart-topic
+- repeat for 30 minutes following steps
+- create user test-user
+- do basic Auth queue/topic tests
+- restart keycloak
+- do basic Auth queue/topic tests
+- remove user test-user
+- repeat
+
+* testAuthSendReceiveLong
+- create brokered addr space: test-auth-send-receive-brokered
+- create queue and topic: test-auth-send-receive-queue/test-auth-send-receive-topic
+- create user test-user
+- repeat for 30 minutes following steps
+- do basic Auth queue/topic tests with user test-user
+- do basic Auth queue/topic tests with non exists user
+- repeat
+
 * testSendReceiveWithCreatingAlreadyCreatedAddressesLong (disabled, until #346 will be fixed)
 - create brokered addr space: test-create-delete-addresses-exist-brokered
 - create 20 queues and 20 topics: test-queue-createdelete-auth-brokered-N/test-topic-createdelete-auth-brokered-N
