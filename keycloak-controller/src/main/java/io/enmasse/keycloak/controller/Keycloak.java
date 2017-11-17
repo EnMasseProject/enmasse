@@ -43,6 +43,7 @@ public class Keycloak implements KeycloakApi {
     public void createRealm(String realmName) {
         final RealmRepresentation newrealm = new RealmRepresentation();
         newrealm.setRealm(realmName);
+        newrealm.setEnabled(true);
         newrealm.setPasswordPolicy("hashAlgorithm(scramsha1)");
         try (CloseableKeycloak wrapper = new CloseableKeycloak(params)) {
             wrapper.get().realms().create(newrealm);
