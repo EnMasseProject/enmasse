@@ -57,7 +57,7 @@ function as_handler(resolve, reject) {
                 log.info('[' + this.connection.container_id + '] Error parsing message body: ' + message + ': ' + e);
             }
         } else {
-            reject('Request did not succeed, response: ' + message.toString());
+            reject(message.body);
         }
     };
 }

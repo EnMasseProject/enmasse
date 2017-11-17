@@ -23,9 +23,10 @@ var artemis = require('./artemis.js');
 
 function BrokerController() {
     events.EventEmitter.call(this);
+    this.check_in_progress = false;
     this.container = rhea.create_container();
     this.container.on('connection_open', this.on_connection_open.bind(this));
-    setInterval(this.retrieve_stats.bind(this), 5000);//poll broker stats every 5 secs
+    setInterval(this.check_broker_addresses.bind(this), 5000);//poll broker stats every 5 secs
     var self = this;
     this.closed = function () { self.broker = undefined; };
 };
@@ -43,7 +44,6 @@ BrokerController.prototype.close = function () {
 BrokerController.prototype.on_connection_open = function (context) {
     this.broker = new artemis.Artemis(context.connection);
     log.info('connected to %s', context.connection.container_id);
-    this.retrieve_stats();
     this.check_broker_addresses();
     context.connection.on('connection_close', this.closed);
     context.connection.on('disconnected', this.closed);
@@ -219,6 +219,10 @@ function difference(a, b, equivalent) {
     return diff;
 }
 
+function address_and_type(object) {
+    return {address: object.address, type: object.type};
+}
+
 function values(map) {
     return Object.keys(map).map(function (key) { return map[key]; });
 }
@@ -241,7 +245,7 @@ function translate(addresses_in, exclude) {
         if (exclude && exclude(name)) continue;
         var a = addresses_in[name];
         if (is_temp_queue(a)) {
-            log.info('ignoring temp queue %s', a.name);
+            log.debug('ignoring temp queue %s', a.name);
             continue;
         }
         addresses_out[name] = {address:a.name, type: a.multicast ? 'topic' : 'queue'};
@@ -288,23 +292,31 @@ BrokerController.prototype.create_addresses = function (addresses) {
 };
 
 BrokerController.prototype.check_broker_addresses = function () {
-    var self = this;
     if (this.broker !== undefined && this.addresses !== undefined) {
-        return this.broker.listAddresses().then(function (results) {
-            var actual = translate(results, excluded_addresses);
-            var stale = values(difference(actual, self.addresses, same_address));
-            var missing = values(difference(self.addresses, actual, same_address));
-            log.info('checking addresses, desired=%j, actual=%j => delete %j and create %j', values(self.addresses), values(actual), stale, missing);
-            return self.delete_addresses(stale).then(
-                function () {
-                    return self.create_addresses(missing).then(function () {
-                        if (missing.length > 0) {
-                            return self.retrieve_stats();
-                        }
-                    });
-                }
-            );
-        });
+        if (!this.check_in_progress) {
+            this.check_in_progress = true;
+            var self = this;
+            return this.broker.listAddresses().then(function (results) {
+                var actual = translate(results, excluded_addresses)
+                var stale = values(difference(actual, self.addresses, same_address)).map(address_and_type);
+                var missing = values(difference(self.addresses, actual, same_address)).map(address_and_type);
+                log.debug('checking addresses, desired=%j, actual=%j => delete %j and create %j', values(self.addresses).map(address_and_type), values(actual), stale, missing);
+                return self.delete_addresses(stale).then(
+                    function () {
+                        return self.create_addresses(missing).then(function () {
+                            return self.retrieve_stats().then(function () {
+                                self.check_in_progress = false;
+                            }).catch( function (error) {
+                                log.error('error retrieving stats: %s', error);
+                                self.check_in_progress = false;
+                            });
+                        });
+                    }
+                );
+            });
+        } else {
+            return Promise.resolve();
+        }
     } else {
         return Promise.resolve();
     }
