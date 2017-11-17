@@ -97,7 +97,8 @@ local hawkularBrokerConfig = import "hawkular-broker-config.jsonnet";
     "metadata": {
       "name": name,
       "labels": {
-        "app": "enmasse"
+        "app": "enmasse",
+        "role": "broker"
       },
       "annotations": {
         "addressSpace": "${ADDRESS_SPACE}",
@@ -161,7 +162,8 @@ local hawkularBrokerConfig = import "hawkular-broker-config.jsonnet";
     "metadata": {
       "name": name,
       "labels": {
-        "app": "enmasse"
+        "app": "enmasse",
+        "role": "agent"
       },
       "annotations": {
         "addressSpace": "${ADDRESS_SPACE}",

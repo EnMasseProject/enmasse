@@ -1485,6 +1485,7 @@ objects:
         io.enmasse.certSecretName: broker-internal-cert
       labels:
         app: enmasse
+        role: broker
       name: broker
     spec:
       replicas: 1
@@ -1605,6 +1606,7 @@ objects:
         io.enmasse.certSecretName: agent-internal-cert
       labels:
         app: enmasse
+        role: agent
       name: agent
     spec:
       replicas: 1
