@@ -1,5 +1,6 @@
 [[prerequisites-openshift]]
-=== Prerequisites
+
+== Prerequisites
 
 To install {ProductName}, you need to have the OpenShift client tools. You can download the OpenShift
 Origin client from https://github.com/openshift/origin/releases[OpenShift Origin]. {ProductName} has
