@@ -99,7 +99,7 @@ public class AddressApiClient {
                             responsePromise.completeExceptionally(ar.cause());
                         }
                     });
-            return responsePromise.get(30, TimeUnit.SECONDS);
+            return responsePromise.get(2, TimeUnit.MINUTES);
         });
     }
 
