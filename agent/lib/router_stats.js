@@ -209,7 +209,7 @@ function is_role_normal (c) {
     return c.role === 'normal';
 }
 
-var internal_identifiers = ['console_server', 'qdconfigd', 'subserv', 'lwt-service'];
+var internal_identifiers = ['agent', 'ragent', 'qdconfigd', 'subserv', 'lwt-service'];
 
 function is_internal_identifier (s) {
     return internal_identifiers.indexOf(s) >= 0;
