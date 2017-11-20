@@ -388,7 +388,8 @@ angular.module('patternfly.wizard').controller('WizardController', ['$scope', '$
             };
 
             $scope.updateName = function() {
-                $scope.semantics_complete = angular.isDefined($scope.data.address) && $scope.data.address.length > 0 && address_service.is_unique_name($scope.data.address);
+                $scope.semantics_complete = angular.isDefined($scope.data.address) && $scope.data.address.length > 0 && address_service.is_unique_name($scope.data.address)
+                    && $scope.data.type.length > 0;
             };
             $scope.nextButtonTitle = "Next >";
 

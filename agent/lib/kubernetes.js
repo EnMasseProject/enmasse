@@ -190,7 +190,12 @@ module.exports.watch = function (resource, options) {
 
 module.exports.update = function (resource, transform, options) {
     return do_get(resource, options).then(function (original) {
-        return do_put(resource, transform(original), options);
+        var updated = transform(original);
+        if (updated !== undefined) {
+            return do_put(resource, updated, options);
+        } else {
+            return 304;
+        }
     });
 };
 

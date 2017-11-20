@@ -165,7 +165,7 @@ function update(actual, desired, type) {
 }
 
 ConnectedRouter.prototype.verify_addresses = function (expected) {
-    if (this.addresses === undefined || this.link_routes == undefined) {
+    if (!expected || this.addresses === undefined || this.link_routes == undefined) {
         return false;
     }
 

@@ -27,8 +27,6 @@ function BrokerController() {
     this.container = rhea.create_container();
     this.container.on('connection_open', this.on_connection_open.bind(this));
     setInterval(this.check_broker_addresses.bind(this), 5000);//poll broker stats every 5 secs
-    var self = this;
-    this.closed = function () { self.broker = undefined; };
 };
 
 util.inherits(BrokerController, events.EventEmitter);
@@ -45,8 +43,6 @@ BrokerController.prototype.on_connection_open = function (context) {
     this.broker = new artemis.Artemis(context.connection);
     log.info('connected to %s', context.connection.container_id);
     this.check_broker_addresses();
-    context.connection.on('connection_close', this.closed);
-    context.connection.on('disconnected', this.closed);
     this.emit('ready');
 };
 
@@ -63,6 +59,7 @@ function transform_queue_stats(queue) {
         messages_in: queue.enqueued,
         messages_out: (queue.acknowledged + queue.expired + queue.killed),
         propagated: 100,
+        shards: [queue],
         outcomes: {
             egress: {
                 links: [],
@@ -92,6 +89,7 @@ function transform_topic_stats(topic) {
         messages_in: sum('enqueued', topic.subscriptions),
         messages_out: sum('acknowledged', topic.subscriptions),
         propagated: 100,
+        shards: [topic],
         outcomes: {
             egress: {
                 links: [],
@@ -163,6 +161,10 @@ function collect_by_address(addresses, links, name, count) {
     });
 }
 
+function is_not_internal(conn) {
+    return conn.user !== 'agent';//Can't get properties or anything else on which to base decision yet
+}
+
 BrokerController.prototype.retrieve_stats = function () {
     var self = this;
     if (this.broker !== undefined) {
@@ -176,7 +178,7 @@ BrokerController.prototype.retrieve_stats = function () {
                 for (var name in results[0]) {
                     address_stats[name] = transform_address_stats(results[0][name]);
                 }
-                var connection_stats = index_by(results[2].map(transform_connection_stats), 'id');
+                var connection_stats = index_by(results[2].map(transform_connection_stats).filter(is_not_internal), 'id');
                 var senders = results[3].map(transform_producer_stats);
                 var receivers = results[4].map(transform_consumer_stats);
                 receivers.forEach(function (r) {
@@ -261,6 +263,11 @@ BrokerController.prototype.delete_addresses = function (addresses) {
                 log.info('Deleted queue %s', a.address);
             }).catch(function (error) {
                 log.error('Failed to delete queue %s: %s', a.address, error);
+                self.broker.deleteAddress(a.address).then(function () {
+                    log.info('Deleted anycast address %s', a.address);
+                }).catch(function (error) {
+                    log.error('Failed to delete queue address %s: %s', a.address, error);
+                });
             });
         } else {
             return self.broker.deleteAddressAndBindings(a.address).then(function () {
