@@ -208,9 +208,25 @@ public abstract class TestBase {
         TestUtils.setReplicas(openShift, addressSpace, destination, numReplicas, budget);
     }
 
-    protected void scaleInGlobal(String deployment, int numReplicas) throws InterruptedException {
-        TimeoutBudget budget = new TimeoutBudget(5, TimeUnit.MINUTES);
-        TestUtils.setReplicas(openShift, environment.namespace(), deployment, numReplicas, budget);
+    protected void scaleKeycloak(int numReplicas) throws Exception {
+        scaleInGlobal("keycloak", numReplicas);
+    }
+
+    /**
+     * scale up/down deployment to count of replicas, includes waiting for expected replicas
+     *
+     * @param deployment name of deployment
+     * @param numReplicas count of replicas
+     * @throws InterruptedException
+     */
+    private void scaleInGlobal(String deployment, int numReplicas) throws InterruptedException {
+        if (numReplicas >= 0) {
+            TimeoutBudget budget = new TimeoutBudget(5, TimeUnit.MINUTES);
+            TestUtils.setReplicas(openShift, environment.namespace(), deployment, numReplicas, budget);
+        } else {
+            throw new IllegalArgumentException("'numReplicas' must be greater than 0");
+        }
+
     }
 
     protected AmqpClientFactory createAmqpClientFactory(AddressSpace addressSpace) {

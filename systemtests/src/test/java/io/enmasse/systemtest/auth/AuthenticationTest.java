@@ -69,10 +69,24 @@ public class AuthenticationTest extends TestBase {
     }
 
 
-    //TODO: issue: #523
-    public void testStandardAuthenticationServiceRestart() throws Exception{
-        Logging.log.info("testStandardAuthenticationServiceRestart");
-//        scaleInGlobal("keycloak", 0);
+    /**
+     * related github issue: #523
+     */
+    @Test
+    public void testStandardAuthenticationServiceRestartBrokered() throws Exception {
+        Logging.log.info("testStandardAuthenticationServiceRestartBrokered");
+        AddressSpace addressSpace = new AddressSpace("keycloak-restart-brokered", AddressSpaceType.BROKERED);
+        createAddressSpace(addressSpace, "standard");
+
+        KeycloakCredentials credentials = new KeycloakCredentials("Pavel", "Novak");
+        getKeycloakClient().createUser(addressSpace.getName(), credentials.getUsername(), credentials.getPassword());
+
+        assertCanConnect(addressSpace, credentials.getUsername(), credentials.getPassword());
+
+        scaleKeycloak(0);
+        scaleKeycloak(1);
+
+        assertCanConnect(addressSpace, credentials.getUsername(), credentials.getPassword());
     }
 
     @Test
