@@ -15,7 +15,12 @@
  */
 package io.enmasse.systemtest;
 
+import io.fabric8.kubernetes.api.model.Event;
+
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -42,5 +47,16 @@ public class GlobalLogCollector {
             collector.close();
         }
         collectorMap.remove(namespace);
+    }
+
+    public void collectEvents(String namespace) {
+        File eventLog = new File(logDir, namespace + ".events");
+        try (FileWriter fileWriter = new FileWriter(eventLog)) {
+            for (Event event : openShift.listEvents(namespace)) {
+                fileWriter.write(event.toString());
+            }
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
     }
 }

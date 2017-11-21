@@ -118,6 +118,7 @@ public abstract class TestBase {
     }
 
     protected void deleteAddressSpace(AddressSpace addressSpace) throws Exception {
+        logCollector.collectEvents(addressSpace.getNamespace());
         addressApiClient.deleteAddressSpace(addressSpace);
         TestUtils.waitForAddressSpaceDeleted(openShift, addressSpace);
         logCollector.stopCollecting(addressSpace.getNamespace());

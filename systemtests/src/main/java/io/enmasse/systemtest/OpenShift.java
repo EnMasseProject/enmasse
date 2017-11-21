@@ -1,9 +1,6 @@
 package io.enmasse.systemtest;
 
-import io.fabric8.kubernetes.api.model.Pod;
-import io.fabric8.kubernetes.api.model.Secret;
-import io.fabric8.kubernetes.api.model.Service;
-import io.fabric8.kubernetes.api.model.ServicePort;
+import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.client.Config;
 import io.fabric8.kubernetes.client.ConfigBuilder;
 import io.fabric8.kubernetes.client.Watch;
@@ -145,6 +142,10 @@ public class OpenShift {
 
     public Watch watchPods(String namespace, Watcher<Pod> podWatcher) {
         return client.pods().inNamespace(namespace).watch(podWatcher);
+    }
+
+    public List<Event> listEvents(String namespace) {
+        return client.events().inNamespace(namespace).list().getItems();
     }
 
     public LogWatch watchPodLog(String namespace, String name, String container, OutputStream outputStream) {
