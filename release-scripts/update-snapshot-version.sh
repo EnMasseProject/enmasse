@@ -10,4 +10,4 @@ git commit -a -m "Update pom.xml snapshot versions to ${VERSION}"
 echo "Press ENTER to push pom changes to GitHub"
 read
 
-git push origin master
+git push origin master --tags
