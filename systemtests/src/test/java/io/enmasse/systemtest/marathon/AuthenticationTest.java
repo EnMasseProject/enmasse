@@ -2,6 +2,7 @@ package io.enmasse.systemtest.marathon;
 
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.amqp.AmqpClient;
+import io.enmasse.systemtest.amqp.AmqpClientFactory;
 import io.enmasse.systemtest.standard.TopicTest;
 import org.junit.Test;
 
@@ -67,10 +68,10 @@ public class AuthenticationTest extends MarathonTestBase {
         createUser(addressSpace, username, password);
 
         runTestInLoop(30, () -> {
-            Logging.log.info("Start test iteration");
+            Logging.log.info("Start test loop basic auth tests");
             doBasicAuthQueueTopicTest(addressSpace, queue, topic, username, password);
             assertCannotConnect(addressSpace, "nobody", "nobody", Arrays.asList(queue, topic));
-            Thread.sleep(1000);
+            Thread.sleep(5000);
         });
         Logging.log.info("testAuthSendReceiveLong finished");
     }
@@ -99,13 +100,14 @@ public class AuthenticationTest extends MarathonTestBase {
     private void doBasicAuthQueueTopicTest(AddressSpace addressSpace, Destination queue, Destination topic,
                                            String uname, String password) throws Exception {
         int messageCount = 100;
-        AmqpClient queueClient = amqpClientFactory.createQueueClient(addressSpace);
+        AmqpClientFactory factory = createAmqpClientFactory(addressSpace);
+        AmqpClient queueClient = factory.createQueueClient(addressSpace);
         queueClient.getConnectOptions().setUsername(uname).setPassword(password);
         io.enmasse.systemtest.standard.QueueTest.runQueueTest(queueClient, queue, messageCount);
         Logging.log.info("User: '{}'; Message count:'{}'; destination:'{}' - done",
                 uname, messageCount, queue.getAddress());
 
-        AmqpClient topicClient = amqpClientFactory.createTopicClient(addressSpace);
+        AmqpClient topicClient = factory.createTopicClient(addressSpace);
         topicClient.getConnectOptions().setUsername(uname).setPassword(password);
         TopicTest.runTopicTest(topicClient, topic, messageCount);
         Logging.log.info("User: '{}'; Message count:'{}'; destination:'{}' - done",
