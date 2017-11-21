@@ -70,6 +70,7 @@ public class AuthenticationTest extends MarathonTestBase {
             Logging.log.info("Start test iteration");
             doBasicAuthQueueTopicTest(addressSpace, queue, topic, username, password);
             assertCannotConnect(addressSpace, "nobody", "nobody", Arrays.asList(queue, topic));
+            Thread.sleep(1000);
         });
         Logging.log.info("testAuthSendReceiveLong finished");
     }
