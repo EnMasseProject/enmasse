@@ -92,10 +92,10 @@ local images = import "images.jsonnet";
                 "name": "keycloak-controller",
                 "resources": {
                     "requests": {
-                        "memory": "128Mi",
+                        "memory": "256Mi",
                     },
                     "limits": {
-                        "memory": "128Mi",
+                        "memory": "256Mi",
                     }
                 },
                 "env": [

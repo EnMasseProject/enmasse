@@ -100,9 +100,9 @@ items:
           name: keycloak-controller
           resources:
             limits:
-              memory: 128Mi
+              memory: 256Mi
             requests:
-              memory: 128Mi
+              memory: 256Mi
 - apiVersion: v1
   kind: Service
   metadata:
