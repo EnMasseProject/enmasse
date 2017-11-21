@@ -11,6 +11,8 @@ public class Executor {
     private Process process;
     private String stdOut;
     private String stdErr;
+    private StreamGobbler stdOutReader;
+    private StreamGobbler stdErrReader;
 
     /**
      * Getter for stdOutput
@@ -49,7 +51,7 @@ public class Executor {
      * @throws InterruptedException
      * @throws ExecutionException
      */
-    public boolean execute(ArrayList<String> commands, int timeout) throws IOException, InterruptedException, ExecutionException{
+    public boolean execute(ArrayList<String> commands, int timeout) throws IOException, InterruptedException, ExecutionException {
         process = Runtime.getRuntime().exec((commands.toArray(new String[0])));
 
         Future<String> output = readStdOutput();
@@ -59,13 +61,25 @@ public class Executor {
         if(timeout > 0){
             if (process.waitFor(timeout, TimeUnit.MILLISECONDS)){
                 retCode = process.exitValue();
+            }else{
+                process.destroyForcibly();
             }
         }else{
             retCode = process.waitFor();
         }
 
-        stdOut = output.get();
-        stdErr = error.get();
+        shutDownReaders();
+        try {
+            stdOut = output.get(500, TimeUnit.MILLISECONDS);
+        }catch (TimeoutException ex){
+            stdOut = stdOutReader.getData();
+        }
+
+        try {
+            stdErr = error.get(500, TimeUnit.MILLISECONDS);
+        }catch (TimeoutException ex){
+            stdErr = stdErrReader.getData();
+        }
 
         return retCode == 0;
     }
@@ -74,10 +88,9 @@ public class Executor {
      * Get standard output of execution
      * @return future string output
      */
-    private Future<String> readStdOutput() {
-        StreamGobbler errorGobbler = new
-                StreamGobbler(process.getInputStream());
-        return errorGobbler.read();
+    private Future<String> readStdOutput(){
+        stdOutReader = new StreamGobbler(process.getInputStream());
+        return stdOutReader.read();
     }
 
     /**
@@ -85,9 +98,16 @@ public class Executor {
      * @return future string error output
      */
     private Future<String> readStdError(){
-        StreamGobbler errorGobbler = new
-                StreamGobbler(process.getErrorStream());
-        return errorGobbler.read();
+        stdErrReader = new StreamGobbler(process.getErrorStream());
+        return stdErrReader.read();
+    }
+
+    /**
+     * Shutdown process output readers
+     */
+    private void shutDownReaders(){
+        stdOutReader.shutDownReader();
+        stdErrReader.shutDownReader();
     }
 
     /**
@@ -96,6 +116,7 @@ public class Executor {
     class StreamGobbler {
         private final ExecutorService executorService = Executors.newSingleThreadExecutor();
         private InputStream is;
+        private StringBuilder data = new StringBuilder();
 
         /**
          * Constructor of StreamGobbler
@@ -103,6 +124,21 @@ public class Executor {
          */
         StreamGobbler(InputStream is) {
             this.is = is;
+        }
+
+        /**
+         * Shutdown executor service with reader
+         */
+        public void shutDownReader(){
+            executorService.shutdownNow();
+        }
+
+        /**
+         * Return data from stream sync
+         * @return string of data
+         */
+        public String getData(){
+            return data.toString();
         }
 
         /**
@@ -114,12 +150,11 @@ public class Executor {
                 InputStreamReader isr = new InputStreamReader(is);
                 BufferedReader br = new BufferedReader(isr);
                 String line;
-                StringBuilder builder = new StringBuilder();
                 while ( (line = br.readLine()) != null)
-                    builder.append(line).append(System.getProperty("line.separator"));
+                    data.append(line).append(System.getProperty("line.separator"));
                 isr.close();
                 br.close();
-                return builder.toString();
+                return data.toString();
             });
 
             return future;
