@@ -16,19 +16,31 @@
 
 package io.enmasse.systemtest;
 
+import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
+import io.enmasse.systemtest.mqtt.MqttClient;
 import io.enmasse.systemtest.mqtt.MqttClientFactory;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
+import org.apache.qpid.proton.message.Message;
+import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.junit.After;
 import org.junit.Before;
 
 import java.io.File;
 import java.io.UnsupportedEncodingException;
+import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * Base class for all tests
@@ -209,5 +221,106 @@ public abstract class TestBase {
     protected MqttClientFactory createMqttClientFactory(AddressSpace addressSpace) {
         return new MqttClientFactory(new OpenShift(environment, environment.namespace(), addressSpace.getNamespace()),
                 environment, addressSpace, username, password);
+    }
+
+    protected boolean isBrokered(AddressSpace addressSpace) throws Exception{
+        return TestUtils.getAddressSpaceType(getAddressSpace(addressSpace.getName())).equals("brokered");
+    }
+
+    protected void assertCanConnect(AddressSpace addressSpace, String username, String password, List<Destination> destinations) throws Exception {
+        assertTrue(canConnectWithAmqp(addressSpace, username, password , destinations));
+        // TODO: Enable this when mqtt is stable enough
+        // assertTrue(canConnectWithMqtt(addressSpace, username, password));
+    }
+
+    protected void assertCannotConnect(AddressSpace addressSpace, String username, String password, List<Destination> destinations) throws Exception {
+        try {
+            assertFalse(canConnectWithAmqp(addressSpace, username, password, destinations));
+            fail("Expected connection to timeout");
+        } catch (ConnectTimeoutException e) {
+        }
+
+        // TODO: Enable this when mqtt is stable enough
+        // assertFalse(canConnectWithMqtt(addressSpace, username, password));
+    }
+
+
+    private boolean canConnectWithAmqp(AddressSpace addressSpace, String username, String password, List<Destination> destinations) throws Exception {
+        for (Destination destination : destinations){
+            switch (destination.getType()){
+                case "queue":
+                    assertTrue(canConnectWithAmqpToQueue(addressSpace, username, password, destination.getAddress()));
+                    break;
+                case "topic":
+                    assertTrue(canConnectWithAmqpToTopic(addressSpace, username, password, destination.getAddress()));
+                    break;
+                case "multicast":
+                    if (!isBrokered(addressSpace))
+                        assertTrue(canConnectWithAmqpToMulticast(addressSpace, username, password, destination.getAddress()));
+                    break;
+                case "anycast":
+                    if(!isBrokered(addressSpace))
+                        assertTrue(canConnectWithAmqpToAnycast(addressSpace, username, password, destination.getAddress()));
+                    break;
+            }
+        }
+        return true;
+    }
+
+    private boolean canConnectWithMqtt(String name, String username, String password) throws Exception {
+        AddressSpace addressSpace = new AddressSpace(name);
+        MqttClient client = mqttClientFactory.createClient(addressSpace);
+        MqttConnectOptions options = client.getMqttConnectOptions();
+        options.setUserName(username);
+        options.setPassword(password.toCharArray());
+
+        Future<List<String>> received = client.recvMessages("t1", 1);
+        Future<Integer> sent = client.sendMessages("t1", Arrays.asList("msgt1"));
+
+        return (sent.get(1, TimeUnit.MINUTES) == received.get(1, TimeUnit.MINUTES).size());
+    }
+
+    protected boolean canConnectWithAmqpToQueue(AddressSpace addressSpace, String username, String password, String queueAddress) throws InterruptedException, IOException, TimeoutException, ExecutionException {
+        AmqpClientFactory clientFactory = createAmqpClientFactory(addressSpace);
+        AmqpClient client = clientFactory.createQueueClient(addressSpace);
+        client.getConnectOptions().setUsername(username).setPassword(password);
+
+        Future<Integer> sent = client.sendMessages(queueAddress, Arrays.asList("msg1"), 10, TimeUnit.SECONDS);
+        Future<List<Message>> received = client.recvMessages(queueAddress, 1, 10, TimeUnit.SECONDS);
+
+        return (sent.get(1, TimeUnit.MINUTES) == received.get(1, TimeUnit.MINUTES).size());
+    }
+
+    protected boolean canConnectWithAmqpToAnycast(AddressSpace addressSpace, String username, String password, String anycastAddress) throws InterruptedException, IOException, TimeoutException, ExecutionException {
+        AmqpClientFactory clientFactory = createAmqpClientFactory(addressSpace);
+        AmqpClient client = clientFactory.createQueueClient(addressSpace);
+        client.getConnectOptions().setUsername(username).setPassword(password);
+
+        Future<List<Message>> received = client.recvMessages(anycastAddress, 1, 10, TimeUnit.SECONDS);
+        Future<Integer> sent = client.sendMessages(anycastAddress, Arrays.asList("msg1"), 10, TimeUnit.SECONDS);
+
+        return (sent.get(1, TimeUnit.MINUTES) == received.get(1, TimeUnit.MINUTES).size());
+    }
+
+    protected boolean canConnectWithAmqpToMulticast(AddressSpace addressSpace, String username, String password, String multicastAddress) throws InterruptedException, IOException, TimeoutException, ExecutionException {
+        AmqpClientFactory clientFactory = createAmqpClientFactory(addressSpace);
+        AmqpClient client = clientFactory.createBroadcastClient(addressSpace);
+        client.getConnectOptions().setUsername(username).setPassword(password);
+
+        Future<List<Message>> received = client.recvMessages(multicastAddress, 1, 10, TimeUnit.SECONDS);
+        Future<Integer> sent = client.sendMessages(multicastAddress, Arrays.asList("msg1"), 10, TimeUnit.SECONDS);
+
+        return (sent.get(1, TimeUnit.MINUTES) == received.get(1, TimeUnit.MINUTES).size());
+    }
+
+    protected boolean canConnectWithAmqpToTopic(AddressSpace addressSpace, String username, String password, String topicAddress) throws InterruptedException, IOException, TimeoutException, ExecutionException {
+        AmqpClientFactory clientFactory = createAmqpClientFactory(addressSpace);
+        AmqpClient client = clientFactory.createTopicClient(addressSpace);
+        client.getConnectOptions().setUsername(username).setPassword(password);
+
+        Future<List<Message>> received = client.recvMessages(topicAddress, 1, 10, TimeUnit.SECONDS);
+        Future<Integer> sent = client.sendMessages(topicAddress, Arrays.asList("msg1"), 10, TimeUnit.SECONDS);
+
+        return (sent.get(1, TimeUnit.MINUTES) == received.get(1, TimeUnit.MINUTES).size());
     }
 }

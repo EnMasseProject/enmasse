@@ -5,7 +5,10 @@ import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.standard.TopicTest;
 import org.junit.Test;
 
+import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import static org.junit.Assert.assertFalse;
 
 public class AuthenticationTest extends MarathonTestBase {
 
@@ -66,7 +69,7 @@ public class AuthenticationTest extends MarathonTestBase {
         runTestInLoop(30, () -> {
             Logging.log.info("Start test iteration");
             doBasicAuthQueueTopicTest(addressSpace, queue, topic, username, password);
-            doBasicAuthQueueTopicTest(addressSpace, queue, topic, "nobody", "nobody");
+            assertCannotConnect(addressSpace, "nobody", "nobody", Arrays.asList(queue, topic));
         });
         Logging.log.info("testAuthSendReceiveLong finished");
     }
