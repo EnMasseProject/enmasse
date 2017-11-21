@@ -79,12 +79,13 @@ public class AddressSpaceTest extends AuthenticationTest {
             topicList.add(Destination.topic(String.format(topicPattern, i)));
         }
 
+        AmqpClientFactory factory = createAmqpClientFactory(addressSpace);
         AmqpClient queueClient;
         AmqpClient topicClient;
 
         setAddresses(addressSpace, queueList.toArray(new Destination[0]));
         for(Destination queue : queueList){
-            queueClient = amqpClientFactory.createQueueClient(addressSpace);
+            queueClient = factory.createQueueClient(addressSpace);
             queueClient.getConnectOptions().setUsername(username).setPassword(password);
 
             QueueTest.runQueueTest(queueClient, queue, 1024);
@@ -93,7 +94,7 @@ public class AddressSpaceTest extends AuthenticationTest {
         setAddresses(addressSpace, topicList.toArray(new Destination[0]));
 
         for(Destination topic : topicList){
-            topicClient = amqpClientFactory.createTopicClient(addressSpace);
+            topicClient = factory.createTopicClient(addressSpace);
             topicClient.getConnectOptions().setUsername(username).setPassword(password);
 
             TopicTest.runTopicTest(topicClient, topic, 1024);

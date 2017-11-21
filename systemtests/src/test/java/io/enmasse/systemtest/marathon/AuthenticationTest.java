@@ -2,10 +2,14 @@ package io.enmasse.systemtest.marathon;
 
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.amqp.AmqpClient;
+import io.enmasse.systemtest.amqp.AmqpClientFactory;
 import io.enmasse.systemtest.standard.TopicTest;
 import org.junit.Test;
 
+import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import static org.junit.Assert.assertFalse;
 
 public class AuthenticationTest extends MarathonTestBase {
 
@@ -45,6 +49,33 @@ public class AuthenticationTest extends MarathonTestBase {
         Logging.log.info("testCreateDeleteUsersLong finished");
     }
 
+    @Test
+    public void testAuthSendReceiveLong() throws Exception{
+        Logging.log.info("testAuthSendReceiveLong start");
+        AddressSpace addressSpace = new AddressSpace("test-auth-send-receive-brokered",
+                AddressSpaceType.BROKERED);
+        createAddressSpace(addressSpace, "standard");
+        Logging.log.info("Address space '{}'created", addressSpace);
+
+        Destination queue = Destination.queue("test-auth-send-receive-queue");
+        Destination topic = Destination.topic("test-auth-send-receive-topic");
+        setAddresses(addressSpace, queue, topic);
+        Logging.log.info("Addresses '{}', '{}' created", queue.getAddress(), topic.getAddress());
+
+        final String username = "test-user";
+        final String password = "test-user";
+
+        createUser(addressSpace, username, password);
+
+        runTestInLoop(30, () -> {
+            Logging.log.info("Start test loop basic auth tests");
+            doBasicAuthQueueTopicTest(addressSpace, queue, topic, username, password);
+            assertCannotConnect(addressSpace, "nobody", "nobody", Arrays.asList(queue, topic));
+            Thread.sleep(5000);
+        });
+        Logging.log.info("testAuthSendReceiveLong finished");
+    }
+
     protected void createUser(AddressSpace addressSpace, String username, String password) throws Exception{
         getKeycloakClient().createUser(addressSpace.getName(), username, password);
     }
@@ -69,13 +100,14 @@ public class AuthenticationTest extends MarathonTestBase {
     private void doBasicAuthQueueTopicTest(AddressSpace addressSpace, Destination queue, Destination topic,
                                            String uname, String password) throws Exception {
         int messageCount = 100;
-        AmqpClient queueClient = amqpClientFactory.createQueueClient(addressSpace);
+        AmqpClientFactory factory = createAmqpClientFactory(addressSpace);
+        AmqpClient queueClient = factory.createQueueClient(addressSpace);
         queueClient.getConnectOptions().setUsername(uname).setPassword(password);
         io.enmasse.systemtest.standard.QueueTest.runQueueTest(queueClient, queue, messageCount);
         Logging.log.info("User: '{}'; Message count:'{}'; destination:'{}' - done",
                 uname, messageCount, queue.getAddress());
 
-        AmqpClient topicClient = amqpClientFactory.createTopicClient(addressSpace);
+        AmqpClient topicClient = factory.createTopicClient(addressSpace);
         topicClient.getConnectOptions().setUsername(uname).setPassword(password);
         TopicTest.runTopicTest(topicClient, topic, messageCount);
         Logging.log.info("User: '{}'; Message count:'{}'; destination:'{}' - done",
