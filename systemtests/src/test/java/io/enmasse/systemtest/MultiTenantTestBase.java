@@ -96,4 +96,15 @@ public class MultiTenantTestBase extends TestBase {
     protected Endpoint getRouteEndpoint(AddressSpace addressSpace) {
         return openShift.getRouteEndpoint(addressSpace.getName(), "messaging");
     }
+
+    protected void deleteDefaultAddressSpaces() throws Exception {
+        if (addressApiClient != null) {
+            if (createDefaultBrokeredAddressSpace()) {
+                deleteAddressSpace(defaultBrokeredAddressSpace);
+            }
+            if (createDefaultAddressSpace()) {
+                deleteAddressSpace(defaultAddressSpace);
+            }
+        }
+    }
 }
