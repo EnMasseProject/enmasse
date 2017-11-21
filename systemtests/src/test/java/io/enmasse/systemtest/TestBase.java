@@ -224,7 +224,7 @@ public abstract class TestBase {
     }
 
     protected boolean isBrokered(AddressSpace addressSpace) throws Exception{
-        return TestUtils.getAddressSpaceType(getAddressSpace(addressSpace.getName())).equals("brokered");
+        return addressSpace.getType().equals(AddressSpaceType.BROKERED);
     }
 
     protected void assertCanConnect(AddressSpace addressSpace, String username, String password, List<Destination> destinations) throws Exception {
