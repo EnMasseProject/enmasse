@@ -81,12 +81,12 @@ public class AuthenticationTest extends TestBase {
         KeycloakCredentials credentials = new KeycloakCredentials("Pavel", "Novak");
         getKeycloakClient().createUser(addressSpace.getName(), credentials.getUsername(), credentials.getPassword());
 
-        assertCanConnect(addressSpace, credentials.getUsername(), credentials.getPassword());
+        assertCanConnect(addressSpace, credentials.getUsername(), credentials.getPassword(), amqpAddressList);
 
         scaleKeycloak(0);
         scaleKeycloak(1);
 
-        assertCanConnect(addressSpace, credentials.getUsername(), credentials.getPassword());
+        assertCanConnect(addressSpace, credentials.getUsername(), credentials.getPassword(), amqpAddressList);
     }
 
     @Test
