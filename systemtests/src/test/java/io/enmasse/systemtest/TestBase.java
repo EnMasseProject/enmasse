@@ -45,7 +45,7 @@ import static org.junit.Assert.fail;
 /**
  * Base class for all tests
  */
-public abstract class TestBase {
+public abstract class TestBase extends SystemTestRunListener {
 
     protected static final Environment environment = new Environment();
     protected static final AddressSpace defaultAddressSpace = environment.isMultitenant() ? new AddressSpace("testspace", "testspace")

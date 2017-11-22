@@ -85,6 +85,12 @@
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-surefire-plugin</artifactId>
             <configuration>
+              <properties>
+                <property>
+                  <name>listener</name>
+                  <value>io.enmasse.systemtest.SystemTestRunListener</value>
+                </property>
+              </properties>
               <skipTests>false</skipTests>
               <excludes>
                 <exclude>**/marathon/*</exclude>
