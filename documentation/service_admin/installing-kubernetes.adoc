@@ -17,7 +17,7 @@ not have cluster-admin privileges. Otherwise, choose multi-tenant mode.
 . To install {ProductName} in single-tenant mode run the following script:
 
 +
-[source,options="nowrap"]
+[options="nowrap"]
 ----
 ./deploy-kubernetes.sh -m "https://localhost:8443" -n enmasse -o singletenant
 ----
@@ -28,7 +28,7 @@ images for the various components.
 
 . You can use the REST API to check the status of the deployment:
 +
-[source,options="nowrap"]
+[options="nowrap"]
 ----
 curl -k https://$(minikube ip)/apis/enmasse.io/v1/addressspaces/default
 ----
@@ -45,7 +45,7 @@ not have cluster-admin privileges. Otherwise, choose multi-tenant mode.
 
 . To install {ProductName} in multi-tenant mode, run the following script:
 +
-[source,options="nowrap"]
+[options="nowrap"]
 ----
 ./deploy-kubernetes.sh -m "https://localhost:8443" -n enmasse -o multitenant
 ----
@@ -57,7 +57,7 @@ to the `view` role and for the `enmasse-service-account` to the `cluster-admin` 
 
 . Grant cluster-admin privileges:
 +
-[source,options="nowrap"]
+[options="nowrap"]
 ----
 kubectl create clusterrolebinding enmasse-service-account-binding --clusterrole=cluster-admin --serviceaccount=enmasse:enmasse-service-account
 kubectl create rolebinding default-view-binding --clusterrole=view --serviceaccount=enmasse:default -n enmasse
@@ -66,7 +66,7 @@ kubectl create rolebinding default-view-binding --clusterrole=view --serviceacco
 The deployments required for running {ProductName} in multi-tenant mode are created.
 {ProductName} will be up and running once all pods in the 'enmasse' namespace are in the `Running` state:
 +
-[source,options="nowrap"]
+[options="nowrap"]
 ----
 kubectl get pods -n enmasse
 ----
