@@ -31,7 +31,7 @@ local common = import "common.jsonnet";
     self.common_service("address-controller", "ClusterIP", {}),
 
   external_service::
-    self.common_service("address-controller-external", "LoadBalancer", {}),
+    self.common_service("restapi-external", "LoadBalancer", {}),
 
   deployment(image, template_config, ca_secret, cert_secret, environment, enable_rbac)::
     {

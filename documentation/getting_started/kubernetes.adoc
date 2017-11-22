@@ -41,8 +41,7 @@ _Note: The `cluster-admin` role gives the `enmasse-service-account` service acco
 === Deploying external load balancers
 
 If you're running {ProductName} in your own Kubernetes instance on any of the
-cloud providers, and if you don't have or don't want to deploy an
-ingress controller, you can deploy the external load balancer services
+cloud providers, you can deploy the external load balancer services
 to expose {ProductName} ports:
 
 [options="nowrap"]
@@ -50,20 +49,17 @@ to expose {ProductName} ports:
 kubectl apply -f kubernetes/addons/external-lb.yaml -n enmasse
 ....
 
+If you are running in multitenant mode, exposing the restapi is sufficient:
+
+[options="nowrap"]
+....
+kubectl apply -f kubernetes/addons/external-lb-restapi.yaml -n enmasse
+....
+
 [[configuring-addresses-kubernetes]]
 === Configuring addresses
 
 include::configuring-addresses.adoc[leveloffset=+1]
-
-[[exposing-messaging-through-ingress-resource]]
-=== Exposing messaging through Ingress resource
-
-To open up for AMQP using minikube and the nginx ingress controller,
-follow
-https://github.com/kubernetes/contrib/tree/master/ingress/controllers/nginx/examples/tcp[this]
-and
-https://github.com/kubernetes/ingress/tree/master/[this]
-guide, using the port `5672` and the service `default/messaging`.
 
 [[sending-and-receiving-messages-kubernetes]]
 === Sending and receiving messages

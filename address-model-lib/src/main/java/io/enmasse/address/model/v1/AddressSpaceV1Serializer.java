@@ -59,6 +59,9 @@ class AddressSpaceV1Serializer extends JsonSerializer<AddressSpace> {
             e.put(Fields.NAME, endpoint.getName());
             e.put(Fields.SERVICE, endpoint.getService());
             endpoint.getHost().ifPresent(h -> e.put(Fields.HOST, h));
+            if (endpoint.getPort() != 0) {
+                e.put(Fields.PORT, endpoint.getPort());
+            }
             endpoint.getCertProvider().ifPresent(provider -> {
                 ObjectNode p = e.putObject(Fields.CERT_PROVIDER);
                 p.put(Fields.NAME, provider.getName());

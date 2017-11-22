@@ -15,9 +15,8 @@ not have cluster-admin privileges. Otherwise, choose multi-tenant mode.
 .Procedure 
 
 . To install {ProductName} in single-tenant mode run the following script:
-
 +
-[source,options="nowrap"]
+[options="nowrap"]
 ----
 ./deploy-kubernetes.sh -m "https://localhost:8443" -n enmasse -o singletenant
 ----
@@ -26,11 +25,18 @@ Running this script creates the deployments required for running {ProductName} i
 up {ProductName} will take a while, usually depending on how fast it is able to download the Docker
 images for the various components.
 
-. You can use the REST API to check the status of the deployment:
+. To access the REST API, enable the external service:
 +
-[source,options="nowrap"]
+[options="nowrap"]
 ----
-curl -k https://$(minikube ip)/apis/enmasse.io/v1/addressspaces/default
+kubectl create -f ./kubernetes/addons/external-lb.yaml
+----
+
+. You can then use the REST API to check the status of the deployment:
++
+[options="nowrap"]
+----
+curl -k $(minikube service --https --namespace enmasse restapi-external --url)/apis/enmasse.io/v1/addressspaces/default
 ----
 +
 The deployment is finished when `status.isReady` is `true` in the returned JSON object.
@@ -45,7 +51,7 @@ not have cluster-admin privileges. Otherwise, choose multi-tenant mode.
 
 . To install {ProductName} in multi-tenant mode, run the following script:
 +
-[source,options="nowrap"]
+[options="nowrap"]
 ----
 ./deploy-kubernetes.sh -m "https://localhost:8443" -n enmasse -o multitenant
 ----
@@ -57,16 +63,17 @@ to the `view` role and for the `enmasse-service-account` to the `cluster-admin` 
 
 . Grant cluster-admin privileges:
 +
-[source,options="nowrap"]
+[options="nowrap"]
 ----
 kubectl create clusterrolebinding enmasse-service-account-binding --clusterrole=cluster-admin --serviceaccount=enmasse:enmasse-service-account
 kubectl create rolebinding default-view-binding --clusterrole=view --serviceaccount=enmasse:default -n enmasse
 ----
 +
 The deployments required for running {ProductName} in multi-tenant mode are created.
+
 {ProductName} will be up and running once all pods in the 'enmasse' namespace are in the `Running` state:
 +
-[source,options="nowrap"]
+[options="nowrap"]
 ----
 kubectl get pods -n enmasse
 ----

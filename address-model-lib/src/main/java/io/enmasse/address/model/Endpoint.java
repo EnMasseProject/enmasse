@@ -10,12 +10,14 @@ public class Endpoint {
     private final String name;
     private final String service;
     private final String host;
+    private final int port;
     private final CertProvider certProvider;
 
-    public Endpoint(String name, String service, String host, CertProvider certProvider) {
+    public Endpoint(String name, String service, String host, int port, CertProvider certProvider) {
         this.name = name;
         this.service = service;
         this.host = host;
+        this.port = port;
         this.certProvider = certProvider;
     }
 
@@ -25,6 +27,10 @@ public class Endpoint {
 
     public String getService() {
         return service;
+    }
+
+    public int getPort() {
+        return port;
     }
 
     public Optional<String> getHost() {
@@ -39,6 +45,7 @@ public class Endpoint {
         private String name;
         private String service;
         private String host;
+        private int port = 0;
         private CertProvider certProvider;
 
         public Builder() {}
@@ -65,6 +72,11 @@ public class Endpoint {
             return this;
         }
 
+        public Builder setPort(int port) {
+            this.port = port;
+            return this;
+        }
+
         public Builder setCertProvider(CertProvider certProvider) {
             this.certProvider = certProvider;
             return this;
@@ -73,7 +85,7 @@ public class Endpoint {
         public Endpoint build() {
             Objects.requireNonNull(name, "name not set");
             Objects.requireNonNull(service, "service not set");
-            return new Endpoint(name, service, host, certProvider);
+            return new Endpoint(name, service, host, port, certProvider);
         }
     }
 }
