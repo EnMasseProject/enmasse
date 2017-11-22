@@ -1,3 +1,16 @@
+## 0.15.0 (November 22, 2017)
+* Add cluster roles that limit privileges required to run address controller
+* Add HTTPS support for standard authentication service
+* Use persistent volumes for standard authentication service
+* Support multiple address controllers on the same cluster
+* Enable HTTPS for REST API and console
+* Authenticate REST API using RBAC
+* Move REST API path from /v1 to /apis/enmasse.io/v1 to support aggregated API service
+* Upgrade broker to Apache Artemis 2.4.0
+* Upgrade keycloak to 3.3.0
+* Lots of bug fixes to console
+* Replace use of Ingress with K8S LoadBalancer Service
+
 ## 0.14.0 (November 3, 2017)
 * New address space type: brokered
     * A single ActiveMQ Artemis broker
