@@ -97,8 +97,8 @@ public class AuthenticationTest extends MarathonTestBase {
             createUser(addressSpace, username, password);
             doBasicAuthQueueTopicTest(addressSpace, queue, topic, username, password);
             Logging.log.info("Restart keycloak");
-            scaleInGlobal("keycloak", 0);
-            scaleInGlobal("keycloak", 1);
+            scaleKeycloak(0);
+            scaleKeycloak(1);
             Thread.sleep(60000);
             doBasicAuthQueueTopicTest(addressSpace, queue, topic, username, password);
             removeUser(addressSpace, username);
