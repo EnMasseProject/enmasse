@@ -85,6 +85,7 @@ public class AuthenticationTest extends TestBase {
 
         scaleKeycloak(0);
         scaleKeycloak(1);
+        Thread.sleep(60000);
 
         assertCanConnect(addressSpace, credentials.getUsername(), credentials.getPassword(), amqpAddressList);
     }
