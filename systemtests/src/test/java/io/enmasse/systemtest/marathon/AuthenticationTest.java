@@ -76,6 +76,38 @@ public class AuthenticationTest extends MarathonTestBase {
         Logging.log.info("testAuthSendReceiveLong finished");
     }
 
+    @Test
+    public void testCreateDeleteUsersRestartKeyCloakLong() throws Exception {
+        Logging.log.info("testCreateDeleteUsersRestartKeyCloakLong start");
+        AddressSpace addressSpace = new AddressSpace("test-create-delete-users-restart-brokered",
+                AddressSpaceType.BROKERED);
+        createAddressSpace(addressSpace, "standard");
+        Logging.log.info("Address space '{}'created", addressSpace);
+
+        Destination queue = Destination.queue("test-create-delete-users-restart-queue");
+        Destination topic = Destination.topic("test-create-delete-users-restart-topic");
+        setAddresses(addressSpace, queue, topic);
+        Logging.log.info("Addresses '{}', '{}' created", queue.getAddress(), topic.getAddress());
+
+        final String username = "test-user";
+        final String password = "test-user";
+
+        runTestInLoop(30, () -> {
+            Logging.log.info("Start test iteration");
+            createUser(addressSpace, username, password);
+            doBasicAuthQueueTopicTest(addressSpace, queue, topic, username, password);
+            Logging.log.info("Restart keycloak");
+            scaleKeycloak(0);
+            scaleKeycloak(1);
+            Thread.sleep(60000);
+            doBasicAuthQueueTopicTest(addressSpace, queue, topic, username, password);
+            removeUser(addressSpace, username);
+        });
+        Logging.log.info("testCreateDeleteUsersRestartKeyCloakLong finished");
+    }
+
+
+
     protected void createUser(AddressSpace addressSpace, String username, String password) throws Exception{
         getKeycloakClient().createUser(addressSpace.getName(), username, password);
     }
