@@ -28,7 +28,6 @@ import org.junit.After;
 import org.junit.Before;
 
 import java.io.File;
-import java.io.UnsupportedEncodingException;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
@@ -245,24 +244,19 @@ public abstract class TestBase extends SystemTestRunListener {
     }
 
     protected void assertCanConnect(AddressSpace addressSpace, String username, String password, List<Destination> destinations) throws Exception {
-        assertTrue(canConnectWithAmqp(addressSpace, username, password , destinations));
-        // TODO: Enable this when mqtt is stable enough
-        // assertTrue(canConnectWithMqtt(addressSpace, username, password));
+        assertTrue(canConnect(addressSpace, username, password , destinations));
     }
 
     protected void assertCannotConnect(AddressSpace addressSpace, String username, String password, List<Destination> destinations) throws Exception {
         try {
-            assertFalse(canConnectWithAmqp(addressSpace, username, password, destinations));
+            assertFalse(canConnect(addressSpace, username, password, destinations));
             fail("Expected connection to timeout");
         } catch (ConnectTimeoutException e) {
         }
-
-        // TODO: Enable this when mqtt is stable enough
-        // assertFalse(canConnectWithMqtt(addressSpace, username, password));
     }
 
 
-    private boolean canConnectWithAmqp(AddressSpace addressSpace, String username, String password, List<Destination> destinations) throws Exception {
+    private boolean canConnect(AddressSpace addressSpace, String username, String password, List<Destination> destinations) throws Exception {
         for (Destination destination : destinations){
             switch (destination.getType()){
                 case "queue":
@@ -270,6 +264,7 @@ public abstract class TestBase extends SystemTestRunListener {
                     break;
                 case "topic":
                     assertTrue(canConnectWithAmqpToTopic(addressSpace, username, password, destination.getAddress()));
+                    assertTrue(canConnectWithMqtt(addressSpace, username, password, destination.getAddress()));
                     break;
                 case "multicast":
                     if (!isBrokered(addressSpace))
@@ -284,15 +279,16 @@ public abstract class TestBase extends SystemTestRunListener {
         return true;
     }
 
-    private boolean canConnectWithMqtt(String name, String username, String password) throws Exception {
-        AddressSpace addressSpace = new AddressSpace(name);
-        MqttClient client = mqttClientFactory.createClient(addressSpace);
+    private boolean canConnectWithMqtt(AddressSpace addressSpace, String username, String password, String address) throws Exception {
+        MqttClient client = createMqttClientFactory(addressSpace).createClient(addressSpace);
         MqttConnectOptions options = client.getMqttConnectOptions();
-        options.setUserName(username);
-        options.setPassword(password.toCharArray());
+        if (username != null && password != null) {
+            options.setUserName(username);
+            options.setPassword(password.toCharArray());
+        }
 
-        Future<List<String>> received = client.recvMessages("t1", 1);
-        Future<Integer> sent = client.sendMessages("t1", Arrays.asList("msgt1"));
+        Future<List<String>> received = client.recvMessages(address, 1);
+        Future<Integer> sent = client.sendMessages(address, Arrays.asList("msgt1"));
 
         return (sent.get(1, TimeUnit.MINUTES) == received.get(1, TimeUnit.MINUTES).size());
     }
