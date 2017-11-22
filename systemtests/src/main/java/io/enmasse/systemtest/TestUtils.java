@@ -342,7 +342,11 @@ public class TestUtils {
                     throw ex2;
                 }
             } else {
-                ex.getCause().printStackTrace();
+                if (ex.getCause() != null) {
+                    ex.getCause().printStackTrace();
+                } else {
+                    ex.printStackTrace();
+                }
                 throw ex;
             }
         }
