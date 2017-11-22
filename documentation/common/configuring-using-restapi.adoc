@@ -2,10 +2,9 @@
 
 == Configuring {ProductName} using a REST API
 
-TODO: Authentication of clients
-
 {ProductName} provides a REST API that can be used for configuring address spaces and addresses
-within those address spaces.
+within those address spaces. When running {ProductName} in multitenant mode, clients are
+authenticated using https://kubernetes.io/docs/admin/authorization/rbac/[RBAC] by default.
 
 === Creating an Address Space
 
@@ -14,7 +13,7 @@ within those address spaces.
 
 .Procedure
 
-To create a 'standard' address space, save the following JSON data to a file:
+. Save the following JSON data to a file 'space.json':
 +
 [source,options="nowrap"]
 ----
@@ -30,6 +29,14 @@ To create a 'standard' address space, save the following JSON data to a file:
 }
 ----
 +
+. POST the address space definition to the REST API using curl:
++
+[source,options="nowrap"]
+----
+TOKEN=`oc whoami -t`
+curl -X POST -T @space.json -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" -k https://$(oc get route restapi -o jsonpath='{.spec.host}')/apis/enmasse.io/v1/addressspaces/myspace
+----
++
 This will create the infrastructure required for that address space. Starting up the address space
 will take a while, usually depending on how fast it is able to download the Docker images for the
 various components.
@@ -42,7 +49,8 @@ various components.
 +
 [source,options="nowrap"]
 ----
-curl -k https://$(oc get route restapi -o jsonpath='{.spec.host}')/apis/enmasse.io/v1/addressspaces/myspace
+TOKEN=`oc whoami -t`
+curl -k -H "Authorization: Bearer $TOKEN" https://$(oc get route restapi -o jsonpath='{.spec.host}')/apis/enmasse.io/v1/addressspaces/myspace
 ----
 +
 You can consider the address space to be ready to use when `status.isReady` is `true` in the returned JSON
@@ -96,11 +104,12 @@ object.
 }
 ----
 
-. You can then create those addresses using the REST API:
+. You can then create those addresses using the REST API (Replace `default` with the name of your address space if running in multitenant mode):
 +
 [source,options="nowrap"]
 ----
-curl -X PUT -T addresses.json -H "content-type: application/json" -k https://$(oc get route restapi -o jsonpath='{.spec.host}')/apis/enmasse.io/v1/addresses/default
+TOKEN=`oc whoami -t`
+curl -X PUT -T addresses.json -H "content-type: application/json" -H "Authorization: Bearer $TOKEN" -k https://$(oc get route restapi -o jsonpath='{.spec.host}')/apis/enmasse.io/v1/addresses/default
 ----
 
 === Viewing Configured Addresses
