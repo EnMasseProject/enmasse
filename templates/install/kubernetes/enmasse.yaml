@@ -639,21 +639,6 @@ items:
         - configMap:
             name: enmasse-template-config
           name: templates
-- apiVersion: extensions/v1beta1
-  kind: Ingress
-  metadata:
-    labels:
-      app: enmasse
-    name: restapi
-  spec:
-    rules:
-    - host: ''
-      http:
-        paths:
-        - backend:
-            serviceName: address-controller
-            servicePort: 443
-          path: /apis/enmasse.io/v1
 - apiVersion: v1
   kind: Service
   metadata:

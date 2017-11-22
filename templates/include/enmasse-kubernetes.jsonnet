@@ -13,19 +13,9 @@ local images = import "images.jsonnet";
     "kind": "List",
     "items": [ templateConfig.generate(with_kafka),
                addressController.deployment(images.address_controller, "enmasse-template-config", "enmasse-ca", "address-controller-cert", "development", "false"),
-               restapiRoute.ingress(""),
                addressController.internal_service ]
   },
 
   external_lb::
-  {
-    "apiVersion": "v1",
-    "kind": "List",
-    "items": [ 
-      addressController.external_service,
-      messagingService.external,
-      mqttService.external,
-      consoleService.external
-    ]
-  }
+    addressController.external_service,
 }

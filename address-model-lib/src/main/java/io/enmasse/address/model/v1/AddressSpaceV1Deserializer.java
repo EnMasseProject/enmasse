@@ -79,6 +79,10 @@ class AddressSpaceV1Deserializer extends JsonDeserializer<AddressSpace> {
                     b.setHost(endpoint.get(Fields.HOST).asText());
                 }
 
+                if (endpoint.hasNonNull(Fields.PORT)) {
+                    b.setPort(endpoint.get(Fields.PORT).asInt());
+                }
+
                 if (endpoint.hasNonNull(Fields.CERT_PROVIDER)) {
                     ObjectNode certProvider = (ObjectNode) endpoint.get(Fields.CERT_PROVIDER);
                     b.setCertProvider(new CertProvider(

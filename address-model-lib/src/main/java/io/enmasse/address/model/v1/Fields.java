@@ -46,4 +46,5 @@ interface Fields {
     String DESCRIPTION = "description";
     String PLANS = "plans";
     String DETAILS = "details";
+    String PORT = "port";
 }

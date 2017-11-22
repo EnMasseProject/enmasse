@@ -21,7 +21,6 @@ import io.enmasse.config.LabelKeys;
 import io.enmasse.address.model.Endpoint;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.extensions.Deployment;
-import io.fabric8.kubernetes.api.model.extensions.DoneableIngress;
 import io.fabric8.kubernetes.client.dsl.Resource;
 import io.fabric8.openshift.api.model.*;
 import io.fabric8.openshift.client.OpenShiftClient;
@@ -230,33 +229,28 @@ public class KubernetesHelper implements Kubernetes {
             }
             route.done();
         } else {
-            DoneableIngress ingress = client.extensions().ingresses().inNamespace(namespace).createNew()
+            if (service.getSpec().getPorts().isEmpty()) {
+                return;
+            }
+            ServicePort servicePort = service.getSpec().getPorts().get(0);
+            DoneableService svc = client.services().inNamespace(namespace).createNew()
                     .editOrNewMetadata()
-                    .withName(endpoint.getName())
+                    .withName(endpoint.getName() + "-external")
                     .addToAnnotations(AnnotationKeys.ADDRESS_SPACE, addressSpaceName)
+                    .addToAnnotations(AnnotationKeys.SERVICE_NAME, service.getMetadata().getName())
+                    .addToLabels(LabelKeys.TYPE, "loadbalancer")
                     .endMetadata()
                     .editOrNewSpec()
-                    .editOrNewBackend()
-                    .withServiceName(endpoint.getService())
-                    .withServicePort(new IntOrString(defaultPort))
-                    .endBackend()
+                    .withPorts(servicePort)
+                    .withSelector(service.getSpec().getSelector())
+                    .withType("LoadBalancer")
                     .endSpec();
-
             if (endpoint.getCertProvider().isPresent()) {
-                ingress.editOrNewMetadata()
+                svc.editOrNewMetadata()
                         .addToAnnotations(AnnotationKeys.CERT_SECRET_NAME, endpoint.getCertProvider().get().getSecretName())
-                        .endMetadata()
-                        .editOrNewSpec();
-
-                if (endpoint.getHost().isPresent()) {
-                    ingress.editOrNewSpec()
-                            .addNewTl()
-                            .addToHosts(endpoint.getHost().get())
-                            .withSecretName(endpoint.getCertProvider().get().getSecretName())
-                            .endTl();
-                }
+                        .endMetadata();
             }
-            ingress.done();
+            svc.done();
         }
     }
 

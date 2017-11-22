@@ -30,7 +30,6 @@ items:
     - deployments
     - replicasets
     - routes
-    - ingresses
     - secrets
     - services
     - persistentvolumeclaims
