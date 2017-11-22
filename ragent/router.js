@@ -418,7 +418,7 @@ function by_name (o) {
 
 ConnectedRouter.prototype.on_query_address_response = function (message) {
     if (message.application_properties.statusCode == 200) {
-        var address_records = extract_records(message.body)
+        var address_records = extract_records(message.body).filter(not_overridden);
         this.addresses = myutils.index(address_records, by_name, from_router_address);
         log.info('retrieved addresses for ' + this.container_id + ': ' + JSON.stringify(this.addresses));
         this.retrieve_link_routes();
@@ -428,14 +428,8 @@ ConnectedRouter.prototype.on_query_address_response = function (message) {
     }
 };
 
-function not_overridden (linkroute) {
-    if (linkroute.name === null) {
-        /*name entered in config file currently doesn't make it through*/
-        log.info('Ignoring unnamed linkroute: ' + JSON.stringify(linkroute));
-        return false;
-    } else {
-        return linkroute.name.indexOf('override') !== 0;
-    }
+function not_overridden (o) {
+    return o.name.indexOf('override') !== 0;
 }
 
 ConnectedRouter.prototype.on_query_link_route_response = function (message) {

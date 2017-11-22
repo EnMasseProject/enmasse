@@ -24,6 +24,7 @@ router {
     mode: interior
     id: Router.${HOSTNAME}
     workerThreads: ${WORKER_THREADS}
+    defaultDistribution: unavailable
 }
 
 sslProfile {
@@ -111,4 +112,22 @@ linkRoute {
     prefix: ${DOLLAR}lwt
     dir: out
     containerId: lwt-service
+}
+
+address {
+    name: override.mqtt
+    prefix: ${DOLLAR}mqtt
+    distribution: balanced
+}
+
+address {
+    name: override.subctrl
+    prefix: ${DOLLAR}subctrl
+    distribution: balanced
+}
+
+address {
+    name: override.temp
+    prefix: ${DOLLAR}temp
+    distribution: balanced
 }
