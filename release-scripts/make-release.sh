@@ -7,3 +7,4 @@ git tag ${VERSION}
 echo "Press ENTER to push the ${VERSION} branch and tag to GitHub"
 read
 git push -u origin release-${VERSION}
+git push -u origin ${VERSION}
