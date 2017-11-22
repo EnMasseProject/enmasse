@@ -28,6 +28,7 @@ var AddressList = require('./address_list.js');
 var auth_service = require('./auth_service.js');
 var Registry = require('./registry.js');
 var tls_options = require('./tls_options.js');
+var myutils = require('./utils.js');
 
 function ConsoleServer (address_ctrl) {
     this.address_ctrl = address_ctrl;
@@ -59,6 +60,7 @@ function ConsoleServer (address_ctrl) {
             self.unsubscribe(context.connection.remote.open.container_id);
         }
     }
+    var self = this;
     this.amqp_container.on('sender_close', unsubscribe);
     this.amqp_container.on('connection_close', unsubscribe);
     this.amqp_container.on('disconnected', unsubscribe);
@@ -72,7 +74,9 @@ function ConsoleServer (address_ctrl) {
             context.delivery.reject({condition: code || 'amqp:internal-error', description: '' + e});
         };
 
-        if (context.message.subject === 'create_address') {
+        if (!self.authz.has_permission('address-space-admin', context.connection.options.groups)) {
+            reject(context, 'amqp:unauthorized-access', 'not authorized');
+        } else if (context.message.subject === 'create_address') {
             log.info('creating address ' + JSON.stringify(context.message.body));
             self.address_ctrl.create_address(context.message.body).then(accept).catch(reject);
         } else if (context.message.subject === 'delete_address') {
@@ -84,25 +88,37 @@ function ConsoleServer (address_ctrl) {
     });
 }
 
-ConsoleServer.prototype.ws_bind = function (server) {
+ConsoleServer.prototype.ws_bind = function (server, env) {
     var self = this;
-    var ws_server = new WebSocketServer({'server': server, 'path': '/websocket'});
-    ws_server.on('connection', function (ws) {
+    this.ws_server = new WebSocketServer({'server': server, path: '/websocket', verifyClient:function (info, callback) {
+        try {
+            var credentials = myutils.basic_auth(info.req);
+            auth_service.authenticate(credentials, auth_service.default_options(env)).then(function (properties) {
+                self.authz.set_authz_props(info.req, credentials, properties);
+                callback(true);
+            }).catch(function () {
+                callback(false, 401, 'Authorization Required');
+            });
+        } catch (e) {
+            log.error('failed to verify websocket: %s', e);
+            callback(false, 500, 'Authorization Required');
+        }
+    }});
+    this.ws_server.on('connection', function (ws, request) {
         log.info('Accepted incoming websocket connection');
-        self.amqp_container.websocket_accept(ws);
+        self.amqp_container.websocket_accept(ws, self.authz.get_authz_props(request));
     });
 };
 
-function basic_auth(request) {
-    if (request.headers.authorization) {
-        var parts = request.headers.authorization.split(' ');
-        if (parts.length === 2 && parts[0].toLowerCase() === 'basic') {
-            parts = new Buffer(parts[1], 'base64').toString().split(':');
-            return { name: parts[0], pass: parts[1] };
-        } else {
-            throw new Error('Cannot handle authorization header ' + auth);
-        }
-    }
+ConsoleServer.prototype.close = function (callback) {
+    var self = this;
+    return new Promise(function (resolve, reject) {
+        self.ws_server.close(resolve);
+    }).then(function () {
+        new Promise(function (resolve, reject) {
+            self.server.close(resolve);
+        });
+    }).then(callback);
 }
 
 var content_types = {
@@ -125,7 +141,7 @@ function get_content_type(file) {
 }
 
 function static_handler(request, response, transform) {
-    return function () {
+    return function (properties) {
         var file = path.join(__dirname, '../www/', url.parse(request.url).pathname);
         if (file.charAt(file.length - 1) === '/') {
             file += 'index.html';
@@ -174,12 +190,13 @@ function replacer(original, replacement) {
 }
 
 ConsoleServer.prototype.listen = function (env, callback) {
+    this.authz = require('./authz.js').policy(env);
     this.server = get_create_server(env)(function (request, response) {
         if (request.method === 'GET' && request.url === '/probe') {
             response.end('OK');
         } else if (request.method === 'GET') {
             try {
-                var user = basic_auth(request);
+                var user = myutils.basic_auth(request);
                 var transform;
                 if (url.parse(request.url).pathname === '/help.html' && env.MESSAGING_ROUTE_HOSTNAME !== undefined) {
                     transform = replacer('\&lt\;messaging\-route\-hostname\&gt\;', env.MESSAGING_ROUTE_HOSTNAME);
@@ -196,7 +213,7 @@ ConsoleServer.prototype.listen = function (env, callback) {
         }
     });
     this.server.listen(env.port === undefined ? 8080 : env.port, callback);
-    this.ws_bind(this.server);
+    this.ws_bind(this.server, env);
     return this.server;
 };
 
@@ -204,13 +221,17 @@ ConsoleServer.prototype.subscribe = function (name, sender) {
     this.listeners[name] = sender;
     this.addresses.for_each(function (address) {
         sender.send({subject:'address', body:address});
-    });
+    }, this.authz.address_filter(sender.connection));
     this.connections.for_each(function (conn) {
         sender.send({subject:'connection', body:conn});
-    });
+    }, this.authz.connection_filter(sender.connection));
     //TODO: poll for changes in address_types
+    var self = this;
     this.address_ctrl.get_address_types().then(function (address_types) {
-        sender.send({subject:'address_types', application_properties:{address_space_type: process.env.ADDRESS_SPACE_TYPE || 'standard'}, body:address_types});
+        var props = {};
+        props.address_space_type = process.env.ADDRESS_SPACE_TYPE || 'standard';
+        props.disable_admin = !self.authz.has_permission('address-space-admin', sender.connection.options.groups);
+        sender.send({subject:'address_types', application_properties:props, body:address_types});
     }).catch(function (error) {
         log.error('failed to get address types from address controller: %s', error);
     });
@@ -222,7 +243,10 @@ ConsoleServer.prototype.unsubscribe = function (name) {
 
 ConsoleServer.prototype.publish = function (message) {
     for (var name in this.listeners) {
-        this.listeners[name].send(message);
+        var sender = this.listeners[name];
+        if (this.authz.can_publish(sender, message)) {
+            sender.send(message);
+        }
     }
 };
 

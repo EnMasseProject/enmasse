@@ -103,9 +103,11 @@ Registry.prototype.update_existing = function (updates) {
     }
 };
 
-Registry.prototype.for_each = function (f) {
+Registry.prototype.for_each = function (action, filter) {
     for (var key in this.objects) {
-        f(this.objects[key]);
+        if (filter === undefined || filter(this.objects[key])) {
+            action(this.objects[key]);
+        }
     }
 }
 

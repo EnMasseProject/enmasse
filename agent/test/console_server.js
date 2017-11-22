@@ -91,7 +91,7 @@ function define_tests(v, client) {
         }
 
         beforeEach(function(done) {
-            auth_service = new MockAuthService();
+            auth_service = new MockAuthService(undefined , ['address-space-admin']);
             auth_service.listen().on('listening', function () {
                 var options = myutils.merge({port:0, AUTHENTICATION_SERVICE_PORT: auth_service.port}, v === 'https' ? tls_env : {ALLOW_HTTP:true});
                 console_server = new ConsoleServer(new AddressCtrl());
@@ -99,10 +99,18 @@ function define_tests(v, client) {
             });
         });
 
-        function connect() {
+        function authorization_header(user, password) {
+            return {
+                headers: {
+                    'Authorization': 'basic ' + new Buffer(user + ':' +password).toString('base64')
+                }
+            };
+        }
+
+        function connect(ws_options, rhea_options) {
             var scheme = v === 'https' ? 'wss' : 'ws';
             var url = scheme + '://localhost:' + console_server.server.address().port + '/websocket';
-            return rhea.connect({connection_details:ws(url, undefined, http_options())});
+            return rhea.connect(myutils.merge({connection_details:ws(url, undefined, http_options(ws_options || authorization_header('bob','bob')))}, rhea_options || {}));
         }
 
         afterEach(function(done) {
@@ -111,7 +119,7 @@ function define_tests(v, client) {
                     auth_service.close(resolve);
                 }),
                 new Promise(function (resolve, reject) {
-                    console_server.server.close(resolve);
+                    console_server.close(resolve);
                 })
             ]).then(function () {
                 done();
@@ -179,6 +187,17 @@ function define_tests(v, client) {
             });
         });
 
+        it('rejects unauthenticated websocket', function(done) {
+            var connection = connect(authorization_header('foo', 'bar'), {reconnect:false});
+            connection.on('connection_open', function (context) {
+                assert.fail('connection attempt should fail');
+                context.connection.close();
+            });
+            connection.once('disconnected', function () {
+                done();
+            });
+        });
+
         it('sends subscribing client address stats', function(done) {
             console_server.addresses.set({foo: {address:'foo', messages_in:100, messages_out:50}});
             var connection = connect();
@@ -196,6 +215,8 @@ function define_tests(v, client) {
                 done();
             });
         });
+
+
         it('sends subscribing client connection stats', function(done) {
             console_server.connections.set({foo: {container:'foo', messages_in:100, messages_out:50}});
             var connection = connect();
@@ -213,6 +234,8 @@ function define_tests(v, client) {
                 done();
             });
         });
+
+
         it('sends subscribing client notification of deleted address', function(done) {
             console_server.addresses.set({foo: {address:'foo', messages_in:100, messages_out:50}, bar: {address:'bar', messages_in:75, messages_out:80}});
             var connection = connect();
@@ -230,6 +253,7 @@ function define_tests(v, client) {
                 done();
             });
         });
+
         it('sends subscribing client notification of deleted connection', function(done) {
             console_server.connections.set({foo: {id:'foo', messages_in:100, messages_out:50}, bar: {id:'bar', messages_in:75, messages_out:80}});
             var connection = connect();
@@ -247,6 +271,7 @@ function define_tests(v, client) {
                 done();
             });
         });
+
         it('accepts valid address creation requests', function(done) {
             var connection = connect();
             var sender = connection.open_sender();
@@ -259,6 +284,7 @@ function define_tests(v, client) {
                 done();
             });
         });
+
         it('rejects invalid address creation requests', function(done) {
             var connection = connect();
             var sender = connection.open_sender();
@@ -275,6 +301,7 @@ function define_tests(v, client) {
                 done();
             });
         });
+
         it('accepts valid address deletion requests', function(done) {
             console_server.address_ctrl.addresses.foo = {address:'foo',type:'queue',plan:'delete-me'};
             var connection = connect();
@@ -288,6 +315,7 @@ function define_tests(v, client) {
                 done();
             });
         });
+
         it('rejects invalid address deletion requests', function(done) {
             console_server.address_ctrl.addresses.foo = {address:'foo',type:'queue',plan:'delete-me'};
             var connection = connect();
@@ -302,6 +330,7 @@ function define_tests(v, client) {
                 done();
             });
         });
+
         it('rejects unrecognised requests', function(done) {
             var connection = connect();
             var sender = connection.open_sender();
@@ -317,9 +346,171 @@ function define_tests(v, client) {
     });
 }
 
+function define_authz_tests(v, client) {
+    describe(v + ' with authorization policy enabled', function() {
+        var console_server;
+        var auth_service;
+
+        function http_options(options) {
+            if (v === 'https') {
+                return myutils.merge({transport:'tls', rejectUnauthorized:false}, options);
+            } else {
+                return options;
+            }
+        }
+
+        function http_get(options, callback) {
+            client.get(http_options(options), callback);
+        }
+
+        function http_request(options, callback) {
+            return client.request(http_options(options), callback);
+        }
+
+        beforeEach(function(done) {
+            auth_service = new MockAuthService(undefined , ['address-space-admin']);
+            auth_service.listen().on('listening', function () {
+                var options = myutils.merge({port:0, KEYCLOAK_GROUP_PERMISSIONS: true, AUTHENTICATION_SERVICE_PORT: auth_service.port}, v === 'https' ? tls_env : {ALLOW_HTTP:true});
+                console_server = new ConsoleServer(new AddressCtrl());
+                console_server.listen(options, done);
+            });
+        });
+
+        function authorization_header(user, password) {
+            return {
+                headers: {
+                    'Authorization': 'basic ' + new Buffer(user + ':' +password).toString('base64')
+                }
+            };
+        }
+
+        function connect(ws_options, rhea_options) {
+            var scheme = v === 'https' ? 'wss' : 'ws';
+            var url = scheme + '://localhost:' + console_server.server.address().port + '/websocket';
+            return rhea.connect(myutils.merge({connection_details:ws(url, undefined, http_options(ws_options || authorization_header('bob','bob')))}, rhea_options || {}));
+        }
+
+        afterEach(function(done) {
+            Promise.all([
+                new Promise(function (resolve, reject) {
+                    auth_service.close(resolve);
+                }),
+                new Promise(function (resolve, reject) {
+                    console_server.close(resolve);
+                })
+            ]).then(function () {
+                done();
+            });
+        });
+
+        it('does not send subscribing client unauthorized address stats', function(done) {
+            auth_service.groups= ['view_bar'];
+            console_server.addresses.set({foo: {address:'foo', messages_in:100, messages_out:50},
+                                          bar: {address:'bar', messages_in:99, messages_out:82}});
+            var connection = connect();
+            var receiver = connection.open_receiver();
+            var count = 0;
+            receiver.on('message', function (context) {
+                if (context.message.subject === 'address') {
+                    if (count === 0) {
+                        assert.equal(context.message.body.address, 'bar');
+                        assert.equal(context.message.body.messages_in, 99);
+                        assert.equal(context.message.body.messages_out, 82);
+                        console_server.addresses.update('foo', {address:'foo', messages_in:200, messages_out:50});
+                        console_server.addresses.update('bar', {address:'bar', messages_in:100, messages_out:100});
+                        count++;
+                    } else if (count === 1) {
+                        assert.equal(context.message.body.address, 'bar');
+                        assert.equal(context.message.body.messages_in, 100);
+                        assert.equal(context.message.body.messages_out, 100);
+                        connection.close();
+                    };
+                }
+            });
+            connection.on('connection_close', function () {
+                done();
+            });
+        });
+
+        it('does not send subscribing client unauthorized connection stats', function(done) {
+            auth_service.groups = ['banana'];
+            console_server.connections.set({foo: {container:'foo', messages_in:100, messages_out:50},
+                                            con1: {container:'con1', user:'bob', messages_in:1, messages_out:2},
+                                            bar: {container:'bar', user:'another', messages_in:3, messages_out:4}});
+            var connection = connect();
+            var receiver = connection.open_receiver();
+            receiver.on('message', function (context) {
+                if (context.message.subject === 'connection') {
+                    receiver.close();
+                    connection.close();
+                }
+            });
+            var count = 0;
+            receiver.on('message', function (context) {
+                if (context.message.subject === 'connection') {
+                    if (count === 0) {
+                        assert.equal(context.message.body.container, 'con1');
+                        assert.equal(context.message.body.messages_in, 1);
+                        assert.equal(context.message.body.messages_out, 2);
+                        console_server.addresses.update('foo', {container:'foo', messages_in:200, messages_out:51});
+                        console_server.addresses.update('bar', {container:'bar', user:'another', messages_in:100, messages_out:100});
+                        console_server.addresses.update('con1', {container:'con1', user:'bob', messages_in:6, messages_out:7});
+                        count++;
+                    } else if (count === 1) {
+                        assert.equal(context.message.body.container, 'con1');
+                        assert.equal(context.message.body.messages_in, 6);
+                        assert.equal(context.message.body.messages_out, 7);
+                        connection.close();
+                    };
+                }
+            });
+            connection.on('connection_close', function () {
+                done();
+            });
+        });
+
+        it('rejects unauthorized address creation requests', function(done) {
+            var connection = connect({});
+            connection.on('accepted', function (context) {
+                assert.fail('request should fail');
+                context.connection.close();
+            });
+            connection.on('rejected', function (context) {
+                context.connection.close();
+            });
+            var sender = connection.open_sender();
+            sender.send({subject:'create_address', body:{address:'foo',type:'queue',plan:'standard'}});
+            connection.once('connection_close', function () {
+                assert.equal(console_server.address_ctrl.addresses.foo, undefined);
+                done();
+            });
+        });
+
+        it('rejects unauthorized address deletion requests', function(done) {
+            var foo = {address:'foo',type:'queue',plan:'delete-me'};
+            console_server.address_ctrl.addresses.foo = foo;
+            var connection = connect({});
+            connection.on('accepted', function (context) {
+                assert.fail('request should fail');
+                context.connection.close();
+            });
+            connection.on('rejected', function (context) {
+                context.connection.close();
+            });
+            var sender = connection.open_sender();
+            sender.send({subject:'delete_address', body:foo});
+            connection.once('connection_close', function () {
+                assert.deepEqual(console_server.address_ctrl.addresses.foo, foo);
+                done();
+            });
+        });
+    });
+}
+
 var configs = {'https':https, 'http':http};
 for (var v in configs) {
     define_tests(v, configs[v]);
+    define_authz_tests(v, configs[v]);
 }
 
 describe('online help', function() {

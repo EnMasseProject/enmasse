@@ -45,3 +45,15 @@ module.exports.merge = function () {
         return a;
     });
 }
+
+module.exports.basic_auth = function (request) {
+    if (request.headers.authorization) {
+        var parts = request.headers.authorization.split(' ');
+        if (parts.length === 2 && parts[0].toLowerCase() === 'basic') {
+            parts = new Buffer(parts[1], 'base64').toString().split(':');
+            return { name: parts[0], pass: parts[1] };
+        } else {
+            throw new Error('Cannot handle authorization header ' + auth);
+        }
+    }
+}

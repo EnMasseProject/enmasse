@@ -3,10 +3,10 @@
   <div class="row col-md-12">
     <div pf-toolbar id="exampleToolbar" config="toolbarConfig">
       <actions>
-        <button class="btn btn-default primary-action" type="button" ng-controller="WizardModalController" ng-click="openWizardModel()">
+        <button class="btn btn-default primary-action" type="button" ng-disabled=admin_disabled ng-controller="WizardModalController" ng-click="openWizardModel()">
           <span class="fa fa-plus"></span> Create
         </button>
-        <button class="btn btn-default primary-action" type="button" ng-click="delete_address()">
+        <button class="btn btn-default primary-action" ng-disabled=admin_disabled type="button" ng-click="delete_address()">
           Delete
         </button>
       </actions>

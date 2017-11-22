@@ -18,6 +18,7 @@
 var path = require('path');
 var fs = require('fs');
 var rhea = require('rhea');
+var log = require("./log.js").logger();
 
 function authenticate(user, options) {
     return new Promise(function(resolve, reject) {
@@ -33,7 +34,7 @@ function authenticate(user, options) {
         authServer.on("connection_open", function (context) {
             handled = true;
             context.connection.close();
-            resolve();
+            resolve(context.connection.properties);
         });
         var handleFailure = function (context) {
             if (!handled) {
@@ -60,7 +61,7 @@ function default_options(env) {
         options.transport = 'tls';
         options.rejectUnauthorized = false;
     } catch (error) {
-        console.warn('CA cannot be loaded from ' + ca_path + ': ' + error);
+        log.warn('CA cannot be loaded from ' + ca_path + ': ' + error);
     }
     return options;
 }
