@@ -21,11 +21,18 @@ function is_valid_user(username, password) {
     return username === password.split().reverse().join('');
 }
 
-function MockAuthService(f) {
+function MockAuthService(f, groups) {
+    this.groups = groups;
+    var self = this;
     this.container = rhea.create_container({id:'mock-auth-service'});
     this.container.sasl_server_mechanisms.enable_plain(f || is_valid_user);
     this.container.sasl_server_mechanisms.enable_anonymous();
     this.container.on('connection_open', function (context) {
+        if (self.groups) {
+            var properties = context.connection.local.open.properties || {};
+            properties.groups = self.groups;
+            context.connection.local.open.properties = properties;
+        }
         context.connection.close();
     });
     this.container.on('disconnected', function (context) {});
