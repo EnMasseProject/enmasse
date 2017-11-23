@@ -75,6 +75,7 @@ public class AmqpClientFactory {
     }
 
     public AmqpClient createClient(TerminusFactory terminusFactory, ProtonQoS qos, AddressSpace addressSpace) throws UnknownHostException, InterruptedException {
+        assert(addressSpace != null);
         if (environment.useTLS()) {
             Endpoint messagingEndpoint = openShift.getRouteEndpoint(addressSpace.getNamespace(), "messaging");
             Endpoint clientEndpoint;
