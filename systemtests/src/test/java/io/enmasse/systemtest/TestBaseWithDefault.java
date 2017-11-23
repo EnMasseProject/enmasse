@@ -100,8 +100,9 @@ public abstract class TestBaseWithDefault extends TestBase {
         if (m.find()) {
             int suffix = Integer.valueOf(m.group(2)) + 1; //number of created default brokered address space + 1
             defaultAddressSpace = new AddressSpace(getAddressSpaceType().name().toLowerCase() + defaultAddressTemplate + suffix, getAddressSpaceType());
+        } else {
+            throw new IllegalStateException("Wrong name of default brokered address space! Didn't match reg exp: " + regExp);
         }
-        throw new IllegalStateException("Wrong name of default brokered address space! Didn't match reg exp: " + regExp);
     }
 
     protected void scale(Destination destination, int numReplicas) throws Exception {
