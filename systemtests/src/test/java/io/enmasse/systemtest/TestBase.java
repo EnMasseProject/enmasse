@@ -67,8 +67,8 @@ public abstract class TestBase extends SystemTestRunListener {
     @Before
     public void setup() throws Exception {
         addressSpaceList = new ArrayList<>();
-        amqpClientFactory = new AmqpClientFactory(openShift, environment, getSharedAddressSpace(), username, password);
-        mqttClientFactory = new MqttClientFactory(openShift, environment, getSharedAddressSpace(), username, password);
+        amqpClientFactory = new AmqpClientFactory(openShift, environment, null, username, password);
+        mqttClientFactory = new MqttClientFactory(openShift, environment, null, username, password);
     }
 
     @After
