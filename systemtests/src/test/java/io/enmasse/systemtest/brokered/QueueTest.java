@@ -23,9 +23,9 @@ public class QueueTest extends BrokeredTestBase {
     @Test
     public void messageGroupTest() throws Exception {
         Destination dest = Destination.queue("messageGroupQueue");
-        setAddresses(defaultBrokeredAddressSpace, dest);
+        setAddresses(defaultAddressSpace, dest);
 
-        AmqpClient client = amqpClientFactory.createQueueClient(defaultBrokeredAddressSpace);
+        AmqpClient client = amqpClientFactory.createQueueClient(defaultAddressSpace);
         client.getConnectOptions().setUsername("test").setPassword("test");
 
         int msgsCount = 20;

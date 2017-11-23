@@ -1,14 +1,11 @@
 package io.enmasse.systemtest.brokered.clients;
 
-import io.enmasse.systemtest.AddressSpace;
-import io.enmasse.systemtest.AddressSpaceType;
 import io.enmasse.systemtest.ClientTestBase;
 import io.enmasse.systemtest.Destination;
 import io.enmasse.systemtest.executor.client.AbstractClient;
 import io.enmasse.systemtest.executor.client.Argument;
 import org.junit.Before;
 
-import javax.validation.constraints.AssertTrue;
 import java.util.Random;
 import java.util.concurrent.Future;
 
@@ -28,9 +25,9 @@ public class MsgPatternsTest extends ClientTestBase {
     protected void doBasicMessageTest(AbstractClient sender, AbstractClient receiver) throws Exception {
 
         Destination dest = Destination.queue("message-basic");
-        setAddresses(defaultBrokeredAddressSpace, dest);
+        setAddresses(defaultAddressSpace, dest);
 
-        arguments.put(Argument.BROKER, getRouteEndpoint(defaultBrokeredAddressSpace).toString());
+        arguments.put(Argument.BROKER, getRouteEndpoint(defaultAddressSpace).toString());
         arguments.put(Argument.ADDRESS, dest.getAddress());
         arguments.put(Argument.COUNT, "10");
 
@@ -47,9 +44,9 @@ public class MsgPatternsTest extends ClientTestBase {
     protected void doRoundRobinReceiverTest(AbstractClient sender, AbstractClient receiver, AbstractClient receiver2)
             throws Exception {
         Destination dest = Destination.queue("receiver-round-robin");
-        setAddresses(defaultBrokeredAddressSpace, dest);
+        setAddresses(defaultAddressSpace, dest);
 
-        arguments.put(Argument.BROKER, getRouteEndpoint(defaultBrokeredAddressSpace).toString());
+        arguments.put(Argument.BROKER, getRouteEndpoint(defaultAddressSpace).toString());
         arguments.put(Argument.ADDRESS, dest.getAddress());
         arguments.put(Argument.COUNT, "5");
 
@@ -76,9 +73,9 @@ public class MsgPatternsTest extends ClientTestBase {
     protected void doTopicSubscribeTest(AbstractClient sender, AbstractClient subscriber, AbstractClient subscriber2)
             throws Exception {
         Destination dest = Destination.topic("topic-subscribe");
-        setAddresses(defaultBrokeredAddressSpace, dest);
+        setAddresses(defaultAddressSpace, dest);
 
-        arguments.put(Argument.BROKER, getRouteEndpoint(defaultBrokeredAddressSpace).toString());
+        arguments.put(Argument.BROKER, getRouteEndpoint(defaultAddressSpace).toString());
         arguments.put(Argument.ADDRESS, dest.getAddress());
         arguments.put(Argument.COUNT, "10");
 
@@ -101,9 +98,9 @@ public class MsgPatternsTest extends ClientTestBase {
     protected void doMessageBrowseTest(AbstractClient sender, AbstractClient receiver_browse, AbstractClient receiver_receive)
             throws Exception {
         Destination dest = Destination.queue("message-browse");
-        setAddresses(defaultBrokeredAddressSpace, dest);
+        setAddresses(defaultAddressSpace, dest);
 
-        arguments.put(Argument.BROKER, getRouteEndpoint(defaultBrokeredAddressSpace).toString());
+        arguments.put(Argument.BROKER, getRouteEndpoint(defaultAddressSpace).toString());
         arguments.put(Argument.ADDRESS, dest.getAddress());
         arguments.put(Argument.COUNT, "10");
 
@@ -126,11 +123,11 @@ public class MsgPatternsTest extends ClientTestBase {
 
     protected void doDrainQueueTest(AbstractClient sender, AbstractClient receiver) throws Exception {
         Destination dest = Destination.queue("drain-queue");
-        setAddresses(defaultBrokeredAddressSpace, dest);
+        setAddresses(defaultAddressSpace, dest);
 
         int count = new Random().nextInt(200 - 10) + 10;
 
-        arguments.put(Argument.BROKER, getRouteEndpoint(defaultBrokeredAddressSpace).toString());
+        arguments.put(Argument.BROKER, getRouteEndpoint(defaultAddressSpace).toString());
         arguments.put(Argument.ADDRESS, dest.getAddress());
         arguments.put(Argument.COUNT, Integer.toString(count));
 
@@ -148,9 +145,9 @@ public class MsgPatternsTest extends ClientTestBase {
 
     protected void doMessageSelectorQueueTest(AbstractClient sender, AbstractClient receiver) throws Exception{
         Destination queue = Destination.queue("selector-queue");
-        setAddresses(defaultBrokeredAddressSpace, queue);
+        setAddresses(defaultAddressSpace, queue);
 
-        arguments.put(Argument.BROKER, getRouteEndpoint(defaultBrokeredAddressSpace).toString());
+        arguments.put(Argument.BROKER, getRouteEndpoint(defaultAddressSpace).toString());
         arguments.put(Argument.COUNT, "10");
         arguments.put(Argument.ADDRESS, queue.getAddress());
         arguments.put(Argument.MSG_PROPERTY, "colour~red");
@@ -197,9 +194,9 @@ public class MsgPatternsTest extends ClientTestBase {
     protected void doMessageSelectorTopicTest(AbstractClient sender, AbstractClient subscriber,
                                               AbstractClient subscriber2, AbstractClient subscriber3) throws Exception{
         Destination topic = Destination.topic("selector-topic");
-        setAddresses(defaultBrokeredAddressSpace, topic);
+        setAddresses(defaultAddressSpace, topic);
 
-        arguments.put(Argument.BROKER, getRouteEndpoint(defaultBrokeredAddressSpace).toString());
+        arguments.put(Argument.BROKER, getRouteEndpoint(defaultAddressSpace).toString());
         arguments.put(Argument.COUNT, "10");
         arguments.put(Argument.ADDRESS, topic.getAddress());
         arguments.put(Argument.MSG_PROPERTY, "colour~red");

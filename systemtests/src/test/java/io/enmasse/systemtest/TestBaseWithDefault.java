@@ -39,30 +39,25 @@ public abstract class TestBaseWithDefault extends TestBase {
     public TestWatcher watcher = new TestWatcher() {
         @Override
         protected void failed(Throwable e, Description description) {
-            Logging.log.info("test failed:" + description);
-            if (getSharedAddressSpace() != null) {
-                Logging.log.info("default address space '{}' will be removed", defaultAddressSpace);
-                try {
-                    deleteAddressSpace(defaultAddressSpace);
-                    initializeSharedAddressSpace();
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                }
-            }
+        Logging.log.info("test failed:" + description);
+        Logging.log.info("default address space '{}' will be removed", defaultAddressSpace);
+        try {
+            deleteAddressSpace(defaultAddressSpace);
+            initializeSharedAddressSpace();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
         }
     };
 
     @Override
     public void testRunFinished(Result result) throws Exception {
         try {
-            if (getSharedAddressSpace() != null) {
-                deleteAddressSpace(getSharedAddressSpace());
-            }
+            deleteAddressSpace(defaultAddressSpace);
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
-
 
     public AddressSpace getSharedAddressSpace() {
         return defaultAddressSpace;
@@ -71,14 +66,14 @@ public abstract class TestBaseWithDefault extends TestBase {
     @Before
     public void setupDefault() throws Exception {
         Logging.log.info("Test is running in multitenant mode");
-        createAddressSpace(getSharedAddressSpace(), environment.defaultAuthService());
+        createAddressSpace(defaultAddressSpace, environment.defaultAuthService());
         // TODO: Wait another minute so that all services are connected
         Logging.log.info("Waiting for 2 minutes before starting tests");
 
         if ("standard".equals(environment.defaultAuthService())) {
             this.username = "systemtest";
             this.password = "systemtest";
-            getKeycloakClient().createUser(getSharedAddressSpace().getName(), username, password, 1, TimeUnit.MINUTES);
+            getKeycloakClient().createUser(defaultAddressSpace.getName(), username, password, 1, TimeUnit.MINUTES);
         }
     }
 
@@ -89,7 +84,7 @@ public abstract class TestBaseWithDefault extends TestBase {
 
 
     /**
-     * initialize new defaultBrokeredAddressSpace with new name due to collecting logs
+     * initialize new defaultAddressSpace with new name due to collecting logs
      */
     private void initializeSharedAddressSpace() {
         String regExp = "^(.*)-([0-9]+)";

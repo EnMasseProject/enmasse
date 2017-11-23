@@ -37,16 +37,16 @@ public class SmokeTest extends BrokeredTestBase {
     @Test
     public void testAddressTypes() throws Exception {
         Destination queueA = Destination.queue("brokeredQueueA");
-        setAddresses(defaultBrokeredAddressSpace, queueA);
+        setAddresses(defaultAddressSpace, queueA);
 
-        AmqpClient amqpQueueCli = amqpClientFactory.createQueueClient(defaultBrokeredAddressSpace);
+        AmqpClient amqpQueueCli = amqpClientFactory.createQueueClient(defaultAddressSpace);
         amqpQueueCli.getConnectOptions().setUsername("test").setPassword("test");
         QueueTest.runQueueTest(amqpQueueCli, queueA);
 
         Destination topicB = Destination.topic("brokeredTopicB");
-        setAddresses(defaultBrokeredAddressSpace, topicB);
+        setAddresses(defaultAddressSpace, topicB);
 
-        AmqpClient amqpTopicCli = amqpClientFactory.createTopicClient(defaultBrokeredAddressSpace);
+        AmqpClient amqpTopicCli = amqpClientFactory.createTopicClient(defaultAddressSpace);
         amqpTopicCli.getConnectOptions().setUsername("test").setPassword("test");
         List<Future<List<Message>>> recvResults = Arrays.asList(
                 amqpTopicCli.recvMessages(topicB.getAddress(), 1000),

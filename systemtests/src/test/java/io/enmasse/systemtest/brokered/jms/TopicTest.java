@@ -38,9 +38,9 @@ public class TopicTest extends JMSTestBase {
     @Before
     public void setUp() throws Exception {
         addressTopic = Destination.topic(topic);
-        setAddresses(defaultBrokeredAddressSpace, addressTopic);
+        setAddresses(defaultAddressSpace, addressTopic);
 
-        env = setUpEnv("amqps://" + getRouteEndpoint(defaultBrokeredAddressSpace).toString(), jmsUsername, jmsPassword, jmsClientID,
+        env = setUpEnv("amqps://" + getRouteEndpoint(defaultAddressSpace).toString(), jmsUsername, jmsPassword, jmsClientID,
                 new HashMap<String, String>() {{
                     put("topic." + topic, topic);
                 }});
@@ -64,7 +64,7 @@ public class TopicTest extends JMSTestBase {
     }
 
     protected Context createContextForShared() throws JMSException, NamingException {
-        Hashtable env2 = setUpEnv("amqps://" + getRouteEndpoint(defaultBrokeredAddressSpace).toString(), jmsUsername, jmsPassword,
+        Hashtable env2 = setUpEnv("amqps://" + getRouteEndpoint(defaultAddressSpace).toString(), jmsUsername, jmsPassword,
                 new HashMap<String, String>() {{
                     put("topic." + topic, topic);
                 }});
