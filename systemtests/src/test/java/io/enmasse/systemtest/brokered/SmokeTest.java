@@ -17,7 +17,6 @@ package io.enmasse.systemtest.brokered;
 
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.amqp.AmqpClient;
-import io.enmasse.systemtest.amqp.AmqpClientFactory;
 import io.enmasse.systemtest.standard.QueueTest;
 import org.apache.qpid.proton.message.Message;
 import org.junit.Test;
@@ -30,7 +29,7 @@ import java.util.concurrent.TimeUnit;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
-public class SmokeTest extends MultiTenantTestBase {
+public class SmokeTest extends BrokeredTestBase {
 
     /**
      * related github issue: #335
@@ -76,8 +75,7 @@ public class SmokeTest extends MultiTenantTestBase {
         Destination queueB = Destination.queue("brokeredQueueB");
         setAddresses(addressSpaceA, queueB);
 
-        AmqpClientFactory amqpFactoryA = createAmqpClientFactory(addressSpaceA);
-        AmqpClient amqpQueueCliA = amqpFactoryA.createQueueClient(addressSpaceA);
+        AmqpClient amqpQueueCliA = amqpClientFactory.createQueueClient(addressSpaceA);
         amqpQueueCliA.getConnectOptions().setUsername("test").setPassword("test");
         QueueTest.runQueueTest(amqpQueueCliA, queueB);
 
@@ -87,8 +85,7 @@ public class SmokeTest extends MultiTenantTestBase {
                 AddressSpaceType.BROKERED);
         createAddressSpace(addressSpaceC, "none");
         setAddresses(addressSpaceC, queueB);
-        AmqpClientFactory amqpFactoryC = createAmqpClientFactory(addressSpaceC);
-        AmqpClient amqpQueueCliC = amqpFactoryC.createQueueClient(addressSpaceC);
+        AmqpClient amqpQueueCliC = amqpClientFactory.createQueueClient(addressSpaceC);
         amqpQueueCliC.getConnectOptions().setUsername("test").setPassword("test");
         QueueTest.runQueueTest(amqpQueueCliC, queueB);
 

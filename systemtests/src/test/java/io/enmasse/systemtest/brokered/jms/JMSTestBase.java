@@ -1,7 +1,7 @@
 package io.enmasse.systemtest.brokered.jms;
 
 import io.enmasse.systemtest.Logging;
-import io.enmasse.systemtest.MultiTenantTestBase;
+import io.enmasse.systemtest.BrokeredTestBase;
 
 import javax.jms.*;
 import javax.naming.Context;
@@ -15,7 +15,7 @@ import java.util.stream.IntStream;
 
 import static org.junit.Assert.assertTrue;
 
-public class JMSTestBase extends MultiTenantTestBase {
+public class JMSTestBase extends BrokeredTestBase {
 
     protected Hashtable<Object, Object> setUpEnv(String url, String username, String password, Map<String, String> prop) {
         return setUpEnv(url, username, password, "", prop);

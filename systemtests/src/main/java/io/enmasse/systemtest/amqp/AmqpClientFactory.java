@@ -93,7 +93,7 @@ public class AmqpClientFactory {
 
             return createClient(terminusFactory, clientEndpoint, clientOptions, qos);
         } else {
-            return createClient(terminusFactory, openShift.getEndpoint(addressSpace.getNamespace(), "messaging"), qos);
+            return createClient(terminusFactory, openShift.getEndpoint(addressSpace.getNamespace(), "messaging", "amqps"), qos);
         }
     }
 

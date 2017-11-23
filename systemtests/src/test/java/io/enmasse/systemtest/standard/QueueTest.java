@@ -34,7 +34,7 @@ import java.util.stream.IntStream;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.*;
 
-public class QueueTest extends TestBase {
+public class QueueTest extends StandardTestBase {
 
     @Test
     public void testColocatedQueues() throws Exception {

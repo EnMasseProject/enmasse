@@ -35,13 +35,11 @@ public class QueueTest extends MarathonTestBase{
         }
         setAddresses(addressSpace, queueList.toArray(new Destination[0]));
 
-        AmqpClientFactory amqpFactory = createAmqpClientFactory(addressSpace);
-
         List<String> msgBatch = TestUtils.generateMessages(msgCount);
 
         runTestInLoop(30, () -> {
             //create client
-            AmqpClient client = amqpFactory.createQueueClient(addressSpace);
+            AmqpClient client = amqpClientFactory.createQueueClient(addressSpace);
             client.getConnectOptions().setUsername("test").setPassword("test");
 
             //attach receivers

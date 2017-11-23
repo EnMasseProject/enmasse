@@ -2,19 +2,15 @@ package io.enmasse.systemtest.marathon;
 
 import io.enmasse.systemtest.AddressSpace;
 import io.enmasse.systemtest.Logging;
-import io.enmasse.systemtest.MultiTenantTestBase;
+import io.enmasse.systemtest.BrokeredTestBase;
+import io.enmasse.systemtest.TestBase;
 import org.junit.Rule;
 import org.junit.rules.ErrorCollector;
 
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
-public class MarathonTestBase extends MultiTenantTestBase {
-
-    @Override
-    protected AddressSpace getDefaultAddressSpace() {
-        return null;
-    }
+public class MarathonTestBase extends TestBase {
 
     @Rule
     public ErrorCollector collector = new ErrorCollector();

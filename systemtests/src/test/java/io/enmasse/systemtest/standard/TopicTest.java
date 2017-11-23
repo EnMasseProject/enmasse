@@ -16,10 +16,7 @@
 
 package io.enmasse.systemtest.standard;
 
-import io.enmasse.systemtest.Destination;
-import io.enmasse.systemtest.Logging;
-import io.enmasse.systemtest.TestBase;
-import io.enmasse.systemtest.TestUtils;
+import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.TopicTerminusFactory;
 
@@ -40,7 +37,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
-public class TopicTest extends TestBase {
+public class TopicTest extends StandardTestBase {
 
     public void testInmemoryTopics() throws Exception {
         Destination t1 = Destination.topic("inMemoryTopic", Optional.of("inmemory"));

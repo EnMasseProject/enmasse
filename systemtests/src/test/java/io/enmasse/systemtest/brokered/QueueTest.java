@@ -1,7 +1,7 @@
 package io.enmasse.systemtest.brokered;
 
 import io.enmasse.systemtest.Destination;
-import io.enmasse.systemtest.MultiTenantTestBase;
+import io.enmasse.systemtest.BrokeredTestBase;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.message.Message;
@@ -15,7 +15,7 @@ import java.util.concurrent.TimeUnit;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.*;
 
-public class QueueTest extends MultiTenantTestBase {
+public class QueueTest extends BrokeredTestBase {
 
     /**
      * related github issue: #387

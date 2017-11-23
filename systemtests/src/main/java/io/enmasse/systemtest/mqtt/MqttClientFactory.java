@@ -103,7 +103,7 @@ public class MqttClientFactory {
             }
 
         } else {
-            mqttEndpoint = this.openShift.getEndpoint("mqtt", "mqtt");
+            mqttEndpoint = this.openShift.getEndpoint(addressSpace.getNamespace(),"mqtt", "mqtt");
         }
 
         if (username != null && password != null) {

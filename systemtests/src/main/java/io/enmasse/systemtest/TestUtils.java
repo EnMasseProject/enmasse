@@ -31,7 +31,7 @@ import java.util.stream.IntStream;
 
 public class TestUtils {
     public static void setReplicas(OpenShift openShift, AddressSpace addressSpace, Destination destination, int numReplicas, TimeoutBudget budget) throws InterruptedException {
-        openShift.setDeploymentReplicas(destination.getGroup(), numReplicas);
+        openShift.setDeploymentReplicas(addressSpace.getNamespace(), destination.getGroup(), numReplicas);
         waitForNReplicas(
                 openShift,
                 addressSpace.getNamespace(),

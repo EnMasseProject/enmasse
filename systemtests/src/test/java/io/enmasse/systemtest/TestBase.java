@@ -48,10 +48,9 @@ import static org.junit.Assert.fail;
 public abstract class TestBase extends SystemTestRunListener {
 
     protected static final Environment environment = new Environment();
-    private static final AddressSpace defaultAddressSpace = environment.isMultitenant() ? new AddressSpace("testspace", "testspace")
-            : new AddressSpace("default", environment.namespace());
 
-    protected static final OpenShift openShift = new OpenShift(environment, environment.namespace(), defaultAddressSpace.getNamespace());
+
+    protected static final OpenShift openShift = new OpenShift(environment, environment.namespace());
     private static final GlobalLogCollector logCollector = new GlobalLogCollector(openShift,
             new File(environment.testLogDir()));
     protected static final AddressApiClient addressApiClient = new AddressApiClient(openShift);
@@ -61,31 +60,15 @@ public abstract class TestBase extends SystemTestRunListener {
     protected String password;
     protected AmqpClientFactory amqpClientFactory;
     protected MqttClientFactory mqttClientFactory;
-    private List<AddressSpace> addressSpaceList = new ArrayList<>();
+    protected List<AddressSpace> addressSpaceList = new ArrayList<>();
 
-    protected AddressSpace getDefaultAddressSpace() {
-        return defaultAddressSpace;
-    }
+    protected AddressSpace getSharedAddressSpace() { return null; }
 
     @Before
     public void setup() throws Exception {
         addressSpaceList = new ArrayList<>();
-        if (getDefaultAddressSpace() != null) {
-            if (environment.isMultitenant()) {
-                Logging.log.info("Test is running in multitenant mode");
-                createAddressSpace(getDefaultAddressSpace(), environment.defaultAuthService());
-                // TODO: Wait another minute so that all services are connected
-                Logging.log.info("Waiting for 2 minutes before starting tests");
-            }
-
-            if ("standard".equals(environment.defaultAuthService())) {
-                this.username = "systemtest";
-                this.password = "systemtest";
-                getKeycloakClient().createUser(getDefaultAddressSpace().getName(), username, password, 1, TimeUnit.MINUTES);
-            }
-        }
-        amqpClientFactory = new AmqpClientFactory(openShift, environment, getDefaultAddressSpace(), username, password);
-        mqttClientFactory = new MqttClientFactory(openShift, environment, getDefaultAddressSpace(), username, password);
+        amqpClientFactory = new AmqpClientFactory(openShift, environment, getSharedAddressSpace(), username, password);
+        mqttClientFactory = new MqttClientFactory(openShift, environment, getSharedAddressSpace(), username, password);
     }
 
     @After
@@ -93,31 +76,29 @@ public abstract class TestBase extends SystemTestRunListener {
         mqttClientFactory.close();
         amqpClientFactory.close();
 
-        if (getDefaultAddressSpace() != null) {
-            setAddresses();
-        }
         for (AddressSpace addressSpace : addressSpaceList) {
             deleteAddressSpace(addressSpace);
         }
+
         addressSpaceList.clear();
     }
 
-    protected AddressSpace createAddressSpace(AddressSpace addressSpace, String authService) throws Exception {
+    protected void createAddressSpace(AddressSpace addressSpace, String authService) throws Exception {
         if (!TestUtils.existAddressSpace(addressApiClient, addressSpace.getName())) {
             Logging.log.info("Address space '" + addressSpace + "' doesn't exist and will be created.");
             addressApiClient.createAddressSpace(addressSpace, authService);
             logCollector.startCollecting(addressSpace.getNamespace());
             TestUtils.waitForAddressSpaceReady(addressApiClient, addressSpace.getName());
-            if (addressSpace.equals(getDefaultAddressSpace())) {
+            if (addressSpace.getType().equals(AddressSpaceType.STANDARD)) {
                 Thread.sleep(120_000);
             }
-            if (!addressSpace.getName().equals(getDefaultAddressSpace().getName())) {
+
+            if (!addressSpace.equals(getSharedAddressSpace())) {
                 addressSpaceList.add(addressSpace);
             }
         } else {
             Logging.log.info("Address space '" + addressSpace + "' already exists.");
         }
-        return addressSpace;
     }
 
     protected void deleteAddressSpace(AddressSpace addressSpace) throws Exception {
@@ -144,28 +125,8 @@ public abstract class TestBase extends SystemTestRunListener {
         return keycloakApiClient;
     }
 
-    /**
-     * use DELETE html method for delete specific addresses
-     *
-     * @param destinations
-     * @throws Exception
-     */
-    protected void deleteAddresses(Destination... destinations) throws Exception {
-        deleteAddresses(getDefaultAddressSpace(), destinations);
-    }
-
     protected void deleteAddresses(AddressSpace addressSpace, Destination... destinations) throws Exception {
         TestUtils.delete(addressApiClient, addressSpace, destinations);
-    }
-
-    /**
-     * use POST html method to append addresses to already existing addresses
-     *
-     * @param destinations
-     * @throws Exception
-     */
-    protected void appendAddresses(Destination... destinations) throws Exception {
-        appendAddresses(getDefaultAddressSpace(), destinations);
     }
 
     protected void appendAddresses(AddressSpace addressSpace, Destination... destinations) throws Exception {
@@ -173,15 +134,6 @@ public abstract class TestBase extends SystemTestRunListener {
         TestUtils.deploy(addressApiClient, openShift, budget, addressSpace, HttpMethod.POST, destinations);
     }
 
-    /**
-     * use PUT html method to replace all addresses
-     *
-     * @param destinations
-     * @throws Exception
-     */
-    protected void setAddresses(Destination... destinations) throws Exception {
-        setAddresses(getDefaultAddressSpace(), destinations);
-    }
 
     protected void setAddresses(AddressSpace addressSpace, Destination... destinations) throws Exception {
         TimeoutBudget budget = new TimeoutBudget(5, TimeUnit.MINUTES);
@@ -195,17 +147,11 @@ public abstract class TestBase extends SystemTestRunListener {
      * @return list of addresses
      * @throws Exception
      */
-    protected Future<List<String>> getAddresses(Optional<String> addressName) throws Exception {
-        return getAddresses(getDefaultAddressSpace(), addressName);
-    }
 
     protected Future<List<String>> getAddresses(AddressSpace addressSpace, Optional<String> addressName) throws Exception {
         return TestUtils.getAddresses(addressApiClient, addressSpace, addressName);
     }
 
-    protected void scale(Destination destination, int numReplicas) throws Exception {
-        scale(getDefaultAddressSpace(), destination, numReplicas);
-    }
 
     protected void scale(AddressSpace addressSpace, Destination destination, int numReplicas) throws Exception {
         TimeoutBudget budget = new TimeoutBudget(5, TimeUnit.MINUTES);
@@ -231,16 +177,6 @@ public abstract class TestBase extends SystemTestRunListener {
             throw new IllegalArgumentException("'numReplicas' must be greater than 0");
         }
 
-    }
-
-    protected AmqpClientFactory createAmqpClientFactory(AddressSpace addressSpace) {
-        return new AmqpClientFactory(new OpenShift(environment, environment.namespace(), addressSpace.getNamespace()),
-                environment, addressSpace, username, password);
-    }
-
-    protected MqttClientFactory createMqttClientFactory(AddressSpace addressSpace) {
-        return new MqttClientFactory(new OpenShift(environment, environment.namespace(), addressSpace.getNamespace()),
-                environment, addressSpace, username, password);
     }
 
     protected boolean isBrokered(AddressSpace addressSpace) throws Exception{
@@ -338,5 +274,9 @@ public abstract class TestBase extends SystemTestRunListener {
         Future<Integer> sent = client.sendMessages(topicAddress, Arrays.asList("msg1"), 10, TimeUnit.SECONDS);
 
         return (sent.get(1, TimeUnit.MINUTES) == received.get(1, TimeUnit.MINUTES).size());
+    }
+
+    protected Endpoint getRouteEndpoint(AddressSpace addressSpace) {
+        return openShift.getRouteEndpoint(addressSpace.getNamespace(), "messaging");
     }
 }

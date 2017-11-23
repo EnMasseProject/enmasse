@@ -17,6 +17,7 @@
 package io.enmasse.systemtest.standard;
 
 import io.enmasse.systemtest.Destination;
+import io.enmasse.systemtest.StandardTestBase;
 import io.enmasse.systemtest.TestBase;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import org.apache.qpid.proton.message.Message;
@@ -30,7 +31,7 @@ import java.util.concurrent.TimeUnit;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
-public class AnycastTest extends TestBase {
+public class AnycastTest extends StandardTestBase {
 
     @Test
     public void testMultipleReceivers() throws Exception {
