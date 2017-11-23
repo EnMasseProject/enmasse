@@ -62,7 +62,7 @@ public class OpenShift {
                 "Unable to find port " + portName + " for service " + service.getMetadata().getName());
     }
 
-    public Endpoint getRestEndpoint() throws InterruptedException {
+    public Endpoint getRestEndpoint() {
         Route route = client.routes().inNamespace(globalNamespace).withName("restapi").get();
         Endpoint endpoint = new Endpoint(route.getSpec().getHost(), 443);
         if (TestUtils.resolvable(endpoint)) {

@@ -51,8 +51,8 @@ public class AuthenticationTest extends TestBase {
     }
 
     @Override
-    protected boolean createDefaultAddressSpace() {
-        return false;
+    protected AddressSpace getDefaultAddressSpace() {
+        return null;
     }
 
     @Override

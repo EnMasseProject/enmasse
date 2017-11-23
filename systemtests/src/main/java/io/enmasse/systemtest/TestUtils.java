@@ -309,14 +309,15 @@ public class TestUtils {
         return generateMessages("testmessage", numMessages);
     }
 
-    public static boolean resolvable(Endpoint endpoint) throws InterruptedException {
+    public static boolean resolvable(Endpoint endpoint) {
         for (int i = 0; i < 10; i++) {
             try {
                 InetAddress[] addresses = Inet4Address.getAllByName(endpoint.getHost());
+                Thread.sleep(1000);
                 return addresses.length > 0;
             } catch (Exception e) {
+                Thread.interrupted();
             }
-            Thread.sleep(1000);
         }
         return false;
     }
