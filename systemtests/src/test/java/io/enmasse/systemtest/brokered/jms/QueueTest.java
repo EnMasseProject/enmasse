@@ -9,7 +9,6 @@ import org.junit.Test;
 import javax.jms.*;
 import javax.naming.Context;
 import javax.naming.InitialContext;
-import javax.validation.constraints.AssertTrue;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
@@ -36,9 +35,9 @@ public class QueueTest extends JMSTestBase {
     @Before
     public void setUp() throws Exception {
         addressQueue = Destination.queue(queue);
-        setAddresses(defaultBrokeredAddressSpace, addressQueue);
+        setAddresses(defaultAddressSpace, addressQueue);
 
-        env = setUpEnv("amqps://" + getRouteEndpoint(defaultBrokeredAddressSpace).toString(), jmsUsername, jmsPassword, jmsClientID,
+        env = setUpEnv("amqps://" + getRouteEndpoint(defaultAddressSpace).toString(), jmsUsername, jmsPassword, jmsClientID,
                 new HashMap<String, String>() {{
                     put("queue." + queue, queue);
                 }});
