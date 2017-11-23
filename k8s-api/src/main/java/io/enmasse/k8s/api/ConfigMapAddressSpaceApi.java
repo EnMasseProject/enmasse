@@ -27,7 +27,6 @@ import io.fabric8.openshift.client.OpenShiftClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.time.Clock;
 import java.util.*;
 
 /**
@@ -38,11 +37,9 @@ public class ConfigMapAddressSpaceApi implements AddressSpaceApi {
     private final OpenShiftClient client;
     // TODO: Parameterize
     private static final ObjectMapper mapper = CodecV1.getMapper();
-    private final EventLogger eventLogger;
 
     public ConfigMapAddressSpaceApi(OpenShiftClient client) {
         this.client = client;
-        this.eventLogger = new KubeEventLogger(client, client.getNamespace(), Clock.systemUTC(), "k8s-api");
     }
 
     @Override
@@ -56,37 +53,38 @@ public class ConfigMapAddressSpaceApi implements AddressSpaceApi {
     }
 
     @Override
-    public void createAddressSpace(AddressSpace addressSpace) {
-        create(client.configMaps().createNew(), addressSpace);
+    public void createAddressSpace(AddressSpace addressSpace) throws Exception {
+        try {
+            create(client.configMaps().createNew(), addressSpace);
+        } catch (Exception e) {
+            log.error("Error creating {}", addressSpace.getName());
+            throw e;
+        }
     }
 
     @Override
-    public void replaceAddressSpace(AddressSpace addressSpace) {
+    public void replaceAddressSpace(AddressSpace addressSpace) throws Exception {
         String name = KubeUtil.sanitizeName("address-space-" + addressSpace.getName());
         ConfigMap previous = client.configMaps().withName(name).get();
         if (previous == null) {
             return;
         }
-        createOrReplace(addressSpace);
+        try {
+            create(client.configMaps().createOrReplaceWithNew(), addressSpace);
+        } catch (Exception e) {
+            log.error("Error replacing {}", addressSpace.getName());
+            throw e;
+        }
     }
 
-    private void create(DoneableConfigMap config, AddressSpace addressSpace) {
+    private void create(DoneableConfigMap config, AddressSpace addressSpace) throws Exception {
         String name = KubeUtil.sanitizeName("address-space-" + addressSpace.getName());
-        try {
             config.withNewMetadata()
                 .withName(name)
                 .addToLabels(LabelKeys.TYPE, "address-space")
                 .endMetadata()
                 .addToData("config.json", mapper.writeValueAsString(addressSpace))
                 .done();
-        } catch (Exception e) {
-            log.error("Error createReplace on " + addressSpace);
-            eventLogger.log("FailedCreate", e.getMessage(), "Warning");
-        }
-    }
-
-    public void createOrReplace(AddressSpace addressSpace) {
-        create(client.configMaps().createOrReplaceWithNew(), addressSpace);
     }
 
     @Override

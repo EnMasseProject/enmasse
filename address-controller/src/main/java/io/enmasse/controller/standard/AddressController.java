@@ -4,10 +4,7 @@ import io.enmasse.address.model.AddressType;
 import io.enmasse.amqp.SyncRequestClient;
 import io.enmasse.controller.common.*;
 import io.enmasse.address.model.Address;
-import io.enmasse.k8s.api.AddressApi;
-import io.enmasse.k8s.api.KubeUtil;
-import io.enmasse.k8s.api.Watch;
-import io.enmasse.k8s.api.Watcher;
+import io.enmasse.k8s.api.*;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerPort;
 import io.fabric8.kubernetes.api.model.Pod;
@@ -45,12 +42,14 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
     private final AddressClusterGenerator clusterGenerator;
     private Watch watch;
     private final String certDir;
+    private final EventLogger eventLogger;
 
-    public AddressController(AddressApi addressApi, Kubernetes kubernetes, AddressClusterGenerator clusterGenerator, String certDir) {
+    public AddressController(AddressApi addressApi, Kubernetes kubernetes, AddressClusterGenerator clusterGenerator, String certDir, EventLogger eventLogger) {
         this.addressApi = addressApi;
         this.kubernetes = kubernetes;
         this.clusterGenerator = clusterGenerator;
         this.certDir = certDir;
+        this.eventLogger = eventLogger;
     }
 
     @Override
@@ -101,7 +100,6 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
         log.debug("Check address in address space controller: " + newAddressSet);
 
         Map<String, Set<Address>> addressByGroup = new LinkedHashMap<>();
-
         for (Address address : newAddressSet) {
             String key;
             if (isPooled(address)) {
@@ -116,21 +114,26 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
             addressByGroup.get(key).add(address);
         }
 
-        validateAddressGroups(addressByGroup);
+        try {
+            validateAddressGroups(addressByGroup);
 
-        List<AddressCluster> clusterList = kubernetes.listClusters();
-        log.debug("Current set of clusters: " + clusterList);
-        deleteBrokers(clusterList, addressByGroup);
-        createBrokers(clusterList, addressByGroup);
+            List<AddressCluster> clusterList = kubernetes.listClusters();
+            log.debug("Current set of clusters: " + clusterList);
+            deleteBrokers(clusterList, addressByGroup);
+            createBrokers(clusterList, addressByGroup);
 
-        // Perform status check
-        checkStatuses(newAddressSet);
-        for (Address address : newAddressSet) {
-            try {
-                addressApi.replaceAddress(address);
-            } catch (KubernetesClientException ex) {
-                log.warn("Error replacing address {}", address, ex);
+            // Perform status check
+            checkStatuses(newAddressSet);
+            for (Address address : newAddressSet) {
+                try {
+                    addressApi.replaceAddress(address);
+                } catch (KubernetesClientException ex) {
+                    log.warn("Error syncing address {}", address, ex);
+                    eventLogger.log("FailedAddressSync", "Error syncing address " + address + ": " + ex.getMessage(), "Error");
+                }
             }
+        } catch (Exception ex) {
+            eventLogger.log("FailedAddressSync", ex.getMessage(), "Error");
         }
     }
 
@@ -162,6 +165,7 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
                     if (!cluster.getResources().getItems().isEmpty()) {
                         log.info("Creating broker cluster with id {}", cluster.getClusterId());
                         kubernetes.create(cluster.getResources());
+                        eventLogger.log("BrokerCreated", "Created broker " + cluster.getClusterId(), "Normal");
                     }
                 });
     }
@@ -183,6 +187,7 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
 
                     log.info("Deleting broker cluster with id {}", cluster.getClusterId());
                     kubernetes.delete(cluster.getResources());
+                    eventLogger.log("BrokerDeleted", "Deleted broker " + cluster.getClusterId(), "Normal");
                 });
     }
 
@@ -290,6 +295,7 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
             return results.stream().map(l -> l.get(0)).collect(Collectors.toList());
         } catch (Exception e) {
             log.info("Error requesting router status. Ignoring", e);
+            eventLogger.log("RouterCheck", e.getMessage(), "Warning");
             return Collections.emptyList();
         }
     }

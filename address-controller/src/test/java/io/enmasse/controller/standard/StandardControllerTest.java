@@ -19,6 +19,7 @@ import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.types.standard.StandardAddressSpaceType;
 import io.enmasse.controller.common.Kubernetes;
 import io.enmasse.controller.common.NoneAuthenticationServiceResolver;
+import io.enmasse.k8s.api.EventLogger;
 import io.enmasse.k8s.api.TestAddressSpaceApi;
 import io.vertx.core.Vertx;
 import io.vertx.ext.unit.TestContext;
@@ -32,7 +33,9 @@ import org.mockito.internal.util.collections.Sets;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 @RunWith(VertxUnitRunner.class)
 public class StandardControllerTest {
@@ -44,6 +47,9 @@ public class StandardControllerTest {
     public void setup() {
         vertx = Vertx.vertx();
         kubernetes = mock(Kubernetes.class);
+        EventLogger mockLogger = mock(EventLogger.class);
+        when(kubernetes.withNamespace(any())).thenReturn(kubernetes);
+        when(kubernetes.createEventLogger(any(), any())).thenReturn(mockLogger);
         testApi = new TestAddressSpaceApi();
     }
 

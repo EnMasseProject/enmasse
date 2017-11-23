@@ -20,6 +20,7 @@ import io.enmasse.controller.common.*;
 import io.enmasse.address.model.*;
 import io.enmasse.address.model.types.Plan;
 import io.enmasse.address.model.types.TemplateConfig;
+import io.enmasse.k8s.api.EventLogger;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.Namespace;
@@ -40,11 +41,13 @@ public class ControllerHelper {
     private final Kubernetes kubernetes;
     private final String namespace;
     private final AuthenticationServiceResolverFactory authResolverFactory;
+    private final EventLogger eventLogger;
 
-    public ControllerHelper(Kubernetes kubernetes, AuthenticationServiceResolverFactory authResolverFactory) {
+    public ControllerHelper(Kubernetes kubernetes, AuthenticationServiceResolverFactory authResolverFactory, EventLogger eventLogger) {
         this.kubernetes = kubernetes;
         this.namespace = kubernetes.getNamespace();
         this.authResolverFactory = authResolverFactory;
+        this.eventLogger = eventLogger;
     }
 
     public void create(AddressSpace addressSpace) {
@@ -78,6 +81,7 @@ public class ControllerHelper {
         }
 
         kubernetes.create(resourceList.resourceList, addressSpace.getNamespace());
+        eventLogger.log("AddressSpaceCreated", "Created address space {}" + addressSpace.getName(), "Normal");
     }
 
     private static class StandardResources {
@@ -200,6 +204,7 @@ public class ControllerHelper {
                 try {
                     log.info("Deleting address space {}", id);
                     kubernetes.deleteNamespace(namespace.getMetadata().getName());
+                    eventLogger.log("AddressSpaceDeleted", "Deleted address space {}" + id, "Normal");
                 } catch (KubernetesClientException e) {
                     log.info("Exception when deleting namespace (may already be in progress): " + e.getMessage());
                 }

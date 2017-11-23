@@ -21,6 +21,7 @@ import io.enmasse.address.model.types.standard.StandardAddressSpaceType;
 import io.enmasse.controller.common.AddressSpaceController;
 import io.enmasse.controller.common.Kubernetes;
 import io.enmasse.controller.common.NoneAuthenticationServiceResolver;
+import io.enmasse.k8s.api.EventLogger;
 import io.enmasse.k8s.api.TestAddressSpaceApi;
 import io.fabric8.openshift.client.OpenShiftClient;
 import io.vertx.core.Vertx;
@@ -36,9 +37,7 @@ import java.util.Arrays;
 
 import static org.mockito.Matchers.anySet;
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @RunWith(VertxUnitRunner.class)
 public class ControllerTest {
@@ -69,7 +68,8 @@ public class ControllerTest {
 
     @Test
     public void testController(TestContext context) throws Exception {
-        Controller controller = new Controller(client, testApi, kubernetes, (a) -> new NoneAuthenticationServiceResolver("localhost", 1234), Arrays.asList(spaceController));
+        EventLogger testLogger = mock(EventLogger.class);
+        Controller controller = new Controller(client, testApi, kubernetes, (a) -> new NoneAuthenticationServiceResolver("localhost", 1234), Arrays.asList(spaceController), testLogger);
 
         vertx.deployVerticle(controller, context.asyncAssertSuccess());
 

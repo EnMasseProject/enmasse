@@ -23,11 +23,10 @@ import io.enmasse.config.LabelKeys;
 import io.enmasse.controller.common.AddressSpaceController;
 import io.enmasse.controller.common.AuthenticationServiceResolverFactory;
 import io.enmasse.controller.common.Kubernetes;
-import io.enmasse.k8s.api.AddressSpaceApi;
-import io.enmasse.k8s.api.Watch;
-import io.enmasse.k8s.api.Watcher;
+import io.enmasse.k8s.api.*;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.Service;
+import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.openshift.api.model.Route;
 import io.fabric8.openshift.client.OpenShiftClient;
 import io.vertx.core.AbstractVerticle;
@@ -36,6 +35,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.time.Clock;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -51,16 +51,19 @@ public class Controller extends AbstractVerticle implements Watcher<AddressSpace
 
     private final List<AddressSpaceController> addressSpaceControllers;
     private final ControllerHelper helper;
+    private final EventLogger eventLogger;
 
     public Controller(OpenShiftClient client,
                       AddressSpaceApi addressSpaceApi,
                       Kubernetes kubernetes,
                       AuthenticationServiceResolverFactory authResolverFactory,
-                      List<AddressSpaceController> addressSpaceControllers) {
-        this.helper = new ControllerHelper(kubernetes, authResolverFactory);
+                      List<AddressSpaceController> addressSpaceControllers,
+                      EventLogger eventLogger) {
+        this.helper = new ControllerHelper(kubernetes, authResolverFactory, eventLogger);
         this.client = client;
         this.addressSpaceApi = addressSpaceApi;
         this.addressSpaceControllers = addressSpaceControllers;
+        this.eventLogger = eventLogger;
     }
 
     @Override
@@ -107,18 +110,28 @@ public class Controller extends AbstractVerticle implements Watcher<AddressSpace
         createAddressSpaces(resources);
         retainAddressSpaces(resources);
 
-        for (AddressSpace instance : addressSpaceApi.listAddressSpaces()) {
-            AddressSpace.Builder mutableAddressSpace = new AddressSpace.Builder(instance);
-            updateReadiness(mutableAddressSpace);
-            updateEndpoints(mutableAddressSpace);
-            addressSpaceApi.replaceAddressSpace(mutableAddressSpace.build());
-        }
+        try {
+            for (AddressSpace instance : addressSpaceApi.listAddressSpaces()) {
+                AddressSpace.Builder mutableAddressSpace = new AddressSpace.Builder(instance);
+                updateReadiness(mutableAddressSpace);
+                updateEndpoints(mutableAddressSpace);
+                try {
+                    addressSpaceApi.replaceAddressSpace(mutableAddressSpace.build());
+                } catch (KubernetesClientException e) {
+                    log.warn("Error syncing address space {}", mutableAddressSpace.getName(), e);
+                    eventLogger.log("FailedAddressSpaceSync", "Error syncing address space " + mutableAddressSpace.getName() + ": " + e.getMessage(), "Error");
+                }
+            }
 
-        for (AddressSpaceController controller : addressSpaceControllers) {
-            Set<AddressSpace> filtered = resources.stream()
-                    .filter(space -> space.getType().getName().equals(controller.getAddressSpaceType().getName()))
-                    .collect(Collectors.toSet());
-            controller.resourcesUpdated(filtered);
+            for (AddressSpaceController controller : addressSpaceControllers) {
+                Set<AddressSpace> filtered = resources.stream()
+                        .filter(space -> space.getType().getName().equals(controller.getAddressSpaceType().getName()))
+                        .collect(Collectors.toSet());
+                controller.resourcesUpdated(filtered);
+            }
+        } catch (Exception e) {
+            eventLogger.log("FailedAddressSpaceSync", e.getMessage(), "Error");
+            throw e;
         }
     }
 

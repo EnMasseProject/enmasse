@@ -19,6 +19,8 @@ package io.enmasse.controller.common;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.config.LabelKeys;
 import io.enmasse.address.model.Endpoint;
+import io.enmasse.k8s.api.EventLogger;
+import io.enmasse.k8s.api.KubeEventLogger;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.extensions.Deployment;
 import io.fabric8.kubernetes.client.dsl.Resource;
@@ -34,6 +36,7 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.time.Clock;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -171,6 +174,11 @@ public class KubernetesHelper implements Kubernetes {
                     .endSubject()
                     .done();
         }
+    }
+
+    @Override
+    public EventLogger createEventLogger(Clock clock, String componentName) {
+        return new KubeEventLogger(client, namespace, clock, componentName);
     }
 
     @Override

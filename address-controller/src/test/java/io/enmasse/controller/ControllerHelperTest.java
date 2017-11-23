@@ -22,6 +22,7 @@ import io.enmasse.config.AnnotationKeys;
 import io.enmasse.config.LabelKeys;
 import io.enmasse.controller.common.Kubernetes;
 import io.enmasse.controller.common.NoneAuthenticationServiceResolver;
+import io.enmasse.k8s.api.EventLogger;
 import io.fabric8.kubernetes.api.model.Namespace;
 import io.fabric8.kubernetes.api.model.NamespaceBuilder;
 import org.junit.Test;
@@ -55,7 +56,9 @@ public class ControllerHelperTest {
                 .build();
 
 
-        ControllerHelper helper = new ControllerHelper(kubernetes, authenticationServiceType -> new NoneAuthenticationServiceResolver("localhost", 12345));
+        EventLogger eventLogger = mock(EventLogger.class);
+
+        ControllerHelper helper = new ControllerHelper(kubernetes, authenticationServiceType -> new NoneAuthenticationServiceResolver("localhost", 12345), eventLogger);
         helper.create(addressSpace);
         ArgumentCaptor<String> nameCapture = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<String> namespaceCapture = ArgumentCaptor.forClass(String.class);
@@ -116,7 +119,8 @@ public class ControllerHelperTest {
                 .build();
 
 
-        ControllerHelper helper = new ControllerHelper(kubernetes, authenticationServiceType -> new NoneAuthenticationServiceResolver("localhost", 12345));
+        EventLogger eventLogger = mock(EventLogger.class);
+        ControllerHelper helper = new ControllerHelper(kubernetes, authenticationServiceType -> new NoneAuthenticationServiceResolver("localhost", 12345), eventLogger);
         helper.retainAddressSpaces(Sets.newSet(addressSpace));
 
         verify(kubernetes).deleteNamespace(eq("todelete"));
