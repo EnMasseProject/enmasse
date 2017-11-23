@@ -748,16 +748,6 @@ describe('basic router configuration', function() {
             }, 1000/*1 second wait for propagation*/);//TODO: add ability to be notified of propagation in some way
         });
     });
-    it('ignores link route with no name', simple_address_test([{address:'a',type:'topic'}, {address:'b',type:'queue'}],
-       function (routers, address_list) {
-           verify_addresses(address_list, routers, function (objects) {
-               var extra_linkroutes = remove(objects.linkroutes, function (o) { return o.prefix === 'foo' && o.dir === 'in'; });
-               assert.equal(extra_linkroutes.length, 1);
-           });
-       },
-       function (router) {
-           router.create_object('org.apache.qpid.dispatch.router.config.linkRoute', undefined, {prefix:'foo', dir:'in'});
-       }));
     it('ignores link route override', simple_address_test([{address:'a',type:'topic'}, {address:'b',type:'queue'}],
        function (routers, address_list) {
            verify_addresses(address_list, routers, function (objects) {
