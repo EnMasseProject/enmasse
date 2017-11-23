@@ -27,6 +27,7 @@ import io.fabric8.openshift.client.OpenShiftClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Clock;
 import java.util.*;
 
 /**
@@ -37,9 +38,11 @@ public class ConfigMapAddressSpaceApi implements AddressSpaceApi {
     private final OpenShiftClient client;
     // TODO: Parameterize
     private static final ObjectMapper mapper = CodecV1.getMapper();
+    private final EventLogger eventLogger;
 
     public ConfigMapAddressSpaceApi(OpenShiftClient client) {
         this.client = client;
+        this.eventLogger = new KubeEventLogger(client, client.getNamespace(), Clock.systemUTC(), "k8s-api");
     }
 
     @Override
@@ -78,6 +81,7 @@ public class ConfigMapAddressSpaceApi implements AddressSpaceApi {
                 .done();
         } catch (Exception e) {
             log.error("Error createReplace on " + addressSpace);
+            eventLogger.log("FailedCreate", e.getMessage(), "Warning");
         }
     }
 
