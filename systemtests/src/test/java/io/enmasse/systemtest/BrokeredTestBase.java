@@ -18,9 +18,6 @@ package io.enmasse.systemtest;
 
 public class BrokeredTestBase extends TestBaseWithDefault {
 
-    private static final String defaultAddress= "brokered-default-";
-    protected AddressSpace defaultBrokeredAddressSpace = new AddressSpace(defaultAddress + "0", AddressSpaceType.BROKERED);
-
     @Override
     protected AddressSpaceType getAddressSpaceType() {
         return AddressSpaceType.BROKERED;
