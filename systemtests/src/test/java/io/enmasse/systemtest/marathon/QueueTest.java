@@ -65,5 +65,7 @@ public class QueueTest extends MarathonTestBase{
             client.close();
             Thread.sleep(5000);
         });
+
+        amqpFactory.close();
     }
 }

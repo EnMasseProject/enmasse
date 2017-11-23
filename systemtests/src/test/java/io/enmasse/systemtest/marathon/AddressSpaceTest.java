@@ -89,6 +89,7 @@ public class AddressSpaceTest extends AuthenticationTest {
             queueClient.getConnectOptions().setUsername(username).setPassword(password);
 
             QueueTest.runQueueTest(queueClient, queue, 1024);
+            queueClient.close();
         }
 
         setAddresses(addressSpace, topicList.toArray(new Destination[0]));
@@ -98,8 +99,10 @@ public class AddressSpaceTest extends AuthenticationTest {
             topicClient.getConnectOptions().setUsername(username).setPassword(password);
 
             TopicTest.runTopicTest(topicClient, topic, 1024);
+            topicClient.close();
         }
 
+        factory.close();
         deleteAddresses(addressSpace, queueList.toArray(new Destination[0]));
         deleteAddresses(addressSpace, topicList.toArray(new Destination[0]));
     }

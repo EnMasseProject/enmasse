@@ -138,11 +138,14 @@ public class AuthenticationTest extends MarathonTestBase {
         io.enmasse.systemtest.standard.QueueTest.runQueueTest(queueClient, queue, messageCount);
         Logging.log.info("User: '{}'; Message count:'{}'; destination:'{}' - done",
                 uname, messageCount, queue.getAddress());
+        queueClient.close();
 
         AmqpClient topicClient = factory.createTopicClient(addressSpace);
         topicClient.getConnectOptions().setUsername(uname).setPassword(password);
         TopicTest.runTopicTest(topicClient, topic, messageCount);
         Logging.log.info("User: '{}'; Message count:'{}'; destination:'{}' - done",
                 uname, messageCount, topic.getAddress());
+        topicClient.close();
+        factory.close();
     }
 }
