@@ -88,7 +88,7 @@
               <properties>
                 <property>
                   <name>listener</name>
-                  <value>io.enmasse.systemtest.SystemTestRunListener</value>
+                  <value>io.enmasse.systemtest.SystemTestRunListener,io.enmasse.systemtest.TestBaseWithDefault</value>
                 </property>
               </properties>
               <skipTests>false</skipTests>
