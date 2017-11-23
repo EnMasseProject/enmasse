@@ -70,12 +70,10 @@ public abstract class TestBaseWithDefault extends TestBase {
 
     @Before
     public void setupDefault() throws Exception {
-        if (environment.isMultitenant()) {
-            Logging.log.info("Test is running in multitenant mode");
-            createAddressSpace(getSharedAddressSpace(), environment.defaultAuthService());
-            // TODO: Wait another minute so that all services are connected
-            Logging.log.info("Waiting for 2 minutes before starting tests");
-        }
+        Logging.log.info("Test is running in multitenant mode");
+        createAddressSpace(getSharedAddressSpace(), environment.defaultAuthService());
+        // TODO: Wait another minute so that all services are connected
+        Logging.log.info("Waiting for 2 minutes before starting tests");
 
         if ("standard".equals(environment.defaultAuthService())) {
             this.username = "systemtest";
