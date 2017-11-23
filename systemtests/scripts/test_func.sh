@@ -102,3 +102,17 @@ function create_user() {
     #create user
     curl -k -X POST -H "content-type: application/json" --data-binary @${NEW_USER_DEF} -H "Authorization: Bearer ${TOKEN}"  https://${USER}:${PASSWORD}@$(oc get routes -o jsonpath='{.spec.host}' keycloak)/auth/admin/realms/${ADDRESS_SPACE_NAME}/users
 }
+
+function get_pv_info() {
+    ARTIFACTS_DIR=${1}
+    FILE_NAME='openshift_pv.log'
+    oc get pv > "${1}/${FILE_NAME}"
+    oc get pv -o yaml >> "${1}/${FILE_NAME}"
+}
+
+function get_pods_info() {
+    ARTIFACTS_DIR=${1}
+    FILE_NAME='openshift_pods.log'
+    oc get pods > "${1}/${FILE_NAME}"
+    oc get pods -o yaml >> "${1}/${FILE_NAME}"
+}
