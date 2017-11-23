@@ -44,10 +44,13 @@ public class MultiTenantTestBase extends TestBase {
             if (createDefaultBrokeredAddressSpace()) {
                 Logging.log.info("default brokered address space '{}' will be removed", defaultBrokeredAddressSpace);
                 try {
+                    addressApiClient = new AddressApiClient(openShift);
                     deleteAddressSpace(defaultBrokeredAddressSpace);
                     initializeDefaultBrokeredAddressSpace();
                 } catch (Exception ex) {
                     ex.printStackTrace();
+                } finally {
+                    addressApiClient.close();
                 }
             }
         }
