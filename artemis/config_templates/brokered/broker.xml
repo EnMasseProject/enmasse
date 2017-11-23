@@ -121,19 +121,10 @@ under the License.
 
 
       <security-settings>
-         <security-setting match="#">
-            <permission type="createNonDurableQueue" roles="all, admin"/>
-            <permission type="deleteNonDurableQueue" roles="all, admin"/>
-            <permission type="createDurableQueue" roles="all, admin"/>
-            <permission type="deleteDurableQueue" roles="all, admin"/>
-            <permission type="createAddress" roles="admin"/>
-            <permission type="deleteAddress" roles="admin"/>
-            <permission type="consume" roles="all, admin"/>
-            <permission type="browse" roles="all, admin"/>
-            <permission type="send" roles="all, admin"/>
-            <!-- we need this otherwise ./artemis data imp wouldn't work -->
-            <permission type="manage" roles="admin"/>
-         </security-setting>
+         <security-setting-plugin class-name="io.enmasse.artemis.sasl_delegation.SaslGroupBasedSecuritySettingsPlugin">
+            <setting name="name" value="enmasse"/>
+            <setting name="useGroupsFromSaslDelegation" value="$KEYCLOAK_GROUP_PERMISSIONS"/>
+         </security-setting-plugin>
       </security-settings>
 
       <address-settings>
