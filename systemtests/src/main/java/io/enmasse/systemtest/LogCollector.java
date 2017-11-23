@@ -82,10 +82,12 @@ public class LogCollector implements Watcher<Pod>, AutoCloseable {
         Logging.log.info("Collecting logs for pod {} in namespace {}", pod.getMetadata().getName(), namespace);
         for (Container container : pod.getSpec().getContainers()) {
             try {
-                FileOutputStream outputFile = new FileOutputStream(new File(logDir, pod.getMetadata().getName() + "." + container.getName()));
+                File outputFile = new File(logDir, pod.getMetadata().getName() + "." + container.getName());
+                FileOutputStream outputFileStream = new FileOutputStream(outputFile);
 
                 synchronized (logWatches) {
-                    logWatches.put(pod.getMetadata().getName(), openShift.watchPodLog(namespace, pod.getMetadata().getName(), container.getName(), outputFile));
+                    Logging.log.info("Starting watcher for container {} in pod {} and writing to {}", container.getName(), pod.getMetadata().getName(), outputFile.getAbsolutePath());
+                    logWatches.put(pod.getMetadata().getName(), openShift.watchPodLog(namespace, pod.getMetadata().getName(), container.getName(), outputFileStream));
                 }
             } catch (Exception e) {
                 Logging.log.info("Unable to save log for " + pod.getMetadata().getName() + "." + container.getName());
