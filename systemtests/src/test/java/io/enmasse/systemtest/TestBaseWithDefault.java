@@ -22,16 +22,17 @@ import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
 import org.junit.runner.Result;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public abstract class TestBaseWithDefault extends TestBase {
     private static final String defaultAddressTemplate = "-default-";
-    protected AddressSpace defaultAddressSpace = new AddressSpace(getAddressSpaceType().name().toLowerCase() + defaultAddressTemplate + "0", getAddressSpaceType());
+    private static Map<AddressSpaceType, Integer> spaceCountMap = new HashMap<>();
+    protected AddressSpace defaultAddressSpace;
 
     protected abstract AddressSpaceType getAddressSpaceType();
 
@@ -43,7 +44,7 @@ public abstract class TestBaseWithDefault extends TestBase {
         Logging.log.info("default address space '{}' will be removed", defaultAddressSpace);
         try {
             deleteAddressSpace(defaultAddressSpace);
-            initializeSharedAddressSpace();
+            spaceCountMap.put(defaultAddressSpace.getType(), spaceCountMap.get(defaultAddressSpace.getType()) + 1);
         } catch (Exception ex) {
             ex.printStackTrace();
         }
@@ -66,6 +67,8 @@ public abstract class TestBaseWithDefault extends TestBase {
 
     @Before
     public void setupDefault() throws Exception {
+        spaceCountMap.putIfAbsent(getAddressSpaceType(), 0);
+        defaultAddressSpace = new AddressSpace(getAddressSpaceType().name().toLowerCase() + defaultAddressTemplate + spaceCountMap.get(getAddressSpaceType()), getAddressSpaceType());
         Logging.log.info("Test is running in multitenant mode");
         createAddressSpace(defaultAddressSpace, environment.defaultAuthService());
         // TODO: Wait another minute so that all services are connected
@@ -81,22 +84,6 @@ public abstract class TestBaseWithDefault extends TestBase {
     @After
     public void teardownDefault() throws Exception {
         setAddresses(defaultAddressSpace);
-    }
-
-
-    /**
-     * initialize new defaultAddressSpace with new name due to collecting logs
-     */
-    private void initializeSharedAddressSpace() {
-        String regExp = "^(.*)-([0-9]+)";
-        Pattern p = Pattern.compile(regExp);
-        Matcher m = p.matcher(defaultAddressSpace.getName());
-        if (m.find()) {
-            int suffix = Integer.valueOf(m.group(2)) + 1; //number of created default brokered address space + 1
-            defaultAddressSpace = new AddressSpace(getAddressSpaceType().name().toLowerCase() + defaultAddressTemplate + suffix, getAddressSpaceType());
-        } else {
-            throw new IllegalStateException("Wrong name of default brokered address space! Didn't match reg exp: " + regExp);
-        }
     }
 
     protected void scale(Destination destination, int numReplicas) throws Exception {
