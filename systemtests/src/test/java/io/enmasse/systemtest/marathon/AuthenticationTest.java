@@ -146,6 +146,5 @@ public class AuthenticationTest extends MarathonTestBase {
         Logging.log.info("User: '{}'; Message count:'{}'; destination:'{}' - done",
                 uname, messageCount, topic.getAddress());
         topicClient.close();
-        factory.close();
     }
 }

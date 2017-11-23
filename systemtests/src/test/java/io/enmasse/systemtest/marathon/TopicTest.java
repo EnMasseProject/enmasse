@@ -68,7 +68,5 @@ public class TopicTest extends MarathonTestBase {
             client.close();
             Thread.sleep(5000);
         });
-
-        amqpFactory.close();
     }
 }

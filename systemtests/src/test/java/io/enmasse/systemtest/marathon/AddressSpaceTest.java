@@ -102,7 +102,6 @@ public class AddressSpaceTest extends AuthenticationTest {
             topicClient.close();
         }
 
-        factory.close();
         deleteAddresses(addressSpace, queueList.toArray(new Destination[0]));
         deleteAddresses(addressSpace, topicList.toArray(new Destination[0]));
     }
