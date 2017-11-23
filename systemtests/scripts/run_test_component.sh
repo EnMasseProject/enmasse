@@ -17,10 +17,10 @@ setup_test ${ENMASSE_DIR} ${KUBEADM}
 
 run_test ${TESTCASE} || failure=$(($failure + 1))
 
-$CURDIR/collect_logs.sh $ARTIFACTS_DIR
+get_pv_info ${ARTIFACTS_DIR}
+get_pods_info ${ARTIFACTS_DIR}
 
-oc get pods
-oc get pv
+$CURDIR/collect_logs.sh $ARTIFACTS_DIR
 
 if [ $failure -gt 0 ]
 then
