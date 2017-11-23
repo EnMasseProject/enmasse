@@ -26,7 +26,7 @@ public class AddressApiClient {
     private final String addressPath = "/apis/enmasse.io/v1/addresses";
     private final String authzString;
 
-    public AddressApiClient(OpenShift openshift) throws InterruptedException {
+    public AddressApiClient(OpenShift openshift) {
         this.vertx = VertxFactory.create();
         this.client = WebClient.create(vertx, new WebClientOptions()
                 .setSsl(true)

@@ -28,8 +28,8 @@ import org.junit.After;
 import org.junit.Before;
 
 import java.io.File;
-import java.io.UnsupportedEncodingException;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -48,30 +48,32 @@ import static org.junit.Assert.fail;
 public abstract class TestBase extends SystemTestRunListener {
 
     protected static final Environment environment = new Environment();
-    protected static final AddressSpace defaultAddressSpace = environment.isMultitenant() ? new AddressSpace("testspace", "testspace")
+    private static final AddressSpace defaultAddressSpace = environment.isMultitenant() ? new AddressSpace("testspace", "testspace")
             : new AddressSpace("default", environment.namespace());
 
     protected static final OpenShift openShift = new OpenShift(environment, environment.namespace(), defaultAddressSpace.getNamespace());
     private static final GlobalLogCollector logCollector = new GlobalLogCollector(openShift,
             new File(environment.testLogDir()));
+    protected static final AddressApiClient addressApiClient = new AddressApiClient(openShift);
+
     private KeycloakClient keycloakApiClient;
-    protected AddressApiClient addressApiClient;
     protected String username;
     protected String password;
     protected AmqpClientFactory amqpClientFactory;
     protected MqttClientFactory mqttClientFactory;
+    private List<AddressSpace> addressSpaceList = new ArrayList<>();
 
-    protected boolean createDefaultAddressSpace() {
-        return true;
+    protected AddressSpace getDefaultAddressSpace() {
+        return defaultAddressSpace;
     }
 
     @Before
     public void setup() throws Exception {
-        addressApiClient = new AddressApiClient(openShift);
-        if (createDefaultAddressSpace()) {
+        addressSpaceList = new ArrayList<>();
+        if (getDefaultAddressSpace() != null) {
             if (environment.isMultitenant()) {
                 Logging.log.info("Test is running in multitenant mode");
-                createAddressSpace(defaultAddressSpace, environment.defaultAuthService());
+                createAddressSpace(getDefaultAddressSpace(), environment.defaultAuthService());
                 // TODO: Wait another minute so that all services are connected
                 Logging.log.info("Waiting for 2 minutes before starting tests");
             }
@@ -79,27 +81,25 @@ public abstract class TestBase extends SystemTestRunListener {
             if ("standard".equals(environment.defaultAuthService())) {
                 this.username = "systemtest";
                 this.password = "systemtest";
-                getKeycloakClient().createUser(defaultAddressSpace.getName(), username, password, 1, TimeUnit.MINUTES);
+                getKeycloakClient().createUser(getDefaultAddressSpace().getName(), username, password, 1, TimeUnit.MINUTES);
             }
-            amqpClientFactory = new AmqpClientFactory(openShift, environment, defaultAddressSpace, username, password);
-            mqttClientFactory = new MqttClientFactory(openShift, environment, defaultAddressSpace, username, password);
         }
+        amqpClientFactory = new AmqpClientFactory(openShift, environment, getDefaultAddressSpace(), username, password);
+        mqttClientFactory = new MqttClientFactory(openShift, environment, getDefaultAddressSpace(), username, password);
     }
 
     @After
     public void teardown() throws Exception {
-        if (mqttClientFactory != null) {
-            mqttClientFactory.close();
+        mqttClientFactory.close();
+        amqpClientFactory.close();
+
+        if (getDefaultAddressSpace() != null) {
+            setAddresses();
         }
-        if (amqpClientFactory != null) {
-            amqpClientFactory.close();
+        for (AddressSpace addressSpace : addressSpaceList) {
+            deleteAddressSpace(addressSpace);
         }
-        if (addressApiClient != null) {
-            if (createDefaultAddressSpace()) {
-                setAddresses();
-            }
-            addressApiClient.close();
-        }
+        addressSpaceList.clear();
     }
 
     protected AddressSpace createAddressSpace(AddressSpace addressSpace, String authService) throws Exception {
@@ -108,8 +108,11 @@ public abstract class TestBase extends SystemTestRunListener {
             addressApiClient.createAddressSpace(addressSpace, authService);
             logCollector.startCollecting(addressSpace.getNamespace());
             TestUtils.waitForAddressSpaceReady(addressApiClient, addressSpace.getName());
-            if (addressSpace.equals(defaultAddressSpace)) {
+            if (addressSpace.equals(getDefaultAddressSpace())) {
                 Thread.sleep(120_000);
+            }
+            if (!addressSpace.getName().equals(getDefaultAddressSpace().getName())) {
+                addressSpaceList.add(addressSpace);
             }
         } else {
             Logging.log.info("Address space '" + addressSpace + "' already exists.");
@@ -148,7 +151,7 @@ public abstract class TestBase extends SystemTestRunListener {
      * @throws Exception
      */
     protected void deleteAddresses(Destination... destinations) throws Exception {
-        deleteAddresses(defaultAddressSpace, destinations);
+        deleteAddresses(getDefaultAddressSpace(), destinations);
     }
 
     protected void deleteAddresses(AddressSpace addressSpace, Destination... destinations) throws Exception {
@@ -162,7 +165,7 @@ public abstract class TestBase extends SystemTestRunListener {
      * @throws Exception
      */
     protected void appendAddresses(Destination... destinations) throws Exception {
-        appendAddresses(defaultAddressSpace, destinations);
+        appendAddresses(getDefaultAddressSpace(), destinations);
     }
 
     protected void appendAddresses(AddressSpace addressSpace, Destination... destinations) throws Exception {
@@ -177,7 +180,7 @@ public abstract class TestBase extends SystemTestRunListener {
      * @throws Exception
      */
     protected void setAddresses(Destination... destinations) throws Exception {
-        setAddresses(defaultAddressSpace, destinations);
+        setAddresses(getDefaultAddressSpace(), destinations);
     }
 
     protected void setAddresses(AddressSpace addressSpace, Destination... destinations) throws Exception {
@@ -193,7 +196,7 @@ public abstract class TestBase extends SystemTestRunListener {
      * @throws Exception
      */
     protected Future<List<String>> getAddresses(Optional<String> addressName) throws Exception {
-        return getAddresses(defaultAddressSpace, addressName);
+        return getAddresses(getDefaultAddressSpace(), addressName);
     }
 
     protected Future<List<String>> getAddresses(AddressSpace addressSpace, Optional<String> addressName) throws Exception {
@@ -201,7 +204,7 @@ public abstract class TestBase extends SystemTestRunListener {
     }
 
     protected void scale(Destination destination, int numReplicas) throws Exception {
-        scale(defaultAddressSpace, destination, numReplicas);
+        scale(getDefaultAddressSpace(), destination, numReplicas);
     }
 
     protected void scale(AddressSpace addressSpace, Destination destination, int numReplicas) throws Exception {
@@ -298,8 +301,7 @@ public abstract class TestBase extends SystemTestRunListener {
     }
 
     protected boolean canConnectWithAmqpToQueue(AddressSpace addressSpace, String username, String password, String queueAddress) throws InterruptedException, IOException, TimeoutException, ExecutionException {
-        AmqpClientFactory clientFactory = createAmqpClientFactory(addressSpace);
-        AmqpClient client = clientFactory.createQueueClient(addressSpace);
+        AmqpClient client = amqpClientFactory.createQueueClient(addressSpace);
         client.getConnectOptions().setUsername(username).setPassword(password);
 
         Future<Integer> sent = client.sendMessages(queueAddress, Arrays.asList("msg1"), 10, TimeUnit.SECONDS);
@@ -309,8 +311,7 @@ public abstract class TestBase extends SystemTestRunListener {
     }
 
     protected boolean canConnectWithAmqpToAnycast(AddressSpace addressSpace, String username, String password, String anycastAddress) throws InterruptedException, IOException, TimeoutException, ExecutionException {
-        AmqpClientFactory clientFactory = createAmqpClientFactory(addressSpace);
-        AmqpClient client = clientFactory.createQueueClient(addressSpace);
+        AmqpClient client = amqpClientFactory.createQueueClient(addressSpace);
         client.getConnectOptions().setUsername(username).setPassword(password);
 
         Future<List<Message>> received = client.recvMessages(anycastAddress, 1, 10, TimeUnit.SECONDS);
@@ -320,8 +321,7 @@ public abstract class TestBase extends SystemTestRunListener {
     }
 
     protected boolean canConnectWithAmqpToMulticast(AddressSpace addressSpace, String username, String password, String multicastAddress) throws InterruptedException, IOException, TimeoutException, ExecutionException {
-        AmqpClientFactory clientFactory = createAmqpClientFactory(addressSpace);
-        AmqpClient client = clientFactory.createBroadcastClient(addressSpace);
+        AmqpClient client = amqpClientFactory.createBroadcastClient(addressSpace);
         client.getConnectOptions().setUsername(username).setPassword(password);
 
         Future<List<Message>> received = client.recvMessages(multicastAddress, 1, 10, TimeUnit.SECONDS);
@@ -331,8 +331,7 @@ public abstract class TestBase extends SystemTestRunListener {
     }
 
     protected boolean canConnectWithAmqpToTopic(AddressSpace addressSpace, String username, String password, String topicAddress) throws InterruptedException, IOException, TimeoutException, ExecutionException {
-        AmqpClientFactory clientFactory = createAmqpClientFactory(addressSpace);
-        AmqpClient client = clientFactory.createTopicClient(addressSpace);
+        AmqpClient client = amqpClientFactory.createTopicClient(addressSpace);
         client.getConnectOptions().setUsername(username).setPassword(password);
 
         Future<List<Message>> received = client.recvMessages(topicAddress, 1, 10, TimeUnit.SECONDS);

@@ -1,5 +1,6 @@
 package io.enmasse.systemtest.marathon;
 
+import io.enmasse.systemtest.AddressSpace;
 import io.enmasse.systemtest.Logging;
 import io.enmasse.systemtest.MultiTenantTestBase;
 import org.junit.Rule;
@@ -11,8 +12,8 @@ import java.util.concurrent.TimeUnit;
 public class MarathonTestBase extends MultiTenantTestBase {
 
     @Override
-    protected boolean createDefaultBrokeredAddressSpace() {
-        return false;
+    protected AddressSpace getDefaultAddressSpace() {
+        return null;
     }
 
     @Rule
