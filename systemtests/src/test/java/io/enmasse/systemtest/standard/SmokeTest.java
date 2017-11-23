@@ -13,8 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.enmasse.systemtest;
+package io.enmasse.systemtest.standard;
 
+import io.enmasse.systemtest.Destination;
+import io.enmasse.systemtest.StandardTestBase;
+import io.enmasse.systemtest.TestBase;
+import io.enmasse.systemtest.TestUtils;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.mqtt.MqttClient;
 import io.enmasse.systemtest.standard.QueueTest;
@@ -35,7 +39,7 @@ import static org.junit.Assert.assertTrue;
  * This is a simple smoketest of EnMasse. If this passes, the chances of something being
  * very wrong is minimized. The test should not take to long too execute
  */
-public class SmokeTest extends TestBase {
+public class SmokeTest extends StandardTestBase {
 
     private Destination queue = Destination.queue("smokequeue");
     private Destination topic = Destination.topic("smoketopic");

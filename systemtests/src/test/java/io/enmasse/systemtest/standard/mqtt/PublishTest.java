@@ -17,6 +17,7 @@
 package io.enmasse.systemtest.standard.mqtt;
 
 import io.enmasse.systemtest.Destination;
+import io.enmasse.systemtest.StandardTestBase;
 import io.enmasse.systemtest.TestBase;
 import io.enmasse.systemtest.mqtt.MqttClient;
 import org.junit.Test;
@@ -32,7 +33,7 @@ import static org.junit.Assert.assertThat;
 /**
  * Tests related to publish messages via MQTT
  */
-public class PublishTest extends TestBase {
+public class PublishTest extends StandardTestBase {
 
     @Test
     public void testPublishQoS0() throws Exception {

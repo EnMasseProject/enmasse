@@ -16,8 +16,6 @@
 package io.enmasse.systemtest.auth;
 
 import io.enmasse.systemtest.*;
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -26,7 +24,6 @@ import java.util.List;
 
 public class AuthenticationTest extends TestBase {
 
-    private List<AddressSpace> addressSpaces = new ArrayList<>();
     private static final List<Destination> amqpAddressList = Arrays.asList(
             Destination.queue("auth-queue"),
             Destination.topic("auth-topic"),
@@ -36,36 +33,15 @@ public class AuthenticationTest extends TestBase {
     private static final String anonymousUser = "anonymous";
     private static final String anonymousPswd = "anonymous";
 
-    @Before
-    public void setupSpaceList() throws Exception {
-        addressSpaces = new ArrayList<>();
-    }
-
-    @After
-    public void teardownSpaces() throws Exception {
-        for (AddressSpace addressSpace : addressSpaces) {
-            getKeycloakClient().deleteUser(addressSpace.getName(), "bob");
-            deleteAddressSpace(addressSpace);
-        }
-        addressSpaces.clear();
-    }
-
     @Override
-    protected AddressSpace getDefaultAddressSpace() {
-        return null;
-    }
-
-    @Override
-    protected AddressSpace createAddressSpace(AddressSpace addressSpace, String authService) throws Exception {
+    protected void createAddressSpace(AddressSpace addressSpace, String authService) throws Exception {
         super.createAddressSpace(addressSpace, authService);
-        addressSpaces.add(addressSpace);
         List<Destination> brokeredAddressList = new ArrayList<>(amqpAddressList);
         if (addressSpace.getType().equals(AddressSpaceType.BROKERED)) {
             brokeredAddressList = amqpAddressList.subList(0, 2);
         }
         setAddresses(addressSpace, brokeredAddressList.toArray(new Destination[brokeredAddressList.size()]));
         //        setAddresses(name, Destination.queue(amqpAddress)); //, Destination.topic(mqttAddress)); #TODO! for MQTT
-        return addressSpace;
     }
 
 

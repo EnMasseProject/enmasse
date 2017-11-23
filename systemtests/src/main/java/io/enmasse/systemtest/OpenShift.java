@@ -22,16 +22,14 @@ public class OpenShift {
     private final Environment environment;
     private final OpenShiftClient client;
     private final String globalNamespace;
-    private final String tenantNamespace;
 
-    public OpenShift(Environment environment, String globalNamespace, String tenantNamespace) {
+    public OpenShift(Environment environment, String globalNamespace) {
         this.environment = environment;
         Config config = new ConfigBuilder().withMasterUrl(environment.openShiftUrl())
                 .withOauthToken(environment.openShiftToken())
                 .withUsername(environment.openShiftUser()).build();
         client = new DefaultOpenShiftClient(config);
         this.globalNamespace = globalNamespace;
-        this.tenantNamespace = tenantNamespace;
     }
 
     public String getApiToken() {
@@ -40,10 +38,6 @@ public class OpenShift {
 
     public OpenShiftClient getClient() {
         return client;
-    }
-
-    public Endpoint getEndpoint(String serviceName, String port) {
-        return getEndpoint(tenantNamespace, serviceName, port);
     }
 
     public Endpoint getEndpoint(String namespace, String serviceName, String port) {
@@ -96,10 +90,6 @@ public class OpenShift {
         }
     }
 
-    public void setDeploymentReplicas(String name, int numReplicas) {
-        setDeploymentReplicas(tenantNamespace, name, numReplicas);
-    }
-
     public void setDeploymentReplicas(String tenantNamespace, String name, int numReplicas) {
         client.extensions().deployments().inNamespace(tenantNamespace).withName(name).scale(numReplicas, true);
     }
@@ -127,16 +117,11 @@ public class OpenShift {
     }
 
     public int getExpectedPods() {
-        if (environment.isMultitenant()) {
-            return 5; // admin, qdrouterd, subscription, mqtt gateway, mqtt lwt
-        } else {
-            return 9; // address-controller, keycloak, keycloak-controller, none-authservice, admin, qdrouterd,
-            // subscription, mqtt gateway, mqtt lwt
-        }
+        return 5;
     }
 
-    public Endpoint getRouteEndpoint(String addressSpace, String routeName) {
-        Route route = client.routes().inNamespace(addressSpace).withName(routeName).get();
+    public Endpoint getRouteEndpoint(String namespace, String routeName) {
+        Route route = client.routes().inNamespace(namespace).withName(routeName).get();
         return new Endpoint(route.getSpec().getHost(), 443);
     }
 

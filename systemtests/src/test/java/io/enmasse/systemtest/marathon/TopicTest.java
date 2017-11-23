@@ -40,12 +40,11 @@ public class TopicTest extends MarathonTestBase {
         setAddresses(addressSpace, topicList.toArray(new Destination[0]));
 
         //create client
-        AmqpClientFactory amqpFactory = createAmqpClientFactory(addressSpace);
 
         List<String> msgBatch = TestUtils.generateMessages(msgCount);
 
         runTestInLoop(30, () -> {
-            AmqpClient client = amqpFactory.createTopicClient(addressSpace);
+            AmqpClient client = amqpClientFactory.createTopicClient(addressSpace);
             client.getConnectOptions().setUsername("test").setPassword("test");
 
             //attach subscibers
