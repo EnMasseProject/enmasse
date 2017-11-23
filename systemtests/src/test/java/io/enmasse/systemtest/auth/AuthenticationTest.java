@@ -32,7 +32,6 @@ public class AuthenticationTest extends TestBase {
             Destination.topic("auth-topic"),
             Destination.anycast("auth-anycast"),
             Destination.multicast("auth-multicast"));
-    private static final String mqttAddress = "t1";
     private static final String anonymousUser = "anonymous";
     private static final String anonymousPswd = "anonymous";
 
@@ -59,12 +58,11 @@ public class AuthenticationTest extends TestBase {
     protected AddressSpace createAddressSpace(AddressSpace addressSpace, String authService) throws Exception {
         super.createAddressSpace(addressSpace, authService);
         addressSpaces.add(addressSpace);
-        List<Destination> brokeredAddressList = new ArrayList<>(amqpAddressList);
+        List<Destination> addressList = new ArrayList<>(amqpAddressList);
         if (addressSpace.getType().equals(AddressSpaceType.BROKERED)) {
-            brokeredAddressList = amqpAddressList.subList(0, 2);
+            addressList = amqpAddressList.subList(0, 2);
         }
-        setAddresses(addressSpace, brokeredAddressList.toArray(new Destination[brokeredAddressList.size()]));
-        //        setAddresses(name, Destination.queue(amqpAddress)); //, Destination.topic(mqttAddress)); #TODO! for MQTT
+        setAddresses(addressSpace, addressList.toArray(new Destination[addressList.size()]));
         return addressSpace;
     }
 
