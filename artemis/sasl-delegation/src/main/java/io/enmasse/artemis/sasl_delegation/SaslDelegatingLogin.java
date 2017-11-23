@@ -97,6 +97,7 @@ public class SaslDelegatingLogin implements LoginModule {
     private SSLContext sslContext;
     private char[] trustStorePassword;
     private Map<String, List<String>> validCertUsers = new HashMap<>();
+    private String securitySettings;
 
     @Override
     public void initialize(Subject subject,
@@ -145,6 +146,9 @@ public class SaslDelegatingLogin implements LoginModule {
                 }
                 validCertUsers.put(userRoles[0], roles);
             }
+        }
+        if(options.containsKey("security_settings")) {
+            this.securitySettings = String.valueOf(options.get("security_settings")).trim();
         }
 
         if(useTls) {
@@ -306,7 +310,14 @@ public class SaslDelegatingLogin implements LoginModule {
                 user = String.valueOf(identity.get(SUB)).trim();
             }
             if (remoteProperties.get(Symbol.valueOf(GROUPS)) instanceof List) {
-                roles.addAll((List<String>) remoteProperties.get(Symbol.valueOf(GROUPS)));
+                List<String> groups = (List<String>) remoteProperties.get(Symbol.valueOf(GROUPS));
+                roles.addAll(groups);
+                if(this.securitySettings != null) {
+                    SaslGroupBasedSecuritySettingsPlugin securitySettingPlugin = SaslGroupBasedSecuritySettingsPlugin.getInstance(this.securitySettings);
+                    if(securitySettingPlugin != null) {
+                        securitySettingPlugin.addGroups(groups);
+                    }
+                }
             }
             roles.add("all");
 
