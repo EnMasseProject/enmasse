@@ -26,8 +26,8 @@ import java.util.Set;
  */
 public interface AddressSpaceApi {
     Optional<AddressSpace> getAddressSpaceWithName(String id);
-    void createAddressSpace(AddressSpace addressSpace);
-    void replaceAddressSpace(AddressSpace addressSpace);
+    void createAddressSpace(AddressSpace addressSpace) throws Exception;
+    void replaceAddressSpace(AddressSpace addressSpace) throws Exception;
     void deleteAddressSpace(AddressSpace addressSpace);
     Set<AddressSpace> listAddressSpaces();
 

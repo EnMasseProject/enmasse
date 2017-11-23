@@ -1,10 +1,12 @@
 package io.enmasse.controller.common;
 
 import io.enmasse.address.model.Endpoint;
+import io.enmasse.k8s.api.EventLogger;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.extensions.Deployment;
 import io.fabric8.openshift.client.ParameterValue;
 
+import java.time.Clock;
 import java.util.*;
 
 /**
@@ -72,4 +74,5 @@ public interface Kubernetes {
     void addInfraViewRole(String controllerNamespace, String namespace);
     void addSystemImagePullerPolicy(String namespace, String tenantNamespace);
 
+    EventLogger createEventLogger(Clock clock, String componentName);
 }

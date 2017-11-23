@@ -16,6 +16,7 @@
 
 package io.enmasse.controller;
 
+import java.time.Clock;
 import java.util.*;
 
 import io.enmasse.address.model.AuthenticationServiceResolver;
@@ -28,6 +29,8 @@ import io.enmasse.controller.common.*;
 import io.enmasse.controller.standard.StandardController;
 import io.enmasse.k8s.api.AddressSpaceApi;
 import io.enmasse.k8s.api.ConfigMapAddressSpaceApi;
+import io.enmasse.k8s.api.EventLogger;
+import io.enmasse.k8s.api.KubeEventLogger;
 import io.fabric8.kubernetes.client.ConfigBuilder;
 import io.fabric8.openshift.client.DefaultOpenShiftClient;
 import io.fabric8.openshift.client.OpenShiftClient;
@@ -56,6 +59,7 @@ public class Main extends AbstractVerticle {
     @Override
     public void start(Future<Void> startPromise) {
         AddressSpaceApi addressSpaceApi = new ConfigMapAddressSpaceApi(controllerClient);
+        EventLogger eventLogger = new KubeEventLogger(controllerClient, controllerClient.getNamespace(), Clock.systemUTC(), "enmasse-controller");
 
         CertManager certManager = OpenSSLCertManager.create(controllerClient, options.getCaDir(), options.getNamespace());
         AuthenticationServiceResolverFactory resolverFactory = createResolverFactory(options);
@@ -64,7 +68,7 @@ public class Main extends AbstractVerticle {
 
         deployVerticles(startPromise,
                 new Deployment(new AuthController(certManager, addressSpaceApi)),
-                new Deployment(new Controller(controllerClient, addressSpaceApi, kubernetes, resolverFactory, Arrays.asList(standardController, brokeredController))),
+                new Deployment(new Controller(controllerClient, addressSpaceApi, kubernetes, resolverFactory, Arrays.asList(standardController, brokeredController), eventLogger)),
 //                new Deployment(new AMQPServer(kubernetes.getNamespace(), addressSpaceApi, options.port())),
                 new Deployment(new HTTPServer(addressSpaceApi, options.getCertDir(), kubernetes, options.isEnableRbac() && kubernetes.isRBACSupported()), new DeploymentOptions().setWorker(true)));
     }

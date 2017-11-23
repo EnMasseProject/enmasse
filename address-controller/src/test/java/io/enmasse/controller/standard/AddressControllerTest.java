@@ -22,6 +22,7 @@ import io.enmasse.address.model.Address;
 import io.enmasse.controller.common.*;
 import io.enmasse.address.model.types.standard.StandardType;
 import io.enmasse.k8s.api.AddressApi;
+import io.enmasse.k8s.api.EventLogger;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.client.KubernetesClientException;
@@ -53,9 +54,10 @@ public class AddressControllerTest {
         mockGenerator = mock(AddressClusterGenerator.class);
         mockApi = mock(AddressApi.class);
         mockClient = mock(OpenShiftClient.class);
+        EventLogger eventLogger = mock(EventLogger.class);
 
         when(mockHelper.getNamespace()).thenReturn("myinstance");
-        controller = new AddressController(mockApi, mockHelper, mockGenerator, null);
+        controller = new AddressController(mockApi, mockHelper, mockGenerator, null, eventLogger);
     }
 
     private Address createAddress(String address, AddressType type) {

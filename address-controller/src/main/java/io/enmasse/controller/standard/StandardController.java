@@ -20,10 +20,13 @@ import io.enmasse.address.model.types.AddressSpaceType;
 import io.enmasse.address.model.types.standard.StandardAddressSpaceType;
 import io.enmasse.controller.common.*;
 import io.enmasse.k8s.api.AddressSpaceApi;
+import io.enmasse.k8s.api.EventLogger;
+import io.enmasse.k8s.api.KubeEventLogger;
 import io.vertx.core.Vertx;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Clock;
 import java.util.*;
 
 
@@ -66,11 +69,13 @@ public class StandardController implements AddressSpaceController {
         for (AddressSpace addressSpace : addressSpaces) {
             if (!addressControllerMap.containsKey(addressSpace)) {
                 AddressClusterGenerator clusterGenerator = new TemplateAddressClusterGenerator(addressSpaceApi, kubernetes, authResolverFactory);
+                EventLogger eventLogger = kubernetes.withNamespace(addressSpace.getNamespace()).createEventLogger(Clock.systemUTC(), addressSpace.getName() + "-controller");
                 AddressController addressController = new AddressController(
                         addressSpaceApi.withAddressSpace(addressSpace),
                         kubernetes.withNamespace(addressSpace.getNamespace()),
                         clusterGenerator,
-                        certDir);
+                        certDir,
+                        eventLogger);
                 log.info("Deploying address space controller for " + addressSpace.getName());
                 vertx.deployVerticle(addressController, result -> {
                     if (result.succeeded()) {
