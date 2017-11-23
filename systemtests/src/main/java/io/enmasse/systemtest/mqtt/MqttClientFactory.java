@@ -65,6 +65,7 @@ public class MqttClientFactory {
     }
 
     public MqttClient createClient() throws Exception {
+        assert(defaultAddressSpace != null);
         return createClient(defaultAddressSpace);
     }
 

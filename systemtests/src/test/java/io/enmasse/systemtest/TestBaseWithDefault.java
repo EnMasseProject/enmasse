@@ -52,6 +52,7 @@ public abstract class TestBaseWithDefault extends TestBase {
 
     @Override
     public void testRunFinished(Result result) throws Exception {
+        Logging.log.info("default address space '{}' will be removed", defaultAddressSpace);
         try {
             deleteAddressSpace(defaultAddressSpace);
         } catch (Exception e) {
