@@ -14,7 +14,6 @@ function setup_test() {
     export OPENSHIFT_USER=${OPENSHIFT_USER:-test}
     export OPENSHIFT_PASSWD=${OPENSHIFT_PASSWD:-test}
     export OPENSHIFT_PROJECT=${OPENSHIFT_PROJECT:-enmasseci}
-    export OPENSHIFT_MULTITENANT=${OPENSHIFT_MULTITENANT:-true}
     export OPENSHIFT_TEST_LOGDIR=${OPENSHIFT_TEST_LOGDIR:-/tmp/testlogs}
     export OPENSHIFT_USE_TLS=${OPENSHIFT_USE_TLS:-true}
     export ARTIFACTS_DIR=${ARTIFACTS_DIR:-artifacts}
@@ -28,21 +27,13 @@ function setup_test() {
     rm -rf $OPENSHIFT_TEST_LOGDIR
     mkdir -p $OPENSHIFT_TEST_LOGDIR
 
-    DEPLOY_ARGS=( "-y" "-n" "$OPENSHIFT_PROJECT" "-u" "$OPENSHIFT_USER" "-m" "$OPENSHIFT_URL" "-a" "none standard" )
-    if [ "$OPENSHIFT_MULTITENANT" == true ]; then
-        DEPLOY_ARGS+=( "-o" "multitenant" )
-    fi
-
-    if [ "$OPENSHIFT_MULTITENANT" == "true" ]; then
-        oc --config ${KUBEADM} create -f ${ENMASSE_DIR}/openshift/cluster-roles.yaml
-    fi
+    DEPLOY_ARGS=( "-y" "-n" "$OPENSHIFT_PROJECT" "-u" "$OPENSHIFT_USER" "-m" "$OPENSHIFT_URL" "-a" "none standard" "-o" "multitenant" )
+    oc --config ${KUBEADM} create -f ${ENMASSE_DIR}/openshift/cluster-roles.yaml
 
     ${ENMASSE_DIR}/deploy-openshift.sh "${DEPLOY_ARGS[@]}"
 
-    if [ "$OPENSHIFT_MULTITENANT" == "true" ]; then
-        oc adm --config ${KUBEADM} policy add-cluster-role-to-user enmasse-namespace-admin system:serviceaccount:$(oc project -q):enmasse-service-account
-        oc adm --config ${KUBEADM} policy add-cluster-role-to-user cluster-admin $OPENSHIFT_USER
-    fi
+    oc adm --config ${KUBEADM} policy add-cluster-role-to-user enmasse-namespace-admin system:serviceaccount:$(oc project -q):enmasse-service-account
+    oc adm --config ${KUBEADM} policy add-cluster-role-to-user cluster-admin $OPENSHIFT_USER
 }
 function wait_until_up(){
     POD_COUNT=$1
@@ -52,11 +43,7 @@ function wait_until_up(){
 
 function run_test() {
     TESTCASE=$1
-    if [ "$OPENSHIFT_MULTITENANT" == false ]; then
-        wait_until_up 9 ${OPENSHIFT_PROJECT} || return 1
-    else
-        wait_until_up 4 ${OPENSHIFT_PROJECT} || return 1
-    fi
+    wait_until_up 4 ${OPENSHIFT_PROJECT} || return 1
     # Run a single test case
     if [ -n "${TESTCASE}" ]; then
         EXTRA_TEST_ARGS="-Dtest=${TESTCASE}"
