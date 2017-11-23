@@ -15,6 +15,8 @@
  */
 package io.enmasse.systemtest;
 
+import io.enmasse.systemtest.amqp.AmqpClientFactory;
+import io.enmasse.systemtest.mqtt.MqttClientFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -79,6 +81,9 @@ public abstract class TestBaseWithDefault extends TestBase {
             this.password = "systemtest";
             getKeycloakClient().createUser(defaultAddressSpace.getName(), username, password, 1, TimeUnit.MINUTES);
         }
+
+        amqpClientFactory = new AmqpClientFactory(openShift, environment, defaultAddressSpace, username, password);
+        mqttClientFactory = new MqttClientFactory(openShift, environment, defaultAddressSpace, username, password);
     }
 
     @After
