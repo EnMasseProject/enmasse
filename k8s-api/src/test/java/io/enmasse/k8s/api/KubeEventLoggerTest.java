@@ -56,7 +56,7 @@ public class KubeEventLoggerTest {
         when(eventResource.get()).thenReturn(null);
 
         EventLogger logger = new KubeEventLogger(mockClient, ns, clock, component);
-        logger.log("Deleted", "it crashed", "Error");
+        logger.log("Deleted", "it crashed", "Error", "Address", "myqueue");
 
         ArgumentCaptor<Event> eventArgumentCaptor = ArgumentCaptor.forClass(Event.class);
         verify(eventResource).create(eventArgumentCaptor.capture());
@@ -68,10 +68,12 @@ public class KubeEventLoggerTest {
         assertThat(newEvent.getFirstTimestamp(), is(clock.instant().toString()));
         assertThat(newEvent.getLastTimestamp(), is(clock.instant().toString()));
         assertThat(newEvent.getCount(), is(1));
+        assertThat(newEvent.getInvolvedObject().getName(), is("myqueue"));
+        assertThat(newEvent.getInvolvedObject().getKind(), is("Address"));
 
         newEvent.setFirstTimestamp(Instant.ofEpochSecond(5).toString());
         when(eventResource.get()).thenReturn(newEvent);
-        logger.log("Deleted", "it crashed", "Error");
+        logger.log("Deleted", "it crashed", "Error", "Address", "myqueue");
 
         eventArgumentCaptor = ArgumentCaptor.forClass(Event.class);
         verify(eventResource).create(eventArgumentCaptor.capture());

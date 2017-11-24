@@ -37,6 +37,7 @@ import static io.enmasse.address.model.types.standard.StandardType.TOPIC;
  */
 public class AddressController extends AbstractVerticle implements Watcher<Address> {
     private static final Logger log = LoggerFactory.getLogger(AddressController.class);
+    private final String addressSpaceName;
     private final AddressApi addressApi;
     private final Kubernetes kubernetes;
     private final AddressClusterGenerator clusterGenerator;
@@ -44,7 +45,8 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
     private final String certDir;
     private final EventLogger eventLogger;
 
-    public AddressController(AddressApi addressApi, Kubernetes kubernetes, AddressClusterGenerator clusterGenerator, String certDir, EventLogger eventLogger) {
+    public AddressController(String addressSpaceName, AddressApi addressApi, Kubernetes kubernetes, AddressClusterGenerator clusterGenerator, String certDir, EventLogger eventLogger) {
+        this.addressSpaceName = addressSpaceName;
         this.addressApi = addressApi;
         this.kubernetes = kubernetes;
         this.clusterGenerator = clusterGenerator;
@@ -129,11 +131,11 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
                     addressApi.replaceAddress(address);
                 } catch (KubernetesClientException ex) {
                     log.warn("Error syncing address {}", address, ex);
-                    eventLogger.log("FailedAddressSync", "Error syncing address " + address + ": " + ex.getMessage(), "Error");
+                    eventLogger.log("AddressSyncFailed", "Error syncing address: " + ex.getMessage(), "Error", "Address", address.getName());
                 }
             }
         } catch (Exception ex) {
-            eventLogger.log("FailedAddressSync", ex.getMessage(), "Error");
+            eventLogger.log("AddressSyncFailed", ex.getMessage(), "Error", "AddressSpace", addressSpaceName);
         }
     }
 
@@ -165,7 +167,7 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
                     if (!cluster.getResources().getItems().isEmpty()) {
                         log.info("Creating broker cluster with id {}", cluster.getClusterId());
                         kubernetes.create(cluster.getResources());
-                        eventLogger.log("BrokerCreated", "Created broker " + cluster.getClusterId(), "Normal");
+                        eventLogger.log("BrokerCreated", "Created broker", "Normal", "Broker", cluster.getClusterId());
                     }
                 });
     }
@@ -187,7 +189,7 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
 
                     log.info("Deleting broker cluster with id {}", cluster.getClusterId());
                     kubernetes.delete(cluster.getResources());
-                    eventLogger.log("BrokerDeleted", "Deleted broker " + cluster.getClusterId(), "Normal");
+                    eventLogger.log("BrokerDeleted", "Deleted broker","Normal", "Broker", cluster.getClusterId());
                 });
     }
 
@@ -295,7 +297,7 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
             return results.stream().map(l -> l.get(0)).collect(Collectors.toList());
         } catch (Exception e) {
             log.info("Error requesting router status. Ignoring", e);
-            eventLogger.log("RouterCheck", e.getMessage(), "Warning");
+            eventLogger.log("RouterCheckFailed", e.getMessage(), "Warning", "AddressSpace", addressSpaceName);
             return Collections.emptyList();
         }
     }

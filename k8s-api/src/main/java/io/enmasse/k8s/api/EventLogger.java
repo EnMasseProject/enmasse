@@ -19,5 +19,14 @@ package io.enmasse.k8s.api;
  * Interface for handling events
  */
 public interface EventLogger {
-    void log(String reason, String message, String type);
+    /**
+     * Log an event.
+     *
+     * @param reason Created, Deleted etc.
+     * @param message Descriptive message
+     * @param type Severity: Normal, Error, Warning etc.
+     * @param objectKind Kind of object involved in event
+     * @param objectName Name of object involved in event
+     */
+    void log(String reason, String message, String type, String objectKind, String objectName);
 }

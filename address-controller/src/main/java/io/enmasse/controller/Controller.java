@@ -35,7 +35,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.time.Clock;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -119,7 +118,7 @@ public class Controller extends AbstractVerticle implements Watcher<AddressSpace
                     addressSpaceApi.replaceAddressSpace(mutableAddressSpace.build());
                 } catch (KubernetesClientException e) {
                     log.warn("Error syncing address space {}", mutableAddressSpace.getName(), e);
-                    eventLogger.log("FailedAddressSpaceSync", "Error syncing address space " + mutableAddressSpace.getName() + ": " + e.getMessage(), "Error");
+                    eventLogger.log("AddressSpaceSyncFailed", "Error syncing address space: " + e.getMessage(), "Error", "AddressSpace", mutableAddressSpace.getName());
                 }
             }
 
@@ -130,7 +129,7 @@ public class Controller extends AbstractVerticle implements Watcher<AddressSpace
                 controller.resourcesUpdated(filtered);
             }
         } catch (Exception e) {
-            eventLogger.log("FailedAddressSpaceSync", e.getMessage(), "Error");
+            eventLogger.log("AddressSpaceSyncFailed", "Error syncing address space: " + e.getMessage(), "Error", "AddressSpaceController", "enmasse-controller");
             throw e;
         }
     }
