@@ -47,6 +47,7 @@ local images = import "images.jsonnet";
             "deployments",
             "replicasets",
             "routes",
+            "events",
             "secrets",
             "services",
             "persistentvolumeclaims",
