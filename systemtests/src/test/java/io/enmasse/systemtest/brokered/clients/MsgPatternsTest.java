@@ -1,14 +1,12 @@
 package io.enmasse.systemtest.brokered.clients;
 
-import io.enmasse.systemtest.AddressSpace;
-import io.enmasse.systemtest.AddressSpaceType;
-import io.enmasse.systemtest.ClientTestBase;
-import io.enmasse.systemtest.Destination;
+import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.executor.client.AbstractClient;
 import io.enmasse.systemtest.executor.client.Argument;
 import org.junit.Before;
 
 import javax.validation.constraints.AssertTrue;
+import java.net.InetAddress;
 import java.util.Random;
 import java.util.concurrent.Future;
 
@@ -18,7 +16,7 @@ import static org.junit.Assert.assertTrue;
 public class MsgPatternsTest extends ClientTestBase {
 
     @Before
-    public void setUpCommonArguments(){
+    public void setUpCommonArguments() {
         arguments.put(Argument.USERNAME, "test");
         arguments.put(Argument.PASSWORD, "test");
         arguments.put(Argument.LOG_MESSAGES, "json");
@@ -89,6 +87,13 @@ public class MsgPatternsTest extends ClientTestBase {
         Future<Boolean> recResult = subscriber.runAsync();
         Future<Boolean> recResult2 = subscriber2.runAsync();
 
+        int countOfSubscribers = artemisApiClient.getCountOfSubscribers(
+                defaultBrokeredAddressSpace,
+                InetAddress.getLocalHost().getHostName(),
+                dest.getAddress());
+
+        Logging.log.info("Count of subscribers: '{}' subscribed to topic: '{}'", countOfSubscribers, dest.getAddress());
+
         assertTrue(sender.run());
         assertTrue(recResult.get());
         assertTrue(recResult2.get());
@@ -146,7 +151,7 @@ public class MsgPatternsTest extends ClientTestBase {
         assertEquals(count, receiver.getMessages().size());
     }
 
-    protected void doMessageSelectorQueueTest(AbstractClient sender, AbstractClient receiver) throws Exception{
+    protected void doMessageSelectorQueueTest(AbstractClient sender, AbstractClient receiver) throws Exception {
         Destination queue = Destination.queue("selector-queue");
         setAddresses(defaultBrokeredAddressSpace, queue);
 
@@ -195,7 +200,7 @@ public class MsgPatternsTest extends ClientTestBase {
     }
 
     protected void doMessageSelectorTopicTest(AbstractClient sender, AbstractClient subscriber,
-                                              AbstractClient subscriber2, AbstractClient subscriber3) throws Exception{
+                                              AbstractClient subscriber2, AbstractClient subscriber3) throws Exception {
         Destination topic = Destination.topic("selector-topic");
         setAddresses(defaultBrokeredAddressSpace, topic);
 

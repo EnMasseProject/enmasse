@@ -60,6 +60,7 @@ public abstract class TestBase {
     protected String password;
     protected AmqpClientFactory amqpClientFactory;
     protected MqttClientFactory mqttClientFactory;
+    protected ArtemisApiClient artemisApiClient = new ArtemisApiClient(openShift);
 
     protected boolean createDefaultAddressSpace() {
         return true;
