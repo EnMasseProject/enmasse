@@ -4,7 +4,7 @@
 
 export BROKER_IP=`hostname -I | cut -f 1 -d ' '`
 CONFIG_TEMPLATES=/config_templates
-JAVA_OPTS="-Djava.net.preferIPv4Stack=true"
+JAVA_OPTS="-Djava.net.preferIPv4Stack=true -javaagent:/jmx_exporter/jmx_prometheus_javaagent-0.1.0.jar=8080:/jmx_exporter/config.yaml"
 
 if [ -n "$ADMIN_SERVICE_HOST" ]
 then

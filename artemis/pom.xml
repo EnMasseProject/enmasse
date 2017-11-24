@@ -13,5 +13,6 @@
      <module>amqp-connector</module>
      <module>sasl-delegation</module>
      <module>shutdown-hook</module>
+     <module>jmx_exporter</module>
   </modules>
 </project>
