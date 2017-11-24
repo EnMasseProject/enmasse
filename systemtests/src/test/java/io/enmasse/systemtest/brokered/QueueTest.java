@@ -26,7 +26,6 @@ public class QueueTest extends BrokeredTestBase {
         setAddresses(defaultAddressSpace, dest);
 
         AmqpClient client = amqpClientFactory.createQueueClient(defaultAddressSpace);
-        client.getConnectOptions().setUsername("test").setPassword("test");
 
         int msgsCount = 20;
         int msgCountGroupA = 15;

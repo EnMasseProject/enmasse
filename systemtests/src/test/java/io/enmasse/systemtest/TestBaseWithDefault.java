@@ -68,13 +68,11 @@ public abstract class TestBaseWithDefault extends TestBase {
         spaceCountMap.putIfAbsent(getAddressSpaceType(), 0);
         defaultAddressSpace = new AddressSpace(getAddressSpaceType().name().toLowerCase() + defaultAddressTemplate + spaceCountMap.get(getAddressSpaceType()), getAddressSpaceType());
         Logging.log.info("Test is running in multitenant mode");
-        createAddressSpace(defaultAddressSpace, environment.defaultAuthService());
+        createAddressSpace(defaultAddressSpace, "standard");
 
-        if ("standard".equals(environment.defaultAuthService())) {
-            this.username = "systemtest";
-            this.password = "systemtest";
-            getKeycloakClient().createUser(defaultAddressSpace.getName(), username, password, 1, TimeUnit.MINUTES);
-        }
+        this.username = "test";
+        this.password = "test";
+        getKeycloakClient().createUser(defaultAddressSpace.getName(), username, password, 1, TimeUnit.MINUTES);
 
         amqpClientFactory = new AmqpClientFactory(openShift, environment, defaultAddressSpace, username, password);
         mqttClientFactory = new MqttClientFactory(openShift, environment, defaultAddressSpace, username, password);

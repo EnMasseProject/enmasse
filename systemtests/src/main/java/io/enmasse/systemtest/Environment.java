@@ -23,7 +23,6 @@ public class Environment {
     private final String namespace = System.getenv("OPENSHIFT_PROJECT");
     private final String useTls = System.getenv("OPENSHIFT_USE_TLS");
     private final String messagingCert = System.getenv("OPENSHIFT_SERVER_CERT");
-    private final String defaultAuthService = System.getenv().getOrDefault("DEFAULT_AUTHSERVICE", "none");
     private final String testLogDir = System.getenv().getOrDefault("OPENSHIFT_TEST_LOGDIR", "/tmp/testlogs");
     private final String keycloakAdminUser = System.getenv().getOrDefault("KEYCLOAK_ADMIN_USER", "admin");
     private final String keycloakAdminPassword = System.getenv("KEYCLOAK_ADMIN_PASSWORD");
@@ -54,10 +53,6 @@ public class Environment {
 
     public String testLogDir() {
         return testLogDir;
-    }
-
-    public String defaultAuthService() {
-        return defaultAuthService;
     }
 
     public KeycloakCredentials keycloakCredentials() {
