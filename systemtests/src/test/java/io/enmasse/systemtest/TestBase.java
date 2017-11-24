@@ -62,7 +62,9 @@ public abstract class TestBase extends SystemTestRunListener {
     protected MqttClientFactory mqttClientFactory;
     protected List<AddressSpace> addressSpaceList = new ArrayList<>();
 
-    protected AddressSpace getSharedAddressSpace() { return null; }
+    protected AddressSpace getSharedAddressSpace() {
+        return null;
+    }
 
     @Before
     public void setup() throws Exception {
@@ -101,7 +103,7 @@ public abstract class TestBase extends SystemTestRunListener {
         }
     }
 
-    protected void deleteAddressSpace(AddressSpace addressSpace) throws Exception {
+    protected static void deleteAddressSpace(AddressSpace addressSpace) throws Exception {
         logCollector.collectEvents(addressSpace.getNamespace());
         addressApiClient.deleteAddressSpace(addressSpace);
         TestUtils.waitForAddressSpaceDeleted(openShift, addressSpace);
@@ -165,7 +167,7 @@ public abstract class TestBase extends SystemTestRunListener {
     /**
      * scale up/down deployment to count of replicas, includes waiting for expected replicas
      *
-     * @param deployment name of deployment
+     * @param deployment  name of deployment
      * @param numReplicas count of replicas
      * @throws InterruptedException
      */
@@ -179,12 +181,12 @@ public abstract class TestBase extends SystemTestRunListener {
 
     }
 
-    protected boolean isBrokered(AddressSpace addressSpace) throws Exception{
+    protected boolean isBrokered(AddressSpace addressSpace) throws Exception {
         return addressSpace.getType().equals(AddressSpaceType.BROKERED);
     }
 
     protected void assertCanConnect(AddressSpace addressSpace, String username, String password, List<Destination> destinations) throws Exception {
-        assertTrue(canConnectWithAmqp(addressSpace, username, password , destinations));
+        assertTrue(canConnectWithAmqp(addressSpace, username, password, destinations));
         // TODO: Enable this when mqtt is stable enough
         // assertTrue(canConnectWithMqtt(addressSpace, username, password));
     }
@@ -202,8 +204,8 @@ public abstract class TestBase extends SystemTestRunListener {
 
 
     private boolean canConnectWithAmqp(AddressSpace addressSpace, String username, String password, List<Destination> destinations) throws Exception {
-        for (Destination destination : destinations){
-            switch (destination.getType()){
+        for (Destination destination : destinations) {
+            switch (destination.getType()) {
                 case "queue":
                     assertTrue(canConnectWithAmqpToQueue(addressSpace, username, password, destination.getAddress()));
                     break;
@@ -215,7 +217,7 @@ public abstract class TestBase extends SystemTestRunListener {
                         assertTrue(canConnectWithAmqpToMulticast(addressSpace, username, password, destination.getAddress()));
                     break;
                 case "anycast":
-                    if(!isBrokered(addressSpace))
+                    if (!isBrokered(addressSpace))
                         assertTrue(canConnectWithAmqpToAnycast(addressSpace, username, password, destination.getAddress()));
                     break;
             }
