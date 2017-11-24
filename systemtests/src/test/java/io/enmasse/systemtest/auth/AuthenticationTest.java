@@ -65,6 +65,7 @@ public class AuthenticationTest extends TestBase {
         }
         setAddresses(addressSpace, brokeredAddressList.toArray(new Destination[brokeredAddressList.size()]));
         //        setAddresses(name, Destination.queue(amqpAddress)); //, Destination.topic(mqttAddress)); #TODO! for MQTT
+        Thread.sleep(40_000);
         return addressSpace;
     }
 
