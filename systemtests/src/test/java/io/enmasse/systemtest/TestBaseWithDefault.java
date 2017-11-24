@@ -18,11 +18,11 @@ package io.enmasse.systemtest;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
 import io.enmasse.systemtest.mqtt.MqttClientFactory;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
-import org.junit.runner.Result;
 
 import java.util.HashMap;
 import java.util.List;
@@ -34,7 +34,7 @@ import java.util.concurrent.TimeUnit;
 public abstract class TestBaseWithDefault extends TestBase {
     private static final String defaultAddressTemplate = "-default-";
     private static Map<AddressSpaceType, Integer> spaceCountMap = new HashMap<>();
-    protected AddressSpace defaultAddressSpace;
+    protected static AddressSpace defaultAddressSpace;
 
     protected abstract AddressSpaceType getAddressSpaceType();
 
@@ -53,14 +53,10 @@ public abstract class TestBaseWithDefault extends TestBase {
         }
     };
 
-    @Override
-    public void testRunFinished(Result result) throws Exception {
+    @AfterClass
+    public static void after() throws Exception {
         Logging.log.info("default address space '{}' will be removed", defaultAddressSpace);
-        try {
-            deleteAddressSpace(defaultAddressSpace);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        deleteAddressSpace(defaultAddressSpace);
     }
 
     public AddressSpace getSharedAddressSpace() {
