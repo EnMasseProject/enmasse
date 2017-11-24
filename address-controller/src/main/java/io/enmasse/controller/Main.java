@@ -65,9 +65,10 @@ public class Main extends AbstractVerticle {
         AuthenticationServiceResolverFactory resolverFactory = createResolverFactory(options);
         StandardController standardController = new StandardController(vertx, addressSpaceApi, kubernetes, resolverFactory, options.getCertDir());
         BrokeredController brokeredController = new BrokeredController();
+        EventLogger authEventLogger = new KubeEventLogger(controllerClient, controllerClient.getNamespace(), Clock.systemUTC(), "auth-controller");
 
         deployVerticles(startPromise,
-                new Deployment(new AuthController(certManager, addressSpaceApi)),
+                new Deployment(new AuthController(certManager, addressSpaceApi, authEventLogger)),
                 new Deployment(new Controller(controllerClient, addressSpaceApi, kubernetes, resolverFactory, Arrays.asList(standardController, brokeredController), eventLogger)),
 //                new Deployment(new AMQPServer(kubernetes.getNamespace(), addressSpaceApi, options.port())),
                 new Deployment(new HTTPServer(addressSpaceApi, options.getCertDir(), kubernetes, options.isEnableRbac() && kubernetes.isRBACSupported()), new DeploymentOptions().setWorker(true)));
