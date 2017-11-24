@@ -21,14 +21,15 @@ import java.util.stream.Collectors;
 
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.Endpoint;
+import io.enmasse.controller.event.ControllerKind;
 import io.enmasse.k8s.api.*;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static io.enmasse.k8s.api.EventLogger.Reason.CertCreateFailed;
-import static io.enmasse.k8s.api.EventLogger.Reason.CertCreated;
+import static io.enmasse.controller.common.ControllerReason.CertCreateFailed;
+import static io.enmasse.controller.common.ControllerReason.CertCreated;
 import static io.enmasse.k8s.api.EventLogger.Type.Normal;
 import static io.enmasse.k8s.api.EventLogger.Type.Warning;
 
@@ -126,10 +127,10 @@ public class AuthController extends AbstractVerticle implements Watcher<AddressS
         }, result -> {
             if (result.succeeded()) {
                 log.info("Issued addressspace ca certificates: {}", result.result());
-                eventLogger.log(CertCreated, "Created address space CA", Normal, EventLogger.ObjectKind.AddressSpace, addressSpace.getName());
+                eventLogger.log(CertCreated, "Created address space CA", Normal, ControllerKind.AddressSpace, addressSpace.getName());
             } else {
                 log.warn("Error issuing addressspace ca certificate", result.cause());
-                eventLogger.log(CertCreateFailed, "Error creating certificate",Warning, EventLogger.ObjectKind.AddressSpace, addressSpace.getName());
+                eventLogger.log(CertCreateFailed, "Error creating certificate",Warning, ControllerKind.AddressSpace, addressSpace.getName());
             }
         });
     }
@@ -155,11 +156,11 @@ public class AuthController extends AbstractVerticle implements Watcher<AddressS
                 List<Cert> components = result.result();
                 if (!components.isEmpty()) {
                     log.info("Issued component certificates: {}", result.result());
-                    eventLogger.log(CertCreated, "Created component certificates", Normal, EventLogger.ObjectKind.AddressSpace, addressSpace.getName());
+                    eventLogger.log(CertCreated, "Created component certificates", Normal, ControllerKind.AddressSpace, addressSpace.getName());
                 }
             } else {
                 log.warn("Error issuing component certificates", result.cause());
-                eventLogger.log(CertCreateFailed, "Error creating component certificates", Warning, EventLogger.ObjectKind.AddressSpace, addressSpace.getName());
+                eventLogger.log(CertCreateFailed, "Error creating component certificates", Warning, ControllerKind.AddressSpace, addressSpace.getName());
             }
         });
     }
