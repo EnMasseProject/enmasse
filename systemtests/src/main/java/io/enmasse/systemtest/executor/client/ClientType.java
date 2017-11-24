@@ -20,9 +20,13 @@ public enum ClientType {
                 return isWindows() ? "cli-rhea-sender.cmd" : "cli-rhea-sender";
             case CLI_RHEA_RECEIVER:
                 return isWindows() ? "cli-rhea-receiver.cmd" : "cli-rhea-receiver";
+            case CLI_PROTON_PYTHON_SENDER:
+                return "cli-proton-python-sender";
+            case CLI_PROTON_PYTHON_RECEIVER:
+                return "cli-proton-python-receiver";
             default:
                 return "";
-            //TODO: complete for every client (cli-java, cli-proton-python)
+            //TODO: complete for every client (cli-java)
         }
     }
 

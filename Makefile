@@ -60,5 +60,6 @@ systemtests:
 
 client_install:
 	npm install -g cli-rhea
+	pip install cli-proton-python
 
 .PHONY: $(BUILD_TARGETS) $(DOCKER_TARGETS) $(BUILD_DIRS) $(DOCKER_DIRS) build_java deploy systemtests clean_java

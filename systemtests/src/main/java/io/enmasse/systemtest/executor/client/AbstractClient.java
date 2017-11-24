@@ -161,7 +161,7 @@ public abstract class AbstractClient {
     /**
      * Base broker transformation to user:password@[ip/hostname]:port
      * @param args argument map
-     * @return
+     * @return argument map
      */
     protected ArgumentMap basicBrokerTransformation(ArgumentMap args){
         String username;
@@ -192,6 +192,27 @@ public abstract class AbstractClient {
         }
         args.remove(Argument.USERNAME);
         args.remove(Argument.PASSWORD);
+        return args;
+    }
+
+    /**
+     * Broker url transformation
+     * @param args argument map
+     * @return argument map
+     */
+    protected ArgumentMap brokerUrlTranformation(ArgumentMap args){
+        args = basicBrokerTransformation(args);
+        if(args.getValues(Argument.BROKER) != null){
+            String protocol = args.getValues(Argument.CONN_SSL) != null ? "amqps://" : "amqp://";
+            args.put(Argument.BROKER_URL,
+                    String.format("%s%s/%s", protocol, args.getValues(Argument.BROKER).get(0),
+                            args.getValues(Argument.ADDRESS).get(0)));
+        }
+        args.remove(Argument.CONN_SSL);
+        args.remove(Argument.USERNAME);
+        args.remove(Argument.PASSWORD);
+        args.remove(Argument.BROKER);
+
         return args;
     }
 
