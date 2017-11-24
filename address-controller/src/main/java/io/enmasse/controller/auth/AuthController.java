@@ -121,10 +121,10 @@ public class AuthController extends AbstractVerticle implements Watcher<AddressS
         }, result -> {
             if (result.succeeded()) {
                 log.info("Issued addressspace ca certificates: {}", result.result());
-                eventLogger.log("CertCreated", "Created address space CA for " + addressSpace.getName(), "Normal");
+                eventLogger.log("CertCreated", "Created address space CA", "Normal", "AddressSpace", addressSpace.getName());
             } else {
                 log.warn("Error issuing addressspace ca certificate", result.cause());
-                eventLogger.log("CertCreateFailed", "Failed creating certificate for address space " + addressSpace.getName(), "Warning");
+                eventLogger.log("CertCreateFailed", "Error creating certificate","Warning", "AddressSpace", addressSpace.getName());
             }
         });
     }
@@ -150,11 +150,11 @@ public class AuthController extends AbstractVerticle implements Watcher<AddressS
                 List<Cert> components = result.result();
                 if (!components.isEmpty()) {
                     log.info("Issued component certificates: {}", result.result());
-                    eventLogger.log("CertCreated", "Created component certificates for " + addressSpace.getName(), "Normal");
+                    eventLogger.log("CertCreated", "Created component certificates", "Normal", "AddressSpace", addressSpace.getName());
                 }
             } else {
                 log.warn("Error issuing component certificates", result.cause());
-                eventLogger.log("CertCreateFailed", "Error creating component certificates for " + addressSpace.getName(), "Warning");
+                eventLogger.log("CertCreateFailed", "Error creating component certificates", "Warning", "AddressSpace", addressSpace.getName());
             }
         });
     }

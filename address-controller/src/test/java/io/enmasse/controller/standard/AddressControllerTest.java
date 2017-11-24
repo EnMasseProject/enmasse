@@ -57,7 +57,7 @@ public class AddressControllerTest {
         EventLogger eventLogger = mock(EventLogger.class);
 
         when(mockHelper.getNamespace()).thenReturn("myinstance");
-        controller = new AddressController(mockApi, mockHelper, mockGenerator, null, eventLogger);
+        controller = new AddressController("me", mockApi, mockHelper, mockGenerator, null, eventLogger);
     }
 
     private Address createAddress(String address, AddressType type) {

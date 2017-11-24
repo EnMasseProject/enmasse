@@ -40,7 +40,7 @@ public class KubeEventLogger implements EventLogger {
     }
 
     @Override
-    public void log(String reason, String message, String type) {
+    public void log(String reason, String message, String type, String objectKind, String objectName) {
         String eventName = componentName + "." + (reason + message + type).hashCode();
         Event existing = kubeClient.events().inNamespace(namespace).withName(eventName).get();
         String timestamp = Instant.now(clock).toString();
@@ -58,6 +58,11 @@ public class KubeEventLogger implements EventLogger {
                         .withReason(reason)
                         .withMessage(message)
                         .withType(type)
+                        .withNewInvolvedObject()
+                        .withNamespace(namespace)
+                        .withKind(objectKind)
+                        .withName(objectName)
+                        .endInvolvedObject()
                         .withFirstTimestamp(timestamp)
                         .withLastTimestamp(timestamp)
                         .withNewSource()

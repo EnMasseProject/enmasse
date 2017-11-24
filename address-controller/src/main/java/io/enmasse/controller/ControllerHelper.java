@@ -81,7 +81,7 @@ public class ControllerHelper {
         }
 
         kubernetes.create(resourceList.resourceList, addressSpace.getNamespace());
-        eventLogger.log("AddressSpaceCreated", "Created address space {}" + addressSpace.getName(), "Normal");
+        eventLogger.log("AddressSpaceCreated", "Created address space", "Normal", "AddressSpace", addressSpace.getName());
     }
 
     private static class StandardResources {
@@ -204,8 +204,9 @@ public class ControllerHelper {
                 try {
                     log.info("Deleting address space {}", id);
                     kubernetes.deleteNamespace(namespace.getMetadata().getName());
-                    eventLogger.log("AddressSpaceDeleted", "Deleted address space {}" + id, "Normal");
+                    eventLogger.log("AddressSpaceDeleted", "Deleted address space", "Normal", "AddressSpace", id);
                 } catch (KubernetesClientException e) {
+                    eventLogger.log("AddressSpaceDeleteFailed", e.getMessage(), "Warning", "AddressSpace", id);
                     log.info("Exception when deleting namespace (may already be in progress): " + e.getMessage());
                 }
             }

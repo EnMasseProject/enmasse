@@ -71,6 +71,7 @@ public class StandardController implements AddressSpaceController {
                 AddressClusterGenerator clusterGenerator = new TemplateAddressClusterGenerator(addressSpaceApi, kubernetes, authResolverFactory);
                 EventLogger eventLogger = kubernetes.withNamespace(addressSpace.getNamespace()).createEventLogger(Clock.systemUTC(), addressSpace.getName() + "-controller");
                 AddressController addressController = new AddressController(
+                        addressSpace.getName(),
                         addressSpaceApi.withAddressSpace(addressSpace),
                         kubernetes.withNamespace(addressSpace.getNamespace()),
                         clusterGenerator,
