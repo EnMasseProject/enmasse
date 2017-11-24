@@ -91,12 +91,14 @@ public abstract class TestBase extends SystemTestRunListener {
             addressApiClient.createAddressSpace(addressSpace, authService);
             logCollector.startCollecting(addressSpace.getNamespace());
             TestUtils.waitForAddressSpaceReady(addressApiClient, addressSpace.getName());
-            if (addressSpace.getType().equals(AddressSpaceType.STANDARD)) {
-                Thread.sleep(120_000);
-            }
 
             if (!addressSpace.equals(getSharedAddressSpace())) {
                 addressSpaceList.add(addressSpace);
+            }
+
+            if (addressSpace.getType().equals(AddressSpaceType.STANDARD)) {
+                Logging.log.info("Waiting for 2 minutes before starting tests");
+                Thread.sleep(120_000);
             }
         } else {
             Logging.log.info("Address space '" + addressSpace + "' already exists.");
