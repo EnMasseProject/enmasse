@@ -38,9 +38,9 @@ public class PythonClientReceiver extends AbstractClient {
         allowedArgs.add(Argument.LOG_MESSAGES);
 
         allowedArgs.add(Argument.BROKER_URL);
-        allowedArgs.add(Argument.BROKER);
-        allowedArgs.add(Argument.ADDRESS);
-        allowedArgs.add(Argument.COUNT);
+        //allowedArgs.add(Argument.BROKER);
+        //allowedArgs.add(Argument.ADDRESS);
+        //allowedArgs.add(Argument.COUNT);
         allowedArgs.add(Argument.CLOSE_SLEEP);
         allowedArgs.add(Argument.TIMEOUT);
         allowedArgs.add(Argument.DURATION);

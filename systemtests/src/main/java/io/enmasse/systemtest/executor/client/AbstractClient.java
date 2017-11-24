@@ -212,6 +212,7 @@ public abstract class AbstractClient {
         args.remove(Argument.USERNAME);
         args.remove(Argument.PASSWORD);
         args.remove(Argument.BROKER);
+        args.remove(Argument.ADDRESS);
 
         return args;
     }
