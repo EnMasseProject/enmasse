@@ -66,9 +66,17 @@ This builds all modules including java.
 
     make deploy
 
-#### Running the systemtests
-
+### Systemtests
 This assumes that the above deploy step has been run
+
+#### To run systemtests, you need
+    * npm
+    * python pip
+
+#### Install clients
+    make client_install
+
+#### Running the systemtests
 
     make systemtests
     
