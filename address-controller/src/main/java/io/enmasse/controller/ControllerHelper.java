@@ -33,6 +33,12 @@ import org.slf4j.LoggerFactory;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static io.enmasse.k8s.api.EventLogger.Reason.AddressSpaceCreated;
+import static io.enmasse.k8s.api.EventLogger.Reason.AddressSpaceDeleteFailed;
+import static io.enmasse.k8s.api.EventLogger.Reason.AddressSpaceDeleted;
+import static io.enmasse.k8s.api.EventLogger.Type.Normal;
+import static io.enmasse.k8s.api.EventLogger.Type.Warning;
+
 /**
  * Helper class for managing a standard address space.
  */
@@ -81,7 +87,7 @@ public class ControllerHelper {
         }
 
         kubernetes.create(resourceList.resourceList, addressSpace.getNamespace());
-        eventLogger.log("AddressSpaceCreated", "Created address space", "Normal", "AddressSpace", addressSpace.getName());
+        eventLogger.log(AddressSpaceCreated, "Created address space", Normal, EventLogger.ObjectKind.AddressSpace, addressSpace.getName());
     }
 
     private static class StandardResources {
@@ -204,9 +210,9 @@ public class ControllerHelper {
                 try {
                     log.info("Deleting address space {}", id);
                     kubernetes.deleteNamespace(namespace.getMetadata().getName());
-                    eventLogger.log("AddressSpaceDeleted", "Deleted address space", "Normal", "AddressSpace", id);
+                    eventLogger.log(AddressSpaceDeleted, "Deleted address space", Normal, EventLogger.ObjectKind.AddressSpace, id);
                 } catch (KubernetesClientException e) {
-                    eventLogger.log("AddressSpaceDeleteFailed", e.getMessage(), "Warning", "AddressSpace", id);
+                    eventLogger.log(AddressSpaceDeleteFailed, e.getMessage(), Warning, EventLogger.ObjectKind.AddressSpace, id);
                     log.info("Exception when deleting namespace (may already be in progress): " + e.getMessage());
                 }
             }

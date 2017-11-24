@@ -38,6 +38,8 @@ import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static io.enmasse.k8s.api.EventLogger.Reason.AddressSpaceSyncFailed;
+
 /**
  * The main controller loop that monitors k8s address spaces
  */
@@ -118,7 +120,7 @@ public class Controller extends AbstractVerticle implements Watcher<AddressSpace
                     addressSpaceApi.replaceAddressSpace(mutableAddressSpace.build());
                 } catch (KubernetesClientException e) {
                     log.warn("Error syncing address space {}", mutableAddressSpace.getName(), e);
-                    eventLogger.log("AddressSpaceSyncFailed", "Error syncing address space: " + e.getMessage(), "Error", "AddressSpace", mutableAddressSpace.getName());
+                    eventLogger.log(AddressSpaceSyncFailed, "Error syncing address space: " + e.getMessage(), EventLogger.Type.Warning, EventLogger.ObjectKind.AddressSpace, mutableAddressSpace.getName());
                 }
             }
 
@@ -129,7 +131,7 @@ public class Controller extends AbstractVerticle implements Watcher<AddressSpace
                 controller.resourcesUpdated(filtered);
             }
         } catch (Exception e) {
-            eventLogger.log("AddressSpaceSyncFailed", "Error syncing address space: " + e.getMessage(), "Error", "AddressSpaceController", "enmasse-controller");
+            eventLogger.log(AddressSpaceSyncFailed, "Error syncing address space: " + e.getMessage(), EventLogger.Type.Warning, EventLogger.ObjectKind.Controller, "enmasse-controller");
             throw e;
         }
     }
