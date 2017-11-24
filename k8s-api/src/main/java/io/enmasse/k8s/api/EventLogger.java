@@ -19,14 +19,43 @@ package io.enmasse.k8s.api;
  * Interface for handling events
  */
 public interface EventLogger {
+
+    enum Reason {
+        AddressSpaceCreated,
+        AddressCreated,
+        BrokerCreated,
+        AddressSpaceSyncFailed,
+        CertCreated,
+        CertCreateFailed,
+        RouterCheckFailed,
+        BrokerDeleted,
+        AddressSpaceDeleted,
+        AddressSpaceDeleteFailed,
+        AddressSyncFailed
+
+
+    }
+
+    enum Type {
+        Normal,
+        Warning
+    }
+
+    enum ObjectKind {
+        Address,
+        AddressSpace,
+        Broker,
+        Controller
+    }
+
     /**
      * Log an event.
      *
-     * @param reason Created, Deleted etc.
+     * @param reason any of {@link Reason}
      * @param message Descriptive message
-     * @param type Severity: Normal, Error, Warning etc.
-     * @param objectKind Kind of object involved in event
+     * @param type any of {@link Type}
+     * @param objectKind any of {@link ObjectKind}
      * @param objectName Name of object involved in event
      */
-    void log(String reason, String message, String type, String objectKind, String objectName);
+    void log(Reason reason, String message, Type type, ObjectKind objectKind, String objectName);
 }
