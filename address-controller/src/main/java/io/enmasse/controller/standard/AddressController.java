@@ -4,6 +4,7 @@ import io.enmasse.address.model.AddressType;
 import io.enmasse.amqp.SyncRequestClient;
 import io.enmasse.controller.common.*;
 import io.enmasse.address.model.Address;
+import io.enmasse.controller.event.ControllerKind;
 import io.enmasse.k8s.api.*;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerPort;
@@ -30,9 +31,9 @@ import java.util.stream.Collectors;
 
 import static io.enmasse.address.model.types.standard.StandardType.QUEUE;
 import static io.enmasse.address.model.types.standard.StandardType.TOPIC;
-import static io.enmasse.k8s.api.EventLogger.ObjectKind.AddressSpace;
-import static io.enmasse.k8s.api.EventLogger.ObjectKind.Broker;
-import static io.enmasse.k8s.api.EventLogger.Reason.*;
+import static io.enmasse.controller.common.ControllerReason.*;
+import static io.enmasse.controller.event.ControllerKind.AddressSpace;
+import static io.enmasse.controller.event.ControllerKind.Broker;
 import static io.enmasse.k8s.api.EventLogger.Type.Normal;
 import static io.enmasse.k8s.api.EventLogger.Type.Warning;
 
@@ -136,7 +137,7 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
                     addressApi.replaceAddress(address);
                 } catch (KubernetesClientException ex) {
                     log.warn("Error syncing address {}", address, ex);
-                    eventLogger.log(AddressSyncFailed, "Error syncing address: " + ex.getMessage(), Warning, EventLogger.ObjectKind.Address, address.getName());
+                    eventLogger.log(AddressSyncFailed, "Error syncing address: " + ex.getMessage(), Warning, ControllerKind.Address, address.getName());
                 }
             }
         } catch (Exception ex) {

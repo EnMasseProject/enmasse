@@ -20,20 +20,8 @@ package io.enmasse.k8s.api;
  */
 public interface EventLogger {
 
-    enum Reason {
-        AddressSpaceCreated,
-        AddressCreated,
-        BrokerCreated,
-        AddressSpaceSyncFailed,
-        CertCreated,
-        CertCreateFailed,
-        RouterCheckFailed,
-        BrokerDeleted,
-        AddressSpaceDeleted,
-        AddressSpaceDeleteFailed,
-        AddressSyncFailed
-
-
+    interface Reason {
+        String name();
     }
 
     enum Type {
@@ -41,11 +29,8 @@ public interface EventLogger {
         Warning
     }
 
-    enum ObjectKind {
-        Address,
-        AddressSpace,
-        Broker,
-        Controller
+    interface ObjectKind {
+        String name();
     }
 
     /**

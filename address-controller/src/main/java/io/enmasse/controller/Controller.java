@@ -23,6 +23,7 @@ import io.enmasse.config.LabelKeys;
 import io.enmasse.controller.common.AddressSpaceController;
 import io.enmasse.controller.common.AuthenticationServiceResolverFactory;
 import io.enmasse.controller.common.Kubernetes;
+import io.enmasse.controller.event.ControllerKind;
 import io.enmasse.k8s.api.*;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.Service;
@@ -38,7 +39,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static io.enmasse.k8s.api.EventLogger.Reason.AddressSpaceSyncFailed;
+import static io.enmasse.controller.common.ControllerReason.AddressSpaceSyncFailed;
 
 /**
  * The main controller loop that monitors k8s address spaces
@@ -120,7 +121,7 @@ public class Controller extends AbstractVerticle implements Watcher<AddressSpace
                     addressSpaceApi.replaceAddressSpace(mutableAddressSpace.build());
                 } catch (KubernetesClientException e) {
                     log.warn("Error syncing address space {}", mutableAddressSpace.getName(), e);
-                    eventLogger.log(AddressSpaceSyncFailed, "Error syncing address space: " + e.getMessage(), EventLogger.Type.Warning, EventLogger.ObjectKind.AddressSpace, mutableAddressSpace.getName());
+                    eventLogger.log(AddressSpaceSyncFailed, "Error syncing address space: " + e.getMessage(), EventLogger.Type.Warning, ControllerKind.AddressSpace, mutableAddressSpace.getName());
                 }
             }
 
@@ -131,7 +132,7 @@ public class Controller extends AbstractVerticle implements Watcher<AddressSpace
                 controller.resourcesUpdated(filtered);
             }
         } catch (Exception e) {
-            eventLogger.log(AddressSpaceSyncFailed, "Error syncing address space: " + e.getMessage(), EventLogger.Type.Warning, EventLogger.ObjectKind.Controller, "enmasse-controller");
+            eventLogger.log(AddressSpaceSyncFailed, "Error syncing address space: " + e.getMessage(), EventLogger.Type.Warning, ControllerKind.Controller, "enmasse-controller");
             throw e;
         }
     }

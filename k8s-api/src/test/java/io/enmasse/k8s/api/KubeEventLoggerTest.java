@@ -15,7 +15,6 @@
  */
 package io.enmasse.k8s.api;
 
-import io.enmasse.address.model.AddressSpace;
 import io.fabric8.kubernetes.api.model.DoneableEvent;
 import io.fabric8.kubernetes.api.model.Event;
 import io.fabric8.kubernetes.api.model.EventList;
@@ -40,6 +39,15 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 public class KubeEventLoggerTest {
+
+    private enum TestReason implements EventLogger.Reason {
+        NONE
+    }
+
+    private enum TestKind implements EventLogger.ObjectKind {
+        KIND
+    }
+
     @Test
     public void testLogger() {
         String ns = "myspace";
@@ -58,31 +66,31 @@ public class KubeEventLoggerTest {
         when(eventResource.get()).thenReturn(null);
 
         EventLogger logger = new KubeEventLogger(mockClient, ns, clock, component);
-        logger.log(EventLogger.Reason.AddressSpaceDeleted, "it crashed", Warning, EventLogger.ObjectKind.AddressSpace, "myqueue");
+        logger.log(TestReason.NONE, "it crashed", Warning, TestKind.KIND, "myqueue");
 
         ArgumentCaptor<Event> eventArgumentCaptor = ArgumentCaptor.forClass(Event.class);
         verify(eventResource).create(eventArgumentCaptor.capture());
         Event newEvent = eventArgumentCaptor.getValue();
         assertNotNull(newEvent);
         assertThat(newEvent.getMessage(), is(message));
-        assertThat(newEvent.getReason(), is(EventLogger.Reason.AddressSpaceDeleted.name()));
+        assertThat(newEvent.getReason(), is(TestReason.NONE.name()));
         assertThat(newEvent.getType(), is(Warning.name()));
         assertThat(newEvent.getFirstTimestamp(), is(clock.instant().toString()));
         assertThat(newEvent.getLastTimestamp(), is(clock.instant().toString()));
         assertThat(newEvent.getCount(), is(1));
         assertThat(newEvent.getInvolvedObject().getName(), is("myqueue"));
-        assertThat(newEvent.getInvolvedObject().getKind(), is(EventLogger.ObjectKind.AddressSpace.name()));
+        assertThat(newEvent.getInvolvedObject().getKind(), is(TestKind.KIND.name()));
 
         newEvent.setFirstTimestamp(Instant.ofEpochSecond(5).toString());
         when(eventResource.get()).thenReturn(newEvent);
-        logger.log(EventLogger.Reason.AddressSpaceDeleted, "it crashed", Warning, EventLogger.ObjectKind.AddressSpace, "myqueue");
+        logger.log(TestReason.NONE, "it crashed", Warning, TestKind.KIND, "myqueue");
 
         eventArgumentCaptor = ArgumentCaptor.forClass(Event.class);
         verify(eventResource).create(eventArgumentCaptor.capture());
         newEvent = eventArgumentCaptor.getValue();
         assertNotNull(newEvent);
         assertThat(newEvent.getMessage(), is(message));
-        assertThat(newEvent.getReason(), is(EventLogger.Reason.AddressSpaceDeleted.name()));
+        assertThat(newEvent.getReason(), is(TestReason.NONE.name()));
         assertThat(newEvent.getType(), is(Warning.name()));
         assertThat(newEvent.getFirstTimestamp(), is(Instant.ofEpochSecond(5).toString()));
         assertThat(newEvent.getLastTimestamp(), is(clock.instant().toString()));
