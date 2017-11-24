@@ -69,8 +69,6 @@ public abstract class TestBaseWithDefault extends TestBase {
         defaultAddressSpace = new AddressSpace(getAddressSpaceType().name().toLowerCase() + defaultAddressTemplate + spaceCountMap.get(getAddressSpaceType()), getAddressSpaceType());
         Logging.log.info("Test is running in multitenant mode");
         createAddressSpace(defaultAddressSpace, environment.defaultAuthService());
-        // TODO: Wait another minute so that all services are connected
-        Logging.log.info("Waiting for 2 minutes before starting tests");
 
         if ("standard".equals(environment.defaultAuthService())) {
             this.username = "systemtest";
