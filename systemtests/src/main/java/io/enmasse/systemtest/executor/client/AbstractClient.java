@@ -92,6 +92,7 @@ public abstract class AbstractClient {
         try {
             Executor executor = new Executor();
             boolean ret = executor.execute(prepareCommand(), timeout);
+            Logging.log.info("Return code - " + ret);
             if (ret) {
                 Logging.log.info(executor.getStdOut());
                 parseToJson(executor.getStdOut());

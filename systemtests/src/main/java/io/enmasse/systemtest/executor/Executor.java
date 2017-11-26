@@ -84,7 +84,6 @@ public class Executor {
             stdErr = stdErrReader.getData();
         }
 
-        Logging.log.info("Return code - " + retCode);
         return retCode == 0;
     }
 
