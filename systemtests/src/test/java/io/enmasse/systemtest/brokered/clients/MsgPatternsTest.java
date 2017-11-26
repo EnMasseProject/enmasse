@@ -208,7 +208,6 @@ public class MsgPatternsTest extends ClientTestBase {
         sender.setArguments(arguments);
 
         arguments.remove(Argument.MSG_PROPERTY);
-        arguments.put(Argument.TIMEOUT, "2");
 
         //set up subscriber1
         arguments.put(Argument.SELECTOR, "colour = 'red'");
@@ -220,6 +219,7 @@ public class MsgPatternsTest extends ClientTestBase {
 
         //set up subscriber3
         arguments.put(Argument.SELECTOR, "a AND b");
+        arguments.put(Argument.TIMEOUT, "1");
         subscriber3.setArguments(arguments);
 
         Future<Boolean> result1 = subscriber.runAsync();
