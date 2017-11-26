@@ -2,14 +2,11 @@ package io.enmasse.systemtest.marathon;
 
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.amqp.AmqpClient;
-import io.enmasse.systemtest.amqp.AmqpClientFactory;
 import io.enmasse.systemtest.standard.TopicTest;
 import org.junit.Test;
 
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import static org.junit.Assert.assertFalse;
 
 public class AuthenticationTest extends MarathonTestBase {
 
@@ -106,31 +103,8 @@ public class AuthenticationTest extends MarathonTestBase {
         Logging.log.info("testCreateDeleteUsersRestartKeyCloakLong finished");
     }
 
-
-
-    protected void createUser(AddressSpace addressSpace, String username, String password) throws Exception{
-        getKeycloakClient().createUser(addressSpace.getName(), username, password);
-    }
-
-    protected void removeUser(AddressSpace addressSpace, String username) throws Exception{
-        getKeycloakClient().deleteUser(addressSpace.getName(), username);
-    }
-
-    protected void createUsers(AddressSpace addressSpace, String prefixName, String prefixPswd, int from, int to)
-            throws Exception {
-        for (int i = from; i < to; i++) {
-            createUser(addressSpace, prefixName + i, prefixPswd + i);
-        }
-    }
-
-    protected void removeUsers(AddressSpace addressSpace, String prefixName, int from, int to) throws Exception {
-        for (int i = from; i < to; i++) {
-            removeUser(addressSpace, prefixName + i);
-        }
-    }
-
     private void doBasicAuthQueueTopicTest(AddressSpace addressSpace, Destination queue, Destination topic,
-                                           String uname, String password) throws Exception {
+                                             String uname, String password) throws Exception {
         int messageCount = 100;
         AmqpClient queueClient = amqpClientFactory.createQueueClient(addressSpace);
         queueClient.getConnectOptions().setUsername(uname).setPassword(password);

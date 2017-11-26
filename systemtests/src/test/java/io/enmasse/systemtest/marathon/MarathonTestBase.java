@@ -1,8 +1,6 @@
 package io.enmasse.systemtest.marathon;
 
-import io.enmasse.systemtest.AddressSpace;
 import io.enmasse.systemtest.Logging;
-import io.enmasse.systemtest.BrokeredTestBase;
 import io.enmasse.systemtest.TestBase;
 import org.junit.Rule;
 import org.junit.rules.ErrorCollector;
