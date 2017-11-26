@@ -208,7 +208,6 @@ public class MsgPatternsTest extends ClientTestBase {
         sender.setArguments(arguments);
 
         arguments.remove(Argument.MSG_PROPERTY);
-        arguments.put(Argument.TIMEOUT, "2");
 
         //set up subscriber1
         arguments.put(Argument.SELECTOR, "colour = 'red'");

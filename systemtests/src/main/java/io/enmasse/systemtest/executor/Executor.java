@@ -1,5 +1,7 @@
 package io.enmasse.systemtest.executor;
 
+import io.enmasse.systemtest.Logging;
+
 import java.io.*;
 import java.util.ArrayList;
 import java.util.concurrent.*;
@@ -52,6 +54,7 @@ public class Executor {
      * @throws ExecutionException
      */
     public boolean execute(ArrayList<String> commands, int timeout) throws IOException, InterruptedException, ExecutionException {
+        Logging.log.info("Running command - " + String.join(" ", commands.toArray(new String[0])));
         process = Runtime.getRuntime().exec((commands.toArray(new String[0])));
 
         Future<String> output = readStdOutput();
@@ -81,6 +84,7 @@ public class Executor {
             stdErr = stdErrReader.getData();
         }
 
+        Logging.log.info("Return code - " + retCode);
         return retCode == 0;
     }
 
