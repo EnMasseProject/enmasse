@@ -35,12 +35,12 @@ public class Executor {
     /**
      * Method executes external command
      * @param commands arguments for command
-     * @return returns true if command exit code is 0
+     * @return returns ecode of execution
      * @throws IOException
      * @throws InterruptedException
      * @throws ExecutionException
      */
-    public boolean execute(ArrayList<String> commands) throws IOException, InterruptedException, ExecutionException {
+    public int execute(ArrayList<String> commands) throws IOException, InterruptedException, ExecutionException {
         return execute(commands, 0);
     }
 
@@ -48,12 +48,12 @@ public class Executor {
      * Method executes external command
      * @param commands arguments for command
      * @param timeout timeout in ms for kill
-     * @return returns true if command exit code is 0
+     * @return returns ecode of execution
      * @throws IOException
      * @throws InterruptedException
      * @throws ExecutionException
      */
-    public boolean execute(ArrayList<String> commands, int timeout) throws IOException, InterruptedException, ExecutionException {
+    public int execute(ArrayList<String> commands, int timeout) throws IOException, InterruptedException, ExecutionException {
         Logging.log.info("Running command - " + String.join(" ", commands.toArray(new String[0])));
         process = Runtime.getRuntime().exec((commands.toArray(new String[0])));
 
@@ -84,7 +84,7 @@ public class Executor {
             stdErr = stdErrReader.getData();
         }
 
-        return retCode == 0;
+        return retCode;
     }
 
     /**

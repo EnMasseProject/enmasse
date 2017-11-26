@@ -91,15 +91,15 @@ public abstract class AbstractClient {
         messages.clear();
         try {
             Executor executor = new Executor();
-            boolean ret = executor.execute(prepareCommand(), timeout);
+            int ret = executor.execute(prepareCommand(), timeout);
             Logging.log.info("Return code - " + ret);
-            if (ret) {
+            if (ret == 0) {
                 Logging.log.info(executor.getStdOut());
                 parseToJson(executor.getStdOut());
             } else {
                 Logging.log.error(executor.getStdErr());
             }
-            return ret;
+            return ret == 0;
         } catch (Exception ex) {
             ex.printStackTrace();
             return false;
@@ -149,7 +149,9 @@ public abstract class AbstractClient {
         if (data != null) {
             for (String line : data.split(System.getProperty("line.separator"))) {
                 if (!Objects.equals(line, "") && !line.trim().isEmpty()) {
-                    messages.add(new JsonObject(line));
+                    try {
+                        messages.add(new JsonObject(line));
+                    }catch(Exception ex){}
                 }
             }
         }
