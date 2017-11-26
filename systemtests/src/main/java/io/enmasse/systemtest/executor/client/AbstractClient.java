@@ -14,6 +14,7 @@ import java.util.concurrent.*;
  * Class represent abstract client which keeps common features of client
  */
 public abstract class AbstractClient {
+    private final Object lock = new Object();
     private final int DEFAULT_ASYNC_TIMEOUT = 120000;
     private final int DEFAULT_SYNC_TIMEOUT = 60000;
 
@@ -92,13 +93,15 @@ public abstract class AbstractClient {
         try {
             Executor executor = new Executor();
             int ret = executor.execute(prepareCommand(), timeout);
-            if (ret == 0) {
-                Logging.log.info(executor.getStdOut());
-                parseToJson(executor.getStdOut());
-            } else {
-                Logging.log.error(executor.getStdErr());
+            synchronized (lock) {
+                Logging.log.info("Return code - " + ret);
+                if (ret == 0) {
+                    Logging.log.info(executor.getStdOut());
+                    parseToJson(executor.getStdOut());
+                } else {
+                    Logging.log.error(executor.getStdErr());
+                }
             }
-            Logging.log.info("Return code - " + ret);
             return ret == 0;
         } catch (Exception ex) {
             ex.printStackTrace();
