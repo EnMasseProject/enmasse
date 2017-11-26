@@ -92,13 +92,13 @@ public abstract class AbstractClient {
         try {
             Executor executor = new Executor();
             int ret = executor.execute(prepareCommand(), timeout);
-            Logging.log.info("Return code - " + ret);
             if (ret == 0) {
                 Logging.log.info(executor.getStdOut());
                 parseToJson(executor.getStdOut());
             } else {
                 Logging.log.error(executor.getStdErr());
             }
+            Logging.log.info("Return code - " + ret);
             return ret == 0;
         } catch (Exception ex) {
             ex.printStackTrace();
