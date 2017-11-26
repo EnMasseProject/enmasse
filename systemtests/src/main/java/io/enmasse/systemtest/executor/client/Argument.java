@@ -66,7 +66,7 @@ public enum Argument {
     ANONYMOUS("--anonymous"),
 
     //receiver opts
-    SELECTOR("--msg-selector"),
+    SELECTOR("--recv-selector"),
     RECV_BROWSE("--recv-browse"),
     ACTION("--action"),
     PROCESS_REPLY_TO("--process-reply-to"),
