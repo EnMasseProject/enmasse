@@ -32,6 +32,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
 
 public class KeycloakClient {
 
@@ -68,25 +69,33 @@ public class KeycloakClient {
         int maxRetries = 10;
         try (CloseableKeycloak keycloak = new CloseableKeycloak(endpoint, credentials, trustStore)) {
             RealmResource realmResource = waitForRealm(keycloak.get(), realm, timeout, timeUnit);
-            if (realmResource.groups().group("admin") != null) {
-                for (int retries = 0; retries < maxRetries; retries++) {
-                    try {
-                        List<UserRepresentation> users = keycloak.get().realm(realm).users().search(username);
-                        if (!users.isEmpty()) {
-                            String clientId = users.get(0).getId();
-                            keycloak.get().realm(realm).users().get(clientId).joinGroup(groupName);
+            for (int retries = 0; retries < maxRetries; retries++) {
+                try {
+                    List<UserRepresentation> users = keycloak.get().realm(realm).users().search(username);
+                    if (!users.isEmpty()) {
+                        String clientId = users.get(0).getId();
+                        String groupId = null;
+                        List<GroupRepresentation> groups =
+                                keycloak.get().realm(realm).groups()
+                                        .groups()
+                                        .stream()
+                                        .filter(group -> group.getName().equals(groupName))
+                                        .collect(Collectors.toList());
+
+                        if (!groups.isEmpty()) {
+                            realmResource.users().get(clientId).joinGroup(groupId);
                             Logging.log.info("User '{}' successfully joined into group '{}'", username, groupName);
                             break;
                         } else {
-                            throw new RuntimeException("Unable to find user: " + username);
+                            throw new RuntimeException("Unable to find group: " + groupName);
                         }
-                    } catch (Exception e) {
-                        Logging.log.info("Exception querying keycloak ({}), retrying", e.getMessage());
-                        Thread.sleep(2000);
+                    } else {
+                        throw new RuntimeException("Unable to find user: " + username);
                     }
+                } catch (Exception e) {
+                    Logging.log.info("Exception querying keycloak ({}), retrying", e.getMessage());
+                    Thread.sleep(2000);
                 }
-            } else {
-                throw new RuntimeException("group doesn't exist:" + groupName);
             }
         }
     }
@@ -99,25 +108,33 @@ public class KeycloakClient {
         int maxRetries = 10;
         try (CloseableKeycloak keycloak = new CloseableKeycloak(endpoint, credentials, trustStore)) {
             RealmResource realmResource = waitForRealm(keycloak.get(), realm, timeout, timeUnit);
-            if (realmResource.groups().group("admin") != null) {
-                for (int retries = 0; retries < maxRetries; retries++) {
-                    try {
-                        List<UserRepresentation> users = keycloak.get().realm(realm).users().search("username");
-                        if (!users.isEmpty()) {
-                            String clientId = users.get(0).getId();
-                            keycloak.get().realm(realm).users().get(clientId).leaveGroup(groupName);
-                            Logging.log.info("User '{}' successfully joined into group '{}'", username, groupName);
+            for (int retries = 0; retries < maxRetries; retries++) {
+                try {
+                    List<UserRepresentation> users = keycloak.get().realm(realm).users().search(username);
+                    if (!users.isEmpty()) {
+                        String clientId = users.get(0).getId();
+                        String groupId = null;
+                        List<GroupRepresentation> groups =
+                                keycloak.get().realm(realm).groups()
+                                        .groups()
+                                        .stream()
+                                        .filter(group -> group.getName().equals(groupName))
+                                        .collect(Collectors.toList());
+
+                        if (!groups.isEmpty()) {
+                            realmResource.users().get(clientId).leaveGroup(groupId);
+                            Logging.log.info("User '{}' successfully leaved into group '{}'", username, groupName);
                             break;
                         } else {
-                            throw new RuntimeException("Unable to find user: " + username);
+                            throw new RuntimeException("Unable to find group: " + groupName);
                         }
-                    } catch (Exception e) {
-                        Logging.log.info("Exception querying keycloak ({}), retrying", e.getMessage());
-                        Thread.sleep(2000);
+                    } else {
+                        throw new RuntimeException("Unable to find user: " + username);
                     }
+                } catch (Exception e) {
+                    Logging.log.info("Exception querying keycloak ({}), retrying", e.getMessage());
+                    Thread.sleep(2000);
                 }
-            } else {
-                throw new RuntimeException("group doesn't exist:" + groupName);
             }
         }
     }
