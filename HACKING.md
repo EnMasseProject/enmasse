@@ -4,16 +4,16 @@
 
 To build EnMasse, you need
 
-    * [JDK](http://openjdk.java.net/) >= 1.8
-    * [Apache Maven](https://maven.apache.org/) >= 3.0
-    * [Python](https://www.python.org/)
-    * [Docker](https://www.docker.com/)
-    * [GNU Make](https://www.gnu.org/software/make/)
-    * [Node.js](https://nodejs.org/en/) >= 6 (only for node.js unit tests)
-    * [Npm >= 3](https://www.npmjs.com/) (only for node.js unit tests)
-    * [GNU GCC C++](https://gcc.gnu.org/) (to build jsonnet tool)
-    * [Asciidoctor](http://asciidoc.org/) (optional, only required for docs)
-    * [Python Pip](https://pypi.python.org/pypi/pip) (optional, only required for systemtests)
+   * [JDK](http://openjdk.java.net/) >= 1.8
+   * [Apache Maven](https://maven.apache.org/) >= 3.0
+   * [Python](https://www.python.org/)
+   * [Docker](https://www.docker.com/)
+   * [GNU Make](https://www.gnu.org/software/make/)
+   * [Node.js](https://nodejs.org/en/) >= 6 (only for node.js unit tests)
+   * [Npm >= 3](https://www.npmjs.com/) (only for node.js unit tests)
+   * [GNU GCC C++](https://gcc.gnu.org/) (to build jsonnet tool)
+   * [Asciidoctor](http://asciidoc.org/) (optional, only required for docs)
+   * [Python Pip](https://pypi.python.org/pypi/pip) (optional, only required for systemtests)
 
 The EnMasse java modules are built using maven. Node.js modules are built using make. All docker images
 are built using make.
