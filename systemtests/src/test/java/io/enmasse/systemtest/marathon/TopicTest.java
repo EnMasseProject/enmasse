@@ -5,7 +5,6 @@ import io.enmasse.systemtest.AddressSpaceType;
 import io.enmasse.systemtest.Destination;
 import io.enmasse.systemtest.TestUtils;
 import io.enmasse.systemtest.amqp.AmqpClient;
-import io.enmasse.systemtest.amqp.AmqpClientFactory;
 import org.apache.qpid.proton.message.Message;
 import org.junit.Test;
 

@@ -5,7 +5,6 @@ import io.enmasse.systemtest.AddressSpaceType;
 import io.enmasse.systemtest.Destination;
 import io.enmasse.systemtest.Logging;
 import io.enmasse.systemtest.amqp.AmqpClient;
-import io.enmasse.systemtest.amqp.AmqpClientFactory;
 import io.enmasse.systemtest.standard.QueueTest;
 import io.enmasse.systemtest.standard.TopicTest;
 import org.junit.Test;
@@ -13,7 +12,7 @@ import org.junit.Test;
 import java.util.ArrayList;
 import java.util.List;
 
-public class AddressSpaceTest extends AuthenticationTest {
+public class AddressSpaceTest extends MarathonTestBase {
 
     @Test
     public void testCreateDeleteAddressSpaceLong() throws Exception{

@@ -183,6 +183,27 @@ public abstract class TestBase extends SystemTestRunListener {
 
     }
 
+    protected void createUser(AddressSpace addressSpace, String username, String password) throws Exception{
+        getKeycloakClient().createUser(addressSpace.getName(), username, password);
+    }
+
+    protected void removeUser(AddressSpace addressSpace, String username) throws Exception{
+        getKeycloakClient().deleteUser(addressSpace.getName(), username);
+    }
+
+    protected void createUsers(AddressSpace addressSpace, String prefixName, String prefixPswd, int from, int to)
+            throws Exception {
+        for (int i = from; i < to; i++) {
+            createUser(addressSpace, prefixName + i, prefixPswd + i);
+        }
+    }
+
+    protected void removeUsers(AddressSpace addressSpace, String prefixName, int from, int to) throws Exception {
+        for (int i = from; i < to; i++) {
+            removeUser(addressSpace, prefixName + i);
+        }
+    }
+
     protected boolean isBrokered(AddressSpace addressSpace) throws Exception {
         return addressSpace.getType().equals(AddressSpaceType.BROKERED);
     }
