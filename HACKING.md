@@ -18,7 +18,7 @@ To build EnMasse, you need
 The EnMasse java modules are built using maven. Node.js modules are built using make. All docker images
 are built using make.
 
-Note: asciidoctor, node.js and npm are optional. asciidoctor is only
+*Note*: asciidoctor, node.js and npm are optional. asciidoctor is only
 required to build the help pages for the console. node.js and npm are
 only required to run the unit tests for ragent, console and subserv.
 
@@ -62,7 +62,7 @@ This builds all modules including java.
     make docker_tag
     make docker_push
 
-If you are using OpenShift and 'oc cluster up', you can push images directly to the builtin registry
+*Note*: If you are using OpenShift and 'oc cluster up', you can push images directly to the builtin registry
 by setting `DOCKER_ORG=myproject` and `DOCKER_REGISTRY=172.30.1.1:5000` instead.
 
 #### Deploying to an OpenShift instance assuming already logged in
