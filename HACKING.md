@@ -92,14 +92,14 @@ individual module:
 
 #### Make targets
 
-    * `build`        - build
-    * `test`         - run tests
-    * `package`      - create artifact bundle
-    * `docker_build` - build docker image
-    * `docker_tag`   - tag docker image
-    * `docker_push`  - push docker image
-    * `deploy`       - deploys the built templates to OpenShift. The images referenced by the template must be available in a docker registry
-    * `systemtests`  - run systemtests
+   * `build`        - build
+   * `test`         - run tests
+   * `package`      - create artifact bundle
+   * `docker_build` - build docker image
+   * `docker_tag`   - tag docker image
+   * `docker_push`  - push docker image
+   * `deploy`       - deploys the built templates to OpenShift. The images referenced by the template must be available in a docker registry
+   * `systemtests`  - run systemtests
 
 Some of these tasks can be configured using environment variables as listed below.
 
@@ -108,11 +108,11 @@ Some of these tasks can be configured using environment variables as listed belo
 There are several environment variables that control the behavior of the build. Some of them are
 only consumed by some tasks:
 
-    * OPENSHIFT_MASTER  - URL to OpenShift master. Consumed by `deploy` and `systemtests` targets
-    * OPENSHIFT_USER    - OpenShift user. Consumed by `deploy` target
-    * OPENSHIFT_PASSWD  - OpenShift password. Consumed by `deploy` target
-    * OPENSHIFT_TOKEN   - OpenShift token. Consumed by `systemtests` target
-    * OPENSHIFT_PROJECT - OpenShift project for EnMasse. Consumed by `deploy` and `systemtests` targets
-    * DOCKER_ORG        - Docker organization for EnMasse images. Consumed by `build`, `package`, `docker*` targets. tasks. Defaults to `enmasseproject`
-    * DOCKER_REGISTRY   - Docker registry for EnMasse images. Consumed by `build`, `package`, `docker_tag` and `docker_push` targets. Defaults to `docker.io`
-    * TAG               - Tag used as docker image tag in snapshots and in the generated templates. Consumed by `build`, `package`, `docker_tag` and `docker_push` targets.
+   * OPENSHIFT_MASTER  - URL to OpenShift master. Consumed by `deploy` and `systemtests` targets
+   * OPENSHIFT_USER    - OpenShift user. Consumed by `deploy` target
+   * OPENSHIFT_PASSWD  - OpenShift password. Consumed by `deploy` target
+   * OPENSHIFT_TOKEN   - OpenShift token. Consumed by `systemtests` target
+   * OPENSHIFT_PROJECT - OpenShift project for EnMasse. Consumed by `deploy` and `systemtests` targets
+   * DOCKER_ORG        - Docker organization for EnMasse images. Consumed by `build`, `package`, `docker*` targets. tasks. Defaults to `enmasseproject`
+   * DOCKER_REGISTRY   - Docker registry for EnMasse images. Consumed by `build`, `package`, `docker_tag` and `docker_push` targets. Defaults to `docker.io`
+   * TAG               - Tag used as docker image tag in snapshots and in the generated templates. Consumed by `build`, `package`, `docker_tag` and `docker_push` targets.
