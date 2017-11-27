@@ -133,14 +133,11 @@ public class KeycloakClient {
 
             for (int retries = 0; retries < maxRetries; retries++) {
                 try {
-                    if (realmResource.groups().group("admin") == null) {
-                        GroupRepresentation groupRep = new GroupRepresentation();
-                        Response response = keycloak.get().realm(realm).groups().add(groupRep);
-                        if (response.getStatus() != 201) {
-                            throw new RuntimeException("Unable to create group: " + response.getStatus());
-                        }
-                    } else {
-                        Logging.log.warn("group '{}' already exist", groupName);
+                    GroupRepresentation groupRep = new GroupRepresentation();
+                    groupRep.setName(groupName);
+                    Response response = keycloak.get().realm(realm).groups().add(groupRep);
+                    if (response.getStatus() != 201) {
+                        throw new RuntimeException("Unable to create group: " + response.getStatus());
                     }
                     break;
                 } catch (Exception e) {
