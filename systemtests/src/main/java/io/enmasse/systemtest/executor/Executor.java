@@ -55,7 +55,10 @@ public class Executor {
      */
     public int execute(ArrayList<String> commands, int timeout) throws IOException, InterruptedException, ExecutionException {
         Logging.log.info("Running command - " + String.join(" ", commands.toArray(new String[0])));
-        process = Runtime.getRuntime().exec((commands.toArray(new String[0])));
+        ProcessBuilder builder = new ProcessBuilder();
+        builder.command(commands);
+        builder.directory(new File(System.getProperty("user.dir")));
+        process = builder.start();
 
         Future<String> output = readStdOutput();
         Future<String> error = readStdError();
