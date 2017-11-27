@@ -15,7 +15,7 @@ import static org.junit.Assert.assertTrue;
 public class MsgPatternsTest extends ClientTestBase {
 
     @Before
-    public void setUpCommonArguments(){
+    public void setUpCommonArguments() {
         arguments.put(Argument.USERNAME, "test");
         arguments.put(Argument.PASSWORD, "test");
         arguments.put(Argument.LOG_MESSAGES, "json");
@@ -86,6 +86,9 @@ public class MsgPatternsTest extends ClientTestBase {
         Future<Boolean> recResult = subscriber.runAsync();
         Future<Boolean> recResult2 = subscriber2.runAsync();
 
+        createGroup(defaultAddressSpace, "admin");
+        joinGroup(defaultAddressSpace, "admin", "test");
+
         assertTrue(sender.run());
         assertTrue(recResult.get());
         assertTrue(recResult2.get());
@@ -143,7 +146,7 @@ public class MsgPatternsTest extends ClientTestBase {
         assertEquals(count, receiver.getMessages().size());
     }
 
-    protected void doMessageSelectorQueueTest(AbstractClient sender, AbstractClient receiver) throws Exception{
+    protected void doMessageSelectorQueueTest(AbstractClient sender, AbstractClient receiver) throws Exception {
         Destination queue = Destination.queue("selector-queue");
         setAddresses(defaultAddressSpace, queue);
 
@@ -192,7 +195,7 @@ public class MsgPatternsTest extends ClientTestBase {
     }
 
     protected void doMessageSelectorTopicTest(AbstractClient sender, AbstractClient subscriber,
-                                              AbstractClient subscriber2, AbstractClient subscriber3) throws Exception{
+                                              AbstractClient subscriber2, AbstractClient subscriber3) throws Exception {
         Destination topic = Destination.topic("selector-topic");
         setAddresses(defaultAddressSpace, topic);
 
