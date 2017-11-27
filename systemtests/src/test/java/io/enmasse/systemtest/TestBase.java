@@ -183,11 +183,23 @@ public abstract class TestBase extends SystemTestRunListener {
 
     }
 
-    protected void createUser(AddressSpace addressSpace, String username, String password) throws Exception{
+    protected void createGroup(AddressSpace addressSpace, String groupName) throws Exception {
+        getKeycloakClient().createGroup(addressSpace.getName(), groupName);
+    }
+
+    protected void joinGroup(AddressSpace addressSpace, String groupName, String username) throws Exception {
+        getKeycloakClient().joinGroup(addressSpace.getName(), groupName, username);
+    }
+
+    protected void leaveGroup(AddressSpace addressSpace, String groupName, String username) throws Exception {
+        getKeycloakClient().leaveGroup(addressSpace.getName(), groupName, username);
+    }
+
+    protected void createUser(AddressSpace addressSpace, String username, String password) throws Exception {
         getKeycloakClient().createUser(addressSpace.getName(), username, password);
     }
 
-    protected void removeUser(AddressSpace addressSpace, String username) throws Exception{
+    protected void removeUser(AddressSpace addressSpace, String username) throws Exception {
         getKeycloakClient().deleteUser(addressSpace.getName(), username);
     }
 
