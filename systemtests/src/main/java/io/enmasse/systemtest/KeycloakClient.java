@@ -71,7 +71,7 @@ public class KeycloakClient {
             if (realmResource.groups().group("admin") != null) {
                 for (int retries = 0; retries < maxRetries; retries++) {
                     try {
-                        List<UserRepresentation> users = keycloak.get().realm(realm).users().search("username");
+                        List<UserRepresentation> users = keycloak.get().realm(realm).users().search(username);
                         if (!users.isEmpty()) {
                             String clientId = users.get(0).getId();
                             keycloak.get().realm(realm).users().get(clientId).joinGroup(groupName);
