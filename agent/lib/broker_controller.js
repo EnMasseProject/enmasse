@@ -125,7 +125,9 @@ function transform_producer_stats(raw) {
         name: undefined,
         connection_id: raw.connectionID,
         address: raw.destination,
-        deliveries: raw.msgSent
+        deliveries: raw.msgSent,
+        deliveryCount: raw.msgSent,
+        lastUpdated: Date.now()
     };
 }
 
@@ -134,7 +136,8 @@ function transform_consumer_stats(raw) {
         name: raw.consumerID,
         connection_id: raw.connectionID,
         address: raw.queueName,//mapped to address in later step
-        deliveries: 0//TODO: need to retrieve this
+        deliveries: 0,//TODO: not yet available from broker
+        lastUpdated: Date.now()
     };
 }
 
