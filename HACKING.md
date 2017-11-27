@@ -33,9 +33,11 @@ can be initialized:
 
 ### Pre-installation
 
-   * `npm install -g mocha-junit-reporter`
-   * `npm install -g rhea`
-   * `npm install -g debug`
+The following node.js modules are required for the ragent, agent and subserv unit tests to work:
+
+    npm install -g mocha-junit-reporter
+    npm install -g rhea
+    npm install -g debug
 
 *Note*: Make sure docker daemon is in running state.
 
