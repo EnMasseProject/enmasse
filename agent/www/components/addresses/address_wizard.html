@@ -35,13 +35,15 @@
   </div>
   <div pf-wizard-step step-title="Plan" substeps="false" step-id="plan" step-priority="1" show-review="true" show-review-details="true" review-template="components/addresses/plan-review.html">
     <form class="form-horizontal">
-      <div ng-repeat="plan in valid_plans()">
-        <div pf-form-group pf-label="Plan" pf-label-class="col-sm-2" pf-input-class="col-sm-10" pf-label="{{plan.name}}">
-          <input id="{{plan.name}}" name="plan" value="{{plan.name}}" ng-model="data.plan" type="radio"/>
-          <span title="" ng-if="hasPlantip(data.type, plan.name)" tooltip-append-to-body="true" class="tip-block" tooltip-class="enmasse-tooltip" uib-tooltip-html="getPlantip(data.type, plan.name)">
-            {{getPlanLabel(data.type, plan.name)}} <span ng-if="hasExternalPlan(data.type, plan.name)"><a class="learn-more" target="_new" ng-href="{{getExternalPlan(data.type, plan.name)}}">Learn more <i class="fa fa-external-link small" aria-hidden="true"></i></a></span>
-          </span>
-          <span ng-if="!hasPlantip(data.type, plan.name)">{{getPlanLabel(data.type, plan.name)}}</span>
+      <div pf-form-group pf-label="Plan" pf-label-class="col-sm-2" pf-input-class="col-sm-10">
+        <div ng-repeat="plan in valid_plans()">
+          <div pf-form-group pf-label-class="col-sm-2" pf-input-class="col-sm-10" pf-label="{{plan.name}}">
+            <input id="{{plan.name}}" name="plan" value="{{plan.name}}" ng-model="data.plan" type="radio"/>
+            <span title="" ng-if="hasPlantip(data.type, plan.name)" tooltip-append-to-body="true" class="tip-block" tooltip-class="enmasse-tooltip" uib-tooltip-html="getPlantip(data.type, plan.name)">
+              {{getPlanLabel(data.type, plan.name)}} <span ng-if="hasExternalPlan(data.type, plan.name)"><a class="learn-more" target="_new" ng-href="{{getExternalPlan(data.type, plan.name)}}">Learn more <i class="fa fa-external-link small" aria-hidden="true"></i></a></span>
+            </span>
+            <span ng-if="!hasPlantip(data.type, plan.name)">{{getPlanLabel(data.type, plan.name)}}</span>
+          </div>
         </div>
       </div>
     </form>
