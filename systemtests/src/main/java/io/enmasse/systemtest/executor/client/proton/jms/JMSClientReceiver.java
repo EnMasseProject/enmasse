@@ -5,6 +5,9 @@ import io.enmasse.systemtest.executor.client.Argument;
 import io.enmasse.systemtest.executor.client.ArgumentMap;
 import io.enmasse.systemtest.executor.client.ClientType;
 
+import java.util.Arrays;
+import java.util.List;
+
 public class JMSClientReceiver extends AbstractClient {
     public JMSClientReceiver(){
         super(ClientType.CLI_JAVA_PROTON_JMS_RECEIVER);
@@ -38,8 +41,8 @@ public class JMSClientReceiver extends AbstractClient {
         allowedArgs.add(Argument.LOG_MESSAGES);
 
         allowedArgs.add(Argument.BROKER_URL);
-        //allowedArgs.add(Argument.BROKER);
-        //allowedArgs.add(Argument.ADDRESS);
+        allowedArgs.add(Argument.BROKER);
+        allowedArgs.add(Argument.ADDRESS);
         allowedArgs.add(Argument.COUNT);
         allowedArgs.add(Argument.CLOSE_SLEEP);
         allowedArgs.add(Argument.TIMEOUT);
@@ -55,7 +58,12 @@ public class JMSClientReceiver extends AbstractClient {
 
     @Override
     protected ArgumentMap transformArguments(ArgumentMap args) {
-        args = brokerUrlTranformation(args);
+        args = basicBrokerTransformation(args);
         return args;
+    }
+
+    @Override
+    protected List<String> transformExecutableCommand(String executableCommand) {
+        return Arrays.asList("java", "-jar", executableCommand, "receiver");
     }
 }

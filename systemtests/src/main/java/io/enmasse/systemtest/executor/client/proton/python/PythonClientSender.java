@@ -5,6 +5,9 @@ import io.enmasse.systemtest.executor.client.Argument;
 import io.enmasse.systemtest.executor.client.ArgumentMap;
 import io.enmasse.systemtest.executor.client.ClientType;
 
+import java.util.Arrays;
+import java.util.List;
+
 
 public class PythonClientSender extends AbstractClient {
     public PythonClientSender(){
@@ -71,5 +74,10 @@ public class PythonClientSender extends AbstractClient {
     protected ArgumentMap transformArguments(ArgumentMap args) {
         args = brokerUrlTranformation(args);
         return args;
+    }
+
+    @Override
+    protected List<String> transformExecutableCommand(String executableCommand) {
+        return Arrays.asList(executableCommand);
     }
 }

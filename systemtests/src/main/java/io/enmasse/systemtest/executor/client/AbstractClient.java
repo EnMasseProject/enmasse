@@ -7,6 +7,8 @@ import io.vertx.core.json.JsonObject;
 
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.*;
 
@@ -84,6 +86,13 @@ public abstract class AbstractClient {
     protected abstract ArgumentMap transformArguments(ArgumentMap args);
 
     /**
+     * Method modify executable command of client
+     * @param executableCommand command
+     * @return list of commands
+     */
+    protected abstract List<String> transformExecutableCommand(String executableCommand);
+
+    /**
      * Run clients
      * @param timeout kill timeout in ms
      * @return true if command end with exit code 0
@@ -115,8 +124,10 @@ public abstract class AbstractClient {
      */
     private ArrayList<String> prepareCommand(){
         ArrayList<String> command = new ArrayList<>(arguments);
-        command.add(0, ClientType.getCommand(clientType));
-        return command;
+        ArrayList<String> executableCommand = new ArrayList<>();
+        executableCommand.addAll(transformExecutableCommand(ClientType.getCommand(clientType)));
+        executableCommand.addAll(command);
+        return executableCommand;
     }
 
     /**

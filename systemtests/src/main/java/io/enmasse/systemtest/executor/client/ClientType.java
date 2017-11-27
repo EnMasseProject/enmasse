@@ -16,7 +16,6 @@ public enum ClientType {
      * @return client executable
      */
     public static String getCommand(ClientType client){
-        String javaPrefix = "java -jar ";
         switch (client){
             case CLI_RHEA_SENDER:
                 return isWindows() ? "cli-rhea-sender.cmd" : "cli-rhea-sender";
@@ -27,13 +26,13 @@ public enum ClientType {
             case CLI_PROTON_PYTHON_RECEIVER:
                 return "cli-proton-python-receiver";
             case CLI_JAVA_PROTON_JMS_SENDER:
-                return javaPrefix + "cli-qpid-jms.jar sender";
+                return "./client_executable/cli-qpid-jms.jar";
             case CLI_JAVA_PROTON_JMS_RECEIVER:
-                return javaPrefix + "cli-qpid-jms.jar receiver";
+                return "./client_executable/cli-qpid-jms.jar";
             case CLI_JAVA_ARTEMIS_JMS_SENDER:
-                return javaPrefix + "cli-artemis-jms.jar sender";
+                return "./client_executable/cli-artemis-jms.jar";
             case CLI_JAVA_ARTEMIS_JMS_RECEIVER:
-                return javaPrefix + "cli-artemis-jms.jar receiver";
+                return "./client_executable/cli-artemis-jms.jar";
             default:
                 return "";
         }
