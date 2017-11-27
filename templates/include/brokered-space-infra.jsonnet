@@ -59,6 +59,16 @@ local hawkularBrokerConfig = import "hawkular-broker-config.jsonnet";
           "port": 5671,
           "targetPort": "amqps"
         },
+        {
+          "name": "core",
+          "port": 61616,
+          "targetPort": "core"
+        },
+        {
+          "name": "openwire",
+          "port": 61613,
+          "targetPort": "openwire"
+        },
       ],
       "selector": {
         "role": "broker"
@@ -143,6 +153,8 @@ local hawkularBrokerConfig = import "hawkular-broker-config.jsonnet";
               "ports": [
                 common.container_port("amqp", 5672),
                 common.container_port("amqps", 5671),
+                common.container_port("core", 61616),
+                common.container_port("openwire", 61613),
                 common.container_port("amqps-normal", 55671),
                 common.container_port("jolokia", 8161)
               ],
