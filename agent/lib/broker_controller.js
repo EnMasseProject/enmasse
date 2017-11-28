@@ -20,12 +20,14 @@ var util = require('util');
 var events = require('events');
 var rhea = require('rhea');
 var artemis = require('./artemis.js');
+var myevents = require('./events.js');
 
-function BrokerController() {
+function BrokerController(event_sink) {
     events.EventEmitter.call(this);
     this.check_in_progress = false;
     this.container = rhea.create_container();
     this.container.on('connection_open', this.on_connection_open.bind(this));
+    this.post_event = event_sink || function (event) { log.info('event: %j', event); };
     setInterval(this.check_broker_addresses.bind(this), 5000);//poll broker stats every 5 secs
 };
 
@@ -264,19 +266,23 @@ BrokerController.prototype.delete_addresses = function (addresses) {
         if (a.type === 'queue') {
             return self.broker.destroyQueue(a.address).then(function () {
                 log.info('Deleted queue %s', a.address);
+                self.post_event(myevents.address_delete(a));
             }).catch(function (error) {
                 log.error('Failed to delete queue %s: %s', a.address, error);
                 self.broker.deleteAddress(a.address).then(function () {
                     log.info('Deleted anycast address %s', a.address);
                 }).catch(function (error) {
                     log.error('Failed to delete queue address %s: %s', a.address, error);
+                    self.post_event(myevents.address_failed_delete(a, error));
                 });
             });
         } else {
             return self.broker.deleteAddressAndBindings(a.address).then(function () {
                 log.info('Deleted topic %s', a.address);
+                self.post_event(myevents.address_delete(a));
             }).catch(function (error) {
                 log.error('Failed to delete topic %s: %s', a.address, error);
+                self.post_event(myevents.address_failed_delete(a, error));
             });
         }
     }));
@@ -288,14 +294,18 @@ BrokerController.prototype.create_addresses = function (addresses) {
         if (a.type === 'queue') {
             return self.broker.createQueue(a.address).then(function () {
                 log.info('Created queue %s', a.address);
+                self.post_event(myevents.address_create(a));
             }).catch(function (error) {
                 log.error('Failed to create queue %s: %s', a.address, error);
+                self.post_event(myevents.address_failed_create(a, error));
             });
         } else {
             return self.broker.createAddress(a.address, {multicast:true}).then(function () {
                 log.info('Created topic %s', a.address);
+                self.post_event(myevents.address_create(a));
             }).catch(function (error) {
                 log.error('Failed to create topic %s: %s', a.address, error);
+                self.post_event(myevents.address_failed_create(a, error));
             });
         }
     }));
