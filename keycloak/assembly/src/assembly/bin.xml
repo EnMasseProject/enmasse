@@ -1,0 +1,31 @@
+<assembly>
+  <id>bin</id>
+  <formats>
+    <format>tar.gz</format>
+    <format>zip</format>
+  </formats>
+  <includeBaseDirectory>false</includeBaseDirectory>
+  <fileSets>
+    <fileSet>
+    <directory>../src/main/sh</directory>
+      <outputDirectory>/bin</outputDirectory>
+      <includes>
+               <include>*</include>
+      </includes>
+    </fileSet>  
+    <fileSet>
+      <directory>../sasl-plugin/target</directory>
+      <outputDirectory>/providers</outputDirectory>
+      <includes>
+          <include>sasl-plugin*.jar</include>
+      </includes>
+    </fileSet>
+    <fileSet>
+      <directory>../src/main/xsl</directory>
+      <outputDirectory>/</outputDirectory>
+      <includes>
+          <include>*.xsl</include>
+      </includes>
+    </fileSet>
+  </fileSets>
+</assembly>
