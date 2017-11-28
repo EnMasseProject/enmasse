@@ -4,7 +4,7 @@ build:
 	@echo "Nothing to build"
 
 package:
-	tar -czf build/ragent.tgz *.js
+	tar -czf build/ragent-$(VERSION).tgz *.js
 
 test: npm_test
 
