@@ -111,7 +111,7 @@ AddressCtrl.prototype.create_address = function (address) {
 }
 
 AddressCtrl.prototype.delete_address = function(address) {
-    return this.request(this.addr_path + address.address, 'DELETE');
+    return this.request(this.addr_path + encodeURIComponent(address.address), 'DELETE');
 }
 
 function index(list) {
