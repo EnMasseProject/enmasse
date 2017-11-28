@@ -16,13 +16,11 @@ public class ArtemisJMSClientSender extends AbstractClient {
 
     @Override
     protected void fillAllowedArgs() {
-        allowedArgs.add(Argument.CONN_URLS);
         allowedArgs.add(Argument.CONN_RECONNECT);
         allowedArgs.add(Argument.CONN_RECONNECT_INTERVAL);
         allowedArgs.add(Argument.CONN_RECONNECT_LIMIT);
         allowedArgs.add(Argument.CONN_RECONNECT_TIMEOUT);
         allowedArgs.add(Argument.CONN_HEARTBEAT);
-        allowedArgs.add(Argument.CONN_SSL);
         allowedArgs.add(Argument.CONN_SSL_CERTIFICATE);
         allowedArgs.add(Argument.CONN_SSL_PRIVATE_KEY);
         allowedArgs.add(Argument.CONN_SSL_PASSWORD);
@@ -30,7 +28,20 @@ public class ArtemisJMSClientSender extends AbstractClient {
         allowedArgs.add(Argument.CONN_SSL_VERIFY_PEER);
         allowedArgs.add(Argument.CONN_SSL_VERIFY_PEER_NAME);
         allowedArgs.add(Argument.CONN_MAX_FRAME_SIZE);
-        allowedArgs.add(Argument.CONN_WEB_SOCKET);
+        allowedArgs.add(Argument.CONN_ASYNC_ACKS);
+        allowedArgs.add(Argument.CONN_ASYNC_SEND);
+        allowedArgs.add(Argument.CONN_AUTH_MECHANISM);
+        allowedArgs.add(Argument.CONN_AUTH_SASL);
+        allowedArgs.add(Argument.CONN_CLIENT_ID);
+        allowedArgs.add(Argument.CONN_CLOSE_TIMEOUT);
+        allowedArgs.add(Argument.CONN_CONN_TIMEOUT);
+        allowedArgs.add(Argument.CONN_DRAIN_TIMEOUT);
+        allowedArgs.add(Argument.CONN_SSL_TRUST_ALL);
+        allowedArgs.add(Argument.CONN_SSL_VERIFY_HOST);
+
+        allowedArgs.add(Argument.TX_SIZE);
+        allowedArgs.add(Argument.TX_ACTION);
+        allowedArgs.add(Argument.TX_ENDLOOP_ACTION);
 
         allowedArgs.add(Argument.LINK_DURABLE);
         allowedArgs.add(Argument.LINK_AT_MOST_ONCE);
@@ -41,7 +52,6 @@ public class ArtemisJMSClientSender extends AbstractClient {
         allowedArgs.add(Argument.LOG_STATS);
         allowedArgs.add(Argument.LOG_MESSAGES);
 
-        allowedArgs.add(Argument.BROKER_URL);
         allowedArgs.add(Argument.BROKER);
         allowedArgs.add(Argument.ADDRESS);
         allowedArgs.add(Argument.COUNT);
@@ -67,12 +77,11 @@ public class ArtemisJMSClientSender extends AbstractClient {
         allowedArgs.add(Argument.MSG_CONTENT_MAP_ITEM);
         allowedArgs.add(Argument.MSG_CONTENT_FROM_FILE);
         allowedArgs.add(Argument.MSG_ANNOTATION);
-        allowedArgs.add(Argument.ANONYMOUS);
     }
 
     @Override
     protected ArgumentMap transformArguments(ArgumentMap args) {
-        args = basicBrokerTransformation(args);
+        args = javaBrokerTransformation(args);
         return args;
     }
 

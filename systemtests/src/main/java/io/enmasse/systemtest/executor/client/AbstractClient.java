@@ -213,7 +213,7 @@ public abstract class AbstractClient {
     }
 
     /**
-     * Broker url transformation
+     * Broker url transformation to amqp[s]://user:password@broker:port/address
      * @param args argument map
      * @return argument map
      */
@@ -234,4 +234,19 @@ public abstract class AbstractClient {
         return args;
     }
 
+    /**
+     * Broker java transformation to --broker broker:port
+     * --conn-username user --conn-password password --address address
+     * @param args argument map
+     * @return argument map
+     */
+    protected ArgumentMap javaBrokerTransformation(ArgumentMap args){
+        if(args.getValues(Argument.CONN_SSL) != null){
+            args.put(Argument.CONN_SSL_TRUST_ALL, "true");
+            args.put(Argument.CONN_SSL_VERIFY_HOST, "false");
+        }
+        args.remove(Argument.CONN_SSL);
+
+        return args;
+    }
 }
