@@ -7,10 +7,7 @@ import org.apache.qpid.proton.amqp.messaging.ApplicationProperties;
 import org.apache.qpid.proton.message.Message;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -45,9 +42,11 @@ public class ArtemisManagement extends BrokerManagement {
         assertThat(received.get(30, TimeUnit.SECONDS).size(), is(1));
         Logging.log.info("answer received");
 
-        JsonObject jsonResponse = new JsonObject(received.get().get(0).getBody().toString());
-        Logging.log.info(jsonResponse.toString());
-        return new ArrayList<>();
+        AmqpValue val = (AmqpValue) received.get().get(0).getBody();
+        String queues = val.getValue().toString();
+        queues = queues.replaceAll("\\[|]|\"", "");
+        
+        return Arrays.asList(queues.split(","));
     }
 
     @Override
@@ -69,6 +68,9 @@ public class ArtemisManagement extends BrokerManagement {
         assertThat(received.get(30, TimeUnit.SECONDS).size(), is(1));
         Logging.log.info("answer received");
 
-        return 1;
+        AmqpValue val = (AmqpValue) received.get().get(0).getBody();
+        String count = val.getValue().toString().replaceAll("\\[|]|\"", "");
+
+        return Integer.valueOf(count);
     }
 }
