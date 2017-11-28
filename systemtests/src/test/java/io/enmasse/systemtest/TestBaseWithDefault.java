@@ -86,11 +86,6 @@ public abstract class TestBaseWithDefault extends TestBase {
 
         amqpClientFactory = new AmqpClientFactory(openShift, environment, defaultAddressSpace, username, password);
         mqttClientFactory = new MqttClientFactory(openShift, environment, defaultAddressSpace, username, password);
-        managementAmqpClientFactory = new AmqpClientFactory(openShift,
-                environment,
-                null,
-                managementCredentials.getUsername(),
-                managementCredentials.getPassword());
     }
 
     @After
