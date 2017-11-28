@@ -83,6 +83,7 @@ items:
     - ''
     resources:
     - configmaps
+    - events
     verbs:
     - create
     - delete

@@ -108,7 +108,8 @@ local images = import "images.jsonnet";
             ""
           ],
           "resources": [
-            "configmaps"
+            "configmaps",
+            "events"
           ],
           "verbs": [
             "create",
