@@ -37,6 +37,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -62,6 +63,11 @@ public abstract class TestBase extends SystemTestRunListener {
     protected MqttClientFactory mqttClientFactory;
     protected List<AddressSpace> addressSpaceList = new ArrayList<>();
 
+    protected KeycloakCredentials managementCredentials = new KeycloakCredentials(null, null);
+    protected AmqpClientFactory managementAmqpClientFactory;
+
+    protected BrokerManagement brokerManagement = new ArtemisManagement();
+
     protected AddressSpace getSharedAddressSpace() {
         return null;
     }
@@ -71,12 +77,18 @@ public abstract class TestBase extends SystemTestRunListener {
         addressSpaceList = new ArrayList<>();
         amqpClientFactory = new AmqpClientFactory(openShift, environment, null, username, password);
         mqttClientFactory = new MqttClientFactory(openShift, environment, null, username, password);
+        managementAmqpClientFactory = new AmqpClientFactory(openShift,
+                environment,
+                null,
+                managementCredentials.getUsername(),
+                managementCredentials.getPassword());
     }
 
     @After
     public void teardown() throws Exception {
         mqttClientFactory.close();
         amqpClientFactory.close();
+        managementAmqpClientFactory.close();
 
         for (AddressSpace addressSpace : addressSpaceList) {
             deleteAddressSpace(addressSpace);
@@ -315,5 +327,84 @@ public abstract class TestBase extends SystemTestRunListener {
 
     protected Endpoint getRouteEndpoint(AddressSpace addressSpace) {
         return openShift.getRouteEndpoint(addressSpace.getNamespace(), "messaging");
+    }
+
+
+    /**
+     * Waiting for expected count of subscribers is subscribed into topic
+     *
+     * @param addressSpace
+     * @param topic         name of topic
+     * @param expectedCount count of expected subscribers
+     * @throws Exception
+     */
+    protected void waitForSubscribers(AddressSpace addressSpace, String topic, int expectedCount) throws Exception {
+        TimeoutBudget budget = new TimeoutBudget(1, TimeUnit.MINUTES);
+        waitForSubscribers(addressSpace, topic, expectedCount, budget);
+    }
+
+    protected void waitForSubscribers(AddressSpace addressSpace, String topic, int expectedCount, TimeoutBudget budget) throws Exception {
+        AmqpClient queueClient = null;
+        try {
+            queueClient = managementAmqpClientFactory.createQueueClient(addressSpace);
+            String replyQueueName = "reply-queue";
+            Destination replyQueue = Destination.queue(replyQueueName);
+            appendAddresses(addressSpace, replyQueue);
+
+            boolean done = false;
+            int actualSubscribers = 0;
+            do {
+                actualSubscribers = getSubscriberCount(queueClient, replyQueue, topic);
+                Logging.log.info("Have " + actualSubscribers + " subscribers. Expecting " + expectedCount);
+                if (actualSubscribers != expectedCount) {
+                    Thread.sleep(1000);
+                } else {
+                    done = true;
+                }
+            } while (budget.timeLeft() >= 0 && !done);
+            if (!done) {
+                throw new RuntimeException("Only " + actualSubscribers + " out of " + expectedCount + " subscribed before timeout");
+            }
+        } catch (Exception ex) {
+            throw ex;
+        } finally {
+            queueClient.close();
+        }
+    }
+
+    /**
+     * return list of queue names created for subscribers
+     *
+     * @param queueClient
+     * @param replyQueue  queue for answer is required
+     * @param topic       topic name
+     * @return
+     * @throws Exception
+     */
+    protected List<String> getBrokerQueueNames(AmqpClient queueClient, Destination replyQueue, String topic) throws Exception {
+        return brokerManagement.getQueueNames(queueClient, replyQueue, topic);
+    }
+
+    /**
+     * get count of subscribers subscribed to 'topic'
+     *
+     * @param queueClient queue client with admin permissions
+     * @param replyQueue  queue for answer is required
+     * @param topic       topic name
+     * @return
+     * @throws Exception
+     */
+    protected int getSubscriberCount(AmqpClient queueClient, Destination replyQueue, String topic) throws Exception {
+        List<String> queueNames = getBrokerQueueNames(queueClient, replyQueue, topic);
+
+        AtomicInteger subscriberCount = new AtomicInteger(0);
+        queueNames.forEach((String queue) -> {
+            try {
+                subscriberCount.addAndGet(brokerManagement.getSubscriberCount(queueClient, replyQueue, queue));
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+        return subscriberCount.get();
     }
 }

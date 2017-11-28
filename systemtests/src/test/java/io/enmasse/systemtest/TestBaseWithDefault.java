@@ -15,6 +15,7 @@
  */
 package io.enmasse.systemtest;
 
+import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
 import io.enmasse.systemtest.mqtt.MqttClientFactory;
 import org.junit.After;
@@ -30,6 +31,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public abstract class TestBaseWithDefault extends TestBase {
     private static final String defaultAddressTemplate = "-default-";
@@ -42,14 +44,14 @@ public abstract class TestBaseWithDefault extends TestBase {
     public TestWatcher watcher = new TestWatcher() {
         @Override
         protected void failed(Throwable e, Description description) {
-        Logging.log.info("test failed:" + description);
-        Logging.log.info("default address space '{}' will be removed", defaultAddressSpace);
-        try {
-            deleteAddressSpace(defaultAddressSpace);
-            spaceCountMap.put(defaultAddressSpace.getType(), spaceCountMap.get(defaultAddressSpace.getType()) + 1);
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
+            Logging.log.info("test failed:" + description);
+            Logging.log.info("default address space '{}' will be removed", defaultAddressSpace);
+            try {
+                deleteAddressSpace(defaultAddressSpace);
+                spaceCountMap.put(defaultAddressSpace.getType(), spaceCountMap.get(defaultAddressSpace.getType()) + 1);
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
         }
     };
 
@@ -74,8 +76,21 @@ public abstract class TestBaseWithDefault extends TestBase {
         this.password = "test";
         getKeycloakClient().createUser(defaultAddressSpace.getName(), username, password, 1, TimeUnit.MINUTES);
 
+        this.managementCredentials = new KeycloakCredentials("artemis-admin", "artemis-admin");
+        getKeycloakClient().createUser(defaultAddressSpace.getName(),
+                managementCredentials.getUsername(),
+                managementCredentials.getPassword());
+
+        createGroup(defaultAddressSpace, "admin");
+        joinGroup(defaultAddressSpace, "admin", managementCredentials.getUsername());
+
         amqpClientFactory = new AmqpClientFactory(openShift, environment, defaultAddressSpace, username, password);
         mqttClientFactory = new MqttClientFactory(openShift, environment, defaultAddressSpace, username, password);
+        managementAmqpClientFactory = new AmqpClientFactory(openShift,
+                environment,
+                null,
+                managementCredentials.getUsername(),
+                managementCredentials.getPassword());
     }
 
     @After
