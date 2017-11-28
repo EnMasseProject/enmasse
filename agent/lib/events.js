@@ -51,19 +51,19 @@ function event (component, reason, message, type, kind, name) {
 }
 
 module.exports.address_create = function (address) {
-    return event('agent', 'Create', util.format('%s %s created', address.type, address.address), 'Normal', 'Address', address.address);
+    return event('agent', 'AddressCreated', util.format('%s %s created', address.type, address.address), 'Normal', 'Address', address.address);
 };
 
 module.exports.address_failed_create = function (address, error) {
-    return event('agent', 'FailedCreate', util.format('Failed to create %s %s: %s', address.type, address.address, error), 'Warning', 'Address', address.address);
+    return event('agent', 'AddressCreateFailed', util.format('Failed to create %s %s: %s', address.type, address.address, error), 'Warning', 'Address', address.address);
 };
 
 module.exports.address_delete = function (address) {
-    return event('agent', 'Delete', util.format('%s %s deleted', address.type, address.address), 'Normal', 'Address', address.address);
+    return event('agent', 'AddressDeleted', util.format('%s %s deleted', address.type, address.address), 'Normal', 'Address', address.address);
 };
 
 module.exports.address_failed_delete = function (address, error) {
-    return event('agent', 'FailedDelete', util.format('Failed to delete %s %s: %s', address.type, address.address, error), 'Warning', 'Address', address.address);
+    return event('agent', 'AddressDeleteFailed', util.format('Failed to delete %s %s: %s', address.type, address.address, error), 'Warning', 'Address', address.address);
 };
 
 module.exports.equivalent = function (a, b) {
