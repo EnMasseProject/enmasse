@@ -36,9 +36,9 @@ public enum ClientType {
             case CLI_JAVA_ARTEMIS_JMS_RECEIVER:
                 return "./client_executable/cli-artemis-jms.jar";
             case CLI_JAVA_OPENWIRE_JMS_SENDER:
-                return "./client_executable/cli-artemis-jms.jar";
+                return "./client_executable/cli-activemq.jar";
             case CLI_JAVA_OPENWIRE_JMS_RECEIVER:
-                return "./client_executable/cli-artemis-jms.jar";
+                return "./client_executable/cli-activemq.jar";
             default:
                 return "";
         }
