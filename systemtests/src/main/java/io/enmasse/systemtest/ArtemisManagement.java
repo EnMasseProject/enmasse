@@ -39,11 +39,13 @@ public class ArtemisManagement extends BrokerManagement {
 
         Future<List<Message>> received = queueClient.recvMessages(replyQueue.getAddress(), 1);
         assertThat(received.get(30, TimeUnit.SECONDS).size(), is(1));
-        Logging.log.info("answer received");
+
 
         AmqpValue val = (AmqpValue) received.get().get(0).getBody();
+        Logging.log.info("answer received: " + val.toString());
         String queues = val.getValue().toString();
         queues = queues.replaceAll("\\[|]|\"", "");
+
 
         return Arrays.asList(queues.split(","));
     }
@@ -65,9 +67,10 @@ public class ArtemisManagement extends BrokerManagement {
 
         Future<List<Message>> received = queueClient.recvMessages(replyQueue.getAddress(), 1);
         assertThat(received.get(30, TimeUnit.SECONDS).size(), is(1));
-        Logging.log.info("answer received");
+
 
         AmqpValue val = (AmqpValue) received.get().get(0).getBody();
+        Logging.log.info("answer received: " + val.toString());
         String count = val.getValue().toString().replaceAll("\\[|]|\"", "");
 
         return Integer.valueOf(count);
