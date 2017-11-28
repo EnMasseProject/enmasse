@@ -2,7 +2,6 @@ package io.enmasse.systemtest.brokered.clients;
 
 import io.enmasse.systemtest.ClientTestBase;
 import io.enmasse.systemtest.Destination;
-import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.executor.client.AbstractClient;
 import io.enmasse.systemtest.executor.client.Argument;
 import org.junit.Before;
@@ -87,14 +86,7 @@ public class MsgPatternsTest extends ClientTestBase {
         Future<Boolean> recResult = subscriber.runAsync();
         Future<Boolean> recResult2 = subscriber2.runAsync();
 
-        createGroup(defaultAddressSpace, "admin");
-        joinGroup(defaultAddressSpace, "admin", "test");
-
-        AmqpClient queueClient = amqpClientFactory.createQueueClient();
-        String replyQueueName = "reply-queue";
-        Destination replyQueue = Destination.queue(replyQueueName);
-        appendAddresses(defaultAddressSpace, replyQueue);
-        getSubscriberCount(queueClient, replyQueue, dest);
+        waitForSubscribers(defaultAddressSpace, dest.getAddress(), 2);
 
         assertTrue(sender.run());
         assertTrue(recResult.get());
@@ -235,6 +227,8 @@ public class MsgPatternsTest extends ClientTestBase {
         Future<Boolean> result1 = subscriber.runAsync();
         Future<Boolean> result2 = subscriber2.runAsync();
         Future<Boolean> result3 = subscriber3.runAsync();
+
+        waitForSubscribers(defaultAddressSpace, topic.getAddress(), 3);
 
         assertTrue(sender.run());
         assertTrue(result1.get());

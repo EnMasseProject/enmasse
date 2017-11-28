@@ -16,35 +16,11 @@
 
 package io.enmasse.systemtest;
 
-import io.enmasse.systemtest.amqp.AmqpClient;
-
-import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
-
 public class BrokeredTestBase extends TestBaseWithDefault {
-
-    protected BrokerManagement brokerManagement = new ArtemisManagement();
 
     @Override
     protected AddressSpaceType getAddressSpaceType() {
         return AddressSpaceType.BROKERED;
     }
 
-    protected List<String> getBrokerQueueNames(AmqpClient queueClient, Destination replyQueue, Destination dest) throws Exception {
-        return brokerManagement.getQueueNames(queueClient, replyQueue, dest);
-    }
-
-    protected int getSubscriberCount(AmqpClient queueClient, Destination replyQueue, Destination dest) throws Exception {
-        List<String> queueNames = brokerManagement.getQueueNames(queueClient, replyQueue, dest);
-
-        AtomicInteger subscriberCount = new AtomicInteger(0);
-        queueNames.forEach((String queue) -> {
-            try {
-                subscriberCount.addAndGet(brokerManagement.getSubscriberCount(queueClient, replyQueue, queue));
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        });
-        return subscriberCount.get();
-    }
 }
