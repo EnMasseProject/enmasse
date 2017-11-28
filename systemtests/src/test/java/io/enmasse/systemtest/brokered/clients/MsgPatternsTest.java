@@ -70,13 +70,13 @@ public class MsgPatternsTest extends ClientTestBase {
         assertEquals(5, receiver.getMessages().size());
     }
 
-    protected void doTopicSubscribeTest(AbstractClient sender, AbstractClient subscriber, AbstractClient subscriber2)
-            throws Exception {
+    protected void doTopicSubscribeTest(AbstractClient sender, AbstractClient subscriber, AbstractClient subscriber2,
+                                        boolean hasTopicPrefix) throws Exception {
         Destination dest = Destination.topic("topic-subscribe");
         setAddresses(defaultAddressSpace, dest);
 
         arguments.put(Argument.BROKER, getRouteEndpoint(defaultAddressSpace).toString());
-        arguments.put(Argument.ADDRESS, dest.getAddress());
+        arguments.put(Argument.ADDRESS, getTopicPrefix(hasTopicPrefix) + dest.getAddress());
         arguments.put(Argument.COUNT, "10");
 
         sender.setArguments(arguments);
@@ -145,7 +145,7 @@ public class MsgPatternsTest extends ClientTestBase {
         assertEquals(count, receiver.getMessages().size());
     }
 
-    protected void doMessageSelectorQueueTest(AbstractClient sender, AbstractClient receiver) throws Exception {
+    protected void doMessageSelectorQueueTest(AbstractClient sender, AbstractClient receiver) throws Exception{
         Destination queue = Destination.queue("selector-queue");
         setAddresses(defaultAddressSpace, queue);
 
@@ -194,13 +194,13 @@ public class MsgPatternsTest extends ClientTestBase {
     }
 
     protected void doMessageSelectorTopicTest(AbstractClient sender, AbstractClient subscriber,
-                                              AbstractClient subscriber2, AbstractClient subscriber3) throws Exception {
+                                              AbstractClient subscriber2, AbstractClient subscriber3, boolean hasTopicPrefix) throws Exception {
         Destination topic = Destination.topic("selector-topic");
         setAddresses(defaultAddressSpace, topic);
 
         arguments.put(Argument.BROKER, getRouteEndpoint(defaultAddressSpace).toString());
         arguments.put(Argument.COUNT, "10");
-        arguments.put(Argument.ADDRESS, topic.getAddress());
+        arguments.put(Argument.ADDRESS, getTopicPrefix(hasTopicPrefix) + topic.getAddress());
         arguments.put(Argument.MSG_PROPERTY, "colour~red");
         arguments.put(Argument.MSG_PROPERTY, "number~12.65");
         arguments.put(Argument.MSG_PROPERTY, "a~true");

@@ -18,7 +18,7 @@ public class MsgPatternsTest extends io.enmasse.systemtest.brokered.clients.MsgP
 
     @Test
     public void testTopicSubscribe() throws Exception {
-        doTopicSubscribeTest(new ProtonJMSClientSender(), new ProtonJMSClientReceiver(), new ProtonJMSClientReceiver());
+        doTopicSubscribeTest(new ProtonJMSClientSender(), new ProtonJMSClientReceiver(), new ProtonJMSClientReceiver(), true);
     }
 
     @Test
@@ -39,6 +39,6 @@ public class MsgPatternsTest extends io.enmasse.systemtest.brokered.clients.MsgP
     @Test
     public void testMessageSelectorTopic() throws Exception{
         doMessageSelectorTopicTest(new ProtonJMSClientSender(), new ProtonJMSClientReceiver(),
-                new ProtonJMSClientReceiver(), new ProtonJMSClientReceiver());
+                new ProtonJMSClientReceiver(), new ProtonJMSClientReceiver(), true);
     }
 }

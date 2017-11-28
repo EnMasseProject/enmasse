@@ -11,4 +11,8 @@ public class ClientTestBase extends BrokeredTestBase {
     public void teardownClient(){
         arguments.clear();
     }
+
+    protected String getTopicPrefix(boolean topicSwitch){
+        return topicSwitch ? "topic://" : "";
+    }
 }
