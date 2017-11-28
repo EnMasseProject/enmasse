@@ -221,7 +221,7 @@ public class MsgPatternsTest extends ClientTestBase {
 
         //set up subscriber3
         arguments.put(Argument.SELECTOR, "a AND b");
-        arguments.put(Argument.TIMEOUT, "1");
+        arguments.put(Argument.TIMEOUT, "30"); //because this client should receive no messages
         subscriber3.setArguments(arguments);
 
         Future<Boolean> result1 = subscriber.runAsync();
