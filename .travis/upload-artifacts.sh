@@ -1,15 +1,16 @@
 #!/bin/bash
 SUCCESS=$1
-VERSION=${TRAVIS_TAG:-latest}
+COMMIT=${COMMIT:-latest}
+VERSION=`cat release.version`
 TAG=${TAG:-latest}
 
-if [ "$VERSION" != "latest" ]; then
-    TAG=$VERSION
+if [ "$TAG" != "latest" ]; then
+    COMMIT=$TAG
 fi
 
 export PACKAGE=enmasse
 export REPOSITORY="snapshots"
-if [ "$VERSION" != "latest" ]
+if [ "$TAG" != "latest" ]
 then
     export REPOSITORY="releases"
     export TRAVIS_BUILD_NUMBER="."
@@ -19,8 +20,8 @@ function upload_file() {
     local file=$1
     local target=$2
     if [ -f $file ]; then
-        echo "curl -T $file -u${BINTRAY_API_USER}:${BINTRAY_API_TOKEN} -H 'X-Bintray-Package:${PACKAGE}' -H 'X-Bintray-Version:${VERSION}' https://api.bintray.com/content/enmasse/${REPOSITORY}/$target"
-        curl -T $file -u${BINTRAY_API_USER}:${BINTRAY_API_TOKEN} -H "X-Bintray-Package:${PACKAGE}" -H "X-Bintray-Version:${VERSION}" -H "X-Bintray-Publish: 1" -H "X-Bintray-Override: 1" https://api.bintray.com/content/enmasse/${REPOSITORY}/$target
+        echo "curl -T $file -u${BINTRAY_API_USER}:${BINTRAY_API_TOKEN} -H 'X-Bintray-Package:${PACKAGE}' -H 'X-Bintray-Version:${TAG}' https://api.bintray.com/content/enmasse/${REPOSITORY}/$target"
+        curl -T $file -u${BINTRAY_API_USER}:${BINTRAY_API_TOKEN} -H "X-Bintray-Package:${PACKAGE}" -H "X-Bintray-Version:${TAG}" -H "X-Bintray-Publish: 1" -H "X-Bintray-Override: 1" https://api.bintray.com/content/enmasse/${REPOSITORY}/$target
     else
         echo "Skipping $file, not found"
     fi
@@ -42,7 +43,7 @@ if [ "$SUCCESS" == "true" ]; then
         echo "Skipping upload for successful PR"
     else
         echo "Uploading snapshot for $TRAVIS_BRANCH build"
-        upload_file templates/build/enmasse-${VERSION}.tgz enmasse-${VERSION}.tgz
+        upload_file templates/build/enmasse-${TAG}.tgz enmasse-${TAG}.tgz
     fi
 else
     echo "Collecting test reports"
@@ -53,7 +54,7 @@ else
         cp $i artifacts/test-reports
     done
 
-    cp templates/build/enmasse-${VERSION}.tgz artifacts/
+    cp templates/build/enmasse-${TAG}.tgz artifacts/
 
     ARTIFACTS=artifacts-$TRAVIS_BUILD_NUMBER
     mkdir -p $ARTIFACTS

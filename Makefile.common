@@ -4,8 +4,8 @@ DOCKER_ORG      ?= enmasseproject
 DOCKER          ?= docker
 PROJECT_PREFIX  ?= enmasse
 PROJECT_NAME    ?= $(shell basename $(CURDIR))
+COMMIT          ?= latest
 TAG             ?= latest
-UPLOAD_TAG      ?= $(TAG)
 VERSION         ?= $(shell cat $(TOPDIR)/release.version)
 MOCHA_FILE      ?= build/test-results/test/TEST-$(PROJECT_NAME).xml
 NPM             ?= $(shell command -v npm 2> /dev/null)
@@ -48,13 +48,13 @@ npm_coverage: npm_install
         endif
 
 docker_build: package
-	if [ -f Dockerfile ]; then $(DOCKER) build $(DOCKER_BUILD_ARGS) --build-arg version=$(VERSION) -t $(PROJECT_PREFIX)-$(PROJECT_NAME):$(TAG) . ; fi
+	if [ -f Dockerfile ]; then $(DOCKER) build $(DOCKER_BUILD_ARGS) --build-arg version=$(VERSION) -t $(PROJECT_PREFIX)-$(PROJECT_NAME):$(COMMIT) . ; fi
 	docker images | grep $(PROJECT_PREFIX)
 
 docker_tag:
-	if [ -f Dockerfile ]; then $(DOCKER) tag $(PROJECT_PREFIX)-$(PROJECT_NAME):$(TAG) $(DOCKER_REGISTRY)/$(DOCKER_ORG)/$(PROJECT_NAME):$(UPLOAD_TAG) ; fi
+	if [ -f Dockerfile ]; then $(DOCKER) tag $(PROJECT_PREFIX)-$(PROJECT_NAME):$(COMMIT) $(DOCKER_REGISTRY)/$(DOCKER_ORG)/$(PROJECT_NAME):$(TAG) ; fi
 
 docker_push:
-	if [ -f Dockerfile ]; then $(DOCKER) push $(DOCKER_REGISTRY)/$(DOCKER_ORG)/$(PROJECT_NAME):$(UPLOAD_TAG) ; fi
+	if [ -f Dockerfile ]; then $(DOCKER) push $(DOCKER_REGISTRY)/$(DOCKER_ORG)/$(PROJECT_NAME):$(TAG) ; fi
 
 .PHONY: all init build test package clean docker_build docker_tag docker_push

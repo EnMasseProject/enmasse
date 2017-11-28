@@ -1,18 +1,19 @@
 #!/bin/sh
 set -e
-VERSION=${VERSION:-latest}
 PULL_REQUEST=${PULL_REQUEST:-true}
 BRANCH=${BRANCH:-master}
+COMMIT=${COMMIT:-latest}
+VERSION=`cat release.version`
 TAG=${TAG:-latest}
 DOCKER_ORG=${DOCKER_ORG:-$USER}
 
-if [ "$VERSION" != "latest" ]; then
-    TAG=$VERSION
+if [ "$TAG" != "latest" ]; then
+    COMMIT=$TAG
 fi
 
-if [ "$BRANCH" != "master" ] && [ "$BRANCH" != "$VERSION" ] || [ "$PULL_REQUEST" != "false" ]
+if [ "$BRANCH" != "master" ] && [ "$BRANCH" != "$TAG" ] || [ "$PULL_REQUEST" != "false" ]
 then
     echo "Skipping docker tag on PR"
 else
-    make UPLOAD_TAG=$VERSION docker_push
+    make docker_push
 fi
