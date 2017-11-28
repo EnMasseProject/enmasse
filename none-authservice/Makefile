@@ -4,7 +4,7 @@ build:
 	@echo "Nothing to build"
 
 package:
-	tar -czf build/none-authservice.tgz *.js
+	tar -czf build/none-authservice-$(VERSION).tgz *.js
 
 test:
 

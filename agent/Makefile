@@ -18,7 +18,7 @@ www/favicon.ico:
 	cp -f ../documentation/images/favicon.ico www/
 
 package: build
-	tar -czf build/agent.tgz bin lib www package.json
+	tar -czf build/agent-$(VERSION).tgz bin lib www package.json
 
 test: npm_test
 

@@ -4,7 +4,8 @@ RUN mkdir -p /opt/app-root/src/
 WORKDIR /opt/app-root/src/
 
 ARG version=latest
-ADD build/agent.tgz /opt/app-root/src/
+ENV VERSION ${version}
+ADD build/agent-${VERSION}.tgz /opt/app-root/src/
 
 RUN ["/bin/bash", "-c", "npm install"]
 

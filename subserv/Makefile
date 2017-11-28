@@ -4,7 +4,7 @@ build:
 	@echo "Nothing to build"
 
 package:
-	tar -czf build/subserv.tgz *.js
+	tar -czf build/subserv-$(VERSION).tgz *.js
 
 test:
 
