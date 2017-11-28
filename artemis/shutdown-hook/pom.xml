@@ -96,7 +96,6 @@
               <goal>shade</goal>
             </goals>
             <configuration>
-              <finalName>shutdown-hook</finalName>
               <transformers>
                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                   <mainClass>enmasse.broker.prestop.Main</mainClass>

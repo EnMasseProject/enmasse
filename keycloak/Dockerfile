@@ -3,7 +3,7 @@ FROM jboss/keycloak:3.3.0.Final
 ARG version=latest
 ENV VERSION ${version}
 
-ADD ./sasl-plugin/target/sasl-plugin.jar /opt/jboss/keycloak/providers/
+ADD ./sasl-plugin/target/sasl-plugin-${VERSION}.jar /opt/jboss/keycloak/providers/
 ADD ./src/main/xsl/*.xsl /opt/jboss/keycloak/
 ADD ./src/main/sh/* /opt/jboss/keycloak/bin/
 

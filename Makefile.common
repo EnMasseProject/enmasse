@@ -6,7 +6,7 @@ PROJECT_PREFIX  ?= enmasse
 PROJECT_NAME    ?= $(shell basename $(CURDIR))
 TAG             ?= latest
 UPLOAD_TAG      ?= $(TAG)
-VERSION         ?= latest
+VERSION         ?= $(shell cat $(TOPDIR)/release.version)
 MOCHA_FILE      ?= build/test-results/test/TEST-$(PROJECT_NAME).xml
 NPM             ?= $(shell command -v npm 2> /dev/null)
 
@@ -48,7 +48,7 @@ npm_coverage: npm_install
         endif
 
 docker_build: package
-	if [ -f Dockerfile ]; then $(DOCKER) build $(DOCKER_BUILD_ARGS) --build-arg version=$(TAG) -t $(PROJECT_PREFIX)-$(PROJECT_NAME):$(TAG) . ; fi
+	if [ -f Dockerfile ]; then $(DOCKER) build $(DOCKER_BUILD_ARGS) --build-arg version=$(VERSION) -t $(PROJECT_PREFIX)-$(PROJECT_NAME):$(TAG) . ; fi
 	docker images | grep $(PROJECT_PREFIX)
 
 docker_tag:

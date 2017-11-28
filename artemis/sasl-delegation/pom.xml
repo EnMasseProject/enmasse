@@ -71,7 +71,4 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
-  <build>
-    <finalName>sasl-delegation</finalName>
-  </build>
 </project>

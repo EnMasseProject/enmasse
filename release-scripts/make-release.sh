@@ -2,7 +2,11 @@
 VERSION=$1
 git checkout -b release-${VERSION}
 mvn versions:set -DnewVersion=${VERSION}
-git commit -a -m "Update version to ${VERSION} in pom files"
+echo $VERSION > release.version
+git status
+echo "Press ENTER to commit ${VERSION}"
+read
+git commit -a -m "Update version to ${VERSION}"
 git tag ${VERSION}
 echo "Press ENTER to push the ${VERSION} branch and tag to GitHub"
 read
