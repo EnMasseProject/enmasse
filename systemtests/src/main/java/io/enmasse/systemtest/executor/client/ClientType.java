@@ -28,9 +28,9 @@ public enum ClientType {
             case CLI_PROTON_PYTHON_RECEIVER:
                 return "cli-proton-python-receiver";
             case CLI_JAVA_PROTON_JMS_SENDER:
-                return "./client_executable/cli-qpid-java.jar";
+                return "./client_executable/cli-qpid-jms.jar";
             case CLI_JAVA_PROTON_JMS_RECEIVER:
-                return "./client_executable/cli-qpid-java.jar";
+                return "./client_executable/cli-qpid-jms.jar";
             case CLI_JAVA_ARTEMIS_JMS_SENDER:
                 return "./client_executable/cli-artemis-java.jar";
             case CLI_JAVA_ARTEMIS_JMS_RECEIVER:
