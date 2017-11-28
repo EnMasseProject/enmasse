@@ -53,6 +53,8 @@ public class OpenwireJMSClientReceiver extends AbstractClient {
 
         allowedArgs.add(Argument.BROKER);
         allowedArgs.add(Argument.ADDRESS);
+        allowedArgs.add(Argument.USERNAME);
+        allowedArgs.add(Argument.PASSWORD);
         allowedArgs.add(Argument.COUNT);
         allowedArgs.add(Argument.CLOSE_SLEEP);
         allowedArgs.add(Argument.TIMEOUT);
