@@ -45,7 +45,7 @@ public class ArtemisManagement extends BrokerManagement {
         AmqpValue val = (AmqpValue) received.get().get(0).getBody();
         String queues = val.getValue().toString();
         queues = queues.replaceAll("\\[|]|\"", "");
-        
+
         return Arrays.asList(queues.split(","));
     }
 
@@ -53,7 +53,7 @@ public class ArtemisManagement extends BrokerManagement {
     public int getSubscriberCount(AmqpClient queueClient, Destination replyQueue, String queue) throws Exception {
         Message requestMessage = Message.Factory.create();
         Map<String, String> appProperties = new HashMap<>();
-        appProperties.put("_AMQ_ResourceName", "address." + queue);
+        appProperties.put("_AMQ_ResourceName", "queue." + queue);
         appProperties.put("_AMQ_OperationName", "getConsumerCount");
         requestMessage.setAddress(managementAddress);
         requestMessage.setApplicationProperties(new ApplicationProperties(appProperties));
