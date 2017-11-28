@@ -9,12 +9,12 @@ build_tar:
 	mkdir -p $(ARTEMIS_HOME)/bin
 	mkdir -p $(ARTEMIS_HOME)/lib
 
-	cp -f amqp-connector/target/amqp-connector.jar $(ARTEMIS_HOME)/lib
-	cp -f sasl-delegation/target/sasl-delegation.jar $(ARTEMIS_HOME)/lib
+	cp -f amqp-connector/target/amqp-connector-$(VERSION).jar $(ARTEMIS_HOME)/lib
+	cp -f sasl-delegation/target/sasl-delegation-$(VERSION).jar $(ARTEMIS_HOME)/lib
 	cp -r config_templates $(ARTIFACT_BASE)/
 	cp -r utils/* $(ARTEMIS_HOME)/bin
 	mkdir -p $(ARTIFACT_BASE)/shutdown-hook
-	cp -r shutdown-hook/target/shutdown-hook.jar $(ARTIFACT_BASE)/shutdown-hook/
+	cp -r shutdown-hook/target/shutdown-hook-$(VERSION).jar $(ARTIFACT_BASE)/shutdown-hook/shutdown-hook.jar
 	cp -r shutdown-hook/src/main/sh/shutdown-hook.sh $(ARTIFACT_BASE)/shutdown-hook/
 	tar -czf build/artemis-image.tar -C build/artemis-image .
 

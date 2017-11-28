@@ -79,7 +79,6 @@
         <artifactId>maven-shade-plugin</artifactId>
         <version>${maven.shade.version}</version>
         <configuration>
-          <finalName>sasl-plugin</finalName>
           <artifactSet>
             <excludes>
               <!--<exclude>io.netty:netty-codec</exclude>-->
