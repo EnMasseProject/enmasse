@@ -64,7 +64,6 @@ public abstract class TestBase extends SystemTestRunListener {
     protected List<AddressSpace> addressSpaceList = new ArrayList<>();
 
     protected KeycloakCredentials managementCredentials = new KeycloakCredentials(null, null);
-    protected AmqpClientFactory managementAmqpClientFactory;
 
     protected BrokerManagement brokerManagement = new ArtemisManagement();
 
@@ -77,18 +76,12 @@ public abstract class TestBase extends SystemTestRunListener {
         addressSpaceList = new ArrayList<>();
         amqpClientFactory = new AmqpClientFactory(openShift, environment, null, username, password);
         mqttClientFactory = new MqttClientFactory(openShift, environment, null, username, password);
-        managementAmqpClientFactory = new AmqpClientFactory(openShift,
-                environment,
-                null,
-                managementCredentials.getUsername(),
-                managementCredentials.getPassword());
     }
 
     @After
     public void teardown() throws Exception {
         mqttClientFactory.close();
         amqpClientFactory.close();
-        managementAmqpClientFactory.close();
 
         for (AddressSpace addressSpace : addressSpaceList) {
             deleteAddressSpace(addressSpace);
@@ -346,7 +339,10 @@ public abstract class TestBase extends SystemTestRunListener {
     protected void waitForSubscribers(AddressSpace addressSpace, String topic, int expectedCount, TimeoutBudget budget) throws Exception {
         AmqpClient queueClient = null;
         try {
-            queueClient = managementAmqpClientFactory.createQueueClient(addressSpace);
+            queueClient = amqpClientFactory.createQueueClient(addressSpace);
+            queueClient.setConnectOptions(queueClient.getConnectOptions()
+                    .setUsername(managementCredentials.getUsername())
+                    .setPassword(managementCredentials.getPassword()));
             String replyQueueName = "reply-queue";
             Destination replyQueue = Destination.queue(replyQueueName);
             appendAddresses(addressSpace, replyQueue);
