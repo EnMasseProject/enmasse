@@ -68,7 +68,7 @@ public class KeycloakClient {
 
     public void joinGroup(String realm, String groupName, String username) throws Exception {
         groupOperation(realm, groupName, username, 3, TimeUnit.MINUTES, (realmResource, clientId, groupId) -> {
-            realmResource.users().get(clientId).leaveGroup(groupId);
+            realmResource.users().get(clientId).joinGroup(groupId);
             Logging.log.info("User '{}' successfully joined group '{}'", username, groupName);
         });
     }
