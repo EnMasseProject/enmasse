@@ -6,12 +6,9 @@ import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.amqp.messaging.ApplicationProperties;
 import org.apache.qpid.proton.message.Message;
 
-import java.io.IOException;
 import java.util.*;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 
 import static org.hamcrest.core.Is.is;
@@ -21,14 +18,16 @@ public class ArtemisManagement extends BrokerManagement {
 
     public ArtemisManagement() {
         managementAddress = "activemq.management";
+        resourceProperty = "_AMQ_ResourceName";
+        operationProperty = "_AMQ_OperationName";
     }
 
     @Override
-    public List<String> getQueueNames(AmqpClient queueClient, Destination replyQueue, Destination dest) throws Exception {
+    public List<String> getQueueNames(AmqpClient queueClient, Destination replyQueue, String topic) throws Exception {
         Message requestMessage = Message.Factory.create();
         Map<String, String> appProperties = new HashMap<>();
-        appProperties.put("_AMQ_ResourceName", "address." + dest.getAddress());
-        appProperties.put("_AMQ_OperationName", "getQueueNames");
+        appProperties.put(resourceProperty, "address." + topic);
+        appProperties.put(operationProperty, "getQueueNames");
         requestMessage.setAddress(managementAddress);
         requestMessage.setApplicationProperties(new ApplicationProperties(appProperties));
         requestMessage.setReplyTo(replyQueue.getAddress());
@@ -53,8 +52,8 @@ public class ArtemisManagement extends BrokerManagement {
     public int getSubscriberCount(AmqpClient queueClient, Destination replyQueue, String queue) throws Exception {
         Message requestMessage = Message.Factory.create();
         Map<String, String> appProperties = new HashMap<>();
-        appProperties.put("_AMQ_ResourceName", "queue." + queue);
-        appProperties.put("_AMQ_OperationName", "getConsumerCount");
+        appProperties.put(resourceProperty, "queue." + queue);
+        appProperties.put(operationProperty, "getConsumerCount");
         requestMessage.setAddress(managementAddress);
         requestMessage.setApplicationProperties(new ApplicationProperties(appProperties));
         requestMessage.setReplyTo(replyQueue.getAddress());
