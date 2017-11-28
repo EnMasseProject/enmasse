@@ -1,4 +1,4 @@
-package io.enmasse.systemtest.executor.client.proton.jms;
+package io.enmasse.systemtest.executor.client.openwire;
 
 import io.enmasse.systemtest.executor.client.AbstractClient;
 import io.enmasse.systemtest.executor.client.Argument;
@@ -8,10 +8,9 @@ import io.enmasse.systemtest.executor.client.ClientType;
 import java.util.Arrays;
 import java.util.List;
 
-
-public class JMSClientSender extends AbstractClient {
-    public JMSClientSender(){
-        super(ClientType.CLI_JAVA_PROTON_JMS_SENDER);
+public class OpenwireJMSClientReceiver extends AbstractClient {
+    public OpenwireJMSClientReceiver(){
+        super(ClientType.CLI_JAVA_OPENWIRE_JMS_RECEIVER);
     }
 
     @Override
@@ -59,24 +58,10 @@ public class JMSClientSender extends AbstractClient {
         allowedArgs.add(Argument.TIMEOUT);
         allowedArgs.add(Argument.DURATION);
 
-        allowedArgs.add(Argument.MSG_ID);
-        allowedArgs.add(Argument.MSG_GROUP_ID);
-        allowedArgs.add(Argument.MSG_GROUP_SEQ);
-        allowedArgs.add(Argument.MSG_REPLY_TO_GROUP_ID);
-        allowedArgs.add(Argument.MSG_SUBJECT);
-        allowedArgs.add(Argument.MSG_REPLY_TO);
-        allowedArgs.add(Argument.MSG_PROPERTY);
-        allowedArgs.add(Argument.MSG_DURABLE);
-        allowedArgs.add(Argument.MSG_TTL);
-        allowedArgs.add(Argument.MSG_PRIORITY);
-        allowedArgs.add(Argument.MSG_CORRELATION_ID);
-        allowedArgs.add(Argument.MSG_USER_ID);
-        allowedArgs.add(Argument.MSG_CONTENT_TYPE);
-        allowedArgs.add(Argument.MSG_CONTENT);
-        allowedArgs.add(Argument.MSG_CONTENT_LIST_ITEM);
-        allowedArgs.add(Argument.MSG_CONTENT_MAP_ITEM);
-        allowedArgs.add(Argument.MSG_CONTENT_FROM_FILE);
-        allowedArgs.add(Argument.MSG_ANNOTATION);
+        allowedArgs.add(Argument.SELECTOR);
+        allowedArgs.add(Argument.RECV_BROWSE);
+        allowedArgs.add(Argument.ACTION);
+        allowedArgs.add(Argument.PROCESS_REPLY_TO);
     }
 
     @Override
@@ -87,6 +72,6 @@ public class JMSClientSender extends AbstractClient {
 
     @Override
     protected List<String> transformExecutableCommand(String executableCommand) {
-        return Arrays.asList("java", "-jar", executableCommand, "sender");
+        return Arrays.asList("java", "-jar", executableCommand, "receiver");
     }
 }

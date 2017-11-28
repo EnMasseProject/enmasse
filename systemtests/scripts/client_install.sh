@@ -17,6 +17,7 @@ function install_java_client(){
 	mvn package -DskipTests=true
 	cp ./cli-artemis-jms/target/cli-artemis-jms-*.jar ../systemtests/client_executable/cli-artemis-jms.jar
 	cp ./cli-qpid-jms/target/cli-qpid-jms-*.jar ../systemtests/client_executable/cli-qpid-jms.jar
+	cp ./cli-activemq/target/cli-activemq-*.jar ../systemtests/client_executable/cli-activemq.jar
 }
 
 install_rhea_client
