@@ -242,6 +242,7 @@ public abstract class AbstractClient {
      */
     protected ArgumentMap javaBrokerTransformation(ArgumentMap args){
         if(args.getValues(Argument.CONN_SSL) != null){
+            args.put(Argument.BROKER, "amqps://" + args.getValues(Argument.BROKER).get(0));
             args.put(Argument.CONN_SSL_TRUST_ALL, "true");
             args.put(Argument.CONN_SSL_VERIFY_HOST, "false");
         }

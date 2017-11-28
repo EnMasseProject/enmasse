@@ -23,13 +23,13 @@ public class JMSTestBase extends BrokeredTestBase {
 
     protected Hashtable<Object, Object> setUpEnv(String url, String username, String password, String clientID, Map<String, String> prop) {
         Hashtable env = new Hashtable<Object, Object>();
-        env.put(Context.INITIAL_CONTEXT_FACTORY, "org.apache.qpid.jms.jndi.JmsInitialContextFactory");
+        env.put(Context.INITIAL_CONTEXT_FACTORY, "org.apache.qpid.java.jndi.JmsInitialContextFactory");
         StringBuilder urlParam = new StringBuilder();
         urlParam.append("?transport.trustAll=true")
-                .append("&jms.password=").append(username)
-                .append("&jms.username=").append(password)
+                .append("&java.password=").append(username)
+                .append("&java.username=").append(password)
                 .append("&transport.verifyHost=false");
-        urlParam.append(clientID.isEmpty() ? clientID : "&jms.clientID=" + clientID);
+        urlParam.append(clientID.isEmpty() ? clientID : "&java.clientID=" + clientID);
 
         env.put("connectionfactory.qpidConnectionFactory", url + urlParam);
         for (Map.Entry<String, String> entry : prop.entrySet()) {

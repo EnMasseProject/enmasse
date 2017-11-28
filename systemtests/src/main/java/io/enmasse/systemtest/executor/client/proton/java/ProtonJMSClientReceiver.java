@@ -1,4 +1,4 @@
-package io.enmasse.systemtest.executor.client.proton.jms;
+package io.enmasse.systemtest.executor.client.proton.java;
 
 import io.enmasse.systemtest.executor.client.AbstractClient;
 import io.enmasse.systemtest.executor.client.Argument;
@@ -8,8 +8,8 @@ import io.enmasse.systemtest.executor.client.ClientType;
 import java.util.Arrays;
 import java.util.List;
 
-public class JMSClientReceiver extends AbstractClient {
-    public JMSClientReceiver(){
+public class ProtonJMSClientReceiver extends AbstractClient {
+    public ProtonJMSClientReceiver(){
         super(ClientType.CLI_JAVA_PROTON_JMS_RECEIVER);
     }
 

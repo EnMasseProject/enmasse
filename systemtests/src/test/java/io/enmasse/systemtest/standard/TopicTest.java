@@ -139,7 +139,7 @@ public class TopicTest extends StandardTestBase {
         source.setAddress(dest.getAddress());
         source.setCapabilities(Symbol.getSymbol("topic"));
         Map<Symbol, DescribedType> map = new HashMap<>();
-        map.put(Symbol.valueOf("jms-selector"), new AmqpJmsSelectorFilter(selector));
+        map.put(Symbol.valueOf("java-selector"), new AmqpJmsSelectorFilter(selector));
         source.setFilter(map);
 
         Future<List<Message>> received = client.recvMessages(source, linkName, 1);
@@ -187,7 +187,7 @@ public class TopicTest extends StandardTestBase {
         source.setAddress(selTopic.getAddress());
         source.setCapabilities(Symbol.getSymbol("topic"));
         Map<Symbol, DescribedType> map = new HashMap<>();
-        map.put(Symbol.valueOf("jms-selector"), new AmqpJmsSelectorFilter("JMSXGroupID IS NOT NULL"));
+        map.put(Symbol.valueOf("java-selector"), new AmqpJmsSelectorFilter("JMSXGroupID IS NOT NULL"));
         source.setFilter(map);
 
         AmqpClient client = amqpClientFactory.createTopicClient();
