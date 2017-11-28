@@ -30,7 +30,7 @@ public enum Argument {
     CONN_CLOSE_TIMEOUT("--conn-close-timeout"),
     CONN_CONN_TIMEOUT("--conn-conn-timeout"),
     CONN_DRAIN_TIMEOUT("--conn-drain-timeout"),
-    CONN_SSL_TRUST_ALL("--conn-ssl-verify-host"),
+    CONN_SSL_TRUST_ALL("--conn-ssl-trust-all"),
     CONN_SSL_VERIFY_HOST("--conn-ssl-verify-host"),
 
     //transaction opts
