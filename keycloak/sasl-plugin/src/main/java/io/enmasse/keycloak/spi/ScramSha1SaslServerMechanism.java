@@ -22,7 +22,7 @@ import org.keycloak.models.KeycloakSession;
 
 import java.security.SecureRandom;
 
-public class ScramSHA1SaslServerMechanism implements SaslServerMechanism {
+public class ScramSha1SaslServerMechanism implements SaslServerMechanism {
 
     private static final String HMAC_NAME = "HmacSHA1";
 
