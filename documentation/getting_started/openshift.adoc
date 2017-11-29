@@ -19,6 +19,9 @@ include::common/prerequisites-openshift.adoc[leveloffset=+1]
 
 include::common/install-procedure.adoc[leveloffset+=1] 
 
+This guide uses a shell script for deploying {ProductName}. Windows users are adviced to look at the
+"Installation and configuration" guide.
+
 include::deploy-procedure.adoc[leveloffset+=1] 
 
 [[configuring-addresses-openshift]]
