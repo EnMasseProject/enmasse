@@ -22,12 +22,12 @@ import org.keycloak.models.KeycloakSession;
 
 import java.security.SecureRandom;
 
-public class ScramSHA1SaslServerMechanism implements SaslServerMechanism {
+public class ScramSha512SaslServerMechanism implements SaslServerMechanism {
 
-    private static final String HMAC_NAME = "HmacSHA1";
+    private static final String HMAC_NAME = "HmacSHA512";
 
-    private static final String MECHANISM = "SCRAM-SHA-1";
-    private static final String DIGEST_NAME = "SHA-1";
+    private static final String MECHANISM = "SCRAM-SHA-512";
+    private static final String DIGEST_NAME = "SHA-512";
 
     private static final byte[] RANDOM_BYTES = new byte[32];
     static {
@@ -45,6 +45,5 @@ public class ScramSHA1SaslServerMechanism implements SaslServerMechanism {
                                 final Config.Scope config) {
         return new ScramSaslAuthenticator(keycloakSession, hostname, RANDOM_BYTES, DIGEST_NAME, HMAC_NAME);
     }
-
 
 }
