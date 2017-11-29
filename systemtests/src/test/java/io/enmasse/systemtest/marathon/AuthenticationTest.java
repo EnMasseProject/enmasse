@@ -10,7 +10,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class AuthenticationTest extends MarathonTestBase {
 
-//    @Test disabled due to issue: #520
+    //    @Test disabled due to issue: #520
     public void testCreateDeleteUsersLong() throws Exception {
         Logging.log.info("testCreateDeleteUsersLong start");
         AddressSpace addressSpace = new AddressSpace("test-create-delete-users-brokered",
@@ -47,7 +47,7 @@ public class AuthenticationTest extends MarathonTestBase {
     }
 
     @Test
-    public void testAuthSendReceiveLong() throws Exception{
+    public void testAuthSendReceiveLong() throws Exception {
         Logging.log.info("testAuthSendReceiveLong start");
         AddressSpace addressSpace = new AddressSpace("test-auth-send-receive-brokered",
                 AddressSpaceType.BROKERED);
@@ -104,20 +104,20 @@ public class AuthenticationTest extends MarathonTestBase {
     }
 
     private void doBasicAuthQueueTopicTest(AddressSpace addressSpace, Destination queue, Destination topic,
-                                             String uname, String password) throws Exception {
+                                           String uname, String password) throws Exception {
         int messageCount = 100;
         AmqpClient queueClient = amqpClientFactory.createQueueClient(addressSpace);
         queueClient.getConnectOptions().setUsername(uname).setPassword(password);
+        clients.add(queueClient);
         io.enmasse.systemtest.standard.QueueTest.runQueueTest(queueClient, queue, messageCount);
         Logging.log.info("User: '{}'; Message count:'{}'; destination:'{}' - done",
                 uname, messageCount, queue.getAddress());
-        queueClient.close();
 
         AmqpClient topicClient = amqpClientFactory.createTopicClient(addressSpace);
         topicClient.getConnectOptions().setUsername(uname).setPassword(password);
+        clients.add(topicClient);
         TopicTest.runTopicTest(topicClient, topic, messageCount);
         Logging.log.info("User: '{}'; Message count:'{}'; destination:'{}' - done",
                 uname, messageCount, topic.getAddress());
-        topicClient.close();
     }
 }

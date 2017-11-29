@@ -2,13 +2,16 @@ package io.enmasse.systemtest.marathon;
 
 import io.enmasse.systemtest.Logging;
 import io.enmasse.systemtest.TestBase;
+import io.enmasse.systemtest.amqp.AmqpClient;
 import org.junit.Rule;
 import org.junit.rules.ErrorCollector;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
 public class MarathonTestBase extends TestBase {
+    ArrayList<AmqpClient> clients = new ArrayList<>();
 
     @Rule
     public ErrorCollector collector = new ErrorCollector();
@@ -21,7 +24,22 @@ public class MarathonTestBase extends TestBase {
                 test.run();
             } catch (Exception ex) {
                 collector.addError(ex);
+            } finally {
+                closeClients();
             }
+        }
+    }
+
+    private void closeClients() {
+        try {
+            for (AmqpClient client : clients) {
+                client.close();
+                Logging.log.info("Clients are closed.");
+            }
+        } catch (Exception ex) {
+            collector.addError(ex);
+        } finally {
+            clients.clear();
         }
     }
 
