@@ -85,6 +85,7 @@ public enum Argument {
 
     //receiver opts
     SELECTOR("--recv-selector"),
+    MSG_SELECTOR("--msg-selector"),
     RECV_BROWSE("--recv-browse"),
     ACTION("--action"),
     PROCESS_REPLY_TO("--process-reply-to"),

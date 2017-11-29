@@ -5,7 +5,6 @@ import io.enmasse.systemtest.executor.client.Argument;
 import io.enmasse.systemtest.executor.client.ArgumentMap;
 import io.enmasse.systemtest.executor.client.ClientType;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
