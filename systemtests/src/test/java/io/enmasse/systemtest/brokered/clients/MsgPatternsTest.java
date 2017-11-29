@@ -77,6 +77,7 @@ public class MsgPatternsTest extends ClientTestBase {
         arguments.put(Argument.BROKER, getRoute(defaultAddressSpace, sender));
         arguments.put(Argument.ADDRESS, getTopicPrefix(hasTopicPrefix) + dest.getAddress());
         arguments.put(Argument.COUNT, "10");
+        arguments.put(Argument.TIMEOUT, "30");
 
         sender.setArguments(arguments);
         subscriber.setArguments(arguments);
@@ -204,6 +205,7 @@ public class MsgPatternsTest extends ClientTestBase {
         arguments.put(Argument.MSG_PROPERTY, "number~12.65");
         arguments.put(Argument.MSG_PROPERTY, "a~true");
         arguments.put(Argument.MSG_PROPERTY, "b~false");
+        arguments.put(Argument.TIMEOUT, "30");
 
         //set up sender
         sender.setArguments(arguments);
@@ -220,7 +222,6 @@ public class MsgPatternsTest extends ClientTestBase {
 
         //set up subscriber3
         arguments.put(Argument.SELECTOR, "a AND b");
-        arguments.put(Argument.TIMEOUT, "30"); //because this client should receive no messages
         subscriber3.setArguments(arguments);
 
         Future<Boolean> result1 = subscriber.runAsync();
