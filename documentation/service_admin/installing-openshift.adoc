@@ -1,54 +1,99 @@
 [[installing-openshift]]
 
+:cmdcli: oc
+
 == Installing {ProductName} on OpenShift
 
 include::common/prerequisites-openshift.adoc[leveloffset=+1]
 
 include::common/install-procedure.adoc[leveloffset+=1]
 
+To simplify deployment, have a look at the `deploy-openshift.sh` script which should work on Linux
+and Mac. You can invoke the deployment script with `-h` to view a list of options.
 
-==== Installing {ProductName} in Single-Tenant Mode
+This guide will walk through the manual deployment procedure and should work on any platform
+supporting the OpenShift client.
 
-{ProductName} can be deployed in either a single-tenant mode or a multi-tenant mode. Choose
-single-tenant mode if you do not expect to be creating multiple isolated address spaces or if you do
-not have cluster-admin privileges. Otherwise, choose multi-tenant mode.
+==== Deploying authentication services
 
-.Procedure 
+{ProductName} require at least 1 authentication service to be deployed. The authentication service
+can either be none (allow all), standard (keycloak) or external (not managed by enmasse).
 
-. To install {ProductName} in single-tenant mode run the following script:
-
-+
-[options="nowrap"]
-----
-./deploy-openshift.sh -m "https://localhost:8443" -n enmasse -o singletenant
-----
-+
-Running this script creates the deployments required for running {ProductName} in single-tenant mode. Starting
-up {ProductName} will take a while, usually depending on how fast it is able to download the Docker
-images for the various components.
-
-. You can use the REST API to check the status of the deployment:
-+
-[options="nowrap"]
-----
-curl -k https://$(oc get route restapi -o jsonpath='{.spec.host}')/apis/enmasse.io/v1/addressspaces/default
-----
-+
-The deployment is finished when `status.isReady` is `true` in the returned JSON object.
-
-==== Installing {ProductName} in Multi-Tenant Mode
-
-{ProductName} can be deployed in either a single-tenant mode or a multi-tenant mode. Choose
-single-tenant mode if you do not expect to be creating multiple isolated address spaces or if you do
-not have cluster-admin privileges. Otherwise, choose multi-tenant mode.
+===== Deploying the none authentication service
 
 .Procedure
 
-. To install {ProductName} in multi-tenant mode, run the following script:
+. Create a certificate to use for the none authentication service. For testing purposes, you can create a self-signed certificate:
 +
 [options="nowrap"]
 ----
-./deploy-openshift.sh -m "https://localhost:8443" -n enmasse -o multitenant
+mkdir -p none-authservice-cert
+openssl req -new -x509 -batch -nodes -days 11000 -subj "/O=io.enmasse/CN=none-authservice.enmasse.svc.cluster.local" -out none-authservice-cert/tls.crt -keyout none-authservice-cert/tls.key
+----
+
+. Create secret with the none authentication service certificate:
++
+[options="nowrap"]
+----
+oc create secret tls none-authservice-cert --cert=none-authservice-cert/tls.crt --key=none-authservice-cert/tls.key -n enmasse
+----
+
+. Create the none authentication service:
++
+[options="nowrap"]
+----
+oc process -f ./openshift/addons/none-authservice.yaml | oc create -n enmasse -f -
+----
+
+===== Deploying the standard authentication service
+
+.Procedure
+
+. Create a certificate to use for the standard authentication service. For testing purposes, you can create a self-signed certificate:
++
+[options="nowrap"]
+----
+mkdir -p standard-authservice-cert
+openssl req -new -x509 -batch -nodes -days 11000 -subj "/O=io.enmasse/CN=standard-authservice.enmasse.svc.cluster.local" -out standard-authservice-cert/tls.crt -keyout standard-authservice-cert/tls.key
+----
+
+. Create secret with the standard authentication service certificate:
++
+[options="nowrap"]
+----
+oc create secret tls standard-authservice-cert --cert=standard-authservice-cert/tls.crt --key=standard-authservice-cert/tls.key -n enmasse
+----
+
+. Create secret with keycloak admin credentials. Choose password wisely as this user will have complete access over authentication and authorization policies:
++
+[options="nowrap"]
+----
+oc create -n enmasse secret generic keycloak-credentials --from-literal=admin.username=admin --from-literal=admin.password=myrandompassword
+----
+
+. Create the standard authentication service:
++
+[options="nowrap"]
+----
+oc process -f ./openshift/addons/standard-authservice.yaml | oc create -n enmasse -f -
+----
+
+==== Deploying {ProductName}
+
+.Procedure
+
+. Create namespace:
++
+[options="nowrap"]
+----
+oc new-project enmasse
+----
+
+. Create service account for the {ProductName} address controller:
++
+[options="nowrap"]
+----
+oc create sa enmasse-service-account -n enmasse
 ----
 
 . Create cluster-wide roles used by the `enmasse-service-account`:
@@ -58,16 +103,38 @@ not have cluster-admin privileges. Otherwise, choose multi-tenant mode.
 oc login -u system:admin
 oc create -f ./openshift/cluster-roles.yaml
 ----
-. Grant cluster-admin privileges:
+
+. Grant cluster-admin privileges to service account:
 +
 [options="nowrap"]
 ----
 oc login -u system:admin
 oc adm policy add-cluster-role-to-user enmasse-namespace-admin system:serviceaccount:enmasse:enmasse-service-account
 ----
+
+. Create a certificate to use for the address controller. For testing purposes, you can create a self-signed certificate:
 +
-The deployments required for running {ProductName} in multi-tenant mode are created.
-{ProductName} will be up and running once all pods in the 'enmasse' namespace are in the `Running` state:
+[options="nowrap"]
+----
+mkdir -p address-controller-cert/
+openssl req -new -x509 -batch -nodes -days 11000 -subj "/O=io.enmasse/CN=address-controller.enmasse.svc.cluster.local" -out address-controller-cert/tls.crt -keyout address-controller-cert/tls.key
+----
+
+. Create secret with address-controller certificate:
++
+[options="nowrap"]
+----
+oc create -n enmasse secret tls address-controller-cert --cert=address-controller-cert/tls.crt --key=address-controller-cert/tls.key
+----
+
+. Deploy address-controller:
++
+[options="nowrap"]
+----
+oc process -f ./openshift/enmasse.yaml ENABLE_RBAC=true ADDRESS_CONTROLLER_CERT_SECRET=address-controller-cert | oc create -n enmasse -f -
+----
+
+The deployments required for running {ProductName} are now created. {ProductName} will be up and running once all pods in the 'enmasse' namespace are in the `Running` state:
 +
 [options="nowrap"]
 ----

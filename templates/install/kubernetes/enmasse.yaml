@@ -590,8 +590,6 @@ items:
       spec:
         containers:
         - env:
-          - name: CA_DIR
-            value: /ca-cert
           - name: ENABLE_RBAC
             value: 'false'
           - name: ENVIRONMENT
@@ -621,9 +619,6 @@ items:
             requests:
               memory: 512Mi
           volumeMounts:
-          - mountPath: /ca-cert
-            name: ca-cert
-            readOnly: true
           - mountPath: /address-controller-cert
             name: address-controller-cert
             readOnly: true
@@ -632,9 +627,6 @@ items:
             readOnly: false
         serviceAccount: enmasse-service-account
         volumes:
-        - name: ca-cert
-          secret:
-            secretName: enmasse-ca
         - name: address-controller-cert
           secret:
             secretName: address-controller-cert
