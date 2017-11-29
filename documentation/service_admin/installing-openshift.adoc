@@ -133,8 +133,10 @@ oc create -n enmasse secret tls address-controller-cert --cert=address-controlle
 ----
 oc process -f ./openshift/enmasse.yaml ENABLE_RBAC=true ADDRESS_CONTROLLER_CERT_SECRET=address-controller-cert | oc create -n enmasse -f -
 ----
++
+The deployments required for running {ProductName} are now created.
 
-The deployments required for running {ProductName} are now created. {ProductName} will be up and running once all pods in the 'enmasse' namespace are in the `Running` state:
+. {ProductName} will be up and running once all pods in the 'enmasse' namespace are in the `Running` state:
 +
 [options="nowrap"]
 ----
