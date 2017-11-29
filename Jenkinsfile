@@ -10,7 +10,7 @@ node('enmasse') {
             stage ('build') {
                 try {
                     withCredentials([string(credentialsId: 'docker-registry-host', variable: 'DOCKER_REGISTRY')]) {
-                        sh 'MOCHA_ARGS="--reporter=mocha-junit-reporter" TAG=$BUILD_TAG make'
+                        sh 'MOCHA_ARGS="--reporter=mocha-junit-reporter" COMMIT=$BUILD_TAG make'
                         sh 'cat templates/install/openshift/enmasse.yaml'
                     }
                 } finally {
