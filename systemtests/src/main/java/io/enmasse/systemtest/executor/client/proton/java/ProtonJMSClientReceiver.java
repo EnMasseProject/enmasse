@@ -60,7 +60,7 @@ public class ProtonJMSClientReceiver extends AbstractClient {
         allowedArgs.add(Argument.TIMEOUT);
         allowedArgs.add(Argument.DURATION);
 
-        allowedArgs.add(Argument.SELECTOR);
+        allowedArgs.add(Argument.MSG_SELECTOR);
         allowedArgs.add(Argument.RECV_BROWSE);
         allowedArgs.add(Argument.ACTION);
         allowedArgs.add(Argument.PROCESS_REPLY_TO);
