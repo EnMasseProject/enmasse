@@ -22,12 +22,6 @@ clean_java:
 
 clean: clean_java
 
-docs:
-	cd $(INSTALLDIR) && ./deploy-openshift.sh -g -m "https://localhost:8443" -n enmasse -o singletenant > $(CURDIR)/documentation/service_admin/manual_openshift_singletenant.adoc
-	cd $(INSTALLDIR) && ./deploy-openshift.sh -g -m "https://localhost:8443" -n enmasse -o multitenant > $(CURDIR)/documentation/service_admin/manual_openshift_multitenant.adoc
-	cd $(INSTALLDIR) && ./deploy-kubernetes.sh -g -m "https://localhost:8443" -n enmasse -o singletenant > $(CURDIR)/documentation/service_admin/manual_kubernetes_singletenant.adoc
-	cd $(INSTALLDIR) && ./deploy-kubernetes.sh -g -m "https://localhost:8443" -n enmasse -o multitenant > $(CURDIR)/documentation/service_admin/manual_kubernetes_multitenant.adoc
-
 docker_build: build_java
 
 coverage: java_coverage

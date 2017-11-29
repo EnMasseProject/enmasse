@@ -115,8 +115,10 @@ kubectl -n enmasse secret tls address-controller-cert --cert=address-controller-
 ----
 kubectl apply -f ./kubernetes/enmasse.yaml
 ----
++
+The deployments required for running {ProductName} are now created.
 
-The deployments required for running {ProductName} are now created. {ProductName} will be up and running once all pods in the 'enmasse' namespace are in the `Running` state:
+. {ProductName} will be up and running once all pods in the 'enmasse' namespace are in the `Running` state:
 +
 [options="nowrap"]
 ----
