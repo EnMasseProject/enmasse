@@ -5,12 +5,11 @@ import io.enmasse.systemtest.executor.Executor;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
-
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 /**
  * Class represent abstract client which keeps common features of client
@@ -40,6 +39,22 @@ public abstract class AbstractClient {
      */
     public JsonArray getMessages() {
         return messages;
+    }
+
+    /**
+     * Return type of client
+     * @return type of client
+     */
+    public ClientType getClientType() {
+        return clientType;
+    }
+
+    /**
+     *
+     * @param clientType
+     */
+    public void setClientType(ClientType clientType) {
+        this.clientType = clientType;
     }
 
     /**
@@ -240,9 +255,11 @@ public abstract class AbstractClient {
      * @param args argument map
      * @return argument map
      */
-    protected ArgumentMap javaBrokerTransformation(ArgumentMap args){
+    protected ArgumentMap javaBrokerTransformation(ArgumentMap args, ClientType type){
         if(args.getValues(Argument.CONN_SSL) != null){
-            args.put(Argument.BROKER, "amqps://" + args.getValues(Argument.BROKER).get(0));
+            if(clientType == ClientType.CLI_JAVA_PROTON_JMS_SENDER
+                    || clientType == ClientType.CLI_JAVA_PROTON_JMS_RECEIVER)
+                args.put(Argument.BROKER, "amqps://" + args.getValues(Argument.BROKER).get(0));
             args.put(Argument.CONN_SSL_TRUST_ALL, "true");
             args.put(Argument.CONN_SSL_VERIFY_HOST, "false");
         }

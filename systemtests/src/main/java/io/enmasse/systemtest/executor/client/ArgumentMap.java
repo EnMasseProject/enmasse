@@ -1,6 +1,9 @@
 package io.enmasse.systemtest.executor.client;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Class represents Map of arguments (allow duplicate argument)

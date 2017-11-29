@@ -6,7 +6,6 @@ import io.enmasse.systemtest.executor.client.AbstractClient;
 import io.enmasse.systemtest.executor.client.Argument;
 import org.junit.Before;
 
-import java.util.Random;
 import java.util.concurrent.Future;
 
 import static org.junit.Assert.assertEquals;
@@ -27,7 +26,7 @@ public class MsgPatternsTest extends ClientTestBase {
         Destination dest = Destination.queue("message-basic");
         setAddresses(defaultAddressSpace, dest);
 
-        arguments.put(Argument.BROKER, getRouteEndpoint(defaultAddressSpace).toString());
+        arguments.put(Argument.BROKER, getRoute(defaultAddressSpace, sender));
         arguments.put(Argument.ADDRESS, dest.getAddress());
         arguments.put(Argument.COUNT, "10");
 
@@ -46,7 +45,7 @@ public class MsgPatternsTest extends ClientTestBase {
         Destination dest = Destination.queue("receiver-round-robin");
         setAddresses(defaultAddressSpace, dest);
 
-        arguments.put(Argument.BROKER, getRouteEndpoint(defaultAddressSpace).toString());
+        arguments.put(Argument.BROKER, getRoute(defaultAddressSpace, sender));
         arguments.put(Argument.ADDRESS, dest.getAddress());
         arguments.put(Argument.COUNT, "5");
 
@@ -75,7 +74,7 @@ public class MsgPatternsTest extends ClientTestBase {
         Destination dest = Destination.topic("topic-subscribe");
         setAddresses(defaultAddressSpace, dest);
 
-        arguments.put(Argument.BROKER, getRouteEndpoint(defaultAddressSpace).toString());
+        arguments.put(Argument.BROKER, getRoute(defaultAddressSpace, sender));
         arguments.put(Argument.ADDRESS, getTopicPrefix(hasTopicPrefix) + dest.getAddress());
         arguments.put(Argument.COUNT, "10");
 
@@ -102,7 +101,7 @@ public class MsgPatternsTest extends ClientTestBase {
         Destination dest = Destination.queue("message-browse");
         setAddresses(defaultAddressSpace, dest);
 
-        arguments.put(Argument.BROKER, getRouteEndpoint(defaultAddressSpace).toString());
+        arguments.put(Argument.BROKER, getRoute(defaultAddressSpace, sender));
         arguments.put(Argument.ADDRESS, dest.getAddress());
         arguments.put(Argument.COUNT, "10");
 
@@ -129,7 +128,7 @@ public class MsgPatternsTest extends ClientTestBase {
 
         int count = 200;
 
-        arguments.put(Argument.BROKER, getRouteEndpoint(defaultAddressSpace).toString());
+        arguments.put(Argument.BROKER, getRoute(defaultAddressSpace, sender));
         arguments.put(Argument.ADDRESS, dest.getAddress());
         arguments.put(Argument.COUNT, Integer.toString(count));
 
@@ -149,7 +148,7 @@ public class MsgPatternsTest extends ClientTestBase {
         Destination queue = Destination.queue("selector-queue");
         setAddresses(defaultAddressSpace, queue);
 
-        arguments.put(Argument.BROKER, getRouteEndpoint(defaultAddressSpace).toString());
+        arguments.put(Argument.BROKER, getRoute(defaultAddressSpace, sender));
         arguments.put(Argument.COUNT, "10");
         arguments.put(Argument.ADDRESS, queue.getAddress());
         arguments.put(Argument.MSG_PROPERTY, "colour~red");
@@ -198,7 +197,7 @@ public class MsgPatternsTest extends ClientTestBase {
         Destination topic = Destination.topic("selector-topic");
         setAddresses(defaultAddressSpace, topic);
 
-        arguments.put(Argument.BROKER, getRouteEndpoint(defaultAddressSpace).toString());
+        arguments.put(Argument.BROKER, getRoute(defaultAddressSpace, sender));
         arguments.put(Argument.COUNT, "10");
         arguments.put(Argument.ADDRESS, getTopicPrefix(hasTopicPrefix) + topic.getAddress());
         arguments.put(Argument.MSG_PROPERTY, "colour~red");
