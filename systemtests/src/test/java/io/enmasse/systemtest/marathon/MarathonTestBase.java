@@ -15,7 +15,7 @@ import java.util.concurrent.TimeUnit;
 public class MarathonTestBase extends TestBase {
 
     @BeforeClass
-    public void initThreadDump() {
+    public static void initThreadDump() {
         Logging.log.info("Setting default exception handler for threads");
         Thread.setDefaultUncaughtExceptionHandler((thread, e) -> {
             if (e instanceof OutOfMemoryError) {
