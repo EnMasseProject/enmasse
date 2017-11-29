@@ -14,6 +14,15 @@ and Mac. You can invoke the deployment script with `-h` to view a list of option
 This guide will walk through the manual deployment procedure and should work on any platform
 supporting the OpenShift client.
 
+==== Creating project for {ProductName}
+
+. Create enmasse project:
++
+[options="nowrap"]
+----
+oc new-project enmasse
+----
+
 ==== Deploying authentication services
 
 {ProductName} require at least 1 authentication service to be deployed. The authentication service
@@ -35,14 +44,14 @@ openssl req -new -x509 -batch -nodes -days 11000 -subj "/O=io.enmasse/CN=none-au
 +
 [options="nowrap"]
 ----
-oc create secret tls none-authservice-cert --cert=none-authservice-cert/tls.crt --key=none-authservice-cert/tls.key -n enmasse
+oc create secret tls none-authservice-cert --cert=none-authservice-cert/tls.crt --key=none-authservice-cert/tls.key
 ----
 
 . Create the none authentication service:
 +
 [options="nowrap"]
 ----
-oc process -f ./openshift/addons/none-authservice.yaml | oc create -n enmasse -f -
+oc process -f ./openshift/addons/none-authservice.yaml | oc create -f -
 ----
 
 ===== Deploying the standard authentication service
@@ -61,39 +70,32 @@ openssl req -new -x509 -batch -nodes -days 11000 -subj "/O=io.enmasse/CN=standar
 +
 [options="nowrap"]
 ----
-oc create secret tls standard-authservice-cert --cert=standard-authservice-cert/tls.crt --key=standard-authservice-cert/tls.key -n enmasse
+oc create secret tls standard-authservice-cert --cert=standard-authservice-cert/tls.crt --key=standard-authservice-cert/tls.key
 ----
 
 . Create secret with keycloak admin credentials. Choose password wisely as this user will have complete access over authentication and authorization policies:
 +
 [options="nowrap"]
 ----
-oc create -n enmasse secret generic keycloak-credentials --from-literal=admin.username=admin --from-literal=admin.password=myrandompassword
+oc create secret generic keycloak-credentials --from-literal=admin.username=admin --from-literal=admin.password=myrandompassword
 ----
 
 . Create the standard authentication service:
 +
 [options="nowrap"]
 ----
-oc process -f ./openshift/addons/standard-authservice.yaml | oc create -n enmasse -f -
+oc process -f ./openshift/addons/standard-authservice.yaml | oc create -f -
 ----
 
 ==== Deploying {ProductName}
 
 .Procedure
 
-. Create namespace:
-+
-[options="nowrap"]
-----
-oc new-project enmasse
-----
-
 . Create service account for the {ProductName} address controller:
 +
 [options="nowrap"]
 ----
-oc create sa enmasse-service-account -n enmasse
+oc create sa enmasse-service-account
 ----
 
 . Create cluster-wide roles used by the `enmasse-service-account`:
@@ -111,6 +113,8 @@ oc create -f ./openshift/cluster-roles.yaml
 oc login -u system:admin
 oc adm policy add-cluster-role-to-user enmasse-namespace-admin system:serviceaccount:enmasse:enmasse-service-account
 ----
++
+*Note*: You can log back in as the regular user after this step.
 
 . Create a certificate to use for the address controller. For testing purposes, you can create a self-signed certificate:
 +
@@ -124,14 +128,14 @@ openssl req -new -x509 -batch -nodes -days 11000 -subj "/O=io.enmasse/CN=address
 +
 [options="nowrap"]
 ----
-oc create -n enmasse secret tls address-controller-cert --cert=address-controller-cert/tls.crt --key=address-controller-cert/tls.key
+oc create secret tls address-controller-cert --cert=address-controller-cert/tls.crt --key=address-controller-cert/tls.key
 ----
 
 . Deploy address-controller:
 +
 [options="nowrap"]
 ----
-oc process -f ./openshift/enmasse.yaml ENABLE_RBAC=true ADDRESS_CONTROLLER_CERT_SECRET=address-controller-cert | oc create -n enmasse -f -
+oc process -f ./openshift/enmasse.yaml ENABLE_RBAC=true ADDRESS_CONTROLLER_CERT_SECRET=address-controller-cert | oc create -f -
 ----
 +
 The deployments required for running {ProductName} are now created.
