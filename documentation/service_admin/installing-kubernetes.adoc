@@ -4,7 +4,7 @@
 
 :cmdcli: kubectl
 
-include::common/prerequisites-openshift.adoc[leveloffset=+1]
+include::common/prerequisites-kubernetes.adoc[leveloffset=+1]
 
 include::common/install-procedure.adoc[leveloffset+=1]
 
