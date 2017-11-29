@@ -111,13 +111,7 @@ fi
 
 runcmd "kubectl create sa enmasse-service-account -n $NAMESPACE" "Create service account for address controller"
 
-CA_KEY=${TEMPDIR}/ca.key
-CA_CERT=${TEMPDIR}/ca.crt
-runcmd "openssl req -new -x509 -batch -nodes -days 11000 -subj \"/O=io.enmasse/CN=enmasse\" -out ${CA_CERT} -keyout ${CA_KEY}" "Create self-signed certificate"
-fix_key_file_format ${CA_KEY}
-create_tls_secret "kubectl" "enmasse-ca" $CA_KEY $CA_CERT
-
-create_and_sign_cert "kubectl " $CA_KEY $CA_CERT "address-controller.${NAMESPACE}.svc.cluster.local" "address-controller-cert"
+create_self_signed_cert "kubectl" "address-controller.${NAMESPACE}.svc.cluster.local" "address-controller-cert"
 
 for auth_service in $AUTH_SERVICES
 do

@@ -9,7 +9,8 @@
 :DeployOptions: 
 
 This guide will walk through the process of setting up {ProductName} on
-OpenShift with clients for sending and receiving messages.
+OpenShift with clients for sending and receiving messages. The guide will deploy EnMasse in a single
+tenant mode and with the `none` authentication service.
 
 include::common/prerequisites-openshift.adoc[leveloffset=+1]
 

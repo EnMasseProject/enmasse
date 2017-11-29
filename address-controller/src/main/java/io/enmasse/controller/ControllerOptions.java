@@ -30,7 +30,6 @@ public final class ControllerOptions {
     private final String masterUrl;
     private final String namespace;
     private final String token;
-    private final File caDir;
 
     private final String certDir;
     private final File templateDir;
@@ -41,12 +40,11 @@ public final class ControllerOptions {
     private final String environment;
 
     private ControllerOptions(String masterUrl, String namespace, String token,
-                              File caDir, File templateDir, String certDir,
+                              File templateDir, String certDir,
                               AuthServiceInfo noneAuthService, AuthServiceInfo standardAuthService, boolean enableRbac, String environment) {
         this.masterUrl = masterUrl;
         this.namespace = namespace;
         this.token = token;
-        this.caDir = caDir;
         this.templateDir = templateDir;
         this.certDir = certDir;
         this.noneAuthService = noneAuthService;
@@ -65,10 +63,6 @@ public final class ControllerOptions {
 
     public String getToken() {
         return token;
-    }
-
-    public File getCaDir() {
-        return caDir;
     }
 
     public Optional<File> getTemplateDir() {
@@ -106,8 +100,6 @@ public final class ControllerOptions {
         String token = getEnv(env, "TOKEN")
                 .orElseGet(() -> readFile(new File(SERVICEACCOUNT_PATH, "token")));
 
-        File caDir = new File(getEnvOrThrow(env, "CA_DIR"));
-
         File templateDir = getEnv(env, "TEMPLATE_DIR")
                 .map(File::new)
                 .orElse(new File("/enmasse-templates"));
@@ -128,7 +120,6 @@ public final class ControllerOptions {
         return new ControllerOptions(String.format("https://%s:%s", masterHost, masterPort),
                 namespace,
                 token,
-                caDir,
                 templateDir,
                 certDir,
                 noneAuthService,

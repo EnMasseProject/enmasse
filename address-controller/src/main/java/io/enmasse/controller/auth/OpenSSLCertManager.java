@@ -39,19 +39,13 @@ import org.slf4j.LoggerFactory;
 public class OpenSSLCertManager implements CertManager {
     private static final Logger log = LoggerFactory.getLogger(OpenSSLCertManager.class.getName());
     private final OpenShiftClient client;
-    private final File caKey;
-    private final File caCert;
     private final File certDir;
     private final String globalNamespace;
 
     public OpenSSLCertManager(OpenShiftClient controllerClient,
-                              File caKey,
-                              File caCert,
                               File certDir,
                               final String globalNamespace) {
         this.client = controllerClient;
-        this.caKey = caKey;
-        this.caCert = caCert;
         this.certDir = certDir;
         this.globalNamespace = globalNamespace;
     }
@@ -256,11 +250,8 @@ public class OpenSSLCertManager implements CertManager {
     }
 
     public static OpenSSLCertManager create(OpenShiftClient controllerClient,
-                                            File caDir,
                                             final String globalNamespace) {
-        File caKey = new File(caDir, "tls.key");
-        File caCrt = new File(caDir, "tls.crt");
-        return new OpenSSLCertManager(controllerClient, caKey, caCrt, new File("/tmp"), globalNamespace);
+        return new OpenSSLCertManager(controllerClient, new File("/tmp"), globalNamespace);
     }
 
 }

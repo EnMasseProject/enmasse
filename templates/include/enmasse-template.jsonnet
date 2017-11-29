@@ -180,7 +180,7 @@ local images = import "images.jsonnet";
                  storage.template(true, true),
                  standardInfra.generate(with_kafka),
                  brokeredInfra.template,
-                 addressController.deployment("${ADDRESS_CONTROLLER_REPO}", "", "${ENMASSE_CA_SECRET}", "${ADDRESS_CONTROLLER_CERT_SECRET}", "${ENVIRONMENT}", "${ENABLE_RBAC}"),
+                 addressController.deployment("${ADDRESS_CONTROLLER_REPO}", "", "${ADDRESS_CONTROLLER_CERT_SECRET}", "${ENVIRONMENT}", "${ENABLE_RBAC}"),
                  addressController.internal_service,
                  restapiRoute.route("${RESTAPI_HOSTNAME}") ],
     "parameters": [
@@ -192,11 +192,6 @@ local images = import "images.jsonnet";
         "name": "ADDRESS_CONTROLLER_REPO",
         "description": "The docker image to use for the address controller",
         "value": images.address_controller
-      },
-      {
-        "name": "ENMASSE_CA_SECRET",
-        "description": "Name of the secret containing the EnMasse CA",
-        "value": "enmasse-ca"
       },
       {
         "name": "ADDRESS_CONTROLLER_CERT_SECRET",

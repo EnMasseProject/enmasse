@@ -9,3 +9,5 @@ been tested to work with the latest stable release of the OpenShift Origin Clien
 If you do not have an OpenShift cluster available, see
 https://github.com/minishift/minishift[minishift] for an example of how to run a local instance of OpenShift
 on your machine.
+
+You also need a way to generate certificates. This guide uses https://www.openssl.org/[OpenSSL].

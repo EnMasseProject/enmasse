@@ -33,7 +33,7 @@ local common = import "common.jsonnet";
   external_service::
     self.common_service("restapi-external", "LoadBalancer", {}),
 
-  deployment(image, template_config, ca_secret, cert_secret, environment, enable_rbac)::
+  deployment(image, template_config, cert_secret, environment, enable_rbac)::
     {
       "apiVersion": "extensions/v1beta1",
       "kind": "Deployment",
@@ -63,12 +63,10 @@ local common = import "common.jsonnet";
                 "image": image,
                 "name": "address-controller",
                 "env": [
-                  common.env("CA_DIR", "/ca-cert"),
                   common.env("ENABLE_RBAC", enable_rbac),
                   common.env("ENVIRONMENT", environment)
                 ],
                 "volumeMounts": [
-                  common.volume_mount("ca-cert", "/ca-cert", true),
                   common.volume_mount("address-controller-cert", "/address-controller-cert", true),
                 ] + if template_config != "" then [ common.volume_mount("templates", "/enmasse-templates") ] else [],
                 "resources": {
@@ -88,7 +86,6 @@ local common = import "common.jsonnet";
               }
             ],
             "volumes": [
-              common.secret_volume("ca-cert", ca_secret),
               common.secret_volume("address-controller-cert", cert_secret)
             ] + if template_config != "" then [ common.configmap_volume("templates", template_config) ] else [],
           }

@@ -164,20 +164,7 @@ runcmd "oc create sa enmasse-service-account -n $NAMESPACE" "Create service acco
 runcmd "oc policy add-role-to-user view system:serviceaccount:${NAMESPACE}:default" "Add permissions for viewing OpenShift resources to default user"
 runcmd "oc policy add-role-to-user edit system:serviceaccount:${NAMESPACE}:enmasse-service-account" "Add permissions for editing OpenShift resources to EnMasse service account"
 
-CA_KEY=${TEMPDIR}/ca.key
-CA_CERT=${TEMPDIR}/ca.crt
-if [ -z $CA_SECRET ]; then
-    CA_SECRET=enmasse-ca
-    runcmd "openssl req -new -x509 -batch -nodes -days 11000 -subj \"/O=io.enmasse/CN=enmasse\" -out ${CA_CERT} -keyout ${CA_KEY}" "Create self-signed certificate"
-    fix_key_file_format ${CA_KEY}
-    create_tls_secret "oc" "enmasse-ca" $CA_KEY $CA_CERT
-else
-    runcmd "oc get secret -o jsonpath='{.data.tls\.key}' ${CA_SECRET} > ${CA_KEY}" "Retrieve CA key"
-    runcmd "oc get secret -o jsonpath='{.data.tls\.crt}' ${CA_SECRET} > ${CA_CERT}" "Retrieve CA certificate"
-    TEMPLATE_PARAMS="$TEMPLATE_PARAMS ENMASSE_CA_SECRET=$CA_SECRET"
-fi
-
-create_and_sign_cert "oc" $CA_KEY $CA_CERT "address-controller.${NAMESPACE}.svc.cluster.local" "address-controller-cert"
+create_self_signed_cert "oc" "address-controller.${NAMESPACE}.svc.cluster.local" "address-controller-cert"
 
 for auth_service in $AUTH_SERVICES
 do
