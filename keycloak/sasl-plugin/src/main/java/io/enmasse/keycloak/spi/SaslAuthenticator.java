@@ -40,11 +40,15 @@ class SaslAuthenticator implements ProtonSaslAuthenticator
     // TODO - load these dynamically
     static {
         final SaslServerMechanism plainSaslServerMechanism = new PlainSaslServerMechanism();
-        final SaslServerMechanism scramSHA1SaslServerMechanism = new ScramSHA1SaslServerMechanism();
+        final SaslServerMechanism scramSHA1SaslServerMechanism = new ScramSha1SaslServerMechanism();
+        final SaslServerMechanism scramSha256SaslServerMechanism = new ScramSha256SaslServerMechanism();
+        final SaslServerMechanism scramSha512SaslServerMechanism = new ScramSha512SaslServerMechanism();
         //final SaslServerMechanism xoauth2SHA1SaslServerMechanism = new XOAUTH2SaslServerMechanism();
 
         MECHANISMS.put(plainSaslServerMechanism.getName(), plainSaslServerMechanism);
         MECHANISMS.put(scramSHA1SaslServerMechanism.getName(), scramSHA1SaslServerMechanism);
+        MECHANISMS.put(scramSha256SaslServerMechanism.getName(), scramSha256SaslServerMechanism);
+        MECHANISMS.put(scramSha512SaslServerMechanism.getName(), scramSha512SaslServerMechanism);
         //MECHANISMS.put(xoauth2SHA1SaslServerMechanism.getName(), scramSHA1SaslServerMechanism);
     }
 
