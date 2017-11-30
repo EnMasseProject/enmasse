@@ -75,7 +75,7 @@ public class OpenShift {
             return endpoint;
         } else {
             Logging.log.info("Endpoint didn't resolve, falling back to service endpoint");
-            return getEndpoint(globalNamespace, "standard-authservice", "http");
+            return getEndpoint(globalNamespace, "standard-authservice", "https");
         }
     }
 
