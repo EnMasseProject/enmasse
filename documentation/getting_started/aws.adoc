@@ -1,5 +1,5 @@
 [[setting-up-enmasse-on-aws]]
-= Setting up EnMasse on AWS
+== Setting up EnMasse on AWS
 
 :OcGetRoute: oc get route -o jsonpath='{.spec.host}'
 :OcRoutePort: 443
@@ -19,7 +19,7 @@ neither messages in brokers nor state in other components like hawkular
 are persisted.
 
 [[prerequisites-aws]]
-== Prerequisites
+=== Prerequisites
 
 First, you must have created an https://aws.amazon.com/ec2/[EC2
 instance]. EnMasse runs on OpenShift and Kubernetes, but this post uses
@@ -30,7 +30,7 @@ will be done using https://www.ansible.com[Ansible], so make sure
 Ansible is installed on laptop or workstation.
 
 [[configure-ansible-to-handle-passwordless-sudo]]
-=== Configure Ansible to handle passwordless sudo
+==== Configure Ansible to handle passwordless sudo
 
 For EC2 instance, the default is a passwordless sudo, and Ansible
 (2.3.0.0 at the time of writing) requires a minor configuration
@@ -39,7 +39,7 @@ from, edit /etc/ansible/ansible.cfg, and make sure that the `sudo_flags`
 parameter is set to `-H -S` (remove the `-n`).
 
 [[setting-up-openshift-aws]]
-== Setting up OpenShift
+=== Setting up OpenShift
 
 Once Ansible is setup, installing OpenShift is easy. First, an inventory
 file with the configuration and the hosts must be created. Save the
@@ -108,7 +108,7 @@ Where `<myuser>` is the username you want to use. The command will
 prompt you for a password that you will later use when deploying
 EnMasse.
 
-== Installing {ProductName}
+=== Installing {ProductName}
 
 include::common/install-procedure.adoc[leveloffset+=1] 
 
@@ -131,7 +131,7 @@ include::amqp-client-openshift.adoc[leveloffset=+1]
 include::mqtt-client-openshift.adoc[leveloffset=+1]
 
 [[optional-setting-up-metrics]]
-== (Optional) Setting up metrics
+=== (Optional) Setting up metrics
 
 The process for setting up grafana is a bit more involved, but it gives
 you a nice overview of whats going on over time. First of all, I like to
@@ -165,7 +165,7 @@ After some time, Grafana should become available at
 `oc get route -n openshift-infra -o jsonpath='{.spec.host}' hawkular-grafana`.
 The default username and password is `admin/admin`. E
 
-== Summary
+=== Summary
 
 In this post, you've seen how to:
 

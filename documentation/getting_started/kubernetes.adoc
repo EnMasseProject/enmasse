@@ -1,5 +1,5 @@
 [[enmasse-on-kubernetes]]
-= {ProductName} on Kubernetes
+== {ProductName} on Kubernetes
 
 :OcGetRoute: kubectl get ingress -o jsonpath='{.spec.host}'
 :OcRoutePort: 443
@@ -20,8 +20,8 @@ include::common/prerequisites-kubernetes.adoc[leveloffset=+1]
 
 include::common/install-procedure.adoc[leveloffset+=1] 
 
-This guide uses a shell script for deploying {ProductName}. Windows users are adviced to look at the
-"Installation and configuration" guide.
+This guide uses a shell script for deploying {ProductName}. Windows users are adviced to look at
+<<installing-kubernetes>>.
 
 include::deploy-procedure.adoc[leveloffset+=1] 
 
@@ -73,7 +73,7 @@ include::amqp-client-openshift.adoc[leveloffset=+1]
 include::mqtt-client-openshift.adoc[leveloffset=+1]
 
 [[conclusion-kubernetes]]
-== Conclusion
+=== Conclusion
 
 We have seen how to setup a messaging service in Kubernetes, and how to
 communicate with it using python example AMQP clients.
