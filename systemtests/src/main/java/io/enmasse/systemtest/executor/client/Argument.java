@@ -22,6 +22,23 @@ public enum Argument {
     CONN_WEB_SOCKET("--conn-web-socket"),
     CONN_OPTIONS("--connection-options"),
 
+    CONN_ASYNC_ACKS("--conn-async-acks"),
+    CONN_ASYNC_SEND("--conn-async-send"),
+    CONN_AUTH_MECHANISM("--conn-auth-mechanisms"),
+    CONN_AUTH_SASL("--conn-auth-sasl"),
+    CONN_CLIENT_ID("--conn-clientid"),
+    CONN_CLOSE_TIMEOUT("--conn-close-timeout"),
+    CONN_CONN_TIMEOUT("--conn-conn-timeout"),
+    CONN_DRAIN_TIMEOUT("--conn-drain-timeout"),
+    CONN_SSL_TRUST_ALL("--conn-ssl-trust-all"),
+    CONN_SSL_VERIFY_HOST("--conn-ssl-verify-host"),
+
+    //transaction opts
+    TX_SIZE("--tx-size"),
+    TX_ACTION("--tx-action"),
+    TX_ENDLOOP_ACTION("--tx-endloop-action"),
+
+
     //common link opts
     LINK_DURABLE("--link-durable"),
     LINK_AT_MOST_ONCE("--link-at-most-once"),
@@ -36,6 +53,7 @@ public enum Argument {
     //common opts
     BROKER("--broker"),
     BROKER_URL("--broker-url"),
+    BROKER_URI("--broker-uri"),
     USERNAME("--conn-username"),
     PASSWORD("--conn-password"),
     ADDRESS("--address"),
@@ -67,6 +85,7 @@ public enum Argument {
 
     //receiver opts
     SELECTOR("--recv-selector"),
+    MSG_SELECTOR("--msg-selector"),
     RECV_BROWSE("--recv-browse"),
     ACTION("--action"),
     PROCESS_REPLY_TO("--process-reply-to"),

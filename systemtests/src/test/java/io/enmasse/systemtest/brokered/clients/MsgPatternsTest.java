@@ -6,7 +6,6 @@ import io.enmasse.systemtest.executor.client.AbstractClient;
 import io.enmasse.systemtest.executor.client.Argument;
 import org.junit.Before;
 
-import java.util.Random;
 import java.util.concurrent.Future;
 
 import static org.junit.Assert.assertEquals;
@@ -20,6 +19,7 @@ public class MsgPatternsTest extends ClientTestBase {
         arguments.put(Argument.PASSWORD, "test");
         arguments.put(Argument.LOG_MESSAGES, "json");
         arguments.put(Argument.CONN_SSL, "true");
+	    arguments.put(Argument.TIMEOUT, "30");
     }
 
     protected void doBasicMessageTest(AbstractClient sender, AbstractClient receiver) throws Exception {
@@ -27,7 +27,7 @@ public class MsgPatternsTest extends ClientTestBase {
         Destination dest = Destination.queue("message-basic");
         setAddresses(defaultAddressSpace, dest);
 
-        arguments.put(Argument.BROKER, getRouteEndpoint(defaultAddressSpace).toString());
+        arguments.put(Argument.BROKER, getRoute(defaultAddressSpace, sender));
         arguments.put(Argument.ADDRESS, dest.getAddress());
         arguments.put(Argument.COUNT, "10");
 
@@ -46,7 +46,7 @@ public class MsgPatternsTest extends ClientTestBase {
         Destination dest = Destination.queue("receiver-round-robin");
         setAddresses(defaultAddressSpace, dest);
 
-        arguments.put(Argument.BROKER, getRouteEndpoint(defaultAddressSpace).toString());
+        arguments.put(Argument.BROKER, getRoute(defaultAddressSpace, sender));
         arguments.put(Argument.ADDRESS, dest.getAddress());
         arguments.put(Argument.COUNT, "5");
 
@@ -70,13 +70,13 @@ public class MsgPatternsTest extends ClientTestBase {
         assertEquals(5, receiver.getMessages().size());
     }
 
-    protected void doTopicSubscribeTest(AbstractClient sender, AbstractClient subscriber, AbstractClient subscriber2)
-            throws Exception {
+    protected void doTopicSubscribeTest(AbstractClient sender, AbstractClient subscriber, AbstractClient subscriber2,
+                                        boolean hasTopicPrefix) throws Exception {
         Destination dest = Destination.topic("topic-subscribe");
         setAddresses(defaultAddressSpace, dest);
 
-        arguments.put(Argument.BROKER, getRouteEndpoint(defaultAddressSpace).toString());
-        arguments.put(Argument.ADDRESS, dest.getAddress());
+        arguments.put(Argument.BROKER, getRoute(defaultAddressSpace, sender));
+        arguments.put(Argument.ADDRESS, getTopicPrefix(hasTopicPrefix) + dest.getAddress());
         arguments.put(Argument.COUNT, "10");
 
         sender.setArguments(arguments);
@@ -102,7 +102,7 @@ public class MsgPatternsTest extends ClientTestBase {
         Destination dest = Destination.queue("message-browse");
         setAddresses(defaultAddressSpace, dest);
 
-        arguments.put(Argument.BROKER, getRouteEndpoint(defaultAddressSpace).toString());
+        arguments.put(Argument.BROKER, getRoute(defaultAddressSpace, sender));
         arguments.put(Argument.ADDRESS, dest.getAddress());
         arguments.put(Argument.COUNT, "10");
 
@@ -129,7 +129,7 @@ public class MsgPatternsTest extends ClientTestBase {
 
         int count = 200;
 
-        arguments.put(Argument.BROKER, getRouteEndpoint(defaultAddressSpace).toString());
+        arguments.put(Argument.BROKER, getRoute(defaultAddressSpace, sender));
         arguments.put(Argument.ADDRESS, dest.getAddress());
         arguments.put(Argument.COUNT, Integer.toString(count));
 
@@ -145,11 +145,11 @@ public class MsgPatternsTest extends ClientTestBase {
         assertEquals(count, receiver.getMessages().size());
     }
 
-    protected void doMessageSelectorQueueTest(AbstractClient sender, AbstractClient receiver) throws Exception {
+    protected void doMessageSelectorQueueTest(AbstractClient sender, AbstractClient receiver) throws Exception{
         Destination queue = Destination.queue("selector-queue");
         setAddresses(defaultAddressSpace, queue);
 
-        arguments.put(Argument.BROKER, getRouteEndpoint(defaultAddressSpace).toString());
+        arguments.put(Argument.BROKER, getRoute(defaultAddressSpace, sender));
         arguments.put(Argument.COUNT, "10");
         arguments.put(Argument.ADDRESS, queue.getAddress());
         arguments.put(Argument.MSG_PROPERTY, "colour~red");
@@ -194,13 +194,13 @@ public class MsgPatternsTest extends ClientTestBase {
     }
 
     protected void doMessageSelectorTopicTest(AbstractClient sender, AbstractClient subscriber,
-                                              AbstractClient subscriber2, AbstractClient subscriber3) throws Exception {
+                                              AbstractClient subscriber2, AbstractClient subscriber3, boolean hasTopicPrefix) throws Exception {
         Destination topic = Destination.topic("selector-topic");
         setAddresses(defaultAddressSpace, topic);
 
-        arguments.put(Argument.BROKER, getRouteEndpoint(defaultAddressSpace).toString());
+        arguments.put(Argument.BROKER, getRoute(defaultAddressSpace, sender));
         arguments.put(Argument.COUNT, "10");
-        arguments.put(Argument.ADDRESS, topic.getAddress());
+        arguments.put(Argument.ADDRESS, getTopicPrefix(hasTopicPrefix) + topic.getAddress());
         arguments.put(Argument.MSG_PROPERTY, "colour~red");
         arguments.put(Argument.MSG_PROPERTY, "number~12.65");
         arguments.put(Argument.MSG_PROPERTY, "a~true");
@@ -221,7 +221,6 @@ public class MsgPatternsTest extends ClientTestBase {
 
         //set up subscriber3
         arguments.put(Argument.SELECTOR, "a AND b");
-        arguments.put(Argument.TIMEOUT, "30"); //because this client should receive no messages
         subscriber3.setArguments(arguments);
 
         Future<Boolean> result1 = subscriber.runAsync();
