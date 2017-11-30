@@ -31,16 +31,15 @@ public class MarathonTestBase extends TestBase {
     }
 
     private void closeClients() {
-        try {
-            for (AmqpClient client : clients) {
+        for (AmqpClient client : clients) {
+            try {
                 client.close();
-                Logging.log.info("Clients are closed.");
+                Logging.log.info("Client is closed.");
+            }catch (Exception ex){
+                collector.addError(ex);
             }
-        } catch (Exception ex) {
-            collector.addError(ex);
-        } finally {
-            clients.clear();
         }
+        clients.clear();
     }
 
     protected interface TestLoop {
