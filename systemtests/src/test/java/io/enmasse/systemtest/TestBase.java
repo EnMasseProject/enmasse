@@ -319,7 +319,13 @@ public abstract class TestBase extends SystemTestRunListener {
     }
 
     protected Endpoint getRouteEndpoint(AddressSpace addressSpace) {
-        return openShift.getRouteEndpoint(addressSpace.getNamespace(), "messaging");
+        Endpoint messagingEndpoint = openShift.getRouteEndpoint(addressSpace.getNamespace(), "messaging");
+
+        if (TestUtils.resolvable(messagingEndpoint)) {
+            return messagingEndpoint;
+        } else {
+            return openShift.getEndpoint(addressSpace.getNamespace(), "messaging", "amqps");
+        }
     }
 
 
