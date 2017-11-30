@@ -118,8 +118,8 @@ function MockRouter (name) {
 util.inherits(MockRouter, events.EventEmitter);
 
 function match_source_address(link, address) {
-    return link && link.local && link.local.attach && link.local.attach.source
-        && link.local.attach.source.address === address;
+   return link && link.local && link.local.attach && link.local.attach.source
+        && link.local.attach.source.value[0].toString() === address;
 }
 
 MockRouter.prototype.add_node = function (router) {

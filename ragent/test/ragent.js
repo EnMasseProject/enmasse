@@ -39,6 +39,12 @@ function MockRouter (name, port, opts) {
     this.connection.on('message', this.on_message.bind(this));
     var self = this;
     this.connection.on('connection_open', function () { self.emit('connected', self); });
+    this.connection.on('sender_open', function (context) {
+        if (context.sender.source.dynamic) {
+            var id = rhea.generate_uuid();
+            context.sender.set_source({address:id});
+        }
+    });
     this.objects = {};
     this.create_object('listener', 'default', {name:'default', host:name, 'port':port, role:'inter-router'});
 }
@@ -47,7 +53,7 @@ util.inherits(MockRouter, events.EventEmitter);
 
 function match_source_address(link, address) {
     return link && link.local && link.local.attach && link.local.attach.source
-        && link.local.attach.source.address === address;
+        && link.local.attach.source.value[0].toString() === address;
 }
 
 MockRouter.prototype.create_object = function (type, name, attributes)
