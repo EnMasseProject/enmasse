@@ -28,7 +28,7 @@ node_modules: package.json
         ifeq ($(NPM),)
 		$(warning "npm not found, node tests will be skipped")
         else
-		npm install
+		npm install --verbose
         endif
 
 npm_install: node_modules
