@@ -324,7 +324,7 @@ public abstract class TestBase extends SystemTestRunListener {
         if (TestUtils.resolvable(messagingEndpoint)) {
             return messagingEndpoint;
         } else {
-            return new Endpoint("localhost", 443);
+            return openShift.getEndpoint(addressSpace.getNamespace(), "messaging", "amqps");
         }
     }
 
