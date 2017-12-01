@@ -19,11 +19,17 @@ public class MarathonTestBase extends TestBase {
     protected void runTestInLoop(int durationMinutes, TestLoop test) {
         Logging.log.info(String.format("Starting test running for %d minutes at %s",
                 durationMinutes, new Date().toString()));
+        int fails = 0;
+        int limit = 10;
         for (long stop = System.nanoTime() + TimeUnit.MINUTES.toNanos(durationMinutes); stop > System.nanoTime(); ) {
             try {
                 test.run();
+                fails = 0;
             } catch (Exception ex) {
                 collector.addError(ex);
+                if (++fails >= limit) {
+                    throw new IllegalStateException("Test failed " + limit + "times in a row");
+                }
             } finally {
                 closeClients();
             }
