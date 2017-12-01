@@ -19,7 +19,7 @@ public class MsgPatternsTest extends ClientTestBase {
         arguments.put(Argument.PASSWORD, "test");
         arguments.put(Argument.LOG_MESSAGES, "json");
         arguments.put(Argument.CONN_SSL, "true");
-	    arguments.put(Argument.TIMEOUT, "30");
+	    arguments.put(Argument.TIMEOUT, "60");
     }
 
     protected void doBasicMessageTest(AbstractClient sender, AbstractClient receiver) throws Exception {
@@ -221,7 +221,6 @@ public class MsgPatternsTest extends ClientTestBase {
 
         //set up subscriber3
         arguments.put(Argument.SELECTOR, "a AND b");
-        arguments.put(Argument.TIMEOUT, "60"); //because this client should receive no messages
         subscriber3.setArguments(arguments);
 
         Future<Boolean> result1 = subscriber.runAsync();
