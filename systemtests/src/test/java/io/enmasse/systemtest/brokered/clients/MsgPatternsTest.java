@@ -19,7 +19,6 @@ public class MsgPatternsTest extends ClientTestBase {
         arguments.put(Argument.PASSWORD, "test");
         arguments.put(Argument.LOG_MESSAGES, "json");
         arguments.put(Argument.CONN_SSL, "true");
-	    arguments.put(Argument.TIMEOUT, "60");
     }
 
     protected void doBasicMessageTest(AbstractClient sender, AbstractClient receiver) throws Exception {
@@ -49,6 +48,7 @@ public class MsgPatternsTest extends ClientTestBase {
         arguments.put(Argument.BROKER, getRoute(defaultAddressSpace, sender));
         arguments.put(Argument.ADDRESS, dest.getAddress());
         arguments.put(Argument.COUNT, "5");
+        arguments.put(Argument.TIMEOUT, "60");
 
 
         receiver.setArguments(arguments);
@@ -78,6 +78,7 @@ public class MsgPatternsTest extends ClientTestBase {
         arguments.put(Argument.BROKER, getRoute(defaultAddressSpace, sender));
         arguments.put(Argument.ADDRESS, getTopicPrefix(hasTopicPrefix) + dest.getAddress());
         arguments.put(Argument.COUNT, "10");
+        arguments.put(Argument.TIMEOUT, "60");
 
         sender.setArguments(arguments);
         subscriber.setArguments(arguments);
@@ -145,7 +146,7 @@ public class MsgPatternsTest extends ClientTestBase {
         assertEquals(count, receiver.getMessages().size());
     }
 
-    protected void doMessageSelectorQueueTest(AbstractClient sender, AbstractClient receiver) throws Exception{
+    protected void doMessageSelectorQueueTest(AbstractClient sender, AbstractClient receiver) throws Exception {
         Destination queue = Destination.queue("selector-queue");
         setAddresses(defaultAddressSpace, queue);
 
@@ -205,6 +206,7 @@ public class MsgPatternsTest extends ClientTestBase {
         arguments.put(Argument.MSG_PROPERTY, "number~12.65");
         arguments.put(Argument.MSG_PROPERTY, "a~true");
         arguments.put(Argument.MSG_PROPERTY, "b~false");
+        arguments.put(Argument.TIMEOUT, "60");
 
         //set up sender
         sender.setArguments(arguments);
