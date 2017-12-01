@@ -94,7 +94,8 @@ function get_openshift_info() {
     ARTIFACTS_DIR=${1}
     RESOURCE=${2}
     NAMESPACE=${3}
-    FILE_NAME="openshift-${RESOURCE}-${NAMESPACE}.log"
+    SUFIX=${4}
+    FILE_NAME="openshift-${RESOURCE}-${NAMESPACE}${SUFIX}.log"
     oc get ${RESOURCE} -n ${NAMESPACE} > "${1}/${FILE_NAME}"
     oc get ${RESOURCE} -n ${NAMESPACE} -o yaml >> "${1}/${FILE_NAME}"
 }
