@@ -23,12 +23,9 @@ import org.keycloak.credential.hash.PasswordHashProviderFactory;
 import org.keycloak.models.KeycloakSession;
 import org.keycloak.models.KeycloakSessionFactory;
 
-public class ScramSha512PasswordHashProviderFactory implements PasswordHashProviderFactory
-{
+public class ScramSha512PasswordHashProviderFactory implements PasswordHashProviderFactory {
 
     public static final String ID = "scramsha512";
-
-    public static final String ALGORITHM = "SCRAMSHA512";
 
     public static final int DEFAULT_ITERATIONS = 20000;
 

@@ -22,9 +22,6 @@ import org.keycloak.credential.CredentialInputValidator;
 import org.keycloak.credential.CredentialModel;
 import org.keycloak.credential.PasswordCredentialProvider;
 import org.keycloak.credential.UserCredentialStoreManager;
-import org.keycloak.credential.hash.Pbkdf2PasswordHashProviderFactory;
-import org.keycloak.credential.hash.Pbkdf2Sha256PasswordHashProviderFactory;
-import org.keycloak.credential.hash.Pbkdf2Sha512PasswordHashProviderFactory;
 import org.keycloak.models.KeycloakSession;
 import org.keycloak.models.RealmModel;
 import org.keycloak.models.UserModel;
@@ -32,45 +29,57 @@ import org.keycloak.storage.StorageId;
 import org.keycloak.storage.UserStorageManager;
 import org.keycloak.storage.UserStorageProvider;
 
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.security.GeneralSecurityException;
 import java.security.InvalidKeyException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.function.Function;
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
 
 class ScramSaslAuthenticator implements SaslServerMechanism.Instance
 {
     private final KeycloakSession keycloakSession;
     private final String hostname;
     private boolean authenticated;
-    private RuntimeException error;
     private State state = State.INITIAL;
     private byte[] gs2Header;
     private String clientFirstMessageBare;
     private String username;
     private String nonce;
-    private int iterationCount;
     private String serverFirstMessage;
-    private byte[] salt;
     private RealmModel realm;
     private UserModel user;
     private final byte[] randomBytes;
     private final String digestName;
     private final String hmacName;
+    private Map<String, Function<CredentialModel, StoredAndServerKey>> keyRetrievalFunctions;
 
-    public ScramSaslAuthenticator(final KeycloakSession keycloakSession, final String hostname, byte[] randomBytes, String digestName, String hmacName)
-    {
+    interface StoredAndServerKey {
+        byte[] getStoredKey();
+        byte[] getServerKey();
+    }
+
+    public ScramSaslAuthenticator(final KeycloakSession keycloakSession,
+                                  final String hostname,
+                                  String digestName,
+                                  String hmacName,
+                                  Map<String, Function<CredentialModel, StoredAndServerKey>> keyRetrievalFunctions) {
         this.keycloakSession = keycloakSession;
         this.hostname = hostname;
-        this.randomBytes = randomBytes;
+        this.randomBytes = new byte[32];
+        (new SecureRandom()).nextBytes(this.randomBytes);
         this.digestName = digestName;
         this.hmacName = hmacName;
+        this.keyRetrievalFunctions = new HashMap<>(keyRetrievalFunctions);
     }
 
 
@@ -82,22 +91,18 @@ class ScramSaslAuthenticator implements SaslServerMechanism.Instance
     }
 
 
-    private byte[] generateServerFirstMessage(final byte[] response)
-    {
+    private byte[] generateServerFirstMessage(final byte[] response) {
         String clientFirstMessage = new String(response, StandardCharsets.US_ASCII);
-        if(!clientFirstMessage.startsWith("n"))
-        {
+        if(!clientFirstMessage.startsWith("n")) {
             throw new IllegalArgumentException("Cannot parse gs2-header");
         }
         String[] parts = clientFirstMessage.split(",");
-        if(parts.length < 4)
-        {
+        if(parts.length < 4) {
             throw new IllegalArgumentException("Cannot parse client first message");
         }
         gs2Header = ("n,"+parts[1]+",").getBytes(StandardCharsets.US_ASCII);
         clientFirstMessageBare = clientFirstMessage.substring(gs2Header.length);
-        if(!parts[2].startsWith("n="))
-        {
+        if(!parts[2].startsWith("n=")) {
             throw new IllegalArgumentException("Cannot parse client first message");
         }
         username = decodeUsername(parts[2].substring(2));
@@ -105,74 +110,58 @@ class ScramSaslAuthenticator implements SaslServerMechanism.Instance
         keycloakSession.getTransactionManager().begin();
         realm = keycloakSession.realms().getRealmByName(hostname);
         keycloakSession.getTransactionManager().commit();
-        if(realm != null)
-        {
+        if(realm != null) {
             user = keycloakSession.userStorageManager().getUserByUsername(username, realm);
         }
 
-
-
-        if(!parts[3].startsWith("r="))
-        {
+        if(!parts[3].startsWith("r=")) {
             throw new IllegalArgumentException("Cannot parse client first message");
         }
         nonce = parts[3].substring(2) + UUID.randomUUID().toString();
 
-        salt = getSalt();
-        iterationCount = getIterations();
-
-        serverFirstMessage = "r=" + nonce + ",s=" + Base64.encodeBytes(this.salt) + ",i=" + this.iterationCount;
+        serverFirstMessage = "r=" + nonce + ",s=" + Base64.encodeBytes(getSalt()) + ",i=" + getIterations();
         return serverFirstMessage.getBytes(StandardCharsets.US_ASCII);
     }
 
-    private byte[] getSalt()
-    {
+    private byte[] getSalt() {
         CredentialModel credentialModel = getCredentialModel();
         if(credentialModel == null) {
             byte[] tmpSalt = new byte[16];
-            byte[] hmac = computeHmac(this.randomBytes, username);
+            byte[] hmac = computeHmac(this.hmacName, this.randomBytes, username);
             if(hmac.length >= tmpSalt.length) {
                 System.arraycopy(hmac, 0, tmpSalt, 0, tmpSalt.length);
             } else {
                 int offset = 0;
                 String key = username;
                 while(offset < tmpSalt.length) {
-
                     System.arraycopy(hmac, 0, tmpSalt, offset, Math.min(hmac.length, tmpSalt.length-offset));
                     key = key+"1";
-                    hmac = computeHmac(this.randomBytes, key);
+                    hmac = computeHmac(this.hmacName, this.randomBytes, key);
                     offset+=hmac.length;
                 }
             }
             return tmpSalt;
-
         } else {
             return credentialModel.getSalt();
         }
     }
 
-    private int getIterations()
-    {
+    private int getIterations() {
         CredentialModel credentialModel = getCredentialModel();
         if (credentialModel == null) {
             // TODO - should come from the policy
             return 20000;
         } else {
-
             return credentialModel.getHashIterations();
         }
     }
 
-    private String decodeUsername(String username)
-    {
-        if(username.contains("="))
-        {
+    private String decodeUsername(String username) {
+        if(username.contains("=")) {
             String check = username;
-            while (check.contains("="))
-            {
+            while (check.contains("=")) {
                 check = check.substring(check.indexOf('=') + 1);
-                if (!(check.startsWith("2C") || check.startsWith("3D")))
-                {
+                if (!(check.startsWith("2C") || check.startsWith("3D"))) {
                     throw new IllegalArgumentException("Invalid username");
                 }
             }
@@ -182,29 +171,21 @@ class ScramSaslAuthenticator implements SaslServerMechanism.Instance
         return username;
     }
 
-    private byte[] decodeBase64(String base64String)
-    {
+     private static byte[] decodeBase64(String base64String) {
         base64String = base64String.replaceAll("\\s","");
-        if(!base64String.matches("^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"))
-        {
+        if(!base64String.matches("^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$")) {
             throw new IllegalArgumentException("Cannot convert string '"+ base64String+ "'to a byte[] - it does not appear to be base64 data");
         }
 
-        try
-        {
+        try {
             return Base64.decode(base64String);
-        }
-        catch (IOException e)
-        {
+        } catch (IOException e) {
             throw new IllegalArgumentException(e);
         }
     }
 
-
-    private byte[] generateServerFinalMessage(final byte[] response)
-    {
-        try
-        {
+    private byte[] generateServerFinalMessage(final byte[] response) {
+        try {
             String clientFinalMessage = new String(response, StandardCharsets.US_ASCII);
             String[] parts = clientFinalMessage.split(",");
             if (!parts[0].startsWith("c=")) {
@@ -230,30 +211,22 @@ class ScramSaslAuthenticator implements SaslServerMechanism.Instance
             String authMessage =
                     clientFirstMessageBare + "," + serverFirstMessage + "," + clientFinalMessageWithoutProof;
 
-            byte[] storedKey;
-            byte[] serverKey;
+            StoredAndServerKey keys;
 
             final CredentialModel credentialModel = getCredentialModel();
-            if (credentialModel == null
-                || credentialModel.getAlgorithm().equals(Pbkdf2PasswordHashProviderFactory.ID)
-                || credentialModel.getAlgorithm().equals(Pbkdf2Sha256PasswordHashProviderFactory.ID)
-                || credentialModel.getAlgorithm().equals(Pbkdf2Sha512PasswordHashProviderFactory.ID)) {
-                byte[] saltedPassword = getSaltedPassword();
-                byte[] clientKey = computeHmac(saltedPassword, "Client Key");
 
-                storedKey = MessageDigest.getInstance(this.digestName).digest(clientKey);
-                serverKey = computeHmac(saltedPassword, "Server Key");
-            } else if (credentialModel.getAlgorithm().equals(ScramSha1PasswordHashProviderFactory.ID)
-                    || credentialModel.getAlgorithm().equals(ScramSha256PasswordHashProviderFactory.ID)
-                    || credentialModel.getAlgorithm().equals(ScramSha512PasswordHashProviderFactory.ID)) {
-                String[] storedAndServerKeys = credentialModel.getValue().split("\\|",2);
-                storedKey = Base64.decode(storedAndServerKeys[0]);
-                serverKey = Base64.decode(storedAndServerKeys[1]);
-            } else {
-                throw new IllegalArgumentException("Unsupported algorithm: " + credentialModel.getAlgorithm());
+            if (credentialModel == null) {
+                keys = getStoredAndServerKeyFromPbkdf2Hash(null, hmacName, digestName);
+            }  else {
+                Function<CredentialModel, StoredAndServerKey> keyRetrieverFunction = this.keyRetrievalFunctions.get(credentialModel.getAlgorithm());
+                if( keyRetrieverFunction != null) {
+                    keys = keyRetrieverFunction.apply(credentialModel);
+                } else {
+                    throw new IllegalArgumentException("Unsupported algorithm: " + credentialModel.getAlgorithm());
+                }
             }
 
-            byte[] clientSignature = computeHmac(storedKey, authMessage);
+            byte[] clientSignature = computeHmac(hmacName, keys.getStoredKey(), authMessage);
 
             for(int i = 0 ; i < proofBytes.length; i++) {
                 proofBytes[i] ^= clientSignature[i];
@@ -262,7 +235,7 @@ class ScramSaslAuthenticator implements SaslServerMechanism.Instance
 
             final byte[] storedKeyFromClient = MessageDigest.getInstance(this.digestName).digest(proofBytes);
 
-            if(user == null || realm == null || !Arrays.equals(storedKeyFromClient, storedKey)) {
+            if(user == null || realm == null || !Arrays.equals(storedKeyFromClient, keys.getStoredKey())) {
                 authenticated = false;
                 state = State.COMPLETE;
                 return null;
@@ -271,16 +244,66 @@ class ScramSaslAuthenticator implements SaslServerMechanism.Instance
             }
 
 
-            String finalResponse = "v=" + Base64.encodeBytes(computeHmac(serverKey, authMessage));
+            String finalResponse = "v=" + Base64.encodeBytes(computeHmac(this.hmacName, keys.getServerKey(), authMessage));
 
             return finalResponse.getBytes(StandardCharsets.US_ASCII);
-        } catch (NoSuchAlgorithmException | IOException e) {
+        } catch (GeneralSecurityException e) {
             throw new IllegalArgumentException(e.getMessage(), e);
         }
     }
 
-    private byte[] getSaltedPassword() {
-        final CredentialModel credentialModel = getCredentialModel();
+    static StoredAndServerKey getStoredAndServerKeyFromScramHash(CredentialModel credentialModel, String hmacName, String digestName) {
+        try {
+            StoredAndServerKey keys;
+            if (credentialModel == null) {
+                return getStoredAndServerKeyFromPbkdf2Hash(credentialModel, hmacName, digestName);
+            }
+            String[] storedAndServerKeys = credentialModel.getValue().split("\\|", 2);
+            byte[] storedKey = Base64.decode(storedAndServerKeys[0]);
+            byte[] serverKey = Base64.decode(storedAndServerKeys[1]);
+            keys = new StoredAndServerKey() {
+                @Override
+                public byte[] getStoredKey() {
+                    return storedKey;
+                }
+
+                @Override
+                public byte[] getServerKey() {
+                    return serverKey;
+                }
+            };
+            return keys;
+        } catch (IOException e) {
+            throw new IllegalArgumentException(e.getMessage(), e);
+        }
+    }
+
+    static StoredAndServerKey getStoredAndServerKeyFromPbkdf2Hash(CredentialModel credentialModel, String hamcName, String digestName) {
+        try {
+            StoredAndServerKey keys;
+            byte[] saltedPassword = getSaltedPassword(credentialModel);
+            byte[] clientKey = computeHmac(hamcName, saltedPassword, "Client Key");
+
+            byte[] storedKey = MessageDigest.getInstance(digestName).digest(clientKey);
+            byte[] serverKey = computeHmac(hamcName, saltedPassword, "Server Key");
+            keys = new StoredAndServerKey() {
+                @Override
+                public byte[] getStoredKey() {
+                    return storedKey;
+                }
+
+                @Override
+                public byte[] getServerKey() {
+                    return serverKey;
+                }
+            };
+            return keys;
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalArgumentException(e.getMessage(), e);
+        }
+    }
+
+    private static byte[] getSaltedPassword(CredentialModel credentialModel) {
         if(credentialModel == null) {
             byte[] password = new byte[20];
             (new SecureRandom()).nextBytes(password);
@@ -343,10 +366,6 @@ class ScramSaslAuthenticator implements SaslServerMechanism.Instance
 
     @Override
     public byte[] processResponse(byte[] response) throws IllegalArgumentException {
-        if(error != null) {
-            throw error;
-        }
-
 
         byte[] challenge;
         switch (state) {
@@ -380,17 +399,17 @@ class ScramSaslAuthenticator implements SaslServerMechanism.Instance
         return user;
     }
 
-    private byte[] computeHmac(final byte[] key, final String string) {
-        Mac mac = createShaHmac(key);
+    private static byte[] computeHmac(String hmacName, final byte[] key, final String string) {
+        Mac mac = createShaHmac(hmacName, key);
         mac.update(string.getBytes(StandardCharsets.US_ASCII));
         return mac.doFinal();
     }
 
 
-    private Mac createShaHmac(final byte[] keyBytes) {
+    private static Mac createShaHmac(String hmacName, final byte[] keyBytes) {
         try {
-            SecretKeySpec key = new SecretKeySpec(keyBytes, this.hmacName);
-            Mac mac = Mac.getInstance(this.hmacName);
+            SecretKeySpec key = new SecretKeySpec(keyBytes, hmacName);
+            Mac mac = Mac.getInstance(hmacName);
             mac.init(key);
             return mac;
         } catch (NoSuchAlgorithmException | InvalidKeyException e) {
