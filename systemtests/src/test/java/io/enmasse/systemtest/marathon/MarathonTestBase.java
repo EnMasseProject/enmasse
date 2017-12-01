@@ -28,7 +28,7 @@ public class MarathonTestBase extends TestBase {
             } catch (Exception ex) {
                 collector.addError(ex);
                 if (++fails >= limit) {
-                    throw new IllegalStateException("Test failed " + limit + "times in a row");
+                    throw new IllegalStateException(String.format("Test failed: %d times in a row", fails));
                 }
             } finally {
                 closeClients();
