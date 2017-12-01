@@ -29,7 +29,7 @@ node('enmasse') {
                 sh 'sudo chmod -R 777 /var/lib/origin/openshift.local.config'
             }
             stage('install clients'){
-                sh 'sudo make client_install'
+                sh 'sudo PATH=$PATH make client_install'
             }
             stage('system tests') {
                 withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {

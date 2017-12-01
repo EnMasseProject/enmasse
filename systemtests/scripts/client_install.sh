@@ -9,7 +9,6 @@ function install_python_proton_client(){
 }
 
 function install_java_client(){
-    export PATH="$PATH:/opt/jenkins/bin:/opt/apache-maven-3.5.2/bin"
     rm -rf cli-java
     rm -rf ./systemtests/client_executable
     mkdir -p systemtests/client_executable
