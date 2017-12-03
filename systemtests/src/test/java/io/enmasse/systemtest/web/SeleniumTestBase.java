@@ -1,24 +1,16 @@
 package io.enmasse.systemtest.web;
 
-import com.gargoylesoftware.htmlunit.BrowserVersion;
-import com.gargoylesoftware.htmlunit.WebClient;
 import io.enmasse.systemtest.TestBase;
 import org.junit.After;
 import org.junit.Before;
-import org.openqa.selenium.htmlunit.HtmlUnitDriver;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.firefox.FirefoxDriver;
 
 public class SeleniumTestBase extends TestBase {
-    private HtmlUnitDriver driver;
+    private WebDriver driver;
 
     private void buildWebDriver(){
-        driver = new HtmlUnitDriver(BrowserVersion.FIREFOX_52) {
-            @Override
-            protected WebClient newWebClient(BrowserVersion version) {
-                WebClient webClient = super.newWebClient(version);
-                webClient.getOptions().setThrowExceptionOnScriptError(false);
-                return webClient;
-            }
-        };
+        driver = new FirefoxDriver();
     }
 
     private void closeWebDriver(){
@@ -35,7 +27,7 @@ public class SeleniumTestBase extends TestBase {
         closeWebDriver();
     }
 
-    public HtmlUnitDriver getDriver() {
+    public WebDriver getDriver() {
         return driver;
     }
 }
