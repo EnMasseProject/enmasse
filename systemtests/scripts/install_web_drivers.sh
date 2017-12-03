@@ -12,7 +12,11 @@ function install_chrome_driver {
 }
 
 
-mkdir ./systemtests/web_driver
-cd ./systemtests/web_driver
+CURDIR=`readlink -f \`dirname $0\``
+rm -rf ${CURDIR}/../web_driver
+mkdir ${CURDIR}/../web_driver
+ACTUAL_DIR=`pwd`
+cd ${CURDIR}/../web_driver
 install_firefox_driver
 install_chrome_driver
+cd $ACTUAL_DIR
