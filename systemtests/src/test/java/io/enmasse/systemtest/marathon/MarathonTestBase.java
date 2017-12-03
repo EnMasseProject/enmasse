@@ -1,5 +1,6 @@
 package io.enmasse.systemtest.marathon;
 
+import io.enmasse.systemtest.ITestMethod;
 import io.enmasse.systemtest.Logging;
 import io.enmasse.systemtest.TestBase;
 import io.enmasse.systemtest.amqp.AmqpClient;
@@ -16,7 +17,7 @@ public class MarathonTestBase extends TestBase {
     @Rule
     public ErrorCollector collector = new ErrorCollector();
 
-    protected void runTestInLoop(int durationMinutes, TestLoop test) {
+    protected void runTestInLoop(int durationMinutes, ITestMethod test) {
         Logging.log.info(String.format("Starting test running for %d minutes at %s",
                 durationMinutes, new Date().toString()));
         int fails = 0;
@@ -46,9 +47,5 @@ public class MarathonTestBase extends TestBase {
             }
         }
         clients.clear();
-    }
-
-    protected interface TestLoop {
-        void run() throws Exception;
     }
 }
