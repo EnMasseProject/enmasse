@@ -119,8 +119,6 @@ public abstract class SeleniumTestBase extends TestBaseWithDefault {
     }
 
     protected void createAddressWebConsole(Destination destination) throws Exception {
-        WebDriver driver = getDriver();
-
         //get console page
         openConsolePageWebConsole();
 
