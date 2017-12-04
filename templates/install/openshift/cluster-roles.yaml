@@ -3,6 +3,32 @@ items:
 - apiVersion: v1
   kind: ClusterRole
   metadata:
+    name: enmasse-address-admin
+  rules:
+  - apiGroups:
+    - ''
+    resources:
+    - configmaps
+    verbs:
+    - create
+    - delete
+    - list
+    - get
+    - watch
+    - update
+    - patch
+  - apiGroups:
+    - ''
+    resources:
+    - events
+    verbs:
+    - create
+    - get
+    - update
+    - patch
+- apiVersion: v1
+  kind: ClusterRole
+  metadata:
     name: enmasse-namespace-admin
   rules:
   - apiGroups:
@@ -29,10 +55,22 @@ items:
     - watch
   - apiGroups:
     - ''
+    - extensions
     - authorization.openshift.io
+    - route.openshift.io
     resources:
     - clusterrolebindings
     - rolebindings
+    - events
+    - policybindings
+    - deployments
+    - pods
+    - configmaps
+    - routes
+    - serviceaccounts
+    - secrets
+    - services
+    - persistentvolumeclaims
     verbs:
     - create
     - delete
@@ -71,22 +109,6 @@ items:
 - apiVersion: v1
   kind: ClusterRole
   metadata:
-    name: enmasse-infra-view
-  rules:
-  - apiGroups:
-    - ''
-    - extensions
-    resources:
-    - pods
-    - configmaps
-    - deployments
-    verbs:
-    - list
-    - get
-    - watch
-- apiVersion: v1
-  kind: ClusterRole
-  metadata:
     name: enmasse-addressspace-admin
   rules:
   - resources:
@@ -99,22 +121,4 @@ items:
     - update
     - patch
     - delete
-- apiVersion: v1
-  kind: ClusterRole
-  metadata:
-    name: enmasse-address-admin
-  rules:
-  - apiGroups:
-    - ''
-    resources:
-    - configmaps
-    - events
-    verbs:
-    - create
-    - delete
-    - list
-    - get
-    - watch
-    - update
-    - patch
 kind: List

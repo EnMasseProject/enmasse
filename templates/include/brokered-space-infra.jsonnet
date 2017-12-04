@@ -1,4 +1,5 @@
 local common = import "common.jsonnet";
+local roles = import "roles.jsonnet";
 local images = import "images.jsonnet";
 local admin = import "admin.jsonnet";
 local auth_service = import "auth-service.jsonnet";
@@ -196,6 +197,7 @@ local hawkularBrokerConfig = import "hawkular-broker-config.jsonnet";
           }
         },
         "spec": {
+          "serviceAccount": "${ADDRESS_SPACE_ADMIN_SA}",
           "volumes": [
             common.secret_volume("authservice-ca", "authservice-ca"),
             common.secret_volume("console-external-cert", "${CONSOLE_SECRET}"),
@@ -343,6 +345,11 @@ local hawkularBrokerConfig = import "hawkular-broker-config.jsonnet";
       {
         "name": "ADDRESS_CONTROLLER_CA_CERT",
         "description": "The CA cert to use for validating address controller identity"
+      },
+      {
+        "name": "ADDRESS_SPACE_ADMIN_SA",
+        "description": "The service account with address space admin privileges",
+        "value": "address-space-admin"
       }
     ],
   }

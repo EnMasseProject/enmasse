@@ -69,7 +69,7 @@ public class ControllerTest {
     @Test
     public void testController(TestContext context) throws Exception {
         EventLogger testLogger = mock(EventLogger.class);
-        Controller controller = new Controller(client, testApi, kubernetes, (a) -> new NoneAuthenticationServiceResolver("localhost", 1234), Arrays.asList(spaceController), testLogger);
+        Controller controller = new Controller(client, testApi, kubernetes, (a) -> new NoneAuthenticationServiceResolver("localhost", 1234), Arrays.asList(spaceController), testLogger, null);
 
         vertx.deployVerticle(controller, context.asyncAssertSuccess());
 

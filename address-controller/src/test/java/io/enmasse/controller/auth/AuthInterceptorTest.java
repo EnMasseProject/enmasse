@@ -88,7 +88,7 @@ public class AuthInterceptorTest {
         TokenReview returnedTokenReview = new TokenReview("foo", true);
         when(mockKubernetes.performTokenReview("valid_token")).thenReturn(returnedTokenReview);
         SubjectAccessReview returnedSubjectAccessReview = new SubjectAccessReview("foo", false);
-        when(mockKubernetes.performSubjectAccessReview(eq("foo"), any(), eq("create"))).thenReturn(returnedSubjectAccessReview);
+        when(mockKubernetes.performSubjectAccessReview(eq("foo"), any(), eq("create"), any())).thenReturn(returnedSubjectAccessReview);
         when(mockRequestContext.getHeaderString(HttpHeaders.AUTHORIZATION)).thenReturn("Bearer valid_token");
         when(mockRequestContext.getMethod()).thenReturn(HttpMethod.POST);
 
@@ -101,7 +101,7 @@ public class AuthInterceptorTest {
         assertThat(context.getAuthenticationScheme(), is("RBAC"));
         RbacSecurityContext rbacSecurityContext = (RbacSecurityContext) context;
         assertThat(rbacSecurityContext.getUserPrincipal().getName(), is("foo"));
-        assertFalse(rbacSecurityContext.isUserInRole(RbacSecurityContext.rbacToRole("myspace", ResourceVerb.create)));
+        assertFalse(rbacSecurityContext.isUserInRole(RbacSecurityContext.rbacToRole("myspace", ResourceVerb.create, null)));
     }
 
     @Test
@@ -115,7 +115,7 @@ public class AuthInterceptorTest {
         TokenReview returnedTokenReview = new TokenReview("foo", true);
         when(mockKubernetes.performTokenReview("valid_token")).thenReturn(returnedTokenReview);
         SubjectAccessReview returnedSubjectAccessReview = new SubjectAccessReview("foo", true);
-        when(mockKubernetes.performSubjectAccessReview(eq("foo"), any(), eq("create"))).thenReturn(returnedSubjectAccessReview);
+        when(mockKubernetes.performSubjectAccessReview(eq("foo"), any(), eq("create"), any())).thenReturn(returnedSubjectAccessReview);
         when(mockRequestContext.getHeaderString(HttpHeaders.AUTHORIZATION)).thenReturn("Bearer valid_token");
         when(mockRequestContext.getMethod()).thenReturn(HttpMethod.POST);
 
@@ -128,6 +128,6 @@ public class AuthInterceptorTest {
         assertThat(context.getAuthenticationScheme(), is("RBAC"));
         RbacSecurityContext rbacSecurityContext = (RbacSecurityContext) context;
         assertThat(rbacSecurityContext.getUserPrincipal().getName(), is("foo"));
-        assertTrue(rbacSecurityContext.isUserInRole(RbacSecurityContext.rbacToRole("myspace", ResourceVerb.create)));
+        assertTrue(rbacSecurityContext.isUserInRole(RbacSecurityContext.rbacToRole("myspace", ResourceVerb.create, null)));
     }
 }

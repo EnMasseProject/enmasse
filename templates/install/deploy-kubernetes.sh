@@ -109,7 +109,7 @@ if [ $? -gt 0 ]; then
     runcmd "kubectl create namespace $NAMESPACE" "Create namespace $NAMESPACE"
 fi
 
-runcmd "kubectl create sa enmasse-service-account -n $NAMESPACE" "Create service account for address controller"
+runcmd "kubectl create sa enmasse-admin -n $NAMESPACE" "Create service account for address controller"
 
 create_self_signed_cert "kubectl" "address-controller.${NAMESPACE}.svc.cluster.local" "address-controller-cert"
 

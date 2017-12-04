@@ -32,7 +32,7 @@ function setup_test() {
 
     ${ENMASSE_DIR}/deploy-openshift.sh "${DEPLOY_ARGS[@]}"
 
-    oc adm --config ${KUBEADM} policy add-cluster-role-to-user enmasse-namespace-admin system:serviceaccount:$(oc project -q):enmasse-service-account
+    oc adm --config ${KUBEADM} policy add-cluster-role-to-user enmasse-namespace-admin system:serviceaccount:$(oc project -q):enmasse-admin
     oc adm --config ${KUBEADM} policy add-cluster-role-to-user cluster-admin $OPENSHIFT_USER
 }
 function wait_until_up(){

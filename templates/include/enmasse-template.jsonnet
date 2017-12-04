@@ -5,196 +5,8 @@ local brokeredInfra = import "brokered-space-infra.jsonnet";
 local addressController = import "address-controller.jsonnet";
 local restapiRoute = import "restapi-route.jsonnet";
 local images = import "images.jsonnet";
+local roles = import "roles.jsonnet";
 {
-  // Role for address-controller service account
-  namespace_admin_role::
-    {
-      "apiVersion": "v1",
-      "kind": "ClusterRole",
-      "metadata": {
-        "name": "enmasse-namespace-admin"
-      },
-      "rules": [
-        {
-          "apiGroups": [
-            "",
-            "user.openshift.io"
-          ],
-          "resources": [
-            "users"
-          ],
-          "verbs": [
-            "impersonate"
-          ]
-        },
-        {
-          "apiGroups": [
-            "",
-            "user.openshift.io"
-          ],
-          "resources": [
-            "identities",
-            "useridentitymappings",
-            "users",
-          ],
-          "verbs": [
-            "create",
-            "delete",
-            "get",
-            "list",
-            "patch",
-            "update",
-            "watch"
-          ]
-        },
-        {
-          "apiGroups": [
-            "",
-            "authorization.openshift.io"
-          ],
-          "resources": [
-            "clusterrolebindings",
-            "rolebindings",
-          ],
-          "verbs": [
-            "create",
-            "delete",
-            "get",
-            "list",
-            "patch",
-            "update",
-            "watch"
-          ]
-        },
-        {
-          "apiGroups": [
-            "rbac.authorization.k8s.io"
-          ],
-          "resources": [
-            "clusterrolebindings",
-            "rolebindings",
-          ],
-          "verbs": [
-            "create",
-            "delete",
-            "get",
-            "list",
-            "patch",
-            "update",
-            "watch"
-          ]
-        },
-        {
-          "apiGroups": [
-            "authentication.k8s.io"
-          ],
-          "resources": [
-            "tokenreviews"
-          ],
-          "verbs": [
-            "create"
-          ]
-        },
-        {
-          "apiGroups": [
-            ""
-          ],
-          "resources": [
-            "namespaces"
-          ],
-          "verbs": [
-            "get",
-            "list",
-            "watch"
-          ]
-        }
-      ]
-    },
-
-  // Role for address space view access for address space service account
-  infra_view_role::
-    {
-      "apiVersion": "v1",
-      "kind": "ClusterRole",
-      "metadata": {
-        "name": "enmasse-infra-view"
-      },
-      "rules": [
-        {
-          "apiGroups": [
-            "",
-            "extensions"
-          ],
-          "resources": [
-            "pods",
-            "configmaps",
-            "deployments"
-          ],
-          "verbs": [
-            "list",
-            "get",
-            "watch"
-          ]
-        }
-      ]
-    },
-
-  // Role for address administrators allowed to create/delete addresses
-  address_admin_role::
-    {
-      "apiVersion": "v1",
-      "kind": "ClusterRole",
-      "metadata": {
-        "name": "enmasse-address-admin"
-      },
-      "rules": [
-        {
-          "apiGroups": [
-            ""
-          ],
-          "resources": [
-            "configmaps",
-            "events"
-          ],
-          "verbs": [
-            "create",
-            "delete",
-            "list",
-            "get",
-            "watch",
-            "update",
-            "patch"
-          ]
-        }
-      ]
-    },
-
-  // Role for address space administrators
-  addressspace_admin_role::
-    {
-      "apiVersion": "v1",
-      "kind": "ClusterRole",
-      "metadata": {
-        "name": "enmasse-addressspace-admin"
-      },
-      "rules": [
-        {
-          "resources": [
-            "configmaps"
-          ],
-          "verbs": [
-            "get",
-            "list",
-            "watch",
-            "create",
-            "update",
-            "patch",
-            "delete"
-          ]
-        }
-      ]
-    },
-
   local me = self,
 
   cluster_roles::
@@ -202,10 +14,9 @@ local images = import "images.jsonnet";
     "apiVersion": "v1",
     "kind": "List",
     "items": [
-      me.namespace_admin_role,
-      me.infra_view_role,
-      me.addressspace_admin_role,
-      me.address_admin_role,
+      roles.address_admin_role,
+      roles.namespace_admin_role,
+      roles.addressspace_admin_role
     ]
   },
 
@@ -225,13 +36,18 @@ local images = import "images.jsonnet";
                  storage.template(true, true),
                  standardInfra.generate(with_kafka),
                  brokeredInfra.template,
-                 addressController.deployment("${ADDRESS_CONTROLLER_REPO}", "", "${ADDRESS_CONTROLLER_CERT_SECRET}", "${ENVIRONMENT}", "${ENABLE_RBAC}"),
+                 addressController.deployment("${ADDRESS_CONTROLLER_REPO}", "", "${ADDRESS_CONTROLLER_CERT_SECRET}", "${ENVIRONMENT}", "${ENABLE_RBAC}", "${ADDRESS_CONTROLLER_SA}", "${ADDRESS_SPACE_ADMIN_SA}"),
                  addressController.internal_service,
                  restapiRoute.route("${RESTAPI_HOSTNAME}") ],
     "parameters": [
       {
         "name": "RESTAPI_HOSTNAME",
         "description": "The hostname to use for the exposed route for the REST API"
+      },
+      {
+        "name": "ADDRESS_CONTROLLER_SA",
+        "description": "The service account to use for the address controller",
+        "value": "enmasse-admin"
       },
       {
         "name": "ADDRESS_CONTROLLER_REPO",
@@ -252,6 +68,11 @@ local images = import "images.jsonnet";
         "name": "ENVIRONMENT",
         "description": "The environment for this EnMasse instance (for instance development, testing or production).",
         "value": "development"
+      },
+      {
+        "name": "ADDRESS_SPACE_ADMIN_SA",
+        "description": "The service account with address space admin privileges",
+        "value": "address-space-admin"
       }
     ]
   }
