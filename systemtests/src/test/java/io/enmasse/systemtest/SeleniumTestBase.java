@@ -4,6 +4,7 @@ import com.paulhammant.ngwebdriver.ByAngular;
 import com.paulhammant.ngwebdriver.NgWebDriver;
 import org.junit.After;
 import org.junit.Before;
+import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
@@ -136,15 +137,15 @@ public abstract class SeleniumTestBase extends TestBaseWithDefault {
         switchToSubWindow();
 
         //fill address name
-        WebElement input = ((FirefoxDriver) driver).findElementByCssSelector("#new-name");
+        WebElement input = driver.findElement(By.cssSelector("#new-name"));
         input.sendKeys("test-" + destination.getType());
 
         //select address type
-        WebElement queueInput = ((FirefoxDriver) driver).findElementById(destination.getType());
+        WebElement queueInput = driver.findElement(By.id(destination.getType()));
         queueInput.click();
 
         //click on next button
-        WebElement nextButton = ((FirefoxDriver) driver).findElementById("nextButton");
+        WebElement nextButton = driver.findElement(By.id("nextButton"));
         nextButton.click();
         angularDriver.waitForAngularRequestsToFinish();
         Logging.log.info("Next button clicked");
