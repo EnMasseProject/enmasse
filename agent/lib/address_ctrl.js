@@ -86,6 +86,7 @@ AddressCtrl.prototype.request = function (addr_path, method, headers, body, hand
         if (body) {
             req.write(body);
         }
+        req.on('error', function (error) { reject(error); });
         req.end();
     });
 }
