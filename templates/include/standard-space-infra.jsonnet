@@ -1,4 +1,5 @@
 local configserv = import "configserv.jsonnet";
+local roles = import "roles.jsonnet";
 local ragent = import "ragent.jsonnet";
 local router = import "router.jsonnet";
 local broker = import "broker.jsonnet";
@@ -45,7 +46,7 @@ local images = import "images.jsonnet";
       common.ca_secret("address-controller-ca", "${ADDRESS_CONTROLLER_CA_CERT}"),
       hawkularBrokerConfig,
       hawkularRouterConfig,
-      admin.deployment("${ADDRESS_SPACE}", "${CONFIGSERV_REPO}", "${RAGENT_REPO}", "${QUEUE_SCHEDULER_REPO}", "${AGENT_IMAGE}", "authservice-ca", "address-controller-ca", "${CONSOLE_SECRET}"),
+      admin.deployment("${ADDRESS_SPACE}", "${CONFIGSERV_REPO}", "${RAGENT_REPO}", "${QUEUE_SCHEDULER_REPO}", "${AGENT_IMAGE}", "authservice-ca", "address-controller-ca", "${CONSOLE_SECRET}")
     ],
 
     local kafka = [
@@ -180,6 +181,11 @@ local images = import "images.jsonnet";
       {
         "name" : "KAFKA_BOOTSTRAP_SERVERS",
         "description": "A list of host/port pairs to use for establishing the initial connection to the Kafka cluster"
+      },
+      {
+        "name": "ADDRESS_SPACE_ADMIN_SA",
+        "description": "The service account with address space admin privileges",
+        "value": "address-space-admin"
       }
     ],
     "parameters": commonParameters

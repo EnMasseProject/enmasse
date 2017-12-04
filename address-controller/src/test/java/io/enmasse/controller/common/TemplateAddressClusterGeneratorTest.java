@@ -77,7 +77,7 @@ public class TemplateAddressClusterGeneratorTest {
             assertThat(annotations.get(AnnotationKeys.CLUSTER_ID), is(dest.getName()));
         }
         List<ParameterValue> parameters = captor.getAllValues();
-        assertThat(parameters.size(), is(7));
+        assertThat(parameters.size(), is(8));
     }
 
     private Address createAddress(String address, AddressType type) {

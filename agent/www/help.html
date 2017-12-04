@@ -441,11 +441,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#address_plans">Address Plans</a></li>
 </ul>
 </li>
-</ul>
-</li>
-<li><a href="#address_space_2">2. Address Space</a>
-<ul class="sectlevel3">
-<li><a href="#standard_address_space">2.1. Standard Address Space</a>
+<li><a href="#standard_address_space">1.4. Standard Address Space</a>
 <ul class="sectlevel4">
 <li><a href="#address_types">Address Types</a></li>
 <li><a href="#standard-queue">Queue</a></li>
@@ -454,7 +450,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#multicast">Multicast</a></li>
 </ul>
 </li>
-<li><a href="#brokered_address_space">2.2. Brokered Address Space</a>
+<li><a href="#brokered_address_space">1.5. Brokered Address Space</a>
 <ul class="sectlevel4">
 <li><a href="#address_types_2">Address types</a></li>
 <li><a href="#brokered-queue">Queue</a></li>
@@ -463,9 +459,9 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </li>
 </ul>
 </li>
-<li><a href="#connecting">3. Connecting to EnMasse</a>
+<li><a href="#connecting">2. Connecting to EnMasse</a>
 <ul class="sectlevel3">
-<li><a href="#client_examples">3.1. Client Examples</a>
+<li><a href="#client_examples">2.1. Client Examples</a>
 <ul class="sectlevel4">
 <li><a href="#apache_qpid_proton_python">Apache Qpid Proton Python</a></li>
 <li><a href="#apache_qpid_jms">Apache Qpid JMS</a></li>
@@ -528,14 +524,8 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 </div>
 </div>
-</div>
-<div class="sect2">
-<h3 id="address_space_2">2. Address Space</h3>
-<div class="paragraph">
-<p>The only currently supported address space is standard.</p>
-</div>
 <div class="sect3">
-<h4 id="standard_address_space">2.1. Standard Address Space</h4>
+<h4 id="standard_address_space">1.4. Standard Address Space</h4>
 <div class="paragraph">
 <p>The default address space in EnMasse is the standard address space and it consists of an AMQP router network in combination with attachable storage units. The implementation of a storage unit is hidden from the client and the routers with a well-defined API. This address space type is appropriate when you have many connections and addresses. However, it has the following limitations: no transaction support, no message ordering, no selectors on queues, and no message groups.</p>
 </div>
@@ -684,7 +674,7 @@ storage.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="brokered_address_space">2.2. Brokered Address Space</h4>
+<h4 id="brokered_address_space">1.5. Brokered Address Space</h4>
 <div class="paragraph">
 <p>The brokered address space is designed to support broker-specific features, at the cost of limited
 scale in terms of the number of connections and addresses. This address space supports JMS
@@ -731,7 +721,7 @@ semantics are not needed, see the <a href="#standard-queue">standard address spa
 </div>
 </div>
 <div class="sect2">
-<h3 id="connecting">3. Connecting to EnMasse</h3>
+<h3 id="connecting">2. Connecting to EnMasse</h3>
 <div class="paragraph">
 <p>To connect to the messaging service from outside the openshift or
 kubernetes cluster, TLS must be used with SNI set to specify the fully
@@ -749,7 +739,7 @@ that in the client examples.</p>
 <p>TODO: Add information about authentication.</p>
 </div>
 <div class="sect3">
-<h4 id="client_examples">3.1. Client Examples</h4>
+<h4 id="client_examples">2.1. Client Examples</h4>
 <div class="paragraph">
 <p>Simple examples are shown here for the following clients:</p>
 </div>
@@ -1025,7 +1015,7 @@ namespace Test
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2017-10-30 20:11:38 GMT
+Last updated 2017-11-15 09:05:22 CET
 </div>
 </div>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css">

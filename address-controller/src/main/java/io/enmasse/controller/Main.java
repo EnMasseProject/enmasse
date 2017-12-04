@@ -53,7 +53,7 @@ public class Main extends AbstractVerticle {
                 .withNamespace(options.getNamespace())
                 .build());
         this.options = options;
-        this.kubernetes = new KubernetesHelper(options.getNamespace(), controllerClient, options.getToken(), options.getEnvironment(), options.getTemplateDir());
+        this.kubernetes = new KubernetesHelper(options.getNamespace(), controllerClient, options.getToken(), options.getEnvironment(), options.getTemplateDir(), options.getAddressControllerSa(), options.getAddressSpaceAdminSa());
     }
 
     @Override
@@ -66,10 +66,10 @@ public class Main extends AbstractVerticle {
         StandardController standardController = new StandardController(vertx, addressSpaceApi, kubernetes, resolverFactory, options.getCertDir());
         BrokeredController brokeredController = new BrokeredController();
         EventLogger authEventLogger = new KubeEventLogger(controllerClient, controllerClient.getNamespace(), Clock.systemUTC(), "auth-controller");
+        AuthController authController = new AuthController(certManager, authEventLogger);
 
         deployVerticles(startPromise,
-                new Deployment(new AuthController(certManager, addressSpaceApi, authEventLogger)),
-                new Deployment(new Controller(controllerClient, addressSpaceApi, kubernetes, resolverFactory, Arrays.asList(standardController, brokeredController), eventLogger)),
+                new Deployment(new Controller(controllerClient, addressSpaceApi, kubernetes, resolverFactory, Arrays.asList(standardController, brokeredController), eventLogger, authController)),
 //                new Deployment(new AMQPServer(kubernetes.getNamespace(), addressSpaceApi, options.port())),
                 new Deployment(new HTTPServer(addressSpaceApi, options.getCertDir(), kubernetes, options.isEnableRbac() && kubernetes.isRBACSupported()), new DeploymentOptions().setWorker(true)));
     }

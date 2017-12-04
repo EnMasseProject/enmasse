@@ -18,6 +18,7 @@ package io.enmasse.controller.api;
 import io.enmasse.controller.common.Kubernetes;
 import io.enmasse.controller.common.SubjectAccessReview;
 import io.enmasse.controller.common.TokenReview;
+import io.vertx.core.json.JsonObject;
 
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
@@ -40,16 +41,22 @@ public class RbacSecurityContext implements SecurityContext {
     }
 
     @Override
-    public boolean isUserInRole(String role) {
-        String [] parts = role.split(":", 2);
-        String namespace = parts[0];
-        String verb = parts[1];
-        SubjectAccessReview accessReview = kubernetes.performSubjectAccessReview(tokenReview.getUserName(), namespace, verb);
+    public boolean isUserInRole(String json) {
+        JsonObject data = new JsonObject(json);
+
+        String namespace = data.getString("namespace");
+        String verb = data.getString("verb");
+        String impersonateUser = data.getString("impersonateUser");
+        SubjectAccessReview accessReview = kubernetes.performSubjectAccessReview(tokenReview.getUserName(), namespace, verb, impersonateUser);
         return accessReview.isAllowed();
     }
 
-    public static String rbacToRole(String namespace, ResourceVerb verb) {
-        return namespace + ":" + verb.name();
+    public static String rbacToRole(String namespace, ResourceVerb verb, String impersonateUser) {
+        JsonObject object = new JsonObject();
+        object.put("namespace", namespace);
+        object.put("verb", verb);
+        object.put("impersonateUser", impersonateUser);
+        return object.toString();
     }
 
     @Override

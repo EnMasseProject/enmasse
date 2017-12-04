@@ -84,6 +84,7 @@ public class TemplateAddressClusterGenerator implements AddressClusterGenerator 
             AuthenticationServiceResolver authResolver = authResolverFactory.getResolver(authService.getType());
             paramMap.put(TemplateParameter.AUTHENTICATION_SERVICE_HOST, authResolver.getHost(authService));
             paramMap.put(TemplateParameter.AUTHENTICATION_SERVICE_PORT, String.valueOf(authResolver.getPort(authService)));
+            paramMap.put(TemplateParameter.ADDRESS_SPACE_ADMIN_SA, kubernetes.getAddressSpaceAdminSa());
             authResolver.getCaSecretName(authService).ifPresent(secretName -> kubernetes.getSecret(secretName).ifPresent(secret -> paramMap.put(TemplateParameter.AUTHENTICATION_SERVICE_CA_CERT, secret.getData().get("tls.crt"))));
             authResolver.getClientSecretName(authService).ifPresent(secret -> paramMap.put(TemplateParameter.AUTHENTICATION_SERVICE_CLIENT_SECRET, secret));
             authResolver.getSaslInitHost(addressSpace.getName(), authService).ifPresent(saslInitHost -> paramMap.put(TemplateParameter.AUTHENTICATION_SERVICE_SASL_INIT_HOST, saslInitHost));

@@ -1,3 +1,18 @@
+/*
+ * Copyright 2017 Red Hat Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package io.enmasse.controller.common;
 
 import io.enmasse.address.model.AddressSpace;
@@ -48,8 +63,8 @@ public interface Kubernetes {
     void delete(HasMetadata ... resources);
     KubernetesList processTemplate(String templateName, ParameterValue ... parameterValues);
 
-    List<Namespace> listNamespaces();
-    void deleteNamespace(String namespace);
+    Set<NamespaceInfo> listAddressSpaces();
+    void deleteNamespace(NamespaceInfo namespaceInfo);
     void createNamespace(AddressSpace addressSpace);
 
     boolean existsNamespace(String namespace);
@@ -68,12 +83,17 @@ public interface Kubernetes {
 
     TokenReview performTokenReview(String token);
 
-    SubjectAccessReview performSubjectAccessReview(String user, String namespace, String verb);
+    SubjectAccessReview performSubjectAccessReview(String user, String namespace, String verb, String impersonateUser);
 
     boolean isRBACSupported();
-    void addAddressAdminRole(String namespace);
-    void addInfraViewRole(String controllerNamespace, String namespace);
-    void addSystemImagePullerPolicy(String namespace, String tenantNamespace);
+    void addAddressAdminRole(AddressSpace namespace);
+    void addSystemImagePullerPolicy(String namespace, AddressSpace tenantNamespace);
 
     EventLogger createEventLogger(Clock clock, String componentName);
+
+    void addAddressSpaceAdminRoleBinding(AddressSpace addressSpace);
+
+    String getAddressSpaceAdminSa();
+
+    void createServiceAccount(String namespace, String addressSpaceAdminSa);
 }
