@@ -1,6 +1,5 @@
 package io.enmasse.systemtest.marathon;
 
-import io.enmasse.systemtest.ITestMethod;
 import io.enmasse.systemtest.Logging;
 import io.enmasse.systemtest.TestBase;
 import io.enmasse.systemtest.amqp.AmqpClient;
