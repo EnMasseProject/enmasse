@@ -5,6 +5,7 @@ import io.enmasse.systemtest.TestBase;
 import org.junit.After;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.firefox.FirefoxDriver;
+import org.openqa.selenium.firefox.FirefoxOptions;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,7 +22,9 @@ public class SeleniumTestBase extends TestBase {
     }
 
     protected WebDriver getDriver() {
-        WebDriver driver = new FirefoxDriver();
+        FirefoxOptions opts = new FirefoxOptions();
+        opts.setHeadless(true);
+        WebDriver driver = new FirefoxDriver(opts);
         drivers.add(driver);
         return driver;
     }

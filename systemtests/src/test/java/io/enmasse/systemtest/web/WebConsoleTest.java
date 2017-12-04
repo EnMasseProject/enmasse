@@ -29,12 +29,13 @@ public class WebConsoleTest extends SeleniumTestBase {
             driver.get("https://" + consoleEndpoint.toString());
             angular.waitForAngularRequestsToFinish();
 
-            Logging.log.info(driver.getPageSource());
-            List<WebElement> addresses = driver.findElements(ByAngular.exactRepeater("items in item"));
+            Logging.log.info("Page dashboard loaded");
+            List<WebElement> addresses = driver.findElements(ByAngular.exactRepeater("item in items"));
             addresses.get(0).click();
-            angular.waitForAngular2RequestsToFinish();
+            Logging.log.info("Clicked on addresses button");
+            angular.waitForAngularRequestsToFinish();
 
-            Logging.log.info(driver.getPageSource());
+            Logging.log.info("Page addresses loaded");
         });
     }
 }
