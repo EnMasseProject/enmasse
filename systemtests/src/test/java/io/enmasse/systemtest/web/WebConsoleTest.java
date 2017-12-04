@@ -23,7 +23,7 @@ public class WebConsoleTest extends SeleniumTestBase {
 
         runSeleniumTest(() -> {
             WebDriver driver = getDriver();
-            NgWebDriver angular = new NgWebDriver((FirefoxDriver)driver);
+            NgWebDriver angular = new NgWebDriver((FirefoxDriver) driver);
 
             Logging.log.info("https://" + consoleEndpoint.toString());
             driver.get("https://" + consoleEndpoint.toString());
