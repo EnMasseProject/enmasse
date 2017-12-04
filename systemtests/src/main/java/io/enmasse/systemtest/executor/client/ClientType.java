@@ -5,8 +5,12 @@ public enum ClientType {
     CLI_RHEA_RECEIVER,
     CLI_PROTON_PYTHON_SENDER,
     CLI_PROTON_PYTHON_RECEIVER,
-    CLI_JAVA_SENDER,
-    CLI_JAVA_REVEIVER;
+    CLI_JAVA_PROTON_JMS_SENDER,
+    CLI_JAVA_PROTON_JMS_RECEIVER,
+    CLI_JAVA_ARTEMIS_JMS_SENDER,
+    CLI_JAVA_ARTEMIS_JMS_RECEIVER,
+    CLI_JAVA_OPENWIRE_JMS_SENDER,
+    CLI_JAVA_OPENWIRE_JMS_RECEIVER;
 
     /**
      * Get bind client type to client executable
@@ -14,7 +18,6 @@ public enum ClientType {
      * @return client executable
      */
     public static String getCommand(ClientType client){
-
         switch (client){
             case CLI_RHEA_SENDER:
                 return isWindows() ? "cli-rhea-sender.cmd" : "cli-rhea-sender";
@@ -24,9 +27,20 @@ public enum ClientType {
                 return "cli-proton-python-sender";
             case CLI_PROTON_PYTHON_RECEIVER:
                 return "cli-proton-python-receiver";
+            case CLI_JAVA_PROTON_JMS_SENDER:
+                return "./client_executable/cli-qpid-jms.jar";
+            case CLI_JAVA_PROTON_JMS_RECEIVER:
+                return "./client_executable/cli-qpid-jms.jar";
+            case CLI_JAVA_ARTEMIS_JMS_SENDER:
+                return "./client_executable/cli-artemis-jms.jar";
+            case CLI_JAVA_ARTEMIS_JMS_RECEIVER:
+                return "./client_executable/cli-artemis-jms.jar";
+            case CLI_JAVA_OPENWIRE_JMS_SENDER:
+                return "./client_executable/cli-activemq.jar";
+            case CLI_JAVA_OPENWIRE_JMS_RECEIVER:
+                return "./client_executable/cli-activemq.jar";
             default:
                 return "";
-            //TODO: complete for every client (cli-java)
         }
     }
 

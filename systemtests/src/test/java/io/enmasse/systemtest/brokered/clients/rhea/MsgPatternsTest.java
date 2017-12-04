@@ -18,7 +18,7 @@ public class MsgPatternsTest extends io.enmasse.systemtest.brokered.clients.MsgP
 
     @Test
     public void testTopicSubscribe() throws Exception {
-        doTopicSubscribeTest(new RheaClientSender(), new RheaClientReceiver(), new RheaClientReceiver());
+        doTopicSubscribeTest(new RheaClientSender(), new RheaClientReceiver(), new RheaClientReceiver(), false);
     }
 
     @Test
@@ -39,6 +39,6 @@ public class MsgPatternsTest extends io.enmasse.systemtest.brokered.clients.MsgP
     @Test
     public void testMessageSelectorTopic() throws Exception{
         doMessageSelectorTopicTest(new RheaClientSender(), new RheaClientReceiver(),
-                new RheaClientReceiver(), new RheaClientReceiver());
+                new RheaClientReceiver(), new RheaClientReceiver(), false);
     }
 }
