@@ -491,7 +491,7 @@ public class KubernetesHelper implements Kubernetes {
 
     @Override
     public void addAddressSpaceAdminRoleBinding(AddressSpace addressSpace) {
-        if (client.isAdaptable(OpenShiftClient.class) && isRBACSupported()) {
+        if (client.isAdaptable(OpenShiftClient.class)) {
             createRoleBinding("addressspace-admins", addressSpace.getNamespace(), "ClusterRole", "admin", Arrays.asList(
                     new Subject("ServiceAccount", addressControllerSa, namespace)),
                     addressSpace.getNamespace());
