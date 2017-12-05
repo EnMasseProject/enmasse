@@ -2,16 +2,18 @@ package io.enmasse.systemtest;
 
 import com.paulhammant.ngwebdriver.ByAngular;
 import com.paulhammant.ngwebdriver.NgWebDriver;
+import org.apache.commons.io.FileUtils;
 import org.junit.After;
 import org.junit.Before;
-import org.openqa.selenium.By;
-import org.openqa.selenium.JavascriptExecutor;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
+import org.junit.Rule;
+import org.junit.rules.TestWatcher;
+import org.junit.runner.Description;
+import org.openqa.selenium.*;
 
-import java.util.Iterator;
+import java.io.File;
+import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertNotNull;
@@ -19,33 +21,53 @@ import static org.junit.Assert.assertNotNull;
 public abstract class SeleniumTestBase extends TestBaseWithDefault {
     private WebDriver driver;
     private NgWebDriver angularDriver;
-    private String baseWindowID;
+    private List<File> browserScreenshots = new ArrayList<>();
+    @Rule
+    public TestWatcher watchman = new TestWatcher() {
+        @Override
+        protected void failed(Throwable e, Description description) {
+            try {
+                for (int i = 0; i < browserScreenshots.size(); i++) {
+                    FileUtils.copyFile(browserScreenshots.get(i),
+                            new File(Paths.get(environment.testLogDir(),
+                                    String.format("%s_%d.png", description.getDisplayName(), i)).toString()));
+                }
+            } catch (Exception ex) {
+                Logging.log.warn("Cannot save screenshots: " + ex.getMessage());
+            }
+        }
+    };
 
     protected abstract WebDriver buildDriver();
 
     @Before
-    public void setupDriver() {
+    public void setupDriver() throws Exception {
         driver = buildDriver();
         angularDriver = new NgWebDriver((JavascriptExecutor) driver);
+        browserScreenshots.clear();
     }
 
     @After
-    public void tearDownDrivers() {
-        driver.close();
+    public void tearDownDrivers() throws Exception {
+        takeScreenShot();
+        Thread.sleep(5000);
         try {
-            driver.quit();
+            driver.close();
+            //driver.quit();
         } catch (Exception ex) {
-            Logging.log.warn("Raise exception on quit: ");
-            ex.printStackTrace();
+            Logging.log.warn("Raise exception on quit: " + ex.getMessage());
         }
         Logging.log.info("Driver is closed");
         driver = null;
         angularDriver = null;
-        baseWindowID = null;
     }
 
     protected WebDriver getDriver() {
         return this.driver;
+    }
+
+    protected NgWebDriver getAngularDriver() {
+        return this.angularDriver;
     }
 
     protected String getConsoleRoute() {
@@ -55,11 +77,20 @@ public abstract class SeleniumTestBase extends TestBaseWithDefault {
         return consoleRoute;
     }
 
+    protected void takeScreenShot() {
+        try {
+            browserScreenshots.add(((TakesScreenshot) driver).getScreenshotAs(OutputType.FILE));
+        } catch (Exception ex) {
+            Logging.log.warn("Cannot take screenshot: " + ex.getMessage());
+        }
+    }
+
     //================================== Common console methods ======================================
     protected void openConsolePageWebConsole() throws Exception {
         driver.get(getConsoleRoute());
         angularDriver.waitForAngularRequestsToFinish();
         Logging.log.info("Console page opened");
+        takeScreenShot();
     }
 
     protected WebElement getLeftMenuItemWebConsole(String itemText) throws Exception {
@@ -75,26 +106,33 @@ public abstract class SeleniumTestBase extends TestBaseWithDefault {
     }
 
     protected void openAddressesPageWebConsole() throws Exception {
-        WebElement addressesItem = getLeftMenuItemWebConsole("Addresses");
-        assertNotNull(addressesItem);
-        addressesItem.click();
-        Logging.log.info("Clicked on addresses button");
-        angularDriver.waitForAngularRequestsToFinish();
-        Logging.log.info("Page addresses loaded");
+        clickOnItem(getLeftMenuItemWebConsole("Addresses"));
     }
 
-    protected void switchToSubWindow() throws Exception {
-        baseWindowID = driver.getWindowHandle();
-        String subWindowHandler = null;
-        Set<String> windows = driver.getWindowHandles();
-        Iterator<String> iterator = windows.iterator();
+    protected void openDashboardPageWebConsole() throws Exception {
+        clickOnItem(getLeftMenuItemWebConsole("Dashboard"));
+    }
 
-        while (iterator.hasNext()) {
-            subWindowHandler = iterator.next();
-        }
-        driver.switchTo().window(subWindowHandler);
+    protected void openConnectionsPageWebConsole() throws Exception {
+        clickOnItem(getLeftMenuItemWebConsole("Connections"));
+    }
+
+    protected void clickOnItem(WebElement element) throws Exception {
+        takeScreenShot();
+        assertNotNull(element);
+        Logging.log.info("Click on button: " + element.getText());
+        element.click();
         angularDriver.waitForAngularRequestsToFinish();
-        Logging.log.info("Switched to sub window");
+        takeScreenShot();
+    }
+
+    protected void fillInputItem(WebElement element, String text) throws Exception {
+        takeScreenShot();
+        assertNotNull(element);
+        element.sendKeys(text);
+        angularDriver.waitForAngularRequestsToFinish();
+        Logging.log.info("Filled input with text: " + text);
+        takeScreenShot();
     }
 
     protected void createAddressWebConsole(Destination destination) throws Exception {
@@ -105,41 +143,18 @@ public abstract class SeleniumTestBase extends TestBaseWithDefault {
         openAddressesPageWebConsole();
 
         //click on create button
-        WebElement createButton = driver.findElement(ByAngular.buttonText("Create"));
-        Logging.log.info("Get the button: " + createButton.getText());
-        createButton.click();
-        angularDriver.waitForAngularRequestsToFinish();
-        Logging.log.info("Clicked on create button");
-
-        //switch to sub window
-        switchToSubWindow();
+        clickOnItem(driver.findElement(ByAngular.buttonText("Create")));
 
         //fill address name
-        WebElement input = driver.findElement(By.cssSelector("#new-name"));
-        input.sendKeys("test-" + destination.getType());
+        fillInputItem(driver.findElement(By.cssSelector("#new-name")), "test-" + destination.getType());
 
         //select address type
-        WebElement queueInput = driver.findElement(By.id(destination.getType()));
-        queueInput.click();
+        clickOnItem(driver.findElement(By.id(destination.getType())));
 
-        //click on next button
         WebElement nextButton = driver.findElement(By.id("nextButton"));
-        nextButton.click();
-        angularDriver.waitForAngularRequestsToFinish();
-        Logging.log.info("Next button clicked");
-
-        //click on next button
-        nextButton.click();
-        angularDriver.waitForAngularRequestsToFinish();
-        Logging.log.info("Next button clicked");
-
-        //click on create button
-        nextButton.click();
-        angularDriver.waitForAngularRequestsToFinish();
-        Logging.log.info("Create button clicked");
-
-        //switch to base page
-        driver.switchTo().window(baseWindowID);
+        clickOnItem(nextButton);
+        clickOnItem(nextButton);
+        clickOnItem(nextButton);
 
         TestUtils.waitForDestinationsReady(addressApiClient, defaultAddressSpace,
                 new TimeoutBudget(5, TimeUnit.MINUTES), destination);
