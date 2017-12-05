@@ -543,8 +543,7 @@ public class KubernetesHelper implements Kubernetes {
                     .withName(groupName)
                     .endSubject()
                     .withNewRoleRef()
-                    .withName(roleName)
-                    .withNamespace(namespace)
+                    .withName("edit")
                     .endRoleRef()
                     .build();
 
