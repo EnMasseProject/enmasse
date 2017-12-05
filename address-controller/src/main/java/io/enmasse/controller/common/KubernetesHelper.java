@@ -515,13 +515,15 @@ public class KubernetesHelper implements Kubernetes {
     }
 
     @Override
-    public void addAddressAdminRole(AddressSpace addressSpace) {
+    public void addAddressSpaceRoleBindings(AddressSpace addressSpace) {
         String namespace = addressSpace.getNamespace();
-        String roleName = "enmasse-address-admin";
 
         if (isRBACSupported()) {
-            if (hasClusterRole(roleName)) {
-                createRoleBinding("address-admins", namespace, "ClusterRole", roleName, Arrays.asList(
+            if (hasClusterRole("enmasse-address-admin")) {
+                createRoleBinding("address-admins", namespace, "ClusterRole", "enmasse-address-admin", Arrays.asList(
+                        new Subject("ServiceAccount", addressSpaceAdminSa, namespace),
+                        new Subject("ServiceAccount", "default", namespace)), null);
+                createRoleBinding("address-space-viewers", namespace, "ClusterRole", "enmasse-infra-view", Arrays.asList(
                         new Subject("ServiceAccount", addressSpaceAdminSa, namespace),
                         new Subject("ServiceAccount", "default", namespace)), null);
             } else {
@@ -544,9 +546,26 @@ public class KubernetesHelper implements Kubernetes {
                     .endSubject()
                     .withNewRoleRef()
                     .withName("edit")
+                    .withNamespace(namespace)
                     .endRoleRef()
                     .build();
 
+            RoleBinding viewRoleBinding = new RoleBindingBuilder()
+                    .editOrNewMetadata()
+                    .withName("infra-viewers")
+                    .withNamespace(namespace)
+                    .endMetadata()
+                    .addToUserNames("system:serviceaccount:" + namespace + ":default")
+                    .addNewSubject()
+                    .withName("default")
+                    .withNamespace(namespace)
+                    .withKind("ServiceAccount")
+                    .endSubject()
+                    .withNewRoleRef()
+                    .withName("view")
+                    .withKind("ClusterRole")
+                    .endRoleRef()
+                    .build();
 
             String policyBindingName = ":default";
 
@@ -557,18 +576,21 @@ public class KubernetesHelper implements Kubernetes {
 
             PolicyBinding policyBinding = new PolicyBindingBuilder(bindingResource.get())
                     .addNewRoleBinding()
-                    .withName(roleName)
+                    .withName("enmasse-address-admin")
                     .withNewRoleBindingLike(roleBinding)
+                    .endRoleBinding()
+                    .endRoleBinding()
+                    .addNewRoleBinding()
+                    .withName("infra-viewers")
+                    .withNewRoleBindingLike(viewRoleBinding)
                     .endRoleBinding()
                     .endRoleBinding()
                     .build();
 
             bindingResource.replace(policyBinding);
-
         } else {
             log.info("No support for RBAC, won't add to address-admin role");
         }
-
     }
 
     private boolean hasClusterRole(String roleName) {

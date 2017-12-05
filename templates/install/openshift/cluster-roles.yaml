@@ -121,4 +121,20 @@ items:
     - update
     - patch
     - delete
+- apiVersion: v1
+  kind: ClusterRole
+  metadata:
+    name: enmasse-infra-view
+  rules:
+  - apiGroups:
+    - ''
+    - extensions
+    resources:
+    - pods
+    - configmaps
+    - deployments
+    verbs:
+    - list
+    - get
+    - watch
 kind: List
