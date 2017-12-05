@@ -23,4 +23,4 @@ do
     done
 done
 
-cp -r /tmp/testlogs/* $ARTIFACTS_DIR/logs/
+cp -r ${OPENSHIFT_TEST_LOGDIR}/* ${ARTIFACTS_DIR}/logs/
