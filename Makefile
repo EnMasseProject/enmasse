@@ -15,7 +15,7 @@ INSTALLDIR=$(CURDIR)/templates/install
 all: init build test package docker_build
 
 build_java:
-	mvn test package -B $(MAVEN_ARGS)
+	mvn -q test package -B $(MAVEN_ARGS)
 
 clean_java:
 	mvn -B clean
