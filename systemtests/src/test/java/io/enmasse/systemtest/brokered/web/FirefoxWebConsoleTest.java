@@ -10,13 +10,13 @@ import org.openqa.selenium.firefox.FirefoxOptions;
 public class FirefoxWebConsoleTest extends BrokeredWebConsoleTest {
 
     @Test
-    public void testCreateQueue() throws Exception {
-        doTestCreateAddress(Destination.queue("test-queue"));
+    public void testCreateDeleteQueue() throws Exception {
+        doTestCreateDeleteAddress(Destination.queue("test-queue"));
     }
 
     @Test
-    public void testCreateTopic() throws Exception {
-        doTestCreateAddress(Destination.topic("test-topic"));
+    public void testCreateDeleteTopic() throws Exception {
+        doTestCreateDeleteAddress(Destination.topic("test-topic"));
     }
 
 

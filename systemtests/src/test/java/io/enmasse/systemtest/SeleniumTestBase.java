@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 public abstract class SeleniumTestBase extends TestBaseWithDefault {
     private WebDriver driver;
@@ -50,12 +51,17 @@ public abstract class SeleniumTestBase extends TestBaseWithDefault {
     @After
     public void tearDownDrivers() throws Exception {
         takeScreenShot();
-        Thread.sleep(5000);
-        try {
+        Thread.sleep(3000);
+        try{
             driver.close();
-            //driver.quit();
+        }catch (Exception ex){
+            Logging.log.warn("Raise exception in close: " + ex.getMessage());
+        }
+
+        try {
+            driver.quit();
         } catch (Exception ex) {
-            Logging.log.warn("Raise exception on quit: " + ex.getMessage());
+            Logging.log.warn("Raise warning on quit: " + ex.getMessage());
         }
         Logging.log.info("Driver is closed");
         driver = null;
@@ -85,7 +91,9 @@ public abstract class SeleniumTestBase extends TestBaseWithDefault {
         }
     }
 
+    //================================================================================================
     //================================== Common console methods ======================================
+    //================================================================================================
     protected void openConsolePageWebConsole() throws Exception {
         driver.get(getConsoleRoute());
         angularDriver.waitForAngularRequestsToFinish();
@@ -118,9 +126,13 @@ public abstract class SeleniumTestBase extends TestBaseWithDefault {
     }
 
     protected void clickOnItem(WebElement element) throws Exception {
+        clickOnItem(element, null);
+    }
+
+    protected void clickOnItem(WebElement element, String textToLog) throws Exception {
         takeScreenShot();
         assertNotNull(element);
-        Logging.log.info("Click on button: " + element.getText());
+        Logging.log.info("Click on button: " + (textToLog == null ? element.getText() : textToLog));
         element.click();
         angularDriver.waitForAngularRequestsToFinish();
         takeScreenShot();
@@ -135,6 +147,28 @@ public abstract class SeleniumTestBase extends TestBaseWithDefault {
         takeScreenShot();
     }
 
+    protected List<AddressWebItem> getAddressItems() {
+        WebElement content = driver.findElement(By.id("contentContainer"));
+        List<WebElement> elements = content.findElements(By.className("list-group-item"));
+        List<AddressWebItem> addressItems = new ArrayList<>();
+        for (WebElement element : elements) {
+            AddressWebItem item = new AddressWebItem(element);
+            Logging.log.info("Got address: " + item.getName());
+            addressItems.add(item);
+        }
+        return addressItems;
+    }
+
+    protected AddressWebItem getAddressItem(Destination destination) throws Exception {
+        AddressWebItem returnedElement = null;
+        List<AddressWebItem> addressWebItems = getAddressItems();
+        for (AddressWebItem item : addressWebItems) {
+            if (item.getName().equals(destination.getAddress()))
+                returnedElement = item;
+        }
+        return returnedElement;
+    }
+
     protected void createAddressWebConsole(Destination destination) throws Exception {
         //get console page
         openConsolePageWebConsole();
@@ -146,17 +180,71 @@ public abstract class SeleniumTestBase extends TestBaseWithDefault {
         clickOnItem(driver.findElement(ByAngular.buttonText("Create")));
 
         //fill address name
-        fillInputItem(driver.findElement(By.cssSelector("#new-name")), "test-" + destination.getType());
+        fillInputItem(driver.findElement(By.id("new-name")), "test-" + destination.getType());
 
         //select address type
-        clickOnItem(driver.findElement(By.id(destination.getType())));
+        clickOnItem(driver.findElement(By.id(destination.getType())), "Radio button " + destination.getType());
 
         WebElement nextButton = driver.findElement(By.id("nextButton"));
         clickOnItem(nextButton);
         clickOnItem(nextButton);
         clickOnItem(nextButton);
 
+        assertNotNull(getAddressItem(destination));
+
         TestUtils.waitForDestinationsReady(addressApiClient, defaultAddressSpace,
                 new TimeoutBudget(5, TimeUnit.MINUTES), destination);
+    }
+
+    protected void deleteAddressWebConsole(Destination destination) throws Exception {
+        //open console webpage
+        openConsolePageWebConsole();
+
+        //open addresses
+        openAddressesPageWebConsole();
+
+        //click on check box
+        clickOnItem(getAddressItem(destination).getCheckBox(), "check box: " + destination.getAddress());
+
+        //click on delete
+        clickOnItem(driver.findElement(ByAngular.buttonText("Delete")));
+
+        //check if address deleted
+        assertNull(getAddressItem(destination));
+    }
+
+    protected class AddressWebItem {
+        private WebElement addressItem;
+        private WebElement checkBox;
+        private boolean isReady;
+        private String name;
+
+        public AddressWebItem(WebElement item) {
+            this.addressItem = item;
+            this.checkBox = item.findElement(By.className("list-view-pf-checkbox"));
+            this.name = item.findElement(By.className("list-group-item-heading")).getText();
+            try{
+                item.findElement(By.className("pficon-ok"));
+                isReady = true;
+            }catch (Exception ex){
+                isReady = false;
+            }
+        }
+
+        public WebElement getAddressItem() {
+            return addressItem;
+        }
+
+        public WebElement getCheckBox() {
+            return checkBox;
+        }
+
+        public boolean getIsReady() {
+            return isReady;
+        }
+
+        public String getName() {
+            return name;
+        }
     }
 }
