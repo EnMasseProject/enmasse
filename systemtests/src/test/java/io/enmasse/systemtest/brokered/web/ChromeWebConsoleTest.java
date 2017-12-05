@@ -9,12 +9,12 @@ import org.openqa.selenium.chrome.ChromeOptions;
 
 public class ChromeWebConsoleTest extends BrokeredWebConsoleTest {
 
-    @Test
+    //@Test
     public void testCreateDeleteQueue() throws Exception {
         doTestCreateDeleteAddress(Destination.queue("test-queue"));
     }
 
-    @Test
+    //@Test
     public void testCreateDeleteTopic() throws Exception {
         doTestCreateDeleteAddress(Destination.topic("test-topic"));
     }
