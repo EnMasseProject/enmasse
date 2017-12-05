@@ -69,7 +69,7 @@ public class ControllerHelper {
             kubernetes.createNamespace(addressSpace);
             kubernetes.addAddressSpaceAdminRoleBinding(addressSpace);
             kubernetes.addSystemImagePullerPolicy(namespace, addressSpace);
-            kubernetes.addAddressAdminRole(addressSpace);
+            kubernetes.addAddressSpaceRoleBindings(addressSpace);
             kubernetes.createServiceAccount(addressSpace.getNamespace(), kubernetes.getAddressSpaceAdminSa());
         }
 

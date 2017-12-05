@@ -86,7 +86,7 @@ public interface Kubernetes {
     SubjectAccessReview performSubjectAccessReview(String user, String namespace, String verb, String impersonateUser);
 
     boolean isRBACSupported();
-    void addAddressAdminRole(AddressSpace namespace);
+    void addAddressSpaceRoleBindings(AddressSpace namespace);
     void addSystemImagePullerPolicy(String namespace, AddressSpace tenantNamespace);
 
     EventLogger createEventLogger(Clock clock, String componentName);

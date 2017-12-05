@@ -159,6 +159,34 @@
       ]
     },
 
+  infra_view_role::
+    {
+      "apiVersion": "v1",
+      "kind": "ClusterRole",
+      "metadata": {
+          "name": "enmasse-infra-view"
+      },
+      "rules": [
+        {
+          "apiGroups": [
+            "",
+            "extensions"
+          ],
+          "resources": [
+            "pods",
+            "configmaps",
+            "deployments"
+          ],
+          "verbs": [
+            "list",
+            "get",
+            "watch"
+          ]
+        }
+      ]
+    },
+
+
   // Role for address space administrators
   addressspace_admin_role::
     {
