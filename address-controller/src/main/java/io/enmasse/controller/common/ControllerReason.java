@@ -25,6 +25,7 @@ public enum ControllerReason implements EventLogger.Reason {
     CertCreateFailed,
     RouterCheckFailed,
     BrokerDeleted,
+    BrokerDeleteFailed,
     AddressSpaceDeleted,
     AddressSpaceDeleteFailed,
     AddressSyncFailed;

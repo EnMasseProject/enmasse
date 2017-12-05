@@ -194,8 +194,13 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
                 .forEach(cluster -> {
 
                     log.info("Deleting broker cluster with id {}", cluster.getClusterId());
-                    kubernetes.delete(cluster.getResources());
-                    eventLogger.log(BrokerDeleted, "Deleted broker", Normal, Broker, cluster.getClusterId());
+                    try {
+                        kubernetes.delete(cluster.getResources());
+                        eventLogger.log(BrokerDeleted, "Deleted broker", Normal, Broker, cluster.getClusterId());
+                    } catch (Exception e) {
+                        log.error("Error deleting broker", e);
+                        eventLogger.log(BrokerDeleteFailed, "Error deleting broker", Warning, Broker, cluster.getClusterId());
+                    }
                 });
     }
 
