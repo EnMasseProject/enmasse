@@ -8,10 +8,6 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
-import org.openqa.selenium.chrome.ChromeDriver;
-import org.openqa.selenium.chrome.ChromeOptions;
-import org.openqa.selenium.firefox.FirefoxDriver;
-import org.openqa.selenium.firefox.FirefoxOptions;
 
 import java.util.Iterator;
 import java.util.List;
@@ -23,31 +19,13 @@ import static org.junit.Assert.assertNotNull;
 public abstract class SeleniumTestBase extends TestBaseWithDefault {
     private WebDriver driver;
     private NgWebDriver angularDriver;
-    private WebBrowserType browserType;
     private String baseWindowID;
 
-    public SeleniumTestBase() {
-        this.browserType = getWebBrowserType();
-    }
-
-    protected abstract WebBrowserType getWebBrowserType();
+    protected abstract WebDriver buildDriver();
 
     @Before
     public void setupDriver() {
-        switch (browserType) {
-            case FIREFOX:
-                FirefoxOptions firefoxOpts = new FirefoxOptions();
-                firefoxOpts.setHeadless(true);
-                this.driver = new FirefoxDriver(firefoxOpts);
-                break;
-            case CHROME:
-                ChromeOptions chromeOpts = new ChromeOptions();
-                chromeOpts.setHeadless(true);
-                this.driver = new ChromeDriver(chromeOpts);
-                break;
-            default:
-                break;
-        }
+        driver = buildDriver();
         angularDriver = new NgWebDriver((JavascriptExecutor) driver);
     }
 

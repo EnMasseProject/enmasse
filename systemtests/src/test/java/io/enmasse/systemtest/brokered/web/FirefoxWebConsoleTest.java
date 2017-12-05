@@ -1,10 +1,13 @@
 package io.enmasse.systemtest.brokered.web;
 
+import io.enmasse.systemtest.BrokeredWebConsoleTest;
 import io.enmasse.systemtest.Destination;
-import io.enmasse.systemtest.WebBrowserType;
 import org.junit.Test;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.firefox.FirefoxDriver;
+import org.openqa.selenium.firefox.FirefoxOptions;
 
-public class FirefoxWebConsoleTest extends WebConsoleTest {
+public class FirefoxWebConsoleTest extends BrokeredWebConsoleTest {
 
     @Test
     public void testCreateQueue() throws Exception {
@@ -16,8 +19,11 @@ public class FirefoxWebConsoleTest extends WebConsoleTest {
         doTestCreateAddress(Destination.topic("test-topic"));
     }
 
+
     @Override
-    protected WebBrowserType getWebBrowserType() {
-        return WebBrowserType.FIREFOX;
+    protected WebDriver buildDriver() {
+        FirefoxOptions opts = new FirefoxOptions();
+        opts.setHeadless(true);
+        return new FirefoxDriver(opts);
     }
 }

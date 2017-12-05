@@ -1,10 +1,13 @@
 package io.enmasse.systemtest.brokered.web;
 
+import io.enmasse.systemtest.BrokeredWebConsoleTest;
 import io.enmasse.systemtest.Destination;
-import io.enmasse.systemtest.WebBrowserType;
 import org.junit.Test;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
 
-public class ChromeWebConsoleTest extends WebConsoleTest {
+public class ChromeWebConsoleTest extends BrokeredWebConsoleTest {
 
     @Test
     public void testCreateQueue() throws Exception {
@@ -17,7 +20,9 @@ public class ChromeWebConsoleTest extends WebConsoleTest {
     }
 
     @Override
-    protected WebBrowserType getWebBrowserType() {
-        return WebBrowserType.CHROME;
+    protected WebDriver buildDriver() {
+        ChromeOptions opts = new ChromeOptions();
+        opts.setHeadless(true);
+        return new ChromeDriver(opts);
     }
 }
