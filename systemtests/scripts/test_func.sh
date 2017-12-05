@@ -53,7 +53,7 @@ function run_test() {
 
 function teardown_test() {
     PROJECT_NAME=$1
-    oc delete project $PROJECT_NAME
+    kubectl delete namespace $PROJECT_NAME
 }
 
 function create_addres_space() {
@@ -90,12 +90,12 @@ function create_user() {
     curl -k -X POST -H "content-type: application/json" --data-binary @${NEW_USER_DEF} -H "Authorization: Bearer ${TOKEN}"  https://${USER}:${PASSWORD}@$(oc get routes -o jsonpath='{.spec.host}' keycloak)/auth/admin/realms/${ADDRESS_SPACE_NAME}/users
 }
 
-function get_openshift_info() {
+function get_kubernetes_info() {
     ARTIFACTS_DIR=${1}
     RESOURCE=${2}
     NAMESPACE=${3}
     SUFIX=${4}
     FILE_NAME="openshift-${RESOURCE}-${NAMESPACE}${SUFIX}.log"
-    oc get ${RESOURCE} -n ${NAMESPACE} > "${1}/${FILE_NAME}"
-    oc get ${RESOURCE} -n ${NAMESPACE} -o yaml >> "${1}/${FILE_NAME}"
+    kubectl get ${RESOURCE} -n ${NAMESPACE} > "${1}/${FILE_NAME}"
+    kubectl get ${RESOURCE} -n ${NAMESPACE} -o yaml >> "${1}/${FILE_NAME}"
 }
