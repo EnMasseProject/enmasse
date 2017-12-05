@@ -52,9 +52,9 @@ public abstract class SeleniumTestBase extends TestBaseWithDefault {
     public void tearDownDrivers() throws Exception {
         takeScreenShot();
         Thread.sleep(3000);
-        try{
+        try {
             driver.close();
-        }catch (Exception ex){
+        } catch (Exception ex) {
             Logging.log.warn("Raise exception in close: " + ex.getMessage());
         }
 
@@ -223,10 +223,10 @@ public abstract class SeleniumTestBase extends TestBaseWithDefault {
             this.addressItem = item;
             this.checkBox = item.findElement(By.className("list-view-pf-checkbox"));
             this.name = item.findElement(By.className("list-group-item-heading")).getText();
-            try{
+            try {
                 item.findElement(By.className("pficon-ok"));
                 isReady = true;
-            }catch (Exception ex){
+            } catch (Exception ex) {
                 isReady = false;
             }
         }
