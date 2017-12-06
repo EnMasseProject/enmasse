@@ -25,13 +25,15 @@ public abstract class SeleniumTestBase extends TestBaseWithDefault {
     private WebDriver driver;
     private NgWebDriver angularDriver;
     private List<File> browserScreenshots = new ArrayList<>();
+    private String webconsoleFolder = "selenium_tests";
     @Rule
     public TestWatcher watchman = new TestWatcher() {
         @Override
         protected void failed(Throwable e, Description description) {
             try {
-                Path path = Paths.get(String.format("%s/%s/%s/",
+                Path path = Paths.get(String.format("%s/%s/%s/%s/",
                         environment.testLogDir(),
+                        webconsoleFolder,
                         description.getClassName(),
                         description.getMethodName()));
                 Files.createDirectories(path);
