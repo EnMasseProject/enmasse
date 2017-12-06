@@ -139,13 +139,14 @@ public class KubernetesHelper implements Kubernetes {
     @Override
     public void createNamespace(AddressSpace addressSpace) {
         if (client.isAdaptable(OpenShiftClient.class)) {
-            client.users().createNew()
+            client.configMaps().inNamespace(namespace).createNew()
                     .editOrNewMetadata()
                     .withName(addressSpace.getNamespace())
                     .addToLabels("app", "enmasse")
                     .addToLabels(LabelKeys.TYPE, "address-space")
                     .addToLabels(LabelKeys.ENVIRONMENT, environment)
                     .addToAnnotations(AnnotationKeys.ADDRESS_SPACE, addressSpace.getName())
+                    .addToAnnotations(AnnotationKeys.CREATED_BY, addressSpace.getCreatedBy())
                     .endMetadata()
                     .done();
 
@@ -157,7 +158,7 @@ public class KubernetesHelper implements Kubernetes {
             metadata.put("name", addressSpace.getNamespace());
             projectrequest.put("metadata", metadata);
 
-            doRawHttpRequest("/oapi/v1/projectrequests", "POST", projectrequest, false, addressSpace.getNamespace());
+            doRawHttpRequest("/oapi/v1/projectrequests", "POST", projectrequest, false, addressSpace.getCreatedBy());
         } else {
             client.namespaces().createNew()
                     .editOrNewMetadata()
@@ -219,8 +220,8 @@ public class KubernetesHelper implements Kubernetes {
     @Override
     public void deleteNamespace(NamespaceInfo namespaceInfo) {
         if (client.isAdaptable(OpenShiftClient.class)) {
-            doRawHttpRequest("/oapi/v1/projects/" + namespaceInfo.getNamespace(), "DELETE", null, false, namespaceInfo.getNamespace());
-            client.users().withName(namespaceInfo.getNamespace()).delete();
+            doRawHttpRequest("/oapi/v1/projects/" + namespaceInfo.getNamespace(), "DELETE", null, false, namespaceInfo.getCreatedBy());
+            client.configMaps().inNamespace(namespace).withName(namespaceInfo.getNamespace()).delete();
         } else {
             client.namespaces().withName(namespaceInfo.getNamespace()).delete();
         }
@@ -323,11 +324,15 @@ public class KubernetesHelper implements Kubernetes {
         labels.put(LabelKeys.ENVIRONMENT, environment);
         if (client.isAdaptable(OpenShiftClient.class)) {
             return client.users().withLabels(labels).list().getItems().stream()
-                    .map(n -> new NamespaceInfo(n.getMetadata().getAnnotations().get(AnnotationKeys.ADDRESS_SPACE), n.getMetadata().getName()))
+                    .map(n -> new NamespaceInfo(n.getMetadata().getAnnotations().get(AnnotationKeys.ADDRESS_SPACE),
+                            n.getMetadata().getName(),
+                            n.getMetadata().getAnnotations().get(AnnotationKeys.CREATED_BY)))
                     .collect(Collectors.toSet());
         } else {
             return client.namespaces().withLabels(labels).list().getItems().stream()
-                    .map(n -> new NamespaceInfo(n.getMetadata().getAnnotations().get(AnnotationKeys.ADDRESS_SPACE), n.getMetadata().getName()))
+                    .map(n -> new NamespaceInfo(n.getMetadata().getAnnotations().get(AnnotationKeys.ADDRESS_SPACE),
+                            n.getMetadata().getName(),
+                            n.getMetadata().getAnnotations().get(AnnotationKeys.CREATED_BY)))
                     .collect(Collectors.toSet());
         }
     }
@@ -494,7 +499,7 @@ public class KubernetesHelper implements Kubernetes {
         if (client.isAdaptable(OpenShiftClient.class)) {
             createRoleBinding("addressspace-admins", addressSpace.getNamespace(), "ClusterRole", "admin", Arrays.asList(
                     new Subject("ServiceAccount", addressControllerSa, namespace)),
-                    addressSpace.getNamespace());
+                    addressSpace.getCreatedBy());
         }
     }
 
@@ -528,9 +533,9 @@ public class KubernetesHelper implements Kubernetes {
                         new Subject("ServiceAccount", "default", namespace)), null);
             } else {
                 createRoleBinding("address-space-viewers", namespace, "ClusterRole", "view", Arrays.asList(
-                        new Subject("ServiceAccount", "default", namespace)), namespace);
+                        new Subject("ServiceAccount", "default", namespace)), addressSpace.getCreatedBy());
                 createRoleBinding("address-admins", namespace, "ClusterRole", "edit", Arrays.asList(
-                        new Subject("ServiceAccount", addressSpaceAdminSa, namespace)), namespace);
+                        new Subject("ServiceAccount", addressSpaceAdminSa, namespace)), addressSpace.getCreatedBy());
             }
         } else if (client.isAdaptable(OpenShiftClient.class)) {
             String groupName = "system:serviceaccounts:" + namespace;
