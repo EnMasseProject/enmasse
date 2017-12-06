@@ -23,6 +23,7 @@ public class ChromeWebConsoleTest extends BrokeredWebConsoleTest {
     protected WebDriver buildDriver() {
         ChromeOptions opts = new ChromeOptions();
         opts.setHeadless(true);
+        opts.addArguments("--no-sandbox");
         return new ChromeDriver(opts);
     }
 }
