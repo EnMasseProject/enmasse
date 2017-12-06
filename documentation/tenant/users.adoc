@@ -1,16 +1,18 @@
 = Users
 
-{ProductName} uses Red Hat Single Sign-On to manage users and credentials. You can create and delete {ProductName} users as well as change an existing password.
+{ProductName} uses {AuthProductName} to manage users and credentials. You can create and delete {ProductName} users as well as change an existing password.
 
 [[_create_user]]
 == Creating a User
 
-Using the Red Hat Single Sign-On Administration Console you can create a new {ProductName} user and specify a password.
+Using the {AuthProductNameConsole} you can create a new {ProductName} user and specify a password.
 
 .Procedure
 
-. In a web browser, navigate to http://localhost:8080/auth/admin/ and log in using the user name and password given to you for your realm.
-The Red Hat Single Sign-On Admin Console opens.
+. In a web browser, navigate to the {ConsoleName} to locate your {AuthProductNameConsole} URL. 
+
+. Log in using the user name and password given to you for your realm.
+The {AuthProductName} Administration Console opens.
 
 . In the left pane, click *Users*. The Users page is displayed.
 
@@ -33,7 +35,7 @@ You can change a user password.
 .Procedure
 
 . In a web browser, navigate to http://localhost:8080/auth/admin/ and log in using the user name and password given to you for your realm.
-The Red Hat Single Sign-On Admin Console opens.
+The {AuthProductNameConsole} opens.
 
 . In the left pane, click *Users*. The Users page is displayed.
 
@@ -49,12 +51,12 @@ The Red Hat Single Sign-On Admin Console opens.
 [[_delete_user]]
 == Deleting a User
 
-Using the Red Hat Single Sign-On Administration Console you can delete an existing {ProductName} user.
+Using the {AuthProductNameConsole} you can delete an existing {ProductName} user.
 
 .Procedure
 
 . In a web browser, navigate to http://localhost:8080/auth/admin/ and log in using the user name and password given to you for your realm.
-The Red Hat Single Sign-On Admin Console opens.
+The {AuthProductNameConsole} opens.
 
 . In the left pane, click *Users*. The Users page is displayed.
 
