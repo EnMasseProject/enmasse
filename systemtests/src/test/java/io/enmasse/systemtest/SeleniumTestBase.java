@@ -14,17 +14,18 @@ import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
+import java.text.SimpleDateFormat;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
 public abstract class SeleniumTestBase extends TestBaseWithDefault {
+    private final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss:SSSS");
     private WebDriver driver;
     private NgWebDriver angularDriver;
-    private List<File> browserScreenshots = new ArrayList<>();
+    private Map<Date, File> browserScreenshots = new HashMap<>();
     private String webconsoleFolder = "selenium_tests";
     @Rule
     public TestWatcher watchman = new TestWatcher() {
@@ -37,9 +38,9 @@ public abstract class SeleniumTestBase extends TestBaseWithDefault {
                         description.getClassName(),
                         description.getMethodName());
                 Files.createDirectories(path);
-                for (int i = 0; i < browserScreenshots.size(); i++) {
-                    FileUtils.copyFile(browserScreenshots.get(i), new File(Paths.get(path.toString(),
-                            String.format("%s_%d.png", description.getDisplayName(), i)).toString()));
+                for (Date key : browserScreenshots.keySet()) {
+                    FileUtils.copyFile(browserScreenshots.get(key), new File(Paths.get(path.toString(),
+                            String.format("%s_%s.png", description.getDisplayName(), dateFormat.format(key))).toString()));
                 }
             } catch (Exception ex) {
                 Logging.log.warn("Cannot save screenshots: " + ex.getMessage());
@@ -93,7 +94,7 @@ public abstract class SeleniumTestBase extends TestBaseWithDefault {
 
     protected void takeScreenShot() {
         try {
-            browserScreenshots.add(((TakesScreenshot) driver).getScreenshotAs(OutputType.FILE));
+            browserScreenshots.put(new Date(), ((TakesScreenshot) driver).getScreenshotAs(OutputType.FILE));
         } catch (Exception ex) {
             Logging.log.warn("Cannot take screenshot: " + ex.getMessage());
         }
