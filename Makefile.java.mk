@@ -8,8 +8,10 @@ build:
 test:
 	mvn test
 
-package:
+package_java:
 	mvn package -DskipTests
+
+package: package_java
 endif
 
 clean_java: 
