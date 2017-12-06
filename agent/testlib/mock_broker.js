@@ -44,7 +44,7 @@ function find(array, predicate) {
 
 function match_source_address(link, address) {
     return link && link.local && link.local.attach && link.local.attach.source
-        && link.local.attach.source.address === address;
+        && link.local.attach.source.value[0].toString() === address;
 }
 
 function MockBroker (name) {

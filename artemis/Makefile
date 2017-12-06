@@ -16,7 +16,7 @@ build_tar:
 	mkdir -p $(ARTIFACT_BASE)/shutdown-hook
 	cp -r shutdown-hook/target/shutdown-hook-$(VERSION).jar $(ARTIFACT_BASE)/shutdown-hook/shutdown-hook.jar
 	cp -r shutdown-hook/src/main/sh/shutdown-hook.sh $(ARTIFACT_BASE)/shutdown-hook/
-	tar -czf build/artemis-image.tar -C build/artemis-image .
+	tar -czf build/artemis-image-$(VERSION).tar.gz -C build/artemis-image .
 
 package: build_tar build/apache-artemis-bin.tar.gz
 

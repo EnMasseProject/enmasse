@@ -44,7 +44,7 @@ public class ConfigMapAddressSpaceApi implements AddressSpaceApi {
 
     @Override
     public Optional<AddressSpace> getAddressSpaceWithName(String name) {
-        ConfigMap map = client.configMaps().withName(KubeUtil.sanitizeName("address-space-" + name)).get();
+        ConfigMap map = client.configMaps().withName(getConfigMapName(name)).get();
         if (map == null) {
             return Optional.empty();
         } else {
@@ -105,7 +105,8 @@ public class ConfigMapAddressSpaceApi implements AddressSpaceApi {
 
     private AddressSpace getAddressSpaceFromConfig(ConfigMap map) {
         try {
-            return mapper.readValue(map.getData().get("config.json"), AddressSpace.class);
+            AddressSpace addressSpace = mapper.readValue(map.getData().get("config.json"), AddressSpace.class);
+            return new AddressSpace.Builder(addressSpace).setUid(map.getMetadata().getUid()).build();
         } catch (Exception e) {
             log.error("Error decoding address space", e);
             throw new RuntimeException(e);
@@ -135,5 +136,9 @@ public class ConfigMapAddressSpaceApi implements AddressSpaceApi {
     @Override
     public AddressApi withAddressSpace(AddressSpace addressSpace) {
         return new ConfigMapAddressApi(client, new AddressResolver(addressSpace.getType()), addressSpace.getNamespace());
+    }
+
+    public static String getConfigMapName(String name) {
+        return KubeUtil.sanitizeName("address-space-" + name);
     }
 }

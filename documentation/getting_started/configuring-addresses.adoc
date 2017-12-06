@@ -18,7 +18,7 @@ echo "https://$({OcGetRoute} console)"
 ....
 
 You can also deploy the addressing config using the address controller
-API. See the link:common/configuring-using-restapi.adoc[restapi documentation] for details on the
+API. See the <<configuring-using-restapi>> for details on the
 resources consumed by the API. Here is an example config with all 4 variants that you can save to `addresses.json`:
 
 [subs=attributes+,options="nowrap"]

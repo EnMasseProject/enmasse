@@ -23,8 +23,7 @@ import org.keycloak.credential.hash.PasswordHashProviderFactory;
 import org.keycloak.models.KeycloakSession;
 import org.keycloak.models.KeycloakSessionFactory;
 
-public class ScramSha1PasswordHashProviderFactory implements PasswordHashProviderFactory
-{
+public class ScramSha1PasswordHashProviderFactory implements PasswordHashProviderFactory {
 
     public static final String ID = "scramsha1";
 

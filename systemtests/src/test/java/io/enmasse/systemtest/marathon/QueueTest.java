@@ -12,7 +12,7 @@ import java.util.concurrent.TimeUnit;
 
 import static org.hamcrest.CoreMatchers.is;
 
-public class QueueTest extends MarathonTestBase{
+public class QueueTest extends MarathonTestBase {
 
     @Test
     public void testQueueSendReceiveLong() throws Exception {
@@ -29,7 +29,7 @@ public class QueueTest extends MarathonTestBase{
         List<Destination> queueList = new ArrayList<>();
 
         //create queues
-        for(int i = 0; i < queueCount; i++){
+        for (int i = 0; i < queueCount; i++) {
             queueList.add(Destination.queue(String.format("test-queue-sendreceive-%d", i)));
         }
         setAddresses(addressSpace, queueList.toArray(new Destination[0]));
@@ -40,6 +40,7 @@ public class QueueTest extends MarathonTestBase{
             //create client
             AmqpClient client = amqpClientFactory.createQueueClient(addressSpace);
             client.getConnectOptions().setUsername("test").setPassword("test");
+            clients.add(client);
 
             //attach receivers
             List<Future<List<Message>>> recvResults = new ArrayList<>();
@@ -49,7 +50,7 @@ public class QueueTest extends MarathonTestBase{
             }
 
             //attach senders
-            for(int i = 0; i < senderCount; i++ ) {
+            for (int i = 0; i < senderCount; i++) {
                 collector.checkThat(client.sendMessages(queueList.get(i).getAddress(), msgBatch,
                         1, TimeUnit.MINUTES).get(1, TimeUnit.MINUTES), is(msgBatch.size()));
             }
@@ -58,8 +59,6 @@ public class QueueTest extends MarathonTestBase{
             for (int i = 0; i < recvCount; i++) {
                 collector.checkThat(recvResults.get(i).get().size(), is(msgCount / 2));
             }
-
-            client.close();
             Thread.sleep(5000);
         });
     }

@@ -3,61 +3,108 @@ items:
 - apiVersion: v1
   kind: ClusterRole
   metadata:
-    name: enmasse-namespace-admin
+    name: enmasse-address-admin
   rules:
   - apiGroups:
-    - authentication.k8s.io
-    - rbac.authorization.k8s.io
-    - authorization.k8s.io
-    resources:
-    - tokenreviews
-    - rolebindings
-    - roles
-    - localsubjectaccessreviews
-    verbs:
-    - create
-  - apiGroups:
     - ''
-    - authorization.openshift.io
-    - extensions
-    - route.openshift.io
     resources:
-    - namespaces
-    - rolebindings
-    - policybindings
-    - pods
     - configmaps
-    - deployments
-    - replicasets
-    - routes
-    - events
-    - secrets
-    - services
-    - persistentvolumeclaims
-    - serviceaccounts
     verbs:
-    - get
-    - list
     - create
     - delete
-    - update
+    - list
+    - get
     - watch
+    - update
+    - patch
+  - apiGroups:
+    - ''
+    resources:
+    - events
+    verbs:
+    - create
+    - get
+    - update
     - patch
 - apiVersion: v1
   kind: ClusterRole
   metadata:
-    name: enmasse-infra-view
+    name: enmasse-namespace-admin
   rules:
   - apiGroups:
     - ''
-    - extensions
+    - user.openshift.io
     resources:
+    - users
+    verbs:
+    - impersonate
+  - apiGroups:
+    - ''
+    - user.openshift.io
+    resources:
+    - identities
+    - useridentitymappings
+    - users
+    verbs:
+    - create
+    - delete
+    - get
+    - list
+    - patch
+    - update
+    - watch
+  - apiGroups:
+    - ''
+    - extensions
+    - authorization.openshift.io
+    - route.openshift.io
+    resources:
+    - clusterrolebindings
+    - rolebindings
+    - events
+    - policybindings
+    - deployments
     - pods
     - configmaps
-    - deployments
+    - routes
+    - serviceaccounts
+    - secrets
+    - services
+    - persistentvolumeclaims
     verbs:
-    - list
+    - create
+    - delete
     - get
+    - list
+    - patch
+    - update
+    - watch
+  - apiGroups:
+    - rbac.authorization.k8s.io
+    resources:
+    - clusterrolebindings
+    - rolebindings
+    verbs:
+    - create
+    - delete
+    - get
+    - list
+    - patch
+    - update
+    - watch
+  - apiGroups:
+    - authentication.k8s.io
+    resources:
+    - tokenreviews
+    verbs:
+    - create
+  - apiGroups:
+    - ''
+    resources:
+    - namespaces
+    verbs:
+    - get
+    - list
     - watch
 - apiVersion: v1
   kind: ClusterRole
@@ -77,19 +124,17 @@ items:
 - apiVersion: v1
   kind: ClusterRole
   metadata:
-    name: enmasse-address-admin
+    name: enmasse-infra-view
   rules:
   - apiGroups:
     - ''
+    - extensions
     resources:
+    - pods
     - configmaps
-    - events
+    - deployments
     verbs:
-    - create
-    - delete
     - list
     - get
     - watch
-    - update
-    - patch
 kind: List

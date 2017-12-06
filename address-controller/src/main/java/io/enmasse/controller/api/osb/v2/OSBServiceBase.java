@@ -39,7 +39,7 @@ public abstract class OSBServiceBase {
     }
 
     protected void verifyAuthorized(SecurityContext securityContext, ResourceVerb verb) {
-        if (!securityContext.isUserInRole(RbacSecurityContext.rbacToRole(namespace, verb))) {
+        if (!securityContext.isUserInRole(RbacSecurityContext.rbacToRole(namespace, verb, null))) {
             throw OSBExceptions.notAuthorizedException();
         }
     }

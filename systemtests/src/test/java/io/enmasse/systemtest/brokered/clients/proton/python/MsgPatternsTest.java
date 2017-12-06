@@ -19,7 +19,7 @@ public class MsgPatternsTest extends io.enmasse.systemtest.brokered.clients.MsgP
 
     @Test
     public void testTopicSubscribe() throws Exception {
-        doTopicSubscribeTest(new PythonClientSender(), new PythonClientReceiver(), new PythonClientReceiver());
+        doTopicSubscribeTest(new PythonClientSender(), new PythonClientReceiver(), new PythonClientReceiver(), false);
     }
 
     @Test
@@ -40,6 +40,6 @@ public class MsgPatternsTest extends io.enmasse.systemtest.brokered.clients.MsgP
     @Test
     public void testMessageSelectorTopic() throws Exception{
         doMessageSelectorTopicTest(new PythonClientSender(), new PythonClientReceiver(),
-                new PythonClientReceiver(), new PythonClientReceiver());
+                new PythonClientReceiver(), new PythonClientReceiver(), false);
     }
 }

@@ -15,7 +15,7 @@ INSTALLDIR=$(CURDIR)/templates/install
 all: init build test package docker_build
 
 build_java:
-	mvn test package -B $(MAVEN_ARGS)
+	mvn -q test package -B $(MAVEN_ARGS)
 
 clean_java:
 	mvn -B clean
@@ -46,7 +46,6 @@ systemtests:
 	OPENSHIFT_PROJECT=$(OPENSHIFT_PROJECT) OPENSHIFT_TOKEN=$(OPENSHIFT_TOKEN) OPENSHIFT_USER=$(OPENSHIFT_USER) OPENSHIFT_URL=$(OPENSHIFT_MASTER) OPENSHIFT_USE_TLS=true ./systemtests/scripts/run_tests.sh $(SYSTEMTEST_ARGS)
 
 client_install:
-	npm install -g cli-rhea
-	pip install cli-proton-python
+	./systemtests/scripts/client_install.sh
 
 .PHONY: $(BUILD_TARGETS) $(DOCKER_TARGETS) $(BUILD_DIRS) $(DOCKER_DIRS) build_java deploy systemtests clean_java

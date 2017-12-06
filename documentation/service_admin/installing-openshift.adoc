@@ -80,6 +80,13 @@ oc create secret tls standard-authservice-cert --cert=standard-authservice-cert/
 oc create secret generic keycloak-credentials --from-literal=admin.username=admin --from-literal=admin.password=myrandompassword
 ----
 
+. Give view permissions for the keycloak controller:
++
+[options="nowrap"]
+----
+oc adm add-role-to-user view system:serviceaccount:$(oc project -q):default
+----
+
 . Create the standard authentication service:
 +
 [options="nowrap"]
@@ -95,10 +102,10 @@ oc process -f ./openshift/addons/standard-authservice.yaml | oc create -f -
 +
 [options="nowrap"]
 ----
-oc create sa enmasse-service-account
+oc create sa enmasse-admin
 ----
 
-. Create cluster-wide roles used by the `enmasse-service-account`:
+. Create cluster-wide roles used by the `enmasse-admin` service account:
 +
 [options="nowrap"]
 ----
@@ -111,7 +118,7 @@ oc create -f ./openshift/cluster-roles.yaml
 [options="nowrap"]
 ----
 oc login -u system:admin
-oc adm policy add-cluster-role-to-user enmasse-namespace-admin system:serviceaccount:enmasse:enmasse-service-account
+oc adm policy add-cluster-role-to-user enmasse-namespace-admin system:serviceaccount:enmasse:enmasse-admin
 ----
 +
 *Note*: You can log back in as the regular user after this step.

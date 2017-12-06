@@ -38,10 +38,12 @@ public final class ControllerOptions {
     private final boolean enableRbac;
 
     private final String environment;
+    private final String addressControllerSa;
+    private final String addressSpaceAdminSa;
 
     private ControllerOptions(String masterUrl, String namespace, String token,
                               File templateDir, String certDir,
-                              AuthServiceInfo noneAuthService, AuthServiceInfo standardAuthService, boolean enableRbac, String environment) {
+                              AuthServiceInfo noneAuthService, AuthServiceInfo standardAuthService, boolean enableRbac, String environment, String addressControllerSa, String addressSpaceAdminSa) {
         this.masterUrl = masterUrl;
         this.namespace = namespace;
         this.token = token;
@@ -51,6 +53,8 @@ public final class ControllerOptions {
         this.standardAuthService = standardAuthService;
         this.enableRbac = enableRbac;
         this.environment = environment;
+        this.addressControllerSa = addressControllerSa;
+        this.addressSpaceAdminSa = addressSpaceAdminSa;
     }
 
     public String getMasterUrl() {
@@ -89,6 +93,14 @@ public final class ControllerOptions {
         return environment;
     }
 
+    public String getAddressControllerSa() {
+        return addressControllerSa;
+    }
+
+    public String getAddressSpaceAdminSa() {
+        return addressSpaceAdminSa;
+    }
+
     public static ControllerOptions fromEnv(Map<String, String> env) throws IOException {
 
         String masterHost = getEnvOrThrow(env, "KUBERNETES_SERVICE_HOST");
@@ -117,6 +129,10 @@ public final class ControllerOptions {
 
         String environment = getEnv(env, "ENVIRONMENT").orElse("development");
 
+        String addressControllerSa = getEnv(env, "ADDRESS_CONTROLLER_SA").orElse("enmasse-admin");
+
+        String addressSpaceAdminSa = getEnv(env, "ADDRESS_SPACE_ADMIN_SA").orElse("address-space-admin");
+
         return new ControllerOptions(String.format("https://%s:%s", masterHost, masterPort),
                 namespace,
                 token,
@@ -125,7 +141,9 @@ public final class ControllerOptions {
                 noneAuthService,
                 standardAuthService,
                 enableRbac,
-                environment);
+                environment,
+                addressControllerSa,
+                addressSpaceAdminSa);
     }
 
 

@@ -20,6 +20,7 @@ import io.enmasse.address.model.Endpoint;
 import io.enmasse.address.model.SecretCertProvider;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.config.LabelKeys;
+import io.enmasse.controller.auth.AuthController;
 import io.enmasse.controller.common.AddressSpaceController;
 import io.enmasse.controller.common.AuthenticationServiceResolverFactory;
 import io.enmasse.controller.common.Kubernetes;
@@ -54,18 +55,21 @@ public class Controller extends AbstractVerticle implements Watcher<AddressSpace
     private final List<AddressSpaceController> addressSpaceControllers;
     private final ControllerHelper helper;
     private final EventLogger eventLogger;
+    private final AuthController authController;
 
     public Controller(OpenShiftClient client,
                       AddressSpaceApi addressSpaceApi,
                       Kubernetes kubernetes,
                       AuthenticationServiceResolverFactory authResolverFactory,
                       List<AddressSpaceController> addressSpaceControllers,
-                      EventLogger eventLogger) {
+                      EventLogger eventLogger,
+                      AuthController authController) {
         this.helper = new ControllerHelper(kubernetes, authResolverFactory, eventLogger);
         this.client = client;
         this.addressSpaceApi = addressSpaceApi;
         this.addressSpaceControllers = addressSpaceControllers;
         this.eventLogger = eventLogger;
+        this.authController = authController;
     }
 
     @Override
@@ -122,6 +126,12 @@ public class Controller extends AbstractVerticle implements Watcher<AddressSpace
                 } catch (KubernetesClientException e) {
                     log.warn("Error syncing address space {}", mutableAddressSpace.getName(), e);
                     eventLogger.log(AddressSpaceSyncFailed, "Error syncing address space: " + e.getMessage(), EventLogger.Type.Warning, ControllerKind.AddressSpace, mutableAddressSpace.getName());
+                }
+
+                if (authController != null) {
+                    authController.issueAddressSpaceCert(instance);
+                    authController.issueComponentCertificates(instance);
+                    authController.issueExternalCertificates(instance);
                 }
             }
 

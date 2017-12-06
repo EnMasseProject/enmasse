@@ -2,46 +2,16 @@ package io.enmasse.systemtest.marathon;
 
 import io.enmasse.systemtest.Logging;
 import io.enmasse.systemtest.TestBase;
-import org.apache.http.util.ExceptionUtils;
-import org.junit.BeforeClass;
+import io.enmasse.systemtest.amqp.AmqpClient;
 import org.junit.Rule;
 import org.junit.rules.ErrorCollector;
 
+import java.util.ArrayList;
 import java.util.Date;
-import java.util.Iterator;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 public class MarathonTestBase extends TestBase {
-
-    @BeforeClass
-    public void initThreadDump() {
-        Logging.log.info("Setting default exception handler for threads");
-        Thread.setDefaultUncaughtExceptionHandler((thread, e) -> {
-            if (e instanceof OutOfMemoryError) {
-                Logging.log.error("Got OOM, dumping thread info");
-                printThreadDump();
-            } else {
-                Logging.log.error("Caught exception {}", e);
-            }
-        });
-    }
-
-    public static void printThreadDump() {
-        Map<Thread, StackTraceElement[]> allThreads = Thread.getAllStackTraces();
-        Iterator<Thread> iterator = allThreads.keySet().iterator();
-        while (iterator.hasNext()) {
-            StringBuilder sb = new StringBuilder();
-            Thread key = iterator.next();
-            StackTraceElement[] trace = allThreads.get(key);
-            sb.append(key + "\r\n");
-            for (int i = 0; i < trace.length; i++) {
-                sb.append(" " + trace[i] + "\r\n");
-            }
-            Logging.log.error(sb.toString());
-        }
-    }
-
+    ArrayList<AmqpClient> clients = new ArrayList<>();
 
     @Rule
     public ErrorCollector collector = new ErrorCollector();
@@ -49,16 +19,36 @@ public class MarathonTestBase extends TestBase {
     protected void runTestInLoop(int durationMinutes, TestLoop test) {
         Logging.log.info(String.format("Starting test running for %d minutes at %s",
                 durationMinutes, new Date().toString()));
-        for(long stop = System.nanoTime() + TimeUnit.MINUTES.toNanos(durationMinutes); stop > System.nanoTime();) {
+        int fails = 0;
+        int limit = 10;
+        for (long stop = System.nanoTime() + TimeUnit.MINUTES.toNanos(durationMinutes); stop > System.nanoTime(); ) {
             try {
                 test.run();
-            }catch (Exception ex){
+                fails = 0;
+            } catch (Exception ex) {
                 collector.addError(ex);
+                if (++fails >= limit) {
+                    throw new IllegalStateException(String.format("Test failed: %d times in a row", fails));
+                }
+            } finally {
+                closeClients();
             }
         }
     }
 
-    protected interface TestLoop{
+    private void closeClients() {
+        for (AmqpClient client : clients) {
+            try {
+                client.close();
+                Logging.log.info("Client is closed.");
+            }catch (Exception ex){
+                collector.addError(ex);
+            }
+        }
+        clients.clear();
+    }
+
+    protected interface TestLoop {
         void run() throws Exception;
     }
 }

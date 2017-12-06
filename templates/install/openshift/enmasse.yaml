@@ -1409,6 +1409,9 @@ objects:
   - description: A list of host/port pairs to use for establishing the initial connection
       to the Kafka cluster
     name: KAFKA_BOOTSTRAP_SERVERS
+  - description: The service account with address space admin privileges
+    name: ADDRESS_SPACE_ADMIN_SA
+    value: address-space-admin
 - apiVersion: v1
   kind: Template
   metadata:
@@ -1664,6 +1667,7 @@ objects:
             - mountPath: /opt/agent/address-controller-ca
               name: address-controller-ca
               readOnly: true
+          serviceAccount: ${ADDRESS_SPACE_ADMIN_SA}
           volumes:
           - name: authservice-ca
             secret:
@@ -1730,6 +1734,9 @@ objects:
     name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
   - description: The CA cert to use for validating address controller identity
     name: ADDRESS_CONTROLLER_CA_CERT
+  - description: The service account with address space admin privileges
+    name: ADDRESS_SPACE_ADMIN_SA
+    value: address-space-admin
 - apiVersion: extensions/v1beta1
   kind: Deployment
   metadata:
@@ -1753,6 +1760,10 @@ objects:
             value: ${ENABLE_RBAC}
           - name: ENVIRONMENT
             value: ${ENVIRONMENT}
+          - name: ADDRESS_CONTROLLER_SA
+            value: ${ADDRESS_CONTROLLER_SA}
+          - name: ADDRESS_SPACE_ADMIN_SA
+            value: ${ADDRESS_SPACE_ADMIN_SA}
           image: ${ADDRESS_CONTROLLER_REPO}
           livenessProbe:
             httpGet:
@@ -1781,7 +1792,7 @@ objects:
           - mountPath: /address-controller-cert
             name: address-controller-cert
             readOnly: true
-        serviceAccount: enmasse-service-account
+        serviceAccount: ${ADDRESS_CONTROLLER_SA}
         volumes:
         - name: address-controller-cert
           secret:
@@ -1818,6 +1829,9 @@ objects:
 parameters:
 - description: The hostname to use for the exposed route for the REST API
   name: RESTAPI_HOSTNAME
+- description: The service account to use for the address controller
+  name: ADDRESS_CONTROLLER_SA
+  value: enmasse-admin
 - description: The docker image to use for the address controller
   name: ADDRESS_CONTROLLER_REPO
   value: docker.io/enmasseproject/address-controller:latest
@@ -1831,3 +1845,6 @@ parameters:
     testing or production).
   name: ENVIRONMENT
   value: development
+- description: The service account with address space admin privileges
+  name: ADDRESS_SPACE_ADMIN_SA
+  value: address-space-admin

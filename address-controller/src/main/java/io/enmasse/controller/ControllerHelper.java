@@ -15,7 +15,6 @@
  */
 package io.enmasse.controller;
 
-import io.enmasse.config.AnnotationKeys;
 import io.enmasse.controller.common.*;
 import io.enmasse.address.model.*;
 import io.enmasse.address.model.types.Plan;
@@ -24,7 +23,6 @@ import io.enmasse.controller.event.ControllerKind;
 import io.enmasse.k8s.api.EventLogger;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesList;
-import io.fabric8.kubernetes.api.model.Namespace;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.openshift.client.ParameterValue;
@@ -68,10 +66,11 @@ public class ControllerHelper {
                 return;
             }
             log.info("Creating address space {}", addressSpace);
-            kubernetes.createNamespace(addressSpace.getName(), addressSpace.getNamespace());
-            kubernetes.addInfraViewRole(namespace, addressSpace.getNamespace());
-            kubernetes.addSystemImagePullerPolicy(namespace, addressSpace.getNamespace());
-            kubernetes.addAddressAdminRole(addressSpace.getNamespace());
+            kubernetes.createNamespace(addressSpace);
+            kubernetes.addAddressSpaceAdminRoleBinding(addressSpace);
+            kubernetes.addSystemImagePullerPolicy(namespace, addressSpace);
+            kubernetes.addAddressSpaceRoleBindings(addressSpace);
+            kubernetes.createServiceAccount(addressSpace.getNamespace(), kubernetes.getAddressSpaceAdminSa());
         }
 
         StandardResources resourceList = createResourceList(addressSpace);
@@ -113,7 +112,7 @@ public class ControllerHelper {
             parameterValues.add(new ParameterValue(TemplateParameter.AUTHENTICATION_SERVICE_HOST, authResolver.getHost(authService)));
             parameterValues.add(new ParameterValue(TemplateParameter.AUTHENTICATION_SERVICE_PORT, String.valueOf(authResolver.getPort(authService))));
             authResolver.getCaSecretName(authService).ifPresent(secretName -> kubernetes.getSecret(secretName).ifPresent(secret -> parameterValues.add(new ParameterValue(TemplateParameter.AUTHENTICATION_SERVICE_CA_CERT, secret.getData().get("tls.crt")))));
-            kubernetes.getSecret("enmasse-ca").ifPresent(secret -> parameterValues.add(new ParameterValue(TemplateParameter.ADDRESS_CONTROLLER_CA_CERT, secret.getData().get("tls.crt"))));
+            kubernetes.getSecret("address-controller-cert").ifPresent(secret -> parameterValues.add(new ParameterValue(TemplateParameter.ADDRESS_CONTROLLER_CA_CERT, secret.getData().get("tls.crt"))));
             authResolver.getClientSecretName(authService).ifPresent(secret -> parameterValues.add(new ParameterValue(TemplateParameter.AUTHENTICATION_SERVICE_CLIENT_SECRET, secret)));
             authResolver.getSaslInitHost(addressSpace.getName(), authService).ifPresent(saslInitHost -> parameterValues.add(new ParameterValue(TemplateParameter.AUTHENTICATION_SERVICE_SASL_INIT_HOST, saslInitHost)));
 
@@ -204,18 +203,21 @@ public class ControllerHelper {
         if (desiredAddressSpaces.size() == 1 && desiredAddressSpaces.iterator().next().getNamespace().equals(namespace)) {
             return;
         }
-        Set<String> addressSpaceIds = desiredAddressSpaces.stream().map(AddressSpace::getName).collect(Collectors.toSet());
-        for (Namespace namespace : kubernetes.listNamespaces()) {
-            String id = namespace.getMetadata().getAnnotations().get(AnnotationKeys.ADDRESS_SPACE);
-            if (!addressSpaceIds.contains(id)) {
-                try {
-                    log.info("Deleting address space {}", id);
-                    kubernetes.deleteNamespace(namespace.getMetadata().getName());
-                    eventLogger.log(AddressSpaceDeleted, "Deleted address space", Normal, ControllerKind.AddressSpace, id);
-                } catch (KubernetesClientException e) {
-                    eventLogger.log(AddressSpaceDeleteFailed, e.getMessage(), Warning, ControllerKind.AddressSpace, id);
-                    log.info("Exception when deleting namespace (may already be in progress): " + e.getMessage());
-                }
+        Set<NamespaceInfo> actual = kubernetes.listAddressSpaces();
+        Set<NamespaceInfo> desired = desiredAddressSpaces.stream()
+                .map(space -> new NamespaceInfo(space.getName(), space.getNamespace()))
+                .collect(Collectors.toSet());
+
+        actual.removeAll(desired);
+
+        for (NamespaceInfo toRemove : actual) {
+            try {
+                log.info("Deleting address space {}", toRemove);
+                kubernetes.deleteNamespace(toRemove);
+                eventLogger.log(AddressSpaceDeleted, "Deleted address space", Normal, ControllerKind.AddressSpace, toRemove.getAddressSpace());
+            } catch (KubernetesClientException e) {
+                eventLogger.log(AddressSpaceDeleteFailed, e.getMessage(), Warning, ControllerKind.AddressSpace, toRemove.getAddressSpace());
+                log.info("Exception when deleting namespace (may already be in progress): " + e.getMessage());
             }
         }
     }

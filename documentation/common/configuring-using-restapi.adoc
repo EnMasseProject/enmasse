@@ -4,12 +4,12 @@
 
 {ProductName} provides a REST API that can be used for configuring address spaces and addresses
 within those address spaces. When running {ProductName} in multitenant mode, clients are
-authenticated using https://kubernetes.io/docs/admin/authorization/rbac/[RBAC] by default.
+authenticated using https://kubernetes.io/docs/admin/authorization/rbac/[RBAC^] by default.
 
 === Creating an Address Space
 
 
-* Creating address spaces is only applicable for multi-tenant deployments of {ProductName}.
+* Creating address spaces is only applicable for multitenant deployments of {ProductName}.
 
 .Procedure
 
@@ -104,7 +104,7 @@ object.
 }
 ----
 
-. You can then create those addresses using the REST API (Replace `default` with the name of your address space if running in multitenant mode):
+. You can then create those addresses using the following REST API command. Replace `default` with the name of your address space:
 +
 [source,options="nowrap"]
 ----

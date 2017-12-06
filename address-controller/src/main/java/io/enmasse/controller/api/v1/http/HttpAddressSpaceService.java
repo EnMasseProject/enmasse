@@ -58,7 +58,8 @@ public class HttpAddressSpaceService {
     }
 
     private void verifyAuthorized(SecurityContext securityContext, ResourceVerb verb) {
-        if (!securityContext.isUserInRole(RbacSecurityContext.rbacToRole(namespace, verb))) {
+        String user = securityContext.getUserPrincipal() != null ? securityContext.getUserPrincipal().getName() : null;
+        if (!securityContext.isUserInRole(RbacSecurityContext.rbacToRole(namespace, verb, user))) {
             throw OSBExceptions.notAuthorizedException();
         }
     }
@@ -83,8 +84,15 @@ public class HttpAddressSpaceService {
     @POST
     @Consumes({MediaType.APPLICATION_JSON})
     @Produces({MediaType.APPLICATION_JSON})
-    public Response createAddressSpace(@Context SecurityContext securityContext,  AddressSpace addressSpace) {
-        return doRequest(securityContext, ResourceVerb.create, "Error creating address space " + addressSpace.getName(), () -> {
+    public Response createAddressSpace(@Context SecurityContext securityContext, AddressSpace input) {
+        return doRequest(securityContext, ResourceVerb.create, "Error creating address space " + input.getName(), () -> {
+
+            AddressSpace addressSpace = input;
+            if (securityContext.getUserPrincipal() != null) {
+                addressSpace = new AddressSpace.Builder(addressSpace)
+                        .setCreatedBy(securityContext.getUserPrincipal().getName())
+                        .build();
+            }
             addressSpaceApi.createAddressSpace(addressSpace);
             return Response.ok(new AddressSpaceList(addressSpaceApi.listAddressSpaces())).build();
         });

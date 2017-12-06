@@ -1,7 +1,3 @@
-
-== Address Space
-The only currently supported address space is standard.
-
 [[standard_address_space]]
 === Standard Address Space
 The default address space in EnMasse is the standard address space and it consists of an AMQP router network in combination with attachable storage units. The implementation of a storage unit is hidden from the client and the routers with a well-defined API. This address space type is appropriate when you have many connections and addresses. However, it has the following limitations: no transaction support, no message ordering, no selectors on queues, and no message groups.

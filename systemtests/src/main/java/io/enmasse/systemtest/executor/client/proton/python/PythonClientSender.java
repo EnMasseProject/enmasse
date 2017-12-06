@@ -5,6 +5,9 @@ import io.enmasse.systemtest.executor.client.Argument;
 import io.enmasse.systemtest.executor.client.ArgumentMap;
 import io.enmasse.systemtest.executor.client.ClientType;
 
+import java.util.Arrays;
+import java.util.List;
+
 
 public class PythonClientSender extends AbstractClient {
     public PythonClientSender(){
@@ -19,7 +22,6 @@ public class PythonClientSender extends AbstractClient {
         allowedArgs.add(Argument.CONN_RECONNECT_LIMIT);
         allowedArgs.add(Argument.CONN_RECONNECT_TIMEOUT);
         allowedArgs.add(Argument.CONN_HEARTBEAT);
-        allowedArgs.add(Argument.CONN_SSL);
         allowedArgs.add(Argument.CONN_SSL_CERTIFICATE);
         allowedArgs.add(Argument.CONN_SSL_PRIVATE_KEY);
         allowedArgs.add(Argument.CONN_SSL_PASSWORD);
@@ -27,20 +29,21 @@ public class PythonClientSender extends AbstractClient {
         allowedArgs.add(Argument.CONN_SSL_VERIFY_PEER);
         allowedArgs.add(Argument.CONN_SSL_VERIFY_PEER_NAME);
         allowedArgs.add(Argument.CONN_MAX_FRAME_SIZE);
-        allowedArgs.add(Argument.CONN_WEB_SOCKET);
 
         allowedArgs.add(Argument.LINK_DURABLE);
         allowedArgs.add(Argument.LINK_AT_MOST_ONCE);
         allowedArgs.add(Argument.LINK_AT_LEAST_ONCE);
         allowedArgs.add(Argument.CAPACITY);
 
+        allowedArgs.add(Argument.TX_SIZE);
+        allowedArgs.add(Argument.TX_ACTION);
+        allowedArgs.add(Argument.TX_ENDLOOP_ACTION);
+
         allowedArgs.add(Argument.LOG_LIB);
         allowedArgs.add(Argument.LOG_STATS);
         allowedArgs.add(Argument.LOG_MESSAGES);
 
         allowedArgs.add(Argument.BROKER_URL);
-        //allowedArgs.add(Argument.BROKER);
-        //allowedArgs.add(Argument.ADDRESS);
         allowedArgs.add(Argument.COUNT);
         allowedArgs.add(Argument.CLOSE_SLEEP);
         allowedArgs.add(Argument.TIMEOUT);
@@ -64,12 +67,16 @@ public class PythonClientSender extends AbstractClient {
         allowedArgs.add(Argument.MSG_CONTENT_MAP_ITEM);
         allowedArgs.add(Argument.MSG_CONTENT_FROM_FILE);
         allowedArgs.add(Argument.MSG_ANNOTATION);
-        allowedArgs.add(Argument.ANONYMOUS);
     }
 
     @Override
     protected ArgumentMap transformArguments(ArgumentMap args) {
         args = brokerUrlTranformation(args);
         return args;
+    }
+
+    @Override
+    protected List<String> transformExecutableCommand(String executableCommand) {
+        return Arrays.asList(executableCommand);
     }
 }

@@ -160,9 +160,10 @@ if [ "$CURRENT_PROJECT" != "$NAMESPACE" ]; then
     runcmd "oc new-project $NAMESPACE" "Create new project $NAMESPACE"
 fi
 
-runcmd "oc create sa enmasse-service-account -n $NAMESPACE" "Create service account for address controller"
+runcmd "oc create sa enmasse-admin -n $NAMESPACE" "Create service account for address controller"
+
 runcmd "oc policy add-role-to-user view system:serviceaccount:${NAMESPACE}:default" "Add permissions for viewing OpenShift resources to default user"
-runcmd "oc policy add-role-to-user edit system:serviceaccount:${NAMESPACE}:enmasse-service-account" "Add permissions for editing OpenShift resources to EnMasse service account"
+runcmd "oc policy add-role-to-user edit system:serviceaccount:${NAMESPACE}:enmasse-admin" "Add permissions for editing OpenShift resources to admin SA"
 
 create_self_signed_cert "oc" "address-controller.${NAMESPACE}.svc.cluster.local" "address-controller-cert"
 
@@ -190,11 +191,11 @@ if [ $MODE == "multitenant" ]; then
     then
         runcmd "oc login -u system:admin" "Logging in as system:admin"
         runcmd "oc create -f $CLUSTER_ROLES -n $NAMESPACE" "Create cluster roles needed for RBAC"
-        runcmd "oc adm policy add-cluster-role-to-user enmasse-namespace-admin system:serviceaccount:${NAMESPACE}:enmasse-service-account" "Granting admin rights to enmasse-service-account"
+        runcmd "oc adm policy add-cluster-role-to-user enmasse-namespace-admin system:serviceaccount:${NAMESPACE}:enmasse-admin" "Granting admin rights to enmasse-admin"
         runcmd "oc login -u $OS_USER $OC_ARGS $MASTER_URI" "Login as $OS_USER"
     else
         echo "Please create cluster roles required to run EnMasse with RBAC: 'oc create -f $CLUSTER_ROLES -n $NAMESPACE'"
-        echo "Please add enmasse-namespace-admin role to system:serviceaccount:${NAMESPACE}:enmasse-service-account before creating instances: 'oc adm policy add-cluster-role-to-user enmasse-namespace-admin system:serviceaccount:${NAMESPACE}:enmasse-service-account'"
+        echo "Please add enmasse-namespace-admin role to system:serviceaccount:${NAMESPACE}:enmasse-admin before creating instances: 'oc adm policy add-cluster-role-to-user enmasse-namespace-admin system:serviceaccount:${NAMESPACE}:enmasse-admin'"
     fi
 fi
 

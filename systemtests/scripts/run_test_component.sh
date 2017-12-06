@@ -15,12 +15,22 @@ export OPENSHIFT_PROJECT=$SANITIZED_PROJECT
 
 setup_test ${ENMASSE_DIR} ${KUBEADM}
 
+#environment info
+LOG_DIR="${ARTIFACTS_DIR}/openshift-info/"
+mkdir -p ${LOG_DIR}
+get_openshift_info ${LOG_DIR} services default "-before"
+get_openshift_info ${LOG_DIR} pods default "-before"
+
 run_test ${TESTCASE} || failure=$(($failure + 1))
 
-get_pv_info ${ARTIFACTS_DIR}
-get_pods_info ${ARTIFACTS_DIR}
+#environment info
+get_openshift_info ${LOG_DIR} pv ${OPENSHIFT_PROJECT}
+get_openshift_info ${LOG_DIR} pods ${OPENSHIFT_PROJECT} 
+get_openshift_info ${LOG_DIR} services default "-after"
+get_openshift_info ${LOG_DIR} pods default "-after"
 
-$CURDIR/collect_logs.sh $ARTIFACTS_DIR
+#store artifacts
+$CURDIR/collect_logs.sh ${ARTIFACTS_DIR}
 
 if [ $failure -gt 0 ]
 then
