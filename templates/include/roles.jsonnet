@@ -66,26 +66,6 @@
         {
           "apiGroups": [
             "",
-            "user.openshift.io"
-          ],
-          "resources": [
-            "identities",
-            "useridentitymappings",
-            "users",
-          ],
-          "verbs": [
-            "create",
-            "delete",
-            "get",
-            "list",
-            "patch",
-            "update",
-            "watch"
-          ]
-        },
-        {
-          "apiGroups": [
-            "",
             "extensions",
             "authorization.openshift.io",
             "route.openshift.io"
