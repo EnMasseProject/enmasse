@@ -143,7 +143,7 @@ public class KubernetesHelper implements Kubernetes {
                     .editOrNewMetadata()
                     .withName(addressSpace.getNamespace())
                     .addToLabels("app", "enmasse")
-                    .addToLabels(LabelKeys.TYPE, "address-space")
+                    .addToLabels(LabelKeys.TYPE, "namespace")
                     .addToLabels(LabelKeys.ENVIRONMENT, environment)
                     .addToAnnotations(AnnotationKeys.ADDRESS_SPACE, addressSpace.getName())
                     .addToAnnotations(AnnotationKeys.CREATED_BY, addressSpace.getCreatedBy())
@@ -164,7 +164,7 @@ public class KubernetesHelper implements Kubernetes {
                     .editOrNewMetadata()
                     .withName(addressSpace.getNamespace())
                     .addToLabels("app", "enmasse")
-                    .addToLabels(LabelKeys.TYPE, "address-space")
+                    .addToLabels(LabelKeys.TYPE, "namespace")
                     .addToLabels(LabelKeys.ENVIRONMENT, environment)
                     .addToAnnotations(AnnotationKeys.ADDRESS_SPACE, addressSpace.getName())
                     // We're leaking the underlying serialized form of the AddressSpace which is not ideal.
@@ -320,7 +320,7 @@ public class KubernetesHelper implements Kubernetes {
     public Set<NamespaceInfo> listAddressSpaces() {
         Map<String, String> labels = new LinkedHashMap<>();
         labels.put(LabelKeys.APP, "enmasse");
-        labels.put(LabelKeys.TYPE, "address-space");
+        labels.put(LabelKeys.TYPE, "namespace");
         labels.put(LabelKeys.ENVIRONMENT, environment);
         if (client.isAdaptable(OpenShiftClient.class)) {
             return client.users().withLabels(labels).list().getItems().stream()
