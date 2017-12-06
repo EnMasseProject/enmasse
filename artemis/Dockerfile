@@ -6,7 +6,7 @@ ARG version=latest
 ENV ARTEMIS_HOME=/opt/apache-artemis-2.4.0 PATH=$ARTEMIS_HOME/bin:$PATH VERSION=${version}
 
 ADD ./build/apache-artemis-bin.tar.gz /opt
-ADD ./build/artemis-image.tar /
+ADD ./build/artemis-image-${version}.tar.gz /
 
 # Needed for bridge clustering
 # COPY ./artemis-plugin/build/libs/artemis-plugin.jar $ARTEMIS_HOME/lib
