@@ -163,6 +163,14 @@ local images = import "images.jsonnet";
                   common.container_port("amqps", 5671),
                   common.container_port("https", 8443)
                 ],
+                "resources": {
+                    "requests": {
+                        "memory": "1Gi",
+                    },
+                    "limits": {
+                        "memory": "1Gi",
+                    }
+                },
                 "env": [
                   {
                     "name": "KEYCLOAK_USER",

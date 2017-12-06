@@ -51,6 +51,11 @@ items:
             name: amqps
           - containerPort: 8443
             name: https
+          resources:
+            limits:
+              memory: 1Gi
+            requests:
+              memory: 1Gi
           volumeMounts:
           - mountPath: /opt/jboss/keycloak/standalone/data
             name: keycloak-persistence
