@@ -11,6 +11,8 @@ import org.junit.runner.Description;
 import org.openqa.selenium.*;
 
 import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
@@ -28,10 +30,14 @@ public abstract class SeleniumTestBase extends TestBaseWithDefault {
         @Override
         protected void failed(Throwable e, Description description) {
             try {
+                Path path = Paths.get(String.format("%s/%s/%s/",
+                        environment.testLogDir(),
+                        description.getClassName(),
+                        description.getMethodName()));
+                Files.createDirectories(path);
                 for (int i = 0; i < browserScreenshots.size(); i++) {
-                    FileUtils.copyFile(browserScreenshots.get(i),
-                            new File(Paths.get(environment.testLogDir(),
-                                    String.format("%s_%d.png", description.getDisplayName(), i)).toString()));
+                    FileUtils.copyFile(browserScreenshots.get(i), new File(Paths.get(path.toString(),
+                            String.format("%s_%d.png", description.getDisplayName(), i)).toString()));
                 }
             } catch (Exception ex) {
                 Logging.log.warn("Cannot save screenshots: " + ex.getMessage());
