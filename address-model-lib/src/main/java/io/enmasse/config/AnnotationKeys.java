@@ -21,4 +21,5 @@ public interface AnnotationKeys {
     String CERT_SECRET_NAME = "io.enmasse.certSecretName";
     String ENDPOINT_PORT = "io.enmasse.endpointPort";
     String SERVICE_NAME = "io.enmasse.serviceName";
+    String CREATED_BY = "io.enmasse.createdBy";
 }

@@ -18,10 +18,16 @@ package io.enmasse.controller.common;
 final public class NamespaceInfo {
     private final String addressSpace;
     private final String namespace;
+    private final String createdBy;
 
-    public NamespaceInfo(String addressSpace, String namespace) {
+    public NamespaceInfo(String addressSpace, String namespace, String createdBy) {
         this.addressSpace = addressSpace;
         this.namespace = namespace;
+        this.createdBy = createdBy;
+    }
+
+    public String getCreatedBy() {
+        return createdBy;
     }
 
     public String getAddressSpace() {
