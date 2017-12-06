@@ -31,11 +31,11 @@ public abstract class SeleniumTestBase extends TestBaseWithDefault {
         @Override
         protected void failed(Throwable e, Description description) {
             try {
-                Path path = Paths.get(String.format("%s/%s/%s/%s/",
+                Path path = Paths.get(
                         environment.testLogDir(),
                         webconsoleFolder,
                         description.getClassName(),
-                        description.getMethodName()));
+                        description.getMethodName());
                 Files.createDirectories(path);
                 for (int i = 0; i < browserScreenshots.size(); i++) {
                     FileUtils.copyFile(browserScreenshots.get(i), new File(Paths.get(path.toString(),
