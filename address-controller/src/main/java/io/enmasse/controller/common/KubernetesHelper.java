@@ -323,7 +323,7 @@ public class KubernetesHelper implements Kubernetes {
         labels.put(LabelKeys.TYPE, "namespace");
         labels.put(LabelKeys.ENVIRONMENT, environment);
         if (client.isAdaptable(OpenShiftClient.class)) {
-            return client.users().withLabels(labels).list().getItems().stream()
+            return client.configMaps().inNamespace(namespace).withLabels(labels).list().getItems().stream()
                     .map(n -> new NamespaceInfo(n.getMetadata().getAnnotations().get(AnnotationKeys.ADDRESS_SPACE),
                             n.getMetadata().getName(),
                             n.getMetadata().getAnnotations().get(AnnotationKeys.CREATED_BY)))
