@@ -11,6 +11,5 @@
   <artifactId>keycloak</artifactId>
   <modules>
      <module>sasl-plugin</module>
-     <module>assembly</module>
   </modules>
 </project>

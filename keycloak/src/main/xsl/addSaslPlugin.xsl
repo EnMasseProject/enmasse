@@ -14,8 +14,8 @@
                     <properties>
                         <property name="enableTls" value="true"/>
                         <property name="enableNonTls" value="false"/>
-                        <property name="pemKeyPath" value="${env.JBOSS_HOME}/standalone/cert/tls.key" />
-                        <property name="pemCertificatePath" value="${env.JBOSS_HOME}/standalone/cert/tls.crt" />
+                        <property name="pemKeyPath" value="${{jboss.home.dir}}/standalone/cert/tls.key" />
+                        <property name="pemCertificatePath" value="${{jboss.home.dir}}/standalone/cert/tls.crt" />
                         <property name="tlsHost" value="0.0.0.0"/>
                         <property name="tlsPort" value="5671"/>
                         <property name="defaultDomain" value="enmasse"/>
