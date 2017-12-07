@@ -13,6 +13,19 @@
             ""
           ],
           "resources": [
+            "routes"
+          ],
+          "verbs": [
+            "list",
+            "get",
+            "watch"
+          ]
+        },
+        {
+          "apiGroups": [
+            ""
+          ],
+          "resources": [
             "configmaps"
           ],
           "verbs": [

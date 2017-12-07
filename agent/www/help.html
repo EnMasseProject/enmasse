@@ -729,14 +729,10 @@ qualified hostname for the address-space. The port used is 443.</p>
 </div>
 <div class="paragraph">
 <p>The messaging protocols supported depends on the type of the
-address-space. At present AMQP and MQTT are supported.</p>
+address-space.</p>
 </div>
 <div class="paragraph">
-<p>TODO: Add information about retrieving the CA certificate and using
-that in the client examples.</p>
-</div>
-<div class="paragraph">
-<p>TODO: Add information about authentication.</p>
+<p>that in the client examples.</p>
 </div>
 <div class="sect3">
 <h4 id="client_examples">2.1. Client Examples</h4>
@@ -765,9 +761,6 @@ that in the client examples.</p>
 <div class="paragraph">
 <p>These all assume you have created an address of type 'queue' named
 'myqueue'.</p>
-</div>
-<div class="paragraph">
-<p>TODO: add links for all these clients</p>
 </div>
 <div class="sect4">
 <h5 id="apache_qpid_proton_python">Apache Qpid Proton Python</h5>
@@ -897,7 +890,7 @@ container.on('sendable', function (context) {
     context.sender.send({body:'Hello World!'});
     context.sender.detach();
 });
-container.connect({port:443, host:&lt;messaging-route-hostname&gt;, transport:tls, rejectUnauthorized:false});</code></pre>
+container.connect({port:443, host:'&lt;messaging-route-hostname&gt;', transport:'tls', rejectUnauthorized:false});</code></pre>
 </div>
 </div>
 </div>
@@ -1015,7 +1008,7 @@ namespace Test
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2017-11-15 09:05:22 CET
+Last updated 2017-10-30 20:11:38 GMT
 </div>
 </div>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css">

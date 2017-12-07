@@ -7,12 +7,12 @@ kubernetes cluster, TLS must be used with SNI set to specify the fully
 qualified hostname for the address-space. The port used is 443.
 
 The messaging protocols supported depends on the type of the
-address-space. At present AMQP and MQTT are supported.
+address-space.
 
-TODO: Add information about retrieving the CA certificate and using
-that in the client examples.
+//TODO: Add information about retrieving the CA certificate and using
+//that in the client examples.
 
-TODO: Add information about authentication.
+//TODO: Add information about authentication.
 
 === Client Examples
 Simple examples are shown here for the following clients:
@@ -26,7 +26,7 @@ Simple examples are shown here for the following clients:
 These all assume you have created an address of type 'queue' named
 'myqueue'.
 
-TODO: add links for all these clients
+//TODO: add links for all these clients
 
 ==== {ClientAmqpPythonName}
 
@@ -152,7 +152,7 @@ container.on('sendable', function (context) {
     context.sender.send({body:'Hello World!'});
     context.sender.detach();
 });
-container.connect({port:443, host:<messaging-route-hostname>, transport:tls, rejectUnauthorized:false});
+container.connect({port:443, host:'<messaging-route-hostname>', transport:'tls', rejectUnauthorized:false});
 ----
 
 ==== {ClientAmqpCppName}

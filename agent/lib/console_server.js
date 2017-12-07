@@ -164,6 +164,23 @@ function static_handler(request, response, transform) {
     };
 }
 
+function file_load_handler(request, response, file) {
+    return function () {
+        fs.readFile(file, function (error, data) {
+            if (error) {
+                response.statusCode = error.code === 'ENOENT' ? 404 : 500;
+                response.end(http.STATUS_CODES[response.statusCode]);
+                log.warn('GET %s => %i %j', request.url, response.statusCode, error);
+            } else {
+                var content_type = get_content_type(file);
+                response.setHeader('content-type', 'text/plain');
+                log.debug('GET %s => %s', request.url, file);
+                response.end(data);
+            }
+        });
+    };
+}
+
 function auth_required(response) {
     return function() {
         response.setHeader('WWW-Authenticate', 'Basic realm=Authorization Required');
@@ -197,11 +214,15 @@ ConsoleServer.prototype.listen = function (env, callback) {
         } else if (request.method === 'GET') {
             try {
                 var user = myutils.basic_auth(request);
-                var transform;
+                var next;
                 if (url.parse(request.url).pathname === '/help.html' && env.MESSAGING_ROUTE_HOSTNAME !== undefined) {
-                    transform = replacer('\&lt\;messaging\-route\-hostname\&gt\;', env.MESSAGING_ROUTE_HOSTNAME);
+                    var transform = replacer('\&lt\;messaging\-route\-hostname\&gt\;', env.MESSAGING_ROUTE_HOSTNAME);
+                    next = static_handler(request, response,  transform);
+                } else if (url.parse(request.url).pathname === '/messaging-cert.pem' && env.MESSAGING_CERT !== undefined) {
+                    next = file_load_handler(request, response, env.MESSAGING_CERT);
+                } else {
+                    next = static_handler(request, response);
                 }
-                var next = static_handler(request, response,  transform);
                 auth_service.authenticate(user, auth_service.default_options(env)).then(next).catch(auth_required(response));
             } catch (error) {
                 response.statusCode = 500;

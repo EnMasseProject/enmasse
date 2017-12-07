@@ -157,6 +157,10 @@ local common = import "common.jsonnet";
                       {
                         "name": "ADDRESS_CONTROLLER_CA",
                         "value": "/opt/agent/address-controller-ca/tls.crt"
+                      },
+                      {
+                        "name": "MESSAGING_CERT",
+                        "value": "/opt/agent/messaging-cert/tls.crt"
                       }]) + {
                         "volumeMounts": [
                           {
@@ -177,6 +181,11 @@ local common = import "common.jsonnet";
                           {
                             "name": address_controller_ca_secret,
                             "mountPath": "/opt/agent/address-controller-ca",
+                            "readOnly": true
+                          },
+                          {
+                            "name": "messaging-cert",
+                            "mountPath": "/opt/agent/messaging-cert",
                             "readOnly": true
                           }
                         ]
@@ -219,6 +228,12 @@ local common = import "common.jsonnet";
                 "name": "admin-internal-cert",
                 "secret": {
                     "secretName": "admin-internal-cert"
+                }
+            },
+            {
+                "name": "messaging-cert",
+                "secret": {
+                    "secretName": "external-certs-messaging"
                 }
             }
           ]
