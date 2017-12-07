@@ -55,12 +55,6 @@ public abstract class TestBaseWithDefault extends TestBase {
         }
     };
 
-    @AfterClass
-    public static void after() throws Exception {
-        Logging.log.info("default address space '{}' will be removed", defaultAddressSpace);
-        deleteAddressSpace(defaultAddressSpace);
-    }
-
     public AddressSpace getSharedAddressSpace() {
         return defaultAddressSpace;
     }
