@@ -19,6 +19,6 @@ import java.util.Set;
 
 public interface KeycloakApi {
     Set<String> getRealmNames();
-    void createRealm(String realmName);
+    void createRealm(String realmName, String realmAdminUser, String realmAdminPassword);
     void deleteRealm(String realmName);
 }
