@@ -110,7 +110,7 @@ public abstract class SeleniumTestBase extends TestBaseWithDefault {
         takeScreenShot();
     }
 
-    protected WebElement getLeftMenuItemWebConsole(String itemText) throws Exception {
+    private WebElement getLeftMenuItemWebConsole(String itemText) throws Exception {
         List<WebElement> items = driver.findElements(ByAngular.exactRepeater("item in items"));
         assertNotNull(items);
         WebElement returnedItem = null;
@@ -162,6 +162,38 @@ public abstract class SeleniumTestBase extends TestBaseWithDefault {
         angularDriver.waitForAngularRequestsToFinish();
         Logging.log.info("Filled input with text: " + text);
         takeScreenShot();
+    }
+
+    private WebElement getToolbar() throws Exception {
+        return driver.findElement(By.id("exampleToolbar"));
+    }
+
+    private WebElement getFilterGroup() throws Exception {
+        WebElement toolbar = getToolbar();
+        return toolbar.findElement(By.id("_fields"));
+    }
+
+    private WebElement getFilterSwitch() throws Exception {
+        return getFilterGroup().findElements(By.tagName("button")).get(0);
+    }
+
+    private WebElement getTypeSwitch() throws Exception {
+        return getFilterGroup().findElements(By.tagName("button")).get(1);
+    }
+
+    private List<WebElement> getFilterDropDown() throws Exception {
+        return getFilterGroup().findElements(ByAngular.repeater("item in config.fields"));
+    }
+
+    protected void switchFilter(String filterType) throws Exception {
+        WebElement switchButton = getFilterSwitch();
+        clickOnItem(switchButton);
+        for (WebElement element : getFilterDropDown()) {
+            if(element.findElement(By.tagName("a")).getText().toUpperCase().equals(filterType.toUpperCase())) {
+                clickOnItem(element);
+                break;
+            }
+        }
     }
 
     protected List<AddressWebItem> getAddressItems() {
