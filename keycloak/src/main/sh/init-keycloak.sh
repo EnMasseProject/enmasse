@@ -2,9 +2,9 @@
 KEYCLOAK_DIR=$JBOSS_HOME
 KEYCLOAK_CONFIG=${KEYCLOAK_DIR}/standalone/configuration/standalone.xml
 
-java -jar /usr/share/java/saxon.jar -s:${KEYCLOAK_CONFIG} -xsl:${KEYCLOAK_DIR}/addSaslPlugin.xsl -o:${KEYCLOAK_CONFIG}
-java -jar /usr/share/java/saxon.jar -s:${KEYCLOAK_CONFIG} -xsl:${KEYCLOAK_DIR}/removeFileLogging.xsl -o:${KEYCLOAK_CONFIG}
-java -jar /usr/share/java/saxon.jar -s:${KEYCLOAK_CONFIG} -xsl:${KEYCLOAK_DIR}/addKeyStore.xsl -o:${KEYCLOAK_CONFIG}
+xsltproc ${KEYCLOAK_DIR}/addSaslPlugin.xsl ${KEYCLOAK_CONFIG} > ${KEYCLOAK_CONFIG}.new; mv ${KEYCLOAK_CONFIG}.new ${KEYCLOAK_CONFIG}
+xsltproc ${KEYCLOAK_DIR}/removeFileLogging.xsl ${KEYCLOAK_CONFIG} > ${KEYCLOAK_CONFIG}.new; mv ${KEYCLOAK_CONFIG}.new ${KEYCLOAK_CONFIG}
+xsltproc ${KEYCLOAK_DIR}/addKeyStore.xsl ${KEYCLOAK_CONFIG} > ${KEYCLOAK_CONFIG}.new; mv ${KEYCLOAK_CONFIG}.new ${KEYCLOAK_CONFIG}
 
 chown -R jboss:root ${KEYCLOAK_DIR}
 find ${KEYCLOAK_DIR} -type d -exec chmod 770 {} \;
