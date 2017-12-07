@@ -51,7 +51,7 @@ public class Keycloak implements KeycloakApi {
         final UserRepresentation newUser = new UserRepresentation();
         newUser.setUsername(realmAdminUser);
 
-        newUser.setEnabled(false);
+        newUser.setEnabled(true);
         newUser.setClientRoles(Collections.singletonMap("realm-management", Collections.singletonList("manage-users")));
 
         newRealm.setUsers(Collections.singletonList(newUser));
