@@ -159,6 +159,7 @@ public class KubernetesHelper implements Kubernetes {
             projectrequest.put("metadata", metadata);
 
             doRawHttpRequest("/oapi/v1/projectrequests", "POST", projectrequest, false, addressSpace.getCreatedBy());
+            doRawHttpRequest("/oapi/v1/namespaces/" + addressSpace.getNamespace() + "/rolebindingrestrictions", "DELETE", null, true, addressSpace.getCreatedBy());
         } else {
             client.namespaces().createNew()
                     .editOrNewMetadata()
