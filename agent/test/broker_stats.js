@@ -21,77 +21,30 @@ var util = require('util');
 var rhea = require('rhea');
 var BrokerStats = require('../lib/broker_stats.js');
 var MockBroker = require('../testlib/mock_broker.js');
+var ResourceServer = require('../testlib/mock_resource_server.js').ResourceServer;
 
-function MockPodSense () {
-    this.brokers = [];
-    this.connections = {};
-    this.container = rhea.create_container({id:'mock-pod-sense'});
-    this.container.on('sender_open', this.on_subscribe.bind(this));
-    this.container.on('connection_open', this.register.bind(this));
-    this.container.on('connection_close', this.unregister.bind(this));
-    this.container.on('disconnected', this.unregister.bind(this));
+function PodServer () {
+    this.resource_server = new ResourceServer('Pod', true, function (b) { return b.get_pod_definition(); });
 }
 
-MockPodSense.prototype.listen = function (port) {
-    this.port = port;
-    this.server = this.container.listen({port:port});
-    var self = this;
-    this.server.on('listening', function () {
-        self.port = self.server.address().port;
-    });
-    return this.server;
-};
-
-MockPodSense.prototype.close = function (callback) {
-    this.brokers.forEach(function (b) { b.close(); });
-    if (this.server) this.server.close(callback);
-};
-
-MockPodSense.prototype.notify = function (sender) {
-    var pods = this.brokers.map(function (b) { return b.get_pod_descriptor(); });
-    sender.send({body:pods});
-};
-
-MockPodSense.prototype.on_subscribe = function (context) {
-    this.notify(context.sender);
-};
-
-MockPodSense.prototype.add_broker = function (name, port) {
-    var broker = new MockBroker(name || 'broker-' + (this.brokers.length+1));
+PodServer.prototype.add_broker = function (name, port) {
+    var broker = new MockBroker(name || 'broker-' + (this.resource_server.resources.length+1));
     broker.listen(port);
-    this.brokers.push(broker);
+    this.resource_server.add_resource(broker);
     return broker;
 };
 
-
-
-function is_subscriber(link) {
-    return link.is_sender();
-}
-
-MockPodSense.prototype.notify_all = function () {
-    var self = this;
-    for (var c in this.connections) {
-        this.connections[c].each_link(function (link) {
-            self.notify(link);
-        }, is_subscriber);
-    }
-}
-
-MockPodSense.prototype.register = function (context) {
-    this.connections[context.connection.container_id] = context.connection;
+PodServer.prototype.remove_broker = function (broker) {
+    this.resource_server.remove_resource(broker);
 };
 
-MockPodSense.prototype.unregister = function (context) {
-    delete this.connections[context.connection.container_id];
+PodServer.prototype.listen = function (port) {
+    return this.resource_server.listen(port);
 };
 
-MockPodSense.prototype.remove_broker = function (broker) {
-    var i = this.brokers.indexOf(broker);
-    if (i >= 0) {
-        this.brokers.splice(i, 1);
-        this.notify_all();
-    }
+PodServer.prototype.close = function (callback) {
+    this.resource_server.resources.forEach(function (b) { b.close(); });
+    this.resource_server.close(callback);
 };
 
 describe('broker stats', function() {
@@ -100,7 +53,7 @@ describe('broker stats', function() {
     var broker;
 
     beforeEach(function(done) {
-        discovery = new MockPodSense();
+        discovery = new PodServer();
         broker = discovery.add_broker();
         var s = discovery.listen(0).on('listening', function () {
             process.env.CONFIGURATION_SERVICE_HOST = 'localhost';
@@ -110,8 +63,9 @@ describe('broker stats', function() {
     });
 
     afterEach(function(done) {
-        discovery.close(done);
-        done();
+        discovery.close(function () {
+            done();
+        });
     });
 
     it('retrieves queue stats from a single broker', function(done) {
@@ -126,7 +80,7 @@ describe('broker stats', function() {
                                      messagesExpired:4,
                                      messagesKilled: 2
                                  });
-        var stats = new BrokerStats();
+        var stats = new BrokerStats({port:discovery.resource_server.port, host:'localhost', namespace:'default', token: 'foo'});
         broker.on('connected', function () {
             stats._retrieve().then(function (results) {
                 assert.equal(results.myqueue.depth, 10);
@@ -139,6 +93,7 @@ describe('broker stats', function() {
                 assert.equal(results.myqueue.shards[0].acknowledged, 8);
                 assert.equal(results.myqueue.shards[0].expired, 4);
                 assert.equal(results.myqueue.shards[0].killed, 2);
+                stats.watcher.close();
                 done();
             });
         });
@@ -167,7 +122,7 @@ describe('broker stats', function() {
                                      messagesExpired:7,
                                      messagesKilled: 3
                                  });
-        var stats = new BrokerStats();
+        var stats = new BrokerStats({port:discovery.resource_server.port, host:'localhost', namespace:'default', token: 'foo'});
         broker2.on('connected', function () {
             stats._retrieve().then(function (results) {
                 assert.equal(results.myqueue.depth, 32);
@@ -199,6 +154,7 @@ describe('broker stats', function() {
                 assert.equal(results.myqueue.shards[b2].acknowledged, 58);
                 assert.equal(results.myqueue.shards[b2].expired, 7);
                 assert.equal(results.myqueue.shards[b2].killed, 3);
+                stats.watcher.close();
                 done();
             });
         });
@@ -223,7 +179,7 @@ describe('broker stats', function() {
                                      'dsub5':{durable:true, messageCount:1, consumerCount:1, messagesAdded:1, deliveringCount:1, messagesAcknowledged:1, messagesExpired:1, messagesKilled: 1},
                                      'sub6':{durable:false, messageCount:2, consumerCount:2, messagesAdded:2, deliveringCount:2, messagesAcknowledged:2, messagesExpired:2, messagesKilled: 2}
                                  }, 14);
-        var stats = new BrokerStats();
+        var stats = new BrokerStats({port:discovery.resource_server.port, host:'localhost', namespace:'default', token: 'foo'});
         broker3.on('connected', function () {
             stats._retrieve().then(function (results) {
                 assert.equal(results.mytopic.depth, 44);
@@ -300,6 +256,7 @@ describe('broker stats', function() {
                     assert.equal(results.mytopic.shards[b3].subscriptions[i].expired, i);
                     assert.equal(results.mytopic.shards[b3].subscriptions[i].killed, i);
                 }
+                stats.watcher.close();
                 done();
             });
         });
@@ -329,7 +286,7 @@ describe('broker stats', function() {
                                      messagesExpired:7,
                                      messagesKilled: 3
                                  });
-        var stats = new BrokerStats();
+        var stats = new BrokerStats({port:discovery.resource_server.port, host:'localhost', namespace:'default', token: 'foo'});
         broker2.on('connected', function () {
             stats._retrieve().then(function (results) {
                 assert.equal(results.myqueue.depth, 32);

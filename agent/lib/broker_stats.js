@@ -20,6 +20,7 @@ var util = require('util');
 var events = require('events');
 var rhea = require('rhea');
 var create_podgroup = require('./podgroup.js');
+var pod_watcher = require('./pod_watcher.js');
 
 function is_pod_ready(pod) {
     return pod.ready === 'True' && pod.phase === 'Running';
@@ -52,19 +53,16 @@ function merge() {
     return c;
 }
 
-function BrokerStats () {
+function BrokerStats (env) {
     this.queues = {};
     this.brokers = create_podgroup();
-    var configserv = require('./admin_service.js').connect_service(rhea, 'CONFIGURATION');
-    var self = this;
-    configserv.open_receiver({source:{address:"podsense", filter:{'role':'broker'}}}).on('message', function (context) {
-        if (util.isArray(context.message.body)) {
-            self.brokers.update(context.message.body.filter(is_pod_ready));
-        } else {
-            log.info('unexpected content from podsense (expected body to be array): ' + context.message);
-        }
-    });
+    this.watcher = pod_watcher.watch('role=broker', env);
+    this.watcher.on('updated', this.on_updated.bind(this));
 }
+
+BrokerStats.prototype.on_updated = function(pods) {
+    this.brokers.update(pods.filter(is_pod_ready));
+};
 
 BrokerStats.prototype.retrieve = function(addresses) {
     return this._retrieve().then(function (stats) {
