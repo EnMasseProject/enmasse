@@ -34,13 +34,11 @@ public class KeycloakManagerTest {
     private KeycloakManager manager;
     private Set<String> realms;
     private Map<String, String> realmAdminUsers;
-    private Map<String, String> realmAdminPasswords;
 
     @Before
     public void setup() {
         realms = new HashSet<>();
         realmAdminUsers = new HashMap<>();
-        realmAdminPasswords = new HashMap<>();
         manager = new KeycloakManager(new KeycloakApi() {
             @Override
             public Set<String> getRealmNames() {
@@ -48,10 +46,9 @@ public class KeycloakManagerTest {
             }
 
             @Override
-            public void createRealm(String realmName, String realmAdminUser, String realmAdminPassword) {
+            public void createRealm(String realmName, String realmAdminUser) {
                 realms.add(realmName);
                 realmAdminUsers.put(realmName, realmAdminUser);
-                realmAdminPasswords.put(realmName, realmAdminPassword);
             }
 
             @Override
@@ -75,7 +72,7 @@ public class KeycloakManagerTest {
         assertEquals(2, realms.size());
 
         assertTrue(realmAdminUsers.get("a2").length() > 0);
-        assertTrue(realmAdminPasswords.get("a2").length() > 0);
+        assertTrue(realmAdminUsers.get("a3").length() > 0);
     }
 
     @Test
