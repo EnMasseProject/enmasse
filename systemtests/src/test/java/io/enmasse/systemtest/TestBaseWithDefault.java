@@ -15,28 +15,23 @@
  */
 package io.enmasse.systemtest;
 
-import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
 import io.enmasse.systemtest.mqtt.MqttClientFactory;
 import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public abstract class TestBaseWithDefault extends TestBase {
     private static final String defaultAddressTemplate = "-default-";
     private static Map<AddressSpaceType, Integer> spaceCountMap = new HashMap<>();
     protected static AddressSpace defaultAddressSpace;
+    protected static HashMap<String, AddressSpace> defaultAddressSpaces = new HashMap<>();
 
     protected abstract AddressSpaceType getAddressSpaceType();
 
@@ -47,19 +42,13 @@ public abstract class TestBaseWithDefault extends TestBase {
             Logging.log.info("test failed:" + description);
             Logging.log.info("default address space '{}' will be removed", defaultAddressSpace);
             try {
-                deleteAddressSpace(defaultAddressSpace);
+                deleteDefaultAddressSpace(defaultAddressSpace);
                 spaceCountMap.put(defaultAddressSpace.getType(), spaceCountMap.get(defaultAddressSpace.getType()) + 1);
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
         }
     };
-
-    @AfterClass
-    public static void after() throws Exception {
-        Logging.log.info("default address space '{}' will be removed", defaultAddressSpace);
-        deleteAddressSpace(defaultAddressSpace);
-    }
 
     public AddressSpace getSharedAddressSpace() {
         return defaultAddressSpace;
@@ -70,7 +59,7 @@ public abstract class TestBaseWithDefault extends TestBase {
         spaceCountMap.putIfAbsent(getAddressSpaceType(), 0);
         defaultAddressSpace = new AddressSpace(getAddressSpaceType().name().toLowerCase() + defaultAddressTemplate + spaceCountMap.get(getAddressSpaceType()), getAddressSpaceType());
         Logging.log.info("Test is running in multitenant mode");
-        createAddressSpace(defaultAddressSpace, "standard");
+        createDefaultAddressSpace(defaultAddressSpace, "standard");
 
         this.username = "test";
         this.password = "test";
@@ -92,6 +81,17 @@ public abstract class TestBaseWithDefault extends TestBase {
     public void teardownDefault() throws Exception {
         setAddresses(defaultAddressSpace);
     }
+
+    protected void createDefaultAddressSpace(AddressSpace addressSpace, String authService) throws Exception {
+        defaultAddressSpaces.put(addressSpace.getName(), addressSpace);
+        super.createAddressSpace(addressSpace, authService);
+    }
+
+    protected static void deleteDefaultAddressSpace(AddressSpace addressSpace) throws Exception {
+        defaultAddressSpaces.remove(addressSpace.getName());
+        TestBase.deleteAddressSpace(addressSpace);
+    }
+
 
     protected void scale(Destination destination, int numReplicas) throws Exception {
         scale(defaultAddressSpace, destination, numReplicas);

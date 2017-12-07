@@ -111,10 +111,14 @@ public abstract class TestBase extends SystemTestRunListener {
     }
 
     protected static void deleteAddressSpace(AddressSpace addressSpace) throws Exception {
-        logCollector.collectEvents(addressSpace.getNamespace());
-        addressApiClient.deleteAddressSpace(addressSpace);
-        TestUtils.waitForAddressSpaceDeleted(openShift, addressSpace);
-        logCollector.stopCollecting(addressSpace.getNamespace());
+        if (TestUtils.existAddressSpace(addressApiClient, addressSpace.getName())) {
+            logCollector.collectEvents(addressSpace.getNamespace());
+            addressApiClient.deleteAddressSpace(addressSpace);
+            TestUtils.waitForAddressSpaceDeleted(openShift, addressSpace);
+            logCollector.stopCollecting(addressSpace.getNamespace());
+        }else{
+            Logging.log.info("Address space '" + addressSpace + "' doesn't exists!");
+        }
     }
 
     //!TODO: protected void appendAddressSpace(...)

@@ -1,6 +1,7 @@
 package io.enmasse.systemtest;
 
 import org.junit.runner.Description;
+import org.junit.runner.Result;
 import org.junit.runner.notification.Failure;
 import org.junit.runner.notification.RunListener;
 
@@ -18,6 +19,18 @@ public class SystemTestRunListener extends RunListener {
     @Override
     public void testFinished(Description description) throws Exception {
         Logging.log.info(description + "FINISHED");
+    }
+
+    @Override
+    public void testRunFinished(Result result) throws Exception {
+        TestBaseWithDefault.defaultAddressSpaces.forEach((name, addrSpace) -> {
+            Logging.log.info("default address space '{}' will be removed", addrSpace);
+            try {
+                TestBase.deleteAddressSpace(addrSpace);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
     }
 
     @Override
