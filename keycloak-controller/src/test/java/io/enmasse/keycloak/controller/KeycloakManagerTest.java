@@ -23,20 +23,24 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.internal.util.collections.Sets;
 
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class KeycloakManagerTest {
     private KeycloakManager manager;
     private Set<String> realms;
+    private Map<String, String> realmAdminUsers;
+    private Map<String, String> realmAdminPasswords;
 
     @Before
     public void setup() {
         realms = new HashSet<>();
+        realmAdminUsers = new HashMap<>();
+        realmAdminPasswords = new HashMap<>();
         manager = new KeycloakManager(new KeycloakApi() {
             @Override
             public Set<String> getRealmNames() {
@@ -44,9 +48,10 @@ public class KeycloakManagerTest {
             }
 
             @Override
-            public void createRealm(String realmName) {
+            public void createRealm(String realmName, String realmAdminUser, String realmAdminPassword) {
                 realms.add(realmName);
-
+                realmAdminUsers.put(realmName, realmAdminUser);
+                realmAdminPasswords.put(realmName, realmAdminPassword);
             }
 
             @Override
@@ -68,6 +73,9 @@ public class KeycloakManagerTest {
         assertTrue(realms.contains("a2"));
         assertTrue(realms.contains("a3"));
         assertEquals(2, realms.size());
+
+        assertTrue(realmAdminUsers.get("a2").length() > 0);
+        assertTrue(realmAdminPasswords.get("a2").length() > 0);
     }
 
     @Test

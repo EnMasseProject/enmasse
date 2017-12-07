@@ -17,8 +17,12 @@ package io.enmasse.keycloak.controller;
 
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 import org.keycloak.admin.client.KeycloakBuilder;
+import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.representations.idm.RealmRepresentation;
+import org.keycloak.representations.idm.UserRepresentation;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -40,13 +44,28 @@ public class Keycloak implements KeycloakApi {
     }
 
     @Override
-    public void createRealm(String realmName) {
-        final RealmRepresentation newrealm = new RealmRepresentation();
-        newrealm.setRealm(realmName);
-        newrealm.setEnabled(true);
-        newrealm.setPasswordPolicy("hashAlgorithm(scramsha1)");
+    public void createRealm(String realmName, String realmAdminUser, String realmAdminPassword) {
+        final RealmRepresentation newRealm = new RealmRepresentation();
+        newRealm.setRealm(realmName);
+        newRealm.setEnabled(true);
+        newRealm.setPasswordPolicy("hashAlgorithm(scramsha1)");
+
+        final UserRepresentation newUser = new UserRepresentation();
+        newUser.setUsername(realmAdminUser);
+
+        final CredentialRepresentation cred = new CredentialRepresentation();
+        cred.setType(CredentialRepresentation.PASSWORD);
+        cred.setValue(realmAdminPassword);
+        cred.setTemporary(false);
+
+        newUser.setCredentials(Collections.singletonList(cred));
+        newUser.setEnabled(true);
+        newUser.setClientRoles(Collections.singletonMap("realm-management", Collections.singletonList("manage-users")));
+
+        newRealm.setUsers(Collections.singletonList(newUser));
+
         try (CloseableKeycloak wrapper = new CloseableKeycloak(params)) {
-            wrapper.get().realms().create(newrealm);
+            wrapper.get().realms().create(newRealm);
         }
     }
 
