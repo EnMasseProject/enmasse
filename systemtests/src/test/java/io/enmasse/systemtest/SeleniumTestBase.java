@@ -147,6 +147,14 @@ public abstract class SeleniumTestBase extends TestBaseWithDefault {
         takeScreenShot();
     }
 
+    protected void clickOnCreateButton() throws Exception {
+        clickOnItem(driver.findElement(ByAngular.buttonText("Create")));
+    }
+
+    protected void clickOnRemoveButton() throws Exception {
+        clickOnItem(driver.findElement(ByAngular.buttonText("Delete")));
+    }
+
     protected void fillInputItem(WebElement element, String text) throws Exception {
         takeScreenShot();
         assertNotNull(element);
@@ -186,7 +194,7 @@ public abstract class SeleniumTestBase extends TestBaseWithDefault {
         openAddressesPageWebConsole();
 
         //click on create button
-        clickOnItem(driver.findElement(ByAngular.buttonText("Create")));
+        clickOnCreateButton();
 
         //fill address name
         fillInputItem(driver.findElement(By.id("new-name")), "test-" + destination.getType());
@@ -216,7 +224,7 @@ public abstract class SeleniumTestBase extends TestBaseWithDefault {
         clickOnItem(getAddressItem(destination).getCheckBox(), "check box: " + destination.getAddress());
 
         //click on delete
-        clickOnItem(driver.findElement(ByAngular.buttonText("Delete")));
+        clickOnRemoveButton();
 
         //check if address deleted
         assertNull(getAddressItem(destination));
