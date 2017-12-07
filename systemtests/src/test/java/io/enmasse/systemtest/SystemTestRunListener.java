@@ -23,8 +23,10 @@ public class SystemTestRunListener extends RunListener {
 
     @Override
     public void testRunFinished(Result result) throws Exception {
-        Logging.log.info("default address space '{}' will be removed", TestBaseWithDefault.defaultAddressSpace);
-        TestBase.deleteAddressSpace(TestBaseWithDefault.defaultAddressSpace);
+        Logging.log.info("default address space '{}' will be removed", BrokeredTestBase.defaultAddressSpace);
+        TestBase.deleteAddressSpace(BrokeredTestBase.defaultAddressSpace);
+        Logging.log.info("default address space '{}' will be removed", StandardTestBase.defaultAddressSpace);
+        TestBase.deleteAddressSpace(StandardTestBase.defaultAddressSpace);
     }
 
     @Override
