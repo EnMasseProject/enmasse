@@ -31,7 +31,7 @@ public abstract class TestBaseWithDefault extends TestBase {
     private static final String defaultAddressTemplate = "-default-";
     private static Map<AddressSpaceType, Integer> spaceCountMap = new HashMap<>();
     protected static AddressSpace defaultAddressSpace;
-    protected static ArrayList<AddressSpace> defaultAddressSpaces = new ArrayList<>();
+    protected static HashMap<String, AddressSpace> defaultAddressSpaces = new HashMap<>();
 
     protected abstract AddressSpaceType getAddressSpaceType();
 
@@ -83,12 +83,12 @@ public abstract class TestBaseWithDefault extends TestBase {
     }
 
     protected void createDefaultAddressSpace(AddressSpace addressSpace, String authService) throws Exception {
-        defaultAddressSpaces.add(addressSpace);
+        defaultAddressSpaces.put(addressSpace.getName(), addressSpace);
         super.createAddressSpace(addressSpace, authService);
     }
 
     protected static void deleteDefaultAddressSpace(AddressSpace addressSpace) throws Exception {
-        defaultAddressSpaces.remove(addressSpace);
+        defaultAddressSpaces.remove(addressSpace.getName());
         TestBase.deleteAddressSpace(addressSpace);
     }
 
