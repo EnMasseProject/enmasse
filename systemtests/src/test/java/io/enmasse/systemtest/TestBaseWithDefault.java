@@ -42,7 +42,7 @@ public abstract class TestBaseWithDefault extends TestBase {
             Logging.log.info("test failed:" + description);
             Logging.log.info("default address space '{}' will be removed", defaultAddressSpace);
             try {
-                deleteAddressSpace(defaultAddressSpace);
+                deleteDefaultAddressSpace(defaultAddressSpace);
                 spaceCountMap.put(defaultAddressSpace.getType(), spaceCountMap.get(defaultAddressSpace.getType()) + 1);
             } catch (Exception ex) {
                 ex.printStackTrace();
@@ -59,7 +59,7 @@ public abstract class TestBaseWithDefault extends TestBase {
         spaceCountMap.putIfAbsent(getAddressSpaceType(), 0);
         defaultAddressSpace = new AddressSpace(getAddressSpaceType().name().toLowerCase() + defaultAddressTemplate + spaceCountMap.get(getAddressSpaceType()), getAddressSpaceType());
         Logging.log.info("Test is running in multitenant mode");
-        createAddressSpace(defaultAddressSpace, "standard");
+        createDefaultAddressSpace(defaultAddressSpace, "standard");
 
         this.username = "test";
         this.password = "test";
@@ -82,13 +82,12 @@ public abstract class TestBaseWithDefault extends TestBase {
         setAddresses(defaultAddressSpace);
     }
 
-    @Override
-    protected void createAddressSpace(AddressSpace addressSpace, String authService) throws Exception {
+    protected void createDefaultAddressSpace(AddressSpace addressSpace, String authService) throws Exception {
         defaultAddressSpaces.add(addressSpace);
         super.createAddressSpace(addressSpace, authService);
     }
 
-    protected static void deleteAddressSpace(AddressSpace addressSpace) throws Exception {
+    protected static void deleteDefaultAddressSpace(AddressSpace addressSpace) throws Exception {
         defaultAddressSpaces.remove(addressSpace);
         TestBase.deleteAddressSpace(addressSpace);
     }
