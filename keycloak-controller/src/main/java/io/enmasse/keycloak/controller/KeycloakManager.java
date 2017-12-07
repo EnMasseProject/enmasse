@@ -16,7 +16,6 @@
 
 package io.enmasse.keycloak.controller;
 
-import java.security.SecureRandom;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
@@ -34,11 +33,9 @@ public class KeycloakManager implements Watcher<AddressSpace>
 {
     private static final Logger log = LoggerFactory.getLogger(KeycloakManager.class);
     private final KeycloakApi keycloak;
-    private final Random random = new SecureRandom();
 
     public KeycloakManager(KeycloakApi keycloak) {
         this.keycloak = keycloak;
-        random.setSeed(System.currentTimeMillis());
     }
 
     @Override
@@ -56,15 +53,7 @@ public class KeycloakManager implements Watcher<AddressSpace>
         }
         for(String name : standardAuthSvcSpaces.keySet()) {
             log.info("Creating realm {}", name);
-            keycloak.createRealm(name, name + "-admin", generateRandomString("abcdefghijklmnopqrstuvwxyz0123456789-_", 16));
+            keycloak.createRealm(name, name + "-admin");
         }
-    }
-
-    private String generateRandomString(String characters, int length) {
-        char[] text = new char[length];
-        for (int i = 0; i < length; i++) {
-            text[i] = characters.charAt(random.nextInt(characters.length()));
-        }
-        return new String(text);
     }
 }
