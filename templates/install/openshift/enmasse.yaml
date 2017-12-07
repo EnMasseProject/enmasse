@@ -1343,7 +1343,7 @@ objects:
               secretName: admin-internal-cert
           - name: messaging-cert
             secret:
-              secretName: external-certs-messaging
+              secretName: ${MESSAGING_SECRET}
   parameters:
   - description: Hostname where API server can be reached
     name: ADDRESS_SPACE_SERVICE_HOST

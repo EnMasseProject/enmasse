@@ -33,7 +33,7 @@ local common = import "common.jsonnet";
   ],
 
 
-  deployment(addressSpace, configserv_image, ragent_image, scheduler_image, agent_image, auth_service_ca_secret, address_controller_ca_secret, console_secret)::
+  deployment(addressSpace, configserv_image, ragent_image, scheduler_image, agent_image, auth_service_ca_secret, address_controller_ca_secret, console_secret, messaging_secret)::
   {
     "apiVersion": "extensions/v1beta1",
     "kind": "Deployment",
@@ -233,7 +233,7 @@ local common = import "common.jsonnet";
             {
                 "name": "messaging-cert",
                 "secret": {
-                    "secretName": "external-certs-messaging"
+                    "secretName": messaging_secret
                 }
             }
           ]

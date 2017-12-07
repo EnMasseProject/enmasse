@@ -395,7 +395,7 @@ items:
       {"secretName": "authservice-ca"}}, {"name": "address-controller-ca", "secret":
       {"secretName": "address-controller-ca"}}, {"name": "admin-internal-cert", "secret":
       {"secretName": "admin-internal-cert"}}, {"name": "messaging-cert", "secret":
-      {"secretName": "external-certs-messaging"}}]}}}}], "parameters": [{"description":
+      {"secretName": "${MESSAGING_SECRET}"}}]}}}}], "parameters": [{"description":
       "Hostname where API server can be reached", "name": "ADDRESS_SPACE_SERVICE_HOST",
       "value": ""}, {"description": "The image to use for the router", "name": "ROUTER_REPO",
       "value": "docker.io/enmasseproject/router:latest"}, {"description": "The image
