@@ -1258,6 +1258,8 @@ objects:
               value: ${ADDRESS_SPACE}
             - name: ADDRESS_CONTROLLER_CA
               value: /opt/agent/address-controller-ca/tls.crt
+            - name: MESSAGING_CERT
+              value: /opt/agent/messaging-cert/tls.crt
             - name: AUTHENTICATION_SERVICE_HOST
               value: ${AUTHENTICATION_SERVICE_HOST}
             - name: AUTHENTICATION_SERVICE_PORT
@@ -1301,6 +1303,9 @@ objects:
             - mountPath: /opt/agent/address-controller-ca
               name: address-controller-ca
               readOnly: true
+            - mountPath: /opt/agent/messaging-cert
+              name: messaging-cert
+              readOnly: true
           - env:
             - name: CERT_DIR
               value: /etc/enmasse-certs
@@ -1336,6 +1341,9 @@ objects:
           - name: admin-internal-cert
             secret:
               secretName: admin-internal-cert
+          - name: messaging-cert
+            secret:
+              secretName: external-certs-messaging
   parameters:
   - description: Hostname where API server can be reached
     name: ADDRESS_SPACE_SERVICE_HOST
@@ -1631,6 +1639,8 @@ objects:
               value: /etc/console-certs
             - name: ADDRESS_CONTROLLER_CA
               value: /opt/agent/address-controller-ca/tls.crt
+            - name: MESSAGING_CERT
+              value: /opt/agent/messaging-cert/tls.crt
             - name: AUTHENTICATION_SERVICE_HOST
               value: ${AUTHENTICATION_SERVICE_HOST}
             - name: AUTHENTICATION_SERVICE_PORT
@@ -1667,6 +1677,9 @@ objects:
             - mountPath: /opt/agent/address-controller-ca
               name: address-controller-ca
               readOnly: true
+            - mountPath: /opt/agent/messaging-cert
+              name: messaging-cert
+              readOnly: true
           serviceAccount: ${ADDRESS_SPACE_ADMIN_SA}
           volumes:
           - name: authservice-ca
@@ -1681,6 +1694,9 @@ objects:
           - name: address-controller-ca
             secret:
               secretName: address-controller-ca
+          - name: messaging-cert
+            secret:
+              secretName: external-certs-messaging
   - apiVersion: v1
     kind: Service
     metadata:
