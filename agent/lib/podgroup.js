@@ -84,8 +84,8 @@ PodGroup.prototype.added = function (pod) {
 };
 
 PodGroup.prototype.removed_by_name = function (podname) {
-    //TODO: may be restarted, so should wait for a while before removing
     this.pods[podname].close();
+    log.info('closed broker for %s', podname);
     delete this.pods[podname];
 };
 

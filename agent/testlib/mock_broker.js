@@ -296,4 +296,34 @@ MockBroker.prototype.get_pod_descriptor = function () {
     };
 };
 
+
+MockBroker.prototype.get_pod_definition = function () {
+    return {
+        metadata: {
+            name: this.name
+        },
+        spec: {
+            containers: [
+                {
+                    name: 'broker',
+                    ports: [
+                        {
+                            name: 'amqp',
+                            containerPort: this.port
+                        }
+                    ]
+                }
+            ]
+        },
+        status: {
+            podIP: '127.0.0.1',
+            phase: 'Running',
+            conditions : [
+                { type: 'Initialized', status: 'True' },
+                { type: 'Ready', status: (this.port === undefined ? 'False' : 'True') }
+            ]
+        }
+    };
+};
+
 module.exports = MockBroker;
