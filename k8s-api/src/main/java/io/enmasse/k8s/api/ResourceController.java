@@ -35,7 +35,7 @@ public class ResourceController<T> implements io.fabric8.kubernetes.client.Watch
     private Watch watch;
     private final Resource<T> resource;
     private final Watcher<T> changeHandler;
-    private final Thread watcherThread;
+    private Thread watcherThread;
     private final BlockingQueue<Action> events = new LinkedBlockingDeque<>();
     private volatile boolean running;
     private final Supplier<Long> resyncSupplier;
@@ -43,7 +43,6 @@ public class ResourceController<T> implements io.fabric8.kubernetes.client.Watch
     ResourceController(Resource<T> resource, Watcher<T> changeHandler, Supplier<Long> resyncSupplier) {
         this.resource = resource;
         this.changeHandler = changeHandler;
-        this.watcherThread = new Thread(this);
         this.resyncSupplier = resyncSupplier;
     }
 
@@ -55,6 +54,7 @@ public class ResourceController<T> implements io.fabric8.kubernetes.client.Watch
     public void start() {
         running = true;
         events.add(Action.ADDED);
+        watcherThread = new Thread(this);
         watcherThread.start();
     }
 
@@ -86,8 +86,10 @@ public class ResourceController<T> implements io.fabric8.kubernetes.client.Watch
             log.debug("Putting poison pill event");
             events.put(Action.ERROR);
             watcherThread.join();
+            watcherThread = null;
             watch = null;
         } catch (InterruptedException ignored) {
+            log.warn("Interrupted while stopping", ignored);
         }
     }
 
