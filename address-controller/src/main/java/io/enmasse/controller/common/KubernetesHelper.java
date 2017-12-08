@@ -159,7 +159,7 @@ public class KubernetesHelper implements Kubernetes {
             projectrequest.put("metadata", metadata);
 
             doRawHttpRequest("/oapi/v1/projectrequests", "POST", projectrequest, false, addressSpace.getCreatedBy());
-            doRawHttpRequest("/oapi/v1/namespaces/" + addressSpace.getNamespace() + "/rolebindingrestrictions", "DELETE", null, true, addressSpace.getCreatedBy());
+            deleteRoleBindingRestrictions(addressSpace);
         } else {
             client.namespaces().createNew()
                     .editOrNewMetadata()
@@ -178,6 +178,21 @@ public class KubernetesHelper implements Kubernetes {
                     .endMetadata()
                     .done();
         }
+    }
+
+    // Needed as long as we can't do user impersonation through fabric8 client
+    private void deleteRoleBindingRestrictions(AddressSpace addressSpace) {
+        JsonObject roleBindingRestrictions = doRawHttpRequest("/oapi/v1/namespaces/" + addressSpace.getNamespace() + "/rolebindingrestrictions", "GET", null, true, addressSpace.getCreatedBy());
+        if (roleBindingRestrictions == null || !"RoleBindingRestrictionList".equals(roleBindingRestrictions.getString("kind"))) {
+            return;
+        }
+        JsonArray items = roleBindingRestrictions.getJsonArray("items");
+        for (int i = 0; i < items.size(); i++) {
+            JsonObject entry = items.getJsonObject(i);
+            String name = entry.getJsonObject("metadata").getString("name");
+            doRawHttpRequest("/oapi/v1/namespaces/" + addressSpace.getNamespace() + "/rolebindingrestrictions/" + name, "DELETE", null, true, addressSpace.getCreatedBy());
+        }
+
     }
 
     @Override
