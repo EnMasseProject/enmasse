@@ -218,6 +218,34 @@ public abstract class SeleniumTestBase extends TestBaseWithDefault {
         }
     }
 
+    private WebElement getFilterResultsToolbar() throws Exception {
+        return getToolbar().findElement(By.id("{{filterDomId}_results}"));
+    }
+
+    private void removeFilter(String filterType, String filterName) throws Exception {
+        String filterText = String.format("%s: %s", filterType, filterName);
+        List<WebElement> filters = getFilterResultsToolbar().findElements(ByAngular.repeater("filter in config.appliedFilters"));
+        for (WebElement filter : filters) {
+            if(filterText.toUpperCase().equals(filter.findElement(By.className("active-filter")).getText().toUpperCase())) {
+                WebElement button = filter.findElement(By.className("pficon-close"));
+                clickOnItem(button, "clearFilterButton");
+            }
+        }
+    }
+
+    protected void removeFilterByType(String filterName) throws Exception {
+        removeFilter("type", filterName);
+    }
+
+    protected void removeFilterByName(String filterName) throws Exception {
+        removeFilter("name", filterName);
+    }
+
+    protected void clearAllFilters() throws Exception {
+        WebElement clearAllButton = getFilterResultsToolbar().findElement(By.className("clear-filters"));
+        clickOnItem(clearAllButton);
+    }
+
     protected List<AddressWebItem> getAddressItems() throws Exception {
         WebElement content = getContentContainer();
         List<WebElement> elements = content.findElements(By.className("list-group-item"));

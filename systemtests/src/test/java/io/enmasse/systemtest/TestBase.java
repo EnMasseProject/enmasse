@@ -427,7 +427,7 @@ public abstract class TestBase extends SystemTestRunListener {
 
     protected ArrayList<Destination> generateQueueTopicList(String infix, IntStream range) {
         ArrayList<Destination> addresses = new ArrayList<>();
-        IntStream.range(0, 20).forEach(i -> {
+        range.forEach(i -> {
             if (i % 2 == 0) {
                 addresses.add(Destination.topic(String.format("topic-%s-%d", infix, i)));
             } else {

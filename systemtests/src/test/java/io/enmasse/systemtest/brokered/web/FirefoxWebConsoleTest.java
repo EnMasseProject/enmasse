@@ -26,8 +26,7 @@ public class FirefoxWebConsoleTest extends BrokeredWebConsoleTest {
 
     @Test
     public void testFilterAddressesByName() throws Exception {
-        doTestFilterAddressesByName("web", Destination.queue("queue-via-web"),
-                Destination.topic("topic-via-web"), Destination.queue("test-queue"));
+        doTestFilterAddressesByName();
     }
 
 

@@ -35,15 +35,29 @@ public abstract class WebConsoleTest extends SeleniumTestBase {
 
     }
 
-    public void doTestFilterAddressesByName(String name, Destination... destinations) throws Exception {
-        createAddressesWebConsole(destinations);
+    public void doTestFilterAddressesByName() throws Exception {
+        int addressCount = 20;
+        ArrayList<Destination> addresses = generateQueueTopicList("via-web", IntStream.range(0, addressCount));
+        createAddressesWebConsole(addresses.toArray(new Destination[0]));
 
         switchFilter("name");
         WebElement filterInput = getFilterGroup().findElement(By.tagName("input"));
         fillInputItem(filterInput, "web");
         pressEnter(filterInput);
-        assertEquals(2, getAddressItems().size());
+        assertEquals(addressCount, getAddressItems().size());
 
-        deleteAddressesWebConsole(destinations);
+        fillInputItem(filterInput, "via");
+        pressEnter(filterInput);
+        assertEquals(addressCount, getAddressItems().size());
+
+        removeFilterByName("web");
+        assertEquals(addressCount, getAddressItems().size());
+
+        fillInputItem(filterInput, "queue");
+        pressEnter(filterInput);
+        assertEquals(addressCount/2, getAddressItems().size());
+
+        clearAllFilters();
+        assertEquals(addressCount, getAddressItems().size());
     }
 }
