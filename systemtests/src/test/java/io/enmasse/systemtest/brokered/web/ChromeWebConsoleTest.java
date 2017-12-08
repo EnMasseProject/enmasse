@@ -19,6 +19,16 @@ public class ChromeWebConsoleTest extends BrokeredWebConsoleTest {
         doTestCreateDeleteAddress(Destination.topic("test-topic"));
     }
 
+    //@Test
+    public void testFilterAddressesByType() throws Exception {
+        doTestFilterAddressesByType();
+    }
+
+    //@Test
+    public void testFilterAddressesByName() throws Exception {
+        doTestFilterAddressesByName();
+    }
+
     @Override
     protected WebDriver buildDriver() {
         ChromeOptions opts = new ChromeOptions();

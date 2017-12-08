@@ -2,6 +2,7 @@ package io.enmasse.systemtest;
 
 
 import io.enmasse.systemtest.web.FilterType;
+import io.enmasse.systemtest.web.SortType;
 
 import java.util.ArrayList;
 import java.util.stream.IntStream;
@@ -18,7 +19,7 @@ public abstract class WebConsoleTest extends SeleniumTestBase {
     }
 
     public void doTestFilterAddressesByType() throws Exception {
-        int addressCount = 10;
+        int addressCount = 4;
         ArrayList<Destination> addresses = generateQueueTopicList("via-web", IntStream.range(0, addressCount));
 
         createAddressesWebConsole(addresses.toArray(new Destination[0]));
@@ -37,7 +38,7 @@ public abstract class WebConsoleTest extends SeleniumTestBase {
     }
 
     public void doTestFilterAddressesByName() throws Exception {
-        int addressCount = 10;
+        int addressCount = 4;
         ArrayList<Destination> addresses = generateQueueTopicList("via-web", IntStream.range(0, addressCount));
         createAddressesWebConsole(addresses.toArray(new Destination[0]));
 
@@ -54,6 +55,18 @@ public abstract class WebConsoleTest extends SeleniumTestBase {
         assertEquals(addressCount / 2, getAddressItems().size());
 
         clearAllFilters();
+        assertEquals(addressCount, getAddressItems().size());
+    }
+
+    public void doTestSortAddressesByName() throws Exception {
+        int addressCount = 4;
+        ArrayList<Destination> addresses = generateQueueTopicList("via-web", IntStream.range(0, addressCount));
+        createAddressesWebConsole(addresses.toArray(new Destination[0]));
+
+        sortItems(SortType.NAME, true);
+        assertEquals(addressCount, getAddressItems().size());
+
+        sortItems(SortType.NAME, false);
         assertEquals(addressCount, getAddressItems().size());
     }
 }

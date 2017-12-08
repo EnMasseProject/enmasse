@@ -4,6 +4,7 @@ import com.paulhammant.ngwebdriver.ByAngular;
 import com.paulhammant.ngwebdriver.NgWebDriver;
 import io.enmasse.systemtest.web.AddressWebItem;
 import io.enmasse.systemtest.web.FilterType;
+import io.enmasse.systemtest.web.SortType;
 import org.apache.commons.io.FileUtils;
 import org.junit.After;
 import org.junit.Before;
@@ -236,6 +237,13 @@ public abstract class SeleniumTestBase extends TestBaseWithDefault {
     }
 
     /**
+     * get list of clickable li elements (Name/Senders/Receivers)
+     */
+    private List<WebElement> getSortDropDown() throws Exception {
+        return getSortGroup().findElements(ByAngular.repeater("item in config.fields"));
+    }
+
+    /**
      * get list of li elements from dropdown-menu with allowed types of addresses (queue, topic, multicast, anycast)
      */
     private List<WebElement> getDropDownAddressTypes() throws Exception {
@@ -257,17 +265,74 @@ public abstract class SeleniumTestBase extends TestBaseWithDefault {
     }
 
     /**
-     * switch type of filtering (DropDown element with Type/Name values)
+     * return part of toolbar with sort buttons
      */
-    protected void switchFilter(FilterType filterType) throws Exception {
-        WebElement switchButton = getFilterSwitch();
+    private WebElement getSortGroup() throws Exception {
+        return getToolbar().findElement(By.className("sort-pf"));
+    }
+
+    /**
+     * get sort switch container
+     */
+    private WebElement getSortSwitch() throws Exception {
+        return getSortGroup().findElement(By.className("dropdown")).findElement(By.tagName("button"));
+    }
+
+    /**
+     * get sort asc/desc button
+     */
+    private WebElement getAscDescButton() throws Exception {
+        return getSortGroup().findElement(By.className("btn-link"));
+    }
+
+    /**
+     * common method for switching type of filtering/sorting
+     */
+    private void switchFilterOrSort(Enum switchElement, WebElement switchButton, List<WebElement> switchElements) throws Exception {
         clickOnItem(switchButton);
-        for (WebElement element : getFilterDropDown()) {
-            if (element.findElement(By.tagName("a")).getText().toUpperCase().equals(filterType.toString())) {
+        for (WebElement element : switchElements) {
+            if (element.findElement(By.tagName("a")).getText().toUpperCase().equals(switchElement.toString())) {
                 clickOnItem(element);
                 break;
             }
         }
+    }
+
+    /**
+     * switch type of sorting Name/Senders/Receivers
+     */
+    private void switchSort(SortType sortType) throws Exception {
+        switchFilterOrSort(sortType, getSortSwitch(), getSortDropDown());
+    }
+
+    /**
+     * switch type of filtering Name/Type
+     */
+    private void switchFilter(FilterType filterType) throws Exception {
+        switchFilterOrSort(filterType, getFilterSwitch(), getFilterDropDown());
+    }
+
+    /**
+     * check if sorted ASC/DESC button is set to ASC.
+     */
+    private boolean isSortAsc() {
+        Boolean isAsc;
+        try{
+            getAscDescButton().findElement(By.className("fa-sort-alpha-asc"));
+            isAsc = true;
+        }catch (Exception ex) {
+            isAsc = false;
+        }
+
+        if(!isAsc) {
+            try {
+                getAscDescButton().findElement(By.className("fa-sort-numeric-asc"));
+                isAsc = true;
+            } catch (Exception ex) {
+                isAsc = false;
+            }
+        }
+        return isAsc;
     }
 
     /**
@@ -338,6 +403,18 @@ public abstract class SeleniumTestBase extends TestBaseWithDefault {
     protected void clearAllFilters() throws Exception {
         WebElement clearAllButton = getFilterResultsToolbar().findElement(By.className("clear-filters"));
         clickOnItem(clearAllButton);
+    }
+
+    /**
+     * Sort address items
+     */
+    protected void sortItems(SortType sortType, boolean asc) throws Exception {
+        switchSort(sortType);
+        if(asc && !isSortAsc()) {
+            clickOnItem(getAscDescButton());
+        } else if (!asc && isSortAsc()) {
+            clickOnItem(getAscDescButton());
+        }
     }
 
     /**

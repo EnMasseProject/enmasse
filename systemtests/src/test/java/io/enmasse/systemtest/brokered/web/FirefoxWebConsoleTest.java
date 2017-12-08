@@ -29,6 +29,11 @@ public class FirefoxWebConsoleTest extends BrokeredWebConsoleTest {
         doTestFilterAddressesByName();
     }
 
+    @Test
+    public void testSortAddressesByName() throws Exception {
+        doTestSortAddressesByName();
+    }
+
 
     @Override
     protected WebDriver buildDriver() {
