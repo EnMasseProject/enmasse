@@ -2,6 +2,7 @@ package io.enmasse.systemtest;
 
 import com.paulhammant.ngwebdriver.ByAngular;
 import com.paulhammant.ngwebdriver.NgWebDriver;
+import io.enmasse.systemtest.web.AddressWebItem;
 import io.enmasse.systemtest.web.FilterType;
 import org.apache.commons.io.FileUtils;
 import org.junit.After;
@@ -183,41 +184,67 @@ public abstract class SeleniumTestBase extends TestBaseWithDefault {
         takeScreenShot();
     }
 
+    /**
+     * get toolbar element with all filters
+     */
+    private WebElement getFilterResultsToolbar() throws Exception {
+        return getToolbar().findElement(By.id("{{filterDomId}_results}"));
+    }
+
+    /**
+     * get element with toolbar and all addresses
+     */
     private WebElement getContentContainer() throws Exception {
         return driver.findElement(By.id("contentContainer"));
     }
 
+    /**
+     * get element with filter, sort, create, delete, ...
+     */
     private WebElement getToolbar() throws Exception {
         return driver.findElement(By.id("exampleToolbar"));
     }
 
-    protected WebElement getFilterGroup() throws Exception {
+    /**
+     * get element from toolbar with Filter elements
+     */
+    private WebElement getFilterGroup() throws Exception {
         WebElement toolbar = getToolbar();
         return toolbar.findElement(By.id("_fields"));
     }
 
+    /**
+     * get button element with filter types (Type/Name)
+     */
     private WebElement getFilterSwitch() throws Exception {
         return getFilterGroup().findElements(By.tagName("button")).get(0);
     }
 
-    private WebElement getTypeSwitch() throws Exception {
+    /**
+     * get button element with address types (Filter by type.../queue/topic/multicast/anycast)
+     */
+    private WebElement getAddressTypeSwitch() throws Exception {
         return getFilterGroup().findElements(By.tagName("button")).get(1);
     }
 
+    /**
+     * get list of clickable li elements (Type/Name)
+     */
     private List<WebElement> getFilterDropDown() throws Exception {
         return getFilterGroup().findElements(ByAngular.repeater("item in config.fields"));
     }
 
     /**
      * get list of li elements from dropdown-menu with allowed types of addresses (queue, topic, multicast, anycast)
-     *
-     * @return
-     * @throws Exception
      */
     private List<WebElement> getDropDownTypes() throws Exception {
         return getFilterGroup().findElements(By.className("dropdown-menu inner")).get(0).findElements(By.tagName("li"));
     }
 
+    /**
+     * get clickable element from list of address types
+     * (DropDown element with: Filter by type.../queue/topic/multicast/anycast values)
+     */
     private WebElement getDropDownAddressType(String addressType, List<WebElement> dropDownTypes) {
         switch (addressType) {
             case "queue":
@@ -234,22 +261,18 @@ public abstract class SeleniumTestBase extends TestBaseWithDefault {
     }
 
     /**
-     * switch type of filtering
-     *
-     * @param filterType type, name
-     * @throws Exception
+     * switch type of filtering (DropDown element with Type/Name values)
      */
-    protected void switchFilter(String filterType) throws Exception {
+    protected void switchFilter(FilterType filterType) throws Exception {
         WebElement switchButton = getFilterSwitch();
         clickOnItem(switchButton);
         for (WebElement element : getFilterDropDown()) {
-            if (element.findElement(By.tagName("a")).getText().toUpperCase().equals(filterType.toUpperCase())) {
+            if (element.findElement(By.tagName("a")).getText().toUpperCase().equals(filterType.toString())) {
                 clickOnItem(element);
                 break;
             }
         }
     }
-
 
     /**
      * add whatever filter you want
@@ -259,7 +282,7 @@ public abstract class SeleniumTestBase extends TestBaseWithDefault {
      * @throws Exception
      */
     protected void addFilter(FilterType filterType, String filterValue) throws Exception {
-        switchFilter(filterType.toString());
+        switchFilter(filterType);
         switch (filterType) {
             case TYPE:
                 addFilterByType(filterValue);
@@ -276,43 +299,54 @@ public abstract class SeleniumTestBase extends TestBaseWithDefault {
      * add filter by address type
      *
      * @param addressType queue, topic, multicast, anycast
-     * @throws Exception
      */
     protected void addFilterByType(String addressType) throws Exception {
-        WebElement switchButton = getFilterSwitch();
+        WebElement switchButton = getAddressTypeSwitch();
         clickOnItem(switchButton);
         WebElement addressTypeElement = getDropDownAddressType(addressType, getDropDownTypes());
         clickOnItem(addressTypeElement);
     }
 
-    private WebElement getFilterResultsToolbar() throws Exception {
-        return getToolbar().findElement(By.id("{{filterDomId}_results}"));
-    }
 
-    private void removeFilter(String filterType, String filterName) throws Exception {
-        String filterText = String.format("%s: %s", filterType, filterName);
+    /**
+     * remove filter element by (Name: Value)
+     */
+    private void removeFilter(FilterType filterType, String filterName) throws Exception {
+        String filterText = String.format("%s: %s", filterType.toString().toLowerCase(), filterName);
         List<WebElement> filters = getFilterResultsToolbar().findElements(ByAngular.repeater("filter in config.appliedFilters"));
         for (WebElement filter : filters) {
-            if(filterText.toUpperCase().equals(filter.findElement(By.className("active-filter")).getText().toUpperCase())) {
+            if (filterText.toUpperCase().equals(filter.findElement(By.className("active-filter")).getText().toUpperCase())) {
                 WebElement button = filter.findElement(By.className("pficon-close"));
                 clickOnItem(button, "clearFilterButton");
             }
         }
     }
 
+    /**
+     * remove 'type' filter element by (Name: Value)
+     */
     protected void removeFilterByType(String filterName) throws Exception {
-        removeFilter("type", filterName);
+        removeFilter(FilterType.TYPE, filterName);
     }
 
+    /**
+     * remove 'name' filter element by (Name: Value)
+     */
     protected void removeFilterByName(String filterName) throws Exception {
-        removeFilter("name", filterName);
+        removeFilter(FilterType.NAME, filterName);
     }
 
+    /**
+     * remove all filters elements
+     */
     protected void clearAllFilters() throws Exception {
         WebElement clearAllButton = getFilterResultsToolbar().findElement(By.className("clear-filters"));
         clickOnItem(clearAllButton);
     }
 
+    /**
+     * get all addresses
+     */
     protected List<AddressWebItem> getAddressItems() throws Exception {
         WebElement content = getContentContainer();
         List<WebElement> elements = content.findElements(By.className("list-group-item"));
@@ -325,6 +359,9 @@ public abstract class SeleniumTestBase extends TestBaseWithDefault {
         return addressItems;
     }
 
+    /**
+     * get specific address
+     */
     protected AddressWebItem getAddressItem(Destination destination) throws Exception {
         AddressWebItem returnedElement = null;
         List<AddressWebItem> addressWebItems = getAddressItems();
@@ -335,12 +372,18 @@ public abstract class SeleniumTestBase extends TestBaseWithDefault {
         return returnedElement;
     }
 
+    /**
+     * create multiple addresses
+     */
     protected void createAddressesWebConsole(Destination... destinations) throws Exception {
         for (Destination dest : destinations) {
             createAddressWebConsole(dest);
         }
     }
 
+    /**
+     * create specific address
+     */
     protected void createAddressWebConsole(Destination destination) throws Exception {
         //get console page
         openConsolePageWebConsole();
@@ -368,12 +411,18 @@ public abstract class SeleniumTestBase extends TestBaseWithDefault {
                 new TimeoutBudget(5, TimeUnit.MINUTES), destination);
     }
 
+    /**
+     * delete multiple addresses
+     */
     protected void deleteAddressesWebConsole(Destination... destinations) throws Exception {
         for (Destination dest : destinations) {
             deleteAddressWebConsole(dest);
         }
     }
 
+    /**
+     * delete specific addresses
+     */
     protected void deleteAddressWebConsole(Destination destination) throws Exception {
         //open console webpage
         openConsolePageWebConsole();
@@ -392,40 +441,5 @@ public abstract class SeleniumTestBase extends TestBaseWithDefault {
         //check if address deleted
         driverWait.until(ExpectedConditions.invisibilityOf(addressItem.getAddressItem()));
         assertNull(getAddressItem(destination));
-    }
-
-    public class AddressWebItem {
-        private WebElement addressItem;
-        private WebElement checkBox;
-        private boolean isReady;
-        private String name;
-
-        public AddressWebItem(WebElement item) {
-            this.addressItem = item;
-            this.checkBox = item.findElement(By.className("list-view-pf-checkbox"));
-            this.name = item.findElement(By.className("list-group-item-heading")).getText();
-            try {
-                item.findElement(By.className("pficon-ok"));
-                isReady = true;
-            } catch (Exception ex) {
-                isReady = false;
-            }
-        }
-
-        public WebElement getAddressItem() {
-            return addressItem;
-        }
-
-        public WebElement getCheckBox() {
-            return checkBox;
-        }
-
-        public boolean getIsReady() {
-            return isReady;
-        }
-
-        public String getName() {
-            return name;
-        }
     }
 }
