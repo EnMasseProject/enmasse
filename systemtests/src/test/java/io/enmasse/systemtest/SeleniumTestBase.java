@@ -235,7 +235,7 @@ public abstract class SeleniumTestBase extends TestBaseWithDefault {
         clickOnCreateButton();
 
         //fill address name
-        fillInputItem(driver.findElement(By.id("new-name")), "test-" + destination.getType());
+        fillInputItem(driver.findElement(By.id("new-name")), destination.getAddress());
 
         //select address type
         clickOnItem(driver.findElement(By.id(destination.getType())), "Radio button " + destination.getType());
