@@ -4,6 +4,11 @@ package io.enmasse.systemtest;
 import java.util.ArrayList;
 import java.util.stream.IntStream;
 
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebElement;
+
+import static org.junit.Assert.assertEquals;
+
 public abstract class WebConsoleTest extends SeleniumTestBase {
 
     public void doTestCreateDeleteAddress(Destination destination) throws Exception {
@@ -28,5 +33,17 @@ public abstract class WebConsoleTest extends SeleniumTestBase {
 //        Remove addresses (shut be done by Tear down
 
 
+    }
+
+    public void doTestFilterAddressesByName(String name, Destination... destinations) throws Exception {
+        createAddressesWebConsole(destinations);
+
+        switchFilter("name");
+        WebElement filterInput = getFilterGroup().findElement(By.tagName("input"));
+        fillInputItem(filterInput, "web");
+        pressEnter(filterInput);
+        assertEquals(2, getAddressItems().size());
+
+        deleteAddressesWebConsole(destinations);
     }
 }

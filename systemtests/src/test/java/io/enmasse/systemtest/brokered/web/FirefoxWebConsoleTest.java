@@ -24,6 +24,12 @@ public class FirefoxWebConsoleTest extends BrokeredWebConsoleTest {
         doTestFilterAddressesByType();
     }
 
+    @Test
+    public void testFilterAddressesByName() throws Exception {
+        doTestFilterAddressesByName("web", Destination.queue("queue-via-web"),
+                Destination.topic("topic-via-web"), Destination.queue("test-queue"));
+    }
+
 
     @Override
     protected WebDriver buildDriver() {

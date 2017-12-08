@@ -9,6 +9,8 @@ import org.junit.Rule;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
 import org.openqa.selenium.*;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -25,6 +27,7 @@ public abstract class SeleniumTestBase extends TestBaseWithDefault {
     private final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss:SSSS");
     private WebDriver driver;
     private NgWebDriver angularDriver;
+    private WebDriverWait driverWait;
     private Map<Date, File> browserScreenshots = new HashMap<>();
     private String webconsoleFolder = "selenium_tests";
     @Rule
@@ -54,6 +57,7 @@ public abstract class SeleniumTestBase extends TestBaseWithDefault {
     public void setupDriver() throws Exception {
         driver = buildDriver();
         angularDriver = new NgWebDriver((JavascriptExecutor) driver);
+        driverWait = new WebDriverWait(driver, 10);
         browserScreenshots.clear();
     }
 
@@ -75,6 +79,7 @@ public abstract class SeleniumTestBase extends TestBaseWithDefault {
         Logging.log.info("Driver is closed");
         driver = null;
         angularDriver = null;
+        driverWait = null;
     }
 
     protected WebDriver getDriver() {
@@ -83,6 +88,10 @@ public abstract class SeleniumTestBase extends TestBaseWithDefault {
 
     protected NgWebDriver getAngularDriver() {
         return this.angularDriver;
+    }
+
+    protected WebDriverWait getDriverWait() {
+        return driverWait;
     }
 
     protected String getConsoleRoute() {
@@ -164,11 +173,24 @@ public abstract class SeleniumTestBase extends TestBaseWithDefault {
         takeScreenShot();
     }
 
+    protected void pressEnter(WebElement element) throws Exception {
+        takeScreenShot();
+        assertNotNull(element);
+        element.sendKeys(Keys.RETURN);
+        angularDriver.waitForAngularRequestsToFinish();
+        Logging.log.info("Enter pressed");
+        takeScreenShot();
+    }
+
+    private WebElement getContentContainer() throws Exception {
+        return driver.findElement(By.id("contentContainer"));
+    }
+
     private WebElement getToolbar() throws Exception {
         return driver.findElement(By.id("exampleToolbar"));
     }
 
-    private WebElement getFilterGroup() throws Exception {
+    protected WebElement getFilterGroup() throws Exception {
         WebElement toolbar = getToolbar();
         return toolbar.findElement(By.id("_fields"));
     }
@@ -196,8 +218,8 @@ public abstract class SeleniumTestBase extends TestBaseWithDefault {
         }
     }
 
-    protected List<AddressWebItem> getAddressItems() {
-        WebElement content = driver.findElement(By.id("contentContainer"));
+    protected List<AddressWebItem> getAddressItems() throws Exception {
+        WebElement content = getContentContainer();
         List<WebElement> elements = content.findElements(By.className("list-group-item"));
         List<AddressWebItem> addressItems = new ArrayList<>();
         for (WebElement element : elements) {
@@ -264,17 +286,20 @@ public abstract class SeleniumTestBase extends TestBaseWithDefault {
         //open addresses
         openAddressesPageWebConsole();
 
+        AddressWebItem addressItem = getAddressItem(destination);
+
         //click on check box
-        clickOnItem(getAddressItem(destination).getCheckBox(), "check box: " + destination.getAddress());
+        clickOnItem(addressItem.getCheckBox(), "check box: " + destination.getAddress());
 
         //click on delete
         clickOnRemoveButton();
 
         //check if address deleted
+        driverWait.until(ExpectedConditions.invisibilityOf(addressItem.getAddressItem()));
         assertNull(getAddressItem(destination));
     }
 
-    protected class AddressWebItem {
+    public class AddressWebItem {
         private WebElement addressItem;
         private WebElement checkBox;
         private boolean isReady;
