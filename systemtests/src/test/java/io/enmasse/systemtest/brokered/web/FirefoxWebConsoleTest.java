@@ -19,6 +19,11 @@ public class FirefoxWebConsoleTest extends BrokeredWebConsoleTest {
         doTestCreateDeleteAddress(Destination.topic("test-topic"));
     }
 
+    @Test
+    public void testFilterAddressesByType() throws Exception {
+        doTestFilterAddressesByType();
+    }
+
 
     @Override
     protected WebDriver buildDriver() {

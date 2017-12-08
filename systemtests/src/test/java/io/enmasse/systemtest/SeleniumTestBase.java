@@ -189,7 +189,7 @@ public abstract class SeleniumTestBase extends TestBaseWithDefault {
         WebElement switchButton = getFilterSwitch();
         clickOnItem(switchButton);
         for (WebElement element : getFilterDropDown()) {
-            if(element.findElement(By.tagName("a")).getText().toUpperCase().equals(filterType.toUpperCase())) {
+            if (element.findElement(By.tagName("a")).getText().toUpperCase().equals(filterType.toUpperCase())) {
                 clickOnItem(element);
                 break;
             }
@@ -218,6 +218,12 @@ public abstract class SeleniumTestBase extends TestBaseWithDefault {
         return returnedElement;
     }
 
+    protected void createAddressesWebConsole(Destination... destinations) throws Exception {
+        for (Destination dest : destinations) {
+            createAddressWebConsole(dest);
+        }
+    }
+
     protected void createAddressWebConsole(Destination destination) throws Exception {
         //get console page
         openConsolePageWebConsole();
@@ -243,6 +249,12 @@ public abstract class SeleniumTestBase extends TestBaseWithDefault {
 
         TestUtils.waitForDestinationsReady(addressApiClient, defaultAddressSpace,
                 new TimeoutBudget(5, TimeUnit.MINUTES), destination);
+    }
+
+    protected void deleteAddressesWebConsole(Destination... destinations) throws Exception {
+        for (Destination dest : destinations) {
+            deleteAddressWebConsole(dest);
+        }
     }
 
     protected void deleteAddressWebConsole(Destination destination) throws Exception {
