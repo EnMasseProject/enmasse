@@ -1,13 +1,16 @@
 package io.enmasse.systemtest;
 
 
-import java.util.ArrayList;
-import java.util.stream.IntStream;
-
+import io.enmasse.systemtest.web.FilterType;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 
+import java.util.ArrayList;
+import java.util.stream.IntStream;
+
+import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 
 public abstract class WebConsoleTest extends SeleniumTestBase {
 
@@ -17,10 +20,14 @@ public abstract class WebConsoleTest extends SeleniumTestBase {
     }
 
     public void doTestFilterAddressesByType() throws Exception {
-        ArrayList<Destination> addresses = generateQueueTopicList("via-web", IntStream.range(0, 20));
+        int addressCount = 20;
+        ArrayList<Destination> addresses = generateQueueTopicList("via-web", IntStream.range(0, addressCount));
 
         createAddressesWebConsole(addresses.toArray(new Destination[0]));
-        deleteAddressesWebConsole(addresses.toArray(new Destination[0]));
+        assertThat(getAddressItems().size(), is(addressCount));
+        addFilter(FilterType.TYPE, "queue");
+
+        assertThat(getAddressItems().size(), is(addressCount / 2));
 
 //        Create 10 queues: queue-via-web-N where N=1,3,5,7,9,11,13,15,17,19…​
 //

@@ -2,6 +2,7 @@ package io.enmasse.systemtest;
 
 import com.paulhammant.ngwebdriver.ByAngular;
 import com.paulhammant.ngwebdriver.NgWebDriver;
+import io.enmasse.systemtest.web.FilterType;
 import org.apache.commons.io.FileUtils;
 import org.junit.After;
 import org.junit.Before;
@@ -207,6 +208,37 @@ public abstract class SeleniumTestBase extends TestBaseWithDefault {
         return getFilterGroup().findElements(ByAngular.repeater("item in config.fields"));
     }
 
+    /**
+     * get list of li elements from dropdown-menu with allowed types of addresses (queue, topic, multicast, anycast)
+     *
+     * @return
+     * @throws Exception
+     */
+    private List<WebElement> getDropDownTypes() throws Exception {
+        return getFilterGroup().findElements(By.className("dropdown-menu inner")).get(0).findElements(By.tagName("li"));
+    }
+
+    private WebElement getDropDownAddressType(String addressType, List<WebElement> dropDownTypes) {
+        switch (addressType) {
+            case "queue":
+                return dropDownTypes.get(1);
+            case "topic":
+                return dropDownTypes.get(2);
+            case "multicast":
+                return dropDownTypes.get(3);
+            case "anycast":
+                return dropDownTypes.get(4);
+            default:
+                throw new IllegalStateException(String.format("Address type '%s'doesn't exist", addressType));
+        }
+    }
+
+    /**
+     * switch type of filtering
+     *
+     * @param filterType type, name
+     * @throws Exception
+     */
     protected void switchFilter(String filterType) throws Exception {
         WebElement switchButton = getFilterSwitch();
         clickOnItem(switchButton);
@@ -216,6 +248,41 @@ public abstract class SeleniumTestBase extends TestBaseWithDefault {
                 break;
             }
         }
+    }
+
+
+    /**
+     * add whatever filter you want
+     *
+     * @param filterType
+     * @param filterValue allowed values are for FilterType.NAME (String), FilterType.NAME (queue, topic, multicast, anycast)
+     * @throws Exception
+     */
+    protected void addFilter(FilterType filterType, String filterValue) throws Exception {
+        switchFilter(filterType.toString());
+        switch (filterType) {
+            case TYPE:
+                addFilterByType(filterValue);
+                break;
+            case NAME:
+                WebElement filterInput = getFilterGroup().findElement(By.tagName("input"));
+                fillInputItem(filterInput, filterValue);
+                pressEnter(filterInput);
+                break;
+        }
+    }
+
+    /**
+     * add filter by address type
+     *
+     * @param addressType queue, topic, multicast, anycast
+     * @throws Exception
+     */
+    protected void addFilterByType(String addressType) throws Exception {
+        WebElement switchButton = getFilterSwitch();
+        clickOnItem(switchButton);
+        WebElement addressTypeElement = getDropDownAddressType(addressType, getDropDownTypes());
+        clickOnItem(addressTypeElement);
     }
 
     private WebElement getFilterResultsToolbar() throws Exception {
