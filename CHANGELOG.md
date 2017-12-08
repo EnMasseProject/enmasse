@@ -1,3 +1,17 @@
+## 0.15.3 (December 8, 2017)
+* Bug fixes to most components found in testing
+* The router in the standard address space now rejects unknown addresses rather than defaulting to
+  'anycast' behavior
+* Tune roles and permissions required to run in a shared OpenShift cluster so that it doesn't
+  require access to all projects in a cluster in order to work.
+* Update JDK version in Keycloak image
+* Improvements to console documentation
+* Added manual deployment process to online documentation
+* Version artifacts and pom files, rewrite on release
+* Report k8s events in address-controller and agent controller loops
+* Automatically create keycloak realm admin user
+* Add OpenWire and CORE port to brokered address space
+
 ## 0.15.0 (November 22, 2017)
 * Add cluster roles that limit privileges required to run address controller
 * Add HTTPS support for standard authentication service
