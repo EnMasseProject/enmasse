@@ -302,6 +302,7 @@ public abstract class SeleniumTestBase extends TestBaseWithDefault {
      * switch type of sorting Name/Senders/Receivers
      */
     private void switchSort(SortType sortType) throws Exception {
+        Logging.log.info("Switch sorting to: " + sortType.toString());
         switchFilterOrSort(sortType, getSortSwitch(), getSortDropDown());
     }
 
@@ -309,6 +310,7 @@ public abstract class SeleniumTestBase extends TestBaseWithDefault {
      * switch type of filtering Name/Type
      */
     private void switchFilter(FilterType filterType) throws Exception {
+        Logging.log.info("Switch filtering to: " + filterType.toString());
         switchFilterOrSort(filterType, getFilterSwitch(), getFilterDropDown());
     }
 
@@ -317,14 +319,14 @@ public abstract class SeleniumTestBase extends TestBaseWithDefault {
      */
     private boolean isSortAsc() {
         Boolean isAsc;
-        try{
+        try {
             getAscDescButton().findElement(By.className("fa-sort-alpha-asc"));
             isAsc = true;
-        }catch (Exception ex) {
+        } catch (Exception ex) {
             isAsc = false;
         }
 
-        if(!isAsc) {
+        if (!isAsc) {
             try {
                 getAscDescButton().findElement(By.className("fa-sort-numeric-asc"));
                 isAsc = true;
@@ -343,6 +345,7 @@ public abstract class SeleniumTestBase extends TestBaseWithDefault {
      * @throws Exception
      */
     protected void addFilter(FilterType filterType, String filterValue) throws Exception {
+        Logging.log.info(String.format("Adding filter ->  %s: %s", filterType.toString(), filterValue));
         switchFilter(filterType);
         switch (filterType) {
             case TYPE:
@@ -361,7 +364,7 @@ public abstract class SeleniumTestBase extends TestBaseWithDefault {
      *
      * @param addressType queue, topic, multicast, anycast
      */
-    protected void addFilterByType(String addressType) throws Exception {
+    private void addFilterByType(String addressType) throws Exception {
         WebElement switchAddressTypeButton = getAddressTypeSwitch();
         clickOnItem(switchAddressTypeButton);
         WebElement addressTypeElement = getDropDownAddressType(addressType, getDropDownAddressTypes());
@@ -387,6 +390,7 @@ public abstract class SeleniumTestBase extends TestBaseWithDefault {
      * remove 'type' filter element by (Name: Value)
      */
     protected void removeFilterByType(String filterName) throws Exception {
+        Logging.log.info("Removing filter: " + filterName);
         removeFilter(FilterType.TYPE, filterName);
     }
 
@@ -394,6 +398,7 @@ public abstract class SeleniumTestBase extends TestBaseWithDefault {
      * remove 'name' filter element by (Name: Value)
      */
     protected void removeFilterByName(String filterName) throws Exception {
+        Logging.log.info("Removing filter: " + filterName);
         removeFilter(FilterType.NAME, filterName);
     }
 
@@ -401,6 +406,7 @@ public abstract class SeleniumTestBase extends TestBaseWithDefault {
      * remove all filters elements
      */
     protected void clearAllFilters() throws Exception {
+        Logging.log.info("Removing all filters");
         WebElement clearAllButton = getFilterResultsToolbar().findElement(By.className("clear-filters"));
         clickOnItem(clearAllButton);
     }
@@ -409,11 +415,12 @@ public abstract class SeleniumTestBase extends TestBaseWithDefault {
      * Sort address items
      */
     protected void sortItems(SortType sortType, boolean asc) throws Exception {
+        Logging.log.info("Sorting");
         switchSort(sortType);
-        if(asc && !isSortAsc()) {
-            clickOnItem(getAscDescButton());
+        if (asc && !isSortAsc()) {
+            clickOnItem(getAscDescButton(), "Asc");
         } else if (!asc && isSortAsc()) {
-            clickOnItem(getAscDescButton());
+            clickOnItem(getAscDescButton(), "Desc");
         }
     }
 
@@ -494,7 +501,7 @@ public abstract class SeleniumTestBase extends TestBaseWithDefault {
     }
 
     /**
-     * delete specific addresses
+     * delete specific address
      */
     protected void deleteAddressWebConsole(Destination destination) throws Exception {
         //open console webpage
