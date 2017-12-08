@@ -32,6 +32,7 @@ public abstract class SeleniumTestBase extends TestBaseWithDefault {
     private WebDriverWait driverWait;
     private Map<Date, File> browserScreenshots = new HashMap<>();
     private String webconsoleFolder = "selenium_tests";
+
     @Rule
     public TestWatcher watchman = new TestWatcher() {
         @Override
@@ -237,7 +238,7 @@ public abstract class SeleniumTestBase extends TestBaseWithDefault {
     /**
      * get list of li elements from dropdown-menu with allowed types of addresses (queue, topic, multicast, anycast)
      */
-    private List<WebElement> getDropDownTypes() throws Exception {
+    private List<WebElement> getDropDownAddressTypes() throws Exception {
         return getFilterGroup().findElements(By.className("dropdown-menu inner")).get(0).findElements(By.tagName("li"));
     }
 
@@ -246,18 +247,13 @@ public abstract class SeleniumTestBase extends TestBaseWithDefault {
      * (DropDown element with: Filter by type.../queue/topic/multicast/anycast values)
      */
     private WebElement getDropDownAddressType(String addressType, List<WebElement> dropDownTypes) {
-        switch (addressType) {
-            case "queue":
-                return dropDownTypes.get(1);
-            case "topic":
-                return dropDownTypes.get(2);
-            case "multicast":
-                return dropDownTypes.get(3);
-            case "anycast":
-                return dropDownTypes.get(4);
-            default:
-                throw new IllegalStateException(String.format("Address type '%s'doesn't exist", addressType));
-        }
+        HashMap<String, Integer> addressTypesMap = new HashMap<>();
+        addressTypesMap.put("queue", 1);
+        addressTypesMap.put("topic", 2);
+        addressTypesMap.put("multicast", 3);
+        addressTypesMap.put("anycast", 4);
+
+        return dropDownTypes.get(addressTypesMap.get(addressType)).findElements(By.tagName("a")).get(0);
     }
 
     /**
@@ -301,9 +297,9 @@ public abstract class SeleniumTestBase extends TestBaseWithDefault {
      * @param addressType queue, topic, multicast, anycast
      */
     protected void addFilterByType(String addressType) throws Exception {
-        WebElement switchButton = getAddressTypeSwitch();
-        clickOnItem(switchButton);
-        WebElement addressTypeElement = getDropDownAddressType(addressType, getDropDownTypes());
+        WebElement switchAddressTypeButton = getAddressTypeSwitch();
+        clickOnItem(switchAddressTypeButton);
+        WebElement addressTypeElement = getDropDownAddressType(addressType, getDropDownAddressTypes());
         clickOnItem(addressTypeElement);
     }
 
