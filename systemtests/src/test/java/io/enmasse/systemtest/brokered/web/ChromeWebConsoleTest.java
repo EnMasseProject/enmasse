@@ -2,7 +2,6 @@ package io.enmasse.systemtest.brokered.web;
 
 import io.enmasse.systemtest.BrokeredWebConsoleTest;
 import io.enmasse.systemtest.Destination;
-import org.junit.Test;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
@@ -27,6 +26,11 @@ public class ChromeWebConsoleTest extends BrokeredWebConsoleTest {
     //@Test
     public void testFilterAddressesByName() throws Exception {
         doTestFilterAddressesByName();
+    }
+
+    //@Test
+    public void testSortAddressesByName() throws Exception {
+        doTestSortAddressesByName();
     }
 
     @Override

@@ -3,7 +3,7 @@ package io.enmasse.systemtest.web;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 
-public class AddressWebItem {
+public class AddressWebItem implements Comparable<AddressWebItem> {
     private WebElement addressItem;
     private WebElement checkBox;
     private boolean isReady;
@@ -35,5 +35,10 @@ public class AddressWebItem {
 
     public String getName() {
         return name;
+    }
+
+    @Override
+    public int compareTo(AddressWebItem o) {
+        return name.compareTo(o.name);
     }
 }

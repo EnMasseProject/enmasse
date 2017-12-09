@@ -1,6 +1,7 @@
 package io.enmasse.systemtest;
 
 
+import com.google.common.collect.Ordering;
 import io.enmasse.systemtest.web.FilterType;
 import io.enmasse.systemtest.web.SortType;
 
@@ -8,8 +9,7 @@ import java.util.ArrayList;
 import java.util.stream.IntStream;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.*;
 
 public abstract class WebConsoleTest extends SeleniumTestBase {
 
@@ -64,9 +64,9 @@ public abstract class WebConsoleTest extends SeleniumTestBase {
         createAddressesWebConsole(addresses.toArray(new Destination[0]));
 
         sortItems(SortType.NAME, true);
-        assertEquals(addressCount, getAddressItems().size());
+        assertTrue(Ordering.natural().isOrdered(getAddressItems()));
 
         sortItems(SortType.NAME, false);
-        assertEquals(addressCount, getAddressItems().size());
+        assertTrue(Ordering.natural().reverse().isOrdered(getAddressItems()));
     }
 }
