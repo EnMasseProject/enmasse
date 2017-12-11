@@ -167,15 +167,7 @@ angular.module('patternfly.toolbars').controller('ViewCtrl', ['$scope', '$timeou
           if (filter.id === 'address') {
               match = item.address.match(filter.value) !== null;
           } else if (filter.id === 'type') {
-              if (filter.value === 'queue') {
-                  match = item.store_and_forward && !item.multicast;
-              } else if (filter.value === 'topic') {
-                  match = item.store_and_forward && item.multicast;
-              } else if (filter.value === 'multicast') {
-                  match = !item.store_and_forward && item.multicast;
-              } else if (filter.value === 'anycast') {
-                  match = !item.store_and_forward && !item.multicast;
-              }
+              match = item.type.match(filter.value) !== null;
           }
           return match;
         };
