@@ -31,8 +31,8 @@ This document contains testing scenarios for selenium system tests in EnMasse.
 * testFilterAddressesByType - *_here is a bug: filter by type doesn’t work in console!_*
 - Create 2 queues: queue-via-web-N where N=1,3
 - Create 2 topics: topic-via-web-M where M=0,2
-- Filter all queues and verify that 4 items is visible
-- Filter all topics and verify that 4 items is visible
+- Filter all queues and verify that 2 items are visible
+- Filter all topics and verify that 2 items are visible
 - Remove addresses
 
 * testSortAddressesByName
