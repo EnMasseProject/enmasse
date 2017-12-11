@@ -41,9 +41,6 @@ local registry = std.extVar("REGISTRY");
   mqtt_lwt::
     self.image(std.extVar("MQTT_LWT_IMAGE")),
 
-  amqp_kafka_bridge::
-    self.image("amqp-kafka-bridge"),
-
   none_authservice::
     self.image(std.extVar("NONE_AUTHSERVICE_IMAGE")),
 
