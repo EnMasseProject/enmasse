@@ -21,7 +21,7 @@ local roles = import "roles.jsonnet";
     ]
   },
 
-  generate(with_kafka)::
+  template::
   {
     "apiVersion": "v1",
     "kind": "Template",
@@ -35,9 +35,9 @@ local roles = import "roles.jsonnet";
                  storage.template(false, true),
                  storage.template(true, false),
                  storage.template(true, true),
-                 standardInfra.generate(with_kafka),
+                 standardInfra.template,
                  brokeredInfra.template,
-                 addressController.deployment("${ADDRESS_CONTROLLER_REPO}", "", "${ADDRESS_CONTROLLER_CERT_SECRET}", "${ENVIRONMENT}", "${ENABLE_RBAC}", "${ADDRESS_CONTROLLER_SA}", "${ADDRESS_SPACE_ADMIN_SA}"),
+                 addressController.deployment("${ADDRESS_CONTROLLER_IMAGE}", "", "${ADDRESS_CONTROLLER_CERT_SECRET}", "${ENVIRONMENT}", "${ENABLE_RBAC}", "${ADDRESS_CONTROLLER_SA}", "${ADDRESS_SPACE_ADMIN_SA}"),
                  addressController.internal_service,
                  restapiRoute.route("${RESTAPI_HOSTNAME}") ],
     "parameters": [
@@ -51,7 +51,7 @@ local roles = import "roles.jsonnet";
         "value": "enmasse-admin"
       },
       {
-        "name": "ADDRESS_CONTROLLER_REPO",
+        "name": "ADDRESS_CONTROLLER_IMAGE",
         "description": "The docker image to use for the address controller",
         "value": images.address_controller
       },

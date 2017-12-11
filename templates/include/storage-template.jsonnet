@@ -2,9 +2,9 @@ local images = import "images.jsonnet";
 local broker = import "broker.jsonnet";
 local common = import "common.jsonnet";
 local router = import "router.jsonnet";
-local broker_repo = "${BROKER_REPO}";
-local router_repo = "${ROUTER_REPO}";
-local forwarder_repo = "${TOPIC_FORWARDER_REPO}";
+local broker_repo = "${BROKER_IMAGE}";
+local router_repo = "${ROUTER_IMAGE}";
+local forwarder_repo = "${TOPIC_FORWARDER_IMAGE}";
 local forwarder = import "forwarder.jsonnet";
 {
   template(multicast, persistence)::
@@ -108,17 +108,17 @@ local forwarder = import "forwarder.jsonnet";
           "value": "2Gi"
         },
         {
-          "name": "BROKER_REPO",
+          "name": "BROKER_IMAGE",
           "description": "The docker image to use for the message broker",
           "value": images.artemis
         },
         {
-          "name": "TOPIC_FORWARDER_REPO",
+          "name": "TOPIC_FORWARDER_IMAGE",
           "description": "The default image to use as topic forwarder",
           "value": images.topic_forwarder
         },
         {
-          "name": "ROUTER_REPO",
+          "name": "ROUTER_IMAGE",
           "description": "The image to use for the router",
           "value": images.router
         },
