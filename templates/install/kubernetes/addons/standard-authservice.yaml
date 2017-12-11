@@ -63,6 +63,9 @@ items:
           - mountPath: /opt/enmasse/cert
             name: standard-authservice-cert
             readOnly: false
+        securityContext:
+          fsGroup: 0
+          runAsUser: 0
         volumes:
         - name: standard-authservice-cert
           secret:
@@ -126,4 +129,19 @@ items:
       targetPort: https
     selector:
       name: keycloak
+- apiVersion: v1
+  kind: Service
+  metadata:
+    labels:
+      app: enmasse
+    name: standard-authservice-external
+  spec:
+    ports:
+    - name: https
+      port: 8443
+      protocol: TCP
+      targetPort: https
+    selector:
+      name: keycloak
+    type: LoadBalancer
 kind: List
