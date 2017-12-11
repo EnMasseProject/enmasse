@@ -151,6 +151,19 @@ public abstract class SeleniumTestBase extends TestBaseWithDefault {
         clickOnItem(element, null);
     }
 
+    protected void executeJavaScript(String script) throws Exception {
+        executeJavaScript(script, null);
+    }
+
+    protected void executeJavaScript(String script, String textToLog) throws Exception {
+        takeScreenShot();
+        assertNotNull(script);
+        Logging.log.info("Execute script: " + (textToLog == null ? script : textToLog));
+        ((JavascriptExecutor) driver).executeScript(script);
+        angularDriver.waitForAngularRequestsToFinish();
+        takeScreenShot();
+    }
+
     protected void clickOnItem(WebElement element, String textToLog) throws Exception {
         takeScreenShot();
         assertNotNull(element);
@@ -247,7 +260,18 @@ public abstract class SeleniumTestBase extends TestBaseWithDefault {
      * get list of li elements from dropdown-menu with allowed types of addresses (queue, topic, multicast, anycast)
      */
     private List<WebElement> getDropDownAddressTypes() throws Exception {
-        return getFilterGroup().findElements(By.className("dropdown-menu inner")).get(0).findElements(By.tagName("li"));
+        for (WebElement el : getFilterGroup().findElements(By.className("dropdown-menu"))) {
+            List<WebElement> subEl = el.findElements(By.className("inner"));
+            if (subEl.size() > 0) {
+                List<WebElement> liElements = subEl.get(0).findElements(By.tagName("li"));
+                liElements.forEach(liEl -> {
+                    Logging.log.info("Got item: {}",
+                            liEl.findElement(By.tagName("a")).findElement(By.tagName("span")).getText());
+                });
+                return liElements;
+            }
+        }
+        throw new IllegalStateException("dropdown-menu doesn't exist");
     }
 
     /**
@@ -261,7 +285,7 @@ public abstract class SeleniumTestBase extends TestBaseWithDefault {
         addressTypesMap.put("multicast", 3);
         addressTypesMap.put("anycast", 4);
 
-        return dropDownTypes.get(addressTypesMap.get(addressType)).findElements(By.tagName("a")).get(0);
+        return dropDownTypes.get(addressTypesMap.get(addressType));
     }
 
     /**
@@ -365,8 +389,9 @@ public abstract class SeleniumTestBase extends TestBaseWithDefault {
      * @param addressType queue, topic, multicast, anycast
      */
     private void addFilterByType(String addressType) throws Exception {
-        WebElement switchAddressTypeButton = getAddressTypeSwitch();
-        clickOnItem(switchAddressTypeButton);
+        executeJavaScript(
+                "document.getElementById('_fields').getElementsByTagName('button')[1].click();",
+                "Click on button: 'Filter by Type...'");
         WebElement addressTypeElement = getDropDownAddressType(addressType, getDropDownAddressTypes());
         clickOnItem(addressTypeElement);
     }
