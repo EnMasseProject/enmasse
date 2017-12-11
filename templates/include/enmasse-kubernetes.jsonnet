@@ -7,11 +7,11 @@ local mqttService = import "mqtt-service.jsonnet";
 local consoleService = import "console-service.jsonnet";
 local images = import "images.jsonnet";
 {
-  common(with_kafka)::
+  list::
   {
     "apiVersion": "v1",
     "kind": "List",
-    "items": [ templateConfig.generate(with_kafka),
+    "items": [ templateConfig.generate,
                addressController.deployment(images.address_controller, "enmasse-template-config", "address-controller-cert", "development", "false", "enmasse-admin", "address-space-admin"),
                addressController.internal_service ]
   },
