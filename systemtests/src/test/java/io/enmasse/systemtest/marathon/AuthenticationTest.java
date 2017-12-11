@@ -10,7 +10,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class AuthenticationTest extends MarathonTestBase {
 
-    //    @Test disabled due to issue: #520
+    @Test
     public void testCreateDeleteUsersLong() throws Exception {
         Logging.log.info("testCreateDeleteUsersLong start");
         AddressSpace addressSpace = new AddressSpace("test-create-delete-users-brokered",
