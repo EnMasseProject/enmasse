@@ -56,8 +56,9 @@ public class KubernetesHelper implements Kubernetes {
     private final Optional<File> templateDir;
     private final String addressControllerSa;
     private final String addressSpaceAdminSa;
+    private final boolean enableRbac;
 
-    public KubernetesHelper(String namespace, OpenShiftClient client, String token, String environment, Optional<File> templateDir, String addressControllerSa, String addressSpaceAdminSa) {
+    public KubernetesHelper(String namespace, OpenShiftClient client, String token, String environment, Optional<File> templateDir, String addressControllerSa, String addressSpaceAdminSa, boolean enableRbac) {
         this.client = client;
         this.namespace = namespace;
         this.controllerToken = token;
@@ -65,6 +66,7 @@ public class KubernetesHelper implements Kubernetes {
         this.templateDir = templateDir;
         this.addressControllerSa = addressControllerSa;
         this.addressSpaceAdminSa = addressSpaceAdminSa;
+        this.enableRbac = enableRbac;
     }
 
     @Override
@@ -197,7 +199,7 @@ public class KubernetesHelper implements Kubernetes {
 
     @Override
     public Kubernetes withNamespace(String namespace) {
-        return new KubernetesHelper(namespace, client, controllerToken, environment, templateDir, addressControllerSa, addressSpaceAdminSa);
+        return new KubernetesHelper(namespace, client, controllerToken, environment, templateDir, addressControllerSa, addressSpaceAdminSa, enableRbac);
     }
 
     @Override
@@ -467,7 +469,8 @@ public class KubernetesHelper implements Kubernetes {
 
     @Override
     public boolean isRBACSupported() {
-        return client.supportsApiPath("/apis/authentication.k8s.io") &&
+        return enableRbac &&
+                client.supportsApiPath("/apis/authentication.k8s.io") &&
                 client.supportsApiPath("/apis/authorization.k8s.io") &&
                 client.supportsApiPath("/apis/rbac.authorization.k8s.io");
 
