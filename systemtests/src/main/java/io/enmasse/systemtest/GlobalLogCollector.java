@@ -26,18 +26,18 @@ import java.util.Map;
 
 public class GlobalLogCollector {
     private final Map<String, LogCollector> collectorMap = new HashMap<>();
-    private final OpenShift openShift;
+    private final Kubernetes kubernetes;
     private final File logDir;
 
-    public GlobalLogCollector(OpenShift openShift, File logDir) {
-        this.openShift = openShift;
+    public GlobalLogCollector(Kubernetes kubernetes, File logDir) {
+        this.kubernetes = kubernetes;
         this.logDir = logDir;
     }
 
 
     public synchronized void startCollecting(String namespace) {
         Logging.log.info("Start collecting logs for pods in namespace {}", namespace);
-        collectorMap.put(namespace, new LogCollector(openShift, new File(logDir, namespace), namespace));
+        collectorMap.put(namespace, new LogCollector(kubernetes, new File(logDir, namespace), namespace));
     }
 
     public synchronized void stopCollecting(String namespace) throws Exception {
@@ -52,7 +52,7 @@ public class GlobalLogCollector {
     public void collectEvents(String namespace) {
         File eventLog = new File(logDir, namespace + ".events");
         try (FileWriter fileWriter = new FileWriter(eventLog)) {
-            for (Event event : openShift.listEvents(namespace)) {
+            for (Event event : kubernetes.listEvents(namespace)) {
                 fileWriter.write(event.toString());
             }
         } catch (IOException e) {

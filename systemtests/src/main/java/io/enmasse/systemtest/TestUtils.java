@@ -30,10 +30,10 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class TestUtils {
-    public static void setReplicas(OpenShift openShift, AddressSpace addressSpace, Destination destination, int numReplicas, TimeoutBudget budget) throws InterruptedException {
-        openShift.setDeploymentReplicas(addressSpace.getNamespace(), destination.getGroup(), numReplicas);
+    public static void setReplicas(Kubernetes kubernetes, AddressSpace addressSpace, Destination destination, int numReplicas, TimeoutBudget budget) throws InterruptedException {
+        kubernetes.setDeploymentReplicas(addressSpace.getNamespace(), destination.getGroup(), numReplicas);
         waitForNReplicas(
-                openShift,
+                kubernetes,
                 addressSpace.getNamespace(),
                 numReplicas,
                 Collections.singletonMap("role", "broker"),
@@ -41,29 +41,29 @@ public class TestUtils {
                 budget);
     }
 
-    public static void setReplicas(OpenShift openShift, String tenantNamespace, String deployment, int numReplicas, TimeoutBudget budget) throws InterruptedException {
-        openShift.setDeploymentReplicas(tenantNamespace, deployment, numReplicas);
+    public static void setReplicas(Kubernetes kubernetes, String tenantNamespace, String deployment, int numReplicas, TimeoutBudget budget) throws InterruptedException {
+        kubernetes.setDeploymentReplicas(tenantNamespace, deployment, numReplicas);
         waitForNReplicas(
-                openShift,
+                kubernetes,
                 tenantNamespace,
                 numReplicas,
                 Collections.singletonMap("name", deployment),
                 budget);
     }
 
-    public static void waitForNReplicas(OpenShift openShift, String tenantNamespace, int expectedReplicas, Map<String, String> labelSelector, TimeoutBudget budget) throws InterruptedException {
-        waitForNReplicas(openShift, tenantNamespace, expectedReplicas, labelSelector, Collections.emptyMap(), budget);
+    public static void waitForNReplicas(Kubernetes kubernetes, String tenantNamespace, int expectedReplicas, Map<String, String> labelSelector, TimeoutBudget budget) throws InterruptedException {
+        waitForNReplicas(kubernetes, tenantNamespace, expectedReplicas, labelSelector, Collections.emptyMap(), budget);
     }
 
-    public static void waitForNReplicas(OpenShift openShift, String tenantNamespace, int expectedReplicas, Map<String, String> labelSelector, Map<String, String> annotationSelector, TimeoutBudget budget) throws InterruptedException {
+    public static void waitForNReplicas(Kubernetes kubernetes, String tenantNamespace, int expectedReplicas, Map<String, String> labelSelector, Map<String, String> annotationSelector, TimeoutBudget budget) throws InterruptedException {
         boolean done = false;
         int actualReplicas = 0;
         do {
             List<Pod> pods;
             if (annotationSelector.isEmpty()) {
-                pods = openShift.listPods(tenantNamespace, labelSelector);
+                pods = kubernetes.listPods(tenantNamespace, labelSelector);
             } else {
-                pods = openShift.listPods(tenantNamespace, labelSelector, annotationSelector);
+                pods = kubernetes.listPods(tenantNamespace, labelSelector, annotationSelector);
             }
             actualReplicas = numReady(pods);
             Logging.log.info("Have " + actualReplicas + " out of " + pods.size() + " replicas. Expecting " + expectedReplicas);
@@ -91,7 +91,7 @@ public class TestUtils {
         return numReady;
     }
 
-    public static void waitForExpectedPods(OpenShift client, AddressSpace addressSpace, int numExpected, TimeoutBudget budget) throws InterruptedException {
+    public static void waitForExpectedPods(Kubernetes client, AddressSpace addressSpace, int numExpected, TimeoutBudget budget) throws InterruptedException {
         List<Pod> pods = listRunningPods(client, addressSpace);
         while (budget.timeLeft() >= 0 && pods.size() != numExpected) {
             Thread.sleep(2000);
@@ -108,13 +108,13 @@ public class TestUtils {
                 .collect(Collectors.joining(","));
     }
 
-    public static List<Pod> listRunningPods(OpenShift openShift, AddressSpace addressSpace) {
-        return openShift.listPods(addressSpace.getNamespace()).stream()
+    public static List<Pod> listRunningPods(Kubernetes kubernetes, AddressSpace addressSpace) {
+        return kubernetes.listPods(addressSpace.getNamespace()).stream()
                 .filter(pod -> pod.getStatus().getPhase().equals("Running"))
                 .collect(Collectors.toList());
     }
 
-    public static void waitForBrokerPod(OpenShift openShift, AddressSpace addressSpace, String group, TimeoutBudget budget) throws InterruptedException {
+    public static void waitForBrokerPod(Kubernetes kubernetes, AddressSpace addressSpace, String group, TimeoutBudget budget) throws InterruptedException {
         Map<String, String> labels = new LinkedHashMap<>();
         labels.put("role", "broker");
 
@@ -125,7 +125,7 @@ public class TestUtils {
         int numReady = 0;
         List<Pod> pods = null;
         while (budget.timeLeft() >= 0 && numReady != 1) {
-            pods = openShift.listPods(addressSpace.getNamespace(), labels, annotations);
+            pods = kubernetes.listPods(addressSpace.getNamespace(), labels, annotations);
             numReady = numReady(pods);
             if (numReady != 1) {
                 Thread.sleep(5000);
@@ -141,20 +141,20 @@ public class TestUtils {
         apiClient.deleteAddresses(addressSpace, destinations);
     }
 
-    public static void deploy(AddressApiClient apiClient, OpenShift openShift, TimeoutBudget budget, AddressSpace addressSpace, HttpMethod httpMethod, Destination... destinations) throws Exception {
+    public static void deploy(AddressApiClient apiClient, Kubernetes kubernetes, TimeoutBudget budget, AddressSpace addressSpace, HttpMethod httpMethod, Destination... destinations) throws Exception {
         apiClient.deploy(addressSpace, httpMethod, destinations);
         JsonObject addrSpaceObj = apiClient.getAddressSpace(addressSpace.getName());
         if (getAddressSpaceType(addrSpaceObj).equals("standard")) {
             Set<String> groups = new HashSet<>();
             for (Destination destination : destinations) {
                 if (Destination.isQueue(destination) || Destination.isTopic(destination)) {
-                    waitForBrokerPod(openShift, addressSpace, destination.getGroup(), budget);
+                    waitForBrokerPod(kubernetes, addressSpace, destination.getGroup(), budget);
                     groups.add(destination.getGroup());
                 }
             }
-            int expectedPods = openShift.getExpectedPods() + groups.size();
+            int expectedPods = kubernetes.getExpectedPods() + groups.size();
             Logging.log.info("Waiting for " + expectedPods + " pods");
-            waitForExpectedPods(openShift, addressSpace, expectedPods, budget);
+            waitForExpectedPods(kubernetes, addressSpace, expectedPods, budget);
         }
         waitForDestinationsReady(apiClient, addressSpace, budget, destinations);
     }
@@ -322,12 +322,12 @@ public class TestUtils {
         return false;
     }
 
-    public static void waitForAddressSpaceDeleted(OpenShift openShift, AddressSpace addressSpace) throws Exception {
-        TimeoutBudget budget = new TimeoutBudget(2, TimeUnit.MINUTES);
-        while (budget.timeLeft() >= 0 && openShift.listNamespaces().contains(addressSpace.getNamespace())) {
+    public static void waitForAddressSpaceDeleted(Kubernetes kubernetes, AddressSpace addressSpace) throws Exception {
+        TimeoutBudget budget = new TimeoutBudget(5, TimeUnit.MINUTES);
+        while (budget.timeLeft() >= 0 && kubernetes.listNamespaces().contains(addressSpace.getNamespace())) {
             Thread.sleep(1000);
         }
-        if (openShift.listNamespaces().contains(addressSpace.getNamespace())) {
+        if (kubernetes.listNamespaces().contains(addressSpace.getNamespace())) {
             throw new TimeoutException("Timed out waiting for namespace " + addressSpace + " to disappear");
         }
     }

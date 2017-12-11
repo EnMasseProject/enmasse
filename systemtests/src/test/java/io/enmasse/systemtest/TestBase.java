@@ -47,11 +47,11 @@ public abstract class TestBase extends SystemTestRunListener {
 
     protected static final Environment environment = new Environment();
 
-
-    protected static final OpenShift openShift = new OpenShift(environment, environment.namespace());
-    protected static final AddressApiClient addressApiClient = new AddressApiClient(openShift);
-    private static final GlobalLogCollector logCollector = new GlobalLogCollector(openShift,
+    protected static final Kubernetes kubernetes = Kubernetes.create(environment);
+    private static final GlobalLogCollector logCollector = new GlobalLogCollector(kubernetes,
             new File(environment.testLogDir()));
+    protected static final AddressApiClient addressApiClient = new AddressApiClient(kubernetes);
+
     protected String username;
     protected String password;
     protected AmqpClientFactory amqpClientFactory;
@@ -65,7 +65,7 @@ public abstract class TestBase extends SystemTestRunListener {
         if (TestUtils.existAddressSpace(addressApiClient, addressSpace.getName())) {
             logCollector.collectEvents(addressSpace.getNamespace());
             addressApiClient.deleteAddressSpace(addressSpace);
-            TestUtils.waitForAddressSpaceDeleted(openShift, addressSpace);
+            TestUtils.waitForAddressSpaceDeleted(kubernetes, addressSpace);
             logCollector.stopCollecting(addressSpace.getNamespace());
         } else {
             Logging.log.info("Address space '" + addressSpace + "' doesn't exists!");
@@ -79,8 +79,8 @@ public abstract class TestBase extends SystemTestRunListener {
     @Before
     public void setup() throws Exception {
         addressSpaceList = new ArrayList<>();
-        amqpClientFactory = new AmqpClientFactory(openShift, environment, null, username, password);
-        mqttClientFactory = new MqttClientFactory(openShift, environment, null, username, password);
+        amqpClientFactory = new AmqpClientFactory(kubernetes, environment, null, username, password);
+        mqttClientFactory = new MqttClientFactory(kubernetes, environment, null, username, password);
     }
 
     @After
@@ -125,9 +125,9 @@ public abstract class TestBase extends SystemTestRunListener {
         if (keycloakApiClient == null) {
             KeycloakCredentials creds = environment.keycloakCredentials();
             if (creds == null) {
-                creds = openShift.getKeycloakCredentials();
+                creds = kubernetes.getKeycloakCredentials();
             }
-            keycloakApiClient = new KeycloakClient(openShift.getKeycloakEndpoint(), creds, openShift.getKeycloakCA());
+            keycloakApiClient = new KeycloakClient(kubernetes.getKeycloakEndpoint(), creds, kubernetes.getKeycloakCA());
         }
         return keycloakApiClient;
     }
@@ -138,13 +138,13 @@ public abstract class TestBase extends SystemTestRunListener {
 
     protected void appendAddresses(AddressSpace addressSpace, Destination... destinations) throws Exception {
         TimeoutBudget budget = new TimeoutBudget(5, TimeUnit.MINUTES);
-        TestUtils.deploy(addressApiClient, openShift, budget, addressSpace, HttpMethod.POST, destinations);
+        TestUtils.deploy(addressApiClient, kubernetes, budget, addressSpace, HttpMethod.POST, destinations);
     }
 
 
     protected void setAddresses(AddressSpace addressSpace, Destination... destinations) throws Exception {
         TimeoutBudget budget = new TimeoutBudget(5, TimeUnit.MINUTES);
-        TestUtils.deploy(addressApiClient, openShift, budget, addressSpace, HttpMethod.PUT, destinations);
+        TestUtils.deploy(addressApiClient, kubernetes, budget, addressSpace, HttpMethod.PUT, destinations);
     }
 
     /**
@@ -162,7 +162,7 @@ public abstract class TestBase extends SystemTestRunListener {
 
     protected void scale(AddressSpace addressSpace, Destination destination, int numReplicas) throws Exception {
         TimeoutBudget budget = new TimeoutBudget(5, TimeUnit.MINUTES);
-        TestUtils.setReplicas(openShift, addressSpace, destination, numReplicas, budget);
+        TestUtils.setReplicas(kubernetes, addressSpace, destination, numReplicas, budget);
     }
 
     protected void scaleKeycloak(int numReplicas) throws Exception {
@@ -179,7 +179,7 @@ public abstract class TestBase extends SystemTestRunListener {
     private void scaleInGlobal(String deployment, int numReplicas) throws InterruptedException {
         if (numReplicas >= 0) {
             TimeoutBudget budget = new TimeoutBudget(5, TimeUnit.MINUTES);
-            TestUtils.setReplicas(openShift, environment.namespace(), deployment, numReplicas, budget);
+            TestUtils.setReplicas(kubernetes, environment.namespace(), deployment, numReplicas, budget);
         } else {
             throw new IllegalArgumentException("'numReplicas' must be greater than 0");
         }
@@ -317,18 +317,18 @@ public abstract class TestBase extends SystemTestRunListener {
     }
 
     protected Endpoint getRouteEndpoint(AddressSpace addressSpace) {
-        Endpoint messagingEndpoint = openShift.getRouteEndpoint(addressSpace.getNamespace(), "messaging");
+        Endpoint messagingEndpoint = kubernetes.getExternalEndpoint(addressSpace.getNamespace(), "messaging");
 
         if (TestUtils.resolvable(messagingEndpoint)) {
             return messagingEndpoint;
         } else {
-            return openShift.getEndpoint(addressSpace.getNamespace(), "messaging", "amqps");
+            return kubernetes.getEndpoint(addressSpace.getNamespace(), "messaging", "amqps");
         }
     }
 
     protected String getConsoleRoute(AddressSpace addressSpace) {
         String consoleRoute = String.format("https://%s:%s@%s", username, password,
-                openShift.getRouteEndpoint(addressSpace.getNamespace(), "console"));
+                kubernetes.getExternalEndpoint(addressSpace.getNamespace(), "console"));
         Logging.log.info(consoleRoute);
         return consoleRoute;
     }
