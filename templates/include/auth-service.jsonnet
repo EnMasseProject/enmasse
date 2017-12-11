@@ -66,6 +66,32 @@ local images = import "images.jsonnet";
     }
   },
 
+  standard_authservice_external::
+  {
+    "apiVersion": "v1",
+    "kind": "Service",
+    "metadata": {
+      "name": "standard-authservice-external",
+      "labels": {
+        "app": "enmasse"
+      }
+    },
+    "spec": {
+      "ports": [
+        {
+          "name": "https",
+          "port": 8443,
+          "protocol": "TCP",
+          "targetPort": "https"
+        }
+      ],
+      "selector": {
+        "name": "keycloak"
+      },
+      "type": "LoadBalancer"
+    }
+  },
+
   keycloak_controller_deployment(keycloak_controller_image, keycloak_credentials_secret, cert_secret)::
     {
       "apiVersion": "extensions/v1beta1",
@@ -135,7 +161,7 @@ local images = import "images.jsonnet";
     },
 
 
-  keycloak_deployment(keycloak_image, keycloak_credentials_secret, cert_secret_name, pvc_claim_name)::
+  keycloak_deployment(keycloak_image, keycloak_credentials_secret, cert_secret_name, pvc_claim_name, podspec_extra={})::
     {
       "apiVersion": "extensions/v1beta1",
       "kind": "Deployment",
@@ -202,7 +228,7 @@ local images = import "images.jsonnet";
               common.secret_volume(cert_secret_name, cert_secret_name),
               common.persistent_volume("keycloak-persistence", pvc_claim_name)
             ]
-          }
+          } + podspec_extra
         }
       }
     },
@@ -314,9 +340,16 @@ local images = import "images.jsonnet";
     "kind": "List",
     "items": [
       me.keycloak_pvc("keycloak-pvc", "2Gi"),
-      me.keycloak_deployment(images.keycloak, "keycloak-credentials", "standard-authservice-cert", "keycloak-pvc"),
+      me.keycloak_deployment(images.keycloak, "keycloak-credentials", "standard-authservice-cert",
+        "keycloak-pvc", {
+              "securityContext": {
+                "runAsUser": 0,
+                "fsGroup": 0
+              }
+        }),
       me.keycloak_controller_deployment(images.keycloak_controller, "keycloak-credentials", "standard-authservice-cert"),
-      me.standard_authservice
+      me.standard_authservice,
+      me.standard_authservice_external
     ],
   },
 

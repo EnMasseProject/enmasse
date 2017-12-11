@@ -104,7 +104,9 @@ items:
   metadata:
     name: enmasse-addressspace-admin
   rules:
-  - resources:
+  - apiGroups:
+    - ''
+    resources:
     - configmaps
     verbs:
     - get

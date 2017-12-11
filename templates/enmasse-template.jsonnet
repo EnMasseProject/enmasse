@@ -8,6 +8,7 @@ local kubernetes = import "include/enmasse-kubernetes.jsonnet";
     "openshift/addons/none-authservice.json": authService.none_openshift,
     "kubernetes/enmasse.json": kubernetes.list,
     "kubernetes/addons/external-lb.json": kubernetes.external_lb,
+    "kubernetes/cluster-roles.json": kubernetes.cluster_roles,
     "kubernetes/addons/standard-authservice.json": authService.keycloak_kubernetes,
     "kubernetes/addons/none-authservice.json": authService.none_kubernetes,
 }
