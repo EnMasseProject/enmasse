@@ -11,7 +11,7 @@ export CHANGE_MINIKUBE_NONE_USER=true
 mkdir $HOME/.kube || true
 touch $HOME/.kube/config
 
-#docker run -d -p 5000:5000 registry
+docker run -d -p 5000:5000 registry
 
 export KUBECONFIG=$HOME/.kube/config
 sudo -E ./minikube start --vm-driver=none --insecure-registry localhost:5000
