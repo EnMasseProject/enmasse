@@ -60,7 +60,7 @@ items:
           - mountPath: /opt/jboss/keycloak/standalone/data
             name: keycloak-persistence
             readOnly: false
-          - mountPath: /opt/jboss/keycloak/standalone/cert
+          - mountPath: /opt/enmasse/cert
             name: standard-authservice-cert
             readOnly: false
         volumes:
