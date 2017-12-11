@@ -5,14 +5,13 @@
 [[_create_user]]
 == Creating a User
 
-Using the {AuthProductNameConsole} you can create a new {ProductName} user and specify a password.
+Using the {AuthProductNameConsole} you can create a new {ProductName} user and specify a password. Note that your realm in {AuthProductName} is the same as your address space in {ProductName}.
 
 .Procedure
 
-. In a web browser, navigate to the {ConsoleName} to locate your {AuthProductNameConsole} URL. 
+. In a web browser, navigate to the {AuthProductNameConsole} URL provided in your welcome email. 
 
-. Log in using the user name and password given to you for your realm.
-The {AuthProductName} Administration Console opens.
+. Log in using the user name and password for your realm provided in your welcome email. The {AuthProductName} Administration Console opens.
 
 . In the left pane, click *Users*. The Users page is displayed.
 
@@ -34,8 +33,9 @@ You can change a user password.
 
 .Procedure
 
-. In a web browser, navigate to http://localhost:8080/auth/admin/ and log in using the user name and password given to you for your realm.
-The {AuthProductNameConsole} opens.
+. In a web browser, navigate to the {AuthProductNameConsole} URL provided in your welcome email. 
+
+. Log in using the user name and password for your realm provided in your welcome email. The {AuthProductNameConsole} opens.
 
 . In the left pane, click *Users*. The Users page is displayed.
 
@@ -55,8 +55,9 @@ Using the {AuthProductNameConsole} you can delete an existing {ProductName} user
 
 .Procedure
 
-. In a web browser, navigate to http://localhost:8080/auth/admin/ and log in using the user name and password given to you for your realm.
-The {AuthProductNameConsole} opens.
+. In a web browser, navigate to the {AuthProductNameConsole} URL provided in your welcome email. 
+
+. Log in using the user name and password for your realm provided in your welcome email. The {AuthProductNameConsole} opens.
 
 . In the left pane, click *Users*. The Users page is displayed.
 
