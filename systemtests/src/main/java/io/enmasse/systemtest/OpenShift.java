@@ -1,3 +1,18 @@
+/*
+ * Copyright 2017 Red Hat Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package io.enmasse.systemtest;
 
 import io.fabric8.kubernetes.api.model.*;
@@ -18,46 +33,17 @@ import java.util.stream.Collectors;
 /**
  * Handles interaction with openshift cluster
  */
-public class OpenShift {
-    private final Environment environment;
-    private final OpenShiftClient client;
-    private final String globalNamespace;
+public class OpenShift extends Kubernetes {
 
     public OpenShift(Environment environment, String globalNamespace) {
-        this.environment = environment;
-        Config config = new ConfigBuilder().withMasterUrl(environment.openShiftUrl())
+        super(environment, new DefaultOpenShiftClient(new ConfigBuilder().withMasterUrl(environment.openShiftUrl())
                 .withOauthToken(environment.openShiftToken())
-                .withUsername(environment.openShiftUser()).build();
-        client = new DefaultOpenShiftClient(config);
-        this.globalNamespace = globalNamespace;
-    }
-
-    public String getApiToken() {
-        return environment.openShiftToken();
-    }
-
-    public OpenShiftClient getClient() {
-        return client;
-    }
-
-    public Endpoint getEndpoint(String namespace, String serviceName, String port) {
-        Service service = client.services().inNamespace(namespace).withName(serviceName).get();
-        return new Endpoint(service.getSpec().getClusterIP(), getPort(service, port));
-    }
-
-    private static int getPort(Service service, String portName) {
-        List<ServicePort> ports = service.getSpec().getPorts();
-        for (ServicePort port : ports) {
-            if (port.getName().equals(portName)) {
-                return port.getPort();
-            }
-        }
-        throw new IllegalArgumentException(
-                "Unable to find port " + portName + " for service " + service.getMetadata().getName());
+                .withUsername(environment.openShiftUser()).build()), globalNamespace);
     }
 
     public Endpoint getRestEndpoint() {
-        Route route = client.routes().inNamespace(globalNamespace).withName("restapi").get();
+        OpenShiftClient openShift = client.adapt(OpenShiftClient.class);
+        Route route = openShift.routes().inNamespace(globalNamespace).withName("restapi").get();
         Endpoint endpoint = new Endpoint(route.getSpec().getHost(), 443);
         if (TestUtils.resolvable(endpoint)) {
             return endpoint;
@@ -67,8 +53,9 @@ public class OpenShift {
         }
     }
 
-    public Endpoint getKeycloakEndpoint() throws InterruptedException {
-        Route route = client.routes().inNamespace(globalNamespace).withName("keycloak").get();
+    public Endpoint getKeycloakEndpoint() {
+        OpenShiftClient openShift = client.adapt(OpenShiftClient.class);
+        Route route = openShift.routes().inNamespace(globalNamespace).withName("keycloak").get();
         Endpoint endpoint = new Endpoint(route.getSpec().getHost(), 443);
         Logging.log.info("Testing endpoint : " + endpoint);
         if (TestUtils.resolvable(endpoint)) {
@@ -79,79 +66,17 @@ public class OpenShift {
         }
     }
 
-    public KeycloakCredentials getKeycloakCredentials() {
-        Secret creds = client.secrets().inNamespace(globalNamespace).withName("keycloak-credentials").get();
-        if (creds != null) {
-            String username = new String(Base64.getDecoder().decode(creds.getData().get("admin.username")));
-            String password = new String(Base64.getDecoder().decode(creds.getData().get("admin.password")));
-            return new KeycloakCredentials(username, password);
+    @Override
+    public Endpoint getExternalEndpoint(String namespace, String endpointName) {
+        OpenShiftClient openShift = client.adapt(OpenShiftClient.class);
+        Route route = openShift.routes().inNamespace(namespace).withName(endpointName).get();
+        Endpoint endpoint = new Endpoint(route.getSpec().getHost(), 443);
+        Logging.log.info("Testing endpoint : " + endpoint);
+        if (TestUtils.resolvable(endpoint)) {
+            return endpoint;
         } else {
-            return null;
+            Logging.log.info("Endpoint didn't resolve, falling back to service endpoint");
+            return getEndpoint(namespace, endpointName, "https");
         }
-    }
-
-    public void setDeploymentReplicas(String tenantNamespace, String name, int numReplicas) {
-        client.extensions().deployments().inNamespace(tenantNamespace).withName(name).scale(numReplicas, true);
-    }
-
-    public List<Pod> listPods(String addressSpace) {
-        return new ArrayList<>(client.pods().inNamespace(addressSpace).list().getItems());
-    }
-
-    public List<Pod> listPods(String addressSpace, Map<String, String> labelSelector) {
-        return client.pods().inNamespace(addressSpace).withLabels(labelSelector).list().getItems();
-    }
-
-    public List<Pod> listPods(String addressSpace, Map<String, String> labelSelector, Map<String, String> annotationSelector) {
-        return client.pods().inNamespace(addressSpace).withLabels(labelSelector).list().getItems().stream().filter(pod -> {
-            for (Map.Entry<String, String> entry : annotationSelector.entrySet()) {
-                if (pod.getMetadata().getAnnotations() == null
-                        || pod.getMetadata().getAnnotations().get(entry.getKey()) == null
-                        || !pod.getMetadata().getAnnotations().get(entry.getKey()).equals(entry.getValue())) {
-                    return false;
-                }
-                return true;
-            }
-            return true;
-        }).collect(Collectors.toList());
-    }
-
-    public int getExpectedPods() {
-        return 5;
-    }
-
-    public Endpoint getRouteEndpoint(String namespace, String routeName) {
-        Route route = client.routes().inNamespace(namespace).withName(routeName).get();
-        return new Endpoint(route.getSpec().getHost(), 443);
-    }
-
-    public Watch watchPods(String namespace, Watcher<Pod> podWatcher) {
-        return client.pods().inNamespace(namespace).watch(podWatcher);
-    }
-
-    public List<Event> listEvents(String namespace) {
-        return client.events().inNamespace(namespace).list().getItems();
-    }
-
-    public LogWatch watchPodLog(String namespace, String name, String container, OutputStream outputStream) {
-        return client.pods().inNamespace(namespace).withName(name).inContainer(container).watchLog(outputStream);
-    }
-
-    public Pod getPod(String namespace, String name) {
-        return client.pods().inNamespace(namespace).withName(name).get();
-    }
-
-    public Set<String> listNamespaces() {
-        return client.namespaces().list().getItems().stream()
-                .map(ns -> ns.getMetadata().getName())
-                .collect(Collectors.toSet());
-    }
-
-    public String getKeycloakCA() throws UnsupportedEncodingException {
-        Secret secret = client.secrets().withName("standard-authservice-cert").get();
-        if (secret == null) {
-            throw new IllegalStateException("Unable to find CA cert for keycloak");
-        }
-        return new String(Base64.getDecoder().decode(secret.getData().get("tls.crt")), "UTF-8");
     }
 }
