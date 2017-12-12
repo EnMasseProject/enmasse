@@ -1,4 +1,4 @@
-// Standard document attributes
+// Standard document attributes for downstream docs
 
 :data-uri!:
 :doctype: article
@@ -12,16 +12,18 @@
 :toc:
 :linkattrs:
 :toclevels: 4
-:Title: Using {ProductName}
 
 // Product attributes
 
-:ProductLongName: EnMasse
-:ProductName: EnMasse
+:ProductLongName: Red Hat OpenShift Messaging
+:ProductName: 
 :ProductVersion: 
 :ProductMajorVersion: 
-:AuthProductName: Keycloak
-:AuthProductNameConsole: Keycloak Administration Console
+:ConsoleName: {ProductName} Console
+:AMQProductLongName: Red Hat JBoss AMQ
+:AMQProductName: JBoss AMQ
+:AuthProductName: Red Hat Single Sign-On
+:AuthProductNameConsole: Red Hat Single Sign-On Administration Console
 :QpidJmsVersion: 0.20.0
 :ProtonVersion: 0.16.0
 :ExampleQueue: myqueue
@@ -29,11 +31,9 @@
 
 // Component attributes
 
-:AMQConsoleName:
 :BrokerLongName: {AMQProductLongName} Broker
 :BrokerName: {AMQProductName} Broker
 :BrokerVersion: 7.0
-:ConsoleName: {ProductName} Console
 :RouterLongName: {AMQProductLongName} Interconnect
 :RouterName: {AMQProductName} Interconnect
 :RouterVersion: 1.0
@@ -65,7 +65,7 @@
 :ClientOpenWireJmsBook: Using the {ClientOpenWireJmsName} Client
 :ClientReleaseNotesBook: {ClientsName} {ClientsVersion} Release Notes
 :AMQConsoleBook: Using {AMQConsoleName}
-:ConsoleReleaseNotesBook: {ConsoleName} {ConsoleVersion} Release Notes
+:AMQConsoleReleaseNotesBook: {AMQConsoleName} {AMQConsoleVersion} Release Notes
 
 // Book links
 
@@ -113,8 +113,8 @@
 :ClientOpenWireJmsBookUrl: {BookUrlBase}/using_the_amq_openwire_jms-client/
 :ClientOpenWireJmsBookLink: link:{ClientOpenWireJmsBookUrl}[{ClientOpenWireJmsBook}]
 
-:ConsoleBookUrl: {BookUrlBase}/using_amq_console/
-:ConsoleBookLink: link:{ConsoleBookUrl}[{ConsoleBook}]
+:AMQConsoleBookUrl: {BookUrlBase}/using_amq_console/
+:AMQConsoleBookLink: link:{AMQConsoleBookUrl}[{AMQConsoleBook}]
 
 // Other links
 
