@@ -27,6 +27,8 @@ kubectl config set-context $(kubectl config current-context) --namespace=$OPENSH
 
 ${ENMASSE_DIR}/deploy-kubernetes.sh -n $OPENSHIFT_PROJECT -o multitenant -a "none standard"
 
+kubectl apply -f ${ENMASSE_DIR}/kubernetes/addons/external-lb.yaml -n ${OPENSHIFT_PROJECT}
+
 #environment info
 LOG_DIR="${ARTIFACTS_DIR}/kubernetes-info/"
 mkdir -p ${LOG_DIR}
