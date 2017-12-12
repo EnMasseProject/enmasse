@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.enmasse.controller.event;
+package io.enmasse.controller.common;
 
 import io.enmasse.k8s.api.EventLogger;
 

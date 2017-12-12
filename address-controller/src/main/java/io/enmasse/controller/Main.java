@@ -24,9 +24,7 @@ import io.enmasse.address.model.AuthenticationServiceType;
 import io.enmasse.address.model.CertProvider;
 import io.enmasse.address.model.Endpoint;
 import io.enmasse.controller.auth.*;
-import io.enmasse.controller.brokered.BrokeredController;
 import io.enmasse.controller.common.*;
-import io.enmasse.controller.standard.StandardController;
 import io.enmasse.k8s.api.AddressSpaceApi;
 import io.enmasse.k8s.api.ConfigMapAddressSpaceApi;
 import io.enmasse.k8s.api.EventLogger;
@@ -63,13 +61,11 @@ public class Main extends AbstractVerticle {
 
         CertManager certManager = OpenSSLCertManager.create(controllerClient, options.getNamespace());
         AuthenticationServiceResolverFactory resolverFactory = createResolverFactory(options);
-        StandardController standardController = new StandardController(vertx, addressSpaceApi, kubernetes, resolverFactory, options.getCertDir());
-        BrokeredController brokeredController = new BrokeredController();
         EventLogger authEventLogger = new KubeEventLogger(controllerClient, controllerClient.getNamespace(), Clock.systemUTC(), "auth-controller");
         AuthController authController = new AuthController(certManager, authEventLogger);
 
         deployVerticles(startPromise,
-                new Deployment(new Controller(controllerClient, addressSpaceApi, kubernetes, resolverFactory, Arrays.asList(standardController, brokeredController), eventLogger, authController)),
+                new Deployment(new Controller(controllerClient, addressSpaceApi, kubernetes, resolverFactory, eventLogger, authController)),
 //                new Deployment(new AMQPServer(kubernetes.getNamespace(), addressSpaceApi, options.port())),
                 new Deployment(new HTTPServer(addressSpaceApi, options.getCertDir(), kubernetes, kubernetes.isRBACSupported()), new DeploymentOptions().setWorker(true)));
     }

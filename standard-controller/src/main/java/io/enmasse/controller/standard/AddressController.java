@@ -1,19 +1,30 @@
+/*
+ * Copyright 2016 Red Hat Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package io.enmasse.controller.standard;
 
 import io.enmasse.address.model.AddressType;
 import io.enmasse.amqp.SyncRequestClient;
-import io.enmasse.controller.common.*;
 import io.enmasse.address.model.Address;
-import io.enmasse.controller.event.ControllerKind;
 import io.enmasse.k8s.api.*;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerPort;
 import io.fabric8.kubernetes.api.model.Pod;
-import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
-import io.vertx.core.buffer.Buffer;
 import io.vertx.core.net.PemKeyCertOptions;
 import io.vertx.core.net.PemTrustOptions;
 import io.vertx.proton.ProtonClientOptions;
@@ -31,15 +42,14 @@ import java.util.stream.Collectors;
 
 import static io.enmasse.address.model.types.standard.StandardType.QUEUE;
 import static io.enmasse.address.model.types.standard.StandardType.TOPIC;
-import static io.enmasse.controller.common.ControllerReason.*;
-import static io.enmasse.controller.event.ControllerKind.AddressSpace;
-import static io.enmasse.controller.event.ControllerKind.Broker;
+import static io.enmasse.controller.standard.ControllerKind.AddressSpace;
+import static io.enmasse.controller.standard.ControllerKind.Broker;
+import static io.enmasse.controller.standard.ControllerReason.*;
 import static io.enmasse.k8s.api.EventLogger.Type.Normal;
 import static io.enmasse.k8s.api.EventLogger.Type.Warning;
 
 /**
- * Controller for a single address space
- * TODO: This component should live within the address space
+ * Controller for a single standard address space
  */
 public class AddressController extends AbstractVerticle implements Watcher<Address> {
     private static final Logger log = LoggerFactory.getLogger(AddressController.class);
@@ -243,18 +253,14 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
             }
         }
 
-        // TODO: This is a workaround to trust the router we are connecting to. This is by no means ideal, and this whole component should be
-        // running inside the address space instead.
-        Optional<Secret> addressSpaceCaSecret = kubernetes.getSecret(KubeUtil.getAddressSpaceCaSecretName(kubernetes.getNamespace()));
-        if (port != 0 && addressSpaceCaSecret.isPresent() && addressSpaceCaSecret.get().getData() != null) {
+        if (port != 0) {
             log.debug("Checking router status of router " + router.getStatus().getPodIP());
-            Buffer ca = Buffer.buffer(Base64.getDecoder().decode(addressSpaceCaSecret.get().getData().get("tls.crt")));
             ProtonClientOptions clientOptions = new ProtonClientOptions()
                     .setSsl(true)
                     .addEnabledSaslMechanism("EXTERNAL")
                     .setHostnameVerificationAlgorithm("")
                     .setPemTrustOptions(new PemTrustOptions()
-                            .addCertValue(ca))
+                            .addCertPath(new File(certDir, "ca.crt").getAbsolutePath()))
                     .setPemKeyCertOptions(new PemKeyCertOptions()
                             .setCertPath(new File(certDir, "tls.crt").getAbsolutePath())
                             .setKeyPath(new File(certDir, "tls.key").getAbsolutePath()));

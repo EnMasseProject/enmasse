@@ -1,4 +1,3 @@
-local storage = import "storage-template.jsonnet";
 local common = import "common.jsonnet";
 local standardInfra = import "standard-space-infra.jsonnet";
 local brokeredInfra = import "brokered-space-infra.jsonnet";
@@ -31,11 +30,7 @@ local roles = import "roles.jsonnet";
       },
       "name": "enmasse"
     },
-    "objects": [ storage.template(false, false),
-                 storage.template(false, true),
-                 storage.template(true, false),
-                 storage.template(true, true),
-                 standardInfra.template,
+    "objects": [ standardInfra.template(false),
                  brokeredInfra.template,
                  addressController.deployment("${ADDRESS_CONTROLLER_IMAGE}", "", "${ADDRESS_CONTROLLER_CERT_SECRET}", "${ENVIRONMENT}", "${ENABLE_RBAC}", "${ADDRESS_CONTROLLER_SA}", "${ADDRESS_SPACE_ADMIN_SA}"),
                  addressController.internal_service,

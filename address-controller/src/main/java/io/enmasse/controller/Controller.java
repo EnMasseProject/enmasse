@@ -21,10 +21,9 @@ import io.enmasse.address.model.SecretCertProvider;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.config.LabelKeys;
 import io.enmasse.controller.auth.AuthController;
-import io.enmasse.controller.common.AddressSpaceController;
 import io.enmasse.controller.common.AuthenticationServiceResolverFactory;
 import io.enmasse.controller.common.Kubernetes;
-import io.enmasse.controller.event.ControllerKind;
+import io.enmasse.controller.common.ControllerKind;
 import io.enmasse.k8s.api.*;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.Service;
@@ -52,7 +51,6 @@ public class Controller extends AbstractVerticle implements Watcher<AddressSpace
     private final AddressSpaceApi addressSpaceApi;
     private Watch watch;
 
-    private final List<AddressSpaceController> addressSpaceControllers;
     private final ControllerHelper helper;
     private final EventLogger eventLogger;
     private final AuthController authController;
@@ -61,13 +59,11 @@ public class Controller extends AbstractVerticle implements Watcher<AddressSpace
                       AddressSpaceApi addressSpaceApi,
                       Kubernetes kubernetes,
                       AuthenticationServiceResolverFactory authResolverFactory,
-                      List<AddressSpaceController> addressSpaceControllers,
                       EventLogger eventLogger,
                       AuthController authController) {
         this.helper = new ControllerHelper(kubernetes, authResolverFactory, eventLogger);
         this.client = client;
         this.addressSpaceApi = addressSpaceApi;
-        this.addressSpaceControllers = addressSpaceControllers;
         this.eventLogger = eventLogger;
         this.authController = authController;
     }
@@ -133,13 +129,6 @@ public class Controller extends AbstractVerticle implements Watcher<AddressSpace
                     authController.issueComponentCertificates(instance);
                     authController.issueExternalCertificates(instance);
                 }
-            }
-
-            for (AddressSpaceController controller : addressSpaceControllers) {
-                Set<AddressSpace> filtered = resources.stream()
-                        .filter(space -> space.getType().getName().equals(controller.getAddressSpaceType().getName()))
-                        .collect(Collectors.toSet());
-                controller.resourcesUpdated(filtered);
             }
         } catch (Exception e) {
             eventLogger.log(AddressSpaceSyncFailed, "Error syncing address space: " + e.getMessage(), EventLogger.Type.Warning, ControllerKind.Controller, "enmasse-controller");

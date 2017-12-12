@@ -14,24 +14,19 @@
  * limitations under the License.
  */
 
-package io.enmasse.controller.common;
+package io.enmasse.controller.standard;
 
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.address.model.*;
 import io.enmasse.address.model.types.AddressType;
 import io.enmasse.address.model.types.standard.StandardAddressSpaceType;
 import io.enmasse.address.model.types.standard.StandardType;
-import io.enmasse.k8s.api.TestAddressSpaceApi;
 import io.fabric8.kubernetes.api.model.*;
-import io.fabric8.openshift.client.OpenShiftClient;
 import io.fabric8.openshift.client.ParameterValue;
-import io.fabric8.openshift.client.dsl.TemplateResource;
-import io.fabric8.openshift.client.dsl.TemplateOperation;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
-import java.io.File;
 import java.util.*;
 
 import static org.hamcrest.CoreMatchers.is;
@@ -42,15 +37,12 @@ import static org.mockito.Mockito.*;
 public class TemplateAddressClusterGeneratorTest {
     private Kubernetes kubernetes;
     private AddressClusterGenerator generator;
-    private TestAddressSpaceApi testAddressSpaceApi = new TestAddressSpaceApi();
 
     @Before
     public void setUp() {
-        testAddressSpaceApi.createAddressSpace(createAddressSpace("myinstance"));
         kubernetes = mock(Kubernetes.class);
-        generator = new TemplateAddressClusterGenerator(testAddressSpaceApi,
-                kubernetes,
-                authenticationServiceType -> new NoneAuthenticationServiceResolver("localhost", 5672));
+        Map<String, String> env = new HashMap<>();
+        generator = new TemplateAddressClusterGenerator(kubernetes, new TemplateOptions(env));
     }
 
     @Test
@@ -77,7 +69,7 @@ public class TemplateAddressClusterGeneratorTest {
             assertThat(annotations.get(AnnotationKeys.CLUSTER_ID), is(dest.getName()));
         }
         List<ParameterValue> parameters = captor.getAllValues();
-        assertThat(parameters.size(), is(8));
+        assertThat(parameters.size(), is(10));
     }
 
     private Address createAddress(String address, AddressType type) {
@@ -103,7 +95,6 @@ public class TemplateAddressClusterGeneratorTest {
 
     private AddressCluster generateCluster(Address address, ArgumentCaptor<ParameterValue> captor) {
         when(kubernetes.processTemplate(anyString(), captor.capture())).thenReturn(new KubernetesListBuilder().addNewConfigMapItem().withNewMetadata().withName("testmap").endMetadata().endConfigMapItem().build());
-        when(kubernetes.getSecret(anyString())).thenReturn(Optional.empty());
 
         return generator.generateCluster(address.getName(), Collections.singleton(address));
     }

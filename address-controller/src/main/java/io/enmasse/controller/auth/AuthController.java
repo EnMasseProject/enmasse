@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.Endpoint;
-import io.enmasse.controller.event.ControllerKind;
+import io.enmasse.controller.common.ControllerKind;
 import io.enmasse.k8s.api.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

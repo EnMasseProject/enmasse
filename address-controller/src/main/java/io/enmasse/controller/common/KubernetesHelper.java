@@ -69,40 +69,6 @@ public class KubernetesHelper implements Kubernetes {
         this.enableRbac = enableRbac;
     }
 
-    @Override
-    public List<AddressCluster> listClusters() {
-        Map<String, List<HasMetadata>> resourceMap = new HashMap<>();
-
-        // Add other resources part of a destination cluster
-        List<HasMetadata> objects = new ArrayList<>();
-        objects.addAll(client.extensions().deployments().inNamespace(namespace).list().getItems());
-        objects.addAll(client.persistentVolumeClaims().inNamespace(namespace).list().getItems());
-        objects.addAll(client.configMaps().inNamespace(namespace).list().getItems());
-
-        for (HasMetadata config : objects) {
-            Map<String, String> annotations = config.getMetadata().getAnnotations();
-
-            if (annotations != null && annotations.containsKey(AnnotationKeys.CLUSTER_ID)) {
-                String groupId = annotations.get(AnnotationKeys.CLUSTER_ID);
-
-                Map<String, String> labels = config.getMetadata().getLabels();
-
-                if (labels != null && !"address-config".equals(labels.get(LabelKeys.TYPE))) {
-                    if (!resourceMap.containsKey(groupId)) {
-                        resourceMap.put(groupId, new ArrayList<>());
-                    }
-                    resourceMap.get(groupId).add(config);
-                }
-            }
-        }
-
-        return resourceMap.entrySet().stream()
-                .map(entry -> {
-                    KubernetesList list = new KubernetesList();
-                    list.setItems(entry.getValue());
-                    return new AddressCluster(entry.getKey(), list);
-                }).collect(Collectors.toList());
-    }
 
     @Override
     public void create(HasMetadata... resources) {
@@ -335,11 +301,8 @@ public class KubernetesHelper implements Kubernetes {
                 .collect(Collectors.toSet());
     }
 
-    @Override
-    public boolean isDestinationClusterReady(String clusterId) {
-        return listClusters().stream()
-                .filter(dc -> clusterId.equals(dc.getClusterId()))
-                .anyMatch(KubernetesHelper::areAllDeploymentsReady);
+    public static boolean isDeployment(HasMetadata res) {
+        return res.getKind().equals("Deployment");  // TODO: is there an existing constant for this somewhere?
     }
 
     @Override
@@ -361,11 +324,6 @@ public class KubernetesHelper implements Kubernetes {
                             n.getMetadata().getAnnotations().get(AnnotationKeys.CREATED_BY)))
                     .collect(Collectors.toSet());
         }
-    }
-
-    @Override
-    public List<Pod> listRouters() {
-        return client.pods().withLabel(LabelKeys.CAPABILITY, "router").list().getItems();
     }
 
     @Override
@@ -631,14 +589,6 @@ public class KubernetesHelper implements Kubernetes {
     private boolean hasClusterRole(String roleName) {
         String apiPath = client.isAdaptable(OpenShiftClient.class) ? "/oapi/v1" : "/apis/rbac.authorization.k8s.io/v1beta1";
         return doRawHttpRequest(apiPath + "/clusterroles/" + roleName, "GET", null, true, null) != null;
-    }
-
-    public static boolean isDeployment(HasMetadata res) {
-        return res.getKind().equals("Deployment");  // TODO: is there an existing constant for this somewhere?
-    }
-
-    private static boolean areAllDeploymentsReady(AddressCluster dc) {
-        return dc.getResources().getItems().stream().filter(KubernetesHelper::isDeployment).allMatch(d -> isReady((Deployment) d));
     }
 
     private static boolean isReady(Deployment deployment) {

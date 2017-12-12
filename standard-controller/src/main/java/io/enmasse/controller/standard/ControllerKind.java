@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Red Hat Inc.
+ * Copyright 2017 Red Hat Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,22 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.enmasse.controller.common;
+package io.enmasse.controller.standard;
 
-import io.enmasse.address.model.Address;
+import io.enmasse.k8s.api.EventLogger;
 
-import java.util.Set;
-
-/**
- * Generates clusters for a set of addresses.
- */
-public interface AddressClusterGenerator {
-
-    /**
-     * Generate cluster for a given address.
-     *
-     * @param clusterId The id of the cluster
-     * @param addressSet The set of addresses to generate a cluster for.
-     */
-    AddressCluster generateCluster(String clusterId, Set<Address> addressSet);
+public enum ControllerKind implements EventLogger.ObjectKind {
+    Address,
+    AddressSpace,
+    Broker
 }

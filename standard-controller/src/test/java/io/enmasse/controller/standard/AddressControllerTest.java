@@ -19,7 +19,6 @@ package io.enmasse.controller.standard;
 import io.enmasse.address.model.types.AddressType;
 import io.enmasse.address.model.types.Plan;
 import io.enmasse.address.model.Address;
-import io.enmasse.controller.common.*;
 import io.enmasse.address.model.types.standard.StandardType;
 import io.enmasse.k8s.api.AddressApi;
 import io.enmasse.k8s.api.EventLogger;
@@ -56,7 +55,6 @@ public class AddressControllerTest {
         mockClient = mock(OpenShiftClient.class);
         EventLogger eventLogger = mock(EventLogger.class);
 
-        when(mockHelper.getNamespace()).thenReturn("myinstance");
         controller = new AddressController("me", mockApi, mockHelper, mockGenerator, null, eventLogger);
     }
 

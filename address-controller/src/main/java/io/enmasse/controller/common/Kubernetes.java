@@ -30,32 +30,9 @@ import java.util.*;
  */
 public interface Kubernetes {
 
-    static void addObjectLabel(KubernetesList items, String labelKey, String labelValue) {
-        for (HasMetadata item : items.getItems()) {
-            Map<String, String> labels = item.getMetadata().getLabels();
-            if (labels == null) {
-                labels = new LinkedHashMap<>();
-            }
-            labels.put(labelKey, labelValue);
-            item.getMetadata().setLabels(labels);
-        }
-    }
-
-    static void addObjectAnnotation(KubernetesList items, String annotationKey, String annotationValue) {
-        for (HasMetadata item : items.getItems()) {
-            Map<String, String> annotations = item.getMetadata().getAnnotations();
-            if (annotations == null) {
-                annotations = new LinkedHashMap<>();
-            }
-            annotations.put(annotationKey, annotationValue);
-            item.getMetadata().setAnnotations(annotations);
-        }
-    }
-
     String getNamespace();
     Kubernetes withNamespace(String namespace);
 
-    List<AddressCluster> listClusters();
     void create(HasMetadata ... resources);
     void create(KubernetesList resources);
     void create(KubernetesList resources, String namespace);
@@ -74,10 +51,6 @@ public interface Kubernetes {
     void createEndpoint(Endpoint endpoint, Service service, String addressSpaceName, String namespace);
 
     Set<Deployment> getReadyDeployments();
-
-    boolean isDestinationClusterReady(String clusterId);
-
-    List<Pod> listRouters();
 
     Optional<Secret> getSecret(String secretName);
 
