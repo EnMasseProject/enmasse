@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.enmasse.controller.common;
+package io.enmasse.controller.standard;
 
 import io.enmasse.address.model.*;
 import io.enmasse.address.model.types.standard.StandardAddressSpaceType;
@@ -22,7 +22,6 @@ import io.enmasse.config.AnnotationKeys;
 import io.enmasse.config.LabelKeys;
 import io.enmasse.address.model.types.Plan;
 import io.enmasse.address.model.types.TemplateConfig;
-import io.enmasse.k8s.api.AddressSpaceApi;
 import io.enmasse.k8s.api.KubeUtil;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.openshift.client.ParameterValue;
@@ -34,19 +33,15 @@ import java.util.stream.Collectors;
 
 /**
  * Generates destination clusters using Openshift templates.
- *
- // TODO: Find a way to make this not dependent on the address space
  */
 public class TemplateAddressClusterGenerator implements AddressClusterGenerator {
     private final Kubernetes kubernetes;
-    private final AddressSpaceApi addressSpaceApi;
-    private final AuthenticationServiceResolverFactory authResolverFactory;
     private static final AddressResolver addressResolver = new AddressResolver(new StandardAddressSpaceType());
+    private final TemplateOptions templateOptions;
 
-    public TemplateAddressClusterGenerator(AddressSpaceApi addressSpaceApi, Kubernetes kubernetes, AuthenticationServiceResolverFactory authResolverFactory) {
-        this.addressSpaceApi = addressSpaceApi;
+    public TemplateAddressClusterGenerator(Kubernetes kubernetes, TemplateOptions templateOptions) {
         this.kubernetes = kubernetes;
-        this.authResolverFactory = authResolverFactory;
+        this.templateOptions = templateOptions;
     }
 
     /**
@@ -70,25 +65,12 @@ public class TemplateAddressClusterGenerator implements AddressClusterGenerator 
         paramMap.put(TemplateParameter.NAME, KubeUtil.sanitizeName(clusterId));
         paramMap.put(TemplateParameter.CLUSTER_ID, clusterId);
         paramMap.put(TemplateParameter.ADDRESS_SPACE, first.getAddressSpace());
-
-        // TODO: Find a way to make this not assume standard address space
-        addressSpaceApi.getAddressSpaceWithName(first.getAddressSpace()).ifPresent(addressSpace -> {
-            for (Endpoint endpoint : addressSpace.getEndpoints()) {
-                if (endpoint.getService().equals("messaging")) {
-                    paramMap.put(TemplateParameter.COLOCATED_ROUTER_SECRET, endpoint.getCertProvider().get().getSecretName());
-                    break;
-                }
-            }
-
-            AuthenticationService authService = addressSpace.getAuthenticationService();
-            AuthenticationServiceResolver authResolver = authResolverFactory.getResolver(authService.getType());
-            paramMap.put(TemplateParameter.AUTHENTICATION_SERVICE_HOST, authResolver.getHost(authService));
-            paramMap.put(TemplateParameter.AUTHENTICATION_SERVICE_PORT, String.valueOf(authResolver.getPort(authService)));
-            paramMap.put(TemplateParameter.ADDRESS_SPACE_ADMIN_SA, kubernetes.getAddressSpaceAdminSa());
-            authResolver.getCaSecretName(authService).ifPresent(secretName -> kubernetes.getSecret(secretName).ifPresent(secret -> paramMap.put(TemplateParameter.AUTHENTICATION_SERVICE_CA_CERT, secret.getData().get("tls.crt"))));
-            authResolver.getClientSecretName(authService).ifPresent(secret -> paramMap.put(TemplateParameter.AUTHENTICATION_SERVICE_CLIENT_SECRET, secret));
-            authResolver.getSaslInitHost(addressSpace.getName(), authService).ifPresent(saslInitHost -> paramMap.put(TemplateParameter.AUTHENTICATION_SERVICE_SASL_INIT_HOST, saslInitHost));
-        });
+        paramMap.put(TemplateParameter.COLOCATED_ROUTER_SECRET, templateOptions.getMessagingSecret());
+        paramMap.put(TemplateParameter.AUTHENTICATION_SERVICE_HOST, templateOptions.getAuthenticationServiceHost());
+        paramMap.put(TemplateParameter.AUTHENTICATION_SERVICE_PORT, templateOptions.getAuthenticationServicePort());
+        paramMap.put(TemplateParameter.AUTHENTICATION_SERVICE_CA_SECRET, templateOptions.getAuthenticationServiceCaSecret());
+        paramMap.put(TemplateParameter.AUTHENTICATION_SERVICE_CLIENT_SECRET, templateOptions.getAuthenticationServiceClientSecret());
+        paramMap.put(TemplateParameter.AUTHENTICATION_SERVICE_SASL_INIT_HOST, templateOptions.getAuthenticationServiceSaslInitHost());
 
         // If the name of the group matches that of the address, assume a scalable queue
         if (clusterId.equals(first.getName()) && addressSet.size() == 1) {
@@ -102,6 +84,7 @@ public class TemplateAddressClusterGenerator implements AddressClusterGenerator 
 
 
         KubernetesList items = kubernetes.processTemplate(templateConfig.getName(), parameters);
+
 
         // These are attributes that we need to identify components belonging to this address
         Kubernetes.addObjectAnnotation(items, AnnotationKeys.CLUSTER_ID, clusterId);

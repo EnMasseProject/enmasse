@@ -47,6 +47,7 @@
      <module>topic-forwarder</module>
      <module>mqtt-gateway</module>
      <module>mqtt-lwt</module>
+     <module>standard-controller</module>
      <module>address-controller</module>
      <module>keycloak</module>
      <module>keycloak-controller</module>

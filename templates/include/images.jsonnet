@@ -8,6 +8,9 @@ local registry = std.extVar("REGISTRY");
   address_controller::
     self.image(std.extVar("ADDRESS_CONTROLLER_IMAGE")),
 
+  standard_controller::
+    self.image(std.extVar("STANDARD_CONTROLLER_IMAGE")),
+
   router::
     self.image(std.extVar("ROUTER_IMAGE")),
 

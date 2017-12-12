@@ -33,11 +33,4 @@ if [ -n "$AMQP_KAFKA_BRIDGE_SERVICE_HOST" ]; then
     envsubst < /etc/qpid-dispatch/amqp-kafka-bridge.snippet >> /tmp/qdrouterd.conf
 fi
 
-# TODO: This is a hack for allowing 2 CAs (address space + address controller) to be accepted as
-# avalid clients. This is needed by the address controller to check the router status
-if [ -d "/etc/enmasse-certs" ] && [ -d "/etc/qpid-dispatch/address-controller-ca" ]; then
-    cat /etc/enmasse-certs/ca.crt > /tmp/ca.crt
-    cat /etc/qpid-dispatch/address-controller-ca/tls.crt >> /tmp/ca.crt
-fi
-
 exec /sbin/qdrouterd --conf /tmp/qdrouterd.conf

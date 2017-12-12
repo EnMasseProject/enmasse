@@ -19,7 +19,7 @@ import io.enmasse.controller.common.*;
 import io.enmasse.address.model.*;
 import io.enmasse.address.model.types.Plan;
 import io.enmasse.address.model.types.TemplateConfig;
-import io.enmasse.controller.event.ControllerKind;
+import io.enmasse.controller.common.ControllerKind;
 import io.enmasse.k8s.api.EventLogger;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesList;

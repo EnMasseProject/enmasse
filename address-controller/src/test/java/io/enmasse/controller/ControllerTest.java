@@ -16,9 +16,9 @@
 package io.enmasse.controller;
 
 import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.Status;
 import io.enmasse.address.model.types.brokered.BrokeredAddressSpaceType;
 import io.enmasse.address.model.types.standard.StandardAddressSpaceType;
-import io.enmasse.controller.common.AddressSpaceController;
 import io.enmasse.controller.common.Kubernetes;
 import io.enmasse.controller.common.NoneAuthenticationServiceResolver;
 import io.enmasse.k8s.api.EventLogger;
@@ -35,6 +35,7 @@ import org.mockito.internal.util.collections.Sets;
 
 import java.util.Arrays;
 
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.anySet;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.*;
@@ -45,17 +46,14 @@ public class ControllerTest {
     private TestAddressSpaceApi testApi;
     private Kubernetes kubernetes;
     private OpenShiftClient client;
-    private AddressSpaceController spaceController;
 
     @Before
     public void setup() {
         vertx = Vertx.vertx();
         client = mock(OpenShiftClient.class);
         kubernetes = mock(Kubernetes.class);
-        spaceController = mock(AddressSpaceController.class);
         testApi = new TestAddressSpaceApi();
 
-        when(spaceController.getAddressSpaceType()).thenReturn(new BrokeredAddressSpaceType());
         when(kubernetes.withNamespace(anyString())).thenReturn(kubernetes);
         when(kubernetes.getNamespace()).thenReturn("myspace");
         when(kubernetes.existsNamespace(anyString())).thenReturn(true);
@@ -69,23 +67,27 @@ public class ControllerTest {
     @Test
     public void testController(TestContext context) throws Exception {
         EventLogger testLogger = mock(EventLogger.class);
-        Controller controller = new Controller(client, testApi, kubernetes, (a) -> new NoneAuthenticationServiceResolver("localhost", 1234), Arrays.asList(spaceController), testLogger, null);
+        Controller controller = new Controller(client, testApi, kubernetes, (a) -> new NoneAuthenticationServiceResolver("localhost", 1234), testLogger, null);
 
         vertx.deployVerticle(controller, context.asyncAssertSuccess());
 
         AddressSpace a1 = new AddressSpace.Builder()
                 .setName("myspace")
                 .setType(new StandardAddressSpaceType())
+                .setStatus(new Status(false))
                 .build();
 
         AddressSpace a2 = new AddressSpace.Builder()
                 .setName("myspace")
                 .setType(new BrokeredAddressSpaceType())
+                .setStatus(new Status(false))
                 .build();
 
         controller.resourcesUpdated(Sets.newSet(a1, a2));
 
-        verify(spaceController).resourcesUpdated(anySet());
+        for (AddressSpace space : testApi.listAddressSpaces()) {
+            assertTrue(space.getStatus().isReady());
+        }
     }
 
 }

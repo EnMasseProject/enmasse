@@ -1,4 +1,5 @@
 local configserv = import "configserv.jsonnet";
+local templateConfig = import "template-config.jsonnet";
 local roles = import "roles.jsonnet";
 local ragent = import "ragent.jsonnet";
 local router = import "router.jsonnet";
@@ -19,9 +20,11 @@ local mqttRoute = import "mqtt-route.jsonnet";
 local mqttLwt = import "mqtt-lwt.jsonnet";
 local images = import "images.jsonnet";
 local prometheus = import "prometheus.jsonnet";
+local storage = import "storage-template.jsonnet";
+local standardController = import "standard-controller.jsonnet";
 
 {
-  template::
+  template(use_template_configmap)::
   {
     "apiVersion": "v1",
     "kind": "Template",
@@ -32,19 +35,34 @@ local prometheus = import "prometheus.jsonnet";
       "name": "standard-space-infra"
     },
 
-    "objects": admin.services("${ADDRESS_SPACE}") + [
+    local storage_templates = [
+      storage.template(false, false),
+      storage.template(false, true),
+      storage.template(true, false),
+      storage.template(true, true)
+    ],
+
+    local storage_template_configmap = [
+      templateConfig.storage("enmasse-storage-templates")
+    ],
+
+    local template_config = (if use_template_configmap then "enmasse-storage-templates" else ""),
+
+    "objects": [
+      standardController.deployment(template_config),
       messagingService.internal("${ADDRESS_SPACE}"),
       subserv.service("${ADDRESS_SPACE}"),
       prometheus.standard_broker_config("broker-prometheus-config"),
       mqttService.internal("${ADDRESS_SPACE}"),
-      qdrouterd.deployment("${ADDRESS_SPACE}", "${ROUTER_IMAGE}", "${ROUTER_METRICS_IMAGE}", "${MESSAGING_SECRET}", "authservice-ca", "address-controller-ca"),
+      qdrouterd.deployment("${ADDRESS_SPACE}", "${ROUTER_IMAGE}", "${ROUTER_METRICS_IMAGE}", "${MESSAGING_SECRET}", "authservice-ca"),
       subserv.deployment("${ADDRESS_SPACE}", "${SUBSERV_IMAGE}"),
       mqttGateway.deployment("${ADDRESS_SPACE}", "${MQTT_GATEWAY_IMAGE}", "${MQTT_SECRET}"),
       mqttLwt.deployment("${ADDRESS_SPACE}", "${MQTT_LWT_IMAGE}"),
       common.ca_secret("authservice-ca", "${AUTHENTICATION_SERVICE_CA_CERT}"),
       common.ca_secret("address-controller-ca", "${ADDRESS_CONTROLLER_CA_CERT}"),
       admin.deployment("${ADDRESS_SPACE}", "${CONFIGSERV_IMAGE}", "${RAGENT_IMAGE}", "${QUEUE_SCHEDULER_IMAGE}", "${AGENT_IMAGE}", "authservice-ca", "address-controller-ca", "${CONSOLE_SECRET}", "${MESSAGING_SECRET}")
-    ],
+    ] + admin.services("${ADDRESS_SPACE}")
+      + (if use_template_configmap then storage_template_configmap else storage_templates),
 
     "parameters": [
       {
@@ -76,6 +94,11 @@ local prometheus = import "prometheus.jsonnet";
         "name": "QUEUE_SCHEDULER_IMAGE",
         "description": "The docker image to use for the queue scheduler",
         "value": images.queue_scheduler
+      },
+      {
+        "name": "STANDARD_CONTROLLER_IMAGE",
+        "description": "The docker image to use for the standard controller",
+        "value": images.standard_controller
       },
       {
         "name": "RAGENT_IMAGE",

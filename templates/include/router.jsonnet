@@ -106,12 +106,6 @@ local authService = import "auth-service.jsonnet";
         "readOnly": true
       }],
 
-      local address_controller_ca = [{
-        "name": "address-controller-ca",
-        "mountPath": "/etc/qpid-dispatch/address-controller-ca",
-        "readOnly": true
-      }],
-
       local router_internal_cert = [{
         "name": internal_cert_volume,
         "mountPath": "/etc/enmasse-certs",
@@ -119,6 +113,6 @@ local authService = import "auth-service.jsonnet";
       }],
 
       [if mem_request != "" then "resources"]: resources,
-      "volumeMounts": ssl_certs + authservice_ca + router_internal_cert + address_controller_ca
+      "volumeMounts": ssl_certs + authservice_ca + router_internal_cert
     },
 }

@@ -13,18 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.enmasse.controller.brokered;
+package io.enmasse.controller.standard;
 
-import io.enmasse.address.model.types.brokered.BrokeredAddressSpaceType;
-import org.junit.Test;
+import io.enmasse.k8s.api.EventLogger;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
-
-public class BrokeredControllerTest {
-    @Test
-    public void testBrokeredController() {
-        BrokeredController controller = new BrokeredController();
-        assertThat(controller.getAddressSpaceType().getName(), is(new BrokeredAddressSpaceType().getName()));
-    }
+public enum ControllerReason implements EventLogger.Reason {
+    BrokerCreated,
+    RouterCheckFailed,
+    BrokerDeleted,
+    BrokerDeleteFailed,
+    AddressSyncFailed;
 }

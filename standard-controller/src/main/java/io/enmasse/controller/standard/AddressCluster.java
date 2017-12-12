@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.enmasse.controller.common;
+package io.enmasse.controller.standard;
 
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import org.slf4j.Logger;
