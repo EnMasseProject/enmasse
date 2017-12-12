@@ -83,7 +83,6 @@
       <groupId>com.paulhammant</groupId>
       <artifactId>ngwebdriver</artifactId>
       <version>1.0</version>
-      <scope>test</scope>
     </dependency>
   </dependencies>
   <profiles>

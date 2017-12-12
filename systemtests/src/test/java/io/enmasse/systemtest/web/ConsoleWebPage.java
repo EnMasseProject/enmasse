@@ -1,155 +1,45 @@
-package io.enmasse.systemtest;
+package io.enmasse.systemtest.web;
 
-import com.google.common.collect.Ordering;
+
 import com.paulhammant.ngwebdriver.ByAngular;
-import com.paulhammant.ngwebdriver.NgWebDriver;
-import io.enmasse.systemtest.web.AddressWebItem;
-import io.enmasse.systemtest.web.FilterType;
-import io.enmasse.systemtest.web.SortType;
-import org.apache.commons.io.FileUtils;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.rules.TestWatcher;
-import org.junit.runner.Description;
-import org.openqa.selenium.*;
+import io.enmasse.systemtest.*;
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.openqa.selenium.support.ui.WebDriverWait;
 
-import java.io.File;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
-public abstract class SeleniumTestBase extends TestBaseWithDefault {
-    private final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss:SSSS");
-    private WebDriver driver;
-    private NgWebDriver angularDriver;
-    private WebDriverWait driverWait;
-    private Map<Date, File> browserScreenshots = new HashMap<>();
-    private String webconsoleFolder = "selenium_tests";
+public class ConsoleWebPage {
 
-    @Rule
-    public TestWatcher watchman = new TestWatcher() {
-        @Override
-        protected void failed(Throwable e, Description description) {
-            try {
-                Path path = Paths.get(
-                        environment.testLogDir(),
-                        webconsoleFolder,
-                        description.getClassName(),
-                        description.getMethodName());
-                Files.createDirectories(path);
-                for (Date key : browserScreenshots.keySet()) {
-                    FileUtils.copyFile(browserScreenshots.get(key), new File(Paths.get(path.toString(),
-                            String.format("%s_%s.png", description.getDisplayName(), dateFormat.format(key))).toString()));
-                }
-            } catch (Exception ex) {
-                Logging.log.warn("Cannot save screenshots: " + ex.getMessage());
-            }
-        }
-    };
+    private SeleniumProvider selenium;
+    private String consoleRoute;
+    private AddressApiClient addressApiClient;
+    private AddressSpace defaultAddressSpace;
 
-    protected abstract WebDriver buildDriver();
 
-    @Before
-    public void setupDriver() throws Exception {
-        driver = buildDriver();
-        angularDriver = new NgWebDriver((JavascriptExecutor) driver);
-        driverWait = new WebDriverWait(driver, 10);
-        browserScreenshots.clear();
+    public ConsoleWebPage(SeleniumProvider selenium, String consoleRoute, AddressApiClient addressApiClient, AddressSpace defaultAddressSpace) {
+        this.selenium = selenium;
+        this.consoleRoute = consoleRoute;
+        this.addressApiClient = addressApiClient;
+        this.defaultAddressSpace = defaultAddressSpace;
     }
 
-    @After
-    public void tearDownDrivers() throws Exception {
-        takeScreenShot();
-        Thread.sleep(3000);
-        try {
-            driver.close();
-        } catch (Exception ex) {
-            Logging.log.warn("Raise exception in close: " + ex.getMessage());
-        }
 
-        try {
-            driver.quit();
-        } catch (Exception ex) {
-            Logging.log.warn("Raise warning on quit: " + ex.getMessage());
-        }
-        Logging.log.info("Driver is closed");
-        driver = null;
-        angularDriver = null;
-        driverWait = null;
-    }
-
-    protected WebDriver getDriver() {
-        return this.driver;
-    }
-
-    protected NgWebDriver getAngularDriver() {
-        return this.angularDriver;
-    }
-
-    protected WebDriverWait getDriverWait() {
-        return driverWait;
-    }
-
-    protected String getConsoleRoute() {
-        String consoleRoute = String.format("https://%s:%s@%s", username, password,
-                openShift.getRouteEndpoint(defaultAddressSpace.getNamespace(), "console"));
-        Logging.log.info(consoleRoute);
-        return consoleRoute;
-    }
-
-    protected void takeScreenShot() {
-        try {
-            browserScreenshots.put(new Date(), ((TakesScreenshot) driver).getScreenshotAs(OutputType.FILE));
-        } catch (Exception ex) {
-            Logging.log.warn("Cannot take screenshot: " + ex.getMessage());
-        }
-    }
-
-    //================================================================================================
-    //==================================== Asserts methods ===========================================
-    //================================================================================================
-    public void assertSorted(List<AddressWebItem> list) throws Exception {
-        assertSorted(list, false);
-    }
-
-    public void assertSorted(List<AddressWebItem> list, Comparator comparator) throws Exception {
-        assertSorted(list, false, comparator);
-    }
-
-    public void assertSorted(List<AddressWebItem> list, boolean reverse) throws Exception {
-        if (!reverse)
-            assertTrue(Ordering.natural().isOrdered(list));
-        else
-            assertTrue(Ordering.natural().reverse().isOrdered(list));
-    }
-
-    public void assertSorted(List<AddressWebItem> list, boolean reverse, Comparator comparator) throws Exception {
-        if (!reverse)
-            assertTrue(Ordering.from(comparator).isOrdered(list));
-        else
-            assertTrue(Ordering.from(comparator).reverse().isOrdered(list));
-    }
-
-    //================================================================================================
-    //================================== Common console methods ======================================
-    //================================================================================================
-    protected void openConsolePageWebConsole() throws Exception {
-        driver.get(getConsoleRoute());
-        angularDriver.waitForAngularRequestsToFinish();
+    public void openConsolePageWebConsole() throws Exception {
+        selenium.driver.get(consoleRoute);
+        selenium.angularDriver.waitForAngularRequestsToFinish();
         Logging.log.info("Console page opened");
-        takeScreenShot();
+        selenium.takeScreenShot();
     }
 
     private WebElement getLeftMenuItemWebConsole(String itemText) throws Exception {
-        List<WebElement> items = driver.findElements(ByAngular.exactRepeater("item in items"));
+        List<WebElement> items = selenium.driver.findElements(ByAngular.exactRepeater("item in items"));
         assertNotNull(items);
         WebElement returnedItem = null;
         for (WebElement item : items) {
@@ -160,69 +50,26 @@ public abstract class SeleniumTestBase extends TestBaseWithDefault {
         return returnedItem;
     }
 
-    protected void openAddressesPageWebConsole() throws Exception {
-        clickOnItem(getLeftMenuItemWebConsole("Addresses"));
+    public void openAddressesPageWebConsole() throws Exception {
+        selenium.clickOnItem(getLeftMenuItemWebConsole("Addresses"));
     }
 
-    protected void openDashboardPageWebConsole() throws Exception {
-        clickOnItem(getLeftMenuItemWebConsole("Dashboard"));
+    public void openDashboardPageWebConsole() throws Exception {
+        selenium.clickOnItem(getLeftMenuItemWebConsole("Dashboard"));
     }
 
-    protected void openConnectionsPageWebConsole() throws Exception {
-        clickOnItem(getLeftMenuItemWebConsole("Connections"));
+    public void openConnectionsPageWebConsole() throws Exception {
+        selenium.clickOnItem(getLeftMenuItemWebConsole("Connections"));
     }
 
-    protected void clickOnItem(WebElement element) throws Exception {
-        clickOnItem(element, null);
+    public void clickOnCreateButton() throws Exception {
+        selenium.clickOnItem(selenium.driver.findElement(ByAngular.buttonText("Create")));
     }
 
-    protected void executeJavaScript(String script) throws Exception {
-        executeJavaScript(script, null);
+    public void clickOnRemoveButton() throws Exception {
+        selenium.clickOnItem(selenium.driver.findElement(ByAngular.buttonText("Delete")));
     }
 
-    protected void executeJavaScript(String script, String textToLog) throws Exception {
-        takeScreenShot();
-        assertNotNull(script);
-        Logging.log.info("Execute script: " + (textToLog == null ? script : textToLog));
-        ((JavascriptExecutor) driver).executeScript(script);
-        angularDriver.waitForAngularRequestsToFinish();
-        takeScreenShot();
-    }
-
-    protected void clickOnItem(WebElement element, String textToLog) throws Exception {
-        takeScreenShot();
-        assertNotNull(element);
-        Logging.log.info("Click on button: " + (textToLog == null ? element.getText() : textToLog));
-        element.click();
-        angularDriver.waitForAngularRequestsToFinish();
-        takeScreenShot();
-    }
-
-    protected void clickOnCreateButton() throws Exception {
-        clickOnItem(driver.findElement(ByAngular.buttonText("Create")));
-    }
-
-    protected void clickOnRemoveButton() throws Exception {
-        clickOnItem(driver.findElement(ByAngular.buttonText("Delete")));
-    }
-
-    protected void fillInputItem(WebElement element, String text) throws Exception {
-        takeScreenShot();
-        assertNotNull(element);
-        element.sendKeys(text);
-        angularDriver.waitForAngularRequestsToFinish();
-        Logging.log.info("Filled input with text: " + text);
-        takeScreenShot();
-    }
-
-    protected void pressEnter(WebElement element) throws Exception {
-        takeScreenShot();
-        assertNotNull(element);
-        element.sendKeys(Keys.RETURN);
-        angularDriver.waitForAngularRequestsToFinish();
-        Logging.log.info("Enter pressed");
-        takeScreenShot();
-    }
 
     /**
      * get toolbar element with all filters
@@ -235,14 +82,14 @@ public abstract class SeleniumTestBase extends TestBaseWithDefault {
      * get element with toolbar and all addresses
      */
     private WebElement getContentContainer() throws Exception {
-        return driver.findElement(By.id("contentContainer"));
+        return selenium.driver.findElement(By.id("contentContainer"));
     }
 
     /**
      * get element with filter, sort, create, delete, ...
      */
     private WebElement getToolbar() throws Exception {
-        return driver.findElement(By.id("exampleToolbar"));
+        return selenium.driver.findElement(By.id("exampleToolbar"));
     }
 
     /**
@@ -338,10 +185,10 @@ public abstract class SeleniumTestBase extends TestBaseWithDefault {
      * common method for switching type of filtering/sorting
      */
     private void switchFilterOrSort(Enum switchElement, WebElement switchButton, List<WebElement> switchElements) throws Exception {
-        clickOnItem(switchButton);
+        selenium.clickOnItem(switchButton);
         for (WebElement element : switchElements) {
             if (element.findElement(By.tagName("a")).getText().toUpperCase().equals(switchElement.toString())) {
-                clickOnItem(element);
+                selenium.clickOnItem(element);
                 break;
             }
         }
@@ -393,7 +240,7 @@ public abstract class SeleniumTestBase extends TestBaseWithDefault {
      * @param filterValue allowed values are for FilterType.NAME (String), FilterType.NAME (queue, topic, multicast, anycast)
      * @throws Exception
      */
-    protected void addFilter(FilterType filterType, String filterValue) throws Exception {
+    public void addFilter(FilterType filterType, String filterValue) throws Exception {
         Logging.log.info(String.format("Adding filter ->  %s: %s", filterType.toString(), filterValue));
         switchFilter(filterType);
         switch (filterType) {
@@ -402,8 +249,8 @@ public abstract class SeleniumTestBase extends TestBaseWithDefault {
                 break;
             case NAME:
                 WebElement filterInput = getFilterGroup().findElement(By.tagName("input"));
-                fillInputItem(filterInput, filterValue);
-                pressEnter(filterInput);
+                selenium.fillInputItem(filterInput, filterValue);
+                selenium.pressEnter(filterInput);
                 break;
         }
     }
@@ -414,11 +261,11 @@ public abstract class SeleniumTestBase extends TestBaseWithDefault {
      * @param addressType queue, topic, multicast, anycast
      */
     private void addFilterByType(String addressType) throws Exception {
-        executeJavaScript(
+        selenium.executeJavaScript(
                 "document.getElementById('_fields').getElementsByTagName('button')[1].click();",
                 "Click on button: 'Filter by Type...'");
         WebElement addressTypeElement = getDropDownAddressType(addressType, getDropDownAddressTypes());
-        clickOnItem(addressTypeElement);
+        selenium.clickOnItem(addressTypeElement);
     }
 
 
@@ -431,7 +278,7 @@ public abstract class SeleniumTestBase extends TestBaseWithDefault {
         for (WebElement filter : filters) {
             if (filterText.toUpperCase().equals(filter.findElement(By.className("active-filter")).getText().toUpperCase())) {
                 WebElement button = filter.findElement(By.className("pficon-close"));
-                clickOnItem(button, "clearFilterButton");
+                selenium.clickOnItem(button, "clearFilterButton");
             }
         }
     }
@@ -439,7 +286,7 @@ public abstract class SeleniumTestBase extends TestBaseWithDefault {
     /**
      * remove 'type' filter element by (Name: Value)
      */
-    protected void removeFilterByType(String filterName) throws Exception {
+    public void removeFilterByType(String filterName) throws Exception {
         Logging.log.info("Removing filter: " + filterName);
         removeFilter(FilterType.TYPE, filterName);
     }
@@ -447,7 +294,7 @@ public abstract class SeleniumTestBase extends TestBaseWithDefault {
     /**
      * remove 'name' filter element by (Name: Value)
      */
-    protected void removeFilterByName(String filterName) throws Exception {
+    public void removeFilterByName(String filterName) throws Exception {
         Logging.log.info("Removing filter: " + filterName);
         removeFilter(FilterType.NAME, filterName);
     }
@@ -455,29 +302,29 @@ public abstract class SeleniumTestBase extends TestBaseWithDefault {
     /**
      * remove all filters elements
      */
-    protected void clearAllFilters() throws Exception {
+    public void clearAllFilters() throws Exception {
         Logging.log.info("Removing all filters");
         WebElement clearAllButton = getFilterResultsToolbar().findElement(By.className("clear-filters"));
-        clickOnItem(clearAllButton);
+        selenium.clickOnItem(clearAllButton);
     }
 
     /**
      * Sort address items
      */
-    protected void sortItems(SortType sortType, boolean asc) throws Exception {
+    public void sortItems(SortType sortType, boolean asc) throws Exception {
         Logging.log.info("Sorting");
         switchSort(sortType);
         if (asc && !isSortAsc()) {
-            clickOnItem(getAscDescButton(), "Asc");
+            selenium.clickOnItem(getAscDescButton(), "Asc");
         } else if (!asc && isSortAsc()) {
-            clickOnItem(getAscDescButton(), "Desc");
+            selenium.clickOnItem(getAscDescButton(), "Desc");
         }
     }
 
     /**
      * get all addresses
      */
-    protected List<AddressWebItem> getAddressItems() throws Exception {
+    public List<AddressWebItem> getAddressItems() throws Exception {
         WebElement content = getContentContainer();
         List<WebElement> elements = content.findElements(By.className("list-group-item"));
         List<AddressWebItem> addressItems = new ArrayList<>();
@@ -492,7 +339,7 @@ public abstract class SeleniumTestBase extends TestBaseWithDefault {
     /**
      * get specific address
      */
-    protected AddressWebItem getAddressItem(Destination destination) throws Exception {
+    public AddressWebItem getAddressItem(Destination destination) throws Exception {
         AddressWebItem returnedElement = null;
         List<AddressWebItem> addressWebItems = getAddressItems();
         for (AddressWebItem item : addressWebItems) {
@@ -505,7 +352,7 @@ public abstract class SeleniumTestBase extends TestBaseWithDefault {
     /**
      * create multiple addresses
      */
-    protected void createAddressesWebConsole(Destination... destinations) throws Exception {
+    public void createAddressesWebConsole(Destination... destinations) throws Exception {
         for (Destination dest : destinations) {
             createAddressWebConsole(dest);
         }
@@ -514,7 +361,7 @@ public abstract class SeleniumTestBase extends TestBaseWithDefault {
     /**
      * create specific address
      */
-    protected void createAddressWebConsole(Destination destination) throws Exception {
+    public void createAddressWebConsole(Destination destination) throws Exception {
         //get console page
         openConsolePageWebConsole();
 
@@ -525,15 +372,15 @@ public abstract class SeleniumTestBase extends TestBaseWithDefault {
         clickOnCreateButton();
 
         //fill address name
-        fillInputItem(driver.findElement(By.id("new-name")), destination.getAddress());
+        selenium.fillInputItem(selenium.driver.findElement(By.id("new-name")), destination.getAddress());
 
         //select address type
-        clickOnItem(driver.findElement(By.id(destination.getType())), "Radio button " + destination.getType());
+        selenium.clickOnItem(selenium.driver.findElement(By.id(destination.getType())), "Radio button " + destination.getType());
 
-        WebElement nextButton = driver.findElement(By.id("nextButton"));
-        clickOnItem(nextButton);
-        clickOnItem(nextButton);
-        clickOnItem(nextButton);
+        WebElement nextButton = selenium.driver.findElement(By.id("nextButton"));
+        selenium.clickOnItem(nextButton);
+        selenium.clickOnItem(nextButton);
+        selenium.clickOnItem(nextButton);
 
         assertNotNull(getAddressItem(destination));
 
@@ -544,7 +391,7 @@ public abstract class SeleniumTestBase extends TestBaseWithDefault {
     /**
      * delete multiple addresses
      */
-    protected void deleteAddressesWebConsole(Destination... destinations) throws Exception {
+    public void deleteAddressesWebConsole(Destination... destinations) throws Exception {
         for (Destination dest : destinations) {
             deleteAddressWebConsole(dest);
         }
@@ -553,7 +400,7 @@ public abstract class SeleniumTestBase extends TestBaseWithDefault {
     /**
      * delete specific address
      */
-    protected void deleteAddressWebConsole(Destination destination) throws Exception {
+    public void deleteAddressWebConsole(Destination destination) throws Exception {
         //open console webpage
         openConsolePageWebConsole();
 
@@ -563,13 +410,13 @@ public abstract class SeleniumTestBase extends TestBaseWithDefault {
         AddressWebItem addressItem = getAddressItem(destination);
 
         //click on check box
-        clickOnItem(addressItem.getCheckBox(), "check box: " + destination.getAddress());
+        selenium.clickOnItem(addressItem.getCheckBox(), "check box: " + destination.getAddress());
 
         //click on delete
         clickOnRemoveButton();
 
         //check if address deleted
-        driverWait.until(ExpectedConditions.invisibilityOf(addressItem.getAddressItem()));
+        selenium.driverWait.until(ExpectedConditions.invisibilityOf(addressItem.getAddressItem()));
         assertNull(getAddressItem(destination));
     }
 }

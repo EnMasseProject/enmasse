@@ -23,18 +23,18 @@ import org.junit.Rule;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 public abstract class TestBaseWithDefault extends TestBase {
     private static final String defaultAddressTemplate = "-default-";
-    private static Map<AddressSpaceType, Integer> spaceCountMap = new HashMap<>();
     protected static AddressSpace defaultAddressSpace;
     protected static HashMap<String, AddressSpace> defaultAddressSpaces = new HashMap<>();
-
-    protected abstract AddressSpaceType getAddressSpaceType();
-
+    private static Map<AddressSpaceType, Integer> spaceCountMap = new HashMap<>();
     @Rule
     public TestWatcher watcher = new TestWatcher() {
         @Override
@@ -49,6 +49,13 @@ public abstract class TestBaseWithDefault extends TestBase {
             }
         }
     };
+
+    protected static void deleteDefaultAddressSpace(AddressSpace addressSpace) throws Exception {
+        defaultAddressSpaces.remove(addressSpace.getName());
+        TestBase.deleteAddressSpace(addressSpace);
+    }
+
+    protected abstract AddressSpaceType getAddressSpaceType();
 
     public AddressSpace getSharedAddressSpace() {
         return defaultAddressSpace;
@@ -86,12 +93,6 @@ public abstract class TestBaseWithDefault extends TestBase {
         defaultAddressSpaces.put(addressSpace.getName(), addressSpace);
         super.createAddressSpace(addressSpace, authService);
     }
-
-    protected static void deleteDefaultAddressSpace(AddressSpace addressSpace) throws Exception {
-        defaultAddressSpaces.remove(addressSpace.getName());
-        TestBase.deleteAddressSpace(addressSpace);
-    }
-
 
     protected void scale(Destination destination, int numReplicas) throws Exception {
         scale(defaultAddressSpace, destination, numReplicas);
