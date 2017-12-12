@@ -49,13 +49,14 @@ public abstract class WebConsoleTest extends MarathonTestBase implements ISeleni
     }
 
     public void doTestCreateDeleteAddressesViaAgentLong() throws Exception {
-        int addressCount = 4;
+        int addressCount = 5;
         ArrayList<Destination> addresses = generateQueueTopicList("via-web", IntStream.range(0, addressCount));
 
         runTestInLoop(30, () -> {
-            consoleWebPage.createAddressesWebConsole();
+            consoleWebPage.createAddressesWebConsole(addresses.toArray(new Destination[0]));
+            consoleWebPage.deleteAddressesWebConsole(addresses.toArray(new Destination[0]));
         });
-        Logging.log.info("testCreateDeleteUsersLong finished");
+        Logging.log.info("testCreateDeleteAddressesViaAgentLong finished");
     }
 
     @Override
