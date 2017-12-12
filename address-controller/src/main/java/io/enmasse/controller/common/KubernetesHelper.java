@@ -378,15 +378,18 @@ public class KubernetesHelper implements Kubernetes {
         }
 
         try (Response response = httpClient.newCall(requestBuilder.build()).execute()) {
-            if (response.isSuccessful()) {
-                return new JsonObject(response.body().string());
-            } else {
-                if (errorOk) {
-                    return null;
+            try (ResponseBody responseBody = response.body()) {
+                String responseString = responseBody != null ? responseBody.string() : "{}";
+                if (response.isSuccessful()) {
+                    return new JsonObject(responseString);
                 } else {
-                    String errorMessage = String.format("Error performing %s on %s: %d, %s", method, path, response.code(), response.body().string());
-                    log.warn(errorMessage);
-                    throw new RuntimeException(errorMessage);
+                    if (errorOk) {
+                        return null;
+                    } else {
+                        String errorMessage = String.format("Error performing %s on %s: %d, %s", method, path, response.code(), responseString);
+                        log.warn(errorMessage);
+                        throw new RuntimeException(errorMessage);
+                    }
                 }
             }
         } catch (IOException e) {
