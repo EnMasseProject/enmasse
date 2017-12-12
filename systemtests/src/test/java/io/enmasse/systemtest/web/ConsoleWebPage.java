@@ -416,7 +416,6 @@ public class ConsoleWebPage {
         clickOnRemoveButton();
 
         //check if address deleted
-        selenium.driverWait.until(ExpectedConditions.invisibilityOf(addressItem.getAddressItem()));
         assertNull(getAddressItem(destination));
     }
 }
