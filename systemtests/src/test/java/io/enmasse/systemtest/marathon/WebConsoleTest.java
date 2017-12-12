@@ -33,11 +33,14 @@ public abstract class WebConsoleTest extends MarathonTestBase implements ISeleni
     @Before
     public void setUpWebConsoleTests() throws Exception {
         Logging.log.info("testCreateDeleteUsersLong start");
-        AddressSpace addressSpace = new AddressSpace("test-create-delete-users-brokered",
+        AddressSpace addressSpace = new AddressSpace("brokered-marathon-web-console",
                 AddressSpaceType.BROKERED);
         createAddressSpace(addressSpace, "standard");
         Logging.log.info("Address space '{}'created", addressSpace);
-        createUser(addressSpace, "test", "test");
+
+        username = "test";
+        password = "test";
+        createUser(addressSpace, username, username);
 
         selenium.setupDriver(environment, openShift, buildDriver());
         consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(addressSpace), addressApiClient, addressSpace);
