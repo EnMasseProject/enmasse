@@ -21,6 +21,8 @@ import java.util.stream.IntStream;
 public abstract class WebConsoleTest extends MarathonTestBase implements ISeleniumProvider {
 
     SeleniumProvider selenium = new SeleniumProvider();
+    AddressSpace addressSpace;
+
     @Rule
     public TestWatcher watchman = new TestWatcher() {
         @Override
@@ -33,7 +35,7 @@ public abstract class WebConsoleTest extends MarathonTestBase implements ISeleni
     @Before
     public void setUpWebConsoleTests() throws Exception {
         Logging.log.info("testCreateDeleteUsersLong start");
-        AddressSpace addressSpace = new AddressSpace("brokered-marathon-web-console",
+        addressSpace = new AddressSpace("brokered-marathon-web-console",
                 AddressSpaceType.BROKERED);
         createAddressSpace(addressSpace, "standard");
         Logging.log.info("Address space '{}'created", addressSpace);
@@ -49,6 +51,7 @@ public abstract class WebConsoleTest extends MarathonTestBase implements ISeleni
     @After
     public void tearDownDrivers() throws Exception {
         selenium.tearDownDrivers();
+        deleteAddressSpace(addressSpace);
     }
 
     public void doTestCreateDeleteAddressesViaAgentLong() throws Exception {
@@ -58,6 +61,7 @@ public abstract class WebConsoleTest extends MarathonTestBase implements ISeleni
         runTestInLoop(30, () -> {
             consoleWebPage.createAddressesWebConsole(addresses.toArray(new Destination[0]));
             consoleWebPage.deleteAddressesWebConsole(addresses.toArray(new Destination[0]));
+            Thread.sleep(5000);
         });
         Logging.log.info("testCreateDeleteAddressesViaAgentLong finished");
     }
