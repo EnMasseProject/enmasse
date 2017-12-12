@@ -1,4 +1,4 @@
-FROM ppatierno/qpid-proton:0.17.0
+FROM gordons/qpid-proton:0.18
 RUN pip install prometheus_client
 ARG version=latest
 ENV VERSION=${version}
