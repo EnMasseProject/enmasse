@@ -72,43 +72,60 @@ public class ConsoleWebPage {
 
 
     /**
-     * get toolbar element with all filters
+     * get toolbar element with all filters for addresses/connections
      */
     private WebElement getFilterResultsToolbar() throws Exception {
-        return getToolbar().findElement(By.id("{{filterDomId}_results}"));
+        return getAddressesToolbar().findElement(By.id("{{filterDomId}_results}"));
     }
 
     /**
-     * get element with toolbar and all addresses
+     * (addresses/connections tab)
+     * get element with toolbar and all addresses/connections
      */
     private WebElement getContentContainer() throws Exception {
         return selenium.driver.findElement(By.id("contentContainer"));
     }
 
     /**
+     * (addresses tab)
      * get element with filter, sort, create, delete, ...
      */
-    private WebElement getToolbar() throws Exception {
+    private WebElement getAddressesToolbar() throws Exception {
         return selenium.driver.findElement(By.id("exampleToolbar"));
     }
 
     /**
+     * (connections tab)
+     * get element with filter, sort, create, delete, ...
+     */
+    private WebElement getConnectionsToolbar() throws Exception {
+        return selenium.driver.findElement(By.id("connectionToolbar"));
+    }
+
+    /**
+     * (addresses/connections tab)
      * get element from toolbar with Filter elements
      */
     private WebElement getFilterGroup() throws Exception {
-        WebElement toolbar = getToolbar();
+        WebElement toolbar = getAddressesToolbar();
         return toolbar.findElement(By.id("_fields"));
     }
 
     /**
-     * get button element with filter types (Type/Name)
+     * (addresses/connections tab)
+     * get button element with filter types * (Type/Name) for addresses
+     * or
+     * (Container/Hostname/User/Encrypted) for connections
      */
     private WebElement getFilterSwitch() throws Exception {
         return getFilterGroup().findElements(By.tagName("button")).get(0);
     }
 
     /**
-     * get button element with address types (Filter by type.../queue/topic/multicast/anycast)
+     * (addresses/connections tab)
+     * get button element with (address types: [Filter by type.../queue/topic/multicast/anycast])
+     * or
+     * (connections encrypted types: [Filter by encrypted/unencrypted/encrypted/unencrypted])
      */
     private WebElement getAddressTypeSwitch() throws Exception {
         return getFilterGroup().findElements(By.tagName("button")).get(1);
@@ -164,7 +181,7 @@ public class ConsoleWebPage {
      * return part of toolbar with sort buttons
      */
     private WebElement getSortGroup() throws Exception {
-        return getToolbar().findElement(By.className("sort-pf"));
+        return getAddressesToolbar().findElement(By.className("sort-pf"));
     }
 
     /**
