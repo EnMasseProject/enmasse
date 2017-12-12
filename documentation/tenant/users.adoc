@@ -17,7 +17,9 @@ Using the {AuthProductNameConsole} you can create a new {ProductName} user and s
 
 . Click *Add user*. The Add User page is displayed.
  
-. In the *Username* field, type a user name. Note that the other functionality is not currently enabled for {ProductName}.
+. In the *Username* field, type a user name. 
++
+NOTE: You can currently specify a user name only. Additional fields/functions/capabilities on this page are not supported for {ProductName}.
 
 . Click *Save*. The user management page is displayed.
 
