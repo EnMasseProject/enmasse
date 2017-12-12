@@ -19,7 +19,6 @@ public class FirefoxWebConsoleTest extends BrokeredWebConsoleTest {
         doTestCreateDeleteAddress(Destination.topic("test-topic"));
     }
 
-
     @Test
     public void testFilterAddressesByType() throws Exception {
         doTestFilterAddressesByType();
@@ -40,9 +39,8 @@ public class FirefoxWebConsoleTest extends BrokeredWebConsoleTest {
         doTestSortAddressesByClients();
     }
 
-
     @Override
-    protected WebDriver buildDriver() {
+    public WebDriver buildDriver() {
         FirefoxOptions opts = new FirefoxOptions();
         opts.setHeadless(true);
         return new FirefoxDriver(opts);

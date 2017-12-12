@@ -14,6 +14,7 @@ import org.junit.Rule;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
 import org.openqa.selenium.WebDriver;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -24,14 +25,9 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
-public abstract class WebConsoleTest extends TestBaseWithDefault {
+public abstract class WebConsoleTest extends TestBaseWithDefault implements ISeleniumProvider {
 
     protected SeleniumProvider selenium = new SeleniumProvider();
-
-    protected ConsoleWebPage consoleWebPage;
-
-    protected abstract WebDriver buildDriver();
-
     @Rule
     public TestWatcher watchman = new TestWatcher() {
         @Override
@@ -39,6 +35,12 @@ public abstract class WebConsoleTest extends TestBaseWithDefault {
             selenium.onFailed(e, description);
         }
     };
+    protected ConsoleWebPage consoleWebPage;
+
+    @Override
+    public WebDriver buildDriver() {
+        throw new NotImplementedException();
+    }
 
     @Before
     public void setUpWebConsoleTests() throws Exception {

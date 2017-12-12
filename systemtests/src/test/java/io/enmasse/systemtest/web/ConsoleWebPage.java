@@ -31,7 +31,7 @@ public class ConsoleWebPage {
     }
 
 
-    protected void openConsolePageWebConsole() throws Exception {
+    public void openConsolePageWebConsole() throws Exception {
         selenium.driver.get(consoleRoute);
         selenium.angularDriver.waitForAngularRequestsToFinish();
         Logging.log.info("Console page opened");
@@ -50,23 +50,23 @@ public class ConsoleWebPage {
         return returnedItem;
     }
 
-    protected void openAddressesPageWebConsole() throws Exception {
+    public void openAddressesPageWebConsole() throws Exception {
         selenium.clickOnItem(getLeftMenuItemWebConsole("Addresses"));
     }
 
-    protected void openDashboardPageWebConsole() throws Exception {
+    public void openDashboardPageWebConsole() throws Exception {
         selenium.clickOnItem(getLeftMenuItemWebConsole("Dashboard"));
     }
 
-    protected void openConnectionsPageWebConsole() throws Exception {
+    public void openConnectionsPageWebConsole() throws Exception {
         selenium.clickOnItem(getLeftMenuItemWebConsole("Connections"));
     }
 
-    protected void clickOnCreateButton() throws Exception {
+    public void clickOnCreateButton() throws Exception {
         selenium.clickOnItem(selenium.driver.findElement(ByAngular.buttonText("Create")));
     }
 
-    protected void clickOnRemoveButton() throws Exception {
+    public void clickOnRemoveButton() throws Exception {
         selenium.clickOnItem(selenium.driver.findElement(ByAngular.buttonText("Delete")));
     }
 
@@ -240,7 +240,7 @@ public class ConsoleWebPage {
      * @param filterValue allowed values are for FilterType.NAME (String), FilterType.NAME (queue, topic, multicast, anycast)
      * @throws Exception
      */
-    protected void addFilter(FilterType filterType, String filterValue) throws Exception {
+    public void addFilter(FilterType filterType, String filterValue) throws Exception {
         Logging.log.info(String.format("Adding filter ->  %s: %s", filterType.toString(), filterValue));
         switchFilter(filterType);
         switch (filterType) {
@@ -286,7 +286,7 @@ public class ConsoleWebPage {
     /**
      * remove 'type' filter element by (Name: Value)
      */
-    protected void removeFilterByType(String filterName) throws Exception {
+    public void removeFilterByType(String filterName) throws Exception {
         Logging.log.info("Removing filter: " + filterName);
         removeFilter(FilterType.TYPE, filterName);
     }
@@ -294,7 +294,7 @@ public class ConsoleWebPage {
     /**
      * remove 'name' filter element by (Name: Value)
      */
-    protected void removeFilterByName(String filterName) throws Exception {
+    public void removeFilterByName(String filterName) throws Exception {
         Logging.log.info("Removing filter: " + filterName);
         removeFilter(FilterType.NAME, filterName);
     }
@@ -302,7 +302,7 @@ public class ConsoleWebPage {
     /**
      * remove all filters elements
      */
-    protected void clearAllFilters() throws Exception {
+    public void clearAllFilters() throws Exception {
         Logging.log.info("Removing all filters");
         WebElement clearAllButton = getFilterResultsToolbar().findElement(By.className("clear-filters"));
         selenium.clickOnItem(clearAllButton);
@@ -311,7 +311,7 @@ public class ConsoleWebPage {
     /**
      * Sort address items
      */
-    protected void sortItems(SortType sortType, boolean asc) throws Exception {
+    public void sortItems(SortType sortType, boolean asc) throws Exception {
         Logging.log.info("Sorting");
         switchSort(sortType);
         if (asc && !isSortAsc()) {
@@ -324,7 +324,7 @@ public class ConsoleWebPage {
     /**
      * get all addresses
      */
-    protected List<AddressWebItem> getAddressItems() throws Exception {
+    public List<AddressWebItem> getAddressItems() throws Exception {
         WebElement content = getContentContainer();
         List<WebElement> elements = content.findElements(By.className("list-group-item"));
         List<AddressWebItem> addressItems = new ArrayList<>();
@@ -339,7 +339,7 @@ public class ConsoleWebPage {
     /**
      * get specific address
      */
-    protected AddressWebItem getAddressItem(Destination destination) throws Exception {
+    public AddressWebItem getAddressItem(Destination destination) throws Exception {
         AddressWebItem returnedElement = null;
         List<AddressWebItem> addressWebItems = getAddressItems();
         for (AddressWebItem item : addressWebItems) {
@@ -352,7 +352,7 @@ public class ConsoleWebPage {
     /**
      * create multiple addresses
      */
-    protected void createAddressesWebConsole(Destination... destinations) throws Exception {
+    public void createAddressesWebConsole(Destination... destinations) throws Exception {
         for (Destination dest : destinations) {
             createAddressWebConsole(dest);
         }
@@ -361,7 +361,7 @@ public class ConsoleWebPage {
     /**
      * create specific address
      */
-    protected void createAddressWebConsole(Destination destination) throws Exception {
+    public void createAddressWebConsole(Destination destination) throws Exception {
         //get console page
         openConsolePageWebConsole();
 
@@ -391,7 +391,7 @@ public class ConsoleWebPage {
     /**
      * delete multiple addresses
      */
-    protected void deleteAddressesWebConsole(Destination... destinations) throws Exception {
+    public void deleteAddressesWebConsole(Destination... destinations) throws Exception {
         for (Destination dest : destinations) {
             deleteAddressWebConsole(dest);
         }
@@ -400,7 +400,7 @@ public class ConsoleWebPage {
     /**
      * delete specific address
      */
-    protected void deleteAddressWebConsole(Destination destination) throws Exception {
+    public void deleteAddressWebConsole(Destination destination) throws Exception {
         //open console webpage
         openConsolePageWebConsole();
 

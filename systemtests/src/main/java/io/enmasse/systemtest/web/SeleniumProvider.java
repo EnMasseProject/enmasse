@@ -33,7 +33,7 @@ public class SeleniumProvider {
     private OpenShift openShift;
 
 
-    protected void onFailed(Throwable e, Description description) {
+    public void onFailed(Throwable e, Description description) {
         try {
             Path path = Paths.get(
                     environment.testLogDir(),

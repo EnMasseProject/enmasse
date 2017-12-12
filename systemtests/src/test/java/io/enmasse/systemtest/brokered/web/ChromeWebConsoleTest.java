@@ -33,7 +33,7 @@ public class ChromeWebConsoleTest extends BrokeredWebConsoleTest {
     }
 
     @Override
-    protected WebDriver buildDriver() {
+    public WebDriver buildDriver() {
         ChromeOptions opts = new ChromeOptions();
         opts.setHeadless(true);
         opts.addArguments("--no-sandbox");
