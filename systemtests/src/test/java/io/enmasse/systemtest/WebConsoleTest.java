@@ -13,6 +13,7 @@ import io.enmasse.systemtest.web.SortType;
 import net.bytebuddy.implementation.bytecode.Throw;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.IntStream;
 
@@ -89,6 +90,10 @@ public abstract class WebConsoleTest extends SeleniumTestBase {
         ArgumentMap receiverArgumets = new ArgumentMap();
         receiverArgumets.put(Argument.BROKER, getRouteEndpoint(defaultAddressSpace).toString());
         receiverArgumets.put(Argument.TIMEOUT, "60");
+        receiverArgumets.put(Argument.CONN_SSL, "true");
+        receiverArgumets.put(Argument.USERNAME, username);
+        receiverArgumets.put(Argument.PASSWORD, password);
+        receiverArgumets.put(Argument.LOG_MESSAGES, "json");
 
         for (int i = 0; i < addressCount; i++) {
             receiverArgumets.put(Argument.ADDRESS, addresses.get(i).getAddress());
@@ -100,10 +105,13 @@ public abstract class WebConsoleTest extends SeleniumTestBase {
             }
         }
 
-        Thread.sleep(15000);
+        Thread.sleep(10000);
 
         sortItems(SortType.RECEIVERS, true);
-        assertEquals(addressCount, getAddressItems().size());
+        assertTrue(Ordering.from(Comparator.comparingInt(AddressWebItem::getReceiversCount)).isOrdered(getAddressItems()));
+
+        sortItems(SortType.RECEIVERS, false);
+        assertTrue(Ordering.from(Comparator.comparingInt(AddressWebItem::getReceiversCount)).reverse().isOrdered(getAddressItems()));
 
         receivers.forEach(AbstractClient::stop);
 
@@ -113,6 +121,10 @@ public abstract class WebConsoleTest extends SeleniumTestBase {
         senderArguments.put(Argument.MSG_CONTENT, "msg no.%d");
         senderArguments.put(Argument.COUNT, "30");
         senderArguments.put(Argument.DURATION, "30");
+        senderArguments.put(Argument.CONN_SSL, "true");
+        senderArguments.put(Argument.USERNAME, username);
+        senderArguments.put(Argument.PASSWORD, password);
+        receiverArgumets.put(Argument.LOG_MESSAGES, "json");
 
         for (int i = 0; i < addressCount; i++) {
             senderArguments.put(Argument.ADDRESS, addresses.get(i).getAddress());
@@ -124,10 +136,13 @@ public abstract class WebConsoleTest extends SeleniumTestBase {
             }
         }
 
-        Thread.sleep(15000);
+        Thread.sleep(10000);
 
         sortItems(SortType.SENDERS, true);
-        assertEquals(addressCount, getAddressItems().size());
+        assertTrue(Ordering.from(Comparator.comparingInt(AddressWebItem::getSendersCount)).isOrdered(getAddressItems()));
+
+        sortItems(SortType.SENDERS, false);
+        assertTrue(Ordering.from(Comparator.comparingInt(AddressWebItem::getSendersCount)).reverse().isOrdered(getAddressItems()));
 
         senders.forEach(AbstractClient::stop);
     }
