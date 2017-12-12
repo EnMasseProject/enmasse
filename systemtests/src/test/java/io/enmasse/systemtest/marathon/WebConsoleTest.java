@@ -42,7 +42,7 @@ public abstract class WebConsoleTest extends MarathonTestBase implements ISeleni
         password = "test";
         createUser(addressSpace, username, username);
 
-        selenium.setupDriver(environment, openShift, buildDriver());
+        selenium.setupDriver(environment, kubernetes, buildDriver());
         consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(addressSpace), addressApiClient, addressSpace);
     }
 
