@@ -38,10 +38,9 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.IntStream;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 /**
  * Base class for all tests
@@ -116,7 +115,7 @@ public abstract class TestBase extends SystemTestRunListener {
             addressApiClient.deleteAddressSpace(addressSpace);
             TestUtils.waitForAddressSpaceDeleted(openShift, addressSpace);
             logCollector.stopCollecting(addressSpace.getNamespace());
-        }else{
+        } else {
             Logging.log.info("Address space '" + addressSpace + "' doesn't exists!");
         }
     }
@@ -412,5 +411,29 @@ public abstract class TestBase extends SystemTestRunListener {
             }
         });
         return subscriberCount.get();
+    }
+
+    protected ArrayList<Destination> generateTopicsList(String prefix, IntStream range) {
+        ArrayList<Destination> addresses = new ArrayList<>();
+        range.forEach(i -> addresses.add(Destination.topic(prefix + i)));
+        return addresses;
+    }
+
+    protected ArrayList<Destination> generateQueueList(String prefix, IntStream range) {
+        ArrayList<Destination> addresses = new ArrayList<>();
+        range.forEach(i -> addresses.add(Destination.queue(prefix + i)));
+        return addresses;
+    }
+
+    protected ArrayList<Destination> generateQueueTopicList(String infix, IntStream range) {
+        ArrayList<Destination> addresses = new ArrayList<>();
+        range.forEach(i -> {
+            if (i % 2 == 0) {
+                addresses.add(Destination.topic(String.format("topic-%s-%d", infix, i)));
+            } else {
+                addresses.add(Destination.queue(String.format("queue-%s-%d", infix, i)));
+            }
+        });
+        return addresses;
     }
 }

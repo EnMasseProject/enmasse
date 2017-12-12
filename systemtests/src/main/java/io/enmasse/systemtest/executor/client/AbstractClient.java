@@ -19,6 +19,7 @@ public abstract class AbstractClient {
     private final int DEFAULT_ASYNC_TIMEOUT = 120000;
     private final int DEFAULT_SYNC_TIMEOUT = 60000;
 
+    private Executor executor;
     private ClientType clientType;
     private JsonArray messages = new JsonArray();
     private ArrayList<String> arguments = new ArrayList<>();
@@ -115,7 +116,7 @@ public abstract class AbstractClient {
     private boolean runClient(int timeout) {
         messages.clear();
         try {
-            Executor executor = new Executor();
+            executor = new Executor();
             int ret = executor.execute(prepareCommand(), timeout);
             synchronized (lock) {
                 Logging.log.info("Return code - " + ret);
@@ -168,6 +169,13 @@ public abstract class AbstractClient {
      */
     public boolean run(int timeout){
         return runClient(timeout);
+    }
+
+    /**
+     * Method for stop client
+     */
+    public void stop(){
+        executor.stop();
     }
 
     /**

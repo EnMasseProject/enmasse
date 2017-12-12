@@ -91,6 +91,16 @@ public class Executor {
     }
 
     /**
+     * Method kills process
+     */
+    public void stop(){
+        shutDownReaders();
+        process.destroyForcibly();
+        stdOut = stdOutReader.getData();
+        stdErr = stdErrReader.getData();
+    }
+
+    /**
      * Get standard output of execution
      * @return future string output
      */
