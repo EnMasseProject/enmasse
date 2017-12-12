@@ -16,6 +16,7 @@
 
 package io.enmasse.systemtest;
 
+import com.google.common.collect.Ordering;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
 import io.enmasse.systemtest.mqtt.MqttClient;
@@ -29,10 +30,7 @@ import org.junit.Before;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -51,20 +49,28 @@ public abstract class TestBase extends SystemTestRunListener {
 
 
     protected static final OpenShift openShift = new OpenShift(environment, environment.namespace());
+    protected static final AddressApiClient addressApiClient = new AddressApiClient(openShift);
     private static final GlobalLogCollector logCollector = new GlobalLogCollector(openShift,
             new File(environment.testLogDir()));
-    protected static final AddressApiClient addressApiClient = new AddressApiClient(openShift);
-
-    private KeycloakClient keycloakApiClient;
     protected String username;
     protected String password;
     protected AmqpClientFactory amqpClientFactory;
     protected MqttClientFactory mqttClientFactory;
     protected List<AddressSpace> addressSpaceList = new ArrayList<>();
-
     protected KeycloakCredentials managementCredentials = new KeycloakCredentials(null, null);
-
     protected BrokerManagement brokerManagement = new ArtemisManagement();
+    private KeycloakClient keycloakApiClient;
+
+    protected static void deleteAddressSpace(AddressSpace addressSpace) throws Exception {
+        if (TestUtils.existAddressSpace(addressApiClient, addressSpace.getName())) {
+            logCollector.collectEvents(addressSpace.getNamespace());
+            addressApiClient.deleteAddressSpace(addressSpace);
+            TestUtils.waitForAddressSpaceDeleted(openShift, addressSpace);
+            logCollector.stopCollecting(addressSpace.getNamespace());
+        } else {
+            Logging.log.info("Address space '" + addressSpace + "' doesn't exists!");
+        }
+    }
 
     protected AddressSpace getSharedAddressSpace() {
         return null;
@@ -106,17 +112,6 @@ public abstract class TestBase extends SystemTestRunListener {
             }
         } else {
             Logging.log.info("Address space '" + addressSpace + "' already exists.");
-        }
-    }
-
-    protected static void deleteAddressSpace(AddressSpace addressSpace) throws Exception {
-        if (TestUtils.existAddressSpace(addressApiClient, addressSpace.getName())) {
-            logCollector.collectEvents(addressSpace.getNamespace());
-            addressApiClient.deleteAddressSpace(addressSpace);
-            TestUtils.waitForAddressSpaceDeleted(openShift, addressSpace);
-            logCollector.stopCollecting(addressSpace.getNamespace());
-        } else {
-            Logging.log.info("Address space '" + addressSpace + "' doesn't exists!");
         }
     }
 
@@ -331,6 +326,13 @@ public abstract class TestBase extends SystemTestRunListener {
         }
     }
 
+    protected String getConsoleRoute(AddressSpace addressSpace) {
+        String consoleRoute = String.format("https://%s:%s@%s", username, password,
+                openShift.getRouteEndpoint(addressSpace.getNamespace(), "console"));
+        Logging.log.info(consoleRoute);
+        return consoleRoute;
+    }
+
 
     /**
      * Waiting for expected count of subscribers is subscribed into topic
@@ -435,5 +437,31 @@ public abstract class TestBase extends SystemTestRunListener {
             }
         });
         return addresses;
+    }
+
+
+    //================================================================================================
+    //==================================== Asserts methods ===========================================
+    //================================================================================================
+    public void assertSorted(Iterable list) throws Exception {
+        assertSorted(list, false);
+    }
+
+    public void assertSorted(Iterable list, Comparator comparator) throws Exception {
+        assertSorted(list, false, comparator);
+    }
+
+    public void assertSorted(Iterable list, boolean reverse) throws Exception {
+        if (!reverse)
+            assertTrue(Ordering.natural().isOrdered(list));
+        else
+            assertTrue(Ordering.natural().reverse().isOrdered(list));
+    }
+
+    public void assertSorted(Iterable list, boolean reverse, Comparator comparator) throws Exception {
+        if (!reverse)
+            assertTrue(Ordering.from(comparator).isOrdered(list));
+        else
+            assertTrue(Ordering.from(comparator).reverse().isOrdered(list));
     }
 }

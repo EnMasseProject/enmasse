@@ -1,6 +1,5 @@
 package io.enmasse.systemtest.brokered.web;
 
-import io.enmasse.systemtest.BrokeredWebConsoleTest;
 import io.enmasse.systemtest.Destination;
 import org.junit.Test;
 import org.openqa.selenium.WebDriver;
@@ -8,6 +7,7 @@ import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxOptions;
 
 public class FirefoxWebConsoleTest extends BrokeredWebConsoleTest {
+
 
     @Test
     public void testCreateDeleteQueue() throws Exception {

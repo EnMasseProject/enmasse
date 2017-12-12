@@ -1,6 +1,5 @@
 package io.enmasse.systemtest.brokered.web;
 
-import io.enmasse.systemtest.BrokeredWebConsoleTest;
 import io.enmasse.systemtest.Destination;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
