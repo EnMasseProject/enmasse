@@ -170,4 +170,8 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
 
         senders.forEach(AbstractClient::stop);
     }
+
+    public void doTestSortConnectionsBySenders() throws Exception {
+
+    }
 }
