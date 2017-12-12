@@ -20,8 +20,8 @@ This document contains testing scenarios for selenium system tests in EnMasse.
 * testFilterAddressesByName
 - Create 2 queues: queue-via-web-N where N=1,3
 - Create 2 topics: topic-via-web-M where M=0,2
-- add filter for “web” and verify that 4 items is visible
-- add filter for “via” and verify that 4 items is visible
+- add filter for “web” and verify that 4 items are visible
+- add filter for “via” and verify that 4 items are visible
 - Remove filter “web”
 - verify that 4 items is visible
 - add filter for “queue” and verify that 2 items is visible
@@ -45,10 +45,13 @@ This document contains testing scenarios for selenium system tests in EnMasse.
 - Create 2 queues: queue-via-web-N where N=1,3
 - Create 2 topics: topic-via-web-M where M=0,2
 - Attach M+1 consumer to each topic and N+1 consumer to each queue
-- Sort addresses by count of receivers
+- Sort addresses by count of receivers asc and verify order
+- Sort addresses by count of receivers desc and verify order
+- Kill receivers
 - Create M+1 senders and start sending messages to each topic (1 messages per 1 second)
-- Sort addresses by count of senders and verify order
-- Kill all clients
+- Sort addresses by count of senders asc and verify order
+- Sort addresses by count of senders desc and verify order
+- Kill senders
 - Remove addresses
 
 === Scenarios for ConnectionTest
