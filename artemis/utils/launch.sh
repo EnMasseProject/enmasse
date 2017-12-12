@@ -63,6 +63,7 @@ function configure() {
                 envsubst < /tmp/login.config > $instanceDir/etc/login.config
         fi
         cp $CONFIG_TEMPLATES/bootstrap.xml $instanceDir/etc/bootstrap.xml
+        cp $CONFIG_TEMPLATES/jolokia-access.xml $instanceDir/etc/jolokia-access.xml
 
         # Convert certs
         openssl pkcs12 -export -passout pass:enmasse -in /etc/enmasse-certs/tls.crt -inkey /etc/enmasse-certs/tls.key -chain -CAfile /etc/enmasse-certs/ca.crt -name "io.enmasse" -out /tmp/enmasse-keystore.p12
