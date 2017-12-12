@@ -1,7 +1,6 @@
 package io.enmasse.systemtest;
 
 
-import com.google.common.collect.Ordering;
 import io.enmasse.systemtest.executor.client.AbstractClient;
 import io.enmasse.systemtest.executor.client.Argument;
 import io.enmasse.systemtest.executor.client.ArgumentMap;
@@ -10,7 +9,6 @@ import io.enmasse.systemtest.executor.client.rhea.RheaClientSender;
 import io.enmasse.systemtest.web.AddressWebItem;
 import io.enmasse.systemtest.web.FilterType;
 import io.enmasse.systemtest.web.SortType;
-import net.bytebuddy.implementation.bytecode.Throw;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -18,7 +16,8 @@ import java.util.List;
 import java.util.stream.IntStream;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 
 public abstract class WebConsoleTest extends SeleniumTestBase {
 
@@ -73,10 +72,10 @@ public abstract class WebConsoleTest extends SeleniumTestBase {
         createAddressesWebConsole(addresses.toArray(new Destination[0]));
 
         sortItems(SortType.NAME, true);
-        assertTrue(Ordering.natural().isOrdered(getAddressItems()));
+        assertSorted(getAddressItems());
 
         sortItems(SortType.NAME, false);
-        assertTrue(Ordering.natural().reverse().isOrdered(getAddressItems()));
+        assertSorted(getAddressItems(), true);
     }
 
     public void doTestSortAddressesByClients() throws Exception {
@@ -87,62 +86,55 @@ public abstract class WebConsoleTest extends SeleniumTestBase {
         List<RheaClientReceiver> receivers = new ArrayList<>();
         List<RheaClientSender> senders = new ArrayList<>();
 
-        ArgumentMap receiverArgumets = new ArgumentMap();
-        receiverArgumets.put(Argument.BROKER, getRouteEndpoint(defaultAddressSpace).toString());
-        receiverArgumets.put(Argument.TIMEOUT, "60");
-        receiverArgumets.put(Argument.CONN_SSL, "true");
-        receiverArgumets.put(Argument.USERNAME, username);
-        receiverArgumets.put(Argument.PASSWORD, password);
-        receiverArgumets.put(Argument.LOG_MESSAGES, "json");
+        ArgumentMap arguments = new ArgumentMap();
+        arguments.put(Argument.BROKER, getRouteEndpoint(defaultAddressSpace).toString());
+        arguments.put(Argument.TIMEOUT, "60");
+        arguments.put(Argument.CONN_SSL, "true");
+        arguments.put(Argument.USERNAME, username);
+        arguments.put(Argument.PASSWORD, password);
+        arguments.put(Argument.LOG_MESSAGES, "json");
 
         for (int i = 0; i < addressCount; i++) {
-            receiverArgumets.put(Argument.ADDRESS, addresses.get(i).getAddress());
-            for(int j = 0; j < i + 1; j++){
+            arguments.put(Argument.ADDRESS, addresses.get(i).getAddress());
+            for (int j = 0; j < i + 1; j++) {
                 RheaClientReceiver rec = new RheaClientReceiver();
-                rec.setArguments(receiverArgumets);
+                rec.setArguments(arguments);
                 rec.runAsync();
                 receivers.add(rec);
             }
         }
 
-        Thread.sleep(10000);
+        Thread.sleep(15000);
 
         sortItems(SortType.RECEIVERS, true);
-        assertTrue(Ordering.from(Comparator.comparingInt(AddressWebItem::getReceiversCount)).isOrdered(getAddressItems()));
+        assertSorted(getAddressItems(), Comparator.comparingInt(AddressWebItem::getReceiversCount));
 
         sortItems(SortType.RECEIVERS, false);
-        assertTrue(Ordering.from(Comparator.comparingInt(AddressWebItem::getReceiversCount)).reverse().isOrdered(getAddressItems()));
+        assertSorted(getAddressItems(), true, Comparator.comparingInt(AddressWebItem::getReceiversCount));
 
         receivers.forEach(AbstractClient::stop);
 
-        ArgumentMap senderArguments = new ArgumentMap();
-        senderArguments.put(Argument.BROKER, getRouteEndpoint(defaultAddressSpace).toString());
-        senderArguments.put(Argument.TIMEOUT, "60");
-        senderArguments.put(Argument.MSG_CONTENT, "msg no.%d");
-        senderArguments.put(Argument.COUNT, "30");
-        senderArguments.put(Argument.DURATION, "30");
-        senderArguments.put(Argument.CONN_SSL, "true");
-        senderArguments.put(Argument.USERNAME, username);
-        senderArguments.put(Argument.PASSWORD, password);
-        receiverArgumets.put(Argument.LOG_MESSAGES, "json");
+        arguments.put(Argument.MSG_CONTENT, "msg no.%d");
+        arguments.put(Argument.COUNT, "30");
+        arguments.put(Argument.DURATION, "30");
 
         for (int i = 0; i < addressCount; i++) {
-            senderArguments.put(Argument.ADDRESS, addresses.get(i).getAddress());
-            for(int j = 0; j < i + 1; j++){
+            arguments.put(Argument.ADDRESS, addresses.get(i).getAddress());
+            for (int j = 0; j < i + 1; j++) {
                 RheaClientSender send = new RheaClientSender();
-                send.setArguments(senderArguments);
+                send.setArguments(arguments);
                 send.runAsync();
                 senders.add(send);
             }
         }
 
-        Thread.sleep(10000);
+        Thread.sleep(15000);
 
         sortItems(SortType.SENDERS, true);
-        assertTrue(Ordering.from(Comparator.comparingInt(AddressWebItem::getSendersCount)).isOrdered(getAddressItems()));
+        assertSorted(getAddressItems(), Comparator.comparingInt(AddressWebItem::getSendersCount));
 
         sortItems(SortType.SENDERS, false);
-        assertTrue(Ordering.from(Comparator.comparingInt(AddressWebItem::getSendersCount)).reverse().isOrdered(getAddressItems()));
+        assertSorted(getAddressItems(), true, Comparator.comparingInt(AddressWebItem::getSendersCount));
 
         senders.forEach(AbstractClient::stop);
     }

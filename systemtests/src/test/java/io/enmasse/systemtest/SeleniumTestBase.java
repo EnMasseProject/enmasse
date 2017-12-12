@@ -1,5 +1,6 @@
 package io.enmasse.systemtest;
 
+import com.google.common.collect.Ordering;
 import com.paulhammant.ngwebdriver.ByAngular;
 import com.paulhammant.ngwebdriver.NgWebDriver;
 import io.enmasse.systemtest.web.AddressWebItem;
@@ -23,8 +24,7 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.*;
 
 public abstract class SeleniumTestBase extends TestBaseWithDefault {
     private final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss:SSSS");
@@ -111,6 +111,31 @@ public abstract class SeleniumTestBase extends TestBaseWithDefault {
         } catch (Exception ex) {
             Logging.log.warn("Cannot take screenshot: " + ex.getMessage());
         }
+    }
+
+    //================================================================================================
+    //==================================== Asserts methods ===========================================
+    //================================================================================================
+    public void assertSorted(List<AddressWebItem> list) throws Exception {
+        assertSorted(list, false);
+    }
+
+    public void assertSorted(List<AddressWebItem> list, Comparator comparator) throws Exception {
+        assertSorted(list, false, comparator);
+    }
+
+    public void assertSorted(List<AddressWebItem> list, boolean reverse) throws Exception {
+        if (!reverse)
+            assertTrue(Ordering.natural().isOrdered(list));
+        else
+            assertTrue(Ordering.natural().reverse().isOrdered(list));
+    }
+
+    public void assertSorted(List<AddressWebItem> list, boolean reverse, Comparator comparator) throws Exception {
+        if (!reverse)
+            assertTrue(Ordering.from(comparator).isOrdered(list));
+        else
+            assertTrue(Ordering.from(comparator).reverse().isOrdered(list));
     }
 
     //================================================================================================
