@@ -299,25 +299,33 @@ public class KubernetesHelper implements Kubernetes {
             if (service.getSpec().getPorts().isEmpty()) {
                 return;
             }
-            ServicePort servicePort = service.getSpec().getPorts().get(0);
-            DoneableService svc = client.services().inNamespace(namespace).createNew()
-                    .editOrNewMetadata()
-                    .withName(endpoint.getName() + "-external")
-                    .addToAnnotations(AnnotationKeys.ADDRESS_SPACE, addressSpaceName)
-                    .addToAnnotations(AnnotationKeys.SERVICE_NAME, service.getMetadata().getName())
-                    .addToLabels(LabelKeys.TYPE, "loadbalancer")
-                    .endMetadata()
-                    .editOrNewSpec()
-                    .withPorts(servicePort)
-                    .withSelector(service.getSpec().getSelector())
-                    .withType("LoadBalancer")
-                    .endSpec();
-            if (endpoint.getCertProvider().isPresent()) {
-                svc.editOrNewMetadata()
-                        .addToAnnotations(AnnotationKeys.CERT_SECRET_NAME, endpoint.getCertProvider().get().getSecretName())
-                        .endMetadata();
+            ServicePort servicePort = null;
+            for (ServicePort port : service.getSpec().getPorts()) {
+                if (port.getName().equals(defaultPort)) {
+                    servicePort = port;
+                    break;
+                }
             }
-            svc.done();
+            if (servicePort != null) {
+                DoneableService svc = client.services().inNamespace(namespace).createNew()
+                        .editOrNewMetadata()
+                        .withName(endpoint.getName() + "-external")
+                        .addToAnnotations(AnnotationKeys.ADDRESS_SPACE, addressSpaceName)
+                        .addToAnnotations(AnnotationKeys.SERVICE_NAME, service.getMetadata().getName())
+                        .addToLabels(LabelKeys.TYPE, "loadbalancer")
+                        .endMetadata()
+                        .editOrNewSpec()
+                        .withPorts(servicePort)
+                        .withSelector(service.getSpec().getSelector())
+                        .withType("LoadBalancer")
+                        .endSpec();
+                if (endpoint.getCertProvider().isPresent()) {
+                    svc.editOrNewMetadata()
+                            .addToAnnotations(AnnotationKeys.CERT_SECRET_NAME, endpoint.getCertProvider().get().getSecretName())
+                            .endMetadata();
+                }
+                svc.done();
+            }
         }
     }
 
