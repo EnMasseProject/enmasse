@@ -19,7 +19,8 @@ public class FirefoxWebConsoleTest extends BrokeredWebConsoleTest {
         doTestCreateDeleteAddress(Destination.topic("test-topic"));
     }
 
-    @Test
+    //disabled due to issue: #623
+    //@Test
     public void testFilterAddressesByType() throws Exception {
         doTestFilterAddressesByType();
     }
