@@ -115,26 +115,9 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
         ArrayList<Destination> addresses = generateQueueTopicList("via-web", IntStream.range(0, addressCount));
         consoleWebPage.createAddressesWebConsole(addresses.toArray(new Destination[0]));
 
-        List<RheaClientReceiver> receivers = new ArrayList<>();
-        List<RheaClientSender> senders = new ArrayList<>();
+        consoleWebPage.openAddressesPageWebConsole();
 
-        ArgumentMap arguments = new ArgumentMap();
-        arguments.put(Argument.BROKER, getRouteEndpoint(defaultAddressSpace).toString());
-        arguments.put(Argument.TIMEOUT, "60");
-        arguments.put(Argument.CONN_SSL, "true");
-        arguments.put(Argument.USERNAME, username);
-        arguments.put(Argument.PASSWORD, password);
-        arguments.put(Argument.LOG_MESSAGES, "json");
-
-        for (int i = 0; i < addressCount; i++) {
-            arguments.put(Argument.ADDRESS, addresses.get(i).getAddress());
-            for (int j = 0; j < i + 1; j++) {
-                RheaClientReceiver rec = new RheaClientReceiver();
-                rec.setArguments(arguments);
-                rec.runAsync();
-                receivers.add(rec);
-            }
-        }
+        List<AbstractClient> receivers = attachReceivers(addresses);
 
         Thread.sleep(15000);
 
@@ -146,19 +129,7 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
 
         receivers.forEach(AbstractClient::stop);
 
-        arguments.put(Argument.MSG_CONTENT, "msg no.%d");
-        arguments.put(Argument.COUNT, "30");
-        arguments.put(Argument.DURATION, "30");
-
-        for (int i = 0; i < addressCount; i++) {
-            arguments.put(Argument.ADDRESS, addresses.get(i).getAddress());
-            for (int j = 0; j < i + 1; j++) {
-                RheaClientSender send = new RheaClientSender();
-                send.setArguments(arguments);
-                send.runAsync();
-                senders.add(send);
-            }
-        }
+        List<AbstractClient> senders = attachSenders(addresses);
 
         Thread.sleep(15000);
 
@@ -172,6 +143,98 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
     }
 
     public void doTestSortConnectionsBySenders() throws Exception {
+        int addressCount = 4;
+        ArrayList<Destination> addresses = generateQueueTopicList("via-web", IntStream.range(0, addressCount));
+        consoleWebPage.createAddressesWebConsole(addresses.toArray(new Destination[0]));
 
+        consoleWebPage.openConnectionsPageWebConsole();
+
+        List<AbstractClient> senders = attachSenders(addresses);
+
+        Thread.sleep(15000);
+
+        consoleWebPage.sortItems(SortType.SENDERS, true);
+        assertSorted(consoleWebPage.getConnectionItems(), Comparator.comparingInt(ConnectionWebItem::getSendersCount));
+
+        consoleWebPage.sortItems(SortType.SENDERS, false);
+        assertSorted(consoleWebPage.getConnectionItems(), true, Comparator.comparingInt(ConnectionWebItem::getSendersCount));
+
+        senders.forEach(AbstractClient::stop);
+    }
+
+    public void doTestSortConnectionsByReceivers() throws Exception {
+        int addressCount = 4;
+        ArrayList<Destination> addresses = generateQueueTopicList("via-web", IntStream.range(0, addressCount));
+        consoleWebPage.createAddressesWebConsole(addresses.toArray(new Destination[0]));
+
+        consoleWebPage.openConnectionsPageWebConsole();
+
+        List<AbstractClient> receivers = attachReceivers(addresses);
+
+        Thread.sleep(15000);
+
+        consoleWebPage.sortItems(SortType.RECEIVERS, true);
+        assertSorted(consoleWebPage.getConnectionItems(), Comparator.comparingInt(ConnectionWebItem::getReceiversCount));
+
+        consoleWebPage.sortItems(SortType.RECEIVERS, false);
+        assertSorted(consoleWebPage.getConnectionItems(), true, Comparator.comparingInt(ConnectionWebItem::getReceiversCount));
+
+        receivers.forEach(AbstractClient::stop);
+    }
+
+    //============================================================================================
+    //============================ Help methods ==================================================
+    //============================================================================================
+
+    private List<AbstractClient> attachSenders(List<Destination> destinations) throws Exception {
+        List<AbstractClient> senders = new ArrayList<>();
+
+        ArgumentMap arguments = new ArgumentMap();
+        arguments.put(Argument.BROKER, getRouteEndpoint(defaultAddressSpace).toString());
+        arguments.put(Argument.TIMEOUT, "60");
+        arguments.put(Argument.CONN_SSL, "true");
+        arguments.put(Argument.USERNAME, username);
+        arguments.put(Argument.PASSWORD, password);
+        arguments.put(Argument.LOG_MESSAGES, "json");
+        arguments.put(Argument.MSG_CONTENT, "msg no.%d");
+        arguments.put(Argument.COUNT, "30");
+        arguments.put(Argument.DURATION, "30");
+
+        for (int i = 0; i < destinations.size(); i++) {
+            arguments.put(Argument.ADDRESS, destinations.get(i).getAddress());
+            for (int j = 0; j < i + 1; j++) {
+                RheaClientSender send = new RheaClientSender();
+                send.setArguments(arguments);
+                send.runAsync();
+                senders.add(send);
+            }
+        }
+
+
+        return senders;
+    }
+
+    private List<AbstractClient> attachReceivers(List<Destination> destinations) throws Exception {
+        List<AbstractClient> receivers = new ArrayList<>();
+
+        ArgumentMap arguments = new ArgumentMap();
+        arguments.put(Argument.BROKER, getRouteEndpoint(defaultAddressSpace).toString());
+        arguments.put(Argument.TIMEOUT, "60");
+        arguments.put(Argument.CONN_SSL, "true");
+        arguments.put(Argument.USERNAME, username);
+        arguments.put(Argument.PASSWORD, password);
+        arguments.put(Argument.LOG_MESSAGES, "json");
+
+        for (int i = 0; i < destinations.size(); i++) {
+            arguments.put(Argument.ADDRESS, destinations.get(i).getAddress());
+            for (int j = 0; j < i + 1; j++) {
+                RheaClientReceiver rec = new RheaClientReceiver();
+                rec.setArguments(arguments);
+                rec.runAsync();
+                receivers.add(rec);
+            }
+        }
+
+        return receivers;
     }
 }

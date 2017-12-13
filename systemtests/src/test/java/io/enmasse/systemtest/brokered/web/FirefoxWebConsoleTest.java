@@ -44,6 +44,11 @@ public class FirefoxWebConsoleTest extends BrokeredWebConsoleTest {
         doTestSortConnectionsBySenders();
     }
 
+    @Test
+    public void testSortConnectionsByReceivers() throws Exception {
+        doTestSortConnectionsByReceivers();
+    }
+
     @Override
     public WebDriver buildDriver() {
         FirefoxOptions opts = new FirefoxOptions();

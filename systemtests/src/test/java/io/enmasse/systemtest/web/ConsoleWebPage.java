@@ -38,8 +38,12 @@ public class ConsoleWebPage {
         selenium.takeScreenShot();
     }
 
+    private WebElement getNavigateMenu() throws Exception {
+        return selenium.driver.findElement(By.id("verticalNavLayout"));
+    }
+
     private WebElement getLeftMenuItemWebConsole(String itemText) throws Exception {
-        List<WebElement> items = selenium.driver.findElements(ByAngular.exactRepeater("item in items"));
+        List<WebElement> items = getNavigateMenu().findElements(ByAngular.exactRepeater("item in items"));
         assertNotNull(items);
         WebElement returnedItem = null;
         for (WebElement item : items) {
@@ -53,15 +57,18 @@ public class ConsoleWebPage {
     public void openAddressesPageWebConsole() throws Exception {
         selenium.clickOnItem(getLeftMenuItemWebConsole("Addresses"));
         toolbarType = ToolbarType.ADDRESSES;
+        Logging.log.info("Addresses page opened");
     }
 
     public void openDashboardPageWebConsole() throws Exception {
         selenium.clickOnItem(getLeftMenuItemWebConsole("Dashboard"));
+        Logging.log.info("Dashboard page opened");
     }
 
     public void openConnectionsPageWebConsole() throws Exception {
         selenium.clickOnItem(getLeftMenuItemWebConsole("Connections"));
         toolbarType = ToolbarType.CONNECTIONS;
+        Logging.log.info("Connections page opened");
     }
 
     public void clickOnCreateButton() throws Exception {
