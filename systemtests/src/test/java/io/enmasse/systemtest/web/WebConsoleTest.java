@@ -186,6 +186,7 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
     public void doTestFilterConnectionsByEncrypted() throws Exception {
         Destination queue = Destination.queue("queue-via-web-connections-encrypted");
         consoleWebPage.createAddressesWebConsole(queue);
+        consoleWebPage.openConnectionsPageWebConsole();
 
         List<RheaClientReceiver> receivers = new ArrayList<>();
         int receiverCount = 5;
