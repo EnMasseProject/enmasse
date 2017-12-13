@@ -120,12 +120,21 @@ public class ConsoleWebPage {
      * or
      * (connections encrypted types: [Filter by encrypted/unencrypted/encrypted/unencrypted])
      */
-    private WebElement getAddressTypeSwitch() throws Exception {
+    private WebElement getAddressConnectionsSwitch() throws Exception {
         return getFilterGroup().findElements(By.tagName("button")).get(1);
     }
 
     /**
-     * get list of clickable li elements (Type/Name)
+     * (addresses/connections tab)
+     * get input element for search with set filter to (addresses:[Name]) or (connections:[Container/Hostname/User])
+     */
+    private WebElement getInputSearchAddressesConnections() throws Exception {
+        return getFilterGroup().findElement(By.tagName("input"));
+    }
+
+    /**
+     * (addresses/connections tab)
+     * get list of clickable li elements (addresses: [Type/Name]) or (connections: [Container/Hostname/User/Encrypted])
      */
     private List<WebElement> getFilterDropDown() throws Exception {
         return getFilterGroup().findElements(ByAngular.repeater("item in config.fields"));
@@ -157,6 +166,7 @@ public class ConsoleWebPage {
     }
 
     /**
+     * (addresss tab)
      * get clickable element from list of address types
      * (DropDown element with: Filter by type.../queue/topic/multicast/anycast values)
      */
@@ -168,6 +178,19 @@ public class ConsoleWebPage {
         addressTypesMap.put("anycast", 4);
 
         return dropDownTypes.get(addressTypesMap.get(addressType));
+    }
+
+    /**
+     * (connections tab)
+     * get clickable element from list of connections by encrypted
+     * (DropDown element with: Filter by encrypted/unencrypted.../encrypted/unencrypted values)
+     */
+    private WebElement getDropDownEncryptedType(String encryptedType, List<WebElement> dropDownTypes) {
+        HashMap<String, Integer> addressTypesMap = new HashMap<>();
+        addressTypesMap.put("encrypted", 1);
+        addressTypesMap.put("unencrypted", 2);
+
+        return dropDownTypes.get(addressTypesMap.get(encryptedType));
     }
 
     /**
@@ -250,32 +273,74 @@ public class ConsoleWebPage {
      * @param filterValue allowed values are for FilterType.NAME (String), FilterType.NAME (queue, topic, multicast, anycast)
      * @throws Exception
      */
-    public void addFilter(FilterType filterType, String filterValue) throws Exception {
+    public void addAddressesFilter(FilterType filterType, String filterValue) throws Exception {
         Logging.log.info(String.format("Adding filter ->  %s: %s", filterType.toString(), filterValue));
         switchFilter(filterType);
         switch (filterType) {
             case TYPE:
-                addFilterByType(filterValue);
+                addFilterBy(filterType, filterValue);
                 break;
             case NAME:
-                WebElement filterInput = getFilterGroup().findElement(By.tagName("input"));
+                WebElement filterInput = getInputSearchAddressesConnections();
                 selenium.fillInputItem(filterInput, filterValue);
                 selenium.pressEnter(filterInput);
                 break;
+            default:
+                throw new IllegalArgumentException("Filter type " + filterType + "isn't supported for addresses");
         }
     }
 
     /**
-     * add filter by address type
+     * add whatever filter you want
      *
-     * @param addressType queue, topic, multicast, anycast
+     * @param filterType
+     * @param filterValue allowed values are for FilterType.NAME (String), FilterType.NAME (queue, topic, multicast, anycast)
+     * @throws Exception
      */
-    private void addFilterByType(String addressType) throws Exception {
+    public void addConnectionsFilter(FilterType filterType, String filterValue) throws Exception {
+        Logging.log.info(String.format("Adding filter ->  %s: %s", filterType.toString(), filterValue));
+        switchFilter(filterType);
+        switch (filterType) {
+            case CONTAINER:
+            case HOSTNAME:
+            case USER:
+                WebElement filterInput = getInputSearchAddressesConnections();
+                selenium.fillInputItem(filterInput, filterValue);
+                selenium.pressEnter(filterInput);
+                break;
+            case ENCRYPTED:
+                addFilterBy(filterType, filterValue);
+                break;
+            default:
+                throw new IllegalArgumentException("Filter type " + filterType + "isn't supported for addresses");
+        }
+    }
+
+    /**
+     * add filter by filter type [TYPE/ENCRYPTED]
+     *
+     * @param filterValue queue/topic/multicast/anycast/encrypted/unencrypted
+     */
+    private void addFilterBy(FilterType filterType, String filterValue) throws Exception {
+        WebElement clickableTypeElement;
+        String textToLog;
+        switch (filterType) {
+            case TYPE:
+                textToLog = "Click on button: 'Filter by name...'";
+                clickableTypeElement = getDropDownAddressType(filterValue, getDropDownAddressTypes());
+                break;
+            case ENCRYPTED:
+                textToLog = "Click on button: 'Filter by encrypted/unencrypted...'";
+                clickableTypeElement = getDropDownEncryptedType(filterValue, getDropDownAddressTypes());
+                break;
+            default:
+                throw new IllegalArgumentException("Filter type " + filterType + "isn't supported for addresses");
+        }
         selenium.executeJavaScript(
                 "document.getElementById('_fields').getElementsByTagName('button')[1].click();",
-                "Click on button: 'Filter by Type...'");
-        WebElement addressTypeElement = getDropDownAddressType(addressType, getDropDownAddressTypes());
-        selenium.clickOnItem(addressTypeElement);
+                textToLog);
+        selenium.clickOnItem(clickableTypeElement);
+
     }
 
 

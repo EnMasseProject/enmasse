@@ -64,13 +64,13 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
 
         consoleWebPage.createAddressesWebConsole(addresses.toArray(new Destination[0]));
         assertThat(consoleWebPage.getAddressItems().size(), is(addressCount));
-        consoleWebPage.addFilter(FilterType.TYPE, "queue");
+        consoleWebPage.addAddressesFilter(FilterType.TYPE, "queue");
         assertThat(consoleWebPage.getAddressItems().size(), is(addressCount / 2));
 
         consoleWebPage.removeFilterByType("queue");
         assertThat(consoleWebPage.getAddressItems().size(), is(addressCount));
 
-        consoleWebPage.addFilter(FilterType.TYPE, "topic");
+        consoleWebPage.addAddressesFilter(FilterType.TYPE, "topic");
         assertThat(consoleWebPage.getAddressItems().size(), is(addressCount / 2));
 
         consoleWebPage.removeFilterByType("topic");
@@ -82,16 +82,16 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
         ArrayList<Destination> addresses = generateQueueTopicList("via-web", IntStream.range(0, addressCount));
         consoleWebPage.createAddressesWebConsole(addresses.toArray(new Destination[0]));
 
-        consoleWebPage.addFilter(FilterType.NAME, "web");
+        consoleWebPage.addAddressesFilter(FilterType.NAME, "web");
         assertEquals(addressCount, consoleWebPage.getAddressItems().size());
 
-        consoleWebPage.addFilter(FilterType.NAME, "via");
+        consoleWebPage.addAddressesFilter(FilterType.NAME, "via");
         assertEquals(addressCount, consoleWebPage.getAddressItems().size());
 
         consoleWebPage.removeFilterByName("web");
         assertEquals(addressCount, consoleWebPage.getAddressItems().size());
 
-        consoleWebPage.addFilter(FilterType.NAME, "queue");
+        consoleWebPage.addAddressesFilter(FilterType.NAME, "queue");
         assertEquals(addressCount / 2, consoleWebPage.getAddressItems().size());
 
         consoleWebPage.clearAllFilters();
