@@ -182,6 +182,44 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
         receivers.forEach(AbstractClient::stop);
     }
 
+
+    public void doTestFilterConnectionsByEncrypted() throws Exception {
+        Destination queue = Destination.queue("queue-via-web-connections-encrypted");
+        consoleWebPage.createAddressesWebConsole(queue);
+
+        List<RheaClientReceiver> receivers = new ArrayList<>();
+        int receiverCount = 5;
+
+        ArgumentMap arguments = new ArgumentMap();
+        arguments.put(Argument.BROKER, getRouteEndpoint(defaultAddressSpace).toString());
+        arguments.put(Argument.TIMEOUT, "60");
+        arguments.put(Argument.CONN_SSL, "true");
+        arguments.put(Argument.USERNAME, username);
+        arguments.put(Argument.PASSWORD, password);
+        arguments.put(Argument.LOG_MESSAGES, "json");
+        arguments.put(Argument.ADDRESS, queue.getAddress());
+
+        for (int i = 0; i < receiverCount; i++) {
+            RheaClientReceiver rec = new RheaClientReceiver();
+            rec.setArguments(arguments);
+            rec.runAsync();
+            receivers.add(rec);
+        }
+
+        Thread.sleep(15000);
+
+        consoleWebPage.addConnectionsFilter(FilterType.ENCRYPTED, "unencrypted");
+        assertThat(consoleWebPage.getConnectionItems().size(), is(receiverCount));
+
+        consoleWebPage.clearAllFilters();
+        assertThat(consoleWebPage.getConnectionItems().size(), is(receiverCount));
+
+        consoleWebPage.addConnectionsFilter(FilterType.ENCRYPTED, "encrypted");
+        assertThat(consoleWebPage.getConnectionItems().size(), is(0));
+
+        receivers.forEach(AbstractClient::stop);
+    }
+
     //============================================================================================
     //============================ Help methods ==================================================
     //============================================================================================

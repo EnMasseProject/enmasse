@@ -43,6 +43,11 @@ public class ChromeWebConsoleTest extends BrokeredWebConsoleTest {
         doTestSortConnectionsByReceivers();
     }
 
+    //@Test
+    public void testFilterConnectionsByEncrypted() throws Exception {
+        doTestFilterConnectionsByEncrypted();
+    }
+
     @Override
     public WebDriver buildDriver() {
         ChromeOptions opts = new ChromeOptions();
