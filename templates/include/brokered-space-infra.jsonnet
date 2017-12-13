@@ -3,7 +3,7 @@ local roles = import "roles.jsonnet";
 local images = import "images.jsonnet";
 local admin = import "admin.jsonnet";
 local auth_service = import "auth-service.jsonnet";
-local hawkularBrokerConfig = import "hawkular-broker-config.jsonnet";
+local prometheus = import "prometheus.jsonnet";
 
 {
 
@@ -126,13 +126,16 @@ local hawkularBrokerConfig = import "hawkular-broker-config.jsonnet";
             "name": name
           },
           "annotations": {
-            "addressSpace": "${ADDRESS_SPACE}"
+            "addressSpace": "${ADDRESS_SPACE}",
+            "prometheus.io/scrape": "true",
+            "prometheus.io/path": "/metrics",
+            "prometheus.io/port": "8080"
           }
         },
         "spec": {
           "volumes": [
             common.persistent_volume("data", "broker-data"),
-            common.configmap_volume("hawkular-openshift-agent", "hawkular-broker-config"),
+            common.configmap_volume("broker-prometheus-config", "broker-prometheus-config"),
             common.secret_volume("broker-internal-cert", "broker-internal-cert"),
             common.secret_volume("authservice-ca", "authservice-ca"),
             common.secret_volume("external-cert", "${MESSAGING_SECRET}"),
@@ -149,7 +152,8 @@ local hawkularBrokerConfig = import "hawkular-broker-config.jsonnet";
                 common.volume_mount("data", "/var/run/artemis"),
                 common.volume_mount("broker-internal-cert", "/etc/enmasse-certs", true),
                 common.volume_mount("external-cert", "/etc/external-certs", true),
-                common.volume_mount("authservice-ca", "/etc/authservice-ca", true)
+                common.volume_mount("authservice-ca", "/etc/authservice-ca", true),
+                common.volume_mount("broker-prometheus-config", "/etc/prometheus-config", true)
               ],
               "ports": [
                 common.container_port("amqp", 5672),
@@ -157,7 +161,8 @@ local hawkularBrokerConfig = import "hawkular-broker-config.jsonnet";
                 common.container_port("core", 61616),
                 common.container_port("openwire", 61613),
                 common.container_port("amqps-normal", 55671),
-                common.container_port("jolokia", 8161)
+                common.container_port("jolokia", 8161),
+                common.container_port("metrics", 8080)
               ],
               "livenessProbe": common.exec_probe(["sh", "-c", "$ARTEMIS_HOME/bin/probe.sh"], 120),
               "readinessProbe": common.exec_probe(["sh", "-c", "$ARTEMIS_HOME/bin/probe.sh"], 10),
@@ -278,7 +283,7 @@ local hawkularBrokerConfig = import "hawkular-broker-config.jsonnet";
     "objects": [
       common.ca_secret("authservice-ca", "${AUTHENTICATION_SERVICE_CA_CERT}"),
       common.ca_secret("address-controller-ca", "${ADDRESS_CONTROLLER_CA_CERT}"),
-      hawkularBrokerConfig,
+      prometheus.broker_config("broker-prometheus-config"),
       me.pvc("broker-data"),
       me.broker_deployment("broker"),
       me.broker_service,

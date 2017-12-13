@@ -17,8 +17,6 @@ local mqtt = import "mqtt.jsonnet";
 local mqttService = import "mqtt-service.jsonnet";
 local mqttRoute = import "mqtt-route.jsonnet";
 local mqttLwt = import "mqtt-lwt.jsonnet";
-local hawkularBrokerConfig = import "hawkular-broker-config.jsonnet";
-local hawkularRouterConfig = import "hawkular-router-config.jsonnet";
 local images = import "images.jsonnet";
 
 {
@@ -43,8 +41,6 @@ local images = import "images.jsonnet";
       mqttLwt.deployment("${ADDRESS_SPACE}", "${MQTT_LWT_IMAGE}"),
       common.ca_secret("authservice-ca", "${AUTHENTICATION_SERVICE_CA_CERT}"),
       common.ca_secret("address-controller-ca", "${ADDRESS_CONTROLLER_CA_CERT}"),
-      hawkularBrokerConfig,
-      hawkularRouterConfig,
       admin.deployment("${ADDRESS_SPACE}", "${CONFIGSERV_IMAGE}", "${RAGENT_IMAGE}", "${QUEUE_SCHEDULER_IMAGE}", "${AGENT_IMAGE}", "authservice-ca", "address-controller-ca", "${CONSOLE_SECRET}", "${MESSAGING_SECRET}")
     ],
 
