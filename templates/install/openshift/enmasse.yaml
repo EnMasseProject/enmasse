@@ -1131,40 +1131,6 @@ objects:
     kind: Secret
     metadata:
       name: address-controller-ca
-  - apiVersion: v1
-    data:
-      hawkular-openshift-agent: '{"endpoints": [{"collection_interval": "60s", "metrics":
-        [{"id": "broker.threadCount", "name": "java.lang:type=Threading#ThreadCount",
-        "tags": {"messagingComponent": "broker", "messagingMetricType": "threadCount"},
-        "type": "counter"}, {"id": "broker.memoryHeapUsage", "name": "java.lang:type=Memory#HeapMemoryUsage#used",
-        "tags": {"messagingComponent": "broker", "messagingMetricType": "heapUsage"},
-        "type": "gauge"}, {"description": "Queue depth for ${address}", "id": "${address}.${queue}.${broker}.queueDepth",
-        "name": "org.apache.activemq.artemis:address=*,broker=*,component=addresses,queue=*,routing-type=*,subcomponent=queues#MessageCount",
-        "tags": {"messagingAddress": "${address}", "messagingBroker": "{broker}",
-        "messagingMetricType": "queueDepth", "messagingQueue": "${queue}"}, "type":
-        "gauge"}, {"description": "Number of consumers for ${address}", "id": "${address}.${queue}.${broker}.numConsumers",
-        "name": "org.apache.activemq.artemis:address=*,broker=*,component=addresses,queue=*,routing-type=*,subcomponent=queues#ConsumerCount",
-        "tags": {"messagingAddress": "${address}", "messagingBroker": "{broker}",
-        "messagingMetricType": "numConsumers", "messagingQueue": "${queue}"}, "type":
-        "gauge"}], "path": "/jolokia/", "port": 8161, "protocol": "http", "type":
-        "jolokia"}]}'
-    kind: ConfigMap
-    metadata:
-      name: hawkular-broker-config
-  - apiVersion: v1
-    data:
-      hawkular-openshift-agent: '{"endpoints": [{"collection_interval": "60s", "metrics":
-        [{"id": "router.totalConnectionCount", "name": "totalConnectionCount", "tags":
-        {"messagingComponent": "router", "messagingMetricType": "totalConnectionCount"}},
-        {"id": "router.totalLinkCount", "name": "totalLinkCount", "tags": {"messagingComponent":
-        "router", "messagingMetricType": "totalLinkCount"}}, {"id": "router.producerCount",
-        "name": "producerCount", "tags": {"messagingComponent": "router", "messagingMetricType":
-        "producerCount"}}, {"id": "router.consumerCount", "name": "consumerCount",
-        "tags": {"messagingComponent": "router", "messagingMetricType": "consumerCount"}}],
-        "path": "/metrics/", "port": 8080, "protocol": "http", "type": "prometheus"}]}'
-    kind: ConfigMap
-    metadata:
-      name: hawkular-router-config
   - apiVersion: extensions/v1beta1
     kind: Deployment
     metadata:
@@ -1435,24 +1401,10 @@ objects:
       name: address-controller-ca
   - apiVersion: v1
     data:
-      hawkular-openshift-agent: '{"endpoints": [{"collection_interval": "60s", "metrics":
-        [{"id": "broker.threadCount", "name": "java.lang:type=Threading#ThreadCount",
-        "tags": {"messagingComponent": "broker", "messagingMetricType": "threadCount"},
-        "type": "counter"}, {"id": "broker.memoryHeapUsage", "name": "java.lang:type=Memory#HeapMemoryUsage#used",
-        "tags": {"messagingComponent": "broker", "messagingMetricType": "heapUsage"},
-        "type": "gauge"}, {"description": "Queue depth for ${address}", "id": "${address}.${queue}.${broker}.queueDepth",
-        "name": "org.apache.activemq.artemis:address=*,broker=*,component=addresses,queue=*,routing-type=*,subcomponent=queues#MessageCount",
-        "tags": {"messagingAddress": "${address}", "messagingBroker": "{broker}",
-        "messagingMetricType": "queueDepth", "messagingQueue": "${queue}"}, "type":
-        "gauge"}, {"description": "Number of consumers for ${address}", "id": "${address}.${queue}.${broker}.numConsumers",
-        "name": "org.apache.activemq.artemis:address=*,broker=*,component=addresses,queue=*,routing-type=*,subcomponent=queues#ConsumerCount",
-        "tags": {"messagingAddress": "${address}", "messagingBroker": "{broker}",
-        "messagingMetricType": "numConsumers", "messagingQueue": "${queue}"}, "type":
-        "gauge"}], "path": "/jolokia/", "port": 8161, "protocol": "http", "type":
-        "jolokia"}]}'
+      config.yaml: '{"lowercaseOutputName": true}'
     kind: ConfigMap
     metadata:
-      name: hawkular-broker-config
+      name: broker-prometheus-config
   - apiVersion: v1
     kind: PersistentVolumeClaim
     metadata:
@@ -1483,6 +1435,9 @@ objects:
         metadata:
           annotations:
             addressSpace: ${ADDRESS_SPACE}
+            prometheus.io/path: /metrics
+            prometheus.io/port: '8080'
+            prometheus.io/scrape: 'true'
           labels:
             app: enmasse
             name: broker
@@ -1524,6 +1479,8 @@ objects:
               name: amqps-normal
             - containerPort: 8161
               name: jolokia
+            - containerPort: 8080
+              name: metrics
             readinessProbe:
               exec:
                 command:
@@ -1544,13 +1501,16 @@ objects:
             - mountPath: /etc/authservice-ca
               name: authservice-ca
               readOnly: true
+            - mountPath: /etc/prometheus-config
+              name: broker-prometheus-config
+              readOnly: true
           volumes:
           - name: data
             persistentVolumeClaim:
               claimName: broker-data
           - configMap:
-              name: hawkular-broker-config
-            name: hawkular-openshift-agent
+              name: broker-prometheus-config
+            name: broker-prometheus-config
           - name: broker-internal-cert
             secret:
               secretName: broker-internal-cert
