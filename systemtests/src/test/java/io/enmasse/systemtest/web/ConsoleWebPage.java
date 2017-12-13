@@ -5,7 +5,6 @@ import com.paulhammant.ngwebdriver.ByAngular;
 import io.enmasse.systemtest.*;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
-import org.openqa.selenium.support.ui.ExpectedConditions;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -21,6 +20,7 @@ public class ConsoleWebPage {
     private String consoleRoute;
     private AddressApiClient addressApiClient;
     private AddressSpace defaultAddressSpace;
+    private ToolbarType toolbarType;
 
 
     public ConsoleWebPage(SeleniumProvider selenium, String consoleRoute, AddressApiClient addressApiClient, AddressSpace defaultAddressSpace) {
@@ -52,6 +52,7 @@ public class ConsoleWebPage {
 
     public void openAddressesPageWebConsole() throws Exception {
         selenium.clickOnItem(getLeftMenuItemWebConsole("Addresses"));
+        toolbarType = ToolbarType.ADDRESSES;
     }
 
     public void openDashboardPageWebConsole() throws Exception {
@@ -60,6 +61,7 @@ public class ConsoleWebPage {
 
     public void openConnectionsPageWebConsole() throws Exception {
         selenium.clickOnItem(getLeftMenuItemWebConsole("Connections"));
+        toolbarType = ToolbarType.CONNECTIONS;
     }
 
     public void clickOnCreateButton() throws Exception {
@@ -75,7 +77,7 @@ public class ConsoleWebPage {
      * get toolbar element with all filters for addresses/connections
      */
     private WebElement getFilterResultsToolbar() throws Exception {
-        return getAddressesToolbar().findElement(By.id("{{filterDomId}_results}"));
+        return getToolbar().findElement(By.id("{{filterDomId}_results}"));
     }
 
     /**
@@ -87,19 +89,11 @@ public class ConsoleWebPage {
     }
 
     /**
-     * (addresses tab)
-     * get element with filter, sort, create, delete, ...
+     * (addresses/connections tab)
+     * get toolbar with filter/sort
      */
-    private WebElement getAddressesToolbar() throws Exception {
-        return selenium.driver.findElement(By.id("exampleToolbar"));
-    }
-
-    /**
-     * (connections tab)
-     * get element with filter, sort, create, delete, ...
-     */
-    private WebElement getConnectionsToolbar() throws Exception {
-        return selenium.driver.findElement(By.id("connectionToolbar"));
+    private WebElement getToolbar() throws Exception {
+        return selenium.driver.findElement(By.id(toolbarType.toString()));
     }
 
     /**
@@ -107,8 +101,7 @@ public class ConsoleWebPage {
      * get element from toolbar with Filter elements
      */
     private WebElement getFilterGroup() throws Exception {
-        WebElement toolbar = getAddressesToolbar();
-        return toolbar.findElement(By.id("_fields"));
+        return getToolbar().findElement(By.id("_fields"));
     }
 
     /**
@@ -181,7 +174,7 @@ public class ConsoleWebPage {
      * return part of toolbar with sort buttons
      */
     private WebElement getSortGroup() throws Exception {
-        return getAddressesToolbar().findElement(By.className("sort-pf"));
+        return getToolbar().findElement(By.className("sort-pf"));
     }
 
     /**
