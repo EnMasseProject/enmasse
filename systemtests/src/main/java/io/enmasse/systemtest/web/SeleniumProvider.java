@@ -3,6 +3,7 @@ package io.enmasse.systemtest.web;
 
 import com.paulhammant.ngwebdriver.NgWebDriver;
 import io.enmasse.systemtest.Environment;
+import io.enmasse.systemtest.Kubernetes;
 import io.enmasse.systemtest.Logging;
 import io.enmasse.systemtest.OpenShift;
 import org.apache.commons.io.FileUtils;
@@ -30,7 +31,7 @@ public class SeleniumProvider {
     private Map<Date, File> browserScreenshots = new HashMap<>();
     private String webconsoleFolder = "selenium_tests";
     private Environment environment;
-    private OpenShift openShift;
+    private Kubernetes kubernetes;
 
 
     public void onFailed(Throwable e, Description description) {
@@ -51,9 +52,9 @@ public class SeleniumProvider {
     }
 
 
-    public void setupDriver(Environment environment, OpenShift openShift, WebDriver driver) throws Exception {
+    public void setupDriver(Environment environment, Kubernetes kubernetes, WebDriver driver) throws Exception {
         this.environment = environment;
-        this.openShift = openShift;
+        this.kubernetes = kubernetes;
         this.driver = driver;
         angularDriver = new NgWebDriver((JavascriptExecutor) driver);
         driverWait = new WebDriverWait(driver, 10);

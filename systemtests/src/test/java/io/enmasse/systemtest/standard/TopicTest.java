@@ -118,7 +118,7 @@ public class TopicTest extends StandardTestBase {
 
     }
 
-    public void assertAppProperty(AmqpClient client, String linkName, Map<String, Object> appProperties, String selector, Destination dest) throws IOException, InterruptedException, TimeoutException, ExecutionException {
+    public void assertAppProperty(AmqpClient client, String linkName, Map<String, Object> appProperties, String selector, Destination dest) throws Exception {
         Logging.log.info("Application property selector: " + selector);
         int msgsCount = 10;
         List<Message> listOfMessages = new ArrayList<>();

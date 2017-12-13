@@ -1,0 +1,70 @@
+= Users
+
+{ProductName} uses {AuthProductName} to manage users and credentials. You can create and delete {ProductName} users as well as change an existing password.
+
+[[_create_user]]
+== Creating a User
+
+Using the {AuthProductNameConsole} you can create a new {ProductName} user and specify a password. Note that your realm in {AuthProductName} is the same as your address space in {ProductName}.
+
+.Procedure
+
+. In a web browser, navigate to the {AuthProductNameConsole} URL provided in your welcome email. 
+
+. Log in using the user name and password for your realm provided in your welcome email. The {AuthProductName} Administration Console opens.
+
+. In the left pane, click *Users*. The Users page is displayed.
+
+. Click *Add user*. The Add User page is displayed.
+ 
+. In the *Username* field, type a user name. 
++
+NOTE: You can currently specify a user name only. Additional fields/functions/capabilities on this page are not supported for {ProductName}.
+
+. Click *Save*. The user management page is displayed.
+
+. Click the *Credentials* tab.
+
+. In the *New Password* and *Password Confirmation* fields, type a password, and then click *Reset Password*. The user password is now set.
+
+
+[[_change_user_password]]
+== Changing a User Password
+
+You can change a user password.
+
+.Procedure
+
+. In a web browser, navigate to the {AuthProductNameConsole} URL provided in your welcome email. 
+
+. Log in using the user name and password for your realm provided in your welcome email. The {AuthProductNameConsole} opens.
+
+. In the left pane, click *Users*. The Users page is displayed.
+
+. Locate the user whose password you want to change by clicking *View all users*. Alternatively, you can search for the user by typing the user name in the *Search* field and clicking the search button.
+
+. Click *Edit*. 
+
+. Click the *Credentials* tab.
+
+. In the *New Password* and *Password Confirmation* fields, type a password, and then click *Reset Password*. The user password is reset.
+
+
+[[_delete_user]]
+== Deleting a User
+
+Using the {AuthProductNameConsole} you can delete an existing {ProductName} user.
+
+.Procedure
+
+. In a web browser, navigate to the {AuthProductNameConsole} URL provided in your welcome email. 
+
+. Log in using the user name and password for your realm provided in your welcome email. The {AuthProductNameConsole} opens.
+
+. In the left pane, click *Users*. The Users page is displayed.
+
+. Locate the user you want to delete by clicking *View all users*. Alternatively, you can search for the user you want to delete by typing the username in the *Search* field and clicking the search button. 
+
+. Click *Delete*. 
+
+

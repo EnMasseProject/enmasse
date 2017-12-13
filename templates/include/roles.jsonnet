@@ -1,8 +1,8 @@
 {
   // Role for address administrators allowed to create/delete addresses
-  address_admin_role::
+  address_admin_role(apiVersion)::
     {
-      "apiVersion": "v1",
+      "apiVersion": apiVersion,
       "kind": "ClusterRole",
       "metadata": {
         "name": "enmasse-address-admin"
@@ -56,9 +56,9 @@
     },
 
   // Role for address-controller service account
-  namespace_admin_role::
+  namespace_admin_role(apiVersion)::
     {
-      "apiVersion": "v1",
+      "apiVersion": apiVersion,
       "kind": "ClusterRole",
       "metadata": {
         "name": "enmasse-namespace-admin"
@@ -152,9 +152,9 @@
       ]
     },
 
-  infra_view_role::
+  infra_view_role(apiVersion)::
     {
-      "apiVersion": "v1",
+      "apiVersion": apiVersion,
       "kind": "ClusterRole",
       "metadata": {
           "name": "enmasse-infra-view"
@@ -181,15 +181,18 @@
 
 
   // Role for address space administrators
-  addressspace_admin_role::
+  addressspace_admin_role(apiVersion)::
     {
-      "apiVersion": "v1",
+      "apiVersion": apiVersion,
       "kind": "ClusterRole",
       "metadata": {
         "name": "enmasse-addressspace-admin"
       },
       "rules": [
         {
+          "apiGroups": [
+            ""
+          ],
           "resources": [
             "configmaps"
           ],

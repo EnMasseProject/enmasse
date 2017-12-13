@@ -44,7 +44,7 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
 
     @Before
     public void setUpWebConsoleTests() throws Exception {
-        selenium.setupDriver(environment, openShift, buildDriver());
+        selenium.setupDriver(environment, kubernetes, buildDriver());
         consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(defaultAddressSpace), addressApiClient, defaultAddressSpace);
     }
 

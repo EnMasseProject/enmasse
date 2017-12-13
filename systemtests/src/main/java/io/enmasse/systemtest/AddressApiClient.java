@@ -18,7 +18,7 @@ import java.util.concurrent.*;
 
 public class AddressApiClient {
     private final WebClient client;
-    private final OpenShift openshift;
+    private final Kubernetes kubernetes;
     private Endpoint endpoint;
     private final Vertx vertx;
     private final int initRetry = 10;
@@ -26,16 +26,16 @@ public class AddressApiClient {
     private final String addressPath = "/apis/enmasse.io/v1/addresses";
     private final String authzString;
 
-    public AddressApiClient(OpenShift openshift) {
+    public AddressApiClient(Kubernetes kubernetes) {
         this.vertx = VertxFactory.create();
         this.client = WebClient.create(vertx, new WebClientOptions()
                 .setSsl(true)
                 // TODO: Fetch CA and use
                 .setTrustAll(true)
                 .setVerifyHost(false));
-        this.openshift = openshift;
-        this.endpoint = openshift.getRestEndpoint();
-        this.authzString = "Bearer " + openshift.getApiToken();
+        this.kubernetes = kubernetes;
+        this.endpoint = kubernetes.getRestEndpoint();
+        this.authzString = "Bearer " + kubernetes.getApiToken();
     }
 
     public void close() {
@@ -310,7 +310,7 @@ public class AddressApiClient {
 
     JsonObject doRequestNTimes(int retry, Callable<JsonObject> fn) throws Exception {
         return TestUtils.doRequestNTimes(retry, () -> {
-            endpoint = openshift.getRestEndpoint();
+            endpoint = kubernetes.getRestEndpoint();
             return fn.call();
         });
     }

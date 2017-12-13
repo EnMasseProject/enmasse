@@ -34,18 +34,18 @@ import java.util.concurrent.Executors;
  */
 public class LogCollector implements Watcher<Pod>, AutoCloseable {
     private final File logDir;
-    private final OpenShift openShift;
+    private final Kubernetes kubernetes;
     private Watch watch;
     private final Map<String, LogWatch> logWatches = new HashMap<>();
     private final ExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
     private final String namespace;
 
-    public LogCollector(OpenShift openShift, File logDir, String namespace) {
-        this.openShift = openShift;
+    public LogCollector(Kubernetes kubernetes, File logDir, String namespace) {
+        this.kubernetes = kubernetes;
         this.logDir = logDir;
         this.namespace = namespace;
         logDir.mkdirs();
-        this.watch = openShift.watchPods(namespace, this);
+        this.watch = kubernetes.watchPods(namespace, this);
     }
 
     @Override
@@ -62,7 +62,7 @@ public class LogCollector implements Watcher<Pod>, AutoCloseable {
     public void onClose(KubernetesClientException cause) {
         if (cause != null) {
             Logging.log.info("LogCollector closed with message: " + cause.getMessage() + ", reconnecting");
-            watch = openShift.watchPods(namespace, this);
+            watch = kubernetes.watchPods(namespace, this);
         }
     }
 
@@ -77,7 +77,7 @@ public class LogCollector implements Watcher<Pod>, AutoCloseable {
             } catch (InterruptedException e) {
 
             }
-            pod = openShift.getPod(namespace, pod.getMetadata().getName());
+            pod = kubernetes.getPod(namespace, pod.getMetadata().getName());
         }
         Logging.log.info("Collecting logs for pod {} in namespace {}", pod.getMetadata().getName(), namespace);
         for (Container container : pod.getSpec().getContainers()) {
@@ -87,7 +87,7 @@ public class LogCollector implements Watcher<Pod>, AutoCloseable {
 
                 synchronized (logWatches) {
                     Logging.log.info("Starting watcher for container {} in pod {} and writing to {}", container.getName(), pod.getMetadata().getName(), outputFile.getAbsolutePath());
-                    logWatches.put(pod.getMetadata().getName(), openShift.watchPodLog(namespace, pod.getMetadata().getName(), container.getName(), outputFileStream));
+                    logWatches.put(pod.getMetadata().getName(), kubernetes.watchPodLog(namespace, pod.getMetadata().getName(), container.getName(), outputFileStream));
                 }
             } catch (Exception e) {
                 Logging.log.info("Unable to save log for " + pod.getMetadata().getName() + "." + container.getName());

@@ -17,7 +17,7 @@ cache:
 jdk:
 - oraclejdk8
 before_script:
-- "./.travis/setup-openshift.sh /tmp/openshift"
+- "./.travis/setup-kubernetes.sh"
 before_install:
 - npm install -g mocha mocha-junit-reporter
 - npm install rhea debug

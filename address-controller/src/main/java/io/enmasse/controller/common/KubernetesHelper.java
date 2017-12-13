@@ -56,8 +56,9 @@ public class KubernetesHelper implements Kubernetes {
     private final Optional<File> templateDir;
     private final String addressControllerSa;
     private final String addressSpaceAdminSa;
+    private final boolean enableRbac;
 
-    public KubernetesHelper(String namespace, OpenShiftClient client, String token, String environment, Optional<File> templateDir, String addressControllerSa, String addressSpaceAdminSa) {
+    public KubernetesHelper(String namespace, OpenShiftClient client, String token, String environment, Optional<File> templateDir, String addressControllerSa, String addressSpaceAdminSa, boolean enableRbac) {
         this.client = client;
         this.namespace = namespace;
         this.controllerToken = token;
@@ -65,6 +66,7 @@ public class KubernetesHelper implements Kubernetes {
         this.templateDir = templateDir;
         this.addressControllerSa = addressControllerSa;
         this.addressSpaceAdminSa = addressSpaceAdminSa;
+        this.enableRbac = enableRbac;
     }
 
     @Override
@@ -197,7 +199,7 @@ public class KubernetesHelper implements Kubernetes {
 
     @Override
     public Kubernetes withNamespace(String namespace) {
-        return new KubernetesHelper(namespace, client, controllerToken, environment, templateDir, addressControllerSa, addressSpaceAdminSa);
+        return new KubernetesHelper(namespace, client, controllerToken, environment, templateDir, addressControllerSa, addressSpaceAdminSa, enableRbac);
     }
 
     @Override
@@ -297,25 +299,33 @@ public class KubernetesHelper implements Kubernetes {
             if (service.getSpec().getPorts().isEmpty()) {
                 return;
             }
-            ServicePort servicePort = service.getSpec().getPorts().get(0);
-            DoneableService svc = client.services().inNamespace(namespace).createNew()
-                    .editOrNewMetadata()
-                    .withName(endpoint.getName() + "-external")
-                    .addToAnnotations(AnnotationKeys.ADDRESS_SPACE, addressSpaceName)
-                    .addToAnnotations(AnnotationKeys.SERVICE_NAME, service.getMetadata().getName())
-                    .addToLabels(LabelKeys.TYPE, "loadbalancer")
-                    .endMetadata()
-                    .editOrNewSpec()
-                    .withPorts(servicePort)
-                    .withSelector(service.getSpec().getSelector())
-                    .withType("LoadBalancer")
-                    .endSpec();
-            if (endpoint.getCertProvider().isPresent()) {
-                svc.editOrNewMetadata()
-                        .addToAnnotations(AnnotationKeys.CERT_SECRET_NAME, endpoint.getCertProvider().get().getSecretName())
-                        .endMetadata();
+            ServicePort servicePort = null;
+            for (ServicePort port : service.getSpec().getPorts()) {
+                if (port.getName().equals(defaultPort)) {
+                    servicePort = port;
+                    break;
+                }
             }
-            svc.done();
+            if (servicePort != null) {
+                DoneableService svc = client.services().inNamespace(namespace).createNew()
+                        .editOrNewMetadata()
+                        .withName(endpoint.getName() + "-external")
+                        .addToAnnotations(AnnotationKeys.ADDRESS_SPACE, addressSpaceName)
+                        .addToAnnotations(AnnotationKeys.SERVICE_NAME, service.getMetadata().getName())
+                        .addToLabels(LabelKeys.TYPE, "loadbalancer")
+                        .endMetadata()
+                        .editOrNewSpec()
+                        .withPorts(servicePort)
+                        .withSelector(service.getSpec().getSelector())
+                        .withType("LoadBalancer")
+                        .endSpec();
+                if (endpoint.getCertProvider().isPresent()) {
+                    svc.editOrNewMetadata()
+                            .addToAnnotations(AnnotationKeys.CERT_SECRET_NAME, endpoint.getCertProvider().get().getSecretName())
+                            .endMetadata();
+                }
+                svc.done();
+            }
         }
     }
 
@@ -467,7 +477,8 @@ public class KubernetesHelper implements Kubernetes {
 
     @Override
     public boolean isRBACSupported() {
-        return client.supportsApiPath("/apis/authentication.k8s.io") &&
+        return enableRbac &&
+                client.supportsApiPath("/apis/authentication.k8s.io") &&
                 client.supportsApiPath("/apis/authorization.k8s.io") &&
                 client.supportsApiPath("/apis/rbac.authorization.k8s.io");
 

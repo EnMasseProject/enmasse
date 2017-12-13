@@ -53,7 +53,7 @@ public class Main extends AbstractVerticle {
                 .withNamespace(options.getNamespace())
                 .build());
         this.options = options;
-        this.kubernetes = new KubernetesHelper(options.getNamespace(), controllerClient, options.getToken(), options.getEnvironment(), options.getTemplateDir(), options.getAddressControllerSa(), options.getAddressSpaceAdminSa());
+        this.kubernetes = new KubernetesHelper(options.getNamespace(), controllerClient, options.getToken(), options.getEnvironment(), options.getTemplateDir(), options.getAddressControllerSa(), options.getAddressSpaceAdminSa(), options.isEnableRbac());
     }
 
     @Override
@@ -71,7 +71,7 @@ public class Main extends AbstractVerticle {
         deployVerticles(startPromise,
                 new Deployment(new Controller(controllerClient, addressSpaceApi, kubernetes, resolverFactory, Arrays.asList(standardController, brokeredController), eventLogger, authController)),
 //                new Deployment(new AMQPServer(kubernetes.getNamespace(), addressSpaceApi, options.port())),
-                new Deployment(new HTTPServer(addressSpaceApi, options.getCertDir(), kubernetes, options.isEnableRbac() && kubernetes.isRBACSupported()), new DeploymentOptions().setWorker(true)));
+                new Deployment(new HTTPServer(addressSpaceApi, options.getCertDir(), kubernetes, kubernetes.isRBACSupported()), new DeploymentOptions().setWorker(true)));
     }
 
     private AuthenticationServiceResolverFactory createResolverFactory(ControllerOptions options) {

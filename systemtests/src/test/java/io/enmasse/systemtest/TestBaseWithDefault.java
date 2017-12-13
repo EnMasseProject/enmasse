@@ -80,8 +80,8 @@ public abstract class TestBaseWithDefault extends TestBase {
         createGroup(defaultAddressSpace, "admin");
         joinGroup(defaultAddressSpace, "admin", managementCredentials.getUsername());
 
-        amqpClientFactory = new AmqpClientFactory(openShift, environment, defaultAddressSpace, username, password);
-        mqttClientFactory = new MqttClientFactory(openShift, environment, defaultAddressSpace, username, password);
+        amqpClientFactory = new AmqpClientFactory(kubernetes, environment, defaultAddressSpace, username, password);
+        mqttClientFactory = new MqttClientFactory(kubernetes, environment, defaultAddressSpace, username, password);
     }
 
     @After

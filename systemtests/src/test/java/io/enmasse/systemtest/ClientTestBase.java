@@ -2,7 +2,6 @@ package io.enmasse.systemtest;
 
 import io.enmasse.systemtest.executor.client.AbstractClient;
 import io.enmasse.systemtest.executor.client.ArgumentMap;
-import io.enmasse.systemtest.executor.client.ClientType;
 import org.junit.After;
 
 
@@ -23,11 +22,11 @@ public class ClientTestBase extends BrokeredTestBase {
     }
 
     private String getOpenwireRoute(AddressSpace addressSpace){
-        return openShift.getEndpoint(addressSpace.getNamespace(), "messaging", "openwire").toString();
+        return kubernetes.getEndpoint(addressSpace.getNamespace(), "messaging", "openwire").toString();
     }
 
     private String getCoreRoute(AddressSpace addressSpace){
-        return openShift.getEndpoint(addressSpace.getNamespace(), "messaging", "core").toString();
+        return kubernetes.getEndpoint(addressSpace.getNamespace(), "messaging", "core").toString();
     }
 
     protected String getRoute(AddressSpace addressSpace, AbstractClient client){
