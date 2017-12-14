@@ -128,7 +128,7 @@ public class MsgPatternsTest extends ClientTestBase {
         Destination dest = Destination.queue("drain-queue");
         setAddresses(defaultAddressSpace, dest);
 
-        int count = 50;
+        int count = 20000;
 
         arguments.put(Argument.BROKER, getRoute(defaultAddressSpace, sender));
         arguments.put(Argument.ADDRESS, dest.getAddress());
