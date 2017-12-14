@@ -162,7 +162,7 @@ local prometheus = import "prometheus.jsonnet";
                 common.container_port("openwire", 61613),
                 common.container_port("amqps-normal", 55671),
                 common.container_port("jolokia", 8161),
-                common.container_port("metrics", 8080)
+                common.container_port("artemismetrics", 8080)
               ],
               "livenessProbe": common.exec_probe(["sh", "-c", "$ARTEMIS_HOME/bin/probe.sh"], 120),
               "readinessProbe": common.exec_probe(["sh", "-c", "$ARTEMIS_HOME/bin/probe.sh"], 10),
