@@ -8,62 +8,62 @@ items:
       "metadata": {"name": "authservice-ca"}}, {"apiVersion": "v1", "data": {"tls.crt":
       "${ADDRESS_CONTROLLER_CA_CERT}"}, "kind": "Secret", "metadata": {"name": "address-controller-ca"}},
       {"apiVersion": "v1", "data": {"config.yaml": "{\"hostPort\": \"127.0.0.1:1099\",
-      \"password\": \"admin\", \"rules\": [{\"labels\": {\"broker\": \"$1\"}, \"name\":
-      \"artemis_connection_count\", \"pattern\": \"org.apache.activemq.artemis<broker=\\\"(.+)\\\"><>ConnectionCount\",
+      \"rules\": [{\"labels\": {\"broker\": \"$1\"}, \"name\": \"artemis_connection_count\",
+      \"pattern\": \"org.apache.activemq.artemis<broker=\\\"(.+)\\\"><>ConnectionCount\",
       \"type\": \"gauge\"}, {\"labels\": {\"address\": \"$2\", \"broker\": \"$1\"},
       \"name\": \"artemis_consumer_count\", \"pattern\": \"org.apache.activemq.artemis<broker=\\\"(.+)\\\",
       component=addresses, address=\\\"(.+)\\\".*><>ConsumerCount\", \"type\": \"gauge\"},
       {\"labels\": {\"address\": \"$2\", \"broker\": \"$1\"}, \"name\": \"artemis_message_count\",
       \"pattern\": \"org.apache.activemq.artemis<broker=\\\"(.+)\\\", component=addresses,
-      address=\\\"(.+)\\\".*><>MessageCount\", \"type\": \"gauge\"}], \"username\":
-      \"admin\"}"}, "kind": "ConfigMap", "metadata": {"name": "broker-prometheus-config"}},
-      {"apiVersion": "v1", "kind": "PersistentVolumeClaim", "metadata": {"annotations":
-      {"addressSpace": "${ADDRESS_SPACE}"}, "labels": {"app": "enmasse"}, "name":
-      "broker-data"}, "spec": {"accessModes": ["ReadWriteOnce"], "resources": {"requests":
-      {"storage": "${STORAGE_CAPACITY}"}}}}, {"apiVersion": "extensions/v1beta1",
-      "kind": "Deployment", "metadata": {"annotations": {"addressSpace": "${ADDRESS_SPACE}",
-      "io.enmasse.certSecretName": "broker-internal-cert"}, "labels": {"app": "enmasse",
-      "role": "broker"}, "name": "broker"}, "spec": {"replicas": 1, "template": {"metadata":
-      {"annotations": {"addressSpace": "${ADDRESS_SPACE}", "prometheus.io/path": "/metrics",
-      "prometheus.io/port": "8080", "prometheus.io/scrape": "true"}, "labels": {"app":
-      "enmasse", "name": "broker", "role": "broker"}}, "spec": {"containers": [{"env":
-      [{"name": "ADDRESS_SPACE_TYPE", "value": "brokered"}, {"name": "CERT_DIR", "value":
-      "/etc/enmasse-certs"}, {"name": "AUTHENTICATION_SERVICE_HOST", "value": "${AUTHENTICATION_SERVICE_HOST}"},
-      {"name": "AUTHENTICATION_SERVICE_PORT", "value": "${AUTHENTICATION_SERVICE_PORT}"},
-      {"name": "AUTHENTICATION_SERVICE_CLIENT_SECRET", "value": "${AUTHENTICATION_SERVICE_CLIENT_SECRET}"},
-      {"name": "AUTHENTICATION_SERVICE_SASL_INIT_HOST", "value": "${AUTHENTICATION_SERVICE_SASL_INIT_HOST}"}],
-      "image": "${BROKER_IMAGE}", "livenessProbe": {"exec": {"command": ["sh", "-c",
-      "$ARTEMIS_HOME/bin/probe.sh"]}, "initialDelaySeconds": 120}, "name": "broker",
-      "ports": [{"containerPort": 5672, "name": "amqp"}, {"containerPort": 5671, "name":
-      "amqps"}, {"containerPort": 61616, "name": "core"}, {"containerPort": 61613,
-      "name": "openwire"}, {"containerPort": 55671, "name": "amqps-normal"}, {"containerPort":
-      8161, "name": "jolokia"}, {"containerPort": 8080, "name": "metrics"}], "readinessProbe":
-      {"exec": {"command": ["sh", "-c", "$ARTEMIS_HOME/bin/probe.sh"]}, "initialDelaySeconds":
-      10}, "volumeMounts": [{"mountPath": "/var/run/artemis", "name": "data", "readOnly":
-      false}, {"mountPath": "/etc/enmasse-certs", "name": "broker-internal-cert",
-      "readOnly": true}, {"mountPath": "/etc/external-certs", "name": "external-cert",
-      "readOnly": true}, {"mountPath": "/etc/authservice-ca", "name": "authservice-ca",
-      "readOnly": true}, {"mountPath": "/etc/prometheus-config", "name": "broker-prometheus-config",
-      "readOnly": true}]}], "volumes": [{"name": "data", "persistentVolumeClaim":
-      {"claimName": "broker-data"}}, {"configMap": {"name": "broker-prometheus-config"},
-      "name": "broker-prometheus-config"}, {"name": "broker-internal-cert", "secret":
-      {"secretName": "broker-internal-cert"}}, {"name": "authservice-ca", "secret":
-      {"secretName": "authservice-ca"}}, {"name": "external-cert", "secret": {"secretName":
-      "${MESSAGING_SECRET}"}}]}}}}, {"apiVersion": "v1", "kind": "Service", "metadata":
-      {"labels": {"app": "enmasse"}, "name": "broker"}, "spec": {"ports": [{"name":
-      "amqps-normal", "port": 55671, "targetPort": "amqps-normal"}], "selector": {"role":
-      "broker"}}}, {"apiVersion": "v1", "kind": "Service", "metadata": {"annotations":
-      {"addressSpace": "${ADDRESS_SPACE}", "io.enmasse.endpointPort": "amqps"}, "labels":
-      {"app": "enmasse"}, "name": "messaging"}, "spec": {"ports": [{"name": "amqp",
-      "port": 5672, "targetPort": "amqp"}, {"name": "amqps", "port": 5671, "targetPort":
-      "amqps"}, {"name": "core", "port": 61616, "targetPort": "core"}, {"name": "openwire",
-      "port": 61613, "targetPort": "openwire"}], "selector": {"role": "broker"}}},
+      address=\\\"(.+)\\\".*><>MessageCount\", \"type\": \"gauge\"}], \"ssl\": true}"},
+      "kind": "ConfigMap", "metadata": {"name": "broker-prometheus-config"}}, {"apiVersion":
+      "v1", "kind": "PersistentVolumeClaim", "metadata": {"annotations": {"addressSpace":
+      "${ADDRESS_SPACE}"}, "labels": {"app": "enmasse"}, "name": "broker-data"}, "spec":
+      {"accessModes": ["ReadWriteOnce"], "resources": {"requests": {"storage": "${STORAGE_CAPACITY}"}}}},
       {"apiVersion": "extensions/v1beta1", "kind": "Deployment", "metadata": {"annotations":
-      {"addressSpace": "${ADDRESS_SPACE}", "io.enmasse.certSecretName": "agent-internal-cert"},
-      "labels": {"app": "enmasse", "role": "agent"}, "name": "agent"}, "spec": {"replicas":
-      1, "template": {"metadata": {"annotations": {"addressSpace": "${ADDRESS_SPACE}"},
-      "labels": {"app": "enmasse", "name": "agent", "role": "agent"}}, "spec": {"containers":
-      [{"env": [{"name": "ADDRESS_SPACE", "value": "${ADDRESS_SPACE}"}, {"name": "ADDRESS_SPACE_TYPE",
+      {"addressSpace": "${ADDRESS_SPACE}", "io.enmasse.certSecretName": "broker-internal-cert"},
+      "labels": {"app": "enmasse", "role": "broker"}, "name": "broker"}, "spec": {"replicas":
+      1, "template": {"metadata": {"annotations": {"addressSpace": "${ADDRESS_SPACE}",
+      "prometheus.io/path": "/metrics", "prometheus.io/port": "8080", "prometheus.io/scrape":
+      "true"}, "labels": {"app": "enmasse", "name": "broker", "role": "broker"}},
+      "spec": {"containers": [{"env": [{"name": "ADDRESS_SPACE_TYPE", "value": "brokered"},
+      {"name": "CERT_DIR", "value": "/etc/enmasse-certs"}, {"name": "AUTHENTICATION_SERVICE_HOST",
+      "value": "${AUTHENTICATION_SERVICE_HOST}"}, {"name": "AUTHENTICATION_SERVICE_PORT",
+      "value": "${AUTHENTICATION_SERVICE_PORT}"}, {"name": "AUTHENTICATION_SERVICE_CLIENT_SECRET",
+      "value": "${AUTHENTICATION_SERVICE_CLIENT_SECRET}"}, {"name": "AUTHENTICATION_SERVICE_SASL_INIT_HOST",
+      "value": "${AUTHENTICATION_SERVICE_SASL_INIT_HOST}"}], "image": "${BROKER_IMAGE}",
+      "livenessProbe": {"exec": {"command": ["sh", "-c", "$ARTEMIS_HOME/bin/probe.sh"]},
+      "initialDelaySeconds": 120}, "name": "broker", "ports": [{"containerPort": 5672,
+      "name": "amqp"}, {"containerPort": 5671, "name": "amqps"}, {"containerPort":
+      61616, "name": "core"}, {"containerPort": 61613, "name": "openwire"}, {"containerPort":
+      55671, "name": "amqps-normal"}, {"containerPort": 8161, "name": "jolokia"},
+      {"containerPort": 8080, "name": "metrics"}], "readinessProbe": {"exec": {"command":
+      ["sh", "-c", "$ARTEMIS_HOME/bin/probe.sh"]}, "initialDelaySeconds": 10}, "volumeMounts":
+      [{"mountPath": "/var/run/artemis", "name": "data", "readOnly": false}, {"mountPath":
+      "/etc/enmasse-certs", "name": "broker-internal-cert", "readOnly": true}, {"mountPath":
+      "/etc/external-certs", "name": "external-cert", "readOnly": true}, {"mountPath":
+      "/etc/authservice-ca", "name": "authservice-ca", "readOnly": true}, {"mountPath":
+      "/etc/prometheus-config", "name": "broker-prometheus-config", "readOnly": true}]}],
+      "volumes": [{"name": "data", "persistentVolumeClaim": {"claimName": "broker-data"}},
+      {"configMap": {"name": "broker-prometheus-config"}, "name": "broker-prometheus-config"},
+      {"name": "broker-internal-cert", "secret": {"secretName": "broker-internal-cert"}},
+      {"name": "authservice-ca", "secret": {"secretName": "authservice-ca"}}, {"name":
+      "external-cert", "secret": {"secretName": "${MESSAGING_SECRET}"}}]}}}}, {"apiVersion":
+      "v1", "kind": "Service", "metadata": {"labels": {"app": "enmasse"}, "name":
+      "broker"}, "spec": {"ports": [{"name": "amqps-normal", "port": 55671, "targetPort":
+      "amqps-normal"}], "selector": {"role": "broker"}}}, {"apiVersion": "v1", "kind":
+      "Service", "metadata": {"annotations": {"addressSpace": "${ADDRESS_SPACE}",
+      "io.enmasse.endpointPort": "amqps"}, "labels": {"app": "enmasse"}, "name": "messaging"},
+      "spec": {"ports": [{"name": "amqp", "port": 5672, "targetPort": "amqp"}, {"name":
+      "amqps", "port": 5671, "targetPort": "amqps"}, {"name": "core", "port": 61616,
+      "targetPort": "core"}, {"name": "openwire", "port": 61613, "targetPort": "openwire"}],
+      "selector": {"role": "broker"}}}, {"apiVersion": "extensions/v1beta1", "kind":
+      "Deployment", "metadata": {"annotations": {"addressSpace": "${ADDRESS_SPACE}",
+      "io.enmasse.certSecretName": "agent-internal-cert"}, "labels": {"app": "enmasse",
+      "role": "agent"}, "name": "agent"}, "spec": {"replicas": 1, "template": {"metadata":
+      {"annotations": {"addressSpace": "${ADDRESS_SPACE}"}, "labels": {"app": "enmasse",
+      "name": "agent", "role": "agent"}}, "spec": {"containers": [{"env": [{"name":
+      "ADDRESS_SPACE", "value": "${ADDRESS_SPACE}"}, {"name": "ADDRESS_SPACE_TYPE",
       "value": "brokered"}, {"name": "ADDRESS_SPACE_SERVICE_HOST", "value": "${ADDRESS_SPACE_SERVICE_HOST}"},
       {"name": "CERT_DIR", "value": "/etc/enmasse-certs"}, {"name": "CONSOLE_CERT_DIR",
       "value": "/etc/console-certs"}, {"name": "ADDRESS_CONTROLLER_CA", "value": "/opt/agent/address-controller-ca/tls.crt"},
