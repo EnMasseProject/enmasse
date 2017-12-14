@@ -29,6 +29,9 @@ objects:
           annotations:
             addressSpace: ${ADDRESS_SPACE}
             cluster_id: ${CLUSTER_ID}
+            prometheus.io/path: /metrics
+            prometheus.io/port: '8080'
+            prometheus.io/scrape: 'true'
           labels:
             app: enmasse
             name: ${NAME}
@@ -61,6 +64,8 @@ objects:
               name: amqp
             - containerPort: 8161
               name: jolokia
+            - containerPort: 8080
+              name: artemismetrics
             readinessProbe:
               exec:
                 command:
@@ -78,6 +83,9 @@ objects:
             - mountPath: /etc/authservice-ca
               name: authservice-ca
               readOnly: true
+            - mountPath: /etc/prometheus-config
+              name: broker-prometheus-config
+              readOnly: true
           volumes:
           - emptyDir: {}
             name: vol-${NAME}
@@ -94,8 +102,8 @@ objects:
             secret:
               secretName: broker-internal-cert
           - configMap:
-              name: hawkular-broker-config
-            name: hawkular-openshift-agent
+              name: broker-prometheus-config
+            name: broker-prometheus-config
   parameters:
   - description: Storage capacity required for volume claims
     name: STORAGE_CAPACITY
@@ -179,6 +187,9 @@ objects:
           annotations:
             addressSpace: ${ADDRESS_SPACE}
             cluster_id: ${CLUSTER_ID}
+            prometheus.io/path: /metrics
+            prometheus.io/port: '8080'
+            prometheus.io/scrape: 'true'
           labels:
             app: enmasse
             name: ${NAME}
@@ -211,6 +222,8 @@ objects:
               name: amqp
             - containerPort: 8161
               name: jolokia
+            - containerPort: 8080
+              name: artemismetrics
             readinessProbe:
               exec:
                 command:
@@ -227,6 +240,9 @@ objects:
               readOnly: true
             - mountPath: /etc/authservice-ca
               name: authservice-ca
+              readOnly: true
+            - mountPath: /etc/prometheus-config
+              name: broker-prometheus-config
               readOnly: true
           volumes:
           - name: vol-${NAME}
@@ -245,8 +261,8 @@ objects:
             secret:
               secretName: broker-internal-cert
           - configMap:
-              name: hawkular-broker-config
-            name: hawkular-openshift-agent
+              name: broker-prometheus-config
+            name: broker-prometheus-config
   parameters:
   - description: Storage capacity required for volume claims
     name: STORAGE_CAPACITY
@@ -315,6 +331,9 @@ objects:
           annotations:
             addressSpace: ${ADDRESS_SPACE}
             cluster_id: ${CLUSTER_ID}
+            prometheus.io/path: /metrics
+            prometheus.io/port: '8080'
+            prometheus.io/scrape: 'true'
           labels:
             app: enmasse
             name: ${NAME}
@@ -347,6 +366,8 @@ objects:
               name: amqp
             - containerPort: 8161
               name: jolokia
+            - containerPort: 8080
+              name: artemismetrics
             readinessProbe:
               exec:
                 command:
@@ -363,6 +384,9 @@ objects:
               readOnly: true
             - mountPath: /etc/authservice-ca
               name: authservice-ca
+              readOnly: true
+            - mountPath: /etc/prometheus-config
+              name: broker-prometheus-config
               readOnly: true
           - env:
             - name: TOPIC_NAME
@@ -456,8 +480,8 @@ objects:
             secret:
               secretName: broker-internal-cert
           - configMap:
-              name: hawkular-broker-config
-            name: hawkular-openshift-agent
+              name: broker-prometheus-config
+            name: broker-prometheus-config
   parameters:
   - description: Storage capacity required for volume claims
     name: STORAGE_CAPACITY
@@ -541,6 +565,9 @@ objects:
           annotations:
             addressSpace: ${ADDRESS_SPACE}
             cluster_id: ${CLUSTER_ID}
+            prometheus.io/path: /metrics
+            prometheus.io/port: '8080'
+            prometheus.io/scrape: 'true'
           labels:
             app: enmasse
             name: ${NAME}
@@ -573,6 +600,8 @@ objects:
               name: amqp
             - containerPort: 8161
               name: jolokia
+            - containerPort: 8080
+              name: artemismetrics
             readinessProbe:
               exec:
                 command:
@@ -589,6 +618,9 @@ objects:
               readOnly: true
             - mountPath: /etc/authservice-ca
               name: authservice-ca
+              readOnly: true
+            - mountPath: /etc/prometheus-config
+              name: broker-prometheus-config
               readOnly: true
           - env:
             - name: TOPIC_NAME
@@ -683,8 +715,8 @@ objects:
             secret:
               secretName: broker-internal-cert
           - configMap:
-              name: hawkular-broker-config
-            name: hawkular-openshift-agent
+              name: broker-prometheus-config
+            name: broker-prometheus-config
   parameters:
   - description: Storage capacity required for volume claims
     name: STORAGE_CAPACITY
@@ -851,6 +883,15 @@ objects:
         targetPort: 5672
       selector:
         name: subserv
+  - apiVersion: v1
+    data:
+      config.yaml: '{"hostPort": "127.0.0.1:1099", "rules": [{"labels": {"address":
+        "$2", "broker": "$1"}, "name": "artemis_message_count", "pattern": "org.apache.activemq.artemis<broker=\"(.+)\",
+        component=addresses, address=\"(.+)\".*><>MessageCount", "type": "GAUGE"}],
+        "ssl": true}'
+    kind: ConfigMap
+    metadata:
+      name: broker-prometheus-config
   - apiVersion: v1
     kind: Service
     metadata:

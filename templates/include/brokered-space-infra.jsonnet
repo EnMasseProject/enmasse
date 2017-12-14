@@ -283,7 +283,7 @@ local prometheus = import "prometheus.jsonnet";
     "objects": [
       common.ca_secret("authservice-ca", "${AUTHENTICATION_SERVICE_CA_CERT}"),
       common.ca_secret("address-controller-ca", "${ADDRESS_CONTROLLER_CA_CERT}"),
-      prometheus.broker_config("broker-prometheus-config"),
+      prometheus.brokered_broker_config("broker-prometheus-config"),
       me.pvc("broker-data"),
       me.broker_deployment("broker"),
       me.broker_service,

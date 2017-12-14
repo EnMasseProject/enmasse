@@ -118,24 +118,27 @@ items:
       "cluster_id": "${CLUSTER_ID}", "io.enmasse.certSecretName": "broker-internal-cert"},
       "labels": {"app": "enmasse"}, "name": "${NAME}"}, "spec": {"replicas": 1, "template":
       {"metadata": {"annotations": {"addressSpace": "${ADDRESS_SPACE}", "cluster_id":
-      "${CLUSTER_ID}"}, "labels": {"app": "enmasse", "name": "${NAME}", "role": "broker"}},
-      "spec": {"containers": [{"env": [{"name": "QUEUE_NAME", "value": "${ADDRESS}"},
-      {"name": "CLUSTER_ID", "value": "${CLUSTER_ID}"}, {"name": "CERT_DIR", "value":
-      "/etc/enmasse-certs"}], "image": "${BROKER_IMAGE}", "lifecycle": {"preStop":
-      {"exec": {"command": ["/shutdown-hook/shutdown-hook.sh"]}}}, "livenessProbe":
+      "${CLUSTER_ID}", "prometheus.io/path": "/metrics", "prometheus.io/port": "8080",
+      "prometheus.io/scrape": "true"}, "labels": {"app": "enmasse", "name": "${NAME}",
+      "role": "broker"}}, "spec": {"containers": [{"env": [{"name": "QUEUE_NAME",
+      "value": "${ADDRESS}"}, {"name": "CLUSTER_ID", "value": "${CLUSTER_ID}"}, {"name":
+      "CERT_DIR", "value": "/etc/enmasse-certs"}], "image": "${BROKER_IMAGE}", "lifecycle":
+      {"preStop": {"exec": {"command": ["/shutdown-hook/shutdown-hook.sh"]}}}, "livenessProbe":
       {"exec": {"command": ["sh", "-c", "$ARTEMIS_HOME/bin/probe.sh"]}, "initialDelaySeconds":
       120}, "name": "broker", "ports": [{"containerPort": 5673, "name": "amqp"}, {"containerPort":
-      8161, "name": "jolokia"}], "readinessProbe": {"exec": {"command": ["sh", "-c",
-      "$ARTEMIS_HOME/bin/probe.sh"]}, "initialDelaySeconds": 10}, "volumeMounts":
-      [{"mountPath": "/var/run/artemis", "name": "vol-${NAME}", "readOnly": false},
-      {"mountPath": "/etc/enmasse-certs", "name": "broker-internal-cert", "readOnly":
-      true}, {"mountPath": "/etc/authservice-ca", "name": "authservice-ca", "readOnly":
-      true}]}], "volumes": [{"emptyDir": { }, "name": "vol-${NAME}"}, {"name": "ssl-certs",
-      "secret": {"secretName": "${COLOCATED_ROUTER_SECRET}"}}, {"name": "authservice-ca",
-      "secret": {"secretName": "authservice-ca"}}, {"name": "address-controller-ca",
-      "secret": {"secretName": "address-controller-ca"}}, {"name": "broker-internal-cert",
-      "secret": {"secretName": "broker-internal-cert"}}, {"configMap": {"name": "hawkular-broker-config"},
-      "name": "hawkular-openshift-agent"}]}}}}], "parameters": [{"description": "Storage
+      8161, "name": "jolokia"}, {"containerPort": 8080, "name": "artemismetrics"}],
+      "readinessProbe": {"exec": {"command": ["sh", "-c", "$ARTEMIS_HOME/bin/probe.sh"]},
+      "initialDelaySeconds": 10}, "volumeMounts": [{"mountPath": "/var/run/artemis",
+      "name": "vol-${NAME}", "readOnly": false}, {"mountPath": "/etc/enmasse-certs",
+      "name": "broker-internal-cert", "readOnly": true}, {"mountPath": "/etc/authservice-ca",
+      "name": "authservice-ca", "readOnly": true}, {"mountPath": "/etc/prometheus-config",
+      "name": "broker-prometheus-config", "readOnly": true}]}], "volumes": [{"emptyDir":
+      { }, "name": "vol-${NAME}"}, {"name": "ssl-certs", "secret": {"secretName":
+      "${COLOCATED_ROUTER_SECRET}"}}, {"name": "authservice-ca", "secret": {"secretName":
+      "authservice-ca"}}, {"name": "address-controller-ca", "secret": {"secretName":
+      "address-controller-ca"}}, {"name": "broker-internal-cert", "secret": {"secretName":
+      "broker-internal-cert"}}, {"configMap": {"name": "broker-prometheus-config"},
+      "name": "broker-prometheus-config"}]}}}}], "parameters": [{"description": "Storage
       capacity required for volume claims", "name": "STORAGE_CAPACITY", "value": "2Gi"},
       {"description": "The docker image to use for the message broker", "name": "BROKER_IMAGE",
       "value": "docker.io/enmasseproject/artemis:latest"}, {"description": "The default
@@ -167,30 +170,33 @@ items:
       "cluster_id": "${CLUSTER_ID}", "io.enmasse.certSecretName": "broker-internal-cert"},
       "labels": {"app": "enmasse"}, "name": "${NAME}"}, "spec": {"replicas": 1, "template":
       {"metadata": {"annotations": {"addressSpace": "${ADDRESS_SPACE}", "cluster_id":
-      "${CLUSTER_ID}"}, "labels": {"app": "enmasse", "name": "${NAME}", "role": "broker"}},
-      "spec": {"containers": [{"env": [{"name": "QUEUE_NAME", "value": "${ADDRESS}"},
-      {"name": "CLUSTER_ID", "value": "${CLUSTER_ID}"}, {"name": "CERT_DIR", "value":
-      "/etc/enmasse-certs"}], "image": "${BROKER_IMAGE}", "lifecycle": {"preStop":
-      {"exec": {"command": ["/shutdown-hook/shutdown-hook.sh"]}}}, "livenessProbe":
+      "${CLUSTER_ID}", "prometheus.io/path": "/metrics", "prometheus.io/port": "8080",
+      "prometheus.io/scrape": "true"}, "labels": {"app": "enmasse", "name": "${NAME}",
+      "role": "broker"}}, "spec": {"containers": [{"env": [{"name": "QUEUE_NAME",
+      "value": "${ADDRESS}"}, {"name": "CLUSTER_ID", "value": "${CLUSTER_ID}"}, {"name":
+      "CERT_DIR", "value": "/etc/enmasse-certs"}], "image": "${BROKER_IMAGE}", "lifecycle":
+      {"preStop": {"exec": {"command": ["/shutdown-hook/shutdown-hook.sh"]}}}, "livenessProbe":
       {"exec": {"command": ["sh", "-c", "$ARTEMIS_HOME/bin/probe.sh"]}, "initialDelaySeconds":
       120}, "name": "broker", "ports": [{"containerPort": 5673, "name": "amqp"}, {"containerPort":
-      8161, "name": "jolokia"}], "readinessProbe": {"exec": {"command": ["sh", "-c",
-      "$ARTEMIS_HOME/bin/probe.sh"]}, "initialDelaySeconds": 10}, "volumeMounts":
-      [{"mountPath": "/var/run/artemis", "name": "vol-${NAME}", "readOnly": false},
-      {"mountPath": "/etc/enmasse-certs", "name": "broker-internal-cert", "readOnly":
-      true}, {"mountPath": "/etc/authservice-ca", "name": "authservice-ca", "readOnly":
-      true}]}], "volumes": [{"name": "vol-${NAME}", "persistentVolumeClaim": {"claimName":
-      "pvc-${NAME}"}}, {"name": "ssl-certs", "secret": {"secretName": "${COLOCATED_ROUTER_SECRET}"}},
-      {"name": "authservice-ca", "secret": {"secretName": "authservice-ca"}}, {"name":
-      "address-controller-ca", "secret": {"secretName": "address-controller-ca"}},
-      {"name": "broker-internal-cert", "secret": {"secretName": "broker-internal-cert"}},
-      {"configMap": {"name": "hawkular-broker-config"}, "name": "hawkular-openshift-agent"}]}}}}],
-      "parameters": [{"description": "Storage capacity required for volume claims",
-      "name": "STORAGE_CAPACITY", "value": "2Gi"}, {"description": "The docker image
-      to use for the message broker", "name": "BROKER_IMAGE", "value": "docker.io/enmasseproject/artemis:latest"},
-      {"description": "The default image to use as topic forwarder", "name": "TOPIC_FORWARDER_IMAGE",
-      "value": "docker.io/enmasseproject/topic-forwarder:latest"}, {"description":
-      "The image to use for the router", "name": "ROUTER_IMAGE", "value": "docker.io/enmasseproject/router:latest"},
+      8161, "name": "jolokia"}, {"containerPort": 8080, "name": "artemismetrics"}],
+      "readinessProbe": {"exec": {"command": ["sh", "-c", "$ARTEMIS_HOME/bin/probe.sh"]},
+      "initialDelaySeconds": 10}, "volumeMounts": [{"mountPath": "/var/run/artemis",
+      "name": "vol-${NAME}", "readOnly": false}, {"mountPath": "/etc/enmasse-certs",
+      "name": "broker-internal-cert", "readOnly": true}, {"mountPath": "/etc/authservice-ca",
+      "name": "authservice-ca", "readOnly": true}, {"mountPath": "/etc/prometheus-config",
+      "name": "broker-prometheus-config", "readOnly": true}]}], "volumes": [{"name":
+      "vol-${NAME}", "persistentVolumeClaim": {"claimName": "pvc-${NAME}"}}, {"name":
+      "ssl-certs", "secret": {"secretName": "${COLOCATED_ROUTER_SECRET}"}}, {"name":
+      "authservice-ca", "secret": {"secretName": "authservice-ca"}}, {"name": "address-controller-ca",
+      "secret": {"secretName": "address-controller-ca"}}, {"name": "broker-internal-cert",
+      "secret": {"secretName": "broker-internal-cert"}}, {"configMap": {"name": "broker-prometheus-config"},
+      "name": "broker-prometheus-config"}]}}}}], "parameters": [{"description": "Storage
+      capacity required for volume claims", "name": "STORAGE_CAPACITY", "value": "2Gi"},
+      {"description": "The docker image to use for the message broker", "name": "BROKER_IMAGE",
+      "value": "docker.io/enmasseproject/artemis:latest"}, {"description": "The default
+      image to use as topic forwarder", "name": "TOPIC_FORWARDER_IMAGE", "value":
+      "docker.io/enmasseproject/topic-forwarder:latest"}, {"description": "The image
+      to use for the router", "name": "ROUTER_IMAGE", "value": "docker.io/enmasseproject/router:latest"},
       {"description": "The link capacity setting for router", "name": "ROUTER_LINK_CAPACITY",
       "value": "50"}, {"description": "A valid addressSpace name for the address Space",
       "name": "ADDRESS_SPACE", "required": true}, {"description": "A valid name for
@@ -239,6 +245,11 @@ items:
       {"addressSpace": "${ADDRESS_SPACE}"}, "labels": {"app": "enmasse"}, "name":
       "subscription"}, "spec": {"ports": [{"name": "amqp", "port": 5672, "protocol":
       "TCP", "targetPort": 5672}], "selector": {"name": "subserv"}}}, {"apiVersion":
+      "v1", "data": {"config.yaml": "{\"hostPort\": \"127.0.0.1:1099\", \"rules\":
+      [{\"labels\": {\"address\": \"$2\", \"broker\": \"$1\"}, \"name\": \"artemis_message_count\",
+      \"pattern\": \"org.apache.activemq.artemis<broker=\\\"(.+)\\\", component=addresses,
+      address=\\\"(.+)\\\".*><>MessageCount\", \"type\": \"GAUGE\"}], \"ssl\": true}"},
+      "kind": "ConfigMap", "metadata": {"name": "broker-prometheus-config"}}, {"apiVersion":
       "v1", "kind": "Service", "metadata": {"annotations": {"addressSpace": "${ADDRESS_SPACE}",
       "io.enmasse.endpointPort": "secure-mqtt"}, "labels": {"app": "enmasse"}, "name":
       "mqtt"}, "spec": {"ports": [{"name": "mqtt", "port": 1883, "protocol": "TCP",
@@ -411,33 +422,36 @@ items:
       "cluster_id": "${CLUSTER_ID}", "io.enmasse.certSecretName": "broker-internal-cert"},
       "labels": {"app": "enmasse"}, "name": "${NAME}"}, "spec": {"replicas": 1, "template":
       {"metadata": {"annotations": {"addressSpace": "${ADDRESS_SPACE}", "cluster_id":
-      "${CLUSTER_ID}"}, "labels": {"app": "enmasse", "name": "${NAME}", "role": "broker"}},
-      "spec": {"containers": [{"env": [{"name": "TOPIC_NAME", "value": "${ADDRESS}"},
-      {"name": "CLUSTER_ID", "value": "${CLUSTER_ID}"}, {"name": "CERT_DIR", "value":
-      "/etc/enmasse-certs"}], "image": "${BROKER_IMAGE}", "lifecycle": {"preStop":
-      {"exec": {"command": ["/shutdown-hook/shutdown-hook.sh"]}}}, "livenessProbe":
+      "${CLUSTER_ID}", "prometheus.io/path": "/metrics", "prometheus.io/port": "8080",
+      "prometheus.io/scrape": "true"}, "labels": {"app": "enmasse", "name": "${NAME}",
+      "role": "broker"}}, "spec": {"containers": [{"env": [{"name": "TOPIC_NAME",
+      "value": "${ADDRESS}"}, {"name": "CLUSTER_ID", "value": "${CLUSTER_ID}"}, {"name":
+      "CERT_DIR", "value": "/etc/enmasse-certs"}], "image": "${BROKER_IMAGE}", "lifecycle":
+      {"preStop": {"exec": {"command": ["/shutdown-hook/shutdown-hook.sh"]}}}, "livenessProbe":
       {"exec": {"command": ["sh", "-c", "$ARTEMIS_HOME/bin/probe.sh"]}, "initialDelaySeconds":
       120}, "name": "broker", "ports": [{"containerPort": 5673, "name": "amqp"}, {"containerPort":
-      8161, "name": "jolokia"}], "readinessProbe": {"exec": {"command": ["sh", "-c",
-      "$ARTEMIS_HOME/bin/probe.sh"]}, "initialDelaySeconds": 10}, "volumeMounts":
-      [{"mountPath": "/var/run/artemis", "name": "vol-${NAME}", "readOnly": false},
-      {"mountPath": "/etc/enmasse-certs", "name": "broker-internal-cert", "readOnly":
-      true}, {"mountPath": "/etc/authservice-ca", "name": "authservice-ca", "readOnly":
-      true}]}, {"env": [{"name": "TOPIC_NAME", "value": "${ADDRESS}"}, {"name": "LINK_CAPACITY",
-      "value": "${ROUTER_LINK_CAPACITY}"}, {"name": "AUTHENTICATION_SERVICE_HOST",
-      "value": "${AUTHENTICATION_SERVICE_HOST}"}, {"name": "AUTHENTICATION_SERVICE_PORT",
-      "value": "${AUTHENTICATION_SERVICE_PORT}"}, {"name": "AUTHENTICATION_SERVICE_CLIENT_SECRET",
-      "value": "${AUTHENTICATION_SERVICE_CLIENT_SECRET}"}, {"name": "AUTHENTICATION_SERVICE_SASL_INIT_HOST",
-      "value": "${AUTHENTICATION_SERVICE_SASL_INIT_HOST}"}], "image": "${ROUTER_IMAGE}",
-      "livenessProbe": {"initialDelaySeconds": 60, "tcpSocket": {"port": "amqp"}},
-      "name": "router", "ports": [{"containerPort": 5672, "name": "amqp", "protocol":
-      "TCP"}, {"containerPort": 5671, "name": "amqps", "protocol": "TCP"}, {"containerPort":
-      55671, "name": "amqps-normal", "protocol": "TCP"}, {"containerPort": 56671,
-      "name": "amqps-broker", "protocol": "TCP"}], "resources": {"limits": {"memory":
-      "256Mi"}, "requests": {"memory": "256Mi"}}, "volumeMounts": [{"mountPath": "/etc/qpid-dispatch/ssl",
-      "name": "ssl-certs", "readOnly": true}, {"mountPath": "/etc/qpid-dispatch/authservice-ca",
-      "name": "authservice-ca", "readOnly": true}, {"mountPath": "/etc/enmasse-certs",
-      "name": "broker-internal-cert", "readOnly": true}, {"mountPath": "/etc/qpid-dispatch/address-controller-ca",
+      8161, "name": "jolokia"}, {"containerPort": 8080, "name": "artemismetrics"}],
+      "readinessProbe": {"exec": {"command": ["sh", "-c", "$ARTEMIS_HOME/bin/probe.sh"]},
+      "initialDelaySeconds": 10}, "volumeMounts": [{"mountPath": "/var/run/artemis",
+      "name": "vol-${NAME}", "readOnly": false}, {"mountPath": "/etc/enmasse-certs",
+      "name": "broker-internal-cert", "readOnly": true}, {"mountPath": "/etc/authservice-ca",
+      "name": "authservice-ca", "readOnly": true}, {"mountPath": "/etc/prometheus-config",
+      "name": "broker-prometheus-config", "readOnly": true}]}, {"env": [{"name": "TOPIC_NAME",
+      "value": "${ADDRESS}"}, {"name": "LINK_CAPACITY", "value": "${ROUTER_LINK_CAPACITY}"},
+      {"name": "AUTHENTICATION_SERVICE_HOST", "value": "${AUTHENTICATION_SERVICE_HOST}"},
+      {"name": "AUTHENTICATION_SERVICE_PORT", "value": "${AUTHENTICATION_SERVICE_PORT}"},
+      {"name": "AUTHENTICATION_SERVICE_CLIENT_SECRET", "value": "${AUTHENTICATION_SERVICE_CLIENT_SECRET}"},
+      {"name": "AUTHENTICATION_SERVICE_SASL_INIT_HOST", "value": "${AUTHENTICATION_SERVICE_SASL_INIT_HOST}"}],
+      "image": "${ROUTER_IMAGE}", "livenessProbe": {"initialDelaySeconds": 60, "tcpSocket":
+      {"port": "amqp"}}, "name": "router", "ports": [{"containerPort": 5672, "name":
+      "amqp", "protocol": "TCP"}, {"containerPort": 5671, "name": "amqps", "protocol":
+      "TCP"}, {"containerPort": 55671, "name": "amqps-normal", "protocol": "TCP"},
+      {"containerPort": 56671, "name": "amqps-broker", "protocol": "TCP"}], "resources":
+      {"limits": {"memory": "256Mi"}, "requests": {"memory": "256Mi"}}, "volumeMounts":
+      [{"mountPath": "/etc/qpid-dispatch/ssl", "name": "ssl-certs", "readOnly": true},
+      {"mountPath": "/etc/qpid-dispatch/authservice-ca", "name": "authservice-ca",
+      "readOnly": true}, {"mountPath": "/etc/enmasse-certs", "name": "broker-internal-cert",
+      "readOnly": true}, {"mountPath": "/etc/qpid-dispatch/address-controller-ca",
       "name": "address-controller-ca", "readOnly": true}]}, {"env": [{"name": "TOPIC_NAME",
       "value": "${ADDRESS}"}, {"name": "CLUSTER_ID", "value": "${NAME}"}, {"name":
       "CERT_DIR", "value": "/etc/enmasse-certs"}], "image": "${TOPIC_FORWARDER_IMAGE}",
@@ -450,7 +464,7 @@ items:
       {"name": "authservice-ca", "secret": {"secretName": "authservice-ca"}}, {"name":
       "address-controller-ca", "secret": {"secretName": "address-controller-ca"}},
       {"name": "broker-internal-cert", "secret": {"secretName": "broker-internal-cert"}},
-      {"configMap": {"name": "hawkular-broker-config"}, "name": "hawkular-openshift-agent"}]}}}}],
+      {"configMap": {"name": "broker-prometheus-config"}, "name": "broker-prometheus-config"}]}}}}],
       "parameters": [{"description": "Storage capacity required for volume claims",
       "name": "STORAGE_CAPACITY", "value": "2Gi"}, {"description": "The docker image
       to use for the message broker", "name": "BROKER_IMAGE", "value": "docker.io/enmasseproject/artemis:latest"},
@@ -482,33 +496,36 @@ items:
       "cluster_id": "${CLUSTER_ID}", "io.enmasse.certSecretName": "broker-internal-cert"},
       "labels": {"app": "enmasse"}, "name": "${NAME}"}, "spec": {"replicas": 1, "template":
       {"metadata": {"annotations": {"addressSpace": "${ADDRESS_SPACE}", "cluster_id":
-      "${CLUSTER_ID}"}, "labels": {"app": "enmasse", "name": "${NAME}", "role": "broker"}},
-      "spec": {"containers": [{"env": [{"name": "TOPIC_NAME", "value": "${ADDRESS}"},
-      {"name": "CLUSTER_ID", "value": "${CLUSTER_ID}"}, {"name": "CERT_DIR", "value":
-      "/etc/enmasse-certs"}], "image": "${BROKER_IMAGE}", "lifecycle": {"preStop":
-      {"exec": {"command": ["/shutdown-hook/shutdown-hook.sh"]}}}, "livenessProbe":
+      "${CLUSTER_ID}", "prometheus.io/path": "/metrics", "prometheus.io/port": "8080",
+      "prometheus.io/scrape": "true"}, "labels": {"app": "enmasse", "name": "${NAME}",
+      "role": "broker"}}, "spec": {"containers": [{"env": [{"name": "TOPIC_NAME",
+      "value": "${ADDRESS}"}, {"name": "CLUSTER_ID", "value": "${CLUSTER_ID}"}, {"name":
+      "CERT_DIR", "value": "/etc/enmasse-certs"}], "image": "${BROKER_IMAGE}", "lifecycle":
+      {"preStop": {"exec": {"command": ["/shutdown-hook/shutdown-hook.sh"]}}}, "livenessProbe":
       {"exec": {"command": ["sh", "-c", "$ARTEMIS_HOME/bin/probe.sh"]}, "initialDelaySeconds":
       120}, "name": "broker", "ports": [{"containerPort": 5673, "name": "amqp"}, {"containerPort":
-      8161, "name": "jolokia"}], "readinessProbe": {"exec": {"command": ["sh", "-c",
-      "$ARTEMIS_HOME/bin/probe.sh"]}, "initialDelaySeconds": 10}, "volumeMounts":
-      [{"mountPath": "/var/run/artemis", "name": "vol-${NAME}", "readOnly": false},
-      {"mountPath": "/etc/enmasse-certs", "name": "broker-internal-cert", "readOnly":
-      true}, {"mountPath": "/etc/authservice-ca", "name": "authservice-ca", "readOnly":
-      true}]}, {"env": [{"name": "TOPIC_NAME", "value": "${ADDRESS}"}, {"name": "LINK_CAPACITY",
-      "value": "${ROUTER_LINK_CAPACITY}"}, {"name": "AUTHENTICATION_SERVICE_HOST",
-      "value": "${AUTHENTICATION_SERVICE_HOST}"}, {"name": "AUTHENTICATION_SERVICE_PORT",
-      "value": "${AUTHENTICATION_SERVICE_PORT}"}, {"name": "AUTHENTICATION_SERVICE_CLIENT_SECRET",
-      "value": "${AUTHENTICATION_SERVICE_CLIENT_SECRET}"}, {"name": "AUTHENTICATION_SERVICE_SASL_INIT_HOST",
-      "value": "${AUTHENTICATION_SERVICE_SASL_INIT_HOST}"}], "image": "${ROUTER_IMAGE}",
-      "livenessProbe": {"initialDelaySeconds": 60, "tcpSocket": {"port": "amqp"}},
-      "name": "router", "ports": [{"containerPort": 5672, "name": "amqp", "protocol":
-      "TCP"}, {"containerPort": 5671, "name": "amqps", "protocol": "TCP"}, {"containerPort":
-      55671, "name": "amqps-normal", "protocol": "TCP"}, {"containerPort": 56671,
-      "name": "amqps-broker", "protocol": "TCP"}], "resources": {"limits": {"memory":
-      "256Mi"}, "requests": {"memory": "256Mi"}}, "volumeMounts": [{"mountPath": "/etc/qpid-dispatch/ssl",
-      "name": "ssl-certs", "readOnly": true}, {"mountPath": "/etc/qpid-dispatch/authservice-ca",
-      "name": "authservice-ca", "readOnly": true}, {"mountPath": "/etc/enmasse-certs",
-      "name": "broker-internal-cert", "readOnly": true}, {"mountPath": "/etc/qpid-dispatch/address-controller-ca",
+      8161, "name": "jolokia"}, {"containerPort": 8080, "name": "artemismetrics"}],
+      "readinessProbe": {"exec": {"command": ["sh", "-c", "$ARTEMIS_HOME/bin/probe.sh"]},
+      "initialDelaySeconds": 10}, "volumeMounts": [{"mountPath": "/var/run/artemis",
+      "name": "vol-${NAME}", "readOnly": false}, {"mountPath": "/etc/enmasse-certs",
+      "name": "broker-internal-cert", "readOnly": true}, {"mountPath": "/etc/authservice-ca",
+      "name": "authservice-ca", "readOnly": true}, {"mountPath": "/etc/prometheus-config",
+      "name": "broker-prometheus-config", "readOnly": true}]}, {"env": [{"name": "TOPIC_NAME",
+      "value": "${ADDRESS}"}, {"name": "LINK_CAPACITY", "value": "${ROUTER_LINK_CAPACITY}"},
+      {"name": "AUTHENTICATION_SERVICE_HOST", "value": "${AUTHENTICATION_SERVICE_HOST}"},
+      {"name": "AUTHENTICATION_SERVICE_PORT", "value": "${AUTHENTICATION_SERVICE_PORT}"},
+      {"name": "AUTHENTICATION_SERVICE_CLIENT_SECRET", "value": "${AUTHENTICATION_SERVICE_CLIENT_SECRET}"},
+      {"name": "AUTHENTICATION_SERVICE_SASL_INIT_HOST", "value": "${AUTHENTICATION_SERVICE_SASL_INIT_HOST}"}],
+      "image": "${ROUTER_IMAGE}", "livenessProbe": {"initialDelaySeconds": 60, "tcpSocket":
+      {"port": "amqp"}}, "name": "router", "ports": [{"containerPort": 5672, "name":
+      "amqp", "protocol": "TCP"}, {"containerPort": 5671, "name": "amqps", "protocol":
+      "TCP"}, {"containerPort": 55671, "name": "amqps-normal", "protocol": "TCP"},
+      {"containerPort": 56671, "name": "amqps-broker", "protocol": "TCP"}], "resources":
+      {"limits": {"memory": "256Mi"}, "requests": {"memory": "256Mi"}}, "volumeMounts":
+      [{"mountPath": "/etc/qpid-dispatch/ssl", "name": "ssl-certs", "readOnly": true},
+      {"mountPath": "/etc/qpid-dispatch/authservice-ca", "name": "authservice-ca",
+      "readOnly": true}, {"mountPath": "/etc/enmasse-certs", "name": "broker-internal-cert",
+      "readOnly": true}, {"mountPath": "/etc/qpid-dispatch/address-controller-ca",
       "name": "address-controller-ca", "readOnly": true}]}, {"env": [{"name": "TOPIC_NAME",
       "value": "${ADDRESS}"}, {"name": "CLUSTER_ID", "value": "${NAME}"}, {"name":
       "CERT_DIR", "value": "/etc/enmasse-certs"}], "image": "${TOPIC_FORWARDER_IMAGE}",
@@ -521,8 +538,8 @@ items:
       "${COLOCATED_ROUTER_SECRET}"}}, {"name": "authservice-ca", "secret": {"secretName":
       "authservice-ca"}}, {"name": "address-controller-ca", "secret": {"secretName":
       "address-controller-ca"}}, {"name": "broker-internal-cert", "secret": {"secretName":
-      "broker-internal-cert"}}, {"configMap": {"name": "hawkular-broker-config"},
-      "name": "hawkular-openshift-agent"}]}}}}], "parameters": [{"description": "Storage
+      "broker-internal-cert"}}, {"configMap": {"name": "broker-prometheus-config"},
+      "name": "broker-prometheus-config"}]}}}}], "parameters": [{"description": "Storage
       capacity required for volume claims", "name": "STORAGE_CAPACITY", "value": "2Gi"},
       {"description": "The docker image to use for the message broker", "name": "BROKER_IMAGE",
       "value": "docker.io/enmasseproject/artemis:latest"}, {"description": "The default

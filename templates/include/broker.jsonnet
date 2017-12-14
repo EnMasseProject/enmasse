@@ -6,7 +6,8 @@ local common = import "common.jsonnet";
       "image": image_repo,
       "ports": [
         common.container_port("amqp", 5673),
-        common.container_port("jolokia", 8161)
+        common.container_port("jolokia", 8161),
+        common.container_port("artemismetrics", 8080)
       ],
       "env": [
         addressEnv,
@@ -16,7 +17,8 @@ local common = import "common.jsonnet";
       "volumeMounts": [
         common.volume_mount(volumeName, "/var/run/artemis"),
         common.volume_mount("broker-internal-cert", "/etc/enmasse-certs", true),
-        common.volume_mount("authservice-ca", "/etc/authservice-ca", true)
+        common.volume_mount("authservice-ca", "/etc/authservice-ca", true),
+        common.volume_mount("broker-prometheus-config", "/etc/prometheus-config", true)
       ],
       "livenessProbe": common.exec_probe(["sh", "-c", "$ARTEMIS_HOME/bin/probe.sh"], 120),
       "readinessProbe": common.exec_probe(["sh", "-c", "$ARTEMIS_HOME/bin/probe.sh"], 10),
