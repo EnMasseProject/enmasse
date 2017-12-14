@@ -48,7 +48,10 @@ local forwarder = import "forwarder.jsonnet";
               },
               "annotations": {
                 "cluster_id": "${CLUSTER_ID}",
-                "addressSpace": "${ADDRESS_SPACE}"
+                "addressSpace": "${ADDRESS_SPACE}",
+                "prometheus.io/scrape": "true",
+                "prometheus.io/path": "/metrics",
+                "prometheus.io/port": "8080"
               }
             },
             "spec": {
@@ -61,7 +64,7 @@ local forwarder = import "forwarder.jsonnet";
                 common.secret_volume("authservice-ca", "authservice-ca"),
                 common.secret_volume("address-controller-ca", "address-controller-ca"),
                 common.secret_volume("broker-internal-cert", "broker-internal-cert"),
-                common.configmap_volume("hawkular-openshift-agent", "hawkular-broker-config")
+                common.configmap_volume("broker-prometheus-config", "broker-prometheus-config")
               ],
 
               "containers": if multicast

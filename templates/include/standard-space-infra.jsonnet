@@ -18,6 +18,7 @@ local mqttService = import "mqtt-service.jsonnet";
 local mqttRoute = import "mqtt-route.jsonnet";
 local mqttLwt = import "mqtt-lwt.jsonnet";
 local images = import "images.jsonnet";
+local prometheus = import "prometheus.jsonnet";
 
 {
   template::
@@ -34,6 +35,7 @@ local images = import "images.jsonnet";
     "objects": admin.services("${ADDRESS_SPACE}") + [
       messagingService.internal("${ADDRESS_SPACE}"),
       subserv.service("${ADDRESS_SPACE}"),
+      prometheus.standard_broker_config("broker-prometheus-config"),
       mqttService.internal("${ADDRESS_SPACE}"),
       qdrouterd.deployment("${ADDRESS_SPACE}", "${ROUTER_IMAGE}", "${ROUTER_METRICS_IMAGE}", "${MESSAGING_SECRET}", "authservice-ca", "address-controller-ca"),
       subserv.deployment("${ADDRESS_SPACE}", "${SUBSERV_IMAGE}"),
