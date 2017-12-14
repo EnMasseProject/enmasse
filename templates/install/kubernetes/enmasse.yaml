@@ -8,9 +8,15 @@ items:
       "metadata": {"name": "authservice-ca"}}, {"apiVersion": "v1", "data": {"tls.crt":
       "${ADDRESS_CONTROLLER_CA_CERT}"}, "kind": "Secret", "metadata": {"name": "address-controller-ca"}},
       {"apiVersion": "v1", "data": {"config.yaml": "{\"hostPort\": \"127.0.0.1:1099\",
-      \"lowercaseOutputName\": true, \"password\": \"admin\", \"rules\": [{\"labels\":
-      {\"broker\": \"$1\"}, \"name\": \"connectionCount\", \"pattern\": \"org.apache.activemq.artemis<broker=\\\"(.+)\\\"><>ConnectionCount\"}],
-      \"username\": \"admin\"}"}, "kind": "ConfigMap", "metadata": {"name": "broker-prometheus-config"}},
+      \"password\": \"admin\", \"rules\": [{\"labels\": {\"broker\": \"$1\"}, \"name\":
+      \"artemis_connection_count\", \"pattern\": \"org.apache.activemq.artemis<broker=\\\"(.+)\\\"><>ConnectionCount\",
+      \"type\": \"gauge\"}, {\"labels\": {\"address\": \"$2\", \"broker\": \"$1\"},
+      \"name\": \"artemis_consumer_count\", \"pattern\": \"org.apache.activemq.artemis<broker=\\\"(.+)\\\",
+      component=addresses, address=\\\"(.+)\\\".*><>ConsumerCount\", \"type\": \"gauge\"},
+      {\"labels\": {\"address\": \"$2\", \"broker\": \"$1\"}, \"name\": \"artemis_message_count\",
+      \"pattern\": \"org.apache.activemq.artemis<broker=\\\"(.+)\\\", component=addresses,
+      address=\\\"(.+)\\\".*><>MessageCount\", \"type\": \"gauge\"}], \"username\":
+      \"admin\"}"}, "kind": "ConfigMap", "metadata": {"name": "broker-prometheus-config"}},
       {"apiVersion": "v1", "kind": "PersistentVolumeClaim", "metadata": {"annotations":
       {"addressSpace": "${ADDRESS_SPACE}"}, "labels": {"app": "enmasse"}, "name":
       "broker-data"}, "spec": {"accessModes": ["ReadWriteOnce"], "resources": {"requests":

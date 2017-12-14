@@ -4,7 +4,7 @@
 
 export BROKER_IP=`hostname -I | cut -f 1 -d ' '`
 CONFIG_TEMPLATES=/config_templates
-JAVA_OPTS="-Djava.net.preferIPv4Stack=true -Dcom.sun.management.jmxremote=true -Dcom.sun.management.jmxremote.port=1099 -Dcom.sun.management.jmxremote.ssl=false -Dcom.sun.management.jmxremote.authenticate=false -javaagent:/jmx_exporter/jmx_prometheus_javaagent-0.1.0.jar=8080:/etc/prometheus-config/config.yaml"
+JAVA_OPTS="-Djava.net.preferIPv4Stack=true -Dcom.sun.management.jmxremote=true -Djava.rmi.server.hostname=127.0.0.1 -Dcom.sun.management.jmxremote.port=1099 -Dcom.sun.management.jmxremote.ssl=true -Dcom.sun.management.jmxremote.registry.ssl=true -Dcom.sun.management.jmxremote.ssl.need.client.auth=true -Dcom.sun.management.jmxremote.authenticate=false -javaagent:/jmx_exporter/jmx_prometheus_javaagent-0.1.0.jar=8080:/etc/prometheus-config/config.yaml"
 
 if [ -n "$ADMIN_SERVICE_HOST" ]
 then
@@ -45,6 +45,17 @@ function configure() {
     local instanceId=$2
     export CONTAINER_ID=$HOSTNAME
     if [ ! -d "$INSTANCE" ]; then
+
+        export KEYSTORE_PATH=$instanceDir/etc/enmasse-keystore.jks
+        export TRUSTSTORE_PATH=$instanceDir/etc/enmasse-truststore.jks
+        export AUTH_TRUSTSTORE_PATH=$instanceDir/etc/enmasse-authtruststore.jks
+        export EXTERNAL_KEYSTORE_PATH=$instanceDir/etc/external-keystore.jks
+        TRUSTSTORE_PASS=enmasse
+        KEYSTORE_PASS=enmasse
+
+
+        JAVA_OPTS="${JAVA_OPTS} -Djavax.net.ssl.keyStore=${KEYSTORE_PATH} -Djavax.net.ssl.keyStorePassword=${KEYSTORE_PASS} -Djavax.net.ssl.trustStore=${TRUSTSTORE_PATH} -Djavax.net.ssl.trustStorePassword=${TRUSTSTORE_PASS}"
+
         $ARTEMIS_HOME/bin/artemis create $instanceDir --user admin --password admin --role admin --allow-anonymous --java-options "$JAVA_OPTS"
 
         if [ "$ADDRESS_SPACE_TYPE" == "brokered" ]; then
@@ -52,11 +63,6 @@ function configure() {
         else
             configure_standard
         fi
-
-        export KEYSTORE_PATH=$instanceDir/etc/enmasse-keystore.jks
-        export TRUSTSTORE_PATH=$instanceDir/etc/enmasse-truststore.jks
-        export AUTH_TRUSTSTORE_PATH=$instanceDir/etc/enmasse-authtruststore.jks
-        export EXTERNAL_KEYSTORE_PATH=$instanceDir/etc/external-keystore.jks
     
         envsubst < /tmp/broker.xml > $instanceDir/etc/broker.xml
         if [ -f /tmp/login.config ]; then
@@ -66,17 +72,17 @@ function configure() {
         cp $CONFIG_TEMPLATES/jolokia-access.xml $instanceDir/etc/jolokia-access.xml
 
         # Convert certs
-        openssl pkcs12 -export -passout pass:enmasse -in /etc/enmasse-certs/tls.crt -inkey /etc/enmasse-certs/tls.key -chain -CAfile /etc/enmasse-certs/ca.crt -name "io.enmasse" -out /tmp/enmasse-keystore.p12
+        openssl pkcs12 -export -passout pass:${KEYSTORE_PASS} -in /etc/enmasse-certs/tls.crt -inkey /etc/enmasse-certs/tls.key -chain -CAfile /etc/enmasse-certs/ca.crt -name "io.enmasse" -out /tmp/enmasse-keystore.p12
 
-        keytool -importkeystore -srcstorepass enmasse -deststorepass enmasse -destkeystore $KEYSTORE_PATH -srckeystore /tmp/enmasse-keystore.p12 -srcstoretype PKCS12
-        keytool -import -noprompt -file /etc/enmasse-certs/ca.crt -alias firstCA -deststorepass enmasse -keystore $TRUSTSTORE_PATH
+        keytool -importkeystore -srcstorepass ${KEYSTORE_PASS} -deststorepass ${KEYSTORE_PASS} -destkeystore $KEYSTORE_PATH -srckeystore /tmp/enmasse-keystore.p12 -srcstoretype PKCS12
+        keytool -import -noprompt -file /etc/enmasse-certs/ca.crt -alias firstCA -deststorepass ${TRUSTSTORE_PASS} -keystore $TRUSTSTORE_PATH
 
-        keytool -import -noprompt -file /etc/authservice-ca/tls.crt -alias firstCA -deststorepass enmasse -keystore $AUTH_TRUSTSTORE_PATH
+        keytool -import -noprompt -file /etc/authservice-ca/tls.crt -alias firstCA -deststorepass ${TRUSTSTORE_PASS} -keystore $AUTH_TRUSTSTORE_PATH
 
         if [ -d /etc/external-certs ]
         then
-            openssl pkcs12 -export -passout pass:enmasse -in /etc/external-certs/tls.crt -inkey /etc/external-certs/tls.key -name "io.enmasse" -out /tmp/external-keystore.p12
-            keytool -importkeystore -srcstorepass enmasse -deststorepass enmasse -destkeystore $EXTERNAL_KEYSTORE_PATH -srckeystore /tmp/external-keystore.p12 -srcstoretype PKCS12
+            openssl pkcs12 -export -passout pass:${KEYSTORE_PASS} -in /etc/external-certs/tls.crt -inkey /etc/external-certs/tls.key -name "io.enmasse" -out /tmp/external-keystore.p12
+            keytool -importkeystore -srcstorepass ${KEYSTORE_PASS} -deststorepass ${KEYSTORE_PASS} -destkeystore $EXTERNAL_KEYSTORE_PATH -srckeystore /tmp/external-keystore.p12 -srcstoretype PKCS12
 
         fi
 
