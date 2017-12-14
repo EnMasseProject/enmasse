@@ -19,7 +19,6 @@ build_tar: build
 
 	mkdir -p $(ARTIFACT_BASE)/jmx_exporter
 	cp -f jmx_exporter/target/lib/jmx_prometheus_javaagent-0.1.0.jar $(ARTIFACT_BASE)/jmx_exporter/
-	cp -f jmx_exporter/config.yaml $(ARTIFACT_BASE)/jmx_exporter/
 
 	tar -czf build/artemis-image-$(VERSION).tar.gz -C build/artemis-image .
 

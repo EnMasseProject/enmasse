@@ -4,7 +4,7 @@
 
 export BROKER_IP=`hostname -I | cut -f 1 -d ' '`
 CONFIG_TEMPLATES=/config_templates
-JAVA_OPTS="-Djava.net.preferIPv4Stack=true -javaagent:/jmx_exporter/jmx_prometheus_javaagent-0.1.0.jar=8080:/etc/prometheus-config/config.yaml"
+JAVA_OPTS="-Djava.net.preferIPv4Stack=true -Dcom.sun.management.jmxremote=true -Dcom.sun.management.jmxremote.port=1099 -Dcom.sun.management.jmxremote.ssl=false -Dcom.sun.management.jmxremote.authenticate=false -javaagent:/jmx_exporter/jmx_prometheus_javaagent-0.1.0.jar=8080:/etc/prometheus-config/config.yaml"
 
 if [ -n "$ADMIN_SERVICE_HOST" ]
 then
@@ -60,7 +60,7 @@ function configure() {
     
         envsubst < /tmp/broker.xml > $instanceDir/etc/broker.xml
         if [ -f /tmp/login.config ]; then
-                envsubst < /tmp/login.config > $instanceDir/etc/login.config
+            envsubst < /tmp/login.config > $instanceDir/etc/login.config
         fi
         cp $CONFIG_TEMPLATES/bootstrap.xml $instanceDir/etc/bootstrap.xml
         cp $CONFIG_TEMPLATES/jolokia-access.xml $instanceDir/etc/jolokia-access.xml
@@ -81,7 +81,7 @@ function configure() {
         fi
 
 
-        #cp $CONFIG_TEMPLATES/logging.properties $instanceDir/etc/logging.properties
+        # cp $CONFIG_TEMPLATES/logging.properties $instanceDir/etc/logging.properties
 
     fi
 

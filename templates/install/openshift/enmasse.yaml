@@ -1401,7 +1401,10 @@ objects:
       name: address-controller-ca
   - apiVersion: v1
     data:
-      config.yaml: '{"lowercaseOutputName": true}'
+      config.yaml: '{"hostPort": "127.0.0.1:1099", "lowercaseOutputName": true, "password":
+        "admin", "rules": [{"labels": {"broker": "$1"}, "name": "connectionCount",
+        "pattern": "org.apache.activemq.artemis<broker=\"(.+)\"><>ConnectionCount"}],
+        "username": "admin"}'
     kind: ConfigMap
     metadata:
       name: broker-prometheus-config
