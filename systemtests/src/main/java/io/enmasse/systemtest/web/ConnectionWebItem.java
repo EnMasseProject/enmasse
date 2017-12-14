@@ -1,59 +1,41 @@
 package io.enmasse.systemtest.web;
 
+
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 
-public class AddressWebItem extends WebItem implements Comparable<AddressWebItem> {
+public class ConnectionWebItem extends WebItem implements Comparable {
 
-
-    private WebElement checkBox;
-    private boolean isReady;
     private String name;
-    private String type;
     private int sendersCount;
     private int receiversCount;
     private int messagesIn;
     private int messagesOut;
-    private int messagesStored;
+    private boolean encrypted;
 
-    public AddressWebItem(WebElement item) {
+    public ConnectionWebItem(WebElement item) {
         this.webItem = item;
-        this.checkBox = item.findElement(By.className("list-view-pf-checkbox"));
         this.name = item.findElement(By.className("list-group-item-heading")).getText();
-        this.type = item.findElement(By.className("list-group-item-text")).getText();
         this.readAdditionalInfo();
         this.sendersCount = getCountOfAdditionalInfoItem("Senders");
         this.receiversCount = getCountOfAdditionalInfoItem("Receivers");
         this.messagesIn = getCountOfAdditionalInfoItem("Messages In");
         this.messagesOut = getCountOfAdditionalInfoItem("Messages Out");
-        this.messagesStored = getCountOfAdditionalInfoItem("Stored");
 
         try {
-            item.findElement(By.className("pficon-ok"));
-            isReady = true;
+            item.findElement(By.className("fa-lock-fa"));
+            this.encrypted = true;
         } catch (Exception ex) {
-            isReady = false;
+            this.encrypted = false;
         }
     }
 
-    public WebElement getAddressItem() {
+    public WebElement getConnectionElement() {
         return webItem;
-    }
-
-    public WebElement getCheckBox() {
-        return checkBox;
-    }
-
-    public boolean getIsReady() {
-        return isReady;
     }
 
     public String getName() {
         return name;
-    }
-
-    public String getType() {
-        return type;
     }
 
     public int getSendersCount() {
@@ -72,12 +54,12 @@ public class AddressWebItem extends WebItem implements Comparable<AddressWebItem
         return messagesOut;
     }
 
-    public int getMessagesStored() {
-        return messagesStored;
+    public boolean isEncrypted() {
+        return encrypted;
     }
 
     @Override
-    public int compareTo(AddressWebItem o) {
-        return name.compareTo(o.name);
+    public int compareTo(Object o) {
+        return 0;
     }
 }
