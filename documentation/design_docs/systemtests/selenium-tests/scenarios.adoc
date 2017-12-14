@@ -63,7 +63,24 @@ test steps are TODO
 * testSortConnectionsByReceivers
 * testFilterConnectionsByContainer
 * testFilterConnectionsByHostname
+
 * testFilterConnectionsByUser
+- Create new user via API with username/password:pavel/enmasse
+- Create queue: queue-via-web-connections-users
+- Attach 5 consumer with user pavel
+- Attach 10 consumers with default user: test/test
+- Verify count of connections (15 expected)
+- Add filter for username: "test"
+- Verify count of connections and user names (10 expected)
+- Add filter for username: "pavel"
+- Verify count of connections and user names (should be empty)
+- Remove filter with username "test"
+- Verify count of connections and user names (5 expected)
+- Clear all filters
+- Verify count of connections (15 expected)
+- Remove user "pavel"
+- Remove queue
+
 * testFilterConnectionsByEncrypted
 - Create queue: queue-via-web-connections-encrypted
 - Atach 5 consumers to this queue
