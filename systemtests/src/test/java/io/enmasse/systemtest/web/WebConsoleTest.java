@@ -414,7 +414,7 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
     }
 
     private void assertConnectionUsers(List<ConnectionWebItem> allItems, String userName) {
-        assertThat(getConnectionProperty(allItems, (item -> item.getUser().equals(userName))).size(), is(allItems.size()));
+        assertThat(getConnectionProperty(allItems, (item -> item.getType().contains(userName))).size(), is(allItems.size()));
     }
 
     private List<ConnectionWebItem> getConnectionProperty(List<ConnectionWebItem> allItems, Predicate<ConnectionWebItem> f) {

@@ -70,6 +70,10 @@ public class ConnectionWebItem extends WebItem implements Comparable {
         return type.split(" +")[1];
     }
 
+    public String getType() {
+        return type;
+    }
+
     @Override
     public int compareTo(Object o) {
         return 0;
