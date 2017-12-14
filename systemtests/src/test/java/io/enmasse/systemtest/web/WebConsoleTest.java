@@ -254,7 +254,7 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
             assertConnectionUsers(items, pavel.getUsername());
 
             consoleWebPage.clearAllFilters();
-            assertThat(consoleWebPage.getConnectionItems().size(), is(receiversBatch1));
+            assertThat(consoleWebPage.getConnectionItems().size(), is(receiversBatch1 + receiversBatch2));
 
         } catch (Exception ex) {
             removeUser(defaultAddressSpace, pavel.getUsername());
