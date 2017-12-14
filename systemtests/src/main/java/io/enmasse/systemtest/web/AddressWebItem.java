@@ -1,17 +1,15 @@
 package io.enmasse.systemtest.web;
 
-import io.enmasse.systemtest.Logging;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 
-import java.util.List;
+public class AddressWebItem extends WebItem implements Comparable<AddressWebItem> {
 
-public class AddressWebItem implements Comparable<AddressWebItem> {
-    private WebElement addressItem;
-    private List<WebElement> additionalsInfo;
+
     private WebElement checkBox;
     private boolean isReady;
     private String name;
+    private String type;
     private int sendersCount;
     private int receiversCount;
     private int messagesIn;
@@ -19,9 +17,10 @@ public class AddressWebItem implements Comparable<AddressWebItem> {
     private int messagesStored;
 
     public AddressWebItem(WebElement item) {
-        this.addressItem = item;
+        this.webItem = item;
         this.checkBox = item.findElement(By.className("list-view-pf-checkbox"));
         this.name = item.findElement(By.className("list-group-item-heading")).getText();
+        this.type = item.findElement(By.className("list-group-item-text")).getText();
         this.additionalsInfo = getAdditionalsInfo();
         this.sendersCount = getCountOfAdditionalInfoItem("Senders");
         this.receiversCount = getCountOfAdditionalInfoItem("Receivers");
@@ -38,7 +37,7 @@ public class AddressWebItem implements Comparable<AddressWebItem> {
     }
 
     public WebElement getAddressItem() {
-        return addressItem;
+        return webItem;
     }
 
     public WebElement getCheckBox() {
@@ -51,6 +50,10 @@ public class AddressWebItem implements Comparable<AddressWebItem> {
 
     public String getName() {
         return name;
+    }
+
+    public String getType() {
+        return type;
     }
 
     public int getSendersCount() {
@@ -71,21 +74,6 @@ public class AddressWebItem implements Comparable<AddressWebItem> {
 
     public int getMessagesStored() {
         return messagesStored;
-    }
-
-    private List<WebElement> getAdditionalsInfo() {
-        return addressItem.findElement(By.className("list-view-pf-additional-info")).findElements(By.tagName("div"));
-    }
-
-    private int getCountOfAdditionalInfoItem(String item) {
-        for (WebElement addInfo : additionalsInfo) {
-            if (addInfo.getText().matches("(.*)" + item + "(.*)")) {
-                if(addInfo.findElement(By.tagName("strong")).getAttribute("innerText").equals(""))
-                    return 0;
-                return Integer.parseInt(addInfo.findElement(By.tagName("strong")).getAttribute("innerText"));
-            }
-        }
-        return 0;
     }
 
     @Override

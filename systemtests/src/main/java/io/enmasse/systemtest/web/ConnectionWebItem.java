@@ -6,9 +6,8 @@ import org.openqa.selenium.WebElement;
 
 import java.util.List;
 
-public class ConnectionWebItem implements Comparable {
+public class ConnectionWebItem extends WebItem implements Comparable {
 
-    private WebElement connectionElement;
     private List<WebElement> additionalsInfo;
     private String name;
     private int sendersCount;
@@ -18,7 +17,7 @@ public class ConnectionWebItem implements Comparable {
     private boolean encrypted;
 
     public ConnectionWebItem(WebElement item) {
-        this.connectionElement = item;
+        this.webItem = item;
         this.name = item.findElement(By.className("list-group-item-heading")).getText();
         this.additionalsInfo = getAdditionalsInfo();
         this.sendersCount = getCountOfAdditionalInfoItem("Senders");
@@ -35,7 +34,7 @@ public class ConnectionWebItem implements Comparable {
     }
 
     public WebElement getConnectionElement() {
-        return connectionElement;
+        return webItem;
     }
 
     public String getName() {
@@ -60,21 +59,6 @@ public class ConnectionWebItem implements Comparable {
 
     public boolean isEncrypted() {
         return encrypted;
-    }
-
-    private List<WebElement> getAdditionalsInfo() {
-        return connectionElement.findElement(By.className("list-view-pf-additional-info")).findElements(By.tagName("div"));
-    }
-
-    private int getCountOfAdditionalInfoItem(String item) {
-        for (WebElement addInfo : additionalsInfo) {
-            if (addInfo.getText().matches("(.*)" + item + "(.*)")) {
-                if(addInfo.findElement(By.tagName("strong")).getAttribute("innerText").equals(""))
-                    return 0;
-                return Integer.parseInt(addInfo.findElement(By.tagName("strong")).getAttribute("innerText"));
-            }
-        }
-        return 0;
     }
 
     @Override
