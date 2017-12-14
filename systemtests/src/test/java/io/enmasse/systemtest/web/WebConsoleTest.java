@@ -7,6 +7,7 @@ import io.enmasse.systemtest.TestBaseWithDefault;
 import io.enmasse.systemtest.executor.client.AbstractClient;
 import io.enmasse.systemtest.executor.client.Argument;
 import io.enmasse.systemtest.executor.client.ArgumentMap;
+import io.enmasse.systemtest.executor.client.rhea.RheaClientConnector;
 import io.enmasse.systemtest.executor.client.rhea.RheaClientReceiver;
 import io.enmasse.systemtest.executor.client.rhea.RheaClientSender;
 import org.junit.After;
@@ -163,15 +164,13 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
     }
 
     public void doTestSortConnectionsBySenders() throws Exception {
-        int addressCount = 4;
+        int addressCount = 2;
         ArrayList<Destination> addresses = generateQueueTopicList("via-web", IntStream.range(0, addressCount));
         consoleWebPage.createAddressesWebConsole(addresses.toArray(new Destination[0]));
 
         consoleWebPage.openConnectionsPageWebConsole();
 
-        List<AbstractClient> senders = attachSenders(addresses);
-
-        Thread.sleep(15000);
+        List<AbstractClient> senders = attachClients(addresses);
 
         consoleWebPage.sortItems(SortType.SENDERS, true);
         assertSorted(consoleWebPage.getConnectionItems(), Comparator.comparingInt(ConnectionWebItem::getSendersCount));
@@ -183,15 +182,12 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
     }
 
     public void doTestSortConnectionsByReceivers() throws Exception {
-        int addressCount = 4;
+        int addressCount = 2;
         ArrayList<Destination> addresses = generateQueueTopicList("via-web", IntStream.range(0, addressCount));
         consoleWebPage.createAddressesWebConsole(addresses.toArray(new Destination[0]));
-
         consoleWebPage.openConnectionsPageWebConsole();
 
-        List<AbstractClient> receivers = attachReceivers(addresses);
-
-        Thread.sleep(15000);
+        List<AbstractClient> clients = attachClients(addresses);
 
         consoleWebPage.sortItems(SortType.RECEIVERS, true);
         assertSorted(consoleWebPage.getConnectionItems(), Comparator.comparingInt(ConnectionWebItem::getReceiversCount));
@@ -199,7 +195,7 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
         consoleWebPage.sortItems(SortType.RECEIVERS, false);
         assertSorted(consoleWebPage.getConnectionItems(), true, Comparator.comparingInt(ConnectionWebItem::getReceiversCount));
 
-        receivers.forEach(AbstractClient::stop);
+        clients.forEach(AbstractClient::stop);
     }
 
 
@@ -248,13 +244,12 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
         for (int i = 0; i < destinations.size(); i++) {
             arguments.put(Argument.ADDRESS, destinations.get(i).getAddress());
             for (int j = 0; j < i + 1; j++) {
-                RheaClientSender send = new RheaClientSender();
+                AbstractClient send = new RheaClientSender();
                 send.setArguments(arguments);
                 send.runAsync();
                 senders.add(send);
             }
         }
-
 
         return senders;
     }
@@ -273,7 +268,7 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
         for (int i = 0; i < destinations.size(); i++) {
             arguments.put(Argument.ADDRESS, destinations.get(i).getAddress());
             for (int j = 0; j < i + 1; j++) {
-                RheaClientReceiver rec = new RheaClientReceiver();
+                AbstractClient rec = new RheaClientReceiver();
                 rec.setArguments(arguments);
                 rec.runAsync();
                 receivers.add(rec);
@@ -303,6 +298,41 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
 
         Thread.sleep(15000); //wait for attached
         return receivers;
+    }
+
+    private List<AbstractClient> attachClients(List<Destination> destinations) throws Exception {
+        List<AbstractClient> clients = new ArrayList<>();
+        for (Destination destination : destinations) {
+            clients.add(attachConnector(destination, 1, 6, 1));
+            clients.add(attachConnector(destination, 1, 4, 4));
+            clients.add(attachConnector(destination, 1, 1, 6));
+        }
+
+        Thread.sleep(10000);
+
+        return clients;
+    }
+
+    private AbstractClient attachConnector(Destination destination, int connectionCount,
+                                           int senderCount, int receiverCount) throws Exception {
+
+        ArgumentMap arguments = new ArgumentMap();
+        arguments.put(Argument.BROKER, getRouteEndpoint(defaultAddressSpace).toString());
+        arguments.put(Argument.TIMEOUT, "120");
+        arguments.put(Argument.CONN_SSL, "true");
+        arguments.put(Argument.USERNAME, username);
+        arguments.put(Argument.PASSWORD, password);
+        arguments.put(Argument.OBJECT_CONTROL, "CESR");
+        arguments.put(Argument.ADDRESS, destination.getAddress());
+        arguments.put(Argument.COUNT, Integer.toString(connectionCount));
+        arguments.put(Argument.SENDER_COUNT, Integer.toString(senderCount));
+        arguments.put(Argument.RECEIVER_COUNT, Integer.toString(receiverCount));
+
+        AbstractClient cli = new RheaClientConnector();
+        cli.setArguments(arguments);
+        cli.runAsync();
+
+        return cli;
     }
 
     private void assertAddressType(List<AddressWebItem> allItems, AddressType type) {
