@@ -26,7 +26,7 @@ local common = import "common.jsonnet";
       "ports": [
         {
           "name": "health",
-          "containerPort": 8080
+          "containerPort": 8088
         }
       ],
       "volumeMounts": [

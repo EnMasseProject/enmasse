@@ -51,7 +51,7 @@ public class ForwarderController extends AbstractVerticle implements DiscoveryLi
     public void start() {
         vertx.createHttpServer()
                 .requestHandler(request -> request.response().setStatusCode(HttpResponseStatus.OK.code()).end())
-                .listen(8080);
+                .listen(8088);
     }
 
     @Override
