@@ -1,4 +1,3 @@
-
 {
   broker_config(name)::
   {
@@ -9,18 +8,36 @@
     },
     "data": {
       "config.yaml": std.toString({
-        "lowercaseOutputName": true,
         "hostPort": "127.0.0.1:1099",
         "username": "admin",
         "password": "admin",
         "rules": [
           {
             "pattern": "org.apache.activemq.artemis<broker=\"(.+)\"><>ConnectionCount",
-            "name": "connectionCount",
+            "name": "artemis_connection_count",
+            "type": "gauge",
             "labels": {
               "broker": "$1"
             }
-          }
+          },
+          {
+            "pattern": "org.apache.activemq.artemis<broker=\"(.+)\", component=addresses, address=\"(.+)\".*><>ConsumerCount",
+            "name": "artemis_consumer_count",
+            "type": "gauge",
+            "labels": {
+              "broker": "$1",
+              "address": "$2"
+            }
+          },
+          {
+            "pattern": "org.apache.activemq.artemis<broker=\"(.+)\", component=addresses, address=\"(.+)\".*><>MessageCount",
+            "name": "artemis_message_count",
+            "type": "gauge",
+            "labels": {
+              "broker": "$1",
+              "address": "$2"
+            }
+          },
         ]
       })
     }
