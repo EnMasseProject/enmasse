@@ -355,6 +355,7 @@ public class ConsoleWebPage {
      * remove filter element by (Name: Value)
      */
     private void removeFilter(FilterType filterType, String filterName) throws Exception {
+        Logging.log.info("Removing filter: " + filterName);
         String filterText = String.format("%s: %s", filterType.toString().toLowerCase(), filterName);
         List<WebElement> filters = getFilterResultsToolbar().findElements(ByAngular.repeater("filter in config.appliedFilters"));
         for (WebElement filter : filters) {
@@ -369,7 +370,6 @@ public class ConsoleWebPage {
      * remove 'type' filter element by (Name: Value)
      */
     public void removeFilterByType(String filterName) throws Exception {
-        Logging.log.info("Removing filter: " + filterName);
         removeFilter(FilterType.TYPE, filterName);
     }
 
@@ -377,8 +377,14 @@ public class ConsoleWebPage {
      * remove 'name' filter element by (Name: Value)
      */
     public void removeFilterByName(String filterName) throws Exception {
-        Logging.log.info("Removing filter: " + filterName);
         removeFilter(FilterType.NAME, filterName);
+    }
+
+    /**
+     * remove 'name' filter element by (Name: Value)
+     */
+    public void removeFilterByUser(String filterName) throws Exception {
+        removeFilter(FilterType.USER, filterName);
     }
 
     /**

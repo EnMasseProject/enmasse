@@ -7,6 +7,7 @@ import org.openqa.selenium.WebElement;
 public class ConnectionWebItem extends WebItem implements Comparable {
 
     private String name;
+    private String type;
     private int sendersCount;
     private int receiversCount;
     private int messagesIn;
@@ -16,6 +17,7 @@ public class ConnectionWebItem extends WebItem implements Comparable {
     public ConnectionWebItem(WebElement item) {
         this.webItem = item;
         this.name = item.findElement(By.className("list-group-item-heading")).getText();
+        this.type = item.findElement(By.className("list-group-item-text")).getText();
         this.readAdditionalInfo();
         this.sendersCount = getCountOfAdditionalInfoItem("Senders");
         this.receiversCount = getCountOfAdditionalInfoItem("Receivers");
@@ -56,6 +58,16 @@ public class ConnectionWebItem extends WebItem implements Comparable {
 
     public boolean isEncrypted() {
         return encrypted;
+    }
+
+
+    public String getSomething() {
+        throw new IllegalStateException("method is not implemented");
+//        return type.split(" +")[0]; //TODO! in web-console filled as "not available"
+    }
+
+    public String getUser() {
+        return type.split(" +")[1];
     }
 
     @Override

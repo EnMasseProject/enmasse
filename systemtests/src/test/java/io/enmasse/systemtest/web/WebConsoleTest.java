@@ -3,6 +3,7 @@ package io.enmasse.systemtest.web;
 
 import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.Destination;
+import io.enmasse.systemtest.KeycloakCredentials;
 import io.enmasse.systemtest.TestBaseWithDefault;
 import io.enmasse.systemtest.executor.client.AbstractClient;
 import io.enmasse.systemtest.executor.client.Argument;
@@ -223,6 +224,39 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
         receivers.forEach(AbstractClient::stop);
     }
 
+    public void doTestFilterConnectionsByUser() throws Exception {
+        Destination queue = Destination.queue("queue-via-web-connections-users");
+        consoleWebPage.createAddressesWebConsole(queue);
+        consoleWebPage.openConnectionsPageWebConsole();
+
+        KeycloakCredentials pavel = new KeycloakCredentials("pavel", "enmasse");
+        createUser(defaultAddressSpace, pavel.getUsername(), pavel.getPassword());
+
+        int receiversBatch1 = 5;
+        int receiversBatch2 = 10;
+        attachReceivers(queue, receiversBatch1, pavel.getUsername(), pavel.getPassword());
+        attachReceivers(queue, receiversBatch2);
+        assertThat(consoleWebPage.getConnectionItems().size(), is(receiversBatch1 + receiversBatch2));
+
+        consoleWebPage.addConnectionsFilter(FilterType.USER, username);
+        List<ConnectionWebItem> items = consoleWebPage.getConnectionItems();
+        assertThat(items.size(), is(receiversBatch2));
+        assertConnectionUsers(items, username);
+
+        consoleWebPage.addConnectionsFilter(FilterType.USER, pavel.getUsername());
+        assertThat(consoleWebPage.getConnectionItems().size(), is(0));
+
+        consoleWebPage.removeFilterByUser(username);
+        items = consoleWebPage.getConnectionItems();
+        assertThat(items.size(), is(receiversBatch1));
+        assertConnectionUsers(items, pavel.getUsername());
+
+        consoleWebPage.clearAllFilters();
+        assertThat(consoleWebPage.getConnectionItems().size(), is(receiversBatch1));
+
+        removeUser(defaultAddressSpace, pavel.getUsername());
+    }
+
     public void doTestSortConnectionsByHostname() throws Exception {
         int addressCount = 2;
         ArrayList<Destination> addresses = generateQueueTopicList("via-web", IntStream.range(0, addressCount));
@@ -296,6 +330,10 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
     }
 
     private List<AbstractClient> attachReceivers(Destination destination, int receiverCount) throws Exception {
+        return attachReceivers(destination, receiverCount, username, password);
+    }
+
+    private List<AbstractClient> attachReceivers(Destination destination, int receiverCount, String username, String password) throws Exception {
         ArgumentMap arguments = new ArgumentMap();
         arguments.put(Argument.BROKER, getRouteEndpoint(defaultAddressSpace).toString());
         arguments.put(Argument.TIMEOUT, "60");
@@ -366,6 +404,10 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
 
     private void assertConnectionUnencrypted(List<ConnectionWebItem> allItems) {
         assertThat(getConnectionProperty(allItems, (item -> !item.isEncrypted())).size(), is(allItems.size()));
+    }
+
+    private void assertConnectionUsers(List<ConnectionWebItem> allItems, String userName) {
+        assertThat(getConnectionProperty(allItems, (item -> item.getUser().equals(userName))).size(), is(allItems.size()));
     }
 
     private List<ConnectionWebItem> getConnectionProperty(List<ConnectionWebItem> allItems, Predicate<ConnectionWebItem> f) {
