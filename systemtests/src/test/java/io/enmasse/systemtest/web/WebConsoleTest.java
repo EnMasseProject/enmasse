@@ -223,6 +223,23 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
         receivers.forEach(AbstractClient::stop);
     }
 
+    public void doTestSortConnectionsByHostname() throws Exception {
+        int addressCount = 2;
+        ArrayList<Destination> addresses = generateQueueTopicList("via-web", IntStream.range(0, addressCount));
+        consoleWebPage.createAddressesWebConsole(addresses.toArray(new Destination[0]));
+        consoleWebPage.openConnectionsPageWebConsole();
+
+        List<AbstractClient> clients = attachClients(addresses);
+
+        consoleWebPage.sortItems(SortType.HOSTNAME, true);
+        assertSorted(consoleWebPage.getConnectionItems(), Comparator.comparing(ConnectionWebItem::getName));
+
+        consoleWebPage.sortItems(SortType.HOSTNAME, false);
+        assertSorted(consoleWebPage.getConnectionItems(), true, Comparator.comparing(ConnectionWebItem::getName));
+
+        clients.forEach(AbstractClient::stop);
+    }
+
     //============================================================================================
     //============================ Help methods ==================================================
     //============================================================================================

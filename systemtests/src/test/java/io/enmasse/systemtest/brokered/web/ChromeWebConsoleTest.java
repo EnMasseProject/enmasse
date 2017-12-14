@@ -1,7 +1,6 @@
 package io.enmasse.systemtest.brokered.web;
 
 import io.enmasse.systemtest.Destination;
-import org.junit.Test;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
@@ -46,6 +45,11 @@ public class ChromeWebConsoleTest extends BrokeredWebConsoleTest {
     //@Test
     public void testFilterConnectionsByEncrypted() throws Exception {
         doTestFilterConnectionsByEncrypted();
+    }
+
+    //@Test
+    public void testSortConnectionsByHostname() throws Exception {
+        doTestSortConnectionsByHostname();
     }
 
     @Override
