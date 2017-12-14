@@ -208,4 +208,28 @@
         }
       ]
     },
+
+  cluster_reader::
+  {
+    "apiVersion": "rbac.authorization.k8s.io/v1beta1",
+    "kind": "ClusterRole",
+    "metadata": {
+      "name": "cluster-reader"
+    },
+    "rules": [
+      {
+        "apiGroups": [
+          ""
+        ],
+        "resources": [
+          "pods"
+        ],
+        "verbs": [
+          "get",
+          "watch",
+          "list"
+        ]
+      }
+    ]
+  }
 }
