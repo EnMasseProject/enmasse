@@ -9,8 +9,7 @@
     "data": {
       "config.yaml": std.toString({
         "hostPort": "127.0.0.1:1099",
-        "username": "admin",
-        "password": "admin",
+        "ssl": true,
         "rules": [
           {
             "pattern": "org.apache.activemq.artemis<broker=\"(.+)\"><>ConnectionCount",
