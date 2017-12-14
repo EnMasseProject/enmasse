@@ -16,6 +16,9 @@
 
 package io.enmasse.controller;
 
+import okhttp3.OkHttpClient;
+import org.apache.log4j.Logger;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -55,6 +58,7 @@ public final class ControllerOptions {
         this.environment = environment;
         this.addressControllerSa = addressControllerSa;
         this.addressSpaceAdminSa = addressSpaceAdminSa;
+        Logger.getLogger(OkHttpClient.class.getName()).setLevel(org.apache.log4j.Level.DEBUG);
     }
 
     public String getMasterUrl() {
