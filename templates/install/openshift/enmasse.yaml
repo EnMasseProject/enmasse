@@ -920,6 +920,9 @@ objects:
       annotations:
         addressSpace: ${ADDRESS_SPACE}
         io.enmasse.certSecretName: router-internal-cert
+        prometheus.io/path: /metrics
+        prometheus.io/port: '8080'
+        prometheus.io/scrape: 'true'
       labels:
         app: enmasse
         name: qdrouterd
@@ -990,11 +993,11 @@ objects:
             livenessProbe:
               initialDelaySeconds: 60
               tcpSocket:
-                port: metrics
+                port: routermetrics
             name: metrics
             ports:
             - containerPort: 8080
-              name: metrics
+              name: routermetrics
               protocol: TCP
             resources:
               limits:
@@ -1006,9 +1009,6 @@ objects:
               name: router-internal-cert
               readOnly: true
           volumes:
-          - configMap:
-              name: hawkular-router-config
-            name: hawkular-openshift-agent
           - name: ssl-certs
             secret:
               secretName: ${MESSAGING_SECRET}

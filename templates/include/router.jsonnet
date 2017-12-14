@@ -15,7 +15,7 @@ local authService = import "auth-service.jsonnet";
       },
       "livenessProbe": {
         "tcpSocket": {
-          "port": "metrics"
+          "port": "routermetrics"
         },
         "initialDelaySeconds": 60
       },
@@ -35,7 +35,7 @@ local authService = import "auth-service.jsonnet";
       ],
       "ports": [
         {
-          "name": "metrics",
+          "name": "routermetrics",
           "containerPort": 8080,
           "protocol": "TCP"
         }
@@ -120,13 +120,5 @@ local authService = import "auth-service.jsonnet";
 
       [if mem_request != "" then "resources"]: resources,
       "volumeMounts": ssl_certs + authservice_ca + router_internal_cert + address_controller_ca
-    },
-
-  hawkular_volume()::
-    {
-      "name": "hawkular-openshift-agent",
-      "configMap": {
-          "name": "hawkular-router-config"
-      }
     },
 }

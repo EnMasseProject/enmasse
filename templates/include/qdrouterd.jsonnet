@@ -12,7 +12,10 @@ local common = import "common.jsonnet";
         },
         "annotations": {
           "addressSpace": addressSpace,
-          "io.enmasse.certSecretName" : "router-internal-cert"
+          "io.enmasse.certSecretName" : "router-internal-cert",
+          "prometheus.io/scrape": "true",
+          "prometheus.io/path": "/metrics",
+          "prometheus.io/port": "8080"
         },
         "name": "qdrouterd"
       },
@@ -33,11 +36,10 @@ local common = import "common.jsonnet";
             "containers": [ router.container(image_repo, [], "", "router-internal-cert"),
               router.metrics(metrics_image_repo, "32Mi", "router-internal-cert") ],
             "volumes": [
-              router.hawkular_volume(),
               common.secret_volume("ssl-certs", router_secret),
               common.secret_volume("authservice-ca", auth_service_ca_secret),
               common.secret_volume("address-controller-ca", address_controller_ca_secret),
-              common.secret_volume("router-internal-cert", "router-internal-cert"),
+              common.secret_volume("router-internal-cert", "router-internal-cert")
             ]
           }
         }
