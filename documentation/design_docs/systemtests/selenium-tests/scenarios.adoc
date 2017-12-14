@@ -59,8 +59,26 @@ test steps are TODO
 
 * testSortConnectionsByClientID
 * testSortConnectionsByHostname
+- Create queue and topic: topic-via-web-0, queue-via-web-1
+- Attach 3 clients to these addresses
+- Change sort to Hostname asc and check order
+- Change sort to Hostname desc and check order
+- Remove addresses
+
 * testSortConnectionsBySenders
+- Create queue and topic: topic-via-web-0, queue-via-web-1
+- Attach 3 clients with different count of producers to these addresses
+- Change sort to Senders asc and check order
+- Change sort to Senders desc and check order
+- Remove addresses
+
 * testSortConnectionsByReceivers
+- Create queue and topic: topic-via-web-0, queue-via-web-1
+- Attach 3 clients with different count of consumers to these addresses
+- Change sort to Receivers asc and check order
+- Change sort to Receivers desc and check order
+- Remove addresses
+
 * testFilterConnectionsByContainer
 * testFilterConnectionsByHostname
 
@@ -83,7 +101,7 @@ test steps are TODO
 
 * testFilterConnectionsByEncrypted
 - Create queue: queue-via-web-connections-encrypted
-- Atach 5 consumers to this queue
+- Attach 5 consumers to this queue
 - Add filter for encrypted and verify count
 - Remove all filters
 - Add filter for unencrypted and verify count
