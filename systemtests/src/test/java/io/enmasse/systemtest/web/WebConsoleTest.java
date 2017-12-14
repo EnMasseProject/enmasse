@@ -231,30 +231,37 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
 
         KeycloakCredentials pavel = new KeycloakCredentials("pavel", "enmasse");
         createUser(defaultAddressSpace, pavel.getUsername(), pavel.getPassword());
+        List<AbstractClient> receiversPavel = null;
+        List<AbstractClient> receiversTest = null;
+        try {
+            int receiversBatch1 = 5;
+            int receiversBatch2 = 10;
+            receiversPavel = attachReceivers(queue, receiversBatch1, pavel.getUsername(), pavel.getPassword());
+            receiversTest = attachReceivers(queue, receiversBatch2);
+            assertThat(consoleWebPage.getConnectionItems().size(), is(receiversBatch1 + receiversBatch2));
 
-        int receiversBatch1 = 5;
-        int receiversBatch2 = 10;
-        attachReceivers(queue, receiversBatch1, pavel.getUsername(), pavel.getPassword());
-        attachReceivers(queue, receiversBatch2);
-        assertThat(consoleWebPage.getConnectionItems().size(), is(receiversBatch1 + receiversBatch2));
+            consoleWebPage.addConnectionsFilter(FilterType.USER, username);
+            List<ConnectionWebItem> items = consoleWebPage.getConnectionItems();
+            assertThat(items.size(), is(receiversBatch2));
+            assertConnectionUsers(items, username);
 
-        consoleWebPage.addConnectionsFilter(FilterType.USER, username);
-        List<ConnectionWebItem> items = consoleWebPage.getConnectionItems();
-        assertThat(items.size(), is(receiversBatch2));
-        assertConnectionUsers(items, username);
+            consoleWebPage.addConnectionsFilter(FilterType.USER, pavel.getUsername());
+            assertThat(consoleWebPage.getConnectionItems().size(), is(0));
 
-        consoleWebPage.addConnectionsFilter(FilterType.USER, pavel.getUsername());
-        assertThat(consoleWebPage.getConnectionItems().size(), is(0));
+            consoleWebPage.removeFilterByUser(username);
+            items = consoleWebPage.getConnectionItems();
+            assertThat(items.size(), is(receiversBatch1));
+            assertConnectionUsers(items, pavel.getUsername());
 
-        consoleWebPage.removeFilterByUser(username);
-        items = consoleWebPage.getConnectionItems();
-        assertThat(items.size(), is(receiversBatch1));
-        assertConnectionUsers(items, pavel.getUsername());
+            consoleWebPage.clearAllFilters();
+            assertThat(consoleWebPage.getConnectionItems().size(), is(receiversBatch1));
 
-        consoleWebPage.clearAllFilters();
-        assertThat(consoleWebPage.getConnectionItems().size(), is(receiversBatch1));
+        } catch (Exception ex) {
+            removeUser(defaultAddressSpace, pavel.getUsername());
+            receiversTest.forEach(AbstractClient::stop);
+            receiversPavel.forEach(AbstractClient::stop);
+        }
 
-        removeUser(defaultAddressSpace, pavel.getUsername());
     }
 
     public void doTestSortConnectionsByHostname() throws Exception {
@@ -336,7 +343,7 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
     private List<AbstractClient> attachReceivers(Destination destination, int receiverCount, String username, String password) throws Exception {
         ArgumentMap arguments = new ArgumentMap();
         arguments.put(Argument.BROKER, getRouteEndpoint(defaultAddressSpace).toString());
-        arguments.put(Argument.TIMEOUT, "60");
+        arguments.put(Argument.TIMEOUT, "180");
         arguments.put(Argument.CONN_SSL, "true");
         arguments.put(Argument.USERNAME, username);
         arguments.put(Argument.PASSWORD, password);
