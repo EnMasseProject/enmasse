@@ -453,7 +453,7 @@ objects:
               initialDelaySeconds: 60
             name: forwarder
             ports:
-            - containerPort: 8080
+            - containerPort: 8088
               name: health
             resources:
               limits:
@@ -687,7 +687,7 @@ objects:
               initialDelaySeconds: 60
             name: forwarder
             ports:
-            - containerPort: 8080
+            - containerPort: 8088
               name: health
             resources:
               limits:

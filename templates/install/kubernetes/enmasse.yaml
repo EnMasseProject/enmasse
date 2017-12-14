@@ -456,7 +456,7 @@ items:
       "value": "${ADDRESS}"}, {"name": "CLUSTER_ID", "value": "${NAME}"}, {"name":
       "CERT_DIR", "value": "/etc/enmasse-certs"}], "image": "${TOPIC_FORWARDER_IMAGE}",
       "livenessProbe": {"httpGet": {"path": "/health", "port": "health"}, "initialDelaySeconds":
-      60}, "name": "forwarder", "ports": [{"containerPort": 8080, "name": "health"}],
+      60}, "name": "forwarder", "ports": [{"containerPort": 8088, "name": "health"}],
       "resources": {"limits": {"memory": "128Mi"}, "requests": {"memory": "128Mi"}},
       "volumeMounts": [{"mountPath": "/etc/enmasse-certs", "name": "broker-internal-cert",
       "readOnly": true}]}], "volumes": [{"emptyDir": { }, "name": "vol-${NAME}"},
@@ -530,7 +530,7 @@ items:
       "value": "${ADDRESS}"}, {"name": "CLUSTER_ID", "value": "${NAME}"}, {"name":
       "CERT_DIR", "value": "/etc/enmasse-certs"}], "image": "${TOPIC_FORWARDER_IMAGE}",
       "livenessProbe": {"httpGet": {"path": "/health", "port": "health"}, "initialDelaySeconds":
-      60}, "name": "forwarder", "ports": [{"containerPort": 8080, "name": "health"}],
+      60}, "name": "forwarder", "ports": [{"containerPort": 8088, "name": "health"}],
       "resources": {"limits": {"memory": "128Mi"}, "requests": {"memory": "128Mi"}},
       "volumeMounts": [{"mountPath": "/etc/enmasse-certs", "name": "broker-internal-cert",
       "readOnly": true}]}], "volumes": [{"name": "vol-${NAME}", "persistentVolumeClaim":
