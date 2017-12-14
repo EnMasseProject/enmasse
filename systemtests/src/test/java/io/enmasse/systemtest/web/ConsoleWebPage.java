@@ -439,9 +439,11 @@ public class ConsoleWebPage {
         List<WebElement> elements = content.findElements(By.className("list-group-item"));
         List<ConnectionWebItem> connectionItems = new ArrayList<>();
         for (WebElement element : elements) {
-            ConnectionWebItem item = new ConnectionWebItem(element);
-            Logging.log.info("Got connection: " + item.getName());
-            connectionItems.add(item);
+            if (!element.getAttribute("class").contains("disabled")) {
+                ConnectionWebItem item = new ConnectionWebItem(element);
+                Logging.log.info("Got connection: " + item.getName());
+                connectionItems.add(item);
+            }
         }
         return connectionItems;
     }
