@@ -8,7 +8,7 @@ messages. Currently, {ProductName} supports 4 different address types:
 * Direct anycast addresses
 * Direct broadcast addresses
 
-See the link:common/address-model.adoc[address model] for details.
+See the <<address_model>> for details.
 {ProductName} also comes with a console that you can use for managing
 addresses. You can get the console URL by running the following command:
 
