@@ -29,5 +29,4 @@ mkdir -p certs
 
 You can modify the client code to use this cert to verify the server connection.
 
-Have a look at http://enmasse.io/documentation/master/messaging_app_developer/#connecting[connecting
-to {ProductName}] for more client examples.
+Have a look at <<connecting>> for more client examples.
