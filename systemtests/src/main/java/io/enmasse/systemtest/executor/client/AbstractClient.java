@@ -18,24 +18,25 @@ public abstract class AbstractClient {
     private final Object lock = new Object();
     private final int DEFAULT_ASYNC_TIMEOUT = 120000;
     private final int DEFAULT_SYNC_TIMEOUT = 60000;
-
+    protected ArrayList<Argument> allowedArgs = new ArrayList<>();
     private Executor executor;
     private ClientType clientType;
     private JsonArray messages = new JsonArray();
     private ArrayList<String> arguments = new ArrayList<>();
-    protected ArrayList<Argument> allowedArgs = new ArrayList<>();
 
     /**
      * Constructor of abstract client
+     *
      * @param clientType type of client
      */
-    public AbstractClient(ClientType clientType){
+    public AbstractClient(ClientType clientType) {
         this.clientType = clientType;
         this.fillAllowedArgs();
     }
 
     /**
      * Get of messages
+     *
      * @return Json array of messages;
      */
     public JsonArray getMessages() {
@@ -44,6 +45,7 @@ public abstract class AbstractClient {
 
     /**
      * Return type of client
+     *
      * @return type of client
      */
     public ClientType getClientType() {
@@ -51,7 +53,6 @@ public abstract class AbstractClient {
     }
 
     /**
-     *
      * @param clientType
      */
     public void setClientType(ClientType clientType) {
@@ -60,18 +61,19 @@ public abstract class AbstractClient {
 
     /**
      * Set arguments of client
+     *
      * @param args string array of arguments
      */
-    public void setArguments(ArgumentMap args){
+    public void setArguments(ArgumentMap args) {
         arguments.clear();
         args = transformArguments(args);
-        for(Argument arg : args.getArguments()){
-            if(validateArgument(arg)) {
-                for(String value : args.getValues(arg)){
+        for (Argument arg : args.getArguments()) {
+            if (validateArgument(arg)) {
+                for (String value : args.getValues(arg)) {
                     arguments.add(arg.command());
                     arguments.add(value);
                 }
-            }else{
+            } else {
                 Logging.log.warn(String.format("Argument '%s' is not allowed for '%s'",
                         arg.command(),
                         this.getClass().getSimpleName()));
@@ -81,10 +83,11 @@ public abstract class AbstractClient {
 
     /**
      * Validates that client support this arg
+     *
      * @param arg argument to validate
      * @return true if argument is supported
      */
-    private boolean validateArgument(Argument arg){
+    private boolean validateArgument(Argument arg) {
         return this.allowedArgs.contains(arg);
     }
 
@@ -96,6 +99,7 @@ public abstract class AbstractClient {
     /**
      * Method for modify argument, when client has special address type
      * or connection options etc...
+     *
      * @param args argument map of arguments
      * @return modified map of arguments
      */
@@ -103,6 +107,7 @@ public abstract class AbstractClient {
 
     /**
      * Method modify executable command of client
+     *
      * @param executableCommand command
      * @return list of commands
      */
@@ -110,6 +115,7 @@ public abstract class AbstractClient {
 
     /**
      * Run clients
+     *
      * @param timeout kill timeout in ms
      * @return true if command end with exit code 0
      */
@@ -136,9 +142,10 @@ public abstract class AbstractClient {
 
     /**
      * Merge command and arguments
+     *
      * @return merged array of command and args
      */
-    private ArrayList<String> prepareCommand(){
+    private ArrayList<String> prepareCommand() {
         ArrayList<String> command = new ArrayList<>(arguments);
         ArrayList<String> executableCommand = new ArrayList<>();
         executableCommand.addAll(transformExecutableCommand(ClientType.getCommand(clientType)));
@@ -148,47 +155,56 @@ public abstract class AbstractClient {
 
     /**
      * Run client async
+     *
      * @return future of exit status of client
      */
-    public Future<Boolean> runAsync(){
+    public Future<Boolean> runAsync() {
         return Executors.newSingleThreadExecutor().submit(() -> runClient(DEFAULT_ASYNC_TIMEOUT));
     }
 
     /**
      * Run client in sync mode
+     *
      * @return exit status of client
      */
-    public boolean run(){
+    public boolean run() {
         return runClient(DEFAULT_SYNC_TIMEOUT);
     }
 
     /**
      * Run client in sync mode with timeout
+     *
      * @param timeout kill timeout in ms
      * @return exit status of client
      */
-    public boolean run(int timeout){
+    public boolean run(int timeout) {
         return runClient(timeout);
     }
 
     /**
      * Method for stop client
      */
-    public void stop(){
-        executor.stop();
+    public void stop() {
+        try {
+            executor.stop();
+        } catch (Exception ex) {
+            Logging.log.warn("Client stop raise exception: " + ex.getMessage());
+        }
     }
 
     /**
      * Method for parse string output to json array of messages
+     *
      * @param data string data output
      */
-    private void parseToJson(String data){
+    private void parseToJson(String data) {
         if (data != null) {
             for (String line : data.split(System.getProperty("line.separator"))) {
                 if (!Objects.equals(line, "") && !line.trim().isEmpty()) {
                     try {
                         messages.add(new JsonObject(line));
-                    }catch(Exception ex){}
+                    } catch (Exception ex) {
+                    }
                 }
             }
         }
@@ -200,22 +216,23 @@ public abstract class AbstractClient {
 
     /**
      * Base broker transformation to user:password@[ip/hostname]:port
+     *
      * @param args argument map
      * @return argument map
      */
-    protected ArgumentMap basicBrokerTransformation(ArgumentMap args){
+    protected ArgumentMap basicBrokerTransformation(ArgumentMap args) {
         String username;
         String password;
         String broker;
-        if(args.getValues(Argument.BROKER) != null){
+        if (args.getValues(Argument.BROKER) != null) {
             broker = args.getValues(Argument.BROKER).get(0);
             args.remove(Argument.BROKER);
 
-            if(args.getValues(Argument.USERNAME) != null){
+            if (args.getValues(Argument.USERNAME) != null) {
                 username = args.getValues(Argument.USERNAME).get(0);
                 args.remove(Argument.USERNAME);
 
-                if(args.getValues(Argument.PASSWORD) != null){
+                if (args.getValues(Argument.PASSWORD) != null) {
                     password = args.getValues(Argument.PASSWORD).get(0);
                     args.remove(Argument.PASSWORD);
 
@@ -237,12 +254,13 @@ public abstract class AbstractClient {
 
     /**
      * Broker url transformation to amqp[s]://user:password@broker:port/address
+     *
      * @param args argument map
      * @return argument map
      */
-    protected ArgumentMap brokerUrlTranformation(ArgumentMap args){
+    protected ArgumentMap brokerUrlTranformation(ArgumentMap args) {
         args = basicBrokerTransformation(args);
-        if(args.getValues(Argument.BROKER) != null){
+        if (args.getValues(Argument.BROKER) != null) {
             String protocol = args.getValues(Argument.CONN_SSL) != null ? "amqps://" : "amqp://";
             args.put(Argument.BROKER_URL,
                     String.format("%s%s/%s", protocol, args.getValues(Argument.BROKER).get(0),
@@ -260,12 +278,13 @@ public abstract class AbstractClient {
     /**
      * Broker java transformation to --broker broker:port
      * --conn-username user --conn-password password --address address
+     *
      * @param args argument map
      * @return argument map
      */
-    protected ArgumentMap javaBrokerTransformation(ArgumentMap args, ClientType type){
-        if(args.getValues(Argument.CONN_SSL) != null){
-            if(clientType == ClientType.CLI_JAVA_PROTON_JMS_SENDER
+    protected ArgumentMap javaBrokerTransformation(ArgumentMap args, ClientType type) {
+        if (args.getValues(Argument.CONN_SSL) != null) {
+            if (clientType == ClientType.CLI_JAVA_PROTON_JMS_SENDER
                     || clientType == ClientType.CLI_JAVA_PROTON_JMS_RECEIVER)
                 args.put(Argument.BROKER, "amqps://" + args.getValues(Argument.BROKER).get(0));
             args.put(Argument.CONN_SSL_TRUST_ALL, "true");

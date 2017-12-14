@@ -90,8 +90,12 @@ public enum Argument {
     ACTION("--action"),
     PROCESS_REPLY_TO("--process-reply-to"),
     RECV_LISTEN("--recv-listen"),
-    RECV_LISTEN_PORT("--recv-listen-port")
-    ;
+    RECV_LISTEN_PORT("--recv-listen-port"),
+
+    //Connector opts
+    OBJECT_CONTROL("--obj-ctrl"),
+    SENDER_COUNT("--sender-count"),
+    RECEIVER_COUNT("--receiver-count");
 
     private String command;
 
@@ -101,6 +105,7 @@ public enum Argument {
 
     /**
      * Gets command for external client
+     *
      * @return string command
      */
     public String command() {
