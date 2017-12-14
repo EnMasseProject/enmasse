@@ -8,7 +8,6 @@ import java.util.List;
 
 public class ConnectionWebItem extends WebItem implements Comparable {
 
-    private List<WebElement> additionalsInfo;
     private String name;
     private int sendersCount;
     private int receiversCount;
