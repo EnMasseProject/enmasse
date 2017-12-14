@@ -1,6 +1,7 @@
 package io.enmasse.systemtest.web;
 
 
+import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.Destination;
 import io.enmasse.systemtest.TestBaseWithDefault;
 import io.enmasse.systemtest.executor.client.AbstractClient;
@@ -19,6 +20,8 @@ import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static org.hamcrest.CoreMatchers.is;
@@ -64,16 +67,21 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
 
         consoleWebPage.createAddressesWebConsole(addresses.toArray(new Destination[0]));
         assertThat(consoleWebPage.getAddressItems().size(), is(addressCount));
-        consoleWebPage.addAddressesFilter(FilterType.TYPE, "queue");
-        assertThat(consoleWebPage.getAddressItems().size(), is(addressCount / 2));
 
-        consoleWebPage.removeFilterByType("queue");
+        consoleWebPage.addAddressesFilter(FilterType.TYPE, AddressType.QUEUE.toString());
+        List<AddressWebItem> items = consoleWebPage.getAddressItems();
+        assertThat(items.size(), is(addressCount / 2)); //assert correct count
+        assertAddressType(items, AddressType.QUEUE); //assert correct type
+
+        consoleWebPage.removeFilterByType(AddressType.QUEUE.toString());
         assertThat(consoleWebPage.getAddressItems().size(), is(addressCount));
 
-        consoleWebPage.addAddressesFilter(FilterType.TYPE, "topic");
-        assertThat(consoleWebPage.getAddressItems().size(), is(addressCount / 2));
+        consoleWebPage.addAddressesFilter(FilterType.TYPE, AddressType.TOPIC.toString());
+        items = consoleWebPage.getAddressItems();
+        assertThat(items.size(), is(addressCount / 2)); //assert correct count
+        assertAddressType(items, AddressType.TOPIC); //assert correct type
 
-        consoleWebPage.removeFilterByType("topic");
+        consoleWebPage.removeFilterByType(AddressType.TOPIC.toString());
         assertThat(consoleWebPage.getAddressItems().size(), is(addressCount));
     }
 
@@ -82,17 +90,29 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
         ArrayList<Destination> addresses = generateQueueTopicList("via-web", IntStream.range(0, addressCount));
         consoleWebPage.createAddressesWebConsole(addresses.toArray(new Destination[0]));
 
-        consoleWebPage.addAddressesFilter(FilterType.NAME, "web");
-        assertEquals(addressCount, consoleWebPage.getAddressItems().size());
+        String subText = "web";
+        consoleWebPage.addAddressesFilter(FilterType.NAME, subText);
+        List<AddressWebItem> items = consoleWebPage.getAddressItems();
+        assertEquals(addressCount, items.size());
+        assertAddressName(items, subText);
 
-        consoleWebPage.addAddressesFilter(FilterType.NAME, "via");
-        assertEquals(addressCount, consoleWebPage.getAddressItems().size());
+        subText = "via";
+        consoleWebPage.addAddressesFilter(FilterType.NAME, subText);
+        items = consoleWebPage.getAddressItems();
+        assertEquals(addressCount, items.size());
+        assertAddressName(items, subText);
 
-        consoleWebPage.removeFilterByName("web");
-        assertEquals(addressCount, consoleWebPage.getAddressItems().size());
+        subText = "web";
+        consoleWebPage.removeFilterByName(subText);
+        items = consoleWebPage.getAddressItems();
+        assertEquals(addressCount, items.size());
+        assertAddressName(items, subText);
 
-        consoleWebPage.addAddressesFilter(FilterType.NAME, "queue");
-        assertEquals(addressCount / 2, consoleWebPage.getAddressItems().size());
+        subText = "queue";
+        consoleWebPage.addAddressesFilter(FilterType.NAME, subText);
+        items = consoleWebPage.getAddressItems();
+        assertEquals(addressCount / 2, items.size());
+        assertAddressName(items, subText);
 
         consoleWebPage.clearAllFilters();
         assertEquals(addressCount, consoleWebPage.getAddressItems().size());
@@ -188,35 +208,21 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
         consoleWebPage.createAddressesWebConsole(queue);
         consoleWebPage.openConnectionsPageWebConsole();
 
-        List<RheaClientReceiver> receivers = new ArrayList<>();
         int receiverCount = 5;
-
-        ArgumentMap arguments = new ArgumentMap();
-        arguments.put(Argument.BROKER, getRouteEndpoint(defaultAddressSpace).toString());
-        arguments.put(Argument.TIMEOUT, "60");
-        arguments.put(Argument.CONN_SSL, "true");
-        arguments.put(Argument.USERNAME, username);
-        arguments.put(Argument.PASSWORD, password);
-        arguments.put(Argument.LOG_MESSAGES, "json");
-        arguments.put(Argument.ADDRESS, queue.getAddress());
-
-        for (int i = 0; i < receiverCount; i++) {
-            RheaClientReceiver rec = new RheaClientReceiver();
-            rec.setArguments(arguments);
-            rec.runAsync();
-            receivers.add(rec);
-        }
-
-        Thread.sleep(15000);
+        List<AbstractClient> receivers = attachReceivers(queue, receiverCount);
 
         consoleWebPage.addConnectionsFilter(FilterType.ENCRYPTED, "unencrypted");
-        assertThat(consoleWebPage.getConnectionItems().size(), is(receiverCount));
+        List<ConnectionWebItem> items = consoleWebPage.getConnectionItems();
+        assertThat(items.size(), is(receiverCount));
+        assertConnectionUnencrypted(items);
 
         consoleWebPage.clearAllFilters();
         assertThat(consoleWebPage.getConnectionItems().size(), is(receiverCount));
 
         consoleWebPage.addConnectionsFilter(FilterType.ENCRYPTED, "encrypted");
-        assertThat(consoleWebPage.getConnectionItems().size(), is(0));
+        items = consoleWebPage.getConnectionItems();
+        assertThat(items.size(), is(0));
+        assertConnectionEncrypted(items);
 
         receivers.forEach(AbstractClient::stop);
     }
@@ -275,5 +281,53 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
         }
 
         return receivers;
+    }
+
+    private List<AbstractClient> attachReceivers(Destination destination, int receiversCount) throws Exception {
+        List<AbstractClient> receivers = new ArrayList<>();
+        int receiverCount = 5;
+
+        ArgumentMap arguments = new ArgumentMap();
+        arguments.put(Argument.BROKER, getRouteEndpoint(defaultAddressSpace).toString());
+        arguments.put(Argument.TIMEOUT, "60");
+        arguments.put(Argument.CONN_SSL, "true");
+        arguments.put(Argument.USERNAME, username);
+        arguments.put(Argument.PASSWORD, password);
+        arguments.put(Argument.LOG_MESSAGES, "json");
+        arguments.put(Argument.ADDRESS, destination.getAddress());
+
+        for (int i = 0; i < receiverCount; i++) {
+            RheaClientReceiver rec = new RheaClientReceiver();
+            rec.setArguments(arguments);
+            rec.runAsync();
+            receivers.add(rec);
+        }
+
+        Thread.sleep(15000); //wait for attached
+        return receivers;
+    }
+
+    private void assertAddressType(List<AddressWebItem> allItems, AddressType type) {
+        assertThat(getAddressProperty(allItems, (item -> item.getType().contains(type.toString()))).size(), is(allItems.size()));
+    }
+
+    private void assertAddressName(List<AddressWebItem> allItems, String subString) {
+        assertThat(getAddressProperty(allItems, (item -> item.getName().contains(subString))).size(), is(allItems.size()));
+    }
+
+    private void assertConnectionEncrypted(List<ConnectionWebItem> allItems) {
+        assertThat(getConnectionProperty(allItems, (item -> item.isEncrypted())).size(), is(allItems.size()));
+    }
+
+    private void assertConnectionUnencrypted(List<ConnectionWebItem> allItems) {
+        assertThat(getConnectionProperty(allItems, (item -> !item.isEncrypted())).size(), is(allItems.size()));
+    }
+
+    private List<ConnectionWebItem> getConnectionProperty(List<ConnectionWebItem> allItems, Predicate<ConnectionWebItem> f) {
+        return allItems.stream().filter(f).collect(Collectors.toList());
+    }
+
+    private List<AddressWebItem> getAddressProperty(List<AddressWebItem> allItems, Predicate<AddressWebItem> f) {
+        return allItems.stream().filter(f).collect(Collectors.toList());
     }
 }
