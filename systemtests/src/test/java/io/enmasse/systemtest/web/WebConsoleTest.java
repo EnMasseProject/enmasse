@@ -283,10 +283,7 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
         return receivers;
     }
 
-    private List<AbstractClient> attachReceivers(Destination destination, int receiversCount) throws Exception {
-        List<AbstractClient> receivers = new ArrayList<>();
-        int receiverCount = 5;
-
+    private List<AbstractClient> attachReceivers(Destination destination, int receiverCount) throws Exception {
         ArgumentMap arguments = new ArgumentMap();
         arguments.put(Argument.BROKER, getRouteEndpoint(defaultAddressSpace).toString());
         arguments.put(Argument.TIMEOUT, "60");
@@ -296,6 +293,7 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
         arguments.put(Argument.LOG_MESSAGES, "json");
         arguments.put(Argument.ADDRESS, destination.getAddress());
 
+        List<AbstractClient> receivers = new ArrayList<>();
         for (int i = 0; i < receiverCount; i++) {
             RheaClientReceiver rec = new RheaClientReceiver();
             rec.setArguments(arguments);
