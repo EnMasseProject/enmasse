@@ -21,7 +21,7 @@ public class AddressWebItem extends WebItem implements Comparable<AddressWebItem
         this.checkBox = item.findElement(By.className("list-view-pf-checkbox"));
         this.name = item.findElement(By.className("list-group-item-heading")).getText();
         this.type = item.findElement(By.className("list-group-item-text")).getText();
-        this.additionalsInfo = getAdditionalsInfo();
+        this.readAdditionalInfo();
         this.sendersCount = getCountOfAdditionalInfoItem("Senders");
         this.receiversCount = getCountOfAdditionalInfoItem("Receivers");
         this.messagesIn = getCountOfAdditionalInfoItem("Messages In");

@@ -4,8 +4,6 @@ package io.enmasse.systemtest.web;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 
-import java.util.List;
-
 public class ConnectionWebItem extends WebItem implements Comparable {
 
     private String name;
@@ -18,7 +16,7 @@ public class ConnectionWebItem extends WebItem implements Comparable {
     public ConnectionWebItem(WebElement item) {
         this.webItem = item;
         this.name = item.findElement(By.className("list-group-item-heading")).getText();
-        this.additionalsInfo = getAdditionalsInfo();
+        this.readAdditionalInfo();
         this.sendersCount = getCountOfAdditionalInfoItem("Senders");
         this.receiversCount = getCountOfAdditionalInfoItem("Receivers");
         this.messagesIn = getCountOfAdditionalInfoItem("Messages In");

@@ -412,7 +412,8 @@ public class ConsoleWebPage {
         List<AddressWebItem> addressItems = new ArrayList<>();
         for (WebElement element : elements) {
             AddressWebItem item = new AddressWebItem(element);
-            Logging.log.info("Got address: " + item.getName());
+            Logging.log.info(String.format("Got address: %s, senders: %d, receivers %d",
+                    item.getName(), item.getSendersCount(), item.getReceiversCount()));
             addressItems.add(item);
         }
         return addressItems;
@@ -441,7 +442,8 @@ public class ConsoleWebPage {
         for (WebElement element : elements) {
             if (!element.getAttribute("class").contains("disabled")) {
                 ConnectionWebItem item = new ConnectionWebItem(element);
-                Logging.log.info("Got connection: " + item.getName());
+                Logging.log.info(String.format("Got connection: %s, senders: %d, receivers: %d",
+                        item.getName(), item.getSendersCount(), item.getReceiversCount()));
                 connectionItems.add(item);
             }
         }
