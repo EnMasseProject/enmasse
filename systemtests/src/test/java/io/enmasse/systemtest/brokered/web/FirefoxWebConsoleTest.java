@@ -55,6 +55,11 @@ public class FirefoxWebConsoleTest extends BrokeredWebConsoleTest {
     }
 
     @Test
+    public void testFilterConnectionsByUser() throws Exception {
+        doTestFilterConnectionsByUser();
+    }
+
+    @Test
     public void testSortConnectionsByHostname() throws Exception {
         doTestSortConnectionsByHostname();
     }

@@ -19,6 +19,12 @@ package io.enmasse.systemtest;
 import com.google.common.collect.Ordering;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
+import io.enmasse.systemtest.executor.client.AbstractClient;
+import io.enmasse.systemtest.executor.client.Argument;
+import io.enmasse.systemtest.executor.client.ArgumentMap;
+import io.enmasse.systemtest.executor.client.rhea.RheaClientConnector;
+import io.enmasse.systemtest.executor.client.rhea.RheaClientReceiver;
+import io.enmasse.systemtest.executor.client.rhea.RheaClientSender;
 import io.enmasse.systemtest.mqtt.MqttClient;
 import io.enmasse.systemtest.mqtt.MqttClientFactory;
 import io.vertx.core.http.HttpMethod;
@@ -439,6 +445,126 @@ public abstract class TestBase extends SystemTestRunListener {
         return addresses;
     }
 
+    /**
+     * attach N receivers into one address with default username/password
+     */
+    protected List<AbstractClient> attachReceivers(AddressSpace addressSpace, Destination destination, int receiverCount) throws Exception {
+        return attachReceivers(addressSpace, destination, receiverCount, username, password);
+    }
+
+    /**
+     * attach N receivers into one address with own username/password
+     */
+    protected List<AbstractClient> attachReceivers(AddressSpace addressSpace, Destination destination, int receiverCount, String username, String password) throws Exception {
+        ArgumentMap arguments = new ArgumentMap();
+        arguments.put(Argument.BROKER, getRouteEndpoint(addressSpace).toString());
+        arguments.put(Argument.TIMEOUT, "120");
+        arguments.put(Argument.CONN_SSL, "true");
+        arguments.put(Argument.USERNAME, username);
+        arguments.put(Argument.PASSWORD, password);
+        arguments.put(Argument.LOG_MESSAGES, "json");
+        arguments.put(Argument.ADDRESS, destination.getAddress());
+
+        List<AbstractClient> receivers = new ArrayList<>();
+        for (int i = 0; i < receiverCount; i++) {
+            RheaClientReceiver rec = new RheaClientReceiver();
+            rec.setArguments(arguments);
+            rec.runAsync();
+            receivers.add(rec);
+        }
+
+        Thread.sleep(15000); //wait for attached
+        return receivers;
+    }
+
+    /**
+     * attach senders to destinations (for N-th destination is attached N+1 senders)
+     */
+    protected List<AbstractClient> attachSenders(AddressSpace addressSpace, List<Destination> destinations) throws Exception {
+        List<AbstractClient> senders = new ArrayList<>();
+
+        ArgumentMap arguments = new ArgumentMap();
+        arguments.put(Argument.BROKER, getRouteEndpoint(addressSpace).toString());
+        arguments.put(Argument.TIMEOUT, "60");
+        arguments.put(Argument.CONN_SSL, "true");
+        arguments.put(Argument.USERNAME, username);
+        arguments.put(Argument.PASSWORD, password);
+        arguments.put(Argument.LOG_MESSAGES, "json");
+        arguments.put(Argument.MSG_CONTENT, "msg no.%d");
+        arguments.put(Argument.COUNT, "30");
+        arguments.put(Argument.DURATION, "30");
+
+        for (int i = 0; i < destinations.size(); i++) {
+            arguments.put(Argument.ADDRESS, destinations.get(i).getAddress());
+            for (int j = 0; j < i + 1; j++) {
+                AbstractClient send = new RheaClientSender();
+                send.setArguments(arguments);
+                send.runAsync();
+                senders.add(send);
+            }
+        }
+
+        return senders;
+    }
+
+    /**
+     * attach receivers to destinations (for N-th destination is attached N+1 senders)
+     */
+    protected List<AbstractClient> attachReceivers(AddressSpace addressSpace, List<Destination> destinations) throws Exception {
+        List<AbstractClient> receivers = new ArrayList<>();
+
+        ArgumentMap arguments = new ArgumentMap();
+        arguments.put(Argument.BROKER, getRouteEndpoint(addressSpace).toString());
+        arguments.put(Argument.TIMEOUT, "60");
+        arguments.put(Argument.CONN_SSL, "true");
+        arguments.put(Argument.USERNAME, username);
+        arguments.put(Argument.PASSWORD, password);
+        arguments.put(Argument.LOG_MESSAGES, "json");
+
+        for (int i = 0; i < destinations.size(); i++) {
+            arguments.put(Argument.ADDRESS, destinations.get(i).getAddress());
+            for (int j = 0; j < i + 1; j++) {
+                AbstractClient rec = new RheaClientReceiver();
+                rec.setArguments(arguments);
+                rec.runAsync();
+                receivers.add(rec);
+            }
+        }
+
+        return receivers;
+    }
+
+    /**
+     * create M connections with N receivers and K senders
+     */
+    protected AbstractClient attachConnector(AddressSpace addressSpace, Destination destination, int connectionCount,
+                                             int senderCount, int receiverCount) throws Exception {
+        ArgumentMap arguments = new ArgumentMap();
+        arguments.put(Argument.BROKER, getRouteEndpoint(addressSpace).toString());
+        arguments.put(Argument.TIMEOUT, "120");
+        arguments.put(Argument.CONN_SSL, "true");
+        arguments.put(Argument.USERNAME, username);
+        arguments.put(Argument.PASSWORD, password);
+        arguments.put(Argument.OBJECT_CONTROL, "CESR");
+        arguments.put(Argument.ADDRESS, destination.getAddress());
+        arguments.put(Argument.COUNT, Integer.toString(connectionCount));
+        arguments.put(Argument.SENDER_COUNT, Integer.toString(senderCount));
+        arguments.put(Argument.RECEIVER_COUNT, Integer.toString(receiverCount));
+
+        AbstractClient cli = new RheaClientConnector();
+        cli.setArguments(arguments);
+        cli.runAsync();
+
+        return cli;
+    }
+
+    /**
+     * stop all clients from list of Abstract clients
+     */
+    protected void stopClients(List<AbstractClient> clients) {
+        Logging.log.info("Stopping clients...");
+        clients.forEach(client -> client.stop());
+    }
 
     //================================================================================================
     //==================================== Asserts methods ===========================================
