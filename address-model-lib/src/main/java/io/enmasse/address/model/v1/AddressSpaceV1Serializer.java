@@ -54,20 +54,22 @@ class AddressSpaceV1Serializer extends JsonSerializer<AddressSpace> {
         spec.put(Fields.TYPE, addressSpace.getType().getName());
         spec.put(Fields.PLAN, addressSpace.getPlan().getName());
 
-        ArrayNode endpoints = spec.putArray(Fields.ENDPOINTS);
-        for (io.enmasse.address.model.Endpoint endpoint : addressSpace.getEndpoints()) {
-            ObjectNode e = endpoints.addObject();
-            e.put(Fields.NAME, endpoint.getName());
-            e.put(Fields.SERVICE, endpoint.getService());
-            endpoint.getHost().ifPresent(h -> e.put(Fields.HOST, h));
-            if (endpoint.getPort() != 0) {
-                e.put(Fields.PORT, endpoint.getPort());
+        if (addressSpace.getEndpoints() != null) {
+            ArrayNode endpoints = spec.putArray(Fields.ENDPOINTS);
+            for (io.enmasse.address.model.Endpoint endpoint : addressSpace.getEndpoints()) {
+                ObjectNode e = endpoints.addObject();
+                e.put(Fields.NAME, endpoint.getName());
+                e.put(Fields.SERVICE, endpoint.getService());
+                endpoint.getHost().ifPresent(h -> e.put(Fields.HOST, h));
+                if (endpoint.getPort() != 0) {
+                    e.put(Fields.PORT, endpoint.getPort());
+                }
+                endpoint.getCertProvider().ifPresent(provider -> {
+                    ObjectNode p = e.putObject(Fields.CERT_PROVIDER);
+                    p.put(Fields.NAME, provider.getName());
+                    p.put(Fields.SECRET_NAME, provider.getSecretName());
+                });
             }
-            endpoint.getCertProvider().ifPresent(provider -> {
-                ObjectNode p = e.putObject(Fields.CERT_PROVIDER);
-                p.put(Fields.NAME, provider.getName());
-                p.put(Fields.SECRET_NAME, provider.getSecretName());
-            });
         }
 
         ObjectNode authenticationService = spec.putObject(Fields.AUTHENTICATION_SERVICE);

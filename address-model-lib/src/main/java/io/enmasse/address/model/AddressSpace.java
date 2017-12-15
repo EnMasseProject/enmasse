@@ -59,7 +59,10 @@ public class AddressSpace {
     }
 
     public List<io.enmasse.address.model.Endpoint> getEndpoints() {
-        return Collections.unmodifiableList(endpointList);
+        if (endpointList != null) {
+            return Collections.unmodifiableList(endpointList);
+        }
+        return null;
     }
 
     public Plan getPlan() {
@@ -125,7 +128,11 @@ public class AddressSpace {
             this.name = addressSpace.getName();
             this.namespace = addressSpace.getNamespace();
             this.type = addressSpace.getType();
-            this.endpointList = new ArrayList<>(addressSpace.getEndpoints());
+            if (addressSpace.getEndpoints() != null) {
+                this.endpointList = new ArrayList<>(addressSpace.getEndpoints());
+            } else {
+                this.endpointList = null;
+            }
             this.plan = addressSpace.getPlan();
             this.status = new Status(addressSpace.getStatus());
             this.authenticationService = addressSpace.getAuthenticationService();
@@ -160,7 +167,11 @@ public class AddressSpace {
         }
 
         public Builder setEndpointList(List<io.enmasse.address.model.Endpoint> endpointList) {
-            this.endpointList = new ArrayList<>(endpointList);
+            if (endpointList != null) {
+                this.endpointList = new ArrayList<>(endpointList);
+            } else {
+                this.endpointList = null;
+            }
             return this;
         }
 
@@ -193,7 +204,6 @@ public class AddressSpace {
             Objects.requireNonNull(name, "name not set");
             Objects.requireNonNull(namespace, "namespace not set");
             Objects.requireNonNull(type, "type not set");
-            Objects.requireNonNull(endpointList);
             Objects.requireNonNull(authenticationService, "authentication service not set");
             Objects.requireNonNull(plan, "plan not set");
             Objects.requireNonNull(status, "status not set");

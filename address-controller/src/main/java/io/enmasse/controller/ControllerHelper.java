@@ -120,20 +120,21 @@ public class ControllerHelper {
             List<String> availableServices = addressSpace.getType().getServiceNames();
             Map<String, CertProvider> serviceCertProviders = new HashMap<>();
 
-            List<Endpoint> endpoints = new ArrayList<>(addressSpace.getEndpoints());
-            Iterator<Endpoint> it = endpoints.iterator();
-            while (it.hasNext()) {
-                Endpoint endpoint = it.next();
-                if (!availableServices.contains(endpoint.getService())) {
-                    log.info("Unknown service {} for endpoint {}, removing", endpoint.getService(), endpoint.getName());
-                    it.remove();
-                } else {
-                    endpoint.getCertProvider().ifPresent(certProvider -> serviceCertProviders.put(endpoint.getService(), certProvider));
+            List<Endpoint> endpoints = null;
+            if (addressSpace.getEndpoints() != null) {
+                endpoints = new ArrayList<>(addressSpace.getEndpoints());
+                Iterator<Endpoint> it = endpoints.iterator();
+                while (it.hasNext()) {
+                    Endpoint endpoint = it.next();
+                    if (!availableServices.contains(endpoint.getService())) {
+                        log.info("Unknown service {} for endpoint {}, removing", endpoint.getService(), endpoint.getName());
+                        it.remove();
+                    } else {
+                        endpoint.getCertProvider().ifPresent(certProvider -> serviceCertProviders.put(endpoint.getService(), certProvider));
+                    }
                 }
-            }
-
+            } else {
             // Step 2: Create endpoints if the user didnt supply any
-            if (endpoints.isEmpty()) {
                 endpoints = availableServices.stream()
                         .map(service -> new Endpoint.Builder().setName(service).setService(service).build())
                         .collect(Collectors.toList());
