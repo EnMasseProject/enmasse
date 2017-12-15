@@ -6,11 +6,6 @@ import io.enmasse.systemtest.Destination;
 import io.enmasse.systemtest.KeycloakCredentials;
 import io.enmasse.systemtest.TestBaseWithDefault;
 import io.enmasse.systemtest.executor.client.AbstractClient;
-import io.enmasse.systemtest.executor.client.Argument;
-import io.enmasse.systemtest.executor.client.ArgumentMap;
-import io.enmasse.systemtest.executor.client.rhea.RheaClientConnector;
-import io.enmasse.systemtest.executor.client.rhea.RheaClientReceiver;
-import io.enmasse.systemtest.executor.client.rhea.RheaClientSender;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -258,8 +253,8 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
 
         } catch (Exception ex) {
             removeUser(defaultAddressSpace, pavel.getUsername());
-            receiversTest.forEach(AbstractClient::stop);
-            receiversPavel.forEach(AbstractClient::stop);
+            stopClients(receiversTest);
+            stopClients(receiversPavel);
         }
 
     }
@@ -285,58 +280,8 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
     //============================ Help methods ==================================================
     //============================================================================================
 
-    private List<AbstractClient> attachSenders(List<Destination> destinations) throws Exception {
-        List<AbstractClient> senders = new ArrayList<>();
 
-        ArgumentMap arguments = new ArgumentMap();
-        arguments.put(Argument.BROKER, getRouteEndpoint(defaultAddressSpace).toString());
-        arguments.put(Argument.TIMEOUT, "60");
-        arguments.put(Argument.CONN_SSL, "true");
-        arguments.put(Argument.USERNAME, username);
-        arguments.put(Argument.PASSWORD, password);
-        arguments.put(Argument.LOG_MESSAGES, "json");
-        arguments.put(Argument.MSG_CONTENT, "msg no.%d");
-        arguments.put(Argument.COUNT, "30");
-        arguments.put(Argument.DURATION, "30");
-
-        for (int i = 0; i < destinations.size(); i++) {
-            arguments.put(Argument.ADDRESS, destinations.get(i).getAddress());
-            for (int j = 0; j < i + 1; j++) {
-                AbstractClient send = new RheaClientSender();
-                send.setArguments(arguments);
-                send.runAsync();
-                senders.add(send);
-            }
-        }
-
-        return senders;
-    }
-
-    private List<AbstractClient> attachReceivers(List<Destination> destinations) throws Exception {
-        List<AbstractClient> receivers = new ArrayList<>();
-
-        ArgumentMap arguments = new ArgumentMap();
-        arguments.put(Argument.BROKER, getRouteEndpoint(defaultAddressSpace).toString());
-        arguments.put(Argument.TIMEOUT, "60");
-        arguments.put(Argument.CONN_SSL, "true");
-        arguments.put(Argument.USERNAME, username);
-        arguments.put(Argument.PASSWORD, password);
-        arguments.put(Argument.LOG_MESSAGES, "json");
-
-        for (int i = 0; i < destinations.size(); i++) {
-            arguments.put(Argument.ADDRESS, destinations.get(i).getAddress());
-            for (int j = 0; j < i + 1; j++) {
-                AbstractClient rec = new RheaClientReceiver();
-                rec.setArguments(arguments);
-                rec.runAsync();
-                receivers.add(rec);
-            }
-        }
-
-        return receivers;
-    }
-
-    private List<AbstractClient> attachClients(List<Destination> destinations) throws Exception {
+    protected List<AbstractClient> attachClients(List<Destination> destinations) throws Exception {
         List<AbstractClient> clients = new ArrayList<>();
         for (Destination destination : destinations) {
             clients.add(attachConnector(destination, 1, 6, 1));
@@ -349,27 +294,6 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
         return clients;
     }
 
-    private AbstractClient attachConnector(Destination destination, int connectionCount,
-                                           int senderCount, int receiverCount) throws Exception {
-
-        ArgumentMap arguments = new ArgumentMap();
-        arguments.put(Argument.BROKER, getRouteEndpoint(defaultAddressSpace).toString());
-        arguments.put(Argument.TIMEOUT, "120");
-        arguments.put(Argument.CONN_SSL, "true");
-        arguments.put(Argument.USERNAME, username);
-        arguments.put(Argument.PASSWORD, password);
-        arguments.put(Argument.OBJECT_CONTROL, "CESR");
-        arguments.put(Argument.ADDRESS, destination.getAddress());
-        arguments.put(Argument.COUNT, Integer.toString(connectionCount));
-        arguments.put(Argument.SENDER_COUNT, Integer.toString(senderCount));
-        arguments.put(Argument.RECEIVER_COUNT, Integer.toString(receiverCount));
-
-        AbstractClient cli = new RheaClientConnector();
-        cli.setArguments(arguments);
-        cli.runAsync();
-
-        return cli;
-    }
 
     private void assertAddressType(List<AddressWebItem> allItems, AddressType type) {
         assertThat(getAddressProperty(allItems, (item -> item.getType().contains(type.toString()))).size(), is(allItems.size()));

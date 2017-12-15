@@ -146,5 +146,28 @@ public abstract class TestBaseWithDefault extends TestBase {
     protected List<AbstractClient> attachReceivers(Destination destination, int receiverCount, String username, String password) throws Exception {
         return attachReceivers(defaultAddressSpace, destination, receiverCount, username, password);
     }
+
+    /**
+     * attach senders to destinations
+     */
+    protected List<AbstractClient> attachSenders(List<Destination> destinations) throws Exception {
+        return attachSenders(defaultAddressSpace, destinations);
+    }
+
+    /**
+     * attach receivers to destinations
+     */
+    protected List<AbstractClient> attachReceivers(List<Destination> destinations) throws Exception {
+        return attachReceivers(defaultAddressSpace, destinations);
+    }
+    
+    /**
+     * create M connections with N receivers and K senders
+     */
+    protected AbstractClient attachConnector(Destination destination, int connectionCount,
+                                             int senderCount, int receiverCount) throws Exception {
+        return attachConnector(defaultAddressSpace, destination, connectionCount, senderCount, receiverCount);
+    }
+
 }
 
