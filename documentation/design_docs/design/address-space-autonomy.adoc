@@ -1,0 +1,35 @@
+== why
+
+Today EnMasse assumes widely granted privileges in order to operate. It is also opinionated in the
+sense that it assumes full control over the namespace of the address space. In many deployments, it
+might make sense to colocate an EnMasse address space with other projects. 
+
+It is desireable that the address controller can be restricted to only view address space configs
+rather than configmaps, limiting the privileges to custom resources.
+
+It is desireable that the address controller does not require special privileges to manage
+namespaces.
+
+In the event that the standard address space will support shared infrastructure, it is also useful
+for the infrastructure to be aware of the address spaces it needs to support. Having the resources
+available within the namespace makes that easier.
+
+== what/how
+
+* Custom resource definitions will be created for address spaces
+* Address controller will require privileges to the AddressSpace resource type cluster-wide
+* 'namespace' field in AddressSpace is removed since it's not used but provided by CRD anyway
+* Address-controller will impersonate creator of address space resource type to create needed
+  components.
+* Component lifetimes are tied to 
+
+What are the components involved in this change and how will they change?
+Describe any new components introduced by this change
+
+== testing
+
+What is the test plan for the feature/change?
+
+== documentation
+
+What documentation will be created for this feature?
