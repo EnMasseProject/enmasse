@@ -336,32 +336,6 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
         return receivers;
     }
 
-    private List<AbstractClient> attachReceivers(Destination destination, int receiverCount) throws Exception {
-        return attachReceivers(destination, receiverCount, username, password);
-    }
-
-    private List<AbstractClient> attachReceivers(Destination destination, int receiverCount, String username, String password) throws Exception {
-        ArgumentMap arguments = new ArgumentMap();
-        arguments.put(Argument.BROKER, getRouteEndpoint(defaultAddressSpace).toString());
-        arguments.put(Argument.TIMEOUT, "180");
-        arguments.put(Argument.CONN_SSL, "true");
-        arguments.put(Argument.USERNAME, username);
-        arguments.put(Argument.PASSWORD, password);
-        arguments.put(Argument.LOG_MESSAGES, "json");
-        arguments.put(Argument.ADDRESS, destination.getAddress());
-
-        List<AbstractClient> receivers = new ArrayList<>();
-        for (int i = 0; i < receiverCount; i++) {
-            RheaClientReceiver rec = new RheaClientReceiver();
-            rec.setArguments(arguments);
-            rec.runAsync();
-            receivers.add(rec);
-        }
-
-        Thread.sleep(15000); //wait for attached
-        return receivers;
-    }
-
     private List<AbstractClient> attachClients(List<Destination> destinations) throws Exception {
         List<AbstractClient> clients = new ArrayList<>();
         for (Destination destination : destinations) {
@@ -414,7 +388,7 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
     }
 
     private void assertConnectionUsers(List<ConnectionWebItem> allItems, String userName) {
-        assertThat(getConnectionProperty(allItems, (item -> item.getType().contains(userName))).size(), is(allItems.size()));
+        assertThat(getConnectionProperty(allItems, (item -> item.getUser().contains(userName))).size(), is(allItems.size()));
     }
 
     private List<ConnectionWebItem> getConnectionProperty(List<ConnectionWebItem> allItems, Predicate<ConnectionWebItem> f) {

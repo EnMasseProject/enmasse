@@ -19,6 +19,10 @@ package io.enmasse.systemtest;
 import com.google.common.collect.Ordering;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
+import io.enmasse.systemtest.executor.client.AbstractClient;
+import io.enmasse.systemtest.executor.client.Argument;
+import io.enmasse.systemtest.executor.client.ArgumentMap;
+import io.enmasse.systemtest.executor.client.rhea.RheaClientReceiver;
 import io.enmasse.systemtest.mqtt.MqttClient;
 import io.enmasse.systemtest.mqtt.MqttClientFactory;
 import io.vertx.core.http.HttpMethod;
@@ -439,6 +443,37 @@ public abstract class TestBase extends SystemTestRunListener {
         return addresses;
     }
 
+    /**
+     * attach N receivers into one address with default username/password
+     */
+    protected List<AbstractClient> attachReceivers(AddressSpace addressSpace, Destination destination, int receiverCount) throws Exception {
+        return attachReceivers(addressSpace, destination, receiverCount, username, password);
+    }
+
+    /**
+     * attach N receivers into one address with own username/password
+     */
+    protected List<AbstractClient> attachReceivers(AddressSpace addressSpace, Destination destination, int receiverCount, String username, String password) throws Exception {
+        ArgumentMap arguments = new ArgumentMap();
+        arguments.put(Argument.BROKER, getRouteEndpoint(addressSpace).toString());
+        arguments.put(Argument.TIMEOUT, "180");
+        arguments.put(Argument.CONN_SSL, "true");
+        arguments.put(Argument.USERNAME, username);
+        arguments.put(Argument.PASSWORD, password);
+        arguments.put(Argument.LOG_MESSAGES, "json");
+        arguments.put(Argument.ADDRESS, destination.getAddress());
+
+        List<AbstractClient> receivers = new ArrayList<>();
+        for (int i = 0; i < receiverCount; i++) {
+            RheaClientReceiver rec = new RheaClientReceiver();
+            rec.setArguments(arguments);
+            rec.runAsync();
+            receivers.add(rec);
+        }
+
+        Thread.sleep(15000); //wait for attached
+        return receivers;
+    }
 
     //================================================================================================
     //==================================== Asserts methods ===========================================

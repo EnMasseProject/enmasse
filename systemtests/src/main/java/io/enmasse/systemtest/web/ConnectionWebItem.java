@@ -63,11 +63,17 @@ public class ConnectionWebItem extends WebItem implements Comparable {
 
     public String getSomething() {
         throw new IllegalStateException("method is not implemented");
-//        return type.split(" +")[0]; //TODO! in web-console filled as "not available"
+//        String[] types = type.split(" +");
+//        StringBuilder something = new StringBuilder();
+//        for (int i = 0; i < types.length - 1; i++) {
+//            something.append(types[i]);
+//        }
+//        return something.toString(); //TODO! in web-console filled as "not available"
     }
 
     public String getUser() {
-        return type.split(" +")[1];
+        String[] types = type.split(" +");
+        return types[types.length - 1];
     }
 
     public String getType() {

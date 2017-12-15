@@ -16,6 +16,7 @@
 package io.enmasse.systemtest;
 
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
+import io.enmasse.systemtest.executor.client.AbstractClient;
 import io.enmasse.systemtest.mqtt.MqttClientFactory;
 import org.junit.After;
 import org.junit.Before;
@@ -130,6 +131,20 @@ public abstract class TestBaseWithDefault extends TestBase {
      */
     protected void deleteAddresses(Destination... destinations) throws Exception {
         deleteAddresses(defaultAddressSpace, destinations);
+    }
+
+    /**
+     * attach N receivers into one address with default username/password
+     */
+    protected List<AbstractClient> attachReceivers(Destination destination, int receiverCount) throws Exception {
+        return attachReceivers(defaultAddressSpace, destination, receiverCount, username, password);
+    }
+
+    /**
+     * attach N receivers into one address with own username/password
+     */
+    protected List<AbstractClient> attachReceivers(Destination destination, int receiverCount, String username, String password) throws Exception {
+        return attachReceivers(defaultAddressSpace, destination, receiverCount, username, password);
     }
 }
 
