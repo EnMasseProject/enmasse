@@ -80,4 +80,10 @@ public class AddressWebItem extends WebItem implements Comparable<AddressWebItem
     public int compareTo(AddressWebItem o) {
         return name.compareTo(o.name);
     }
+
+    @Override
+    public String toString() {
+        return String.format("name: %s, senders: %d, receivers: %d, Messages In: %d, Messages Out: %d, Messages stored: %d",
+                this.name, this.sendersCount, this.receiversCount, this.messagesIn, this.messagesOut, this.messagesStored);
+    }
 }

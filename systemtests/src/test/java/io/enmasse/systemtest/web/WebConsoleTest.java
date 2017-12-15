@@ -144,7 +144,7 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
         consoleWebPage.sortItems(SortType.RECEIVERS, false);
         assertSorted(consoleWebPage.getAddressItems(), true, Comparator.comparingInt(AddressWebItem::getReceiversCount));
 
-        receivers.forEach(AbstractClient::stop);
+        stopClients(receivers);
 
         List<AbstractClient> senders = attachSenders(addresses);
 
@@ -156,7 +156,7 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
         consoleWebPage.sortItems(SortType.SENDERS, false);
         assertSorted(consoleWebPage.getAddressItems(), true, Comparator.comparingInt(AddressWebItem::getSendersCount));
 
-        senders.forEach(AbstractClient::stop);
+        stopClients(senders);
     }
 
     public void doTestSortConnectionsBySenders() throws Exception {
@@ -174,7 +174,7 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
         consoleWebPage.sortItems(SortType.SENDERS, false);
         assertSorted(consoleWebPage.getConnectionItems(), true, Comparator.comparingInt(ConnectionWebItem::getSendersCount));
 
-        senders.forEach(AbstractClient::stop);
+        stopClients(senders);
     }
 
     public void doTestSortConnectionsByReceivers() throws Exception {
@@ -191,7 +191,7 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
         consoleWebPage.sortItems(SortType.RECEIVERS, false);
         assertSorted(consoleWebPage.getConnectionItems(), true, Comparator.comparingInt(ConnectionWebItem::getReceiversCount));
 
-        clients.forEach(AbstractClient::stop);
+        stopClients(clients);
     }
 
 
@@ -216,7 +216,7 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
         assertThat(items.size(), is(0));
         assertConnectionEncrypted(items);
 
-        receivers.forEach(AbstractClient::stop);
+        stopClients(receivers);
     }
 
     public void doTestFilterConnectionsByUser() throws Exception {
@@ -260,6 +260,25 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
 
     }
 
+    public void doTestFilterConnectionsByHostname() throws Exception {
+        int addressCount = 2;
+        ArrayList<Destination> addresses = generateQueueTopicList("via-web", IntStream.range(0, addressCount));
+        consoleWebPage.createAddressesWebConsole(addresses.toArray(new Destination[0]));
+        consoleWebPage.openConnectionsPageWebConsole();
+
+        List<AbstractClient> clients = attachClients(addresses);
+
+        String hostname = consoleWebPage.getConnectionItems().get(0).getName();
+
+        consoleWebPage.addConnectionsFilter(FilterType.HOSTNAME, hostname);
+        assertThat(consoleWebPage.getConnectionItems().size(), is(1));
+
+        consoleWebPage.clearAllFilters();
+        assertThat(consoleWebPage.getConnectionItems().size(), is(6));
+
+        stopClients(clients);
+    }
+
     public void doTestSortConnectionsByHostname() throws Exception {
         int addressCount = 2;
         ArrayList<Destination> addresses = generateQueueTopicList("via-web", IntStream.range(0, addressCount));
@@ -274,7 +293,7 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
         consoleWebPage.sortItems(SortType.HOSTNAME, false);
         assertSorted(consoleWebPage.getConnectionItems(), true, Comparator.comparing(ConnectionWebItem::getName));
 
-        clients.forEach(AbstractClient::stop);
+        stopClients(clients);
     }
 
     //============================================================================================
