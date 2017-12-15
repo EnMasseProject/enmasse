@@ -53,6 +53,11 @@ public class ChromeWebConsoleTest extends BrokeredWebConsoleTest {
     }
 
     //@Test
+    public void testFilterConnectionsByHostname() throws Exception {
+        doTestFilterConnectionsByHostname();
+    }
+
+    //@Test
     public void testSortConnectionsByHostname() throws Exception {
         doTestSortConnectionsByHostname();
     }

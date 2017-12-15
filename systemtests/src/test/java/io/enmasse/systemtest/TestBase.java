@@ -563,7 +563,7 @@ public abstract class TestBase extends SystemTestRunListener {
      */
     protected void stopClients(List<AbstractClient> clients) {
         Logging.log.info("Stopping clients...");
-        clients.forEach(client -> client.stop());
+        clients.forEach(AbstractClient::stop);
     }
 
     //================================================================================================
