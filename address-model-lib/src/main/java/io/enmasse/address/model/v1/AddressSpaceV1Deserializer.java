@@ -95,6 +95,8 @@ class AddressSpaceV1Deserializer extends JsonDeserializer<AddressSpace> {
                 }
                 builder.appendEndpoint(b.build());
             }
+        } else {
+            builder.setEndpointList(null);
         }
 
         if (spec.hasNonNull(Fields.AUTHENTICATION_SERVICE)) {

@@ -184,6 +184,41 @@ public class SerializationTest {
         assertThat(addressSpace, is(deserialized));
     }
 
+    @Test
+    public void testSerializeAddressSpaceWithNullEndpoints() throws IOException {
+        AddressSpace addressSpace = new AddressSpace.Builder()
+                .setName("myspace")
+                .setNamespace("mynamespace")
+                .setPlan(new StandardAddressSpaceType().getDefaultPlan())
+                .setType(new StandardAddressSpaceType())
+                .setStatus(new Status(true).appendMessage("hello"))
+                .setEndpointList(null)
+                .build();
+
+        String serialized = CodecV1.getMapper().writeValueAsString(addressSpace);
+        AddressSpace deserialized = CodecV1.getMapper().readValue(serialized, AddressSpace.class);
+
+        assertThat(deserialized.getName(), is(addressSpace.getName()));
+        assertThat(deserialized.getNamespace(), is(addressSpace.getNamespace()));
+        assertThat(deserialized.getType().getName(), is(addressSpace.getType().getName()));
+        assertThat(deserialized.getPlan().getName(), is(addressSpace.getPlan().getName()));
+        assertThat(deserialized.getStatus().isReady(), is(addressSpace.getStatus().isReady()));
+        assertThat(deserialized.getStatus().getMessages(), is(addressSpace.getStatus().getMessages()));
+        assertNull(deserialized.getEndpoints());
+        assertThat(addressSpace, is(deserialized));
+
+        AddressSpace copied = new AddressSpace.Builder(deserialized).build();
+        assertThat(copied.getName(), is(addressSpace.getName()));
+        assertThat(copied.getNamespace(), is(addressSpace.getNamespace()));
+        assertThat(copied.getType().getName(), is(addressSpace.getType().getName()));
+        assertThat(copied.getPlan().getName(), is(addressSpace.getPlan().getName()));
+        assertThat(copied.getStatus().isReady(), is(addressSpace.getStatus().isReady()));
+        assertThat(copied.getStatus().getMessages(), is(addressSpace.getStatus().getMessages()));
+        assertNull(copied.getEndpoints());
+
+        assertThat(addressSpace, is(copied));
+    }
+
     @Test(expected = RuntimeException.class)
     public void testDeserializeAddressSpaceWithMissingAuthServiceValues() throws IOException {
         String json = "{" +
