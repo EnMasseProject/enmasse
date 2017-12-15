@@ -458,7 +458,7 @@ public abstract class TestBase extends SystemTestRunListener {
     protected List<AbstractClient> attachReceivers(AddressSpace addressSpace, Destination destination, int receiverCount, String username, String password) throws Exception {
         ArgumentMap arguments = new ArgumentMap();
         arguments.put(Argument.BROKER, getRouteEndpoint(addressSpace).toString());
-        arguments.put(Argument.TIMEOUT, "180");
+        arguments.put(Argument.TIMEOUT, "120");
         arguments.put(Argument.CONN_SSL, "true");
         arguments.put(Argument.USERNAME, username);
         arguments.put(Argument.PASSWORD, password);
