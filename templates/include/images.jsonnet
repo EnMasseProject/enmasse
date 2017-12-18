@@ -49,4 +49,10 @@ local registry = std.extVar("REGISTRY");
 
   keycloak_controller::
     self.image(std.extVar("KEYCLOAK_CONTROLLER_IMAGE")),
+
+  prometheus::
+    "prom/prometheus:v2.0.0",
+
+  grafana::
+    "enmasseproject/grafana:latest"
 }

@@ -1,4 +1,5 @@
 local common = import "common.jsonnet";
+local images = import "images.jsonnet";
 
 {
   standard_broker_config(name)::
@@ -90,7 +91,7 @@ local common = import "common.jsonnet";
           "containers": [
             {
               "name": "prometheus",
-              "image": "prom/prometheus:v2.0.0",
+              "image": images.prometheus,
               "ports": [
                 common.container_port("prometheus", 9090),
               ],
