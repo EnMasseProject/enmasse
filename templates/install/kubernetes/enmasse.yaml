@@ -119,25 +119,26 @@ items:
       "labels": {"app": "enmasse", "component": "standard-controller"}, "name": "standard-controller"},
       "spec": {"replicas": 1, "template": {"metadata": {"labels": {"app": "enmasse",
       "component": "standard-controller"}}, "spec": {"containers": [{"env": [{"name":
-      "ADDRESS_SPACE", "value": "${ADDRESS_SPACE}"}, {"name": "AUTHENTICATION_SERVICE_HOST",
-      "value": "${AUTHENTICATION_SERVICE_HOST}"}, {"name": "AUTHENTICATION_SERVICE_PORT",
-      "value": "${AUTHENTICATION_SERVICE_PORT}"}, {"name": "AUTHENTICATION_SERVICE_CA_CERT",
-      "value": "${AUTHENTICATION_SERVICE_CA_CERT}"}, {"name": "AUTHENTICATION_SERVICE_CLIENT_SECRET",
-      "value": "${AUTHENTICATION_SERVICE_CLIENT_SECRET}"}, {"name": "AUTHENTICATION_SERVICE_SASL_INIT_HOST",
-      "value": "${AUTHENTICATION_SERVICE_SASL_INIT_HOST}"}, {"name": "MESSAGING_SECRET",
-      "value": "${MESSAGING_SECRET}"}, {"name": "TEMPLATE_DIR", "value": "/enmasse-templates"}],
-      "image": "${STANDARD_CONTROLLER_IMAGE}", "livenessProbe": {"httpGet": {"path":
-      "/health", "port": "http", "scheme": "HTTP"}, "initialDelaySeconds": 30}, "name":
-      "standard-controller", "ports": [{"containerPort": 8080, "name": "http"}], "readinessProbe":
+      "CERT_DIR", "value": "/etc/enmasse-certs"}, {"name": "ADDRESS_SPACE", "value":
+      "${ADDRESS_SPACE}"}, {"name": "AUTHENTICATION_SERVICE_HOST", "value": "${AUTHENTICATION_SERVICE_HOST}"},
+      {"name": "AUTHENTICATION_SERVICE_PORT", "value": "${AUTHENTICATION_SERVICE_PORT}"},
+      {"name": "AUTHENTICATION_SERVICE_CA_CERT", "value": "${AUTHENTICATION_SERVICE_CA_CERT}"},
+      {"name": "AUTHENTICATION_SERVICE_CLIENT_SECRET", "value": "${AUTHENTICATION_SERVICE_CLIENT_SECRET}"},
+      {"name": "AUTHENTICATION_SERVICE_SASL_INIT_HOST", "value": "${AUTHENTICATION_SERVICE_SASL_INIT_HOST}"},
+      {"name": "MESSAGING_SECRET", "value": "${MESSAGING_SECRET}"}, {"name": "TEMPLATE_DIR",
+      "value": "/enmasse-templates"}], "image": "${STANDARD_CONTROLLER_IMAGE}", "livenessProbe":
       {"httpGet": {"path": "/health", "port": "http", "scheme": "HTTP"}, "initialDelaySeconds":
-      30}, "resources": {"limits": {"memory": "128Mi"}, "requests": {"memory": "128Mi"}},
-      "volumeMounts": [{"mountPath": "/etc/enmasse-certs", "name": "standard-controller-internal-cert",
-      "readOnly": true}, {"mountPath": "/enmasse-templates", "name": "templates",
-      "readOnly": false}]}], "serviceAccount": "${ADDRESS_SPACE_ADMIN_SA}", "volumes":
-      [{"name": "standard-controller-internal-cert", "secret": {"secretName": "standard-controller-internal-cert"}},
-      {"configMap": {"name": "enmasse-storage-templates"}, "name": "templates"}]}}}},
-      {"apiVersion": "v1", "kind": "Service", "metadata": {"annotations": {"addressSpace":
-      "${ADDRESS_SPACE}", "io.enmasse.endpointPort": "amqps", "service.alpha.openshift.io/dependencies":
+      30}, "name": "standard-controller", "ports": [{"containerPort": 8080, "name":
+      "http"}], "readinessProbe": {"httpGet": {"path": "/health", "port": "http",
+      "scheme": "HTTP"}, "initialDelaySeconds": 30}, "resources": {"limits": {"memory":
+      "128Mi"}, "requests": {"memory": "128Mi"}}, "volumeMounts": [{"mountPath": "/etc/enmasse-certs",
+      "name": "standard-controller-internal-cert", "readOnly": true}, {"mountPath":
+      "/enmasse-templates", "name": "templates", "readOnly": false}]}], "serviceAccount":
+      "${ADDRESS_SPACE_ADMIN_SA}", "volumes": [{"name": "standard-controller-internal-cert",
+      "secret": {"secretName": "standard-controller-internal-cert"}}, {"configMap":
+      {"name": "enmasse-storage-templates"}, "name": "templates"}]}}}}, {"apiVersion":
+      "v1", "kind": "Service", "metadata": {"annotations": {"addressSpace": "${ADDRESS_SPACE}",
+      "io.enmasse.endpointPort": "amqps", "service.alpha.openshift.io/dependencies":
       "[{\"kind\": \"Service\", \"name\": \"queue-scheduler\", \"namespace\": \"\"},
       {\"kind\": \"Service\", \"name\": \"configuration\", \"namespace\": \"\"}, {\"kind\":
       \"Service\", \"name\": \"ragent\", \"namespace\": \"\"}, {\"kind\": \"Service\",
