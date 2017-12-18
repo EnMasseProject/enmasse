@@ -43,6 +43,8 @@ public class Main {
                 .map(File::new)
                 .orElse(null);
 
+        String certDir = getEnvOrThrow(env, "CERT_DIR");
+
         Kubernetes kubernetes = new KubernetesHelper(new DefaultOpenShiftClient(), templateDir);
         AddressClusterGenerator clusterGenerator = new TemplateAddressClusterGenerator(kubernetes, templateOptions);
 
@@ -55,7 +57,7 @@ public class Main {
                 kubernetes.createAddressApi(),
                 kubernetes,
                 clusterGenerator,
-                null,
+                certDir,
                 eventLogger);
 
         log.info("Deploying address space controller for " + addressSpace);

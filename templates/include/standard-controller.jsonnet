@@ -33,6 +33,7 @@ local certSecretName = "standard-controller-internal-cert";
                 "image": "${STANDARD_CONTROLLER_IMAGE}",
                 "name": "standard-controller",
                 "env": [
+                  common.env("CERT_DIR", "/etc/enmasse-certs"),
                   common.env("ADDRESS_SPACE", "${ADDRESS_SPACE}"),
                   common.env("AUTHENTICATION_SERVICE_HOST", "${AUTHENTICATION_SERVICE_HOST}"),
                   common.env("AUTHENTICATION_SERVICE_PORT", "${AUTHENTICATION_SERVICE_PORT}"),

@@ -32,6 +32,8 @@ objects:
         spec:
           containers:
           - env:
+            - name: CERT_DIR
+              value: /etc/enmasse-certs
             - name: ADDRESS_SPACE
               value: ${ADDRESS_SPACE}
             - name: AUTHENTICATION_SERVICE_HOST
