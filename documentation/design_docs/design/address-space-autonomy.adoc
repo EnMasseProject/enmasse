@@ -1,35 +1,47 @@
+= Making use of CRDs, removing REST API and reducing required privileges of EnMasse
+
 == why
 
-Today EnMasse assumes widely granted privileges in order to operate. It is also opinionated in the
-sense that it assumes full control over the namespace of the address space. In many deployments, it
-might make sense to colocate an EnMasse address space with other projects. 
+EnMasse assumes widely granted privileges to standard resources in order to operate. It is also
+opinionated in the sense that it assumes full control over the namespace of the address space. In
+many deployments, such as Eclipse Hono, it is useful to colocate an EnMasse address space.
 
 It is desireable that the address controller can be restricted to only view address space configs
-rather than configmaps, limiting the privileges to custom resources.
+rather than configmaps, limiting the privileges to custom resources only, which is less likely to
+conflict with operations requirements.
 
 It is desireable that the address controller does not require special privileges to manage
 namespaces.
 
 In the event that the standard address space will support shared infrastructure, it is also useful
-for the infrastructure to be aware of the address spaces it needs to support. Having the resources
+for the infrastructure to be aware of the address spaces it needs to support. Having those resources
 available within the namespace makes that easier.
 
 == what/how
 
 * Custom resource definitions will be created for address spaces
+* The current configmap-based approach will continue to exist and be used for OpenShift/Kubernetes
+  versions < 3.7
+* Current REST API will be made as an addon available in 3.6 and below. In 3.7 it is replaced with auto-generated REST API based on CRDs
+* Service broker implementation will be split into its own module and made as an addon
 * Address controller will require privileges to the AddressSpace resource type cluster-wide
 * 'namespace' field in AddressSpace is removed since it's not used but provided by CRD anyway
 * Address-controller will impersonate creator of address space resource type to create needed
-  components.
-* Component lifetimes are tied to 
+  components in his name.
+* Component lifetimes are tied to the address spaces it serves (setting them as ownerreferences)
 
-What are the components involved in this change and how will they change?
-Describe any new components introduced by this change
+Single-tenant mode is essentially just creating an address space config within the same namespaces
+as the global infrastructure. Deleting it will remove only the address-space specific
+infrastructure.
 
 == testing
 
-What is the test plan for the feature/change?
+Tests can use the same REST API for creating address spaces, but they need in addition to create the
+namespace where the address space resource is to be created.
 
 == documentation
 
-What documentation will be created for this feature?
+Instead of using curl + REST API, documentation should use the command line tool which should work with
+the CRDs.
+
+Admin guide must be updated to install CRD types.
