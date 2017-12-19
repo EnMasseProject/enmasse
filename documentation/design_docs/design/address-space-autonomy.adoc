@@ -6,8 +6,8 @@ EnMasse assumes widely granted privileges to standard resources in order to oper
 opinionated in the sense that it assumes full control over the namespace of the address space. In
 many deployments, such as Eclipse Hono, it is useful to colocate an EnMasse address space.
 
-It is desireable that the address controller can be restricted to only view address space configs
-rather than configmaps, limiting the privileges to custom resources only, which is less likely to
+It is desireable that the address controller can be restricted to only view address space custom
+resource definitions rather than configmaps, limiting the privileges to custom resources only, which is less likely to
 conflict with operations requirements.
 
 It is desireable that the address controller does not require special privileges to manage
@@ -25,6 +25,7 @@ available within the namespace makes that easier.
 * Current REST API will be made as an addon available in 3.6 and below. In 3.7 it is replaced with auto-generated REST API based on CRDs
 * Service broker implementation will be split into its own module and made as an addon
 * Address controller will require privileges to the AddressSpace resource type cluster-wide
+* Address space resources will now be created within the namespace where it should be created
 * 'namespace' field in AddressSpace is removed since it's not used but provided by CRD anyway
 * Address-controller will impersonate creator of address space resource type to create needed
   components in his name.
