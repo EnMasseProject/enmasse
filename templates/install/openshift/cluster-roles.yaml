@@ -1,6 +1,6 @@
 apiVersion: v1
 items:
-- apiVersion: v1
+- apiVersion: rbac.authorization.k8s.io/v1beta1
   kind: ClusterRole
   metadata:
     name: enmasse-address-admin
@@ -17,7 +17,7 @@ items:
     - watch
     - update
     - patch
-- apiVersion: v1
+- apiVersion: rbac.authorization.k8s.io/v1beta1
   kind: ClusterRole
   metadata:
     name: enmasse-namespace-admin
@@ -82,7 +82,7 @@ items:
     - get
     - list
     - watch
-- apiVersion: v1
+- apiVersion: rbac.authorization.k8s.io/v1beta1
   kind: ClusterRole
   metadata:
     name: event-reporter
