@@ -1,8 +1,8 @@
 {
   // Role for address administrators allowed to create/delete addresses
-  address_admin_role(apiVersion)::
+  address_admin_role::
     {
-      "apiVersion": apiVersion,
+      "apiVersion": "rbac.authorization.k8s.io/v1beta1",
       "kind": "ClusterRole",
       "metadata": {
         "name": "enmasse-address-admin"
@@ -29,9 +29,9 @@
     },
 
   // Role for address-controller service account
-  namespace_admin_role(apiVersion)::
+  namespace_admin_role::
     {
-      "apiVersion": apiVersion,
+      "apiVersion": "rbac.authorization.k8s.io/v1beta1",
       "kind": "ClusterRole",
       "metadata": {
         "name": "enmasse-namespace-admin"
@@ -125,9 +125,9 @@
       ]
     },
 
-  event_reporter_role(apiVersion)::
+  event_reporter_role::
     {
-      "apiVersion": apiVersion,
+      "apiVersion": "rbac.authorization.k8s.io/v1beta1",
       "kind": "ClusterRole",
       "metadata": {
         "name": "event-reporter"

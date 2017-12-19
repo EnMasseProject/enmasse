@@ -188,7 +188,7 @@ public class KubernetesHelper implements Kubernetes {
 
     @Override
     public void addSystemImagePullerPolicy(String namespace, AddressSpace addressSpace) {
-        if (client.isAdaptable(OpenShiftClient.class)) {
+        if (isRBACSupported()) {
             String groupName = "system:serviceaccounts:" + addressSpace.getNamespace();
             log.info("Adding system:image-pullers policy for {}", groupName);
             client.roleBindings()
@@ -492,7 +492,7 @@ public class KubernetesHelper implements Kubernetes {
 
     @Override
     public void addAddressSpaceAdminRoleBinding(AddressSpace addressSpace) {
-        if (client.isAdaptable(OpenShiftClient.class)) {
+        if (isRBACSupported()) {
             createRoleBinding("addressspace-admins", addressSpace.getNamespace(), "ClusterRole", "admin", Arrays.asList(
                     new Subject("ServiceAccount", addressControllerSa, namespace)),
                     addressSpace.getCreatedBy());
@@ -532,62 +532,6 @@ public class KubernetesHelper implements Kubernetes {
                     log.warn("Unable to grant event create privileges");
                 }
             }
-        } else if (client.isAdaptable(OpenShiftClient.class)) {
-            String groupName = "system:serviceaccounts:" + namespace;
-            RoleBinding roleBinding = new RoleBindingBuilder()
-                    .editOrNewMetadata()
-                    .withName("enmasse-address-admin")
-                    .withNamespace(namespace)
-                    .endMetadata()
-                    .addToGroupNames(groupName)
-                    .addNewSubject()
-                    .withKind("SystemGroup")
-                    .withName(groupName)
-                    .endSubject()
-                    .withNewRoleRef()
-                    .withName("edit")
-                    .withNamespace(namespace)
-                    .endRoleRef()
-                    .build();
-
-            RoleBinding viewRoleBinding = new RoleBindingBuilder()
-                    .editOrNewMetadata()
-                    .withName("infra-viewers")
-                    .withNamespace(namespace)
-                    .endMetadata()
-                    .addToUserNames("system:serviceaccount:" + namespace + ":default")
-                    .addNewSubject()
-                    .withName("default")
-                    .withNamespace(namespace)
-                    .withKind("ServiceAccount")
-                    .endSubject()
-                    .withNewRoleRef()
-                    .withName("view")
-                    .withKind("ClusterRole")
-                    .endRoleRef()
-                    .build();
-
-            String policyBindingName = ":default";
-
-            Resource<PolicyBinding, DoneablePolicyBinding> bindingResource = client.policyBindings()
-                    .inNamespace(namespace)
-                    .withName(policyBindingName);
-
-
-            PolicyBinding policyBinding = new PolicyBindingBuilder(bindingResource.get())
-                    .addNewRoleBinding()
-                    .withName("enmasse-address-admin")
-                    .withNewRoleBindingLike(roleBinding)
-                    .endRoleBinding()
-                    .endRoleBinding()
-                    .addNewRoleBinding()
-                    .withName("infra-viewers")
-                    .withNewRoleBindingLike(viewRoleBinding)
-                    .endRoleBinding()
-                    .endRoleBinding()
-                    .build();
-
-            bindingResource.replace(policyBinding);
         } else {
             log.info("No support for RBAC, won't add to address-admin role");
         }

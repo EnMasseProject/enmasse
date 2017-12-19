@@ -13,9 +13,9 @@ local roles = import "roles.jsonnet";
     "apiVersion": "v1",
     "kind": "List",
     "items": [
-      roles.address_admin_role("rbac.authorization.k8s.io/v1"),
-      roles.namespace_admin_role("rbac.authorization.k8s.io/v1"),
-      roles.event_reporter_role("rbac.authorization.k8s.io/v1")
+      roles.address_admin_role,
+      roles.namespace_admin_role,
+      roles.event_reporter_role,
     ]
   },
 
