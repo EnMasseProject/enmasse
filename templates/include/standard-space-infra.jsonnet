@@ -21,7 +21,6 @@ local mqttLwt = import "mqtt-lwt.jsonnet";
 local images = import "images.jsonnet";
 local prometheus = import "prometheus.jsonnet";
 local storage = import "storage-template.jsonnet";
-local standardController = import "standard-controller.jsonnet";
 
 {
   template(use_template_configmap)::
@@ -49,7 +48,6 @@ local standardController = import "standard-controller.jsonnet";
     local template_config = (if use_template_configmap then "enmasse-storage-templates" else ""),
 
     "objects": [
-      standardController.deployment(template_config, "authservice-ca"),
       messagingService.internal("${ADDRESS_SPACE}"),
       subserv.service("${ADDRESS_SPACE}"),
       prometheus.standard_broker_config("broker-prometheus-config"),
@@ -60,7 +58,7 @@ local standardController = import "standard-controller.jsonnet";
       mqttLwt.deployment("${ADDRESS_SPACE}", "${MQTT_LWT_IMAGE}"),
       common.ca_secret("authservice-ca", "${AUTHENTICATION_SERVICE_CA_CERT}"),
       common.ca_secret("address-controller-ca", "${ADDRESS_CONTROLLER_CA_CERT}"),
-      admin.deployment("${ADDRESS_SPACE}", "${CONFIGSERV_IMAGE}", "${RAGENT_IMAGE}", "${QUEUE_SCHEDULER_IMAGE}", "${AGENT_IMAGE}", "authservice-ca", "address-controller-ca", "${CONSOLE_SECRET}", "${MESSAGING_SECRET}")
+      admin.deployment("authservice-ca", "address-controller-ca", template_config)
     ] + admin.services("${ADDRESS_SPACE}")
       + (if use_template_configmap then storage_template_configmap else storage_templates),
 

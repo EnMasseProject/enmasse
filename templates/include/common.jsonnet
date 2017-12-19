@@ -198,4 +198,13 @@
     "value": value
   },
 
+  memory_resources(request, limit)::
+  {
+    "requests": {
+      "memory": request
+    },
+    "limits": {
+      "memory": limit
+    }
+  }
 }
