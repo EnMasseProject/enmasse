@@ -100,7 +100,7 @@ public abstract class Kubernetes {
     }
 
     public int getExpectedPods() {
-        return 6;
+        return 5;
     }
 
     public Watch watchPods(String namespace, Watcher<Pod> podWatcher) {
