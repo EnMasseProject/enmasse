@@ -220,7 +220,10 @@ objects:
             name: subserv
         spec:
           containers:
-          - image: ${SUBSERV_IMAGE}
+          - command:
+            - node
+            - /opt/app-root/src/bin/subserv.js
+            image: ${AGENT_IMAGE}
             livenessProbe:
               initialDelaySeconds: 60
               tcpSocket:
@@ -378,6 +381,7 @@ objects:
               value: '5671'
             - name: CERT_DIR
               value: /etc/enmasse-certs
+<<<<<<< HEAD
             - name: PROBE_PORT
               value: '8888'
             image: ${RAGENT_IMAGE}
@@ -411,6 +415,8 @@ objects:
               value: /etc/enmasse-certs
             - name: JAVA_OPTS
               value: -verbose:gc
+=======
+>>>>>>> Merge ragent and subserv directories into agent
             - name: LISTEN_PORT
               value: '55667'
             image: ${QUEUE_SCHEDULER_IMAGE}
@@ -667,6 +673,7 @@ objects:
               prometheus.io/port: '8080'
               prometheus.io/scrape: 'true'
             labels:
+              addresstype: queue
               app: enmasse
               name: ${NAME}
               role: broker
@@ -826,6 +833,7 @@ objects:
               prometheus.io/port: '8080'
               prometheus.io/scrape: 'true'
             labels:
+              addresstype: queue
               app: enmasse
               name: ${NAME}
               role: broker
@@ -971,6 +979,7 @@ objects:
               prometheus.io/port: '8080'
               prometheus.io/scrape: 'true'
             labels:
+              addresstype: topic
               app: enmasse
               name: ${NAME}
               role: broker
@@ -1203,6 +1212,7 @@ objects:
               prometheus.io/port: '8080'
               prometheus.io/scrape: 'true'
             labels:
+              addresstype: topic
               app: enmasse
               name: ${NAME}
               role: broker
@@ -1415,12 +1425,6 @@ objects:
   - description: The docker image to use for the standard controller
     name: STANDARD_CONTROLLER_IMAGE
     value: docker.io/enmasseproject/standard-controller:latest
-  - description: The image to use for the router agent
-    name: RAGENT_IMAGE
-    value: docker.io/enmasseproject/ragent:latest
-  - description: The image to use for the subscription services
-    name: SUBSERV_IMAGE
-    value: docker.io/enmasseproject/subserv:latest
   - description: The image to use for the enmasse agent
     name: AGENT_IMAGE
     value: docker.io/enmasseproject/agent:latest

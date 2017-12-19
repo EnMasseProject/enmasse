@@ -44,6 +44,7 @@ local forwarder = import "forwarder.jsonnet";
               "labels": {
                 "app": "enmasse",
                 "role": "broker",
+                "addresstype": addrtype,
                 "name": "${NAME}"
               },
               "annotations": {

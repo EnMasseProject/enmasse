@@ -16,7 +16,7 @@
 'use strict';
 
 var assert = require('assert');
-var future = require('../future.js');
+var future = require('../lib/future.js');
 
 describe('future', function() {
     it('handles completion before then is called', function (done) {
