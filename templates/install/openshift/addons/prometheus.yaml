@@ -68,4 +68,8 @@ items:
     resources:
       requests:
         storage: 10Gi
+- apiVersion: v1
+  kind: ServiceAccount
+  metadata:
+    name: prometheus-server
 kind: List

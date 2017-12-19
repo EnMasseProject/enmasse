@@ -110,6 +110,15 @@ local images = import "images.jsonnet";
     }
   },
 
+  prometheus_sa::
+  {
+    "apiVersion": "v1",
+    "kind": "ServiceAccount",
+    "metadata": {
+      "name": "prometheus-server"
+    }
+  },
+
   prometheus_config::
   {
     "apiVersion": "v1",
@@ -228,7 +237,8 @@ local images = import "images.jsonnet";
       me.prometheus_deployment,
       me.prometheus_config,
       me.prometheus_service,
-      me.prometheus_pvc
+      me.prometheus_pvc,
+      me.prometheus_sa
     ]
   }
 }
