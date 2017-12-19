@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Red Hat Inc.
+ * Copyright 2017 Red Hat Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,8 @@ function extract_pod_definition (object) {
     var pod = {
         name: object.metadata.name,
         host: object.status.podIP,
-        phase: object.status.phase
+        phase: object.status.phase,
+        annotations: object.metadata.annotations
     };
     for (var i in object.status.conditions) {
         if (object.status.conditions[i].type === 'Ready') {

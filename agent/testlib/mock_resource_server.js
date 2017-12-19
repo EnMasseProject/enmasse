@@ -137,6 +137,17 @@ ResourceServer.prototype.remove_resource = function (resource) {
     }
 };
 
+ResourceServer.prototype.remove_resource_by_name = function (name) {
+    for (var i = 0; i < this.resources.length; i++) {
+        if (this.resources[i].metadata.name === name) {
+            var removed = this.resources[i];
+            this.resources.splice(i, 1);
+            this.emit('deleted', this.externalize(removed));
+            break;
+        }
+    }
+};
+
 function Watcher (parent, response) {
     this.parent = parent;
     this.response = response;
@@ -230,6 +241,12 @@ util.inherits(ConfigMapServer, ResourceServer);
 ConfigMapServer.prototype.add_address_definition = function (def, name) {
     var address = {kind: 'Address', metadata: {name: def.address}, spec:def, status:{}};
     this.add_resource({kind:'ConfigMap', metadata: {name: name || def.address}, data:{'config.json': JSON.stringify(address)}});
+};
+
+ConfigMapServer.prototype.add_address_definitions = function (defs) {
+    for (var i in defs) {
+        this.add_address_definition(defs[i]);
+    }
 };
 
 module.exports.ResourceServer = ResourceServer;

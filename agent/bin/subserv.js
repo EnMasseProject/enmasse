@@ -15,46 +15,13 @@
  */
 'use strict';
 
-var log = require('./log.js').logger();
+var log = require('../lib/log.js').logger();
 var util = require('util');
-var config_service = require('./config_service.js');
-var Promise = require('bluebird');
 var amqp = require('rhea').create_container();
-var create_topic = require('./topic.js');
-var tls_options = require('./tls_options.js');
+var create_topic = require('../lib/topic.js');
+var tls_options = require('../lib/tls_options.js');
 
 var topics = {};
-
-function get_or_create_topic(name) {
-    var topic = topics[name];
-    if (topic === undefined) {
-        topic = create_topic(name);
-        topics[name] = topic;
-    }
-    return topic;
-}
-
-function update_topics(current) {
-    log.debug('updating topics: ' + JSON.stringify(current));
-    current.forEach(function (name) {
-        var topic = topics[name];
-        if (topic === undefined) {
-            log.debug('starting to watch pods for topic ' + name);
-            topic = create_topic(name);
-            topic.watch_pods();
-            topics[name] = topic;
-        } else {
-            log.debug('already watching pods for topic ' + name);
-        }
-    });
-
-    for (var name in topics) {
-        if (!current.some(function (topic_name) { return topic_name === name; })) {
-            topics[name].close();
-            delete topics[name];
-        }
-    }
-}
 
 var SUBCTRL = '$subctrl';
 
@@ -154,13 +121,6 @@ function subreqs(input) {
     );
 }
 
-function is_topic(addr) {
-    return addr.spec.type === 'topic';
-}
-function get_address(addr) {
-    return addr.spec.address;
-}
-
 function handle_control_message(context) {
     log.debug('received message: ' + context.message);
     if (context.message.to === SUBCTRL || (context.receiver.target && context.receiver.target.address === SUBCTRL)) {
@@ -199,26 +159,6 @@ function handle_control_message(context) {
             }
         } catch (e) {
             reject(e, 'amqp:precondition-failed');
-        }
-    } else if (context.message.subject === 'pods') {
-        if (context.receiver.target.address) {
-            var topic = get_or_create_topic(context.receiver.target.address);
-            topic.pods.update(context.message.body);
-        } else {
-            log.warn('Must specify topic as target address for messages with pods as subject');
-        }
-    } else if (context.message.subject === 'enmasse.io/v1/AddressList') {
-        try {
-            var body = JSON.parse(context.message.body);
-            if (body.items === undefined) {
-                update_topics([]);
-            } else if (util.isArray(body.items)) {
-                update_topics(body.items.filter(is_topic).map(get_address));
-            } else {
-                log.error('items field unrecognised in address list: ' + context.message.body);
-            }
-        } catch (e) {
-            log.error('failed to parse addresses: ' + e + '; ' + context.message.body);
         }
     }
 }
@@ -293,8 +233,34 @@ if (process.env.MESSAGING_SERVICE_HOST) {
     });
 }
 
-var conn = config_service.connect(amqp, 'configuration-service');
-if (conn) {
-    log.debug('opening link to configuration service...');
-    conn.open_receiver('v1/addresses');
+
+function is_pod_ready(pod) {
+    return pod.ready === 'True' && pod.phase === 'Running';
 }
+
+var pod_watcher = require('../lib/pod_watcher.js').watch('role=broker,addresstype=topic');
+pod_watcher.on('updated', function (pods) {
+    var by_topic = {};
+    pods.filter(is_pod_ready).forEach(function (pod) {
+        var key = pod.annotations.cluster_id;
+        var list = by_topic[key];
+        if (list === undefined) {
+            list = [];
+            by_topic[key] = list;
+        }
+        list.push(pod);
+    });
+    for (var name in by_topic) {
+        var topic = topics[name];
+        if (topic === undefined) {
+            topic = create_topic(name);
+            topics[name] = topic;
+        }
+        topic.pods.update(by_topic[name]);
+    }
+    for (var name in topics) {
+        if (topics[name].empty()) {
+            delete topics[name];
+        }
+    }
+});

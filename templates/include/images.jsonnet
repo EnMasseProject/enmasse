@@ -29,12 +29,6 @@ local registry = std.extVar("REGISTRY");
   queue_scheduler::
     self.image(std.extVar("QUEUE_SCHEDULER_IMAGE")),
 
-  ragent::
-    self.image(std.extVar("RAGENT_IMAGE")),
-
-  subserv::
-    self.image(std.extVar("SUBSERV_IMAGE")),
-
   agent::
     self.image(std.extVar("AGENT_IMAGE")),
 

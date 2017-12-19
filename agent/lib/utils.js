@@ -57,3 +57,51 @@ module.exports.basic_auth = function (request) {
         }
     }
 }
+
+function self(o) {
+    return o;
+}
+
+module.exports.index = function (a, key, value) {
+    var fk = key || self;
+    var fv = value || self;
+    var m = {};
+    a.forEach(function (i) { m[fk(i)] = fv(i); });
+    return m;
+}
+
+module.exports.values = function (map) {
+    var v = [];
+    for (var k in map) {
+        v.push(map[k]);
+    }
+    return v;
+}
+
+module.exports.separate = function (map, predicate, a, b) {
+    for (var k in map) {
+        var v = map[k];
+        if (predicate(v)) {
+            a[k] = v;
+        } else {
+            b[k] = v;
+        }
+    }
+}
+
+module.exports.difference = function (a, b, equivalent) {
+    var diff = {};
+    for (var k in a) {
+	if (!equivalent(b[k], a[k])) {
+	    diff[k] = a[k];
+	}
+    }
+    return diff;
+}
+
+
+module.exports.match_source_address = function (link, address) {
+    return link && link.local && link.local.attach && link.local.attach.source
+        && link.local.attach.source.value[0].toString() === address;
+}
+

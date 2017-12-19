@@ -22,167 +22,16 @@ var path = require('path');
 var util = require('util');
 var http = require('http');
 
-var Promise = require('bluebird');
 var rhea = require('rhea');
 
-var Ragent = require('../ragent.js');
-var tls_options = require('../tls_options.js');
-
-function MockRouter (name, port, opts) {
-    this.name = name;
-    events.EventEmitter.call(this);
-    var options = {'port':port, container_id:name, properties:{product:'qpid-dispatch-router'}};
-    for (var o in opts) {
-        options[o] = opts[o];
-    }
-    this.connection = rhea.connect(options);
-    this.connection.on('message', this.on_message.bind(this));
-    var self = this;
-    this.connection.on('connection_open', function () { self.emit('connected', self); });
-    this.connection.on('sender_open', function (context) {
-        if (context.sender.source.dynamic) {
-            var id = rhea.generate_uuid();
-            context.sender.set_source({address:id});
-        }
-    });
-    this.objects = {};
-    this.create_object('listener', 'default', {name:'default', host:name, 'port':port, role:'inter-router'});
-}
-
-util.inherits(MockRouter, events.EventEmitter);
-
-function match_source_address(link, address) {
-    return link && link.local && link.local.attach && link.local.attach.source
-        && link.local.attach.source.value[0].toString() === address;
-}
-
-MockRouter.prototype.create_object = function (type, name, attributes)
-{
-    if (this.objects[type] === undefined) {
-        this.objects[type] = {};
-    }
-    this.objects[type][name] = (attributes === undefined) ? {} : attributes;
-    this.objects[type][name].name = name;
-    this.objects[type][name].id = name;
-};
-
-MockRouter.prototype.delete_object = function (type, name)
-{
-    delete this.objects[type][name];
-};
-
-MockRouter.prototype.list_objects = function (type)
-{
-    var results = [];
-    for (var key in this.objects[type]) {
-        results.push(this.objects[type][key]);
-    }
-    return results;
-};
-
-MockRouter.prototype.close = function ()
-{
-    if (this.connection && !this.connection.is_closed()) {
-        this.connection.close();
-        var conn = this.connection;
-        return new Promise(function(resolve, reject) {
-            conn.on('connection_close', resolve);
-        });
-    } else {
-        return Promise.resolve();
-    }
-};
-
-MockRouter.prototype.close_with_error = function (error)
-{
-    if (this.connection && !this.connection.is_closed()) {
-        this.connection.local.close.error = error;
-    }
-    return this.close();
-};
-
-MockRouter.prototype.has_connector_to = function (other) {
-    return this.list_objects('connector').some(function (c) { return c.host === other.name; });
-};
-
-MockRouter.prototype.check_connector_from = function (others) {
-    var self = this;
-    return others.some(function (router) { return router !== self && router.has_connector_to(self); });
-};
-
-function get_attribute_names(objects) {
-    var names = {};
-    for (var i in objects) {
-        for (var f in objects[i]) {
-            names[f] = f;
-        }
-    }
-    return Object.keys(names);
-}
-
-function query_result(names, objects) {
-    var results = [];
-    for (var j in objects) {
-        var record = [];
-        for (var i = 0; i < names.length; i++) {
-            record.push(objects[j][names[i]]);
-        }
-        results.push(record);
-    }
-    return {attributeNames:names, 'results':results};
-}
-
-MockRouter.prototype.on_message = function (context)
-{
-    var request = context.message;
-    var reply_to = request.reply_to;
-    var response = {to: reply_to};
-    if (!(this.special && this.special(request, response, context))) {// the 'special' method when defined lets errors be injected
-        if (request.correlation_id) {
-            response.correlation_id = request.correlation_id;
-        }
-        response.application_properties = {};
-
-        if (request.application_properties.operation === 'CREATE') {
-            response.application_properties.statusCode = 201;
-            this.create_object(request.application_properties.type, request.application_properties.name, request.body);
-        } else if (request.application_properties.operation === 'DELETE') {
-            response.application_properties.statusCode = 204;
-            this.delete_object(request.application_properties.type, request.application_properties.name);
-        } else if (request.application_properties.operation === 'QUERY') {
-            response.application_properties.statusCode = 200;
-            var results = this.list_objects(request.application_properties.entityType);
-            var attributes = request.body.attributeNames;
-            if (!attributes || attributes.length === 0) {
-                attributes = get_attribute_names(results);
-            }
-            response.body = query_result(attributes, results);
-        }
-    }
-
-    var reply_link = context.connection.find_sender(function (s) { return match_source_address(s, reply_to); });
-    if (reply_link) {
-        reply_link.send(response);
-    }
-};
-
-MockRouter.prototype.set_onetime_error_response = function (operation, type, name) {
-    var f = function (request, response) {
-        if ((operation === undefined || request.application_properties.operation === operation)
-            && (type === undefined || (operation === 'QUERY' && request.application_properties.entityType === type) || request.application_properties.type === type)
-            && (name === undefined || request.application_properties.name === name)) {
-            response.application_properties = {};
-            response.application_properties.statusCode = 500;
-            response.application_properties.statusDescription = 'error simulation';
-            response.correlation_id = request.correlation_id;
-            delete this.special;
-            return true;
-        } else {
-            return false;
-        }
-    };
-    this.special = f.bind(this);
-};
+var Ragent = require('../lib/ragent.js');
+var tls_options = require('../lib/tls_options.js');
+var MockRouter = require('../testlib/mock_router.js');
+var match_source_address = require('../lib/utils.js').match_source_address;
+var mock_resource_server = require('../testlib/mock_resource_server.js');
+var ConfigMapServer = mock_resource_server.ConfigMapServer;
+var ResourceServer = mock_resource_server.ResourceServer;
+var myutils = require('../lib/utils.js');
 
 function remove(list, predicate) {
     var removed = [];
@@ -317,11 +166,6 @@ function verify_full_mesh_n(routers, n) {
     }
 }
 
-function get_address_list_message(address_list) {
-    var content = JSON.stringify({items:address_list.map(function (a) { return {spec:a}; })});
-    return {subject:'enmasse.io/v1/AddressList', body:content};
-}
-
 function RouterList(port, basename) {
     this.counter = 1;
     this.routers = [];
@@ -342,95 +186,6 @@ RouterList.prototype.new_name = function () {
 RouterList.prototype.close = function () {
     return Promise.all(this.routers.map(function (r) { return r.close(); }));
 }
-
-function get_source_address_filter(address) {
-    return function (link) {
-        return link && link.remote && link.remote.attach && link.remote.attach.source
-            && link.remote.attach.source.address === address;
-    }
-}
-
-function MockAddressSource(address_list, pod_list) {
-    this.address_list = address_list || [];
-    this.pod_list = pod_list || [];
-    this.connections = {};
-    this.source_address = 'v1/addresses';
-    this.pod_watch_address = 'podsense';
-    this.container = rhea.create_container();
-    this.container.on('sender_open', this.subscribe.bind(this));
-    var self = this;
-    this.cleanup = function (context) {
-        delete self.connections[context.connection.container_id];
-    };
-    this.notify_addresses = this.send_address_list.bind(this);
-    this.address_subscription_filter = get_source_address_filter(this.source_address);
-    this.notify_pods = this.send_pod_list.bind(this);
-    this.podwatch_subscription_filter = get_source_address_filter(this.pod_watch_address);
-}
-
-MockAddressSource.prototype.listen = function (port) {
-    this.listener = this.container.listen({'port':port});
-    return this.listener;
-};
-
-MockAddressSource.prototype.listen_tls = function (options) {
-    this.listener = this.container.listen(options);
-    return this.listener;
-};
-
-MockAddressSource.prototype.close = function () {
-    if (this.listener) this.listener.close();
-}
-
-MockAddressSource.prototype.get_port = function () {
-    return this.listener ? this.listener.address().port : 0;
-}
-
-MockAddressSource.prototype.send_address_list = function (sender) {
-    sender.send(get_address_list_message(this.address_list));
-};
-
-MockAddressSource.prototype.update_address_list = function (address_list) {
-    this.address_list = address_list;
-    for (var c in this.connections) {
-        this.connections[c].each_link(this.notify_addresses, this.address_subscription_filter);
-    }
-};
-
-MockAddressSource.prototype.send_pod_list = function (sender) {
-    sender.send({body:this.pod_list});
-};
-
-MockAddressSource.prototype.update_pod_list = function (pod_list) {
-    this.pod_list = pod_list;
-    this.foreach_podwatch_subscription(this.notify_pods);
-};
-
-MockAddressSource.prototype.foreach_podwatch_subscription = function (f) {
-    for (var c in this.connections) {
-        this.connections[c].each_link(f, this.podwatch_subscription_filter);
-    }
-}
-
-MockAddressSource.prototype.register = function (connection) {
-    this.connections[connection.container_id] = connection;
-    connection.on('connection_close', this.cleanup);
-    connection.on('disconnected', this.cleanup);
-};
-
-MockAddressSource.prototype.subscribe = function (context) {
-    if (context.sender.remote.attach.source && context.sender.remote.attach.source.address === this.source_address) {
-        context.sender.set_source({address:this.source_address});
-        this.register(context.connection);
-        this.send_address_list(context.sender);
-    } else if (context.sender.remote.attach.source && context.sender.remote.attach.source.address === this.pod_watch_address) {
-        context.sender.set_source({address:this.pod_watch_address});
-        this.register(context.connection);
-        this.send_pod_list(context.sender);
-    } else {
-        context.sender.close({condition:'amqp:not-found', description:'Unrecognised source'});
-    }
-};
 
 function HealthChecker(conn) {
     this.connection = conn;
@@ -547,15 +302,11 @@ describe('basic router configuration', function() {
                 routers.push(new_router());
             }
             if (initial_config) initial_config(routers);
-            var client = rhea.connect({port:ragent.server.address().port});
-            client.open_sender().send(get_address_list_message(address_list));
-            client.on('sender_open', function () {
-                setTimeout(function () {
-                    verification ? verification(routers, address_list) : verify_addresses(address_list, routers);
-                    client.close();
-                    client.on('connection_close', function () { done(); } );
-                }, 1000/*1 second wait for propagation*/);//TODO: add ability to be notified of propagation in some way
-            });
+            ragent.sync_addresses(address_list);
+            setTimeout(function () {
+                verification ? verification(routers, address_list) : verify_addresses(address_list, routers);
+                done();
+            }, 1000/*1 second wait for propagation*/);//TODO: add ability to be notified of propagation in some way
         };
     }
 
@@ -594,31 +345,26 @@ describe('basic router configuration', function() {
         verify_full_mesh(routers);
     }));
     it('configures routers correctly whenever they connect', function(done) {
-        var client = rhea.connect({port:ragent.server.address().port});
-        var sender = client.open_sender();
-        sender.send(get_address_list_message([{address:'a',type:'topic'}, {address:'b',type:'queue'}]));
-        client.on('sender_open', function () {
-            var routers = [];
+        ragent.sync_addresses([{address:'a',type:'topic'}, {address:'b',type:'queue'}]);
+        var routers = [];
+        for (var i = 0; i < 2; i++) {
+            routers.push(new_router());
+        }
+        setTimeout(function () {
+            verify_addresses([{address:'a',type:'topic'}, {address:'b',type:'queue'}], routers);
+            verify_full_mesh(routers);
+            //update addresses
+            ragent.sync_addresses([{address:'a',type:'queue'}, {address:'c',type:'topic'}, {address:'d',type:'multicast'}]);
+            //add another couple of routers
             for (var i = 0; i < 2; i++) {
                 routers.push(new_router());
             }
             setTimeout(function () {
-                verify_addresses([{address:'a',type:'topic'}, {address:'b',type:'queue'}], routers);
+                verify_addresses([{address:'a',type:'queue'}, {address:'c',type:'topic'}, {address:'d',type:'multicast'}], routers);
                 verify_full_mesh(routers);
-                //update addresses
-                sender.send(get_address_list_message([{address:'a',type:'queue'}, {address:'c',type:'topic'}, {address:'d',type:'multicast'}]));
-                //add another couple of routers
-                for (var i = 0; i < 2; i++) {
-                    routers.push(new_router());
-                }
-                setTimeout(function () {
-                    verify_addresses([{address:'a',type:'queue'}, {address:'c',type:'topic'}, {address:'d',type:'multicast'}], routers);
-                    verify_full_mesh(routers);
-                    client.close();
-                    client.on('connection_close', function () { done(); } );
-                }, 1000/*1 second wait for propagation*/);//TODO: add ability to be notified of propagation in some way
-            }, 500);
-        });
+                done();
+            }, 1000/*1 second wait for propagation*/);//TODO: add ability to be notified of propagation in some way
+        }, 500);
     });
     it('handles health-check requests', function(done) {
         var routers = [];
@@ -628,14 +374,13 @@ describe('basic router configuration', function() {
         routers[1].on('connected', function () {
             var client = rhea.connect({port:ragent.server.address().port});
             var checker = new HealthChecker(client);
-            var sender = client.open_sender();
             checker.check([{name:'x'}, {name:'b', store_and_forward:true, multicast:false}]).then(function (result) {
                 assert.equal(result, false);
-                sender.send(get_address_list_message([{address:'a',type:'topic'}]));
+                ragent.sync_addresses([{address:'a',type:'topic'}]);
                 setTimeout(function () {
                     checker.check([{name:'x'}, {name:'b', store_and_forward:true, multicast:false}]).then(function (result) {
                         assert.equal(result, false);
-                        sender.send(get_address_list_message([{address:'a',type:'topic'}, {address:'b',type:'queue'}]));
+                        ragent.sync_addresses([{address:'a',type:'topic'}, {address:'b',type:'queue'}]);
                         setTimeout(function () {
                             verify_addresses([{address:'a',type:'topic'}, {address:'b',type:'queue'}], routers);
                             verify_full_mesh(routers);
@@ -655,9 +400,7 @@ describe('basic router configuration', function() {
         for (var i = 0; i < 6; i++) {
             routers.push(new_router());
         }
-        var client = rhea.connect({port:ragent.server.address().port});
-        var sender = client.open_sender();
-        sender.send(get_address_list_message([{address:'a',type:'topic'}, {address:'b',type:'queue'}]));
+        ragent.sync_addresses([{address:'a',type:'topic'}, {address:'b',type:'queue'}]);
         setTimeout(function () {
             verify_addresses([{address:'a',type:'topic'}, {address:'b',type:'queue'}], routers);
             verify_full_mesh(routers);
@@ -693,7 +436,7 @@ describe('basic router configuration', function() {
         sender.send({subject:'enmasse.io/v1/AddressList', body:'{"items":101}'});
         sender.send({subject:'health-check'});
         sender.send({subject:'random-nonsense'});
-        sender.send(get_address_list_message([{address:'a',type:'topic'}, {address:'b',type:'queue'}]));
+        ragent.sync_addresses([{address:'a',type:'topic'}, {address:'b',type:'queue'}]);
         setTimeout(function () {
             verify_addresses([{address:'a',type:'topic'}, {address:'b',type:'queue'}], routers);
             verify_full_mesh(routers);
@@ -741,18 +484,12 @@ describe('basic router configuration', function() {
             routers.push(new_router());
         }
         var address_list = [{address:'a',type:'topic'}, {address:'b',type:'queue'}];
-        var client = rhea.connect({port:ragent.server.address().port});
-        client.open_sender().send(get_address_list_message(address_list));
-        client.on('sender_open', function () {
-            setTimeout(function () {
-                verify_full_mesh_n(routers, 2);
-                client.close();
-                client.on('connection_close', function () {
-                    delete process.env.ROUTER_NUM_CONNECTORS;
-                    done();
-                });
-            }, 1000/*1 second wait for propagation*/);//TODO: add ability to be notified of propagation in some way
-        });
+        ragent.sync_addresses(address_list);
+        setTimeout(function () {
+            verify_full_mesh_n(routers, 2);
+            delete process.env.ROUTER_NUM_CONNECTORS;
+            done();
+        }, 1000/*1 second wait for propagation*/);//TODO: add ability to be notified of propagation in some way
     });
     it('ignores link route override', simple_address_test([{address:'a',type:'topic'}, {address:'b',type:'queue'}],
        function (routers, address_list) {
@@ -800,26 +537,23 @@ function localpath(name) {
     return path.resolve(__dirname, name);
 }
 
-describe('address source subscription', function() {
+describe('configuration from configmaps', function() {
     this.timeout(5000);
     var ragent;
-    var address_source = new MockAddressSource([{address:'a',type:'topic'}, {address:'b',type:'queue'}]);
+    var address_source;
     var routers;
 
     beforeEach(function(done) {
+        address_source = new ConfigMapServer();
         address_source.listen(0).on('listening', function () {
-            done();
+            ragent = new Ragent();
+            ragent.subscribe_to_addresses({token:'foo', namespace:'default', host: 'localhost', port:address_source.port});
+            ragent.listen({port:0}).on('listening', function (){
+                routers = new RouterList(ragent.server.address().port);
+                done();
+            });
         });
     });
-
-    function with_ragent(env, done) {
-        ragent = new Ragent();
-        ragent.listen({port:0}).on('listening', function (){
-            routers = new RouterList(ragent.server.address().port);
-            done();
-        });
-        ragent.subscribe_to_addresses(env);
-    }
 
     afterEach(function(done) {
         routers.close().then(function () {
@@ -829,31 +563,40 @@ describe('address source subscription', function() {
         });
     });
 
-    function simple_subscribe_env_test(get_env) {
-        return function (done) {
-            with_ragent(get_env(), function () {
-                var router = routers.new_router();
-                setTimeout(function () {
-                    verify_addresses(address_source.address_list, router);
-                    done();
-                }, 1000/*1 second wait for propagation*/);//TODO: add ability to be notified of propagation in some way
-            });
-        }
-    }
-
-    it('subscribes to configuration service', simple_subscribe_env_test(function () { return {'CONFIGURATION_SERVICE_HOST': 'localhost', 'CONFIGURATION_SERVICE_PORT':address_source.get_port()} }));
-    it('subscribes to admin service on configuration port', simple_subscribe_env_test(function () { return {'ADMIN_SERVICE_HOST': 'localhost', 'ADMIN_SERVICE_PORT_CONFIGURATION':address_source.get_port()} }));
-    it('prefers configuration service over admin service', simple_subscribe_env_test(function () { return {'ADMIN_SERVICE_HOST': 'foo', 'ADMIN_SERVICE_PORT_CONFIGURATION':7777,
-                                                                                                           'CONFIGURATION_SERVICE_HOST': 'localhost',
-                                                                                                           'CONFIGURATION_SERVICE_PORT':address_source.get_port()} }));
-    it('will not subscribe if no host and port provided', function (done) {
-        with_ragent({}, function () {
-            var router = routers.new_router();
+    it('retrieves initial list of addresses', function (done) {
+        var router = routers.new_router();
+        var addresses = [{address:'a', type:'topic'}, {address:'b', type:'queue'}];
+        address_source.add_address_definitions(addresses);
+        setTimeout(function () {
+            verify_addresses(addresses, router);
+            done();
+        }, 1000/*1 second wait for propagation*/);//TODO: add ability to be notified of propagation in some way
+    });
+    it('watches for new addresses', function (done) {
+        var router = routers.new_router();
+        address_source.add_address_definitions([{address:'a', type:'topic'}, {address:'b', type:'queue'}]);
+        setTimeout(function () {
+            address_source.add_address_definition({address:'c', type:'anycast'});
+            address_source.add_address_definition({address:'d', type:'queue'});
+            //address_source.remove_resource_by_name('b');
             setTimeout(function () {
-                verify_addresses([], router);
+                verify_addresses([{address:'a', type:'topic'}, {address:'b', type:'queue'}, {address:'c', type:'anycast'}, {address:'d', type:'queue'}], router);
                 done();
             }, 1000/*1 second wait for propagation*/);//TODO: add ability to be notified of propagation in some way
-        });
+        }, 100/*delay before changes*/);
+    });
+    it('watches for deleted addresses', function (done) {
+        var router = routers.new_router();
+        address_source.add_address_definitions([{address:'a', type:'topic'}, {address:'b', type:'queue'}]);
+        setTimeout(function () {
+            address_source.add_address_definition({address:'c', type:'anycast'});
+            address_source.add_address_definition({address:'d', type:'queue'});
+            address_source.remove_resource_by_name('b');
+            setTimeout(function () {
+                verify_addresses([{address:'a', type:'topic'}, {address:'c', type:'anycast'}, {address:'d', type:'queue'}], router);
+                done();
+            }, 1000/*1 second wait for propagation*/);//TODO: add ability to be notified of propagation in some way
+        }, 100/*delay before changes*/);
     });
 });
 
@@ -891,6 +634,35 @@ RouterGroup.prototype.pod = function () {
     };
 };
 
+RouterGroup.prototype.get_pod_definition = function () {
+    return {
+        metadata: {
+            name: this.name
+        },
+        spec: {
+            containers: [
+                {
+                    name: 'ragent',
+                    ports: [
+                        {
+                            name: 'amqp',
+                            containerPort: this.port
+                        }
+                    ]
+                }
+            ]
+        },
+        status: {
+            podIP: '127.0.0.1',
+            phase: 'Running',
+            conditions : [
+                { type: 'Initialized', status: 'True' },
+                { type: 'Ready', status: (this.port === undefined ? 'False' : 'True') }
+            ]
+        }
+    };
+};
+
 function fill(n, f) {
     return Array.apply(null, Array(n)).map(function (v, i) { return f(i); });
 }
@@ -899,11 +671,12 @@ describe('cooperating ragent group', function() {
     this.timeout(5000);
     var counter = 0;
     var groups = fill(4, function (i) { return new RouterGroup('ragent-' + (i+1)); });
-    var configserv = new MockAddressSource();
+    var podserver;
 
     beforeEach(function(done) {
+        podserver = new ResourceServer('Pod', true);
         Promise.all(groups.map(function (g) { return g.listen(); })).then(function (){
-            configserv.listen(0).on('listening', function () {
+            podserver.listen(0).on('listening', function () {
                 done();
             });
         });
@@ -911,7 +684,7 @@ describe('cooperating ragent group', function() {
 
     afterEach(function(done) {
         Promise.all(groups.map(function (g) {return g.close()})).then(function () {
-            configserv.close();
+            podserver.close();
             done();
         });
     });
@@ -925,9 +698,11 @@ describe('cooperating ragent group', function() {
         var routers = [];
         routers = routers.concat(fill(3, new_router));
         //inform ragent instances of each other
-        configserv.update_pod_list(groups.map(function (g) { return g.pod(); }));
+        groups.forEach(function (g) {
+            podserver.add_resource(g.get_pod_definition());
+        });
         groups.forEach(function(g) {
-            g.ragent.subscribe_to_addresses({'CONFIGURATION_SERVICE_HOST': 'localhost', 'CONFIGURATION_SERVICE_PORT':configserv.get_port()});
+            g.ragent.watch_pods({port:podserver.port, token:'foo', namespace:'default'});
         });
         //connect some more routers
         routers = routers.concat(fill(3, new_router));
@@ -943,15 +718,17 @@ describe('cooperating ragent group', function() {
             return new Array(g.routers.new_router(), g.routers.new_router());
         });
         //inform ragent instances of each other
-        configserv.update_pod_list(groups.map(function (g) { return g.pod(); }));
+        groups.forEach(function (g) {
+            podserver.add_resource(g.get_pod_definition());
+        });
         groups.forEach(function(g) {
-            g.ragent.subscribe_to_addresses({'CONFIGURATION_SERVICE_HOST': 'localhost', 'CONFIGURATION_SERVICE_PORT':configserv.get_port()});
+            g.ragent.watch_pods({port:podserver.port, token:'foo', namespace:'default'});
         });
         //wait for some time for things to settle, then verify we have a full mesh
         setTimeout(function () {
             verify_full_mesh([].concat.apply([], routers));
             var leaving = groups.pop();
-            configserv.update_pod_list(groups.map(function (g) { return g.pod(); }));
+            podserver.remove_resource_by_name(leaving.name);
             //shutdown one of the ragents
             routers.pop();
             leaving.close().then(function() {
@@ -1000,16 +777,22 @@ function merge(a, b) {
     return result;
 }
 
+function mock_address_source(addresses) {
+    var server = new ConfigMapServer();
+    server.add_address_definitions(addresses);
+    return server;
+}
+
 describe('forked process', function() {
     this.timeout(5000);
     var ragent;
-    var address_source = new MockAddressSource([{address:'a',type:'topic'}, {address:'b',type:'queue'}]);
+    var address_source = mock_address_source([{address:'a',type:'topic'}, {address:'b',type:'queue'}]);
     var routers;
 
     beforeEach(function(done) {
         address_source.listen(0).on('listening', function () {
-            var env =  merge(process.env, {'LOGLEVEL':'info', 'AMQP_PORT':0, 'CONFIGURATION_SERVICE_HOST': 'localhost', 'CONFIGURATION_SERVICE_PORT':address_source.get_port(), 'DEBUG':''});
-            ragent = child_process.fork(path.resolve(__dirname, '../ragent.js'), [], {silent:true, 'env':env});
+            var env =  merge(process.env, {'LOGLEVEL':'info', 'DEBUG':'ragent*', 'AMQP_PORT':0, token:'foo', host: 'localhost', 'port':address_source.port, namespace:'default'});
+            ragent = child_process.fork(path.resolve(__dirname, '../lib/ragent.js'), [], {silent:true, 'env':env});
             ragent.stderr.on('data', function (data) {
                 if (data.toString().match('Router agent listening on')) {
                     var matches = data.toString().match(/on (\d+)/);
@@ -1030,7 +813,7 @@ describe('forked process', function() {
     it('subscribes to configuration service', function (done) {
         var router = routers.new_router();
         setTimeout(function () {
-            verify_addresses(address_source.address_list, router);
+            verify_addresses([{address:'a',type:'topic'}, {address:'b',type:'queue'}], router);
             router.close().then(function () {
                 done();
             });
@@ -1042,12 +825,12 @@ describe('forked process', function() {
 describe('run method', function() {
     this.timeout(5000);
     var ragent;
-    var address_source = new MockAddressSource([{address:'a',type:'topic'}, {address:'b',type:'queue'}]);
+    var address_source = mock_address_source([{address:'a',type:'topic'}, {address:'b',type:'queue'}]);
     var routers;
 
     beforeEach(function(done) {
         address_source.listen(0).on('listening', function() {
-            var env =  {'AMQP_PORT':0, 'CONFIGURATION_SERVICE_HOST': 'localhost', 'CONFIGURATION_SERVICE_PORT':address_source.get_port()};
+            var env =  {'AMQP_PORT':0, 'port':address_source.port, token:'foo', namespace:'default'};
             ragent = new Ragent();
             ragent.run(env, function (port) {
                 routers = new RouterList(port);
@@ -1065,110 +848,11 @@ describe('run method', function() {
     it('subscribes to configuration service', function (done) {
         var router = routers.new_router();
         setTimeout(function () {
-            verify_addresses(address_source.address_list, router);
+            verify_addresses([{address:'a',type:'topic'}, {address:'b',type:'queue'}], router);
             router.close().then(function () {
                 done();
             });
         }, 1000/*1 second wait for propagation*/);//TODO: add ability to be notified of propagation in some way
-    });
-});
-
-describe('run method also', function() {
-    this.timeout(5000);
-    var ragent;
-    var address_source = new MockAddressSource([{address:'a',type:'topic'}, {address:'b',type:'queue'}]);
-    var routers;
-    var tls_env =  {'CA_PATH': localpath('ca-cert.pem'), 'CERT_PATH': localpath('server-cert.pem'),'KEY_PATH': localpath('server-key.pem')};
-
-    beforeEach(function(done) {
-        address_source.listen_tls(tls_options.get_server_options({port:0}, tls_env)).on('listening', function() {
-            var env =  {'AMQP_PORT':0, 'CONFIGURATION_SERVICE_HOST': 'localhost', 'CONFIGURATION_SERVICE_PORT':address_source.get_port(),
-                        'CA_PATH': localpath('ca-cert.pem'), 'CERT_PATH': localpath('server-cert.pem'),
-                        'KEY_PATH': localpath('server-key.pem')};
-            ragent = new Ragent();
-            ragent.run(env, function (port) {
-                routers = new RouterList(port);
-                done();
-            });
-        });
-    });
-
-    afterEach(function(done) {
-        ragent.server.close();
-        address_source.close();
-        done();
-    });
-
-    it('uses TLS', function (done) {
-        var router = routers.new_router(undefined, tls_options.get_client_options({}, tls_env));
-        setTimeout(function () {
-            verify_addresses(address_source.address_list, router);
-            router.close().then(function () {
-                done();
-            });
-        }, 1000/*1 second wait for propagation*/);//TODO: add ability to be notified of propagation in some way
-    });
-});
-
-var podwatch = require('../podwatch.js');
-//testing pod watch here for convenience since the necessary mocks are
-//here, can move it out into separate file if move mocks into a test
-//module:
-describe('pod watch', function() {
-    this.timeout(5000);
-    var configserv;
-
-    beforeEach(function(done) {
-        configserv = new MockAddressSource([], []);
-        configserv.listen(0).on('listening', function () {
-            done();
-        });
-    });
-
-    afterEach(function(done) {
-        configserv.close();
-        done();
-    });
-
-    it('does its thing', function (done) {
-        configserv.update_pod_list([{
-            ready : 'True',
-            phase : 'Running',
-            name : 'foo',
-            host : 'localhost',
-            port : 1234
-        }]);
-        var conn = rhea.connect({port:configserv.get_port()});
-        var sub = podwatch.watch_pods(conn);
-        sub.on('added', function (added) {
-            assert.equal(added.foo.ready, 'True');
-            assert.equal(added.foo.port, 1234);
-            assert.equal(added.foo.host, 'localhost');
-            sub.close();
-            done();
-        });
-    });
-    it('handles empty bodied message', function (done) {
-        var conn = rhea.connect({port:configserv.get_port()}).on('receiver_open', function () {
-            configserv.foreach_podwatch_subscription(function (s) {
-                s.send({'subject':'ignore-me'});
-            });
-            configserv.update_pod_list([{
-                ready : 'True',
-                phase : 'Running',
-                name : 'foo',
-                host : 'localhost',
-                port : 1234
-            }]);
-        });
-        var sub = podwatch.watch_pods(conn);
-        sub.on('added', function (added) {
-            assert.equal(added.foo.ready, 'True');
-            assert.equal(added.foo.port, 1234);
-            assert.equal(added.foo.host, 'localhost');
-            done();
-            sub.close();
-        });
     });
 });
 
@@ -1211,14 +895,13 @@ describe('changing router configuration', function() {
         var client = rhea.connect({port:ragent.server.address().port});
         client.on('connection_close', function () { done(); } );
 
-        var sender = client.open_sender();
-        sender.send(get_address_list_message([{address:'mytopic',type:'topic'}]));
+        ragent.sync_addresses([{address:'mytopic',type:'topic'}]);
         delay(function () {
-            sender.send({subject:'enmasse.io/v1/AddressList', body:JSON.stringify({items:[]})});
+            ragent.sync_addresses([]);
         }, 500).then(function () {
             delay(function () {
                 verify_addresses([], router);
-                sender.send(get_address_list_message([{address:'mytopic',type:'topic'}]));
+                ragent.sync_addresses([{address:'mytopic',type:'topic'}]);
             }, 500).then(function () {
                 setTimeout(function () {
                     verify_addresses([{address:'mytopic',type:'topic'}], router);

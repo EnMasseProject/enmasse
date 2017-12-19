@@ -33,7 +33,7 @@ function get_broker_port(pod) {
     return get(pod.ports, ['broker', 'amqp'], 5673);
 };
 
-function Pod(pod) {
+function BrokerPod(pod) {
     this.name = pod.name;
     var options = {
         id:   pod.name,
@@ -49,12 +49,13 @@ function Pod(pod) {
     this.broker = artemis.connect(options);
 };
 
-Pod.prototype.close = function () {
+BrokerPod.prototype.close = function () {
     this.broker.close();
 };
 
-function PodGroup() {
+function PodGroup(constructor) {
     this.pods = {};
+    this.constructor = constructor || BrokerPod;
 };
 
 PodGroup.prototype.update = function (latest) {
@@ -80,12 +81,11 @@ PodGroup.prototype.update = function (latest) {
 }
 
 PodGroup.prototype.added = function (pod) {
-    this.pods[pod.name] = new Pod(pod);
+    this.pods[pod.name] = new this.constructor(pod);
 };
 
 PodGroup.prototype.removed_by_name = function (podname) {
-    this.pods[podname].close();
-    log.info('closed broker for %s', podname);
+    if (this.pods[podname].close) this.pods[podname].close();
     delete this.pods[podname];
 };
 
@@ -109,6 +109,10 @@ PodGroup.prototype.broker_list = function () {
     return list;
 };
 
+PodGroup.prototype.empty = function () {
+    return this.pods.length === 0;
+};
+
 PodGroup.prototype.close = function () {
     for (var p in this.pods) {
         this.pods[p].close();
@@ -116,6 +120,10 @@ PodGroup.prototype.close = function () {
     this.pods = [];
 };
 
-module.exports = function () {
-    return new PodGroup();
+PodGroup.prototype.get_port_from_pod_definition = function (pod, container, port_name) {
+    return get(pod.ports, [container, port_name || 'amqp']);
+};
+
+module.exports = function (constructor) {
+    return new PodGroup(constructor);
 }

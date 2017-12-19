@@ -15,7 +15,6 @@
  */
 'use strict';
 
-var Promise = require('bluebird');
 var log = require('./log.js').logger();
 
 function SubscriptionLocator(pods) {

@@ -17,10 +17,11 @@
 
 var http = require('http');
 var util = require('util');
-var log = require("./log.js").logger();
 var amqp = require('rhea');
+var AddressSource = require('./internal_address_source.js');
+var log = require("./log.js").logger();
 var rtr = require('./router.js');
-var podwatch = require('./podwatch.js');
+var pod_watcher = require('./pod_watcher.js');
 var tls_options = require('./tls_options.js');
 
 
@@ -134,9 +135,20 @@ Ragent.prototype.addresses_updated = function () {
     }
 }
 
+function transform_address(addr) {
+    if (addr.address === undefined || addr.type === undefined) {
+        console.error('BAD ADDRESS: %j', addr);
+    }
+    return {
+        name: addr.address,
+        multicast: (addr.type === 'multicast' || addr.type === 'topic'),
+        store_and_forward: (addr.type === 'queue' || addr.type === 'topic')
+    };
+}
+
 Ragent.prototype.sync_addresses = function (updated) {
-    log.info('updating addresses: ' + JSON.stringify(updated));
-    this.addresses = updated;
+    this.addresses = updated.map(transform_address).reduce(function (map, a) { map[a.name] = a; return map; }, {});;
+    log.info('updating addresses: %j', this.addresses);
     this.addresses_updated();
 }
 
@@ -161,64 +173,37 @@ Ragent.prototype.on_router_agent_disconnect = function (context) {
 
 var connection_properties = {product:'ragent', container_id:process.env.HOSTNAME};
 
-Ragent.prototype.watch_pods = function (connection, env) {
-    var self = this;
-    var watcher = undefined;
-    if (env.ADMIN_SERVICE_HOST) {
-        watcher = podwatch.watch_pods(connection, {"name": "admin"});
-    } else {
-        watcher = podwatch.watch_pods(connection, {"name": "ragent"});
+// watch for- and connect to- other router agents to share knowledge of
+// all routers
+Ragent.prototype.watch_pods = function (env) {
+    var parent = this;
+    var agents;
+    function RagentPod(pod) {
+        this.name = pod.name;
+        var options = {
+            host:pod.host,
+            port:agents.get_port_from_pod_definition(pod, 'ragent'),
+            id:pod.name,
+            properties:connection_properties
+        };
+        log.info('connecting to new agent %s', options);
+        this.agent = parent.container.connect(options);
+        this.agent.open_receiver('routers');
+        var agent = this.agent;
+        this.close = function () {
+            log.info('disconnecting from agent ' + pod.name);
+            agent.close();
+        }
     }
-    var agent_connections = {}
-    watcher.on('added', function (pods) {
-        for (var pod_name in pods) {
-            var pod = pods[pod_name];
-
-            //pod name will be containerid, use that as the id for debug logging
-            var agent_conn_info = {host:pod.host, port:pod.port, id:pod_name, properties:connection_properties};
-            var agent_conn = self.container.connect(agent_conn_info);
-            agent_conn.open_receiver('routers');
-            agent_connections[pod_name] = agent_conn;
-            log.info('connecting to new agent ' + JSON.stringify(agent_conn_info));
-        }
-    });
-    watcher.on('removed', function (pods) {
-        for (var pod_name in pods) {
-            var conn = agent_connections[pod_name];
-            if (conn !== undefined) {
-                log.info('disconnecting from agent ' + pod_name);
-                conn.close();
-            }
-        }
-    });
+    agents = require('./podgroup.js')(RagentPod);
+    this.watcher = pod_watcher.watch('name=admin', env);
+    this.watcher.on('updated', agents.update.bind(agents));
 }
 
 Ragent.prototype.on_message = function (context) {
     if (context.message.subject === 'routers') {
         this.known_routers[context.connection.container_id] = unwrap_known_routers (context.message.body);
         this.check_connectivity();
-    } else if (context.message.subject === 'enmasse.io/v1/AddressList') {
-        var semantics = {};
-        var body;
-        try{
-            body = JSON.parse(context.message.body || '{}');
-        } catch (e) {
-            log.error('failed to parse addresses: ' + e + '; ' + context.message.body);
-            return;
-        }
-        if (util.isArray(body.items)) {
-            for (var i = 0; i < body.items.length; i++) {
-                var addr = body.items[i];
-                semantics[addr.spec.address] = {
-                    name: addr.spec.address,
-                    multicast: (addr.spec.type === 'multicast' || addr.spec.type === 'topic'),
-                    store_and_forward: (addr.spec.type === 'queue' || addr.spec.type === 'topic')
-                }
-            }
-        } else if (body.items !== undefined) {
-            log.error('invalid type for body.items: ' + (typeof body.items));
-        }
-        this.sync_addresses(semantics);
     } else if (context.message.subject === 'health-check') {
         var request = context.message;
         var content = JSON.parse(request.body);
@@ -295,27 +280,8 @@ Ragent.prototype.listen = function (options) {
 }
 
 Ragent.prototype.subscribe_to_addresses = function (env) {
-    var config_host = env.ADMIN_SERVICE_HOST
-    var config_port = env.ADMIN_SERVICE_PORT_CONFIGURATION
-
-    if (env.CONFIGURATION_SERVICE_HOST) {
-        config_host = env.CONFIGURATION_SERVICE_HOST
-        config_port = env.CONFIGURATION_SERVICE_PORT
-    }
-
-    if (config_host) {
-        this.container.options.username = 'ragent';
-        var options;
-        try {
-            options = tls_options.get_client_options({ host: config_host, port: config_port, properties: connection_properties }, env);
-        } catch (error) {
-            options = { host: config_host, port: config_port, properties: connection_properties };
-        }
-
-        var conn = this.container.connect(options);
-        conn.open_receiver('v1/addresses');
-        this.watch_pods(conn, env);
-    }
+    var address_source = new AddressSource(env);
+    address_source.on('addresses_defined', this.sync_addresses.bind(this));
 };
 
 Ragent.prototype.listen_probe = function (env) {
@@ -328,7 +294,7 @@ Ragent.prototype.listen_probe = function (env) {
     }
 };
 
-Ragent.prototype.run = function (env, callback) {
+Ragent.prototype.start_listening = function (env, callback) {
     var options = {properties:connection_properties};
     try {
         options = tls_options.get_server_options(options, env);
@@ -342,6 +308,10 @@ Ragent.prototype.run = function (env, callback) {
         log.info("Router agent listening on " + server.address().port);
         if (callback) callback(server.address().port);
     });
+};
+
+Ragent.prototype.run = function (env, callback) {
+    this.start_listening(env, callback);
     this.subscribe_to_addresses(env);
     this.listen_probe(env);
 };

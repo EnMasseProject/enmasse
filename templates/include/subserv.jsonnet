@@ -33,6 +33,7 @@ local common = import "common.jsonnet";
           "containers": [
             {
               "image": container_image,
+              "command": ["node", "/opt/app-root/src/bin/subserv.js"],
               "name": "subserv",
               "resources": {
                   "requests": {
