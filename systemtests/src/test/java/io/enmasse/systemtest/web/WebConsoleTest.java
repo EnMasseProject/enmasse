@@ -200,23 +200,30 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
         consoleWebPage.createAddressesWebConsole(queue);
         consoleWebPage.openConnectionsPageWebConsole();
 
+        List<AbstractClient> receivers = null;
         int receiverCount = 5;
-        List<AbstractClient> receivers = attachReceivers(queue, receiverCount);
+        try {
+            receivers = attachReceivers(queue, receiverCount);
 
-        consoleWebPage.addConnectionsFilter(FilterType.ENCRYPTED, "unencrypted");
-        List<ConnectionWebItem> items = consoleWebPage.getConnectionItems();
-        assertThat(items.size(), is(receiverCount));
-        assertConnectionUnencrypted(items);
+            consoleWebPage.addConnectionsFilter(FilterType.ENCRYPTED, "unencrypted");
+            List<ConnectionWebItem> items = consoleWebPage.getConnectionItems();
+            assertThat(items.size(), is(receiverCount));
+            assertConnectionUnencrypted(items);
 
-        consoleWebPage.clearAllFilters();
-        assertThat(consoleWebPage.getConnectionItems().size(), is(receiverCount));
+            consoleWebPage.clearAllFilters();
+            assertThat(consoleWebPage.getConnectionItems().size(), is(receiverCount));
 
-        consoleWebPage.addConnectionsFilter(FilterType.ENCRYPTED, "encrypted");
-        items = consoleWebPage.getConnectionItems();
-        assertThat(items.size(), is(0));
-        assertConnectionEncrypted(items);
+            consoleWebPage.addConnectionsFilter(FilterType.ENCRYPTED, "encrypted");
+            items = consoleWebPage.getConnectionItems();
+            assertThat(items.size(), is(0));
+            assertConnectionEncrypted(items);
 
-        stopClients(receivers);
+        } catch (Exception ex) {
+            throw ex;
+        } finally {
+            stopClients(receivers);
+
+        }
     }
 
     public void doTestFilterConnectionsByUser() throws Exception {
