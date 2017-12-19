@@ -175,7 +175,7 @@ local common = import "common.jsonnet";
             common.secret_volume("address-controller-ca", address_controller_ca_secret),
             common.secret_volume("admin-internal-cert", "admin-internal-cert"),
             common.secret_volume("messaging-cert", "${MESSAGING_SECRET}")
-          ]
+          ] + (if template_config != "" then [ common.configmap_volume("templates", template_config) ] else []),
         }
       }
     }

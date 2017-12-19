@@ -278,7 +278,8 @@ items:
       "authservice-ca"}}, {"name": "address-controller-ca", "secret": {"secretName":
       "address-controller-ca"}}, {"name": "admin-internal-cert", "secret": {"secretName":
       "admin-internal-cert"}}, {"name": "messaging-cert", "secret": {"secretName":
-      "${MESSAGING_SECRET}"}}]}}}}, {"apiVersion": "v1", "kind": "Service", "metadata":
+      "${MESSAGING_SECRET}"}}, {"configMap": {"name": "enmasse-storage-templates"},
+      "name": "templates"}]}}}}, {"apiVersion": "v1", "kind": "Service", "metadata":
       {"annotations": {"addressSpace": "${ADDRESS_SPACE}"}, "labels": {"app": "enmasse"},
       "name": "ragent"}, "spec": {"ports": [{"name": "amqp", "port": 5671, "targetPort":
       55671}], "selector": {"name": "admin"}}}, {"apiVersion": "v1", "kind": "Service",
