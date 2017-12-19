@@ -1,0 +1,8 @@
+<productname>{ProductLongName}</productname>
+<productnumber>{ProductVersion}</productnumber>
+<subtitle>For Use with {ProductName} {ProductVersion}</subtitle>
+<abstract>
+   <para>This guide describes how to install, configure, and manage
+   {ProductName} to build a large-scale messaging network.</para>
+</abstract>
+<xi:include href="Common_Content/Legal_Notice.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
