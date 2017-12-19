@@ -8,14 +8,6 @@ items:
   - apiGroups:
     - ''
     resources:
-    - routes
-    verbs:
-    - list
-    - get
-    - watch
-  - apiGroups:
-    - ''
-    resources:
     - configmaps
     verbs:
     - create
@@ -23,15 +15,6 @@ items:
     - list
     - get
     - watch
-    - update
-    - patch
-  - apiGroups:
-    - ''
-    resources:
-    - events
-    verbs:
-    - create
-    - get
     - update
     - patch
 - apiVersion: rbac.authorization.k8s.io/v1
@@ -102,34 +85,15 @@ items:
 - apiVersion: rbac.authorization.k8s.io/v1
   kind: ClusterRole
   metadata:
-    name: enmasse-addressspace-admin
+    name: event-reporter
   rules:
   - apiGroups:
     - ''
     resources:
-    - configmaps
+    - events
     verbs:
-    - get
-    - list
-    - watch
     - create
+    - get
     - update
     - patch
-    - delete
-- apiVersion: rbac.authorization.k8s.io/v1
-  kind: ClusterRole
-  metadata:
-    name: enmasse-infra-view
-  rules:
-  - apiGroups:
-    - ''
-    - extensions
-    resources:
-    - pods
-    - configmaps
-    - deployments
-    verbs:
-    - list
-    - get
-    - watch
 kind: List

@@ -13,19 +13,6 @@
             ""
           ],
           "resources": [
-            "routes"
-          ],
-          "verbs": [
-            "list",
-            "get",
-            "watch"
-          ]
-        },
-        {
-          "apiGroups": [
-            ""
-          ],
-          "resources": [
             "configmaps"
           ],
           "verbs": [
@@ -34,20 +21,6 @@
             "list",
             "get",
             "watch",
-            "update",
-            "patch"
-          ]
-        },
-        {
-          "apiGroups": [
-            ""
-          ],
-          "resources": [
-            "events"
-          ],
-          "verbs": [
-            "create",
-            "get",
             "update",
             "patch"
           ]
@@ -152,41 +125,12 @@
       ]
     },
 
-  infra_view_role(apiVersion)::
+  event_reporter_role(apiVersion)::
     {
       "apiVersion": apiVersion,
       "kind": "ClusterRole",
       "metadata": {
-          "name": "enmasse-infra-view"
-      },
-      "rules": [
-        {
-          "apiGroups": [
-            "",
-            "extensions"
-          ],
-          "resources": [
-            "pods",
-            "configmaps",
-            "deployments"
-          ],
-          "verbs": [
-            "list",
-            "get",
-            "watch"
-          ]
-        }
-      ]
-    },
-
-
-  // Role for address space administrators
-  addressspace_admin_role(apiVersion)::
-    {
-      "apiVersion": apiVersion,
-      "kind": "ClusterRole",
-      "metadata": {
-        "name": "enmasse-addressspace-admin"
+        "name": "event-reporter"
       },
       "rules": [
         {
@@ -194,20 +138,18 @@
             ""
           ],
           "resources": [
-            "configmaps"
+            "events"
           ],
           "verbs": [
-            "get",
-            "list",
-            "watch",
             "create",
+            "get",
             "update",
-            "patch",
-            "delete"
+            "patch"
           ]
         }
       ]
     },
+
 
   cluster_reader::
   {

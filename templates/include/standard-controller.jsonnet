@@ -1,7 +1,7 @@
 local common = import "common.jsonnet";
 local certSecretName = "standard-controller-internal-cert";
 {
-  deployment(template_config)::
+  deployment(template_config, authservice_ca)::
     {
       "apiVersion": "extensions/v1beta1",
       "kind": "Deployment",
@@ -37,7 +37,7 @@ local certSecretName = "standard-controller-internal-cert";
                   common.env("ADDRESS_SPACE", "${ADDRESS_SPACE}"),
                   common.env("AUTHENTICATION_SERVICE_HOST", "${AUTHENTICATION_SERVICE_HOST}"),
                   common.env("AUTHENTICATION_SERVICE_PORT", "${AUTHENTICATION_SERVICE_PORT}"),
-                  common.env("AUTHENTICATION_SERVICE_CA_CERT", "${AUTHENTICATION_SERVICE_CA_CERT}"),
+                  common.env("AUTHENTICATION_SERVICE_CA_SECRET", authservice_ca),
                   common.env("AUTHENTICATION_SERVICE_CLIENT_SECRET", "${AUTHENTICATION_SERVICE_CLIENT_SECRET}"),
                   common.env("AUTHENTICATION_SERVICE_SASL_INIT_HOST", "${AUTHENTICATION_SERVICE_SASL_INIT_HOST}"),
                   common.env("MESSAGING_SECRET", "${MESSAGING_SECRET}"),

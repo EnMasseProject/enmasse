@@ -520,18 +520,13 @@ public class KubernetesHelper implements Kubernetes {
         String namespace = addressSpace.getNamespace();
 
         if (isRBACSupported()) {
-            if (hasClusterRole("enmasse-address-admin")) {
-                createRoleBinding("address-admins", namespace, "ClusterRole", "enmasse-address-admin", Arrays.asList(
-                        new Subject("ServiceAccount", addressSpaceAdminSa, namespace),
-                        new Subject("ServiceAccount", "default", namespace)), null);
-                createRoleBinding("address-space-viewers", namespace, "ClusterRole", "enmasse-infra-view", Arrays.asList(
-                        new Subject("ServiceAccount", addressSpaceAdminSa, namespace),
-                        new Subject("ServiceAccount", "default", namespace)), null);
-            } else {
-                createRoleBinding("address-space-viewers", namespace, "ClusterRole", "view", Arrays.asList(
-                        new Subject("ServiceAccount", "default", namespace)), addressSpace.getCreatedBy());
-                createRoleBinding("address-admins", namespace, "ClusterRole", "edit", Arrays.asList(
-                        new Subject("ServiceAccount", addressSpaceAdminSa, namespace)), addressSpace.getCreatedBy());
+            createRoleBinding("address-space-viewers", namespace, "ClusterRole", "view", Arrays.asList(
+                    new Subject("ServiceAccount", "default", namespace)), addressSpace.getCreatedBy());;
+            createRoleBinding("address-admins", namespace, "ClusterRole", "edit", Arrays.asList(
+                    new Subject("ServiceAccount", addressSpaceAdminSa, namespace)), addressSpace.getCreatedBy());
+            if (hasClusterRole("event-reporter")) {
+                createRoleBinding("event-reporters", namespace, "ClusterRole", "event-reporter", Arrays.asList(
+                    new Subject("ServiceAccount", addressSpaceAdminSa, namespace)), addressSpace.getCreatedBy());
             }
         } else if (client.isAdaptable(OpenShiftClient.class)) {
             String groupName = "system:serviceaccounts:" + namespace;
