@@ -1,5 +1,3 @@
-local router = import "router.jsonnet";
-local agent = import "agent.jsonnet";
 local common = import "common.jsonnet";
 {
   service(name, addressSpace, ports, default_port="")::
@@ -33,7 +31,7 @@ local common = import "common.jsonnet";
   ],
 
 
-  deployment(addressSpace, configserv_image, ragent_image, scheduler_image, agent_image, auth_service_ca_secret, address_controller_ca_secret, console_secret, messaging_secret)::
+  deployment(auth_service_ca_secret, address_controller_ca_secret, template_config)::
   {
     "apiVersion": "extensions/v1beta1",
     "kind": "Deployment",
@@ -43,7 +41,7 @@ local common = import "common.jsonnet";
         "name": "admin",
       },
       "annotations": {
-        "addressSpace": addressSpace,
+        "addressSpace": "${ADDRESS_SPACE}",
         "io.enmasse.certSecretName": "admin-internal-cert"
       },
       "name": "admin"
@@ -57,186 +55,126 @@ local common = import "common.jsonnet";
             "app": "enmasse",
           },
           "annotations": {
-            "addressSpace": addressSpace
+            "addressSpace": "${ADDRESS_SPACE}"
           }
         },
         "spec": {
           "serviceAccount": "${ADDRESS_SPACE_ADMIN_SA}",
           "containers": [
             {
-              "image": ragent_image,
+              "image": "${RAGENT_IMAGE}",
               "name": "ragent",
               "env": [
-                 {
-                   "name": "CONFIGURATION_SERVICE_HOST",
-                   "value": "localhost"
-                 },
-                 {
-                   "name": "CONFIGURATION_SERVICE_PORT",
-                   "value": "5671"
-                 },
-                 {
-                   "name": "CERT_DIR",
-                   "value": "/etc/enmasse-certs"
-                 },
-                 {
-                   "name": "PROBE_PORT",
-                   "value": "8888"
-                 }
+                common.env("CONFIGURATION_SERVICE_HOST", "localhost"),
+                common.env("CONFIGURATION_SERVICE_PORT", "5671"),
+                common.env("CERT_DIR", "/etc/enmasse-certs"),
+                common.env("PROBE_PORT", "8888")
               ],
-              "resources": {
-                "requests": {
-                  "memory": "64Mi",
-                },
-                "limits": {
-                  "memory": "64Mi",
-                }
-              },
+              "resources": common.memory_resources("64Mi", "64Mi"),
               "ports": [
-                {
-                  "name": "amqp",
-                  "containerPort": 55671,
-                  "protocol": "TCP"
-                },
-                {
-                  "name": "http",
-                  "containerPort": 8888,
-                  "protocol": "TCP"
-                }
+                common.container_port("amqp", 55671),
+                common.container_port("http", 8888)
               ],
               "livenessProbe": common.http_probe("http", "/", "HTTP", 60),
               "volumeMounts": [
-                {
-                  "name": "admin-internal-cert",
-                  "mountPath": "/etc/enmasse-certs",
-                  "readOnly": true
-                }
+                common.volume_mount("admin-internal-cert", "/etc/enmasse-certs", true)
               ]
             },
-            common.container("queue-scheduler", scheduler_image, "amqp", 55667, "128Mi", [
-                      {
-                        "name": "CONFIGURATION_SERVICE_HOST",
-                        "value": "localhost"
-                      },
-                      {
-                        "name": "CONFIGURATION_SERVICE_PORT",
-                        "value": "5671"
-                      },
-                      {
-                        "name": "LISTEN_PORT",
-                        "value": "55667"
-                      },
-                      {
-                        "name": "CERT_DIR",
-                        "value": "/etc/enmasse-certs"
-                      }])  + {
-                          "volumeMounts": [
-                            {
-                              "name": "admin-internal-cert",
-                              "mountPath": "/etc/enmasse-certs",
-                              "readOnly": true
-                            }
-                          ]
-                        },
-            agent.container(agent_image, [
-                      {
-                        "name": "CONFIGURATION_SERVICE_HOST",
-                        "value": "localhost"
-                      },
-                      {
-                        "name": "CONFIGURATION_SERVICE_PORT",
-                        "value": "5671"
-                      },
-                      {
-                        "name": "ADDRESS_SPACE_SERVICE_HOST",
-                        "value": "${ADDRESS_SPACE_SERVICE_HOST}"
-                      },
-                      {
-                        "name": "ADDRESS_SPACE",
-                        "value": addressSpace
-                      },
-                      {
-                        "name": "ADDRESS_CONTROLLER_CA",
-                        "value": "/opt/agent/address-controller-ca/tls.crt"
-                      },
-                      {
-                        "name": "MESSAGING_CERT",
-                        "value": "/opt/agent/messaging-cert/tls.crt"
-                      }]) + {
-                        "volumeMounts": [
-                          {
-                            "name": "console-secret",
-                            "mountPath": "/etc/console-certs",
-                            "readOnly": true
-                          },
-                          {
-                            "name": "authservice-ca",
-                            "mountPath": "/opt/agent/authservice-ca",
-                            "readOnly": true
-                          },
-                          {
-                            "name": "admin-internal-cert",
-                            "mountPath": "/etc/enmasse-certs",
-                            "readOnly": true
-                          },
-                          {
-                            "name": address_controller_ca_secret,
-                            "mountPath": "/opt/agent/address-controller-ca",
-                            "readOnly": true
-                          },
-                          {
-                            "name": "messaging-cert",
-                            "mountPath": "/opt/agent/messaging-cert",
-                            "readOnly": true
-                          }
-                        ]
-                      },
-            common.container("configserv", configserv_image, "amqps", 5671, "256Mi", [
-                      {
-                        "name": "CERT_DIR",
-                        "value": "/etc/enmasse-certs"
-                      }
-                      ]) + {
-                        "volumeMounts": [
-                          {
-                            "name": "admin-internal-cert",
-                            "mountPath": "/etc/enmasse-certs",
-                            "readOnly": true
-                          }
-                        ]
-                      },
+            {
+              "image": "${QUEUE_SCHEDULER_IMAGE}",
+              "name": "queue-scheduler",
+              "env": [
+                common.env("CONFIGURATION_SERVICE_HOST", "localhost"),
+                common.env("CONFIGURATION_SERVICE_PORT", "5671"),
+                common.env("CERT_DIR", "/etc/enmasse-certs"),
+                common.env("LISTEN_PORT", "55667")
+              ],
+              "resources": common.memory_resources("128Mi", "128Mi"),
+              "ports": [
+                common.container_port("amqp", 55667)
+              ],
+              "livenessProbe": common.tcp_probe("amqp", 60),
+              "volumeMounts": [
+                common.volume_mount("admin-internal-cert", "/etc/enmasse-certs", true)
+              ]
+            },
+            {
+              "image": "${STANDARD_CONTROLLER_IMAGE}",
+              "name": "standard-controller",
+              "env": [
+                common.env("CERT_DIR", "/etc/enmasse-certs"),
+                common.env("ADDRESS_SPACE", "${ADDRESS_SPACE}"),
+                common.env("AUTHENTICATION_SERVICE_HOST", "${AUTHENTICATION_SERVICE_HOST}"),
+                common.env("AUTHENTICATION_SERVICE_PORT", "${AUTHENTICATION_SERVICE_PORT}"),
+                common.env("AUTHENTICATION_SERVICE_CA_SECRET", auth_service_ca_secret),
+                common.env("AUTHENTICATION_SERVICE_CLIENT_SECRET", "${AUTHENTICATION_SERVICE_CLIENT_SECRET}"),
+                common.env("AUTHENTICATION_SERVICE_SASL_INIT_HOST", "${AUTHENTICATION_SERVICE_SASL_INIT_HOST}"),
+                common.env("MESSAGING_SECRET", "${MESSAGING_SECRET}"),
+              ] + (if template_config != "" then [ common.env("TEMPLATE_DIR", "/enmasse-templates") ] else []),
+              "resources": common.memory_resources("128Mi", "128Mi"),
+              "ports": [
+                common.container_port("http", 8889)
+              ],
+              "livenessProbe": common.http_probe("http", "/health", "HTTP", 30),
+              "readinessProbe": common.http_probe("http", "/health", "HTTP", 30),
+              "volumeMounts": [
+                common.volume_mount("admin-internal-cert", "/etc/enmasse-certs", true)
+              ] + (if template_config != "" then [ common.volume_mount("templates", "/enmasse-templates") ] else []),
+            },
+            {
+              "image": "${AGENT_IMAGE}",
+              "name": "agent",
+              "env": [
+                common.env("CONFIGURATION_SERVICE_HOST", "localhost"),
+                common.env("CONFIGURATION_SERVICE_PORT", "5671"),
+                common.env("CERT_DIR", "/etc/enmasse-certs"),
+                common.env("AUTHENTICATION_SERVICE_HOST", "${AUTHENTICATION_SERVICE_HOST}"),
+                common.env("AUTHENTICATION_SERVICE_PORT", "${AUTHENTICATION_SERVICE_PORT}"),
+                common.env("AUTHENTICATION_SERVICE_CA_SECRET", auth_service_ca_secret),
+                common.env("AUTHENTICATION_SERVICE_CLIENT_SECRET", "${AUTHENTICATION_SERVICE_CLIENT_SECRET}"),
+                common.env("AUTHENTICATION_SERVICE_SASL_INIT_HOST", "${AUTHENTICATION_SERVICE_SASL_INIT_HOST}"),
+                common.env("ADDRESS_SPACE", "${ADDRESS_SPACE}"),
+                common.env("ADDRESS_SPACE_SERVICE_HOST", "${ADDRESS_SPACE_SERVICE_HOST}"),
+                common.env("ADDRESS_CONTROLLER_CA", "/opt/agent/address-controller-ca/tls.crt"),
+                common.env("MESSAGING_CERT", "/opt/agent/messaging-cert/tls.crt")
+              ],
+              "resources": common.memory_resources("128Mi", "128Mi"),
+              "ports": [
+                common.container_port("https", 8080),
+                common.container_port("amqp-ws", 56720)
+              ],
+              "livenessProbe": common.http_probe("https", "/probe", "HTTPS"),
+              "readinessProbe": common.http_probe("https", "/probe", "HTTPS"),
+              "volumeMounts": [
+                common.volume_mount("console-secret", "/etc/console-certs", true),
+                common.volume_mount("authservice-ca", "/opt/agent/authservice-ca", true),
+                common.volume_mount("admin-internal-cert", "/etc/enmasse-certs", true),
+                common.volume_mount("address-controller-ca", "/opt/agent/address-controller-ca", true),
+                common.volume_mount("messaging-cert", "/opt/agent/messaging-cert", true)
+              ]
+            },
+            {
+              "image": "${CONFIGSERV_IMAGE}",
+              "name": "configserv",
+              "env": [
+                common.env("CERT_DIR", "/etc/enmasse-certs")
+              ],
+              "resources": common.memory_resources("128Mi", "128Mi"),
+              "ports": [
+                common.container_port("amqps", 5671)
+              ],
+              "livenessProbe": common.tcp_probe("amqps", 60),
+              "volumeMounts": [
+                common.volume_mount("admin-internal-cert", "/etc/enmasse-certs", true)
+              ]
+            },
           ],
           "volumes": [
-            {
-              "name": "console-secret",
-              "secret": {
-                "secretName": console_secret
-              }
-            },
-            {
-              "name": "authservice-ca",
-              "secret": {
-                "secretName": auth_service_ca_secret
-              }
-            },
-            {
-              "name": address_controller_ca_secret,
-              "secret": {
-                "secretName": address_controller_ca_secret
-              }
-            },
-            {
-                "name": "admin-internal-cert",
-                "secret": {
-                    "secretName": "admin-internal-cert"
-                }
-            },
-            {
-                "name": "messaging-cert",
-                "secret": {
-                    "secretName": messaging_secret
-                }
-            }
+            common.secret_volume("console-secret", "${CONSOLE_SECRET}"),
+            common.secret_volume("authservice-ca", auth_service_ca_secret),
+            common.secret_volume("address-controller-ca", address_controller_ca_secret),
+            common.secret_volume("admin-internal-cert", "admin-internal-cert"),
+            common.secret_volume("messaging-cert", "${MESSAGING_SECRET}")
           ]
         }
       }
