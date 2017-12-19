@@ -49,7 +49,7 @@ local standardController = import "standard-controller.jsonnet";
     local template_config = (if use_template_configmap then "enmasse-storage-templates" else ""),
 
     "objects": [
-      standardController.deployment(template_config),
+      standardController.deployment(template_config, "authservice-ca"),
       messagingService.internal("${ADDRESS_SPACE}"),
       subserv.service("${ADDRESS_SPACE}"),
       prometheus.standard_broker_config("broker-prometheus-config"),

@@ -122,8 +122,8 @@ items:
       "CERT_DIR", "value": "/etc/enmasse-certs"}, {"name": "ADDRESS_SPACE", "value":
       "${ADDRESS_SPACE}"}, {"name": "AUTHENTICATION_SERVICE_HOST", "value": "${AUTHENTICATION_SERVICE_HOST}"},
       {"name": "AUTHENTICATION_SERVICE_PORT", "value": "${AUTHENTICATION_SERVICE_PORT}"},
-      {"name": "AUTHENTICATION_SERVICE_CA_CERT", "value": "${AUTHENTICATION_SERVICE_CA_CERT}"},
-      {"name": "AUTHENTICATION_SERVICE_CLIENT_SECRET", "value": "${AUTHENTICATION_SERVICE_CLIENT_SECRET}"},
+      {"name": "AUTHENTICATION_SERVICE_CA_SECRET", "value": "authservice-ca"}, {"name":
+      "AUTHENTICATION_SERVICE_CLIENT_SECRET", "value": "${AUTHENTICATION_SERVICE_CLIENT_SECRET}"},
       {"name": "AUTHENTICATION_SERVICE_SASL_INIT_HOST", "value": "${AUTHENTICATION_SERVICE_SASL_INIT_HOST}"},
       {"name": "MESSAGING_SECRET", "value": "${MESSAGING_SECRET}"}, {"name": "TEMPLATE_DIR",
       "value": "/enmasse-templates"}], "image": "${STANDARD_CONTROLLER_IMAGE}", "livenessProbe":
@@ -280,54 +280,54 @@ items:
       "ports": [{"containerPort": 5671, "name": "amqps", "protocol": "TCP"}], "resources":
       {"limits": {"memory": "256Mi"}, "requests": {"memory": "256Mi"}}, "volumeMounts":
       [{"mountPath": "/etc/enmasse-certs", "name": "admin-internal-cert", "readOnly":
-      true}]}], "volumes": [{"name": "console-secret", "secret": {"secretName": "${CONSOLE_SECRET}"}},
-      {"name": "authservice-ca", "secret": {"secretName": "authservice-ca"}}, {"name":
-      "address-controller-ca", "secret": {"secretName": "address-controller-ca"}},
-      {"name": "admin-internal-cert", "secret": {"secretName": "admin-internal-cert"}},
-      {"name": "messaging-cert", "secret": {"secretName": "${MESSAGING_SECRET}"}}]}}}},
+      true}]}], "serviceAccount": "${ADDRESS_SPACE_ADMIN_SA}", "volumes": [{"name":
+      "console-secret", "secret": {"secretName": "${CONSOLE_SECRET}"}}, {"name": "authservice-ca",
+      "secret": {"secretName": "authservice-ca"}}, {"name": "address-controller-ca",
+      "secret": {"secretName": "address-controller-ca"}}, {"name": "admin-internal-cert",
+      "secret": {"secretName": "admin-internal-cert"}}, {"name": "messaging-cert",
+      "secret": {"secretName": "${MESSAGING_SECRET}"}}]}}}}, {"apiVersion": "v1",
+      "kind": "Service", "metadata": {"annotations": {"addressSpace": "${ADDRESS_SPACE}"},
+      "labels": {"app": "enmasse"}, "name": "ragent"}, "spec": {"ports": [{"name":
+      "amqp", "port": 5671, "targetPort": 55671}], "selector": {"name": "admin"}}},
       {"apiVersion": "v1", "kind": "Service", "metadata": {"annotations": {"addressSpace":
-      "${ADDRESS_SPACE}"}, "labels": {"app": "enmasse"}, "name": "ragent"}, "spec":
-      {"ports": [{"name": "amqp", "port": 5671, "targetPort": 55671}], "selector":
+      "${ADDRESS_SPACE}"}, "labels": {"app": "enmasse"}, "name": "configuration"},
+      "spec": {"ports": [{"name": "amqps", "port": 5671}], "selector": {"name": "admin"}}},
+      {"apiVersion": "v1", "kind": "Service", "metadata": {"annotations": {"addressSpace":
+      "${ADDRESS_SPACE}"}, "labels": {"app": "enmasse"}, "name": "queue-scheduler"},
+      "spec": {"ports": [{"name": "amqp", "port": 5672, "targetPort": 55667}], "selector":
       {"name": "admin"}}}, {"apiVersion": "v1", "kind": "Service", "metadata": {"annotations":
-      {"addressSpace": "${ADDRESS_SPACE}"}, "labels": {"app": "enmasse"}, "name":
-      "configuration"}, "spec": {"ports": [{"name": "amqps", "port": 5671}], "selector":
-      {"name": "admin"}}}, {"apiVersion": "v1", "kind": "Service", "metadata": {"annotations":
-      {"addressSpace": "${ADDRESS_SPACE}"}, "labels": {"app": "enmasse"}, "name":
-      "queue-scheduler"}, "spec": {"ports": [{"name": "amqp", "port": 5672, "targetPort":
-      55667}], "selector": {"name": "admin"}}}, {"apiVersion": "v1", "kind": "Service",
-      "metadata": {"annotations": {"addressSpace": "${ADDRESS_SPACE}", "io.enmasse.endpointPort":
-      "https"}, "labels": {"app": "enmasse"}, "name": "console"}, "spec": {"ports":
-      [{"name": "https", "port": 8081, "targetPort": 8080}], "selector": {"name":
-      "admin"}}}, {"apiVersion": "v1", "data": {"queue-inmemory.json": "{\"apiVersion\":
-      \"v1\", \"kind\": \"Template\", \"metadata\": {\"labels\": {\"app\": \"enmasse\"},
-      \"name\": \"queue-inmemory\"}, \"objects\": [{\"apiVersion\": \"extensions/v1beta1\",
-      \"kind\": \"Deployment\", \"metadata\": {\"annotations\": {\"addressSpace\":
-      \"${ADDRESS_SPACE}\", \"cluster_id\": \"${CLUSTER_ID}\", \"io.enmasse.certSecretName\":
-      \"broker-internal-cert\"}, \"labels\": {\"app\": \"enmasse\"}, \"name\": \"${NAME}\"},
-      \"spec\": {\"replicas\": 1, \"template\": {\"metadata\": {\"annotations\": {\"addressSpace\":
-      \"${ADDRESS_SPACE}\", \"cluster_id\": \"${CLUSTER_ID}\", \"prometheus.io/path\":
-      \"/metrics\", \"prometheus.io/port\": \"8080\", \"prometheus.io/scrape\": \"true\"},
-      \"labels\": {\"app\": \"enmasse\", \"name\": \"${NAME}\", \"role\": \"broker\"}},
-      \"spec\": {\"containers\": [{\"env\": [{\"name\": \"QUEUE_NAME\", \"value\":
-      \"${ADDRESS}\"}, {\"name\": \"CLUSTER_ID\", \"value\": \"${CLUSTER_ID}\"}, {\"name\":
-      \"CERT_DIR\", \"value\": \"/etc/enmasse-certs\"}], \"image\": \"${BROKER_IMAGE}\",
-      \"lifecycle\": {\"preStop\": {\"exec\": {\"command\": [\"/shutdown-hook/shutdown-hook.sh\"]}}},
-      \"livenessProbe\": {\"exec\": {\"command\": [\"sh\", \"-c\", \"$ARTEMIS_HOME/bin/probe.sh\"]},
-      \"initialDelaySeconds\": 120}, \"name\": \"broker\", \"ports\": [{\"containerPort\":
-      5673, \"name\": \"amqp\"}, {\"containerPort\": 8161, \"name\": \"jolokia\"},
-      {\"containerPort\": 8080, \"name\": \"artemismetrics\"}], \"readinessProbe\":
-      {\"exec\": {\"command\": [\"sh\", \"-c\", \"$ARTEMIS_HOME/bin/probe.sh\"]},
-      \"initialDelaySeconds\": 10}, \"volumeMounts\": [{\"mountPath\": \"/var/run/artemis\",
-      \"name\": \"vol-${NAME}\", \"readOnly\": false}, {\"mountPath\": \"/etc/enmasse-certs\",
-      \"name\": \"broker-internal-cert\", \"readOnly\": true}, {\"mountPath\": \"/etc/authservice-ca\",
-      \"name\": \"authservice-ca\", \"readOnly\": true}, {\"mountPath\": \"/etc/prometheus-config\",
-      \"name\": \"broker-prometheus-config\", \"readOnly\": true}]}], \"volumes\":
-      [{\"emptyDir\": { }, \"name\": \"vol-${NAME}\"}, {\"name\": \"ssl-certs\", \"secret\":
-      {\"secretName\": \"${COLOCATED_ROUTER_SECRET}\"}}, {\"name\": \"authservice-ca\",
-      \"secret\": {\"secretName\": \"authservice-ca\"}}, {\"name\": \"address-controller-ca\",
-      \"secret\": {\"secretName\": \"address-controller-ca\"}}, {\"name\": \"broker-internal-cert\",
-      \"secret\": {\"secretName\": \"broker-internal-cert\"}}, {\"configMap\": {\"name\":
-      \"broker-prometheus-config\"}, \"name\": \"broker-prometheus-config\"}]}}}}],
+      {"addressSpace": "${ADDRESS_SPACE}", "io.enmasse.endpointPort": "https"}, "labels":
+      {"app": "enmasse"}, "name": "console"}, "spec": {"ports": [{"name": "https",
+      "port": 8081, "targetPort": 8080}], "selector": {"name": "admin"}}}, {"apiVersion":
+      "v1", "data": {"queue-inmemory.json": "{\"apiVersion\": \"v1\", \"kind\": \"Template\",
+      \"metadata\": {\"labels\": {\"app\": \"enmasse\"}, \"name\": \"queue-inmemory\"},
+      \"objects\": [{\"apiVersion\": \"extensions/v1beta1\", \"kind\": \"Deployment\",
+      \"metadata\": {\"annotations\": {\"addressSpace\": \"${ADDRESS_SPACE}\", \"cluster_id\":
+      \"${CLUSTER_ID}\", \"io.enmasse.certSecretName\": \"broker-internal-cert\"},
+      \"labels\": {\"app\": \"enmasse\"}, \"name\": \"${NAME}\"}, \"spec\": {\"replicas\":
+      1, \"template\": {\"metadata\": {\"annotations\": {\"addressSpace\": \"${ADDRESS_SPACE}\",
+      \"cluster_id\": \"${CLUSTER_ID}\", \"prometheus.io/path\": \"/metrics\", \"prometheus.io/port\":
+      \"8080\", \"prometheus.io/scrape\": \"true\"}, \"labels\": {\"app\": \"enmasse\",
+      \"name\": \"${NAME}\", \"role\": \"broker\"}}, \"spec\": {\"containers\": [{\"env\":
+      [{\"name\": \"QUEUE_NAME\", \"value\": \"${ADDRESS}\"}, {\"name\": \"CLUSTER_ID\",
+      \"value\": \"${CLUSTER_ID}\"}, {\"name\": \"CERT_DIR\", \"value\": \"/etc/enmasse-certs\"}],
+      \"image\": \"${BROKER_IMAGE}\", \"lifecycle\": {\"preStop\": {\"exec\": {\"command\":
+      [\"/shutdown-hook/shutdown-hook.sh\"]}}}, \"livenessProbe\": {\"exec\": {\"command\":
+      [\"sh\", \"-c\", \"$ARTEMIS_HOME/bin/probe.sh\"]}, \"initialDelaySeconds\":
+      120}, \"name\": \"broker\", \"ports\": [{\"containerPort\": 5673, \"name\":
+      \"amqp\"}, {\"containerPort\": 8161, \"name\": \"jolokia\"}, {\"containerPort\":
+      8080, \"name\": \"artemismetrics\"}], \"readinessProbe\": {\"exec\": {\"command\":
+      [\"sh\", \"-c\", \"$ARTEMIS_HOME/bin/probe.sh\"]}, \"initialDelaySeconds\":
+      10}, \"volumeMounts\": [{\"mountPath\": \"/var/run/artemis\", \"name\": \"vol-${NAME}\",
+      \"readOnly\": false}, {\"mountPath\": \"/etc/enmasse-certs\", \"name\": \"broker-internal-cert\",
+      \"readOnly\": true}, {\"mountPath\": \"/etc/authservice-ca\", \"name\": \"authservice-ca\",
+      \"readOnly\": true}, {\"mountPath\": \"/etc/prometheus-config\", \"name\": \"broker-prometheus-config\",
+      \"readOnly\": true}]}], \"volumes\": [{\"emptyDir\": { }, \"name\": \"vol-${NAME}\"},
+      {\"name\": \"ssl-certs\", \"secret\": {\"secretName\": \"${COLOCATED_ROUTER_SECRET}\"}},
+      {\"name\": \"authservice-ca\", \"secret\": {\"secretName\": \"authservice-ca\"}},
+      {\"name\": \"address-controller-ca\", \"secret\": {\"secretName\": \"address-controller-ca\"}},
+      {\"name\": \"broker-internal-cert\", \"secret\": {\"secretName\": \"broker-internal-cert\"}},
+      {\"configMap\": {\"name\": \"broker-prometheus-config\"}, \"name\": \"broker-prometheus-config\"}]}}}}],
       \"parameters\": [{\"description\": \"Storage capacity required for volume claims\",
       \"name\": \"STORAGE_CAPACITY\", \"value\": \"2Gi\"}, {\"description\": \"The
       docker image to use for the message broker\", \"name\": \"BROKER_IMAGE\", \"value\":

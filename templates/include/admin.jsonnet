@@ -61,6 +61,7 @@ local common = import "common.jsonnet";
           }
         },
         "spec": {
+          "serviceAccount": "${ADDRESS_SPACE_ADMIN_SA}",
           "containers": [
             {
               "image": ragent_image,

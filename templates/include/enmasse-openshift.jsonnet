@@ -15,8 +15,7 @@ local roles = import "roles.jsonnet";
     "items": [
       roles.address_admin_role("v1"),
       roles.namespace_admin_role("v1"),
-      roles.addressspace_admin_role("v1"),
-      roles.infra_view_role("v1")
+      roles.event_reporter_role("v1"),
     ]
   },
 

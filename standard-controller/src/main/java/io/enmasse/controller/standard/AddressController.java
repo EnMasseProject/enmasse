@@ -151,6 +151,7 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
                 }
             }
         } catch (Exception ex) {
+            log.warn("Errror synchronizing addresses", ex);
             eventLogger.log(AddressSyncFailed, ex.getMessage(), Warning, AddressSpace, addressSpaceName);
         }
     }
