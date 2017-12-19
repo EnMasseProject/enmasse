@@ -525,8 +525,12 @@ public class KubernetesHelper implements Kubernetes {
             createRoleBinding("address-admins", namespace, "ClusterRole", "edit", Arrays.asList(
                     new Subject("ServiceAccount", addressSpaceAdminSa, namespace)), addressSpace.getCreatedBy());
             if (hasClusterRole("event-reporter")) {
-                createRoleBinding("event-reporters", namespace, "ClusterRole", "event-reporter", Arrays.asList(
-                    new Subject("ServiceAccount", addressSpaceAdminSa, namespace)), addressSpace.getCreatedBy());
+                try {
+                    createRoleBinding("event-reporters", namespace, "ClusterRole", "event-reporter", Arrays.asList(
+                            new Subject("ServiceAccount", addressSpaceAdminSa, namespace)), addressSpace.getCreatedBy());
+                } catch (Exception e) {
+                    log.warn("Unable to grant event create privileges");
+                }
             }
         } else if (client.isAdaptable(OpenShiftClient.class)) {
             String groupName = "system:serviceaccounts:" + namespace;
