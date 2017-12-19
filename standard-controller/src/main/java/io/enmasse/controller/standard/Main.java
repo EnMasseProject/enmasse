@@ -70,7 +70,7 @@ public class Main {
             }
         });
         vertx.createHttpServer()
-                .requestHandler(request -> request.response().setStatusCode(200).end()).listen(8080);
+                .requestHandler(request -> request.response().setStatusCode(200).end()).listen(8889);
     }
 
     private static Optional<String> getEnv(Map<String, String> env, String envVar) {
