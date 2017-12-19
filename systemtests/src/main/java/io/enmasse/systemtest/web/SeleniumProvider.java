@@ -5,7 +5,6 @@ import com.paulhammant.ngwebdriver.NgWebDriver;
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.Kubernetes;
 import io.enmasse.systemtest.Logging;
-import io.enmasse.systemtest.OpenShift;
 import org.apache.commons.io.FileUtils;
 import org.junit.runner.Description;
 import org.openqa.selenium.*;
@@ -65,12 +64,6 @@ public class SeleniumProvider {
     public void tearDownDrivers() throws Exception {
         takeScreenShot();
         Thread.sleep(3000);
-        try {
-            driver.close();
-        } catch (Exception ex) {
-            Logging.log.warn("Raise exception in close: " + ex.getMessage());
-        }
-
         try {
             driver.quit();
         } catch (Exception ex) {
