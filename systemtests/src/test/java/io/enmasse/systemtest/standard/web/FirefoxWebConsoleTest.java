@@ -64,7 +64,7 @@ public class FirefoxWebConsoleTest extends StandardWebConsoleTest {
         doTestFilterConnectionsByEncrypted();
     }
 
-    @Test
+    //@Test disabled due to issue: #667
     public void testFilterConnectionsByUser() throws Exception {
         doTestFilterConnectionsByUser();
     }
