@@ -49,7 +49,7 @@ public class FirefoxWebConsoleTest extends BrokeredWebConsoleTest {
         doTestSortConnectionsByReceivers();
     }
 
-    @Test
+    //@Test disabled due to issue: #669
     public void testFilterConnectionsByEncrypted() throws Exception {
         doTestFilterConnectionsByEncrypted();
     }

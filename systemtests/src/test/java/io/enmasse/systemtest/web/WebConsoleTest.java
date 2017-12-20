@@ -205,7 +205,7 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
         try {
             receivers = attachReceivers(queue, receiverCount);
 
-            consoleWebPage.addConnectionsFilter(FilterType.ENCRYPTED, "unencrypted");
+            consoleWebPage.addConnectionsFilter(FilterType.ENCRYPTED, "encrypted");
             List<ConnectionWebItem> items = consoleWebPage.getConnectionItems();
             assertThat(items.size(), is(receiverCount));
             assertConnectionUnencrypted(items);
@@ -213,7 +213,7 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
             consoleWebPage.clearAllFilters();
             assertThat(consoleWebPage.getConnectionItems().size(), is(receiverCount));
 
-            consoleWebPage.addConnectionsFilter(FilterType.ENCRYPTED, "encrypted");
+            consoleWebPage.addConnectionsFilter(FilterType.ENCRYPTED, "unencrypted");
             items = consoleWebPage.getConnectionItems();
             assertThat(items.size(), is(0));
             assertConnectionEncrypted(items);
