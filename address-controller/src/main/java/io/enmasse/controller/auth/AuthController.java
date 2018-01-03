@@ -46,10 +46,13 @@ public class AuthController {
     }
 
     public void issueExternalCertificates(AddressSpace addressSpace) throws Exception {
-        for (Endpoint endpoint : addressSpace.getEndpoints()) {
-            if (endpoint.getCertProvider().isPresent()) {
-                String secretName = endpoint.getCertProvider().get().getSecretName();
-                certManager.issueRouteCert(secretName, addressSpace.getNamespace());
+        List<Endpoint> endpoints = addressSpace.getEndpoints();
+        if (endpoints != null) {
+            for (Endpoint endpoint : endpoints) {
+                if (endpoint.getCertProvider().isPresent()) {
+                    String secretName = endpoint.getCertProvider().get().getSecretName();
+                    certManager.issueRouteCert(secretName, addressSpace.getNamespace());
+                }
             }
         }
     }
