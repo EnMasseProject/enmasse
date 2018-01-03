@@ -351,6 +351,7 @@ ConnectedRouter.prototype.request = function (operation, properties, body, callb
         req.body = body;
         this.requests[id] = callback;
         this.sender.send(req);
+        log.info('sent: %j', req);
     }
 };
 
@@ -447,7 +448,7 @@ ConnectedRouter.prototype.on_query_link_route_response = function (message) {
 };
 
 ConnectedRouter.prototype.incoming = function (context) {
-    //log.info('Got message: ' + JSON.stringify(context.message));
+    log.info('recv: %j', context.message);
     var message = context.message;
     var handler = this.requests[message.correlation_id];
     if (handler) {
