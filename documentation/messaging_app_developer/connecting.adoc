@@ -235,7 +235,7 @@ namespace Test
         public static void Main(string[] args)
         {
             String url = (args.Length > 0) ? args[0] : "amqps://<messaging-route-hostname>:443";
-            String address = (args.Length > 1) ? args[0] : "myqueue";
+            String address = (args.Length > 1) ? args[1] : "myqueue";
 
             Connection.DisableServerCertValidation = true;
             Connection connection = new Connection(new Address(url));
