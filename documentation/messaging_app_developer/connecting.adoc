@@ -247,7 +247,7 @@ namespace Test
 
             ReceiverLink receiver = new ReceiverLink(session, "test-receiver", address);
             Message messageReceived = receiver.Receive(TimeSpan.FromSeconds(2));
-            Console.WriteLine(messageReceived.GetBody<String>());
+            Console.WriteLine(messageReceived.Body);
             receiver.Accept(messageReceived);
 
             sender.Close();
