@@ -190,7 +190,7 @@ ConnectedRouter.prototype.sync_addresses = function (desired) {
     myutils.separate(desired, is_topic, topics, others);
 
     var work = update(this.addresses, others, this.update_types.address);
-    work.concat(update(this.link_routes, to_link_routes(myutils.values(topics)), this.update_types.link_route));
+    work = work.concat(update(this.link_routes, to_link_routes(myutils.values(topics)), this.update_types.link_route));
 
     if (work.length) {
         //if made changes, requery when they are complete
