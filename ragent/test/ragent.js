@@ -1171,3 +1171,60 @@ describe('pod watch', function() {
         });
     });
 });
+
+function delay(f, time) {
+    return new Promise(function (resolve, reject) {
+        setTimeout(function () {
+            f();
+            resolve();
+        }, time);
+    });
+}
+
+
+describe('changing router configuration', function() {
+    this.timeout(5000);
+    var ragent;
+    var routers;
+
+    beforeEach(function(done) {
+        ragent = new Ragent();
+        ragent.listen({port:0}).on('listening', function (){
+            routers = new RouterList(ragent.server.address().port);
+            done();
+        });
+    });
+
+    afterEach(function(done) {
+        routers.close().then(function () {
+            ragent.server.close();
+            done();
+        });
+    });
+
+    function new_router(name) {
+        return routers.new_router(name);
+    }
+
+    it('deletes and recreates a topic', function (done) {
+        var router = new_router();
+        var client = rhea.connect({port:ragent.server.address().port});
+        client.on('connection_close', function () { done(); } );
+
+        var sender = client.open_sender();
+        sender.send(get_address_list_message([{address:'mytopic',type:'topic'}]));
+        delay(function () {
+            sender.send({subject:'enmasse.io/v1/AddressList', body:JSON.stringify({items:[]})});
+        }, 500).then(function () {
+            delay(function () {
+                verify_addresses([], router);
+                sender.send(get_address_list_message([{address:'mytopic',type:'topic'}]));
+            }, 500).then(function () {
+                setTimeout(function () {
+                    verify_addresses([{address:'mytopic',type:'topic'}], router);
+                    client.close();
+                }, 1000/*1 second wait for propagation*/);//TODO: add ability to be notified of propagation in some way
+            });
+        });
+    });
+});
