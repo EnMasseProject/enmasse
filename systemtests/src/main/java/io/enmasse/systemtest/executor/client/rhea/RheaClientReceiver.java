@@ -30,6 +30,7 @@ public class RheaClientReceiver extends AbstractClient {
         allowedArgs.add(Argument.CONN_SSL_VERIFY_PEER_NAME);
         allowedArgs.add(Argument.CONN_MAX_FRAME_SIZE);
         allowedArgs.add(Argument.CONN_WEB_SOCKET);
+        allowedArgs.add(Argument.CONN_PROPERTY);
 
         allowedArgs.add(Argument.LINK_DURABLE);
         allowedArgs.add(Argument.LINK_AT_MOST_ONCE);
