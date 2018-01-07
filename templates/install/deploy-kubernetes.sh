@@ -133,6 +133,7 @@ then
 fi
 
 if [ "$MODE" == "singletenant" ]; then
+    runcmd "kubectl create sa address-space-admin -n $NAMESPACE" "Create service account for default address space"
     create_address_space "kubectl" "default" $NAMESPACE
 fi
 

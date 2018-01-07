@@ -205,6 +205,9 @@ then
 fi
 
 if [ "$MODE" == "singletenant" ]; then
+    runcmd "oc create sa address-space-admin -n $NAMESPACE" "Create service account for default address space"
+    runcmd "oc policy add-role-to-user edit system:serviceaccount:${NAMESPACE}:address-space-admin" "Add permissions for editing OpenShift resources to address space admin SA"
+
     create_address_space "oc" "default" $NAMESPACE
 fi
 
