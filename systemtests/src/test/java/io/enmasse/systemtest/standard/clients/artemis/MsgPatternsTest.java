@@ -1,10 +1,10 @@
-package io.enmasse.systemtest.brokered.clients.artemis;
+package io.enmasse.systemtest.standard.clients.artemis;
 
 import io.enmasse.systemtest.AddressSpaceType;
 import io.enmasse.systemtest.executor.client.artemis.ArtemisJMSClientReceiver;
 import io.enmasse.systemtest.executor.client.artemis.ArtemisJMSClientSender;
 
-public class MsgPatternsTest extends io.enmasse.systemtest.brokered.clients.MsgPatternsTest {
+public class MsgPatternsTest extends io.enmasse.systemtest.standard.clients.MsgPatternsTest {
 
     //Disabled until we create mechanism for fetch clients certificates
     //@Test
@@ -45,6 +45,6 @@ public class MsgPatternsTest extends io.enmasse.systemtest.brokered.clients.MsgP
 
     @Override
     protected AddressSpaceType getAddressSpaceType() {
-        return AddressSpaceType.BROKERED;
+        return AddressSpaceType.STANDARD;
     }
 }

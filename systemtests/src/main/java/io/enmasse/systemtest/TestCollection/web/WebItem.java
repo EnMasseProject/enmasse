@@ -1,4 +1,4 @@
-package io.enmasse.systemtest.web;
+package io.enmasse.systemtest.TestCollection.web;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;

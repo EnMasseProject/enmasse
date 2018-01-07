@@ -2,7 +2,7 @@ package io.enmasse.systemtest.standard.authz;
 
 import io.enmasse.systemtest.AddressSpaceType;
 import io.enmasse.systemtest.AddressType;
-import io.enmasse.systemtest.authz.AuthorizationTestBase;
+import io.enmasse.systemtest.TestCollection.authz.AuthorizationTestBase;
 import org.junit.Test;
 
 public class AuthorizationTest extends AuthorizationTestBase {

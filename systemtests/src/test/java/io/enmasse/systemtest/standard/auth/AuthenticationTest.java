@@ -16,12 +16,8 @@
 package io.enmasse.systemtest.standard.auth;
 
 import io.enmasse.systemtest.*;
-import io.enmasse.systemtest.auth.AuthenticationTestBase;
+import io.enmasse.systemtest.TestCollection.auth.AuthenticationTestBase;
 import org.junit.Test;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 public class AuthenticationTest extends AuthenticationTestBase {
 

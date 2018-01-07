@@ -1,11 +1,11 @@
-package io.enmasse.systemtest.brokered.clients.proton.java;
+package io.enmasse.systemtest.standard.clients.proton.java;
 
 import io.enmasse.systemtest.AddressSpaceType;
 import io.enmasse.systemtest.executor.client.proton.java.ProtonJMSClientReceiver;
 import io.enmasse.systemtest.executor.client.proton.java.ProtonJMSClientSender;
 import org.junit.Test;
 
-public class MsgPatternsTest extends io.enmasse.systemtest.brokered.clients.MsgPatternsTest{
+public class MsgPatternsTest extends io.enmasse.systemtest.standard.clients.MsgPatternsTest {
 
     @Test
     public void testBasicMessage() throws Exception {
@@ -45,6 +45,6 @@ public class MsgPatternsTest extends io.enmasse.systemtest.brokered.clients.MsgP
 
     @Override
     protected AddressSpaceType getAddressSpaceType() {
-        return AddressSpaceType.BROKERED;
+        return AddressSpaceType.STANDARD;
     }
 }

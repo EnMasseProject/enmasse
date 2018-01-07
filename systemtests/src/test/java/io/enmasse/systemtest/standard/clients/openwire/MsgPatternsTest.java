@@ -1,10 +1,10 @@
-package io.enmasse.systemtest.brokered.clients.openwire;
+package io.enmasse.systemtest.standard.clients.openwire;
 
 import io.enmasse.systemtest.AddressSpaceType;
 import io.enmasse.systemtest.executor.client.openwire.OpenwireJMSClientReceiver;
 import io.enmasse.systemtest.executor.client.openwire.OpenwireJMSClientSender;
 
-public class MsgPatternsTest extends io.enmasse.systemtest.brokered.clients.MsgPatternsTest{
+public class MsgPatternsTest extends io.enmasse.systemtest.standard.clients.MsgPatternsTest {
 
     //Disabled until we create mechanism for fetch clients certificates
     //@Test
@@ -45,6 +45,6 @@ public class MsgPatternsTest extends io.enmasse.systemtest.brokered.clients.MsgP
 
     @Override
     protected AddressSpaceType getAddressSpaceType() {
-        return AddressSpaceType.BROKERED;
+        return AddressSpaceType.STANDARD;
     }
 }

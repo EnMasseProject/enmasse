@@ -2,8 +2,7 @@ package io.enmasse.systemtest.brokered.authz;
 
 import io.enmasse.systemtest.AddressSpaceType;
 import io.enmasse.systemtest.AddressType;
-import io.enmasse.systemtest.authz.AuthorizationTestBase;
-import org.junit.Test;
+import io.enmasse.systemtest.TestCollection.authz.AuthorizationTestBase;
 
 public class AuthorizationTest extends AuthorizationTestBase {
     @Override

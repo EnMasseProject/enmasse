@@ -1,15 +1,9 @@
-package io.enmasse.systemtest.standard.web;
+package io.enmasse.systemtest.standard.clients;
 
-import io.enmasse.systemtest.AddressSpaceType;
 import io.enmasse.systemtest.AddressType;
-import io.enmasse.systemtest.TestCollection.web.WebConsoleTest;
+import io.enmasse.systemtest.TestCollection.clients.MsgPatternsTestBase;
 
-public abstract class StandardWebConsoleTest extends WebConsoleTest {
-    @Override
-    protected AddressSpaceType getAddressSpaceType() {
-        return AddressSpaceType.STANDARD;
-    }
-
+public abstract class MsgPatternsTest extends MsgPatternsTestBase {
     @Override
     protected String getDefaultPlan(AddressType addressType) {
         switch (addressType) {

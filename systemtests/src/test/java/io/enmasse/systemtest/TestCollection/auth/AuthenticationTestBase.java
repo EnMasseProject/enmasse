@@ -13,10 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.enmasse.systemtest.auth;
+package io.enmasse.systemtest.TestCollection.auth;
 
 import io.enmasse.systemtest.*;
-import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import java.util.ArrayList;
