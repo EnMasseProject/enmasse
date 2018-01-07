@@ -18,7 +18,6 @@ package io.enmasse.systemtest.standard;
 
 import io.enmasse.systemtest.Destination;
 import io.enmasse.systemtest.StandardTestBase;
-import io.enmasse.systemtest.TestBase;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import org.apache.qpid.proton.message.Message;
 import org.junit.Test;
@@ -54,4 +53,14 @@ public class AnycastTest extends StandardTestBase {
         assertThat(recvResult2.get(1, TimeUnit.MINUTES).size(), is(1));
         assertThat(recvResult3.get(1, TimeUnit.MINUTES).size(), is(1));
     }
+
+    @Test
+    public void testRestApi() throws Exception {
+        List<String> addresses = Arrays.asList("anycastRest1", "anycastRest2");
+        Destination a1 = Destination.anycast(addresses.get(0));
+        Destination a2 = Destination.anycast(addresses.get(1));
+
+        runRestApiTest(addresses, a1, a2);
+    }
+
 }

@@ -24,12 +24,13 @@ import org.junit.Rule;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
 
 public abstract class TestBaseWithDefault extends TestBase {
     private static final String defaultAddressTemplate = "-default-";
@@ -160,13 +161,40 @@ public abstract class TestBaseWithDefault extends TestBase {
     protected List<AbstractClient> attachReceivers(List<Destination> destinations) throws Exception {
         return attachReceivers(defaultAddressSpace, destinations);
     }
-    
+
     /**
      * create M connections with N receivers and K senders
      */
     protected AbstractClient attachConnector(Destination destination, int connectionCount,
                                              int senderCount, int receiverCount) throws Exception {
         return attachConnector(defaultAddressSpace, destination, connectionCount, senderCount, receiverCount);
+    }
+
+    /**
+     * body for rest api tests
+     */
+    public void runRestApiTest(List<String> destinationsNames, Destination d1, Destination d2) throws Exception {
+        setAddresses(d1);
+        appendAddresses(d2);
+
+        //queue1, queue2
+        Future<List<String>> response = getAddresses(Optional.empty());
+        assertThat(response.get(1, TimeUnit.MINUTES), is(destinationsNames));
+        Logging.log.info("addresses (" + destinationsNames.stream().collect(Collectors.joining(",")) + ") successfully created");
+
+        deleteAddresses(d1);
+
+        //queue1
+        response = getAddresses(Optional.empty());
+        assertThat(response.get(1, TimeUnit.MINUTES), is(destinationsNames.subList(1, 2)));
+        Logging.log.info("address (" + d1.getAddress() + ") successfully deleted");
+
+        deleteAddresses(d2);
+
+        //empty
+        response = getAddresses(Optional.empty());
+        assertThat(response.get(1, TimeUnit.MINUTES), is(Collections.emptyList()));
+        Logging.log.info("addresses (" + d2.getAddress() + ") successfully deleted");
     }
 
 }
