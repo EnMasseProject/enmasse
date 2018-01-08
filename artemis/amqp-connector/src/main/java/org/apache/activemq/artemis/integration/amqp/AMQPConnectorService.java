@@ -97,8 +97,16 @@ public class AMQPConnectorService implements ConnectorService, BaseConnectionLif
       ProtonClientProtocolManager protocolManager = new ProtonClientProtocolManager(new ProtonProtocolManagerFactory(), server);
       NettyConnector connector = new NettyConnector(connectorConfig, lifecycleHandler, this, closeExecutor, threadPool, server.getScheduledPool(), protocolManager);
       connector.start();
-      connector.createConnection();
-      started = true;
+      Connection connection = connector.createConnection();
+      if (connection != null) {
+         started = true;
+      } else {
+         ActiveMQAMQPLogger.LOGGER.info("Error starting connector, retrying in 5 seconds");
+         scheduledExecutorService.schedule(() -> {
+            start();
+            return true;
+         }, 5, TimeUnit.SECONDS);
+      }
    }
 
    @Override
