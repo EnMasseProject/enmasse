@@ -10,9 +10,15 @@
   <artifactId>discovery-lib</artifactId>
   <dependencies>
     <dependency>
-      <groupId>io.vertx</groupId>
-      <artifactId>vertx-proton</artifactId>
-      <version>${vertx.version}</version>
+      <groupId>io.enmasse</groupId>
+      <artifactId>k8s-api</artifactId>
+      <version>${project.version}</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.fabric8</groupId>
+      <artifactId>kubernetes-client</artifactId>
+      <version>${fabric8.kubernetes-client.version}</version>
       <scope>compile</scope>
     </dependency>
     <dependency>

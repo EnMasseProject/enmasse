@@ -16,12 +16,9 @@
 
 package enmasse.broker.prestop;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import enmasse.discovery.DiscoveryClient;
 import enmasse.discovery.Endpoint;
 import enmasse.discovery.Host;
-import io.enmasse.amqp.Artemis;
-import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.net.PemKeyCertOptions;
 import io.vertx.core.net.PemTrustOptions;
@@ -35,9 +32,11 @@ import java.nio.file.Files;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 public class Main {
-    private static final ObjectMapper mapper = new ObjectMapper();
     public static void main(String [] args) throws Exception {
         boolean debug = System.getenv("PRESTOP_DEBUG") != null;
 
@@ -58,11 +57,12 @@ public class Main {
             annotationFilter.put("cluster_id", clusterId);
 
             Endpoint messagingEndpoint = new Endpoint(System.getenv("MESSAGING_SERVICE_HOST"), Integer.parseInt(System.getenv("MESSAGING_SERVICE_PORT_AMQPS_BROKER")));
-            DiscoveryClient discoveryClient = new DiscoveryClient("podsense", labelFilter, annotationFilter, "broker", certDir);
+            DiscoveryClient discoveryClient = new DiscoveryClient(labelFilter, annotationFilter, "broker");
+            CompletableFuture<Set<Host>> peers = new CompletableFuture<>();
+            discoveryClient.addListener(peers::complete);
+
             TopicMigrator migrator = new TopicMigrator(vertx, localHost, messagingEndpoint, brokerFactory, clientOptions);
-            discoveryClient.addListener(migrator);
-            vertx.deployVerticle(discoveryClient);
-            migrator.migrate();
+            migrator.migrate(peers.get(60, TimeUnit.SECONDS));
         } else {
             Endpoint messagingEndpoint = new Endpoint(System.getenv("MESSAGING_SERVICE_HOST"), Integer.parseInt(System.getenv("MESSAGING_SERVICE_PORT_AMQPS_NORMAL")));
             String queueName = System.getenv("QUEUE_NAME");

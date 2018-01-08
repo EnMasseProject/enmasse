@@ -16,58 +16,38 @@
 
 package enmasse.discovery;
 
-import io.vertx.core.AbstractVerticle;
-import io.vertx.core.Future;
-import io.vertx.core.net.PemKeyCertOptions;
-import io.vertx.core.net.PemTrustOptions;
-import io.vertx.proton.ProtonClient;
-import io.vertx.proton.ProtonClientOptions;
-import io.vertx.proton.ProtonConnection;
-import io.vertx.proton.ProtonReceiver;
-import org.apache.qpid.proton.amqp.Symbol;
-import org.apache.qpid.proton.amqp.messaging.AmqpValue;
-import org.apache.qpid.proton.amqp.messaging.Source;
-import org.apache.qpid.proton.message.Message;
+import io.enmasse.k8s.api.Resource;
+import io.enmasse.k8s.api.ResourceController;
+import io.enmasse.k8s.api.Watcher;
+import io.fabric8.kubernetes.client.DefaultKubernetesClient;
+import io.fabric8.kubernetes.client.KubernetesClient;
+import io.fabric8.kubernetes.client.Watch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
 import java.util.*;
+import java.util.stream.Collectors;
 
-public class DiscoveryClient extends AbstractVerticle {
-    private final Map<Symbol, Map<String, String>> sourceFilter;
+public class DiscoveryClient implements Resource<Pod>, Watcher<Pod> {
     private final List<DiscoveryListener> listeners = new ArrayList<>();
     private final Logger log = LoggerFactory.getLogger(DiscoveryClient.class.getName());
-    private final Endpoint endpoint;
     private final String containerName;
-    private final String address;
-    private final String certDir;
+    private final Map<String, String> labelFilter;
+    private final Map<String, String> annotationFilter;
     private Set<Host> currentHosts = new LinkedHashSet<>();
-    private volatile ProtonConnection connection;
+    private final KubernetesClient client;
+    private final ResourceController<Pod> resourceController;
 
-    public DiscoveryClient(Endpoint endpoint, String address, Map<String, String> labelFilter, Map<String, String> annotationFilter, String containerName, String certDir) {
-        this.endpoint = endpoint;
-        this.address = address;
-        this.sourceFilter = toSymbolMap(labelFilter, annotationFilter);
+    public DiscoveryClient(KubernetesClient client, Map<String, String> labelFilter, Map<String, String> annotationFilter, String containerName) {
+        this.client = client;
+        this.labelFilter = labelFilter;
+        this.annotationFilter = annotationFilter;
         this.containerName = containerName;
-        this.certDir = certDir;
+        this.resourceController = ResourceController.create(this, this);
     }
 
-    public DiscoveryClient(String address, Map<String, String> labelFilter, Map<String, String> annotationFilter, String containerName, String certDir) {
-        this(getEndpoint(), address, labelFilter, annotationFilter, containerName, certDir);
-    }
-
-    private static Endpoint getEndpoint() {
-        String host = System.getenv("CONFIGURATION_SERVICE_HOST");
-        String port = System.getenv("CONFIGURATION_SERVICE_PORT");
-        return new Endpoint(host, Integer.parseInt(port));
-    }
-
-    private static Map<Symbol, Map<String, String>> toSymbolMap(Map<String, String> labelFilter, Map<String, String> annotationFilter) {
-        Map<Symbol, Map<String, String>> symbolMap = new HashMap<>();
-        symbolMap.put(Symbol.getSymbol("labels"), labelFilter);
-        symbolMap.put(Symbol.getSymbol("annotations"), annotationFilter);
-        return symbolMap;
+    public DiscoveryClient(Map<String, String> labelFilter, Map<String, String> annotationFilter, String containerName) {
+        this(new DefaultKubernetesClient(), labelFilter, annotationFilter, containerName);
     }
 
     public void addListener(DiscoveryListener listener) {
@@ -85,55 +65,20 @@ public class DiscoveryClient extends AbstractVerticle {
         }
     }
 
-    private ProtonClientOptions createClientOptions()
-    {
-        ProtonClientOptions options = new ProtonClientOptions();
-
-        if (certDir != null) {
-            options.setSsl(true)
-                    .addEnabledSaslMechanism("EXTERNAL")
-                    .setHostnameVerificationAlgorithm("")
-                    .setPemTrustOptions(new PemTrustOptions()
-                            .addCertPath(new File(certDir, "ca.crt").getAbsolutePath()))
-                    .setPemKeyCertOptions(new PemKeyCertOptions()
-                            .setCertPath(new File(certDir, "tls.crt").getAbsolutePath())
-                            .setKeyPath(new File(certDir, "tls.key").getAbsolutePath()));
-        }
-        return options;
+    public void start() {
+        resourceController.start();;
     }
 
     @Override
-    public void start(Future<Void> startFuture) {
-        ProtonClient client = ProtonClient.create(vertx);
-        client.connect(createClientOptions(), endpoint.hostname(), endpoint.port(), event -> {
-            if (event.succeeded()) {
-                connection = event.result();
-                connection.open();
-
-                Source source = new Source();
-                source.setAddress(address);
-                source.setFilter(sourceFilter);
-                ProtonReceiver receiver = connection.createReceiver(address);
-                receiver.openHandler(o -> startFuture.complete());
-                receiver.setSource(source);
-                receiver.handler((protonDelivery, message) -> notifyListeners(decodeHosts(message)));
-                receiver.open();
-            }
-
-        });
-    }
-
-    @SuppressWarnings("unchecked")
-    private Set<Host> decodeHosts(Message message) {
+    public void resourcesUpdated(Set<Pod> resources) throws Exception {
         Set<Host> hosts = new HashSet<>();
-        AmqpValue value = (AmqpValue) message.getBody();
-        for (Object obj : (List)value.getValue()) {
-            Map<String, Object> podInfo = (Map<String, Object>) obj;
-            String host = (String) podInfo.get("host");
-            String ready = (String) podInfo.get("ready");
-            String phase = (String) podInfo.get("phase");
+        for (Pod pod : resources) {
+
+            String host = pod.getHost();
+            String ready = pod.getReady();
+            String phase = pod.getPhase();
             if ("True".equals(ready) && "Running".equals(phase)) {
-                Map<String, Map<String, Integer>> portMap = (Map<String, Map<String, Integer>>) podInfo.get("ports");
+                Map<String, Map<String, Integer>> portMap = pod.getPortMap();
                 if (containerName != null) {
                     hosts.add(new Host(host, portMap.get(containerName)));
                 } else {
@@ -141,16 +86,44 @@ public class DiscoveryClient extends AbstractVerticle {
                 }
             }
         }
-        return hosts;
+
+        notifyListeners(hosts);
+    }
+
+    public void stop() {
+        resourceController.stop();
     }
 
     @Override
-    public void stop(Future<Void> stopFuture) {
-        vertx.runOnContext(h -> {
-            if (connection != null) {
-                connection.close();
-                stopFuture.complete();
+    public Watch watchResources(io.fabric8.kubernetes.client.Watcher watcher) {
+        return client.pods().withLabels(labelFilter).watch(watcher);
+    }
+
+    @Override
+    public Set<Pod> listResources() {
+        return client.pods().withLabels(labelFilter).list().getItems().stream()
+                .map(Pod::new)
+                .filter(this::filterPod)
+                .collect(Collectors.toSet());
+    }
+
+
+    private boolean filterPod(Pod pod) {
+        Map<String, String> annotations = pod.getAnnotations();
+        if (annotationFilter.isEmpty()) {
+            return true;
+        }
+
+        if (annotations == null) {
+            return false;
+        }
+
+        for (Map.Entry<String, String> filterEntry : annotationFilter.entrySet()) {
+            String annotationValue = annotations.get(filterEntry.getKey());
+            if (annotationValue == null || !annotationValue.equals(filterEntry.getValue())) {
+                return false;
             }
-        });
+        }
+        return true;
     }
 }

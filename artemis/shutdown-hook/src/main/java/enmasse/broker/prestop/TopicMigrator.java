@@ -16,7 +16,6 @@
 
 package enmasse.broker.prestop;
 
-import enmasse.discovery.DiscoveryListener;
 import enmasse.discovery.Endpoint;
 import enmasse.discovery.Host;
 import io.enmasse.amqp.Artemis;
@@ -32,10 +31,9 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
-public class TopicMigrator implements DiscoveryListener {
+public class TopicMigrator {
     private final Vertx vertx;
     private final Logger log = LoggerFactory.getLogger(TopicMigrator.class);
-    private volatile Set<Host> destinationBrokers = Collections.emptySet();
     private final Host localHost;
     private final Artemis localBroker;
     private final Endpoint messagingEndpoint;
@@ -52,7 +50,7 @@ public class TopicMigrator implements DiscoveryListener {
         this.protonClientOptions = clientOptions;
     }
 
-    public void migrate() throws Exception {
+    public void migrate(Set<Host> peers) throws Exception {
         // Step 0: Cutoff router link
         localBroker.destroyConnectorService("amqp-connector");
 
@@ -62,7 +60,7 @@ public class TopicMigrator implements DiscoveryListener {
 
         // Step 2: Create and pause queues on other brokers
         log.info("Creating and pausing queues for {}", subscriptions);
-        Map<QueueInfo, Host> queueMap = createSubscriptions(subscriptions);
+        Map<QueueInfo, Host> queueMap = createSubscriptions(peers, subscriptions);
 
         // Step 3: Migrate messages from local subscriptions to destinations
         log.info("Migrating messages for " + queueMap.keySet());
@@ -92,12 +90,12 @@ public class TopicMigrator implements DiscoveryListener {
         }
     }
 
-    private Map<QueueInfo,Host> createSubscriptions(Set<SubscriptionInfo> subscriptions) throws Exception {
+    private Map<QueueInfo,Host> createSubscriptions(Set<Host> peers, Set<SubscriptionInfo> subscriptions) throws Exception {
         Map<QueueInfo, Host> queueMap = new LinkedHashMap<>();
         Iterator<Host> destinations = Collections.emptyIterator();
         for (SubscriptionInfo subscriptionInfo : subscriptions) {
             while (!destinations.hasNext()) {
-                destinations = otherHosts().iterator();
+                destinations = otherHosts(peers).iterator();
                 if (destinations.hasNext()) {
                     break;
                 }
@@ -131,8 +129,8 @@ public class TopicMigrator implements DiscoveryListener {
         localBroker.createConnectorService(address, parameters);
     }
 
-    private Set<Host> otherHosts() {
-        return destinationBrokers.stream()
+    private Set<Host> otherHosts(Set<Host> peers) {
+        return peers.stream()
                 .filter(host -> !host.equals(localHost))
                 .collect(Collectors.toSet());
     }
@@ -215,10 +213,5 @@ public class TopicMigrator implements DiscoveryListener {
                 broker.destroyConnectorService(subscription.getConnectorInfo().get().getName());
             }
         }
-    }
-
-    @Override
-    public void hostsChanged(Set<Host> set) {
-        destinationBrokers = set;
     }
 }
