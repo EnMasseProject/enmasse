@@ -198,6 +198,16 @@
     "value": value
   },
 
+  env_field_ref(name, field_path)::
+  {
+    "name": name,
+    "valueFrom": {
+      "fieldRef": {
+        "fieldPath": field_path
+      }
+    }
+  },
+
   memory_resources(request, limit)::
   {
     "requests": {
