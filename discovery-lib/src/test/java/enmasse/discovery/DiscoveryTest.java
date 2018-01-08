@@ -1,73 +1,35 @@
 package enmasse.discovery;
 
-import io.enmasse.config.service.amqp.AMQPServer;
 import io.enmasse.config.service.model.Subscriber;
-import io.vertx.core.Vertx;
-import io.vertx.ext.unit.TestContext;
-import io.vertx.ext.unit.junit.VertxUnitRunner;
-import org.apache.qpid.proton.amqp.messaging.AmqpValue;
-import org.apache.qpid.proton.message.Message;
-import org.junit.After;
-import org.junit.Before;
+import io.fabric8.kubernetes.api.model.*;
+import io.fabric8.kubernetes.client.KubernetesClient;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
-import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.*;
+import static org.mockito.Mockito.mock;
 
-@RunWith(VertxUnitRunner.class)
 public class DiscoveryTest {
 
-    private Vertx vertx;
-
-    @Before
-    public void setup() {
-        vertx = Vertx.vertx();
-    }
-
-    @After
-    public void teardown() {
-        vertx.close();
-    }
-
     @Test
-    public void testDiscovery(TestContext context) throws InterruptedException, IOException, ExecutionException, TimeoutException {
+    public void testDiscovery() throws Exception {
         Map<String, String> expectedLabelFilter = Collections.singletonMap("my", "key");
         Map<String, String> expectedAnnotationFilter = Collections.singletonMap("my", "annotation");
         CompletableFuture<Set<Host>> changedHosts = new CompletableFuture<>();
-        CompletableFuture<Subscriber> subscriberFuture = new CompletableFuture<>();
-
-        AMQPServer testServer = new AMQPServer("0.0.0.0", 0, Collections.singletonMap("podsense", (observerKey, subscriber) -> {
-            assertThat(observerKey.getLabelFilter(), is(expectedLabelFilter));
-            assertThat(observerKey.getAnnotationFilter(), is(expectedAnnotationFilter));
-            System.out.println("Creating subscription");
-            subscriberFuture.complete(subscriber);
-        }));
+        KubernetesClient kubeClient = mock(KubernetesClient.class);
 
         System.out.println("Deploying server verticle");
-        vertx.deployVerticle(testServer, context.asyncAssertSuccess());
-        DiscoveryClient client = new DiscoveryClient(new Endpoint("127.0.0.1", waitForPort(testServer)), "podsense", expectedLabelFilter, expectedAnnotationFilter, null, null);
+        DiscoveryClient client = new DiscoveryClient(kubeClient, expectedLabelFilter, expectedAnnotationFilter, null);
         client.addListener(changedHosts::complete);
-        System.out.println("Deploying discovery verticle");
-        vertx.deployVerticle(client, context.asyncAssertSuccess());
 
         System.out.println("Waiting for subscriber to be created");
-        Subscriber subscriber = subscriberFuture.get(1, TimeUnit.MINUTES);
-        assertNotNull(subscriber);
-        System.out.println("Sending initial response");
-        vertx.runOnContext(a -> subscriber.resourcesUpdated(createResponse("False", "Pending")));
-        try {
-            changedHosts.get(10, TimeUnit.SECONDS);
-            fail("Pending hosts should not update host set");
-        } catch (TimeoutException ignored) {
-        }
+        client.resourcesUpdated(Collections.singleton(createPod("False", "Pending")));
 
         System.out.println("Sending second response");
-        vertx.runOnContext(a -> subscriber.resourcesUpdated(createResponse("False", "Running")));
+        client.resourcesUpdated(Collections.singleton(createPod("False", "Running")));
         try {
             changedHosts.get(10, TimeUnit.SECONDS);
             fail("Ready must be true before returning host");
@@ -75,7 +37,7 @@ public class DiscoveryTest {
         }
 
         System.out.println("Sending third response");
-        vertx.runOnContext(a -> subscriber.resourcesUpdated(createResponse("True", "Running")));
+        client.resourcesUpdated(Collections.singleton(createPod("True", "Running")));
         try {
             Set<Host> actual = changedHosts.get(2, TimeUnit.MINUTES);
             assertThat(actual.size(), is(1));
@@ -87,24 +49,30 @@ public class DiscoveryTest {
         }
     }
 
-    public Message createResponse(String ready, String phase) {
-        Message message = Message.Factory.create();
-        Map<String, Object> responseMap = new LinkedHashMap<>();
-        Map<String, Map<String, Integer>> portMap = Collections.singletonMap("c", Collections.singletonMap("http", 1234));
-        responseMap.put("host", "10.0.0.1");
-        responseMap.put("ports", portMap);
-        responseMap.put("ready", ready);
-        responseMap.put("phase", phase);
-        AmqpValue val = new AmqpValue(Collections.singletonList(responseMap));
-        message.setBody(val);
-        return message;
-    }
-
-
-    private int waitForPort(AMQPServer testServer) throws InterruptedException {
-        while (testServer.port() == 0) {
-            Thread.sleep(1000);
-        }
-        return testServer.port();
+    public enmasse.discovery.Pod createPod(String ready, String phase) {
+       return new enmasse.discovery.Pod(new PodBuilder()
+               .editOrNewMetadata()
+               .withName("mypod")
+               .withLabels(Collections.singletonMap("my", "key"))
+               .withAnnotations(Collections.singletonMap("my", "annotation"))
+               .endMetadata()
+               .editOrNewStatus()
+               .withPhase(phase)
+               .withPodIP("10.0.0.1")
+               .addNewCondition()
+               .withType("Ready")
+               .withStatus(ready)
+               .endCondition()
+               .endStatus()
+               .withNewSpec()
+               .addToContainers(new ContainerBuilder()
+                       .withName("c")
+                       .addToPorts(new ContainerPortBuilder()
+                               .withName("http")
+                               .withContainerPort(1234)
+                               .build())
+                       .build())
+               .endSpec()
+               .build());
     }
 }

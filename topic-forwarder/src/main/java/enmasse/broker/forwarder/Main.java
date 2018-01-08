@@ -41,14 +41,14 @@ public class Main {
 
         String certDir = System.getenv("CERT_DIR");
 
-        DiscoveryClient discoveryClient = new DiscoveryClient("podsense", labelFilter, annotationFilter, "broker", certDir);
+        DiscoveryClient discoveryClient = new DiscoveryClient( labelFilter, annotationFilter, "broker");
         ForwarderController replicator = new ForwarderController(localHost, address, certDir);
         discoveryClient.addListener(replicator);
 
         Vertx vertx = Vertx.vertx();
         vertx.deployVerticle(replicator, result -> {
             if (result.succeeded()) {
-                vertx.deployVerticle(discoveryClient);
+                discoveryClient.start();
             }
         });
     }
