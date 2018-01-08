@@ -1,6 +1,7 @@
 #!/bin/sh
-. $ARTEMIS_HOME/bin/partitionPV.sh
-. $ARTEMIS_HOME/bin/dynamic_resources.sh
+
+source /opt/partition/partitionPV.sh
+source /usr/local/dynamic-resources/dynamic_resources.sh
 
 export BROKER_IP=`hostname -I | cut -f 1 -d ' '`
 CONFIG_TEMPLATES=/config_templates
@@ -12,13 +13,14 @@ then
     export QUEUE_SCHEDULER_SERVICE_PORT=$ADMIN_SERVICE_PORT_QUEUE_SCHEDULER
 fi
 
-MAX_HEAP=`get_heap_size`
-if [ -n "$MAX_HEAP" ]; then
-  JAVA_OPTS="-Xms${MAX_HEAP}m -Xmx${MAX_HEAP}m $JAVA_OPTS"
-fi
-
 # Make sure that we use /dev/urandom
 JAVA_OPTS="${JAVA_OPTS} -Djava.security.egd=file:/dev/./urandom"
+
+#Set the memory options
+JAVA_OPTS="$(adjust_java_options ${JAVA_OPTS})"
+#GC Option conflicts with the one already configured.
+JAVA_OPTS=$(echo $JAVA_OPTS | sed -e "s/-XX:+UseParallelGC/ /")
+
 
 function configure_brokered() {
     cp $CONFIG_TEMPLATES/brokered/broker.xml /tmp/broker.xml
@@ -91,6 +93,11 @@ function configure() {
 
     fi
 
+}
+
+function init_data_dir() {
+# No init needed for Artemis
+  return
 }
 
 # Parameters are
