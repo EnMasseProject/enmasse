@@ -4,6 +4,7 @@ package io.enmasse.systemtest.web;
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.executor.client.AbstractClient;
+import io.enmasse.systemtest.executor.client.rhea.RheaClientConnector;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -313,13 +314,14 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
         client.getConnectOptions().setUsername(username).setPassword(password);
         List<String> msgBatch = TestUtils.generateMessages(msgCount);
 
-        assertThat(client.sendMessages(dest.getAddress(), msgBatch, 1, TimeUnit.MINUTES).get(1, TimeUnit.MINUTES),
-                is(consoleWebPage.getAddressItem(dest).getMessagesIn()));
-
+        int sent = client.sendMessages(dest.getAddress(), msgBatch, 1, TimeUnit.MINUTES).get(1, TimeUnit.MINUTES);
+        Thread.sleep(5000);
+        assertEquals(sent, consoleWebPage.getAddressItem(dest).getMessagesIn());
         assertEquals(msgCount, consoleWebPage.getAddressItem(dest).getMessagesStored());
 
-        assertThat(client.recvMessages(dest.getAddress(), msgCount).get(1, TimeUnit.MINUTES),
-                is(consoleWebPage.getAddressItem(dest).getMessagesOut()));
+        int received = client.recvMessages(dest.getAddress(), msgCount).get(1, TimeUnit.MINUTES).size();
+        Thread.sleep(5000);
+        assertEquals(received, consoleWebPage.getAddressItem(dest).getMessagesOut());
 
     }
 
@@ -330,11 +332,16 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
         consoleWebPage.createAddressWebConsole(dest);
         consoleWebPage.openAddressesPageWebConsole();
 
-        AbstractClient client = attachConnector(dest, 1, 10, 5);
-        Thread.sleep(5000);
+        AbstractClient client = new RheaClientConnector();
+        try{
+            client = attachConnector(dest, 1, senderCount, receiverCount);
+            Thread.sleep(5000);
 
-        assertEquals(10, consoleWebPage.getAddressItem(dest).getReceiversCount());
-        assertEquals(5, consoleWebPage.getAddressItem(dest).getSendersCount());
+            assertEquals(10, consoleWebPage.getAddressItem(dest).getReceiversCount());
+            assertEquals(5, consoleWebPage.getAddressItem(dest).getSendersCount());
+        } finally {
+            client.stop();
+        }
     }
 
     //============================================================================================
