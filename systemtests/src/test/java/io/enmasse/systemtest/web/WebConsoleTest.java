@@ -1,10 +1,8 @@
 package io.enmasse.systemtest.web;
 
 
-import io.enmasse.systemtest.AddressType;
-import io.enmasse.systemtest.Destination;
-import io.enmasse.systemtest.KeycloakCredentials;
-import io.enmasse.systemtest.TestBaseWithDefault;
+import io.enmasse.systemtest.*;
+import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.executor.client.AbstractClient;
 import org.junit.After;
 import org.junit.Before;
@@ -17,6 +15,8 @@ import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -301,6 +301,40 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
         assertSorted(consoleWebPage.getConnectionItems(), true, Comparator.comparing(ConnectionWebItem::getName));
 
         stopClients(clients);
+    }
+
+    public void doTestMessagesMetrics() throws Exception {
+        int msgCount = 19;
+        Destination dest = Destination.queue("queue-via-web");
+        consoleWebPage.createAddressWebConsole(dest);
+        consoleWebPage.openAddressesPageWebConsole();
+
+        AmqpClient client = amqpClientFactory.createQueueClient(defaultAddressSpace);
+        client.getConnectOptions().setUsername(username).setPassword(password);
+        List<String> msgBatch = TestUtils.generateMessages(msgCount);
+
+        assertThat(client.sendMessages(dest.getAddress(), msgBatch, 1, TimeUnit.MINUTES).get(1, TimeUnit.MINUTES),
+                is(consoleWebPage.getAddressItem(dest).getMessagesIn()));
+
+        assertEquals(msgCount, consoleWebPage.getAddressItem(dest).getMessagesStored());
+
+        assertThat(client.recvMessages(dest.getAddress(), msgCount).get(1, TimeUnit.MINUTES),
+                is(consoleWebPage.getAddressItem(dest).getMessagesOut()));
+
+    }
+
+    public void doTestClientsMetrics() throws Exception {
+        int senderCount = 5;
+        int receiverCount = 10;
+        Destination dest = Destination.queue("queue-via-web");
+        consoleWebPage.createAddressWebConsole(dest);
+        consoleWebPage.openAddressesPageWebConsole();
+
+        AbstractClient client = attachConnector(dest, 1, 10, 5);
+        Thread.sleep(5000);
+
+        assertEquals(10, consoleWebPage.getAddressItem(dest).getReceiversCount());
+        assertEquals(5, consoleWebPage.getAddressItem(dest).getSendersCount());
     }
 
     //============================================================================================
