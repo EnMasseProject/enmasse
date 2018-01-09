@@ -16,7 +16,7 @@
 'use strict';
 
 var assert = require('assert');
-var log = require('../log.js');
+var log = require('../lib/log.js');
 
 describe('logger', function() {
     it('sets level from LOGLEVEL env var', function (done) {

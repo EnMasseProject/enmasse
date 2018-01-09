@@ -49,7 +49,7 @@ local storage = import "storage-template.jsonnet";
       prometheus.standard_broker_config("broker-prometheus-config"),
       mqttService.internal("${ADDRESS_SPACE}"),
       qdrouterd.deployment("${ADDRESS_SPACE}", "${ROUTER_IMAGE}", "${ROUTER_METRICS_IMAGE}", "${MESSAGING_SECRET}", "authservice-ca"),
-      subserv.deployment("${ADDRESS_SPACE}", "${SUBSERV_IMAGE}"),
+      subserv.deployment("${ADDRESS_SPACE}", "${AGENT_IMAGE}"),
       mqttGateway.deployment("${ADDRESS_SPACE}", "${MQTT_GATEWAY_IMAGE}", "${MQTT_SECRET}"),
       mqttLwt.deployment("${ADDRESS_SPACE}", "${MQTT_LWT_IMAGE}"),
       common.ca_secret("authservice-ca", "${AUTHENTICATION_SERVICE_CA_CERT}"),
@@ -93,16 +93,6 @@ local storage = import "storage-template.jsonnet";
         "name": "STANDARD_CONTROLLER_IMAGE",
         "description": "The docker image to use for the standard controller",
         "value": images.standard_controller
-      },
-      {
-        "name": "RAGENT_IMAGE",
-        "description": "The image to use for the router agent",
-        "value": images.ragent
-      },
-      {
-        "name": "SUBSERV_IMAGE",
-        "description": "The image to use for the subscription services",
-        "value": images.subserv
       },
       {
         "name": "AGENT_IMAGE",

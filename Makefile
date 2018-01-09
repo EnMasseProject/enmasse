@@ -1,5 +1,5 @@
 TOPDIR=$(dir $(lastword $(MAKEFILE_LIST)))
-BUILD_DIRS     = ragent subserv agent none-authservice templates
+BUILD_DIRS     = agent none-authservice templates
 DOCKER_DIRS	   = topic-forwarder artemis address-controller standard-controller queue-scheduler configserv keycloak keycloak-controller router router-metrics mqtt-gateway mqtt-lwt
 FULL_BUILD 	   = true
 DOCKER_REGISTRY ?= docker.io

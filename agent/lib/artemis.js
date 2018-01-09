@@ -16,7 +16,7 @@
 'use strict';
 
 var util = require('util');
-var log = require("./log.js").logger();
+var log = require('./log.js').logger();
 
 var Artemis = function (connection) {
     this.connection = connection;
@@ -401,7 +401,7 @@ Artemis.prototype.createConnectorService = function (name, source, target) {
         "host": process.env.MESSAGING_SERVICE_HOST,
         "port": process.env.MESSAGING_SERVICE_PORT_AMQPS_BROKER,
         "containerId": name,
-        "groupId": name,
+        "clusterId": name,
         "clientAddress": target,
         "sourceAddress": source
     };

@@ -62,25 +62,6 @@ local common = import "common.jsonnet";
           "serviceAccount": "${ADDRESS_SPACE_ADMIN_SA}",
           "containers": [
             {
-              "image": "${RAGENT_IMAGE}",
-              "name": "ragent",
-              "env": [
-                common.env("CONFIGURATION_SERVICE_HOST", "localhost"),
-                common.env("CONFIGURATION_SERVICE_PORT", "5671"),
-                common.env("CERT_DIR", "/etc/enmasse-certs"),
-                common.env("PROBE_PORT", "8888")
-              ],
-              "resources": common.memory_resources("64Mi", "64Mi"),
-              "ports": [
-                common.container_port("amqp", 55671),
-                common.container_port("http", 8888)
-              ],
-              "livenessProbe": common.http_probe("http", "/", "HTTP", 60),
-              "volumeMounts": [
-                common.volume_mount("admin-internal-cert", "/etc/enmasse-certs", true)
-              ]
-            },
-            {
               "image": "${QUEUE_SCHEDULER_IMAGE}",
               "name": "queue-scheduler",
               "env": [

@@ -19,6 +19,7 @@ var address_ctrl = require('../lib/address_ctrl.js');
 var AddressSource = require('../lib/internal_address_source.js');
 var ConsoleServer = require('../lib/console_server.js');
 var kubernetes = require('../lib/kubernetes.js');
+var Ragent = require('../lib/ragent.js');
 var tls_options = require('../lib/tls_options.js');
 
 function bind_event(source, event, target, method) {
@@ -47,6 +48,10 @@ function start(env) {
             var StandardStats = require('../lib/standard_stats.js');
             var stats = new StandardStats();
             stats.init(console_server);
+
+            var ragent = new Ragent();
+            bind_event(address_source, 'addresses_defined', ragent, 'sync_addresses')
+            ragent.start_listening(env);
         }
     });
 }
