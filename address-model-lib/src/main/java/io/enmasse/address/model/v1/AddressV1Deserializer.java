@@ -81,6 +81,10 @@ class AddressV1Deserializer extends JsonDeserializer<Address> {
         if (status != null) {
             boolean isReady = status.get(Fields.IS_READY).asBoolean();
             Status s = new Status(isReady);
+
+            if (status.hasNonNull(Fields.PHASE)) {
+                s.setPhase(Status.Phase.valueOf(status.get(Fields.PHASE).asText()));
+            }
             if (status.hasNonNull(Fields.MESSAGES)) {
                 ArrayNode messages = (ArrayNode) status.get(Fields.MESSAGES);
                 for (int i = 0; i < messages.size(); i++) {

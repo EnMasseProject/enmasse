@@ -23,25 +23,8 @@ import java.util.List;
  */
 public class Status {
     private boolean isReady = false;
+    private Phase phase = Phase.Pending;
     private List<String> messages = new ArrayList<>();
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        Status status = (Status) o;
-
-        if (isReady != status.isReady) return false;
-        return messages.equals(status.messages);
-    }
-
-    @Override
-    public int hashCode() {
-        int result = (isReady ? 1 : 0);
-        result = 31 * result + messages.hashCode();
-        return result;
-    }
 
     public Status(boolean isReady) {
         this.isReady = isReady;
@@ -56,8 +39,17 @@ public class Status {
         return isReady;
     }
 
+    public Phase getPhase() {
+        return phase;
+    }
+
     public Status setReady(boolean isReady) {
         this.isReady = isReady;
+        return this;
+    }
+
+    public Status setPhase(Phase phase) {
+        this.phase = phase;
         return this;
     }
 
@@ -82,6 +74,35 @@ public class Status {
 
     @Override
     public String toString() {
-        return String.valueOf(isReady);
+        return new StringBuilder()
+                .append("{isReady=").append(isReady)
+                .append(",").append("phase=").append("phase")
+                .append("}")
+                .toString();
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Status status = (Status) o;
+
+        if (isReady != status.isReady) return false;
+        return phase.equals(status.phase);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = (isReady ? 1 : 0);
+        result = 31 * result + phase.hashCode();
+        return result;
+    }
+
+    public enum Phase {
+        Pending,
+        Active,
+        Failed,
+        Terminating
+    };
 }

@@ -61,6 +61,7 @@ class AddressV1Serializer extends JsonSerializer<Address> {
         spec.put(Fields.ADDRESS, address.getAddress());
 
         status.put(Fields.IS_READY, address.getStatus().isReady());
+        status.put(Fields.PHASE, address.getStatus().getPhase().name());
         if (!address.getStatus().getMessages().isEmpty()) {
             ArrayNode messages = status.putArray(Fields.MESSAGES);
             for (String message : address.getStatus().getMessages()) {
