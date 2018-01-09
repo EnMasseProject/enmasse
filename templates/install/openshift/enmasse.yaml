@@ -465,9 +465,9 @@ objects:
               initialDelaySeconds: 30
             resources:
               limits:
-                memory: 128Mi
+                memory: 256Mi
               requests:
-                memory: 128Mi
+                memory: 256Mi
             volumeMounts:
             - mountPath: /etc/enmasse-certs
               name: admin-internal-cert

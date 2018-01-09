@@ -244,7 +244,7 @@ items:
       30}, "name": "standard-controller", "ports": [{"containerPort": 8889, "name":
       "http"}], "readinessProbe": {"httpGet": {"path": "/health", "port": "http",
       "scheme": "HTTP"}, "initialDelaySeconds": 30}, "resources": {"limits": {"memory":
-      "128Mi"}, "requests": {"memory": "128Mi"}}, "volumeMounts": [{"mountPath": "/etc/enmasse-certs",
+      "256Mi"}, "requests": {"memory": "256Mi"}}, "volumeMounts": [{"mountPath": "/etc/enmasse-certs",
       "name": "admin-internal-cert", "readOnly": true}, {"mountPath": "/enmasse-templates",
       "name": "templates", "readOnly": false}]}, {"env": [{"name": "CONFIGURATION_SERVICE_HOST",
       "value": "localhost"}, {"name": "CONFIGURATION_SERVICE_PORT", "value": "5671"},
