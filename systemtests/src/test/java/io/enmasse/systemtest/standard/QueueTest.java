@@ -23,10 +23,7 @@ import org.apache.qpid.proton.message.Message;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -86,32 +83,12 @@ public class QueueTest extends StandardTestBase {
     }
 
     @Test
-    public void testRestApiForQueue() throws Exception {
+    public void testRestApi() throws Exception {
         List<String> queues = Arrays.asList("queue1", "queue2");
         Destination q1 = Destination.queue(queues.get(0), Optional.of("pooled-inmemory"));
         Destination q2 = Destination.queue(queues.get(1), Optional.of("pooled-inmemory"));
 
-        setAddresses(q1);
-        appendAddresses(q2);
-
-        //queue1, queue2
-        Future<List<String>> response = getAddresses(Optional.empty());
-        assertThat(response.get(1, TimeUnit.MINUTES), is(queues));
-        Logging.log.info("queues (" + queues.stream().collect(Collectors.joining(",")) + ") successfully created");
-
-        deleteAddresses(q1);
-
-        //queue1
-        response = getAddresses(Optional.empty());
-        assertThat(response.get(1, TimeUnit.MINUTES), is(queues.subList(1, 2)));
-        Logging.log.info("queue (" + q1.getAddress() + ") successfully deleted");
-
-        deleteAddresses(q2);
-
-        //empty
-        response = getAddresses(Optional.empty());
-        assertThat(response.get(1, TimeUnit.MINUTES), is(java.util.Collections.emptyList()));
-        Logging.log.info("queue (" + q2.getAddress() + ") successfully deleted");
+        runRestApiTest(queues, q1, q2);
     }
 
     @Test
