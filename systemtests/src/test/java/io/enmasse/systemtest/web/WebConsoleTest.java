@@ -1,11 +1,10 @@
 package io.enmasse.systemtest.web;
 
 
-import io.enmasse.systemtest.AddressType;
-import io.enmasse.systemtest.Destination;
-import io.enmasse.systemtest.KeycloakCredentials;
-import io.enmasse.systemtest.TestBaseWithDefault;
+import io.enmasse.systemtest.*;
+import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.executor.client.AbstractClient;
+import io.enmasse.systemtest.executor.client.rhea.RheaClientConnector;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -17,6 +16,7 @@ import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -303,6 +303,46 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
         stopClients(clients);
     }
 
+    public void doTestMessagesMetrics() throws Exception {
+        int msgCount = 19;
+        Destination dest = Destination.queue("queue-via-web");
+        consoleWebPage.createAddressWebConsole(dest);
+        consoleWebPage.openAddressesPageWebConsole();
+
+        AmqpClient client = amqpClientFactory.createQueueClient(defaultAddressSpace);
+        client.getConnectOptions().setUsername(username).setPassword(password);
+        List<String> msgBatch = TestUtils.generateMessages(msgCount);
+
+        int sent = client.sendMessages(dest.getAddress(), msgBatch, 1, TimeUnit.MINUTES).get(1, TimeUnit.MINUTES);
+        waitUntil(5, msgCount, () -> consoleWebPage.getAddressItem(dest).getMessagesIn());
+        assertEquals(sent, consoleWebPage.getAddressItem(dest).getMessagesIn());
+        assertEquals(msgCount, consoleWebPage.getAddressItem(dest).getMessagesStored());
+
+        int received = client.recvMessages(dest.getAddress(), msgCount).get(1, TimeUnit.MINUTES).size();
+        waitUntil(5, msgCount, () -> consoleWebPage.getAddressItem(dest).getMessagesOut());
+        assertEquals(received, consoleWebPage.getAddressItem(dest).getMessagesOut());
+
+    }
+
+    public void doTestClientsMetrics() throws Exception {
+        int senderCount = 5;
+        int receiverCount = 10;
+        Destination dest = Destination.queue("queue-via-web");
+        consoleWebPage.createAddressWebConsole(dest);
+        consoleWebPage.openAddressesPageWebConsole();
+
+        AbstractClient client = new RheaClientConnector();
+        try {
+            client = attachConnector(dest, 1, senderCount, receiverCount);
+            waitUntil(5, senderCount, () -> consoleWebPage.getAddressItem(dest).getSendersCount());
+
+            assertEquals(10, consoleWebPage.getAddressItem(dest).getReceiversCount());
+            assertEquals(5, consoleWebPage.getAddressItem(dest).getSendersCount());
+        } finally {
+            client.stop();
+        }
+    }
+
     //============================================================================================
     //============================ Help methods ==================================================
     //============================================================================================
@@ -348,5 +388,19 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
 
     private List<AddressWebItem> getAddressProperty(List<AddressWebItem> allItems, Predicate<AddressWebItem> f) {
         return allItems.stream().filter(f).collect(Collectors.toList());
+    }
+
+    private void waitUntil(int timeoutInSeconds, int expectedValue, IWebItemProperty item) throws Exception {
+        int attempts = 0;
+        while (attempts < timeoutInSeconds) {
+            if (expectedValue == item.getProperty())
+                break;
+            Thread.sleep(1000);
+            attempts++;
+        }
+    }
+
+    private interface IWebItemProperty {
+        int getProperty() throws Exception;
     }
 }

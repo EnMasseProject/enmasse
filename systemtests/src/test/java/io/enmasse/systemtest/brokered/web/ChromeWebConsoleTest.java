@@ -62,6 +62,16 @@ public class ChromeWebConsoleTest extends BrokeredWebConsoleTest {
         doTestSortConnectionsByHostname();
     }
 
+    //@Test
+    public void testMessagesMetrics() throws Exception {
+        doTestMessagesMetrics();
+    }
+
+    //@Test
+    public void testClientsMetrics() throws Exception {
+        doTestClientsMetrics();
+    }
+
     @Override
     public WebDriver buildDriver() {
         ChromeOptions opts = new ChromeOptions();
