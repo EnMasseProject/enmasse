@@ -102,6 +102,7 @@ public class QueueTest extends StandardTestBase {
         AmqpClient client = amqpClientFactory.createQueueClient();
         for (Destination address : addresses) {
             setAddresses(address, destExtra);
+            Thread.sleep(20_000);
 
             //runQueueTest(client, address, 1); //TODO! commented due to issue #429
 
@@ -111,6 +112,7 @@ public class QueueTest extends StandardTestBase {
             deleteAddresses(destExtra);
             response = getAddresses(Optional.empty());
             assertThat(response.get(20, TimeUnit.SECONDS), is(java.util.Collections.emptyList()));
+            Thread.sleep(20_000);
         }
     }
 
