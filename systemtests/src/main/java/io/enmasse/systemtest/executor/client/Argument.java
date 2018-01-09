@@ -21,6 +21,7 @@ public enum Argument {
     CONN_MAX_FRAME_SIZE("--conn-max-frame-size"),
     CONN_WEB_SOCKET("--conn-web-socket"),
     CONN_OPTIONS("--connection-options"),
+    CONN_PROPERTY("--conn-property"),
 
     CONN_ASYNC_ACKS("--conn-async-acks"),
     CONN_ASYNC_SEND("--conn-async-send"),

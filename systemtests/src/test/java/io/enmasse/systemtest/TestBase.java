@@ -464,6 +464,8 @@ public abstract class TestBase extends SystemTestRunListener {
         arguments.put(Argument.PASSWORD, password);
         arguments.put(Argument.LOG_MESSAGES, "json");
         arguments.put(Argument.ADDRESS, destination.getAddress());
+        arguments.put(Argument.CONN_PROPERTY, "connection_property1~50");
+        arguments.put(Argument.CONN_PROPERTY, "connection_property2~testValue");
 
         List<AbstractClient> receivers = new ArrayList<>();
         for (int i = 0; i < receiverCount; i++) {
@@ -493,6 +495,8 @@ public abstract class TestBase extends SystemTestRunListener {
         arguments.put(Argument.MSG_CONTENT, "msg no.%d");
         arguments.put(Argument.COUNT, "30");
         arguments.put(Argument.DURATION, "30");
+        arguments.put(Argument.CONN_PROPERTY, "connection_property1~50");
+        arguments.put(Argument.CONN_PROPERTY, "connection_property2~testValue");
 
         for (int i = 0; i < destinations.size(); i++) {
             arguments.put(Argument.ADDRESS, destinations.get(i).getAddress());
@@ -520,6 +524,8 @@ public abstract class TestBase extends SystemTestRunListener {
         arguments.put(Argument.USERNAME, username);
         arguments.put(Argument.PASSWORD, password);
         arguments.put(Argument.LOG_MESSAGES, "json");
+        arguments.put(Argument.CONN_PROPERTY, "connection_property1~50");
+        arguments.put(Argument.CONN_PROPERTY, "connection_property2~testValue");
 
         for (int i = 0; i < destinations.size(); i++) {
             arguments.put(Argument.ADDRESS, destinations.get(i).getAddress());
@@ -550,6 +556,8 @@ public abstract class TestBase extends SystemTestRunListener {
         arguments.put(Argument.COUNT, Integer.toString(connectionCount));
         arguments.put(Argument.SENDER_COUNT, Integer.toString(senderCount));
         arguments.put(Argument.RECEIVER_COUNT, Integer.toString(receiverCount));
+        arguments.put(Argument.CONN_PROPERTY, "connection_property1~50");
+        arguments.put(Argument.CONN_PROPERTY, "connection_property2~testValue");
 
         AbstractClient cli = new RheaClientConnector();
         cli.setArguments(arguments);

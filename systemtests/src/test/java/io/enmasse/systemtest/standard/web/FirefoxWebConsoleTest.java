@@ -1,4 +1,4 @@
-package io.enmasse.systemtest.brokered.web;
+package io.enmasse.systemtest.standard.web;
 
 import io.enmasse.systemtest.Destination;
 import org.junit.Test;
@@ -6,7 +6,7 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxOptions;
 
-public class FirefoxWebConsoleTest extends BrokeredWebConsoleTest {
+public class FirefoxWebConsoleTest extends StandardWebConsoleTest {
 
 
     @Test
@@ -17,6 +17,16 @@ public class FirefoxWebConsoleTest extends BrokeredWebConsoleTest {
     @Test
     public void testCreateDeleteTopic() throws Exception {
         doTestCreateDeleteAddress(Destination.topic("test-topic"));
+    }
+
+    @Test
+    public void testCreateDeleteAnycast() throws Exception {
+        doTestCreateDeleteAddress(Destination.anycast("test-anycast-firefox"));
+    }
+
+    @Test
+    public void testCreateDeleteMulticast() throws Exception {
+        doTestCreateDeleteAddress(Destination.multicast("test-multicast-firefox"));
     }
 
     @Test
@@ -49,12 +59,12 @@ public class FirefoxWebConsoleTest extends BrokeredWebConsoleTest {
         doTestSortConnectionsByReceivers();
     }
 
-    //@Test disabled due to issue: #669
+    @Test
     public void testFilterConnectionsByEncrypted() throws Exception {
         doTestFilterConnectionsByEncrypted();
     }
 
-    @Test
+    //@Test disabled due to issue: #667
     public void testFilterConnectionsByUser() throws Exception {
         doTestFilterConnectionsByUser();
     }

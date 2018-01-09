@@ -1,78 +1,82 @@
-package io.enmasse.systemtest.brokered.web;
+package io.enmasse.systemtest.standard.web;
 
 import io.enmasse.systemtest.Destination;
-import org.junit.Test;
 import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.firefox.FirefoxDriver;
-import org.openqa.selenium.firefox.FirefoxOptions;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
 
-public class FirefoxWebConsoleTest extends BrokeredWebConsoleTest {
+public class ChromeWebConsoleTest extends StandardWebConsoleTest {
 
-
-    @Test
+    //@Test
     public void testCreateDeleteQueue() throws Exception {
         doTestCreateDeleteAddress(Destination.queue("test-queue"));
     }
 
-    @Test
+    //@Test
     public void testCreateDeleteTopic() throws Exception {
         doTestCreateDeleteAddress(Destination.topic("test-topic"));
     }
 
-    @Test
+    //@Test
+    public void testCreateDeleteAnycast() throws Exception {
+        doTestCreateDeleteAddress(Destination.anycast("test-anycast-firefox"));
+    }
+
+    //@Test
+    public void testCreateDeleteMulticast() throws Exception {
+        doTestCreateDeleteAddress(Destination.multicast("test-multicast-firefox"));
+    }
+
+    //@Test
     public void testFilterAddressesByType() throws Exception {
         doTestFilterAddressesByType();
     }
 
-    @Test
+    //@Test
     public void testFilterAddressesByName() throws Exception {
         doTestFilterAddressesByName();
     }
 
-    @Test
+    //@Test
     public void testSortAddressesByName() throws Exception {
         doTestSortAddressesByName();
     }
 
-    @Test
-    public void testSortAddressesByClients() throws Exception {
-        doTestSortAddressesByClients();
-    }
-
-    @Test
+    //@Test
     public void testSortConnectionsBySenders() throws Exception {
         doTestSortConnectionsBySenders();
     }
 
-    @Test
+    //@Test
     public void testSortConnectionsByReceivers() throws Exception {
         doTestSortConnectionsByReceivers();
     }
 
-    //@Test disabled due to issue: #669
+    //@Test
     public void testFilterConnectionsByEncrypted() throws Exception {
         doTestFilterConnectionsByEncrypted();
     }
 
-    @Test
+    //@Test
     public void testFilterConnectionsByUser() throws Exception {
         doTestFilterConnectionsByUser();
     }
 
-    @Test
+    //@Test
     public void testFilterConnectionsByHostname() throws Exception {
         doTestFilterConnectionsByHostname();
     }
 
-    @Test
+    //@Test
     public void testSortConnectionsByHostname() throws Exception {
         doTestSortConnectionsByHostname();
     }
 
     @Override
     public WebDriver buildDriver() {
-        FirefoxOptions opts = new FirefoxOptions();
+        ChromeOptions opts = new ChromeOptions();
         opts.setHeadless(true);
-        return new FirefoxDriver(opts);
+        opts.addArguments("--no-sandbox");
+        return new ChromeDriver(opts);
     }
 }

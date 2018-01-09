@@ -57,7 +57,8 @@ public class ArgumentMap {
                 (key != Argument.MSG_PROPERTY &&
                         key != Argument.MSG_CONTENT_LIST_ITEM &&
                         key != Argument.MSG_CONTENT_MAP_ITEM &&
-                        key != Argument.MSG_ANNOTATION)) {
+                        key != Argument.MSG_ANNOTATION) &&
+                        key != Argument.CONN_PROPERTY) {
 
             target = new ArrayList<>();
             mappings.put(key, target);
