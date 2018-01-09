@@ -25,14 +25,14 @@ run_test ${TESTCASE} || failure=$(($failure + 1))
 
 #environment info
 get_kubernetes_info ${LOG_DIR} pv ${OPENSHIFT_PROJECT}
-get_kubernetes_info ${LOG_DIR} pods ${OPENSHIFT_PROJECT} 
+get_kubernetes_info ${LOG_DIR} pods ${OPENSHIFT_PROJECT}
 get_kubernetes_info ${LOG_DIR} services default "-after"
 get_kubernetes_info ${LOG_DIR} pods default "-after"
 get_docker_info ${LOG_DIR} origin
 
 
 #store artifacts
-$CURDIR/collect_logs.sh ${ARTIFACTS_DIR}
+${CURDIR}/collect_logs.sh ${ARTIFACTS_DIR}
 
 if [ $failure -gt 0 ]
 then
