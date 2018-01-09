@@ -74,7 +74,7 @@ public class FirefoxWebConsoleTest extends BrokeredWebConsoleTest {
         doTestMessagesMetrics();
     }
 
-    @Test
+    //@Test disabled due to #649
     public void testClientsMetrics() throws Exception {
         doTestClientsMetrics();
     }
