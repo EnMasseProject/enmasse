@@ -22,16 +22,9 @@ under the License.
    see: https://jolokia.org/reference/html/security.html -->
 <restrict>
 
-    <remote>
-        <host>localhost</host>
-        <host>172.17.0.0/16</host>
-        <host>172.30.0.0/16</host>
-        <host>127.0.0.1</host>
-    </remote>
-
     <cors>
         <!-- Allow cross origin access from localhost ... -->
-        <allow-origin>*://localhost*</allow-origin>
+        <allow-origin>*</allow-origin>
 
         <!-- Check for the proper origin on the server side, too -->
         <strict-checking/>
