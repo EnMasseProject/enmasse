@@ -55,4 +55,5 @@ interface Fields {
     String CREDIT = "credit";
     String ANNOTATIONS = "annotations";
     String ADDRESS_SPACE_TYPE = "addressSpaceType";
+    String PHASE = "phase";
 }
