@@ -16,7 +16,6 @@ import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -315,12 +314,12 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
         List<String> msgBatch = TestUtils.generateMessages(msgCount);
 
         int sent = client.sendMessages(dest.getAddress(), msgBatch, 1, TimeUnit.MINUTES).get(1, TimeUnit.MINUTES);
-        Thread.sleep(5000);
+        waitUntil(5, msgCount, () -> consoleWebPage.getAddressItem(dest).getMessagesIn());
         assertEquals(sent, consoleWebPage.getAddressItem(dest).getMessagesIn());
         assertEquals(msgCount, consoleWebPage.getAddressItem(dest).getMessagesStored());
 
         int received = client.recvMessages(dest.getAddress(), msgCount).get(1, TimeUnit.MINUTES).size();
-        Thread.sleep(5000);
+        waitUntil(5, msgCount, () -> consoleWebPage.getAddressItem(dest).getMessagesOut());
         assertEquals(received, consoleWebPage.getAddressItem(dest).getMessagesOut());
 
     }
@@ -333,9 +332,9 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
         consoleWebPage.openAddressesPageWebConsole();
 
         AbstractClient client = new RheaClientConnector();
-        try{
+        try {
             client = attachConnector(dest, 1, senderCount, receiverCount);
-            Thread.sleep(5000);
+            waitUntil(5, senderCount, () -> consoleWebPage.getAddressItem(dest).getSendersCount());
 
             assertEquals(10, consoleWebPage.getAddressItem(dest).getReceiversCount());
             assertEquals(5, consoleWebPage.getAddressItem(dest).getSendersCount());
@@ -389,5 +388,19 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
 
     private List<AddressWebItem> getAddressProperty(List<AddressWebItem> allItems, Predicate<AddressWebItem> f) {
         return allItems.stream().filter(f).collect(Collectors.toList());
+    }
+
+    private void waitUntil(int timeoutInSeconds, int expectedValue, IWebItemProperty item) throws Exception {
+        int attempts = 0;
+        while (attempts < timeoutInSeconds) {
+            if (expectedValue == item.getProperty())
+                break;
+            Thread.sleep(1000);
+            attempts++;
+        }
+    }
+
+    private interface IWebItemProperty {
+        int getProperty() throws Exception;
     }
 }
