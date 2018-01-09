@@ -31,8 +31,12 @@ import org.keycloak.models.GroupModel;
 import org.keycloak.models.KeycloakSessionFactory;
 import org.keycloak.models.UserModel;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -40,6 +44,20 @@ import java.util.stream.Collectors;
 public class AmqpServer extends AbstractVerticle {
 
     private static final Logger LOG = Logger.getLogger(AmqpServer.class);
+    private static final Symbol ADDRESS_AUTHZ_CAPABILITY = Symbol.valueOf("ADDRESS-AUTHZ");
+    private static final Symbol ADDRESS_AUTHZ_PROPERTY = Symbol.valueOf("address-authz");
+
+    private static final Map<String,String> PERMISSIONS = new HashMap<>();
+    static
+    {
+        PERMISSIONS.put("send", "send");
+        PERMISSIONS.put("recv", "recv");
+        // consume_ rather than recv_ was used as a prefix for Artemis plugin
+        PERMISSIONS.put("consume", "recv");
+        PERMISSIONS.put("create", "create");
+        PERMISSIONS.put("delete", "delete");
+        PERMISSIONS.put("view", "view");
+    }
 
     private final String hostname;
     private final int port;
@@ -68,6 +86,11 @@ public class AmqpServer extends AbstractVerticle {
                 props.put(Symbol.valueOf("authenticated-identity"), authUserMap);
                 Set<String> groups = userModel.getGroups().stream().map(GroupModel::getName).collect(Collectors.toSet());
                 props.put(Symbol.valueOf("groups"), new ArrayList<>(groups));
+                // TODO - Access to connection capabilities requires vert.x proton >= 3.5.0
+                // if(connection.getRemoteDesiredCapabilities() != null && Arrays.asList(connection.getRemoteDesiredCapabilities()).contains(ADDRESS_AUTHZ_CAPABILITY)) {
+                    // connection.setOfferedCapabilities(new Symbol[] { ADDRESS_AUTHZ_CAPABILITY });
+                props.put(ADDRESS_AUTHZ_PROPERTY, getPermissionsFromGroups(groups));
+                // }
                 connection.setProperties(props);
             }
             connection.open();
@@ -79,6 +102,27 @@ public class AmqpServer extends AbstractVerticle {
             connection.disconnect();
         });
 
+    }
+
+    Map<String, String[]> getPermissionsFromGroups(Set<String> groups) {
+        Map<String, Set<String>> authMap = new HashMap<>();
+        for(String group : groups) {
+            String[] parts = group.split("_", 2);
+            if(parts.length == 2) {
+                String permission = PERMISSIONS.get(parts[0]);
+                if(permission != null) {
+                    try {
+                        String address = URLDecoder.decode(parts[1], StandardCharsets.UTF_8.name());
+                        Set<String> permissions = authMap.computeIfAbsent(address, a -> new HashSet<>());
+                        permissions.add(permission);
+
+                    } catch (UnsupportedEncodingException e) {
+                        // Should never happen
+                    }
+                }
+            }
+        }
+        return authMap.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().toArray(new String[e.getValue().size()])));
     }
 
     @Override
