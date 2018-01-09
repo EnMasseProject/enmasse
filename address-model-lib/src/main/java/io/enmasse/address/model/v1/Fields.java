@@ -49,4 +49,5 @@ interface Fields {
     String PORT = "port";
     String UID = "uid";
     String CREATED_BY = "createdBy";
+    String PHASE = "phase";
 }
