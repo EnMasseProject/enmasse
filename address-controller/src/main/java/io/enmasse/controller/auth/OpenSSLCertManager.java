@@ -142,7 +142,11 @@ public class OpenSSLCertManager implements CertManager {
     public Collection<CertComponent> listComponents(String namespace) {
         return client.extensions().deployments().inNamespace(namespace).list().getItems().stream()
                 .filter(deployment -> deployment.getMetadata().getAnnotations() != null && deployment.getMetadata().getAnnotations().containsKey(AnnotationKeys.CERT_SECRET_NAME))
-                .map(deployment -> new CertComponent(deployment.getMetadata().getName(), namespace, deployment.getMetadata().getAnnotations().get(AnnotationKeys.CERT_SECRET_NAME)))
+                .map(deployment -> {
+                    Map<String, String> annotations = deployment.getMetadata().getAnnotations();
+                    String cn = annotations.getOrDefault(AnnotationKeys.CERT_CN, deployment.getMetadata().getName());
+                    return new CertComponent(cn, namespace, annotations.get(AnnotationKeys.CERT_SECRET_NAME));
+                })
                 .collect(Collectors.toList());
     }
 
