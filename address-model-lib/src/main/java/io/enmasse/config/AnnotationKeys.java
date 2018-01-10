@@ -19,6 +19,7 @@ public interface AnnotationKeys {
     String CLUSTER_ID = "cluster_id";
     String ADDRESS_SPACE = "addressSpace";
     String CERT_SECRET_NAME = "io.enmasse.certSecretName";
+    String CERT_CN = "io.enmasse.certCn";
     String ENDPOINT_PORT = "io.enmasse.endpointPort";
     String SERVICE_NAME = "io.enmasse.serviceName";
     String CREATED_BY = "io.enmasse.createdBy";
