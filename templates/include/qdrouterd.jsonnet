@@ -13,6 +13,7 @@ local common = import "common.jsonnet";
         "annotations": {
           "addressSpace": addressSpace,
           "io.enmasse.certSecretName" : "router-internal-cert",
+          "io.enmasse.certCn" : "router",
           "prometheus.io/scrape": "true",
           "prometheus.io/path": "/metrics",
           "prometheus.io/port": "8080"

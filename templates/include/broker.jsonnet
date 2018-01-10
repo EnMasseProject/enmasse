@@ -1,4 +1,5 @@
 local common = import "common.jsonnet";
+local authService = import "auth-service.jsonnet";
 {
   container(volumeName, image_repo, addressEnv)::
     {
@@ -13,7 +14,7 @@ local common = import "common.jsonnet";
         addressEnv,
         common.env("CLUSTER_ID", "${CLUSTER_ID}"),
         common.env("CERT_DIR", "/etc/enmasse-certs")
-      ],
+      ] + authService.envVars,
       "volumeMounts": [
         common.volume_mount(volumeName, "/var/run/artemis"),
         common.volume_mount("broker-internal-cert", "/etc/enmasse-certs", true),
