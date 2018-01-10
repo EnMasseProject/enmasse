@@ -5,6 +5,12 @@ ARTEMIS_HOME=$(ARTIFACT_BASE)/opt/apache-artemis-2.4.0
 build/apache-artemis-bin.tar.gz:
 	curl -o build/apache-artemis-bin.tar.gz http://archive.apache.org/dist/activemq/activemq-artemis/2.4.0/apache-artemis-2.4.0-bin.tar.gz
 
+clean_modules:
+	rm -rf sasl-delegation/target
+	rm -rf amqp-connector/target
+
+clean: clean_modules
+
 build_tar: build
 	mkdir -p $(ARTEMIS_HOME)/bin
 	mkdir -p $(ARTEMIS_HOME)/lib
@@ -29,4 +35,4 @@ build_tar: build
 
 package: build_tar build/apache-artemis-bin.tar.gz
 
-.PHONY: build_tar
+.PHONY: build_tar clean_modules
