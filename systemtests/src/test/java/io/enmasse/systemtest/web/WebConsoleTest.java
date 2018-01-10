@@ -37,11 +37,6 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
     };
     protected ConsoleWebPage consoleWebPage;
 
-    @Override
-    public WebDriver buildDriver() {
-        throw new NotImplementedException();
-    }
-
     @Before
     public void setUpWebConsoleTests() throws Exception {
         selenium.setupDriver(environment, kubernetes, buildDriver());
@@ -314,14 +309,14 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
         List<String> msgBatch = TestUtils.generateMessages(msgCount);
 
         int sent = client.sendMessages(dest.getAddress(), msgBatch, 1, TimeUnit.MINUTES).get(1, TimeUnit.MINUTES);
-        waitUntil(60, msgCount, () -> consoleWebPage.getAddressItem(dest).getMessagesIn());
+        selenium.waitUntilPropertyPresent(60, msgCount, () -> consoleWebPage.getAddressItem(dest).getMessagesIn());
         assertEquals(sent, consoleWebPage.getAddressItem(dest).getMessagesIn());
 
-        waitUntil(60, msgCount, () -> consoleWebPage.getAddressItem(dest).getMessagesStored());
+        selenium.waitUntilPropertyPresent(60, msgCount, () -> consoleWebPage.getAddressItem(dest).getMessagesStored());
         assertEquals(msgCount, consoleWebPage.getAddressItem(dest).getMessagesStored());
 
         int received = client.recvMessages(dest.getAddress(), msgCount).get(1, TimeUnit.MINUTES).size();
-        waitUntil(60, msgCount, () -> consoleWebPage.getAddressItem(dest).getMessagesOut());
+        selenium.waitUntilPropertyPresent(60, msgCount, () -> consoleWebPage.getAddressItem(dest).getMessagesOut());
         assertEquals(received, consoleWebPage.getAddressItem(dest).getMessagesOut());
 
     }
@@ -336,7 +331,7 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
         AbstractClient client = new RheaClientConnector();
         try {
             client = attachConnector(dest, 1, senderCount, receiverCount);
-            waitUntil(60, senderCount, () -> consoleWebPage.getAddressItem(dest).getSendersCount());
+            selenium.waitUntilPropertyPresent(60, senderCount, () -> consoleWebPage.getAddressItem(dest).getSendersCount());
 
             assertEquals(10, consoleWebPage.getAddressItem(dest).getReceiversCount());
             assertEquals(5, consoleWebPage.getAddressItem(dest).getSendersCount());
@@ -390,21 +385,5 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
 
     private List<AddressWebItem> getAddressProperty(List<AddressWebItem> allItems, Predicate<AddressWebItem> f) {
         return allItems.stream().filter(f).collect(Collectors.toList());
-    }
-
-    private void waitUntil(int timeoutInSeconds, int expectedValue, IWebItemProperty item) throws Exception {
-        Logging.log.info("Waiting until data will be present");
-        int attempts = 0;
-        while (attempts < timeoutInSeconds) {
-            if (expectedValue == item.getProperty())
-                break;
-            Thread.sleep(1000);
-            attempts++;
-        }
-        Logging.log.info("End of waiting");
-    }
-
-    private interface IWebItemProperty {
-        int getProperty() throws Exception;
     }
 }

@@ -39,11 +39,14 @@ public class ConsoleWebPage {
     }
 
     private WebElement getNavigateMenu() throws Exception {
-        return selenium.driver.findElement(By.id("verticalNavLayout"));
+        return selenium.driver.findElement(By.className("nav-pf-vertical"));
     }
 
     private WebElement getLeftMenuItemWebConsole(String itemText) throws Exception {
-        List<WebElement> items = getNavigateMenu().findElements(ByAngular.exactRepeater("item in items"));
+        Logging.log.info("Getting navigation menu items");
+        List<WebElement> items = getNavigateMenu()
+                .findElement(By.className("list-group"))
+                .findElements(ByAngular.repeater("item in items"));
         assertNotNull(items);
         WebElement returnedItem = null;
         for (WebElement item : items) {
@@ -413,7 +416,6 @@ public class ConsoleWebPage {
      * get all addresses
      */
     public List<AddressWebItem> getAddressItems() throws Exception {
-        Logging.log.info("Getting all address items...");
         WebElement content = getContentContainer();
         List<WebElement> elements = content.findElements(By.className("list-group-item"));
         List<AddressWebItem> addressItems = new ArrayList<>();
@@ -442,7 +444,6 @@ public class ConsoleWebPage {
      * get all connections
      */
     public List<ConnectionWebItem> getConnectionItems() throws Exception {
-        Logging.log.info("Getting all connection items...");
         WebElement content = getContentContainer();
         List<WebElement> elements = content.findElements(By.className("list-group-item"));
         List<ConnectionWebItem> connectionItems = new ArrayList<>();
@@ -490,6 +491,8 @@ public class ConsoleWebPage {
         selenium.clickOnItem(nextButton);
         selenium.clickOnItem(nextButton);
 
+        selenium.waitUntilItemPresent(60, () -> getAddressItem(destination));
+
         assertNotNull(getAddressItem(destination));
 
         TestUtils.waitForDestinationsReady(addressApiClient, defaultAddressSpace,
@@ -523,6 +526,8 @@ public class ConsoleWebPage {
 
         //click on delete
         clickOnRemoveButton();
+
+        selenium.waitUntilItemNotPresent(60, () -> getAddressItem(destination));
 
         //check if address deleted
         assertNull(getAddressItem(destination));
