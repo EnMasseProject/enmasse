@@ -314,12 +314,12 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
         List<String> msgBatch = TestUtils.generateMessages(msgCount);
 
         int sent = client.sendMessages(dest.getAddress(), msgBatch, 1, TimeUnit.MINUTES).get(1, TimeUnit.MINUTES);
-        waitUntil(5, msgCount, () -> consoleWebPage.getAddressItem(dest).getMessagesIn());
+        waitUntil(60, msgCount, () -> consoleWebPage.getAddressItem(dest).getMessagesIn());
         assertEquals(sent, consoleWebPage.getAddressItem(dest).getMessagesIn());
         assertEquals(msgCount, consoleWebPage.getAddressItem(dest).getMessagesStored());
 
         int received = client.recvMessages(dest.getAddress(), msgCount).get(1, TimeUnit.MINUTES).size();
-        waitUntil(5, msgCount, () -> consoleWebPage.getAddressItem(dest).getMessagesOut());
+        waitUntil(60, msgCount, () -> consoleWebPage.getAddressItem(dest).getMessagesOut());
         assertEquals(received, consoleWebPage.getAddressItem(dest).getMessagesOut());
 
     }
@@ -334,7 +334,7 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
         AbstractClient client = new RheaClientConnector();
         try {
             client = attachConnector(dest, 1, senderCount, receiverCount);
-            waitUntil(5, senderCount, () -> consoleWebPage.getAddressItem(dest).getSendersCount());
+            waitUntil(60, senderCount, () -> consoleWebPage.getAddressItem(dest).getSendersCount());
 
             assertEquals(10, consoleWebPage.getAddressItem(dest).getReceiversCount());
             assertEquals(5, consoleWebPage.getAddressItem(dest).getSendersCount());
