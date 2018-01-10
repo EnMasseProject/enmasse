@@ -338,6 +338,7 @@ public class TestUtils {
         } catch (Exception ex) {
             if (ex.getCause() instanceof UnknownHostException && retry > 0) {
                 try {
+                    Logging.log.info("{} remaining iterations", retry);
                     return doRequestNTimes(retry - 1, fn);
                 } catch (Exception ex2) {
                     throw ex2;
