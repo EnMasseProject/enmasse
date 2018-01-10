@@ -35,8 +35,10 @@ var server = container.listen({
 console.log('Listening on port ' + process.env.LISTENPORT);
 container.on('connection_open', function (context) {
     var authenticatedIdentity = { 'sub' : context.connection.sasl_transport.username || 'anonymous' };
+    var groups = [ "manage" ];
     var properties = context.connection.local.open.properties || {};
     properties["authenticated-identity"] = authenticatedIdentity;
+    properties["groups"] = groups;
     context.connection.local.open.properties = properties;
     context.connection.close();
 });
