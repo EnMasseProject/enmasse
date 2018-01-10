@@ -442,7 +442,7 @@ public class ConsoleWebPage {
      * get all connections
      */
     public List<ConnectionWebItem> getConnectionItems() throws Exception {
-        Logging.log.info("Getting all connections items...");
+        Logging.log.info("Getting all connection items...");
         WebElement content = getContentContainer();
         List<WebElement> elements = content.findElements(By.className("list-group-item"));
         List<ConnectionWebItem> connectionItems = new ArrayList<>();
@@ -469,6 +469,7 @@ public class ConsoleWebPage {
      * create specific address
      */
     public void createAddressWebConsole(Destination destination) throws Exception {
+        Logging.log.info("Create address using web console");
         //get console page
         openConsolePageWebConsole();
 
@@ -508,6 +509,7 @@ public class ConsoleWebPage {
      * delete specific address
      */
     public void deleteAddressWebConsole(Destination destination) throws Exception {
+        Logging.log.info("Remove address using web console");
         //open console webpage
         openConsolePageWebConsole();
 
