@@ -3,7 +3,9 @@ ARTIFACT_BASE=build/artemis-image
 ARTEMIS_HOME=$(ARTIFACT_BASE)/opt/apache-artemis-2.4.0
 
 build/apache-artemis-bin.tar.gz:
-	curl -o build/apache-artemis-bin.tar.gz http://archive.apache.org/dist/activemq/activemq-artemis/2.4.0/apache-artemis-2.4.0-bin.tar.gz
+	#curl -o build/apache-artemis-bin.tar.gz http://archive.apache.org/dist/activemq/activemq-artemis/2.4.0/apache-artemis-2.4.0-bin.tar.gz
+	# A patched version with ssl connector fix (ARTEMIS-1598)
+	curl -o build/apache-artemis-bin.tar.gz http://people.redhat.com/~ulilleen/apache-artemis-2.4.0-bin.tar.gz
 
 clean_modules:
 	rm -rf sasl-delegation/target
