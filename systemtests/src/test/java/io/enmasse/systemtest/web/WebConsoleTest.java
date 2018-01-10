@@ -316,6 +316,8 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
         int sent = client.sendMessages(dest.getAddress(), msgBatch, 1, TimeUnit.MINUTES).get(1, TimeUnit.MINUTES);
         waitUntil(60, msgCount, () -> consoleWebPage.getAddressItem(dest).getMessagesIn());
         assertEquals(sent, consoleWebPage.getAddressItem(dest).getMessagesIn());
+
+        waitUntil(60, msgCount, () -> consoleWebPage.getAddressItem(dest).getMessagesStored());
         assertEquals(msgCount, consoleWebPage.getAddressItem(dest).getMessagesStored());
 
         int received = client.recvMessages(dest.getAddress(), msgCount).get(1, TimeUnit.MINUTES).size();
@@ -391,6 +393,7 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
     }
 
     private void waitUntil(int timeoutInSeconds, int expectedValue, IWebItemProperty item) throws Exception {
+        Logging.log.info("Waiting until data will be present");
         int attempts = 0;
         while (attempts < timeoutInSeconds) {
             if (expectedValue == item.getProperty())
@@ -398,6 +401,7 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
             Thread.sleep(1000);
             attempts++;
         }
+        Logging.log.info("End of waiting");
     }
 
     private interface IWebItemProperty {

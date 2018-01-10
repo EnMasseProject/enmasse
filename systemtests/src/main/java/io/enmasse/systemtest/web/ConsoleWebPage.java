@@ -413,6 +413,7 @@ public class ConsoleWebPage {
      * get all addresses
      */
     public List<AddressWebItem> getAddressItems() throws Exception {
+        Logging.log.info("Getting all address items...");
         WebElement content = getContentContainer();
         List<WebElement> elements = content.findElements(By.className("list-group-item"));
         List<AddressWebItem> addressItems = new ArrayList<>();
@@ -441,6 +442,7 @@ public class ConsoleWebPage {
      * get all connections
      */
     public List<ConnectionWebItem> getConnectionItems() throws Exception {
+        Logging.log.info("Getting all connections items...");
         WebElement content = getContentContainer();
         List<WebElement> elements = content.findElements(By.className("list-group-item"));
         List<ConnectionWebItem> connectionItems = new ArrayList<>();
