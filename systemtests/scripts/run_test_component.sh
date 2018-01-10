@@ -21,7 +21,14 @@ mkdir -p ${LOG_DIR}
 get_kubernetes_info ${LOG_DIR} services default "-before"
 get_kubernetes_info ${LOG_DIR} pods default "-before"
 
+${CURDIR}/system-stats.sh > ${ARTIFACTS_DIR}/system-resources.log &
+STATS_PID=$!
+echo "process for checking system resources is running with PID: ${STATS_PID}"
+
 run_test ${TESTCASE} || failure=$(($failure + 1))
+
+echo "process for checking system resources with PID: ${STATS_PID} will be killed"
+kill ${STATS_PID}
 
 #environment info
 get_kubernetes_info ${LOG_DIR} pv ${OPENSHIFT_PROJECT}
