@@ -34,6 +34,7 @@ local forwarder = import "forwarder.jsonnet";
           "annotations": {
             "cluster_id": "${CLUSTER_ID}",
             "addressSpace": "${ADDRESS_SPACE}",
+            "io.enmasse.certCn": "broker",
             "io.enmasse.certSecretName" : "broker-internal-cert"
           }
         },

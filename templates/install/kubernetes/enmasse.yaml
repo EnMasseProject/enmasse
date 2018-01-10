@@ -143,15 +143,15 @@ items:
       "targetPort": 1883}, {"name": "secure-mqtt", "port": 8883, "protocol": "TCP",
       "targetPort": 8883}], "selector": {"name": "mqtt-gateway"}, "type": "ClusterIP"}},
       {"apiVersion": "extensions/v1beta1", "kind": "Deployment", "metadata": {"annotations":
-      {"addressSpace": "${ADDRESS_SPACE}", "io.enmasse.certSecretName": "router-internal-cert",
-      "prometheus.io/path": "/metrics", "prometheus.io/port": "8080", "prometheus.io/scrape":
-      "true"}, "labels": {"app": "enmasse", "name": "qdrouterd"}, "name": "qdrouterd"},
-      "spec": {"replicas": 1, "template": {"metadata": {"annotations": {"addressSpace":
-      "${ADDRESS_SPACE}"}, "labels": {"app": "enmasse", "capability": "router", "name":
-      "qdrouterd"}}, "spec": {"containers": [{"env": [{"name": "LINK_CAPACITY", "value":
-      "${ROUTER_LINK_CAPACITY}"}, {"name": "AUTHENTICATION_SERVICE_HOST", "value":
-      "${AUTHENTICATION_SERVICE_HOST}"}, {"name": "AUTHENTICATION_SERVICE_PORT", "value":
-      "${AUTHENTICATION_SERVICE_PORT}"}, {"name": "AUTHENTICATION_SERVICE_CLIENT_SECRET",
+      {"addressSpace": "${ADDRESS_SPACE}", "io.enmasse.certCn": "router", "io.enmasse.certSecretName":
+      "router-internal-cert", "prometheus.io/path": "/metrics", "prometheus.io/port":
+      "8080", "prometheus.io/scrape": "true"}, "labels": {"app": "enmasse", "name":
+      "qdrouterd"}, "name": "qdrouterd"}, "spec": {"replicas": 1, "template": {"metadata":
+      {"annotations": {"addressSpace": "${ADDRESS_SPACE}"}, "labels": {"app": "enmasse",
+      "capability": "router", "name": "qdrouterd"}}, "spec": {"containers": [{"env":
+      [{"name": "LINK_CAPACITY", "value": "${ROUTER_LINK_CAPACITY}"}, {"name": "AUTHENTICATION_SERVICE_HOST",
+      "value": "${AUTHENTICATION_SERVICE_HOST}"}, {"name": "AUTHENTICATION_SERVICE_PORT",
+      "value": "${AUTHENTICATION_SERVICE_PORT}"}, {"name": "AUTHENTICATION_SERVICE_CLIENT_SECRET",
       "value": "${AUTHENTICATION_SERVICE_CLIENT_SECRET}"}, {"name": "AUTHENTICATION_SERVICE_SASL_INIT_HOST",
       "value": "${AUTHENTICATION_SERVICE_SASL_INIT_HOST}"}], "image": "${ROUTER_IMAGE}",
       "livenessProbe": {"initialDelaySeconds": 60, "tcpSocket": {"port": "amqp"}},
@@ -292,15 +292,20 @@ items:
       \"v1\", \"kind\": \"Template\", \"metadata\": {\"labels\": {\"app\": \"enmasse\"},
       \"name\": \"queue-inmemory\"}, \"objects\": [{\"apiVersion\": \"extensions/v1beta1\",
       \"kind\": \"Deployment\", \"metadata\": {\"annotations\": {\"addressSpace\":
-      \"${ADDRESS_SPACE}\", \"cluster_id\": \"${CLUSTER_ID}\", \"io.enmasse.certSecretName\":
-      \"broker-internal-cert\"}, \"labels\": {\"app\": \"enmasse\"}, \"name\": \"${NAME}\"},
-      \"spec\": {\"replicas\": 1, \"template\": {\"metadata\": {\"annotations\": {\"addressSpace\":
-      \"${ADDRESS_SPACE}\", \"cluster_id\": \"${CLUSTER_ID}\", \"prometheus.io/path\":
-      \"/metrics\", \"prometheus.io/port\": \"8080\", \"prometheus.io/scrape\": \"true\"},
-      \"labels\": {\"addresstype\": \"queue\", \"app\": \"enmasse\", \"name\": \"${NAME}\",
-      \"role\": \"broker\"}}, \"spec\": {\"containers\": [{\"env\": [{\"name\": \"QUEUE_NAME\",
-      \"value\": \"${ADDRESS}\"}, {\"name\": \"CLUSTER_ID\", \"value\": \"${CLUSTER_ID}\"},
-      {\"name\": \"CERT_DIR\", \"value\": \"/etc/enmasse-certs\"}], \"image\": \"${BROKER_IMAGE}\",
+      \"${ADDRESS_SPACE}\", \"cluster_id\": \"${CLUSTER_ID}\", \"io.enmasse.certCn\":
+      \"broker\", \"io.enmasse.certSecretName\": \"broker-internal-cert\"}, \"labels\":
+      {\"app\": \"enmasse\"}, \"name\": \"${NAME}\"}, \"spec\": {\"replicas\": 1,
+      \"template\": {\"metadata\": {\"annotations\": {\"addressSpace\": \"${ADDRESS_SPACE}\",
+      \"cluster_id\": \"${CLUSTER_ID}\", \"prometheus.io/path\": \"/metrics\", \"prometheus.io/port\":
+      \"8080\", \"prometheus.io/scrape\": \"true\"}, \"labels\": {\"addresstype\":
+      \"queue\", \"app\": \"enmasse\", \"name\": \"${NAME}\", \"role\": \"broker\"}},
+      \"spec\": {\"containers\": [{\"env\": [{\"name\": \"QUEUE_NAME\", \"value\":
+      \"${ADDRESS}\"}, {\"name\": \"CLUSTER_ID\", \"value\": \"${CLUSTER_ID}\"}, {\"name\":
+      \"CERT_DIR\", \"value\": \"/etc/enmasse-certs\"}, {\"name\": \"AUTHENTICATION_SERVICE_HOST\",
+      \"value\": \"${AUTHENTICATION_SERVICE_HOST}\"}, {\"name\": \"AUTHENTICATION_SERVICE_PORT\",
+      \"value\": \"${AUTHENTICATION_SERVICE_PORT}\"}, {\"name\": \"AUTHENTICATION_SERVICE_CLIENT_SECRET\",
+      \"value\": \"${AUTHENTICATION_SERVICE_CLIENT_SECRET}\"}, {\"name\": \"AUTHENTICATION_SERVICE_SASL_INIT_HOST\",
+      \"value\": \"${AUTHENTICATION_SERVICE_SASL_INIT_HOST}\"}], \"image\": \"${BROKER_IMAGE}\",
       \"lifecycle\": {\"preStop\": {\"exec\": {\"command\": [\"/shutdown-hook/shutdown-hook.sh\"]}}},
       \"livenessProbe\": {\"exec\": {\"command\": [\"sh\", \"-c\", \"$ARTEMIS_HOME/bin/probe.sh\"]},
       \"initialDelaySeconds\": 120}, \"name\": \"broker\", \"ports\": [{\"containerPort\":
@@ -350,15 +355,19 @@ items:
       [\"ReadWriteMany\"], \"resources\": {\"requests\": {\"storage\": \"${STORAGE_CAPACITY}\"}}}},
       {\"apiVersion\": \"extensions/v1beta1\", \"kind\": \"Deployment\", \"metadata\":
       {\"annotations\": {\"addressSpace\": \"${ADDRESS_SPACE}\", \"cluster_id\": \"${CLUSTER_ID}\",
-      \"io.enmasse.certSecretName\": \"broker-internal-cert\"}, \"labels\": {\"app\":
-      \"enmasse\"}, \"name\": \"${NAME}\"}, \"spec\": {\"replicas\": 1, \"template\":
-      {\"metadata\": {\"annotations\": {\"addressSpace\": \"${ADDRESS_SPACE}\", \"cluster_id\":
-      \"${CLUSTER_ID}\", \"prometheus.io/path\": \"/metrics\", \"prometheus.io/port\":
+      \"io.enmasse.certCn\": \"broker\", \"io.enmasse.certSecretName\": \"broker-internal-cert\"},
+      \"labels\": {\"app\": \"enmasse\"}, \"name\": \"${NAME}\"}, \"spec\": {\"replicas\":
+      1, \"template\": {\"metadata\": {\"annotations\": {\"addressSpace\": \"${ADDRESS_SPACE}\",
+      \"cluster_id\": \"${CLUSTER_ID}\", \"prometheus.io/path\": \"/metrics\", \"prometheus.io/port\":
       \"8080\", \"prometheus.io/scrape\": \"true\"}, \"labels\": {\"addresstype\":
       \"queue\", \"app\": \"enmasse\", \"name\": \"${NAME}\", \"role\": \"broker\"}},
       \"spec\": {\"containers\": [{\"env\": [{\"name\": \"QUEUE_NAME\", \"value\":
       \"${ADDRESS}\"}, {\"name\": \"CLUSTER_ID\", \"value\": \"${CLUSTER_ID}\"}, {\"name\":
-      \"CERT_DIR\", \"value\": \"/etc/enmasse-certs\"}], \"image\": \"${BROKER_IMAGE}\",
+      \"CERT_DIR\", \"value\": \"/etc/enmasse-certs\"}, {\"name\": \"AUTHENTICATION_SERVICE_HOST\",
+      \"value\": \"${AUTHENTICATION_SERVICE_HOST}\"}, {\"name\": \"AUTHENTICATION_SERVICE_PORT\",
+      \"value\": \"${AUTHENTICATION_SERVICE_PORT}\"}, {\"name\": \"AUTHENTICATION_SERVICE_CLIENT_SECRET\",
+      \"value\": \"${AUTHENTICATION_SERVICE_CLIENT_SECRET}\"}, {\"name\": \"AUTHENTICATION_SERVICE_SASL_INIT_HOST\",
+      \"value\": \"${AUTHENTICATION_SERVICE_SASL_INIT_HOST}\"}], \"image\": \"${BROKER_IMAGE}\",
       \"lifecycle\": {\"preStop\": {\"exec\": {\"command\": [\"/shutdown-hook/shutdown-hook.sh\"]}}},
       \"livenessProbe\": {\"exec\": {\"command\": [\"sh\", \"-c\", \"$ARTEMIS_HOME/bin/probe.sh\"]},
       \"initialDelaySeconds\": 120}, \"name\": \"broker\", \"ports\": [{\"containerPort\":
@@ -404,15 +413,19 @@ items:
       {\"labels\": {\"app\": \"enmasse\"}, \"name\": \"topic-inmemory\"}, \"objects\":
       [{\"apiVersion\": \"extensions/v1beta1\", \"kind\": \"Deployment\", \"metadata\":
       {\"annotations\": {\"addressSpace\": \"${ADDRESS_SPACE}\", \"cluster_id\": \"${CLUSTER_ID}\",
-      \"io.enmasse.certSecretName\": \"broker-internal-cert\"}, \"labels\": {\"app\":
-      \"enmasse\"}, \"name\": \"${NAME}\"}, \"spec\": {\"replicas\": 1, \"template\":
-      {\"metadata\": {\"annotations\": {\"addressSpace\": \"${ADDRESS_SPACE}\", \"cluster_id\":
-      \"${CLUSTER_ID}\", \"prometheus.io/path\": \"/metrics\", \"prometheus.io/port\":
+      \"io.enmasse.certCn\": \"broker\", \"io.enmasse.certSecretName\": \"broker-internal-cert\"},
+      \"labels\": {\"app\": \"enmasse\"}, \"name\": \"${NAME}\"}, \"spec\": {\"replicas\":
+      1, \"template\": {\"metadata\": {\"annotations\": {\"addressSpace\": \"${ADDRESS_SPACE}\",
+      \"cluster_id\": \"${CLUSTER_ID}\", \"prometheus.io/path\": \"/metrics\", \"prometheus.io/port\":
       \"8080\", \"prometheus.io/scrape\": \"true\"}, \"labels\": {\"addresstype\":
       \"topic\", \"app\": \"enmasse\", \"name\": \"${NAME}\", \"role\": \"broker\"}},
       \"spec\": {\"containers\": [{\"env\": [{\"name\": \"TOPIC_NAME\", \"value\":
       \"${ADDRESS}\"}, {\"name\": \"CLUSTER_ID\", \"value\": \"${CLUSTER_ID}\"}, {\"name\":
-      \"CERT_DIR\", \"value\": \"/etc/enmasse-certs\"}], \"image\": \"${BROKER_IMAGE}\",
+      \"CERT_DIR\", \"value\": \"/etc/enmasse-certs\"}, {\"name\": \"AUTHENTICATION_SERVICE_HOST\",
+      \"value\": \"${AUTHENTICATION_SERVICE_HOST}\"}, {\"name\": \"AUTHENTICATION_SERVICE_PORT\",
+      \"value\": \"${AUTHENTICATION_SERVICE_PORT}\"}, {\"name\": \"AUTHENTICATION_SERVICE_CLIENT_SECRET\",
+      \"value\": \"${AUTHENTICATION_SERVICE_CLIENT_SECRET}\"}, {\"name\": \"AUTHENTICATION_SERVICE_SASL_INIT_HOST\",
+      \"value\": \"${AUTHENTICATION_SERVICE_SASL_INIT_HOST}\"}], \"image\": \"${BROKER_IMAGE}\",
       \"lifecycle\": {\"preStop\": {\"exec\": {\"command\": [\"/shutdown-hook/shutdown-hook.sh\"]}}},
       \"livenessProbe\": {\"exec\": {\"command\": [\"sh\", \"-c\", \"$ARTEMIS_HOME/bin/probe.sh\"]},
       \"initialDelaySeconds\": 120}, \"name\": \"broker\", \"ports\": [{\"containerPort\":
@@ -486,15 +499,19 @@ items:
       [\"ReadWriteMany\"], \"resources\": {\"requests\": {\"storage\": \"${STORAGE_CAPACITY}\"}}}},
       {\"apiVersion\": \"extensions/v1beta1\", \"kind\": \"Deployment\", \"metadata\":
       {\"annotations\": {\"addressSpace\": \"${ADDRESS_SPACE}\", \"cluster_id\": \"${CLUSTER_ID}\",
-      \"io.enmasse.certSecretName\": \"broker-internal-cert\"}, \"labels\": {\"app\":
-      \"enmasse\"}, \"name\": \"${NAME}\"}, \"spec\": {\"replicas\": 1, \"template\":
-      {\"metadata\": {\"annotations\": {\"addressSpace\": \"${ADDRESS_SPACE}\", \"cluster_id\":
-      \"${CLUSTER_ID}\", \"prometheus.io/path\": \"/metrics\", \"prometheus.io/port\":
+      \"io.enmasse.certCn\": \"broker\", \"io.enmasse.certSecretName\": \"broker-internal-cert\"},
+      \"labels\": {\"app\": \"enmasse\"}, \"name\": \"${NAME}\"}, \"spec\": {\"replicas\":
+      1, \"template\": {\"metadata\": {\"annotations\": {\"addressSpace\": \"${ADDRESS_SPACE}\",
+      \"cluster_id\": \"${CLUSTER_ID}\", \"prometheus.io/path\": \"/metrics\", \"prometheus.io/port\":
       \"8080\", \"prometheus.io/scrape\": \"true\"}, \"labels\": {\"addresstype\":
       \"topic\", \"app\": \"enmasse\", \"name\": \"${NAME}\", \"role\": \"broker\"}},
       \"spec\": {\"containers\": [{\"env\": [{\"name\": \"TOPIC_NAME\", \"value\":
       \"${ADDRESS}\"}, {\"name\": \"CLUSTER_ID\", \"value\": \"${CLUSTER_ID}\"}, {\"name\":
-      \"CERT_DIR\", \"value\": \"/etc/enmasse-certs\"}], \"image\": \"${BROKER_IMAGE}\",
+      \"CERT_DIR\", \"value\": \"/etc/enmasse-certs\"}, {\"name\": \"AUTHENTICATION_SERVICE_HOST\",
+      \"value\": \"${AUTHENTICATION_SERVICE_HOST}\"}, {\"name\": \"AUTHENTICATION_SERVICE_PORT\",
+      \"value\": \"${AUTHENTICATION_SERVICE_PORT}\"}, {\"name\": \"AUTHENTICATION_SERVICE_CLIENT_SECRET\",
+      \"value\": \"${AUTHENTICATION_SERVICE_CLIENT_SECRET}\"}, {\"name\": \"AUTHENTICATION_SERVICE_SASL_INIT_HOST\",
+      \"value\": \"${AUTHENTICATION_SERVICE_SASL_INIT_HOST}\"}], \"image\": \"${BROKER_IMAGE}\",
       \"lifecycle\": {\"preStop\": {\"exec\": {\"command\": [\"/shutdown-hook/shutdown-hook.sh\"]}}},
       \"livenessProbe\": {\"exec\": {\"command\": [\"sh\", \"-c\", \"$ARTEMIS_HOME/bin/probe.sh\"]},
       \"initialDelaySeconds\": 120}, \"name\": \"broker\", \"ports\": [{\"containerPort\":

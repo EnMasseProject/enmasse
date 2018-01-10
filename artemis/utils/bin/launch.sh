@@ -37,6 +37,7 @@ function configure_standard() {
         cat $CONFIG_TEMPLATES/standard/broker_queue_colocated.xml >> /tmp/broker.xml
     fi
     cat $CONFIG_TEMPLATES/standard/broker_footer.xml >> /tmp/broker.xml
+    cp $CONFIG_TEMPLATES/standard/login.config /tmp/login.config
 }
 
 # Parameters are
@@ -67,9 +68,8 @@ function configure() {
         fi
     
         envsubst < /tmp/broker.xml > $instanceDir/etc/broker.xml
-        if [ -f /tmp/login.config ]; then
-            envsubst < /tmp/login.config > $instanceDir/etc/login.config
-        fi
+        envsubst < /tmp/login.config > $instanceDir/etc/login.config
+
         cp $CONFIG_TEMPLATES/bootstrap.xml $instanceDir/etc/bootstrap.xml
         cp $CONFIG_TEMPLATES/jolokia-access.xml $instanceDir/etc/jolokia-access.xml
 

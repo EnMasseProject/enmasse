@@ -103,6 +103,7 @@ objects:
     metadata:
       annotations:
         addressSpace: ${ADDRESS_SPACE}
+        io.enmasse.certCn: router
         io.enmasse.certSecretName: router-internal-cert
         prometheus.io/path: /metrics
         prometheus.io/port: '8080'
@@ -624,6 +625,7 @@ objects:
         annotations:
           addressSpace: ${ADDRESS_SPACE}
           cluster_id: ${CLUSTER_ID}
+          io.enmasse.certCn: broker
           io.enmasse.certSecretName: broker-internal-cert
         labels:
           app: enmasse
@@ -652,6 +654,14 @@ objects:
                 value: ${CLUSTER_ID}
               - name: CERT_DIR
                 value: /etc/enmasse-certs
+              - name: AUTHENTICATION_SERVICE_HOST
+                value: ${AUTHENTICATION_SERVICE_HOST}
+              - name: AUTHENTICATION_SERVICE_PORT
+                value: ${AUTHENTICATION_SERVICE_PORT}
+              - name: AUTHENTICATION_SERVICE_CLIENT_SECRET
+                value: ${AUTHENTICATION_SERVICE_CLIENT_SECRET}
+              - name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
+                value: ${AUTHENTICATION_SERVICE_SASL_INIT_HOST}
               image: ${BROKER_IMAGE}
               lifecycle:
                 preStop:
@@ -784,6 +794,7 @@ objects:
         annotations:
           addressSpace: ${ADDRESS_SPACE}
           cluster_id: ${CLUSTER_ID}
+          io.enmasse.certCn: broker
           io.enmasse.certSecretName: broker-internal-cert
         labels:
           app: enmasse
@@ -812,6 +823,14 @@ objects:
                 value: ${CLUSTER_ID}
               - name: CERT_DIR
                 value: /etc/enmasse-certs
+              - name: AUTHENTICATION_SERVICE_HOST
+                value: ${AUTHENTICATION_SERVICE_HOST}
+              - name: AUTHENTICATION_SERVICE_PORT
+                value: ${AUTHENTICATION_SERVICE_PORT}
+              - name: AUTHENTICATION_SERVICE_CLIENT_SECRET
+                value: ${AUTHENTICATION_SERVICE_CLIENT_SECRET}
+              - name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
+                value: ${AUTHENTICATION_SERVICE_SASL_INIT_HOST}
               image: ${BROKER_IMAGE}
               lifecycle:
                 preStop:
@@ -930,6 +949,7 @@ objects:
         annotations:
           addressSpace: ${ADDRESS_SPACE}
           cluster_id: ${CLUSTER_ID}
+          io.enmasse.certCn: broker
           io.enmasse.certSecretName: broker-internal-cert
         labels:
           app: enmasse
@@ -958,6 +978,14 @@ objects:
                 value: ${CLUSTER_ID}
               - name: CERT_DIR
                 value: /etc/enmasse-certs
+              - name: AUTHENTICATION_SERVICE_HOST
+                value: ${AUTHENTICATION_SERVICE_HOST}
+              - name: AUTHENTICATION_SERVICE_PORT
+                value: ${AUTHENTICATION_SERVICE_PORT}
+              - name: AUTHENTICATION_SERVICE_CLIENT_SECRET
+                value: ${AUTHENTICATION_SERVICE_CLIENT_SECRET}
+              - name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
+                value: ${AUTHENTICATION_SERVICE_SASL_INIT_HOST}
               image: ${BROKER_IMAGE}
               lifecycle:
                 preStop:
@@ -1163,6 +1191,7 @@ objects:
         annotations:
           addressSpace: ${ADDRESS_SPACE}
           cluster_id: ${CLUSTER_ID}
+          io.enmasse.certCn: broker
           io.enmasse.certSecretName: broker-internal-cert
         labels:
           app: enmasse
@@ -1191,6 +1220,14 @@ objects:
                 value: ${CLUSTER_ID}
               - name: CERT_DIR
                 value: /etc/enmasse-certs
+              - name: AUTHENTICATION_SERVICE_HOST
+                value: ${AUTHENTICATION_SERVICE_HOST}
+              - name: AUTHENTICATION_SERVICE_PORT
+                value: ${AUTHENTICATION_SERVICE_PORT}
+              - name: AUTHENTICATION_SERVICE_CLIENT_SECRET
+                value: ${AUTHENTICATION_SERVICE_CLIENT_SECRET}
+              - name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
+                value: ${AUTHENTICATION_SERVICE_SASL_INIT_HOST}
               image: ${BROKER_IMAGE}
               lifecycle:
                 preStop:
