@@ -56,7 +56,7 @@ function configure() {
         KEYSTORE_PASS=enmasse
 
 
-        JAVA_OPTS="${JAVA_OPTS} -Djavax.net.ssl.keyStore=${KEYSTORE_PATH} -Djavax.net.ssl.keyStorePassword=${KEYSTORE_PASS} -Djavax.net.ssl.trustStore=${TRUSTSTORE_PATH} -Djavax.net.ssl.trustStorePassword=${TRUSTSTORE_PASS}"
+        export JAVA_OPTS="${JAVA_OPTS} -Djavax.net.ssl.keyStore=${KEYSTORE_PATH} -Djavax.net.ssl.keyStorePassword=${KEYSTORE_PASS} -Djavax.net.ssl.trustStore=${TRUSTSTORE_PATH} -Djavax.net.ssl.trustStorePassword=${TRUSTSTORE_PASS}"
 
         $ARTEMIS_HOME/bin/artemis create $instanceDir --user admin --password admin --role admin --allow-anonymous --java-options "$JAVA_OPTS"
 
@@ -88,9 +88,11 @@ function configure() {
 
         fi
 
+        export ARTEMIS_INSTANCE=${instanceDir}
+        export ARTEMIS_INSTANCE_URI=file:${instanceDir}/
+        envsubst < $CONFIG_TEMPLATES/artemis.profile > $instanceDir/etc/artemis.profile
 
         # cp $CONFIG_TEMPLATES/logging.properties $instanceDir/etc/logging.properties
-
     fi
 
 }
