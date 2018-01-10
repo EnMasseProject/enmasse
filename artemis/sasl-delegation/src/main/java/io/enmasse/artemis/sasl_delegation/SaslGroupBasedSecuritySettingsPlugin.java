@@ -41,6 +41,7 @@ public class SaslGroupBasedSecuritySettingsPlugin implements SecuritySettingPlug
     private static final String NAME = "name";
     private static final String USE_GROUPS_FROM_SASL_DELEGATION = "useGroupsFromSaslDelegation";
     private static final String ADMIN_GROUP = "admin";
+    private static final String MANAGE_GROUP = "manage";
     private static final String ALL_GROUP = "all";
     private String name;
     private HierarchicalRepository<Set<Role>> securityRepository;
@@ -63,6 +64,7 @@ public class SaslGroupBasedSecuritySettingsPlugin implements SecuritySettingPlug
         if(!useGroupsFromSaslDelegation) {
             // "all" users can create/delete queues (but not addresses)
             roles.add(new Role(ALL_GROUP, true, true, true, true, true, true, false, true, false, false));
+            roles.add(new Role(MANAGE_GROUP, true, true, true, true, true, true, true, true, false, false));
         }
 
         this.standardRoles = Collections.unmodifiableSet(roles);
