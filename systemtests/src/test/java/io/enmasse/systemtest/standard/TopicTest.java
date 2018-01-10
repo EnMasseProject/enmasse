@@ -63,8 +63,9 @@ public class TopicTest extends StandardTestBase {
         assertThat(recvMessages.get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
     }
 
-    @Test
-    public void testRestApiForTopic() throws Exception {
+    //disabled due to issue: #693
+    //@Test
+    public void testRestApi() throws Exception {
         List<String> topics = Arrays.asList("topicRest1", "topicRest2");
         Destination t1 = Destination.topic(topics.get(0), Optional.of("pooled-inmemory"));
         Destination t2 = Destination.topic(topics.get(1), Optional.of("pooled-inmemory"));
