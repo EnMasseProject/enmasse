@@ -39,11 +39,14 @@ public class ConsoleWebPage {
     }
 
     private WebElement getNavigateMenu() throws Exception {
-        return selenium.driver.findElement(By.id("verticalNavLayout"));
+        return selenium.driver.findElement(By.className("nav-pf-vertical"));
     }
 
     private WebElement getLeftMenuItemWebConsole(String itemText) throws Exception {
-        List<WebElement> items = getNavigateMenu().findElements(ByAngular.exactRepeater("item in items"));
+        Logging.log.info("Getting navigation menu items");
+        List<WebElement> items = getNavigateMenu()
+                .findElement(By.className("list-group"))
+                .findElements(ByAngular.repeater("item in items"));
         assertNotNull(items);
         WebElement returnedItem = null;
         for (WebElement item : items) {
@@ -467,6 +470,7 @@ public class ConsoleWebPage {
      * create specific address
      */
     public void createAddressWebConsole(Destination destination) throws Exception {
+        Logging.log.info("Create address using web console");
         //get console page
         openConsolePageWebConsole();
 
@@ -487,6 +491,8 @@ public class ConsoleWebPage {
         selenium.clickOnItem(nextButton);
         selenium.clickOnItem(nextButton);
 
+        selenium.waitUntilItemPresent(60, () -> getAddressItem(destination));
+
         assertNotNull(getAddressItem(destination));
 
         TestUtils.waitForDestinationsReady(addressApiClient, defaultAddressSpace,
@@ -506,6 +512,7 @@ public class ConsoleWebPage {
      * delete specific address
      */
     public void deleteAddressWebConsole(Destination destination) throws Exception {
+        Logging.log.info("Remove address using web console");
         //open console webpage
         openConsolePageWebConsole();
 
@@ -519,6 +526,8 @@ public class ConsoleWebPage {
 
         //click on delete
         clickOnRemoveButton();
+
+        selenium.waitUntilItemNotPresent(60, () -> getAddressItem(destination));
 
         //check if address deleted
         assertNull(getAddressItem(destination));

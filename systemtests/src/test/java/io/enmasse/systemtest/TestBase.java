@@ -586,6 +586,7 @@ public abstract class TestBase extends SystemTestRunListener {
     }
 
     public void assertSorted(Iterable list, boolean reverse) throws Exception {
+        Logging.log.info("Assert sort reverse: " + reverse);
         if (!reverse)
             assertTrue(Ordering.natural().isOrdered(list));
         else
@@ -593,6 +594,7 @@ public abstract class TestBase extends SystemTestRunListener {
     }
 
     public void assertSorted(Iterable list, boolean reverse, Comparator comparator) throws Exception {
+        Logging.log.info("Assert sort reverse: " + reverse);
         if (!reverse)
             assertTrue(Ordering.from(comparator).isOrdered(list));
         else

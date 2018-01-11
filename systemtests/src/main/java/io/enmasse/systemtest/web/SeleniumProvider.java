@@ -141,4 +141,46 @@ public class SeleniumProvider {
         Logging.log.info("Enter pressed");
         takeScreenShot();
     }
+
+    protected void waitUntilItemPresent(int timeInSeconds, IWebProperty<WebItem> item) throws Exception {
+        waitUntilItem(timeInSeconds, item, true);
+    }
+
+    protected void waitUntilItemNotPresent(int timeInSeconds, IWebProperty<WebItem> item) throws Exception {
+        waitUntilItem(timeInSeconds, item, false);
+    }
+
+    private void waitUntilItem(int timeInSeconds, IWebProperty<WebItem> item, boolean present) throws Exception {
+        Logging.log.info("Waiting for element be present");
+        int attempts = 0;
+        while (attempts++ < timeInSeconds) {
+            if (present) {
+                if (item.get() != null)
+                    break;
+                Logging.log.info("Element not present, go to next iteration: " + attempts);
+            } else {
+                if (item.get() == null)
+                    break;
+                Logging.log.info("Element still present, go to next iteration: " + attempts);
+            }
+            Thread.sleep(1000);
+        }
+        Logging.log.info("End of waiting");
+    }
+
+    protected void waitUntilPropertyPresent(int timeoutInSeconds, int expectedValue, IWebProperty<Integer> item) throws Exception {
+        Logging.log.info("Waiting until data will be present");
+        int attempts = 0;
+        while (attempts < timeoutInSeconds) {
+            if (expectedValue == item.get())
+                break;
+            Thread.sleep(1000);
+            attempts++;
+        }
+        Logging.log.info("End of waiting");
+    }
+
+    protected interface IWebProperty<T> {
+        T get() throws Exception;
+    }
 }
