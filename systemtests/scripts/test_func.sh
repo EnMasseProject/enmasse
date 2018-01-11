@@ -99,3 +99,11 @@ function get_kubernetes_info() {
     kubectl get ${RESOURCE} -n ${NAMESPACE} > "${1}/${FILE_NAME}"
     kubectl get ${RESOURCE} -n ${NAMESPACE} -o yaml >> "${1}/${FILE_NAME}"
 }
+
+function get_docker_info() {
+    ARTIFACTS_DIR=${1}
+    CONTAINER=${2}
+
+    FILENAME="docker_${CONTAINER}.log"
+    docker logs ${CONTAINER} > ${FILENAME}
+}
