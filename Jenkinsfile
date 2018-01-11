@@ -1,5 +1,5 @@
 node('enmasse') {
-    result = 'failure'
+    currentBuild.result = 'failure'
     timeout(180) {
         catchError {
             stage ('checkout') {
@@ -38,12 +38,21 @@ node('enmasse') {
                 withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
                     try {
                         sh 'Xvfb :10 -ac &'
-                        sh 'PATH=$PATH:$(pwd)/systemtests/web_driver DISPLAY=:10 ARTIFACTS_DIR=artifacts OPENSHIFT_PROJECT=${JOB_NAME::16}${BUILD_NUMBER} ./systemtests/scripts/run_test_component.sh templates/install /var/lib/origin/openshift.local.config/master/admin.kubeconfig systemtests'
+                        sh '''
+                            PATH=$PATH:$(pwd)/systemtests/web_driver
+                            DISPLAY=:10
+                            ARTIFACTS_DIR=artifacts
+                            OPENSHIFT_PROJECT=${JOB_NAME::16}${BUILD_NUMBER}
+                            ./systemtests/scripts/run_test_component.sh templates/install /var/lib/origin/openshift.local.config/master/admin.kubeconfig systemtests
+                        '''
                         currentBuild.result = 'SUCCESS'
                     } catch(err) { // timeout reached or input false
                         echo "collect logs and archive artifacts"
-                        sh 'OPENSHIFT_TEST_LOGDIR="/tmp/testlogs" ./systemtests/scripts/collect_logs.sh "artifacts"'
-                        currentBuild.result = 'FAILURE'
+                        sh './systemtests/scripts/store_kubernetes_info.sh artifacts/openshift-info ${JOB_NAME::16}${BUILD_NUMBER}'
+                        sh '''
+                            OPENSHIFT_TEST_LOGDIR="/tmp/testlogs"
+                            ./systemtests/scripts/collect_logs.sh artifacts
+                        '''
                         throw err //to mark this stage red
                     } finally {
                        junit '**/TEST-*.xml'
@@ -60,7 +69,7 @@ node('enmasse') {
             sh './systemtests/scripts/teardown-openshift.sh'
         }
         stage('notify mailing list') {
-            if (result.equals("failure")) {
+            if (currentBuild.result.equals("FAILURE")) {
                 mail to: "$MAILING_LIST", subject: "EnMasse build has finished with ${result}", body: "See ${env.BUILD_URL}"
             }
         }

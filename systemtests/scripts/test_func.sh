@@ -100,6 +100,23 @@ function get_kubernetes_info() {
     kubectl get ${RESOURCE} -n ${NAMESPACE} -o yaml >> "${1}/${FILE_NAME}"
 }
 
+#store previous logs from restarted pods
+function get_previous_logs() {
+    LOG_DIR=${1}
+    ADDRESS_SPACE=${2}
+
+    pods_id=$(kubectl get pods -n ${ADDRESS_SPACE} | awk 'NR >1 {print $1}')
+    for pod_id in ${pods_id}
+    do
+        restart_count=$(kubectl get -o json pod -n ${ADDRESS_SPACE} ${pod_id} -o jsonpath={.status.containerStatuses[0].restartCount})
+        if [ ${restart_count} > 0 ]
+        then
+            echo "pod ${pod_id} was restarted"
+            kubectl logs -p ${pod_id} -n ${ADDRESS_SPACE} > "${LOG_DIR}/${pod_id}.previous.log"
+        fi
+    done
+}
+
 function get_docker_info() {
     ARTIFACTS_DIR=${1}
     CONTAINER=${2}
