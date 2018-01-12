@@ -39,12 +39,17 @@ node('enmasse') {
                     try {
                         sh 'Xvfb :10 -ac &'
                         sh 'PATH=$PATH:$(pwd)/systemtests/web_driver DISPLAY=:10 ARTIFACTS_DIR=artifacts OPENSHIFT_PROJECT=${JOB_NAME::16}${BUILD_NUMBER} ./systemtests/scripts/run_test_component.sh templates/install /var/lib/origin/openshift.local.config/master/admin.kubeconfig systemtests'
+                        currentBuild.result = 'SUCCESS'
+                    } catch(err) { // timeout reached or input false
+                        echo "collect logs and archive artifacts"
+                        sh 'OPENSHIFT_TEST_LOGDIR="/tmp/testlogs" ./systemtests/scripts/collect_logs.sh "artifacts"'
+                        currentBuild.result = 'FAILURE'
+                        throw err //to mark this stage red
                     } finally {
-                        junit '**/TEST-*.xml'
+                       junit '**/TEST-*.xml'
                     }
                 }
             }
-            result = 'success'
         }
         stage('archive artifacts') {
             archive '**/TEST-*.xml'
