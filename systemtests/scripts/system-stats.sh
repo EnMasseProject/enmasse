@@ -7,5 +7,5 @@ while [ true ]; do
     CPU=$(top -bn1 | grep load | awk '{printf "%.2f%%\t\t\n", $(NF-2)}')
     TIME=$(date +"%m-%d-%Y-%T")
     echo "$TIME    $MEMORY$DISK$CPU"
-    sleep 30
+    sleep 5
 done
