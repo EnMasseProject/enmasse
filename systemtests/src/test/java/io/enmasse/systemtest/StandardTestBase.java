@@ -15,7 +15,7 @@
  */
 package io.enmasse.systemtest;
 
-public class StandardTestBase extends TestBaseWithDefault {
+public abstract class StandardTestBase extends TestBaseWithDefault {
     @Override
     protected AddressSpaceType getAddressSpaceType() {
         return AddressSpaceType.STANDARD;
