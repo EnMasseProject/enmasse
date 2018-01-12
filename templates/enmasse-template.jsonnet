@@ -19,5 +19,6 @@ local grafana = import "include/grafana.jsonnet";
     "kubernetes/addons/cluster-reader.json": roles.cluster_reader,
     "kubernetes/cluster-roles.json": kubernetes.cluster_roles,
     "kubernetes/addons/standard-authservice.json": authService.keycloak_kubernetes,
+    "kubernetes/addons/keycloak-controller.json": authService.keycloak_controller_kubernetes,
     "kubernetes/addons/none-authservice.json": authService.none_kubernetes,
 }

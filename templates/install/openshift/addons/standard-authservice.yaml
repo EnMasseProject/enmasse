@@ -62,12 +62,12 @@ objects:
             name: keycloak-persistence
             readOnly: false
           - mountPath: /opt/enmasse/cert
-            name: ${STANDARD_AUTHSERVICE_SECRET_NAME}
+            name: ${KEYCLOAK_CERT_SECRET_NAME}
             readOnly: false
         volumes:
-        - name: ${STANDARD_AUTHSERVICE_SECRET_NAME}
+        - name: ${KEYCLOAK_CERT_SECRET_NAME}
           secret:
-            secretName: ${STANDARD_AUTHSERVICE_SECRET_NAME}
+            secretName: ${KEYCLOAK_CERT_SECRET_NAME}
         - name: keycloak-persistence
           persistentVolumeClaim:
             claimName: keycloak-pvc
@@ -87,21 +87,31 @@ objects:
       spec:
         containers:
         - env:
-          - name: STANDARD_AUTHSERVICE_ADMIN_USER
+          - name: KEYCLOAK_HOSTNAME
+            valueFrom:
+              configMapKeyRef:
+                key: hostname
+                name: ${KEYCLOAK_CONTROLLER_CONFIGMAP_NAME}
+          - name: KEYCLOAK_PORT
+            valueFrom:
+              configMapKeyRef:
+                key: port
+                name: ${KEYCLOAK_CONTROLLER_CONFIGMAP_NAME}
+          - name: KEYCLOAK_ADMIN_USER
             valueFrom:
               secretKeyRef:
                 key: admin.username
                 name: ${KEYCLOAK_SECRET_NAME}
-          - name: STANDARD_AUTHSERVICE_ADMIN_PASSWORD
+          - name: KEYCLOAK_ADMIN_PASSWORD
             valueFrom:
               secretKeyRef:
                 key: admin.password
                 name: ${KEYCLOAK_SECRET_NAME}
-          - name: STANDARD_AUTHSERVICE_CA_CERT
+          - name: KEYCLOAK_CERT
             valueFrom:
               secretKeyRef:
                 key: tls.crt
-                name: ${STANDARD_AUTHSERVICE_SECRET_NAME}
+                name: ${KEYCLOAK_CERT_SECRET_NAME}
           image: ${KEYCLOAK_CONTROLLER_IMAGE}
           name: keycloak-controller
           resources:
@@ -109,6 +119,15 @@ objects:
               memory: 256Mi
             requests:
               memory: 256Mi
+- apiVersion: v1
+  data:
+    hostname: standard-authservice
+    port: '8443'
+  kind: ConfigMap
+  metadata:
+    labels:
+      app: enmasse
+    name: keycloak-controller-config
 - apiVersion: v1
   kind: Service
   metadata:
@@ -152,8 +171,11 @@ parameters:
 - description: The docker image to use for the keycloak controller
   name: KEYCLOAK_CONTROLLER_IMAGE
   value: docker.io/enmasseproject/keycloak-controller:latest
+- description: The configmap used to configure the keycloak controller
+  name: KEYCLOAK_CONTROLLER_CONFIGMAP_NAME
+  value: keycloak-controller-config
 - description: The secret containing the tls certificate and key
-  name: STANDARD_AUTHSERVICE_SECRET_NAME
+  name: KEYCLOAK_CERT_SECRET_NAME
   value: standard-authservice-cert
 - description: The hostname to use for the public keycloak route
   name: KEYCLOAK_ROUTE_HOSTNAME
