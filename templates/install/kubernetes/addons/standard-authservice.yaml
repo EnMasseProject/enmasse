@@ -89,17 +89,27 @@ items:
       spec:
         containers:
         - env:
-          - name: STANDARD_AUTHSERVICE_ADMIN_USER
+          - name: KEYCLOAK_HOSTNAME
+            valueFrom:
+              configMapKeyRef:
+                key: hostname
+                name: keycloak-controller-config
+          - name: KEYCLOAK_PORT
+            valueFrom:
+              configMapKeyRef:
+                key: port
+                name: keycloak-controller-config
+          - name: KEYCLOAK_ADMIN_USER
             valueFrom:
               secretKeyRef:
                 key: admin.username
                 name: keycloak-credentials
-          - name: STANDARD_AUTHSERVICE_ADMIN_PASSWORD
+          - name: KEYCLOAK_ADMIN_PASSWORD
             valueFrom:
               secretKeyRef:
                 key: admin.password
                 name: keycloak-credentials
-          - name: STANDARD_AUTHSERVICE_CA_CERT
+          - name: KEYCLOAK_CERT
             valueFrom:
               secretKeyRef:
                 key: tls.crt
@@ -111,6 +121,15 @@ items:
               memory: 256Mi
             requests:
               memory: 256Mi
+- apiVersion: v1
+  data:
+    hostname: standard-authservice
+    port: '8443'
+  kind: ConfigMap
+  metadata:
+    labels:
+      app: enmasse
+    name: keycloak-controller-config
 - apiVersion: v1
   kind: Service
   metadata:

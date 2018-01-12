@@ -19,9 +19,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.file.Files;
 import java.security.KeyStore;
 import java.security.cert.CertificateFactory;
 import java.util.Map;
+import java.util.Optional;
 
 public class KeycloakParams {
 
@@ -42,28 +47,28 @@ public class KeycloakParams {
     }
 
     public static KeycloakParams fromEnv(Map<String, String> env) throws Exception {
-        String host = getEnvOrThrow(env, "STANDARD_AUTHSERVICE_SERVICE_HOST");
-        int httpPort = Integer.parseInt(getEnvOrThrow(env, "STANDARD_AUTHSERVICE_SERVICE_PORT_HTTPS"));
-        String adminUser = getEnvOrThrow(env, "STANDARD_AUTHSERVICE_ADMIN_USER");
-        String adminPassword = getEnvOrThrow(env, "STANDARD_AUTHSERVICE_ADMIN_PASSWORD");
+        String host = getEnvOrThrow(env, "KEYCLOAK_HOSTNAME");
+        int httpPort = Integer.parseInt(getEnvOrThrow(env, "KEYCLOAK_PORT"));
+        String adminUser = getEnvOrThrow(env, "KEYCLOAK_ADMIN_USER");
+        String adminPassword = getEnvOrThrow(env, "KEYCLOAK_ADMIN_PASSWORD");
         KeyStore keyStore = createKeyStore(env);
 
         return new KeycloakParams(host, httpPort, adminUser, adminPassword, keyStore);
     }
 
     private static KeyStore createKeyStore(Map<String, String> env) throws Exception {
-        String authServiceCa = getEnvOrThrow(env, "STANDARD_AUTHSERVICE_CA_CERT");
+        String authServiceCa = getEnvOrThrow(env, "KEYCLOAK_CERT");
 
         try {
             KeyStore keyStore = KeyStore.getInstance("JKS");
             keyStore.load(null);
             CertificateFactory cf = CertificateFactory.getInstance("X.509");
-            keyStore.setCertificateEntry("standard-authservice",
+            keyStore.setCertificateEntry("keycloak",
                     cf.generateCertificate(new ByteArrayInputStream(authServiceCa.getBytes("UTF-8"))));
 
             return keyStore;
         } catch (Exception ignored) {
-            log.warn("Error creating keystore for authservice CA", ignored);
+            log.warn("Error creating keystore for keycloak CA", ignored);
             throw ignored;
         }
     }
@@ -95,4 +100,5 @@ public class KeycloakParams {
     public KeyStore getKeyStore() {
         return keyStore;
     }
+
 }

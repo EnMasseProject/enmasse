@@ -32,18 +32,18 @@ public class KeycloakParamsTest {
         Map<String, String> env = new HashMap<>();
         assertThrows(env);
 
-        env.put("STANDARD_AUTHSERVICE_SERVICE_HOST", "localhost");
+        env.put("KEYCLOAK_HOSTNAME", "localhost");
         assertThrows(env);
 
-        env.put("STANDARD_AUTHSERVICE_SERVICE_PORT_HTTPS", "1234");
+        env.put("KEYCLOAK_PORT", "1234");
         assertThrows(env);
 
-        env.put("STANDARD_AUTHSERVICE_ADMIN_USER", "admin");
+        env.put("KEYCLOAK_ADMIN_USER", "admin");
         assertThrows(env);
 
-        env.put("STANDARD_AUTHSERVICE_ADMIN_PASSWORD", "password");
+        env.put("KEYCLOAK_ADMIN_PASSWORD", "password");
 
-        env.put("STANDARD_AUTHSERVICE_CA_CERT", new String(Files.readAllBytes(new File("src/test/resources/ca.crt").toPath()), "UTF-8"));
+        env.put("KEYCLOAK_CERT", new String(Files.readAllBytes(new File("src/test/resources/ca.crt").toPath()), "UTF-8"));
 
         KeycloakParams params = KeycloakParams.fromEnv(env);
         assertEquals("localhost", params.getHost());
