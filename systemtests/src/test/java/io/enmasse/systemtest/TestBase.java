@@ -70,10 +70,10 @@ public abstract class TestBase extends SystemTestRunListener {
     protected static void deleteAddressSpace(AddressSpace addressSpace) throws Exception {
         if (TestUtils.existAddressSpace(addressApiClient, addressSpace.getName())) {
             logCollector.collectEvents(addressSpace.getNamespace());
+            logCollector.collectLogsTerminatedPods(addressSpace.getNamespace());
             addressApiClient.deleteAddressSpace(addressSpace);
             TestUtils.waitForAddressSpaceDeleted(kubernetes, addressSpace);
             logCollector.stopCollecting(addressSpace.getNamespace());
-            logCollector.collectLogsTerminatedPods(addressSpace.getNamespace());
         } else {
             Logging.log.info("Address space '" + addressSpace + "' doesn't exists!");
         }
