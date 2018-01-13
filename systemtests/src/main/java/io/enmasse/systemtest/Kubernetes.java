@@ -23,7 +23,6 @@ import io.fabric8.kubernetes.client.dsl.LogWatch;
 
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
-import java.net.UnknownHostException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -59,7 +58,9 @@ public abstract class Kubernetes {
     }
 
     public abstract Endpoint getRestEndpoint();
+
     public abstract Endpoint getKeycloakEndpoint();
+
     public abstract Endpoint getExternalEndpoint(String namespace, String name);
 
     public KeycloakCredentials getKeycloakCredentials() {
@@ -71,6 +72,23 @@ public abstract class Kubernetes {
         } else {
             return null;
         }
+    }
+
+    public HashMap<String, String> getLogsOfTerminatedPods(String namespace) {
+        HashMap<String, String> terminatedPodsLogs = new HashMap<>();
+        client.pods().inNamespace(namespace).list().getItems().forEach(pod -> {
+            pod.getStatus().getContainerStatuses().forEach(containerStatus -> {
+                Logging.log.info("pod:'{}' : restart count '{}'",
+                        pod.getMetadata().getName(),
+                        containerStatus.getRestartCount());
+                if (containerStatus.getRestartCount() > 0) {
+                    terminatedPodsLogs.put(
+                            pod.getMetadata().getName(),
+                            client.pods().withName(pod.getMetadata().getName()).terminated().getLog());
+                }
+            });
+        });
+        return terminatedPodsLogs;
     }
 
     public void setDeploymentReplicas(String tenantNamespace, String name, int numReplicas) {

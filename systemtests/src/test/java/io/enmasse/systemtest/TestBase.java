@@ -73,6 +73,7 @@ public abstract class TestBase extends SystemTestRunListener {
             addressApiClient.deleteAddressSpace(addressSpace);
             TestUtils.waitForAddressSpaceDeleted(kubernetes, addressSpace);
             logCollector.stopCollecting(addressSpace.getNamespace());
+            logCollector.collectLogsTerminatedPods(addressSpace.getNamespace());
         } else {
             Logging.log.info("Address space '" + addressSpace + "' doesn't exists!");
         }
@@ -83,7 +84,7 @@ public abstract class TestBase extends SystemTestRunListener {
     }
 
     @Before
-    public void setup() throws Exception {
+    public void setup() {
         addressSpaceList = new ArrayList<>();
         amqpClientFactory = new AmqpClientFactory(kubernetes, environment, null, username, password);
         mqttClientFactory = new MqttClientFactory(kubernetes, environment, null, username, password);

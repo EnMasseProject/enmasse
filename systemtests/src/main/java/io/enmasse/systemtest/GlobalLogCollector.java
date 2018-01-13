@@ -17,10 +17,10 @@ package io.enmasse.systemtest;
 
 import io.fabric8.kubernetes.api.model.Event;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.UncheckedIOException;
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -47,6 +47,29 @@ public class GlobalLogCollector {
             collector.close();
         }
         collectorMap.remove(namespace);
+    }
+
+    /**
+     * Collect logs from terminated pods in namespace
+     */
+    public void collectLogsTerminatedPods(String namespace) {
+        Logging.log.info("Store logs from all terminated pods in namespace '{}'", namespace);
+        kubernetes.getLogsOfTerminatedPods(namespace).forEach((podName, podLogTerminated) -> {
+            try {
+                Path path = Paths.get(logDir.getPath(), namespace);
+                File podLog = new File(
+                        Files.createDirectories(path).toFile(),
+                        namespace + "." + podName + ".terminated.log");
+                Logging.log.info("log of terminated '{}' pod will be archived with path: '{}'",
+                        podName,
+                        path.toString());
+                try (BufferedWriter bf = Files.newBufferedWriter(podLog.toPath())) {
+                    bf.write(podLogTerminated);
+                }
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
+        });
     }
 
     public void collectEvents(String namespace) {
