@@ -11,6 +11,12 @@
   <dependencies>
     <dependency>
       <groupId>io.enmasse</groupId>
+      <artifactId>k8s-api</artifactId>
+      <version>${project.version}</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.enmasse</groupId>
       <artifactId>address-model-lib</artifactId>
       <version>${project.version}</version>
       <scope>compile</scope>

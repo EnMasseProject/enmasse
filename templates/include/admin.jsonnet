@@ -65,11 +65,10 @@ local common = import "common.jsonnet";
               "image": "${QUEUE_SCHEDULER_IMAGE}",
               "name": "queue-scheduler",
               "env": [
-                common.env("CONFIGURATION_SERVICE_HOST", "localhost"),
-                common.env("CONFIGURATION_SERVICE_PORT", "5671"),
                 common.env("CERT_DIR", "/etc/enmasse-certs"),
                 common.env("JAVA_OPTS", "-verbose:gc"),
-                common.env("LISTEN_PORT", "55667")
+                common.env("LISTEN_PORT", "55667"),
+                common.env_field_ref("NAMESPACE", "metadata.namespace")
               ],
               "resources": common.memory_resources("128Mi", "128Mi"),
               "ports": [

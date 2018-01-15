@@ -18,15 +18,15 @@ package io.enmasse.queue.scheduler;
 
 import io.enmasse.amqp.Artemis;
 import io.enmasse.amqp.ExternalSaslAuthenticator;
+import io.fabric8.kubernetes.client.DefaultKubernetesClient;
+import io.fabric8.kubernetes.client.KubernetesClient;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 
 public class Main {
     public static void main(String [] args) {
         Vertx vertx = Vertx.vertx();
-        String configHost = getEnvOrThrow("CONFIGURATION_SERVICE_HOST");
         String certDir = System.getenv("CERT_DIR");
-        int configPort = Integer.parseInt(getEnvOrThrow("CONFIGURATION_SERVICE_PORT"));
         int listenPort = Integer.parseInt(getEnvOrThrow("LISTEN_PORT"));
 
         QueueScheduler scheduler = new QueueScheduler(
@@ -52,7 +52,10 @@ public class Main {
         } else {
             scheduler.setProtonSaslAuthenticatorFactory(new DummySaslAuthenticatorFactory());
         }
-        ConfigServiceClient configServiceClient = new ConfigServiceClient(configHost, configPort, scheduler, certDir);
+
+
+        KubernetesClient kubernetesClient = new DefaultKubernetesClient();
+        ConfigServiceClient configServiceClient = new ConfigServiceClient(scheduler, kubernetesClient, getEnvOrThrow("NAMESPACE"));
 
         vertx.deployVerticle(configServiceClient);
         vertx.deployVerticle(scheduler);
