@@ -1,5 +1,5 @@
 node('enmasse') {
-    result = 'failure'
+    currentBuild.result = 'failure'
     timeout(180) {
         catchError {
             stage ('checkout') {
@@ -60,7 +60,7 @@ node('enmasse') {
             sh './systemtests/scripts/teardown-openshift.sh'
         }
         stage('notify mailing list') {
-            if (result.equals("failure")) {
+            if (currentBuild.result.equals("FAILURE")) {
                 mail to: "$MAILING_LIST", subject: "EnMasse build has finished with ${result}", body: "See ${env.BUILD_URL}"
             }
         }
