@@ -106,7 +106,7 @@ public class TopicMigrator implements DiscoveryListener {
             Host dest = destinations.next();
             QueueInfo queue = subscriptionInfo.getQueueInfo();
             try (Artemis manager = brokerFactory.createClient(vertx, protonClientOptions, dest.amqpEndpoint())) {
-                manager.deployQueue(queue.getQueueName(), queue.getAddress());
+                manager.createQueue(queue.getQueueName(), queue.getAddress());
                 manager.pauseQueue(queue.getQueueName());
                 if (subscriptionInfo.getDivertInfo().isPresent()) {
                     DivertInfo divert = subscriptionInfo.getDivertInfo().get();
