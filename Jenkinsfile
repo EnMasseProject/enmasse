@@ -39,13 +39,12 @@ node('enmasse') {
                     try {
                         environment {
                             WORKSPACE = pwd()
-                            PATH = "$PATH:$WORKSPACE/systemtests/web_driver"
                             DISPLAY = ':10'
                             ARTIFACTS_DIR = 'artifacts'
                             OPENSHIFT_PROJECT = "${JOB_NAME.substring(0,15)}${BUILD_NUMBER}"
                         }
                         sh 'Xvfb :10 -ac &'
-                        sh "PATH=${env.PATH} DISPLAY=${env.DISPLAY} ARTIFACTS_DIR=${env.ARTIFACTS_DIR} OPENSHIFT_PROJECT=${env.OPENSHIFT_PROJECT} ./systemtests/scripts/run_test_component.sh templates/install /var/lib/origin/openshift.local.config/master/admin.kubeconfig systemtests ${params.TEST_CASE}"
+                        sh "PATH=$PATH:${env.WORKSPACE}/systemtests/web_driver DISPLAY=${env.DISPLAY} ARTIFACTS_DIR=${env.ARTIFACTS_DIR} OPENSHIFT_PROJECT=${env.OPENSHIFT_PROJECT} ./systemtests/scripts/run_test_component.sh templates/install /var/lib/origin/openshift.local.config/master/admin.kubeconfig systemtests ${params.TEST_CASE}"
                         currentBuild.result = 'SUCCESS'
                     } catch(err) { // timeout reached or input false
                         echo "collect logs and archive artifacts"
