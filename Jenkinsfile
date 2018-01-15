@@ -42,7 +42,7 @@ node('enmasse') {
                             PATH = "$PATH:$WORKSPACE/systemtests/web_driver"
                             DISPLAY = ':10'
                             ARTIFACTS_DIR = 'artifacts'
-                            OPENSHIFT_PROJECT = "${JOB_NAME::16}${BUILD_NUMBER}"
+                            OPENSHIFT_PROJECT = "${JOB_NAME.substring(0,15)}${BUILD_NUMBER}"
                         }
                         sh 'Xvfb :10 -ac &'
                         sh 'PATH=$PATH:$(pwd)/systemtests/web_driver DISPLAY=:10 ARTIFACTS_DIR=artifacts OPENSHIFT_PROJECT=${JOB_NAME::16}${BUILD_NUMBER} ./systemtests/scripts/run_test_component.sh templates/install /var/lib/origin/openshift.local.config/master/admin.kubeconfig systemtests'
