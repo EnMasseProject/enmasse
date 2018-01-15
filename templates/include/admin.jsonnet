@@ -87,6 +87,7 @@ local common = import "common.jsonnet";
                 common.env("CONFIGURATION_SERVICE_HOST", "localhost"),
                 common.env("CONFIGURATION_SERVICE_PORT", "5671"),
                 common.env("CERT_DIR", "/etc/enmasse-certs"),
+                common.env("JAVA_OPTS", "-verbose:gc"),
                 common.env("LISTEN_PORT", "55667")
               ],
               "resources": common.memory_resources("128Mi", "128Mi"),
@@ -108,6 +109,7 @@ local common = import "common.jsonnet";
                 common.env("AUTHENTICATION_SERVICE_PORT", "${AUTHENTICATION_SERVICE_PORT}"),
                 common.env("AUTHENTICATION_SERVICE_CA_SECRET", auth_service_ca_secret),
                 common.env("AUTHENTICATION_SERVICE_CLIENT_SECRET", "${AUTHENTICATION_SERVICE_CLIENT_SECRET}"),
+                common.env("JAVA_OPTS", "-verbose:gc"),
                 common.env("AUTHENTICATION_SERVICE_SASL_INIT_HOST", "${AUTHENTICATION_SERVICE_SASL_INIT_HOST}"),
                 common.env("MESSAGING_SECRET", "${MESSAGING_SECRET}"),
               ] + (if template_config != "" then [ common.env("TEMPLATE_DIR", "/enmasse-templates") ] else []),
@@ -157,6 +159,7 @@ local common = import "common.jsonnet";
               "image": "${CONFIGSERV_IMAGE}",
               "name": "configserv",
               "env": [
+                common.env("JAVA_OPTS", "-verbose:gc"),
                 common.env("CERT_DIR", "/etc/enmasse-certs")
               ],
               "resources": common.memory_resources("128Mi", "128Mi"),

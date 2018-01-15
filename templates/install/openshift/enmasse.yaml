@@ -409,6 +409,8 @@ objects:
               value: '5671'
             - name: CERT_DIR
               value: /etc/enmasse-certs
+            - name: JAVA_OPTS
+              value: -verbose:gc
             - name: LISTEN_PORT
               value: '55667'
             image: ${QUEUE_SCHEDULER_IMAGE}
@@ -442,6 +444,8 @@ objects:
               value: authservice-ca
             - name: AUTHENTICATION_SERVICE_CLIENT_SECRET
               value: ${AUTHENTICATION_SERVICE_CLIENT_SECRET}
+            - name: JAVA_OPTS
+              value: -verbose:gc
             - name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
               value: ${AUTHENTICATION_SERVICE_SASL_INIT_HOST}
             - name: MESSAGING_SECRET
@@ -536,6 +540,8 @@ objects:
               name: messaging-cert
               readOnly: true
           - env:
+            - name: JAVA_OPTS
+              value: -verbose:gc
             - name: CERT_DIR
               value: /etc/enmasse-certs
             image: ${CONFIGSERV_IMAGE}
