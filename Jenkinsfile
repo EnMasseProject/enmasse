@@ -37,6 +37,13 @@ node('enmasse') {
             stage('system tests') {
                 withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
                     try {
+                        environment {
+                            WORKSPACE = pwd()
+                            PATH = "$PATH:$WORKSPACE/systemtests/web_driver"
+                            DISPLAY = ':10'
+                            ARTIFACTS_DIR = 'artifacts'
+                            OPENSHIFT_PROJECT = "${JOB_NAME::16}${BUILD_NUMBER}"
+                        }
                         sh 'Xvfb :10 -ac &'
                         sh 'PATH=$PATH:$(pwd)/systemtests/web_driver DISPLAY=:10 ARTIFACTS_DIR=artifacts OPENSHIFT_PROJECT=${JOB_NAME::16}${BUILD_NUMBER} ./systemtests/scripts/run_test_component.sh templates/install /var/lib/origin/openshift.local.config/master/admin.kubeconfig systemtests'
                         currentBuild.result = 'SUCCESS'
@@ -59,8 +66,9 @@ node('enmasse') {
         stage('teardown openshift') {
             sh './systemtests/scripts/teardown-openshift.sh'
         }
-        stage('notify mailing list') {
-            if (currentBuild.result.equals("FAILURE")) {
+        post {
+            failure {
+                echo "build failed"
                 mail to: "$MAILING_LIST", subject: "EnMasse build has finished with ${result}", body: "See ${env.BUILD_URL}"
             }
         }
