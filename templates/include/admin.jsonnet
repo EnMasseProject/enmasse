@@ -25,7 +25,6 @@ local common = import "common.jsonnet";
   services(addressSpace)::
   [
     self.service("ragent", addressSpace, [{"name": "amqp", "port": 5671, "targetPort": 55671}]),
-    self.service("configuration", addressSpace, [{"name": "amqps", "port": 5671}]),
     self.service("queue-scheduler", addressSpace, [{"name": "amqp", "port": 5672, "targetPort": 55667}]),
     self.service("console", addressSpace, [{"name": "https", "port": 8081, "targetPort": 8080}], "https")
   ],
@@ -107,8 +106,6 @@ local common = import "common.jsonnet";
               "image": "${AGENT_IMAGE}",
               "name": "agent",
               "env": [
-                common.env("CONFIGURATION_SERVICE_HOST", "localhost"),
-                common.env("CONFIGURATION_SERVICE_PORT", "5671"),
                 common.env("CERT_DIR", "/etc/enmasse-certs"),
                 common.env("AUTHENTICATION_SERVICE_HOST", "${AUTHENTICATION_SERVICE_HOST}"),
                 common.env("AUTHENTICATION_SERVICE_PORT", "${AUTHENTICATION_SERVICE_PORT}"),
@@ -133,22 +130,6 @@ local common = import "common.jsonnet";
                 common.volume_mount("admin-internal-cert", "/etc/enmasse-certs", true),
                 common.volume_mount("address-controller-ca", "/opt/agent/address-controller-ca", true),
                 common.volume_mount("messaging-cert", "/opt/agent/messaging-cert", true)
-              ]
-            },
-            {
-              "image": "${CONFIGSERV_IMAGE}",
-              "name": "configserv",
-              "env": [
-                common.env("JAVA_OPTS", "-verbose:gc"),
-                common.env("CERT_DIR", "/etc/enmasse-certs")
-              ],
-              "resources": common.memory_resources("128Mi", "128Mi"),
-              "ports": [
-                common.container_port("amqps", 5671)
-              ],
-              "livenessProbe": common.tcp_probe("amqps", 60),
-              "volumeMounts": [
-                common.volume_mount("admin-internal-cert", "/etc/enmasse-certs", true)
               ]
             },
           ],

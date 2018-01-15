@@ -241,18 +241,16 @@ items:
       30}, "resources": {"limits": {"memory": "256Mi"}, "requests": {"memory": "256Mi"}},
       "volumeMounts": [{"mountPath": "/etc/enmasse-certs", "name": "admin-internal-cert",
       "readOnly": true}, {"mountPath": "/enmasse-templates", "name": "templates",
-      "readOnly": false}]}, {"env": [{"name": "CONFIGURATION_SERVICE_HOST", "value":
-      "localhost"}, {"name": "CONFIGURATION_SERVICE_PORT", "value": "5671"}, {"name":
-      "CERT_DIR", "value": "/etc/enmasse-certs"}, {"name": "AUTHENTICATION_SERVICE_HOST",
-      "value": "${AUTHENTICATION_SERVICE_HOST}"}, {"name": "AUTHENTICATION_SERVICE_PORT",
-      "value": "${AUTHENTICATION_SERVICE_PORT}"}, {"name": "AUTHENTICATION_SERVICE_CA_SECRET",
-      "value": "authservice-ca"}, {"name": "AUTHENTICATION_SERVICE_CLIENT_SECRET",
-      "value": "${AUTHENTICATION_SERVICE_CLIENT_SECRET}"}, {"name": "AUTHENTICATION_SERVICE_SASL_INIT_HOST",
-      "value": "${AUTHENTICATION_SERVICE_SASL_INIT_HOST}"}, {"name": "ADDRESS_SPACE",
-      "value": "${ADDRESS_SPACE}"}, {"name": "ADDRESS_SPACE_SERVICE_HOST", "value":
-      "${ADDRESS_SPACE_SERVICE_HOST}"}, {"name": "ADDRESS_CONTROLLER_CA", "value":
-      "/opt/agent/address-controller-ca/tls.crt"}, {"name": "MESSAGING_CERT", "value":
-      "/opt/agent/messaging-cert/tls.crt"}], "image": "${AGENT_IMAGE}", "livenessProbe":
+      "readOnly": false}]}, {"env": [{"name": "CERT_DIR", "value": "/etc/enmasse-certs"},
+      {"name": "AUTHENTICATION_SERVICE_HOST", "value": "${AUTHENTICATION_SERVICE_HOST}"},
+      {"name": "AUTHENTICATION_SERVICE_PORT", "value": "${AUTHENTICATION_SERVICE_PORT}"},
+      {"name": "AUTHENTICATION_SERVICE_CA_SECRET", "value": "authservice-ca"}, {"name":
+      "AUTHENTICATION_SERVICE_CLIENT_SECRET", "value": "${AUTHENTICATION_SERVICE_CLIENT_SECRET}"},
+      {"name": "AUTHENTICATION_SERVICE_SASL_INIT_HOST", "value": "${AUTHENTICATION_SERVICE_SASL_INIT_HOST}"},
+      {"name": "ADDRESS_SPACE", "value": "${ADDRESS_SPACE}"}, {"name": "ADDRESS_SPACE_SERVICE_HOST",
+      "value": "${ADDRESS_SPACE_SERVICE_HOST}"}, {"name": "ADDRESS_CONTROLLER_CA",
+      "value": "/opt/agent/address-controller-ca/tls.crt"}, {"name": "MESSAGING_CERT",
+      "value": "/opt/agent/messaging-cert/tls.crt"}], "image": "${AGENT_IMAGE}", "livenessProbe":
       {"httpGet": {"path": "/probe", "port": "https", "scheme": "HTTPS"}}, "name":
       "agent", "ports": [{"containerPort": 8080, "name": "https"}, {"containerPort":
       56720, "name": "amqp-ws"}], "readinessProbe": {"httpGet": {"path": "/probe",
@@ -262,13 +260,7 @@ items:
       "name": "authservice-ca", "readOnly": true}, {"mountPath": "/etc/enmasse-certs",
       "name": "admin-internal-cert", "readOnly": true}, {"mountPath": "/opt/agent/address-controller-ca",
       "name": "address-controller-ca", "readOnly": true}, {"mountPath": "/opt/agent/messaging-cert",
-      "name": "messaging-cert", "readOnly": true}]}, {"env": [{"name": "JAVA_OPTS",
-      "value": "-verbose:gc"}, {"name": "CERT_DIR", "value": "/etc/enmasse-certs"}],
-      "image": "${CONFIGSERV_IMAGE}", "livenessProbe": {"initialDelaySeconds": 60,
-      "tcpSocket": {"port": "amqps"}}, "name": "configserv", "ports": [{"containerPort":
-      5671, "name": "amqps"}], "resources": {"limits": {"memory": "128Mi"}, "requests":
-      {"memory": "128Mi"}}, "volumeMounts": [{"mountPath": "/etc/enmasse-certs", "name":
-      "admin-internal-cert", "readOnly": true}]}], "serviceAccount": "${ADDRESS_SPACE_ADMIN_SA}",
+      "name": "messaging-cert", "readOnly": true}]}], "serviceAccount": "${ADDRESS_SPACE_ADMIN_SA}",
       "volumes": [{"name": "console-secret", "secret": {"secretName": "${CONSOLE_SECRET}"}},
       {"name": "authservice-ca", "secret": {"secretName": "authservice-ca"}}, {"name":
       "address-controller-ca", "secret": {"secretName": "address-controller-ca"}},
@@ -278,9 +270,6 @@ items:
       {"apiVersion": "v1", "kind": "Service", "metadata": {"annotations": {"addressSpace":
       "${ADDRESS_SPACE}"}, "labels": {"app": "enmasse"}, "name": "ragent"}, "spec":
       {"ports": [{"name": "amqp", "port": 5671, "targetPort": 55671}], "selector":
-      {"name": "admin"}}}, {"apiVersion": "v1", "kind": "Service", "metadata": {"annotations":
-      {"addressSpace": "${ADDRESS_SPACE}"}, "labels": {"app": "enmasse"}, "name":
-      "configuration"}, "spec": {"ports": [{"name": "amqps", "port": 5671}], "selector":
       {"name": "admin"}}}, {"apiVersion": "v1", "kind": "Service", "metadata": {"annotations":
       {"addressSpace": "${ADDRESS_SPACE}"}, "labels": {"app": "enmasse"}, "name":
       "queue-scheduler"}, "spec": {"ports": [{"name": "amqp", "port": 5672, "targetPort":
