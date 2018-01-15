@@ -41,7 +41,7 @@ public class ArtemisAdapter implements Broker {
 
     @Override
     public void createQueue(String address) throws TimeoutException {
-        artemis.deployQueue(address, address);
+        artemis.createQueue(address, address);
         Map<String, String> connectorParams = new HashMap<>();
         connectorParams.put("host", messagingHost);
         connectorParams.put("port", messagingPort);

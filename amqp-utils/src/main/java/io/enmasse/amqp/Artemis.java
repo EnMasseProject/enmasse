@@ -200,6 +200,11 @@ public class Artemis implements AutoCloseable {
         doOperation("broker", "deployQueue", address, name, null, false);
     }
 
+    public void createQueue(String name, String address) throws TimeoutException {
+        log.info("Creating queue {} with address {}", name, address);
+        doOperation("broker", "createQueue", address, "ANYCAST", name, null, true, -1, false, true);
+    }
+
     public void createConnectorService(String name, Map<String, String> connParams) throws TimeoutException {
         log.info("Creating connector service {}", name);
         String factoryName = "org.apache.activemq.artemis.integration.amqp.AMQPConnectorServiceFactory";
