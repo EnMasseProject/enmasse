@@ -34,7 +34,7 @@ authenticated using https://kubernetes.io/docs/admin/authorization/rbac/[RBAC^] 
 [source,options="nowrap"]
 ----
 TOKEN=`oc whoami -t`
-curl -X POST -T @space.json -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" -k https://$(oc get route restapi -o jsonpath='{.spec.host}')/apis/enmasse.io/v1/addressspaces/myspace
+curl -X POST -T space.json -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" -k https://$(oc get route restapi -o jsonpath='{.spec.host}')/apis/enmasse.io/v1/addressspaces
 ----
 +
 This will create the infrastructure required for that address space. Starting up the address space
