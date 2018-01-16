@@ -16,7 +16,7 @@
 
 package io.enmasse.systemtest;
 
-public class BrokeredTestBase extends TestBaseWithDefault {
+public abstract class BrokeredTestBase extends TestBaseWithDefault {
 
     @Override
     protected AddressSpaceType getAddressSpaceType() {

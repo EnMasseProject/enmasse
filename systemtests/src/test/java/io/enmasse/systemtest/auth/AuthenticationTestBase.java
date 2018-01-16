@@ -22,16 +22,16 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class AuthenticationTest extends TestBase {
+public abstract class AuthenticationTestBase extends TestBase {
 
-    private static final List<Destination> amqpAddressList = Arrays.asList(
+    protected static final List<Destination> amqpAddressList = Arrays.asList(
             Destination.queue("auth-queue"),
             Destination.topic("auth-topic"),
             Destination.anycast("auth-anycast"),
             Destination.multicast("auth-multicast"));
-    private static final String mqttAddress = "t1";
-    private static final String anonymousUser = "anonymous";
-    private static final String anonymousPswd = "anonymous";
+    protected static final String mqttAddress = "t1";
+    protected static final String anonymousUser = "anonymous";
+    protected static final String anonymousPswd = "anonymous";
 
     @Override
     protected void createAddressSpace(AddressSpace addressSpace, String authService) throws Exception {
@@ -44,49 +44,7 @@ public class AuthenticationTest extends TestBase {
         //        setAddresses(name, Destination.queue(amqpAddress)); //, Destination.topic(mqttAddress)); #TODO! for MQTT
     }
 
-
-    /**
-     * related github issue: #523
-     */
-    @Test
-    public void testStandardAuthenticationServiceRestartBrokered() throws Exception {
-        Logging.log.info("testStandardAuthenticationServiceRestartBrokered");
-        AddressSpace addressSpace = new AddressSpace("keycloak-restart-brokered", AddressSpaceType.BROKERED);
-        createAddressSpace(addressSpace, "standard");
-
-        KeycloakCredentials credentials = new KeycloakCredentials("Pavel", "Novak");
-        getKeycloakClient().createUser(addressSpace.getName(), credentials.getUsername(), credentials.getPassword());
-
-        assertCanConnect(addressSpace, credentials.getUsername(), credentials.getPassword(), amqpAddressList);
-
-        scaleKeycloak(0);
-        scaleKeycloak(1);
-        Thread.sleep(60000);
-
-        assertCanConnect(addressSpace, credentials.getUsername(), credentials.getPassword(), amqpAddressList);
-    }
-
-    @Test
-    public void testStandardAuthenticationServiceBrokered() throws Exception {
-        testStandardAuthenticationServiceGeneral(AddressSpaceType.BROKERED);
-    }
-
-    @Test
-    public void testNoneAuthenticationServiceBrokered() throws Exception {
-        testNoneAuthenticationServiceGeneral(AddressSpaceType.BROKERED, anonymousUser, anonymousPswd);
-    }
-
-    @Test
-    public void testStandardAuthenticationService() throws Exception {
-        testStandardAuthenticationServiceGeneral(AddressSpaceType.STANDARD);
-    }
-
-    @Test
-    public void testNoneAuthenticationService() throws Exception {
-        testNoneAuthenticationServiceGeneral(AddressSpaceType.STANDARD, null, null);
-    }
-
-    public void testNoneAuthenticationServiceGeneral(AddressSpaceType type, String emptyUser, String emptyPassword) throws Exception {
+    protected void testNoneAuthenticationServiceGeneral(AddressSpaceType type, String emptyUser, String emptyPassword) throws Exception {
         AddressSpace s3standard = new AddressSpace(type.toString().toLowerCase() + "-s3", type);
         createAddressSpace(s3standard, "none");
         assertCanConnect(s3standard, emptyUser, emptyPassword, amqpAddressList);
@@ -100,7 +58,7 @@ public class AuthenticationTest extends TestBase {
         assertCannotConnect(s4standard, "bob", "pass", amqpAddressList);
     }
 
-    public void testStandardAuthenticationServiceGeneral(AddressSpaceType type) throws Exception {
+    protected void testStandardAuthenticationServiceGeneral(AddressSpaceType type) throws Exception {
         AddressSpace s1brokered = new AddressSpace(type.toString().toLowerCase() + "-s1", type);
         createAddressSpace(s1brokered, "standard");
 

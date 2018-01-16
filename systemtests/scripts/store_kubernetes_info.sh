@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-CURDIR=$(readlink -f "dirname $0")
+CURDIR=$(readlink -f $(dirname $0))
 source ${CURDIR}/test_func.sh
 
 LOG_DIR=${1}

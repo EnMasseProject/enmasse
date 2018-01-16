@@ -1,5 +1,5 @@
 node('enmasse') {
-    currentBuild.result = 'failure'
+    result = 'failure'
     timeout(180) {
         catchError {
             stage ('checkout') {
@@ -37,14 +37,8 @@ node('enmasse') {
             stage('system tests') {
                 withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
                     try {
-                        environment {
-                            WORKSPACE = pwd()
-                            DISPLAY = ':10'
-                            ARTIFACTS_DIR = 'artifacts'
-                            OPENSHIFT_PROJECT = "${JOB_NAME.substring(0,15)}${BUILD_NUMBER}"
-                        }
                         sh 'Xvfb :10 -ac &'
-                        sh "PATH=$PATH:${env.WORKSPACE}/systemtests/web_driver DISPLAY=${env.DISPLAY} ARTIFACTS_DIR=${env.ARTIFACTS_DIR} OPENSHIFT_PROJECT=${env.OPENSHIFT_PROJECT} ./systemtests/scripts/run_test_component.sh templates/install /var/lib/origin/openshift.local.config/master/admin.kubeconfig systemtests ${params.TEST_CASE}"
+                        sh 'PATH=$PATH:$(pwd)/systemtests/web_driver DISPLAY=:10 ARTIFACTS_DIR=artifacts OPENSHIFT_PROJECT=${JOB_NAME::16}${BUILD_NUMBER} ./systemtests/scripts/run_test_component.sh templates/install /var/lib/origin/openshift.local.config/master/admin.kubeconfig systemtests "standard.**"'
                         currentBuild.result = 'SUCCESS'
                     } catch(err) { // timeout reached or input false
                         echo "collect logs and archive artifacts"
@@ -65,9 +59,8 @@ node('enmasse') {
         stage('teardown openshift') {
             sh './systemtests/scripts/teardown-openshift.sh'
         }
-        post {
-            failure {
-                echo "build failed"
+        stage('notify mailing list') {
+            if (result.equals("failure")) {
                 mail to: "$MAILING_LIST", subject: "EnMasse build has finished with ${result}", body: "See ${env.BUILD_URL}"
             }
         }
