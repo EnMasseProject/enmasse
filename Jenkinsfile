@@ -1,75 +1,100 @@
-node('enmasse') {
-    currentBuild.result = 'failure'
-    timeout(180) {
-        catchError {
-            stage ('checkout') {
+#!/usr/bin/env groovy
+
+def storeArtifacts(buildStatus) {
+    if (buildStatus == 'ABORTED') {
+        sh 'OPENSHIFT_TEST_LOGDIR="/tmp/testlogs" ./systemtests/scripts/collect_logs.sh "artifacts"'
+    }
+}
+
+pipeline {
+    agent {
+        node {
+            label 'enmasse'
+        }
+    }
+    parameters {
+        string(name: 'MAILING_LIST', defaultValue: 'enmasse-ci@redhat.com', description: '')
+        string(name: 'TEST_CASE', defaultValue: 'SmokeTest', description: 'maven parameter for executing specific tests')
+    }
+    options {
+        timeout(time: 3, unit: 'HOURS')
+    }
+    stages {
+        stage('checkout') {
+            steps {
                 checkout scm
                 sh 'git submodule update --init --recursive'
                 sh 'rm -rf artifacts && mkdir -p artifacts'
             }
-            stage ('build') {
-                try {
-                    withCredentials([string(credentialsId: 'docker-registry-host', variable: 'DOCKER_REGISTRY')]) {
-                        sh 'MOCHA_ARGS="--reporter=mocha-junit-reporter" COMMIT=$BUILD_TAG make'
-                        sh 'cat templates/install/openshift/enmasse.yaml'
-                    }
-                } finally {
-                    junit '**/TEST-*.xml'
+        }
+        stage('build') {
+            steps {
+                withCredentials([string(credentialsId: 'docker-registry-host', variable: 'DOCKER_REGISTRY')]) {
+                    sh 'MOCHA_ARGS="--reporter=mocha-junit-reporter" COMMIT=$BUILD_TAG make'
+                    sh 'cat templates/install/openshift/enmasse.yaml'
                 }
             }
-            stage ('push docker image') {
+        }
+        stage('push docker image') {
+            steps {
                 withCredentials([string(credentialsId: 'docker-registry-host', variable: 'DOCKER_REGISTRY'), usernamePassword(credentialsId: 'docker-registry-credentials', passwordVariable: 'DOCKER_PASS', usernameVariable: 'DOCKER_USER')]) {
                     sh 'TAG=$BUILD_TAG COMMIT=$BUILD_TAG make docker_tag'
                     sh '$DOCKER login -u $DOCKER_USER -p $DOCKER_PASS $DOCKER_REGISTRY'
                     sh 'TAG=$BUILD_TAG COMMIT=$BUILD_TAG make docker_push'
                 }
             }
-            stage('start openshift') {
+        }
+        stage('start openshift') {
+            steps {
                 sh './systemtests/scripts/setup-openshift.sh'
                 sh 'sudo chmod -R 777 /var/lib/origin/openshift.local.config'
             }
-            stage('install clients'){
+        }
+        stage('install clients') {
+            steps {
                 sh 'sudo PATH=$PATH make client_install'
             }
-            stage('install webdrivers'){
+        }
+        stage('install webdrivers') {
+            steps {
                 sh 'sudo make webdriver_install'
             }
-            stage('system tests') {
+        }
+        stage('system tests') {
+            environment {
+                DISPLAY = ':10'
+                ARTIFACTS_DIR = 'artifacts'
+                JOB_NAME_SUB = "${String.format("%.15s", JOB_NAME)}"
+                OPENSHIFT_PROJECT = "${JOB_NAME_SUB}${BUILD_NUMBER}"
+            }
+            steps {
                 withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
-                    try {
-                        environment {
-                            WORKSPACE = pwd()
-                            DISPLAY = ':10'
-                            ARTIFACTS_DIR = 'artifacts'
-                            OPENSHIFT_PROJECT = "${JOB_NAME.substring(0,15)}${BUILD_NUMBER}"
-                        }
-                        sh 'Xvfb :10 -ac &'
-                        sh "PATH=$PATH:${env.WORKSPACE}/systemtests/web_driver DISPLAY=${env.DISPLAY} ARTIFACTS_DIR=${env.ARTIFACTS_DIR} OPENSHIFT_PROJECT=${env.OPENSHIFT_PROJECT} ./systemtests/scripts/run_test_component.sh templates/install /var/lib/origin/openshift.local.config/master/admin.kubeconfig systemtests ${params.TEST_CASE}"
-                        currentBuild.result = 'SUCCESS'
-                    } catch(err) { // timeout reached or input false
-                        echo "collect logs and archive artifacts"
-                        sh 'OPENSHIFT_TEST_LOGDIR="/tmp/testlogs" ./systemtests/scripts/collect_logs.sh "artifacts"'
-                        currentBuild.result = 'FAILURE'
-                        throw err //to mark this stage red
-                    } finally {
-                       junit '**/TEST-*.xml'
-                    }
+                    sh 'sudo cp ./systemtests/web_driver/* /usr/bin'
+                    sh 'Xvfb :10 -ac &'
+                    sh "./systemtests/scripts/run_test_component.sh templates/install /var/lib/origin/openshift.local.config/master/admin.kubeconfig systemtests ${params.TEST_CASE}"
                 }
             }
         }
-        stage('archive artifacts') {
+        stage('teardown openshift') {
+            steps {
+                sh './systemtests/scripts/teardown-openshift.sh'
+            }
+        }
+    }
+    post {
+        always {
+            storeArtifacts(currentBuild.result) //store artifacts if build was aborted - due to timeout reached
+            //store test results from build and system tests
+            junit '**/TEST-*.xml'
+
+            //archive test results and openshift lofs
             archive '**/TEST-*.xml'
             archive 'artifacts/**'
             archive 'templates/install/**'
         }
-        stage('teardown openshift') {
-            sh './systemtests/scripts/teardown-openshift.sh'
-        }
-        post {
-            failure {
-                echo "build failed"
-                mail to: "$MAILING_LIST", subject: "EnMasse build has finished with ${result}", body: "See ${env.BUILD_URL}"
-            }
+        failure {
+            echo "build failed"
+            mail to: "$MAILING_LIST", subject: "EnMasse build has finished with ${result}", body: "See ${env.BUILD_URL}"
         }
     }
 }
