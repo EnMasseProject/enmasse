@@ -75,7 +75,7 @@ public class FirefoxWebConsoleTest extends BrokeredWebConsoleTest {
     }
 
     //@Test disabled due to https://github.com/EnMasseProject/enmasse/issues/634
-    public void testSortConnectionsByContainerID() throws Exception {
+    public void testSortConnectionsByContainerId() throws Exception {
         doTestSortConnectionsByContainerId();
     }
 

@@ -68,7 +68,7 @@ public class ChromeWebConsoleTest extends BrokeredWebConsoleTest {
     }
 
     //@Test
-    public void testSortConnectionsByContainerID() throws Exception {
+    public void testSortConnectionsByContainerId() throws Exception {
         doTestSortConnectionsByContainerId();
     }
 

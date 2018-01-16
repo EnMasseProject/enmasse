@@ -85,7 +85,7 @@ public class FirefoxWebConsoleTest extends StandardWebConsoleTest {
     }
 
     @Test
-    public void testSortConnectionsByContainerID() throws Exception {
+    public void testSortConnectionsByContainerId() throws Exception {
         doTestSortConnectionsByContainerId();
     }
 
