@@ -88,7 +88,7 @@ pipeline {
             //store test results from build and system tests
             sh "pwd"
             sh "ls -laR"
-            junit "**/target/*.xml"
+            junit "**/target/**.xml"
             junit '**/TEST-*.xml'
             //archive test results and openshift lofs
             archive '**/TEST-*.xml'
