@@ -7,7 +7,7 @@ import org.openqa.selenium.WebElement;
 public class ConnectionWebItem extends WebItem implements Comparable {
 
     private String name;
-    private String type;
+    private String headerText;
     private int sendersCount;
     private int receiversCount;
     private int messagesIn;
@@ -17,7 +17,7 @@ public class ConnectionWebItem extends WebItem implements Comparable {
     public ConnectionWebItem(WebElement item) {
         this.webItem = item;
         this.name = item.findElement(By.className("list-group-item-heading")).getText();
-        this.type = item.findElement(By.className("list-group-item-text")).getText();
+        this.headerText = item.findElement(By.className("list-group-item-text")).getText();
         this.readAdditionalInfo();
         this.sendersCount = getCountOfAdditionalInfoItem("Senders");
         this.receiversCount = getCountOfAdditionalInfoItem("Receivers");
@@ -72,12 +72,17 @@ public class ConnectionWebItem extends WebItem implements Comparable {
     }
 
     public String getUser() {
-        String[] types = type.split(" +");
+        String[] types = headerText.split(" +");
         return types[types.length - 1];
     }
 
     public String getType() {
-        return type;
+        return headerText;
+    }
+
+    public  String getContainerID() {
+        String[] types = headerText.split(" +");
+        return types[0];
     }
 
     @Override

@@ -298,6 +298,46 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
         stopClients(clients);
     }
 
+    public void doTestFilterConnectionsByContainerId() throws Exception {
+        int connectionCount = 5;
+
+        Destination dest = Destination.queue("queue-via-web");
+        consoleWebPage.createAddressWebConsole(dest);
+        consoleWebPage.openConnectionsPageWebConsole();
+
+        AbstractClient client = attachConnector(dest, connectionCount, 1, 1);
+        selenium.waitUntilPropertyPresent(60, connectionCount, () -> consoleWebPage.getConnectionItems().size());
+
+        String containerID = consoleWebPage.getConnectionItems().get(0).getContainerID();
+
+        consoleWebPage.addConnectionsFilter(FilterType.CONTAINER, containerID);
+        assertThat(consoleWebPage.getConnectionItems().size(), is(1));
+
+        consoleWebPage.clearAllFilters();
+        assertThat(consoleWebPage.getConnectionItems().size(), is(6));
+
+        client.stop();
+    }
+
+    public void doTestSortConnectionsByContainerId() throws Exception {
+        int connectionCount = 5;
+
+        Destination dest = Destination.queue("queue-via-web");
+        consoleWebPage.createAddressWebConsole(dest);
+        consoleWebPage.openConnectionsPageWebConsole();
+
+        AbstractClient client = attachConnector(dest, connectionCount, 1, 1);
+        selenium.waitUntilPropertyPresent(60, connectionCount, () -> consoleWebPage.getConnectionItems().size());
+
+        consoleWebPage.sortItems(SortType.CONTAINER_ID, true);
+        assertSorted(consoleWebPage.getConnectionItems(), Comparator.comparing(ConnectionWebItem::getContainerID));
+
+        consoleWebPage.sortItems(SortType.CONTAINER_ID, false);
+        assertSorted(consoleWebPage.getConnectionItems(), true, Comparator.comparing(ConnectionWebItem::getContainerID));
+
+        client.stop();
+    }
+
     public void doTestMessagesMetrics() throws Exception {
         int msgCount = 19;
         Destination dest = Destination.queue("queue-via-web");
