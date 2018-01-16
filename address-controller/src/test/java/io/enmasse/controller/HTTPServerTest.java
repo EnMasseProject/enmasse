@@ -109,7 +109,7 @@ public class HTTPServerTest {
                 context.assertEquals(200, response.statusCode());
                 response.bodyHandler(buffer -> {
                     JsonObject data = buffer.toJsonObject();
-                    context.assertFalse(data.containsKey("items"));
+                    context.assertTrue(data.containsKey("items"));
                     context.assertEquals("addr1", data.getJsonArray("items").getJsonObject(0).getJsonObject("metadata").getString("name"));
                     async.complete();
                 });
