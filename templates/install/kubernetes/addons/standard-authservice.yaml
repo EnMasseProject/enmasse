@@ -28,6 +28,9 @@ items:
       spec:
         containers:
         - env:
+          - name: JAVA_OPTS
+            value: -Dvertx.cacheDirBase=/tmp -Djboss.bind.address=0.0.0.0 -Djava.net.preferIPv4Stack=true
+              -Xms512m -Xmx512m
           - name: KEYCLOAK_USER
             valueFrom:
               secretKeyRef:
@@ -38,7 +41,7 @@ items:
               secretKeyRef:
                 key: admin.password
                 name: keycloak-credentials
-          image: docker.io/enmasseproject/keycloak:latest
+          image: jboss/keycloak-openshift:3.3.0.Final
           livenessProbe:
             httpGet:
               path: /
@@ -57,8 +60,30 @@ items:
             requests:
               memory: 1Gi
           volumeMounts:
+          - mountPath: /opt/jboss/keycloak/providers
+            name: keycloak-providers
+            readOnly: false
+          - mountPath: /opt/jboss/keycloak/standalone/configuration
+            name: keycloak-configuration
+            readOnly: false
+          - mountPath: /opt/enmasse/cert
+            name: standard-authservice-cert
+            readOnly: false
           - mountPath: /opt/jboss/keycloak/standalone/data
             name: keycloak-persistence
+            readOnly: false
+        initContainers:
+        - env:
+          - name: KEYCLOAK_DIR
+            value: /opt/jboss/keycloak
+          image: docker.io/enmasseproject/keycloak-plugin:latest
+          name: keycloak-plugin
+          volumeMounts:
+          - mountPath: /opt/jboss/keycloak/providers
+            name: keycloak-providers
+            readOnly: false
+          - mountPath: /opt/jboss/keycloak/standalone/configuration
+            name: keycloak-configuration
             readOnly: false
           - mountPath: /opt/enmasse/cert
             name: standard-authservice-cert
@@ -73,6 +98,10 @@ items:
         - name: keycloak-persistence
           persistentVolumeClaim:
             claimName: keycloak-pvc
+        - emptyDir: {}
+          name: keycloak-configuration
+        - emptyDir: {}
+          name: keycloak-providers
 - apiVersion: extensions/v1beta1
   kind: Deployment
   metadata:
