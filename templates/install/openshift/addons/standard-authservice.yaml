@@ -29,6 +29,9 @@ objects:
       spec:
         containers:
         - env:
+          - name: JAVA_OPTS
+            value: -Dvertx.cacheDirBase=/tmp -Djboss.bind.address=0.0.0.0 -Djava.net.preferIPv4Stack=true
+              -Xms512m -Xmx512m
           - name: KEYCLOAK_USER
             valueFrom:
               secretKeyRef:
@@ -58,8 +61,30 @@ objects:
             requests:
               memory: 1Gi
           volumeMounts:
+          - mountPath: /opt/jboss/keycloak/providers
+            name: keycloak-providers
+            readOnly: false
+          - mountPath: /opt/jboss/keycloak/standalone/configuration
+            name: keycloak-configuration
+            readOnly: false
+          - mountPath: /opt/enmasse/cert
+            name: ${KEYCLOAK_CERT_SECRET_NAME}
+            readOnly: false
           - mountPath: /opt/jboss/keycloak/standalone/data
             name: keycloak-persistence
+            readOnly: false
+        initContainers:
+        - env:
+          - name: KEYCLOAK_DIR
+            value: /opt/jboss/keycloak
+          image: ${KEYCLOAK_PLUGIN_IMAGE}
+          name: keycloak-plugin
+          volumeMounts:
+          - mountPath: /opt/jboss/keycloak/providers
+            name: keycloak-providers
+            readOnly: false
+          - mountPath: /opt/jboss/keycloak/standalone/configuration
+            name: keycloak-configuration
             readOnly: false
           - mountPath: /opt/enmasse/cert
             name: ${KEYCLOAK_CERT_SECRET_NAME}
@@ -71,6 +96,10 @@ objects:
         - name: keycloak-persistence
           persistentVolumeClaim:
             claimName: keycloak-pvc
+        - emptyDir: {}
+          name: keycloak-configuration
+        - emptyDir: {}
+          name: keycloak-providers
 - apiVersion: extensions/v1beta1
   kind: Deployment
   metadata:
@@ -162,9 +191,12 @@ objects:
       kind: Service
       name: standard-authservice
 parameters:
+- description: The docker image to use for the keycloak plugin image
+  name: KEYCLOAK_PLUGIN_IMAGE
+  value: docker.io/enmasseproject/keycloak-plugin:latest
 - description: The docker image to use for the 'standard' auth service
   name: STANDARD_AUTHSERVICE_IMAGE
-  value: docker.io/enmasseproject/keycloak:latest
+  value: jboss/keycloak-openshift:3.3.0.Final
 - description: The secret where keycloak credentials are stored
   name: KEYCLOAK_SECRET_NAME
   value: keycloak-credentials

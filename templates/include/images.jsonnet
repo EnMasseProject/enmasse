@@ -41,8 +41,11 @@ local registry = std.extVar("REGISTRY");
   none_authservice::
     self.image(std.extVar("NONE_AUTHSERVICE_IMAGE")),
 
+  keycloak_plugin::
+    self.image(std.extVar("KEYCLOAK_PLUGIN_IMAGE")),
+
   keycloak::
-    self.image(std.extVar("KEYCLOAK_IMAGE")),
+    std.extVar("KEYCLOAK_IMAGE"),
 
   keycloak_controller::
     self.image(std.extVar("KEYCLOAK_CONTROLLER_IMAGE")),

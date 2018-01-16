@@ -179,7 +179,8 @@ local images = import "images.jsonnet";
     },
 
 
-  keycloak_deployment(keycloak_image, keycloak_credentials_secret, cert_secret_name, pvc_claim_name, podspec_extra={})::
+
+  keycloak_deployment(keycloak_plugin_image, keycloak_image, keycloak_credentials_secret, cert_secret_name, pvc_claim_name, podspec_extra={})::
     {
       "apiVersion": "extensions/v1beta1",
       "kind": "Deployment",
@@ -199,6 +200,20 @@ local images = import "images.jsonnet";
             }
           },
           "spec": {
+            "initContainers": [
+              {
+                "image": keycloak_plugin_image,
+                "name": "keycloak-plugin",
+                "env": [
+                  common.env("KEYCLOAK_DIR", "/opt/jboss/keycloak")
+                ],
+                "volumeMounts": [
+                  common.volume_mount("keycloak-providers", "/opt/jboss/keycloak/providers"),
+                  common.volume_mount("keycloak-configuration", "/opt/jboss/keycloak/standalone/configuration"),
+                  common.volume_mount(cert_secret_name, "/opt/enmasse/cert")
+                ],
+              }
+            ],
             "containers": [
               {
                 "image": keycloak_image,
@@ -216,6 +231,7 @@ local images = import "images.jsonnet";
                     }
                 },
                 "env": [
+                  common.env("JAVA_OPTS", "-Dvertx.cacheDirBase=/tmp -Djboss.bind.address=0.0.0.0 -Djava.net.preferIPv4Stack=true -Xms512m -Xmx512m"),
                   {
                     "name": "KEYCLOAK_USER",
                     "valueFrom": {
@@ -236,15 +252,19 @@ local images = import "images.jsonnet";
                   }
                 ],
                 "volumeMounts": [
-                  common.volume_mount("keycloak-persistence", "/opt/jboss/keycloak/standalone/data"),
-                  common.volume_mount(cert_secret_name, "/opt/enmasse/cert")
+                  common.volume_mount("keycloak-providers", "/opt/jboss/keycloak/providers"),
+                  common.volume_mount("keycloak-configuration", "/opt/jboss/keycloak/standalone/configuration"),
+                  common.volume_mount(cert_secret_name, "/opt/enmasse/cert"),
+                  common.volume_mount("keycloak-persistence", "/opt/jboss/keycloak/standalone/data")
                 ],
                 "livenessProbe": common.http_probe("https", "/", "HTTPS", 120)
               }
             ],
             "volumes": [
               common.secret_volume(cert_secret_name, cert_secret_name),
-              common.persistent_volume("keycloak-persistence", pvc_claim_name)
+              common.persistent_volume("keycloak-persistence", pvc_claim_name),
+              common.empty_volume("keycloak-configuration"),
+              common.empty_volume("keycloak-providers")
             ]
           } + podspec_extra
         }
@@ -377,7 +397,7 @@ local images = import "images.jsonnet";
     "kind": "List",
     "items": [
       me.keycloak_pvc("keycloak-pvc", "2Gi"),
-      me.keycloak_deployment(images.keycloak, "keycloak-credentials", "standard-authservice-cert",
+      me.keycloak_deployment(images.keycloak_plugin, images.keycloak, "keycloak-credentials", "standard-authservice-cert",
         "keycloak-pvc", {
               "securityContext": {
                 "runAsUser": 0,
@@ -397,13 +417,18 @@ local images = import "images.jsonnet";
     "kind": "Template",
     "objects": [
       me.keycloak_pvc("keycloak-pvc", "${KEYCLOAK_STORAGE_CAPACITY}"),
-      me.keycloak_deployment("${STANDARD_AUTHSERVICE_IMAGE}", "${KEYCLOAK_SECRET_NAME}", "${KEYCLOAK_CERT_SECRET_NAME}", "keycloak-pvc"),
+      me.keycloak_deployment("${KEYCLOAK_PLUGIN_IMAGE}", "${STANDARD_AUTHSERVICE_IMAGE}", "${KEYCLOAK_SECRET_NAME}", "${KEYCLOAK_CERT_SECRET_NAME}", "keycloak-pvc"),
       me.keycloak_controller_deployment("${KEYCLOAK_CONTROLLER_IMAGE}", "${KEYCLOAK_SECRET_NAME}", "${KEYCLOAK_CONTROLLER_CONFIGMAP_NAME}", "${KEYCLOAK_CERT_SECRET_NAME}"),
       me.keycloak_controller_config,
       me.standard_authservice,
       me.keycloak_route("${KEYCLOAK_ROUTE_HOSTNAME}")
     ],
     "parameters": [
+      {
+        "name": "KEYCLOAK_PLUGIN_IMAGE",
+        "description": "The docker image to use for the keycloak plugin image",
+        "value": images.keycloak_plugin
+      },
       {
         "name": "STANDARD_AUTHSERVICE_IMAGE",
         "description": "The docker image to use for the 'standard' auth service",

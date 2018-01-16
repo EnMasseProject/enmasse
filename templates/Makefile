@@ -14,7 +14,8 @@ AGENT_IMAGE ?= "agent"
 MQTT_GATEWAY_IMAGE ?= "mqtt-gateway"
 MQTT_LWT_IMAGE ?= "mqtt-lwt"
 NONE_AUTHSERVICE_IMAGE ?= "none-authservice"
-KEYCLOAK_IMAGE ?= "keycloak"
+KEYCLOAK_IMAGE ?= "jboss/keycloak-openshift:3.3.0.Final"
+KEYCLOAK_PLUGIN_IMAGE ?= "keycloak-plugin"
 KEYCLOAK_CONTROLLER_IMAGE ?= "keycloak-controller"
 
 SRCS=$(wildcard *.jsonnet)
@@ -40,6 +41,7 @@ INSTALLDIR=enmasse-$(TAG)
 		-V MQTT_LWT_IMAGE=$(MQTT_LWT_IMAGE) \
 		-V NONE_AUTHSERVICE_IMAGE=$(NONE_AUTHSERVICE_IMAGE) \
 		-V KEYCLOAK_IMAGE=$(KEYCLOAK_IMAGE) \
+		-V KEYCLOAK_PLUGIN_IMAGE=$(KEYCLOAK_PLUGIN_IMAGE) \
 		-V KEYCLOAK_CONTROLLER_IMAGE=$(KEYCLOAK_CONTROLLER_IMAGE) \
 		-m build $<
 
