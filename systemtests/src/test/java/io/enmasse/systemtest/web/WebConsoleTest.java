@@ -314,7 +314,7 @@ public abstract class WebConsoleTest extends TestBaseWithDefault implements ISel
         assertThat(consoleWebPage.getConnectionItems().size(), is(1));
 
         consoleWebPage.clearAllFilters();
-        assertThat(consoleWebPage.getConnectionItems().size(), is(6));
+        assertThat(consoleWebPage.getConnectionItems().size(), is(5));
 
         client.stop();
     }
