@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 printf "Time\t\t\tMemory\t\tDisk\t\tCPU\n"
+export TZ=UTC
 
 while [ true ]; do
     MEMORY=$(free -m | awk 'NR==2{printf "%.2f%%\t\t", $3*100/$2 }')
