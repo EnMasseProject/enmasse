@@ -13,8 +13,8 @@ pipeline {
         }
     }
     parameters {
-        string(name: 'MAILING_LIST', defaultValue: 'enmasse-ci@redhat.com', description: '')
-        string(name: 'TEST_CASE', defaultValue: 'SmokeTest', description: 'maven parameter for executing specific tests')
+        string(name: 'MAILING_LIST', defaultValue: '', description: '')
+        string(name: 'TEST_CASE', defaultValue: '', description: 'maven parameter for executing specific tests')
     }
     options {
         timeout(time: 3, unit: 'HOURS')
