@@ -69,6 +69,16 @@ public class FirefoxWebConsoleTest extends BrokeredWebConsoleTest {
         doTestSortConnectionsByHostname();
     }
 
+    //@Test disabled due to https://github.com/EnMasseProject/enmasse/issues/634
+    public void testFilterConnectionsByContainerId() throws Exception {
+        doTestFilterConnectionsByContainerId();
+    }
+
+    //@Test disabled due to https://github.com/EnMasseProject/enmasse/issues/634
+    public void testSortConnectionsByContainerId() throws Exception {
+        doTestSortConnectionsByContainerId();
+    }
+
     @Test
     public void testMessagesMetrics() throws Exception {
         doTestMessagesMetrics();

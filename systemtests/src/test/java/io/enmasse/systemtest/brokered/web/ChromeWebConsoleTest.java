@@ -63,6 +63,16 @@ public class ChromeWebConsoleTest extends BrokeredWebConsoleTest {
     }
 
     //@Test
+    public void testFilterConnectionsByContainerId() throws Exception {
+        doTestFilterConnectionsByContainerId();
+    }
+
+    //@Test
+    public void testSortConnectionsByContainerId() throws Exception {
+        doTestSortConnectionsByContainerId();
+    }
+
+    //@Test
     public void testMessagesMetrics() throws Exception {
         doTestMessagesMetrics();
     }
