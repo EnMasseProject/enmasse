@@ -1,9 +1,19 @@
 #!/usr/bin/env groovy
+
+def storeArtifacts(buildStatus) {
+    if (buildStatus == 'ABORTED') {
+        sh 'OPENSHIFT_TEST_LOGDIR="/tmp/testlogs" ./systemtests/scripts/collect_logs.sh "artifacts"'
+    }
+}
+
 pipeline {
     agent {
         node {
             label 'enmasse'
         }
+    }
+    options {
+        timeout(time: 3, unit: 'HOURS')
     }
     stages {
         stage('checkout') {
@@ -32,11 +42,6 @@ pipeline {
             }
         }
         stage('start openshift') {
-            when {
-                expression {
-                    currentBuild.result == null || currentBuild.result == 'SUCCESS'
-                }
-            }
             steps {
                 sh './systemtests/scripts/setup-openshift.sh'
                 sh 'sudo chmod -R 777 /var/lib/origin/openshift.local.config'
@@ -54,8 +59,6 @@ pipeline {
         }
         stage('system tests') {
             environment {
-                WORKSPACE = pwd()
-                PATH = "$PATH:$WORKSPACE/systemtests/web_driver"
                 DISPLAY = ':10'
                 ARTIFACTS_DIR = 'artifacts'
                 JOB_NAME_SUB = "${String.format("%.15s", JOB_NAME)}"
@@ -63,10 +66,9 @@ pipeline {
             }
             steps {
                 withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
+                    sh 'sudo cp ./systemtests/web_driver/* /usr/bin'
                     sh 'Xvfb :10 -ac &'
-                    sh "./systemtests/scripts/run_test_component.sh templates/install /var/lib/origin/openshift.local.config/master/admin.kubeconfig systemtests ${params.TEST_CASE} || true"
-                    echo "collect logs and archive artifacts"
-                    sh 'OPENSHIFT_TEST_LOGDIR="/tmp/testlogs" ./systemtests/scripts/collect_logs.sh "artifacts"'
+                    sh "./systemtests/scripts/run_test_component.sh templates/install /var/lib/origin/openshift.local.config/master/admin.kubeconfig systemtests ${params.TEST_CASE}"
                 }
             }
         }
@@ -78,9 +80,11 @@ pipeline {
     }
     post {
         always {
-            //store test results from build and systemtests
+            storeArtifacts(currentBuild.result) //store artifacts if build was aborted - due to timeout reached
+            //store test results from build and system tests
             junit '**/target/*.xml'
             junit '**/TEST-*.xml'
+            //archive test results and openshift lofs
             archive '**/TEST-*.xml'
             archive 'artifacts/**'
             archive 'templates/install/**'
