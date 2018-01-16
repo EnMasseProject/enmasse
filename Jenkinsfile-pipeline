@@ -82,7 +82,9 @@ pipeline {
         always {
             storeArtifacts(currentBuild.result) //store artifacts if build was aborted - due to timeout reached
             //store test results from build and system tests
-            junit '**/target/*.xml'
+            sh "pwd"
+            sh "ls -laR"
+            junit "**/target/*.xml"
             junit '**/TEST-*.xml'
             //archive test results and openshift lofs
             archive '**/TEST-*.xml'
