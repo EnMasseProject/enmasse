@@ -1,17 +1,17 @@
-= Users
+== Users
 
-{ProductName} uses {AuthProductName} to manage users and credentials. You can create and delete {ProductName} users as well as change an existing password.
+{OnlineName} uses {AuthProductName} to manage users and credentials. You can create and delete {OnlineName} users as well as change an existing password.
 
 [[_create_user]]
-== Creating a User
+=== Creating a User
 
-Using the {AuthProductNameConsole} you can create a new {ProductName} user and specify a password. Note that your realm in {AuthProductName} is the same as your address space in {ProductName}.
+Using the {AuthProductConsoleName} you can create a new {OnlineName} user and specify a password. Note that your realm in {AuthProductName} is the same as your address space in {OnlineName}.
 
 .Procedure
 
-. In a web browser, navigate to the {AuthProductNameConsole} URL provided in your welcome email. 
+. In a web browser, navigate to the {AuthProductConsoleName} URL provided in your welcome email. 
 
-. Log in using the user name and password for your realm provided in your welcome email. The {AuthProductName} Administration Console opens.
+. Log in using the user name and password for your realm provided in your welcome email. The {AuthProductConsoleName} opens.
 
 . In the left pane, click *Users*. The Users page is displayed.
 
@@ -19,7 +19,7 @@ Using the {AuthProductNameConsole} you can create a new {ProductName} user and s
  
 . In the *Username* field, type a user name. 
 +
-NOTE: You can currently specify a user name only. Additional fields/functions/capabilities on this page are not supported for {ProductName}.
+NOTE: You can currently specify a user name only. Additional fields/functions/capabilities on this page are not supported for {OnlineName}.
 
 . Click *Save*. The user management page is displayed.
 
@@ -29,15 +29,15 @@ NOTE: You can currently specify a user name only. Additional fields/functions/ca
 
 
 [[_change_user_password]]
-== Changing a User Password
+=== Changing a User Password
 
 You can change a user password.
 
 .Procedure
 
-. In a web browser, navigate to the {AuthProductNameConsole} URL provided in your welcome email. 
+. In a web browser, navigate to the {AuthProductConsoleName} URL provided in your welcome email. 
 
-. Log in using the user name and password for your realm provided in your welcome email. The {AuthProductNameConsole} opens.
+. Log in using the user name and password for your realm provided in your welcome email. The {AuthProductConsoleName} opens.
 
 . In the left pane, click *Users*. The Users page is displayed.
 
@@ -49,17 +49,16 @@ You can change a user password.
 
 . In the *New Password* and *Password Confirmation* fields, type a password, and then click *Reset Password*. The user password is reset.
 
-
 [[_delete_user]]
-== Deleting a User
+=== Deleting a User
 
-Using the {AuthProductNameConsole} you can delete an existing {ProductName} user.
+Using the {AuthProductConsoleName} you can delete an existing {OnlineName} user.
 
 .Procedure
 
-. In a web browser, navigate to the {AuthProductNameConsole} URL provided in your welcome email. 
+. In a web browser, navigate to the {AuthProductConsoleName} URL provided in your welcome email. 
 
-. Log in using the user name and password for your realm provided in your welcome email. The {AuthProductNameConsole} opens.
+. Log in using the user name and password for your realm provided in your welcome email. The {AuthProductConsoleName} opens.
 
 . In the left pane, click *Users*. The Users page is displayed.
 
