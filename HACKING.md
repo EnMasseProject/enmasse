@@ -53,6 +53,8 @@ This builds all modules including java.
 
     export DOCKER_ORG=myorg
     export DOCKER_REGISTRY=docker.io
+    #optional parameters
+    export COMMIT=v.1.0.3 #for specific version of your image
 
     docker login -u myuser -p mypassword $DOCKER_REGISTRY
 
