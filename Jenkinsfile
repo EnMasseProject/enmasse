@@ -12,12 +12,17 @@ pipeline {
             label 'enmasse'
         }
     }
+    environment {
+        STANDARD_JOB_NAME = 'enmasse-master-standard'
+        BROKERED_JOB_NAME = 'enmasse-master-brokered'
+        MAILING_LIST = credentials('MAILING_LIST')
+    }
     parameters {
-        string(name: 'MAILING_LIST', defaultValue: '', description: '')
-        string(name: 'TEST_CASE', defaultValue: '', description: 'maven parameter for executing specific tests')
+        string(name: 'TEST_CASE', defaultValue: 'SmokeTest', description: 'maven parameter for executing specific tests')
+        string(name: 'MAILING_LIST', defaultValue: env.MAILING_LIST, description: 'mailing list when build failed')
     }
     options {
-        timeout(time: 3, unit: 'HOURS')
+        timeout(time: 1, unit: 'HOURS')
     }
     stages {
         stage('checkout') {
@@ -50,27 +55,14 @@ pipeline {
                 sh 'sudo chmod -R 777 /var/lib/origin/openshift.local.config'
             }
         }
-        stage('install clients') {
-            steps {
-                sh 'sudo PATH=$PATH make client_install'
-            }
-        }
-        stage('install webdrivers') {
-            steps {
-                sh 'sudo make webdriver_install'
-            }
-        }
-        stage('system tests') {
+        stage('system tests - smoke tests') {
             environment {
-                DISPLAY = ':10'
                 ARTIFACTS_DIR = 'artifacts'
                 JOB_NAME_SUB = "${String.format("%.15s", JOB_NAME)}"
                 OPENSHIFT_PROJECT = "${JOB_NAME_SUB}${BUILD_NUMBER}"
             }
             steps {
                 withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
-                    sh 'sudo cp ./systemtests/web_driver/* /usr/bin'
-                    sh 'Xvfb :10 -ac &'
                     sh "./systemtests/scripts/run_test_component.sh templates/install /var/lib/origin/openshift.local.config/master/admin.kubeconfig systemtests ${params.TEST_CASE}"
                 }
             }
@@ -78,6 +70,26 @@ pipeline {
         stage('teardown openshift') {
             steps {
                 sh './systemtests/scripts/teardown-openshift.sh'
+            }
+        }
+        stage('execute brokered') {
+            steps {
+                build job: env.BROKERED_JOB_NAME, wait: false, parameters:
+                        [
+                                [$class: 'StringParameterValue', name: 'BUILD_TAG', value: BUILD_TAG],
+                                [$class: 'StringParameterValue', name: 'MAILING_LIST', value: params.MAILING_LIST],
+                                [$class: 'StringParameterValue', name: 'TEST_CASE', value: 'brokered.**'],
+                        ]
+            }
+        }
+        stage('execute standard') {
+            steps {
+                build job: env.STANDARD_JOB_NAME, wait: false, parameters:
+                        [
+                                [$class: 'StringParameterValue', name: 'BUILD_TAG', value: BUILD_TAG],
+                                [$class: 'StringParameterValue', name: 'MAILING_LIST', value: params.MAILING_LIST],
+                                [$class: 'StringParameterValue', name: 'TEST_CASE', value: 'standard.**'],
+                        ]
             }
         }
     }
