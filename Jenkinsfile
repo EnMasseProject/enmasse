@@ -12,12 +12,15 @@ pipeline {
             label 'enmasse'
         }
     }
+    environment {
+        STANDARD_JOB_NAME = 'enmasse-master-standard'
+        BROKERED_JOB_NAME = 'enmasse-master-brokered'
+    }
     parameters {
-        string(name: 'MAILING_LIST', defaultValue: '', description: '')
-        string(name: 'TEST_CASE', defaultValue: '', description: 'maven parameter for executing specific tests')
+        string(name: 'TEST_CASE', defaultValue: 'SmokeTest', description: 'maven parameter for executing specific tests')
     }
     options {
-        timeout(time: 3, unit: 'HOURS')
+        timeout(time: 1, unit: 'HOURS')
     }
     stages {
         stage('checkout') {
@@ -60,7 +63,7 @@ pipeline {
                 sh 'sudo make webdriver_install'
             }
         }
-        stage('system tests') {
+        stage('system tests - smoke tests') {
             environment {
                 DISPLAY = ':10'
                 ARTIFACTS_DIR = 'artifacts'
@@ -78,6 +81,26 @@ pipeline {
         stage('teardown openshift') {
             steps {
                 sh './systemtests/scripts/teardown-openshift.sh'
+            }
+        }
+        stage('execute brokered') {
+            steps {
+                build job: env.BROKERED_JOB_NAME, wait: false, parameters:
+                        [
+                                [$class: 'StringParameterValue', name: 'BUILD_TAG', value: String.valueOf(BUILD_TAG)],
+                                [$class: 'StringParameterValue', name: 'MAILING_LIST', value: String.valueOf(params.MAILING_LIST)],
+                                [$class: 'StringParameterValue', name: 'TEST_CASE', value: String.valueOf('brokered.**')],
+                        ]
+            }
+        }
+        stage('execute standard') {
+            steps {
+                build job: env.STANDARD_JOB_NAME, wait: false, parameters:
+                        [
+                                [$class: 'StringParameterValue', name: 'BUILD_TAG', value: String.valueOf(BUILD_TAG)],
+                                [$class: 'StringParameterValue', name: 'MAILING_LIST', value: String.valueOf(params.MAILING_LIST)],
+                                [$class: 'StringParameterValue', name: 'TEST_CASE', value: String.valueOf('standard.**')],
+                        ]
             }
         }
     }
