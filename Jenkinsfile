@@ -55,15 +55,12 @@ pipeline {
         }
         stage('system tests - smoke tests') {
             environment {
-                DISPLAY = ':10'
                 ARTIFACTS_DIR = 'artifacts'
                 JOB_NAME_SUB = "${String.format("%.15s", JOB_NAME)}"
                 OPENSHIFT_PROJECT = "${JOB_NAME_SUB}${BUILD_NUMBER}"
             }
             steps {
                 withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
-                    sh 'sudo cp ./systemtests/web_driver/* /usr/bin'
-                    sh 'Xvfb :10 -ac &'
                     sh "./systemtests/scripts/run_test_component.sh templates/install /var/lib/origin/openshift.local.config/master/admin.kubeconfig systemtests ${params.TEST_CASE}"
                 }
             }
