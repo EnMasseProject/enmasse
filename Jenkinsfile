@@ -53,16 +53,6 @@ pipeline {
                 sh 'sudo chmod -R 777 /var/lib/origin/openshift.local.config'
             }
         }
-        stage('install clients') {
-            steps {
-                sh 'sudo PATH=$PATH make client_install'
-            }
-        }
-        stage('install webdrivers') {
-            steps {
-                sh 'sudo make webdriver_install'
-            }
-        }
         stage('system tests - smoke tests') {
             environment {
                 DISPLAY = ':10'
