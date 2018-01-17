@@ -15,9 +15,11 @@ pipeline {
     environment {
         STANDARD_JOB_NAME = 'enmasse-master-standard'
         BROKERED_JOB_NAME = 'enmasse-master-brokered'
+        MAILING_LIST = credentials('MAILING_LIST')
     }
     parameters {
         string(name: 'TEST_CASE', defaultValue: 'SmokeTest', description: 'maven parameter for executing specific tests')
+        string(name: 'MAILING_LIST', defaultValue: env.MAILING_LIST, description: 'mailing list when build failed')
     }
     options {
         timeout(time: 1, unit: 'HOURS')
