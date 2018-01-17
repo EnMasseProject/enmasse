@@ -1,0 +1,133 @@
+[[standard_address_space]]
+=== Standard Address Space
+
+The default address space in {ProductName} is the standard address space and it consists of an AMQP router network in combination with attachable storage units. The implementation of a storage unit is hidden from the client and the routers with a well-defined API. This address space type is appropriate when you have many connections and addresses. However, it has the following limitations: no transaction support, no message ordering, no selectors on queues, and no message groups.
+
+For the standard address space, there are four address types available: 
+* queue
+* topic
+* anycast
+* multicast
+
+Clients connect and send and receive messages in this address space using the AMQP or MQTT protocols. Note that MQTT does not support qos2 or retained messages.
+
+// TODO This reflects the status quo, but how should multiple protocols actually be surfaced?
+
+==== Address Types
+
+The standard address space supports four address types:
+
+* queue
+* topic
+* anycast
+* multicast
+
+// TODO Document plan restrictions and document properties for all 4 types
+
+[[standard-queue]]
+==== Queue
+// address.queue.shortDescription:Creates a store-and-forward queue
+// address.queue.longDescription:start
+The queue address type is a store-and-forward queue. This address type is appropriate for implementing a distributed work queue, handling traffic bursts, and other use cases where you want to decouple the producer and consumer. A queue can be sharded across multiple storage units, in which case message order is no longer guaranteed.
+// address.queue.longDescription:stop
+
+[[queue-plans]]
+===== Queue Plans
+
+* inmemory
+* persisted
+* pooled-inmemory
+* pooled-persisted
+
+[[in-memory-queue]]
+====== In memory
+// address.queue.plan.inmemory.shortDescription:In memory only
+// address.queue.plan.inmemory.longDescription:start
+Creates a standalone broker cluster for queues. Messages are not persisted on
+stable storage.
+// address.queue.plan.inmemory.longDescription:stop
+
+[[persisted-queue]]
+====== Persisted
+
+// address.queue.plan.persisted.shortDescription:Saved to storage
+// address.queue.plan.persisted.longDescription:start
+Creates a standalone broker cluster for queues. Messages are persisted on stable
+storage.
+// address.queue.plan.persisted.longDescription:stop
+
+[[pooled-in-memory-queue]]
+====== Pooled in memory
+// address.queue.plan.pooled-inmemory.shortDescription:Shared broker cluster - not persisted
+// address.queue.plan.pooled-inmemory.longDescription:start
+Schedules queues to run on a shared broker cluster, which reduces overhead. Messages
+are not persisted on stable storage.
+// address.queue.plan.pooled-inmemory.longDescription:stop
+
+[[pooled-persisted-queue]]
+====== Pooled persisted
+
+// address.queue.plan.pooled-persisted.shortDescription:Shared broker cluster - saved to storage
+// address.queue.plan.pooled-persisted.longDescription:start
+Schedules queues to run on a shared broker cluster, reducing overhead. Messages
+are persisted on stable storage.
+// address.queue.plan.pooled-persisted.longDescription:stop
+
+[[standard-topic]]
+==== Topic
+// address.topic.shortDescription:Creates a publish-subscribe topic
+// address.topic.longDescription:start
+The topic address type supports the publish-subscribe messaging pattern where you have 1..N producers and 1..M consumers. Each message published to a topic address is forwarded to all subscribers for that address. A subscriber can also be durable, in which case messages are kept until the subscriber has acknowledged them.
+// address.topic.longDescription:stop
+
+[[topic-plans]]
+===== Topic Plans
+
+* inmemory
+* persisted
+
+[[in-memory-topic]]
+====== In memory
+
+// address.topic.plan.inmemory.shortDescription:In memory only
+// address.topic.plan.inmemory.longDescription:start
+Creates a standalone broker cluster for topics. Messages are not persisted on
+stable storage.
+// address.topic.plan.inmemory.longDescription:stop
+
+[[persisted-topic]]
+====== Persisted
+
+// address.topic.plan.persisted.shortDescription:Saved to storage
+// address.topic.plan.persisted.longDescription:start
+Creates a standalone broker cluster for topics. Messages are persisted on stable
+storage.
+// address.topic.plan.persisted.longDescription:stop
+
+[[anycast]]
+==== Anycast
+// address.anycast.shortDescription:A scalable 'direct' address for sending messages to one consumer
+// address.anycast.longDescription:start
+The anycast address type is a scalable direct address for sending messages to one consumer. Messages sent to an anycast address are not stored, but forwarded directly to the consumer. This method makes this address type ideal for request-reply (RPC) uses or even work distribution. This is the cheapest address type as it does not require any persistence.
+// address.anycast.longDescription:stop
+
+[[anycast-plans]]
+===== Anycast Plans
+
+* standard
+
+// address.anycast.plan.inmemory.shortDescription:Configures the router network with an anycast address
+
+[[multicast]]
+==== Multicast
+// address.multicast.shortDescription:A scalable 'direct' address for sending messages to multiple consumers
+// address.multicast.longDescription:start
+The multicast address type is a scalable direct address for sending messages to multiple consumers. Messages sent to a multicast address are forwarded to all consumers receiving messages on that address. It is important to note that only pre-settled messages can be sent to multicast addresses, as message acknowledgements from consumers are not propagated to producers.
+// address.multicast.longDescription:stop
+
+[[multicast-plans]]
+===== Multicast Plans
+
+* standard
+
+// address.multicast.plan.inmemory.shortDescription:Configures router network with multicast address
