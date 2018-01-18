@@ -153,8 +153,6 @@ Only a standard plan is available for queues.
 // brokered.address.queue.plan.standard.shortDescription:stop
 // brokered.address.queue.plan.standard.longDescription:There is no choice of plans for queues at this time.
 
-// If the queue is a high-volume queue and these semantics are not needed, see the xref:standard-queue[standard address space `queue`] type.
-
 [[brokered-topic]]
 ==== Topic
 // brokered.address.topic.shortDescription:A publish-and-subscribe address with store-and-forward semantics
