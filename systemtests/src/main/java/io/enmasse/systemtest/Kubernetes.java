@@ -84,7 +84,7 @@ public abstract class Kubernetes {
                 if (containerStatus.getRestartCount() > 0) {
                     terminatedPodsLogs.put(
                             pod.getMetadata().getName(),
-                            client.pods().withName(pod.getMetadata().getName()).terminated().getLog());
+                            client.pods().inNamespace(namespace).withName(pod.getMetadata().getName()).terminated().getLog());
                 }
             });
         });
