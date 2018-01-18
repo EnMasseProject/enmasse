@@ -21,6 +21,13 @@ pipeline {
         timeout(time: 3, unit: 'HOURS')
     }
     stages {
+        stage('add description') {
+            steps {
+                script {
+                    currentBuild.description = "related build: ${params.BUILD_TAG}"
+                }
+            }
+        }
         stage('start openshift') {
             steps {
                 sh './systemtests/scripts/setup-openshift.sh'
