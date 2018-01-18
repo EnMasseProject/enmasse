@@ -1,0 +1,16 @@
+The following exchange is used to provide the authz information:
+
+_client_ sends `open` with 
+- desired-capability `ADDRESS-AUTHZ`
+
+_server_ sends `open` with 
+- offered-capability `ADDRESS-AUTHZ`
+- property `address-authz`
+
+The value of the property is a map with keys of type `string`, and values of type `array` (of `string`)
+
+The key represents an address, the address is formed of one or more words separated by `.` or `/` (the separators are completely equivalent).  The character `*` can be used as a wildcard word, but only for the final word in an address - otherwise the `*` character is invalid.  For example `foo/*`, `foo.*` and `*` are valid; `foo*` and `*.foo` are not.
+The value associated with the key is an array of permissions.  Valid permissions are `send`, `recv`, `create`, `delete`, and `view`  
+
+
+The plugin determines the permissions by using the names of the groups to which the user belong.  Groups of the form \<_permission_\>\_\<_endoded address_\> (where the encoded address is the [percent encoding](https://tools.ietf.org/html/rfc3986#section-2) of the address for which the permission is to apply)
