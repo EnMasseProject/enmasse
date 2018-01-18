@@ -1,5 +1,5 @@
 {
-    "name" : "agent",
+    "name": "agent",
     "version": "0.0.1",
     "description": "controller agent and console for enmasse",
     "homepage": "http://github.com/enmasseproject",
@@ -14,9 +14,9 @@
         "ws": "*"
     },
     "devDependencies": {
-        "eslint":"",
-        "mocha":"",
-        "mocha-junit-reporter":"",
+        "eslint": "",
+        "mocha": "^4.0.0",
+        "mocha-junit-reporter": "",
         "istanbul": ""
     },
     "scripts": {
