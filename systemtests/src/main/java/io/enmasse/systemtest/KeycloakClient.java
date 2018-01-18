@@ -194,6 +194,13 @@ public class KeycloakClient {
                 }
             }
         }
+
+        String sendGroup = "send_*";
+        String receiveGroup = "recv_*";
+        createGroup(realm, sendGroup);
+        createGroup(realm, receiveGroup);
+        joinGroup(realm, sendGroup, userName);
+        joinGroup(realm, receiveGroup, userName);
     }
 
 
