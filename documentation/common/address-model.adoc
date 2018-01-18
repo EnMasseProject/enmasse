@@ -12,13 +12,13 @@ The {ProductName} address model involves three distinct concepts:
 An address space is a group of addresses that can be accessed through a single connection (per protocol). This means that clients connected to the endpoints of an address space can send messages to or receive messages from any address it is authorized to send messages to or receive messages from within that address space. An address space can support multiple protocols, which is defined by the address space type.
 
 === Address
-// address.name.shortDescription:Enter the address name
-// address.name.longDescription:The <b>address name</b> is a unique string to which messages can be sent and received.
-// address.name.external:https://github.com/EnMasseProject/enmasse/pull/44
+// address.name.shortDescription:Type an address name
+// address.name.longDescription:The <b>address name</b> is a unique string that specifies where messages can be sent and received.
+// address.name.external:{OnlineBookURL}
 An address is part of an address space and represents a destination used for sending and receiving messages. An address has a type, which defines the semantics of sending messages to and receiving messages from that address.
 
 === Plans
-Both address spaces and addresses can be restricted by a plan, which enforces a limit on resource usage across multiple dimensions. <tag for upstream only>Note that the set of plans currently offered might be extended in the future, and the constraints imposed by a plan within an address space might change as operational experience is gained.</tag for upstream only>
+Both address spaces and addresses can be restricted by a plan, which enforces a limit on resource usage across multiple dimensions. Note that the set of plans currently offered might be extended in the future, and the constraints imposed by a plan within an address space might change as operational experience is gained.
 
 ==== Address Space Plans
 Each address space has a plan that restricts the aggregated resource usage within an address space. Each address space type can translate the plan into a set of restrictions, for example, the ability to scale up to five routers or to create up to 10 addresses. These restrictions are documented within each address space.

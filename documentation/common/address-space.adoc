@@ -1,6 +1,6 @@
 [[standard_address_space]]
 === Standard Address Space
-The default address space in EnMasse is the standard address space and it consists of an AMQP router network in combination with attachable storage units. The implementation of a storage unit is hidden from the client and the routers with a well-defined API. This address space type is appropriate when you have many connections and addresses. However, it has the following limitations: no transaction support, no message ordering, no selectors on queues, and no message groups.
+The default address space in {ProductName} is the standard address space and it consists of an AMQP router network in combination with attachable storage units. The implementation of a storage unit is hidden from the client and the routers with a well-defined API. This address space type is appropriate when you have many connections and addresses. However, it has the following limitations: no transaction support, no message ordering, no selectors on queues, and no message groups.
 
 Clients connect and send and receive messages in this address space using the AMQP or MQTT protocols. Note that MQTT does not support qos2 or retained messages.
 
@@ -18,9 +18,9 @@ The standard address space supports four address types:
 
 [[standard-queue]]
 ==== Queue
-// standard.address.queue.shortDescription:A store and forward queue
+// standard.address.queue.shortDescription:A store-and-forward queue
 // standard.address.queue.longDescription:start
-The queue address type is a store-and-forward queue. This address type is appropriate for implementing a distributed work queue, handling traffic bursts, and other use cases where you want to decouple the producer and consumer. A queue can be sharded across multiple storage units, in which case message order is no longer guaranteed.
+The queue address type is a store-and-forward queue. This address type is appropriate for implementing a distributed work queue, handling traffic bursts, and other use cases where you want to decouple the producer and consumer. A queue can be sharded across multiple storage units; however, message order is no longer guaranteed.
 // standard.address.queue.longDescription:stop
 
 [[queue-plans]]
@@ -108,7 +108,7 @@ The anycast address type is a scalable direct address for sending messages to on
 
 * standard
 
-// standard.address.anycast.plan.inmemory.shortDescription:Configures router network with anycast address
+// standard.address.anycast.plan.inmemory.shortDescription:Configures the router network with an anycast address
 
 [[multicast]]
 ==== Multicast
@@ -141,15 +141,13 @@ Clients connect and send and receive messages in this address space using the AM
 [[brokered-queue]]
 ==== Queue
 
-// brokered.address.queue.shortDescription:A store and forward queue
+// brokered.address.queue.shortDescription:A store-and-forward queue
 // brokered.address.queue.longDescription:start
 The queue address type is a store-and-forward queue. This address type is appropriate for
 implementing a distributed work queue, handling traffic bursts, and other use cases where you want
 to decouple the producer and consumer. A queue in the brokered address spaces supports selectors,
-message groups, transactions and other JMS features. If the queue is a high volume queue and these
-semantics are not needed, see the xref:standard-queue[standard address space `queue`] type.
+message groups, transactions, and other JMS features.
 // brokered.address.queue.longDescription:stop
-
 // brokered.address.queue.plan.standard.shortDescription:start
 Only a standard plan is available for queues.
 // brokered.address.queue.plan.standard.shortDescription:stop
@@ -157,7 +155,7 @@ Only a standard plan is available for queues.
 
 [[brokered-topic]]
 ==== Topic
-// brokered.address.topic.shortDescription:A publish and subscribe address with store and forward semantics
+// brokered.address.topic.shortDescription:A publish-and-subscribe address with store-and-forward semantics
 // brokered.address.topic.longDescription:start
 The topic address type supports the publish-subscribe messaging pattern where you have 1..N producers and 1..M consumers. Each message published to a topic address is forwarded to all subscribers for that address. A subscriber can also be durable, in which case messages are kept until the subscriber has acknowledged them.
 // brokered.address.topic.longDescription:stop
