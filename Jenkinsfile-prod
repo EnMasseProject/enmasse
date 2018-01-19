@@ -1,0 +1,100 @@
+#!/usr/bin/env groovy
+
+def storeArtifacts(buildStatus) {
+    if (buildStatus == 'ABORTED') {
+        sh 'OPENSHIFT_TEST_LOGDIR="/tmp/testlogs" ./systemtests/scripts/collect_logs.sh "artifacts"'
+    }
+}
+
+def tearDownOpenshift() {
+    echo "tear down openshift"
+    sh './systemtests/scripts/teardown-openshift.sh'
+}
+
+pipeline {
+    agent {
+        node {
+            label 'enmasse'
+        }
+    }
+    environment {
+        MAILING_LIST = credentials('MAILING_LIST')
+    }
+    parameters {
+        string(name: 'MAILING_LIST', defaultValue: '', description: '')
+    }
+    options {
+        timeout(time: 6, unit: 'HOURS')
+    }
+    stages {
+        stage('clean') {
+            steps {
+                cleanWs()
+                sh 'docker stop $(docker ps -q) || true'
+                sh 'docker rm $(docker ps -a -q) -f || true'
+                sh 'docker rmi $(docker images -q) -f || true'
+            }
+        }
+        stage('checkout') {
+            steps {
+                checkout scm
+                sh 'git checkout tags/0.16.1'
+                sh 'git submodule update --init --recursive'
+                sh 'rm -rf artifacts && mkdir -p artifacts'
+            }
+        }
+        stage('start openshift') {
+            steps {
+                sh './systemtests/scripts/setup-openshift.sh'
+                sh 'sudo chmod -R 777 /var/lib/origin/openshift.local.config'
+            }
+        }
+        stage('install clients') {
+            steps {
+                sh 'sudo PATH=$PATH make client_install'
+            }
+        }
+        stage('install webdrivers') {
+            steps {
+                sh 'sudo make webdriver_install'
+            }
+        }
+        stage('system tests') {
+            environment {
+                DISPLAY = ':10'
+                ARTIFACTS_DIR = 'artifacts'
+                JOB_NAME_SUB = "${String.format("%.15s", JOB_NAME)}"
+                OPENSHIFT_PROJECT = "${JOB_NAME_SUB}${BUILD_NUMBER}"
+            }
+            steps {
+                withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
+                    sh 'sudo cp ./systemtests/web_driver/* /usr/bin'
+                    sh 'Xvfb :10 -ac &'
+                    sh 'git clone https://github.com/jboss-container-images/jboss-amqmaas-image.git && cp jboss-amqmaas-image/templates/* templates/install -R'
+                    sh "./systemtests/scripts/run_test_component.sh templates/install /var/lib/origin/openshift.local.config/master/admin.kubeconfig 'systemtests' 'brokered.**'"
+                }
+            }
+        }
+    }
+    post {
+        always {
+            storeArtifacts(currentBuild.result) //store artifacts if build was aborted - due to timeout reached
+            //store test results from build and system tests
+            junit '**/TEST-*.xml'
+
+            //archive test results and openshift logs
+            archive '**/TEST-*.xml'
+            archive 'artifacts/**'
+            archive 'templates/install/**'
+            sh "sudo tar -czvf core-dumps.tar.gz ${env.CORES_DIR}/"
+            sh "sudo mv core-dumps.tar.gz artifacts/"
+            archive 'artifacts/**'
+            tearDownOpenshift()
+            sh "./systemtests/scripts/check_and_clear_cores.sh ${env.CORES_DIR}"
+        }
+        failure {
+            echo "build failed"
+            mail to: "$MAILING_LIST", subject: "EnMasse build has finished with ${result}", body: "See ${env.BUILD_URL}"
+        }
+    }
+}
