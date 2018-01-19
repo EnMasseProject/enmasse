@@ -22,6 +22,12 @@ pipeline {
         timeout(time: 3, unit: 'HOURS')
     }
     stages {
+        stage('clean') {
+            steps {
+                cleanWs()
+                sh 'docker rmi $(docker images -q) -f'
+            }
+        }
         stage('checkout') {
             steps {
                 checkout scm
