@@ -19,6 +19,7 @@ pipeline {
     stages {
         stage('checkout') {
             steps {
+                cleanWs()
                 checkout scm
                 sh 'git submodule update --init --recursive'
                 sh 'rm -rf artifacts && mkdir -p artifacts'
