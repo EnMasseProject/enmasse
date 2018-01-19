@@ -28,6 +28,13 @@ pipeline {
                 }
             }
         }
+        stage ('checkout') {
+            steps {
+                checkout scm
+                sh 'git submodule update --init --recursive'
+                sh 'rm -rf artifacts && mkdir -p artifacts'
+            }
+        }
         stage('start openshift') {
             steps {
                 sh './systemtests/scripts/setup-openshift.sh'
