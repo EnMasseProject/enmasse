@@ -3,7 +3,13 @@
 def storeArtifacts(buildStatus) {
     if (buildStatus == 'ABORTED') {
         sh 'OPENSHIFT_TEST_LOGDIR="/tmp/testlogs" ./systemtests/scripts/collect_logs.sh "artifacts"'
+        sh 'rm -rf /tmp/testlogs'
     }
+}
+
+def tearDownOpenshift() {
+    echo "tear down openshift"
+    sh './systemtests/scripts/teardown-openshift.sh'
 }
 
 pipeline {
@@ -72,11 +78,6 @@ pipeline {
                 }
             }
         }
-        stage('teardown openshift') {
-            steps {
-                sh './systemtests/scripts/teardown-openshift.sh'
-            }
-        }
     }
     post {
         always {
@@ -88,6 +89,9 @@ pipeline {
             archive '**/TEST-*.xml'
             archive 'artifacts/**'
             archive 'templates/install/**'
+
+            //tear down openshift
+            tearDownOpenshift()
         }
         failure {
             echo "build failed"
