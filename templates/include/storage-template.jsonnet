@@ -25,7 +25,7 @@ local forwarder = import "forwarder.jsonnet";
 
       "objects": [
         {
-          "apiVersion": "extensions/v1beta1",
+          "apiVersion": "apps/v1beta1",
           "kind": "StatefulSet",
           "metadata": {
             "name": "${NAME}",

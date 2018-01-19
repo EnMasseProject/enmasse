@@ -578,7 +578,7 @@ objects:
         app: enmasse
       name: queue-inmemory
     objects:
-    - apiVersion: extensions/v1beta1
+    - apiVersion: apps/v1beta1
       kind: StatefulSet
       metadata:
         annotations:
@@ -732,7 +732,7 @@ objects:
         app: enmasse
       name: queue-persisted
     objects:
-    - apiVersion: extensions/v1beta1
+    - apiVersion: apps/v1beta1
       kind: StatefulSet
       metadata:
         annotations:
@@ -900,7 +900,7 @@ objects:
         app: enmasse
       name: topic-inmemory
     objects:
-    - apiVersion: extensions/v1beta1
+    - apiVersion: apps/v1beta1
       kind: StatefulSet
       metadata:
         annotations:
@@ -1127,7 +1127,7 @@ objects:
         app: enmasse
       name: topic-persisted
     objects:
-    - apiVersion: extensions/v1beta1
+    - apiVersion: apps/v1beta1
       kind: StatefulSet
       metadata:
         annotations:

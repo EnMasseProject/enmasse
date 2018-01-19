@@ -53,6 +53,7 @@ public class KubernetesHelper implements Kubernetes {
         // Add other resources part of a destination cluster
         List<HasMetadata> objects = new ArrayList<>();
         objects.addAll(client.extensions().deployments().list().getItems());
+        objects.addAll(client.apps().statefulSets().list().getItems());
         objects.addAll(client.persistentVolumeClaims().list().getItems());
         objects.addAll(client.configMaps().list().getItems());
 

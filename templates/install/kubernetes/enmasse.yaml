@@ -279,7 +279,7 @@ items:
       [{"name": "https", "port": 8081, "targetPort": 8080}], "selector": {"name":
       "admin"}}}, {"apiVersion": "v1", "data": {"queue-inmemory.json": "{\"apiVersion\":
       \"v1\", \"kind\": \"Template\", \"metadata\": {\"labels\": {\"app\": \"enmasse\"},
-      \"name\": \"queue-inmemory\"}, \"objects\": [{\"apiVersion\": \"extensions/v1beta1\",
+      \"name\": \"queue-inmemory\"}, \"objects\": [{\"apiVersion\": \"apps/v1beta1\",
       \"kind\": \"StatefulSet\", \"metadata\": {\"annotations\": {\"addressSpace\":
       \"${ADDRESS_SPACE}\", \"cluster_id\": \"${CLUSTER_ID}\", \"io.enmasse.certCn\":
       \"broker\", \"io.enmasse.certSecretName\": \"broker-internal-cert\"}, \"labels\":
@@ -337,7 +337,7 @@ items:
       \"The hostname to use in sasl init\", \"name\": \"AUTHENTICATION_SERVICE_SASL_INIT_HOST\"}]}",
       "queue-persisted.json": "{\"apiVersion\": \"v1\", \"kind\": \"Template\", \"metadata\":
       {\"labels\": {\"app\": \"enmasse\"}, \"name\": \"queue-persisted\"}, \"objects\":
-      [{\"apiVersion\": \"extensions/v1beta1\", \"kind\": \"StatefulSet\", \"metadata\":
+      [{\"apiVersion\": \"apps/v1beta1\", \"kind\": \"StatefulSet\", \"metadata\":
       {\"annotations\": {\"addressSpace\": \"${ADDRESS_SPACE}\", \"cluster_id\": \"${CLUSTER_ID}\",
       \"io.enmasse.certCn\": \"broker\", \"io.enmasse.certSecretName\": \"broker-internal-cert\"},
       \"labels\": {\"app\": \"enmasse\"}, \"name\": \"${NAME}\"}, \"spec\": {\"replicas\":
@@ -398,7 +398,7 @@ items:
       \"The hostname to use in sasl init\", \"name\": \"AUTHENTICATION_SERVICE_SASL_INIT_HOST\"}]}",
       "topic-inmemory.json": "{\"apiVersion\": \"v1\", \"kind\": \"Template\", \"metadata\":
       {\"labels\": {\"app\": \"enmasse\"}, \"name\": \"topic-inmemory\"}, \"objects\":
-      [{\"apiVersion\": \"extensions/v1beta1\", \"kind\": \"StatefulSet\", \"metadata\":
+      [{\"apiVersion\": \"apps/v1beta1\", \"kind\": \"StatefulSet\", \"metadata\":
       {\"annotations\": {\"addressSpace\": \"${ADDRESS_SPACE}\", \"cluster_id\": \"${CLUSTER_ID}\",
       \"io.enmasse.certCn\": \"broker\", \"io.enmasse.certSecretName\": \"broker-internal-cert\"},
       \"labels\": {\"app\": \"enmasse\"}, \"name\": \"${NAME}\"}, \"spec\": {\"replicas\":
@@ -479,7 +479,7 @@ items:
       \"The hostname to use in sasl init\", \"name\": \"AUTHENTICATION_SERVICE_SASL_INIT_HOST\"}]}",
       "topic-persisted.json": "{\"apiVersion\": \"v1\", \"kind\": \"Template\", \"metadata\":
       {\"labels\": {\"app\": \"enmasse\"}, \"name\": \"topic-persisted\"}, \"objects\":
-      [{\"apiVersion\": \"extensions/v1beta1\", \"kind\": \"StatefulSet\", \"metadata\":
+      [{\"apiVersion\": \"apps/v1beta1\", \"kind\": \"StatefulSet\", \"metadata\":
       {\"annotations\": {\"addressSpace\": \"${ADDRESS_SPACE}\", \"cluster_id\": \"${CLUSTER_ID}\",
       \"io.enmasse.certCn\": \"broker\", \"io.enmasse.certSecretName\": \"broker-internal-cert\"},
       \"labels\": {\"app\": \"enmasse\"}, \"name\": \"${NAME}\"}, \"spec\": {\"replicas\":
