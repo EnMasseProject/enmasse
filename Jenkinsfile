@@ -20,6 +20,8 @@ pipeline {
         stage('clean') {
             steps {
                 cleanWs()
+                sh 'docker stop $(docker ps -q) || true'
+                sh 'docker rm $(docker ps -a -q) -f || true'
                 sh 'docker rmi $(docker images -q) -f'
             }
         }
