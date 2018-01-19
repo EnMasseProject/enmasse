@@ -23,89 +23,85 @@ local forwarder = import "forwarder.jsonnet";
         }
       },
 
-      local controller = {
-        "apiVersion": "extensions/v1beta1",
-        "kind": "Deployment",
-        "metadata": {
-          "name": "${NAME}",
-          "labels": {
-            "app": "enmasse"
+      "objects": [
+        {
+          "apiVersion": "extensions/v1beta1",
+          "kind": "StatefulSet",
+          "metadata": {
+            "name": "${NAME}",
+            "labels": {
+              "app": "enmasse"
+            },
+            "annotations": {
+              "cluster_id": "${CLUSTER_ID}",
+              "addressSpace": "${ADDRESS_SPACE}",
+              "io.enmasse.certCn": "broker",
+              "io.enmasse.certSecretName" : "broker-internal-cert"
+            }
           },
-          "annotations": {
-            "cluster_id": "${CLUSTER_ID}",
-            "addressSpace": "${ADDRESS_SPACE}",
-            "io.enmasse.certCn": "broker",
-            "io.enmasse.certSecretName" : "broker-internal-cert"
-          }
-        },
-        "spec": {
-          "replicas": 1,
-          "template": {
-            "metadata": {
-              "labels": {
-                "app": "enmasse",
-                "role": "broker",
-                "addresstype": addrtype,
-                "name": "${NAME}"
+          "spec": {
+            "replicas": 1,
+            "template": {
+              "metadata": {
+                "labels": {
+                  "app": "enmasse",
+                  "role": "broker",
+                  "addresstype": addrtype,
+                  "name": "${NAME}"
+                },
+                "annotations": {
+                  "cluster_id": "${CLUSTER_ID}",
+                  "addressSpace": "${ADDRESS_SPACE}",
+                  "prometheus.io/scrape": "true",
+                  "prometheus.io/path": "/metrics",
+                  "prometheus.io/port": "8080"
+                }
               },
-              "annotations": {
-                "cluster_id": "${CLUSTER_ID}",
-                "addressSpace": "${ADDRESS_SPACE}",
-                "prometheus.io/scrape": "true",
-                "prometheus.io/path": "/metrics",
-                "prometheus.io/port": "8080"
+              "spec": {
+                "volumes": [
+                  common.secret_volume("ssl-certs", "${COLOCATED_ROUTER_SECRET}"),
+                  common.secret_volume("authservice-ca", "authservice-ca"),
+                  common.secret_volume("address-controller-ca", "address-controller-ca"),
+                  common.secret_volume("broker-internal-cert", "broker-internal-cert"),
+                  common.configmap_volume("broker-prometheus-config", "broker-prometheus-config")
+                ] + (if !persistence then [common.empty_volume(volumeName)] else []),
+
+                "containers": if multicast
+                  then [ broker.container(volumeName, broker_repo, addressEnv),
+                         router.container(router_repo, [addressEnv], "256Mi", "broker-internal-cert"),
+                         forwarder.container(forwarder_repo, addressEnv) ]
+                  else [ broker.container(volumeName, broker_repo, addressEnv) ]
               }
             },
-            "spec": {
-              local brokerVolume = if persistence
-                then common.persistent_volume(volumeName, claimName)
-                else common.empty_volume(volumeName),
-              "volumes": [
-                brokerVolume,
-                common.secret_volume("ssl-certs", "${COLOCATED_ROUTER_SECRET}"),
-                common.secret_volume("authservice-ca", "authservice-ca"),
-                common.secret_volume("address-controller-ca", "address-controller-ca"),
-                common.secret_volume("broker-internal-cert", "broker-internal-cert"),
-                common.configmap_volume("broker-prometheus-config", "broker-prometheus-config")
-              ],
-
-              "containers": if multicast
-                then [ broker.container(volumeName, broker_repo, addressEnv),
-                       router.container(router_repo, [addressEnv], "256Mi", "broker-internal-cert"),
-                       forwarder.container(forwarder_repo, addressEnv) ]
-                else [ broker.container(volumeName, broker_repo, addressEnv) ]
-            }
+            [if persistence then "volumeClaimTemplates"]: [
+              {
+                "apiVersion": "v1",
+                "kind": "PersistentVolumeClaim",
+                "metadata": {
+                  "name": claimName,
+                  "labels": {
+                    "app": "enmasse"
+                  },
+                  "annotations": {
+                    "cluster_id": "${CLUSTER_ID}",
+                    "addressSpace": "${ADDRESS_SPACE}",
+                  }
+                },
+                "spec": {
+                  "accessModes": [
+                    "ReadWriteOnce"
+                  ],
+                  "resources": {
+                    "requests": {
+                      "storage": "${STORAGE_CAPACITY}"
+                    }
+                  }
+                }
+              }
+            ]
           }
         }
-      },
-
-      local pvc = {
-        "apiVersion": "v1",
-        "kind": "PersistentVolumeClaim",
-        "metadata": {
-          "name": claimName,
-          "labels": {
-            "app": "enmasse"
-          },
-          "annotations": {
-            "cluster_id": "${CLUSTER_ID}",
-            "addressSpace": "${ADDRESS_SPACE}",
-          }
-        },
-        "spec": {
-          "accessModes": [
-            "ReadWriteMany"
-          ],
-          "resources": {
-            "requests": {
-              "storage": "${STORAGE_CAPACITY}"
-            }
-          }
-        }
-      },
-      "objects": if persistence
-        then [pvc, controller]
-        else [controller],
+      ],
       "parameters": [
         {
           "name": "STORAGE_CAPACITY",

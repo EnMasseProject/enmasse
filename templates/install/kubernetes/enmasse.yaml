@@ -280,7 +280,7 @@ items:
       "admin"}}}, {"apiVersion": "v1", "data": {"queue-inmemory.json": "{\"apiVersion\":
       \"v1\", \"kind\": \"Template\", \"metadata\": {\"labels\": {\"app\": \"enmasse\"},
       \"name\": \"queue-inmemory\"}, \"objects\": [{\"apiVersion\": \"extensions/v1beta1\",
-      \"kind\": \"Deployment\", \"metadata\": {\"annotations\": {\"addressSpace\":
+      \"kind\": \"StatefulSet\", \"metadata\": {\"annotations\": {\"addressSpace\":
       \"${ADDRESS_SPACE}\", \"cluster_id\": \"${CLUSTER_ID}\", \"io.enmasse.certCn\":
       \"broker\", \"io.enmasse.certSecretName\": \"broker-internal-cert\"}, \"labels\":
       {\"app\": \"enmasse\"}, \"name\": \"${NAME}\"}, \"spec\": {\"replicas\": 1,
@@ -306,43 +306,38 @@ items:
       \"name\": \"broker-internal-cert\", \"readOnly\": true}, {\"mountPath\": \"/etc/authservice-ca\",
       \"name\": \"authservice-ca\", \"readOnly\": true}, {\"mountPath\": \"/etc/prometheus-config\",
       \"name\": \"broker-prometheus-config\", \"readOnly\": true}]}], \"volumes\":
-      [{\"emptyDir\": { }, \"name\": \"vol-${NAME}\"}, {\"name\": \"ssl-certs\", \"secret\":
-      {\"secretName\": \"${COLOCATED_ROUTER_SECRET}\"}}, {\"name\": \"authservice-ca\",
-      \"secret\": {\"secretName\": \"authservice-ca\"}}, {\"name\": \"address-controller-ca\",
-      \"secret\": {\"secretName\": \"address-controller-ca\"}}, {\"name\": \"broker-internal-cert\",
-      \"secret\": {\"secretName\": \"broker-internal-cert\"}}, {\"configMap\": {\"name\":
-      \"broker-prometheus-config\"}, \"name\": \"broker-prometheus-config\"}]}}}}],
-      \"parameters\": [{\"description\": \"Storage capacity required for volume claims\",
-      \"name\": \"STORAGE_CAPACITY\", \"value\": \"2Gi\"}, {\"description\": \"The
-      docker image to use for the message broker\", \"name\": \"BROKER_IMAGE\", \"value\":
-      \"docker.io/enmasseproject/artemis:latest\"}, {\"description\": \"The default
-      image to use as topic forwarder\", \"name\": \"TOPIC_FORWARDER_IMAGE\", \"value\":
-      \"docker.io/enmasseproject/topic-forwarder:latest\"}, {\"description\": \"The
-      image to use for the router\", \"name\": \"ROUTER_IMAGE\", \"value\": \"docker.io/enmasseproject/router:latest\"},
-      {\"description\": \"The link capacity setting for router\", \"name\": \"ROUTER_LINK_CAPACITY\",
-      \"value\": \"50\"}, {\"description\": \"A valid addressSpace name for the address
-      Space\", \"name\": \"ADDRESS_SPACE\", \"required\": true}, {\"description\":
-      \"A valid name for the deployment\", \"name\": \"NAME\", \"required\": true},
-      {\"description\": \"A valid group id for the deployment\", \"name\": \"CLUSTER_ID\",
-      \"required\": true}, {\"description\": \"The address to use for the queue\",
-      \"name\": \"ADDRESS\", \"value\": \"\"}, {\"description\": \"Name of secret
-      containing router key and certificate\", \"name\": \"COLOCATED_ROUTER_SECRET\",
-      \"required\": true}, {\"description\": \"The hostname of the authentication
-      service used by this address space\", \"name\": \"AUTHENTICATION_SERVICE_HOST\",
-      \"required\": true}, {\"description\": \"The port of the authentication service
-      used by this address space\", \"name\": \"AUTHENTICATION_SERVICE_PORT\", \"required\":
-      true}, {\"description\": \"The secret to use for validating authentication service
-      cert\", \"name\": \"AUTHENTICATION_SERVICE_CA_SECRET\", \"required\": true},
-      {\"description\": \"The client cert to use as identity against authentication
+      [{\"name\": \"ssl-certs\", \"secret\": {\"secretName\": \"${COLOCATED_ROUTER_SECRET}\"}},
+      {\"name\": \"authservice-ca\", \"secret\": {\"secretName\": \"authservice-ca\"}},
+      {\"name\": \"address-controller-ca\", \"secret\": {\"secretName\": \"address-controller-ca\"}},
+      {\"name\": \"broker-internal-cert\", \"secret\": {\"secretName\": \"broker-internal-cert\"}},
+      {\"configMap\": {\"name\": \"broker-prometheus-config\"}, \"name\": \"broker-prometheus-config\"},
+      {\"emptyDir\": { }, \"name\": \"vol-${NAME}\"}]}}}}], \"parameters\": [{\"description\":
+      \"Storage capacity required for volume claims\", \"name\": \"STORAGE_CAPACITY\",
+      \"value\": \"2Gi\"}, {\"description\": \"The docker image to use for the message
+      broker\", \"name\": \"BROKER_IMAGE\", \"value\": \"docker.io/enmasseproject/artemis:latest\"},
+      {\"description\": \"The default image to use as topic forwarder\", \"name\":
+      \"TOPIC_FORWARDER_IMAGE\", \"value\": \"docker.io/enmasseproject/topic-forwarder:latest\"},
+      {\"description\": \"The image to use for the router\", \"name\": \"ROUTER_IMAGE\",
+      \"value\": \"docker.io/enmasseproject/router:latest\"}, {\"description\": \"The
+      link capacity setting for router\", \"name\": \"ROUTER_LINK_CAPACITY\", \"value\":
+      \"50\"}, {\"description\": \"A valid addressSpace name for the address Space\",
+      \"name\": \"ADDRESS_SPACE\", \"required\": true}, {\"description\": \"A valid
+      name for the deployment\", \"name\": \"NAME\", \"required\": true}, {\"description\":
+      \"A valid group id for the deployment\", \"name\": \"CLUSTER_ID\", \"required\":
+      true}, {\"description\": \"The address to use for the queue\", \"name\": \"ADDRESS\",
+      \"value\": \"\"}, {\"description\": \"Name of secret containing router key and
+      certificate\", \"name\": \"COLOCATED_ROUTER_SECRET\", \"required\": true}, {\"description\":
+      \"The hostname of the authentication service used by this address space\", \"name\":
+      \"AUTHENTICATION_SERVICE_HOST\", \"required\": true}, {\"description\": \"The
+      port of the authentication service used by this address space\", \"name\": \"AUTHENTICATION_SERVICE_PORT\",
+      \"required\": true}, {\"description\": \"The secret to use for validating authentication
+      service cert\", \"name\": \"AUTHENTICATION_SERVICE_CA_SECRET\", \"required\":
+      true}, {\"description\": \"The client cert to use as identity against authentication
       service\", \"name\": \"AUTHENTICATION_SERVICE_CLIENT_SECRET\"}, {\"description\":
       \"The hostname to use in sasl init\", \"name\": \"AUTHENTICATION_SERVICE_SASL_INIT_HOST\"}]}",
       "queue-persisted.json": "{\"apiVersion\": \"v1\", \"kind\": \"Template\", \"metadata\":
       {\"labels\": {\"app\": \"enmasse\"}, \"name\": \"queue-persisted\"}, \"objects\":
-      [{\"apiVersion\": \"v1\", \"kind\": \"PersistentVolumeClaim\", \"metadata\":
-      {\"annotations\": {\"addressSpace\": \"${ADDRESS_SPACE}\", \"cluster_id\": \"${CLUSTER_ID}\"},
-      \"labels\": {\"app\": \"enmasse\"}, \"name\": \"pvc-${NAME}\"}, \"spec\": {\"accessModes\":
-      [\"ReadWriteMany\"], \"resources\": {\"requests\": {\"storage\": \"${STORAGE_CAPACITY}\"}}}},
-      {\"apiVersion\": \"extensions/v1beta1\", \"kind\": \"Deployment\", \"metadata\":
+      [{\"apiVersion\": \"extensions/v1beta1\", \"kind\": \"StatefulSet\", \"metadata\":
       {\"annotations\": {\"addressSpace\": \"${ADDRESS_SPACE}\", \"cluster_id\": \"${CLUSTER_ID}\",
       \"io.enmasse.certCn\": \"broker\", \"io.enmasse.certSecretName\": \"broker-internal-cert\"},
       \"labels\": {\"app\": \"enmasse\"}, \"name\": \"${NAME}\"}, \"spec\": {\"replicas\":
@@ -368,39 +363,42 @@ items:
       \"name\": \"broker-internal-cert\", \"readOnly\": true}, {\"mountPath\": \"/etc/authservice-ca\",
       \"name\": \"authservice-ca\", \"readOnly\": true}, {\"mountPath\": \"/etc/prometheus-config\",
       \"name\": \"broker-prometheus-config\", \"readOnly\": true}]}], \"volumes\":
-      [{\"name\": \"vol-${NAME}\", \"persistentVolumeClaim\": {\"claimName\": \"pvc-${NAME}\"}},
-      {\"name\": \"ssl-certs\", \"secret\": {\"secretName\": \"${COLOCATED_ROUTER_SECRET}\"}},
+      [{\"name\": \"ssl-certs\", \"secret\": {\"secretName\": \"${COLOCATED_ROUTER_SECRET}\"}},
       {\"name\": \"authservice-ca\", \"secret\": {\"secretName\": \"authservice-ca\"}},
       {\"name\": \"address-controller-ca\", \"secret\": {\"secretName\": \"address-controller-ca\"}},
       {\"name\": \"broker-internal-cert\", \"secret\": {\"secretName\": \"broker-internal-cert\"}},
-      {\"configMap\": {\"name\": \"broker-prometheus-config\"}, \"name\": \"broker-prometheus-config\"}]}}}}],
-      \"parameters\": [{\"description\": \"Storage capacity required for volume claims\",
-      \"name\": \"STORAGE_CAPACITY\", \"value\": \"2Gi\"}, {\"description\": \"The
-      docker image to use for the message broker\", \"name\": \"BROKER_IMAGE\", \"value\":
-      \"docker.io/enmasseproject/artemis:latest\"}, {\"description\": \"The default
-      image to use as topic forwarder\", \"name\": \"TOPIC_FORWARDER_IMAGE\", \"value\":
-      \"docker.io/enmasseproject/topic-forwarder:latest\"}, {\"description\": \"The
-      image to use for the router\", \"name\": \"ROUTER_IMAGE\", \"value\": \"docker.io/enmasseproject/router:latest\"},
-      {\"description\": \"The link capacity setting for router\", \"name\": \"ROUTER_LINK_CAPACITY\",
-      \"value\": \"50\"}, {\"description\": \"A valid addressSpace name for the address
-      Space\", \"name\": \"ADDRESS_SPACE\", \"required\": true}, {\"description\":
-      \"A valid name for the deployment\", \"name\": \"NAME\", \"required\": true},
-      {\"description\": \"A valid group id for the deployment\", \"name\": \"CLUSTER_ID\",
-      \"required\": true}, {\"description\": \"The address to use for the queue\",
-      \"name\": \"ADDRESS\", \"value\": \"\"}, {\"description\": \"Name of secret
-      containing router key and certificate\", \"name\": \"COLOCATED_ROUTER_SECRET\",
-      \"required\": true}, {\"description\": \"The hostname of the authentication
-      service used by this address space\", \"name\": \"AUTHENTICATION_SERVICE_HOST\",
-      \"required\": true}, {\"description\": \"The port of the authentication service
-      used by this address space\", \"name\": \"AUTHENTICATION_SERVICE_PORT\", \"required\":
-      true}, {\"description\": \"The secret to use for validating authentication service
-      cert\", \"name\": \"AUTHENTICATION_SERVICE_CA_SECRET\", \"required\": true},
-      {\"description\": \"The client cert to use as identity against authentication
+      {\"configMap\": {\"name\": \"broker-prometheus-config\"}, \"name\": \"broker-prometheus-config\"}]}},
+      \"volumeClaimTemplates\": [{\"apiVersion\": \"v1\", \"kind\": \"PersistentVolumeClaim\",
+      \"metadata\": {\"annotations\": {\"addressSpace\": \"${ADDRESS_SPACE}\", \"cluster_id\":
+      \"${CLUSTER_ID}\"}, \"labels\": {\"app\": \"enmasse\"}, \"name\": \"pvc-${NAME}\"},
+      \"spec\": {\"accessModes\": [\"ReadWriteOnce\"], \"resources\": {\"requests\":
+      {\"storage\": \"${STORAGE_CAPACITY}\"}}}}]}}], \"parameters\": [{\"description\":
+      \"Storage capacity required for volume claims\", \"name\": \"STORAGE_CAPACITY\",
+      \"value\": \"2Gi\"}, {\"description\": \"The docker image to use for the message
+      broker\", \"name\": \"BROKER_IMAGE\", \"value\": \"docker.io/enmasseproject/artemis:latest\"},
+      {\"description\": \"The default image to use as topic forwarder\", \"name\":
+      \"TOPIC_FORWARDER_IMAGE\", \"value\": \"docker.io/enmasseproject/topic-forwarder:latest\"},
+      {\"description\": \"The image to use for the router\", \"name\": \"ROUTER_IMAGE\",
+      \"value\": \"docker.io/enmasseproject/router:latest\"}, {\"description\": \"The
+      link capacity setting for router\", \"name\": \"ROUTER_LINK_CAPACITY\", \"value\":
+      \"50\"}, {\"description\": \"A valid addressSpace name for the address Space\",
+      \"name\": \"ADDRESS_SPACE\", \"required\": true}, {\"description\": \"A valid
+      name for the deployment\", \"name\": \"NAME\", \"required\": true}, {\"description\":
+      \"A valid group id for the deployment\", \"name\": \"CLUSTER_ID\", \"required\":
+      true}, {\"description\": \"The address to use for the queue\", \"name\": \"ADDRESS\",
+      \"value\": \"\"}, {\"description\": \"Name of secret containing router key and
+      certificate\", \"name\": \"COLOCATED_ROUTER_SECRET\", \"required\": true}, {\"description\":
+      \"The hostname of the authentication service used by this address space\", \"name\":
+      \"AUTHENTICATION_SERVICE_HOST\", \"required\": true}, {\"description\": \"The
+      port of the authentication service used by this address space\", \"name\": \"AUTHENTICATION_SERVICE_PORT\",
+      \"required\": true}, {\"description\": \"The secret to use for validating authentication
+      service cert\", \"name\": \"AUTHENTICATION_SERVICE_CA_SECRET\", \"required\":
+      true}, {\"description\": \"The client cert to use as identity against authentication
       service\", \"name\": \"AUTHENTICATION_SERVICE_CLIENT_SECRET\"}, {\"description\":
       \"The hostname to use in sasl init\", \"name\": \"AUTHENTICATION_SERVICE_SASL_INIT_HOST\"}]}",
       "topic-inmemory.json": "{\"apiVersion\": \"v1\", \"kind\": \"Template\", \"metadata\":
       {\"labels\": {\"app\": \"enmasse\"}, \"name\": \"topic-inmemory\"}, \"objects\":
-      [{\"apiVersion\": \"extensions/v1beta1\", \"kind\": \"Deployment\", \"metadata\":
+      [{\"apiVersion\": \"extensions/v1beta1\", \"kind\": \"StatefulSet\", \"metadata\":
       {\"annotations\": {\"addressSpace\": \"${ADDRESS_SPACE}\", \"cluster_id\": \"${CLUSTER_ID}\",
       \"io.enmasse.certCn\": \"broker\", \"io.enmasse.certSecretName\": \"broker-internal-cert\"},
       \"labels\": {\"app\": \"enmasse\"}, \"name\": \"${NAME}\"}, \"spec\": {\"replicas\":
@@ -449,99 +447,97 @@ items:
       \"forwarder\", \"ports\": [{\"containerPort\": 8088, \"name\": \"health\"}],
       \"resources\": {\"limits\": {\"memory\": \"128Mi\"}, \"requests\": {\"memory\":
       \"128Mi\"}}, \"volumeMounts\": [{\"mountPath\": \"/etc/enmasse-certs\", \"name\":
-      \"broker-internal-cert\", \"readOnly\": true}]}], \"volumes\": [{\"emptyDir\":
-      { }, \"name\": \"vol-${NAME}\"}, {\"name\": \"ssl-certs\", \"secret\": {\"secretName\":
-      \"${COLOCATED_ROUTER_SECRET}\"}}, {\"name\": \"authservice-ca\", \"secret\":
-      {\"secretName\": \"authservice-ca\"}}, {\"name\": \"address-controller-ca\",
-      \"secret\": {\"secretName\": \"address-controller-ca\"}}, {\"name\": \"broker-internal-cert\",
-      \"secret\": {\"secretName\": \"broker-internal-cert\"}}, {\"configMap\": {\"name\":
-      \"broker-prometheus-config\"}, \"name\": \"broker-prometheus-config\"}]}}}}],
-      \"parameters\": [{\"description\": \"Storage capacity required for volume claims\",
-      \"name\": \"STORAGE_CAPACITY\", \"value\": \"2Gi\"}, {\"description\": \"The
-      docker image to use for the message broker\", \"name\": \"BROKER_IMAGE\", \"value\":
-      \"docker.io/enmasseproject/artemis:latest\"}, {\"description\": \"The default
-      image to use as topic forwarder\", \"name\": \"TOPIC_FORWARDER_IMAGE\", \"value\":
-      \"docker.io/enmasseproject/topic-forwarder:latest\"}, {\"description\": \"The
-      image to use for the router\", \"name\": \"ROUTER_IMAGE\", \"value\": \"docker.io/enmasseproject/router:latest\"},
-      {\"description\": \"The link capacity setting for router\", \"name\": \"ROUTER_LINK_CAPACITY\",
-      \"value\": \"50\"}, {\"description\": \"A valid addressSpace name for the address
-      Space\", \"name\": \"ADDRESS_SPACE\", \"required\": true}, {\"description\":
-      \"A valid name for the deployment\", \"name\": \"NAME\", \"required\": true},
-      {\"description\": \"A valid group id for the deployment\", \"name\": \"CLUSTER_ID\",
-      \"required\": true}, {\"description\": \"The address to use for the topic\",
-      \"name\": \"ADDRESS\", \"value\": \"\"}, {\"description\": \"Name of secret
-      containing router key and certificate\", \"name\": \"COLOCATED_ROUTER_SECRET\",
-      \"required\": true}, {\"description\": \"The hostname of the authentication
-      service used by this address space\", \"name\": \"AUTHENTICATION_SERVICE_HOST\",
-      \"required\": true}, {\"description\": \"The port of the authentication service
-      used by this address space\", \"name\": \"AUTHENTICATION_SERVICE_PORT\", \"required\":
-      true}, {\"description\": \"The secret to use for validating authentication service
-      cert\", \"name\": \"AUTHENTICATION_SERVICE_CA_SECRET\", \"required\": true},
-      {\"description\": \"The client cert to use as identity against authentication
-      service\", \"name\": \"AUTHENTICATION_SERVICE_CLIENT_SECRET\"}, {\"description\":
-      \"The hostname to use in sasl init\", \"name\": \"AUTHENTICATION_SERVICE_SASL_INIT_HOST\"}]}",
-      "topic-persisted.json": "{\"apiVersion\": \"v1\", \"kind\": \"Template\", \"metadata\":
-      {\"labels\": {\"app\": \"enmasse\"}, \"name\": \"topic-persisted\"}, \"objects\":
-      [{\"apiVersion\": \"v1\", \"kind\": \"PersistentVolumeClaim\", \"metadata\":
-      {\"annotations\": {\"addressSpace\": \"${ADDRESS_SPACE}\", \"cluster_id\": \"${CLUSTER_ID}\"},
-      \"labels\": {\"app\": \"enmasse\"}, \"name\": \"pvc-${NAME}\"}, \"spec\": {\"accessModes\":
-      [\"ReadWriteMany\"], \"resources\": {\"requests\": {\"storage\": \"${STORAGE_CAPACITY}\"}}}},
-      {\"apiVersion\": \"extensions/v1beta1\", \"kind\": \"Deployment\", \"metadata\":
-      {\"annotations\": {\"addressSpace\": \"${ADDRESS_SPACE}\", \"cluster_id\": \"${CLUSTER_ID}\",
-      \"io.enmasse.certCn\": \"broker\", \"io.enmasse.certSecretName\": \"broker-internal-cert\"},
-      \"labels\": {\"app\": \"enmasse\"}, \"name\": \"${NAME}\"}, \"spec\": {\"replicas\":
-      1, \"template\": {\"metadata\": {\"annotations\": {\"addressSpace\": \"${ADDRESS_SPACE}\",
-      \"cluster_id\": \"${CLUSTER_ID}\", \"prometheus.io/path\": \"/metrics\", \"prometheus.io/port\":
-      \"8080\", \"prometheus.io/scrape\": \"true\"}, \"labels\": {\"addresstype\":
-      \"topic\", \"app\": \"enmasse\", \"name\": \"${NAME}\", \"role\": \"broker\"}},
-      \"spec\": {\"containers\": [{\"env\": [{\"name\": \"TOPIC_NAME\", \"value\":
-      \"${ADDRESS}\"}, {\"name\": \"CLUSTER_ID\", \"value\": \"${CLUSTER_ID}\"}, {\"name\":
-      \"CERT_DIR\", \"value\": \"/etc/enmasse-certs\"}, {\"name\": \"AUTHENTICATION_SERVICE_HOST\",
-      \"value\": \"${AUTHENTICATION_SERVICE_HOST}\"}, {\"name\": \"AUTHENTICATION_SERVICE_PORT\",
-      \"value\": \"${AUTHENTICATION_SERVICE_PORT}\"}, {\"name\": \"AUTHENTICATION_SERVICE_CLIENT_SECRET\",
-      \"value\": \"${AUTHENTICATION_SERVICE_CLIENT_SECRET}\"}, {\"name\": \"AUTHENTICATION_SERVICE_SASL_INIT_HOST\",
-      \"value\": \"${AUTHENTICATION_SERVICE_SASL_INIT_HOST}\"}], \"image\": \"${BROKER_IMAGE}\",
-      \"lifecycle\": {\"preStop\": {\"exec\": {\"command\": [\"/shutdown-hook/shutdown-hook.sh\"]}}},
-      \"livenessProbe\": {\"exec\": {\"command\": [\"sh\", \"-c\", \"$ARTEMIS_HOME/bin/probe.sh\"]},
-      \"initialDelaySeconds\": 120}, \"name\": \"broker\", \"ports\": [{\"containerPort\":
-      5673, \"name\": \"amqp\"}, {\"containerPort\": 8161, \"name\": \"jolokia\"},
-      {\"containerPort\": 8080, \"name\": \"artemismetrics\"}], \"readinessProbe\":
-      {\"exec\": {\"command\": [\"sh\", \"-c\", \"$ARTEMIS_HOME/bin/probe.sh\"]},
-      \"initialDelaySeconds\": 10}, \"volumeMounts\": [{\"mountPath\": \"/var/run/artemis\",
-      \"name\": \"vol-${NAME}\", \"readOnly\": false}, {\"mountPath\": \"/etc/enmasse-certs\",
-      \"name\": \"broker-internal-cert\", \"readOnly\": true}, {\"mountPath\": \"/etc/authservice-ca\",
-      \"name\": \"authservice-ca\", \"readOnly\": true}, {\"mountPath\": \"/etc/prometheus-config\",
-      \"name\": \"broker-prometheus-config\", \"readOnly\": true}]}, {\"env\": [{\"name\":
-      \"TOPIC_NAME\", \"value\": \"${ADDRESS}\"}, {\"name\": \"LINK_CAPACITY\", \"value\":
-      \"${ROUTER_LINK_CAPACITY}\"}, {\"name\": \"AUTHENTICATION_SERVICE_HOST\", \"value\":
-      \"${AUTHENTICATION_SERVICE_HOST}\"}, {\"name\": \"AUTHENTICATION_SERVICE_PORT\",
-      \"value\": \"${AUTHENTICATION_SERVICE_PORT}\"}, {\"name\": \"AUTHENTICATION_SERVICE_CLIENT_SECRET\",
-      \"value\": \"${AUTHENTICATION_SERVICE_CLIENT_SECRET}\"}, {\"name\": \"AUTHENTICATION_SERVICE_SASL_INIT_HOST\",
-      \"value\": \"${AUTHENTICATION_SERVICE_SASL_INIT_HOST}\"}], \"image\": \"${ROUTER_IMAGE}\",
-      \"livenessProbe\": {\"initialDelaySeconds\": 60, \"tcpSocket\": {\"port\": \"amqp\"}},
-      \"name\": \"router\", \"ports\": [{\"containerPort\": 5672, \"name\": \"amqp\",
-      \"protocol\": \"TCP\"}, {\"containerPort\": 5671, \"name\": \"amqps\", \"protocol\":
-      \"TCP\"}, {\"containerPort\": 55671, \"name\": \"amqps-normal\", \"protocol\":
-      \"TCP\"}, {\"containerPort\": 56671, \"name\": \"amqps-broker\", \"protocol\":
-      \"TCP\"}], \"resources\": {\"limits\": {\"memory\": \"256Mi\"}, \"requests\":
-      {\"memory\": \"256Mi\"}}, \"volumeMounts\": [{\"mountPath\": \"/etc/qpid-dispatch/ssl\",
-      \"name\": \"ssl-certs\", \"readOnly\": true}, {\"mountPath\": \"/etc/qpid-dispatch/authservice-ca\",
-      \"name\": \"authservice-ca\", \"readOnly\": true}, {\"mountPath\": \"/etc/enmasse-certs\",
-      \"name\": \"broker-internal-cert\", \"readOnly\": true}]}, {\"env\": [{\"name\":
-      \"TOPIC_NAME\", \"value\": \"${ADDRESS}\"}, {\"name\": \"CLUSTER_ID\", \"value\":
-      \"${NAME}\"}, {\"name\": \"CERT_DIR\", \"value\": \"/etc/enmasse-certs\"}],
-      \"image\": \"${TOPIC_FORWARDER_IMAGE}\", \"livenessProbe\": {\"httpGet\": {\"path\":
-      \"/health\", \"port\": \"health\"}, \"initialDelaySeconds\": 60}, \"name\":
-      \"forwarder\", \"ports\": [{\"containerPort\": 8088, \"name\": \"health\"}],
-      \"resources\": {\"limits\": {\"memory\": \"128Mi\"}, \"requests\": {\"memory\":
-      \"128Mi\"}}, \"volumeMounts\": [{\"mountPath\": \"/etc/enmasse-certs\", \"name\":
-      \"broker-internal-cert\", \"readOnly\": true}]}], \"volumes\": [{\"name\": \"vol-${NAME}\",
-      \"persistentVolumeClaim\": {\"claimName\": \"pvc-${NAME}\"}}, {\"name\": \"ssl-certs\",
+      \"broker-internal-cert\", \"readOnly\": true}]}], \"volumes\": [{\"name\": \"ssl-certs\",
       \"secret\": {\"secretName\": \"${COLOCATED_ROUTER_SECRET}\"}}, {\"name\": \"authservice-ca\",
       \"secret\": {\"secretName\": \"authservice-ca\"}}, {\"name\": \"address-controller-ca\",
       \"secret\": {\"secretName\": \"address-controller-ca\"}}, {\"name\": \"broker-internal-cert\",
       \"secret\": {\"secretName\": \"broker-internal-cert\"}}, {\"configMap\": {\"name\":
-      \"broker-prometheus-config\"}, \"name\": \"broker-prometheus-config\"}]}}}}],
+      \"broker-prometheus-config\"}, \"name\": \"broker-prometheus-config\"}, {\"emptyDir\":
+      { }, \"name\": \"vol-${NAME}\"}]}}}}], \"parameters\": [{\"description\": \"Storage
+      capacity required for volume claims\", \"name\": \"STORAGE_CAPACITY\", \"value\":
+      \"2Gi\"}, {\"description\": \"The docker image to use for the message broker\",
+      \"name\": \"BROKER_IMAGE\", \"value\": \"docker.io/enmasseproject/artemis:latest\"},
+      {\"description\": \"The default image to use as topic forwarder\", \"name\":
+      \"TOPIC_FORWARDER_IMAGE\", \"value\": \"docker.io/enmasseproject/topic-forwarder:latest\"},
+      {\"description\": \"The image to use for the router\", \"name\": \"ROUTER_IMAGE\",
+      \"value\": \"docker.io/enmasseproject/router:latest\"}, {\"description\": \"The
+      link capacity setting for router\", \"name\": \"ROUTER_LINK_CAPACITY\", \"value\":
+      \"50\"}, {\"description\": \"A valid addressSpace name for the address Space\",
+      \"name\": \"ADDRESS_SPACE\", \"required\": true}, {\"description\": \"A valid
+      name for the deployment\", \"name\": \"NAME\", \"required\": true}, {\"description\":
+      \"A valid group id for the deployment\", \"name\": \"CLUSTER_ID\", \"required\":
+      true}, {\"description\": \"The address to use for the topic\", \"name\": \"ADDRESS\",
+      \"value\": \"\"}, {\"description\": \"Name of secret containing router key and
+      certificate\", \"name\": \"COLOCATED_ROUTER_SECRET\", \"required\": true}, {\"description\":
+      \"The hostname of the authentication service used by this address space\", \"name\":
+      \"AUTHENTICATION_SERVICE_HOST\", \"required\": true}, {\"description\": \"The
+      port of the authentication service used by this address space\", \"name\": \"AUTHENTICATION_SERVICE_PORT\",
+      \"required\": true}, {\"description\": \"The secret to use for validating authentication
+      service cert\", \"name\": \"AUTHENTICATION_SERVICE_CA_SECRET\", \"required\":
+      true}, {\"description\": \"The client cert to use as identity against authentication
+      service\", \"name\": \"AUTHENTICATION_SERVICE_CLIENT_SECRET\"}, {\"description\":
+      \"The hostname to use in sasl init\", \"name\": \"AUTHENTICATION_SERVICE_SASL_INIT_HOST\"}]}",
+      "topic-persisted.json": "{\"apiVersion\": \"v1\", \"kind\": \"Template\", \"metadata\":
+      {\"labels\": {\"app\": \"enmasse\"}, \"name\": \"topic-persisted\"}, \"objects\":
+      [{\"apiVersion\": \"extensions/v1beta1\", \"kind\": \"StatefulSet\", \"metadata\":
+      {\"annotations\": {\"addressSpace\": \"${ADDRESS_SPACE}\", \"cluster_id\": \"${CLUSTER_ID}\",
+      \"io.enmasse.certCn\": \"broker\", \"io.enmasse.certSecretName\": \"broker-internal-cert\"},
+      \"labels\": {\"app\": \"enmasse\"}, \"name\": \"${NAME}\"}, \"spec\": {\"replicas\":
+      1, \"template\": {\"metadata\": {\"annotations\": {\"addressSpace\": \"${ADDRESS_SPACE}\",
+      \"cluster_id\": \"${CLUSTER_ID}\", \"prometheus.io/path\": \"/metrics\", \"prometheus.io/port\":
+      \"8080\", \"prometheus.io/scrape\": \"true\"}, \"labels\": {\"addresstype\":
+      \"topic\", \"app\": \"enmasse\", \"name\": \"${NAME}\", \"role\": \"broker\"}},
+      \"spec\": {\"containers\": [{\"env\": [{\"name\": \"TOPIC_NAME\", \"value\":
+      \"${ADDRESS}\"}, {\"name\": \"CLUSTER_ID\", \"value\": \"${CLUSTER_ID}\"}, {\"name\":
+      \"CERT_DIR\", \"value\": \"/etc/enmasse-certs\"}, {\"name\": \"AUTHENTICATION_SERVICE_HOST\",
+      \"value\": \"${AUTHENTICATION_SERVICE_HOST}\"}, {\"name\": \"AUTHENTICATION_SERVICE_PORT\",
+      \"value\": \"${AUTHENTICATION_SERVICE_PORT}\"}, {\"name\": \"AUTHENTICATION_SERVICE_CLIENT_SECRET\",
+      \"value\": \"${AUTHENTICATION_SERVICE_CLIENT_SECRET}\"}, {\"name\": \"AUTHENTICATION_SERVICE_SASL_INIT_HOST\",
+      \"value\": \"${AUTHENTICATION_SERVICE_SASL_INIT_HOST}\"}], \"image\": \"${BROKER_IMAGE}\",
+      \"lifecycle\": {\"preStop\": {\"exec\": {\"command\": [\"/shutdown-hook/shutdown-hook.sh\"]}}},
+      \"livenessProbe\": {\"exec\": {\"command\": [\"sh\", \"-c\", \"$ARTEMIS_HOME/bin/probe.sh\"]},
+      \"initialDelaySeconds\": 120}, \"name\": \"broker\", \"ports\": [{\"containerPort\":
+      5673, \"name\": \"amqp\"}, {\"containerPort\": 8161, \"name\": \"jolokia\"},
+      {\"containerPort\": 8080, \"name\": \"artemismetrics\"}], \"readinessProbe\":
+      {\"exec\": {\"command\": [\"sh\", \"-c\", \"$ARTEMIS_HOME/bin/probe.sh\"]},
+      \"initialDelaySeconds\": 10}, \"volumeMounts\": [{\"mountPath\": \"/var/run/artemis\",
+      \"name\": \"vol-${NAME}\", \"readOnly\": false}, {\"mountPath\": \"/etc/enmasse-certs\",
+      \"name\": \"broker-internal-cert\", \"readOnly\": true}, {\"mountPath\": \"/etc/authservice-ca\",
+      \"name\": \"authservice-ca\", \"readOnly\": true}, {\"mountPath\": \"/etc/prometheus-config\",
+      \"name\": \"broker-prometheus-config\", \"readOnly\": true}]}, {\"env\": [{\"name\":
+      \"TOPIC_NAME\", \"value\": \"${ADDRESS}\"}, {\"name\": \"LINK_CAPACITY\", \"value\":
+      \"${ROUTER_LINK_CAPACITY}\"}, {\"name\": \"AUTHENTICATION_SERVICE_HOST\", \"value\":
+      \"${AUTHENTICATION_SERVICE_HOST}\"}, {\"name\": \"AUTHENTICATION_SERVICE_PORT\",
+      \"value\": \"${AUTHENTICATION_SERVICE_PORT}\"}, {\"name\": \"AUTHENTICATION_SERVICE_CLIENT_SECRET\",
+      \"value\": \"${AUTHENTICATION_SERVICE_CLIENT_SECRET}\"}, {\"name\": \"AUTHENTICATION_SERVICE_SASL_INIT_HOST\",
+      \"value\": \"${AUTHENTICATION_SERVICE_SASL_INIT_HOST}\"}], \"image\": \"${ROUTER_IMAGE}\",
+      \"livenessProbe\": {\"initialDelaySeconds\": 60, \"tcpSocket\": {\"port\": \"amqp\"}},
+      \"name\": \"router\", \"ports\": [{\"containerPort\": 5672, \"name\": \"amqp\",
+      \"protocol\": \"TCP\"}, {\"containerPort\": 5671, \"name\": \"amqps\", \"protocol\":
+      \"TCP\"}, {\"containerPort\": 55671, \"name\": \"amqps-normal\", \"protocol\":
+      \"TCP\"}, {\"containerPort\": 56671, \"name\": \"amqps-broker\", \"protocol\":
+      \"TCP\"}], \"resources\": {\"limits\": {\"memory\": \"256Mi\"}, \"requests\":
+      {\"memory\": \"256Mi\"}}, \"volumeMounts\": [{\"mountPath\": \"/etc/qpid-dispatch/ssl\",
+      \"name\": \"ssl-certs\", \"readOnly\": true}, {\"mountPath\": \"/etc/qpid-dispatch/authservice-ca\",
+      \"name\": \"authservice-ca\", \"readOnly\": true}, {\"mountPath\": \"/etc/enmasse-certs\",
+      \"name\": \"broker-internal-cert\", \"readOnly\": true}]}, {\"env\": [{\"name\":
+      \"TOPIC_NAME\", \"value\": \"${ADDRESS}\"}, {\"name\": \"CLUSTER_ID\", \"value\":
+      \"${NAME}\"}, {\"name\": \"CERT_DIR\", \"value\": \"/etc/enmasse-certs\"}],
+      \"image\": \"${TOPIC_FORWARDER_IMAGE}\", \"livenessProbe\": {\"httpGet\": {\"path\":
+      \"/health\", \"port\": \"health\"}, \"initialDelaySeconds\": 60}, \"name\":
+      \"forwarder\", \"ports\": [{\"containerPort\": 8088, \"name\": \"health\"}],
+      \"resources\": {\"limits\": {\"memory\": \"128Mi\"}, \"requests\": {\"memory\":
+      \"128Mi\"}}, \"volumeMounts\": [{\"mountPath\": \"/etc/enmasse-certs\", \"name\":
+      \"broker-internal-cert\", \"readOnly\": true}]}], \"volumes\": [{\"name\": \"ssl-certs\",
+      \"secret\": {\"secretName\": \"${COLOCATED_ROUTER_SECRET}\"}}, {\"name\": \"authservice-ca\",
+      \"secret\": {\"secretName\": \"authservice-ca\"}}, {\"name\": \"address-controller-ca\",
+      \"secret\": {\"secretName\": \"address-controller-ca\"}}, {\"name\": \"broker-internal-cert\",
+      \"secret\": {\"secretName\": \"broker-internal-cert\"}}, {\"configMap\": {\"name\":
+      \"broker-prometheus-config\"}, \"name\": \"broker-prometheus-config\"}]}}, \"volumeClaimTemplates\":
+      [{\"apiVersion\": \"v1\", \"kind\": \"PersistentVolumeClaim\", \"metadata\":
+      {\"annotations\": {\"addressSpace\": \"${ADDRESS_SPACE}\", \"cluster_id\": \"${CLUSTER_ID}\"},
+      \"labels\": {\"app\": \"enmasse\"}, \"name\": \"pvc-${NAME}\"}, \"spec\": {\"accessModes\":
+      [\"ReadWriteOnce\"], \"resources\": {\"requests\": {\"storage\": \"${STORAGE_CAPACITY}\"}}}}]}}],
       \"parameters\": [{\"description\": \"Storage capacity required for volume claims\",
       \"name\": \"STORAGE_CAPACITY\", \"value\": \"2Gi\"}, {\"description\": \"The
       docker image to use for the message broker\", \"name\": \"BROKER_IMAGE\", \"value\":

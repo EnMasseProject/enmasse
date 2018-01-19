@@ -579,7 +579,7 @@ objects:
       name: queue-inmemory
     objects:
     - apiVersion: extensions/v1beta1
-      kind: Deployment
+      kind: StatefulSet
       metadata:
         annotations:
           addressSpace: ${ADDRESS_SPACE}
@@ -663,8 +663,6 @@ objects:
                 name: broker-prometheus-config
                 readOnly: true
             volumes:
-            - emptyDir: {}
-              name: vol-${NAME}
             - name: ssl-certs
               secret:
                 secretName: ${COLOCATED_ROUTER_SECRET}
@@ -680,6 +678,8 @@ objects:
             - configMap:
                 name: broker-prometheus-config
               name: broker-prometheus-config
+            - emptyDir: {}
+              name: vol-${NAME}
     parameters:
     - description: Storage capacity required for volume claims
       name: STORAGE_CAPACITY
@@ -732,23 +732,8 @@ objects:
         app: enmasse
       name: queue-persisted
     objects:
-    - apiVersion: v1
-      kind: PersistentVolumeClaim
-      metadata:
-        annotations:
-          addressSpace: ${ADDRESS_SPACE}
-          cluster_id: ${CLUSTER_ID}
-        labels:
-          app: enmasse
-        name: pvc-${NAME}
-      spec:
-        accessModes:
-        - ReadWriteMany
-        resources:
-          requests:
-            storage: ${STORAGE_CAPACITY}
     - apiVersion: extensions/v1beta1
-      kind: Deployment
+      kind: StatefulSet
       metadata:
         annotations:
           addressSpace: ${ADDRESS_SPACE}
@@ -832,9 +817,6 @@ objects:
                 name: broker-prometheus-config
                 readOnly: true
             volumes:
-            - name: vol-${NAME}
-              persistentVolumeClaim:
-                claimName: pvc-${NAME}
             - name: ssl-certs
               secret:
                 secretName: ${COLOCATED_ROUTER_SECRET}
@@ -850,6 +832,22 @@ objects:
             - configMap:
                 name: broker-prometheus-config
               name: broker-prometheus-config
+        volumeClaimTemplates:
+        - apiVersion: v1
+          kind: PersistentVolumeClaim
+          metadata:
+            annotations:
+              addressSpace: ${ADDRESS_SPACE}
+              cluster_id: ${CLUSTER_ID}
+            labels:
+              app: enmasse
+            name: pvc-${NAME}
+          spec:
+            accessModes:
+            - ReadWriteOnce
+            resources:
+              requests:
+                storage: ${STORAGE_CAPACITY}
     parameters:
     - description: Storage capacity required for volume claims
       name: STORAGE_CAPACITY
@@ -903,7 +901,7 @@ objects:
       name: topic-inmemory
     objects:
     - apiVersion: extensions/v1beta1
-      kind: Deployment
+      kind: StatefulSet
       metadata:
         annotations:
           addressSpace: ${ADDRESS_SPACE}
@@ -1060,8 +1058,6 @@ objects:
                 name: broker-internal-cert
                 readOnly: true
             volumes:
-            - emptyDir: {}
-              name: vol-${NAME}
             - name: ssl-certs
               secret:
                 secretName: ${COLOCATED_ROUTER_SECRET}
@@ -1077,6 +1073,8 @@ objects:
             - configMap:
                 name: broker-prometheus-config
               name: broker-prometheus-config
+            - emptyDir: {}
+              name: vol-${NAME}
     parameters:
     - description: Storage capacity required for volume claims
       name: STORAGE_CAPACITY
@@ -1129,23 +1127,8 @@ objects:
         app: enmasse
       name: topic-persisted
     objects:
-    - apiVersion: v1
-      kind: PersistentVolumeClaim
-      metadata:
-        annotations:
-          addressSpace: ${ADDRESS_SPACE}
-          cluster_id: ${CLUSTER_ID}
-        labels:
-          app: enmasse
-        name: pvc-${NAME}
-      spec:
-        accessModes:
-        - ReadWriteMany
-        resources:
-          requests:
-            storage: ${STORAGE_CAPACITY}
     - apiVersion: extensions/v1beta1
-      kind: Deployment
+      kind: StatefulSet
       metadata:
         annotations:
           addressSpace: ${ADDRESS_SPACE}
@@ -1302,9 +1285,6 @@ objects:
                 name: broker-internal-cert
                 readOnly: true
             volumes:
-            - name: vol-${NAME}
-              persistentVolumeClaim:
-                claimName: pvc-${NAME}
             - name: ssl-certs
               secret:
                 secretName: ${COLOCATED_ROUTER_SECRET}
@@ -1320,6 +1300,22 @@ objects:
             - configMap:
                 name: broker-prometheus-config
               name: broker-prometheus-config
+        volumeClaimTemplates:
+        - apiVersion: v1
+          kind: PersistentVolumeClaim
+          metadata:
+            annotations:
+              addressSpace: ${ADDRESS_SPACE}
+              cluster_id: ${CLUSTER_ID}
+            labels:
+              app: enmasse
+            name: pvc-${NAME}
+          spec:
+            accessModes:
+            - ReadWriteOnce
+            resources:
+              requests:
+                storage: ${STORAGE_CAPACITY}
     parameters:
     - description: Storage capacity required for volume claims
       name: STORAGE_CAPACITY
