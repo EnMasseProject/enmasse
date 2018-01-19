@@ -44,7 +44,7 @@ items:
           image: jboss/keycloak-openshift:3.3.0.Final
           livenessProbe:
             httpGet:
-              path: /
+              path: /auth
               port: https
               scheme: HTTPS
             initialDelaySeconds: 120
@@ -54,6 +54,12 @@ items:
             name: amqps
           - containerPort: 8443
             name: https
+          readinessProbe:
+            httpGet:
+              path: /auth
+              port: https
+              scheme: HTTPS
+            initialDelaySeconds: 120
           resources:
             limits:
               memory: 1Gi

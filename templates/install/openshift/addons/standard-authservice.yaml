@@ -45,7 +45,7 @@ objects:
           image: ${STANDARD_AUTHSERVICE_IMAGE}
           livenessProbe:
             httpGet:
-              path: /
+              path: /auth
               port: https
               scheme: HTTPS
             initialDelaySeconds: 120
@@ -55,6 +55,12 @@ objects:
             name: amqps
           - containerPort: 8443
             name: https
+          readinessProbe:
+            httpGet:
+              path: /auth
+              port: https
+              scheme: HTTPS
+            initialDelaySeconds: 120
           resources:
             limits:
               memory: 1Gi
