@@ -25,9 +25,14 @@ pipeline {
         timeout(time: 3, unit: 'HOURS')
     }
     stages {
-        stage('checkout') {
+        stage('clean') {
             steps {
                 cleanWs()
+                sh 'docker rmi $(docker images -q) -f'
+            }
+        }
+        stage('checkout') {
+            steps {
                 checkout scm
                 sh 'git submodule update --init --recursive'
                 sh 'rm -rf artifacts && mkdir -p artifacts'
