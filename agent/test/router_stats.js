@@ -408,6 +408,27 @@ describe('router stats', function() {
             done();
         });
     });
+    it('retrieves sender and receiver stats for a topic from a single router', function(done) {
+        //populate router:
+        router.populate.topic('bar');
+        for (var i = 0; i < 10; i++) {
+            var c = router.populate.connection();
+            c.receiver('bar');
+            c.receiver('bar');
+            c.sender('bar');
+            var c2 = router.populate.connection({role:'route-container'});
+            c2.receiver('bar');
+            c2.sender('bar');
+        }
+        //retrieve stats:
+        router_stats._retrieve().then(function(results) {
+            assert.equal(results.addresses.bar.senders, 10);
+            assert.equal(results.addresses.bar.receivers, 20);
+            done();
+        }).catch(function (error) {
+            done(error);
+        });
+    });
     it('updates registries with stats for a queue from a single router', function(done) {
         //populate router:
         router.populate.queue('foo', 64, 46);

@@ -108,10 +108,10 @@ function get_stats_for_address(stats, address) {
     return s;
 }
 
-function collect_by_address(links, stats, router) {
+function collect_by_address(links, stats, router, connections) {
     for (var l in links) {
         var link = links[l];
-        if (link.linkType === 'endpoint' && link.owningAddr) {
+        if (link.linkType === 'endpoint' && link.owningAddr && connections[link.connectionId]) {
             var address = clean_address(link.owningAddr);
             var counts = get_stats_for_address(stats, address);
             if (link.name.indexOf('qdlink.') !== 0) {
@@ -271,7 +271,7 @@ RouterStats.prototype._retrieve = function () {
             return Promise.all(routers.map(function (router) { return router.get_links(); })).then(function (results) {
                 var address_stats = {};
                 results.forEach(function (links, i) {
-                    collect_by_address(links, address_stats, routers[i]);
+                    collect_by_address(links, address_stats, routers[i], connections);
                     collect_by_connection(links, connections, routers[i]);
                 });
                 return Promise.all(routers.map(function (router) { return router.get_addresses(); })).then(function (results) {
