@@ -257,7 +257,8 @@ local images = import "images.jsonnet";
                   common.volume_mount(cert_secret_name, "/opt/enmasse/cert"),
                   common.volume_mount("keycloak-persistence", "/opt/jboss/keycloak/standalone/data")
                 ],
-                "livenessProbe": common.http_probe("https", "/", "HTTPS", 120)
+                "livenessProbe": common.http_probe("https", "/auth", "HTTPS", 120),
+                "readinessProbe": common.http_probe("https", "/auth", "HTTPS", 120)
               }
             ],
             "volumes": [
