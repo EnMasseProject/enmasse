@@ -33,4 +33,5 @@ public interface AddressApi {
     void deleteAddress(Address address);
 
     Watch watchAddresses(Watcher<Address> watcher) throws Exception;
+    Watch watchAddresses(Watcher<Address> watcher, boolean useEventLoop) throws Exception;
 }

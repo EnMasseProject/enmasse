@@ -42,7 +42,7 @@ public class ResourceControllerTest {
             public Long get() {
                 return 2_000L;
             }
-        });
+        }, true);
         controller.start();
     }
 

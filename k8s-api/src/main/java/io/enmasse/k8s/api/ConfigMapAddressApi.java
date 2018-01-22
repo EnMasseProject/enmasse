@@ -156,6 +156,13 @@ public class ConfigMapAddressApi implements AddressApi, Resource<Address> {
     }
 
     @Override
+    public Watch watchAddresses(Watcher<Address> watcher, boolean useEventLoop) throws Exception {
+        ResourceController<Address> controller = ResourceController.create(this, watcher, useEventLoop);
+        controller.start();
+        return controller::stop;
+    }
+
+    @Override
     public Watch watchAddresses(Watcher<Address> watcher) throws Exception {
         ResourceController<Address> controller = ResourceController.create(this, watcher);
         controller.start();

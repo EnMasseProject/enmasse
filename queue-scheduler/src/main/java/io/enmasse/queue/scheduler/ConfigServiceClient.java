@@ -34,7 +34,7 @@ public class ConfigServiceClient extends AbstractVerticle implements Watcher<Add
     @Override
     public void start() {
         try {
-            this.watch = addressApi.watchAddresses(this);
+            this.watch = addressApi.watchAddresses(this, false);
         } catch (Exception e) {
             stop();
             vertx.setTimer(5000, id -> {
