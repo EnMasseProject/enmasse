@@ -56,6 +56,11 @@ public class TestAddressApi implements AddressApi {
     }
 
     @Override
+    public Watch watchAddresses(Watcher<Address> watcher, boolean useEventLoop) throws Exception {
+        return null;
+    }
+
+    @Override
     public Optional<Address> getAddressWithName(String address) {
         if (throwException) {
             throw new RuntimeException("exception");
