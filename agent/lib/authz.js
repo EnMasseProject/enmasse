@@ -17,10 +17,33 @@
 
 var myutils = require('./utils.js');
 
+const admin_permission = 'manage';
+const monitor_permission = 'monitor';
+const access_permission = 'view_console';
+
 function AuthorizationPolicy() {};
+
+AuthorizationPolicy.prototype.get_permissions = function (connection) {
+    return connection.options.groups;
+};
 
 AuthorizationPolicy.prototype.has_permission = function (required, actual) {
     return actual && actual.indexOf(required) >= 0;
+};
+
+function is_view_permission(s) {
+    return s.indexOf('view_') === 0;
+}
+
+AuthorizationPolicy.prototype.access_console = function (properties) {
+    return properties.groups
+        && (this.has_permission(admin_permission, properties.groups)
+            || this.has_permission(monitor_permission, properties.groups)
+            || properties.groups.some(is_view_permission));
+};
+
+AuthorizationPolicy.prototype.is_admin = function (connection) {
+    return this.has_permission(admin_permission, this.get_permissions(connection));
 };
 
 AuthorizationPolicy.prototype.set_authz_props = function (request, credentials, properties) {
@@ -44,21 +67,21 @@ AuthorizationPolicy.prototype.get_authz_props = function (request) {
 };
 
 AuthorizationPolicy.prototype.address_filter = function (connection) {
-    var groups = connection.options.groups;
-    if (this.has_permission('address-space-admin', groups) || this.has_permission('address-space-monitor', groups)) {
+    var permissions = this.get_permissions(connection);
+    if (this.has_permission(admin_permission, permissions) || this.has_permission(monitor_permission, permissions)) {
         return undefined;
     } else {
         var self = this;
         return function (a) {
             //TODO: handle wildcards
-            return self.has_permission('view_' + encodeURIComponent(a.address), groups);
+            return self.has_permission('view_' + encodeURIComponent(a.address), permissions);
         };
     }
 };
 
 AuthorizationPolicy.prototype.connection_filter = function (connection) {
-    var groups = connection.options.groups;
-    if (this.has_permission('address-space-admin', groups) || this.has_permission('address-space-monitor', groups)) {
+    var permissions = this.get_permissions(connection);
+    if (this.has_permission(admin_permission, permissions) || this.has_permission(monitor_permission, permissions)) {
         return undefined;
     } else {
         return function (c) {
@@ -68,12 +91,12 @@ AuthorizationPolicy.prototype.connection_filter = function (connection) {
 };
 
 AuthorizationPolicy.prototype.can_publish = function (sender, message) {
-    var groups = sender.connection.options.groups;
-    if (this.has_permission('address-space-admin', groups) || this.has_permission('address-space-monitor', groups)) {
+    var permissions = this.get_permissions(sender.connection);
+    if (this.has_permission(admin_permission, permissions) || this.has_permission(monitor_permission, permissions)) {
         return true;
     } else if (message.subject === 'address' || message.subject === 'address_deleted') {
         //TODO: handle wildcards
-        return this.has_permission('view_' + encodeURIComponent(message.body.address), groups);
+        return this.has_permission('view_' + encodeURIComponent(message.body.address), permissions);
     } else if (message.subject === 'connection' || message.subject === 'connection_deleted') {
         return sender.connection.options.authid === message.body.user;
     }
@@ -82,6 +105,14 @@ AuthorizationPolicy.prototype.can_publish = function (sender, message) {
 function NullPolicy() {};
 
 NullPolicy.prototype.has_permission = function (required, actual) {
+    return true;
+};
+
+NullPolicy.prototype.access_console = function () {
+    return true;
+};
+
+NullPolicy.prototype.is_admin = function () {
     return true;
 };
 
@@ -102,9 +133,9 @@ NullPolicy.prototype.can_publish = function (sender, message) {
 };
 
 module.exports.policy = function (env) {
-    if (env.KEYCLOAK_GROUP_PERMISSIONS) {
-        return new AuthorizationPolicy();
-    } else {
+    if (env.DISABLE_CONSOLE_AUTHZ) {
         return new NullPolicy();
+    } else {
+        return new AuthorizationPolicy();
     }
 }
