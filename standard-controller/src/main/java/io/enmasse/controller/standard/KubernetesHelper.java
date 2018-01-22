@@ -53,8 +53,10 @@ public class KubernetesHelper implements Kubernetes {
         // Add other resources part of a destination cluster
         List<HasMetadata> objects = new ArrayList<>();
         objects.addAll(client.extensions().deployments().list().getItems());
+        objects.addAll(client.apps().statefulSets().list().getItems());
         objects.addAll(client.persistentVolumeClaims().list().getItems());
         objects.addAll(client.configMaps().list().getItems());
+        objects.addAll(client.services().list().getItems());
 
         for (HasMetadata config : objects) {
             Map<String, String> annotations = config.getMetadata().getAnnotations();
@@ -93,7 +95,7 @@ public class KubernetesHelper implements Kubernetes {
     }
 
     public static boolean isDeployment(HasMetadata res) {
-        return res.getKind().equals("Deployment");  // TODO: is there an existing constant for this somewhere?
+        return res.getKind().equals("Deployment") || res.getKind().equals("StatefulSet");  // TODO: is there an existing constant for this somewhere?
     }
 
     @Override

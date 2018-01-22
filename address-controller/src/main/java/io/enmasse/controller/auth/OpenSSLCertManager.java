@@ -16,19 +16,14 @@
 package io.enmasse.controller.auth;
 
 import java.io.*;
-import java.util.Base64;
-import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import io.enmasse.config.AnnotationKeys;
-import io.fabric8.kubernetes.api.model.ObjectReference;
-import io.fabric8.kubernetes.api.model.ObjectReferenceBuilder;
-import io.fabric8.kubernetes.api.model.Secret;
-import io.fabric8.kubernetes.api.model.ServiceAccount;
+import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.openshift.client.OpenShiftClient;
+import io.vertx.core.impl.Deployment;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -140,11 +135,16 @@ public class OpenSSLCertManager implements CertManager {
 
     @Override
     public Collection<CertComponent> listComponents(String namespace) {
-        return client.extensions().deployments().inNamespace(namespace).list().getItems().stream()
-                .filter(deployment -> deployment.getMetadata().getAnnotations() != null && deployment.getMetadata().getAnnotations().containsKey(AnnotationKeys.CERT_SECRET_NAME))
-                .map(deployment -> {
-                    Map<String, String> annotations = deployment.getMetadata().getAnnotations();
-                    String cn = annotations.getOrDefault(AnnotationKeys.CERT_CN, deployment.getMetadata().getName());
+        List<HasMetadata> components = new ArrayList<>();
+
+        components.addAll(client.extensions().deployments().inNamespace(namespace).list().getItems());
+        components.addAll(client.apps().statefulSets().inNamespace(namespace).list().getItems());
+
+        return components.stream()
+                .filter(object -> object.getMetadata().getAnnotations() != null && object.getMetadata().getAnnotations().containsKey(AnnotationKeys.CERT_SECRET_NAME))
+                .map(object -> {
+                    Map<String, String> annotations = object.getMetadata().getAnnotations();
+                    String cn = annotations.getOrDefault(AnnotationKeys.CERT_CN, object.getMetadata().getName());
                     return new CertComponent(cn, namespace, annotations.get(AnnotationKeys.CERT_SECRET_NAME));
                 })
                 .collect(Collectors.toList());
