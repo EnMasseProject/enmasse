@@ -112,8 +112,7 @@ public class Address {
 
         if (!name.equals(address1.name)) return false;
         if (!uuid.equals(address1.uuid)) return false;
-        if (!address.equals(address1.address)) return false;
-        return version != null ? version.equals(address1.version) : address1.version == null;
+        return address.equals(address1.address);
     }
 
     @Override
@@ -121,7 +120,6 @@ public class Address {
         int result = name.hashCode();
         result = 31 * result + uuid.hashCode();
         result = 31 * result + address.hashCode();
-        result = 31 * result + (version != null ? version.hashCode() : 0);
         return result;
     }
 
