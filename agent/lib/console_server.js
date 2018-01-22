@@ -74,7 +74,7 @@ function ConsoleServer (address_ctrl) {
             context.delivery.reject({condition: code || 'amqp:internal-error', description: '' + e});
         };
 
-        if (!self.authz.has_permission('address-space-admin', context.connection.options.groups)) {
+        if (!self.authz.is_admin(context.connection)) {
             reject(context, 'amqp:unauthorized-access', 'not authorized');
         } else if (context.message.subject === 'create_address') {
             log.info('creating address ' + JSON.stringify(context.message.body));
@@ -95,8 +95,14 @@ ConsoleServer.prototype.ws_bind = function (server, env) {
             var credentials = myutils.basic_auth(info.req);
             auth_service.authenticate(credentials, auth_service.default_options(env)).then(function (properties) {
                 self.authz.set_authz_props(info.req, credentials, properties);
-                callback(true);
-            }).catch(function () {
+                if (self.authz.access_console(properties)) {
+                    callback(true);
+                } else {
+                    log.error('Access to console denied to %s [%j]', credentials.name, properties);
+                    callback(false, 403, 'You do not have permission to use this console');
+                }
+            }).catch(function (error) {
+                log.error('Failed to authorize websocket: %s', error);
                 callback(false, 401, 'Authorization Required');
             });
         } catch (e) {
@@ -182,7 +188,8 @@ function file_load_handler(request, response, file) {
 }
 
 function auth_required(response) {
-    return function() {
+    return function(error) {
+        if (error) log.error('Failed to authenticate http request: %s', error);
         response.setHeader('WWW-Authenticate', 'Basic realm=Authorization Required');
         response.statusCode = 401;
         response.end('Authorization Required');
@@ -207,6 +214,7 @@ function replacer(original, replacement) {
 }
 
 ConsoleServer.prototype.listen = function (env, callback) {
+    var self = this;
     this.authz = require('./authz.js').policy(env);
     this.server = get_create_server(env)(function (request, response) {
         if (request.method === 'GET' && request.url === '/probe') {
@@ -223,7 +231,14 @@ ConsoleServer.prototype.listen = function (env, callback) {
                 } else {
                     next = static_handler(request, response);
                 }
-                auth_service.authenticate(user, auth_service.default_options(env)).then(next).catch(auth_required(response));
+                auth_service.authenticate(user, auth_service.default_options(env)).then(function (properties) {
+                    if (self.authz.access_console(properties)) {
+                        next();
+                    } else {
+                        response.statusCode = 403;
+                        response.end('You do not have permission to view the console');
+                    }
+                }).catch(auth_required(response));
             } catch (error) {
                 response.statusCode = 500;
                 response.end(error.message);
@@ -251,7 +266,7 @@ ConsoleServer.prototype.subscribe = function (name, sender) {
     this.address_ctrl.get_address_types().then(function (address_types) {
         var props = {};
         props.address_space_type = process.env.ADDRESS_SPACE_TYPE || 'standard';
-        props.disable_admin = !self.authz.has_permission('address-space-admin', sender.connection.options.groups);
+        props.disable_admin = !self.authz.is_admin(sender.connection);
         sender.send({subject:'address_types', application_properties:props, body:address_types});
     }).catch(function (error) {
         log.error('failed to get address types from address controller: %s', error);

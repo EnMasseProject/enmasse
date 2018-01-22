@@ -197,10 +197,13 @@ public class KeycloakClient {
 
         String sendGroup = "send_*";
         String receiveGroup = "recv_*";
+        String manageGroup = "manage";//allows full access to console
         createGroup(realm, sendGroup);
         createGroup(realm, receiveGroup);
+        createGroup(realm, manageGroup);
         joinGroup(realm, sendGroup, userName);
         joinGroup(realm, receiveGroup, userName);
+        joinGroup(realm, manageGroup, userName);
     }
 
 

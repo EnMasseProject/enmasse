@@ -91,7 +91,7 @@ function define_tests(v, client) {
         }
 
         beforeEach(function(done) {
-            auth_service = new MockAuthService(undefined , ['address-space-admin']);
+            auth_service = new MockAuthService(undefined , ['manage']);
             auth_service.listen().on('listening', function () {
                 var options = myutils.merge({port:0, AUTHENTICATION_SERVICE_PORT: auth_service.port}, v === 'https' ? tls_env : {ALLOW_HTTP:true});
                 console_server = new ConsoleServer(new AddressCtrl());
@@ -368,7 +368,7 @@ function define_authz_tests(v, client) {
         }
 
         beforeEach(function(done) {
-            auth_service = new MockAuthService(undefined , ['address-space-admin']);
+            auth_service = new MockAuthService(undefined , ['manage']);
             auth_service.listen().on('listening', function () {
                 var options = myutils.merge({port:0, KEYCLOAK_GROUP_PERMISSIONS: true, AUTHENTICATION_SERVICE_PORT: auth_service.port}, v === 'https' ? tls_env : {ALLOW_HTTP:true});
                 console_server = new ConsoleServer(new AddressCtrl());
@@ -433,7 +433,7 @@ function define_authz_tests(v, client) {
         });
 
         it('does not send subscribing client unauthorized connection stats', function(done) {
-            auth_service.groups = ['banana'];
+            auth_service.groups = ['view_banana'];
             console_server.connections.set({foo: {container:'foo', messages_in:100, messages_out:50},
                                             con1: {container:'con1', user:'bob', messages_in:1, messages_out:2},
                                             bar: {container:'bar', user:'another', messages_in:3, messages_out:4}});
@@ -518,7 +518,7 @@ describe('online help', function() {
     var auth_service;
 
     beforeEach(function(done) {
-        auth_service = new MockAuthService();
+        auth_service = new MockAuthService(undefined , ['monitor']);
         auth_service.listen().on('listening', function () {
             var options = {port:0, AUTHENTICATION_SERVICE_PORT: auth_service.port, MESSAGING_ROUTE_HOSTNAME:'my-messaging-route-test', ALLOW_HTTP:1};
             console_server = new ConsoleServer(new AddressCtrl());
