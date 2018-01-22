@@ -177,16 +177,21 @@ public class AddressController extends AbstractVerticle implements Watcher<Addre
     }
 
     private void createBrokers(List<AddressCluster> clusterList, Map<String, Set<Address>> newAddressGroups) {
-        newAddressGroups.entrySet().stream()
-                .filter(group -> !brokerExists(clusterList, group.getKey()))
-                .map(group -> clusterGenerator.generateCluster(group.getKey(), group.getValue()))
-                .forEach(cluster -> {
+        for (Map.Entry<String, Set<Address>> group : newAddressGroups.entrySet()) {
+            if (!brokerExists(clusterList, group.getKey())) {
+                try {
+                    AddressCluster cluster = clusterGenerator.generateCluster(group.getKey(), group.getValue());
                     if (!cluster.getResources().getItems().isEmpty()) {
                         log.info("Creating broker cluster with id {}", cluster.getClusterId());
                         kubernetes.create(cluster.getResources());
                         eventLogger.log(BrokerCreated, "Created broker", Normal, Broker, cluster.getClusterId());
                     }
-                });
+                } catch (Exception e) {
+                    log.error("Error creating broker", e);
+                    eventLogger.log(BrokerCreateFailed, "Error creating broker", Warning, Broker, group.getKey());
+                }
+            }
+        }
     }
 
     private boolean brokerExists(List<AddressCluster> clusterList, String clusterId) {
