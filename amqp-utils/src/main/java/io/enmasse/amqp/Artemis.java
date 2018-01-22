@@ -146,7 +146,7 @@ public class Artemis implements AutoCloseable {
     }
 
     private Message doRequestResponse(Message message, Object ... parameters) throws TimeoutException {
-        return doRequestResponse(30, TimeUnit.SECONDS, message, parameters);
+        return doRequestResponse(5, TimeUnit.SECONDS, message, parameters);
     }
 
     private Message doRequestResponse(long timeout, TimeUnit timeUnit, Message message, Object ... parameters) throws TimeoutException {
@@ -196,29 +196,29 @@ public class Artemis implements AutoCloseable {
     }
 
     public void deployQueue(String name, String address) throws TimeoutException {
-        log.info("Deploying queue {} with address {}", name, address);
+        log.info("Deploying queue {} with address {} on broker {}", name, address, brokerContainerId);
         doOperation("broker", "deployQueue", address, name, null, false);
     }
 
     public void createQueue(String name, String address) throws TimeoutException {
-        log.info("Creating queue {} with address {}", name, address);
+        log.info("Creating queue {} with address {} on broker {}", name, address, brokerContainerId);
         doOperation("broker", "createQueue", address, "ANYCAST", name, null, true, -1, false, true);
     }
 
     public void createConnectorService(String name, Map<String, String> connParams) throws TimeoutException {
-        log.info("Creating connector service {}", name);
+        log.info("Creating connector service {} on broker {}", name, brokerContainerId);
         String factoryName = "org.apache.activemq.artemis.integration.amqp.AMQPConnectorServiceFactory";
         doOperation("broker", "createConnectorService", name, factoryName, connParams);
     }
 
     public void destroyQueue(String name) throws TimeoutException {
-        log.info("Destroying queue {}", name);
+        log.info("Destroying queue {} on broker {}", name, brokerContainerId);
         doOperation("broker", "destroyQueue", name, true);
     }
 
     public void destroyConnectorService(String address) throws TimeoutException {
         doOperation("broker", "destroyConnectorService", address);
-        log.info("Destroyed connector service " + address);
+        log.info("Destroyed connector service {} on broker {}", address, brokerContainerId);
     }
 
     public long getNumQueues() throws TimeoutException {
@@ -226,7 +226,7 @@ public class Artemis implements AutoCloseable {
     }
 
     public long getQueueMessageCount(String queueName) throws TimeoutException {
-        log.info("Checking message count for queue {}", queueName);
+        log.info("Checking message count for queue {} on broker {}", queueName, brokerContainerId);
         Message response = doAttribute("queue." + queueName, "messageCount");
         String payload = (String) ((AmqpValue)response.getBody()).getValue();
         JsonArray json = new JsonArray(payload);
@@ -235,7 +235,7 @@ public class Artemis implements AutoCloseable {
 
 
     public String getQueueAddress(String queueName) throws TimeoutException {
-        log.info("Checking queue address for queue {}", queueName);
+        log.info("Checking queue address for queue {} on broker {}", queueName, brokerContainerId);
         Message response = doOperation("queue." + queueName, "getAddress");
         String payload = (String) ((AmqpValue)response.getBody()).getValue();
         JsonArray json = new JsonArray(payload);
@@ -243,13 +243,13 @@ public class Artemis implements AutoCloseable {
     }
 
     public void forceShutdown() throws TimeoutException {
-        log.info("Sending forceShutdown");
+        log.info("Sending forceShutdown to broker {}", brokerContainerId);
         Message request = createOperationMessage("broker", "forceFailover");
         doRequestResponse(10, TimeUnit.SECONDS, request);
     }
 
     public Set<String> getQueueNames() throws TimeoutException {
-        log.info("Retrieving queue names");
+        log.info("Retrieving queue names for broker {}", brokerContainerId);
         Message response = doOperation("broker", "getQueueNames");
 
         Set<String> queues = new LinkedHashSet<>();
