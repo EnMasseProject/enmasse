@@ -40,6 +40,12 @@ public class KeycloakClient {
     private final KeycloakCredentials credentials;
     private final KeyStore trustStore;
 
+    public KeycloakClient(Endpoint endpoint, KeycloakCredentials credentials, String keycloakCaCert) throws Exception {
+        this.endpoint = endpoint;
+        this.credentials = credentials;
+        this.trustStore = createTrustStore(keycloakCaCert);
+    }
+
     private static KeyStore createTrustStore(String keycloakCaCert) throws Exception {
         try {
             KeyStore keyStore = KeyStore.getInstance("JKS");
@@ -53,17 +59,6 @@ public class KeycloakClient {
             Logging.log.warn("Error creating keystore for authservice CA", ignored);
             throw ignored;
         }
-    }
-
-    public KeycloakClient(Endpoint endpoint, KeycloakCredentials credentials, String keycloakCaCert) throws Exception {
-        this.endpoint = endpoint;
-        this.credentials = credentials;
-        this.trustStore = createTrustStore(keycloakCaCert);
-    }
-
-    @FunctionalInterface
-    interface GroupMethod<T, U, V> {
-        void apply(T t, U u, V v);
     }
 
     public void joinGroup(String realm, String groupName, String username) throws Exception {
@@ -158,7 +153,6 @@ public class KeycloakClient {
         }
     }
 
-
     public void createUser(String realm, String userName, String password) throws Exception {
         createUser(realm, userName, password, 3, TimeUnit.MINUTES,
                 Group.SEND_ALL.toString(),
@@ -217,7 +211,6 @@ public class KeycloakClient {
         }
     }
 
-
     private RealmResource waitForRealm(Keycloak keycloak, String realmName, long timeout, TimeUnit timeUnit) throws Exception {
         Logging.log.info("Waiting for realm {} to exist", realmName);
         long endTime = System.currentTimeMillis() + timeUnit.toMillis(timeout);
@@ -257,6 +250,11 @@ public class KeycloakClient {
         try (CloseableKeycloak keycloak = new CloseableKeycloak(endpoint, credentials, trustStore)) {
             TestUtils.doRequestNTimes(10, () -> keycloak.get().realm(realm).users().delete(userName));
         }
+    }
+
+    @FunctionalInterface
+    interface GroupMethod<T, U, V> {
+        void apply(T t, U u, V v);
     }
 
     private static class CloseableKeycloak implements AutoCloseable {
