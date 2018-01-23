@@ -40,18 +40,18 @@ public abstract class AuthorizationTestBase extends TestBaseWithDefault {
         getKeycloakClient().deleteUser(defaultAddressSpace.getName(), allowedUser.getUsername());
 
         KeycloakCredentials noAllowedUser = new KeycloakCredentials("nobody", "nobodyPa55");
-        getKeycloakClient().createUser(defaultAddressSpace.getName(), noAllowedUser.getUsername(), noAllowedUser.getPassword(), Group.RECV_ALL.toString());
+        getKeycloakClient().createUser(defaultAddressSpace.getName(), noAllowedUser.getUsername(), noAllowedUser.getPassword(), "null");
         assertCannotSend(noAllowedUser.getUsername(), noAllowedUser.getPassword());
         getKeycloakClient().deleteUser(defaultAddressSpace.getName(), noAllowedUser.getUsername());
 
-        getKeycloakClient().createUser(defaultAddressSpace.getName(), noAllowedUser.getUsername(), noAllowedUser.getPassword(), "null");
+        getKeycloakClient().createUser(defaultAddressSpace.getName(), noAllowedUser.getUsername(), noAllowedUser.getPassword(), Group.RECV_ALL.toString());
         assertCannotSend(noAllowedUser.getUsername(), noAllowedUser.getPassword());
         getKeycloakClient().deleteUser(defaultAddressSpace.getName(), noAllowedUser.getUsername());
     }
 
-    protected void doTestSendReceiveAuthz() throws Exception {
+    protected void doTestReceiveAuthz() throws Exception {
         KeycloakCredentials allowedUser = new KeycloakCredentials("receiver", "receiverPa55");
-        getKeycloakClient().createUser(defaultAddressSpace.getName(), allowedUser.getUsername(), allowedUser.getPassword(), Group.SEND_ALL.toString(), Group.RECV_ALL.toString());
+        getKeycloakClient().createUser(defaultAddressSpace.getName(), allowedUser.getUsername(), allowedUser.getPassword(), Group.RECV_ALL.toString());
         assertReceive(allowedUser.getUsername(), allowedUser.getPassword());
         getKeycloakClient().deleteUser(defaultAddressSpace.getName(), allowedUser.getUsername());
 
@@ -62,6 +62,7 @@ public abstract class AuthorizationTestBase extends TestBaseWithDefault {
     }
 
     private void assertSend(String username, String password) throws Exception {
+        Logging.log.info("Testing if client is authorized to send messages");
         assertTrue(canSend(queue, username, password));
         assertTrue(canSend(topic, username, password));
 
@@ -72,6 +73,7 @@ public abstract class AuthorizationTestBase extends TestBaseWithDefault {
     }
 
     private void assertCannotSend(String username, String password) throws Exception {
+        Logging.log.info("Testing if client is NOT authorized to send messages");
         assertFalse(canSend(queue, username, password));
         assertFalse(canSend(topic, username, password));
 
@@ -82,6 +84,7 @@ public abstract class AuthorizationTestBase extends TestBaseWithDefault {
     }
 
     private void assertReceive(String username, String password) throws Exception {
+        Logging.log.info("Testing if client is authorized to receive messages");
         assertTrue(canReceive(queue, username, password));
         assertTrue(canReceive(topic, username, password));
 
@@ -92,6 +95,7 @@ public abstract class AuthorizationTestBase extends TestBaseWithDefault {
     }
 
     private void assertCannotReceive(String username, String password) throws Exception {
+        Logging.log.info("Testing if client is NOT authorized to receive messages");
         assertFalse(canReceive(queue, username, password));
         assertFalse(canReceive(topic, username, password));
 
@@ -102,21 +106,27 @@ public abstract class AuthorizationTestBase extends TestBaseWithDefault {
     }
 
     private boolean canSend(Destination destination, String username, String password) throws Exception {
+        AmqpClient adminClient = createClient(destination, this.username, this.password);
         AmqpClient client = createClient(destination, username, password);
         try {
-            return client.sendMessages(destination.getAddress(), Collections.singletonList("msg1"), 10, TimeUnit.SECONDS).get(30, TimeUnit.SECONDS) == 1;
+            Future<List<Message>> received = adminClient.recvMessages(destination.getAddress(), 1, 10, TimeUnit.SECONDS);
+            Future<Integer> sent = client.sendMessages(destination.getAddress(), Collections.singletonList("msg1"), 10, TimeUnit.SECONDS);
+            return received.get(1, TimeUnit.MINUTES).size() == sent.get(1, TimeUnit.MINUTES);
         }catch (Exception ex){
+            Logging.log.info(ex.getMessage());
             return false;
         }
     }
 
     private boolean canReceive(Destination destination, String username, String password) throws Exception {
+        AmqpClient adminClient = createClient(destination, this.username, this.password);
         AmqpClient client = createClient(destination, username, password);
         try {
             Future<List<Message>> received = client.recvMessages(destination.getAddress(), 1, 10, TimeUnit.SECONDS);
-            Future<Integer> sent = client.sendMessages(destination.getAddress(), Collections.singletonList("msg1"), 10, TimeUnit.SECONDS);
+            Future<Integer> sent = adminClient.sendMessages(destination.getAddress(), Collections.singletonList("msg1"), 10, TimeUnit.SECONDS);
             return received.get(1, TimeUnit.MINUTES).size() == sent.get(1, TimeUnit.MINUTES);
         }catch (Exception ex){
+            Logging.log.info(ex.getMessage());
             return false;
         }
 

@@ -16,7 +16,7 @@ public class AuthorizationTest extends AuthorizationTestBase {
     }
 
     @Test
-    public void testSendReceiveAuthz() throws Exception {
-        doTestSendReceiveAuthz();
+    public void testReceiveAuthz() throws Exception {
+        doTestReceiveAuthz();
     }
 }
