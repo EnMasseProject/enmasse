@@ -1,7 +1,7 @@
 package io.enmasse.systemtest;
 
 public enum Group {
-    MANAGEMENT,
+    MANAGE,
     SEND_ALL,
     RECV_ALL,
     MONITOR,
