@@ -46,15 +46,17 @@ public class Artemis implements AutoCloseable {
     private final Vertx vertx;
     private final ProtonConnection connection;
     private final ProtonSender sender;
+    private final ProtonReceiver receiver;
     private final String replyTo;
     private final BlockingQueue<Message> replies;
     private final String brokerContainerId;
 
-    private Artemis(Vertx vertx, ProtonConnection connection, ProtonSender sender, String replyTo, BlockingQueue<Message> replies) {
+    private Artemis(Vertx vertx, ProtonConnection connection, ProtonSender sender, ProtonReceiver receiver, String replyTo, BlockingQueue<Message> replies) {
         this.vertx = vertx;
         this.connection = connection;
         this.brokerContainerId = connection.getRemoteContainer();
         this.sender = sender;
+        this.receiver = receiver;
         this.replyTo = replyTo;
         this.replies = replies;
     }
@@ -104,9 +106,11 @@ public class Artemis implements AutoCloseable {
         Source source = new Source();
         source.setDynamic(true);
         receiver.setSource(source);
+        receiver.setPrefetch(0);
         receiver.openHandler(h -> {
             if (h.succeeded()) {
-                promise.complete(new Artemis(vertx, connection, sender, h.result().getRemoteSource().getAddress(), replies));
+                receiver.flow(1);
+                promise.complete(new Artemis(vertx, connection, sender, receiver, h.result().getRemoteSource().getAddress(), replies));
             } else {
                 if (retries > maxRetries) {
                     promise.fail(h.cause());
@@ -186,7 +190,9 @@ public class Artemis implements AutoCloseable {
     }
 
     private Message sendMessage(Message message, long timeout, TimeUnit timeUnit) {
-        vertx.runOnContext(h -> sender.send(message));
+        vertx.runOnContext(h -> sender.send(message, (delivery) -> {
+            receiver.flow(1);
+        }));
         try {
             Message m = replies.poll(timeout, timeUnit);
             return m;
