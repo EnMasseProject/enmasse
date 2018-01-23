@@ -16,9 +16,9 @@ import static org.junit.Assert.assertTrue;
 public abstract class AuthorizationTestBase extends TestBaseWithDefault {
 
     private static final Destination queue = Destination.queue("authz-queue");
-    private static final Destination topic = Destination.queue("authz-topic");
-    private static final Destination anycast = Destination.queue("authz-anycast");
-    private static final Destination multicast = Destination.queue("authz-multicast");
+    private static final Destination topic = Destination.topic("authz-topic");
+    private static final Destination anycast = Destination.anycast("authz-anycast");
+    private static final Destination multicast = Destination.multicast("authz-multicast");
 
     @Before
     public void initAddresses() throws Exception {
