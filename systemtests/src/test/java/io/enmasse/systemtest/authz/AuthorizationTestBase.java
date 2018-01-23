@@ -22,7 +22,10 @@ public abstract class AuthorizationTestBase extends TestBaseWithDefault {
 
     @Before
     public void initAddresses() throws Exception {
-        setAddresses(defaultAddressSpace, queue, topic, anycast, multicast);
+        setAddresses(defaultAddressSpace, queue, topic);
+        if(getAddressSpaceType() == AddressSpaceType.STANDARD){
+            setAddresses(defaultAddressSpace, anycast, multicast);
+        }
     }
 
     protected void doTestSendAuthz() throws Exception {
