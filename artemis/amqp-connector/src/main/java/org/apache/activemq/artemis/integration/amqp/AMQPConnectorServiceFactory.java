@@ -72,6 +72,7 @@ public class AMQPConnectorServiceFactory implements ConnectorServiceFactory {
       Map<String, Object> connectorConfig = new HashMap<>();
       connectorConfig.put(TransportConstants.HOST_PROP_NAME, configuration.get(TransportConstants.HOST_PROP_NAME));
       connectorConfig.put(TransportConstants.PORT_PROP_NAME, configuration.get(TransportConstants.PORT_PROP_NAME));
+      connectorConfig.put(TransportConstants.NETTY_CONNECT_TIMEOUT, "10000");
 
       setOrDefault(configuration, connectorConfig, TransportConstants.SSL_ENABLED_PROP_NAME, true);
       setOrDefault(configuration, connectorConfig, TransportConstants.VERIFY_HOST_PROP_NAME, false);
