@@ -160,10 +160,26 @@ public class KeycloakClient {
 
 
     public void createUser(String realm, String userName, String password) throws Exception {
-        createUser(realm, userName, password, 3, TimeUnit.MINUTES);
+        createUser(realm, userName, password, 3, TimeUnit.MINUTES,
+                Group.SEND_ALL.toString(),
+                Group.RECV_ALL.toString(),
+                Group.MANAGEMENT.toString());
     }
 
-    public void createUser(String realm, String userName, String password, long timeout, TimeUnit timeUnit) throws Exception {
+    public void createUser(String realm, String userName, String password, String... groups) throws Exception {
+        createUser(realm, userName, password, 3, TimeUnit.MINUTES, groups);
+    }
+
+    public void createUser(String realm, String userName, String password, long timeout, TimeUnit timeUnit)
+            throws Exception {
+        createUser(realm, userName, password, timeout, timeUnit,
+                Group.SEND_ALL.toString(),
+                Group.RECV_ALL.toString(),
+                Group.MANAGEMENT.toString());
+    }
+
+    public void createUser(String realm, String userName, String password, long timeout, TimeUnit timeUnit, String... groups)
+            throws Exception {
 
         int maxRetries = 10;
         try (CloseableKeycloak keycloak = new CloseableKeycloak(endpoint, credentials, trustStore)) {
@@ -195,15 +211,10 @@ public class KeycloakClient {
             }
         }
 
-        String sendGroup = "send_*";
-        String receiveGroup = "recv_*";
-        String manageGroup = "manage";//allows full access to console
-        createGroup(realm, sendGroup);
-        createGroup(realm, receiveGroup);
-        createGroup(realm, manageGroup);
-        joinGroup(realm, sendGroup, userName);
-        joinGroup(realm, receiveGroup, userName);
-        joinGroup(realm, manageGroup, userName);
+        for (String group : groups) {
+            createGroup(realm, group);
+            joinGroup(realm, group, userName);
+        }
     }
 
 
