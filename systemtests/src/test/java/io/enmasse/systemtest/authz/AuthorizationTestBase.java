@@ -5,6 +5,7 @@ import io.enmasse.systemtest.amqp.AmqpClient;
 import org.apache.qpid.proton.message.Message;
 import org.junit.Before;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Future;
@@ -22,10 +23,14 @@ public abstract class AuthorizationTestBase extends TestBaseWithDefault {
 
     @Before
     public void initAddresses() throws Exception {
-        setAddresses(defaultAddressSpace, queue, topic);
+        List<Destination> addresses = new ArrayList<>();
+        addresses.add(queue);
+        addresses.add(topic);
         if(getAddressSpaceType() == AddressSpaceType.STANDARD){
-            appendAddresses(defaultAddressSpace, anycast, multicast);
+            addresses.add(anycast);
+            addresses.add(multicast);
         }
+        setAddresses(defaultAddressSpace, addresses.toArray(new Destination[0]));
     }
 
     protected void doTestSendAuthz() throws Exception {
