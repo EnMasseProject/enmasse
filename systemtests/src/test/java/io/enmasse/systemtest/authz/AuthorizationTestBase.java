@@ -24,7 +24,7 @@ public abstract class AuthorizationTestBase extends TestBaseWithDefault {
     public void initAddresses() throws Exception {
         setAddresses(defaultAddressSpace, queue, topic);
         if(getAddressSpaceType() == AddressSpaceType.STANDARD){
-            setAddresses(defaultAddressSpace, anycast, multicast);
+            appendAddresses(defaultAddressSpace, anycast, multicast);
         }
     }
 
