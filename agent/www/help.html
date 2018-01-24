@@ -559,85 +559,11 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="paragraph">
 <p>The queue address type is a store-and-forward queue. This address type is appropriate for implementing a distributed work queue, handling traffic bursts, and other use cases where you want to decouple the producer and consumer. A queue can be sharded across multiple storage units; however, message order is no longer guaranteed.</p>
 </div>
-<div class="sect5">
-<h6 id="queue-plans">Queue Plans</h6>
-<div class="ulist">
-<ul>
-<li>
-<p>inmemory</p>
-</li>
-<li>
-<p>persisted</p>
-</li>
-<li>
-<p>pooled-inmemory</p>
-</li>
-<li>
-<p>pooled-persisted</p>
-</li>
-</ul>
-</div>
-<div class="sect6">
-<h7 id="in-memory-queue">In memory</h7>
-<div class="paragraph">
-<p>Creates a standalone broker cluster for queues. Messages are not persisted on
-stable storage.</p>
-</div>
-</div>
-<div class="sect6">
-<h7 id="persisted-queue">Persisted</h7>
-<div class="paragraph">
-<p>Creates a standalone broker cluster for queues. Messages are persisted on stable
-storage.</p>
-</div>
-</div>
-<div class="sect6">
-<h7 id="pooled-in-memory-queue">Pooled in memory</h7>
-<div class="paragraph">
-<p>Schedules queues to run on a shared broker cluster, reducing overhead. Messages
-are not persisted on stable storage.</p>
-</div>
-</div>
-<div class="sect6">
-<h7 id="pooled-persisted-queue">Pooled persisted</h7>
-<div class="paragraph">
-<p>Schedules queues to run on a shared broker cluster, reducing overhead. Messages
-are persisted on stable storage.</p>
-</div>
-</div>
-</div>
 </div>
 <div class="sect4">
 <h5 id="standard-topic">Topic</h5>
 <div class="paragraph">
 <p>The topic address type supports the publish-subscribe messaging pattern where you have 1..N producers and 1..M consumers. Each message published to a topic address is forwarded to all subscribers for that address. A subscriber can also be durable, in which case messages are kept until the subscriber has acknowledged them.</p>
-</div>
-<div class="sect5">
-<h6 id="topic-plans">Topic Plans</h6>
-<div class="ulist">
-<ul>
-<li>
-<p>inmemory</p>
-</li>
-<li>
-<p>persisted</p>
-</li>
-</ul>
-</div>
-<div class="sect6">
-<h7 id="in-memory-topic">In memory</h7>
-<div class="paragraph">
-<p>Creates a standalone broker cluster for topics. Messages are not persisted on
-stable storage.</p>
-</div>
-</div>
-<div class="sect6">
-<h7 id="persisted-topic">Persisted</h7>
-<div class="paragraph">
-<p>Creates a standalone broker cluster for topics. Messages are persisted on stable
-storage.</p>
-</div>
-</div>
 </div>
 </div>
 <div class="sect4">
@@ -645,31 +571,11 @@ storage.</p>
 <div class="paragraph">
 <p>The anycast address type is a scalable direct address for sending messages to one consumer. Messages sent to an anycast address are not stored, but forwarded directly to the consumer. This method makes this address type ideal for request-reply (RPC) uses or even work distribution. This is the cheapest address type as it does not require any persistence.</p>
 </div>
-<div class="sect5">
-<h6 id="anycast-plans">Anycast Plans</h6>
-<div class="ulist">
-<ul>
-<li>
-<p>standard</p>
-</li>
-</ul>
-</div>
-</div>
 </div>
 <div class="sect4">
 <h5 id="multicast">Multicast</h5>
 <div class="paragraph">
 <p>The multicast address type is a scalable direct address for sending messages to multiple consumers. Messages sent to a multicast address are forwarded to all consumers receiving messages on that address. It is important to note that only pre-settled messages can be sent to multicast addresses, as message acknowledgements from consumers are not propagated to producers.</p>
-</div>
-<div class="sect5">
-<h6 id="multicast-plans">Multicast Plans</h6>
-<div class="ulist">
-<ul>
-<li>
-<p>standard</p>
-</li>
-</ul>
-</div>
 </div>
 </div>
 </div>
@@ -702,17 +608,13 @@ transactions, message groups, and so on.</p>
 <p>The queue address type is a store-and-forward queue. This address type is appropriate for
 implementing a distributed work queue, handling traffic bursts, and other use cases where you want
 to decouple the producer and consumer. A queue in the brokered address spaces supports selectors,
-message groups, transactions, and other JMS features.
-Only a standard plan is available for queues.</p>
+message groups, transactions, and other JMS features.</p>
 </div>
 </div>
 <div class="sect4">
 <h5 id="brokered-topic">Topic</h5>
 <div class="paragraph">
 <p>The topic address type supports the publish-subscribe messaging pattern where you have 1..N producers and 1..M consumers. Each message published to a topic address is forwarded to all subscribers for that address. A subscriber can also be durable, in which case messages are kept until the subscriber has acknowledged them.</p>
-</div>
-<div class="paragraph">
-<p>Only a standard plan is available for topics.</p>
 </div>
 </div>
 </div>
@@ -1002,7 +904,7 @@ namespace Test
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2017-11-01 23:15:24 CET
+Last updated 2017-12-18 12:10:44 GMT
 </div>
 </div>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css">

@@ -280,7 +280,7 @@ Ragent.prototype.listen = function (options) {
 }
 
 Ragent.prototype.subscribe_to_addresses = function (env) {
-    var address_source = new AddressSource(env);
+    var address_source = new AddressSource('foo', env);
     address_source.on('addresses_defined', this.sync_addresses.bind(this));
 };
 

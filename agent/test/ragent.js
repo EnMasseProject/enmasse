@@ -637,7 +637,10 @@ RouterGroup.prototype.pod = function () {
 RouterGroup.prototype.get_pod_definition = function () {
     return {
         metadata: {
-            name: this.name
+            name: this.name,
+            labels: {
+                name: 'admin'
+            }
         },
         spec: {
             containers: [

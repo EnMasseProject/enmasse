@@ -23,78 +23,12 @@ The standard address space supports four address types:
 The queue address type is a store-and-forward queue. This address type is appropriate for implementing a distributed work queue, handling traffic bursts, and other use cases where you want to decouple the producer and consumer. A queue can be sharded across multiple storage units; however, message order is no longer guaranteed.
 // standard.address.queue.longDescription:stop
 
-[[queue-plans]]
-===== Queue Plans
-
-* inmemory
-* persisted
-* pooled-inmemory
-* pooled-persisted
-
-[[in-memory-queue]]
-====== In memory
-// standard.address.queue.plan.inmemory.shortDescription:In memory only
-// standard.address.queue.plan.inmemory.longDescription:start
-Creates a standalone broker cluster for queues. Messages are not persisted on
-stable storage.
-// standard.address.queue.plan.inmemory.longDescription:stop
-
-[[persisted-queue]]
-====== Persisted
-
-// standard.address.queue.plan.persisted.shortDescription:Saved to storage
-// standard.address.queue.plan.persisted.longDescription:start
-Creates a standalone broker cluster for queues. Messages are persisted on stable
-storage.
-// standard.address.queue.plan.persisted.longDescription:stop
-
-[[pooled-in-memory-queue]]
-====== Pooled in memory
-// standard.address.queue.plan.pooled-inmemory.shortDescription:Shared broker cluster - not persisted
-// standard.address.queue.plan.pooled-inmemory.longDescription:start
-Schedules queues to run on a shared broker cluster, reducing overhead. Messages
-are not persisted on stable storage.
-// standard.address.queue.plan.pooled-inmemory.longDescription:stop
-
-[[pooled-persisted-queue]]
-====== Pooled persisted
-
-// standard.address.queue.plan.pooled-persisted.shortDescription:Shared broker cluster - saved to storage
-// standard.address.queue.plan.pooled-persisted.longDescription:start
-Schedules queues to run on a shared broker cluster, reducing overhead. Messages
-are persisted on stable storage.
-// standard.address.queue.plan.pooled-persisted.longDescription:stop
-
 [[standard-topic]]
 ==== Topic
 // standard.address.topic.shortDescription:A publish-subscribe topic
 // standard.address.topic.longDescription:start
 The topic address type supports the publish-subscribe messaging pattern where you have 1..N producers and 1..M consumers. Each message published to a topic address is forwarded to all subscribers for that address. A subscriber can also be durable, in which case messages are kept until the subscriber has acknowledged them.
 // standard.address.topic.longDescription:stop
-
-[[topic-plans]]
-===== Topic Plans
-
-* inmemory
-* persisted
-
-[[in-memory-topic]]
-====== In memory
-
-// standard.address.topic.plan.inmemory.shortDescription:In memory only
-// standard.address.topic.plan.inmemory.longDescription:start
-Creates a standalone broker cluster for topics. Messages are not persisted on
-stable storage.
-// standard.address.topic.plan.inmemory.longDescription:stop
-
-[[persisted-topic]]
-====== Persisted
-
-// standard.address.topic.plan.persisted.shortDescription:Saved to storage
-// standard.address.topic.plan.persisted.longDescription:start
-Creates a standalone broker cluster for topics. Messages are persisted on stable
-storage.
-// standard.address.topic.plan.persisted.longDescription:stop
 
 [[anycast]]
 ==== Anycast
@@ -103,26 +37,12 @@ storage.
 The anycast address type is a scalable direct address for sending messages to one consumer. Messages sent to an anycast address are not stored, but forwarded directly to the consumer. This method makes this address type ideal for request-reply (RPC) uses or even work distribution. This is the cheapest address type as it does not require any persistence.
 // standard.address.anycast.longDescription:stop
 
-[[anycast-plans]]
-===== Anycast Plans
-
-* standard
-
-// standard.address.anycast.plan.inmemory.shortDescription:Configures the router network with an anycast address
-
 [[multicast]]
 ==== Multicast
 // standard.address.multicast.shortDescription:A scalable 'direct' address for sending messages to multiple consumers
 // standard.address.multicast.longDescription:start
 The multicast address type is a scalable direct address for sending messages to multiple consumers. Messages sent to a multicast address are forwarded to all consumers receiving messages on that address. It is important to note that only pre-settled messages can be sent to multicast addresses, as message acknowledgements from consumers are not propagated to producers.
 // standard.address.multicast.longDescription:stop
-
-[[multicast-plans]]
-===== Multicast Plans
-
-* standard
-
-// standard.address.multicast.plan.inmemory.shortDescription:Configures router network with multicast address
 
 [[brokered_address_space]]
 === Brokered Address Space
@@ -148,10 +68,6 @@ implementing a distributed work queue, handling traffic bursts, and other use ca
 to decouple the producer and consumer. A queue in the brokered address spaces supports selectors,
 message groups, transactions, and other JMS features.
 // brokered.address.queue.longDescription:stop
-// brokered.address.queue.plan.standard.shortDescription:start
-Only a standard plan is available for queues.
-// brokered.address.queue.plan.standard.shortDescription:stop
-// brokered.address.queue.plan.standard.longDescription:There is no choice of plans for queues at this time.
 
 [[brokered-topic]]
 ==== Topic
@@ -160,7 +76,3 @@ Only a standard plan is available for queues.
 The topic address type supports the publish-subscribe messaging pattern where you have 1..N producers and 1..M consumers. Each message published to a topic address is forwarded to all subscribers for that address. A subscriber can also be durable, in which case messages are kept until the subscriber has acknowledged them.
 // brokered.address.topic.longDescription:stop
 
-// brokered.address.topic.plan.standard.shortDescription:start
-Only a standard plan is available for topics.
-// brokered.address.topic.plan.standard.shortDescription:stop
-// brokered.address.topic.plan.standard.longDescription:There is no choice of plans for topics at this time.

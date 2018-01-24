@@ -19,10 +19,12 @@ var util = require('util');
 var events = require('events');
 var kubernetes = require('./kubernetes.js');
 var log = require('./log.js').logger();
+var myutils = require('./utils.js');
 
-function AddressSource(config) {
-    this.config = config;
-    var options = config || {};
+function AddressSource(address_space, config) {
+    this.address_space = address_space;
+    this.config = config || {};
+    var options = this.config;
     options.selector = 'type=address-config';
     events.EventEmitter.call(this);
     this.watcher = kubernetes.watch('configmaps', options);
@@ -91,6 +93,97 @@ AddressSource.prototype.check_status = function (address_stats) {
             return this.update_status(record, ready);
         }
     }
+};
+
+function get_configmap_name_for_address(address) {
+    return myutils.kubernetes_name(util.format('address-config-%s', address));
+}
+
+AddressSource.prototype.create_address = function (definition) {
+    var configmap_name = get_configmap_name_for_address(definition.address);
+    var address = {
+        apiVersion: 'enmasse.io/v1',
+        kind: 'Address',
+        metadata: {
+            name: definition.address,
+            addressSpace: this.address_space
+        },
+        spec: {
+            address: definition.address,
+            type: definition.type,
+            plan: definition.plan
+        }
+    };
+    var configmap = {
+        apiVersion: 'v1',
+        kind: 'ConfigMap',
+        metadata: {
+            name: configmap_name,
+            labels: {
+                type: 'address-config'
+            },
+            annotations: {
+                addressSpace: this.address_space,
+                cluster_id: definition.address
+            },
+        },
+        data: {
+            'config.json': JSON.stringify(address)
+        }
+    };
+    return kubernetes.post('configmaps', configmap, this.config);
+};
+
+AddressSource.prototype.delete_address = function (definition) {
+    var configmap_name = get_configmap_name_for_address(definition.address);
+    return kubernetes.delete_resource('configmaps/' + configmap_name, this.config);
+};
+
+function extract_address_plan (object) {
+    return JSON.parse(object.data.definition);
+}
+
+function display_order (plan_a, plan_b) {
+    // explicitly ordered plans always come before those with undefined order
+    var a = plan_a.displayOrder || Number.MAX_VALUE;
+    var b = plan_b.displayOrder || Number.MAX_VALUE;
+    return a - b;
+}
+
+function extract_plan_details (plan) {
+    return {
+        name: plan.metadata.name,
+        displayName: plan.displayName || plan.metadata.name,
+        shortDescription: plan.shortDescription,
+        longDescription: plan.longDescription,
+    };
+}
+
+AddressSource.prototype.get_address_types = function () {
+    var options = this.config;
+    options.selector = 'type=address-plan';
+    return kubernetes.get('configmaps', options).then(function (configmaps) {
+        //extract plans
+        var plans = configmaps.items.map(extract_address_plan);
+        plans.sort(display_order);
+        //group by addressType
+        var types = [];
+        var by_type = plans.reduce(function (map, plan) {
+            var list = map[plan.addressType];
+            if (list === undefined) {
+                list = [];
+                map[plan.addressType] = list;
+                types.push(plan.addressType);
+            }
+            list.push(plan);
+            return map;
+        }, {});
+        var results = [];
+        types.forEach(function (type) {
+            results.push({name:type, plans:by_type[type].map(extract_plan_details)});
+        });
+        return results;
+    });
 };
 
 module.exports = AddressSource;

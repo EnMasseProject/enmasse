@@ -17,6 +17,11 @@ angular.module('patternfly.toolbars').controller('ViewCtrl', ['$scope', '$timeou
             return chart;
         };
 
+        $scope.get_plan_display_name = function (type, plan) {
+            console.log('get_plan_display_name(%s, %s)', type, plan);
+            return address_service.get_plan_display_name(type, plan);
+        };
+
         $scope.get_outcomes_chart_config = function (address, direction) {
             var chart = get_donut_chart(address, direction + '_outcomes_chart', direction);
             var outcomes = address.outcomes[direction];
@@ -414,21 +419,6 @@ angular.module('patternfly.wizard').controller('WizardController', ['$scope', '$
             }
             $scope.getExternal = function (addr) {
               return $scope.tooltip.address[addr].external
-            }
-            $scope.getPlantip = function (addr, plan) {
-              return $scope.tooltip.address[addr].plan[plan].longDescription
-            }
-            $scope.getPlanLabel = function (addr, plan) {
-              return $scope.tooltip.address[addr].plan[plan].shortDescription
-            }
-            $scope.hasExternalPlan = function (addr, plan) {
-              return angular.isDefined($scope.tooltip.address[addr].plan[plan].external)
-            }
-            $scope.hasPlantip = function (addr, plan) {
-              return angular.isDefined($scope.tooltip.address[addr].plan[plan].longDescription)
-            }
-            $scope.getExternalPlan = function (addr, plan) {
-              return $scope.tooltip.address[addr].plan[plan].external
             }
         };
 

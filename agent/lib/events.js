@@ -15,19 +15,10 @@
  */
 
 var util = require('util');
-
-
-function hash(s) {
-    var h = 0;
-    for (var i = 0; i < s.length; i++) {
-        h = (h << 5) - h + s.charCodeAt(i) | 0;
-    }
-    return h;
-};
-
+var myutils = require('./utils.js');
 
 function event (component, reason, message, type, kind, name) {
-    var event_id = util.format('%s.%s', component, hash([kind, reason, name, message].join()));
+    var event_id = util.format('%s.%s', component, myutils.hash([kind, reason, name, message].join()));
     var now = new Date().toISOString();
     return {
         kind: 'Event',

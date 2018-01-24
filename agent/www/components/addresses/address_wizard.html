@@ -37,12 +37,13 @@
     <form class="form-horizontal">
       <div pf-form-group pf-label="Plan" pf-label-class="col-sm-2" pf-input-class="col-sm-10">
         <div ng-repeat="plan in valid_plans()">
-          <div pf-form-group pf-label-class="col-sm-2" pf-input-class="col-sm-10" pf-label="{{plan.name}}">
+          <div pf-form-group pf-label-class="col-sm-2" pf-input-class="col-sm-10" pf-label="{{plan.displayName}}">
             <input id="{{plan.name}}" name="plan" value="{{plan.name}}" ng-model="data.plan" type="radio"/>
-            <span title="" ng-if="hasPlantip(data.type, plan.name)" tooltip-append-to-body="true" class="tip-block" tooltip-class="enmasse-tooltip" uib-tooltip-html="getPlantip(data.type, plan.name)">
-              {{getPlanLabel(data.type, plan.name)}} <span ng-if="hasExternalPlan(data.type, plan.name)"><a class="learn-more" target="_new" ng-href="{{getExternalPlan(data.type, plan.name)}}">Learn more <i class="fa fa-external-link small" aria-hidden="true"></i></a></span>
+            <input id="{{plan.displayName}}" name="plan_display_name" value="{{plan.displayName}}" ng-model="data.planDisplayName" type="hidden"/>
+            <span title="" ng-if="plan.longDescription" tooltip-append-to-body="true" class="tip-block" tooltip-class="enmasse-tooltip" uib-tooltip-html="plan.longDescription">
+              {{plan.shortDescription}}
             </span>
-            <span ng-if="!hasPlantip(data.type, plan.name)">{{getPlanLabel(data.type, plan.name)}}</span>
+            <span ng-if="plan.longDescription === undefined">{{plan.shortDescription}}</span>
           </div>
         </div>
       </div>

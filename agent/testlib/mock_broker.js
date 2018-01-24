@@ -300,7 +300,10 @@ MockBroker.prototype.get_pod_descriptor = function () {
 MockBroker.prototype.get_pod_definition = function () {
     return {
         metadata: {
-            name: this.name
+            name: this.name,
+            labels: {
+                role: 'broker'
+            }
         },
         spec: {
             containers: [
