@@ -133,7 +133,7 @@ NullPolicy.prototype.can_publish = function (sender, message) {
 };
 
 module.exports.policy = function (env) {
-    if (env.DISABLE_CONSOLE_AUTHZ) {
+    if (env.DISABLE_AUTHORIZATION) {
         return new NullPolicy();
     } else {
         return new AuthorizationPolicy();
