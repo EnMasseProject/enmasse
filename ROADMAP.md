@@ -1,3 +1,7 @@
+# EnMasse Roadmap
+
+This roadmap describes the features we expect to be available in the next releases of EnMasse. The list of features for a particular version is subject to change, particularily for versions further down the road.
+
 0.17.0
 * Support for plans to set resource limits for address spaces
 * Rework queue-scheduling to take resource limits into account, automatically scale colocated
