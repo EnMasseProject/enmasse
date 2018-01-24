@@ -6,7 +6,6 @@ import org.apache.qpid.proton.message.Message;
 import org.junit.Before;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Future;
@@ -28,7 +27,7 @@ public abstract class AuthorizationTestBase extends TestBaseWithDefault {
         addresses = new ArrayList<>();
         addresses.add(queue);
         addresses.add(topic);
-        if(getAddressSpaceType() == AddressSpaceType.STANDARD){
+        if (getAddressSpaceType() == AddressSpaceType.STANDARD) {
             addresses.add(anycast);
             addresses.add(multicast);
         }
@@ -126,7 +125,7 @@ public abstract class AuthorizationTestBase extends TestBaseWithDefault {
             Future<List<Message>> received = adminClient.recvMessages(destination.getAddress(), 1, 10, TimeUnit.SECONDS);
             Future<Integer> sent = client.sendMessages(destination.getAddress(), Collections.singletonList("msg1"), 10, TimeUnit.SECONDS);
             return received.get(1, TimeUnit.MINUTES).size() == sent.get(10, TimeUnit.SECONDS);
-        }catch (Exception ex){
+        } catch (Exception ex) {
             return false;
         }
     }
@@ -138,7 +137,7 @@ public abstract class AuthorizationTestBase extends TestBaseWithDefault {
             Future<List<Message>> received = client.recvMessages(destination.getAddress(), 1, 10, TimeUnit.SECONDS);
             Future<Integer> sent = adminClient.sendMessages(destination.getAddress(), Collections.singletonList("msg1"), 10, TimeUnit.SECONDS);
             return received.get(1, TimeUnit.MINUTES).size() == sent.get(10, TimeUnit.SECONDS);
-        }catch (Exception ex){
+        } catch (Exception ex) {
             return false;
         }
 
