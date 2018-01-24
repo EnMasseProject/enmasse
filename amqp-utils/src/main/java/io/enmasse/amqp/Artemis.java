@@ -50,6 +50,7 @@ public class Artemis implements AutoCloseable {
     private final String replyTo;
     private final BlockingQueue<Message> replies;
     private final String brokerContainerId;
+    private long requestTimeoutMillis = 10_000;
 
     private Artemis(Vertx vertx, ProtonConnection connection, ProtonSender sender, ProtonReceiver receiver, String replyTo, BlockingQueue<Message> replies) {
         this.vertx = vertx;
@@ -59,6 +60,11 @@ public class Artemis implements AutoCloseable {
         this.receiver = receiver;
         this.replyTo = replyTo;
         this.replies = replies;
+    }
+
+    public Artemis setRequestTimeout(long timeout, TimeUnit timeUnit) {
+        this.requestTimeoutMillis = timeUnit.toMillis(timeout);
+        return this;
     }
 
     public static Future<Artemis> createFromConnection(Vertx vertx, ProtonConnection connection) {
@@ -148,7 +154,7 @@ public class Artemis implements AutoCloseable {
     }
 
     private Message doRequestResponse(Message message, Object ... parameters) throws TimeoutException {
-        return doRequestResponse(10, TimeUnit.SECONDS, message, parameters);
+        return doRequestResponse(requestTimeoutMillis, TimeUnit.MILLISECONDS, message, parameters);
     }
 
     private Message doRequestResponse(long timeout, TimeUnit timeUnit, Message message, Object ... parameters) throws TimeoutException {
