@@ -119,28 +119,27 @@ public abstract class AuthorizationTestBase extends TestBaseWithDefault {
     }
 
     private boolean canSend(Destination destination, String username, String password) throws Exception {
-        AmqpClient adminClient = createClient(destination, this.username, this.password);
-        AmqpClient client = createClient(destination, username, password);
-        try {
-            Future<List<Message>> received = adminClient.recvMessages(destination.getAddress(), 1, 10, TimeUnit.SECONDS);
-            Future<Integer> sent = client.sendMessages(destination.getAddress(), Collections.singletonList("msg1"), 10, TimeUnit.SECONDS);
-            return received.get(1, TimeUnit.MINUTES).size() == sent.get(10, TimeUnit.SECONDS);
-        } catch (Exception ex) {
-            return false;
-        }
+        AmqpClient sender = createClient(destination, username, password);
+        AmqpClient receiver = createClient(destination, this.username, this.password);
+        return canAuth(sender, receiver, destination);
     }
 
     private boolean canReceive(Destination destination, String username, String password) throws Exception {
-        AmqpClient adminClient = createClient(destination, this.username, this.password);
-        AmqpClient client = createClient(destination, username, password);
+        AmqpClient sender = createClient(destination, this.username, this.password);
+        AmqpClient receiver = createClient(destination, username, password);
+        return canAuth(sender, receiver, destination);
+    }
+
+    private boolean canAuth(AmqpClient sender, AmqpClient receiver, Destination destination) throws Exception {
         try {
-            Future<List<Message>> received = client.recvMessages(destination.getAddress(), 1, 10, TimeUnit.SECONDS);
-            Future<Integer> sent = adminClient.sendMessages(destination.getAddress(), Collections.singletonList("msg1"), 10, TimeUnit.SECONDS);
-            return received.get(1, TimeUnit.MINUTES).size() == sent.get(10, TimeUnit.SECONDS);
+            Future<List<Message>> received = receiver.recvMessages(destination.getAddress(), 1, 10, TimeUnit.SECONDS);
+            Future<Integer> sent = sender.sendMessages(destination.getAddress(), Collections.singletonList("msg1"), 10, TimeUnit.SECONDS);
+            return received.get(10, TimeUnit.SECONDS).size() == sent.get(10, TimeUnit.SECONDS);
         } catch (Exception ex) {
+            sender.close();
+            receiver.close();
             return false;
         }
-
     }
 
     private AmqpClient createClient(Destination dest, String username, String password) throws Exception {
