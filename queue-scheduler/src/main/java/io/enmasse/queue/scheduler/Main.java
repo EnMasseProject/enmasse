@@ -23,11 +23,15 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 
+import java.util.concurrent.TimeUnit;
+
 public class Main {
     public static void main(String [] args) {
         Vertx vertx = Vertx.vertx();
         String certDir = System.getenv("CERT_DIR");
         int listenPort = Integer.parseInt(getEnvOrThrow("LISTEN_PORT"));
+        String requestTimeoutStr = System.getenv("DEFAULT_BROKER_REQUEST_TIMEOUT");
+        Long requestTimeout = requestTimeoutStr != null ? Long.parseLong(requestTimeoutStr) : null;
 
         QueueScheduler scheduler = new QueueScheduler(
                 connection -> {
@@ -35,7 +39,11 @@ public class Main {
                     Future<Artemis> artemis = Artemis.createFromConnection(vertx, connection);
                     artemis.setHandler(result -> {
                         if (result.succeeded()) {
-                            broker.complete(new ArtemisAdapter(result.result()));
+                            Artemis a = result.result();
+                            if (requestTimeout != null) {
+                                a.setRequestTimeout(requestTimeout, TimeUnit.SECONDS);
+                            }
+                            broker.complete(new ArtemisAdapter(a));
                         } else {
                             broker.fail(result.cause());
                         }
