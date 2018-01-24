@@ -135,6 +135,10 @@ function do_put(resource, object, options) {
     return do_request('PUT', resource, JSON.stringify(object), options);
 };
 
+function do_delete(resource, options) {
+    return do_request('DELETE', resource, undefined, options);
+};
+
 function Watcher (resource, options) {
     events.EventEmitter.call(this);
     this.closed = false;
@@ -160,6 +164,8 @@ Watcher.prototype.list = function () {
         if (!self.closed) {
             log.info('list retrieved; watching...');
             self.watch();
+        } else {
+            self.emit('closed');
         }
     });
 };
@@ -175,6 +181,8 @@ Watcher.prototype.watch = function () {
             if (!self.closed) {
                 log.info('response ended; reconnecting...');
                 self.list();
+            } else {
+                self.emit('closed');
             }
         });
     });
@@ -203,7 +211,25 @@ Watcher.prototype.deleted = function (object) {
 
 Watcher.prototype.close = function () {
     this.closed = true;
+    var self = this;
+    return new Promise(function (resolve) {
+        self.once('closed', function () {
+            resolve();
+        });
+    });
 };
+
+module.exports.get = function (resource, options) {
+    return do_get(resource, options);
+};
+
+module.exports.post = function (resource, object, options) {
+    return do_post(resource, object, options);
+};
+
+module.exports.delete_resource = function(resource, options) {
+    return do_delete(resource, options);
+}
 
 module.exports.watch = function (resource, options) {
     var w = new Watcher(resource, options);

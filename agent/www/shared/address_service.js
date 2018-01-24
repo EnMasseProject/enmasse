@@ -129,6 +129,27 @@ function AddressService($http) {
       })
 }
 
+function by_name(name) {
+    return function (o) {
+        return o.name === name;
+    }
+}
+
+AddressService.prototype.get_plan_display_name = function (type, plan) {
+    var t = this.address_types.filter(by_name(type))
+    if (t.length) {
+        var p = t[0].plans.filter(by_name(plan));
+        if (p.length) {
+            return p[0].displayName;
+        } else {
+            console.log('found no plan called %s address of type %s', plan, type);
+        }
+    } else {
+        console.log('found no address for type %s', type);
+    }
+    return plan;
+};
+
 AddressService.prototype.get_valid_plans = function (type) {
     var l = this.address_types.filter(function (f) { return f.name === type; })
     return l.length ? l[0].plans : [];

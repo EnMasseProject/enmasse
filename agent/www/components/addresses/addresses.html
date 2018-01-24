@@ -26,7 +26,7 @@
         </div>
         <div class="list-group-item-text">
           {{item.type}} &nbsp &nbsp
-          {{item.plan}}
+          {{$parent.$parent.get_plan_display_name(item.type, item.plan)}}
         </div>
       </div>
       <div class="list-view-pf-additional-info">

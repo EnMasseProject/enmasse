@@ -99,9 +99,31 @@ module.exports.difference = function (a, b, equivalent) {
     return diff;
 }
 
-
 module.exports.match_source_address = function (link, address) {
     return link && link.local && link.local.attach && link.local.attach.source
         && link.local.attach.source.value[0].toString() === address;
 }
 
+function hash(s) {
+    var h = 0;
+    for (var i = 0; i < s.length; i++) {
+        h = ((h << 5) - h) + s.charCodeAt(i) | 0;
+    }
+    return h;
+};
+
+module.exports.hash = hash;
+
+module.exports.kubernetes_name = function (name) {
+    var clean = name.replace(/[^a-zA-Z0-9\-]/g, '');
+    if (clean !== name) {
+        var qualifier = hash(name).toString(16);
+        if (clean.length + qualifier.length > 63) {
+            clean = clean.substring(0, 63 - qualifier.length);
+        }
+        clean += qualifier;
+    } else if (clean.length > 63) {
+        clean = clean.substring(0, 63);
+    }
+    return clean;
+}
