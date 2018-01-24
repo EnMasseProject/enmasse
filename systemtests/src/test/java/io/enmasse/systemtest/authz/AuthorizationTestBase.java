@@ -36,7 +36,7 @@ public abstract class AuthorizationTestBase extends TestBaseWithDefault {
 
     protected void doTestSendAuthz() throws Exception {
         KeycloakCredentials allowedUser = new KeycloakCredentials("sender", "senderPa55");
-        KeycloakCredentials noAllowedUser = new KeycloakCredentials("nobody", "nobodyPa55");
+        KeycloakCredentials noAllowedUser = new KeycloakCredentials("notAllowedSender", "nobodyPa55");
 
         getKeycloakClient().createUser(defaultAddressSpace.getName(), allowedUser.getUsername(), allowedUser.getPassword(), Group.SEND_ALL.toString());
         assertSend(allowedUser.getUsername(), allowedUser.getPassword());
@@ -58,7 +58,7 @@ public abstract class AuthorizationTestBase extends TestBaseWithDefault {
 
     protected void doTestReceiveAuthz() throws Exception {
         KeycloakCredentials allowedUser = new KeycloakCredentials("receiver", "receiverPa55");
-        KeycloakCredentials noAllowedUser = new KeycloakCredentials("nobody", "nobodyPa55");
+        KeycloakCredentials noAllowedUser = new KeycloakCredentials("notAllowedReceiver", "nobodyPa55");
 
         getKeycloakClient().createUser(defaultAddressSpace.getName(), allowedUser.getUsername(), allowedUser.getPassword(), Group.RECV_ALL.toString());
         assertReceive(allowedUser.getUsername(), allowedUser.getPassword());
