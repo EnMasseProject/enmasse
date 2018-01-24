@@ -56,18 +56,19 @@ public class SchedulerState implements StateListener {
     }
 
     private synchronized void groupUpdated(String groupId, Set<Address> addresses) throws TimeoutException {
-        log.info("Updating addresses for {}: {}", groupId, addresses);
         Set<Address> existing = addressMap.getOrDefault(groupId, Collections.emptySet());
 
         Set<Address> removed = new HashSet<>(existing);
         removed.removeAll(addresses);
         if (!removed.isEmpty()) {
+            log.info("Removing addresses for {}: {}", groupId, removed);
             deleteAddresses(groupId, removed);
         }
 
         Set<Address> added = new HashSet<>(addresses);
         added.removeAll(existing);
         if (!added.isEmpty()) {
+            log.info("Adding addresses for {}: {}", groupId, added);
             addAddresses(groupId, addresses, added);
         }
 
