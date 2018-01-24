@@ -6,6 +6,7 @@ import org.apache.qpid.proton.message.Message;
 import org.junit.Before;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Future;
@@ -20,10 +21,11 @@ public abstract class AuthorizationTestBase extends TestBaseWithDefault {
     private static final Destination topic = Destination.topic("authz-topic");
     private static final Destination anycast = Destination.anycast("authz-anycast");
     private static final Destination multicast = Destination.multicast("authz-multicast");
+    private List<Destination> addresses;
 
     @Before
     public void initAddresses() throws Exception {
-        List<Destination> addresses = new ArrayList<>();
+        addresses = new ArrayList<>();
         addresses.add(queue);
         addresses.add(topic);
         if(getAddressSpaceType() == AddressSpaceType.STANDARD){
@@ -35,11 +37,17 @@ public abstract class AuthorizationTestBase extends TestBaseWithDefault {
 
     protected void doTestSendAuthz() throws Exception {
         KeycloakCredentials allowedUser = new KeycloakCredentials("sender", "senderPa55");
+        KeycloakCredentials noAllowedUser = new KeycloakCredentials("nobody", "nobodyPa55");
+
         getKeycloakClient().createUser(defaultAddressSpace.getName(), allowedUser.getUsername(), allowedUser.getPassword(), Group.SEND_ALL.toString());
         assertSend(allowedUser.getUsername(), allowedUser.getPassword());
         getKeycloakClient().deleteUser(defaultAddressSpace.getName(), allowedUser.getUsername());
 
-        KeycloakCredentials noAllowedUser = new KeycloakCredentials("nobody", "nobodyPa55");
+        getKeycloakClient().createUser(defaultAddressSpace.getName(), allowedUser.getUsername(), allowedUser.getPassword(),
+                addresses.stream().map(s -> "send_" + s.getAddress()).toArray(String[]::new));
+        assertSend(allowedUser.getUsername(), allowedUser.getPassword());
+        getKeycloakClient().deleteUser(defaultAddressSpace.getName(), allowedUser.getUsername());
+
         getKeycloakClient().createUser(defaultAddressSpace.getName(), noAllowedUser.getUsername(), noAllowedUser.getPassword(), "null");
         assertCannotSend(noAllowedUser.getUsername(), noAllowedUser.getPassword());
         getKeycloakClient().deleteUser(defaultAddressSpace.getName(), noAllowedUser.getUsername());
@@ -51,11 +59,17 @@ public abstract class AuthorizationTestBase extends TestBaseWithDefault {
 
     protected void doTestReceiveAuthz() throws Exception {
         KeycloakCredentials allowedUser = new KeycloakCredentials("receiver", "receiverPa55");
+        KeycloakCredentials noAllowedUser = new KeycloakCredentials("nobody", "nobodyPa55");
+
         getKeycloakClient().createUser(defaultAddressSpace.getName(), allowedUser.getUsername(), allowedUser.getPassword(), Group.RECV_ALL.toString());
         assertReceive(allowedUser.getUsername(), allowedUser.getPassword());
         getKeycloakClient().deleteUser(defaultAddressSpace.getName(), allowedUser.getUsername());
 
-        KeycloakCredentials noAllowedUser = new KeycloakCredentials("nobody", "nobodyPa55");
+        getKeycloakClient().createUser(defaultAddressSpace.getName(), allowedUser.getUsername(), allowedUser.getPassword(),
+                addresses.stream().map(s -> "recv_" + s.getAddress()).toArray(String[]::new));
+        assertReceive(allowedUser.getUsername(), allowedUser.getPassword());
+        getKeycloakClient().deleteUser(defaultAddressSpace.getName(), allowedUser.getUsername());
+
         getKeycloakClient().createUser(defaultAddressSpace.getName(), noAllowedUser.getUsername(), noAllowedUser.getPassword(), Group.SEND_ALL.toString());
         assertCannotReceive(noAllowedUser.getUsername(), noAllowedUser.getPassword());
         getKeycloakClient().deleteUser(defaultAddressSpace.getName(), noAllowedUser.getUsername());
@@ -123,7 +137,7 @@ public abstract class AuthorizationTestBase extends TestBaseWithDefault {
         try {
             Future<List<Message>> received = client.recvMessages(destination.getAddress(), 1, 10, TimeUnit.SECONDS);
             Future<Integer> sent = adminClient.sendMessages(destination.getAddress(), Collections.singletonList("msg1"), 10, TimeUnit.SECONDS);
-            return received.get(1, TimeUnit.MINUTES).size() == sent.get(1, TimeUnit.MINUTES);
+            return received.get(1, TimeUnit.MINUTES).size() == sent.get(10, TimeUnit.SECONDS);
         }catch (Exception ex){
             return false;
         }
