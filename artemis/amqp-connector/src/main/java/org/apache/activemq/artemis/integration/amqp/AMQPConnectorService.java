@@ -98,33 +98,38 @@ public class AMQPConnectorService implements ConnectorService, BaseConnectionLif
 
    @Override
    public void start() throws Exception {
-      ActiveMQAMQPLogger.LOGGER.infov("Starting connector {0}", name);
 
-      ProtonClientProtocolManager protocolManager = new ProtonClientProtocolManager(new ProtonProtocolManagerFactory(), server);
-      NettyConnector connector = new NettyConnector(connectorConfig, lifecycleHandler, this, closeExecutor, threadPool, server.getScheduledPool(), protocolManager);
-      connector.start();
-      Connection connection = connector.createConnection();
-      if (connection != null) {
-         started = true;
-      } else {
-         ActiveMQAMQPLogger.LOGGER.infov("Error starting connector {0}, retrying in 5 seconds", name);
-         scheduledExecutorService.schedule(() -> {
-            start();
-            return true;
-         }, 5, TimeUnit.SECONDS);
-      }
+      scheduledExecutorService.submit(() -> {
+         ActiveMQAMQPLogger.LOGGER.infov("Starting connector {0}", name);
+         ProtonClientProtocolManager protocolManager = new ProtonClientProtocolManager(new ProtonProtocolManagerFactory(), server);
+         NettyConnector connector = new NettyConnector(connectorConfig, lifecycleHandler, AMQPConnectorService.this, closeExecutor, threadPool, server.getScheduledPool(), protocolManager);
+         connector.start();
+         Connection connection = connector.createConnection();
+
+         if (connection != null) {
+            started = true;
+         } else {
+            ActiveMQAMQPLogger.LOGGER.infov("Error starting connector {0}, retrying in 5 seconds", name);
+            scheduledExecutorService.schedule(() -> {
+               start();
+               return true;
+            }, 5, TimeUnit.SECONDS);
+         }
+      });
    }
 
    @Override
    public void stop() throws Exception {
-      started = false;
-      ActiveMQAMQPLogger.LOGGER.infov("Stopping connector {0}", name);
-      if (connection != null) {
-         lifecycleHandler.stop();
-      }
-      closeExecutor.shutdown();
-      threadPool.shutdown();
-      ActiveMQAMQPLogger.LOGGER.infov("Stopped connector {0}", name);
+      scheduledExecutorService.submit(() -> {
+         started = false;
+         ActiveMQAMQPLogger.LOGGER.infov("Stopping connector {0}", name);
+         if (connection != null) {
+            lifecycleHandler.stop();
+         }
+         closeExecutor.shutdown();
+         threadPool.shutdown();
+         ActiveMQAMQPLogger.LOGGER.infov("Stopped connector {0}", name);
+      });
    }
 
    @Override
