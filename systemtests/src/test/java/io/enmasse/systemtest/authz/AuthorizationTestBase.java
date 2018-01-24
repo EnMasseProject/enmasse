@@ -74,6 +74,18 @@ public abstract class AuthorizationTestBase extends TestBaseWithDefault {
         getKeycloakClient().deleteUser(defaultAddressSpace.getName(), noAllowedUser.getUsername());
     }
 
+    protected void doTestUserPermissionAfterRemoveAuthz() throws Exception {
+        KeycloakCredentials user = new KeycloakCredentials("pepa", "pepaPa55");
+
+        getKeycloakClient().createUser(defaultAddressSpace.getName(), user.getUsername(), user.getPassword(), Group.RECV_ALL.toString());
+        assertReceive(user.getUsername(), user.getPassword());
+        getKeycloakClient().deleteUser(defaultAddressSpace.getName(), user.getUsername());
+
+        getKeycloakClient().createUser(defaultAddressSpace.getName(), user.getUsername(), user.getPassword(), "pepa_group");
+        assertCannotReceive(user.getUsername(), user.getPassword());
+        getKeycloakClient().deleteUser(defaultAddressSpace.getName(), user.getUsername());
+    }
+
     private void assertSend(String username, String password) throws Exception {
         Logging.log.info("Testing if client is authorized to send messages");
         assertTrue(canSend(queue, username, password));

@@ -19,4 +19,9 @@ public class AuthorizationTest extends AuthorizationTestBase {
     public void testReceiveAuthz() throws Exception {
         doTestReceiveAuthz();
     }
+
+    @Test
+    public void testUserPermissionAfterRemoveAuthz() throws Exception {
+        doTestUserPermissionAfterRemoveAuthz();
+    }
 }

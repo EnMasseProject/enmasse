@@ -75,6 +75,12 @@ public class KeycloakClient {
         });
     }
 
+    public void leaveGroups(String realm, String username, String... groups) throws Exception {
+        for (String group : groups) {
+            leaveGroup(realm, group, username);
+        }
+    }
+
     public void groupOperation(String realm, String groupName, String username, long timeout, TimeUnit timeUnit,
                                GroupMethod<RealmResource, String, String> groupMethod) throws Exception {
         int maxRetries = 10;
