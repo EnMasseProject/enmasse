@@ -111,9 +111,8 @@ public abstract class AuthorizationTestBase extends TestBaseWithDefault {
         try {
             Future<List<Message>> received = adminClient.recvMessages(destination.getAddress(), 1, 10, TimeUnit.SECONDS);
             Future<Integer> sent = client.sendMessages(destination.getAddress(), Collections.singletonList("msg1"), 10, TimeUnit.SECONDS);
-            return received.get(1, TimeUnit.MINUTES).size() == sent.get(1, TimeUnit.MINUTES);
+            return received.get(1, TimeUnit.MINUTES).size() == sent.get(10, TimeUnit.SECONDS);
         }catch (Exception ex){
-            Logging.log.info(ex.getMessage());
             return false;
         }
     }
@@ -126,7 +125,6 @@ public abstract class AuthorizationTestBase extends TestBaseWithDefault {
             Future<Integer> sent = adminClient.sendMessages(destination.getAddress(), Collections.singletonList("msg1"), 10, TimeUnit.SECONDS);
             return received.get(1, TimeUnit.MINUTES).size() == sent.get(1, TimeUnit.MINUTES);
         }catch (Exception ex){
-            Logging.log.info(ex.getMessage());
             return false;
         }
 
