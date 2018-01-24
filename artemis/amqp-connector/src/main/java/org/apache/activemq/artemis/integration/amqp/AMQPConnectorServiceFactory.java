@@ -50,6 +50,8 @@ public class AMQPConnectorServiceFactory implements ConnectorServiceFactory {
       properties.add(TransportConstants.KEYSTORE_PASSWORD_PROP_NAME);
       properties.add(TransportConstants.TRUSTSTORE_PATH_PROP_NAME);
       properties.add(TransportConstants.TRUSTSTORE_PASSWORD_PROP_NAME);
+      properties.add(TransportConstants.USE_GLOBAL_WORKER_POOL_PROP_NAME);
+      properties.add(TransportConstants.REMOTING_THREADS_PROPNAME);
       return properties;
    }
 
