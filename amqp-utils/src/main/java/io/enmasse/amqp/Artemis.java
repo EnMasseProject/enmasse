@@ -106,10 +106,8 @@ public class Artemis implements AutoCloseable {
         Source source = new Source();
         source.setDynamic(true);
         receiver.setSource(source);
-        receiver.setPrefetch(0);
         receiver.openHandler(h -> {
             if (h.succeeded()) {
-                receiver.flow(1);
                 promise.complete(new Artemis(vertx, connection, sender, receiver, h.result().getRemoteSource().getAddress(), replies));
             } else {
                 if (retries > maxRetries) {
@@ -150,7 +148,7 @@ public class Artemis implements AutoCloseable {
     }
 
     private Message doRequestResponse(Message message, Object ... parameters) throws TimeoutException {
-        return doRequestResponse(5, TimeUnit.SECONDS, message, parameters);
+        return doRequestResponse(10, TimeUnit.SECONDS, message, parameters);
     }
 
     private Message doRequestResponse(long timeout, TimeUnit timeUnit, Message message, Object ... parameters) throws TimeoutException {
@@ -190,9 +188,7 @@ public class Artemis implements AutoCloseable {
     }
 
     private Message sendMessage(Message message, long timeout, TimeUnit timeUnit) {
-        vertx.runOnContext(h -> sender.send(message, (delivery) -> {
-            receiver.flow(1);
-        }));
+        vertx.runOnContext(h -> sender.send(message));
         try {
             Message m = replies.poll(timeout, timeUnit);
             return m;
