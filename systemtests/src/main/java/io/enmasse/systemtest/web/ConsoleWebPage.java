@@ -40,6 +40,13 @@ public class ConsoleWebPage {
         selenium.takeScreenShot();
     }
 
+    public void openConsolePageWebConsole(String route) throws Exception {
+        selenium.driver.get(route);
+        selenium.angularDriver.waitForAngularRequestsToFinish();
+        Logging.log.info("Console page opened");
+        selenium.takeScreenShot();
+    }
+
     private WebElement getNavigateMenu() throws Exception {
         return selenium.driver.findElement(By.className("nav-pf-vertical"));
     }
@@ -232,6 +239,10 @@ public class ConsoleWebPage {
      */
     private WebElement getAscDescButton() throws Exception {
         return getSortGroup().findElement(By.className("btn-link"));
+    }
+
+    public WebElement getCreateAddressModalWindow() throws Exception {
+        return selenium.driver.findElement(By.className("modal-dialog")).findElement(By.className("modal-content"));
     }
 
     /**

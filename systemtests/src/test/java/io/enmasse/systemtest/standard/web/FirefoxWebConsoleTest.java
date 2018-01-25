@@ -99,6 +99,16 @@ public class FirefoxWebConsoleTest extends StandardWebConsoleTest {
         doTestClientsMetrics();
     }
 
+    @Test
+    public void testCannotCreateAddresses() throws Exception {
+        doTestCannotCreateAddresses();
+    }
+
+    @Test
+    public void testCannotDeleteAddresses() throws Exception {
+        doTestCannotDeleteAddresses();
+    }
+
     @Override
     public WebDriver buildDriver() {
         FirefoxOptions opts = new FirefoxOptions();
