@@ -335,11 +335,15 @@ public abstract class TestBase extends SystemTestRunListener {
         }
     }
 
-    protected String getConsoleRoute(AddressSpace addressSpace) {
+    protected String getConsoleRoute(AddressSpace addressSpace, String username, String password) {
         String consoleRoute = String.format("https://%s:%s@%s", username, password,
                 kubernetes.getExternalEndpoint(addressSpace.getNamespace(), "console"));
         log.info(consoleRoute);
         return consoleRoute;
+    }
+
+    protected String getConsoleRoute(AddressSpace addressSpace) {
+        return getConsoleRoute(addressSpace, username, password);
     }
 
 
